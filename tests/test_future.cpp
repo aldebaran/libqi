@@ -287,6 +287,28 @@ TEST(TestFutureSync, InSitu)
   tag = false;
 }
 
+TEST(TestFutureSync, ThrowOnDestroy) {
+  qi::Promise<int> prom;
+
+  prom.setError("touctouc");
+  EXPECT_THROW(qi::FutureSync<int>(prom.future()), std::runtime_error);
+  EXPECT_THROW(qi::FutureSync<int>(prom.future()), std::runtime_error); //multiple futuresync on the same future should fail.
+  EXPECT_THROW(qi::FutureSync<int>(prom.future()).value(), std::runtime_error); //value should fail.
+}
+
+TEST(TestFutureSync, NoThrow) {
+  qi::Promise<int> prom;
+
+  prom.setError("touctouc");
+  EXPECT_NO_THROW(qi::FutureSync<int>(prom.future()).wait(1));
+  EXPECT_NO_THROW(qi::FutureSync<int>(prom.future()).hasError());
+  EXPECT_NO_THROW(qi::FutureSync<int>(prom.future()).isReady());
+  EXPECT_NO_THROW(qi::FutureSync<int>(prom.future()).valueWithDefault());
+  EXPECT_NO_THROW(qi::FutureSync<int>(prom.future()).error());
+  EXPECT_NO_THROW(qi::FutureSync<int>(prom.future()).cancel());
+  EXPECT_NO_THROW(qi::FutureSync<int>(prom.future()).isCanceleable());
+}
+
 void do_nothing(TestFutureI*) {}
 
 TEST(TestFutureError, MultipleSetValue)
@@ -416,6 +438,7 @@ TEST(TestPromiseBarrier, CompleteExample)
   // Wait for the end of the check.
   end.future().wait();
 }
+
 
 qi::Future<int> emulateSet(int it, bool error = false) {
   qi::Promise<int> prom;

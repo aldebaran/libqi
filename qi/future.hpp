@@ -50,6 +50,7 @@ namespace qi {
   public:
     typedef typename FutureType<T>::type ValueType;
     typedef typename FutureType<T>::typecast ValueTypeCast;
+
     Future()
       : _p(boost::make_shared<detail::FutureState<T> >())
     {
@@ -101,7 +102,6 @@ namespace qi {
     inline bool wait(int msecs = 0) const             { return _p->wait(msecs); }
     inline bool isReady() const                       { return _p->isReady(); }
     inline bool hasError(int msecs = 0) const         { return _p->hasError(msecs); }
-
     inline const std::string &error() const           { return _p->error(); }
 
 
@@ -182,8 +182,22 @@ namespace qi {
     ~FutureSync()
     {
       if (_sync)
-        this->wait();
+        this->value();
     }
+
+    inline const typename Future<T>::ValueType &valueWithDefault(const typename Future<T>::ValueType& defaultVal = typename Future<T>::ValueType()) const
+    {
+      _sync = false;
+      return Future<T>::valueWithDefault(defaultVal);
+    }
+    inline const typename Future<T>::ValueType &value() const        { _sync = false; return Future<T>::value(); }
+    inline operator const typename Future<T>::ValueTypeCast&() const { _sync = false; return Future<T>::value(); }
+    inline bool wait(int msecs = 0) const                   { _sync = false; return Future<T>::wait(msecs); }
+    inline bool isReady() const                             { _sync = false; return Future<T>::isReady(); }
+    inline bool hasError(int msecs = 0) const               { _sync = false; return Future<T>::hasError(msecs); }
+    inline const std::string &error() const                 { _sync = false; return Future<T>::error(); }
+    inline void cancel()                                    { _sync = false; Future<T>::cancel(); }
+    bool isCanceleable() const                              { _sync = false; return Future<T>::isCanceleable(); }
 
     Future<T> async()
     {
