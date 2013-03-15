@@ -8,6 +8,7 @@
 #define _QITYPE_DETAILS_METHODTYPEFACTORY_HXX_
 
 #include <boost/function_types/function_type.hpp>
+#include <boost/function_types/components.hpp>
 #include <boost/function_types/result_type.hpp>
 #include <boost/function_types/parameter_types.hpp>
 
@@ -163,6 +164,15 @@ namespace qi
       result.value = result.type->clone(result.type->initializeStorage(&f));
       return result;
     }
+
+    template <typename T> struct UnwrapBoostFunction
+    {
+      typedef T ype;
+    };
+    template<typename T> struct UnwrapBoostFunction<boost::function<T> >
+    {
+      typedef T type;
+    };
   }
 
   template<typename M>
@@ -172,5 +182,16 @@ namespace qi
     return detail::makeGenericMethodSwitch<M>(method,
       typename boost::function_types::is_member_function_pointer<M>::type());
   }
+
+  template<typename M>
+  GenericMethod makeGenericMethodFromFunction(const M& f)
+  {
+    typedef typename detail::UnwrapBoostFunction<M>::type FunctionType;
+    GenericMethod result;
+    result.type = methodTypeOf<FunctionType>();
+    result.value = result.type->clone(result.type->initializeStorage(const_cast<M*>(&f)));
+    return result;
+  }
+
 }
 #endif
