@@ -92,6 +92,12 @@ namespace qi
     return nextId;
   }
 
+  int GenericObjectBuilder::xAdvertiseProperty(const std::string& name, const std::string& sig, int id)
+  {
+    return _p->_object->metaObject()._p->addProperty(name, sig, id);
+  }
+
+
   void GenericObjectBuilder::setDescription(const std::string &desc) {
     _p->_object->metaObject()._p->setDescription(desc);
   }

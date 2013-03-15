@@ -174,7 +174,7 @@ namespace qi
           std::vector<Type*> dstTypes = tdst->memberTypes();
           if (dstTypes.size() != sourceData.size())
           {
-            qiLogWarning() << "Conversion failure: tuple size mismatch";
+            qiLogWarning() << "Conversion failure: tuple size mismatch between " << tsrc->signature() << " and " << tdst->signature();
             return std::make_pair(GenericValuePtr(), false);
           }
 
@@ -328,7 +328,7 @@ namespace qi
 
   bool operator< (const GenericValuePtr& a, const GenericValuePtr& b)
   {
-    qiLogDebug() << "Compare " << a.type << ' ' << b.type;
+    //qiLogDebug() << "Compare " << a.type << ' ' << b.type;
     #define GET(v, t) static_cast<Type ## t *>(v.type)->get(v.value)
     if (!a.type)
       return b.type;
@@ -340,13 +340,13 @@ namespace qi
     if ((a.type == b.type || a.type->info() == b.type->info())
       && a.type->kind() != Type::String)
     {
-      qiLogDebug() << "Compare sametype " << a.type->infoString();
+      //qiLogDebug() << "Compare sametype " << a.type->infoString();
       return a.type->less(a.value, b.value);
     }
     // Comparing values of different types
     Type::Kind ka = a.type->kind();
     Type::Kind kb = b.type->kind();
-    qiLogDebug() << "Compare " << ka << ' ' << kb;
+    //qiLogDebug() << "Compare " << ka << ' ' << kb;
     if (ka != kb)
     {
       if (ka == Type::Int && kb == Type::Float)

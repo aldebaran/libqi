@@ -414,6 +414,12 @@ namespace qi {
     reset(b);
   }
 
+  inline GenericValue::GenericValue(const GenericValueRef& b)
+  : _allocated(false)
+  {
+    reset(b);
+  }
+
   template<typename T>
   GenericValue GenericValue::make()
   {
@@ -653,6 +659,6 @@ namespace std
 * inside a GenericValuePtr. use GenericValue instead.
 */
 QI_NO_TYPE(qi::GenericValuePtr);
-
+QI_NO_TYPE(qi::GenericValueRef);
 
 #endif  // _QITYPE_DETAILS_GENERICVALUE_HXX_

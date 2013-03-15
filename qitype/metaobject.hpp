@@ -9,6 +9,7 @@
 
 #include <qitype/metamethod.hpp>
 #include <qitype/metasignal.hpp>
+#include <qitype/metaproperty.hpp>
 
 #ifdef _MSC_VER
 #  pragma warning( push )
@@ -28,6 +29,7 @@ namespace qi {
 
     int methodId(const std::string &name) const;
     int signalId(const std::string &name) const;
+    int propertyId(const std::string& name) const;
 
     typedef std::map<unsigned int, MetaMethod> MethodMap;
     MethodMap methodMap() const;
@@ -36,11 +38,17 @@ namespace qi {
     typedef std::map<unsigned int, MetaSignal> SignalMap;
     SignalMap signalMap() const;
 
+    typedef std::map<unsigned int, MetaProperty> PropertyMap;
+    PropertyMap propertyMap() const;
+
     MetaMethod*       method(unsigned int id);
     const MetaMethod* method(unsigned int id) const;
 
     MetaSignal*       signal(unsigned int id);
     const MetaSignal* signal(unsigned int id) const;
+
+    MetaProperty*       property(unsigned int id);
+    const MetaProperty* property(unsigned int id) const;
 
     std::vector<MetaMethod> findMethod(const std::string &name) const;
     typedef std::pair<MetaMethod, float> CompatibleMethod;
@@ -67,6 +75,7 @@ namespace qi {
     unsigned int addMethod(MetaMethodBuilder& builder, int id = -1);
     unsigned int addSignal(const std::string &sig, int id = -1);
 
+    unsigned int addProperty(const std::string& name, const std::string& sig, int id = -1);
     qi::MetaObject metaObject();
 
   private:

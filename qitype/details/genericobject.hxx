@@ -49,6 +49,34 @@ namespace qi {
       val.destroy();
     }
 
+    template <typename T>
+    inline void futureAdapterVal(qi::Future<qi::GenericValue> metaFut, qi::Promise<T> promise)
+    {
+      //error handling
+      if (metaFut.hasError()) {
+        promise.setError(metaFut.error());
+        return;
+      }
+      const GenericValue& val =  metaFut.value();
+      try
+      {
+        promise.setValue(val.to<T>());
+      }
+      catch (const std::exception& e)
+      {
+        promise.setError(std::string("Return argument conversion error: ") + e.what());
+      }
+    }
+
+    template<>
+    inline void futureAdapterVal(qi::Future<qi::GenericValue> metaFut, qi::Promise<GenericValue> promise)
+    {
+      if (metaFut.hasError())
+        promise.setError(metaFut.error());
+      else
+        promise.setValue(metaFut.value());
+    }
+
     template <>
     inline void futureAdapter<void>(qi::Future<qi::GenericValuePtr> metaFut, qi::Promise<void> promise)
     {
@@ -143,6 +171,27 @@ namespace qi {
   QI_GEN(genCall)
   #undef genCall
   #undef pushi
+
+  template<typename T>
+  qi::FutureSync<T> GenericObject::getProperty(const std::string& name)
+  {
+    int pid = metaObject().propertyId(name);
+    if (pid < 0)
+      return makeFutureError<T>("Property not found");
+    qi::Future<GenericValue> f = type->getProperty(value, pid);
+    qi::Promise<T> p;
+    f.connect(boost::bind(&detail::futureAdapterVal<T>,_1, p));
+    return p.future();
+  }
+
+  template<typename T>
+  qi::FutureSync<void> GenericObject::setProperty(const std::string& name, const T& val)
+  {
+    int pid = metaObject().propertyId(name);
+    if (pid < 0)
+      return makeFutureError<void>("Property not found");
+    return type->setProperty(value, pid, GenericValue(GenericValueRef(val)));
+  }
 
   /* An ObjectPtr is actually of a Dynamic type: The underlying Type*
    * is not allways the same.

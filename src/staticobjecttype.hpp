@@ -8,6 +8,7 @@
 #define _SRC_STATICOBJECTTYPE_HPP_
 
 #include <qitype/api.hpp>
+#include <qitype/property.hpp>
 #include <qitype/genericvalue.hpp>
 #include <qitype/type.hpp>
 #include <qitype/metaobject.hpp>
@@ -33,6 +34,10 @@ struct ObjectTypeData
   typedef boost::function<SignalBase* (void*)> SignalGetter;
   typedef std::map<unsigned int, SignalGetter> SignalGetterMap;
   SignalGetterMap signalGetterMap;
+
+  typedef boost::function<PropertyBase*(void*)> PropertyGetter;
+  typedef std::map<unsigned int, PropertyGetter> PropertyGetterMap;
+  PropertyGetterMap propertyGetterMap;
 
   typedef std::map<
     unsigned int,
@@ -65,6 +70,9 @@ public:
   virtual qi::Future<Link> connect(void* instance, Manageable* context, unsigned int event, const SignalSubscriber& subscriber);
   /// Disconnect an event link. Returns if disconnection was successful.
   virtual qi::Future<void> disconnect(void* instance, Manageable* context, Link linkId);
+  virtual qi::Future<GenericValue> getProperty(void* instance, unsigned int id);
+  virtual qi::Future<void> setProperty(void* instance, unsigned int id, GenericValue value);
+
   virtual const std::vector<std::pair<Type*, int> >& parentTypes();
   virtual void* initializeStorage(void*);
   virtual void* ptrFromStorage(void**);

@@ -172,6 +172,11 @@ namespace qi {
     /// Disconnect an event link. Returns if disconnection was successful.
     qi::FutureSync<void> disconnect(Link linkId);
 
+    template<typename T>
+    qi::FutureSync<T> getProperty(const std::string& name);
+    template<typename T>
+    qi::FutureSync<void> setProperty(const std::string& name, const T& val);
+
     //bool isValid() { return type && value;}
     ObjectType*  type;
     void*        value;

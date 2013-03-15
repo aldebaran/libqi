@@ -16,6 +16,7 @@
 #include <qitype/type.hpp>
 #include <qitype/genericobject.hpp>
 #include <qitype/methodtype.hpp>
+#include <qitype/property.hpp>
 
 
 namespace qi {
@@ -35,6 +36,7 @@ namespace qi {
     ~ObjectTypeBuilderBase();
 
     typedef boost::function<SignalBase* (void*)> SignalMemberGetter;
+    typedef boost::function<PropertyBase* (void*)> PropertyMemberGetter;
 
     // input: template-based
 
@@ -47,6 +49,9 @@ namespace qi {
     template <typename T>
     inline unsigned int advertiseEvent(const std::string& name, SignalMemberGetter getter, int id = -1);
 
+    template <typename C, typename T>
+    inline unsigned int advertiseProperty(const std::string& eventName, Property<T> C::* propertyAccessor);
+
     template<typename P> void inherits(int offset);
 
     // input: type-erased
@@ -54,6 +59,7 @@ namespace qi {
     int xAdvertiseMethod(MetaMethodBuilder& builder, GenericMethod func, MetaCallType threadingModel = MetaCallType_Auto, int id = -1);
 
     int xAdvertiseEvent(const std::string& signature, SignalMemberGetter getter, int id = -1);
+    int xAdvertiseProperty(const std::string& name, const std::string& sig, PropertyMemberGetter getter, int id = -1);
     void xBuildFor(Type* type);
     void inherits(Type* parentType, int offset);
 

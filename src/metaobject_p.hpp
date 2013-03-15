@@ -49,6 +49,7 @@ namespace qi {
     //you really dont want to do that.
     bool addMethods(const MetaObject::MethodMap &mms);
     bool addSignals(const MetaObject::SignalMap &mms);
+    bool addProperties(const MetaObject::PropertyMap &mms);
 
     std::vector<MetaMethod> findMethod(const std::string &name);
     std::vector<MetaObject::CompatibleMethod> findCompatibleMethod(const std::string &nameOrSignature);
@@ -58,6 +59,8 @@ namespace qi {
     int addMethod(MetaMethodBuilder& builder, int uid = -1);
 
     int addSignal(const std::string &sig, int id = -1);
+
+    int addProperty(const std::string& name, const std::string& sig, int id = -1);
 
     // Recompute data cached in *ToIdx
     void refreshCache();
@@ -79,6 +82,9 @@ namespace qi {
     NameToIdx                           _eventsNameToIdx;
     MetaObject::SignalMap               _events;
     mutable boost::recursive_mutex      _eventsMutex;
+
+    MetaObject::PropertyMap             _properties;
+    mutable boost::recursive_mutex      _propertiesMutex;
 
     qi::Atomic<unsigned int>            _index;
 

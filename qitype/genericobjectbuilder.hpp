@@ -48,6 +48,8 @@ namespace qi {
 
     template<typename FUNCTION_TYPE>
     inline unsigned int advertiseEvent(const std::string& eventName);
+    template<typename T>
+    unsigned int advertiseProperty(const std::string& name);
 
     void setThreadingModel(ObjectThreadingModel model);
 
@@ -59,10 +61,11 @@ namespace qi {
                          MetaCallType threadingModel = MetaCallType_Auto);
 
     int xAdvertiseEvent(const std::string& signature);
-
+    int xAdvertiseProperty(const std::string& name, const std::string& sig, int id=-1);
     void setDescription(const std::string& desc);
     qi::ObjectPtr object(boost::function<void (GenericObject*)> onDelete = boost::function<void (GenericObject*)>());
 
+    void markProperty(unsigned int ev, unsigned int getter, unsigned int setter);
   public:
     GenericObjectBuilderPrivate *_p;
     QI_DISALLOW_COPY_AND_ASSIGN(GenericObjectBuilder);

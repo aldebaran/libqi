@@ -64,5 +64,13 @@ namespace qi {
     return xAdvertiseEvent(name + "::" + detail::FunctionSignature<T>::signature());
   }
 
+  template <typename T> unsigned int GenericObjectBuilder::advertiseProperty(const std::string& name)
+  {
+    // we must end up with name event, get_name and set_name methods
+    unsigned int isig = advertiseEvent<void(const T&)>(name);
+    xAdvertiseProperty(name, typeOf<T>()->signature(), isig);
+    return isig;
+  }
+
 }
 #endif  // _QITYPE_DETAILS_GENERICOBJECTBUILDER_HXX_

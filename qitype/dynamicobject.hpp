@@ -8,6 +8,7 @@
 #define _QITYPE_DYNAMICOBJECT_HPP_
 
 #include <qitype/genericobject.hpp>
+#include <qitype/property.hpp>
 
 #ifdef _MSC_VER
 #  pragma warning( push )
@@ -45,6 +46,7 @@ namespace qi
     void setMethod(unsigned int id, GenericFunction callable, MetaCallType threadingModel = MetaCallType_Auto);
     GenericFunction method(unsigned int id);
     SignalBase* signalBase(unsigned int id) const;
+    PropertyBase* property(unsigned int);
 
     virtual qi::Future<GenericValuePtr> metaCall(Manageable* context, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto);
     virtual void metaPost(Manageable* context, unsigned int event, const GenericFunctionParameters& params);
@@ -52,6 +54,8 @@ namespace qi
     virtual qi::Future<Link> metaConnect(unsigned int event, const SignalSubscriber& subscriber);
     /// Disconnect an event link. Returns if disconnection was successful.
     virtual qi::Future<void> metaDisconnect(Link linkId);
+    virtual qi::Future<GenericValue> getProperty(unsigned int id);
+    virtual qi::Future<void> setProperty(unsigned int id, GenericValue val);
 
     void setThreadingModel(ObjectThreadingModel model);
     ObjectThreadingModel threadingModel() const;

@@ -31,6 +31,7 @@ namespace qi
     ~DynamicObjectPrivate();
     // get or create signal, or 0 if id is not an event
     SignalBase* createSignal(unsigned int id);
+    PropertyBase* property(unsigned int id);
     bool                                dying;
     typedef std::map<unsigned int, SignalBase*> SignalMap;
     typedef std::map<unsigned int,
@@ -40,6 +41,9 @@ namespace qi
     MethodMap           methodMap;
     MetaObject          meta;
     ObjectThreadingModel threadingModel;
+
+    typedef std::map<unsigned int, PropertyBase*> PropertyMap;
+    PropertyMap propertyMap;
   };
 
   DynamicObjectPrivate::~DynamicObjectPrivate()
@@ -50,10 +54,16 @@ namespace qi
 
   SignalBase* DynamicObjectPrivate::createSignal(unsigned int id)
   {
+
     SignalMap::iterator i = signalMap.find(id);
     if (i != signalMap.end())
       return i->second;
-
+    if (meta.property(id))
+    { // Replicate signal of prop in signalMap
+      SignalBase* sb = property(id)->signal();
+      signalMap[id] = sb;
+      return sb;
+    }
     MetaSignal* sig = meta.signal(id);
     if (sig)
     {
@@ -75,7 +85,8 @@ namespace qi
     /// Disconnect an event link. Returns if disconnection was successful.
     virtual qi::Future<void> disconnect(void* instance, Manageable* context, Link linkId);
     virtual const std::vector<std::pair<Type*, int> >& parentTypes();
-
+    virtual qi::Future<GenericValue> getProperty(void* instance, unsigned int id);
+    virtual qi::Future<void> setProperty(void* instance, unsigned int id, GenericValue val);
     _QI_BOUNCE_TYPE_METHODS(DefaultTypeImplMethods<DynamicObject>);
   };
 
@@ -125,9 +136,37 @@ namespace qi
 
   SignalBase* DynamicObject::signalBase(unsigned int id) const
   {
+    if (_p->meta.property(id))
+      return const_cast<DynamicObject*>(this)->property(id)->signal();
     DynamicObjectPrivate::SignalMap::iterator i = _p->signalMap.find(id);
     if (i == _p->signalMap.end())
       return 0;
+    else
+      return i->second;
+  }
+
+  PropertyBase* DynamicObject::property(unsigned int id)
+  {
+    return _p->property(id);
+  }
+
+  PropertyBase* DynamicObjectPrivate::property(unsigned int id)
+  {
+    DynamicObjectPrivate::PropertyMap::iterator i = propertyMap.find(id);
+    if (i == propertyMap.end())
+    {
+      MetaProperty* p = meta.property(id);
+      if (!p)
+        throw std::runtime_error("Id is not id of a property");
+      // Fetch its type
+      std::string sig = p->signature();
+      Type* type = Type::fromSignature(sig);
+      if (!type)
+        throw std::runtime_error("Unable to construct a type from " + sig);
+      PropertyBase* res = new GenericProperty(type);
+      propertyMap[id] = res;
+      return res;
+    }
     else
       return i->second;
   }
@@ -145,6 +184,28 @@ namespace qi
     }
     return ::qi::metaCall(context->eventLoop(), _p->threadingModel,
       i->second.second, callType, context->mutex(), i->second.first, params);
+  }
+
+  qi::Future<void> DynamicObject::setProperty(unsigned int id, GenericValue val)
+  {
+    try
+    {
+      property(id)->setValue(val);
+    }
+    catch(const std::exception& e)
+    {
+      return qi::makeFutureError<void>(std::string("setProperty: ") + e.what());
+    }
+    qi::Promise<void> p;
+    p.setValue(0);
+    return p.future();
+  }
+
+  qi::Future<GenericValue> DynamicObject::getProperty(unsigned int id)
+  {
+    qi::Promise<GenericValue> p;
+    p.setValue(property(id)->getValue());
+    return p.future();
   }
 
   void DynamicObject::metaPost(Manageable* context, unsigned int event, const GenericFunctionParameters& params)
@@ -174,6 +235,7 @@ namespace qi
     Link link = ((Link)event << 32) + l;
     assert(link >> 32 == event);
     assert((link & 0xFFFFFFFF) == l);
+    qiLogDebug() << "New subscriber " << link <<" to event " << event;
     return qi::Future<Link>(link);
   }
 
@@ -356,6 +418,18 @@ namespace qi
   {
     static std::vector<std::pair<Type*, int> > empty;
     return empty;
+  }
+
+  qi::Future<GenericValue> DynamicObjectType::getProperty(void* instance, unsigned int id)
+  {
+    return reinterpret_cast<DynamicObject*>(instance)
+      ->getProperty(id);
+  }
+
+  qi::Future<void> DynamicObjectType::setProperty(void* instance, unsigned int id, GenericValue value)
+  {
+    return reinterpret_cast<DynamicObject*>(instance)
+      ->setProperty(id, value);
   }
 
   static void cleanupDynamicObject(GenericObject *obj, bool destroyObject,

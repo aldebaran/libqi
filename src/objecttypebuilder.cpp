@@ -64,6 +64,15 @@ namespace qi {
     return nextId;
   }
 
+  int ObjectTypeBuilderBase::xAdvertiseProperty(const std::string& name, const std::string& sig, PropertyMemberGetter getter,int id)
+  {
+    int res = _p->metaObject._p->addProperty(name, sig, id);
+    if (res < 0)
+      return -1;
+    _p->data.propertyGetterMap[res] = getter;
+    return id;
+  }
+
   void ObjectTypeBuilderBase::xBuildFor(Type* type)
   {
     _p->data.classType = type;

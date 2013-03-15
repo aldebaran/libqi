@@ -106,11 +106,38 @@ namespace qi {
   }
 
   template <typename C, typename T>
+  PropertyBase* propertyAccess(Property<T> C::* ptr, void* instance)
+  {
+    C* c = reinterpret_cast<C*>(instance);
+    return &((*c).*ptr);
+  }
+
+  template <typename C, typename T>
+  SignalBase* signalFromInstanceProperty(Property<T> C::* ptr, void* instance)
+  {
+    C* c = reinterpret_cast<C*>(instance);
+    Property<T>& p = ((*c).*ptr);
+    return &p;
+  }
+
+  template <typename C, typename T>
   unsigned int ObjectTypeBuilderBase::advertiseEvent(const std::string& eventName, Signal<T> C::* signalAccessor, int id)
   {
     // FIXME validate type
     SignalMemberGetter fun = boost::bind(&signalAccess<C, T>, signalAccessor, _1);
     return xAdvertiseEvent(eventName + "::" + detail::FunctionSignature<T>::signature(), fun, id);
+  }
+
+  template <typename C, typename T>
+  unsigned int ObjectTypeBuilderBase::advertiseProperty(const std::string& name, Property<T> C::* accessor)
+  {
+    // FIXME validate type
+    SignalMemberGetter fun = boost::bind(&signalFromInstanceProperty<C, T>, accessor, _1);
+    // advertise the event
+    unsigned int id = xAdvertiseEvent(name + "::" + detail::FunctionSignature<void(const T&)>::signature(), fun);
+
+    PropertyMemberGetter pg = boost::bind(&propertyAccess<C, T>, accessor, _1);
+    return xAdvertiseProperty(name, typeOf<T>()->signature(), pg, id);
   }
 
   template <typename T> unsigned int ObjectTypeBuilderBase::advertiseEvent(const std::string& name, SignalMemberGetter getter, int id)

@@ -33,6 +33,10 @@ namespace qi {
       _eventsNameToIdx = rhs._eventsNameToIdx;
       _events = rhs._events;
     }
+    {
+      boost::recursive_mutex::scoped_lock sl(rhs._propertiesMutex);
+      _properties = rhs._properties;
+    }
     _index = rhs._index;
     _description = rhs._description;
     return (*this);
@@ -150,6 +154,23 @@ namespace qi {
     return id;
   }
 
+  int MetaObjectPrivate::addProperty(const std::string& name, const std::string& sig, int id)
+  {
+    boost::recursive_mutex::scoped_lock sl(_propertiesMutex);
+    for (MetaObject::PropertyMap::iterator it = _properties.begin(); it != _properties.end(); ++it)
+    {
+      if (it->second.name() == name)
+      {
+        qiLogWarning() << "Property already exists: " << name;
+        return 0;
+      }
+    }
+    if (id == -1)
+      id = ++_index;
+    _properties[id] = MetaProperty(id, name, sig);
+    return id;
+  }
+
   bool MetaObjectPrivate::addMethods(const MetaObject::MethodMap &mms) {
     boost::recursive_mutex::scoped_lock sl(_methodsMutex);
     MetaObject::MethodMap::const_iterator it;
@@ -179,6 +200,22 @@ namespace qi {
         return false;
       _events[newUid] = qi::MetaSignal(newUid, it->second.signature());
       _eventsNameToIdx[it->second.signature()] = newUid;
+    }
+    //todo: update uid
+    return true;
+  }
+
+  bool MetaObjectPrivate::addProperties(const MetaObject::PropertyMap &mms) {
+    boost::recursive_mutex::scoped_lock sl(_propertiesMutex);
+    MetaObject::PropertyMap::const_iterator it;
+    unsigned int newUid;
+
+    for (it = mms.begin(); it != mms.end(); ++it) {
+      newUid = it->second.uid();
+      MetaObject::PropertyMap::iterator jt = _properties.find(newUid);
+      if (jt != _properties.end())
+        return false;
+      _properties[newUid] = qi::MetaProperty(newUid, it->second.name(), it->second.signature());
     }
     //todo: update uid
     return true;
@@ -269,6 +306,22 @@ namespace qi {
     return &i->second;
   }
 
+  MetaProperty *MetaObject::property(unsigned int id) {
+    boost::recursive_mutex::scoped_lock sl(_p->_propertiesMutex);
+    PropertyMap::iterator i = _p->_properties.find(id);
+    if (i == _p->_properties.end())
+      return 0;
+    return &i->second;
+  }
+
+  const MetaProperty *MetaObject::property(unsigned int id) const {
+    boost::recursive_mutex::scoped_lock sl(_p->_propertiesMutex);
+    PropertyMap::const_iterator i = _p->_properties.find(id);
+    if (i == _p->_properties.end())
+      return 0;
+    return &i->second;
+  }
+
   int MetaObject::methodId(const std::string &name) const
   {
     return _p->methodId(name);
@@ -280,11 +333,30 @@ namespace qi {
   }
 
   MetaObject::MethodMap MetaObject::methodMap() const {
+    boost::recursive_mutex::scoped_lock sl(_p->_methodsMutex);
     return _p->_methods;
   }
 
   MetaObject::SignalMap MetaObject::signalMap() const {
+    boost::recursive_mutex::scoped_lock sl(_p->_eventsMutex);
     return _p->_events;
+  }
+
+  MetaObject::PropertyMap MetaObject::propertyMap() const {
+    boost::recursive_mutex::scoped_lock sl(_p->_propertiesMutex);
+    return _p->_properties;
+  }
+
+  int MetaObject::propertyId(const std::string& name) const
+  {
+    boost::recursive_mutex::scoped_lock sl(_p->_propertiesMutex);
+    for (PropertyMap::iterator it = _p->_properties.begin();
+      it != _p->_properties.end(); ++it)
+    {
+      if (it->second.name() == name)
+        return it->first;
+    }
+    return -1;
   }
 
   std::vector<qi::MetaMethod> MetaObject::findMethod(const std::string &name) const
@@ -308,6 +380,8 @@ namespace qi {
       qiLogError() << "cant merge metaobject (methods)";
     if (!result._p->addSignals(dest.signalMap()))
       qiLogError() << "cant merge metaobject (signals)";
+    if (!result._p->addProperties(dest.propertyMap()))
+      qiLogError() << "cant merge metaobject (properties)";
     result._p->setDescription(dest.description());
     return result;
   }
@@ -343,6 +417,11 @@ namespace qi {
 
   unsigned int MetaObjectBuilder::addSignal(const std::string &sig, int id) {
     return _p->metaObject._p->addSignal(sig, id);
+  }
+
+  unsigned int MetaObjectBuilder::addProperty(const std::string& name, const std::string& sig, int id)
+  {
+     return _p->metaObject._p->addProperty(name, sig, id);
   }
 
   qi::MetaObject MetaObjectBuilder::metaObject() {
@@ -402,6 +481,15 @@ namespace qi {
         stream << "  " << std::right << std::setfill('0') << std::setw(3) << it3->second.uid() << std::setw(0) << " "
                << std::left << std::setfill(' ') << std::setw(offset) << "" << std::setw(0)
                << " " << it3->second.signature() << std::endl;
+      stream <<"properties:" << std::endl;
+      qi::MetaObject::PropertyMap props = mobj.propertyMap();
+      for (qi::MetaObject::PropertyMap::const_iterator it = props.begin();
+        it != props.end(); ++it)
+      {
+        stream << "  " << std::right << std::setfill('0') << std::setw(3) << it->second.uid() << std::setw(0) << " "
+        << std::left << std::setfill(' ') << std::setw(offset) << "" << std::setw(0)
+               << " " << it->second.name() << ' ' << it->second.signature() << std::endl;
+      }
       }
     }
   }
@@ -412,7 +500,7 @@ static qi::MetaObjectPrivate* metaObjectPrivate(qi::MetaObject* p) {
 }
 
 
-QI_TYPE_STRUCT_EX(qi::MetaObjectPrivate, ptr->refreshCache();, _methods, _events, _description);
+QI_TYPE_STRUCT_EX(qi::MetaObjectPrivate, ptr->refreshCache();, _methods, _events, _properties, _description);
 QI_TYPE_REGISTER(::qi::MetaObjectPrivate);
 
 

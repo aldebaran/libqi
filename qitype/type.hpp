@@ -403,6 +403,7 @@ namespace qi{
     GenericValue(const GenericValue& b);
     explicit GenericValue(const GenericValuePtr& b, bool copy, bool free);
     explicit GenericValue(const GenericValuePtr& b);
+    explicit GenericValue(const GenericValueRef& b);
     explicit GenericValue(qi::Type *type);
     /// Create and return a GenericValue of type T
     template<typename T> static GenericValue make();
@@ -643,6 +644,9 @@ QITYPE_API bool operator !=(const GenericIterator & a, const GenericIterator& b)
 #include <qitype/details/typepointer.hxx>
 #include <qitype/details/typetuple.hxx>
 #include <qitype/details/typebuffer.hxx>
+
+QI_NO_TYPE(qi::Type)
+QI_NO_TYPE(qi::Type*)
 
 #ifdef _MSC_VER
 #  pragma warning( pop )
