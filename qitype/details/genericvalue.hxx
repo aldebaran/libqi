@@ -497,8 +497,10 @@ namespace qi {
       return static_cast<TypeList*>(type)->size(value);
     if (kind() == Type::Map)
       return static_cast<TypeMap*>(type)->size(value);
+    if (kind() == Type::Tuple)
+      return static_cast<TypeTuple*>(type)->memberTypes().size();
     else
-      throw std::runtime_error("Expected List or Map.");
+      throw std::runtime_error("Expected List, Map or Tuple.");
   }
 
   template<typename T> void GenericValuePtr::append(const T& element)
