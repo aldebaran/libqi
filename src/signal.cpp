@@ -112,9 +112,11 @@ namespace qi {
     SignalSubscriberMap::iterator i;
     for (i = copy.begin(); i != copy.end(); ++i)
     {
+      qiLogDebug() << (void*)this << " Invoking signal subscriber";
       SignalSubscriberPtr s = i->second; // hold s alive
       s->call(params, mct);
     }
+    qiLogDebug() << (void*)this << " done invoking signal subscribers";
   }
 
   class FunctorCall
@@ -288,6 +290,7 @@ namespace qi {
 
   SignalSubscriber& SignalBase::connect(const SignalSubscriber& src)
   {
+    qiLogDebug() << (void*)this << " connecting new subscriber";
     static SignalSubscriber invalid;
     if (!_p)
     {

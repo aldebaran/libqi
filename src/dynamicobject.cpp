@@ -213,7 +213,9 @@ namespace qi
     else
     {
       boost::system_time timeout = boost::get_system_time() + boost::posix_time::milliseconds(msWait);
+      qiLogDebug() << "Aquiering module lock...";
       boost::timed_mutex::scoped_lock l(*lock, timeout);
+      qiLogDebug() << "Checking lock acquisition...";
       if (!l.owns_lock())
       {
         qiLogWarning() << "Time-out acquiring object lock when calling method. Deadlock?";

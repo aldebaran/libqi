@@ -144,10 +144,15 @@ namespace qi
         boost::add_pointer<
         boost::remove_const<
         boost::remove_reference<boost::mpl::_1> > > > >(detail::fill_arguments(&_argumentsType));
+      if (CallableType::signature().find('X') != std::string::npos)
+        qiLogDebug("qitype.call") << "Function arguments not serializable";
+      if (_resultType->signature().find('X') != std::string::npos)
+        qiLogDebug("qitype.call") << "Function result will not be serializable";
     }
 
     virtual void* call(void* func, void** args, unsigned int argc)
     {
+      qiLogDebug("qitype.call") << " call of f " << CallableType::signature() << ' ' << sigreturn();
       boost::function<T>* f = (boost::function<T>*)ptrFromStorage(&func);
       return MakeCall<T, boost::function_types::function_arity<T>::value>()(*f, args);
     }
