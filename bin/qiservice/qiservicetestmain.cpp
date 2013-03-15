@@ -24,6 +24,12 @@ std::string reply(const std::string &msg) {
   return msg + "bim";
 }
 
+qi::GenericValue reply(const qi::GenericValue &myval) {
+  qi::GenericValuePtr val(myval);
+  qiLogInfo() << "Message received with the signature" << myval.signature(false) << " -> " << qi::encodeJSON(val) << std::endl;
+  return myval;
+}
+
 std::string reply(const int &msg) {
   qiLogInfo() << "Message recv:" << msg;
   std::stringstream ss;
@@ -109,6 +115,7 @@ int main(int argc, char *argv[])
       ob.advertiseMethod<std::string (const int&)>("reply", &reply);
       ob.advertiseMethod<std::string (const std::string&, const double &)>("reply", &reply);
       ob.advertiseMethod<std::string (const std::string&, const float &)>("reply", &reply);
+      ob.advertiseMethod<qi::GenericValue (const qi::GenericValue&)>("reply", &reply);
       qi::ObjectPtr obj(ob.object());
 
       session.connect(masterAddress);
