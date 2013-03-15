@@ -424,6 +424,8 @@ namespace qi{
     void operator = (const GenericValue& b);
     void reset();
     void reset(qi::Type *type);
+    template <typename T>
+    void set(const T& t) { GenericValuePtr::set<T>(t); }
     void set(const GenericValuePtr& src);
     void set(const GenericValuePtr& src, bool copy, bool free);
     void swap(GenericValue& b);
