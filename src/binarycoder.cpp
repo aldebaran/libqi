@@ -634,8 +634,16 @@ namespace qi {
         {
           std::string sig;
           in.read(sig);
+          Type* type = Type::fromSignature(sig);
+          if (!type)
+          {
+            qiLogError() << "Cannot find a type to deserialize signature " << sig << " within a dynamic value.";
+            result.destroy();
+            return;
+          }
+
           DeserializeTypeVisitor dtv(*this);
-          dtv.result = GenericValuePtr(Type::fromSignature(sig));;
+          dtv.result = GenericValuePtr(type);
           typeDispatch<DeserializeTypeVisitor>(dtv, dtv.result);
           static_cast<TypeDynamic*>(result.type)->set(&result.value, dtv.result);
           dtv.result.destroy();
