@@ -146,8 +146,8 @@ namespace qi {
         try {
           std::string sig = sb->signature();
           // Remove top-level tuple
-          sig = sig.substr(1, sig.length()-2);
-          GenericFunctionParameters args = msg.parameters(sig, _socket);
+          //sig = sig.substr(1, sig.length()-2);
+          GenericFunctionParameters args = msg.value(sig, _socket).asTupleValuePtr();
           qiLogDebug() << "Triggering local event listeners";
           sb->trigger(args);
           args.destroy();
@@ -232,7 +232,7 @@ namespace qi {
   {
     qi::Promise<GenericValuePtr> out;
     qi::Message msg;
-    msg.setParameters(in, this);
+    msg.setValue(qi::makeGenericTuple(in), this);
 #ifndef NDEBUG
     std::string sig = metaObject().method(method)->signature();
     sig = signatureSplit(sig)[2];
@@ -295,7 +295,7 @@ namespace qi {
     // But it is a bit complex, because the server will bounce the
     // event back to us.
     qi::Message msg;
-    msg.setParameters(args, this);
+    msg.setValue(qi::makeGenericTuple(args), this);
     msg.setType(Message::Type_Post);
     msg.setService(_service);
     msg.setObject(_object);

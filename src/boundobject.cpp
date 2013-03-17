@@ -21,7 +21,7 @@ namespace qi {
                                    ObjectHost* context)
   {
     qi::Message msg;
-    msg.setParameters(params, context);
+    msg.setValue(qi::makeGenericTuple(params), context);
     msg.setService(service);
     msg.setFunction(event);
     msg.setType(Message::Type_Event);
@@ -167,10 +167,8 @@ namespace qi {
       return;
     }
 
-
     sigparam = signatureSplit(sigparam)[2];
-    sigparam = sigparam.substr(1, sigparam.length()-2);
-    mfp = msg.parameters(sigparam, socket);
+    mfp = msg.value(sigparam, socket).asTupleValuePtr();
     /* Because of 'global' _currentSocket, we cannot support parallel
     * executions at this point.
     * Both on self, and on obj which can use currentSocket() too.

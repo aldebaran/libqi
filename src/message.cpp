@@ -214,35 +214,6 @@ namespace qi {
     setBuffer(buf);
   }
 
-  void Message::setParameters(const GenericFunctionParameters &parameters, ObjectHost* context)
-  {
-    // Bounces to setSignature(), no need for cow()
-    BinaryEncoder out(_p->buffer);
-    for (unsigned int i = 0; i < parameters.size(); ++i)
-      qi::details::serialize(parameters[i], out, context);
-    setSignature(out.signature());
-  }
-
-  GenericFunctionParameters Message::parameters(const qi::Signature &sig, TransportSocketPtr context) const {
-    GenericFunctionParameters result;
-    BinaryDecoder in(_p->buffer);
-    Signature::iterator it = sig.begin();
-    if (!_p->signature.empty() && _p->signature != sig.toString())
-      qiLogWarning() << "Signature mismatch " << sig.toString() <<" " << _p->signature;
-    while (it != sig.end())
-    {
-      qi::Type* compatible = qi::Type::fromSignature(*it);
-      if (!compatible)
-      {
-        qiLogError() <<"fromBuffer: unknown type " << *it;
-        throw std::runtime_error("Could not construct type for " + *it);
-      }
-      result.push_back(qi::details::deserialize(compatible, in, context));
-      ++it;
-    }
-    return result;
-  }
-
   GenericValuePtr Message::value(const std::string &signature, const qi::TransportSocketPtr &socket) const {
     qi::Type* type = qi::Type::fromSignature(signature);
     if (!type) {

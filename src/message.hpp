@@ -136,11 +136,6 @@ namespace qi {
     ///@return signature, set by setParameters() or setSignature()
     const std::string& signature() const;
 
-    void                      setParameters(const GenericFunctionParameters &parameters,
-                                            ObjectHost* context = 0);
-    GenericFunctionParameters parameters(const qi::Signature &signature,
-                                         TransportSocketPtr context = TransportSocketPtr()) const;
-
     GenericValuePtr value(const std::string &signature, const qi::TransportSocketPtr &socket) const;
     void setValue(qi::GenericValuePtr value, ObjectHost* context = 0);
     MessageAddress address() const;
