@@ -73,7 +73,10 @@ class Session:
         :returns: The id of the service.
         """
         #TODO
-        return _qipy.qi_session_register_service(self._session, name, obj._obj)
+        fut = Future(_qipy.qi_session_register_service(self._session, name, obj._obj))
+        if async:
+            return fut
+        return fut.value()
 
     def unregister_service(self, idx, async=False):
         """Unregister service, it is not visible anymore.
@@ -81,7 +84,10 @@ class Session:
         :param idx: id of the service given on register.
         """
         #TODO
-        _qipy.qi_session_unregister_service(self._session, idx)
+        fut = Future(_qipy.qi_session_unregister_service(self._session, idx))
+        if async:
+            return fut
+        return fut.value()
 
     def service(self, name, default=None, async=False):
         """Fetches a new instance of GenericObject binding to a service. If the
@@ -94,17 +100,10 @@ class Session:
             raise TypeError('keys must be strings.')
 
         # Get C object.
-        fut_c = _qipy.qi_session_get_service(self._session, name)
-        if not async:
-            #this clear fut_c. do not use fut_c after that.
-            obj_c = _qipy.qi_future_get_object(fut_c)
-            # One failure, return None.
-            if not obj_c:
-                return default
-
-            # Create Python object from C object.
-            return GenericObject(qi_object=obj_c, qi_name=name)
-        return Future(fut_c)
+        fut = Future(_qipy.qi_session_get_service(self._session, name))
+        if async:
+            return fut
+        return fut.value()
 
     def services(self, async=False):
         """Retrieves the list of the names of all the services available on the
