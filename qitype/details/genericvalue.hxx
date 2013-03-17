@@ -306,6 +306,12 @@ namespace qi {
       throw std::runtime_error("Expected tuple, list or map");
   }
 
+  inline std::vector<GenericValuePtr>
+  GenericValuePtr::asListValuePtr()
+  {
+    return asTupleValuePtr();
+  }
+
   inline std::map<GenericValuePtr, GenericValuePtr>
   GenericValuePtr::asMapValuePtr()
   {
