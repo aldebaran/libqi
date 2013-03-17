@@ -14,11 +14,11 @@ namespace qi {
 
   class BinaryDecoderPrivate {
     public:
-      BinaryDecoderPrivate(const qi::Buffer& buffer);
+      BinaryDecoderPrivate(qi::BufferReader* buffer);
       ~BinaryDecoderPrivate();
 
       BinaryDecoder::Status _status;
-      BufferReader _reader;
+      BufferReader *_reader;
   };
 
   class BinaryEncoderPrivate {

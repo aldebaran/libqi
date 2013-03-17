@@ -28,7 +28,8 @@ namespace qi {
   class QIMESSAGING_API BinaryDecoder {
   public:
 
-    explicit BinaryDecoder(const qi::Buffer &buffer);
+    //explicit BinaryDecoder(const qi::Buffer &buffer);
+    explicit BinaryDecoder(qi::BufferReader *buffer);
     ~BinaryDecoder();
 
 

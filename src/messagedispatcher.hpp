@@ -11,7 +11,6 @@
 #include <qitype/signal.hpp>
 #include <boost/thread/mutex.hpp>
 #include "message.hpp"
-#include <qimessaging/binaryencoder.hpp>
 
 namespace qi {
 

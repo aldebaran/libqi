@@ -6,7 +6,8 @@
 #include <qimessaging/gateway.hpp>
 #include <qimessaging/session.hpp>
 #include "transportserver.hpp"
-#include <qimessaging/binarydecoder.hpp>
+#include "binarydecoder.hpp"
+#include "binaryencoder.hpp"
 #include <boost/bind.hpp>
 #include <qi/log.hpp>
 
@@ -230,8 +231,10 @@ void GatewayPrivate::handleMsgFromService(TransportSocketPtr service, const Mess
     {
       // Get serviceId
       ServiceInfo    result;
-      qi::BinaryDecoder ds(msg->buffer());
-      ds.read(result);
+      //yes it works!
+      result = msg->value(qi::typeOf<ServiceInfo>()->signature(), qi::TransportSocketPtr()).as<ServiceInfo>();
+      //qi::BinaryDecoder ds(msg->buffer());
+      //ds.read(result);
 
       if (result.name() == "")
       {
@@ -351,8 +354,8 @@ void GatewayPrivate::onMessageReady(const qi::Message &msg, qi::TransportSocketP
     else if (_type == Type_ReverseGateway && msg.type() == Message::Type_Reply)
     {
       std::string endpoint;
-      BinaryDecoder d(msg.buffer());
-      d.read(endpoint);
+      endpoint = msg.value("s", qi::TransportSocketPtr()).asString();
+
       if (endpoint != "")
       {
         connect(endpoint);

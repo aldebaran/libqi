@@ -3,11 +3,12 @@
 **  See COPYING for the license
 */
 
+#include <qimessaging/binarycodec.hpp>
 #include <qitype/genericvalue.hpp>
 #include "message.hpp"
 
-#include <qimessaging/binaryencoder.hpp>
-#include <qimessaging/binarydecoder.hpp>
+#include "binaryencoder.hpp"
+#include "binarydecoder.hpp"
 #include "binarycoder_p.hpp"
 #include "boundobject.hpp"
 #include "remoteobject_p.hpp"
@@ -76,7 +77,7 @@ namespace qi {
 
 #undef QI_SIMPLE_SERIALIZER_IMPL
 
-  BinaryDecoder::BinaryDecoder(const qi::Buffer& buffer)
+  BinaryDecoder::BinaryDecoder(BufferReader *buffer)
     : _p(new BinaryDecoderPrivate(buffer))
   {
   }
@@ -88,12 +89,12 @@ namespace qi {
 
   size_t BinaryDecoder::readRaw(void *data, size_t size)
   {
-    return _p->_reader.read(data, size);
+    return _p->_reader->read(data, size);
   }
 
   void* BinaryDecoder::readRaw(size_t size)
   {
-    return _p->_reader.read(size);
+    return _p->_reader->read(size);
   }
 
   BinaryDecoder::Status BinaryDecoder::status() const
@@ -108,11 +109,11 @@ namespace qi {
 
   BufferReader& BinaryDecoder::bufferReader()
   {
-    return _p->_reader;
+    return *_p->_reader;
   }
 
-  BinaryDecoderPrivate::BinaryDecoderPrivate(const qi::Buffer& buffer)
-    : _status(BinaryDecoder::Status_Ok), _reader(BufferReader(buffer))
+  BinaryDecoderPrivate::BinaryDecoderPrivate(qi::BufferReader *buffer)
+    : _status(BinaryDecoder::Status_Ok), _reader(buffer)
   {
   }
 
@@ -691,5 +692,32 @@ namespace qi {
 
 
   } // namespace details
+
+  void encodeBinary(qi::Buffer *buf, qi::GenericValuePtr gvp) {
+    BinaryEncoder be(*buf);
+    details::SerializeTypeVisitor stv(be, 0, gvp);
+    qi::typeDispatch(stv, gvp);
+    if (be.status() != BinaryEncoder::Status_Ok) {
+      std::stringstream ss;
+      ss << "OSerialization error " << be.status();
+      qiLogError() << ss.str();
+      throw std::runtime_error(ss.str());
+    }
+  }
+
+  void decodeBinary(qi::BufferReader *buf, qi::GenericValuePtr *gvp) {
+    BinaryDecoder in(buf);
+    details::DeserializeTypeVisitor dtv(in, qi::TransportSocketPtr());
+    dtv.result = *gvp;
+    qi::typeDispatch(dtv, dtv.result);
+    if (in.status() != BinaryDecoder::Status_Ok) {
+      std::stringstream ss;
+      ss << "ISerialization error " << in.status();
+      qiLogError() << ss.str();
+      throw std::runtime_error(ss.str());
+    }
+    *gvp = dtv.result;
+  }
+
 }
 

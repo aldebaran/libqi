@@ -59,12 +59,11 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/c)
 
 set(PUBLIC_HEADERS
                    qimessaging/api.hpp
-                   qimessaging/binarydecoder.hpp
-                   qimessaging/binaryencoder.hpp
                    qimessaging/gateway.hpp
                    qimessaging/servicedirectory.hpp
                    qimessaging/serviceinfo.hpp
                    qimessaging/session.hpp
+                   qimessaging/binarycodec.hpp
                    qimessaging/url.hpp
 )
 
@@ -74,6 +73,8 @@ set(SRCS ${CONFIG_H}
 
          src/boundobject.cpp
          src/boundobject.hpp
+         src/binarydecoder.hpp
+         src/binaryencoder.hpp
          src/binarycoder_p.hpp
          src/binarycoder.cpp
          src/gateway.cpp

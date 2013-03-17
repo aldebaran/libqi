@@ -10,8 +10,8 @@
 
 #include <qitype/genericvalue.hpp>
 #include "message.hpp"
-#include <qimessaging/binaryencoder.hpp>
-#include <qimessaging/binarydecoder.hpp>
+#include "binaryencoder.hpp"
+#include "binarydecoder.hpp"
 
 #include <qi/atomic.hpp>
 #include <qi/log.hpp>
@@ -220,7 +220,8 @@ namespace qi {
       qiLogError() <<"fromBuffer: unknown type " << signature;
       throw std::runtime_error("Could not construct type for " + signature);
     }
-    BinaryDecoder in(_p->buffer);
+    qi::BufferReader br(_p->buffer);
+    BinaryDecoder in(&br);
     return qi::details::deserialize(type, in, socket);
   }
 
