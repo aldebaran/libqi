@@ -12,7 +12,6 @@
 #include "remoteobject_p.hpp"
 #include "message.hpp"
 #include "transportsocket.hpp"
-#include <qimessaging/binarydecoder.hpp>
 #include <qi/log.hpp>
 #include <boost/thread/mutex.hpp>
 #include <qi/eventloop.hpp>
@@ -198,32 +197,28 @@ namespace qi {
            promise.setError("Result for unknown function");
            return;
         }
-        Type* type = Type::fromSignature(mm->sigreturn());
-        if (!type)
-        {
-          promise.setError("Unable to find a type for signature " + mm->sigreturn());
-          return;
+        try {
+          qi::GenericValuePtr val = msg.value(mm->sigreturn(), _socket);
+          promise.setValue(val);
+        } catch (std::runtime_error &err) {
+          promise.setError(err.what());
         }
-        BinaryDecoder in(msg.buffer());
-        promise.setValue(qi::details::deserialize(type, in, _socket));
+
         qiLogDebug() << "Message passed to promise";
         return;
       }
 
       case qi::Message::Type_Error: {
-        qi::BinaryDecoder ds(msg.buffer());
-        std::string    err;
-        std::string    sig;
-        ds.read(sig);
-        if (sig != "s") {
-          qiLogError() << "Invalid error signature: " << sig;
+        try {
+          static std::string sigerr("m");
+          qi::GenericValuePtr gvp = msg.value(sigerr, _socket).asDynamic();
+          std::string err = gvp.asString();
+          qiLogVerbose() << "Received error message"  << msg.address() << ":" << err;
+          promise.setError(err);
+        } catch (std::runtime_error &e) {
           //houston we have an error about the error..
-          promise.setError("unknown error");
-          return;
+          promise.setError(e.what());
         }
-        ds.read(err);
-        qiLogVerbose() << "Received error message"  << msg.address() << ":" << err;
-        promise.setError(err);
         return;
       }
       default:

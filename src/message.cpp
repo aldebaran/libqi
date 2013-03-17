@@ -214,8 +214,7 @@ namespace qi {
     setBuffer(buf);
   }
 
-  void Message::setParameters(const GenericFunctionParameters &parameters,
-    ObjectHost* context)
+  void Message::setParameters(const GenericFunctionParameters &parameters, ObjectHost* context)
   {
     // Bounces to setSignature(), no need for cow()
     BinaryEncoder out(_p->buffer);
@@ -224,8 +223,7 @@ namespace qi {
     setSignature(out.signature());
   }
 
-  GenericFunctionParameters Message::parameters(const qi::Signature &sig,
-    TransportSocketPtr context) const {
+  GenericFunctionParameters Message::parameters(const qi::Signature &sig, TransportSocketPtr context) const {
     GenericFunctionParameters result;
     BinaryDecoder in(_p->buffer);
     Signature::iterator it = sig.begin();
@@ -243,6 +241,23 @@ namespace qi {
       ++it;
     }
     return result;
+  }
+
+  GenericValuePtr Message::value(const std::string &signature, const qi::TransportSocketPtr &socket) const {
+    qi::Type* type = qi::Type::fromSignature(signature);
+    if (!type) {
+      qiLogError() <<"fromBuffer: unknown type " << signature;
+      throw std::runtime_error("Could not construct type for " + signature);
+    }
+    BinaryDecoder in(_p->buffer);
+    return qi::details::deserialize(type, in, socket);
+  }
+
+  void Message::setValue(qi::GenericValuePtr value, ObjectHost* context) {
+    cow();
+    qi::BinaryEncoder ods(_p->buffer);
+    if (value.type->kind() != qi::Type::Void)
+      qi::details::serialize(value, ods, context);
   }
 
   const qi::Buffer &Message::buffer() const

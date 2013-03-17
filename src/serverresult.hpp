@@ -23,13 +23,9 @@ namespace qi {
       ret.setType(qi::Message::Type_Error);
       ret.setError(future.error());
     } else {
-      qi::Buffer        result;
-      qi::BinaryEncoder ods(result);
-      GenericValuePtr val = future.value();
-      if (val.type->kind() != Type::Void)
-        qi::details::serialize(val, ods, host);
+      qi::GenericValuePtr val = future.value();
+      ret.setValue(val, host);
       val.destroy();
-      ret.setBuffer(result);
     }
     if (!socket->send(ret))
       qiLogError("qimessaging.serverresult") << "Can't generate an answer for address:" << replyaddr;
