@@ -1,5 +1,5 @@
 /*
-**  Copyright (C) 2012 Aldebaran Robotics
+**  Copyright (C) 2012, 2013 Aldebaran Robotics
 **  See COPYING for the license
 */
 
@@ -15,6 +15,10 @@
 #include <qi/eventloop.hpp>
 
 #include "eventloop_p.hpp"
+
+#include <pthread.h>
+
+qiLogCategory("qi.eventloop");
 
 namespace qi {
 
@@ -39,7 +43,7 @@ namespace qi {
   EventLoopAsio::~EventLoopAsio()
   {
     if (_running && boost::this_thread::get_id() != _id)
-      qiLogError("Destroying EventLoopPrivate from itself while running");
+      qiLogError() << "Destroying EventLoopPrivate from itself while running";
     stop();
     join();
   }
@@ -56,7 +60,7 @@ namespace qi {
 
   void EventLoopAsio::run()
   {
-    qiLogDebug("qi.EventLoop") << this << "run starting";
+    qiLogDebug() << this << "run starting";
     qi::os::setCurrentThreadName("eventloop");
     _running = true;
     _id = boost::this_thread::get_id();
@@ -79,7 +83,7 @@ namespace qi {
 
   void EventLoopAsio::stop()
   {
-    qiLogDebug("qi.EventLoop") << this << "stopping";
+    qiLogDebug() << "stopping eventloopasio: " << this;
     boost::recursive_mutex::scoped_lock sl(_mutex);
     if (_work)
     {
@@ -92,7 +96,7 @@ namespace qi {
   {
     if (boost::this_thread::get_id() == _id)
     {
-      qiLogError("qi.EventLoop") << "Cannot join from within event loop thread";
+      qiLogError() << "Cannot join from within event loop thread";
       return;
     }
     if (_threaded)
@@ -101,7 +105,7 @@ namespace qi {
       }
       catch(const boost::thread_resource_error& e)
       {
-        qiLogWarning("qi.EventLoop") << "Join an already joined thread: " << e.what();
+        qiLogWarning() << "Join an already joined thread: " << e.what();
       }
     else
       while (_running)
@@ -200,11 +204,11 @@ namespace qi {
     }
     catch(const std::exception& e)
     {
-      qiLogError("qi.EventLoop") << "Exception caught in async call: " << e.what();
+      qiLogError() << "Exception caught in async call: " << e.what();
     }
     catch(...)
     {
-      qiLogError("qi.EventLoop") << "Unknown exception caught in async call";
+      qiLogError() << "Unknown exception caught in async call";
     }
     delete callback;
   }
@@ -398,7 +402,7 @@ namespace qi {
       }
       uint64_t pingDelay = os::ustime() - ctx->startTime;
       if (pingDelay > ctx->maxDelay / 2)
-        qiLogDebug("qi.EventLoop") << "Long ping " << pingDelay;
+        qiLogDebug() << "Long ping " << pingDelay;
       // Wait a bit before pinging againg
       //qiLogDebug("qi.EventLoop") << os::ustime() << " MON delay " << ctx->maxDelay;
       ctx->helper->async(boost::bind(&monitor_ping, ctx), ctx->maxDelay*5);
@@ -442,7 +446,7 @@ namespace qi {
 
   static void monitor_notify(const char* which)
   {
-    qiLogError("qi.EventLoop") << which << " event loop stuck?";
+    qiLogError() << which << " event loop stuck?";
   }
   static EventLoop* _get(EventLoop* &ctx, bool isPool)
   {
@@ -450,7 +454,7 @@ namespace qi {
     {
       if (! qi::Application::initialized())
       {
-        qiLogInfo("EventLoop") << "Creating event loop while no qi::Application() is running";
+        qiLogInfo() << "Creating event loop while no qi::Application() is running";
       }
       ctx = new EventLoop();
       if (isPool)
