@@ -426,13 +426,15 @@ namespace qi{
     void reset(qi::Type *type);
     template <typename T>
     void set(const T& t) { GenericValuePtr::set<T>(t); }
-    void set(const GenericValuePtr& src);
-    void set(const GenericValuePtr& src, bool copy, bool free);
+    void reset(const GenericValuePtr& src);
+    void reset(const GenericValuePtr& src, bool copy, bool free);
     void swap(GenericValue& b);
 
     template<typename T> static GenericValue from(const T& r) { return GenericValue(GenericValuePtr(&r));}
 
   private:
+    //we dont accept GVP here.  (block set<T> with T=GVP)
+    void set(const GenericValuePtr& t);
     bool _allocated;
   };
 

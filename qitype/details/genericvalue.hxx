@@ -27,8 +27,7 @@ namespace qi {
     virtual void set(void** storage, GenericValuePtr src)
     {
       GenericValue* val = (GenericValue*)ptrFromStorage(storage);
-      val->reset();
-      val->set(src, true, true);
+      val->reset(src, true, true);
     }
     // Default cloner will do just right since GenericValue is by-value.
     typedef DefaultTypeImplMethods<GenericValue> Methods;
@@ -406,13 +405,13 @@ namespace qi {
   inline GenericValue::GenericValue(const GenericValuePtr& b, bool copy, bool free)
   : _allocated(false)
   {
-   set(b, copy, free);
+    reset(b, copy, free);
   }
 
   inline GenericValue::GenericValue(const GenericValuePtr& b)
   : _allocated(false)
   {
-   set(b);
+    reset(b);
   }
 
   template<typename T>
@@ -423,20 +422,20 @@ namespace qi {
 
   inline void GenericValue::operator=(const GenericValue& b)
   {
-    set(b, true, true);
+    reset(b, true, true);
   }
 
   inline void GenericValue::operator=(const GenericValuePtr& b)
   {
-    set(b, true, true);
+    reset(b, true, true);
   }
 
-  inline void GenericValue::set(const GenericValuePtr& b)
+  inline void GenericValue::reset(const GenericValuePtr& b)
   {
-    set(b, true, true);
+    reset(b, true, true);
   }
 
-  inline void GenericValue::set(const GenericValuePtr& b, bool copy, bool free)
+  inline void GenericValue::reset(const GenericValuePtr& b, bool copy, bool free)
   {
     reset();
     *(GenericValuePtr*)this = b;
