@@ -2,7 +2,7 @@
 ** Author(s):
 **  - Pierre Roullon <proullon@aldebaran-robotics.com>
 **
-** Copyright (C) 2012 Aldebaran Robotics
+** Copyright (C) 2012, 2013 Aldebaran Robotics
 */
 
 #include <qic/future.h>
@@ -16,6 +16,10 @@ void future_callback_simple(qi_future_t* fut, void *data)
   qi_value_t *val = 0;
   if (qi_future_is_ready(fut) && !qi_future_has_error(fut))
     val = qi_future_get_value(fut);
+  if (!val) {
+    printf("Value is callback is empty\n");
+    return;
+  }
 
   int result = 0;
   if (val)
@@ -32,7 +36,7 @@ TEST(TestFuture, SimpleType)
   qi_value_set_int64(val, answer);
 
   int res = 0;
-  res = qi_value_get_int64(val, 0);
+  res = qi_value_get_int64_default(val, 0);
   EXPECT_EQ(42, res);
 
   qi_promise_t* promise = qi_promise_create();
@@ -48,7 +52,7 @@ TEST(TestFuture, SimpleType)
   ASSERT_EQ(1, qi_future_is_ready(future));
 
   qi_value_t *rest = qi_future_get_value(future);
-  EXPECT_EQ(42, qi_value_get_int64(rest, 0));
+  EXPECT_EQ(42, qi_value_get_int64_default(rest, 0));
 
   qi_value_destroy(rest);
   qi_future_destroy(future);
