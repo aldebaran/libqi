@@ -52,7 +52,7 @@ qi_value_t* qi_value_copy(qi_value_t* src)
 {
   qi::GenericValue *s = &qi_value_cpp(src);
   qi::GenericValue *d = new qi::GenericValue;
-  *d = s;
+  *d = *s;
   return (qi_value_t*)d;
 }
 
