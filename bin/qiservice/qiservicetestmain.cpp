@@ -123,7 +123,12 @@ int main(int argc, char *argv[])
 
       session.listen("tcp://0.0.0.0:0");
       session.setIdentity("tests/server.key", "tests/server.crt");
-      session.listen("tcps://0.0.0.0:0");
+      try {
+        session.listen("tcps://0.0.0.0:0");
+      } catch (std::runtime_error &) {
+        qiLogWarning() << "SSL desactivated.";
+      }
+
       unsigned int id = session.registerService(serviceName, obj);
 
 #if 0
