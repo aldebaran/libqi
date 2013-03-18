@@ -11,8 +11,8 @@
 
 #include <qitype/genericvalue.hpp>
 
-inline qi::GenericValuePtr &qi_value_cpp(qi_value_t *value) {
-  qi::GenericValuePtr &gv = *(reinterpret_cast<qi::GenericValuePtr *>(value));
+inline qi::GenericValue &qi_value_cpp(qi_value_t *value) {
+  qi::GenericValue &gv = *(reinterpret_cast<qi::GenericValue *>(value));
   return gv;
 };
 

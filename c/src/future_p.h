@@ -37,9 +37,8 @@ inline void qi_future_c_adapter(qi::Future<T> fut, qi_promise_t* prom) {
     return;
   }
   qi_value_t* val = qi_value_create("");
-  qi::GenericValuePtr &gvp = qi_value_cpp(val);
-  gvp.destroy();
-  gvp = qi::GenericValuePtr::from(fut.value()).clone();
+  qi::GenericValue &gvp = qi_value_cpp(val);
+  gvp = qi::GenericValue::from(fut.value());
   qi_promise_set_value(prom, val);
 }
 

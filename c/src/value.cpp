@@ -10,117 +10,130 @@
 
 qi_value_t* qi_value_create(const char *signature)
 {
-  qi::GenericValuePtr* v;
+  qi::GenericValue* v;
 
   if (!strcmp(signature, ""))
-    v = new qi::GenericValuePtr();
+    v = new qi::GenericValue();
   else {
     //TODO: check signature correctness
     qi::Type *type = qi::Type::fromSignature(signature);
-    v = new qi::GenericValuePtr(type);
+    v = new qi::GenericValue(type);
   }
   return (qi_value_t*)v;
 }
 
 void qi_value_destroy(qi_value_t* val)
 {
-  qi::GenericValuePtr *v = &qi_value_cpp(val);
-  if (v)
-    v->destroy();
+  qi::GenericValue *v = &qi_value_cpp(val);
   delete v;
 }
 
 void        qi_value_swap(qi_value_t* dest, qi_value_t* src)
 {
-  qi::GenericValuePtr *s = &qi_value_cpp(src);
-  qi::GenericValuePtr *d = &qi_value_cpp(dest);
-
-  qi::GenericValuePtr t = *s;
-  *s = *d;
-  *d = t;
+  qi::GenericValue *s = &qi_value_cpp(src);
+  qi::GenericValue *d = &qi_value_cpp(dest);
+  s->swap(*d);
 }
 
 qi_value_t* qi_value_copy(qi_value_t* src)
 {
-  qi::GenericValuePtr *s = &qi_value_cpp(src);
-  qi_value_t *dest = qi_value_create("");
-  qi::GenericValuePtr *d = &qi_value_cpp(dest);
-  *d = s->clone();
-  return dest;
+  qi::GenericValue *s = &qi_value_cpp(src);
+  qi::GenericValue *d = new qi::GenericValue;
+  *d = s;
+  return (qi_value_t*)d;
 }
 
 int        qi_value_set_string(qi_value_t *msg, const char *s)
 {
-  qi::GenericValuePtr &gv = qi_value_cpp(msg);
-  gv.destroy();
-  //todo: check that types matches
-  gv = qi::GenericValuePtr::from(std::string(s)).clone();
-  return true;
+  qi::GenericValue &gv = qi_value_cpp(msg);
+  try {
+    gv.setString(s);
+  } catch (std::runtime_error &) {
+    return 0;
+  }
+  return 1;
 }
 
 const char* qi_value_get_string(qi_value_t *msg)
 {
-  qi::GenericValuePtr &gv = qi_value_cpp(msg);
-  //todo: check for types
-  return qi::os::strdup(gv.asString().c_str());
+  qi::GenericValue &gv = qi_value_cpp(msg);
+  try {
+    return qi::os::strdup(gv.toString().c_str());
+  } catch (std::runtime_error &) {
+  }
+  return 0;
 }
 
 int       qi_value_set_uint64(qi_value_t *msg, unsigned long long ul) {
-  qi::GenericValuePtr &gv = qi_value_cpp(msg);
-  //todo: check for signature matches...
-  gv = qi::GenericValuePtr::from(ul).clone();
-  return true;
+  qi::GenericValue &gv = qi_value_cpp(msg);
+  try {
+    //TODO: setUInt
+    gv.setInt(ul);
+  } catch (std::runtime_error&) {
+    return 0;
+  }
+  return 1;
 }
 
 unsigned long long qi_value_get_uint64(qi_value_t *msg, int *err) {
-  qi::GenericValuePtr &gv = qi_value_cpp(msg);
+  qi::GenericValue &gv = qi_value_cpp(msg);
   //todo: check for signatures matches
   if (err)
     *err = 0;
-  return gv.asInt();
+  try {
+    return gv.toInt();
+  } catch (std::runtime_error &) {
+    if (err)
+      *err = 1;
+  }
+  return 0;
 }
 
 int       qi_value_set_int64(qi_value_t  *msg, long long l) {
-  qi::GenericValuePtr &gv = qi_value_cpp(msg);
-  //todo: check for signatures matches
-  gv = qi::GenericValuePtr::from(l).clone();
-  return true;
+  qi::GenericValue &gv = qi_value_cpp(msg);
+  try {
+    gv.setInt(l);
+  } catch (std::runtime_error &) {
+    return 0;
+  }
+  return 1;
 }
 
 long long  qi_value_get_int64(qi_value_t  *msg, int *err) {
-  qi::GenericValuePtr &gv = qi_value_cpp(msg);
+  qi::GenericValue &gv = qi_value_cpp(msg);
   //todo: check for signatures matches
   if (err)
     *err = 0;
-  return gv.asInt();
+  try {
+    return gv.toInt();
+  } catch (std::runtime_error &) {
+    if (err)
+      *err = 1;
+  }
+  return 0;
 }
 
 int        qi_value_tuple_set(qi_value_t *msg, unsigned int idx, qi_value_t *value)
 {
-  qi::GenericValuePtr &container = qi_value_cpp(msg);
-  qi::GenericValuePtr &val = qi_value_cpp(value);
-  std::vector<qi::GenericValuePtr> vt = container.asTuple().get();
-  if (idx >= vt.size())
-    return false;
-  qi::GenericValuePtr &gvp = vt.at(idx);
-  //gvp.destroy();
-  gvp = val.clone();
-  //TODO: check for type?
-  container.asTuple().set(vt);
-  return true;
+  qi::GenericValue &container = qi_value_cpp(msg);
+  qi::GenericValue &val = qi_value_cpp(value);
+
+  if (idx >= container.size()) {
+    return 0;
+  }
+  container[idx].set(val);
+  return 1;
 }
 
 qi_value_t*  qi_value_tuple_get(qi_value_t *msg, unsigned int idx, int *err) {
-  qi::GenericValuePtr &container = qi_value_cpp(msg);
-  std::vector<qi::GenericValuePtr> vt = container.asTuple().get();
-  if (idx >= vt.size()) {
+  qi::GenericValue &container = qi_value_cpp(msg);
+  if (idx >= container.size()) {
     *err = 1;
     return 0;
   }
   qi_value_t* ret = qi_value_create("");
-  qi::GenericValuePtr &gv = qi_value_cpp(ret);
-  gv.destroy();
-  gv = vt[idx].clone();
+  qi::GenericValue &gv = qi_value_cpp(ret);
+  gv = container[idx];
   if (err)
     *err = 0;
   return ret;
@@ -129,44 +142,29 @@ qi_value_t*  qi_value_tuple_get(qi_value_t *msg, unsigned int idx, int *err) {
 qi_value_kind_t qi_value_get_kind(qi_value_t* value) {
   if (!value)
     return QI_VALUE_KIND_UNKNOWN;
-  qi::GenericValuePtr &val = qi_value_cpp(value);
+  qi::GenericValue &val = qi_value_cpp(value);
   return (qi_value_kind_t)(val.kind());
 }
 
 int          qi_value_tuple_size(qi_value_t *msg)
 {
-  qi::GenericValuePtr &container = qi_value_cpp(msg);
-  std::vector<qi::GenericValuePtr> vt = container.asTuple().get();
-  return vt.size();
+  qi::GenericValue &container = qi_value_cpp(msg);
+  return container.size();
 }
 
 int          qi_value_list_set(qi_value_t *msg, unsigned int idx, qi_value_t *value)
 {
-  qi::GenericValuePtr &container = qi_value_cpp(msg);
-  //TODO
-  return -1;
+  return qi_value_tuple_set(msg, idx, value);
 }
 
-qi_value_t*  qi_value_list_get(qi_value_t *msg, unsigned int idx)
+qi_value_t*  qi_value_list_get(qi_value_t *msg, unsigned int idx, int *err)
 {
-  qi::GenericValuePtr &container = qi_value_cpp(msg);
-  qi::GenericListIteratorPtr it;
-  it = container.asList().begin();
-  for (unsigned int i = 0; i < idx; ++i) {
-    ++it;
-  }
-  qi_value_t* ret = qi_value_create("");
-  qi::GenericValuePtr &gv = qi_value_cpp(ret);
-  gv = (*it).clone();
-  it.destroy();
-  //TODO
-  return ret;
+  return qi_value_tuple_get(msg, idx, err);
 }
 
 int          qi_value_list_size(qi_value_t *msg)
 {
-  qi::GenericValuePtr &container = qi_value_cpp(msg);
-  return container.asList().size();
+  return qi_value_tuple_size(msg);
 }
 
 qi_object_t* qi_value_get_object(qi_value_t* val)

@@ -34,7 +34,8 @@ void  qi_promise_destroy(qi_promise_t *pr)
 void qi_promise_set_value(qi_promise_t *pr, qi_value_t *value)
 {
   qi::Promise<qi::GenericValue>  *promise = qi_promise_cpp(pr);
-  promise->setValue(qi::GenericValue::take(qi_value_cpp(value)));
+  //TODO: Take?
+  promise->setValue(qi_value_cpp(value));
 }
 
 void qi_promise_set_error(qi_promise_t *pr, const char *error)
@@ -97,8 +98,8 @@ qi_value_t *qi_future_get_value(qi_future_t *fu)
   if (fut->hasError())
     return 0;
   qi_value_t *val = qi_value_create("");
-  qi::GenericValuePtr &gv = qi_value_cpp(val);
-  gv = fut->value().data;
+  qi::GenericValue &gv = qi_value_cpp(val);
+  gv = fut->value();
   return val;
 }
 

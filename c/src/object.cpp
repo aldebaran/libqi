@@ -18,13 +18,14 @@
 
 qiLogCategory("qimessaging.object");
 
-void qiFutureCAdapter(qi::Future<qi::GenericValuePtr> result, qi::Promise<qi::GenericValue> promise) {
+void qiFutureCAdapter(qi::Future<qi::GenericValue> result, qi::Promise<qi::GenericValue> promise) {
   if (result.hasError()) {
     promise.setError(result.error());
     return;
   }
   //do not copy the gvp, now it's own by gv.
-  qi::GenericValue gv(result.value(), false);
+  qi::GenericValue gv;
+  gv.set(result.value());
   promise.setValue(gv);
 }
 
@@ -42,9 +43,10 @@ void        qi_object_destroy(qi_object_t *object)
 
 qi_future_t *qi_object_call(qi_object_t *object, const char *signature_c, qi_value_t *params)
 {
-  qi::ObjectPtr                &obj = qi_object_cpp(object);
-  qi::GenericValuePtr           gv  = qi_value_cpp(params);
-  qi::GenericFunctionParameters gfparams(gv.asTuple().get());
+  qi::ObjectPtr             &obj = qi_object_cpp(object);
+  qi::GenericValue           gv  = qi_value_cpp(params);
+
+  qi::GenericFunctionParameters gfparams(gv.toList<qi::GenericValuePtr>());
 
   qi::Future<qi::GenericValuePtr> res = obj->metaCall(signature_c, gfparams);
   qi::Promise<qi::GenericValue> prom;
@@ -76,7 +78,7 @@ qi::GenericValuePtr c_call(const std::string &complete_sig,
   qi_value_t* value = qi_value_create(vs[2].c_str());
   qi_value_t* ret = qi_value_create(vs[0].c_str());
 
-  qi::GenericValuePtr &gvp = qi_value_cpp(value);
+  qi::GenericValue &gvp = qi_value_cpp(value);
   gvp.asTuple().set(params);
   std::cout << "Complete sig:" << complete_sig << std::endl;
 

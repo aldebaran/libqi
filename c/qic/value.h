@@ -81,7 +81,7 @@ extern "C"
   QIC_API int          qi_value_tuple_size(qi_value_t *container);
 
   QIC_API int          qi_value_list_set(qi_value_t *container, unsigned int idx, qi_value_t *element);
-  QIC_API qi_value_t*  qi_value_list_get(qi_value_t *container, unsigned int idx);
+  QIC_API qi_value_t*  qi_value_list_get(qi_value_t *container, unsigned int idx, int *err);
   QIC_API int          qi_value_list_size(qi_value_t *container);
 
 //  QIMESSAGING_API void         qi_value_tuple_get(qi_value_t *msg, unsigned int idx, qi_value_t *result);
