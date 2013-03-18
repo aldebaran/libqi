@@ -518,12 +518,6 @@ namespace qi {
         , context(context)
       {}
 
-      template<typename T>
-      void deserialize()
-      {
-        in.read(result.as<T>());
-      }
-
       void visitUnknown(GenericValuePtr)
       {
         qiLogError() << "Type " << result.type->infoString() <<" not deserializable";
@@ -539,26 +533,49 @@ namespace qi {
       {
         switch((isSigned?1:-1)*byteSize)
         {
-          case 0:  deserialize<bool>();  break;
-          case 1:  deserialize<int8_t>();  break;
-          case -1: deserialize<uint8_t>(); break;
-          case 2:  deserialize<int16_t>(); break;
-          case -2: deserialize<uint16_t>();break;
-          case 4:  deserialize<int32_t>(); break;
-          case -4: deserialize<uint32_t>();break;
-          case 8:  deserialize<int64_t>(); break;
-          case -8: deserialize<uint64_t>();break;
-          default:
-            qiLogError() << "Unknown integer type " << isSigned << " " << byteSize;
+        case 0: {
+          bool b; in.read(b); result.setInt(b);
+        } break;
+        case 1: {
+          int8_t b; in.read(b); result.setInt(b);
+        } break;
+        case -1: {
+          uint8_t b; in.read(b); result.setUInt(b);
+        } break;
+        case 2: {
+          int16_t b; in.read(b); result.setInt(b);
+        } break;
+        case -2: {
+          uint16_t b; in.read(b); result.setUInt(b);
+        } break;
+        case 4: {
+          int32_t b; in.read(b); result.setInt(b);
+        } break;
+        case -4: {
+          uint32_t b; in.read(b); result.setUInt(b);
+        } break;
+        case 8: {
+          int64_t b; in.read(b); result.setInt(b);
+        } break;
+        case -8: {
+          uint64_t b; in.read(b); result.setUInt(b);
+        } break;
+        default:
+          qiLogError() << "Unknown integer type " << isSigned << " " << byteSize;
         }
       }
 
       void visitFloat(double value, int byteSize)
       {
-        if (byteSize == 4)
-          deserialize<float>();
-        else if (byteSize == 8)
-          deserialize<double>();
+        if (byteSize == 4) {
+          float t;
+          in.read(t);
+          result.setFloat(t);
+        } else if (byteSize == 8) {
+          double t;
+          in.read(t);
+          result.setDouble(t);
+        }
         else
           qiLogError() << "Unknown float type " << byteSize;
       }
