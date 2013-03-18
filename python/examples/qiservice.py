@@ -30,7 +30,6 @@ def get_servicedirectory_address():
 
     return sys.argv[1]
 
-
 def main():
     """ Entry point of qiservice
     """

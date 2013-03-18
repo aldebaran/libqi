@@ -4,34 +4,27 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../)
 include("qibuild/swig/python")
 
 
-file (GLOB SWIG_MODULE_qimessagingswig_EXTRA_DEPS
-  ../c/qimessaging/c/*.h
+file (GLOB SWIG_MODULE_qipy_EXTRA_DEPS
+  ../c/qic/*.h
   ./src/*.hpp
 )
 
 # Compile swig compatibility layer
 file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/src")
-qi_swig_wrap_python(qimessagingswig src/qimessagingswig.i SRC
+qi_swig_wrap_python(qipy src/qipy.i SRC
                     src/qipython.hpp
                     src/qipython.cpp
-                    src/qipython_call.hpp
-                    src/qipython_call.cpp
-                    src/qipython_convert.hpp
-                    src/qipython_convert.cpp
-                    src/sd_testwrap.hpp
-                    src/sd_testwrap.cpp
                     src/converter_testwrap.cpp
                     src/converter_testwrap.hpp
                     src/pyobjectconverter.hpp
                     src/pyobjectconverter.cpp
-                    src/pythonscopedref.cpp
                     src/pythonscopedref.hpp
                     src/qipython_signal.cpp
                     src/qipython_signal.hpp
-                    DEPENDS QI QIMESSAGING
+                    DEPENDS QI QIMESSAGING QIC
 )
 
-qi_install_python(${CMAKE_CURRENT_SOURCE_DIR}/qimessaging
+qi_install_python(${CMAKE_CURRENT_SOURCE_DIR}/qi
   KEEP_RELATIVE_PATHS
 )
 

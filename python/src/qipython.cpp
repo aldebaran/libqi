@@ -10,7 +10,6 @@
 #include <Python.h>
 
 #include "qipython.hpp"
-#include "qipython_convert.hpp"
 
 #include <qi/log.hpp>
 #include <qi/os.hpp>
@@ -18,24 +17,10 @@
 #include <qitype/genericobject.hpp>
 #include <qitype/metaobject.hpp>
 #include <qitype/genericobjectbuilder.hpp>
+#include "src/value_p.h"
+#include "src/future_p.h"
 
-#include <qimessaging/c/qi_c.h>
-
-qiLogCategory("qimessaging.python");
-
-// qi::signatureSplit return an empty sigv[1] when signature is not a full signature (method::(sss))
-// For python bindings, when signature is not valid, we assume parameter was method name.
-std::vector<std::string>  signatureSplit(const std::string &signature)
-{
-  std::vector<std::string> sigv;
-
-  sigv = qi::signatureSplit(signature);
-
-  if (sigv[1].compare("") == 0)
-    sigv[1] = signature;
-
-  return sigv;
-}
+qiLogCategory("qipy");
 
 void*     qi_raise(const char *exception_class, const char *error_message)
 {
@@ -93,7 +78,7 @@ void*     qi_raise(const char *exception_class, const char *error_message)
   return NULL;
 }
 
-qi_application_t *py_application_create(PyObject *args)
+qi_application_t *qipy_application_create(PyObject *args)
 {
   PyObject *iter;
   int       argc, i;
@@ -131,13 +116,13 @@ qi_application_t *py_application_create(PyObject *args)
   return app;
 }
 
-static void __python_callback(const char *signature, qi_message_t *msg, qi_message_t *answer, void *data)
+static void python_call_callback(const char *signature, qi_value_t *msg, qi_value_t *answer, void *data)
 {
-  std::vector<std::string> sigv = signatureSplit(signature);
   PyObject* param;
   PyObject* ret;
   PyObject* func;
 
+  qi::GenericValuePtr &gmsg = qi_value_cpp(msg);
   func = reinterpret_cast<PyObject *>(data);
   // Check if there is actually a python function in data
   if (!func || !PyCallable_Check(func))
@@ -146,10 +131,11 @@ static void __python_callback(const char *signature, qi_message_t *msg, qi_messa
     return;
   }
 
+  param = gmsg.as<PyObject *>();
   // Convert parameters (qi_message_t msg) in python tuple (PyObject param)
-  if ((param = qi_message_to_python(sigv[2].c_str(), msg)) == Py_None || !param)
+  if (!param)
   {
-    qiLogError() << "Generic callback : Cannot convert parameters to python. [" << sigv[2] << "]";
+    qiLogError() << "Generic callback : Cannot convert parameters to python. [" << signature << "]";
     return;
   }
 
@@ -168,129 +154,32 @@ static void __python_callback(const char *signature, qi_message_t *msg, qi_messa
     return; // My work here is done
   }
 
-  // Convert return value (PyObject ret) in answer message (qi_message_t answer)
-  qi_python_to_message(sigv[0].c_str(), answer, ret);
+  qi::GenericValuePtr &ganswer = qi_value_cpp(answer);
+  ganswer = qi::GenericValuePtr::from(ret);
 
   // Satisfaction.
+  Py_XDECREF(func);
   Py_XDECREF(param);
   Py_XDECREF(ret);
   return;
 }
 
-void qi_bind_method(qi_object_builder_t *builder, const char *signature, PyObject *method)
+void qipy_objectbuilder_bind_method(qi_object_builder_t *builder, const char *signature, PyObject *method)
 {
+  Py_XINCREF(method);
   // #1 Register generic callback to object and give pointer to real python function in data parameter
-  qi_object_builder_register_method(builder, signature, &__python_callback, method);
+  qi_object_builder_register_method(builder, signature, &python_call_callback, method);
 }
 
-PyObject* qi_get_sigreturn(qi_object_t *object, const char *signature)
+PyObject* qipy_object_get_metaobject(qi_object_t *object)
 {
   qi::ObjectPtr &obj = *(reinterpret_cast<qi::ObjectPtr *>(object));
-  std::string sigreturns;
-  std::vector<qi::MetaObject::CompatibleMethod> mm = obj->metaObject().findCompatibleMethod(std::string(signature));
-
-  for (std::vector<qi::MetaObject::CompatibleMethod>::iterator it = mm.begin(); it != mm.end(); ++it)
-  {
-    if (sigreturns.empty() == false)
-      sigreturns.append(",").append(it->first.sigreturn());
-    else
-      sigreturns = it->first.sigreturn();
-  }
-
-  qi::GenericValuePtr val(&sigreturns);
-  return val.to<PyObject*>();
+  const qi::MetaObject &mo = obj->metaObject();
+  qi::GenericValuePtr gvp = qi::GenericValuePtr::from(mo);
+  return gvp.as<PyObject*>();
 }
 
-PyObject* qi_get_object_description(qi_object_t *object)
-{
-  qi::ObjectPtr& obj = *(reinterpret_cast<qi::ObjectPtr *>(object));
-
-  qi::GenericValuePtr val = qi::GenericValueRef(obj->metaObject().description());
-  return val.to<PyObject*>();
-}
-
-PyObject* qi_get_method_description(qi_object_t *object, const char *signature)
-{
-  qi::ObjectPtr &obj = *(reinterpret_cast<qi::ObjectPtr *>(object));
-  std::vector<qi::MetaMethod> mm = obj->metaObject().findMethod(std::string(signature));
-  std::string description;
-
-  if (mm.begin() != mm.end()) {
-    description = mm.front().description();
-  }
-
-  qi::GenericValuePtr val = qi::GenericValueRef(description);
-  return val.to<PyObject*>();
-}
-
-PyObject* qi_get_sigreturn_description(qi_object_t *object, const char *sig) {
-  qi::ObjectPtr &obj = *(reinterpret_cast<qi::ObjectPtr *>(object));
-  std::vector<qi::MetaMethod> mm = obj->metaObject().findMethod(std::string(sig));
-  std::string description;
-
-  if (mm.begin() != mm.end()) {
-    description = mm.front().returnDescription();
-  }
-
-  qi::GenericValuePtr val = qi::GenericValueRef(description);
-  return val.to<PyObject*>();
-}
-
-PyObject* qi_get_parameters_descriptions(qi_object_t *object, const char *sig) {
-  qi::ObjectPtr &obj = *(reinterpret_cast<qi::ObjectPtr *>(object));
-  std::vector<qi::MetaMethod> mm = obj->metaObject().findMethod(std::string(sig));
-  std::vector<std::string> res;
-
-  if (mm.begin() != mm.end()) {
-    qi::MetaMethod m = mm.front();
-    qi::MetaMethodParameterVector v = m.parameters();
-    qi::MetaMethodParameterVector::iterator it;
-    for (it = v.begin(); it != v.end(); ++it) {
-      res.push_back(it->name() + ": " + it->description());
-    }
-  }
-
-  qi::GenericValuePtr val = qi::GenericValueRef(res);
-  return val.to<PyObject*>();
-}
-
-PyObject* qi_object_methods_vector(qi_object_t *object)
-{
-  qi::ObjectPtr &obj = *(reinterpret_cast<qi::ObjectPtr *>(object));
-
-  std::string signature("(");
-  qi_message_t* message = qi_message_create();
-  qi::MetaObject::MethodMap mmm = obj->metaObject().methodMap();
-  std::map<std::string, std::string> parsedMap;
-
-  // #1 Merge same name.
-  for (qi::MetaObject::MethodMap::iterator it = mmm.begin(); it != mmm.end(); ++it)
-  {
-    // #1.1 Split signature to get name.
-    std::vector<std::string> sigv = signatureSplit((*it).second.signature());
-    // #1.2 If there is already a signature with same name, add signature after a coma.
-    if (parsedMap.find(sigv[1]) != parsedMap.end())
-      parsedMap[sigv[1]] = parsedMap[sigv[1]].append(",").append((*it).second.signature());
-    else
-      parsedMap[sigv[1]] = (*it).second.signature();
-  }
-
-  // #2 Serialise methods
-  for (std::map<std::string, std::string>::iterator it = parsedMap.begin(); it != parsedMap.end(); ++it)
-    qi_message_write_string(message, (*it).second.c_str());
-
-  // #3 Create Python tuple signature
-  signature.append(parsedMap.size(), 's');
-  signature.append(1, ')');
-
-  // #4 Return Python object from qi_message_t
-  PyObject *ret = qi_message_to_python(signature.c_str(), message);
-
-  qi_message_destroy(message);
-  return ret;
-}
-
-unsigned int py_session_register_object(qi_session_t *session, char *name, PyObject *object, PyObject *attr)
+unsigned int qipy_session_register_object(qi_session_t *session, char *name, PyObject *object, PyObject *attr)
 {
   PyObject *iter, *method, *attribute, *sig;
 
@@ -326,11 +215,94 @@ unsigned int py_session_register_object(qi_session_t *session, char *name, PyObj
     {
       std::string signature(PyString_AsString(sig));
 
-      qi_bind_method((qi_object_builder_t*) &ob, signature.c_str(), method);
+      qipy_objectbuilder_bind_method((qi_object_builder_t*) &ob, signature.c_str(), method);
     }
   }
 
   // Get object from object builder and give it to session
   qi::ObjectPtr obj = ob.object();
-  return qi_session_register_service(session, name, (qi_object_t*) &obj);
+  //return qi_session_register_service(session, name, (qi_object_t*) &obj);
+  return 0xFA11;
+}
+
+PyObject* qipy_object_call(qi_object_t* objectc, const char *strMethodName, PyObject* listParams)
+{
+  PyObject    *it, *current;
+  qi::GenericFunctionParameters params;
+  std::string signature;
+  qi::ObjectPtr object = *(reinterpret_cast<qi::ObjectPtr*>(objectc));
+
+  it = PyObject_GetIter(listParams);
+  current = PyIter_Next(it);
+  while (current)
+  {
+    // The line below is ok because we know current is
+    // a byvalue GenericValuePtr
+    qi::GenericValuePtr val = qi::GenericValuePtr::from(current);
+    params.push_back(val);
+    signature += val.signature();
+    current = PyIter_Next(it);
+  }
+  std::string mname = strMethodName;
+  mname += "::(" + signature + ")";
+
+  qi::Future<qi::GenericValuePtr> fut = object->metaCall(mname, params);
+  qi::Promise<PyObject *> out;
+
+  if (fut.hasError())
+  {
+    out.setError(fut.error());
+    qi_raise("qimessaging.genericobject.CallError", out.future().error().c_str());
+    return 0;
+  }
+
+  return fut.value().as<PyObject*>();
+}
+
+
+static void python_future_callback(qi::Future<qi::GenericValue> &fut, PyObject* pyfuture, PyObject *pyfunc)
+{
+  // Check if there is actually a python function in data
+  if (!pyfunc || !PyCallable_Check(pyfunc))
+  {
+    qiLogError() << "Generic callback : No Python function to call.";
+    return;
+  }
+
+  // Clear Python errors
+  PyErr_Clear();
+
+  PyObject* param = PyTuple_New(1);
+  PyTuple_SetItem(param, 0, pyfuture);
+
+  // Call python function.
+  PyObject* ret = PyObject_CallObject(pyfunc, param);
+
+  // Force print of possible error, it won't print anything if no error occured.
+  PyErr_Print();
+
+  Py_XDECREF(pyfunc);
+  Py_XDECREF(param);
+  Py_XDECREF(ret);
+}
+
+void qipy_future_add_callback(qi_future_t* future, PyObject* pyfuture, PyObject* function) {
+  qiLogInfo() << "qi_future_add_cb(" << future << ")";
+  //callback fun with the future in argument.
+  Py_XINCREF(pyfuture);
+  Py_XINCREF(function);
+  qi::Future<qi::GenericValue> *fut = qi_future_cpp(future);
+  fut->connect(boost::bind<void>(&python_future_callback, _1, pyfuture, function));
+}
+
+PyObject*         qipy_future_get_value(qi_future_t*future) {
+  qi::Future<qi::GenericValue> *fut = qi_future_cpp(future);
+  return fut->value().as<PyObject*>();
+}
+
+void qipy_promise_set_value(qi_promise_t* promise, PyObject* value) {
+  qiLogInfo() << "setvalue promise";
+  qi::Promise<qi::GenericValue> *prom = qi_promise_cpp(promise);
+  qi::GenericValuePtr gvp = qi::GenericValuePtr::from(value).clone();
+  prom->setValue(qi::GenericValue::take(gvp));
 }

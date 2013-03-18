@@ -1,14 +1,14 @@
 '''Signal class provides a way to create and subscribe to signals.'''
 
-import qimessagingswig
+import _qipyessagingswig
 
-import qimessaging.application as qima
+import _qipyessaging.application as _qipya
 
 class Signal:
     def __init__(self):
-        if not qima.Application.initialized():
-            raise qima.MissingApplicationError(feature='Signals')
-        self._obj = qimessagingswig.qi_signal()
+        if not _qipya.Application.initialized():
+            raise _qipya.MissingApplicationError(feature='Signals')
+        self._obj = _qipyessagingswig.qi_signal()
 
     def connect(self, callback):
         '''Connects callback to the signal. When signal will be triggered,

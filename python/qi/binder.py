@@ -8,7 +8,7 @@
 """ This Class is meant to be used as a decorator.
     Bind a function with a signature.
 
-.. module:: qimessaging
+.. module:: _qipyessaging
 
 """
 

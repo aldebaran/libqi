@@ -20,6 +20,8 @@
 
 using namespace qi;
 
+qiLogCategory("qipy.convert");
+
 struct ToPyObject
 {
   ToPyObject(PyObject** result)
@@ -319,18 +321,21 @@ public:
     PyObject** target = (PyObject**)ptrFromStorage(storage);
     PyObject_from_GenericValue(src, target);
 
+    qiLogInfo() << "Set" << *storage;
     /* Increment the ref counter since we now store the PyObject */
     Py_XINCREF(*target);
   }
 
   virtual void* clone(void* obj)
   {
+    qiLogInfo() << "Clone" << obj;
     Py_XINCREF((PyObject*)obj);
     return obj;
   }
 
   virtual void destroy(void* obj)
   {
+    qiLogInfo() << "Destroy" << obj;
     Py_XDECREF((PyObject*)obj);
   }
   virtual bool less(void* a, void* b)

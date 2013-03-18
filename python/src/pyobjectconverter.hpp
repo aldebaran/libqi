@@ -14,8 +14,8 @@
 
 # include <qitype/type.hpp>
 
-PyObject* PyObject_from_GenericValue(qi::GenericValuePtr val);
-void PyObject_from_GenericValue(qi::GenericValuePtr val, PyObject** target);
+PyObject*           PyObject_from_GenericValue(qi::GenericValuePtr val);
+void                PyObject_from_GenericValue(qi::GenericValuePtr val, PyObject** target);
 qi::GenericValuePtr GenericValue_from_PyObject(PyObject* val);
 
 #endif // !PYOBJECTCONVERTER_HPP_

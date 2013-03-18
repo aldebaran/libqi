@@ -7,13 +7,14 @@
 
 """ Ease startup and teardown of an application.
 
-.. module:: qimessaging
+.. module:: _qipyessaging
 
 """
 
 import sys
-import _qimessagingswig
+import _qipy
 
+##should support with Appplication
 class Application:
     """ Python wrapper around qi::Application
     """
@@ -28,7 +29,7 @@ class Application:
         """
         if not args:
             args = sys.argv
-        self._app = _qimessagingswig.py_application_create(args)
+        self._app = _qipy.qipy_application_create(args)
 
     def run(self):
         """ Waits until on of those condition become true:
@@ -36,7 +37,7 @@ class Application:
              - TERM or QUIT signal is received.
              - The Application instance is destroyed, which means main() is exiting.
         """
-        _qimessagingswig.qi_application_run(self._app)
+        _qipy.qi_application_run(self._app)
 
     def stop(self):
         """ Tear down application
@@ -44,7 +45,7 @@ class Application:
         .. note::
             Calling this function will make run() return.
         """
-        _qimessagingswig.qi_application_stop(self._app)
+        _qipy.qi_application_stop(self._app)
 
     def __del__(self):
         """ Do nothing.
@@ -53,7 +54,7 @@ class Application:
 
     @staticmethod
     def initialized():
-        return _qimessagingswig.qi_application_initialized()
+        return _qipy.qi_application_initialized()
 
 
 class MissingApplicationError(Exception):

@@ -5,32 +5,21 @@
 """ Python client implementation of famous QiMessaging hello world : serviceTest
 """
 
+import time
 import sys
-import qimessaging
-
-from qimessaging.application import Application
-from qimessaging.session import Session
+import qi
 
 def get_service(session, service_name):
     """ Get service given by service_name.
 
     .. note:: Exit on failure.
     """
-    obj = session.service(service_name)
-
-    if obj is None:
-        print "Oops, cannot get service %s" % service_name
-        sys.exit()
 
     return obj
-
 
 def call_reply(obj):
     """ Synchronous call to serviceTest.reply::s(s)
     """
-    value = obj.reply("plaf")
-
-    print 'Reply : ', value
 
 def get_servicedirectory_address(argv):
     """ Parse command line arguments
@@ -44,33 +33,59 @@ def get_servicedirectory_address(argv):
 
     return argv[1]
 
+def callmoilababy(f):
+    print "ici.com"
+    ret = f.value().reply("coco")
+    print "rep coco:", ret
+
+def callmoilababy2(f):
+    print "ici2.com"
+
+def onPlaf(f):
+    print "result:", f.value()
+
+def toto(session):
+
+    session.connect("tcp://127.0.0.1:5555", async=True)
+    #3 Get service serviceTest
+    fut = session.service("serviceTest", async=True)
+
+    print "plouf1"
+    fut.add_callback(callmoilababy)
+    print "plouf2"
+    fut.add_callback(callmoilababy2)
+    print "plouf3"
+
+    obj = fut.value()
+    #4 Call foreign method reply
+    value = obj.reply("plaf")
+    print 'Reply : ', value
+
+    f = obj.reply("plaf", async=True)
+    f.add_callback(onPlaf)
+
+    i = 0
+    while i < 3:
+        print "ploof"
+        time.sleep(1)
+        i = i + 1
+    #5 Cleanup
+    session.close()
+
 def  main():
     """ Entry point of qiservice
     """
     #0 Declare app
-    _application = Application()
+    _application = qi.Application()
 
     #1 Check if user give us service directory address.
     sd_addr = get_servicedirectory_address(sys.argv)
 
     #2 Open a session onto service directory.
-    try:
-        session = Session(sd_addr)
-    except qimessaging.ConnectionError as session_error:
-        print 'Connection error : %s' % session_error
-        sys.exit()
+    session = qi.Session()
 
-    #3 Get service serviceTest
-    obj = get_service(session, "serviceTest")
-    if not obj:
-        print 'Cannot get proxy on service "serviceTest".'
-        sys.exit()
+    toto(session)
 
-    #4 Call foreign method reply
-    call_reply(obj)
-
-    #5 Cleanup
-    session.close()
     _application.stop()
 
 if __name__ == "__main__":
