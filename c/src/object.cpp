@@ -25,7 +25,7 @@ void qiFutureCAdapter(qi::Future<qi::GenericValuePtr> result, qi::Promise<qi::Ge
   }
   qi::GenericValue gv;
   //we take the ownership of the GVP content. we are now responsible for freeing it.
-  gv.set(result.value(), false, true);
+  gv.reset(result.value(), false, true);
   promise.setValue(gv);
 }
 
