@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, 2013 Aldebaran Robotics. All rights reserved.
+ * Copyright (c) 2013 Aldebaran Robotics. All rights reserved.
  * Use of this source code is governed by a BSD-style license that can be
  * found in the COPYING file.
  */
@@ -8,22 +8,27 @@
 
 #include <qi/application.hpp>
 #include <qi/os.hpp>
+#include <qi/translator.hpp>
 
-#define _(string) qi::os::gettext(string)
 
 int main(int argc, char *argv[])
 {
   qi::Application app(argc, argv);
-  app.setName("translate");
-  app.loadTranslationDict("translate");
+  app.setName("qitranslate");
 
-  app.setTranslationLocale("en_US");
-  std::cout << _("Hi, my name is NAO.") << std::endl;
-  std::cout << _("Where is Brian?") << std::endl;
-  std::cout << _("Brian is in the kitchen.") << std::endl;
+  qi::Translator &tl = qi::defaultTranslator(app.name());
+  tl.setCurrentLocale("en_US");
+  tl.setDefaultDomain("translate");
 
-  app.setTranslationLocale("fr_FR");
-  std::cout << _("Hi, my name is NAO.") << std::endl;
-  std::cout << _("Where is Brian?") << std::endl;
-  std::cout << _("Brian is in the kitchen.") << std::endl;
+  std::cout << qi::tr("Hi, my name is NAO.") << std::endl;
+  std::cout << qi::tr("Where is Brian?") << std::endl;
+  std::cout << qi::tr("Brian is in the kitchen.") << std::endl;
+
+  tl.setCurrentLocale("fr_FR");
+  std::cout << qi::tr("Hi, my name is NAO.") << std::endl;
+  std::cout << qi::tr("Where is Brian?") << std::endl;
+  std::cout << qi::tr("Brian is in the kitchen.") << std::endl;
+
+  std::cout << qi::tr("Brian is in the kitchen.", "", "en_US") << std::endl;
+  std::cout << qi::tr("Brian is in the kitchen.", "", "fr_FR") << std::endl;
 }
