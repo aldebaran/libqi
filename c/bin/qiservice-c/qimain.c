@@ -26,7 +26,7 @@
 
 void reply(const char *signature, qi_value_t *message, qi_value_t *answer, void *data)
 {
-  qi_value_t *str = qi_value_tuple_get(message, 0, 0);
+  qi_value_t *str = qi_value_tuple_get(message, 0);
   const char* msg = qi_value_get_string(str);
   char* rep = (char *) malloc(strlen(msg) + 4);
   memcpy(rep, msg, strlen(msg) + 1);

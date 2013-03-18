@@ -17,10 +17,9 @@ void future_callback_simple(qi_future_t* fut, void *data)
   if (qi_future_is_ready(fut) && !qi_future_has_error(fut))
     val = qi_future_get_value(fut);
 
-  int err = 0;
   int result = 0;
   if (val)
-    result = qi_value_get_int64(val, &err);
+    result = qi_value_get_int64_default(val, -1);
   EXPECT_EQ(42, result);
   isCallbackCalled = true;
   qi_value_destroy(val);

@@ -77,7 +77,7 @@ extern "C"
 
   //# MAP
   QIC_API unsigned int qi_value_map_size(qi_value_t *msg);
-  QIC_API void         qi_value_map_set(qi_value_t *msg, qi_value_t *key, qi_value_t *value);
+  QIC_API int          qi_value_map_set(qi_value_t *msg, qi_value_t *key, qi_value_t *value);
   QIC_API qi_value_t*  qi_value_map_get(qi_value_t *msg, qi_value_t *key);
 
   //# OBJECT

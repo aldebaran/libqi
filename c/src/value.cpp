@@ -72,10 +72,10 @@ const char*     qi_value_get_signature(qi_value_t* value, int resolveDynamics)
 
 //# GENERIC POD IMPL
 template<typename T>
-int       qi_value_set_pod(qi_value_t  *msg, T l) {
+int       qi_value_set_pod(qi_value_t  *msg, T val) {
   qi::GenericValue &gv = qi_value_cpp(msg);
   try {
-    gv.set<T>(l);
+    gv.set<T>(val);
     return 1;
   } catch (std::runtime_error &) {}
   return 0;
@@ -109,7 +109,7 @@ int qi_value_set_uint64(qi_value_t* container, unsigned long long value)
 int qi_value_get_uint64(qi_value_t* container, unsigned long long *result)
 { return qi_value_get_pod<unsigned long long>(container, result); }
 
-unsigned long long qi_value_get_uint64_default(qi_value_t *msg, unsigned long long defvalue)
+unsigned long long qi_value_get_uint64_default(qi_value_t *container, unsigned long long defvalue)
 { return qi_value_get_pod_default<unsigned long long>(container, defvalue); }
 
 //# INT64
@@ -119,7 +119,7 @@ int qi_value_set_int64(qi_value_t* container, long long value)
 int qi_value_get_int64(qi_value_t* container, long long *result)
 { return qi_value_get_pod<long long>(container, result); }
 
-long long qi_value_get_int64_default(qi_value_t *msg, long long defvalue)
+long long qi_value_get_int64_default(qi_value_t *container, long long defvalue)
 { return qi_value_get_pod_default<long long>(container, defvalue); }
 
 //# FLOAT
@@ -129,23 +129,23 @@ int qi_value_set_float(qi_value_t* container, float value)
 int qi_value_get_float(qi_value_t* container, float *result)
 { return qi_value_get_pod<float>(container, result); }
 
-float qi_value_get_float_default(qi_value_t *msg, float defvalue)
+float qi_value_get_float_default(qi_value_t *container, float defvalue)
 { return qi_value_get_pod_default<float>(container, defvalue); }
 
 //# DOUBLE
 int qi_value_set_double(qi_value_t* container, double value)
 { return qi_value_set_pod<double>(container, value); }
 
-int qi_value_get_double(qi_value_t* container, long long *result)
+int qi_value_get_double(qi_value_t* container, double *result)
 { return qi_value_get_pod<double>(container, result); }
 
-double qi_value_get_int64_default(qi_value_t *msg, double defvalue)
+double qi_value_get_double_default(qi_value_t *container, double defvalue)
 { return qi_value_get_pod_default<double>(container, defvalue); }
 
 //# STRING
-int        qi_value_set_string(qi_value_t *msg, const char *s)
+int        qi_value_set_string(qi_value_t *container, const char *s)
 {
-  qi::GenericValue &gv = qi_value_cpp(msg);
+  qi::GenericValue &gv = qi_value_cpp(container);
   try {
     gv.setString(s);
     return 1;
@@ -170,10 +170,10 @@ int        qi_value_tuple_set(qi_value_t *msg, unsigned int idx, qi_value_t *val
   qi::GenericValue &container = qi_value_cpp(msg);
   qi::GenericValue &val = qi_value_cpp(value);
 
-  if (idx >= container.size() || container.kind() != QI_VALUE_KIND_TUPLE) {
-    return 0;
-  }
   try {
+    if (container.kind() != QI_VALUE_KIND_TUPLE || idx >= container.size()) {
+      return 0;
+    }
     container[idx].set(val);
     return 1;
   } catch (std::runtime_error &) {}
@@ -182,7 +182,7 @@ int        qi_value_tuple_set(qi_value_t *msg, unsigned int idx, qi_value_t *val
 
 qi_value_t*  qi_value_tuple_get(qi_value_t *msg, unsigned int idx) {
   qi::GenericValue &container = qi_value_cpp(msg);
-  if (idx >= container.size() || container.kind() != QI_VALUE_KIND_TUPLE) {
+  if (container.kind() != QI_VALUE_KIND_TUPLE || idx >= container.size()) {
     return 0;
   }
   qi_value_t* ret = qi_value_create("");
@@ -206,7 +206,7 @@ int          qi_value_list_set(qi_value_t *msg, unsigned int idx, qi_value_t *va
   qi::GenericValue &container = qi_value_cpp(msg);
   qi::GenericValue &val = qi_value_cpp(value);
 
-  if (idx >= container.size() || container.kind() != QI_VALUE_KIND_LIST) {
+  if (container.kind() != QI_VALUE_KIND_LIST || idx >= container.size()) {
     return 0;
   }
   try {
@@ -219,7 +219,7 @@ int          qi_value_list_set(qi_value_t *msg, unsigned int idx, qi_value_t *va
 qi_value_t*  qi_value_list_get(qi_value_t *msg, unsigned int idx)
 {
   qi::GenericValue &container = qi_value_cpp(msg);
-  if (idx >= container.size() || container.kind() != QI_VALUE_KIND_LIST) {
+  if (container.kind() != QI_VALUE_KIND_LIST || idx >= container.size()) {
     return 0;
   }
   qi_value_t* ret = qi_value_create("");
@@ -247,7 +247,7 @@ qi_object_t* qi_value_get_object(qi_value_t* val)
 
 int          qi_value_set_object(qi_value_t* value, qi_object_t *o)
 {
-  qi::GenericValuePtr &gv = qi_value_cpp(val);
+  qi::GenericValuePtr &gv = qi_value_cpp(value);
   qi::ObjectPtr &obj = qi_object_cpp(o);
   try {
     gv.set<qi::ObjectPtr>(obj);
@@ -273,12 +273,21 @@ unsigned int qi_value_map_size(qi_value_t *msg)
   return 0;
 }
 
-void         qi_value_map_set(qi_value_t *msg, qi_value_t *key, qi_value_t *value)
+int         qi_value_map_set(qi_value_t *msg, qi_value_t *key, qi_value_t *value)
 {
   return 0;
 }
 
 qi_value_t*  qi_value_map_get(qi_value_t *msg, qi_value_t *key)
 {
+  return 0;
+}
+
+//# RAW
+int          qi_value_raw_set(qi_value_t* value, const char* data, int size){
+  return 0;
+}
+
+int          qi_value_raw_get(qi_value_t* value, const char**data, int *size) {
   return 0;
 }

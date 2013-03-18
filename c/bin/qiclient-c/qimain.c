@@ -15,7 +15,7 @@
 #include <qic/object.h>
 
 void evcb(qi_value_t *value, void *user_data) {
-  qi_value_t* str = qi_value_tuple_get(value, 0, 0);
+  qi_value_t* str = qi_value_tuple_get(value, 0);
   const char *ts = qi_value_get_string(str);
   printf("Event recv %s\n", ts);
   free((void*)ts);

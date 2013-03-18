@@ -20,9 +20,8 @@ bool pass1 = false;
 
 void signal_callback_0(qi_value_t* cont, void *)
 {
-  int err = 0;
-  qi_value_t* val = qi_value_tuple_get(cont, 0, &err);
-  res0 = qi_value_get_int64(val, &err);
+  qi_value_t* val = qi_value_tuple_get(cont, 0);
+  res0 = qi_value_get_int64_default(val, -1);
   printf("callback0: value: %d\n", res0);
   qi_value_destroy(val);
   pass0 = true;
@@ -30,9 +29,8 @@ void signal_callback_0(qi_value_t* cont, void *)
 
 void signal_callback_1(qi_value_t* cont, void *)
 {
-  int err = 0;
-  qi_value_t* val = qi_value_tuple_get(cont, 0, &err);
-  res1 = qi_value_get_int64(val, &err);
+  qi_value_t* val = qi_value_tuple_get(cont, 0);
+  res1 = qi_value_get_int64_default(val, -1);
   printf("callback1: value: %d\n", res1);
   qi_value_destroy(val);
   pass1 = true;

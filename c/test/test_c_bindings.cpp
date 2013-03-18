@@ -59,8 +59,7 @@ void print(const char *signature, qi_value_t *message, qi_value_t *answer, void 
 
 void reply(const char *signature, qi_value_t *message, qi_value_t *answer, void *data)
 {
-  int err = 0;
-  qi_value_t *str = qi_value_tuple_get(message, 0, &err);
+  qi_value_t *str = qi_value_tuple_get(message, 0);
   const char* msg = qi_value_get_string(str);
   char* rep = (char *) malloc(strlen(msg) + 4);
 
@@ -214,7 +213,6 @@ TEST_F(TestCBindings, Call)
 
   ret = qi_future_get_value(fut);
   ASSERT_TRUE(ret != 0);
-  int err = 0;
   result = qi_value_get_string(ret);
   ASSERT_TRUE(strcmp(result, "plafbim") == 0);
   free((void*)result);
