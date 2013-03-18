@@ -237,7 +237,8 @@ namespace qi{
      * is destroyed (if it gets deleted or points to the stack and goes
      * out of scope).
      */
-    template<typename T> GenericValuePtr(T* ptr);
+    template<typename T>
+    explicit GenericValuePtr(T* ptr);
 
     /** Assignment operator.
      *  Previous content is lost, and will leak if not deleted outside or
