@@ -15,8 +15,8 @@ namespace qi {
   class QI_API BufferReader
   {
   public:
-    /// Copy constructor.
-    BufferReader(const Buffer& buf);
+    /// Constructor.
+    explicit BufferReader(const Buffer& buf);
     /// Default destructor.
     ~BufferReader();
     /// read and store data from the buffer.
