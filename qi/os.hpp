@@ -79,7 +79,7 @@ namespace qi {
     QI_API std::map<std::string, std::vector<std::string> > hostIPAddrs(bool ipv6Addr = false);
 
     QI_API void setCurrentThreadName(const std::string &name);
-
+    QI_API bool setCurrentThreadCPUAffinity(const std::vector<int> &cpus);
     QI_API std::string getMachineId();
 
     //since 1.12.1

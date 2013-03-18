@@ -294,5 +294,21 @@ namespace qi {
      #endif
     }
 
+    //true on success
+    bool setCurrentThreadCPUAffinity(const std::vector<int> &cpus) {
+     #if defined (__linux__)
+      //Force the eventloop to always run on the same core
+      cpu_set_t cpu;
+      pthread_t self = pthread_self();
+      CPU_ZERO(&cpu);
+      for (int i = 0; i < cpus.size(); ++i)
+        CPU_SET(cpus[i], &cpu);
+      int ret = 0;
+      ret = pthread_setaffinity_np(self, sizeof(cpu_set_t), &cpu);
+      return !ret;
+     #endif
+      return false;
+    }
+
   }
 }

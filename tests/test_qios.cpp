@@ -371,6 +371,14 @@ TEST(QiOs, getMachineId)
   ASSERT_TRUE(uuid1.compare(uuid2) == 0);
 }
 
+TEST(QiOs, CPUAffinity)
+{
+  std::vector<int> cpus;
+
+  cpus.push_back(1);
+  ASSERT_TRUE(qi::os::setCurrentThreadCPUAffinity(cpus));
+}
+
 #ifdef _MSC_VER
 # pragma warning( pop )
 #endif

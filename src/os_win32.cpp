@@ -483,5 +483,26 @@ namespace qi {
       }
     }
 
+    bool setCurrentThreadCPUAffinity(const std::vector<int> &cpus) {
+
+      if (cpus.size() == 0)
+        return false;
+
+      DWORD64 dwProcessAffinity, dwSystemAffinity;
+      DWORD* mask = new DWORD[cpus.size()];
+      int i = 0;
+
+      for (std::vector<int>::const_iterator it = cpus.begin(); it != cpus.end(); ++it)
+       mask[i++] = *it;
+
+      DWORD_PTR ret = SetThreadAffinityMask(GetCurrentThread(), (DWORD_PTR) mask);
+
+      delete[] mask;
+      if (!ret)
+        return false;
+      return true;
+    }
+
+
   }
 }
