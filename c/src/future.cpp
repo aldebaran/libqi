@@ -59,7 +59,7 @@ void    qi_future_destroy(qi_future_t *fu)
   fut = 0;
 }
 
-QIC_API qi_future_t*  qi_future_clone(qi_future_t* fu) {
+qi_future_t*  qi_future_clone(qi_future_t* fu) {
   qi::Future<qi::GenericValue>* fut = qi_future_cpp(fu);
   qi::Future<qi::GenericValue>* clo = new qi::Future<qi::GenericValue>();
   *clo = *fut;
