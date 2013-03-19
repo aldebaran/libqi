@@ -349,6 +349,7 @@ namespace qi{
     void  setFloat(float v);
     void  setDouble(double v);
     void  setString(const std::string& v);
+    void  setDynamic(const qi::GenericValue &value);
 
     ///@{
     /// In-place container manipulation.

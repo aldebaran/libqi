@@ -591,6 +591,10 @@ namespace qi
       throw std::runtime_error("Value is not Int or Float");
   }
 
+  void GenericValuePtr::setDynamic(const qi::GenericValue &value) {
+    set<qi::GenericValue>(value);
+  }
+
   void GenericValuePtr::setUInt(uint64_t v)
   {
     if (kind() == Type::Int)
