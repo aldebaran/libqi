@@ -154,10 +154,11 @@ namespace qi {
 
           // Remove top-level tuple
           //sig = sig.substr(1, sig.length()-2);
-          GenericFunctionParameters args = msg.value(sig, _socket).asTupleValuePtr();
+          GenericValuePtr value = msg.value(sig, _socket);
+          GenericFunctionParameters args = value.asTupleValuePtr();
           qiLogDebug() << "Triggering local event listeners";
           sb->trigger(args);
-          args.destroy();
+          value.destroy();
         }
         catch (const std::exception& e)
         {
