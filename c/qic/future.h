@@ -28,7 +28,7 @@ extern "C"
   QIC_API qi_future_t*  qi_future_clone(qi_future_t* fut);
 
   QIC_API void          qi_future_add_callback(qi_future_t *fut, qi_future_callback_t cb, void *user_data);
-  QIC_API void          qi_future_wait(qi_future_t *fut);
+  QIC_API void          qi_future_wait(qi_future_t *fut, int timeout);
   QIC_API int           qi_future_has_error(qi_future_t *fut);
   QIC_API int           qi_future_is_ready(qi_future_t *fut);
   /// the value lifetime depends on the future.

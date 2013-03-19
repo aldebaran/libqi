@@ -91,7 +91,7 @@ TEST_F(TestCBindings, CallWithComplexTypes)
   ASSERT_FALSE(qi_future_has_error(fuc));
   qi_future_destroy(fuc);
 
-  unsigned int id = qi_future_get_uint64(qi_session_register_service(session, "service", obj), 0);
+  unsigned long long id = qi_future_get_uint64(qi_session_register_service(session, "service", obj), 0);
   EXPECT_GT(id, 0);
 
   qi_object_t* proxy = qi_future_get_object(qi_session_get_service(session, "service"));
@@ -170,7 +170,7 @@ TEST_F(TestCBindings, Call)
   qi_object_t*          object;
   qi_object_t*          remote;
 
-  int                   id;
+  unsigned long long id;
 
   ob = qi_object_builder_create();
   qi_object_builder_register_method(ob, "reply::s(s)", &reply, 0);
@@ -179,7 +179,8 @@ TEST_F(TestCBindings, Call)
   session = qi_session_create();
   ASSERT_TRUE(session != 0);
 
-  qi_session_connect(session, addr);
+  qi_future_wait(qi_session_connect(session, addr), 0);
+
 
   ASSERT_TRUE(qi_session_listen(session, "tcp://0.0.0.0:0"));
 
@@ -205,7 +206,7 @@ TEST_F(TestCBindings, Call)
   // call
   qi_future_t* fut = qi_object_call(object, "reply::(s)", cont);
 
-  qi_future_wait(fut);
+  qi_future_wait(fut, 0);
   qi_value_t *ret = 0;
 
   ASSERT_EQ(0, qi_future_has_error(fut));

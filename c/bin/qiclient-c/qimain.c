@@ -54,7 +54,7 @@ int make_call(qi_application_t *app, char *addr, int event)
 
   qi_future_t* fut = qi_object_call(object, "reply::(s)", message);
 
-  qi_future_wait(fut);
+  qi_future_wait(fut, 0);
 
   if (qi_future_has_error(fut))
     printf("Future has error : %s\n", qi_future_get_error(fut));

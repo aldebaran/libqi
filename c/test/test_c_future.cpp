@@ -48,7 +48,7 @@ TEST(TestFuture, SimpleType)
   qi_promise_set_value(promise, val);
   EXPECT_EQ(1, qi_future_is_ready(future));
   qi_value_destroy(val);
-  qi_future_wait(future);
+  qi_future_wait(future, 0);
   ASSERT_EQ(1, qi_future_is_ready(future));
 
   qi_value_t *rest = qi_future_get_value(future);
@@ -65,7 +65,7 @@ TEST(TestFuture, Error)
   qi_future_t*  future = qi_promise_get_future(promise);
 
   qi_promise_set_error(promise, "it's friday");
-  qi_future_wait(future);
+  qi_future_wait(future, 0);
 
   ASSERT_EQ(1, qi_future_has_error(future));
   ASSERT_EQ(1, qi_future_is_ready(future));

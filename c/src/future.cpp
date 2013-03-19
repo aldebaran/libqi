@@ -73,10 +73,10 @@ void    qi_future_add_callback(qi_future_t *fu, qi_future_callback_t cb, void *m
   fut->connect(boost::bind<void>(cb, fu, miscdata));
 }
 
-void    qi_future_wait(qi_future_t *fu)
+void    qi_future_wait(qi_future_t *fu, int timeout)
 {
   qi::Future<qi::GenericValue> *fut = qi_future_cpp(fu);
-  fut->wait();
+  fut->wait(timeout);
 }
 
 int     qi_future_has_error(qi_future_t *fu)
