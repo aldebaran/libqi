@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 Aldebaran Robotics. All rights reserved.
+ * Copyright (c) 2012, 2013 Aldebaran Robotics. All rights reserved.
  * Use of this source code is governed by a BSD-style license that can be
  * found in the COPYING file.
  */
@@ -14,12 +14,17 @@
 #include <qi/os.hpp>
 #include <qi/qi.hpp>
 
+
+
 static char rand_alnum()
 {
   unsigned char c;
-  while (!std::isalnum(c = static_cast<unsigned char>(std::rand())))
-    ;
-  return c;
+  while (true)
+  {
+    c = static_cast<unsigned char>(std::rand());
+    if (c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c >= '0' && c <= '9')
+      return c;
+  }
 }
 
 std::string randomstr(std::string::size_type sz) {
