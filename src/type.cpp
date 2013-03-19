@@ -721,9 +721,17 @@ namespace qi {
 
     void* initializeStorage(void* ptr=0) {
       std::vector<void*> *ret = (std::vector<void*>*)Methods::initializeStorage(ptr);
-      ret->resize(types.size());
-      for (unsigned i=0; i < ret->size(); ++i) {
-        (*ret)[i] = types[i]->initializeStorage();
+      if (ptr)
+      {
+        if (types.size() != ret->size())
+          throw std::runtime_error("Tuple storage is of incorrect size");
+      }
+      else
+      {
+        ret->resize(types.size());
+        for (unsigned i=0; i < ret->size(); ++i) {
+          (*ret)[i] = types[i]->initializeStorage();
+        }
       }
       return ret;
     }
@@ -759,6 +767,14 @@ namespace qi {
       storages.push_back(values[i].value);
     tupleType->set(&result.value, storages);
     return result;
+  }
+
+  GenericValuePtr makeGenericTuplePtr(
+    const std::vector<Type*>&types,
+    const std::vector<void*>&values)
+  {
+    TypeTuple* tupleType = static_cast<TypeTuple*>(makeTupleType(types));
+    return GenericValuePtr(tupleType, tupleType->initializeStorage((void*)(const void*)&values));
   }
 
 
