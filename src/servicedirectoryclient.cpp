@@ -132,8 +132,16 @@ namespace qi {
 
   void ServiceDirectoryClient::onSocketDisconnected(int error) {
     disconnected(error);
-    _object->disconnect(_addLink);
-    _object->disconnect(_removeLink);
+    try {
+      _object->disconnect(_addLink);
+    } catch (std::runtime_error &) {
+      qiLogVerbose() << "Cannot disconnect SDC::serviceAdded";
+    }
+    try {
+      _object->disconnect(_removeLink);
+    } catch (std::runtime_error &) {
+      qiLogVerbose() << "Cannot disconnect SDC::serviceRemoved";
+    }
     _addLink = _removeLink = 0;
   }
 
