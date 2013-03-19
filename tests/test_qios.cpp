@@ -371,7 +371,11 @@ TEST(QiOs, getMachineId)
   ASSERT_TRUE(uuid1.compare(uuid2) == 0);
 }
 
+#if  defined(_WIN32) || defined(__linux__)
 TEST(QiOs, CPUAffinity)
+#else
+TEST(QiOs, DISABLED_CPUAffinity)
+#endif
 {
   std::vector<int> cpus;
 
