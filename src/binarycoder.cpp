@@ -710,7 +710,7 @@ namespace qi {
 
   } // namespace details
 
-  void encodeBinary(qi::Buffer *buf, qi::GenericValuePtr gvp) {
+  void encodeBinary(qi::Buffer *buf, const qi::GenericValuePtr &gvp) {
     BinaryEncoder be(*buf);
     details::SerializeTypeVisitor stv(be, 0, gvp);
     qi::typeDispatch(stv, gvp);

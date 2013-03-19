@@ -16,7 +16,7 @@
 namespace qi {
 
   //generic binary codec API
-  QIMESSAGING_API void encodeBinary(qi::Buffer *buf, qi::GenericValuePtr gvp);
+  QIMESSAGING_API void encodeBinary(qi::Buffer *buf, const qi::GenericValuePtr &gvp);
   QIMESSAGING_API void decodeBinary(qi::BufferReader *buf, qi::GenericValuePtr *gvp);
 
   template <typename T>
