@@ -67,7 +67,7 @@ namespace qi
     : PropertyImpl<T>(getter, setter)
     {}
     virtual SignalBase* signal() { return this;}
-    virtual void setValue(GenericValueRef value)  { set(value.to<T>());}
+    virtual void setValue(GenericValueRef value)  { PropertyImpl<T>::set(value.to<T>());}
     virtual GenericValue getValue() { return GenericValue(GenericValueRef(PropertyImpl<T>::get()));}
   };
 
