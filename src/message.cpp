@@ -244,7 +244,7 @@ namespace qi {
       vals.push_back(values.at(i).value);
     }
     qi::GenericValuePtr args = qi::makeGenericTuplePtr(types, vals);
-    setValue(args);
+    setValue(args, context);
     return args;
   }
 
