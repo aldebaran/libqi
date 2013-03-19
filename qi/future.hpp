@@ -198,7 +198,7 @@ namespace qi {
     inline const std::string &error() const                 { _sync = false; return Future<T>::error(); }
     inline void cancel()                                    { _sync = false; Future<T>::cancel(); }
     bool isCanceleable() const                              { _sync = false; return Future<T>::isCanceleable(); }
-
+    inline void connect(const typename Future<T>::Connection& s) { _sync = false; Future<T>::connect(s);}
     Future<T> async()
     {
       return *this;
