@@ -232,17 +232,16 @@ namespace qi {
   {
     qi::Promise<GenericValuePtr> out;
     qi::Message msg;
-    msg.setValue(qi::makeGenericTuple(in), this);
+    GenericValuePtr args = qi::makeGenericTuple(in);
+    msg.setValue(args, this);
 #ifndef NDEBUG
     std::string sig = metaObject().method(method)->signature();
     sig = signatureSplit(sig)[2];
-    // Remove extra tuple layer
-    sig = sig.substr(1, sig.length()-2);
-    if (sig != msg.signature())
+    if (sig != args.signature())
     {
       qiLogWarning() << "call signature mismatch '"
                                    << sig << "' (internal) vs '"
-                                   << msg.signature() << "' (message) for:" << metaObject().method(method)->signature();
+                                   << args.signature() << "' (message) for:" << metaObject().method(method)->signature();
     }
 #endif
     msg.setType(qi::Message::Type_Call);

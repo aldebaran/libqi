@@ -273,16 +273,6 @@ namespace qi {
     return MessageAddress(_p->header.id, _p->header.service, _p->header.object, _p->header.action);
   }
 
-  const std::string& Message::signature() const
-  {
-    return _p->signature;
-  }
-
-  void Message::setSignature(const std::string& sig)
-  {
-    cow();
-    _p->signature = sig;
-  }
 
   std::ostream &operator<<(std::ostream &os, const qi::MessageAddress &address) {
     os << "{" << address.serviceId << "." << address.objectId << "." << address.functionId << ", id:" << address.messageId << "}";

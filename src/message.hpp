@@ -132,9 +132,7 @@ namespace qi {
 
     void          setError(const std::string &error);
 
-    void               setSignature(const std::string& signature);
     ///@return signature, set by setParameters() or setSignature()
-    const std::string& signature() const;
 
     GenericValuePtr value(const std::string &signature, const qi::TransportSocketPtr &socket) const;
     void setValue(qi::GenericValuePtr value, ObjectHost* context = 0);
