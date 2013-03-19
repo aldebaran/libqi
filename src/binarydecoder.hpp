@@ -79,15 +79,14 @@ namespace qi {
 
   namespace details {
     QIMESSAGING_API GenericValuePtr deserialize(qi::Type *type, BinaryDecoder& in, TransportSocketPtr context = TransportSocketPtr());
+    /// Deserialize in place
+    QIMESSAGING_API void deserialize(GenericValuePtr what, BinaryDecoder& in, TransportSocketPtr context = TransportSocketPtr());
   }
 
   template<typename T>
   void BinaryDecoder::read(T& v)
   {
-    Type* type = typeOf<T>();
-    GenericValuePtr value = qi::details::deserialize(type, *this);;
-    T* ptr = (T*)type->ptrFromStorage(&value.value);
-    v = *ptr;
+    details::deserialize(GenericValueRef(v), *this);
   }
 }
 

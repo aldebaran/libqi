@@ -695,15 +695,22 @@ namespace qi {
       }
     }
 
-    GenericValuePtr deserialize(qi::Type *type, BinaryDecoder& in, TransportSocketPtr context) {
+    void deserialize(GenericValuePtr what, BinaryDecoder& in, TransportSocketPtr context)
+    {
       DeserializeTypeVisitor dtv(in, context);
-      dtv.result = GenericValuePtr(type);
-
+      dtv.result = what;
       qi::typeDispatch(dtv, dtv.result);
       if (in.status() != BinaryDecoder::Status_Ok) {
         qiLogError() << "ISerialization error " << in.status();
       }
-      return dtv.result;
+      what = dtv.result;
+    }
+
+    GenericValuePtr deserialize(qi::Type *type, BinaryDecoder& in, TransportSocketPtr context)
+    {
+      GenericValuePtr res(type);
+      deserialize(res, in, context);
+      return res;
     }
 
 
