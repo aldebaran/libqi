@@ -140,6 +140,9 @@ namespace qi {
   template<typename T> class FutureSync: public Future<T>
   {
   public:
+    typedef typename Future<T>::ValueType ValueType;
+    typedef typename Future<T>::ValueTypeCast ValueTypeCast;
+    typedef typename Future<T>::Connection Connection;
     // This future cannot be set, so sync starts at false
     FutureSync() : _sync(false) {}
 
@@ -156,7 +159,7 @@ namespace qi {
       b._sync = false;
     }
 
-    explicit FutureSync<T>(const typename Future<T>::ValueType& v)
+    explicit FutureSync<T>(const ValueType& v)
     : _sync(false)
     {
       Promise<T> promise;
@@ -185,12 +188,12 @@ namespace qi {
         this->value();
     }
 
-    inline const typename Future<T>::ValueType &valueWithDefault(const typename Future<T>::ValueType& defaultVal = typename Future<T>::ValueType()) const
+    inline const ValueType &valueWithDefault(const ValueType& defaultVal = ValueType()) const
     {
       _sync = false;
       return Future<T>::valueWithDefault(defaultVal);
     }
-    inline const typename Future<T>::ValueType &value() const        { _sync = false; return Future<T>::value(); }
+    inline const ValueType &value() const                            { _sync = false; return Future<T>::value(); }
     inline operator const typename Future<T>::ValueTypeCast&() const { _sync = false; return Future<T>::value(); }
     inline bool wait(int msecs = 0) const                   { _sync = false; return Future<T>::wait(msecs); }
     inline bool isReady() const                             { _sync = false; return Future<T>::isReady(); }
@@ -198,7 +201,7 @@ namespace qi {
     inline const std::string &error() const                 { _sync = false; return Future<T>::error(); }
     inline void cancel()                                    { _sync = false; Future<T>::cancel(); }
     bool isCanceleable() const                              { _sync = false; return Future<T>::isCanceleable(); }
-    inline void connect(const typename Future<T>::Connection& s) { _sync = false; Future<T>::connect(s);}
+    inline void connect(const Connection& s) { _sync = false; Future<T>::connect(s);}
     Future<T> async()
     {
       return *this;
