@@ -15,7 +15,7 @@
 #include <qic/application.h>
 
 #ifdef _WIN32
-#include <WinBase.h>
+#include <windows.h>
 #define sleep Sleep
 #else
 #include <unistd.h>
