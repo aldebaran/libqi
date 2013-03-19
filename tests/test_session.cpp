@@ -35,7 +35,7 @@ TEST(QiSession, simpleConnectionToSd)
 TEST(QiSession, simpleConnectionToNonReachableSd)
 {
   qi::Session session;
-  session.connect("tcp://127.0.0.1:1234");
+  EXPECT_ANY_THROW(session.connect("tcp://127.0.0.1:1234"));
 
   EXPECT_FALSE(session.isConnected());
 
@@ -107,7 +107,8 @@ TEST(QiSession, testClose)
   f = session.connect(sd.endpoints()[0]);
   f.wait(3000);
   ASSERT_TRUE(!f.hasError());
-  session.unregisterService(idx.value());
+
+  EXPECT_ANY_THROW(session.unregisterService(idx.value()));
 }
 
 TEST(QiSession, getSimpleService)
