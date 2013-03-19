@@ -16,8 +16,6 @@
 
 #include "eventloop_p.hpp"
 
-#include <pthread.h>
-
 qiLogCategory("qi.eventloop");
 
 namespace qi {
