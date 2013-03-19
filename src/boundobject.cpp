@@ -171,7 +171,8 @@ namespace qi {
     }
 
     sigparam = signatureSplit(sigparam)[2];
-    mfp = msg.value(sigparam, socket).asTupleValuePtr();
+    GenericValuePtr value = msg.value(sigparam, socket);
+    mfp = value.asTupleValuePtr();
     /* Because of 'global' _currentSocket, we cannot support parallel
     * executions at this point.
     * Both on self, and on obj which can use currentSocket() too.
@@ -203,7 +204,7 @@ namespace qi {
         qiLogError() << "unknown request of type " << (int)msg.type() << " on service: " << msg.address();
     }
     //########################
-    mfp.destroy();
+    value.destroy();
   }
 
   void ServiceBoundObject::onSocketDisconnected(TransportSocketPtr client, int error)
