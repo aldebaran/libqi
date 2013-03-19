@@ -239,17 +239,7 @@ namespace qi {
   {
     qi::Promise<GenericValuePtr> out;
     qi::Message msg;
-    std::vector<Type*> types;
-    std::vector<void*> vals;
-    types.reserve(in.size());
-    vals.reserve(in.size());
-    for (unsigned i=0; i<in.size(); ++i)
-    {
-      types.push_back(in[i].type);
-      vals.push_back(in[i].value);
-    }
-    GenericValuePtr args = qi::makeGenericTuplePtr(types, vals);
-    msg.setValue(args, this);
+    qi::GenericValuePtr args = msg.setValues(in, this);
 #ifndef NDEBUG
     std::string sig = metaObject().method(method)->signature();
     sig = signatureSplit(sig)[2];

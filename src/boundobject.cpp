@@ -21,7 +21,7 @@ namespace qi {
                                    ObjectHost* context)
   {
     qi::Message msg;
-    msg.setValue(qi::makeGenericTuple(params), context);
+    msg.setValues(params, context);
     msg.setService(service);
     msg.setFunction(event);
     msg.setType(Message::Type_Event);

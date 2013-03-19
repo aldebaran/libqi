@@ -226,11 +226,26 @@ namespace qi {
     return qi::details::deserialize(type, in, socket);
   }
 
-  void Message::setValue(qi::GenericValuePtr value, ObjectHost* context) {
+  void Message::setValue(const GenericValuePtr &value, ObjectHost* context) {
     cow();
     qi::BinaryEncoder ods(_p->buffer);
     if (value.type->kind() != qi::Type::Void)
       qi::details::serialize(value, ods, context);
+  }
+
+  qi::GenericValuePtr Message::setValues(const std::vector<qi::GenericValuePtr> &values, ObjectHost* context) {
+    std::vector< ::qi::Type*> types;
+    std::vector<void*> vals;
+    types.reserve(values.size());
+    vals.reserve(values.size());
+    for (unsigned i = 0; i < values.size(); ++i)
+    {
+      types.push_back(values.at(i).type);
+      vals.push_back(values.at(i).value);
+    }
+    qi::GenericValuePtr args = qi::makeGenericTuplePtr(types, vals);
+    setValue(args);
+    return args;
   }
 
   const qi::Buffer &Message::buffer() const
