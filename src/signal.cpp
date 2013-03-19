@@ -141,21 +141,28 @@ namespace qi {
 
     void operator() ()
     {
+      try
       {
-        SignalSubscriberPtr s;
-        boost::mutex::scoped_lock sl((*sub)->mutex);
-        // verify-enabled-then-register-active op must be locked
-        if (!(*sub)->enabled)
         {
-          s = *sub; // delay destruction until after we leave the scoped_lock
-          delete sub;
-          params->destroy();
-          delete params;
-          return;
-        }
-        (*sub)->addActive(false);
+          SignalSubscriberPtr s;
+          boost::mutex::scoped_lock sl((*sub)->mutex);
+          // verify-enabled-then-register-active op must be locked
+          if (!(*sub)->enabled)
+          {
+            s = *sub; // delay destruction until after we leave the scoped_lock
+            delete sub;
+            params->destroy();
+            delete params;
+            return;
+          }
+          (*sub)->addActive(false);
+        } // end mutex-protected scope
+        (*sub)->handler(*params);
       }
-      (*sub)->handler(*params);
+      catch(const std::exception& e)
+      {
+        qiLogVerbose() << "Exception caught from signal subscriber: " << e.what();
+      }
       (*sub)->removeActive(true);
       params->destroy();
       delete params;
