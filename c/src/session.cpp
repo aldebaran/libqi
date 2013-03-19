@@ -14,6 +14,11 @@
 #include <qimessaging/serviceinfo.hpp>
 #include "future_p.h"
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 qi_session_t *qi_session_create()
 {
   qi::Session *session = new qi::Session();
@@ -79,3 +84,7 @@ qi_future_t* qi_session_unregister_service(qi_session_t *session, unsigned int i
   qi::Session *s = reinterpret_cast<qi::Session*>(session);
   return qi_future_wrap(s->unregisterService(idx));
 }
+
+#ifdef __cplusplus
+}
+#endif

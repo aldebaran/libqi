@@ -18,6 +18,56 @@
 
 qiLogCategory("qimessaging.object");
 
+
+qi::GenericValuePtr c_call(const std::string &complete_sig,
+                           qi_object_method_t func,
+                           void* data,
+                           const qi::GenericFunctionParameters& params)
+{
+  //TODO: move to register
+  std::vector<std::string> vs = qi::signatureSplit(std::string(complete_sig));
+  qi_value_t* value = qi_value_create(vs[2].c_str());
+  qi_value_t* ret = qi_value_create(vs[0].c_str());
+
+  qi::GenericValue &gvp = qi_value_cpp(value);
+  //TODO: there is a copy here
+  gvp = qi::GenericValue::makeTuple(params);
+  std::cout << "Complete sig:" << complete_sig << std::endl;
+
+  if (func)
+    func(complete_sig.c_str(), value, ret, data);
+
+  qi::GenericValuePtr &gvpr = qi_value_cpp(ret);
+  qi::GenericValuePtr re = gvpr;
+  //just reset the gvp, we dont want destroy to destroy it...
+  gvpr.type = 0;
+  gvpr.value = 0;
+  qi_value_destroy(value);
+  qi_value_destroy(ret);
+  return re;
+}
+
+qi::GenericValuePtr c_signal_callback(const std::vector<qi::GenericValuePtr>& args,
+                                      const std::string &params_sigs,
+                                      qi_object_signal_callback_t f,
+                                      void *user_data) {
+  qiLogInfo() << "Signal Callback(" << params_sigs << ")";
+
+  qi_value_t* params = qi_value_create(params_sigs.c_str());
+  qi::GenericValue &gvp = qi_value_cpp(params);
+  gvp = qi::GenericValue::makeTuple(args);
+  f(params, user_data);
+  qi_value_destroy(params);
+  return qi::GenericValuePtr();
+}
+
+
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 void qiFutureCAdapter(qi::Future<qi::GenericValuePtr> result, qi::Promise<qi::GenericValue> promise) {
   if (result.hasError()) {
     promise.setError(result.error());
@@ -64,48 +114,6 @@ void        qi_object_builder_destroy(qi_object_builder_t *object_builder)
 {
   qi::GenericObjectBuilder *ob = reinterpret_cast<qi::GenericObjectBuilder *>(object_builder);
   delete ob;
-}
-
-qi::GenericValuePtr c_call(const std::string &complete_sig,
-                           qi_object_method_t func,
-                           void* data,
-                           const qi::GenericFunctionParameters& params)
-{
-  //TODO: move to register
-  std::vector<std::string> vs = qi::signatureSplit(std::string(complete_sig));
-  qi_value_t* value = qi_value_create(vs[2].c_str());
-  qi_value_t* ret = qi_value_create(vs[0].c_str());
-
-  qi::GenericValue &gvp = qi_value_cpp(value);
-  //TODO: there is a copy here
-  gvp = qi::GenericValue::makeTuple(params);
-  std::cout << "Complete sig:" << complete_sig << std::endl;
-
-  if (func)
-    func(complete_sig.c_str(), value, ret, data);
-
-  qi::GenericValuePtr &gvpr = qi_value_cpp(ret);
-  qi::GenericValuePtr re = gvpr;
-  //just reset the gvp, we dont want destroy to destroy it...
-  gvpr.type = 0;
-  gvpr.value = 0;
-  qi_value_destroy(value);
-  qi_value_destroy(ret);
-  return re;
-}
-
-qi::GenericValuePtr c_signal_callback(const std::vector<qi::GenericValuePtr>& args,
-                                      const std::string &params_sigs,
-                                      qi_object_signal_callback_t f,
-                                      void *user_data) {
-  qiLogInfo() << "Signal Callback(" << params_sigs << ")";
-
-  qi_value_t* params = qi_value_create(params_sigs.c_str());
-  qi::GenericValue &gvp = qi_value_cpp(params);
-  gvp = qi::GenericValue::makeTuple(args);
-  f(params, user_data);
-  qi_value_destroy(params);
-  return qi::GenericValuePtr();
 }
 
 qi_value_t*          qi_object_get_metaobject(qi_object_t *object)
@@ -170,4 +178,8 @@ qi_object_t*         qi_object_builder_get_object(qi_object_builder_t *object_bu
   o = ob->object();
   return obj;
 }
+
+#ifdef __cplusplus
+}
+#endif
 

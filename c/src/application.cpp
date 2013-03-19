@@ -9,6 +9,11 @@
 #include <qic/application.h>
 #include <qi/application.hpp>
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 qi_application_t *qi_application_create(int *argc, char **argv)
 {
   qi::Application* app = new qi::Application(*argc, argv);
@@ -41,3 +46,7 @@ int qi_application_initialized()
 {
     return qi::Application::initialized();
 }
+
+#ifdef __cplusplus
+}
+#endif

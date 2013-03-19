@@ -18,6 +18,11 @@
 
 qiLogCategory("qipy.future");
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 qi_promise_t* qi_promise_create()
 {
   qi::Promise<qi::GenericValue> *pr = new qi::Promise<qi::GenericValue>();
@@ -167,3 +172,7 @@ qi_object_t* qi_future_get_object(qi_future_t* fut) {
   qi_future_destroy(fut);
   return obj;
 }
+
+#ifdef __cplusplus
+}
+#endif

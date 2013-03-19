@@ -11,6 +11,11 @@
 #include <qic/value.h>
 #include "value_p.h"
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 inline qi::ServiceDirectory *qi_servicedirectory_cpp(qi_servicedirectory_t *value) {
   return reinterpret_cast<qi::ServiceDirectory *>(value);
 };
@@ -56,3 +61,7 @@ qi_value_t*       qi_servicedirectory_endpoints(qi_servicedirectory_t *servicedi
   gvp = qi::GenericValue::from(epss);
   return val;
 }
+
+#ifdef __cplusplus
+}
+#endif

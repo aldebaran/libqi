@@ -8,6 +8,44 @@
 #include "value_p.h"
 #include "object_p.h"
 
+//# GENERIC POD IMPL
+template<typename T>
+int       qi_value_set_pod(qi_value_t  *msg, T val) {
+  qi::GenericValue &gv = qi_value_cpp(msg);
+  try {
+    gv.set<T>(val);
+    return 1;
+  } catch (std::runtime_error &) {}
+  return 0;
+}
+
+template<typename T>
+int qi_value_get_pod(qi_value_t *msg, T *result) {
+  qi::GenericValue &gv = qi_value_cpp(msg);
+  try {
+    *result = gv.to<T>();
+    return 1;
+  } catch (std::runtime_error &) {
+  }
+  return 0;
+}
+
+template<typename T>
+T qi_value_get_pod_default(qi_value_t *msg, T defvalue) {
+  qi::GenericValue &gv = qi_value_cpp(msg);
+  try {
+    return gv.to<T>();
+  } catch (std::runtime_error &) {
+  }
+  return defvalue;
+}
+
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 qi_value_t* qi_value_create(const char *signature)
 {
   qi::GenericValue* v;
@@ -68,38 +106,6 @@ const char*     qi_value_get_signature(qi_value_t* value, int resolveDynamics)
 {
   qi::GenericValue &val = qi_value_cpp(value);
   return qi::os::strdup(val.signature(!!resolveDynamics).c_str());
-}
-
-//# GENERIC POD IMPL
-template<typename T>
-int       qi_value_set_pod(qi_value_t  *msg, T val) {
-  qi::GenericValue &gv = qi_value_cpp(msg);
-  try {
-    gv.set<T>(val);
-    return 1;
-  } catch (std::runtime_error &) {}
-  return 0;
-}
-
-template<typename T>
-int qi_value_get_pod(qi_value_t *msg, T *result) {
-  qi::GenericValue &gv = qi_value_cpp(msg);
-  try {
-    *result = gv.to<T>();
-    return 1;
-  } catch (std::runtime_error &) {
-  }
-  return 0;
-}
-
-template<typename T>
-T qi_value_get_pod_default(qi_value_t *msg, T defvalue) {
-  qi::GenericValue &gv = qi_value_cpp(msg);
-  try {
-    return gv.to<T>();
-  } catch (std::runtime_error &) {
-  }
-  return defvalue;
 }
 
 //# UINT64
@@ -332,6 +338,10 @@ int          qi_value_raw_set(qi_value_t* value, const char* data, int size){
   return 0;
 }
 
-int          qi_value_raw_get(qi_value_t* value, const char**data, int *size) {
+extern "C" int          qi_value_raw_get(qi_value_t* value, const char**data, int *size) {
   return 0;
 }
+
+#ifdef __cplusplus
+}
+#endif
