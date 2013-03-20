@@ -47,7 +47,7 @@ namespace qi {
     SignalBase& operator = (const SignalBase& b);
     virtual std::string signature() const;
 
-    typedef unsigned int Link;
+    typedef qi::uint64_t Link;
 
     template<typename FUNCTION_TYPE>
     SignalSubscriber& connect(FUNCTION_TYPE f, MetaCallType model=MetaCallType_Auto);
