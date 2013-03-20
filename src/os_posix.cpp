@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 Aldebaran Robotics. All rights reserved.
+ * Copyright (c) 2012, 2013 Aldebaran Robotics. All rights reserved.
  * Use of this source code is governed by a BSD-style license that can be
  * found in the COPYING file.
  */
@@ -111,6 +111,7 @@ namespace qi {
       if (prefix)
         sprefix = prefix;
 
+      bool isCreated = false;
       do
       {
         tmpdir = sprefix;
@@ -119,8 +120,17 @@ namespace qi {
         pp.append(tmpdir, qi::unicodeFacet());
         path = pp.make_preferred().string(qi::unicodeFacet());
         ++i;
+
+        try
+        {
+          isCreated = boost::filesystem::create_directory(pp.make_preferred());
+        }
+        catch (const boost::filesystem::filesystem_error &e)
+        {
+          qiLogDebug("qi::os") << "Attempt " << i << " fail to create tmpdir! " << e.what();
+        }
       }
-      while (i < TMP_MAX && mkdir(path.c_str(), S_IRWXU) == -1);
+      while (i < TMP_MAX && !isCreated);
 
       return path;
     }
