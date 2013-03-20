@@ -47,13 +47,15 @@ namespace qi
   public:
     typedef boost::function<T (const T&)> Setter;
     typedef boost::function<T()> Getter;
+    typedef Signal<void(const T&)> SignalType;
     /**
      * @param getter value getter, default to reading _value
      * @param setter value setter, what it returns will be written to
      *        _value. If it throws AbortUpdate, update operation will
      *        be silently aborted (subscribers will not be called)
     */
-    PropertyImpl(Getter getter = Getter(), Setter setter = Setter());
+    PropertyImpl(Getter getter = Getter(), Setter setter = Setter(),
+      SignalBase::OnSubscribers onsubscribe = SignalBase::OnSubscribers());
     virtual ~PropertyImpl() {}
     T get() const;
     void set(const T& v);
@@ -71,8 +73,9 @@ namespace qi
     typedef PropertyImpl<T> ImplType;
     typedef typename ImplType::Getter Getter;
     typedef typename ImplType::Setter Setter;
-    Property(Getter getter = Getter(), Setter setter = Setter())
-    : PropertyImpl<T>(getter, setter)
+    Property(Getter getter = Getter(), Setter setter = Setter(),
+      SignalBase::OnSubscribers onsubscribe = SignalBase::OnSubscribers())
+    : PropertyImpl<T>(getter, setter, onsubscribe)
     {}
     virtual SignalBase* signal() { return this;}
     virtual void setValue(GenericValueRef value)  { PropertyImpl<T>::set(value.to<T>());}
@@ -83,8 +86,10 @@ namespace qi
   class QITYPE_API Property<GenericValue>: public PropertyImpl<GenericValue>
   {
   public:
-    Property(Getter getter = Getter(), Setter setter = Setter())
-    : PropertyImpl<GenericValue>(getter, setter)
+
+    Property(Getter getter = Getter(), Setter setter = Setter(),
+      SignalBase::OnSubscribers onsubscribe = SignalBase::OnSubscribers())
+    : PropertyImpl<GenericValue>(getter, setter, onsubscribe)
     {
     }
     virtual SignalBase* signal() { return this;}
