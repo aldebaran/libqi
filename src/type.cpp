@@ -510,7 +510,7 @@ namespace qi {
   // Default list
   static Type* makeListIteratorType(Type* element);
 
-  class DefaultListIteratorType: public TypeIteratorImpl<std::vector<void*> >
+  class DefaultListIteratorType: public TypeSimpleIteratorImpl<std::vector<void*>::iterator >
   {
   public:
   private:

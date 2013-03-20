@@ -26,41 +26,40 @@ public:
   _QI_BOUNCE_TYPE_METHODS(MethodsImpl);
 };
 
-
-template<typename C> class TypeIteratorImpl
-: public TypeIterator
+// Type impl for any class that behaves as a forward iterator (++, *, ==)
+template<typename T> class TypeSimpleIteratorImpl: public TypeIterator
 {
 public:
-  typedef typename detail::TypeImplMethodsBySize<typename C::iterator>::type
-  TypeImpl;
-  typedef typename C::iterator Iterator;
+  typedef T Storage;
   virtual GenericValueRef dereference(void* storage)
   {
-    Iterator& i = *(Iterator*)ptrFromStorage(&storage);
-    // Here we assume *i is a ref, ie not returned on the stack
-    // It seems true for lists and maps
-    return GenericValueRef(*i);
+    T* ptr = (T*)ptrFromStorage(&storage);
+    return GenericValueRef(*(*ptr));
   }
-  virtual void  next(void** storage)
+  virtual void next(void** storage)
   {
-    Iterator& i = *(Iterator*)ptrFromStorage(storage);
-    ++i;
+    T* ptr = (T*)ptrFromStorage(storage);
+    ++(*ptr);
   }
   virtual bool equals(void* s1, void* s2)
   {
-    Iterator& i1 = *(Iterator*)ptrFromStorage(&s1);
-    Iterator& i2 = *(Iterator*)ptrFromStorage(&s2);
-    return i1 == i2;
+    T* p1 = (T*)ptrFromStorage(&s1);
+    T* p2 = (T*)ptrFromStorage(&s2);
+    return *p1 == *p2;
   }
+  typedef DefaultTypeImplMethods<Storage> TypeImpl;
   _QI_BOUNCE_TYPE_METHODS(TypeImpl);
+  static GenericIterator make(const T& val)
+  {
+    static TypeSimpleIteratorImpl<T>* type = new TypeSimpleIteratorImpl<T>();
+    return GenericValue(GenericValuePtr(type, type->initializeStorage(const_cast<void*>((const void*)&val))));
+  }
 };
 
 
 template<typename T>
 TypeListImpl<T>::TypeListImpl()
 {
-  // register our iterator type
-  registerType(typeid(typename T::iterator), new TypeIteratorImpl<T>());
 }
 
 template<typename T> Type*
@@ -74,14 +73,14 @@ template<typename T> GenericIterator
 TypeListImpl<T>::begin(void* storage)
 {
   T* ptr = (T*)ptrFromStorage(&storage);
-  return GenericIterator(ptr->begin());
+  return TypeSimpleIteratorImpl<typename T::iterator>::make(ptr->begin());
 }
 
 template<typename T> GenericIterator
 TypeListImpl<T>::end(void* storage)
 {
   T* ptr = (T*)ptrFromStorage(&storage);
-  return GenericIterator(ptr->end());
+  return TypeSimpleIteratorImpl<typename T::iterator>::make(ptr->end());
 }
 
 template<typename T> void
@@ -102,6 +101,7 @@ TypeListImpl<T>::size(void* storage)
 // There is no way to register a template container type :(
 template<typename T> struct TypeImpl<std::vector<T> >: public TypeListImpl<std::vector<T> > {};
 template<typename T> struct TypeImpl<std::list<T> >: public TypeListImpl<std::list<T> > {};
+
 }
 
 #endif  // _QITYPE_DETAILS_TYPELIST_HXX_

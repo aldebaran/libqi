@@ -34,8 +34,6 @@ namespace qi {
 template<typename M>
 TypeMapImpl<M>::TypeMapImpl()
 {
-  // register our iterator type
-  registerType(typeid(typename M::iterator), new TypeIteratorImpl<M>());
 }
 
 
@@ -65,14 +63,14 @@ template<typename M> GenericIterator
 TypeMapImpl<M>::begin(void* storage)
 {
   M* ptr = (M*)ptrFromStorage(&storage);
-  return GenericIterator(ptr->begin());
+  return TypeSimpleIteratorImpl<typename M::iterator>::make(ptr->begin());
 }
 
 template<typename M> GenericIterator
 TypeMapImpl<M>::end(void* storage)
 {
   M* ptr = (M*)ptrFromStorage(&storage);
-  return GenericIterator(ptr->end());
+  return TypeSimpleIteratorImpl<typename M::iterator>::make(ptr->end());
 }
 
 template<typename M> void
