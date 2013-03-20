@@ -3,6 +3,11 @@
 
 #include <qitype/type.hpp>
 
+#ifdef _MSC_VER
+#  pragma warning( push )
+#  pragma warning( disable: 4251 )
+#endif
+
 namespace qi
 {
   class QITYPE_API MetaProperty
@@ -25,5 +30,8 @@ namespace qi
 
 QI_TYPE_STRUCT(qi::MetaProperty, _uid, _name, _signature);
 
+#ifdef _MSC_VER
+#  pragma warning( pop )
+#endif
 
 #endif

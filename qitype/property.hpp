@@ -10,6 +10,14 @@
 #include <boost/function.hpp>
 #include <qitype/signal.hpp>
 
+#ifdef _MSC_VER
+#  pragma warning( push )
+   // needs to have dll-interface to be used by clients
+#  pragma warning( disable: 4251 )
+   // non dll-interface class * used as base for dll-interface class
+#  pragma warning( disable: 4275 )
+#endif
+
 namespace qi
 {
   /// Exception that can be thrown to abort a property set from setter callback.
@@ -103,5 +111,9 @@ namespace qi
 }
 
 #include <qitype/details/property.hxx>
+
+#ifdef _MSC_VER
+#  pragma warning( pop )
+#endif
 
 #endif
