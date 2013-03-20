@@ -15,6 +15,7 @@
 #include <qitype/genericobject.hpp>
 #include <qitype/objecttypebuilder.hpp>
 #include <qitype/proxysignal.hpp>
+#include <qitype/proxyproperty.hpp>
 #include <qimessaging/session.hpp>
 #include <testsession/testsessionpair.hpp>
 #include <qimessaging/servicedirectory.hpp>
@@ -55,6 +56,7 @@ public:
   void on2() { ++_count2;}
   qi::Signal<void(int, int)> sig1;
   qi::Signal<void()> sig2;
+
   int _count1, _count2;
   qi::SignalBase::Link _l1, _l2;
 };
@@ -117,6 +119,108 @@ TEST(Proxy, Signal)
   PERSIST_ASSERT(, foo->count1() == 12, 500);
   PERSIST_ASSERT(, foo2.count1() == 7, 500);
 }
+
+class Bar
+{
+public:
+  Bar() :_count(0){}
+  void set(int v) {prop.set(v);}
+  int get() { return prop.get();}
+  int count() { return _count;}
+  void onProp(int v)
+  {
+    qiLogDebug() << "onprop " << v <<" " << this;
+    _count += v;
+  }
+  void subscribe()
+  {
+    _link = prop.connect(boost::bind(&Bar::onProp, this, _1));
+  }
+  void unsubscribe()
+  {
+    prop.disconnect(_link);
+  }
+  qi::Property<int> prop;
+  qi::SignalBase::Link _link;
+  int _count;
+};
+
+int registerBar()
+{
+  qi::ObjectTypeBuilder<Bar> b;
+  b.advertiseMethod("subscribe", &Bar::subscribe);
+  b.advertiseMethod("unsubscribe", &Bar::unsubscribe);
+  b.advertiseMethod("count", &Bar::count);
+  b.advertiseMethod("get", &Bar::get);
+  b.advertiseMethod("set", &Bar::set);
+  b.advertiseProperty("prop", &Bar::prop);
+  b.registerType();
+  return 0;
+}
+static int uselessToo = registerBar();
+
+
+TEST(Proxy, Property)
+{
+  boost::shared_ptr<Bar> bar(new Bar);
+  qi::ObjectPtr gbar = qi::GenericValueRef(bar).toObject();
+  ASSERT_TRUE(!!gbar);
+  // The session must die before bar.
+  TestSessionPair p;
+  p.server()->registerService("bar", gbar);
+  // we need that to force two clients
+  p.server()->registerService("bar2", gbar);
+  qi::ObjectPtr client = p.client()->service("bar");
+  ASSERT_EQ(0, client->call<int>("count"));
+
+  qi::ProxyProperty<int> pp(client, "prop");
+  bar->set(1);
+  ASSERT_EQ(1, pp.get());
+  pp.set(2);
+  ASSERT_EQ(2, bar->get());
+  // althoug PropertyProxy::set is itself synchronous, notify on remote end
+  // may be asynchronous, so subscribe below may come too soon and catch
+  // the pp.set above
+  qi::os::msleep(100);
+  qiLogDebug() << "subscribe";
+  bar->subscribe();
+  qi::os::msleep(100);
+  qiLogDebug() << "set 3";
+  pp.set(3);
+  // this is an event, all notify are asychronous
+  PERSIST_ASSERT(, bar->count() == 3, 500);
+
+  Bar bar2;
+  qi::SignalBase::Link l = pp.connect(boost::bind(&Bar::onProp, &bar2, _1));
+  bar->set(4);
+  // this one is async (remote notify of local property set)
+  PERSIST_ASSERT(, bar2.count() == 4, 500);
+  pp.disconnect(l);
+  bar->set(5); // we expect an async op *not* to happen, no choice but wait.
+  qi::os::msleep(200);
+  ASSERT_EQ(4, bar2.count());
+  // reconnect to see if disconnect did not break anything
+  l = pp.connect(boost::bind(&Bar::onProp, &bar2, _1));
+  bar->set(4);
+  PERSIST_ASSERT(, bar2.count() == 8, 500);
+
+  // proxy-proxy
+  qi::ObjectPtr client2 = p.client()->service("bar2");
+  qi::ProxyProperty<int> pp2(client2, "prop");
+  Bar bar3;
+  qi::SignalBase::Link l2 = pp2.connect(boost::bind(&Bar::onProp, &bar3, _1));
+  qiLogDebug() << "set 2";
+  pp.set(2);
+  PERSIST(, bar3.count() == 2, 1000);
+  ASSERT_EQ(2, bar3.count());
+  PERSIST(, bar2.count() == 10, 500);
+  ASSERT_EQ(10, bar2.count());
+  qiLogDebug() << "set 3";
+  pp2.set(3);
+  PERSIST_ASSERT(, bar2.count() == 13, 500);
+  PERSIST_ASSERT(, bar3.count() == 5, 500);
+}
+
 
 
 int main(int argc, char **argv) {
