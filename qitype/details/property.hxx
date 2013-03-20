@@ -47,7 +47,7 @@ namespace qi
         _value = _setter(v);
         (*this)(_value);
       }
-      catch (const AbortUpdate& e)
+      catch (const AbortUpdate&)
       {}
     }
     else

@@ -70,7 +70,7 @@ float qi::Signature::isConvertibleTo(const qi::Signature& b) const
         return 0;
   }
   assert(is==end() && id==b.end()); // we allready exited on size mismatch
-  return 1.0 - childErr - ((float)error) / 100.0f;
+  return 1.0f - childErr - ((float)error) / 100.0f;
 }
 
 Signature Signature::fromType(Signature::Type t)
