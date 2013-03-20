@@ -8,11 +8,12 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <qic/object.h>
 #include <qic/session.h>
 #include <qic/value.h>
 #include <qic/future.h>
 #include <qic/application.h>
-#include <qic/object.h>
+
 
 void evcb(qi_value_t *value, void *user_data) {
   qi_value_t* str = qi_value_tuple_get(value, 0);
@@ -22,13 +23,20 @@ void evcb(qi_value_t *value, void *user_data) {
   qi_value_destroy(str);
 }
 
-int make_call(qi_application_t *app, char *addr, int event)
+int make_call(qi_application_t *app, char *addr, int ev)
 {
   qi_session_t* session = qi_session_create();
+  qi_object_t*  object = 0;
+  qi_value_t*   message = 0;
+  qi_value_t*   str = 0;
+  qi_future_t*  fut = 0;
+  char*         ss = 0;
+  qi_value_t*   ret = 0;
+  char*         result = 0;
 
   qi_session_connect(session, addr);
 
-  qi_object_t* object = qi_future_get_object(qi_session_get_service(session, "serviceTest"));
+  object = qi_future_get_object(qi_session_get_service(session, "serviceTest"));
 
   if (object == 0)
   {
@@ -36,23 +44,23 @@ int make_call(qi_application_t *app, char *addr, int event)
     return (1);
   }
 
-  if (event) {
+  if (ev) {
     qi_object_event_connect(object, "testEvent::(s)", &evcb, 0);
     qi_application_run(app);
   }
 
-  qi_value_t *message = qi_value_create("(s)");
-  qi_value_t *str     = qi_value_create("s");
+  message = qi_value_create("(s)");
+  str     = qi_value_create("s");
 
   qi_value_set_string(str, "plaf");
 
-  const char *ss = qi_value_get_string(str);
+  ss = qi_value_get_string(str);
   printf("str: %s\n", ss);
 
 
   qi_value_tuple_set(message, 0, str);
 
-  qi_future_t* fut = qi_object_call(object, "reply::(s)", message);
+  fut = qi_object_call(object, "reply::(s)", message);
 
   qi_future_wait(fut, 0);
 
@@ -62,11 +70,11 @@ int make_call(qi_application_t *app, char *addr, int event)
   if (!qi_future_is_ready(fut))
     printf("Future is not ready [:\n");
 
-  qi_value_t *ret = 0;
+  ret = 0;
   if (!qi_future_has_error(fut) && qi_future_is_ready(fut))
     ret = qi_future_get_value(fut);
 
-  const char *result = 0;
+  result  = 0;
   if (ret)
     result = qi_value_get_string(ret);
 
@@ -87,6 +95,8 @@ int main(int argc, char *argv[])
   qi_application_t * app = qi_application_create(&argc, argv);
   char*     sd_addr = 0;
   int       event = 0;
+  int       ret = 0;
+
   // get the program options
   if (argc < 2)
   {
@@ -101,7 +111,7 @@ int main(int argc, char *argv[])
     } else
       sd_addr = argv[1];
   }
-  int ret = make_call(app, sd_addr, event);
+  ret = make_call(app, sd_addr, event);
 
   qi_application_destroy(app);
   return ret;

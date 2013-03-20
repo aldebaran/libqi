@@ -5,7 +5,7 @@
 ## Copyright (C) 2012 Aldebaran Robotics
 ##
 
-qi_create_lib("qic"  qic/api.h
+qi_create_lib("qic" SHARED qic/api.h
                      qic/application.h
                      qic/session.h
                      qic/object.h

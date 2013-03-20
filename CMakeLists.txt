@@ -152,20 +152,14 @@ qi_add_subdirectory(examples WITH_EXAMPLES)
 
 #target_link_libraries(qimessaging "-Wl,--no-undefined")
 
-if (NOT WIN32)
 qi_add_subdirectory(c)
-endif()
 
 qi_add_subdirectory("bin")
 
-if (NOT WIN32)
 qi_add_subdirectory("python" WITH_PYTHON)
-endif()
 qi_add_subdirectory("dotnet" WITH_DOTNET)
-if (NOT WIN32)
 qi_add_subdirectory("c/test" BUILD_TESTS)
 qi_add_subdirectory("c/bin"  BUILD_TESTS)
-endif()
 qi_add_subdirectory("tests"  BUILD_TESTS)
 
 message(STATUS "")

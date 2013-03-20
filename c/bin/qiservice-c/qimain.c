@@ -16,7 +16,7 @@
 
 #ifdef _WIN32
 #include <windows.h>
-#define sleep Sleep
+#define sleep(X) Sleep(X * 1000)
 #else
 #include <unistd.h>
 #endif
@@ -39,8 +39,15 @@ void reply(const char *signature, qi_value_t *message, qi_value_t *answer, void 
 
 int		main(int argc, char **argv)
 {
-  qi_application_t* app = qi_application_create(&argc, argv);
-  char*     sd_addr = 0;
+  qi_application_t*    app = qi_application_create(&argc, argv);
+  char*                sd_addr = 0;
+  qi_object_builder_t* ob = 0;
+  qi_session_t*        session = 0;
+  qi_object_t*         object = 0;
+  unsigned int         id = 0;
+  qi_value_t*          cont = 0;
+  qi_value_t*          val = 0;
+  int                  ret = 0;
 
   // get the program options
   if (argc != 2)
@@ -52,16 +59,16 @@ int		main(int argc, char **argv)
   else
     sd_addr = argv[1];
 
-  qi_object_builder_t* ob = qi_object_builder_create();
+  ob = qi_object_builder_create();
   qi_object_builder_register_method(ob, "reply::s(s)", &reply, 0);
   qi_object_builder_register_event(ob, "testEvent::(s)");
-  qi_session_t* session = qi_session_create();
+  session = qi_session_create();
 
   qi_session_connect(session, sd_addr);
 
   qi_session_listen(session, "tcp://0.0.0.0:0");
-  qi_object_t *object = qi_object_builder_get_object(ob);
-  unsigned int id = qi_future_get_int64(qi_session_register_service(session, "serviceTest", object), 0);
+  object = qi_object_builder_get_object(ob);
+  id = (int) qi_future_get_int64(qi_session_register_service(session, "serviceTest", object), 0);
 
   if (!id)
   {
@@ -72,12 +79,12 @@ int		main(int argc, char **argv)
     printf("Registered as service #%d\n", id);
 
   while (1) {
-    qi_value_t* cont = qi_value_create("(s)");
-    qi_value_t* val = qi_value_create("s");
+    cont = qi_value_create("(s)");
+    val = qi_value_create("s");
     qi_value_set_string(val, "pifpaf");
     qi_value_tuple_set(cont, 0, val);
     qi_value_destroy(val);
-    int ret = qi_object_event_emit(object, "testEvent::(s)", cont);
+    ret = qi_object_event_emit(object, "testEvent::(s)", cont);
     printf("emit: %d\n", ret);
     qi_value_destroy(cont);
     sleep(1);

@@ -4,11 +4,6 @@
 **
 ** Copyright (C) 2010, 2011, 2012 Aldebararan Robotics
 */
-
-#include <qitype/genericobject.hpp>
-#include <qitype/genericvalue.hpp>
-#include <qitype/genericobjectbuilder.hpp>
-
 #include <qic/object.h>
 #include <qic/future.h>
 #include <qic/value.h>
@@ -16,13 +11,19 @@
 #include "object_p.h"
 #include "value_p.h"
 
+#include <qitype/genericobject.hpp>
+#include <qitype/genericvalue.hpp>
+#include <qitype/genericobjectbuilder.hpp>
+
+
+
 qiLogCategory("qimessaging.object");
 
 
-qi::GenericValuePtr c_call(const std::string &complete_sig,
-                           qi_object_method_t func,
-                           void* data,
-                           const qi::GenericFunctionParameters& params)
+static qi::GenericValuePtr c_call(const std::string &complete_sig,
+		                          qi_object_method_t func,
+			                      void* data,
+                                  const qi::GenericFunctionParameters& params)
 {
   //TODO: move to register
   std::vector<std::string> vs = qi::signatureSplit(std::string(complete_sig));
@@ -47,10 +48,10 @@ qi::GenericValuePtr c_call(const std::string &complete_sig,
   return re;
 }
 
-qi::GenericValuePtr c_signal_callback(const std::vector<qi::GenericValuePtr>& args,
-                                      const std::string &params_sigs,
-                                      qi_object_signal_callback_t f,
-                                      void *user_data) {
+static qi::GenericValuePtr c_signal_callback(const std::vector<qi::GenericValuePtr>& args,
+                                             const std::string &params_sigs,
+                                             qi_object_signal_callback_t f,
+                                             void *user_data) {
   qiLogInfo() << "Signal Callback(" << params_sigs << ")";
 
   qi_value_t* params = qi_value_create(params_sigs.c_str());

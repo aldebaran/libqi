@@ -7,9 +7,10 @@
 */
 
 #include <qic/servicedirectory.h>
-#include <qimessaging/servicedirectory.hpp>
 #include <qic/value.h>
 #include "value_p.h"
+
+#include <qimessaging/servicedirectory.hpp>
 
 #ifdef __cplusplus
 extern "C"

@@ -4,19 +4,20 @@
 **
 ** Copyright (C) 2010, 2011, 2012 Aldebararan Robotics
 */
+#include <qic/future.h>
+#include <qic/object.h>
+#include <qic/value.h>
+#include "future_p.h"
+#include "value_p.h"
 
 #include <list>
 #include <vector>
 
-#include <qic/future.h>
-#include <qic/object.h>
-#include <qic/value.h>
 #include <qi/future.hpp>
-#include "future_p.h"
-#include "value_p.h"
 
 
-qiLogCategory("qipy.future");
+
+qiLogCategory("qi.future");
 
 #ifdef __cplusplus
 extern "C"

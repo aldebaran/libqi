@@ -394,7 +394,7 @@ namespace qi {
       {
         switch((isSigned ? 1 : -1) * byteSize)
         {
-          case 0:  out.write((bool)value);    break;
+          case 0:  out.write((bool)!!value);    break;
           case 1:  out.write((int8_t)value);  break;
           case -1: out.write((uint8_t)value); break;
           case 2:  out.write((int16_t)value); break;

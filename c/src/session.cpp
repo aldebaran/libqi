@@ -6,13 +6,14 @@
 ** Copyright (C) 2012 Aldebaran Robotics
 */
 
-#include <string.h>
 #include <qic/session.h>
 #include <qic/object.h>
 #include <qic/future.h>
+#include "future_p.h"
+
+#include <string.h>
 #include <qimessaging/session.hpp>
 #include <qimessaging/serviceinfo.hpp>
-#include "future_p.h"
 
 #ifdef __cplusplus
 extern "C"
