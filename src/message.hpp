@@ -153,9 +153,5 @@ namespace qi {
   QIMESSAGING_API std::ostream& operator<<(std::ostream& os, const qi::Message& msg);
 }
 
-#ifdef _MSC_VER
-#  pragma warning( pop )
-#endif
-
 
 #endif  // _QIMESSAGING_MESSAGE_HPP_
