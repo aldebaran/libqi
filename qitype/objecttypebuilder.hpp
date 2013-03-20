@@ -54,6 +54,9 @@ namespace qi {
 
     template<typename P> void inherits(int offset);
 
+    // Advertise anything, dispatch on {method, event, property} based on T.
+    template<typename T>
+    unsigned int advertise(const std::string& name, T element);
     // input: type-erased
 
     int xAdvertiseMethod(MetaMethodBuilder& builder, GenericMethod func, MetaCallType threadingModel = MetaCallType_Auto, int id = -1);

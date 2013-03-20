@@ -277,6 +277,26 @@ namespace qi {
   bool registerProxy();
 }
 
+#define __QI_REGISTER_ELEMENT(_, name, field) \
+  b.advertise(BOOST_PP_STRINGIZE(field), & name::field); // do not remove the space
+
+/** Register an object to the typesystem
+ * @param name the class name, without any namespace
+ * @param ARGS the names of the methods, signals and properties of the class
+ *
+ * @warning must be called from an unique compilation unit (not a header), from
+ * within the namespace of the class
+ */
+#define QI_REGISTER_OBJECT(name, ...)                                             \
+static bool _qiregister##name() {                                              \
+   ::qi::ObjectTypeBuilder<name> b;                                            \
+   QI_VAARGS_APPLY(__QI_REGISTER_ELEMENT, name, __VA_ARGS__)                   \
+   b.registerType();                                                           \
+   return true;                                                                \
+ }                                                                             \
+ static bool BOOST_PP_CAT(__qi_registration, __LINE__) = _qiregister##name();
+
+
 #include <qitype/details/genericobject.hxx>
 
 #ifdef _MSC_VER

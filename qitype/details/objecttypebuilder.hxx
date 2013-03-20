@@ -145,7 +145,42 @@ namespace qi {
     return xAdvertiseEvent(name + "::" + detail::FunctionSignature<T>::signature(), getter, id);
   }
 
+  namespace detail
+  {
+    template<typename E>
+    struct AdvertiseDispatch
+    {
+      unsigned int operator()(const std::string& name, ObjectTypeBuilderBase* b,
+                              E e)
+      {
+        return b->advertiseMethod(name, e);
+      }
+    };
+    template<typename T, typename C>
+    struct AdvertiseDispatch<Signal<T> C::*>
+    {
+      unsigned int operator()(const std::string& name, ObjectTypeBuilderBase* b,
+                              Signal<T> C::* e)
+      {
+        return b->advertiseEvent(name, e);
+      }
+    };
+    template<typename T, typename C>
+    struct AdvertiseDispatch<Property<T> C::*>
+    {
+      unsigned int operator()(const std::string& name, ObjectTypeBuilderBase* b,
+        Property<T> C::* e)
+      {
+        return b->advertiseProperty(name, e);
+      }
+    };
+  }
 
+  template<typename E>
+  unsigned int ObjectTypeBuilderBase::advertise(const std::string& name, E e)
+  {
+    return detail::AdvertiseDispatch<E>()(name, this, e);
+  }
 }
 
 
