@@ -233,6 +233,14 @@ namespace qi {
         ObjectPtr op(new GenericObject(static_cast<ObjectType*>(source.type), source.value));
         *val = op;
       }
+      else if (source.kind() == Type::Pointer)
+      {
+        TypePointer* ptype = static_cast<TypePointer*>(source.type);
+        // FIXME: find a way!
+        if (ptype->pointerKind() == TypePointer::Shared)
+          qiLogInfo("ObjectPtr will *not* track original shared pointer");
+        set(storage, *source);
+      }
       else
         throw std::runtime_error((std::string)"Cannot assign non-object " + source.type->infoString() + " to ObjectPtr");
 
