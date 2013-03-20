@@ -176,6 +176,40 @@ TEST(kill, Terminate)
   EXPECT_EQ(-1, dead) << "dead: " << dead;
 }
 
+#ifdef _MSC_VER
+# define SIGKILL 9 // not defined on windows and ignored by kill
+#endif
+
+TEST(kill, Kill)
+{
+  int status = 0;
+  int alive = -1;
+  int killed = -1;
+  int dead = 0;
+
+  int childPid = qi::os::spawnlp(loopBinDir.c_str(), NULL);
+  ASSERT_NE(-1, childPid);
+
+  if (childPid != -1)
+  {
+    qi::os::sleep(1);
+
+    // is it alive?
+    alive = qi::os::kill(childPid, 0);
+
+    // let's kill it
+    killed = qi::os::kill(childPid, SIGKILL);
+    qi::os::waitpid(childPid, &status);
+
+    // is it dead?
+    dead = qi::os::kill(childPid, 0);
+  }
+
+  EXPECT_EQ(0, alive) << "alive: " << alive;
+  EXPECT_EQ(0, killed) << "killed: " << killed;
+  EXPECT_EQ(-1, dead) << "dead: " << dead;
+}
+
 TEST(system, CmdWithNoArgs)
 {
   std::string bin = binDir;
