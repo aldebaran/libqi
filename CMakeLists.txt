@@ -64,6 +64,7 @@ set(H
   qi/qi.hpp
   qi/threadpool.hpp
   qi/eventloop.hpp
+  qi/version.hpp
   )
 
 set(C
@@ -94,6 +95,7 @@ set(C
   src/eventloop.cpp
   src/eventloop_p.hpp
   src/sdklayout-boost.cpp
+  src/version.cpp
   )
 
 if (WIN32)
@@ -158,7 +160,7 @@ if (WITH_QT_QTCORE)
   qi_use_lib(qi QT_QTCORE)
 endif()
 
-qi_use_lib(qi BOOST_FILESYSTEM BOOST_THREAD BOOST_PROGRAM_OPTIONS)
+qi_use_lib(qi BOOST_FILESYSTEM BOOST_THREAD BOOST_PROGRAM_OPTIONS BOOST_REGEX)
 
 if (UNIX)
   qi_use_lib(qi PTHREAD)

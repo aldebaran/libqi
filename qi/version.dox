@@ -1,0 +1,29 @@
+// -*- mode:c++; -*-
+
+/**
+ * \namespace qi::version
+ * \brief Version numbering API.
+ */
+
+/**
+ * \fn qi::version::explode(const std::string&)
+ * \brief Explode a version string to an array of strings.
+ * \param version The string to explode.
+ * \return An array of strings (including ".").
+ */
+
+/**
+ * \fn qi::version::compare(const std::string&, const std::string&)
+ * \brief Compare version numbers.
+ * \param versionA Version number.
+ * \param versionB Version number.
+ * \return 1 if \a versionA is more recent than \a versionB, 0 otherwise,
+           and -1 if error.
+ */
+
+/**
+ * \fn qi::version::extract(const std::string&)
+ * \brief Extract version number from string.
+ * \param version The string containing the version number.
+ * \return The version number, if any.
+ */
