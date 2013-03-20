@@ -106,6 +106,7 @@ namespace qi {
     /** Signal constructor
      * @param onSubscribers invoked each time number of subscribers switch
      * between 0 and 1, with argument '!subscribers.empty()'
+     * Will not be called when destructor is invoked and all subscribers are removed
     */
     Signal(OnSubscribers onSubscribers = OnSubscribers());
     Signal(const Signal<T>& b);

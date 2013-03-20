@@ -437,6 +437,7 @@ namespace qi {
   {
     if (!_p)
       return;
+    _p->onSubscribers = OnSubscribers();
     boost::shared_ptr<SignalBasePrivate> p(_p);
     _p.reset();
     SignalSubscriberMap::iterator i;
