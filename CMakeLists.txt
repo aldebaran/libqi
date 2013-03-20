@@ -66,6 +66,7 @@ set(PUBLIC_HEADERS
                    qitype/objectfactory.hpp
                    qitype/objecttypebuilder.hpp
                    qitype/property.hpp
+                   qitype/proxyproperty.hpp
                    qitype/proxysignal.hpp
                    qitype/signal.hpp
                    qitype/signature.hpp
