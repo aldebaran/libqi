@@ -21,25 +21,25 @@ namespace qi
 
 #define QI_TYPE_STRUCT_DECLARE(name)                                      \
 namespace qi {                                                            \
-  template<> struct TypeImpl<name>: public TypeTuple                      \
+  template<> struct TypeImpl<name>: public ::qi::TypeTuple                \
   {                                                                       \
   public:                                                                 \
-    virtual std::vector<Type*> memberTypes();                             \
+    virtual std::vector< ::qi::Type*> memberTypes();                             \
     virtual void* get(void* storage, unsigned int index);                 \
     virtual void set(void** storage, unsigned int index, void* valStorage); \
-    _QI_BOUNCE_TYPE_METHODS(DefaultTypeImplMethods<name>);                \
+    _QI_BOUNCE_TYPE_METHODS(::qi::DefaultTypeImplMethods<name>);            \
  }; }
 
 
-#define __QI_TUPLE_TYPE(_, what, field) res.push_back(typeOf(ptr->field));
-#define __QI_TUPLE_GET(_, what, field) if (i == index) return typeOf(ptr->field)->initializeStorage(&ptr->field); i++;
-#define __QI_TUPLE_SET(_, what, field) if (i == index) detail::setFromStorage(ptr->field, valueStorage); i++;
+#define __QI_TUPLE_TYPE(_, what, field) res.push_back(::qi::typeOf(ptr->field));
+#define __QI_TUPLE_GET(_, what, field) if (i == index) return ::qi::typeOf(ptr->field)->initializeStorage(&ptr->field); i++;
+#define __QI_TUPLE_SET(_, what, field) if (i == index) ::qi::detail::setFromStorage(ptr->field, valueStorage); i++;
 #define __QI_TYPE_STRUCT_IMPLEMENT(name, inl, onSet, ...)                                    \
 namespace qi {                                                                        \
-  inl std::vector<Type*> TypeImpl<name>::memberTypes()                                \
+  inl std::vector< ::qi::Type*> TypeImpl<name>::memberTypes()                                \
   {                                                                                   \
     name* ptr = 0;                                                                    \
-    std::vector<Type*> res;                                                           \
+    std::vector< ::qi::Type*> res;                                                           \
     QI_VAARGS_APPLY(__QI_TUPLE_TYPE, _, __VA_ARGS__);                                 \
     return res;                                                                       \
   }                                                                                   \
