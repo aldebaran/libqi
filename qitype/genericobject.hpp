@@ -265,6 +265,19 @@ namespace qi {
       static std::vector<std::pair<Type*, int> > empty;
       return empty;
     }
+    virtual qi::Future<GenericValue> getProperty(void* instance, unsigned int id)
+    {
+      Proxy* ptr = static_cast<Proxy*>(instance);
+      ObjectPtr obj = ptr->asObject();
+      return obj->type->getProperty(obj->value, id);
+    }
+    virtual qi::Future<void> setProperty(void* instance, unsigned int id, GenericValue value)
+    {
+      Proxy* ptr = static_cast<Proxy*>(instance);
+      ObjectPtr obj = ptr->asObject();
+      return obj->type->setProperty(obj->value, id, value);
+    }
+
   };
 #define QI_TYPE_PROXY(name)                            \
   namespace qi {                                       \
