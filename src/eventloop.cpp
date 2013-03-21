@@ -59,7 +59,16 @@ namespace qi {
   void EventLoopAsio::run()
   {
     qiLogDebug() << this << "run starting";
-    qi::os::setCurrentThreadName("eventloop");
+    std::string dontusecpuaffinity = qi::os::getenv("QI_EVENTLOOP_NO_CPU_AFFINITY");
+    if (dontusecpuaffinity.empty()) {
+      std::vector<int> cpus;
+      cpus.push_back(0);
+      bool ret = qi::os::setCurrentThreadCPUAffinity(cpus);
+      qiLogVerbose() << "AsioEventLoop: Set cpu thread affinity to " << 1 << " (" << ret <<")";
+    } else {
+      qiLogVerbose() << "AsioEventLoop: Cpu thread affinity not set because QI_EVENTLOOP_NO_CPU_AFFINITY is set.";
+    }
+    qi::os::setCurrentThreadName("asioeventloop");
     _running = true;
     _id = boost::this_thread::get_id();
     _work = new boost::asio::io_service::work(_io);
