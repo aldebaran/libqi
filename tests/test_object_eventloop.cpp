@@ -101,17 +101,17 @@ TEST(TestEventLoop, Event)
   qi::ObjectPtr o1 = makeObj();
   qi::Link link = o1->connect("fire", &vSameThread);
   o1->emitEvent("fire", mainId);
-  ASSERT_TRUE(result.future().wait(3000));
+  ASSERT_TRUE(result.future().wait(3000) != qi::FutureState_Running);
   ASSERT_TRUE(result.future().value());
   result.reset();
   fireSameThreadIn(o1, qi::getDefaultObjectEventLoop(), 0);
-  ASSERT_TRUE(result.future().wait(3000));
+  ASSERT_TRUE(result.future().wait(3000) != qi::FutureState_Running);
   ASSERT_TRUE(result.future().value());
   result.reset();
   o1->disconnect(link);
   link = o1->connect("fire", &vSameThread, qi::MetaCallType_Queued);
   fireSameThreadIn(o1, qi::getDefaultObjectEventLoop(), 0);
-  ASSERT_TRUE(result.future().wait(3000));
+  ASSERT_TRUE(result.future().wait(3000) != qi::FutureState_Running);
   ASSERT_FALSE(result.future().value());
   result.reset();
 }
@@ -155,7 +155,7 @@ TEST(TestThreadModel, MethodModel)
   // fast method->synchronous call
   f1 = o1->call<void>("delaymsFast", 150);
   ASSERT_GT(qi::os::ustime() - start, 100000);
-  ASSERT_TRUE(f1.isReady());
+  ASSERT_TRUE(f1.isFinished());
   // Thread-safe method: parallel call
   start = qi::os::ustime();
   f1 = o1->call<void>("delaymsThreadSafe", 150);

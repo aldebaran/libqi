@@ -57,7 +57,7 @@ TEST(TestSignal, TestCompilation)
     timeout -= 1;
   }
   ASSERT_EQ(6, res);
-  ASSERT_TRUE(prom.future().isReady());
+  ASSERT_TRUE(prom.future().isFinished());
   ASSERT_FALSE(prom.future().hasError());
 }
 

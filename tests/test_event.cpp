@@ -26,16 +26,16 @@ TEST(TestObject, Simple)
   EXPECT_EQ(1U, obj->metaObject().signalMap().size());
   qi::Link linkId = obj->connect("fire", &onFire);
   obj->emitEvent("fire", 42);
-  EXPECT_TRUE(pPayload.future().wait(2000));
+  EXPECT_TRUE(pPayload.future().wait(2000) != qi::FutureState_Running);
   EXPECT_EQ(42, lastPayload);
   pPayload.reset();
   obj->emitEvent("fire", 51);
-  EXPECT_TRUE(pPayload.future().wait(2000));
+  EXPECT_TRUE(pPayload.future().wait(2000) != qi::FutureState_Running);
   EXPECT_EQ(51, lastPayload);
   pPayload.reset();
   obj->disconnect(linkId);
   obj->emitEvent("fire", 42);
-  EXPECT_FALSE(pPayload.future().wait(200));
+  EXPECT_FALSE(pPayload.future().wait(200) != qi::FutureState_Running);
   EXPECT_EQ(51, lastPayload);
 }
 
@@ -47,7 +47,7 @@ TEST(TestObject, ConnectBind)
   qi::ObjectPtr obj(ob.object());
   qi::Link link = obj->connect("fire", boost::bind<void>(&onFire, _1));
   obj->emitEvent("fire", 42);
-  EXPECT_TRUE(pPayload.future().wait(2000));
+  EXPECT_TRUE(pPayload.future().wait(2000) != qi::FutureState_Running);
   EXPECT_EQ(42, lastPayload);
   obj->disconnect(link);
   // The boost bind without _1 gives us a void (void) signature that does not match fire
@@ -59,7 +59,7 @@ TEST(TestObject, ConnectBind)
   EXPECT_TRUE(link != 0);
   pPayload.reset();
   obj->emitEvent("fire2", 40, 41);
-  EXPECT_TRUE(pPayload.future().wait(2000));
+  EXPECT_TRUE(pPayload.future().wait(2000) != qi::FutureState_Running);
   EXPECT_EQ(41, lastPayload);
   obj->disconnect(link);
 }
@@ -72,7 +72,7 @@ TEST(TestObject, EmitMethod)
   qi::ObjectPtr obj(ob.object());
   pPayload.reset();
   obj->emitEvent("fire", 23);
-  EXPECT_TRUE(pPayload.future().wait(2000));
+  EXPECT_TRUE(pPayload.future().wait(2000) != qi::FutureState_Running);
   EXPECT_EQ(23, pPayload.future().value());
 }
 
