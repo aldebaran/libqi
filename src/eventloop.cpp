@@ -184,7 +184,11 @@ namespace qi {
   {
     _stopping = true;
     // Ensure delete is not called from one of the threads of the event loop
-    boost::thread(&EventLoopThreadPool::destroy, this);
+    boost::thread(&EventLoopThreadPool::_destroy, this);
+  }
+  void EventLoopThreadPool::_destroy()
+  {
+    delete this;
   }
 
   EventLoopThreadPool::~EventLoopThreadPool()

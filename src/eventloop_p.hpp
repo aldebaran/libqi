@@ -91,6 +91,7 @@ namespace qi {
     virtual void* nativeHandle();
   private:
     virtual ~EventLoopThreadPool();
+    void _destroy();
     ThreadPool* _pool;
     bool _stopping;
   };
