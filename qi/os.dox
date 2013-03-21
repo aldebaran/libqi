@@ -289,6 +289,20 @@
  * \param name The new name of the current thread.
  */
 
+/** \fn bool setCurrentThreadCPUAffinity(const std::vector<int> &cpus)
+ *  \brief Set the CPU affinity for the current thread.
+ *  \param cpus a vector of CPU core ids
+ *  \return true on success
+ *  \warning This function has no effect under Android nor OSX.
+ *
+ * \verbatim
+ * When CPU Affinity is set, the current thread will only be allowed
+ * to run on the given set of cores.
+ *
+ * .. versionadded:: 1.22
+ * \endverbatim
+ */
+
 /**
  * \fn qi::os::setenv(const char*, const char*)
  * \brief Change or add an environment variable.
