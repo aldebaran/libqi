@@ -54,6 +54,11 @@ std::string reply(const std::string &msg, const float &value) {
   return ss.str();
 }
 
+bool slip(unsigned int seconds) {
+  qi::os::sleep(seconds);
+  return true;
+}
+
 namespace po = boost::program_options;
 
 int main(int argc, char *argv[])
@@ -117,6 +122,7 @@ int main(int argc, char *argv[])
       ob.advertiseMethod<std::string (const std::string&, const float &)>("reply", &reply);
       ob.advertiseMethod<qi::GenericValue (const qi::GenericValue&)>("reply", &reply);
       ob.advertiseEvent<void (const std::string&)>("testEvent");
+      ob.advertiseMethod<bool (unsigned int)>("slip", &slip);
       qi::ObjectPtr obj(ob.object());
 
       session.connect(masterAddress);
