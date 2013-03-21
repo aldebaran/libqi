@@ -78,21 +78,9 @@ void Foo::unsubscribe2()
   sig2.disconnect(_l2);
 }
 
-int registerFoo()
-{
-  qi::ObjectTypeBuilder<Foo> b;
-  b.advertiseMethod("subscribe1", &Foo::subscribe1);
-  b.advertiseMethod("subscribe2", &Foo::subscribe2);
-  b.advertiseMethod("unsubscribe1", &Foo::unsubscribe1);
-  b.advertiseMethod("unsubscribe2", &Foo::unsubscribe2);
-  b.advertiseMethod("count1", &Foo::count1);
-  b.advertiseMethod("count2", &Foo::count2);
-  b.advertiseEvent("sig1", &Foo::sig1);
-  b.advertiseEvent("sig2", &Foo::sig2);
-  b.registerType();
-  return 0;
-}
-static int useless = registerFoo();
+
+QI_REGISTER_OBJECT(Foo, subscribe1, subscribe2, unsubscribe1, unsubscribe2,
+  count1, count2, sig1, sig2);
 
 TEST(Proxy, Signal)
 {
@@ -145,20 +133,7 @@ public:
   int _count;
 };
 
-int registerBar()
-{
-  qi::ObjectTypeBuilder<Bar> b;
-  b.advertiseMethod("subscribe", &Bar::subscribe);
-  b.advertiseMethod("unsubscribe", &Bar::unsubscribe);
-  b.advertiseMethod("count", &Bar::count);
-  b.advertiseMethod("get", &Bar::get);
-  b.advertiseMethod("set", &Bar::set);
-  b.advertiseProperty("prop", &Bar::prop);
-  b.registerType();
-  return 0;
-}
-static int uselessToo = registerBar();
-
+QI_REGISTER_OBJECT(Bar, subscribe, unsubscribe, count, get, set, prop);
 
 TEST(Proxy, Property)
 {
