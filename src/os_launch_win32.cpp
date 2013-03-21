@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 Aldebaran Robotics. All rights reserved.
+ * Copyright (c) 2012, 2013 Aldebaran Robotics. All rights reserved.
  * Use of this source code is governed by a BSD-style license that can be
  * found in the COPYING file.
  */
@@ -92,6 +92,14 @@ namespace qi
       if(status == STILL_ACTIVE)
       {
         if(sig == SIGTERM)
+        {
+          ExitProcess(0);
+          qi::os::msleep(100);
+          GetExitCodeProcess(handle, &status);
+          if(status != STILL_ACTIVE)
+            res = 0;
+        }
+        else if(sig == 9) // SIGKILL
         {
           DWORD error = TerminateProcess(handle, 0);
           qi::os::msleep(100);
