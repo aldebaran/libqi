@@ -65,16 +65,16 @@ namespace qi
     };
 
     /** Call given function once after given delay in microseconds.
-     * @return a cancelleable future
+     * @return a canceleable future
      */
     Future<void> async(boost::function<void ()> callback, uint64_t usDelay=0);
-    /// Similar to asyncCall() but without cancellation or notification
+    /// Similar to asyncCall() but without cancelation or notification
     void post(const boost::function<void ()>& callback, uint64_t usDelay=0);
 
     /** Monitor event loop to detect deadlocks.
      @param helper an other event loop used for monitoring
      @param maxUsDelay maximum expected delay between an async() and its execution
-     @return a cancelleable future. Invoke cancel() to terminate monitoring.
+     @return a canceleable future. Invoke cancel() to terminate monitoring.
             In case an async() call does not execute in time, the
             future's error will be set.
     */
