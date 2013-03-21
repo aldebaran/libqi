@@ -432,35 +432,10 @@ def raw_to_proxy(class_name, data, return_future, implement_interface, include):
 #include <qi/types.hpp>
 #include <qitype/signal.hpp>
 #include <qitype/genericobject.hpp>
-
-
-
-static void signal_bridge(bool enable, qi::SignalBase::Link* link, qi::GenericObject* obj,
-  qi::SignalBase* sig, const char* sigName);
-
-#ifndef QI_GENERATED_PROXY_SIGNAL
-#define QI_GENERATED_PROXY_SIGNAL
+#include <qitype/proxysignal.hpp>
 
 @include@
 
-template<typename T> class ProxySignal: public qi::Signal<T>
-{
-public:
-  ProxySignal(qi::SignalBase::OnSubscribers os, qi::GenericObject* obj, const std::string& name)
-  : qi::Signal<T>(os)
-  , _obj(obj)
-  , _name(name)
-  {
-  }
-  virtual void trigger(const qi::GenericFunctionParameters& params, qi::MetaCallType)
-  {
-    _obj->xMetaPost(_name + "::" + this->signature(), params);
-  }
-  qi::GenericObject* _obj;
-  std::string _name;
-};
-
-#endif
 class @className@Proxy: public ::qi::Proxy
 {
 public:
@@ -477,30 +452,7 @@ public:
 };
 @registerProxy@
 
-
 QI_TYPE_PROXY(@className@Proxy);
-
-#ifndef QI_GENERATED_PROXY_CODE
-#define QI_GENERATED_PROXY_CODE
-static qi::GenericValuePtr signal_bounce(const std::vector<qi::GenericValuePtr>& args,
- qi::SignalBase* target)
-{
-  target->SignalBase::trigger(args);
-  return qi::GenericValuePtr(qi::typeOf<void>(), 0);
-}
-
-static void signal_bridge(bool enable, qi::SignalBase::Link* link, qi::GenericObject* obj,
-  qi::SignalBase* sig, const char* sigName)
-{
-  std::string signature = sigName + ("::" + sig->signature());
-  if (enable)
-    *link = obj->xConnect(signature, qi::SignalSubscriber(qi::makeDynamicGenericFunction(
-      boost::bind(&signal_bounce, _1, sig))));
-  else
-    obj->disconnect(*link);
-}
-
-#endif
 
 #endif //@GARD@
 """
@@ -531,20 +483,18 @@ static void signal_bridge(bool enable, qi::SignalBase::Link* link, qi::GenericOb
       method_impls += "return "
     method_impls += '_obj->call<' + cret + ' >' + '(callType,"' + method_name + '"' + arg_names + ");\n  }\n"
   signal_decl = ''
-  signal_decl2 = ''
   ctor = ''
   # Make  a Signal field for each signal, bridge it to backend in ctor
   for sig in signals:
-    signal_decl += '  ProxySignal<void(' + ','.join(map(idltype_to_cxxtype, sig[1])) +')> ' + sig[0] + ';\n'
-    signal_decl2 += '  qi::SignalBase::Link _link_' + sig[0] + ';\n'
-    ctor += '  , {0}(boost::bind(&signal_bridge, _1, &_link_{0}, obj.get(), &{0}, "{0}"), obj.get(), "{0}")\n'.format(sig[0])
+    signal_decl += '  qi::ProxySignal<void(' + ','.join(map(idltype_to_cxxtype, sig[1])) +')> ' + sig[0] + ';\n'
+    ctor += '  , {0}(obj, "{0}")\n'.format(sig[0])
 
   result = skeleton
   replace = {
       'GARD': '_' + class_name.upper() + '_PROXY_HPP_',
       'className': class_name,
       'publicDecl': method_impls + signal_decl,
-      'privateDecl': signal_decl2,
+      'privateDecl': '',
       'constructor': '',
       'constructor_initList': ctor,
       'include': ''.join(['#include <' + x + '>\n' for x in include]),
