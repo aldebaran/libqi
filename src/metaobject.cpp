@@ -477,10 +477,12 @@ namespace qi {
       stream << "events:" << std::endl;
       qi::MetaObject::SignalMap events = mobj.signalMap();
       qi::MetaObject::SignalMap::const_iterator it3;
-      for (it3 = events.begin(); it3 != events.end(); ++it3) {
+      for (it3 = events.begin(); it3 != events.end(); ++it3)
+      {
         stream << "  " << std::right << std::setfill('0') << std::setw(3) << it3->second.uid() << std::setw(0) << " "
                << std::left << std::setfill(' ') << std::setw(offset) << "" << std::setw(0)
                << " " << it3->second.signature() << std::endl;
+      }
       stream <<"properties:" << std::endl;
       qi::MetaObject::PropertyMap props = mobj.propertyMap();
       for (qi::MetaObject::PropertyMap::const_iterator it = props.begin();
@@ -489,7 +491,6 @@ namespace qi {
         stream << "  " << std::right << std::setfill('0') << std::setw(3) << it->second.uid() << std::setw(0) << " "
         << std::left << std::setfill(' ') << std::setw(offset) << "" << std::setw(0)
                << " " << it->second.name() << ' ' << it->second.signature() << std::endl;
-      }
       }
     }
   }
