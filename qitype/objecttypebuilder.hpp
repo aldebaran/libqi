@@ -50,7 +50,8 @@ namespace qi {
 
     template <typename C, typename T>
     inline unsigned int advertiseProperty(const std::string& eventName, Property<T> C::* propertyAccessor);
-
+    template<typename T>
+    inline unsigned int advertiseProperty(const std::string& eventName, PropertyMemberGetter getter);
     template<typename P> void inherits(int offset);
 
     // Advertise anything, dispatch on {method, event, property} based on T.

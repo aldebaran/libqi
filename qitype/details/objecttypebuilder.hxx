@@ -147,6 +147,13 @@ namespace qi {
     return xAdvertiseEvent(name + "::" + detail::FunctionSignature<T>::signature(), getter, id);
   }
 
+  template<typename T>
+  inline unsigned int ObjectTypeBuilderBase::advertiseProperty(const std::string& eventName, PropertyMemberGetter getter)
+  {
+    return xAdvertiseProperty(eventName, typeOf<T>()->signature(), getter);
+  }
+
+
   namespace detail
   {
     template<typename E>

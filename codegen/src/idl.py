@@ -7,11 +7,13 @@
     Representations used:
     - IDL: XML file describing the interface
     - RAW: Internal representation of the IDL
-    raw: (methods, signals, annotations)
+    raw: (methods, signals, properties, annotations)
     methods: [method]
     signals: [signal]
+    properties: [property]
     method: (name, [argtype], rettype, annotations)
     signal: (name, [argtype], annotations)
+    property: [name, type, annotations]
 
     Code parser:
     - Invoke Doxygen and parse its XML output to produce an IDL file.
@@ -41,6 +43,11 @@ import os
 import subprocess
 import shutil
 import re
+
+METHODS = 0
+SIGNALS = 1
+PROPERTIES = 2
+
 
 """ IDL type system:
     PRIMITIVES:
@@ -277,7 +284,8 @@ def doxyxml_to_raw(doxy_dir):
           an.append(a)
       methods.append((method_name, argstype, rettype, ' '.join(an)))
     signals = []
-    # Parse signals
+    properties = []
+    # Parse signals and properties
     for s in class_root.findall("sectiondef[@kind='public-attrib']/memberdef[@kind='variable']"):
       name = s.find("name").text
       t = xml_extract_text(s.find("type"))
@@ -291,8 +299,14 @@ def doxyxml_to_raw(doxy_dir):
         sig = cxx_type_to_signature(t)
         sig = parse_toplevel_comma(sig)
         signals.append((name, sig))
+      match = re.match(r"(qi::)?Property<(.*)>", t)
+      if match:
+        t = match.expand(r"\2")
+        sig = cxx_type_to_signature(t)
+        sig = parse_toplevel_comma(sig)[0]
+        properties.append((name, sig))
 
-    result[cls] = (methods, signals, ' '.join(class_annotations))
+    result[cls] = (methods, signals, properties, ' '.join(class_annotations))
   return result
 
 def raw_to_idl(dstruct):
@@ -301,7 +315,7 @@ def raw_to_idl(dstruct):
   root = etree.Element('IDL')
   for cls in dstruct:
 
-    (methods, signals, an) = dstruct[cls]
+    (methods, signals, properties, an) = dstruct[cls]
     e = etree.SubElement(root, 'class', name=cls, annotations=','.join(an))
     for method in methods:
       (method_name, args, ret, an) = method
@@ -313,6 +327,8 @@ def raw_to_idl(dstruct):
       s = etree.SubElement(e, 'signal', name=signal[0])
       for a in signal[1]:
         etree.SubElement(s, 'argument', type=a)
+    for prop in properties:
+      s = etree.SubElement(e, 'property', name=prop[0], type=prop[1])
   return root
 
 def raw_to_text(dstruct):
@@ -320,13 +336,16 @@ def raw_to_text(dstruct):
   """
   result = ""
   for cls in dstruct:
-    result += "class " + cls +"// " + dstruct[cls][2] + "\n  methods\n"
-    for method in dstruct[cls][0]:
+    result += "class " + cls +"// " + dstruct[cls][3] + "\n  methods\n"
+    for method in dstruct[cls][METHODS]:
       (method_name, args, ret, an) = method
       result += "    " + ret + " " + method_name +"(" + ",".join(args) + ") // " + an +"\n"
     result += "  signals\n"
-    for signal in dstruct[cls][1]:
+    for signal in dstruct[cls][SIGNALS]:
       result += "    " + signal[0] + '(' + ','.join(signal[1]) + ')\n'
+    result += "  properties\n"
+    for prop in dstruct[cls][PROPERTIES]:
+      result += "    " + prop[0] + '(' + prop[1] + ')\n'
   return result
 
 def method_to_cxx(method):
@@ -359,7 +378,12 @@ def idl_to_raw(root):
       n = s.get('name')
       args = [a.get("type") for a in s.findall("argument")]
       signals.append((n, args))
-    result[cls.get("name")] =  (methods, signals, (cls.get("annotations") or '').split(','))
+    properties = []
+    for p in cls.findall("property"):
+      n = p.get('name')
+      t = p.get('type')
+      properties.append([n, t])
+    result[cls.get("name")] =  (methods, signals, events, (cls.get("annotations") or '').split(','))
   return result
 
 def raw_to_interface(class_name, data, include):
@@ -374,6 +398,7 @@ def raw_to_interface(class_name, data, include):
 #include <map>
 
 #include <qitype/signal.hpp>
+#include <qitype/property.hpp>
 @include@
 class I@NAME@
 {
@@ -387,7 +412,7 @@ typedef boost::shared_ptr<I@NAME@> I@NAME@Ptr;
 QI_TYPE_NOT_CLONABLE(I@NAME@);
 #endif
 """
-  (methods, signals) = (data[0], data[1])
+  (methods, signals, properties) = (data[METHODS], data[SIGNALS], data[PROPERTIES])
   methodsDecl = ''
   for method in methods:
     (cret, typed_args, arg_names) = method_to_cxx(method)
@@ -401,6 +426,11 @@ QI_TYPE_NOT_CLONABLE(I@NAME@);
     signals_decl += '    qi::Signal<void(%s)> & %s;\n' % (signature, sig[0])
     ctor_decl.append('qi::Signal<void(%s)> & %s' % (signature, sig[0]))
     ctor_init.append('%s(%s)' % (sig[0], sig[0]))
+  for prop in properties:
+    signature = idltype_to_cxxtype(prop[1])
+    signals_decl += '    qi::Property<%s> & %s;\n' % (signature, prop[0])
+    ctor_decl.append('qi::Property<%s> & %s' % (signature, prop[0]))
+    ctor_init.append('%s(%s)' % (prop[0], prop[0]))
   if len(ctor_decl):
     ctor_decl = ','.join(ctor_decl)
     ctor_init =  ':' + '\n      ,'.join(ctor_init)
@@ -431,8 +461,10 @@ def raw_to_proxy(class_name, data, return_future, implement_interface, include):
 
 #include <qi/types.hpp>
 #include <qitype/signal.hpp>
+#include <qitype/property.hpp>
 #include <qitype/genericobject.hpp>
 #include <qitype/proxysignal.hpp>
+#include <qitype/proxyproperty.hpp>
 
 @include@
 
@@ -459,7 +491,7 @@ QI_TYPE_PROXY(@className@Proxy);
   forward_decls = "class @className@Proxy;\ntypedef boost::shared_ptr<@className@Proxy> @className@ProxyPtr;\n"
   forward_decls = forward_decls.replace('@className@', class_name)
   #generate methods
-  (methods, signals) = (data[0], data[1])
+  (methods, signals, properties) = (data[METHODS], data[SIGNALS], data[PROPERTIES])
   method_impls = ""
   register_proxy = ''
   if implement_interface:
@@ -488,7 +520,10 @@ QI_TYPE_PROXY(@className@Proxy);
   for sig in signals:
     signal_decl += '  qi::ProxySignal<void(' + ','.join(map(idltype_to_cxxtype, sig[1])) +')> ' + sig[0] + ';\n'
     ctor += '  , {0}(obj, "{0}")\n'.format(sig[0])
-
+  for prop in properties:
+    print(prop[1])
+    signal_decl += '  qi::ProxyProperty<' + idltype_to_cxxtype(prop[1]) + '> ' + prop[0] + ';\n'
+    ctor += '  , {0}(obj, "{0}")\n'.format(prop[0])
   result = skeleton
   replace = {
       'GARD': '_' + class_name.upper() + '_PROXY_HPP_',
@@ -535,7 +570,7 @@ qi::ObjectPtr TYPEmake_one(const std::string&)
   template = template.replace('MAKEONE', make_one)
   advertise = ''
   bouncers = ''
-  (methods, signals, annotations) = (data[0], data[1], data[2])
+  (methods, signals, properties, annotations) = (data[0], data[1], data[2], data[3])
   if 'threadSafe' in annotations:
     advertise += '  I%sbuilder.setThreadingModel(qi::ObjectThreadingModel_MultiThread);\n' % class_name
   cns = class_name + 'Service'
@@ -559,6 +594,12 @@ qi::ObjectPtr TYPEmake_one(const std::string&)
     #advertise += '  builder.advertiseEvent("{0}", {1}::{0});\n'.format(s[0], class_name + 'Service')
     advertise += '  {3}.advertiseEvent<void({2})>("{0}", qi::ObjectTypeBuilderBase::SignalMemberGetter(&signalget_{1}_{0}));\n'.format(
       s[0], class_name + 'Service', ','.join(map(idltype_to_cxxtype, s[1])), builder)
+  for s in properties:
+    bouncers += 'inline qi::PropertyBase* propertyget_%s_%s(void* inst) { return &reinterpret_cast<%s*>(inst)->%s;}\n'%(
+     cns, s[0], cns, s[0])
+    #advertise += '  builder.advertiseEvent("{0}", {1}::{0});\n'.format(s[0], class_name + 'Service')
+    advertise += '  {3}.advertiseProperty<{2}>("{0}", qi::ObjectTypeBuilderBase::PropertyMemberGetter(&propertyget_{1}_{0}));\n'.format(
+      s[0], class_name + 'Service', idltype_to_cxxtype(s[1]), builder)
   register = ''
   if register_to_factory:
     register = '  qi::registerObjectFactory("{}", &{}make_one);'.format(class_name + 'Service', class_name)
@@ -568,7 +609,7 @@ qi::ObjectPtr TYPEmake_one(const std::string&)
 def raw_to_cxx_service_skeleton(class_name, data, implement_interface, include):
   """ Produce skeleton of C++ implementation of the service.
   """
-  result = "#include <qitype/signal.hpp>\n"
+  result = "#include <qitype/signal.hpp>\n#include <qitype/property.hpp>\n"
   result += ''.join(['#include <' + x + '>\n' for x in include])
   result += '\n'
   inherits = ''
@@ -665,10 +706,12 @@ inline void release_ptr(T ptr)
 I@name@Ptr interface_from_bound(@impl@ ptr);
 @name@ProxyPtr proxy_from_interface(I@name@Ptr ptr);
 """
-  (methods, signals) = (data[0], data[1])
+  (methods, signals, properties) = (data[METHODS], data[SIGNALS], data[PROPERTIES])
   signal_init = []
   for s in signals:
     signal_init.append('impl->' + s[0])
+  for p in properties:
+    signal_init.append('impl->' + p[0])
   method_bounce = ''
   emit_interface = dict()
   for method in methods:
@@ -683,8 +726,6 @@ I@name@Ptr interface_from_bound(@impl@ ptr);
     # FooPtr foo;
     # IFooPtr ifoo = interface_from_bound(foo); // generated by binder(us)
     # FooProxyPtr foop = proxy_from_interface(ifoo); // generated by proxy
-    if ret.find("LogListen") != -1:
-      print("TCHOOO TCHOO " + ret + "  " + method[2])
     if method[2] in REV_MAP and method[2].find("Ptr") != -1: # FIXME make a more clever test
       #forward-declare converter functions we use
       fwd = "I@name@Ptr interface_from_bound(@name@Ptr ptr);\n@name@ProxyPtr proxy_from_interface(I@name@Ptr ptr);\n"
@@ -810,6 +851,7 @@ def main(args):
   else:
     doxy_dir = run_doxygen(pargs.input)
     raw = doxyxml_to_raw(doxy_dir)
+    #print("DOXYDIR " + doxy_dir)
     shutil.rmtree(doxy_dir)
 
   if not len(pargs.include):
