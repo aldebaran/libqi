@@ -307,7 +307,6 @@ namespace qi {
     //true on success
     bool setCurrentThreadCPUAffinity(const std::vector<int> &cpus) {
      #if defined (__linux__) && !defined(ANDROID)
-      //Force the eventloop to always run on the same core
       cpu_set_t cpu;
       pthread_t self = pthread_self();
       CPU_ZERO(&cpu);
