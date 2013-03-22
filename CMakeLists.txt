@@ -110,7 +110,6 @@ set(SRCS ${CONFIG_H}
          src/transportserverasio_p.hpp
          src/transportsocket.hpp
          src/transportsocket.cpp
-         src/transportsocket_p.hpp
          src/transportsocketcache.cpp
          src/transportsocketcache.hpp
          src/tcptransportsocket.cpp

@@ -25,7 +25,6 @@
 
 #include "message.hpp"
 #include <qi/buffer.hpp>
-#include "transportsocket_p.hpp"
 
 qiLogCategory("qimessaging.transportsocket");
 
@@ -33,50 +32,35 @@ namespace qi
 {
 
   TransportSocket::TransportSocket(qi::EventLoop *eventLoop)
-    : _p(new TransportSocketPrivate(this, eventLoop))
   {
     // Set messageReady signal to async mode to protect our network thread
     messageReady.setCallType(MetaCallType_Queued);
   }
-
-  TransportSocket::TransportSocket(TransportSocketPrivate *p)
-    : _p(p)
-  {
-    // Set messageReady signal to async mode to protect our network thread
-    messageReady.setCallType(MetaCallType_Queued);
-  }
-
-  TransportSocket::~TransportSocket()
-  {
-    delete _p;
-    _p = 0;
-  }
-
 
   qi::Url TransportSocket::url() const {
-    return _p->_url;
+    return _url;
   }
 
   TransportSocket::Status TransportSocket::status() const {
-    return _p->_status;
+    return _status;
   }
 
   int TransportSocket::error() const
   {
-    return _p->_err;
+    return _err;
   }
 
   bool TransportSocket::isConnected() const
   {
-    return _p->_status == qi::TransportSocket::Status_Connected;
+    return _status == qi::TransportSocket::Status_Connected;
   }
 
   qi::SignalBase::Link TransportSocket::messagePendingConnect(unsigned int serviceId, unsigned int objectId, boost::function<void (const qi::Message&)> fun) {
-    return _p->_dispatcher.messagePendingConnect(serviceId, objectId, fun);
+    return _dispatcher.messagePendingConnect(serviceId, objectId, fun);
   }
 
   bool                 TransportSocket::messagePendingDisconnect(unsigned int serviceId, unsigned int objectId, qi::SignalBase::Link linkId) {
-    return _p->_dispatcher.messagePendingDisconnect(serviceId, objectId, linkId);
+    return _dispatcher.messagePendingDisconnect(serviceId, objectId, linkId);
   }
 
   TransportSocketPtr makeTransportSocket(const std::string &protocol, qi::EventLoop *eventLoop) {

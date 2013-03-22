@@ -15,6 +15,7 @@
 # include <qitype/signal.hpp>
 # include <string>
 # include <boost/enable_shared_from_this.hpp>
+# include "messagedispatcher.hpp"
 
 namespace qi
 {
@@ -34,7 +35,6 @@ namespace qi
 
   public:
     explicit TransportSocket(qi::EventLoop* eventLoop = qi::getDefaultNetworkEventLoop());
-    virtual ~TransportSocket();
 
     virtual qi::FutureSync<void> connect(const qi::Url &url) = 0;
     virtual qi::FutureSync<void> disconnect()                = 0;
@@ -51,6 +51,14 @@ namespace qi
     static const unsigned int ALL_OBJECTS = (unsigned int)-1;
     qi::SignalBase::Link messagePendingConnect(unsigned int serviceId, unsigned int objectId, boost::function<void (const qi::Message&)> fun);
     bool                 messagePendingDisconnect(unsigned int serviceId, unsigned int objectId, qi::SignalBase::Link linkId);
+
+  public:
+    qi::EventLoop*          _eventLoop;
+    qi::MessageDispatcher   _dispatcher;
+
+    int                     _err;
+    TransportSocket::Status _status;
+    qi::Url                 _url;
 
   public:
     // C4251

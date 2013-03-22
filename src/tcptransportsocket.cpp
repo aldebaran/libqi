@@ -22,7 +22,6 @@
 #include <boost/make_shared.hpp>
 
 #include "tcptransportsocket.hpp"
-#include "transportsocket_p.hpp"
 #include "message_p.hpp"
 
 #include <qi/log.hpp>
@@ -39,8 +38,7 @@ qiLogCategory("qimessaging.transportsocket");
 namespace qi
 {
   TcpTransportSocket::TcpTransportSocket(EventLoop* eventLoop, bool ssl, void* s)
-    : TransportSocketPrivate(this, eventLoop)
-    , TransportSocket(this)
+    : TransportSocket()
     , _ssl(ssl)
     , _sslHandshake(false)
     , _abort(boost::make_shared<bool>(false))
@@ -52,6 +50,10 @@ namespace qi
     , _connecting(false)
     , _sending(false)
   {
+    _eventLoop = eventLoop;
+    _err = 0;
+    _status = qi::TransportSocket::Status_Disconnected;
+
     if (s != 0)
     {
 #ifdef WITH_SSL
@@ -186,12 +188,12 @@ namespace qi
       error(erc);
       return;
     }
-      qiLogDebug() << _self << " Recv (" << _msg->type() << "):" << _msg->address();
+      qiLogDebug() << this << " Recv (" << _msg->type() << "):" << _msg->address();
     static int usWarnThreshold = os::getenv("QIMESSAGING_SOCKET_DISPATCH_TIME_WARN_THRESHOLD").empty()?0:strtol(os::getenv("QIMESSAGING_SOCKET_DISPATCH_TIME_WARN_THRESHOLD").c_str(),0,0);
     qi::int64_t start = 0;
     if (usWarnThreshold)
       start = os::ustime(); // call might be not that cheap
-    _self->messageReady(*_msg);
+    messageReady(*_msg);
     _dispatcher.dispatch(*_msg);
     if (usWarnThreshold)
     {
@@ -206,7 +208,7 @@ namespace qi
   void TcpTransportSocket::error(const boost::system::error_code& erc)
   {
     _status = qi::TransportSocket::Status_Disconnected;
-    _self->disconnected(erc.value());
+    disconnected(erc.value());
 
     if (_connecting)
     {
@@ -259,7 +261,7 @@ namespace qi
       ip::tcp::resolver::iterator it = r.resolve(q);
       // asynchronous connect
       _socket->lowest_layer().async_connect(*it,
-        boost::bind(&TcpTransportSocket::connected, this, _1));
+        boost::bind(&TcpTransportSocket::connected2, this, _1));
       return _connectPromise.future();
     }
     catch (const std::exception& e)
@@ -285,7 +287,7 @@ namespace qi
     {
       _status = qi::TransportSocket::Status_Connected;
       _connectPromise.setValue(0);
-      _self->connected();
+      connected();
       _sslHandshake = true;
       // Transmit each Message without delay
       const boost::asio::ip::tcp::no_delay option( true );
@@ -294,7 +296,7 @@ namespace qi
     }
   }
 
-  void TcpTransportSocket::connected(const boost::system::error_code& erc)
+  void TcpTransportSocket::connected2(const boost::system::error_code& erc)
   {
     _connecting = false;
     if (erc)
@@ -317,7 +319,7 @@ namespace qi
       {
         _status = qi::TransportSocket::Status_Connected;
         _connectPromise.setValue(0);
-        _self->connected();
+        connected();
         // Transmit each Message without delay
         const boost::asio::ip::tcp::no_delay option( true );
         _socket->lowest_layer().set_option(option);
@@ -348,7 +350,7 @@ namespace qi
 
   bool TcpTransportSocket::send(const qi::Message &msg)
   {
-    qiLogDebug() << _self << " Send (" << msg.type() << "):" << msg.address();
+    qiLogDebug() << this << " Send (" << msg.type() << "):" << msg.address();
     boost::mutex::scoped_lock lock(_sendQueueMutex);
 
     if (!_sending)

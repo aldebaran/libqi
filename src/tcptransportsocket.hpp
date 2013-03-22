@@ -21,16 +21,13 @@
 # include <qimessaging/url.hpp>
 # include "transportsocket.hpp"
 # include <qi/eventloop.hpp>
-
-# include "transportsocket_p.hpp"
-
-
 # include "transportsocket.hpp"
 # include <qi/eventloop.hpp>
+# include "messagedispatcher.hpp"
 
 namespace qi
 {
-  class TcpTransportSocket : public TransportSocketPrivate, public TransportSocket
+  class TcpTransportSocket : public TransportSocket
   {
   public:
     explicit TcpTransportSocket(EventLoop* eventloop = getDefaultNetworkEventLoop(), bool ssl = false, void* s = 0);
@@ -43,7 +40,7 @@ namespace qi
 
   private:
     void error(const boost::system::error_code& erc);
-    void connected(const boost::system::error_code& erc);
+    void connected2(const boost::system::error_code& erc);
     void handshake(const boost::system::error_code& erc);
     void onRead();
     void onReadHeader(const boost::system::error_code& erc, std::size_t);
