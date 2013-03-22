@@ -33,8 +33,7 @@ namespace qi
   class TcpTransportSocket : public TransportSocketPrivate, public TransportSocket
   {
   public:
-    explicit TcpTransportSocket(EventLoop* eventloop = getDefaultNetworkEventLoop(), bool ssl = false);
-    explicit TcpTransportSocket(void* s, EventLoop* eventloop = getDefaultNetworkEventLoop(), bool ssl = false);
+    explicit TcpTransportSocket(EventLoop* eventloop = getDefaultNetworkEventLoop(), bool ssl = false, void* s = 0);
     virtual ~TcpTransportSocket();
 
     virtual qi::FutureSync<void> connect(const qi::Url &url);
@@ -52,8 +51,6 @@ namespace qi
 
     void send_(qi::Message* msg);
     void sendCont(const boost::system::error_code& erc, Message* msg, boost::shared_ptr<bool> abort);
-    void connect_(TransportSocketPtr socket, const qi::Url &url);
-    void disconnect_(TransportSocketPtr socket);
   private:
     bool _ssl;
     bool _sslHandshake;

@@ -38,11 +38,12 @@ qiLogCategory("qimessaging.transportsocket");
 
 namespace qi
 {
-  TcpTransportSocket::TcpTransportSocket(EventLoop* eventLoop, bool ssl)
+  TcpTransportSocket::TcpTransportSocket(EventLoop* eventLoop, bool ssl, void* s)
     : TransportSocketPrivate(this, eventLoop)
     , TransportSocket(this)
     , _ssl(ssl)
     , _sslHandshake(false)
+    , _abort(boost::make_shared<bool>(false))
 #ifdef WITH_SSL
     , _sslContext(boost::asio::ssl::context::sslv23)
 #endif
@@ -51,45 +52,34 @@ namespace qi
     , _connecting(false)
     , _sending(false)
   {
-#ifdef WITH_SSL
-    if (_ssl)
+    if (s != 0)
     {
-      _sslContext.set_verify_mode(boost::asio::ssl::verify_none);
-    }
-
-    _socket = (new boost::asio::ssl::stream<boost::asio::ip::tcp::socket>((*(boost::asio::io_service*)eventLoop->nativeHandle()), _sslContext));
-#else
-    _socket = new boost::asio::ip::tcp::socket(*(boost::asio::io_service*)eventLoop->nativeHandle());
-#endif
-
-    assert(eventLoop);
-    _disconnectPromise.setValue(0); // not connected, so we are finished disconnecting
-    _abort = boost::make_shared<bool>(false);
-  }
-
-  TcpTransportSocket::TcpTransportSocket(void* s, EventLoop* eventLoop, bool ssl)
-    : TransportSocketPrivate(this, eventLoop)
-    , TransportSocket(this)
-    , _ssl(ssl)
-    , _sslHandshake(false)
 #ifdef WITH_SSL
-    , _sslContext(boost::asio::ssl::context::sslv23)
-    , _socket((boost::asio::ssl::stream<boost::asio::ip::tcp::socket>*) s)
+      _socket = (boost::asio::ssl::stream<boost::asio::ip::tcp::socket>*) s;
 #else
-    , _socket((boost::asio::ip::tcp::socket*) s)
+      _socket = (boost::asio::ip::tcp::socket*) s;
 #endif
-    , _readHdr(true)
-    , _msg(0)
-    , _connecting(false)
-    , _sending(false)
-  {
-    assert(eventLoop);
-    _status = qi::TransportSocket::Status_Connected;
-    _abort = boost::make_shared<bool>(false);
+      _status = qi::TransportSocket::Status_Connected;
 
-    // Transmit each Message without delay
-    const boost::asio::ip::tcp::no_delay option( true );
-    _socket->lowest_layer().set_option(option);
+      // Transmit each Message without delay
+      const boost::asio::ip::tcp::no_delay option( true );
+      _socket->lowest_layer().set_option(option);
+    }
+    else
+    {
+#ifdef WITH_SSL
+      if (_ssl)
+      {
+        _sslContext.set_verify_mode(boost::asio::ssl::verify_none);
+      }
+
+      _socket = (new boost::asio::ssl::stream<boost::asio::ip::tcp::socket>((*(boost::asio::io_service*)eventLoop->nativeHandle()), _sslContext));
+#else
+      _socket = new boost::asio::ip::tcp::socket(*(boost::asio::io_service*)eventLoop->nativeHandle());
+#endif
+
+      _disconnectPromise.setValue(0); // not connected, so we are finished disconnecting
+    }
   }
 
 

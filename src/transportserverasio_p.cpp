@@ -51,7 +51,7 @@ namespace qi
       self->acceptError(erc.value());
       return;
     }
-    qi::TransportSocketPtr socket = qi::TcpTransportSocketPtr(new TcpTransportSocket(s, context, _ssl));
+    qi::TransportSocketPtr socket = qi::TcpTransportSocketPtr(new TcpTransportSocket(context, _ssl, s));
     self->newConnection(socket);
 #ifdef WITH_SSL
     s = new boost::asio::ssl::stream<boost::asio::ip::tcp::socket>(_acceptor.get_io_service(), _sslContext);
