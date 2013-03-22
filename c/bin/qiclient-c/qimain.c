@@ -30,9 +30,9 @@ int make_call(qi_application_t *app, char *addr, int ev)
   qi_value_t*   message = 0;
   qi_value_t*   str = 0;
   qi_future_t*  fut = 0;
-  char*         ss = 0;
+  const char*   ss = 0;
   qi_value_t*   ret = 0;
-  char*         result = 0;
+  const char*   result = 0;
 
   qi_session_connect(session, addr);
 
