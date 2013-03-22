@@ -9,7 +9,7 @@
 # define TYPES_HPP_
 
 // visual studio 2008 and lower version
-# if (_MSC_VER) && (_MSC_VER <= 1500)
+# if defined(_MSC_VER) && (_MSC_VER <= 1500)
 namespace qi
 {
   typedef signed __int8     int8_t;

@@ -30,7 +30,7 @@ TEST(TestBuffer, TestReserveSpace)
   image = new unsigned char [fiveM];
   srand(static_cast<unsigned int>(time(NULL)));
   for (int i = 0; i < fiveM; i++)
-    image[i] = rand() % 256;
+    image[i] = static_cast<unsigned char>(rand() % 256);
 
   buffer.write(image, fiveM);
   resultImage = (unsigned char*)buffer.data() + 150 + 1024;

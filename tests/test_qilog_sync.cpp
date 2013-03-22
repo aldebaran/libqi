@@ -263,55 +263,55 @@ TEST(log, perf)
   qi::log::setVerbosity(qi::log::info);
   qi::int64_t t;
   qiLogCategory("qi.test");
-  int count = 1000;
+  long count = 1000;
   if (getenv("COUNT"))
     count = strtol(getenv("COUNT"), 0, 0);
 
   t = qi::os::ustime();
-  for (int i = 0; i < count; i++)
+  for (long int i = 0; i < count; i++)
     qiLogWarning("qi.test") << "foo " << i;
   t = qi::os::ustime() - t;
   std::cerr << "qiLogWarning(cat) << stream " << t << std::endl;
 
   t = qi::os::ustime();
-  for (int i = 0; i < count; i++)
+  for (long int i = 0; i < count; i++)
     qiLogWarningF("foo %s", i);
   t = qi::os::ustime() - t;
   std::cerr << "qiLogWarningF(format) " << t << std::endl;
 
   t = qi::os::ustime();
-  for (int i = 0; i < count; i++)
+  for (long int i = 0; i < count; i++)
     qiLogWarning() << "foo " <<  i;
   t = qi::os::ustime() - t;
   std::cerr << "qiLogWarning() << stream " << t << std::endl;
 
   t = qi::os::ustime();
-  for (int i = 0; i < count; i++)
+  for (long int i = 0; i < count; i++)
     qiLogWarning("qi.test", "foo %s", i) <<"bar " << i;
   t = qi::os::ustime() - t;
   std::cerr << "qiLogWarning(cat, format) << stream " << t << std::endl;
 
 
     t = qi::os::ustime();
-  for (int i = 0; i < count; i++)
+  for (long int i = 0; i < count; i++)
     qiLogDebug("qi.test") << "foo " << i;
   t = qi::os::ustime() - t;
   std::cerr << "qiLogDebug(cat) << stream " << t << std::endl;
 
   t = qi::os::ustime();
-  for (int i = 0; i < count; i++)
+  for (long int i = 0; i < count; i++)
     qiLogDebugF("foo %s", i);
   t = qi::os::ustime() - t;
   std::cerr << "qiLogDebugF(format) " << t << std::endl;
 
   t = qi::os::ustime();
-  for (int i = 0; i < count; i++)
+  for (long int i = 0; i < count; i++)
     qiLogDebug() << "foo " <<  i;
   t = qi::os::ustime() - t;
   std::cerr << "qiLogDebug() << stream " << t << std::endl;
 
   t = qi::os::ustime();
-  for (int i = 0; i < count; i++)
+  for (long int i = 0; i < count; i++)
     qiLogDebug("qi.test", "foo %s", i) <<"bar " << i;
   t = qi::os::ustime() - t;
   std::cerr << "qiLogDebug(cat, format) << stream " << t << std::endl;

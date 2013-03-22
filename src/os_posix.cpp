@@ -212,7 +212,7 @@ namespace qi {
 
       // cast ushort into int to check all ports between
       // [49152, 65535] (e.g. USHRT_MAX)
-      int iPort = port != 0 ? static_cast<int>(port) : 49152;
+      unsigned short iPort = port != 0 ? port : static_cast<unsigned short>(49152);
       int unavailable = -1;
 
       do
@@ -228,7 +228,7 @@ namespace qi {
         }
         ++iPort;
       }
-      while (iPort <= USHRT_MAX);
+      while (iPort + 1 > USHRT_MAX);
 
       if (unavailable)
       {
