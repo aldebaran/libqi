@@ -92,7 +92,7 @@ TEST_F(TestCBindings, CallWithComplexTypes)
   qi_future_destroy(fuc);
 
   unsigned long long id = qi_future_get_uint64(qi_session_register_service(session, "service", obj), 0);
-  EXPECT_GT(id, 0);
+  EXPECT_GT(id, 0u);
 
   qi_object_t* proxy = qi_future_get_object(qi_session_get_service(session, "service"));
 
@@ -121,7 +121,7 @@ TEST_F(TestCBindings, TestDestructionOrder)
   qi_future_destroy(fuc);
 
 
-  EXPECT_GT(qi_future_get_uint64(qi_session_register_service(session, "service", obj), 0), 0);
+  EXPECT_GT(qi_future_get_uint64(qi_session_register_service(session, "service", obj), 0), 0u);
 
   qi_future_t *fu = qi_session_get_service(session, "service");
   qi_value_t* fuv = qi_future_get_value(fu);
@@ -156,8 +156,8 @@ TEST_F(TestCBindings, AlreadyRegistered)
   qi_future_destroy(fuc);
 
 
-  EXPECT_GT(qi_future_get_uint64(qi_session_register_service(session, "service", obj), 0), 0);
-  EXPECT_EQ(0, qi_future_get_uint64(qi_session_register_service(session, "service", obj), 0));
+  EXPECT_GT(qi_future_get_uint64(qi_session_register_service(session, "service", obj), 0), 0u);
+  EXPECT_EQ(0u, qi_future_get_uint64(qi_session_register_service(session, "service", obj), 0));
   qi_object_destroy(obj);
   qi_session_destroy(session);
 }

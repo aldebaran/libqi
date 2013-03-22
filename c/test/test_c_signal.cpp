@@ -60,7 +60,7 @@ TEST(TestSignal, SimpleSignalConnect)
   qi_object_builder_destroy(qiob);
 
   unsigned long long link = qi_future_get_int64(qi_object_event_connect(object, "plouf::(i)", signal_callback_0, 0), 0);
-  ASSERT_GE(link, 0);
+  ASSERT_GE(link, 0u);
   int n = 42;
   qi_value_t *val = create_tup(n);
 
