@@ -34,7 +34,11 @@ namespace qi
     };
 
   public:
-    explicit TransportSocket(qi::EventLoop* eventLoop = qi::getDefaultNetworkEventLoop());
+    explicit TransportSocket(qi::EventLoop* eventLoop = qi::getDefaultNetworkEventLoop())
+    {
+      // Set messageReady signal to async mode to protect our network thread
+      messageReady.setCallType(MetaCallType_Queued);
+    }
 
     virtual qi::FutureSync<void> connect(const qi::Url &url) = 0;
     virtual qi::FutureSync<void> disconnect()                = 0;
@@ -43,14 +47,33 @@ namespace qi
     /// Must be called once if the socket is obtained through TransportServer::newConnection()
     virtual void  startReading() = 0;
 
-    bool    isConnected() const;
-    Status  status() const;
-    int     error() const;
-    qi::Url url() const;
+    qi::Url url() const {
+      return _url;
+    }
+
+    Status status() const {
+      return _status;
+    }
+
+    int error() const
+    {
+      return _err;
+    }
+
+    bool isConnected() const
+    {
+      return _status == qi::TransportSocket::Status_Connected;
+    }
 
     static const unsigned int ALL_OBJECTS = (unsigned int)-1;
-    qi::SignalBase::Link messagePendingConnect(unsigned int serviceId, unsigned int objectId, boost::function<void (const qi::Message&)> fun);
-    bool                 messagePendingDisconnect(unsigned int serviceId, unsigned int objectId, qi::SignalBase::Link linkId);
+
+    qi::SignalBase::Link messagePendingConnect(unsigned int serviceId, unsigned int objectId, boost::function<void (const qi::Message&)> fun) {
+      return _dispatcher.messagePendingConnect(serviceId, objectId, fun);
+    }
+
+    bool                 messagePendingDisconnect(unsigned int serviceId, unsigned int objectId, qi::SignalBase::Link linkId) {
+      return _dispatcher.messagePendingDisconnect(serviceId, objectId, linkId);
+    }
 
   public:
     qi::EventLoop*          _eventLoop;
