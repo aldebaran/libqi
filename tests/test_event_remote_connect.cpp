@@ -66,8 +66,8 @@ protected:
     unsigned int nbLocalServices = TestMode::getTestMode() == TestMode::Mode_Nightmare ? 2 : 1;
     unsigned int nbConnectedServices = TestMode::getTestMode() == TestMode::Mode_Nightmare ? 5 : 3;
 
-    ASSERT_GT(p1.server()->registerService("coin1", oserver1).wait(1000), 0);
-    ASSERT_GT(p2.server()->registerService("coin2", oserver2).wait(1000), 0);
+    ASSERT_TRUE(p1.server()->registerService("coin1", oserver1).hasValue(1000));
+    ASSERT_TRUE(p2.server()->registerService("coin2", oserver2).hasValue(1000));
     EXPECT_EQ(nbLocalServices, p1.server()->services(qi::Session::ServiceLocality_Local).value().size());
     EXPECT_EQ(nbLocalServices, p2.server()->services(qi::Session::ServiceLocality_Local).value().size());
 
@@ -129,7 +129,7 @@ TEST_F(TestObject, Connect1)
 {
   oclient1->connect(oe1, oclient1, om1).wait(2000);
   oclient1->emitEvent("fire1", 12);
-  ASSERT_TRUE(payload1->future().wait(2000));
+  ASSERT_TRUE(payload1->future().hasValue(2000));
   EXPECT_EQ(12, payload1->future().value());
 }
 
@@ -137,7 +137,7 @@ TEST_F(TestObject, Connect2)
 {
   oclient1->connect(oe1, oclient1, om1).wait(2000);
   oserver1->emitEvent("fire1", 12);
-  ASSERT_TRUE(payload1->future().wait(2000));
+  ASSERT_TRUE(payload1->future().hasValue(2000));
   EXPECT_EQ(12, payload1->future().value());
 }
 
@@ -146,7 +146,7 @@ TEST_F(TestObject, Connect3)
 {
   oclient1->connect(oe1, oserver1, sm1).wait(2000);
   oserver1->emitEvent("fire1", 12);
-  ASSERT_TRUE(payload1->future().wait(2000));
+  ASSERT_TRUE(payload1->future().hasValue(2000));
   EXPECT_EQ(12, payload1->future().value());
 }
 
@@ -154,7 +154,7 @@ TEST_F(TestObject, Connect4)
 {
   oclient1->connect(oe1, oserver1, sm1).wait(2000);
   oclient1->emitEvent("fire1", 12);
-  ASSERT_TRUE(payload1->future().wait(2000));
+  ASSERT_TRUE(payload1->future().hasValue(2000));
   EXPECT_EQ(12, payload1->future().value());
 }
 
@@ -162,7 +162,7 @@ TEST_F(TestObject, Connect5)
 {
   oserver1->connect(se1, oclient1, om1).wait(2000);
   oclient1->emitEvent("fire1", 12);
-  ASSERT_TRUE(payload1->future().wait(2000));
+  ASSERT_TRUE(payload1->future().hasValue(2000));
   EXPECT_EQ(12, payload1->future().value());
 }
 
@@ -170,7 +170,7 @@ TEST_F(TestObject, Connect6)
 {
   oserver1->connect(se1, oclient1, om1).wait(2000);
   oserver1->emitEvent("fire1", 12);
-  ASSERT_TRUE(payload1->future().wait(2000));
+  ASSERT_TRUE(payload1->future().hasValue(2000));
   EXPECT_EQ(12, payload1->future().value());
 }
 
@@ -178,7 +178,7 @@ TEST_F(TestObject, Connect7)
 {
   oserver1->connect(se1, oserver1, sm1).wait(2000);
   oserver1->emitEvent("fire1", 12);
-  ASSERT_TRUE(payload1->future().wait(2000));
+  ASSERT_TRUE(payload1->future().hasValue(2000));
   EXPECT_EQ(12, payload1->future().value());
 }
 
@@ -186,7 +186,7 @@ TEST_F(TestObject, Connect8)
 {
   oserver1->connect(se1, oserver1, sm1).wait(2000);
   oclient1->emitEvent("fire1", 12);
-  ASSERT_TRUE(payload1->future().wait(2000));
+  ASSERT_TRUE(payload1->future().hasValue(2000));
   EXPECT_EQ(12, payload1->future().value());
 }
 
@@ -202,7 +202,7 @@ TEST_F(TestObject, Connect10)
 {
   oclient1->connect(oe1, oclient2, om2).wait(2000);
   oclient1->emitEvent("fire1", 12);
-  ASSERT_TRUE(payload2->future().wait(2000));
+  ASSERT_TRUE(payload2->future().hasValue(2000));
   EXPECT_EQ(12, payload2->future().value());
 }
 
@@ -210,7 +210,7 @@ TEST_F(TestObject, Connect11)
 {
   oclient1->connect(oe1, oclient2, om2).wait(2000);
   oserver1->emitEvent("fire1", 12);
-  ASSERT_TRUE(payload2->future().wait(2000));
+  ASSERT_TRUE(payload2->future().hasValue(2000));
   EXPECT_EQ(12, payload2->future().value());
 }
 
@@ -219,7 +219,7 @@ TEST_F(TestObject, Connect12)
 {
   oclient1->connect(oe1, oserver2, sm2).wait(2000);
   oserver1->emitEvent("fire1", 12);
-  ASSERT_TRUE(payload2->future().wait(2000));
+  ASSERT_TRUE(payload2->future().hasValue(2000));
   EXPECT_EQ(12, payload2->future().value());
 }
 
@@ -227,7 +227,7 @@ TEST_F(TestObject, Connect13)
 {
   oclient1->connect(oe1, oserver2, sm2).wait(2000);
   oclient1->emitEvent("fire1", 12);
-  ASSERT_TRUE(payload2->future().wait(2000));
+  ASSERT_TRUE(payload2->future().hasValue(2000));
   EXPECT_EQ(12, payload2->future().value());
 }
 
@@ -235,7 +235,7 @@ TEST_F(TestObject, Connect14)
 {
   oserver1->connect(se1, oclient2, om2).wait(2000);
   oclient1->emitEvent("fire1", 12);
-  ASSERT_TRUE(payload2->future().wait(2000));
+  ASSERT_TRUE(payload2->future().hasValue(2000));
   EXPECT_EQ(12, payload2->future().value());
 }
 
@@ -243,7 +243,7 @@ TEST_F(TestObject, Connect15)
 {
   oserver1->connect(se1, oclient2, om2).wait(2000);
   oserver1->emitEvent("fire1", 12);
-  ASSERT_TRUE(payload2->future().wait(2000));
+  ASSERT_TRUE(payload2->future().hasValue(2000));
   EXPECT_EQ(12, payload2->future().value());
 }
 
@@ -251,7 +251,7 @@ TEST_F(TestObject, Connect16)
 {
   oserver1->connect(se1, oserver2, sm2).wait(2000);
   oserver1->emitEvent("fire1", 12);
-  ASSERT_TRUE(payload2->future().wait(2000));
+  ASSERT_TRUE(payload2->future().hasValue(2000));
   EXPECT_EQ(12, payload2->future().value());
 }
 
@@ -259,7 +259,7 @@ TEST_F(TestObject, Connect17)
 {
   oserver1->connect(se1, oserver2, sm2).wait(2000);
   oclient1->emitEvent("fire1", 12);
-  ASSERT_TRUE(payload2->future().wait(2000));
+  ASSERT_TRUE(payload2->future().hasValue(2000));
   EXPECT_EQ(12, payload2->future().value());
 }
 

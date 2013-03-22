@@ -542,7 +542,7 @@ void servicecall_addone(qi::Promise<int>& prom, qi::Session* s)
   qiLogDebug() << "TEST: got service";
   qi::Future<int> v = obj2Proxy->call<int>("serviceCall", "adder", "addOne", 5);
   v.wait(500);
-  if (!v.isReady())
+  if (!v.isFinished())
     prom.setError("timeout");
   else if (v.hasError())
     prom.setError(v.error());
@@ -589,9 +589,9 @@ TEST(TestCall, DeadLock)
   qi::getDefaultObjectEventLoop()->async(
     boost::bind(&servicecall_addone, boost::ref(prom), p.server()));
 
-  for (unsigned i=0; i<20 && !prom.future().isReady(); ++i)
+  for (unsigned i=0; i<20 && !prom.future().isFinished(); ++i)
     qi::os::msleep(50);
-  ASSERT_TRUE(prom.future().isReady());
+  ASSERT_TRUE(prom.future().isFinished());
   ASSERT_EQ(6, prom.future().value());
 }
 
@@ -619,7 +619,7 @@ int makeObjectCall(qi::ObjectPtr ptr, const std::string& fname, int arg)
 
 void bounceFuture(qi::Future<int> s, qi::Promise<int> d, qi::ObjectPtr obj)
 {
-  if (s.isReady())
+  if (s.hasValue())
     d.setValue(s.value());
   else
     d.setError(s.error());
@@ -661,7 +661,7 @@ TEST(TestCall, TestObjectPassing)
   proxy->call<void>("bindObjectEvent", unregisteredObj, "fire").wait();
   unregisteredObj->emitEvent("fire", 42);
   eventValue.future().wait(); //fixme wait(2s)
-  ASSERT_TRUE(eventValue.future().isReady());
+  ASSERT_TRUE(eventValue.future().isFinished());
   ASSERT_EQ(42, eventValue.future().value());
   eventValue.reset();
 
@@ -675,12 +675,12 @@ TEST(TestCall, TestObjectPassing)
   // This will delete the proxy
   unregisteredObj->emitEvent("fire", 0);
   eventValue.future().wait();
-  ASSERT_TRUE(eventValue.future().isReady());
+  ASSERT_TRUE(eventValue.future().isFinished());
   ASSERT_EQ(0, eventValue.future().value());
   eventValue.reset();
   unregisteredObj->emitEvent("fire", 1);
   eventValue.future().wait(1000);
-  ASSERT_TRUE(!eventValue.future().isReady());
+  ASSERT_TRUE(!eventValue.future().isFinished());
 
   // Check that unregisteredObj is no longuer held
   unregisteredObj.reset();
@@ -722,9 +722,9 @@ TEST(TestCall, TestObjectPassingReverse)
   - TADAAA
   */
   value.future().wait(100000);
-  if (value.future().hasError(1))
-    std::cerr << value.future().error() << std::endl;
-  ASSERT_TRUE(value.future().isReady());
+  if (value.future().hasError(qi::FutureTimeout_None))
+    std::cerr << "Err:" << value.future().error() << std::endl;
+  ASSERT_TRUE(value.future().isFinished());
   ASSERT_EQ(42, value.future().value());
 }
 
@@ -758,7 +758,7 @@ TEST(TestCall, TestObjectPassingReturn)
   ASSERT_TRUE(adder);
   qi::Future<int> f = adder->call<int>("add", 41);
   f.wait(1000);
-  ASSERT_TRUE(f.isReady());
+  ASSERT_TRUE(f.isFinished());
   ASSERT_EQ(42, f.value());
   adder.reset();
   qi::os::msleep(300);

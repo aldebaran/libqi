@@ -59,7 +59,7 @@ TEST(TestSignal, SimpleSignalConnect)
   qi_object_t *object = qi_object_builder_get_object(qiob);
   qi_object_builder_destroy(qiob);
 
-  unsigned long long link = qi_future_get_int64(qi_object_event_connect(object, "plouf::(i)", signal_callback_0, 0), 0);
+  unsigned long long link = qi_future_get_int64_default(qi_object_event_connect(object, "plouf::(i)", signal_callback_0, 0), 0);
   ASSERT_GE(link, 0u);
   int n = 42;
   qi_value_t *val = create_tup(n);
@@ -120,14 +120,14 @@ TEST(TestSignal, SignalDisconnect)
   qi_object_builder_destroy(qiob);
 
   qi_object_event_connect(object, "plouf::(i)", signal_callback_0, 0);
-  unsigned long long l = qi_future_get_uint64(qi_object_event_connect(object, "plouf::(i)", signal_callback_1, 0), 0);
+  unsigned long long l = qi_future_get_uint64_default(qi_object_event_connect(object, "plouf::(i)", signal_callback_1, 0), 0);
   qi_future_t* fut = qi_object_event_disconnect(object, l);
-  if (qi_future_has_error(fut)) {
+  if (qi_future_has_error(fut, QI_FUTURETIMEOUT_INFINITE)) {
     const char *errr = qi_future_get_error(fut);
     printf("future error: %s\n", errr);
     free((void*)errr);
   }
-  EXPECT_TRUE(!qi_future_has_error(fut));
+  EXPECT_TRUE(!qi_future_has_error(fut, QI_FUTURETIMEOUT_INFINITE));
   qi_future_destroy(fut);
 
   int n = 11;

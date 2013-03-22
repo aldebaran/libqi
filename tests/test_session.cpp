@@ -174,7 +174,7 @@ TEST(QiSession, AlreadyRegistered)
   qi::ObjectPtr obj(ob.object());
 
   session = new qi::Session();
-  EXPECT_TRUE(session->connect(ss.str()).wait(1000));
+  EXPECT_TRUE(session->connect(ss.str()).hasValue(1000));
   f = session->listen("tcp://0.0.0.0:0");
   f.wait(3000);
   ASSERT_TRUE(!f.hasError());
@@ -251,7 +251,7 @@ TEST(QiSession, getCallInConnect)
   qi::Future<void> ff = finito.future();
 
   ff.wait(2000);
-  EXPECT_TRUE(ff.isReady());
+  EXPECT_TRUE(ff.isFinished());
   EXPECT_TRUE(ses.isConnected());
 }
 

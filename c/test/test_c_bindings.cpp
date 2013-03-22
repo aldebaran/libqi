@@ -84,19 +84,21 @@ TEST_F(TestCBindings, CallWithComplexTypes)
 
   session = qi_session_create();
   qi_future_t* fuc = qi_session_connect(session, addr);
-  ASSERT_FALSE(qi_future_has_error(fuc));
+  ASSERT_FALSE(qi_future_has_error(fuc, QI_FUTURETIMEOUT_INFINITE));
   qi_future_destroy(fuc);
 
   fuc = qi_session_listen(session, "tcp://0.0.0.0:0");
-  ASSERT_FALSE(qi_future_has_error(fuc));
+  ASSERT_FALSE(qi_future_has_error(fuc, QI_FUTURETIMEOUT_INFINITE));
   qi_future_destroy(fuc);
 
-  unsigned long long id = qi_future_get_uint64(qi_session_register_service(session, "service", obj), 0);
+  unsigned long long id = qi_future_get_uint64_default(qi_session_register_service(session, "service", obj), 0);
   EXPECT_GT(id, 0u);
 
   qi_object_t* proxy = qi_future_get_object(qi_session_get_service(session, "service"));
 
-  qi_session_close(session);
+  qi_future_t *futc = qi_session_close(session);
+  qi_future_wait(futc, QI_FUTURETIMEOUT_INFINITE);
+  qi_future_destroy(futc);
   qi_session_destroy(session);
   qi_object_destroy(obj);
   qi_object_destroy(proxy);
@@ -113,15 +115,14 @@ TEST_F(TestCBindings, TestDestructionOrder)
 
   session = qi_session_create();
   qi_future_t* fuc = qi_session_connect(session, addr);
-  ASSERT_FALSE(qi_future_has_error(fuc));
+  ASSERT_FALSE(qi_future_has_error(fuc, QI_FUTURETIMEOUT_INFINITE));
   qi_future_destroy(fuc);
 
   fuc = qi_session_listen(session, "tcp://0.0.0.0:0");
-  ASSERT_FALSE(qi_future_has_error(fuc));
+  ASSERT_FALSE(qi_future_has_error(fuc, QI_FUTURETIMEOUT_INFINITE));
   qi_future_destroy(fuc);
 
-
-  EXPECT_GT(qi_future_get_uint64(qi_session_register_service(session, "service", obj), 0), 0u);
+  EXPECT_GT(qi_future_get_uint64_default(qi_session_register_service(session, "service", obj), 0), 0u);
 
   qi_future_t *fu = qi_session_get_service(session, "service");
   qi_value_t* fuv = qi_future_get_value(fu);
@@ -130,7 +131,9 @@ TEST_F(TestCBindings, TestDestructionOrder)
   qi_value_destroy(fuv);
   qi_future_destroy(fu);
 
-  qi_session_close(session);
+  qi_future_t *futc = qi_session_close(session);
+  qi_future_wait(futc, QI_FUTURETIMEOUT_INFINITE);
+  qi_future_destroy(futc);
   qi_session_destroy(session);
   qi_object_destroy(obj);
   qi_object_destroy(proxy);
@@ -148,16 +151,16 @@ TEST_F(TestCBindings, AlreadyRegistered)
 
   session = qi_session_create();
   qi_future_t* fuc = qi_session_connect(session, addr);
-  ASSERT_FALSE(qi_future_has_error(fuc));
+  ASSERT_FALSE(qi_future_has_error(fuc, QI_FUTURETIMEOUT_INFINITE));
   qi_future_destroy(fuc);
 
   fuc = qi_session_listen(session, "tcp://0.0.0.0:0");
-  ASSERT_FALSE(qi_future_has_error(fuc));
+  ASSERT_FALSE(qi_future_has_error(fuc, QI_FUTURETIMEOUT_INFINITE));
   qi_future_destroy(fuc);
 
 
-  EXPECT_GT(qi_future_get_uint64(qi_session_register_service(session, "service", obj), 0), 0u);
-  EXPECT_EQ(0u, qi_future_get_uint64(qi_session_register_service(session, "service", obj), 0));
+  EXPECT_GT(qi_future_get_uint64_default(qi_session_register_service(session, "service", obj), 0), 0u);
+  EXPECT_EQ(0u, qi_future_get_uint64_default(qi_session_register_service(session, "service", obj), 0));
   qi_object_destroy(obj);
   qi_session_destroy(session);
 }
@@ -179,17 +182,18 @@ TEST_F(TestCBindings, Call)
   session = qi_session_create();
   ASSERT_TRUE(session != 0);
 
-  qi_future_wait(qi_session_connect(session, addr), 0);
+  qi_future_wait(qi_session_connect(session, addr), QI_FUTURETIMEOUT_INFINITE);
 
 
   ASSERT_TRUE(qi_session_listen(session, "tcp://0.0.0.0:0"));
 
-  id = qi_future_get_uint64(qi_session_register_service(session, "serviceTest", object), 0);
+  id = qi_future_get_uint64_default(qi_session_register_service(session, "serviceTest", object), 0);
   client_session = qi_session_create();
   ASSERT_TRUE(client_session != 0);
 
-  qi_session_connect(client_session, addr);
-
+  qi_future_t *futco = qi_session_connect(client_session, addr);
+  qi_future_wait(futco, QI_FUTURETIMEOUT_INFINITE);
+  qi_future_destroy(futco);
   remote = qi_future_get_object(qi_session_get_service(session, "serviceTest"));
   ASSERT_TRUE(remote != 0);
 
@@ -206,11 +210,11 @@ TEST_F(TestCBindings, Call)
   // call
   qi_future_t* fut = qi_object_call(object, "reply::(s)", cont);
 
-  qi_future_wait(fut, 0);
+  qi_future_wait(fut, QI_FUTURETIMEOUT_INFINITE);
   qi_value_t *ret = 0;
 
-  ASSERT_EQ(0, qi_future_has_error(fut));
-  ASSERT_EQ(1, qi_future_is_ready(fut));
+  ASSERT_EQ(0, qi_future_has_error(fut, QI_FUTURETIMEOUT_INFINITE));
+  ASSERT_EQ(1, qi_future_is_finished(fut));
 
   ret = qi_future_get_value(fut);
   ASSERT_TRUE(ret != 0);

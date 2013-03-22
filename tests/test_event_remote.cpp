@@ -70,7 +70,7 @@ TEST_F(TestObject, Simple)
   qi::Link linkId = oclient->connect("fire", &onFire);
   EXPECT_LT((unsigned) 0, linkId);
   oserver->emitEvent("fire", 42);
-  ASSERT_TRUE(payload->future().wait(2000));
+  ASSERT_TRUE(payload->future().hasValue(2000));
   EXPECT_EQ(42, payload->future().value());
 }
 
@@ -80,7 +80,7 @@ TEST_F(TestObject, RemoteEmit)
   qi::Link linkId = oclient->connect("fire", &onFire);
   EXPECT_LT((unsigned) 0, linkId);
   oclient->emitEvent("fire", 43);
-  ASSERT_TRUE(payload->future().wait(2000));
+  ASSERT_TRUE(payload->future().hasValue(2000));
   EXPECT_EQ(43, payload->future().value());
 }
 
@@ -97,13 +97,13 @@ TEST_F(TestObject, CoDeco)
     int exp;
     EXPECT_GE(linkId, (unsigned) 0);
     oserver->emitEvent("fire", (int)(50 + i));
-    ASSERT_TRUE(payload->future().wait(2000));
+    ASSERT_TRUE(payload->future().hasValue(2000));
     exp = 50 + i;
     EXPECT_EQ(exp, payload->future().value());
 
     payload->reset();
     oserver->emitEvent("fire", (int)(51 + i));
-    ASSERT_TRUE(payload->future().wait(2000));
+    ASSERT_TRUE(payload->future().hasValue(2000));
     exp = 51 + i;
     EXPECT_EQ(exp, payload->future().value());
 
@@ -111,7 +111,7 @@ TEST_F(TestObject, CoDeco)
 
     payload->reset();
     oserver->emitEvent("fire", (int)(50 + i));
-    ASSERT_FALSE(payload->future().wait(200));
+    EXPECT_ANY_THROW(payload->future().hasValue(200));
   }
 }
 

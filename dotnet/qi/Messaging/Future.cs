@@ -28,7 +28,7 @@ namespace qi
             [DllImport("qimessaging.dll")]
             public static extern int qi_future_is_error(qi_future_t* fut);
             [DllImport("qimessaging.dll")]
-            public static extern int qi_future_is_ready(qi_future_t* fut);
+            public static extern int qi_future_is_finished(qi_future_t* fut);
             [DllImport("qimessaging.dll")]
             public static extern qi_message_t* qi_future_get_value(qi_future_t* fut);
 
@@ -65,7 +65,7 @@ namespace qi
 
             public bool IsReady()
             {
-                if (qi_future_is_ready(_future_t) == 0)
+                if (qi_future_is_finished(_future_t) == 0)
                     return false;
 
                 return true;

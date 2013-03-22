@@ -63,7 +63,7 @@ protected:
     f = session.listen("tcp://0.0.0.0:0");
     f.wait(3000);
     ASSERT_TRUE(!f.hasError());
-    ASSERT_GT(session.registerService("coin", oserver).wait(), 0);
+    ASSERT_TRUE(session.registerService("coin", oserver).hasValue(3000));
     EXPECT_EQ(1U, session.services(qi::Session::ServiceLocality_Local).value().size());
 
     f = sclient.connect(sd.endpoints()[0]);

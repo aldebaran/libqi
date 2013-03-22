@@ -118,7 +118,7 @@
   */
 
   /*!
-  * \fn qi_future_is_ready(qi_future_t *fut)
+  * \fn qi_future_is_finished(qi_future_t *fut)
   * \brief Check whether future value is set.
   * \param[in] fut : Future to use.
   * \return 0 on error, 1 on success.

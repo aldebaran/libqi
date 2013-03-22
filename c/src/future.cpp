@@ -65,7 +65,8 @@ void    qi_future_destroy(qi_future_t *fu)
   fut = 0;
 }
 
-qi_future_t*  qi_future_clone(qi_future_t* fu) {
+qi_future_t*  qi_future_clone(qi_future_t* fu)
+{
   qi::Future<qi::GenericValue>* fut = qi_future_cpp(fu);
   qi::Future<qi::GenericValue>* clo = new qi::Future<qi::GenericValue>();
   *clo = *fut;
@@ -85,17 +86,44 @@ void    qi_future_wait(qi_future_t *fu, int timeout)
   fut->wait(timeout);
 }
 
-int     qi_future_has_error(qi_future_t *fu)
+int qi_future_has_error(qi_future_t *fu, int timeout)
 {
   qi::Future<qi::GenericValue> *fut = qi_future_cpp(fu);
-  return fut->hasError();
+  try {
+    return fut->hasError(timeout);
+  } catch (qi::FutureException &fe) {
+    return -fe.state();
+  }
 }
 
-int     qi_future_is_ready(qi_future_t *fu)
+int qi_future_has_value(qi_future_t *fu, int timeout)
 {
   qi::Future<qi::GenericValue> *fut = qi_future_cpp(fu);
-  return fut->isReady();
+  try {
+    return fut->hasValue(timeout);
+  } catch (qi::FutureException &fe) {
+    return -fe.state();
+  }
 }
+
+int qi_future_is_finished(qi_future_t *fu)
+{
+  qi::Future<qi::GenericValue> *fut = qi_future_cpp(fu);
+  return fut->isFinished();
+}
+
+int qi_future_is_running(qi_future_t *fu)
+{
+  qi::Future<qi::GenericValue> *fut = qi_future_cpp(fu);
+  return fut->isRunning();
+}
+
+int qi_future_is_canceled(qi_future_t *fu)
+{
+  qi::Future<qi::GenericValue> *fut = qi_future_cpp(fu);
+  return fut->isCanceled();
+}
+
 
 qi_value_t *qi_future_get_value(qi_future_t *fu)
 {
@@ -117,33 +145,39 @@ const char*         qi_future_get_error(qi_future_t *fu)
 
 //Syntaxic Sugar
 
-long long qi_future_get_int64(qi_future_t* fut, int *err) {
-  if (qi_future_has_error(fut)) {
-    if (err)
-      *err = 1;
-    return 0;
-  }
-  qi_value_t* val = qi_future_get_value(fut);
+long long qi_future_get_int64_default(qi_future_t* fut, long long def) {
   long long res;
-  int ret = qi_value_get_int64(val, &res);
-  if (err)
-    *err = ret;
+  qi_value_t* val = 0;
+  if (!qi_future_has_value(fut, QI_FUTURETIMEOUT_INFINITE)) {
+    res = def;
+    goto clean;
+  }
+  val = qi_future_get_value(fut);
+  if (!qi_value_get_int64(val, &res)) {
+    res = def;
+    goto clean;
+  }
+
+clean:
   qi_value_destroy(val);
   qi_future_destroy(fut);
   return res;
 }
 
-unsigned long long qi_future_get_uint64(qi_future_t* fut, int *err) {
-  if (qi_future_has_error(fut)) {
-    if (err)
-      *err = 1;
-    return 0;
-  }
-  qi_value_t* val = qi_future_get_value(fut);
+unsigned long long qi_future_get_uint64_default(qi_future_t* fut, unsigned long long def) {
   unsigned long long res;
-  int ret = qi_value_get_uint64(val, &res);
-  if (err)
-    *err = ret;
+  qi_value_t* val = 0;
+  if (!qi_future_has_value(fut, QI_FUTURETIMEOUT_INFINITE)) {
+    res = def;
+    goto cleanup;
+  }
+  val = qi_future_get_value(fut);
+  if (!qi_value_get_uint64(val, &res)) {
+    res = def;
+    goto cleanup;
+  }
+
+cleanup:
   qi_value_destroy(val);
   qi_future_destroy(fut);
   return res;
@@ -151,28 +185,35 @@ unsigned long long qi_future_get_uint64(qi_future_t* fut, int *err) {
 
 
 const char* qi_future_get_string(qi_future_t* fut) {
-  if (qi_future_has_error(fut)) {
-    return 0;
+  const char *str = 0;
+  qi_value_t* val = 0;
+  if (!qi_future_has_value(fut, QI_FUTURETIMEOUT_INFINITE)) {
+    str = 0;
+    goto clean;
   }
-  qi_value_t* val = qi_future_get_value(fut);
-  const char *str;
+  val = qi_future_get_value(fut);
   str = qi_value_get_string(val);
+clean:
   qi_value_destroy(val);
   qi_future_destroy(fut);
   return str;
 }
 
 qi_object_t* qi_future_get_object(qi_future_t* fut) {
-  if (qi_future_has_error(fut)) {
-    return 0;
+  qi_object_t *str = 0;
+  qi_value_t* val = 0;
+  if (!qi_future_has_value(fut, QI_FUTURETIMEOUT_INFINITE)) {
+    str = 0;
+    goto clean;
   }
-  qi_value_t* val = qi_future_get_value(fut);
-  qi_object_t* obj;
-  obj = qi_value_get_object(val);
+  val = qi_future_get_value(fut);
+  str = qi_value_get_object(val);
+clean:
   qi_value_destroy(val);
   qi_future_destroy(fut);
-  return obj;
+  return str;
 }
+
 
 #ifdef __cplusplus
 }

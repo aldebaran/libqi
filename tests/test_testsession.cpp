@@ -106,7 +106,7 @@ TEST(TestTestSession, TestTestSessionOnly)
   qi::ObjectPtr obj(ob.object());
 
   // #4 Bind service on server session.
-  ASSERT_TRUE(server.session()->registerService("test", obj).wait());
+  ASSERT_TRUE(server.session()->registerService("test", obj).hasValue(4000));
 
   // #5 Get proxy on 'test' service.
   qi::ObjectPtr proxy = client.session()->service("test");

@@ -68,7 +68,7 @@ int		main(int argc, char **argv)
 
   qi_session_listen(session, "tcp://0.0.0.0:0");
   object = qi_object_builder_get_object(ob);
-  id = (int) qi_future_get_int64(qi_session_register_service(session, "serviceTest", object), 0);
+  id = (int) qi_future_get_int64_default(qi_session_register_service(session, "serviceTest", object), 0);
 
   if (!id)
   {

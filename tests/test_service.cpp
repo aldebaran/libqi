@@ -194,12 +194,12 @@ TEST(QiService, RemoteObjectNackTransactionWhenServerClosed)
   qi::Future<void> fret = fut.value()->call<void>("msleep", 2000);
   qi::Future<void> fclose = p.server()->close();
   fclose.wait(1000);
-  EXPECT_TRUE(fclose.isReady());
+  EXPECT_TRUE(fclose.isFinished());
   EXPECT_FALSE(fclose.hasError(1));
 
   fret.wait(1000);
   //once the server is close, the answer should be ready.
-  EXPECT_TRUE(fret.isReady());
+  EXPECT_TRUE(fret.isFinished());
   //the service is closed, so it cant send an answer.
   EXPECT_TRUE(fret.hasError(1000));
 }

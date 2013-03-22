@@ -28,8 +28,9 @@ namespace qi {
  void ServiceDirectoryClient::onSDEventConnected(qi::Future<Link> ret,
    qi::Promise<void> fco, bool isAdd)
  {
-   if (fco.future().wait(-1))
+   if (fco.future().isFinished()) {
      return;
+   }
    if (ret.hasError())
    {
      fco.setError(ret.error());

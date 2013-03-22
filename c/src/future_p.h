@@ -40,6 +40,7 @@ inline void qi_future_c_adapter(qi::Future<T> fut, qi_promise_t* prom) {
   qi::GenericValue &gvp = qi_value_cpp(val);
   gvp = qi::GenericValue::from(fut.value());
   qi_promise_set_value(prom, val);
+  qi_value_destroy(val);
 }
 
 template <typename T>

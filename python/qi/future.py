@@ -66,7 +66,7 @@ class Future:
     def is_ready(self):
         """ Check whether future value is set.
         """
-        return _qipy.qi_future_is_ready(self._fut)
+        return _qipy.qi_future_is_finished(self._fut)
 
     def error(self):
         """ Getter on future error.

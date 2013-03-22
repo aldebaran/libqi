@@ -243,7 +243,7 @@ namespace qi {
       result = _object->type->setProperty(_object->value, prop.toUInt(), val);
     else
       throw std::runtime_error("Expected int or string for property index");
-    if (!result.isReady())
+    if (!result.isFinished())
       qiLogWarning() << "Assertion failed, setProperty() call not finished";
     // Throw the future error
     result.value();

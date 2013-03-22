@@ -40,7 +40,6 @@ T qi_value_get_pod_default(qi_value_t *msg, T defvalue) {
   return defvalue;
 }
 
-
 #ifdef __cplusplus
 extern "C"
 {

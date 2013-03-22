@@ -40,6 +40,7 @@ namespace qi {
           //remove callback before calling disconnect. (we dont need them)
           if (tscmIt->second.socket->isConnected())
             tscmIt->second.socket->disconnect();
+          tscmIt->second.promise.reset();
           tscmIt->second.promise.setError("session closed");
         }
       }

@@ -14,7 +14,7 @@ bool isCallbackCalled = false;
 void future_callback_simple(qi_future_t* fut, void *data)
 {
   qi_value_t *val = 0;
-  if (qi_future_is_ready(fut) && !qi_future_has_error(fut))
+  if (qi_future_has_value(fut, QI_FUTURETIMEOUT_INFINITE))
     val = qi_future_get_value(fut);
   if (!val) {
     printf("Value is callback is empty\n");
@@ -44,12 +44,12 @@ TEST(TestFuture, SimpleType)
 
   qi_future_add_callback(future, future_callback_simple, 0);
 
-  ASSERT_FALSE(qi_future_is_ready(future));
+  ASSERT_FALSE(qi_future_is_finished(future));
   qi_promise_set_value(promise, val);
-  EXPECT_EQ(1, qi_future_is_ready(future));
+  EXPECT_EQ(1, qi_future_is_finished(future));
   qi_value_destroy(val);
-  qi_future_wait(future, 0);
-  ASSERT_EQ(1, qi_future_is_ready(future));
+  qi_future_wait(future, QI_FUTURETIMEOUT_INFINITE);
+  ASSERT_EQ(1, qi_future_is_finished(future));
 
   qi_value_t *rest = qi_future_get_value(future);
   EXPECT_EQ(42, qi_value_get_int64_default(rest, 0));
@@ -65,10 +65,10 @@ TEST(TestFuture, Error)
   qi_future_t*  future = qi_promise_get_future(promise);
 
   qi_promise_set_error(promise, "it's friday");
-  qi_future_wait(future, 0);
+  qi_future_wait(future, QI_FUTURETIMEOUT_INFINITE);
 
-  ASSERT_EQ(1, qi_future_has_error(future));
-  ASSERT_EQ(1, qi_future_is_ready(future));
+  ASSERT_EQ(1, qi_future_has_error(future, QI_FUTURETIMEOUT_INFINITE));
+  ASSERT_EQ(1, qi_future_is_finished(future));
 
   std::string error(qi_future_get_error(future));
   ASSERT_TRUE(error.compare("it's friday") == 0);

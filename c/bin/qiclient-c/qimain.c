@@ -64,14 +64,14 @@ int make_call(qi_application_t *app, char *addr, int ev)
 
   qi_future_wait(fut, 0);
 
-  if (qi_future_has_error(fut))
+  if (qi_future_has_error(fut, QI_FUTURETIMEOUT_INFINITE))
     printf("Future has error : %s\n", qi_future_get_error(fut));
 
-  if (!qi_future_is_ready(fut))
+  if (!qi_future_is_finished(fut))
     printf("Future is not ready [:\n");
 
   ret = 0;
-  if (!qi_future_has_error(fut) && qi_future_is_ready(fut))
+  if (qi_future_has_value(fut, QI_FUTURETIMEOUT_INFINITE))
     ret = qi_future_get_value(fut);
 
   result  = 0;
