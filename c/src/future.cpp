@@ -26,21 +26,31 @@ extern "C"
 
 qi_promise_t* qi_promise_create()
 {
-  qi::Promise<qi::GenericValue> *pr = new qi::Promise<qi::GenericValue>();
-  return (qi_promise_t *) pr;
+  //use placement new, because the other ctor do, and we want the same destroy impl.
+  qi_promise_t *mem = (qi_promise_t *)malloc(sizeof(qi::Promise<qi::GenericValue>));
+  new(mem) qi::Promise<qi::GenericValue>();
+  return mem;
+}
+
+qi_promise_t* qi_promise_cancelable_create(qi_future_cancel_t cb, void *user_data)
+{
+  //use a placement new to have qi_promise_t before constructing the object
+  qi_promise_t *mem = (qi_promise_t *)malloc(sizeof(qi::Promise<qi::GenericValue>));
+  new(mem) qi::Promise<qi::GenericValue>(boost::bind<void>(cb, mem, user_data));
+  return mem;
 }
 
 void  qi_promise_destroy(qi_promise_t *pr)
 {
   qi::Promise<qi::GenericValue>  *promise = qi_promise_cpp(pr);
-  delete promise;
-  promise = 0;
+  //used placement new to create
+  promise->~Promise<qi::GenericValue>();
+  free((void *)promise);
 }
 
 void qi_promise_set_value(qi_promise_t *pr, qi_value_t *value)
 {
   qi::Promise<qi::GenericValue>  *promise = qi_promise_cpp(pr);
-  //TODO: Take?
   promise->setValue(qi_value_cpp(value));
 }
 
@@ -49,6 +59,12 @@ void qi_promise_set_error(qi_promise_t *pr, const char *error)
   qi::Promise<qi::GenericValue>* promise = qi_promise_cpp(pr);
   promise->setError(error);
 }
+
+void qi_promise_set_canceled(qi_promise_t *pr) {
+  qi::Promise<qi::GenericValue>* promise = qi_promise_cpp(pr);
+  promise->setCanceled();
+}
+
 
 qi_future_t* qi_promise_get_future(qi_promise_t *pr)
 {
@@ -59,8 +75,7 @@ qi_future_t* qi_promise_get_future(qi_promise_t *pr)
 void    qi_future_destroy(qi_future_t *fu)
 {
   qi::Future<qi::GenericValue> *fut = qi_future_cpp(fu);
-  qiLogInfo() << "qi_future_destroy(" << fu << ")";
-  //TODO: the GenericValue should be somehow destroyed
+  qiLogDebug() << "qi_future_destroy(" << fu << ")";
   delete fut;
   fut = 0;
 }
@@ -75,7 +90,7 @@ qi_future_t*  qi_future_clone(qi_future_t* fu)
 
 void    qi_future_add_callback(qi_future_t *fu, qi_future_callback_t cb, void *miscdata)
 {
-  qiLogInfo() << "qi_future_add_cb(" << fu << ")";
+  qiLogDebug() << "qi_future_add_cb(" << fu << ")";
   qi::Future<qi::GenericValue> *fut = qi_future_cpp(fu);
   fut->connect(boost::bind<void>(cb, fu, miscdata));
 }
@@ -124,6 +139,17 @@ int qi_future_is_canceled(qi_future_t *fu)
   return fut->isCanceled();
 }
 
+int qi_future_is_cancelable(qi_future_t *fu)
+{
+  qi::Future<qi::GenericValue> *fut = qi_future_cpp(fu);
+  return fut->isCanceleable();
+}
+
+void qi_future_cancel(qi_future_t *fu)
+{
+  qi::Future<qi::GenericValue> *fut = qi_future_cpp(fu);
+  fut->cancel();
+}
 
 qi_value_t *qi_future_get_value(qi_future_t *fu)
 {

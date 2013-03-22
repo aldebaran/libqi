@@ -16,7 +16,7 @@ extern "C"
 #endif
 
   typedef void (*qi_future_callback_t)(qi_future_t* value, void *user_data);
-  typedef void (*qi_future_cancel_t)(qi_future_t* value, void *user_data);
+  typedef void (*qi_future_cancel_t)(qi_promise_t* promise, void *user_data);
 
   #define QI_FUTURETIMEOUT_NONE     (0)
   #define QI_FUTURETIMEOUT_INFINITE ((int)0x7ffffff)
@@ -40,6 +40,9 @@ extern "C"
   QIC_API int           qi_future_is_running(qi_future_t *fut);
   QIC_API int           qi_future_is_finished(qi_future_t *fut);
   QIC_API int           qi_future_is_canceled(qi_future_t *fut);
+  QIC_API int           qi_future_is_cancelable(qi_future_t *fut);
+
+  QIC_API void          qi_future_cancel(qi_future_t *fut);
 
   /// the value lifetime depends on the future.
   QIC_API qi_value_t*   qi_future_get_value(qi_future_t *fut);

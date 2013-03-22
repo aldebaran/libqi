@@ -48,7 +48,7 @@ bool SessionInitializer::tearDown(qi::Session *session, TestMode::Mode mode)
 
 bool SessionInitializer::setUpSD(qi::Session *session, const std::string &serviceDirectoryUrl)
 {
-  if(session->connect(serviceDirectoryUrl).wait(1000) != qi::FutureState_FinishWithResult)
+  if(session->connect(serviceDirectoryUrl).wait(1000) != qi::FutureState_FinishedWithValue)
     return false;
 
   if (_listen == true)
@@ -59,7 +59,7 @@ bool SessionInitializer::setUpSD(qi::Session *session, const std::string &servic
 
 bool SessionInitializer::setUpSSL(qi::Session *session, const std::string &serviceDirectoryUrl)
 {
-  if(session->connect(serviceDirectoryUrl).wait(1000) != qi::FutureState_FinishWithResult)
+  if(session->connect(serviceDirectoryUrl).wait(1000) != qi::FutureState_FinishedWithValue)
     return false;
 
   if (_listen == true)
@@ -73,7 +73,7 @@ bool SessionInitializer::setUpSSL(qi::Session *session, const std::string &servi
 
 bool SessionInitializer::tearDownSD(qi::Session *session)
 {
-  if (session->close().wait(1000) != qi::FutureState_FinishWithResult)
+  if (session->close().wait(1000) != qi::FutureState_FinishedWithValue)
     return false;
 
   return true;
@@ -84,7 +84,7 @@ bool SessionInitializer::setUpNightmare(qi::Session *session, const std::string 
   std::string serviceName;
 
   // #1 Connect session to service directory.
-  if(session->connect(serviceDirectoryUrl).wait(1000) != qi::FutureState_FinishWithResult)
+  if(session->connect(serviceDirectoryUrl).wait(1000) != qi::FutureState_FinishedWithValue)
     return false;
 
   // #1.1 If session is a client session, that's it.
@@ -123,7 +123,7 @@ bool SessionInitializer::tearDownNightmare(qi::Session *session)
   delete _populationGenerator;
   delete _traficGenerator;
 
-  if (session->close().wait(1000) != qi::FutureState_FinishWithResult)
+  if (session->close().wait(1000) != qi::FutureState_FinishedWithValue)
     return false;
 
   return true;

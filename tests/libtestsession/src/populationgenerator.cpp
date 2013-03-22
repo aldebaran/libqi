@@ -29,7 +29,7 @@ bool PopulationGenerator::populateClients(const std::string &serviceDirectoryUrl
   {
     session = new qi::Session();
 
-    if (session->connect(serviceDirectoryUrl).wait(1000) != qi::FutureState_FinishWithResult)
+    if (session->connect(serviceDirectoryUrl).wait(1000) != qi::FutureState_FinishedWithValue)
       ret = false;
 
     _clients.push_back(session);
