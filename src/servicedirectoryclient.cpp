@@ -147,27 +147,27 @@ namespace qi {
   }
 
   qi::Future< std::vector<ServiceInfo> > ServiceDirectoryClient::services() {
-    return _object->call< std::vector<ServiceInfo> >("services");
+    return _object->call("services");
   }
 
   qi::Future<ServiceInfo>              ServiceDirectoryClient::service(const std::string &name) {
-    return _object->call< ServiceInfo >("service", name);
+    return _object->call("service", name);
   }
 
   qi::Future<unsigned int>             ServiceDirectoryClient::registerService(const ServiceInfo &svcinfo) {
-    return _object->call< unsigned int >("registerService", svcinfo);
+    return _object->call("registerService", svcinfo);
   }
 
   qi::Future<void>                     ServiceDirectoryClient::unregisterService(const unsigned int &idx) {
-    return _object->call<void>("unregisterService", idx);
+    return _object->call("unregisterService", idx);
   }
 
   qi::Future<void>                     ServiceDirectoryClient::serviceReady(const unsigned int &idx) {
-    return _object->call<void>("serviceReady", idx);
+    return _object->call("serviceReady", idx);
   }
 
   qi::Future<void>                     ServiceDirectoryClient::updateServiceInfo(const ServiceInfo &svcinfo) {
-    return _object->call<void>("updateServiceInfo", svcinfo);
+    return _object->call("updateServiceInfo", svcinfo);
   }
 
 }

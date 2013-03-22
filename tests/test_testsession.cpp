@@ -113,7 +113,7 @@ TEST(TestTestSession, TestTestSessionOnly)
   ASSERT_NE((void *) 0, proxy.get());
 
   // #6 Make a call and assert result is 1.
-  i = proxy->call<int>("++", i);
+  i = proxy->call("++", i);
   ASSERT_EQ(1, i);
 }
 
@@ -152,8 +152,8 @@ TEST(TestTestSession, TestTestSessionPair)
   ASSERT_NE((void *) 0, proxySD.get());
 
   // #4 Call ++ method from Incr service.
-  iSD = proxySD->call<int>(std::string("++"), iSD);
-  iDirect = proxyDirect->call<int>(std::string("++"), iDirect);
+  iSD = proxySD->call(std::string("++"), iSD);
+  iDirect = proxyDirect->call(std::string("++"), iDirect);
 
   ASSERT_EQ(1, iSD);
   ASSERT_EQ(1, iDirect);
@@ -183,7 +183,7 @@ TEST(TestTestSession, TestSameObject)
   ASSERT_NE((void *) 0, proxy.get());
 
   // #4 Call ++ method from Incr service.
-  i = proxy->call<int>(std::string("++"), i);
+  i = proxy->call(std::string("++"), i);
   ASSERT_EQ(1, i);
 }
 
@@ -217,7 +217,7 @@ TEST(TestTestSession, TestThroughSD)
   ASSERT_NE((void *) 0, proxy.get());
 
   // #4 Call ++ method from Incr service.
-  i = proxy->call<int>(std::string("++"), i);
+  i = proxy->call(std::string("++"), i);
 
   // #5 No need for Cleanup !
   ASSERT_EQ(1, i);

@@ -68,7 +68,7 @@ TEST(QiMessagingConnexion, testSyncSendOneMessage)
   TestConnection tc;
   ASSERT_TRUE(tc.init());
 
-  std::string result = tc.obj->call<std::string>("reply", "question");
+  std::string result = tc.obj->call("reply", "question");
   EXPECT_EQ("question", result);
 }
 
@@ -77,11 +77,11 @@ TEST(QiMessagingConnexion, testSyncSendMessages)
   TestConnection tc;
   ASSERT_TRUE(tc.init());
 
-  std::string result = tc.obj->call<std::string>("reply", "question1");
+  std::string result = tc.obj->call("reply", "question1");
   EXPECT_EQ("question1", result);
-  result = tc.obj->call<std::string>("reply", "question2");
+  result = tc.obj->call("reply", "question2").value().toString();
   EXPECT_EQ("question2", result);
-  result = tc.obj->call<std::string>("reply", "question3");
+  result = tc.obj->call("reply", "question3").value().toString();
   EXPECT_EQ("question3", result);
 }
 
@@ -112,13 +112,13 @@ TEST(QiMessagingConnexion, testBuffer)
   std::string challenge = "foo*******************************";
   qi::encodeBinary(&buf, challenge);
   qiLogDebug() << "call BA";
-  qi::Buffer result = tc.obj->call<qi::Buffer>("replyBufBA", (unsigned int)1, buf, 2);
+  qi::Buffer result = tc.obj->call("replyBufBA", (unsigned int)1, buf, 2);
   std::string reply;
   qi::BufferReader br(result);
   qi::decodeBinary(&br, &reply);
   ASSERT_EQ(challenge, reply);
   qiLogDebug() << "call BA";
-  result = tc.obj->call<qi::Buffer>("replyBufBA", (unsigned int)2, buf, 1);
+  result = tc.obj->call("replyBufBA", (unsigned int)2, buf, 1);
   {
     std::string reply;
     qi::BufferReader br(result);
@@ -126,21 +126,21 @@ TEST(QiMessagingConnexion, testBuffer)
     ASSERT_EQ(challenge, reply);
   }
   qiLogDebug() << "call A";
-  result = tc.obj->call<qi::Buffer>("replyBufA", buf, 1);
+  result = tc.obj->call("replyBufA", buf, 1);
   {
     std::string reply;
     qi::BufferReader br(result);
     qi::decodeBinary(&br, &reply);
     ASSERT_EQ(challenge, reply);
   }
-  result = tc.obj->call<qi::Buffer>("replyBuf", buf);
+  result = tc.obj->call("replyBuf", buf);
    {
     std::string reply;
     qi::BufferReader br(result);
     qi::decodeBinary(&br, &reply);
     ASSERT_EQ(challenge, reply);
   }
-  result = tc.obj->call<qi::Buffer>("replyBufB", 1, buf);
+  result = tc.obj->call("replyBufB", 1, buf);
   {
     std::string reply;
     qi::BufferReader br(result);

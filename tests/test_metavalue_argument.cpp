@@ -104,43 +104,43 @@ TEST_F(TestObject, meta)
     * So call(AutoGenericValuePtr(12)) will *not* call with the value
     * "a metavalue containing 12", it will call with "12".
     */
-  target->call<void>(function, 12).wait();
+  target->call(function, 12).wait();
   ASSERT_EQ(v.toDouble(), 12);
   {
     int myint = 12;
-    qi::Future<void> fut = target->call<void>(function, myint);
+    qi::Future<void> fut = target->call(function, myint);
     myint = 5;
     fut.wait();
     ASSERT_EQ(v.toDouble(), 12);
   }
   {
     int myint = 12;
-    qi::Future<void> fut = target->call<void>(function, AutoGenericValuePtr(GenericValue::from(myint)));
+    qi::Future<void> fut = target->call(function, AutoGenericValuePtr(GenericValue::from(myint)));
     myint = 5;
     fut.wait();
     ASSERT_EQ(v.toDouble(), 12);
   }
-  target->call<void>(function, qi::AutoGenericValuePtr(qi::GenericValue::from(12))).wait();
+  target->call(function, qi::AutoGenericValuePtr(qi::GenericValue::from(12))).wait();
   ASSERT_EQ(v.toDouble(), 12);
-  target->call<void>(function, qi::AutoGenericValuePtr(qi::GenericValue::from(12.0))).wait();
+  target->call(function, qi::AutoGenericValuePtr(qi::GenericValue::from(12.0))).wait();
   ASSERT_EQ(v.toDouble(), 12);
-  target->call<void>(function, qi::AutoGenericValuePtr(qi::GenericValue::from(12.0f))).wait();
+  target->call(function, qi::AutoGenericValuePtr(qi::GenericValue::from(12.0f))).wait();
   ASSERT_EQ(v.toDouble(), 12);
-  target->call<void>(function, qi::AutoGenericValuePtr(qi::GenericValue::from("foo"))).wait();
+  target->call(function, qi::AutoGenericValuePtr(qi::GenericValue::from("foo"))).wait();
   ASSERT_EQ(v.toString(), "foo");
-  target->call<void>(function, "foo").wait();
+  target->call(function, "foo").wait();
   ASSERT_EQ(v.toString(), "foo");
   std::vector<double> in;
   in.push_back(1); in.push_back(2);
-  target->call<void>(function, qi::AutoGenericValuePtr(qi::GenericValue::from(in))).wait();
+  target->call(function, qi::AutoGenericValuePtr(qi::GenericValue::from(in))).wait();
   ASSERT_EQ(v.to<std::vector<double> >(), in);
-  target->call<void>(function, in).wait();
+  target->call(function, in).wait();
   ASSERT_EQ(v.to<std::vector<double> >(), in);
   std::vector<GenericValue> args;
   args.push_back(GenericValue::from(12));
   args.push_back(GenericValue::from("foo"));
   args.push_back(GenericValue::from(in));
-  target->call<void>(function, args).wait();
+  target->call(function, args).wait();
   ASSERT_EQ(v.kind(), Type::List);
   ASSERT_EQ(static_cast<size_t>(3), v.size());
 
@@ -156,45 +156,45 @@ TEST_F(TestObject, meta)
   target = oserver;
   function = "valueAsync";
   {
-  target->call<void>(function, 12).wait();
+  target->call(function, 12).wait();
   ASSERT_EQ(v.toDouble(), 12);
   {
     int myint = 12;
-    qi::Future<void> fut = target->call<void>(function, myint);
+    qi::Future<void> fut = target->call(function, myint);
     myint = 5;
     fut.wait();
     ASSERT_EQ(v.toDouble(), 12);
   }
   {
     int myint = 12;
-    qi::Future<void> fut = target->call<void>(function, AutoGenericValuePtr(GenericValue::from(myint)));
+    qi::Future<void> fut = target->call(function, AutoGenericValuePtr(GenericValue::from(myint)));
     myint = 5;
     fut.wait();
     ASSERT_EQ(v.toDouble(), 12);
   }
-  target->call<void>(function, qi::AutoGenericValuePtr(qi::GenericValue::from(12))).wait();
+  target->call(function, qi::AutoGenericValuePtr(qi::GenericValue::from(12))).wait();
   ASSERT_EQ(v.toDouble(), 12);
-  target->call<void>(function, qi::AutoGenericValuePtr(qi::GenericValue::from(12.0))).wait();
+  target->call(function, qi::AutoGenericValuePtr(qi::GenericValue::from(12.0))).wait();
   ASSERT_EQ(v.toDouble(), 12);
-  target->call<void>(function, qi::AutoGenericValuePtr(qi::GenericValue::from(12.0f))).wait();
+  target->call(function, qi::AutoGenericValuePtr(qi::GenericValue::from(12.0f))).wait();
   ASSERT_EQ(v.toDouble(), 12);
-  target->call<void>(function, qi::AutoGenericValuePtr(qi::GenericValue::from("foo"))).wait();
+  target->call(function, qi::AutoGenericValuePtr(qi::GenericValue::from("foo"))).wait();
   ASSERT_EQ(v.toString(), "foo");
-  target->call<void>(function, "foo").wait();
+  target->call(function, "foo").wait();
   ASSERT_EQ(v.toString(), "foo");
   std::vector<double> in;
   in.push_back(1); in.push_back(2);
-  target->call<void>(function, qi::AutoGenericValuePtr(qi::GenericValue::from(in))).wait();
+  target->call(function, qi::AutoGenericValuePtr(qi::GenericValue::from(in))).wait();
   ASSERT_EQ(v.to<std::vector<double> >(), in);
-  target->call<void>(function, in).wait();
+  target->call(function, in).wait();
   ASSERT_EQ(v.to<std::vector<double> >(), in);
-  target->call<void>(function, in).wait();
+  target->call(function, in).wait();
   ASSERT_EQ(v.to<std::vector<double> >(), in);
   std::vector<GenericValue> args;
   args.push_back(GenericValue::from(12));
   args.push_back(GenericValue::from("foo"));
   args.push_back(GenericValue::from(in));
-  target->call<void>(function, args).wait();
+  target->call(function, args).wait();
   ASSERT_EQ(v.kind(), Type::List);
   // iterate
   ASSERT_EQ(12, v[0].toDouble());
@@ -206,43 +206,43 @@ TEST_F(TestObject, meta)
   // plugin direct test
   function = "value";
   {
-  target->call<void>(function, 12).wait();
+  target->call(function, 12).wait();
   ASSERT_EQ(v.toDouble(), 12);
   {
     int myint = 12;
-    qi::Future<void> fut = target->call<void>(function, myint);
+    qi::Future<void> fut = target->call(function, myint);
     myint = 5;
     fut.wait();
     ASSERT_EQ(v.toDouble(), 12);
   }
   {
     int myint = 12;
-    qi::Future<void> fut = target->call<void>(function, AutoGenericValuePtr(GenericValue::from(myint)));
+    qi::Future<void> fut = target->call(function, AutoGenericValuePtr(GenericValue::from(myint)));
     myint = 5;
     fut.wait();
     ASSERT_EQ(v.toDouble(), 12);
   }
-  target->call<void>(function, qi::AutoGenericValuePtr(qi::GenericValue::from(12))).wait();
+  target->call(function, qi::AutoGenericValuePtr(qi::GenericValue::from(12))).wait();
   ASSERT_EQ(v.toDouble(), 12);
-  target->call<void>(function, qi::AutoGenericValuePtr(qi::GenericValue::from(12.0))).wait();
+  target->call(function, qi::AutoGenericValuePtr(qi::GenericValue::from(12.0))).wait();
   ASSERT_EQ(v.toDouble(), 12);
-  target->call<void>(function, qi::AutoGenericValuePtr(qi::GenericValue::from(12.0f))).wait();
+  target->call(function, qi::AutoGenericValuePtr(qi::GenericValue::from(12.0f))).wait();
   ASSERT_EQ(v.toDouble(), 12);
-  target->call<void>(function, qi::AutoGenericValuePtr(qi::GenericValue::from("foo"))).wait();
+  target->call(function, qi::AutoGenericValuePtr(qi::GenericValue::from("foo"))).wait();
   ASSERT_EQ(v.toString(), "foo");
-  target->call<void>(function, "foo").wait();
+  target->call(function, "foo").wait();
   ASSERT_EQ(v.toString(), "foo");
   std::vector<double> in;
   in.push_back(1); in.push_back(2);
-  target->call<void>(function, qi::AutoGenericValuePtr(qi::GenericValue::from(in))).wait();
+  target->call(function, qi::AutoGenericValuePtr(qi::GenericValue::from(in))).wait();
   ASSERT_EQ(v.to<std::vector<double> >(), in);
-  target->call<void>(function, in).wait();
+  target->call(function, in).wait();
   ASSERT_EQ(v.to<std::vector<double> >(), in);
   std::vector<GenericValue> args;
   args.push_back(GenericValue::from(12));
   args.push_back(GenericValue::from("foo"));
   args.push_back(GenericValue::from(in));
-  target->call<void>(function, args).wait();
+  target->call(function, args).wait();
   ASSERT_EQ(v.kind(), Type::List);
   // iterate
   ASSERT_EQ(12, v[0].toDouble());

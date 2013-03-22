@@ -175,7 +175,7 @@ TEST(TestCall, CallBufferInList)
   buf.write("canard", strlen("canard")+1);
   args.push_back(qi::GenericValue::from(buf));
   args.push_back(qi::GenericValue::from("foo"));
-  qi::GenericValue result = proxy->call<qi::GenericValue>("pingcopy", args);
+  qi::GenericValue result = proxy->call("pingcopy", args);
   {
     ASSERT_EQ(3u, val.size());
     ASSERT_EQ(12, val[0].toInt());
@@ -216,7 +216,7 @@ TEST(TestCall, CallComplexType)
   robots.push_back(std::make_pair("Billy West", 3456789));
   robots.push_back(std::make_pair("33CL", 4567890));
 
-  ASSERT_EQ(4u, proxy->call<long unsigned int>("print", robots));
+  ASSERT_EQ(4, proxy->call("print", robots));
 
   p.server()->unregisterService(serviceID);
 }
@@ -238,7 +238,7 @@ TEST(TestCall, CallVoid)
 
 
   std::cout << "Calling" << std::endl;
-  qi::Future<void> fut = proxy->call<void>("foobar");
+  qi::Future<void> fut = proxy->call("foobar");
 
   ASSERT_FALSE(fut.hasError());
   p.server()->unregisterService(serviceID);
@@ -259,7 +259,7 @@ TEST(TestCall, CallVoidErr)
   qi::ObjectPtr proxy = p.client()->service("serviceCall");
 
   std::cout << "Calling" << std::endl;
-  qi::Future<void> fut = proxy->call<void>("fooerr");
+  qi::Future<void> fut = proxy->call("fooerr");
 
   ASSERT_TRUE(fut.hasError());
   p.server()->unregisterService(serviceID);
@@ -281,7 +281,7 @@ TEST(TestCall, TestDoubleToFloatConvertion)
   ASSERT_TRUE(proxy != 0);
 
   std::cout << "Calling FakeRGB" << std::endl;
-  qi::Future<int> fut = proxy->call<int>("fakeRGB", "Haha", 42, duration);
+  qi::Future<int> fut = proxy->call("fakeRGB", "Haha", 42, duration);
 }
 
 TEST(TestCall, TestFloatToDoubleConvertion)
@@ -300,7 +300,7 @@ TEST(TestCall, TestFloatToDoubleConvertion)
   ASSERT_TRUE(proxy != 0);
 
   std::cout << "Calling FakeRGB" << std::endl;
-  qi::Future<int> fut = proxy->call<int>("fakeRGB", "Haha", 42, duration);
+  qi::Future<int> fut = proxy->call("fakeRGB", "Haha", 42, duration);
 }
 
 qi::ObjectPtr createObject() {
@@ -348,27 +348,27 @@ TEST(TestCall, TestGenericConversion) {
   qi::Future<int> fut;
 
   //Check empty, same type
-  fut = proxy->call<int>("fakeemptysvec", esvec);
+  fut = proxy->call("fakeemptysvec", esvec);
   EXPECT_FALSE(fut.hasError());
-  fut = proxy->call<int>("fakeemptygvec", egvec);
+  fut = proxy->call("fakeemptygvec", egvec);
   EXPECT_FALSE(fut.hasError());
 
   //check call, same type
-  fut = proxy->call<int>("fakesvec", svec);
+  fut = proxy->call("fakesvec", svec);
   EXPECT_FALSE(fut.hasError());
-  fut = proxy->call<int>("fakegvec", gvec);
+  fut = proxy->call("fakegvec", gvec);
   EXPECT_FALSE(fut.hasError());
 
   //check empty, type conv
-  fut = proxy->call<int>("fakeemptysvec", egvec);
+  fut = proxy->call("fakeemptysvec", egvec);
   EXPECT_FALSE(fut.hasError());
-  fut = proxy->call<int>("fakeemptygvec", esvec);
+  fut = proxy->call("fakeemptygvec", esvec);
   EXPECT_FALSE(fut.hasError());
 
   //check call, type conv
-  fut = proxy->call<int>("fakesvec", gvec);
+  fut = proxy->call("fakesvec", gvec);
   EXPECT_FALSE(fut.hasError());
-  fut = proxy->call<int>("fakegvec", svec);
+  fut = proxy->call("fakegvec", svec);
   EXPECT_FALSE(fut.hasError());
 }
 
@@ -402,26 +402,26 @@ TEST(TestCall, TestGenericConversionComplexList) {
   qi::Future<int> fut;
 
   //Check empty, same type
-  fut = proxy->call<int>("fakesvvec", sss);
+  fut = proxy->call("fakesvvec", sss);
   EXPECT_FALSE(fut.hasError());
-  fut = proxy->call<int>("fakesvvec", ssg);
+  fut = proxy->call("fakesvvec", ssg);
   EXPECT_FALSE(fut.hasError());
-  fut = proxy->call<int>("fakesvvec", sg);
-  EXPECT_FALSE(fut.hasError());
-
-  fut = proxy->call<int>("fakegvvec", sss);
-  EXPECT_FALSE(fut.hasError());
-  fut = proxy->call<int>("fakegvvec", ssg);
-  EXPECT_FALSE(fut.hasError());
-  fut = proxy->call<int>("fakegvvec", sg);
+  fut = proxy->call("fakesvvec", sg);
   EXPECT_FALSE(fut.hasError());
 
+  fut = proxy->call("fakegvvec", sss);
+  EXPECT_FALSE(fut.hasError());
+  fut = proxy->call("fakegvvec", ssg);
+  EXPECT_FALSE(fut.hasError());
+  fut = proxy->call("fakegvvec", sg);
+  EXPECT_FALSE(fut.hasError());
 
-  fut = proxy->call<int>("fakegvvec2", sss);
+
+  fut = proxy->call("fakegvvec2", sss);
   EXPECT_FALSE(fut.hasError());
-  fut = proxy->call<int>("fakegvvec2", ssg);
+  fut = proxy->call("fakegvvec2", ssg);
   EXPECT_FALSE(fut.hasError());
-  fut = proxy->call<int>("fakegvvec2", sg);
+  fut = proxy->call("fakegvvec2", sg);
   EXPECT_FALSE(fut.hasError());
 }
 
@@ -455,14 +455,14 @@ TEST(TestCall, TestGenericConversionComplexMap) {
 
   qi::Future<int> fut;
 
-  fut = proxy->call<int>("fakemsvvec", msvvs);
+  fut = proxy->call("fakemsvvec", msvvs);
   EXPECT_FALSE(fut.hasError());
-  fut = proxy->call<int>("fakemsvvec", msvvg);
+  fut = proxy->call("fakemsvvec", msvvg);
   EXPECT_FALSE(fut.hasError());
 
-  fut = proxy->call<int>("fakemgvvec", msvvs);
+  fut = proxy->call("fakemgvvec", msvvs);
   EXPECT_FALSE(fut.hasError());
-  fut = proxy->call<int>("fakemgvvec", msvvg);
+  fut = proxy->call("fakemgvvec", msvvg);
   EXPECT_FALSE(fut.hasError());
 }
 
@@ -481,7 +481,7 @@ TEST(TestCall, TestGenericConversionTuple) {
   t.e1 = 1;
   t.e2 = 2;
   t.e3["foo"] = 3;
-  f = proxy->call<double>("eatSpecific", t);
+  f = proxy->call("eatSpecific", t);
   EXPECT_FALSE(f.hasError());
   EXPECT_EQ(6, f.value());
 
@@ -491,13 +491,13 @@ TEST(TestCall, TestGenericConversionTuple) {
   std::map<std::string, qi::GenericValue> map;
   map["foo"] = qi::GenericValueRef(3);
   gt.e3 = qi::GenericValueRef(map);
-  f = proxy->call<double>("eatSpecific", gt);
+  f = proxy->call("eatSpecific", gt);
   EXPECT_FALSE(f.hasError());
   EXPECT_EQ(6, f.value());
 
   std::map<unsigned int, std::string> ravMap;
   gt.e3 = qi::GenericValueRef(ravMap);
-  f = proxy->call<double>("eatSpecific", gt);
+  f = proxy->call("eatSpecific", gt);
   EXPECT_FALSE(f.hasError());
   EXPECT_EQ(3, f.value());
 }
@@ -521,7 +521,7 @@ TEST(TestEventLoop, MonitorEventLoop)
   p.server()->registerService("delayer", obj);
   qi::ObjectPtr proxy = p.client()->service("delayer");
   ASSERT_TRUE(!loopStuck);
-  proxy->call<void>("delay", 1000).wait();
+  proxy->call("delay", 1000).wait();
   ASSERT_TRUE(loopStuck);
   qiLogDebug() << "Cancelling monitorEventLoop";
   f.cancel(); // or eventloops will get stuck
@@ -532,7 +532,7 @@ int service_call(qi::Session* s, const std::string& obj,
 {
   qiLogDebug() << "TEST: servicecall";
   qi::ObjectPtr o = s->service(obj);
-  return o->call<int>(method, arg);
+  return o->call(method, arg);
 }
 
 void servicecall_addone(qi::Promise<int>& prom, qi::Session* s)
@@ -540,7 +540,7 @@ void servicecall_addone(qi::Promise<int>& prom, qi::Session* s)
   qiLogDebug() << "TEST: call servicecall";
   qi::ObjectPtr obj2Proxy = s->service("caller");
   qiLogDebug() << "TEST: got service";
-  qi::Future<int> v = obj2Proxy->call<int>("serviceCall", "adder", "addOne", 5);
+  qi::Future<int> v = obj2Proxy->call("serviceCall", "adder", "addOne", 5);
   v.wait(500);
   if (!v.isFinished())
     prom.setError("timeout");
@@ -614,7 +614,7 @@ void bindObjectEvent(qi::ObjectPtr ptr, const std::string& eventName,
 
 int makeObjectCall(qi::ObjectPtr ptr, const std::string& fname, int arg)
 {
-  return ptr->call<int>(fname, arg).value();
+  return ptr->call(fname, arg);
 }
 
 void bounceFuture(qi::Future<int> s, qi::Promise<int> d, qi::ObjectPtr obj)
@@ -629,7 +629,7 @@ void onMakeObjectCall(qi::ObjectPtr ptr, const std::string& fname, int arg,
   qi::Promise<int>& result)
 {
   qiLogDebug() << "onMakeObjectCall";
-  qi::Future<int> fut = ptr->call<int>(fname, arg);
+  qi::Future<int> fut = ptr->call(fname, arg);
   // We must keep ptr alive until the call returns
   fut.connect(boost::bind(&bounceFuture, _1, result, ptr));
 }
@@ -654,11 +654,11 @@ TEST(TestCall, TestObjectPassing)
     unregisteredObj = ob.object();
   }
   // Transmit unregisteredObj through the network.
-  qi::Future<int> v = proxy->call<int>("makeObjectCall", unregisteredObj, "add", 1);
+  qi::Future<int> v = proxy->call("makeObjectCall", unregisteredObj, "add", 1);
   v.wait(2000);
   ASSERT_TRUE(!v.hasError());
   ASSERT_EQ(2, v.value());
-  proxy->call<void>("bindObjectEvent", unregisteredObj, "fire").wait();
+  proxy->call("bindObjectEvent", unregisteredObj, "fire").wait();
   unregisteredObj->emitEvent("fire", 42);
   eventValue.future().wait(); //fixme wait(2s)
   ASSERT_TRUE(eventValue.future().isFinished());
@@ -750,13 +750,13 @@ TEST(TestCall, TestObjectPassingReturn)
   p.server()->registerService("s", obj);
   qi::ObjectPtr proxy = p.client()->service("s");
 
-  qi::ObjectPtr adder = proxy->call<qi::ObjectPtr>("makeAdder");
+  qi::ObjectPtr adder = proxy->call("makeAdder");
   ASSERT_TRUE(weak.lock());
   // One is client side, the other server side
   if (p.client() != p.server())
     ASSERT_FALSE(weak.lock().get() == adder.get());
   ASSERT_TRUE(adder);
-  qi::Future<int> f = adder->call<int>("add", 41);
+  qi::Future<int> f = adder->call("add", 41);
   f.wait(1000);
   ASSERT_TRUE(f.isFinished());
   ASSERT_EQ(42, f.value());
@@ -770,6 +770,7 @@ char          pingChar(char v) { return v; }
 unsigned char pingUChar(unsigned char v) { return v;}
 int           pingInt(int v) { return v;}
 int           pingUInt(unsigned int v) { return v;}
+qi::GenericValue  pingGV(qi::GenericValue v) { return v;}
 
 #define EXPECTTHROW(exp) do {                   \
   try {                                         \
@@ -783,6 +784,7 @@ int           pingUInt(unsigned int v) { return v;}
     EXPECT_TRUE(true);                          \
   }                                             \
 } while(0)
+
 
 
 TEST(TestCall, Overflow)
@@ -800,20 +802,20 @@ TEST(TestCall, Overflow)
   p.server()->registerService("ping", obj);
 
   ObjectPtr client = p.client()->service("ping");
-  ASSERT_EQ(1, client->call<int>("pingChar", 1));
+  ASSERT_EQ(1, client->call("pingChar", 1));
   try
   {
     // Return cast check
-    EXPECTTHROW(client->call<char>("pingInt", 256).value());
-    EXPECTTHROW(client->call<char>("pingInt", 128).value());
-    EXPECTTHROW(client->call<unsigned char>("pingInt", -1).value());
-    EXPECTTHROW(client->call<unsigned int>("pingInt", -1).value());
+    EXPECTTHROW((char)client->call("pingInt", 256));
+    EXPECTTHROW((char)client->call("pingInt", 128));
+    EXPECTTHROW((unsigned char)client->call("pingInt", -1));
+    EXPECTTHROW((unsigned int)client->call("pingInt", -1));
     // call arg check
-    EXPECTTHROW(client->call<int>("pingUInt", -1).value());
-    EXPECTTHROW(client->call<int>("pingChar", 128).value());
-    EXPECTTHROW(client->call<int>("pingUChar", 256).value());
+    EXPECTTHROW(client->call("pingUInt", -1));
+    EXPECTTHROW(client->call("pingChar", 128));
+    EXPECTTHROW(client->call("pingUChar", 256));
     // call arg check at call backend site
-    EXPECTTHROW(client->call<int>("pingChar_i", 512).value());
+    EXPECTTHROW(client->call("pingChar_i", 512));
   }
   catch(const std::exception& e)
   {
