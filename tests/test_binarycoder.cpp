@@ -93,7 +93,7 @@ TEST(TestBind, serializeChars)
 {
   qi::Buffer      buf;
   qi::BufferReader bufr(buf);
-  char c1 = 'c';
+
   qi::encodeBinary(&buf, 'c');
   qi::encodeBinary(&buf, 'd');
   qi::encodeBinary(&buf, 'e');
