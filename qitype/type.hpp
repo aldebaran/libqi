@@ -15,6 +15,8 @@
 #include <boost/mpl/if.hpp>
 
 #include <qi/log.hpp>
+#include <qi/future.hpp>
+
 #include <qitype/api.hpp>
 #include <qitype/fwd.hpp>
 #include <qitype/signature.hpp>
@@ -504,7 +506,50 @@ QITYPE_API bool operator !=(const GenericIterator & a, const GenericIterator& b)
     template<typename T> AutoGenericValuePtr(const T& ptr);
   };
 
+  /** FutureSync storing a GenericValue, with
+   * cast to anything support.
+   *
+   */
+  class FutureSyncValue: public FutureSync<GenericValue>
+  {
+  public:
+    FutureSyncValue()
+    : FutureSync<GenericValue>()
+    {}
+    FutureSyncValue(const FutureSync<GenericValue>& b)
+    : FutureSync<GenericValue>(b)
+    {}
+    FutureSyncValue(const Future<GenericValue>& b)
+    : FutureSync<GenericValue>(b)
+    {}
 
+    template<typename T> operator T()
+    {
+      return value().to<T>();
+    }
+
+    template<typename T> operator Future<T>()
+    {
+      Promise<T> prom;
+      adaptFuture(async(), prom);
+      return prom.future();
+    }
+    template<typename T> operator FutureSync<T>()
+    {
+      Promise<T> prom;
+      adaptFuture(async(), prom);
+      return prom.future();
+    }
+  };
+  template<typename T> bool operator==(const T& a, const FutureSyncValue& b)
+  {
+    return a == b.value();
+  }
+
+  template<typename T> bool operator==(const FutureSyncValue& a, const T&b)
+  {
+    return a.value() == b;
+  }
 
   class TypeList;
 
@@ -652,6 +697,7 @@ QITYPE_API bool operator !=(const GenericIterator & a, const GenericIterator& b)
 
 QI_NO_TYPE(qi::Type)
 QI_NO_TYPE(qi::Type*)
+QI_NO_TYPE(qi::FutureSyncValue)
 
 #ifdef _MSC_VER
 #  pragma warning( pop )

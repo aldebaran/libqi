@@ -644,6 +644,51 @@ namespace qi {
   {
     return !(a==b);
   }
+
+  /// FutureValueConverter implementation for GenericValuePtr -> T
+  /// that destroys the value
+  template <typename T>
+  struct FutureValueConverterTakeGenericValuePtr
+  {
+    void operator()(const GenericValuePtr& in, T& out)
+    {
+      try {
+        out = in.to<T>();
+      }
+      catch (const std::exception& e)
+      {
+        const_cast<GenericValuePtr&>(in).destroy();
+        throw e;
+      }
+      const_cast<GenericValuePtr&>(in).destroy();
+    }
+  };
+
+  template <typename T>
+  struct FutureValueConverter<GenericValue, T>
+  {
+    void operator()(const GenericValue& in, T& out)
+    {
+      out = in.to<T>();
+    }
+  };
+
+  /// FutureValueConverter implementation for GenericValuePtr -> T
+  /// that destroys the value
+  template<> struct FutureValueConverterTakeGenericValuePtr<GenericValue>
+  {
+    void operator()(const GenericValuePtr& in, GenericValue& out)
+    {
+      out.reset(in, false, true);
+    }
+  };
+
+  // This one is ambiguous if not specialized
+  template<> struct FutureValueConverter<GenericValue, void>
+  {
+    void operator()(const GenericValue& in, void* out)
+    {}
+  };
 }
 
 namespace std

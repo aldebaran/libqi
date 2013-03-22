@@ -19,6 +19,7 @@
 #include <qitype/functiontypefactory.hpp>
 #include <qitype/signal.hpp>
 #include <qi/eventloop.hpp>
+#include <qitype/type.hpp>
 #include <qitype/typeobject.hpp>
 
 #ifdef _MSC_VER
@@ -68,8 +69,7 @@ namespace qi {
 
 #ifdef DOXYGEN
   // Help doxygen and the header reader a bit.
-  template<typename R>
-  qi::FutureSync<R> call(
+  qi::FutureSyncValue call(
                          const std::string& eventName,
                          qi::AutoGenericValuePtr p1 = qi::AutoGenericValuePtr(),
                          qi::AutoGenericValuePtr p2 = qi::AutoGenericValuePtr(),
@@ -79,8 +79,7 @@ namespace qi {
                          qi::AutoGenericValuePtr p6 = qi::AutoGenericValuePtr(),
                          qi::AutoGenericValuePtr p7 = qi::AutoGenericValuePtr(),
                          qi::AutoGenericValuePtr p8 = qi::AutoGenericValuePtr());
-  template<typename R>
-  qi::FutureSync<R> call(
+  qi::FutureSyncValue call(
                          qi::MetaCallType callType,
                          const std::string& eventName,
                          qi::AutoGenericValuePtr p1 = qi::AutoGenericValuePtr(),
@@ -92,8 +91,7 @@ namespace qi {
                          qi::AutoGenericValuePtr p7 = qi::AutoGenericValuePtr(),
                          qi::AutoGenericValuePtr p8 = qi::AutoGenericValuePtr());
 
-  template<typename R>
-  qi::FutureSync<R> async(
+  qi::FutureSyncValue async(
                          const std::string& eventName,
                          qi::AutoGenericValuePtr p1 = qi::AutoGenericValuePtr(),
                          qi::AutoGenericValuePtr p2 = qi::AutoGenericValuePtr(),
@@ -105,23 +103,28 @@ namespace qi {
                          qi::AutoGenericValuePtr p8 = qi::AutoGenericValuePtr());
 #else
     // Declare genCall, using overloads for all argument count instead of default values.
-    #define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma) \
-    template<typename R> qi::FutureSync<R> call(       \
-      const std::string& methodName comma              \
-      QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoGenericValuePtr));
+#define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)        \
+    FutureSyncValue call(                                        \
+      const std::string& methodName comma                        \
+      QI_GEN_ARGSDECLSAMETYPE(n, AutoGenericValuePtr));
+
     QI_GEN(genCall)
     #undef genCall
+
     #define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma) \
-    template<typename R> qi::FutureSync<R> async(     \
-      const std::string& methodName comma              \
-      QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoGenericValuePtr));
+    FutureSyncValue async(                                    \
+      const std::string& methodName comma                     \
+      QI_GEN_ARGSDECLSAMETYPE(n, AutoGenericValuePtr));
+
     QI_GEN(genCall)
     #undef genCall
+
     #define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma) \
-    template<typename R> qi::FutureSync<R> call(     \
-      qi::MetaCallType callType,                         \
-      const std::string& methodName comma              \
-      QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoGenericValuePtr));
+    FutureSyncValue call(                                     \
+      MetaCallType callType,                                  \
+      const std::string& methodName comma                     \
+      QI_GEN_ARGSDECLSAMETYPE(n, AutoGenericValuePtr));
+
     QI_GEN(genCall)
     #undef genCall
 #endif // DOXYGEN

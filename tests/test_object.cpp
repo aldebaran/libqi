@@ -159,37 +159,42 @@ TEST(TestObject, Simple) {
   ob.advertiseMethod("valuetest", &valuefun);
   qi::ObjectPtr obj(ob.object());
 
-
-  EXPECT_EQ(42, obj->call<int>("test", 21, 21));
-  EXPECT_EQ(42, obj->call<int>("objtest", 21, 21));
-  EXPECT_EQ(42, obj->call<int>("testBind", 21));
-  EXPECT_EQ(42, obj->call<int>("testBind2", 21));
-  EXPECT_EQ(static_cast<unsigned int>(42), obj->call<unsigned int>("test", 21, 21));
-  EXPECT_EQ(42, obj->call<char>("test", 21, 21));
-  EXPECT_EQ(42, obj->call<double>("test", 21, 21));
-  EXPECT_EQ(42, obj->call<long>("test", 21, 21));
-  EXPECT_EQ(42UL, obj->call<unsigned long>("test", 21, 21));
+  // check that call(...) == 42 compiles
+  EXPECT_TRUE(obj->call("test", 21, 21) == 42);
+  EXPECT_TRUE(42 == obj->call("test", 21, 21));
+  // though it fails inside EXPECT_EQ
+  EXPECT_EQ(42, obj->call("test", 21, 21).value());
+  EXPECT_EQ(42, obj->call("objtest", 21, 21).value());
+  ASSERT_EQ(42, obj->call("testBind", 21).value());
+  EXPECT_EQ(42, obj->call("testBind", 21).value());
+  EXPECT_EQ(42, obj->call("testBind2", 21).value());
+  EXPECT_EQ(static_cast<unsigned int>(42), (unsigned int)obj->call("test", 21, 21));
+  EXPECT_EQ(42, (char)obj->call("test", 21, 21));
+  EXPECT_EQ(42, (double)obj->call("test", 21, 21));
+  EXPECT_EQ(42, (long)obj->call("test", 21, 21));
+  EXPECT_EQ(42UL, (unsigned long)obj->call("test", 21, 21));
 
 #ifndef QI_REQUIRE_SIGNATURE_EXACT_MATCH
-  EXPECT_EQ(42, obj->call<int>("test", (char)21, 21));
-  EXPECT_EQ(42, obj->call<int>("test", (unsigned char)21, 21));
-  EXPECT_EQ(42, obj->call<int>("test", (short)21, 21));
-  EXPECT_EQ(42, obj->call<int>("test", (unsigned short)21, 21));
-  EXPECT_EQ(42, obj->call<int>("test", (float)21, 21));
-  EXPECT_EQ(42, obj->call<int>("test", (double)21, 21));
-  EXPECT_EQ(42, obj->call<int>("test", (long)21, 21));
+  EXPECT_EQ(42, (int)obj->call("test", (char)21, 21));
+  EXPECT_EQ(42, (int)obj->call("test", (unsigned char)21, 21));
+  EXPECT_EQ(42, (int)obj->call("test", (short)21, 21));
+  EXPECT_EQ(42, (int)obj->call("test", (unsigned short)21, 21));
+  EXPECT_EQ(42, (int)obj->call("test", (float)21, 21));
+  EXPECT_EQ(42, (int)obj->call("test", (double)21, 21));
+  EXPECT_EQ(42, (int)obj->call("test", (long)21, 21));
 #endif
 
   gGlobalResult = 0;
-  obj->call<void>("vtest", 21, 21).wait();
+  obj->call("vtest", 21, 21).wait();
   EXPECT_EQ(42, gGlobalResult);
   gGlobalResult = 0;
-  obj->call<void>("objvtest", 21, 21).wait();
+  obj->call("objvtest", 21, 21).wait();
   EXPECT_EQ(42, gGlobalResult);
 
   C f(42);
-  EXPECT_EQ(&f, obj->call<C*>("ptrtest", &f).value());
-  EXPECT_EQ(f, obj->call<C>("valuetest", f).value());
+  EXPECT_EQ(&f, (C*)obj->call("ptrtest", &f));
+  EXPECT_EQ(&f, obj->call("ptrtest", &f).value().to<C*>());
+  EXPECT_EQ(f, obj->call("valuetest", f).value().to<C>());
 }
 
 struct Point
@@ -231,7 +236,7 @@ TEST(TestObject, SerializeSimple)
   qi::ObjectPtr obj(ob.object());
   Point p;
   p.x = 1; p.y = 2;
-  Point res = obj->call<Point>("swapPoint", p);
+  Point res = obj->call("swapPoint", p);
   ASSERT_EQ(2, res.x);
   ASSERT_EQ(1, res.y);
 }
@@ -299,7 +304,7 @@ TEST(TestObject, SerializeComplex)
   unsigned id = ob.advertiseMethod("echo", &echoBack);
   qi::ObjectPtr obj(ob.object());
   std::cerr << obj->metaObject().methodMap()[id].signature() << std::endl;
-  Complex res = obj->call<Complex>("echo", comp);
+  Complex res = obj->call("echo", comp);
   ASSERT_EQ(res, comp);
 }
 
@@ -342,24 +347,24 @@ TEST(TestObject, ObjectTypeBuilder)
   qi::ObjectPtr oa1 = builder.object(&a1);
   qi::ObjectPtr oa2 = builder.object(&a2);
   ASSERT_TRUE(!oa1->eventLoop()); // no eventloop override
-  ASSERT_EQ(2, oa1->call<int>("add", 1));
-  ASSERT_EQ(3, oa2->call<int>("add", 1));
-  ASSERT_EQ(5, oa1->call<int>("addTwo", 3, 2));
-  ASSERT_EQ(3, oa1->call<int>("addAdderByPtr", &a2));
+  ASSERT_EQ(2, (int)oa1->call("add", 1));
+  ASSERT_EQ(3, (int)oa2->call("add", 1));
+  ASSERT_EQ(5, (int)oa1->call("addTwo", 3, 2));
+  ASSERT_EQ(3, (int)oa1->call("addAdderByPtr", &a2));
   //GenericObject is T not T*
-  ASSERT_EQ(3, oa1->call<int>("addAdderByPtr", oa2));
+  ASSERT_EQ(3, (int)oa1->call("addAdderByPtr", oa2));
   qiLogDebug() << "NEXT";
-  ASSERT_EQ(3, oa1->call<int>("addAdderByRef", a2));
+  ASSERT_EQ(3, (int)oa1->call("addAdderByRef", a2));
   qiLogDebug() << "NEXT";
-  ASSERT_EQ(3, oa1->call<int>("addAdderByRef", oa2));
-  ASSERT_EQ(3, oa1->call<int>("addAdderByConstPtr", &a2));
+  ASSERT_EQ(3, oa1->call("addAdderByRef", oa2));
+  ASSERT_EQ(3, oa1->call("addAdderByConstPtr", &a2));
   // GenericObject is T not T*
-  ASSERT_EQ(3, oa1->call<int>("addAdderByConstPtr", oa2));
-  ASSERT_EQ(3, oa1->call<int>("addAdderByConstRef", a2));
-  ASSERT_EQ(3, oa1->call<int>("addAdderByConstRef", oa2));
+  ASSERT_EQ(3, oa1->call("addAdderByConstPtr", oa2));
+  ASSERT_EQ(3, oa1->call("addAdderByConstRef", a2));
+  ASSERT_EQ(3, oa1->call("addAdderByConstRef", oa2));
 
-  ASSERT_EQ(4, oa1->call<int>("increment", 3));
-  ASSERT_EQ(4, oa1->call<int>("increment2", 3));
+  ASSERT_EQ(4, oa1->call("increment", 3));
+  ASSERT_EQ(4, oa1->call("increment2", 3));
 }
 
 class MAdder: public Adder, public qi::Manageable
@@ -386,27 +391,27 @@ TEST(TestObject, ObjectTypeBuilderAsync)
   MAdder a2(2);
   qi::ObjectPtr oa1 = builder.object(&a1);
   qi::ObjectPtr oa2 = builder.object(&a2);
-  ASSERT_EQ(2, oa1->call<int>("add", 1));
-  ASSERT_EQ(3, oa2->call<int>("add", 1));
-  ASSERT_EQ(5, oa1->call<int>("addTwo", 3, 2));
+  ASSERT_EQ(2, oa1->call("add", 1));
+  ASSERT_EQ(3, oa2->call("add", 1));
+  ASSERT_EQ(5, oa1->call("addTwo", 3, 2));
 
   // ptr cast not supported, cast ourselve
-  ASSERT_EQ(3, oa1->call<int>("addAdderByPtr", (Adder*)&a2));
+  ASSERT_EQ(3, oa1->call("addAdderByPtr", (Adder*)&a2));
   // Generic object is T not T*
   // ASSERT_EQ(3, oa1->call<int>("addAdderByPtr", oa2));
   // Copies a2
-  ASSERT_EQ(4, oa1->call<int>("addAdderByRef", a2));
+  ASSERT_EQ(4, oa1->call("addAdderByRef", a2));
   // ObjectPtr: no copy
-  ASSERT_EQ(3, oa1->call<int>("addAdderByRef", oa2));
-  ASSERT_EQ(3, oa1->call<int>("addAdderByConstPtr", &a2));
+  ASSERT_EQ(3, oa1->call("addAdderByRef", oa2));
+  ASSERT_EQ(3, oa1->call("addAdderByConstPtr", &a2));
   // GenericObject is T not T*
   //ASSERT_EQ(3, oa1->call<int>("addAdderByConstPtr", oa2));
 
-  ASSERT_EQ(4, oa1->call<int>("addAdderByConstRef", a2));
-  ASSERT_EQ(3, oa1->call<int>("addAdderByConstRef", oa2));
+  ASSERT_EQ(4, oa1->call("addAdderByConstRef", a2));
+  ASSERT_EQ(3, oa1->call("addAdderByConstRef", oa2));
 
-  ASSERT_EQ(4, oa1->call<int>("increment", 3));
-  ASSERT_EQ(4, oa1->call<int>("increment2", 3));
+  ASSERT_EQ(4, oa1->call("increment", 3));
+  ASSERT_EQ(4, oa1->call("increment2", 3));
 }
 
 
