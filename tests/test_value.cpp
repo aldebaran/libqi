@@ -242,7 +242,7 @@ TEST(Value, Tuple)
   Point p;
   p.x = 1;
   p.y = 2;
-  p == p;
+  ASSERT_TRUE(p == p);
   ASSERT_EQ(p , gtuple.to<Point>());
   p.x = 3;
   gtuple[0].setDouble(gtuple[0].toDouble() + 2);
@@ -332,6 +332,7 @@ TEST(Value, Overflow)
 {
   {
     long long test = 0xFFFF11223344LL; // paint the stack with nonzero
+    (void)test; //remove unused warning
   }
   long twelve = 12;
   GenericValueRef(12).to<char>();
