@@ -21,7 +21,6 @@
 
 #include "transportsocket.hpp"
 #include "tcptransportsocket.hpp"
-#include "message_p.hpp"
 
 #include "message.hpp"
 #include <qi/buffer.hpp>

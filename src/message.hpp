@@ -17,6 +17,35 @@
 
 namespace qi {
 
+  class MessagePrivate
+  {
+  public:
+    typedef struct
+    {
+      qi::uint32_t magic;
+      qi::uint32_t id;
+      qi::uint32_t size;
+      qi::uint16_t version;
+      qi::uint16_t type;
+      qi::uint32_t service;
+      qi::uint32_t object;
+      qi::uint32_t action;
+    } MessageHeader;
+
+    MessagePrivate();
+    MessagePrivate(const MessagePrivate& b);
+    ~MessagePrivate();
+
+    inline void                complete() { header.size = buffer.totalSize(); }
+    inline void               *getHeader() { return reinterpret_cast<void *>(&header); }
+
+    Buffer        buffer;
+    std::string   signature;
+    MessageHeader header;
+
+    static const unsigned int magic = 0x42adde42;
+  };
+
   class MessageAddress {
   public:
     MessageAddress()
@@ -46,8 +75,6 @@ namespace qi {
   /** \class qi::Message
     * This class represent a network message
     */
-  class MessagePrivate;
-
   class TransportSocket;
   typedef boost::shared_ptr<TransportSocket> TransportSocketPtr;
   class ObjectHost;

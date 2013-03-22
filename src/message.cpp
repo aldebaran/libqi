@@ -15,9 +15,9 @@
 
 #include <qi/atomic.hpp>
 #include <qi/log.hpp>
+#include <boost/cstdint.hpp>
 #include <qi/types.hpp>
-
-#include "message_p.hpp"
+#include <qi/buffer.hpp>
 
 qiLogCategory("qimessaging.message");
 

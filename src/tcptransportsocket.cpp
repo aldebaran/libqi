@@ -22,7 +22,6 @@
 #include <boost/make_shared.hpp>
 
 #include "tcptransportsocket.hpp"
-#include "message_p.hpp"
 
 #include <qi/log.hpp>
 #include <qi/types.hpp>

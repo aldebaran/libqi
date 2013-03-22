@@ -80,7 +80,6 @@ set(SRCS ${CONFIG_H}
          src/gateway.cpp
          src/message.hpp
          src/message.cpp
-         src/message_p.hpp
          src/messagedispatcher.hpp
          src/messagedispatcher.cpp
          src/objecthost.hpp
