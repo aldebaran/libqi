@@ -9,9 +9,8 @@
 
 #include <vector>
 #include <utility> // pair
-#include <boost/thread/recursive_mutex.hpp>
 #include <boost/bind.hpp>
-#include <qi/api.hpp>
+
 
 namespace qi {
 
@@ -22,30 +21,36 @@ namespace qi {
     public:
       FutureBase();
       ~FutureBase();
-      bool wait(int msecs = 0) const;
-      bool isReady() const;
-      bool hasError(int msecs = 0) const;
-      const std::string &error() const;
+
+      FutureState wait(int msecs) const;
+      FutureState state() const;
+      bool isRunning() const;
+      bool isFinished() const;
+      bool isCanceled() const;
+      bool hasError(int msecs) const;
+      bool hasValue(int msecs) const;
+      const std::string &error(int msecs) const;
+      void reportStart();
       void reset();
-      boost::recursive_mutex& mutex();
+
     protected:
-      void reportReady();
+      void reportValue();
       void reportError(const std::string &message);
-      void notifyReady();
+      void reportCanceled();
+      boost::recursive_mutex& mutex();
+      void notifyFinish();
 
     public:
       FutureBasePrivate *_p;
     };
 
-    QI_API void* futureStateNew(size_t);
-    QI_API void  futureStateDelete(void*);
 
     //common state shared between a Promise and multiple Futures
     template <typename T>
-    class FutureState : public FutureBase {
+    class FutureBaseTyped : public FutureBase {
     public:
       typedef typename FutureType<T>::type ValueType;
-      FutureState()
+      FutureBaseTyped()
         : _value()
       {
       }
@@ -57,10 +62,10 @@ namespace qi {
 
       void cancel()
       {
-        if (isReady())
+        if (isFinished())
           return;
         if (!_onCancel)
-          throw std::runtime_error("Future not cancelleable");
+          throw FutureException(FutureException::ExceptionState_FutureNotCancelable);
         _onCancel();
       }
 
@@ -68,28 +73,41 @@ namespace qi {
       {
         _onCancel = onCancel;
       }
+
       void setValue(qi::Future<T>& future, const ValueType &value)
       {
-        if (wait(-1))
-          throw std::runtime_error("Future value already set.");
         // report-ready + onResult() must be atomic to avoid
         // missing callbacks/double calls in case connect() is invoked at
         // the same time
         boost::recursive_mutex::scoped_lock lock(mutex());
+        if (!isRunning())
+          throw FutureException(FutureException::ExceptionState_PromiseAlreadySet);
         _value = value;
-        reportReady();
-        for(unsigned i=0; i<_onResult.size(); ++i)
+        reportValue();
+        for(unsigned i = 0; i<_onResult.size(); ++i)
           _onResult[i](future);
-        notifyReady();
+        notifyFinish();
       }
 
       void setError(qi::Future<T>& future, const std::string &message)
       {
         boost::recursive_mutex::scoped_lock lock(mutex());
+        if (!isRunning())
+          throw FutureException(FutureException::ExceptionState_PromiseAlreadySet);
         reportError(message);
-        for(unsigned i=0; i<_onResult.size(); ++i)
+        for(unsigned i = 0; i<_onResult.size(); ++i)
           _onResult[i](future);
-        notifyReady();
+        notifyFinish();
+      }
+
+      void setCanceled(qi::Future<T>& future) {
+        boost::recursive_mutex::scoped_lock lock(mutex());
+        if (!isRunning())
+          throw FutureException(FutureException::ExceptionState_PromiseAlreadySet);
+        reportCanceled();
+        for(unsigned i = 0; i<_onResult.size(); ++i)
+          _onResult[i](future);
+        notifyFinish();
       }
 
       void connect(qi::Future<T> future, const boost::function<void (qi::Future<T>)> &s)
@@ -98,7 +116,7 @@ namespace qi {
         {
           boost::recursive_mutex::scoped_lock lock(mutex());
           _onResult.push_back(s);
-          ready = isReady();
+          ready = isFinished();
         }
         //result already ready, notify the callback
         if (ready) {
@@ -106,20 +124,29 @@ namespace qi {
         }
       }
 
-      const ValueType &value() const    { wait(); if (hasError()) throw std::runtime_error(error()); return _value; }
+      const ValueType &value(int msecs) const {
+        FutureState state = wait(msecs);
+        if (state == FutureState_Running)
+          throw FutureException(FutureException::ExceptionState_FutureTimeout);
+        if (state == FutureState_Canceled)
+          throw FutureException(FutureException::ExceptionState_FutureCanceled);
+        if (state == FutureState_FinishedWithError)
+          throw FutureUserException(error(FutureTimeout_None));
+        return _value;
+      }
 
     private:
       typedef std::vector<boost::function<void (qi::Future<T>)> > Callbacks;
-      Callbacks _onResult;
-      ValueType                         _value;
-      boost::function<void ()>          _onCancel;
+      Callbacks                _onResult;
+      ValueType                _value;
+      boost::function<void ()> _onCancel;
     };
 
     template <typename T>
     void waitForFirstHelper(qi::Promise<bool>& bprom,
                             qi::Promise< qi::Future<T> >& prom,
                             qi::Future<T>& fut) {
-      if (prom.future().isReady())
+      if (prom.future().isFinished())
         return;
       if (!fut.hasError())
         prom.setValue(fut);
@@ -128,7 +155,7 @@ namespace qi {
 
     template <typename T>
     void waitForFirstHelperFailure(qi::Promise< qi::Future<T> >& prom) {
-      if (prom.future().isReady())
+      if (prom.future().isFinished())
         return;
       prom.setValue(makeFutureError<T>("No future returned successfully."));
     }
@@ -139,15 +166,6 @@ namespace qi {
     qi::Promise<T> prom;
     prom.setError(error);
     return prom.future();
-  }
-
-  template<typename T>
-  const typename Future<T>::ValueType& Future<T>::valueWithDefault(const ValueType& v) const
-  {
-    _p->wait();
-    if (hasError())
-      return v;
-    return _p->value();
   }
 
   template <typename T>

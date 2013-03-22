@@ -21,8 +21,7 @@ namespace qi {
       boost::condition_variable_any _cond;
       boost::recursive_mutex    _mutex;
       std::string               _error;
-      bool                      _isReady;
-      bool                      _hasError;
+      FutureState               _state;
     };
 
     struct FutureBasePrivatePoolTag { };
@@ -42,8 +41,7 @@ namespace qi {
       : _cond(),
         _mutex(),
         _error(),
-        _isReady(false),
-        _hasError(false)
+        _state(FutureState_None)
     {
     }
 
@@ -57,64 +55,111 @@ namespace qi {
       delete _p;
     };
 
-    bool FutureBase::wait(int msecs) const {
+    FutureState FutureBase::wait(int msecs) const {
       static bool detectEventLoopWait = !os::getenv("QI_DETECT_FUTURE_WAIT_FROM_NETWORK_EVENTLOOP").empty();
       if (detectEventLoopWait && getDefaultNetworkEventLoop()->isInEventLoopThread())
         qiLogWarning("qi.future") << "Future wait in network thread.";
       boost::recursive_mutex::scoped_lock lock(_p->_mutex);
-      if (_p->_isReady || _p->_hasError)
-        return true;
-      if (msecs > 0)
-        _p->_cond.timed_wait(lock, boost::posix_time::milliseconds(msecs));
-      else if (msecs < 0)
-        {} // Do nothing, just return state
-      else
+      if (_p->_state != FutureState_Running)
+        return _p->_state;
+      if (msecs == FutureTimeout_Infinite)
         _p->_cond.wait(lock);
-      return _p->_isReady || _p->_hasError;
+      else if (msecs > 0)
+        _p->_cond.timed_wait(lock, boost::posix_time::milliseconds(msecs));
+      // msecs <= 0 : do nothing just return the state
+      return _p->_state;
     }
 
-    void FutureBase::reportReady() {
-      boost::recursive_mutex::scoped_lock lock(_p->_mutex);
-      _p->_isReady = true;
+    void FutureBase::reportValue() {
+      //always set by setValue
+      //boost::recursive_mutex::scoped_lock lock(_p->_mutex);
+      _p->_state = FutureState_FinishedWithValue;
     }
 
-    void FutureBase::notifyReady() {
-      _p->_cond.notify_all();
+    void FutureBase::reportCanceled() {
+      //always set by setCanceled
+      //boost::recursive_mutex::scoped_lock lock(_p->_mutex);
+      _p->_state = FutureState_Canceled;
     }
 
     void FutureBase::reportError(const std::string &message) {
-      boost::recursive_mutex::scoped_lock lock(_p->_mutex);
-      _p->_hasError = true;
-      _p->_isReady = true;
+      //always set by setError
+      //boost::recursive_mutex::scoped_lock lock(_p->_mutex);
+      _p->_state = FutureState_FinishedWithError;
       _p->_error = message;
     }
 
-    bool FutureBase::isReady() const {
-      return _p->_isReady;
+    void FutureBase::reportStart() {
+      boost::recursive_mutex::scoped_lock lock(_p->_mutex);
+      _p->_state = FutureState_Running;
+    }
+
+    void FutureBase::notifyFinish() {
+      _p->_cond.notify_all();
+    }
+
+    bool FutureBase::isFinished() const {
+      return _p->_state == FutureState_FinishedWithValue || _p->_state == FutureState_FinishedWithError || _p->_state == FutureState_Canceled;
+    }
+
+    bool FutureBase::isRunning() const {
+      return _p->_state == FutureState_Running;
+    }
+
+    bool FutureBase::isCanceled() const {
+      return _p->_state == FutureState_Canceled;
     }
 
     bool FutureBase::hasError(int msecs) const {
-      wait(msecs);
-      return _p->_hasError;
+      if (wait(msecs) == FutureState_Running)
+        throw FutureException(FutureException::ExceptionState_FutureTimeout);
+      return _p->_state == FutureState_FinishedWithError;
     }
 
-    const std::string &FutureBase::error() const {
-      wait();
+    bool FutureBase::hasValue(int msecs) const {
+      if (wait(msecs) == FutureState_Running)
+        throw FutureException(FutureException::ExceptionState_FutureTimeout);
+      return _p->_state == FutureState_FinishedWithValue;
+    }
+
+    const std::string &FutureBase::error(int msecs) const {
+      if (wait(msecs) == FutureState_Running)
+        throw FutureException(FutureException::ExceptionState_FutureTimeout);
+      if (_p->_state != FutureState_FinishedWithError)
+        throw FutureException(FutureException::ExceptionState_FutureHasNoError);
       return _p->_error;
     }
 
-
     void FutureBase::reset() {
       boost::recursive_mutex::scoped_lock lock(_p->_mutex);
-      _p->_isReady = false;
+      //reset is called by the promise. So set the state to running.
+      _p->_state = FutureState_Running;
       _p->_error = std::string();
-      _p->_hasError = false;
     }
 
     boost::recursive_mutex& FutureBase::mutex()
     {
       return _p->_mutex;
     }
+  }
+
+  std::string FutureException::stateToString(const ExceptionState &es) {
+    switch (es) {
+    case ExceptionState_FutureTimeout:
+      return "Future timeout.";
+    case ExceptionState_FutureCanceled:
+      return "Future canceled.";
+    case ExceptionState_FutureNotCancelable:
+      return "Future is not cancelable.";
+    case ExceptionState_FutureHasNoError:
+      return "Future has no error.";
+    //use the specified string instead.
+    case ExceptionState_FutureUserError:
+      return "";
+    case ExceptionState_PromiseAlreadySet:
+      return "Future has already been set.";
+    }
+    return "";
   }
 
 }

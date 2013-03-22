@@ -7,6 +7,7 @@
 #ifndef _QITYPE_FUTURE_HPP_
 #define _QITYPE_FUTURE_HPP_
 
+#include <qi/api.hpp>
 #include <vector>
 #include <qi/atomic.hpp>
 #include <qi/config.hpp>
@@ -14,6 +15,7 @@
 #include <boost/make_shared.hpp>
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
+#include <boost/thread/recursive_mutex.hpp>
 
 #ifdef _MSC_VER
 #  pragma warning( push )
@@ -22,15 +24,17 @@
 
 namespace qi {
 
-  template<typename T> struct FutureType
+  template<typename T>
+  struct FutureType
   {
     typedef T type;
     typedef T typecast;
   };
 
-  struct FutureHasNoValue{};
+  struct FutureHasNoValue {};
   // Hold a void* for Future<void>
-  template<> struct FutureType<void>
+  template<>
+  struct FutureType<void>
   {
     typedef void* type;
     typedef FutureHasNoValue typecast;
@@ -42,17 +46,81 @@ namespace qi {
   template <typename T> class Promise;
 
   namespace detail {
-    template <typename T> class FutureState;
+    template <typename T> class FutureBaseTyped;
   }
+
+  /** State of the future.
+   */
+  enum FutureState {
+    FutureState_None,               /// Future is not tied to a promise
+    FutureState_Running,            /// Operation pending
+    FutureState_Canceled,           /// The future has been canceled
+    FutureState_FinishedWithError,  /// The operation is finished with an error
+    FutureState_FinishedWithValue,  /// The operation is finished with a value
+  };
+
+  enum FutureTimeout {
+    FutureTimeout_Infinite = ((int) 0x7fffffff),
+    FutureTimeout_None     = 0,
+  };
+
+  /** base exception raised for all future error.
+   */
+  class QI_API FutureException : public std::runtime_error {
+  public:
+    enum ExceptionState {
+      //No result ready
+      ExceptionState_FutureTimeout,
+      //The future has been canceled
+      ExceptionState_FutureCanceled,
+      //The future is not cancelable
+      ExceptionState_FutureNotCancelable,
+      //asked for error, but there is no error
+      ExceptionState_FutureHasNoError,
+      //real future error
+      ExceptionState_FutureUserError,
+      //when the promise is already set.
+      ExceptionState_PromiseAlreadySet,
+    };
+
+    explicit FutureException(const ExceptionState &es, const std::string &str = std::string())
+      : std::runtime_error(stateToString(es) + str)
+    {}
+
+    inline ExceptionState state() { return _state; }
+
+    std::string stateToString(const ExceptionState &es);
+
+    virtual ~FutureException() throw()
+    {}
+
+  private:
+    ExceptionState _state;
+  };
+
+  /** Exception inherited from FutureException
+   *  This exception represent an error reported by the operation.
+   */
+  class QI_API FutureUserException : public FutureException {
+  public:
+
+    explicit FutureUserException(const std::string &str = std::string())
+      : FutureException(ExceptionState_FutureUserError, str)
+    {}
+
+    virtual ~FutureUserException() throw()
+    {}
+  };
 
   template <typename T>
   class Future {
   public:
-    typedef typename FutureType<T>::type ValueType;
+    typedef typename FutureType<T>::type     ValueType;
     typedef typename FutureType<T>::typecast ValueTypeCast;
 
+  public:
     Future()
-      : _p(boost::make_shared<detail::FutureState<T> >())
+      : _p(boost::make_shared<detail::FutureBaseTyped<T> >())
     {
     }
 
@@ -71,7 +139,7 @@ namespace qi {
       return _p.get() == other._p.get();
     }
 
-    inline Future<T>& operator = (const FutureSync<T>& b)
+    inline Future<T>& operator=(const FutureSync<T>& b)
     {
       b._sync = false;
       _p = b._p;
@@ -85,24 +153,77 @@ namespace qi {
       *this = promise.future();
     }
 
-    inline const ValueType &value() const    { return _p->value(); }
-
-    /** Wait for future, and return a default value in case of error.
-     * @param defaultVal the value to return in case of Future error
-     * @return the future value, or \p defaultVal if hasError() is true.
+    /**
+     * @brief Return the value associated to a Future.
+     * @param msecs timeout
+     * @return the value
+     *
+     * This function can throw for many reason:
+     *   - wait timeout
+     *   - user error
+     *   - future canceled
+     *
+     * if an error is set, then value throw a FutureUserException, others errors are FutureException.
      */
-    inline const ValueType &valueWithDefault(const ValueType& defaultVal = ValueType()) const;
+    inline const ValueType &value(int msecs = FutureTimeout_Infinite) const { return _p->value(msecs); }
 
-    inline operator const ValueTypeCast&() const { return _p->value(); }
+    /** same as value() with an infinite timeout.
+     */
+    inline operator const ValueTypeCast&() const { return _p->value(FutureTimeout_Infinite); }
 
     /** Wait for future to contain a value or an error
      @param msecs: Maximum time to wait in milliseconds, 0 means forever and -1 means return immediately.
      @return true if future contains a value or an error, false if timeout was reached
      */
-    inline bool wait(int msecs = 0) const             { return _p->wait(msecs); }
-    inline bool isReady() const                       { return _p->isReady(); }
-    inline bool hasError(int msecs = 0) const         { return _p->hasError(msecs); }
-    inline const std::string &error() const           { return _p->error(); }
+    inline FutureState wait(int msecs = FutureTimeout_Infinite) const          { return _p->wait(msecs); }
+
+    /**
+     * @brief isFinished
+     * @return true if finished
+     * do not throw
+     */
+    inline bool isFinished() const                                             { return _p->isFinished(); }
+
+    /**
+     * @brief isRunning
+     * @return
+     * do not throw
+     */
+    inline bool isRunning() const                                              { return _p->isRunning(); }
+
+    /**
+     * @brief isCanceled
+     * @return
+     * do not throw
+     */
+    inline bool isCanceled() const                                             { return _p->isCanceled(); }
+
+    /**
+     * @brief hasError
+     * @param msecs timeout
+     * @return true if the future has an error.
+     * throw in the following case:
+     *   - timeout
+     */
+    inline bool hasError(int msecs = FutureTimeout_Infinite) const             { return _p->hasError(msecs); }
+    /**
+     * @brief hasValue
+     * @param msecs timeout
+     * @return
+     * true if the future has a value.
+     * throw in the following case:
+     *   - timeout
+     */
+    inline bool hasValue(int msecs = FutureTimeout_Infinite) const             { return _p->hasValue(msecs); }
+
+    /**
+     * @brief error
+     * @param msecs
+     * @return the error
+     * throw on timeout
+     * throw if the future do not have an actual error.
+     */
+    inline const std::string &error(int msecs = FutureTimeout_Infinite) const  { return _p->error(msecs); }
 
 
     inline FutureSync<T> sync()
@@ -114,13 +235,15 @@ namespace qi {
     * Exact effect is controlled by the cancel implementation, but it is
     * expected to set a value or an error to the Future as fast as possible.
     * Note that cancelation may be asynchronous.
-    * @throw runtime_error if isCancelleable() is false.
+    * @throw ExceptionState_FutureNotCancelable if isCanceleable() is false.
     */
     void cancel()
     {
       _p->cancel();
     }
 
+    /** return true if the future can be canceled. This does not mean that cancel will succeed.
+     */
     bool isCanceleable() const
     {
       return _p->isCanceleable();
@@ -132,12 +255,18 @@ namespace qi {
 
   protected:
     // C4251 needs to have dll-interface to be used by clients of class 'qi::Future<T>'
-    boost::shared_ptr< detail::FutureState<T> > _p;
+    boost::shared_ptr< detail::FutureBaseTyped<T> > _p;
     friend class Promise<T>;
     friend class FutureSync<T>;
   };
 
-  template<typename T> class FutureSync: public Future<T>
+
+
+  /** this class allow throwing on error and being synchronous
+   *  when the future is not handled by the client.
+   */
+  template<typename T>
+  class FutureSync: public Future<T>
   {
   public:
     typedef typename Future<T>::ValueType ValueType;
@@ -167,7 +296,7 @@ namespace qi {
       *this = promise.future();
     }
 
-    inline FutureSync<T>& operator = (const FutureSync<T>& b)
+    inline FutureSync<T>& operator=(const FutureSync<T>& b)
     {
       this->_p = b._p;
       _sync = true;
@@ -175,7 +304,7 @@ namespace qi {
       return *this;
     }
 
-    inline FutureSync<T>& operator = (const Future<T>& b)
+    inline FutureSync<T>& operator=(const Future<T>& b)
     {
      this->_p = b._p;
       _sync = true;
@@ -188,24 +317,21 @@ namespace qi {
         this->value();
     }
 
-    inline const ValueType &valueWithDefault(const ValueType& defaultVal = ValueType()) const
-    {
-      _sync = false;
-      return Future<T>::valueWithDefault(defaultVal);
-    }
-    inline const ValueType &value() const                            { _sync = false; return Future<T>::value(); }
-    inline operator const typename Future<T>::ValueTypeCast&() const { _sync = false; return Future<T>::value(); }
-    inline bool wait(int msecs = 0) const                   { _sync = false; return Future<T>::wait(msecs); }
-    inline bool isReady() const                             { _sync = false; return Future<T>::isReady(); }
-    inline bool hasError(int msecs = 0) const               { _sync = false; return Future<T>::hasError(msecs); }
+    inline const ValueType &value() const                             { _sync = false; return Future<T>::value(); }
+    inline operator const typename Future<T>::ValueTypeCast&() const  { _sync = false; return Future<T>::value(); }
+    inline FutureState wait(int msecs = FutureTimeout_Infinite) const { _sync = false; return Future<T>::wait(msecs); }
+    inline bool isRunning() const                                     { _sync = false; return Future<T>::isRunning(); }
+    inline bool isFinished() const                                    { _sync = false; return Future<T>::isFinished(); }
+    inline bool isCanceled() const                                    { _sync = false; return Future<T>::isCanceled(); }
+
+    inline bool hasError(int msecs = FutureTimeout_Infinite) const    { _sync = false; return Future<T>::hasError(msecs); }
+    inline bool hasValue(int msecs = FutureTimeout_Infinite) const    { _sync = false; return Future<T>::hasValue(msecs); }
+
     inline const std::string &error() const                 { _sync = false; return Future<T>::error(); }
     inline void cancel()                                    { _sync = false; Future<T>::cancel(); }
     bool isCanceleable() const                              { _sync = false; return Future<T>::isCanceleable(); }
-    inline void connect(const Connection& s) { _sync = false; Future<T>::connect(s);}
-    Future<T> async()
-    {
-      return *this;
-    }
+    inline void connect(const Connection& s)                { _sync = false; Future<T>::connect(s);}
+    Future<T> async()                                       { return *this; }
 
   private:
     mutable bool _sync;
@@ -218,24 +344,40 @@ namespace qi {
   public:
     typedef typename FutureType<T>::type ValueType;
 
-    Promise() { }
-
-    /** Create a cancelleable promise. If Future<T>::cancel is invoked,
-     * onCancel() will be called. It is expected to call setValue() or
-     * setError() as quickly as possible, but can do so in an asynchronous
-     * way.
-    */
-    Promise(boost::function<void ()> onCancel)
-    {
-       _f._p->setOnCancel(onCancel);
+    Promise() {
+      _f._p->reportStart();
     }
 
+    /** Create a canceleable promise. If Future<T>::cancel is invoked,
+     * onCancel() will be called. It is expected to call setValue(),
+     * setError() or setCanceled as quickly as possible, but can do so
+     * in an asynchronous way.
+     */
+    Promise(boost::function<void (qi::Promise<T>)> cancelCallback)
+    {
+      _f._p->reportStart();
+      _f._p->setOnCancel(boost::bind<void>(cancelCallback, *this));
+    }
+
+    /** notify all future that a value has been set.
+     *  throw if state != running
+     */
     void setValue(const ValueType &value) {
       _f._p->setValue(_f, value);
     }
 
+    /** set the error, and notify all futures
+     *  throw if state != running
+     */
     void setError(const std::string &msg) {
       _f._p->setError(_f, msg);
+    }
+
+    /** set the cancel state, and notify all futures
+     *  throw if state != running
+     */
+    void setCanceled() {
+      _f._p->setCanceled(_f);
     }
 
     void reset() {
@@ -266,7 +408,7 @@ namespace qi {
         return false;
 
       ++(this->_count);
-      fut.connect(boost::bind<void>(&FutureBarrier::onFutureDone, this));
+      fut.connect(boost::bind<void>(&FutureBarrier::onFutureFinish, this));
       this->_futures.push_back(fut);
       return true;
     }
@@ -284,7 +426,7 @@ namespace qi {
     Promise< std::vector< Future<T> > > _promise;
 
   private:
-    void onFutureDone() {
+    void onFutureFinish() {
       if (--(this->_count) == 0 && this->_closed) {
         this->_promise.setValue(this->_futures);
       }

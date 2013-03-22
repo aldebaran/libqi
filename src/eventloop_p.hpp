@@ -17,8 +17,8 @@ namespace qi {
   class AsyncCallHandlePrivate
   {
   public:
-    void cancel() { cancelled = true;}
-    bool cancelled;
+    void cancel() { canceled = true;}
+    bool canceled;
     // Callback used with notifyFd.
 #ifdef _WIN32
     // Assume it is a socket under WIN32, no way to poll

@@ -126,7 +126,7 @@ namespace qi {
       p.setValue(0);
     }
     else
-      p.setError("Operation cancelled");
+      p.setError("Operation canceled");
   }
 
   qi::Future<void> EventLoopAsio::asyncCall(uint64_t usDelay, boost::function<void ()> cb)
@@ -376,7 +376,7 @@ namespace qi {
     ctx->promise.reset();
   }
 
-  static void monitor_cancel(boost::shared_ptr<MonitorContext> ctx)
+  static void monitor_cancel(qi::Promise<void>, boost::shared_ptr<MonitorContext> ctx)
   {
     //qiLogDebug("qi.EventLoop") << os::ustime() << " MON cancel " << ctx->isFired;
     ctx->ending = true;
@@ -428,7 +428,7 @@ namespace qi {
     ctx->target = this;
     ctx->helper = helper;
     ctx->maxDelay = maxDelay;
-    ctx->promise = Promise<void>(boost::bind(&monitor_cancel, ctx));
+    ctx->promise = Promise<void>(boost::bind<void>(&monitor_cancel, _1, ctx));
     ctx->isFired = false;
     ctx->ending = false;
     monitor_ping(ctx);
@@ -444,7 +444,7 @@ namespace qi {
   static EventLoop* _netEventLoop = 0;
   static EventLoop* _objEventLoop = 0;
   static EventLoop* _poolEventLoop = 0;
-  static double _monitorInterval = 0;
+  static double     _monitorInterval = 0;
 
   static void monitor_notify(const char* which)
   {

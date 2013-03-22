@@ -85,10 +85,12 @@ TEST_F(TestFuture, SimpleType) {
   fut.connect(boost::bind(&TestFutureI::onFutureFinished, tf, _1));
 
   EXPECT_EQ(0, gGlobalI);
-  EXPECT_FALSE(fut.isReady());
+  EXPECT_FALSE(fut.isFinished());
+  EXPECT_TRUE(fut.isRunning());
+  EXPECT_FALSE(fut.isCanceled());
   pro.setValue(42);
   fut.wait(1000);
-  EXPECT_TRUE(fut.isReady());
+  EXPECT_TRUE(fut.isFinished());
   EXPECT_EQ(42, fut.value());
   EXPECT_EQ(42, gGlobalI);
 }
@@ -103,9 +105,9 @@ TEST_F(TestFuture, ComplexType) {
   fut.connect(boost::bind(&TestFutureS::onFutureFinished, tf, _1));
 
   EXPECT_STREQ("", gGlobalS.c_str());
-  EXPECT_FALSE(fut.isReady());
+  EXPECT_FALSE(fut.isFinished());
   pro.setValue("42");
-  EXPECT_TRUE(fut.isReady());
+  EXPECT_TRUE(fut.isFinished());
   EXPECT_STREQ("42", fut.value().c_str());
   EXPECT_STREQ("42", gGlobalS.c_str());
 }
@@ -117,7 +119,7 @@ void producer(qi::Promise<int> pro) {
 
 void consumer(qi::Atomic<int> &gSuccess, qi::Future<int> fut) {
   //wont block thread on error
-  ASSERT_TRUE(fut.wait(1000));
+  ASSERT_TRUE(fut.wait(1000) == qi::FutureState_FinishedWithValue);
   EXPECT_EQ(42, fut.value());
   ++gSuccess;
 }
@@ -140,8 +142,8 @@ TEST_F(TestFuture, TestTimeout) {
   qi::Promise<int> pro;
   qi::Future<int>  fut = pro.future();
 
-  EXPECT_FALSE(fut.wait(100));
-  EXPECT_FALSE(fut.isReady());
+  EXPECT_TRUE(fut.wait(100) == qi::FutureState_Running);
+  EXPECT_FALSE(fut.isFinished());
 }
 
 TEST_F(TestFuture, TestError) {
@@ -153,12 +155,36 @@ TEST_F(TestFuture, TestError) {
   fut.connect(boost::bind(&TestFutureI::onFutureFinished, tf, _1));
 
   EXPECT_STREQ("", gGlobalE.c_str());
-  EXPECT_FALSE(fut.isReady());
+  EXPECT_FALSE(fut.isFinished());
   pro.setError("chiche");
   fut.wait();
   EXPECT_STREQ("chiche", gGlobalE.c_str());
-  EXPECT_TRUE(fut.isReady());
+  EXPECT_TRUE(fut.isFinished());
   EXPECT_TRUE(fut.hasError());
+  EXPECT_THROW(fut.value(), qi::FutureUserException);
+  std::string err;
+  try {
+    fut.value();
+  } catch (qi::FutureUserException &fue) {
+    err = fue.what();
+  }
+  EXPECT_EQ(err, fut.error());
+}
+
+TEST_F(TestFuture, TestStateNone)
+{
+  qi::Future<int> f;
+  ASSERT_FALSE(f.isRunning());
+  ASSERT_FALSE(f.isCanceled());
+  ASSERT_FALSE(f.isFinished());
+  ASSERT_TRUE(f.wait(qi::FutureTimeout_None) == qi::FutureState_None);
+
+  qi::Promise<int> p;
+  f = p.future();
+  ASSERT_TRUE(f.isRunning());
+  ASSERT_FALSE(f.isCanceled());
+  ASSERT_FALSE(f.isFinished());
+  ASSERT_TRUE(f.wait(qi::FutureTimeout_None) == qi::FutureState_Running);
 }
 
 void unlock(qi::Promise<int> prom, bool* tag)
@@ -174,7 +200,7 @@ TEST(TestFutureSync, Basic)
 
   {
     qi::FutureSync<int> fs;
-    ASSERT_TRUE(!fs.isReady());
+    ASSERT_TRUE(!fs.isFinished());
   } // unbound futuresync should not block
 
   bool tag = false;
@@ -300,10 +326,12 @@ TEST(TestFutureSync, NoThrow) {
   qi::Promise<int> prom;
 
   prom.setError("touctouc");
-  EXPECT_NO_THROW(qi::FutureSync<int>(prom.future()).wait(1));
+  EXPECT_NO_THROW(qi::FutureSync<int>(prom.future()).wait(qi::FutureTimeout_None));
   EXPECT_NO_THROW(qi::FutureSync<int>(prom.future()).hasError());
-  EXPECT_NO_THROW(qi::FutureSync<int>(prom.future()).isReady());
-  EXPECT_NO_THROW(qi::FutureSync<int>(prom.future()).valueWithDefault());
+  EXPECT_NO_THROW(qi::FutureSync<int>(prom.future()).hasValue());
+  EXPECT_NO_THROW(qi::FutureSync<int>(prom.future()).isRunning());
+  EXPECT_NO_THROW(qi::FutureSync<int>(prom.future()).isCanceled());
+  EXPECT_NO_THROW(qi::FutureSync<int>(prom.future()).isFinished());
   EXPECT_NO_THROW(qi::FutureSync<int>(prom.future()).error());
   EXPECT_NO_THROW(qi::FutureSync<int>(prom.future()).cancel());
   EXPECT_NO_THROW(qi::FutureSync<int>(prom.future()).isCanceleable());
@@ -344,18 +372,94 @@ static void setTrue(bool* b)
   *b = true;
 }
 
-TEST(TestFutureCancel, Canceleable)
+TEST(TestFutureCancel, AsyncCallCanceleable)
 {
   bool b = false;
   qi::Future<void> f = qi::getDefaultNetworkEventLoop()->async(
     boost::bind(&setTrue, &b), 200);
   f.cancel();
-  ASSERT_FALSE(f.isReady());
+  ASSERT_FALSE(f.isFinished());
   qi::os::msleep(400);
   ASSERT_TRUE(!b);
-  ASSERT_TRUE(f.isReady());
+  ASSERT_TRUE(f.isFinished());
   ASSERT_TRUE(f.hasError());
 }
+
+static void doCancel(qi::Promise<int> promise)  { promise.setCanceled(); }
+static void doError(qi::Promise<int> promise)   { promise.setError("paf");}
+static void doValue(qi::Promise<int> promise)   { promise.setValue(42); }
+static void doNothing(qi::Promise<int> promise) { ; }
+
+TEST(TestFutureCancel, Canceleable)
+{
+  qi::Promise<int> p(doCancel);
+  qi::Future<int> f = p.future();
+
+  ASSERT_FALSE(f.isFinished());
+  ASSERT_FALSE(f.isCanceled());
+  ASSERT_TRUE(f.isCanceleable());
+  f.cancel();
+  ASSERT_TRUE(f.isFinished());
+  ASSERT_TRUE(f.isCanceled());
+  ASSERT_TRUE(f.isCanceleable());
+  ASSERT_FALSE(f.hasError(qi::FutureTimeout_None));
+  ASSERT_FALSE(f.hasValue(qi::FutureTimeout_None));
+
+
+  p = qi::Promise<int>(doError);
+  f = p.future();
+
+  ASSERT_FALSE(f.isFinished());
+  ASSERT_FALSE(f.isCanceled());
+  ASSERT_TRUE(f.isCanceleable());
+  f.cancel();
+  ASSERT_TRUE(f.isFinished());
+  ASSERT_FALSE(f.isCanceled());
+  ASSERT_TRUE(f.isCanceleable());
+  ASSERT_TRUE(f.hasError(qi::FutureTimeout_None));
+  ASSERT_FALSE(f.hasValue(qi::FutureTimeout_None));
+
+  p = qi::Promise<int>(doValue);
+  f = p.future();
+
+  ASSERT_FALSE(f.isFinished());
+  ASSERT_FALSE(f.isCanceled());
+  ASSERT_TRUE(f.isCanceleable());
+  f.cancel();
+  ASSERT_TRUE(f.isFinished());
+  ASSERT_FALSE(f.isCanceled());
+  ASSERT_TRUE(f.isCanceleable());
+  ASSERT_FALSE(f.hasError(qi::FutureTimeout_None));
+  ASSERT_TRUE(f.hasValue(qi::FutureTimeout_None));
+
+  p = qi::Promise<int>(doNothing);
+  f = p.future();
+
+  ASSERT_FALSE(f.isFinished());
+  ASSERT_FALSE(f.isCanceled());
+  ASSERT_TRUE(f.isCanceleable());
+  f.cancel();
+  ASSERT_FALSE(f.isFinished());
+  ASSERT_FALSE(f.isCanceled());
+  ASSERT_TRUE(f.isCanceleable());
+  EXPECT_THROW(f.hasError(qi::FutureTimeout_None), qi::FutureException);
+  EXPECT_THROW(f.hasValue(qi::FutureTimeout_None), qi::FutureException);
+}
+
+
+TEST(TestFutureCancel, Canceled)
+{
+  bool b = false;
+  qi::Future<void> f = qi::getDefaultNetworkEventLoop()->async(
+    boost::bind(&setTrue, &b), 200);
+  f.cancel();
+  ASSERT_FALSE(f.isFinished());
+  qi::os::msleep(400);
+  ASSERT_TRUE(!b);
+  ASSERT_TRUE(f.isFinished());
+  ASSERT_TRUE(f.hasError());
+}
+
 
 // ===== FutureBarrier =========================================================
 #define BARRIER_N 10
