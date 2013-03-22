@@ -311,7 +311,7 @@ namespace qi {
       cpu_set_t cpu;
       pthread_t self = pthread_self();
       CPU_ZERO(&cpu);
-      for (int i = 0; i < cpus.size(); ++i)
+      for (unsigned int i = 0; i < cpus.size(); ++i)
         CPU_SET(cpus[i], &cpu);
       int ret = 0;
       ret = pthread_setaffinity_np(self, sizeof(cpu_set_t), &cpu);
