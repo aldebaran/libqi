@@ -226,20 +226,19 @@ namespace qi {
     return to<T>();
   }
 
+  namespace detail
+  {
+    QI_NORETURN  QITYPE_API void throwConversionFailure(Type* from, Type* to);
+  }
+
   template<typename T>
   inline T GenericValuePtr::to() const
   {
-    qiLogCategory("qitype.genericvalue");
-    std::pair<GenericValuePtr, bool> conv = convert(typeOf<T>());
+    Type* targetType = typeOf<T>();
+    std::pair<GenericValuePtr, bool> conv = convert(targetType);
     if (!conv.first.type)
     {
-      std::stringstream msg;
-      msg << "Conversion from " << type->infoString()
-          << '(' << type->kind() << ')'
-          << " to " << typeOf<T>()->infoString()
-          << '(' << typeOf<T>()->kind() << ") failed";
-      qiLogWarning() << msg.str();
-      throw std::runtime_error(msg.str());
+      detail::throwConversionFailure(type, targetType);
     }
     T result = *conv.first.ptr<T>(false);
     if (conv.second)

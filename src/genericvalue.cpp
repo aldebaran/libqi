@@ -636,5 +636,19 @@ namespace qi
    else
       throw std::runtime_error("Value is not Int or Float");
   }
+
+  namespace detail
+  {
+    QI_NORETURN void throwConversionFailure(Type* from, Type* to)
+    {
+      std::stringstream msg;
+      msg << "Conversion from " << from->infoString()
+          << '(' << from->kind() << ')'
+          << " to " << to->infoString()
+          << '(' << to->kind() << ") failed";
+      qiLogWarning() << msg.str();
+      throw std::runtime_error(msg.str());
+    }
+  }
 }
 
