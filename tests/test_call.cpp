@@ -42,7 +42,7 @@ int addOne(int v)
   return v+1;
 }
 
-int print(std::list<std::pair<std::string, int> > robots)
+long unsigned int print(std::list<std::pair<std::string, int> > robots)
 {
   for(std::list<std::pair<std::string, int> >::iterator it = robots.begin(); it != robots.end(); ++it)
     std::cout << "Robot " << (*it).first << " has serial ID " << (*it).second << std::endl;
@@ -216,7 +216,7 @@ TEST(TestCall, CallComplexType)
   robots.push_back(std::make_pair("Billy West", 3456789));
   robots.push_back(std::make_pair("33CL", 4567890));
 
-  ASSERT_EQ(4, proxy->call<int>("print", robots));
+  ASSERT_EQ(4u, proxy->call<long unsigned int>("print", robots));
 
   p.server()->unregisterService(serviceID);
 }
