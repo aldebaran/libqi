@@ -29,7 +29,7 @@
 #  define QI_NORETURN   __attribute__((noreturn))
 #elif defined(_MSC_VER)
 /// Portable noreturn attribute, used to declare that a function does not return
-#  define QI_NORETURN   __declspec((noreturn))
+#  define QI_NORETURN   __declspec(noreturn)
 #else
 #  define QI_NORETURN
 #endif
