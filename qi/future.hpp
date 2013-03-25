@@ -125,12 +125,6 @@ namespace qi {
     {
     }
 
-    Future(const FutureSync<T>& b)
-    : _p(b._p)
-    {
-      b._sync = false;
-    }
-
     Future(const Future<T>& b)
     : _p(b._p)
     {}
