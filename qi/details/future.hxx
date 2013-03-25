@@ -150,7 +150,7 @@ namespace qi {
       }
 
     private:
-      template<typename> friend class Promise;
+      friend class Promise<T>;
       typedef std::vector<boost::function<void (qi::Future<T>)> > Callbacks;
       Callbacks                _onResult;
       ValueType                _value;
