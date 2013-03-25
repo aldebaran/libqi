@@ -10,9 +10,86 @@
 #include <qi/future.hpp>
 #include <qitype/typeobject.hpp>
 #include <qitype/details/typeimpl.hxx>
-#include <qitype/type.hpp>
 
 namespace qi {
+
+  namespace detail
+  {
+
+    template <typename T>
+    inline void futureAdapter(qi::Future<qi::GenericValuePtr> metaFut, qi::Promise<T> promise)
+    {
+
+      //error handling
+      if (metaFut.hasError()) {
+        promise.setError(metaFut.error());
+        return;
+      }
+
+      GenericValuePtr val =  metaFut.value();
+      Type* targetType = typeOf<T>();
+      try
+      {
+        std::pair<GenericValuePtr, bool> conv = val.convert(targetType);
+        if (!conv.first.type)
+          promise.setError(std::string("Unable to convert call result to target type:")
+            + val.type->infoString() + " -> " + targetType->infoString());
+        else
+        {
+          T* res = (T*)conv.first.type->ptrFromStorage(&conv.first.value);
+          promise.setValue(*res);
+        }
+        if (conv.second)
+          conv.first.destroy();
+      }
+      catch(const std::exception& e)
+      {
+        promise.setError(std::string("Return argument conversion error: ") + e.what());
+      }
+      val.destroy();
+    }
+
+    template <typename T>
+    inline void futureAdapterVal(qi::Future<qi::GenericValue> metaFut, qi::Promise<T> promise)
+    {
+      //error handling
+      if (metaFut.hasError()) {
+        promise.setError(metaFut.error());
+        return;
+      }
+      const GenericValue& val =  metaFut.value();
+      try
+      {
+        promise.setValue(val.to<T>());
+      }
+      catch (const std::exception& e)
+      {
+        promise.setError(std::string("Return argument conversion error: ") + e.what());
+      }
+    }
+
+    template<>
+    inline void futureAdapterVal(qi::Future<qi::GenericValue> metaFut, qi::Promise<GenericValue> promise)
+    {
+      if (metaFut.hasError())
+        promise.setError(metaFut.error());
+      else
+        promise.setValue(metaFut.value());
+    }
+
+    template <>
+    inline void futureAdapter<void>(qi::Future<qi::GenericValuePtr> metaFut, qi::Promise<void> promise)
+    {
+      //error handling
+      if (metaFut.hasError()) {
+        promise.setError(metaFut.error());
+        return;
+      }
+      promise.setValue(0);
+    }
+
+  }
+
 
   /* Generate qi::FutureSync<R> GenericObject::call(methodname, args...)
    * for all argument counts
@@ -20,13 +97,13 @@ namespace qi {
    * signature and bounce those to metaCall.
    */
   #define pushi(z, n,_) params.push_back(p ## n);
-#define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)                      \
-  inline qi::FutureSyncValue GenericObject::call(             \
+#define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)                           \
+  template<typename R> qi::FutureSync<R> GenericObject::call(             \
       const std::string& methodName       comma                           \
       QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoGenericValuePtr))             \
   {                                                                        \
      if (!value || !type) {                                                \
-      return makeFutureError<GenericValue>("Invalid GenericObject");                  \
+      return makeFutureError<R>("Invalid GenericObject");                  \
      }                                                                     \
      std::vector<qi::GenericValuePtr> params;                              \
      params.reserve(n);                                                    \
@@ -36,22 +113,21 @@ namespace qi {
        signature += params[i].signature();                                 \
      signature += ")";                                                     \
      std::string sigret;                                                   \
-     qi::Promise<GenericValue> res;                                \
+     qi::Promise<R> res;                                                   \
      qi::Future<GenericValuePtr> fmeta = metaCall(signature, params);      \
-     adaptFuture(fmeta, res, \
-       FutureValueConverterTakeGenericValuePtr<GenericValue>()); \
+     fmeta.connect(boost::bind<void>(&detail::futureAdapter<R>, _1, res));  \
      return res.future();                                                  \
   }
+
   QI_GEN(genCall)
   #undef genCall
-
-  #define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)                \
-  inline qi::FutureSyncValue GenericObject::async(                         \
-      const std::string& methodName       comma                            \
-      QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoGenericValuePtr))                 \
+  #define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)                           \
+  template<typename R> qi::FutureSync<R> GenericObject::async(             \
+      const std::string& methodName       comma                           \
+      QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoGenericValuePtr))             \
   {                                                                        \
      if (!value || !type) {                                                \
-      return makeFutureError<GenericValue>("Invalid GenericObject");       \
+      return makeFutureError<R>("Invalid GenericObject");                  \
      }                                                                     \
      std::vector<qi::GenericValuePtr> params;                              \
      params.reserve(n);                                                    \
@@ -61,23 +137,22 @@ namespace qi {
        signature += params[i].signature();                                 \
      signature += ")";                                                     \
      std::string sigret;                                                   \
-     qi::Promise<GenericValue> res;                                        \
+     qi::Promise<R> res;                                                   \
      qi::Future<GenericValuePtr> fmeta = metaCall(signature, params, MetaCallType_Queued);   \
-     adaptFuture(fmeta, res, \
-       FutureValueConverterTakeGenericValuePtr<GenericValue>()); \
+     fmeta.connect(boost::bind<void>(&detail::futureAdapter<R>, _1, res));  \
      return res.future();                                                  \
   }
 
   QI_GEN(genCall)
   #undef genCall
-  #define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)              \
-  inline qi::FutureSyncValue GenericObject::call(                         \
+  #define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)                           \
+  template<typename R> qi::FutureSync<R> GenericObject::call(             \
       MetaCallType callType,                                              \
       const std::string& methodName       comma                           \
       QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoGenericValuePtr))             \
   {                                                                        \
      if (!value || !type) {                                                \
-      return makeFutureError<GenericValue>("Invalid GenericObject");                  \
+      return makeFutureError<R>("Invalid GenericObject");                  \
      }                                                                     \
      std::vector<qi::GenericValuePtr> params;                              \
      params.reserve(n);                                                    \
@@ -87,10 +162,9 @@ namespace qi {
        signature += params[i].signature();                                 \
      signature += ")";                                                     \
      std::string sigret;                                                   \
-     qi::Promise<GenericValue> res;                                        \
+     qi::Promise<R> res;                                                   \
      qi::Future<GenericValuePtr> fmeta = metaCall(signature, params, callType);   \
-     adaptFuture(fmeta, res, \
-     FutureValueConverterTakeGenericValuePtr<GenericValue>());            \
+     fmeta.connect(boost::bind<void>(&detail::futureAdapter<R>, _1, res));  \
      return res.future();                                                  \
   }
 
@@ -106,7 +180,7 @@ namespace qi {
       return makeFutureError<T>("Property not found");
     qi::Future<GenericValue> f = type->getProperty(value, pid);
     qi::Promise<T> p;
-    adaptFuture(f, p);
+    f.connect(boost::bind(&detail::futureAdapterVal<T>,_1, p));
     return p.future();
   }
 
