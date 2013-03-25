@@ -123,7 +123,7 @@ namespace qi {
   //retrieve the metaObject from the network
   qi::Future<void> RemoteObject::fetchMetaObject() {
     qi::Promise<void> prom;
-    qi::Future<qi::MetaObject> fut = _self->call("metaObject", 0U);
+    qi::Future<qi::MetaObject> fut = _self->call<qi::MetaObject>("metaObject", 0U);
     fut.connect(boost::bind<void>(&RemoteObject::onMetaObject, this, _1, prom));
     return prom.future();
   }
@@ -327,7 +327,7 @@ namespace qi {
     Link uid = DynamicObject::metaConnect(event, sub);
 
     qiLogDebug() <<"connect() to " << event <<" gave " << uid;
-    qi::Future<Link> fut = _self->call("registerEvent", _service, event, uid);
+    qi::Future<Link> fut = _self->call<Link>("registerEvent", _service, event, uid);
     fut.connect(boost::bind<void>(&onEventConnected, _1, prom, uid));
     return prom.future();
   }
@@ -345,7 +345,7 @@ namespace qi {
       return qi::makeFutureError<void>(ss.str());
     }
     if (_socket->isConnected())
-      return _self->call("unregisterEvent", _service, event, linkId);
+      return _self->call<void>("unregisterEvent", _service, event, linkId);
     return qi::makeFutureError<void>("No remote unregister: socket disconnected");
   }
 
@@ -362,13 +362,13 @@ namespace qi {
  {
    qiLogDebug() << "bouncing getProperty";
    // FIXME: perform some validations on this end?
-   return _self->call("getProperty", id);
+   return _self->call<GenericValue>("getProperty", id);
  }
 
  qi::Future<void> RemoteObject::setProperty(unsigned int id, GenericValue val)
  {
    qiLogDebug() << "bouncing setProperty";
-   return _self->call("setProperty", id, val);
+   return _self->call<void>("setProperty", id, val);
  }
 }
 

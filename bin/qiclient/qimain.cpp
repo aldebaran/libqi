@@ -41,7 +41,7 @@ void call(int count, const std::string &addr)
   qi::ObjectPtr obj = getObj(&session);
 
   for (int i = 0; i < count; ++i) {
-    std::string result = obj->call("reply", "plaf");
+    std::string result = obj->call<std::string>("reply", "plaf");
     std::cout << "result" << i << ":" << result << std::endl;
   }
 

@@ -71,7 +71,7 @@ TEST(QiService, RemoteObjectCacheServerClose)
   fut = p.client()->service("serviceTest");
   EXPECT_FALSE(fut.hasError());
 
-  EXPECT_EQ(std::string("titi"), fut.value()->call("reply", "titi").value());
+  EXPECT_EQ(std::string("titi"), fut.value()->call<std::string>("reply", "titi").value());
 
   p.server()->close();
 
@@ -92,7 +92,7 @@ TEST(QiService, RemoteObjectCacheUnregister)
   fut = p.client()->service("serviceTest");
   EXPECT_FALSE(fut.hasError());
 
-  EXPECT_EQ(std::string("titi"), fut.value()->call("reply", "titi").value());
+  EXPECT_EQ(std::string("titi"), fut.value()->call<std::string>("reply", "titi").value());
 
   p.server()->unregisterService(idx);
 
@@ -114,7 +114,7 @@ TEST(QiService, RemoteObjectCacheABAUnregister)
   fut = p.client()->service("serviceTest");
   EXPECT_FALSE(fut.hasError());
 
-  EXPECT_EQ(std::string("titi"), fut.value()->call("reply", "titi").value());
+  EXPECT_EQ(std::string("titi"), fut.value()->call<std::string>("reply", "titi").value());
 
   p.server()->unregisterService(idx);
 
@@ -127,7 +127,7 @@ TEST(QiService, RemoteObjectCacheABAUnregister)
   fut = p.client()->service("serviceTest");
   EXPECT_FALSE(fut.hasError());
 
-  qi::Future<std::string> fret = fut.value()->call("reply", "titi");
+  qi::Future<std::string> fret = fut.value()->call<std::string>("reply", "titi");
   if (fret.hasError()) {
     std::cout << "Error returned:" << fret.error();
   }
@@ -151,7 +151,7 @@ TEST(QiService, RemoteObjectCacheABANewServer)
   fut = p.client()->service("serviceTest");
   EXPECT_FALSE(fut.hasError());
 
-  EXPECT_EQ(std::string("titi"), fut.value()->call("reply", "titi").value());
+  EXPECT_EQ(std::string("titi"), fut.value()->call<std::string>("reply", "titi").value());
 
   p.server()->close();
 
@@ -168,7 +168,7 @@ TEST(QiService, RemoteObjectCacheABANewServer)
   fut = p.client()->service("serviceTest");
   EXPECT_FALSE(fut.hasError());
 
-  qi::Future<std::string> fret = fut.value()->call("reply", "titi");
+  qi::Future<std::string> fret = fut.value()->call<std::string>("reply", "titi");
   if (fret.hasError()) {
     std::cout << "Error returned:" << fret.error();
   }
@@ -191,7 +191,7 @@ TEST(QiService, RemoteObjectNackTransactionWhenServerClosed)
   fut = p.client()->service("serviceTest");
   EXPECT_FALSE(fut.hasError());
 
-  qi::Future<void> fret = fut.value()->call("msleep", 2000);
+  qi::Future<void> fret = fut.value()->call<void>("msleep", 2000);
   qi::Future<void> fclose = p.server()->close();
   fclose.wait(1000);
   EXPECT_TRUE(fclose.isFinished());
@@ -238,9 +238,9 @@ TEST(QiService, ClassProperty)
   client->setProperty<int>("offset", 1).value();
   qiLogDebug() << "setProp done";
   ASSERT_EQ(1, f.prop.get());
-  ASSERT_EQ(2, client->call("ping", 1));
+  ASSERT_EQ(2, client->call<int>("ping", 1));
   f.prop.set(2);
-  ASSERT_EQ(3, client->call("ping", 1));
+  ASSERT_EQ(3, client->call<int>("ping", 1));
   ASSERT_EQ(2, client->getProperty<int>("offset"));
 
   // test event
@@ -281,9 +281,9 @@ TEST(QiService, GenericProperty)
 
   client->setProperty("offset", 1);
   ASSERT_EQ(1, prop->getValue().toInt());
-  ASSERT_EQ(2, client->call("ping", 1));
+  ASSERT_EQ(2, client->call<int>("ping", 1));
   prop->setValue(qi::GenericValue(qi::GenericValueRef(2)));
-  ASSERT_EQ(3, client->call("ping", 1));
+  ASSERT_EQ(3, client->call<int>("ping", 1));
   ASSERT_EQ(2, client->getProperty<int>("offset"));
 
   // test event
@@ -303,7 +303,7 @@ TEST(QiService, GenericProperty)
   EXPECT_EQ(6, hit);
   if (client != obj)
   {
-    client->call("setProperty", "offset", 3);
+    client->call<void>("setProperty", "offset", 3);
     EXPECT_EQ(3, prop->getValue().toInt());
   }
 

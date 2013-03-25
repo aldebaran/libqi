@@ -100,7 +100,7 @@ namespace qi
 
     // TODO: implement OS networking notifications
 
-    //qiLogDebug() << "Checking endpoints...";
+    qiLogDebug() << "Checking endpoints...";
     std::vector<qi::Url> currentEndpoints;
 
     std::map<std::string, std::vector<std::string> > ifsMap = qi::os::hostIPAddrs();

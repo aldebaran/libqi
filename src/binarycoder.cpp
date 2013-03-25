@@ -372,7 +372,7 @@ namespace qi {
       DynamicObject* dobj = reinterpret_cast<DynamicObject*>(ptr->value);
       // dobj is a RemoteObject
       //FIXME: use post()
-      ptr->call("terminate", static_cast<RemoteObject*>(dobj)->service()).async();
+      ptr->call<void>("terminate", static_cast<RemoteObject*>(dobj)->service()).async();
     }
 
     GenericValuePtr deserializeObject(qi::BinaryDecoder& in,

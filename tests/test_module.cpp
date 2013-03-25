@@ -19,7 +19,7 @@ TEST(Module, Load)
 
   qi::ObjectPtr o = session->service("test");
   ASSERT_TRUE(o);
-  int res = o->call("testMethod", 12);
+  int res = o->call<int>("testMethod", 12);
   ASSERT_EQ(13, res);
 }
 
