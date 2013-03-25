@@ -14,12 +14,18 @@ Allow easy asynchronous calls handling and calls synchronisation.
 
 import _qipy
 
+FutureTimeout_Infinite = int(0x7ffffff)
+FutureTimeout_None     = 0
+
 class Promise:
     """ Promise
     """
 
-    def __init__(self):
-        self._prom = _qipy.qi_promise_create()
+    def __init__(self, cancel_callback=None):
+        if cancel_callback is None:
+            self._prom = _qipy.qi_promise_create()
+        else:
+            self._prom = _qipy.qipy_promise_cancelable_create(self, cancel_callback)
 
     def future(self):
         return Future(_qipy.qi_promise_get_future(self._prom))
@@ -28,8 +34,10 @@ class Promise:
         _qipy.qi_promise_set_error(self._prom, str(err))
 
     def set_value(self, val):
-        print "prom setval"
         _qipy.qipy_promise_set_value(self._prom, val)
+
+    def set_canceled(self):
+        _qipy.qi_promise_set_canceled(self._prom)
 
     def __del__(self):
         """ Destructor of Future class
@@ -37,6 +45,7 @@ class Promise:
         Call C instance destructor
         """
         _qipy.qi_promise_destroy(self._prom)
+
 
 class Future:
     """ Future can be used to keep track of a long asynchronous call
@@ -50,31 +59,49 @@ class Future:
         .. args::
            future : Valid C future wrapper.
         """
-        print "calling Future.__init__"
         self._fut = future
 
-    def wait(self):
-        """ Wait untill future value or error is set.
+    def wait(self, timeout = FutureTimeout_Infinite):
+        """ Wait until future value or error is set.
         """
         _qipy.qi_future_wait(self._fut)
 
-    def has_error(self):
+    def cancel(self):
+        """ Try to cancel the future operation """
+        _qipy.qi_future_cancel(self._fut)
+
+    def has_error(self, timeout = FutureTimeout_Infinite):
         """ Check whether future encountered an error.
         """
-        return _qipy.qi_future_has_error(self._fut)
+        return _qipy.qi_future_has_error(self._fut, timeout)
 
-    def is_ready(self):
+    def has_value(self, timeout = FutureTimeout_Infinite):
+        """ Check whether future encountered an error.
+        """
+        return _qipy.qi_future_has_value(self._fut, timeout)
+
+    def is_finished(self):
         """ Check whether future value is set.
         """
         return _qipy.qi_future_is_finished(self._fut)
 
-    def error(self):
+    def is_running(self):
+        """ Check whether future value is set.
+        """
+        return _qipy.qi_future_is_running(self._fut)
+
+    def is_canceled(self):
+        """ Check whether future value is set.
+        """
+        return _qipy.qi_future_is_canceled(self._fut)
+
+    def error(self, timeout = FutureTimeout_Infinite):
         """ Getter on future error.
         """
         #todo: may leak
         return _qipy.qi_future_get_error(self._fut)
 
-    def value(self):
+    def value(self, timeout = FutureTimeout_Infinite):
         """ Getter on future error.
         """
         return _qipy.qipy_future_get_value(self._fut)
@@ -89,7 +116,4 @@ class Future:
 
         Call C instance destructor
         """
-        print "calling Future.__del__"
-        #import pdb
-        #pdb.set_trace()
         _qipy.qi_future_destroy(self._fut)

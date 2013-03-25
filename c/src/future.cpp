@@ -24,6 +24,8 @@ extern "C"
 {
 #endif
 
+
+//##Warning: please update qipy_promise_cancelable_create if you change something with the placement new.
 qi_promise_t* qi_promise_create()
 {
   //use placement new, because the other ctor do, and we want the same destroy impl.

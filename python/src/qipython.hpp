@@ -29,6 +29,8 @@ extern "C" {
   void              qipy_future_add_callback(qi_future_t* future, PyObject* pyfuture, PyObject* function);
   PyObject*         qipy_future_get_value(qi_future_t*future);
   void              qipy_promise_set_value(qi_promise_t* promise, PyObject* value);
+  qi_promise_t*     qipy_promise_cancelable_create(PyObject* pypromise, PyObject* callable);
+
 }
 
 #endif      /* !QIPYTHON_H_ */

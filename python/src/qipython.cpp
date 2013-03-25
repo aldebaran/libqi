@@ -259,8 +259,7 @@ PyObject* qipy_object_call(qi_object_t* objectc, const char *strMethodName, PyOb
   return fut.value().to<PyObject*>();
 }
 
-
-static void python_future_callback(qi::Future<qi::GenericValue> &fut, PyObject* pyfuture, PyObject *pyfunc)
+static void python_future_callback(PyObject* pyfuture, PyObject *pyfunc)
 {
   // Check if there is actually a python function in data
   if (!pyfunc || !PyCallable_Check(pyfunc))
@@ -292,7 +291,7 @@ void qipy_future_add_callback(qi_future_t* future, PyObject* pyfuture, PyObject*
   Py_XINCREF(pyfuture);
   Py_XINCREF(function);
   qi::Future<qi::GenericValue> *fut = qi_future_cpp(future);
-  fut->connect(boost::bind<void>(&python_future_callback, _1, pyfuture, function));
+  fut->connect(boost::bind<void>(&python_future_callback, pyfuture, function));
 }
 
 PyObject*         qipy_future_get_value(qi_future_t*future) {
@@ -305,3 +304,16 @@ void qipy_promise_set_value(qi_promise_t* promise, PyObject* value) {
   qi::Promise<qi::GenericValue> *prom = qi_promise_cpp(promise);
   prom->setValue(qi::GenericValue::from(value));
 }
+
+
+qi_promise_t*     qipy_promise_cancelable_create(PyObject* pypromise, PyObject* callable) {
+  Py_XINCREF(pypromise);
+  Py_XINCREF(callable);
+
+  //use a placement new to have qi_promise_t before constructing the object
+  //see qi_promise_cancelable_create for more details.
+  qi_promise_t *mem = (qi_promise_t *)malloc(sizeof(qi::Promise<qi::GenericValue>));
+  new(mem) qi::Promise<qi::GenericValue>(boost::bind<void>(&python_future_callback, pypromise, callable));
+  return mem;
+}
+
