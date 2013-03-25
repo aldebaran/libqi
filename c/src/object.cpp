@@ -21,8 +21,8 @@ qiLogCategory("qimessaging.object");
 
 
 static qi::GenericValuePtr c_call(const std::string &complete_sig,
-		                          qi_object_method_t func,
-			                      void* data,
+                                          qi_object_method_t func,
+                                              void* data,
                                   const qi::GenericFunctionParameters& params)
 {
   //TODO: move to register
@@ -69,17 +69,6 @@ extern "C"
 {
 #endif
 
-void qiFutureCAdapter(qi::Future<qi::GenericValuePtr> result, qi::Promise<qi::GenericValue> promise) {
-  if (result.hasError()) {
-    promise.setError(result.error());
-    return;
-  }
-  qi::GenericValue gv;
-  //we take the ownership of the GVP content. we are now responsible for freeing it.
-  gv.reset(result.value(), false, true);
-  promise.setValue(gv);
-}
-
 qi_object_t *qi_object_create()
 {
   qi::ObjectPtr *obj = new qi::ObjectPtr();
@@ -99,7 +88,7 @@ qi_future_t *qi_object_call(qi_object_t *object, const char *signature_c, qi_val
 
   qi::Future<qi::GenericValuePtr> res = obj->metaCall(signature_c, gv.asTupleValuePtr());
   qi::Promise<qi::GenericValue> prom;
-  res.connect(boost::bind<void>(&qiFutureCAdapter, _1, prom));
+  qi::adaptFuture(res, prom, qi::FutureValueConverterTakeGenericValuePtr<qi::GenericValue>());
   return qi_cpp_promise_get_future(prom);
 }
 
