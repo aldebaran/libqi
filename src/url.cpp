@@ -4,9 +4,29 @@
 */
 #include <qimessaging/url.hpp>
 #include <sstream>
-#include <src/url_p.hpp>
+#include <qitype/type.hpp>
 
 namespace qi {
+
+  class UrlPrivate {
+  public:
+    UrlPrivate();
+    UrlPrivate(const UrlPrivate* url_p);
+    UrlPrivate(const std::string& url);
+    UrlPrivate(const char* url);
+
+    const std::string& str() const;
+    bool isValid() const;
+
+    std::string    url;
+    std::string    protocol;
+    std::string    host;
+    unsigned short port;
+
+  private:
+    void split_me(const std::string& url);
+  };
+
   Url::Url()
     : _p(new UrlPrivate())
   {

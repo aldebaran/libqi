@@ -113,7 +113,6 @@ set(SRCS ${CONFIG_H}
          src/tcptransportsocket.cpp
          src/tcptransportsocket.hpp
          src/url.cpp
-         src/url_p.hpp
          src/serverresult.hpp
          )
 
