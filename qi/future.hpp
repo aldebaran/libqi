@@ -460,6 +460,24 @@ namespace qi {
   /// Helper function to wait for the first valid future.
   template <typename T>
   qi::FutureSync< qi::Future<T> > waitForFirst(std::vector< Future<T> >& vect);
+
+  /// Specialize this struct to provide conversion between future values
+  template<typename FT, typename PT> struct FutureValueConverter
+  {
+    void operator()(const FT& vIn, PT& vOut) { vOut = vIn;}
+  };
+
+  /** Feed a promise from a future of possibly different type.
+   * Will monitor \p f, and bounce its state to \p p.
+   * Error and canceled state are bounced as is.
+   * Valued state is bounced through FutureValueConverter<FT, PT>::convert()
+   */
+  template<typename FT, typename PT>
+    void adaptFuture(const Future<FT>& f, Promise<PT>& p);
+
+  /// Similar to adaptFuture(f, p) but with a custom converter
+  template<typename FT, typename PT, typename CONV>
+    void adaptFuture(const Future<FT>& f, Promise<PT>& p, CONV converter);
 }
 
 #ifdef _MSC_VER

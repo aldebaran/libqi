@@ -212,6 +212,51 @@ namespace qi {
 
     return prom.future();
   }
+
+  namespace detail
+  {
+    template<typename FT, typename PT, typename CONV>
+    void futureAdapter(Future<FT> f, Promise<PT> p, CONV converter)
+    {
+      if (f.hasError())
+        p.setError(f.error());
+      else if (f.isCanceled())
+        p.setCanceled();
+      else
+      {
+        try {
+          converter(f.value(), p.value());
+        }
+        catch (const std::exception& e)
+        {
+          p.setError(std::string("futureAdapter conversion error: ") + e.what());
+          return;
+        }
+        p.trigger();
+      }
+    }
+  }
+
+  template <typename T>
+  struct FutureValueConverter<T, void>
+  {
+    void convert(const T& in, void* out)
+    {
+    }
+  };
+
+  template<typename FT, typename PT>
+  void adaptFuture(const Future<FT>& f, Promise<PT>& p)
+  {
+    const_cast<Future<FT>&>(f).connect(boost::bind(detail::futureAdapter<FT, PT, FutureValueConverter<FT, PT> >, _1, p,
+      FutureValueConverter<FT, PT>()));
+  }
+
+  template<typename FT, typename PT, typename CONV>
+  void adaptFuture(const Future<FT>& f, Promise<PT>& p, CONV converter)
+  {
+    const_cast<Future<FT>&>(f).connect(boost::bind(detail::futureAdapter<FT, PT, CONV>, _1, p, converter));
+  }
 }
 
 #endif  // _QITYPE_DETAILS_FUTURE_HXX_
