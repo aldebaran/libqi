@@ -140,9 +140,8 @@ namespace qi {
       return _p.get() == other._p.get();
     }
 
-    inline Future<T>& operator=(const FutureSync<T>& b)
+    inline Future<T>& operator=(const Future<T>& b)
     {
-      b._sync = false;
       _p = b._p;
       return *this;
     }
@@ -267,7 +266,7 @@ namespace qi {
    *  when the future is not handled by the client.
    */
   template<typename T>
-  class FutureSync: public Future<T>
+  class FutureSync
   {
   public:
     typedef typename Future<T>::ValueType ValueType;
@@ -277,15 +276,15 @@ namespace qi {
     FutureSync() : _sync(false) {}
 
     FutureSync(const Future<T>& b)
-    : Future<T>(b)
-    , _sync(true)
+    : _sync(true)
     {
+      _future = b;
     }
 
     FutureSync(const FutureSync<T>& b)
-    : Future<T>(b)
-    , _sync(true)
+    : _sync(true)
     {
+      _future = b._future;
       b._sync = false;
     }
 
@@ -294,12 +293,12 @@ namespace qi {
     {
       Promise<T> promise;
       promise.setValue(v);
-      *this = promise.future();
+      _future = promise.future();
     }
 
     inline FutureSync<T>& operator=(const FutureSync<T>& b)
     {
-      this->_p = b._p;
+      _future = b;
       _sync = true;
       b._sync = false;
       return *this;
@@ -307,7 +306,7 @@ namespace qi {
 
     inline FutureSync<T>& operator=(const Future<T>& b)
     {
-     this->_p = b._p;
+      _future = b;
       _sync = true;
       return *this;
     }
@@ -315,27 +314,36 @@ namespace qi {
     ~FutureSync()
     {
       if (_sync)
-        this->value();
+        _future.value();
     }
 
-    inline const ValueType &value() const                             { _sync = false; return Future<T>::value(); }
-    inline operator const typename Future<T>::ValueTypeCast&() const  { _sync = false; return Future<T>::value(); }
-    inline FutureState wait(int msecs = FutureTimeout_Infinite) const { _sync = false; return Future<T>::wait(msecs); }
-    inline bool isRunning() const                                     { _sync = false; return Future<T>::isRunning(); }
-    inline bool isFinished() const                                    { _sync = false; return Future<T>::isFinished(); }
-    inline bool isCanceled() const                                    { _sync = false; return Future<T>::isCanceled(); }
+    operator Future<T>()
+    {
+      return async();
+    }
 
-    inline bool hasError(int msecs = FutureTimeout_Infinite) const    { _sync = false; return Future<T>::hasError(msecs); }
-    inline bool hasValue(int msecs = FutureTimeout_Infinite) const    { _sync = false; return Future<T>::hasValue(msecs); }
+    inline const ValueType &value() const                            { _sync = false; return _future.value(); }
+    inline operator const typename Future<T>::ValueTypeCast&() const { _sync = false; return _future.value(); }
+    inline FutureState wait(int msecs = FutureTimeout_Infinite) const { _sync = false; return _future.wait(msecs); }
+    inline bool isRunning() const                                     { _sync = false; return _future.isRunning(); }
+    inline bool isFinished() const                                    { _sync = false; return _future.isFinished(); }
+    inline bool isCanceled() const                                    { _sync = false; return _future.isCanceled(); }
+    inline bool hasError(int msecs = FutureTimeout_Infinite) const    { _sync = false; return _future.hasError(msecs); }
+    inline bool hasValue(int msecs = FutureTimeout_Infinite) const    { _sync = false; return _future.hasValue(msecs); }
 
-    inline const std::string &error() const                 { _sync = false; return Future<T>::error(); }
-    inline void cancel()                                    { _sync = false; Future<T>::cancel(); }
-    bool isCanceleable() const                              { _sync = false; return Future<T>::isCanceleable(); }
-    inline void connect(const Connection& s)                { _sync = false; Future<T>::connect(s);}
-    Future<T> async()                                       { return *this; }
+    inline const std::string &error() const                 { _sync = false; return _future.error(); }
+    inline void cancel()                                    { _sync = false; _future.cancel(); }
+    bool isCanceleable() const                              { _sync = false; return _future.isCanceleable(); }
+    inline void connect(const Connection& s)                { _sync = false; _future.connect(s);}
+    Future<T> async()
+    {
+      _sync = false;
+      return _future;
+    }
 
-  private:
+  protected:
     mutable bool _sync;
+    Future<T> _future;
     friend class Future<T>;
   };
 
