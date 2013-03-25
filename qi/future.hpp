@@ -350,7 +350,7 @@ namespace qi {
 
     /** Create a canceleable promise. If Future<T>::cancel is invoked,
      * onCancel() will be called. It is expected to call setValue(),
-     * setError() or setCanceled as quickly as possible, but can do so
+     * setError() or setCanceled() as quickly as possible, but can do so
      * in an asynchronous way.
      */
     Promise(boost::function<void (qi::Promise<T>)> cancelCallback)
@@ -380,10 +380,12 @@ namespace qi {
       _f._p->setCanceled(_f);
     }
 
+    /* reset the promise and the future */
     void reset() {
       _f._p->reset();
     }
 
+    /* get the future from the promise, you can call this function many times. */
     Future<T> future() { return _f; }
 
   protected:
