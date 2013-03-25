@@ -90,7 +90,6 @@ namespace qi
     disconnect();
     delete _msg;
     delete _socket;
-    _p = 0;
     qiLogVerbose() << "deleted " << this;
   }
 

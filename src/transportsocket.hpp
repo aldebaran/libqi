@@ -20,7 +20,6 @@
 namespace qi
 {
   class Session;
-  class TransportSocketPrivate;
   class TransportSocket : public boost::enable_shared_from_this<TransportSocket>
   {
     QI_DISALLOW_COPY_AND_ASSIGN(TransportSocket);
@@ -90,10 +89,6 @@ namespace qi
     qi::Signal<void (int error)>          disconnected;
     // C4251
     qi::Signal<void (const qi::Message&)> messageReady;
-
-  protected:
-    explicit TransportSocket(TransportSocketPrivate *p);
-    TransportSocketPrivate *_p;
   };
 
   typedef boost::shared_ptr<TransportSocket> TransportSocketPtr;
