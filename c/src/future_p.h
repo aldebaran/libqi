@@ -50,5 +50,13 @@ inline qi_future_t* qi_future_wrap(qi::Future<T> fut) {
   return qi_promise_get_future(prom);
 }
 
+template <typename T>
+inline qi_future_t* qi_future_wrap(qi::FutureSync<T> fut) {
+  qi_promise_t* prom = qi_promise_create();
+  //async to avoid exception handling. we really want a future here, not a FutureSync
+  fut.async().connect(boost::bind<void>(&qi_future_c_adapter<T>, _1, prom));
+  return qi_promise_get_future(prom);
+}
+
 
 #endif
