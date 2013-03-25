@@ -9,7 +9,6 @@
 
 #include "binaryencoder.hpp"
 #include "binarydecoder.hpp"
-#include "binarycoder_p.hpp"
 #include "boundobject.hpp"
 #include "remoteobject_p.hpp"
 #include <qi/log.hpp>
@@ -22,6 +21,29 @@
 qiLogCategory("qimessaging.binarycoder");
 
 namespace qi {
+  class BinaryDecoder;
+  class BinaryEncoder;
+
+  class BinaryDecoderPrivate {
+    public:
+      BinaryDecoderPrivate(qi::BufferReader* buffer);
+      ~BinaryDecoderPrivate();
+
+      BinaryDecoder::Status _status;
+      BufferReader *_reader;
+  };
+
+  class BinaryEncoderPrivate {
+    public:
+      BinaryEncoderPrivate(qi::Buffer& buffer);
+      ~BinaryEncoderPrivate();
+
+      BinaryEncoder::Status _status;
+      Buffer _buffer;
+      std::string _signature;
+      unsigned int _innerSerialization;
+  };
+
   template <typename T, typename T2, char S>
   static inline qi::BinaryDecoder& deserialize(qi::BinaryDecoder* ds, T &b)
   {

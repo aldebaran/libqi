@@ -75,7 +75,6 @@ set(SRCS ${CONFIG_H}
          src/boundobject.hpp
          src/binarydecoder.hpp
          src/binaryencoder.hpp
-         src/binarycoder_p.hpp
          src/binarycoder.cpp
          src/gateway.cpp
          src/message.hpp
