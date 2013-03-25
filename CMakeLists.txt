@@ -93,7 +93,6 @@ set(SRCS ${CONFIG_H}
          src/servicedirectoryclient.hpp
          src/servicedirectoryclient.cpp
          src/serviceinfo.cpp
-         src/serviceinfo_p.hpp
          src/session.cpp
          src/session_p.hpp
          src/sessionservice.hpp

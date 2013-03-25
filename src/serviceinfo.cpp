@@ -3,10 +3,26 @@
 **  See COPYING for the license
 */
 
-#include "serviceinfo_p.hpp"
+#include <string>
+
+#include <qitype/type.hpp>
+#include <qimessaging/serviceinfo.hpp>
+#include <qimessaging/url.hpp>
 
 namespace qi
 {
+  class ServiceInfoPrivate
+  {
+  public:
+    ServiceInfoPrivate();
+
+    std::string name;
+    unsigned int serviceId;
+    std::string machineId;
+    unsigned int processId;
+    qi::UrlVector endpoints;
+  };
+
   ServiceInfo::ServiceInfo()
     : _p(new ServiceInfoPrivate())
   {
