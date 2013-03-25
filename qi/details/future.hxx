@@ -89,6 +89,20 @@ namespace qi {
         notifyFinish();
       }
 
+      void set(qi::Future<T>& future)
+      {
+        // report-ready + onResult() must be atomic to avoid
+        // missing callbacks/double calls in case connect() is invoked at
+        // the same time
+        boost::recursive_mutex::scoped_lock lock(mutex());
+        if (!isRunning())
+          throw FutureException(FutureException::ExceptionState_PromiseAlreadySet);
+        reportValue();
+        for(unsigned i=0; i<_onResult.size(); ++i)
+          _onResult[i](future);
+        notifyFinish();
+      }
+
       void setError(qi::Future<T>& future, const std::string &message)
       {
         boost::recursive_mutex::scoped_lock lock(mutex());
@@ -136,6 +150,7 @@ namespace qi {
       }
 
     private:
+      template<typename> friend class Promise;
       typedef std::vector<boost::function<void (qi::Future<T>)> > Callbacks;
       Callbacks                _onResult;
       ValueType                _value;
