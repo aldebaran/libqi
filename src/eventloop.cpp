@@ -135,7 +135,7 @@ namespace qi {
       p.setValue(0);
     }
     else
-      p.setError("Operation canceled");
+      p.setCanceled();
   }
 
   qi::Future<void> EventLoopAsio::asyncCall(uint64_t usDelay, boost::function<void ()> cb)
