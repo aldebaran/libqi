@@ -40,10 +40,10 @@ namespace qi
     : TransportSocket()
     , _ssl(ssl)
     , _sslHandshake(false)
-    , _abort(boost::make_shared<bool>(false))
 #ifdef WITH_SSL
     , _sslContext(boost::asio::ssl::context::sslv23)
 #endif
+    , _abort(boost::make_shared<bool>(false))
     , _readHdr(true)
     , _msg(0)
     , _connecting(false)
