@@ -25,67 +25,6 @@ using namespace qi;
 
 qiLogCategory("qipy.convert");
 
-//typedef struct {
-//    PyCFunctionObject _obj;
-//} PyGoFunctionObject;
-
-//PyObject* PyGoFunction_Call(PyObject* self, PyObject* params)
-//{
-//  Py_INCREF(Py_None);
-//  return Py_None;
-//}
-
-//static int
-//PyGoFunction_init(PyGoFunctionObject *self, PyObject *args, PyObject *kwds)
-//{
-//  if (PyCFunction_Type.tp_init((PyObject *)self, args, kwds) < 0)
-//    return -1;
-//  //self->state = 0;
-//  return 0;
-//}
-
-//PyTypeObject PyGOFunction_Type = {
-//    PyVarObject_HEAD_INIT(&PyType_Type, 0)
-//    "qi_generic_function_or_method",
-//    sizeof(PyGoFunctionObject),
-//    0,
-//    0,                                          /* tp_dealloc */
-//    0,                                          /* tp_print */
-//    0,                                          /* tp_getattr */
-//    0,                                          /* tp_setattr */
-//    0,                                          /* tp_compare */
-//    0,                                          /* tp_repr */
-//    0,                                          /* tp_as_number */
-//    0,                                          /* tp_as_sequence */
-//    0,                                          /* tp_as_mapping */
-//    0,                                          /* tp_hash */
-//    PyGoFunction_Call,                          /* tp_call */
-//    0,                                          /* tp_str */
-//    PyObject_GenericGetAttr,                    /* tp_getattro */
-//    0,                                          /* tp_setattro */
-//    0,                                          /* tp_as_buffer */
-//    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC,    /* tp_flags */
-//    0,                                          /* tp_doc */
-//    0,                                          /* tp_traverse */
-//    0,                                          /* tp_clear */
-//    0,                                          /* tp_richcompare */
-//    0,                                          /* tp_weaklistoffset */
-//    0,                                          /* tp_iter */
-//    0,                                          /* tp_iternext */
-//    0,                                          /* tp_methods */
-//    0,                                          /* tp_members */
-//    0,                                          /* tp_getset */
-//    0,                                          /* tp_base */
-//    0,                                          /* tp_dict */
-//    0,                                          /* tp_descr_get */
-//    0,                                          /* tp_descr_set */
-//    0,                                          /* tp_dictoffset */
-//    (initproc) PyGoFunction_init,               /* tp_init */
-//    0,                                          /* tp_alloc */
-//    0,                                          /* tp_new */
-//};
-
-
 /**
  * @brief py_call
  * @param pyclass
@@ -100,14 +39,11 @@ qiLogCategory("qipy.convert");
  * @return
  */
 PyObject* py_call(PyObject* pyclass, PyObject* argsself, PyObject* kw) {
-  qiLogInfo() << "Chiche le callback";
-
   PyObject* self         = PyTuple_GetItem(argsself, 0);
   size_t    len          = PyTuple_Size(argsself);
   PyObject* args         = PyTuple_GetSlice(argsself, 1, len);
   PyObject* pyMethodName = PyObject_GetAttrString(self, "__method_name");
   PyObject* pyCaps       = PyObject_GetAttrString(self, "__c_instance");
-
 
   bool async = false;
   const char* overload = 0;
