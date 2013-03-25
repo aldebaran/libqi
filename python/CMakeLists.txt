@@ -14,13 +14,9 @@ file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/src")
 qi_swig_wrap_python(qipy src/qipy.i SRC
                     src/qipython.hpp
                     src/qipython.cpp
-                    src/converter_testwrap.cpp
-                    src/converter_testwrap.hpp
                     src/pyobjectconverter.hpp
                     src/pyobjectconverter.cpp
                     src/pythonscopedref.hpp
-                    src/qipython_signal.cpp
-                    src/qipython_signal.hpp
                     DEPENDS QI QIMESSAGING QIC
 )
 
