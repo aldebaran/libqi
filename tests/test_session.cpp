@@ -273,6 +273,18 @@ TEST(QiSession, getCallInConnect)
   EXPECT_TRUE(ses.isConnected());
 }
 
+TEST(QiSession, asyncConnect) {
+  qi::ServiceDirectory sd;
+  sd.listen("tcp://127.0.0.1:0");
+
+  qi::Session s;
+  s.connect(sd.endpoints()[0]).async();
+  try {
+    //we dont know the success or failure of the operation.
+    qi::ObjectPtr obj = s.service("IDontWantToSegfaultHere");
+  } catch(...) {
+  }
+}
 
 int main(int argc, char **argv)
 {
