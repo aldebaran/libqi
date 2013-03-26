@@ -47,6 +47,10 @@ TEST(TestJSON, Simple) {
   EXPECT_EQ("\"ttc:42\"", qi::encodeJSON(qi::GenericValueRef("ttc:42")));
   EXPECT_EQ("32.4", qi::encodeJSON(qi::GenericValueRef(32.4f)));
   EXPECT_EQ("32.3", qi::encodeJSON(qi::GenericValueRef((double)32.3)));
+
+  qi::GenericValue gv(qi::Type::fromSignature("c"));
+  gv.setInt(42);
+  EXPECT_EQ("42", qi::encodeJSON(gv));
 }
 
 TEST(TestJSON, String) {
@@ -55,4 +59,23 @@ TEST(TestJSON, String) {
   EXPECT_EQ("\" \\u00C3\\u00A9 \"", qi::encodeJSON(qi::GenericValueRef(" é ")));
 
   EXPECT_EQ("\" \\\" \\u0000 \\u00C3\\u00A9 \"", qi::encodeJSON(qi::GenericValueRef(" \" \0 é ")));
+}
+
+TEST(TestJSON, CharTuple) {
+  qi::GenericValue gv(qi::Type::fromSignature("(c)"));
+  EXPECT_EQ("[ 0 ]", qi::encodeJSON(gv));
+}
+
+
+TEST(TestJSON, EmptyValue) {
+  qi::GenericValue gv(qi::Type::fromSignature("m"));
+  EXPECT_EQ("", qi::encodeJSON(gv));
+}
+
+
+TEST(TestJSON, Dynamics) {
+  qi::GenericValuePtr gv(qi::Type::fromSignature("m"));
+  qi::GenericValue gvr = qi::GenericValue::from("plouf");
+  gv.setDynamic(gvr);
+  EXPECT_EQ("\"plouf\"", qi::encodeJSON(gv));
 }
