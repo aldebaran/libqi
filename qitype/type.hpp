@@ -352,7 +352,7 @@ namespace qi{
     void  setFloat(float v);
     void  setDouble(double v);
     void  setString(const std::string& v);
-    void  setDynamic(const qi::GenericValue &value);
+    void  setDynamic(const GenericValuePtr &value);
 
     ///@{
     /// In-place container manipulation.
@@ -392,9 +392,9 @@ namespace qi{
 
   };
 
-  QITYPE_API bool operator <(const GenericValuePtr& a, const GenericValuePtr& b);
+  QITYPE_API bool operator< (const GenericValuePtr& a, const GenericValuePtr& b);
   QITYPE_API bool operator==(const GenericValuePtr& a, const GenericValuePtr& b);
-  QITYPE_API bool operator !=(const GenericValuePtr& a, const GenericValuePtr& b);
+  QITYPE_API bool operator!=(const GenericValuePtr& a, const GenericValuePtr& b);
   /** GenericValuePtr with copy semantics
   */
   class QITYPE_API GenericValue: public GenericValuePtr

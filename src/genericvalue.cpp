@@ -563,6 +563,8 @@ namespace qi
     case Type::String:
       setString(val.toString());
       break;
+    case Type::Dynamic:
+      setDynamic(val);
     default:
       throw std::runtime_error("Update not implemented for this type.");
     }
@@ -591,8 +593,11 @@ namespace qi
       throw std::runtime_error("Value is not Int or Float");
   }
 
-  void GenericValuePtr::setDynamic(const qi::GenericValue &value) {
-    set<qi::GenericValue>(value);
+  void GenericValuePtr::setDynamic(const qi::GenericValuePtr &element) {
+    if (kind() != Type::Dynamic)
+      throw std::runtime_error("Value is not a Dynamic");
+    TypeDynamic* t = static_cast<TypeDynamic*>(this->type);
+    t->set(&value, element);
   }
 
   void GenericValuePtr::setUInt(uint64_t v)
