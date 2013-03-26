@@ -118,14 +118,15 @@ namespace qi {
           out << "false";
         break;
       }
-      case 1:  out << ((int8_t)value);  break;
-      case -1: out << ((uint8_t)value); break;
-      case 2:  out << ((int16_t)value); break;
-      case -2: out << ((uint16_t)value);break;
-      case 4:  out << ((int32_t)value); break;
-      case -4: out << ((uint32_t)value);break;
+      case 1:
+      case 2:
+      case 4:
       case 8:  out << ((int64_t)value); break;
+      case -1:
+      case -2:
+      case -4:
       case -8: out << ((uint64_t)value);break;
+
       default:
         qiLogError("qi.type") << "Unknown integer type " << isSigned << " " << byteSize;
       }
