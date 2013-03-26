@@ -599,7 +599,12 @@ void onEvent(int v, qi::Promise<int>& eventValue, qi::ObjectPtr* ptr)
 {
   qiLogDebug() << "onEvent";
   if (v == 0)
+  {
+    qi::ObjectWeakPtr weak(*ptr);
     delete ptr;
+    if (weak.lock())
+      qiLogWarning() << "Object destruction is going to be asynchronous";
+  }
   eventValue.setValue(v);
 }
 
@@ -678,6 +683,7 @@ TEST(TestCall, TestObjectPassing)
   ASSERT_TRUE(eventValue.future().isFinished());
   ASSERT_EQ(0, eventValue.future().value());
   eventValue.reset();
+  ASSERT_TRUE(!eventValue.future().isFinished());
   unregisteredObj->emitEvent("fire", 1);
   eventValue.future().wait(1000);
   ASSERT_TRUE(!eventValue.future().isFinished());
