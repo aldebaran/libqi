@@ -160,29 +160,16 @@ TEST(QiSession, getCloseService)
 
 TEST(QiSession, AlreadyRegistered)
 {
-  qi::Session*  session;
-  std::stringstream ss;
-  qi::ServiceDirectory sd;
-
-  ss << "tcp://127.0.0.1:" << qi::os::findAvailablePort(3000);
-  qi::Future<void> f = sd.listen(ss.str());
-  f.wait(3000);
-  ASSERT_TRUE(!f.hasError());
+  TestSessionPair p;
 
   qi::GenericObjectBuilder ob;
   ob.advertiseMethod("reply", &reply);
   qi::ObjectPtr obj(ob.object());
 
-  session = new qi::Session();
-  EXPECT_TRUE(session->connect(ss.str()).hasValue(1000));
-  f = session->listen("tcp://0.0.0.0:0");
-  f.wait(3000);
-  ASSERT_TRUE(!f.hasError());
 
-  ASSERT_GT(session->registerService("service", obj), static_cast<unsigned int>(0));
-  EXPECT_ANY_THROW({session->registerService("service", obj).value();});
+  ASSERT_GT(p.server()->registerService("service", obj), static_cast<unsigned int>(0));
+  EXPECT_ANY_THROW({p.server()->registerService("service", obj).value();});
 
-  delete session;
 }
 
 TEST(QiSession, Services)
