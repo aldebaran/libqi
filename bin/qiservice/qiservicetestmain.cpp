@@ -25,8 +25,9 @@ std::string reply(const std::string &msg) {
 }
 
 qi::GenericValue reply(const qi::GenericValue &myval) {
+  static int i = 0;
   qi::GenericValuePtr val(myval);
-  qiLogInfo() << "Message received with the signature" << myval.signature(false) << " -> " << qi::encodeJSON(val) << std::endl;
+  qiLogInfo() << i++ << " Message received with the signature: " << myval.signature(false) << " = " << qi::encodeJSON(val) << std::endl;
   return myval;
 }
 
