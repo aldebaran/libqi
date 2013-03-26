@@ -101,9 +101,8 @@ namespace qi {
 
     void visitVoid()
     {
-      qiLogError("qi.type") << "JSON Warning: serialiazing void to 'null'";
       // Not an error, makes sense if encapsulated in a Dynamic for instance
-      out << "\"Error: no serialization for void\"";
+      out << "null";
     }
 
     void visitInt(int64_t value, bool isSigned, int byteSize)
