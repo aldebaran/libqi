@@ -141,7 +141,7 @@ namespace qi {
         qiLogError("qi.type") << "serialize on unknown float type " << byteSize;
     }
 
-    void visitString(char* data, size_t size)
+    void visitString(const char* data, size_t size)
     {
       out << "\"" << add_esc_chars(std::string(data, size)) << "\"";
     }
@@ -208,7 +208,9 @@ namespace qi {
 
     void visitDynamic(GenericValuePtr pointee)
     {
-      serialize(pointee, out);
+      if (pointee.isValid()) {
+        serialize(pointee, out);
+      }
     }
 
     void visitRaw(GenericValuePtr raw)
