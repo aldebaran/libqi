@@ -57,6 +57,7 @@ namespace qi
 #else
     boost::asio::ip::tcp::socket* _socket;
 #endif
+    boost::asio::io_service::work* _work;
 
     boost::shared_ptr<bool> _abort; // used to notify send callback sendCont that we are dead
     qi::Promise<void>   _connectPromise;

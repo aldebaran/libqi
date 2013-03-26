@@ -43,6 +43,7 @@ namespace qi
 #ifdef WITH_SSL
     , _sslContext(boost::asio::ssl::context::sslv23)
 #endif
+    , _work(0)
     , _abort(boost::make_shared<bool>(false))
     , _readHdr(true)
     , _msg(0)
@@ -78,7 +79,7 @@ namespace qi
 #else
       _socket = new boost::asio::ip::tcp::socket(*(boost::asio::io_service*)eventLoop->nativeHandle());
 #endif
-
+      _work = new boost::asio::io_service::work(*(boost::asio::io_service*)eventLoop->nativeHandle());
       _disconnectPromise.setValue(0); // not connected, so we are finished disconnecting
     }
   }
@@ -90,6 +91,7 @@ namespace qi
     disconnect();
     delete _msg;
     delete _socket;
+    delete _work;
     qiLogVerbose() << "deleted " << this;
   }
 
