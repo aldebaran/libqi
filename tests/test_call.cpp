@@ -598,9 +598,9 @@ TEST(TestCall, DeadLock)
 void onEvent(int v, qi::Promise<int>& eventValue, qi::ObjectPtr* ptr)
 {
   qiLogDebug() << "onEvent";
-  eventValue.setValue(v);
   if (v == 0)
     delete ptr;
+  eventValue.setValue(v);
 }
 
 
