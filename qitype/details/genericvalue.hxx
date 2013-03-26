@@ -246,6 +246,10 @@ namespace qi {
     return result;
   }
 
+  inline bool    GenericValuePtr::isValid() const {
+    return type != 0;
+  }
+
   inline int64_t GenericValuePtr::toInt() const
   {
     return detail::valueAs<int64_t, Type::Int>(*this);

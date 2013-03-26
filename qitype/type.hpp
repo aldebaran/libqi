@@ -217,6 +217,9 @@ namespace qi{
      * @param check if false, does not validate type before converting
      */
     template<typename T> T* ptr(bool check = true);
+
+    bool isValid() const;
+
     /// Helper function that converts and always clone
     GenericValuePtr convertCopy(Type* targetType) const;
 
