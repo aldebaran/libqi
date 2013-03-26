@@ -640,3 +640,13 @@ TEST(testSerializable, Struct) {
   EXPECT_EQ("(ii)", qi::typeOf(ts1)->signature());
   EXPECT_EQ("((ii)(ii))", qi::typeOf(tsp2d1)->signature());
 }
+
+TEST(testSerializable, Value) {
+  qi::Buffer buf;
+  qi::BufferReader bufr(buf);
+  qi::GenericValue gv(qi::Type::fromSignature("m"));
+  qi::GenericValue gv2;
+
+  qi::encodeBinary(&buf, gv);
+  qi::decodeBinary(&bufr, &gv2);
+}

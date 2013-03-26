@@ -62,18 +62,19 @@ namespace qi {
     void write(const char *);
     void write(const std::string& i);
 
-    void write(const GenericValuePtr &value,
-      boost::function<void()> recurse = boost::function<void()>());
-    void write(const Buffer &buffer);
+    void writeValue(const GenericValuePtr &value, boost::function<void()> recurse = boost::function<void()>());
+    void writeRaw(const Buffer &buffer);
 
     template<typename T> void write(const T &v);
 
-    void beginList(qi::uint32_t size, std::string elementSignature);
+    void beginList(qi::uint32_t size, const std::string &elementSignature);
     void endList();
-    void beginMap(qi::uint32_t size, std::string keySignature, std::string valueSignature);
+    void beginMap(qi::uint32_t size, const std::string &keySignature, const std::string &valueSignature);
     void endMap();
     void beginTuple(std::string sig);
     void endTuple();
+    void beginDynamic(const std::string &elementSignature);
+    void endDynamic();
 
     Status status() const;
     void setStatus(Status status);

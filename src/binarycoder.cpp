@@ -243,7 +243,7 @@ namespace qi {
     writeString(s, len);
   }
 
-  void BinaryEncoder::write(const qi::Buffer &meta) {
+  void BinaryEncoder::writeRaw(const qi::Buffer &meta) {
     if (!_p->_innerSerialization)
     {
       signature() += "r";
@@ -255,26 +255,37 @@ namespace qi {
     //                         << " at " << buffer().size();
   }
 
-  void BinaryEncoder::write(const GenericValuePtr &value,
-    boost::function<void()> recurse)
+  void BinaryEncoder::writeValue(const GenericValuePtr &value, boost::function<void()> recurse)
+  {
+    std::string sig = value.signature();
+    beginDynamic(sig);
+
+    if (!sig.empty()) {
+      assert(value.type);
+      if (!recurse)
+        qi::details::serialize(value, *this);
+      else
+        recurse();
+    } else {
+      assert(!value.type);
+    }
+    endDynamic();
+  }
+
+  void BinaryEncoder::beginDynamic(const std::string &elementSignature)
   {
     if (!_p->_innerSerialization)
       signature() += "m";
     ++_p->_innerSerialization;
-    std::string sig = value.signature();
-    if (sig.empty())
-      sig = "v";
-    if (Signature(sig).size() != 1)
-      qiLogWarning() << "Weird GenericValuePtr signature: " << sig;
-    write(sig);
-    if (!recurse)
-      qi::details::serialize(value, *this);
-    else
-      recurse();
+    write(elementSignature);
+  }
+
+  void BinaryEncoder::endDynamic()
+  {
     --_p->_innerSerialization;
   }
 
-  void BinaryEncoder::beginList(uint32_t size, std::string elementSignature)
+  void BinaryEncoder::beginList(uint32_t size, const std::string &elementSignature)
   {
     if (!_p->_innerSerialization)
       signature() += "[" + elementSignature;
@@ -289,7 +300,7 @@ namespace qi {
       signature() += "]";
   }
 
-  void BinaryEncoder::beginMap(uint32_t size, std::string keySignature, std::string valueSignature)
+  void BinaryEncoder::beginMap(uint32_t size, const std::string &keySignature, const std::string &valueSignature)
   {
     if (!_p->_innerSerialization)
       signature() += "{" + keySignature + valueSignature + "}";
@@ -503,27 +514,29 @@ namespace qi {
 
       void visitDynamic(GenericValuePtr pointee)
       {
+        //Object
         if (value.type->info() == typeOf<ObjectPtr>()->info())
         {
           out.write("o");
           ObjectPtr* obj = value.ptr<ObjectPtr>();
           serializeObject(out, *obj, context);
+          return;
         }
-        else
-        out.write(pointee,
-          boost::bind(&typeDispatch<SerializeTypeVisitor>,
-            SerializeTypeVisitor(out, context, pointee),
-            pointee));
+        //Remaining types
+        out.writeValue(pointee, boost::bind(&typeDispatch<SerializeTypeVisitor>,
+                                            SerializeTypeVisitor(out, context, pointee), pointee));
       }
 
       void visitRaw(GenericValuePtr raw)
       {
-        out.write(raw.as<Buffer>());
+        out.writeRaw(raw.as<Buffer>());
       }
+
       void visitIterator(GenericValuePtr)
       {
         qiLogError() << "Type " << value.type->infoString() <<" not serializable";
       }
+
       BinaryEncoder& out;
       ObjectHost* context;
       GenericValuePtr value;
@@ -674,6 +687,11 @@ namespace qi {
         {
           std::string sig;
           in.read(sig);
+          //empty gv: nothing to do
+          if (sig.empty()) {
+            result = GenericValuePtr();
+            return;
+          }
           Type* type = Type::fromSignature(sig);
           if (!type)
           {
