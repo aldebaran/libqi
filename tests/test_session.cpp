@@ -125,6 +125,37 @@ TEST(QiSession, getSimpleService)
   EXPECT_TRUE(object);
 }
 
+TEST(QiSession, getSimpleServiceTwice)
+{
+  TestSessionPair pair;
+
+  qi::GenericObjectBuilder ob;
+  ob.advertiseMethod("reply", &reply);
+  qi::ObjectPtr obj(ob.object());
+
+  pair.server()->registerService("serviceTest", obj);
+
+  qi::Future<qi::ObjectPtr> f1 = pair.server()->service("serviceTest");
+  qi::Future<qi::ObjectPtr> f2 = pair.server()->service("serviceTest");
+  f1.wait();
+  f2.wait();
+
+  EXPECT_TRUE(f1.value() == f2.value());
+}
+
+TEST(QiSession, getSimpleServiceTwiceUnexisting)
+{
+  TestSessionPair pair;
+
+  qi::Future<qi::ObjectPtr> f1 = pair.server()->service("xxxLOL");
+  qi::Future<qi::ObjectPtr> f2 = pair.server()->service("xxxLOL");
+  f1.wait();
+  f2.wait();
+
+  EXPECT_TRUE(f1.hasError());
+  EXPECT_TRUE(f2.hasError());
+}
+
 TEST(QiSession, getUnregisterService)
 {
   TestSessionPair p;

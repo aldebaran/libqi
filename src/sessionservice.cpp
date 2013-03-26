@@ -252,6 +252,18 @@ namespace qi {
       }
     }
 
+    {
+      boost::recursive_mutex::scoped_lock l(_requestsMutex);
+      std::map<int, ServiceRequest*>::const_iterator it;
+      for (it = _requests.begin(); it != _requests.end(); ++it)
+      {
+        if (it->second->name == service)
+        {
+          return it->second->promise.future();
+        }
+      }
+    }
+
     qi::Future<qi::ServiceInfo> fut = _sdClient->service(service);
     ServiceRequest *rq = new ServiceRequest(service);
     long requestId = ++_requestsIndex;
