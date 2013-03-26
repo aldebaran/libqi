@@ -66,6 +66,8 @@ TEST(Test, Recurse)
   }
   oclient1->call<void>("onFire1", niter);
   ASSERT_TRUE(payload.future().hasValue(8000));
+  oclient1.reset();
+  oclient2.reset();
 }
 
 
