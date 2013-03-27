@@ -31,6 +31,7 @@ qi_create_gtest(test_testsession          SRC test_testsession.cpp          DEPE
 #qi_create_gtest(test_gateway              SRC test_gateway.cpp              DEPENDS QI QIMESSAGING GTEST TIMEOUT 10)
 
 qi_create_bin(test_call_on_close_session SRC test_call_on_close_session.cpp DEPENDS QI QIMESSAGING TESTSESSION BOOST BOOST_THREAD)
+qi_create_bin(test_signature SRC sig_generator.cpp sig_generator.h test_signature.cpp DEPENDS TESTSESSION QI QIMESSAGING BOOST)
 
 qi_create_session_test(test_service              SRC test_service.cpp DEPENDS QI QIMESSAGING GTEST TESTSESSION TIMEOUT 10)
 
