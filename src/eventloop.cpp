@@ -451,10 +451,11 @@ namespace qi {
     return ctx->promise.future();
   }
 
-  static void eventloop_stop(EventLoop* ctx)
+  static void eventloop_stop(EventLoop* &ctx)
   {
     ctx->stop();
     delete ctx;
+    ctx = 0;
   }
 
   static EventLoop* _netEventLoop = 0;
@@ -479,7 +480,7 @@ namespace qi {
         ctx->startThreadPool();
       else
         ctx->start();
-      Application::atExit(boost::bind(&eventloop_stop, ctx));
+      Application::atExit(boost::bind(&eventloop_stop, boost::ref(ctx)));
       if (!isPool && _netEventLoop && _objEventLoop && _monitorInterval)
       {
         int64_t d = static_cast<qi::int64_t>(_monitorInterval * 1e6);
