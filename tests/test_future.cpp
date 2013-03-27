@@ -382,7 +382,8 @@ TEST(TestFutureCancel, AsyncCallCanceleable)
   qi::os::msleep(400);
   ASSERT_TRUE(!b);
   ASSERT_TRUE(f.isFinished());
-  ASSERT_TRUE(f.hasError());
+  ASSERT_FALSE(f.hasError());
+  ASSERT_TRUE(f.isCanceled());
 }
 
 static void doCancel(qi::Promise<int> promise)  { promise.setCanceled(); }
@@ -457,7 +458,8 @@ TEST(TestFutureCancel, Canceled)
   qi::os::msleep(400);
   ASSERT_TRUE(!b);
   ASSERT_TRUE(f.isFinished());
-  ASSERT_TRUE(f.hasError());
+  ASSERT_FALSE(f.hasError());
+  ASSERT_TRUE(f.isCanceled());
 }
 
 
