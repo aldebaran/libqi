@@ -135,8 +135,8 @@ TEST(QiSession, getSimpleServiceTwice)
 
   pair.server()->registerService("serviceTest", obj);
 
-  qi::Future<qi::ObjectPtr> f1 = pair.server()->service("serviceTest");
-  qi::Future<qi::ObjectPtr> f2 = pair.server()->service("serviceTest");
+  qi::Future<qi::ObjectPtr> f1 = pair.client()->service("serviceTest");
+  qi::Future<qi::ObjectPtr> f2 = pair.client()->service("serviceTest");
   f1.wait();
   f2.wait();
 
