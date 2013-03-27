@@ -140,7 +140,7 @@ TEST(QiSession, getSimpleServiceTwice)
   f1.wait();
   f2.wait();
 
-  EXPECT_TRUE(f1.value() == f2.value());
+  EXPECT_TRUE(f1.value().get() == f2.value().get());
 }
 
 TEST(QiSession, getSimpleServiceTwiceUnexisting)
