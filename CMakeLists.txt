@@ -148,14 +148,12 @@ qi_add_subdirectory(examples WITH_EXAMPLES)
 #target_link_libraries(qimessaging "-Wl,--no-undefined")
 
 qi_add_subdirectory(c)
-
-qi_add_subdirectory("bin")
-
 qi_add_subdirectory("python" WITH_PYTHON)
 qi_add_subdirectory("dotnet" WITH_DOTNET)
 qi_add_subdirectory("c/test" BUILD_TESTS)
 qi_add_subdirectory("c/bin"  BUILD_TESTS)
 qi_add_subdirectory("tests"  BUILD_TESTS)
+qi_add_subdirectory("bin")
 
 message(STATUS "")
 message(STATUS "Build Options:")
