@@ -30,6 +30,8 @@ qi_create_gtest(test_metavalue_argument   SRC test_metavalue_argument.cpp   DEPE
 qi_create_gtest(test_testsession          SRC test_testsession.cpp          DEPENDS QI QIMESSAGING GTEST TESTSESSION TIMEOUT 2)
 #qi_create_gtest(test_gateway              SRC test_gateway.cpp              DEPENDS QI QIMESSAGING GTEST TIMEOUT 10)
 
+qi_create_bin(test_call_on_close_session SRC test_call_on_close_session.cpp DEPENDS QI QIMESSAGING TESTSESSION BOOST BOOST_THREAD)
+
 qi_create_session_test(test_service              SRC test_service.cpp DEPENDS QI QIMESSAGING GTEST TESTSESSION TIMEOUT 10)
 
 option(WITH_CODEGEN_TESTS       "Run codegen tests"       OFF)
