@@ -202,6 +202,8 @@ namespace qi {
 
   EventLoopThreadPool::~EventLoopThreadPool()
   {
+    stop();
+    join();
     delete _pool;
   }
 
@@ -247,6 +249,11 @@ namespace qi {
   void EventLoopThreadPool::post(uint64_t usDelay,
       const boost::function<void ()>& callback)
   {
+    if (_stopping)
+    {
+      qiLogWarning() << "ThreadPool post() while stopping";
+      return;
+    }
     _pool->schedule(boost::bind(&delay_call, usDelay, new boost::function<void ()>(callback)));
   }
 
