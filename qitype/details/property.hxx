@@ -44,13 +44,9 @@ namespace qi
   {
     if (_setter)
     {
-      try
-      { // Allow setter to abort operation by throwing AbortUpdate
-        _value = _setter(v);
+      bool ok = _setter(_value, v);
+      if (ok)
         (*this)(_value);
-      }
-      catch (const AbortUpdate&)
-      {}
     }
     else
     {

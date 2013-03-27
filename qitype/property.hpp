@@ -20,15 +20,6 @@
 
 namespace qi
 {
-  /// Exception that can be thrown to abort a property set from setter callback.
-  class AbortUpdate: public std::exception
-  {
-  public:
-    virtual const char* what() const throw()
-    {
-      return "AbortUpdate";
-    }
-  };
 
   /** Type-erased virtual interface implemented by all Property classes.
   */
@@ -45,7 +36,10 @@ namespace qi
   class PropertyImpl: public Signal<void(const T&)>, public PropertyBase
   {
   public:
-    typedef boost::function<T (const T&)> Setter;
+    /** Setter called with storage containing old value, and new value
+    *  Returns true to invoke subscribers, false to 'abort' the update.
+    */
+    typedef boost::function<bool (T&, const T&)> Setter;
     typedef boost::function<T()> Getter;
     typedef Signal<void(const T&)> SignalType;
     /**

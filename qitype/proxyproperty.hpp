@@ -30,7 +30,7 @@ namespace qi
     ProxyProperty(ObjectPtr object, const std::string& propertyName)
     : Property<T>(
       boost::bind(&ProxyProperty<T>::_getter, this),
-      boost::bind(&ProxyProperty<T>::_setter, this, _1),
+      boost::bind(&ProxyProperty<T>::_setter, this, _1, _2),
       boost::bind(&ProxyProperty<T>::onSubscribe, this, _1))
     , _name(propertyName)
     , _object(object.get())
@@ -43,7 +43,7 @@ namespace qi
     virtual void trigger(const GenericFunctionParameters& params, MetaCallType);
   private:
     T _getter();
-    T _setter(const T&);
+    bool _setter(T&, const T&);
     std::string _name;
     GenericObject* _object;
     SignalBase::Link _link;
@@ -98,11 +98,12 @@ namespace qi
     return _object->getProperty<T>(_name);
   }
   template<typename T>
-  T ProxyProperty<T>::_setter(const T& v)
+  bool ProxyProperty<T>::_setter(T& target, const T& v)
   {
+    // no need to fill target it's never used since we have a getter
     _object->setProperty(_name, v).value(); // throw on remote error
     // Prevent local subscribers from being called
-    throw AbortUpdate();
+    return false;
   }
 }
 #endif
