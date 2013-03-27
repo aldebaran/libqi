@@ -50,7 +50,7 @@ namespace qi {
     *pcurrent   = current;
     *psignature = signature;
 
-    return 0;
+    return opencount != closecount ? 0 : 1;
   }
 
 
@@ -133,13 +133,16 @@ namespace qi {
           signature++;
           break;
         case qi::Signature::Type_List:
-          _find_end(&current, &signature, sig_end, '[', ']');
+          if (!_find_end(&current, &signature, sig_end, '[', ']'))
+            return false;
           break;
         case qi::Signature::Type_Map:
-          _find_end(&current, &signature, sig_end, '{', '}');
+          if (!_find_end(&current, &signature, sig_end, '{', '}'))
+            return false;
           break;
         case qi::Signature::Type_Tuple:
-          _find_end(&current, &signature, sig_end, '(', ')');
+          if (!_find_end(&current, &signature, sig_end, '(', ')'))
+            return false;
           break;
         default:
           qiLogError() << "Signature is invalid:" << signature;
@@ -173,12 +176,24 @@ namespace qi {
       return;
     size_t size = strlen(fullSignature);
     _p->init(fullSignature, size);
+
+    if (this->size() != 1)
+    {
+      qiLogError() << "Signature is invalid : " << fullSignature;
+      _p->_valid = false;
+    }
   }
 
   Signature::Signature(const std::string &subsig)
     : _p(boost::make_shared<SignaturePrivate>())
   {
     _p->init(subsig.c_str(), subsig.size());
+
+    if (this->size() != 1)
+    {
+      qiLogError() << "Signature is invalid : " << subsig;
+      _p->_valid = false;
+    }
   }
 
   bool Signature::isValid() const {
@@ -309,11 +324,17 @@ namespace qi {
     size_t idx1 = fullSignature.find("::");
     if (idx1 != fullSignature.npos)
       funcName = fullSignature.substr(0, idx1);
-    size_t idx2 = fullSignature.find("(", idx1);
-    if (idx2 != fullSignature.npos) {
-      retSig = fullSignature.substr(idx1 + 2, idx2 - idx1 - 2);
-      parSig = fullSignature.substr(idx2);
+
+    qi::Signature sig = qi::Signature("(" + fullSignature.substr(idx1+2) + ")").begin().children();
+    if (sig.isValid() && sig.size() == 2)
+    {
+      qi::Signature::iterator it = sig.begin();
+      retSig = it.signature();
+      ++it;
+      parSig = it.signature();
     }
+    else if (sig.isValid() && sig.size() == 1)
+      parSig = sig.begin().signature();
 
     ret.push_back(retSig);
     ret.push_back(funcName);

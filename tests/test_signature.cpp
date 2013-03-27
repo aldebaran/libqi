@@ -170,7 +170,59 @@ TEST(TestSignature, ComplexConstRefPtr) {
   EXPECT_EQ("f",    qi::signatureFromType<const float>::value());
 }
 
+TEST(TestSignature, FromString) {
 
+  qi::Signature *sig;
+
+  sig = new qi::Signature("(");
+  EXPECT_FALSE(sig->isValid());
+  delete sig;
+
+  sig = new qi::Signature("{");
+  EXPECT_FALSE(sig->isValid());
+  delete sig;
+
+  sig = new qi::Signature("[");
+  EXPECT_FALSE(sig->isValid());
+  delete sig;
+
+  sig = new qi::Signature("plafbim");
+  EXPECT_FALSE(sig->isValid());
+  delete sig;
+
+  sig = new qi::Signature("(s)");
+  EXPECT_TRUE(sig->isValid());
+  delete sig;
+
+  sig = new qi::Signature("(m)(sib)");
+  EXPECT_FALSE(sig->isValid());
+  delete sig;
+}
+
+TEST(TestSignature, SignatureSplit) {
+  std::vector<std::string> sigInfo;
+
+  sigInfo = qi::signatureSplit("reply::(s)");
+  EXPECT_EQ("", sigInfo[0]);
+  EXPECT_EQ("reply", sigInfo[1]);
+  EXPECT_EQ("(s)", sigInfo[2]);
+
+  sigInfo = qi::signatureSplit("reply::s(s)");
+  EXPECT_EQ("s", sigInfo[0]);
+  EXPECT_EQ("reply", sigInfo[1]);
+  EXPECT_EQ("(s)", sigInfo[2]);
+
+
+  sigInfo = qi::signatureSplit("info::(m)(sib)");
+  EXPECT_EQ("(m)", sigInfo[0]);
+  EXPECT_EQ("info", sigInfo[1]);
+  EXPECT_EQ("(sib)", sigInfo[2]);
+
+  sigInfo = qi::signatureSplit("toto::((([{ii}])))({[{{ii}{ii}}][[{{ii}{ii}}]]})");
+  EXPECT_EQ("((([{ii}])))", sigInfo[0]);
+  EXPECT_EQ("toto", sigInfo[1]);
+  EXPECT_EQ("({[{{ii}{ii}}][[{{ii}{ii}}]]})", sigInfo[2]);
+}
 
 
 //expect that the following test to do not build. (static assert)

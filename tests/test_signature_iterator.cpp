@@ -41,7 +41,10 @@ TEST(TestSignatureIterator, Simple) {
 
   qi::Signature::iterator it;
 
-  qi::Signature sig("is");
+  qi::Signature signature("(is)");
+  qi::Signature sig = signature.begin().children();
+
+  EXPECT_TRUE(signature.isValid());
   EXPECT_TRUE(sig.isValid());
   EXPECT_STREQ("is", sig.toString().c_str());
   it = sig.begin();
