@@ -39,25 +39,26 @@ namespace qi
     virtual void startReading();
 
   private:
+#ifdef WITH_SSL
+    typedef boost::shared_ptr<boost::asio::ssl::stream<boost::asio::ip::tcp::socket> > SocketPtr;
+#else
+    typedef boost::shared_ptr<boost::asio::ip::tcp::socket> SocketPtr;
+#endif
     void error(const boost::system::error_code& erc);
-    void connected2(const boost::system::error_code& erc);
-    void handshake(const boost::system::error_code& erc);
-    void onRead();
-    void onReadHeader(const boost::system::error_code& erc, std::size_t);
-    void onReadData(const boost::system::error_code& erc, std::size_t);
+    void connected2(const boost::system::error_code& erc, SocketPtr socket);
+    void handshake(const boost::system::error_code& erc, SocketPtr socket);
+    void onReadHeader(const boost::system::error_code& erc, std::size_t, SocketPtr socket);
+    void onReadData(const boost::system::error_code& erc, std::size_t, SocketPtr socket);
 
-    void send_(qi::Message* msg);
-    void sendCont(const boost::system::error_code& erc, Message* msg, boost::shared_ptr<bool> abort);
+    void send_(qi::Message* msg, SocketPtr socket);
+    void sendCont(const boost::system::error_code& erc, Message* msg, boost::shared_ptr<bool> abort, SocketPtr socket);
   private:
     bool _ssl;
     bool _sslHandshake;
 #ifdef WITH_SSL
     boost::asio::ssl::context _sslContext;
-    boost::asio::ssl::stream<boost::asio::ip::tcp::socket>* _socket;
-#else
-    boost::asio::ip::tcp::socket* _socket;
 #endif
-    boost::asio::io_service::work* _work;
+   SocketPtr _socket;
 
     boost::shared_ptr<bool> _abort; // used to notify send callback sendCont that we are dead
     qi::Promise<void>   _connectPromise;

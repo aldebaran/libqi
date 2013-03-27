@@ -43,7 +43,6 @@ namespace qi
 #ifdef WITH_SSL
     , _sslContext(boost::asio::ssl::context::sslv23)
 #endif
-    , _work(0)
     , _abort(boost::make_shared<bool>(false))
     , _readHdr(true)
     , _msg(0)
@@ -57,9 +56,9 @@ namespace qi
     if (s != 0)
     {
 #ifdef WITH_SSL
-      _socket = (boost::asio::ssl::stream<boost::asio::ip::tcp::socket>*) s;
+      _socket = SocketPtr((boost::asio::ssl::stream<boost::asio::ip::tcp::socket>*) s);
 #else
-      _socket = (boost::asio::ip::tcp::socket*) s;
+      _socket = SocketPtr((boost::asio::ip::tcp::socket*) s);
 #endif
       _status = qi::TransportSocket::Status_Connected;
 
@@ -69,17 +68,6 @@ namespace qi
     }
     else
     {
-#ifdef WITH_SSL
-      if (_ssl)
-      {
-        _sslContext.set_verify_mode(boost::asio::ssl::verify_none);
-      }
-
-      _socket = (new boost::asio::ssl::stream<boost::asio::ip::tcp::socket>((*(boost::asio::io_service*)eventLoop->nativeHandle()), _sslContext));
-#else
-      _socket = new boost::asio::ip::tcp::socket(*(boost::asio::io_service*)eventLoop->nativeHandle());
-#endif
-      _work = new boost::asio::io_service::work(*(boost::asio::io_service*)eventLoop->nativeHandle());
       _disconnectPromise.setValue(0); // not connected, so we are finished disconnecting
     }
   }
@@ -90,8 +78,6 @@ namespace qi
   {
     disconnect();
     delete _msg;
-    delete _socket;
-    delete _work;
     qiLogVerbose() << "deleted " << this;
   }
 
@@ -114,29 +100,29 @@ namespace qi
       if (!_sslHandshake)
       {
         _socket->async_handshake(boost::asio::ssl::stream_base::server,
-          boost::bind(&TcpTransportSocket::handshake, this, _1));
+          boost::bind(&TcpTransportSocket::handshake, this, _1, _socket));
         return;
       }
 
       boost::asio::async_read(*_socket,
         boost::asio::buffer(_msg->_p->getHeader(), sizeof(MessagePrivate::MessageHeader)),
-        boost::bind(&TcpTransportSocket::onReadHeader, this, _1, _2));
+        boost::bind(&TcpTransportSocket::onReadHeader, this, _1, _2, _socket));
     }
     else
     {
       boost::asio::async_read(_socket->next_layer(),
         boost::asio::buffer(_msg->_p->getHeader(), sizeof(MessagePrivate::MessageHeader)),
-        boost::bind(&TcpTransportSocket::onReadHeader, this, _1, _2));
+        boost::bind(&TcpTransportSocket::onReadHeader, this, _1, _2, _socket));
     }
 #else
     boost::asio::async_read(*_socket,
       boost::asio::buffer(_msg->_p->getHeader(), sizeof(MessagePrivate::MessageHeader)),
-      boost::bind(&TcpTransportSocket::onReadHeader, this, _1, _2));
+      boost::bind(&TcpTransportSocket::onReadHeader, this, _1, _2, _socket));
 #endif
   }
 
   void TcpTransportSocket::onReadHeader(const boost::system::error_code& erc,
-    std::size_t len)
+    std::size_t len, SocketPtr s)
   {
     if (erc)
     {
@@ -162,26 +148,26 @@ namespace qi
       {
         boost::asio::async_read(*_socket,
           boost::asio::buffer(ptr, payload),
-          boost::bind(&TcpTransportSocket::onReadData, this, _1, _2));
+          boost::bind(&TcpTransportSocket::onReadData, this, _1, _2, _socket));
       }
       else
       {
         boost::asio::async_read(_socket->next_layer(),
           boost::asio::buffer(ptr, payload),
-          boost::bind(&TcpTransportSocket::onReadData, this, _1, _2));
+          boost::bind(&TcpTransportSocket::onReadData, this, _1, _2, _socket));
       }
 #else
       boost::asio::async_read(*_socket,
         boost::asio::buffer(ptr, payload),
-        boost::bind(&TcpTransportSocket::onReadData, this, _1, _2));
+        boost::bind(&TcpTransportSocket::onReadData, this, _1, _2, _socket));
 #endif
     }
     else
-      onReadData(boost::system::error_code(), 0);
+      onReadData(boost::system::error_code(), 0, _socket);
   }
 
   void TcpTransportSocket::onReadData(const boost::system::error_code& erc,
-    std::size_t len)
+    std::size_t len, SocketPtr socket)
   {
     if (erc)
     {
@@ -207,6 +193,7 @@ namespace qi
 
   void TcpTransportSocket::error(const boost::system::error_code& erc)
   {
+    boost::mutex::scoped_lock lock(_closingMutex);
     _status = qi::TransportSocket::Status_Disconnected;
     disconnected(erc.value());
 
@@ -222,7 +209,7 @@ namespace qi
       if (_socket->lowest_layer().is_open())
         _socket->lowest_layer().close(er);
     }
-
+    _socket.reset();
     _disconnectPromise.setValue(0);
   }
 
@@ -235,6 +222,15 @@ namespace qi
       qiLogError() << s;
       return makeFutureError<void>(s);
     }
+#ifdef WITH_SSL
+    if (_ssl)
+    {
+      _sslContext.set_verify_mode(boost::asio::ssl::verify_none);
+    }
+    _socket = SocketPtr(new boost::asio::ssl::stream<boost::asio::ip::tcp::socket>((*(boost::asio::io_service*)_eventLoop->nativeHandle()), _sslContext));
+#else
+    _socket = SocketPtr(new boost::asio::ip::tcp::socket(*(boost::asio::io_service*)_eventLoop->nativeHandle()));
+#endif
     _url = url;
     _connectPromise.reset();
     _disconnectPromise.reset();
@@ -261,7 +257,7 @@ namespace qi
       ip::tcp::resolver::iterator it = r.resolve(q);
       // asynchronous connect
       _socket->lowest_layer().async_connect(*it,
-        boost::bind(&TcpTransportSocket::connected2, this, _1));
+        boost::bind(&TcpTransportSocket::connected2, this, _1, _socket));
       return _connectPromise.future();
     }
     catch (const std::exception& e)
@@ -273,7 +269,7 @@ namespace qi
     }
   }
 
-  void TcpTransportSocket::handshake(const boost::system::error_code& erc)
+  void TcpTransportSocket::handshake(const boost::system::error_code& erc, SocketPtr s)
   {
     if (erc)
     {
@@ -296,7 +292,7 @@ namespace qi
     }
   }
 
-  void TcpTransportSocket::connected2(const boost::system::error_code& erc)
+  void TcpTransportSocket::connected2(const boost::system::error_code& erc, SocketPtr s)
   {
     _connecting = false;
     if (erc)
@@ -312,7 +308,7 @@ namespace qi
       {
 #ifdef WITH_SSL
         _socket->async_handshake(boost::asio::ssl::stream_base::client,
-          boost::bind(&TcpTransportSocket::handshake, this, _1));
+          boost::bind(&TcpTransportSocket::handshake, this, _1, s));
 #endif
       }
       else
@@ -333,7 +329,7 @@ namespace qi
     *_abort = true; // Notify send callback sendCont that it must silently terminate
     {
       boost::mutex::scoped_lock l(_sendQueueMutex);
-      if (_socket->lowest_layer().is_open())
+      if (_socket && _socket->lowest_layer().is_open())
       {
         boost::system::error_code erc;
         boost::mutex::scoped_lock(_closingMutex);
@@ -350,20 +346,32 @@ namespace qi
 
   bool TcpTransportSocket::send(const qi::Message &msg)
   {
+    // Check that once before locking in case some idiot tries to send
+    // from a disconnect notification.
+    if (_status != qi::TransportSocket::Status_Connected)
+      return false;
+    boost::mutex::scoped_lock lockc(_closingMutex);
+    SocketPtr s;
+    if (!_socket || _status != qi::TransportSocket::Status_Connected)
+    {
+      qiLogDebug() << this << "Send on closed socket";
+      return false;
+    }
+    s = _socket;
     qiLogDebug() << this << " Send (" << msg.type() << "):" << msg.address();
     boost::mutex::scoped_lock lock(_sendQueueMutex);
 
     if (!_sending)
     {
       _sending = true;
-      send_(new Message(msg));
+      send_(new Message(msg), s);
     }
     else
       _sendQueue.push_back(msg);
     return true;
   }
 
-  void TcpTransportSocket::send_(qi::Message* msg)
+  void TcpTransportSocket::send_(qi::Message* msg, SocketPtr s)
   {
     using boost::asio::buffer;
     std::vector<boost::asio::const_buffer> b;
@@ -391,22 +399,22 @@ namespace qi
 #ifdef WITH_SSL
     if (_ssl)
     {
-      boost::asio::async_write(*_socket, b,
-        boost::bind(&TcpTransportSocket::sendCont, this, _1, msg, _abort));
+      boost::asio::async_write(*s, b,
+        boost::bind(&TcpTransportSocket::sendCont, this, _1, msg, _abort, _socket));
     }
     else
     {
-      boost::asio::async_write(_socket->next_layer(), b,
-        boost::bind(&TcpTransportSocket::sendCont, this, _1, msg, _abort));
+      boost::asio::async_write(s->next_layer(), b,
+        boost::bind(&TcpTransportSocket::sendCont, this, _1, msg, _abort, _socket));
     }
 #else
-    boost::asio::async_write(*_socket, b,
-      boost::bind(&TcpTransportSocket::sendCont, this, _1, msg, _abort));
+    boost::asio::async_write(*s, b,
+      boost::bind(&TcpTransportSocket::sendCont, this, _1, msg, _abort, _socket));
 #endif
   }
 
   void TcpTransportSocket::sendCont(const boost::system::error_code& erc,
-    Message* msg, boost::shared_ptr<bool> abort)
+    Message* msg, boost::shared_ptr<bool> abort, SocketPtr s)
   {
     delete msg;
     // The class does not wait for us to terminate, but it will set abort to true.
@@ -420,7 +428,7 @@ namespace qi
     {
       msg = new Message(_sendQueue.front());
       _sendQueue.pop_front();
-      send_(msg);
+      send_(msg, s);
     }
   }
 
