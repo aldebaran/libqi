@@ -35,6 +35,9 @@ TEST(Test, TestApplicationDestruction)
     server.registerService("coin1", oserver1).wait();
 
     oclient1 = client.service("coin1");
+    // will fall with the others client.close();
+    server.close();
+    sd.close();
   }
 }
 
