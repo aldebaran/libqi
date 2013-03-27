@@ -79,7 +79,7 @@ namespace qi
     { /* Lock here otherwise we could wait just after all threads go to sleep */
       boost::mutex::scoped_lock lock(_tasksMutex);
 
-      if ((*_activeWorkers != 0) && (_tasks.size() != 0))
+      while ((*_activeWorkers != 0) && (_tasks.size() != 0))
         _userCondition.wait(lock);
     }
   }
