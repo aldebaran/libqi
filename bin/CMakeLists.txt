@@ -13,4 +13,5 @@ qi_add_subdirectory("qiservice")
 qi_add_subdirectory("qimaster")
 qi_add_subdirectory("qigateway")
 qi_add_subdirectory("qilaunch")
-qi_add_subdirectory("perfs")
+# Since perf depends on libtestsession, it inherits of its dependencies!
+qi_add_subdirectory("perfs" BUILD_TESTS)
