@@ -7,12 +7,6 @@
 #ifndef _QITYPE_DETAILS_FUNCTIONTYPEFACTORY_HXX_
 #define _QITYPE_DETAILS_FUNCTIONTYPEFACTORY_HXX_
 
-#ifdef BOOST_FUSION_INVOKE_FUNCTION_OBJECT_MAX_ARITY
-# undef BOOST_FUSION_INVOKE_FUNCTION_OBJECT_MAX_ARITY
-#endif
-#define BOOST_FUSION_INVOKE_FUNCTION_OBJECT_MAX_ARITY 10
-
-#include <boost/fusion/include/mpl.hpp>
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/transform_view.hpp>
 #include <boost/mpl/find_if.hpp>
@@ -26,9 +20,11 @@
 #include <boost/type_traits/add_pointer.hpp>
 #include <boost/type_traits/remove_const.hpp>
 #include <boost/type_traits/remove_pointer.hpp>
+#include <boost/type_traits/is_member_function_pointer.hpp>
 #include <boost/function_types/function_type.hpp>
 #include <boost/function_types/function_arity.hpp>
 #include <boost/function_types/function_pointer.hpp>
+#include <boost/function_types/member_function_pointer.hpp>
 #include <boost/function_types/result_type.hpp>
 #include <boost/function_types/parameter_types.hpp>
 #include <boost/bind.hpp>
@@ -38,8 +34,342 @@ namespace qi
 {
   namespace detail
   {
+  /* General idea: code generated to make a function call taking a
+  * void*, long, or long& is the same.
+  * So we reduce the function types for which we effectively implement
+  * call, and bounce the equivalent functions to it.
+  */
 
+  /* ASSERTS
+  * We make some asumptions for this code to work. Failure on any of
+  * those asumptions will *not* be detected and will cause undefined behavior.
+  * - typesystem Storage for pointer types is by-value, and by-pointer for everything else
+  * - compiler-generated code is the same when calling a function:
+  *     - with argument T and EqType<T>::type
+  *     - with return type T and EqType<T>::rType
+  *     - with all pointer types and all reference types for argument/return type
+  */
 
+  class Class{}; // dummy class placeholder
+
+  /* For each type, get equivalent type, and if it is a reference
+  * Equivalent type is a type for which when types are substituted in a
+  * function call, compiler-generated code is the same.
+  * *WARNING* some magic occurs for return type, so have a separate rule
+  * which matches less stuffs for it.
+  */
+  template <typename T, bool isWordSize> struct EqTypeBase
+  {
+    typedef T type;
+    typedef T rType;
+    typedef typename boost::is_reference<T>::type isReference;
+    static const int dbgTag = 0;
+  };
+  template<typename T> struct EqTypeBase<T, true>
+  {
+    typedef void* type;
+    typedef typename boost::mpl::if_<typename boost::is_fundamental<T>::type, void*, T>::type rType;
+    typedef typename boost::is_reference<T>::type isReference;
+     static const int dbgTag = 1;
+  };
+  template <typename T> struct EqType
+  : public EqTypeBase<T, sizeof(T) == sizeof(void*)>
+  {
+  };
+  template <> struct EqType<void>
+  {
+    typedef void type;
+    typedef void* rType;
+    typedef boost::false_type isReference;
+  };
+  template<> struct EqType<double>
+  {
+    typedef double type;
+    typedef double rType;
+    typedef boost::false_type isReference;
+  };
+  template<> struct EqType<float>
+  {
+    typedef float type;
+    typedef float rType;
+    typedef boost::false_type isReference;
+  };
+  template<> struct EqType<bool>
+  {
+    typedef void* type;
+    typedef void* rType;
+    typedef boost::false_type isReference;
+  };
+  template <typename T> struct EqType<T&>
+  {
+    typedef void* type;
+    typedef void* rType;
+    typedef boost::true_type isReference;
+    static const int dbgTag = 2;
+  };
+  template <typename T> struct EqType<T const &>
+  {
+    typedef void* type;
+    typedef void* rType;
+    typedef boost::true_type isReference;
+    static const int dbgTag = 3;
+  };
+  // HACK: mark pointer as references, because typesystem transmit them
+  // by-value
+  template <typename T> struct EqType<T *>
+  {
+    typedef void* type;
+    typedef void* rType;
+    typedef boost::true_type isReference;
+    static const int dbgTag = 4;
+  };
+
+  // helper to compute a reference mask iterating through a mpl sequence
+  template<typename S, typename I, int p> struct RefMasqBuilderHelper
+  {
+    typedef typename boost::mpl::deref<I>::type type;
+    static const unsigned int isRef = EqType<type>::isReference::value;
+    static const unsigned long vSelf = isRef << p;
+    static const unsigned long val = vSelf + RefMasqBuilderHelper<S,
+     typename boost::mpl::next<I>::type, p+1>::val;
+  };
+  template<typename S, int p> struct RefMasqBuilderHelper<S, typename boost::mpl::end<S>::type, p>
+  {
+    static const unsigned long val = 0;
+  };
+
+  /* Equivalent function info for function type F
+   *
+   */
+  template<typename F> struct EqFunctionBare
+  {
+    typedef typename boost::function_types::components<F>::type Components;
+
+    typedef typename boost::function_types::parameter_types<F>::type Arguments;
+    typedef typename boost::function_types::result_type<F>::type Result;
+
+    // need to handle result type separately
+    typedef typename boost::mpl::transform<Arguments,
+      EqType<boost::mpl::_1> >::type EqArguments;
+    typedef typename EqType<Result>::rType EqResult;
+    typedef typename boost::mpl::push_front<EqArguments, EqResult>::type EqComponents;
+
+    // Bit b is set if argument index b+1 (0=return type) is a reference.
+    static const unsigned long refMask = RefMasqBuilderHelper<Components,
+      typename boost::mpl::begin<Components>::type, 0>::val;
+    typedef typename boost::function_types::function_type<EqComponents>::type type;
+  };
+
+  template<typename F> struct EqMemberFunction
+  {
+    typedef typename boost::function_types::components<F>::type Components;
+    // we need to handle object type and return type separately
+    // arguments with object
+    typedef typename boost::function_types::parameter_types<F>::type MethodArguments;
+    // arguments without object
+    typedef typename boost::mpl::pop_front<MethodArguments>::type Arguments;
+    // return type
+    typedef typename boost::function_types::result_type<F>::type Result;
+    typedef typename boost::mpl::transform<Arguments,
+      EqType<boost::mpl::_1> >::type EqArguments;
+    typedef typename EqType<Result>::rType EqResult;
+    // push equivalent object type
+    typedef typename boost::mpl::push_front<EqArguments, detail::Class&>::type EqComponentsInt;
+    typedef typename boost::mpl::push_front<EqComponentsInt, EqResult>::type EqComponents;
+    typedef typename boost::function_types::member_function_pointer<EqComponents>::type type;
+    static const unsigned long refMask = RefMasqBuilderHelper<Components,
+    typename boost::mpl::begin<Components>::type, 0>::val;
+  };
+
+  template<typename F> struct EqFunction:
+  public boost::mpl::if_<typename boost::is_member_function_pointer<F>::type,
+   EqMemberFunction<F>,
+   EqFunctionBare<F> >::type
+   {};
+  /* arg[i] is a pointer to an element of expected type DROPPING ref
+  * we will make the call by dereferencing all args, so we must add
+  * one layer of pointer to effective refs
+   *
+   */
+  inline
+  void transformRef(void** args, void** out, unsigned int sz,
+    unsigned long refMask)
+  {
+    for (unsigned i=0; i<sz; ++i)
+    {
+      if (refMask & (1 << (i+1))) // bit 0 is for return type
+        out[i] = &args[i];
+      else
+        out[i] = args[i];
+    }
+  }
+  // makeCall function family
+  // accepts a bare function, boost function, member function
+  // we handled byval/byref in refMask/transformRef, so bypass
+  // entirely ptrFromStorage.
+
+  #define callArg(z, n, _) \
+   BOOST_PP_COMMA_IF(n) *(typename boost::remove_reference<P ## n>::type  *)args[n]
+  #define makeCall(n, argstypedecl, argstype, argsdecl, argsues, comma)     \
+  template<typename R comma argstypedecl> \
+  void* makeCall(R(*f)(argstype), void** args)  \
+  { \
+    detail::GenericValuePtrCopy val; \
+    val(), f( \
+      BOOST_PP_REPEAT(n, callArg, _) \
+      ); \
+    return val.value; \
+  }
+ QI_GEN(makeCall)
+ #undef makeCall
+
+ // hacks are disabled for boost::function (refMask forced to 0)
+ // so use ptrFromStorage.
+ #define declType(z, n, _) \
+   static Type* type_ ## n  = typeOf<typename boost::remove_reference<P ## n>::type>();
+ #define callArgBF(z, n, _) \
+   BOOST_PP_COMMA_IF(n) *(typename boost::remove_reference<P ## n>::type  *)type_##n -> ptrFromStorage(&args[n])
+
+ #define makeCall(n, argstypedecl, argstype, argsdecl, argsues, comma)     \
+  template<typename R comma argstypedecl> \
+  void* makeCall(boost::function<R(argstype)> f, void** args)  \
+  { \
+    BOOST_PP_REPEAT(n, declType, _) \
+    detail::GenericValuePtrCopy val; \
+    val(), f( \
+      BOOST_PP_REPEAT(n, callArgBF, _) \
+      ); \
+    return val.value; \
+  }
+  QI_GEN(makeCall)
+ #undef makeCall
+
+ #define makeCall(n, argstypedecl, argstype, argsdecl, argsues, comma)     \
+  template<typename R comma argstypedecl> \
+  void* makeCall(R(Class::*f)(argstype), void* instance, void** args)  \
+  { \
+    detail::GenericValuePtrCopy val; \
+    Class* cptr = *(Class**)instance; \
+    val(), ((*cptr).*f)( \
+      BOOST_PP_REPEAT(n, callArg, _) \
+      ); \
+    return val.value; \
+  }
+ QI_GEN(makeCall)
+ #undef makeCall
+
+ #define makeCall_(n, argstypedecl, argstype, argsdecl, argsues, comma)     \
+ template<typename R comma argstypedecl> \
+ void* makeCall(R(Class::*f)(argstype), void** args)  \
+ { \
+   return makeCall(f, args[0], args + 1); \
+ }
+
+ QI_GEN(makeCall_)
+ #undef callArg
+ #undef makeCall_
+
+#ifdef QITYPE_TRACK_FUNCTIONTYPE_INSTANCES
+   // debug-tool to monitor function type usage
+   void QITYPE_API functionTypeTrack(const std::string& functionName);
+   void QITYPE_API functionTypeDump();
+#endif
+}
+
+  struct InfosKeyMask: public std::vector<Type*>
+  {
+  public:
+    InfosKeyMask(const std::vector<Type*>& b, unsigned long mask)
+    : std::vector<Type*>(b), _mask(mask) {}
+    bool operator < (const InfosKeyMask& b) const
+    {
+      if (size() != b.size())
+        return size() < b.size();
+      for (unsigned i=0; i<size(); ++i)
+      {
+        if ( (*this)[i]->info() != b[i]->info())
+          return (*this)[i]->info() < b[i]->info();
+      }
+      return _mask < b._mask;
+    }
+    unsigned long _mask;
+  };
+
+  /* T is the *reducted* function type
+  *  S is the storage type of the function
+  * So each instance must know the refMask, and the real return type
+  *
+  * categories of S in use:
+  *  boost::function: no reduction performed
+  *  bare function pointer
+  *  member function pointer: T is the linearized signature
+  */
+  template<typename T, typename S>
+  class FunctionTypeEq: public FunctionType
+  {
+  public:
+    typedef typename boost::function_types::result_type<T>::type ReturnType;
+    FunctionTypeEq(unsigned long refMask)
+    : refMask(refMask)
+    {
+#ifdef QITYPE_TRACK_FUNCTIONTYPE_INSTANCES
+      detail::functionTypeTrack(typeid(S).name());
+#endif
+    }
+    virtual void* call(void* storage, void** args, unsigned int argc)
+    {
+#if QI_HAS_VARIABLE_LENGTH_ARRAY
+      void* out[argc];
+#else
+      void* outStatic[8];
+      void** out;
+      if (argc <= 8)
+        out = outStatic;
+      else
+        out = new void*[argc];
+#endif
+      detail::transformRef(args, out, argc, refMask);
+      void* v = detail::makeCall(*(S*)ptrFromStorage(&storage), (void**)out);
+      // adapt return value if needed
+      if (boost::is_pointer<ReturnType>::value
+        &&  _resultType->kind() != Type::Pointer)
+      {
+        void* vstorage = _resultType->initializeStorage(&v);
+        vstorage = _resultType->clone(vstorage);
+        //qiLogWarning("ft") << "Ret deref " << (unsigned long)v <<' ' << vstorage
+        // << ' ' << *(unsigned long*)vstorage;
+        v = vstorage;
+      }
+#if ! QI_HAS_VARIABLE_LENGTH_ARRAY
+      if (argc > 8)
+        delete[] out;
+#endif
+      return v;
+    }
+    unsigned long refMask;
+    static FunctionTypeEq<T, S>* make(unsigned long refMask, std::vector<Type*> argsType,
+      Type* returnType)
+    { // we need to hash/compare on all the arguments
+      std::vector<Type*> key(argsType);
+      key.push_back(returnType);
+      typedef std::map<InfosKeyMask,  FunctionTypeEq<T, S>* > FTMap;
+      static FTMap ftMap;
+      FunctionTypeEq<T, S>* & fptr = ftMap[InfosKeyMask(key, refMask)];
+      if (!fptr)
+      {
+        fptr = new FunctionTypeEq<T, S>(refMask);
+        fptr->_resultType = returnType;
+        fptr->_argumentsType = argsType;
+      }
+      return fptr;
+    }
+    _QI_BOUNCE_TYPE_METHODS(DefaultTypeImplMethods<S>);
+  };
+
+  namespace detail
+  {
+
+    // Trick used to avoid instanciating a T
     template<typename T> struct Ident
     {
     };
@@ -62,6 +392,7 @@ namespace qi
     {
       typedef T* type;
     };
+    // Fill a vector<Type*> from a T*
     struct fill_arguments
     {
       inline fill_arguments(std::vector<Type*>* target)
@@ -79,110 +410,73 @@ namespace qi
       std::vector<Type*>* target;
     };
 
-  } // namespace detail
-
-
-  template<typename T, int arity> struct SafePopFront
-  {
-    typedef typename boost::mpl::pop_front<T>::type type;
-  };
-
-  template<typename T> struct SafePopFront<T, 0>
-  {
-    typedef T type;
-  };
-
-  template<typename T, int n> struct MakeCall
-  {
-    void* operator() (boost::function<T>&f, void** args);
-  };
-
-  // Generate MakeCall<F>::operator()(function<F>, void** args) for each
-  // argument count.
-  #define callArg(z, n, _) BOOST_PP_COMMA_IF(n) *(typename boost::remove_reference<P##n>::type*)t##n->ptrFromStorage(&args[n])
-#define makeCall(n, argstypedecl, argstype, argsdecl, argsues, comma)     \
-  template<typename R comma argstypedecl > struct MakeCall<R(argstype), n>  \
-  {                                                                         \
-    void* operator() (boost::function<R(argstype)>&f, void** args)          \
-    {                                                                       \
-      QI_GEN_PREPOST2(n, static qi::Type* t,  = qi::typeOf<P, >(););        \
-      detail::GenericValuePtrCopy val;                                              \
-      val(), f(                                                               \
-        BOOST_PP_REPEAT(n, callArg, _)                                      \
-        );                                                                  \
-      return val.value;                                                     \
-    }                                                                       \
-  };
-  QI_GEN(makeCall)
-  #undef callArg
-  #undef makeCall
-
-  template<typename T> class FunctionTypeImpl:
-  public FunctionType
-  {
-  public:
-    FunctionTypeImpl(bool isMethod = false)
+    // build a function pointer or member function pointer type
+    template<typename F, bool Member> struct FunctionPointerSynthetizer
     {
-      _resultType = typeOf<typename boost::function_types::result_type<T>::type >();
-
-      typedef typename boost::function_types::parameter_types<T>::type ArgsType;
-      // Detect and warn about non-const reference arguments
-      if (isMethod) // skip first argument. Runtime switch so cant pop_front directly
-        boost::mpl::for_each<
-         boost::mpl::transform_view<
-           typename SafePopFront<ArgsType, boost::function_types::function_arity<T>::value>::type,
-           detail::Ident<boost::mpl::_1>
-           > >(detail::checkForNonConstRef());
-      else
-      boost::mpl::for_each<
-         boost::mpl::transform_view<ArgsType,
-           detail::Ident<boost::mpl::_1>
-           > >(detail::checkForNonConstRef());
+      typedef typename  boost::function_types::member_function_pointer<F>::type type;
+    };
+    template<typename F> struct FunctionPointerSynthetizer<F, false>
+    {
+      typedef typename boost::function_types::function_pointer<F>::type type;
+    };
+    // Accept a function pointer or member function pointer
+    template<typename F>
+    GenericFunction makeGenericFunctionBare(F func)
+    {
+      typedef typename boost::function_types::parameter_types<F>::type ArgsType;
+      typedef typename boost::function_types::result_type<F>::type ResType;
+      Type* resultType = typeOf<ResType>();
+      std::vector<Type*> argumentsType;
       // Generate and store a Type* for each argument
       boost::mpl::for_each<
         boost::mpl::transform_view<ArgsType,
         boost::add_pointer<
         boost::remove_const<
-        boost::remove_reference<boost::mpl::_1> > > > >(detail::fill_arguments(&_argumentsType));
-      if (CallableType::signature().find('X') != std::string::npos)
-        qiLogDebug("qitype.call") << "Function arguments not serializable";
-      if (_resultType->signature().find('X') != std::string::npos)
-        qiLogDebug("qitype.call") << "Function result will not be serializable";
+        boost::remove_reference<boost::mpl::_1> > > > >(detail::fill_arguments(&argumentsType));
+      typedef typename EqFunction<F>::type MapedF;
+      // regenerate eq function pointer type
+      typedef typename boost::function_types::components<MapedF>::type EqComponents;
+      // would have used mpl::if_ but it has lazyness issues it seems
+      typedef typename FunctionPointerSynthetizer<EqComponents,
+        boost::is_member_function_pointer<F>::value>::type EqFunPtr;
+      unsigned long mask = EqFunction<F>::refMask;
+      FunctionType* ftype = FunctionTypeEq<MapedF, EqFunPtr>::make(mask, argumentsType, resultType);
+
+      qiLogDebug("qitype.makeGenericFunction") << "bare mask " << EqFunction<F>::refMask;
+      return GenericFunction(ftype, ftype->clone(ftype->initializeStorage(&func)));
     }
 
-    virtual void* call(void* func, void** args, unsigned int argc)
+    template<typename F> GenericFunction makeGenericFunctionBare(boost::function<F> func)
     {
-      qiLogDebug("qitype.call") << " call of f " << CallableType::signature() << ' ' << sigreturn();
-      boost::function<T>* f = (boost::function<T>*)ptrFromStorage(&func);
-      return MakeCall<T, boost::function_types::function_arity<T>::value>()(*f, args);
+      /* Do not try to reduce anything on a boost::function.
+      * It will bounce to an internal template backend anyway
+      */
+      typedef typename boost::function_types::parameter_types<F>::type ArgsType;
+      typedef typename boost::function_types::result_type<F>::type ResType;
+      Type* resultType = typeOf<ResType>();
+      std::vector<Type*> argumentsType;
+      boost::mpl::for_each<
+        boost::mpl::transform_view<ArgsType,
+        boost::add_pointer<
+        boost::remove_const<
+        boost::remove_reference<boost::mpl::_1> > > > >(detail::fill_arguments(&argumentsType));
+      FunctionType* ftype = FunctionTypeEq<F, boost::function<F> >::make(0, argumentsType, resultType);
+      return GenericFunction(ftype, new boost::function<F>(func));
     }
 
-    _QI_BOUNCE_TYPE_METHODS(DefaultTypeImplMethods<boost::function<T> >);
-  };
-
-  template<typename T> FunctionType* makeFunctionType()
-  {
-    static FunctionTypeImpl<T>* result = 0;
-    if (!result)
-      result = new FunctionTypeImpl<T>();
-    return result;
-  }
-
-  namespace detail
-  {
     // Use helper structures for which template partial specialisation is possible
     template<typename T> struct GenericFunctionMaker
     {
       static GenericFunction make(T func)
       {
-        return GenericFunctionMaker<typename boost::function<T> >::make(boost::function<T>(func));
+        return makeGenericFunctionBare(func);
       }
     };
     template<typename T> struct GenericFunctionMaker<T*>
     {
       static GenericFunction make(T* func)
       {
-         return GenericFunctionMaker<typename boost::function<T> >::make(boost::function<T>(func));
+        return makeGenericFunctionBare(func);
       }
     };
     template<typename R, typename F, typename B>
@@ -201,9 +495,7 @@ namespace qi
       static GenericFunction make(boost::function<T> func)
       {
          assert(sizeof(boost::function<T>) == sizeof(boost::function<void ()>));
-         GenericFunction res;
-         res.type = makeFunctionType<T>();
-         res.value = res.type->clone(res.type->initializeStorage(&func));
+         GenericFunction res = detail::makeGenericFunctionBare(func);
          return res;
       }
     };
@@ -226,31 +518,46 @@ namespace qi
 
   namespace detail
   {
-
-    // Generate bindFirst(function, arg) that returns a function  binding
-    // arg as the first argument, for each argument count.
-#define underscoren(z, n, x) BOOST_PP_COMMA_IF(n) BOOST_PP_CAT(_, QI_GEN_SYMINC(n))
-
-#define BindFirst(n, argstypedecl, argstype, argsdecl, argsues, comma)                          \
-template<typename R, typename EFF, typename PX comma argstypedecl>                              \
-boost::function<R(argstype)> bindFirst(boost::function<R(PX comma argstype)> f, EFF *instance)  \
-{                                                                                               \
-  return boost::bind(f, boost::ref(*instance) comma BOOST_PP_REPEAT(n, underscoren, _));        \
-}
-
-  QI_GEN(BindFirst)
-
-#undef BindFirst
-#undef underscoren
+    template<typename T> struct Pointer
+    {
+      static T* pointer(T& t)
+      {
+        return &t;
+      }
+    };
+    template<typename T> struct Pointer<T*>
+    {
+      static T* pointer(T* & t)
+      {
+        return t;
+      }
+    };
   }
 
-template<typename C, typename F> GenericFunction makeGenericFunction(C* inst, F func)
-{
+  template<typename F, typename C>
+  GenericFunction makeGenericFunction(F func, C instance)
+  {
+    /* Taking a GenericFunction of F will likely imply a typeOf<C> which is
+    * unnecessary. So use a fake class in signature.
+    */
+    typedef typename boost::function_types::result_type<F>::type Result;
+    typedef typename boost::function_types::parameter_types<F, boost::mpl::identity<boost::mpl::_1> >::type Args;
+    typedef typename boost::mpl::pop_front<Args>::type ArgsNoClass;
+    typedef typename boost::mpl::push_front<ArgsNoClass, detail::Class&>::type ArgsFakeClass;
+    typedef typename boost::mpl::push_front<ArgsFakeClass, Result>::type ComponentsFaked;
+    typedef typename boost::function_types::member_function_pointer<ComponentsFaked>::type MethodTypeFaked;
+    MethodTypeFaked newFunk = *(MethodTypeFaked*)(void*)&func;
+    GenericFunction res = makeGenericFunction(newFunk);
 
-  typedef typename ::boost::function_types::function_type<F>::type FType;
-  boost::function<FType> memberFunction = func;
-  return makeGenericFunction(detail::bindFirst(memberFunction, inst));
+    // Dynamic-cast instance to expected pointer type.
+    typedef typename boost::mpl::at_c<Args, 0>::type FirstArg;
+    // Get expected
+    FirstArg* ptr = dynamic_cast<FirstArg*>(detail::Pointer<C>::pointer(instance));
+    if (!ptr && instance)
+      throw std::runtime_error("makeGenericFunction: failed to dynamic_cast bound value to expected type");
+    res.prependArgument((void*)(const void*)ptr);
+    return res;
+  }
 
-}
 }
 #endif

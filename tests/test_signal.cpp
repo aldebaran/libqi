@@ -34,11 +34,11 @@ TEST(TestSignal, TestCompilation)
 {
   int                    res = 0;
   qi::Signal<void (int)> s;
-  Foo*                   f = 0;
+  Foo*                   f = (Foo*)1;
   qi::Promise<void>      prom;
 
   //do not count
-  s.connect(qi::makeGenericFunction(f, &Foo::func));
+  s.connect(qi::makeGenericFunction(&Foo::func, f));
   s.connect(boost::bind<void>(&Foo::func, f, _1));
 
   s.connect(boost::bind(&foo, &res, 12, _1));

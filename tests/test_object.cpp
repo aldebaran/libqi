@@ -15,7 +15,6 @@
 #include <qitype/genericobject.hpp>
 #include <qitype/genericobjectbuilder.hpp>
 #include <qitype/objecttypebuilder.hpp>
-#include <qitype/methodtypefactory.hpp>
 
 qiLogCategory("test");
 
@@ -23,10 +22,57 @@ static int gGlobalResult = 0;
 
 void vfun(const int &p0,const int &p1)   { gGlobalResult = p0 + p1; }
 int fun(const int &p0,const int &p1)     { return p0 + p1; }
+int funVal(int p0, int p1) { return p0 + p1;} //by-value
 
-struct Foo {
+qi::int8_t ping8(qi::int8_t v) { return v;}
+qi::int16_t ping16(qi::int16_t v) { return v;}
+qi::int32_t ping32(qi::int32_t v) { return v;}
+qi::int64_t ping64(qi::int64_t v) { return v;}
+float pingFloat(float v) { return v;}
+double pingDouble(double v) { return v;}
+
+struct Padding
+{
+  Padding() : pad(1) {}
+  int pad;
+};
+struct Padding2
+{
+  Padding2() : pad(-1) {}
+  int pad;
+};
+
+struct Parent
+{
+  qi::int32_t pping32(qi::int32_t v) { return v+m;}
+  virtual  qi::int32_t vping32(qi::int32_t v) { return v+m;}
+  qi::int32_t m;
+  Parent() : m(2) {}
+};
+
+// Insert padding to be able to check that class pointers are correctly
+// converted when calling member functions
+struct Foo: public Padding, public Parent, public Padding2 {
+  Foo() : f(3) {}
+  Foo(const Foo& b)
+  : f(b.f+1) {}
+  void operator = (const Foo& b)
+  {
+    f = b.f + 1;
+  }
   int fun(const int &p0,const int &p1)   { return p0 + p1; }
   void vfun(const int &p0,const int &p1) { gGlobalResult = p0 + p1; }
+  qi::int8_t ping8(qi::int8_t v) { return v+f;}
+  qi::int16_t ping16(qi::int16_t v) { return v+f;}
+  qi::int32_t ping32(qi::int32_t v) { return v+f;}
+  qi::int64_t ping64(qi::int64_t v) { return v+f;}
+  bool pingB(bool v) { return v;}
+  float pingFloat(float v) { return v+(float)f;}
+  double pingDouble(double v) { return v+(double)f;}
+  virtual  qi::int32_t vping32(qi::int32_t v) { return v+f;}
+  void pingV(qi::int32_t v) { r = v+f;}
+  int f;
+  int r;
 };
 
 class C
@@ -132,16 +178,105 @@ TEST(TestObject, Typing)
   qiLogDebug() << "fun";
   qi::GenericFunction fv2 = qi::makeGenericFunction(&fun);
   qiLogDebug() << "Foo::fun";
-  qi::GenericMethod mv = qi::makeGenericMethod(&Foo::fun);
+  qi::GenericFunction mv = qi::makeGenericFunction(&Foo::fun);
   std::vector<qi::GenericValuePtr> args1 = convert(1, 2);
   qi::GenericValuePtr res = fv2.call(args1);
   ASSERT_TRUE(checkValue(res, 3));
 
-  qi::GenericMethod adderAdd = qi::makeGenericMethod(&Adder::add);
+  qi::GenericFunction adderAdd = qi::makeGenericFunction(&Adder::add);
   Adder add1(1);
   std::vector<qi::GenericValuePtr> argsAdd = convert(41);
   res = adderAdd.call(qi::GenericValueRef(add1), argsAdd);
   ASSERT_TRUE(checkValue(res, 42));
+}
+
+TEST(TestObject, ABI)
+{
+  using namespace qi;
+  // We must declare inheritance between Foo and Parent
+  ObjectTypeBuilder<Foo> b;
+  b.inherits<Parent>();
+  b.registerType();
+  GenericFunction f;
+  f = makeGenericFunction(&ping8);
+  EXPECT_EQ(42, f.call(convert(42)).toInt());
+  f = makeGenericFunction(&ping16);
+  EXPECT_EQ(42, f.call(convert(42)).toInt());
+  f = makeGenericFunction(&ping32);
+  EXPECT_EQ(42, f.call(convert(42)).toInt());
+  f = makeGenericFunction(&ping64);
+  EXPECT_EQ(42, f.call(convert(42)).toInt());
+  f = makeGenericFunction(&pingFloat);
+  EXPECT_EQ(42.42f, f.call(convert(42.42f)).toFloat());
+  f = makeGenericFunction(&pingDouble);
+  EXPECT_EQ(42.42, f.call(convert(42.42)).toDouble());
+
+  Foo foo;
+  f = makeGenericFunction(&Foo::ping8);
+  EXPECT_EQ(45, f.call(convert(&foo, 42)).toInt());
+  EXPECT_EQ(45, f.call(convert(foo, 42)).toInt());
+  f = makeGenericFunction(&Foo::ping8, &foo);
+  EXPECT_EQ(45, f.call(convert(42)).toInt());
+
+  f = makeGenericFunction(&Foo::ping16);
+  EXPECT_EQ(45, f.call(convert(&foo, 42)).toInt());
+  EXPECT_EQ(45, f.call(convert(foo, 42)).toInt());
+  f = makeGenericFunction(&Foo::ping16, &foo);
+  EXPECT_EQ(45, f.call(convert(42)).toInt());
+
+  f = makeGenericFunction(&Foo::ping32);
+  EXPECT_EQ(45, f.call(convert(&foo, 42)).toInt());
+  EXPECT_EQ(45, f.call(convert(foo, 42)).toInt());
+  f = makeGenericFunction(&Foo::ping32, &foo);
+  EXPECT_EQ(45, f.call(convert(42)).toInt());
+
+  f = makeGenericFunction(&Foo::ping64);
+  EXPECT_EQ(45, f.call(convert(&foo, 42)).toInt());
+  EXPECT_EQ(45, f.call(convert(foo, 42)).toInt());
+  f = makeGenericFunction(&Foo::ping64, &foo);
+  EXPECT_EQ(45, f.call(convert(42)).toInt());
+
+  f = makeGenericFunction(&Foo::pingFloat);
+  EXPECT_EQ(45.42f, f.call(convert(&foo, 42.42f)).toFloat());
+  EXPECT_EQ(45.42f, f.call(convert(foo, 42.42f)).toFloat());
+  f = makeGenericFunction(&Foo::pingFloat, &foo);
+  EXPECT_EQ(45.42f, f.call(convert(42.42f)).toFloat());
+
+  f = makeGenericFunction(&Foo::pingDouble);
+  EXPECT_EQ(45.42, f.call(convert(&foo, 42.42)).toDouble());
+  EXPECT_EQ(45.42, f.call(convert(foo, 42.42)).toDouble());
+  f = makeGenericFunction(&Foo::pingDouble, &foo);
+  EXPECT_EQ(45.42, f.call(convert(42.42)).toDouble());
+
+  f = makeGenericFunction(&Parent::pping32);
+  EXPECT_EQ(44, f.call(convert(&foo, 42)).toInt());
+  EXPECT_EQ(44, f.call(convert(foo, 42)).toInt());
+  EXPECT_EQ(44, f.call(convert(static_cast<Parent*>(&foo), 42)).toInt());
+  EXPECT_EQ(44, f.call(convert(static_cast<Parent&>(foo), 42)).toInt());
+  f = makeGenericFunction(&Parent::pping32, &foo);
+  EXPECT_EQ(44, f.call(convert(42)).toInt());
+  f = makeGenericFunction(&Parent::pping32, static_cast<Parent*>(&foo));
+  EXPECT_EQ(44, f.call(convert(42)).toInt());
+
+  f = makeGenericFunction(&Foo::pingV);
+  f.call(convert(&foo, 42));
+  EXPECT_EQ(45, foo.r);
+
+  f = makeGenericFunction(&Foo::pingB);
+  EXPECT_EQ(true, f.call(convert(&foo, true)).toInt());
+  EXPECT_EQ(false, f.call(convert(&foo, false)).toInt());
+
+  f = makeGenericFunction(&Foo::vping32);
+  EXPECT_EQ(45, f.call(convert(&foo, 42)).toInt());
+  EXPECT_EQ(45, f.call(convert(foo, 42)).toInt());
+  f = makeGenericFunction(&Foo::vping32, &foo);
+  EXPECT_EQ(45, f.call(convert(42)).toInt());
+  EXPECT_EQ(45, f.call(convert(42)).toInt());
+  f = makeGenericFunction(&Parent::vping32);
+  EXPECT_EQ(45, f.call(convert(&foo, 42)).toInt());
+  EXPECT_EQ(45, f.call(convert(static_cast<Parent*>(&foo), 42)).toInt());
+  EXPECT_EQ(45, f.call(convert(foo, 42)).toInt());
+
 }
 
 TEST(TestObject, Simple) {
@@ -149,11 +284,14 @@ TEST(TestObject, Simple) {
   qi::GenericObjectBuilder ob;
 
   ob.advertiseMethod("test", &fun);
+  ob.advertiseMethod("testVal", &funVal);
   ob.advertiseMethod("vtest", &vfun);
   ob.advertiseMethod("objtest", &foo, &Foo::fun);
   ob.advertiseMethod("objvtest", &foo, &Foo::vfun);
   ob.advertiseMethod("testBind", (boost::function<int(const int&)>)boost::bind(&fun, 21, _1));
   ob.advertiseMethod("testBind2", (boost::function<int(int)>)boost::bind(&fun, 21, _1));
+  ob.advertiseMethod("testBindVal", (boost::function<int(const int&)>)boost::bind(&funVal, 21, _1));
+  ob.advertiseMethod("testBind2Val", (boost::function<int(int)>)boost::bind(&funVal, 21, _1));
   ob.advertiseMethod("ptrtest", &ptrfun);
   ob.advertiseMethod("reftest", &reffun);
   ob.advertiseMethod("valuetest", &valuefun);
@@ -161,9 +299,12 @@ TEST(TestObject, Simple) {
 
 
   EXPECT_EQ(42, obj->call<int>("test", 21, 21));
+  EXPECT_EQ(42, obj->call<int>("testVal", 21, 21));
   EXPECT_EQ(42, obj->call<int>("objtest", 21, 21));
   EXPECT_EQ(42, obj->call<int>("testBind", 21));
   EXPECT_EQ(42, obj->call<int>("testBind2", 21));
+  EXPECT_EQ(42, obj->call<int>("testBindVal", 21));
+  EXPECT_EQ(42, obj->call<int>("testBind2Val", 21));
   EXPECT_EQ(static_cast<unsigned int>(42), obj->call<unsigned int>("test", 21, 21));
   EXPECT_EQ(42, obj->call<char>("test", 21, 21));
   EXPECT_EQ(42, obj->call<double>("test", 21, 21));

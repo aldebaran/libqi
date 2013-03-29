@@ -182,8 +182,12 @@ namespace qi
       out.setError(ss.str());
       return out.future();
     }
+    GenericFunctionParameters p;
+    p.reserve(params.size()+1);
+    p.push_back(GenericValueRef(this));
+    p.insert(p.end(), params.begin(), params.end());
     return ::qi::metaCall(context->eventLoop(), _p->threadingModel,
-      i->second.second, callType, context->mutex(), i->second.first, params);
+      i->second.second, callType, context->mutex(), i->second.first, p);
   }
 
   qi::Future<void> DynamicObject::setProperty(unsigned int id, GenericValue val)

@@ -10,97 +10,167 @@ qiLogCategory("qitype.functiontype");
 
 namespace qi
 {
-  GenericValuePtr callManyArgs(FunctionType* type, void* func,
-    const std::vector<GenericValuePtr>& args)
+  GenericValuePtr GenericFunction::call(
+    GenericValuePtr arg1, const std::vector<GenericValuePtr>& remaining)
   {
-    const std::vector<Type*>& target = type->argumentsType();
-    if (target.size() != args.size())
-    {
-      qiLogErrorF("Argument count mismatch, expected %s, got %s",
-        target.size(), args.size());
-      return GenericValuePtr();
-    }
-    void** convertedArgs = new void*[args.size()];
-     std::vector<GenericValuePtr> toDestroy;
-    for (unsigned i=0; i<target.size(); ++i)
-    {
-      //qiLogDebug() << "argument " << i
-      //   << " " << args[i].type->infoString() << ' ' << args[i].value
-      //   << " to " << target[i]->infoString();
-      if (args[i].type == target[i] || args[i].type->info() == target[i]->info())
-        convertedArgs[i] = args[i].value;
-      else
-      {
-        //qiLogDebug() << "needs conversion "
-        //<< args[i].type->infoString() << " -> "
-        //<< target[i]->infoString();
-        std::pair<GenericValuePtr,bool> v = args[i].convert(target[i]);
-        if (v.second)
-          toDestroy.push_back(v.first);
-        convertedArgs[i] = v.first.value;
-      }
-    }
-    void* res = type->call(func, convertedArgs, args.size());
-    GenericValuePtr result;
-    result.type = type->resultType();
-    result.value = res;
-    for (unsigned i=0; i<toDestroy.size(); ++i)
-      toDestroy[i].destroy();
-    delete[] convertedArgs;
-    return result;
-
+    std::vector<GenericValuePtr> args;
+    args.reserve(remaining.size()+1);
+    args.push_back(arg1);
+    args.insert(args.end(), remaining.begin(), remaining.end());
+    return call(args);
   }
-  GenericValuePtr FunctionType::call(void* func,
-    const std::vector<GenericValuePtr>& args)
+
+  GenericValuePtr GenericFunction::call(
+    const std::vector<GenericValuePtr>& vargs)
   {
-    unsigned argsSize = args.size();
-    if (argsSize > 8)
-      return callManyArgs(this, func, args);
-
-    const std::vector<Type*>& target = argumentsType();
-
-    if (target.size() != args.size())
+    if (type == dynamicFunctionType())
     {
-      qiLogErrorF("Argument count mismatch, expected %s, got %s",
-        target.size(), args.size());
+      DynamicFunction* f = (DynamicFunction*)value;
+      return (*f)(vargs);
+    }
+    /* We must honor transform, who can have any combination of the following enabled:
+    * - drop first arg
+    * - prepend an arg
+    */
+    unsigned deltaCount = (transform.dropFirst? -1:0) + (transform.prependValue?1:0);
+    const std::vector<Type*>& target = type->argumentsType();
+    const GenericValuePtr* args = &vargs[0];
+    unsigned sz = vargs.size();
+
+    if (target.size() != sz + deltaCount)
+    {
+      qiLogErrorF("Argument count mismatch, expected %s, got %s (transform %s)",
+        target.size(), sz, deltaCount);
       return GenericValuePtr();
     }
-
-    void* stackArgs[8];
-    void** convertedArgs = stackArgs;
-    GenericValuePtr toDestroy[8];
+    if (transform.dropFirst)
+    {
+      ++args;
+      --sz;
+    }
+    unsigned offset = transform.prependValue? 1:0;
+#if QI_HAS_VARIABLE_LENGTH_ARRAY
+    GenericValuePtr toDestroy[sz+offset];
+    void* convertedArgs[sz+offset];
+#else
+    GenericValuePtr* toDestroy = new GenericValuePtr[sz+offset];
+    void** convertedArgs = new void*[sz+offset];
+#endif
+    if (transform.prependValue)
+      convertedArgs[0] = transform.boundValue;
     unsigned int toDestroyPos = 0;
-    for (unsigned i=0; i<argsSize; ++i)
+    for (unsigned i=0; i<sz; ++i)
     {
       //qiLogDebug() << "argument " << i
       //   << " " << args[i].type->infoString() << ' ' << args[i].value
       //   << " to " << target[i]->infoString();
-      if (args[i].type == target[i] || args[i].type->info() == target[i]->info())
-        convertedArgs[i] = args[i].value;
+      if (args[i].type == target[i+offset] || args[i].type->info() == target[i+offset]->info())
+        convertedArgs[i+offset] = args[i].value;
       else
       {
         //qiLogDebug() << "needs conversion "
         //<< args[i].type->infoString() << " -> "
         //<< target[i]->infoString();
-        std::pair<GenericValuePtr,bool> v = args[i].convert(target[i]);
+        std::pair<GenericValuePtr,bool> v = args[i].convert(target[i+offset]);
         if (!v.first.type)
         {
-          qiLogError() << "Conversion failure from " << args[i].type->infoString()
-          << " to " << target[i]->infoString() <<", aborting call";
-          return GenericValuePtr();
+          // Try pointer dereference
+          if (args[i].kind() == Type::Pointer)
+          {
+            GenericValuePtr deref = *const_cast<GenericValuePtr&>(args[i]);
+            if (deref.type == target[i+offset] || deref.type->info() == target[i+offset]->info())
+              v = std::make_pair(deref, false);
+            else
+              v = deref.convert(target[i+offset]);
+          }
+          if (!v.first.type)
+          {
+            qiLogError() << "Conversion failure from " << args[i].type->infoString()
+            << " to " << target[i]->infoString() <<", aborting call";
+            return GenericValuePtr();
+          }
         }
         if (v.second)
           toDestroy[toDestroyPos++] = v.first;
-        convertedArgs[i] = v.first.value;
+        convertedArgs[i+offset] = v.first.value;
       }
     }
-    void* res = call(func, convertedArgs, argsSize);
+    void* res;
+    res = type->call(value, convertedArgs, sz+offset);
     GenericValuePtr result;
     result.type = resultType();
     result.value = res;
     for (unsigned i=0; i<toDestroyPos; ++i)
       toDestroy[i].destroy();
+#if ! QI_HAS_VARIABLE_LENGTH_ARRAY
+    delete[] toDestroy;
+    delete[] convertedArgs;
+#endif
     return result;
+  }
+
+  const GenericFunction& GenericFunction::dropFirstArgument() const
+  {
+    transform.dropFirst = true;
+    return *this;
+  }
+
+  const GenericFunction& GenericFunction::prependArgument(void* arg) const
+  {
+    transform.prependValue = true;
+    transform.boundValue = arg;
+    return *this;
+  }
+
+  const GenericFunction& GenericFunction::replaceFirstArgument(void* arg) const
+  {
+    transform.dropFirst = true;
+    return prependArgument(arg);
+  }
+
+  Type* GenericFunction::resultType() const
+  {
+    return type->resultType();
+  }
+
+  std::vector<Type*> GenericFunction::argumentsType() const
+  {
+    std::vector<Type*> res = type->argumentsType();
+    if (transform.dropFirst && transform.prependValue) // optimize that case
+      res[0] = typeOf<GenericValue>();
+    else if (transform.dropFirst)
+    {
+      // First argument passed to us will be ignored, so aparent signature
+      // has one extra arg of any type.
+
+      // do not access res[1], it might not exist and invalid access might be
+      // detected by debug-mode stl
+      res.push_back(0);
+      memmove(&res[0]+1, &res[0], (res.size()-1)*sizeof(void*));
+      res[0] = typeOf<GenericValue>();
+    }
+    else if (transform.prependValue)
+    {
+      // We bind one argument, so it is not present is aparent signature, remove it
+      memmove(&res[0], &res[0]+1, (res.size()-1)*sizeof(void*));
+      res.pop_back();
+    }
+    return res;
+  }
+
+  std::string GenericFunction::signature() const
+  {
+    std::vector<Type*> types = argumentsType();
+    std::string res("(");
+    for (unsigned i=0; i<types.size(); ++i)
+      res += types[i]->signature();
+    res += ')';
+    return res;
+  }
+
+  std::string GenericFunction::sigreturn() const
+  {
+    return resultType()->signature();
   }
 
   std::string CallableType::signature() const
@@ -203,11 +273,6 @@ namespace qi
       qiLogError() << "Dynamic function called without type information";
       return 0;
     }
-    virtual GenericValuePtr call(void* func, const std::vector<GenericValuePtr>& args)
-    {
-      DynamicFunction* f = (DynamicFunction*)func;
-      return (*f)(args);
-    }
     _QI_BOUNCE_TYPE_METHODS(DefaultTypeImplMethods<DynamicFunction>);
   };
 
@@ -221,9 +286,29 @@ namespace qi
 
   GenericFunction makeDynamicGenericFunction(DynamicFunction f)
   {
-    GenericFunction result;
-    result.type = dynamicFunctionType();
-    result.value = result.type->clone(result.type->initializeStorage(&f));
+    FunctionType* d = dynamicFunctionType();
+    GenericFunction result(d, d->clone(d->initializeStorage(&f)));
     return result;
   }
+
 }
+#ifdef QITYPE_TRACK_FUNCTIONTYPE_INSTANCES
+#include <qi/application.hpp>
+namespace qi
+{
+  namespace detail
+  {
+    static std::map<std::string, int> functionTrackMap;
+    void functionTypeTrack(const std::string& f)
+    {
+      functionTrackMap[std::string(f)]++;
+    }
+    void functionTypeDump()
+    {
+      for (std::map<std::string, int>::iterator it = functionTrackMap.begin();
+        it != functionTrackMap.end(); ++it)
+        std::cerr << it->second << '\t' << it->first << std::endl;
+    }
+  }
+}
+#endif

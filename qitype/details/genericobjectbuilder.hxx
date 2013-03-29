@@ -22,7 +22,7 @@ namespace qi {
     MetaMethodBuilder builder(name, desc);
     builder.setSigreturn(detail::FunctionSignature<FUNCTION_TYPE>::sigreturn());
     builder.setSignature(name + "::" + detail::FunctionSignature<FUNCTION_TYPE>::signature());
-    return xAdvertiseMethod(builder, makeGenericFunction(function), threadingModel);
+    return xAdvertiseMethod(builder, makeGenericFunction(function).dropFirstArgument(), threadingModel);
   }
 
   template <typename OBJECT_TYPE, typename METHOD_TYPE>
@@ -35,7 +35,7 @@ namespace qi {
     MetaMethodBuilder builder(name, desc);
     builder.setSigreturn(detail::FunctionSignature<METHOD_TYPE>::sigreturn());
     builder.setSignature(name + "::" + detail::FunctionSignature<METHOD_TYPE>::signature());
-    return xAdvertiseMethod(builder, makeGenericFunction(object, method), threadingModel);
+    return xAdvertiseMethod(builder, makeGenericFunction(method, object).dropFirstArgument(), threadingModel);
   }
 
   template <typename FUNCTION_TYPE>
@@ -45,7 +45,7 @@ namespace qi {
   {
     builder.setSigreturn(detail::FunctionSignature<FUNCTION_TYPE>::sigreturn());
     builder.setSignature(builder.name() + "::" + detail::FunctionSignature<FUNCTION_TYPE>::signature());
-    return xAdvertiseMethod(builder, makeGenericFunction(function), threadingModel);
+    return xAdvertiseMethod(builder, makeGenericFunction(function).dropFirstArgument(), threadingModel);
   }
 
   template <typename OBJECT_TYPE, typename METHOD_TYPE>
@@ -56,7 +56,7 @@ namespace qi {
   {
     builder.setSigreturn(detail::FunctionSignature<METHOD_TYPE>::sigreturn());
     builder.setSignature(builder.name() + "::" + detail::FunctionSignature<METHOD_TYPE>::signature());
-    return xAdvertiseMethod(builder, makeGenericFunction(object, method), threadingModel);
+    return xAdvertiseMethod(builder, makeGenericFunction(method, object).dropFirstArgument(), threadingModel);
   }
 
   template <typename T> unsigned int GenericObjectBuilder::advertiseEvent(const std::string& name)

@@ -13,7 +13,6 @@
 #include <qitype/type.hpp>
 #include <qitype/metaobject.hpp>
 #include <qitype/genericobject.hpp>
-#include <qitype/methodtype.hpp>
 
 namespace qi
 {
@@ -41,7 +40,7 @@ struct ObjectTypeData
 
   typedef std::map<
     unsigned int,
-    std::pair<GenericMethod, MetaCallType>
+    std::pair<GenericFunction, MetaCallType>
   > MethodMap;
 
   MethodMap methodMap;

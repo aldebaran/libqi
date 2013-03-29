@@ -37,8 +37,6 @@ set(PUBLIC_HEADERS
                    qitype/details/genericobjectbuilder.hxx
                    qitype/details/genericobject.hxx
                    qitype/details/genericvalue.hxx
-                   qitype/details/methodtype.hxx
-                   qitype/details/methodtypefactory.hxx
                    qitype/details/objecttypebuilder.hxx
                    qitype/details/property.hxx
                    qitype/details/signal.hxx
@@ -64,8 +62,6 @@ set(PUBLIC_HEADERS
                    qitype/metaobject.hpp
                    qitype/metaproperty.hpp
                    qitype/metasignal.hpp
-                   qitype/methodtype.hpp
-                   qitype/methodtypefactory.hpp
                    qitype/objectfactory.hpp
                    qitype/objecttypebuilder.hpp
                    qitype/property.hpp

@@ -179,7 +179,7 @@ namespace qi {
   void SignalSubscriber::call(const GenericFunctionParameters& args, MetaCallType callType)
   {
     // this is held alive by caller
-    if (handler.type)
+    if (handler)
     {
       // Try to acquire weakLock, for both the sync and async cases
       if (weakLock)
@@ -306,11 +306,11 @@ namespace qi {
     // Check arity. Does not require to acquire weakLock.
     int sigArity = Signature(signature()).begin().children().size();
     int subArity = -1;
-    if (src.handler.type)
+    if (src.handler)
     {
-      if (src.handler.type == dynamicFunctionType())
+      if (src.handler.functionType() == dynamicFunctionType())
         goto proceed; // no arity checking is possible
-      subArity = src.handler.type->argumentsType().size();
+      subArity = src.handler.argumentsType().size();
     }
     else if (src.target)
     {

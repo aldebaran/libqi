@@ -33,7 +33,7 @@ namespace qi {
   }
 
   int ObjectTypeBuilderBase::xAdvertiseMethod(MetaMethodBuilder& builder,
-                                              GenericMethod func,
+                                              GenericFunction func,
                                               MetaCallType threadingModel,
                                               int id)
   {

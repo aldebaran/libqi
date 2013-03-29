@@ -15,7 +15,6 @@
 #include <sstream>
 #include <qitype/type.hpp>
 #include <qitype/genericobject.hpp>
-#include <qitype/methodtype.hpp>
 #include <qitype/property.hpp>
 
 
@@ -59,7 +58,7 @@ namespace qi {
     unsigned int advertise(const std::string& name, T element);
     // input: type-erased
 
-    int xAdvertiseMethod(MetaMethodBuilder& builder, GenericMethod func, MetaCallType threadingModel = MetaCallType_Auto, int id = -1);
+    int xAdvertiseMethod(MetaMethodBuilder& builder, GenericFunction func, MetaCallType threadingModel = MetaCallType_Auto, int id = -1);
 
     int xAdvertiseEvent(const std::string& signature, SignalMemberGetter getter, int id = -1);
     int xAdvertiseProperty(const std::string& name, const std::string& sig, PropertyMemberGetter getter, int id = -1);

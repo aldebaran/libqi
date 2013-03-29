@@ -8,7 +8,6 @@
 #define _QITYPE_DETAILS_SIGNAL_HXX_
 
 #include <qitype/manageable.hpp>
-
 #include <boost/bind.hpp>
 
 namespace qi
@@ -56,7 +55,7 @@ namespace qi
     public:
       static void set(SignalSubscriber& sub, O ptr, MF function)
       {
-        sub.handler = makeGenericFunction(ptr, function);
+        sub.handler = makeGenericFunction(function, ptr);
         sub.weakLock = 0;
       }
     };
@@ -69,7 +68,7 @@ namespace qi
       static void set(SignalSubscriber& sub, boost::shared_ptr<O> ptr, MF function)
       {
         // bind the pointer, not the shared ptr
-        sub.handler = makeGenericFunction(ptr.get(), function);
+        sub.handler = makeGenericFunction(function, ptr.get());
         // Register a locker on the weak pointer
         sub.weakLock = new BoostWeakPointerLock<O>(ptr);
 

@@ -40,12 +40,28 @@ namespace qi {
     * @return the return value of type resultType(). This value is allocated and must be destroyed.
     */
     virtual void* call(void* storage, void** args, unsigned int argc) = 0;
-    /// Default implementation convert arguments to argumentsType()
-    /// and bounce to the other call()
-    virtual GenericValuePtr call(void* func, const std::vector<GenericValuePtr>& args);
   };
 
   template<typename T> FunctionType* makeFunctionType();
+
+  struct ArgumentTransformation
+  {
+  public:
+    // Drop first argument
+    bool dropFirst;
+    // Prepend boundValue to argument list
+    bool prependValue;
+
+    // So if both dropFirst and prependValue are set, first argument is
+    // replaced with boundValue.
+    ArgumentTransformation(bool dropFirst = false, bool prependValue=false, void* value = 0)
+    : dropFirst(dropFirst)
+    , prependValue(prependValue)
+    , boundValue(value)
+    {}
+
+    void* boundValue;
+  };
 
   /** Represents a generic callable function.
    * This class has value semantic.
@@ -56,11 +72,33 @@ namespace qi {
     GenericFunction();
     ~GenericFunction();
     GenericFunction(const GenericFunction& b);
+    GenericFunction(FunctionType* type, void* value);
     GenericFunction& operator = (const GenericFunction& b);
     GenericValuePtr call(const std::vector<GenericValuePtr>& args);
+    GenericValuePtr call(GenericValuePtr arg1, const std::vector<GenericValuePtr>& args);
     GenericValuePtr operator()(const std::vector<GenericValuePtr>& args);
-    FunctionType* type;
-    void* value;
+
+    /// Change signature, drop the first argument passed to call.
+    const GenericFunction& dropFirstArgument() const;
+    /// Replace first argument by \p value which must be storage for correct type.
+    const GenericFunction& replaceFirstArgument(void* value) const;
+    /// Prepend extra argument \p value to argument list
+    const GenericFunction& prependArgument(void* value) const;
+
+    /// Return expected argument types, taking transform into account
+    std::vector<Type*> argumentsType() const;
+    Type*              resultType() const;
+    std::string signature() const;
+    std::string sigreturn() const;
+
+    void swap(GenericFunction& b);
+
+    operator bool() const;
+    FunctionType* functionType() const;
+  private:
+    FunctionType*  type;
+    void* value; //type-dependant storage
+    mutable ArgumentTransformation transform;
   };
 
 

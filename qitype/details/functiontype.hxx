@@ -40,6 +40,13 @@ namespace qi
   {
     type = b.type;
     value = type?type->clone(b.value):0;
+    transform = b.transform;
+  }
+
+  inline GenericFunction::GenericFunction(FunctionType* type, void* value)
+  : type(type)
+  , value(value)
+  {
   }
 
   inline GenericFunction& GenericFunction::operator=(const GenericFunction& b)
@@ -47,6 +54,7 @@ namespace qi
     this->~GenericFunction();
     type = b.type;
     value = type?type->clone(b.value):0;
+    transform = b.transform;
     return *this;
   }
 
@@ -56,21 +64,29 @@ namespace qi
       type->destroy(value);
   }
 
-  inline GenericValuePtr GenericFunction::call(const std::vector<GenericValuePtr>& args)
+  inline void GenericFunction::swap(GenericFunction& b)
   {
-    return type->call(value, args);
+    std::swap(value, b.value);
+    std::swap(type, b.type);
+    std::swap(transform, b.transform);
   }
 
+  inline GenericFunction::operator bool() const
+  {
+    return type;
+  }
 
-
+  inline FunctionType* GenericFunction::functionType() const
+  {
+    return type;
+  }
 } // namespace qi
 
 namespace std
 {
   template<> inline void swap(::qi::GenericFunction& a, ::qi::GenericFunction & b)
   {
-    swap(a.value, b.value);
-    swap(a.type, b.type);
+    a.swap(b);
   }
 }
 

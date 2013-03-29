@@ -1030,6 +1030,7 @@ namespace qi {
     return result;
   }
 
+
   struct InfosKey: public std::vector<Type*>
   {
   public:

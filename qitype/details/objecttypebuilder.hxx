@@ -10,7 +10,6 @@
 #include <boost/function_types/is_member_function_pointer.hpp>
 #include <boost/mpl/front.hpp>
 #include <qitype/objecttypebuilder.hpp>
-#include <qitype/methodtypefactory.hpp>
 #include <qitype/metamethod.hpp>
 
 namespace qi {
@@ -37,7 +36,10 @@ namespace qi {
     MetaMethodBuilder builder;
     builder.setSigreturn(detail::FunctionSignature<FUNCTION_TYPE>::sigreturn());
     builder.setSignature(name + "::" + detail::FunctionSignature<FUNCTION_TYPE>::signature());
-    return xAdvertiseMethod(builder, makeGenericMethod(function), threadingModel, id);
+    GenericFunction f = makeGenericFunction(function);
+    if (! boost::is_member_function_pointer<FUNCTION_TYPE>::value)
+      f.dropFirstArgument();
+    return xAdvertiseMethod(builder, f, threadingModel, id);
   }
 
   template<typename U>
