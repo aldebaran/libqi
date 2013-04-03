@@ -10,8 +10,6 @@
 #include "binaryencoder.hpp"
 #include <boost/bind.hpp>
 #include <qi/log.hpp>
-
-#include "tcptransportsocket.hpp"
 #include "session_p.hpp"
 
 qiLogCategory("qimessaging.gateway");

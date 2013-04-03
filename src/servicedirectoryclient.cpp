@@ -5,7 +5,7 @@
 #include "servicedirectoryclient.hpp"
 #include <qitype/objecttypebuilder.hpp>
 #include "servicedirectory_p.hpp"
-#include "tcptransportsocket.hpp"
+#include "transportsocket.hpp"
 
 qiLogCategory("qimessaging.servicedirectoryclient");
 

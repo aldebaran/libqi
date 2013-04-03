@@ -28,8 +28,6 @@
 #include "transportserver.hpp"
 #include "transportsocket.hpp"
 #include "transportserverasio_p.hpp"
-#include "tcptransportsocket.hpp"
-
 
 qiLogCategory("qimessaging.transportserver");
 

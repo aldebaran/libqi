@@ -14,13 +14,12 @@
 # include <qi/eventloop.hpp>
 # include <qitype/signal.hpp>
 # include <string>
-# include <boost/enable_shared_from_this.hpp>
 # include "messagedispatcher.hpp"
 
 namespace qi
 {
   class Session;
-  class TransportSocket : public boost::enable_shared_from_this<TransportSocket>
+  class TransportSocket
   {
     QI_DISALLOW_COPY_AND_ASSIGN(TransportSocket);
 
@@ -32,7 +31,6 @@ namespace qi
       Status_Disconnecting = 3,
     };
 
-  public:
     explicit TransportSocket(qi::EventLoop* eventLoop = qi::getDefaultNetworkEventLoop())
     {
       // Set messageReady signal to async mode to protect our network thread
@@ -74,7 +72,7 @@ namespace qi
       return _dispatcher.messagePendingDisconnect(serviceId, objectId, linkId);
     }
 
-  public:
+  protected:
     qi::EventLoop*          _eventLoop;
     qi::MessageDispatcher   _dispatcher;
 

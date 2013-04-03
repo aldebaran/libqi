@@ -9,28 +9,16 @@
 # pragma warning(disable: 4355)
 #endif
 
-#include <iostream>
-#include <cstring>
-#include <map>
-
 #ifdef ANDROID
 #include <linux/in.h> // for  IPPROTO_TCP
 #endif
 
-#include <boost/thread.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/make_shared.hpp>
 
 #include "tcptransportsocket.hpp"
 
 #include <qi/log.hpp>
-#include <qi/types.hpp>
-#include <qimessaging/session.hpp>
-#include "message.hpp"
-#include <qi/buffer.hpp>
-#include <qi/eventloop.hpp>
-
-#define MAX_LINE 16384
 
 qiLogCategory("qimessaging.transportsocket");
 
@@ -43,8 +31,7 @@ namespace qi
 #ifdef WITH_SSL
     , _sslContext(boost::asio::ssl::context::sslv23)
 #endif
-    , _abort(boost::make_shared<bool>(false))
-    , _readHdr(true)
+    , _abort(false)
     , _msg(0)
     , _connecting(false)
     , _sending(false)
@@ -76,6 +63,8 @@ namespace qi
 
   TcpTransportSocket::~TcpTransportSocket()
   {
+    qiLogDebug() << this;
+
     disconnect();
     delete _msg;
     qiLogVerbose() << "deleted " << this;
@@ -83,11 +72,13 @@ namespace qi
 
   void TcpTransportSocket::startReading()
   {
+    qiLogDebug() << this;
+
     _msg = new qi::Message();
 
     boost::mutex::scoped_lock(_closingMutex);
 
-    if (*_abort == true)
+    if (_abort)
     {
       boost::system::error_code erc;
       error(erc);
@@ -100,29 +91,29 @@ namespace qi
       if (!_sslHandshake)
       {
         _socket->async_handshake(boost::asio::ssl::stream_base::server,
-          boost::bind(&TcpTransportSocket::handshake, this, _1, _socket));
+          boost::bind(&TcpTransportSocket::handshake, shared_from_this(), _1));
         return;
       }
 
       boost::asio::async_read(*_socket,
         boost::asio::buffer(_msg->_p->getHeader(), sizeof(MessagePrivate::MessageHeader)),
-        boost::bind(&TcpTransportSocket::onReadHeader, this, _1, _2, _socket));
+        boost::bind(&TcpTransportSocket::onReadHeader, shared_from_this(), _1, _2));
     }
     else
     {
       boost::asio::async_read(_socket->next_layer(),
         boost::asio::buffer(_msg->_p->getHeader(), sizeof(MessagePrivate::MessageHeader)),
-        boost::bind(&TcpTransportSocket::onReadHeader, this, _1, _2, _socket));
+        boost::bind(&TcpTransportSocket::onReadHeader, shared_from_this(), _1, _2));
     }
 #else
     boost::asio::async_read(*_socket,
       boost::asio::buffer(_msg->_p->getHeader(), sizeof(MessagePrivate::MessageHeader)),
-      boost::bind(&TcpTransportSocket::onReadHeader, this, _1, _2, _socket));
+      boost::bind(&TcpTransportSocket::onReadHeader, shared_from_this(), _1, _2));
 #endif
   }
 
   void TcpTransportSocket::onReadHeader(const boost::system::error_code& erc,
-    std::size_t len, SocketPtr s)
+    std::size_t len)
   {
     if (erc)
     {
@@ -136,7 +127,7 @@ namespace qi
 
       boost::mutex::scoped_lock(_closingMutex);
 
-      if (*_abort == true)
+      if (_abort)
       {
         boost::system::error_code erc;
         error(erc);
@@ -148,26 +139,26 @@ namespace qi
       {
         boost::asio::async_read(*_socket,
           boost::asio::buffer(ptr, payload),
-          boost::bind(&TcpTransportSocket::onReadData, this, _1, _2, _socket));
+          boost::bind(&TcpTransportSocket::onReadData, shared_from_this(), _1, _2));
       }
       else
       {
         boost::asio::async_read(_socket->next_layer(),
           boost::asio::buffer(ptr, payload),
-          boost::bind(&TcpTransportSocket::onReadData, this, _1, _2, _socket));
+          boost::bind(&TcpTransportSocket::onReadData, shared_from_this(), _1, _2));
       }
 #else
       boost::asio::async_read(*_socket,
         boost::asio::buffer(ptr, payload),
-        boost::bind(&TcpTransportSocket::onReadData, this, _1, _2, _socket));
+        boost::bind(&TcpTransportSocket::onReadData, shared_from_this(), _1, _2));
 #endif
     }
     else
-      onReadData(boost::system::error_code(), 0, _socket);
+      onReadData(boost::system::error_code(), 0);
   }
 
   void TcpTransportSocket::onReadData(const boost::system::error_code& erc,
-    std::size_t len, SocketPtr socket)
+    std::size_t len)
   {
     if (erc)
     {
@@ -194,6 +185,7 @@ namespace qi
   void TcpTransportSocket::error(const boost::system::error_code& erc)
   {
     boost::mutex::scoped_lock lock(_closingMutex);
+    _abort = true;
     _status = qi::TransportSocket::Status_Disconnected;
     disconnected(erc.value());
 
@@ -216,6 +208,8 @@ namespace qi
 
   qi::FutureSync<void> TcpTransportSocket::connect(const qi::Url &url)
   {
+    boost::mutex::scoped_lock l(_closingMutex);
+
     if (_status == qi::TransportSocket::Status_Connected || _connecting)
     {
       const char* s = "connection already in progress";
@@ -257,7 +251,7 @@ namespace qi
       ip::tcp::resolver::iterator it = r.resolve(q);
       // asynchronous connect
       _socket->lowest_layer().async_connect(*it,
-        boost::bind(&TcpTransportSocket::connected2, this, _1, _socket));
+        boost::bind(&TcpTransportSocket::onConnected, shared_from_this(), _1));
       return _connectPromise.future();
     }
     catch (const std::exception& e)
@@ -269,7 +263,7 @@ namespace qi
     }
   }
 
-  void TcpTransportSocket::handshake(const boost::system::error_code& erc, SocketPtr s)
+  void TcpTransportSocket::handshake(const boost::system::error_code& erc)
   {
     if (erc)
     {
@@ -285,14 +279,24 @@ namespace qi
       _connectPromise.setValue(0);
       connected();
       _sslHandshake = true;
-      // Transmit each Message without delay
-      const boost::asio::ip::tcp::no_delay option( true );
-      _socket->lowest_layer().set_option(option);
+
+      {
+        boost::mutex::scoped_lock l(_closingMutex);
+
+        if (_abort)
+        {
+          return;
+        }
+        // Transmit each Message without delay
+        const boost::asio::ip::tcp::no_delay option( true );
+        _socket->lowest_layer().set_option(option);
+      }
+
       startReading();
     }
   }
 
-  void TcpTransportSocket::connected2(const boost::system::error_code& erc, SocketPtr s)
+  void TcpTransportSocket::onConnected(const boost::system::error_code& erc)
   {
     _connecting = false;
     if (erc)
@@ -308,7 +312,7 @@ namespace qi
       {
 #ifdef WITH_SSL
         _socket->async_handshake(boost::asio::ssl::stream_base::client,
-          boost::bind(&TcpTransportSocket::handshake, this, _1, s));
+          boost::bind(&TcpTransportSocket::handshake, shared_from_this(), _1));
 #endif
       }
       else
@@ -316,9 +320,19 @@ namespace qi
         _status = qi::TransportSocket::Status_Connected;
         _connectPromise.setValue(0);
         connected();
-        // Transmit each Message without delay
-        const boost::asio::ip::tcp::no_delay option( true );
-        _socket->lowest_layer().set_option(option);
+
+        {
+          boost::mutex::scoped_lock l(_closingMutex);
+
+          if (_abort)
+          {
+            return;
+          }
+          // Transmit each Message without delay
+          const boost::asio::ip::tcp::no_delay option( true );
+          _socket->lowest_layer().set_option(option);
+        }
+
         startReading();
       }
     }
@@ -326,7 +340,10 @@ namespace qi
 
   qi::FutureSync<void> TcpTransportSocket::disconnect()
   {
-    *_abort = true; // Notify send callback sendCont that it must silently terminate
+    {
+      boost::mutex::scoped_lock(_closingMutex);
+      _abort = true; // Notify send callback sendCont that it must silently terminate
+    }
     {
       boost::mutex::scoped_lock l(_sendQueueMutex);
       if (_socket && _socket->lowest_layer().is_open())
@@ -351,34 +368,34 @@ namespace qi
     if (_status != qi::TransportSocket::Status_Connected)
       return false;
     boost::mutex::scoped_lock lockc(_closingMutex);
-    SocketPtr s;
+
     if (!_socket || _status != qi::TransportSocket::Status_Connected)
     {
       qiLogDebug() << this << "Send on closed socket";
       return false;
     }
-    s = _socket;
+
     qiLogDebug() << this << " Send (" << msg.type() << "):" << msg.address();
     boost::mutex::scoped_lock lock(_sendQueueMutex);
 
     if (!_sending)
     {
       _sending = true;
-      send_(new Message(msg), s);
+      send_(msg);
     }
     else
       _sendQueue.push_back(msg);
     return true;
   }
 
-  void TcpTransportSocket::send_(qi::Message* msg, SocketPtr s)
+  void TcpTransportSocket::send_(qi::Message msg)
   {
     using boost::asio::buffer;
     std::vector<boost::asio::const_buffer> b;
-    msg->_p->complete();
+    msg._p->complete();
     // Send header
-    b.push_back(buffer(msg->_p->getHeader(), sizeof(qi::MessagePrivate::MessageHeader)));
-    const qi::Buffer& buf = msg->buffer();
+    b.push_back(buffer(msg._p->getHeader(), sizeof(qi::MessagePrivate::MessageHeader)));
+    const qi::Buffer& buf = msg.buffer();
     size_t sz = buf.size();
     const std::vector<std::pair<size_t, Buffer> >& subs = buf.subBuffers();
     size_t pos = 0;
@@ -394,41 +411,48 @@ namespace qi
       b.push_back(buffer(subs[i].second.data(), subs[i].second.size()));
     }
     b.push_back(buffer((const char*)buf.data() + pos, sz - pos));
-    _dispatcher.sent(*msg);
+
+    boost::mutex::scoped_lock(_closingMutex);
+
+    if (_abort)
+    {
+      qiLogWarning() << "send aborted";
+      return;
+    }
+
+    _dispatcher.sent(msg);
 
 #ifdef WITH_SSL
     if (_ssl)
     {
-      boost::asio::async_write(*s, b,
-        boost::bind(&TcpTransportSocket::sendCont, this, _1, msg, _abort, _socket));
+      boost::asio::async_write(*_socket, b,
+        boost::bind(&TcpTransportSocket::sendCont, shared_from_this(), _1));
     }
     else
     {
-      boost::asio::async_write(s->next_layer(), b,
-        boost::bind(&TcpTransportSocket::sendCont, this, _1, msg, _abort, _socket));
+      boost::asio::async_write(_socket->next_layer(), b,
+        boost::bind(&TcpTransportSocket::sendCont, shared_from_this(), _1));
     }
 #else
-    boost::asio::async_write(*s, b,
-      boost::bind(&TcpTransportSocket::sendCont, this, _1, msg, _abort, _socket));
+    boost::asio::async_write(*_socket, b,
+      boost::bind(&TcpTransportSocket::sendCont, shared_from_this(), _1));
 #endif
   }
 
-  void TcpTransportSocket::sendCont(const boost::system::error_code& erc,
-    Message* msg, boost::shared_ptr<bool> abort, SocketPtr s)
+  void TcpTransportSocket::sendCont(const boost::system::error_code& erc)
   {
-    delete msg;
     // The class does not wait for us to terminate, but it will set abort to true.
     // So do not use this before checking abort.
-    if (erc || *abort)
+    if (erc || _abort)
       return; // read-callback will also get the error, avoid dup and ignore it
     boost::mutex::scoped_lock lock(_sendQueueMutex);
     if (_sendQueue.empty())
       _sending = false;
     else
     {
-      msg = new Message(_sendQueue.front());
+      qi::Message msg = _sendQueue.front();
       _sendQueue.pop_front();
-      send_(msg, s);
+      send_(msg);
     }
   }
 
