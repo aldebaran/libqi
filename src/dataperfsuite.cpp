@@ -82,6 +82,7 @@ namespace qi
       } else {
         std::cout
           << std::setprecision(12) << data.getMsgPerSecond() << " msg/s, "
+          << data.getPeriod() << " us, "
           << data.getCpu() << " %"
           << std::endl;
       }
