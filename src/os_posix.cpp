@@ -319,5 +319,37 @@ namespace qi {
       return false;
     }
 
+    static std::string readLink(const std::string &link)
+    {
+      boost::filesystem::path p(link, qi::unicodeFacet());
+
+      while (boost::filesystem::exists(p))
+      {
+        if (boost::filesystem::is_symlink(p))
+        {
+          p = boost::filesystem::read_symlink(p);
+        }
+        else
+        {
+          std::string basename = p.parent_path().filename().string(qi::unicodeFacet());
+          std::string filename = p.filename().string(qi::unicodeFacet());
+          boost::filesystem::path res(basename, qi::unicodeFacet());
+          res.append(filename, qi::unicodeFacet());
+          return res.make_preferred().string(qi::unicodeFacet());
+        }
+      }
+      return std::string();
+    }
+
+    std::string timezone()
+    {
+      std::string link = readLink("/etc/timezone");
+      if (link.empty())
+        link = readLink("/etc/localtime");
+      if (link.empty())
+        qiLogError("core.common") << "Could not find timezone!";
+
+      return link;
+    }
   }
 }

@@ -36,6 +36,7 @@ namespace qi {
     // env
     QI_API std::string getenv(const char *var);
     QI_API int setenv(const char *var, const char *value);
+    QI_API std::string timezone();
 
     // time
     QI_API void sleep(unsigned int seconds);

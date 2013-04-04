@@ -467,3 +467,13 @@
  * \var qi::os::timeval::tv_sec
  * \brief seconds
  */
+
+/**
+ * \fn qi::os::timezone();
+ * \brief Return the timezone.
+ * \return A string with the timezone.
+ *
+ * \verbatim
+ * .. versionadded:: 1.22
+ * \endverbatim
+ */

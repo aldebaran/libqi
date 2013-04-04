@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 Aldebaran Robotics. All rights reserved.
+ * Copyright (c) 2012, 2013 Aldebaran Robotics. All rights reserved.
  * Use of this source code is governed by a BSD-style license that can be
  * found in the COPYING file.
  */
@@ -503,6 +503,24 @@ namespace qi {
       return true;
     }
 
+    std::string timezone()
+    {
+      TIME_ZONE_INFORMATION tzInfo;
+      DWORD err = GetTimeZoneInformation(&tzInfo);
 
+      if (err == TIME_ZONE_ID_INVALID)
+      {
+        qiLogError("core.common") << "Cannot get timezone.";
+        return std::string();
+      }
+
+      size_t origsize = wcslen(tzInfo.StandardName) + 1;
+      const size_t newsize = 128;
+      size_t convertedChars = 0;
+      char nstring[newsize];
+      wcstombs_s(&convertedChars, nstring, origsize, tzInfo.StandardName, _TRUNCATE);
+
+      return std::string(nstring);
+    }
   }
 }
