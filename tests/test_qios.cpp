@@ -379,7 +379,7 @@ TEST(QiOs, DISABLED_CPUAffinity)
 {
   std::vector<int> cpus;
 
-  cpus.push_back(1);
+  cpus.push_back(0);
   ASSERT_TRUE(qi::os::setCurrentThreadCPUAffinity(cpus));
 }
 
