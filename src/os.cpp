@@ -14,6 +14,10 @@
 #include <qi/error.hpp>
 #include <qi/path.hpp>
 
+#ifdef WITH_INTL
+# include <libintl.h>
+#endif
+
 namespace qi {
   namespace os {
     /* Have the static variable we need inside the function so that we
@@ -144,5 +148,25 @@ namespace qi {
 
       return idString;
     }
+
+    std::string gettext(const std::string &msgid)
+    {
+#ifdef WITH_INTL
+      return ::gettext(msgid.c_str());
+#else
+      return msgid;
+#endif
+    }
+
+    std::string dgettext(const std::string &domainename,
+                         const std::string &msgid)
+    {
+#ifdef WITH_INTL
+      return ::dgettext(domainename.c_str(), msgid.c_str());
+#else
+      return msgid;
+#endif
+    }
+
   }
 }
