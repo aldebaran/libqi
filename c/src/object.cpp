@@ -29,10 +29,13 @@ static qi::GenericValuePtr c_call(const std::string &complete_sig,
   std::vector<std::string> vs = qi::signatureSplit(std::string(complete_sig));
   qi_value_t* value = qi_value_create(vs[2].c_str());
   qi_value_t* ret = qi_value_create(vs[0].c_str());
-
+  // First argument is the DynamicObject instance, drop it.
+  qi::GenericFunctionParameters remove_first;
+  if (params.size() > 1)
+    remove_first.insert(remove_first.end(), params.begin()+1, params.end());
   qi::GenericValue &gvp = qi_value_cpp(value);
   //TODO: there is a copy here
-  gvp = qi::GenericValue::makeTuple(params);
+  gvp = qi::GenericValue::makeTuple(remove_first);
   std::cout << "Complete sig:" << complete_sig << std::endl;
 
   if (func)
