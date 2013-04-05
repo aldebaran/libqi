@@ -17,6 +17,7 @@ namespace qi {
   {
   public:
     Application(int& argc, char** &argv);
+    Application(const std::string &name, int& argc, char** &argv);
     ~Application();
 
     static void run();

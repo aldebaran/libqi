@@ -214,7 +214,7 @@ namespace qi {
     return std::string();
   }
 
-  Application::Application(int& argc, char ** &argv)
+  static void initApp(int& argc, char ** &argv)
   {
     readPathConf();
     if (globalInitialized)
@@ -234,6 +234,17 @@ namespace qi {
     fl.clear();
     argc = Application::argc();
     argv = globalArgv;
+  }
+
+  Application::Application(int& argc, char ** &argv)
+  {
+    initApp(argc, argv);
+  }
+
+  Application::Application(const std::string &name, int& argc, char ** &argv)
+  {
+    globalName = name;
+    initApp(argc, argv);
   }
 
   void* Application::loadModule(const std::string& moduleName, int flags)
