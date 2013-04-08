@@ -13,11 +13,11 @@
 #include <qi/log.hpp>
 #include "log_p.hpp"
 #include <qi/log/consoleloghandler.hpp>
+#include <boost/thread.hpp>
 
 #ifdef _WIN32
 # include <windows.h>
 # include <io.h>
-# define isatty _isatty
 #else
 # include <unistd.h>
 #endif
@@ -58,11 +58,12 @@ namespace qi {
         gray,
         whiteblue,
         whitegreen,
-        cyan,
+        blue,
         red,
         magenta,
         yellow,
-        white
+        white,
+        max_color,
       };
 #else
       enum ConsoleColor {
@@ -74,7 +75,8 @@ namespace qi {
         magenta,
         cyan,
         white,
-        gray
+        gray,
+        max_color,
       };
 #endif
 
@@ -83,6 +85,13 @@ namespace qi {
       void textColorFG(char fg) const;
       void textColorAttr(char attr) const;
       void header(const LogLevel verb) const;
+      PrivateConsoleLogHandler::ConsoleColor colorForHeader(const LogLevel verb) const;
+      void coloredLog(const LogLevel verb, const qi::os::timeval date,
+                      const char *category,
+                      const char *msg,
+                      const char *file,
+                      const char *fct,
+                      const int   line);
 
       bool _color;
 
@@ -93,12 +102,17 @@ namespace qi {
 
 
 #ifndef _WIN32
+    void printAttribute(char attr)
+    {
+      printf("%c[%dm", 0x1B, attr);
+    }
+
     void PrivateConsoleLogHandler::textColorAttr(char attr) const
     {
       if (!_color)
         return;
 
-      printf("%c[%dm", 0x1B, attr);
+      printAttribute(attr);
     }
 
     void PrivateConsoleLogHandler::textColorBG(char bg) const
@@ -106,7 +120,7 @@ namespace qi {
       if (!_color)
         return;
 
-      printf("%c[%dm", 0x1B, bg + 40);
+      printAttribute(bg+40);
     }
 
     void PrivateConsoleLogHandler::textColorFG(char fg) const
@@ -114,7 +128,7 @@ namespace qi {
       if (!_color)
         return;
 
-      printf("%c[%dm", 0x1B, fg + 30);
+      printAttribute(fg+30);
     }
 
 #else
@@ -146,22 +160,28 @@ namespace qi {
     }
 #endif
 
+    PrivateConsoleLogHandler::ConsoleColor PrivateConsoleLogHandler::colorForHeader(const LogLevel verb) const
+    {
+      if (verb == fatal)
+        return magenta;
+      if (verb == error)
+        return red;
+      if (verb == warning)
+        return yellow;
+      if (verb == info)
+        return gray;
+      if (verb == verbose)
+        return blue;
+      if (verb == debug)
+        return green;
+      return white;
+    }
+
     void PrivateConsoleLogHandler::header(const LogLevel verb) const
     {
       //display log level
       textColorAttr(reset);
-      if (verb == fatal)
-        textColorFG(magenta);
-      if (verb == error)
-        textColorFG(red);
-      if (verb == warning)
-        textColorFG(yellow);
-      if (verb == info)
-        textColorAttr(reset);
-      if (verb == verbose)
-        textColorAttr(dim);
-      if (verb == debug)
-        textColorAttr(dim);
+      textColorFG(colorForHeader(verb));
       printf("%s ", logLevelToString(verb));
       textColorAttr(reset);
     }
@@ -183,8 +203,67 @@ namespace qi {
 
       if (color)
         _private->_color = atoi(color) > 0 ? true: false;
-      if (!isatty(1))
+      if (!qi::os::isatty())
         _private->_color = 0;
+    }
+
+    int stringToColor(const char *str)
+    {
+      int sum = 0;
+      int i = 0;
+      while (str[i] != '\0') {
+        sum += str[i++];
+      }
+      return sum % qi::log::PrivateConsoleLogHandler::max_color;
+    }
+
+    int intToColor(int nbr)
+    {
+      return nbr % qi::log::PrivateConsoleLogHandler::max_color;
+    }
+
+    void PrivateConsoleLogHandler::coloredLog(const LogLevel verb,
+                    const qi::os::timeval date,
+                    const char *category,
+                    const char *msg,
+                    const char *file,
+                    const char *fct,
+                    const int   line)
+    {
+      int categories = qi::detail::categoriesFromContext();
+
+      static boost::mutex mutex;
+      boost::mutex::scoped_lock scopedLock(mutex, boost::defer_lock_t());
+      static bool useLock = qi::os::getenv("QI_LOG_NOTUSELOCK").empty();
+      if (useLock)
+        scopedLock.lock();
+      if (categories & qi::detail::LOG_VERBOSITY) {
+        header(verb);
+      }
+      if (categories & qi::detail::LOG_DATE)
+        printf("%s ", qi::detail::dateToString(date).c_str());
+      if (categories & qi::detail::LOG_TID) {
+        textColorBG(intToColor(qi::os::gettid()));
+        printf("%s ", qi::detail::tidToString().c_str());
+        textColorAttr(reset);
+      }
+      if (categories & qi::detail::LOG_CATEGORY) {
+        std::string cat = qi::detail::categoryToFixedCategory(category);
+        textColorFG(stringToColor(cat.c_str()));
+        printf("%s: ", cat.c_str());
+        textColorAttr(qi::log::PrivateConsoleLogHandler::reset);
+      }
+      if (categories & qi::detail::LOG_FILE) {
+        printf("%s", file);
+        if (line != 0)
+          printf("(%i)", line);
+        printf(" ");
+      }
+      if (categories && qi::detail::LOG_FUNCTION)
+        printf("%s ", fct);
+      std::string ss = msg;
+      ss.reserve(qi::detail::rtrim(msg));
+      printf("%s\n", ss.c_str());
     }
 
     void ConsoleLogHandler::log(const LogLevel        verb,
@@ -201,15 +280,20 @@ namespace qi {
       }
       else
       {
-        _private->header(verb);
 #ifndef _WIN32
         _private->textColorAttr(_private->reset);
         _private->textColorFG(_private->gray);
 #endif
+        if (_private->_color) {
+          _private->coloredLog(verb, date, category, msg, file, fct, line);
+          return;
+        } else {
+          _private->header(verb);
 
-        std::string logline = qi::detail::logline(date, category, msg, file, fct, line);
-        printf("%s", logline.c_str());
-        fflush(stdout);
+          std::string logline = qi::detail::logline(date, category, msg, file, fct, line);
+          printf("%s", logline.c_str());
+          fflush(stdout);
+        }
       }
       fflush(stdout);
     }
