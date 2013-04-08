@@ -477,3 +477,10 @@
  * .. versionadded:: 1.22
  * \endverbatim
  */
+
+/**
+ * \fn qi::os::generateUuid()
+ * \brief Generate a universally unique identifier.
+ * \return The uuid.
+ * .. versionadded:: 1.20
+ */

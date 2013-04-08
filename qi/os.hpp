@@ -82,6 +82,7 @@ namespace qi {
     QI_API void setCurrentThreadName(const std::string &name);
     QI_API bool setCurrentThreadCPUAffinity(const std::vector<int> &cpus);
     QI_API std::string getMachineId();
+    QI_API std::string generateUuid();
 
     //since 1.12.1
     QI_API_DEPRECATED QI_API std::string tmpdir(const char *prefix = "");

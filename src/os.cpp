@@ -132,9 +132,8 @@ namespace qi {
       }
 
       std::ofstream newIdFile(idFilePath.c_str());
-      boost::uuids::uuid u = boost::uuids::random_generator()();
 
-      idString = to_string(u);
+      idString = generateUuid();
       if (newIdFile)
       {
         newIdFile << idString;
@@ -147,6 +146,12 @@ namespace qi {
       }
 
       return idString;
+    }
+
+    std::string generateUuid()
+    {
+      boost::uuids::uuid u = boost::uuids::random_generator()();
+      return to_string(u);
     }
 
     std::string gettext(const std::string &msgid)
