@@ -21,6 +21,7 @@ namespace qi
     std::string machineId;
     unsigned int processId;
     qi::UrlVector endpoints;
+    std::string sessionId;
   };
 
   ServiceInfo::ServiceInfo()
@@ -63,6 +64,10 @@ namespace qi
     _p->endpoints = endpoints;
   }
 
+  void ServiceInfo::setSessionId(const std::string& sessionId) {
+    _p->sessionId = sessionId;
+  }
+
   void ServiceInfo::addEndpoint(const qi::Url& endpoint) {
     _p->endpoints.push_back(endpoint);
   }
@@ -87,6 +92,10 @@ namespace qi
     return _p->endpoints;
   }
 
+  const std::string& ServiceInfo::sessionId() const {
+    return _p->sessionId;
+  }
+
   ServiceInfoPrivate::ServiceInfoPrivate()
     : name()
     , serviceId()
@@ -100,7 +109,7 @@ static qi::ServiceInfoPrivate* serviceInfoPrivate(qi::ServiceInfo* svcinfo) {
     return svcinfo->_p;
 }
 
-QI_TYPE_STRUCT(qi::ServiceInfoPrivate, name, serviceId, machineId, processId, endpoints);
+QI_TYPE_STRUCT(qi::ServiceInfoPrivate, name, serviceId, machineId, processId, endpoints, sessionId);
 QI_TYPE_REGISTER(::qi::ServiceInfoPrivate);
 
 QI_TYPE_STRUCT_BOUNCE_REGISTER(::qi::ServiceInfo, ::qi::ServiceInfoPrivate, serviceInfoPrivate);

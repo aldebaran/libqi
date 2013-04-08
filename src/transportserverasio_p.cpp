@@ -133,7 +133,7 @@ namespace qi
       if (_endpoints.size() != currentEndpoints.size() ||
           !std::equal(_endpoints.begin(), _endpoints.end(), currentEndpoints.begin()))
       {
-        qiLogDebug() << "Updating endpoints...";
+        qiLogVerbose() << "Updating endpoints...";
 
         _endpoints = currentEndpoints;
         _self->endpointsChanged();

@@ -272,6 +272,16 @@ namespace qi
     boost::recursive_mutex::scoped_lock lock(mutex);
     std::map<unsigned int, ServiceInfo>::iterator itService;
 
+    for (itService = connectedServices.begin();
+         itService != connectedServices.end();
+         ++itService)
+    {
+      if (svcinfo.sessionId() == itService->second.sessionId())
+      {
+        itService->second.setEndpoints(svcinfo.endpoints());
+      }
+    }
+
     itService = connectedServices.find(svcinfo.serviceId());
     if (itService != connectedServices.end())
     {
@@ -337,6 +347,8 @@ namespace qi
     si.setName("ServiceDirectory");
     si.setServiceId(qi::Message::Service_ServiceDirectory);
     si.setMachineId(qi::os::getMachineId());
+    si.setProcessId(qi::os::getpid());
+    si.setSessionId("0");
     si.setEndpoints(_p->_server.endpoints());
     unsigned int regid = sdbo->registerService(si);
     sdbo->serviceReady(qi::Message::Service_ServiceDirectory);

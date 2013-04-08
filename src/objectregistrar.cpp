@@ -14,17 +14,19 @@
 #include <qi/os.hpp>
 #include <boost/thread/mutex.hpp>
 #include "servicedirectoryclient.hpp"
+#include "session_p.hpp"
 
 qiLogCategory("qimessaging.objectregistrar");
 
 namespace qi {
 
-
-  ObjectRegistrar::ObjectRegistrar(ServiceDirectoryClient *sdClient)
+  ObjectRegistrar::ObjectRegistrar(ServiceDirectoryClient *sdClient, Session *session)
     : Server()
     , _dying(false)
     , _sdClient(sdClient)
+    , _session(session)
   {
+    _server.endpointsChanged.connect(boost::bind(&ObjectRegistrar::updateServiceInfo, this));
   }
 
   ObjectRegistrar::~ObjectRegistrar()
@@ -46,6 +48,7 @@ namespace qi {
     si.setProcessId(qi::os::getpid());
     si.setMachineId(qi::os::getMachineId());
     si.setEndpoints(Server::endpoints());
+    si.setSessionId(_session->_p->_id);
 
     boost::mutex::scoped_lock sl(_servicesMutex);
     for (std::map<unsigned int, BoundService>::iterator it = _services.begin();
@@ -56,6 +59,7 @@ namespace qi {
       si.setServiceId(bs.id);
       si.setName(bs.name);
       _sdClient->updateServiceInfo(si);
+      return;
     }
   }
 
@@ -104,7 +108,6 @@ namespace qi {
     //TODO: async handle.
     qi::Future<void> fut2 = _sdClient->serviceReady(idx);
     fut2.connect(boost::bind(&serviceReady, _1, result, idx));
-    _server.endpointsChanged.connect(boost::bind(&ObjectRegistrar::updateServiceInfo, this));
 
     {
       boost::mutex::scoped_lock sl(_serviceNameToIndexMutex);
@@ -128,6 +131,7 @@ namespace qi {
     si.setProcessId(qi::os::getpid());
     si.setMachineId(qi::os::getMachineId());
     si.setEndpoints(Server::endpoints());
+    si.setSessionId(_session->_p->_id);
 
     long id = ++_registerServiceRequestIndex;
     {

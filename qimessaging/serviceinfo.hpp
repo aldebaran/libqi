@@ -33,12 +33,14 @@ namespace qi
     void setProcessId(unsigned int processId);
     void setEndpoints(const qi::UrlVector& endpoints);
     void addEndpoint(const qi::Url& endpoint);
+    void setSessionId(const std::string& sessionId);
 
     const std::string& name() const;
     unsigned int serviceId() const;
     const std::string& machineId() const;
     unsigned int processId() const;
     const qi::UrlVector& endpoints() const;
+    const std::string& sessionId() const;
 
     ServiceInfoPrivate* _p;
 

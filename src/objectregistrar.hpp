@@ -36,7 +36,7 @@ namespace qi {
   class ObjectRegistrar : private Server {
 
   public:
-    ObjectRegistrar(ServiceDirectoryClient *sdClient);
+    ObjectRegistrar(ServiceDirectoryClient *sdClient, Session *session);
     virtual ~ObjectRegistrar();
 
     //register/unregister services
@@ -88,6 +88,7 @@ namespace qi {
 
     bool                                _dying;
     ServiceDirectoryClient             *_sdClient;
+    Session                            *_session;
   };
 
 }
