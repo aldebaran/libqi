@@ -488,7 +488,7 @@ namespace qi {
       if (cpus.size() == 0)
         return false;
 
-      DWORD64 dwProcessAffinity, dwSystemAffinity;
+      DWORD64 dwProcessAffinity = 0, dwSystemAffinity = 0;
       DWORD* mask = new DWORD[cpus.size()];
       int i = 0;
 
@@ -499,7 +499,10 @@ namespace qi {
 
       delete[] mask;
       if (!ret)
+      {
+        qiLogError("qi.os") << "setCPUThreadAffinity : " << GetLastErrorMessage(GetLastError());
         return false;
+      }
       return true;
     }
 
