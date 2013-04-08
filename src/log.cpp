@@ -49,20 +49,34 @@
 
 namespace qi {
   namespace detail {
-    void cutCat(const char* category, char* res)
+    int categoriesFromContext()
     {
-      unsigned int categorySize = static_cast<unsigned int>(strlen(category));
-      if (categorySize < CATSIZEMAX)
+      int ret = LOG_VERBOSITY;
+      switch (qi::log::context())
       {
-        memset(res, ' ', CATSIZEMAX);
-        memcpy(res, category, strlen(category));
+        case 1:
+          ret |= LOG_CATEGORY;
+          break;
+        case 2:
+          ret |= LOG_DATE;
+          break;
+        case 3:
+          ret |= LOG_FILE;
+          break;
+        case 4:
+          ret |= LOG_DATE | LOG_CATEGORY;
+          break;
+        case 5:
+          ret |= LOG_DATE | LOG_FILE;
+          break;
+        case 6:
+          ret |= LOG_CATEGORY | LOG_FILE;
+          break;
+        case 7:
+          ret |= LOG_DATE | LOG_TID | LOG_CATEGORY | LOG_FILE | LOG_FUNCTION;
+          break;
       }
-      else
-      {
-        memset(res, '.', CATSIZEMAX);
-        memcpy(res + 3, category + categorySize - CATSIZEMAX + 3, CATSIZEMAX - 3);
-      }
-      res[CATSIZEMAX] = '\0';
+      return ret;
     }
 
     std::string logline(const              os::timeval date,
@@ -70,72 +84,77 @@ namespace qi {
                         const char        *msg,
                         const char        *file,
                         const char        *fct,
-                        const int          line)
+                        const int          line,
+                        const qi::log::LogLevel     verb
+                       )
     {
-      char fixedCategory[CATSIZEMAX + 1];
-      fixedCategory[CATSIZEMAX] = '\0';
-      cutCat(category, fixedCategory);
-
-      int tid = qi::os::gettid();
+      int categories = qi::detail::categoriesFromContext();
       std::stringstream logline;
 
-      std::stringstream ss;
-      ss << date.tv_sec << "."
-         << std::setw(7) << std::setfill('0')  << date.tv_usec;
-
-      switch (qi::log::context())
-      {
-      case 1:
-        logline << fixedCategory << ": ";
-        break;
-      case 2:
-        logline << ss.str() << " ";
-        break;
-      case 3:
+      if (verb != qi::log::silent && categories & qi::detail::LOG_VERBOSITY)
+        logline << qi::log::logLevelToString(verb) << " ";
+      if (categories & qi::detail::LOG_DATE)
+        logline << qi::detail::dateToString(date) << " ";
+      if (categories & qi::detail::LOG_TID)
+        logline << qi::detail::tidToString() << " ";
+      if (categories & qi::detail::LOG_CATEGORY)
+        logline << qi::detail::categoryToFixedCategory(category) << ": ";
+      if (categories & qi::detail::LOG_FILE) {
+        logline << file;
         if (line != 0)
-          logline << file << "(" << line << ") ";
-        break;
-      case 4:
-        logline << ss.str() << " " << fixedCategory << ": ";
-        break;
-      case 5:
-        if (line == 0)
-          logline << ss.str() << " ";
-        else
-          logline << ss.str() << " " << file << "(" << line << ") ";
-        break;
-      case 6:
-        if (line == 0)
-          logline << fixedCategory << ": ";
-        else
-          logline << fixedCategory << ": " << file << "(" << line << ")";
-        break;
-      case 7:
-        if (line == 0)
-          logline << ss.str() << " " << tid << " " << fixedCategory << ": " << fct << " ";
-        else
-          logline << ss.str() << " " << tid << " " << fixedCategory << ": " << file << "(" << line << ") " << fct << " ";
-        break;
-      default:
-        break;
+          logline << "(" << line << ")";
+        logline << " ";
       }
-
-      size_t p = strlen(msg) - 1;
-
-      /* Emulate previous behavior that ensured a single newline was
-      * present at the end on message.
-      */
-      p -= (msg[p] == '\r')? 1:
-             (msg[p] == '\n')?
-               (p && msg[p-1] == '\r')? 2:1
-               :0;
-
-      logline.write(msg, p+1);
+      if (categories && qi::detail::LOG_FUNCTION)
+        logline << fct;
+      logline.write(msg, qi::detail::rtrim(msg));
       logline << std::endl;
 
       return logline.str();
     }
 
+    const std::string dateToString(const qi::os::timeval date)
+    {
+      std::stringstream ss;
+      ss << date.tv_sec << "."
+        << std::setw(7) << std::setfill('0') << date.tv_usec;
+
+      return ss.str();
+    }
+
+    const std::string tidToString()
+    {
+      int tid = qi::os::gettid();
+      std::stringstream ss;
+      ss << tid;
+
+      return ss.str();
+    }
+
+    const std::string categoryToFixedCategory(const char *category, int size)
+    {
+      if (size == 0)
+        return std::string(category);
+
+      std::string fixedCategory = category;
+      fixedCategory.resize(size, ' ');
+      return fixedCategory;
+    }
+
+    /* Emulate previous behavior that ensured a single newline was
+    * present at the end on message.
+    */
+    int rtrim(const char *msg)
+    {
+      size_t p = strlen(msg) - 1;
+
+      p -= (msg[p] == '\r')? 1:
+             (msg[p] == '\n')?
+               (p && msg[p-1] == '\r')? 2:1
+               :0;
+
+      return p+1;
+    }
   }
 
   namespace log {
