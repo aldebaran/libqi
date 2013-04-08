@@ -15,7 +15,7 @@
 #include <sys/timeb.h>
 
 #include <iostream>
-#include <io.h>       //_wopen
+#include <io.h>       //_wopen _isatty
 #include <windows.h>  //Sleep
 #include <winsock2.h>
 #include <direct.h>   // _mkdir
@@ -278,6 +278,11 @@ namespace qi {
         return boost::filesystem::path((WCHAR *)chrComputerName, qi::unicodeFacet()).string(qi::unicodeFacet());
       }
       return std::string();
+    }
+
+    int isatty(int fd)
+    {
+      return ::_isatty(fd) == 0 ? 0 : 1;
     }
 
     char* strdup(const char *src)

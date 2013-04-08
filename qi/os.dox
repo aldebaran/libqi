@@ -484,3 +484,14 @@
  * \return The uuid.
  * .. versionadded:: 1.20
  */
+
+/**
+ * \fn qi::os::isatty(int fd);
+ * \brief Test if descriptor represents a terminal
+ * \return Returns a value of 1 if the given file descriptor is a terminal.
+ * Otherwise returns a value of 0. By default test for stdout (1).
+ *
+ * \verbatim
+ * .. versionadded:: 1.22
+ * \endverbatim
+ */

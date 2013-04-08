@@ -188,6 +188,11 @@ namespace qi {
     }
 #endif
 
+    int isatty(int fd)
+    {
+      return ::isatty(fd);
+    }
+
     char* strdup(const char *src)
     {
       return ::strdup(src);

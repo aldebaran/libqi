@@ -28,6 +28,7 @@ namespace qi {
     QI_API std::string mktmpdir(const char *prefix = "");
     QI_API std::string tmp();
     QI_API std::string gethostname();
+    QI_API int isatty(int fd = 1);
 
     // lib C
     QI_API char* strdup(const char *src);
