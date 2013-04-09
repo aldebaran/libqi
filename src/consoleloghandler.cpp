@@ -244,14 +244,16 @@ namespace qi {
         printf("%s ", qi::detail::dateToString(date).c_str());
       if (categories & qi::detail::LOG_TID) {
         textColorBG(intToColor(qi::os::gettid()));
-        printf("%s ", qi::detail::tidToString().c_str());
+        printf("%s", qi::detail::tidToString().c_str());
         textColorAttr(reset);
+        printf(" ");
       }
       if (categories & qi::detail::LOG_CATEGORY) {
         std::string cat = qi::detail::categoryToFixedCategory(category);
         textColorFG(stringToColor(cat.c_str()));
-        printf("%s: ", cat.c_str());
+        printf("%s", cat.c_str());
         textColorAttr(qi::log::PrivateConsoleLogHandler::reset);
+        printf(": ");
       }
       if (categories & qi::detail::LOG_FILE) {
         printf("%s", file);
