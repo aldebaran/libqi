@@ -140,6 +140,10 @@ namespace qi {
       return *this;
     }
 
+    bool operator < (const Future<T>& b) const
+    {
+      return _p.get() < b._p.get();
+    }
     explicit Future<T>(const ValueType& v)
     {
       Promise<T> promise;
