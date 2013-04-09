@@ -75,10 +75,10 @@ namespace qi {
         magenta,
         cyan,
         white,
-        gray,
         max_color,
       };
 #endif
+      static int InvertConsoleColor[max_color];
 
 
       void textColorBG(char bg) const;
@@ -173,7 +173,7 @@ namespace qi {
       if (verb == verbose)
         return green;
       if (verb == debug)
-        return gray;
+        return white;
       return white;
     }
 
@@ -243,7 +243,9 @@ namespace qi {
       if (categories & qi::detail::LOG_DATE)
         printf("%s ", qi::detail::dateToString(date).c_str());
       if (categories & qi::detail::LOG_TID) {
-        textColorBG(intToColor(qi::os::gettid()));
+        int tidColor = intToColor(qi::os::gettid());
+        textColorBG(tidColor);
+        textColorFG(InvertConsoleColor[tidColor]);
         printf("%s", qi::detail::tidToString().c_str());
         textColorAttr(reset);
         printf(" ");
@@ -284,7 +286,7 @@ namespace qi {
       {
 #ifndef _WIN32
         _private->textColorAttr(_private->reset);
-        _private->textColorFG(_private->gray);
+        _private->textColorFG(_private->white);
 #endif
         if (_private->_color) {
           _private->coloredLog(verb, date, category, msg, file, fct, line);
@@ -302,3 +304,36 @@ namespace qi {
   }
 }
 
+#ifdef _WIN32
+int qi::log::PrivateConsoleLogHandler::InvertConsoleColor[] = {
+        white, // black   = 0,
+        white, // darkblue,
+        black, // green,
+        white, // bluegray,
+        black, // brown,
+        black, // purple,
+        black, // NONE
+        black, // whitegray = 7,
+        black, // gray,
+        black, // whiteblue,
+        black, // whitegreen,
+        white, // blue,
+        black, // red,
+        black, // magenta,
+        black, // yellow,
+        black // white,
+        // max_color,
+};
+#else
+int qi::log::PrivateConsoleLogHandler::InvertConsoleColor[] = {
+        white, //black   = 0,
+        green, //red,
+        black, //green,
+        black, //yellow,
+        white, //blue,
+        yellow, //magenta,
+        black, //cyan,
+        black, //white,
+        //max_color,
+};
+#endif
