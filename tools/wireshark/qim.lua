@@ -9,7 +9,7 @@ qim_proto = Proto("qim","qi::Messaging")
 
 src_F = ProtoField.string("qim.src","Source")
 dst_F = ProtoField.string("qim.dst","Destination")
-magic_F = ProtoField.uint32("qim.magic", "Magic", base.HEX)
+magic_F = ProtoField.uint32("qim.magic", "Magic", base["HEX"])
 id_F = ProtoField.uint32("qim.id","Id")
 size_F = ProtoField.uint32("qim.size","Size")
 version_F = ProtoField.uint16("qim.version","Version")
