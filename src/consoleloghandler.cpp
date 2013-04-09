@@ -169,11 +169,11 @@ namespace qi {
       if (verb == warning)
         return yellow;
       if (verb == info)
-        return gray;
-      if (verb == verbose)
         return blue;
-      if (verb == debug)
+      if (verb == verbose)
         return green;
+      if (verb == debug)
+        return gray;
       return white;
     }
 
