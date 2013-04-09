@@ -111,6 +111,17 @@ namespace qi {
       ServerFunction_Connect           = 4,
     };
 
+    enum ServiceDirectoryAction {
+      ServiceDirectoryAction_Service             = 10,
+      ServiceDirectoryAction_Services            = 11,
+      ServiceDirectoryAction_RegisterService     = 12,
+      ServiceDirectoryAction_UnregisterService   = 13,
+      ServiceDirectoryAction_ServiceReady        = 14,
+      ServiceDirectoryAction_UpdateServiceInfo   = 15,
+      ServiceDirectoryAction_ServiceAdded        = 16,
+      ServiceDirectoryAction_ServiceRemoved      = 17,
+    };
+
     enum Type
     {
       Type_None  = 0,
@@ -125,6 +136,9 @@ namespace qi {
       // Event Server->Client
       Type_Event = 5,
     };
+
+    static const char* typeToString(Type t);
+    static const char* actionToString(unsigned int action, unsigned int service);
 
     ~Message();
     Message();

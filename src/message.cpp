@@ -29,6 +29,75 @@ namespace qi {
     return ++id;
   }
 
+  const char* Message::typeToString(Type t)
+  {
+    switch (t)
+    {
+    case Type_None:
+      return "None";
+    case Type_Call:
+      return "Call";
+    case Type_Reply:
+      return "Reply";
+    case Type_Error:
+      return "Error";
+    case Type_Post:
+      return "Post";
+    case Type_Event:
+      return "Event";
+    default:
+      return "Unknown";
+    }
+  }
+
+  const char* Message::actionToString(unsigned int action, unsigned int service)
+  {
+    switch (action)
+    {
+    case BoundObjectFunction_RegisterEvent:
+      return "RegisterEvent";
+    case BoundObjectFunction_UnregisterEvent:
+      return "UnregisterEvent";
+    case BoundObjectFunction_MetaObject:
+      return "MetaObject";
+    case BoundObjectFunction_Terminate:
+      return "Terminate";
+    case BoundObjectFunction_GetProperty:
+      return "GetProperty";
+    case BoundObjectFunction_SetProperty:
+      return "SetProperty";
+    case BoundObjectFunction_Properties:
+      return "Properties";
+    }
+
+    if (service != qi::Message::Service_ServiceDirectory)
+    {
+      return 0;
+    }
+
+    switch (action)
+    {
+    case ServiceDirectoryAction_Service:
+      return "Service";
+    case ServiceDirectoryAction_Services:
+      return "Services";
+    case ServiceDirectoryAction_RegisterService:
+      return "RegisterService";
+    case ServiceDirectoryAction_UnregisterService:
+      return "UnregisterService";
+    case ServiceDirectoryAction_ServiceReady:
+      return "ServiceReady";
+    case ServiceDirectoryAction_UpdateServiceInfo:
+      return "UpdateServiceInfo";
+    case ServiceDirectoryAction_ServiceAdded:
+      return "ServiceAdded";
+    case ServiceDirectoryAction_ServiceRemoved:
+      return "ServiceRemoved";
+    default:
+      return 0;
+    }
+  }
+
   MessagePrivate::MessagePrivate()
   {
     memset(&header, 0, sizeof(MessagePrivate::MessageHeader));
@@ -88,10 +157,43 @@ namespace qi {
        << "  size=" << msg._p->header.size << "," << std::endl
        << "  id  =" << msg.id() << "," << std::endl
        << "  vers=" << msg.version() << "," << std::endl
-       << "  type=" << msg.type() << "," << std::endl
-       << "  serv=" << msg.service() << "," << std::endl
-       << "  path=" << msg.object() << "," << std::endl
-       << "  acti=" << msg.action() << "," << std::endl
+       << "  type=" << qi::Message::typeToString(msg.type()) << "," << std::endl
+       << "  serv=";
+
+    if (msg.service() == qi::Message::Service_ServiceDirectory)
+    {
+      os << "ServiceDirectory";
+    }
+    else
+    {
+      os << msg.service();
+    }
+
+    os << "," << std::endl
+       << "  obje=";
+
+    if (msg.object() == qi::Message::GenericObject_Main)
+    {
+      os << "main";
+    }
+    else
+    {
+      os << msg.object();
+    }
+
+    os << std::endl << "  acti=";
+
+    const char* s = qi::Message::actionToString(msg.action(), msg.service());
+    if (s != 0)
+    {
+      os << s;
+    }
+    else
+    {
+      os << msg.action();
+    }
+
+    os << "," << std::endl
        << "  data=" << std::endl;
     qi::details::printBuffer(os, msg._p->buffer);
     os << std::endl << "}";

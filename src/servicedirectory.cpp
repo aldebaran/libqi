@@ -62,14 +62,23 @@ namespace qi
     if (!ob)
     {
       ob = new qi::ObjectTypeBuilder<ServiceDirectoryBoundObject>();
-      ob->advertiseMethod("service", &ServiceDirectoryBoundObject::service);
-      ob->advertiseMethod("services", &ServiceDirectoryBoundObject::services);
-      ob->advertiseMethod("registerService", &ServiceDirectoryBoundObject::registerService);
-      ob->advertiseMethod("unregisterService", &ServiceDirectoryBoundObject::unregisterService);
-      ob->advertiseMethod("serviceReady", &ServiceDirectoryBoundObject::serviceReady);
-      ob->advertiseMethod("updateServiceInfo", &ServiceDirectoryBoundObject::updateServiceInfo);
-      ob->advertiseEvent("serviceAdded", &ServiceDirectoryBoundObject::serviceAdded);
-      ob->advertiseEvent("serviceRemoved", &ServiceDirectoryBoundObject::serviceRemoved);
+      unsigned int id = 0;
+      id = ob->advertiseMethod("service", &ServiceDirectoryBoundObject::service);
+      assert(id == qi::Message::ServiceDirectoryAction_Service);
+      id = ob->advertiseMethod("services", &ServiceDirectoryBoundObject::services);
+      assert(id == qi::Message::ServiceDirectoryAction_Services);
+      id = ob->advertiseMethod("registerService", &ServiceDirectoryBoundObject::registerService);
+      assert(id == qi::Message::ServiceDirectoryAction_RegisterService);
+      id = ob->advertiseMethod("unregisterService", &ServiceDirectoryBoundObject::unregisterService);
+      assert(id == qi::Message::ServiceDirectoryAction_UnregisterService);
+      id = ob->advertiseMethod("serviceReady", &ServiceDirectoryBoundObject::serviceReady);
+      assert(id == qi::Message::ServiceDirectoryAction_ServiceReady);
+      id = ob->advertiseMethod("updateServiceInfo", &ServiceDirectoryBoundObject::updateServiceInfo);
+      assert(id == qi::Message::ServiceDirectoryAction_UpdateServiceInfo);
+      id = ob->advertiseEvent("serviceAdded", &ServiceDirectoryBoundObject::serviceAdded);
+      assert(id == qi::Message::ServiceDirectoryAction_ServiceAdded);
+      id = ob->advertiseEvent("serviceRemoved", &ServiceDirectoryBoundObject::serviceRemoved);
+      assert(id == qi::Message::ServiceDirectoryAction_ServiceRemoved);
     }
     return ob->object(self);
   }
