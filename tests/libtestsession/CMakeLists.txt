@@ -7,7 +7,7 @@
 
 include_directories(".")
 
-function(qi_create_session_test name)
+function(qimessaging_create_session_test name)
   if (DEFINED BUILD_TESTS AND NOT BUILD_TESTS)
     return()
   endif()
