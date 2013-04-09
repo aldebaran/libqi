@@ -33,6 +33,14 @@
 #else
 #  define QI_NORETURN
 #endif
+
+// Mark compilers supporting variable length array (VLA)
+#if defined(__GNUC__) && !defined(__clang__)
+#  define QI_HAS_VARIABLE_LENGTH_ARRAY 1
+#else
+#  define QI_HAS_VARIABLE_LENGTH_ARRAY 0
+#endif
+
 // For shared library
 
 
