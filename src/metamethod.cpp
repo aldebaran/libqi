@@ -3,7 +3,11 @@
 **  See COPYING for the license
 */
 
+#include <qitype/functiontype.hpp>
+
 #include "metamethod_p.hpp"
+
+qiLogCategory("qitype.metamethod");
 
 namespace qi {
   // ***** MetaMethod Implementation *****
@@ -162,6 +166,20 @@ namespace qi {
 
   void MetaMethodBuilder::setSigreturn(const std::string& sig) {
     this->_p->metaMethod._p->sigreturn = sig;
+  }
+
+  void MetaMethodBuilder::setSignatures(const GenericFunction& f)
+  {
+    setSignatures(name(), f);
+  }
+
+  void MetaMethodBuilder::setSignatures(const std::string& name, const GenericFunction& f)
+  {
+    this->_p->name = name;
+    qiLogDebug() << "sig " << f.signature() << " -> " << ('(' + f.signature().substr(2));
+    // Drop first argument which is the instance
+    setSignature(name + "::(" + f.signature().substr(2));
+    setSigreturn(f.sigreturn());
   }
 
   void MetaMethodBuilder::setReturnDescription(const std::string& desc) {

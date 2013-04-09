@@ -32,13 +32,11 @@ namespace qi {
                                                       MetaCallType threadingModel,
                                                       int id)
   {
-    // FIXME validate type
     MetaMethodBuilder builder;
-    builder.setSigreturn(detail::FunctionSignature<FUNCTION_TYPE>::sigreturn());
-    builder.setSignature(name + "::" + detail::FunctionSignature<FUNCTION_TYPE>::signature());
     GenericFunction f = makeGenericFunction(function);
     if (! boost::is_member_function_pointer<FUNCTION_TYPE>::value)
       f.dropFirstArgument();
+    builder.setSignatures(name, f);
     return xAdvertiseMethod(builder, f, threadingModel, id);
   }
 

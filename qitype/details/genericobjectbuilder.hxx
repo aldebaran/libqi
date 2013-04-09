@@ -18,11 +18,10 @@ namespace qi {
                                                      const std::string& desc,
                                                      MetaCallType threadingModel)
   {
-    // FIXME validate type
     MetaMethodBuilder builder(name, desc);
-    builder.setSigreturn(detail::FunctionSignature<FUNCTION_TYPE>::sigreturn());
-    builder.setSignature(name + "::" + detail::FunctionSignature<FUNCTION_TYPE>::signature());
-    return xAdvertiseMethod(builder, makeGenericFunction(function).dropFirstArgument(), threadingModel);
+    GenericFunction f = makeGenericFunction(function).dropFirstArgument();
+    builder.setSignatures(f);
+    return xAdvertiseMethod(builder, f, threadingModel);
   }
 
   template <typename OBJECT_TYPE, typename METHOD_TYPE>
@@ -33,9 +32,9 @@ namespace qi {
                                                             MetaCallType threadingModel)
   {
     MetaMethodBuilder builder(name, desc);
-    builder.setSigreturn(detail::FunctionSignature<METHOD_TYPE>::sigreturn());
-    builder.setSignature(name + "::" + detail::FunctionSignature<METHOD_TYPE>::signature());
-    return xAdvertiseMethod(builder, makeGenericFunction(method, object).dropFirstArgument(), threadingModel);
+    GenericFunction f = makeGenericFunction(method, object).dropFirstArgument();
+    builder.setSignatures(f);
+    return xAdvertiseMethod(builder, f, threadingModel);
   }
 
   template <typename FUNCTION_TYPE>
@@ -43,9 +42,9 @@ namespace qi {
                                                             FUNCTION_TYPE function,
                                                             MetaCallType threadingModel)
   {
-    builder.setSigreturn(detail::FunctionSignature<FUNCTION_TYPE>::sigreturn());
-    builder.setSignature(builder.name() + "::" + detail::FunctionSignature<FUNCTION_TYPE>::signature());
-    return xAdvertiseMethod(builder, makeGenericFunction(function).dropFirstArgument(), threadingModel);
+    GenericFunction f = makeGenericFunction(function).dropFirstArgument();
+    builder.setSignatures(f);
+    return xAdvertiseMethod(builder, f, threadingModel);
   }
 
   template <typename OBJECT_TYPE, typename METHOD_TYPE>
@@ -54,9 +53,9 @@ namespace qi {
                                                             METHOD_TYPE method,
                                                             MetaCallType threadingModel)
   {
-    builder.setSigreturn(detail::FunctionSignature<METHOD_TYPE>::sigreturn());
-    builder.setSignature(builder.name() + "::" + detail::FunctionSignature<METHOD_TYPE>::signature());
-    return xAdvertiseMethod(builder, makeGenericFunction(method, object).dropFirstArgument(), threadingModel);
+    GenericFunction f = makeGenericFunction(method, object).dropFirstArgument();
+    builder.setSignatures(f);
+    return xAdvertiseMethod(builder, f, threadingModel);
   }
 
   template <typename T> unsigned int GenericObjectBuilder::advertiseEvent(const std::string& name)
