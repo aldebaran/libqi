@@ -49,9 +49,9 @@ TEST(TestSignal, TestCompilation)
   s.connect(boost::bind(&foolast, _1, prom, &res));
 
   s(42);
-  int timeout = 1000;
+  int timeout = 100;
   while (timeout > 0) {
-    qi::os::msleep(1);
+    qi::os::msleep(10);
     if (res == 6)
       break;
     timeout -= 1;
