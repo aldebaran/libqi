@@ -10,9 +10,6 @@
 #include <qitype/manageable.hpp>
 
 #include <boost/bind.hpp>
-#include <boost/fusion/algorithm/iteration/for_each.hpp>
-#include <boost/fusion/functional/generation/make_unfused.hpp>
-#include <boost/fusion/functional/invocation/invoke_procedure.hpp>
 
 namespace qi
 {
@@ -112,55 +109,41 @@ namespace qi
   }
   namespace detail
   {
-    struct Appender
-  {
-    inline Appender(std::vector<GenericValuePtr>*target)
-    :target(target)
-    {
-    }
-    template<typename T>
-    void
-    operator() (const T &v) const
-    {
-      target->push_back(AutoGenericValuePtr(v));
-    }
 
-    std::vector<GenericValuePtr>* target;
-  };
-  template<typename T>
-  struct FusedEmit
+  template<typename T> class BounceToSignalBase
   {
-    typedef typename boost::function_types::result_type<T>::type RetType;
-    typedef typename boost::function_types::parameter_types<T>::type ArgsType;
-    typedef typename boost::mpl::push_front<ArgsType, SignalBase*>::type InstArgsType;
-    typedef typename boost::mpl::push_front<InstArgsType, RetType>::type FullType;
-    typedef typename boost::function_types::function_type<FullType>::type LinearizedType;
-    FusedEmit(Signal<T>& signal)
-    : _signal(signal) {}
-
-    template <class Seq>
-    struct result
+    public:
+    BounceToSignalBase(SignalBase& sb)
     {
-      typedef typename boost::function_types::result_type<T>::type type;
-    };
-    template <class Seq>
-    typename result<Seq>::type
-    operator()(Seq const & s) const
-    {
-      std::vector<GenericValuePtr> args;
-      boost::fusion::for_each(s, Appender(&args));
-      _signal.trigger(args);
+      typedef typename T::UnexpectedMethodSignature type;
     }
-    SignalBase& _signal;
   };
+  #define pushArg(z, n, _) \
+    args.push_back(AutoGenericValuePtr(p ##n));
+  #define makeBounce(n, argstypedecl, argstype, argsdecl, argsues, comma)     \
+  template<typename R comma argstypedecl> \
+  class BounceToSignalBase<R(argstype)>  {  \
+  public:                      \
+    BounceToSignalBase(SignalBase& signalBase) : signalBase(signalBase) {} \
+    R operator()(argsdecl) {   \
+      std::vector<GenericValuePtr> args; \
+      BOOST_PP_REPEAT(n, pushArg, _);    \
+      signalBase.trigger(args);          \
+    }                                    \
+  private:                               \
+    SignalBase& signalBase;              \
+  };
+  QI_GEN(makeBounce)
+  #undef makeBounce
+  #undef pushArg
+
   } // detail
 
   template<typename T>
   Signal<T>::Signal(OnSubscribers onSubscribers)
   : SignalBase(onSubscribers)
   {
-    detail::FusedEmit<T> fusor = detail::FusedEmit<T>(*this);
-    * (boost::function<T>*)this = boost::fusion::make_unfused(fusor);
+    * (boost::function<T>*)this = detail::BounceToSignalBase<T>(*this);
   }
 
   template<typename T>
@@ -173,8 +156,7 @@ namespace qi
   template<typename T>
   Signal<T>::Signal(const Signal<T>& b)
   {
-    detail::FusedEmit<T> fusor = detail::FusedEmit<T>(*this);
-    * (boost::function<T>*)this = boost::fusion::make_unfused(fusor);
+    * (boost::function<T>*)this = detail::BounceToSignalBase<T>(*this);
   }
 
   template<typename T>

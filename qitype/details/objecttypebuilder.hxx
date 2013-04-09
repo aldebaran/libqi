@@ -7,6 +7,8 @@
 #ifndef _QITYPE_DETAILS_OBJECTTYPEBUILDER_HXX_
 #define _QITYPE_DETAILS_OBJECTTYPEBUILDER_HXX_
 
+#include <boost/function_types/is_member_function_pointer.hpp>
+#include <boost/mpl/front.hpp>
 #include <qitype/objecttypebuilder.hpp>
 #include <qitype/methodtypefactory.hpp>
 #include <qitype/metamethod.hpp>
