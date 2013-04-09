@@ -229,18 +229,19 @@ namespace qi
 
       std::ios_base::fmtflags flags = stream.flags();
       unsigned int i = 0;
-      const char* data = (const char*)buffer.data();
+      const unsigned char* data = (const unsigned char*)buffer.data();
 
       while (i < buffer.size()) {
         if (i % 16 == 0) stream << std::hex << std::setfill('0') << std::setw(8) << i << ": ";
-        stream << std::setw(2) << (const int)data[i];
+        stream << std::setw(2) << (const unsigned int) data[i];
         i++;
         if (i % 2 == 0) stream << ' ';
         if (i % 16 == 0)
         {
           for (unsigned int j = i - 16; j < i ; j++)
           {
-            stream << (isgraph(data[j]) ? data[j] : '.');
+            char c = data[j];
+            stream << (isgraph(c) ? c : '.');
           }
           stream << '\n';
         }
@@ -254,7 +255,8 @@ namespace qi
       stream << ' ';
 
       for (unsigned int j = i - 16; j < buffer.size(); j++) {
-        stream << (isgraph(data[j]) ? data[j] : '.');
+        char c = data[j];
+        stream << (isgraph(c) ? c : '.');
       }
 
       stream.flags(flags);
