@@ -39,8 +39,8 @@ namespace qi
 
     if (target.size() != sz + deltaCount)
     {
-      qiLogErrorF("Argument count mismatch, expected %s, got %s (transform %s)",
-        target.size(), sz, deltaCount);
+      throw std::runtime_error(_QI_LOG_FORMAT("Argument count mismatch, expected %s, got %s (transform %s)",
+        target.size(), sz, deltaCount));
       return GenericValuePtr();
     }
     if (transform.dropFirst)
@@ -85,8 +85,9 @@ namespace qi
           }
           if (!v.first.type)
           {
-            qiLogError() << "Conversion failure from " << args[i].type->infoString()
-            << " to " << target[i]->infoString() <<", aborting call";
+            throw std::runtime_error(_QI_LOG_FORMAT("Call argument onversion failure from %s to %s",
+              args[i].type->infoString(),
+              target[i]->infoString()));
             return GenericValuePtr();
           }
         }
