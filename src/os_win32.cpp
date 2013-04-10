@@ -16,7 +16,7 @@
 
 #include <iostream>
 #include <io.h>       //_wopen _isatty
-#include <windows.h>  //Sleep
+#include <windows.h>  //Sleep, *CPU*
 #include <winsock2.h>
 #include <direct.h>   // _mkdir
 #include <iphlpapi.h> // GetComputerName
@@ -486,6 +486,13 @@ namespace qi {
       __except (EXCEPTION_CONTINUE_EXECUTION)
       {
       }
+    }
+
+    long numberOfCPUs()
+    {
+      SYSTEM_INFO info;
+      GetSystemInfo(&info);
+      return info.dwNumberOfProcessors;
     }
 
     bool setCurrentThreadCPUAffinity(const std::vector<int> &cpus) {

@@ -309,6 +309,11 @@ namespace qi {
      #endif
     }
 
+    long numberOfCPUs()
+    {
+      return sysconf(_SC_NPROCESSORS_CONF);
+    }
+
     //true on success
     bool setCurrentThreadCPUAffinity(const std::vector<int> &cpus) {
      #if defined (__linux__) && !defined(ANDROID)

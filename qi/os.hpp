@@ -82,6 +82,7 @@ namespace qi {
 
     QI_API void setCurrentThreadName(const std::string &name);
     QI_API bool setCurrentThreadCPUAffinity(const std::vector<int> &cpus);
+    QI_API long numberOfCPUs();
     QI_API std::string getMachineId();
     QI_API std::string generateUuid();
 

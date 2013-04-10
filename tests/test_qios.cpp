@@ -372,8 +372,6 @@ TEST(QiOs, getMachineId)
   ASSERT_TRUE(uuid1.compare(uuid2) == 0);
 }
 
-#include <qi/log.hpp>
-
 #if  defined(_WIN32) || defined(__linux__)
 TEST(QiOs, CPUAffinity)
 #else
@@ -387,16 +385,9 @@ TEST(QiOs, DISABLED_CPUAffinity)
   cpus.push_back(1);
   ASSERT_TRUE(qi::os::setCurrentThreadCPUAffinity(cpus));
 
+  nprocs_max = qi::os::numberOfCPUs();
+  ASSERT_TRUE(nprocs_max > 0);
 
-#ifndef _WIN32
-  nprocs_max = sysconf(_SC_NPROCESSORS_CONF);
-#else
-  SYSTEM_INFO info;
-  GetSystemInfo(&info);
-  nprocs_max = info.dwNumberOfProcessors;
-#endif
-
-  qiLogInfo("o") << "Available CPUs : " << nprocs_max;
   cpus.clear();
   cpus.push_back(nprocs_max + 1);
   ASSERT_FALSE(qi::os::setCurrentThreadCPUAffinity(cpus));
