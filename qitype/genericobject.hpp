@@ -289,12 +289,38 @@ namespace qi {
  */
 #define QI_REGISTER_OBJECT(name, ...)                                             \
 static bool _qiregister##name() {                                              \
-   ::qi::ObjectTypeBuilder<name> b;                                            \
+   ::qi::ObjectTypeBuilder<name > b;                                            \
    QI_VAARGS_APPLY(__QI_REGISTER_ELEMENT, name, __VA_ARGS__)                   \
    b.registerType();                                                           \
    return true;                                                                \
  }                                                                             \
  static bool BOOST_PP_CAT(__qi_registration, __LINE__) = _qiregister##name();
+
+/** Register name as a template object type
+ * Remaining arguments are the methods, signals and properties of the object.
+ * Use QI_TEMPLATE_TYPE_GET() to access the TypeTemplate from a Type.
+ */
+#define QI_REGISTER_TEMPLATE_OBJECT(name, ...)                                                         \
+  namespace qi {                                                                                       \
+    template<typename T> class TypeOfTemplateImpl<name, T>: public TypeOfTemplateDefaultImpl<name, T>  \
+    {                                                                                                  \
+    public:                                                                                            \
+      TypeOfTemplateImpl(): _next(0) {}                                                                \
+      virtual Type* next()                                                                             \
+      {                                                                                                \
+        if (!_next)                                                                                    \
+        {                                                                                              \
+           ObjectTypeBuilder<name<T> > b(false);                                               \
+           QI_VAARGS_APPLY(__QI_REGISTER_ELEMENT, name<T> , __VA_ARGS__)                                \
+           _next = b.type();                                                                             \
+        }                                                                                              \
+        return _next;                                                                                  \
+      }                                                                                                \
+      Type* _next;                                                                                     \
+    };                                                                                                 \
+  } \
+  QI_TEMPLATE_TYPE_DECLARE(name)
+
 
 
 #include <qitype/details/genericobject.hxx>

@@ -280,6 +280,38 @@ namespace qi  {
     };
   }
 
+  // Provide a base class for all templated type impls
+  class QITYPE_API TypeTemplate: public Type
+  {
+  public:
+    // Return erased template argument type
+    virtual Type* templateArgument() = 0;
+    // If this type is also an object, return it.
+    virtual Type* next() { return 0;}
+  };
+
+  // To detect a templated type, make all the Type of its instanciations
+  // inherit fro a single class
+  template<template<typename> class T> class TypeOfTemplate: public TypeTemplate
+  {
+  public:
+
+  };
+
+  // Default Type for template type T instanciated with type I
+  template<template<typename> class T, typename I> class TypeOfTemplateDefaultImpl:
+  public TypeOfTemplate<T>
+  {
+  public:
+     virtual Type* templateArgument()
+    {
+      return typeOf<I>();
+    }
+    typedef DefaultTypeImplMethods<T<I> > Methods;
+    _QI_BOUNCE_TYPE_METHODS(Methods);
+  };
+  template<template<typename> class T, typename I> class TypeOfTemplateImpl
+  : public TypeOfTemplateDefaultImpl<T, I> {};
 }
 
 #endif  // _QITYPE_DETAILS_TYPE_HXX_
