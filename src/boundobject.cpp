@@ -5,7 +5,7 @@
 
 #include <boost/make_shared.hpp>
 
-#include <qitype/objecttypebuilder.hpp>
+#include <qitype/genericobject.hpp>
 #include "boundobject.hpp"
 #include "serverresult.hpp"
 
