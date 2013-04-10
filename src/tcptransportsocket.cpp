@@ -426,20 +426,23 @@ namespace qi
     if (_ssl)
     {
       boost::asio::async_write(*_socket, b,
-        boost::bind(&TcpTransportSocket::sendCont, shared_from_this(), _1));
+        boost::bind(&TcpTransportSocket::sendCont, shared_from_this(), _1, msg));
     }
     else
     {
       boost::asio::async_write(_socket->next_layer(), b,
-        boost::bind(&TcpTransportSocket::sendCont, shared_from_this(), _1));
+        boost::bind(&TcpTransportSocket::sendCont, shared_from_this(), _1, msg));
     }
 #else
     boost::asio::async_write(*_socket, b,
-      boost::bind(&TcpTransportSocket::sendCont, shared_from_this(), _1));
+      boost::bind(&TcpTransportSocket::sendCont, shared_from_this(), _1, msg));
 #endif
   }
 
-  void TcpTransportSocket::sendCont(const boost::system::error_code& erc)
+  /*
+   * warning: msg is given to the callback so as not to drop buffers refcount
+   */
+  void TcpTransportSocket::sendCont(const boost::system::error_code& erc, qi::Message msg)
   {
     // The class does not wait for us to terminate, but it will set abort to true.
     // So do not use this before checking abort.
