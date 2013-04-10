@@ -111,10 +111,11 @@ namespace qi
 
   template<typename T> class BounceToSignalBase
   {
+    // This default should not be instanciated
+    BOOST_STATIC_ASSERT(sizeof(T) < 0);
     public:
     BounceToSignalBase(SignalBase& sb)
     {
-      typedef typename T::UnexpectedMethodSignature type;
     }
   };
   #define pushArg(z, n, _) \
