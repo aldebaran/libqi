@@ -249,7 +249,10 @@ namespace qi {
   public: //Signals
     typedef boost::function<void (Future<T>) > Connection;
     inline void connect(const Connection& s) { _p->connect(*this, s);}
-    //qi::Signal<void (qi::Future<T>)> &onResult() { return _p->_onResult; }
+
+
+    // Our companion library libqitype requires a connect with same signature for all instantiations
+    inline void _connect(const boost::function<void()>& s) { connect(boost::bind(s));}
 
   protected:
     // C4251 needs to have dll-interface to be used by clients of class 'qi::Future<T>'
