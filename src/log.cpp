@@ -261,6 +261,7 @@ namespace qi {
     static bool                   _glSyncLog = false;
     static bool                   _glInit    = false;
     static ConsoleLogHandler      *_glConsoleLogHandler;
+    static ColorWhen              _glColorWhen = COLOR_AUTO;
 
     static Log                    *LogInstance;
     static privateLog             LogBuffer[RTLOG_BUFFERS];
@@ -711,6 +712,17 @@ namespace qi {
       return _glContext;
     };
 
+    void setColor(ColorWhen color)
+    {
+      _glColorWhen = color;
+      _glConsoleLogHandler->updateColor();
+    };
+
+    ColorWhen color()
+    {
+      return _glColorWhen;
+    }
+
     void setSynchronousLog(bool sync)
     {
       _glSyncLog = sync;
@@ -858,6 +870,15 @@ namespace qi {
       if (on)
         removeLogHandler("consoleloghandler");
     }
+    static void _setColor(const std::string &color)
+    {
+      if (color == "always")
+        setColor(COLOR_ALWAYS);
+      else if (color == "never")
+        setColor(COLOR_NEVER);
+      else
+        setColor(COLOR_AUTO);
+    }
 
     _QI_COMMAND_LINE_OPTIONS(
       "Logging options",
@@ -867,6 +888,7 @@ namespace qi {
       ("context,c", value<int>()->notifier(&setContext), "Show context logs: [0-7] (0: none, 1: categories, 2: date, 3: file+line, 4: date+categories, 5: date+line+file, 6: categories+line+file, 7: all (date+categories+line+file+function)).")
       ("synchronous-log", bool_switch()->notifier(boost::bind(&setSynchronousLog, true)),  "Activate synchronous logs.")
       ("log-level,L", value<int>()->notifier(&_setVerbosityInt), "Change the log minimum level: [0-6] (0: silent, 1: fatal, 2: error, 3: warning, 4: info, 5: verbose, 6: debug). Default: 4 (info)")
+      ("color", value<std::string>()->notifier(&_setColor), "Tell if we should put color or not in log (auto, always, never).")
       )
 
     int process_env()

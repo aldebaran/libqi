@@ -37,6 +37,8 @@ namespace qi {
                const char              *fct,
                const int               line);
 
+      void updateColor();
+
 
     protected:
       QI_DISALLOW_COPY_AND_ASSIGN(ConsoleLogHandler);

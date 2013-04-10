@@ -90,6 +90,11 @@ namespace qi {
         verbose,
         debug
     };
+    enum ColorWhen {
+      COLOR_NEVER,
+      COLOR_AUTO,
+      COLOR_ALWAYS,
+    };
   }
 }
 
@@ -172,6 +177,10 @@ namespace qi {
     QI_API void setContext(int ctx);
 
     QI_API int context();
+
+    QI_API void setColor(ColorWhen color);
+
+    QI_API ColorWhen color();
 
     QI_API void setSynchronousLog(bool sync);
 

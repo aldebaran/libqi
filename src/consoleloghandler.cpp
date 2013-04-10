@@ -194,17 +194,30 @@ namespace qi {
     ConsoleLogHandler::ConsoleLogHandler()
       : _private(new PrivateConsoleLogHandler)
     {
-      const char *color   = std::getenv("CLICOLOR");
-
 #ifdef _WIN32
       _private->_winScreenHandle = GetStdHandle(STD_OUTPUT_HANDLE);
 #endif
-      _private->_color = 1;
+      updateColor();
+    }
 
-      if (color)
-        _private->_color = atoi(color) > 0 ? true: false;
-      if (!qi::os::isatty())
+    void ConsoleLogHandler::updateColor()
+    {
+      const char *color   = std::getenv("CLICOLOR");
+
+      if (color && atoi(color) == 0) {
         _private->_color = 0;
+        return;
+      }
+      if (qi::log::color() == COLOR_NEVER)
+        _private->_color = 0;
+      if (qi::log::color() == COLOR_AUTO) {
+        if (qi::os::isatty())
+          _private->_color = 1;
+        else
+          _private->_color = 0;
+      }
+      if (qi::log::color() == COLOR_ALWAYS)
+        _private->_color = 1;
     }
 
     int stringToColor(const char *str)
