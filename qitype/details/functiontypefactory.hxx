@@ -67,7 +67,7 @@ namespace qi
   };
   template<typename T> struct EqTypeBase<T, true>
   {
-    typedef void* type;
+    typedef typename boost::mpl::if_<typename boost::is_fundamental<T>::type, void*, T>::type type;
     typedef typename boost::mpl::if_<typename boost::is_fundamental<T>::type, void*, T>::type rType;
     typedef typename boost::is_reference<T>::type isReference;
      static const int dbgTag = 1;

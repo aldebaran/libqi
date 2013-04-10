@@ -72,8 +72,15 @@ struct Foo: public Padding, public Parent, public Padding2 {
   virtual  qi::int32_t vping32(qi::int32_t v) { return v+f;}
   void pingV(qi::int32_t v) { r = v+f;}
   int & getRefF() { return f;}
+  std::string pingString(std::string s) { return s + (char)('0' + f);}
+  const std::string& pingConstString(const std::string& s)
+  {
+    this->s = s;
+    return this->s;
+  }
   int f;
   int r;
+  std::string s;
 };
 
 class C
@@ -280,6 +287,11 @@ TEST(TestObject, ABI)
 
   f = makeGenericFunction(&Foo::getRefF);
   EXPECT_EQ(3, f.call(convert(&foo)).toInt());
+
+  f = makeGenericFunction(&Foo::pingString);
+  EXPECT_EQ("foo3", f.call(convert(&foo, "foo")).toString());
+  f = makeGenericFunction(&Foo::pingConstString);
+  EXPECT_EQ("bar", f.call(convert(&foo, "bar")).toString());
 }
 
 TEST(TestObject, Simple) {
