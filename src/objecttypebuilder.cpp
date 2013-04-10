@@ -2,9 +2,10 @@
 **  Copyright (C) 2012 Aldebaran Robotics
 **  See COPYING for the license
 */
-#include <qitype/objecttypebuilder.hpp>
+
 #include <boost/thread.hpp>
 #include <qitype/genericobject.hpp>
+#include <qitype/objecttypebuilder.hpp>
 #include "staticobjecttype.hpp"
 #include "metaobject_p.hpp"
 
@@ -15,11 +16,16 @@ namespace qi {
   class ObjectTypeBuilderPrivate
   {
   public:
-    ObjectTypeBuilderPrivate() : type(0), threadingModel(ObjectThreadingModel_SingleThread)  {}
+    ObjectTypeBuilderPrivate()
+    : type(0)
+    , threadingModel(ObjectThreadingModel_SingleThread)
+    , autoRegister(true)
+    {}
     ObjectTypeData data;
     ObjectType*    type;
     MetaObject     metaObject;
     ObjectThreadingModel threadingModel;
+    bool                 autoRegister;
   };
 
   ObjectTypeBuilderBase::ObjectTypeBuilderBase()
@@ -73,9 +79,10 @@ namespace qi {
     return id;
   }
 
-  void ObjectTypeBuilderBase::xBuildFor(Type* type)
+  void ObjectTypeBuilderBase::xBuildFor(Type* type, bool autoRegister)
   {
     _p->data.classType = type;
+    _p->autoRegister = autoRegister;
   }
 
   void ObjectTypeBuilderBase::setThreadingModel(ObjectThreadingModel model)
@@ -105,7 +112,8 @@ namespace qi {
       StaticObjectTypeBase* t = new StaticObjectTypeBase();
       t->initialize(metaObject(), _p->data);
       _p->type = t;
-      registerType();
+      if (_p->autoRegister)
+        registerType();
     }
     return _p->type;
   }

@@ -15,7 +15,7 @@
 namespace qi {
 
 
-  template<typename T> void ObjectTypeBuilderBase::buildFor()
+  template<typename T> void ObjectTypeBuilderBase::buildFor(bool autoRegister)
   {
     // We are erasing T here: we must pass everything the builder need to know about t:
     // - typeid
@@ -23,7 +23,7 @@ namespace qi {
     // - serializer, ...
     // => wee need all Type* methods, but we do not want another Type*
     // to anwser to typeOf<T>
-    xBuildFor(new DefaultTypeImpl<T>());
+    xBuildFor(new DefaultTypeImpl<T>(), autoRegister);
   }
 
   template <typename FUNCTION_TYPE>

@@ -40,7 +40,7 @@ namespace qi {
     // input: template-based
 
     /// Declare the class type for which this StaticBuilder is.
-    template<typename T> void  buildFor();
+    template<typename T> void  buildFor(bool autoRegister = true);
     template <typename FUNCTION_TYPE>
     inline unsigned int advertiseMethod(const std::string& name, FUNCTION_TYPE function, MetaCallType threadingModel = MetaCallType_Auto, int id = -1);
     template <typename C, typename T>
@@ -62,7 +62,7 @@ namespace qi {
 
     int xAdvertiseEvent(const std::string& signature, SignalMemberGetter getter, int id = -1);
     int xAdvertiseProperty(const std::string& name, const std::string& sig, PropertyMemberGetter getter, int id = -1);
-    void xBuildFor(Type* type);
+    void xBuildFor(Type* type, bool autoRegister = true);
     void inherits(Type* parentType, int offset);
 
     // Configuration
@@ -85,9 +85,9 @@ namespace qi {
   class ObjectTypeBuilder : public ObjectTypeBuilderBase
   {
   public:
-    ObjectTypeBuilder()
+    ObjectTypeBuilder(bool autoRegister=true)
     {
-      buildFor<T>();
+      buildFor<T>(autoRegister);
     }
 
     template<typename U> void inherits();
