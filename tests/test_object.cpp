@@ -71,6 +71,7 @@ struct Foo: public Padding, public Parent, public Padding2 {
   double pingDouble(double v) { return v+(double)f;}
   virtual  qi::int32_t vping32(qi::int32_t v) { return v+f;}
   void pingV(qi::int32_t v) { r = v+f;}
+  int & getRefF() { return f;}
   int f;
   int r;
 };
@@ -277,6 +278,8 @@ TEST(TestObject, ABI)
   EXPECT_EQ(45, f.call(convert(static_cast<Parent*>(&foo), 42)).toInt());
   EXPECT_EQ(45, f.call(convert(foo, 42)).toInt());
 
+  f = makeGenericFunction(&Foo::getRefF);
+  EXPECT_EQ(3, f.call(convert(&foo)).toInt());
 }
 
 TEST(TestObject, Simple) {

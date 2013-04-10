@@ -330,11 +330,15 @@ namespace qi
 #endif
       detail::transformRef(args, out, argc, refMask);
       void* v = detail::makeCall(*(S*)ptrFromStorage(&storage), (void**)out);
+      // v is storage for type ReturnType we claimed we were
       // adapt return value if needed
       if (boost::is_pointer<ReturnType>::value
         &&  _resultType->kind() != Type::Pointer)
       {
-        void* vstorage = _resultType->initializeStorage(&v);
+        // if refMask&1, real return type is some Foo& and v is Foo*
+        // else, return type is Foo whith sizeof(Foo) == sizeof(void*) and v is a Foo
+        void* vstorage = _resultType->initializeStorage(
+          (refMask&1)? v: &v);
         vstorage = _resultType->clone(vstorage);
         //qiLogWarning("ft") << "Ret deref " << (unsigned long)v <<' ' << vstorage
         // << ' ' << *(unsigned long*)vstorage;
