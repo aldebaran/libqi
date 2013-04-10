@@ -494,15 +494,17 @@ namespace qi {
         return false;
 
       DWORD64 dwProcessAffinity = 0, dwSystemAffinity = 0;
-      DWORD* mask = new DWORD[cpus.size()];
+      DWORD64 mask = 0;
       int i = 0;
 
       for (std::vector<int>::const_iterator it = cpus.begin(); it != cpus.end(); ++it)
-       mask[i++] = *it;
+      {
+        mask |= (1 << *it);
+        i++;
+      }
 
       DWORD_PTR ret = SetThreadAffinityMask(GetCurrentThread(), (DWORD_PTR) mask);
 
-      delete[] mask;
       if (!ret)
       {
         qiLogError("qi.os") << "setCPUThreadAffinity : " << GetLastErrorMessage(GetLastError());
