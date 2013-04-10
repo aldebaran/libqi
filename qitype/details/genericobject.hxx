@@ -8,13 +8,33 @@
 #define _QITYPE_DETAILS_GENERICOBJECT_HXX_
 
 #include <qi/future.hpp>
+#include <qitype/type.hpp>
 #include <qitype/typeobject.hpp>
 #include <qitype/details/typeimpl.hxx>
+#include <qitype/objecttypebuilder.hpp>
+
+QI_REGISTER_TEMPLATE_OBJECT(qi::Future, connect, _connect, isFinished, value, wait, isRunning, isCanceled, hasError, error);
 
 namespace qi {
 
   namespace detail
   {
+
+    template <typename T>
+    void futureAdapterGeneric(GenericValuePtr val, qi::Promise<T> promise)
+    {
+      TypeTemplate* futureType = QI_TEMPLATE_TYPE_GET(val.type, Future);
+      ObjectType* onext = dynamic_cast<ObjectType*>(futureType->next());
+      GenericObject gfut(onext, val.value);
+      if (gfut.call<bool>("hasError", 0))
+      {
+        promise.setError(gfut.call<std::string>("error", 0));
+        return;
+      }
+      GenericValue v = gfut.call<GenericValue>("value", 0);
+      promise.setValue(v.to<T>());
+      val.destroy();
+    }
 
     template <typename T>
     inline void futureAdapter(qi::Future<qi::GenericValuePtr> metaFut, qi::Promise<T> promise)
@@ -27,6 +47,16 @@ namespace qi {
       }
 
       GenericValuePtr val =  metaFut.value();
+      TypeTemplate* futureType = QI_TEMPLATE_TYPE_GET(val.type, Future);
+      if (futureType)
+      {
+        Type* next = futureType->next();
+        ObjectType* onext = dynamic_cast<ObjectType*>(next);
+        GenericObject gfut(onext, val.value);
+        boost::function<void()> cb = boost::bind(futureAdapterGeneric<T>, val, promise);
+        gfut.call<void>("_connect", cb);
+        return;
+      }
       Type* targetType = typeOf<T>();
       try
       {

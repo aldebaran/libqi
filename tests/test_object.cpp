@@ -620,6 +620,38 @@ TEST(TestObject, CallBackRegistration)
  // obj->connect("testcb", boost::bind<void>(&ccb));
 }
 
+void _delaySet(qi::Promise<int> p, unsigned long msDelay, int value)
+{
+  qi::os::msleep(msDelay);
+  if (value == -1)
+    p.setError("-1");
+  else
+    p.setValue(value);
+}
+
+qi::Future<int> delaySet(unsigned long msDelay, int value)
+{
+  qi::Promise<int> p;
+  boost::thread(_delaySet, p, msDelay, value);
+  return p.future();
+}
+
+TEST(TestObject, Future)
+{
+  qi::GenericObjectBuilder gob;
+  gob.advertiseMethod("delaySet", &delaySet);
+  qi::ObjectPtr obj = gob.object();
+  qi::Future<int> f = obj->call<int>("delaySet", 500, 41);
+  ASSERT_TRUE(!f.isFinished());
+  f.wait();
+  ASSERT_EQ(41, f.value());
+  f =  obj->call<int>("delaySet", 500, -1);
+  ASSERT_TRUE(!f.isFinished());
+  f.wait();
+  ASSERT_TRUE(f.hasError());
+  std::cerr << "ERR " << f.error() << std::endl;
+}
+
 int main(int argc, char **argv)
 {
   qi::Application app(argc, argv);
