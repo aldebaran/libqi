@@ -678,6 +678,25 @@ namespace qi {
     }
   };
 
+  template <typename T1, typename T2>
+  struct FutureValueConverter;
+
+  template <typename T>
+  struct FutureValueConverter<T, qi::GenericValue>
+  {
+    void operator()(const T& in, qi::GenericValue &out)
+    {
+      out = qi::GenericValue::from(in);
+    }
+  };
+
+  template <>
+  struct FutureValueConverter<void, qi::GenericValue>
+  {
+    void operator()(void *in, qi::GenericValue &out)
+    {
+    }
+  };
 }
 
 namespace std
