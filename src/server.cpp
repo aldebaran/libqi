@@ -2,7 +2,6 @@
 **  Copyright (C) 2012 Aldebaran Robotics
 **  See COPYING for the license
 */
-#include <set>
 #include <qitype/genericobject.hpp>
 #include "transportserver.hpp"
 #include <qimessaging/serviceinfo.hpp>
@@ -30,20 +29,7 @@ namespace qi {
 
   Server::~Server()
   {
-    //we can call reset on server and socket they are only owned by us.
-    //when it's close it's close
-    _server.newConnection.disconnectAll();
-    boost::recursive_mutex::scoped_lock sl(_socketsMutex);
-    _dying = true;
-    for (std::set<TransportSocketPtr>::iterator i = _sockets.begin();
-      i != _sockets.end(); ++i)
-    {
-      // We do not want onSocketDisconnected called
-      //TODO: move that logic into TransportServer.
-      (*i)->disconnected.disconnectAll();
-      (*i)->messageReady.disconnectAll();
-      (*i)->disconnect();
-    }
+    close();
   }
 
   bool Server::addObject(unsigned int id, qi::ObjectPtr obj)
@@ -91,7 +77,7 @@ namespace qi {
     boost::recursive_mutex::scoped_lock sl(_socketsMutex);
     if (!socket)
       return;
-    _sockets.insert(socket);
+    _sockets.push_back(socket);
     socket->disconnected.connect(boost::bind<void>(&Server::onSocketDisconnected, this, socket, _1));
     socket->messageReady.connect(boost::bind<void>(&Server::onMessageReady, this, _1, socket));
     socket->startReading();
@@ -124,15 +110,19 @@ namespace qi {
 
   void Server::close()
   {
-    if (endpoints().empty())
     {
-      return;
+      boost::mutex::scoped_lock l(_stateMutex);
+      _dying = true;
     }
+
+    //we can call reset on server and socket they are only owned by us.
+    //when it's close it's close
+    _server.newConnection.disconnectAll();
 
     qiLogInfo() << "Closing server...";
     {
       boost::recursive_mutex::scoped_lock sl(_socketsMutex);
-      std::set<TransportSocketPtr>::iterator it;
+      std::list<TransportSocketPtr>::iterator it;
       //TODO move that logic into TransportServer
       for (it = _sockets.begin(); it != _sockets.end(); ++it) {
         (*it)->connected.disconnectAll();
@@ -156,12 +146,34 @@ namespace qi {
 
   void Server::onSocketDisconnected(TransportSocketPtr socket, int error)
   {
+    boost::mutex::scoped_lock l(_stateMutex);
+    if (_dying)
+    {
+      return;
+    }
+
     BoundObjectPtrMap::iterator it;
     {
       boost::mutex::scoped_lock sl(_boundObjectsMutex);
       for (it = _boundObjects.begin(); it != _boundObjects.end(); ++it) {
         BoundObjectPtr o = it->second;
         o->onSocketDisconnected(socket, error);
+      }
+    }
+
+    {
+      std::list<TransportSocketPtr>::iterator it;
+      boost::recursive_mutex::scoped_lock sl(_socketsMutex);
+      for (it = _sockets.begin(); it != _sockets.end(); ++it)
+      {
+        if (it->get() == socket.get())
+        {
+          (*it)->connected.disconnectAll();
+          (*it)->disconnected.disconnectAll();
+          (*it)->messageReady.disconnectAll();
+          _sockets.erase(it);
+          break;
+        }
       }
     }
   }

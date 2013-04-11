@@ -7,13 +7,8 @@
 #ifndef _SRC_SERVER_HPP_
 #define _SRC_SERVER_HPP_
 
-#include <string>
-#include <set>
 #include <boost/thread/recursive_mutex.hpp>
 #include <qimessaging/api.hpp>
-#include <qimessaging/session.hpp>
-#include "transportserver.hpp"
-#include <qi/atomic.hpp>
 #include "boundobject.hpp"
 
 namespace qi {
@@ -65,8 +60,9 @@ namespace qi {
     boost::mutex                        _boundObjectsMutex;
 
     //SocketList
-    std::set<TransportSocketPtr>        _sockets;
+    std::list<TransportSocketPtr>       _sockets;
     boost::recursive_mutex              _socketsMutex;
+    boost::mutex                        _stateMutex;
 
   public:
     TransportServer                     _server;
