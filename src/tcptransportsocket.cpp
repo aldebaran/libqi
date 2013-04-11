@@ -198,11 +198,19 @@ namespace qi
     {
       boost::mutex::scoped_lock l(_sendQueueMutex);
       boost::system::error_code er;
-      if (_socket->lowest_layer().is_open())
+      if (_socket && _socket->lowest_layer().is_open())
+      {
+        _socket->lowest_layer().shutdown(boost::asio::ip::tcp::socket::shutdown_both, er);
         _socket->lowest_layer().close(er);
+
+      }
     }
     _socket.reset();
-    _disconnectPromise.setValue(0);
+
+    if (_disconnectPromise.future().isRunning())
+    {
+      _disconnectPromise.setValue(0);
+    }
   }
 
 
@@ -340,24 +348,9 @@ namespace qi
 
   qi::FutureSync<void> TcpTransportSocket::disconnect()
   {
-    {
-      boost::mutex::scoped_lock(_closingMutex);
-      _abort = true; // Notify send callback sendCont that it must silently terminate
-    }
-    {
-      boost::mutex::scoped_lock l(_sendQueueMutex);
-      if (_socket && _socket->lowest_layer().is_open())
-      {
-        boost::system::error_code erc;
-        boost::mutex::scoped_lock(_closingMutex);
+    boost::system::error_code erc;
+    error(erc);
 
-        _socket->lowest_layer().shutdown(boost::asio::ip::tcp::socket::shutdown_both, erc);
-        _socket->lowest_layer().close(erc); // will invoke read callback with error set
-      }
-      // Do not set disconnectPromise here, it will/has been set
-      // by error(), called by read callback, and we must wait for it
-      // to terminate.
-    }
     return _disconnectPromise.future();
   }
 
