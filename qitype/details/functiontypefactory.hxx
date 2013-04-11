@@ -446,7 +446,7 @@ namespace qi
       unsigned long mask = EqFunction<F>::refMask;
       FunctionType* ftype = FunctionTypeEq<MapedF, EqFunPtr>::make(mask, argumentsType, resultType);
 
-      qiLogDebug("qitype.makeGenericFunction") << "bare mask " << EqFunction<F>::refMask;
+      qiLogDebug("qitype.makeGenericFunction") << "bare mask " << (unsigned long)EqFunction<F>::refMask;
       return GenericFunction(ftype, ftype->clone(ftype->initializeStorage(&func)));
     }
 
