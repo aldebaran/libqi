@@ -26,7 +26,19 @@ namespace qi
     if (type == dynamicFunctionType())
     {
       DynamicFunction* f = (DynamicFunction*)value;
-      return (*f)(vargs);
+      if (!transform.dropFirst && !transform.prependValue)
+        return (*f)(vargs);
+      std::vector<GenericValuePtr> args;
+      if (transform.dropFirst && !transform.prependValue)
+        args.insert(args.end(), &vargs[1], &vargs[1] + vargs.size()-1);
+      else if (transform.dropFirst && transform.prependValue)
+      {
+        args = vargs;
+        args[0].value = transform.boundValue;
+      }
+      else // prepend && ! drop
+        throw std::runtime_error("Cannot prepend argument to dynamic function type");
+      return (*f)(args);
     }
     /* We must honor transform, who can have any combination of the following enabled:
     * - drop first arg
