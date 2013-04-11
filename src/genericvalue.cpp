@@ -629,7 +629,9 @@ namespace qi
       TypeInt* type = static_cast<TypeInt*>(this->type);
        if (v < 0 && !type->isSigned())
         throw std::runtime_error(_QI_LOG_FORMAT_HASARG_0("Converting negative value %s to unsigned type", v));
-      if (type->size() < 8 && (std::abs(v) >= (1ULL << (8*type->size() - (type->isSigned()?1:0))) + ((v<0)?1:0)))
+      if (type->size() == 0 && std::min(std::abs(v), std::abs(v-1)) > 0.01)
+        throw std::runtime_error(_QI_LOG_FORMAT_HASARG_0("Expected 0 or 1 when converting to bool, got %s", v));
+      if (type->size() != 0 && type->size() < 8 && (std::abs(v) >= (1ULL << (8*type->size() - (type->isSigned()?1:0))) + ((v<0)?1:0)))
         throw std::runtime_error(_QI_LOG_FORMAT_HASARG_0("Overflow converting %s to %s bytes", v, type->size()));
       if (type->size() == 8
         && std::abs(v) > (type->isSigned()?
