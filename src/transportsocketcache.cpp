@@ -74,6 +74,11 @@ namespace qi {
         endpoints.push_back(url);
       }
     }
+    if (endpoints.empty() && local && !servInfo.endpoints().empty())
+    { // We are local, but localhost is not listed in endpoints.
+      // Just take any entry, it has to be one of our public IP addresses
+      endpoints.push_back(servInfo.endpoints().front());
+    }
     if (endpoints.empty())
       qiLogWarning() << "No more endpoints available after filtering.";
     {
