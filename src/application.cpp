@@ -35,6 +35,7 @@
 extern int _nl_msg_cat_cntr;
 #endif
 
+qiLogCategory("qi.Application");
 
 
 namespace qi {
@@ -74,7 +75,7 @@ namespace qi {
 
   static void stop_io_service()
   {
-    qiLogInfo("qi.application") << "Unregistering all signal handlers.";
+    qiLogInfo() << "Unregistering all signal handlers.";
     //dont call ioservice->stop, just remove all events for the ioservice
     //deleting the object holding the run() method from quitting
     delete globalIoWork;
@@ -121,7 +122,7 @@ namespace qi {
     }
     switch (sigcount) {
       case 1:
-        qiLogInfo("qi.application") << "Sending the stop command...";
+        qiLogInfo() << "Sending the stop command...";
         //register the signal again to call exit the next time if stop did not succeed
         Application::atSignal(boost::bind<void>(&stop_handler, _1), signal_number);
         // Stop might immediately trigger application destruction, so it has
@@ -130,7 +131,7 @@ namespace qi {
         return;
       default:
         //even for SIGTERM this is an error, so return 1.
-        qiLogInfo("qi.application") << "signal " << signal_number << " received a second time, calling exit(1).";
+        qiLogInfo() << "signal " << signal_number << " received a second time, calling exit(1).";
         exit(1);
         return;
     }
@@ -218,7 +219,7 @@ namespace qi {
   {
     readPathConf();
     if (globalInitialized)
-      qiLogError("Application") << "Application was already initialized";
+      qiLogError() << "Application was already initialized";
     globalInitialized = true;
     globalArgc = argc;
     globalArgv = argv;
@@ -228,7 +229,7 @@ namespace qi {
       args.push_back(argv[i]);
 
     FunctionList& fl = lazyGet(globalAtEnter);
-    qiLogDebug("Application") << "Executing " << fl.size() << " atEnter handlers";
+    qiLogDebug() << "Executing " << fl.size() << " atEnter handlers";
     for (FunctionList::iterator i = fl.begin(); i!= fl.end(); ++i)
       (*i)();
     fl.clear();
@@ -250,12 +251,12 @@ namespace qi {
   void* Application::loadModule(const std::string& moduleName, int flags)
   {
     void* handle = os::dlopen(moduleName.c_str(), flags);
-    qiLogDebug("qi.Application") << "Loadmodule " << handle;
+    qiLogDebug() << "Loadmodule " << handle;
     if (!handle)
-      qiLogVerbose("qi.Application") << "dlopen failed with " << os::dlerror();
+      qiLogVerbose() << "dlopen failed with " << os::dlerror();
     // Reprocess atEnter list in case the module had AT_ENTER
     FunctionList& fl = lazyGet(globalAtEnter);
-    qiLogDebug("qi.Application") << "Executing " << fl.size() << " atEnter handlers";
+    qiLogDebug() << "Executing " << fl.size() << " atEnter handlers";
     for (FunctionList::iterator i = fl.begin(); i!= fl.end(); ++i)
       (*i)();
     fl.clear();
@@ -280,7 +281,7 @@ namespace qi {
     bool signalInit = false;
 
     if (!signalInit) {
-      qiLogVerbose("qi.Application") << "Registering SIGINT/SIGTERM handler within qi::Application";
+      qiLogVerbose() << "Registering SIGINT/SIGTERM handler within qi::Application";
       // kill with no signal sends TERM, control-c sends INT.
       Application::atSignal(boost::bind(&stop_handler, _1), SIGTERM);
       Application::atSignal(boost::bind(&stop_handler, _1), SIGINT);
@@ -305,7 +306,7 @@ namespace qi {
   {
     globalCond.notify_all();
     FunctionList& fl = lazyGet(globalAtStop);
-    qiLogDebug("qi.Application") << "Executing " << fl.size() << " atStop handlers";
+    qiLogDebug() << "Executing " << fl.size() << " atStop handlers";
     for (FunctionList::iterator i = fl.begin(); i!= fl.end(); ++i)
       (*i)();
   }
@@ -399,7 +400,7 @@ namespace qi {
 
   bool Application::atEnter(boost::function<void()> func)
   {
-    qiLogDebug("qi.Application") << "atEnter";
+    qiLogDebug() << "atEnter";
     lazyGet(globalAtEnter).push_back(func);
     return true;
   }

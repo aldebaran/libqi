@@ -18,6 +18,8 @@
 
 #include <iostream>
 
+qiLogCategory("qi.Buffer");
+
 namespace qi
 {
   BufferPrivate::BufferPrivate()
@@ -90,7 +92,7 @@ namespace qi
   {
     neededSize += BLOCK; // Should be enough in most cases;
 
-    qiLogDebug("qi.buffer") << "Resizing buffer from " << available << " to " << neededSize;
+    qiLogDebug() << "Resizing buffer from " << available << " to " << neededSize;
     unsigned char *newBigdata;
 
     newBigdata = static_cast<unsigned char *>(realloc(_bigdata, neededSize));
@@ -109,7 +111,7 @@ namespace qi
     {
       bool ret = _p->resize(_p->used + size);
       if (!ret) {
-        qiLogVerbose("qi.Buffer") << "write(" << size << ") failed, buffer size is " << _p->available;
+        qiLogVerbose() << "write(" << size << ") failed, buffer size is " << _p->available;
         return false;
       }
     }
@@ -199,7 +201,7 @@ namespace qi
   {
     if (offset + length > _p->used)
     {
-      qiLogDebug("qi.buffer") << "Attempt to read " << offset+length
+      qiLogDebug() << "Attempt to read " << offset+length
        <<" on buffer of size " << _p->used;
       return 0;
     }
@@ -210,7 +212,7 @@ namespace qi
   {
     if (offset > _p->used)
     {
-      qiLogDebug("qi.buffer") << "Attempt to read " << offset+length
+      qiLogDebug() << "Attempt to read " << offset+length
       <<" on buffer of size " << _p->used;
       return -1;
     }
@@ -223,7 +225,7 @@ namespace qi
     void printBuffer(std::ostream& stream, const Buffer& buffer)
     {
       if (buffer.size() == 0) {
-        qiLogDebug("qi.buffer") << "dump on empty buffer";
+        qiLogDebug() << "dump on empty buffer";
         return;
       }
 
