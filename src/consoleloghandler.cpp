@@ -188,14 +188,14 @@ namespace qi {
 
     ConsoleLogHandler::~ConsoleLogHandler()
     {
-      delete _private;
+      delete _p;
     }
 
     ConsoleLogHandler::ConsoleLogHandler()
-      : _private(new PrivateConsoleLogHandler)
+      : _p(new PrivateConsoleLogHandler)
     {
 #ifdef _WIN32
-      _private->_winScreenHandle = GetStdHandle(STD_OUTPUT_HANDLE);
+      _p->_winScreenHandle = GetStdHandle(STD_OUTPUT_HANDLE);
 #endif
       updateColor();
     }
@@ -205,19 +205,19 @@ namespace qi {
       const char *color   = std::getenv("CLICOLOR");
 
       if (color && atoi(color) == 0) {
-        _private->_color = 0;
+        _p->_color = 0;
         return;
       }
       if (qi::log::color() == COLOR_NEVER)
-        _private->_color = 0;
+        _p->_color = 0;
       if (qi::log::color() == COLOR_AUTO) {
         if (qi::os::isatty())
-          _private->_color = 1;
+          _p->_color = 1;
         else
-          _private->_color = 0;
+          _p->_color = 0;
       }
       if (qi::log::color() == COLOR_ALWAYS)
-        _private->_color = 1;
+        _p->_color = 1;
     }
 
     int stringToColor(const char *str)
@@ -298,14 +298,14 @@ namespace qi {
       else
       {
 #ifndef _WIN32
-        _private->textColorAttr(_private->reset);
-        _private->textColorFG(_private->white);
+        _p->textColorAttr(_p->reset);
+        _p->textColorFG(_p->white);
 #endif
-        if (_private->_color) {
-          _private->coloredLog(verb, date, category, msg, file, fct, line);
+        if (_p->_color) {
+          _p->coloredLog(verb, date, category, msg, file, fct, line);
           return;
         } else {
-          _private->header(verb);
+          _p->header(verb);
 
           std::string logline = qi::detail::logline(date, category, msg, file, fct, line);
           printf("%s", logline.c_str());

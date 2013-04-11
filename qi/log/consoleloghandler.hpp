@@ -42,7 +42,7 @@ namespace qi {
 
     protected:
       QI_DISALLOW_COPY_AND_ASSIGN(ConsoleLogHandler);
-      PrivateConsoleLogHandler* _private;
+      PrivateConsoleLogHandler* _p;
     };
   }
 }
