@@ -240,7 +240,15 @@ namespace qi {
   template <typename T>
   struct FutureValueConverter<T, void>
   {
-    void convert(const T& in, void* out)
+    void operator()(const T& in, void* out)
+    {
+    }
+  };
+
+  template <typename T>
+  struct FutureValueConverter<void, T>
+  {
+    void operator()(void* in, const T& out)
     {
     }
   };
