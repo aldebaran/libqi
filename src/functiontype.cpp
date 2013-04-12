@@ -2,9 +2,11 @@
 **  Copyright (C) 2012 Aldebaran Robotics
 **  See COPYING for the license
 */
+#include <qi/future.hpp>
 #include <qitype/signature.hpp>
 #include <qitype/functiontype.hpp>
 #include <qitype/functiontypefactory.hpp>
+#include <qitype/genericobject.hpp>
 
 qiLogCategory("qitype.functiontype");
 
@@ -183,7 +185,12 @@ namespace qi
 
   std::string GenericFunction::sigreturn() const
   {
-    return resultType()->signature();
+    // Detect if returned type is a qi::Future and return underlying value type.
+    TypeTemplate* futureType = QI_TEMPLATE_TYPE_GET(resultType(), Future);
+    if (futureType)
+      return futureType->templateArgument()->signature();
+    else
+      return resultType()->signature();
   }
 
   std::string CallableType::signature() const
