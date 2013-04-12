@@ -13,6 +13,29 @@
 
 namespace qi {
 
+  // second bounce when returned type is a future
+  inline void serverResultAdapterNext(GenericValuePtr val,// the future
+    ObjectHost* host,
+    TransportSocketPtr socket, const qi::MessageAddress &replyaddr)
+  {
+    qi::Message ret(Message::Type_Reply, replyaddr);
+    TypeTemplate* futureType = QI_TEMPLATE_TYPE_GET(val.type, Future);
+    ObjectType* onext = dynamic_cast<ObjectType*>(futureType->next());
+    GenericObject gfut(onext, val.value);
+    if (gfut.call<bool>("hasError", 0))
+    {
+      ret.setType(qi::Message::Type_Error);
+      ret.setError(gfut.call<std::string>("error", 0));
+    }
+    else
+    {
+      GenericValue v = gfut.call<GenericValue>("value", 0);
+      ret.setValue(v, host);
+    }
+    if (!socket->send(ret))
+      qiLogError("qimessaging.serverresult") << "Can't generate an answer for address:" << replyaddr;
+  }
+
   inline void serverResultAdapter(qi::Future<GenericValuePtr> future,
     ObjectHost* host, TransportSocketPtr socket, const qi::MessageAddress &replyaddr) {
     qi::Message ret(Message::Type_Reply, replyaddr);
@@ -22,6 +45,16 @@ namespace qi {
       ret.setError(future.error());
     } else {
       qi::GenericValuePtr val = future.value();
+      TypeTemplate* futureType = QI_TEMPLATE_TYPE_GET(val.type, Future);
+      if (futureType)
+      { // Return value is a future, bounce
+        Type* next = futureType->next();
+        ObjectType* onext = dynamic_cast<ObjectType*>(next);
+        GenericObject gfut(onext, val.value);
+        boost::function<void()> cb = boost::bind(serverResultAdapterNext, val, host, socket, replyaddr);
+        gfut.call<void>("_connect", cb);
+        return;
+      }
       ret.setValue(val, host);
       val.destroy();
     }

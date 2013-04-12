@@ -854,6 +854,40 @@ TEST(TestCall, ForceOverload)
   ASSERT_EQ("foo", client->call<std::string>("ping::(s)", "foo").value());
 }
 
+void _delaySet(qi::Promise<int> p, unsigned long msDelay, int value)
+{
+  qi::os::msleep(msDelay);
+  if (value == -1)
+    p.setError("-1");
+  else
+    p.setValue(value);
+}
+
+qi::Future<int> delaySet(unsigned long msDelay, int value)
+{
+  qi::Promise<int> p;
+  boost::thread(_delaySet, p, msDelay, value);
+  return p.future();
+}
+
+TEST(TestCall, Future)
+{
+  TestSessionPair p;
+  qi::GenericObjectBuilder gob;
+  gob.advertiseMethod("delaySet", &delaySet);
+  qi::ObjectPtr sobj = gob.object();
+  p.server()->registerService("delayer", sobj);
+  qi::ObjectPtr obj = p.client()->service("delayer");
+  qi::Future<int> f = obj->call<int>("delaySet", 500, 41);
+  ASSERT_TRUE(!f.isFinished());
+  f.wait();
+  ASSERT_EQ(41, f.value());
+  f =  obj->call<int>("delaySet", 500, -1);
+  ASSERT_TRUE(!f.isFinished());
+  f.wait();
+  ASSERT_TRUE(f.hasError());
+}
+
 
 int main(int argc, char **argv) {
   qi::Application app(argc, argv);
