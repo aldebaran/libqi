@@ -38,7 +38,7 @@ namespace qi {
 
     private:
       QI_DISALLOW_COPY_AND_ASSIGN(HeadFileLogHandler);
-      PrivateHeadFileLogHandler* _private;
+      PrivateHeadFileLogHandler* _p;
     }; // !HeadFileLogHandler
 
   }; // !log

@@ -35,7 +35,7 @@ namespace qi {
 
     private:
       QI_DISALLOW_COPY_AND_ASSIGN(TailFileLogHandler);
-      PrivateTailFileLogHandler* _private;
+      PrivateTailFileLogHandler* _p;
     }; // !TailFileLogHandler
 
   }; // !log

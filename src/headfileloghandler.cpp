@@ -32,11 +32,11 @@ namespace qi {
 
     HeadFileLogHandler::HeadFileLogHandler(const std::string& filePath,
                                            int length)
-      : _private(new PrivateHeadFileLogHandler)
+      : _p(new PrivateHeadFileLogHandler)
     {
-      _private->_max = length;
-      _private->_file = NULL;
-      _private->_count = _private->_max + 1;
+      _p->_max = length;
+      _p->_file = NULL;
+      _p->_count = _p->_max + 1;
 
       boost::filesystem::path fPath(filePath);
       // Create the directory!
@@ -54,8 +54,8 @@ namespace qi {
 
       if (file)
       {
-        _private->_file = file;
-        _private->_count = 0;
+        _p->_file = file;
+        _p->_count = 0;
       }
       else
       {
@@ -67,9 +67,9 @@ namespace qi {
 
     HeadFileLogHandler::~HeadFileLogHandler()
     {
-      if (_private->_file != NULL)
-        fclose(_private->_file);
-      delete _private;
+      if (_p->_file != NULL)
+        fclose(_p->_file);
+      delete _p;
     }
 
     void HeadFileLogHandler::log(const qi::log::LogLevel verb,
@@ -80,27 +80,27 @@ namespace qi {
                                  const char              *fct,
                                  const int               line)
     {
-      boost::mutex::scoped_lock scopedLock(_private->_mutex);
+      boost::mutex::scoped_lock scopedLock(_p->_mutex);
 
-      if (_private->_count < _private->_max)
+      if (_p->_count < _p->_max)
       {
-        if (verb > qi::log::verbosity() || _private->_file == NULL)
+        if (verb > qi::log::verbosity() || _p->_file == NULL)
         {
           return;
         }
         else
         {
           std::string logline = qi::detail::logline(date, category, msg, file, fct, line);
-          fprintf(_private->_file, "%s %s", logLevelToString(verb), logline.c_str());
-          fflush(_private->_file);
+          fprintf(_p->_file, "%s %s", logLevelToString(verb), logline.c_str());
+          fflush(_p->_file);
 
-          _private->_count++;
+          _p->_count++;
         }
       }
-      else if (_private->_file != NULL)
+      else if (_p->_file != NULL)
       {
-        fclose(_private->_file);
-        _private->_file = NULL;
+        fclose(_p->_file);
+        _p->_file = NULL;
       }
     }
   }

@@ -28,9 +28,9 @@ namespace qi {
 
 
     FileLogHandler::FileLogHandler(const std::string& filePath)
-      : _private(new PrivateFileLogHandler)
+      : _p(new PrivateFileLogHandler)
     {
-      _private->_file = NULL;
+      _p->_file = NULL;
       boost::filesystem::path fPath(filePath);
       // Create the directory!
       try
@@ -47,7 +47,7 @@ namespace qi {
       FILE* file = qi::os::fopen(fPath.make_preferred().string().c_str(), "w+");
 
       if (file)
-        _private->_file = file;
+        _p->_file = file;
       else
         qiLogWarning("qi.log.fileloghandler") << "Cannot open "
                                               << filePath << std::endl;
@@ -55,9 +55,9 @@ namespace qi {
 
     FileLogHandler::~FileLogHandler()
     {
-      if (_private->_file != NULL)
-        fclose(_private->_file);
-      delete _private;
+      if (_p->_file != NULL)
+        fclose(_p->_file);
+      delete _p;
     }
 
     void FileLogHandler::log(const qi::log::LogLevel verb,
@@ -68,15 +68,15 @@ namespace qi {
                              const char              *fct,
                              const int               line)
     {
-      if (verb > qi::log::verbosity() || _private->_file == NULL)
+      if (verb > qi::log::verbosity() || _p->_file == NULL)
       {
         return;
       }
       else
       {
         std::string logline = qi::detail::logline(date, category, msg, file, fct, line);
-        fprintf(_private->_file, "%s %s", logLevelToString(verb), logline.c_str());
-        fflush(_private->_file);
+        fprintf(_p->_file, "%s %s", logLevelToString(verb), logline.c_str());
+        fflush(_p->_file);
       }
     }
   }

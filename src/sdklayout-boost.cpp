@@ -122,35 +122,35 @@ namespace qi {
 
   SDKLayout::~SDKLayout()
   {
-    delete _private;
+    delete _p;
   }
 
   SDKLayout::SDKLayout()
-    : _private(new PrivateSDKLayout)
+    : _p(new PrivateSDKLayout)
   {
-    _private->initSDKlayout();
-    _private->checkInit();
+    _p->initSDKlayout();
+    _p->checkInit();
   }
 
   SDKLayout::SDKLayout(const SDKLayout &rhs)
-    : _private(new PrivateSDKLayout)
+    : _p(new PrivateSDKLayout)
   {
-    *_private = *rhs._private;
+    *_p = *rhs._p;
   }
 
   SDKLayout & SDKLayout::operator=(const SDKLayout &rhs) {
-    *_private = *rhs._private;
+    *_p = *rhs._p;
     return *this;
   }
 
   // FIXME: Add exception if prefix == ""
   SDKLayout::SDKLayout(const std::string &prefix, const std::string &mode)
-    : _private(new PrivateSDKLayout)
+    : _p(new PrivateSDKLayout)
   {
     boost::filesystem::path prefixPath(prefix, qi::unicodeFacet());
     prefixPath = boost::filesystem::system_complete(prefixPath).make_preferred();
-    _private->_sdkPrefixes.push_back(prefixPath.string(qi::unicodeFacet()));
-    _private->_mode = mode;
+    _p->_sdkPrefixes.push_back(prefixPath.string(qi::unicodeFacet()));
+    _p->_mode = mode;
   }
 
   void SDKLayout::addOptionalSdkPrefix(const char *prefix)
@@ -164,29 +164,29 @@ namespace qi {
     {
       qiLogDebug("qi::path") << e.what();
     }
-    _private->_sdkPrefixes.push_back(prefixPath.string(qi::unicodeFacet()));
+    _p->_sdkPrefixes.push_back(prefixPath.string(qi::unicodeFacet()));
   }
 
   void SDKLayout::clearOptionalSdkPrefix()
   {
-    if (_private->_sdkPrefixes.size() > 0)
+    if (_p->_sdkPrefixes.size() > 0)
     {
-      std::string sdkPrefixPath = _private->_sdkPrefixes[0];
-      _private->_sdkPrefixes.clear();
-      _private->_sdkPrefixes.push_back(sdkPrefixPath);
+      std::string sdkPrefixPath = _p->_sdkPrefixes[0];
+      _p->_sdkPrefixes.clear();
+      _p->_sdkPrefixes.push_back(sdkPrefixPath);
     }
   }
 
   std::string SDKLayout::sdkPrefix() const
   {
-    if (_private->_sdkPrefixes.size() <= 0)
+    if (_p->_sdkPrefixes.size() <= 0)
       return std::string();
-    return _private->_sdkPrefixes[0];
+    return _p->_sdkPrefixes[0];
   }
 
   std::vector<std::string> SDKLayout::getSdkPrefixes() const
   {
-    return _private->_sdkPrefixes;
+    return _p->_sdkPrefixes;
   }
 
   std::string SDKLayout::findBin(const std::string &name) const
@@ -201,8 +201,8 @@ namespace qi {
         return bin.string(qi::unicodeFacet());
 
       std::vector<std::string>::const_iterator it;
-      for (it = _private->_sdkPrefixes.begin();
-           it != _private->_sdkPrefixes.end();
+      for (it = _p->_sdkPrefixes.begin();
+           it != _p->_sdkPrefixes.end();
            ++it)
       {
         boost::filesystem::path p;
@@ -264,8 +264,8 @@ namespace qi {
         return res;
 
       std::vector<std::string>::const_iterator it;
-      for (it = _private->_sdkPrefixes.begin();
-           it != _private->_sdkPrefixes.end();
+      for (it = _p->_sdkPrefixes.begin();
+           it != _p->_sdkPrefixes.end();
            ++it)
       {
         boost::filesystem::path p;
@@ -382,7 +382,7 @@ namespace qi {
     try
     {
       std::vector<std::string>::const_iterator it;
-      for (it = _private->_sdkPrefixes.begin(); it != _private->_sdkPrefixes.end(); ++it)
+      for (it = _p->_sdkPrefixes.begin(); it != _p->_sdkPrefixes.end(); ++it)
       {
         res.push_back(fsconcat(*it, "etc", applicationName));
         res.push_back(fsconcat(*it, "etc"));
@@ -411,8 +411,8 @@ namespace qi {
     res.push_back(userWritableDataPath(applicationName, ""));
 
     std::vector<std::string>::const_iterator it;
-    for (it = _private->_sdkPrefixes.begin();
-         it != _private->_sdkPrefixes.end();
+    for (it = _p->_sdkPrefixes.begin();
+         it != _p->_sdkPrefixes.end();
          ++it)
     {
       res.push_back(fsconcat(*it, "share", applicationName));
@@ -426,8 +426,8 @@ namespace qi {
     std::vector<std::string> binPaths;
 
     std::vector<std::string>::const_iterator it;
-    for (it = _private->_sdkPrefixes.begin();
-         it != _private->_sdkPrefixes.end();
+    for (it = _p->_sdkPrefixes.begin();
+         it != _p->_sdkPrefixes.end();
          ++it)
     {
       binPaths.push_back(fsconcat(*it, "bin"));
@@ -441,8 +441,8 @@ namespace qi {
     std::vector<std::string> libPaths;
 
     std::vector<std::string>::const_iterator it;
-    for (it = _private->_sdkPrefixes.begin();
-         it != _private->_sdkPrefixes.end();
+    for (it = _p->_sdkPrefixes.begin();
+         it != _p->_sdkPrefixes.end();
          ++it)
     {
       libPaths.push_back(fsconcat(*it, "lib"));
@@ -454,18 +454,18 @@ namespace qi {
   void SDKLayout::setWritablePath(const std::string &path)
   {
     boost::filesystem::path p(path, qi::unicodeFacet());
-    _private->_writablePath = p.string(qi::unicodeFacet());
+    _p->_writablePath = p.string(qi::unicodeFacet());
   }
 
   std::string SDKLayout::userWritableDataPath(const std::string &applicationName,
                                               const std::string &filename) const
   {
-    return _private->writablePath(applicationName, filename, "data");
+    return _p->writablePath(applicationName, filename, "data");
   }
 
   std::string SDKLayout::userWritableConfPath(const std::string &applicationName,
                                               const std::string &filename) const
   {
-    return _private->writablePath(applicationName, filename, "config");
+    return _p->writablePath(applicationName, filename, "config");
   }
 }

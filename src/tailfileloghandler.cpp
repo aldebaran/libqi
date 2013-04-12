@@ -30,13 +30,13 @@ namespace qi {
     };
 
     TailFileLogHandler::TailFileLogHandler(const std::string& filePath)
-      : _private(new PrivateTailFileLogHandler)
+      : _p(new PrivateTailFileLogHandler)
     {
-      _private->_file = NULL;
-      _private->_writeSize = 0;
-      _private->_fileName = filePath;
+      _p->_file = NULL;
+      _p->_writeSize = 0;
+      _p->_fileName = filePath;
 
-      boost::filesystem::path fPath(_private->_fileName);
+      boost::filesystem::path fPath(_p->_fileName);
       // Create the directory!
       try
       {
@@ -52,7 +52,7 @@ namespace qi {
       FILE* file = qi::os::fopen(fPath.make_preferred().string().c_str(), "w+");
 
       if (file)
-        _private->_file = file;
+        _p->_file = file;
       else
         qiLogWarning("qi.log.tailfileloghandler") << "Cannot open "
                                                   << filePath << std::endl;
@@ -61,9 +61,9 @@ namespace qi {
 
     TailFileLogHandler::~TailFileLogHandler()
     {
-      if (_private->_file != NULL)
-        fclose(_private->_file);
-      delete _private;
+      if (_p->_file != NULL)
+        fclose(_p->_file);
+      delete _p;
     }
 
     void TailFileLogHandler::log(const qi::log::LogLevel verb,
@@ -74,26 +74,26 @@ namespace qi {
                                  const char              *fct,
                                  const int               line)
     {
-      boost::mutex::scoped_lock scopedLock(_private->mutex_);
+      boost::mutex::scoped_lock scopedLock(_p->mutex_);
 
-      if (verb > qi::log::verbosity() || _private->_file == NULL)
+      if (verb > qi::log::verbosity() || _p->_file == NULL)
       {
         return;
       }
       else
       {
-        fseek(_private->_file, 0, SEEK_END);
+        fseek(_p->_file, 0, SEEK_END);
 
         std::string logline = qi::detail::logline(date, category, msg, file, fct, line);
-        _private->_writeSize += fprintf(_private->_file, "%s %s", logLevelToString(verb), logline.c_str());
-        fflush(_private->_file);
+        _p->_writeSize += fprintf(_p->_file, "%s %s", logLevelToString(verb), logline.c_str());
+        fflush(_p->_file);
       }
 
-      if (_private->_writeSize > FILESIZEMAX)
+      if (_p->_writeSize > FILESIZEMAX)
       {
-        fclose(_private->_file);
-        boost::filesystem::path filePath(_private->_fileName);
-        boost::filesystem::path oldFilePath(_private->_fileName + ".old");
+        fclose(_p->_file);
+        boost::filesystem::path filePath(_p->_fileName);
+        boost::filesystem::path oldFilePath(_p->_fileName + ".old");
 
         boost::filesystem::copy_file(filePath,
                                      oldFilePath,
@@ -101,8 +101,8 @@ namespace qi {
 
         FILE* pfile = qi::os::fopen(filePath.make_preferred().string().c_str(), "w+");
 
-        _private->_file = pfile;
-        _private->_writeSize = 0;
+        _p->_file = pfile;
+        _p->_writeSize = 0;
       }
     }
   }

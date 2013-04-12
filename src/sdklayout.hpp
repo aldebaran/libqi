@@ -117,7 +117,7 @@ namespace qi
 
   private:
     // Pimpl
-    PrivateSDKLayout* _private;
+    PrivateSDKLayout* _p;
   };
 
 }
