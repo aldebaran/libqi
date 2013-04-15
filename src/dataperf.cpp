@@ -37,7 +37,7 @@ namespace qi
     qi::os::gettimeofday(&tv);
     _p->cpuElapsed = _p->cpuTime.elapsed();
 
-    _p->wallClockElapsed  = (tv.tv_sec - _p->fStartTime.tv_sec);
+    _p->wallClockElapsed  = (double)(tv.tv_sec - _p->fStartTime.tv_sec);
     _p->wallClockElapsed += (double)(tv.tv_usec - _p->fStartTime.tv_usec) / 1000 / 1000;
   }
 
