@@ -48,7 +48,7 @@ public:
     }
     virtual void set(void** storage, int64_t value)
     {
-      *(T*)ImplType::Access::ptrFromStorage(storage) = (T)value;
+      *(T*)ImplType::Access::ptrFromStorage(storage) = (T)(value != 0);
     }
     virtual unsigned int size() const
     {

@@ -92,11 +92,11 @@ namespace qi {
   bool TypeInfo::operator< (const TypeInfo& b) const
   {
     if (!! stdInfo != !! b.stdInfo)
-      return stdInfo;
+      return stdInfo != 0;
     else
     {
       if (stdInfo)
-        return (*stdInfo).before(*b.stdInfo);
+        return (*stdInfo).before(*b.stdInfo) != 0;
       else
         return customInfo < b.customInfo;
     }

@@ -110,7 +110,7 @@ namespace qi {
       switch((isSigned ? 1 : -1) * byteSize)
       {
       case 0: {
-        bool v = ((bool)value);
+        bool v = value != 0;
         if (v)
           out << "true";
         else

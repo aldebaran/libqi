@@ -93,8 +93,8 @@ TEST(Value, Basic)
   GenericValuePtr v;
   int twelve = 12;
   v = GenericValueRef(twelve);
-  ASSERT_TRUE(v.type);
-  ASSERT_TRUE(v.value);
+  ASSERT_TRUE(v.type != 0);
+  ASSERT_TRUE(v.value != 0);
   ASSERT_EQ(v.toInt(), 12);
   ASSERT_EQ(v.toFloat(), 12.0f);
   ASSERT_EQ(v.toDouble(), 12.0);
@@ -166,7 +166,7 @@ TEST(Value, ObjectPtr)
   {
     ObjectPtr o((GenericObject*)1, &nothing);
     ASSERT_TRUE(o);
-    ASSERT_TRUE(o.get());
+    ASSERT_TRUE(o.get() != 0);
     GenericValuePtr v = GenericValueRef(o);
     qi::ObjectPtr out = v.to<ObjectPtr>();
     ASSERT_TRUE(out);
@@ -265,7 +265,7 @@ TEST(Value, DefaultMap)
   ASSERT_EQ(10, val.find("foo").toInt());
   GenericIterator b = val.begin();
   GenericIterator end = val.end();
-  int sum = 0;
+  qi::int64_t sum = 0;
   while (b != end)
   {
     GenericValueRef deref = *b;

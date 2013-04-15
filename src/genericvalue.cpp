@@ -331,7 +331,7 @@ namespace qi
     //qiLogDebug() << "Compare " << a.type << ' ' << b.type;
     #define GET(v, t) static_cast<Type ## t *>(v.type)->get(v.value)
     if (!a.type)
-      return b.type;
+      return b.type != 0;
     if (!b.type)
       return false;
     /* < operator for char* does not do what we want, so force

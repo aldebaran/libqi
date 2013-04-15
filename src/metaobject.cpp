@@ -72,7 +72,7 @@ namespace qi {
     {
       std::vector<MetaMethod> r = findMethod(cname);
       for (unsigned i=0; i<r.size(); ++i)
-        ret.push_back(std::make_pair(r[i], 1.0));
+        ret.push_back(std::make_pair(r[i], 1.0f));
       return ret;
     }
 

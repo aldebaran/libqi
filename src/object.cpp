@@ -372,7 +372,7 @@ namespace qi {
         }
       }
       qiLogDebug() << parents[i].first->infoString() << " does not match " << other->infoString()
-      <<" " << ((bool)op == (bool)dynamic_cast<ObjectType*>(other));
+      <<" " << ((op != 0) == (dynamic_cast<ObjectType*>(other) != 0));
     }
     return -1;
   }

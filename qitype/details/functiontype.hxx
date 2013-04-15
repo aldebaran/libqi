@@ -73,7 +73,7 @@ namespace qi
 
   inline GenericFunction::operator bool() const
   {
-    return type;
+    return type != 0;
   }
 
   inline FunctionType* GenericFunction::functionType() const

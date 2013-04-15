@@ -271,8 +271,8 @@ TEST(TestObject, ABI)
   EXPECT_EQ(45, foo.r);
 
   f = makeGenericFunction(&Foo::pingB);
-  EXPECT_EQ(true, f.call(convert(&foo, true)).toInt());
-  EXPECT_EQ(false, f.call(convert(&foo, false)).toInt());
+  EXPECT_EQ(true, f.call(convert(&foo, true)).toInt() != 0);
+  EXPECT_EQ(false, f.call(convert(&foo, false)).toInt() != 0);
 
   f = makeGenericFunction(&Foo::vping32);
   EXPECT_EQ(45, f.call(convert(&foo, 42)).toInt());
@@ -320,9 +320,10 @@ TEST(TestObject, Simple) {
   EXPECT_EQ(42, obj->call<int>("testBind2", 21));
   EXPECT_EQ(42, obj->call<int>("testBindVal", 21));
   EXPECT_EQ(42, obj->call<int>("testBind2Val", 21));
-  EXPECT_EQ(static_cast<unsigned int>(42), obj->call<unsigned int>("test", 21, 21));
+  EXPECT_EQ(42U, obj->call<unsigned int>("test", 21, 21));
   EXPECT_EQ(42, obj->call<char>("test", 21, 21));
-  EXPECT_EQ(42, obj->call<double>("test", 21, 21));
+  double d = obj->call<double>("test", 21, 21);
+  EXPECT_EQ(42.0, d);
   EXPECT_EQ(42, obj->call<long>("test", 21, 21));
   EXPECT_EQ(42UL, obj->call<unsigned long>("test", 21, 21));
 
