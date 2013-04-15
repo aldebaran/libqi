@@ -486,19 +486,13 @@ namespace qi {
 
       void visitPointer(GenericValuePtr pointee)
       {
-        TypePointer* type = static_cast<TypePointer*>(value.type);
-        if (type->pointerKind() == TypePointer::Shared
-          && pointee.kind() == Type::Object)
-        {
-          out.write("o");
-          GenericValuePtr shared_ptr = value.clone();
-          serializeObject(out,
-            ObjectPtr(new GenericObject(static_cast<ObjectType*>(pointee.type), pointee.value),
-              boost::bind(&GenericValuePtr::destroy, shared_ptr)),
-            context);
-        }
-        else
-          qiLogError() << "Pointer serialization not implemented";
+        qiLogError() << "Pointer serialization not implemented";
+      }
+
+      void visitObjectPtr(ObjectPtr& ptr)
+      {
+        out.write("o");
+        serializeObject(out, ptr, context);
       }
 
       void visitTuple(const std::vector<GenericValuePtr>& vals)
@@ -514,14 +508,6 @@ namespace qi {
 
       void visitDynamic(GenericValuePtr pointee)
       {
-        //Object
-        if (value.type->info() == typeOf<ObjectPtr>()->info())
-        {
-          out.write("o");
-          ObjectPtr* obj = value.ptr<ObjectPtr>();
-          serializeObject(out, *obj, context);
-          return;
-        }
         //Remaining types
         out.writeValue(pointee, boost::bind(&typeDispatch<SerializeTypeVisitor>,
                                             SerializeTypeVisitor(out, context, pointee), pointee));
@@ -654,10 +640,14 @@ namespace qi {
           v.destroy();
         }
       }
+      void visitObjectPtr(ObjectPtr& )
+      {
+        result = deserializeObject(in, context);
+      }
 
       void visitObject(GenericObject value)
       {
-        result = deserializeObject(in, context);
+        qiLogError() << "No signature deserializes to object";
       }
 
       void visitPointer(GenericValuePtr pointee)
@@ -679,33 +669,26 @@ namespace qi {
 
       void visitDynamic(GenericValuePtr pointee)
       {
-        if (result.type->info() == typeOf<ObjectPtr>()->info())
-        { // Advertise as dynamic, but type was already parsed
-          visitObject(GenericObject(0, 0));
+        std::string sig;
+        in.read(sig);
+        //empty gv: nothing to do
+        if (sig.empty()) {
+          result = GenericValuePtr();
+          return;
         }
-        else
+        Type* type = Type::fromSignature(sig);
+        if (!type)
         {
-          std::string sig;
-          in.read(sig);
-          //empty gv: nothing to do
-          if (sig.empty()) {
-            result = GenericValuePtr();
-            return;
-          }
-          Type* type = Type::fromSignature(sig);
-          if (!type)
-          {
-            qiLogError() << "Cannot find a type to deserialize signature " << sig << " within a dynamic value.";
-            result.destroy();
-            return;
-          }
-
-          DeserializeTypeVisitor dtv(*this);
-          dtv.result = GenericValuePtr(type);
-          typeDispatch<DeserializeTypeVisitor>(dtv, dtv.result);
-          static_cast<TypeDynamic*>(result.type)->set(&result.value, dtv.result);
-          dtv.result.destroy();
+          qiLogError() << "Cannot find a type to deserialize signature " << sig << " within a dynamic value.";
+          result.destroy();
+          return;
         }
+
+        DeserializeTypeVisitor dtv(*this);
+        dtv.result = GenericValuePtr(type);
+        typeDispatch<DeserializeTypeVisitor>(dtv, dtv.result);
+        static_cast<TypeDynamic*>(result.type)->set(&result.value, dtv.result);
+        dtv.result.destroy();
       }
       void visitIterator(GenericValuePtr)
       {

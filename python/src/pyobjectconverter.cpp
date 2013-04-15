@@ -252,6 +252,12 @@ struct ToPyObject
     //throw std::runtime_error("Error in conversion: qi::GenericObject not supported yet");
   }
 
+  void visitObjectPtr(ObjectPtr& obj)
+  {
+    // FIXME
+    //*result = GOtoPyO("plouf", obj);
+  }
+
   void visitPointer(qi::GenericValuePtr)
   {
     throw std::runtime_error("Error in conversion: Unable to convert pointer in Python");
