@@ -227,7 +227,7 @@ namespace qi {
       while (str[i] != '\0') {
         sum += str[i++];
       }
-      return sum % qi::log::PrivateConsoleLogHandler::max_color;
+      return sum % (qi::log::PrivateConsoleLogHandler::max_color - 1) + 1;
     }
 
     int intToColor(int nbr)
@@ -277,7 +277,7 @@ namespace qi {
         printf(" ");
       }
       if (categories & qi::detail::LOG_FUNCTION)
-        printf("%s ", fct);
+        printf("%s() ", fct);
       std::string ss = msg;
       ss.reserve(qi::detail::rtrim(msg));
       printf("%s\n", ss.c_str());
