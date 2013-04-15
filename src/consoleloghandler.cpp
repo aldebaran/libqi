@@ -276,7 +276,7 @@ namespace qi {
           printf("(%i)", line);
         printf(" ");
       }
-      if (categories && qi::detail::LOG_FUNCTION)
+      if (categories & qi::detail::LOG_FUNCTION)
         printf("%s ", fct);
       std::string ss = msg;
       ss.reserve(qi::detail::rtrim(msg));
