@@ -150,65 +150,45 @@ namespace qi {
       out.setError("Invalid object");
       return out.future();
     }
-    GenericFunctionParameters* newArgs = 0;
-    int methodId = metaObject().methodId(signature);
-#ifndef QI_REQUIRE_SIGNATURE_EXACT_MATCH
-    if (methodId < 0) {
-
-      // Try to find an other method with compatible signature
-      // For this, first get a signature that resolves dynamic
-      std::string resolvedSig = "(";
-      for (unsigned i=0; i<args.size(); ++i)
-        resolvedSig += args[i].signature(true);
-      resolvedSig = resolvedSig + ')';
-      std::string fullSig = qi::signatureSplit(signature)[1] + "::" + resolvedSig;
-      qiLogDebug() << "Finding method for resolved signature " << fullSig;
-      std::vector<MetaObject::CompatibleMethod> mml = metaObject().findCompatibleMethod(fullSig);
-
-      if (!mml.empty())
+    int methodId = -1;
+    if (signature.find("::") != signature.npos)
+    { // user passed a full signature, require an exact match
+      methodId = metaObject().methodId(signature);
+      if (methodId < 0)
+        return makeFutureError<GenericValuePtr>("No such method " + signature);
+    }
+    else
+    {
+      // Querying signature with resolveDynamic can cost a lot, so try static first.
+      std::string resolvedSig;
+      std::vector<MetaObject::CompatibleMethod> mml;
+      std::string fullSig;
+      for (unsigned dyn = 0; dyn<2 && methodId < 0; ++dyn)
       {
-        std::sort(mml.begin(), mml.end(), less_pair_second());
-        unsigned sz = mml.size();
-        if (sz > 1 && mml[sz-1].second == mml[sz-2].second) // ambiguity remains
-          return makeFutureError<GenericValuePtr>(generateErrorString("overload", signature, mml));
-        qiLogDebug() << generateErrorString("overload OK", signature, mml, false);
-        MetaMethod bestMatch = mml[sz - 1].first;
-        qiLogDebug() << "Signature mismatch, but found compatible type "
-                                  << bestMatch.signature() <<" for " << signature;
-        methodId = bestMatch.uid();
-        qi::Signature s(qi::signatureSplit(bestMatch.signature())[2]);
-        bool hasUnknown = (s.toString().find("X") != std::string::npos);
-        // If we have an unknown signature, serialization is impossible.
-        // So no need for this extra conversion step.
-        if (!hasUnknown)
+        resolvedSig = "(";
+        for (unsigned i=0; i<args.size(); ++i)
+          resolvedSig += args[i].signature(dyn==1);
+        resolvedSig = resolvedSig + ')';
+        fullSig = signature + "::" + resolvedSig;
+        qiLogDebug() << "Finding method for resolved signature " << fullSig;
+        mml = metaObject().findCompatibleMethod(fullSig);
+
+        if (!mml.empty())
         {
-          // Signature is wrapped in a tuple, unwrap
-          newArgs = new GenericFunctionParameters(args.convert(s.begin().children()));
-#ifndef NDEBUG
-          // Validate signature again on newArgs
-          std::string sig = "";
-          for (unsigned i=0; i< newArgs->size(); ++i)
-            sig += (*newArgs)[i].signature();
-          if (s.toString() != '(' + sig + ')')
-            qiLogError() << "Inconsistency in signature, deserialization will fail " << s.toString() << " " << sig;
-#endif
+          std::sort(mml.begin(), mml.end(), less_pair_second());
+          unsigned sz = mml.size();
+          if (sz == 1 || mml[sz-1].second != mml[sz-2].second)
+          {
+            qiLogDebug() << generateErrorString("overload OK", signature, mml, false);
+            methodId = mml[sz - 1].first.uid();
+          }
         }
       }
     }
-#endif
     if (methodId < 0) {
-      return makeFutureError<GenericValuePtr>(generateErrorString("method", signature, metaObject().findCompatibleMethod(qi::signatureSplit(signature)[1])));
+      return makeFutureError<GenericValuePtr>(generateErrorString("method", signature, metaObject().findCompatibleMethod(signature)));
     }
-    //TODO: check for metacall to return false when not able to send the answer
-    if (newArgs)
-    {
-      qi::Future<GenericValuePtr> res = metaCall(methodId, *newArgs, callType);
-      newArgs->destroy();
-      delete newArgs;
-      return res;
-    }
-    else
-      return metaCall(methodId, args, callType);
+    return metaCall(methodId, args, callType);
   }
 
   /// Resolve signature and bounce

@@ -63,7 +63,8 @@ float qi::Signature::isConvertibleTo(const qi::Signature& b) const
       float childRes = is.children().isConvertibleTo(id.children());
       if (!childRes)
         return 0; // Just check subtype compatibility
-      childErr += 1.0f - childRes;
+      // the lower the error the better
+      childErr += 1.0f - childRes*1.01;
     }
     else
       if (d != s)

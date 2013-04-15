@@ -127,7 +127,10 @@ namespace qi {
 #endif // DOXYGEN
 
     qi::Future<GenericValuePtr> metaCall(unsigned int method, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto);
-    /// Resolve the method Id and bounces to metaCall
+    /** Resolve the method Id and bounces to metaCall
+    * @param signature method name or method signature 'name::(args)'
+    *        if signature is given, an exact match is required
+    */
     qi::Future<GenericValuePtr> metaCall(const std::string &signature, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto);
 
     void emitEvent(const std::string& eventName,

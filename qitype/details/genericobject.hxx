@@ -138,13 +138,9 @@ namespace qi {
      std::vector<qi::GenericValuePtr> params;                              \
      params.reserve(n);                                                    \
      BOOST_PP_REPEAT(n, pushi, _)                                          \
-     std::string signature = methodName + "::(";                           \
-     for (unsigned i=0; i< params.size(); ++i)                             \
-       signature += params[i].signature();                                 \
-     signature += ")";                                                     \
      std::string sigret;                                                   \
      qi::Promise<R> res;                                                   \
-     qi::Future<GenericValuePtr> fmeta = metaCall(signature, params);      \
+     qi::Future<GenericValuePtr> fmeta = metaCall(methodName, params);      \
      fmeta.connect(boost::bind<void>(&detail::futureAdapter<R>, _1, res));  \
      return res.future();                                                  \
   }
@@ -162,20 +158,16 @@ namespace qi {
      std::vector<qi::GenericValuePtr> params;                              \
      params.reserve(n);                                                    \
      BOOST_PP_REPEAT(n, pushi, _)                                          \
-     std::string signature = methodName + "::(";                           \
-     for (unsigned i=0; i< params.size(); ++i)                             \
-       signature += params[i].signature();                                 \
-     signature += ")";                                                     \
      std::string sigret;                                                   \
      qi::Promise<R> res;                                                   \
-     qi::Future<GenericValuePtr> fmeta = metaCall(signature, params, MetaCallType_Queued);   \
+     qi::Future<GenericValuePtr> fmeta = metaCall(methodName, params, MetaCallType_Queued);   \
      fmeta.connect(boost::bind<void>(&detail::futureAdapter<R>, _1, res));  \
      return res.future();                                                  \
   }
 
   QI_GEN(genCall)
   #undef genCall
-  #define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)                           \
+  #define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)               \
   template<typename R> qi::FutureSync<R> GenericObject::call(             \
       MetaCallType callType,                                              \
       const std::string& methodName       comma                           \
@@ -187,13 +179,9 @@ namespace qi {
      std::vector<qi::GenericValuePtr> params;                              \
      params.reserve(n);                                                    \
      BOOST_PP_REPEAT(n, pushi, _)                                          \
-     std::string signature = methodName + "::(";                           \
-     for (unsigned i=0; i< params.size(); ++i)                             \
-       signature += params[i].signature();                                 \
-     signature += ")";                                                     \
      std::string sigret;                                                   \
      qi::Promise<R> res;                                                   \
-     qi::Future<GenericValuePtr> fmeta = metaCall(signature, params, callType);   \
+     qi::Future<GenericValuePtr> fmeta = metaCall(methodName, params, callType);   \
      fmeta.connect(boost::bind<void>(&detail::futureAdapter<R>, _1, res));  \
      return res.future();                                                  \
   }
