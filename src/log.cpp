@@ -105,7 +105,7 @@ namespace qi {
           logline << "(" << line << ")";
         logline << " ";
       }
-      if (categories && qi::detail::LOG_FUNCTION)
+      if (categories & qi::detail::LOG_FUNCTION)
         logline << fct << "() ";
       logline.write(msg, qi::detail::rtrim(msg));
       logline << std::endl;
