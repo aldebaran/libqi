@@ -500,13 +500,12 @@ namespace qi {
       if (cpus.size() == 0)
         return false;
 
-      DWORD64 dwProcessAffinity = 0, dwSystemAffinity = 0;
       DWORD64 mask = 0;
       int i = 0;
 
       for (std::vector<int>::const_iterator it = cpus.begin(); it != cpus.end(); ++it)
       {
-        mask |= (1 << *it);
+        mask |= 1ULL << *it;
         i++;
       }
 

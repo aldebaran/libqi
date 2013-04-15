@@ -223,7 +223,7 @@ namespace qi {
     inline bool globMatch(const std::string& pattern, const std::string& string)
     {
 #ifdef _WIN32
-      return ::PathMatchSpec(string.c_str(), pattern.c_str());
+      return ::PathMatchSpec(string.c_str(), pattern.c_str()) == TRUE;
 #else
       return !fnmatch(pattern.c_str(), string.c_str(), 0);
 #endif
