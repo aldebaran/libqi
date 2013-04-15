@@ -295,15 +295,13 @@ namespace qi {
    {
      result = Signature::fromType(Signature::Type_Object).toString();
    }
+   void visitObjectPtr(ObjectPtr& )
+   {
+     result = Signature::fromType(Signature::Type_Object).toString();
+   }
    void visitPointer(GenericValuePtr)
    {
-     // Shared-ptr of Object can be serialized as type dynamic
-     TypePointer* type = static_cast<TypePointer*>(_value.type);
-     if (type->pointerKind() == TypePointer::Shared
-       && type->pointedType()->kind() == Type::Object)
-       result = Signature::fromType(Signature::Type_Dynamic).toString();
-     else
-       result = Signature::fromType(Signature::Type_Unknown).toString();
+     result = Signature::fromType(Signature::Type_Unknown).toString();
    }
    void visitUnknown(GenericValuePtr)
    {

@@ -13,8 +13,6 @@ namespace qi {
 
   /** Invoke one of the visitor functions in dispatcher based on kind().
    * Dispatcher must implement TypeDispatcher.
-   * Passing 0 in storage is possible, in which case visitor functions will
-   * get a dummy value but correct Type informations.
    */
   template<typename Dispatcher>
   Dispatcher& typeDispatch(const Dispatcher& dispatcher, GenericValuePtr value);
@@ -37,6 +35,7 @@ namespace qi {
   //   void visitDynamic(GenericValuePtr pointee);
   //   void visitRaw(GenericValuePtr value);
   //   void visitIterator(GenericValuePtr value);
+  //   void visitObjectPtr(ObjectPtr& ptr);
   // };
 
 }

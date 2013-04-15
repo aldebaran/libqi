@@ -60,7 +60,20 @@ namespace qi {
       }
       case Type::Pointer:
       {
-        v.visitPointer(*value);
+        GenericValuePtr pointee = *value;
+        TypePointer* type = static_cast<TypePointer*>(value.type);
+        if (type->pointerKind() == TypePointer::Shared
+          && pointee.kind() == Type::Object)
+        { // shared_ptr<Foo> p with Foo object type.
+          // Create our own shared_ptr, that holds p and delete it on destruction
+          qiLogDebug("qitype.typedispatcher") << "Detected object shared ptr";
+          GenericValuePtr shared_ptr = value.clone();
+          ObjectPtr o(new GenericObject(static_cast<ObjectType*>(pointee.type), pointee.value),
+            boost::bind(&GenericValuePtr::destroy, shared_ptr));
+          v.visitObjectPtr(o);
+        }
+        else
+          v.visitPointer(pointee);
         break;
       }
       case Type::Tuple:
@@ -72,7 +85,13 @@ namespace qi {
       }
       case Type::Dynamic:
       {
-        v.visitDynamic(value.asDynamic());
+        if (value.type->info() == typeOf<ObjectPtr>()->info())
+        {
+          ObjectPtr* o = (ObjectPtr*)value.type->ptrFromStorage(&value.value);
+          v.visitObjectPtr(*o);
+        }
+        else
+          v.visitDynamic(value.asDynamic());
         break;
       }
       case Type::Raw:
