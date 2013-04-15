@@ -48,6 +48,7 @@ struct Parent
   virtual  qi::int32_t vping32(qi::int32_t v) { return v+m;}
   qi::int32_t m;
   Parent() : m(2) {}
+  virtual ~Parent() {}
 };
 
 // Insert padding to be able to check that class pointers are correctly
@@ -56,6 +57,7 @@ struct Foo: public Padding, public Parent, public Padding2 {
   Foo() : f(3) {}
   Foo(const Foo& b)
   : f(b.f+1) {}
+  virtual ~Foo() {}
   void operator = (const Foo& b)
   {
     f = b.f + 1;
@@ -272,7 +274,7 @@ TEST(TestObject, ABI)
 
   f = makeGenericFunction(&Foo::pingB);
   EXPECT_EQ(true, f.call(convert(&foo, true)).toInt() != 0);
-  EXPECT_EQ(false, f.call(convert(&foo, false)).toInt() != 0);
+  EXPECT_EQ(true, f.call(convert(&foo, false)).toInt() == 0);
 
   f = makeGenericFunction(&Foo::vping32);
   EXPECT_EQ(45, f.call(convert(&foo, 42)).toInt());
