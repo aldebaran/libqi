@@ -776,6 +776,7 @@ char          pingChar(char v) { return v; }
 unsigned char pingUChar(unsigned char v) { return v;}
 int           pingInt(int v) { return v;}
 int           pingUInt(unsigned int v) { return v;}
+std::string   pingString(const std::string& s) { return s;}
 
 #define EXPECTTHROW(exp) do {                   \
   try {                                         \
@@ -826,6 +827,31 @@ TEST(TestCall, Overflow)
     qiLogError() << "Unexpected exception: " << e.what();
     throw e;
   }
+}
+
+TEST(TestCall, ForceOverload)
+{
+  using namespace qi;
+  TestSessionPair p;
+  GenericObjectBuilder ob;
+  ob.advertiseMethod("pingChar", &pingChar);
+  ob.advertiseMethod("pingUChar", &pingUChar);
+  ob.advertiseMethod("pingInt", &pingInt);
+  ob.advertiseMethod("pingString", &pingString);
+  ob.advertiseMethod("ping", &pingInt);
+  ob.advertiseMethod("ping", &pingString);
+  ObjectPtr obj = ob.object();
+  p.server()->registerService("ping", obj);
+
+  ObjectPtr client = p.client()->service("ping");
+  // no .value() on expectthrow: we expect a synchronous exception
+  EXPECTTHROW(client->call<std::string>("pingInt", "foo"));
+  ASSERT_EQ("foo", client->call<std::string>("ping", "foo").value());
+  ASSERT_EQ(12, client->call<int>("ping", 12).value());
+  EXPECTTHROW(client->call<std::string>("ping::(s)", 5));
+  EXPECTTHROW(client->call<int>("ping::(i)", "foo"));
+  ASSERT_EQ(12, client->call<int>("ping::(i)", (char)12).value());
+  ASSERT_EQ("foo", client->call<std::string>("ping::(s)", "foo").value());
 }
 
 

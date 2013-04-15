@@ -335,7 +335,7 @@ namespace qi {
       qi::details::serialize(value, ods, context);
   }
 
-  qi::GenericValuePtr Message::setValues(const std::vector<qi::GenericValuePtr> &values, ObjectHost* context) {
+  void Message::setValues(const std::vector<qi::GenericValuePtr> &values, ObjectHost* context) {
     std::vector< ::qi::Type*> types;
     std::vector<void*> vals;
     types.reserve(values.size());
@@ -347,7 +347,6 @@ namespace qi {
     }
     qi::GenericValuePtr args = qi::makeGenericTuplePtr(types, vals);
     setValue(args, context);
-    return args;
   }
 
   const qi::Buffer &Message::buffer() const

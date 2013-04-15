@@ -14,6 +14,7 @@
 #include "transportsocket.hpp"
 #include <qi/log.hpp>
 #include <boost/thread/mutex.hpp>
+#include <boost/dynamic_bitset.hpp>
 #include <qi/eventloop.hpp>
 
 qiLogCategory("qimessaging.remoteobject");
@@ -240,17 +241,45 @@ namespace qi {
   {
     qi::Promise<GenericValuePtr> out;
     qi::Message msg;
-    qi::GenericValuePtr args = msg.setValues(in, this);
-#ifndef NDEBUG
-    std::string sig = metaObject().method(method)->signature();
-    sig = signatureSplit(sig)[2];
-    if (sig != args.signature())
+    std::string argsSig("(");
+    // apparent signature must match for correct serialization
+    for (unsigned i = 0; i < in.size(); ++i)
+      argsSig += in[i].signature(false);
+    argsSig += ')';
+    std::string funcSig =
+      signatureSplit(metaObject().method(method)->signature())[2];
+    if (funcSig != argsSig)
     {
-      qiLogWarning() << "call signature mismatch '"
-                                   << sig << "' (internal) vs '"
-                                   << args.signature() << "' (message) for:" << metaObject().method(method)->signature();
+      std::vector<GenericValuePtr> nargs(in);
+      Signature src = Signature(argsSig).begin().children();
+      Signature dst = Signature(funcSig).begin().children();
+      Signature::iterator its = src.begin(), itd = dst.begin();
+      boost::dynamic_bitset<> allocated(nargs.size());
+      for (unsigned i = 0; i< nargs.size(); ++i, ++its, ++itd)
+      {
+        if (*its != *itd)
+        {
+          Type* target = Type::fromSignature(*itd);
+          if (!target)
+            throw std::runtime_error("remote call: Failed to obtain a type from signature " + *itd);
+          std::pair<GenericValuePtr, bool> c = nargs[i].convert(target);
+          if (!c.first.type)
+          {
+            throw std::runtime_error(
+              _QI_LOG_FORMAT("remote call: failed to convert argument %s from %s to %s", i, *its, *itd));
+          }
+          nargs[i] = c.first;
+          allocated[i] = c.second;
+        }
+      }
+      msg.setValues(nargs, this);
+      for (unsigned i = 0; i< nargs.size(); ++i)
+        if (allocated[i])
+        nargs[i].destroy();
     }
-#endif
+    else
+      msg.setValues(in, this);
+
     msg.setType(qi::Message::Type_Call);
     msg.setService(_service);
     msg.setObject(_object);
