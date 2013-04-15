@@ -63,7 +63,7 @@ public:
 };
 
 // "" in utf-8 w. french locale.
-const char QiOSTests::a_accent[4] =  { '/', 0xc3, 0xa9, '\0' } ;
+const char QiOSTests::a_accent[4] =  { (char) '/', (char) 0xc3, (char) 0xa9, (char) '\0' } ;
 
 TEST_F(QiOSTests, LowLevelAccent)
 {
@@ -248,7 +248,7 @@ TEST(QiOs, tmpdir_prefix)
 
 TEST(QiOs, tmpdir_prefix_accentuated)
 {
-  char utf8[]     = { 0xC5, 0xAA, 0x6E, 0xC4, 0xAD, 0x63, 0xC5, 0x8D, 0x64, 0x65, 0xCC, 0xBD, 0 };
+  char utf8[]     = { (char) 0xC5, (char) 0xAA, (char) 0x6E, (char) 0xC4, (char) 0xAD, (char) 0x63, (char) 0xC5, (char) 0x8D, (char) 0x64, (char) 0x65, (char) 0xCC, (char) 0xBD, (char) 0 };
 
   std::string temp = qi::os::mktmpdir(utf8);
 

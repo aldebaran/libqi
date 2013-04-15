@@ -21,7 +21,7 @@
 TEST(qiPathTests, pathUTF8)
 {
   //unicode but only with weird char
-  char utf8[]     = { 0xC5, 0xAA, 0x6E, 0xC4, 0xAD, 0x63, 0xC5, 0x8D, 0x64, 0x65, 0xCC, 0xBD, 0 };
+  char utf8[]     = { (char) 0xC5, (char) 0xAA, (char) 0x6E, (char) 0xC4, (char) 0xAD, (char) 0x63, (char) 0xC5, (char) 0x8D, (char) 0x64, (char) 0x65, (char) 0xCC, (char) 0xBD, (char) 0 };
   wchar_t utf16[] = { 0x016A, 0x006E, 0x012D, 0x0063, 0x014D, 0x0064, 0x0065, 0x033D, 0 };
 
   std::string utf8xx(utf8);
@@ -35,7 +35,7 @@ TEST(qiPathTests, pathUTF8)
 TEST(qiPathTests, pathUTF8Too)
 {
   // create a path containing "/hé" in utf-8, and verify 16-bit api gives utf-16
-  char utf8[] = {47, 104, 195, 169, 0};
+  char utf8[] = { (char) 47, (char) 104, (char) 195, (char) 169, (char) 0};
   wchar_t utf16[] = {47, 104, 233, 0};
 
   std::string utf8xx(utf8);
@@ -50,7 +50,7 @@ TEST(qiPathTests, pathUTF16)
 {
     // create a path containing "/hé" in utf-16, and verify 8-bit api gives utf-8
   wchar_t utf16[] = {47, 104, 233, 0};
-  char utf8[] = {47, 104, 195, 169, 0};
+  char utf8[] = {(char) 47, (char) 104, (char) 195, (char) 169, (char) 0};
 
   std::wstring utf16xx(utf16);
   std::string utf8xx(utf8);
