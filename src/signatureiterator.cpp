@@ -322,20 +322,22 @@ namespace qi {
     std::string funcName;
 
     size_t idx1 = fullSignature.find("::");
-    if (idx1 != fullSignature.npos)
+    if (idx1 != fullSignature.npos) {
       funcName = fullSignature.substr(0, idx1);
-
-    qi::Signature sig = qi::Signature("(" + fullSignature.substr(idx1+2) + ")").begin().children();
-    if (sig.isValid() && sig.size() == 2)
-    {
-      qi::Signature::iterator it = sig.begin();
-      retSig = it.signature();
-      ++it;
-      parSig = it.signature();
+      //we should have a valid signature
+      qi::Signature sig = qi::Signature("(" + fullSignature.substr(idx1+2) + ")").begin().children();
+      if (sig.isValid() && sig.size() == 2)
+      {
+        qi::Signature::iterator it = sig.begin();
+        retSig = it.signature();
+        ++it;
+        parSig = it.signature();
+      }
+      else if (sig.isValid() && sig.size() == 1)
+        parSig = sig.begin().signature();
+    } else {
+      funcName = fullSignature;
     }
-    else if (sig.isValid() && sig.size() == 1)
-      parSig = sig.begin().signature();
-
     ret.push_back(retSig);
     ret.push_back(funcName);
     ret.push_back(parSig);

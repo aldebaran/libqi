@@ -199,13 +199,31 @@ TEST(TestSignature, FromString) {
   delete sig;
 }
 
+TEST(TestSignature, SignatureSplitError) {
+  std::vector<std::string> sigInfo;
+
+
+  sigInfo = qi::signatureSplit("reply");
+  EXPECT_EQ("", sigInfo[0]);
+  EXPECT_EQ("reply", sigInfo[1]);
+  EXPECT_EQ("", sigInfo[2]);
+
+  //should it just return ('', 'reply', '') ?
+  EXPECT_ANY_THROW(qi::signatureSplit("reply::"));
+
+  //to do later
+  //EXPECT_ANY_THROW(qi::signatureSplit("reply::("));
+  //EXPECT_ANY_THROW(qi::signatureSplit("reply::e";
+  //EXPECT_ANY_THROW(qi::signatureSplit("reply::(RRRR)"));
+}
+
 TEST(TestSignature, SignatureSplit) {
   std::vector<std::string> sigInfo;
 
-  sigInfo = qi::signatureSplit("reply::(s)");
+  sigInfo = qi::signatureSplit("reply");
   EXPECT_EQ("", sigInfo[0]);
   EXPECT_EQ("reply", sigInfo[1]);
-  EXPECT_EQ("(s)", sigInfo[2]);
+  EXPECT_EQ("", sigInfo[2]);
 
   sigInfo = qi::signatureSplit("reply::s(s)");
   EXPECT_EQ("s", sigInfo[0]);
