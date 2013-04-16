@@ -548,8 +548,8 @@ QITYPE_API bool operator !=(const GenericIterator & a, const GenericIterator& b)
   class QITYPE_API TypeRaw: public Type
   {
   public:
-    virtual Buffer get(void *storage) = 0;
-    virtual void set(void** storage, Buffer& value) = 0;
+    virtual std::pair<char*, size_t> get(void* storage) const = 0;
+    virtual void set(void** storage, const char* ptr, size_t sz) = 0;
     virtual Kind kind() const { return Raw; }
   };
 

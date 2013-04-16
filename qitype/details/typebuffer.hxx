@@ -14,14 +14,16 @@ namespace qi
   class TypeBufferImpl: public TypeRaw
   {
   public:
-    virtual Buffer get(void *storage)
+    virtual std::pair<char*, size_t> get(void *storage) const
     {
-      return *(Buffer*)ptrFromStorage(&storage);
+      Buffer* b = (Buffer*)Methods::ptrFromStorage(&storage);
+      return std::make_pair(const_cast<char*>((const char*)b->data()), b->size());
     }
-    virtual void set(void** storage, Buffer& value)
+    virtual void set(void** storage, const char* ptr, size_t sz)
     {
-      Buffer& b = *(Buffer*)ptrFromStorage(storage);
-      b = value;
+      Buffer* b = (Buffer*)ptrFromStorage(storage);
+      b->clear();
+      b->write(ptr, sz);
     }
     typedef DefaultTypeImplMethods<Buffer> Methods;
     _QI_BOUNCE_TYPE_METHODS(Methods);

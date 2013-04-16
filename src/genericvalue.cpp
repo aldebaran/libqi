@@ -217,10 +217,12 @@ namespace qi
           return std::make_pair(result, true);
         }
         case Type::Raw: {
+          if (targetType->info() == type->info())
+            return std::make_pair(*this, false);
           result.type = targetType;
           result.value = targetType->initializeStorage();
-          qi::Buffer buf = static_cast<TypeRaw*>(type)->get(value);
-          static_cast<TypeRaw*>(targetType)->set(&result.value, buf);
+          std::pair<char*, size_t> v = static_cast<TypeRaw*>(type)->get(value);
+           static_cast<TypeRaw*>(result.type)->set(&result.value, v.first, v.second);
           return std::make_pair(result, true);
         }
         default:
@@ -248,12 +250,10 @@ namespace qi
     }
     else if (skind == Type::String && dkind == Type::Raw)
     {
-      qi::Buffer buf;
       std::pair<char*, size_t> data = static_cast<TypeString*>(type)->get(value);
-      memcpy(buf.reserve(data.second), data.first, data.second);
       result.type = targetType;
       result.value = targetType->initializeStorage();
-      static_cast<TypeRaw*>(result.type)->set(&result.value, buf);
+      static_cast<TypeRaw*>(result.type)->set(&result.value, data.first, data.second);
       return std::make_pair(result, true);
     }
     else if (skind == Type::Raw && dkind == Type::String)
