@@ -19,6 +19,9 @@
 #include <qi/types.hpp>
 #include <qi/buffer.hpp>
 
+#include "boundobject.hpp"
+#include "remoteobject_p.hpp"
+
 qiLogCategory("qimessaging.message");
 
 namespace qi {
@@ -316,6 +319,55 @@ namespace qi {
     setBuffer(buf);
   }
 
+  namespace {
+    void serializeObject(qi::BinaryEncoder& out,
+      ObjectPtr object,
+      ObjectHost* context)
+    {
+      if (!context)
+        throw std::runtime_error("Unable to serialize object without a valid ObajectHost");
+      unsigned int sid = context->service();
+      unsigned int oid = context->nextId();
+      ServiceBoundObject* sbo = new ServiceBoundObject(sid, oid, object, MetaCallType_Queued, true, context);
+      boost::shared_ptr<BoundObject> bo(sbo);
+      context->addObject(bo, oid);
+      qiLogDebug() << "Hooking " << oid <<" on " << context;
+      qiLogDebug() << "sbo " << sbo << "obj " << object.get();
+      // Transmit the metaObject augmented by ServiceBoundObject.
+      out.write(sbo->metaObject(oid));
+      out.write((unsigned int)sid);
+      out.write((unsigned int)oid);
+    }
+
+    void onProxyLost(GenericObject* ptr)
+    {
+      qiLogDebug() << "Proxy on argument object lost, invoking terminate...";
+      DynamicObject* dobj = reinterpret_cast<DynamicObject*>(ptr->value);
+      // dobj is a RemoteObject
+      //FIXME: use post()
+      ptr->call<void>("terminate", static_cast<RemoteObject*>(dobj)->service()).async();
+    }
+
+    GenericValuePtr deserializeObject(qi::BinaryDecoder& in,
+      TransportSocketPtr context)
+    {
+      if (!context)
+        throw std::runtime_error("Unable to deserialize object without a valid TransportSocket");
+      MetaObject mo;
+      in.read(mo);
+      int sid, oid;
+      in.read(sid);
+      in.read(oid);
+      qiLogDebug() << "Creating unregistered object " << sid << '/' << oid << " on " << context.get();
+      RemoteObject* ro = new RemoteObject(sid, oid, mo, context);
+      ObjectPtr o = makeDynamicObjectPtr(ro, true, &onProxyLost);
+      qiLogDebug() << "New object is " << o.get() << "on ro " << ro;
+      assert(o);
+      assert(GenericValueRef(o).as<ObjectPtr>());
+      return GenericValueRef(o).clone();
+    }
+  }
+
   GenericValuePtr Message::value(const std::string &signature, const qi::TransportSocketPtr &socket) const {
     qi::Type* type = qi::Type::fromSignature(signature);
     if (!type) {
@@ -325,14 +377,14 @@ namespace qi {
     }
     qi::BufferReader br(_p->buffer);
     BinaryDecoder in(&br);
-    return qi::details::deserialize(type, in, socket);
+    return deserialize(type, in, boost::bind(deserializeObject, _1, socket));
   }
 
   void Message::setValue(const GenericValuePtr &value, ObjectHost* context) {
     cow();
     qi::BinaryEncoder ods(_p->buffer);
     if (value.type->kind() != qi::Type::Void)
-      qi::details::serialize(value, ods, context);
+      serialize(value, ods, boost::bind(serializeObject, _1, _2, context));
   }
 
   void Message::setValues(const std::vector<qi::GenericValuePtr> &values, ObjectHost* context) {

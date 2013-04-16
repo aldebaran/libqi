@@ -90,16 +90,14 @@ namespace qi {
 
   };
 
-  class ObjectHost;
-
-  namespace details {
-    QIMESSAGING_API void serialize(GenericValuePtr val, BinaryEncoder& out, ObjectHost* context = 0);
-  }
+  typedef boost::function<void (BinaryEncoder&, ObjectPtr)> SerializeObjectCallback;
+  QIMESSAGING_API void serialize(GenericValuePtr val, BinaryEncoder& out,
+    SerializeObjectCallback serializeObject=SerializeObjectCallback());
 
   template<typename T> void BinaryEncoder::write(const T &v)
   {
     GenericValuePtr value = GenericValuePtr(&v);
-    qi::details::serialize(value, *this);
+    serialize(value, *this);
   }
 }
 
