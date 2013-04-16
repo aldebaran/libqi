@@ -14,6 +14,7 @@
 #include <qitype/genericvalue.hpp>
 #include <qitype/genericobject.hpp>
 
+#include <qimessaging/binarycodec.hpp>
 #include <qimessaging/api.hpp>
 
 namespace qi {
@@ -74,7 +75,7 @@ namespace qi {
     BinaryDecoderPrivate *_p;
   };
 
-  typedef boost::function<GenericValuePtr (BinaryDecoder&)> DeserializeObjectCallback;
+  typedef boost::function<GenericValuePtr (const ObjectSerializationInfo&)> DeserializeObjectCallback;
 
   QIMESSAGING_API GenericValuePtr deserialize(qi::Type *type, BinaryDecoder& in, DeserializeObjectCallback deserializeObject = DeserializeObjectCallback());
   /// Deserialize in place

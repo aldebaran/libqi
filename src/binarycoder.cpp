@@ -446,8 +446,11 @@ namespace qi {
       {
         if (!context)
           throw std::runtime_error("Object serialization callback required but not provided");
+        ObjectSerializationInfo osi = context(ptr);
         out.write("o");
-        context(out, ptr);
+        out.write(osi.metaObject);
+        out.write(osi.serviceId);
+        out.write(osi.objectId);
       }
 
       void visitTuple(const std::vector<GenericValuePtr>& vals)
@@ -597,8 +600,12 @@ namespace qi {
       }
       void visitObjectPtr(ObjectPtr&)
       {
+        ObjectSerializationInfo osi;
+        in.read(osi.metaObject);
+        in.read(osi.serviceId);
+        in.read(osi.objectId);
         if (context)
-          result = context(in);
+          result = context(osi);
         else
           result = GenericValuePtr(typeOf<void>());
       }

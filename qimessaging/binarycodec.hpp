@@ -12,7 +12,7 @@
 #include <qi/buffer.hpp>
 #include <qi/bufferreader.hpp>
 #include <qitype/genericvalue.hpp>
-
+#include <qitype/metaobject.hpp>
 namespace qi {
 
   //generic binary codec API
@@ -30,6 +30,12 @@ namespace qi {
     decodeBinary(buf, &gvp);
   }
 
+  struct ObjectSerializationInfo
+  {
+    MetaObject metaObject;
+    unsigned int serviceId;
+    unsigned int objectId;
+  };
 }
 
 #endif // QIMESSAGING_BINARYENCODER_HPP

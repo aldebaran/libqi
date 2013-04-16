@@ -320,7 +320,7 @@ namespace qi {
   }
 
   namespace {
-    void serializeObject(qi::BinaryEncoder& out,
+    ObjectSerializationInfo serializeObject(
       ObjectPtr object,
       ObjectHost* context)
     {
@@ -334,9 +334,11 @@ namespace qi {
       qiLogDebug() << "Hooking " << oid <<" on " << context;
       qiLogDebug() << "sbo " << sbo << "obj " << object.get();
       // Transmit the metaObject augmented by ServiceBoundObject.
-      out.write(sbo->metaObject(oid));
-      out.write((unsigned int)sid);
-      out.write((unsigned int)oid);
+      ObjectSerializationInfo res;
+      res.metaObject = sbo->metaObject(oid);
+      res.serviceId = sid;
+      res.objectId = oid;
+      return res;
     }
 
     void onProxyLost(GenericObject* ptr)
@@ -348,18 +350,13 @@ namespace qi {
       ptr->call<void>("terminate", static_cast<RemoteObject*>(dobj)->service()).async();
     }
 
-    GenericValuePtr deserializeObject(qi::BinaryDecoder& in,
+    GenericValuePtr deserializeObject(const ObjectSerializationInfo& osi,
       TransportSocketPtr context)
     {
       if (!context)
         throw std::runtime_error("Unable to deserialize object without a valid TransportSocket");
-      MetaObject mo;
-      in.read(mo);
-      int sid, oid;
-      in.read(sid);
-      in.read(oid);
-      qiLogDebug() << "Creating unregistered object " << sid << '/' << oid << " on " << context.get();
-      RemoteObject* ro = new RemoteObject(sid, oid, mo, context);
+      qiLogDebug() << "Creating unregistered object " << osi.serviceId << '/' << osi.objectId << " on " << context.get();
+      RemoteObject* ro = new RemoteObject(osi.serviceId, osi.objectId, osi.metaObject, context);
       ObjectPtr o = makeDynamicObjectPtr(ro, true, &onProxyLost);
       qiLogDebug() << "New object is " << o.get() << "on ro " << ro;
       assert(o);
@@ -384,7 +381,7 @@ namespace qi {
     cow();
     qi::BinaryEncoder ods(_p->buffer);
     if (value.type->kind() != qi::Type::Void)
-      serialize(value, ods, boost::bind(serializeObject, _1, _2, context));
+      serialize(value, ods, boost::bind(serializeObject, _1, context));
   }
 
   void Message::setValues(const std::vector<qi::GenericValuePtr> &values, ObjectHost* context) {

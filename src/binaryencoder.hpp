@@ -14,6 +14,7 @@
 #include <qitype/type.hpp>
 #include <qitype/genericvalue.hpp>
 #include <qitype/genericobject.hpp>
+#include <qimessaging/binarycodec.hpp>
 
 #include <qimessaging/api.hpp>
 
@@ -90,7 +91,8 @@ namespace qi {
 
   };
 
-  typedef boost::function<void (BinaryEncoder&, ObjectPtr)> SerializeObjectCallback;
+
+  typedef boost::function<ObjectSerializationInfo (ObjectPtr)> SerializeObjectCallback;
   QIMESSAGING_API void serialize(GenericValuePtr val, BinaryEncoder& out,
     SerializeObjectCallback serializeObject=SerializeObjectCallback());
 
