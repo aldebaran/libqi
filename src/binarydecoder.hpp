@@ -75,16 +75,11 @@ namespace qi {
     BinaryDecoderPrivate *_p;
   };
 
-  typedef boost::function<GenericValuePtr (const ObjectSerializationInfo&)> DeserializeObjectCallback;
-
-  QIMESSAGING_API GenericValuePtr deserialize(qi::Type *type, BinaryDecoder& in, DeserializeObjectCallback deserializeObject = DeserializeObjectCallback());
-  /// Deserialize in place
-  QIMESSAGING_API void deserialize(GenericValuePtr what, BinaryDecoder& in, DeserializeObjectCallback deserializeObject = DeserializeObjectCallback());
-
   template<typename T>
   void BinaryDecoder::read(T& v)
   {
-    deserialize(GenericValueRef(v), *this);
+    GenericValuePtr gv(&v);
+    decodeBinary(&bufferReader(), gv);
   }
 }
 

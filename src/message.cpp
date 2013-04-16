@@ -350,7 +350,7 @@ namespace qi {
       ptr->call<void>("terminate", static_cast<RemoteObject*>(dobj)->service()).async();
     }
 
-    GenericValuePtr deserializeObject(const ObjectSerializationInfo& osi,
+    ObjectPtr deserializeObject(const ObjectSerializationInfo& osi,
       TransportSocketPtr context)
     {
       if (!context)
@@ -360,8 +360,7 @@ namespace qi {
       ObjectPtr o = makeDynamicObjectPtr(ro, true, &onProxyLost);
       qiLogDebug() << "New object is " << o.get() << "on ro " << ro;
       assert(o);
-      assert(GenericValueRef(o).as<ObjectPtr>());
-      return GenericValueRef(o).clone();
+      return o;
     }
   }
 
@@ -373,15 +372,17 @@ namespace qi {
     qiLogDebug() << "Serialized message body: " << _p->buffer.size();
     }
     qi::BufferReader br(_p->buffer);
-    BinaryDecoder in(&br);
-    return deserialize(type, in, boost::bind(deserializeObject, _1, socket));
+    GenericValuePtr res(type);
+    decodeBinary(&br, res, boost::bind(deserializeObject, _1, socket));
+    return res;
   }
 
   void Message::setValue(const GenericValuePtr &value, ObjectHost* context) {
     cow();
-    qi::BinaryEncoder ods(_p->buffer);
     if (value.type->kind() != qi::Type::Void)
-      serialize(value, ods, boost::bind(serializeObject, _1, context));
+    {
+      encodeBinary(&_p->buffer, value, boost::bind(serializeObject, _1, context));
+    }
   }
 
   void Message::setValues(const std::vector<qi::GenericValuePtr> &values, ObjectHost* context) {

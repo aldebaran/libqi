@@ -91,15 +91,9 @@ namespace qi {
 
   };
 
-
-  typedef boost::function<ObjectSerializationInfo (ObjectPtr)> SerializeObjectCallback;
-  QIMESSAGING_API void serialize(GenericValuePtr val, BinaryEncoder& out,
-    SerializeObjectCallback serializeObject=SerializeObjectCallback());
-
   template<typename T> void BinaryEncoder::write(const T &v)
   {
-    GenericValuePtr value = GenericValuePtr(&v);
-    serialize(value, *this);
+    encodeBinary(&buffer(), GenericValueRef(v));
   }
 }
 

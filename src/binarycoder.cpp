@@ -19,6 +19,12 @@
 qiLogCategory("qimessaging.binarycoder");
 
 namespace qi {
+  namespace details
+  {
+    void serialize(GenericValuePtr val, BinaryEncoder& out, SerializeObjectCallback context=SerializeObjectCallback());
+    void deserialize(GenericValuePtr what, BinaryDecoder& in, DeserializeObjectCallback context=DeserializeObjectCallback());
+    GenericValuePtr deserialize(qi::Type *type, BinaryDecoder& in, DeserializeObjectCallback context=DeserializeObjectCallback());
+  }
   class BinaryDecoder;
   class BinaryEncoder;
 
@@ -261,7 +267,7 @@ namespace qi {
     if (!sig.empty()) {
       assert(value.type);
       if (!recurse)
-        serialize(value, *this);
+        details::serialize(value, *this);
       else
         recurse();
     } else {
@@ -355,8 +361,6 @@ namespace qi {
   }
 
   namespace details {
-
-
 
     class SerializeTypeVisitor
     {
@@ -488,9 +492,9 @@ namespace qi {
 
     class DeserializeTypeVisitor
     {
-      /* Value passed to visitor functions should not be used, only type
-    * information should.
-    */
+      /*
+      * result *must* be modified in place, not changed
+      */
     public:
       DeserializeTypeVisitor(BinaryDecoder& in, DeserializeObjectCallback context)
         : in(in)
@@ -598,16 +602,15 @@ namespace qi {
           v.destroy();
         }
       }
-      void visitObjectPtr(ObjectPtr&)
+      void visitObjectPtr(ObjectPtr& o)
       {
         ObjectSerializationInfo osi;
         in.read(osi.metaObject);
         in.read(osi.serviceId);
         in.read(osi.objectId);
         if (context)
-          result = context(osi);
-        else
-          result = GenericValuePtr(typeOf<void>());
+          o = context(osi);
+        // else leave result default-initilaized
       }
 
       void visitObject(GenericObject value)
@@ -638,7 +641,6 @@ namespace qi {
         in.read(sig);
         //empty gv: nothing to do
         if (sig.empty()) {
-          result = GenericValuePtr();
           return;
         }
         Type* type = Type::fromSignature(sig);
@@ -671,38 +673,40 @@ namespace qi {
       DeserializeObjectCallback context;
     }; //class
 
+     void serialize(GenericValuePtr val, BinaryEncoder& out, SerializeObjectCallback context)
+    {
+      details::SerializeTypeVisitor stv(out, context, val);
+      qi::typeDispatch(stv, val);
+      if (out.status() != BinaryEncoder::Status_Ok) {
+        qiLogError() << "OSerialization error " << out.status();
+      }
+    }
+
+    void deserialize(GenericValuePtr what, BinaryDecoder& in, DeserializeObjectCallback context)
+    {
+      details::DeserializeTypeVisitor dtv(in, context);
+      dtv.result = what;
+      qi::typeDispatch(dtv, dtv.result);
+      if (in.status() != BinaryDecoder::Status_Ok) {
+        qiLogError() << "ISerialization error " << in.status();
+      }
+      what = dtv.result;
+    }
+
+    GenericValuePtr deserialize(qi::Type *type, BinaryDecoder& in, DeserializeObjectCallback context)
+    {
+      GenericValuePtr res(type);
+      deserialize(res, in, context);
+      return res;
+    }
+
   } // namespace details
 
-  void serialize(GenericValuePtr val, BinaryEncoder& out, SerializeObjectCallback context)
-  {
-    details::SerializeTypeVisitor stv(out, context, val);
-    qi::typeDispatch(stv, val);
-    if (out.status() != BinaryEncoder::Status_Ok) {
-      qiLogError() << "OSerialization error " << out.status();
-    }
-  }
-
-  void deserialize(GenericValuePtr what, BinaryDecoder& in, DeserializeObjectCallback context)
-  {
-    details::DeserializeTypeVisitor dtv(in, context);
-    dtv.result = what;
-    qi::typeDispatch(dtv, dtv.result);
-    if (in.status() != BinaryDecoder::Status_Ok) {
-      qiLogError() << "ISerialization error " << in.status();
-    }
-    what = dtv.result;
-  }
-
-  GenericValuePtr deserialize(qi::Type *type, BinaryDecoder& in, DeserializeObjectCallback context)
-  {
-    GenericValuePtr res(type);
-    deserialize(res, in, context);
-    return res;
-  }
-
-  void encodeBinary(qi::Buffer *buf, const qi::GenericValuePtr &gvp) {
+  template<>
+  void encodeBinary(qi::Buffer *buf, const qi::GenericValuePtr &gvp,
+    SerializeObjectCallback onObject) {
     BinaryEncoder be(*buf);
-    details::SerializeTypeVisitor stv(be, 0, gvp);
+    details::SerializeTypeVisitor stv(be, onObject, gvp);
     qi::typeDispatch(stv, gvp);
     if (be.status() != BinaryEncoder::Status_Ok) {
       std::stringstream ss;
@@ -712,10 +716,11 @@ namespace qi {
     }
   }
 
-  void decodeBinary(qi::BufferReader *buf, qi::GenericValuePtr *gvp) {
+  void decodeBinary(qi::BufferReader *buf, qi::GenericValuePtr gvp,
+    DeserializeObjectCallback onObject) {
     BinaryDecoder in(buf);
-    details::DeserializeTypeVisitor dtv(in, DeserializeObjectCallback());
-    dtv.result = *gvp;
+    details::DeserializeTypeVisitor dtv(in, onObject);
+    dtv.result = gvp;
     qi::typeDispatch(dtv, dtv.result);
     if (in.status() != BinaryDecoder::Status_Ok) {
       std::stringstream ss;
@@ -723,7 +728,6 @@ namespace qi {
       qiLogError() << ss.str();
       throw std::runtime_error(ss.str());
     }
-    *gvp = dtv.result;
   }
 
 }
