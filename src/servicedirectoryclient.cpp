@@ -99,6 +99,8 @@ namespace qi {
   }
 
   qi::FutureSync<void> ServiceDirectoryClient::close() {
+    onSocketDisconnected(0);
+
     if (!_sdSocket)
       return qi::Future<void>(0);
     qi::Future<void> fut = _sdSocket->disconnect();
@@ -134,14 +136,20 @@ namespace qi {
   void ServiceDirectoryClient::onSocketDisconnected(int error) {
     disconnected(error);
     try {
-      _object->disconnect(_addLink);
-    } catch (std::runtime_error &) {
-      qiLogVerbose() << "Cannot disconnect SDC::serviceAdded";
+      if (_addLink != 0)
+      {
+        _object->disconnect(_addLink);
+      }
+    } catch (std::runtime_error &e) {
+      qiLogError() << "Cannot disconnect SDC::serviceAdded: " << e.what();
     }
     try {
-      _object->disconnect(_removeLink);
-    } catch (std::runtime_error &) {
-      qiLogVerbose() << "Cannot disconnect SDC::serviceRemoved";
+      if (_removeLink != 0)
+      {
+        _object->disconnect(_removeLink);
+      }
+    } catch (std::runtime_error &e) {
+        qiLogError() << "Cannot disconnect SDC::serviceRemoved: " << e.what();
     }
     _addLink = _removeLink = 0;
   }
