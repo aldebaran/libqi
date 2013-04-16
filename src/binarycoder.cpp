@@ -515,7 +515,7 @@ namespace qi {
 
       void visitRaw(GenericValuePtr raw)
       {
-        out.writeRaw(raw.as<Buffer>());
+        out.writeRaw(raw.to<Buffer>());
       }
 
       void visitIterator(GenericValuePtr)
@@ -699,7 +699,7 @@ namespace qi {
       {
         Buffer b;
         in.read(b);
-        static_cast<TypeRaw*>(result.type)->set(&result.value, b);
+        static_cast<TypeRaw*>(result.type)->set(&result.value, (char*)b.data(), b.size());
       }
       GenericValuePtr result;
       BinaryDecoder& in;
