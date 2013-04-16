@@ -157,7 +157,14 @@ namespace qi {
       boost::mutex::scoped_lock sl(_boundObjectsMutex);
       for (it = _boundObjects.begin(); it != _boundObjects.end(); ++it) {
         BoundObjectPtr o = it->second;
-        o->onSocketDisconnected(socket, error);
+        try
+        {
+          o->onSocketDisconnected(socket, error);
+        }
+        catch (const std::runtime_error& e)
+        {
+          qiLogError() << e.what();
+        }
       }
     }
 
