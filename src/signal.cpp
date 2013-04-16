@@ -350,12 +350,7 @@ namespace qi {
 
   bool SignalBase::disconnectAll() {
     if (_p)
-    {
-      bool hasSubs = !_p->subscriberMap.empty();
       return _p->reset();
-      if (hasSubs && _p->onSubscribers)
-        _p->onSubscribers(false);
-    }
     return false;
   }
 
