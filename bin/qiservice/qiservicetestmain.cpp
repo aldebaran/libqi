@@ -55,6 +55,39 @@ std::string reply(const std::string &msg, const float &value) {
   return ss.str();
 }
 
+typedef std::vector<std::string> VS;
+typedef std::map<std::string, VS> MSM;
+
+VS replyVector() {
+  VS ret;
+  return ret;
+  ret.push_back("titi");
+  ret.push_back("tutu");
+  return ret;
+}
+
+std::map<std::string, std::string> replyMap() {
+  std::map<std::string, std::string> ret;
+  return ret;
+  ret["titi"] = "42";
+  ret["tutu"] = "41";
+  return ret;
+}
+
+
+MSM replyMap2() {
+  MSM ret;
+  VS v;
+
+  return ret;
+  v.push_back("titi");
+  v.push_back("tutu");
+
+  ret["titi"] = v;
+  ret["tutu"] = v;
+  return ret;
+}
+
 bool slip(unsigned int seconds) {
   qi::os::sleep(seconds);
   return true;
@@ -121,6 +154,9 @@ int main(int argc, char *argv[])
       ob.advertiseMethod<std::string (const int&)>("reply", &reply);
       ob.advertiseMethod<std::string (const std::string&, const double &)>("reply", &reply);
       ob.advertiseMethod<std::string (const std::string&, const float &)>("reply", &reply);
+      ob.advertiseMethod("replyVector", &replyVector);
+      ob.advertiseMethod("replyMap", &replyMap);
+      ob.advertiseMethod("replyMap2", &replyMap2);
       ob.advertiseMethod<qi::GenericValue (const qi::GenericValue&)>("reply", &reply);
       ob.advertiseEvent<void (const std::string&)>("testEvent");
       ob.advertiseMethod<bool (unsigned int)>("slip", &slip);
