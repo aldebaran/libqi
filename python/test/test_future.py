@@ -5,7 +5,7 @@
 ##
 ## Copyright (C) 2013 Aldebaran Robotics
 
-from qi.future import Future, Promise
+from qi import Future, Promise
 
 def onError(promise):
   promise.set_error("paffff")

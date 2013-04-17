@@ -41,58 +41,6 @@ if sys.platform.startswith("linux"):
 
 #######
 
+from libqipy import Application, Future, FutureState, FutureTimeout, Promise, Session
 
-import _qipy
-from qi.genericobject import GenericObject
-from qi.application   import Application
-from qi._session      import Session
-from qi.future        import Future, Promise
-
-__all__ = [ "Application", "Session", "Promise", "Future", "CallError", "SerializationError", "ConnectionError", "SessionNotConnectedError", "RegisterError", ]
-
-class CallError(Exception):
-    """ CallError exception raised by Object.call() method
-    """
-    def __init__(self, value):
-        """ Constructor of CallError exception
-        """
-        self._value = value
-
-    def __str__(self):
-        """ Getter on error value, Python style.
-        """
-        return str(self._value)
-
-class SerializationError(Exception):
-    def __init__(self, value):
-        self._value = value
-
-    def __str__(self):
-        return str(self._value)
-
-class ConnectionError(Exception):
-    """Raised by Session constructor and Session.connect."""
-
-    def __init__(self, value):
-        """ ConnectionError constructor
-
-        :param value: Error message.
-        """
-        self._value = value
-
-    def __str__(self):
-        """Error message getter, Python style."""
-        return str(self._value)
-
-class SessionNotConnectedError(Exception):
-    def __str__(self):
-        return 'Session is not connected: can\'t fetch services list.'
-
-class RegisterError(Exception):
-    """Raised by Session when it can't register a service."""
-
-    def __init__(self, value):
-        self._value = value
-
-    def __str__(self):
-        return str(self._value)
+__all__ = [ "Application", "Session", "Promise", "Future", "FutureState", "FutureTimeout" ]

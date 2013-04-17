@@ -35,14 +35,14 @@ def get_servicedirectory_address(argv):
 
 def callmoilababy(f):
     print "ici.com"
-    ret = f.value().reply("coco")
-    print "rep coco:", ret
+    #ret = f.value().reply("coco")
+    #print "rep coco:", ret
 
 def callmoilababy2(f):
     print "ici2.com"
 
 def onPlaf(f):
-    print "result:", f.value()
+    print "the result:", f.value()
 
 def toto(session):
 
@@ -50,9 +50,9 @@ def toto(session):
     print "connected?", not f.has_error()
 
     #3 Get service serviceTest
-    fut = session.service("serviceTest", async=True)
+    fut = session.service("serviceTest", _async=True)
 
-    print "plouf1"
+    print "plouf1", fut.value()
     fut.add_callback(callmoilababy)
     print "plouf2"
     fut.add_callback(callmoilababy2)
@@ -61,13 +61,30 @@ def toto(session):
     obj = fut.value()
     print "obj:", obj
     print "dir:", dir(obj)
-    print "o f:", obj.reply
-    print "dir f:", dir(obj.reply)
-    #4 Call foreign method reply
-    value = obj.reply("plaf", _overload="reply::(s)", _async=False)
-    print 'Reply : ', dir(value), value
+    print "o f:", obj.call
+    print "dir f:", dir(obj.call)
 
-    f = obj.reply("plaf", async=True)
+    print "list:", obj.call("replyVector::()")
+    print "map:", obj.call("replyMap::()")
+    print "map:", obj.call("replyMap2::()")
+
+    print "list:", obj.replyVector()
+    print "map:", obj.replyMap()
+    print "map:", obj.replyMap2()
+
+    print "metaobj:", obj.call("metaObject::(I)", (1,))
+
+    #print "props:", obj.call("properties", tuple(), None)
+    print "props:", obj.call("properties::()", tuple())
+    print "repl:", obj.call("reply::(s)", ("plouf",))
+    print "repl:", obj.call("reply::(m)", ("plouf",))
+
+    #4 Call foreign method reply
+    #value = obj.reply("plaf", _overload="reply::(s)", _async=False)
+    #print 'Reply : ', value
+
+    f = obj.reply("plaf", _overload="reply::(s)", _async=True)
+    #print "jen suis la, mais ca crack avant je pense"
     f.add_callback(onPlaf)
 
     i = 0
@@ -77,6 +94,8 @@ def toto(session):
         i = i + 1
     #5 Cleanup
     session.close()
+
+import sys
 
 def  main():
     """ Entry point of qiservice

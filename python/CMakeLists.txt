@@ -1,28 +1,21 @@
-#project(PyQiMessaging)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../)
-include("qibuild/swig/python")
-
-
-file (GLOB SWIG_MODULE_qipy_EXTRA_DEPS
-  ../c/qic/*.h
-  ./src/*.hpp
-)
-
-# Compile swig compatibility layer
-file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/src")
-qi_swig_wrap_python(qipy src/qipy.i SRC
-                    src/qipython.hpp
-                    src/qipython.cpp
-                    src/pyobjectconverter.hpp
-                    src/pyobjectconverter.cpp
-                    src/pythonscopedref.hpp
-                    DEPENDS QI QIMESSAGING QIC
-)
 
 qi_install_python(${CMAKE_CURRENT_SOURCE_DIR}/qi
   KEEP_RELATIVE_PATHS
 )
+
+qi_create_lib(qipy src/boostpymain.cpp
+                   src/pyapplication.cpp
+                   src/pyapplication.hpp
+                   src/pysession.cpp
+                   src/pysession.hpp
+                   src/pyfuture.cpp
+                   src/pyfuture.hpp
+                   src/pyobject.cpp
+                   src/pyobject.hpp
+                   src/pyobjectconverter.cpp)
+qi_use_lib(qipy BOOST_PYTHON QI QITYPE QIMESSAGING PYTHON)
 
 # Add automatic testing for Python bindings
 add_subdirectory(test)
