@@ -221,6 +221,7 @@ TEST(TestSignature, SignatureSplitError) {
   EXPECT_ANY_THROW(qi::signatureSplit("reply::"));
   EXPECT_ANY_THROW(qi::signatureSplit("reply::("));
   EXPECT_ANY_THROW(qi::signatureSplit("reply::e"));
+
   EXPECT_ANY_THROW(qi::signatureSplit("reply::(RRRR)"));
   EXPECT_NO_THROW(qi::signatureSplit("reply::(sssss)"));
 
@@ -240,33 +241,48 @@ TEST(TestSignature, SignatureSplitError) {
 TEST(TestSignature, SignatureSplit) {
   std::vector<std::string> sigInfo;
 
-  sigInfo = qi::signatureSplit("reply");
+  ASSERT_NO_THROW(sigInfo = qi::signatureSplit("reply::(s)"));
   EXPECT_EQ("", sigInfo[0]);
   EXPECT_EQ("reply", sigInfo[1]);
-  EXPECT_EQ("", sigInfo[2]);
+  EXPECT_EQ("(s)", sigInfo[2]);
 
-  sigInfo = qi::signatureSplit("reply::s(s)");
+  ASSERT_NO_THROW(sigInfo = qi::signatureSplit("reply::s(s)"));
   EXPECT_EQ("s", sigInfo[0]);
   EXPECT_EQ("reply", sigInfo[1]);
   EXPECT_EQ("(s)", sigInfo[2]);
 
 
-  sigInfo = qi::signatureSplit("info::(m)(sib)");
+  ASSERT_NO_THROW(sigInfo = qi::signatureSplit("info::(m)(sib)"));
   EXPECT_EQ("(m)", sigInfo[0]);
   EXPECT_EQ("info", sigInfo[1]);
   EXPECT_EQ("(sib)", sigInfo[2]);
 
-  sigInfo = qi::signatureSplit("toto::((([{ii}])))({[{{ii}{ii}}][[{{ii}{ii}}]]})");
+  ASSERT_NO_THROW(sigInfo = qi::signatureSplit("toto::((([{ii}])))({[{{ii}{ii}}][[{{ii}{ii}}]]})"));
   EXPECT_EQ("((([{ii}])))", sigInfo[0]);
   EXPECT_EQ("toto", sigInfo[1]);
   EXPECT_EQ("({[{{ii}{ii}}][[{{ii}{ii}}]]})", sigInfo[2]);
 
-  sigInfo = qi::signatureSplit("toto");
+  ASSERT_NO_THROW(sigInfo = qi::signatureSplit("toto"));
   EXPECT_EQ("", sigInfo[0]);
   EXPECT_EQ("toto", sigInfo[1]);
   EXPECT_EQ("", sigInfo[2]);
 }
 
+
+TEST(TestSignature, TestToSTLType)
+{
+  qi::Signature sig("(s)");
+  EXPECT_EQ("(std::string)", sig.toSTLSignature());
+
+  qi::Signature sig2("(sib)");
+  EXPECT_EQ("(std::string,int,bool)", sig2.toSTLSignature());
+
+  qi::Signature sig3("{is}");
+  EXPECT_EQ("std::map<int,std::string>", sig3.toSTLSignature());
+
+  qi::Signature sig4("((m)(scf))");
+  EXPECT_EQ("((Unknown),(std::string,char,float))", sig4.toSTLSignature());
+}
 
 //expect that the following test to do not build. (static assert)
 static int gGlobalResult = 0;
@@ -412,6 +428,5 @@ TEST(TestSignature, WeirdSharedPtr) {
   EXPECT_EQ("X", qi::signatureFromType< boost::shared_ptr<int> >::value());
   EXPECT_EQ("X", qi::signatureFromType< boost::shared_ptr<int> &>::value());
 }
-
 
 //#endif

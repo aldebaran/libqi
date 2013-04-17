@@ -19,7 +19,7 @@ namespace qi {
   };
 
   static const char *gStl[] = {
-    "string",
+    "std::string",
     "std::vector<",
     ">",
     "std::map<",
@@ -27,7 +27,7 @@ namespace qi {
   };
 
   static const char *gStlConst[] = {
-    "const string &",
+    "const std::string &",
     "const std::vector<",
     ">",
     "const std::map<",
