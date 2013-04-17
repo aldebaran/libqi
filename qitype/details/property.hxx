@@ -30,7 +30,7 @@ namespace qi
   }
 
   template<typename T>
-  T PropertyImpl<T>::get()
+  T PropertyImpl<T>::get() const
   {
     if (_getter)
       return _getter();
