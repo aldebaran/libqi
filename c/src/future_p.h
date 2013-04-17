@@ -25,8 +25,7 @@ inline qi::Future<qi::GenericValue> *qi_future_cpp(qi_future_t *value) {
 };
 
 inline qi_future_t* qi_cpp_promise_get_future(qi::Promise<qi::GenericValue> &prom) {
-  qi::Future<qi::GenericValue>*  fut = new qi::Future<qi::GenericValue>();
-  *fut = prom.future();
+  qi::Future<qi::GenericValue>*  fut = new qi::Future<qi::GenericValue>(prom.future());
   return (qi_future_t *) fut;
 }
 
