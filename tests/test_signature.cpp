@@ -197,6 +197,16 @@ TEST(TestSignature, FromString) {
   sig = new qi::Signature("(m)(sib)");
   EXPECT_FALSE(sig->isValid());
   delete sig;
+
+  ASSERT_NO_THROW(sig = new qi::Signature("(((sIsI[(sssW)]s)))"));
+  EXPECT_TRUE(sig->isValid());
+  delete sig;
+
+  ASSERT_NO_THROW(sig = new qi::Signature("({I(Isss[(ss)]s)}{I(Is)}{I(Iss)}s)"));
+  EXPECT_TRUE(sig->isValid());
+  delete sig;
+
+  ASSERT_FALSE(qi::Signature("ddd").isValid());
 }
 
 TEST(TestSignature, SignatureSplitError) {
@@ -208,13 +218,23 @@ TEST(TestSignature, SignatureSplitError) {
   EXPECT_EQ("reply", sigInfo[1]);
   EXPECT_EQ("", sigInfo[2]);
 
-  //should it just return ('', 'reply', '') ?
   EXPECT_ANY_THROW(qi::signatureSplit("reply::"));
+  EXPECT_ANY_THROW(qi::signatureSplit("reply::("));
+  EXPECT_ANY_THROW(qi::signatureSplit("reply::e"));
+  EXPECT_ANY_THROW(qi::signatureSplit("reply::(RRRR)"));
+  EXPECT_NO_THROW(qi::signatureSplit("reply::(sssss)"));
 
-  //to do later
-  //EXPECT_ANY_THROW(qi::signatureSplit("reply::("));
-  //EXPECT_ANY_THROW(qi::signatureSplit("reply::e";
-  //EXPECT_ANY_THROW(qi::signatureSplit("reply::(RRRR)"));
+  EXPECT_ANY_THROW(qi::signatureSplit("reply::([sss])"));
+  EXPECT_NO_THROW(qi::signatureSplit("reply::([s])"));
+
+  EXPECT_ANY_THROW(qi::signatureSplit("titi::s([[xxx]])"));
+  EXPECT_ANY_THROW(qi::signatureSplit("titi::s([[sss]])"));
+  EXPECT_NO_THROW(qi::signatureSplit("titi::s([[s]])"));
+
+  EXPECT_ANY_THROW(qi::signatureSplit("titi::s([({ii}s[ss])])"));
+  EXPECT_NO_THROW(qi::signatureSplit("titi::s([({ii}s[s])])"));
+
+  EXPECT_NO_THROW(qi::signatureSplit("titi::s({i{is}})"));
 }
 
 TEST(TestSignature, SignatureSplit) {
@@ -240,6 +260,11 @@ TEST(TestSignature, SignatureSplit) {
   EXPECT_EQ("((([{ii}])))", sigInfo[0]);
   EXPECT_EQ("toto", sigInfo[1]);
   EXPECT_EQ("({[{{ii}{ii}}][[{{ii}{ii}}]]})", sigInfo[2]);
+
+  sigInfo = qi::signatureSplit("toto");
+  EXPECT_EQ("", sigInfo[0]);
+  EXPECT_EQ("toto", sigInfo[1]);
+  EXPECT_EQ("", sigInfo[2]);
 }
 
 

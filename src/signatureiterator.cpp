@@ -17,13 +17,80 @@ qiLogCategory("qitype.signature");
 
 namespace qi {
 
-  //TODO
-  static bool _is_valid(const char *begin, const char *QI_UNUSED(end)) {
-    const char *current = begin;
+  static bool _is_valid(const std::string& s, unsigned int& current, qi::Signature::Type type, qi::Signature::Type closing)
+  {
+    int         arguments = 0;
+    while (current < s.size() && s[current] != closing)
+    {
+      switch (static_cast<qi::Signature::Type>(s[current]))
+      {
+      case qi::Signature::Type_Void:
+      case qi::Signature::Type_Bool:
+      case qi::Signature::Type_Int8:
+      case qi::Signature::Type_UInt8:
+      case qi::Signature::Type_Int16:
+      case qi::Signature::Type_UInt16:
+      case qi::Signature::Type_Int32:
+      case qi::Signature::Type_UInt32:
+      case qi::Signature::Type_Int64:
+      case qi::Signature::Type_UInt64:
+      case qi::Signature::Type_Float:
+      case qi::Signature::Type_Double:
+      case qi::Signature::Type_String:
+      case qi::Signature::Type_List_End:
+      case qi::Signature::Type_Map_End:
+      case qi::Signature::Type_Tuple_End:
+      case qi::Signature::Type_Dynamic:
+      case qi::Signature::Type_Raw:
+      case qi::Signature::Type_Pointer:
+      case qi::Signature::Type_Object:
+      case qi::Signature::Type_Unknown:
+      case qi::Signature::Type_None:
+        break;
+      case qi::Signature::Type_List:
+      {
+        if (_is_valid(s, ++current, qi::Signature::Type_List, qi::Signature::Type_List_End) == false)
+          return false;
 
-    while (*current) {
+        break;
+      }
+      case qi::Signature::Type_Tuple:
+      {
+        if (s[++current] == qi::Signature::Type_Tuple_End)
+          return true; // Empty tuple is valid.
+        if (_is_valid(s, current, qi::Signature::Type_Tuple, qi::Signature::Type_Tuple_End) == false)
+          return false;
+        break;
+      }
+      case qi::Signature::Type_Map:
+        if (_is_valid(s, ++current, qi::Signature::Type_Map, qi::Signature::Type_Map_End) == false)
+          return false;
+        break;
+      default:
+        qiLogError() << "`" << s[current] << "' : Type unknown in `" << s << "'";
+        return false;
+        break;
+      }
       current++;
-    };
+      arguments++;
+    }
+
+    // Check complex type validity
+    if (type == qi::Signature::Type_Map && (arguments != 2 || s[current] != qi::Signature::Type_Map_End))
+    {
+      qiLogError() << "Map must have a key and a value.";
+      return false;
+    }
+    if (type == qi::Signature::Type_List && (arguments != 1 || s[current] != qi::Signature::Type_List_End))
+    {
+      qiLogError() << "List must contain only one element.";
+      return false;
+    }
+    if (type == qi::Signature::Type_Tuple && s[current] != qi::Signature::Type_Tuple_End)
+    {
+      qiLogError() << "Invalid tuple.";
+      return false;
+    }
     return true;
   }
 
@@ -97,19 +164,18 @@ namespace qi {
 
   // go forward, add a 0, go forward, add a 0, bouhhh a 1! AHHHHHH scary!
   bool SignaturePrivate::split(const char *signature, const char *sig_end) {
-
-    if (!_is_valid(signature, sig_end))
+    unsigned int i = 0;
+    if (!_is_valid(std::string(signature), i, qi::Signature::Type_None, qi::Signature::Type_None))
       return false;
 
-    //std::cout << "fullsig:" << signature << std::endl;
     char *current   = _signature;
-    //char *signature = _signature;
-
-    while(*signature) {
+    while(*signature)
+    {
       if (signature >= sig_end || _signature >= _end)
         break;
       //verify that the current signature is correct
-      switch(static_cast<qi::Signature::Type>(*signature)) {
+      switch(static_cast<qi::Signature::Type>(*signature))
+      {
         case qi::Signature::Type_Void:
         case qi::Signature::Type_Bool:
         case qi::Signature::Type_Int8:
@@ -145,7 +211,7 @@ namespace qi {
             return false;
           break;
         default:
-          qiLogError() << "Signature is invalid:" << signature;
+          qiLogError() << "Signature is invalid: `" << signature << "'";
           return false;
       }
 
@@ -179,7 +245,7 @@ namespace qi {
 
     if (this->size() != 1)
     {
-      qiLogError() << "Signature is invalid : " << fullSignature;
+      qiLogError() << "Signature is invalid: `" << fullSignature << "'";
       _p->_valid = false;
     }
   }
@@ -191,7 +257,7 @@ namespace qi {
 
     if (this->size() != 1)
     {
-      qiLogError() << "Signature is invalid : " << subsig;
+      qiLogError() << "Signature is invalid: `" << subsig << "'";
       _p->_valid = false;
     }
   }
@@ -323,9 +389,19 @@ namespace qi {
 
     size_t idx1 = fullSignature.find("::");
     if (idx1 != fullSignature.npos) {
+      // If :: are given, expect parameter tuple.
+      if (fullSignature.find("(") == fullSignature.npos || fullSignature.find(")") == fullSignature.npos)
+        throw std::runtime_error("Signature " + fullSignature + " is not valid");
+
       funcName = fullSignature.substr(0, idx1);
       //we should have a valid signature
-      qi::Signature sig = qi::Signature("(" + fullSignature.substr(idx1+2) + ")").begin().children();
+      qi::Signature parent("(" + fullSignature.substr(idx1+2) + ")");
+      qi::Signature sig = parent.begin().children();
+
+      // Expect valid signatures.
+      if (fullSignature.substr(idx1+2) == "" || parent.isValid() == false || sig.isValid() == false)
+        throw std::runtime_error("Signature " + fullSignature + " is not valid");
+
       if (sig.isValid() && sig.size() == 2)
       {
         qi::Signature::iterator it = sig.begin();

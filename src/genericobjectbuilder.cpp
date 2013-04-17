@@ -50,12 +50,39 @@ namespace qi
     delete _p;
   }
 
+  static int isSignatureValid(const std::string& signature, const std::string& sigret)
+  {
+    std::vector<std::string> sigInfo;
+    try
+    {
+      sigInfo = signatureSplit(signature);
+    }
+    catch (const std::runtime_error& e)
+    {
+      qiLogError() << e.what();
+      return -1;
+    }
+
+    if (sigInfo[2] == "")
+      return -1;
+
+    if (sigret != "")
+    {
+      Signature sret(sigret);
+      if (sret.isValid() == false)
+        return -1;
+    }
+    return 0;
+  }
+
   int GenericObjectBuilder::xAdvertiseMethod(const std::string& sigret,
                                              const std::string& signature,
                                              GenericFunction func,
                                              const std::string& desc,
                                              MetaCallType threadingModel)
   {
+    if (isSignatureValid(signature, sigret) < 0)
+      return -1;
     MetaMethodBuilder mmb;
     mmb.setSigreturn(sigret);
     mmb.setSignature(signature);
@@ -83,6 +110,8 @@ namespace qi
 
   int GenericObjectBuilder::xAdvertiseEvent(const std::string& signature)
   {
+    if (isSignatureValid(signature, "") < 0)
+      return -1;
     if (_p->_objptr) {
       qiLogWarning() << "GenericObjectBuilder: Called xAdvertiseEvent on event '" << signature << "' but object is already created.";
     }
@@ -94,6 +123,8 @@ namespace qi
 
   int GenericObjectBuilder::xAdvertiseProperty(const std::string& name, const std::string& sig, int id)
   {
+    if (isSignatureValid(sig, "") < 0)
+      return -1;
     return _p->_object->metaObject()._p->addProperty(name, sig, id);
   }
 
