@@ -88,6 +88,13 @@ namespace qi
             else
             {
               std::pair<GenericValuePtr,bool> c = val.convert(dstElemType);
+              if (!c.first.type)
+              {
+                qiLogDebug() << "List element conversion failure from "
+                 << val.type->infoString() << " to " << dstElemType->infoString();
+                 result.destroy();
+                 return std::make_pair(GenericValuePtr(), false);
+              }
               result._append(c.first);
               if (c.second)
                 c.first.destroy();
