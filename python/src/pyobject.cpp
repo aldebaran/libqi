@@ -9,6 +9,8 @@
 #include <boost/python.hpp>
 #include <boost/python/raw_function.hpp>
 #include "pyfuture.hpp"
+#include "pysignal.hpp"
+#include "pyproperty.hpp"
 
 qiLogCategory("qipy.object");
 
@@ -46,14 +48,6 @@ namespace qi { namespace py {
     };
 
 
-
-    void addMethod(boost::python::object pyobj, qi::ObjectPtr obj, const qi::MetaMethod &mem) {
-      qiLogInfo() << "adding method:" << mem.signature();
-      std::vector<std::string> vs = qi::signatureSplit(mem.signature());
-      boost::python::object fun = boost::python::raw_function(PyQiFunctor(vs[1].c_str(), obj));
-      boost::python::api::setattr(pyobj, vs[1].c_str(), fun);// result
-    }
-
     void populateMethods(boost::python::object pyobj, qi::ObjectPtr obj) {
       qi::MetaObject::MethodMap           mm = obj->metaObject().methodMap();
       qi::MetaObject::MethodMap::iterator it;
@@ -63,7 +57,39 @@ namespace qi { namespace py {
         if (mem.uid() < 10)
           continue;
         std::vector<std::string> vs = qi::signatureSplit(mem.signature());
-        addMethod(pyobj, obj, mem);
+        qiLogInfo() << "adding method:" << mem.signature();
+        boost::python::object fun = boost::python::raw_function(PyQiFunctor(vs[1].c_str(), obj));
+        boost::python::api::setattr(pyobj, vs[1].c_str(), fun);// result
+      }
+    }
+
+    void populateSignals(boost::python::object pyobj, qi::ObjectPtr obj) {
+      qi::MetaObject::SignalMap           mm = obj->metaObject().signalMap();
+      qi::MetaObject::SignalMap::iterator it;
+      for (it = mm.begin(); it != mm.end(); ++it) {
+        qi::MetaSignal &ms = it->second;
+        //drop special methods
+        if (ms.uid() < 10)
+          continue;
+        std::vector<std::string> vs = qi::signatureSplit(ms.signature());
+        qiLogInfo() << "adding signal:" << ms.signature();
+        boost::python::object fun = qi::py::makePySignal();
+        boost::python::api::setattr(pyobj, vs[1].c_str(), fun);
+      }
+    }
+
+    void populateProperties(boost::python::object pyobj, qi::ObjectPtr obj) {
+      qi::MetaObject::PropertyMap           mm = obj->metaObject().propertyMap();
+      qi::MetaObject::PropertyMap::iterator it;
+      for (it = mm.begin(); it != mm.end(); ++it) {
+        qi::MetaProperty &mp = it->second;
+        //drop special methods
+        if (mp.uid() < 10)
+          continue;
+        std::vector<std::string> vs = qi::signatureSplit(mp.signature());
+        qiLogInfo() << "adding property:" << mp.signature();
+        boost::python::object fun = qi::py::makePyProperty();
+        boost::python::api::setattr(pyobj, vs[1].c_str(), fun);
       }
     }
 
@@ -92,6 +118,8 @@ namespace qi { namespace py {
     boost::python::object makePyQiObject(qi::ObjectPtr obj, const std::string &name) {
       boost::python::object result = boost::python::object(qi::py::PyQiObject(obj));
       qi::py::populateMethods(result, obj);
+      qi::py::populateSignals(result, obj);
+      qi::py::populateProperties(result, obj);
       return result;
     }
 

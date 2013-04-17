@@ -11,6 +11,8 @@
 #include "pyfuture.hpp"
 #include "pysession.hpp"
 #include "pyobject.hpp"
+#include "pysignal.hpp"
+#include "pyproperty.hpp"
 
 BOOST_PYTHON_MODULE(libqipy)
 {
@@ -18,4 +20,6 @@ BOOST_PYTHON_MODULE(libqipy)
   qi::py::export_pyapplication();
   qi::py::export_pysession();
   qi::py::export_pyobject();
+  qi::py::export_pysignal();
+  qi::py::export_pyproperty();
 }

@@ -7,12 +7,15 @@
 */
 
 
-#ifndef   	PYSESSION_HPP_
-# define   	PYSESSION_HPP_
+#ifndef   	PYPROPERTY_HPP_
+# define   	PYPROPERTY_HPP_
+
+#include <boost/python.hpp>
 
 namespace qi {
   namespace py {
-    void export_pysession();
+    boost::python::object makePyProperty();
+    void export_pyproperty();
   }
 }
 

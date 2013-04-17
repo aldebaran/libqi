@@ -14,7 +14,12 @@ qi_create_lib(qipy src/boostpymain.cpp
                    src/pyfuture.hpp
                    src/pyobject.cpp
                    src/pyobject.hpp
-                   src/pyobjectconverter.cpp)
+                   src/pyobjectconverter.cpp
+                   src/pyproperty.cpp
+                   src/pyproperty.hpp
+                   src/pysignal.cpp
+                   src/pysignal.hpp)
+
 qi_use_lib(qipy BOOST_PYTHON QI QITYPE QIMESSAGING PYTHON)
 
 # Add automatic testing for Python bindings

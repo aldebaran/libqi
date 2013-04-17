@@ -14,13 +14,9 @@
 #include <boost/python.hpp>
 
 namespace qi {
-
   namespace py {
-
     boost::python::object makePyQiObject(qi::ObjectPtr obj, const std::string &name = std::string());
-
     void export_pyobject();
-
   }
 }
 
