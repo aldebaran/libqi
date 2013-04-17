@@ -214,7 +214,16 @@ namespace qi {
     if (it != _links.end())
     {
       for (ServiceLinks::iterator jt = it->second.begin(); jt != it->second.end(); ++jt)
-        _object->disconnect(jt->second.localLinkId);
+      {
+        try
+        {
+          _object->disconnect(jt->second.localLinkId);
+        }
+        catch (const std::runtime_error& e)
+        {
+          qiLogError() << e.what();
+        }
+      }
       _links.erase(it);
     }
   }
