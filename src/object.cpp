@@ -163,6 +163,7 @@ namespace qi {
       std::string resolvedSig;
       std::vector<MetaObject::CompatibleMethod> mml;
       std::string fullSig;
+      const MetaObject& mo = metaObject();
       for (unsigned dyn = 0; dyn<2 && methodId < 0; ++dyn)
       {
         resolvedSig = "(";
@@ -171,7 +172,14 @@ namespace qi {
         resolvedSig = resolvedSig + ')';
         fullSig = signature + "::" + resolvedSig;
         qiLogDebug() << "Finding method for resolved signature " << fullSig;
-        mml = metaObject().findCompatibleMethod(fullSig);
+        // First try an exact match, wich is much faster if we're lucky.
+        methodId = mo.methodId(fullSig);
+        if (methodId >= 0)
+        {
+          qiLogDebug() << "Got exact match";
+          break;
+        }
+        mml = mo.findCompatibleMethod(fullSig);
 
         if (!mml.empty())
         {
@@ -182,6 +190,8 @@ namespace qi {
             qiLogDebug() << generateErrorString("overload OK", signature, mml, false);
             methodId = mml[sz - 1].first.uid();
           }
+          else
+            qiLogVerbose() << generateErrorString("ambiguous overload", signature, mml, false);
         }
       }
     }
