@@ -25,10 +25,9 @@ namespace qi {
       {
       }
 
-      void setValue(const boost::python::handle<> &pyval) {
-        PyObject* pyobj = pyval.get();
+      void setValue(const boost::python::object &pyval) {
         //TODO: remove the useless copy here.
-        qi::GenericValue gvr = qi::GenericValue::from(pyobj);
+        qi::GenericValue gvr = qi::GenericValue::from(pyval);
         qi::Promise<qi::GenericValue>::setValue(gvr);
       }
 

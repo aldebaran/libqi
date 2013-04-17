@@ -29,10 +29,8 @@ namespace qi {
         : qi::Future<qi::GenericValue>(fut)
       {}
 
-      //boost::python::handle<>
       boost::python::object value(int msecs = qi::FutureTimeout_Infinite) const {
         qi::GenericValue gv = qi::Future<qi::GenericValue>::value(msecs);
-        //TODO handle error and exceptions
         return gv.to<boost::python::object>();
       }
 
