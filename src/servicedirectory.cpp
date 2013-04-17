@@ -341,7 +341,6 @@ namespace qi
 
   ServiceDirectory::~ServiceDirectory()
   {
-    close();
     delete _p;
   }
 
