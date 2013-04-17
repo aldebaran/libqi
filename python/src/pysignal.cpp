@@ -12,9 +12,10 @@
 namespace qi { namespace py {
 
 
-    class PySignal {
+    class PySignal : qi::SignalBase {
     public:
-      PySignal()
+      PySignal(const std::string &signature)
+        : qi::SignalBase(signature)
       {
       }
 
@@ -22,32 +23,30 @@ namespace qi { namespace py {
       }
 
       qi::uint64_t connect(boost::python::object callable) {
-        return sig.connect(boost::bind<void>(callable, this));
+        return qi::SignalBase::connect(boost::bind<void>(callable, this));
       }
 
       bool disconnect(qi::uint64_t id) {
-        return sig.disconnect(id);
+        return qi::SignalBase::disconnect(id);
       }
 
-      void trigger(boost::python::object arg) {
+      //renamed to avoid "hidden overload" warning. Yes we know :)
+      void trig(boost::python::object arg) {
         qi::GenericValueRef gvr(arg);
-        sig.trigger(gvr.asTupleValuePtr());
+        qi::SignalBase::trigger(gvr.asTupleValuePtr());
       }
 
-    private:
-      qi::Signal<void (qi::GenericValue)> sig;
     };
 
-    boost::python::object makePySignal() {
-      boost::python::object ret;
-      return ret;
+    boost::python::object makePySignal(const std::string &signature) {
+      return boost::python::object(PySignal(signature));
     }
 
     void export_pysignal() {
-      boost::python::class_<PySignal>("Signal")
+      boost::python::class_<PySignal>("Signal", boost::python::init<const std::string &>())
           .def("connect", &PySignal::connect, (boost::python::arg("callback")))
           .def("disconnect", &PySignal::disconnect, (boost::python::arg("id")))
-          .def("trigger", &PySignal::trigger, (boost::python::arg("arguments")));
+          .def("trigger", &PySignal::trig, (boost::python::arg("arguments")));
     }
 
   }

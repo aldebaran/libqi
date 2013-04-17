@@ -73,7 +73,7 @@ namespace qi { namespace py {
           continue;
         std::vector<std::string> vs = qi::signatureSplit(ms.signature());
         qiLogInfo() << "adding signal:" << ms.signature();
-        boost::python::object fun = qi::py::makePySignal();
+        boost::python::object fun = qi::py::makePySignal(ms.signature());
         boost::python::api::setattr(pyobj, vs[1].c_str(), fun);
       }
     }
@@ -88,7 +88,7 @@ namespace qi { namespace py {
           continue;
         std::vector<std::string> vs = qi::signatureSplit(mp.signature());
         qiLogInfo() << "adding property:" << mp.signature();
-        boost::python::object fun = qi::py::makePyProperty();
+        boost::python::object fun = qi::py::makePyProperty(mp.signature());
         boost::python::api::setattr(pyobj, vs[1].c_str(), fun);
       }
     }

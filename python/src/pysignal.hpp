@@ -14,7 +14,7 @@
 
 namespace qi {
   namespace py {
-    boost::python::object makePySignal();
+    boost::python::object makePySignal(const std::string &signature);
     void export_pysignal();
   }
 }

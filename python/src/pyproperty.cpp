@@ -13,8 +13,8 @@ namespace qi { namespace py {
 
     class PyProperty : public qi::GenericProperty {
     public:
-      PyProperty()
-        : qi::GenericProperty(0)
+      PyProperty(const std::string &signature)
+        : qi::GenericProperty(qi::Type::fromSignature(signature))
       {
       }
 
@@ -29,16 +29,14 @@ namespace qi { namespace py {
       void setVal(boost::python::object obj) {
         qi::GenericProperty::setValue(qi::GenericValueRef(obj));
       }
-
     };
 
-    boost::python::object makePyProperty() {
-      boost::python::object ret;
-      return ret;
+    boost::python::object makePyProperty(const std::string &signature) {
+      return boost::python::object(PyProperty(signature));
     }
 
     void export_pyproperty() {
-      boost::python::class_<PyProperty>("Property")
+      boost::python::class_<PyProperty>("Property", boost::python::init<const std::string &>())
           .def("value", &PyProperty::value)
           .def("setValue", &PyProperty::setVal, (boost::python::arg("value")));
     }

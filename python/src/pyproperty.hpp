@@ -14,7 +14,7 @@
 
 namespace qi {
   namespace py {
-    boost::python::object makePyProperty();
+    boost::python::object makePyProperty(const std::string &signature);
     void export_pyproperty();
   }
 }
