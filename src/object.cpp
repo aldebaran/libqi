@@ -141,6 +141,46 @@ namespace qi {
       return a.second < b.second;
     }
   };
+  unsigned int
+  GenericObject::findMethod(const std::string& signature, const GenericFunctionParameters& args)
+  {
+    typedef std::vector<MetaObject::CompatibleMethod> Methods;
+    const MetaObject& mo = metaObject();
+    if (signature.find(':') != signature.npos)
+      return mo.methodId(signature);
+    for (unsigned dyn = 0; dyn<2; ++dyn)
+    {
+      std::string resolvedSig = "(";
+      for (unsigned i=0; i<args.size(); ++i)
+        resolvedSig += args[i].signature(dyn==1);
+      resolvedSig = resolvedSig + ')';
+      std::string fullSig = signature + "::" + resolvedSig;
+      qiLogDebug() << "Finding method for resolved signature " << fullSig;
+      // First try an exact match, wich is much faster if we're lucky.
+      int methodId = mo.methodId(fullSig);
+      if (methodId >= 0)
+        return methodId;
+      Methods mml = mo.findCompatibleMethod(fullSig);
+      if (mml.empty())
+        continue;
+      if (mml.size() == 1)
+        return mml.front().first.uid();
+      // get best match
+      Methods::iterator it = std::max_element(mml.begin(), mml.end(), less_pair_second());
+      int count = 0;
+      for (unsigned i=0; i<mml.size(); ++i)
+      {
+        if (mml[i].second == it->second)
+          ++count;
+      }
+      assert(count);
+      if (count > 1)
+        qiLogVerbose() << generateErrorString("ambiguous overload", signature, mml, false);
+      else
+        return it->first.uid();
+    }
+    return -1;
+  }
   qi::Future<GenericValuePtr>
   GenericObject::metaCall(const std::string &signature, const GenericFunctionParameters& args, MetaCallType callType)
   {
@@ -150,51 +190,7 @@ namespace qi {
       out.setError("Invalid object");
       return out.future();
     }
-    int methodId = -1;
-    if (signature.find("::") != signature.npos)
-    { // user passed a full signature, require an exact match
-      methodId = metaObject().methodId(signature);
-      if (methodId < 0)
-        return makeFutureError<GenericValuePtr>("No such method " + signature);
-    }
-    else
-    {
-      // Querying signature with resolveDynamic can cost a lot, so try static first.
-      std::string resolvedSig;
-      std::vector<MetaObject::CompatibleMethod> mml;
-      std::string fullSig;
-      const MetaObject& mo = metaObject();
-      for (unsigned dyn = 0; dyn<2 && methodId < 0; ++dyn)
-      {
-        resolvedSig = "(";
-        for (unsigned i=0; i<args.size(); ++i)
-          resolvedSig += args[i].signature(dyn==1);
-        resolvedSig = resolvedSig + ')';
-        fullSig = signature + "::" + resolvedSig;
-        qiLogDebug() << "Finding method for resolved signature " << fullSig;
-        // First try an exact match, wich is much faster if we're lucky.
-        methodId = mo.methodId(fullSig);
-        if (methodId >= 0)
-        {
-          qiLogDebug() << "Got exact match";
-          break;
-        }
-        mml = mo.findCompatibleMethod(fullSig);
-
-        if (!mml.empty())
-        {
-          std::sort(mml.begin(), mml.end(), less_pair_second());
-          unsigned sz = mml.size();
-          if (sz == 1 || mml[sz-1].second != mml[sz-2].second)
-          {
-            qiLogDebug() << generateErrorString("overload OK", signature, mml, false);
-            methodId = mml[sz - 1].first.uid();
-          }
-          else
-            qiLogVerbose() << generateErrorString("ambiguous overload", signature, mml, false);
-        }
-      }
-    }
+    int methodId = findMethod(signature, args);
     if (methodId < 0) {
       return makeFutureError<GenericValuePtr>(generateErrorString("method", signature, metaObject().findCompatibleMethod(signature)));
     }
