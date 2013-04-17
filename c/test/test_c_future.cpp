@@ -70,7 +70,9 @@ TEST(TestFuture, Error)
   ASSERT_EQ(1, qi_future_has_error(future, QI_FUTURETIMEOUT_INFINITE));
   ASSERT_EQ(1, qi_future_is_finished(future));
 
-  std::string error(qi_future_get_error(future));
+  const char *s = qi_future_get_error(future);
+  std::string error(s);
+  free((void*)s);
   ASSERT_TRUE(error.compare("it's friday") == 0);
 
   qi_future_destroy(future);
