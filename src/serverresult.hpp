@@ -7,7 +7,6 @@
 #ifndef _SRC_SERVERRESULT_HPP_
 #define _SRC_SERVERRESULT_HPP_
 
-#include <boost/shared_ptr.hpp>
 #include <qi/future.hpp>
 #include "message.hpp"
 #include "transportsocket.hpp"

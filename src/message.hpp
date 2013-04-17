@@ -7,7 +7,6 @@
 #ifndef _QIMESSAGING_MESSAGE_HPP_
 #define _QIMESSAGING_MESSAGE_HPP_
 
-#include <iostream>
 #include <qimessaging/api.hpp>
 #include <qitype/genericvalue.hpp>
 #include <qi/buffer.hpp>

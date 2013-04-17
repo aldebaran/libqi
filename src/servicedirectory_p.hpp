@@ -7,13 +7,10 @@
 #ifndef _SRC_SERVICEDIRECTORY_P_HPP_
 #define _SRC_SERVICEDIRECTORY_P_HPP_
 
-#include "transportserver.hpp"
 #include "transportsocket.hpp"
-#include <qitype/genericobject.hpp>
-#include <set>
 #include <boost/thread/recursive_mutex.hpp>
-#include "objectregistrar.hpp"
 #include "boundobject.hpp"
+#include "server.hpp"
 
 namespace qi {
 

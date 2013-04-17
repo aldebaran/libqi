@@ -10,8 +10,6 @@
 #include <qi/future.hpp>
 #include <string>
 #include <boost/thread/mutex.hpp>
-#include <boost/thread/barrier.hpp>
-#include <boost/enable_shared_from_this.hpp>
 #include <qimessaging/session.hpp>
 #include <qi/atomic.hpp>
 #include "remoteobject_p.hpp"

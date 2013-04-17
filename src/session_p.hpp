@@ -7,17 +7,7 @@
 #ifndef _SRC_SESSION_P_HPP_
 #define _SRC_SESSION_P_HPP_
 
-#include <map>
-#include <set>
-#include <vector>
-#include <boost/thread.hpp>
-#include "transportsocket.hpp"
-#include "transportserver.hpp"
-#include <qitype/genericobject.hpp>
-#include <qimessaging/serviceinfo.hpp>
 #include <qimessaging/session.hpp>
-#include <qitype/signal.hpp>
-#include "serverresult.hpp"
 #include "servicedirectoryclient.hpp"
 #include "objectregistrar.hpp"
 #include "sessionservice.hpp"

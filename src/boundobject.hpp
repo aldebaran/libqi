@@ -8,7 +8,6 @@
 #define _SRC_BOUNDOBJECT_HPP_
 
 #include <string>
-#include <set>
 #include <boost/thread/mutex.hpp>
 #include <boost/signals2.hpp>
 #include <qimessaging/api.hpp>

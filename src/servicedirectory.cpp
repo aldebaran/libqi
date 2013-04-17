@@ -9,10 +9,8 @@
 # pragma warning(disable: 4355)
 #endif
 
-#include <iostream>
 #include <vector>
 #include <map>
-#include <set>
 
 #include <boost/make_shared.hpp>
 
