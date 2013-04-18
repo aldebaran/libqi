@@ -41,8 +41,16 @@ namespace qi {
     return this->_p->uid;
   }
 
+  std::string MetaMethod::name() const {
+    return this->_p->name;
+  }
+
+  std::string MetaMethod::parametersSignature() const {
+    return this->_p->parametersSignature;
+  }
+
   std::string MetaMethod::signature() const {
-    return this->_p->signature;
+    return this->_p->name + "::" + this->_p->parametersSignature;
   }
 
   std::string MetaMethod::sigreturn() const {
@@ -161,7 +169,9 @@ namespace qi {
   }
 
   void MetaMethodBuilder::setSignature(const std::string& sig) {
-    this->_p->metaMethod._p->signature = sig;
+    std::vector<std::string> split = signatureSplit(sig);
+    this->_p->metaMethod._p->name = split[1];
+    this->_p->metaMethod._p->parametersSignature = split[2];
   }
 
   void MetaMethodBuilder::setSigreturn(const std::string& sig) {
@@ -206,5 +216,5 @@ QI_TYPE_STRUCT_BOUNCE_REGISTER(::qi::MetaMethodParameter,
                                ::qi::MetaMethodParameterPrivate,
                                metaMethodParameterPrivate);
 
-QI_TYPE_STRUCT(::qi::MetaMethodPrivate, uid, sigreturn, signature, description, parameters, returnDescription);
+QI_TYPE_STRUCT(::qi::MetaMethodPrivate, uid, sigreturn, name, parametersSignature, description, parameters, returnDescription);
 QI_TYPE_STRUCT_BOUNCE_REGISTER(::qi::MetaMethod, ::qi::MetaMethodPrivate, metaMethodPrivate);

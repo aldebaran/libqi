@@ -68,9 +68,10 @@ namespace qi {
     std::string cname(nameOrSignature);
 
     //no signature specified fallback on findMethod
-    if (cname.find("::", 0, 2) == std::string::npos)
+    if (cname.find(':') == std::string::npos)
     {
       std::vector<MetaMethod> r = findMethod(cname);
+      ret.reserve(r.size());
       for (unsigned i=0; i<r.size(); ++i)
         ret.push_back(std::make_pair(r[i], 1.0f));
       return ret;
@@ -83,12 +84,11 @@ namespace qi {
     Signature sresolved(sigsorig[2]);
 
     for (it = _methods.begin(); it != _methods.end(); ++it) {
-      qi::MetaMethod mm = it->second;
-      std::vector<std::string> sigs = qi::signatureSplit(mm.signature());
+      const qi::MetaMethod& mm = it->second;
 
-      if (sigsorig[1] != sigs[1])
+      if (sigsorig[1] != mm.name())
         continue;
-      float score = sresolved.isConvertibleTo(Signature(sigs[2]));
+      float score = sresolved.isConvertibleTo(Signature(mm.parametersSignature()));
       if (score)
         ret.push_back(std::make_pair(mm, score));
     }

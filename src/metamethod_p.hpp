@@ -31,7 +31,8 @@ namespace qi {
 
     unsigned int uid;
     std::string sigreturn;
-    std::string signature;
+    std::string name;
+    std::string parametersSignature;
     std::string description;
     MetaMethodParameterVector parameters;
     std::string returnDescription;
