@@ -147,17 +147,17 @@ namespace qi {
         serverResultAdapter(prom.future(), this, socket, msg.address());
         return;
       }
-      sigparam = mm->signature();
+      sigparam = mm->parametersSignature();
     }
 
     else if (msg.type() == qi::Message::Type_Post) {
       const qi::MetaSignal *ms = obj->metaObject().signal(funcId);
       if (ms)
-        sigparam = ms->signature();
+        sigparam = signatureSplit(ms->signature())[2];
       else {
         const qi::MetaMethod *mm = obj->metaObject().method(funcId);
         if (mm)
-          sigparam = mm->signature();
+          sigparam = mm->parametersSignature();
         else {
           qiLogError() << "No such signal/method on event message " << msg.address();
           return;
@@ -170,7 +170,6 @@ namespace qi {
       return;
     }
 
-    sigparam = signatureSplit(sigparam)[2];
     GenericValuePtr value = msg.value(sigparam, socket);
     mfp = value.asTupleValuePtr();
     /* Because of 'global' _currentSocket, we cannot support parallel

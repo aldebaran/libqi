@@ -150,8 +150,7 @@ namespace qi {
           // Trust MetaObject.
           //std::string sig = sb->signature();
           const MetaSignal* ms  = _self->metaObject().signal(msg.event());
-          std::string sig = ms->signature();
-          sig = signatureSplit(sig)[2];
+          std::string sig = signatureSplit(ms->signature())[2];
 
           // Remove top-level tuple
           //sig = sig.substr(1, sig.length()-2);
@@ -247,7 +246,7 @@ namespace qi {
       argsSig += in[i].signature(false);
     argsSig += ')';
     std::string funcSig =
-      signatureSplit(metaObject().method(method)->signature())[2];
+      metaObject().method(method)->parametersSignature();
     if (funcSig != argsSig)
     {
       std::vector<GenericValuePtr> nargs(in);
