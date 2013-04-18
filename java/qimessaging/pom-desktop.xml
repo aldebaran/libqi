@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+
+  <groupId>com.aldebaran.app</groupId> <!-- Qimessaging Java bindings properties -->
+  <artifactId>qimessaging</artifactId>
+  <version>1.0-SNAPSHOT</version>
+  <packaging>jar</packaging>
+
+  <name>qimessaging</name> <!-- Project name -->
+  <url>http://aldebaran-robotics.com</url>
+  <description>
+    The QiMessaging library extends C++ object connecting and calls over network.
+    It provides object creation and exposition on the network in C++, Python, C# and Java.
+    Services can be join through a ServiceDirectory, possibly behind gateways and firewalls.
+
+    This package contains the Java Bindings for QiMessaging
+  </description>
+
+  <licenses>
+    <license>
+      <name>See COPYING</name>
+      <url>http://aldebaran-robotics.com&gt;</url>
+    </license>
+  </licenses>
+
+  <properties> <!-- Project encoding -->
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <lib.directory>src/main/resources/</lib.directory>
+
+    <!-- Plugin versions -->
+    <maven-assembly-plugin.version>2.3</maven-assembly-plugin.version>
+
+    <!-- Native libraries handling -->
+    <native.arch>${os.arch}</native.arch>
+    <native.path.resolved>${native.path}</native.path.resolved>
+    <native.path.resolvedd>${native.path}</native.path.resolvedd>
+    <native.prefix>target/lib</native.prefix>
+    <native.library-path.resolved>${native.library-path}</native.library-path.resolved>
+  </properties>
+
+  <dependencies>
+    <dependency> <!-- Dependency to java test suite -->
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.6</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency> <!-- Dependency to native qimessaging library (embeded into a jar) -->
+      <groupId>com.aldebaran</groupId>
+      <version>1.0-SNAPSHOT</version>
+      <artifactId>nativeqimessaging</artifactId> <!-- If modified, update packagenative.xml -->
+    </dependency>
+  </dependencies>
+
+
+  <!-- Handle platform for native libraries -->
+  <profiles>
+    <profile>
+      <id>Linux</id>
+      <activation>
+        <property>
+          <name>os.name</name>
+          <value>Linux</value>
+        </property>
+      </activation>
+      <properties>
+        <native.os>${os.name}</native.os>
+        <native.path>${native.prefix}/libqimessagingjni.so</native.path>
+        <native.pathd>${native.prefix}/libqimessaging.so</native.pathd>
+        <native.library-path>${native.prefix}</native.library-path>
+      </properties>
+    </profile>
+
+    <profile>
+      <id>Windows</id>
+      <activation>
+        <os>
+          <family>windows</family>
+        </os>
+      </activation>
+      <properties>
+        <native.os>Windows</native.os>
+        <native.path>${native.prefix}/qimessagingjni.dll</native.path>
+        <native.library-path>${native.prefix}</native.library-path>
+      </properties>
+    </profile>
+
+    <profile>
+      <id>Mac</id>
+      <activation>
+        <os>
+          <family>mac</family>
+        </os>
+      </activation>
+      <properties>
+        <native.os>${os.name}</native.os>
+        <native.path>${native.prefix}/qimessagingjni.dylib</native.path>
+        <native.library-path>${native.prefix}</native.library-path>
+      </properties>
+    </profile>
+  </profiles>
+
+
+  <build>
+    <resources> <!-- Package native libraries as resources -->
+      <resource>
+        <filtering>false</filtering>
+        <directory>${basedir}/src/main/resources</directory>
+        <includes>
+          <include>libqi.so</include>
+          <include>libqitype.so</include>
+          <include>libqimessaging.so</include>
+          <include>libqimessagingjni.so</include>
+        </includes>
+      </resource>
+    </resources>
+    <plugins>
+      <plugin> <!-- Plug Ecplise on project -->
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-eclipse-plugin</artifactId>
+        <version>2.8</version>
+        <configuration>
+          <downloadSources>true</downloadSources>
+          <downloadJavadocs>true</downloadJavadocs>
+        </configuration>
+      </plugin>
+      <plugin> <!-- Handle project dependencies -->
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <executions>
+          <execution> <!-- Specify plugin behavior -->
+            <id>unpack</id>
+            <phase>compile</phase>
+            <goals>
+              <goal>unpack</goal>
+            </goals>
+            <configuration>
+              <artifactItems>
+                <artifactItem> <!-- Specify maven behavior with nativeqimessaging.jar -->
+                  <groupId>com.aldebaran</groupId>
+                  <artifactId>nativeqimessaging</artifactId> <!-- If modified, update packagenative.xml -->
+                  <version>1.0-SNAPSHOT</version>
+                  <classifier>${build.type}</classifier>
+                  <type>jar</type>
+                  <overWrite>true</overWrite>
+                  <outputDirectory>${lib.directory}</outputDirectory>
+                </artifactItem>
+              </artifactItems>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.0</version>
+        <configuration>
+          <source>5</source>
+          <target>5</target>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+
+  <repositories> <!-- Specify address of nativeqimessaging maven repository -->
+    <repository>
+      <id>local-repository</id>
+    <name>Native qimessaging library jar repository</name>
+    <url>file:///tmp/maven/repo</url> <!-- If modified, update packagenative.xml -->
+    </repository>
+  </repositories>
+
+</project>

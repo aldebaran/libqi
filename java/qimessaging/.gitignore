@@ -1,0 +1,8 @@
+src/main/resources/
+
+# Ignore unpacked C++ librairies
+jni/*.so
+jni/*.a
+
+# Ignore compilation folder
+target/
