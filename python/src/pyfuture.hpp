@@ -17,6 +17,11 @@
 namespace qi {
   namespace py {
 
+    class PyPromise;
+    class PyFuture;
+    void pysignalCbP(boost::python::object callable, PyPromise *pp);
+    void pysignalCbF(boost::python::object callable, PyFuture *pp);
+
     //needed in .hpp by some adapter in PySession.
     class PyFuture : public qi::Future<qi::GenericValue> {
     public:
@@ -40,7 +45,7 @@ namespace qi {
       }
 
       void add_callback(boost::python::object callable) {
-        connect(boost::bind<void>(callable, this));
+        connect(boost::bind<void>(pysignalCbF, callable, this));
       }
 
     };

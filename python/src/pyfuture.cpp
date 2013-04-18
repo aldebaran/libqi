@@ -9,19 +9,28 @@
 #include "pyfuture.hpp"
 #include <qi/future.hpp>
 #include <boost/python.hpp>
-
+#include "gil.hpp"
 
 namespace qi {
   namespace py {
 
+    class PyPromise;
+    void pysignalCbP(boost::python::object callable, PyPromise *pp) {
+      GILScopedLock _lock;
+      callable(pp);
+    }
 
+    void pysignalCbF(boost::python::object callable, PyFuture *pp) {
+      GILScopedLock _lock;
+      callable(pp);
+    }
 
     class PyPromise: public qi::Promise<qi::GenericValue> {
     public:
       PyPromise() {};
 
       PyPromise(boost::python::object callable)
-        : qi::Promise<qi::GenericValue> (boost::bind<void>(callable, this))
+        : qi::Promise<qi::GenericValue> (boost::bind<void>(&pysignalCbP, callable, this))
       {
       }
 

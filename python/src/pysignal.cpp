@@ -13,10 +13,11 @@ qiLogCategory("py.signal");
 
 namespace qi { namespace py {
 
-    qi::GenericValuePtr pysignalCb(const std::vector<qi::GenericValuePtr>& cargs, boost::python::object callable) {
+    static qi::GenericValuePtr pysignalCb(const std::vector<qi::GenericValuePtr>& cargs, boost::python::object callable) {
       GILScopedLock _lock;
       boost::python::list   args;
       boost::python::object ret;
+
       std::vector<qi::GenericValuePtr>::const_iterator it;
       for (it = cargs.begin(); it != cargs.end(); ++it) {
         args.append(it->to<boost::python::object>());
