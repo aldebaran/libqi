@@ -67,7 +67,7 @@ namespace qi {
   {
     // we must end up with name event, get_name and set_name methods
     unsigned int isig = advertiseEvent<void(const T&)>(name);
-    xAdvertiseProperty(name, typeOf<T>()->signature(), isig);
+    isig = xAdvertiseProperty(name, typeOf<T>()->signature(), isig);
     return isig;
   }
 

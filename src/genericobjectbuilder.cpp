@@ -123,7 +123,7 @@ namespace qi
 
   int GenericObjectBuilder::xAdvertiseProperty(const std::string& name, const std::string& sig, int id)
   {
-    if (isSignatureValid(sig, "") < 0)
+    if (isSignatureValid( name + "::(" + sig + ")", "") < 0)
       return -1;
     return _p->_object->metaObject()._p->addProperty(name, sig, id);
   }
