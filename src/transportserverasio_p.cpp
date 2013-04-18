@@ -221,7 +221,7 @@ namespace qi
 #ifdef WITH_SSL
     if (_ssl)
     {
-      if (self->_p->_identityCertificate.empty() || self->_p->_identityKey.empty())
+      if (self->_identityCertificate.empty() || self->_identityKey.empty())
       {
         const char* s = "SSL certificates missing, please call Session::setIdentity first";
         qiLogError("qimessaging.server.listen") << s;
@@ -231,8 +231,8 @@ namespace qi
       _sslContext.set_options(
         boost::asio::ssl::context::default_workarounds
         | boost::asio::ssl::context::no_sslv2);
-      _sslContext.use_certificate_chain_file(self->_p->_identityCertificate.c_str());
-      _sslContext.use_private_key_file(self->_p->_identityKey.c_str(), boost::asio::ssl::context::pem);
+      _sslContext.use_certificate_chain_file(self->_identityCertificate.c_str());
+      _sslContext.use_private_key_file(self->_identityKey.c_str(), boost::asio::ssl::context::pem);
     }
 
     _s = new boost::asio::ssl::stream<boost::asio::ip::tcp::socket>(_acceptor.get_io_service(), _sslContext);
