@@ -16,6 +16,8 @@
 
 BOOST_PYTHON_MODULE(libqipy)
 {
+  PyEval_InitThreads();
+  Py_Initialize();
   qi::py::export_pyfuture();
   qi::py::export_pyapplication();
   qi::py::export_pysession();

@@ -41,6 +41,11 @@ if sys.platform.startswith("linux"):
 
 #######
 
-from libqipy import Application, Future, FutureState, FutureTimeout, Promise, Session
+from libqipy import Application, Future, FutureState, FutureTimeout, Promise, Session, Signal, Property
 
-__all__ = [ "Application", "Session", "Promise", "Future", "FutureState", "FutureTimeout" ]
+def _expander(self, *args, **kwargs):
+    self.trigger(args, kwargs)
+
+Signal.__call__ = _expander
+
+__all__ = [ "Application", "Session", "Promise", "Future", "FutureState", "FutureTimeout", "Signal", "Property" ]

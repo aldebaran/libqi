@@ -10,21 +10,23 @@
 import time
 import sys
 
-import qimessaging.application as qima
-import qimessaging.signal as qims
+import qi
 
 class subscriber:
   def __init__(self):
     self.done = False
 
   def callback(self):
+    print "callback"
     self.done = True
 
   def callback_42(self, nb):
+    print "callback_42:", nb
     if (nb == 42):
       self.done = True
 
   def callback_5args(self, a, b, c ,d, e):
+    print "callback_5args:", a, b, c, d ,e
     self.done = True
 
   def wait(self):
@@ -33,10 +35,10 @@ class subscriber:
 
 def main():
   print "\nInit..."
-  app = qima.Application()
+  app = qi.Application()
   sub1 = subscriber()
   sub2 = subscriber()
-  mysignal = qims.Signal()
+  mysignal = qi.Signal()
 
   print "\nTest #1 : Multiple subscribers to signal"
   callback = sub1.callback
@@ -44,7 +46,7 @@ def main():
   mysignal.connect(callback)
   signalid = mysignal.connect(callback2)
 
-  mysignal.trigger()
+  mysignal()
   sub2.wait()
   sub1.wait()
 
@@ -53,16 +55,16 @@ def main():
 
   sub1.done = False
   sub2.done = False
-  mysignal.trigger()
+  mysignal()
   sub1.wait()
 
   print "\nTest #3 : Disconnect All"
   mysignal.connect(callback2)
-  assert mysignal.disconnectAll() == True
+  assert mysignal.disconnect_all() == True
 
   sub1.done = False
   sub2.done = False
-  mysignal.trigger()
+  mysignal()
   time.sleep(0.5)
 
   assert sub1.done == False
@@ -73,16 +75,16 @@ def main():
 
   sub1.done = False
   sub2.done = False
-  mysignal.trigger(42)
+  mysignal(42)
   sub1.wait()
 
-  assert mysignal.disconnectAll() == True
+  assert mysignal.disconnect_all() == True
   print "\nTest #5 : Trigger with five parameters"
   mysignal.connect(sub1.callback_5args)
 
   sub1.done = False
   sub2.done = False
-  mysignal.trigger(42, "hey", "a", 0.42, (0,1))
+  mysignal(42, "hey", "a", 0.42, (0,1))
   sub1.wait()
 
 if __name__ == "__main__":

@@ -11,6 +11,7 @@
 #include "pyfuture.hpp"
 #include "pysignal.hpp"
 #include "pyproperty.hpp"
+#include "gil.hpp"
 
 qiLogCategory("qipy.object");
 
@@ -25,17 +26,13 @@ namespace qi { namespace py {
       {}
 
       boost::python::object operator()(boost::python::tuple pyargs, boost::python::dict pykwargs) {
-        qiLogInfo("qipy") << "calling a method!";
+        //calling c++, so release the GIL.
+        GILScopedUnlock _unlock;
         qi::GenericValue val = qi::GenericValue::from(pyargs);
-        //TODO: do we need async?
-        pykwargs.has_key("_async");
         bool async = boost::python::extract<bool>(pykwargs.get("_async", false));
         std::string funN = boost::python::extract<std::string>(pykwargs.get("_overload", _funName));
-
-        qiLogInfo("qipy") << "calling a method1!" << qi::encodeJSON(val);
+        qiLogDebug() << "calling a method: " << funN << " args:" << qi::encodeJSON(val);
         qi::Future<qi::GenericValuePtr> fut = _object->metaCall(funN, val.asDynamic().asTupleValuePtr());
-        //_object->
-        qiLogInfo("qipy") << "calling a method2: ret:" << qi::encodeJSON(fut.value());
         if (!async)
           return fut.value().to<boost::python::object>();
         else
@@ -57,7 +54,7 @@ namespace qi { namespace py {
         if (mem.uid() < 10)
           continue;
         std::vector<std::string> vs = qi::signatureSplit(mem.signature());
-        qiLogInfo() << "adding method:" << mem.signature();
+        qiLogDebug() << "adding method:" << mem.signature();
         boost::python::object fun = boost::python::raw_function(PyQiFunctor(vs[1].c_str(), obj));
         boost::python::api::setattr(pyobj, vs[1].c_str(), fun);// result
       }
@@ -72,7 +69,7 @@ namespace qi { namespace py {
         if (ms.uid() < 10)
           continue;
         std::vector<std::string> vs = qi::signatureSplit(ms.signature());
-        qiLogInfo() << "adding signal:" << ms.signature();
+        qiLogDebug() << "adding signal:" << ms.signature();
         boost::python::object fun = qi::py::makePySignal(ms.signature());
         boost::python::api::setattr(pyobj, vs[1].c_str(), fun);
       }
@@ -87,7 +84,7 @@ namespace qi { namespace py {
         if (mp.uid() < 10)
           continue;
         std::vector<std::string> vs = qi::signatureSplit(mp.signature());
-        qiLogInfo() << "adding property:" << mp.signature();
+        qiLogDebug() << "adding property:" << mp.signature();
         boost::python::object fun = qi::py::makePyProperty(mp.signature());
         boost::python::api::setattr(pyobj, vs[1].c_str(), fun);
       }
