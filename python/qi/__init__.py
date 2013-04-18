@@ -24,7 +24,7 @@ def load_lib_qipyessaging():
     deps = [
             "libqi.so",
             "libqitype.so",
-            "lib_qipyessaging.so",
+            "libqimessaging.so",
     ]
     this_dir = os.path.abspath(os.path.dirname(__file__))
     for dep in deps:
@@ -43,9 +43,9 @@ if sys.platform.startswith("linux"):
 
 from libqipy import Application, Future, FutureState, FutureTimeout, Promise, Session, Signal, Property
 
-def _expander(self, *args, **kwargs):
+def _shrinker(self, *args, **kwargs):
     self.trigger(args, kwargs)
 
-Signal.__call__ = _expander
+Signal.__call__ = _shrinker
 
 __all__ = [ "Application", "Session", "Promise", "Future", "FutureState", "FutureTimeout", "Signal", "Property" ]
