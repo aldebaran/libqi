@@ -165,7 +165,7 @@ void PyObject_from_GenericValue(qi::GenericValuePtr val, boost::python::object* 
 
 qi::GenericValuePtr GenericValue_from_PyObject_List(PyObject* val)
 {
-  std::vector<qi::GenericValue>& res = *new std::vector<qi::GenericValue>();
+  std::vector<qi::GenericValue> res;
   Py_ssize_t len = PyList_Size(val);
 
   for (Py_ssize_t i = 0; i < len; i++)
@@ -174,7 +174,7 @@ qi::GenericValuePtr GenericValue_from_PyObject_List(PyObject* val)
     res.push_back(qi::GenericValue(GenericValue_from_PyObject(current)));
   }
 
-  return qi::GenericValueRef(res);
+  return qi::GenericValueRef(res).clone();
 }
 
 qi::GenericValuePtr GenericValue_from_PyObject_Map(PyObject* dict)
@@ -191,12 +191,12 @@ qi::GenericValuePtr GenericValue_from_PyObject_Map(PyObject* dict)
     res[qi::GenericValue(newkey)] = newvalue;
   }
 
-  return qi::GenericValueRef(res);
+  return qi::GenericValueRef(res).clone();
 }
 
 qi::GenericValuePtr GenericValue_from_PyObject_Tuple(PyObject* val)
 {
-  std::vector<qi::GenericValuePtr>& res = *new std::vector<qi::GenericValuePtr>();
+  std::vector<qi::GenericValuePtr> res;
   Py_ssize_t len = PyTuple_Size(val);
 
   for (Py_ssize_t i = 0; i < len; i++)
@@ -231,12 +231,12 @@ qi::GenericValuePtr GenericValue_from_PyObject(PyObject* val)
 
   if (PyString_CheckExact(val))
   {
-    res = qi::GenericValueRef(*new std::string(PyString_AsString(val)));
+    res = qi::GenericValueRef(std::string(PyString_AsString(val))).clone();
   }
   else if (PyUnicode_CheckExact(val))
   {
     PyObject *pstring = PyUnicode_AsUTF8String(val);
-    res = qi::GenericValueRef(*new std::string(PyString_AsString(pstring)));
+    res = qi::GenericValueRef(std::string(PyString_AsString(pstring))).clone();
     Py_DECREF(pstring);
   }
   else if (val == Py_None)
@@ -245,15 +245,15 @@ qi::GenericValuePtr GenericValue_from_PyObject(PyObject* val)
   }
   else if (PyFloat_CheckExact(val))
   {
-    res = qi::GenericValueRef(PyFloat_AsDouble(val));
+    res = qi::GenericValueRef(PyFloat_AsDouble(val)).clone();
   }
   else if (PyLong_CheckExact(val))
   {
-    res = qi::GenericValueRef(PyLong_AsLong(val));
+    res = qi::GenericValueRef(PyLong_AsLong(val)).clone();
   }
   else if (PyInt_CheckExact(val))
   {
-    res = qi::GenericValueRef(PyInt_AsLong(val));
+    res = qi::GenericValueRef(PyInt_AsLong(val)).clone();
   }
   else if (PyList_CheckExact(val))
   {
