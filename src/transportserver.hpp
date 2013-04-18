@@ -15,12 +15,33 @@
 
 
 namespace qi {
+  class TransportServer;
+
+  class TransportServerImpl: public boost::enable_shared_from_this<TransportServerImpl>
+  {
+  public:
+    TransportServerImpl(TransportServer* self, EventLoop* ctx)
+      : self(self)
+      , context(ctx)
+    {}
+
+    virtual qi::Future<void> listen(const qi::Url& listenUrl) = 0;
+    virtual void close() = 0;
+
+  public:
+    TransportServer                        *self;
+    boost::mutex                            mutexCallback;
+    qi::EventLoop                          *context;
+    boost::mutex                            _endpointsMutex;
+    qi::UrlVector                           _endpoints;
+    qi::Promise<void>                       _connectionPromise;
+  };
+
+  typedef boost::shared_ptr<TransportServerImpl> TransportServerImplPtr;
+
 
   class TransportSocket;
-  class TransportServer;
-  class Session;
   typedef boost::shared_ptr<TransportSocket> TransportSocketPtr;
-  class TransportServerPrivate;
 
   class TransportServer
   {
@@ -46,9 +67,9 @@ namespace qi {
     // C4251
     qi::Signal<void (int error)>          acceptError;
     qi::Signal<void (void)>               endpointsChanged;
-
-  public:
-    TransportServerPrivate *_p;
+    std::string                           _identityKey;
+    std::string                           _identityCertificate;
+    std::vector<TransportServerImplPtr>   _impl;
   };
 
 }

@@ -20,7 +20,6 @@
 
 #include <qi/eventloop.hpp>
 
-#include "transportserver_p.hpp"
 #include "transportserverasio_p.hpp"
 
 qiLogCategory("qimessaging.transportserver");

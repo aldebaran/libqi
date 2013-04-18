@@ -34,15 +34,12 @@ qiLogCategory("qimessaging.transportserver");
 namespace qi
 {
   TransportServer::TransportServer()
-    : _p(new TransportServerPrivate)
   {
   }
 
   TransportServer::~TransportServer()
   {
     close();
-    delete _p;
-    _p = 0;
   }
 
   qi::Future<void> TransportServer::listen(const qi::Url &url, qi::EventLoop* ctx)
@@ -66,7 +63,7 @@ namespace qi
       return qi::makeFutureError<void>(s);
     }
 
-    _p->_impl.push_back(TransportServerImplPtr(impl));
+    _impl.push_back(TransportServerImplPtr(impl));
     return impl->listen(url);
   }
 
@@ -87,8 +84,8 @@ namespace qi
       return false;
     }
 
-    _p->_identityCertificate = crt;
-    _p->_identityKey = key;
+    _identityCertificate = crt;
+    _identityKey = key;
 
     return true;
   }
@@ -97,8 +94,8 @@ namespace qi
   {
     std::vector<qi::Url> r;
 
-    for (std::vector<TransportServerImplPtr>::const_iterator it = _p->_impl.begin();
-         it != _p->_impl.end();
+    for (std::vector<TransportServerImplPtr>::const_iterator it = _impl.begin();
+         it != _impl.end();
          it++)
     {
       boost::mutex::scoped_lock((*it)->_endpointsMutex);
@@ -109,14 +106,14 @@ namespace qi
   }
 
   void TransportServer::close() {
-    for (std::vector<TransportServerImplPtr>::const_iterator it = _p->_impl.begin();
-         it != _p->_impl.end();
+    for (std::vector<TransportServerImplPtr>::const_iterator it = _impl.begin();
+         it != _impl.end();
          it++)
     {
-      (*it)->close(); // this will delete _p->_impl
+      (*it)->close(); // this will delete _impl
     }
 
-    _p->_impl.clear();
+    _impl.clear();
   }
 
 }

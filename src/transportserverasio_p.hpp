@@ -14,7 +14,7 @@
 
 # include <qimessaging/api.hpp>
 # include <qimessaging/url.hpp>
-# include "transportserver_p.hpp"
+# include "transportserver.hpp"
 
 namespace qi
 {

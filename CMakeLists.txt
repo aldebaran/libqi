@@ -99,7 +99,6 @@ set(SRCS ${CONFIG_H}
          src/server.cpp
          src/transportserver.hpp
          src/transportserver.cpp
-         src/transportserver_p.hpp
          src/transportserverasio_p.cpp
          src/transportserverasio_p.hpp
          src/transportsocket.hpp
