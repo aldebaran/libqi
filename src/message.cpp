@@ -10,14 +10,14 @@
 
 #include <qitype/genericvalue.hpp>
 #include "message.hpp"
-#include "binaryencoder.hpp"
-#include "binarydecoder.hpp"
 
 #include <qi/atomic.hpp>
 #include <qi/log.hpp>
 #include <boost/cstdint.hpp>
 #include <qi/types.hpp>
 #include <qi/buffer.hpp>
+
+#include <qitype/binarycodec.hpp>
 
 #include "boundobject.hpp"
 #include "remoteobject_p.hpp"
@@ -312,11 +312,10 @@ namespace qi {
       qiLogWarning() << "called setError on a non Type_Error message";
       return;
     }
-    qi::Buffer        buf;
-    qi::BinaryEncoder ds(buf);
-    ds.write(qi::typeOf<std::string>()->signature());
-    ds.write(error);
-    setBuffer(buf);
+    // Error message is of type m (dynamic)
+    GenericValue v(GenericValueRef(error), false, false);
+    GenericValueRef vr(v);
+    setValue(vr);
   }
 
   namespace {

@@ -6,8 +6,7 @@
 #include <qimessaging/gateway.hpp>
 #include <qimessaging/session.hpp>
 #include "transportserver.hpp"
-#include "binarydecoder.hpp"
-#include "binaryencoder.hpp"
+
 #include <boost/bind.hpp>
 #include <qi/log.hpp>
 #include "session_p.hpp"
@@ -181,10 +180,8 @@ void GatewayPrivate::handleMsgFromClient(TransportSocketPtr client, Message cons
     }
 
     Message sdMsg;
-    Buffer buf;
-    BinaryEncoder d(buf);
-    d.write(msg->service());
-    sdMsg.setBuffer(buf);
+    unsigned int service = msg->service();
+    sdMsg.setValue(GenericValueRef(service));
 
     // associate the transportSoket client = 0
     // this will allow S.1 to be handle correctly
@@ -253,10 +250,7 @@ void GatewayPrivate::handleMsgFromService(TransportSocketPtr service, const Mess
 
       // create new message for the client
       Message  ans(Message::Type_Reply, msg->address());
-      Buffer   buf;
-      ans.setBuffer(buf);
-      BinaryEncoder dsAns(buf);
-      dsAns.write(result);
+      ans.setValue(GenericValueRef(result));
 
       // id should be rewritten then sent to the client
       ans.setId(itReq->second.first);
@@ -335,13 +329,12 @@ void GatewayPrivate::onMessageReady(const qi::Message &msg, qi::TransportSocketP
         _services[Message::Service_ServiceDirectory] = socket;
         qi::Buffer buf;
         qi::Message ans;
-        ans.setBuffer(buf);
         ans.setService(qi::Message::Service_Server);
         ans.setType(qi::Message::Type_Reply);
         ans.setFunction(qi::Message::ServerFunction_Connect);
         ans.setObject(qi::Message::GenericObject_Main);
-        qi::BinaryEncoder d(buf);
-        d.write("");
+        std::string empty;
+        ans.setValue(GenericValueRef(empty));
         socket->send(ans);
       }
       else

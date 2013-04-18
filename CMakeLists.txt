@@ -64,7 +64,6 @@ set(PUBLIC_HEADERS
                    qimessaging/servicedirectory.hpp
                    qimessaging/serviceinfo.hpp
                    qimessaging/session.hpp
-                   qimessaging/binarycodec.hpp
                    qimessaging/url.hpp
 )
 
@@ -74,9 +73,6 @@ set(SRCS ${CONFIG_H}
 
          src/boundobject.cpp
          src/boundobject.hpp
-         src/binarydecoder.hpp
-         src/binaryencoder.hpp
-         src/binarycoder.cpp
          src/gateway.cpp
          src/message.hpp
          src/message.cpp

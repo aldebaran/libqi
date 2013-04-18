@@ -18,7 +18,7 @@
 #include <qimessaging/gateway.hpp>
 #include <qi/application.hpp>
 #include <qi/os.hpp>
-#include <qimessaging/binarycodec.hpp>
+#include <qitype/binarycodec.hpp>
 
 qiLogCategory("test");
 
