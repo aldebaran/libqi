@@ -18,7 +18,8 @@ qi_create_lib(qipy src/boostpymain.cpp
                    src/pyproperty.cpp
                    src/pyproperty.hpp
                    src/pysignal.cpp
-                   src/pysignal.hpp)
+                   src/pysignal.hpp
+                   src/gil.hpp)
 
 qi_use_lib(qipy BOOST_PYTHON QI QITYPE QIMESSAGING PYTHON)
 
