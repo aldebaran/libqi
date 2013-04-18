@@ -112,6 +112,12 @@ namespace qi {
   {
     {
       boost::mutex::scoped_lock l(_stateMutex);
+
+      if (_dying)
+      {
+        return;
+      }
+
       _dying = true;
     }
 
