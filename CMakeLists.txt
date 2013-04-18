@@ -31,6 +31,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 set(PUBLIC_HEADERS
                    qitype/api.hpp
+                   qitype/binarycodec.hpp
                    qitype/details/bindtype.hxx
                    qitype/details/functiontype.hxx
                    qitype/details/functiontypefactory.hxx
@@ -79,6 +80,9 @@ qi_create_config_h(_confighpp qitype/config.hpp.in qitype/config.hpp)
 qi_install_header(${PUBLIC_HEADERS} KEEP_RELATIVE_PATHS)
 
 set(SOURCES ${PUBLIC_HEADERS}
+            src/binarydecoder.hpp
+            src/binaryencoder.hpp
+            src/binarycoder.cpp
             src/dynamicobject.cpp
             src/functiontype.cpp
             src/genericobjectbuilder.cpp
