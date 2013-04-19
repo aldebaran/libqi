@@ -64,8 +64,8 @@ namespace qi
   TcpTransportSocket::~TcpTransportSocket()
   {
     qiLogDebug() << this;
-
-    disconnect();
+    boost::system::error_code erc;
+    error(erc);
     delete _msg;
     qiLogVerbose() << "deleted " << this;
   }
@@ -349,8 +349,9 @@ namespace qi
   qi::FutureSync<void> TcpTransportSocket::disconnect()
   {
     boost::system::error_code erc;
-    error(erc);
-
+    _eventLoop->post(boost::bind(&TcpTransportSocket::error,
+                                 boost::static_pointer_cast<TcpTransportSocket>(shared_from_this()),
+                                 erc));
     return _disconnectPromise.future();
   }
 
