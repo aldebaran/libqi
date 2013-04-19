@@ -142,6 +142,11 @@ namespace qi {
     return true;
   }
 
+  inline std::string stringFromType(Signature::Type t)
+  {
+    return std::string(1, (char)t);
+  }
+
   class SignatureTypeVisitor
   {
   public:
@@ -152,35 +157,35 @@ namespace qi {
     }
     void visitVoid()
     {
-      result = Signature::fromType(Signature::Type_Void).toString();
+      result = stringFromType(Signature::Type_Void);
     }
     void visitInt(int64_t, bool isSigned, int byteSize)
     {
       switch((isSigned?1:-1)*byteSize)
       {
-        case 0:  result = Signature::fromType(Signature::Type_Bool).toString();  break;
-        case 1:  result = Signature::fromType(Signature::Type_Int8).toString();  break;
-        case -1: result = Signature::fromType(Signature::Type_UInt8).toString(); break;
-        case 2:  result = Signature::fromType(Signature::Type_Int16).toString(); break;
-        case -2: result = Signature::fromType(Signature::Type_UInt16).toString();break;
-        case 4:  result = Signature::fromType(Signature::Type_Int32).toString(); break;
-        case -4: result = Signature::fromType(Signature::Type_UInt32).toString();break;
-        case 8:  result = Signature::fromType(Signature::Type_Int64).toString(); break;
-        case -8: result = Signature::fromType(Signature::Type_UInt64).toString();break;
+        case 0:  result = stringFromType(Signature::Type_Bool);  break;
+        case 1:  result = stringFromType(Signature::Type_Int8);  break;
+        case -1: result = stringFromType(Signature::Type_UInt8); break;
+        case 2:  result = stringFromType(Signature::Type_Int16); break;
+        case -2: result = stringFromType(Signature::Type_UInt16);break;
+        case 4:  result = stringFromType(Signature::Type_Int32); break;
+        case -4: result = stringFromType(Signature::Type_UInt32);break;
+        case 8:  result = stringFromType(Signature::Type_Int64); break;
+        case -8: result = stringFromType(Signature::Type_UInt64);break;
         default:
-          result =  Signature::fromType(Signature::Type_Unknown).toString();
+          result =  stringFromType(Signature::Type_Unknown);
       }
     }
    void visitFloat(double, int byteSize)
    {
      if (byteSize == 4)
-       result = Signature::fromType(Signature::Type_Float).toString();
+       result = stringFromType(Signature::Type_Float);
      else
-       result = Signature::fromType(Signature::Type_Double).toString();
+       result = stringFromType(Signature::Type_Double);
    }
    void visitString(char*, size_t)
    {
-     result = Signature::fromType(Signature::Type_String).toString();
+     result = stringFromType(Signature::Type_String);
    }
    void visitList(GenericIterator it, GenericIterator iend)
    {
@@ -293,19 +298,19 @@ namespace qi {
    }
    void visitObject(GenericObject )
    {
-     result = Signature::fromType(Signature::Type_Object).toString();
+     result = stringFromType(Signature::Type_Object);
    }
    void visitObjectPtr(ObjectPtr& )
    {
-     result = Signature::fromType(Signature::Type_Object).toString();
+     result = stringFromType(Signature::Type_Object);
    }
    void visitPointer(GenericValuePtr)
    {
-     result = Signature::fromType(Signature::Type_Unknown).toString();
+     result = stringFromType(Signature::Type_Unknown);
    }
    void visitUnknown(GenericValuePtr)
    {
-     result = Signature::fromType(Signature::Type_Unknown).toString();
+     result = stringFromType(Signature::Type_Unknown);
    }
    void visitTuple(const std::vector<GenericValuePtr>& tuple)
    {
@@ -323,11 +328,11 @@ namespace qi {
        result = pointee.signature(true);
      }
      else
-       result = Signature::fromType(Signature::Type_Dynamic).toString();
+       result = stringFromType(Signature::Type_Dynamic);
    }
    void visitRaw(GenericValuePtr)
    {
-     result = Signature::fromType(Signature::Type_Raw).toString();
+     result = stringFromType(Signature::Type_Raw);
    }
    void visitIterator(GenericValuePtr v)
    {
@@ -337,7 +342,6 @@ namespace qi {
    GenericValuePtr _value;
    bool _resolveDynamic;
   };
-
 
   std::string Type::signature(void* storage, bool resolveDynamic)
   {
@@ -357,7 +361,7 @@ namespace qi {
       switch(kind())
       {
       case Type::Void:
-        v.result = Signature::fromType(Signature::Type_Void).toString();
+        return stringFromType(Signature::Type_Void);
         break;
       case Type::Int:
       {
@@ -372,7 +376,7 @@ namespace qi {
         break;
       }
       case Type::String:
-        v.result = Signature::fromType(Signature::Type_String).toString();
+        v.result = stringFromType(Signature::Type_String);
         break;
       case Type::List:
         v.visitList(GenericIterator(), GenericIterator());
@@ -381,7 +385,7 @@ namespace qi {
         v.visitMap(GenericIterator(), GenericIterator());
         break;
       case Type::Object:
-        v.result = Signature::fromType(Signature::Type_Object).toString();
+        v.result = stringFromType(Signature::Type_Object);
         break;
       case Type::Pointer:
         v.visitPointer(GenericValuePtr());
@@ -396,14 +400,14 @@ namespace qi {
         v.result += (char)Signature::Type_Tuple_End;
         break;
       case Type::Dynamic:
-        v.result = Signature::fromType(Signature::Type_Dynamic).toString();
+        v.result = stringFromType(Signature::Type_Dynamic);
         break;
       case Type::Raw:
-        v.result = Signature::fromType(Signature::Type_Raw).toString();
+        v.result = stringFromType(Signature::Type_Raw);
         break;
       case Type::Unknown:
       case Type::Iterator:
-         v.result = Signature::fromType(Signature::Type_Unknown).toString();
+         v.result = stringFromType(Signature::Type_Unknown);
          break;
       }
       return v.result;
