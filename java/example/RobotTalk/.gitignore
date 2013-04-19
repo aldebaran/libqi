@@ -1,0 +1,15 @@
+# Generated files
+bin/classes/
+bin/dexedLibs/
+bin/jarlist.cache
+bin/classes.dex
+bin/resources.ap_
+bin/HelloAndroidActivity.apk
+gen/
+
+# Generated settings
+.settings
+.cproject
+
+# Output directory
+target/

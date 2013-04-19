@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="hello">Make your robot talk!</string>
+    <string name="app_name">RobotTalk</string>
+    <string name="connect">Say !</string>
+    <string name="defaultIP">10.0.252.230</string>
+    <string name="defaultPort">9559</string>
+</resources>
