@@ -48,8 +48,8 @@ namespace qi
     */
     unsigned deltaCount = (transform.dropFirst? -1:0) + (transform.prependValue?1:0);
     const std::vector<Type*>& target = type->argumentsType();
-    const GenericValuePtr* args = &vargs[0];
     unsigned sz = vargs.size();
+    const GenericValuePtr* args = sz > 0 ? &vargs[0] : 0;
 
     if (target.size() != sz + deltaCount)
     {
