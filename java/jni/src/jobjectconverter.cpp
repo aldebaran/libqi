@@ -166,6 +166,11 @@ struct toJObject
       *result = env->NewObject(cls, mid, (jlong) ptr);*/
     }
 
+    void visitObjectPtr(qi::ObjectPtr o)
+    {
+      throw std::runtime_error("Cannot convert ObjectPtr to Jobject.");
+    }
+
     void visitPointer(qi::GenericValuePtr pointee)
     {
       throwJavaError(env, "Error in conversion: Unable to convert pointer in Java");
