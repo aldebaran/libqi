@@ -417,35 +417,51 @@ namespace qi {
 
   static Type* fromSignature(const qi::Signature::iterator & i)
   {
+    static Type* tv = typeOf<void>();
+    static Type* tb = typeOf<bool>();
+    static Type* t8 = typeOf<int8_t>();
+    static Type* t16 = typeOf<int16_t>();
+    static Type* t32 = typeOf<int32_t>();
+    static Type* t64 = typeOf<int64_t>();
+    static Type* tu8  = typeOf<uint8_t>();
+    static Type* tu16 = typeOf<uint16_t>();
+    static Type* tu32 = typeOf<uint32_t>();
+    static Type* tu64 = typeOf<uint64_t>();
+    static Type* tfloat = typeOf<float>();
+    static Type* tdouble = typeOf<double>();
+    static Type* tstring = typeOf<std::string>();
+    static Type* tgv = typeOf<GenericValue>();
+    static Type* tbuffer = typeOf<Buffer>();
+    static Type* tobjectptr = typeOf<ObjectPtr>();
     switch(i.type())
     {
     case Signature::Type_None:
     case Signature::Type_Void:
-      return typeOf<void>();
+      return tv;
     case Signature::Type_Bool:
-      return typeOf<bool>();
+      return tb;
     case Signature::Type_Int8:
-      return typeOf<int8_t>();
+      return t8;
     case Signature::Type_UInt8:
-      return typeOf<uint8_t>();
+      return tu8;
     case Signature::Type_Int16:
-      return typeOf<int16_t>();
+      return t16;
     case Signature::Type_UInt16:
-      return typeOf<uint16_t>();
+      return tu16;
     case Signature::Type_Int32:
-      return typeOf<int32_t>();
+      return t32;
     case Signature::Type_UInt32:
-      return typeOf<uint32_t>();
+      return tu32;
     case Signature::Type_Int64:
-      return typeOf<int64_t>();
+      return t64;
     case Signature::Type_UInt64:
-      return typeOf<uint64_t>();
+      return tu64;
     case Signature::Type_Float:
-      return typeOf<float>();
+      return tfloat;
     case Signature::Type_Double:
-      return typeOf<double>();
+      return tdouble;
     case Signature::Type_String:
-      return typeOf<std::string>();
+      return tstring;
     case Signature::Type_List:
       {
         Type* el = fromSignature(i.children().begin());
@@ -488,11 +504,11 @@ namespace qi {
         return res;
       }
     case Signature::Type_Dynamic:
-      return typeOf<GenericValue>();
+      return tgv;
     case Signature::Type_Raw:
-      return typeOf<Buffer>();
+      return tbuffer;
     case Signature::Type_Object:
-      return typeOf<ObjectPtr>();
+      return tobjectptr;
     default:
       qiLogWarning() << "Cannot get type from signature " << i.signature();
       return 0;
