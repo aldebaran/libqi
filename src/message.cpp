@@ -384,18 +384,12 @@ namespace qi {
     }
   }
 
-  void Message::setValues(const std::vector<qi::GenericValuePtr> &values, ObjectHost* context) {
-    std::vector< ::qi::Type*> types;
-    std::vector<void*> vals;
-    types.reserve(values.size());
-    vals.reserve(values.size());
+  void Message::setValues(const std::vector<qi::GenericValuePtr> &values, ObjectHost* context)
+  {
+    cow();
+    SerializeObjectCallback scb = boost::bind(serializeObject, _1, context);
     for (unsigned i = 0; i < values.size(); ++i)
-    {
-      types.push_back(values.at(i).type);
-      vals.push_back(values.at(i).value);
-    }
-    qi::GenericValuePtr args = qi::makeGenericTuplePtr(types, vals);
-    setValue(args, context);
+      encodeBinary(&_p->buffer, values[i], scb);
   }
 
   const qi::Buffer &Message::buffer() const
