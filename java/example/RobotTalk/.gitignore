@@ -6,6 +6,7 @@ bin/classes.dex
 bin/resources.ap_
 bin/HelloAndroidActivity.apk
 gen/
+libs/android-support.jar
 
 # Generated settings
 .settings
