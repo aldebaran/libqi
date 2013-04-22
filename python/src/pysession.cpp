@@ -26,6 +26,15 @@ namespace qi { namespace py {
       return gprom.future();
     }
 
+
+    qi::ObjectPtr makeQiPyObjectPtr(boost::python::object obj)
+    {
+      qi::ObjectPtr ret;
+      boost::python::object ob;
+
+      return ret;
+    }
+
     class PySession {
     public:
       PySession()
@@ -65,6 +74,15 @@ namespace qi { namespace py {
           qi::Future<qi::ObjectPtr>  fut = _ses->service(name);
           return boost::python::object(fut.value()); //throw on error
         }
+      }
+
+      boost::python::object registerService(const std::string &name, boost::python::object obj, bool _async=false) {
+        qi::ObjectPtr qiobj;
+        qiobj = makeQiPyObjectPtr(obj);
+        qi::Future<unsigned int> fut = _ses->registerService(name, qiobj);
+        if (_async)
+          return boost::python::object(toPyFuture(fut));
+        return boost::python::object(fut.value()); //throw on error
       }
 
     private:
