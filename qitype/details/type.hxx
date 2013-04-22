@@ -292,14 +292,14 @@ namespace qi  {
 
   // To detect a templated type, make all the Type of its instanciations
   // inherit fro a single class
-  template<template<typename> class T> class TypeOfTemplate: public TypeTemplate
+  template<template<typename> class T> class QITYPE_TEMPLATE_API TypeOfTemplate: public TypeTemplate
   {
   public:
 
   };
 
   // Default Type for template type T instanciated with type I
-  template<template<typename> class T, typename I> class TypeOfTemplateDefaultImpl:
+  template<template<typename> class T, typename I> class QITYPE_TEMPLATE_API TypeOfTemplateDefaultImpl:
   public TypeOfTemplate<T>
   {
   public:
@@ -310,7 +310,7 @@ namespace qi  {
     typedef DefaultTypeImplMethods<T<I> > Methods;
     _QI_BOUNCE_TYPE_METHODS(Methods);
   };
-  template<template<typename> class T, typename I> class TypeOfTemplateImpl
+  template<template<typename> class T, typename I> class QITYPE_TEMPLATE_API TypeOfTemplateImpl
   : public TypeOfTemplateDefaultImpl<T, I> {};
 }
 
