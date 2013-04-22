@@ -6,11 +6,14 @@
 """
 
 import sys
-import qimessaging
+import qi
 
-from qimessaging.application import Application
-from qimessaging.session import Session
-from qimessaging.objectbuilder import ObjectBuilder
+class MyService:
+    def titit():
+        pass
+
+    def totot(pif, paf):
+        pass
 
 def service_reply(string):
     """ Famous reply::s(s) function
@@ -34,10 +37,16 @@ def main():
     """ Entry point of qiservice
     """
     #0 Declare app
-    app = Application()
+    #app = Application()
+
+    m = MyService()
+    s = qi.Session()
+    s.register_service("toto", m)
+    exit(2)
 
     #1 Check if user give us service directory address.
     sd_addr = get_servicedirectory_address()
+
 
     #2 Open a session onto service directory.
     try:
