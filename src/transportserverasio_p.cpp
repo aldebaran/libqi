@@ -60,6 +60,7 @@ namespace qi
       qiLogDebug() << "accept error " << erc.message();
       delete s;
       self->acceptError(erc.value());
+      delete &_acceptor;
       return;
     }
     qi::TransportSocketPtr socket = qi::TcpTransportSocketPtr(new TcpTransportSocket(context, _ssl, s));
@@ -249,7 +250,7 @@ namespace qi
                                                                  EventLoop* ctx)
     : TransportServerImpl(self, ctx)
     , _self(self)
-    , _acceptor(*(boost::asio::io_service*)ctx->nativeHandle())
+    , _acceptor(*new boost::asio::ip::tcp::acceptor(*(boost::asio::io_service*)ctx->nativeHandle()))
     , _live(true)
 #ifdef WITH_SSL
     , _sslContext(*(boost::asio::io_service*)ctx->nativeHandle(), boost::asio::ssl::context::sslv23)

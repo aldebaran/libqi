@@ -29,7 +29,7 @@ namespace qi
     virtual void close();
     void updateEndpoints();
     TransportServer* _self;
-    boost::asio::ip::tcp::acceptor _acceptor;
+    boost::asio::ip::tcp::acceptor& _acceptor;
     void onAccept(const boost::system::error_code& erc,
 #ifdef WITH_SSL
       boost::asio::ssl::stream<boost::asio::ip::tcp::socket>* s
