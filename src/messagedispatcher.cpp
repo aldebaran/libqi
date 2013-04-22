@@ -51,21 +51,28 @@ namespace qi {
     }
 
     {
-      boost::recursive_mutex::scoped_lock sl(_signalMapMutex);
-      SignalMap::iterator it;
+      boost::shared_ptr<OnMessageSignal> sig[2];
       bool hit = false;
-      it = _signalMap.find(Target(msg.service(), msg.object()));
-      if (it != _signalMap.end())
       {
-        hit = true;
-        it->second(msg);
+        boost::recursive_mutex::scoped_lock sl(_signalMapMutex);
+        SignalMap::iterator it;
+        it = _signalMap.find(Target(msg.service(), msg.object()));
+        if (it != _signalMap.end())
+        {
+          hit = true;
+          sig[0] = it->second;
+        }
+        it = _signalMap.find(Target(msg.service(), ALL_OBJECTS));
+        if (it != _signalMap.end())
+        {
+          hit = true;
+          sig[1] = it->second;
+        }
       }
-      it = _signalMap.find(Target(msg.service(), ALL_OBJECTS));
-      if (it != _signalMap.end())
-      {
-        hit = true;
-        it->second(msg);
-      }
+      if (sig[0])
+        (*sig[0])(msg);
+      if (sig[1])
+        (*sig[1])(msg);
       if (!hit) // FIXME: that should probably never happen, raise log level
         qiLogDebug() << "No listener for service " << msg.service();
     }
@@ -74,24 +81,34 @@ namespace qi {
   qi::SignalBase::Link
   MessageDispatcher::messagePendingConnect(unsigned int serviceId, unsigned int objectId, boost::function<void (const qi::Message&)> fun) {
     boost::recursive_mutex::scoped_lock sl(_signalMapMutex);
-    qi::Signal<void (const qi::Message&)> &sig = _signalMap[Target(serviceId, objectId)];
+    boost::shared_ptr<OnMessageSignal> &sig = _signalMap[Target(serviceId, objectId)];
+    if (!sig)
+      sig.reset(new OnMessageSignal());
     // Ensure calls will be asynchronous
-    sig.setCallType(MetaCallType_Queued);
-    return sig.connect(fun);
+    sig->setCallType(MetaCallType_Queued);
+    return sig->connect(fun);
   }
 
-  bool MessageDispatcher::messagePendingDisconnect(unsigned int serviceId, unsigned int objectId, qi::SignalBase::Link linkId) {
-    boost::recursive_mutex::scoped_lock sl(_signalMapMutex);
+  bool MessageDispatcher::messagePendingDisconnect(unsigned int serviceId, unsigned int objectId, qi::SignalBase::Link linkId)
+  {
+    // Do not hold the lock when invoking disconnect()
+    // or deadlock may occurr as disconnect() waits for
+    // handlers to finish before returning.
+    boost::shared_ptr<OnMessageSignal> sig;
     SignalMap::iterator it;
-    it = _signalMap.find(Target(serviceId, objectId));
-    if (it != _signalMap.end())
     {
-      bool ok = it->second.disconnect(linkId);
-      if (it->second.subscribers().empty())
-        _signalMap.erase(it);
-      return ok;
+      boost::recursive_mutex::scoped_lock sl(_signalMapMutex);
+      it = _signalMap.find(Target(serviceId, objectId));
+      if (it != _signalMap.end())
+        sig = it->second;
+      else
+        return false;
     }
-    return false;
+    bool ok = sig->disconnect(linkId);
+    boost::recursive_mutex::scoped_lock sl(_signalMapMutex);
+    if (sig->subscribers().empty())
+      _signalMap.erase(it);
+    return ok;
   }
 
   void MessageDispatcher::cleanPendingMessages()
