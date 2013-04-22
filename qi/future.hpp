@@ -86,9 +86,10 @@ namespace qi {
 
     explicit FutureException(const ExceptionState &es, const std::string &str = std::string())
       : std::runtime_error(stateToString(es) + str)
+      , _state(es)
     {}
 
-    inline ExceptionState state() { return _state; }
+    inline ExceptionState state() const { return _state; }
 
     std::string stateToString(const ExceptionState &es);
 
