@@ -13,7 +13,6 @@ Provided features are very close to C++, Python style.
 
 import os
 import sys
-import ctypes
 
 def load_lib_qipyessaging():
     """ Load _qipyessaging.so and its dependencies.
@@ -21,6 +20,7 @@ def load_lib_qipyessaging():
     This makes _qipyessaging usable from a relocatable
     SDK without having to set LD_LIBRARY_PATH
     """
+    import ctypes
     deps = [
             "libqi.so",
             "libqitype.so",
