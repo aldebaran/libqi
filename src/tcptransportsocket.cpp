@@ -22,6 +22,34 @@
 
 qiLogCategory("qimessaging.transportsocket");
 
+
+/**
+ * ###
+ * connect/disconnect promise could be called multiple times.
+ * (error could be handled twice for example)
+ * so catch the error and continue, only the first set is taken into account
+ */
+
+static void pSetError(qi::Promise<void> prom, const std::string &error) {
+  try { //could have already been set.
+    prom.setError(error);
+  } catch (const qi::FutureException &fe) {
+    if (fe.state() != qi::FutureException::ExceptionState_PromiseAlreadySet)
+      throw;
+    qiLogVerbose() << "Error already set on promise.";
+  }
+}
+
+static void pSetValue(qi::Promise<void> prom) {
+  try { //could have already been set.
+    prom.setValue(0);
+  } catch (const qi::FutureException &fe) {
+    if (fe.state() != qi::FutureException::ExceptionState_PromiseAlreadySet)
+      throw;
+    qiLogVerbose() << "Value already set on promise.";
+  }
+}
+
 namespace qi
 {
   TcpTransportSocket::TcpTransportSocket(EventLoop* eventLoop, bool ssl, void* s)
@@ -55,7 +83,7 @@ namespace qi
     }
     else
     {
-      _disconnectPromise.setValue(0); // not connected, so we are finished disconnecting
+      pSetValue(_disconnectPromise); // not connected, so we are finished disconnecting
     }
   }
 
@@ -192,7 +220,7 @@ namespace qi
     if (_connecting)
     {
       _connecting = false;
-      _connectPromise.setError(std::string("Connection error: ") + erc.message());
+      pSetError(_connectPromise, std::string("Connection error: ") + erc.message());
     }
 
     {
@@ -206,11 +234,7 @@ namespace qi
       }
     }
     _socket.reset();
-
-    if (_disconnectPromise.future().isRunning())
-    {
-      _disconnectPromise.setValue(0);
-    }
+    pSetValue(_disconnectPromise);
   }
 
 
@@ -241,10 +265,11 @@ namespace qi
     _err = 0;
     if (_url.port() == 0) {
       qiLogError() << "Error try to connect to a bad address: " << _url.str();
-      _connectPromise.setError("Bad address " + _url.str());
+      pSetError(_connectPromise, std::string("Bad address ") + _url.str());
+
       _status = qi::TransportSocket::Status_Disconnected;
       _connecting = false;
-      _disconnectPromise.setValue(0);
+      pSetValue(_disconnectPromise);
       return _connectPromise.future();
     }
     qiLogVerbose() << "Trying to connect to " << _url.host() << ":" << _url.port();
@@ -266,7 +291,7 @@ namespace qi
     {
       const char* s = e.what();
       qiLogError() << s;
-      _connectPromise.setError(s);
+      pSetError(_connectPromise, s);
       return _connectPromise.future();
     }
   }
@@ -277,14 +302,13 @@ namespace qi
     {
       qiLogWarning() << "connect: " << erc.message();
       _status = qi::TransportSocket::Status_Disconnected;
-      _connectPromise.setError(erc.message());
-      _disconnectPromise.setValue(0);
-      //FIXME: ?? _connectPromise.setError(erc.message());
+      pSetError(_connectPromise, erc.message());
+      pSetValue(_disconnectPromise);
     }
     else
     {
       _status = qi::TransportSocket::Status_Connected;
-      _connectPromise.setValue(0);
+      pSetValue(_connectPromise);
       connected();
       _sslHandshake = true;
 
@@ -311,8 +335,8 @@ namespace qi
     {
       qiLogWarning("qimessaging.TransportSocketLibEvent") << "connect: " << erc.message();
       _status = qi::TransportSocket::Status_Disconnected;
-      _connectPromise.setError(erc.message());
-      _disconnectPromise.setValue(0);
+      pSetError(_connectPromise, erc.message());
+      pSetValue(_disconnectPromise);
     }
     else
     {
@@ -326,7 +350,7 @@ namespace qi
       else
       {
         _status = qi::TransportSocket::Status_Connected;
-        _connectPromise.setValue(0);
+        pSetValue(_connectPromise);
         connected();
 
         {
