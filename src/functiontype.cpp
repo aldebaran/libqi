@@ -99,9 +99,10 @@ namespace qi
           }
           if (!v.first.type)
           {
-            throw std::runtime_error(_QI_LOG_FORMAT("Call argument onversion failure from %s to %s",
+            throw std::runtime_error(_QI_LOG_FORMAT("Call argument conversion failure from %s to %s (equals: %s)",
               args[i].type->infoString(),
-              target[i]->infoString()));
+              target[i]->infoString(),
+              args[i].type->infoString() == target[i]->infoString()));
             return GenericValuePtr();
           }
         }
