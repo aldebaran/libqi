@@ -388,7 +388,17 @@ namespace qi {
         v.result = stringFromType(Signature::Type_Object);
         break;
       case Type::Pointer:
-        v.visitPointer(GenericValuePtr());
+        {
+        TypePointer* type = static_cast<TypePointer*>(value.type);
+        if (type->pointerKind() == TypePointer::Shared
+          && type->pointedType()->kind() == Type::Object)
+        {
+          ObjectPtr op;
+          v.visitObjectPtr(op);
+        }
+        else
+          v.visitPointer(GenericValuePtr());
+        }
         break;
       case Type::Tuple:
         v.result += (char)Signature::Type_Tuple;
