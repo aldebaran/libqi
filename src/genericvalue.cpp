@@ -225,6 +225,20 @@ namespace qi
            static_cast<TypeRaw*>(result.type)->set(&result.value, v.first, v.second);
           return std::make_pair(result, true);
         }
+        case Type::Unknown:
+          /* Under clang macos, typeInfo() comparison fails
+           * for non-exported (not forced visibility=default since we default to hidden)
+           * symbols. So ugly hack, compare the strings.
+           */
+          if (targetType->info() == type->info()
+#ifdef __clang__
+            || targetType->info().asString() ==  type->info().asString()
+#endif
+              )
+            return std::make_pair(*this, false);
+          else
+            return std::make_pair(GenericValuePtr(), false);
+          break;
         default:
           break;
       } // switch
