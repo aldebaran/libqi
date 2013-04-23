@@ -11,6 +11,7 @@
 #include <utility> // pair
 #include <boost/bind.hpp>
 
+#include <qi/log.hpp>
 
 namespace qi {
 
@@ -85,7 +86,16 @@ namespace qi {
         _value = value;
         reportValue();
         for(unsigned i = 0; i<_onResult.size(); ++i)
-          _onResult[i](future);
+        {
+          try
+          {
+            _onResult[i](future);
+          }
+          catch(const std::exception& e)
+          {
+            qiLogError("qi.future") << "Exception caught in future callback " << e.what();
+          }
+        }
         notifyFinish();
       }
 
@@ -99,7 +109,16 @@ namespace qi {
           throw FutureException(FutureException::ExceptionState_PromiseAlreadySet);
         reportValue();
         for(unsigned i=0; i<_onResult.size(); ++i)
-          _onResult[i](future);
+        {
+          try
+          {
+            _onResult[i](future);
+          }
+          catch(const std::exception& e)
+          {
+            qiLogError("qi.future") << "Exception caught in future callback " << e.what();
+          }
+        }
         notifyFinish();
       }
 
