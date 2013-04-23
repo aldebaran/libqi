@@ -55,6 +55,11 @@ namespace qi {
       delete _p;
     };
 
+    FutureState FutureBase::state() const
+    {
+      return _p->_state;
+    }
+
     FutureState FutureBase::wait(int msecs) const {
       static bool detectEventLoopWait = !os::getenv("QI_DETECT_FUTURE_WAIT_FROM_NETWORK_EVENTLOOP").empty();
       if (detectEventLoopWait && getDefaultNetworkEventLoop()->isInEventLoopThread())
