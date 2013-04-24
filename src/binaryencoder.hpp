@@ -78,6 +78,7 @@ namespace qi {
 
     Status status() const;
     void setStatus(Status status);
+    static const char* statusToStr(Status status);
 
     Buffer& buffer();
     std::string& signature();

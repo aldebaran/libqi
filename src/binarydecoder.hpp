@@ -69,6 +69,7 @@ namespace qi {
     void* readRaw(size_t len);
     Status status() const;
     void setStatus(Status status);
+    static const char* statusToStr(Status status);
     BufferReader& bufferReader();
 
   private:

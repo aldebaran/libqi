@@ -133,6 +133,16 @@ namespace qi {
     _p->_status = status;
   }
 
+  const char* BinaryDecoder::statusToStr(Status status)
+  {
+    const char* StatusStr[] = {
+      "Status OK",
+      "Status Read Error",
+      "Status Read Past End"
+    };
+    return StatusStr[status];
+  }
+
   BufferReader& BinaryDecoder::bufferReader()
   {
     return *_p->_reader;
@@ -337,6 +347,15 @@ namespace qi {
   void BinaryEncoder::setStatus(Status status)
   {
     _p->_status = status;
+  }
+
+  const char* BinaryEncoder::statusToStr(Status status)
+  {
+    const char* StatusStr[] = {
+      "Status OK",
+      "Status Write Error"
+    };
+    return StatusStr[status];
   }
 
   Buffer& BinaryEncoder::buffer()
@@ -677,7 +696,7 @@ namespace qi {
       details::SerializeTypeVisitor stv(out, context, val);
       qi::typeDispatch(stv, val);
       if (out.status() != BinaryEncoder::Status_Ok) {
-        qiLogError() << "OSerialization error " << out.status();
+        qiLogError() << "OSerialization error " << BinaryEncoder::statusToStr[out.status()];
       }
     }
 
@@ -687,7 +706,7 @@ namespace qi {
       dtv.result = what;
       qi::typeDispatch(dtv, dtv.result);
       if (in.status() != BinaryDecoder::Status_Ok) {
-        qiLogError() << "ISerialization error " << in.status();
+        qiLogError() << "ISerialization error " << BinaryDecoder::statusToStr(in.status());
       }
       what = dtv.result;
     }
