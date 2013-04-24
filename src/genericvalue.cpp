@@ -27,6 +27,12 @@ qiLogCategory("qitype.genericvalue");
 namespace qi
 {
 
+  namespace
+  {
+    static void dropIt(const GenericValue& v)
+    {
+    }
+  }
   std::pair<GenericValuePtr, bool> GenericValuePtr::convert(Type* targetType) const
   {
     // qiLogDebug() << "convert " << type->infoString() << ' ' << targetType->infoString();
@@ -289,13 +295,22 @@ namespace qi
       qiLogWarning() << "Conversion attempt from raw to string";
       return std::make_pair(GenericValuePtr(), false);
     }
-    if (targetType->kind() == Type::Dynamic)
-    {
-      result.type = targetType;
-      result.value = targetType->initializeStorage();
-      static_cast<TypeDynamic*>(targetType)->set(&result.value, *this);
-      return std::make_pair(result, true);
+
+    if (targetType->info() == typeOf<ObjectPtr>()->info()
+      && type->kind() == Type::Pointer
+    && static_cast<TypePointer*>(type)->pointedType()->kind() == Type::Object)
+    { // Pointer to concrete object -> ObjectPtr
+      // Keep a copy of this in ObjectPtr, and destroy on ObjectPtr destruction
+      // That way if this is a shared_ptr, we link to it correctly
+      TypePointer* pT = static_cast<TypePointer*>(type);
+      ObjectPtr o(
+        new GenericObject(
+          static_cast<ObjectType*>(pT->pointedType()),
+          pT->dereference(value).value),
+        boost::bind(dropIt, GenericValue(*this)));
+      return std::make_pair(GenericValueRef(o).clone(), true);
     }
+
     if (type->info() == typeOf<ObjectPtr>()->info()
       && targetType->kind() == Type::Pointer
     && static_cast<TypePointer*>(targetType)->pointedType()->kind() == Type::Object)
@@ -308,6 +323,13 @@ namespace qi
         GenericValuePtr res = (it->second)(*(ObjectPtr*)value);
         return std::make_pair(res, true);
       }
+    }
+    if (targetType->kind() == Type::Dynamic)
+    {
+      result.type = targetType;
+      result.value = targetType->initializeStorage();
+      static_cast<TypeDynamic*>(targetType)->set(&result.value, *this);
+      return std::make_pair(result, true);
     }
     if (type->kind() == Type::Dynamic)
     {
