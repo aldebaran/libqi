@@ -286,5 +286,28 @@ namespace qi {
     map[typeOf<Proxy>()->info()] = &detail::makeProxy<Proxy>;
     return true;
   }
+
+  namespace detail
+  {
+    /* Factory helper functions
+    */
+
+    // create a T, wrap in a ObjectPtr
+    template<typename T> ObjectPtr constructObject()
+    {
+      return GenericValuePtr(new T()).toObject();
+    }
+
+    // in genericobjectbuilder.hxx
+    template<typename T> ObjectPtr makeObject(const std::string& fname, T func);
+
+    // Create a factory function for an object with one method functionName bouncing to func
+    template<typename T> boost::function<ObjectPtr(const std::string&)>
+    makeObjectFactory(const std::string functionName, T func)
+    {
+      return ( boost::function<ObjectPtr(const std::string&)>)
+        boost::bind(&makeObject<T>, functionName, func);
+    }
+  }
 }
 #endif  // _QITYPE_DETAILS_GENERICOBJECT_HXX_
