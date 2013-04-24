@@ -451,7 +451,6 @@ namespace qi {
         if (!context)
           throw std::runtime_error("Object serialization callback required but not provided");
         ObjectSerializationInfo osi = context(ptr);
-        out.write("o");
         out.write(osi.metaObject);
         out.write(osi.serviceId);
         out.write(osi.objectId);

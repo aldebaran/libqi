@@ -400,7 +400,10 @@ namespace qi {
         v.result += (char)Signature::Type_Tuple_End;
         break;
       case Type::Dynamic:
-        v.result = stringFromType(Signature::Type_Dynamic);
+        if (value.type->info() == typeOf<ObjectPtr>()->info())
+          v.result = stringFromType(Signature::Type_Object);
+        else
+          v.result = stringFromType(Signature::Type_Dynamic);
         break;
       case Type::Raw:
         v.result = stringFromType(Signature::Type_Raw);
