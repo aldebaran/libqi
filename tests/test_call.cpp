@@ -771,6 +771,41 @@ TEST(TestCall, TestObjectPassingReturn)
   ASSERT_FALSE(weak.lock());
 }
 
+class TestClass
+{
+public:
+  TestClass() : v(0) {}
+  TestClass(int v) : v(v) {}
+  ~TestClass()
+  {
+    qiLogDebug() << "~TestClass " << this;
+  }
+  int ping(int w)
+  {
+    qiLogDebug() << "TestClass::ping " << this << ' ' << v << ' ' << w;
+    return v+w;
+  }
+  static boost::shared_ptr<TestClass> make(int v)
+  {
+    TestClass* tc = new TestClass(v);
+    qiLogDebug() << "Making a TestClass " << v << ' ' << tc;
+    return boost::shared_ptr<TestClass>(tc);
+  }
+  int v;
+};
+QI_REGISTER_OBJECT(TestClass, ping);
+
+TEST(TestCall, TestConcreteObjectPassingReturn)
+{
+  TestSessionPair p;
+  qi::GenericObjectBuilder ob;
+  ob.advertiseMethod("getTest", &TestClass::make);
+  qi::ObjectPtr obj(ob.object());
+  p.server()->registerService("getter", obj);
+  qi::ObjectPtr proxy = p.client()->service("getter");
+  qi::ObjectPtr test = proxy->call<qi::ObjectPtr>("getTest", 1);
+  ASSERT_EQ(3, test->call<int>("ping", 2));
+}
 
 char          pingChar(char v) { return v; }
 unsigned char pingUChar(unsigned char v) { return v;}
