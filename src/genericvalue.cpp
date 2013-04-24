@@ -8,6 +8,20 @@
 #include <qitype/genericvalue.hpp>
 #include <qitype/genericobject.hpp>
 
+#if defined(_MSC_VER) && _MSC_VER <= 1500
+// vs2008 32 bits does not have std::abs() on int64
+namespace std
+{
+  qi::int64_t abs(qi::int64_t x)
+  {
+    if (x < 0)
+      return -x;
+    else
+      return x;
+  }
+}
+#endif
+
 qiLogCategory("qitype.genericvalue");
 
 namespace qi
