@@ -53,23 +53,6 @@ StaticObjectTypeBase::metaCall(void* instance, Manageable* context, unsigned int
   return ::qi::metaCall(el, _data.threadingModel, methodThreadingModel, callType, context->mutex(), method, p2, true);
 }
 
-static SignalBase* getSignal(ObjectTypeData& data, void* instance, unsigned int signal)
-{
-  ObjectTypeData::SignalGetterMap::iterator i;
-  i = data.signalGetterMap.find(signal);
-  if (i == data.signalGetterMap.end())
-  {
-    qiLogError() << "No such signal " << signal;
-    return 0;
-  }
-  SignalBase* sig = i->second(instance);
-  if (!sig)
-  {
-    qiLogError() << "Signal getter returned NULL";
-    return 0;
-  }
-  return sig;
-}
 
 static PropertyBase* getProperty(ObjectTypeData& data, void* instance, unsigned int signal)
 {
@@ -89,14 +72,39 @@ static PropertyBase* getProperty(ObjectTypeData& data, void* instance, unsigned 
   return sig;
 }
 
+static SignalBase* getSignal(ObjectTypeData& data, void* instance, unsigned int signal)
+{
+  ObjectTypeData::SignalGetterMap::iterator i;
+  i = data.signalGetterMap.find(signal);
+  if (i == data.signalGetterMap.end())
+  {
+    PropertyBase* prop = getProperty(data, instance, signal);
+    if (prop)
+      return prop->signal();
+    qiLogError() << "No such signal " << signal;
+    return 0;
+  }
+  SignalBase* sig = i->second(instance);
+  if (!sig)
+  {
+    qiLogError() << "Signal getter returned NULL";
+    return 0;
+  }
+  return sig;
+}
 
 void StaticObjectTypeBase::metaPost(void* instance, Manageable* context, unsigned int signal,
                                     const GenericFunctionParameters& params)
 {
   SignalBase* sb = getSignal(_data, instance, signal);
-  if (!sb)
-    return;
-  sb->trigger(params);
+  if (sb)
+  {
+    sb->trigger(params);
+  }
+  else
+  { // try method
+    metaCall(instance, context, signal, params, MetaCallType_Queued);
+  }
 }
 
 qi::Future<Link> StaticObjectTypeBase::connect(void* instance, Manageable* context, unsigned int event,
