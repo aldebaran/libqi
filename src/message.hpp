@@ -111,14 +111,14 @@ namespace qi {
     };
 
     enum ServiceDirectoryAction {
-      ServiceDirectoryAction_Service             = 10,
-      ServiceDirectoryAction_Services            = 11,
-      ServiceDirectoryAction_RegisterService     = 12,
-      ServiceDirectoryAction_UnregisterService   = 13,
-      ServiceDirectoryAction_ServiceReady        = 14,
-      ServiceDirectoryAction_UpdateServiceInfo   = 15,
-      ServiceDirectoryAction_ServiceAdded        = 16,
-      ServiceDirectoryAction_ServiceRemoved      = 17,
+      ServiceDirectoryAction_Service             = 100,
+      ServiceDirectoryAction_Services            = 101,
+      ServiceDirectoryAction_RegisterService     = 102,
+      ServiceDirectoryAction_UnregisterService   = 103,
+      ServiceDirectoryAction_ServiceReady        = 104,
+      ServiceDirectoryAction_UpdateServiceInfo   = 105,
+      ServiceDirectoryAction_ServiceAdded        = 106,
+      ServiceDirectoryAction_ServiceRemoved      = 107,
     };
 
     enum Type

@@ -50,7 +50,10 @@ namespace qi {
     , _linkMessageDispatcher(0)
     , _self(makeDynamicObjectPtr(this, false))
   {
-    //simple metaObject with only special methods. (<10)
+    /* simple metaObject with only special methods. (<100)
+     * Will be *replaced* by metaObject received from remote end, when
+     * fetchMetaObject is invoked and retuns.
+    */
     setMetaObject(createRemoteObjectSpecialMetaObject());
     setTransportSocket(socket);
     //fetchMetaObject should be called to make sure the metaObject is valid.

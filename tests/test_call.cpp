@@ -923,6 +923,39 @@ TEST(TestCall, Future)
   ASSERT_TRUE(f.hasError());
 }
 
+TEST(TestCall, Statistics)
+{
+  TestSessionPair p;
+  if (p.client() == p.server())
+    return; // yup, methods are not metaAvailable if not a remoteobject.
+  qi::GenericObjectBuilder gob;
+  int mid = gob.advertiseMethod("sleep", &qi::os::msleep);
+  qi::ObjectPtr srv = gob.object();
+  p.server()->registerService("sleep", srv);
+  qi::ObjectPtr obj = p.client()->service("sleep");
+  obj->call<void>("sleep", 10);
+  EXPECT_TRUE(obj->stats().empty());
+  obj->call<void>("enableStats", true);
+  obj->call<void>("sleep", 10);
+  obj->call<void>("sleep", 100);
+  qi::ObjectStatistics stats = obj->call<qi::ObjectStatistics>("stats");
+  EXPECT_EQ(1u, stats.size());
+  qi::MethodStatistics& m = stats[mid];
+  EXPECT_EQ(2u, m.count);
+  // Don't expect too much sleep precision
+  EXPECT_LT(10.0, std::abs(m.min - 10.0));
+  EXPECT_LT(30.0, std::abs(m.max - 100.0));
+  obj->call<void>("clearStats");
+  obj->call<void>("sleep", 0);
+  stats = obj->call<qi::ObjectStatistics>("stats");
+  m = stats[mid];
+  EXPECT_EQ(1u, m.count);
+  obj->call<void>("clearStats");
+  obj->call<void>("enableStats", false);
+  obj->call<void>("sleep", 0);
+  EXPECT_TRUE(obj->stats().empty());
+}
+
 
 int main(int argc, char **argv) {
   qi::Application app(argc, argv);

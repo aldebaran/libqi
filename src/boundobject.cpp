@@ -11,7 +11,7 @@
 
 qiLogCategory("qimessaging.boundobject");
 
-static const int gObjectOffset = 10;
+static const int gObjectOffset = 100;
 
 namespace qi {
 
@@ -61,17 +61,49 @@ namespace qi {
     if (!ob)
     {
       ob = new qi::ObjectTypeBuilder<ServiceBoundObject>();
+      /* Network-related stuff.
+      */
       ob->advertiseMethod("registerEvent"  , &ServiceBoundObject::registerEvent, MetaCallType_Auto, qi::Message::BoundObjectFunction_RegisterEvent);
       ob->advertiseMethod("unregisterEvent", &ServiceBoundObject::unregisterEvent, MetaCallType_Auto, qi::Message::BoundObjectFunction_UnregisterEvent);
-      ob->advertiseMethod("metaObject"     , &ServiceBoundObject::metaObject, MetaCallType_Auto, qi::Message::BoundObjectFunction_MetaObject);
       ob->advertiseMethod("terminate",       &ServiceBoundObject::terminate, MetaCallType_Auto, qi::Message::BoundObjectFunction_Terminate);
+      /* GenericObject-related stuff.
+      * Those methods could be advertised and implemented by GenericObject itself.
+      * But since we already have a wrapper system in place in BoundObject, us it.
+      * There is no use-case that requires the methods below without a BoundObject present.
+      */
+      ob->advertiseMethod("metaObject"     , &ServiceBoundObject::metaObject, MetaCallType_Auto, qi::Message::BoundObjectFunction_MetaObject);
       ob->advertiseMethod("getProperty",       &ServiceBoundObject::getProperty, MetaCallType_Auto, qi::Message::BoundObjectFunction_GetProperty);
       ob->advertiseMethod("setProperty",       &ServiceBoundObject::setProperty, MetaCallType_Auto, qi::Message::BoundObjectFunction_SetProperty);
       ob->advertiseMethod("properties",       &ServiceBoundObject::properties, MetaCallType_Auto, qi::Message::BoundObjectFunction_Properties);
+      // Manageable-level stuff, above comment applies.
+      ob->advertiseMethod("isStatsEnabled", &ServiceBoundObject::isStatsEnabled, MetaCallType_Auto, qi::Message::BoundObjectFunction_Properties + 1);
+      ob->advertiseMethod("enableStats",    &ServiceBoundObject::enableStats,    MetaCallType_Auto, qi::Message::BoundObjectFunction_Properties + 2);
+      ob->advertiseMethod("stats",          &ServiceBoundObject::stats,       MetaCallType_Auto, qi::Message::BoundObjectFunction_Properties + 3);
+      ob->advertiseMethod("clearStats",     &ServiceBoundObject::clearStats,     MetaCallType_Auto, qi::Message::BoundObjectFunction_Properties + 4);
       //global currentSocket: we are not multithread or async capable ob->setThreadingModel(ObjectThreadingModel_MultiThread);
     }
     ObjectPtr result = ob->object(self);
     return result;
+  }
+
+  bool ServiceBoundObject::isStatsEnabled()
+  {
+    return _object->isStatsEnabled();
+  }
+
+  void ServiceBoundObject::enableStats(bool enable)
+  {
+    _object->enableStats(enable);
+  }
+
+  ObjectStatistics ServiceBoundObject::stats()
+  {
+    return _object->stats();
+  }
+
+  void ServiceBoundObject::clearStats()
+  {
+    _object->clearStats();
   }
 
   //Bound Method
