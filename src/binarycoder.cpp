@@ -696,7 +696,7 @@ namespace qi {
       details::SerializeTypeVisitor stv(out, context, val);
       qi::typeDispatch(stv, val);
       if (out.status() != BinaryEncoder::Status_Ok) {
-        qiLogError() << "OSerialization error " << BinaryEncoder::statusToStr[out.status()];
+        qiLogError() << "OSerialization error " << BinaryEncoder::statusToStr(out.status());
       }
     }
 
