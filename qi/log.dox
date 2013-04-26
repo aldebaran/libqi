@@ -40,7 +40,7 @@
  *   setCategory("internal.*", silent);
  *
  * One can also set a filtering rule in QI_LOG_CATEGORIES environment variable.
- * syntax is column-separated list of rules of the form (+|-)CAT or CAT=level.
+ * syntax is colon-separated list of rules of the form (+|-)CAT or CAT=level.
  * For example, -internal.*:file=verbose
  *
  * \endverbatim

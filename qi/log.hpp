@@ -148,7 +148,7 @@ namespace qi {
     QI_API std::vector<std::string> categories();
 
     /** Parse and execute a set of verbosity rules
-    *  Semi-colon separated of rules.
+    *  Colon separated of rules.
     *  Each rule can be:
     *    - (+)?CAT    : enable category CAT
     *    - -CAT       : disable category CAT
