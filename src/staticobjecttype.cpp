@@ -50,7 +50,7 @@ StaticObjectTypeBase::metaCall(void* instance, Manageable* context, unsigned int
   p2.push_back(self);
   p2.insert(p2.end(), params.begin(), params.end());
 
-  return ::qi::metaCall(el, _data.threadingModel, methodThreadingModel, callType, context->mutex(), method, p2, true);
+  return ::qi::metaCall(el, _data.threadingModel, methodThreadingModel, callType, context, methodId, method, p2, true);
 }
 
 

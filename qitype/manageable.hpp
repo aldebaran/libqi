@@ -25,6 +25,17 @@ namespace qi {
     ObjectThreadingModel_MultiThread = 1
   };
 
+  struct MethodStatistics
+  {
+    MethodStatistics()
+    : sum(0), min(0), max(0), count(0) {}
+    float sum;
+    float min;
+    float max;
+    unsigned count;
+  };
+
+  typedef std::map<unsigned int, MethodStatistics> ObjectStatistics;
 /** Per-instance context.
   */
   class QITYPE_API Manageable
@@ -44,6 +55,22 @@ namespace qi {
     typedef boost::shared_ptr<boost::timed_mutex> TimedMutexPtr;
     ///@return the mutex associated with managed object.
     TimedMutexPtr mutex(); // non-recursive of course!
+
+    /// @{
+    /** Statistics gathering/retreiving API
+     *
+     */
+    ///@return if statistics gatehering is enabled
+    bool isStatsEnabled() const;
+    /// Set statistics gathering status
+    void enableStats(bool enable);
+    /// Push statistics information about \p slotId.
+    void pushStats(int slotId, float value);
+    ObjectStatistics stats() const;
+    /// Reset all statistical data
+    void clearStats();
+
+    /// @}
 
     ManageablePrivate* _p;
   };

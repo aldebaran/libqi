@@ -187,7 +187,7 @@ namespace qi
     p.push_back(GenericValueRef(this));
     p.insert(p.end(), params.begin(), params.end());
     return ::qi::metaCall(context->eventLoop(), _p->threadingModel,
-      i->second.second, callType, context->mutex(), i->second.first, p);
+      i->second.second, callType, context, method, i->second.first, p);
   }
 
   qi::Future<void> DynamicObject::setProperty(unsigned int id, GenericValue val)
@@ -260,7 +260,7 @@ namespace qi
 
   static GenericValuePtr locked_call(GenericFunction& function,
                                      const GenericFunctionParameters& params,
-                                     Manageable::TimedMutexPtr& lock)
+                                     Manageable::TimedMutexPtr lock)
   {
     static long msWait = -1;
     if (msWait == -1)
@@ -295,11 +295,13 @@ namespace qi
   {
   public:
     MFunctorCall(GenericFunction& func, GenericFunctionParameters& params,
-       qi::Promise<GenericValuePtr>* out, bool noCloneFirst, Manageable::TimedMutexPtr lock)
+       qi::Promise<GenericValuePtr>* out, bool noCloneFirst, Manageable* context, unsigned int methodId, bool lock)
     : noCloneFirst(noCloneFirst)
     {
       this->out = out;
-      std::swap(this->lock, lock);
+      this->methodId = methodId;
+      this->context = context;
+      this->lock = lock;
       std::swap(this->func, func);
       std::swap((std::vector<GenericValuePtr>&) params,
         (std::vector<GenericValuePtr>&) this->params);
@@ -314,7 +316,9 @@ namespace qi
       std::swap( (std::vector<GenericValuePtr>&) params,
         (std::vector<GenericValuePtr>&) b.params);
       std::swap(func, const_cast<MFunctorCall&>(b).func);
-      std::swap(this->lock, const_cast<MFunctorCall&>(b).lock);
+      context = b.context;
+      methodId = b.methodId;
+      this->lock = b.lock;
       this->out = b.out;
       noCloneFirst = b.noCloneFirst;
     }
@@ -322,10 +326,14 @@ namespace qi
     {
       try
       {
+        bool stats = context && context->isStatsEnabled();
+        qi::int64_t time = stats?qi::os::ustime():0;
         if (lock)
-          out->setValue(locked_call(func, params, lock));
+          out->setValue(locked_call(func, params, context->mutex()));
         else
           out->setValue(func.call(params));
+        if (stats)
+          context->pushStats(methodId, qi::os::ustime() - time);
       }
       catch(const std::exception& e)
       {
@@ -342,14 +350,17 @@ namespace qi
     GenericFunctionParameters params;
     GenericFunction func;
     bool noCloneFirst;
-    Manageable::TimedMutexPtr lock;
+    Manageable* context;
+    bool lock;
+    unsigned int methodId;
   };
 
   qi::Future<GenericValuePtr> metaCall(EventLoop* el,
     ObjectThreadingModel objectThreadingModel,
     MetaCallType methodThreadingModel,
     MetaCallType callType,
-    Manageable::TimedMutexPtr objectLock,
+    Manageable* context,
+    unsigned int methodId,
     GenericFunction func, const GenericFunctionParameters& params, bool noCloneFirst)
   {
     // Implement rules described in header
@@ -367,11 +378,15 @@ namespace qi
     if (sync)
     {
       qi::Promise<GenericValuePtr> out;
-      if (objectThreadingModel == ObjectThreadingModel_SingleThread
+      bool stats = context && context->isStatsEnabled();
+      qi::int64_t time = stats?qi::os::ustime():0;
+      if (context && objectThreadingModel == ObjectThreadingModel_SingleThread
         && methodThreadingModel == MetaCallType_Auto)
-        out.setValue(locked_call(func, params, objectLock));
+        out.setValue(locked_call(func, params, context->mutex()));
       else
         out.setValue(func.call(params));
+      if (stats)
+        context->pushStats(methodId, qi::os::ustime() - time);
       return out.future();
     }
     else
@@ -379,10 +394,9 @@ namespace qi
       qi::Promise<GenericValuePtr>* out = new qi::Promise<GenericValuePtr>();
       GenericFunctionParameters pCopy = params.copy(noCloneFirst);
       qi::Future<GenericValuePtr> result = out->future();
-      if (!(objectThreadingModel == ObjectThreadingModel_SingleThread
-        && methodThreadingModel == MetaCallType_Auto))
-        objectLock.reset();
-      el->post(MFunctorCall(func, pCopy, out, noCloneFirst, objectLock));
+      bool doLock = (context && objectThreadingModel == ObjectThreadingModel_SingleThread
+        && methodThreadingModel == MetaCallType_Auto);
+      el->post(MFunctorCall(func, pCopy, out, noCloneFirst, context, methodId, doLock));
       return result;
     }
   }

@@ -30,6 +30,7 @@ namespace qi {
     _p = new ManageablePrivate();
     _p->eventLoop = 0;
     _p->dying = false;
+    _p->statsEnabled = false;
   }
 
   Manageable::Manageable(const Manageable& b)
@@ -75,6 +76,46 @@ namespace qi {
   Manageable::TimedMutexPtr Manageable::mutex()
   {
     return _p->objectMutex;
+  }
+
+  bool Manageable::isStatsEnabled() const
+  {
+    return _p->statsEnabled;
+  }
+
+  void Manageable::enableStats(bool state)
+  {
+    _p->statsEnabled = state;
+  }
+
+  void Manageable::pushStats(int slotId, float value)
+  {
+    boost::mutex::scoped_lock(_p->registrationsMutex);
+    MethodStatistics& ms = _p->stats[slotId];
+    ms.sum += value;
+    if (!ms.count)
+    {
+      ms.min = value;
+      ms.max = value;
+    }
+    else
+    {
+      ms.min = std::min(ms.min, value);
+      ms.max = std::max(ms.max, value);
+    }
+    ++ms.count;
+  }
+
+  ObjectStatistics Manageable::stats() const
+  {
+    boost::mutex::scoped_lock(_p->registrationsMutex);
+    return _p->stats;
+  }
+
+  void Manageable::clearStats()
+  {
+    boost::mutex::scoped_lock(_p->registrationsMutex);
+    _p->stats.clear();
   }
 
   const MetaObject &GenericObject::metaObject() {

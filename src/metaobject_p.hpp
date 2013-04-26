@@ -19,7 +19,7 @@ namespace qi {
   public:
     //by default we start at 10, the first 10 id are reserved for bound object
     MetaObjectPrivate()
-      : _index(9)
+      : _index(99)
     {
     };
 

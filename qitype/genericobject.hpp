@@ -214,7 +214,8 @@ namespace qi {
     ObjectThreadingModel objectThreadingModel,
     MetaCallType methodThreadingModel,
     MetaCallType callType,
-    Manageable::TimedMutexPtr objectLock,
+    Manageable* manageable,
+    unsigned int methodId,
     GenericFunction func, const GenericFunctionParameters& params, bool noCloneFirst=false);
 
   class QITYPE_API Proxy

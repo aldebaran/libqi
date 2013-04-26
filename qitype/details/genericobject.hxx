@@ -310,4 +310,6 @@ namespace qi {
     }
   }
 }
+
+QI_TYPE_STRUCT(qi::MethodStatistics, sum, min, max, count);
 #endif  // _QITYPE_DETAILS_GENERICOBJECT_HXX_

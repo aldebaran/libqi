@@ -655,6 +655,34 @@ TEST(TestObject, Future)
   std::cerr << "ERR " << f.error() << std::endl;
 }
 
+TEST(TestObject, statistics)
+{
+  qi::GenericObjectBuilder gob;
+  int mid = gob.advertiseMethod("sleep", &qi::os::msleep);
+  qi::ObjectPtr obj = gob.object();
+  obj->call<void>("sleep", 10);
+  EXPECT_TRUE(obj->stats().empty());
+  obj->enableStats(true);
+  obj->call<void>("sleep", 10);
+  obj->call<void>("sleep", 100);
+  qi::ObjectStatistics stats = obj->stats();
+  EXPECT_EQ(1u, stats.size());
+  qi::MethodStatistics& m = stats[mid];
+  EXPECT_EQ(2u, m.count);
+  // Don't expect too much sleep precision
+  EXPECT_LT(10.0, std::abs(m.min - 10.0));
+  EXPECT_LT(30.0, std::abs(m.max - 100.0));
+  obj->clearStats();
+  obj->call<void>("sleep", 0);
+  stats = obj->stats();
+  m = stats[mid];
+  EXPECT_EQ(1u, m.count);
+  obj->clearStats();
+  obj->enableStats(false);
+  obj->call<void>("sleep", 0);
+  EXPECT_TRUE(obj->stats().empty());
+}
+
 int main(int argc, char **argv)
 {
   qi::Application app(argc, argv);
