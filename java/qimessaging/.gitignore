@@ -6,3 +6,8 @@ jni/*.a
 
 # Ignore compilation folder
 target/
+jni/nativeqimessaging.jar
+
+# Ignore Eclipse configuration files
+.classpath
+.project

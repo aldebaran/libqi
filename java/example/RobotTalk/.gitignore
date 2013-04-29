@@ -11,6 +11,8 @@ libs/android-support.jar
 # Generated settings
 .settings
 .cproject
+.classpath
+.project
 
 # Output directory
 target/
