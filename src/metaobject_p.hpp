@@ -11,15 +11,17 @@
 #include <qitype/metasignal.hpp>
 #include <qitype/metaobject.hpp>
 #include <qitype/metamethod.hpp>
+#include <qitype/genericobject.hpp>
 #include <boost/thread/recursive_mutex.hpp>
 
 namespace qi {
 
   class MetaObjectPrivate {
   public:
-    //by default we start at 10, the first 10 id are reserved for bound object
+    //by default we start at qiObjectSpecialMethodMaxUid,
+    //the first qiObjectSpecialMethodMaxUid id are reserved for bound object
     MetaObjectPrivate()
-      : _index(99)
+      : _index(qiObjectSpecialMethodMaxUid - 1)
     {
     };
 
