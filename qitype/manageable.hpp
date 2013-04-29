@@ -28,11 +28,11 @@ namespace qi {
   struct MethodStatistics
   {
     MethodStatistics()
-    : sum(0), min(0), max(0), count(0) {}
-    float sum;
-    float min;
-    float max;
-    unsigned count;
+    : cumulatedTime(0), minTime(0), maxTime(0), count(0) {}
+    float cumulatedTime; //< Cumulated call durations in seconds
+    float minTime;       //< Min call duration in seconds
+    float maxTime;       //< Max call duration in seconds
+    unsigned count;      //< Number of calls
   };
 
   typedef std::map<unsigned int, MethodStatistics> ObjectStatistics;

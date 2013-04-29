@@ -333,7 +333,7 @@ namespace qi
         else
           out->setValue(func.call(params));
         if (stats)
-          context->pushStats(methodId, qi::os::ustime() - time);
+          context->pushStats(methodId, (float)(qi::os::ustime() - time)/1e6);
       }
       catch(const std::exception& e)
       {
@@ -386,7 +386,7 @@ namespace qi
       else
         out.setValue(func.call(params));
       if (stats)
-        context->pushStats(methodId, qi::os::ustime() - time);
+        context->pushStats(methodId, (float)(qi::os::ustime() - time)/1e6);
       return out.future();
     }
     else

@@ -311,5 +311,5 @@ namespace qi {
   }
 }
 
-QI_TYPE_STRUCT(qi::MethodStatistics, sum, min, max, count);
+QI_TYPE_STRUCT(qi::MethodStatistics, cumulatedTime , minTime, maxTime, count);
 #endif  // _QITYPE_DETAILS_GENERICOBJECT_HXX_

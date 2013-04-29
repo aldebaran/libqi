@@ -92,16 +92,16 @@ namespace qi {
   {
     boost::mutex::scoped_lock(_p->registrationsMutex);
     MethodStatistics& ms = _p->stats[slotId];
-    ms.sum += value;
+    ms.cumulatedTime += value;
     if (!ms.count)
     {
-      ms.min = value;
-      ms.max = value;
+      ms.minTime = value;
+      ms.maxTime = value;
     }
     else
     {
-      ms.min = std::min(ms.min, value);
-      ms.max = std::max(ms.max, value);
+      ms.minTime = std::min(ms.minTime, value);
+      ms.maxTime = std::max(ms.maxTime, value);
     }
     ++ms.count;
   }
