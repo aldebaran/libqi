@@ -154,8 +154,8 @@ public class App
     String  sdAddr = "tcp://127.0.0.1:5555";
 
 
-    if (args.length >= 2)
-      sdAddr = args[1];
+    if (args.length >= 1)
+      sdAddr = args[0];
 
     try {
       client.connect(sdAddr);

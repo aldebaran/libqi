@@ -16,7 +16,7 @@ public class App
     QimessagingService service = new ReplyService();
     GenericObject obj = new GenericObject();
 
-    if (args.length >= 2)
+    if (args.length >= 1)
       sdAddr = args[0];
 
     System.out.println("Connecting to " + sdAddr);
