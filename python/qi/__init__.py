@@ -41,7 +41,7 @@ if sys.platform.startswith("linux"):
 
 #######
 
-from libqipy import Application, Future, FutureState, FutureTimeout, Promise, Session, Signal, Property
+from _qi import Application, Future, FutureState, FutureTimeout, Promise, Session, Signal, Property
 
 def _shrinker(self, *args, **kwargs):
     self.trigger(args, kwargs)

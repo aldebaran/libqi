@@ -16,7 +16,7 @@
 
 qiLogCategory("qi.py");
 
-BOOST_PYTHON_MODULE(libqipy)
+BOOST_PYTHON_MODULE(_qi)
 {
   qiLogDebug() << "PyEval_ThreadsInit()? : " << PyEval_ThreadsInitialized();
   qi::py::export_pyfuture();
