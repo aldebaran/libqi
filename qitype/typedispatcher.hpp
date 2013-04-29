@@ -18,24 +18,23 @@ namespace qi {
   Dispatcher& typeDispatch(const Dispatcher& dispatcher, GenericValuePtr value);
 
 
-
   // class QITYPE_API TypeDispatcher
   // {
   // public:
-  //   void visitUnknown(GenericValuePtr value);
+  //   void visitUnknown(qi::GenericValuePtr value);
   //   void visitVoid();
-  //   void visitInt(int64_t value, bool isSigned, int byteSize);
+  //   void visitInt(qi::int64_t value, bool isSigned, int byteSize);
   //   void visitFloat(double value, int byteSize);
   //   void visitString(char* data, size_t size);
-  //   void visitList(GenericIterator begin, GenericIterator end);
-  //   void visitMap(GenericIterator begin, GenericIterator end);
-  //   void visitObject(GenericObject value);
-  //   void visitPointer(GenericValuePtr pointee);
-  //   void visitTuple(const std::vector<GenericValuePtr>& tuple);
-  //   void visitDynamic(GenericValuePtr pointee);
-  //   void visitRaw(GenericValuePtr value);
-  //   void visitIterator(GenericValuePtr value);
-  //   void visitObjectPtr(ObjectPtr& ptr);
+  //   void visitList(qi::GenericIterator begin, qi::GenericIterator end);
+  //   void visitMap(qi::GenericIterator begin, qi::GenericIterator end);
+  //   void visitObject(qi::GenericObject value);
+  //   void visitPointer(qi::GenericValuePtr pointee);
+  //   void visitTuple(const std::vector<qi::GenericValuePtr>& tuple);
+  //   void visitDynamic(qi::GenericValuePtr pointee);
+  //   void visitRaw(qi::GenericValuePtr value);
+  //   void visitIterator(qi::GenericValuePtr value);
+  //   void visitObjectPtr(qi::ObjectPtr& ptr);
   // };
 
 }
