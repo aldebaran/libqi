@@ -33,7 +33,7 @@ JavaVM*       JVM(JNIEnv* env = 0);
 std::string   toJavaSignature(const std::string &signature);
 jint          throwJavaError(JNIEnv *env, const char *message);
 jobject       loadJavaObject(const std::string& denomination);
-void          getJavaSignature(std::string &sig, char c);
+void          getJavaSignature(std::string &sig, const std::string &sigInfo);
 
 extern "C"
 {

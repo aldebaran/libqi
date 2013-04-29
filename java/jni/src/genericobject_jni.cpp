@@ -11,6 +11,8 @@
 
 #include <qitype/genericobject.hpp>
 #include <qitype/genericobjectbuilder.hpp>
+#include <qitype/functiontype.hpp>
+
 #include <qimessaging/c/object_c.h>
 #include <qimessaging/c/future_c.h>
 
@@ -44,7 +46,7 @@ static jobject qi_generic_call_java(JNIEnv *env, qi::ObjectPtr object, const std
     jobject current = env->GetObjectArrayElement(listParams, i);
     qi::GenericValuePtr val = qi::GenericValuePtr(current).clone();
     params.push_back(val);
-    signature += val.signature();
+    signature += val.signature(true);
     i++;
   }
 
@@ -74,10 +76,10 @@ static jobject qi_generic_call_java(JNIEnv *env, qi::ObjectPtr object, const std
   return ret;
 }
 
-jobject Java_com_aldebaran_qimessaging_GenericObject_qiObjectCall(JNIEnv *env, jobject jobj, jlong pObject, jstring jmethod, jobjectArray args)
+jobject Java_com_aldebaran_qimessaging_GenericObject_qiObjectCall
+(JNIEnv *env, jobject jobj, jlong pObject, jstring jmethod, jobjectArray args)
 {
   qi::ObjectPtr obj = *(reinterpret_cast<qi::ObjectPtr *>(pObject));
-  jobject      ret = 0;
   std::string  method;
 
   // Init JVM singleton and attach current thread to JVM
@@ -88,12 +90,12 @@ jobject Java_com_aldebaran_qimessaging_GenericObject_qiObjectCall(JNIEnv *env, j
   {
     qiLogError("qimessaging.java") << "Given object not valid.";
     throwJavaError(env, "Given object is not valid.");
-    return ret;
+    return 0;
   }
 
   // Get method name and parameters C style.
   method = toStdString(env, jmethod);
-  return qi_generic_call_java(env, obj, method, (jobjectArray) args);
+  return qi_generic_call_java(env, obj, method, args);
 }
 
 qi::GenericValuePtr java_call
@@ -121,7 +123,6 @@ qi::GenericValuePtr java_call
     throwJavaError(env, "Internal method informations are not valid");
     return res;
   }
-
   // Translate parameters from GenericValues to jobjects
   qi::GenericFunctionParameters::const_iterator it = params.begin();
   qi::GenericFunctionParameters::const_iterator end = params.end();
@@ -147,10 +148,7 @@ qi::GenericValuePtr java_call
 
   delete[] args;
   if (sigInfo[0] == "")
-  {
-    env->DeleteLocalRef(ret);
     return qi::GenericValuePtr(qi::typeOf<void>());
-  }
 
   return GenericValue_from_JObject(ret).first;
 }
@@ -188,4 +186,101 @@ jlong Java_com_aldebaran_qimessaging_GenericObject_qiObjectRegisterMethod
         boost::bind(&java_call, complete_signature, data, _1)).dropFirstArgument());
 
   return (jlong) ret;
+}
+
+jlong   Java_com_aldebaran_qimessaging_GenericObject_qiObjectAdvertiseEvent
+(JNIEnv *env, jobject QI_UNUSED(obj), jlong pObjectBuilder, jstring eventSignature)
+{
+  qi::GenericObjectBuilder  *ob = reinterpret_cast<qi::GenericObjectBuilder *>(pObjectBuilder);
+  std::vector<std::string>   sigInfo = qi::signatureSplit(toStdString(env, eventSignature));
+  std::string   event = sigInfo[1];
+  std::string   callbackSignature = sigInfo[0] + sigInfo[2];
+
+  // Keep a pointer on JavaVM singleton if not already set.
+  JVM(env);
+
+  //jlong ret = (jlong) ob->advertiseEvent<void (*)(const int&)>(event);
+  jlong ret = (jlong) ob->xAdvertiseEvent(event + "::" + callbackSignature);
+  return ret;
+}
+
+jlong   Java_com_aldebaran_qimessaging_GenericObject_qiObjectEmitEvent
+(JNIEnv *env, jobject QI_UNUSED(callingObj), jlong pObject, jstring eventName, jobjectArray jargs)
+{
+  qi::ObjectPtr obj = *(reinterpret_cast<qi::ObjectPtr *>(pObject));
+  std::string   event = toStdString(env, eventName);
+  qi::GenericFunctionParameters params;
+  std::string signature;
+  jsize size;
+  jsize i = 0;
+
+  // Attach JNIEnv to current thread to avoid segfault in jni functions. (eventloop dependent)
+  if (JVM()->AttachCurrentThread((envPtr) &env, (void *) 0) != JNI_OK || env == 0)
+  {
+    qiLogError("qimessaging.java") << "Cannot attach callback thread to Java VM";
+    throwJavaError(env, "Cannot attach callback thread to Java VM");
+    return 0;
+  }
+
+  size = env->GetArrayLength(jargs);
+  i = 0;
+  while (i < size)
+  {
+    jobject current = env->NewGlobalRef(env->GetObjectArrayElement(jargs, i));
+    qi::GenericValuePtr val = qi::GenericValueRef(GenericValue_from_JObject(current).first);
+    params.push_back(val);
+    i++;
+  }
+
+  // Signature construction
+  signature = event + "::(";
+  for (unsigned i=0; i< params.size(); ++i)
+    signature += params[i].signature(true);
+  signature += ")";
+
+  return (jlong) obj->xMetaPost(signature, params);;
+}
+
+qi::GenericValuePtr java_event_callback
+(void *vinfo, const std::vector<qi::GenericValuePtr>& params)
+{
+  qi_method_info*  info = static_cast<qi_method_info*>(vinfo);
+  qiLogVerbose("qimessaging.jni") << "Java event callback called (sig=" << info->sig << ")";
+  return java_call(info->sig, info, params);
+}
+
+jlong   Java_com_aldebaran_qimessaging_GenericObject_qiObjectConnectEvent
+(JNIEnv *env, jobject jobj, jlong pObject, jstring method, jobject instance, jstring service, jstring eventName)
+{
+  qi::ObjectPtr&             obj = *(reinterpret_cast<qi::ObjectPtr *>(pObject));
+  std::string                signature = toStdString(env, method);
+  std::string                complete_signature = signature;
+  std::string                event = toStdString(env, eventName);
+  qi_method_info*            data;
+  std::vector<std::string>  sigInfo;
+
+  // Keep a pointer on JavaVM singleton if not already set.
+  JVM(env);
+
+  // Create a new global reference on object instance.
+  // jobject structure are local reference and are destroyed when returning to JVM
+  // Fixme : May leak global ref.
+  instance = env->NewGlobalRef(instance);
+
+  // Create a struct holding a jobject instance, jmethodId id and other needed thing for callback
+  // Pass it to void * data to register_method
+  data = new qi_method_info(instance, signature + "::(i)", jobj, toStdString(env, service));
+  gInfoHandler.push(data);
+
+  // Bind method signature on generic java callback
+  sigInfo = qi::signatureSplit(signature);
+  signature = sigInfo[1];
+  signature.append("::");
+  signature.append(sigInfo[2]);
+
+  return obj->xConnect(event + "::" + "(i)",
+                  qi::SignalSubscriber(
+                         qi::makeDynamicGenericFunction(
+                           boost::bind(&java_event_callback, (void*) data, _1)),
+                           qi::MetaCallType_Direct));
 }

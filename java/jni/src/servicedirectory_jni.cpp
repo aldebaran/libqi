@@ -15,11 +15,16 @@ jlong   Java_com_aldebaran_qimessaging_ServiceDirectory_qiTestSDCreate(JNIEnv *e
 {
   qi::ServiceDirectory *sd = new qi::ServiceDirectory();
 
-  if (sd->listen("tcp://0.0.0.0:0") == false)
+  qi::Future<void> fut = sd->listen("tcp://0.0.0.0:0");
+  fut.wait();
+  if (fut.hasError())
   {
-    qiLogError("qimessaging.jni") << "Cannot get test Service Directory";
+    std::stringstream ss;
+
+    ss << "Cannot get test Service Directory: " << fut.error();
+    qiLogError("qimessaging.jni") << ss.str();
     delete sd;
-    throwJavaError(env, "Cannot get test ServiceDirectory");
+    throwJavaError(env, ss.str().c_str());
     return (jlong) 0;
   }
 

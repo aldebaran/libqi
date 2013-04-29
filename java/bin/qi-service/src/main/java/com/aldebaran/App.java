@@ -19,6 +19,7 @@ public class App
     if (args.length >= 2)
       sdAddr = args[0];
 
+    System.out.println("Connecting to " + sdAddr);
     try
     {
       s.connect(sdAddr);
@@ -35,13 +36,18 @@ public class App
       obj.advertiseMethod("answer::i(i)", service);
       obj.advertiseMethod("answerFloat::f(f)", service);
       obj.advertiseMethod("answerBool::b(b)", service);
-      obj.advertiseMethod("echoIntegerList::[m]([m])", service);
+      obj.advertiseMethod("echoIntegerList::[m]([i])", service);
       obj.advertiseMethod("add::i(ii)", service);
       obj.advertiseMethod("abacus::{ib}({ib})", service);
       obj.advertiseMethod("info::(sib)(sib)", service);
       obj.advertiseMethod("triggerFireEvent::(i)", service);
     } catch (QimessagingException e1) {
       System.out.println("Cannot advertise method : " + e1.getMessage());
+    }
+    try {
+      obj.advertiseEvent("fire::(i)");
+    } catch (Exception e) {
+      System.out.println("Cannot advertise event : " + e.getMessage());
     }
 
     ReplyService rs = (ReplyService) service;

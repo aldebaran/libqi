@@ -18,7 +18,7 @@ public class App
 
     try
     {
-      answer = (Float) proxy.call("answerFloat", 41.2);
+      answer = (Float) proxy.<Float>call("answerFloat", 41.2);
     } catch (CallError e)
     {
       System.out.println("Error calling answerFloat() :" + e.getMessage());
@@ -38,14 +38,20 @@ public class App
 
     try
     {
-      answer = (Integer) proxy.call("answer", 41);
+      answer = proxy.<Integer>call("answer", 41);
     } catch (CallError e)
     {
       System.out.println("Error calling answer() :" + e.getMessage());
       return;
+    } catch (NullPointerException e)
+    {
+      e.printStackTrace();
     }
 
-    System.out.println("AnswerInteger : " + answer);
+    if (answer == null)
+      System.out.println("Answer is null :(");
+    else
+      System.out.println("AnswerInteger : " + answer);
   }
 
   public static void testBoolean(GenericObject proxy)
@@ -54,7 +60,7 @@ public class App
 
     try
     {
-      answer = (Boolean) proxy.call("answerBool", false);
+      answer = proxy.<Boolean>call("answerBool", false);
     } catch (CallError e)
     {
       System.out.println("Error calling answerBool() :" + e.getMessage());

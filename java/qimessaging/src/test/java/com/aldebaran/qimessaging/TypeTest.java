@@ -317,7 +317,7 @@ extends TestCase
   /**
    * Test Map conversion
    */
-  public void testMap()
+  public void testEmptyMap()
   {
     ServiceDirectory sd = new ServiceDirectory();
     Session s = new Session();
@@ -334,7 +334,7 @@ extends TestCase
 
     // Register method "reply::s(s)", implemented from Service interface
     try {
-      obj.advertiseMethod("abacus::{mm}({mm})", reply);
+      obj.advertiseMethod("abacus::{ib}({ib})", reply);
     } catch (Exception e2) {
       System.out.println("Cannot advertise method : " + e2.getMessage());
     }
@@ -404,7 +404,7 @@ extends TestCase
 
     // Register method "reply::s(s)", implemented from Service interface
     try {
-      obj.advertiseMethod("abacus::{mm}({mm})", reply);
+      obj.advertiseMethod("abacus::{mm}({ib})", reply);
     } catch (Exception e2) {
       System.out.println("Cannot advertise method : " + e2.getMessage());
     }
@@ -464,7 +464,7 @@ extends TestCase
   /**
    * Test List conversion
    */
-  public void testList()
+  public void testEmptyList()
   {
     ServiceDirectory sd = new ServiceDirectory();
     Session s = new Session();
@@ -481,7 +481,7 @@ extends TestCase
 
     // Register method "reply::s(s)", implemented from Service interface
     try {
-      obj.advertiseMethod("echoFloatList::[m]([m])", reply);
+      obj.advertiseMethod("echoFloatList::[m]([f])", reply);
     } catch (Exception e2) {
       System.out.println("Cannot advertise method : " + e2.getMessage());
     }
@@ -550,7 +550,7 @@ extends TestCase
 
     // Register method "reply::s(s)", implemented from Service interface
     try {
-      obj.advertiseMethod("echoFloatList::[m]([m])", reply);
+      obj.advertiseMethod("echoFloatList::[m]([f])", reply);
     } catch (Exception e2) {
       System.out.println("Cannot advertise method : " + e2.getMessage());
     }

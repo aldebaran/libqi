@@ -171,7 +171,7 @@ extends TestCase
     String res = null;
 
     try {
-      res = (String) proxy.call("reply", "plaf");
+      res = proxy.<String>call("reply", "plaf");
     } catch (CallError e)
     {
       Assert.assertTrue("Call must succeed withtout CallError", false);

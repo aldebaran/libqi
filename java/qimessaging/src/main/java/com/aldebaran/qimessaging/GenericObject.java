@@ -32,6 +32,9 @@ public class GenericObject
   private static native void   qiObjectDestroy(long pObject);
   private static native Object qiObjectCall(long pObject, String method, Object[] args);
   private static native long   qiObjectRegisterMethod(long pObjectBuilder, String method, Object instance, String className);
+  private static native long   qiObjectAdvertiseEvent(long pObjectBuilder, String eventSignature);
+  private static native long   qiObjectEmitEvent(long pObjectBuilder, String name, Object[] args);
+  private static native long   qiObjectConnectEvent(long pObject, String method, Object instance, String className, String eventName);
 
   public GenericObject()
   {
@@ -65,14 +68,15 @@ public class GenericObject
 
     try
     {
-      if ((ret = GenericObject.qiObjectCall(_obj, method, args)) == null)
-        throw new CallError();
+      ret = GenericObject.qiObjectCall(_obj, method, args);
     } catch (Exception e)
     {
-      // Catch generic exception from C++ code and rethrow a CallError
+      // Catch generic exceptions from C++ code and rethrow a CallError
       throw new CallError(e.getMessage());
     }
 
+    if (ret == null)
+      throw new CallError("Return value is null.");
     return (T) ret;
   }
 
@@ -104,6 +108,59 @@ public class GenericObject
         return;
       }
     }
+  }
+
+  /**
+   * Connect a callback to a foreign event.
+   * @param eventName Name of the event
+   * @param callback Callback name
+   * @param object Instance of class implementing callback
+   * @throws Exception If callback method is not found in object instance.
+   */
+  public void connect(String eventName, String callback, Object object) throws Exception
+  {
+    Class<?extends Object> c = object.getClass();
+    Method[] methods = c.getDeclaredMethods();
+
+    if (_obj == 0)
+    {
+      System.out.printf("GenericObject instance is needed to connect to an event.\n");
+      return;
+    }
+
+    for (Method method : methods)
+    {
+      String className = object.getClass().toString();
+      className = className.substring(6); // Remove "class "
+      className = className.replace('.', '/');
+
+      // If method name match signature
+      if (callback.contains(method.getName()) == true)
+      {
+        GenericObject.qiObjectConnectEvent(_obj, callback, object, className, eventName);
+        return;
+      }
+    }
+
+    throw new Exception("Cannot find " + callback + " in object " + object.toString());
+  }
+
+  /**
+   * Advertise an event and its callback signature.
+   * @param callbackSignature Signature needed to subscribe a callback.
+   * @param eventName Name of event
+   * @throws Exception If GenericObject is not initialized internally.
+   */
+  public void advertiseEvent(String eventSignature) throws Exception
+  {
+    if (_ob == 0)
+      throw new Exception("Cannot advertise event : Object is already instanciated");
+    GenericObject.qiObjectAdvertiseEvent(_ob, eventSignature);
+  }
+
+  public void emitEvent(String eventName, Object ... args)
+  {
+    GenericObject.qiObjectEmitEvent(_obj, eventName, args);
   }
 
   protected void finalize()

@@ -53,6 +53,7 @@ struct toJObject
       jmethodID mid = env->GetMethodID(cls, "<init>", byteSize == 0 ? "(Z)V" : "(I)V");
       if (!mid)
       {
+        env->DeleteLocalRef(cls);
         throwJavaError(env, "GenericValue to Integer : GetMethodID error");
         return;
       }
@@ -61,6 +62,7 @@ struct toJObject
       jint jval = value;
       *result = env->NewObject(cls, mid, jval);
       checkForError();
+      env->DeleteLocalRef(cls);
     }
 
     void visitString(char *data, size_t len)//qi::TypeString* type, void* storage)
@@ -97,6 +99,7 @@ struct toJObject
       jmethodID mid = env->GetMethodID(cls, "<init>","(F)V");
       if (!mid)
       {
+        env->DeleteLocalRef(cls);
         throwJavaError(env, "GenericValue to Float : GetMethodID error");
         return;
       }
@@ -104,6 +107,7 @@ struct toJObject
       // Instanciate new Float, yeah !
       jfloat jval = value;
       *result = env->NewObject(cls, mid, jval);
+      env->DeleteLocalRef(cls);
       checkForError();
     }
 
@@ -243,9 +247,12 @@ void JObject_from_GenericValue(qi::GenericValuePtr val, jobject* target)
 
 qi::GenericValuePtr GenericValue_from_JObject_List(jobject val)
 {
+  JNIEnv* env;
   JNIList list(val);
   std::vector<qi::GenericValue>& res = *new std::vector<qi::GenericValue>();
   int size = 0;
+
+  JVM()->GetEnv((void **) &env, JNI_VERSION_1_6);
 
   size = list.size();
   res.reserve(size);
@@ -261,9 +268,12 @@ qi::GenericValuePtr GenericValue_from_JObject_List(jobject val)
 
 qi::GenericValuePtr GenericValue_from_JObject_Map(jobject hashtable)
 {
+  JNIEnv* env;
   std::map<qi::GenericValue, qi::GenericValue>& res = *new std::map<qi::GenericValue, qi::GenericValue>();
   JNIHashTable ht(hashtable);
   jobject key, value;
+
+  JVM()->GetEnv((void **) &env, JNI_VERSION_1_6);
 
   JNIEnumeration keys = ht.keys();
   while (keys.hasNextElement())
@@ -320,15 +330,15 @@ std::pair<qi::GenericValuePtr, bool> GenericValue_from_JObject(jobject val)
   jclass mapClass = env->FindClass("java/util/Map");
   jclass listClass = env->FindClass("java/util/ArrayList");
 
-  if (env->IsInstanceOf(val, stringClass))
+  if (val == NULL)
+  {
+    res = qi::GenericValuePtr(qi::typeOf<void>());
+  }
+  else if (env->IsInstanceOf(val, stringClass))
   {
     std::string tmp = std::string(env->GetStringUTFChars((jstring) val, 0));
     res = qi::GenericValueRef(*new std::string(tmp));
     copy = true;
-  }
-  else if (val == NULL)
-  {
-    res = qi::GenericValuePtr(qi::typeOf<void>());
   }
   else if (env->IsInstanceOf(val, floatClass))
   {
@@ -426,14 +436,8 @@ class JObjectType: public qi::TypeDynamic
 
     virtual void* initializeStorage(void* ptr = 0)
     {
-      // ptr is address of jobject (aka _jobject**)
-      void** myptr = static_cast<void**>(ptr);
-      if (myptr)
-      {
-        // return _jobject* // jobject
-        return *myptr;
-      }
-      return 0;
+      // ptr is jobject* (aka _jobject**)
+      return ptr;
     }
 
     virtual void* ptrFromStorage(void** s)
@@ -449,16 +453,17 @@ class JObjectType: public qi::TypeDynamic
 
     virtual void set(void** storage, qi::GenericValuePtr src)
     {
-      // void **storage is a jobject*
+      // storage is jobject*
       // We will assign *storage to target, so we need it to be allocated
-      jobject target = *(new jobject);
+      jobject *target = new jobject;
 
       // Giving jobject* to JObject_from_GenericValue
-      JObject_from_GenericValue(src, &target);
+      JObject_from_GenericValue(src, target);
 
       JNIEnv *env;
       JVM()->GetEnv((void **) &env, JNI_VERSION_1_6);
-      env->NewGlobalRef(target);
+      JVM()->AttachCurrentThread((envPtr) &env, (void *) 0);
+      env->NewGlobalRef(*target);
 
       *storage = target;
     }
