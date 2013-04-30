@@ -47,6 +47,7 @@ namespace qi { namespace py {
       //this function is named trigger in the qi.Signal object,
       //the python wrapper add a __call__ method bound to this one. (see qi/__init__.py)
       void trig(boost::python::tuple args, boost::python::dict kwargs) {
+        GILScopedUnlock _unlock;
         qi::SignalBase::trigger(qi::GenericValueRef(args).asDynamic().asTupleValuePtr());
       }
 
