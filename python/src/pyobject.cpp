@@ -26,7 +26,6 @@ namespace qi { namespace py {
       {}
 
       boost::python::object operator()(boost::python::tuple pyargs, boost::python::dict pykwargs) {
-        //calling c++, so release the GIL.
         qi::GenericValue val = qi::GenericValue::from(pyargs);
         bool async = boost::python::extract<bool>(pykwargs.get("_async", false));
         std::string funN = boost::python::extract<std::string>(pykwargs.get("_overload", _funName));
@@ -34,6 +33,7 @@ namespace qi { namespace py {
 
         qi::Future<qi::GenericValuePtr> fut;
         {
+          //calling c++, so release the GIL.
           GILScopedUnlock _unlock;
           fut = _object->metaCall(funN, val.asDynamic().asTupleValuePtr());
         }
