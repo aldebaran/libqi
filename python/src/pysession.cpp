@@ -36,97 +36,6 @@ namespace qi { namespace py {
 
     }
 
-    //TODO: DO NOT DUPLICATE
-    static qi::GenericValuePtr pysignalCb(const std::vector<qi::GenericValuePtr>& cargs, boost::python::object callable) {
-      qi::py::GILScopedLock _lock;
-      boost::python::list   args;
-      boost::python::object ret;
-
-      std::vector<qi::GenericValuePtr>::const_iterator it;
-      for (it = cargs.begin(); it != cargs.end(); ++it) {
-        args.append(it->to<boost::python::object>());
-      }
-      ret = callable(*boost::python::tuple(args));
-      return qi::GenericValueRef(ret).clone();
-    }
-
-
-    qi::ObjectPtr makeQiPyObjectPtr(boost::python::object obj)
-    {
-      qi::ObjectPtr ret;
-      qi::GenericObjectBuilder gob;
-      boost::python::object attrs(boost::python::handle<>(PyObject_Dir(obj.ptr())));
-
-      //boost::python::list                                    l(attrs);
-      //boost::python::stl_input_iterator<boost::python::list> it(l);
-      //boost::python::stl_input_iterator<boost::python::list> end;
-
-      for (unsigned i = 0; i < boost::python::len(attrs); ++i) {
-      //for (; it != end; ++it) {
-        std::string key = boost::python::extract<std::string>(attrs[i]);
-        boost::python::object m = obj.attr(attrs[i]);
-
-        //boost::python::object value = (*it)[1];
-        std::cout << "ATTR:" << key << std::endl;
-        if (PyMethod_Check(m.ptr())) {
-          std::cout << "adding method:" << key << std::endl;
-          qi::MetaMethodBuilder mmb;
-          boost::python::object desc = m.attr("__doc__");
-
-          if (desc)
-            mmb.setDescription(boost::python::extract<std::string>(desc));
-          gob.xAdvertiseMethod(mmb, qi::makeDynamicGenericFunction(boost::bind(pysignalCb, _1, m)));
-        }
-        //check for Signal
-        //PyObject_IsInstance(m.ptr(), );
-        //check for Property
-      }
-
-
-//      +def buildFunctionListFromObject(obj):
-//      +  # Construct a list of tuple with function and signature associated
-//      +  functionsList = []
-//      +  attrs = dir(obj)
-//      +
-//      +  for attr in attrs:
-//      +    if (attr.startswith("_")):
-//      +      continue
-//      +    fun = getattr(obj, attr)
-//      +    signature = getFunctionSignature(fun)
-//      +    if (signature is not None):
-//      +      functionsList.append((fun, signature))
-//      +
-//      +  return functionsList
-
-
-//      // Declare qimessaging object builder
-//      -  qi::GenericObjectBuilder ob;
-//      -
-//      -  // Get iterator on object attributes
-//      -  if (!(iter = PyObject_GetIter(attr)))
-//      -  {
-//      -    qiLogError() << "Register object : Given object attributes is not iterable.";
-//      -    qi_raise("qimessaging.session.RegisterError",
-//      -             "Register object : Given object attributes is not iterable.");
-//      -    return 0;
-//      -  }
-//      -
-//      -  // For each attribute of class
-//      -  while ((attribute = PyIter_Next(iter)))
-//      -  {
-//      -    method = PyTuple_GetItem(attribute, 0);
-//      -    sig = PyTuple_GetItem(attribute, 1);
-//      -
-//      -    // register method using code of qi_object_builder_register_method
-//      -    if (PyMethod_Check(method) == true)
-//      -    {
-//      -      std::string signature(PyString_AsString(sig));
-//      -
-//      -      qipy_objectbuilder_bind_method((qi_object_builder_t*) &ob, signature.c_str(), method);
-//      -    }
-//      -  }
-      return ret;
-    }
 
     class PySession {
     public:
@@ -170,9 +79,7 @@ namespace qi { namespace py {
       }
 
       boost::python::object registerService(const std::string &name, boost::python::object obj, bool _async=false) {
-        qi::ObjectPtr qiobj;
-        qiobj = makeQiPyObjectPtr(obj);
-        qi::Future<unsigned int> fut = _ses->registerService(name, qiobj);
+        qi::Future<unsigned int> fut = _ses->registerService(name, qi::GenericValueRef(obj).toObject());
         if (_async)
           return boost::python::object(toPyFuture(fut));
         return boost::python::object(fut.value()); //throw on error
