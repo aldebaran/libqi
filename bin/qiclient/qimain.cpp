@@ -19,32 +19,18 @@ namespace po = boost::program_options;
 
 qiLogCategory("qiclient");
 
-qi::ObjectPtr getObj(qi::Session *ses) {
-  qi::Session &session = *ses;
-
-  qi::Future<qi::ObjectPtr> fut = session.service("serviceTest");
-  fut.wait();
-  if (fut.hasError())
-  {
-    std::cerr << "Error returned:" << fut.error() << std::endl;
-    return qi::ObjectPtr();
-  }
-  qi::ObjectPtr obj = fut.value();
-  return obj;
-}
-
 void call(int count, const std::string &addr)
 {
   qi::Session session;
+  qiLogInfo() << "Connecting to:" << addr;
   session.connect(addr);
 
-  qi::ObjectPtr obj = getObj(&session);
+  qi::ObjectPtr obj = session.service("serviceTest");
 
   for (int i = 0; i < count; ++i) {
     std::string result = obj->call<std::string>("reply", "plaf");
     std::cout << "result" << i << ":" << result << std::endl;
   }
-
   session.close();
 }
 
@@ -56,7 +42,7 @@ void recEvent(qi::Application *app, const std::string &addr) {
   qi::Session session;
   session.connect(addr);
 
-  qi::ObjectPtr obj = getObj(&session);
+  qi::ObjectPtr obj = session.service("serviceTest");
 
   obj->connect("testEvent", &eventCb);
 
