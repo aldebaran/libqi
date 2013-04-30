@@ -5,7 +5,11 @@ qi_install_python(${CMAKE_CURRENT_SOURCE_DIR}/qi
   KEEP_RELATIVE_PATHS
 )
 
-qi_create_lib(_qi src/boostpymain.cpp
+# do not use qi_create_lib: it does not all
+# the python-specific stuff we need.
+# FIXME: use qi_create_py_ext() from qibuild
+# when it is implemented
+add_library(_qi SHARED src/boostpymain.cpp
                    src/pyapplication.cpp
                    src/pyapplication.hpp
                    src/pysession.cpp
@@ -19,16 +23,28 @@ qi_create_lib(_qi src/boostpymain.cpp
                    src/pyproperty.hpp
                    src/pysignal.cpp
                    src/pysignal.hpp
-                   src/gil.hpp)
+                   src/gil.hpp
+)
+
+# Install the library next to the .py files
+qi_install_python(TARGETS _qi)
 
 # Fix the library name: no lib prefix, correct extension
 set_target_properties(_qi PROPERTIES PREFIX "")
-if(APPLE)
-  set_target_properties(_qi PROPERTIES SUFFIX ".so")
+if(UNIX)
+  set_target_properties(_qi PROPERTIES
+    SUFFIX ".so"
+    LIBRARY_OUTPUT_DIRECTORY ${QI_SDK_DIR}/${QI_SDK_LIB}
+  )
 endif()
 
 if (WIN32)
-  set_target_properties(_qi PROPERTIES SUFFIX ".pyd")
+  set_target_properties(_qi PROPERTIES
+    SUFFIX ".pyd"
+    DEBUG_POSTFIX "_d"
+    RUNTIME_OUTPUT_DIRECTORY_DEBUG ${QI_SDK_DIR}/${QI_SDK_LIB}
+    RUNTIME_OUTPUT_DIRECTORY_RELEASE ${QI_SDK_DIR}/${QI_SDK_LIB}
+  )
 endif()
 
 qi_use_lib(_qi BOOST_PYTHON QI QITYPE QIMESSAGING PYTHON)
