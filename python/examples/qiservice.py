@@ -8,18 +8,20 @@
 import sys
 import qi
 
-class MyService:
-    def titit():
+class ServiceTest:
+    def reply(self, plaf):
+        print "iciiii"
+        print "v:", plaf
+        return plaf + "bim"
+
+    def rep(self):
+        print "rep"
+
+    def totot(self, pif, paf):
+        print "laaaa"
         pass
 
-    def totot(pif, paf):
-        pass
 
-def service_reply(string):
-    """ Famous reply::s(s) function
-    """
-    ret = "%sbim" % string
-    return ret
 
 def get_servicedirectory_address():
     """ Parse command line arguments
@@ -37,41 +39,22 @@ def main():
     """ Entry point of qiservice
     """
     #0 Declare app
-    #app = Application()
-
-    m = MyService()
-    s = qi.Session()
-    s.register_service("toto", m)
-    exit(2)
+    app = qi.Application()
 
     #1 Check if user give us service directory address.
     sd_addr = get_servicedirectory_address()
 
+    s = qi.Session()
 
-    #2 Open a session onto service directory.
-    try:
-        session = Session(sd_addr)
-    except qimessaging.ConnectionError as session_error:
-        print 'Connection error : %s' % session_error
-        sys.exit()
-
-    #3 Create an object builder and register method on it.
-    builder = ObjectBuilder()
-    builder.register_method("reply::s(s)", service_reply)
-    obj = builder.object()
-
-    if not obj:
-        sys.exit()
-
-    #4 Initialise service.
-    session.listen("tcp://0.0.0.0:0")
-    idx = session.register_service("serviceTest", obj)
+    s.connect(sd_addr)
+    m = ServiceTest()
+    s.register_service("serviceTest", m)
 
     #5 Call Application.run() to join event loop.
     app.run()
 
     #6 Clean
-    session.close()
+    s.close()
     app.stop()
     #main : Done.
 
