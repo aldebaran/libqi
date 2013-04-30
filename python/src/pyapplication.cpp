@@ -11,6 +11,7 @@
 #include <qi/log.hpp>
 #include <qi/application.hpp>
 #include <boost/python.hpp>
+#include "gil.hpp"
 
 qiLogCategory("qimpy");
 
@@ -24,20 +25,13 @@ namespace qi {
         char *argvstorage[2] = { 0, 0 };
         char **argv = argvstorage;
         // #2 Create c application
-        _app = new qi::Application(argc, argv);
+        _app = boost::shared_ptr<qi::Application>(new qi::Application(argc, argv));
       }
 
       PyApplication(boost::python::tuple args)
       {
-        PyObject *iter;
         int       argc, i;
         char      **argv;
-
-        //TODO: remove THAT
-        // #0 Initialize Python threads, for code in C/C++ that will call python object in a thread
-        //PyEval_InitThreads();
-
-        ///args.slice().size();
         argc = boost::python::len(args);
         argv = new char*[argc + 1];
 
@@ -49,7 +43,7 @@ namespace qi {
         }
 
         // #2 Create c application
-        _app = new qi::Application(argc, argv);
+        _app = boost::shared_ptr<qi::Application>(new qi::Application(argc, argv));
 
         // #3 Free C arguements
         i = 0;
@@ -57,15 +51,17 @@ namespace qi {
       }
 
       void run() {
+        qi::py::GILScopedUnlock _unlock;
         _app->run();
       }
 
       void stop() {
+        qi::py::GILScopedUnlock _unlock;
         _app->stop();
       }
 
     private:
-      qi::Application *_app;
+      boost::shared_ptr<qi::Application> _app;
     };
 
     void export_pyapplication() {

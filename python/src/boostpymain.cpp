@@ -14,10 +14,11 @@
 #include "pysignal.hpp"
 #include "pyproperty.hpp"
 
+qiLogCategory("qi.py");
+
 BOOST_PYTHON_MODULE(libqipy)
 {
-  PyEval_InitThreads();
-  Py_Initialize();
+  qiLogDebug() << "PyEval_ThreadsInit()? : " << PyEval_ThreadsInitialized();
   qi::py::export_pyfuture();
   qi::py::export_pyapplication();
   qi::py::export_pysession();
