@@ -42,7 +42,7 @@ if (WITH_CODEGEN_TESTS)
 
   MESSAGE("Found python:  ${_python_executable}")
   qi_create_service(task
-    SRC task_service.cpp
+    SRC ${CMAKE_CURRENT_SOURCE_DIR}/task_service.cpp
     INCLUDE ${CMAKE_CURRENT_SOURCE_DIR}/task_service.hpp
     SHARED
     CLASSES Task
@@ -51,4 +51,7 @@ if (WITH_CODEGEN_TESTS)
     IDL ${CMAKE_CURRENT_SOURCE_DIR}/task.idl)
 
   qi_create_gtest(test_task SRC test_task.cpp  ${CMAKE_CURRENT_BINARY_DIR}/task_proxy.hpp DEPENDS QI QITYPE TESTSESSION GTEST TIMEOUT 10)
+  add_subdirectory(passobject-fromservice)
+  add_subdirectory(passobject-fromclient)
 endif()
+

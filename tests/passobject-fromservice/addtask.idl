@@ -1,0 +1,6 @@
+<IDL>
+<class name="AddTask">
+  <method name="add"><return type="int" /><argument type="int" /></method>
+  <signal name="onChange"><argument type="int" /></signal>
+</class>
+</IDL>
