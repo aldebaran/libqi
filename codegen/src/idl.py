@@ -383,7 +383,7 @@ def idl_to_raw(root):
       n = p.get('name')
       t = p.get('type')
       properties.append([n, t])
-    result[cls.get("name")] =  (methods, signals, events, (cls.get("annotations") or '').split(','))
+    result[cls.get("name")] =  (methods, signals, properties, (cls.get("annotations") or '').split(','))
   return result
 
 def raw_to_interface(class_name, data, include):
@@ -542,7 +542,7 @@ def raw_to_cxx_typebuild(class_name, data, use_interface, register_to_factory):
   """ Generate a c++ file that registers the class to type system.
   """
   template = """
-#include <qitype/objecttypebuilder.hpp>
+#include <qitype/genericobject.hpp>
 #include <qitype/objectfactory.hpp>
 
 qi::ObjectTypeBuilder<ITYPE> ITYPEbuilder;
