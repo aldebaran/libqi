@@ -17,6 +17,7 @@
 #include <boost/python.hpp>
 #include "pyobject.hpp"
 #include "pysignal.hpp"
+#include "pyproperty.hpp"
 
 #include  <boost/python.hpp>
 #include <boost/python/raw_function.hpp>
@@ -147,9 +148,6 @@ struct ToPyObject
 
   boost::python::object& result;
 };
-
-
-
 
 
 boost::python::object PyObject_from_GenericValue(qi::GenericValuePtr val)
@@ -295,10 +293,27 @@ qi::ObjectPtr makeQiObjectPtr(boost::python::object obj)
       mmb.setSignature(ss.str());
       mmb.setSigreturn("m");
       gob.xAdvertiseMethod(mmb, qi::makeDynamicGenericFunction(boost::bind(pysignalCb, _1, m)));
+      continue;
     }
-    //check for Signal
-    //PyObject_IsInstance(m.ptr(), );
-    //check for Property
+
+    //store a pointer on PySignal class
+    static boost::python::object asignal = qi::py::makePySignal("(i)").attr("__class__");
+    if (PyObject_IsInstance(m.ptr(), asignal.ptr())) {
+      qiLogDebug() << "Adding signal:" << key;
+      //TODO: register the signal, and get the it to link it to the python one.
+      int sig = gob.xAdvertiseEvent(key + "::(i)");
+      //TODO: make py.trigger call cpp.trigger
+      //TODO: make cpp.callback call py.trigger
+      continue;
+    }
+
+    //TODO: check for Property
+    static boost::python::object aproperty = qi::py::makePyProperty("(i)").attr("__class__");
+    if (PyObject_IsInstance(m.ptr(), aproperty.ptr())) {
+      qiLogDebug() << "Adding property:" << key;
+      continue;
+    }
+
   }
   //this is a useless callback, needed to keep a ref on obj.
   //when the GO is destructed, the ref is released.
