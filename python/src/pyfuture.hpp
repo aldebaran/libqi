@@ -17,41 +17,20 @@
 namespace qi {
   namespace py {
 
-    class PyPromise;
-    class PyFuture;
-    void pysignalCbP(boost::python::object callable, PyPromise *pp);
-    void pysignalCbF(boost::python::object callable, PyFuture *pp);
-
-    //needed in .hpp by some adapter in PySession.
     class PyFuture : public qi::Future<qi::GenericValue> {
     public:
-      PyFuture() {}
-      PyFuture(const PyFuture& fut)
-        : qi::Future<qi::GenericValue>(fut)
-      {}
-
-      PyFuture(const qi::Future<qi::GenericValue>& fut)
-        : qi::Future<qi::GenericValue>(fut)
-      {}
-
-      boost::python::object value(int msecs = qi::FutureTimeout_Infinite) const {
-        qi::GenericValue gv = qi::Future<qi::GenericValue>::value(msecs);
-        return gv.to<boost::python::object>();
-      }
-
-      //Future::error return a const ref... I'am lazy I dont want to tweak boost.py call policies!
-      std::string error(int msecs = qi::FutureTimeout_Infinite) const {
-        return qi::Future<qi::GenericValue>::error(msecs);
-      }
-
-      void add_callback(boost::python::object callable) {
-        connect(boost::bind<void>(pysignalCbF, callable, this));
-      }
-
+      PyFuture();
+      PyFuture(const PyFuture& fut);
+      PyFuture(const qi::Future<qi::GenericValue>& fut);
+      boost::python::object value(int msecs = qi::FutureTimeout_Infinite) const;
+      //Future::error return a const ref...
+      //I'am lazy I dont want to tweak boost.py call policies!
+      //so here is the overridden version returning a simple string
+      std::string error(int msecs = qi::FutureTimeout_Infinite) const;
+      void add_callback(boost::python::object callable);
     };
 
     boost::python::object makeFuture(qi::Future<qi::GenericValuePtr> fut);
-
     void export_pyfuture();
 
   }

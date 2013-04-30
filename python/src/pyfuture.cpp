@@ -14,23 +14,45 @@
 namespace qi {
   namespace py {
 
-    class PyPromise;
-    void pysignalCbP(boost::python::object callable, PyPromise *pp) {
+    template <typename T>
+    static void pySignalCb(boost::python::object callable, T *pp) {
       GILScopedLock _lock;
       callable(pp);
     }
 
-    void pysignalCbF(boost::python::object callable, PyFuture *pp) {
-      GILScopedLock _lock;
-      callable(pp);
+
+    PyFuture::PyFuture()
+    {}
+
+    PyFuture::PyFuture(const PyFuture& fut)
+      : qi::Future<qi::GenericValue>(fut)
+    {}
+
+    PyFuture::PyFuture(const qi::Future<qi::GenericValue>& fut)
+      : qi::Future<qi::GenericValue>(fut)
+    {}
+
+    boost::python::object PyFuture::value(int msecs) const {
+      qi::GenericValue gv = qi::Future<qi::GenericValue>::value(msecs);
+      return gv.to<boost::python::object>();
     }
+
+    std::string PyFuture::error(int msecs) const {
+      return qi::Future<qi::GenericValue>::error(msecs);
+    }
+
+    void PyFuture::add_callback(boost::python::object callable) {
+      connect(boost::bind<void>(&pySignalCb<PyFuture>, callable, this));
+    }
+
+
 
     class PyPromise: public qi::Promise<qi::GenericValue> {
     public:
       PyPromise() {};
 
       PyPromise(boost::python::object callable)
-        : qi::Promise<qi::GenericValue> (boost::bind<void>(&pysignalCbP, callable, this))
+        : qi::Promise<qi::GenericValue> (boost::bind<void>(&pySignalCb<PyPromise>, callable, this))
       {
       }
 
