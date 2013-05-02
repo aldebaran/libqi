@@ -25,7 +25,6 @@ namespace qi {
   class SessionPrivate;
   class QIMESSAGING_API Session {
   public:
-    QI_DISALLOW_COPY_AND_ASSIGN(Session);
     Session();
     virtual ~Session();
 
@@ -70,10 +69,13 @@ namespace qi {
 
   public:
     SessionPrivate      *_p;
+  private:
+    QI_DISALLOW_COPY_AND_ASSIGN(Session);
   };
 
 }
 
+QI_TYPE_NOT_CLONABLE(qi::Session);
 #ifdef _MSC_VER
 #  pragma warning( pop )
 #endif
