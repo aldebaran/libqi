@@ -22,7 +22,6 @@
 #include  <boost/python.hpp>
 #include <boost/python/raw_function.hpp>
 #include "gil.hpp"
-#include <qitype/genericobjectbuilder.hpp>
 
 qiLogCategory("qipy.convert");
 
@@ -224,103 +223,6 @@ class PythonScopedRef
     PyObject* _p;
 };
 
-boost::python::object import_inspect() {
-  static bool plouf = false;
-  static boost::python::object obj;
-  if (!plouf) {
-    obj = boost::python::import("inspect");
-    plouf = true;
-  }
-  return obj;
-}
-
-//TODO: DO NOT DUPLICATE
-static qi::GenericValuePtr pysignalCb(const std::vector<qi::GenericValuePtr>& cargs, boost::python::object callable) {
-  qi::py::GILScopedLock _lock;
-  boost::python::list   args;
-  boost::python::object ret;
-
-  std::vector<qi::GenericValuePtr>::const_iterator it = cargs.begin();
-  ++it; //drop the first arg which is DynamicObject*
-  for (; it != cargs.end(); ++it) {
-    qiLogDebug() << "argument: " << qi::encodeJSON(*it);
-    args.append(it->to<boost::python::object>());
-  }
-  qiLogDebug() << "before method call";
-  ret = callable(*boost::python::tuple(args));
-  qi::GenericValuePtr gvret = qi::GenericValueRef(ret).clone();
-  qiLogDebug() << "method returned:" << qi::encodeJSON(gvret);
-  return gvret;
-}
-
-//callback just needed to keep a ref on obj
-static void doNothing(qi::GenericObject *go, boost::python::object obj)
-{
-  (void)go;
-  (void)obj;
-}
-
-qi::ObjectPtr makeQiObjectPtr(boost::python::object obj)
-{
-  qi::GenericObjectBuilder gob;
-  boost::python::object attrs(boost::python::handle<>(PyObject_Dir(obj.ptr())));
-
-  for (unsigned i = 0; i < boost::python::len(attrs); ++i) {
-    std::string key = boost::python::extract<std::string>(attrs[i]);
-    boost::python::object m = obj.attr(attrs[i]);
-    if (PyMethod_Check(m.ptr())) {
-      qi::MetaMethodBuilder mmb(key);
-      boost::python::object desc = m.attr("__doc__");
-      if (desc)
-        mmb.setDescription(boost::python::extract<std::string>(desc));
-      boost::python::object inspect = import_inspect();
-      //returns: (args, varargs, keywords, defaults)
-      boost::python::object tu = inspect.attr("getargspec")(m);
-      int argsz = boost::python::len(tu[0]);
-
-      argsz = argsz > 0 ? argsz - 1 : 0;
-
-      if (argsz < 0) {
-        qiLogError() << "Method " << key << " is missing the self argument.";
-        continue;
-      }
-      std::stringstream ss;
-      ss << key << "::(";
-      for (int i = 0; i < argsz; ++i)
-        ss << "m";
-      ss << ")";
-      qiLogDebug() << "Adding method: " << ss.str();
-      mmb.setSignature(ss.str());
-      mmb.setSigreturn("m");
-      gob.xAdvertiseMethod(mmb, qi::makeDynamicGenericFunction(boost::bind(pysignalCb, _1, m)));
-      continue;
-    }
-
-    //store a pointer on PySignal class
-    static boost::python::object asignal = qi::py::makePySignal("(i)").attr("__class__");
-    if (PyObject_IsInstance(m.ptr(), asignal.ptr())) {
-      qiLogDebug() << "Adding signal:" << key;
-      //TODO: register the signal, and get the it to link it to the python one.
-      int sig = gob.xAdvertiseEvent(key + "::(i)");
-      //TODO: make py.trigger call cpp.trigger
-      //TODO: make cpp.callback call py.trigger
-      continue;
-    }
-
-    //TODO: check for Property
-    static boost::python::object aproperty = qi::py::makePyProperty("(i)").attr("__class__");
-    if (PyObject_IsInstance(m.ptr(), aproperty.ptr())) {
-      qiLogDebug() << "Adding property:" << key;
-      continue;
-    }
-
-  }
-  //this is a useless callback, needed to keep a ref on obj.
-  //when the GO is destructed, the ref is released.
-  return gob.object(boost::bind<void>(&doNothing, _1, obj));
-}
-
-
 
 qi::GenericValuePtr GenericValue_from_PyObject(PyObject* val)
 {
@@ -373,7 +275,7 @@ qi::GenericValuePtr GenericValue_from_PyObject(PyObject* val)
   }
   else if (PyInstance_Check(val))
   {
-    res = qi::GenericValueRef(makeQiObjectPtr(boost::python::object(boost::python::borrowed(val)))).clone();
+    res = qi::GenericValueRef(qi::py::makeQiObjectPtr(boost::python::object(boost::python::borrowed(val)))).clone();
   }
   else
   {
