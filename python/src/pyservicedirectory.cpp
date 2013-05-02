@@ -25,17 +25,18 @@ namespace qi {
           return boost::python::object(toPyFuture(ServiceDirectory::listen(url)));
         else {
           qi::Future<void> fut = ServiceDirectory::listen(url);
+          //TODO: unlock GIL here?
           fut.value(); //throw on error
           return boost::python::object();
         }
       }
 
       //override because python do not know qi::Url
-      std::vector<std::string> endpoints() const {
-        std::vector<std::string> ret;
+      boost::python::list endpoints() const {
+        boost::python::list ret;
         std::vector<qi::Url>     eps = ServiceDirectory::endpoints();
         for (unsigned int i = 0; i < eps.size(); ++i) {
-          ret.push_back(eps.at(i).str());
+          ret.append(eps.at(i).str());
         }
         return ret;
       }
