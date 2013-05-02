@@ -48,4 +48,4 @@ def _shrinker(self, *args, **kwargs):
 
 Signal.__call__ = _shrinker
 
-__all__ = [ "Application", "Session", "Promise", "Future", "FutureState", "FutureTimeout", "Signal", "Property", "ServiceDirectory" ]
+__all__ = [ "Application", "Promise", "Future", "FutureState", "FutureTimeout", "Session", "Signal", "Property", "ServiceDirectory" ]
