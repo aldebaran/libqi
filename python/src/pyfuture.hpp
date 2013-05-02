@@ -30,6 +30,23 @@ namespace qi {
       void add_callback(boost::python::object callable);
     };
 
+
+    //convert from Future to PyFuture
+    template <typename T>
+    PyFuture toPyFuture(qi::Future<T> fut) {
+      qi::Promise<qi::GenericValue> gprom;
+      qi::adaptFuture(fut, gprom);
+      return gprom.future();
+    }
+
+    //convert from FutureSync to PyFuture
+    template <typename T>
+    PyFuture toPyFuture(qi::FutureSync<T> fut) {
+      qi::Promise<qi::GenericValue> gprom;
+      qi::adaptFuture(fut.async(), gprom);
+      return gprom.future();
+    }
+
     boost::python::object makeFuture(qi::Future<qi::GenericValuePtr> fut);
     void export_pyfuture();
 

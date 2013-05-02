@@ -17,25 +17,6 @@ qiLogCategory("qi.py");
 
 namespace qi { namespace py {
 
-    template <typename T>
-    PyFuture toPyFuture(qi::Future<T> fut) {
-      qi::Promise<qi::GenericValue> gprom;
-      qi::adaptFuture(fut, gprom);
-      return gprom.future();
-    }
-
-    template <typename T>
-    PyFuture toPyFuture(qi::FutureSync<T> fut) {
-      qi::Promise<qi::GenericValue> gprom;
-      qi::adaptFuture(fut.async(), gprom);
-      return gprom.future();
-    }
-
-
-    void addMethod(qi::GenericObjectBuilder& gob, boost::python::object meth) {
-
-    }
-
 
     class PySession {
     public:
