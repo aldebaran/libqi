@@ -41,11 +41,11 @@ if sys.platform.startswith("linux"):
 
 #######
 
-from _qi import Application, Future, FutureState, FutureTimeout, Promise, Session, Signal, Property
+from _qi import Application, Future, FutureState, FutureTimeout, Promise, Session, Signal, Property, ServiceDirectory
 
 def _shrinker(self, *args, **kwargs):
     self.trigger(args, kwargs)
 
 Signal.__call__ = _shrinker
 
-__all__ = [ "Application", "Session", "Promise", "Future", "FutureState", "FutureTimeout", "Signal", "Property" ]
+__all__ = [ "Application", "Session", "Promise", "Future", "FutureState", "FutureTimeout", "Signal", "Property", "ServiceDirectory" ]
