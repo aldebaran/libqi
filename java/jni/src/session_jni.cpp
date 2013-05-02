@@ -53,7 +53,7 @@ jboolean Java_com_aldebaran_qimessaging_Session_qiSessionConnect(JNIEnv *env, jo
   return true;
 }
 
-void Java_com_aldebaran_qimessaging_Session_qiSessionClose(jlong pSession)
+void Java_com_aldebaran_qimessaging_Session_qiSessionClose(JNIEnv* QI_UNUSED(env), jobject QI_UNUSED(obj), jlong pSession)
 {
   qi_session_close(reinterpret_cast<qi_session_t *>(pSession));
 }

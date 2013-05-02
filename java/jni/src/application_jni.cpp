@@ -7,6 +7,9 @@
 */
 
 #include <cstring>
+
+#include <qi/log.hpp>
+#include <qi/application.hpp>
 #include <qimessaging/c/application_c.h>
 #include "application_jni.hpp"
 
@@ -21,7 +24,7 @@ jlong Java_com_aldebaran_qimessaging_Application_qiApplicationCreate()
   ::strcpy(argv[0], "java");
 
   // Call qi_application_create
-  jlong ret = (jlong) qi_application_create(&argc, argv);
+  jlong ret = (jlong) new qi::Application(argc, argv);
 
   delete[] argv[0];
   delete[] argv;
@@ -30,10 +33,22 @@ jlong Java_com_aldebaran_qimessaging_Application_qiApplicationCreate()
 
 void Java_com_aldebaran_qimessaging_Application_qiApplicationDestroy(jlong pApplication)
 {
-  qi_application_destroy(reinterpret_cast<qi_application_t *>(pApplication));
+  qi::Application* app = reinterpret_cast<qi::Application *>(pApplication);
+
+  delete app;
 }
 
 void Java_com_aldebaran_qimessaging_Application_qiApplicationRun(jlong pApplication)
 {
-  qi_application_run(reinterpret_cast<qi_application_t *>(pApplication));
+  qi::Application* app = reinterpret_cast<qi::Application *>(pApplication);
+
+  app->run();
+}
+
+void Java_com_aldebaran_qimessaging_Application_qiApplicationStop(jlong pApplication)
+{
+  qi::Application* app = reinterpret_cast<qi::Application *>(pApplication);
+
+  qiLogInfo("qimessaging.jni") << "Stopping qi::Application...";
+  app->stop();
 }

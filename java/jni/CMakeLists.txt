@@ -20,6 +20,8 @@ set(SOURCE
    jni/map_jni.hpp
    jni/enumeration_jni.hpp
    jni/list_jni.hpp
+   jni/future_jni.hpp
+   jni/futurehandler.hpp
 
    src/session_jni.cpp
    src/application_jni.cpp
@@ -31,6 +33,8 @@ set(SOURCE
    src/map_jni.cpp
    src/enumeration_jni.cpp
    src/list_jni.cpp
+   src/future_jni.cpp
+   src/futurehandler.cpp
    )
 
 # Compile qimessaging java compatibility layer using jni

@@ -38,6 +38,25 @@
     </parent>-->
 
     <build>
+      <resources> <!-- Package native libraries as resources -->
+        <resource>
+          <filtering>false</filtering>
+          <directory>${basedir}/jni/</directory>
+          <includes>
+            <include>libqi.so</include>
+            <include>libqitype.so</include>
+            <include>libqimessaging.so</include>
+            <include>libqimessagingjni.so</include>
+          </includes>
+        </resource>
+        <resource>
+          <filtering>false</filtering>
+          <directory>${basedir}/src/main/java</directory>
+          <includes>
+            <include>**/*.java</include>
+          </includes>
+        </resource>
+      </resources>
       <plugins>
         <plugin> <!-- Handle native-qimessaging : Unpack libraries -->
           <groupId>org.apache.maven.plugins</groupId>

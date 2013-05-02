@@ -1,0 +1,127 @@
+package com.aldebaran.qimessaging;
+
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
+/**
+ * @author proullon
+ *
+ * @param <T>
+ */
+public class Future <T> implements java.util.concurrent.Future<T> {
+
+  // Loading QiMessaging JNI layer
+  static
+  {
+    if (!EmbeddedTools.LOADED_EMBEDDED_LIBRARY)
+    {
+      EmbeddedTools loader = new EmbeddedTools();
+      loader.loadEmbeddedLibraries();
+    }
+  }
+
+  // Members
+  private long  _fut;
+
+  // Native C API object functions
+  private static native boolean qiFutureCallCancel(long pFuture);
+  private static native Object  qiFutureCallGet(long pFuture);
+  private static native Object  qiFutureCallGetWithTimeout(long pFuture, int timeout);
+  private static native boolean qiFutureCallIsCancelled(long pFuture);
+  private static native boolean qiFutureCallIsDone(long pFuture);
+  private static native boolean qiFutureCallConnect(long pFuture, Object callback, String className, Object[] args);
+
+  private Future()
+  {
+
+  }
+
+  Future(long pFuture)
+  {
+    _fut = pFuture;
+  }
+
+  /**
+   * Callbacks to future can be set.
+   * @param callback com.aldebaran.qimessaging.Callback implementation
+   * @return
+   */
+  public boolean addCallback(Callback<?> callback, Object ... args)
+  {
+    String className = callback.getClass().toString();
+    className = className.substring(6); // Remove "class "
+    className = className.replace('.', '/');
+
+    return qiFutureCallConnect(_fut, callback, className, args);
+  }
+
+  @Override
+  public boolean cancel(boolean mayInterruptIfRunning)
+  {
+
+    return qiFutureCallCancel(_fut);
+  }
+
+  @SuppressWarnings("unchecked")
+  @Override
+  public T get() throws InterruptedException, ExecutionException
+  {
+
+    Object ret = null;
+
+    try
+    {
+      ret = Future.qiFutureCallGet(_fut);
+    } catch (Exception e)
+    {
+      throw new ExecutionException(e.getCause());
+    }
+
+    if (isCancelled())
+      throw new InterruptedException();
+
+    return (T) ret;
+  }
+
+  @SuppressWarnings("unchecked")
+  @Override
+  public T get(long timeout, TimeUnit unit) throws InterruptedException,
+  ExecutionException, TimeoutException
+  {
+
+    Object ret = null;
+    int timeoutms = (int) unit.toMillis(timeout);
+
+    try
+    {
+      ret = Future.qiFutureCallGetWithTimeout(_fut, timeoutms);
+    } catch (Exception e)
+    {
+      throw new ExecutionException(e.getCause());
+    }
+
+    if (ret == null)
+      throw new TimeoutException();
+
+    return (T) ret;
+  }
+
+  @Override
+  public boolean isCancelled() {
+    return Future.qiFutureCallIsCancelled(_fut);
+  }
+
+  @Override
+  public boolean isDone() {
+    return Future.qiFutureCallIsDone(_fut);
+  }
+
+  public boolean isValid() {
+    if (_fut == 0)
+      return false;
+
+    return true;
+  }
+
+}

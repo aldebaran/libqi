@@ -31,6 +31,7 @@ public class GenericObject
   private static native long   qiObjectBuilderGetObject(long pObjectBuilder);
   private static native void   qiObjectDestroy(long pObject);
   private static native Object qiObjectCall(long pObject, String method, Object[] args);
+  private static native long   qiObjectAsyncCall(long pObject, String method, Object[] args);
   private static native long   qiObjectRegisterMethod(long pObjectBuilder, String method, Object instance, String className);
   private static native long   qiObjectAdvertiseEvent(long pObjectBuilder, String eventSignature);
   private static native long   qiObjectEmitEvent(long pObjectBuilder, String name, Object[] args);
@@ -78,6 +79,38 @@ public class GenericObject
     if (ret == null)
       throw new CallError("Return value is null.");
     return (T) ret;
+  }
+
+  /**
+   *
+   * @param method
+   * @param parameter
+   * @return Future<T> (implements java.concurent.util.Future)
+   * @throws CallError On call failure.
+   */
+  public <T> Future<T> asyncCall(String method, Object ... args) throws CallError
+  {
+    com.aldebaran.qimessaging.Future<T> ret = null;
+
+    if (_obj == 0 && _ob == 0)
+      throw new CallError();
+
+    if (_obj == 0)
+      _obj = GenericObject.qiObjectBuilderGetObject(_ob);
+
+    try
+    {
+      ret = new com.aldebaran.qimessaging.Future<T>(GenericObject.qiObjectAsyncCall(_obj, method, args));
+    } catch (Exception e)
+    {
+      // Catch generic exceptions from C++ code and rethrow a CallError
+      throw new CallError(e.getMessage());
+    }
+
+    if (ret.isValid() == false)
+      throw new CallError("Future is null.");
+
+    return ret;
   }
 
   /**

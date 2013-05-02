@@ -21,7 +21,6 @@ public class Session
   private static native void    qiSessionClose(long pSession);
   private static native long    qiSessionService(long pSession, String name);
   private static native boolean qiSessionRegisterService(long pSession, long pObject, String name);
-  private static native long    PocAndroidConnection(long pSession, String url);
 
   // Members
   private long _session;
@@ -43,11 +42,6 @@ public class Session
       return false;
 
     return Session.qiSessionIsConnected(_session);
-  }
-
-  public long    test(String url) throws Exception
-  {
-    return Session.PocAndroidConnection(_session, url);
   }
 
   public void connect(String sdAddr) throws Exception

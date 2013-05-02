@@ -33,7 +33,8 @@ void    Java_com_aldebaran_qimessaging_GenericObject_qiObjectDestroy(JNIEnv *env
   qi_object_destroy(reinterpret_cast<qi_object_t*>(pObject));
 }
 
-static jobject qi_generic_call_java(JNIEnv *env, qi::ObjectPtr object, const std::string& strMethodName, jobjectArray listParams)
+static qi::Future<qi::GenericValuePtr>* async_call_java
+(JNIEnv *env, qi::ObjectPtr object, const std::string& strMethodName, jobjectArray listParams)
 {
   qi::GenericFunctionParameters params;
   std::string signature;
@@ -43,31 +44,62 @@ static jobject qi_generic_call_java(JNIEnv *env, qi::ObjectPtr object, const std
   size = env->GetArrayLength(listParams);
   while (i < size)
   {
-    jobject current = env->GetObjectArrayElement(listParams, i);
-    qi::GenericValuePtr val = qi::GenericValuePtr(current).clone();
+    jobject current = env->NewGlobalRef(env->GetObjectArrayElement(listParams, i));
+    qi::GenericValuePtr val = qi::GenericValueRef(current).clone();
     params.push_back(val);
     signature += val.signature(true);
     i++;
   }
 
-  qi::Future<qi::GenericValuePtr> fut;
+  qi::Future<qi::GenericValuePtr> *fut = new qi::Future<qi::GenericValuePtr>();
   try {
-    fut = object->metaCall(strMethodName + "::(" + signature + ")", params);
-  } catch (std::bad_alloc &e)
-  {
-    throwJavaError(env, e.what());
-    return 0;
+    *fut = object->metaCall(strMethodName + "::(" + signature + ")", params);
   } catch (std::runtime_error &e)
   {
     throwJavaError(env, e.what());
     return 0;
   }
 
-  qi::Promise<jobject> out;
-  if (fut.hasError())
+  return fut;
+}
+
+jlong   Java_com_aldebaran_qimessaging_GenericObject_qiObjectAsyncCall
+(JNIEnv *env, jobject QI_UNUSED(jobj), jlong pObject, jstring jmethod, jobjectArray args)
+{
+  qi::ObjectPtr obj = *(reinterpret_cast<qi::ObjectPtr *>(pObject));
+  std::string  method;
+
+  // Init JVM singleton and attach current thread to JVM
+  JVM(env);
+  JVM()->AttachCurrentThread((envPtr) &env, (void*) 0);
+
+  if (!obj)
   {
-    out.setError(fut.error());
-    throwJavaError(env, out.future().error().c_str());
+    qiLogError("qimessaging.java") << "Given object not valid.";
+    throwJavaError(env, "Given object is not valid.");
+    return 0;
+  }
+
+  // Get method name and parameters C style.
+  method = toStdString(env, jmethod);
+  qi::Future<qi::GenericValuePtr> *fut = async_call_java(env, obj, method, args);
+  return (jlong) fut;
+}
+
+static jobject qi_generic_call_java(JNIEnv *env, qi::ObjectPtr object, const std::string& strMethodName, jobjectArray listParams)
+{
+  qi::Future<qi::GenericValuePtr> *fut = async_call_java(env, object, strMethodName, listParams);
+
+  if(fut == 0)
+  {
+    throwJavaError(env, "Future value not inialized");
+    return 0;
+  }
+
+  fut->wait();
+  if (fut->hasError())
+  {
+    throwJavaError(env, fut->error().c_str());
     return 0;
   }
 
@@ -77,7 +109,7 @@ static jobject qi_generic_call_java(JNIEnv *env, qi::ObjectPtr object, const std
 }
 
 jobject Java_com_aldebaran_qimessaging_GenericObject_qiObjectCall
-(JNIEnv *env, jobject jobj, jlong pObject, jstring jmethod, jobjectArray args)
+(JNIEnv *env, jobject QI_UNUSED(jobj), jlong pObject, jstring jmethod, jobjectArray args)
 {
   qi::ObjectPtr obj = *(reinterpret_cast<qi::ObjectPtr *>(pObject));
   std::string  method;

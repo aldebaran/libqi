@@ -115,6 +115,13 @@
           <include>libqimessagingjni.so</include>
         </includes>
       </resource>
+      <resource>
+        <filtering>false</filtering>
+        <directory>${basedir}/src/main/java</directory>
+        <includes>
+          <include>**/*.java</include>
+        </includes>
+      </resource>
     </resources>
     <plugins>
       <plugin> <!-- Plug Ecplise on project -->

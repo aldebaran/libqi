@@ -19,6 +19,20 @@ public class ReplyService implements QimessagingService
     return str.concat("bim !");
   }
 
+  public String longReply(String str)
+  {
+    System.out.println("Sleeping 2s...");
+
+    try {
+      Thread.sleep(2000);
+    } catch (InterruptedException e) {
+      System.out.println("Cannot sleep anymore : " + e.getMessage());
+    }
+
+    System.out.println("Replying : " + str + "bim !");
+    return str.concat("bim !");
+  }
+
   public Integer answer(Integer val)
   {
     System.out.println("Replying : " + (val + 1));

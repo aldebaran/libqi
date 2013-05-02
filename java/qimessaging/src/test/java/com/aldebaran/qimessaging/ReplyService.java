@@ -5,9 +5,11 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Map;
 
-public class ReplyService implements QimessagingService {
+public class ReplyService implements QimessagingService
+{
 
-  public String reply(String s) {
+  public String reply(String s)
+  {
     String reply = new String();
 
     reply = s;
@@ -16,7 +18,24 @@ public class ReplyService implements QimessagingService {
     return reply;
   }
 
-  public String answer() {
+  public String longReply(String str)
+  {
+    System.out.println("Sleeping 2s...");
+
+    try
+    {
+      Thread.sleep(2000);
+    } catch (InterruptedException e)
+    {
+      System.out.println("Cannot sleep anymore : " + e.getMessage());
+    }
+
+    System.out.println("Replying : " + str + "bim !");
+    return str.concat("bim !");
+  }
+
+  public String answer()
+  {
     return "42 !";
   }
 
@@ -50,7 +69,8 @@ public class ReplyService implements QimessagingService {
     Map<Integer, Boolean> ret = new Hashtable<Integer, Boolean>();
 
     System.out.println("abacus : Received args : " + map);
-    try {
+    try
+    {
       for( Iterator<Integer> ii = map.keySet().iterator(); ii.hasNext();)
       {
         Integer key = (Integer) ii.next();
@@ -74,7 +94,8 @@ public class ReplyService implements QimessagingService {
 
   public ArrayList<Float> echoFloatList(ArrayList<Float> l)
   {
-    try {
+    try
+    {
       System.out.println("Received args : " + l);
       for (Iterator<Float> it = l.iterator(); it.hasNext();)
       {
