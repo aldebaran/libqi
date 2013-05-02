@@ -17,17 +17,18 @@
 namespace qi {
   namespace py {
 
+    //all blocking function are wrapped here to unlock the GIL while blocking.
     class PyFuture : public qi::Future<qi::GenericValue> {
     public:
       PyFuture();
       PyFuture(const PyFuture& fut);
       PyFuture(const qi::Future<qi::GenericValue>& fut);
       boost::python::object value(int msecs = qi::FutureTimeout_Infinite) const;
-      //Future::error return a const ref...
-      //I'am lazy I dont want to tweak boost.py call policies!
-      //so here is the overridden version returning a simple string
       std::string error(int msecs = qi::FutureTimeout_Infinite) const;
       void add_callback(boost::python::object callable);
+      FutureState wait(int msecs) const;
+      bool        hasError(int msecs) const;
+      bool        hasValue(int msecs) const;
     };
 
 

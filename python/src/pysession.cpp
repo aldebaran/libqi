@@ -34,7 +34,10 @@ namespace qi { namespace py {
           return boost::python::object(toPyFuture(_ses->connect(url)));
         else {
           qi::Future<void> fut = _ses->connect(url);
-          fut.value(); //throw on error
+          {
+            GILScopedUnlock _unlock;
+            fut.value(); //throw on error
+          }
           return boost::python::object();
         }
       }
@@ -45,7 +48,10 @@ namespace qi { namespace py {
           return boost::python::object(toPyFuture(_ses->close()));
         else {
           qi::Future<void> fut = _ses->close();
-          fut.value(); //throw on error
+          {
+            GILScopedUnlock _unlock;
+            fut.value(); //throw on error
+          }
           return boost::python::object();
         }
       }
@@ -55,7 +61,11 @@ namespace qi { namespace py {
           return boost::python::object(toPyFuture(_ses->service(name)));
         else {
           qi::Future<qi::ObjectPtr>  fut = _ses->service(name);
-          qi::ObjectPtr obj = fut.value(); //throw on error.
+          qi::ObjectPtr obj;
+          {
+            GILScopedUnlock _unlock;
+            obj = fut.value(); //throw on error.
+          }
           qi::GenericValueRef r(obj);
           return r.to<boost::python::object>(); //throw on error
         }
@@ -66,7 +76,11 @@ namespace qi { namespace py {
           return boost::python::object(toPyFuture(_ses->services()));
         else {
           qi::Future< std::vector<ServiceInfo> >  fut = _ses->services();
-          std::vector<ServiceInfo> si = fut.value(); //throw on error.
+          std::vector<ServiceInfo> si;
+          {
+            GILScopedUnlock _unlock;
+            si = fut.value(); //throw on error.
+          }
           qi::GenericValueRef r(si);
           return r.to<boost::python::object>(); //throw on error
         }
@@ -76,6 +90,10 @@ namespace qi { namespace py {
         qi::Future<unsigned int> fut = _ses->registerService(name, qi::GenericValueRef(obj).toObject());
         if (_async)
           return boost::python::object(toPyFuture(fut));
+        {
+          GILScopedUnlock _unlock;
+          fut.value();
+        }
         return boost::python::object(fut.value()); //throw on error
       }
 

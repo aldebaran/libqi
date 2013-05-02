@@ -10,7 +10,7 @@
 #include <qimessaging/servicedirectory.hpp>
 #include <boost/python.hpp>
 #include "pyfuture.hpp"
-
+#include "gil.hpp"
 qiLogCategory("qimpy");
 
 namespace qi {
@@ -25,8 +25,10 @@ namespace qi {
           return boost::python::object(toPyFuture(ServiceDirectory::listen(url)));
         else {
           qi::Future<void> fut = ServiceDirectory::listen(url);
-          //TODO: unlock GIL here?
-          fut.value(); //throw on error
+          {
+            GILScopedUnlock _unlock;
+            fut.value(); //throw on error
+          }
           return boost::python::object();
         }
       }

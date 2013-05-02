@@ -33,12 +33,32 @@ namespace qi {
     {}
 
     boost::python::object PyFuture::value(int msecs) const {
-      qi::GenericValue gv = qi::Future<qi::GenericValue>::value(msecs);
+      qi::GenericValue gv;
+      {
+        GILScopedUnlock _unlock;
+        gv = qi::Future<qi::GenericValue>::value(msecs);
+      }
       return gv.to<boost::python::object>();
     }
 
     std::string PyFuture::error(int msecs) const {
+      GILScopedUnlock _unlock;
       return qi::Future<qi::GenericValue>::error(msecs);
+    }
+
+    FutureState PyFuture::wait(int msecs) const {
+      GILScopedUnlock _unlock;
+      return qi::Future<qi::GenericValue>::wait(msecs);
+    }
+
+    bool PyFuture::hasError(int msecs) const{
+      GILScopedUnlock _unlock;
+      return qi::Future<qi::GenericValue>::hasError(msecs);
+    }
+
+    bool PyFuture::hasValue(int msecs) const {
+      GILScopedUnlock _unlock;
+      return qi::Future<qi::GenericValue>::hasValue(msecs);
     }
 
     void PyFuture::add_callback(boost::python::object callable) {
@@ -59,7 +79,10 @@ namespace qi {
       void setValue(const boost::python::object &pyval) {
         //TODO: remove the useless copy here.
         qi::GenericValue gvr = qi::GenericValue::from(pyval);
-        qi::Promise<qi::GenericValue>::setValue(gvr);
+        {
+          GILScopedUnlock _unlock;
+          qi::Promise<qi::GenericValue>::setValue(gvr);
+        }
       }
 
       PyFuture future() {
