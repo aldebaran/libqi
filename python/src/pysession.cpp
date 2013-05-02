@@ -55,7 +55,9 @@ namespace qi { namespace py {
           return boost::python::object(toPyFuture(_ses->service(name)));
         else {
           qi::Future<qi::ObjectPtr>  fut = _ses->service(name);
-          return boost::python::object(fut.value()); //throw on error
+          qi::ObjectPtr obj = fut.value(); //throw on error.
+          qi::GenericValueRef r(obj);
+          return r.to<boost::python::object>(); //throw on error
         }
       }
 
