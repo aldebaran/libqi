@@ -25,6 +25,9 @@
   typedef void** envPtr;
 #endif
 
+// Define JNI minimum version used by qimessaging bindings
+#define QI_JNI_MIN_VERSION JNI_VERSION_1_6
+
 std::string   toStdString(JNIEnv *env, jstring inputString);
 jstring       toJavaString(JNIEnv *env, const std::string &inputString);
 qi_message_t* toQiMessage(JNIEnv *env, jobject obj, qi_message_t *m = 0);

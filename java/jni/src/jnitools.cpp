@@ -196,7 +196,7 @@ jobject       loadJavaObject(const std::string& denomination)
 {
   JNIEnv* env;
 
-  JVM()->GetEnv((void **) &env, JNI_VERSION_1_6);
+  JVM()->GetEnv((void **) &env, QI_JNI_MIN_VERSION);
 
   jclass cls = env->FindClass(denomination.c_str());
   jmethodID mid = env->GetMethodID(cls, "init","()V");

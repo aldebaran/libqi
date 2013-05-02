@@ -13,7 +13,7 @@
 
 JNIEnumeration::JNIEnumeration(jobject obj)
 {
-  JVM()->GetEnv((void**) &_env, JNI_VERSION_1_6);
+  JVM()->GetEnv((void**) &_env, QI_JNI_MIN_VERSION);
   _obj = obj;
   _cls = _env->FindClass("java/util/Enumeration");
 }

@@ -13,7 +13,7 @@
 
 JNIList::JNIList()
 {
-  JVM()->GetEnv((void**) &_env, JNI_VERSION_1_6);
+  JVM()->GetEnv((void**) &_env, QI_JNI_MIN_VERSION);
  _cls = _env->FindClass("java/util/ArrayList");
 
  jmethodID mid = _env->GetMethodID(_cls, "<init>", "()V");
@@ -28,7 +28,7 @@ JNIList::JNIList()
 
 JNIList::JNIList(jobject obj)
 {
-  JVM()->GetEnv((void**) &_env, JNI_VERSION_1_6);
+  JVM()->GetEnv((void**) &_env, QI_JNI_MIN_VERSION);
  _obj = obj;
  _cls = _env->FindClass("java/util/ArrayList");
 }

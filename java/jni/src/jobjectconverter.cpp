@@ -24,7 +24,7 @@ using namespace qi;
 struct toJObject
 {
     toJObject(jobject *result)
-      : result(result), jni_version(JNI_VERSION_1_6)
+      : result(result), jni_version(QI_JNI_MIN_VERSION)
     {
       if (JVM()->GetEnv((void **) &env, jni_version) != JNI_OK)
         qiLogFatal("qimessaging.jni") << "Cannot initialize Java environment.";
@@ -252,7 +252,7 @@ qi::GenericValuePtr GenericValue_from_JObject_List(jobject val)
   std::vector<qi::GenericValue>& res = *new std::vector<qi::GenericValue>();
   int size = 0;
 
-  JVM()->GetEnv((void **) &env, JNI_VERSION_1_6);
+  JVM()->GetEnv((void **) &env, QI_JNI_MIN_VERSION);
 
   size = list.size();
   res.reserve(size);
@@ -273,7 +273,7 @@ qi::GenericValuePtr GenericValue_from_JObject_Map(jobject hashtable)
   JNIHashTable ht(hashtable);
   jobject key, value;
 
-  JVM()->GetEnv((void **) &env, JNI_VERSION_1_6);
+  JVM()->GetEnv((void **) &env, QI_JNI_MIN_VERSION);
 
   JNIEnumeration keys = ht.keys();
   while (keys.hasNextElement())
@@ -318,7 +318,7 @@ std::pair<qi::GenericValuePtr, bool> GenericValue_from_JObject(jobject val)
   if (JVM()->AttachCurrentThread((envPtr) &env, (void *) 0) != JNI_OK)
     throw std::runtime_error("Cannot attach current thread to JVM for conversion.");
 
-  if (JVM()->GetEnv((void **) &env, JNI_VERSION_1_6) != JNI_OK)
+  if (JVM()->GetEnv((void **) &env, QI_JNI_MIN_VERSION) != JNI_OK)
     throw std::runtime_error("No JNIEnvironment available for conversion.");
 
   jclass stringClass = env->FindClass("java/lang/String");
@@ -461,7 +461,7 @@ class JObjectType: public qi::TypeDynamic
       JObject_from_GenericValue(src, target);
 
       JNIEnv *env;
-      JVM()->GetEnv((void **) &env, JNI_VERSION_1_6);
+      JVM()->GetEnv((void **) &env, QI_JNI_MIN_VERSION);
       JVM()->AttachCurrentThread((envPtr) &env, (void *) 0);
       env->NewGlobalRef(*target);
 
