@@ -18,6 +18,7 @@ namespace qi
     MetaProperty() {}
     const std::string& name() const { return _name;}
     const std::string& signature() const { return _signature;}
+    std::string toString() const { return _name + "::" + _signature; }
     unsigned int uid() const { return _uid;}
 
   private:

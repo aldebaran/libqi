@@ -485,7 +485,7 @@ namespace qi {
       {
         stream << "  " << std::right << std::setfill('0') << std::setw(3) << it->second.uid() << std::setw(0) << " "
         << std::left << std::setfill(' ') << std::setw(offset) << "" << std::setw(0)
-               << " " << it->second.name() << ' ' << it->second.signature() << std::endl;
+        << " " << it->second.toString() << std::endl;
       }
     }
   }
