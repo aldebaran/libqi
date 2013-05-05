@@ -21,8 +21,8 @@ qiLogCategory("qimessaging.object");
 
 
 static qi::GenericValuePtr c_call(const std::string &complete_sig,
-		                          qi_object_method_t func,
-			                      void* data,
+                                          qi_object_method_t func,
+                                              void* data,
                                   const qi::GenericFunctionParameters& params)
 {
   //TODO: move to register
@@ -171,7 +171,17 @@ int          qi_object_builder_register_method(qi_object_builder_t *object_build
 int          qi_object_builder_register_event(qi_object_builder_t *object_builder, const char *complete_signature)
 {
   qi::GenericObjectBuilder  *ob = reinterpret_cast<qi::GenericObjectBuilder *>(object_builder);
-  return ob->xAdvertiseEvent(complete_signature);
+  std::vector<std::string>  sigInfo;
+  sigInfo = qi::signatureSplit(complete_signature);
+  return ob->xAdvertiseEvent(sigInfo[1], sigInfo[2]);
+}
+
+int          qi_object_builder_register_property(qi_object_builder_t *object_builder, const char *complete_signature)
+{
+  qi::GenericObjectBuilder  *ob = reinterpret_cast<qi::GenericObjectBuilder *>(object_builder);
+  std::vector<std::string>  sigInfo;
+  sigInfo = qi::signatureSplit(complete_signature);
+  return ob->xAdvertiseProperty(sigInfo[1], sigInfo[2]);
 }
 
 qi_object_t*         qi_object_builder_get_object(qi_object_builder_t *object_builder) {
