@@ -46,8 +46,7 @@ namespace qi {
     if (_p->type) {
       qiLogWarning()
           << "ObjectTypeBuilder: Called xAdvertiseMethod with method '"
-          << builder.metaMethod().sigreturn() << " "
-          << builder.metaMethod().signature()
+          << builder.metaMethod().toString()
           << "' but type is already created.";
     }
     int nextId = _p->metaObject._p->addMethod(builder, id);

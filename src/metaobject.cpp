@@ -113,12 +113,11 @@ namespace qi {
     boost::recursive_mutex::scoped_lock sl(_methodsMutex);
     unsigned int id;
     qi::MetaMethod method = builder.metaMethod();
-    NameToIdx::iterator it = _methodsNameToIdx.find(method.signature());
+    NameToIdx::iterator it = _methodsNameToIdx.find(method.toString());
     if (it != _methodsNameToIdx.end()) {
       qiLogWarning()
           << "Method("<< it->second << ") already defined (and reused): "
-          << method.sigreturn() << " "
-          << method.signature();
+          << method.toString();
       return 0;
     }
     if (-1 < uid)
@@ -128,7 +127,7 @@ namespace qi {
 
     builder.setUid(id);
     _methods[id] = builder.metaMethod();
-    _methodsNameToIdx[method.signature()] = id;
+    _methodsNameToIdx[method.toString()] = id;
     // qiLogDebug() << "Adding method("<< id << "): " << sigret << " " << signature;
     return id;
   }
@@ -182,7 +181,7 @@ namespace qi {
       if (jt != _methods.end())
         return false;
       _methods[newUid] = qi::MetaMethod(newUid, it->second);
-      _methodsNameToIdx[it->second.signature()] = newUid;
+      _methodsNameToIdx[it->second.toString()] = newUid;
     }
     //todo: update uid
     return true;
@@ -231,7 +230,7 @@ namespace qi {
       for (MetaObject::MethodMap::iterator i = _methods.begin();
         i != _methods.end(); ++i)
       {
-        _methodsNameToIdx[i->second.signature()] = i->second.uid();
+        _methodsNameToIdx[i->second.toString()] = i->second.uid();
         idx = std::max(idx, i->second.uid());
       }
     }
@@ -440,7 +439,7 @@ namespace qi {
       qi::MetaObject::MethodMap::const_iterator it;
       int max = 0;
       for (it = mmaps.begin(); it != mmaps.end(); ++it) {
-        int cur = it->second.sigreturn().size();
+        int cur = it->second.toString().size();
         if (cur > max)
           max = cur;
       }
@@ -459,7 +458,7 @@ namespace qi {
       for (itMM = methods.begin(); itMM != methods.end(); ++itMM) {
         stream << "  " << std::right << std::setfill('0') << std::setw(3)
                << itMM->second.uid() << std::setw(0) << " " << std::left
-               << itMM->second.sigreturn() << " " << itMM->second.signature() << std::endl;
+               << itMM->second.toString() << std::endl;
 
         if (itMM->second.description() != "")
           stream << "    documentation: " << itMM->second.description() << std::endl;

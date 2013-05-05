@@ -50,9 +50,9 @@ namespace qi {
 
     unsigned int uid() const;
     std::string name() const;
-    std::string parametersSignature() const;
-    std::string signature() const; //< name::(args)
-    std::string sigreturn() const;
+    std::string toString() const; //< name::(args)
+    const std::string& parametersSignature() const;
+    const std::string& returnSignature() const;
     std::string description() const;
     MetaMethodParameterVector parameters() const;
     std::string returnDescription() const;

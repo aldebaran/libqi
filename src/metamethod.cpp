@@ -45,15 +45,15 @@ namespace qi {
     return this->_p->name;
   }
 
-  std::string MetaMethod::parametersSignature() const {
+  const std::string& MetaMethod::parametersSignature() const {
     return this->_p->parametersSignature;
   }
 
-  std::string MetaMethod::signature() const {
+  std::string MetaMethod::toString() const {
     return this->_p->name + "::" + this->_p->parametersSignature;
   }
 
-  std::string MetaMethod::sigreturn() const {
+  const std::string& MetaMethod::returnSignature() const {
     return this->_p->sigreturn;
   }
 

@@ -97,7 +97,7 @@ namespace qi
     if (_p->_objptr) {
       qiLogWarning()
           << "GenericObjectBuilder: Called xAdvertiseMethod with method '"
-          << builder.metaMethod().signature()
+          << builder.metaMethod().toString()
           << "' but object is already created.";
     }
 

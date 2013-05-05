@@ -457,7 +457,7 @@ TEST(TestObject, SerializeComplex)
   qi::GenericObjectBuilder ob;
   unsigned id = ob.advertiseMethod("echo", &echoBack);
   qi::ObjectPtr obj(ob.object());
-  std::cerr << obj->metaObject().methodMap()[id].signature() << std::endl;
+  std::cerr << obj->metaObject().methodMap()[id].toString() << std::endl;
   Complex res = obj->call<Complex>("echo", comp);
   ASSERT_EQ(res, comp);
 }

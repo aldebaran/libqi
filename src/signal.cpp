@@ -327,7 +327,7 @@ namespace qi {
         goto proceed;
       }
       else
-        subArity = Signature(qi::signatureSplit(ms->signature())[2]).size();
+        subArity = Signature(ms->parametersSignature()).size();
     }
     if (sigArity != subArity)
     {

@@ -168,7 +168,7 @@ namespace qi {
        << "  Candidate(s):" << std::endl;
     for (it = candidates.begin(); it != candidates.end(); ++it) {
       const qi::MetaMethod       &mm = it->first;
-      ss << "  " << mm.signature() << " (" << it->second << ')' << std::endl;
+      ss << "  " << mm.toString() << " (" << it->second << ')' << std::endl;
     }
     if (logError)
       qiLogError() << ss.str();
