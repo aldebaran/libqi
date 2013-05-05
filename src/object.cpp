@@ -255,7 +255,7 @@ namespace qi {
       std::vector<MetaSignal>::const_iterator it;
 
       for (it = mml.begin(); it != mml.end(); ++it) {
-        ss << "  " << it->signature() << std::endl;
+        ss << "  " << it->toString() << std::endl;
       }
       qiLogError() << ss.str();
       return false;
@@ -280,7 +280,7 @@ namespace qi {
       Signature sargs(signatureSplit(signature)[2]);
       for (unsigned i = 0; i < mml.size(); ++i)
       {
-        Signature s(signatureSplit(mml[i].signature())[2]);
+        Signature s(mml[i].parametersSignature());
         qiLogDebug() << "Checking compatibility " << s.toString() << ' '
          << sargs.toString();
          // Order is reversed from method call check.
@@ -288,7 +288,7 @@ namespace qi {
         {
           qiLogVerbose()
               << "Signature mismatch, but found compatible type "
-              << mml[i].signature() <<" for " << signature;
+              << mml[i].toString() <<" for " << signature;
           eventId = mml[i].uid();
           break;
         }
@@ -303,7 +303,7 @@ namespace qi {
       std::vector<MetaSignal>::const_iterator it;
 
       for (it = mml.begin(); it != mml.end(); ++it) {
-        ss << "  " << it->signature() << std::endl;
+        ss << "  " << it->toString() << std::endl;
       }
       qiLogError() << ss.str();
       return qi::makeFutureError<Link>(ss.str());

@@ -67,7 +67,7 @@ namespace qi
     MetaSignal* sig = meta.signal(id);
     if (sig)
     {
-      SignalBase* sb = new SignalBase(qi::signatureSplit(sig->signature())[2]);
+      SignalBase* sb = new SignalBase(sig->parametersSignature());
       signalMap[id] = sb;
       return sb;
     }

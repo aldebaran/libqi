@@ -98,14 +98,12 @@ namespace qi {
   std::vector<MetaSignal> MetaObjectPrivate::findSignal(const std::string &name)
   {
     boost::recursive_mutex::scoped_lock sl(_eventsMutex);
-    std::vector<MetaSignal>           ret;
+    std::vector<MetaSignal>         ret;
     MetaObject::SignalMap::iterator it;
-    std::string cname(name);
-    cname += "::";
 
     for (it = _events.begin(); it != _events.end(); ++it) {
       MetaSignal &mm = it->second;
-      if (boost::starts_with(mm.signature(), cname))
+      if (mm.name() == name)
         ret.push_back(mm);
     }
     return ret;
@@ -135,21 +133,23 @@ namespace qi {
     return id;
   }
 
-  int MetaObjectPrivate::addSignal(const std::string &sig, int uid) {
+  int MetaObjectPrivate::addSignal(const std::string &name, const std::string &signature, int uid) {
     boost::recursive_mutex::scoped_lock sl(_eventsMutex);
     unsigned int id;
-    NameToIdx::iterator it = _eventsNameToIdx.find(sig);
+    std::string namesig = name + "::" + signature;
+    NameToIdx::iterator it = _eventsNameToIdx.find(namesig);
     if (it != _eventsNameToIdx.end()) {
-      qiLogWarning() << "Signal("<< it->second << ") already defined (and reused): " << sig;
+      MetaSignal &ms = _events[it->second];
+      qiLogWarning() << "Signal("<< it->second << ") already defined (and reused): " << ms.toString() << "instead of requested: " << namesig;
       return 0;
     }
     if (uid >= 0)
       id = uid;
     else
       id = ++_index;
-    MetaSignal ms(id, sig);
+    MetaSignal ms(id, name, signature);
     _events[id] = ms;
-    _eventsNameToIdx[sig] = id;
+    _eventsNameToIdx[namesig] = id;
     // qiLogDebug() << "Adding signal("<< id << "): " << sig;
     return id;
   }
@@ -198,8 +198,8 @@ namespace qi {
       MetaObject::SignalMap::iterator jt = _events.find(newUid);
       if (jt != _events.end())
         return false;
-      _events[newUid] = qi::MetaSignal(newUid, it->second.signature());
-      _eventsNameToIdx[it->second.signature()] = newUid;
+      _events[newUid] = qi::MetaSignal(newUid, it->second.name(), it->second.parametersSignature());
+      _eventsNameToIdx[it->second.toString()] = newUid;
     }
     //todo: update uid
     return true;
@@ -241,7 +241,7 @@ namespace qi {
       for (MetaObject::SignalMap::iterator i = _events.begin();
         i != _events.end(); ++i)
       {
-        _eventsNameToIdx[i->second.signature()] = i->second.uid();
+        _eventsNameToIdx[i->second.toString()] = i->second.uid();
         idx = std::max(idx, i->second.uid());
       }
     }
@@ -415,8 +415,8 @@ namespace qi {
     return _p->metaObject._p->addMethod(builder, id);
   }
 
-  unsigned int MetaObjectBuilder::addSignal(const std::string &sig, int id) {
-    return _p->metaObject._p->addSignal(sig, id);
+  unsigned int MetaObjectBuilder::addSignal(const std::string &name, const std::string &sig, int id) {
+    return _p->metaObject._p->addSignal(name, sig, id);
   }
 
   unsigned int MetaObjectBuilder::addProperty(const std::string& name, const std::string& sig, int id)
@@ -481,7 +481,7 @@ namespace qi {
       {
         stream << "  " << std::right << std::setfill('0') << std::setw(3) << it3->second.uid() << std::setw(0) << " "
                << std::left << std::setfill(' ') << std::setw(offset) << "" << std::setw(0)
-               << " " << it3->second.signature() << std::endl;
+               << " " << it3->second.toString() << std::endl;
       }
       stream <<"properties:" << std::endl;
       qi::MetaObject::PropertyMap props = mobj.propertyMap();

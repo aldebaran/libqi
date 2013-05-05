@@ -57,13 +57,13 @@ namespace qi {
     return nextId;
   }
 
-  int ObjectTypeBuilderBase::xAdvertiseEvent(const std::string& signature, SignalMemberGetter getter, int id)
+  int ObjectTypeBuilderBase::xAdvertiseEvent(const std::string &name, const std::string& signature, SignalMemberGetter getter, int id)
   {
     if (_p->type) {
       qiLogWarning() << "ObjectTypeBuilder: Called xAdvertiseEvent with event '"
                      << signature << "' but type is already created.";
     }
-    int nextId = _p->metaObject._p->addSignal(signature, id);
+    int nextId = _p->metaObject._p->addSignal(name, signature, id);
     if (nextId < 0)
       return -1;
     _p->data.signalGetterMap[nextId] = getter;

@@ -60,7 +60,7 @@ namespace qi {
 
   template <typename T> unsigned int GenericObjectBuilder::advertiseEvent(const std::string& name)
   {
-    return xAdvertiseEvent(name + "::" + detail::FunctionSignature<T>::signature());
+    return xAdvertiseEvent(name, detail::FunctionSignature<T>::signature());
   }
 
   template <typename T> unsigned int GenericObjectBuilder::advertiseProperty(const std::string& name)

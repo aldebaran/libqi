@@ -46,8 +46,8 @@ namespace qi {
       return idFromName(_eventsNameToIdx, name);
     }
 
-    //if you want to use thoose methods thinks twice...
-    //they are only useful to merge too metaobject and I bet
+    //if you want to use those methods think twice...
+    //they are only useful to merge two metaobjects and I bet
     //you really dont want to do that.
     bool addMethods(const MetaObject::MethodMap &mms);
     bool addSignals(const MetaObject::SignalMap &mms);
@@ -60,7 +60,7 @@ namespace qi {
 
     int addMethod(MetaMethodBuilder& builder, int uid = -1);
 
-    int addSignal(const std::string &sig, int id = -1);
+    int addSignal(const std::string &name, const std::string &signature, int id = -1);
 
     int addProperty(const std::string& name, const std::string& sig, int id = -1);
 
@@ -77,10 +77,12 @@ namespace qi {
      * When a member is added, serialization and deserialization
      * operators _MUST_ be updated.
      */
+    //name::sig() -> Index
     NameToIdx                           _methodsNameToIdx;
     MetaObject::MethodMap               _methods;
     mutable boost::recursive_mutex      _methodsMutex;
 
+    //name::sig() -> Index
     NameToIdx                           _eventsNameToIdx;
     MetaObject::SignalMap               _events;
     mutable boost::recursive_mutex      _eventsMutex;

@@ -127,7 +127,7 @@ namespace qi {
   {
     // FIXME validate type
     SignalMemberGetter fun = boost::bind(&signalAccess<C, T>, signalAccessor, _1);
-    return xAdvertiseEvent(eventName + "::" + detail::FunctionSignature<T>::signature(), fun, id);
+    return xAdvertiseEvent(eventName, detail::FunctionSignature<T>::signature(), fun, id);
   }
 
   template <typename C, typename T>
@@ -136,7 +136,7 @@ namespace qi {
     // FIXME validate type
     SignalMemberGetter fun = boost::bind(&signalFromInstanceProperty<C, T>, accessor, _1);
     // advertise the event
-    unsigned int id = xAdvertiseEvent(name + "::" + detail::FunctionSignature<void(const T&)>::signature(), fun);
+    unsigned int id = xAdvertiseEvent(name, detail::FunctionSignature<void(const T&)>::signature(), fun);
 
     PropertyMemberGetter pg = boost::bind(&propertyAccess<C, T>, accessor, _1);
     return xAdvertiseProperty(name, typeOf<T>()->signature(), pg, id);
