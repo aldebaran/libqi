@@ -187,7 +187,9 @@ namespace qi
   std::string GenericFunction::sigreturn() const
   {
     // Detect if returned type is a qi::Future and return underlying value type.
-    TypeTemplate* futureType = QI_TEMPLATE_TYPE_GET(resultType(), Future);
+    TypeTemplate* ft1 = QI_TEMPLATE_TYPE_GET(resultType(), Future);
+    TypeTemplate* ft2 = QI_TEMPLATE_TYPE_GET(resultType(), FutureSync);
+    TypeTemplate* futureType = ft1 ? ft1 : ft2;
     if (futureType)
       return futureType->templateArgument()->signature();
     else

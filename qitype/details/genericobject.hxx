@@ -13,7 +13,8 @@
 #include <qitype/details/typeimpl.hxx>
 #include <qitype/objecttypebuilder.hpp>
 
-QI_REGISTER_TEMPLATE_OBJECT(qi::Future, connect, _connect, isFinished, value, wait, isRunning, isCanceled, hasError, error);
+QI_REGISTER_TEMPLATE_OBJECT(qi::Future    , connect, _connect, isFinished, value, wait, isRunning, isCanceled, hasError, error);
+QI_REGISTER_TEMPLATE_OBJECT(qi::FutureSync, connect, _connect, isFinished, value, wait, isRunning, isCanceled, hasError, error, async);
 
 namespace qi {
 
@@ -23,7 +24,9 @@ namespace qi {
     template <typename T>
     void futureAdapterGeneric(GenericValuePtr val, qi::Promise<T> promise)
     {
-      TypeTemplate* futureType = QI_TEMPLATE_TYPE_GET(val.type, Future);
+      TypeTemplate* ft1 = QI_TEMPLATE_TYPE_GET(val.type, Future);
+      TypeTemplate* ft2 = QI_TEMPLATE_TYPE_GET(val.type, FutureSync);
+      TypeTemplate* futureType = ft1 ? ft1 : ft2;
       ObjectType* onext = dynamic_cast<ObjectType*>(futureType->next());
       GenericObject gfut(onext, val.value);
       if (gfut.call<bool>("hasError", 0))
@@ -47,7 +50,9 @@ namespace qi {
       }
 
       GenericValuePtr val =  metaFut.value();
-      TypeTemplate* futureType = QI_TEMPLATE_TYPE_GET(val.type, Future);
+      TypeTemplate* ft1 = QI_TEMPLATE_TYPE_GET(val.type, Future);
+      TypeTemplate* ft2 = QI_TEMPLATE_TYPE_GET(val.type, FutureSync);
+      TypeTemplate* futureType = ft1 ? ft1 : ft2;
       if (futureType)
       {
         Type* next = futureType->next();
@@ -311,5 +316,5 @@ namespace qi {
   }
 }
 
-QI_TYPE_STRUCT(qi::MethodStatistics, cumulatedTime , minTime, maxTime, count);
+QI_TYPE_STRUCT(qi::MethodStatistics, cumulatedTime, minTime, maxTime, count);
 #endif  // _QITYPE_DETAILS_GENERICOBJECT_HXX_
