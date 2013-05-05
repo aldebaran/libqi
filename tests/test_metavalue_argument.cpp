@@ -43,7 +43,7 @@ public:
   TestObject()
   {
     qi::GenericObjectBuilder ob;
-    ob.advertiseEvent<void (*)(const int&)>("fire");
+    ob.advertiseSignal<void (*)(const int&)>("fire");
     ob.advertiseMethod("value", &value);
     ob.advertiseMethod("value", &valueList);
     ob.advertiseMethod("valueAsync", &value, "", qi::MetaCallType_Queued);

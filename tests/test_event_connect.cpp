@@ -26,7 +26,7 @@ void onFire2(const int& pl)
 void testDelete(bool afirst, bool disconnectFirst)
 {
   qi::GenericObjectBuilder oba, obb;
-  qi::Link fireId = oba.advertiseEvent<void (*)(int)>("fire");
+  qi::Link fireId = oba.advertiseSignal<void (*)(int)>("fire");
   qi::Link onFireId = obb.advertiseMethod("onFire", &onFire);
   qi::Link onFireId2 = obb.advertiseMethod("onFire2", &onFire2);
   qi::ObjectPtr *a = new qi::ObjectPtr(oba.object());
@@ -37,13 +37,13 @@ void testDelete(bool afirst, bool disconnectFirst)
   //EXPECT_EQ(static_cast<unsigned int>(2), subs.size());
   // Subs ordering is unspecified
   //EXPECT_EQ(subs[0].method + subs[1].method, onFireId + onFireId2);
-  (*a)->emitEvent("fire", 12);
+  (*a)->post("fire", 12);
   EXPECT_EQ(12, lastPayload);
   EXPECT_EQ(12, lastPayload2);
   if (disconnectFirst)
   {
     (*a)->disconnect(linkId);
-    (*a)->emitEvent("fire", 13);
+    (*a)->post("fire", 13);
     EXPECT_EQ(12, lastPayload);
     EXPECT_EQ(13, lastPayload2);
   }
@@ -55,7 +55,7 @@ void testDelete(bool afirst, bool disconnectFirst)
   else
   {
     delete b;
-    (*a)->emitEvent("fire", 12);
+    (*a)->post("fire", 12);
     delete a;
   }
   ++completed;

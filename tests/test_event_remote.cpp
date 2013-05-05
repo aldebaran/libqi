@@ -31,7 +31,7 @@ public:
   TestObject()
   {
     qi::GenericObjectBuilder ob;
-    ob.advertiseEvent<void (*)(const int&)>("fire");
+    ob.advertiseSignal<void (*)(const int&)>("fire");
     oserver = ob.object();
   }
 
@@ -69,7 +69,7 @@ TEST_F(TestObject, Simple)
 {
   qi::Link linkId = oclient->connect("fire", &onFire);
   EXPECT_LT((unsigned) 0, linkId);
-  oserver->emitEvent("fire", 42);
+  oserver->post("fire", 42);
   ASSERT_TRUE(payload->future().hasValue(2000));
   EXPECT_EQ(42, payload->future().value());
 }
@@ -79,7 +79,7 @@ TEST_F(TestObject, RemoteEmit)
 {
   qi::Link linkId = oclient->connect("fire", &onFire);
   EXPECT_LT((unsigned) 0, linkId);
-  oclient->emitEvent("fire", 43);
+  oclient->post("fire", 43);
   ASSERT_TRUE(payload->future().hasValue(2000));
   EXPECT_EQ(43, payload->future().value());
 }
@@ -96,13 +96,13 @@ TEST_F(TestObject, CoDeco)
     qiLogDebug() << "connected with " << linkId;
     int exp;
     EXPECT_GE(linkId, (unsigned) 0);
-    oserver->emitEvent("fire", (int)(50 + i));
+    oserver->post("fire", (int)(50 + i));
     ASSERT_TRUE(payload->future().hasValue(2000));
     exp = 50 + i;
     EXPECT_EQ(exp, payload->future().value());
 
     payload->reset();
-    oserver->emitEvent("fire", (int)(51 + i));
+    oserver->post("fire", (int)(51 + i));
     ASSERT_TRUE(payload->future().hasValue(2000));
     exp = 51 + i;
     EXPECT_EQ(exp, payload->future().value());
@@ -110,7 +110,7 @@ TEST_F(TestObject, CoDeco)
     oclient->disconnect(linkId).wait();
 
     payload->reset();
-    oserver->emitEvent("fire", (int)(50 + i));
+    oserver->post("fire", (int)(50 + i));
     EXPECT_ANY_THROW(payload->future().hasValue(200));
   }
 }

@@ -655,7 +655,7 @@ TEST(TestCall, TestObjectPassing)
   {
     qi::GenericObjectBuilder ob;
     ob.advertiseMethod("add", &addOne);
-    ob.advertiseEvent<void(int)>("fire");
+    ob.advertiseSignal<void(int)>("fire");
     unregisteredObj = ob.object();
   }
   // Transmit unregisteredObj through the network.
@@ -664,7 +664,7 @@ TEST(TestCall, TestObjectPassing)
   ASSERT_TRUE(!v.hasError());
   ASSERT_EQ(2, v.value());
   proxy->call<void>("bindObjectEvent", unregisteredObj, "fire").wait();
-  unregisteredObj->emitEvent("fire", 42);
+  unregisteredObj->post("fire", 42);
   eventValue.future().wait(); //fixme wait(2s)
   ASSERT_TRUE(eventValue.future().isFinished());
   ASSERT_EQ(42, eventValue.future().value());
@@ -678,13 +678,13 @@ TEST(TestCall, TestObjectPassing)
   if (p.client() == p.server())
     return; // test makes no sense in direct mode
   // This will delete the proxy
-  unregisteredObj->emitEvent("fire", 0);
+  unregisteredObj->post("fire", 0);
   eventValue.future().wait();
   ASSERT_TRUE(eventValue.future().isFinished());
   ASSERT_EQ(0, eventValue.future().value());
   eventValue.reset();
   ASSERT_TRUE(!eventValue.future().isFinished());
-  unregisteredObj->emitEvent("fire", 1);
+  unregisteredObj->post("fire", 1);
   eventValue.future().wait(1000);
   ASSERT_TRUE(!eventValue.future().isFinished());
 
@@ -697,7 +697,7 @@ TEST(TestCall, TestObjectPassingReverse)
 { // Test server->client object passing (through emit)
   TestSessionPair p;
   qi::GenericObjectBuilder ob;
-  ob.advertiseEvent<void (qi::ObjectPtr ptr, const std::string& fname, int arg)>("makeObjectCallEvent");
+  ob.advertiseSignal<void (qi::ObjectPtr ptr, const std::string& fname, int arg)>("makeObjectCallEvent");
 
   qi::ObjectPtr obj(ob.object());
 
@@ -708,7 +708,7 @@ TEST(TestCall, TestObjectPassingReverse)
   {
     qi::GenericObjectBuilder ob;
     ob.advertiseMethod("add", &addOne);
-    ob.advertiseEvent<void(int)>("fire");
+    ob.advertiseSignal<void(int)>("fire");
     unregisteredObj = ob.object();
   }
 
@@ -716,7 +716,7 @@ TEST(TestCall, TestObjectPassingReverse)
   // We connect a method client-side
   proxy->connect("makeObjectCallEvent", boost::bind(&onMakeObjectCall, _1, _2, _3, value)).wait();
   // And emit server-side, this is the reverse of a method call
-  obj->emitEvent("makeObjectCallEvent", unregisteredObj, "add", 41);
+  obj->post("makeObjectCallEvent", unregisteredObj, "add", 41);
   /* This is what happens:
   - ob sends EVENT(makeObjectCall, unregisterObb, "add", 41) to obproxy
   - obProxy receives EVENT(makeObjetCall, unregisteredObProxy, "add", 41)
@@ -738,7 +738,7 @@ qi::ObjectPtr makeAdder(qi::ObjectWeakPtr& weak)
 {
   qi::GenericObjectBuilder ob;
   ob.advertiseMethod("add", &addOne);
-  ob.advertiseEvent<void(int)>("fire");
+  ob.advertiseSignal<void(int)>("fire");
   qi::ObjectPtr res = ob.object();
   qiLogDebug() << "unregistered object is " << res.get();
   weak = res;

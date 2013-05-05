@@ -104,7 +104,7 @@ public class ReplyService implements QimessagingService
   {
     System.out.println("Fire event triggered (" + val + ")");
 
-    _obj.emitEvent("fire", val);
+    _obj.post("fire", val);
   }
 
 }

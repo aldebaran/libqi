@@ -158,7 +158,7 @@ int main(int argc, char *argv[])
       ob.advertiseMethod("replyMap", &replyMap);
       ob.advertiseMethod("replyMap2", &replyMap2);
       ob.advertiseMethod<qi::GenericValue (const qi::GenericValue&)>("reply", &reply);
-      ob.advertiseEvent<void (const std::string&)>("testEvent");
+      ob.advertiseSignal<void (const std::string&)>("testEvent");
       ob.advertiseMethod<bool (unsigned int)>("slip", &slip);
       qi::ObjectPtr obj(ob.object());
 
@@ -193,7 +193,7 @@ int main(int argc, char *argv[])
       while (true) {
         std::stringstream ss;
         ss << "miam" << i++;
-        obj->emitEvent("testEvent", ss.str());
+        obj->post("testEvent", ss.str());
         ss.str(std::string());
         qi::os::sleep(1);
       }

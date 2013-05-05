@@ -173,7 +173,7 @@ int          qi_object_builder_register_event(qi_object_builder_t *object_builde
   qi::GenericObjectBuilder  *ob = reinterpret_cast<qi::GenericObjectBuilder *>(object_builder);
   std::vector<std::string>  sigInfo;
   sigInfo = qi::signatureSplit(complete_signature);
-  return ob->xAdvertiseEvent(sigInfo[1], sigInfo[2]);
+  return ob->xAdvertiseSignal(sigInfo[1], sigInfo[2]);
 }
 
 int          qi_object_builder_register_property(qi_object_builder_t *object_builder, const char *complete_signature)

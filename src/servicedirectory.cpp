@@ -72,9 +72,9 @@ namespace qi
       assert(id == qi::Message::ServiceDirectoryAction_ServiceReady);
       id = ob->advertiseMethod("updateServiceInfo", &ServiceDirectoryBoundObject::updateServiceInfo);
       assert(id == qi::Message::ServiceDirectoryAction_UpdateServiceInfo);
-      id = ob->advertiseEvent("serviceAdded", &ServiceDirectoryBoundObject::serviceAdded);
+      id = ob->advertiseSignal("serviceAdded", &ServiceDirectoryBoundObject::serviceAdded);
       assert(id == qi::Message::ServiceDirectoryAction_ServiceAdded);
-      id = ob->advertiseEvent("serviceRemoved", &ServiceDirectoryBoundObject::serviceRemoved);
+      id = ob->advertiseSignal("serviceRemoved", &ServiceDirectoryBoundObject::serviceRemoved);
       assert(id == qi::Message::ServiceDirectoryAction_ServiceRemoved);
     }
     return ob->object(self);

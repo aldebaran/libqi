@@ -42,7 +42,7 @@ void advertise_event(int iteration) //test  event advertising.
   for(int i = 0; i < iteration; i++)
   {
     eventName << i;
-    myObjectPointerBuilder.advertiseEvent<void (int)>(eventName.str());
+    myObjectPointerBuilder.advertiseSignal<void (int)>(eventName.str());
     eventName.str(std::string());
   }
 }
@@ -59,7 +59,7 @@ void advertise_method(int iteration)// test method advertising.
 void connect_event(int iteration)//test event connection perf.
 {
   qi::GenericObjectBuilder myObjectPointerBuilder;
-  qi::Link eventId = myObjectPointerBuilder.advertiseEvent<void (int)>("testEvent");
+  qi::Link eventId = myObjectPointerBuilder.advertiseSignal<void (int)>("testEvent");
   qi::Link callbackID = myObjectPointerBuilder.advertiseMethod("callback", &callback);
   qi::ObjectPtr myObjectPointer = myObjectPointerBuilder.object();
   qi::Link myLinkId;
@@ -74,13 +74,13 @@ void connect_event(int iteration)//test event connection perf.
 void emit_event_without_session(int iteration)//test emit-event perf without session.
 {
   qi::ObjectTypeBuilder<Service> obt;
-  obt.advertiseEvent("ping", &Service::ping);
+  obt.advertiseSignal("ping", &Service::ping);
 
   qi::ObjectPtr myObjectPointer = qi::ObjectPtr(new qi::GenericObject(obt.type(), new Service));
 
   for (int i = 1; i < iteration; i++)
   {
-    myObjectPointer->emitEvent("ping");
+    myObjectPointer->post("ping");
   }
 }
 
@@ -100,7 +100,7 @@ void emit_event(int iteration, const T &param)//test int emit-event perf.
   TestSessionPair  p;
 
   qi::GenericObjectBuilder myObjectPointerBuilder;
-  myObjectPointerBuilder.advertiseEvent<void (T)>("testEvent");
+  myObjectPointerBuilder.advertiseSignal<void (T)>("testEvent");
   qi::ObjectPtr myObjectPointer = myObjectPointerBuilder.object();
 
   if(!p.server()->registerService("service", myObjectPointer).wait())
@@ -110,7 +110,7 @@ void emit_event(int iteration, const T &param)//test int emit-event perf.
 
   for (int i = 1; i < iteration; i++)
   {
-    myObjectPointer->emitEvent("testEvent", param);
+    myObjectPointer->post("testEvent", param);
   }
 }
 
@@ -119,7 +119,7 @@ void emit_event(int iteration)//test emit empty events.
   TestSessionPair  p;
 
   qi::ObjectTypeBuilder<Service> obt;
-  obt.advertiseEvent("ping", &Service::ping);
+  obt.advertiseSignal("ping", &Service::ping);
   qi::ObjectPtr myObjectPointer = qi::ObjectPtr(new qi::GenericObject(obt.type(), new Service));
 
   if(!p.server()->registerService("service", myObjectPointer).wait())
@@ -129,21 +129,21 @@ void emit_event(int iteration)//test emit empty events.
 
   for (int i = 1; i < iteration; i++)
   {
-    myObjectPointer->emitEvent("ping");
+    myObjectPointer->post("ping");
   }
 }
 
 void test_callback()  //test callbacks performances without session
 {
   qi::ObjectTypeBuilder<Service> obt; //advertising Event
-  obt.advertiseEvent("ping", &Service::ping);
+  obt.advertiseSignal("ping", &Service::ping);
 
   qi::ObjectPtr myObjectPointer = qi::ObjectPtr(new qi::GenericObject(obt.type(), new Service));
 
   myObjectPointer->connect("ping", &cb); //connecting event to callback
   for (int i=0; i < iteration; i++) //Emiting Events
   {
-    myObjectPointer->emitEvent("ping");
+    myObjectPointer->post("ping");
   }
   while(*callbackValue < iteration)//waiting callbacks
   {
@@ -158,7 +158,7 @@ void test_callback_session(qi::DataPerfSuite &out ,std::string testname) //testi
   qi::ObjectPtr oclient;
 
   qi::ObjectTypeBuilder<Service> obt;  //building service2
-  obt.advertiseEvent("ping", &Service::ping);
+  obt.advertiseSignal("ping", &Service::ping);
   qi::ObjectPtr oserver = qi::ObjectPtr(new qi::GenericObject(obt.type(), new Service));
   if(!p.server()->registerService("service", oserver).wait())
   {
@@ -171,7 +171,7 @@ void test_callback_session(qi::DataPerfSuite &out ,std::string testname) //testi
 
   for (int i=0; i < iteration; i++) //Emiting Events
   {
-    oclient->emitEvent("ping");
+    oclient->post("ping");
   }
 
   while (*callbackValue < iteration) //waiting callbacks.

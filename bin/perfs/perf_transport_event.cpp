@@ -159,7 +159,7 @@ int main_client(std::string QI_UNUSED(str))
 
     for (int j = 0; j < gLoopCount; ++j)
     {
-      obj->emitEvent("New event");
+      obj->post("New event");
     }
   }
   return 0;
