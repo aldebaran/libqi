@@ -185,7 +185,7 @@ namespace qi {
     else if (msg.type() == qi::Message::Type_Post) {
       const qi::MetaSignal *ms = obj->metaObject().signal(funcId);
       if (ms)
-        sigparam = signatureSplit(ms->signature())[2];
+        sigparam = ms->parametersSignature();
       else {
         const qi::MetaMethod *mm = obj->metaObject().method(funcId);
         if (mm)

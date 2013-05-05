@@ -132,8 +132,8 @@ PyObject* GOtoPyO(const char *name, qi::GenericObject obj)
   qi::MetaObject::MethodMap::iterator it;
   for (it = mm.begin(); it != mm.end(); ++it) {
     qi::MetaMethod &mem = it->second;
-    std::vector<std::string> vs = qi::signatureSplit(mem.signature());
-    qiLogInfo() << "adding method:" << mem.signature();
+    std::vector<std::string> vs = qi::signatureSplit(mem.parametersSignature());
+    qiLogInfo() << "adding method:" << mem.parametersSignature();
 
     //TODO: this leak
     //TODO: store in a capsule with a dtor
@@ -143,7 +143,7 @@ PyObject* GOtoPyO(const char *name, qi::GenericObject obj)
     methd->ml_flags = METH_VARARGS | METH_KEYWORDS;
     methd->ml_doc = mem.description().c_str();
 
-    PyObject* methName = PyString_FromString(mem.signature().c_str());
+    PyObject* methName = PyString_FromString(mem.parametersSignature().c_str());
     //we reuse the same parent class type: we just dont care about it.
     PyObject* claInst = PyInstance_New(pyclass, 0, 0);
     PyObject_SetAttrString(claInst, "__method_name", methName);

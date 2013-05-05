@@ -153,7 +153,7 @@ namespace qi {
           // Trust MetaObject.
           //std::string sig = sb->signature();
           const MetaSignal* ms  = _self->metaObject().signal(msg.event());
-          std::string sig = signatureSplit(ms->signature())[2];
+          std::string sig = ms->parametersSignature();
 
           // Remove top-level tuple
           //sig = sig.substr(1, sig.length()-2);
@@ -209,7 +209,7 @@ namespace qi {
            return;
         }
         try {
-          qi::GenericValuePtr val = msg.value(mm->sigreturn(), _socket);
+          qi::GenericValuePtr val = msg.value(mm->returnSignature(), _socket);
           promise.setValue(val);
         } catch (std::runtime_error &err) {
           promise.setError(err.what());
@@ -303,7 +303,7 @@ namespace qi {
       std::stringstream ss;
       if (meth) {
         ss << "Network error while sending data to method: '";
-        ss << meth->signature();;
+        ss << meth->toString();;
         ss << "'.";
       } else {
         ss << "Network error while sending data an unknown method (id=" << method << ").";
