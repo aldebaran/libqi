@@ -47,14 +47,10 @@ namespace qi {
     boost::recursive_mutex::scoped_lock sl(_methodsMutex);
     std::vector<qi::MetaMethod>         ret;
     MetaObject::MethodMap::iterator     it;
-    std::string                         cname(name);
-
-    if (cname.find("::", 0, 2) == std::string::npos)
-      cname += "::";
 
     for (it = _methods.begin(); it != _methods.end(); ++it) {
       qi::MetaMethod &mm = it->second;
-      if (boost::starts_with(mm.signature(), cname))
+      if (mm.name() == name)
         ret.push_back(mm);
     }
     return ret;
