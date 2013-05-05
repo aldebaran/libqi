@@ -639,6 +639,13 @@ qi::Future<int> delaySet(unsigned long msDelay, int value)
   return p.future();
 }
 
+qi::FutureSync<int> delaySetSync(unsigned long msDelay, int value)
+{
+  qi::Promise<int> p;
+  boost::thread(_delaySet, p, msDelay, value);
+  return p.future();
+}
+
 TEST(TestObject, Future)
 {
   qi::GenericObjectBuilder gob;
@@ -649,6 +656,22 @@ TEST(TestObject, Future)
   f.wait();
   ASSERT_EQ(41, f.value());
   f =  obj->call<int>("delaySet", 500, -1);
+  ASSERT_TRUE(!f.isFinished());
+  f.wait();
+  ASSERT_TRUE(f.hasError());
+  std::cerr << "ERR " << f.error() << std::endl;
+}
+
+TEST(TestObject, FutureSync)
+{
+  qi::GenericObjectBuilder gob;
+  gob.advertiseMethod("delaySetSync", &delaySetSync);
+  qi::ObjectPtr obj = gob.object();
+  qi::Future<int> f = obj->call<int>("delaySetSync", 500, 41);
+  ASSERT_TRUE(!f.isFinished());
+  f.wait();
+  ASSERT_EQ(41, f.value());
+  f =  obj->call<int>("delaySetSync", 500, -1);
   ASSERT_TRUE(!f.isFinished());
   f.wait();
   ASSERT_TRUE(f.hasError());
