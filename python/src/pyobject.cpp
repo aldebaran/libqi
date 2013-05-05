@@ -68,10 +68,9 @@ namespace qi { namespace py {
         //drop special methods
         if (mem.uid() < qiObjectSpecialMethodMaxUid)
           continue;
-        std::vector<std::string> vs = qi::signatureSplit(mem.signature());
-        qiLogDebug() << "adding method:" << mem.signature();
-        boost::python::object fun = boost::python::raw_function(PyQiFunctor(vs[1].c_str(), obj));
-        boost::python::api::setattr(pyobj, vs[1].c_str(), fun);// result
+        qiLogDebug() << "adding method:" << mem.toString();
+        boost::python::object fun = boost::python::raw_function(PyQiFunctor(mem.name().c_str(), obj));
+        boost::python::api::setattr(pyobj, mem.name().c_str(), fun);
       }
     }
 
@@ -83,10 +82,9 @@ namespace qi { namespace py {
         //drop special methods
         if (ms.uid() < qiObjectSpecialMethodMaxUid)
           continue;
-        std::vector<std::string> vs = qi::signatureSplit(ms.signature());
-        qiLogDebug() << "adding signal:" << ms.signature();
-        boost::python::object fun = qi::py::makePySignal(ms.signature());
-        boost::python::api::setattr(pyobj, vs[1].c_str(), fun);
+        qiLogDebug() << "adding signal:" << ms.toString();
+        boost::python::object fun = qi::py::makePySignal(ms.parametersSignature());
+        boost::python::api::setattr(pyobj, ms.name(), fun);
       }
     }
 
@@ -98,10 +96,9 @@ namespace qi { namespace py {
         //drop special methods
         if (mp.uid() < qiObjectSpecialMethodMaxUid)
           continue;
-        std::vector<std::string> vs = qi::signatureSplit(mp.signature());
-        qiLogDebug() << "adding property:" << mp.signature();
+        qiLogDebug() << "adding property:" << mp.toString();
         boost::python::object fun = qi::py::makePyProperty(mp.signature());
-        boost::python::api::setattr(pyobj, vs[1].c_str(), fun);
+        boost::python::api::setattr(pyobj, mp.name().c_str(), fun);
       }
     }
 
@@ -203,7 +200,7 @@ namespace qi { namespace py {
         if (PyObject_IsInstance(m.ptr(), asignal.ptr())) {
           qiLogDebug() << "Adding signal:" << key;
           //TODO: register the signal, and get the it to link it to the python one.
-          int sig = gob.xAdvertiseEvent(key + "::(i)");
+          int sig = gob.xAdvertiseEvent(key, "(i)");
           //TODO: make py.trigger call cpp.trigger
           //TODO: make cpp.callback call py.trigger
           continue;
