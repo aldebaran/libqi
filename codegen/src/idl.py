@@ -501,9 +501,22 @@ QI_REGISTER_PROXY(@className@Proxy);
       out_ret = 'qi::FutureSync<' + cret + ' >'
     if arg_names:
       arg_names = ', ' + arg_names # comma used in call
+    # Handle ObjectPtr in argument
+    # If a function takes a FooProxyPtr, it actualy accepts AnyPtr with Any
+    # a compatible object.
+    # But we have no parent class to let C++ typecheck.
+    # We could make this method a template, but let's rather take a
+    # AutoGenericValuePtr.
+    typed_args = ''
+    argIdx = 0
+    for arg in method[1]:
+      if arg.find("Ptr") != -1:
+        typed_args += '::qi::AutoGenericValuePtr p' + str(argIdx)
+      else:
+        typed_args += idltype_to_cxxtype(arg) + ' p' + str(argIdx)
+      typed_args += ', '
+      argIdx = argIdx + 1
     # Add a final optional argument 'MetaCallType calltype=auto'
-    if typed_args:
-      typed_args = typed_args + ', '
     typed_args = typed_args + '::qi::MetaCallType callType = ::qi::MetaCallType_Auto'
     #NOTE: should we return the future?
     method_impls += '  ' + out_ret + " " + method_name + "(" + typed_args + ") {\n    "
