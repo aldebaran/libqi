@@ -482,9 +482,9 @@ public:
 
 @privateDecl@
 };
-@registerProxy@
 
 QI_TYPE_PROXY(@className@Proxy);
+QI_REGISTER_PROXY(@className@Proxy);
 
 #endif //@GARD@
 """
@@ -493,10 +493,6 @@ QI_TYPE_PROXY(@className@Proxy);
   #generate methods
   (methods, signals, properties) = (data[METHODS], data[SIGNALS], data[PROPERTIES])
   method_impls = ""
-  register_proxy = ''
-  if implement_interface:
-    register_proxy = "static bool _qi_register_@className@ = qi::registerProxy<@className@Proxy>();"
-  skeleton = skeleton.replace('@registerProxy@', register_proxy)
   for method in methods:
     (cret, typed_args, arg_names) = method_to_cxx(method)
     method_name = method[0]
