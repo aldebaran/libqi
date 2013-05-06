@@ -98,7 +98,7 @@ namespace qi
          it != _impl.end();
          it++)
     {
-      boost::mutex::scoped_lock((*it)->_endpointsMutex);
+      boost::mutex::scoped_lock l((*it)->_endpointsMutex);
       r.insert(r.end(), (*it)->_endpoints.begin(), (*it)->_endpoints.end());
     }
 

@@ -104,7 +104,7 @@ namespace qi
 
     _msg = new qi::Message();
 
-    boost::mutex::scoped_lock(_closingMutex);
+    boost::mutex::scoped_lock l(_closingMutex);
 
     if (_abort)
     {
@@ -153,7 +153,7 @@ namespace qi
     {
       void* ptr = _msg->_p->buffer.reserve(payload);
 
-      boost::mutex::scoped_lock(_closingMutex);
+      boost::mutex::scoped_lock l(_closingMutex);
 
       if (_abort)
       {

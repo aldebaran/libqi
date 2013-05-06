@@ -141,7 +141,7 @@ namespace qi
     }
 
     {
-      boost::mutex::scoped_lock(_endpointsMutex);
+      boost::mutex::scoped_lock l(_endpointsMutex);
       if (_endpoints.size() != currentEndpoints.size() ||
           !std::equal(_endpoints.begin(), _endpoints.end(), currentEndpoints.begin()))
       {
@@ -201,7 +201,7 @@ namespace qi
     /* Set endpoints */
     if (listenUrl.host() != "0.0.0.0")
     {
-      boost::mutex::scoped_lock(_endpointsMutex);
+      boost::mutex::scoped_lock l(_endpointsMutex);
       _endpoints.push_back(listenUrl.str());
     }
     else
@@ -210,7 +210,7 @@ namespace qi
     }
 
     {
-      boost::mutex::scoped_lock(_endpointsMutex);
+      boost::mutex::scoped_lock l(_endpointsMutex);
       for (std::vector<qi::Url>::const_iterator it = _endpoints.begin();
            it != _endpoints.end();
            it++)
