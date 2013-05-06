@@ -1,0 +1,8 @@
+# Ignore eclipse generated files
+.classpath
+.project
+*.class
+bin/pom.xml
+
+# Ignore maven output directory
+target/
