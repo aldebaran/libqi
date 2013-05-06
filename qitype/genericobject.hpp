@@ -299,6 +299,11 @@ namespace qi {
    */
   template<typename Proxy>
   bool registerProxy();
+
+  #define QI_REGISTER_PROXY(Proxy) \
+  namespace {                      \
+    static bool BOOST_PP_CAT(_qi_register_proxy_, Proxy) = ::qi::registerProxy<Proxy>(); \
+  }
 }
 
 #define __QI_REGISTER_ELEMENT(_, name, field) \
