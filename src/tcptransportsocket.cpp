@@ -104,7 +104,7 @@ namespace qi
 
     _msg = new qi::Message();
 
-    boost::mutex::scoped_lock l(_closingMutex);
+    boost::recursive_mutex::scoped_lock l(_closingMutex);
 
     if (_abort)
     {
@@ -153,7 +153,7 @@ namespace qi
     {
       void* ptr = _msg->_p->buffer.reserve(payload);
 
-      boost::mutex::scoped_lock l(_closingMutex);
+      boost::recursive_mutex::scoped_lock l(_closingMutex);
 
       if (_abort)
       {
@@ -212,7 +212,7 @@ namespace qi
 
   void TcpTransportSocket::error(const boost::system::error_code& erc)
   {
-    boost::mutex::scoped_lock lock(_closingMutex);
+    boost::recursive_mutex::scoped_lock lock(_closingMutex);
     _abort = true;
     _status = qi::TransportSocket::Status_Disconnected;
     disconnected(erc.value());
@@ -240,7 +240,7 @@ namespace qi
 
   qi::FutureSync<void> TcpTransportSocket::connect(const qi::Url &url)
   {
-    boost::mutex::scoped_lock l(_closingMutex);
+    boost::recursive_mutex::scoped_lock l(_closingMutex);
 
     if (_status == qi::TransportSocket::Status_Connected || _connecting)
     {
@@ -313,7 +313,7 @@ namespace qi
       _sslHandshake = true;
 
       {
-        boost::mutex::scoped_lock l(_closingMutex);
+        boost::recursive_mutex::scoped_lock l(_closingMutex);
 
         if (_abort)
         {
@@ -354,7 +354,7 @@ namespace qi
         connected();
 
         {
-          boost::mutex::scoped_lock l(_closingMutex);
+          boost::recursive_mutex::scoped_lock l(_closingMutex);
 
           if (_abort)
           {
@@ -385,7 +385,7 @@ namespace qi
     // from a disconnect notification.
     if (_status != qi::TransportSocket::Status_Connected)
       return false;
-    boost::mutex::scoped_lock lockc(_closingMutex);
+    boost::recursive_mutex::scoped_lock lockc(_closingMutex);
 
     if (!_socket || _status != qi::TransportSocket::Status_Connected)
     {
@@ -430,7 +430,7 @@ namespace qi
     }
     b.push_back(buffer((const char*)buf.data() + pos, sz - pos));
 
-    boost::mutex::scoped_lock(_closingMutex);
+    boost::recursive_mutex::scoped_lock l(_closingMutex);
 
     if (_abort)
     {
