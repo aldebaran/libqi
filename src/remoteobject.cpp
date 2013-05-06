@@ -91,8 +91,12 @@ namespace qi {
     _socket = socket;
     //do not set the socket on the remote object
     if (socket) {
+      // We must hook on ALL_OBJECTS in case our objectHost gets filled, even
+      // if we are a sub-object.
+      // We have no mechanism to bounce objectHost registration
+      // to a 'parent' object.
       _linkMessageDispatcher = _socket->messagePendingConnect(_service,
-        _object <= Message::GenericObject_Main?TransportSocket::ALL_OBJECTS:_object,
+        TransportSocket::ALL_OBJECTS,
         boost::bind<void>(&RemoteObject::onMessagePending, this, _1));
       _linkDisconnected      = _socket->disconnected.connect (boost::bind<void>(&RemoteObject::onSocketDisconnected, this, _1));
     }
@@ -384,7 +388,7 @@ namespace qi {
   void RemoteObject::close() {
     if (_socket) {
       _socket->messagePendingDisconnect(_service,
-        _object <= Message::GenericObject_Main?TransportSocket::ALL_OBJECTS:_object,
+        TransportSocket::ALL_OBJECTS,
         _linkMessageDispatcher);
       _socket->disconnected.disconnect(_linkDisconnected);
     }
