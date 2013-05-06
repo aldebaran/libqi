@@ -160,6 +160,8 @@ function(qi_create_service name)
         -o ${CMAKE_CURRENT_BINARY_DIR}/${name}_proxy.hpp
     )
     list(APPEND ARG_SRC ${CMAKE_CURRENT_BINARY_DIR}/${name}_proxy.hpp)
+    set(service_includes "${service_includes},${CMAKE_CURRENT_BINARY_DIR}/${name}_proxy.hpp")
+    set(includes "${includes},${CMAKE_CURRENT_BINARY_DIR}/${name}_proxy.hpp")
   endif()
   # Generate binder
   # Build command argument from classes and modules
