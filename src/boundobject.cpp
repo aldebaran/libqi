@@ -176,7 +176,7 @@ namespace qi {
         qiLogError() << ss.str();
         qi::Promise<GenericValuePtr> prom;
         prom.setError(ss.str());
-        serverResultAdapter(prom.future(), this, socket, msg.address());
+        serverResultAdapter(prom.future(), _owner?_owner:this, socket, msg.address());
         return;
       }
       sigparam = mm->parametersSignature();
@@ -224,7 +224,7 @@ namespace qi {
         qi::Future<GenericValuePtr>  fut = obj->metaCall(funcId, mfp,
             obj==_self ? MetaCallType_Direct: _callType);
         _currentSocket.reset();
-        fut.connect(boost::bind<void>(&serverResultAdapter, _1, (ObjectHost*)this, socket, msg.address()));
+        fut.connect(boost::bind<void>(&serverResultAdapter, _1, _owner?_owner:(ObjectHost*)this, socket, msg.address()));
       }
       break;
     case Message::Type_Post: {
