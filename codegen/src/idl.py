@@ -372,7 +372,7 @@ def idl_to_raw(root):
     for m in cls.findall("method"):
       r = m.find("return").get("type")
       args = [a.get("type") for a in m.findall("argument")]
-      methods.append((m.get('name'), args, r, (m.get('annotations') or '').split(',')))
+      methods.append((m.get('name'), args, r, (m.get('annotations') or '')))
     signals = []
     for s in cls.findall("signal"):
       n = s.get('name')
@@ -383,7 +383,7 @@ def idl_to_raw(root):
       n = p.get('name')
       t = p.get('type')
       properties.append([n, t])
-    result[cls.get("name")] =  (methods, signals, properties, (cls.get("annotations") or '').split(','))
+    result[cls.get("name")] =  (methods, signals, properties, (cls.get("annotations") or ''))
   return result
 
 def raw_to_interface(class_name, data, include):
