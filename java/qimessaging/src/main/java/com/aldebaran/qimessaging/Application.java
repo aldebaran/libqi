@@ -22,16 +22,32 @@ public class Application
   // Members
   long _application;
 
+  /**
+   * Application constructor.
+   * @param args Arguments given to main() function.
+   * @since 1.20
+   */
   public Application(String[] args)
   {
     _application = Application.qiApplicationCreate();
   }
 
+  /**
+   * Stop Application eventloops and calls atStop() callbacks.
+   * @since 1.20
+   */
   public void stop()
   {
     Application.qiApplicationStop(_application);
   }
 
+  /**
+   * Blocking function. Application.run() join eventloop thread.
+   * Return when :
+   * - Eventloop is stopped.
+   * - Application.stop() is called
+   * @since 1.20
+   */
   public void run()
   {
     Application.qiApplicationRun(_application);

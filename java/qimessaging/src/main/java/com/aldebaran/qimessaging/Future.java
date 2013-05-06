@@ -45,7 +45,9 @@ public class Future <T> implements java.util.concurrent.Future<T> {
   /**
    * Callbacks to future can be set.
    * @param callback com.aldebaran.qimessaging.Callback implementation
-   * @return
+   * @param args Argument to be forwarded to callback functions.
+   * @return true on success.
+   * @since 1.20
    */
   public boolean addCallback(Callback<?> callback, Object ... args)
   {

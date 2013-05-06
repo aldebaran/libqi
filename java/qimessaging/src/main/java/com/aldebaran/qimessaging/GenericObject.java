@@ -43,7 +43,8 @@ public class GenericObject
     _ob = GenericObject.qiObjectBuilderCreate();
   }
 
-  public GenericObject(long pObj)
+  // Public only inside package
+  GenericObject(long pObj)
   {
     _obj = pObj;
     _ob = 0;
@@ -191,6 +192,13 @@ public class GenericObject
     GenericObject.qiObjectAdvertiseEvent(_ob, eventSignature);
   }
 
+
+  /**
+   * Emit an event advertised with advertiseEvent method.
+   * @see advertiseEvent
+   * @param eventName Name of the event to trigger.
+   * @param args Arguments sent to callbacks
+   */
   public void emitEvent(String eventName, Object ... args)
   {
     GenericObject.qiObjectEmitEvent(_obj, eventName, args);
@@ -204,7 +212,8 @@ public class GenericObject
       GenericObject.qiObjectDestroy(_ob);
   }
 
-  public long origin()
+  // Only public inside package.
+  long origin()
   {
     if (_obj == 0)
       _obj = GenericObject.qiObjectBuilderGetObject(_ob);

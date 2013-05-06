@@ -25,17 +25,28 @@ public class Session
   // Members
   private long _session;
 
+  /**
+   * Create session and try to connect to given address.
+   * @param sdAddr Address to connect to.
+   * @throws Exception on error.
+   */
   public Session(String sdAddr) throws Exception
   {
     _session = Session.qiSessionCreate();
     Session.qiSessionConnect(_session, sdAddr);
   }
 
+  /**
+   * Create a qimessaging session.
+   */
   public Session()
   {
     _session = Session.qiSessionCreate();
   }
 
+  /**
+   * @return true is session is connected, false otherwise
+   */
   public boolean isConnected()
   {
     if (_session == 0)
@@ -44,6 +55,11 @@ public class Session
     return Session.qiSessionIsConnected(_session);
   }
 
+  /**
+   * Try to connect to given address.
+   * @param sdAddr Address to connect to.
+   * @throws Exception on error.
+   */
   public void connect(String sdAddr) throws Exception
   {
     Session.qiSessionConnect(_session, sdAddr);
@@ -63,6 +79,9 @@ public class Session
     return new GenericObject(pObj);
   }
 
+  /**
+   * Close connection to Service Directory
+   */
   public void 	close()
   {
     Session.qiSessionClose(_session);
@@ -73,6 +92,12 @@ public class Session
     Session.qiSessionDestroy(_session);
   }
 
+  /**
+   * Register service on Service Directory
+   * @param name Name of new service
+   * @param obj Instance of service
+   * @return
+   */
   public boolean registerService(String name, GenericObject obj)
   {
     long pObj = obj.origin();

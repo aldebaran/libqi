@@ -1,16 +1,10 @@
-Disclaimer
-----------
-
-Hi fellows,
-I'm doing my best to avoid to you the insanity of Java language, so here are QiMessaging Java bindings using Maven.
-
 Prerequisite
 ------------
 
 * Mandatory::
  - Maven
- - Qimessaging
  - Java
+ - Qibuild
 
 * Optionnal::
 
@@ -19,21 +13,11 @@ Prerequisite
 Get started
 -----------
 
-* If you want to package Java bindings :
+Maven archetypes are available at http://maven.aldebaran.lan.
 
-  - qc && qm && ./packagenative-desktop.sh
-  - mvn -f pom-desktop.xml package
-
-* If you want to package Android bindings :
-
-  - qc -c android && qm -c android && ./packagenative-android.sh
-  - mvn -f pom-android.xml -Dmaven.test.skip android:ndk-build compile package
 
 F.A.Q
 -----
-
-* Ho crap, mvn compile fail, what shoud I do ?
-  - mvn android:apklib
 
 * I have following Eclipse error 'the type BuildConfig is already defined', what should I do ?
 
@@ -70,7 +54,7 @@ F.A.Q
 * How do I run single test without maven ?
 
   - Install junit on your system
-  - Run 'java -cp  ./:./test-classes/com/aldebaran/qimessaging:/usr/share/java/junit.jar junit.textui.TestRunner IntegrationTest` for instance
+  - Run 'java -cp  ./:./test-classes/com/aldebaran/qimessaging:/usr/share/java/junit.jar junit.textui.TestRunner MyTest` for instance
 
 How it works
 ------------
@@ -91,29 +75,6 @@ How it works
 
  When using native types with qiMessaging bindings, you may cast to corresponding java.lang class to ensure code safety.
 
-* On linux, all next operations are scripted in packagenative.sh
-
-* Build C++ qimessaging library::
-
-  cd <worktree>/lib/qimessaging
-  qc && qm
-
-* Make a jar containing the C++ library::
-
-  cd build-sys-<platform>-<archi>/sdk/lib/
-  jar cvf nativeqimessaging.jar *.so
-
-* Deploy it to a local maven repository that will be used by qimessaging java bindings::
-
-  mvn deploy:deploy-file -Dpackaging=jar -DgroupId=com.aldebaran -Dversion=1.0 -DartifactId=nativeqimessaging  \
-                         -Dfile=nativeqimessaging.jar \
-                         -Durl=file:///tmp/maven/repo
-
-* Compile and run the tests::
-
-  # Deprectated : patch the pom.xml with the repo path
-  cd <worktree>/lib/qimessaging/libqimessaging/java/qimessaging
-  mvn test
 
 Work with Eclipse :
 -------------------
@@ -132,27 +93,37 @@ Work with Eclipse :
     select "Native library/External Folder..."
     enter <this_dir>qimessaging/target/lib
 
-Todo
-----
 
-* Integrate properly. It only works on linux for now.
+Package bindings manually
+-------------------------
 
-* Solution 1 (local)::
+* Build C++ qimessaging library::
 
-  - Add qi_create_jar in qibuild.
-  - Deploy nativeqimessaging in <worktree>/lib/qimessage/libqimessaging/java/native
-  or <worktree>/lib/qimessaging/<builddir>/sdk/maven/
-  - Find a way to give path to pom.xml
+  cd <worktree>/lib/qimessaging
+  qc -c toolchain && qm -c toolchain 
 
-* Solution 2 (remote)::
+* Make a jar containing the C++ library::
 
-  - Maintain an official maven repository for qimessaging usable inside and outside Aldebaran's network.
+  cd build-sys-<platform>-<archi>/sdk/lib/
+  jar cvf nativeqimessaging.jar *.so
+
+* Deploy it to a local maven repository that will be used by qimessaging java bindings::
+
+  mvn deploy:deploy-file -Dpackaging=jar -DgroupId=com.aldebaran -Dversion=1.0 -DartifactId=nativeqimessaging  \
+                         -Dfile=nativeqimessaging.jar \
+                         -Durl=file:///tmp/maven
+
+* If you want to package Desktop bindings :
+
+  - mvn -f pom-desktop.xml package
+
+* If you want to package Android bindings :
+
+  - mvn -f pom-android.xml -Dmaven.test.skip android:ndk-build compile package
 
 Links
 -----
 
   * Maven native on google code: http://code.google.com/p/mavennatives/
   * How to update maven cache: https://cwiki.apache.org/confluence/display/MAVEN/DependencyResolutionException
-  * Tutos on buildanddeploy.com:
-    * http://buildanddeploy.com/node/14
-    * http://buildanddeploy.com/node/17
+  * Archetype generation : http://maven.apache.org/archetype/maven-archetype-plugin/advanced-usage.html
