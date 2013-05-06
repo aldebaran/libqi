@@ -14,7 +14,6 @@ namespace qi
 
 ObjectHost::ObjectHost(unsigned int service)
  : _service(service)
- , _nextId(2)
  {}
 
  ObjectHost::~ObjectHost()
@@ -67,4 +66,5 @@ void ObjectHost::clear()
   _objectMap.clear();
 }
 
+Atomic<int> ObjectHost::_nextId(2);
 }

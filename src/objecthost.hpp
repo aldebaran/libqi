@@ -41,7 +41,9 @@ namespace qi
     boost::recursive_mutex    _mutex;
     unsigned int    _service;
     ObjectMap       _objectMap;
-    qi::Atomic<int> _nextId;
+    /* Be static for better readability
+    */
+    static qi::Atomic<int> _nextId;
   };
 }
 
