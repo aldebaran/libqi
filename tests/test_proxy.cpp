@@ -183,7 +183,7 @@ TEST(Proxy, Property)
   qi::ObjectPtr client2 = p.client()->service("bar2");
   qi::ProxyProperty<int> pp2(client2, "prop");
   Bar bar3;
-  qi::SignalBase::Link l2 = pp2.connect(boost::bind(&Bar::onProp, &bar3, _1));
+  pp2.connect(boost::bind(&Bar::onProp, &bar3, _1));
   qiLogDebug() << "set 2";
   pp.set(2);
   PERSIST(, bar3.count() == 2, 1000);
