@@ -176,7 +176,10 @@ namespace qi
             if (type->info() == targetType->info())
               return std::make_pair(*this, false);
             else
+            {
+              qiLogDebug() << "Conversion between non-object pointers not supported";
               return std::make_pair(GenericValuePtr(), false);
+            }
           }
           GenericValuePtr pointedSrc = static_cast<TypePointer*>(type)->dereference(value);
           std::pair<GenericValuePtr, bool> pointedDstPair = pointedSrc.convert(dstPointedType);
@@ -315,6 +318,7 @@ namespace qi
       && targetType->kind() == Type::Pointer
     && static_cast<TypePointer*>(targetType)->pointedType()->kind() == Type::Object)
     { // Attempt specialized proxy conversion
+      qiLogDebug() << "Attempting specialized proxy conversion";
       detail::ProxyGeneratorMap& map = detail::proxyGeneratorMap();
       detail::ProxyGeneratorMap::iterator it = map.find(
         static_cast<TypePointer*>(targetType)->pointedType()->info());
@@ -323,6 +327,10 @@ namespace qi
         GenericValuePtr res = (it->second)(*(ObjectPtr*)value);
         return std::make_pair(res, true);
       }
+      else
+        qiLogDebug() << "type "
+                     << static_cast<TypePointer*>(targetType)->pointedType()->infoString()
+                     <<" not found in proxy map";
     }
     if (targetType->kind() == Type::Dynamic)
     {
