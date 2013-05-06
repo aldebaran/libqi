@@ -109,6 +109,7 @@ function(qi_create_service name)
   if ("${ARG_IDL}" STREQUAL "")
     # no IDL specified, generate it from sources and classes
     # or do nothing, will be generated at each call
+    set(IDL ${ARG_SRC} ${ARG_DOXYSRC})
   else()
     set(IDL ${ARG_IDL})
   endif()
@@ -152,7 +153,6 @@ function(qi_create_service name)
       SRC ${ARG_SRC} ${ARG_DOXYSRC}
       COMMAND ${_python_executable} ${IDLPY}
         ${IDL}
-        ${ARG_SRC} ${ARG_DOXYSRC}
         "${classes}"
         -m proxyFuture --interface
         ${kclasses}
@@ -176,7 +176,6 @@ function(qi_create_service name)
        SRC ${ARG_SRC} ${ARG_DOXYSRC}
        COMMAND ${_python_executable} ${IDLPY}
          ${IDL}
-         ${ARG_SRC} ${ARG_DOXYSRC}
          ${kclasses}
          -m cxxservicebouncerregister --interface
          -c ${c}:cxxservicebouncerregister
@@ -192,7 +191,6 @@ function(qi_create_service name)
       SRC ${ARG_SRC} ${ARG_DOXYSRC}
       COMMAND ${_python_executable} ${IDLPY}
         ${IDL}
-        ${ARG_SRC} ${ARG_DOXYSRC}
         ${kclasses}
         -m cxxservicebouncerregister --interface
         -c ${c}:cxxservicebouncer
@@ -218,7 +216,6 @@ function(qi_create_service name)
        SRC ${ARG_SRC} ${ARG_DOXYSRC}
        COMMAND ${_python_executable} ${IDLPY}
          ${IDL}
-         ${ARG_SRC} ${ARG_DOXYSRC}
          ${kclasses}
          -m cxxservicebouncerregister --interface
          "${carg}"
@@ -233,7 +230,6 @@ function(qi_create_service name)
      SRC ${ARG_SRC} ${ARG_DOXYSRC}
      COMMAND ${_python_executable} ${IDLPY}
        ${IDL}
-       ${ARG_SRC} ${ARG_DOXYSRC}
        ${classes}
        ${kclasses}
        -m interface --interface
