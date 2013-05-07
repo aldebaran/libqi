@@ -259,6 +259,17 @@ namespace qi
     return dst;
   }
 
+  std::string GenericFunctionParameters::signature(bool dyn) const
+  {
+    const std::vector<GenericValuePtr>& params = *this;
+    std::stringstream ss;
+    ss << "(";
+    for (unsigned int i = 0; i < params.size(); ++i)
+      ss << params[i].signature(dyn);
+    ss << ")";
+    return ss.str();
+  }
+
 //  GenericFunctionParameters
 //  GenericFunctionParameters::fromBuffer(const Signature& sig, const qi::Buffer& buffer)
 //  {

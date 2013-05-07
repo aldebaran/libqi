@@ -117,6 +117,7 @@ namespace qi {
     GenericFunctionParameters copy(bool notFirst=false) const;
     /// Convert the arguments to given signature. destroy() must be called on the result.
     GenericFunctionParameters convert(const Signature& sig) const;
+    std::string signature(bool dyn) const;
     void destroy(bool notFirst = false);
   };
 
