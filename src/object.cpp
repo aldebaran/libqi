@@ -182,20 +182,17 @@ namespace qi {
       return a.second < b.second;
     }
   };
-  unsigned int
-  GenericObject::findMethod(const std::string& signature, const GenericFunctionParameters& args)
+
+  unsigned int GenericObject::findMethod(const std::string& nameWithOptionalSignature, const GenericFunctionParameters& args)
   {
     typedef std::vector<MetaObject::CompatibleMethod> Methods;
     const MetaObject& mo = metaObject();
-    if (signature.find(':') != signature.npos)
-      return mo.methodId(signature);
+    if (nameWithOptionalSignature.find(':') != nameWithOptionalSignature.npos)
+      return mo.methodId(nameWithOptionalSignature);
     for (unsigned dyn = 0; dyn<2; ++dyn)
     {
-      std::string resolvedSig = "(";
-      for (unsigned i=0; i<args.size(); ++i)
-        resolvedSig += args[i].signature(dyn==1);
-      resolvedSig = resolvedSig + ')';
-      std::string fullSig = signature + "::" + resolvedSig;
+      std::string resolvedSig = args.signature(dyn==1);
+      std::string fullSig = nameWithOptionalSignature + "::" + resolvedSig;
       qiLogDebug() << "Finding method for resolved signature " << fullSig;
       // First try an exact match, wich is much faster if we're lucky.
       int methodId = mo.methodId(fullSig);
@@ -216,14 +213,15 @@ namespace qi {
       }
       assert(count);
       if (count > 1)
-        qiLogVerbose() << generateErrorString("ambiguous overload", signature, mml, false);
+        qiLogVerbose() << generateErrorString("ambiguous overload", nameWithOptionalSignature, mml, false);
       else
         return it->first.uid();
     }
     return -1;
   }
+
   qi::Future<GenericValuePtr>
-  GenericObject::metaCall(const std::string &signature, const GenericFunctionParameters& args, MetaCallType callType)
+  GenericObject::metaCall(const std::string &nameWithOptionalSignature, const GenericFunctionParameters& args, MetaCallType callType)
   {
     qi::Promise<GenericValuePtr> out;
     if (!type || !value) {
@@ -231,9 +229,9 @@ namespace qi {
       out.setError("Invalid object");
       return out.future();
     }
-    int methodId = findMethod(signature, args);
+    int methodId = findMethod(nameWithOptionalSignature, args);
     if (methodId < 0) {
-      return makeFutureError<GenericValuePtr>(generateErrorString("method", signature, metaObject().findCompatibleMethod(signature)));
+      return makeFutureError<GenericValuePtr>(generateErrorString("method", nameWithOptionalSignature, metaObject().findCompatibleMethod(nameWithOptionalSignature)));
     }
     return metaCall(methodId, args, callType);
   }
@@ -245,7 +243,7 @@ namespace qi {
       qiLogWarning() << "Operating on invalid GenericObject..";
       return;
     }
-       int eventId = metaObject().signalId(signature);
+    int eventId = metaObject().signalId(signature);
     if (eventId < 0)
       eventId = metaObject().methodId(signature);
     if (eventId < 0) {

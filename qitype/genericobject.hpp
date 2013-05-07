@@ -132,14 +132,14 @@ namespace qi {
 #endif // DOXYGEN
 
     qi::Future<GenericValuePtr> metaCall(unsigned int method, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto);
-    /** Find method named \p named callable with arguments \p params
+    /** Find method named \p named callable with arguments \p parameters
     */
     unsigned int findMethod(const std::string& name, const GenericFunctionParameters& parameters);
     /** Resolve the method Id and bounces to metaCall
     * @param signature method name or method signature 'name::(args)'
     *        if signature is given, an exact match is required
     */
-    qi::Future<GenericValuePtr> metaCall(const std::string &signature, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto);
+    qi::Future<GenericValuePtr> metaCall(const std::string &nameWithOptionalSignature, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto);
 
     void post(const std::string& eventName,
                    qi::AutoGenericValuePtr p1 = qi::AutoGenericValuePtr(),
@@ -167,7 +167,7 @@ namespace qi {
     qi::FutureSync<Link> xConnect(const std::string &signature, const SignalSubscriber& functor);
 
     /// Calls given functor when event is fired. Takes ownership of functor.
-    qi::FutureSync<Link> connect(unsigned int event, const SignalSubscriber& subscriber);
+    qi::FutureSync<Link> connect(unsigned int signal, const SignalSubscriber& subscriber);
 
     /** Connect an event to a method.
      * Recommended use is when target is not a proxy.
@@ -183,6 +183,7 @@ namespace qi {
 
     template<typename T>
     qi::FutureSync<T> getProperty(const std::string& name);
+
     template<typename T>
     qi::FutureSync<void> setProperty(const std::string& name, const T& val);
 
