@@ -17,9 +17,15 @@ var s = "";
 
 qim.socket().on('connect', function() { console.log('connected') })
 
+var t = [];
+for (var i = 0; i < 1024; ++i)
+{
+  t[String.fromCharCode(i)] = i;
+}
+
 function getImageRemote(data)
 {
-  a = atob(data[6]);
+  var a = atob(data[6]);
 
   var canvas = document.getElementById('myCanvas');
   var context = canvas.getContext('2d');
@@ -27,20 +33,16 @@ function getImageRemote(data)
   var imageHeight = data[1];
   var imageData = context.getImageData(0, 0, imageWidth, imageHeight);
   var data = imageData.data;
+  var w = imageWidth * imageHeight * 4;
 
-  for (var y = 0; y < imageHeight; y++)
+  var x = 0;
+  var x3 = 0;
+  while (x < w)
   {
-    for (var x = 0; x < imageWidth; x++)
-    {
-      var r = a[(imageWidth * y + x) * 3 + 0];
-      var g = a[(imageWidth * y + x) * 3 + 1];
-      var b = a[(imageWidth * y + x) * 3 + 2];
-
-      data[((imageWidth * y) + x) * 4 + 0] = r.charCodeAt();
-      data[((imageWidth * y) + x) * 4 + 1] = g.charCodeAt();
-      data[((imageWidth * y) + x) * 4 + 2] = b.charCodeAt();
-      data[((imageWidth * y) + x) * 4 + 3] = 255;;
-    }
+    data[x++] = t[a[x3++]];
+    data[x++] = t[a[x3++]];
+    data[x++] = t[a[x3++]];
+    data[x++] = 255;
   }
 
   context.putImageData(imageData, 0, 0);
@@ -51,14 +53,13 @@ function getImageRemote(data)
 function subscribed(data)
 {
   s = data;
-  console.log(s);
   m.getImageRemote(s).done(getImageRemote);
 }
 
 function subscribeCamera(data)
 {
   m = data;
-  z = Math.floor((Math.random()*10000)+1);
+  var z = Math.floor((Math.random()*10000)+1);
   m.subscribeCamera("test_z" + z, 0, 0, 11, 30).done(subscribed);
 }
 
