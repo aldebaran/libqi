@@ -12,8 +12,10 @@
 #include <qimessaging/servicedirectory.hpp>
 
 
-#include "tests/task_proxy.hpp"
+#include "task_proxy.hpp"
+#include "taskgenerator_proxy.hpp"
 
+qiLogCategory("Test.Task");
 
 class TestTask: public ::testing::Test
 {
@@ -25,9 +27,10 @@ public:
     if (!init)
     {
       std::vector<std::string> objs = qi::loadObject("task");
+      qiLogInfo() << "loadobject gave " << objs.size();
       if (objs.size() != 1)
         throw std::runtime_error("Expected one object in taskService");
-      tgs = qi::createObject("TaskGeneratorService");
+      tgs = qi::createObject("TaskGenerator");
       if (!tgs)
         throw std::runtime_error("No TaskGenerator service found");
       init = true;
@@ -64,7 +67,8 @@ TEST_F(TestTask, Basic)
 
 TEST_F(TestTask, Task)
 {
-  ITaskPtr task = taskGenProxy->newTask("coin");
+  qi::details::printMetaObject(std::cerr, taskGenProxy->asObject()->metaObject());
+  TaskProxyPtr task = taskGenProxy->newTask("coin");
   ASSERT_TRUE(task);
   std::string n = task->getName();
 
@@ -86,14 +90,14 @@ TEST_F(TestTask, Task)
 
 TEST_F(TestTask, Signals)
 {
-  ITaskPtr task = taskGenProxy->newTask("coin");
+  TaskProxyPtr task = taskGenProxy->newTask("coin");
   ASSERT_TRUE(task);
   qi::Promise<std::string> p;
   task->onParamChanged.connect(
     boost::bind(&qi::Promise<std::string>::setValue, p, _1));
   task->setParam("foo");
   ASSERT_EQ("foo", p.future().value());
-  std::vector<ITaskPtr> tasks = taskGenProxy->tasks();
+  std::vector<TaskProxyPtr> tasks = taskGenProxy->tasks();
   ASSERT_EQ(1U, tasks.size());
   p.reset();
   tasks[0]->setParam("bar");
@@ -110,7 +114,7 @@ struct Context
   qi::Session*          session;
   qi::ObjectPtr         taskGenClient;
   TaskGeneratorProxy*   taskGenProxy;
-  std::vector<ITaskPtr> tasks;
+  std::vector<TaskProxyPtr> tasks;
 };
 
 void on_step(const std::string& s, unsigned& i)
@@ -146,7 +150,7 @@ TEST_F(TestTask, ManyManyTasks)
   {
     for (unsigned j=0; j<NTASKS; ++j)
     {
-      ITaskPtr task = clients[i].taskGenProxy->newTask(
+      TaskProxyPtr task = clients[i].taskGenProxy->newTask(
         boost::lexical_cast<std::string>(i*NTASKS + j));
       clients[i].tasks.push_back(task);
       task->onStep.connect(

@@ -6,6 +6,7 @@
 #include <boost/make_shared.hpp>
 
 #include <qi/qi.hpp>
+#include <qi/log.hpp>
 #include <qi/application.hpp>
 #include <qitype/genericobject.hpp>
 #include <qitype/genericobjectbuilder.hpp>
@@ -14,7 +15,10 @@
 #include <qimessaging/servicedirectory.hpp>
 #include <testsession/testsessionpair.hpp>
 #include "task_service.hpp"
+#include "task_bind.hpp"
+#include "taskgenerator_bind.hpp"
 
+qiLogCategory("Task");
 
 Task::Task(const std::string& name, TaskGenerator* handler)
   : _handler(handler)

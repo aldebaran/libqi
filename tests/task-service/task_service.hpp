@@ -21,6 +21,8 @@ private:
   unsigned int   _step;
   std::string    _lastResult;
 };
+
+
 typedef Task TaskImpl;
 
 typedef boost::shared_ptr<Task> TaskPtr;
@@ -36,6 +38,8 @@ public:
 private:
   std::vector<TaskWeakPtr> _tasks;
 };
+
+
 
 typedef TaskGenerator TaskGeneratorImpl;
 typedef boost::shared_ptr<TaskGenerator> TaskGeneratorPtr;

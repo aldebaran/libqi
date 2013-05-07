@@ -8,7 +8,7 @@ qi_create_proxy(${CMAKE_CURRENT_SOURCE_DIR}/addtask.idl AddTask ${CMAKE_CURRENT_
 
 # Build the service
 qi_create_lib(adder_fromclient
-  SHARED
+  MODULE
   SRC adder.cpp ${_proxy2}
   DEPENDS qitype
 )

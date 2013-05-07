@@ -158,6 +158,8 @@ namespace qi {
 
   qi::FutureSync<unsigned int> Session::registerService(const std::string &name, qi::ObjectPtr obj)
   {
+    if (!obj)
+      return makeFutureError<unsigned int>("registerService: Object is empty");
     if (endpoints().empty()) {
       qi::Url listeningAddress("tcp://0.0.0.0:0");
       qiLogVerbose() << listeningAddress.str() << "." << std::endl;

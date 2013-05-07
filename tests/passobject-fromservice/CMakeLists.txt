@@ -4,7 +4,7 @@ find_package(idl REQUIRED)
 
 # Build the service
 qi_create_lib(adder
-  SHARED
+  MODULE
   SRC adder.cpp
   DEPENDS qitype
 )
