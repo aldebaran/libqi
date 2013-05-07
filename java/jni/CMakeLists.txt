@@ -21,6 +21,7 @@ set(SOURCE
    jni/enumeration_jni.hpp
    jni/list_jni.hpp
    jni/future_jni.hpp
+   jni/tuple_jni.hpp
    jni/futurehandler.hpp
 
    src/session_jni.cpp
@@ -34,6 +35,7 @@ set(SOURCE
    src/enumeration_jni.cpp
    src/list_jni.cpp
    src/future_jni.cpp
+   src/tuple_jni.cpp
    src/futurehandler.cpp
    )
 

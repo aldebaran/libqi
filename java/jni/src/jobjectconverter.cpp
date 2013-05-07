@@ -18,6 +18,7 @@
 #include <jobjectconverter.hpp>
 #include <map_jni.hpp>
 #include <list_jni.hpp>
+#include <tuple_jni.hpp>
 
 using namespace qi;
 
@@ -172,20 +173,16 @@ struct toJObject
 
     void visitTuple(const std::vector<qi::GenericValuePtr>& tuple)
     {
-      throwJavaError(env, "Error in conversion: No Tuple in Java.");
-      //const std::vector<qi::GenericValuePtr>& tuple = type->getValues(storage);
+      JNITuple jtuple(tuple.size());
+      int i = 0;
 
-      /*Py_ssize_t len = tuple.size();
-      *result = PyTuple_New(len);
-      if (!*result)
-        throw std::runtime_error("Error in conversion: unable to alloc a python Tuple");
-
-      for (Py_ssize_t i = 0; i < len; i++)
+      for(std::vector<qi::GenericValuePtr>::const_iterator it = tuple.begin(); it != tuple.end(); ++it)
       {
-        PyObject* current = PyObject_from_GenericValue(tuple[i]);
-        if (PyTuple_SetItem(*result, i, current) != 0)
-          throw std::runtime_error("Error in conversion : unable to set item in PyTuple");
-      }*/
+        jobject current = (*it).to<jobject>();
+        jtuple.set(i++, current);
+      }
+
+      *result = jtuple.object();
     }
 
     void visitDynamic(qi::GenericValuePtr pointee)
@@ -291,18 +288,17 @@ qi::GenericValuePtr GenericValue_from_JObject_Map(jobject hashtable)
 
 qi::GenericValuePtr GenericValue_from_JObject_Tuple(jobject val)
 {
-  throw std::runtime_error("Error in conversion: Tuple not supported in Java");
-
+  JNITuple tuple(val);
+  int i = 0;
   std::vector<qi::GenericValuePtr>& res = *new std::vector<qi::GenericValuePtr>();
-  /*Py_ssize_t len = PyTuple_Size(val);
 
-  for (Py_ssize_t i = 0; i < len; i++)
+  while (i < tuple.size())
   {
-    PyObject* current = PyTuple_GetItem(val, i);
-    qi::GenericValuePtr currentConverted = GenericValue_from_PyObject(current);
-    res.push_back(currentConverted);
+    qi::GenericValuePtr value = GenericValue_from_JObject(tuple.get(i)).first;
+    res.push_back(value);
+    i++;
   }
-  */
+
   return qi::makeGenericTuple(res);
 }
 
@@ -329,6 +325,7 @@ std::pair<qi::GenericValuePtr, bool> GenericValue_from_JObject(jobject val)
   jclass longClass = env->FindClass("java/lang/Long");
   jclass mapClass = env->FindClass("java/util/Map");
   jclass listClass = env->FindClass("java/util/ArrayList");
+  jclass tupleClass = env->FindClass("com/aldebaran/qimessaging/Tuple");
 
   if (val == NULL)
   {
@@ -384,11 +381,11 @@ std::pair<qi::GenericValuePtr, bool> GenericValue_from_JObject(jobject val)
   {
     copy = true;
     res = GenericValue_from_JObject_Map(val);
-  }/*
-  else if (PyTuple_CheckExact(val))
+  }
+  else if (env->IsInstanceOf(val, tupleClass))
   {
     res = GenericValue_from_JObject_Tuple(val);
-  }*/
+  }
   else
   {
     throw std::runtime_error("Unable to convert JObject in GenericValue");
@@ -402,6 +399,7 @@ std::pair<qi::GenericValuePtr, bool> GenericValue_from_JObject(jobject val)
   env->DeleteLocalRef(longClass);
   env->DeleteLocalRef(mapClass);
   env->DeleteLocalRef(listClass);
+  env->DeleteLocalRef(tupleClass);
 
   return std::make_pair(res, copy);
 }

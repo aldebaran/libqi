@@ -8,6 +8,13 @@ import java.util.Map;
 public class ReplyService implements QimessagingService
 {
 
+  public Tuple info(String str, Integer i, Boolean b)
+  {
+    Tuple ret = new Tuple3<String, Integer, Boolean>(str, i, b);
+    System.out.println("Received : " + str + "," + i + "," + b);
+    return ret;
+  }
+
   public String reply(String s)
   {
     String reply = new String();

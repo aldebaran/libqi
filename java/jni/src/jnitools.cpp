@@ -106,7 +106,7 @@ void getJavaSignature(std::string &sig, const std::string& sigInfo)
     }
     case qi::Signature::Type_Tuple:
     {
-      sig.append("Ljava/lang/Object;");
+      sig.append("Lcom/aldebaran/qimessaging/Tuple;");
       while (i < sigInfo.size() && sigInfo[i] != qi::Signature::Type_Tuple_End)
         i++;
       break;

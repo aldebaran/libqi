@@ -7,11 +7,20 @@ import java.util.Map;
 
 import com.aldebaran.qimessaging.GenericObject;
 import com.aldebaran.qimessaging.QimessagingService;
+import com.aldebaran.qimessaging.Tuple;
+import com.aldebaran.qimessaging.Tuple3;
 
 public class ReplyService implements QimessagingService
 {
 
   private GenericObject _obj = null;
+
+  public Tuple  info(String str, Integer i, Boolean b)
+  {
+    Tuple ret = new Tuple3<String, Integer, Boolean>(str, i, b);
+    System.out.println("Received : " + str + "," + i + "," + b);
+    return ret;
+  }
 
   public String reply(String str)
   {
