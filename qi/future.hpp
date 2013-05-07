@@ -324,6 +324,11 @@ namespace qi {
       return async();
     }
 
+    bool operator < (const FutureSync<T>& b) const
+    {
+      return _future._p.get() < b._future._p.get();
+    }
+
     inline const ValueType &value() const                            { _sync = false; return _future.value(); }
     inline operator const typename Future<T>::ValueTypeCast&() const { _sync = false; return _future.value(); }
     inline FutureState wait(int msecs = FutureTimeout_Infinite) const { _sync = false; return _future.wait(msecs); }
@@ -335,8 +340,10 @@ namespace qi {
 
     inline const std::string &error() const                 { _sync = false; return _future.error(); }
     inline void cancel()                                    { _sync = false; _future.cancel(); }
-    bool isCanceleable() const                              { _sync = false; return _future.isCanceleable(); }
+    inline bool isCanceleable() const                       { _sync = false; return _future.isCanceleable(); }
     inline void connect(const Connection& s)                { _sync = false; _future.connect(s);}
+    inline void _connect(const boost::function<void()>& s)  { _sync = false; _future._connect(s);}
+
     Future<T> async()
     {
       _sync = false;
