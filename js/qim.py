@@ -2,8 +2,7 @@
 
 import tornado
 import tornadio2
-from qimessaging.session import Session
-from qimessaging.genericobject import CallError
+import qi
 import sys
 import json
 from tornadio2 import proto
@@ -20,48 +19,29 @@ class SetEncoder(json.JSONEncoder):
 class QiMessagingHandler(tornadio2.conn.SocketConnection):
 
     def on_open(self, info):
-        self.s = Session()
+        self.s = qi.Session()
         self.s.connect(url)
-        pass
 
     @tornadio2.event
     def call(self, idm, params):
       try:
-        service = params["service"]
-        method = params["method"]
-        if method == "services":
-            data = self.s.services()
-        else:
-            args = params["args"]
-            if method == "service":
-                o = self.s.service(str(args[0]))
-                r = []
-                for m in dir(o):
-                  try:
-                    sigarg = getattr(o, m).__signatures__
-                    sigres = getattr(o, m).__sigreturns__
-                    docs = getattr(o, m).__docs__
-                    s = []
-                    for i in range(len(sigarg)):
-                      s.append([ sigres[i], sigarg[i], docs[sigarg[i]] ])
-                    r.append( {"name": m, "signatures": s } )
-                  except:
-                    pass
-                data = { "name": args[0], "doc": o.__doc__, "functions": r }
-            else:
-                o = self.s.service(str(service))
-                m = getattr(o, method)
-                if args is None:
-                  data = m()
-                else:
-                  data = m(*args)
-
+        data = self.do_call(params["service"], params["method"],
+                            params["args"] if "args" in params else None)
         evt = dict(name = "reply", args = { "idm": idm, "result": data })
         message = u'5:%s:%s:%s' % ('', self.endpoint or '', json.dumps(evt,
           cls=SetEncoder))
         self.session.handler.ws_connection.write_message(message, binary=False)
-      except CallError as e:
+      except (AttributeError, RuntimeError) as e:
         self.emit('error', { "idm": idm, "result": str(e) })
+
+    def do_call(self,service, method, args):
+      if service == "ServiceDirectory" and method == "service":
+        o = self.s.service(str(args[0]))
+        return (args[0], o.metaObject())
+      else:
+        o = self.s.service(str(service))
+        m = getattr(o, method)
+        return m() if args is None else m(*args)
 
     def on_close(self):
         pass
@@ -70,6 +50,8 @@ if __name__ == "__main__":
     if len(sys.argv) != 2:
         print("Usage: %s SD_URL" % sys.argv[0])
         sys.exit(1)
+
+    app = qi.Application()
 
     url = sys.argv[1]
 

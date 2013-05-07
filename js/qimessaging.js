@@ -16,17 +16,13 @@ function QiSession(url)
       var service = _dfdD[data["idm"]]
       _dfdD[data["idm"]] = 0;
       _services[service] = new Object();
+      _services[service].__mobj = data["result"];
 
-      _services[service].__mobj = new Object();
-      _services[service].__mobj.name = data["result"]["name"];
-      _services[service].__mobj.doc = data["result"]["doc"];
-      _services[service].__mobj.functions = new Array();
-
-      for (var i = 0; i < data["result"]["functions"].length; ++i)
+      var f = data["result"][1][0];
+      for (var i in f)
       {
-        var m = data["result"]["functions"][i];
-        _services[service][m.name] = createMetaCall(service, m.name);
-        _services[service].__mobj.functions[m.name] = m;
+        m = f[i][2]
+        _services[service][m] = createMetaCall(service, m);
       }
 
       _dfd[data["idm"]].resolve(_services[service]);

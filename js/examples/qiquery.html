@@ -25,38 +25,32 @@ function showServices(services) {
   n = services.length;
   for (var i = 0; i < services.length; i++)
   {
-    qim.service(services[i]).done(showService);
+    qim.service(services[i][0]).done(showService);
   }
 }
 
-function createLOL(s, m, s3, s4)
+function createShowCall(s, m, sigret, sigarg)
 {
   return function() {
-    showCall(s, m, s3, s4)
+    showCall(s, m, sigret, sigarg)
   }
 }
 
 function showService(service) {
-  var mobj = service.__mobj
-  var tabname = $("<h3><b>" + mobj["name"] + "</b> [<i>" + mobj["doc"] + "</i>]</h3>")
+  var mobj = service["__mobj"];
+  var tabname = $("<h3><b>" + mobj[0] + "</b> [<i>" + mobj[1][3] + "</i>]</h3>")
   $("#accordion").append(tabname)
 
   var tab = $("<div/>")
   var list = $("<ul/>").appendTo(tab)
-  for (var m in mobj.functions)
+  for (var m in mobj[1][0])
   {
-    var f = mobj.functions[m]
-    for (i = 0; i < f.signatures.length; i++)
-    {
-      var s3 = f.signatures[i][0]
-      var s4 = f.signatures[i][1]
-
-      $("<li>").html(f.signatures[i][0] + '::' + f.name
-                       + '(' + f.signatures[i][1] + ') '
-                       + '[<i>' + f.signatures[i][2] + '</i>]')
-               .appendTo(list)
-               .click(createLOL(service, f.name, s3, s4))
-    }
+    var f = mobj[1][0][m];
+    $("<li>").html(f[1] + '::' + f[2]
+                     + f[3] + ' '
+                     + '[<i>' + f[4] + '</i>]')
+             .appendTo(list)
+             .click(createShowCall(service, f[2], f[1], f[3]))
   }
   $("#accordion").append(tab)
 
@@ -76,16 +70,16 @@ function showResult(s) {
   $("#res").val(s)
 }
 
-function showCall(s, m, s3, s4) {
+function showCall(s, m, sigret, sigarg) {
   $("#call").empty()
   $("#call").hide()
 
-  $("<div/>").html(s3 + ' ' + s.__mobj["name"]+ "::" + m + "(" + s4 + ")").appendTo("#call")
+  $("<div/>").html(sigret + ' ' + s["__mobj"][0] + "::" + m + sigarg).appendTo("#call")
   var c = $("<div/>").appendTo("#call")
-  for (var i = 0 ; i < s4.length; i++)
+  for (var i = 1 ; i < sigarg.length - 1; i++)
   {
     var t = "";
-    switch (s4[i])
+    switch (sigarg[i])
     {
       case 'b': t = "bool"; break;
       case 'v': t = "void"; break;
@@ -108,14 +102,14 @@ function showCall(s, m, s3, s4) {
   $("<button/>", { id: "cbutton", type: "submit" }).html("call!").appendTo(c)
     .click(function() {
       var l = []
-      for (i = 0; i < s4.length; i++)
+      for (i = 1; i < sigarg.length - 1; i++)
       {
-        l[i] = $("#args" + i).val()
+        l[i - 1] = $("#args" + i).val()
       }
       s[m].apply(this, l).done(showResult).fail(showError);
     })
   $("<div/>").html("<input id='res' type='input'/>").appendTo(c)
-  if (s3 == "v")
+  if (sigret == "v")
     $("#res").hide()
 
   $("#call").dialog();
