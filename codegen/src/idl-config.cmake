@@ -150,7 +150,7 @@ function(qi_create_service name)
   if (ARG_PROXY)
     qi_generate_src(
       ${CMAKE_CURRENT_BINARY_DIR}/${name}_proxy.hpp
-      SRC ${ARG_SRC} ${ARG_DOXYSRC}
+      SRC ${ARG_SRC} ${ARG_DOXYSRC} ${IDL}
       COMMAND ${_python_executable} ${IDLPY}
         ${IDL}
         "${classes}"
@@ -175,7 +175,7 @@ function(qi_create_service name)
        string(TOLOWER ${c} cl)
        qi_generate_src(
        ${CMAKE_CURRENT_BINARY_DIR}/${cl}_bind.cpp
-       SRC ${ARG_SRC} ${ARG_DOXYSRC}
+       SRC ${ARG_SRC} ${ARG_DOXYSRC} ${IDL}
        COMMAND ${_python_executable} ${IDLPY}
          ${IDL}
          ${kclasses}
@@ -190,7 +190,7 @@ function(qi_create_service name)
       string(TOLOWER ${c} cl)
       qi_generate_src(
       ${CMAKE_CURRENT_BINARY_DIR}/${cl}_bind.cpp
-      SRC ${ARG_SRC} ${ARG_DOXYSRC}
+      SRC ${ARG_SRC} ${ARG_DOXYSRC} ${IDL}
       COMMAND ${_python_executable} ${IDLPY}
         ${IDL}
         ${kclasses}
@@ -215,7 +215,7 @@ function(qi_create_service name)
     message("carg: '${carg}'")
     qi_generate_src(
        ${CMAKE_CURRENT_BINARY_DIR}/${name}_bind.cpp
-       SRC ${ARG_SRC} ${ARG_DOXYSRC}
+       SRC ${ARG_SRC} ${ARG_DOXYSRC} ${IDL}
        COMMAND ${_python_executable} ${IDLPY}
          ${IDL}
          ${kclasses}
@@ -229,7 +229,7 @@ function(qi_create_service name)
   # Generate interface
   qi_generate_src(
      ${CMAKE_CURRENT_BINARY_DIR}/${name}_interface.hpp
-     SRC ${ARG_SRC} ${ARG_DOXYSRC}
+     SRC ${ARG_SRC} ${ARG_DOXYSRC} ${IDL}
      COMMAND ${_python_executable} ${IDLPY}
        ${IDL}
        ${classes}
