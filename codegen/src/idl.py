@@ -309,6 +309,46 @@ def doxyxml_to_raw(doxy_dir):
     result[cls] = (methods, signals, properties, ' '.join(class_annotations))
   return result
 
+def rawtype_to_boxinterface_argtype(arg):
+  if arg=='string':
+    return 3 #string
+  elif arg in ['uint', 'int', 'ushort', 'short', 'int64', 'uint64']:
+    return 2 #int
+  else:
+    return 0 #dynamic
+def raw_to_boxinterface(class_name, data):
+  """ Convert RAW to boxInterface choregraphe XML format
+  """
+  root = etree.Element('BoxInterface', name=class_name, tooltip=data[3])
+  (methods, signals, properties, an) = data
+  for method in methods:
+    #advertise only nullary or unary methods
+    (method_name, args, ret, an) = method
+    if len(args) > 1:
+      continue
+    argtype = 1
+    if len(args) == 1:
+      argtype = rawtype_to_boxinterface_argtype(args[0])
+    e = etree.SubElement(root, 'Input', name=method_name, type=str(argtype),
+      type_size="0", nature="1", inner="0", tooltype=an)
+  for signal in signals:
+    (name, args, an) = signal
+    if len(args) >1:
+      continue
+    argtype = 1
+    if len(args) == 1:
+      argtype = rawtype_to_boxinterface_argtype(args[0])
+    e = etree.SubElement(root, 'Output', name=name, type=str(argtype),
+      type_size="0", nature="2", inner="0", tooltip=an)
+  for prop in properties:
+    # prop for now are in signals, so were registered as output.
+    # Register them as input
+    e = etree.SubElement(root, 'Input', name=prop[0],
+      type=str(rawtype_to_boxinterface_argtype(prop[1])),
+      type_size="0",
+      tooltip="")
+  return etree.tostring(root) + "\n"
+
 def raw_to_idl(dstruct):
   """ Convert RAW to IDL XML format
   """
@@ -833,12 +873,12 @@ def main(args):
   parser = argparse.ArgumentParser()
   parser.add_argument("--interface", "-i", help="Use interface mode", action='store_true')
   parser.add_argument("--output-file","-o", help="output file (stdout)")
-  parser.add_argument("--output-mode","-m", default="txt", choices=["parse", "txt", "idl", "proxy", "proxyFuture", "cxxtype", "cxxtyperegister", "cxxskel", "cxxservice", "cxxserviceregister", "cxxservicebouncer", "cxxservicebouncerregister", "interface"], help="output mode (stdout)")
+  parser.add_argument("--output-mode","-m", default="txt", choices=["parse", "txt", "idl", "proxy", "proxyFuture", "cxxtype", "cxxtyperegister", "cxxskel", "cxxservice", "cxxserviceregister", "cxxservicebouncer", "cxxservicebouncerregister", "interface", "boxinterface"], help="output mode (stdout)")
   parser.add_argument("--include", "-I", default="", help="File to include in generated C++")
   parser.add_argument("--known-classes", "-k", default="", help="Comma-separated list of other handled classes")
   parser.add_argument("--classes", "-c", default="*", help="Comma-separated list of classes to select, optionally with per class ':operation'")
   parser.add_argument("input", nargs='+', help="input file(s)")
-  
+
   pargs = parser.parse_args(args)
   pargs.input = pargs.input[1:]
 
@@ -901,6 +941,9 @@ def main(args):
       if op == "interface":
         functions = [raw_to_interface]
         args = [[pargs.include]]
+      elif op == "boxinterface":
+        functions = [raw_to_boxinterface]
+        args = [[]]
       elif op == "proxy":
         functions = [raw_to_proxy]
         args = [[False, pargs.interface, pargs.include]]
