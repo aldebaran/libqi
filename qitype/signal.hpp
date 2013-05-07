@@ -127,6 +127,8 @@ namespace qi {
     {
       return SignalBase::connect(target, slot);
     }
+    template<typename U>
+    inline SignalSubscriber& connect(Signal<U>& signal);
     /// IF O is a shared_ptr, will auto-disconnect if object is destroyed
     template<typename O, typename MF>
     inline SignalSubscriber& connect(O* target, MF method, MetaCallType model=MetaCallType_Auto);

@@ -151,6 +151,22 @@ TEST(TestSignal, BadArity)
   ASSERT_EQ(qi::SignalBase::invalidLink, s.connect((Foo*)0, &Foo::func1));
 }
 
+void lol(int v, int& target)
+{
+  target = v;
+}
+TEST(TestSignal, SignalSignal)
+{
+  qi::Signal<void (int)> sig1;
+  qi::Signal<void (int)> sig2;
+  int res = 0;
+  sig1.connect(sig2);
+  sig2.connect(boost::bind<void>(&lol, _1, boost::ref(res)));
+  sig1(10);
+  qi::os::msleep(300);
+  ASSERT_EQ(10, res);
+}
+
 int main(int argc, char **argv) {
   qi::Application app(argc, argv);
   ::testing::InitGoogleTest(&argc, argv);

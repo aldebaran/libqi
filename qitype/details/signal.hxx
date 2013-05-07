@@ -166,6 +166,13 @@ namespace qi
   }
 
   template<typename T>
+  template<typename U>
+  SignalSubscriber& Signal<T>::connect(Signal<U>& signal)
+  {
+    return connect((boost::function<U>&)signal);
+  }
+
+  template<typename T>
   SignalSubscriber& SignalSubscriber::track(boost::weak_ptr<T> ptr)
   {
     if (weakLock)
