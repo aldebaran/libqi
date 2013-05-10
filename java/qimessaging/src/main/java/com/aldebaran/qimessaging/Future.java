@@ -46,7 +46,7 @@ public class Future <T>
 
   public void sync(long timeout, TimeUnit unit)
   {
-    Future.qiFutureCallWaitWithTimeout(_fut, unit.toMillis(timeout));
+    Future.qiFutureCallWaitWithTimeout(_fut, (int) unit.toMillis(timeout));
   }
 
   public void sync()
@@ -77,7 +77,6 @@ public class Future <T>
   }
 
   @SuppressWarnings("unchecked")
-  @Override
   public T get() throws InterruptedException, ExecutionException
   {
 
