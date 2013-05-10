@@ -7,6 +7,7 @@ import sys
 import json
 from tornadio2 import proto
 import base64
+import time
 
 url = None
 
@@ -22,26 +23,38 @@ class QiMessagingHandler(tornadio2.conn.SocketConnection):
         self.s = qi.Session()
         self.s.connect(url)
 
+    def reply(self, idm, mtype, data):
+      try:
+        evt = dict(name = mtype, args = { "idm": idm, "result": data })
+        message = u'5:::%s' % (json.dumps(evt, cls=SetEncoder))
+        self.session.send_message(message)
+      except AttributeError as e:
+        print idm, str(e)
+
+    def do_reply(self, idm):
+      def rep(f):
+        if f.has_error():
+          self.reply(idm, "error", f.error())
+        else:
+          self.reply(idm, "reply", f.value())
+      return rep
+
     @tornadio2.event
     def call(self, idm, params):
       try:
-        data = self.do_call(params["service"], params["method"],
-                            params["args"] if "args" in params else None)
-        evt = dict(name = "reply", args = { "idm": idm, "result": data })
-        message = u'5:%s:%s:%s' % ('', self.endpoint or '', json.dumps(evt,
-          cls=SetEncoder))
-        self.session.handler.ws_connection.write_message(message, binary=False)
+        service = params["service"]
+        method = params["method"]
+        args = params["args"]
+        if service == "ServiceDirectory" and method == "service":
+          o = self.s.service(str(args[0]))
+          self.reply(idm, "reply", (args[0], o.metaObject()))
+        else:
+          o = self.s.service(str(service))
+          m = getattr(o, method)
+          f = m(_async = True) if args is None else m(*args, _async = True)
+          f.add_callback(self.do_reply(idm))
       except (AttributeError, RuntimeError) as e:
-        self.emit('error', { "idm": idm, "result": str(e) })
-
-    def do_call(self,service, method, args):
-      if service == "ServiceDirectory" and method == "service":
-        o = self.s.service(str(args[0]))
-        return (args[0], o.metaObject())
-      else:
-        o = self.s.service(str(service))
-        m = getattr(o, method)
-        return m() if args is None else m(*args)
+        self.reply(idm, 'error', str(e))
 
     def on_close(self):
         pass
