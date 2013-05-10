@@ -58,7 +58,7 @@ function QiSession(url)
   {
     var idm = getIdm();
     _dfd[idm] = $.Deferred();
-    _socket.emit('call', { idm: idm, params: { service: "serviceDirectory", method: "services" } });
+    _socket.emit('call', { idm: idm, params: { service: "ServiceDirectory", method: "services" } });
 
     return _dfd[idm];
   }
@@ -72,7 +72,7 @@ function QiSession(url)
       var idm = getIdm();
       _dfd[idm] = dfd;
       _dfdD[idm] = service;
-      _socket.emit('call', { idm: idm, params: { service: "serviceDirectory", method: "service", args: [ service ] } });
+      _socket.emit('call', { idm: idm, params: { service: "ServiceDirectory", method: "service", args: [ service ] } });
     }
     else
     {
