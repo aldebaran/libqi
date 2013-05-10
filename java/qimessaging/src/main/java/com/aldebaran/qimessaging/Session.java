@@ -16,7 +16,7 @@ public class Session
   // Native function
   private static native long    qiSessionCreate();
   private static native void    qiSessionDestroy(long pSession);
-  private static native boolean qiSessionConnect(long pSession, String url);
+  private static native long    qiSessionConnect(long pSession, String url);
   private static native boolean qiSessionIsConnected(long pSession);
   private static native void    qiSessionClose(long pSession);
   private static native long    qiSessionService(long pSession, String name);
@@ -60,9 +60,11 @@ public class Session
    * @param sdAddr Address to connect to.
    * @throws Exception on error.
    */
-  public void connect(String sdAddr) throws Exception
+  public Future<Void> connect(String sdAddr) throws Exception
   {
-    Session.qiSessionConnect(_session, sdAddr);
+    long pFuture = Session.qiSessionConnect(_session, sdAddr);
+    Future<Void> future = new Future<Void>(pFuture);
+    return future;
   }
 
   /**

@@ -9,7 +9,8 @@ import java.util.concurrent.TimeoutException;
  *
  * @param <T>
  */
-public class Future <T> implements java.util.concurrent.Future<T> {
+public class Future <T>
+{
 
   // Loading QiMessaging JNI layer
   static
@@ -21,7 +22,7 @@ public class Future <T> implements java.util.concurrent.Future<T> {
     }
   }
 
-  // Members
+  // C++ Future
   private long  _fut;
 
   // Native C API object functions
@@ -31,6 +32,7 @@ public class Future <T> implements java.util.concurrent.Future<T> {
   private static native boolean qiFutureCallIsCancelled(long pFuture);
   private static native boolean qiFutureCallIsDone(long pFuture);
   private static native boolean qiFutureCallConnect(long pFuture, Object callback, String className, Object[] args);
+  private static native void    qiFutureCallWaitWithTimeout(long pFuture, int timeout);
 
   private Future()
   {
@@ -40,6 +42,16 @@ public class Future <T> implements java.util.concurrent.Future<T> {
   Future(long pFuture)
   {
     _fut = pFuture;
+  }
+
+  public void sync(long timeout, TimeUnit unit)
+  {
+    Future.qiFutureCallWaitWithTimeout(_fut, unit.toMillis(timeout));
+  }
+
+  public void sync()
+  {
+    this.sync(0, TimeUnit.SECONDS);
   }
 
   /**
@@ -58,8 +70,7 @@ public class Future <T> implements java.util.concurrent.Future<T> {
     return qiFutureCallConnect(_fut, callback, className, args);
   }
 
-  @Override
-  public boolean cancel(boolean mayInterruptIfRunning)
+  public boolean cancel()
   {
 
     return qiFutureCallCancel(_fut);
@@ -87,7 +98,6 @@ public class Future <T> implements java.util.concurrent.Future<T> {
   }
 
   @SuppressWarnings("unchecked")
-  @Override
   public T get(long timeout, TimeUnit unit) throws InterruptedException,
   ExecutionException, TimeoutException
   {
@@ -109,17 +119,18 @@ public class Future <T> implements java.util.concurrent.Future<T> {
     return (T) ret;
   }
 
-  @Override
-  public boolean isCancelled() {
+  public boolean isCancelled()
+  {
     return Future.qiFutureCallIsCancelled(_fut);
   }
 
-  @Override
-  public boolean isDone() {
+  public boolean isDone()
+  {
     return Future.qiFutureCallIsDone(_fut);
   }
 
-  public boolean isValid() {
+  public boolean isValid()
+  {
     if (_fut == 0)
       return false;
 

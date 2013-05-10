@@ -70,7 +70,7 @@ extends TestCase
 
     // Try to connect session to service directory.
     try {
-      s.connect(url);
+      s.connect(url).sync();
     } catch (Exception e)
     {
       System.out.printf("Cannot connect to service directory (%s) : %s", url, e.getMessage());

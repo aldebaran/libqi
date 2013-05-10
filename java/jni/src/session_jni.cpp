@@ -35,25 +35,29 @@ jboolean Java_com_aldebaran_qimessaging_Session_qiSessionIsConnected(JNIEnv* QI_
   return (jboolean) s->isConnected();
 }
 
-jboolean Java_com_aldebaran_qimessaging_Session_qiSessionConnect(JNIEnv *env, jobject QI_UNUSED(obj), jlong pSession, jstring jurl)
+jlong Java_com_aldebaran_qimessaging_Session_qiSessionConnect(JNIEnv *env, jobject QI_UNUSED(obj), jlong pSession, jstring jurl)
 {
   if (pSession == 0)
   {
     throwJavaError(env, "Given qi::Session doesn't exists (pointer null).");
-    return false;
+    return 0;
   }
+
+  // After this function return, callbacks are going to be set on new created Future.
+  // Save the JVM pointer here to avoid big issues when callbacks will be called.
+  JVM(env);
 
   qi::Session *s = reinterpret_cast<qi::Session*>(pSession);
-  qi::FutureSync<void> fut = s->connect(toStdString(env, jurl).c_str());
-  fut.wait();
+  qi::Future<void> *fut = new qi::Future<void>();
+  *fut = s->connect(toStdString(env, jurl).c_str()).async();
 
-  if (fut.hasError())
+  if (fut->hasError())
   {
-    throwJavaError(env, fut.error().c_str());
-    return false;
+    qiLogError("qimessaging.jni") << "Error : " << fut->error();
+    throwJavaError(env, fut->error().c_str());
   }
 
-  return true;
+  return (jlong) fut;
 }
 
 void Java_com_aldebaran_qimessaging_Session_qiSessionClose(JNIEnv* QI_UNUSED(env), jobject QI_UNUSED(obj), jlong pSession)
@@ -68,7 +72,7 @@ jlong Java_com_aldebaran_qimessaging_Session_qiSessionService(JNIEnv *env, jobje
   if (pSession == 0)
   {
     throwJavaError(env, "Given qi::Session doesn't exists (pointer null).");
-    return false;
+    return 0;
   }
 
   qi::Session *s = reinterpret_cast<qi::Session*>(pSession);
@@ -80,7 +84,8 @@ jlong Java_com_aldebaran_qimessaging_Session_qiSessionService(JNIEnv *env, jobje
   try
   {
     o = s->service(serviceName);
-    if (!o) {
+    if (!o)
+    {
       delete obj;
       throwJavaError(env, "Cannot get service");
       return 0;
@@ -103,7 +108,8 @@ jlong Java_com_aldebaran_qimessaging_Session_qiSessionRegisterService
   jlong ret = 0;
 
   char *cname = qi::os::strdup(name.c_str());
-  try {
+  try
+  {
     ret = session->registerService(name, *object);
   }
   catch (std::runtime_error &e)

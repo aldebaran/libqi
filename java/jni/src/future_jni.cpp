@@ -62,7 +62,8 @@ jobject  Java_com_aldebaran_qimessaging_Future_qiFutureCallGet(JNIEnv *env, jobj
 {
   qi::Future<qi::GenericValuePtr>* fut = reinterpret_cast<qi::Future<qi::GenericValuePtr>*>(pFuture);
 
-  try {
+  try
+  {
     return fut->value().to<jobject>();
   }
   catch (std::runtime_error &e)
@@ -122,4 +123,10 @@ jboolean Java_com_aldebaran_qimessaging_Future_qiFutureCallConnect(JNIEnv *env, 
   qi::FutureHandler::addCallbackInfo(fut, info);
   fut->connect(boost::bind(&java_future_callback, _1));
   return true;
+}
+
+void  Java_com_aldebaran_qimessaging_Future_qiFutureCallWaitWithTimeout(JNIEnv *env, jobject obj, jlong pFuture, jint timeout)
+{
+  qi::Future<qi::GenericValuePtr>* fut = reinterpret_cast<qi::Future<qi::GenericValuePtr>*>(pFuture);
+  fut->wait(timeout);
 }

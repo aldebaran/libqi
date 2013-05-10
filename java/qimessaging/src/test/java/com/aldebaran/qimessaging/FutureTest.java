@@ -67,7 +67,7 @@ extends TestCase
     // Connect session to Service Directory
     try
     {
-      s.connect(url);
+      s.connect(url).sync();
     } catch (Exception e)
     {
       Assert.assertTrue("Session must be connected to Service Directory : " + e.getMessage(), false);
@@ -80,7 +80,7 @@ extends TestCase
     try
     {
       System.out.printf("Connecting to %s\n", url);
-      client.connect(url);
+      client.connect(url).sync();
     } catch (Exception e)
     {
       Assert.assertTrue("Client session must be connected to Service Directory : " + e.getMessage(), false);
@@ -263,7 +263,7 @@ extends TestCase
     // Connect session to Service Directory
     try
     {
-      s.connect(url);
+      s.connect(url).sync();
     } catch (Exception e)
     {
       Assert.assertTrue("Session must be connected to Service Directory : " + e.getMessage(), false);
