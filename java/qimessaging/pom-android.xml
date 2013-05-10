@@ -7,10 +7,10 @@
     <groupId>com.aldebaran.app</groupId> <!-- Qimessaging Java bindings properties -->
     <artifactId>qimessaging-apklib</artifactId>
     <version>1.0-SNAPSHOT</version>
-    <name>Android NDK - Qimessaging APKLIB</name>
+    <name>Android NDK - QiMessaging APKLIB</name>
 
     <properties>
-      <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding> <!-- Project encoding -->
+      <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
     <!-- Packaging is defined as 'apklib' -->
@@ -20,7 +20,7 @@
       <dependency> <!-- Dependency to native qimessaging library (embeded into a jar) -->
         <groupId>com.aldebaran</groupId>
         <version>1.0-SNAPSHOT</version>
-        <artifactId>nativeqimessaging-android</artifactId> <!-- If modified, update packagenative.sh -->
+        <artifactId>nativeqimessaging-android</artifactId>
         <type>jar</type>
       </dependency>
       <dependency>
@@ -30,12 +30,6 @@
         <scope>provided</scope>
       </dependency>
     </dependencies>
-
-    <!--<parent>
-        <groupId>com.jayway.maven.plugins.android.generation2.samples</groupId>
-        <artifactId>native-parent</artifactId>
-        <version>1.0.0-SNAPSHOT</version>
-    </parent>-->
 
     <build>
       <resources> <!-- Package native libraries as resources -->
@@ -72,12 +66,12 @@
                 <artifactItems>
                   <artifactItem> <!-- Specify maven behavior with nativeqimessaging.jar -->
                     <groupId>com.aldebaran</groupId>
-                    <artifactId>nativeqimessaging</artifactId> <!-- If modified, update packagenative.sh -->
+                    <artifactId>nativeqimessaging-android</artifactId>
                     <version>1.0-SNAPSHOT</version>
                     <classifier>${build.type}</classifier>
                     <type>jar</type>
                     <overWrite>true</overWrite>
-                    <outputDirectory>jni/</outputDirectory>
+                    <outputDirectory>${basedir}/jni</outputDirectory>
                   </artifactItem>
                 </artifactItems>
               </configuration>
@@ -99,7 +93,7 @@
           </executions>
           <configuration>
             <attachNativeArtifacts>false</attachNativeArtifacts>
-            <clearNativeArtifacts>true</clearNativeArtifacts> <!-- Why does this need to be set to work? -->
+            <clearNativeArtifacts>true</clearNativeArtifacts>
           </configuration>
         </plugin>
         <plugin>
@@ -118,7 +112,7 @@
       <repository>
         <id>local-repository</id>
         <name>Native qimessaging library jar repository</name>
-        <url>file:///tmp/maven/nativeqimessaging-android</url> <!-- If modified, update packagenative.sh -->
+        <url>file:///tmp/maven/nativeqimessaging-android</url>
       </repository>
     </repositories>
 

@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
 
 
-  <groupId>com.aldebaran.app</groupId> <!-- Qimessaging Java bindings properties -->
+  <groupId>com.aldebaran.app</groupId> <!-- QiMessaging Java bindings properties -->
   <artifactId>qimessaging</artifactId>
   <version>1.0-SNAPSHOT</version>
   <packaging>jar</packaging>
@@ -21,7 +21,7 @@
   <licenses>
     <license>
       <name>See COPYING</name>
-      <url>http://aldebaran-robotics.com&gt;</url>
+      <url>http://aldebaran-robotics.com</url>
     </license>
   </licenses>
 
@@ -50,7 +50,7 @@
     <dependency> <!-- Dependency to native qimessaging library (embeded into a jar) -->
       <groupId>com.aldebaran</groupId>
       <version>1.0-SNAPSHOT</version>
-      <artifactId>nativeqimessaging</artifactId> <!-- If modified, update packagenative.xml -->
+      <artifactId>nativeqimessaging-desktop</artifactId>
     </dependency>
   </dependencies>
 
@@ -147,7 +147,7 @@
               <artifactItems>
                 <artifactItem> <!-- Specify maven behavior with nativeqimessaging.jar -->
                   <groupId>com.aldebaran</groupId>
-                  <artifactId>nativeqimessaging</artifactId> <!-- If modified, update packagenative.xml -->
+                  <artifactId>nativeqimessaging-desktop</artifactId>
                   <version>1.0-SNAPSHOT</version>
                   <classifier>${build.type}</classifier>
                   <type>jar</type>
@@ -176,7 +176,7 @@
     <repository>
       <id>local-repository</id>
     <name>Native qimessaging library jar repository</name>
-    <url>file:///tmp/maven/repo</url> <!-- If modified, update packagenative.xml -->
+    <url>file:///tmp/maven/nativeqimessaging-desktop</url>
     </repository>
   </repositories>
 
