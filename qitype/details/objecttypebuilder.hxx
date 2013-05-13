@@ -109,6 +109,13 @@ namespace qi {
   }
 
   template <typename C, typename T>
+  SignalBase* signalAccessGetter(Signal<T>& (C::*ptr)(), void* instance)
+  {
+    C* c = reinterpret_cast<C*>(instance);
+    return &((c->*ptr)());
+  }
+
+  template <typename C, typename T>
   PropertyBase* propertyAccess(Property<T> C::* ptr, void* instance)
   {
     C* c = reinterpret_cast<C*>(instance);
@@ -116,10 +123,24 @@ namespace qi {
   }
 
   template <typename C, typename T>
+  PropertyBase* propertyAccessGetter(Property<T>& (C::* ptr)(), void* instance)
+  {
+    C* c = reinterpret_cast<C*>(instance);
+    return &((*c).*ptr)();
+  }
+
+  template <typename C, typename T>
   SignalBase* signalFromInstanceProperty(Property<T> C::* ptr, void* instance)
   {
     C* c = reinterpret_cast<C*>(instance);
     Property<T>& p = ((*c).*ptr);
+    return &p;
+  }
+  template <typename C, typename T>
+  SignalBase* signalFromInstancePropertyGetter(Property<T>& (C::* ptr)(), void* instance)
+  {
+    C* c = reinterpret_cast<C*>(instance);
+    Property<T>& p = ((*c).*ptr)();
     return &p;
   }
 
@@ -132,6 +153,14 @@ namespace qi {
   }
 
   template <typename C, typename T>
+  unsigned int ObjectTypeBuilderBase::advertiseSignal(const std::string& eventName, Signal<T>& (C::*signalAccessor)(), int id)
+  {
+    // FIXME validate type
+    SignalMemberGetter fun = boost::bind(&signalAccessGetter<C, T>, signalAccessor, _1);
+    return xAdvertiseSignal(eventName, detail::FunctionSignature<T>::signature(), fun, id);
+  }
+
+  template <typename C, typename T>
   unsigned int ObjectTypeBuilderBase::advertiseProperty(const std::string& name, Property<T> C::* accessor)
   {
     // FIXME validate type
@@ -140,6 +169,18 @@ namespace qi {
     unsigned int id = xAdvertiseSignal(name, detail::FunctionSignature<void(const T&)>::signature(), fun);
 
     PropertyMemberGetter pg = boost::bind(&propertyAccess<C, T>, accessor, _1);
+    return xAdvertiseProperty(name, typeOf<T>()->signature(), pg, id);
+  }
+
+  template <typename C, typename T>
+  unsigned int ObjectTypeBuilderBase::advertiseProperty(const std::string& name, Property<T>& (C::*accessor)())
+  {
+    // FIXME validate type
+    SignalMemberGetter fun = boost::bind(&signalFromInstancePropertyGetter<C, T>, accessor, _1);
+    // advertise the event
+    unsigned int id = xAdvertiseSignal(name, detail::FunctionSignature<void(const T&)>::signature(), fun);
+
+    PropertyMemberGetter pg = boost::bind(&propertyAccessGetter<C, T>, accessor, _1);
     return xAdvertiseProperty(name, typeOf<T>()->signature(), pg, id);
   }
 
@@ -157,6 +198,8 @@ namespace qi {
 
   namespace detail
   {
+    static const char* interfaceMarker = "_interface_";
+    static const unsigned int interfaceMarkerLength = strlen(interfaceMarker);
     template<typename E>
     struct AdvertiseDispatch
     {
@@ -176,12 +219,38 @@ namespace qi {
       }
     };
     template<typename T, typename C>
+    struct AdvertiseDispatch<Signal<T>& (C::*)()>
+    {
+      unsigned int operator()(const std::string& name, ObjectTypeBuilderBase* b,
+                              Signal<T>& (C::* e)())
+      {
+        std::string n = name;
+        if (n.size() > interfaceMarkerLength && n.substr(0, interfaceMarkerLength) == interfaceMarker)
+          n = name.substr(interfaceMarkerLength);
+        return b->advertiseSignal(n, e);
+      }
+    };
+
+    template<typename T, typename C>
     struct AdvertiseDispatch<Property<T> C::*>
     {
       unsigned int operator()(const std::string& name, ObjectTypeBuilderBase* b,
         Property<T> C::* e)
       {
         return b->advertiseProperty(name, e);
+      }
+    };
+
+    template<typename T, typename C>
+    struct AdvertiseDispatch<Property<T>& (C::*)()>
+    {
+      unsigned int operator()(const std::string& name, ObjectTypeBuilderBase* b,
+        Property<T>& (C::*e)())
+      {
+        std::string n = name;
+        if (n.size() > interfaceMarkerLength && n.substr(0, interfaceMarkerLength) == interfaceMarker)
+          n = name.substr(interfaceMarkerLength);
+        return b->advertiseProperty(n, e);
       }
     };
   }

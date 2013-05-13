@@ -45,11 +45,15 @@ namespace qi {
     inline unsigned int advertiseMethod(const std::string& name, FUNCTION_TYPE function, MetaCallType threadingModel = MetaCallType_Auto, int id = -1);
     template <typename C, typename T>
     inline unsigned int advertiseSignal(const std::string& eventName, Signal<T> C::* signalAccessor, int id = -1);
+    template <typename C, typename T>
+    inline unsigned int advertiseSignal(const std::string& eventName, Signal<T>& (C::*signalAccessor)(), int id = -1);
     template <typename T>
     inline unsigned int advertiseSignal(const std::string& name, SignalMemberGetter getter, int id = -1);
 
     template <typename C, typename T>
     inline unsigned int advertiseProperty(const std::string& eventName, Property<T> C::* propertyAccessor);
+    template <typename C, typename T>
+    inline unsigned int advertiseProperty(const std::string& eventName, Property<T>& (C::*propertyAccessor)());
     template<typename T>
     inline unsigned int advertiseProperty(const std::string& eventName, PropertyMemberGetter getter);
     template<typename P> void inherits(int offset);

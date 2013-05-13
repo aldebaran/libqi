@@ -448,8 +448,13 @@ class @INAME@
     virtual ~@INAME@();
 @DECLS@
 
+@GETTERS@
     bool _allocated; // are sigs/props allocated by us
 };
+
+// Register an object implementing this interface
+#define QI_IMPLEMENT_@INAME@(name, ...) \
+  QI_REGISTER_OBJECT(name, @FIELDS@, ##__VA_ARGS__)
 
 @CTOR0IMPL@
 
@@ -472,10 +477,13 @@ QI_TYPE_NOT_CLONABLE(@INAME@);
 """
   (methods, signals, properties) = (data[METHODS], data[SIGNALS], data[PROPERTIES])
   methods_decl = ''
+  getters = ''
+  fields = []
   for method in methods:
     (cret, typed_args, arg_names) = method_to_cxx(method)
     method_name = method[0]
     methods_decl += '    virtual %s %s (%s) = 0;\n' % (cret, method_name, typed_args)
+    fields.append(method_name)
   signals_decl = ''
   ctor_decl = []
   ctor_init = []   # all sig/prop in argument ctor
@@ -489,6 +497,8 @@ QI_TYPE_NOT_CLONABLE(@INAME@);
     ctor_init.append('%s(%s)' % (name, name))
     ctor_init0.append('%s(*new qi::Signal<void (%s)>)' % (name, signature))
     dtor += '    delete &%s;\n' % (name)
+    getters += '    qi::Signal<void(%s)> & _interface_%s() { return %s;}\n' % (signature, name, name)
+    fields.append('_interface_' + name)
   for prop in properties:
     name = prop[0]
     signature = idltype_to_cxxtype(prop[1])
@@ -497,6 +507,8 @@ QI_TYPE_NOT_CLONABLE(@INAME@);
     ctor_init.append('%s(%s)' % (name, name))
     ctor_init0.append('%s(*new qi::Property<%s>)' % (name, signature))
     dtor += '    delete &%s;\n' % (name)
+    getters += '    qi::Property<%s>& _interface_%s() { return %s;}\n' % (signature, name, name)
+    fields.append('_interface_' + name)
   no_sigprop = (len(ctor_init) == 0)
   ctor_init.append('_allocated(false)')
   ctor_init0.append('_allocated(true)')
@@ -507,6 +519,7 @@ QI_TYPE_NOT_CLONABLE(@INAME@);
     ctor0impl = ''
     ctor0decl = ''
   else:
+    getters = '   // Accessors required for proper bindings, since constructing a getter on a reference member is impossible\n' + getters
     ctor0impl = """
 inline @INAME@::@INAME@()
 %s
@@ -522,6 +535,8 @@ inline @INAME@::@INAME@()
    '@CTOR1ARGS@': ctor_decl,
    '@DELETE@': dtor,
    '@DECLS@': methods_decl + signals_decl,
+   '@GETTERS@': getters,
+   '@FIELDS@': ','.join(fields),
    '@include@': ''.join(['#include <' + x + '>\n' for x in include])
    }
   for k in replace:
