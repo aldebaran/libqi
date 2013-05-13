@@ -31,7 +31,7 @@ namespace qi {
       if (fullName.empty())
       {
         qiLogError("qi.dlopen") << "Could not locate library " << filename;
-        return 0;
+        fullName = filename; // Do not return here, let sys call fails and set errno.
       }
       void *handle = NULL;
       boost::filesystem::path fname(fullName, qi::unicodeFacet());
@@ -73,7 +73,13 @@ namespace qi {
      #ifdef _WIN32
       static char err[255];
       DWORD lastError = GetLastError();
+      // Unix dlerror() return null if error code is 0
+      if (lastError == 0)
+        return NULL;
+
       DWORD result = FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM, 0, lastError, 0, err, sizeof(err), 0);
+      // Unix dlerror() resets its value after a call, ensure same behavior
+      SetLastError(0);
       return err;
      #else
       return ::dlerror();

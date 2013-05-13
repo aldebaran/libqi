@@ -38,8 +38,15 @@
 /**
  * \fn qi::os::dlerror()
  * \brief Returns a human readable string of the error code.
- * \return NULL if no error has occurred since initialization or since it was
- *         last called. An human readable string otherwise.
+ * \return NULL if no error has occurred since it was last called.
+ *         An human readable string otherwise.
+ *
+ * .. warning::
+ *      On windows, return value may be modified by another function
+ *      unrelated to qi::os::dlopen familly.
+ *      This function does not ensure that error value is 0 at initialisation.
+ *      You may reset error value before a call to any qi::os::dl{open, sym, close}
+ *      functions with a first call to this function.
  *
  * \verbatim
  * Returns a human readable string describing the most recent error that
