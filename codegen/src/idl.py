@@ -947,7 +947,7 @@ def main(args):
     if len(c):
       REV_MAP[c + 'Ptr'] = c + 'ProxyPtr'
   # Step one: get raw from either IDL, source files, or running service
-  if len(pargs.input) == 1 and pargs.input[0][-3:] == 'idl':
+  if len(pargs.input) == 1 and pargs.input[0][-3:] in ['idl', 'xml']:
     xml = etree.ElementTree(file=pargs.input[0]).getroot()
     raw = idl_to_raw(xml)
   elif len(pargs.input) == 1 and pargs.input[0].find('://') != -1:
@@ -975,7 +975,7 @@ def main(args):
         continue #be lenient on trailing ,
       cc = c.split(':', 1)
       if not cc[0] in raw:
-        raise Exception("Requested class %s not found" % cc[0])
+        raise Exception("Requested class %s not found in %s" % (cc[0], ','.join(raw.keys())))
       REV_MAP[cc[0] + 'Ptr'] = cc[0] + 'ProxyPtr'
       newraw[cc[0]] = raw[cc[0]]
       if len(cc) > 1:
