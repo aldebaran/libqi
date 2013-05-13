@@ -837,7 +837,7 @@ TEST(TestCall, Overflow)
   ob.advertiseMethod("pingInt", &pingInt);
   ob.advertiseMethod("pingUInt", &pingUInt);
 
-  ob.xAdvertiseMethod("i", "pingChar_i::(i)", makeGenericFunction(&pingChar).dropFirstArgument());
+  ob.xAdvertiseMethod("i", "pingChar_i", "(i)", makeGenericFunction(&pingChar).dropFirstArgument());
   ObjectPtr obj = ob.object();
   p.server()->registerService("ping", obj);
 

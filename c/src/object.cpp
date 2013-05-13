@@ -135,7 +135,8 @@ int                 qi_object_event_emit(qi_object_t* object, const char *signat
   qi::GenericValuePtr &val = qi_value_cpp(params);
   if (qi_value_get_kind(params) != QI_VALUE_KIND_TUPLE)
     return -1;
-  return obj->xMetaPost(signature, val.asTupleValuePtr());
+  obj->metaPost(signature, val.asTupleValuePtr());
+  return 0;
 }
 
 
@@ -159,10 +160,7 @@ int          qi_object_builder_register_method(qi_object_builder_t *object_build
   std::vector<std::string>  sigInfo;
 
   sigInfo = qi::signatureSplit(signature);
-  signature = sigInfo[1];
-  signature.append("::");
-  signature.append(sigInfo[2]);
-  ob->xAdvertiseMethod(sigInfo[0], signature,
+  ob->xAdvertiseMethod(sigInfo[0], sigInfo[1], sigInfo[2],
     makeDynamicGenericFunction(
     boost::bind(&c_call, std::string(complete_signature), func, data, _1)));
   return 0;
