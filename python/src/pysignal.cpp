@@ -7,6 +7,7 @@
 */
 #include "pysignal.hpp"
 #include <boost/python.hpp>
+#include <boost/python/raw_function.hpp>
 #include <qitype/signal.hpp>
 #include "gil.hpp"
 qiLogCategory("py.signal");
@@ -57,13 +58,22 @@ namespace qi { namespace py {
       return boost::python::object(PySignal(signature));
     }
 
+    static boost::python::object raw_fun(boost::python::tuple args, boost::python::dict kwargs) {
+      PySignal& pys = boost::python::extract<PySignal&>(args[0]);
+      boost::python::list l;
+      for (unsigned i = 1; i < boost::python::len(args); ++i)
+        l.append(args[i]);
+      pys.trig(boost::python::tuple(l), kwargs);
+      return boost::python::object();
+    }
+
     void export_pysignal() {
       boost::python::class_<PySignal>("Signal", boost::python::init<>())
           .def(boost::python::init<const std::string &>())
           .def("connect", &PySignal::connect, (boost::python::arg("callback")))
           .def("disconnect", &PySignal::disconnect, (boost::python::arg("id")))
           .def("disconnect_all", &PySignal::disconnectAll)
-          .def("trigger", &PySignal::trig);
+          .def("__call__", boost::python::raw_function(&raw_fun));
     }
 
   }
