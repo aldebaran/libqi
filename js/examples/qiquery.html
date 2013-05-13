@@ -116,8 +116,13 @@ function showCall(s, m, sigret, sigarg) {
   $("#call").fadeIn(400)
 }
 
+function getSD(sd)
+{
+  sd.services().done(showServices)
+}
+
 $(document).ready(function() {
-  qim.services().done(showServices)
+  qim.service("ServiceDirectory").done(getSD)
 });
 </script>
 

@@ -54,15 +54,6 @@ function QiSession(url)
     return metaCall;
   }
 
-  this.services = function()
-  {
-    var idm = getIdm();
-    _dfd[idm] = $.Deferred();
-    _socket.emit('call', { idm: idm, params: { service: "ServiceDirectory", method: "services" } });
-
-    return _dfd[idm];
-  }
-
   this.service = function(service)
   {
     var dfd = $.Deferred();
