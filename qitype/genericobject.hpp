@@ -141,7 +141,7 @@ namespace qi {
     */
     qi::Future<GenericValuePtr> metaCall(const std::string &signature, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto);
 
-    void emitEvent(const std::string& eventName,
+    void post(const std::string& eventName,
                    qi::AutoGenericValuePtr p1 = qi::AutoGenericValuePtr(),
                    qi::AutoGenericValuePtr p2 = qi::AutoGenericValuePtr(),
                    qi::AutoGenericValuePtr p3 = qi::AutoGenericValuePtr(),

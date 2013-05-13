@@ -21,20 +21,20 @@ void onFire(const int& pl)
 TEST(TestObject, Simple)
 {
   qi::GenericObjectBuilder ob;
-  ob.advertiseEvent<void (*)(int)>("fire");
+  ob.advertiseSignal<void (*)(int)>("fire");
   qi::ObjectPtr obj(ob.object());
   EXPECT_EQ(1U, obj->metaObject().signalMap().size());
   qi::Link linkId = obj->connect("fire", &onFire);
-  obj->emitEvent("fire", 42);
+  obj->post("fire", 42);
   EXPECT_TRUE(pPayload.future().wait(2000) != qi::FutureState_Running);
   EXPECT_EQ(42, lastPayload);
   pPayload.reset();
-  obj->emitEvent("fire", 51);
+  obj->post("fire", 51);
   EXPECT_TRUE(pPayload.future().wait(2000) != qi::FutureState_Running);
   EXPECT_EQ(51, lastPayload);
   pPayload.reset();
   obj->disconnect(linkId);
-  obj->emitEvent("fire", 42);
+  obj->post("fire", 42);
   EXPECT_FALSE(pPayload.future().wait(200) != qi::FutureState_Running);
   EXPECT_EQ(51, lastPayload);
 }
@@ -42,11 +42,11 @@ TEST(TestObject, Simple)
 TEST(TestObject, ConnectBind)
 {
   qi::GenericObjectBuilder ob;
-  ob.advertiseEvent<void (*)(int)>("fire");
-  ob.advertiseEvent<void (*)(int, int)>("fire2");
+  ob.advertiseSignal<void (*)(int)>("fire");
+  ob.advertiseSignal<void (*)(int, int)>("fire2");
   qi::ObjectPtr obj(ob.object());
   qi::Link link = obj->connect("fire", boost::bind<void>(&onFire, _1));
-  obj->emitEvent("fire", 42);
+  obj->post("fire", 42);
   EXPECT_TRUE(pPayload.future().wait(2000) != qi::FutureState_Running);
   EXPECT_EQ(42, lastPayload);
   obj->disconnect(link);
@@ -58,7 +58,7 @@ TEST(TestObject, ConnectBind)
   link = obj->connect("fire2", boost::bind(&onFire, _2));
   EXPECT_TRUE(link != 0);
   pPayload.reset();
-  obj->emitEvent("fire2", 40, 41);
+  obj->post("fire2", 40, 41);
   EXPECT_TRUE(pPayload.future().wait(2000) != qi::FutureState_Running);
   EXPECT_EQ(41, lastPayload);
   obj->disconnect(link);
@@ -71,7 +71,7 @@ TEST(TestObject, EmitMethod)
   ob.advertiseMethod("fire", &onFire);
   qi::ObjectPtr obj(ob.object());
   pPayload.reset();
-  obj->emitEvent("fire", 23);
+  obj->post("fire", 23);
   EXPECT_TRUE(pPayload.future().wait(2000) != qi::FutureState_Running);
   EXPECT_EQ(23, pPayload.future().value());
 }

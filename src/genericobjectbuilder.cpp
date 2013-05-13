@@ -108,12 +108,12 @@ namespace qi
     return nextId;
   }
 
-  int GenericObjectBuilder::xAdvertiseEvent(const std::string &name, const std::string& signature)
+  int GenericObjectBuilder::xAdvertiseSignal(const std::string &name, const std::string& signature)
   {
     if (isSignatureValid(signature, "") < 0)
       return -1;
     if (_p->_objptr) {
-      qiLogWarning() << "GenericObjectBuilder: Called xAdvertiseEvent on event '" << signature << "' but object is already created.";
+      qiLogWarning() << "GenericObjectBuilder: Called xAdvertiseSignal on event '" << signature << "' but object is already created.";
     }
     int nextId = _p->_object->metaObject()._p->addSignal(name, signature);
     if (nextId < 0)

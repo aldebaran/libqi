@@ -47,7 +47,7 @@ namespace qi {
                                         MetaCallType threadingModel = MetaCallType_Auto);
 
     template<typename FUNCTION_TYPE>
-    inline unsigned int advertiseEvent(const std::string& eventName);
+    inline unsigned int advertiseSignal(const std::string& eventName);
     template<typename T>
     unsigned int advertiseProperty(const std::string& name);
 
@@ -60,7 +60,7 @@ namespace qi {
     int xAdvertiseMethod(MetaMethodBuilder& builder, GenericFunction func,
                          MetaCallType threadingModel = MetaCallType_Auto);
 
-    int xAdvertiseEvent(const std::string &name, const std::string& signature);
+    int xAdvertiseSignal(const std::string &name, const std::string& signature);
     int xAdvertiseProperty(const std::string& name, const std::string& sig, int id=-1);
     void setDescription(const std::string& desc);
     qi::ObjectPtr object(boost::function<void (GenericObject*)> onDelete = boost::function<void (GenericObject*)>());

@@ -30,10 +30,10 @@ TEST(TestLoadService, Load)
   //specialized connect/disconnect
   qi::Promise<int> prom;
   unsigned int link = proxy.sig.connect(boost::bind(&notify, _1, boost::ref(prom)));
-  obj->emitEvent("sig", 1);
+  obj->post("sig", 1);
   ASSERT_EQ(1, prom.future().value());
   proxy.sig.disconnect(link);
-  obj->emitEvent("sig", 2);
+  obj->post("sig", 2);
   qi::os::msleep(300);
   ASSERT_EQ(1, prom.future().value());
   //specialized emit

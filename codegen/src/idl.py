@@ -591,13 +591,13 @@ qi::ObjectPtr TYPEmake_one(const std::string&)
   for s in signals:
     bouncers += 'inline qi::SignalBase* signalget_%s_%s(void* inst) { return &reinterpret_cast<%s*>(inst)->%s;}\n'%(
      cns, s[0], cns, s[0])
-    #advertise += '  builder.advertiseEvent("{0}", {1}::{0});\n'.format(s[0], class_name + 'Service')
-    advertise += '  {3}.advertiseEvent<void({2})>("{0}", qi::ObjectTypeBuilderBase::SignalMemberGetter(&signalget_{1}_{0}));\n'.format(
+    #advertise += '  builder.advertiseSignal("{0}", {1}::{0});\n'.format(s[0], class_name + 'Service')
+    advertise += '  {3}.advertiseSignal<void({2})>("{0}", qi::ObjectTypeBuilderBase::SignalMemberGetter(&signalget_{1}_{0}));\n'.format(
       s[0], class_name + 'Service', ','.join(map(idltype_to_cxxtype, s[1])), builder)
   for s in properties:
     bouncers += 'inline qi::PropertyBase* propertyget_%s_%s(void* inst) { return &reinterpret_cast<%s*>(inst)->%s;}\n'%(
      cns, s[0], cns, s[0])
-    #advertise += '  builder.advertiseEvent("{0}", {1}::{0});\n'.format(s[0], class_name + 'Service')
+    #advertise += '  builder.advertiseSignal("{0}", {1}::{0});\n'.format(s[0], class_name + 'Service')
     advertise += '  {3}.advertiseProperty<{2}>("{0}", qi::ObjectTypeBuilderBase::PropertyMemberGetter(&propertyget_{1}_{0}));\n'.format(
       s[0], class_name + 'Service', idltype_to_cxxtype(s[1]), builder)
   register = ''

@@ -54,7 +54,7 @@ void fire_samethread(qi::ObjectPtr obj, void* tid)
 {
   if (!tid)
     tid = new TID(boost::this_thread::get_id());
-  obj->emitEvent("fire", (unsigned long) tid);
+  obj->post("fire", (unsigned long) tid);
 }
 
 // Fire sameThread in given event loop
@@ -67,7 +67,7 @@ qi::ObjectPtr makeObj()
 {
   qi::GenericObjectBuilder ob;
   ob.advertiseMethod("sameThread", &sameThread);
-  ob.advertiseEvent<void (unsigned long)>("fire");
+  ob.advertiseSignal<void (unsigned long)>("fire");
   qi::ObjectPtr res = ob.object();
   return res;
 }
@@ -79,7 +79,7 @@ qi::ObjectPtr makeObjWithThreadModel(qi::ObjectThreadingModel model)
   ob.advertiseMethod("delayms", &qi::os::msleep);
   ob.advertiseMethod("delaymsThreadSafe", &qi::os::msleep, "", qi::MetaCallType_Queued);
   ob.advertiseMethod("delaymsFast", &qi::os::msleep, "", qi::MetaCallType_Direct);
-  ob.advertiseEvent<void (unsigned long)>("fire");
+  ob.advertiseSignal<void (unsigned long)>("fire");
   ob.setThreadingModel(model);
   qi::ObjectPtr res = ob.object();
   return res;
@@ -100,7 +100,7 @@ TEST(TestEventLoop, Event)
   unsigned long mainId = (unsigned long)(void*)new TID(boost::this_thread::get_id());
   qi::ObjectPtr o1 = makeObj();
   qi::Link link = o1->connect("fire", &vSameThread);
-  o1->emitEvent("fire", mainId);
+  o1->post("fire", mainId);
   ASSERT_TRUE(result.future().wait(3000) != qi::FutureState_Running);
   ASSERT_TRUE(result.future().value());
   result.reset();

@@ -345,7 +345,7 @@ namespace qi {
     return _p->subscribers(eventId);
   }*/
 
-  void GenericObject::emitEvent(const std::string& eventName,
+  void GenericObject::post(const std::string& eventName,
                          qi::AutoGenericValuePtr p1,
                          qi::AutoGenericValuePtr p2,
                          qi::AutoGenericValuePtr p3,

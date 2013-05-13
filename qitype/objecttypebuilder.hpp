@@ -44,9 +44,9 @@ namespace qi {
     template <typename FUNCTION_TYPE>
     inline unsigned int advertiseMethod(const std::string& name, FUNCTION_TYPE function, MetaCallType threadingModel = MetaCallType_Auto, int id = -1);
     template <typename C, typename T>
-    inline unsigned int advertiseEvent(const std::string& eventName, Signal<T> C::* signalAccessor, int id = -1);
+    inline unsigned int advertiseSignal(const std::string& eventName, Signal<T> C::* signalAccessor, int id = -1);
     template <typename T>
-    inline unsigned int advertiseEvent(const std::string& name, SignalMemberGetter getter, int id = -1);
+    inline unsigned int advertiseSignal(const std::string& name, SignalMemberGetter getter, int id = -1);
 
     template <typename C, typename T>
     inline unsigned int advertiseProperty(const std::string& eventName, Property<T> C::* propertyAccessor);
@@ -61,7 +61,7 @@ namespace qi {
 
     int xAdvertiseMethod(MetaMethodBuilder& builder, GenericFunction func, MetaCallType threadingModel = MetaCallType_Auto, int id = -1);
 
-    int xAdvertiseEvent(const std::string &name, const std::string& signature, SignalMemberGetter getter, int id = -1);
+    int xAdvertiseSignal(const std::string &name, const std::string& signature, SignalMemberGetter getter, int id = -1);
     int xAdvertiseProperty(const std::string& name, const std::string& sig, PropertyMemberGetter getter, int id = -1);
     void xBuildFor(Type* type, bool autoRegister = true);
     void inherits(Type* parentType, int offset);

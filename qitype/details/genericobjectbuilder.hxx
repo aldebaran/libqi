@@ -58,15 +58,15 @@ namespace qi {
     return xAdvertiseMethod(builder, f, threadingModel);
   }
 
-  template <typename T> unsigned int GenericObjectBuilder::advertiseEvent(const std::string& name)
+  template <typename T> unsigned int GenericObjectBuilder::advertiseSignal(const std::string& name)
   {
-    return xAdvertiseEvent(name, detail::FunctionSignature<T>::signature());
+    return xAdvertiseSignal(name, detail::FunctionSignature<T>::signature());
   }
 
   template <typename T> unsigned int GenericObjectBuilder::advertiseProperty(const std::string& name)
   {
     // we must end up with name event, get_name and set_name methods
-    unsigned int isig = advertiseEvent<void(const T&)>(name);
+    unsigned int isig = advertiseSignal<void(const T&)>(name);
     isig = xAdvertiseProperty(name, typeOf<T>()->signature(), isig);
     return isig;
   }

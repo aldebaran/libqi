@@ -615,7 +615,7 @@ TEST(TestObject, CallBackRegistration)
 {
   qi::GenericObjectBuilder gob;
 
-  gob.advertiseEvent<void (void)>("testcb");
+  gob.advertiseSignal<void (void)>("testcb");
   qi::ObjectPtr obj = gob.object();
   CPPCB c;
   obj->connect("testcb", boost::bind(&CPPCB::cb, &c));
