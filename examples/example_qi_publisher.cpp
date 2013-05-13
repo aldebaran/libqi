@@ -11,7 +11,7 @@ int main()
   qi::Publisher publisher("time");
 
   // Connect the publisher to the master
-  const std::string masterAddress = "127.0.0.1:5555";
+  const std::string masterAddress = "127.0.0.1:9559";
   publisher.connect(masterAddress);
 
   // Advertise the Topic, giving it a name and an int type

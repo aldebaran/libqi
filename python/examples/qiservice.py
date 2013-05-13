@@ -25,8 +25,8 @@ def get_servicedirectory_address():
     """
     if len(sys.argv) != 2:
         print 'Usage : %s qi-service.py directory-address' % sys.argv[0]
-        print 'Assuming service directory address is tcp://127.0.0.1:5555'
-        return "tcp://127.0.0.1:5555"
+        print 'Assuming service directory address is tcp://127.0.0.1:9559'
+        return "tcp://127.0.0.1:9559"
 
     return sys.argv[1]
 

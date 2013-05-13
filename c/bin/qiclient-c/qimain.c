@@ -101,8 +101,8 @@ int main(int argc, char *argv[])
   if (argc < 2)
   {
     printf("Usage : ./qi-client-c [--event] master-address");
-    printf("Assuming master address is tcp://127.0.0.1:5555");
-    sd_addr = strdup("tcp://127.0.0.1:5555");
+    printf("Assuming master address is tcp://127.0.0.1:9559");
+    sd_addr = strdup("tcp://127.0.0.1:9559");
   }
   else {
     if (!strcmp(argv[1], "--event")) {

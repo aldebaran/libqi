@@ -21,8 +21,8 @@ namespace qi_client_dotnet
             if (args.Length != 2)
             {
                 Console.WriteLine("Usage : /qi-client-dotnet master-address");
-                Console.WriteLine("Assuming master-address is tcp://127.0.0.1:5555");
-                connectionAddr = "tcp://127.0.0.1:5555";
+                Console.WriteLine("Assuming master-address is tcp://127.0.0.1:9559");
+                connectionAddr = "tcp://127.0.0.1:9559";
             }
             else
             {

@@ -28,8 +28,8 @@ def get_servicedirectory_address(argv):
     """
     if len(argv) != 2:
         print 'Usage : python2 qi-client.py directory-address'
-        print 'Assuming service directory address is tcp://127.0.0.1:5555'
-        return "tcp://127.0.0.1:5555"
+        print 'Assuming service directory address is tcp://127.0.0.1:9559'
+        return "tcp://127.0.0.1:9559"
 
     return argv[1]
 
@@ -46,7 +46,9 @@ def onPlaf(f):
 
 def toto(session):
 
-    session.connect("tcp://127.0.0.1:5555", async=True)
+    f = session.connect("tcp://127.0.0.1:9559", _async=True)
+    print "connected?", not f.has_error()
+
     #3 Get service serviceTest
     fut = session.service("serviceTest", async=True)
 

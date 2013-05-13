@@ -7,7 +7,7 @@
 
 using namespace qi;
 
-std::string gMasterAddress = "127.0.0.1:5555";
+std::string gMasterAddress = "127.0.0.1:9559";
 std::string gServerName = "server";
 std::string gServerAddress = "127.0.0.1:5556";
 
@@ -126,7 +126,7 @@ std::string echo(const std::string& in) {
 //  //sleep(10);
 //  // TODO deprecate this
 //  Context* c = new Context();
-//  Master master("127.0.0.1:5555", c);
+//  Master master("127.0.0.1:9559", c);
 //  delete(c);
 //}
 
@@ -137,7 +137,7 @@ std::string echo(const std::string& in) {
 //{
 //  //sleep(10);
 //  Context* c = new Context();
-//  std::string address = "127.0.0.1:5555";
+//  std::string address = "127.0.0.1:9559";
 //  Master master(address, c);
 //  master.run();
 //  Server server("server", c);
@@ -155,7 +155,7 @@ std::string echo(const std::string& in) {
 //{
 //  //sleep(10);
 //  Context* c = new Context();
-//  std::string address = "127.0.0.1:5555";
+//  std::string address = "127.0.0.1:9559";
 //  Master master(address, c);
 //  master.run();
 //  Server server("server", c);
@@ -187,7 +187,7 @@ TEST(ClientServer, defaultArgs)
 //TEST(ClientServer, explicitAddress)
 //{
 //  sleep(10);
-//  std::string address = "127.0.0.1:5555";
+//  std::string address = "127.0.0.1:9559";
 //  Master master(address);
 //  master.run();
 //  Server server;

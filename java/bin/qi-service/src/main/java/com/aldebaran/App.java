@@ -11,7 +11,7 @@ public class App
   public static void main( String[] args )
   {
     Application app = new Application(args);
-    String sdAddr = "tcp://127.0.0.1:5555";
+    String sdAddr = "tcp://127.0.0.1:9559";
     Session s = new Session();
     QimessagingService service = new ReplyService();
     GenericObject obj = new GenericObject();

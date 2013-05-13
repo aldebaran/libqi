@@ -12,7 +12,7 @@
 
 using namespace qi;
 
-std::string gMasterAddress = "127.0.0.1:5555";
+std::string gMasterAddress = "127.0.0.1:9559";
 //std::string gServerName = "server";
 //std::string gServerAddress = "127.0.0.1:5556";
 

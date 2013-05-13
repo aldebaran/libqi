@@ -23,13 +23,13 @@ namespace qi_service_dotnet
         static int Main(string[] args)
         {
             Application app = new Application(args);
-            string SDAddr = "tcp://127.0.0.1:5555";
+            string SDAddr = "tcp://127.0.0.1:9559";
             string serviceName = "serviceTest";
 
             if (args.Length < 1)
             {
                 Console.WriteLine("Usage : ./qi-service-c master-address service-name");
-                Console.WriteLine("Assuming master address is tcp://127.0.0.1:5555");
+                Console.WriteLine("Assuming master address is tcp://127.0.0.1:9559");
             }
             else
             {

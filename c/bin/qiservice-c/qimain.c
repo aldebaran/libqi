@@ -53,8 +53,8 @@ int		main(int argc, char **argv)
   if (argc != 2)
   {
     printf("Usage : ./qi-service-c master-address\n");
-    printf("Assuming master address is tcp://127.0.0.1:5555\n");
-    sd_addr = strdup("tcp://127.0.0.1:5555");
+    printf("Assuming master address is tcp://127.0.0.1:9559\n");
+    sd_addr = strdup("tcp://127.0.0.1:9559");
   }
   else
     sd_addr = argv[1];

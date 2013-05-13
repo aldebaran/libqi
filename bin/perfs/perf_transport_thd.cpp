@@ -79,7 +79,7 @@ int main_client(bool shared)
 {
   const unsigned int nbThreads = 4;
   qi::Session session;
-  session.connect("tcp://127.0.0.1:5555");
+  session.connect("tcp://127.0.0.1:9559");
   qi::ObjectPtr obj;
   boost::thread thd[nbThreads];
 
@@ -141,7 +141,7 @@ int main_gateway()
 {
   qi::Gateway       gate;
 
-  gate.attachToServiceDirectory("tcp://127.0.0.1:5555");
+  gate.attachToServiceDirectory("tcp://127.0.0.1:9559");
   gate.listen("tcp://127.0.0.1:12345");
   std::cout << "ready." << std::endl;
   while (!clientDone)
@@ -158,7 +158,7 @@ std::string reply(const std::string &msg)
 int main_server()
 {
   qi::ServiceDirectory sd;
-  sd.listen("tcp://127.0.0.1:5555");
+  sd.listen("tcp://127.0.0.1:9559");
   std::cout << "Service Directory ready." << std::endl;
 
   qi::GenericObjectBuilder ob;
@@ -167,7 +167,7 @@ int main_server()
   qi::Session       session;
   qi::ObjectPtr obj(ob.object());
 
-  session.connect("tcp://127.0.0.1:5555");
+  session.connect("tcp://127.0.0.1:9559");
 
   session.listen("tcp://127.0.0.1:9559");
   session.registerService("serviceTest", obj);

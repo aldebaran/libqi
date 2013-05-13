@@ -151,7 +151,7 @@ public class App
     @SuppressWarnings("unused")
     Application app = new Application(args);
     Session client = new Session();
-    String  sdAddr = "tcp://127.0.0.1:5555";
+    String  sdAddr = "tcp://127.0.0.1:9559";
 
 
     if (args.length >= 1)

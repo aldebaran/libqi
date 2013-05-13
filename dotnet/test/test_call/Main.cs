@@ -24,7 +24,7 @@ namespace test_call
         public static int Main (string[] args)
         {
             Application app = new Application(args);
-            string ServiceDirectoryAddress = "tcp://127.0.0.1:5555";
+            string ServiceDirectoryAddress = "tcp://127.0.0.1:9559";
 
             Debug.Assert(app != null);
 
