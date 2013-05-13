@@ -77,7 +77,7 @@ namespace qi
   {
     // Just forward to backend, which will notify us in bouceEvent(),
     // and then we will notify our local Subscribers
-    _object->xMetaPost(_name + "::" + SignalType::signature(), params);
+    _object->metaPost(_name + "::" + SignalType::signature(), params);
   }
 
 }

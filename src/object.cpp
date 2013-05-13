@@ -238,11 +238,12 @@ namespace qi {
     return metaCall(methodId, args, callType);
   }
 
+  ///TODO: use findMethod, and findSignal with fuzzy match
   /// Resolve signature and bounce
-  bool GenericObject::xMetaPost(const std::string &signature, const GenericFunctionParameters &in) {
+  void GenericObject::metaPost(const std::string &nameWithOptionalSignature, const GenericFunctionParameters &in) {
     if (!value || !type) {
       qiLogWarning() << "Operating on invalid GenericObject..";
-      return false;
+      return;
     }
        int eventId = metaObject().signalId(signature);
     if (eventId < 0)
@@ -258,10 +259,9 @@ namespace qi {
         ss << "  " << it->toString() << std::endl;
       }
       qiLogError() << ss.str();
-      return false;
+      return;
     }
     metaPost(eventId, in);
-    return true;
   }
 
   /// Resolve signature and bounce
@@ -345,7 +345,7 @@ namespace qi {
     return _p->subscribers(eventId);
   }*/
 
-  void GenericObject::post(const std::string& eventName,
+  void GenericObject::post(const std::string& nameWithOptionalSignature,
                          qi::AutoGenericValuePtr p1,
                          qi::AutoGenericValuePtr p2,
                          qi::AutoGenericValuePtr p3,
@@ -364,12 +364,7 @@ namespace qi {
     for (unsigned i=0; i<8; ++i)
       if (vals[i]->type)
         params.push_back(*vals[i]);
-    // Signature construction
-    std::string signature = eventName + "::(";
-    for (unsigned i=0; i< params.size(); ++i)
-      signature += params[i].signature();
-    signature += ")";
-    xMetaPost(signature, GenericFunctionParameters(params));
+    metaPost(nameWithOptionalSignature, GenericFunctionParameters(params));
   }
 
   int ObjectType::inherits(Type* other)

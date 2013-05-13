@@ -152,9 +152,7 @@ namespace qi {
                    qi::AutoGenericValuePtr p8 = qi::AutoGenericValuePtr());
 
     void metaPost(unsigned int event, const GenericFunctionParameters& params);
-
-    //protected
-    bool xMetaPost(const std::string &signature, const GenericFunctionParameters &in);
+    void metaPost(const std::string &nameWithOptionalSignature, const GenericFunctionParameters &in);
 
     /** Connect an event to an arbitrary callback.
      *

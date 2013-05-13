@@ -218,16 +218,18 @@ namespace qi
     if (s)
     { // signal is declared, create if needed
       s->trigger(params);
+      return;
     }
-    else
-    {
-      // Allow emit on a method
-      // FIXME: call errors are lost
-      if (metaObject().method(event))
-        metaCall(context, event, params, MetaCallType_Auto);
-      else
-        qiLogError() << "No such event " << event;
+
+    // Allow emit on a method
+    // FIXME: call errors are lost
+    if (metaObject().method(event)) {
+      metaCall(context, event, params, MetaCallType_Auto);
+      //TODO: return metacall status: check params
+      return;
     }
+    qiLogError() << "No such event " << event;
+    return;
   }
 
   qi::Future<Link> DynamicObject::metaConnect(unsigned int event, const SignalSubscriber& subscriber)
@@ -416,20 +418,17 @@ namespace qi
 
   void DynamicObjectType::metaPost(void* instance, Manageable* context, unsigned int signal, const GenericFunctionParameters& params)
   {
-    reinterpret_cast<DynamicObject*>(instance)
-      ->metaPost(context, signal, params);
+    reinterpret_cast<DynamicObject*>(instance)->metaPost(context, signal, params);
   }
 
   qi::Future<Link> DynamicObjectType::connect(void* instance, Manageable* context, unsigned int event, const SignalSubscriber& subscriber)
   {
-    return reinterpret_cast<DynamicObject*>(instance)
-      ->metaConnect(event, subscriber);
+    return reinterpret_cast<DynamicObject*>(instance)->metaConnect(event, subscriber);
   }
 
   qi::Future<void> DynamicObjectType::disconnect(void* instance, Manageable* context, Link linkId)
   {
-    return reinterpret_cast<DynamicObject*>(instance)
-      ->metaDisconnect(linkId);
+    return reinterpret_cast<DynamicObject*>(instance)->metaDisconnect(linkId);
   }
 
   const std::vector<std::pair<Type*, int> >& DynamicObjectType::parentTypes()
