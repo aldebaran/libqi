@@ -393,6 +393,21 @@ TEST(QiOs, DISABLED_CPUAffinity)
   ASSERT_FALSE(qi::os::setCurrentThreadCPUAffinity(cpus));
 }
 
+TEST(QiOs, dlerror)
+{
+  qi::os::dlerror(); // Reset errno value
+  const char *error0 = qi::os::dlerror();
+  // expect NULL since no error has occurred since initialization
+  EXPECT_TRUE(error0 == NULL) << "Expected NULL, got: " << error0;
+
+  qi::os::dlerror(); // Reset errno value
+  qi::os::dlopen("failure.so");
+  EXPECT_TRUE(qi::os::dlerror() != NULL) << "Expected error got NULL";
+  const char *error1 = qi::os::dlerror(); // reset
+  // expect NULL since no error has occurred since last dlerror call
+  EXPECT_TRUE(error1 == NULL) << "Expected NULL, got: " << error1;
+}
+
 #ifdef _MSC_VER
 # pragma warning( pop )
 #endif
