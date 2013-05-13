@@ -593,9 +593,13 @@ QI_REGISTER_PROXY(@className@Proxy);
   #generate methods
   (methods, signals, properties) = (data[METHODS], data[SIGNALS], data[PROPERTIES])
   method_impls = ""
+  fwdecl = dict()
   for method in methods:
     (cret, typed_args, arg_names) = method_to_cxx(method)
     method_name = method[0]
+    if cret.find('Ptr') == len(cret)-3 and cret.find('Proxy') == -1:
+      fwdecl[cret[0:len(cret)-3]] = 1
+      cret = cret.replace('Ptr', 'ProxyPtr')
     out_ret = cret
     if (return_future):
       out_ret = 'qi::FutureSync<' + cret + ' >'
@@ -645,6 +649,8 @@ QI_REGISTER_PROXY(@className@Proxy);
   }
   for k in replace:
     result = result.replace('@' + k + '@', replace[k])
+  for k in fwdecl.keys():
+    forward_decls += 'class {0}; typedef boost::shared_ptr<{0}> {0}Ptr;\n'.format(k+'Proxy')
   return [forward_decls, result, '']
 
 def raw_to_cxx_typebuild(class_name, data, use_interface, register_to_factory, include):
