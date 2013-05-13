@@ -329,20 +329,19 @@ namespace qi {
       return _future._p.get() < b._future._p.get();
     }
 
-    inline const ValueType &value() const                            { _sync = false; return _future.value(); }
-    inline operator const typename Future<T>::ValueTypeCast&() const { _sync = false; return _future.value(); }
-    inline FutureState wait(int msecs = FutureTimeout_Infinite) const { _sync = false; return _future.wait(msecs); }
-    inline bool isRunning() const                                     { _sync = false; return _future.isRunning(); }
-    inline bool isFinished() const                                    { _sync = false; return _future.isFinished(); }
-    inline bool isCanceled() const                                    { _sync = false; return _future.isCanceled(); }
-    inline bool hasError(int msecs = FutureTimeout_Infinite) const    { _sync = false; return _future.hasError(msecs); }
-    inline bool hasValue(int msecs = FutureTimeout_Infinite) const    { _sync = false; return _future.hasValue(msecs); }
-
-    inline const std::string &error() const                 { _sync = false; return _future.error(); }
-    inline void cancel()                                    { _sync = false; _future.cancel(); }
-    inline bool isCanceleable() const                       { _sync = false; return _future.isCanceleable(); }
-    inline void connect(const Connection& s)                { _sync = false; _future.connect(s);}
-    inline void _connect(const boost::function<void()>& s)  { _sync = false; _future._connect(s);}
+    const ValueType &value(int msecs = FutureTimeout_Infinite) const   { _sync = false; return _future.value(msecs); }
+    operator const typename Future<T>::ValueTypeCast&() const          { _sync = false; return _future.value(); }
+    FutureState wait(int msecs = FutureTimeout_Infinite) const         { _sync = false; return _future.wait(msecs); }
+    bool isRunning() const                                             { _sync = false; return _future.isRunning(); }
+    bool isFinished() const                                            { _sync = false; return _future.isFinished(); }
+    bool isCanceled() const                                            { _sync = false; return _future.isCanceled(); }
+    bool hasError(int msecs = FutureTimeout_Infinite) const            { _sync = false; return _future.hasError(msecs); }
+    bool hasValue(int msecs = FutureTimeout_Infinite) const            { _sync = false; return _future.hasValue(msecs); }
+    const std::string &error(int msecs = FutureTimeout_Infinite) const { _sync = false; return _future.error(msecs); }
+    void cancel()                                                      { _sync = false; _future.cancel(); }
+    bool isCanceleable() const                                         { _sync = false; return _future.isCanceleable(); }
+    void connect(const Connection& s)                                  { _sync = false; _future.connect(s);}
+    void _connect(const boost::function<void()>& s)                    { _sync = false; _future._connect(s);}
 
     Future<T> async()
     {
