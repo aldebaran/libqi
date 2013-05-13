@@ -647,7 +647,7 @@ QI_REGISTER_PROXY(@className@Proxy);
     result = result.replace('@' + k + '@', replace[k])
   return [forward_decls, result, '']
 
-def raw_to_cxx_typebuild(class_name, data, use_interface, register_to_factory):
+def raw_to_cxx_typebuild(class_name, data, use_interface, register_to_factory, include):
   """ Generate a c++ file that registers the class to type system.
   @param class_name name of the class to bind
   @param data raw IDL data
@@ -656,8 +656,10 @@ def raw_to_cxx_typebuild(class_name, data, use_interface, register_to_factory):
   """
   template = """
 #include <qitype/genericobject.hpp>
+#include <qitype/objecttypebuilder.hpp>
 #include <qitype/objectfactory.hpp>
 
+@INCLUDE@
 static int @TYPE@init()
 {
  qi::ObjectTypeBuilder<@TYPE@> builder;
@@ -669,6 +671,13 @@ static int _init_@TYPE@ = @TYPE@init();
 @REGISTER@
 """
 
+  if include:
+    v = ''
+    for i in include:
+      v += '#include <' + i + '>\n'
+    include = v
+  else:
+    include = ''
   advertise = ''
   (methods, signals, properties, annotations) = (data[0], data[1], data[2], data[3])
   if 'threadSafe' in annotations:
@@ -701,7 +710,7 @@ static int _init_@TYPE@ = @TYPE@init();
   elif register_to_factory == 'factory':
     register = 'QI_REGISTER_OBJECT_FACTORY_BUILDER(%s);\n' % (class_name)
 
-  return template.replace('@TYPE@', class_name).replace('@ADVERTISE@', advertise).replace('@REGISTER@', register)
+  return template.replace('@TYPE@', class_name).replace('@ADVERTISE@', advertise).replace('@REGISTER@', register).replace('@INCLUDE@', include)
 
 def raw_to_cxx_service_skeleton(class_name, data, implement_interface, include):
   """ Produce skeleton of C++ implementation of the service.
@@ -1004,13 +1013,13 @@ def main(args):
         args = [[True, pargs.interface, pargs.include]]
       elif op == "cxxtype":
         functions = [raw_to_cxx_typebuild]
-        args = [[pargs.interface, '']]
+        args = [[pargs.interface, '', pargs.include]]
       elif op == "cxxtyperegisterfactory":
         functions = [raw_to_cxx_typebuild]
-        args = [[pargs.interface, 'factory']]
+        args = [[pargs.interface, 'factory', pargs.include]]
       elif op == "cxxtyperegisterservice":
         functions = [raw_to_cxx_typebuild]
-        args = [[pargs.interface, 'service']]
+        args = [[pargs.interface, 'service', pargs.include]]
       elif op == "cxxskel":
         functions = [raw_to_cxx_service_skeleton]
         args = [[pargs.interface, pargs.include]]

@@ -54,6 +54,7 @@ function(qi_create_interface idl class_name output_dir _out)
 endfunction()
 
 #! Create type/factory registration file
+# \group:INCLUDE files to include in generated file
 # \param:DIR directory to output file to
 # \param:IDL path to input IDL file
 # \param:NAME name of the class in the IDL file
@@ -61,19 +62,24 @@ endfunction()
 # \param:INTERFACE set if class inherits from inteface built with qi_create_interface
 # \param:FACTORY if set, register a factory for this class as a service
 # \param:SERVICE if set, register this class as a service
+# \param:CPP create a source file (.cpp) instead of a header (.hpp)
 function(qi_create_binder _out)
   cmake_parse_arguments(ARG
-    "INTERFACE;FACTORY;SERVICE"
+    "INTERFACE;FACTORY;SERVICE;CPP"
     "DIR;NAME;CLASS_NAME;IDL"
-    ""
+    "INCLUDE"
     ${ARGN})
   _qi_find_idl(IDL)
-
+  if(ARG_CPP)
+    set(_ext ".cpp")
+  else()
+    set(_ext ".hpp")
+  endif()
   if(NOT ARG_CLASS_NAME)
     set(ARG_CLASS_NAME ${ARG_NAME})
   endif()
   string(TOLOWER ${ARG_CLASS_NAME} _filename)
-  set(target "${ARG_DIR}/${_filename}_bind.hpp")
+  set(target "${ARG_DIR}/${_filename}_bind${_ext}")
   if(ARG_INTERFACE)
     set(interface "--interface")
   endif()
@@ -84,6 +90,12 @@ function(qi_create_binder _out)
   else()
     set(mode "cxxtype")
   endif()
+  if(ARG_INCLUDE)
+    set(include "--include")
+    FOREACH(i ${ARG_INCLUDE})
+      set(includes "${includes},${i}")
+    ENDFOREACH()
+  endif()
   set(${_out} ${target} PARENT_SCOPE)
   qi_generate_src(${target}
     SRC ${ARG_IDL} ${IDL}
@@ -92,6 +104,7 @@ function(qi_create_binder _out)
       -c ${ARG_NAME}:${mode}:${ARG_CLASS_NAME}
       -o ${target}
       -m many
+      ${include} ${includes}
       ${interface}
    )
 endfunction()
