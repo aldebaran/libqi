@@ -430,8 +430,8 @@ def raw_to_interface(class_name, data, include):
   """ Generate service interface class from RAW representation
   """
   skeleton = """
-#ifndef @NAME@_INTERFACE_HPP
-#define @NAME@_INTERFACE_HPP
+#ifndef @INAME@_INTERFACE_HPP
+#define @INAME@_INTERFACE_HPP
 
 #include <vector>
 #include <string>
@@ -440,47 +440,92 @@ def raw_to_interface(class_name, data, include):
 #include <qitype/signal.hpp>
 #include <qitype/property.hpp>
 @include@
-class I@NAME@
+class @INAME@
 {
   public:
-    virtual ~I@NAME@() {}
+    @CTOR0DECL@
+    @INAME@(@CTOR1ARGS@);
+    virtual ~@INAME@();
 @DECLS@
+
+    bool _allocated; // are sigs/props allocated by us
 };
 
-typedef boost::shared_ptr<I@NAME@> I@NAME@Ptr;
+@CTOR0IMPL@
 
-QI_TYPE_NOT_CLONABLE(I@NAME@);
+inline @INAME@::@INAME@(@CTOR1ARGS@)
+@CTOR1@
+{}
+
+inline @INAME@::~@INAME@()
+{
+  if (_allocated)
+  {
+@DELETE@
+  }
+}
+
+typedef boost::shared_ptr<@INAME@> @INAME@Ptr;
+
+QI_TYPE_NOT_CLONABLE(@INAME@);
 #endif
 """
   (methods, signals, properties) = (data[METHODS], data[SIGNALS], data[PROPERTIES])
-  methodsDecl = ''
+  methods_decl = ''
   for method in methods:
     (cret, typed_args, arg_names) = method_to_cxx(method)
     method_name = method[0]
-    methodsDecl += '    virtual %s %s (%s) = 0;\n' % (cret, method_name, typed_args)
+    methods_decl += '    virtual %s %s (%s) = 0;\n' % (cret, method_name, typed_args)
   signals_decl = ''
   ctor_decl = []
-  ctor_init = []
+  ctor_init = []   # all sig/prop in argument ctor
+  ctor_init0 = []  # no argument ctor
+  dtor = ''
   for sig in signals:
+    name = sig[0]
     signature = ','.join(map(idltype_to_cxxtype, sig[1]))
-    signals_decl += '    qi::Signal<void(%s)> & %s;\n' % (signature, sig[0])
-    ctor_decl.append('qi::Signal<void(%s)> & %s' % (signature, sig[0]))
-    ctor_init.append('%s(%s)' % (sig[0], sig[0]))
+    signals_decl += '    qi::Signal<void(%s)> & %s;\n' % (signature, name)
+    ctor_decl.append('qi::Signal<void(%s)> & %s' % (signature, name))
+    ctor_init.append('%s(%s)' % (name, name))
+    ctor_init0.append('%s(*new qi::Signal<void (%s)>)' % (name, signature))
+    dtor += '    delete &%s;\n' % (name)
   for prop in properties:
+    name = prop[0]
     signature = idltype_to_cxxtype(prop[1])
-    signals_decl += '    qi::Property<%s> & %s;\n' % (signature, prop[0])
-    ctor_decl.append('qi::Property<%s> & %s' % (signature, prop[0]))
-    ctor_init.append('%s(%s)' % (prop[0], prop[0]))
-  if len(ctor_decl):
-    ctor_decl = ','.join(ctor_decl)
-    ctor_init =  ':' + '\n      ,'.join(ctor_init)
+    signals_decl += '    qi::Property<%s> & %s;\n' % (signature, name)
+    ctor_decl.append('qi::Property<%s> & %s' % (signature, name))
+    ctor_init.append('%s(%s)' % (name, name))
+    ctor_init0.append('%s(*new qi::Property<%s>)' % (name, signature))
+    dtor += '    delete &%s;\n' % (name)
+  no_sigprop = (len(ctor_init) == 0)
+  ctor_init.append('_allocated(false)')
+  ctor_init0.append('_allocated(true)')
+  ctor_decl = ','.join(ctor_decl)
+  ctor_init =   ':    ' + '\n      ,'.join(ctor_init)
+  ctor_init0 =  ':    ' + '\n      ,'.join(ctor_init0)
+  if no_sigprop:
+    ctor0impl = ''
+    ctor0decl = ''
   else:
-    ctor_decl = ''
-    ctor_init = ''
-  ctor = '    I%s(%s)\n      %s\n    {}\n' % (class_name, ctor_decl, ctor_init)
-  skeleton = skeleton.replace("@NAME@", class_name).replace("@DECLS@", ctor + methodsDecl + signals_decl)
-  if len(include):
-    skeleton = skeleton.replace("@include@", ''.join(['#include <' + x + '>\n' for x in include]))
+    ctor0impl = """
+inline @INAME@::@INAME@()
+%s
+{}
+""" % (ctor_init0)
+    ctor0decl = '    %s();\n' % ('I'+class_name)
+  replace = {
+   '@CTOR0IMPL@': ctor0impl,
+   '@CTOR0DECL@': ctor0decl,
+   '@INAME@': 'I' + class_name,
+   '@CTOR0@': ctor_init0,
+   '@CTOR1@': ctor_init,
+   '@CTOR1ARGS@': ctor_decl,
+   '@DELETE@': dtor,
+   '@DECLS@': methods_decl + signals_decl,
+   '@include@': ''.join(['#include <' + x + '>\n' for x in include])
+   }
+  for k in replace:
+    skeleton = skeleton.replace(k, replace[k])
   skeleton = "/*" + raw_to_text({class_name: data}) + "*/" + skeleton
   return skeleton
 
