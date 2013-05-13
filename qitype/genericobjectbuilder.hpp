@@ -53,7 +53,9 @@ namespace qi {
 
     void setThreadingModel(ObjectThreadingModel model);
 
-    int xAdvertiseMethod(const std::string& sigret, const std::string& signature,
+    int xAdvertiseMethod(const std::string& sigret,
+                         const std::string &name,
+                         const std::string& signature,
                          GenericFunction func, const std::string& desc = "",
                          MetaCallType threadingModel = MetaCallType_Auto);
 

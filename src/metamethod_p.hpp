@@ -41,7 +41,6 @@ namespace qi {
   class MetaMethodBuilderPrivate {
   public:
     qi::MetaMethod metaMethod;
-    std::string name;
   };
 }
 

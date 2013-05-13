@@ -18,9 +18,11 @@ namespace qi {
                                                      const std::string& desc,
                                                      MetaCallType threadingModel)
   {
-    MetaMethodBuilder builder(name, desc);
+    MetaMethodBuilder builder;
     GenericFunction f = makeGenericFunction(function).dropFirstArgument();
-    builder.setSignatures(f);
+    builder.setName(name);
+    builder.setSignature(f);
+    builder.setDescription(desc);
     return xAdvertiseMethod(builder, f, threadingModel);
   }
 
@@ -31,9 +33,11 @@ namespace qi {
                                                             const std::string& desc,
                                                             MetaCallType threadingModel)
   {
-    MetaMethodBuilder builder(name, desc);
+    MetaMethodBuilder builder;
     GenericFunction f = makeGenericFunction(method, object).dropFirstArgument();
-    builder.setSignatures(f);
+    builder.setName(name);
+    builder.setSignature(f);
+    builder.setDescription(desc);
     return xAdvertiseMethod(builder, f, threadingModel);
   }
 
@@ -43,7 +47,7 @@ namespace qi {
                                                             MetaCallType threadingModel)
   {
     GenericFunction f = makeGenericFunction(function).dropFirstArgument();
-    builder.setSignatures(f);
+    builder.setSignature(f);
     return xAdvertiseMethod(builder, f, threadingModel);
   }
 
@@ -54,7 +58,7 @@ namespace qi {
                                                             MetaCallType threadingModel)
   {
     GenericFunction f = makeGenericFunction(method, object).dropFirstArgument();
-    builder.setSignatures(f);
+    builder.setSignature(f);
     return xAdvertiseMethod(builder, f, threadingModel);
   }
 

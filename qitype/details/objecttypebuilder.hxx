@@ -36,7 +36,8 @@ namespace qi {
     GenericFunction f = makeGenericFunction(function);
     if (! boost::is_member_function_pointer<FUNCTION_TYPE>::value)
       f.dropFirstArgument();
-    builder.setSignatures(name, f);
+    builder.setName(name);
+    builder.setSignature(f);
     return xAdvertiseMethod(builder, f, threadingModel, id);
   }
 

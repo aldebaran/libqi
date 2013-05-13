@@ -67,7 +67,7 @@ namespace qi {
   class QITYPE_API MetaMethodBuilder {
   public:
     MetaMethodBuilder();
-    MetaMethodBuilder(const std::string& name, const std::string& doc = "");
+    MetaMethodBuilder(const std::string &sigreturn, const std::string& name, const std::string &signature, const std::string& doc = "");
     MetaMethodBuilder(const MetaMethodBuilder& other);
     ~MetaMethodBuilder();
 
@@ -76,10 +76,10 @@ namespace qi {
     std::string name() const;
 
     void setUid(unsigned int uid);
-    void setSignatures(const std::string& name, const GenericFunction& f);
-    void setSignatures(const GenericFunction& f);
-    void setSignature(const std::string& sig);
-    void setSigreturn(const std::string& sig);
+    void setSignature(const GenericFunction& f);
+    void setReturnSignature(const std::string& sig);
+    void setName(const std::string& name);
+    void setParametersSignature(const std::string& sig);
     void setReturnDescription(const std::string& doc);
     void addParameter(const std::string& name, const std::string& documentation);
     void setDescription(const std::string& documentation);

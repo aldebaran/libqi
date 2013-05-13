@@ -76,6 +76,7 @@ namespace qi
   }
 
   int GenericObjectBuilder::xAdvertiseMethod(const std::string& sigret,
+                                             const std::string& name,
                                              const std::string& signature,
                                              GenericFunction func,
                                              const std::string& desc,
@@ -84,8 +85,9 @@ namespace qi
     if (isSignatureValid(signature, sigret) < 0)
       return -1;
     MetaMethodBuilder mmb;
-    mmb.setSigreturn(sigret);
-    mmb.setSignature(signature);
+    mmb.setReturnSignature(sigret);
+    mmb.setName(name);
+    mmb.setParametersSignature(signature);
     mmb.setDescription(desc);
     return xAdvertiseMethod(mmb, func, threadingModel);
   }
@@ -97,7 +99,7 @@ namespace qi
     if (_p->_objptr) {
       qiLogWarning()
           << "GenericObjectBuilder: Called xAdvertiseMethod with method '"
-          << builder.metaMethod().toString()
+          << mm.toString()
           << "' but object is already created.";
     }
 

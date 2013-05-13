@@ -397,12 +397,14 @@ namespace qi {
   }
 
   unsigned int MetaObjectBuilder::addMethod(const std::string& sigret,
+                                            const std::string& name,
                                             const std::string& signature,
                                             int id)
   {
     MetaMethodBuilder mmb;
-    mmb.setSigreturn(sigret);
-    mmb.setSignature(signature);
+    mmb.setReturnSignature(sigret);
+    mmb.setName(name);
+    mmb.setParametersSignature(signature);
     return _p->metaObject._p->addMethod(mmb, id);
   }
 
