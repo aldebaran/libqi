@@ -53,6 +53,49 @@ function(qi_create_interface idl class_name output_dir _out)
       -m interface)
 endfunction()
 
+#! Create type/factory registration file
+# \param:DIR directory to output file to
+# \param:IDL path to input IDL file
+# \param:NAME name of the class in the IDL file
+# \param:CLASS_NAME if set bind under this name instead of NAME
+# \param:INTERFACE set if class inherits from inteface built with qi_create_interface
+# \param:FACTORY if set, register a factory for this class as a service
+# \param:SERVICE if set, register this class as a service
+function(qi_create_binder _out)
+  cmake_parse_arguments(ARG
+    "INTERFACE;FACTORY;SERVICE"
+    "DIR;NAME;CLASS_NAME;IDL"
+    ""
+    ${ARGN})
+  _qi_find_idl(IDL)
+
+  if(NOT ARG_CLASS_NAME)
+    set(ARG_CLASS_NAME ${ARG_NAME})
+  endif()
+  string(TOLOWER ${ARG_CLASS_NAME} _filename)
+  set(target "${ARG_DIR}/${_filename}_bind.hpp")
+  if(ARG_INTERFACE)
+    set(interface "--interface")
+  endif()
+  if(ARG_FACTORY)
+    set(mode "cxxtyperegisterfactory")
+  elseif(ARG_SERVICE)
+    set(mode "cxxtyperegisterservice")
+  else()
+    set(mode "cxxtype")
+  endif()
+  set(${_out} ${target} PARENT_SCOPE)
+  qi_generate_src(${target}
+    SRC ${ARG_IDL} ${IDL}
+    COMMAND ${_python_executable} ${IDL}
+      ${ARG_IDL}
+      -c ${ARG_NAME}:${mode}:${ARG_CLASS_NAME}
+      -o ${target}
+      -m many
+      ${interface}
+   )
+endfunction()
+
 #! Create an IDL file by parsing C++ header files.
 # \group:SRC C++ source/headers file to parse
 # \group:CLASSES name of the classes for which to generate idl

@@ -649,45 +649,31 @@ QI_REGISTER_PROXY(@className@Proxy);
 
 def raw_to_cxx_typebuild(class_name, data, use_interface, register_to_factory):
   """ Generate a c++ file that registers the class to type system.
+  @param class_name name of the class to bind
+  @param data raw IDL data
+  @param use_interface true if the class inherits from generated interface
+  @param register_to_factory: '', 'service' or 'factory'
   """
   template = """
 #include <qitype/genericobject.hpp>
 #include <qitype/objectfactory.hpp>
 
-qi::ObjectTypeBuilder<ITYPE> ITYPEbuilder;
-
-MAKEONE
-BOUNCERS
-static int TYPEinit()
+static int @TYPE@init()
 {
-ADVERTISE
-  ITYPEbuilder.registerType();
-REGISTER
+ qi::ObjectTypeBuilder<@TYPE@> builder;
+@ADVERTISE@
+  builder.registerType();
   return 0;
 }
-static int _init_ITYPE = TYPEinit();
+static int _init_@TYPE@ = @TYPE@init();
+@REGISTER@
+"""
 
-"""
-  make_one = """
-qi::ObjectPtr TYPEmake_one(const std::string&)
-{
-  return ITYPEbuilder.object(new TYPEService());
-}
-"""
-  if not register_to_factory:
-    make_one = ''
-  template = template.replace('MAKEONE', make_one)
   advertise = ''
-  bouncers = ''
   (methods, signals, properties, annotations) = (data[0], data[1], data[2], data[3])
   if 'threadSafe' in annotations:
-    advertise += '  I%sbuilder.setThreadingModel(qi::ObjectThreadingModel_MultiThread);\n' % class_name
-  cns = class_name + 'Service'
-  icn = 'I' + class_name
-  decl_type = 'I' + class_name
-  if not use_interface:
-    decl_type = class_name + 'Service'
-  builder = decl_type + 'builder'
+    advertise += '  builder.setThreadingModel(qi::ObjectThreadingModel_MultiThread);\n'
+
   for method in methods:
     method_name = method[0]
     annotations = method[3]
@@ -696,24 +682,26 @@ qi::ObjectPtr TYPEmake_one(const std::string&)
       thread_mode = 'qi::MetaCallType_Fast'
     if 'threadSafe' in annotations:
       thread_mode = 'qi::MetaCallType_ThreadSafe'
-    advertise += '  {2}.advertiseMethod("{0}", &{1}::{0}, {3});\n'.format(method_name, decl_type, builder, thread_mode)
+    advertise += '  builder.advertiseMethod("{0}", &{1}::{0}, {2});\n'.format(method_name, class_name, thread_mode)
   for s in signals:
-    bouncers += 'inline qi::SignalBase* signalget_%s_%s(void* inst) { return &reinterpret_cast<%s*>(inst)->%s;}\n'%(
-     cns, s[0], cns, s[0])
-    #advertise += '  builder.advertiseSignal("{0}", {1}::{0});\n'.format(s[0], class_name + 'Service')
-    advertise += '  {3}.advertiseSignal<void({2})>("{0}", qi::ObjectTypeBuilderBase::SignalMemberGetter(&signalget_{1}_{0}));\n'.format(
-      s[0], class_name + 'Service', ','.join(map(idltype_to_cxxtype, s[1])), builder)
+    name = s[0]
+    field = name
+    if use_interface:
+      field = '_interface_' + name
+    advertise += '  builder.advertise("%s", &%s::%s);\n' % (name, class_name, field);
   for s in properties:
-    bouncers += 'inline qi::PropertyBase* propertyget_%s_%s(void* inst) { return &reinterpret_cast<%s*>(inst)->%s;}\n'%(
-     cns, s[0], cns, s[0])
-    #advertise += '  builder.advertiseSignal("{0}", {1}::{0});\n'.format(s[0], class_name + 'Service')
-    advertise += '  {3}.advertiseProperty<{2}>("{0}", qi::ObjectTypeBuilderBase::PropertyMemberGetter(&propertyget_{1}_{0}));\n'.format(
-      s[0], class_name + 'Service', idltype_to_cxxtype(s[1]), builder)
+    name = s[0]
+    field = name
+    if use_interface:
+      field = '_interface_' + name
+    advertise += '  builder.advertise("%s", &%s::%s);\n' % (name, class_name, field);
   register = ''
-  if register_to_factory:
-    register = '  qi::registerObjectFactory("{}", &{}make_one);'.format(class_name + 'Service', class_name)
+  if register_to_factory == 'service':
+    register = 'QI_REGISTER_OBJECT_FACTORY_CONSTRUCTOR(%s);\n' % (class_name)
+  elif register_to_factory == 'factory':
+    register = 'QI_REGISTER_OBJECT_FACTORY_BUILDER(%s);\n' % (class_name)
 
-  return template.replace('ITYPE', decl_type).replace('TYPE', class_name).replace('ADVERTISE', advertise).replace('REGISTER', register).replace('BOUNCERS', bouncers)
+  return template.replace('@TYPE@', class_name).replace('@ADVERTISE@', advertise).replace('@REGISTER@', register)
 
 def raw_to_cxx_service_skeleton(class_name, data, implement_interface, include):
   """ Produce skeleton of C++ implementation of the service.
@@ -933,7 +921,7 @@ def main(args):
   parser = argparse.ArgumentParser()
   parser.add_argument("--interface", "-i", help="Use interface mode", action='store_true')
   parser.add_argument("--output-file","-o", help="output file (stdout)")
-  parser.add_argument("--output-mode","-m", default="txt", choices=["parse", "txt", "idl", "proxy", "proxyFuture", "cxxtype", "cxxtyperegister", "cxxskel", "cxxservice", "cxxserviceregister", "cxxservicebouncer", "cxxservicebouncerregister", "interface", "boxinterface"], help="output mode (stdout)")
+  parser.add_argument("--output-mode","-m", default="txt", choices=["parse", "txt", "idl", "proxy", "proxyFuture", "cxxtype", "cxxtyperegisterfactory", "cxxtyperegisterservice", "cxxskel", "cxxservice", "cxxserviceregister", "cxxservicebouncer", "cxxservicebouncerregister", "interface", "boxinterface", "many"], help="output mode (stdout)")
   parser.add_argument("--include", "-I", default="", help="File to include in generated C++")
   parser.add_argument("--known-classes", "-k", default="", help="Comma-separated list of other handled classes")
   parser.add_argument("--classes", "-c", default="*", help="Comma-separated list of classes to select, optionally with per class ':operation'")
@@ -976,7 +964,7 @@ def main(args):
     for c in classes:
       if not c.strip():
         continue #be lenient on trailing ,
-      cc = c.split(':')
+      cc = c.split(':', 1)
       if not cc[0] in raw:
         raise Exception("Requested class %s not found" % cc[0])
       REV_MAP[cc[0] + 'Ptr'] = cc[0] + 'ProxyPtr'
@@ -994,8 +982,12 @@ def main(args):
     res = ['','','']
     for c in raw:
       op = pargs.output_mode
+      name = c
       if c in class_operation:
-        op = class_operation[c]
+        op = class_operation[c].split(':')
+        if len(op) > 1:
+          name = op[1]
+        op = op[0]
       functions = []
       args = []
       if op == "interface":
@@ -1012,10 +1004,13 @@ def main(args):
         args = [[True, pargs.interface, pargs.include]]
       elif op == "cxxtype":
         functions = [raw_to_cxx_typebuild]
-        args = [[pargs.interface, False]]
-      elif op == "cxxtyperegister":
+        args = [[pargs.interface, '']]
+      elif op == "cxxtyperegisterfactory":
         functions = [raw_to_cxx_typebuild]
-        args = [[pargs.interface, True]]
+        args = [[pargs.interface, 'factory']]
+      elif op == "cxxtyperegisterservice":
+        functions = [raw_to_cxx_typebuild]
+        args = [[pargs.interface, 'service']]
       elif op == "cxxskel":
         functions = [raw_to_cxx_service_skeleton]
         args = [[pargs.interface, pargs.include]]
@@ -1033,7 +1028,7 @@ def main(args):
         args = [['@Ptr', pargs.include], [pargs.interface, True]]
     #print("Executing %s functions on %s classes" % (len(functions), len(raw)))
       for i in range(len(functions)):
-        cargs = [c, raw[c]] + args[i]
+        cargs = [name, raw[c]] + args[i]
         tres = functions[i](*cargs)
         if type(tres) == type(''):
           res[1] += tres
