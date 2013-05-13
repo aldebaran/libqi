@@ -2,16 +2,24 @@
 QiMessaging JavaScript
 **********************
 
+.. warning::
+   This library is still under development. Feel free to contact
+   llec@aldebaran-robotics.com for more information.
+
 Introduction
 ============
 
 QiMessaging provides JavaScript bindings to call remote services through
 a web browser.
 
+It currently consists of two pieces of software: the server side, which
+will listen for requests from the browser, and the client side, which is
+the JavaScript library *per se*.
+
 The server side uses the Python bindings, and listen for both HTTP and
 Websocket requests.
 
-The client side consists in a few JavaScript files, that can be embedded
+The client side consists in a few JavaScript files that can be embedded
 within a web page. The implementation relies on jQuery and socket.io.
 
 Server side
@@ -31,6 +39,9 @@ It should be run as following:
 
    $ python2 qim.py tcp://nao.local:9559
 
+The script will open two ports: ``8001`` for standard HTTP requests and
+``8002`` for websocket connection. All mention to ``localhost`` in this page
+refer to the machine where this script is running.
 
 Client side
 ===========
@@ -41,9 +52,9 @@ and its two dependencies, `socket.io <http://socket.io/>`_ and
 
 .. code-block:: html
 
-   <script src="http://qim.io/jquery.min.js"></script>
-   <script src="http://qim.io/socket.io.js"></script>
-   <script src="http://qim.io/qimessaging.js"></script>
+   <script src="http://localhost:8001/jquery.min.js"></script>
+   <script src="http://localhost:8001/socket.io.js"></script>
+   <script src="http://localhost:8001/qimessaging.js"></script>
 
 The API was designed around the jQuery
 `Deferred object <http://api.jquery.com/category/deferred-object/>`_, which
@@ -54,53 +65,30 @@ of qimessaging sessions. It is constructed using the JSON server URL.
 
 .. code-block:: javascript
 
-   qim = new QiSession("http://nao.local:8080");
+   qim = new QiSession("http://localhost:8001");
 
-Once the connection is established, three methods are available ``services()``,
-``service()`` and ``socket()``.
-
-
-QiSession.services()
---------------------
-
-This method will call the ``done()`` callback with a list of string,
-corresponding to services registered to the *ServiceDirectory*.
-
-.. code-block:: javascript
-
-   function onServices(services)
-   {
-     console.log(services);
-   }
-
-   qim.services().done(onServices);
-
-
-.. code-block:: javascript
-
-   // console
-   > ["ServiceDirectory", "serviceTest"]
-
+Once the connection is established, two methods are available: ``service()``
+and ``socket()``.
 
 QiSession.service()
 -------------------
 
-This method will call the ``done()`` callback with an object corresponding
-to the requested service.
+In case of success, this method will call the ``done()`` callback with an
+object corresponding to the requested service.
 
 .. code-block:: javascript
 
-   function gotService(onService)
+   function onService(service)
    {
    }
 
    qim.service("serviceTest").done(onService);
 
-Using services
-^^^^^^^^^^^^^^
+Calls
+^^^^^
 
 Once a service is retrieved through `QiSession.service()`, it is bound
-to an object providing the corresponding APIs. Service call also return
+to an object providing the corresponding APIs. All service calls return
 Deferred objects.
 
 .. code-block:: javascript
@@ -120,12 +108,10 @@ Deferred objects.
    // console
    > plafbim
 
-
-
 QiSession.socket()
 ------------------
 
-This last function will return the underlying `socket.io` object, that can
+This function will return the underlying `socket.io` object, that can
 be used to deal with low-level
 `events <https://github.com/LearnBoost/socket.io/wiki/Exposed-events>`_.
 
@@ -134,7 +120,6 @@ be used to deal with low-level
    qim.socket().on('disconnect', function() {
      console.log('disconnected!');
    });
-
 
 Complete example
 ----------------
@@ -146,9 +131,9 @@ Complete example
 
    <head>
    <title>QiSession example</title>
-   <script src="http://qim.io/jquery.js"></script>
-   <script src="http://qim.io/qimessaging.js"></script>
-   <script src="http://qim.io/socket.io.js"></script>
+   <script src="http://localhost:8001/jquery.min.js"></script>
+   <script src="http://localhost:8001/socket.io.js"></script>
+   <script src="http://localhost:8001/qimessaging.js"></script>
    </head>
 
    <body>
@@ -169,13 +154,7 @@ Complete example
      service.reply("plaf").done(onReply);
    }
 
-   function onServices(services)
-   {
-     console.log(services);
-     qim.service("serviceTest").done(onService);
-   }
-
-   qim.services().done(onServices);
+   qim.service("serviceTest").done(onService);
    </script>
    </body>
 
