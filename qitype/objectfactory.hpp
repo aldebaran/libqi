@@ -31,7 +31,7 @@ namespace qi {
 
 /// register \p func as factory for object named \p name
 #define QI_REGISTER_OBJECT_FACTORY(name, func) \
-  static bool BOOST_PP_CAT(_register_factory_ ,__LINE__) = ::qi::registerObjectFactory(name, func)
+  static bool BOOST_PP_CAT(_register_factory_ ,__COUNTER__) = ::qi::registerObjectFactory(name, func)
 
 /// register \p name's default constructor as factory for \p name
 #define QI_REGISTER_OBJECT_FACTORY_CONSTRUCTOR(name) \
