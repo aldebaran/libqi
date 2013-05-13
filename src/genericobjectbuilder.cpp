@@ -50,20 +50,13 @@ namespace qi
     delete _p;
   }
 
-  static int isSignatureValid(const std::string& signature, const std::string& sigret)
+  static int isSignatureValid(const std::string &sigret, const std::string& name, const std::string& signature)
   {
-    std::vector<std::string> sigInfo;
-    try
-    {
-      sigInfo = signatureSplit(signature);
-    }
-    catch (const std::runtime_error& e)
-    {
-      qiLogError() << e.what();
+    Signature sparams(signature);
+    if (!sparams.isValid())
       return -1;
-    }
 
-    if (sigInfo[2] == "")
+    if (name.empty())
       return -1;
 
     if (sigret != "")
@@ -82,8 +75,10 @@ namespace qi
                                              const std::string& desc,
                                              MetaCallType threadingModel)
   {
-    if (isSignatureValid(signature, sigret) < 0)
+    if (isSignatureValid(sigret, name, signature) < 0) {
+      qiLogWarning() << "GenericObjectBuilder: Called xAdvertiseMethod with an invalid signature.";
       return -1;
+    }
     MetaMethodBuilder mmb;
     mmb.setReturnSignature(sigret);
     mmb.setName(name);
@@ -96,6 +91,11 @@ namespace qi
                                              GenericFunction func,
                                              MetaCallType threadingModel)
   {
+    MetaMethod mm = builder.metaMethod();
+    if (isSignatureValid(mm.returnSignature(), mm.name(), mm.parametersSignature()) < 0) {
+      qiLogWarning() << "GenericObjectBuilder: Called xAdvertiseMethod("<< mm.returnSignature() << "," << mm.name() << "," << mm.parametersSignature() << ") with an invalid signature.";
+      return -1;
+    }
     if (_p->_objptr) {
       qiLogWarning()
           << "GenericObjectBuilder: Called xAdvertiseMethod with method '"
@@ -112,8 +112,10 @@ namespace qi
 
   int GenericObjectBuilder::xAdvertiseSignal(const std::string &name, const std::string& signature)
   {
-    if (isSignatureValid(signature, "") < 0)
+    if (!Signature(signature).isValid()) {
+      qiLogWarning() << "GenericObjectBuilder: Called xAdvertiseSignal("<< name << "," << signature << ") with an invalid signature.";
       return -1;
+    }
     if (_p->_objptr) {
       qiLogWarning() << "GenericObjectBuilder: Called xAdvertiseSignal on event '" << signature << "' but object is already created.";
     }
@@ -125,8 +127,10 @@ namespace qi
 
   int GenericObjectBuilder::xAdvertiseProperty(const std::string& name, const std::string& sig, int id)
   {
-    if (isSignatureValid( name + "::(" + sig + ")", "") < 0)
+    if (!Signature(sig).isValid()) {
+      qiLogWarning() << "GenericObjectBuilder: Called xAdvertiseProperty("<< name << "," << sig << ") with an invalid signature.";
       return -1;
+    }
     return _p->_object->metaObject()._p->addProperty(name, sig, id);
   }
 
