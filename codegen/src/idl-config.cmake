@@ -38,6 +38,21 @@ function(qi_create_proxy idl class_name output_dir _out)
       -m proxyFuture)
 endfunction()
 
+function(qi_create_interface idl class_name output_dir _out)
+  _qi_find_idl(IDL)
+  string(TOLOWER ${class_name} _filename)
+  set(_filename "${_filename}_interface.hpp")
+  message("tgt ${output_dir}/${_filename}")
+  set(${_out} ${output_dir}/${_filename} PARENT_SCOPE)
+  qi_generate_src(${output_dir}/${_filename}
+    SRC ${idl}
+    COMMAND ${_python_executable} ${IDL}
+      ${idl}
+      -c ${class_name}
+      -o ${output_dir}/${_filename}
+      -m interface)
+endfunction()
+
 #! Create an IDL file by parsing C++ header files.
 # \group:SRC C++ source/headers file to parse
 # \group:CLASSES name of the classes for which to generate idl
