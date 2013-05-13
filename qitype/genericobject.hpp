@@ -164,7 +164,7 @@ namespace qi {
                          MetaCallType threadingModel = MetaCallType_Direct);
 
 
-    qi::FutureSync<Link> xConnect(const std::string &signature, const SignalSubscriber& functor);
+    qi::FutureSync<Link> xConnect(const std::string &nameWithSignature, const SignalSubscriber& functor);
 
     /// Calls given functor when event is fired. Takes ownership of functor.
     qi::FutureSync<Link> connect(unsigned int signal, const SignalSubscriber& subscriber);

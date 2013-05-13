@@ -275,20 +275,21 @@ namespace qi {
     metaPost(eventId, in);
   }
 
+  //TODO: use functor.signature instead of nameWithSignature.
   /// Resolve signature and bounce
-  qi::FutureSync<Link> GenericObject::xConnect(const std::string &signature, const SignalSubscriber& functor)
+  qi::FutureSync<Link> GenericObject::xConnect(const std::string &nameWithSignature, const SignalSubscriber& functor)
   {
     if (!type || !value) {
       qiLogWarning() << "Operating on invalid GenericObject..";
       return qi::makeFutureError<Link>("Operating on invalid GenericObject..");
     }
-    int eventId = metaObject().signalId(signature);
+    int eventId = metaObject().signalId(nameWithSignature);
 
   #ifndef QI_REQUIRE_SIGNATURE_EXACT_MATCH
     if (eventId < 0) {
       // Try to find an other event with compatible signature
-      std::vector<qi::MetaSignal> mml = metaObject().findSignal(qi::signatureSplit(signature)[1]);
-      Signature sargs(signatureSplit(signature)[2]);
+      std::vector<qi::MetaSignal> mml = metaObject().findSignal(qi::signatureSplit(nameWithSignature)[1]);
+      Signature sargs(signatureSplit(nameWithSignature)[2]);
       for (unsigned i = 0; i < mml.size(); ++i)
       {
         Signature s(mml[i].parametersSignature());
@@ -299,7 +300,7 @@ namespace qi {
         {
           qiLogVerbose()
               << "Signature mismatch, but found compatible type "
-              << mml[i].toString() <<" for " << signature;
+              << mml[i].toString() <<" for " << nameWithSignature;
           eventId = mml[i].uid();
           break;
         }
@@ -308,9 +309,9 @@ namespace qi {
 #endif
     if (eventId < 0) {
       std::stringstream ss;
-      ss << "Can't find event: " << signature << std::endl
+      ss << "Can't find signal: " << nameWithSignature << std::endl
          << "  Candidate(s):" << std::endl;
-      std::vector<MetaSignal>           mml = metaObject().findSignal(qi::signatureSplit(signature)[1]);
+      std::vector<MetaSignal>           mml = metaObject().findSignal(qi::signatureSplit(nameWithSignature)[1]);
       std::vector<MetaSignal>::const_iterator it;
 
       for (it = mml.begin(); it != mml.end(); ++it) {
