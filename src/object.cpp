@@ -236,25 +236,38 @@ namespace qi {
     return metaCall(methodId, args, callType);
   }
 
-  ///TODO: use findMethod, and findSignal with fuzzy match
   /// Resolve signature and bounce
   void GenericObject::metaPost(const std::string &nameWithOptionalSignature, const GenericFunctionParameters &in) {
     if (!value || !type) {
       qiLogWarning() << "Operating on invalid GenericObject..";
       return;
     }
-    int eventId = metaObject().signalId(signature);
+    ///TODO: use findSignal with fuzzy match
+    int eventId = metaObject().signalId(nameWithOptionalSignature);
+    if (eventId < 0) {
+      std::vector<MetaSignal> mml = metaObject().findSignal(qi::signatureSplit(nameWithOptionalSignature)[1]);
+      if (mml.size() == 1)
+        eventId = mml[0].uid();
+    }
     if (eventId < 0)
-      eventId = metaObject().methodId(signature);
+      eventId = findMethod(nameWithOptionalSignature, in);
     if (eventId < 0) {
       std::stringstream ss;
-      ss << "Can't find event: " << signature << std::endl
-         << "  Candidate(s):" << std::endl;
-      std::vector<MetaSignal>           mml = metaObject().findSignal(qi::signatureSplit(signature)[1]);
-      std::vector<MetaSignal>::const_iterator it;
+      std::string name = qi::signatureSplit(nameWithOptionalSignature)[1];
+      ss << "Can't find method or signal: " << nameWithOptionalSignature << std::endl;
 
+      ss << "  Signal Candidate(s):" << std::endl;
+      std::vector<MetaSignal>           mml = metaObject().findSignal(name);
+      std::vector<MetaSignal>::const_iterator it;
       for (it = mml.begin(); it != mml.end(); ++it) {
         ss << "  " << it->toString() << std::endl;
+      }
+
+      ss << "  Method Candidate(s):" << std::endl;
+      std::vector<MetaMethod>           mml2 = metaObject().findMethod(name);
+      std::vector<MetaMethod>::const_iterator it2;
+      for (it2 = mml2.begin(); it2 != mml2.end(); ++it2) {
+        ss << "  " << it2->toString() << std::endl;
       }
       qiLogError() << ss.str();
       return;
