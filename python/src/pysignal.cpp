@@ -51,8 +51,11 @@ namespace qi { namespace py {
         GILScopedUnlock _unlock;
         qi::SignalBase::trigger(qi::GenericValueRef(args).asDynamic().asTupleValuePtr());
       }
-
     };
+
+    qi::SignalBase *getSignal(boost::python::object obj) {
+      return boost::python::extract<PySignal*>(obj);
+    }
 
     boost::python::object makePySignal(const std::string &signature) {
       return boost::python::object(PySignal(signature));

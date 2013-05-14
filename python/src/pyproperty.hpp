@@ -13,8 +13,10 @@
 #include <boost/python.hpp>
 
 namespace qi {
+  class PropertyBase;
   namespace py {
     boost::python::object makePyProperty(const std::string &signature);
+    qi::PropertyBase *getProperty(boost::python::object obj);
     void export_pyproperty();
   }
 }

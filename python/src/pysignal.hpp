@@ -12,9 +12,12 @@
 
 #include <boost/python.hpp>
 
+
 namespace qi {
+  class SignalBase;
   namespace py {
     boost::python::object makePySignal(const std::string &signature);
+    qi::SignalBase *getSignal(boost::python::object obj);
     void export_pysignal();
   }
 }

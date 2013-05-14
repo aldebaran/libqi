@@ -35,6 +35,10 @@ namespace qi { namespace py {
       return boost::python::object(PyProperty(signature));
     }
 
+    qi::PropertyBase *getProperty(boost::python::object obj) {
+      return boost::python::extract<PyProperty*>(obj);
+    }
+
     void export_pyproperty() {
       boost::python::class_<PyProperty>("Property", boost::python::init<const std::string &>())
           .def("value", &PyProperty::value)
