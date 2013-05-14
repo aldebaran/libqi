@@ -194,6 +194,7 @@ int main(int argc, char *argv[])
         std::stringstream ss;
         ss << "miam" << i++;
         obj->post("testEvent", ss.str());
+        qiLogInfo() << "Posting:" << ss.str();
         ss.str(std::string());
         qi::os::sleep(1);
       }
