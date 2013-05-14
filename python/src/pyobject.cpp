@@ -185,11 +185,12 @@ namespace qi { namespace py {
             continue;
           }
           std::stringstream ss;
-          ss << key << "::(";
+          ss << "(";
           for (int i = 0; i < argsz; ++i)
             ss << "m";
           ss << ")";
           qiLogDebug() << "Adding method: " << ss.str();
+          mmb.setName(key);
           mmb.setParametersSignature(ss.str());
           mmb.setReturnSignature("m");
           gob.xAdvertiseMethod(mmb, qi::makeDynamicGenericFunction(boost::bind(pysignalCb, _1, m)));
