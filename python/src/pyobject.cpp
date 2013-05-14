@@ -84,6 +84,7 @@ namespace qi { namespace py {
           continue;
         qiLogDebug() << "adding signal:" << ms.toString();
         boost::python::object fun = qi::py::makePySignal(ms.parametersSignature());
+        //TODO: connect the two signals.
         boost::python::api::setattr(pyobj, ms.name(), fun);
       }
     }
@@ -98,6 +99,7 @@ namespace qi { namespace py {
           continue;
         qiLogDebug() << "adding property:" << mp.toString();
         boost::python::object fun = qi::py::makePyProperty(mp.signature());
+        //TODO: connect the two properties
         boost::python::api::setattr(pyobj, mp.name().c_str(), fun);
       }
     }
@@ -201,10 +203,7 @@ namespace qi { namespace py {
         static boost::python::object asignal = qi::py::makePySignal("(i)").attr("__class__");
         if (PyObject_IsInstance(m.ptr(), asignal.ptr())) {
           qiLogDebug() << "Adding signal:" << key;
-          //TODO: register the signal, and get the it to link it to the python one.
-          int sig = gob.xAdvertiseSignal(key, "(i)");
-          //TODO: make py.trigger call cpp.trigger
-          //TODO: make cpp.callback call py.trigger
+          int sig = gob.advertiseSignal(key, qi::py::getSignal(m));
           continue;
         }
 
@@ -212,6 +211,7 @@ namespace qi { namespace py {
         static boost::python::object aproperty = qi::py::makePyProperty("(i)").attr("__class__");
         if (PyObject_IsInstance(m.ptr(), aproperty.ptr())) {
           qiLogDebug() << "Adding property:" << key;
+          int sig = gob.advertiseProperty(key, qi::py::getProperty(m));
           continue;
         }
 
