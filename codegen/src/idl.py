@@ -727,7 +727,7 @@ def raw_to_cxx_service_skeleton(class_name, data, implement_interface, include):
   inherits = ''
   if implement_interface:
     inherits = ' : public I' + class_name
-  result += "class %sService %s \n{\npublic:\n" % (class_name, inherits)
+  result += "class %s %s \n{\npublic:\n" % (class_name, inherits)
   (methods, signals) = (data[0], data[1])
   for method in methods:
     method_name = method[0]
@@ -745,7 +745,7 @@ def raw_to_cxx_service_skeleton(class_name, data, implement_interface, include):
       signal[0]
     )
   if implement_interface:
-    result += '  %sService() :%s(%s) {}\n' % (class_name, class_name, ','.join(iface_ctor))
+    result += '  %s() :%s(%s) {}\n' % (class_name, class_name, ','.join(iface_ctor))
   result += '};\n\n'
   for method in methods:
     method_name = method[0]
@@ -753,7 +753,7 @@ def raw_to_cxx_service_skeleton(class_name, data, implement_interface, include):
     for i in range(len(args)):
       args[i] = idltype_to_cxxtype(args[i]) + ' p' + str(i)
     args = ','.join(args)
-    result += '%s %sService::%s(%s)\n{\n  // Implementation of %s\n}\n' % (
+    result += '%s %s::%s(%s)\n{\n  // Implementation of %s\n}\n' % (
       idltype_to_cxxtype(method[2]),
       class_name,
       method_name,
@@ -1031,16 +1031,16 @@ def main(args):
         args = [[pargs.interface, pargs.include]]
       elif op == "cxxserviceregister":
         functions = [raw_to_cxx_service_skeleton, raw_to_cxx_typebuild]
-        args = [[pargs.interface, pargs.include], [pargs.interface, True]]
+        args = [[pargs.interface, pargs.include], [pargs.interface, 'service', pargs.include]]
       elif op == "cxxservice":
         functions = [raw_to_cxx_service_skeleton, raw_to_cxx_typebuild]
-        args = [[pargs.interface, pargs.include], [pargs.interface, False]]
+        args = [[pargs.interface, pargs.include], [pargs.interface, '', pargs.include]]
       elif op == "cxxservicebouncer":
         functions = [raw_to_cxx_service_bouncer, raw_to_cxx_typebuild]
-        args = [['@Ptr', pargs.include], [pargs.interface, False]]
+        args = [['@Ptr', pargs.include], [pargs.interface, '', pargs.include]]
       elif op == "cxxservicebouncerregister":
         functions = [raw_to_cxx_service_bouncer, raw_to_cxx_typebuild]
-        args = [['@Ptr', pargs.include], [pargs.interface, True]]
+        args = [['@Ptr', pargs.include], [pargs.interface, 'service', pargs.include]]
     #print("Executing %s functions on %s classes" % (len(functions), len(raw)))
       for i in range(len(functions)):
         cargs = [name, raw[c]] + args[i]
