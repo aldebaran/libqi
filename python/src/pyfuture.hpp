@@ -13,12 +13,17 @@
 #include <boost/python.hpp>
 #include <qi/future.hpp>
 #include <qitype/genericvalue.hpp>
+#include <boost/smart_ptr/enable_shared_from_this.hpp>
 
 namespace qi {
   namespace py {
 
     //all blocking function are wrapped here to unlock the GIL while blocking.
-    class PyFuture : public qi::Future<qi::GenericValue> {
+    //PyFuture should always be a shared_ptr, because boost::python provide convenient
+    //converter between shared_ptr and pyobject refcount. this allow us to get the python
+    //object associated to this in add_callback.
+    //see the fac of boost::python for more information
+    class PyFuture : public qi::Future<qi::GenericValue>, public boost::enable_shared_from_this<PyFuture> {
     public:
       PyFuture();
       PyFuture(const PyFuture& fut);

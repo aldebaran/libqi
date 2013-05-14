@@ -14,8 +14,14 @@
 namespace qi {
   namespace py {
 
-    template <typename T>
-    static void pySignalCb(boost::python::object callable, T *pp) {
+
+    static void pySignalCb(boost::python::object callable, boost::python::object pp) {
+      GILScopedLock _lock;
+      callable(pp);
+    }
+
+    class PyPromise;
+    static void pySignalCbProm(boost::python::object callable, PyPromise *pp) {
       GILScopedLock _lock;
       callable(pp);
     }
@@ -62,8 +68,16 @@ namespace qi {
     }
 
     void PyFuture::add_callback(boost::python::object callable) {
-      connect(boost::bind<void>(&pySignalCb<PyFuture>, callable, this));
+
+      //because we use shared_ptr, we get a correct pyObject here.
+      boost::python::object obj(shared_from_this());
+      //we store a ref on ourself, because our future can get out of scope.
+      //so the shared future state will keep a ref on us. When the promise will
+      //be destroyed this will destroy the ref on us.
+      connect(boost::bind<void>(&pySignalCb, callable, obj));
     }
+
+    typedef boost::shared_ptr<PyFuture> PyFuturePtr;
 
 
 
@@ -72,7 +86,7 @@ namespace qi {
       PyPromise() {};
 
       PyPromise(boost::python::object callable)
-        : qi::Promise<qi::GenericValue> (boost::bind<void>(&pySignalCb<PyPromise>, callable, this))
+        : qi::Promise<qi::GenericValue> (boost::bind<void>(&pySignalCbProm, callable, this))
       {
       }
 
@@ -85,8 +99,10 @@ namespace qi {
         }
       }
 
-      PyFuture future() {
-        return qi::Promise<qi::GenericValue>::future();
+      PyFuturePtr future() {
+        PyFuturePtr pfp(new PyFuture);
+        *pfp = qi::Promise<qi::GenericValue>::future();
+        return pfp;
       }
     };
 
@@ -116,7 +132,7 @@ namespace qi {
           .def("set_value", &PyPromise::setValue)
           .def("future", &PyPromise::future);
 
-      boost::python::class_<PyFuture>("Future")
+      boost::python::class_<PyFuture, boost::shared_ptr<PyFuture> >("Future")
           .def("value", &PyFuture::value, (boost::python::args("timeout") = qi::FutureTimeout_Infinite))
           .def("error", &PyFuture::error, (boost::python::args("timeout") = qi::FutureTimeout_Infinite))
           .def("wait", &PyFuture::wait, (boost::python::args("timeout") = qi::FutureTimeout_Infinite))
