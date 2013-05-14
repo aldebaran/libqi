@@ -62,18 +62,24 @@ int		main(int argc, char **argv)
   ob = qi_object_builder_create();
   qi_object_builder_register_method(ob, "reply::s(s)", &reply, 0);
   qi_object_builder_register_event(ob, "testEvent::(s)");
+  object = qi_object_builder_get_object(ob);
   session = qi_session_create();
 
-  qi_session_connect(session, sd_addr);
+  qi_future_t* fuc = qi_session_connect(session, sd_addr);
+  if (qi_future_has_error(fuc, QI_FUTURETIMEOUT_INFINITE))
+  {
+    printf("Connection failed\n");
+    return(-1);
+  }
+  qi_future_destroy(fuc);
 
   qi_session_listen(session, "tcp://0.0.0.0:0");
-  object = qi_object_builder_get_object(ob);
   id = (int) qi_future_get_int64_default(qi_session_register_service(session, "serviceTest", object), 0);
 
   if (!id)
   {
     printf("registration failed...\n");
-    exit(1);
+    return(-1);
   }
   else
     printf("Registered as service #%d\n", id);
