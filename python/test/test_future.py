@@ -56,9 +56,30 @@ def test_future_cancel():
   assert(fut.is_canceled())
   assert(not fut.has_error())
 
+
+paflecb="tic"
+def super_cb(fut):
+  assert(fut.value() == 42)
+  global paflecb
+  paflecb = "toc"
+
+def test_future_callback():
+  print "check simple future"
+  prom = Promise()
+  fut = prom.future()
+
+  prom.set_value(42)
+  fut.add_callback(super_cb)
+  assert(fut.value() == 42)
+  assert(fut.is_finished())
+  assert(not fut.is_canceled())
+  assert(paflecb == "toc")
+
+
 def main():
   test_future()
   test_future_cancel()
+  test_future_callback()
 
 if __name__ == "__main__":
     main()
