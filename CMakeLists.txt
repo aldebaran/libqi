@@ -90,6 +90,7 @@ set(SOURCES ${PUBLIC_HEADERS}
             src/genericobjectbuilder.cpp
             src/genericvalue.cpp
             src/jsonencoder.cpp
+            src/jsondecoder.cpp
             src/metamethod.cpp
             src/metasignal.cpp
             src/metasignal_p.cpp

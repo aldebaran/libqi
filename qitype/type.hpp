@@ -482,6 +482,7 @@ QITYPE_API bool operator !=(const GenericIterator & a, const GenericIterator& b)
   /** @return the value encoded in JSON.
    */
   QITYPE_API std::string encodeJSON(const qi::GenericValuePtr &val);
+  QITYPE_API qi::GenericValue decodeJSON(const std::string &in);
 
   /// Less than operator. Will compare the values within the GenericValue.
   QITYPE_API bool operator < (const GenericValue& a, const GenericValue& b);
