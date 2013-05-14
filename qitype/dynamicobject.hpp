@@ -44,9 +44,12 @@ namespace qi
     MetaObject &metaObject();
 
     void setMethod(unsigned int id, GenericFunction callable, MetaCallType threadingModel = MetaCallType_Auto);
-    GenericFunction method(unsigned int id);
-    SignalBase* signalBase(unsigned int id) const;
-    PropertyBase* property(unsigned int);
+    void setSignal(unsigned int id, SignalBase* signal);
+    void setProperty(unsigned int id, PropertyBase* property);
+
+    GenericFunction method(unsigned int id) const;
+    SignalBase*     signal(unsigned int id) const;
+    PropertyBase*   property(unsigned int) const;
 
     virtual qi::Future<GenericValuePtr> metaCall(Manageable* context, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto);
     virtual void metaPost(Manageable* context, unsigned int event, const GenericFunctionParameters& params);

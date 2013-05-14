@@ -125,7 +125,18 @@ namespace qi
     _p->methodMap[id] = std::make_pair(callable, threadingModel);
   }
 
-  GenericFunction DynamicObject::method(unsigned int id)
+  void DynamicObject::setSignal(unsigned int id, SignalBase* signal)
+  {
+    _p->signalMap[id] = signal;
+  }
+
+
+  void DynamicObject::setProperty(unsigned int id, PropertyBase* property)
+  {
+    _p->propertyMap[id] = property;
+  }
+
+  GenericFunction DynamicObject::method(unsigned int id) const
   {
     DynamicObjectPrivate::MethodMap::iterator i = _p->methodMap.find(id);
     if (i == _p->methodMap.end())
@@ -134,7 +145,7 @@ namespace qi
       return i->second.first;
   }
 
-  SignalBase* DynamicObject::signalBase(unsigned int id) const
+  SignalBase* DynamicObject::signal(unsigned int id) const
   {
     if (_p->meta.property(id))
       return const_cast<DynamicObject*>(this)->property(id)->signal();
@@ -145,7 +156,7 @@ namespace qi
       return i->second;
   }
 
-  PropertyBase* DynamicObject::property(unsigned int id)
+  PropertyBase* DynamicObject::property(unsigned int id) const
   {
     return _p->property(id);
   }
