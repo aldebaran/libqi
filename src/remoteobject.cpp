@@ -145,7 +145,7 @@ namespace qi {
 
 
     if (msg.type() == qi::Message::Type_Event) {
-      SignalBase* sb = signalBase(msg.event());
+      SignalBase* sb = signal(msg.event());
       if (sb)
       {
         try {
