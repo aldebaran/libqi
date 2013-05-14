@@ -388,18 +388,25 @@ namespace qi {
         v.result = stringFromType(Signature::Type_Object);
         break;
       case Type::Pointer:
-        {
+      {
         TypePointer* type = static_cast<TypePointer*>(value.type);
+        Type::Kind pointedKind = type->pointedType()->kind();
         if (type->pointerKind() == TypePointer::Shared
-          && type->pointedType()->kind() == Type::Object)
+          && (pointedKind == Type::Object || pointedKind == Type::Unknown))
         {
+          if(pointedKind != Type::Object)
+            qiLogWarning() << "Shared pointer to unknown type " << type->pointedType()->infoString()
+                           << ", assuming object not yet registered";
           ObjectPtr op;
           v.visitObjectPtr(op);
         }
         else
+        {
+          qiLogWarning() << "Pointer to unknown type " << type->pointedType()->infoString() << ", signature is X";
           v.visitPointer(GenericValuePtr());
         }
         break;
+      }
       case Type::Tuple:
         v.result += (char)Signature::Type_Tuple;
         {

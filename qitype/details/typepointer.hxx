@@ -42,10 +42,7 @@ namespace qi
   public:
     Type* pointedType() const
     {
-      static Type* result = 0;
-      if (!result)
-        result = typeOf<typename T::element_type>();
-      return result;
+      return typeOf<typename T::element_type>();
     }
     PointerKind pointerKind() const { return Shared;}
     GenericValuePtr dereference(void* storage)

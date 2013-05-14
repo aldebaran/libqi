@@ -89,7 +89,7 @@ namespace qi  {
         // Is this realy a problem?
         if (!defaultResult)
         {
-          qiLogDebug("qitype.typeof") << "typeOf request for unregistered type "
+          qiLogDebug("qitype.typeof") << "first typeOf request for unregistered type "
           << typeid(T).name();
         }
         if (!defaultResult)
