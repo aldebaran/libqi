@@ -48,6 +48,7 @@ int		main(int argc, char **argv)
   qi_value_t*          cont = 0;
   qi_value_t*          val = 0;
   int                  ret = 0;
+  qi_future_t*         fuc = 0;
 
   // get the program options
   if (argc != 2)
@@ -65,7 +66,7 @@ int		main(int argc, char **argv)
   object = qi_object_builder_get_object(ob);
   session = qi_session_create();
 
-  qi_future_t* fuc = qi_session_connect(session, sd_addr);
+  fuc = qi_session_connect(session, sd_addr);
   if (qi_future_has_error(fuc, QI_FUTURETIMEOUT_INFINITE))
   {
     printf("Connection failed\n");
