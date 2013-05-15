@@ -305,7 +305,7 @@ extends TestCase
     }
 
     // Try to cancel call
-    if (fut.cancel(true) == false)
+    if (fut.cancel() == false)
     {
       try
       {

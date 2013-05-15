@@ -186,11 +186,10 @@ qi::GenericValuePtr java_call
 }
 
 jlong Java_com_aldebaran_qimessaging_GenericObject_qiObjectRegisterMethod
-(JNIEnv *env, jobject jobj, jlong pObjectBuilder, jstring method, jobject instance, jstring className)
+(JNIEnv *env, jobject jobj, jlong pObjectBuilder, jstring method, jobject instance, jstring className /*, jstring description*/)
 {
   qi::GenericObjectBuilder  *ob = reinterpret_cast<qi::GenericObjectBuilder *>(pObjectBuilder);
   std::string                signature = toStdString(env, method);
-  std::string                complete_signature = signature;
   qi_method_info*            data;
   std::vector<std::string>  sigInfo;
 
@@ -210,12 +209,11 @@ jlong Java_com_aldebaran_qimessaging_GenericObject_qiObjectRegisterMethod
 
   // Bind method signature on generic java callback
   sigInfo = qi::signatureSplit(signature);
-  signature = sigInfo[1];
-  signature.append("::");
-  signature.append(sigInfo[2]);
-  int ret = ob->xAdvertiseMethod(sigInfo[0], signature,
-    makeDynamicGenericFunction(
-        boost::bind(&java_call, complete_signature, data, _1)).dropFirstArgument());
+  int ret = ob->xAdvertiseMethod(sigInfo[0],
+                                 sigInfo[1],
+                                 sigInfo[2],
+                                 makeDynamicGenericFunction(boost::bind(&java_call, signature, data, _1)).dropFirstArgument(),
+                                 std::string(""));
 
   return (jlong) ret;
 }
@@ -231,8 +229,8 @@ jlong   Java_com_aldebaran_qimessaging_GenericObject_qiObjectAdvertiseEvent
   // Keep a pointer on JavaVM singleton if not already set.
   JVM(env);
 
-  //jlong ret = (jlong) ob->advertiseEvent<void (*)(const int&)>(event);
-  jlong ret = (jlong) ob->xAdvertiseEvent(event + "::" + callbackSignature);
+  //I.E : jlong ret = (jlong) ob->advertiseEvent<void (*)(const int&)>(event);
+  jlong ret = (jlong) ob->xAdvertiseSignal(event, callbackSignature);
   return ret;
 }
 
@@ -270,7 +268,8 @@ jlong   Java_com_aldebaran_qimessaging_GenericObject_qiObjectEmitEvent
     signature += params[i].signature(true);
   signature += ")";
 
-  return (jlong) obj->xMetaPost(signature, params);;
+  obj->metaPost(signature, params);
+  return 0;
 }
 
 qi::GenericValuePtr java_event_callback
