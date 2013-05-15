@@ -89,6 +89,7 @@ namespace qi {
     std::vector<SignalSubscriber> subscribers();
     static const SignalBase::Link invalidLink;
   public:
+    void _setSignature(const std::string& s);
     // C4251
     boost::shared_ptr<SignalBasePrivate> _p;
   };

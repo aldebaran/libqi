@@ -144,6 +144,7 @@ namespace qi
   : SignalBase(onSubscribers)
   {
     * (boost::function<T>*)this = detail::BounceToSignalBase<T>(*this);
+    _setSignature(detail::functionArgumentsSignature<T>());
   }
 
   template<typename T>

@@ -387,6 +387,11 @@ namespace qi {
     return _p ? _p->signature : "";
   }
 
+  void SignalBase::_setSignature(const std::string& s)
+  {
+    _p->signature = s;
+  }
+
   bool SignalBasePrivate::disconnect(const SignalBase::Link& l)
   {
 
