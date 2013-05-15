@@ -20,9 +20,9 @@ extern "C"
   QIMESSAGING_API jobject Java_com_aldebaran_qimessaging_GenericObject_qiObjectCall(JNIEnv *env, jobject obj, jlong pObject, jstring jmethod, jobjectArray args);
   QIMESSAGING_API jlong   Java_com_aldebaran_qimessaging_GenericObject_qiObjectAsyncCall(JNIEnv *env, jobject obj, jlong pObject, jstring jmethod, jobjectArray args);
   QIMESSAGING_API jlong   Java_com_aldebaran_qimessaging_GenericObject_qiObjectRegisterMethod(JNIEnv *env, jobject obj, jlong pObjectBuilder, jstring method, jobject instance, jstring service);
-  QIMESSAGING_API jlong   Java_com_aldebaran_qimessaging_GenericObject_qiObjectAdvertiseEvent(JNIEnv *env, jobject obj, jlong pObjectBuilder, jstring eventSignature);
-  QIMESSAGING_API jlong   Java_com_aldebaran_qimessaging_GenericObject_qiObjectEmitEvent(JNIEnv *env, jobject obj, jlong pObject, jstring eventName, jobjectArray args);
-  QIMESSAGING_API jlong   Java_com_aldebaran_qimessaging_GenericObject_qiObjectConnectEvent(JNIEnv *env, jobject obj, jlong pObject, jstring method, jobject instance, jstring service, jstring event);
+  QIMESSAGING_API jlong   Java_com_aldebaran_qimessaging_GenericObject_qiObjectAdvertiseSignal(JNIEnv *env, jobject obj, jlong pObjectBuilder, jstring eventSignature);
+  QIMESSAGING_API jlong   Java_com_aldebaran_qimessaging_GenericObject_qiObjectPost(JNIEnv *env, jobject obj, jlong pObject, jstring eventName, jobjectArray args);
+  QIMESSAGING_API jlong   Java_com_aldebaran_qimessaging_GenericObject_qiObjectConnect(JNIEnv *env, jobject obj, jlong pObject, jstring method, jobject instance, jstring service, jstring event);
 } // !extern "C"
 
 struct qi_method_info

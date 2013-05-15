@@ -218,7 +218,7 @@ jlong Java_com_aldebaran_qimessaging_GenericObject_qiObjectRegisterMethod
   return (jlong) ret;
 }
 
-jlong   Java_com_aldebaran_qimessaging_GenericObject_qiObjectAdvertiseEvent
+jlong   Java_com_aldebaran_qimessaging_GenericObject_qiObjectAdvertiseSignal
 (JNIEnv *env, jobject QI_UNUSED(obj), jlong pObjectBuilder, jstring eventSignature)
 {
   qi::GenericObjectBuilder  *ob = reinterpret_cast<qi::GenericObjectBuilder *>(pObjectBuilder);
@@ -234,7 +234,7 @@ jlong   Java_com_aldebaran_qimessaging_GenericObject_qiObjectAdvertiseEvent
   return ret;
 }
 
-jlong   Java_com_aldebaran_qimessaging_GenericObject_qiObjectEmitEvent
+jlong   Java_com_aldebaran_qimessaging_GenericObject_qiObjectPost
 (JNIEnv *env, jobject QI_UNUSED(callingObj), jlong pObject, jstring eventName, jobjectArray jargs)
 {
   qi::ObjectPtr obj = *(reinterpret_cast<qi::ObjectPtr *>(pObject));
@@ -280,12 +280,11 @@ qi::GenericValuePtr java_event_callback
   return java_call(info->sig, info, params);
 }
 
-jlong   Java_com_aldebaran_qimessaging_GenericObject_qiObjectConnectEvent
+jlong   Java_com_aldebaran_qimessaging_GenericObject_qiObjectConnect
 (JNIEnv *env, jobject jobj, jlong pObject, jstring method, jobject instance, jstring service, jstring eventName)
 {
   qi::ObjectPtr&             obj = *(reinterpret_cast<qi::ObjectPtr *>(pObject));
   std::string                signature = toStdString(env, method);
-  std::string                complete_signature = signature;
   std::string                event = toStdString(env, eventName);
   qi_method_info*            data;
   std::vector<std::string>  sigInfo;

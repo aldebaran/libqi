@@ -33,9 +33,9 @@ public class GenericObject
   private static native Object qiObjectCall(long pObject, String method, Object[] args);
   private static native long   qiObjectAsyncCall(long pObject, String method, Object[] args);
   private static native long   qiObjectRegisterMethod(long pObjectBuilder, String method, Object instance, String className);
-  private static native long   qiObjectAdvertiseEvent(long pObjectBuilder, String eventSignature);
-  private static native long   qiObjectEmitEvent(long pObjectBuilder, String name, Object[] args);
-  private static native long   qiObjectConnectEvent(long pObject, String method, Object instance, String className, String eventName);
+  private static native long   qiObjectAdvertiseSignal(long pObjectBuilder, String eventSignature);
+  private static native long   qiObjectPost(long pObject, String name, Object[] args);
+  private static native long   qiObjectConnect(long pObject, String method, Object instance, String className, String eventName);
 
   public GenericObject()
   {
@@ -171,7 +171,7 @@ public class GenericObject
       // If method name match signature
       if (callback.contains(method.getName()) == true)
       {
-        GenericObject.qiObjectConnectEvent(_obj, callback, object, className, eventName);
+        GenericObject.qiObjectConnect(_obj, callback, object, className, eventName);
         return;
       }
     }
@@ -180,28 +180,27 @@ public class GenericObject
   }
 
   /**
-   * Advertise an event and its callback signature.
-   * @param callbackSignature Signature needed to subscribe a callback.
-   * @param eventName Name of event
+   * Advertise an signal with its callback signature.
+   * @param signalSignature Signature of available callback.
    * @throws Exception If GenericObject is not initialized internally.
    */
-  public void advertiseEvent(String eventSignature) throws Exception
+  public void advertiseSignal(String signalSignature) throws Exception
   {
     if (_ob == 0)
       throw new Exception("Cannot advertise event : Object is already instanciated");
-    GenericObject.qiObjectAdvertiseEvent(_ob, eventSignature);
+    GenericObject.qiObjectAdvertiseSignal(_ob, signalSignature);
   }
 
 
   /**
-   * Emit an event advertised with advertiseEvent method.
+   * Post an event advertised with advertiseEvent method.
    * @see advertiseEvent
    * @param eventName Name of the event to trigger.
-   * @param args Arguments sent to callbacks
+   * @param args Arguments sent to callback
    */
-  public void emitEvent(String eventName, Object ... args)
+  public void post(String eventName, Object ... args)
   {
-    GenericObject.qiObjectEmitEvent(_obj, eventName, args);
+    GenericObject.qiObjectPost(_obj, eventName, args);
   }
 
   protected void finalize()

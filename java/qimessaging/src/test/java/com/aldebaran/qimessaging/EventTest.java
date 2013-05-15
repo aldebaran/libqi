@@ -42,7 +42,7 @@ public class EventTest extends TestCase {
 
     // Register event 'Fire'
     try {
-      obj.advertiseEvent("fire::(i)");
+      obj.advertiseSignal("fire::(i)");
     } catch (Exception e1) {
       Assert.assertTrue("Advertise event must not fail : " + e1.getMessage(), false);
     }
@@ -90,7 +90,7 @@ public class EventTest extends TestCase {
     } catch (Exception e) {
       Assert.assertTrue("Connect to event must succeed : " + e.getMessage(), false);
     }
-    obj.emitEvent("fire", 42);
+    obj.post("fire", 42);
 
     Thread.sleep(100); // Give time for callback to be called.
     Assert.assertTrue("Event callback must have been called ", callbackCalled);
