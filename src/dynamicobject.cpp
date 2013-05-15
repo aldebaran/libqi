@@ -50,6 +50,7 @@ namespace qi
   {
     for (SignalMap::iterator it = signalMap.begin(); it!= signalMap.end(); ++it)
       delete it->second;
+    //properties are also in signals, do not delete
   }
 
   SignalBase* DynamicObjectPrivate::createSignal(unsigned int id)
@@ -127,7 +128,7 @@ namespace qi
 
   void DynamicObject::setSignal(unsigned int id, SignalBase* signal)
   {
-    _p->signalMap[id] = signal;
+    _p->signalMap[id] = new SignalBase(*signal);
   }
 
 

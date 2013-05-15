@@ -706,6 +706,52 @@ TEST(TestObject, statistics)
   EXPECT_TRUE(obj->stats().empty());
 }
 
+static void bim(int i, qi::Promise<void> p, const std::string &name) {
+  qiLogInfo() << "Bim le callback:" << name << " ,i:" << i;
+  if (i == 42)
+    p.setValue(0);
+  else
+    p.setError(0);
+}
+
+//test local and remote callback.
+//trigger local or remote each time
+TEST(TestObject, AdvertiseRealSignal)
+{
+  qi::Promise<void> plocal;
+  qi::Promise<void> premote;
+
+  EXPECT_ANY_THROW(plocal.future().hasValue(0));
+  EXPECT_ANY_THROW(premote.future().hasValue(0));
+
+  qi::Signal<void (int)> sig;
+  sig.connect(boost::bind<void>(&bim, _1, plocal, "local"));
+  qi::GenericObjectBuilder gob;
+  int id = gob.advertiseSignal("sig", &sig);
+  ASSERT_LT(0, id);
+  qi::ObjectPtr obj = gob.object();
+  obj->connect("sig", boost::bind<void>(&bim, _1, premote, "remote"));
+
+  //test remote trigger
+  qiLogInfo() << "remote trigger.";
+  obj->post("sig", 42);
+  plocal.future().wait(1000);
+  premote.future().wait(1000);
+  ASSERT_TRUE(plocal.future().hasValue(0));
+  ASSERT_TRUE(premote.future().hasValue(0));
+
+  plocal.reset();
+  premote.reset();
+
+  //test local trigger
+  qiLogInfo() << "local trigger.";
+  sig(42);
+  plocal.future().wait(1000);
+  premote.future().wait(1000);
+  ASSERT_TRUE(plocal.future().hasValue(0));
+  ASSERT_TRUE(premote.future().hasValue(0));
+}
+
 int main(int argc, char **argv)
 {
   qi::Application app(argc, argv);

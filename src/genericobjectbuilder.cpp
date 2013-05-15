@@ -125,6 +125,21 @@ namespace qi
     return nextId;
   }
 
+  int GenericObjectBuilder::advertiseSignal(const std::string &name, qi::SignalBase *sig)
+  {
+    int nextId = xAdvertiseSignal(name, sig->signature());
+    _p->_object->setSignal(nextId, sig);
+    return nextId;
+  }
+
+  int GenericObjectBuilder::advertiseProperty(const std::string &name, qi::PropertyBase *prop)
+  {
+    //todo: prop.signature()
+    int nextId = xAdvertiseProperty(name, prop->signal()->signature());
+    _p->_object->setProperty(nextId, prop);
+    return nextId;
+  }
+
   int GenericObjectBuilder::xAdvertiseProperty(const std::string& name, const std::string& sig, int id)
   {
     if (!Signature(sig).isValid()) {

@@ -47,9 +47,13 @@ namespace qi {
                                         MetaCallType threadingModel = MetaCallType_Auto);
 
     template<typename FUNCTION_TYPE>
-    inline unsigned int advertiseSignal(const std::string& eventName);
+    inline unsigned int advertiseSignal(const std::string& name);
+    int advertiseSignal(const std::string &name, qi::SignalBase *signal);
+
     template<typename T>
     unsigned int advertiseProperty(const std::string& name);
+    /// Ownership is transfered to the object
+    int advertiseProperty(const std::string &name, qi::PropertyBase *sig);
 
     void setThreadingModel(ObjectThreadingModel model);
 
