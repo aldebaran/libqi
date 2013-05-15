@@ -63,6 +63,12 @@ qi_value_t*       qi_servicedirectory_endpoints(qi_servicedirectory_t *servicedi
   return val;
 }
 
+int qi_servicedirectory_set_identity(qi_servicedirectory_t *servicedirectory, char *key, char *crt)
+{
+  qi::ServiceDirectory* sd = qi_servicedirectory_cpp(servicedirectory);
+  return (int)sd->setIdentity(std::string(key), std::string(crt));
+}
+
 #ifdef __cplusplus
 }
 #endif

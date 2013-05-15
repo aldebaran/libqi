@@ -20,6 +20,7 @@ extern "C"
   QIC_API void                   qi_servicedirectory_listen(qi_servicedirectory_t *servicedirectory, const char *url);
   QIC_API void                   qi_servicedirectory_close(qi_servicedirectory_t *servicedirectory);
   QIC_API qi_value_t*            qi_servicedirectory_endpoints(qi_servicedirectory_t *servicedirectory);
+  QIC_API int                    qi_servicedirectory_set_identity(qi_servicedirectory_t *servicedirectory, char *key, char *crt);
 
 #ifdef __cplusplus
 }
