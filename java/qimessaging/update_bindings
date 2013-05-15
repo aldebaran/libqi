@@ -27,7 +27,7 @@ def jar_package(jarname, file_list, config=None):
     callee += [jarname] + file_list
     return subprocess.call(callee)
 
-def deploy(artifact_id, filename, url, version = "1.0-SNAPSHOT", group_id = "com.aldebaran"):
+def deploy(artifact_id, filename, url, version = "1.0-SNAPSHOT", group_id = "com.aldebaran", packaging_format = "jar"):
     """
     Call to maven deploy goal
     """
@@ -36,8 +36,9 @@ def deploy(artifact_id, filename, url, version = "1.0-SNAPSHOT", group_id = "com
     version     = ["--version", version]
     artifact_id = ["--artifactId", artifact_id]
     url         = ["--url", url]
+    packaging   = ["--packaging", packaging_format]
 
-    callee = ["qimvn", "deploy", filename] + group_id + version + artifact_id + url
+    callee = ["qimvn", "deploy", filename] + group_id + version + artifact_id + url + packaging
     return subprocess.call(callee)
 
 def deploy_native_package(platform):
@@ -46,6 +47,7 @@ def deploy_native_package(platform):
     deploy them with Maven
     """
     pom_name = "pom-" + platform + ".xml"
+    packaging_format = "jar"
     callee = ["qimvn", "package", "--pom", pom_name, "--skip-test"]
 
     if subprocess.call(callee) is not 0:
@@ -55,6 +57,7 @@ def deploy_native_package(platform):
     jarname = "qimessaging"
     if platform == "android":
         jarname += "-apklib"
+        packaging_format = "apklib"
     jarname += "-1.0-SNAPSHOT"
     if platform == "android":
         jarname += ".apklib"
@@ -62,7 +65,7 @@ def deploy_native_package(platform):
         jarname += ".jar"
 
     url = "file:///tmp/maven/qimessaging-" + platform
-    return deploy("qimessaging", "target/" + jarname, url)
+    return deploy("qimessaging", "target/" + jarname, url, packaging_format = packaging_format)
 
 def package_native_libraries(platform):
     """
