@@ -35,13 +35,10 @@ qi_create_bin(test_signature SRC sig_generator.cpp sig_generator.h test_signatur
 
 qimessaging_create_session_test(test_service              SRC test_service.cpp DEPENDS QI QIMESSAGING GTEST TESTSESSION TIMEOUT 10)
 qimessaging_create_session_test(test_proxy           SRC test_proxy.cpp DEPENDS QI QIMESSAGING GTEST TESTSESSION TIMEOUT 10)
-option(WITH_CODEGEN_TESTS       "Run codegen tests"       OFF)
 
-if (WITH_CODEGEN_TESTS)
-  add_subdirectory(passobject-fromservice)
-  add_subdirectory(passobject-fromclient)
-  add_subdirectory(codegen-interface)
-  add_subdirectory(codegen-bind)
-  add_subdirectory(task-service)
-endif()
+add_subdirectory(passobject-fromservice)
+add_subdirectory(passobject-fromclient)
+add_subdirectory(codegen-interface)
+add_subdirectory(codegen-bind)
+add_subdirectory(task-service)
 
