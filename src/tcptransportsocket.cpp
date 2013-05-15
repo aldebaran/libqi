@@ -466,15 +466,21 @@ namespace qi
     // So do not use this before checking abort.
     if (erc || _abort)
       return; // read-callback will also get the error, avoid dup and ignore it
-    boost::mutex::scoped_lock lock(_sendQueueMutex);
-    if (_sendQueue.empty())
-      _sending = false;
-    else
+
+    qi::Message m;
     {
-      qi::Message msg = _sendQueue.front();
+      boost::mutex::scoped_lock lock(_sendQueueMutex);
+      if (_sendQueue.empty())
+      {
+        _sending = false;
+        return;
+      }
+
+      m = _sendQueue.front();
       _sendQueue.pop_front();
-      send_(msg);
     }
+
+    send_(m);
   }
 
 }
