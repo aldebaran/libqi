@@ -182,9 +182,14 @@ namespace qi
             }
           }
           GenericValuePtr pointedSrc = static_cast<TypePointer*>(type)->dereference(value);
+          // try object conversion (inheritance)
           std::pair<GenericValuePtr, bool> pointedDstPair = pointedSrc.convert(dstPointedType);
           if (!pointedDstPair.first.type)
-            return std::make_pair(GenericValuePtr(), false);
+          {
+            // try object->proxy conversion by simply rewrapping this
+            ObjectPtr o(new GenericObject(static_cast<ObjectType*>(pointedSrc.type), pointedSrc.value));
+            return GenericValueRef(o).convert(targetType);
+          }
           if (pointedDstPair.second)
             qiLogError() << "assertion error, allocated converted reference";
           // We must re-reference
