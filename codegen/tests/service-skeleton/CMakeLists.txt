@@ -42,6 +42,7 @@ file(WRITE  ${CMAKE_CURRENT_BINARY_DIR}/simpleservice/simpleservice-service.cpp
 
 #now build our service
 qi_create_lib(simpleservice
+  MODULE
   SRC ${CMAKE_CURRENT_BINARY_DIR}/simpleservice/simpleservice-service.cpp
   DEPENDS qitype
 )
