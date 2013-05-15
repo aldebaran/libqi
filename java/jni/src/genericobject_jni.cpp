@@ -40,6 +40,7 @@ static qi::Future<qi::GenericValuePtr>* async_call_java
   std::string signature;
   jsize size;
   jsize i = 0;
+  bool  useSignature = true;
 
   size = env->GetArrayLength(listParams);
   while (i < size)
@@ -47,13 +48,23 @@ static qi::Future<qi::GenericValuePtr>* async_call_java
     jobject current = env->NewGlobalRef(env->GetObjectArrayElement(listParams, i));
     qi::GenericValuePtr val = qi::GenericValueRef(current).clone();
     params.push_back(val);
+
+    // In case of empty list or map, type system cannot resole containee type. In that case, do not use signature.
+    if (val.signature(true).find(qi::Signature::Type_None) != std::string::npos)
+    {
+      useSignature = false;
+      break;
+    }
+
     signature += val.signature(true);
     i++;
   }
 
   qi::Future<qi::GenericValuePtr> *fut = new qi::Future<qi::GenericValuePtr>();
-  try {
-    *fut = object->metaCall(strMethodName + "::(" + signature + ")", params);
+  try
+  {
+    std::string nameWithOptionalSignature = strMethodName + (useSignature == true ? "::(" + signature + ")" : "");
+    *fut = object->metaCall(nameWithOptionalSignature, params);
   } catch (std::runtime_error &e)
   {
     throwJavaError(env, e.what());
