@@ -910,26 +910,35 @@ def signature_split(sig):
   return ret
 
 def runtime_to_raw(class_name, sd_url):
-  from qimessaging.session import Session
-  session = Session(sd_url)
+  from qi import Session
+  print("connecting session to " + sd_url)
+  session = Session()
+  session.connect(sd_url)
+  print("Trying to fetch " + class_name)
   obj = session.service(class_name)
-  desc = obj.metaObject(0)
+  print("Fetching metaobject")
+  desc = obj.metaObject()
   print(desc)
   methods = []
   for k in desc[0]:
     m = desc[0][k]
-    print(m)
-    composite_name = m[2]
-    parts = composite_name.split('::')
-    method_name = parts[0]
-    sig = parts[1][1:-1] #remove toplevel tuple
+    print(m) # ex: (0L, 'L', 'registerEvent', '(IIL)', 'doc', [argdoc], 'retdoc')
+    method_name = m[2]
+    sig = m[3][1:-1] #remove toplevel tuple
     sig = signature_split(sig)
     sig = map(signature_to_idl, sig)
     rettype = m[1]
     rettype = signature_to_idl(rettype)
-
-    methods.append((method_name, sig, rettype, m[3]))
-  return {class_name : (methods, [], '')}
+    if method_name == 'metaObject': # HACK
+      rettype = 'MetaObject'
+    doc = m[4]
+    # FIXME support argdoc/retdoc in RAW structure
+    for argdoc in m[5]:
+      doc += '\n' + argdoc[0] + ': ' + argdoc[1]
+    if len(m[6]):
+      doc += '\nreturn: ' + m[6]
+    methods.append((method_name, sig, rettype, doc))
+  return {class_name : (methods, [], [], '')}
 
 def main(args):
   res = ''
