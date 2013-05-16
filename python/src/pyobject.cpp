@@ -83,8 +83,7 @@ namespace qi { namespace py {
         if (ms.uid() < qiObjectSpecialMethodMaxUid)
           continue;
         qiLogDebug() << "adding signal:" << ms.toString();
-        boost::python::object fun = qi::py::makePySignal(ms.parametersSignature());
-        //TODO: connect the two signals.
+        boost::python::object fun = qi::py::makePyProxySignal(obj, ms);
         boost::python::api::setattr(pyobj, ms.name(), fun);
       }
     }
@@ -98,8 +97,7 @@ namespace qi { namespace py {
         if (mp.uid() < qiObjectSpecialMethodMaxUid)
           continue;
         qiLogDebug() << "adding property:" << mp.toString();
-        boost::python::object fun = qi::py::makePyProperty(mp.signature());
-        //TODO: connect the two properties
+        boost::python::object fun = qi::py::makePyProxyProperty(obj, mp);
         boost::python::api::setattr(pyobj, mp.name().c_str(), fun);
       }
     }
@@ -122,7 +120,11 @@ namespace qi { namespace py {
         return qi::GenericValueRef(_object->metaObject()).to<boost::python::object>();
       }
 
-    public:
+      qi::ObjectPtr object() {
+        return _object;
+      }
+
+    private:
       qi::ObjectPtr _object;
     };
 
@@ -163,6 +165,14 @@ namespace qi { namespace py {
 
     qi::ObjectPtr makeQiObjectPtr(boost::python::object obj)
     {
+      //is that a qi::ObjectPtr?
+      boost::python::extract<PyQiObject*> isthatyoumum(obj);
+
+      if (isthatyoumum.check()) {
+        qiLogDebug() << "this PyObject is already a qi::ObjectPtr. Just returning it.";
+        return isthatyoumum()->object();
+      }
+
       qi::GenericObjectBuilder gob;
       boost::python::object attrs(boost::python::handle<>(PyObject_Dir(obj.ptr())));
 
