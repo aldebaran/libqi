@@ -33,8 +33,11 @@ int make_call(qi_application_t *app, char *addr, int ev)
   const char*   ss = 0;
   qi_value_t*   ret = 0;
   const char*   result = 0;
+  qi_future_t*  fu = 0;
 
-  qi_session_connect(session, addr);
+  fu = qi_session_connect(session, addr);
+
+  qi_future_wait(fu, QI_FUTURETIMEOUT_INFINITE);
 
   object = qi_future_get_object(qi_session_get_service(session, "serviceTest"));
 
@@ -80,6 +83,8 @@ int make_call(qi_application_t *app, char *addr, int ev)
 
   if (result)
     printf("Reply : %s\n", result);
+
+  qi_future_destroy(fu);
   qi_future_destroy(fut);
   qi_value_destroy(message);
   qi_value_destroy(str);
@@ -100,8 +105,8 @@ int main(int argc, char *argv[])
   // get the program options
   if (argc < 2)
   {
-    printf("Usage : ./qi-client-c [--event] master-address");
-    printf("Assuming master address is tcp://127.0.0.1:9559");
+    printf("Usage : ./qi-client-c [--event] master-address\n");
+    printf("Assuming master address is tcp://127.0.0.1:9559\n");
     sd_addr = strdup("tcp://127.0.0.1:9559");
   }
   else {
