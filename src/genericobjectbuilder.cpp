@@ -96,6 +96,7 @@ namespace qi
       qiLogWarning() << "GenericObjectBuilder: Called xAdvertiseMethod("<< mm.returnSignature() << "," << mm.name() << "," << mm.parametersSignature() << ") with an invalid signature.";
       return -1;
     }
+    //TODO: check that func is compatible with MM
     if (_p->_objptr) {
       qiLogWarning()
           << "GenericObjectBuilder: Called xAdvertiseMethod with method '"

@@ -752,6 +752,40 @@ TEST(TestObject, AdvertiseRealSignal)
   ASSERT_TRUE(premote.future().hasValue(0));
 }
 
+std::string add(const std::string &str) {
+  return str + "ahah";
+}
+
+TEST(TestObject, AdvertiseBadType)
+{
+  qi::GenericObjectBuilder gob;
+
+  //missing ::
+  EXPECT_EQ(-1, gob.xAdvertiseMethod("s", "addbadsignature", "s)", qi::makeGenericFunction(&add)));
+  //missing param sig
+  EXPECT_EQ(-1, gob.xAdvertiseMethod("s", "addbadsignature", "", qi::makeGenericFunction(&add)));
+  //missing ()
+  EXPECT_EQ(-1, gob.xAdvertiseMethod("s", "addbadsignature", "::", qi::makeGenericFunction(&add)));
+  //missing ()
+  EXPECT_EQ(-1, gob.xAdvertiseMethod("s", "addbadsignature", "ss", qi::makeGenericFunction(&add)));
+  //G do not exists
+  EXPECT_EQ(-1, gob.xAdvertiseMethod("s", "addbadsignature", "(G)", qi::makeGenericFunction(&add)));
+
+  //bad return type
+  EXPECT_EQ(-1, gob.xAdvertiseMethod("TOOBADDDDD", "addbadsignature", "(s)", qi::makeGenericFunction(&add)));
+  //two return type
+  EXPECT_EQ(-1, gob.xAdvertiseMethod("si", "addbadsignature", "(s)", qi::makeGenericFunction(&add)));
+
+  EXPECT_EQ(-1, gob.xAdvertiseSignal("ploufffffffPlifffff", ""));
+
+  EXPECT_EQ(-1, gob.xAdvertiseSignal("", "si"));
+  EXPECT_EQ(-1, gob.xAdvertiseProperty("plouf", "ss"));
+  EXPECT_EQ(-1, gob.xAdvertiseProperty("plouf", "("));
+  //signature mismatch
+  //TODO: EXPECT_EQ(-1, gob.xAdvertiseMethod("i", "add", "(i)", qi::makeGenericFunction(&add)));
+}
+
+
 int main(int argc, char **argv)
 {
   qi::Application app(argc, argv);
