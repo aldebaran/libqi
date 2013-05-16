@@ -12,22 +12,11 @@ import qi
 class ServiceTest:
     def __init__(self):
         self.onFoo = qi.Signal("i")
-        self.onBar = qi.Signal("i")
         self.testEvent = qi.Signal("(s)")
 
-
     def reply(self, plaf):
-        print "iciiii"
         print "v:", plaf
         return plaf + "bim"
-
-    def rep(self):
-        self.onFoo(32)
-        print "rep"
-
-    def totot(self, pif, paf):
-        print "laaaa"
-        pass
 
 def get_servicedirectory_address():
     """ Parse command line arguments
@@ -51,7 +40,6 @@ def main():
     sd_addr = get_servicedirectory_address()
 
     s = qi.Session()
-
     s.connect(sd_addr)
     m = ServiceTest()
     s.register_service("serviceTest", m)

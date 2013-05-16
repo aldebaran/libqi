@@ -9,18 +9,6 @@ import time
 import sys
 import qi
 
-def get_service(session, service_name):
-    """ Get service given by service_name.
-
-    .. note:: Exit on failure.
-    """
-
-    return obj
-
-def call_reply(obj):
-    """ Synchronous call to serviceTest.reply::s(s)
-    """
-
 def get_servicedirectory_address(argv):
     """ Parse command line arguments
 
@@ -33,18 +21,16 @@ def get_servicedirectory_address(argv):
 
     return argv[1]
 
-def callmoilababy(f):
-    print "ici.com"
-    #ret = f.value().reply("coco")
-    #print "rep coco:", ret
+def onReply(fut):
+    print "async repl:", fut.value()
 
-def callmoilababy2(f):
-    print "ici2.com"
+def onServiceAvailable(fut):
+    print "onServiceAvailable"
 
-def onPlaf(f):
-    print "the result:", f.value()
+def onTestEvent(v):
+    print "Event:", v
 
-def toto(session):
+def client(session):
 
     f = session.connect("tcp://127.0.0.1:9559", _async=True)
     print "connected?", not f.has_error()
@@ -52,50 +38,23 @@ def toto(session):
     #3 Get service serviceTest
     fut = session.service("serviceTest", _async=True)
 
-    print "plouf1", fut.value()
-    fut.add_callback(callmoilababy)
-    print "plouf2"
-    fut.add_callback(callmoilababy2)
-    print "plouf3"
+    fut.add_callback(onServiceAvailable)
 
     obj = fut.value()
-    print "obj:", obj
-    print "dir:", dir(obj)
-    print "o f:", obj.call
-    print "dir f:", dir(obj.call)
 
-    print "list:", obj.call("replyVector::()")
-    print "map:", obj.call("replyMap::()")
-    print "map:", obj.call("replyMap2::()")
+    obj.testEvent.connect(onTestEvent)
 
-    print "list:", obj.replyVector()
-    print "map:", obj.replyMap()
-    print "map:", obj.replyMap2()
-
-    print "metaobj:", obj.call("metaObject::(I)", (1,))
-
-    #print "props:", obj.call("properties", tuple(), None)
-    print "props:", obj.call("properties::()", tuple())
-    print "repl:", obj.call("reply::(s)", ("plouf",))
-    print "repl:", obj.call("reply::(m)", ("plouf",))
-
-    #4 Call foreign method reply
-    #value = obj.reply("plaf", _overload="reply::(s)", _async=False)
-    #print 'Reply : ', value
-
-    f = obj.reply("plaf", _overload="reply::(s)", _async=True)
-    #print "jen suis la, mais ca crack avant je pense"
-    f.add_callback(onPlaf)
+    print "repl:", obj.call("reply", "plouf")
+    f = obj.reply("plaf", _async=True)
+    f.add_callback(onReply)
 
     i = 0
-    while i < 3:
-        print "ploof"
+    while i < 2:
+        print "waiting..."
         time.sleep(1)
         i = i + 1
-    #5 Cleanup
     session.close()
 
-import sys
 
 def  main():
     """ Entry point of qiservice
@@ -103,13 +62,10 @@ def  main():
     #0 Declare app
     _application = qi.Application()
 
-    #1 Check if user give us service directory address.
-    sd_addr = get_servicedirectory_address(sys.argv)
-
     #2 Open a session onto service directory.
     session = qi.Session()
 
-    toto(session)
+    client(session)
 
     _application.stop()
 
