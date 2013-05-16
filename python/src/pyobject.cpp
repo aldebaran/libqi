@@ -200,7 +200,7 @@ namespace qi { namespace py {
         if (PyObject_IsInstance(m.ptr(), asignal.ptr())) {
           qiLogDebug() << "Adding signal:" << key;
           //TODO: register the signal, and get the it to link it to the python one.
-          int sig = gob.xAdvertiseEvent(key, "(i)");
+          int sig = gob.xAdvertiseSignal(key, "(i)");
           //TODO: make py.trigger call cpp.trigger
           //TODO: make cpp.callback call py.trigger
           continue;
