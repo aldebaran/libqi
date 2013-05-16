@@ -168,7 +168,8 @@ namespace qi { namespace py {
         std::string key = boost::python::extract<std::string>(attrs[i]);
         boost::python::object m = obj.attr(attrs[i]);
         if (PyMethod_Check(m.ptr())) {
-          qi::MetaMethodBuilder mmb(key);
+          qi::MetaMethodBuilder mmb;
+          mmb.setName(key);
           boost::python::object desc = m.attr("__doc__");
           if (desc)
             mmb.setDescription(boost::python::extract<std::string>(desc));
@@ -189,8 +190,8 @@ namespace qi { namespace py {
             ss << "m";
           ss << ")";
           qiLogDebug() << "Adding method: " << ss.str();
-          mmb.setSignature(ss.str());
-          mmb.setSigreturn("m");
+          mmb.setParametersSignature(ss.str());
+          mmb.setReturnSignature("m");
           gob.xAdvertiseMethod(mmb, qi::makeDynamicGenericFunction(boost::bind(pysignalCb, _1, m)));
           continue;
         }
