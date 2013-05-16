@@ -8,7 +8,7 @@
 #include "pyproperty.hpp"
 #include <boost/python.hpp>
 #include <qitype/property.hpp>
-
+#include <qitype/genericobject.hpp>
 namespace qi { namespace py {
 
     class PyProperty : public qi::GenericProperty {
@@ -31,6 +31,28 @@ namespace qi { namespace py {
       }
     };
 
+    class PyProxyProperty {
+    public:
+      PyProxyProperty(qi::ObjectPtr obj, const qi::MetaProperty &signal)
+        : _obj(obj)
+        , _sigid(signal.uid()){
+      }
+
+      //TODO: support async
+      boost::python::object value() const {
+        return _obj->getProperty(_sigid).value().to<boost::python::object>();
+      }
+
+      //TODO: support async
+      void setValue(boost::python::object obj) {
+        _obj->setProperty(_sigid, qi::GenericValue::from(obj));
+      }
+
+    private:
+      qi::ObjectPtr _obj;
+      unsigned int  _sigid;
+    };
+
     boost::python::object makePyProperty(const std::string &signature) {
       return boost::python::object(PyProperty(signature));
     }
@@ -39,10 +61,18 @@ namespace qi { namespace py {
       return boost::python::extract<PyProperty*>(obj);
     }
 
+    boost::python::object makePyProxyProperty(const qi::ObjectPtr &obj, const qi::MetaProperty &prop) {
+      return boost::python::object(PyProxyProperty(obj, prop));
+    }
+
     void export_pyproperty() {
       boost::python::class_<PyProperty>("Property", boost::python::init<const std::string &>())
           .def("value", &PyProperty::value)
           .def("setValue", &PyProperty::setVal, (boost::python::arg("value")));
+
+      boost::python::class_<PyProxyProperty>("_ProxyProperty", boost::python::no_init)
+          .def("value", &PyProxyProperty::value)
+          .def("setValue", &PyProxyProperty::setValue, (boost::python::arg("value")));
     }
 
   }
