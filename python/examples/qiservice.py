@@ -6,12 +6,15 @@
 """
 
 import sys
+import time
 import qi
 
 class ServiceTest:
     def __init__(self):
         self.onFoo = qi.Signal("i")
         self.onBar = qi.Signal("i")
+        self.testEvent = qi.Signal("(s)")
+
 
     def reply(self, plaf):
         print "iciiii"
@@ -54,7 +57,13 @@ def main():
     s.register_service("serviceTest", m)
 
     #5 Call Application.run() to join event loop.
-    app.run()
+    i = 0
+    while True:
+      mystr = "bim" + str(i)
+      print "posting:", mystr
+      m.testEvent(mystr)
+      time.sleep(1);
+      i += 1
 
     #6 Clean
     s.close()
