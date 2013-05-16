@@ -231,11 +231,21 @@ namespace qi { namespace py {
       return gob.object(boost::bind<void>(&doNothing, _1, obj));
     }
 
+    static boost::python::object pyobject_param_shrinker(boost::python::tuple args, boost::python::dict kwargs) {
+      PyQiObject& pys = boost::python::extract<PyQiObject&>(args[0]);
+      boost::python::list l;
+      for (unsigned i = 2; i < boost::python::len(args); ++i)
+        l.append(args[i]);
+      return pys.call(boost::python::extract<boost::python::str>(args[1]), boost::python::tuple(l), kwargs);
+    }
+
     void export_pyobject() {
       boost::python::class_<qi::py::PyQiObject>("Object")
-          .def("call", &qi::py::PyQiObject::call, (boost::python::arg("name"), boost::python::arg("args") = boost::python::tuple(), boost::python::arg("kargs") = boost::python::dict()))
+          .def("call", boost::python::raw_function(&pyobject_param_shrinker, 1))
+          //TODO: .def("post")
+          //TODO: .def("setProperty")
+          //TODO: .def("getProperty")
           .def("metaObject", &qi::py::PyQiObject::metaObject);
-
       //import inspect in our current namespace
       import_inspect();
     }

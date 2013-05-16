@@ -63,6 +63,7 @@ namespace qi { namespace py {
       }
 
       qi::uint64_t connect(boost::python::object callable) {
+        //TODO: own ourself.
         return _obj->connect(_sigid, qi::makeDynamicGenericFunction(boost::bind(pysignalCb, _1, callable)));
       }
 
