@@ -187,6 +187,11 @@ namespace qi {
     template<typename T>
     qi::FutureSync<void> setProperty(const std::string& name, const T& val);
 
+    //Low Level Properties
+    qi::FutureSync<GenericValue> getProperty(unsigned int id);
+    qi::FutureSync<void> setProperty(unsigned int id, const GenericValue &val);
+
+
     //bool isValid() { return type && value;}
     ObjectType*  type;
     void*        value;
