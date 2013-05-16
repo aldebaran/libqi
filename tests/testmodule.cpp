@@ -16,11 +16,19 @@ int testMethod(const int& v)
   return v+1;
 }
 
+qi::ObjectPtr make_other_object()
+{
+  qi::GenericObjectBuilder ob;
+  ob.advertiseMethod("testMethod", testMethod);
+  return ob.object();
+}
+
 qi::ObjectPtr setup(const std::string&)
 {
   qiLogDebug() << "setup";
   qi::GenericObjectBuilder ob;
   ob.advertiseMethod("testMethod", testMethod);
+  ob.advertiseMethod("make_other_object", make_other_object);
   return ob.object();
 }
 

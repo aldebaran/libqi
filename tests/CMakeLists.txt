@@ -34,6 +34,7 @@ qi_create_bin(test_call_on_close_session SRC test_call_on_close_session.cpp DEPE
 qi_create_bin(test_signature SRC sig_generator.cpp sig_generator.h test_signature.cpp DEPENDS TESTSESSION QI QIMESSAGING BOOST)
 
 qimessaging_create_session_test(test_service              SRC test_service.cpp DEPENDS QI QIMESSAGING GTEST TESTSESSION TIMEOUT 10)
+qimessaging_create_session_test(test_send_object              SRC test_send_object.cpp DEPENDS QI QIMESSAGING GTEST TESTSESSION TIMEOUT 10)
 qimessaging_create_session_test(test_proxy           SRC test_proxy.cpp DEPENDS QI QIMESSAGING GTEST TESTSESSION TIMEOUT 10)
 
 add_subdirectory(passobject-fromservice)
