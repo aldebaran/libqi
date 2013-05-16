@@ -223,7 +223,6 @@ class PythonScopedRef
     PyObject* _p;
 };
 
-
 qi::GenericValuePtr GenericValue_from_PyObject(PyObject* val)
 {
   qi::GenericValuePtr res;
@@ -273,13 +272,12 @@ qi::GenericValuePtr GenericValue_from_PyObject(PyObject* val)
     bool b = (PyInt_AsLong(val) != 0);
     res = qi::GenericValueRef(b).clone();
   }
-  else if (PyInstance_Check(val))
+  else if (PyModule_CheckExact(val) || PyClass_Check(val)) {
+    throw std::runtime_error("Unable to convert Python Module or Class to GenericValue");
+  }
+  else // if (PyInstance_Check(val))   //instance are old style python class
   {
     res = qi::GenericValueRef(qi::py::makeQiObjectPtr(boost::python::object(boost::python::borrowed(val)))).clone();
-  }
-  else
-  {
-    throw std::runtime_error("Unable to convert PyObject to GenericValue");
   }
   return res;
 }
