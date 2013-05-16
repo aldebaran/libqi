@@ -36,8 +36,18 @@ function createShowCall(s, m, sigret, sigarg)
   }
 }
 
+function cb(data) {
+  qim.service(data[1]).done(showService);
+}
+
 function showService(service) {
   var mobj = service["__mobj"];
+
+  if (mobj[0] == "ServiceDirectory")
+  {
+    service.serviceAdded.connect(cb)
+  }
+
   var tabname = $("<h3><b>" + mobj[0] + "</b> [<i>" + mobj[1][3] + "</i>]</h3>")
   $("#accordion").append(tabname)
 

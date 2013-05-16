@@ -31,6 +31,11 @@ class QiMessagingHandler(tornadio2.conn.SocketConnection):
       except AttributeError as e:
         print idm, str(e)
 
+    def do_callback(self, service, signal):
+      def cbk(*args):
+        self.reply(-1, "event", { "service": service, "signal": signal, "data": args })
+      return cbk
+
     def do_reply(self, idm):
       def rep(f):
         if f.has_error():
@@ -48,6 +53,10 @@ class QiMessagingHandler(tornadio2.conn.SocketConnection):
         if service == "ServiceDirectory" and method == "service":
           o = self.s.service(str(args[0]))
           self.reply(idm, "reply", (args[0], o.metaObject()))
+        elif method == "registerEvent":
+          o = self.s.service(str(service))
+          s = getattr(o, args[0])
+          s.connect(self.do_callback(service, args[0]))
         else:
           o = self.s.service(str(service))
           m = getattr(o, method)

@@ -108,6 +108,32 @@ Deferred objects.
    // console
    > plafbim
 
+Events
+^^^^^^
+
+Events are also available. These are JavaScript objects providing two methods,
+``connect()`` and ``disconnect()``. The first one will return an id that must
+will be used by the second for unregistration.
+
+.. code-block:: javascript
+
+   function onMyEvent(data)
+   {
+     console.log('myEvent triggered, with:', data);
+   }
+
+   function onUnregister(data)
+   {
+     console.log('myEvent unregistered');
+   }
+
+   function onRegister(eventId)
+   {
+     service.myEvent.disconnect(eventId).done(onUnregister);
+   }
+
+   service.myEvent.connect(onMyEvent).done(onRegister);
+
 QiSession.socket()
 ------------------
 
