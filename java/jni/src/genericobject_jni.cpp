@@ -51,14 +51,15 @@ static qi::Future<qi::GenericValuePtr>* async_call_java
 
     // In case of empty list or map, type system cannot resole containee type. In that case, do not use signature.
     if (val.signature(true).find(qi::Signature::Type_None) != std::string::npos)
-    {
       useSignature = false;
-      break;
-    }
 
     signature += val.signature(true);
     i++;
   }
+
+  // If user provide signature, do not use resolved one.
+  if (strMethodName.find("::") != std::string::npos)
+    useSignature = false;
 
   qi::Future<qi::GenericValuePtr> *fut = new qi::Future<qi::GenericValuePtr>();
   try

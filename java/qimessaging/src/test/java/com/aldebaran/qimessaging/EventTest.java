@@ -1,83 +1,71 @@
 package com.aldebaran.qimessaging;
 
-import junit.framework.Assert;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import static org.junit.Assert.*;
 
-public class EventTest extends TestCase {
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
-  private boolean callbackCalled = false;
-  private int callbackParam = 0;
+public class EventTest
+{
+  private boolean         callbackCalled = false;
+  private int             callbackParam = 0;
+  public GenericObject    proxy = null;
+  public GenericObject    obj = null;
+  public Session          s = null;
+  public Session          client = null;
+  public ServiceDirectory sd = null;
 
-  /**
-   * Create the test case
-   *
-   * @param testName name of the test case
-   */
-  public EventTest(String testName)
+  @Before
+  public void setUp() throws Exception
   {
-    super(testName);
-  }
-
-  /**
-   * @return the suite of tests being tested
-   */
-  public static Test suite()
-  {
-    return new TestSuite(EventTest.class);
-  }
-
-  public void testEvent() throws InterruptedException
-  {
-    ServiceDirectory sd = new ServiceDirectory();
-    Session s = new Session();
-    Session client = new Session();
+    sd = new ServiceDirectory();
+    s = new Session();
+    client = new Session();
 
     // Get Service directory listening url.
     String url = sd.listenUrl();
 
-    // Create new qimessaging generic object
-    GenericObject obj = new GenericObject();
+    // Create new QiMessaging generic object
+    obj = new GenericObject();
 
     // Register event 'Fire'
-    try {
-      obj.advertiseSignal("fire::(i)");
-    } catch (Exception e1) {
-      Assert.assertTrue("Advertise event must not fail : " + e1.getMessage(), false);
-    }
+    obj.advertiseSignal("fire::(i)");
 
     // Connect session to Service Directory
-    try {
-      s.connect(url);
-    } catch (Exception e)
-    {
-      Assert.assertTrue("Session must be connected to Service Directory : " + e.getMessage(), false);
-    }
+    s.connect(url).sync();
 
     // Register service as serviceTest
-    Assert.assertTrue("Service must be registered", s.registerService("serviceTest", obj));
+    assertTrue("Service must be registered", s.registerService("serviceTest", obj));
 
     // Connect client session to service directory
-    try {
-      System.out.printf("Connecting to %s\n", url);
-      client.connect(url);
-    } catch (Exception e)
-    {
-      Assert.assertTrue("Client session must be connected to Service Directory : " + e.getMessage(), false);
-    }
+    client.connect(url);
 
     // Get a proxy to serviceTest
-    GenericObject proxy = null;
-    try {
-      proxy = client.service("serviceTest");
-    } catch (Exception e1) {
-      Assert.assertTrue("Cannot get serviceTest :" + e1.getMessage(), false);
-    }
-    Assert.assertTrue("Proxy must not be null", proxy != null);
+    proxy = client.service("serviceTest");
+    assertNotNull(proxy);
+  }
 
+  @After
+  public void tearDown()
+  {
+    obj = null;
+    proxy = null;
+
+    s.close();
+    client.close();
+
+    s = null;
+    client = null;
+    sd = null;
+  }
+
+  @Test
+  public void testEvent() throws InterruptedException
+  {
+
+    @SuppressWarnings("unused")
     Object callback = new Object() {
-      @SuppressWarnings("unused")
       public void fireCallback(Integer i)
       {
         callbackCalled = true;
@@ -88,12 +76,12 @@ public class EventTest extends TestCase {
     try {
       proxy.connect("fire", "fireCallback", callback);
     } catch (Exception e) {
-      Assert.assertTrue("Connect to event must succeed : " + e.getMessage(), false);
+      fail("Connect to event must succeed : " + e.getMessage());
     }
     obj.post("fire", 42);
 
     Thread.sleep(100); // Give time for callback to be called.
-    Assert.assertTrue("Event callback must have been called ", callbackCalled);
-    Assert.assertTrue("Parameter value must be 42 (" + callbackParam + ")", callbackParam == 42);
+    assertTrue("Event callback must have been called ", callbackCalled);
+    assertTrue("Parameter value must be 42 (" + callbackParam + ")", callbackParam == 42);
   }
 }

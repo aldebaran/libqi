@@ -10,242 +10,142 @@ import com.aldebaran.qimessaging.Session;
 import com.aldebaran.qimessaging.GenericObject;
 import com.aldebaran.qimessaging.ReplyService;
 
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
-import junit.framework.Assert;
+import static org.junit.Assert.*;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  * Integration test for QiMessaging java bindings.
  */
 public class TypeTest
-extends TestCase
 {
-  /**
-   * Create the test case
-   *
-   * @param testName name of the test case
-   */
-  public TypeTest(String testName)
+  public GenericObject    proxy = null;
+  public GenericObject    obj = null;
+  public Session          s = null;
+  public Session          client = null;
+  public ServiceDirectory sd = null;
+
+  @Before
+  public void setUp() throws Exception
   {
-    super(testName);
+    sd = new ServiceDirectory();
+    s = new Session();
+    client = new Session();
+
+    // Get Service directory listening url.
+    String url = sd.listenUrl();
+
+    // Create new QiMessaging generic object
+    obj = new GenericObject();
+
+    // Get instance of ReplyService
+    QimessagingService reply = new ReplyService();
+
+    // Register event 'Fire'
+    obj.advertiseSignal("fire::(i)");
+    obj.advertiseMethod("reply::s(s)", reply);
+    obj.advertiseMethod("answer::s()", reply);
+    obj.advertiseMethod("add::i(iii)", reply);
+    obj.advertiseMethod("info::(sib)(sib)", reply);
+    obj.advertiseMethod("answer::i(i)", reply);
+    obj.advertiseMethod("answerFloat::f(f)", reply);
+    obj.advertiseMethod("answerBool::b(b)", reply);
+    obj.advertiseMethod("abacus::{ib}({ib})", reply);
+//    obj.advertiseMethod("abacus::{mm}({ib})", reply);
+    obj.advertiseMethod("echoFloatList::[m]([f])", reply);
+
+    // Connect session to Service Directory
+    s.connect(url).sync();
+
+    // Register service as serviceTest
+    assertTrue("Service must be registered", s.registerService("serviceTest", obj));
+
+    // Connect client session to service directory
+    client.connect(url);
+
+    // Get a proxy to serviceTest
+    proxy = client.service("serviceTest");
+    assertNotNull(proxy);
   }
 
-  /**
-   * @return the suite of tests being tested
-   */
-  public static Test suite()
+  @After
+  public void tearDown()
   {
-    return new TestSuite(TypeTest.class);
+    obj = null;
+    proxy = null;
+
+    s.close();
+    client.close();
+
+    s = null;
+    client = null;
+    sd = null;
   }
 
   /**
    * Test String conversion
    */
+  @Test
   public void testString()
   {
-    ServiceDirectory sd = new ServiceDirectory();
-    Session s = new Session();
-    Session client = new Session();
-
-    // Get Service directory listening url.
-    String url = sd.listenUrl();
-
-    // Create new qimessaging generic object
-    GenericObject obj = new GenericObject();
-
-    // Get instance of ReplyService
-    QimessagingService reply = new ReplyService();
-
-    // Register method "reply::s(s)", implemented from Service interface
-    try {
-      obj.advertiseMethod("reply::s(s)", reply);
-      obj.advertiseMethod("answer::s()", reply);
-    } catch (Exception e2) {
-      System.out.println("Cannot advertise method : " + e2.getMessage());
-    }
-
-    // Connect session to Service Directory
-    try {
-      s.connect(url);
-    } catch (Exception e)
-    {
-      Assert.assertTrue("Session must be connected to Service Directory : " + e.getMessage(), false);
-    }
-
-    // Register service as serviceTest
-    Assert.assertTrue("Service must be registered", s.registerService("serviceTest", obj));
-
-    // Connect client session to service directory
-    try {
-      System.out.printf("Connecting to %s\n", url);
-      client.connect(url);
-    } catch (Exception e)
-    {
-      Assert.assertTrue("Client session must be connected to Service Directory : " + e.getMessage(), false);
-    }
-
-    // Get a proxy to serviceTest
-    GenericObject proxy = null;
-    try {
-      proxy = client.service("serviceTest");
-    } catch (Exception e1) {
-      Assert.assertTrue("Cannot get serviceTest :" + e1.getMessage(), false);
-    }
-    Assert.assertTrue("Proxy must not be null", proxy != null);
-
     String ret = null;
     try {
       ret = proxy.<String>call("reply", "plaf");
     }
     catch (CallError e)
     {
-      Assert.assertTrue("Call Error must not be thrown : " + e.getMessage(), false);
+      fail("Call Error must not be thrown : " + e.getMessage());
     }
 
-    Assert.assertTrue("Result must be 'plafbim !'", ret.compareTo("plafbim !") == 0);
+    assertEquals("plafbim !", ret);
 
     try {
       ret = proxy.<String>call("answer");
     }
     catch (CallError e)
     {
-      Assert.assertTrue("Call Error must not be thrown : " + e.getMessage(), false);
+      fail("Call Error must not be thrown : " + e.getMessage());
     }
 
-    Assert.assertTrue("Result must be '42 !'", ret.compareTo("42 !") == 0);
+    assertEquals("42 !", ret);
   }
 
   /**
    * Test Integer conversion
    */
+  @Test
   public void testInt()
   {
-    ServiceDirectory sd = new ServiceDirectory();
-    Session s = new Session();
-    Session client = new Session();
-
-    // Get Service directory listening url.
-    String url = sd.listenUrl();
-
-    // Create new qimessaging generic object
-    GenericObject obj = new GenericObject();
-
-    // Get instance of ReplyService
-    QimessagingService reply = new ReplyService();
-
-    // Register method "reply::s(s)", implemented from Service interface
-    try {
-      obj.advertiseMethod("answer::i(i)", reply);
-    } catch (Exception e2) {
-      System.out.println("Cannot advertise method : " + e2.getMessage());
-    }
-
-    // Connect session to Service Directory
-    try {
-      s.connect(url);
-    } catch (Exception e)
-    {
-      Assert.assertTrue("Session must be connected to Service Directory : " + e.getMessage(), false);
-    }
-
-    // Register service as serviceTest
-    Assert.assertTrue("Service must be registered", s.registerService("serviceTest", obj));
-
-    // Connect client session to service directory
-    try {
-      System.out.printf("Connecting to %s\n", url);
-      client.connect(url);
-    } catch (Exception e)
-    {
-      Assert.assertTrue("Client session must be connected to Service Directory : " + e.getMessage(), false);
-    }
-
-    // Get a proxy to serviceTest
-    GenericObject proxy = null;
-    try {
-      proxy = client.service("serviceTest");
-    } catch (Exception e1) {
-      Assert.assertTrue("Cannot get serviceTest :" + e1.getMessage(), false);
-    }
-    Assert.assertTrue("Proxy must not be null", proxy != null);
-
     Integer ret = null;
     try {
       ret = proxy.<Integer>call("answer", 41);
     }
     catch (CallError e)
     {
-      Assert.assertTrue("Call Error must not be thrown : " + e.getMessage(), false);
+      fail("Call Error must not be thrown : " + e.getMessage());
     }
 
-    Assert.assertTrue("Result must be 42", ret == 42);
+    assertEquals(42, ret.intValue());
   }
 
   /**
    * Test Float conversion
    */
+  @Test
   public void testFloat()
   {
-    ServiceDirectory sd = new ServiceDirectory();
-    Session s = new Session();
-    Session client = new Session();
-
-    // Get Service directory listening url.
-    String url = sd.listenUrl();
-
-    // Create new qimessaging generic object
-    GenericObject obj = new GenericObject();
-
-    // Get instance of ReplyService
-    QimessagingService reply = new ReplyService();
-
-    // Register method "reply::s(s)", implemented from Service interface
-    try {
-      obj.advertiseMethod("answerFloat::f(f)", reply);
-    } catch (Exception e2) {
-      System.out.println("Cannot advertise method : " + e2.getMessage());
-    }
-
-    // Connect session to Service Directory
-    try {
-      s.connect(url);
-    } catch (Exception e)
-    {
-      Assert.assertTrue("Session must be connected to Service Directory : " + e.getMessage(), false);
-    }
-
-    // Register service as serviceTest
-    Assert.assertTrue("Service must be registered", s.registerService("serviceTest", obj));
-
-    // Connect client session to service directory
-    try {
-      System.out.printf("Connecting to %s\n", url);
-      client.connect(url);
-    } catch (Exception e)
-    {
-      Assert.assertTrue("Client session must be connected to Service Directory : " + e.getMessage(), false);
-    }
-
-    // Get a proxy to serviceTest
-    GenericObject proxy = null;
-    try {
-      proxy = client.service("serviceTest");
-    } catch (Exception e1) {
-      Assert.assertTrue("Cannot get serviceTest :" + e1.getMessage(), false);
-    }
-    Assert.assertTrue("Proxy must not be null", proxy != null);
-
     Float ret = null;
     try {
       ret = proxy.<Float>call("answerFloat", 41.2f);
     }
     catch (CallError e)
     {
-      Assert.assertTrue("Call Error must not be thrown : " + e.getMessage(), false);
+      fail("Call Error must not be thrown : " + e.getMessage());
     }
 
-    Assert.assertTrue("Result must be 42.2 ("+ret+")", ret == 42.2f);
+    assertEquals(42.2f, ret.floatValue(), 0.1f);
   }
 
   /**
@@ -253,65 +153,16 @@ extends TestCase
    */
   public void testBoolean()
   {
-    ServiceDirectory sd = new ServiceDirectory();
-    Session s = new Session();
-    Session client = new Session();
-
-    // Get Service directory listening url.
-    String url = sd.listenUrl();
-
-    // Create new qimessaging generic object
-    GenericObject obj = new GenericObject();
-
-    // Get instance of ReplyService
-    QimessagingService reply = new ReplyService();
-
-    // Register method "reply::s(s)", implemented from Service interface
-    try {
-      obj.advertiseMethod("answerBool::b(b)", reply);
-    } catch (Exception e2) {
-      System.out.println("Cannot advertise method : " + e2.getMessage());
-    }
-
-    // Connect session to Service Directory
-    try {
-      s.connect(url);
-    } catch (Exception e)
-    {
-      Assert.assertTrue("Session must be connected to Service Directory : " + e.getMessage(), false);
-    }
-
-    // Register service as serviceTest
-    Assert.assertTrue("Service must be registered", s.registerService("serviceTest", obj));
-
-    // Connect client session to service directory
-    try {
-      System.out.printf("Connecting to %s\n", url);
-      client.connect(url);
-    } catch (Exception e)
-    {
-      Assert.assertTrue("Client session must be connected to Service Directory : " + e.getMessage(), false);
-    }
-
-    // Get a proxy to serviceTest
-    GenericObject proxy = null;
-    try {
-      proxy = client.service("serviceTest");
-    } catch (Exception e1) {
-      Assert.assertTrue("Cannot get serviceTest :" + e1.getMessage(), false);
-    }
-    Assert.assertTrue("Proxy must not be null", proxy != null);
-
     Boolean ret = null;
     try {
       ret = proxy.<Boolean>call("answerBool", false);
     }
     catch (CallError e)
     {
-      Assert.assertTrue("Call Error must not be thrown : " + e.getMessage(), false);
+      fail("Call Error must not be thrown : " + e.getMessage());
     }
 
-    Assert.assertTrue("Result must be true", ret);
+    assertTrue("Result must be true", ret);
   }
 
   /**
@@ -319,56 +170,6 @@ extends TestCase
    */
   public void testEmptyMap()
   {
-    ServiceDirectory sd = new ServiceDirectory();
-    Session s = new Session();
-    Session client = new Session();
-
-    // Get Service directory listening url.
-    String url = sd.listenUrl();
-
-    // Create new qimessaging generic object
-    GenericObject obj = new GenericObject();
-
-    // Get instance of ReplyService
-    QimessagingService reply = new ReplyService();
-
-    // Register method "reply::s(s)", implemented from Service interface
-    try {
-      obj.advertiseMethod("abacus::{ib}({ib})", reply);
-    } catch (Exception e2) {
-      System.out.println("Cannot advertise method : " + e2.getMessage());
-    }
-
-    // Connect session to Service Directory
-    try {
-      s.connect(url);
-    } catch (Exception e)
-    {
-      Assert.assertTrue("Session must be connected to Service Directory : " + e.getMessage(), false);
-    }
-
-    // Register service as serviceTest
-    Assert.assertTrue("Service must be registered", s.registerService("serviceTest", obj));
-
-    // Connect client session to service directory
-    try {
-      System.out.printf("Connecting to %s\n", url);
-      client.connect(url);
-    } catch (Exception e)
-    {
-      Assert.assertTrue("Client session must be connected to Service Directory : " + e.getMessage(), false);
-    }
-
-    // Get a proxy to serviceTest
-    GenericObject proxy = null;
-    try {
-      proxy = client.service("serviceTest");
-    } catch (Exception e1) {
-      Assert.assertTrue("Cannot get serviceTest :" + e1.getMessage(), false);
-    }
-    Assert.assertTrue("Proxy must not be null", proxy != null);
-
-
     Map<Integer, Boolean> args = new Hashtable<Integer, Boolean>();
 
     Map<Integer, Boolean> ret = null;
@@ -377,11 +178,10 @@ extends TestCase
     }
     catch (CallError e)
     {
-      Assert.assertTrue("Call Error must not be thrown : " + e.getMessage(), false);
+      fail("Call Error must not be thrown : " + e.getMessage());
     }
 
-    System.out.println("Ret : " + ret);
-    Assert.assertTrue("Result must be empty", ret.size() == 0);
+    assertTrue("Result must be empty", ret.size() == 0);
   }
 
   /**
@@ -389,56 +189,6 @@ extends TestCase
    */
   public void testIntegerBooleanMap()
   {
-    ServiceDirectory sd = new ServiceDirectory();
-    Session s = new Session();
-    Session client = new Session();
-
-    // Get Service directory listening url.
-    String url = sd.listenUrl();
-
-    // Create new qimessaging generic object
-    GenericObject obj = new GenericObject();
-
-    // Get instance of ReplyService
-    QimessagingService reply = new ReplyService();
-
-    // Register method "reply::s(s)", implemented from Service interface
-    try {
-      obj.advertiseMethod("abacus::{mm}({ib})", reply);
-    } catch (Exception e2) {
-      System.out.println("Cannot advertise method : " + e2.getMessage());
-    }
-
-    // Connect session to Service Directory
-    try {
-      s.connect(url);
-    } catch (Exception e)
-    {
-      Assert.assertTrue("Session must be connected to Service Directory : " + e.getMessage(), false);
-    }
-
-    // Register service as serviceTest
-    Assert.assertTrue("Service must be registered", s.registerService("serviceTest", obj));
-
-    // Connect client session to service directory
-    try {
-      System.out.printf("Connecting to %s\n", url);
-      client.connect(url);
-    } catch (Exception e)
-    {
-      Assert.assertTrue("Client session must be connected to Service Directory : " + e.getMessage(), false);
-    }
-
-    // Get a proxy to serviceTest
-    GenericObject proxy = null;
-    try {
-      proxy = client.service("serviceTest");
-    } catch (Exception e1) {
-      Assert.assertTrue("Cannot get serviceTest :" + e1.getMessage(), false);
-    }
-    Assert.assertTrue("Proxy must not be null", proxy != null);
-
-
     Map<Integer, Boolean> args = new Hashtable<Integer, Boolean>();
     args.put(4, true);
     args.put(3, false);
@@ -451,14 +201,13 @@ extends TestCase
     }
     catch (CallError e)
     {
-      Assert.assertTrue("Call Error must not be thrown : " + e.getMessage(), false);
+      fail("Call Error must not be thrown : " + e.getMessage());
     }
 
-    System.out.println("Ret : " + ret);
-    Assert.assertTrue("Result must be false", ret.get(1) == false);
-    Assert.assertTrue("Result must be true", ret.get(2) == true);
-    Assert.assertTrue("Result must be true", ret.get(3) == true);
-    Assert.assertTrue("Result must be false", ret.get(4) == false);
+    assertFalse("Result must be false", ret.get(1));
+    assertTrue("Result must be true", ret.get(2));
+    assertTrue("Result must be true", ret.get(3));
+    assertFalse("Result must be false", ret.get(4));
   }
 
   /**
@@ -466,56 +215,6 @@ extends TestCase
    */
   public void testEmptyList()
   {
-    ServiceDirectory sd = new ServiceDirectory();
-    Session s = new Session();
-    Session client = new Session();
-
-    // Get Service directory listening url.
-    String url = sd.listenUrl();
-
-    // Create new qimessaging generic object
-    GenericObject obj = new GenericObject();
-
-    // Get instance of ReplyService
-    QimessagingService reply = new ReplyService();
-
-    // Register method "reply::s(s)", implemented from Service interface
-    try {
-      obj.advertiseMethod("echoFloatList::[m]([f])", reply);
-    } catch (Exception e2) {
-      System.out.println("Cannot advertise method : " + e2.getMessage());
-    }
-
-    // Connect session to Service Directory
-    try {
-      s.connect(url);
-    } catch (Exception e)
-    {
-      Assert.assertTrue("Session must be connected to Service Directory : " + e.getMessage(), false);
-    }
-
-    // Register service as serviceTest
-    Assert.assertTrue("Service must be registered", s.registerService("serviceTest", obj));
-
-    // Connect client session to service directory
-    try {
-      System.out.printf("Connecting to %s\n", url);
-      client.connect(url);
-    } catch (Exception e)
-    {
-      Assert.assertTrue("Client session must be connected to Service Directory : " + e.getMessage(), false);
-    }
-
-    // Get a proxy to serviceTest
-    GenericObject proxy = null;
-    try {
-      proxy = client.service("serviceTest");
-    } catch (Exception e1) {
-      Assert.assertTrue("Cannot get serviceTest :" + e1.getMessage(), false);
-    }
-    Assert.assertTrue("Proxy must not be null", proxy != null);
-
-
     List<Float> args = new ArrayList<Float>();
 
     List<Float> ret = null;
@@ -524,10 +223,10 @@ extends TestCase
     }
     catch (CallError e)
     {
-      Assert.assertTrue("Call Error must not be thrown : " + e.getMessage(), false);
+      fail("Call Error must not be thrown : " + e.getMessage());
     }
 
-    Assert.assertTrue("Result must be empty", ret.size() == 0);
+    assertTrue("Result must be empty", ret.size() == 0);
   }
 
   /**
@@ -535,56 +234,6 @@ extends TestCase
    */
   public void testIntegerList()
   {
-    ServiceDirectory sd = new ServiceDirectory();
-    Session s = new Session();
-    Session client = new Session();
-
-    // Get Service directory listening url.
-    String url = sd.listenUrl();
-
-    // Create new qimessaging generic object
-    GenericObject obj = new GenericObject();
-
-    // Get instance of ReplyService
-    QimessagingService reply = new ReplyService();
-
-    // Register method "reply::s(s)", implemented from Service interface
-    try {
-      obj.advertiseMethod("echoFloatList::[m]([f])", reply);
-    } catch (Exception e2) {
-      System.out.println("Cannot advertise method : " + e2.getMessage());
-    }
-
-    // Connect session to Service Directory
-    try {
-      s.connect(url);
-    } catch (Exception e)
-    {
-      Assert.assertTrue("Session must be connected to Service Directory : " + e.getMessage(), false);
-    }
-
-    // Register service as serviceTest
-    Assert.assertTrue("Service must be registered", s.registerService("serviceTest", obj));
-
-    // Connect client session to service directory
-    try {
-      System.out.printf("Connecting to %s\n", url);
-      client.connect(url);
-    } catch (Exception e)
-    {
-      Assert.assertTrue("Client session must be connected to Service Directory : " + e.getMessage(), false);
-    }
-
-    // Get a proxy to serviceTest
-    GenericObject proxy = null;
-    try {
-      proxy = client.service("serviceTest");
-    } catch (Exception e1) {
-      Assert.assertTrue("Cannot get serviceTest :" + e1.getMessage(), false);
-    }
-    Assert.assertTrue("Proxy must not be null", proxy != null);
-
-
     List<Float> args = new ArrayList<Float>();
     args.add(13.3f);
     args.add(1342.3f);
@@ -598,10 +247,9 @@ extends TestCase
     }
     catch (CallError e)
     {
-      Assert.assertTrue("Call Error must not be thrown : " + e.getMessage(), false);
+      fail("Call Error must not be thrown : " + e.getMessage());
     }
 
-    System.out.println(ret + " VS " + args);
-    Assert.assertTrue("Result must be equals to arguments", ret.equals(args));
+    assertEquals(args, ret);
   }
 }

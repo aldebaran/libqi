@@ -9,43 +9,33 @@ import com.aldebaran.qimessaging.Session;
 import com.aldebaran.qimessaging.GenericObject;
 import com.aldebaran.qimessaging.ReplyService;
 
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
-import junit.framework.Assert;
+import static org.junit.Assert.*;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  * Integration test for QiMessaging java bindings.
  */
 public class FutureTest
-extends TestCase
 {
-  /**
-   * Create the test case
-   *
-   * @param testName name of the test case
-   */
-  public FutureTest(String testName)
-  {
-    super(testName);
-  }
-
-  /**
-   * @return the suite of tests being tested
-   */
-  public static Test suite()
-  {
-    return new TestSuite(FutureTest.class);
-  }
+  public Application      app = null;
+  public ServiceDirectory sd = null;
+  public Session          s = null;
+  public Session          client = null;
+  public GenericObject    proxy = null;
 
   public Boolean onSuccessCalled;
   public Boolean onCompleteCalled;
 
-  public void testCallback()
+  @Before
+  public void setUp() throws Exception
   {
-    ServiceDirectory sd = new ServiceDirectory();
-    Session s = new Session();
-    Session client = new Session();
+    app = new Application(null);
+    sd = new ServiceDirectory();
+    s = new Session();
+    client = new Session();
 
     // Get Service directory listening url.
     String url = sd.listenUrl();
@@ -57,48 +47,40 @@ extends TestCase
     QimessagingService reply = new ReplyService();
 
     // Register method "reply::s(s)", implemented from Service interface
-    try
-    {
-      obj.advertiseMethod("longReply::s(s)", reply);
-    } catch (Exception e2) {
-      System.out.println("Cannot advertise method : " + e2.getMessage());
-    }
+    obj.advertiseMethod("longReply::s(s)", reply);
 
     // Connect session to Service Directory
-    try
-    {
-      s.connect(url).sync();
-    } catch (Exception e)
-    {
-      Assert.assertTrue("Session must be connected to Service Directory : " + e.getMessage(), false);
-    }
+    s.connect(url).sync();
 
-    // Register service as serviceTest
-    Assert.assertTrue("Service must be registered", s.registerService("serviceTest", obj));
+    // Register service
+    s.registerService("serviceTest", obj);
 
     // Connect client session to service directory
-    try
-    {
-      System.out.printf("Connecting to %s\n", url);
-      client.connect(url).sync();
-    } catch (Exception e)
-    {
-      Assert.assertTrue("Client session must be connected to Service Directory : " + e.getMessage(), false);
-    }
+    client.connect(url).sync();
 
     // Get a proxy to serviceTest
-    GenericObject proxy = null;
-    try
-    {
-      proxy = client.service("serviceTest");
-    } catch (Exception e1) {
-      Assert.assertTrue("Cannot get serviceTest :" + e1.getMessage(), false);
-    }
-    Assert.assertTrue("Proxy must not be null", proxy != null);
+    proxy = client.service("serviceTest");
+    assertNotNull(proxy);
+  }
 
-    this.onSuccessCalled = new Boolean(false);
-    this.onCompleteCalled = new Boolean(false);
+  @After
+  public void tearDown()
+  {
+    s.close();
+    client.close();
+
+    s = null;
+    client = null;
+    sd = null;
+    app.stop();
+    app = null;
+  }
+
+  @Test
+  public void testCallback()
+  {
     Future<String> fut = null;
+
     // Call a 2s long function
     try
     {
@@ -108,26 +90,25 @@ extends TestCase
         public void onSuccess(Future<String> future, Object[] args)
         {
           onSuccessCalled = true;
-          Assert.assertTrue("arg[0] must be 1", (Integer) args[0] == 1);
-          Assert.assertTrue("arg[1] must be 2", (Integer) args[1] == 2);
+          assertEquals(1, args[0]);
+          assertEquals(2, args[1]);
         }
 
         public void onFailure(Future<String> future, Object[] args)
         {
-          Assert.assertTrue("onFailure must not be called", false);
+          fail("onFailure must not be called");
         }
 
         public void onComplete(Future<String> future, Object[] args)
         {
           onCompleteCalled = true;
-          Assert.assertTrue("arg[0] must be 1", (Integer) args[0] == 1);
-          Assert.assertTrue("arg[1] must be 2", (Integer) args[1] == 2);
+          assertEquals(1, args[0]);
+          assertEquals(2, args[1]);
         }
       }, 1, 2);
     } catch (CallError e)
     {
-      System.out.println("Error calling answer function : " + e.getMessage());
-      return;
+      fail("Error calling answer function : " + e.getMessage());
     }
 
     try
@@ -135,78 +116,24 @@ extends TestCase
       fut.get();
     } catch (Exception e)
     {
-      Assert.assertTrue("fut.wait() must not fail", false);
+      fail("fut.get() must not fail");
     }
-    Assert.assertTrue("onSuccess callback must be called", onSuccessCalled);
-    Assert.assertTrue("onComplete callback must be called", onCompleteCalled);
+    assertTrue(onSuccessCalled);
+    assertTrue(onCompleteCalled);
   }
 
+  @Test
   public void testLongCall()
   {
-    ServiceDirectory sd = new ServiceDirectory();
-    Session s = new Session();
-    Session client = new Session();
-
-    // Get Service directory listening url.
-    String url = sd.listenUrl();
-
-    // Create new qimessaging generic object
-    GenericObject obj = new GenericObject();
-
-    // Get instance of ReplyService
-    QimessagingService reply = new ReplyService();
-
-    // Register method "reply::s(s)", implemented from Service interface
-    try
-    {
-      obj.advertiseMethod("longReply::s(s)", reply);
-    } catch (Exception e2)
-    {
-      System.out.println("Cannot advertise method : " + e2.getMessage());
-    }
-
-    // Connect session to Service Directory
-    try
-    {
-      s.connect(url);
-    } catch (Exception e)
-    {
-      Assert.assertTrue("Session must be connected to Service Directory : " + e.getMessage(), false);
-    }
-
-    // Register service as serviceTest
-    Assert.assertTrue("Service must be registered", s.registerService("serviceTest", obj));
-
-    // Connect client session to service directory
-    try
-    {
-      System.out.printf("Connecting to %s\n", url);
-      client.connect(url);
-    } catch (Exception e)
-    {
-      Assert.assertTrue("Client session must be connected to Service Directory : " + e.getMessage(), false);
-    }
-
-    // Get a proxy to serviceTest
-    GenericObject proxy = null;
-    try
-    {
-      proxy = client.service("serviceTest");
-    } catch (Exception e1)
-    {
-      Assert.assertTrue("Cannot get serviceTest :" + e1.getMessage(), false);
-    }
-    Assert.assertTrue("Proxy must not be null", proxy != null);
-
     Future<String> fut = null;
+
     // Call a 2s long function
     try
     {
       fut = proxy.asyncCall("longReply", "plaf");
     } catch (CallError e)
     {
-      Assert.assertTrue("Error calling answer function : " + e.getMessage(), false);
-      return;
+      fail("Error calling answer function : " + e.getMessage());
     }
 
     // Wait for call to finish.
@@ -220,88 +147,31 @@ extends TestCase
       } catch (InterruptedException e) {}
     }
 
-    Assert.assertTrue("isDone() must return false at least 3 times (" + count + ")", count > 3);
+    assertTrue("isDone() must return false at least 3 times (" + count + ")", count > 3);
 
     // Get and print result
     try
     {
       String result = fut.get();
-      Assert.assertTrue("result must be 'plafbim !' (" + result + ")", result.equals("plafbim !"));
-    } catch (InterruptedException e)
+      assertEquals("plafbim !", result);
+    } catch (Exception e)
     {
-      Assert.assertTrue("Call has been interrupted ("+ e.getMessage() + ")", false);
-    } catch (ExecutionException e)
-    {
-      Assert.assertTrue("Error occurred : "+ e.getMessage(), false);
+      fail("Call has been interrupted ("+ e.getMessage() + ")");
     }
   }
 
+  @Test
   public void testCancel()
   {
-    ServiceDirectory sd = new ServiceDirectory();
-    Session s = new Session();
-    Session client = new Session();
-
-    // Get Service directory listening url.
-    String url = sd.listenUrl();
-
-    // Create new qimessaging generic object
-    GenericObject obj = new GenericObject();
-
-    // Get instance of ReplyService
-    QimessagingService reply = new ReplyService();
-
-    // Register method "reply::s(s)", implemented from Service interface
-    try
-    {
-      obj.advertiseMethod("longReply::s(s)", reply);
-    } catch (Exception e2)
-    {
-      System.out.println("Cannot advertise method : " + e2.getMessage());
-    }
-
-    // Connect session to Service Directory
-    try
-    {
-      s.connect(url).sync();
-    } catch (Exception e)
-    {
-      Assert.assertTrue("Session must be connected to Service Directory : " + e.getMessage(), false);
-    }
-
-    // Register service as serviceTest
-    Assert.assertTrue("Service must be registered", s.registerService("serviceTest", obj));
-
-    // Connect client session to service directory
-    try
-    {
-      System.out.printf("Connecting to %s\n", url);
-      client.connect(url);
-    } catch (Exception e)
-    {
-      Assert.assertTrue("Client session must be connected to Service Directory : " + e.getMessage(), false);
-    }
-
-    // Get a proxy to serviceTest
-    GenericObject proxy = null;
-    try
-    {
-      proxy = client.service("serviceTest");
-    } catch (Exception e1)
-    {
-      Assert.assertTrue("Cannot get serviceTest :" + e1.getMessage(), false);
-    }
-    Assert.assertTrue("Proxy must not be null", proxy != null);
-
     Future<String> fut = null;
+
     // Call a 2s long function
     try
     {
       fut = proxy.asyncCall("longReply", "plaf");
     } catch (CallError e)
     {
-      Assert.assertTrue("Error calling answer function : " + e.getMessage(), false);
-      return;
+      fail("Error calling answer function : " + e.getMessage());
     }
 
     // Try to cancel call
@@ -327,68 +197,15 @@ extends TestCase
       exceptionThrown = true;
     }
 
-    Assert.assertTrue("InterruptedException must be thrown", exceptionThrown);
-    Assert.assertTrue("isCancelled must return true", fut.isCancelled());
+    assertTrue("InterruptedException must be thrown", exceptionThrown);
+    assertTrue("isCancelled must return true", fut.isCancelled());
   }
 
+  @Test
   public void testGetTimeout()
   {
-    ServiceDirectory sd = new ServiceDirectory();
-    Session s = new Session();
-    Session client = new Session();
-
-    // Get Service directory listening url.
-    String url = sd.listenUrl();
-
-    // Create new qimessaging generic object
-    GenericObject obj = new GenericObject();
-
-    // Get instance of ReplyService
-    QimessagingService reply = new ReplyService();
-
-    // Register method "reply::s(s)", implemented from Service interface
-    try
-    {
-      obj.advertiseMethod("longReply::s(s)", reply);
-    } catch (Exception e3)
-    {
-      System.out.println("Cannot advertise method : " + e3.getMessage());
-    }
-
-    // Connect session to Service Directory
-    try
-    {
-      s.connect(url);
-    } catch (Exception e)
-    {
-      Assert.assertTrue("Session must be connected to Service Directory : " + e.getMessage(), false);
-    }
-
-    // Register service as serviceTest
-    Assert.assertTrue("Service must be registered", s.registerService("serviceTest", obj));
-
-    // Connect client session to service directory
-    try
-    {
-      System.out.printf("Connecting to %s\n", url);
-      client.connect(url);
-    } catch (Exception e)
-    {
-      Assert.assertTrue("Client session must be connected to Service Directory : " + e.getMessage(), false);
-    }
-
-    // Get a proxy to serviceTest
-    GenericObject proxy = null;
-    try
-    {
-      proxy = client.service("serviceTest");
-    } catch (Exception e2)
-    {
-      Assert.assertTrue("Cannot get serviceTest :" + e2.getMessage(), false);
-    }
-    Assert.assertTrue("Proxy must not be null", proxy != null);
-
     Future<String> fut = null;
+
     // Call a 2s long function
     try
     {
@@ -408,80 +225,23 @@ extends TestCase
       hasTimeout = true;
     } catch (Exception e) {}
 
-    Assert.assertTrue("Future.get() must timeout", hasTimeout);
+    assertTrue("Future.get() must timeout", hasTimeout);
 
     try
     {
       String ret = fut.get();
-      Assert.assertTrue("InterruptedException must not be thrown", ret.equals("plafbim !"));
-    } catch (InterruptedException e1)
+      assertEquals("plafbim !", ret);
+    } catch (Exception e1)
     {
-      Assert.assertTrue("InterruptedException must not be thrown", false);
-    } catch (ExecutionException e1)
-    {
-      Assert.assertTrue("InterruptedException must not be thrown", false);
+      fail("InterruptedException must not be thrown");
     }
   }
 
-
+  @Test
   public void testGetTimeoutSuccess()
   {
-    ServiceDirectory sd = new ServiceDirectory();
-    Session s = new Session();
-    Session client = new Session();
-
-    // Get Service directory listening url.
-    String url = sd.listenUrl();
-
-    // Create new qimessaging generic object
-    GenericObject obj = new GenericObject();
-
-    // Get instance of ReplyService
-    QimessagingService reply = new ReplyService();
-
-    // Register method "reply::s(s)", implemented from Service interface
-    try
-    {
-      obj.advertiseMethod("longReply::s(s)", reply);
-    } catch (Exception e3)
-    {
-      System.out.println("Cannot advertise method : " + e3.getMessage());
-    }
-
-    // Connect session to Service Directory
-    try
-    {
-      s.connect(url);
-    } catch (Exception e)
-    {
-      Assert.assertTrue("Session must be connected to Service Directory : " + e.getMessage(), false);
-    }
-
-    // Register service as serviceTest
-    Assert.assertTrue("Service must be registered", s.registerService("serviceTest", obj));
-
-    // Connect client session to service directory
-    try
-    {
-      System.out.printf("Connecting to %s\n", url);
-      client.connect(url);
-    } catch (Exception e)
-    {
-      Assert.assertTrue("Client session must be connected to Service Directory : " + e.getMessage(), false);
-    }
-
-    // Get a proxy to serviceTest
-    GenericObject proxy = null;
-    try
-    {
-      proxy = client.service("serviceTest");
-    } catch (Exception e2)
-    {
-      Assert.assertTrue("Cannot get serviceTest :" + e2.getMessage(), false);
-    }
-    Assert.assertTrue("Proxy must not be null", proxy != null);
-
     Future<String> fut = null;
+
     // Call a 2s long function
     try
     {
@@ -498,15 +258,12 @@ extends TestCase
       ret = fut.get(3, TimeUnit.SECONDS);
     } catch (TimeoutException e)
     {
-      Assert.assertTrue("Call must not timeout", false);
-    } catch (InterruptedException e1)
+      fail("Call must not timeout");
+    } catch (Exception e1)
     {
-      Assert.assertTrue("InterruptedException must not be thrown", false);
-    } catch (ExecutionException e1)
-    {
-      Assert.assertTrue("InterruptedException must not be thrown", false);
+      fail("InterruptedException must not be thrown");
     }
 
-    Assert.assertTrue("Result must be 'plafbim !' (" + ret + ")", ret.equals("plafbim !"));
+    assertEquals("plafbim !", ret);
   }
 }

@@ -28,9 +28,7 @@ public abstract class Tuple
   {
     Field[] fields = this.getClass().getFields();
     if (index < fields.length)
-    {
-      fields[index].set(this, value);
-    }
+      fields[index].set(this, (T) value);
   }
 
   public final int size()

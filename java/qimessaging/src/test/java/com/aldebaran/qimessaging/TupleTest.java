@@ -1,33 +1,74 @@
 package com.aldebaran.qimessaging;
 
+import java.util.Hashtable;
 import java.util.Map;
 
-import junit.framework.Assert;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import static org.junit.Assert.*;
 
-public class TupleTest extends TestCase
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
+public class TupleTest
 {
+  public GenericObject    proxy = null;
+  public GenericObject    obj = null;
+  public Session          s = null;
+  public Session          client = null;
+  public ServiceDirectory sd = null;
 
-  /**
-   * Create the test case
-   *
-   * @param testName name of the test case
-   */
-  public TupleTest(String testName)
+  @Before
+  public void setUp() throws Exception
   {
-    super(testName);
+    sd = new ServiceDirectory();
+    s = new Session();
+    client = new Session();
+
+    // Get Service directory listening url.
+    String url = sd.listenUrl();
+
+    // Create new QiMessaging generic object
+    obj = new GenericObject();
+
+    // Get instance of ReplyService
+    QimessagingService reply = new ReplyService();
+
+    // Register event 'Fire'
+    obj.advertiseSignal("fire::(i)");
+    obj.advertiseMethod("reply::s(s)", reply);
+    obj.advertiseMethod("answer::s()", reply);
+    obj.advertiseMethod("add::i(iii)", reply);
+    obj.advertiseMethod("info::(sib)(sib)", reply);
+
+    // Connect session to Service Directory
+    s.connect(url).sync();
+
+    // Register service as serviceTest
+    assertTrue("Service must be registered", s.registerService("serviceTest", obj));
+
+    // Connect client session to service directory
+    client.connect(url);
+
+    // Get a proxy to serviceTest
+    proxy = client.service("serviceTest");
+    assertNotNull(proxy);
   }
 
-  /**
-   * @return the suite of tests being tested
-   */
-  public static Test suite()
+  @After
+  public void tearDown()
   {
-    return new TestSuite(TupleTest.class);
+    obj = null;
+    proxy = null;
+
+    s.close();
+    client.close();
+
+    s = null;
+    client = null;
+    sd = null;
   }
 
+  @Test
   public void testOutOfBoundException()
   {
     Tuple tuple = new Tuple3<String, Integer, Map<Integer, String>>();
@@ -36,24 +77,16 @@ public class TupleTest extends TestCase
     try
     {
       tuple.<String>get(4);
-    } catch (IndexOutOfBoundsException e)
+    } catch (Exception e)
     {
       exceptionRaised = true;
       System.out.println("Exception catched : " + e.getMessage());
-    } catch (ClassCastException e)
-    {
-      Assert.assertTrue("Exception catched : " + e.getMessage(), false);
-    } catch (IllegalArgumentException e)
-    {
-      Assert.assertTrue("Exception catched : " + e.getMessage(), false);
-    } catch (IllegalAccessException e)
-    {
-      Assert.assertTrue("Exception catched : " + e.getMessage(), false);
     }
 
-    Assert.assertTrue("Exception must have been thrown", exceptionRaised);
+    assertTrue("Exception must have been thrown", exceptionRaised);
   }
 
+  @Test
   public void testTuple()
   {
     Tuple tuple = new Tuple3<String, Integer, Boolean>();
@@ -64,39 +97,30 @@ public class TupleTest extends TestCase
     try
     {
       tuple.<String>set(0, str);
-    } catch (IllegalArgumentException e)
+    } catch (Exception e)
     {
-      Assert.assertTrue("Exception must not be thrown", false);
-    } catch (IllegalAccessException e)
-    {
-      Assert.assertTrue("Exception must not be thrown", false);
+      fail("Exception must not be thrown (string)");
     }
 
     try
     {
       tuple.<Integer>set(1, i);
-    } catch (IllegalArgumentException e)
+    } catch (Exception e)
     {
-      Assert.assertTrue("Exception must not be thrown", false);
-    } catch (IllegalAccessException e)
-    {
-      Assert.assertTrue("Exception must not be thrown", false);
+      fail("Exception must not be thrown (integer)");
     }
 
     try
     {
       tuple.<Boolean>set(2, b);
-    } catch (IllegalArgumentException e)
+    } catch (Exception e)
     {
-      Assert.assertTrue("Exception must not be thrown", false);
-    } catch (IllegalAccessException e)
-    {
-      Assert.assertTrue("Exception must not be thrown", false);
+      fail("Exception must not be thrown (boolean)");
     }
 
-    Assert.assertTrue(true);
   }
 
+  @Test
   public void testValue()
   {
     Tuple tuple = new Tuple3<String, Integer, Boolean>("42", 42, true);
@@ -107,147 +131,65 @@ public class TupleTest extends TestCase
     try
     {
       str = tuple.<String>get(0);
-    } catch (IndexOutOfBoundsException e)
+    } catch (Exception e)
     {
-      Assert.assertTrue("Exception must not be thrown : " + e.getMessage(), false);
-    } catch (ClassCastException e)
-    {
-      Assert.assertTrue("Exception must not be thrown : " + e.getMessage(), false);
-    } catch (IllegalArgumentException e)
-    {
-      Assert.assertTrue("Exception must not be thrown : " + e.getMessage(), false);
-    } catch (IllegalAccessException e)
-    {
-      Assert.assertTrue("Exception must not be thrown : " + e.getMessage(), false);
+      fail("Exception must not be thrown : " + e.getMessage());
     }
 
-    Assert.assertTrue("String value must be '42' : " + str, str.equals("42"));
-
+    assertEquals("42", str);
 
     try
     {
       i = tuple.<Integer>get(1);
-    } catch (IndexOutOfBoundsException e)
+    } catch (Exception e)
     {
-      Assert.assertTrue("Exception must not be thrown : " + e.getMessage(), false);
-    } catch (ClassCastException e)
-    {
-      Assert.assertTrue("Exception must not be thrown : " + e.getMessage(), false);
-    } catch (IllegalArgumentException e)
-    {
-      Assert.assertTrue("Exception must not be thrown : " + e.getMessage(), false);
-    } catch (IllegalAccessException e)
-    {
-      Assert.assertTrue("Exception must not be thrown : " + e.getMessage(), false);
+      fail("Exception must not be thrown : " + e.getMessage());
     }
 
-    Assert.assertTrue("Integer value must be 42 : " + i, i == 42);
+    assertEquals(42, i.intValue());
 
     try
     {
       b = tuple.<Boolean>get(2);
-    } catch (IndexOutOfBoundsException e)
+    } catch (Exception e)
     {
-      Assert.assertTrue("Exception must not be thrown : " + e.getMessage(), false);
-    } catch (ClassCastException e)
-    {
-      Assert.assertTrue("Exception must not be thrown : " + e.getMessage(), false);
-    } catch (IllegalArgumentException e)
-    {
-      Assert.assertTrue("Exception must not be thrown : " + e.getMessage(), false);
-    } catch (IllegalAccessException e)
-    {
-      Assert.assertTrue("Exception must not be thrown : " + e.getMessage(), false);
+      fail("Exception must not be thrown : " + e.getMessage());
     }
 
-    Assert.assertTrue("Boolean value must be true : " + b, b);
+    assertTrue("Boolean value must be true : " + b, b);
   }
 
-  public void testCastException()
+  @Test(expected=IndexOutOfBoundsException.class)
+  public void testIndexOutOfBoundsException() throws IndexOutOfBoundsException, ClassCastException, IllegalArgumentException, IllegalAccessException
   {
     Tuple tuple = new Tuple3<String, Integer, Map<Integer, String>>("42", 42, null);
-    boolean exceptionRaised = false;
 
-    @SuppressWarnings("unused")
-    String tmp = null;
-    try
-    {
-      tmp = tuple.<String>get(1);
-    } catch (IndexOutOfBoundsException e)
-    {
-      Assert.assertTrue("IndexOutOfBound exception must not be thrown", false);
-    } catch (ClassCastException e)
-    {
-      exceptionRaised = true;
-      System.out.println("Exception catched : " + e.getMessage());
-    } catch (IllegalArgumentException e)
-    {
-      Assert.assertTrue("IllegalArgumentException exception must not be thrown", false);
-    } catch (IllegalAccessException e)
-    {
-      Assert.assertTrue("IllegalAccessException exception must not be thrown", false);
-    }
-
-    Assert.assertTrue("Exception must have been thrown", exceptionRaised);
+    tuple.<String>get(42);
   }
 
 
+  @Test(expected=ClassCastException.class)
+  public void testClassCastException() throws IndexOutOfBoundsException, ClassCastException, IllegalArgumentException, IllegalAccessException
+  {
+    Tuple tuple = new Tuple3<String, Integer, Map<Integer, String>>("42", 42, new Hashtable<Integer, String>());
+
+    @SuppressWarnings("unused")
+    ReplyService tmp = tuple.<ReplyService>get(0);
+  }
+
+  @Test(expected=IllegalArgumentException.class)
+  public void testIllegalArgumentException() throws IndexOutOfBoundsException, ClassCastException, IllegalArgumentException, IllegalAccessException
+  {
+    Tuple tuple = new Tuple3<String, Float, Map<Integer, String>>("42", 42F, new Hashtable<Integer, String>());
+
+    tuple.<Long>set(0, new Long(1234567890));
+    tuple.<Long>set(1, new Long(1234567890));
+    tuple.<Long>set(2, new Long(1234567890));
+  }
+
+  @Test
   public void testCallTuple()
   {
-    ServiceDirectory sd = new ServiceDirectory();
-    Session s = new Session();
-    Session client = new Session();
-
-    // Get Service directory listening url.
-    String url = sd.listenUrl();
-
-    // Create new QiMessaging generic object
-    GenericObject obj = new GenericObject();
-
-    // Get instance of ReplyService
-    QimessagingService reply = new ReplyService();
-
-    // Register method "info::(sib)(sib)", implemented from Service interface
-    try
-    {
-      obj.advertiseMethod("info::(sib)(sib)", reply);
-    } catch (Exception e2)
-    {
-      System.out.println("Cannot advertise method : " + e2.getMessage());
-    }
-
-    // Connect session to Service Directory
-    try
-    {
-      s.connect(url);
-    } catch (Exception e)
-    {
-      Assert.assertTrue("Session must be connected to Service Directory : " + e.getMessage(), false);
-    }
-
-    // Register service as serviceTest
-    Assert.assertTrue("Service must be registered", s.registerService("serviceTest", obj));
-
-    // Connect client session to service directory
-    try
-    {
-      System.out.printf("Connecting to %s\n", url);
-      client.connect(url);
-    } catch (Exception e)
-    {
-      Assert.assertTrue("Client session must be connected to Service Directory : " + e.getMessage(), false);
-    }
-
-    // Get a proxy to serviceTest
-    GenericObject proxy = null;
-    try
-    {
-      proxy = client.service("serviceTest");
-    } catch (Exception e1)
-    {
-      Assert.assertTrue("Cannot get serviceTest :" + e1.getMessage(), false);
-    }
-    Assert.assertTrue("Proxy must not be null", proxy != null);
 
     Tuple ret = null;
     try
@@ -255,7 +197,7 @@ public class TupleTest extends TestCase
       ret = proxy.<Tuple>call("info", "42", 42, true);
     } catch (CallError e)
     {
-      Assert.assertTrue("Call must be successful : " + e.getMessage(), false);
+      fail("Call must be successful : " + e.getMessage());
     }
 
     String str = null;
@@ -267,7 +209,7 @@ public class TupleTest extends TestCase
       str = ret.<String>get(0);
     } catch (Exception e)
     {
-      Assert.assertTrue("Exception must not be thrown : " + e.getMessage(), false);
+      fail("Exception must not be thrown : " + e.getMessage());
     }
 
     try
@@ -275,7 +217,7 @@ public class TupleTest extends TestCase
       i = ret.<Integer>get(1);
     } catch (Exception e)
     {
-      Assert.assertTrue("Exception must not be thrown : " + e.getMessage(), false);
+      fail("Exception must not be thrown : " + e.getMessage());
     }
 
     try
@@ -283,12 +225,12 @@ public class TupleTest extends TestCase
       b = ret.<Boolean>get(2);
     } catch (Exception e)
     {
-      Assert.assertTrue("Exception must not be thrown : " + e.getMessage(), false);
+      fail("Exception must not be thrown : " + e.getMessage());
     }
 
-    Assert.assertTrue("String value must be '42' : " + str, str.equals("42"));
-    Assert.assertTrue("Integer value must be 42 : " + i, i == 42);
-    Assert.assertTrue("Boolean value must be true : " + b, b);
+    assertEquals("42", str);
+    assertEquals(42, i.intValue());
+    assertTrue(b);
   }
 
 }
