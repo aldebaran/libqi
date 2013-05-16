@@ -93,7 +93,7 @@ SIGNATURE_MAP = {
     'm'    : 'dynamic',
     'v'    : 'void',
     'b'    : 'bool',
-    'X'    : 'dynamic'
+    'X'    : 'void*'
 }
 
 # signature of a tuple to known matching structure
@@ -544,6 +544,242 @@ inline @INAME@::@INAME@()
   skeleton = "/*" + raw_to_text({class_name: data}) + "*/" + skeleton
   return skeleton
 
+def clean_extra_space(name):
+  """ Clean extra spaces in type name, taking care of ">>"
+  """
+  return re.sub(r"([^>])\s>", r"\1>", name)
+
+def raw_to_al_proxy(class_name, data):
+  """ Generate an ALProxy for the given class
+  """
+  skeleton_header = """// Generated for @NAME@ version @VERSION@
+
+#ifndef @UPNAME@PROXY_H_
+#define @UPNAME@PROXY_H_
+
+#include <alproxies/api.h>
+#include <boost/shared_ptr.hpp>
+#include <alvalue/alvalue.h>
+#include <string>
+#include <vector>
+
+namespace AL
+{
+  class ALBroker;
+  class ALProxy;
+  class @PROXYNAME@;
+
+  namespace detail {
+    class @PROXYNAME@PostHandler
+    {
+    protected:
+      @PROXYNAME@PostHandler(boost::shared_ptr<ALProxy> proxy);
+
+    public:
+      friend class AL::@PROXYNAME@;
+
+@DECL6@    private:
+      boost::shared_ptr<ALProxy> _proxy;
+    };
+  }
+
+  @SUMMARY@
+  /// \ingroup ALProxies
+  class ALPROXIES_API @PROXYNAME@
+  {
+  private:
+    boost::shared_ptr<ALProxy> _proxy;
+
+  public:
+    /// <summary>
+    /// Default Constructor. If there is a broker in your process, which is always the case
+    /// if you are in a module, then this will be found and used.
+    /// </summary>
+    @PROXYNAME@();
+
+    /// <summary>
+    /// Explicit Broker Constructor. If you have a smart pointer to a broker that you want
+    /// to specify, then you can use this constructor. In most cases, the default constructor
+    /// will do the work for you without passing a broker explicitly.
+    /// </summary>
+    /// <param name="broker">A smart pointer to your broker</param>
+    @PROXYNAME@(boost::shared_ptr<ALBroker> broker);
+
+    /// <summary>
+    /// Explicit Proxy Constructor. Create a specialised proxy from a generic proxy.
+    /// </summary>
+    /// <param name="broker">A smart pointer to your broker</param>
+    @PROXYNAME@(boost::shared_ptr<ALProxy> proxy);
+
+    /// <summary>
+    /// Remote Constructor. This constructor allows you to connect to a remote module by
+    /// explicit IP address and port. This is useful if you are not within a process that
+    /// has a broker, or want to connect to a remote instance of NAOqi such as another
+    /// robot.
+    /// </summary>
+    /// <param name="ip">The IP address of the remote module you want to connect to</param>
+    /// <param name="port">The port of the remote module, typically 9559</param>
+    @PROXYNAME@(const std::string &ip, int port=9559);
+
+    /// <summary>
+    /// Gets the underlying generic proxy
+    /// </summary>
+    boost::shared_ptr<ALProxy> getGenericProxy();
+
+@DECL4@
+    detail::@PROXYNAME@PostHandler post;
+  };
+
+}
+#endif // @UPNAME@PROXY_H_
+"""
+  skeleton_source = """// Generated for @NAME@ version @VERSION@
+
+#include <alproxies/@DOWNNAME@proxy.h>
+#include <alcommon/alproxy.h>
+#include <alcommon/almodule.h>
+#include <alcommon/albrokermanager.h>
+
+namespace AL
+{
+
+  @PROXYNAME@::@PROXYNAME@()
+    : _proxy(new AL::ALProxy(ALBrokerManager::getInstance()->getRandomBroker(), "@NAME@")),
+      post(_proxy)
+  {
+  }
+
+  @PROXYNAME@::@PROXYNAME@(boost::shared_ptr<ALProxy> pProxy)
+    : _proxy(pProxy),
+      post(_proxy)
+  {
+  }
+
+  @PROXYNAME@::@PROXYNAME@(boost::shared_ptr<ALBroker> pBroker)
+    : _proxy(new AL::ALProxy(pBroker, "@NAME@")),
+      post(_proxy)
+  {
+  }
+
+  @PROXYNAME@::@PROXYNAME@(const std::string &pIP, int pPort)
+    : _proxy(new AL::ALProxy("@NAME@", pIP, pPort)),
+      post(_proxy)
+  {
+  }
+
+  boost::shared_ptr<ALProxy> @PROXYNAME@::getGenericProxy() {
+    return _proxy;
+  }
+
+  // -----------------------------
+
+@IMPL@
+  // @PROXYNAME@PostHandler -----------------------------
+
+namespace detail {
+  @PROXYNAME@PostHandler::@PROXYNAME@PostHandler(boost::shared_ptr<ALProxy> proxy)
+   : _proxy(proxy)
+  {}
+
+@POSTIMPL@}
+
+}  // namespace AL
+"""
+  taskIdDoc = '/// <returns> brokerTaskID : The ID of the task assigned to it by the broker.</returns>\n'
+  methods = data[0]
+  summary = '/// <summary>' + '\n  ///'.join(data[3].split('\n')) + '</summary>'
+  decl = ''
+  declvoid = ''
+  impl = ''
+  postimpl = ''
+  REV_MAP['dynamic'] = 'AL::ALValue'
+  # sort the methods
+  methods.sort(key=lambda m: m[0])
+  for method in methods:
+    if method[0][0] == '_':
+      continue
+    (cret, typed_args, arg_names) = method_to_cxx(method)
+    cargs = map(idltype_to_cxxtype, method[1])
+    cargs = map(clean_extra_space, cargs)
+    cret = clean_extra_space(cret)
+    rawdoc = method[3].split('\n')
+    arg_names = []
+    #reformat doc and extract argument names
+    retdoc = ''
+    # handle multi-line stuff by delaying terminator
+    doc = '/// <summary>\n/// ' + rawdoc[0]
+    terminateLast = '\n/// </summary>\n'
+    for arg in rawdoc[1:]:
+      argl = arg.split(' ', 1)
+      if argl[0] == 'param:':
+        doc += terminateLast
+        terminateLast = ' </param>\n'
+        p = argl[1].split(' ', 1)
+        doc += '/// <param name="'+p[0]+'"> ' + p[1]
+        arg_names.append(p[0])
+      elif argl[0] == 'return:':
+        if cret != 'void': # workaround glitch in MetaMethodBuilder
+          retdoc += '/// <returns> ' + argl[1] +' </returns>\n'
+      else:
+        doc += '\n/// ' + ' '.join(argl)
+    doc += terminateLast
+    # handle undocumented argsc
+    i = len(arg_names) + 1
+    while i <= len(cargs):
+      doc += '/// <param name="arg' + str(i) + '"> arg </param>\n'
+      arg_names.append('arg' + str(i))
+      i = i+1
+    # argument string
+    argstring = ''
+    argcall = ''
+    for i in range(len(cargs)):
+      if len(argstring):
+        argstring += ', '
+      argstring += 'const ' + cargs[i] +'& ' + arg_names[i]
+      argcall += ', ' + arg_names[i]
+    # construct full method decl
+    call_kind = 'Void'
+    if cret != 'void':
+      call_kind='< ' + cret + ' >'
+    decl += doc + retdoc + cret + ' ' + method[0] +'(' + argstring +');\n\n'
+    impl += '  %s %s::%s(%s)\n  {\n    %s_proxy->call%s("%s"%s);\n  }\n\n' % (
+      cret,
+      class_name + 'Proxy',
+      method[0],
+      argstring,
+      'return '*(cret != 'void'),
+      call_kind,
+      method[0],
+      ' ' * (len(argcall)!=0) + argcall)
+
+    if cret == 'void':
+      declvoid += doc + taskIdDoc + 'int' + ' ' + method[0] +'(' + argstring +');\n\n'
+      postimpl += '  int %s::%s(%s)\n  {\n    return _proxy->pCall("%s"%s);\n  }\n\n' % (
+        class_name + "ProxyPostHandler",
+        method[0],
+        argstring,
+        method[0],
+        argcall
+    )
+  decl4 = '\n'.join(map(lambda x: '    ' * (len(x)!=0) + x, decl.split('\n')))
+  decl6 = '\n'.join(map(lambda x: '      ' * (len(x)!=0) + x, declvoid.split('\n')))
+  replace = {
+    '@VERSION@': '0',
+    '@NAME@': class_name,
+    '@UPNAME@': class_name.upper(),
+    '@DOWNNAME@': class_name.lower(),
+    '@SUMMARY@': summary,
+    '@PROXYNAME@': class_name + 'Proxy',
+    '@DECL4@': decl4,
+    '@DECL6@': decl6,
+    '@IMPL@': impl,
+    '@POSTIMPL@': postimpl,
+  }
+  for k in replace:
+    skeleton_header = skeleton_header.replace(k, replace[k])
+    skeleton_source = skeleton_source.replace(k, replace[k])
+  return [skeleton_header, skeleton_source, '']
+
 def raw_to_proxy(class_name, data, return_future, implement_interface, include):
   """ Generate C++ proxy code from RAW
   @param return_future have the declared functions return a Future
@@ -906,23 +1142,26 @@ def signature_split(sig):
       p = p+1
     ret.append(sig[plast:p+1])
     p = p+1
-  print("woot %s %s" % (sig, ret))
+  #print("woot %s %s" % (sig, ret))
   return ret
 
 def runtime_to_raw(class_name, sd_url):
+  abver = '.'.join(sys.version.split('.', 2)[0:2])
+  me = os.path.dirname(os.path.abspath(__file__))
+  lpath = me + '/../lib/python'+ abver + '/site-packages'
+  sys.path.append(lpath)
   from qi import Session
-  print("connecting session to " + sd_url)
   session = Session()
   session.connect(sd_url)
-  print("Trying to fetch " + class_name)
   obj = session.service(class_name)
-  print("Fetching metaobject")
   desc = obj.metaObject()
-  print(desc)
+  #print(desc)
   methods = []
   for k in desc[0]:
     m = desc[0][k]
-    print(m) # ex: (0L, 'L', 'registerEvent', '(IIL)', 'doc', [argdoc], 'retdoc')
+    #print(m) # ex: (0L, 'L', 'registerEvent', '(IIL)', 'doc', [argdoc], 'retdoc')
+    if m[0] < 100:
+      continue
     method_name = m[2]
     sig = m[3][1:-1] #remove toplevel tuple
     sig = signature_split(sig)
@@ -934,18 +1173,18 @@ def runtime_to_raw(class_name, sd_url):
     doc = m[4]
     # FIXME support argdoc/retdoc in RAW structure
     for argdoc in m[5]:
-      doc += '\n' + argdoc[0] + ': ' + argdoc[1]
+      doc += '\n' + 'param: ' + argdoc[0] + ' ' + argdoc[1]
     if len(m[6]):
       doc += '\nreturn: ' + m[6]
     methods.append((method_name, sig, rettype, doc))
-  return {class_name : (methods, [], [], '')}
+  return {class_name : (methods, [], [], desc[3])}
 
 def main(args):
   res = ''
   parser = argparse.ArgumentParser()
   parser.add_argument("--interface", "-i", help="Use interface mode", action='store_true')
   parser.add_argument("--output-file","-o", help="output file (stdout)")
-  parser.add_argument("--output-mode","-m", default="txt", choices=["parse", "txt", "idl", "proxy", "proxyFuture", "cxxtype", "cxxtyperegisterfactory", "cxxtyperegisterservice", "cxxskel", "cxxservice", "cxxserviceregister", "cxxservicebouncer", "cxxservicebouncerregister", "interface", "boxinterface", "many"], help="output mode (stdout)")
+  parser.add_argument("--output-mode","-m", default="txt", choices=["parse", "txt", "idl", "proxy", "proxyFuture", "cxxtype", "cxxtyperegisterfactory", "cxxtyperegisterservice", "cxxskel", "cxxservice", "cxxserviceregister", "cxxservicebouncer", "cxxservicebouncerregister", "interface", "boxinterface", "alproxy", "many"], help="output mode (stdout)")
   parser.add_argument("--include", "-I", default="", help="File to include in generated C++")
   parser.add_argument("--known-classes", "-k", default="", help="Comma-separated list of other handled classes")
   parser.add_argument("--classes", "-c", default="*", help="Comma-separated list of classes to select, optionally with per class ':operation'")
@@ -1020,6 +1259,9 @@ def main(args):
       elif op == "boxinterface":
         functions = [raw_to_boxinterface]
         args = [[]]
+      elif op == "alproxy":
+        functions = [raw_to_al_proxy]
+        args = [[]]
       elif op == "proxy":
         functions = [raw_to_proxy]
         args = [[False, pargs.interface, pargs.include]]
@@ -1065,12 +1307,19 @@ def main(args):
         out = open(out_name, "w")
         out.write(res[0] + res[1] + res[2])
         res = ["","",""]
-    res = res[0] + res[1] + res[2]
   if not split_output:
-    # Set output stream to file or stdout
-    out = sys.stdout
-    if pargs.output_file and pargs.output_file != "-" :
-      out = open(pargs.output_file, "w")
-    out.write(res)
+    names = pargs.output_file.split(',')
+    if len(names) > 1:
+      for i in range(len(names)):
+        out = open(names[i], "w")
+        out.write(res[i])
+    else:
+      if type(res) == type([]):
+        res = ''.join(res)
+      # Set output stream to file or stdout
+      out = sys.stdout
+      if pargs.output_file and pargs.output_file != "-" :
+        out = open(pargs.output_file, "w")
+      out.write(res)
 
 main(sys.argv)
