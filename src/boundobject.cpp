@@ -11,8 +11,6 @@
 
 qiLogCategory("qimessaging.boundobject");
 
-static const int gObjectOffset = 100;
-
 namespace qi {
 
   static GenericValuePtr forwardEvent(const GenericFunctionParameters& params,
@@ -158,7 +156,7 @@ namespace qi {
     qi::ObjectPtr    obj;
     unsigned int     funcId;
     //choose between special function (on BoundObject) or normal calls
-    if (msg.function() < static_cast<unsigned int>(gObjectOffset)) {
+    if (msg.function() < static_cast<unsigned int>(qiObjectSpecialMethodMaxUid)) {
       obj = _self;
     } else {
       obj = _object;

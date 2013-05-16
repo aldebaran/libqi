@@ -55,7 +55,7 @@ namespace qi { namespace py {
       for (it = mm.begin(); it != mm.end(); ++it) {
         qi::MetaMethod &mem = it->second;
         //drop special methods
-        if (mem.uid() < 10)
+        if (mem.uid() < qiObjectSpecialMethodMaxUid)
           continue;
         std::vector<std::string> vs = qi::signatureSplit(mem.signature());
         qiLogDebug() << "adding method:" << mem.signature();
@@ -70,7 +70,7 @@ namespace qi { namespace py {
       for (it = mm.begin(); it != mm.end(); ++it) {
         qi::MetaSignal &ms = it->second;
         //drop special methods
-        if (ms.uid() < 10)
+        if (ms.uid() < qiObjectSpecialMethodMaxUid)
           continue;
         std::vector<std::string> vs = qi::signatureSplit(ms.signature());
         qiLogDebug() << "adding signal:" << ms.signature();
@@ -85,7 +85,7 @@ namespace qi { namespace py {
       for (it = mm.begin(); it != mm.end(); ++it) {
         qi::MetaProperty &mp = it->second;
         //drop special methods
-        if (mp.uid() < 10)
+        if (mp.uid() < qiObjectSpecialMethodMaxUid)
           continue;
         std::vector<std::string> vs = qi::signatureSplit(mp.signature());
         qiLogDebug() << "adding property:" << mp.signature();
