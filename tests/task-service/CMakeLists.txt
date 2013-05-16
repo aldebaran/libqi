@@ -15,7 +15,7 @@ qi_create_binder(
    DIR ${CMAKE_CURRENT_BINARY_DIR}
    NAME Task
  )
- 
+
  qi_create_binder(
    _taskgenerator_binder
    IDL ${CMAKE_CURRENT_SOURCE_DIR}/task.idl
@@ -23,16 +23,16 @@ qi_create_binder(
    NAME TaskGenerator
    SERVICE
  )
- 
+
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 qi_create_lib(task
-  SRC task_service.cpp ${_task_binder} ${_taskgenerator_binder}
   MODULE
+  SRC task_service.cpp ${_task_binder} ${_taskgenerator_binder}
   DEPENDS QITYPE)
 
 qi_create_gtest(test_task
   SRC test_task.cpp ${_task_proxy} ${_taskgenerator_proxy}
   DEPENDS QI QITYPE TESTSESSION GTEST TIMEOUT 10
 )
-  
+
