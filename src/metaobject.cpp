@@ -174,8 +174,12 @@ namespace qi {
     for (it = mms.begin(); it != mms.end(); ++it) {
       newUid = it->second.uid();
       MetaObject::MethodMap::iterator jt = _methods.find(newUid);
-      if (jt != _methods.end())
-        return false;
+      //same id and same signature: we dont mind.
+      if (jt != _methods.end()) {
+        if ((jt->second.toString() != it->second.toString()) ||
+            (jt->second.returnSignature() != it->second.returnSignature()))
+          return false;
+      }
       _methods[newUid] = qi::MetaMethod(newUid, it->second);
       _methodsNameToIdx[it->second.toString()] = newUid;
     }
@@ -191,8 +195,10 @@ namespace qi {
     for (it = mms.begin(); it != mms.end(); ++it) {
       newUid = it->second.uid();
       MetaObject::SignalMap::iterator jt = _events.find(newUid);
-      if (jt != _events.end())
-        return false;
+      if (jt != _events.end()) {
+        if ((jt->second.toString() != it->second.toString()))
+          return false;
+      }
       _events[newUid] = qi::MetaSignal(newUid, it->second.name(), it->second.parametersSignature());
       _eventsNameToIdx[it->second.toString()] = newUid;
     }
@@ -208,8 +214,10 @@ namespace qi {
     for (it = mms.begin(); it != mms.end(); ++it) {
       newUid = it->second.uid();
       MetaObject::PropertyMap::iterator jt = _properties.find(newUid);
-      if (jt != _properties.end())
-        return false;
+      if (jt != _properties.end()) {
+        if ((jt->second.toString() != it->second.toString()))
+          return false;
+      }
       _properties[newUid] = qi::MetaProperty(newUid, it->second.name(), it->second.signature());
     }
     //todo: update uid
