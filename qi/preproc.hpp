@@ -475,7 +475,10 @@ for i in range(0, 10):
 #define QI_GEN_MAYBE_TEMPLATE_CLOSE(...) \
   QI_CAT(_QI_GEN_MAYBE_TEMPLATE_CLOSE_, QI_LIST_VASIZE((__VA_ARGS__)))
 
-
+#define QI_PAIR_FIRST(x) QI_DELAY(_QI_PAIR_FIRST)x
+#define QI_PAIR_SECOND(x) QI_DELAY(_QI_PAIR_SECOND)x
+#define _QI_PAIR_FIRST(x, y) x
+#define _QI_PAIR_SECOND(x, y) y
 #define _QI_GEN_MAYBE_TEMPLATE_OPEN_1 template<
 #define _QI_GEN_MAYBE_TEMPLATE_OPEN_0
 #define _QI_GEN_MAYBE_TEMPLATE_CLOSE_1 >
@@ -492,4 +495,29 @@ for i in range(0, 10):
 #define _QI_GEN_SYMINC_2 3
 #define _QI_GEN_SYMINC_1 2
 #define _QI_GEN_SYMINC_0 1
+
+#define _QI_IF_QI_TRUE(a) a
+#define _QI_IF_QI_FALSE(a)
+#define _QI_NIF_QI_TRUE(a)
+#define _QI_NIF_QI_FALSE(a) a
+
+#define _QI_NCOMMA_QI_TRUE
+#define _QI_NCOMMA_QI_FALSE ,
+
+#define _QI_VAARGS_MAP8(list, macro, arg) macro(8,  arg, QI_LIST_HEAD(list)) QI_CAT(_QI_NCOMMA_, QI_LIST_EMPTY(QI_LIST_TAIL(list))) QI_CAT(_QI_NIF_, QI_LIST_EMPTY(QI_LIST_TAIL(list)))(_QI_ERROR_LIST_TOO_LONG)
+#define _QI_VAARGS_MAP7(list, macro, arg) macro(7, arg, QI_LIST_HEAD(list)) QI_CAT(_QI_NCOMMA_, QI_LIST_EMPTY(QI_LIST_TAIL(list))) QI_CAT(_QI_NIF_, QI_LIST_EMPTY(QI_LIST_TAIL(list)))(_QI_VAARGS_MAP8(QI_LIST_TAIL(list), macro, arg))
+#define _QI_VAARGS_MAP6(list, macro, arg) macro(6, arg, QI_LIST_HEAD(list)) QI_CAT(_QI_NCOMMA_, QI_LIST_EMPTY(QI_LIST_TAIL(list))) QI_CAT(_QI_NIF_, QI_LIST_EMPTY(QI_LIST_TAIL(list)))(_QI_VAARGS_MAP7(QI_LIST_TAIL(list), macro, arg))
+#define _QI_VAARGS_MAP5(list, macro, arg) macro(5, arg, QI_LIST_HEAD(list)) QI_CAT(_QI_NCOMMA_, QI_LIST_EMPTY(QI_LIST_TAIL(list))) QI_CAT(_QI_NIF_, QI_LIST_EMPTY(QI_LIST_TAIL(list)))(_QI_VAARGS_MAP6(QI_LIST_TAIL(list), macro, arg))
+#define _QI_VAARGS_MAP4(list, macro, arg) macro(4, arg, QI_LIST_HEAD(list)) QI_CAT(_QI_NCOMMA_, QI_LIST_EMPTY(QI_LIST_TAIL(list))) QI_CAT(_QI_NIF_, QI_LIST_EMPTY(QI_LIST_TAIL(list)))(_QI_VAARGS_MAP5(QI_LIST_TAIL(list), macro, arg))
+#define _QI_VAARGS_MAP3(list, macro, arg) macro(3, arg, QI_LIST_HEAD(list)) QI_CAT(_QI_NCOMMA_, QI_LIST_EMPTY(QI_LIST_TAIL(list))) QI_CAT(_QI_NIF_, QI_LIST_EMPTY(QI_LIST_TAIL(list)))(_QI_VAARGS_MAP4(QI_LIST_TAIL(list), macro, arg))
+#define _QI_VAARGS_MAP2(list, macro, arg) macro(2, arg, QI_LIST_HEAD(list)) QI_CAT(_QI_NCOMMA_, QI_LIST_EMPTY(QI_LIST_TAIL(list))) QI_CAT(_QI_NIF_, QI_LIST_EMPTY(QI_LIST_TAIL(list)))(_QI_VAARGS_MAP3(QI_LIST_TAIL(list), macro, arg))
+#define _QI_VAARGS_MAP1(list, macro, arg) macro(1, arg, QI_LIST_HEAD(list)) QI_CAT(_QI_NCOMMA_, QI_LIST_EMPTY(QI_LIST_TAIL(list))) QI_CAT(_QI_NIF_, QI_LIST_EMPTY(QI_LIST_TAIL(list)))(_QI_VAARGS_MAP2(QI_LIST_TAIL(list), macro, arg))
+#define _QI_VAARGS_MAP(list, macro, arg)  macro(0, arg, QI_LIST_HEAD(list)) QI_CAT(_QI_NCOMMA_, QI_LIST_EMPTY(QI_LIST_TAIL(list))) QI_CAT(_QI_NIF_, QI_LIST_EMPTY(QI_LIST_TAIL(list)))(_QI_VAARGS_MAP1(QI_LIST_TAIL(list), macro, arg))
+
+/// Expand to  Macro(0, Arg, arg0), Macro(1, Arg, arg1), ..., Macro(n, Arg, argn)
+#define QI_VAARGS_MAP(Macro, Arg, ...) \
+  _QI_VAARGS_MAP( QI_LIST(__VA_ARGS__,), Macro, Arg)
+
+
+
 #endif
