@@ -163,6 +163,10 @@ namespace qi {
       {
         qiLogVerbose() << "Exception caught from signal subscriber: " << e.what();
       }
+      catch (...) {
+        qiLogVerbose() << "Unknown exception caught from signal subscriber";
+      }
+
       (*sub)->removeActive(true);
       params->destroy();
       delete params;
@@ -215,6 +219,7 @@ namespace qi {
             return;
           addActive(false);
         }
+        //do not throw
         handler(args);
         if (weakLock)
           weakLock->unlock();
