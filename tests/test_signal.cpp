@@ -29,7 +29,6 @@ void foo2(int *r, char, char)  { *r += 1; }
 void foo3(int *r, Foo *)       { *r += 1; }
 void foolast(int, qi::Promise<void> prom, int* r) { prom.setValue(0); *r += 1;}
 
-
 TEST(TestSignal, TestCompilation)
 {
   int                    res = 0;
@@ -166,6 +165,20 @@ TEST(TestSignal, SignalSignal)
   qi::os::msleep(300);
   ASSERT_EQ(10, res);
 }
+
+
+void foothrow() {
+  throw 42;
+}
+
+TEST(TestSignal, SignalThrow)
+{
+  qi::Signal<void()> sig;
+  sig.connect(boost::bind<void>(&foothrow));
+  ASSERT_NO_THROW(sig());
+  qi::os::msleep(50);
+}
+
 
 int main(int argc, char **argv) {
   qi::Application app(argc, argv);
