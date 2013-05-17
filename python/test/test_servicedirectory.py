@@ -3,7 +3,13 @@ from qi import ServiceDirectory
 from qi import Session
 
 
-def main():
+class TestService:
+    def display(self, t):
+        print(t)
+        return t
+
+
+def test_throwing_callback():
     def raising(f):
         raise Exception("woops")
 
@@ -19,5 +25,23 @@ def main():
     time.sleep(0.01)
     s.close()
 
+
+def test_unicode_strings():
+    local = "tcp://127.0.0.1:5555"
+    sd = ServiceDirectory()
+    sd.listen(local)
+
+    s = Session()
+    s.connect(local)
+
+    m = TestService()
+    s.register_service("TestService", m)
+    service = s.service("TestService")
+    # Only 1 character is actually used
+    mystring = service.display(u"my unicode poney")
+    assert mystring == "my unicode poney"
+
+    s.close()
 if __name__ == "__main__":
-    main()
+    #test_throwing_callback()
+    test_unicode_strings()
