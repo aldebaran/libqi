@@ -20,6 +20,7 @@ qi_create_gtest(test_without_gateway      SRC test_without_gateway.cpp      DEPE
 # `qibuild test` on mac never returns with those tests.
 qimessaging_create_session_test(test_event_remote         SRC test_event_remote.cpp         DEPENDS QI QIMESSAGING GTEST TESTSESSION TIMEOUT 10)
 qi_create_gtest(test_event_connect        SRC test_event_connect.cpp        DEPENDS QI QIMESSAGING GTEST TIMEOUT 10)
+qi_create_gtest(test_sd                   SRC test_sd.cpp                  DEPENDS QI QIMESSAGING GTEST TIMEOUT 10)
 qimessaging_create_session_test(test_event_remote_connect SRC test_event_remote_connect.cpp DEPENDS QI QIMESSAGING GTEST TESTSESSION TIMEOUT 25)
 qimessaging_create_session_test(test_call_many            SRC test_call_many.cpp            DEPENDS QI QIMESSAGING GTEST TESTSESSION TIMEOUT 10)
 qimessaging_create_session_test(test_session              SRC test_session.cpp              DEPENDS QI QIMESSAGING GTEST TESTSESSION TIMEOUT 30)
@@ -42,4 +43,3 @@ add_subdirectory(passobject-fromclient)
 add_subdirectory(codegen-interface)
 add_subdirectory(codegen-bind)
 add_subdirectory(task-service)
-
