@@ -26,6 +26,20 @@ namespace qi {
 
   class SignaturePrivate;
 
+  /* Represent the serialisation signature of a Type.
+  * pseudo-grammar:
+  * root: element
+  * element: signature annotation.opt
+  * sinature:
+  *   | primitive  // in bcCwWiIlLfdsmro, see Type
+  *   | [element]
+  *   | {elementelement}
+  *   | (elementsequence)
+  * elementsequence: a list of 1 or more elements
+  * annotation.opt: empty or <annotation>
+  * annotation: may contain arbitrary content except \0
+      and must balance all (), {}, [] and <> within
+  */
   class QITYPE_API Signature {
   public:
 
