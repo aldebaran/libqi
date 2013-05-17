@@ -348,6 +348,14 @@ namespace qi
 
     ServiceDirectoryBoundObject *sdbo = static_cast<ServiceDirectoryBoundObject*>(_p->_sdbo.get());
 
+    std::map<unsigned int, ServiceInfo>::iterator it =
+        sdbo->connectedServices.find(qi::Message::Service_ServiceDirectory);
+    if (it != sdbo->connectedServices.end())
+    {
+      it->second.setEndpoints(_p->_server.endpoints());
+      return f;
+    }
+
     ServiceInfo si;
     si.setName("ServiceDirectory");
     si.setServiceId(qi::Message::Service_ServiceDirectory);
