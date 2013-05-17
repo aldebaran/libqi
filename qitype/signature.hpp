@@ -104,6 +104,7 @@ namespace qi {
       // accesors
       Type        type()const;
       std::string signature()const;
+      std::string annotation()const;
       bool        isValid()const;
 
       bool        hasChildren()const;

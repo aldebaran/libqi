@@ -429,4 +429,147 @@ TEST(TestSignature, WeirdSharedPtr) {
   EXPECT_EQ("X", qi::signatureFromType< boost::shared_ptr<int> &>::value());
 }
 
+qiLogCategory("test.signature()");
+
+class SignatureValidator
+{
+public:
+
+  SignatureValidator(qi::Signature s)
+  : good(true), count(0)
+  {
+    stack.push_back(Item());
+    stack.front().first = s;
+    stack.front().second = stack.front().first.begin();
+    if (stack.front().second == stack.front().first.end())
+      stack.pop_back();
+  }
+  SignatureValidator& operator()(char t, const char* annotation)
+  {
+    if (!good)
+      return *this;
+    if (stack.empty())
+    {
+      qiLogError() << "No more elements after " << count;
+      good = false;
+      return *this;
+    }
+    assert(stack.back().second != stack.back().first.end());
+    qi::Signature::iterator& it = stack.back().second;
+    if (it.type() != t)
+    {
+      qiLogError() << "Type mismatch " << t << " " << it.type();
+      good = false;
+      return *this;
+    }
+    if (it.annotation() != annotation)
+    {
+      qiLogError() << "Annotation mismatch " << annotation << " vs " << it.annotation();
+      good = false;
+      return *this;
+    }
+    next();
+    return *this;
+  }
+  void next()
+  {
+    ++count;
+    if (stack.back().second.hasChildren())
+    { // go down
+      Item i;
+      i.first = stack.back().second.children();
+      i.second = i.first.begin();
+      stack.push_back(i);
+      return;
+    }
+    // go next then up-next until we hit a valid element
+    ++stack.back().second;
+    while (!stack.empty() && stack.back().second == stack.back().first.end())
+    {
+      stack.pop_back();
+      if (!stack.empty())
+        ++stack.back().second;
+    }
+  }
+  operator bool() const
+  {
+    if (!stack.empty())
+    {
+      qiLogError() << "Remaining elements at the end";
+      good = false;
+    }
+    return good;
+  }
+  typedef std::pair<qi::Signature, qi::Signature::iterator> Item;
+  std::vector<Item> stack;
+  mutable bool good;
+  int count;
+};
+
+
+qi::Signature tuple(const std::string& str)
+{
+  return qi::Signature("(" + str + ")").begin().children();
+}
+
+TEST(TestSignature, Annotation) {
+  using qi::Signature;
+  Signature s("i<foo>");
+  Signature::iterator it = s.begin();
+  EXPECT_EQ("foo", it.annotation());
+  EXPECT_EQ('i', it.type());
+
+  s = Signature("i<foo<bar><<baz@5'\"[]><>a>>");
+  it = s.begin();
+  EXPECT_EQ('i', it.type());
+  EXPECT_EQ("foo<bar><<baz@5'\"[]><>a>", it.annotation());
+
+  s = Signature("(ii<foo>i<bar>ii<bam<baz>>)").begin().children();
+  qiLogInfo() << "sig: " << s.toString();
+  EXPECT_EQ(5u, s.size());
+  EXPECT_TRUE(
+    SignatureValidator(s)
+    ('i', "")
+    ('i', "foo")
+    ('i', "bar")
+    ('i', "")
+    ('i', "bam<baz>")
+    );
+EXPECT_TRUE(SignatureValidator(tuple("i<foo>[i<bar>]<baz>{i<bim>I<bam>}<boum>(i<pif>I<paf>)<pouf>"))
+  ('i', "foo")
+  ('[', "baz")
+  ('i', "bar")
+  ('{', "boum")
+  ('i', "bim")
+  ('I', "bam")
+  ('(', "pouf")
+  ('i', "pif")
+  ('I', "paf")
+  );
+ EXPECT_TRUE(SignatureValidator("[[[[i<a>]<b>]<c>]<d>]<e>")
+   ('[', "e")
+   ('[', "d")
+   ('[', "c")
+   ('[', "b")
+   ('i', "a")
+ );
+ // Test the test-suite tool
+ EXPECT_FALSE(SignatureValidator("i")('I', ""));
+ EXPECT_FALSE(SignatureValidator("i"));
+ EXPECT_FALSE(SignatureValidator(tuple("ii"))('i', ""));
+ EXPECT_FALSE(SignatureValidator("i")('i', "coin"));
+ EXPECT_FALSE(SignatureValidator("i<coin>")('i', ""));
+}
+
+TEST(TestSignature, AnnotationInvalid) {
+  using qi::Signature;
+  EXPECT_TRUE(!Signature("i<foo")  .isValid());
+  EXPECT_TRUE(!Signature("ifoo>")  .isValid());
+  EXPECT_TRUE(!Signature("[ifoo>]").isValid());
+  EXPECT_TRUE(!Signature("[i]>")   .isValid());
+  EXPECT_TRUE(!Signature("<>")     .isValid());
+  EXPECT_TRUE(!Signature(">")      .isValid());
+  EXPECT_TRUE(!Signature("<")      .isValid());
+}
+
 //#endif

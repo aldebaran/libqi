@@ -72,6 +72,25 @@ namespace qi {
         break;
       }
       current++;
+      if (s[current] == '<')
+      {
+        int count = 0;
+        while (current < s.size())
+        {
+          if (s[current] == '<')
+            ++count;
+          else if (s[current] == '>')
+            --count;
+          ++current;
+          if (!count)
+            break;
+        }
+        if (count)
+        {
+          qiLogError() << "Annotation not closed in '" << s << "'";
+          return false;
+        }
+      }
       arguments++;
     }
 
@@ -83,15 +102,26 @@ namespace qi {
     }
     if (type == qi::Signature::Type_List && (arguments != 1 || s[current] != qi::Signature::Type_List_End))
     {
-      qiLogError() << "List must contain only one element.";
-      return false;
-    }
-    if (type == qi::Signature::Type_Tuple && s[current] != qi::Signature::Type_Tuple_End)
-    {
-      qiLogError() << "Invalid tuple.";
+      qiLogError() << "List must contain only one element, but has " << arguments;
       return false;
     }
     return true;
+  }
+
+  static const char* _find_begin(const char* current, const char* start, char open, char close)
+  {
+    int count = 0; // start at 0
+    while (current >= start)
+    { // update count with current before testing
+      if (*current == close)
+        ++count;
+      else if (*current == open)
+        --count;
+      if (!count)
+        return current;
+      --current;
+    }
+    return 0;
   }
 
   static int _find_end(char **pcurrent, const char **psignature, const char *sigend, char copen, char close)
@@ -151,7 +181,7 @@ namespace qi {
     size_t size = len * 2;
 
     if (_signature)
-      free(_signature);
+      delete[] _signature;
     if (size == 0)
       size = 1;
     _signature = new char[size];
@@ -211,16 +241,21 @@ namespace qi {
             return false;
           break;
         default:
-          qiLogError() << "Signature is invalid: `" << signature << "'";
+          qiLogError() << "Signature element is invalid: `" << signature << "'";
           return false;
       }
 
-      while (*signature == '*') {
+      while (*signature == '*') { // dead code?
         *current = *signature;
         current++;
         signature++;
       }
-
+      // handle annotation
+      if (signature < sig_end && *signature == '<')
+      {
+        if (!_find_end(&current, &signature, sig_end, '<', '>'))
+          return false;
+      }
 
       *current = 0;
       current++;
@@ -245,7 +280,7 @@ namespace qi {
 
     if (this->size() != 1)
     {
-      qiLogError() << "Signature is invalid: `" << fullSignature << "'";
+      qiLogError() << "Signature has more than one element: `" << fullSignature << "'";
       _p->_valid = false;
     }
   }
@@ -257,7 +292,7 @@ namespace qi {
 
     if (this->size() != 1)
     {
-      qiLogError() << "Signature is invalid: `" << subsig << "'";
+      qiLogError() << "Signature has more than one element: `" << subsig << "'";
       _p->_valid = false;
     }
   }
@@ -333,6 +368,20 @@ namespace qi {
     return std::string(_current);
   }
 
+  std::string Signature::iterator::annotation()const {
+    // Since we have an end marker, use it, it will simplify annotation lookup
+    const char* next = _current;
+    while (*next && next <= _end)
+      ++next;
+    --next; // last caracter of this element
+    if (*next != '>')
+      return std::string();
+    const char* astart = _find_begin(next, _current, '<', '>');
+    if (!astart)
+      return std::string();
+    return std::string(astart + 1, next);
+  }
+
   bool Signature::iterator::hasChildren() const {
     if (!_current)
       return false;
@@ -361,6 +410,12 @@ namespace qi {
 
     if (size < 2)
       return sig;
+    // remove annotation
+    if (fullSignature[size - 1] == '>')
+    {
+      const char* astart = _find_begin(fullSignature + size - 1, _current, '<', '>');
+      size = astart - fullSignature;
+    }
     while (toremove <= (size - 2)) {
       if (fullSignature[size - 1 - toremove] != '*')
         break;
