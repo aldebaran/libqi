@@ -95,6 +95,9 @@ namespace qi {
           {
             qiLogError("qi.future") << "Exception caught in future callback " << e.what();
           }
+          catch (...) {
+            qiLogError("qi.future") << "Unknown exception caught in future callback";
+          }
         }
         notifyFinish();
       }
@@ -117,6 +120,9 @@ namespace qi {
           catch(const std::exception& e)
           {
             qiLogError("qi.future") << "Exception caught in future callback " << e.what();
+          }
+          catch (...) {
+            qiLogError("qi.future") << "Unknown exception caught in future callback";
           }
         }
         notifyFinish();
