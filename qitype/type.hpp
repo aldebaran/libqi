@@ -614,6 +614,7 @@ QITYPE_API bool operator !=(const GenericIterator & a, const GenericIterator& b)
     virtual void set(void** storage, std::vector<void*>);
     virtual void set(void** storage, unsigned int index, void* valStorage) = 0; // will copy
     virtual Kind kind() const { return Tuple; }
+    virtual std::vector<std::string> annotations() { return std::vector<std::string>();}
   };
 
   class QITYPE_API TypeDynamic: public Type

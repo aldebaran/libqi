@@ -411,8 +411,13 @@ namespace qi {
         v.result += (char)Signature::Type_Tuple;
         {
           std::vector<Type*> memberTypes = static_cast<TypeTuple*>(this)->memberTypes();
+          std::vector<std::string> annotations = static_cast<TypeTuple*>(this)->annotations();
           for (unsigned i=0; i<memberTypes.size(); ++i)
+          {
             v.result += memberTypes[i]->signature();
+            if (annotations.size() > i)
+              v.result += '<' + annotations[i] + '>';
+          }
         }
         v.result += (char)Signature::Type_Tuple_End;
         break;

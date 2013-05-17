@@ -24,7 +24,8 @@ namespace qi {                                                            \
   template<> struct TypeImpl<name>: public ::qi::TypeTuple                \
   {                                                                       \
   public:                                                                 \
-    virtual std::vector< ::qi::Type*> memberTypes();                             \
+    virtual std::vector< ::qi::Type*> memberTypes();                      \
+    virtual std::vector<std::string> annotations();                       \
     virtual void* get(void* storage, unsigned int index);                 \
     virtual void set(void** storage, unsigned int index, void* valStorage); \
     _QI_BOUNCE_TYPE_METHODS(::qi::DefaultTypeImplMethods<name>);            \
@@ -34,6 +35,7 @@ namespace qi {                                                            \
 #define __QI_TUPLE_TYPE(_, what, field) res.push_back(::qi::typeOf(ptr->field));
 #define __QI_TUPLE_GET(_, what, field) if (i == index) return ::qi::typeOf(ptr->field)->initializeStorage(&ptr->field); i++;
 #define __QI_TUPLE_SET(_, what, field) if (i == index) ::qi::detail::setFromStorage(ptr->field, valueStorage); i++;
+#define __QI_TUPLE_FIELD_NAME(_, what, field) res.push_back(BOOST_PP_STRINGIZE(QI_DELAY(field)));
 #define __QI_TYPE_STRUCT_IMPLEMENT(name, inl, onSet, ...)                                    \
 namespace qi {                                                                        \
   inl std::vector< ::qi::Type*> TypeImpl<name>::memberTypes()                                \
@@ -56,6 +58,12 @@ namespace qi {                                                                  
     name* ptr = (name*)ptrFromStorage(storage);                                       \
     QI_VAARGS_APPLY(__QI_TUPLE_SET, _, __VA_ARGS__);                                  \
     onSet                                                                      \
+  }\
+  inl std::vector<std::string> TypeImpl<name>::annotations() \
+  {  \
+    std::vector<std::string> res; \
+    QI_VAARGS_APPLY(__QI_TUPLE_FIELD_NAME, _, __VA_ARGS__); \
+    return res; \
   }\
 }
 

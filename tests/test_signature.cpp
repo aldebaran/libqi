@@ -572,4 +572,17 @@ TEST(TestSignature, AnnotationInvalid) {
   EXPECT_TRUE(!Signature("<")      .isValid());
 }
 
+struct Point
+{
+  double x;
+  double y;
+  std::string name;
+};
+QI_TYPE_STRUCT(Point, x, y, name);
+
+TEST(TestSignature, AnnotationStruct)
+{
+  EXPECT_EQ("(d<x>d<y>s<name>)", qi::typeOf<Point>()->signature());
+}
+
 //#endif
