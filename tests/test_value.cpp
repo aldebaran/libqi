@@ -250,6 +250,64 @@ TEST(Value, Tuple)
 }
 
 
+struct Point2
+{
+  Point2() {}
+  const double& getY() { return y;}
+  double& getZ() { return z;}
+  const double& getA() const { return a;}
+  double x,y, z, a, b;
+  std::string s;
+private:
+  Point2(double x, double y, const std::string& s,
+    double z, double a
+    , double b
+    )
+  : x(x), y(y), s(s), z(z), a(a)
+  , b(b)
+  {}
+  friend class ::qi::TypeImpl<Point2>;
+};
+
+const double& get_point2_b(Point2* ptr)
+{
+  return ptr->b;
+}
+
+QI_TYPE_STRUCT_AGREGATE_CONSTRUCTOR(Point2,
+  ("x", x),
+  ("y", getY),
+  ("str", s),
+  ("z", getZ),
+  QI_STRUCT_FIELD("a", getA),
+  QI_STRUCT_HELPER("b", get_point2_b)
+  );
+
+TEST(Value, Tuple2)
+{
+  Point2 p;
+  TypeTuple* t = static_cast<qi::TypeTuple*>(qi::typeOf<Point2>());
+  ASSERT_EQ(6u, t->memberTypes().size());
+  EXPECT_EQ("(d<x>d<y>s<str>d<z>d<a>d<b>)", t->signature());
+  std::vector<GenericValue> vd;
+  vd.push_back(GenericValue(AutoGenericValuePtr(1.5)));
+  vd.push_back(GenericValue(AutoGenericValuePtr(2.5)));
+  vd.push_back(GenericValue(AutoGenericValuePtr("coin")));
+  vd.push_back(GenericValue(AutoGenericValuePtr(1.5)));
+  vd.push_back(GenericValue(AutoGenericValuePtr(1.5)));
+  vd.push_back(GenericValue(AutoGenericValuePtr(3.5)));
+  p = GenericValueRef(vd).toTuple(true).to<Point2>();
+  EXPECT_EQ(1.5, p.x);
+  EXPECT_EQ(2.5, p.y);
+  EXPECT_EQ("coin", p.s);
+  EXPECT_EQ(3.5, p.b);
+  std::vector<GenericValuePtr> pcomps = t->getValues(&p);
+  EXPECT_EQ(1.5, pcomps[0].toDouble());
+  EXPECT_EQ(2.5, pcomps[1].toDouble());
+  EXPECT_EQ("coin", pcomps[2].toString());
+  EXPECT_EQ(3.5, pcomps[5].toDouble());
+}
+
 TEST(Value, DefaultMap)
 { // this one has tricky code and deserves a test)
   Type* dmt = Type::fromSignature("{si}");

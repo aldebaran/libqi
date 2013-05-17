@@ -645,11 +645,23 @@ namespace qi {
       {
         TypeTuple* type = static_cast<TypeTuple*>(result.type);
         std::vector<Type*> types = type->memberTypes();
+        // Be safe, do not assume deserialize will give us the type we asked.
+        std::vector<void*> vals;
+        std::vector<Type*> valstypes;
+        vals.resize(types.size());
+        valstypes.resize(types.size());
         for (unsigned i = 0; i<types.size(); ++i)
         {
           GenericValuePtr val = deserialize(types[i], in, context);
-          type->set(&result.value, i, val.value);
-          val.destroy();
+          if (!val.type)
+            throw std::runtime_error("Deserialization of tuple field failed");
+          vals[i] = val.value;
+          valstypes[i] = val.type;
+        }
+        type->set(&result.value, vals);
+        for (unsigned i = 0; i<types.size(); ++i)
+        {
+          valstypes[i]->destroy(vals[i]);
         }
       }
 
