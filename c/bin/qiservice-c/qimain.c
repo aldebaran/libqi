@@ -62,7 +62,7 @@ int		main(int argc, char **argv)
 
   ob = qi_object_builder_create();
   qi_object_builder_register_method(ob, "reply::s(s)", &reply, 0);
-  qi_object_builder_register_event(ob, "testEvent::(s)");
+  qi_object_builder_register_event(ob, "testEvent", "(s)");
   object = qi_object_builder_get_object(ob);
   session = qi_session_create();
 

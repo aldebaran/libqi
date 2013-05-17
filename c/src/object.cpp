@@ -168,14 +168,13 @@ unsigned int        qi_object_builder_register_method(qi_object_builder_t *objec
   return 0;
 }
 
-unsigned int        qi_object_builder_register_event(qi_object_builder_t *object_builder, const char *complete_signature)
+
+unsigned int          qi_object_builder_register_event(qi_object_builder_t *object_builder, const char *name, const char *signature)
 {
-  qi::DynamicObjectBuilder  *ob = reinterpret_cast<qi::DynamicObjectBuilder *>(object_builder);
-  std::vector<std::string>  sigInfo;
-  sigInfo = qi::signatureSplit(complete_signature);
+  qi::DynamicObjectBuilder *ob = reinterpret_cast<qi::DynamicObjectBuilder *>(object_builder);
   try
   {
-    return ob->xAdvertiseSignal(sigInfo[1], sigInfo[2]);
+    return ob->xAdvertiseSignal(name, signature);
   }
   catch (const std::runtime_error &e)
   {
@@ -184,14 +183,12 @@ unsigned int        qi_object_builder_register_event(qi_object_builder_t *object
   return 0;
 }
 
-unsigned int        qi_object_builder_register_property(qi_object_builder_t *object_builder, const char *complete_signature)
+unsigned int          qi_object_builder_register_property(qi_object_builder_t *object_builder, const char *name, const char *signature)
 {
-  qi::DynamicObjectBuilder  *ob = reinterpret_cast<qi::DynamicObjectBuilder *>(object_builder);
-  std::vector<std::string>  sigInfo;
-  sigInfo = qi::signatureSplit(complete_signature);
+  qi::DynamicObjectBuilder *ob = reinterpret_cast<qi::DynamicObjectBuilder *>(object_builder);
   try
   {
-    return ob->xAdvertiseProperty(sigInfo[1], sigInfo[2]);
+    return ob->xAdvertiseProperty(name, signature);
   }
   catch (const std::runtime_error &e)
   {
@@ -199,6 +196,8 @@ unsigned int        qi_object_builder_register_property(qi_object_builder_t *obj
   }
   return 0;
 }
+
+
 
 qi_object_t*         qi_object_builder_get_object(qi_object_builder_t *object_builder) {
   qi::DynamicObjectBuilder *ob = reinterpret_cast<qi::DynamicObjectBuilder *>(object_builder);
@@ -208,6 +207,38 @@ qi_object_t*         qi_object_builder_get_object(qi_object_builder_t *object_bu
   o = ob->object();
   return obj;
 }
+
+qi_future_t *qi_object_get_property(qi_object_t *object, const char* prop_name)
+{
+  if (object == NULL)
+    return qi_future_wrap(qi::makeFutureError<void>("Object Invalid, should not be null"));
+  if (prop_name == NULL)
+    return qi_future_wrap(qi::makeFutureError<void>("Property name invalid, should not be null"));
+  qi::AnyObject& obj = qi_object_cpp(object);
+  int prop_id = obj.metaObject().propertyId(prop_name);
+  if (prop_id < 0)
+    return qi_future_wrap(qi::makeFutureError<int>("Property not found"));
+  return qi_future_wrap(obj.property(prop_id));
+}
+
+qi_future_t *qi_object_set_property(qi_object_t *object, const char* prop_name, qi_value_t *value)
+{
+  if (object == NULL)
+    return qi_future_wrap(qi::makeFutureError<void>("Object Invalid, should not be null"));
+  if (prop_name == NULL)
+    return qi_future_wrap(qi::makeFutureError<void>("Property name invalid, should not be null"));
+  if (value == NULL)
+    return qi_future_wrap(qi::makeFutureError<void>("Property value invalid, should not be null"));
+
+  qi::AnyObject& obj = qi_object_cpp(object);
+
+  int prop_id = obj.metaObject().propertyId(prop_name);
+  if (prop_id < 0)
+    return qi_future_wrap(qi::makeFutureError<int>("Property not found"));
+  qi::AnyValue &gv = qi_value_cpp(value);
+  return qi_future_wrap(obj.setProperty(prop_id, gv));
+}
+
 
 #ifdef __cplusplus
 }

@@ -39,7 +39,7 @@ void signal_callback_1(qi_value_t* cont, void *)
 TEST(TestSignal, CreateAndDestroy)
 {
   qi_object_builder_t* qiob =  qi_object_builder_create();
-  qi_object_builder_register_event(qiob, "plouf::(s)");
+  qi_object_builder_register_event(qiob, "plouf", "(s)");
   qi_object_builder_destroy(qiob);
 }
 
@@ -55,7 +55,7 @@ qi_value_t *create_tup(int v) {
 TEST(TestSignal, SimpleSignalConnect)
 {
   qi_object_builder_t* qiob =  qi_object_builder_create();
-  qi_object_builder_register_event(qiob, "plouf::(i)");
+  qi_object_builder_register_event(qiob, "plouf", "(i)");
   qi_object_t *object = qi_object_builder_get_object(qiob);
   qi_object_builder_destroy(qiob);
 
@@ -84,7 +84,7 @@ TEST(TestSignal, SimpleSignalConnect)
 TEST(TestSignal, MultipleSignalConnect)
 {
   qi_object_builder_t* qiob =  qi_object_builder_create();
-  qi_object_builder_register_event(qiob, "plouf::(i)");
+  qi_object_builder_register_event(qiob, "plouf", "(i)");
   qi_object_t *object = qi_object_builder_get_object(qiob);
   qi_object_builder_destroy(qiob);
 
@@ -115,7 +115,7 @@ TEST(TestSignal, MultipleSignalConnect)
 TEST(TestSignal, SignalDisconnect)
 {
   qi_object_builder_t* qiob =  qi_object_builder_create();
-  qi_object_builder_register_event(qiob, "plouf::(i)");
+  qi_object_builder_register_event(qiob, "plouf", "(i)");
   qi_object_t *object = qi_object_builder_get_object(qiob);
   qi_object_builder_destroy(qiob);
 
