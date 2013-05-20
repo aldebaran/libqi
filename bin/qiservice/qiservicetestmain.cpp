@@ -47,6 +47,10 @@ std::string reply(const std::string &msg, const double &value) {
   return ss.str();
 }
 
+void error() {
+  throw std::runtime_error("errrrrror from cpp");
+}
+
 std::string reply(const std::string &msg, const float &value) {
   qiLogInfo() << "Message recv:" << msg << " * " << value;
   std::stringstream ss;
@@ -151,6 +155,7 @@ int main(int argc, char *argv[])
       qi::Session       session;
       qi::GenericObjectBuilder ob;
       ob.advertiseMethod<std::string (const std::string&)>("reply", &reply);
+      ob.advertiseMethod<void ()>("error", &error);
       ob.advertiseMethod<std::string (const int&)>("reply", &reply);
       ob.advertiseMethod<std::string (const std::string&, const double &)>("reply", &reply);
       ob.advertiseMethod<std::string (const std::string&, const float &)>("reply", &reply);
