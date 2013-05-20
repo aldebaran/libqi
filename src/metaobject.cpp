@@ -499,15 +499,44 @@ namespace qi {
       }
     }
   }
+
+
+  MetaObject::MetaObject(const MethodMap& methodMap, const SignalMap& signalMap,
+    const PropertyMap& propertyMap, const std::string& description)
+  {
+    _p = new MetaObjectPrivate();
+    _p->_methods = methodMap;
+    _p->_events = signalMap;
+    _p->_properties = propertyMap;
+    _p->_description = description;
+    _p->refreshCache();
+  }
+
+
 }
 
-static qi::MetaObjectPrivate* metaObjectPrivate(qi::MetaObject* p) {
-  return p->_p;
+namespace {
+  static const qi::MetaObject::MethodMap& methodMap(qi::MetaObject* ptr)
+  {
+    return ptr->_p->_methods;
+  }
+  static const qi::MetaObject::SignalMap& signalMap(qi::MetaObject* ptr)
+  {
+    return ptr->_p->_events;
+  }
+  static const qi::MetaObject::PropertyMap& propertyMap(qi::MetaObject* ptr)
+  {
+    return ptr->_p->_properties;
+  }
+  static const std::string& description(qi::MetaObject* ptr)
+  {
+    return ptr->_p->_description;
+  }
 }
 
+QI_TYPE_STRUCT_AGREGATE_CONSTRUCTOR_REGISTER(::qi::MetaObject,
+  QI_STRUCT_HELPER("methods", methodMap),
+  QI_STRUCT_HELPER("signals", signalMap),
+  QI_STRUCT_HELPER("properties", propertyMap),
+  QI_STRUCT_HELPER("description", description));
 
-QI_TYPE_STRUCT_EX(qi::MetaObjectPrivate, ptr->refreshCache();, _methods, _events, _properties, _description);
-QI_TYPE_REGISTER(::qi::MetaObjectPrivate);
-
-
-QI_TYPE_STRUCT_BOUNCE_REGISTER(::qi::MetaObject, ::qi::MetaObjectPrivate, metaObjectPrivate);

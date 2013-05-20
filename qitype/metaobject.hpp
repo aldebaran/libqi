@@ -61,6 +61,8 @@ namespace qi {
     std::string description() const;
 
     MetaObjectPrivate   *_p;
+    MetaObject(const MethodMap& methodMap, const SignalMap& signalMap,
+      const PropertyMap& propertyMap, const std::string& description);
   };
 
   class MetaObjectBuilderPrivate;
@@ -88,6 +90,7 @@ namespace qi {
   }
 
 }
+
 
 #ifdef _MSC_VER
 #  pragma warning( pop )

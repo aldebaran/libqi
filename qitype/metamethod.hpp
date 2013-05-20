@@ -59,8 +59,10 @@ namespace qi {
 
     MetaMethodPrivate* _p;
 
-  private:
-    friend class TypeImpl<MetaMethod>;
+    MetaMethod(unsigned int uid, const std::string& returnSignature,
+      const std::string& name, const std::string& parametersSignature,
+      const std::string& description, const MetaMethodParameterVector& parameters,
+      const std::string& returnDescription);
   };
 
   class MetaMethodBuilderPrivate;

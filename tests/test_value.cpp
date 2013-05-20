@@ -386,6 +386,11 @@ TEST(Value, STL)
   ASSERT_EQ(321, vg[0].toInt() + vg[1].toInt()*2 + vg[2].toInt() * 3);
 }
 
+TEST(Value, DISABLED_MetaObjectSignature)
+{
+  std::cerr << qi::typeOf<qi::MetaObject>()->signature() << std::endl;
+}
+
 TEST(Value, Overflow)
 {
   {

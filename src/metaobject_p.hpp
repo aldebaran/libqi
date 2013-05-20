@@ -72,7 +72,7 @@ namespace qi {
   private:
     friend class MetaObject;
 
-  private:
+  public:
     /*
      * When a member is added, serialization and deserialization
      * operators _MUST_ be updated.

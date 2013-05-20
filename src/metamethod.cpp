@@ -207,15 +207,49 @@ namespace qi {
   void MetaMethodBuilder::setDescription(const std::string &description) {
     this->_p->metaMethod._p->setDescription(description);
   }
+
+  MetaMethod::MetaMethod(unsigned int uid, const std::string& returnSignature,
+      const std::string& name, const std::string& parametersSignature,
+      const std::string& description, const MetaMethodParameterVector& parameters,
+      const std::string& returnDescription)
+  : _p (new MetaMethodPrivate())
+  {
+    _p->uid = uid;
+    _p->sigreturn = returnSignature;
+    _p->name = name;
+    _p->parametersSignature = parametersSignature;
+    _p->description = description;
+    _p->parameters = parameters;
+    _p->returnDescription = returnDescription;
+  }
 }
 
-static qi::MetaMethodPrivate* metaMethodPrivate(qi::MetaMethod* mm) { return mm->_p; }
-static qi::MetaMethodParameterPrivate* metaMethodParameterPrivate(qi::MetaMethodParameter* mmp) { return mmp->_p; }
+#define PBOUNCE(cls, field, type) \
+  static const type& QI_CAT(QI_CAT(cls, _), field)(::qi::cls* ptr) { \
+    return ptr->_p->field; \
+  }
 
-QI_TYPE_STRUCT(::qi::MetaMethodParameterPrivate, name, description);
-QI_TYPE_STRUCT_BOUNCE_REGISTER(::qi::MetaMethodParameter,
-                               ::qi::MetaMethodParameterPrivate,
-                               metaMethodParameterPrivate);
+namespace {
+PBOUNCE(MetaMethod, uid,         unsigned int)
+PBOUNCE(MetaMethod, name,        std::string)
+PBOUNCE(MetaMethod, description, std::string)
+PBOUNCE(MetaMethod, parameters,  ::qi::MetaMethodParameterVector)
+PBOUNCE(MetaMethod, returnDescription, std::string)
 
-QI_TYPE_STRUCT(::qi::MetaMethodPrivate, uid, sigreturn, name, parametersSignature, description, parameters, returnDescription);
-QI_TYPE_STRUCT_BOUNCE_REGISTER(::qi::MetaMethod, ::qi::MetaMethodPrivate, metaMethodPrivate);
+PBOUNCE(MetaMethodParameter, name,        std::string)
+PBOUNCE(MetaMethodParameter, description, std::string)
+}
+
+QI_TYPE_STRUCT_AGREGATE_CONSTRUCTOR_REGISTER(::qi::MetaMethod,
+  QI_STRUCT_HELPER("uid", MetaMethod_uid),
+  ("returnSignature", returnSignature),
+  QI_STRUCT_HELPER("name", MetaMethod_name),
+  ("parametersSignature", parametersSignature),
+  QI_STRUCT_HELPER("description", MetaMethod_description),
+  QI_STRUCT_HELPER("parameters", MetaMethod_parameters),
+  QI_STRUCT_HELPER("returnDescription", MetaMethod_returnDescription));
+
+QI_TYPE_STRUCT_AGREGATE_CONSTRUCTOR_REGISTER(::qi::MetaMethodParameter,
+  QI_STRUCT_HELPER("name", MetaMethodParameter_name),
+  QI_STRUCT_HELPER("description", MetaMethodParameter_description));
+

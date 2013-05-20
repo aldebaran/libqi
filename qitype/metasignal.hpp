@@ -38,7 +38,10 @@ namespace qi {
 
 }; // namespace qi
 
-QI_TYPE_STRUCT(qi::MetaSignal, _uid, _name, _signature);
+QI_TYPE_STRUCT_AGREGATE_CONSTRUCTOR(qi::MetaSignal,
+  ("uid",_uid),
+  ("name",_name),
+  ("signature", _signature));
 
 #ifdef _MSC_VER
 #  pragma warning( pop )
