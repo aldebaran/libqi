@@ -33,6 +33,7 @@ template <typename T>
 inline void qi_future_c_adapter(qi::Future<T> fut, qi_promise_t* prom) {
   if (fut.hasError()) {
     qi_promise_set_error(prom, fut.error().c_str());
+    qi_promise_destroy(prom);
     return;
   }
   qi_value_t* val = qi_value_create("");
@@ -40,6 +41,7 @@ inline void qi_future_c_adapter(qi::Future<T> fut, qi_promise_t* prom) {
   gvp = qi::GenericValue::from(fut.value());
   qi_promise_set_value(prom, val);
   qi_value_destroy(val);
+  qi_promise_destroy(prom);
 }
 
 template <typename T>
