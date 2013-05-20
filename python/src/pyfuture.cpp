@@ -44,6 +44,7 @@ namespace qi {
       qi::GenericValue gv;
       {
         GILScopedUnlock _unlock;
+        //throw in case of error
         gv = qi::Future<qi::GenericValue>::value(msecs);
       }
       return gv.to<boost::python::object>();

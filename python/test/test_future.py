@@ -76,10 +76,25 @@ def test_future_callback():
   assert(paflecb == "toc")
 
 
+def test_future_error():
+  print "check future error"
+  prom = Promise()
+  fut = prom.future()
+  exc = False
+  prom.set_error("plaf")
+  try:
+    fut.value()
+  except Exception as e:
+    exc = True
+    print "err:", e
+  assert(exc == True)
+
+
 def main():
   test_future()
   test_future_cancel()
   test_future_callback()
+  test_future_error()
 
 if __name__ == "__main__":
     main()

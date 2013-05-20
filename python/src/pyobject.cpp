@@ -150,7 +150,14 @@ namespace qi { namespace py {
         args.append(it->to<boost::python::object>());
       }
       qiLogDebug() << "before method call";
-      PY_DISPLAY_ERROR(ret = callable(*boost::python::tuple(args)));
+      try {
+        ret = callable(*boost::python::tuple(args));
+      } catch (const boost::python::error_already_set &e) {
+        std::string err = PyFormatError();
+        qiLogDebug() << "call exception:" << err;
+        throw std::runtime_error(err);
+      }
+
       qi::GenericValuePtr gvret = qi::GenericValueRef(ret).clone();
       qiLogDebug() << "method returned:" << qi::encodeJSON(gvret);
       return gvret;
