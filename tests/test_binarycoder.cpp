@@ -586,7 +586,7 @@ private:
   int _x;
   int _y;
 };
-QI_TYPE_STRUCT(Point2D, _x, _y);
+QI_TYPE_STRUCT_AGREGATE_CONSTRUCTOR(Point2D, ("x", _x), ("y", _y));
 
 //(ii)
 struct TimeStamp {
@@ -636,9 +636,9 @@ TEST(testSerializable, Struct) {
   EXPECT_EQ(tsp2d1.p.y(), tsp2d2.p.y());
   EXPECT_EQ(tsp2d1.t.i, tsp2d2.t.i);
   EXPECT_EQ(tsp2d1.t.j, tsp2d2.t.j);
-  EXPECT_EQ("(ii)", qi::typeOf(p2d1)->signature());
-  EXPECT_EQ("(ii)", qi::typeOf(ts1)->signature());
-  EXPECT_EQ("((ii)(ii))", qi::typeOf(tsp2d1)->signature());
+  EXPECT_EQ("(i<x>i<y>)", qi::typeOf(p2d1)->signature());
+  EXPECT_EQ("(i<i>i<j>)", qi::typeOf(ts1)->signature());
+  EXPECT_EQ("((i<x>i<y>)<p>(i<i>i<j>)<t>)", qi::typeOf(tsp2d1)->signature());
 }
 
 TEST(testSerializable, Value) {
