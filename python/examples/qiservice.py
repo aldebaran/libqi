@@ -18,6 +18,11 @@ class ServiceTest:
         print "v:", plaf
         return plaf + "bim"
 
+    def error(self):
+        d= dict()
+        print "I Will throw"
+        r = d['pleaseraise']
+
 def get_servicedirectory_address():
     """ Parse command line arguments
 
