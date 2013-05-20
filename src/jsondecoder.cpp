@@ -3,193 +3,201 @@
 
 namespace qi {
 
-static bool decodeValue(std::string::const_iterator &it, std::string::const_iterator &end, GenericValue &value);
-
-static void skipWhiteSpaces(std::string::const_iterator &it, std::string::const_iterator &end)
+struct JSONParseInfos
 {
-  while (it != end && *it == ' ')
-    ++it;
+  JSONParseInfos(std::string::const_iterator it, std::string::const_iterator end)
+    :it(it),
+      end(end)
+  {}
+  std::string::const_iterator it;
+  std::string::const_iterator const end;
+};
+
+static bool decodeValue(JSONParseInfos &infos, GenericValue &value);
+
+static void skipWhiteSpaces(JSONParseInfos &infos)
+{
+  while (infos.it != infos.end && *infos.it == ' ')
+    ++infos.it;
 }
 
-static bool getDigits(std::string::const_iterator &it, std::string::const_iterator &end, std::string &result)
+static bool getDigits(JSONParseInfos &infos, std::string &result)
 {
-  std::string::const_iterator begin = it;
+  std::string::const_iterator begin = infos.it;
 
-  while (it != end && *it >= '0' && *it <= '9')
-    ++it;
-  if (it == begin)
+  while (infos.it != infos.end && *infos.it >= '0' && *infos.it <= '9')
+    ++infos.it;
+  if (infos.it == begin)
     return false;
-  result = std::string(begin, it);
+  result = std::string(begin, infos.it);
   return true;
 }
 
-static bool getInteger(std::string::const_iterator &it, std::string::const_iterator &end, std::string &result)
+static bool getInteger(JSONParseInfos &infos, std::string &result)
 {
-  std::string::const_iterator save = it;
+  std::string::const_iterator save = infos.it;
   std::string integerStr;
 
-  if (it == end)
+  if (infos.it == infos.end)
     return false;
-  if (*it == '-')
+  if (*infos.it == '-')
   {
-    ++it;
+    ++infos.it;
     integerStr = "-";
   }
   std::string digitsStr;
 
-  if (!getDigits(it, end, digitsStr))
+  if (!getDigits(infos, digitsStr))
   {
-    it = save;
+    infos.it = save;
     return false;
   }
   integerStr += digitsStr;
+
   result = integerStr;
   return true;
 }
 
-static bool getInteger(std::string::const_iterator &it, std::string::const_iterator &end, qi::int64_t &result)
+static bool getInteger(JSONParseInfos &infos, qi::int64_t &result)
 {
   std::string integerStr;
 
-  if (!getInteger(it, end, integerStr))
+  if (!getInteger(infos, integerStr))
     return false;
   result = ::atol(integerStr.c_str());
   return true;
 }
 
-static bool getExponent(std::string::const_iterator &it, std::string::const_iterator &end, std::string &result)
+static bool getExponent(JSONParseInfos &infos, std::string &result)
 {
-  std::string::const_iterator save = it;
+  std::string::const_iterator save = infos.it;
 
-  if (it == end)
+  if (infos.it == infos.end || (*infos.it != 'e' && *infos.it != 'E'))
     return false;
-  if (*it != 'e' && *it != 'E')
-    return false;
-  ++it;
+  ++infos.it;
   std::string exponentStr;
 
   exponentStr += 'e';
-  if (*it == '+' || *it == '-')
+  if (*infos.it == '+' || *infos.it == '-')
   {
-    exponentStr += *it;
-    ++it;
+    exponentStr += *infos.it;
+    ++infos.it;
   }
   else
     exponentStr += '+';
   std::string integerStr;
-  if (!getDigits(it, end, integerStr))
+  if (!getDigits(infos, integerStr))
   {
-    it = save;
+    infos.it = save;
     return false;
   }
+
   result = exponentStr + integerStr;
   return true;
 }
 
-static bool getFloat(std::string::const_iterator &it, std::string::const_iterator &end, double &result)
+static bool getFloat(JSONParseInfos &infos, double &result)
 {
   std::string floatStr;
   std::string beforePoint;
   std::string afterPoint;
   std::string exponent;
-  std::string::const_iterator save = it;
+  std::string::const_iterator save = infos.it;
 
-  if (!getInteger(it, end, beforePoint))
+  if (!getInteger(infos, beforePoint))
     return false;
-  if (!getExponent(it, end, exponent))
+  if (!getExponent(infos, exponent))
   {
-    if (*it != '.')
+    if (*infos.it != '.')
     {
-      it = save;
+      infos.it = save;
       return false;
     }
-    ++it;
-    if (!getDigits(it, end, afterPoint))
+    ++infos.it;
+    if (!getDigits(infos, afterPoint))
     {
-      it = save;
+      infos.it = save;
       return false;
     }
-    getExponent(it, end, exponent);
+    getExponent(infos, exponent);
     floatStr = beforePoint + "." + afterPoint + exponent;
   }
   else
     floatStr = beforePoint + exponent;
+
   result = ::atof(floatStr.c_str());
   return true;
 }
 
-static bool decodeArray(std::string::const_iterator &it, std::string::const_iterator &end, GenericValue &value)
+static bool decodeArray(JSONParseInfos &infos, GenericValue &value)
 {
-  std::string::const_iterator save = it;
+  std::string::const_iterator save = infos.it;
 
-  if (it == end)
+  if (infos.it == infos.end || *infos.it != '[')
     return false;
-  if (*it != '[')
-    return false;
-  ++it;
+  ++infos.it;
   std::vector<GenericValue>   tmpArray;
 
   while (true)
   {
     GenericValue subElement;
 
-    if (!decodeValue(it, end, subElement))
+    if (!decodeValue(infos, subElement))
       break;
     tmpArray.push_back(subElement);
-    skipWhiteSpaces(it, end);
-    if (*it != ',')
+    if (*infos.it != ',')
       break;
-    ++it;
+    ++infos.it;
   }
-  if (*it != ']')
+  if (*infos.it != ']')
   {
-    it = save;
+    infos.it = save;
     return false;
   }
-  ++it;
+  ++infos.it;
   value = GenericValue(tmpArray);
   return true;
 }
 
-static bool decodeFloat(std::string::const_iterator &it, std::string::const_iterator &end, GenericValue &value)
+static bool decodeFloat(JSONParseInfos &infos, GenericValue &value)
 {
   double tmpFloat;
 
-  if (!getFloat(it, end, tmpFloat))
+  if (!getFloat(infos, tmpFloat))
     return false;
   value = GenericValue(tmpFloat);
   return true;
 }
 
-static bool decodeInteger(std::string::const_iterator &it, std::string::const_iterator &end, GenericValue &value)
+static bool decodeInteger(JSONParseInfos &infos, GenericValue &value)
 {
   qi::int64_t tmpInteger;
 
-  if (!getInteger(it, end, tmpInteger))
+  if (!getInteger(infos, tmpInteger))
     return false;
   value = GenericValue(tmpInteger);
   return true;
 }
 
-static bool getCleanString(std::string::const_iterator &it, std::string::const_iterator &end, std::string &result)
+static bool getCleanString(JSONParseInfos &infos, std::string &result)
 {
-  std::string::const_iterator save = it;
+  std::string::const_iterator save = infos.it;
 
-  if (it == end || *it != '"')
+  if (infos.it == infos.end || *infos.it != '"')
     return false;
   std::string tmpString;
 
-  ++it;
-  for (;it != end && *it != '"';)
+  ++infos.it;
+  for (;infos.it != infos.end && *infos.it != '"';)
   {
-    if (*it == '\\')
+    if (*infos.it == '\\')
     {
-      if (it + 1 == end)
+      if (infos.it + 1 == infos.end)
       {
-        it = save;
+        infos.it = save;
         return false;
       }
-      switch (*(it + 1))
+      switch (*(infos.it + 1))
       {
       case '"' :tmpString += '"'; break;
       case '\\':tmpString += '\\';break;
@@ -200,58 +208,150 @@ static bool getCleanString(std::string::const_iterator &it, std::string::const_i
       case 'r' :tmpString += '\r';break;
       case 't' :tmpString += '\t';break;
       default:
-        it = save;
+        infos.it = save;
         return false;
       }
-      it += 2;
+      infos.it += 2;
     }
     else
     {
-      tmpString += *it;
-      ++it;
+      tmpString += *infos.it;
+      ++infos.it;
     }
   }
-  if (it == end)
+  if (infos.it == infos.end)
   {
-    it = save;
+    infos.it = save;
     return false;
   }
-  ++it;
+  ++infos.it;
   result = tmpString;
   return true;
 }
 
-static bool decodeString(std::string::const_iterator &it, std::string::const_iterator &end, GenericValue &value)
+static bool decodeString(JSONParseInfos &infos, GenericValue &value)
 {
   std::string tmpString;
 
-  if (!getCleanString(it, end, tmpString))
+  if (!getCleanString(infos, tmpString))
     return false;
   value = GenericValue(tmpString);
   return true;
 }
 
-static bool decodeValue(std::string::const_iterator &it, std::string::const_iterator &end, GenericValue &value)
+static bool decodeObject(JSONParseInfos &infos, GenericValue &value)
 {
-  skipWhiteSpaces(it, end);
-  if (decodeString(it, end, value)
-      || decodeFloat(it, end, value)
-      || decodeInteger(it, end, value)
-      || decodeArray(it, end, value)
+  std::string::const_iterator save = infos.it;
+
+  if (infos.it == infos.end || *infos.it != '{')
+    return false;
+  ++infos.it;
+
+  std::map<std::string, GenericValue> tmpMap;
+  while (true)
+  {
+    skipWhiteSpaces(infos);
+    std::string key;
+
+    if (!getCleanString(infos, key))
+      break;
+    skipWhiteSpaces(infos);
+    if (infos.it == infos.end || *infos.it != ':')
+    {
+      infos.it = save;
+      return false;
+    }
+    ++infos.it;
+    GenericValue tmpValue;
+    if (!decodeValue(infos, tmpValue))
+    {
+      infos.it = save;
+      return false;
+    }
+    if (infos.it == infos.end)
+      break;
+    tmpMap[key] = tmpValue;
+    if (*infos.it != ',')
+      break;
+    ++infos.it;
+  }
+  if (infos.it == infos.end || *infos.it != '}')
+  {
+    infos.it = save;
+    return false;
+  }
+  ++infos.it;
+  value = GenericValue(tmpMap);
+  return true;
+}
+
+static bool match(JSONParseInfos &infos, std::string const& expected)
+{
+  std::string::const_iterator save = infos.it;
+  std::string::const_iterator begin = expected.begin();
+
+  while (infos.it != infos.end && begin != expected.end())
+  {
+    if (*infos.it != *begin)
+    {
+      infos.it = save;
+      return false;
+    }
+    ++infos.it;
+    ++begin;
+  }
+  if (begin != expected.end())
+    return false;
+  return true;
+}
+
+static bool decodeSpecial(JSONParseInfos &infos, GenericValue &value)
+{
+  if (infos.it == infos.end)
+    return false;
+  if (match(infos, "true"))
+    value = GenericValue(true);
+  else if (match(infos, "false"))
+    value = GenericValue::from(false);
+  else if (match(infos, "null"))
+    value = GenericValue();
+  else
+    return false;
+  return true;
+}
+
+static bool decodeValue(JSONParseInfos &infos, GenericValue &value)
+{
+  skipWhiteSpaces(infos);
+  if (decodeSpecial(infos, value)
+      || decodeString(infos, value)
+      || decodeFloat(infos, value)
+      || decodeInteger(infos, value)
+      || decodeArray(infos, value)
+      || decodeObject(infos, value)
       )
+  {
+    skipWhiteSpaces(infos);
     return true;
+  }
   return false;
+}
+
+std::string::const_iterator decodeJSON(std::string::const_iterator begin,
+                                       std::string::const_iterator end,
+                                       GenericValue &target)
+{
+  JSONParseInfos infos(begin, end);
+  if (!decodeValue(infos, target))
+    throw std::runtime_error("parse error");
+  return infos.it;
 }
 
 GenericValue decodeJSON(const std::string &in)
 {
   GenericValue value;
-  std::string::const_iterator begin = in.begin();
-  std::string::const_iterator end = in.end();
-
-  if (decodeValue(begin, end, value) && begin == end)
-    return value;
-  throw std::runtime_error("parse error");
+  decodeJSON(in.begin(), in.end(), value);
+  return value;
 }
 
 }

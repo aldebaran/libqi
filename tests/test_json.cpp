@@ -199,9 +199,6 @@ TEST(TestJSONDecoder, Integer) {
 
 TEST(TestJSONDecoder, Float) {
   // broken value
-  EXPECT_ANY_THROW(qi::decodeJSON("42."));
-  EXPECT_ANY_THROW(qi::decodeJSON("42.-43"));
-
   ASSERT_NO_THROW(qi::decodeJSON("42.43"));
   ASSERT_NO_THROW(qi::decodeJSON("-42.43"));
   ASSERT_NO_THROW(qi::decodeJSON("0.42"));
@@ -254,6 +251,55 @@ TEST(TestJSONDecoder, Array) {
   ASSERT_EQ(qi::Type::Int, val[0].asDynamic().kind());
   ASSERT_EQ(qi::Type::List, val[1].asDynamic().kind());
   ASSERT_EQ(2U, qi::decodeJSON("[1, [2, 3]]")[1].asDynamic().size());
+}
+
+TEST(TestJSONDecoder, Object) {
+  // good parse
+  ASSERT_NO_THROW(qi::decodeJSON("{}"));
+  ASSERT_NO_THROW(qi::decodeJSON("{\"a\":42}"));
+  ASSERT_NO_THROW(qi::decodeJSON("{\"a\":42, \"b\":1.0}"));
+  ASSERT_NO_THROW(qi::decodeJSON("{\"a\":42, \"b\":{\"c\":[1, 2]}}"));
+
+  ASSERT_ANY_THROW(qi::decodeJSON("{"));
+  ASSERT_ANY_THROW(qi::decodeJSON("{42:42}"));
+  ASSERT_ANY_THROW(qi::decodeJSON("{\"42\":}"));
+
+  ASSERT_EQ(qi::Type::Map, qi::decodeJSON("{}").kind());
+  ASSERT_EQ(1U, qi::decodeJSON("{\"a\":42}").size());
+  ASSERT_EQ(qi::Type::Int, qi::decodeJSON("{\"a\":42}")["a"].asDynamic().kind());
+
+}
+
+TEST(TestJSONDecoder, special) {
+  // good parse
+  ASSERT_NO_THROW(qi::decodeJSON("true"));
+  ASSERT_NO_THROW(qi::decodeJSON("false"));
+  ASSERT_NO_THROW(qi::decodeJSON("null"));
+  ASSERT_ANY_THROW(qi::decodeJSON("tru"));
+
+  ASSERT_EQ(qi::Type::Int, qi::decodeJSON("true").kind());
+  ASSERT_EQ(qi::Type::Int, qi::decodeJSON("false").kind());
+  ASSERT_EQ(qi::Type::Void, qi::decodeJSON("null").kind());
+
+  ASSERT_EQ(0U, static_cast<qi::TypeInt*>(qi::decodeJSON("true").type)->size());
+  ASSERT_EQ(0U, static_cast<qi::TypeInt*>(qi::decodeJSON("false").type)->size());
+
+  ASSERT_EQ(1, qi::decodeJSON("true").toInt());
+  ASSERT_EQ(0, qi::decodeJSON("false").toInt());
+}
+
+TEST(TestJSONDecoder, itOverload) {
+  std::string testString = "<jsonString=\"[\"a\", 42]\"/>";
+
+  qi::GenericValue val;
+  ASSERT_NO_THROW(qi::decodeJSON(testString.begin() + 13, testString.end(), val));
+  ASSERT_EQ('\"', *qi::decodeJSON(testString.begin() + 13, testString.end(), val));
+  qi::decodeJSON(testString.begin() + 13, testString.end(), val);
+  ASSERT_EQ(qi::Type::List, val.kind());
+
+  std::string testString2 = "<jsonString=\"[\"a\", 42\"/>";
+  ASSERT_ANY_THROW(qi::decodeJSON(testString2.begin() + 13, testString2.end(), val));
+
 }
 
 int main(int argc, char **argv)
