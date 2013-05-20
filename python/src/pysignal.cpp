@@ -24,7 +24,7 @@ namespace qi { namespace py {
       for (it = cargs.begin(); it != cargs.end(); ++it) {
         args.append(it->to<boost::python::object>());
       }
-      ret = callable(*boost::python::tuple(args));
+      PY_DISPLAY_ERROR(ret = callable(*boost::python::tuple(args)));
       return qi::GenericValueRef(ret).clone();
     }
 
@@ -39,7 +39,7 @@ namespace qi { namespace py {
       }
 
       qi::uint64_t connect(boost::python::object callable) {
-        //todo: store the pointer on the PyObject itself. (use shared_ptr)
+        //no need to store a ptr on ourself. (this exist if the callback is triggered)
         return qi::SignalBase::connect(qi::makeDynamicGenericFunction(boost::bind(pysignalCb, _1, callable)));
       }
 
@@ -63,7 +63,7 @@ namespace qi { namespace py {
       }
 
       qi::uint64_t connect(boost::python::object callable) {
-        //TODO: own ourself.
+        //no need to store a ptr on ourself. (this exist if the callback is triggered)
         return _obj->connect(_sigid, qi::makeDynamicGenericFunction(boost::bind(pysignalCb, _1, callable)));
       }
 

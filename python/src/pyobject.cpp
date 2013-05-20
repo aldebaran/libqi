@@ -138,7 +138,7 @@ namespace qi { namespace py {
 
 
     //TODO: DO NOT DUPLICATE
-    static qi::GenericValuePtr pysignalCb(const std::vector<qi::GenericValuePtr>& cargs, boost::python::object callable) {
+    static qi::GenericValuePtr pyCallMethod(const std::vector<qi::GenericValuePtr>& cargs, boost::python::object callable) {
       qi::py::GILScopedLock _lock;
       boost::python::list   args;
       boost::python::object ret;
@@ -150,7 +150,7 @@ namespace qi { namespace py {
         args.append(it->to<boost::python::object>());
       }
       qiLogDebug() << "before method call";
-      ret = callable(*boost::python::tuple(args));
+      PY_DISPLAY_ERROR(ret = callable(*boost::python::tuple(args)));
       qi::GenericValuePtr gvret = qi::GenericValueRef(ret).clone();
       qiLogDebug() << "method returned:" << qi::encodeJSON(gvret);
       return gvret;
@@ -205,7 +205,7 @@ namespace qi { namespace py {
           mmb.setName(key);
           mmb.setParametersSignature(ss.str());
           mmb.setReturnSignature("m");
-          gob.xAdvertiseMethod(mmb, qi::makeDynamicGenericFunction(boost::bind(pysignalCb, _1, m)));
+          gob.xAdvertiseMethod(mmb, qi::makeDynamicGenericFunction(boost::bind(pyCallMethod, _1, m)));
           continue;
         }
 

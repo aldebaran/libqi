@@ -14,6 +14,19 @@
 #include <boost/python.hpp>
 
 
+#define PY_DISPLAY_ERROR(DO)                                \
+try                                                         \
+   {                                                        \
+     DO;                                                    \
+   }                                                        \
+   catch (const boost::python::error_already_set &e)        \
+   {                                                        \
+     PyObject *ptype, *pvalue, *ptraceback;                 \
+     PyErr_Fetch(&ptype, &pvalue, &ptraceback);             \
+     qiLogError("python") << PyString_AsString(pvalue);     \
+     PyErr_Restore(ptype, pvalue, ptraceback);              \
+   }
+
 
 namespace qi {
   namespace py {

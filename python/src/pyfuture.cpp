@@ -11,19 +11,21 @@
 #include <boost/python.hpp>
 #include "gil.hpp"
 
+
 namespace qi {
   namespace py {
 
 
-    static void pySignalCb(boost::python::object callable, boost::python::object pp) {
+
+    static void pyFutureCb(boost::python::object callable, boost::python::object pp) {
       GILScopedLock _lock;
-      callable(pp);
+      PY_DISPLAY_ERROR(callable(pp));
     }
 
     class PyPromise;
-    static void pySignalCbProm(boost::python::object callable, PyPromise *pp) {
+    static void pyFutureCbProm(boost::python::object callable, PyPromise *pp) {
       GILScopedLock _lock;
-      callable(pp);
+      PY_DISPLAY_ERROR(callable(pp));
     }
 
 
@@ -74,7 +76,7 @@ namespace qi {
       //we store a ref on ourself, because our future can get out of scope.
       //so the shared future state will keep a ref on us. When the promise will
       //be destroyed this will destroy the ref on us.
-      connect(boost::bind<void>(&pySignalCb, callable, obj));
+      connect(boost::bind<void>(&pyFutureCb, callable, obj));
     }
 
     typedef boost::shared_ptr<PyFuture> PyFuturePtr;
@@ -86,7 +88,7 @@ namespace qi {
       PyPromise() {};
 
       PyPromise(boost::python::object callable)
-        : qi::Promise<qi::GenericValue> (boost::bind<void>(&pySignalCbProm, callable, this))
+        : qi::Promise<qi::GenericValue> (boost::bind<void>(&pyFutureCbProm, callable, this))
       {
       }
 
