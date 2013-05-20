@@ -7,3 +7,11 @@ CMakeLists.txt.user
 *.suo
 Release
 Debug
+c/Doxyfile.qidoc
+c/doxygen.css
+c/footer.html
+c/header.html
+doc/Doxyfile.qidoc
+doc/doxygen.css
+doc/footer.html
+doc/header.html
