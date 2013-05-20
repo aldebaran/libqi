@@ -155,10 +155,5 @@ namespace qi {
   }
 }
 
-static qi::UrlPrivate* urlPrivate(qi::Url* url) {
-  return url->_p;
-}
 
-QI_TYPE_STRUCT(qi::UrlPrivate, url, protocol, host, port);
-QI_TYPE_REGISTER(::qi::UrlPrivate);
-QI_TYPE_STRUCT_BOUNCE_REGISTER(::qi::Url, ::qi::UrlPrivate, urlPrivate);
+QI_EQUIVALENT_STRING_REGISTER(qi::Url, &qi::Url::str);
