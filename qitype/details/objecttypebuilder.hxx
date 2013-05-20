@@ -101,87 +101,39 @@ namespace qi {
     ::qi::registerType(typeid(T), type());
   }
 
-  template <typename C, typename T>
-  SignalBase* signalAccess(Signal<T> C::* ptr, void* instance)
+  template<typename A>
+  typename boost::enable_if<typename detail::Accessor<A>::is_accessor, SignalBase*>::type
+  signalAccess(A acc, void* instance)
   {
-    C* c = reinterpret_cast<C*>(instance);
-    return &((*c).*ptr);
+    typedef typename detail::Accessor<A>::class_type class_type;
+    return &detail::Accessor<A>::access((class_type*)instance, acc);
   }
 
-  template <typename C, typename T>
-  SignalBase* signalAccessGetter(Signal<T>& (C::*ptr)(), void* instance)
+  template<typename A>
+  typename boost::enable_if<typename detail::Accessor<A>::is_accessor, PropertyBase*>::type
+  propertyAccess(A acc, void* instance)
   {
-    C* c = reinterpret_cast<C*>(instance);
-    return &((c->*ptr)());
+    typedef typename detail::Accessor<A>::class_type class_type;
+    return &detail::Accessor<A>::access((class_type*)instance, acc);
   }
 
-  template <typename C, typename T>
-  PropertyBase* propertyAccess(Property<T> C::* ptr, void* instance)
+  template<typename A>
+  unsigned int
+  ObjectTypeBuilderBase::advertiseSignal(const std::string& eventName, A accessor, int id)
   {
-    C* c = reinterpret_cast<C*>(instance);
-    return &((*c).*ptr);
+    SignalMemberGetter fun = boost::bind(&signalAccess<A>, accessor, _1);
+    typedef typename detail::Accessor<A>::value_type::FunctionType FunctionType;
+    return xAdvertiseSignal(eventName,
+      detail::FunctionSignature<FunctionType>::signature(), fun, id);
   }
 
-  template <typename C, typename T>
-  PropertyBase* propertyAccessGetter(Property<T>& (C::* ptr)(), void* instance)
+  template <typename A>
+  unsigned int ObjectTypeBuilderBase::advertiseProperty(const std::string& name, A accessor)
   {
-    C* c = reinterpret_cast<C*>(instance);
-    return &((*c).*ptr)();
-  }
-
-  template <typename C, typename T>
-  SignalBase* signalFromInstanceProperty(Property<T> C::* ptr, void* instance)
-  {
-    C* c = reinterpret_cast<C*>(instance);
-    Property<T>& p = ((*c).*ptr);
-    return &p;
-  }
-  template <typename C, typename T>
-  SignalBase* signalFromInstancePropertyGetter(Property<T>& (C::* ptr)(), void* instance)
-  {
-    C* c = reinterpret_cast<C*>(instance);
-    Property<T>& p = ((*c).*ptr)();
-    return &p;
-  }
-
-  template <typename C, typename T>
-  unsigned int ObjectTypeBuilderBase::advertiseSignal(const std::string& eventName, Signal<T> C::* signalAccessor, int id)
-  {
-    // FIXME validate type
-    SignalMemberGetter fun = boost::bind(&signalAccess<C, T>, signalAccessor, _1);
-    return xAdvertiseSignal(eventName, detail::FunctionSignature<T>::signature(), fun, id);
-  }
-
-  template <typename C, typename T>
-  unsigned int ObjectTypeBuilderBase::advertiseSignal(const std::string& eventName, Signal<T>& (C::*signalAccessor)(), int id)
-  {
-    // FIXME validate type
-    SignalMemberGetter fun = boost::bind(&signalAccessGetter<C, T>, signalAccessor, _1);
-    return xAdvertiseSignal(eventName, detail::FunctionSignature<T>::signature(), fun, id);
-  }
-
-  template <typename C, typename T>
-  unsigned int ObjectTypeBuilderBase::advertiseProperty(const std::string& name, Property<T> C::* accessor)
-  {
-    // FIXME validate type
-    SignalMemberGetter fun = boost::bind(&signalFromInstanceProperty<C, T>, accessor, _1);
-    // advertise the event
-    unsigned int id = xAdvertiseSignal(name, detail::FunctionSignature<void(const T&)>::signature(), fun);
-
-    PropertyMemberGetter pg = boost::bind(&propertyAccess<C, T>, accessor, _1);
-    return xAdvertiseProperty(name, typeOf<T>()->signature(), pg, id);
-  }
-
-  template <typename C, typename T>
-  unsigned int ObjectTypeBuilderBase::advertiseProperty(const std::string& name, Property<T>& (C::*accessor)())
-  {
-    // FIXME validate type
-    SignalMemberGetter fun = boost::bind(&signalFromInstancePropertyGetter<C, T>, accessor, _1);
-    // advertise the event
-    unsigned int id = xAdvertiseSignal(name, detail::FunctionSignature<void(const T&)>::signature(), fun);
-
-    PropertyMemberGetter pg = boost::bind(&propertyAccessGetter<C, T>, accessor, _1);
-    return xAdvertiseProperty(name, typeOf<T>()->signature(), pg, id);
+    unsigned id = advertiseSignal(name, accessor);
+    PropertyMemberGetter pg = boost::bind(&propertyAccess<A>, accessor, _1);
+    typedef typename detail::Accessor<A>::value_type::PropertyType PropertyType;
+    return xAdvertiseProperty(name, typeOf<PropertyType>()->signature(), pg, id);
   }
 
   template <typename T> unsigned int ObjectTypeBuilderBase::advertiseSignal(const std::string& name, SignalMemberGetter getter, int id)
@@ -200,66 +152,59 @@ namespace qi {
   {
     static const char* interfaceMarker = "_interface_";
     static const unsigned int interfaceMarkerLength = strlen(interfaceMarker);
-    template<typename E>
-    struct AdvertiseDispatch
-    {
-      unsigned int operator()(const std::string& name, ObjectTypeBuilderBase* b,
-                              E e)
-      {
-        return b->advertiseMethod(name, e);
-      }
-    };
-    template<typename T, typename C>
-    struct AdvertiseDispatch<Signal<T> C::*>
-    {
-      unsigned int operator()(const std::string& name, ObjectTypeBuilderBase* b,
-                              Signal<T> C::* e)
-      {
-        return b->advertiseSignal(name, e);
-      }
-    };
-    template<typename T, typename C>
-    struct AdvertiseDispatch<Signal<T>& (C::*)()>
-    {
-      unsigned int operator()(const std::string& name, ObjectTypeBuilderBase* b,
-                              Signal<T>& (C::* e)())
-      {
-        std::string n = name;
-        if (n.size() > interfaceMarkerLength && n.substr(0, interfaceMarkerLength) == interfaceMarker)
-          n = name.substr(interfaceMarkerLength);
-        return b->advertiseSignal(n, e);
-      }
-    };
 
-    template<typename T, typename C>
-    struct AdvertiseDispatch<Property<T> C::*>
+    template<typename T> struct SigProp
     {
-      unsigned int operator()(const std::string& name, ObjectTypeBuilderBase* b,
-        Property<T> C::* e)
-      {
-        return b->advertiseProperty(name, e);
-      }
+      static const unsigned value = 0;
     };
-
-    template<typename T, typename C>
-    struct AdvertiseDispatch<Property<T>& (C::*)()>
+    template<typename T> struct SigProp<SignalF<T> >
     {
-      unsigned int operator()(const std::string& name, ObjectTypeBuilderBase* b,
-        Property<T>& (C::*e)())
-      {
-        std::string n = name;
-        if (n.size() > interfaceMarkerLength && n.substr(0, interfaceMarkerLength) == interfaceMarker)
-          n = name.substr(interfaceMarkerLength);
-        return b->advertiseProperty(n, e);
-      }
+      static const unsigned value = 1;
     };
+    template<QI_SIGNAL_TEMPLATE_DECL> struct SigProp<Signal<QI_SIGNAL_TEMPLATE> >
+    {
+      static const unsigned value = 1;
+    };
+    template<typename T> struct SigProp<Property<T> >
+    {
+      static const unsigned value = 2;
+    };
+    template<unsigned> struct Dummy {};
+    template<typename A> unsigned int advertise(ObjectTypeBuilderBase* builder, const std::string& name, A accessor, Dummy<0>)
+    {
+      return builder->advertiseMethod(name, accessor);
+    }
+    template<typename A> unsigned int advertise(ObjectTypeBuilderBase* builder, const std::string& name, A accessor, Dummy<1>)
+    {
+      std::string n = name;
+      if (n.size() > interfaceMarkerLength && n.substr(0, interfaceMarkerLength) == interfaceMarker)
+        n = name.substr(interfaceMarkerLength);
+      return builder->advertiseSignal(n, accessor);
+    }
+    template<typename A> unsigned int advertise(ObjectTypeBuilderBase* builder, const std::string& name, A accessor, Dummy<2>)
+    {
+      std::string n = name;
+      if (n.size() > interfaceMarkerLength && n.substr(0, interfaceMarkerLength) == interfaceMarker)
+        n = name.substr(interfaceMarkerLength);
+      return builder->advertiseProperty(n, accessor);
+    }
+    template<typename A> unsigned int advertiseBounce(ObjectTypeBuilderBase* builder, const std::string& name, A accessor, boost::true_type)
+    {
+      return advertise(builder, name, accessor,
+        Dummy<detail::SigProp<typename detail::Accessor<A>::value_type>::value>());
+    }
+    template<typename A> unsigned int advertiseBounce(ObjectTypeBuilderBase* builder, const std::string& name, A accessor, boost::false_type)
+    {
+      return builder->advertiseMethod(name, accessor);
+    }
   }
-
   template<typename E>
-  unsigned int ObjectTypeBuilderBase::advertise(const std::string& name, E e)
+  unsigned int
+  ObjectTypeBuilderBase::advertise(const std::string& name, E e)
   {
-    return detail::AdvertiseDispatch<E>()(name, this, e);
+    return detail::advertiseBounce(this, name, e, typename detail::Accessor<E>::is_accessor());
   }
+
 }
 
 

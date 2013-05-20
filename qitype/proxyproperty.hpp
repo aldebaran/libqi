@@ -21,7 +21,7 @@ namespace qi
   class ProxyProperty: public Property<T>
   {
   public:
-    typedef Signal<void(const T&)> SignalType;
+    typedef SignalF<void (const T&)> SignalType;
     /* The signal bounce code is completely duplicated from SignalProxy.
      * Unfortunately factoring this is not trivial:
      * onSubscribe needs to be passed to Signal constructor, and we want to keep

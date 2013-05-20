@@ -78,14 +78,14 @@ namespace qi
 
   template<typename T>
   template<typename O, typename MF>
-  inline SignalSubscriber& Signal<T>::connect(O* target, MF method, MetaCallType threadingModel)
+  inline SignalSubscriber& SignalF<T>::connect(O* target, MF method, MetaCallType threadingModel)
   {
     return SignalBase::connect(SignalSubscriber(target, method, threadingModel));
   }
 
   template<typename T>
   template<typename O, typename MF>
-  inline SignalSubscriber& Signal<T>::connect(boost::shared_ptr<O> target, MF method, MetaCallType threadingModel)
+  inline SignalSubscriber& SignalF<T>::connect(boost::shared_ptr<O> target, MF method, MetaCallType threadingModel)
   {
     return SignalBase::connect(SignalSubscriber(target, method, threadingModel));
   }
@@ -140,7 +140,7 @@ namespace qi
   } // detail
 
   template<typename T>
-  Signal<T>::Signal(OnSubscribers onSubscribers)
+  SignalF<T>::SignalF(OnSubscribers onSubscribers)
   : SignalBase(onSubscribers)
   {
     * (boost::function<T>*)this = detail::BounceToSignalBase<T>(*this);
@@ -148,27 +148,27 @@ namespace qi
   }
 
   template<typename T>
-  Signal<T>& Signal<T>::operator = (const Signal<T>& b)
+  SignalF<T>& SignalF<T>::operator = (const SignalF<T>& b)
   { // Keep our boost::function as is.
     *(SignalBase*)this = b;
     return *this;
   }
 
   template<typename T>
-  Signal<T>::Signal(const Signal<T>& b)
+  SignalF<T>::SignalF(const SignalF<T>& b)
   {
     * (boost::function<T>*)this = detail::BounceToSignalBase<T>(*this);
   }
 
   template<typename T>
-  std::string Signal<T>::signature() const
+  std::string SignalF<T>::signature() const
   {
     return detail::functionArgumentsSignature<T>();
   }
 
   template<typename T>
   template<typename U>
-  SignalSubscriber& Signal<T>::connect(Signal<U>& signal)
+  SignalSubscriber& SignalF<T>::connect(SignalF<U>& signal)
   {
     return connect((boost::function<U>&)signal);
   }

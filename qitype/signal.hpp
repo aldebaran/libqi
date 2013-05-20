@@ -101,7 +101,7 @@ namespace qi {
   }
 
   template<typename T>
-  class Signal: public SignalBase, public boost::function<T>
+  class SignalF: public SignalBase, public boost::function<T>
   {
   public:
     /** Signal constructor
@@ -109,9 +109,10 @@ namespace qi {
      * between 0 and 1, with argument '!subscribers.empty()'
      * Will not be called when destructor is invoked and all subscribers are removed
     */
-    Signal(OnSubscribers onSubscribers = OnSubscribers());
-    Signal(const Signal<T>& b);
-    Signal<T>& operator = (const Signal<T>& b);
+    SignalF(OnSubscribers onSubscribers = OnSubscribers());
+    SignalF(const SignalF<T>& b);
+    SignalF<T>& operator = (const SignalF<T>& b);
+    typedef T FunctionType;
     virtual std::string signature() const;
     using boost::function<T>::operator();
 
@@ -129,13 +130,45 @@ namespace qi {
       return SignalBase::connect(target, slot);
     }
     template<typename U>
-    inline SignalSubscriber& connect(Signal<U>& signal);
+    inline SignalSubscriber& connect(SignalF<U>& signal);
     /// IF O is a shared_ptr, will auto-disconnect if object is destroyed
     template<typename O, typename MF>
     inline SignalSubscriber& connect(O* target, MF method, MetaCallType model=MetaCallType_Auto);
     template<typename O, typename MF>
     inline SignalSubscriber& connect(boost::shared_ptr<O> target, MF method, MetaCallType model=MetaCallType_Auto);
   };
+
+namespace detail
+{
+  template<typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename P6> struct VoidFunctionType                                           { typedef void(type)(P0, P1, P2, P3, P4, P5, P6); };
+  template<typename P0, typename P1, typename P2, typename P3, typename P4, typename P5             > struct VoidFunctionType<P0, P1, P2, P3, P4, P5, void>             { typedef void(type)(P0, P1, P2, P3, P4, P5); };
+  template<typename P0, typename P1, typename P2, typename P3, typename P4                          > struct VoidFunctionType<P0, P1, P2, P3, P4, void, void>           { typedef void(type)(P0, P1, P2, P3, P4); };
+  template<typename P0, typename P1, typename P2, typename P3                                       > struct VoidFunctionType<P0, P1, P2, P3, void, void, void>         { typedef void(type)(P0, P1, P2, P3); };
+  template<typename P0, typename P1, typename P2                                                    > struct VoidFunctionType<P0, P1, P2, void, void, void, void>       { typedef void(type)(P0, P1, P2); };
+  template<typename P0, typename P1                                                                 > struct VoidFunctionType<P0, P1, void, void, void, void, void>     { typedef void(type)(P0, P1); };
+  template<typename P0                                                                              > struct VoidFunctionType<P0, void, void, void, void, void, void>   { typedef void(type)(P0); };
+  template<                                                                                         > struct VoidFunctionType<void, void, void, void, void, void, void> { typedef void(type)(); };
+
+}
+template<
+  typename P0 = void,
+  typename P1 = void,
+  typename P2 = void,
+  typename P3 = void,
+  typename P4 = void,
+  typename P5 = void,
+  typename P6 = void>
+  class Signal: public SignalF<typename detail::VoidFunctionType<P0, P1, P2, P3, P4, P5, P6>::type>
+  {
+  public:
+    typedef typename detail::VoidFunctionType<P0, P1, P2, P3, P4, P5, P6>::type FunctionType;
+    typedef SignalF<FunctionType> ParentType;
+    Signal(typename ParentType::OnSubscribers onSubscribers = typename ParentType::OnSubscribers())
+    : ParentType(onSubscribers) {}
+    using boost::function<FunctionType>::operator();
+  };
+#define QI_SIGNAL_TEMPLATE_DECL typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename P6
+#define QI_SIGNAL_TEMPLATE P0,P1,P2,P3,P4,P5,P6
 
   namespace detail
   {

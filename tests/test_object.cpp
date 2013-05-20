@@ -724,7 +724,7 @@ TEST(TestObject, AdvertiseRealSignal)
   EXPECT_ANY_THROW(plocal.future().hasValue(0));
   EXPECT_ANY_THROW(premote.future().hasValue(0));
 
-  qi::Signal<void (int)> sig;
+  qi::Signal<int> sig;
   sig.connect(boost::bind<void>(&bim, _1, plocal, "local"));
   qi::GenericObjectBuilder gob;
   int id = gob.advertiseSignal("sig", &sig);

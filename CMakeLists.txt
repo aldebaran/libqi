@@ -32,6 +32,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 set(PUBLIC_HEADERS
                    qitype/api.hpp
                    qitype/binarycodec.hpp
+                   qitype/details/accessor.hxx
                    qitype/details/bindtype.hxx
                    qitype/details/functiontype.hxx
                    qitype/details/functiontypefactory.hxx

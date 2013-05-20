@@ -10,6 +10,7 @@
 #include <qi/future.hpp>
 #include <qi/application.hpp>
 #include <qitype/functiontypefactory.hpp>
+#include <qitype/genericobject.hpp>
 
 qiLogCategory("test");
 
@@ -32,7 +33,7 @@ void foolast(int, qi::Promise<void> prom, int* r) { prom.setValue(0); *r += 1;}
 TEST(TestSignal, TestCompilation)
 {
   int                    res = 0;
-  qi::Signal<void (int)> s;
+  qi::Signal<int> s;
   Foo*                   f = (Foo*)1;
   qi::Promise<void>      prom;
 
@@ -69,7 +70,7 @@ TEST(TestSignal, SharedPtr)
 {
   // Redundant with Copy test, but just to be sure, check that shared_ptr
   // is correctly transmited.
-  qi::Signal<void (boost::shared_ptr<int>)> sig;
+  qi::Signal<boost::shared_ptr<int> > sig;
   sig.connect(qi::makeGenericFunction(&write42), qi::MetaCallType_Queued);
   {
     boost::shared_ptr<int> ptr(new int(12));
@@ -87,7 +88,7 @@ void byRef(int& i, bool* done)
 TEST(TestSignal, Copy)
 {
   // Check that reference argument type are copied when an async call is made
-  qi::Signal<void (int&, bool*)> sig;
+  qi::Signal<int&, bool*> sig;
   qiLogDebug() << "sync";
   sig.connect(qi::makeGenericFunction(byRef), qi::MetaCallType_Direct);
   bool done = false;
@@ -97,7 +98,7 @@ TEST(TestSignal, Copy)
   ASSERT_TRUE(done); //synchronous
   //ASSERT_EQ(0, i); // byref, but still copies for small types
   qiLogDebug() << "async";
-  sig =  qi::Signal<void (int&, bool*)>();
+  sig =  qi::Signal<int&, bool*>();
   sig.connect(qi::makeGenericFunction(byRef), qi::MetaCallType_Queued);
   i = 0;
   done = false;
@@ -113,7 +114,7 @@ TEST(TestSignal, AutoDisconnect)
   // Test automatic disconnection when passing shared_ptrs
   int r = 0;
   boost::shared_ptr<Foo> foo(new Foo());
-  qi::Signal<void (int*, int)> sig;
+  qi::Signal<int*, int> sig;
   sig.connect(foo, &Foo::func1, qi::MetaCallType_Direct);
   sig(&r, 0);
   ASSERT_EQ(1, r);
@@ -128,7 +129,7 @@ TEST(TestSignal, AutoDisconnectTrack)
   int r = 0;
   boost::shared_ptr<int> s(new int(2));
   Foo* ptr = new Foo();
-  qi::Signal<void (int*, int)> sig;
+  qi::Signal<int*, int> sig;
   sig.connect(ptr, &Foo::func1, qi::MetaCallType_Direct).track(boost::weak_ptr<int>(s));
   sig(&r, 0);
   ASSERT_EQ(1, r);
@@ -142,7 +143,7 @@ TEST(TestSignal, AutoDisconnectTrack)
 
 TEST(TestSignal, BadArity)
 {
-  qi::Signal<void()> s;
+  qi::Signal<> s;
   // caught at compile-time by signal<T>
   ASSERT_EQ(qi::SignalBase::invalidLink, ((qi::SignalBase&)s).connect(&foo));
   //idem
@@ -156,14 +157,56 @@ void lol(int v, int& target)
 }
 TEST(TestSignal, SignalSignal)
 {
-  qi::Signal<void (int)> sig1;
-  qi::Signal<void (int)> sig2;
+  qi::SignalF<void (int)> sig1;
+  qi::SignalF<void (int)> sig2;
   int res = 0;
   sig1.connect(sig2);
   sig2.connect(boost::bind<void>(&lol, _1, boost::ref(res)));
   sig1(10);
   qi::os::msleep(300);
   ASSERT_EQ(10, res);
+}
+
+TEST(TestSignal, SignalN)
+{
+  qi::Signal<int> sig;
+  int res = 0;
+  sig.connect(boost::bind<void>(&lol, _1, boost::ref(res)));
+  sig(5);
+  qi::os::msleep(300);
+  ASSERT_EQ(5, res);
+}
+
+class SigHolder
+{
+public:
+  qi::Signal<> s0;
+  qi::Signal<int> s1;
+  qi::Signal<int, int> s2;
+  void fire0() { s0();}
+  void fire1(int i) { s1(i); }
+  void fire2(int i, int j) { s2(i, j);}
+};
+
+QI_REGISTER_OBJECT(SigHolder, s0, s1, s2, fire0, fire1, fire2);
+
+TEST(TestSignal, SignalNBind)
+{
+  int res = 0;
+  boost::shared_ptr<SigHolder> so(new SigHolder);
+  qi::ObjectPtr op = qi::GenericValueRef(so).to<qi::ObjectPtr>();
+  qi::details::printMetaObject(std::cerr, op->metaObject());
+  op->connect("s1", (boost::function<void(int)>)boost::bind<void>(&lol, _1, boost::ref(res)));
+  op->post("s1", 2);
+  for (unsigned i=0; i<30 && res!=2; ++i) qi::os::msleep(10);
+  ASSERT_EQ(2, res);
+  so->s1(3);
+  for (unsigned i=0; i<30 && res!=3; ++i) qi::os::msleep(10);
+  ASSERT_EQ(3, res);
+  so->s0.connect( boost::bind<void>(&lol, 42, boost::ref(res)));
+  op->post("s0");
+  for (unsigned i=0; i<30 && res!=42; ++i) qi::os::msleep(10);
+  ASSERT_EQ(42, res);
 }
 
 
@@ -173,7 +216,7 @@ void foothrow() {
 
 TEST(TestSignal, SignalThrow)
 {
-  qi::Signal<void()> sig;
+  qi::Signal<> sig;
   sig.connect(boost::bind<void>(&foothrow));
   ASSERT_NO_THROW(sig());
   qi::os::msleep(50);

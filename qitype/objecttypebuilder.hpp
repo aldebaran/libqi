@@ -14,6 +14,7 @@
 #include <qitype/signature.hpp>
 #include <sstream>
 #include <qitype/type.hpp>
+#include <qitype/details/accessor.hxx>
 #include <qitype/genericobject.hpp>
 #include <qitype/property.hpp>
 
@@ -25,7 +26,7 @@ namespace qi {
   class SignalBase;
   class ObjectType;
   class Type;
-  template<typename T> class Signal;
+  template<typename T> class SignalF;
   class ObjectTypeBuilderPrivate;
 
   class QITYPE_API ObjectTypeBuilderBase
@@ -43,17 +44,15 @@ namespace qi {
     template<typename T> void  buildFor(bool autoRegister = true);
     template <typename FUNCTION_TYPE>
     inline unsigned int advertiseMethod(const std::string& name, FUNCTION_TYPE function, MetaCallType threadingModel = MetaCallType_Auto, int id = -1);
-    template <typename C, typename T>
-    inline unsigned int advertiseSignal(const std::string& eventName, Signal<T> C::* signalAccessor, int id = -1);
-    template <typename C, typename T>
-    inline unsigned int advertiseSignal(const std::string& eventName, Signal<T>& (C::*signalAccessor)(), int id = -1);
+    template<typename A>
+    unsigned int
+    advertiseSignal(const std::string& eventName, A accessor, int id = -1);
+
     template <typename T>
     inline unsigned int advertiseSignal(const std::string& name, SignalMemberGetter getter, int id = -1);
+    template <typename A>
+    inline unsigned int advertiseProperty(const std::string& propertyName, A accessor);
 
-    template <typename C, typename T>
-    inline unsigned int advertiseProperty(const std::string& eventName, Property<T> C::* propertyAccessor);
-    template <typename C, typename T>
-    inline unsigned int advertiseProperty(const std::string& eventName, Property<T>& (C::*propertyAccessor)());
     template<typename T>
     inline unsigned int advertiseProperty(const std::string& eventName, PropertyMemberGetter getter);
     template<typename P> void inherits(int offset);

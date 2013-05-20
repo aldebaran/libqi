@@ -25,7 +25,7 @@ namespace qi
   template<typename T>
   PropertyImpl<T>::PropertyImpl(Getter getter, Setter setter,
     SignalBase::OnSubscribers onsubscribe)
-  : Signal<void(const T&)>(onsubscribe)
+  : SignalF<void(const T&)>(onsubscribe)
   , _getter(getter)
   , _setter(setter)
   {

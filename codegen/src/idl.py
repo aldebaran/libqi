@@ -293,7 +293,9 @@ def doxyxml_to_raw(doxy_dir):
       t = re.sub(r"\s([^a-zA-Z])", r"\1", t)
       t = re.sub(r"([^a-zA-Z])\s", r"\1", t)
       t = t.strip()
-      match = re.match(r"(qi::)?Signal<[^(]+\((.*)\)>", t)
+      match = re.match(r"(qi::)?SignalF<[^(]+\((.*)\)>", t)
+      if not match:
+        match = re.match(r"(qi::)?Signal<(.*)>", t)
       if match:
         t = match.expand(r"\2")
         sig = cxx_type_to_signature(t)
@@ -492,12 +494,12 @@ QI_TYPE_NOT_CLONABLE(@INAME@);
   for sig in signals:
     name = sig[0]
     signature = ','.join(map(idltype_to_cxxtype, sig[1]))
-    signals_decl += '    qi::Signal<void(%s)> & %s;\n' % (signature, name)
-    ctor_decl.append('qi::Signal<void(%s)> & %s' % (signature, name))
+    signals_decl += '    qi::Signal<%s> & %s;\n' % (signature, name)
+    ctor_decl.append('qi::Signal<%s> & %s' % (signature, name))
     ctor_init.append('%s(%s)' % (name, name))
-    ctor_init0.append('%s(*new qi::Signal<void (%s)>)' % (name, signature))
+    ctor_init0.append('%s(*new qi::Signal<%s>)' % (name, signature))
     dtor += '    delete &%s;\n' % (name)
-    getters += '    qi::Signal<void(%s)> & _interface_%s() { return %s;}\n' % (signature, name, name)
+    getters += '    qi::Signal<%s> & _interface_%s() { return %s;}\n' % (signature, name, name)
     fields.append('_interface_' + name)
   for prop in properties:
     name = prop[0]
@@ -976,7 +978,7 @@ def raw_to_cxx_service_skeleton(class_name, data, implement_interface, include):
   iface_ctor = []
   for signal in signals:
     iface_ctor.append('%s' % (signal[0]))
-    result += '  qi::Signal<void(%s)> %s;\n' % (
+    result += '  qi::Signal<%s> %s;\n' % (
       ','.join(map(idltype_to_cxxtype, signal[1])),
       signal[0]
     )

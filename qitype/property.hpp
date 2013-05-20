@@ -33,7 +33,7 @@ namespace qi
   };
 
   template<typename T>
-  class PropertyImpl: public Signal<void(const T&)>, public PropertyBase
+  class PropertyImpl: public SignalF<void(const T&)>, public PropertyBase
   {
   public:
     /** Setter called with storage containing old value, and new value
@@ -41,7 +41,8 @@ namespace qi
     */
     typedef boost::function<bool (T&, const T&)> Setter;
     typedef boost::function<T()> Getter;
-    typedef Signal<void(const T&)> SignalType;
+    typedef SignalF<void(const T&)> SignalType;
+    typedef T PropertyType;
     /**
      * @param getter value getter, default to reading _value
      * @param setter value setter, what it returns will be written to

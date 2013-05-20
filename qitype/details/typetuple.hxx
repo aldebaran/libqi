@@ -9,6 +9,7 @@
 
 #include <boost/type_traits.hpp>
 #include <boost/utility/enable_if.hpp>
+#include <qitype/details/accessor.hxx>
 #include <qi/preproc.hpp>
 
 namespace qi
@@ -22,82 +23,23 @@ namespace qi
     {
       ref = *(T*)typeOf<T>()->ptrFromStorage(&storage);
     }
-    /* Overloads to manipulate an accessor: field, field getter, free function
-    * We need given the accessor (and instance):
-    * - access to erased type
-    * - invocation
-    * - acess to typed value (to invoke the setter)
+    /* Helpers around accessors
     */
-    template<typename C, typename T> Type* fieldType(T C::*field)
+    template<typename A> Type* fieldType(A)
     {
-      return typeOf<T>();
+      return qi::typeOf<typename detail::Accessor<A>::value_type>();
     }
-    template<typename C, typename T> Type* fieldType(T (C::*field)(void))
+    template<typename C, typename A> void* fieldStorage(C* inst, A accessor)
     {
-      return typeOf<T>();
+      return fieldType(accessor)->initializeStorage(
+        (void*)&detail::Accessor<A>::access(inst, accessor));
     }
-    template<typename C, typename T> Type* fieldType(T (C::*field)(void) const)
+    template<typename C, typename A>
+    typename detail::Accessor<A>::value_type&
+    fieldValue(C* instance, A accessor, void** data)
     {
-      return typeOf<T>();
-    }
-    template<typename C, typename T> Type* fieldType(T (*field)(C*))
-    {
-      return typeOf<T>();
-    }
-    /* TypeTuple::get expects a pointer within storage, so a copy is not
-    * acceptable. So force T& return type.
-    *
-    * Also, cl.exe does weird things and somehow match a member function
-    * value to a member object type. So use enable_if to protect the
-    * template.
-    */
-    template<typename C, typename T> void* fieldStorage(C* inst, T& (C::*field)(void))
-    {
-      return typeOf<T>()->initializeStorage((void*)&((*inst.*field)()));
-    }
-    template<typename C, typename T> void*
-    fieldStorage_memobj(C* inst, T C::*field)
-    {
-      return typeOf<T>()->initializeStorage(&((*inst.*field)));
-    }
-    template<typename C, typename F>
-    typename boost::enable_if<boost::is_member_object_pointer<F>,void*>::type
-    fieldStorage(C* inst, F field)
-    {
-      return fieldStorage_memobj(inst, field);
-    }
-
-    template<typename C, typename T> void* fieldStorage(C* inst, T& (C::*field)(void) const)
-    {
-      return typeOf<T>()->initializeStorage((void*)&((*inst.*field)()));
-    }
-    template<typename C, typename T> void* fieldStorage(C* inst, T& (*field)(C*))
-    {
-       return typeOf<T>()->initializeStorage((void*)&((*field)(inst)));
-    }
-    template<typename F> struct FieldType{};
-    template<typename C, typename T> struct FieldType<T C::*>
-    {
-     typedef T type;
-    };
-    template<typename C, typename F>
-    typename boost::enable_if<boost::is_member_object_pointer<F>, typename FieldType<F>::type&>::type
-    fieldValue(C* inst, F field, void** data)
-    {
-      typedef typename  FieldType<F>::type T;
-      return *(T*)typeOf<T>()->ptrFromStorage(data);
-    }
-    template<typename C, typename T> T& fieldValue(C* inst, T& (C::*field)(void), void** data)
-    {
-      return *(T*)typeOf<T>()->ptrFromStorage(data);
-    }
-    template<typename C, typename T> T& fieldValue(C* inst, T& (C::*field)(void) const, void** data)
-    {
-      return *(T*)typeOf<T>()->ptrFromStorage(data);
-    }
-    template<typename C, typename T> T& fieldValue(C* inst, const T& (*field)(C*), void** data)
-    {
-      return *(T*)typeOf<T>()->ptrFromStorage(data);
+      typedef typename detail::Accessor<A>::value_type T;
+      return *(T*)fieldType(accessor)->ptrFromStorage(data);
     }
   }
 }
