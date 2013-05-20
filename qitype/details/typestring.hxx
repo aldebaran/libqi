@@ -7,6 +7,7 @@
 #ifndef _QITYPE_DETAILS_TYPESTRING_HXX_
 #define _QITYPE_DETAILS_TYPESTRING_HXX_
 #include <qi/os.hpp>
+#include <qitype/details/typetuple.hxx>
 
 namespace qi
 {
@@ -95,6 +96,46 @@ namespace qi
       TypeByPointer<char[I]> > Methods;
       _QI_BOUNCE_TYPE_METHODS_NOCLONE(Methods);
   };
+
+  /** Declare a Type for T of Kind string.
+  *
+  * T must be default-constructible, copy-constructible, and
+  * provide a constructor accepting a string.
+  * F must be a member function pointer, member object pointer, or free function
+  * returning a const string&.
+  */
+  template<typename T, typename F> class TypeEquivalentString: public TypeString
+  {
+  public:
+    TypeEquivalentString(F f): _getter(f) {}
+    typedef DefaultTypeImplMethods<T> Impl;
+    virtual void set(void** storage, const char* ptr, size_t sz)
+    {
+      T* inst = (T*)ptrFromStorage(storage);
+      *inst = T(std::string(ptr, sz));
+    }
+    virtual std::pair<char*, size_t> get(void* storage) const
+    {
+      T* ptr = (T*)Impl::ptrFromStorage(&storage);
+      void* str = detail::fieldStorage(ptr, _getter);
+      const std::string& s = detail::fieldValue(ptr, _getter, &str);
+      return std::make_pair((char*)s.c_str(), s.size());
+    }
+    _QI_BOUNCE_TYPE_METHODS(Impl);
+    F _getter;
+  };
+  template<typename T, typename F>
+  TypeString* makeTypeEquivalentString(T*, F f)
+  {
+    return new TypeEquivalentString<T, F>(f);
+  }
 }
+
+/** Register type \p type in the type system as string kind, using constructor
+ * for setter, and function \p func for getter
+ */
+#define QI_EQUIVALENT_STRING_REGISTER(type, func) \
+  static bool BOOST_PP_CAT(__qi_registration, __COUNTER__) \
+    = qi::registerType(typeid(type),  qi::makeTypeEquivalentString((type*)0, func))
 
 #endif  // _QITYPE_DETAILS_TYPESTRING_HXX_
