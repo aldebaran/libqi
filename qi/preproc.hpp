@@ -477,7 +477,7 @@ for i in range(0, 10):
 
 #define QI_PAIR_FIRST(x) QI_DELAY(_QI_PAIR_FIRST)x
 #define QI_PAIR_SECOND(x) QI_DELAY(_QI_PAIR_SECOND)x
-#define _QI_PAIR_FIRST(x, y) x
+#define _QI_PAIR_FIRST(x, ...) x
 #define _QI_PAIR_SECOND(x, y) y
 #define _QI_GEN_MAYBE_TEMPLATE_OPEN_1 template<
 #define _QI_GEN_MAYBE_TEMPLATE_OPEN_0
