@@ -21,8 +21,8 @@ namespace qi { namespace py {
       ~PyProperty() {
       }
 
-      boost::python::object value() const {
-        return getValue().to<boost::python::object>();
+      boost::python::object val() const {
+        return value().to<boost::python::object>();
       }
 
       //change the name to avoid warning "hidden overload in base class" : YES WE KNOW :)
@@ -40,7 +40,7 @@ namespace qi { namespace py {
 
       //TODO: support async
       boost::python::object value() const {
-        return _obj->getProperty(_sigid).value().to<boost::python::object>();
+        return _obj->property(_sigid).value().to<boost::python::object>();
       }
 
       //TODO: support async
@@ -67,7 +67,7 @@ namespace qi { namespace py {
 
     void export_pyproperty() {
       boost::python::class_<PyProperty>("Property", boost::python::init<const std::string &>())
-          .def("value", &PyProperty::value)
+          .def("value", &PyProperty::val)
           .def("setValue", &PyProperty::setVal, (boost::python::arg("value")));
 
       boost::python::class_<PyProxyProperty>("_ProxyProperty", boost::python::no_init)

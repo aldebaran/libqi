@@ -252,7 +252,7 @@ namespace qi { namespace py {
           .def("call", boost::python::raw_function(&pyobject_param_shrinker, 1))
           //TODO: .def("post")
           //TODO: .def("setProperty")
-          //TODO: .def("getProperty")
+          //TODO: .def("property")
           .def("metaObject", &qi::py::PyQiObject::metaObject);
       //import inspect in our current namespace
       import_inspect();
