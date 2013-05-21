@@ -7,6 +7,18 @@
 
 namespace qi
 {
+
+
+  namespace detail {
+    std::string normalizeClassName(const std::string &name) {
+      //::qi::Foo -> Foo
+      size_t id = name.rfind("::");
+      if (id != std::string::npos)
+        return name.substr(id + 2);
+      else return name;
+    }
+  }
+
   std::vector<GenericValuePtr> TypeTuple::getValues(void* storage)
   {
     std::vector<Type*> types = memberTypes();

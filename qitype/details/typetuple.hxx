@@ -14,6 +14,10 @@
 namespace qi
 {
   namespace detail {
+
+    //keep only the class name. (remove :: and namespaces)
+    QITYPE_API std::string normalizeClassName(const std::string &name);
+
     template<typename T> void setFromStorage(T& ref, void* storage)
     {
       ref = *(T*)typeOf<T>()->ptrFromStorage(&storage);
@@ -109,6 +113,7 @@ namespace qi {                                                            \
     typedef name ClassType;                                               \
     virtual std::vector< ::qi::Type*> memberTypes();                      \
     virtual std::vector<std::string> annotations();                       \
+    virtual std::string className();                                      \
     virtual void* get(void* storage, unsigned int index);                 \
     virtual void set(void** storage, unsigned int index, void* valStorage); \
     extra                                                                   \
@@ -149,7 +154,13 @@ namespace qi {                                                                  
     QI_VAARGS_APPLY(__QI_TUPLE_FIELD_NAME, _, __VA_ARGS__); \
     return res; \
   }\
+  inl std::string TypeImpl<name>::className() \
+  {\
+    return ::qi::detail::normalizeClassName(BOOST_PP_STRINGIZE(name));\
+  }\
 }
+
+
 
 /// Declare a struct field using an helper function
 #define QI_STRUCT_HELPER(name, func) (name, func, FUNC)
@@ -211,6 +222,10 @@ namespace qi {                                                                  
     QI_VAARGS_APPLY(__QI_ATUPLE_FIELD_NAME, _, __VA_ARGS__); \
     return res; \
   }\
+  inl std::string TypeImpl<name>::className() \
+  { \
+    return ::qi::detail::normalizeClassName(BOOST_PP_STRINGIZE(name));\
+  } \
 }
 
 

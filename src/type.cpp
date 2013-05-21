@@ -440,6 +440,9 @@ namespace qi {
           }
         }
         v.result += (char)Signature::Type_Tuple_End;
+        std::string name = static_cast<TypeTuple*>(this)->className();
+        if (name)
+          v.result += '<' + name + '>';
         break;
       case Type::Dynamic:
         if (value.type->info() == typeOf<ObjectPtr>()->info())
