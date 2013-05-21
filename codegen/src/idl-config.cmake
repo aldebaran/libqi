@@ -30,7 +30,7 @@ function(qi_create_proxy idl class_name output_dir _out)
   message("tgt ${output_dir}/${_filename}")
   set(${_out} ${output_dir}/${_filename} PARENT_SCOPE)
   qi_generate_src(${output_dir}/${_filename}
-    SRC ${idl}
+    SRC ${idl} ${IDL}
     COMMAND ${_python_executable} ${IDL}
       ${idl}
       -c ${class_name}
@@ -45,7 +45,7 @@ function(qi_create_interface idl class_name output_dir _out)
   message("tgt ${output_dir}/${_filename}")
   set(${_out} ${output_dir}/${_filename} PARENT_SCOPE)
   qi_generate_src(${output_dir}/${_filename}
-    SRC ${idl}
+    SRC ${idl} ${IDL}
     COMMAND ${_python_executable} ${IDL}
       ${idl}
       -c ${class_name}
