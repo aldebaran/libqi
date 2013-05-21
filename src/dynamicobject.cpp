@@ -202,7 +202,7 @@ namespace qi
       i->second.second, callType, context, method, i->second.first, p);
   }
 
-  qi::Future<void> DynamicObject::setProperty(unsigned int id, GenericValue val)
+  qi::Future<void> DynamicObject::metaSetProperty(unsigned int id, GenericValue val)
   {
     try
     {
@@ -217,7 +217,7 @@ namespace qi
     return p.future();
   }
 
-  qi::Future<GenericValue> DynamicObject::getProperty(unsigned int id)
+  qi::Future<GenericValue> DynamicObject::metaProperty(unsigned int id)
   {
     qi::Promise<GenericValue> p;
     p.setValue(property(id)->value());
@@ -452,13 +452,13 @@ namespace qi
   qi::Future<GenericValue> DynamicObjectType::getProperty(void* instance, unsigned int id)
   {
     return reinterpret_cast<DynamicObject*>(instance)
-      ->getProperty(id);
+      ->metaProperty(id);
   }
 
   qi::Future<void> DynamicObjectType::setProperty(void* instance, unsigned int id, GenericValue value)
   {
     return reinterpret_cast<DynamicObject*>(instance)
-      ->setProperty(id, value);
+      ->metaSetProperty(id, value);
   }
 
   static void cleanupDynamicObject(GenericObject *obj, bool destroyObject,
