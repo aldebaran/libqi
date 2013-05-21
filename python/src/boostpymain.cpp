@@ -20,6 +20,10 @@ qiLogCategory("qi.py");
 BOOST_PYTHON_MODULE(_qi)
 {
   qiLogDebug() << "PyEval_ThreadsInit()? : " << PyEval_ThreadsInitialized();
+
+  // set the docstring of the current module scope
+  boost::python::scope().attr("__doc__") = "qi bindings for python.";
+
   qi::py::export_pyfuture();
   qi::py::export_pyapplication();
   qi::py::export_pysession();
