@@ -440,7 +440,7 @@ namespace qi {
       case Type::Tuple: {
         v.result += (char)Signature::Type_Tuple;
         std::vector<Type*> memberTypes = static_cast<TypeTuple*>(this)->memberTypes();
-        std::vector<std::string> annotations = static_cast<TypeTuple*>(this)->annotations();
+        std::vector<std::string> annotations = static_cast<TypeTuple*>(this)->elementsName();
         for (unsigned i=0; i<memberTypes.size(); ++i)
         {
           v.result += memberTypes[i]->signature();

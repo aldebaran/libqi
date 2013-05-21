@@ -47,14 +47,14 @@ namespace qi
 #define QI_TYPE_STRUCT_DECLARE(name)                                      \
  __QI_TYPE_STRUCT_DECLARE(name, /**/)
 
-#define __QI_TYPE_STRUCT_DECLARE(name, extra)                              \
+#define __QI_TYPE_STRUCT_DECLARE(name, extra)                             \
 namespace qi {                                                            \
   template<> struct TypeImpl<name>: public ::qi::TypeTuple                \
   {                                                                       \
   public:                                                                 \
     typedef name ClassType;                                               \
     virtual std::vector< ::qi::Type*> memberTypes();                      \
-    virtual std::vector<std::string> annotations();                       \
+    virtual std::vector<std::string> elementsName();                      \
     virtual std::string className();                                      \
     virtual void* get(void* storage, unsigned int index);                 \
     virtual void set(void** storage, unsigned int index, void* valStorage); \
@@ -90,7 +90,7 @@ namespace qi {                                                                  
     QI_VAARGS_APPLY(__QI_TUPLE_SET, _, __VA_ARGS__);                                  \
     onSet                                                                      \
   }\
-  inl std::vector<std::string> TypeImpl<name>::annotations() \
+  inl std::vector<std::string> TypeImpl<name>::elementsName() \
   {  \
     std::vector<std::string> res; \
     QI_VAARGS_APPLY(__QI_TUPLE_FIELD_NAME, _, __VA_ARGS__); \
@@ -158,7 +158,7 @@ namespace qi {                                                                  
      name* ptr = (name*)ptrFromStorage(storage);         \
      *ptr = name(QI_VAARGS_MAP(__QI_ATUPLE_FROMDATA, name, __VA_ARGS__)); \
   }\
-  inl std::vector<std::string> TypeImpl<name>::annotations() \
+  inl std::vector<std::string> TypeImpl<name>::elementsName() \
   {  \
     std::vector<std::string> res; \
     QI_VAARGS_APPLY(__QI_ATUPLE_FIELD_NAME, _, __VA_ARGS__); \

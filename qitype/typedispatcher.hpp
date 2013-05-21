@@ -30,7 +30,7 @@ namespace qi {
   //   void visitMap(qi::GenericIterator begin, qi::GenericIterator end);
   //   void visitObject(qi::GenericObject value);
   //   void visitPointer(qi::GenericValuePtr pointee);
-  //   void visitTuple(const std::vector<qi::GenericValuePtr>& tuple);
+  //   void visitTuple(const std::string &className, const std::vector<qi::GenericValuePtr>& tuple, const std::vector<std::string>& elementNames);
   //   void visitDynamic(qi::GenericValuePtr pointee);
   //   void visitRaw(qi::GenericValuePtr value);
   //   void visitIterator(qi::GenericValuePtr value);

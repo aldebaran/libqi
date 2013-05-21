@@ -80,7 +80,7 @@ namespace qi {
       {
         TypeTuple* ttuple = static_cast<TypeTuple*>(value.type);
         std::vector<GenericValuePtr> tuple = ttuple->values(value.value);
-        v.visitTuple(ttuple->className(), tuple, ttuple->annotations());
+        v.visitTuple(ttuple->className(), tuple, ttuple->elementsName());
         break;
       }
       case Type::Dynamic:
