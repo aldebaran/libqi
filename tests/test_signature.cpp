@@ -137,7 +137,7 @@ struct MPoint {
 QI_TYPE_STRUCT(MPoint, x, y);
 
 TEST(TestSignature, NamedTuple) {
-  EXPECT_EQ("(i<x>i<y>)<MPoint>", qi::typeOf<MPoint>()->signature());
+  EXPECT_EQ("(ii)<MPoint,x,y>", qi::typeOf<MPoint>()->signature());
 }
 
 TEST(TestSignature, ComplexTypeSignature) {
@@ -595,7 +595,7 @@ QI_TYPE_STRUCT(Point, x, y, name);
 
 TEST(TestSignature, AnnotationStruct)
 {
-  EXPECT_EQ("(d<x>d<y>s<name>)<Point>", qi::typeOf<Point>()->signature());
+  EXPECT_EQ("(dds)<Point,x,y,name>", qi::typeOf<Point>()->signature());
 }
 
 //#endif

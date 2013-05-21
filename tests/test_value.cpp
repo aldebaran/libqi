@@ -288,7 +288,7 @@ TEST(Value, Tuple2)
   Point2 p;
   TypeTuple* t = static_cast<qi::TypeTuple*>(qi::typeOf<Point2>());
   ASSERT_EQ(6u, t->memberTypes().size());
-  EXPECT_EQ("(d<x>d<y>s<str>d<z>d<a>d<b>)<Point2>", t->signature());
+  EXPECT_EQ("(ddsddd)<Point2,x,y,str,z,a,b>", t->signature());
   std::vector<GenericValue> vd;
   vd.push_back(GenericValue(AutoGenericValuePtr(1.5)));
   vd.push_back(GenericValue(AutoGenericValuePtr(2.5)));

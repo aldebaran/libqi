@@ -329,12 +329,21 @@ namespace qi {
       res += (char)Signature::Type_Tuple;
       for (unsigned i=0; i<vals.size(); ++i) {
         res += vals[i].signature(_resolveDynamic);
-        if (i < annotations.size())
-          res += "<" + annotations.at(i) + ">";
       }
       res += (char)Signature::Type_Tuple_End;
-      if (!name.empty())
-        res += "<" + name + ">";
+
+      if (!name.empty() || annotations.size() >= vals.size()) {
+
+        res += '<';
+        if (!name.empty())
+          res += name;
+
+        for (unsigned i = 0; i < vals.size(); ++i)
+        {
+          res += ',' + annotations[i];
+        }
+        res += '>';
+      }
       result = res;
     }
 
@@ -429,20 +438,27 @@ namespace qi {
       }
       case Type::Tuple: {
         v.result += (char)Signature::Type_Tuple;
+        std::vector<Type*> memberTypes = static_cast<TypeTuple*>(this)->memberTypes();
+        std::vector<std::string> annotations = static_cast<TypeTuple*>(this)->annotations();
+        for (unsigned i=0; i<memberTypes.size(); ++i)
         {
-          std::vector<Type*> memberTypes = static_cast<TypeTuple*>(this)->memberTypes();
-          std::vector<std::string> annotations = static_cast<TypeTuple*>(this)->annotations();
-          for (unsigned i=0; i<memberTypes.size(); ++i)
-          {
-            v.result += memberTypes[i]->signature();
-            if (annotations.size() > i)
-              v.result += '<' + annotations[i] + '>';
-          }
+          v.result += memberTypes[i]->signature();
         }
         v.result += (char)Signature::Type_Tuple_End;
         std::string name = static_cast<TypeTuple*>(this)->className();
-        if (!name.empty())
-          v.result += '<' + name + '>';
+
+        if (!name.empty() || annotations.size() >= memberTypes.size()) {
+
+          v.result += '<';
+          if (!name.empty())
+            v.result += name;
+
+          for (unsigned i = 0; i < memberTypes.size(); ++i)
+          {
+            v.result += ',' + annotations[i];
+          }
+          v.result += '>';
+        }
         break;
       }
       case Type::Dynamic:
