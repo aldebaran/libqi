@@ -33,7 +33,7 @@ class Adder1: public IAdder
 public:
   Adder1()
   : IAdder(
-    *new qi::Signal<void(int)>(),
+    *new qi::Signal<int>(),
     *new qi::Property<int>(qi::Property<int>::Getter(), clamp_positive)
     )
   {}

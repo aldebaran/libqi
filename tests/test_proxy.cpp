@@ -54,8 +54,8 @@ public:
   int count2() { return _count2;}
   void on1(int a, int b) { _count1 += a+b;}
   void on2() { ++_count2;}
-  qi::Signal<void(int, int)> sig1;
-  qi::Signal<void()> sig2;
+  qi::Signal<int, int> sig1;
+  qi::Signal<> sig2;
 
   int _count1, _count2;
   qi::SignalBase::Link _l1, _l2;
@@ -87,6 +87,7 @@ TEST(Proxy, Signal)
   boost::shared_ptr<Foo> foo(new Foo);
   qi::ObjectPtr gfoo = qi::GenericValueRef(foo).toObject();
   ASSERT_TRUE(!!gfoo);
+  qi::details::printMetaObject(std::cerr, gfoo->metaObject());
   // The session must die before foo.
   TestSessionPair p;
   p.server()->registerService("foo", gfoo);

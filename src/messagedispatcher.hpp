@@ -42,7 +42,7 @@ namespace qi {
 
   public:
     typedef std::pair<unsigned int, unsigned int> Target;
-    typedef Signal<void (const qi::Message&)> OnMessageSignal;
+    typedef Signal<const qi::Message&> OnMessageSignal;
     // use shared-ptr on signal so that we may hold it without holding the map lock
     typedef std::map<Target, boost::shared_ptr<OnMessageSignal> > SignalMap;
     typedef std::map<unsigned int, MessageAddress>                   MessageSentMap;

@@ -73,7 +73,7 @@ int main(int argc, char *argv[])
 
   qi::DataPerfSuite out("qimessaging", "signal_direct", qi::DataPerfSuite::OutputData_Period, vm["output"].as<std::string>());
 
-  qi::Signal<void (void)> signal_1;
+  qi::Signal<> signal_1;
 
   signal_1.connect(boost::bind(&foo));
 
@@ -89,7 +89,7 @@ int main(int argc, char *argv[])
   dp.stop();
   out << dp;
 
-  qi::Signal<void (int)> signal_2;
+  qi::Signal<int> signal_2;
 
   signal_2.connect(boost::bind(&fooInt, _1));
 
@@ -104,7 +104,7 @@ int main(int argc, char *argv[])
   out << dp;
 
   // Test signals with a string of 32768 bytes
-  qi::Signal<void (std::string)> signal_3;
+  qi::Signal<std::string> signal_3;
 
   signal_3.connect(boost::bind(&fooStr, _1));
 
@@ -149,7 +149,7 @@ int main(int argc, char *argv[])
   out << dp;
 
   // Test signal with 10 args
-  qi::Signal<void (int, int, int, int, int, int)> signal_4;
+  qi::Signal<int, int, int, int, int, int> signal_4;
 
   signal_4.connect(boost::bind(&fooSevenArgs, _1, _2, _3, _4, _5, _6));
 

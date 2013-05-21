@@ -12,8 +12,8 @@ public:
   std::string setParam(const std::string& p);
   std::string step(unsigned int arg);
   std::string getLastResult();
-  qi::Signal<void(std::string)> onParamChanged;
-  qi::Signal<void(std::string)> onStep;
+  qi::Signal<std::string> onParamChanged;
+  qi::Signal<std::string> onStep;
 private:
   TaskGenerator* _handler;
   std::string    _name;

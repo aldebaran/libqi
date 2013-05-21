@@ -63,10 +63,10 @@ namespace qi {
      * called on the socket
      */
     // C4251
-    qi::Signal<void (TransportSocketPtr)> newConnection;
+    qi::Signal<TransportSocketPtr> newConnection;
     // C4251
-    qi::Signal<void (int error)>          acceptError;
-    qi::Signal<void (void)>               endpointsChanged;
+    qi::Signal<int>                acceptError;
+    qi::Signal<void>               endpointsChanged;
     std::string                           _identityKey;
     std::string                           _identityCertificate;
     std::vector<TransportServerImplPtr>   _impl;

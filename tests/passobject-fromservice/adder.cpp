@@ -37,7 +37,7 @@ class AddTask
     qiLogVerbose() << "add " << v <<" " << val << " " << av;
     return v + val + av;
   }
-  qi::Signal<void(int)> onChange;
+  qi::Signal<int> onChange;
   Adder& adder;
   int val;
 };

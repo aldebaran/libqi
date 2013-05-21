@@ -195,7 +195,7 @@ static void test_signal()
 {
   for (unsigned nsub = 1; nsub <= maxContainerSize; nsub*=10)
   {
-    qi::Signal<void(int)> qsig;
+    qi::Signal<int> qsig;
     /*
     qi::GenericObjectBuilder gob;
     int mid = gob.advertiseMethod("counterInc", &counterInc);

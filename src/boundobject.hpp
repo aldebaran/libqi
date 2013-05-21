@@ -83,7 +83,7 @@ namespace qi {
     virtual void onMessage(const qi::Message &msg, TransportSocketPtr socket);
     virtual void onSocketDisconnected(qi::TransportSocketPtr socket, int error);
 
-    qi::Signal<void(ServiceBoundObject*)> onDestroy;
+    qi::Signal<ServiceBoundObject*> onDestroy;
   private:
     qi::ObjectPtr createServiceBoundObjectType(ServiceBoundObject *self, bool bindTerminate = false);
 

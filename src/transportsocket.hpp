@@ -82,11 +82,11 @@ namespace qi
 
   public:
     // C4251
-    qi::Signal<void ()>                   connected;
+    qi::Signal<>                   connected;
     // C4251
-    qi::Signal<void (int error)>          disconnected;
+    qi::Signal<int>                disconnected;
     // C4251
-    qi::Signal<void (const qi::Message&)> messageReady;
+    qi::Signal<const qi::Message&> messageReady;
   };
 
   typedef boost::shared_ptr<TransportSocket> TransportSocketPtr;

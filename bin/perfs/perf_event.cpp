@@ -30,7 +30,7 @@ public:
   Service() {
   }
 public:
-  qi::Signal<void ()> ping;
+  qi::Signal<> ping;
 };
 
 void advertise_event(int iteration) //test  event advertising.

@@ -20,7 +20,7 @@ public:
     onAdd(res);
     return res;
   }
-  qi::Signal<void(int)> onAdd;
+  qi::Signal<int> onAdd;
   qi::Property<int> value;
 };
 

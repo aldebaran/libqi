@@ -33,7 +33,7 @@ namespace qi
     void removeObject(unsigned int);
     unsigned int service() { return _service;}
     unsigned int nextId() { return ++_nextId;}
-    qi::Signal<void()> onDestroy;
+    qi::Signal<> onDestroy;
   protected:
     void clear();
   private:

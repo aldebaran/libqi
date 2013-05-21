@@ -37,10 +37,10 @@ namespace qi {
     qi::Future< void >                     serviceReady(const unsigned int &idx);
     qi::Future< void >                     updateServiceInfo(const ServiceInfo &svcinfo);
 
-    qi::Signal<void ()>                                  connected;
-    qi::Signal<void (int error)>                         disconnected;
-    qi::Signal<void (unsigned int, std::string)>         serviceAdded;
-    qi::Signal<void (unsigned int, std::string)>         serviceRemoved;
+    qi::Signal<>                                  connected;
+    qi::Signal<int>                               disconnected;
+    qi::Signal<unsigned int, std::string>         serviceAdded;
+    qi::Signal<unsigned int, std::string>         serviceRemoved;
 
   private:
     //ServiceDirectory Interface

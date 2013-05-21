@@ -17,7 +17,7 @@ class Adder1
 public:
   ~Adder1() { ++nDead;}
   int add(int v) { return v;}
-  qi::Signal<void(int)> onChange;
+  qi::Signal<int> onChange;
   qi::Property<int> uid;
 };
 
@@ -29,7 +29,7 @@ public:
   ~Adder2() { ++nDead;}
   int val() { return v;}
   int add(int v2) { return v + v2;}
-  qi::Signal<void(int)> onChange;
+  qi::Signal<int> onChange;
   qi::Property<int> uid;
   int v;
 };
