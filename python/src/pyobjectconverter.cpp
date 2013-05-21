@@ -116,7 +116,24 @@ struct ToPyObject
     {
       l.append(PyObject_from_GenericValue(tuple[i]));
     }
-    result = boost::python::tuple(l);
+    //named tuple
+    if (!annotations.size()){
+      result = boost::python::tuple(l);
+      return;
+    }
+
+    static boost::python::object collections = boost::python::import("collections");
+    static boost::python::object namedtuple = collections.attr("namedtuple");
+    boost::python::object        mytuple;
+    boost::python::list          fields;
+    for (unsigned int i = 0; i < annotations.size(); ++i) {
+      fields.append(annotations.at(i));
+    }
+    std::string tname = name;
+    if (tname.empty())
+      tname = "Tuple";
+    mytuple = namedtuple(tname, fields);
+    result = mytuple(*boost::python::tuple(l));
   }
 
   void visitDynamic(qi::GenericValuePtr pointee)
