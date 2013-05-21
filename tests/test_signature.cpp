@@ -44,8 +44,7 @@ namespace qi
   };
 }
 class noSigForThis;
-
-typedef std::map<int,int> MapInt;
+typedef std::map<int, int> MapInt;
 
 TEST(TestSignature, BasicTypeSignature) {
   EXPECT_EQ("b",    qi::signatureFromType<bool>::value());
@@ -125,6 +124,20 @@ TEST(TestSignature, Strings) {
   EXPECT_EQ("s",    qi::signatureFromType<const char *&>::value());
   EXPECT_EQ("s",    qi::signatureFromType<const char * const&>::value());
   EXPECT_EQ("s",    qi::signatureFromType<char const * const&>::value());
+}
+
+struct MPoint {
+  MPoint(int x=0, int y=0)
+    : x(x)
+    , y(y)
+  {}
+  int x;
+  int y;
+};
+QI_TYPE_STRUCT(MPoint, x, y);
+
+TEST(TestSignature, NamedTuple) {
+  EXPECT_EQ("(i<x>i<y>)", qi::typeOf<MPoint>()->signature());
 }
 
 TEST(TestSignature, ComplexTypeSignature) {

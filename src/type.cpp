@@ -329,8 +329,12 @@ namespace qi {
       res += (char)Signature::Type_Tuple;
       for (unsigned i=0; i<vals.size(); ++i) {
         res += vals[i].signature(_resolveDynamic);
+        if (i < annotations.size())
+          res += "<" + annotations.at(i) + ">";
       }
       res += (char)Signature::Type_Tuple_End;
+      if (!name.empty())
+        res += "<" + name + ">";
       result = res;
     }
 
