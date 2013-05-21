@@ -182,13 +182,13 @@ namespace qi {
     qi::FutureSync<void> disconnect(Link linkId);
 
     template<typename T>
-    qi::FutureSync<T> getProperty(const std::string& name);
+    qi::FutureSync<T> property(const std::string& name);
 
     template<typename T>
     qi::FutureSync<void> setProperty(const std::string& name, const T& val);
 
     //Low Level Properties
-    qi::FutureSync<GenericValue> getProperty(unsigned int id);
+    qi::FutureSync<GenericValue> property(unsigned int id);
     qi::FutureSync<void> setProperty(unsigned int id, const GenericValue &val);
 
 
@@ -269,11 +269,11 @@ namespace qi {
       static std::vector<std::pair<Type*, int> > empty;
       return empty;
     }
-    virtual qi::Future<GenericValue> getProperty(void* instance, unsigned int id)
+    virtual qi::Future<GenericValue> property(void* instance, unsigned int id)
     {
       Proxy* ptr = static_cast<Proxy*>(instance);
       ObjectPtr obj = ptr->asObject();
-      return obj->type->getProperty(obj->value, id);
+      return obj->type->property(obj->value, id);
     }
     virtual qi::Future<void> setProperty(void* instance, unsigned int id, GenericValue value)
     {

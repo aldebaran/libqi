@@ -54,7 +54,7 @@ StaticObjectTypeBase::metaCall(void* instance, Manageable* context, unsigned int
 }
 
 
-static PropertyBase* getProperty(ObjectTypeData& data, void* instance, unsigned int signal)
+static PropertyBase* property(ObjectTypeData& data, void* instance, unsigned int signal)
 {
   ObjectTypeData::PropertyGetterMap::iterator i;
   i = data.propertyGetterMap.find(signal);
@@ -78,7 +78,7 @@ static SignalBase* getSignal(ObjectTypeData& data, void* instance, unsigned int 
   i = data.signalGetterMap.find(signal);
   if (i == data.signalGetterMap.end())
   {
-    PropertyBase* prop = getProperty(data, instance, signal);
+    PropertyBase* prop = property(data, instance, signal);
     if (prop)
       return prop->signal();
     qiLogError() << "No such signal " << signal;
@@ -136,9 +136,9 @@ qi::Future<void> StaticObjectTypeBase::disconnect(void* instance, Manageable* co
   return qi::Future<void>(0);
 }
 
-qi::Future<GenericValue> StaticObjectTypeBase::getProperty(void* instance, unsigned int id)
+qi::Future<GenericValue> StaticObjectTypeBase::property(void* instance, unsigned int id)
 {
-  PropertyBase* p = ::qi::getProperty(_data, instance, id);
+  PropertyBase* p = ::qi::property(_data, instance, id);
   if (!p)
     return qi::makeFutureError<GenericValue>("Cant find event");
   qi::Promise<GenericValue> res;
@@ -148,7 +148,7 @@ qi::Future<GenericValue> StaticObjectTypeBase::getProperty(void* instance, unsig
 
 qi::Future<void> StaticObjectTypeBase::setProperty(void* instance, unsigned int id, GenericValue value)
 {
-  PropertyBase* p = ::qi::getProperty(_data, instance, id);
+  PropertyBase* p = ::qi::property(_data, instance, id);
   if (!p)
     return qi::makeFutureError<void>("Cant find event");
   qiLogDebug() << "SetProperty " << id << " " << encodeJSON(value);

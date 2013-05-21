@@ -95,7 +95,7 @@ namespace qi
   template<typename T>
   T ProxyProperty<T>::_getter()
   {
-    return _object->getProperty<T>(_name);
+    return _object->property<T>(_name);
   }
   template<typename T>
   bool ProxyProperty<T>::_setter(T& target, const T& v)

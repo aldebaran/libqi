@@ -196,12 +196,12 @@ namespace qi {
   #undef pushi
 
   template<typename T>
-  qi::FutureSync<T> GenericObject::getProperty(const std::string& name)
+  qi::FutureSync<T> GenericObject::property(const std::string& name)
   {
     int pid = metaObject().propertyId(name);
     if (pid < 0)
       return makeFutureError<T>("Property not found");
-    qi::Future<GenericValue> f = type->getProperty(value, pid);
+    qi::Future<GenericValue> f = type->property(value, pid);
     qi::Promise<T> p;
     f.connect(boost::bind(&detail::futureAdapterVal<T>,_1, p));
     return p.future();

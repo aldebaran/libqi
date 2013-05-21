@@ -51,7 +51,7 @@ namespace qi {
     virtual qi::Future<void> disconnect(void* instance, Manageable* context, Link linkId)=0;
     /// @return parent types with associated poniter offset
     virtual const std::vector<std::pair<Type*, int> >& parentTypes() = 0;
-    virtual qi::Future<GenericValue> getProperty(void* instance, unsigned int id) = 0;
+    virtual qi::Future<GenericValue> property(void* instance, unsigned int id) = 0;
     virtual qi::Future<void> setProperty(void* instance, unsigned int id, GenericValue value) = 0;
     virtual Type::Kind kind() const { return Type::Object;}
     /// @return -1 if there is no inheritance, or the pointer offset

@@ -86,7 +86,7 @@ namespace qi
     /// Disconnect an event link. Returns if disconnection was successful.
     virtual qi::Future<void> disconnect(void* instance, Manageable* context, Link linkId);
     virtual const std::vector<std::pair<Type*, int> >& parentTypes();
-    virtual qi::Future<GenericValue> getProperty(void* instance, unsigned int id);
+    virtual qi::Future<GenericValue> property(void* instance, unsigned int id);
     virtual qi::Future<void> setProperty(void* instance, unsigned int id, GenericValue val);
     _QI_BOUNCE_TYPE_METHODS(DefaultTypeImplMethods<DynamicObject>);
   };
@@ -449,7 +449,7 @@ namespace qi
     return empty;
   }
 
-  qi::Future<GenericValue> DynamicObjectType::getProperty(void* instance, unsigned int id)
+  qi::Future<GenericValue> DynamicObjectType::property(void* instance, unsigned int id)
   {
     return reinterpret_cast<DynamicObject*>(instance)
       ->metaProperty(id);

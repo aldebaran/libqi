@@ -341,8 +341,8 @@ namespace qi {
     return type->disconnect(value, this, linkId);
   }
 
-  qi::FutureSync<GenericValue> GenericObject::getProperty(unsigned int id) {
-    return type->getProperty(value, id);
+  qi::FutureSync<GenericValue> GenericObject::property(unsigned int id) {
+    return type->property(value, id);
   }
 
   qi::FutureSync<void> GenericObject::setProperty(unsigned int id, const GenericValue& val) {
