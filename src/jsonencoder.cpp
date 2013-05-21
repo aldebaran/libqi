@@ -201,6 +201,22 @@ namespace qi {
 
     void visitTuple(const std::string &name, const std::vector<GenericValuePtr> &vals, const std::vector<std::string> &annotations)
     {
+      //is the tuple is annotated serialize as an object
+      if (annotations.size()) {
+        out << "{ ";
+        std::string tsig;
+        for (unsigned i=0; i<vals.size(); ++i) {
+          visitString(annotations[i].data(), annotations[i].size());
+          out << " : ";
+          serialize(vals[i], out);
+          if (i < vals.size() + 1)
+            out << ", ";
+        }
+        if (vals.size())
+          out.seekp(-2, std::ios_base::cur);
+        out << " }";
+        return;
+      }
       out << "[ ";
       std::string tsig;
       for (unsigned i=0; i<vals.size(); ++i) {

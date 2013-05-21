@@ -9,6 +9,19 @@
 #include <map>
 #include <qitype/genericvalue.hpp>
 #include <qi/application.hpp>
+#include <qitype/type.hpp>
+
+struct MPoint {
+  MPoint(int x=0, int y=0)
+    : x(x)
+    , y(y)
+  {}
+  int x;
+  int y;
+};
+
+
+QI_TYPE_STRUCT(MPoint, x, y);
 
 TEST(TestJSON, MapIntTableString) {
   std::map<int, std::vector<std::string> > mps;
@@ -79,6 +92,12 @@ TEST(TestJSON, Dynamics) {
   qi::GenericValue gvr = qi::GenericValue::from("plouf");
   gv.setDynamic(gvr);
   EXPECT_EQ("\"plouf\"", qi::encodeJSON(gv));
+}
+
+TEST(TestJSON, NamedStruct) {
+  MPoint mp(41, 42);
+  qi::GenericValue gvr = qi::GenericValue::from(mp);
+  EXPECT_EQ("{ \"x\" : 41, \"y\" : 42 }", qi::encodeJSON(gvr));
 }
 
 template<class T>
