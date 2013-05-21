@@ -62,7 +62,7 @@ namespace qi {
     void           unregisterEvent(unsigned int serviceId, unsigned int eventId, Link linkId);
     qi::MetaObject metaObject(unsigned int serviceId);
     void           terminate(unsigned int serviceId); //bound only in special cases
-    GenericValue   getProperty(const GenericValue& name);
+    GenericValue   property(const GenericValue& name);
     void           setProperty(const GenericValue& name, GenericValue value);
     std::vector<std::string> properties();
     bool           isStatsEnabled();

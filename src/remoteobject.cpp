@@ -394,14 +394,14 @@ namespace qi {
     }
   }
 
- qi::Future<GenericValue> RemoteObject::getProperty(unsigned int id)
+ qi::Future<GenericValue> RemoteObject::metaProperty(unsigned int id)
  {
-   qiLogDebug() << "bouncing getProperty";
+   qiLogDebug() << "bouncing property";
    // FIXME: perform some validations on this end?
-   return _self->call<GenericValue>("getProperty", id);
+   return _self->call<GenericValue>("property", id);
  }
 
- qi::Future<void> RemoteObject::setProperty(unsigned int id, GenericValue val)
+ qi::Future<void> RemoteObject::metaSetProperty(unsigned int id, GenericValue val)
  {
    qiLogDebug() << "bouncing setProperty";
    return _self->call<void>("setProperty", id, val);

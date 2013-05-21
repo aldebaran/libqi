@@ -72,7 +72,7 @@ namespace qi {
       * There is no use-case that requires the methods below without a BoundObject present.
       */
       ob->advertiseMethod("metaObject"     , &ServiceBoundObject::metaObject, MetaCallType_Auto, qi::Message::BoundObjectFunction_MetaObject);
-      ob->advertiseMethod("getProperty",       &ServiceBoundObject::getProperty, MetaCallType_Auto, qi::Message::BoundObjectFunction_GetProperty);
+      ob->advertiseMethod("property",       &ServiceBoundObject::property, MetaCallType_Auto, qi::Message::BoundObjectFunction_GetProperty);
       ob->advertiseMethod("setProperty",       &ServiceBoundObject::setProperty, MetaCallType_Auto, qi::Message::BoundObjectFunction_SetProperty);
       ob->advertiseMethod("properties",       &ServiceBoundObject::properties, MetaCallType_Auto, qi::Message::BoundObjectFunction_Properties);
       // Manageable-level stuff, above comment applies.
@@ -264,12 +264,12 @@ namespace qi {
     return ret;
   }
 
-  GenericValue ServiceBoundObject::getProperty(const GenericValue& prop)
+  GenericValue ServiceBoundObject::property(const GenericValue& prop)
   {
     if (prop.kind() == Type::String)
-      return _object->getProperty<GenericValue>(prop.toString());
+      return _object->property<GenericValue>(prop.toString());
     else if (prop.kind() == Type::Int)
-      return _object->type->getProperty(_object->value, prop.toUInt());
+      return _object->type->property(_object->value, prop.toUInt());
     else
       throw std::runtime_error("Expected int or string for property index");
   }

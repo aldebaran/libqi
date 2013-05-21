@@ -241,7 +241,7 @@ TEST(QiService, ClassProperty)
   ASSERT_EQ(2, client->call<int>("ping", 1));
   f.prop.set(2);
   ASSERT_EQ(3, client->call<int>("ping", 1));
-  ASSERT_EQ(2, client->getProperty<int>("offset"));
+  ASSERT_EQ(2, client->property<int>("offset"));
 
   // test event
   int hit = 0;
@@ -260,7 +260,7 @@ TEST(QiService, ClassProperty)
 
 int prop_ping(qi::PropertyBase* &p, int v)
 {
-  return p->getValue().toInt() + v;
+  return p->value().toInt() + v;
 }
 
 TEST(QiService, GenericProperty)
@@ -280,11 +280,11 @@ TEST(QiService, GenericProperty)
   qi::ObjectPtr client = p.client()->service("foo");
 
   client->setProperty("offset", 1);
-  ASSERT_EQ(1, prop->getValue().toInt());
+  ASSERT_EQ(1, prop->value().toInt());
   ASSERT_EQ(2, client->call<int>("ping", 1));
   prop->setValue(qi::GenericValue(qi::GenericValueRef(2)));
   ASSERT_EQ(3, client->call<int>("ping", 1));
-  ASSERT_EQ(2, client->getProperty<int>("offset"));
+  ASSERT_EQ(2, client->property<int>("offset"));
 
   // test event
   int hit = 0;
@@ -304,7 +304,7 @@ TEST(QiService, GenericProperty)
   if (client != obj)
   {
     client->call<void>("setProperty", "offset", 3);
-    EXPECT_EQ(3, prop->getValue().toInt());
+    EXPECT_EQ(3, prop->value().toInt());
   }
 
   // test error handling

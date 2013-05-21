@@ -25,7 +25,7 @@ TEST(Interface, Adder0)
   a1->setProperty("value", 1);
   ASSERT_EQ(4, a1->call<int>("addTwo", 0, 3));
   a1->setProperty("value", -1);
-  ASSERT_EQ(1, a1->getProperty<int>("value").value());
+  ASSERT_EQ(1, a1->property<int>("value").value());
   ASSERT_EQ(4, a1->call<int>("addTwo", 0, 3));
 }
 
