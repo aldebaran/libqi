@@ -5,6 +5,7 @@
 
 #include <boost/lexical_cast.hpp>
 #include <boost/thread/mutex.hpp>
+#include <boost/algorithm/string.hpp>
 
 #include <qitype/type.hpp>
 #include <qitype/signature.hpp>
@@ -564,7 +565,15 @@ namespace qi {
           // qiLogDebug() << "tuple element " << child.signature() << " " << t->infoString();
           types.push_back(t);
         }
-        Type* res = makeTupleType(types);
+        std::vector<std::string> vannotations;
+        std::string annotation = i.annotation();
+        boost::algorithm::split(vannotations, annotation, boost::algorithm::is_any_of(","));
+        Type* res;
+        //first annotation is the name, then the name of each elements
+        if (vannotations.size() >= 1)
+          res = makeTupleType(types, vannotations[0], std::vector<std::string>(vannotations.begin()+1, vannotations.end()));
+        else
+          res = makeTupleType(types);
         qiLogDebug() <<"Resulting tuple " << i.signature() << " " << res->infoString();
         return res;
       }
@@ -751,8 +760,10 @@ namespace qi {
   class DefaultTupleType: public TypeTuple
   {
   private:
-    DefaultTupleType(std::vector<Type*> types)
-    : types(types)
+    DefaultTupleType(const std::vector<Type*>& types, const std::string& className = std::string(), const std::vector<std::string>& elementsName = std::vector<std::string>())
+    : _className(className)
+    , _types(types)
+    , _elementName(elementsName)
     {
       _name = "DefaultTupleType<";
       for (unsigned i=0; i<types.size(); ++i)
@@ -761,9 +772,12 @@ namespace qi {
       qiLogDebug() << "Instanciating tuple " << _name;
       _info = TypeInfo(_name);
     }
-    friend Type* makeTupleType(std::vector<Type*> types);
+
+    friend Type* makeTupleType(const std::vector<Type*>&, const std::string&, const std::vector<std::string>&);
+
   public:
-    virtual std::vector<Type*> memberTypes() { return types;}
+    virtual std::vector<Type*> memberTypes() { return _types;}
+
     virtual void* get(void* storage, unsigned int index)
     {
       std::vector<void*>& ptr = *(std::vector<void*>*)ptrFromStorage(&storage);
@@ -771,19 +785,22 @@ namespace qi {
         ptr.resize(index + 1, 0);
       return ptr[index];
     }
+
     virtual void set(void** storage, unsigned int index, void* valStorage)
     {
       std::vector<void*>& ptr = *(std::vector<void*>*)ptrFromStorage(storage);
       if (ptr.size() < index +1)
         ptr.resize(index + 1, 0);
       if (ptr[index])
-        types[index]->destroy(ptr[index]);
-      ptr[index] = types[index]->clone(valStorage);
+        _types[index]->destroy(ptr[index]);
+      ptr[index] = _types[index]->clone(valStorage);
     }
+
     const TypeInfo& info()
     {
       return _info;
     }
+
     virtual void* clone(void* storage)
     {
       std::vector<void*>& src = *(std::vector<void*>*)ptrFromStorage(&storage);
@@ -792,12 +809,13 @@ namespace qi {
         set(&result, i, src[i]); // set will clone
       return result;
     }
+
     virtual void destroy(void* storage)
     { // destroy elements that have been set
       std::vector<void*>& ptr = *(std::vector<void*>*)ptrFromStorage(&storage);
       for (unsigned i=0; i<ptr.size(); ++i)
       {
-        types[i]->destroy(ptr[i]);
+        _types[i]->destroy(ptr[i]);
       }
       Methods::destroy(storage);
     }
@@ -806,14 +824,14 @@ namespace qi {
       std::vector<void*> *ret = (std::vector<void*>*)Methods::initializeStorage(ptr);
       if (ptr)
       {
-        if (types.size() != ret->size())
+        if (_types.size() != ret->size())
           throw std::runtime_error("Tuple storage is of incorrect size");
       }
       else
       {
-        ret->resize(types.size());
+        ret->resize(_types.size());
         for (unsigned i=0; i < ret->size(); ++i) {
-          (*ret)[i] = types[i]->initializeStorage();
+          (*ret)[i] = _types[i]->initializeStorage();
         }
       }
       return ret;
@@ -827,14 +845,26 @@ namespace qi {
       return ptr;
     }
 
+    virtual std::vector<std::string> elementsName() {
+      return _elementName;
+    }
+
+    virtual std::string className() {
+      return _className;
+    }
+
     bool less(void* a, void* b) { return Methods::less(a, b);}
-    std::vector<Type*> types;
-    std::string _name;
-    TypeInfo _info;
+
+  public:
+    std::string              _className;
+    std::vector<Type*>       _types;
+    std::vector<std::string> _elementName;
+    std::string              _name;
+    TypeInfo                 _info;
     typedef DefaultTypeImplMethods<std::vector<void*> > Methods;
   };
 
-  GenericValuePtr makeGenericTuple(std::vector<GenericValuePtr> values)
+  GenericValuePtr makeGenericTuple(const std::vector<GenericValuePtr>& values)
   {
     std::vector<Type*> types;
     types.reserve(values.size());
@@ -1088,6 +1118,7 @@ namespace qi {
     std::string _name;
   };
 
+
   // We want exactly one instance per element type
   Type* makeMapType(Type* kt, Type* et)
   {
@@ -1112,36 +1143,60 @@ namespace qi {
     }
     return result;
   }
-
-
-  struct InfosKey: public std::vector<Type*>
+  struct InfosKey
   {
   public:
-    InfosKey(const std::vector<Type*>& b)
-    : std::vector<Type*>(b) {}
+    InfosKey(const std::vector<Type*>& types, const std::string &name = std::string(), const std::vector<std::string>& elements = std::vector<std::string>())
+      : _types(types)
+      , _name(name)
+      , _elements(elements)
+    {}
+
     bool operator < (const InfosKey& b) const
     {
-      if (size() != b.size())
-        return size() < b.size();
-      for (unsigned i=0; i<size(); ++i)
+      //check for types
+      if (_types.size() != b._types.size())
+        return _types.size() < b._types.size();
+      for (unsigned i = 0; i < _types.size(); ++i)
       {
-        if ( (*this)[i]->info() != b[i]->info())
-          return (*this)[i]->info() < b[i]->info();
+        if ( _types[i]->info() != b._types[i]->info())
+          return _types[i]->info() < b._types[i]->info();
+      }
+      return true;
+
+      //check for name
+      if (_name != b._name)
+        return _name < b._name;
+
+      //check for elements
+      if (_elements.size() != b._elements.size())
+        return _elements.size() < b._elements.size();
+      for (unsigned i = 0; i < _elements.size(); ++i)
+      {
+        if ( _elements[i] != b._elements[i])
+          return _elements[i] < b._elements[i];
       }
       return false;
     }
+
+  private:
+    std::vector<Type*>       _types;
+    std::string              _name;
+    std::vector<std::string> _elements;
   };
-  Type* makeTupleType(std::vector<Type*> types)
+
+  //TODO: not threadsafe
+  Type* makeTupleType(const std::vector<Type*>& types, const std::string &name, const std::vector<std::string>& elementNames)
   {
     typedef std::map<InfosKey, TypeTuple*> Map;
     static Map* map = 0;
     if (!map)
       map = new Map;
-    InfosKey key(types);
+    InfosKey key(types, name, elementNames);
     Map::iterator it = map->find(key);
     if (it == map->end())
     {
-      TypeTuple* result = new DefaultTupleType(types);
+      TypeTuple* result = new DefaultTupleType(types, name, elementNames);
       (*map)[key] = result;
       return result;
     }

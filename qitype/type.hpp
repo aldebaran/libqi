@@ -651,10 +651,10 @@ QITYPE_API bool operator !=(const GenericIterator & a, const GenericIterator& b)
   QITYPE_API Type* makeMapType(Type* keyType, Type* ElementType);
 
   ///@return a Type of kind Tuple with givent memberTypes
-  QITYPE_API Type* makeTupleType(std::vector<Type*> memberTypes);
+  QITYPE_API Type* makeTupleType(const std::vector<Type*>& memberTypes, const std::string &name = std::string(), const std::vector<std::string>& elementNames = std::vector<std::string>());
 
   ///@return an allocated Tuple made from copies of \param values
-  QITYPE_API GenericValuePtr makeGenericTuple(std::vector<GenericValuePtr> values);
+  QITYPE_API GenericValuePtr makeGenericTuple(const std::vector<GenericValuePtr>& values);
 
   ///@return a Tuple pointing to \param values as its storage
   QITYPE_API GenericValuePtr makeGenericTuplePtr(

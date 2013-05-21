@@ -39,6 +39,7 @@ namespace qi {
   * annotation.opt: empty or <annotation>
   * annotation: may contain arbitrary content except \0
       and must balance all (), {}, [] and <> within
+  * for tuple annotation has the following form: "<TupleName,elementName0,...,elementName1>"
   */
   class QITYPE_API Signature {
   public:
