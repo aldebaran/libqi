@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 Aldebaran Robotics. All rights reserved.
+ * Copyright (c) 2012, 2013 Aldebaran Robotics. All rights reserved.
  * Use of this source code is governed by a BSD-style license that can be
  * found in the COPYING file.
  */
@@ -318,7 +318,6 @@ TEST(log, perf)
 
 }
 
-
 // Useful for manual testing
 TEST(log, jukebox_DISABLED)
 {
@@ -330,4 +329,27 @@ TEST(log, jukebox_DISABLED)
     qiLogVerbose(c) << c;
     qiLogDebug(c) << c;
   }
+}
+
+TEST(log, emptyLogWithCat)
+{
+  qi::log::init(qi::log::debug, 0, true);
+
+  qiLogDebug("log.test1");
+  qiLogVerbose("log.test1");
+  qiLogInfo("log.test1");
+  qiLogWarning("log.test1");
+  qiLogError("log.test1");
+  qiLogFatal("log.test1");
+}
+
+TEST(log, emptyLog)
+{
+  qiLogCategory("log.test2");
+  qiLogDebug();
+  qiLogVerbose();
+  qiLogInfo();
+  qiLogWarning();
+  qiLogError();
+  qiLogFatal();
 }

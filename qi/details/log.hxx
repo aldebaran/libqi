@@ -257,13 +257,10 @@ namespace qi {
 
       ~LogStream()
       {
-        if (!this->str().empty())
-        {
-          if (_category)
-            qi::log::log(_logLevel, _category, this->str().c_str(), _file, _function, _line);
-          else
-            qi::log::log(_logLevel, _categoryType, this->str(), _file, _function, _line);
-        }
+        if (_category)
+          qi::log::log(_logLevel, _category, this->str().c_str(), _file, _function, _line);
+        else
+          qi::log::log(_logLevel, _categoryType, this->str(), _file, _function, _line);
       }
 
       LogStream& self() {

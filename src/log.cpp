@@ -541,8 +541,6 @@ namespace qi {
              const char           *fct,
              const int             line)
     {
-      if (msg.empty())
-        return;
       #ifndef ANDROID
       if (_glSyncLog)
       {
