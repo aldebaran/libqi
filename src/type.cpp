@@ -427,7 +427,7 @@ namespace qi {
         }
         break;
       }
-      case Type::Tuple:
+      case Type::Tuple: {
         v.result += (char)Signature::Type_Tuple;
         {
           std::vector<Type*> memberTypes = static_cast<TypeTuple*>(this)->memberTypes();
@@ -441,9 +441,10 @@ namespace qi {
         }
         v.result += (char)Signature::Type_Tuple_End;
         std::string name = static_cast<TypeTuple*>(this)->className();
-        if (name)
+        if (!name.empty())
           v.result += '<' + name + '>';
         break;
+      }
       case Type::Dynamic:
         if (value.type->info() == typeOf<ObjectPtr>()->info())
           v.result = stringFromType(Signature::Type_Object);
