@@ -46,8 +46,20 @@ namespace qi {
                                         FUNCTION_TYPE function,
                                         MetaCallType threadingModel = MetaCallType_Auto);
 
-    template<typename FUNCTION_TYPE>
-    inline unsigned int advertiseSignal(const std::string& name);
+    int advertiseSignal(const std::string& name);
+    template<typename P0> int advertiseSignal(const std::string& name);
+    template<typename P0, typename P1> int advertiseSignal(const std::string& name);
+    template<typename P0, typename P1, typename P2> int advertiseSignal(const std::string& name);
+    template<typename P0, typename P1, typename P2, typename P3> int advertiseSignal(const std::string& name);
+    template<typename P0, typename P1, typename P2, typename P3,typename P4> int advertiseSignal(const std::string& name);
+    template<typename P0, typename P1, typename P2, typename P3,typename P4,typename P5> int advertiseSignal(const std::string& name);
+    template<typename P0, typename P1, typename P2, typename P3,typename P4,typename P5,typename P6> int advertiseSignal(const std::string& name);
+    template<typename P0, typename P1, typename P2, typename P3,typename P4,typename P5,typename P6, typename P7> int advertiseSignal(const std::string& name);
+
+    /// Advertise a signal using a function signature
+    template<typename T>
+    int advertiseSignalF(const std::string& name);
+
     int advertiseSignal(const std::string &name, qi::SignalBase *signal);
 
     template<typename T>

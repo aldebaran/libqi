@@ -21,7 +21,7 @@ void onFire(const int& pl)
 TEST(TestObject, Simple)
 {
   qi::GenericObjectBuilder ob;
-  ob.advertiseSignal<void (*)(int)>("fire");
+  ob.advertiseSignal<int>("fire");
   qi::ObjectPtr obj(ob.object());
   EXPECT_EQ(1U, obj->metaObject().signalMap().size());
   qi::Link linkId = obj->connect("fire", &onFire);
@@ -42,8 +42,8 @@ TEST(TestObject, Simple)
 TEST(TestObject, ConnectBind)
 {
   qi::GenericObjectBuilder ob;
-  ob.advertiseSignal<void (*)(int)>("fire");
-  ob.advertiseSignal<void (*)(int, int)>("fire2");
+  ob.advertiseSignal<int>("fire");
+  ob.advertiseSignal<int, int>("fire2");
   qi::ObjectPtr obj(ob.object());
   qi::Link link = obj->connect("fire", boost::bind<void>(&onFire, _1));
   obj->post("fire", 42);

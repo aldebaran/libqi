@@ -140,14 +140,15 @@ namespace qi {
 
 namespace detail
 {
-  template<typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename P6> struct VoidFunctionType                                           { typedef void(type)(P0, P1, P2, P3, P4, P5, P6); };
-  template<typename P0, typename P1, typename P2, typename P3, typename P4, typename P5             > struct VoidFunctionType<P0, P1, P2, P3, P4, P5, void>             { typedef void(type)(P0, P1, P2, P3, P4, P5); };
-  template<typename P0, typename P1, typename P2, typename P3, typename P4                          > struct VoidFunctionType<P0, P1, P2, P3, P4, void, void>           { typedef void(type)(P0, P1, P2, P3, P4); };
-  template<typename P0, typename P1, typename P2, typename P3                                       > struct VoidFunctionType<P0, P1, P2, P3, void, void, void>         { typedef void(type)(P0, P1, P2, P3); };
-  template<typename P0, typename P1, typename P2                                                    > struct VoidFunctionType<P0, P1, P2, void, void, void, void>       { typedef void(type)(P0, P1, P2); };
-  template<typename P0, typename P1                                                                 > struct VoidFunctionType<P0, P1, void, void, void, void, void>     { typedef void(type)(P0, P1); };
-  template<typename P0                                                                              > struct VoidFunctionType<P0, void, void, void, void, void, void>   { typedef void(type)(P0); };
-  template<                                                                                         > struct VoidFunctionType<void, void, void, void, void, void, void> { typedef void(type)(); };
+  template<typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename P6, typename P7> struct VoidFunctionType                                           { typedef void(type)(P0, P1, P2, P3, P4, P5, P6, P7); };
+  template<typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename P6> struct VoidFunctionType<P0, P1, P2, P3, P4, P5, P6, void>                     { typedef void(type)(P0, P1, P2, P3, P4, P5, P6); };
+  template<typename P0, typename P1, typename P2, typename P3, typename P4, typename P5             > struct VoidFunctionType<P0, P1, P2, P3, P4, P5, void, void>             { typedef void(type)(P0, P1, P2, P3, P4, P5); };
+  template<typename P0, typename P1, typename P2, typename P3, typename P4                          > struct VoidFunctionType<P0, P1, P2, P3, P4, void, void, void>           { typedef void(type)(P0, P1, P2, P3, P4); };
+  template<typename P0, typename P1, typename P2, typename P3                                       > struct VoidFunctionType<P0, P1, P2, P3, void, void, void, void>         { typedef void(type)(P0, P1, P2, P3); };
+  template<typename P0, typename P1, typename P2                                                    > struct VoidFunctionType<P0, P1, P2, void, void, void, void, void>       { typedef void(type)(P0, P1, P2); };
+  template<typename P0, typename P1                                                                 > struct VoidFunctionType<P0, P1, void, void, void, void, void, void>     { typedef void(type)(P0, P1); };
+  template<typename P0                                                                              > struct VoidFunctionType<P0, void, void, void, void, void, void, void>   { typedef void(type)(P0); };
+  template<                                                                                         > struct VoidFunctionType<void, void, void, void, void, void, void, void> { typedef void(type)(); };
 
 }
 template<
@@ -157,18 +158,20 @@ template<
   typename P3 = void,
   typename P4 = void,
   typename P5 = void,
-  typename P6 = void>
-  class Signal: public SignalF<typename detail::VoidFunctionType<P0, P1, P2, P3, P4, P5, P6>::type>
+  typename P6 = void,
+  typename P7 = void
+  >
+  class Signal: public SignalF<typename detail::VoidFunctionType<P0, P1, P2, P3, P4, P5, P6, P7>::type>
   {
   public:
-    typedef typename detail::VoidFunctionType<P0, P1, P2, P3, P4, P5, P6>::type FunctionType;
+    typedef typename detail::VoidFunctionType<P0, P1, P2, P3, P4, P5, P6, P7>::type FunctionType;
     typedef SignalF<FunctionType> ParentType;
     Signal(typename ParentType::OnSubscribers onSubscribers = typename ParentType::OnSubscribers())
     : ParentType(onSubscribers) {}
     using boost::function<FunctionType>::operator();
   };
-#define QI_SIGNAL_TEMPLATE_DECL typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename P6
-#define QI_SIGNAL_TEMPLATE P0,P1,P2,P3,P4,P5,P6
+#define QI_SIGNAL_TEMPLATE_DECL typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename P6, typename P7
+#define QI_SIGNAL_TEMPLATE P0,P1,P2,P3,P4,P5,P6,P7
 
   namespace detail
   {

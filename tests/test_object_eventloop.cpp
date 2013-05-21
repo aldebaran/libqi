@@ -67,7 +67,7 @@ qi::ObjectPtr makeObj()
 {
   qi::GenericObjectBuilder ob;
   ob.advertiseMethod("sameThread", &sameThread);
-  ob.advertiseSignal<void (unsigned long)>("fire");
+  ob.advertiseSignal<unsigned long>("fire");
   qi::ObjectPtr res = ob.object();
   return res;
 }
@@ -79,7 +79,7 @@ qi::ObjectPtr makeObjWithThreadModel(qi::ObjectThreadingModel model)
   ob.advertiseMethod("delayms", &qi::os::msleep);
   ob.advertiseMethod("delaymsThreadSafe", &qi::os::msleep, "", qi::MetaCallType_Queued);
   ob.advertiseMethod("delaymsFast", &qi::os::msleep, "", qi::MetaCallType_Direct);
-  ob.advertiseSignal<void (unsigned long)>("fire");
+  ob.advertiseSignal<unsigned long>("fire");
   ob.setThreadingModel(model);
   qi::ObjectPtr res = ob.object();
   return res;
