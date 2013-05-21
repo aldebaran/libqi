@@ -636,9 +636,9 @@ TEST(testSerializable, Struct) {
   EXPECT_EQ(tsp2d1.p.y(), tsp2d2.p.y());
   EXPECT_EQ(tsp2d1.t.i, tsp2d2.t.i);
   EXPECT_EQ(tsp2d1.t.j, tsp2d2.t.j);
-  EXPECT_EQ("(i<x>i<y>)<Point2D>", qi::typeOf(p2d1)->signature());
-  EXPECT_EQ("(i<i>i<j>)<TimeStamp>", qi::typeOf(ts1)->signature());
-  EXPECT_EQ("((i<x>i<y>)<Point2D>(i<i>i<j>)<TimeStamp>)<TimeStampedPoint2D,p,t>", qi::typeOf(tsp2d1)->signature());
+  EXPECT_EQ("(ii)<Point2D,x,y>", qi::typeOf(p2d1)->signature());
+  EXPECT_EQ("(ii)<TimeStamp,i,j>", qi::typeOf(ts1)->signature());
+  EXPECT_EQ("((ii)<Point2D,x,y>(ii)<TimeStamp,i,j>)<TimeStampedPoint2D,p,t>", qi::typeOf(tsp2d1)->signature());
 }
 
 TEST(testSerializable, Value) {
