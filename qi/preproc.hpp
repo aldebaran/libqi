@@ -468,6 +468,7 @@ for i in range(0, 10):
 
 // invoke f(n, argtypedecl, argstype, argsdecl, argsuses, comma_or_empty) for n in [0, 10]
 #define QI_GEN(f) BOOST_PP_REPEAT(10, _QI_GEN, f)
+#define QI_GEN_RANGE(f, max) BOOST_PP_REPEAT(max, _QI_GEN, f)
 
 // Evaluate to empty or 'template<' depending on wheter args is empty or a comma.
 #define QI_GEN_MAYBE_TEMPLATE_OPEN(...) \
