@@ -199,7 +199,7 @@ namespace qi {
       out << "\"Error: no serialization for pointer\"";
     }
 
-    void visitTuple(const std::vector<GenericValuePtr> vals)
+    void visitTuple(const std::string &name, const std::vector<GenericValuePtr> &vals, const std::vector<std::string> &annotations)
     {
       out << "[ ";
       std::string tsig;

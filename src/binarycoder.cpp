@@ -475,7 +475,7 @@ namespace qi {
         out.write(osi.objectId);
       }
 
-      void visitTuple(const std::vector<GenericValuePtr>& vals)
+      void visitTuple(const std::string &name, const std::vector<GenericValuePtr>& vals, const std::vector<std::string>& annotations)
       {
         std::string tsig;
         for (unsigned i=0; i<vals.size(); ++i)
@@ -641,7 +641,8 @@ namespace qi {
         qiLogError() << " Pointer serialization not implemented";
       }
 
-      void visitTuple(const std::vector<GenericValuePtr>&)
+      void visitTuple(const std::string &, const std::vector<GenericValuePtr>&, const std::vector<std::string>&)
+
       {
         TypeTuple* type = static_cast<TypeTuple*>(result.type);
         std::vector<Type*> types = type->memberTypes();
