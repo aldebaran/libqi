@@ -19,7 +19,7 @@ namespace qi
     }
   }
 
-  std::vector<GenericValuePtr> TypeTuple::getValues(void* storage)
+  std::vector<GenericValuePtr> TypeTuple::values(void* storage)
   {
     std::vector<Type*> types = memberTypes();
     std::vector<void*> values = get(storage);

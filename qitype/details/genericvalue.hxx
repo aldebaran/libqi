@@ -294,7 +294,7 @@ namespace qi {
   GenericValuePtr::asTupleValuePtr()
   {
     if (kind() == Type::Tuple)
-      return static_cast<TypeTuple*>(type)->getValues(value);
+      return static_cast<TypeTuple*>(type)->values(value);
     else if (kind() == Type::List || kind() == Type::Map)
     {
       std::vector<GenericValuePtr> result;

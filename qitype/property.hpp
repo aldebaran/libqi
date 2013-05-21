@@ -29,7 +29,7 @@ namespace qi
     virtual ~PropertyBase() {}
     virtual SignalBase* signal() = 0;
     virtual void setValue(GenericValueRef value) = 0;
-    virtual GenericValue getValue() const = 0;
+    virtual GenericValue value() const = 0;
   };
 
   template<typename T>
@@ -74,7 +74,7 @@ namespace qi
     {}
     virtual SignalBase* signal() { return this;}
     virtual void setValue(GenericValueRef value)  { PropertyImpl<T>::set(value.to<T>());}
-    virtual GenericValue getValue() const { return GenericValue(GenericValueRef(PropertyImpl<T>::get()));}
+    virtual GenericValue value() const { return GenericValue(GenericValueRef(PropertyImpl<T>::get()));}
   };
 
   template<>
@@ -89,7 +89,7 @@ namespace qi
     }
     virtual SignalBase* signal() { return this;}
     virtual void setValue(GenericValueRef value)  { set(GenericValue(value, false, false));}
-    virtual GenericValue getValue() const { return get();}
+    virtual GenericValue value() const { return get();}
   };
 
   /// Type-erased property, simulating a typed property but using GenericValue.

@@ -301,7 +301,7 @@ TEST(Value, Tuple2)
   EXPECT_EQ(2.5, p.y);
   EXPECT_EQ("coin", p.s);
   EXPECT_EQ(3.5, p.b);
-  std::vector<GenericValuePtr> pcomps = t->getValues(&p);
+  std::vector<GenericValuePtr> pcomps = t->values(&p);
   EXPECT_EQ(1.5, pcomps[0].toDouble());
   EXPECT_EQ(2.5, pcomps[1].toDouble());
   EXPECT_EQ("coin", pcomps[2].toString());

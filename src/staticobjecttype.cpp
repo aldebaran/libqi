@@ -142,7 +142,7 @@ qi::Future<GenericValue> StaticObjectTypeBase::getProperty(void* instance, unsig
   if (!p)
     return qi::makeFutureError<GenericValue>("Cant find event");
   qi::Promise<GenericValue> res;
-  res.setValue(p->getValue());
+  res.setValue(p->value());
   return res.future();
 }
 

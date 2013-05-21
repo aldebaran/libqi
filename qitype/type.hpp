@@ -608,7 +608,7 @@ QITYPE_API bool operator !=(const GenericIterator & a, const GenericIterator& b)
   class QITYPE_API TypeTuple: public Type
   {
   public:
-    std::vector<GenericValuePtr> getValues(void* storage);
+    std::vector<GenericValuePtr> values(void* storage);
     virtual std::vector<Type*> memberTypes() = 0;
     virtual std::vector<void*> get(void* storage); // must not be destroyed
     virtual void* get(void* storage, unsigned int index) = 0; // must not be destroyed

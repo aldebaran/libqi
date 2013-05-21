@@ -220,7 +220,7 @@ namespace qi
   qi::Future<GenericValue> DynamicObject::getProperty(unsigned int id)
   {
     qi::Promise<GenericValue> p;
-    p.setValue(property(id)->getValue());
+    p.setValue(property(id)->value());
     return p.future();
   }
 
