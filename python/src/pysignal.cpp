@@ -11,6 +11,8 @@
 #include <qitype/signal.hpp>
 #include <qitype/genericobject.hpp>
 #include "gil.hpp"
+#include "error.hpp"
+
 qiLogCategory("py.signal");
 
 namespace qi { namespace py {
@@ -24,7 +26,7 @@ namespace qi { namespace py {
       for (it = cargs.begin(); it != cargs.end(); ++it) {
         args.append(it->to<boost::python::object>());
       }
-      PY_DISPLAY_ERROR(ret = callable(*boost::python::tuple(args)));
+      PY_CATCH_ERROR(ret = callable(*boost::python::tuple(args)));
       return qi::GenericValueRef(ret).clone();
     }
 

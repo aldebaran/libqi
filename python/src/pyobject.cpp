@@ -12,6 +12,7 @@
 #include "pysignal.hpp"
 #include "pyproperty.hpp"
 #include "gil.hpp"
+#include "error.hpp"
 #include <qitype/genericobjectbuilder.hpp>
 
 qiLogCategory("qipy.object");

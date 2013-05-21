@@ -26,6 +26,7 @@ add_library(_qi SHARED src/boostpymain.cpp
                    src/pyservicedirectory.hpp
                    src/pyservicedirectory.cpp
                    src/gil.hpp
+                   src/error.hpp
 )
 
 # Install the library next to the .py files

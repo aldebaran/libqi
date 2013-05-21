@@ -10,7 +10,7 @@
 #include <qi/future.hpp>
 #include <boost/python.hpp>
 #include "gil.hpp"
-
+#include "error.hpp"
 
 namespace qi {
   namespace py {
@@ -19,13 +19,13 @@ namespace qi {
 
     static void pyFutureCb(boost::python::object callable, boost::python::object pp) {
       GILScopedLock _lock;
-      PY_DISPLAY_ERROR(callable(pp));
+      PY_CATCH_ERROR(callable(pp));
     }
 
     class PyPromise;
     static void pyFutureCbProm(boost::python::object callable, PyPromise *pp) {
       GILScopedLock _lock;
-      PY_DISPLAY_ERROR(callable(pp));
+      PY_CATCH_ERROR(callable(pp));
     }
 
 
