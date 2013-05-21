@@ -158,7 +158,7 @@ int main(int argc, char *argv[])
       ob.advertiseMethod("replyMap", &replyMap);
       ob.advertiseMethod("replyMap2", &replyMap2);
       ob.advertiseMethod<qi::GenericValue (const qi::GenericValue&)>("reply", &reply);
-      ob.advertiseSignal<void (const std::string&)>("testEvent");
+      ob.advertiseSignal<const std::string&>("testEvent");
       ob.advertiseMethod<bool (unsigned int)>("slip", &slip);
       qi::ObjectPtr obj(ob.object());
 

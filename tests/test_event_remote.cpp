@@ -31,7 +31,7 @@ public:
   TestObject()
   {
     qi::GenericObjectBuilder ob;
-    ob.advertiseSignal<void (*)(const int&)>("fire");
+    ob.advertiseSignal<const int&>("fire");
     oserver = ob.object();
   }
 

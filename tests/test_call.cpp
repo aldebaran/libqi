@@ -655,7 +655,7 @@ TEST(TestCall, TestObjectPassing)
   {
     qi::GenericObjectBuilder ob;
     ob.advertiseMethod("add", &addOne);
-    ob.advertiseSignal<void(int)>("fire");
+    ob.advertiseSignal<int>("fire");
     unregisteredObj = ob.object();
   }
   // Transmit unregisteredObj through the network.
@@ -697,7 +697,7 @@ TEST(TestCall, TestObjectPassingReverse)
 { // Test server->client object passing (through emit)
   TestSessionPair p;
   qi::GenericObjectBuilder ob;
-  ob.advertiseSignal<void (qi::ObjectPtr ptr, const std::string& fname, int arg)>("makeObjectCallEvent");
+  ob.advertiseSignal<qi::ObjectPtr, const std::string&, int>("makeObjectCallEvent");
 
   qi::ObjectPtr obj(ob.object());
 
@@ -708,7 +708,7 @@ TEST(TestCall, TestObjectPassingReverse)
   {
     qi::GenericObjectBuilder ob;
     ob.advertiseMethod("add", &addOne);
-    ob.advertiseSignal<void(int)>("fire");
+    ob.advertiseSignal<int>("fire");
     unregisteredObj = ob.object();
   }
 
@@ -738,7 +738,7 @@ qi::ObjectPtr makeAdder(qi::ObjectWeakPtr& weak)
 {
   qi::GenericObjectBuilder ob;
   ob.advertiseMethod("add", &addOne);
-  ob.advertiseSignal<void(int)>("fire");
+  ob.advertiseSignal<int>("fire");
   qi::ObjectPtr res = ob.object();
   qiLogDebug() << "unregistered object is " << res.get();
   weak = res;
