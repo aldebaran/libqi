@@ -263,7 +263,7 @@ struct ToPyObject
     throw std::runtime_error("Error in conversion: Unable to convert pointer in Python");
   }
 
-  void visitTuple(const std::vector<qi::GenericValuePtr>& tuple)
+  void visitTuple(const std::string &name, const std::vector<qi::GenericValuePtr>& tuple, const std::vector<std::string>&annotations)
   {
     Py_ssize_t len = tuple.size();
     *result = PyTuple_New(len);
