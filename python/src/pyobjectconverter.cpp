@@ -132,7 +132,8 @@ struct ToPyObject
     std::string tname = name;
     if (tname.empty())
       tname = "Tuple";
-    mytuple = namedtuple(tname, fields);
+    //verbose=false, rename=true: force invalid field to be renamed
+    mytuple = namedtuple(tname, fields, false, true);
     result = mytuple(*boost::python::tuple(l));
   }
 
