@@ -115,6 +115,38 @@ TEST_F(TestObject, CoDeco)
   }
 }
 
+int verifA = 0;
+int verifB = 0;
+
+void cb(int a, int b)
+{
+  verifA = a;
+  verifB = b;
+}
+
+TEST(TestSignal, TwoLongPost)
+{
+  qi::GenericObjectBuilder gob;
+  qi::Signal<int, int> sig;
+  gob.advertiseSignal("sig1", &sig);
+  qi::ObjectPtr op = gob.object();
+
+  TestSessionPair p;
+  p.server()->registerService("MyService", op);
+  qi::ObjectPtr clientOp = p.client()->service("MyService").value();
+  clientOp->connect("sig1", &cb);
+
+  qi::GenericFunctionParameters params;
+  params.push_back(qi::GenericValue(42L).clone());
+  params.push_back(qi::GenericValue(43L).clone());
+
+  clientOp->metaPost("sig1", params);
+  for(unsigned int i=0; i<100 && (verifA == 0 || verifB == 0); ++i)
+    qi::os::msleep(10);
+  ASSERT_EQ(42, verifA);
+  ASSERT_EQ(43, verifB);
+}
+
 int main(int argc, char *argv[])
 {
 #if defined(__APPLE__) || defined(__linux__)
