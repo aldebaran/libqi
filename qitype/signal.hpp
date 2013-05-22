@@ -166,7 +166,8 @@ template<
   public:
     typedef typename detail::VoidFunctionType<P0, P1, P2, P3, P4, P5, P6, P7>::type FunctionType;
     typedef SignalF<FunctionType> ParentType;
-    Signal(typename ParentType::OnSubscribers onSubscribers = typename ParentType::OnSubscribers())
+    typedef typename ParentType::OnSubscribers OnSubscribers;
+    Signal(OnSubscribers onSubscribers = OnSubscribers())
     : ParentType(onSubscribers) {}
     using boost::function<FunctionType>::operator();
   };
