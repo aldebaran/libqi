@@ -7,6 +7,7 @@
 #include <qi/threadpool.hpp>
 #include <qi/os.hpp>
 #include "threadpool_p.hpp"
+#include <qi/log.hpp>
 
 #ifdef _MSC_VER
 #  pragma warning( push )
@@ -183,10 +184,17 @@ namespace qi
       /* Create Threads */
       for (unsigned int i = 0; i < threadstoCreate; i++)
       {
-        boost::thread* newThread = new boost::thread(boost::bind(&ThreadPoolPrivate::workLoop, this));
+        try
+        {
+          boost::thread* newThread = new boost::thread(boost::bind(&ThreadPoolPrivate::workLoop, this));
 
-        _threadsMap[newThread->get_id()] = newThread;
-        ++_workers;
+          _threadsMap[newThread->get_id()] = newThread;
+          ++_workers;
+        }
+        catch (const boost::thread_resource_error &e)
+        {
+          qiLogError("qi.threadpool") << e.what();
+        }
       }
 
       /* Check if we have too much threads */
