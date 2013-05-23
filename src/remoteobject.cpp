@@ -328,7 +328,7 @@ namespace qi {
     return out.future();
   }
 
-  void RemoteObject::metaPost(Manageable*, unsigned int event, const qi::GenericFunctionParameters &args)
+  void RemoteObject::metaPost(Manageable*, unsigned int event, const qi::GenericFunctionParameters &in)
   {
     // Bounce the emit request to server
     // TODO: one optimisation that could be done is to trigger the local
@@ -336,7 +336,53 @@ namespace qi {
     // But it is a bit complex, because the server will bounce the
     // event back to us.
     qi::Message msg;
-    msg.setValue(qi::makeGenericTuple(args), this);
+    // apparent signature must match for correct serialization
+    std::string argsSig("(");
+    for (unsigned i = 0; i < in.size(); ++i)
+      argsSig += in[i].signature(false);
+    argsSig += ')';
+    std::string funcSig;
+    const MetaMethod* mm = metaObject().method(event);
+    if (mm)
+      funcSig = mm->parametersSignature();
+    else
+    {
+      const MetaSignal* ms = metaObject().signal(event);
+      if (!ms)
+        throw std::runtime_error("Post target id does not exist");
+      funcSig = ms->parametersSignature();
+    }
+    if (funcSig != argsSig)
+    {
+      std::vector<GenericValuePtr> nargs(in);
+      Signature src = Signature(argsSig).begin().children();
+      Signature dst = Signature(funcSig).begin().children();
+      Signature::iterator its = src.begin(), itd = dst.begin();
+      boost::dynamic_bitset<> allocated(nargs.size());
+      for (unsigned i = 0; i< nargs.size(); ++i, ++its, ++itd)
+      {
+        if (*its != *itd)
+        {
+          Type* target = Type::fromSignature(*itd);
+          if (!target)
+            throw std::runtime_error("remote call: Failed to obtain a type from signature " + *itd);
+          std::pair<GenericValuePtr, bool> c = nargs[i].convert(target);
+          if (!c.first.type)
+          {
+            throw std::runtime_error(
+              _QI_LOG_FORMAT("remote call: failed to convert argument %s from %s to %s", i, *its, *itd));
+          }
+          nargs[i] = c.first;
+          allocated[i] = c.second;
+        }
+      }
+      msg.setValues(nargs, this);
+      for (unsigned i = 0; i< nargs.size(); ++i)
+        if (allocated[i])
+        nargs[i].destroy();
+    }
+    else
+      msg.setValues(in, this);
     msg.setType(Message::Type_Post);
     msg.setService(_service);
     msg.setObject(_object);
