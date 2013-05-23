@@ -50,6 +50,14 @@ function QiSession(url)
     }
   });
 
+  _socket.on('disconnected', function(data) {
+    for (var i in _dfd)
+    {
+      _dfd[id].reject("disconnected");
+      delete _dfd[id];
+    }
+  });
+
   function createMetaCall(service, method)
   {
     return function() {
