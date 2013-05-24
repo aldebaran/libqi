@@ -2,20 +2,28 @@
 <html>
 
 <head>
-<title></title>
+<title>NAOQuake</title>
+<style type="text/css">
+div, canvas { border: 0; margin: 0; padding:0 }
+</style>
 <script src="http://localhost:8001/jquery.min.js"></script>
 <script src="http://localhost:8001/socket.io.min.js"></script>
 <script src="http://localhost:8001/qimessaging.js"></script>
 </head>
 
 <body>
-<canvas id="myCanvas" width="578" height="400"></canvas>
+<div><canvas id="myCanvas0" width="160" height="120"></canvas></div>
+<div><canvas id="myCanvas1" width="160" height="120"></canvas></div>
 <script language="JavaScript">
 var qim = new QiSession("http://localhost:8002");
-var m = 0;
-var s = "";
+var alvideodevice = 0;
+var almotion = 0;
+var alrobotposture = 0;
+var altts = 0;
+var sname = "";
 
-qim.socket().on('connect', function() { console.log('connected') })
+function error(data) { console.log(data) }
+
 
 var t = [];
 for (var i = 0; i < 1024; ++i)
@@ -23,49 +31,150 @@ for (var i = 0; i < 1024; ++i)
   t[String.fromCharCode(i)] = i;
 }
 
-function getImageRemote(data)
+function getImageRemote(d)
 {
-  var a = atob(data[6]);
-
-  var canvas = document.getElementById('myCanvas');
-  var context = canvas.getContext('2d');
-  var imageWidth = data[0];
-  var imageHeight = data[1];
-  var imageData = context.getImageData(0, 0, imageWidth, imageHeight);
-  var data = imageData.data;
+  var a = atob(d[2]);
+  var imageWidth = d[0][0];
+  var imageHeight = d[0][1];
+  var x = 0;
   var w = imageWidth * imageHeight * 4;
 
-  var x = 0;
-  var x3 = 0;
-  while (x < w)
+  for (var i = 0; i <= 1; ++i)
   {
-    data[x++] = t[a[x3++]];
-    data[x++] = t[a[x3++]];
-    data[x++] = t[a[x3++]];
-    data[x++] = 255;
+    var canvas = document.getElementById('myCanvas' + i);
+    var context = canvas.getContext('2d');
+    var imageData = context.getImageData(0, 0, imageWidth, imageHeight);
+    var data = imageData.data;
+
+    for (var p = 0; p < w; )
+    {
+      data[p++] = t[a[x++]];
+      data[p++] = t[a[x++]];
+      data[p++] = t[a[x++]];
+      data[p++] = 255;
+    }
+
+    context.putImageData(imageData, 0, 0);
   }
 
-  context.putImageData(imageData, 0, 0);
-
-  m.getImageRemote(s).done(getImageRemote);
+  alvideodevice.getImagesRemote(sname).done(getImageRemote).fail(error);
 }
 
 function subscribed(data)
 {
-  s = data;
-  m.getImageRemote(s).done(getImageRemote);
+  sname = data;
+  alvideodevice.getImagesRemote(sname).done(getImageRemote).fail(error);
 }
 
 function subscribeCamera(data)
 {
-  m = data;
+  alvideodevice = data;
   var z = Math.floor((Math.random()*10000)+1);
-  m.subscribeCamera("test_z" + z, 0, 0, 11, 30).done(subscribed);
+  alvideodevice.subscribeCameras("test_z" + z, [0,1], [0,0], [11,11], 30).done(subscribed).fail(error);
 }
 
-qim.service("ALVideoDevice").done(subscribeCamera);
+function posture(data)
+{
+  alrobotposture = data;
 
+  $(document).keydown(function(e) {
+    switch (e.keyCode)
+    {
+      case 67: // C
+        alrobotposture.goToPosture("Crouch", 1.0);
+        break;
+      case 32: // SPACE
+        alrobotposture.goToPosture("Stand", 1.0);
+        break;
+      case 88: // X
+        alrobotposture.goToPosture("Sit", 1.0);
+        break;
+      case 27: // Esc
+        alrobotposture.goToPosture("Rest", 1.0);
+        break;
+      case 81: // Q move left
+        almotion.moveTo(0.0, 0.1, 0.0);
+        break;
+      case 87: // W forward
+        almotion.moveTo(0.1, 0.0, 0.0);
+        break;
+      case 69: // E move right
+        almotion.moveTo(0.0, -0.1, 0.0);
+        break;
+      case 83: // S backward
+        almotion.moveTo(-0.1, 0.0, 0.0);
+        break;
+      case 65: // A turn left
+        almotion.moveTo(0.0, 0.0, 0.26);
+        break;
+      case 68: // D turn right
+        almotion.moveTo(0.0, 0.0, -0.26);
+        break;
+    }
+  });
+}
+
+var coords = { x: 0, y: 0};
+
+function motion(data)
+{
+  almotion = data;
+  almotion.setStiffnesses("Head", 1.0);
+
+  $("#myCanvas0").mousemove(function(e){
+    coords.x = e.pageX - $(this).offset().left;
+    coords.y = e.pageY - $(this).offset().top;
+  });
+
+  moveHead();
+}
+
+function moveFailed(data)
+{
+  console.log(data);
+  moveHead();
+}
+
+function moveHead()
+{
+    var dx = coords.x - ($("#myCanvas0").width() / 2);
+    var dx = -dx / $("#myCanvas0").width() * 2.09;
+    var dy = coords.y - ($("#myCanvas0").height() / 2);
+    var dy = dy / $("#myCanvas0").height() * 0.90;
+    var v = 0.2
+
+    almotion.angleInterpolation(["HeadYaw", "HeadPitch"], [[dx], [dy]], [[v],[v]], true).done(moveHead).fail(moveFailed);
+}
+
+function tts(data)
+{
+  altts = data;
+}
+
+function say()
+{
+  var text = $("#sentence").val();
+  console.log(text);
+  altts.say(text);
+}
+
+function main()
+{
+  console.log('Start');
+  qim.service("ALTextToSpeech").done(tts)
+  qim.service("ALMotion").done(motion)
+  qim.service("ALRobotPosture").done(posture)
+  qim.service("ALVideoDevice").done(subscribeCamera);
+}
+
+qim.socket().on('connect', main)
+qim.socket().on('disconnect', main)
 </script>
+
+<div>
+<input type="input" id="sentence"/>
+<button onclick="say()">say</button>
+</div>
 
 </body>
 </html>
