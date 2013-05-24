@@ -74,21 +74,42 @@ def test_builtin_types():
     assert f == 0L  # is False ?
 
     # int
-    assert type(service.display(42)) == int
+    assert type(service.display(42)) == long
     assert service.display(42) == 42
 
     # float
     assert service.display(0.1337) == 0.1337
 
     # long
-    assert type(service.display(2 ** 64)) == long
-    assert service.display(2 ** 64) == 18446744073709551616L
+    #assert type(service.display(2 ** 64)) == long
+    #assert service.display(2 ** 64) == 18446744073709551616L
 
     # list
+    assert service.display([]) == []
+    assert service.display([1]) == [1]
+    assert service.display(["bla", "bli"]) == ["bla", "bli"]
+
     # set
+    # assert service.display(set([1, 2]))
+
     # tuple
+    assert service.display(()) == ()
+    assert service.display((1)) == (1)
+    assert service.display((1, 2)) == (1, 2)
+
     # dict
+    assert service.display({}) == {}
+    assert service.display({1: "bla", 3: []}) == {1: "bla", 3: []}
+
+
+    # bytearray
+    # assert service.display(bytearray("lol"))
+
     # buffer
+    # assert service.display(buffer("lol"))
+
+    # complex (why not)
+    # assert service.display(complex(1, 2))
 
     time.sleep(0.01)
     s.close()
