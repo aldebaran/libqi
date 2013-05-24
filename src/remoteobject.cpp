@@ -103,7 +103,7 @@ namespace qi {
   }
 
   //should be done in the object thread
-  void RemoteObject::onSocketDisconnected(int error)
+  void RemoteObject::onSocketDisconnected(std::string error)
   {
     {
       boost::mutex::scoped_lock lock(_mutex);

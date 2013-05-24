@@ -99,7 +99,7 @@ namespace qi {
   }
 
   qi::FutureSync<void> ServiceDirectoryClient::close() {
-    onSocketDisconnected(0);
+    onSocketDisconnected("ServiceDirectoryClient closed");
 
     if (!_sdSocket)
       return qi::Future<void>(0);
@@ -133,7 +133,7 @@ namespace qi {
     serviceAdded(idx, name);
   }
 
-  void ServiceDirectoryClient::onSocketDisconnected(int error) {
+  void ServiceDirectoryClient::onSocketDisconnected(std::string error) {
     disconnected(error);
     try {
       if (_addLink != 0)

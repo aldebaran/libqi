@@ -20,7 +20,7 @@ namespace qi {
     virtual ~ServiceDirectoryBoundObject();
 
     //TransportSocket
-    virtual void onSocketDisconnected(TransportSocketPtr socket, int error);
+    virtual void onSocketDisconnected(TransportSocketPtr socket, std::string error);
 
 
   public:

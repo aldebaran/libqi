@@ -48,7 +48,7 @@ namespace qi {
     void onTransportServerNewConnection(TransportSocketPtr socket);
 
     //TransportSocket
-    void onSocketDisconnected(TransportSocketPtr socket, int error);
+    void onSocketDisconnected(TransportSocketPtr socket, std::string error);
     void onMessageReady(const qi::Message &msg, TransportSocketPtr socket);
 
   private:

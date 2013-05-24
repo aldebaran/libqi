@@ -27,7 +27,7 @@ namespace qi {
     bool isConnected() const;
 
     void onConnected();
-    void onDisconnected(int error);
+    void onDisconnected(std::string error);
     void onServiceAdded(unsigned int idx, const std::string &name);
     void onServiceRemoved(unsigned int idx, const std::string &name);
 

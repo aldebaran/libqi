@@ -149,7 +149,7 @@ namespace qi {
     return _server.setIdentity(key, crt);
   }
 
-  void Server::onSocketDisconnected(TransportSocketPtr socket, int error)
+  void Server::onSocketDisconnected(TransportSocketPtr socket, std::string error)
   {
     boost::mutex::scoped_lock l(_stateMutex);
     if (_dying)

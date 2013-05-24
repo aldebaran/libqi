@@ -57,7 +57,7 @@ namespace qi {
     _self->connected();
   }
 
-  void SessionPrivate::onDisconnected(int error) {
+  void SessionPrivate::onDisconnected(std::string error) {
     _self->disconnected(error);
 
     /*

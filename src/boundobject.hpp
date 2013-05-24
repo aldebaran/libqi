@@ -42,7 +42,7 @@ namespace qi {
     //Server Interface
     virtual ~BoundObject() {}
     virtual void onMessage(const qi::Message &msg, TransportSocketPtr socket) = 0;
-    virtual void onSocketDisconnected(qi::TransportSocketPtr socket, int error) = 0;
+    virtual void onSocketDisconnected(qi::TransportSocketPtr socket, std::string error) = 0;
   };
 
   //Bound Object, represent an object bound on a server
@@ -81,7 +81,7 @@ namespace qi {
   public:
     //BoundObject Interface
     virtual void onMessage(const qi::Message &msg, TransportSocketPtr socket);
-    virtual void onSocketDisconnected(qi::TransportSocketPtr socket, int error);
+    virtual void onSocketDisconnected(qi::TransportSocketPtr socket, std::string error);
 
     qi::Signal<ServiceBoundObject*> onDestroy;
   private:

@@ -84,7 +84,7 @@ namespace qi
     // C4251
     qi::Signal<>                   connected;
     // C4251
-    qi::Signal<int>                disconnected;
+    qi::Signal<std::string>        disconnected;
     // C4251
     qi::Signal<const qi::Message&> messageReady;
   };

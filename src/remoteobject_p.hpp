@@ -43,7 +43,7 @@ namespace qi {
     //TransportSocket.messagePending
     void onMessagePending(const qi::Message &msg);
     //TransportSocket.disconnected
-    void onSocketDisconnected(int error);
+    void onSocketDisconnected(std::string error);
 
     virtual void metaPost(Manageable* context, unsigned int event, const GenericFunctionParameters& args);
     virtual qi::Future<GenericValuePtr> metaCall(Manageable* context, unsigned int method, const GenericFunctionParameters& args, qi::MetaCallType callType = qi::MetaCallType_Auto);

@@ -38,7 +38,7 @@ namespace qi {
     qi::Future< void >                     updateServiceInfo(const ServiceInfo &svcinfo);
 
     qi::Signal<>                                  connected;
-    qi::Signal<int>                               disconnected;
+    qi::Signal<std::string>                       disconnected;
     qi::Signal<unsigned int, std::string>         serviceAdded;
     qi::Signal<unsigned int, std::string>         serviceRemoved;
 
@@ -49,7 +49,7 @@ namespace qi {
 
     //TransportSocket Interface
     void onSocketConnected(qi::FutureSync<void> future, qi::Promise<void> prom);
-    void onSocketDisconnected(int error);
+    void onSocketDisconnected(std::string error);
 
     //RemoteObject Interface
     void onMetaObjectFetched(qi::Future<void> fut, qi::Promise<void> prom);

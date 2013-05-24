@@ -149,7 +149,7 @@ namespace qi {
     } // ! boost::mutex::scoped_lock
   }
 
-  void TransportSocketCache::onSocketDisconnected(int error, TransportSocketPtr socket, const qi::ServiceInfo& servInfo, const qi::Url& url) {
+  void TransportSocketCache::onSocketDisconnected(std::string error, TransportSocketPtr socket, const qi::ServiceInfo& servInfo, const qi::Url& url) {
     {
       boost::mutex::scoped_lock sl(_socketsMutex);
 

@@ -215,7 +215,7 @@ namespace qi
     boost::recursive_mutex::scoped_lock lock(_closingMutex);
     _abort = true;
     _status = qi::TransportSocket::Status_Disconnected;
-    disconnected(erc.value());
+    disconnected(erc.message());
 
     if (_connecting)
     {

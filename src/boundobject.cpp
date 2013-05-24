@@ -238,7 +238,7 @@ namespace qi {
     value.destroy();
   }
 
-  void ServiceBoundObject::onSocketDisconnected(TransportSocketPtr client, int error)
+  void ServiceBoundObject::onSocketDisconnected(TransportSocketPtr client, std::string error)
   {
     // Disconnect event links set for this client.
     BySocketServiceLinks::iterator it = _links.find(client);

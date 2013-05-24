@@ -90,7 +90,7 @@ namespace qi
   {
   }
 
-  void ServiceDirectoryBoundObject::onSocketDisconnected(TransportSocketPtr socket, int error)
+  void ServiceDirectoryBoundObject::onSocketDisconnected(TransportSocketPtr socket, std::string error)
   {
     boost::recursive_mutex::scoped_lock lock(mutex);
     // if services were connected behind the socket

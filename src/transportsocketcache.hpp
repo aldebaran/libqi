@@ -52,7 +52,7 @@ namespace qi {
   protected:
     //TransportSocket
     void onSocketConnected(TransportSocketPtr client, const ServiceInfo &servInfo, const Url &url);
-    void onSocketDisconnected(int error, TransportSocketPtr client, const ServiceInfo &servInfo, const Url& url);
+    void onSocketDisconnected(std::string error, TransportSocketPtr client, const ServiceInfo &servInfo, const Url& url);
 
   private:
     //maintain a cache of remote connections
