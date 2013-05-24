@@ -53,7 +53,7 @@ and its two dependencies, `socket.io <http://socket.io/>`_ and
 .. code-block:: html
 
    <script src="http://localhost:8001/jquery.min.js"></script>
-   <script src="http://localhost:8001/socket.io.js"></script>
+   <script src="http://localhost:8001/socket.io.min.js"></script>
    <script src="http://localhost:8001/qimessaging.js"></script>
 
 The API was designed around the jQuery
@@ -158,7 +158,7 @@ Complete example
    <head>
    <title>QiSession example</title>
    <script src="http://localhost:8001/jquery.min.js"></script>
-   <script src="http://localhost:8001/socket.io.js"></script>
+   <script src="http://localhost:8001/socket.io.min.js"></script>
    <script src="http://localhost:8001/qimessaging.js"></script>
    </head>
 
