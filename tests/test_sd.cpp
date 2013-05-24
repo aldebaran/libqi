@@ -13,11 +13,12 @@ TEST(Module, pass_obj)
 
   try
     {
-    sd.listen("tcp://127.0.0.1:9559");
+    sd.listen("tcp://127.0.0.1:0");
     sd.listen("tcp://127.0.0.1:0");
     }
-    catch(std::runtime_error&)
+    catch(std::runtime_error&e)
     {
+      qiLogError("test_sd") << e.what();
       ASSERT_TRUE(false);
     }
 }
