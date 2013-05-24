@@ -69,7 +69,7 @@ function QiSession(url)
       }
       _socket.emit('call', { idm: idm, params: { service: service, method: method, args: Array.prototype.slice.call(arguments, 0) } });
 
-      return _dfd[idm];
+      return _dfd[idm].promise();
     }
   }
 

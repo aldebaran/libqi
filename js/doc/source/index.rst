@@ -57,8 +57,9 @@ and its two dependencies, `socket.io <http://socket.io/>`_ and
    <script src="http://localhost:8001/qimessaging.js"></script>
 
 The API was designed around the jQuery
-`Deferred object <http://api.jquery.com/category/deferred-object/>`_, which
-is returned by most functions.
+`Deferred object <http://api.jquery.com/category/deferred-object/>`_, of which
+most functions return a
+`promise <http://api.jquery.com/deferred.promise/>`_.
 
 The binding provides only one class: ``QiSession``, the JavaScript equivalent
 of qimessaging sessions. It is constructed using the JSON server URL.
