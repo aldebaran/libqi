@@ -88,7 +88,7 @@ if __name__ == "__main__":
 
     # Create HTTP application
     http_app = tornado.web.Application(
-      [(r'/(socket.io.js)', tornado.web.StaticFileHandler, {'path': "./"}),
+      [(r'/(socket.io.min.js)', tornado.web.StaticFileHandler, {'path': "./"}),
        (r'/(qimessaging.js)', tornado.web.StaticFileHandler, {'path': "./"}),
        (r'/(jquery.min.js)', tornado.web.StaticFileHandler, {'path': "./"})]
     )
