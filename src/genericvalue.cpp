@@ -33,6 +33,350 @@ namespace qi
     {
     }
   }
+
+
+  std::pair<GenericValuePtr, bool> GenericValuePtr::convert(TypeDynamic* targetType) const
+  {
+    GenericValuePtr result;
+
+    result.type = targetType;
+    result.value = targetType->initializeStorage();
+    static_cast<TypeDynamic*>(targetType)->set(&result.value, *this);
+    return std::make_pair(result, true);
+    return std::make_pair(GenericValuePtr(), false);
+  }
+
+  std::pair<GenericValuePtr, bool> GenericValuePtr::convert(TypePointer* targetType) const
+  {
+    GenericValuePtr result;
+
+    switch (type->kind())
+    {
+    case Type::Pointer:
+    {
+      Type* srcPointedType = static_cast<TypePointer*>(type)->pointedType();
+      Type* dstPointedType = static_cast<TypePointer*>(targetType)->pointedType();
+      // We only try to handle conversion for pointer to objects
+      if (srcPointedType->kind() != Type::Object || dstPointedType->kind() != Type::Object)
+      {
+        // However, we need the full check for exact match here
+        if (type->info() == targetType->info())
+          return std::make_pair(*this, false);
+        else
+        {
+          qiLogDebug() << "Conversion between non-object pointers not supported";
+          return std::make_pair(GenericValuePtr(), false);
+        }
+      }
+      GenericValuePtr pointedSrc = static_cast<TypePointer*>(type)->dereference(value);
+      // try object conversion (inheritance)
+      std::pair<GenericValuePtr, bool> pointedDstPair = pointedSrc.convert(dstPointedType);
+      if (!pointedDstPair.first.type)
+      {
+        // try object->proxy conversion by simply rewrapping this
+        ObjectPtr o(new GenericObject(static_cast<ObjectType*>(pointedSrc.type), pointedSrc.value));
+        return GenericValueRef(o).convert(targetType);
+      }
+      if (pointedDstPair.second)
+        qiLogError() << "assertion error, allocated converted reference";
+      // We must re-reference
+      GenericValuePtr pointedDst = pointedDstPair.first;
+      void* ptr = pointedDst.type->ptrFromStorage(&pointedDst.value);
+      result.type = targetType;
+      result.value = targetType->initializeStorage(&ptr);
+      return std::make_pair(result, false);
+    }
+    case Type::Object:
+    {
+      std::pair<GenericValuePtr, bool> gv = convert(
+                                              static_cast<TypePointer*>(targetType)->pointedType());
+      if (!gv.first.type)
+        return gv;
+      // Re-pointerise it
+      void* ptr = gv.first.type->ptrFromStorage(&gv.first.value);
+      GenericValuePtr result;
+      result.type = targetType;
+      result.value = targetType->initializeStorage(&ptr);
+      return std::make_pair(result, false);
+    }
+    default:
+      break;
+    }
+    return std::make_pair(GenericValuePtr(), false);
+  }
+
+  std::pair<GenericValuePtr, bool> GenericValuePtr::convert(TypeList* targetType) const
+  {
+    GenericValuePtr result;
+
+    switch (type->kind())
+    {
+    case Type::List:
+    {
+      TypeList* targetListType = static_cast<TypeList*>(targetType);
+      TypeList* sourceListType = static_cast<TypeList*>(type);
+
+      Type* srcElemType = sourceListType->elementType();
+      Type* dstElemType = targetListType->elementType();
+      bool needConvert = (srcElemType->info() != dstElemType->info());
+      result = GenericValuePtr((Type*)targetListType);
+
+      GenericIterator iend = end();
+      for (GenericIterator it = begin(); it!= iend; ++it)
+      {
+        GenericValuePtr val = *it;
+        if (!needConvert)
+          result._append(val);
+        else
+        {
+          std::pair<GenericValuePtr,bool> c = val.convert(dstElemType);
+          if (!c.first.type)
+          {
+            qiLogDebug() << "List element conversion failure from "
+                         << val.type->infoString() << " to " << dstElemType->infoString();
+            result.destroy();
+            return std::make_pair(GenericValuePtr(), false);
+          }
+          result._append(c.first);
+          if (c.second)
+            c.first.destroy();
+        }
+      }
+      return std::make_pair(result, true);
+    }
+    default:
+      break;
+    }
+    return std::make_pair(GenericValuePtr(), false);
+  }
+
+  std::pair<GenericValuePtr, bool> GenericValuePtr::convert(TypeString* targetType) const
+  {
+    GenericValuePtr result;
+
+    switch (type->kind())
+    {
+    case Type::String:
+    {
+      if (targetType->info() == type->info())
+        return std::make_pair(*this, false);
+      result.type = targetType;
+      result.value = targetType->initializeStorage();
+      std::pair<char*, size_t> v = static_cast<TypeString*>(type)->get(value);
+      static_cast<TypeString*>(targetType)->set(&result.value,
+                                                v.first, v.second);
+      return std::make_pair(result, true);
+    }
+    case Type::Raw:
+    {
+      qiLogWarning() << "Conversion attempt from raw to string";
+      return std::make_pair(GenericValuePtr(), false);
+    }
+    default:
+      break;
+    }
+    return std::make_pair(GenericValuePtr(), false);
+  }
+
+  std::pair<GenericValuePtr, bool> GenericValuePtr::convert(TypeRaw* targetType) const
+  {
+    GenericValuePtr result;
+
+    switch (type->kind())
+    {
+    case Type::Raw:
+    {
+      if (targetType->info() == type->info())
+        return std::make_pair(*this, false);
+      result.type = targetType;
+      result.value = targetType->initializeStorage();
+      std::pair<char*, size_t> v = static_cast<TypeRaw*>(type)->get(value);
+      static_cast<TypeRaw*>(result.type)->set(&result.value, v.first, v.second);
+      return std::make_pair(result, true);
+    }
+    case Type::String:
+    {
+      std::pair<char*, size_t> data = static_cast<TypeString*>(type)->get(value);
+      result.type = targetType;
+      result.value = targetType->initializeStorage();
+      static_cast<TypeRaw*>(result.type)->set(&result.value, data.first, data.second);
+      return std::make_pair(result, true);
+    }
+    default:
+      break;
+    }
+    return std::make_pair(GenericValuePtr(), false);
+  }
+
+  std::pair<GenericValuePtr, bool> GenericValuePtr::convert(TypeFloat* targetType) const
+  {
+    GenericValuePtr result;
+
+    switch (type->kind())
+    {
+    case Type::Float:
+    {
+      result.type = targetType;
+      result.value = targetType->initializeStorage();
+      static_cast<TypeFloat*>(targetType)->set(&result.value,
+                                               static_cast<TypeFloat*>(type)->get(value));
+      return std::make_pair(result, true);
+    }
+    case Type::Int:
+    {
+      GenericValuePtr result(static_cast<Type*>(targetType));
+      int64_t v = static_cast<TypeInt*>(type)->get(value);
+      if (static_cast<TypeInt*>(type)->isSigned())
+        result.setInt(v);
+      else
+        result.setUInt((uint64_t)v);
+      return std::make_pair(result, true);
+    }
+    default:
+      break;
+    }
+    return std::make_pair(GenericValuePtr(), false);
+  }
+
+  std::pair<GenericValuePtr, bool> GenericValuePtr::convert(TypeInt* targetType) const
+  {
+    GenericValuePtr result;
+
+    switch (type->kind())
+    {
+    case Type::Int:
+    {
+      TypeInt* tsrc = static_cast<TypeInt*>(type);
+      TypeInt* tdst = static_cast<TypeInt*>(targetType);
+      int64_t v = tsrc->get(value);
+      /* Bounce to GVP to perform overflow checks
+      */
+      GenericValuePtr result((Type*)tdst);
+      if (tsrc->isSigned())
+        result.setInt(v);
+      else
+        result.setUInt((uint64_t)v);
+      tdst->set(&result.value, v);
+      return std::make_pair(result, true);
+    }
+    case Type::Float:
+    {
+      double v = static_cast<TypeFloat*>(type)->get(value);
+      TypeInt* tdst = static_cast<TypeInt*>(targetType);
+      GenericValuePtr result((Type*)tdst);
+      // bounce to setDouble for overflow check
+      result.setDouble(v);
+      return std::make_pair(result, true);
+    }
+    default:
+      break;
+    }
+    return std::make_pair(GenericValuePtr(), false);
+  }
+
+  std::pair<GenericValuePtr, bool> GenericValuePtr::convert(TypeTuple* targetType) const
+  {
+    GenericValuePtr result;
+    TypeTuple* tdst = targetType;
+
+    switch (type->kind())
+    {
+    case Type::Tuple:
+    {
+      TypeTuple* tsrc = static_cast<TypeTuple*>(type);
+      std::vector<void*> sourceData = tsrc->get(value);
+      std::vector<Type*> srcTypes = tsrc->memberTypes();
+      std::vector<Type*> dstTypes = tdst->memberTypes();
+      if (dstTypes.size() != sourceData.size())
+      {
+        qiLogWarning() << "Conversion failure: tuple size mismatch between " << tsrc->signature() << " and " << tdst->signature();
+        return std::make_pair(GenericValuePtr(), false);
+      }
+
+      std::vector<void*> targetData;
+      std::vector<bool> mustDestroy;
+      for (unsigned i=0; i<dstTypes.size(); ++i)
+      {
+        std::pair<GenericValuePtr, bool> conv = GenericValuePtr(srcTypes[i], sourceData[i]).convert(dstTypes[i]);
+        if (!conv.first.type)
+        {
+          qiLogWarning() << "Conversion failure in tuple member between "
+                         << srcTypes[i]->infoString() << " and " << dstTypes[i]->infoString();
+          return std::make_pair(GenericValuePtr(), false);
+        }
+        targetData.push_back(conv.first.value);
+        mustDestroy.push_back(conv.second);
+      }
+      void* dst = tdst->initializeStorage();
+      tdst->set(&dst, targetData);
+      for (unsigned i=0; i<mustDestroy.size(); ++i)
+      {
+        if (mustDestroy[i])
+          dstTypes[i]->destroy(targetData[i]);
+      }
+      result.type = targetType;
+      result.value = dst;
+      return std::make_pair(result, true);
+    }
+    default:
+      break;
+    }
+    return std::make_pair(GenericValuePtr(), false);
+  }
+
+  std::pair<GenericValuePtr, bool> GenericValuePtr::convert(TypeMap* targetType) const
+  {
+    GenericValuePtr result;
+
+    switch (type->kind())
+    {
+    case Type::Map:
+    {
+      result = GenericValuePtr(static_cast<Type*>(targetType));
+
+      TypeMap* targetMapType = static_cast<TypeMap*>(targetType);
+      TypeMap* srcMapType = static_cast<TypeMap*>(type);
+
+      Type* srcKeyType = srcMapType->keyType();
+      Type* srcElementType = srcMapType->elementType();
+
+      Type* targetKeyType = targetMapType->keyType();
+      Type* targetElementType = targetMapType->elementType();
+
+      bool sameKey = srcKeyType->info() == targetKeyType->info();
+      bool sameElem = srcElementType->info() == targetElementType->info();
+
+      GenericIterator iend = end();
+      for (GenericIterator it = begin(); it != iend; ++it)
+      {
+        std::pair<GenericValuePtr, bool> ck, cv;
+        GenericValuePtr kv = *it;
+        if (!sameKey)
+        {
+          ck = kv[0].convert(targetKeyType);
+          if (!ck.first.type)
+            return std::make_pair(GenericValuePtr(), false);
+        }
+        if (!sameElem)
+        {
+          cv = kv[1].convert(targetElementType);
+          if (!cv.first.type)
+            return std::make_pair(GenericValuePtr(), false);
+        }
+        result._insert(sameKey?kv[0]:ck.first, sameElem?kv[1]:cv.first);
+        if (!sameKey && ck.second)
+          ck.first.destroy();
+        if (!sameElem && cv.second)
+          cv.first.destroy();
+      }
+      return std::make_pair(result, true);
+    }
+    default:
+      break;
+    }
+    return std::make_pair(GenericValuePtr(), false);
+  }
+
   std::pair<GenericValuePtr, bool> GenericValuePtr::convert(Type* targetType) const
   {
     // qiLogDebug() << "convert " << type->infoString() << ' ' << targetType->infoString();
@@ -41,9 +385,7 @@ namespace qi
      * is more expensive than the dummy conversion that will happen.
      */
     if (type == targetType)
-    {
       return std::make_pair(*this, false);
-    }
 
     if (!targetType || !type) {
       qiLogWarning() << "Conversion error: can't convert to/from a null type.";
@@ -53,280 +395,80 @@ namespace qi
     GenericValuePtr result;
     Type::Kind skind = type->kind();
     Type::Kind dkind = targetType->kind();
+
     if (skind == dkind)
     {
-      switch(skind)
+      switch(dkind)
       {
-        case Type::Float:
-          result.type = targetType;
-          result.value = targetType->initializeStorage();
-          static_cast<TypeFloat*>(targetType)->set(&result.value,
-                                                   static_cast<TypeFloat*>(type)->get(value));
-          return std::make_pair(result, true);
-        case Type::Int:
-          {
-          TypeInt* tsrc = static_cast<TypeInt*>(type);
-          TypeInt* tdst = static_cast<TypeInt*>(targetType);
-          int64_t v = tsrc->get(value);
-          /* Bounce to GVP to perform overflow checks
-          */
-          GenericValuePtr result((Type*)tdst);
-          if (tsrc->isSigned())
-            result.setInt(v);
-          else
-            result.setUInt((uint64_t)v);
-          tdst->set(&result.value, v);
-          return std::make_pair(result, true);
-          }
-        case Type::String:
-          {
-            if (targetType->info() == type->info())
-              return std::make_pair(*this, false);
-            result.type = targetType;
-            result.value = targetType->initializeStorage();
-            std::pair<char*, size_t> v = static_cast<TypeString*>(type)->get(value);
-            static_cast<TypeString*>(targetType)->set(&result.value,
-                                                      v.first, v.second);
-            return std::make_pair(result, true);
-          }
-        case Type::List:
-        {
-          TypeList* targetListType = static_cast<TypeList*>(targetType);
-          TypeList* sourceListType = static_cast<TypeList*>(type);
-
-          Type* srcElemType = sourceListType->elementType();
-          Type* dstElemType = targetListType->elementType();
-          bool needConvert = (srcElemType->info() != dstElemType->info());
-          result = GenericValuePtr((Type*)targetListType);
-
-          GenericIterator iend = end();
-          for (GenericIterator it = begin(); it!= iend; ++it)
-          {
-            GenericValuePtr val = *it;
-            if (!needConvert)
-              result._append(val);
-            else
-            {
-              std::pair<GenericValuePtr,bool> c = val.convert(dstElemType);
-              if (!c.first.type)
-              {
-                qiLogDebug() << "List element conversion failure from "
-                 << val.type->infoString() << " to " << dstElemType->infoString();
-                 result.destroy();
-                 return std::make_pair(GenericValuePtr(), false);
-              }
-              result._append(c.first);
-              if (c.second)
-                c.first.destroy();
-            }
-          }
-          return std::make_pair(result, true);
-        }
-          break;
-        case Type::Map:
-        {
-          result = GenericValuePtr(targetType);
-
-          TypeMap* targetMapType = static_cast<TypeMap*>(targetType);
-          TypeMap* srcMapType = static_cast<TypeMap*>(type);
-
-          Type* srcKeyType = srcMapType->keyType();
-          Type* srcElementType = srcMapType->elementType();
-
-          Type* targetKeyType = targetMapType->keyType();
-          Type* targetElementType = targetMapType->elementType();
-
-          bool sameKey = srcKeyType->info() == targetKeyType->info();
-          bool sameElem = srcElementType->info() == targetElementType->info();
-
-          GenericIterator iend = end();
-          for (GenericIterator it = begin(); it != iend; ++it)
-          {
-            std::pair<GenericValuePtr, bool> ck, cv;
-            GenericValuePtr kv = *it;
-            if (!sameKey)
-            {
-              ck = kv[0].convert(targetKeyType);
-              if (!ck.first.type)
-                return std::make_pair(GenericValuePtr(), false);
-            }
-            if (!sameElem)
-            {
-              cv = kv[1].convert(targetElementType);
-              if (!cv.first.type)
-                return std::make_pair(GenericValuePtr(), false);
-            }
-            result._insert(sameKey?kv[0]:ck.first, sameElem?kv[1]:cv.first);
-            if (!sameKey && ck.second)
-              ck.first.destroy();
-            if (!sameElem && cv.second)
-              cv.first.destroy();
-          }
-          return std::make_pair(result, true);
-        }
-          break;
-        case Type::Pointer:
-        {
-          Type* srcPointedType = static_cast<TypePointer*>(type)->pointedType();
-          Type* dstPointedType = static_cast<TypePointer*>(targetType)->pointedType();
-          // We only try to handle conversion for pointer to objects
-          if (srcPointedType->kind() != Type::Object || dstPointedType->kind() != Type::Object)
-          {
-            // However, we need the full check for exact match here
-            if (type->info() == targetType->info())
-              return std::make_pair(*this, false);
-            else
-            {
-              qiLogDebug() << "Conversion between non-object pointers not supported";
-              return std::make_pair(GenericValuePtr(), false);
-            }
-          }
-          GenericValuePtr pointedSrc = static_cast<TypePointer*>(type)->dereference(value);
-          // try object conversion (inheritance)
-          std::pair<GenericValuePtr, bool> pointedDstPair = pointedSrc.convert(dstPointedType);
-          if (!pointedDstPair.first.type)
-          {
-            // try object->proxy conversion by simply rewrapping this
-            ObjectPtr o(new GenericObject(static_cast<ObjectType*>(pointedSrc.type), pointedSrc.value));
-            return GenericValueRef(o).convert(targetType);
-          }
-          if (pointedDstPair.second)
-            qiLogError() << "assertion error, allocated converted reference";
-          // We must re-reference
-          GenericValuePtr pointedDst = pointedDstPair.first;
-          void* ptr = pointedDst.type->ptrFromStorage(&pointedDst.value);
-          result.type = targetType;
-          result.value = targetType->initializeStorage(&ptr);
-          return std::make_pair(result, false);
-        }
-          break;
-        case Type::Tuple:
-        {
-          TypeTuple* tsrc = static_cast<TypeTuple*>(type);
-          TypeTuple* tdst = static_cast<TypeTuple*>(targetType);
-          std::vector<void*> sourceData = tsrc->get(value);
-          std::vector<Type*> srcTypes = tsrc->memberTypes();
-          std::vector<Type*> dstTypes = tdst->memberTypes();
-          if (dstTypes.size() != sourceData.size())
-          {
-            qiLogWarning() << "Conversion failure: tuple size mismatch between " << tsrc->signature() << " and " << tdst->signature();
-            return std::make_pair(GenericValuePtr(), false);
-          }
-
-          std::vector<void*> targetData;
-          std::vector<bool> mustDestroy;
-          for (unsigned i=0; i<dstTypes.size(); ++i)
-          {
-            std::pair<GenericValuePtr, bool> conv = GenericValuePtr(srcTypes[i], sourceData[i]).convert(dstTypes[i]);
-            if (!conv.first.type)
-            {
-              qiLogWarning() << "Conversion failure in tuple member between "
-                                      << srcTypes[i]->infoString() << " and " << dstTypes[i]->infoString();
-              return std::make_pair(GenericValuePtr(), false);
-            }
-            targetData.push_back(conv.first.value);
-            mustDestroy.push_back(conv.second);
-          }
-          void* dst = tdst->initializeStorage();
-          tdst->set(&dst, targetData);
-          for (unsigned i=0; i<mustDestroy.size(); ++i)
-          {
-            if (mustDestroy[i])
-              dstTypes[i]->destroy(targetData[i]);
-          }
-          result.type = targetType;
-          result.value = dst;
-          return std::make_pair(result, true);
-        }
-        case Type::Dynamic: {
-          result.type  = targetType;
-          result.value = targetType->initializeStorage();
-          static_cast<TypeDynamic*>(targetType)->set(&result.value, *this);
-          return std::make_pair(result, true);
-        }
-        case Type::Raw: {
-          if (targetType->info() == type->info())
-            return std::make_pair(*this, false);
-          result.type = targetType;
-          result.value = targetType->initializeStorage();
-          std::pair<char*, size_t> v = static_cast<TypeRaw*>(type)->get(value);
-           static_cast<TypeRaw*>(result.type)->set(&result.value, v.first, v.second);
-          return std::make_pair(result, true);
-        }
-        case Type::Unknown:
-          /* Under clang macos, typeInfo() comparison fails
+      case Type::Float:
+        return convert(static_cast<TypeFloat*>(targetType));
+      case Type::Int:
+        return convert(static_cast<TypeInt*>(targetType));
+      case Type::String:
+        return convert(static_cast<TypeString*>(targetType));
+      case Type::List:
+        return convert(static_cast<TypeList*>(targetType));
+      case Type::Map:
+        return convert(static_cast<TypeMap*>(targetType));
+      case Type::Pointer:
+        return convert(static_cast<TypePointer*>(targetType));
+      case Type::Tuple:
+        return convert(static_cast<TypeTuple*>(targetType));
+      case Type::Dynamic:
+        return convert(static_cast<TypeDynamic*>(targetType));
+      case Type::Raw:
+        return convert(static_cast<TypeRaw*>(targetType));
+      case Type::Unknown:
+      {
+        /* Under clang macos, typeInfo() comparison fails
            * for non-exported (not forced visibility=default since we default to hidden)
            * symbols. So ugly hack, compare the strings.
            */
-          if (targetType->info() == type->info()
-#ifdef __clang__
+        if (targetType->info() == type->info()
+    #ifdef __clang__
             || targetType->info().asString() ==  type->info().asString()
-#endif
-              )
-            return std::make_pair(*this, false);
-          else
-            return std::make_pair(GenericValuePtr(), false);
-          break;
-        default:
-          break;
+    #endif
+            )
+          return std::make_pair(*this, false);
+        else
+          return std::make_pair(GenericValuePtr(), false);
+      }
+      default:
+        break;
       } // switch
     } // skind == dkind
     if (skind == Type::Float && dkind == Type::Int)
-    {
-      double v = static_cast<TypeFloat*>(type)->get(value);
-      TypeInt* tdst = static_cast<TypeInt*>(targetType);
-      GenericValuePtr result((Type*)tdst);
-      // bounce to setDouble for overflow check
-      result.setDouble(v);
-      return std::make_pair(result, true);
-    }
+      return convert(static_cast<TypeInt*>(targetType));
     else if (skind == Type::Int && dkind == Type::Float)
-    {
-      GenericValuePtr result(targetType);
-      int64_t v = static_cast<TypeInt*>(type)->get(value);
-      if (static_cast<TypeInt*>(type)->isSigned())
-        result.setInt(v);
-      else
-        result.setUInt((uint64_t)v);
-      return std::make_pair(result, true);
-    }
+      return convert(static_cast<TypeFloat*>(targetType));
     else if (skind == Type::String && dkind == Type::Raw)
-    {
-      std::pair<char*, size_t> data = static_cast<TypeString*>(type)->get(value);
-      result.type = targetType;
-      result.value = targetType->initializeStorage();
-      static_cast<TypeRaw*>(result.type)->set(&result.value, data.first, data.second);
-      return std::make_pair(result, true);
-    }
+      return convert(static_cast<TypeRaw*>(targetType));
     else if (skind == Type::Raw && dkind == Type::String)
-    {
-      qiLogWarning() << "Conversion attempt from raw to string";
-      return std::make_pair(GenericValuePtr(), false);
-    }
+      return convert(static_cast<TypeString*>(targetType));
 
     if (targetType->info() == typeOf<ObjectPtr>()->info()
-      && type->kind() == Type::Pointer
-    && static_cast<TypePointer*>(type)->pointedType()->kind() == Type::Object)
+        && type->kind() == Type::Pointer
+        && static_cast<TypePointer*>(type)->pointedType()->kind() == Type::Object)
     { // Pointer to concrete object -> ObjectPtr
       // Keep a copy of this in ObjectPtr, and destroy on ObjectPtr destruction
       // That way if this is a shared_ptr, we link to it correctly
       TypePointer* pT = static_cast<TypePointer*>(type);
       ObjectPtr o(
-        new GenericObject(
-          static_cast<ObjectType*>(pT->pointedType()),
-          pT->dereference(value).value),
-        boost::bind(dropIt, GenericValue(*this)));
+            new GenericObject(
+              static_cast<ObjectType*>(pT->pointedType()),
+              pT->dereference(value).value),
+            boost::bind(dropIt, GenericValue(*this)));
       return std::make_pair(GenericValueRef(o).clone(), true);
     }
 
     if (type->info() == typeOf<ObjectPtr>()->info()
-      && targetType->kind() == Type::Pointer
-    && static_cast<TypePointer*>(targetType)->pointedType()->kind() == Type::Object)
+        && targetType->kind() == Type::Pointer
+        && static_cast<TypePointer*>(targetType)->pointedType()->kind() == Type::Object)
     { // Attempt specialized proxy conversion
       qiLogDebug() << "Attempting specialized proxy conversion";
       detail::ProxyGeneratorMap& map = detail::proxyGeneratorMap();
       detail::ProxyGeneratorMap::iterator it = map.find(
-        static_cast<TypePointer*>(targetType)->pointedType()->info());
+                                                 static_cast<TypePointer*>(targetType)->pointedType()->info());
       if (it != map.end())
       {
         GenericValuePtr res = (it->second)(*(ObjectPtr*)value);
@@ -337,13 +479,10 @@ namespace qi
                      << static_cast<TypePointer*>(targetType)->pointedType()->infoString()
                      <<" not found in proxy map";
     }
+
     if (targetType->kind() == Type::Dynamic)
-    {
-      result.type = targetType;
-      result.value = targetType->initializeStorage();
-      static_cast<TypeDynamic*>(targetType)->set(&result.value, *this);
-      return std::make_pair(result, true);
-    }
+      return convert(static_cast<TypeDynamic*>(targetType));
+
     if (type->kind() == Type::Dynamic)
     {
       GenericValuePtr gv = asDynamic();
@@ -352,24 +491,14 @@ namespace qi
     }
 
     if (skind == Type::Object && dkind == Type::Pointer)
-    {
-      std::pair<GenericValuePtr, bool> gv = convert(
-        static_cast<TypePointer*>(targetType)->pointedType());
-      if (!gv.first.type)
-        return gv;
-      // Re-pointerise it
-      void* ptr = gv.first.type->ptrFromStorage(&gv.first.value);
-      GenericValuePtr result;
-      result.type = targetType;
-      result.value = targetType->initializeStorage(&ptr);
-      return std::make_pair(result, false);
-    }
+      return convert(static_cast<TypePointer*>(targetType));
+
     if (skind == Type::Object)
     {
       // Try inheritance
       ObjectType* osrc = static_cast<ObjectType*>(type);
       qiLogDebug() << "inheritance check "
-                            << osrc <<" " << (osrc?osrc->inherits(targetType):false);
+        << osrc <<" " << (osrc?osrc->inherits(targetType):false);
       int inheritOffset = 0;
       if (osrc && (inheritOffset =  osrc->inherits(targetType)) != -1)
       {
@@ -379,10 +508,9 @@ namespace qi
         return std::make_pair(result, false);
       }
     }
+
     if (type->info() == targetType->info())
-    {
       return std::make_pair(*this, false);
-    }
 
     return std::make_pair(GenericValuePtr(), false);
   }
@@ -399,7 +527,7 @@ namespace qi
   bool operator< (const GenericValuePtr& a, const GenericValuePtr& b)
   {
     //qiLogDebug() << "Compare " << a.type << ' ' << b.type;
-    #define GET(v, t) static_cast<Type ## t *>(v.type)->get(v.value)
+#define GET(v, t) static_cast<Type ## t *>(v.type)->get(v.value)
     if (!a.type)
       return b.type != 0;
     if (!b.type)
@@ -408,7 +536,7 @@ namespace qi
     * usage of get() below for string types.
     */
     if ((a.type == b.type || a.type->info() == b.type->info())
-      && a.type->kind() != Type::String)
+        && a.type->kind() != Type::String)
     {
       //qiLogDebug() << "Compare sametype " << a.type->infoString();
       return a.type->less(a.value, b.value);
@@ -435,40 +563,40 @@ namespace qi
     case Type::Float:
       return GET(a, Float) < GET(b, Float);
     case Type::String:
-      {
-        std::pair<char*, size_t> ca, cb;
-        ca = GET(a, String);
-        cb = GET(b, String);
-        bool res = ca.second == cb.second?
-        (memcmp(ca.first, cb.first, ca.second) < 0) : (ca.second < cb.second);
-        qiLogDebug() << "Compare " << ca.first << ' ' << cb.first << ' ' << res;
-        return res;
-      }
+    {
+      std::pair<char*, size_t> ca, cb;
+      ca = GET(a, String);
+      cb = GET(b, String);
+      bool res = ca.second == cb.second?
+                   (memcmp(ca.first, cb.first, ca.second) < 0) : (ca.second < cb.second);
+      qiLogDebug() << "Compare " << ca.first << ' ' << cb.first << ' ' << res;
+      return res;
+    }
     case Type::List:
     case Type::Map: // omg, same code!
+    {
+      size_t la = a.size();
+      size_t lb = b.size();
+      if (la != lb)
+        return la < lb;
+      GenericIterator ita   = a.begin();
+      GenericIterator enda = a.end();
+      GenericIterator itb   = b.begin();
+      GenericIterator endb = b.end();
+      while (ita != enda)
       {
-        size_t la = a.size();
-        size_t lb = b.size();
-        if (la != lb)
-          return la < lb;
-        GenericIterator ita   = a.begin();
-        GenericIterator enda = a.end();
-        GenericIterator itb   = b.begin();
-        GenericIterator endb = b.end();
-        while (ita != enda)
-        {
-          assert (! (itb == endb));
-          GenericValuePtr ea = *ita;
-          GenericValuePtr eb = *itb;
-          if (ea < eb)
-            return true;
-          else if (eb < ea)
-            return false;
-          ++ita;
-          ++itb;
-        }
-        return false; // list are equals
+        assert (! (itb == endb));
+        GenericValuePtr ea = *ita;
+        GenericValuePtr eb = *itb;
+        if (ea < eb)
+          return true;
+        else if (eb < ea)
+          return false;
+        ++ita;
+        ++itb;
       }
+      return false; // list are equals
+    }
     case Type::Object:
     case Type::Pointer:
     case Type::Tuple:
@@ -478,7 +606,7 @@ namespace qi
     case Type::Iterator:
       return a.value < b.value;
     }
-    #undef GET
+#undef GET
     return a.value < b.value;
   }
   bool operator< (const GenericValue& a, const GenericValue& b)
@@ -489,7 +617,7 @@ namespace qi
   bool operator==(const GenericValuePtr& a, const GenericValuePtr& b)
   {
     if (a.kind() == Type::Iterator && b.kind() == Type::Iterator
-      && a.type->info() == b.type->info())
+        && a.type->info() == b.type->info())
     {
       return static_cast<TypeIterator*>(a.type)->equals(a.value, b.value);
     }
@@ -568,7 +696,7 @@ namespace qi
       // HACK: should be two separate booleans
       bool autoInsert = throwOnFailure;
       GenericValuePtr result
-        = t->element(&value, c.first.value, autoInsert);
+          = t->element(&value, c.first.value, autoInsert);
       if (c.second)
         c.first.destroy();
       return result;
@@ -697,20 +825,20 @@ namespace qi
     else if (kind() == Type::Int)
     {
       TypeInt* type = static_cast<TypeInt*>(this->type);
-       if (v < 0 && !type->isSigned())
+      if (v < 0 && !type->isSigned())
         throw std::runtime_error(_QI_LOG_FORMAT_HASARG_0("Converting negative value %s to unsigned type", v));
       if (type->size() == 0 && std::min(std::abs(v), std::abs(v-1)) > 0.01)
         throw std::runtime_error(_QI_LOG_FORMAT_HASARG_0("Expected 0 or 1 when converting to bool, got %s", v));
       if (type->size() != 0 && type->size() < 8 && (std::abs(v) >= (1ULL << (8*type->size() - (type->isSigned()?1:0))) + ((v<0)?1:0)))
         throw std::runtime_error(_QI_LOG_FORMAT_HASARG_0("Overflow converting %s to %s bytes", v, type->size()));
       if (type->size() == 8
-        && std::abs(v) > (type->isSigned()?
-          (double)std::numeric_limits<int64_t>::max()
-          :(double)std::numeric_limits<uint64_t>::max()))
+          && std::abs(v) > (type->isSigned()?
+            (double)std::numeric_limits<int64_t>::max()
+            :(double)std::numeric_limits<uint64_t>::max()))
         throw std::runtime_error(_QI_LOG_FORMAT_HASARG_0("Overflow converting %s to %s bytes", v, type->size()));
       type->set(&value, static_cast<int64_t>(v));
-   }
-   else
+    }
+    else
       throw std::runtime_error("Value is not Int or Float");
   }
 
@@ -720,9 +848,9 @@ namespace qi
     {
       std::stringstream msg;
       msg << "Conversion from " << from->infoString()
-          << '(' << from->kind() << ')'
-          << " to " << to->infoString()
-          << '(' << to->kind() << ") failed";
+        << '(' << from->kind() << ')'
+        << " to " << to->infoString()
+        << '(' << to->kind() << ") failed";
       qiLogWarning() << msg.str();
       throw std::runtime_error(msg.str());
     }

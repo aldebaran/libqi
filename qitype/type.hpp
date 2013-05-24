@@ -211,6 +211,19 @@ namespace qi{
     /// @return the pair (convertedValue, trueIfCopiedAndNeedsDestroy)
     std::pair<GenericValuePtr, bool> convert(Type* targetType) const;
 
+    std::pair<GenericValuePtr, bool> convert(TypeList* targetType) const;
+    std::pair<GenericValuePtr, bool> convert(TypeTuple* targetType) const;
+    std::pair<GenericValuePtr, bool> convert(TypeMap* targetType) const;
+    std::pair<GenericValuePtr, bool> convert(TypeInt* targetType) const;
+    std::pair<GenericValuePtr, bool> convert(TypeFloat* targetType) const;
+    std::pair<GenericValuePtr, bool> convert(TypeRaw* targetType) const;
+    std::pair<GenericValuePtr, bool> convert(TypeString* targetType) const;
+    std::pair<GenericValuePtr, bool> convert(TypePointer* targetType) const;
+    std::pair<GenericValuePtr, bool> convert(TypeDynamic* targetType) const;
+
+
+
+
     /** Return the typed pointer behind a GenericValuePtr. T *must* be the type
      * of the value.
      * @return a pointer to the value as a T or 0 if value is not a T.
