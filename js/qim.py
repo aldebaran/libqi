@@ -46,7 +46,6 @@ class QiMessagingHandler(tornadio2.conn.SocketConnection):
                 self.reply(idm, "reply", fut.value())
         return rep
 
-
     @tornadio2.event
     def call(self, idm, params):
         try:
@@ -72,7 +71,8 @@ class QiMessagingHandler(tornadio2.conn.SocketConnection):
             self.reply(idm, 'error', str(exc))
 
     def on_close(self):
-        pass
+        self.qim.close()
+        self.qim = None
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
