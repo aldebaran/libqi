@@ -1,5 +1,5 @@
 <IDL>
-<class name="Adder">
+<class name="qi::Adder">
   <method name="addTwo">
     <return type="int" />
     <argument type="int" />

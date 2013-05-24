@@ -2,7 +2,7 @@ find_package(idl REQUIRED)
 
 #generate interface header from idl
 qi_create_interface(${CMAKE_CURRENT_SOURCE_DIR}/adder.idl
-  Adder
+  qi::Adder
   ${CMAKE_CURRENT_BINARY_DIR} _interfacefile
   )
 
@@ -17,4 +17,3 @@ qi_create_lib(adder_interface
 
 #build the client
 qimessaging_create_session_test(test_adder_interface SRC test_adder.cpp DEPENDS QI QITYPE QIMESSAGING GTEST TESTSESSION TIMEOUT 10)
-
