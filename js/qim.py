@@ -58,7 +58,12 @@ class QiMessagingHandler(tornadio2.conn.SocketConnection):
             elif method == "registerEvent":
                 obj = self.qim.service(str(service))
                 evt = getattr(obj, args[0])
-                evt.connect(self.do_callback(service, args[0]))
+                eid = evt.connect(self.do_callback(service, args[0]))
+                self.reply(idm, "reply", eid)
+            elif method == "unregisterEvent":
+                obj = self.qim.service(str(service))
+                evt = getattr(obj, args[0])
+                self.reply(idm, "reply", evt.disconnect(args[1]))
             else:
                 obj = self.qim.service(str(service))
                 met = getattr(obj, method)
