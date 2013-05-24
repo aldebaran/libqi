@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-## Copyright (c) 2012 Aldebaran Robotics. All rights reserved.
+## Copyright (c) 2012, 2013 Aldebaran Robotics. All rights reserved.
 
 """ Code parsing and generator tool.
 
@@ -428,7 +428,7 @@ def idl_to_raw(root):
     result[cls.get("name")] =  (methods, signals, properties, (cls.get("annotations") or ''))
   return result
 
-def raw_to_interface(class_name, data, include):
+def raw_to_interface(class_name, data, include, namespaces):
   """ Generate service interface class from RAW representation
   """
   skeleton = """
@@ -442,6 +442,9 @@ def raw_to_interface(class_name, data, include):
 #include <qitype/signal.hpp>
 #include <qitype/property.hpp>
 @include@
+
+@OPEN_NAMESPACE@
+
 class @INAME@
 {
   public:
@@ -474,7 +477,9 @@ inline @INAME@::~@INAME@()
 
 typedef boost::shared_ptr<@INAME@> @INAME@Ptr;
 
-QI_TYPE_NOT_CLONABLE(@INAME@);
+@CLOSE_NAMESPACE@
+QI_TYPE_NOT_CLONABLE(@NAMESPACES@@INAME@);
+
 #endif
 """
   (methods, signals, properties) = (data[METHODS], data[SIGNALS], data[PROPERTIES])
@@ -528,6 +533,16 @@ inline @INAME@::@INAME@()
 {}
 """ % (ctor_init0)
     ctor0decl = '    %s();\n' % ('I'+class_name)
+
+  open_namespace = ""
+  close_namespace = ""
+  ns_full = ""
+  if namespaces:
+    for n in namespaces:
+      open_namespace += "namespace " + n + "\n{\n"
+      close_namespace = "} // !" + n + "\n" + close_namespace
+      ns_full = n + "::"
+
   replace = {
    '@CTOR0IMPL@': ctor0impl,
    '@CTOR0DECL@': ctor0decl,
@@ -539,7 +554,10 @@ inline @INAME@::@INAME@()
    '@DECLS@': methods_decl + signals_decl,
    '@GETTERS@': getters,
    '@FIELDS@': ','.join(fields),
-   '@include@': ''.join(['#include <' + x + '>\n' for x in include])
+   '@include@': ''.join(['#include <' + x + '>\n' for x in include]),
+   '@OPEN_NAMESPACE@': open_namespace,
+   '@CLOSE_NAMESPACE@': close_namespace,
+   '@NAMESPACES@': ns_full
    }
   for k in replace:
     skeleton = skeleton.replace(k, replace[k])
@@ -782,16 +800,16 @@ namespace detail {
     skeleton_source = skeleton_source.replace(k, replace[k])
   return [skeleton_header, skeleton_source, '']
 
-def raw_to_proxy(class_name, data, return_future, implement_interface, include):
+def raw_to_proxy(class_name, data, return_future, implement_interface, include, namespaces):
   """ Generate C++ proxy code from RAW
   @param return_future have the declared functions return a Future
   @param implement_interface make the proxy inherit from an interface, that
          can be generated with raw_to_interface
   """
+
   skeleton = """
 #ifndef @GARD@
 #define @GARD@
-
 
 #include <vector>
 #include <string>
@@ -805,6 +823,10 @@ def raw_to_proxy(class_name, data, return_future, implement_interface, include):
 #include <qitype/proxyproperty.hpp>
 
 @include@
+
+@open_namespace@
+
+@forward_decls@
 
 class @className@Proxy: public ::qi::Proxy
 {
@@ -821,12 +843,16 @@ public:
 @privateDecl@
 };
 
-QI_TYPE_PROXY(@className@Proxy);
 QI_REGISTER_PROXY(@className@Proxy);
+@close_namespace@
+
+QI_TYPE_PROXY(@namepaces@@className@Proxy);
 
 #endif //@GARD@
 """
+
   forward_decls = "class @className@Proxy;\ntypedef boost::shared_ptr<@className@Proxy> @className@ProxyPtr;\n"
+
   forward_decls = forward_decls.replace('@className@', class_name)
   #generate methods
   (methods, signals, properties) = (data[METHODS], data[SIGNALS], data[PROPERTIES])
@@ -876,22 +902,35 @@ QI_REGISTER_PROXY(@className@Proxy);
     signal_decl += '  qi::ProxyProperty<' + idltype_to_cxxtype(prop[1]) + '> ' + prop[0] + ';\n'
     ctor += '  , {0}(obj, "{0}")\n'.format(prop[0])
   result = skeleton
+  open_namespace = ""
+  close_namespace = ""
+  ns_full = ""
+  if namespaces:
+    for n in namespaces:
+      open_namespace += "namespace " + n + "\n{\n"
+      close_namespace = "} // !" + n + "\n" + close_namespace
+      ns_full = n + "::"
+
+  for k in fwdecl.keys():
+    forward_decls += 'class {0}; typedef boost::shared_ptr<{0}> {0}Ptr;\n'.format(k+'Proxy')
   replace = {
       'GARD': '_' + class_name.upper() + '_PROXY_HPP_',
+      'open_namespace': open_namespace,
+      'close_namespace': close_namespace,
       'className': class_name,
       'publicDecl': method_impls + signal_decl,
       'privateDecl': '',
       'constructor': '',
       'constructor_initList': ctor,
       'include': ''.join(['#include <' + x + '>\n' for x in include]),
+      'forward_decls': forward_decls,
+      'namepaces': ns_full,
   }
   for k in replace:
     result = result.replace('@' + k + '@', replace[k])
-  for k in fwdecl.keys():
-    forward_decls += 'class {0}; typedef boost::shared_ptr<{0}> {0}Ptr;\n'.format(k+'Proxy')
-  return [forward_decls, result, '']
+  return ['', result, '']
 
-def raw_to_cxx_typebuild(class_name, data, use_interface, register_to_factory, include):
+def raw_to_cxx_typebuild(class_name, data, use_interface, register_to_factory, include, namespaces):
   """ Generate a c++ file that registers the class to type system.
   @param class_name name of the class to bind
   @param data raw IDL data
@@ -904,6 +943,9 @@ def raw_to_cxx_typebuild(class_name, data, use_interface, register_to_factory, i
 #include <qitype/objectfactory.hpp>
 
 @INCLUDE@
+
+@OPEN_NAMESPACE@
+
 static int @TYPE@init()
 {
  qi::ObjectTypeBuilder<@TYPE@> builder;
@@ -913,6 +955,7 @@ static int @TYPE@init()
 }
 static int _init_@TYPE@ = @TYPE@init();
 @REGISTER@
+@CLOSE_NAMESPACE@
 """
 
   if include:
@@ -954,7 +997,14 @@ static int _init_@TYPE@ = @TYPE@init();
   elif register_to_factory == 'factory':
     register = 'QI_REGISTER_OBJECT_FACTORY_BUILDER(%s);\n' % (class_name)
 
-  return template.replace('@TYPE@', class_name).replace('@ADVERTISE@', advertise).replace('@REGISTER@', register).replace('@INCLUDE@', include)
+  open_namespace = ""
+  close_namespace = ""
+  if namespaces:
+    for n in namespaces:
+      open_namespace += "namespace " + n + "\n{\n"
+      close_namespace = "} // !" + n + "\n" + close_namespace
+
+  return template.replace('@TYPE@', class_name).replace('@ADVERTISE@', advertise).replace('@REGISTER@', register).replace('@INCLUDE@', include).replace('@OPEN_NAMESPACE@', open_namespace).replace('@CLOSE_NAMESPACE@', close_namespace)
 
 def raw_to_cxx_service_skeleton(class_name, data, implement_interface, include):
   """ Produce skeleton of C++ implementation of the service.
@@ -1080,7 +1130,7 @@ I@name@Ptr interface_from_bound(@impl@ ptr);
       #forward-declare converter functions we use
       fwd = "I@name@Ptr interface_from_bound(@name@Ptr ptr);\n@name@ProxyPtr proxy_from_interface(I@name@Ptr ptr);\n"
       fwd = fwd.replace('@name@', method[2].replace('Ptr', ''))
-      converter_decl += fwd 
+      converter_decl += fwd
       emit_interface[method[2]] = 1
       method_bounce += '   %s %s(%s) { return qi_to_interface_%s(_impl->%s(%s));}\n' % (ret, method_name, typed_args, method[2], method_name, args)
     elif ret[0:11] == 'std::vector' and ret[12:-2] == 'I' + method[2][1:-1]:
@@ -1190,6 +1240,7 @@ def main(args):
   parser.add_argument("--include", "-I", default="", help="File to include in generated C++")
   parser.add_argument("--known-classes", "-k", default="", help="Comma-separated list of other handled classes")
   parser.add_argument("--classes", "-c", default="*", help="Comma-separated list of classes to select, optionally with per class ':operation'")
+  parser.add_argument("--class-name", "-n", default="", help="C++ class name separated by include namespaces (ei: ns1::ns2::classname")
   parser.add_argument("input", nargs='+', help="input file(s)")
 
   pargs = parser.parse_args(args)
@@ -1227,16 +1278,40 @@ def main(args):
     classes = pargs.classes.split(',')
     newraw = dict()
     for c in classes:
+      namespaces_class_split = c.rsplit("::", 1) #[("ns1::ns1")+, "class:op1:op2"]
+      if len(namespaces_class_split) > 1:
+        namespaces = namespaces_class_split[0]
+        class_and_op = namespaces_class_split[1]
+      else:
+        namespaces = ""
+        class_and_op = namespaces_class_split[0]
+
+      class_and_op_split = class_and_op.split(":", 1)
+      cls = class_and_op_split[0]
+      if len(class_and_op_split) > 1:
+        class_op = class_and_op_split[1]
+      else:
+        class_op = ""
+
       if not c.strip():
         continue #be lenient on trailing ,
-      cc = c.split(':', 1)
-      if not cc[0] in raw:
-        raise Exception("Requested class %s not found in %s" % (cc[0], ','.join(raw.keys())))
-      REV_MAP[cc[0] + 'Ptr'] = cc[0] + 'ProxyPtr'
-      newraw[cc[0]] = raw[cc[0]]
-      if len(cc) > 1:
-        class_operation[cc[0]] = cc[1]
+      c = ""
+      if namespaces:
+        c = namespaces + "::"
+      c += cls
+      if not c in raw:
+        raise Exception("Requested class %s not found in %s" % (c, ','.join(raw.keys())))
+      REV_MAP[cls + 'Ptr'] = cls + 'ProxyPtr'
+      if pargs.class_name:
+        newraw[pargs.class_name] = raw[c]
+        if class_op:
+          class_operation[pargs.class_name] = class_op
+      else:
+        newraw[c] = raw[c]
+        if class_op:
+          class_operation[c] = class_op
     raw = newraw
+
   split_output = (pargs.output_file.find("%s") != -1)
   # Main switch on output mode
   if pargs.output_mode == "txt":
@@ -1247,7 +1322,17 @@ def main(args):
     res = ['','','']
     for c in raw:
       op = pargs.output_mode
-      name = c
+      namespaces_class_split = c.rsplit("::", 1) #[("ns1::ns1")+, "class:op1:op2"]
+      if len(namespaces_class_split) > 1:
+        namespaces = namespaces_class_split[0]
+        name = namespaces_class_split[1]
+      else:
+        namespaces = ""
+        name = namespaces_class_split[0]
+
+      namespaces_list = list()
+      if namespaces:
+        namespaces_list = namespaces.split("::")
       if c in class_operation:
         op = class_operation[c].split(':')
         if len(op) > 1:
@@ -1255,9 +1340,10 @@ def main(args):
         op = op[0]
       functions = []
       args = []
+
       if op == "interface":
         functions = [raw_to_interface]
-        args = [[pargs.include]]
+        args = [[pargs.include, namespaces_list]]
       elif op == "boxinterface":
         functions = [raw_to_boxinterface]
         args = [[]]
@@ -1266,35 +1352,36 @@ def main(args):
         args = [[]]
       elif op == "proxy":
         functions = [raw_to_proxy]
-        args = [[False, pargs.interface, pargs.include]]
+        args = [[False, pargs.interface, pargs.include, namespaces_list]]
       elif op == "proxyFuture":
         functions = [raw_to_proxy]
-        args = [[True, pargs.interface, pargs.include]]
+        args = [[True, pargs.interface, pargs.include, namespaces_list]]
       elif op == "cxxtype":
         functions = [raw_to_cxx_typebuild]
-        args = [[pargs.interface, '', pargs.include]]
+        args = [[pargs.interface, '', pargs.include, namespaces_list]]
       elif op == "cxxtyperegisterfactory":
         functions = [raw_to_cxx_typebuild]
-        args = [[pargs.interface, 'factory', pargs.include]]
+        args = [[pargs.interface, 'factory', pargs.include, namespaces_list]]
       elif op == "cxxtyperegisterservice":
         functions = [raw_to_cxx_typebuild]
-        args = [[pargs.interface, 'service', pargs.include]]
+        args = [[pargs.interface, 'service', pargs.include, namespaces_list]]
       elif op == "cxxskel":
         functions = [raw_to_cxx_service_skeleton]
         args = [[pargs.interface, pargs.include]]
       elif op == "cxxserviceregister":
         functions = [raw_to_cxx_service_skeleton, raw_to_cxx_typebuild]
-        args = [[pargs.interface, pargs.include], [pargs.interface, 'service', pargs.include]]
+        args = [[pargs.interface, pargs.include], [pargs.interface, 'service', pargs.include, namespaces_list]]
       elif op == "cxxservice":
         functions = [raw_to_cxx_service_skeleton, raw_to_cxx_typebuild]
-        args = [[pargs.interface, pargs.include], [pargs.interface, '', pargs.include]]
+        args = [[pargs.interface, pargs.include], [pargs.interface, '', pargs.include, namespaces_list]]
       elif op == "cxxservicebouncer":
         functions = [raw_to_cxx_service_bouncer, raw_to_cxx_typebuild]
-        args = [['@Ptr', pargs.include], [pargs.interface, '', pargs.include]]
+        args = [['@Ptr', pargs.include], [pargs.interface, '', pargs.include, namespaces_list]]
       elif op == "cxxservicebouncerregister":
         functions = [raw_to_cxx_service_bouncer, raw_to_cxx_typebuild]
-        args = [['@Ptr', pargs.include], [pargs.interface, 'service', pargs.include]]
+        args = [['@Ptr', pargs.include], [pargs.interface, 'service', pargs.include, namespaces_list]]
     #print("Executing %s functions on %s classes" % (len(functions), len(raw)))
+
       for i in range(len(functions)):
         cargs = [name, raw[c]] + args[i]
         tres = functions[i](*cargs)
@@ -1304,11 +1391,13 @@ def main(args):
           res[0] += tres[0]
           res[1] += tres[1]
           res[2] += tres[2]
+
       if split_output:
         out_name = pargs.output_file.replace("%s", c)
         out = open(out_name, "w")
         out.write(res[0] + res[1] + res[2])
         res = ["","",""]
+
   if not split_output:
     names = pargs.output_file.split(',')
     if len(names) > 1:

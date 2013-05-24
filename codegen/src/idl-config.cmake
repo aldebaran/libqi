@@ -25,7 +25,10 @@ endfunction()
 
 function(qi_create_proxy idl class_name output_dir _out)
   _qi_find_idl(IDL)
-  string(TOLOWER ${class_name} _filename)
+  string(REPLACE "::" ";" split_class ${class_name})
+  list(REVERSE split_class)
+  list(GET split_class 0 class)
+  string(TOLOWER ${class} _filename)
   set(_filename "${_filename}_proxy.hpp")
   message("tgt ${output_dir}/${_filename}")
   set(${_out} ${output_dir}/${_filename} PARENT_SCOPE)
@@ -40,7 +43,10 @@ endfunction()
 
 function(qi_create_interface idl class_name output_dir _out)
   _qi_find_idl(IDL)
-  string(TOLOWER ${class_name} _filename)
+  string(REPLACE "::" ";" split_class ${class_name})
+  list(REVERSE split_class)
+  list(GET split_class 0 class)
+  string(TOLOWER ${class} _filename)
   set(_filename "${_filename}_interface.hpp")
   message("tgt ${output_dir}/${_filename}")
   set(${_out} ${output_dir}/${_filename} PARENT_SCOPE)
@@ -78,7 +84,11 @@ function(qi_create_binder _out)
   if(NOT ARG_CLASS_NAME)
     set(ARG_CLASS_NAME ${ARG_NAME})
   endif()
-  string(TOLOWER ${ARG_CLASS_NAME} _filename)
+
+  string(REPLACE "::" ";" split_class ${ARG_CLASS_NAME})
+  list(REVERSE split_class)
+  list(GET split_class 0 class)
+  string(TOLOWER ${class} _filename)
   set(target "${ARG_DIR}/${_filename}_bind${_ext}")
   if(ARG_INTERFACE)
     set(interface "--interface")
@@ -101,8 +111,9 @@ function(qi_create_binder _out)
     SRC ${ARG_IDL} ${IDL}
     COMMAND ${_python_executable} ${IDL}
       ${ARG_IDL}
-      -c ${ARG_NAME}:${mode}:${ARG_CLASS_NAME}
+      -c ${ARG_NAME}:${mode}
       -o ${target}
+      -n ${ARG_CLASS_NAME}
       -m many
       ${include} ${includes}
       ${interface}
@@ -126,7 +137,10 @@ function(qi_create_idl files)
     set(ARG_PREFIX ".")
   endif()
   foreach(c ${ARG_CLASSES})
-    set(target "${ARG_PREFIX}/${c}.xml")
+    string(REPLACE "::" ";" split_class ${c})
+    list(REVERSE split_class)
+    list(GET split_class 0 class)
+    set(target "${ARG_PREFIX}/${class}.xml")
     qi_generate_src(${target}
       SRC ${ARG_SRC}
       COMMAND  ${_python_executable} ${IDL}
@@ -138,4 +152,3 @@ function(qi_create_idl files)
   endforeach(c)
   qi_persistent_set(${files} "${names}")
 endfunction()
-
