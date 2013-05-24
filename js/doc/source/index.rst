@@ -6,49 +6,26 @@ QiMessaging JavaScript
    This library is still under development. Feel free to contact
    llec@aldebaran-robotics.com for more information.
 
+   All references to ``localhost`` correspond to the running ``qim.py``
+   script that is not yet available on the robot.
+
 Introduction
 ============
 
 QiMessaging provides JavaScript bindings to call remote services through
-a web browser.
+a web browser using JSON.
 
-It currently consists of two pieces of software: the server side, which
-will listen for requests from the browser, and the client side, which is
-the JavaScript library *per se*.
+`Socket.IO <http://socket.io/>`_ is used in order to establish full-duplex
+communication between the robot and the browser, and easily deal with
+connection state.
 
-The server side uses the Python bindings, and listen for both HTTP and
-Websocket requests.
+The library was designed around the `jQuery <http://www.jquery.com/>`_
+`Deferred object <http://api.jquery.com/category/deferred-object/>`_, of which
+most functions return a
+`promise <http://api.jquery.com/deferred.promise/>`_.
 
-The client side consists in a few JavaScript files that can be embedded
-within a web page. The implementation relies on jQuery and socket.io.
-
-Server side
-===========
-
-The JavaScript bindings need a running Websocket server with a qimessaging
-session opened.
-
-A script is provided, ``qim.py``, which uses
-`Tornadio <https://github.com/facebook/tornado>`_ and
-`Tornadio2 <home/laurent/src/master/lib/qimessaging/js/doc/source>`_ as
-web backends.
-
-It should be run as following:
-
-.. code-block:: sh
-
-   $ python2 qim.py tcp://nao.local:9559
-
-The script will open two ports: ``8001`` for standard HTTP requests and
-``8002`` for websocket connection. All mention to ``localhost`` in this page
-refer to the machine where this script is running.
-
-Client side
-===========
-
-The client page will require three script inclusions: qimessaging itself,
-and its two dependencies, `socket.io <http://socket.io/>`_ and
-`jQuery <http://www.jquery.com/>`_.
+The client page therefore requires three script inclusions: QiMessaging itself,
+and its two dependencies: jQuery and Socket.IO.
 
 .. code-block:: html
 
@@ -56,25 +33,26 @@ and its two dependencies, `socket.io <http://socket.io/>`_ and
    <script src="http://localhost:8001/socket.io.min.js"></script>
    <script src="http://localhost:8001/qimessaging.js"></script>
 
-The API was designed around the jQuery
-`Deferred object <http://api.jquery.com/category/deferred-object/>`_, of which
-most functions return a
-`promise <http://api.jquery.com/deferred.promise/>`_.
+How to use
+==========
 
 The binding provides only one class: ``QiSession``, the JavaScript equivalent
-of qimessaging sessions. It is constructed using the JSON server URL.
+of QiMessaging sessions. Once connected, it can be used to call services and
+access the socket.
+
+It is constructed using the URL of the JSON server.
 
 .. code-block:: javascript
 
-   qim = new QiSession("http://localhost:8001");
+   var qim = new QiSession("http://localhost:8001");
 
 Once the connection is established, two methods are available: ``service()``
 and ``socket()``.
 
 QiSession.service()
--------------------
+===================
 
-In case of success, this method will call the ``done()`` callback with an
+In case of success, this method calls the ``done()`` callback with an
 object corresponding to the requested service.
 
 .. code-block:: javascript
@@ -85,12 +63,16 @@ object corresponding to the requested service.
 
    qim.service("serviceTest").done(onService);
 
-Calls
-^^^^^
+Services are JavaScript bound objects providing corresponding API :ref:`calls`
+and :ref:`events`.
 
-Once a service is retrieved through `QiSession.service()`, it is bound
-to an object providing the corresponding APIs. All service calls return
-Deferred objects.
+.. _calls:
+
+Calls
+-----
+
+Service calls are only JavaScript function calls returning jQuery Deferred
+promises, which means they are entirely asynchronous.
 
 .. code-block:: javascript
 
@@ -99,22 +81,29 @@ Deferred objects.
      console.log(data);
    }
 
-   function onService(service)
+   function onError(data)
    {
-     service.reply("plaf").done(onReply);
+     console.log(data);
    }
 
-   qim.service("serviceTest").done(onService);
+   function onService(service)
+   {
+     service.reply("plaf").done(onReply).fail(onError);
+   }
+
+   qim.service("serviceTest").done(onService).fail(onError);
 
    // console
    > plafbim
 
-Events
-^^^^^^
+.. _events:
 
-Events are also available. These are JavaScript objects providing two methods,
+Events
+------
+
+Events are JavaScript objects inside a service, that provide two methods,
 ``connect()`` and ``disconnect()``. The first one will return an id that must
-will be used by the second for unregistration.
+be used by the second one for unregistration.
 
 .. code-block:: javascript
 
@@ -136,20 +125,25 @@ will be used by the second for unregistration.
    service.myEvent.connect(onMyEvent).done(onRegister);
 
 QiSession.socket()
-------------------
+==================
 
 This function will return the underlying `socket.io` object, that can
 be used to deal with low-level
-`events <https://github.com/LearnBoost/socket.io/wiki/Exposed-events>`_.
+`socket events <https://github.com/LearnBoost/socket.io/wiki/Exposed-events>`_.
 
 .. code-block:: javascript
+
+   qim.socket().on('connected', function() {
+     console.log('connected!');
+     start();
+   });
 
    qim.socket().on('disconnect', function() {
      console.log('disconnected!');
    });
 
-Complete example
-----------------
+Sample
+======
 
 .. code-block:: html
 
@@ -165,11 +159,21 @@ Complete example
 
    <body>
    <script>
-   qim = new QiSession("http://nao.local:8080");
+   var qim = new QiSession("http://nao.local:8080");
+
+   qim.socket().on('connected', function() {
+     console.log('connected!');
+     start();
+   });
 
    qim.socket().on('disconnect', function() {
      console.log('disconnected!');
    });
+
+   function onError(data)
+   {
+     console.log(data);
+   }
 
    function onReply(data)
    {
@@ -178,10 +182,13 @@ Complete example
 
    function onService(service)
    {
-     service.reply("plaf").done(onReply);
+     service.reply("plaf").done(onReply).fail(onError);
    }
 
-   qim.service("serviceTest").done(onService);
+   function do()
+   {
+     qim.service("serviceTest").done(onService).fail(onError);
+   }
    </script>
    </body>
 

@@ -119,7 +119,7 @@ var coords = { x: 0, y: 0};
 function motion(data)
 {
   almotion = data;
-  almotion.setStiffnesses("Head", 1.0);
+  almotion.setStiffnesses("Head", 1.0).fail(error);
 
   $("#myCanvas0").mousemove(function(e){
     coords.x = e.pageX - $(this).offset().left;
