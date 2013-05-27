@@ -8,6 +8,37 @@ import java.util.Map;
 public class ReplyService implements QimessagingService
 {
 
+  public Object createObject()
+  {
+    GenericObjectBuilder ob = new GenericObjectBuilder();
+
+    try {
+      ob.advertiseSignal("fire::(i)");
+
+      ob.advertiseMethod("reply::s(s)", this, "Concatenate given parameter with 'bim !'");
+      ob.advertiseMethod("answer::s()", this, "return '42 !'");
+      ob.advertiseMethod("add::i(iii)", this, "Sum given parameters and return computed value");
+
+      ob.advertiseProperty("name", String.class);
+      ob.advertiseProperty("uid", Integer.class);
+
+    } catch (Exception e1) {
+      System.out.println("Cannot advertise methods and signals : " + e1.getMessage());
+      return null;
+    }
+
+    Object ro = ob.object();
+
+    try {
+      ro.setProperty("name", "foo");
+      ro.setProperty("uid", 42);
+    } catch (Exception e) {
+      System.out.println("Cannot set properties : " + e.getMessage());
+    }
+
+    return ro;
+  }
+
   public Tuple info(String str, Integer i, Boolean b)
   {
     Tuple ret = new Tuple3<String, Integer, Boolean>(str, i, b);

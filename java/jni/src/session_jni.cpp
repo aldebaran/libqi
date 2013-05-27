@@ -13,8 +13,9 @@
 #include <qimessaging/session.hpp>
 
 #include <jni.h>
-#include "jnitools.hpp"
-#include "session_jni.hpp"
+#include <jnitools.hpp>
+#include <session_jni.hpp>
+#include <object_jni.hpp>
 
 jlong Java_com_aldebaran_qimessaging_Session_qiSessionCreate()
 {
@@ -67,56 +68,50 @@ void Java_com_aldebaran_qimessaging_Session_qiSessionClose(JNIEnv* QI_UNUSED(env
   s->close();
 }
 
-jlong Java_com_aldebaran_qimessaging_Session_qiSessionService(JNIEnv *env, jobject jobj, jlong pSession, jstring jurl)
+jobject   Java_com_aldebaran_qimessaging_Session_service(JNIEnv* env, jobject QI_UNUSED(obj), jlong pSession, jstring jname)
 {
-  if (pSession == 0)
-  {
-    throwJavaError(env, "Given qi::Session doesn't exists (pointer null).");
-    return 0;
-  }
-
   qi::Session *s = reinterpret_cast<qi::Session*>(pSession);
-  std::string serviceName = toStdString(env, jurl);
+  std::string serviceName = toStdString(env, jname);
 
   qi::ObjectPtr *obj = new qi::ObjectPtr();
-  qi::ObjectPtr &o = *(reinterpret_cast<qi::ObjectPtr *>(obj));
+  jobject proxy = 0;
 
   try
   {
-    o = s->service(serviceName);
-    if (!o)
-    {
-      delete obj;
-      throwJavaError(env, "Cannot get service");
-      return 0;
-    }
-    return (jlong) obj;
+    *obj = s->service(serviceName);
+    JNIObject jniProxy(obj);
+    return jniProxy.object();
   }
   catch (std::runtime_error &e)
   {
+    delete obj;
     throwJavaError(env, e.what());
-    return 0;
+    return proxy;
   }
 }
 
-jlong Java_com_aldebaran_qimessaging_Session_qiSessionRegisterService
-(JNIEnv *env, jobject obj, jlong pSession, jlong pObject, jstring jname)
+jboolean  Java_com_aldebaran_qimessaging_Session_registerService(JNIEnv *env, jobject QI_UNUSED(jobj), jlong pSession, jstring jname, jobject object)
 {
   qi::Session*    session = reinterpret_cast<qi::Session*>(pSession);
   std::string     name    = toStdString(env, jname);
-  qi::ObjectPtr*  object  = reinterpret_cast<qi::ObjectPtr*>(pObject);
+  JNIObject obj(object);
   jlong ret = 0;
 
-  char *cname = qi::os::strdup(name.c_str());
   try
   {
-    ret = session->registerService(name, *object);
+    ret = session->registerService(name, obj.objectPtr());
   }
   catch (std::runtime_error &e)
   {
     throwJavaError(env, e.what());
+    return false;
   }
 
-  free(cname);
-  return ret;
+  if (ret <= 0)
+  {
+    throwJavaError(env, "Cannot register service");
+    return false;
+  }
+
+  return true;
 }

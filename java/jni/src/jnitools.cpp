@@ -118,6 +118,13 @@ void getJavaSignature(std::string &sig, const std::string& sigInfo)
         i++;
       break;
     }
+    case qi::Signature::Type_Object:
+    {
+      sig.append("L");
+      sig.append(QI_OBJECT_CLASS);
+      sig.append(";");
+      break;
+    }
     default:
       qiLogFatal("qimessaging.java") << "Unknown conversion for [" << sigInfo[i] << "]";
       exit(1);
@@ -162,13 +169,64 @@ jint throwJavaError(JNIEnv *env, const char *message)
   return env->ThrowNew(exClass, message);
 }
 
-jobject       loadJavaObject(const std::string& denomination)
+std::string propertyBaseSignature(JNIEnv* env, jclass propertyBase)
 {
-  JNIEnv* env;
+  std::string sig;
 
-  JVM()->GetEnv((void **) &env, QI_JNI_MIN_VERSION);
+  jclass stringClass = env->FindClass("java/lang/String");
+  jclass int32Class = env->FindClass("java/lang/Integer");
+  jclass floatClass = env->FindClass("java/lang/Float");
+  jclass doubleClass = env->FindClass("java/lang/Double");
+  jclass boolClass = env->FindClass("java/lang/Boolean");
+  jclass longClass = env->FindClass("java/lang/Long");
+  jclass mapClass = env->FindClass("java/util/Map");
+  jclass listClass = env->FindClass("java/util/ArrayList");
+  jclass tupleClass = env->FindClass("com/aldebaran/qimessaging/Tuple");
+  jclass objectClass = env->FindClass(QI_OBJECT_CLASS);
 
-  jclass cls = env->FindClass(denomination.c_str());
-  jmethodID mid = env->GetMethodID(cls, "init","()V");
-  return env->NewObject(cls, mid);
+  if (env->IsAssignableFrom(propertyBase, stringClass) == true)
+    sig = static_cast<char>(qi::Signature::Type_String);
+  if (env->IsAssignableFrom(propertyBase, int32Class) == true)
+    sig = static_cast<char>(qi::Signature::Type_Int32);
+  if (env->IsAssignableFrom(propertyBase, floatClass) == true)
+    sig = static_cast<char>(qi::Signature::Type_Float);
+  if (env->IsAssignableFrom(propertyBase, boolClass) == true)
+    sig = static_cast<char>(qi::Signature::Type_Bool);
+  if (env->IsAssignableFrom(propertyBase, longClass) == true)
+    sig = static_cast<char>(qi::Signature::Type_Int64);
+  if (env->IsAssignableFrom(propertyBase, objectClass) == true)
+    sig = static_cast<char>(qi::Signature::Type_Object);
+  if (env->IsAssignableFrom(propertyBase, doubleClass) == true)
+    sig = static_cast<char>(qi::Signature::Type_Float);
+  if (env->IsAssignableFrom(propertyBase, mapClass) == true)
+  {
+    sig = static_cast<char>(qi::Signature::Type_Map);
+    sig += static_cast<char>(qi::Signature::Type_Dynamic);
+    sig += static_cast<char>(qi::Signature::Type_Map_End);
+  }
+  if (env->IsAssignableFrom(propertyBase, listClass) == true)
+  {
+    sig = static_cast<char>(qi::Signature::Type_List);
+    sig += static_cast<char>(qi::Signature::Type_Dynamic);
+    sig += static_cast<char>(qi::Signature::Type_List_End);
+  }
+  if (env->IsAssignableFrom(propertyBase, tupleClass) == true)
+  {
+    sig = static_cast<char>(qi::Signature::Type_Tuple);
+    sig += static_cast<char>(qi::Signature::Type_Dynamic);
+    sig += static_cast<char>(qi::Signature::Type_Tuple_End);
+  }
+
+  env->DeleteLocalRef(stringClass);
+  env->DeleteLocalRef(int32Class);
+  env->DeleteLocalRef(floatClass);
+  env->DeleteLocalRef(doubleClass);
+  env->DeleteLocalRef(boolClass);
+  env->DeleteLocalRef(longClass);
+  env->DeleteLocalRef(mapClass);
+  env->DeleteLocalRef(listClass);
+  env->DeleteLocalRef(tupleClass);
+  env->DeleteLocalRef(objectClass);
+
+  return sig;
 }

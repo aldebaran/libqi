@@ -12,9 +12,9 @@ include_directories("jni")
 set(SOURCE
    jni/session_jni.hpp
    jni/application_jni.hpp
-   jni/genericobject_jni.hpp
+   jni/callbridge.hpp
    jni/servicedirectory_jni.hpp
-   jni/objectbuilder_jni.hpp
+   jni/objectbuilder.hpp
    jni/jnitools.hpp
    jni/jobjectconverter.hpp
    jni/map_jni.hpp
@@ -23,12 +23,14 @@ set(SOURCE
    jni/future_jni.hpp
    jni/tuple_jni.hpp
    jni/futurehandler.hpp
+   jni/object_jni.hpp
+   jni/object.hpp
 
    src/session_jni.cpp
    src/application_jni.cpp
-   src/genericobject_jni.cpp
+   src/callbridge.cpp
    src/servicedirectory_jni.cpp
-   src/objectbuilder_jni.cpp
+   src/objectbuilder.cpp
    src/jnitools.cpp
    src/jobjectconverter.cpp
    src/map_jni.cpp
@@ -37,6 +39,8 @@ set(SOURCE
    src/future_jni.cpp
    src/tuple_jni.cpp
    src/futurehandler.cpp
+   src/object_jni.cpp
+   src/object.cpp
    )
 
 # Compile qimessaging java compatibility layer using jni

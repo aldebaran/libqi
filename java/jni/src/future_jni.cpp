@@ -11,7 +11,7 @@
 #include <jnitools.hpp>
 #include <futurehandler.hpp>
 #include <future_jni.hpp>
-#include <genericobject_jni.hpp>
+#include <callbridge.hpp>
 
 void      java_future_callback(const qi::Future<qi::GenericValuePtr>& future)
 {

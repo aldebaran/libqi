@@ -3,7 +3,7 @@
 ** Author(s):
 **  - Pierre ROULLON <proullon@aldebaran-robotics.com>
 **
-** Copyright (C) 2012 Aldebaran Robotics
+** Copyright (C) 2012, 2013 Aldebaran Robotics
 */
 
 #ifndef _JAVA_JNI_JNITOOLS_HPP_
@@ -26,18 +26,21 @@
 
 // Define JNI minimum version used by qimessaging bindings
 #define QI_JNI_MIN_VERSION JNI_VERSION_1_6
+// QI_OBJECT_CLASS defines complete name of java generic object class
+#define QI_OBJECT_CLASS "com/aldebaran/qimessaging/Object"
 
+// String conversion
 std::string   toStdString(JNIEnv *env, jstring inputString);
 jstring       toJavaString(JNIEnv *env, const std::string &inputString);
-JavaVM*       JVM(JNIEnv* env = 0);
-std::string   toJavaSignature(const std::string &signature);
-jint          throwJavaError(JNIEnv *env, const char *message);
-jobject       loadJavaObject(const std::string& denomination);
-void          getJavaSignature(std::string &sig, const std::string &sigInfo);
 
-extern "C"
-{
-  QIMESSAGING_API jlong Java_com_aldebaran_qimessaging_Session_PocAndroidConnection(JNIEnv *env, jobject obj, jlong pSession, jstring url);
-} // !extern "C"
+// Global JVM Pointer
+JavaVM*       JVM(JNIEnv* env = 0);
+
+// Signature conversion
+std::string   toJavaSignature(const std::string &signature);
+std::string   propertyBaseSignature(JNIEnv *env, jclass propertyBase);
+
+// Java exception thrower
+jint          throwJavaError(JNIEnv *env, const char *message);
 
 #endif // !_JAVA_JNI_JNITOOLS_HPP_

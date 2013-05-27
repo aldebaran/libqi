@@ -19,8 +19,8 @@ public class Session
   private static native long    qiSessionConnect(long pSession, String url);
   private static native boolean qiSessionIsConnected(long pSession);
   private static native void    qiSessionClose(long pSession);
-  private static native long    qiSessionService(long pSession, String name);
-  private static native boolean qiSessionRegisterService(long pSession, long pObject, String name);
+  private static native Object  service(long pSession, String name);
+  private static native boolean registerService(long pSession, String name, Object obj);
 
   // Members
   private long _session;
@@ -72,13 +72,9 @@ public class Session
    * @param name Name of service.
    * @return Proxy on remote service on success, null on error.
    */
-  public GenericObject 	service(String name) throws Exception
+  public Object  service(String name) throws Exception
   {
-    long pObj = Session.qiSessionService(_session, name);
-
-    if (pObj == 0)
-      return null;
-    return new GenericObject(pObj);
+    return (Object) Session.service(_session, name);
   }
 
   /**
@@ -97,16 +93,12 @@ public class Session
   /**
    * Register service on Service Directory
    * @param name Name of new service
-   * @param obj Instance of service
+   * @param object Instance of service
    * @return
    */
-  public boolean registerService(String name, GenericObject obj)
+  public boolean registerService(String name, Object object)
   {
-    long pObj = obj.origin();
-
-    if (pObj == 0)
-      return false;
-    return Session.qiSessionRegisterService(_session, pObj, name);
+    return Session.registerService(_session, name, object);
   }
 
 }

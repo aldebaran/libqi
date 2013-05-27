@@ -19,7 +19,9 @@
 #include <map_jni.hpp>
 #include <list_jni.hpp>
 #include <tuple_jni.hpp>
+#include <object_jni.hpp>
 
+qiLogCategory("qimessaging.jni");
 using namespace qi;
 
 struct toJObject
@@ -148,35 +150,30 @@ struct toJObject
     void visitObject(qi::GenericObject obj)
     {
       throw std::runtime_error("Cannot convert GenericObject to Jobject.");
-
-      /*jclass cls = env->FindClass("com/aldebaran/qimessaging/GenericObject");
-      if (!cls)
-      {
-        qiLogError("qimessaging.jni") << "Cannot convert GenericObject to Java object";
-        return;
-      }
-
-      jmethodID mid = env->GetMethodID(cls, "<init>", "(J)V");
-      if (!cls)
-      {
-        qiLogError("qimessaging.jni") << "Cannot convert GenericObject to Java object";
-        return;
-      }
-
-      *result = env->NewObject(cls, mid, (jlong) ptr);*/
     }
 
     void visitObjectPtr(qi::ObjectPtr o)
     {
-      throw std::runtime_error("Cannot convert ObjectPtr to Jobject.");
+
+      try
+      {
+        JNIObject obj(o);
+        *result = obj.object();
+
+      } catch (std::exception&)
+      {
+        return;
+      }
+
     }
 
     void visitPointer(qi::GenericValuePtr pointee)
     {
+      qiLogFatal() << "Error in conversion: Unable to convert pointer in Java";
       throwJavaError(env, "Error in conversion: Unable to convert pointer in Java");
     }
 
-    void visitTuple(const std::vector<qi::GenericValuePtr>& tuple)
+    void visitTuple(const std::string& className, const std::vector<qi::GenericValuePtr>& tuple, const std::vector<std::string>& annotations)
     {
       JNITuple jtuple(tuple.size());
       int i = 0;
@@ -261,7 +258,6 @@ qi::GenericValuePtr GenericValue_from_JObject_List(jobject val)
   for (int i = 0; i < size; i++)
   {
     jobject current = list.get(i);
-    //qi::GenericValuePtr currentGVP = qi::GenericValuePtr(current);
     res.push_back(qi::GenericValue(GenericValue_from_JObject(current).first));
   }
 
@@ -307,6 +303,15 @@ qi::GenericValuePtr GenericValue_from_JObject_Tuple(jobject val)
   return qi::makeGenericTuple(res);
 }
 
+qi::GenericValuePtr GenericValue_from_JObject_RemoteObject(jobject val)
+{
+  JNIObject obj(val);
+
+  qi::ObjectPtr* tmp = new qi::ObjectPtr();
+  *tmp = obj.objectPtr();
+  return qi::GenericValueRef(*tmp);
+}
+
 std::pair<qi::GenericValuePtr, bool> GenericValue_from_JObject(jobject val)
 {
   qi::GenericValuePtr res;
@@ -331,6 +336,7 @@ std::pair<qi::GenericValuePtr, bool> GenericValue_from_JObject(jobject val)
   jclass mapClass = env->FindClass("java/util/Map");
   jclass listClass = env->FindClass("java/util/ArrayList");
   jclass tupleClass = env->FindClass("com/aldebaran/qimessaging/Tuple");
+  jclass objectClass = env->FindClass(QI_OBJECT_CLASS);
 
   if (val == NULL)
   {
@@ -391,6 +397,10 @@ std::pair<qi::GenericValuePtr, bool> GenericValue_from_JObject(jobject val)
   {
     res = GenericValue_from_JObject_Tuple(val);
   }
+  else if (env->IsInstanceOf(val, objectClass))
+  {
+    res = GenericValue_from_JObject_RemoteObject(val);
+  }
   else
   {
     throw std::runtime_error("Unable to convert JObject in GenericValue");
@@ -405,6 +415,7 @@ std::pair<qi::GenericValuePtr, bool> GenericValue_from_JObject(jobject val)
   env->DeleteLocalRef(mapClass);
   env->DeleteLocalRef(listClass);
   env->DeleteLocalRef(tupleClass);
+  env->DeleteLocalRef(objectClass);
 
   return std::make_pair(res, copy);
 }
@@ -426,13 +437,9 @@ class JObjectType: public qi::TypeDynamic
 
     virtual const qi::TypeInfo& info()
     {
-      //qiLogFatal("qimessaging.jni") << "info";
       static qi::TypeInfo* result = 0;
       if (!result)
-      {
         result = new qi::TypeInfo(typeid(jobject));
-        std::cout << result->asString() << std::endl;
-      }
 
       return *result;
     }
@@ -487,11 +494,12 @@ class JObjectType: public qi::TypeDynamic
     virtual void destroy(void* obj)
     {
       // void* obj is a jobject
+      jobject jobj = (jobject) obj;
 
-      // We cannot delete GlobalRef, because it's shared with JVM.
-      // FIXME: Find a way to delete the local one.
-      // Atm it destroys object because JVM hasn't set its ref onto jobject
-      // when destroy is called.
+      JNIEnv *env;
+      JVM()->GetEnv((void **) &env, QI_JNI_MIN_VERSION);
+      JVM()->AttachCurrentThread((envPtr) &env, (void *) 0);
+      env->DeleteGlobalRef(jobj);
     }
 
     virtual bool less(void* a, void* b)
@@ -499,7 +507,6 @@ class JObjectType: public qi::TypeDynamic
       jobject* pa = (jobject*) ptrFromStorage(&a);
       jobject* pb = (jobject*) ptrFromStorage(&b);
 
-      // call Object.compare
       return *pa < *pb;
     }
 };
