@@ -5,10 +5,63 @@
 #include <cstring>
 
 #include <qitype/signature.hpp>
+#include <qitype/type.hpp>
 
 qiLogCategory("qi.signature");
 
 namespace qi {
+
+  static std::string makeTupleAnnotation(const std::string& name, const std::vector<std::string>& annotations) {
+    std::string res;
+
+    res += '<';
+    res += name;
+    for (unsigned i = 0; i < annotations.size(); ++i)
+      res += ',' + annotations[i];
+    res += '>';
+    return res;
+  }
+
+  qi::Signature makeListSignature(const qi::Signature &element) {
+    std::stringstream res;
+    res << (char)Signature::Type_List;
+    res << element.toString();
+    res << (char)Signature::Type_List_End;
+    return qi::Signature(res.str());
+  }
+
+  qi::Signature makeMapSignature(const qi::Signature &key, const qi::Signature &value) {
+    std::stringstream res;
+    res << (char)Signature::Type_Map;
+    res << key.toString();
+    res << value.toString();
+    res << (char)Signature::Type_Map_End;
+    return qi::Signature(res.str());
+  }
+
+  qi::Signature makeTupleSignature(const std::vector<qi::GenericValuePtr>& vgv, bool resolve, const std::string &name, const std::vector<std::string>& names)
+  {
+    std::stringstream res;
+    res << (char)Signature::Type_Tuple;
+    for (unsigned int i = 0; i < vgv.size(); ++i)
+      res << vgv[i].signature(resolve).toString();
+    res << (char)Signature::Type_Tuple_End;
+    if (names.size() == vgv.size())
+      res << makeTupleAnnotation(name, names);
+    return qi::Signature(res.str());
+  }
+
+  qi::Signature makeTupleSignature(const std::vector<Type*>& vt, const std::string &name, const std::vector<std::string>& names)
+  {
+    std::stringstream res;
+    res << (char)Signature::Type_Tuple;
+    for (unsigned int i = 0; i < vt.size(); ++i)
+      res << vt[i]->signature().toString();
+    res << (char)Signature::Type_Tuple_End;
+    if (names.size() == vt.size())
+      res << makeTupleAnnotation(name, names);
+    return qi::Signature(res.str());
+  }
 
 float qi::Signature::isConvertibleTo(const qi::Signature& b) const
 {

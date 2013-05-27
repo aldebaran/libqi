@@ -26,6 +26,20 @@ namespace qi {
 
   class SignaturePrivate;
 
+  class GenericValuePtr;
+  class Type;
+  class Signature;
+  QITYPE_API qi::Signature makeTupleSignature(const std::vector<qi::GenericValuePtr>& vgv,
+                                              bool resolveDynamic = false,
+                                              const std::string &name = std::string(),
+                                              const std::vector<std::string>& names = std::vector<std::string>());
+  QITYPE_API qi::Signature makeTupleSignature(const std::vector<Type*>& vgv,
+                                              const std::string &name = std::string(),
+                                              const std::vector<std::string>& names = std::vector<std::string>());
+
+  QITYPE_API qi::Signature makeListSignature(const qi::Signature &element);
+  QITYPE_API qi::Signature makeMapSignature(const qi::Signature &key, const qi::Signature &value);
+
   /* Represent the serialisation signature of a Type.
   * pseudo-grammar:
   * root: element
