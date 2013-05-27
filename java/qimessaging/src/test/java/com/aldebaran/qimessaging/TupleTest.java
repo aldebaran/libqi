@@ -11,8 +11,8 @@ import org.junit.Test;
 
 public class TupleTest
 {
-  public GenericObject    proxy = null;
-  public GenericObject    obj = null;
+  public Object           proxy = null;
+  public Object           obj = null;
   public Session          s = null;
   public Session          client = null;
   public ServiceDirectory sd = null;
@@ -28,22 +28,29 @@ public class TupleTest
     String url = sd.listenUrl();
 
     // Create new QiMessaging generic object
-    obj = new GenericObject();
+    GenericObjectBuilder ob = new GenericObjectBuilder();
 
     // Get instance of ReplyService
     QimessagingService reply = new ReplyService();
 
     // Register event 'Fire'
-    obj.advertiseSignal("fire::(i)");
-    obj.advertiseMethod("reply::s(s)", reply);
-    obj.advertiseMethod("answer::s()", reply);
-    obj.advertiseMethod("add::i(iii)", reply);
-    obj.advertiseMethod("info::(sib)(sib)", reply);
+    ob.advertiseSignal("fire::(i)");
+    ob.advertiseMethod("reply::s(s)", reply, "Concatenate given argument with 'bim !'");
+    ob.advertiseMethod("answer::s()", reply, "Return given argument");
+    ob.advertiseMethod("add::i(iii)", reply, "Return sum of arguments");
+    ob.advertiseMethod("info::(sib)(sib)", reply, "Return a tuple containing given arguments");
+    ob.advertiseMethod("answer::i(i)", reply, "Return given parameter plus 1");
+    ob.advertiseMethod("answerFloat::f(f)", reply, "Return given parameter plus 1");
+    ob.advertiseMethod("answerBool::b(b)", reply, "Flip given parameter and return it");
+    ob.advertiseMethod("abacus::{ib}({ib})", reply, "Flip all booleans in map");
+    ob.advertiseMethod("echoFloatList::[m]([f])", reply, "Return the exact same list");
+    ob.advertiseMethod("createObject::o()", reply, "Return a test object");
 
     // Connect session to Service Directory
     s.connect(url).sync();
 
     // Register service as serviceTest
+    obj = ob.object();
     assertTrue("Service must be registered", s.registerService("serviceTest", obj));
 
     // Connect client session to service directory
@@ -177,10 +184,9 @@ public class TupleTest
     ReplyService tmp = tuple.<ReplyService>get(0);
   }
 
-  @Test(expected=IllegalArgumentException.class)
   public void testIllegalArgumentException() throws IndexOutOfBoundsException, ClassCastException, IllegalArgumentException, IllegalAccessException
   {
-    Tuple tuple = new Tuple3<String, Float, Map<Integer, String>>("42", 42F, new Hashtable<Integer, String>());
+    Tuple tuple = new Tuple3<String, Session, Map<Object, Session>>("42", new Session(), new Hashtable<Object, Session>());
 
     tuple.<Long>set(0, new Long(1234567890));
     tuple.<Long>set(1, new Long(1234567890));
@@ -194,8 +200,8 @@ public class TupleTest
     Tuple ret = null;
     try
     {
-      ret = proxy.<Tuple>call("info", "42", 42, true);
-    } catch (CallError e)
+      ret = proxy.<Tuple>call("info", "42", 42, true).get();
+    } catch (Exception e)
     {
       fail("Call must be successful : " + e.getMessage());
     }

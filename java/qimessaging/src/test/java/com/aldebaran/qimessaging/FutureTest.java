@@ -6,8 +6,8 @@ import java.util.concurrent.TimeoutException;
 
 import com.aldebaran.qimessaging.ServiceDirectory;
 import com.aldebaran.qimessaging.Session;
-import com.aldebaran.qimessaging.GenericObject;
 import com.aldebaran.qimessaging.ReplyService;
+import com.aldebaran.qimessaging.Object;
 
 import static org.junit.Assert.*;
 
@@ -21,17 +21,19 @@ import org.junit.Test;
 public class FutureTest
 {
   public Application      app = null;
-  public ServiceDirectory sd = null;
+  public Object           proxy = null;
+  public Object           obj = null;
   public Session          s = null;
   public Session          client = null;
-  public GenericObject    proxy = null;
-
-  public Boolean onSuccessCalled;
-  public Boolean onCompleteCalled;
+  public ServiceDirectory sd = null;
+  public boolean          onSuccessCalled = false;
+  public boolean          onCompleteCalled = false;
 
   @Before
   public void setUp() throws Exception
   {
+    onSuccessCalled = false;
+    onCompleteCalled = false;
     app = new Application(null);
     sd = new ServiceDirectory();
     s = new Session();
@@ -40,23 +42,35 @@ public class FutureTest
     // Get Service directory listening url.
     String url = sd.listenUrl();
 
-    // Create new qimessaging generic object
-    GenericObject obj = new GenericObject();
+    // Create new QiMessaging generic object
+    GenericObjectBuilder ob = new GenericObjectBuilder();
 
     // Get instance of ReplyService
     QimessagingService reply = new ReplyService();
 
-    // Register method "reply::s(s)", implemented from Service interface
-    obj.advertiseMethod("longReply::s(s)", reply);
+    // Register event 'Fire'
+    ob.advertiseSignal("fire::(i)");
+    ob.advertiseMethod("reply::s(s)", reply, "Concatenate given argument with 'bim !'");
+    ob.advertiseMethod("answer::s()", reply, "Return given argument");
+    ob.advertiseMethod("add::i(iii)", reply, "Return sum of arguments");
+    ob.advertiseMethod("info::(sib)(sib)", reply, "Return a tuple containing given arguments");
+    ob.advertiseMethod("answer::i(i)", reply, "Return given parameter plus 1");
+    ob.advertiseMethod("answerFloat::f(f)", reply, "Return given parameter plus 1");
+    ob.advertiseMethod("answerBool::b(b)", reply, "Flip given parameter and return it");
+    ob.advertiseMethod("abacus::{ib}({ib})", reply, "Flip all booleans in map");
+    ob.advertiseMethod("echoFloatList::[m]([f])", reply, "Return the exact same list");
+    ob.advertiseMethod("createObject::o()", reply, "Return a test object");
+    ob.advertiseMethod("longReply::s(s)", reply, "Sleep 2s, then return given argument + 'bim !'");
 
     // Connect session to Service Directory
     s.connect(url).sync();
 
-    // Register service
-    s.registerService("serviceTest", obj);
+    // Register service as serviceTest
+    obj = ob.object();
+    assertTrue("Service must be registered", s.registerService("serviceTest", obj));
 
     // Connect client session to service directory
-    client.connect(url).sync();
+    client.connect(url);
 
     // Get a proxy to serviceTest
     proxy = client.service("serviceTest");
@@ -79,27 +93,38 @@ public class FutureTest
   @Test
   public void testCallback()
   {
+    Object proxy = null;
     Future<String> fut = null;
+
+
+    // Get a proxy to serviceTest
+    try
+    {
+      proxy = client.service("serviceTest");
+    } catch (Exception e1)
+    {
+      fail("Cannot get serviceTest :" + e1.getMessage());
+    }
 
     // Call a 2s long function
     try
     {
-      fut = proxy.asyncCall("longReply", "plaf");
+      fut = proxy.call("longReply", "plaf");
       fut.addCallback(new Callback<String>() {
 
-        public void onSuccess(Future<String> future, Object[] args)
+        public void onSuccess(Future<String> future, java.lang.Object[] args)
         {
           onSuccessCalled = true;
           assertEquals(1, args[0]);
           assertEquals(2, args[1]);
         }
 
-        public void onFailure(Future<String> future, Object[] args)
+        public void onFailure(Future<String> future, java.lang.Object[] args)
         {
           fail("onFailure must not be called");
         }
 
-        public void onComplete(Future<String> future, Object[] args)
+        public void onComplete(Future<String> future, java.lang.Object[] args)
         {
           onCompleteCalled = true;
           assertEquals(1, args[0]);
@@ -130,7 +155,7 @@ public class FutureTest
     // Call a 2s long function
     try
     {
-      fut = proxy.asyncCall("longReply", "plaf");
+      fut = proxy.call("longReply", "plaf");
     } catch (CallError e)
     {
       fail("Error calling answer function : " + e.getMessage());
@@ -168,7 +193,7 @@ public class FutureTest
     // Call a 2s long function
     try
     {
-      fut = proxy.asyncCall("longReply", "plaf");
+      fut = proxy.call("longReply", "plaf");
     } catch (CallError e)
     {
       fail("Error calling answer function : " + e.getMessage());
@@ -209,7 +234,7 @@ public class FutureTest
     // Call a 2s long function
     try
     {
-      fut = proxy.asyncCall("longReply", "plaf");
+      fut = proxy.call("longReply", "plaf");
     } catch (CallError e)
     {
       System.out.println("Error calling answer function : " + e.getMessage());
@@ -245,7 +270,7 @@ public class FutureTest
     // Call a 2s long function
     try
     {
-      fut = proxy.asyncCall("longReply", "plaf");
+      fut = proxy.call("longReply", "plaf");
     } catch (CallError e)
     {
       System.out.println("Error calling answer function : " + e.getMessage());

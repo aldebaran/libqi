@@ -2,8 +2,8 @@ package com.aldebaran.qimessaging;
 
 import com.aldebaran.qimessaging.ServiceDirectory;
 import com.aldebaran.qimessaging.Session;
-import com.aldebaran.qimessaging.GenericObject;
 import com.aldebaran.qimessaging.ReplyService;
+import com.aldebaran.qimessaging.Object;
 
 import static org.junit.Assert.*;
 
@@ -16,8 +16,8 @@ import org.junit.Test;
  */
 public class IntegrationTest
 {
-  public GenericObject    proxy = null;
-  public GenericObject    obj = null;
+  public Object           proxy = null;
+  public Object           obj = null;
   public Session          s = null;
   public Session          client = null;
   public ServiceDirectory sd = null;
@@ -33,21 +33,29 @@ public class IntegrationTest
     String url = sd.listenUrl();
 
     // Create new QiMessaging generic object
-    obj = new GenericObject();
+    GenericObjectBuilder ob = new GenericObjectBuilder();
 
     // Get instance of ReplyService
     QimessagingService reply = new ReplyService();
 
     // Register event 'Fire'
-    obj.advertiseSignal("fire::(i)");
-    obj.advertiseMethod("reply::s(s)", reply);
-    obj.advertiseMethod("answer::s()", reply);
-    obj.advertiseMethod("add::i(iii)", reply);
+    ob.advertiseSignal("fire::(i)");
+    ob.advertiseMethod("reply::s(s)", reply, "Concatenate given argument with 'bim !'");
+    ob.advertiseMethod("answer::s()", reply, "Return given argument");
+    ob.advertiseMethod("add::i(iii)", reply, "Return sum of arguments");
+    ob.advertiseMethod("info::(sib)(sib)", reply, "Return a tuple containing given arguments");
+    ob.advertiseMethod("answer::i(i)", reply, "Return given parameter plus 1");
+    ob.advertiseMethod("answerFloat::f(f)", reply, "Return given parameter plus 1");
+    ob.advertiseMethod("answerBool::b(b)", reply, "Flip given parameter and return it");
+    ob.advertiseMethod("abacus::{ib}({ib})", reply, "Flip all booleans in map");
+    ob.advertiseMethod("echoFloatList::[m]([f])", reply, "Return the exact same list");
+    ob.advertiseMethod("createObject::o()", reply, "Return a test object");
 
     // Connect session to Service Directory
     s.connect(url).sync();
 
     // Register service as serviceTest
+    obj = ob.object();
     assertTrue("Service must be registered", s.registerService("serviceTest", obj));
 
     // Connect client session to service directory
@@ -84,7 +92,7 @@ public class IntegrationTest
     String res = null;
 
     try {
-      res = proxy.<String>call("reply::(s)", "plaf");
+      res = proxy.<String>call("reply::(s)", "plaf").get();
     } catch (Exception e)
     {
       fail("Call must succeed : " + e.getMessage());
@@ -106,7 +114,7 @@ public class IntegrationTest
     String res = null;
 
     try {
-      res = proxy.<String>call("reply", "plaf");
+      res = proxy.<String>call("reply", "plaf").get();
     } catch (Exception e)
     {
       fail("Call must succeed : " + e.getMessage());
@@ -124,9 +132,9 @@ public class IntegrationTest
   {
     Integer ret = null;
     try {
-      ret = proxy.<Integer>call("add", 1, 21, 20);
+      ret = proxy.<Integer>call("add", 1, 21, 20).get();
     }
-    catch (CallError e)
+    catch (Exception e)
     {
       fail("Call Error must not be thrown : " + e.getMessage());
     }

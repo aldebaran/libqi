@@ -10,8 +10,8 @@ public class EventTest
 {
   private boolean         callbackCalled = false;
   private int             callbackParam = 0;
-  public GenericObject    proxy = null;
-  public GenericObject    obj = null;
+  public Object           proxy = null;
+  public Object           obj = null;
   public Session          s = null;
   public Session          client = null;
   public ServiceDirectory sd = null;
@@ -27,15 +27,29 @@ public class EventTest
     String url = sd.listenUrl();
 
     // Create new QiMessaging generic object
-    obj = new GenericObject();
+    GenericObjectBuilder ob = new GenericObjectBuilder();
+
+    // Get instance of ReplyService
+    QimessagingService reply = new ReplyService();
 
     // Register event 'Fire'
-    obj.advertiseSignal("fire::(i)");
+    ob.advertiseSignal("fire::(i)");
+    ob.advertiseMethod("reply::s(s)", reply, "Concatenate given argument with 'bim !'");
+    ob.advertiseMethod("answer::s()", reply, "Return given argument");
+    ob.advertiseMethod("add::i(iii)", reply, "Return sum of arguments");
+    ob.advertiseMethod("info::(sib)(sib)", reply, "Return a tuple containing given arguments");
+    ob.advertiseMethod("answer::i(i)", reply, "Return given parameter plus 1");
+    ob.advertiseMethod("answerFloat::f(f)", reply, "Return given parameter plus 1");
+    ob.advertiseMethod("answerBool::b(b)", reply, "Flip given parameter and return it");
+    ob.advertiseMethod("abacus::{ib}({ib})", reply, "Flip all booleans in map");
+    ob.advertiseMethod("echoFloatList::[m]([f])", reply, "Return the exact same list");
+    ob.advertiseMethod("createObject::o()", reply, "Return a test object");
 
     // Connect session to Service Directory
     s.connect(url).sync();
 
     // Register service as serviceTest
+    obj = ob.object();
     assertTrue("Service must be registered", s.registerService("serviceTest", obj));
 
     // Connect client session to service directory
@@ -65,7 +79,7 @@ public class EventTest
   {
 
     @SuppressWarnings("unused")
-    Object callback = new Object() {
+    java.lang.Object callback = new java.lang.Object() {
       public void fireCallback(Integer i)
       {
         callbackCalled = true;

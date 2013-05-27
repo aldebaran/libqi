@@ -7,8 +7,8 @@ import java.util.Map;
 
 import com.aldebaran.qimessaging.ServiceDirectory;
 import com.aldebaran.qimessaging.Session;
-import com.aldebaran.qimessaging.GenericObject;
 import com.aldebaran.qimessaging.ReplyService;
+import com.aldebaran.qimessaging.Object;
 
 import static org.junit.Assert.*;
 
@@ -21,8 +21,8 @@ import org.junit.Test;
  */
 public class TypeTest
 {
-  public GenericObject    proxy = null;
-  public GenericObject    obj = null;
+  public Object           proxy = null;
+  public Object           obj = null;
   public Session          s = null;
   public Session          client = null;
   public ServiceDirectory sd = null;
@@ -38,28 +38,29 @@ public class TypeTest
     String url = sd.listenUrl();
 
     // Create new QiMessaging generic object
-    obj = new GenericObject();
+    GenericObjectBuilder ob = new GenericObjectBuilder();
 
     // Get instance of ReplyService
     QimessagingService reply = new ReplyService();
 
     // Register event 'Fire'
-    obj.advertiseSignal("fire::(i)");
-    obj.advertiseMethod("reply::s(s)", reply);
-    obj.advertiseMethod("answer::s()", reply);
-    obj.advertiseMethod("add::i(iii)", reply);
-    obj.advertiseMethod("info::(sib)(sib)", reply);
-    obj.advertiseMethod("answer::i(i)", reply);
-    obj.advertiseMethod("answerFloat::f(f)", reply);
-    obj.advertiseMethod("answerBool::b(b)", reply);
-    obj.advertiseMethod("abacus::{ib}({ib})", reply);
-//    obj.advertiseMethod("abacus::{mm}({ib})", reply);
-    obj.advertiseMethod("echoFloatList::[m]([f])", reply);
+    ob.advertiseSignal("fire::(i)");
+    ob.advertiseMethod("reply::s(s)", reply, "Concatenate given argument with 'bim !'");
+    ob.advertiseMethod("answer::s()", reply, "Return given argument");
+    ob.advertiseMethod("add::i(iii)", reply, "Return sum of arguments");
+    ob.advertiseMethod("info::(sib)(sib)", reply, "Return a tuple containing given arguments");
+    ob.advertiseMethod("answer::i(i)", reply, "Return given parameter plus 1");
+    ob.advertiseMethod("answerFloat::f(f)", reply, "Return given parameter plus 1");
+    ob.advertiseMethod("answerBool::b(b)", reply, "Flip given parameter and return it");
+    ob.advertiseMethod("abacus::{ib}({ib})", reply, "Flip all booleans in map");
+    ob.advertiseMethod("echoFloatList::[m]([f])", reply, "Return the exact same list");
+    ob.advertiseMethod("createObject::o()", reply, "Return a test object");
 
     // Connect session to Service Directory
     s.connect(url).sync();
 
     // Register service as serviceTest
+    obj = ob.object();
     assertTrue("Service must be registered", s.registerService("serviceTest", obj));
 
     // Connect client session to service directory
@@ -92,9 +93,9 @@ public class TypeTest
   {
     String ret = null;
     try {
-      ret = proxy.<String>call("reply", "plaf");
+      ret = proxy.<String>call("reply", "plaf").get();
     }
-    catch (CallError e)
+    catch (Exception e)
     {
       fail("Call Error must not be thrown : " + e.getMessage());
     }
@@ -102,9 +103,9 @@ public class TypeTest
     assertEquals("plafbim !", ret);
 
     try {
-      ret = proxy.<String>call("answer");
+      ret = proxy.<String>call("answer").get();
     }
-    catch (CallError e)
+    catch (Exception e)
     {
       fail("Call Error must not be thrown : " + e.getMessage());
     }
@@ -120,9 +121,9 @@ public class TypeTest
   {
     Integer ret = null;
     try {
-      ret = proxy.<Integer>call("answer", 41);
+      ret = proxy.<Integer>call("answer", 41).get();
     }
-    catch (CallError e)
+    catch (Exception e)
     {
       fail("Call Error must not be thrown : " + e.getMessage());
     }
@@ -138,9 +139,9 @@ public class TypeTest
   {
     Float ret = null;
     try {
-      ret = proxy.<Float>call("answerFloat", 41.2f);
+      ret = proxy.<Float>call("answerFloat", 41.2f).get();
     }
-    catch (CallError e)
+    catch (Exception e)
     {
       fail("Call Error must not be thrown : " + e.getMessage());
     }
@@ -155,9 +156,9 @@ public class TypeTest
   {
     Boolean ret = null;
     try {
-      ret = proxy.<Boolean>call("answerBool", false);
+      ret = proxy.<Boolean>call("answerBool", false).get();
     }
-    catch (CallError e)
+    catch (Exception e)
     {
       fail("Call Error must not be thrown : " + e.getMessage());
     }
@@ -174,9 +175,9 @@ public class TypeTest
 
     Map<Integer, Boolean> ret = null;
     try {
-      ret = proxy.<Hashtable<Integer, Boolean> >call("abacus", args);
+      ret = proxy.<Hashtable<Integer, Boolean> >call("abacus", args).get();
     }
-    catch (CallError e)
+    catch (Exception e)
     {
       fail("Call Error must not be thrown : " + e.getMessage());
     }
@@ -197,9 +198,9 @@ public class TypeTest
 
     Map<Integer, Boolean> ret = null;
     try {
-      ret = proxy.<Hashtable<Integer, Boolean> >call("abacus", args);
+      ret = proxy.<Hashtable<Integer, Boolean> >call("abacus", args).get();
     }
-    catch (CallError e)
+    catch (Exception e)
     {
       fail("Call Error must not be thrown : " + e.getMessage());
     }
@@ -219,9 +220,9 @@ public class TypeTest
 
     List<Float> ret = null;
     try {
-      ret = proxy.<ArrayList<Float> >call("echoFloatList", args);
+      ret = proxy.<ArrayList<Float> >call("echoFloatList", args).get();
     }
-    catch (CallError e)
+    catch (Exception e)
     {
       fail("Call Error must not be thrown : " + e.getMessage());
     }
@@ -243,9 +244,9 @@ public class TypeTest
 
     List<Float> ret = null;
     try {
-      ret = proxy.<ArrayList<Float> >call("echoFloatList", args);
+      ret = proxy.<ArrayList<Float> >call("echoFloatList", args).get();
     }
-    catch (CallError e)
+    catch (Exception e)
     {
       fail("Call Error must not be thrown : " + e.getMessage());
     }
