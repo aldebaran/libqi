@@ -17,7 +17,7 @@ public abstract class Tuple
 
     if (index < fields.length)
     {
-      Object t = fields[index].get(this);
+      java.lang.Object t = fields[index].get(this);
       return (T) t;
     }
 
@@ -44,7 +44,7 @@ public abstract class Tuple
     String ret = "(";
     while (index < fields.length)
     {
-      Object t;
+      java.lang.Object t;
       try
       {
         t = fields[index].get(this);
