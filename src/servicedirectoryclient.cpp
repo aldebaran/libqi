@@ -141,7 +141,7 @@ namespace qi {
         _object->disconnect(_addLink);
       }
     } catch (std::runtime_error &e) {
-      qiLogError() << "Cannot disconnect SDC::serviceAdded: " << e.what();
+      qiLogDebug() << "Cannot disconnect SDC::serviceAdded: " << e.what();
     }
     try {
       if (_removeLink != 0)
@@ -149,7 +149,7 @@ namespace qi {
         _object->disconnect(_removeLink);
       }
     } catch (std::runtime_error &e) {
-        qiLogError() << "Cannot disconnect SDC::serviceRemoved: " << e.what();
+        qiLogDebug() << "Cannot disconnect SDC::serviceRemoved: " << e.what();
     }
     _addLink = _removeLink = 0;
   }
