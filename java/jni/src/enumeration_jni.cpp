@@ -11,6 +11,8 @@
 #include <jnitools.hpp>
 #include <enumeration_jni.hpp>
 
+qiLogCategory("qimessaging.jni");
+
 JNIEnumeration::JNIEnumeration(jobject obj)
 {
   JVM()->GetEnv((void**) &_env, QI_JNI_MIN_VERSION);
@@ -29,7 +31,7 @@ bool JNIEnumeration::hasNextElement()
 
   if (!mid)
   {
-    qiLogFatal("qimessaging.jni") << "JNIEnumeration : Cannot call method hasMoreElements";
+    qiLogFatal() << "JNIEnumeration : Cannot call method hasMoreElements";
     throw std::runtime_error("JNIEnumeration : Cannot call method hasMoreElements");
   }
 
@@ -42,7 +44,7 @@ jobject JNIEnumeration::nextElement()
 
   if (!mid)
   {
-    qiLogFatal("qimessaging.jni") << "JNIEnumeration : Cannot call method nextElement";
+    qiLogFatal() << "JNIEnumeration : Cannot call method nextElement";
     throw std::runtime_error("JNIEnumeration : Cannot call method nextElement");
   }
 

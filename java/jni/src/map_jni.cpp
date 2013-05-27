@@ -12,6 +12,8 @@
 #include <jnitools.hpp>
 #include <map_jni.hpp>
 
+qiLogCategory("qimessaging.jni");
+
 JNIHashTable::JNIHashTable()
 {
    JVM()->GetEnv((void**) &_env, QI_JNI_MIN_VERSION);
@@ -20,7 +22,7 @@ JNIHashTable::JNIHashTable()
   jmethodID mid = _env->GetMethodID(_cls, "<init>", "()V");
   if (!mid)
   {
-    qiLogFatal("qimessaging.jni") << "JNIHashTable::JNIHashTable : Cannot call constructor";
+    qiLogFatal() << "JNIHashTable::JNIHashTable : Cannot call constructor";
     throw std::runtime_error("JNIHashTable::JNIHashTable : Cannot call constructor");
   }
 
@@ -30,7 +32,7 @@ JNIHashTable::JNIHashTable()
 JNIHashTable::JNIHashTable(jobject obj)
 {
    JVM()->GetEnv((void**) &_env, QI_JNI_MIN_VERSION);
-  _obj = obj;
+   _obj = obj;
   _cls = _env->FindClass("java/util/Hashtable");
 }
 
@@ -45,13 +47,13 @@ bool JNIHashTable::setItem(jobject key, jobject value)
 
   if (!key || !value)
   {
-    qiLogFatal("qimessaging.jni") << "JNIHashTable::setItem() : Given key/value pair is null";
+    qiLogFatal() << "JNIHashTable::setItem() : Given key/value pair is null";
     return false;
   }
 
   if (!mid)
   {
-    qiLogFatal("qimessaging.jni") << "JNIHashTable::setItem() : Cannot call put";
+    qiLogFatal() << "JNIHashTable::setItem() : Cannot call put";
     throw std::runtime_error("JNIHashTable::setItem() : Cannot call put");
   }
 
@@ -80,7 +82,7 @@ JNIEnumeration JNIHashTable::keys()
 
   if (!mid)
   {
-    qiLogFatal("qimessaging.jni") << "JNIHashTable : Cannot call method keys";
+    qiLogFatal() << "JNIHashTable : Cannot call method keys";
     throw std::runtime_error("JNIHashTable : Cannot call method keys");
   }
 
@@ -93,13 +95,13 @@ jobject JNIHashTable::at(jobject key)
 
   if (!key)
   {
-    qiLogFatal("qimessaging.jni") << "JNIHashTable::at() : Given key is null";
+    qiLogFatal() << "JNIHashTable::at() : Given key is null";
     return 0;
   }
 
   if (!mid)
   {
-    qiLogFatal("qimessaging.jni") << "JNIHashTable::at() : Cannot call method get";
+    qiLogFatal() << "JNIHashTable::at() : Cannot call method get";
     throw std::runtime_error("JNIHashTable::at() : Cannot call method get");
   }
 

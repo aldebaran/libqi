@@ -11,6 +11,8 @@
 #include <qimessaging/session.hpp>
 #include "jnitools.hpp"
 
+qiLogCategory("qimessaging.jni");
+
 /*
  * JNIEnv structure is thread dependent.
  * To use a JNIEnv* pointer in another thread (such as QiMessaging callback)
@@ -25,7 +27,7 @@ JavaVM*       JVM(JNIEnv* env)
     env->GetJavaVM(&gJVM);
 
   if (gJVM == 0 && env == 0)
-    qiLogError("qimessaging.jni.JVM") << "JVM singleton wasn't initialised";
+    qiLogError() << "JVM singleton wasn't initialised";
   return gJVM;
 }
 
@@ -36,13 +38,13 @@ std::string toStdString(JNIEnv *env, jstring inputString)
 
   if (!env)
   {
-    qiLogError("qimessaging.jni") << "Java environment missing.";
+    qiLogError() << "Java environment missing.";
     return string;
   }
 
   if (!(cstring = env->GetStringUTFChars(inputString, 0)))
   {
-    qiLogError("qimessaging.jni") << "Cannot convert Java string into string.";
+    qiLogError() << "Cannot convert Java string into string.";
   }
 
   string = cstring;
@@ -55,12 +57,12 @@ jstring     toJavaString(JNIEnv *env, const std::string &inputString)
 
   if (!env)
   {
-    qiLogError("qimessaging.jni") << "Java environment missing.";
+    qiLogError() << "Java environment missing.";
     return string;
   }
 
   if (!(string = env->NewStringUTF(inputString.c_str())))
-    qiLogError("qimessaging.jni") << "Cannot convert string into Java string.";
+    qiLogError() << "Cannot convert string into Java string.";
 
   return string;
 }
@@ -126,7 +128,7 @@ void getJavaSignature(std::string &sig, const std::string& sigInfo)
       break;
     }
     default:
-      qiLogFatal("qimessaging.java") << "Unknown conversion for [" << sigInfo[i] << "]";
+      qiLogFatal() << "Unknown conversion for [" << sigInfo[i] << "]";
       exit(1);
       break;
     }
@@ -162,7 +164,7 @@ jint throwJavaError(JNIEnv *env, const char *message)
   exClass = env->FindClass(className);
   if (exClass == NULL)
   {
-    qiLogFatal("qimessaging.jni.throw") << "Cannot throw any exceptions";
+    qiLogFatal() << "Cannot throw any exceptions";
     return 1;
   }
 
