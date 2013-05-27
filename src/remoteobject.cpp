@@ -14,7 +14,6 @@
 #include "transportsocket.hpp"
 #include <qi/log.hpp>
 #include <boost/thread/mutex.hpp>
-#include <boost/dynamic_bitset.hpp>
 #include <qi/eventloop.hpp>
 
 qiLogCategory("qimessaging.remoteobject");
@@ -157,7 +156,7 @@ namespace qi {
           // Trust MetaObject.
           //std::string sig = sb->signature();
           const MetaSignal* ms  = _self->metaObject().signal(msg.event());
-          std::string sig = ms->parametersSignature();
+          qi::Signature sig = ms->parametersSignature();
 
           // Remove top-level tuple
           //sig = sig.substr(1, sig.length()-2);
@@ -247,45 +246,9 @@ namespace qi {
   {
     qi::Promise<GenericValuePtr> out;
     qi::Message msg;
-    std::string argsSig("(");
-    // apparent signature must match for correct serialization
-    for (unsigned i = 0; i < in.size(); ++i)
-      argsSig += in[i].signature(false);
-    argsSig += ')';
-    std::string funcSig =
-      metaObject().method(method)->parametersSignature();
-    if (funcSig != argsSig)
-    {
-      std::vector<GenericValuePtr> nargs(in);
-      Signature src = Signature(argsSig).begin().children();
-      Signature dst = Signature(funcSig).begin().children();
-      Signature::iterator its = src.begin(), itd = dst.begin();
-      boost::dynamic_bitset<> allocated(nargs.size());
-      for (unsigned i = 0; i< nargs.size(); ++i, ++its, ++itd)
-      {
-        if (*its != *itd)
-        {
-          Type* target = Type::fromSignature(*itd);
-          if (!target)
-            throw std::runtime_error("remote call: Failed to obtain a type from signature " + *itd);
-          std::pair<GenericValuePtr, bool> c = nargs[i].convert(target);
-          if (!c.first.type)
-          {
-            throw std::runtime_error(
-              _QI_LOG_FORMAT("remote call: failed to convert argument %s from %s to %s", i, *its, *itd));
-          }
-          nargs[i] = c.first;
-          allocated[i] = c.second;
-        }
-      }
-      msg.setValues(nargs, this);
-      for (unsigned i = 0; i< nargs.size(); ++i)
-        if (allocated[i])
-        nargs[i].destroy();
-    }
-    else
-      msg.setValues(in, this);
+    qi::Signature funcSig = metaObject().method(method)->parametersSignature();
 
+    msg.setValues(in, funcSig, this);
     msg.setType(qi::Message::Type_Call);
     msg.setService(_service);
     msg.setObject(_object);
@@ -337,11 +300,8 @@ namespace qi {
     // event back to us.
     qi::Message msg;
     // apparent signature must match for correct serialization
-    std::string argsSig("(");
-    for (unsigned i = 0; i < in.size(); ++i)
-      argsSig += in[i].signature(false);
-    argsSig += ')';
-    std::string funcSig;
+    qi::Signature argsSig = qi::makeTupleSignature(in, false);
+    qi::Signature funcSig;
     const MetaMethod* mm = metaObject().method(event);
     if (mm)
       funcSig = mm->parametersSignature();
@@ -352,37 +312,8 @@ namespace qi {
         throw std::runtime_error("Post target id does not exist");
       funcSig = ms->parametersSignature();
     }
-    if (funcSig != argsSig)
-    {
-      std::vector<GenericValuePtr> nargs(in);
-      Signature src = Signature(argsSig).begin().children();
-      Signature dst = Signature(funcSig).begin().children();
-      Signature::iterator its = src.begin(), itd = dst.begin();
-      boost::dynamic_bitset<> allocated(nargs.size());
-      for (unsigned i = 0; i< nargs.size(); ++i, ++its, ++itd)
-      {
-        if (*its != *itd)
-        {
-          Type* target = Type::fromSignature(*itd);
-          if (!target)
-            throw std::runtime_error("remote call: Failed to obtain a type from signature " + *itd);
-          std::pair<GenericValuePtr, bool> c = nargs[i].convert(target);
-          if (!c.first.type)
-          {
-            throw std::runtime_error(
-              _QI_LOG_FORMAT("remote call: failed to convert argument %s from %s to %s", i, *its, *itd));
-          }
-          nargs[i] = c.first;
-          allocated[i] = c.second;
-        }
-      }
-      msg.setValues(nargs, this);
-      for (unsigned i = 0; i< nargs.size(); ++i)
-        if (allocated[i])
-        nargs[i].destroy();
-    }
-    else
-      msg.setValues(in, this);
+
+    msg.setValues(in, funcSig, this);
     msg.setType(Message::Type_Post);
     msg.setService(_service);
     msg.setObject(_object);

@@ -104,7 +104,7 @@ qi_value_kind_t qi_value_get_kind(qi_value_t* value) {
 const char*     qi_value_get_signature(qi_value_t* value, int resolveDynamics)
 {
   qi::GenericValue &val = qi_value_cpp(value);
-  return qi::os::strdup(val.signature(!!resolveDynamics).c_str());
+  return qi::os::strdup(val.signature(!!resolveDynamics).toString().c_str());
 }
 
 //# UINT64

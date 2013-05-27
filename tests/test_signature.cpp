@@ -15,7 +15,7 @@
 qi::GenericValue reply(const qi::GenericValue &myval) {
 
   qi::GenericValuePtr val(myval);
-  qiLogDebug("reply") << "Message received with the signature =" << myval.signature(false) << ":" << qi::encodeJSON(val) << std::endl;
+  qiLogDebug("reply") << "Message received with the signature =" << myval.signature(false).toString() << ":" << qi::encodeJSON(val) << std::endl;
   return myval;
 }
 
@@ -53,6 +53,6 @@ int main(int argc, char* argv[])
     ret.hasValue();
     qi::GenericValuePtr lol = ret.value();
 
-    std::cout << "signature of the return:" << lol.signature(false) << std::endl;
+    std::cout << "signature of the return:" << lol.signature(false).toString() << std::endl;
   }
 }

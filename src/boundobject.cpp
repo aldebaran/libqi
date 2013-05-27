@@ -163,7 +163,7 @@ namespace qi {
     }
     funcId = msg.function();
 
-    std::string sigparam;
+    qi::Signature sigparam;
     GenericFunctionParameters mfp;
 
     if (msg.type() == qi::Message::Type_Call) {

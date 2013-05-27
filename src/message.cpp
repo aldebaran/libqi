@@ -7,6 +7,7 @@
 #include <cstring>
 
 #include <boost/make_shared.hpp>
+#include <boost/dynamic_bitset.hpp>
 
 #include <qitype/genericvalue.hpp>
 #include "message.hpp"
@@ -363,11 +364,11 @@ namespace qi {
     }
   }
 
-  GenericValuePtr Message::value(const std::string &signature, const qi::TransportSocketPtr &socket) const {
+  GenericValuePtr Message::value(const qi::Signature &signature, const qi::TransportSocketPtr &socket) const {
     qi::Type* type = qi::Type::fromSignature(signature);
     if (!type) {
-      qiLogError() <<"fromBuffer: unknown type " << signature;
-      throw std::runtime_error("Could not construct type for " + signature);
+      qiLogError() <<"fromBuffer: unknown type " << signature.toString();
+      throw std::runtime_error("Could not construct type for " + signature.toString());
     qiLogDebug() << "Serialized message body: " << _p->buffer.size();
     }
     qi::BufferReader br(_p->buffer);
@@ -384,12 +385,47 @@ namespace qi {
     }
   }
 
-  void Message::setValues(const std::vector<qi::GenericValuePtr> &values, ObjectHost* context)
+  void Message::setValues(const std::vector<qi::GenericValuePtr>& values, ObjectHost* context)
   {
     cow();
     SerializeObjectCallback scb = boost::bind(serializeObject, _1, context);
     for (unsigned i = 0; i < values.size(); ++i)
       encodeBinary(&_p->buffer, values[i], scb);
+  }
+
+  //convert args then call setValues
+  void Message::setValues(const std::vector<qi::GenericValuePtr>& in, const qi::Signature& expectedSignature, ObjectHost* context) {
+    qi::Signature argsSig = qi::makeTupleSignature(in, false);
+    if (expectedSignature == argsSig) {
+      setValues(in, context);
+      return;
+    }
+    std::vector<GenericValuePtr> nargs(in);
+    Signature src = argsSig.begin().children();
+    Signature dst = expectedSignature.begin().children();
+    Signature::iterator its = src.begin(), itd = dst.begin();
+    boost::dynamic_bitset<> allocated(nargs.size());
+    for (unsigned i = 0; i< nargs.size(); ++i, ++its, ++itd)
+    {
+      if (*its != *itd)
+      {
+        ::qi::Type* target = ::qi::Type::fromSignature(*itd);
+        if (!target)
+          throw std::runtime_error("remote call: Failed to obtain a type from signature " + (*itd).toString());
+        std::pair<GenericValuePtr, bool> c = nargs[i].convert(target);
+        if (!c.first.type)
+        {
+          throw std::runtime_error(
+                _QI_LOG_FORMAT("remote call: failed to convert argument %s from %s to %s", i, (*its).toString(), (*itd).toString()));
+        }
+        nargs[i] = c.first;
+        allocated[i] = c.second;
+      }
+    }
+    setValues(nargs, context);
+    for (unsigned i = 0; i< nargs.size(); ++i)
+      if (allocated[i])
+        nargs[i].destroy();
   }
 
   const qi::Buffer &Message::buffer() const

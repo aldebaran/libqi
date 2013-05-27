@@ -12,11 +12,11 @@ namespace qi
   {
     static std::string value()
     {
-      return typeOf<T>()->signature();
+      return typeOf<T>()->signature().toString();
     }
     static std::string value(std::string v)
     {
-      v+= typeOf<T>()->signature();
+      v+= typeOf<T>()->signature().toString();
       return v;
     }
   };
@@ -24,7 +24,7 @@ namespace qi
   {
     template<typename T> std::string value(const T& ptr)
     {
-      return typeOf(ptr)->signature();
+      return typeOf(ptr)->signature().toString();
     }
   };
 }
@@ -52,10 +52,10 @@ void sig_print(const qi::Signature &sig, int indent = 0) {
 
   for (it = sig.begin(); it != sig.end(); ++it) {
     if (!it.hasChildren()) {
-      std::cout << space_i(indent) << "e:(" << it.type() << "): " << *it << std::endl;
+      std::cout << space_i(indent) << "e:(" << it.type() << "): " << (*it).toString() << std::endl;
     }
     else {
-      std::cout << space_i(indent) << "c:(" << it.type() << "): " << *it << std::endl;
+      std::cout << space_i(indent) << "c:(" << it.type() << "): " << (*it).toString() << std::endl;
       qi::Signature subsig = it.children();
       sig_print(subsig, indent + 1);
     }

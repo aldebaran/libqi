@@ -32,7 +32,7 @@ namespace qi { namespace py {
 
     class PySignal : public qi::SignalBase {
     public:
-      PySignal(const std::string &signature = "[m]")
+      PySignal(const qi::Signature &signature = "[m]")
         : qi::SignalBase(signature)
       {
       }

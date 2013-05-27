@@ -13,14 +13,14 @@ namespace qi
   {
     static std::string value()
     {
-      return typeOf<T>()->signature();
+      return typeOf<T>()->signature().toString();
     }
   };
   struct signatureFromObject
   {
     template<typename T> std::string value(const T& ptr)
     {
-      return typeOf(ptr)->signature();
+      return typeOf(ptr)->signature().toString();
     }
   };
 }
