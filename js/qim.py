@@ -8,6 +8,7 @@ import json
 import base64
 
 URL = None
+sid = 1
 
 class SetEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -17,7 +18,12 @@ class SetEncoder(json.JSONEncoder):
 
 class QiMessagingHandler(tornadio2.conn.SocketConnection):
 
-    def on_open(self, _info):
+    def on_open(self, info):
+        global sid
+        self.info = info
+        self.sid = sid
+        sid = sid + 1
+        print("[%d] New connection from %s" % (self.sid, self.info.ip))
         self.qim = qi.Session()
         self.qim.connect(URL)
 
@@ -78,6 +84,7 @@ class QiMessagingHandler(tornadio2.conn.SocketConnection):
     def on_close(self):
         self.qim.close()
         self.qim = None
+        print("[%d] Disconnected" % (self.sid))
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
