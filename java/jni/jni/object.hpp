@@ -16,8 +16,8 @@
 extern "C"
 {
 
-  QIMESSAGING_API jobject   Java_com_aldebaran_qimessaging_Object_property(JNIEnv* env, jobject jobj, jlong pObj, jstring name);
-  QIMESSAGING_API jboolean  Java_com_aldebaran_qimessaging_Object_setProperty(JNIEnv* env, jobject jobj, jlong pObj, jstring name, jobject property);
+  QIMESSAGING_API jlong     Java_com_aldebaran_qimessaging_Object_property(JNIEnv* env, jobject jobj, jlong pObj, jstring name);
+  QIMESSAGING_API jlong     Java_com_aldebaran_qimessaging_Object_setProperty(JNIEnv* env, jobject jobj, jlong pObj, jstring name, jobject property);
   QIMESSAGING_API jlong     Java_com_aldebaran_qimessaging_Object_asyncCall(JNIEnv* env, jobject jobj, jlong pObj, jstring methodName, jobjectArray args);
   QIMESSAGING_API jstring   Java_com_aldebaran_qimessaging_Object_printMetaObject(JNIEnv* env, jobject jobj, jlong pObj);
   QIMESSAGING_API void      Java_com_aldebaran_qimessaging_Object_destroy(JNIEnv* env, jobject jobj, jlong pObj);

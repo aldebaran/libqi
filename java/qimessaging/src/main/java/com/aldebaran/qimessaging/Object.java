@@ -16,8 +16,8 @@ public class Object {
 
   private long    _p;
 
-  private static native Object   property(long pObj, String property);
-  private static native boolean  setProperty(long pObj, String property, java.lang.Object value);
+  private static native long     property(long pObj, String property);
+  private static native long     setProperty(long pObj, String property, java.lang.Object value);
   private static native long     asyncCall(long pObject, String method, java.lang.Object[] args);
   private static native String   printMetaObject(long pObject);
   private static native void     destroy(long pObj);
@@ -34,21 +34,14 @@ public class Object {
     this._p = p;
   }
 
-  public void setProperty(String property, java.lang.Object o) throws Exception
+  public Future<Void> setProperty(String property, java.lang.Object o) throws Exception
   {
-    Object.setProperty(_p, property, o);
+    return new Future<Void>(Object.setProperty(_p, property, o));
   }
 
-  public java.lang.Object property(String property)
+  public <T> Future<T> property(String property)
   {
-    try
-    {
-      return Object.property(_p, property);
-    } catch (Exception e)
-    {
-      System.out.println("Exception caught : " + e.getMessage());
-      return null;
-    }
+    return new Future<T>(Object.property(_p, property));
   }
 
   /**

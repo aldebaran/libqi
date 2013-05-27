@@ -3,6 +3,7 @@ package com.aldebaran;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 import com.aldebaran.qimessaging.CallError;
 import com.aldebaran.qimessaging.Object;
@@ -143,7 +144,7 @@ public class App
     System.out.println("AnswerString : " + str);
   }
 
-  public static void testObject(Object proxy)
+  public static void testObject(Object proxy) throws InterruptedException, ExecutionException
   {
     Object ro = null;
     try
@@ -155,11 +156,11 @@ public class App
       return;
     }
 
-    String prop = (String) ro.property("name");
+    String prop = (String) ro.<String>property("name").get();
     System.out.println("Property : " + prop);
   }
 
-  public static void main( String args[] )
+  public static void main( String args[] ) throws InterruptedException, ExecutionException
   {
     @SuppressWarnings("unused")
     Application app = new Application(args);

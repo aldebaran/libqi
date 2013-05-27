@@ -17,32 +17,29 @@ qiLogCategory("qimessaging.jni");
 
 extern MethodInfoHandler gInfoHandler;
 
-jobject   Java_com_aldebaran_qimessaging_Object_property(JNIEnv* env, jobject jobj, jlong pObj, jstring name)
+jlong   Java_com_aldebaran_qimessaging_Object_property(JNIEnv* env, jobject jobj, jlong pObj, jstring name)
 {
   qi::ObjectPtr&     obj = *(reinterpret_cast<qi::ObjectPtr*>(pObj));
   std::string        propName = toStdString(env, name);
+
+  qi::Future<qi::GenericValue>* ret = new qi::Future<qi::GenericValue>();
 
   JVM(env);
   JVM()->AttachCurrentThread((envPtr) &env, (void*) 0);
 
   try
   {
-    qi::GenericValue v = obj->property<qi::GenericValue>(propName);
-    if (v.isValid() == false)
-    {
-      throwJavaError(env, "Unknown error.");
-      return 0;
-    }
-
-    return v.to<jobject>();
+    *ret = obj->property<qi::GenericValue>(propName).async();
   } catch (qi::FutureUserException& e)
   {
     throwJavaError(env, e.what());
     return 0;
   }
+
+  return (jlong) ret;
 }
 
-jboolean  Java_com_aldebaran_qimessaging_Object_setProperty(JNIEnv* env, jobject QI_UNUSED(jobj), jlong pObj, jstring name, jobject property)
+jlong  Java_com_aldebaran_qimessaging_Object_setProperty(JNIEnv* env, jobject QI_UNUSED(jobj), jlong pObj, jstring name, jobject property)
 {
   qi::ObjectPtr&    obj = *(reinterpret_cast<qi::ObjectPtr*>(pObj));
   std::string        propName = toStdString(env, name);
@@ -50,15 +47,10 @@ jboolean  Java_com_aldebaran_qimessaging_Object_setProperty(JNIEnv* env, jobject
   JVM(env);
   JVM()->AttachCurrentThread((envPtr) &env, (void*) 0);
 
-  qi::FutureSync<void> ret = obj->setProperty(propName, qi::GenericValue::from<jobject>(property));
+  qi::Future<void>* ret = new qi::Future<void>();
+  *ret = obj->setProperty(propName, qi::GenericValue::from<jobject>(property)).async();
 
-  if (ret.hasError())
-  {
-    qiLogError() << "Cannot set " << propName << ": " << ret.error();
-    throwJavaError(env, ret.error().c_str());
-  }
-
-  return ret.hasError() ? false : true;
+  return (jlong) ret;
 }
 
 jlong     Java_com_aldebaran_qimessaging_Object_asyncCall(JNIEnv* env, jobject QI_UNUSED(jobj), jlong pObject, jstring jmethod, jobjectArray args)
@@ -135,10 +127,10 @@ jlong     Java_com_aldebaran_qimessaging_Object_connect(JNIEnv *env, jobject job
   signature.append(sigInfo[2]);
 
   return obj->xConnect(event + "::" + "(i)",
-                  qi::SignalSubscriber(
+                       qi::SignalSubscriber(
                          qi::makeDynamicGenericFunction(
                            boost::bind(&event_callback_to_java, (void*) data, _1)),
-                           qi::MetaCallType_Direct));
+                         qi::MetaCallType_Direct));
 }
 
 void      Java_com_aldebaran_qimessaging_Object_post(JNIEnv *env, jobject QI_UNUSED(jobj), jlong pObject, jstring eventName, jobjectArray jargs)

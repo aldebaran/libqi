@@ -86,7 +86,11 @@ public class ObjectTest
     }
 
     assertNotNull(ro);
-    assertEquals("foo", ro.property("name"));
+    try {
+      assertEquals("foo", ro.<String>property("name").get());
+    } catch (Exception e1) {
+      fail("Property must not fail");
+    }
 
     String ret = null;
     try {
