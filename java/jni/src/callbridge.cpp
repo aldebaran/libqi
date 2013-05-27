@@ -24,10 +24,8 @@ MethodInfoHandler gInfoHandler;
 qi::Future<qi::GenericValuePtr>* call_from_java(JNIEnv *env, qi::ObjectPtr object, const std::string& strMethodName, jobjectArray listParams)
 {
   qi::GenericFunctionParameters params;
-  std::string signature;
   jsize size;
   jsize i = 0;
-  bool  useSignature = true;
 
   size = env->GetArrayLength(listParams);
   while (i < size)
@@ -36,23 +34,13 @@ qi::Future<qi::GenericValuePtr>* call_from_java(JNIEnv *env, qi::ObjectPtr objec
     qi::GenericValuePtr val = qi::GenericValueRef(current).clone();
     params.push_back(val);
 
-    // In case of empty list or map, type system cannot resole containee type. In that case, do not use signature.
-    if (val.signature(true).find(qi::Signature::Type_None) != std::string::npos)
-      useSignature = false;
-
-    signature += val.signature(true);
     i++;
   }
-
-  // If user provide signature, do not use resolved one.
-  if (strMethodName.find("::") != std::string::npos)
-    useSignature = false;
 
   qi::Future<qi::GenericValuePtr> *fut = new qi::Future<qi::GenericValuePtr>();
   try
   {
-    std::string nameWithOptionalSignature = strMethodName + (useSignature == true ? "::(" + signature + ")" : "");
-    *fut = object->metaCall(nameWithOptionalSignature, params);
+    *fut = object->metaCall(strMethodName, params);
   } catch (std::runtime_error &e)
   {
     throwJavaError(env, e.what());
