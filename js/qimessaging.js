@@ -1,3 +1,12 @@
+/*
+**  Copyright (C) Aldebaran Robotics
+**  See COPYING for the license
+**
+**  Author(s):
+**   - Laurent LEC    <llec@aldebaran-robotics.com>
+**
+**  QiMessaging master release
+*/
 function QiSession(url)
 {
   var _socket = io.connect(url);
