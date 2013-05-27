@@ -47,6 +47,13 @@ qi::Future<qi::GenericValuePtr>* call_from_java(JNIEnv *env, qi::ObjectPtr objec
     return 0;
   }
 
+  i = 0;
+  for(qi::GenericFunctionParameters::iterator it = params.begin(); it != params.end(); ++it)
+  {
+    qi::GenericValuePtr ptr = (*it);
+    ptr.destroy();
+  }
+
   return fut;
 }
 
