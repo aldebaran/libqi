@@ -572,7 +572,8 @@ TEST(TestObject, ObjectTypeBuilderAsync)
 TEST(TestObject, TypeType)
 {
   using namespace qi;
-  std::vector<GenericValuePtr> vals = convert(12);
+  int i = 12;
+  std::vector<GenericValuePtr> vals = convert(i);
   GenericValuePtr val = vals[0];
   qiLogDebug() << "type ptr " << val.type->infoString() << " "
   <<(void*)val.type;
