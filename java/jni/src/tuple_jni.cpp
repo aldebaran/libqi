@@ -33,7 +33,7 @@ JNITuple::JNITuple(int size)
   if (!mid)
   {
     qiLogError("qimessaging.jni") << "JNITuple : Cannot find " << name.str() << " constructor";
-    throw std::runtime_error("JNITuple : Cannot find Tuple constructor");
+    throwJavaError(_env, "JNITuple : Cannot find Tuple constructor");
   }
 
   _obj = _env->NewObject(_cls, mid);
