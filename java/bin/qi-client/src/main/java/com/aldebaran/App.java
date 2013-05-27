@@ -5,20 +5,20 @@ import java.util.Hashtable;
 import java.util.Map;
 
 import com.aldebaran.qimessaging.CallError;
-import com.aldebaran.qimessaging.GenericObject;
+import com.aldebaran.qimessaging.Object;
 import com.aldebaran.qimessaging.Session;
 import com.aldebaran.qimessaging.Application;
 
 public class App
 {
 
-  public static void testFloat(GenericObject proxy)
+  public static void testFloat(Object proxy)
   {
     Float answer = null;
 
     try
     {
-      answer = (Float) proxy.<Float>call("answerFloat", 41.2);
+      answer = proxy.<Float>call("answerFloat", 41.2).get();
     } catch (CallError e)
     {
       System.out.println("Error calling answerFloat() :" + e.getMessage());
@@ -32,20 +32,17 @@ public class App
     System.out.println("AnswerFloat : " + answer);
   }
 
-  public static void testInteger(GenericObject proxy)
+  public static void testInteger(Object proxy)
   {
     Integer answer = null;
 
     try
     {
-      answer = proxy.<Integer>call("answer", 41);
-    } catch (CallError e)
+      answer = proxy.<Integer>call("answer", 41).get();
+    } catch (Exception e)
     {
       System.out.println("Error calling answer() :" + e.getMessage());
       return;
-    } catch (NullPointerException e)
-    {
-      e.printStackTrace();
     }
 
     if (answer == null)
@@ -54,14 +51,14 @@ public class App
       System.out.println("AnswerInteger : " + answer);
   }
 
-  public static void testBoolean(GenericObject proxy)
+  public static void testBoolean(Object proxy)
   {
     Boolean answer = null;
 
     try
     {
-      answer = proxy.<Boolean>call("answerBool", false);
-    } catch (CallError e)
+      answer = proxy.<Boolean>call("answerBool", false).get();
+    } catch (Exception e)
     {
       System.out.println("Error calling answerBool() :" + e.getMessage());
       return;
@@ -70,14 +67,14 @@ public class App
     System.out.println("AnswerBool : " + answer);
   }
 
-  public static void testAdd(GenericObject proxy)
+  public static void testAdd(Object proxy)
   {
     Integer answer = null;
 
     try
     {
-      answer = proxy.<Integer>call("add", 40, 2);
-    } catch (CallError e)
+      answer = proxy.<Integer>call("add", 40, 2).get();
+    } catch (Exception e)
     {
       System.out.println("Error calling add() :" + e.getMessage());
       return;
@@ -86,7 +83,7 @@ public class App
     System.out.println("add : " + answer);
   }
 
-  public static void testMap(GenericObject proxy)
+  public static void testMap(Object proxy)
   {
     Map<Integer, Boolean> abacus = new Hashtable<Integer, Boolean>();
     Map<Integer, Boolean> answer = null;
@@ -97,9 +94,9 @@ public class App
 
     try
     {
-      answer = proxy.<Hashtable<Integer, Boolean> >call("abacus", abacus);
+      answer = proxy.<Hashtable<Integer, Boolean> >call("abacus", abacus).get();
     }
-    catch (CallError e)
+    catch (Exception e)
     {
       System.out.println("Error calling abacus() :" + e.getMessage());
       return;
@@ -108,7 +105,7 @@ public class App
     System.out.println("abacus : " + answer);
   }
 
-  public static void testList(GenericObject proxy)
+  public static void testList(Object proxy)
   {
     ArrayList<Integer> positions = new ArrayList<Integer>();
     ArrayList<Integer> answer = null;
@@ -120,8 +117,8 @@ public class App
 
     try
     {
-      answer = proxy.<ArrayList<Integer> >call("echoIntegerList", positions);
-    } catch (CallError e)
+      answer = proxy.<ArrayList<Integer> >call("echoIntegerList", positions).get();
+    } catch (Exception e)
     {
       System.out.println("Error calling echoIntegerList() :" + e.getMessage());
       return;
@@ -130,20 +127,36 @@ public class App
     System.out.println("list : " + answer);
   }
 
-  public static void testString(GenericObject proxy)
+  public static void testString(Object proxy)
   {
     String  str = null;
 
     try
     {
-      str = proxy.<String>call("reply", "plaf");
-    } catch (CallError e)
+      str = proxy.<String>call("reply", "plaf").get();
+    } catch (Exception e)
     {
       System.out.println("Error calling reply() :" + e.getMessage());
       return;
     }
 
     System.out.println("AnswerString : " + str);
+  }
+
+  public static void testObject(Object proxy)
+  {
+    Object ro = null;
+    try
+    {
+      ro = proxy.<Object>call("createObject").get();
+    } catch (Exception e)
+    {
+      System.out.println("Call failed: " + e.getMessage());
+      return;
+    }
+
+    String prop = (String) ro.property("name");
+    System.out.println("Property : " + prop);
   }
 
   public static void main( String args[] )
@@ -165,7 +178,7 @@ public class App
       return;
     }
 
-    GenericObject proxy = null;
+    Object proxy = null;
     try {
       proxy = client.service("serviceTest");
     } catch (Exception e) {
@@ -173,6 +186,8 @@ public class App
       return;
     }
 
+
+    testObject(proxy);
     testMap(proxy);
     testList(proxy);
     testString(proxy);
@@ -184,6 +199,7 @@ public class App
 
     EventTester t = new EventTester();
     t.testEvent(proxy);
+
     System.exit(0);
   }
 }

@@ -1,10 +1,11 @@
 package com.aldebaran;
 
 import com.aldebaran.qimessaging.Application;
+import com.aldebaran.qimessaging.GenericObjectBuilder;
 import com.aldebaran.qimessaging.QimessagingException;
+import com.aldebaran.qimessaging.Object;
 import com.aldebaran.qimessaging.Session;
 import com.aldebaran.qimessaging.QimessagingService;
-import com.aldebaran.qimessaging.GenericObject;
 
 public class App
 {
@@ -14,7 +15,7 @@ public class App
     String sdAddr = "tcp://127.0.0.1:9559";
     Session s = new Session();
     QimessagingService service = new ReplyService();
-    GenericObject obj = new GenericObject();
+    GenericObjectBuilder ob = new GenericObjectBuilder();
 
     if (args.length >= 1)
       sdAddr = args[0];
@@ -31,29 +32,38 @@ public class App
 
     try
     {
-      obj.advertiseMethod("reply::s(s)", service);
-      obj.advertiseMethod("longReply::s(s)", service);
-      obj.advertiseMethod("answer::i(i)", service);
-      obj.advertiseMethod("answerFloat::f(f)", service);
-      obj.advertiseMethod("answerBool::b(b)", service);
-      obj.advertiseMethod("echoIntegerList::[m]([i])", service);
-      obj.advertiseMethod("add::i(ii)", service);
-      obj.advertiseMethod("abacus::{ib}({ib})", service);
-      obj.advertiseMethod("info::(sib)(sib)", service);
-      obj.advertiseMethod("triggerFireEvent::(i)", service);
+      ob.advertiseMethod("reply::s(s)", service, "Concatenate given argument with 'bim !'");
+      ob.advertiseMethod("answer::s()", service, "Return given argument");
+      ob.advertiseMethod("add::i(ii)", service, "Return sum of arguments");
+      ob.advertiseMethod("info::(sib)(sib)", service, "Return a tuple containing given arguments");
+      ob.advertiseMethod("answer::i(i)", service, "Return given parameter plus 1");
+      ob.advertiseMethod("answerFloat::f(f)", service, "Return given parameter plus 1");
+      ob.advertiseMethod("answerBool::b(b)", service, "Flip given parameter and return it");
+      ob.advertiseMethod("abacus::{ib}({ib})", service, "Flip all booleans in map");
+      ob.advertiseMethod("echoFloatList::[m]([f])", service, "Return the exact same list");
+      ob.advertiseMethod("createObject::o()", service, "Return a test object");
+      ob.advertiseMethod("triggerFireEvent::(i)", service, "Trigger Fire event");
+      ob.advertiseMethod("echoIntegerList::[i]([i])", service, "Trigger Fire event");
     } catch (QimessagingException e1) {
       System.out.println("Cannot advertise method : " + e1.getMessage());
     }
     try {
-      obj.advertiseEvent("fire::(i)");
+      ob.advertiseSignal("fire::(i)");
     } catch (Exception e) {
       System.out.println("Cannot advertise event : " + e.getMessage());
     }
 
+    Object obj = ob.object();
     ReplyService rs = (ReplyService) service;
     rs.setObj(obj);
 
-    s.registerService("serviceTest", obj);
+    try {
+      s.registerService("serviceTest", obj);
+    } catch (Exception e)
+    {
+      System.out.println("Cannot register service serviceTest : " + e.getMessage());
+      return;
+    }
 
     System.out.println("Ready.");
     app.run();
