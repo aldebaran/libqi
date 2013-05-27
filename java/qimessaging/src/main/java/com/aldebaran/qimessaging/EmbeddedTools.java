@@ -126,7 +126,6 @@ public class EmbeddedTools
 
       libfile.renameTo(so);
       System.load(so.getAbsolutePath());
-      so.delete();
 
       usingEmbedded = true;
     }
