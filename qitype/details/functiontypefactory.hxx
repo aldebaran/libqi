@@ -450,6 +450,32 @@ namespace qi
       return GenericFunction(ftype, ftype->clone(ftype->initializeStorage(&func)));
     }
 
+    template<typename C, typename R>
+    GenericValuePtr bouncer(const std::vector<GenericValuePtr>& vargs,
+      R (C::*fun)(const ArgumentPack&)
+      )
+    {
+      // Pack arguments, call, wrap return value in GenericValue
+      ArgumentPack nargs;
+      nargs.args.insert(nargs.args.begin(), vargs.begin()+1, vargs.end());
+      C* inst = (C*)vargs.front().to<C*>();
+      if (!inst)
+        qiLogWarning("qitype.ArgumentPackBouncer") << "Null instance";
+      detail::GenericValuePtrCopy output;
+      output(), (*inst.*fun)(nargs); // output clones
+      GenericValue* v = new GenericValue(output, false, true); // steal output
+      return GenericValuePtr(v);
+    }
+
+    template<typename C, typename R>
+    GenericFunction makeGenericFunctionBare(R (C::*fun)(const ArgumentPack&))
+    {
+      GenericFunction res = makeDynamicGenericFunction(boost::bind(&bouncer<C, R>, _1, fun));
+      // The signature storage in GO will drop first argument, and bug if none is present
+      const_cast<std::vector<Type*> &>(res.functionType()->argumentsType()).push_back(typeOf<GenericValue>());
+      return res;
+    }
+
     template<typename F> GenericFunction makeGenericFunctionBare(boost::function<F> func)
     {
       /* Do not try to reduce anything on a boost::function.

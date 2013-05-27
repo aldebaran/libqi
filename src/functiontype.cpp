@@ -176,6 +176,8 @@ namespace qi
 
   qi::Signature GenericFunction::parametersSignature(bool dropFirst) const
   {
+    if (type == dynamicFunctionType())
+      return "m";
     if (!dropFirst)
       return qi::makeTupleSignature(argumentsType());
     std::vector<Type*> vtype = argumentsType();
@@ -189,6 +191,8 @@ namespace qi
 
   qi::Signature GenericFunction::returnSignature() const
   {
+    if (type == dynamicFunctionType())
+      return "m";
     // Detect if returned type is a qi::Future and return underlying value type.
     TypeTemplate* ft1 = QI_TEMPLATE_TYPE_GET(resultType(), Future);
     TypeTemplate* ft2 = QI_TEMPLATE_TYPE_GET(resultType(), FutureSync);
@@ -201,11 +205,16 @@ namespace qi
 
   qi::Signature CallableType::parametersSignature() const
   {
-    return qi::makeTupleSignature(_argumentsType);
+    if (this == dynamicFunctionType())
+      return "m";
+    else
+      return qi::makeTupleSignature(_argumentsType);
   }
 
   qi::Signature CallableType::returnSignature() const
   {
+    if (this == dynamicFunctionType())
+      return "m";
     return _resultType->signature();
   }
 
@@ -267,6 +276,10 @@ namespace qi
   class DynamicFunctionType: public FunctionType
   {
   public:
+    DynamicFunctionType()
+    {
+      _resultType = typeOf<GenericValue>();
+    }
     virtual void* call(void* func, void** args, unsigned int argc)
     {
       qiLogError() << "Dynamic function called without type information";
