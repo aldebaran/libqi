@@ -427,6 +427,43 @@ TEST(Value, Overflow)
   ASSERT_ANY_THROW(GenericValue::make<char>().update(GenericValueRef(128)));
 }
 
+TEST(Value, Convert_ListToTuple)
+{
+  qi::Type *type = qi::Type::fromSignature("(fsf[s])");
+  qi::GenericValue gv1 = qi::decodeJSON("[42, \"plop\", 1.42, [\"a\", \"b\"]]");
+  qi::GenericValue gv2 = qi::decodeJSON("[42, \"plop\", 1.42, [\"a\", 42]]");
+
+  std::pair<qi::GenericValuePtr, bool> res1 = gv1.convert(type);
+  std::pair<qi::GenericValuePtr, bool> res2 = gv2.convert(type);
+
+  ASSERT_FALSE(res2.first.type);
+  ASSERT_TRUE(res1.first.type);
+  ASSERT_EQ(res1.first.type->info(), type->info());
+  ASSERT_EQ(gv1.size(), res1.first.size());
+  ASSERT_STREQ("b", res1.first[3][1].asString().c_str());
+
+  qi::Type *dest3 = qi::Type::fromSignature("(fffI)");
+  qi::GenericValue gv3 = qi::decodeJSON("[1.1, 2.2, 3.3, \"42\"]");
+  std::pair<qi::GenericValuePtr, bool> res3 = gv3.convert(dest3);
+  ASSERT_FALSE(res3.first.type);
+}
+
+TEST(Value, Convert_ListToMap)
+{
+  qi::Type *type1= qi::Type::fromSignature("{if}");
+  qi::GenericValue gv1 = qi::decodeJSON("[[10.10, 42.42], [20, 43], [30, 44.44]]");
+  std::pair<qi::GenericValuePtr, bool> res1 = gv1.convert(type1);
+  ASSERT_TRUE(res1.first.type);
+  ASSERT_EQ(res1.first.type->info(), type1->info());
+  ASSERT_EQ(gv1.size(), res1.first.size());
+  ASSERT_EQ(44.44f, res1.first[30].asFloat());
+
+  qi::Type *type2 = qi::Type::fromSignature("{if}");
+  qi::GenericValue gv2 = qi::decodeJSON("[[10.10, 42.42], [20, 43], [\"plop\", 44.44]]");
+  std::pair<qi::GenericValuePtr, bool> res2 = gv2.convert(type2);
+  ASSERT_FALSE(res2.first.type);
+}
+
 int main(int argc, char **argv) {
   qi::Application app(argc, argv);
   ::testing::InitGoogleTest(&argc, argv);

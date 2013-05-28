@@ -318,6 +318,56 @@ namespace qi
       result.value = dst;
       return std::make_pair(result, true);
     }
+    case Type::List:
+    {
+      // No explicit type-check, convert will do it
+      // handles for instance [i] -> (iii) if size matches
+      // or [m] -> (anything) if effective types match
+      TypeList* tsrc = static_cast<TypeList*>(type);
+
+      GenericIterator srcBegin = tsrc->begin(value);
+      GenericIterator srcEnd = tsrc->end(value);
+
+      std::vector<Type*> dstTypes = tdst->memberTypes();
+      std::vector<void*> targetData;
+      targetData.reserve(dstTypes.size());
+      std::vector<bool> mustDestroy;
+      mustDestroy.reserve(dstTypes.size());
+
+      if (this->size() != dstTypes.size())
+      {
+        qiLogWarning() << "Conversion failure: containers size mismatch between "
+                       << tsrc->signature().toString() << " and " << tdst->signature().toString();
+        return std::make_pair(GenericValuePtr(), false);
+      }
+
+      unsigned int i = 0;
+      while (srcBegin != srcEnd)
+      {
+        std::pair<GenericValuePtr, bool> conv = (*srcBegin).convert(dstTypes[i]);
+        if (!conv.first.type)
+        {
+          for (unsigned u = 0; u < targetData.size(); ++u)
+            if (mustDestroy[u])
+              dstTypes[u]->destroy(targetData[u]);
+          return std::make_pair(GenericValuePtr(), false);
+        }
+        targetData.push_back(conv.first.value);
+        mustDestroy.push_back(conv.second);
+        ++srcBegin;
+        ++i;
+      }
+      void* dst = tdst->initializeStorage();
+      tdst->set(&dst, targetData);
+      for (i = 0; i < mustDestroy.size(); ++i)
+      {
+        if (mustDestroy[i])
+          dstTypes[i]->destroy(targetData[i]);
+      }
+      result.type = targetType;
+      result.value = dst;
+      return std::make_pair(result, true);
+    }
     default:
       break;
     }
@@ -368,6 +418,33 @@ namespace qi
           ck.first.destroy();
         if (!sameElem && cv.second)
           cv.first.destroy();
+      }
+      return std::make_pair(result, true);
+    }
+    case Type::List:
+    {
+      // Accept [(kv)] and convert to {kv}
+      // Also accept [[m]] , [[k]] if k=v and size match, and other compatible stuffs
+      result = GenericValuePtr(static_cast<Type*>(targetType));
+      TypeList* tsrc = static_cast<TypeList*>(type);
+
+      GenericIterator srcBegin = tsrc->begin(value);
+      GenericIterator srcEnd = tsrc->end(value);
+
+      Type *pairType = (*result.end()).type;
+
+      while (srcBegin != srcEnd)
+      {
+        std::pair<GenericValuePtr, bool> conv = (*srcBegin).convert(pairType);
+        if (!conv.first.type)
+        {
+          result.destroy();
+          return std::make_pair(GenericValuePtr(), false);
+        }
+        result._insert(conv.first[0], conv.first[1]);
+        if (conv.second)
+          conv.first.destroy();
+        ++srcBegin;
       }
       return std::make_pair(result, true);
     }
@@ -437,7 +514,11 @@ namespace qi
         break;
       } // switch
     } // skind == dkind
-    if (skind == Type::Float && dkind == Type::Int)
+    if (skind == Type::List && dkind == Type::Tuple)
+      return convert(static_cast<TypeTuple*>(targetType));
+    else if (skind == Type::List && dkind == Type::Map)
+      return convert(static_cast<TypeMap*>(targetType));
+    else if (skind == Type::Float && dkind == Type::Int)
       return convert(static_cast<TypeInt*>(targetType));
     else if (skind == Type::Int && dkind == Type::Float)
       return convert(static_cast<TypeFloat*>(targetType));
