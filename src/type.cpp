@@ -1162,7 +1162,6 @@ namespace qi {
         if ( _types[i]->info() != b._types[i]->info())
           return _types[i]->info() < b._types[i]->info();
       }
-      return true;
 
       //check for name
       if (_name != b._name)
