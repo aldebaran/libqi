@@ -362,6 +362,9 @@ def raw_to_idl(dstruct):
     for method in methods:
       (method_name, args, ret, an) = method
       m = etree.SubElement(e, 'method', name=method_name, annotations=','.join(an))
+      r = ret.split("<", 1)
+      if (r[0] == "qi::Future") or (r[0] == "Future"):
+        ret = r[1][:-1]
       etree.SubElement(m, 'return', type=ret)
       for a in args:
         etree.SubElement(m, 'argument', type=a)
