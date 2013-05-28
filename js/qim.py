@@ -88,12 +88,13 @@ class QiMessagingHandler(tornadio2.conn.SocketConnection):
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
-        print("Usage: %s SD_URL" % sys.argv[0])
-        sys.exit(1)
+        URL = "tcp://127.0.0.1:9559"
+    else:
+        URL = sys.argv[1]
+
+    print("Will connect to " + URL)
 
     QI_APP = qi.Application()
-
-    URL = sys.argv[1]
 
     ROUTER = tornadio2.router.TornadioRouter(QiMessagingHandler)
 
@@ -101,15 +102,6 @@ if __name__ == "__main__":
       ROUTER.urls,
       socket_io_port = 8002
     )
-
-    HTTP_APP = tornado.web.Application(
-      [(r'/(socket.io.min.js)', tornado.web.StaticFileHandler, {'path': "./"}),
-       (r'/(qimessaging.js)', tornado.web.StaticFileHandler, {'path': "./"}),
-       (r'/(jquery.min.js)', tornado.web.StaticFileHandler, {'path': "./"})]
-    )
-
-    HTTP_SERVER = tornado.httpserver.HTTPServer(HTTP_APP)
-    HTTP_SERVER.listen(8001)
 
     tornadio2.server.SocketServer(SOCK_APP, auto_start=False)
 
