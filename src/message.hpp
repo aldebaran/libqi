@@ -180,7 +180,8 @@ namespace qi {
     GenericValuePtr value(const Signature &signature, const qi::TransportSocketPtr &socket) const;
     void setValue(const qi::GenericValuePtr &value, ObjectHost* context = 0);
     void setValues(const std::vector<qi::GenericValuePtr>& values, ObjectHost* context = 0);
-    void setValues(const std::vector<qi::GenericValuePtr>& values, const qi::Signature& expectedSignature, ObjectHost* context = 0);
+    /// Convert values to \p targetSignature and assign to payload.
+    void setValues(const std::vector<qi::GenericValuePtr>& values, const qi::Signature& targetSignature, ObjectHost* context = 0);
     MessageAddress address() const;
 
     bool         isValid();

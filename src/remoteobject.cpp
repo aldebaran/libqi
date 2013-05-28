@@ -247,7 +247,6 @@ namespace qi {
     qi::Promise<GenericValuePtr> out;
     qi::Message msg;
     qi::Signature funcSig = metaObject().method(method)->parametersSignature();
-
     msg.setValues(in, funcSig, this);
     msg.setType(qi::Message::Type_Call);
     msg.setService(_service);

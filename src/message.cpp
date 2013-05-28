@@ -400,6 +400,25 @@ namespace qi {
       setValues(in, context);
       return;
     }
+    if (expectedSignature == "m")
+    {
+      /* We need to send a dynamic containing the value tuple to push the
+      * signature. This wraps correctly without copying the data.
+      */
+      std::vector<qi::Type*> types;
+      std::vector<void*> values;
+      types.resize(in.size());
+      values.resize(in.size());
+      for (unsigned i=0; i<in.size(); ++i)
+      {
+        types[i] = in[i].type;
+        values[i] = in[i].value;
+      }
+      GenericValuePtr tuple = makeGenericTuplePtr(types, values);
+      GenericValue val(tuple, false, false);
+      setValue(GenericValueRef(val), context);
+      return;
+    }
     std::vector<GenericValuePtr> nargs(in);
     Signature src = argsSig.begin().children();
     Signature dst = expectedSignature.begin().children();

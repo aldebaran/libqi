@@ -10,6 +10,8 @@
 
 #include <gtest/gtest.h>
 
+#include <boost/assign/list_of.hpp>
+
 #include <qi/qi.hpp>
 #include <qi/application.hpp>
 #include <qi/eventloop.hpp>
@@ -954,6 +956,33 @@ TEST(TestCall, Statistics)
   obj->call<void>("sleep", 0);
   stats = obj->call<qi::ObjectStatistics>("stats");
   EXPECT_TRUE(stats.empty());
+}
+
+class ArgPack
+{
+public:
+  qi::Property<qi::GenericValue> onCall;
+  int callMe(const qi::ArgumentPack& pack)
+  {
+    onCall.set(qi::GenericValue::from(pack.args));
+    return pack.args.size();
+  }
+};
+
+QI_REGISTER_OBJECT(ArgPack, onCall, callMe);
+
+TEST(TestCall, Dynamic)
+{
+  TestSessionPair p;
+  boost::shared_ptr<ArgPack> ap(new ArgPack);
+  qi::ObjectPtr os = qi::GenericValue::from(ap).to<qi::ObjectPtr>();
+  p.server()->registerService("packer", os);
+  qi::ObjectPtr o = p.client()->service("packer");
+  qi::details::printMetaObject(std::cerr, o->metaObject());
+  EXPECT_EQ(3, o->call<int>("callMe", 1, 2, 3));
+  qi::GenericValue args = o->property<qi::GenericValue>("onCall");
+  std::vector<int> expect = boost::assign::list_of(1)(2)(3);
+  EXPECT_EQ(expect, args.to<std::vector<int> >());
 }
 
 

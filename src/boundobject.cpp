@@ -177,6 +177,18 @@ namespace qi {
     }
 
     GenericValuePtr value = msg.value(sigparam, socket);
+    if (sigparam == "m")
+    {
+      // received dynamically typed argument pack, unwrap
+      GenericValue* content = value.ptr<GenericValue>();
+      // steal it
+      GenericValuePtr pContent(content->type, content->value);
+      content->type = 0;
+      content->value = 0;
+      // free the object content
+      value.destroy();
+      value = pContent;
+    }
     mfp = value.asTupleValuePtr();
     /* Because of 'global' _currentSocket, we cannot support parallel
     * executions at this point.
