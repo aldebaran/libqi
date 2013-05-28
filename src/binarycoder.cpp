@@ -582,7 +582,15 @@ namespace qi {
       {
         std::string s;
         in.read(s);
-        std::swap(s, result.as<std::string>());
+
+        //optimise when result is of type std::string
+        static Type* tstring = qi::typeOf<std::string>();
+        if ((result.type == tstring) || (result.type->info() == tstring->info())) {
+          std::swap(s, result.as<std::string>());
+          return;
+        }
+        //result is compatible with string
+        result.setString(s);
       }
 
       void visitList(GenericIterator, GenericIterator)

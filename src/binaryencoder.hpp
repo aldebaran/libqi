@@ -65,11 +65,12 @@ namespace qi {
     void writeValue(const GenericValuePtr &value, boost::function<void()> recurse = boost::function<void()>());
     void writeRaw(const Buffer &buffer);
 
-    template<typename T> void write(const T &v);
+    template<typename T>
+    void write(const T &v);
 
-    void beginList(qi::uint32_t size, const Signature &elementSignature);
+    void beginList(qi::uint32_t size, const qi::Signature &elementSignature);
     void endList();
-    void beginMap(qi::uint32_t size, const Signature &keySignature, const Signature &valueSignature);
+    void beginMap(qi::uint32_t size, const qi::Signature &keySignature, const qi::Signature &valueSignature);
     void endMap();
     void beginTuple(const qi::Signature &signature);
     void endTuple();
@@ -91,9 +92,11 @@ namespace qi {
 
   };
 
-  template<typename T> void BinaryEncoder::write(const T &v)
+  template<typename T>
+  void BinaryEncoder::write(const T &v)
   {
-    encodeBinary(&buffer(), GenericValueRef(v));
+    //last arguments specified, or VS2010 segfault with an internal error...
+    encodeBinary(&buffer(), GenericValueRef(v), SerializeObjectCallback());
   }
 }
 
