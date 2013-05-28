@@ -6,20 +6,20 @@
 ** Copyright (C) 2012 Aldebaran Robotics
 */
 
-#include "traficgenerator.hpp"
+#include "trafficgenerator.hpp"
 
 qiLogCategory("qimessaging.testsession");
 
-TraficGenerator::TraficGenerator()
+TrafficGenerator::TrafficGenerator()
 {
 }
 
-TraficGenerator::~TraficGenerator()
+TrafficGenerator::~TrafficGenerator()
 {
-  stopTrafic();
+  stopTraffic();
 }
 
-bool TraficGenerator::generateCommonTrafic(const std::vector<qi::Session *> &sessions, const std::string &serviceName)
+bool TrafficGenerator::generateCommonTraffic(const std::vector<qi::Session *> &sessions, const std::string &serviceName)
 {
   Behavior     *b;
   qi::Session  *sess;
@@ -38,12 +38,12 @@ bool TraficGenerator::generateCommonTrafic(const std::vector<qi::Session *> &ses
   return true;
 }
 
-bool TraficGenerator::generateSpam(std::vector<qi::Session *> &sessions)
+bool TrafficGenerator::generateSpam(std::vector<qi::Session *> &sessions)
 {
   return false;
 }
 
-bool TraficGenerator::stopTrafic()
+bool TrafficGenerator::stopTraffic()
 {
   for (std::map<boost::mutex *, boost::thread *>::iterator it = _clients.begin(); it != _clients.end(); it = _clients.begin())
   {

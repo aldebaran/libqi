@@ -37,8 +37,8 @@ qi_create_lib(testsession STATIC SRC ${PUBLIC_HEADERS}
               src/testsession_p.hpp
               src/testsession_p.cpp
               src/testsessionerror.cpp
-              src/traficgenerator.hpp
-              src/traficgenerator.cpp
+              src/trafficgenerator.hpp
+              src/trafficgenerator.cpp
               src/populationgenerator.cpp
               src/populationgenerator.cpp
               src/sessioninitializer.hpp

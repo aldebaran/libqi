@@ -21,7 +21,7 @@
 #include <testsession/testsession.hpp>
 
 #include "populationgenerator.hpp"
-#include "traficgenerator.hpp"
+#include "trafficgenerator.hpp"
 
 class SessionInitializer
 {
@@ -50,7 +50,7 @@ private:
   std::map<TestMode::Mode, tearDownFcnt>   _tearDowns;
 
   PopulationGenerator                     *_populationGenerator;
-  TraficGenerator                         *_traficGenerator;
+  TrafficGenerator                         *_trafficGenerator;
 };
 
 #endif // !_TESTS_LIBTESTSESSION_SESSIONINITIALIZER_HPP_

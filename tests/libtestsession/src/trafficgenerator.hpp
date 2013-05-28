@@ -6,8 +6,8 @@
 ** Copyright (C) 2012 Aldebaran Robotics
 */
 
-#ifndef _TESTS_LIBTESTSESSION_TRAFICGENERATOR_HPP_
-#define _TESTS_LIBTESTSESSION_TRAFICGENERATOR_HPP_
+#ifndef _TESTS_LIBTESTSESSION_TRAFFICGENERATOR_HPP_
+#define _TESTS_LIBTESTSESSION_TRAFFICGENERATOR_HPP_
 
 #include <vector>
 #include <map>
@@ -26,20 +26,20 @@ struct Behavior
   boost::mutex *mutex;
 };
 
-class TraficGenerator
+class TrafficGenerator
 {
 public:
-  TraficGenerator();
-  ~TraficGenerator();
+  TrafficGenerator();
+  ~TrafficGenerator();
 
 public:
-  bool generateCommonTrafic(const std::vector<qi::Session*> &sessions, const std::string &serviceName);
+  bool generateCommonTraffic(const std::vector<qi::Session*> &sessions, const std::string &serviceName);
   bool generateSpam(std::vector<qi::Session *> &sessions);
 
-  bool stopTrafic();
+  bool stopTraffic();
 
 public:
   std::map<boost::mutex *, boost::thread *> _clients;
 };
 
-#endif // !_TESTS_LIBTESTSESSION_TRAFICGENERATOR_HPP_
+#endif // !_TESTS_LIBTESTSESSION_TRAFFICGENERATOR_HPP_

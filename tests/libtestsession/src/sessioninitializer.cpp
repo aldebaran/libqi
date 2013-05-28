@@ -12,7 +12,7 @@
 
 SessionInitializer::SessionInitializer() :
   _populationGenerator(0),
-  _traficGenerator(0)
+  _trafficGenerator(0)
 {
   _setUps[TestMode::Mode_SD] = &SessionInitializer::setUpSD;
   _setUps[TestMode::Mode_SSL] = &SessionInitializer::setUpSSL;
@@ -94,9 +94,9 @@ bool SessionInitializer::setUpNightmare(qi::Session *session, const std::string 
   // #1.2 Make session listen.
   session->listen("tcp://0.0.0.0:0");
 
-  // #2 Allocate population and trafic tools.
+  // #2 Allocate population and traffic tools.
   _populationGenerator = new PopulationGenerator();
-  _traficGenerator = new TraficGenerator();
+  _trafficGenerator = new TrafficGenerator();
 
   // #3 Generate an unique name for hidder service
   if (DefaultService::generateUniqueServiceName(serviceName) == false)
@@ -105,11 +105,11 @@ bool SessionInitializer::setUpNightmare(qi::Session *session, const std::string 
   // #4 Register hidden service.
   session->registerService(serviceName, DefaultService::getDefaultService());
 
-  // #5 Populate with client session and generate trafic.
+  // #5 Populate with client session and generate traffic.
   if (_populationGenerator->populateClients(serviceDirectoryUrl, 10000) == false)
     return false;
 
-  if (_traficGenerator->generateCommonTrafic(_populationGenerator->clientPopulation(), serviceName) == false)
+  if (_trafficGenerator->generateCommonTraffic(_populationGenerator->clientPopulation(), serviceName) == false)
     return false;
 
   return true;
@@ -117,11 +117,11 @@ bool SessionInitializer::setUpNightmare(qi::Session *session, const std::string 
 
 bool SessionInitializer::tearDownNightmare(qi::Session *session)
 {
-  if (_traficGenerator)
-    _traficGenerator->stopTrafic();
+  if (_trafficGenerator)
+    _trafficGenerator->stopTraffic();
 
   delete _populationGenerator;
-  delete _traficGenerator;
+  delete _trafficGenerator;
 
   if (session->close().wait(1000) != qi::FutureState_FinishedWithValue)
     return false;
