@@ -132,11 +132,12 @@ namespace qi {
       friend class qi::Signature;
     };
 
-
+    inline bool operator!=(const Signature &rhs) const { return !(*this == rhs); }
+    bool operator==(const Signature &rhs) const;
 
     std::string toSTLSignature(bool constify = false) const;
     std::string toQtSignature(bool constify = false) const;
-    std::string toString() const;
+    const std::string& toString() const;
 
     /** Tell if arguments with this signature can be converted to \p b.
      * @return 0 if conversion is impossible, or a score in ]0,1] indicating

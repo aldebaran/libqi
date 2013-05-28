@@ -183,6 +183,12 @@ TEST(TestSignature, ComplexConstRefPtr) {
   EXPECT_EQ("f",    qi::signatureFromType<const float>::value());
 }
 
+TEST(TestSignature, Equal) {
+  EXPECT_EQ(qi::signatureFromType<float&>::value(), qi::signatureFromType<float>::value());
+  EXPECT_EQ(qi::Signature("[s]"), qi::Signature("[s]"));
+  EXPECT_EQ(qi::Signature("(ss)<Point,x,y>"), qi::Signature("(ss)")); // really?
+}
+
 TEST(TestSignature, FromString) {
 
   qi::Signature *sig;

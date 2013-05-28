@@ -6,6 +6,8 @@
 
 #include <qitype/signature.hpp>
 
+qiLogCategory("qi.signature");
+
 namespace qi {
 
 float qi::Signature::isConvertibleTo(const qi::Signature& b) const
@@ -80,4 +82,25 @@ Signature Signature::fromType(Signature::Type t)
   return Signature(res);
 }
 
+//compare signature without taking annotation into account
+bool Signature::operator==(const Signature &rhs) const {
+  Signature::iterator it;
+  Signature::iterator it2;
+  it2 = begin();
+  for (it = rhs.begin(); it != rhs.end(); ++it) {
+    if (it2 == end()) //not the same number of elements
+      return false;
+    if (it.type() != it2.type()) //different types
+      return false;
+    if (it.hasChildren() != it2.hasChildren())
+      return false;
+    if (it.hasChildren() && it.children() != it2.children()) //different children
+      return false;
+    ++it2;
+  }
+  return true;
 }
+
+}
+
+QI_EQUIVALENT_STRING_REGISTER(qi::Signature, &qi::Signature::toString);

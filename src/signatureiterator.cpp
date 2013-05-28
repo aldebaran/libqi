@@ -170,6 +170,7 @@ namespace qi {
     char          *_signature;
     const char    *_end;
     bool           _valid;
+    std::string    _fsig;
   };
 
   void SignaturePrivate::init(const char *signature, size_t len) {
@@ -189,6 +190,8 @@ namespace qi {
       _signature[0] = 0;
     _end = _signature + size;
     _valid = split(signature, signature + len);
+    if (_valid)
+      _fsig = std::string(signature, len);
   }
 
 
@@ -301,20 +304,9 @@ namespace qi {
     return _p->_valid;
   }
 
-  std::string Signature::toString() const {
-    char *current = _p->_signature;
-    std::string ret;
-
-    //yeah kinda too big, but it's ok
-    ret.reserve(_p->_end - _p->_signature);
-    while (current != _p->_end) {
-      if (*current)
-        ret += *current;
-      current++;
-    }
-    return ret;
+  const std::string& Signature::toString() const {
+    return _p->_fsig;
   }
-
 
   Signature::iterator Signature::begin() const {
     if (_p->_signature == _p->_end)
