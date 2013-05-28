@@ -219,6 +219,8 @@ namespace qi{
     template<typename T> T* ptr(bool check = true);
 
     bool isValid() const;
+    /// @return true if value is valid and not void
+    bool isValue() const;
 
     /// Helper function that converts and always clone
     GenericValuePtr convertCopy(Type* targetType) const;

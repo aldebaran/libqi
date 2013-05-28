@@ -250,6 +250,10 @@ namespace qi {
     return type != 0;
   }
 
+  inline bool    GenericValuePtr::isValue() const {
+    return type != 0 && type->info() != typeOf<void>()->info();
+  }
+
   inline int64_t GenericValuePtr::toInt() const
   {
     return detail::valueAs<int64_t, Type::Int>(*this);
