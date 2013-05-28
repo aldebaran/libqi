@@ -13,6 +13,9 @@ namespace qi {
     UrlPrivate();
     UrlPrivate(const UrlPrivate* url_p);
     UrlPrivate(const std::string& url);
+    UrlPrivate(const std::string& url, unsigned short defaultPort);
+    UrlPrivate(const std::string& url, const std::string& defaultProtocol);
+    UrlPrivate(const std::string& url, const std::string& defaultProtocol, unsigned short defaultPort);
     UrlPrivate(const char* url);
 
     const std::string& str() const;
@@ -23,8 +26,18 @@ namespace qi {
     std::string    host;
     unsigned short port;
 
+    enum UrlComponents {
+      SCHEME = 2,
+      HOST   = 4,
+      PORT   = 1,
+      None   = 0,
+    };
+
+    int components;
+
   private:
-    void split_me(const std::string& url);
+    //@return a bitmask of UrlComponents with the elements that were found
+    int split_me(const std::string& url);
   };
 
   Url::Url()
@@ -34,6 +47,21 @@ namespace qi {
 
   Url::Url(const std::string &url)
     : _p(new UrlPrivate(url))
+  {
+  }
+
+  Url::Url(const std::string &url, unsigned short defaultPort)
+    : _p(new UrlPrivate(url, defaultPort))
+  {
+  }
+
+  Url::Url(const std::string &url, const std::string &defaultProtocol)
+    : _p(new UrlPrivate(url, defaultProtocol))
+  {
+  }
+
+  Url::Url(const std::string &url, const std::string &defaultProtocol, unsigned short defaultPort)
+    : _p(new UrlPrivate(url, defaultProtocol, defaultPort))
   {
   }
 
@@ -92,6 +120,7 @@ namespace qi {
     , protocol()
     , host()
     , port(0)
+    , components(0)
   {
   }
 
@@ -100,6 +129,7 @@ namespace qi {
     , protocol(url_p->protocol)
     , host(url_p->host)
     , port(url_p->port)
+    , components(0)
   {
   }
 
@@ -108,6 +138,7 @@ namespace qi {
     , protocol()
     , host()
     , port(0)
+    , components(0)
   {
     split_me(url);
   }
@@ -117,41 +148,103 @@ namespace qi {
     , protocol()
     , host()
     , port(0)
+    , components(0)
   {
     split_me(url);
   }
 
-  bool UrlPrivate::isValid() const {
-    return !protocol.empty();
+  UrlPrivate::UrlPrivate(const std::string& url, unsigned short defaultPort)
+    : url(url)
+    , protocol()
+    , host()
+    , port(defaultPort)
+    , components(0)
+  {
+    if (!(split_me(url) & PORT)) {
+      port = defaultPort;
+      components |= PORT;
+    }
   }
 
-  void UrlPrivate::split_me(const std::string& url) {
-    std::string _protocol;
-    std::string _host;
-    unsigned short _port;
+  UrlPrivate::UrlPrivate(const std::string& url, const std::string& defaultProtocol)
+    : url(url)
+    , protocol()
+    , host()
+    , port(0)
+    , components(0)
+  {
+    if (!(split_me(url) & SCHEME)) {
+      protocol = defaultProtocol;
+      components |= SCHEME;
+    }
+  }
 
-    size_t begin = 0;
-    size_t end   = 0;
-    end = url.find(":");
-    if (end == std::string::npos)
-      return;
-    _protocol = url.substr(begin, end);
+  UrlPrivate::UrlPrivate(const std::string& url, const std::string& defaultProtocol, unsigned short defaultPort)
+    : url(url)
+    , protocol()
+    , host()
+    , port(0)
+    , components(0)
+  {
+    int result = split_me(url);
+    if (!(result & SCHEME)) {
+      protocol = defaultProtocol;
+      components |= SCHEME;
+    }
+    if (!(result & PORT)) {
+      port = defaultPort;
+      components |= PORT;
+    }
+  }
 
-    if (_protocol.empty())
-      return;
+  bool UrlPrivate::isValid() const {
+    return (components & (PORT | SCHEME)) == (PORT | SCHEME);
+  }
 
-    begin = end + 3;
-    end = url.find_last_of(":");
-    if (end == std::string::npos || end < begin)
-      return;
-    _host = url.substr(begin, end - begin);
-    begin = end + 1;
-    std::stringstream ss(url.substr(begin));
-    ss >> _port;
+  int UrlPrivate::split_me(const std::string& url) {
+    /******
+     * Not compliant with RFC 3986
+     * This function can parse:
+     * scheme://host:port and return SCHEME | HOST | PORT
+     * scheme://host and return SCHEME | HOST
+     * host:port and return HOST | PORT
+     * host and return HOST
+     * scheme://:port return SCHEME | PORT
+     * scheme:// return SCHEME
+     * :port return PORT
+     *  return 0
+     */
+    std::string _url = url;
+    std::string _scheme = "";
+    std::string _host = "";
+    unsigned short _port = 0;
+    components = 0;
+
+    size_t place = 0;
+    place = _url.find("://");
+    if (place != std::string::npos) {
+      _scheme = url.substr(0, place);
+      components |= SCHEME;
+      place += 3;
+    } else
+      place = 0;
+
+    _url = _url.substr(place);
+    place = _url.find(":");
+    _host = _url.substr(0, place);
+    if (!_host.empty())
+      components |= HOST;
+
+    if (place != std::string::npos) {
+      std::stringstream ss(_url.substr(place+1));
+      ss >> _port;
+      components |= PORT;
+    }
 
     port = _port;
     host = _host;
-    protocol = _protocol;
+    protocol = _scheme;
+    return components;
   }
 }
 

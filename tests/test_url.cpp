@@ -27,53 +27,103 @@ TEST(TestURL, EmptyUrl)
 
 TEST(TestURL, InvalidUrl)
 {
-  qi::Url url("slip");
+  qi::Url url("example.com");
 
-  EXPECT_EQ("", url.host());
+  EXPECT_EQ("example.com", url.host());
   EXPECT_EQ(0, url.port());
   EXPECT_EQ("", url.protocol());
   EXPECT_FALSE(url.isValid());
 
-  url = "slip:";
-  EXPECT_EQ("", url.host());
+  url = "example.com:";
+  EXPECT_EQ("example.com", url.host());
   EXPECT_EQ(0, url.port());
   EXPECT_EQ("", url.protocol());
   EXPECT_FALSE(url.isValid());
 
-  url = qi::Url("slip//");
-  EXPECT_EQ("", url.host());
+  url = qi::Url("tcp//");
+  EXPECT_EQ("tcp//", url.host());
   EXPECT_EQ(0, url.port());
   EXPECT_EQ("", url.protocol());
   EXPECT_FALSE(url.isValid());
 
-  url = "slip::";
-  EXPECT_EQ("", url.host());
+  url = "tcp::";
+  EXPECT_EQ("tcp", url.host());
   EXPECT_EQ(0, url.port());
   EXPECT_EQ("", url.protocol());
   EXPECT_FALSE(url.isValid());
 
-  url = "slip:/:";
-  EXPECT_EQ("", url.host());
+  url = "tcp:/:";
+  EXPECT_EQ("tcp", url.host());
   EXPECT_EQ(0, url.port());
   EXPECT_EQ("", url.protocol());
+  EXPECT_FALSE(url.isValid());
+
+  url = "tcp://example.com";
+  EXPECT_EQ("tcp", url.protocol());
+  EXPECT_EQ("example.com", url.host());
+  EXPECT_EQ(0, url.port());
   EXPECT_FALSE(url.isValid());
 }
 
 TEST(TestURL, ValidUrl)
 {
-  qi::Url url("slip://pd:5");
+  qi::Url url("tcp://example.com:5");
 
-  EXPECT_EQ("slip", url.protocol());
-  EXPECT_EQ("pd", url.host());
+  EXPECT_EQ("tcp", url.protocol());
+  EXPECT_EQ("example.com", url.host());
   EXPECT_EQ(5, url.port());
   EXPECT_TRUE(url.isValid());
 
-  url = "slip://:5";
+  url = "tcp://:5";
 
-  EXPECT_EQ("slip", url.protocol());
+  EXPECT_EQ("tcp", url.protocol());
   EXPECT_EQ("", url.host());
   EXPECT_EQ(5, url.port());
   EXPECT_TRUE(url.isValid());
+
+  url = qi::Url("tcp://example.com", 5);
+
+  EXPECT_EQ("tcp", url.protocol());
+  EXPECT_EQ("example.com", url.host());
+  EXPECT_EQ(5, url.port());
+  EXPECT_TRUE(url.isValid());
+
+  url = qi::Url("tcp://example.com:5", 10);
+
+  EXPECT_EQ("tcp", url.protocol());
+  EXPECT_EQ("example.com", url.host());
+  EXPECT_EQ(5, url.port());
+  EXPECT_TRUE(url.isValid());
+
+  url = qi::Url("example.com:5", "tcp");
+
+  EXPECT_EQ("tcp", url.protocol());
+  EXPECT_EQ("example.com", url.host());
+  EXPECT_EQ(5, url.port());
+  EXPECT_TRUE(url.isValid());
+
+  url = qi::Url("tcp://example.com:5", "http");
+
+  EXPECT_EQ("tcp", url.protocol());
+  EXPECT_EQ("example.com", url.host());
+  EXPECT_EQ(5, url.port());
+  EXPECT_TRUE(url.isValid());
+
+  url = qi::Url("example.com", "tcp", 5);
+
+  EXPECT_EQ("tcp", url.protocol());
+  EXPECT_EQ("example.com", url.host());
+  EXPECT_EQ(5, url.port());
+  EXPECT_TRUE(url.isValid());
+
+  url = qi::Url("tcp://example.com:5", "http", 10);
+
+  EXPECT_EQ("tcp", url.protocol());
+  EXPECT_EQ("example.com", url.host());
+  EXPECT_EQ(5, url.port());
+  EXPECT_TRUE(url.isValid());
+
+
 }
 
 std::string urlOut(const qi::Url& u)

@@ -19,6 +19,9 @@ namespace qi {
   public:
     Url();
     Url(const std::string &url);
+    Url(const std::string &url, unsigned short defaultPort);
+    Url(const std::string &url, const std::string &defaultProtocol);
+    Url(const std::string &url, const std::string &defaultProtocol, unsigned short defaultPort);
     Url(const char *url);
 
     bool operator ==(const Url& url);
