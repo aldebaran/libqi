@@ -239,6 +239,9 @@ namespace qi {
     {
       qiLogCategory("qitype.object");
       ObjectPtr* val = (ObjectPtr*)ptrFromStorage(storage);
+      TypeTemplate* templ = dynamic_cast<TypeTemplate*>(source.type);
+      if (templ)
+        source.type = templ->next();
       if (source.type->info() == info())
       { // source is objectptr
         ObjectPtr* src = (ObjectPtr*)source.type->ptrFromStorage(&source.value);
@@ -261,7 +264,7 @@ namespace qi {
         TypePointer* ptype = static_cast<TypePointer*>(source.type);
         // FIXME: find a way!
         if (ptype->pointerKind() == TypePointer::Shared)
-          qiLogInfo("ObjectPtr will *not* track original shared pointer");
+          qiLogInfo() << "ObjectPtr will *not* track original shared pointer";
         set(storage, *source);
       }
       else
