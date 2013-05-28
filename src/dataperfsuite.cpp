@@ -47,26 +47,32 @@ namespace qi
 
   DataPerfSuite& DataPerfSuite::operator<<(const DataPerf& data) {
     if (_p->out.is_open()) {
+      std::string result_type;
+      float result_value;
       if (_p->outputData & OutputData_Cpu) {
-        _p->out << "\t<perf_result benchmark=\"" << data.getBenchmarkName() << "_Cpu"
-                << "\" result_value=\"" << std::fixed << std::setprecision(6)
-                << data.getCpu() << "\" />" << std::endl;
+        result_type = "Cpu";
+        result_value = data.getCpu();
       }
       if (_p->outputData & OutputData_Period) {
-        _p->out << "\t<perf_result benchmark=\"" << data.getBenchmarkName() << "_Period"
-                << "\" result_value=\"" << std::fixed << std::setprecision(6)
-                << data.getPeriod() << "\" />" << std::endl;
+        result_type = "Period";
+        result_value = data.getPeriod();
       }
       if (_p->outputData & OutputData_MsgPerSecond) {
-        _p->out << "\t<perf_result benchmark=\"" << data.getBenchmarkName() << "_MsgPerSecond"
-                << "\" result_value=\"" << std::fixed << std::setprecision(6)
-                << data.getMsgPerSecond() << "\" />" << std::endl;
+        result_type = "MsgPerSecond";
+        result_value = data.getMsgPerSecond();
       }
       if (_p->outputData & OutputData_MsgMBPerSecond) {
-        _p->out << "\t<perf_result benchmark=\"" << data.getBenchmarkName() << "_MsgMBPerSecond"
-                << "\" result_value=\"" << std::fixed << std::setprecision(6)
-                << data.getMegaBytePerSecond() << "\" />" << std::endl;
+        result_type = "MsgMBPerSecond";
+        result_value = data.getMegaBytePerSecond();
       }
+      _p->out << "\t<perf_result "
+              << "benchmark=\"" << data.getBenchmarkName() << "_" << result_type << "\" "
+              << "result_value=\"" << std::fixed << std::setprecision(6) << result_value << "\" "
+              << "result_type=\"" << result_type << "\" "
+              << "test_name=\"" << data.getBenchmarkName() << "\" ";
+      if (data.getMsgSize() != 0)
+        _p->out << "result_variable=\"" << data.getMsgSize() << "\" ";
+      _p->out << "/>" << std::endl;
     }
 
     {
