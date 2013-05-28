@@ -163,6 +163,7 @@ namespace qi {
     // C4251
     boost::shared_ptr<SignaturePrivate> _p;
   };
+
 }
 
 #ifdef _MSC_VER

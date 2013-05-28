@@ -156,27 +156,35 @@ namespace qi
       res[0] = typeOf<GenericValue>();
     else if (transform.dropFirst)
     {
-      // First argument passed to us will be ignored, so aparent signature
+      // First argument passed to us will be ignored, so apparent signature
       // has one extra arg of any type.
 
       // do not access res[1], it might not exist and invalid access might be
       // detected by debug-mode stl
       res.push_back(0);
-      memmove(&res[0]+1, &res[0], (res.size()-1)*sizeof(void*));
+      memmove(&res[0]+1, &res[0], (res.size()-1)*sizeof(Type*));
       res[0] = typeOf<GenericValue>();
     }
     else if (transform.prependValue)
     {
-      // We bind one argument, so it is not present is aparent signature, remove it
-      memmove(&res[0], &res[0]+1, (res.size()-1)*sizeof(void*));
+      // We bind one argument, so it is not present in apparent signature, remove it
+      memmove(&res[0], &res[0]+1, (res.size()-1)*sizeof(Type*));
       res.pop_back();
     }
     return res;
   }
 
-  qi::Signature GenericFunction::parametersSignature() const
+  qi::Signature GenericFunction::parametersSignature(bool dropFirst) const
   {
-    return qi::makeTupleSignature(argumentsType());
+    if (!dropFirst)
+      return qi::makeTupleSignature(argumentsType());
+    std::vector<Type*> vtype = argumentsType();
+    if (vtype.empty())
+      throw std::runtime_error("Can't drop the first argument, the argument list is empty");
+    //ninja! : drop the first Type*
+    memmove(&vtype[0], &vtype[0]+1, (vtype.size()-1)*sizeof(Type*));
+    vtype.pop_back();
+    return qi::makeTupleSignature(vtype);
   }
 
   qi::Signature GenericFunction::returnSignature() const

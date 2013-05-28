@@ -65,7 +65,8 @@ namespace qi {
 
   /** Represents a generic callable function.
    * This class has value semantic.
-  */
+   *
+   */
   class QITYPE_API GenericFunction
   {
   public:
@@ -88,7 +89,8 @@ namespace qi {
     /// Return expected argument types, taking transform into account
     std::vector<Type*> argumentsType() const;
     Type*              resultType() const;
-    Signature          parametersSignature() const;
+    //dropfirst is useful when you want the parameters signature of a method.
+    Signature          parametersSignature(bool dropFirst) const;
     Signature          returnSignature() const;
 
     void swap(GenericFunction& b);

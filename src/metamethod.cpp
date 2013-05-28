@@ -187,10 +187,8 @@ namespace qi {
 
   void MetaMethodBuilder::setSignature(const GenericFunction& f)
   {
-    qiLogDebug() << "sig " << f.parametersSignature().toString() << " -> " << ('(' + f.parametersSignature().toString().substr(2));
-    // Drop first argument which is the instance
-    // TODO: this is a little bit hackish. (it does not take annotations, nor type into account)
-    setParametersSignature(Signature("(" + f.parametersSignature().toString().substr(2)));
+    //this is always a method: drop the first argument
+    setParametersSignature(f.parametersSignature(true));
     setReturnSignature(f.returnSignature());
   }
 
