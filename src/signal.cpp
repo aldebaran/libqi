@@ -108,7 +108,7 @@ namespace qi {
       boost::recursive_mutex::scoped_lock sl(_p->mutex);
       copy = _p->subscriberMap;
     }
-
+    qiLogDebug() << (void*)this << " Invoking signal subscribers: " << copy.size();
     SignalSubscriberMap::iterator i;
     for (i = copy.begin(); i != copy.end(); ++i)
     {
