@@ -406,6 +406,11 @@ TEST(QiOs, dlerror)
   const char *error1 = qi::os::dlerror(); // reset
   // expect NULL since no error has occurred since last dlerror call
   EXPECT_TRUE(error1 == NULL) << "Expected NULL, got: " << error1;
+
+  qi::os::dlerror(); // Reset errno value
+  EXPECT_NE(0, qi::os::dlclose((void*) 123));
+  const char* error2 = qi::os::dlerror();
+  EXPECT_NE((const char*) NULL, error2);
 }
 
 #ifdef _MSC_VER
