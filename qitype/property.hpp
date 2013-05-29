@@ -99,7 +99,8 @@ namespace qi
     GenericProperty(Type* type, Getter getter = Getter(), Setter setter = Setter())
     :Property<GenericValue>(getter, setter)
     , _type(type)
-    {
+    { // Initialize with default value for given type
+      set(GenericValue(_type));
     }
     virtual void setValue(GenericValueRef value)  { set(GenericValue(value, false, false));}
     void set(const GenericValue& v);
