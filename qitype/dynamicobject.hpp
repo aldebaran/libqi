@@ -62,6 +62,8 @@ namespace qi
 
     void setThreadingModel(ObjectThreadingModel model);
     ObjectThreadingModel threadingModel() const;
+    // internal use, call once to update with Manageable methods and signals
+    void setManageable(Manageable* m);
     // C4251
     boost::shared_ptr<DynamicObjectPrivate> _p;
   };

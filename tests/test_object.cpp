@@ -679,7 +679,7 @@ TEST(TestObject, FutureSync)
   std::cerr << "ERR " << f.error() << std::endl;
 }
 
-TEST(TestObject, statistics)
+TEST(TestObject, statisticsGeneric)
 {
   qi::GenericObjectBuilder gob;
   int mid = gob.advertiseMethod("sleep", &qi::os::msleep);
@@ -705,6 +705,34 @@ TEST(TestObject, statistics)
   obj->enableStats(false);
   obj->call<void>("sleep", 0);
   EXPECT_TRUE(obj->stats().empty());
+
+  obj->clearStats();
+  obj->enableStats(true);
+  obj->call<void>("sleep", 0);
+  stats = obj->call<qi::ObjectStatistics>("stats");
+  m = stats[mid];
+  EXPECT_EQ(1u, m.count);
+}
+
+TEST(TestObject, statisticsType)
+{
+  qi::ObjectTypeBuilder<Adder> builder;
+  int mid = builder.advertiseMethod("add", &Adder::add);
+  Adder a1(1);
+  qi::ObjectPtr oa1 = builder.object(&a1);
+
+  EXPECT_EQ(3, oa1->call<int>("add", 2));
+
+  qi::ObjectStatistics stats;
+
+  oa1->enableStats(true);
+  oa1->call<int>("add", 2);
+  stats = oa1->stats();
+  EXPECT_EQ(1u, stats[mid].count);
+
+  oa1->call<int>("add", 2);
+  stats = oa1->call<qi::ObjectStatistics>("stats");
+  EXPECT_EQ(2u, stats[mid].count);
 }
 
 static void bim(int i, qi::Promise<void> p, const std::string &name) {

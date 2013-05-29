@@ -8,8 +8,11 @@
 #define _QITYPE_MANAGEABLE_HPP_
 
 #include <qitype/api.hpp>
-
+#include <qitype/functiontype.hpp>
+#include <qitype/typeobject.hpp>
+#include <qitype/signal.hpp>
 #include <boost/thread/mutex.hpp>
+#include <boost/function.hpp>
 
 namespace qi {
 
@@ -72,6 +75,23 @@ namespace qi {
 
     /// @}
 
+    /// Starting id of features handled by Manageable
+    static const uint32_t startId = 80;
+    /// Stop id of features handled by Manageable
+    static const uint32_t endId = 99;
+    typedef std::map<unsigned int,
+      std::pair<GenericFunction, MetaCallType>
+    > MethodMap;
+    typedef boost::function<SignalBase* (void*)> SignalGetter;
+    typedef std::map<unsigned int, SignalGetter> SignalMap;
+    SignalMap signalMap;
+    /* Return the methods and signals defined at GenericObject level.
+     * The 'this' argument must be the Manageable*.
+    */
+    static MethodMap&       manageableMmethodMap();
+    static SignalMap&       manageableSignalMap();
+    static MetaObject&      manageableMetaObject();
+    static void            _build();
     ManageablePrivate* _p;
   };
 }

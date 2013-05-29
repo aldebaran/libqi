@@ -31,6 +31,11 @@ namespace qi {
   ObjectTypeBuilderBase::ObjectTypeBuilderBase()
   : _p(new ObjectTypeBuilderPrivate())
   {
+    // import manageable stuff
+    // need this trick to avoid changing nextId
+    _p->metaObject = MetaObject::merge(_p->metaObject, Manageable::manageableMetaObject());
+    _p->data.signalGetterMap = Manageable::manageableSignalMap();
+    _p->data.methodMap = Manageable::manageableMmethodMap();
   }
 
   ObjectTypeBuilderBase::~ObjectTypeBuilderBase()
@@ -102,6 +107,11 @@ namespace qi {
       ObjectPtr(new GenericObject(type(), ptr), onDestroy):
       ObjectPtr(new GenericObject(type(), ptr));
     return ret;
+  }
+
+  const ObjectTypeData& ObjectTypeBuilderBase::typeData()
+  {
+    return _p->data;
   }
 
   ObjectType* ObjectTypeBuilderBase::type()

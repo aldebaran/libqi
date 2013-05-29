@@ -28,7 +28,7 @@ namespace qi {
   class Type;
   template<typename T> class SignalF;
   class ObjectTypeBuilderPrivate;
-
+  class ObjectTypeData;
   class QITYPE_API ObjectTypeBuilderBase
   {
   public:
@@ -81,6 +81,7 @@ namespace qi {
     /// Register type to typeof. Called by type()
     inline virtual void registerType() {};
 
+    const ObjectTypeData& typeData();
   private:
     ObjectTypeBuilderPrivate* _p;
   };

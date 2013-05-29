@@ -5,6 +5,7 @@
 #include <iostream>
 
 #include <qitype/genericobject.hpp>
+#include "staticobjecttype.hpp"
 #include "object_p.hpp"
 
 qiLogCategory("qitype.object");
@@ -417,6 +418,49 @@ namespace qi {
       <<" " << ((op != 0) == (dynamic_cast<ObjectType*>(other) != 0));
     }
     return -1;
+  }
+  namespace manageable
+  {
+    static Manageable::MethodMap* methodMap = 0;
+    static Manageable::SignalMap* signalMap = 0;
+    static MetaObject* metaObject = 0;
+  }
+  void Manageable::_build()
+  {
+    if (manageable::methodMap)
+      return;
+    manageable::methodMap = new MethodMap();
+    manageable::signalMap = new SignalMap();
+    manageable::metaObject = new MetaObject();
+    ObjectTypeBuilder<Manageable> builder;
+    unsigned int id = startId;
+    builder.advertiseMethod("isStatsEnabled", &Manageable::isStatsEnabled, MetaCallType_Auto, id++);
+    builder.advertiseMethod("enableStats", &Manageable::enableStats,       MetaCallType_Auto, id++);
+    builder.advertiseMethod("stats", &Manageable::stats,                   MetaCallType_Auto, id++);
+    builder.advertiseMethod("clearStats", &Manageable::clearStats,         MetaCallType_Auto, id++);
+    assert(id <= endId);
+    const ObjectTypeData& typeData = builder.typeData();
+    *manageable::methodMap = typeData.methodMap;
+    *manageable::signalMap = typeData.signalGetterMap;
+    *manageable::metaObject = builder.metaObject();
+  }
+
+  Manageable::MethodMap& Manageable::manageableMmethodMap()
+  {
+    _build();
+    return *manageable::methodMap;
+  }
+
+  Manageable::SignalMap& Manageable::manageableSignalMap()
+  {
+    _build();
+    return *manageable::signalMap;
+  }
+
+  MetaObject& Manageable::manageableMetaObject()
+  {
+    _build();
+    return *manageable::metaObject;
   }
 
   namespace detail

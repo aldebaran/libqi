@@ -25,9 +25,8 @@ namespace qi
   class DynamicObjectPrivate
   {
   public:
-    DynamicObjectPrivate()
-    : threadingModel(ObjectThreadingModel_SingleThread)
-    {}
+    DynamicObjectPrivate();
+
     ~DynamicObjectPrivate();
     // get or create signal, or 0 if id is not an event
     SignalBase* createSignal(unsigned int id);
@@ -45,6 +44,25 @@ namespace qi
     typedef std::map<unsigned int, PropertyBase*> PropertyMap;
     PropertyMap propertyMap;
   };
+
+  DynamicObjectPrivate::DynamicObjectPrivate()
+  : threadingModel(ObjectThreadingModel_SingleThread)
+  {
+  }
+
+  void DynamicObject::setManageable(Manageable* m)
+  {
+    _p->methodMap.insert(Manageable::manageableMmethodMap().begin(),
+      Manageable::manageableMmethodMap().end());
+    _p->meta = MetaObject::merge(_p->meta, Manageable::manageableMetaObject());
+    Manageable::SignalMap& smap = Manageable::manageableSignalMap();
+    // need to convert signal getters to signal, we have the instance
+    for (Manageable::SignalMap::iterator it = smap.begin(); it != smap.end(); ++it)
+    {
+      SignalBase* sb = it->second(m);
+      _p->signalMap[it->first] = sb;
+    }
+  }
 
   DynamicObjectPrivate::~DynamicObjectPrivate()
   {
@@ -196,7 +214,10 @@ namespace qi
     }
     GenericFunctionParameters p;
     p.reserve(params.size()+1);
-    p.push_back(GenericValueRef(this));
+    if (method >= Manageable::startId && method < Manageable::endId)
+      p.push_back(GenericValueRef(context));
+    else
+      p.push_back(GenericValueRef(this));
     p.insert(p.end(), params.begin(), params.end());
     return ::qi::metaCall(context->eventLoop(), _p->threadingModel,
       i->second.second, callType, context, method, i->second.first, p);

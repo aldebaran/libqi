@@ -43,8 +43,16 @@ StaticObjectTypeBase::metaCall(void* instance, Manageable* context, unsigned int
 
   GenericFunction method = i->second.first;
   GenericValuePtr self;
-  self.type = this;
-  self.value = instance;
+  if (methodId >= Manageable::startId  && methodId < Manageable::endId)
+  {
+    self.type = qi::typeOf<Manageable>();
+    self.value = context;
+  }
+  else
+  {
+    self.type = this;
+    self.value = instance;
+  }
   GenericFunctionParameters p2;
   p2.reserve(params.size()+1);
   p2.push_back(self);

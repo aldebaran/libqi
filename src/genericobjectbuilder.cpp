@@ -151,7 +151,10 @@ namespace qi
   ObjectPtr GenericObjectBuilder::object(boost::function<void (GenericObject*)> onDelete)
   {
     if (!_p->_objptr)
+    {
       _p->_objptr = makeDynamicObjectPtr(_p->_object, _p->_deleteOnDestroy, onDelete);
+      _p->_object->setManageable(_p->_objptr.get());
+    }
     return _p->_objptr;
   }
 

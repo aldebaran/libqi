@@ -13,7 +13,6 @@
 #include <qitype/functiontype.hpp>
 #include <qitype/functiontypefactory.hpp>
 #include <qitype/typeobject.hpp>
-#include <qitype/manageable.hpp>
 
 #include <boost/thread/thread.hpp>
 #include <boost/thread/mutex.hpp>
