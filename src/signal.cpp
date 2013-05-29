@@ -81,14 +81,11 @@ namespace qi {
     for (unsigned i = 0; i < 8; ++i)
       if (vals[i]->value)
         params.push_back(*vals[i]);
-    // Signature construction
-    std::string signature = "(";
-    for (unsigned i=0; i< params.size(); ++i)
-      signature += params[i].signature();
-    signature += ")";
+    qi::Signature signature = qi::makeTupleSignature(params);
+
     if (signature != _p->signature)
     {
-      qiLogError() << "Dropping emit: signature mismatch: " << signature <<" " << _p->signature;
+      qiLogError() << "Dropping emit: signature mismatch: " << signature.toString() <<" " << _p->signature.toString();
       return;
     }
     trigger(params, _p->defaultCallType);
@@ -359,7 +356,7 @@ namespace qi {
     return false;
   }
 
-  SignalBase::SignalBase(const std::string& sig, OnSubscribers onSubscribers)
+  SignalBase::SignalBase(const qi::Signature& sig, OnSubscribers onSubscribers)
     : _p(new SignalBasePrivate)
   {
     _p->onSubscribers = onSubscribers;
@@ -387,12 +384,12 @@ namespace qi {
     return *this;
   }
 
-  std::string SignalBase::signature() const
+  qi::Signature SignalBase::signature() const
   {
-    return _p ? _p->signature : "";
+    return _p ? _p->signature : qi::Signature();
   }
 
-  void SignalBase::_setSignature(const std::string& s)
+  void SignalBase::_setSignature(const qi::Signature& s)
   {
     _p->signature = s;
   }

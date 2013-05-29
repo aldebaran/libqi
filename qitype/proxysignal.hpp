@@ -47,7 +47,7 @@ namespace qi
   template<typename T>
   void ProxySignal<T>::onSubscribe(bool enable)
   {
-    std::string sig = _name + "::" + SignalType::signature();
+    std::string sig = _name + "::" + SignalType::signature().toString();
     if (enable)
     {
       _link = _object->xConnect(sig,
@@ -77,7 +77,7 @@ namespace qi
   {
     // Just forward to backend, which will notify us in bouceEvent(),
     // and then we will notify our local Subscribers
-    _object->metaPost(_name + "::" + SignalType::signature(), params);
+    _object->metaPost(_name + "::" + SignalType::signature().toString(), params);
   }
 
 }

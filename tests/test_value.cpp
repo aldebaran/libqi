@@ -310,7 +310,7 @@ TEST(Value, Tuple2)
 
 TEST(Value, DefaultMap)
 { // this one has tricky code and deserves a test)
-  Type* dmt = Type::fromSignature("{si}");
+  Type* dmt = Type::fromSignature(qi::Signature("{si}"));
   GenericValue val = GenericValue(GenericValuePtr(dmt), false, true);
   ASSERT_EQ(0u, val.size());
   val["foo"] = 12;
@@ -388,7 +388,7 @@ TEST(Value, STL)
 
 TEST(Value, DISABLED_MetaObjectSignature)
 {
-  std::cerr << qi::typeOf<qi::MetaObject>()->signature() << std::endl;
+  std::cerr << qi::typeOf<qi::MetaObject>()->signature().toString() << std::endl;
 }
 
 TEST(Value, Overflow)

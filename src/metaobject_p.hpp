@@ -60,9 +60,9 @@ namespace qi {
 
     int addMethod(MetaMethodBuilder& builder, int uid = -1);
 
-    int addSignal(const std::string &name, const std::string &signature, int id = -1);
+    int addSignal(const std::string &name, const Signature &signature, int id = -1);
 
-    int addProperty(const std::string& name, const std::string& sig, int id = -1);
+    int addProperty(const std::string& name, const Signature &sig, int id = -1);
 
     // Recompute data cached in *ToIdx
     void refreshCache();

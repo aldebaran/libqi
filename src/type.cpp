@@ -143,11 +143,6 @@ namespace qi {
     return true;
   }
 
-  inline std::string stringFromType(Signature::Type t)
-  {
-    return std::string(1, (char)t);
-  }
-
   class SignatureTypeVisitor
   {
   public:
@@ -159,179 +154,155 @@ namespace qi {
 
     void visitVoid()
     {
-      result = stringFromType(Signature::Type_Void);
+      result = qi::Signature::fromType(Signature::Type_Void);
     }
 
     void visitInt(int64_t, bool isSigned, int byteSize)
     {
       switch((isSigned?1:-1)*byteSize)
       {
-        case 0:  result = stringFromType(Signature::Type_Bool);  break;
-        case 1:  result = stringFromType(Signature::Type_Int8);  break;
-        case -1: result = stringFromType(Signature::Type_UInt8); break;
-        case 2:  result = stringFromType(Signature::Type_Int16); break;
-        case -2: result = stringFromType(Signature::Type_UInt16);break;
-        case 4:  result = stringFromType(Signature::Type_Int32); break;
-        case -4: result = stringFromType(Signature::Type_UInt32);break;
-        case 8:  result = stringFromType(Signature::Type_Int64); break;
-        case -8: result = stringFromType(Signature::Type_UInt64);break;
+        case 0:  result = qi::Signature::fromType(Signature::Type_Bool);  break;
+        case 1:  result = qi::Signature::fromType(Signature::Type_Int8);  break;
+        case -1: result = qi::Signature::fromType(Signature::Type_UInt8); break;
+        case 2:  result = qi::Signature::fromType(Signature::Type_Int16); break;
+        case -2: result = qi::Signature::fromType(Signature::Type_UInt16);break;
+        case 4:  result = qi::Signature::fromType(Signature::Type_Int32); break;
+        case -4: result = qi::Signature::fromType(Signature::Type_UInt32);break;
+        case 8:  result = qi::Signature::fromType(Signature::Type_Int64); break;
+        case -8: result = qi::Signature::fromType(Signature::Type_UInt64);break;
         default:
-          result =  stringFromType(Signature::Type_Unknown);
+          result =  qi::Signature::fromType(Signature::Type_Unknown);
       }
     }
 
     void visitFloat(double, int byteSize)
     {
       if (byteSize == 4)
-        result = stringFromType(Signature::Type_Float);
+        result = qi::Signature::fromType(Signature::Type_Float);
       else
-        result = stringFromType(Signature::Type_Double);
+        result = qi::Signature::fromType(Signature::Type_Double);
     }
 
     void visitString(char*, size_t)
     {
-      result = stringFromType(Signature::Type_String);
+      result = qi::Signature::fromType(Signature::Type_String);
     }
 
     void visitList(GenericIterator it, GenericIterator iend)
     {
-      std::string esig = static_cast<TypeList*>(_value.type)->elementType()->signature();
-      if (_resolveDynamic)
+      qi::Signature esig = static_cast<TypeList*>(_value.type)->elementType()->signature();
+      if (!_resolveDynamic) {
+        result = qi::makeListSignature(esig);
+        return;
+      }
+
+      if (it == iend)
+      { // Empty list, TODO have a 'whatever signature entry
+        result = qi::makeListSignature(qi::Signature::fromType(Signature::Type_None));
+        return;
+      }
+
+      qi::Signature sigFirst = (*it).signature(true);
+      ++it;
+      for (;it != iend && sigFirst.isValid(); ++it)
       {
-        if (it == iend)
-        { // Empty list, TODO have a 'whatever signature entry
-          result =  std::string()
-              + (char)Signature::Type_List
-              + (char)Signature::Type_None
-              + (char)Signature::Type_List_End;
-        }
-        else
+        qi::Signature sig = (*it).signature(true);
+        if (sig != sigFirst)
         {
-          std::string sigFirst = (*it).signature(true);
-          ++it;
-          for (;it != iend && !sigFirst.empty(); ++it)
+          if (sig.isConvertibleTo(sigFirst))
+          {} // keep sigFirst
+          else if (sigFirst.isConvertibleTo(sig))
+            sigFirst = sig; // keep sig
+          else
           {
-            std::string sig = (*it).signature(true);
-            if (sig != sigFirst)
-            {
-              if (Signature(sig).isConvertibleTo(Signature(sigFirst)))
-              {} // keep sigFirst
-              else if (Signature(sigFirst).isConvertibleTo(Signature(sig)))
-                sigFirst = sig; // keep sig
-              else
-              {
-                qiLogDebug() << "Heterogeneous elements "
-                             << sigFirst << ' ' << sig;
-                sigFirst.clear();
-              }
-            }
+            qiLogDebug() << "Heterogeneous elements "
+                         << sigFirst.toString() << ' ' << sig.toString();
+            sigFirst = qi::Signature();
           }
-          // qiLogDebug() << "List effective " << sigFirst;
-          result =  std::string()
-              + (char)Signature::Type_List
-              + (sigFirst.empty()?esig:sigFirst)
-              + (char)Signature::Type_List_End;
         }
       }
-      else
-        result = std::string()
-            + (char)Signature::Type_List
-            + esig
-            + (char)Signature::Type_List_End;
+      // qiLogDebug() << "List effective " << sigFirst;
+      result = qi::makeListSignature(sigFirst.isValid()?sigFirst:esig);
     }
 
     void visitMap(GenericIterator it, GenericIterator iend)
     {
       TypeMap* type =  static_cast<TypeMap*>(_value.type);
-      if (_resolveDynamic)
+      if (!_resolveDynamic) {
+        result = qi::makeMapSignature(type->keyType()->signature(), type->elementType()->signature());
+        return;
+      }
+
+      if (it == iend) {
+        result = qi::makeMapSignature(qi::Signature::fromType(Signature::Type_None), qi::Signature::fromType(Signature::Type_None));
+        return;
+      }
+
+      GenericValuePtr e = *it;
+      qi::Signature ksig = e[0].signature(true);
+      qi::Signature vsig = e[1].signature(true);
+      // Check that ksig/vsig is always the same, set to empty if not
+      ++it;
+      for(; it!= iend; ++it)
       {
-        if (it == iend)
-          result = std::string()
-              + (char)Signature::Type_Map
-              + (char)Signature::Type_None
-              + (char)Signature::Type_None
-              + (char)Signature::Type_Map_End;
-        else
+        GenericValuePtr e = *it;
+        qi::Signature k = e[0].signature(true);
+        qi::Signature v = e[1].signature(true);
+        if (ksig.isValid() && ksig != k)
         {
-          GenericValuePtr e = *it;
-          std::string ksig = e[0].signature(true);
-          std::string vsig = e[1].signature(true);
-          // Check that ksig/vsig is always the same, set to empty if not
-          ++it;
-          for(; it!= iend; ++it)
+          if (k.isConvertibleTo(ksig))
+          {}
+          else if (ksig.isConvertibleTo(k))
+            ksig = k;
+          else
           {
-            GenericValuePtr e = *it;
-            std::string k = e[0].signature(true);
-            std::string v = e[1].signature(true);
-            if (!ksig.empty() && ksig != k)
-            {
-              if (Signature(k).isConvertibleTo(Signature(ksig)))
-              {}
-              else if (Signature(ksig).isConvertibleTo(Signature(k)))
-                ksig = k;
-              else
-              {
-                qiLogDebug() << "Heterogeneous keys " << ksig << e[0].signature(true);
-                ksig.clear();
-              }
-            }
-            if (!vsig.empty() && vsig != v)
-            {
-              if (Signature(v).isConvertibleTo(Signature(vsig)))
-              {}
-              else if (Signature(vsig).isConvertibleTo(Signature(v)))
-                vsig = v;
-              else
-              {
-                qiLogDebug() << "Heterogeneous value " << vsig << e[1].signature(true);
-                vsig.clear();
-              }
-            }
+            qiLogDebug() << "Heterogeneous keys " << ksig.toString() << e[0].signature(true).toString();
+            ksig = qi::Signature();
           }
-          // qiLogDebug() << "Map effective: " << ksig << " , " << vsig;
-          result = std::string()
-              + (char)Signature::Type_Map
-              + (ksig.empty()? type->keyType()->signature(): ksig)
-              + (vsig.empty()? type->elementType()->signature(): vsig)
-              + (char)Signature::Type_Map_End;
+        }
+        if (vsig.isValid() && vsig != v)
+        {
+          if (v.isConvertibleTo(vsig))
+          {}
+          else if (vsig.isConvertibleTo(v))
+            vsig = v;
+          else
+          {
+            qiLogDebug() << "Heterogeneous value " << vsig.toString() << e[1].signature(true).toString();
+            vsig = qi::Signature();
+          }
         }
       }
-      else
-        result = std::string()
-            + (char)Signature::Type_Map
-            + type->keyType()->signature()
-            + type->elementType()->signature()
-            + (char)Signature::Type_Map_End;
+      // qiLogDebug() << "Map effective: " << ksig << " , " << vsig;
+      result = qi::makeMapSignature((ksig.isValid()?ksig:type->keyType()->signature()),
+                                    (vsig.isValid()?vsig:type->elementType()->signature()));
     }
+
 
     void visitObject(GenericObject )
     {
-      result = stringFromType(Signature::Type_Object);
+      result = qi::Signature::fromType(Signature::Type_Object);
     }
 
     void visitObjectPtr(ObjectPtr& )
     {
-      result = stringFromType(Signature::Type_Object);
+      result = qi::Signature::fromType(Signature::Type_Object);
     }
 
     void visitPointer(GenericValuePtr)
     {
-      result = stringFromType(Signature::Type_Unknown);
+      result = qi::Signature::fromType(Signature::Type_Unknown);
     }
 
     void visitUnknown(GenericValuePtr)
     {
-      result = stringFromType(Signature::Type_Unknown);
+      result = qi::Signature::fromType(Signature::Type_Unknown);
     }
 
     void visitTuple(const std::string &name, const std::vector<GenericValuePtr>& vals, const std::vector<std::string>& annotations)
     {
       std::string res;
-      res += (char)Signature::Type_Tuple;
-      for (unsigned i=0; i<vals.size(); ++i) {
-        res += vals[i].signature(_resolveDynamic);
-      }
-      res += (char)Signature::Type_Tuple_End;
+      res = qi::makeTupleSignature(vals, _resolveDynamic).toString();
 
       if (!name.empty() || annotations.size() >= vals.size()) {
 
@@ -345,22 +316,20 @@ namespace qi {
         }
         res += '>';
       }
-      result = res;
+      result = qi::Signature(res);
     }
 
     void visitDynamic(GenericValuePtr pointee)
     {
       if (_resolveDynamic)
-      {
-       result = pointee.signature(true);
-      }
+        result = pointee.signature(true);
       else
-        result = stringFromType(Signature::Type_Dynamic);
+        result = qi::Signature::fromType(Signature::Type_Dynamic);
     }
 
     void visitRaw(GenericValuePtr)
     {
-      result = stringFromType(Signature::Type_Raw);
+      result = qi::Signature::fromType(Signature::Type_Raw);
     }
 
     void visitIterator(GenericValuePtr v)
@@ -368,19 +337,19 @@ namespace qi {
       visitUnknown(v);
     }
 
-    std::string     result;
+    qi::Signature    result;
     GenericValuePtr _value;
     bool            _resolveDynamic;
   };
 
-  std::string Type::signature(void* storage, bool resolveDynamic)
+  Signature Type::signature(void* storage, bool resolveDynamic)
   {
     if (resolveDynamic)
     {
       GenericValuePtr value(this, storage);
       SignatureTypeVisitor ts(value, resolveDynamic);
       typeDispatch(ts, value);
-      return ts.result;
+      return qi::Signature(ts.result);
     }
     else
     { // We might be called without a valid storage in that mode, which
@@ -391,7 +360,7 @@ namespace qi {
       switch(kind())
       {
       case Type::Void:
-        return stringFromType(Signature::Type_Void);
+        return qi::Signature::fromType(Signature::Type_Void);
         break;
       case Type::Int:
       {
@@ -406,7 +375,7 @@ namespace qi {
         break;
       }
       case Type::String:
-        v.result = stringFromType(Signature::Type_String);
+        v.result = qi::Signature::fromType(Signature::Type_String);
         break;
       case Type::List:
         v.visitList(GenericIterator(), GenericIterator());
@@ -415,7 +384,7 @@ namespace qi {
         v.visitMap(GenericIterator(), GenericIterator());
         break;
       case Type::Object:
-        v.result = stringFromType(Signature::Type_Object);
+        v.result = qi::Signature::fromType(Signature::Type_Object);
         break;
       case Type::Pointer:
       {
@@ -438,42 +407,24 @@ namespace qi {
         break;
       }
       case Type::Tuple: {
-        v.result += (char)Signature::Type_Tuple;
-        std::vector<Type*> memberTypes = static_cast<TypeTuple*>(this)->memberTypes();
+        std::vector<Type*>       memberTypes = static_cast<TypeTuple*>(this)->memberTypes();
         std::vector<std::string> annotations = static_cast<TypeTuple*>(this)->elementsName();
-        for (unsigned i=0; i<memberTypes.size(); ++i)
-        {
-          v.result += memberTypes[i]->signature();
-        }
-        v.result += (char)Signature::Type_Tuple_End;
-        std::string name = static_cast<TypeTuple*>(this)->className();
-
-        if (!name.empty() || annotations.size() >= memberTypes.size()) {
-
-          v.result += '<';
-          if (!name.empty())
-            v.result += name;
-
-          for (unsigned i = 0; i < memberTypes.size(); ++i)
-          {
-            v.result += ',' + annotations[i];
-          }
-          v.result += '>';
-        }
+        std::string              name        = static_cast<TypeTuple*>(this)->className();
+        v.result = qi::makeTupleSignature(memberTypes, name, annotations);
         break;
       }
       case Type::Dynamic:
         if (value.type->info() == typeOf<ObjectPtr>()->info())
-          v.result = stringFromType(Signature::Type_Object);
+          v.result = qi::Signature::fromType(Signature::Type_Object);
         else
-          v.result = stringFromType(Signature::Type_Dynamic);
+          v.result = qi::Signature::fromType(Signature::Type_Dynamic);
         break;
       case Type::Raw:
-        v.result = stringFromType(Signature::Type_Raw);
+        v.result = qi::Signature::fromType(Signature::Type_Raw);
         break;
       case Type::Unknown:
       case Type::Iterator:
-         v.result = stringFromType(Signature::Type_Unknown);
+         v.result = qi::Signature::fromType(Signature::Type_Unknown);
          break;
       }
       return v.result;
@@ -574,7 +525,7 @@ namespace qi {
           res = makeTupleType(types, vannotations[0], std::vector<std::string>(vannotations.begin()+1, vannotations.end()));
         else
           res = makeTupleType(types);
-        qiLogDebug() <<"Resulting tuple " << i.signature() << " " << res->infoString();
+        qiLogDebug() <<"Resulting tuple " << i.signature().toString() << " " << res->infoString();
         return res;
       }
     case Signature::Type_Dynamic:
@@ -584,7 +535,7 @@ namespace qi {
     case Signature::Type_Object:
       return tobjectptr;
     default:
-      qiLogWarning() << "Cannot get type from signature " << i.signature();
+      qiLogWarning() << "Cannot get type from signature " << i.signature().toString();
       return 0;
     }
   }
@@ -1143,6 +1094,7 @@ namespace qi {
     }
     return result;
   }
+
   struct InfosKey
   {
   public:

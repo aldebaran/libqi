@@ -128,10 +128,10 @@ namespace qi {
     return id;
   }
 
-  int MetaObjectPrivate::addSignal(const std::string &name, const std::string &signature, int uid) {
+  int MetaObjectPrivate::addSignal(const std::string &name, const Signature &signature, int uid) {
     boost::recursive_mutex::scoped_lock sl(_eventsMutex);
     unsigned int id;
-    std::string namesig = name + "::" + signature;
+    std::string namesig = name + "::" + signature.toString();
     NameToIdx::iterator it = _eventsNameToIdx.find(namesig);
     if (it != _eventsNameToIdx.end()) {
       MetaSignal &ms = _events[it->second];
@@ -149,7 +149,7 @@ namespace qi {
     return id;
   }
 
-  int MetaObjectPrivate::addProperty(const std::string& name, const std::string& sig, int id)
+  int MetaObjectPrivate::addProperty(const std::string& name, const qi::Signature& sig, int id)
   {
     boost::recursive_mutex::scoped_lock sl(_propertiesMutex);
     for (MetaObject::PropertyMap::iterator it = _properties.begin(); it != _properties.end(); ++it)
@@ -404,9 +404,9 @@ namespace qi {
   {
   }
 
-  unsigned int MetaObjectBuilder::addMethod(const std::string& sigret,
+  unsigned int MetaObjectBuilder::addMethod(const qi::Signature& sigret,
                                             const std::string& name,
-                                            const std::string& signature,
+                                            const qi::Signature& signature,
                                             int id)
   {
     MetaMethodBuilder mmb;
@@ -420,11 +420,11 @@ namespace qi {
     return _p->metaObject._p->addMethod(builder, id);
   }
 
-  unsigned int MetaObjectBuilder::addSignal(const std::string &name, const std::string &sig, int id) {
+  unsigned int MetaObjectBuilder::addSignal(const std::string &name, const qi::Signature& sig, int id) {
     return _p->metaObject._p->addSignal(name, sig, id);
   }
 
-  unsigned int MetaObjectBuilder::addProperty(const std::string& name, const std::string& sig, int id)
+  unsigned int MetaObjectBuilder::addProperty(const std::string& name, const qi::Signature& sig, int id)
   {
      return _p->metaObject._p->addProperty(name, sig, id);
   }

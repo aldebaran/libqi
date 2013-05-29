@@ -86,10 +86,10 @@ namespace qi {
     value = type = 0;
   }
 
-  inline std::string GenericValuePtr::signature(bool resolveDynamic) const
+  inline qi::Signature GenericValuePtr::signature(bool resolveDynamic) const
   {
     if (!type)
-      return "";
+      return qi::Signature();
     else
       return type->signature(value, resolveDynamic);
   }

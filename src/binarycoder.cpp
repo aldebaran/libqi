@@ -271,10 +271,10 @@ namespace qi {
 
   void BinaryEncoder::writeValue(const GenericValuePtr &value, boost::function<void()> recurse)
   {
-    std::string sig = value.signature();
+    qi::Signature sig = value.signature();
     beginDynamic(sig);
 
-    if (!sig.empty()) {
+    if (sig.isValid()) {
       assert(value.type);
       if (!recurse)
         details::serialize(value, *this);
@@ -286,7 +286,7 @@ namespace qi {
     endDynamic();
   }
 
-  void BinaryEncoder::beginDynamic(const std::string &elementSignature)
+  void BinaryEncoder::beginDynamic(const qi::Signature &elementSignature)
   {
     if (!_p->_innerSerialization)
       signature() += "m";
@@ -299,10 +299,10 @@ namespace qi {
     --_p->_innerSerialization;
   }
 
-  void BinaryEncoder::beginList(uint32_t size, const std::string &elementSignature)
+  void BinaryEncoder::beginList(uint32_t size, const qi::Signature &elementSignature)
   {
     if (!_p->_innerSerialization)
-      signature() += "[" + elementSignature;
+      signature() += "[" + elementSignature.toString();
     ++_p->_innerSerialization;
     write(size);
   }
@@ -314,10 +314,10 @@ namespace qi {
       signature() += "]";
   }
 
-  void BinaryEncoder::beginMap(uint32_t size, const std::string &keySignature, const std::string &valueSignature)
+  void BinaryEncoder::beginMap(uint32_t size, const qi::Signature &keySignature, const qi::Signature &valueSignature)
   {
     if (!_p->_innerSerialization)
-      signature() += "{" + keySignature + valueSignature + "}";
+      signature() += "{" + keySignature.toString() + valueSignature.toString() + "}";
     ++_p->_innerSerialization;
     write(size);
   }
@@ -327,10 +327,10 @@ namespace qi {
     --_p->_innerSerialization;
   }
 
-  void BinaryEncoder::beginTuple(std::string sig)
+  void BinaryEncoder::beginTuple(const Signature &signatu)
   {
     if (!_p->_innerSerialization)
-      signature() += "(" + sig + ")";
+      _p->_signature += signatu.toString();
     ++_p->_innerSerialization;
   }
 
@@ -477,10 +477,7 @@ namespace qi {
 
       void visitTuple(const std::string &name, const std::vector<GenericValuePtr>& vals, const std::vector<std::string>& annotations)
       {
-        std::string tsig;
-        for (unsigned i=0; i<vals.size(); ++i)
-          tsig += vals[i].type->signature();
-        out.beginTuple(tsig);
+        out.beginTuple(qi::makeTupleSignature(vals));
         for (unsigned i=0; i<vals.size(); ++i)
           serialize(vals[i], out, context);
         out.endTuple();
@@ -674,7 +671,7 @@ namespace qi {
         if (sig.empty()) {
           return;
         }
-        Type* type = Type::fromSignature(sig);
+        Type* type = Type::fromSignature(qi::Signature(sig));
         if (!type)
         {
           qiLogError() << "Cannot find a type to deserialize signature " << sig << " within a dynamic value.";

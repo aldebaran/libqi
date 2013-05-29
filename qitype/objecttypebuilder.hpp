@@ -64,8 +64,8 @@ namespace qi {
 
     int xAdvertiseMethod(MetaMethodBuilder& builder, GenericFunction func, MetaCallType threadingModel = MetaCallType_Auto, int id = -1);
 
-    int xAdvertiseSignal(const std::string &name, const std::string& signature, SignalMemberGetter getter, int id = -1);
-    int xAdvertiseProperty(const std::string& name, const std::string& sig, PropertyMemberGetter getter, int id = -1);
+    int xAdvertiseSignal(const std::string &name, const qi::Signature& signature, SignalMemberGetter getter, int id = -1);
+    int xAdvertiseProperty(const std::string& name, const qi::Signature& signature, PropertyMemberGetter getter, int id = -1);
     void xBuildFor(Type* type, bool autoRegister = true);
     void inherits(Type* parentType, int offset);
 

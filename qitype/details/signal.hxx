@@ -161,7 +161,7 @@ namespace qi
   }
 
   template<typename T>
-  std::string SignalF<T>::signature() const
+  qi::Signature SignalF<T>::signature() const
   {
     return detail::functionArgumentsSignature<T>();
   }

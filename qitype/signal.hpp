@@ -40,12 +40,12 @@ namespace qi {
   {
   public:
     typedef boost::function<void(bool)> OnSubscribers;
-    explicit SignalBase(const std::string& signature, OnSubscribers onSubscribers = OnSubscribers());
+    explicit SignalBase(const Signature &signature, OnSubscribers onSubscribers = OnSubscribers());
     SignalBase(OnSubscribers onSubscribers=OnSubscribers());
     virtual ~SignalBase();
     SignalBase(const SignalBase& b);
     SignalBase& operator = (const SignalBase& b);
-    virtual std::string signature() const;
+    virtual qi::Signature signature() const;
 
     typedef qi::uint64_t Link;
 
@@ -89,7 +89,7 @@ namespace qi {
     std::vector<SignalSubscriber> subscribers();
     static const SignalBase::Link invalidLink;
   public:
-    void _setSignature(const std::string& s);
+    void _setSignature(const Signature &s);
     // C4251
     boost::shared_ptr<SignalBasePrivate> _p;
   };
@@ -113,7 +113,7 @@ namespace qi {
     SignalF(const SignalF<T>& b);
     SignalF<T>& operator = (const SignalF<T>& b);
     typedef T FunctionType;
-    virtual std::string signature() const;
+    virtual qi::Signature signature() const;
     using boost::function<T>::operator();
 
     inline SignalSubscriber& connect(boost::function<T> f, MetaCallType model=MetaCallType_Auto)

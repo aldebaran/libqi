@@ -171,10 +171,10 @@ namespace qi
       if (!p)
         throw std::runtime_error("Id is not id of a property");
       // Fetch its type
-      std::string sig = p->signature();
+      qi::Signature sig = p->signature();
       Type* type = Type::fromSignature(sig);
       if (!type)
-        throw std::runtime_error("Unable to construct a type from " + sig);
+        throw std::runtime_error("Unable to construct a type from " + sig.toString());
       PropertyBase* res = new GenericProperty(type);
       propertyMap[id] = res;
       return res;

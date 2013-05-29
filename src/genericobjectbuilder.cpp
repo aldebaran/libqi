@@ -50,32 +50,25 @@ namespace qi
     delete _p;
   }
 
-  static int isSignatureValid(const std::string &sigret, const std::string& name, const std::string& signature)
+  static bool isSignatureValid(const qi::Signature &sigret, const std::string& name, const qi::Signature& signature)
   {
-    Signature sparams(signature);
-    if (!sparams.isValid())
-      return -1;
-
+    if (!signature.isValid())
+      return false;
     if (name.empty())
-      return -1;
-
-    if (sigret != "")
-    {
-      Signature sret(sigret);
-      if (sret.isValid() == false)
-        return -1;
-    }
-    return 0;
+      return false;
+    if (!sigret.isValid())
+      return false;
+    return true;
   }
 
-  int GenericObjectBuilder::xAdvertiseMethod(const std::string& sigret,
+  int GenericObjectBuilder::xAdvertiseMethod(const qi::Signature& sigret,
                                              const std::string& name,
-                                             const std::string& signature,
+                                             const qi::Signature& signature,
                                              GenericFunction func,
                                              const std::string& desc,
                                              MetaCallType threadingModel)
   {
-    if (isSignatureValid(sigret, name, signature) < 0) {
+    if (!isSignatureValid(sigret, name, signature)) {
       qiLogWarning() << "GenericObjectBuilder: Called xAdvertiseMethod with an invalid signature.";
       return -1;
     }
@@ -92,8 +85,8 @@ namespace qi
                                              MetaCallType threadingModel)
   {
     MetaMethod mm = builder.metaMethod();
-    if (isSignatureValid(mm.returnSignature(), mm.name(), mm.parametersSignature()) < 0) {
-      qiLogWarning() << "GenericObjectBuilder: Called xAdvertiseMethod("<< mm.returnSignature() << "," << mm.name() << "," << mm.parametersSignature() << ") with an invalid signature.";
+    if (!isSignatureValid(mm.returnSignature(), mm.name(), mm.parametersSignature())) {
+      qiLogWarning() << "GenericObjectBuilder: Called xAdvertiseMethod("<< mm.returnSignature().toString() << "," << mm.name() << "," << mm.parametersSignature().toString() << ") with an invalid signature.";
       return -1;
     }
     //TODO: check that func is compatible with MM
@@ -111,14 +104,14 @@ namespace qi
     return nextId;
   }
 
-  int GenericObjectBuilder::xAdvertiseSignal(const std::string &name, const std::string& signature)
+  int GenericObjectBuilder::xAdvertiseSignal(const std::string &name, const qi::Signature& signature)
   {
-    if (!Signature(signature).isValid()) {
-      qiLogWarning() << "GenericObjectBuilder: Called xAdvertiseSignal("<< name << "," << signature << ") with an invalid signature.";
+    if (!Signature(signature).isValid() || name.empty()) {
+      qiLogWarning() << "GenericObjectBuilder: Called xAdvertiseSignal("<< name << "," << signature.toString() << ") with an invalid signature.";
       return -1;
     }
     if (_p->_objptr) {
-      qiLogWarning() << "GenericObjectBuilder: Called xAdvertiseSignal on event '" << signature << "' but object is already created.";
+      qiLogWarning() << "GenericObjectBuilder: Called xAdvertiseSignal on event '" << signature.toString() << "' but object is already created.";
     }
     int nextId = _p->_object->metaObject()._p->addSignal(name, signature);
     if (nextId < 0)
@@ -141,10 +134,10 @@ namespace qi
     return nextId;
   }
 
-  int GenericObjectBuilder::xAdvertiseProperty(const std::string& name, const std::string& sig, int id)
+  int GenericObjectBuilder::xAdvertiseProperty(const std::string& name, const Signature &sig, int id)
   {
-    if (!Signature(sig).isValid()) {
-      qiLogWarning() << "GenericObjectBuilder: Called xAdvertiseProperty("<< name << "," << sig << ") with an invalid signature.";
+    if (!Signature(sig).isValid() || name.empty()) {
+      qiLogWarning() << "GenericObjectBuilder: Called xAdvertiseProperty("<< name << "," << sig.toString() << ") with an invalid signature.";
       return -1;
     }
     return _p->_object->metaObject()._p->addProperty(name, sig, id);

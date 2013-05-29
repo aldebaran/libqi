@@ -21,8 +21,6 @@
 #include <vector>
 #include <map>
 
-//#include "alvalue.pb.h"
-
 static const int gLoopCount = 1000000;
 
 namespace qi
@@ -32,14 +30,14 @@ namespace qi
   {
     static std::string value()
     {
-      return typeOf<T>()->signature();
+      return typeOf<T>()->signature().toString();
     }
   };
   struct signatureFromObject
   {
     template<typename T> static std::string value(const T& ptr)
     {
-      return typeOf(ptr)->signature();
+      return typeOf(ptr)->signature().toString();
     }
   };
 }
@@ -137,7 +135,7 @@ struct MPoint {
 QI_TYPE_STRUCT(MPoint, x, y);
 
 TEST(TestSignature, NamedTuple) {
-  EXPECT_EQ("(ii)<MPoint,x,y>", qi::typeOf<MPoint>()->signature());
+  EXPECT_EQ("(ii)<MPoint,x,y>", qi::typeOf<MPoint>()->signature().toString());
 }
 
 TEST(TestSignature, ComplexTypeSignature) {
@@ -161,14 +159,14 @@ TEST(TestSignature, ComplexTypeSignature) {
 
   //{[{{ii}{ii}}][[{{ii}{ii}}&]#]}
   //and obama said: Yes We Can!
-  EXPECT_EQ("{ii}"                        , qi::typeOf<MapInt>()->signature());
-  EXPECT_EQ("{{ii}{ii}}"                  , qi::typeOf<MapInt2>()->signature());
-  EXPECT_EQ("[{{ii}{ii}}]"                , qi::typeOf<VectorMapInt2>()->signature());
-  EXPECT_EQ("{{ii}{ii}}"                  , qi::typeOf<MapInt2Ref>()->signature());
-  EXPECT_EQ("[{{ii}{ii}}]"                , qi::typeOf<VectMapInt2Ref>()->signature());
-  EXPECT_EQ("[{{ii}{ii}}]"                , qi::typeOf<VectMapInt2RefConst>()->signature());
-  EXPECT_EQ("[[{{ii}{ii}}]]"              , qi::typeOf<VectVectMapInt2ConstRef>()->signature());
-  EXPECT_EQ("{[{{ii}{ii}}][[{{ii}{ii}}]]}", qi::typeOf<FuckinMap>()->signature());
+  EXPECT_EQ("{ii}"                        , qi::typeOf<MapInt>()->signature().toString());
+  EXPECT_EQ("{{ii}{ii}}"                  , qi::typeOf<MapInt2>()->signature().toString());
+  EXPECT_EQ("[{{ii}{ii}}]"                , qi::typeOf<VectorMapInt2>()->signature().toString());
+  EXPECT_EQ("{{ii}{ii}}"                  , qi::typeOf<MapInt2Ref>()->signature().toString());
+  EXPECT_EQ("[{{ii}{ii}}]"                , qi::typeOf<VectMapInt2Ref>()->signature().toString());
+  EXPECT_EQ("[{{ii}{ii}}]"                , qi::typeOf<VectMapInt2RefConst>()->signature().toString());
+  EXPECT_EQ("[[{{ii}{ii}}]]"              , qi::typeOf<VectVectMapInt2ConstRef>()->signature().toString());
+  EXPECT_EQ("{[{{ii}{ii}}][[{{ii}{ii}}]]}", qi::typeOf<FuckinMap>()->signature().toString());
 }
 
 TEST(TestSignature, FromObject) {
@@ -192,6 +190,14 @@ TEST(TestSignature, Equal) {
 TEST(TestSignature, FromString) {
 
   qi::Signature *sig;
+
+  sig = new qi::Signature("");
+  EXPECT_FALSE(sig->isValid());
+  delete sig;
+
+  sig = new qi::Signature();
+  EXPECT_FALSE(sig->isValid());
+  delete sig;
 
   sig = new qi::Signature("(");
   EXPECT_FALSE(sig->isValid());
@@ -463,6 +469,7 @@ public:
     if (stack.front().second == stack.front().first.end())
       stack.pop_back();
   }
+
   SignatureValidator& operator()(char t, const char* annotation)
   {
     if (!good)
@@ -601,7 +608,7 @@ QI_TYPE_STRUCT(Point, x, y, name);
 
 TEST(TestSignature, AnnotationStruct)
 {
-  EXPECT_EQ("(dds)<Point,x,y,name>", qi::typeOf<Point>()->signature());
+  EXPECT_EQ("(dds)<Point,x,y,name>", qi::typeOf<Point>()->signature().toString());
 }
 
 //#endif

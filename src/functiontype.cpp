@@ -174,17 +174,12 @@ namespace qi
     return res;
   }
 
-  std::string GenericFunction::signature() const
+  qi::Signature GenericFunction::parametersSignature() const
   {
-    std::vector<Type*> types = argumentsType();
-    std::string res("(");
-    for (unsigned i=0; i<types.size(); ++i)
-      res += types[i]->signature();
-    res += ')';
-    return res;
+    return qi::makeTupleSignature(argumentsType());
   }
 
-  std::string GenericFunction::sigreturn() const
+  qi::Signature GenericFunction::returnSignature() const
   {
     // Detect if returned type is a qi::Future and return underlying value type.
     TypeTemplate* ft1 = QI_TEMPLATE_TYPE_GET(resultType(), Future);
@@ -196,16 +191,12 @@ namespace qi
       return resultType()->signature();
   }
 
-  std::string CallableType::signature() const
+  qi::Signature CallableType::parametersSignature() const
   {
-    std::string res("(");
-    for (unsigned i=0; i<_argumentsType.size(); ++i)
-      res += _argumentsType[i]->signature();
-    res += ')';
-    return res;
+    return qi::makeTupleSignature(_argumentsType);
   }
 
-  std::string CallableType::sigreturn() const
+  qi::Signature CallableType::returnSignature() const
   {
     return _resultType->signature();
   }
@@ -251,7 +242,7 @@ namespace qi
       Type* compatible = qi::Type::fromSignature(*it);
       if (!compatible)
       {
-        qiLogError() <<"convert: unknown type " << *it;
+        qiLogError() << "convert: unknown type " << (*it).toString();
         compatible = src[idx].type;
       }
       dst.push_back(src[idx].convertCopy(compatible));
@@ -259,15 +250,10 @@ namespace qi
     return dst;
   }
 
-  std::string GenericFunctionParameters::signature(bool dyn) const
+  Signature GenericFunctionParameters::signature(bool dyn) const
   {
     const std::vector<GenericValuePtr>& params = *this;
-    std::stringstream ss;
-    ss << "(";
-    for (unsigned int i = 0; i < params.size(); ++i)
-      ss << params[i].signature(dyn);
-    ss << ")";
-    return ss.str();
+    return qi::makeTupleSignature(params, dyn);
   }
 
   class DynamicFunctionType: public FunctionType

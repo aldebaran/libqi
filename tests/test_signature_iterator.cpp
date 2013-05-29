@@ -19,7 +19,7 @@
 
 #define verif_iter(_it, _sig, _type, _hasChildren) \
 {\
-  EXPECT_STREQ(_sig, _it.signature().c_str());\
+  EXPECT_STREQ(_sig, _it.signature().toString().c_str());\
   EXPECT_TRUE(_hasChildren == _it.hasChildren()); \
   EXPECT_EQ(qi::Signature::_type, _it.type());\
 }
@@ -30,7 +30,7 @@ void verif_bad(const qi::Signature::iterator it)
   qi::Signature::iterator ite;
   qi::Signature s;
 
-  EXPECT_STREQ("", it.signature().c_str());
+  EXPECT_STREQ("", it.signature().toString().c_str());
   EXPECT_FALSE(it.hasChildren());
   EXPECT_EQ(qi::Signature::Type_None, it.type());
   EXPECT_TRUE(it == ite);

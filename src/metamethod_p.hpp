@@ -29,13 +29,13 @@ namespace qi {
     void setDescription(const std::string& desc);
     void addParameter(const MetaMethodParameter& mm);
 
-    unsigned int uid;
-    std::string sigreturn;
-    std::string name;
-    std::string parametersSignature;
-    std::string description;
+    unsigned int  uid;
+    qi::Signature sigreturn;
+    std::string   name;
+    qi::Signature parametersSignature;
+    std::string   description;
     MetaMethodParameterVector parameters;
-    std::string returnDescription;
+    std::string   returnDescription;
   };
 
   class MetaMethodBuilderPrivate {

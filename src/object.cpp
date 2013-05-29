@@ -191,7 +191,7 @@ namespace qi {
       return mo.methodId(nameWithOptionalSignature);
     for (unsigned dyn = 0; dyn<2; ++dyn)
     {
-      std::string resolvedSig = args.signature(dyn==1);
+      std::string resolvedSig = args.signature(dyn==1).toString();
       std::string fullSig = nameWithOptionalSignature + "::" + resolvedSig;
       qiLogDebug() << "Finding method for resolved signature " << fullSig;
       // First try an exact match, wich is much faster if we're lucky.

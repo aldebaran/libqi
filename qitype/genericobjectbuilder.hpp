@@ -69,17 +69,17 @@ namespace qi {
 
     void setThreadingModel(ObjectThreadingModel model);
 
-    int xAdvertiseMethod(const std::string& sigret,
+    int xAdvertiseMethod(const Signature &sigret,
                          const std::string &name,
-                         const std::string& signature,
+                         const Signature &signature,
                          GenericFunction func, const std::string& desc = "",
                          MetaCallType threadingModel = MetaCallType_Auto);
 
     int xAdvertiseMethod(MetaMethodBuilder& builder, GenericFunction func,
                          MetaCallType threadingModel = MetaCallType_Auto);
 
-    int xAdvertiseSignal(const std::string &name, const std::string& signature);
-    int xAdvertiseProperty(const std::string& name, const std::string& sig, int id=-1);
+    int xAdvertiseSignal(const std::string &name, const Signature &signature);
+    int xAdvertiseProperty(const std::string& name, const Signature& sig, int id=-1);
     void setDescription(const std::string& desc);
     qi::ObjectPtr object(boost::function<void (GenericObject*)> onDelete = boost::function<void (GenericObject*)>());
 

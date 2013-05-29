@@ -354,10 +354,10 @@ namespace qi {
     return static_cast<Type>(*_current);
   }
 
-  std::string Signature::iterator::signature()const {
+  Signature Signature::iterator::signature()const {
     if (!_current)
-      return std::string();
-    return std::string(_current);
+      return Signature();
+    return Signature(_current);
   }
 
   std::string Signature::iterator::annotation()const {
@@ -452,12 +452,12 @@ namespace qi {
       if (sig.isValid() && sig.size() == 2)
       {
         qi::Signature::iterator it = sig.begin();
-        retSig = it.signature();
+        retSig = it.signature().toString();
         ++it;
-        parSig = it.signature();
+        parSig = it.signature().toString();
       }
       else if (sig.isValid() && sig.size() == 1)
-        parSig = sig.begin().signature();
+        parSig = sig.begin().signature().toString();
     } else {
       funcName = fullSignature;
     }

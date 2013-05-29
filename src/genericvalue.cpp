@@ -289,7 +289,7 @@ namespace qi
       std::vector<Type*> dstTypes = tdst->memberTypes();
       if (dstTypes.size() != sourceData.size())
       {
-        qiLogWarning() << "Conversion failure: tuple size mismatch between " << tsrc->signature() << " and " << tdst->signature();
+        qiLogWarning() << "Conversion failure: tuple size mismatch between " << tsrc->signature().toString() << " and " << tdst->signature().toString();
         return std::make_pair(GenericValuePtr(), false);
       }
 

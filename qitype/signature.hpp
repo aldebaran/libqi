@@ -117,27 +117,26 @@ namespace qi {
 
     class QITYPE_API iterator {
     public:
-      typedef std::string               value_type;
+      typedef Signature                 value_type;
       typedef std::forward_iterator_tag iterator_category;
       typedef ptrdiff_t                 difference_type;
-      typedef std::string*              pointer;
-      typedef std::string&              reference;
+      typedef Signature*                pointer;
+      typedef Signature&                reference;
       iterator() : _current(0), _end(0) {}
       iterator          &operator++();
       iterator          &operator++(int);
       inline bool        operator!=(const iterator &rhs) const { return _current != rhs._current; }
       inline bool        operator==(const iterator &rhs) const { return _current == rhs._current; };
-      inline std::string operator*() const                     { return signature(); }
-      inline std::string operator->() const                    { return signature(); }
+      inline Signature   operator*() const                     { return signature(); }
 
       // accesors
-      Type        type()const;
-      std::string signature()const;
-      std::string annotation()const;
-      bool        isValid()const;
+      Type          type()const;
+      qi::Signature signature()const;
+      std::string   annotation()const;
+      bool          isValid()const;
 
-      bool        hasChildren()const;
-      Signature   children()const;
+      bool          hasChildren()const;
+      Signature     children()const;
 
     protected:
       iterator(const char *begin, const char *end) : _current(begin), _end(end) {}

@@ -71,13 +71,13 @@ namespace qi {
     MetaObjectBuilder();
 
     void setDescription(const std::string& desc);
-    unsigned int addMethod(const std::string& sigret,
+    unsigned int addMethod(const qi::Signature &sigret,
                            const std::string &name,
-                           const std::string& signature,
+                           const qi::Signature &signature,
                            int id = -1);
     unsigned int addMethod(MetaMethodBuilder& builder, int id = -1);
-    unsigned int addSignal(const std::string &name, const std::string &sig, int id = -1);
-    unsigned int addProperty(const std::string& name, const std::string& sig, int id = -1);
+    unsigned int addSignal(const std::string &name, const qi::Signature& sig, int id = -1);
+    unsigned int addProperty(const std::string& name, const qi::Signature& sig, int id = -1);
     qi::MetaObject metaObject();
 
   private:

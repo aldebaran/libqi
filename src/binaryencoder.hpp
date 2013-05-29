@@ -67,13 +67,13 @@ namespace qi {
 
     template<typename T> void write(const T &v);
 
-    void beginList(qi::uint32_t size, const std::string &elementSignature);
+    void beginList(qi::uint32_t size, const Signature &elementSignature);
     void endList();
-    void beginMap(qi::uint32_t size, const std::string &keySignature, const std::string &valueSignature);
+    void beginMap(qi::uint32_t size, const Signature &keySignature, const Signature &valueSignature);
     void endMap();
-    void beginTuple(std::string sig);
+    void beginTuple(const qi::Signature &signature);
     void endTuple();
-    void beginDynamic(const std::string &elementSignature);
+    void beginDynamic(const qi::Signature &elementSignature);
     void endDynamic();
 
     Status status() const;

@@ -135,7 +135,7 @@ namespace qi  {
       {}
 
       template<typename T> void operator()(T *x) {
-        val += qi::typeOf<T>()->signature();
+        val += qi::typeOf<T>()->signature().toString();
       }
 
       std::string &val;
@@ -145,12 +145,12 @@ namespace qi  {
 
     template<typename T> struct RawFunctionSignature
     {
-      static std::string makeSigreturn()
+      static qi::Signature makeSigreturn()
       {
         typedef typename boost::function_types::result_type<T>::type     ResultType;
         return typeOf<ResultType>()->signature();
       }
-      static std::string makeSignature()
+      static qi::Signature makeSignature()
       {
         std::string   signature;
         signature += '(';
@@ -163,22 +163,21 @@ namespace qi  {
               >
             >
           >
-        >
-        (qi::detail::signature_function_arg_apply(&signature));
+        >(qi::detail::signature_function_arg_apply(&signature));
         signature += ')';
-        return signature;
+        return qi::Signature(signature);
       }
     };
 
     template<typename R, typename F, typename B>
     struct RawFunctionSignature<boost::_bi::bind_t<R, F, B> >
     {
-      static std::string makeSigreturn()
+      static qi::Signature makeSigreturn()
       {
         typedef typename qi::boost_bind_result_type<boost::_bi::bind_t<R, F, B> >::type     ResultType;
         return typeOf<ResultType>()->signature();
       }
-      static std::string makeSignature()
+      static qi::Signature makeSignature()
       {
         std::string   signature;
         signature += '(';
@@ -191,20 +190,19 @@ namespace qi  {
               >
             >
           >
-        >
-        (qi::detail::signature_function_arg_apply(&signature));
+        >(qi::detail::signature_function_arg_apply(&signature));
         signature += ')';
-        return signature;
+        return Signature(signature);
       }
     };
     template<typename T> struct MemberFunctionSignature
     {
-      static std::string makeSigreturn()
+      static qi::Signature makeSigreturn()
       {
         typedef typename boost::function_types::result_type<T>::type     ResultType;
         return typeOf<ResultType>()->signature();
       }
-      static std::string makeSignature()
+      static qi::Signature makeSignature()
       {
         // Reconstruct the boost::bind(instance, _1, _2...) signature
         typedef typename boost::function_types::result_type<T>::type     RetType;
@@ -222,14 +220,14 @@ namespace qi  {
         MemberFunctionSignature<T>,
         RawFunctionSignature<T>
         >::type Backend;
-      static std::string signature()
+      static qi::Signature signature()
       {
-        static std::string result = Backend::makeSignature();
+        static qi::Signature result = Backend::makeSignature();
         return result;
       }
-      static std::string sigreturn()
+      static qi::Signature sigreturn()
       {
-        static std::string result = Backend::makeSigreturn();
+        static qi::Signature result = Backend::makeSigreturn();
         return result;
       }
     };
@@ -237,7 +235,7 @@ namespace qi  {
     : public FunctionSignature<T> {};
 
     template<typename T> inline
-    std::string functionArgumentsSignature()
+    qi::Signature functionArgumentsSignature()
     {
       static bool done = false;
       static std::string sigs;
@@ -253,7 +251,7 @@ namespace qi  {
         sigs += ')';
         done = true;
       }
-      return sigs;
+      return Signature(sigs);
     }
 
     // Bouncer to DefaultAccess or DirectAccess based on type size

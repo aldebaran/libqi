@@ -25,8 +25,8 @@ namespace qi {
     CallableType();
     Type* resultType();
     const std::vector<Type*>& argumentsType();
-    std::string signature() const;
-    std::string sigreturn() const;
+    qi::Signature parametersSignature() const;
+    qi::Signature returnSignature() const;
   protected:
     Type*              _resultType;
     // C4251
@@ -88,8 +88,8 @@ namespace qi {
     /// Return expected argument types, taking transform into account
     std::vector<Type*> argumentsType() const;
     Type*              resultType() const;
-    std::string signature() const;
-    std::string sigreturn() const;
+    Signature          parametersSignature() const;
+    Signature          returnSignature() const;
 
     void swap(GenericFunction& b);
 
@@ -117,7 +117,7 @@ namespace qi {
     GenericFunctionParameters copy(bool notFirst=false) const;
     /// Convert the arguments to given signature. destroy() must be called on the result.
     GenericFunctionParameters convert(const Signature& sig) const;
-    std::string signature(bool dyn) const;
+    qi::Signature signature(bool dyn) const;
     void destroy(bool notFirst = false);
   };
 

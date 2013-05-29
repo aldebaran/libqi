@@ -203,7 +203,7 @@ namespace qi {
                                                       FUNCTION_TYPE callback,
                                                       MetaCallType model)
   {
-    return xConnect(eventName + "::" + detail::FunctionSignature<FUNCTION_TYPE>::signature(),
+    return xConnect(eventName + "::" + detail::FunctionSignature<FUNCTION_TYPE>::signature().toString(),
       SignalSubscriber(makeGenericFunction(callback), model));
   }
 

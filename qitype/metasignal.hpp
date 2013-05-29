@@ -19,20 +19,20 @@ namespace qi {
   /// Representation of a Signal in an GenericObject.
   class QITYPE_API MetaSignal {
   public:
-    MetaSignal(unsigned int uid, const std::string &name, const std::string &sig);
+    MetaSignal(unsigned int uid, const std::string &name, const qi::Signature &sig);
     MetaSignal();
     ~MetaSignal();
 
     const std::string &name() const;
-    std::string toString() const;  // name::(sig)
-    const std::string &parametersSignature() const;
+    std::string        toString() const;  // name::(sig)
+    const Signature   &parametersSignature() const;
     unsigned int       uid() const;
 
   private:
-    unsigned int _uid;
+    unsigned int  _uid;
     // C4251
-    std::string  _name;
-    std::string  _signature;
+    std::string   _name;
+    qi::Signature _signature;
     QI_TYPE_STRUCT_PRIVATE_ACCESS(MetaSignal);
   };
 

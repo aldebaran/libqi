@@ -45,15 +45,15 @@ namespace qi {
     return this->_p->name;
   }
 
-  const std::string& MetaMethod::parametersSignature() const {
+  const qi::Signature& MetaMethod::parametersSignature() const {
     return this->_p->parametersSignature;
   }
 
   std::string MetaMethod::toString() const {
-    return this->_p->name + "::" + this->_p->parametersSignature;
+    return this->_p->name + "::" + this->_p->parametersSignature.toString();
   }
 
-  const std::string& MetaMethod::returnSignature() const {
+  const qi::Signature& MetaMethod::returnSignature() const {
     return this->_p->sigreturn;
   }
 
@@ -134,9 +134,9 @@ namespace qi {
     : _p (new MetaMethodBuilderPrivate())
   {}
 
-  MetaMethodBuilder::MetaMethodBuilder(const std::string& sigreturn,
+  MetaMethodBuilder::MetaMethodBuilder(const qi::Signature& sigreturn,
                                        const std::string& name,
-                                       const std::string& signature,
+                                       const qi::Signature& signature,
                                        const std::string& desc)
     : _p (new MetaMethodBuilderPrivate())
   {
@@ -177,20 +177,21 @@ namespace qi {
     this->_p->metaMethod._p->name = name;
   }
 
-  void MetaMethodBuilder::setParametersSignature(const std::string& sig) {
+  void MetaMethodBuilder::setParametersSignature(const qi::Signature &sig) {
     this->_p->metaMethod._p->parametersSignature = sig;
   }
 
-  void MetaMethodBuilder::setReturnSignature(const std::string& sig) {
+  void MetaMethodBuilder::setReturnSignature(const qi::Signature& sig) {
     this->_p->metaMethod._p->sigreturn = sig;
   }
 
   void MetaMethodBuilder::setSignature(const GenericFunction& f)
   {
-    qiLogDebug() << "sig " << f.signature() << " -> " << ('(' + f.signature().substr(2));
+    qiLogDebug() << "sig " << f.parametersSignature().toString() << " -> " << ('(' + f.parametersSignature().toString().substr(2));
     // Drop first argument which is the instance
-    setParametersSignature("(" + f.signature().substr(2));
-    setReturnSignature(f.sigreturn());
+    // TODO: this is a little bit hackish. (it does not take annotations, nor type into account)
+    setParametersSignature(Signature("(" + f.parametersSignature().toString().substr(2)));
+    setReturnSignature(f.returnSignature());
   }
 
   void MetaMethodBuilder::setReturnDescription(const std::string& desc) {
@@ -208,8 +209,8 @@ namespace qi {
     this->_p->metaMethod._p->setDescription(description);
   }
 
-  MetaMethod::MetaMethod(unsigned int uid, const std::string& returnSignature,
-      const std::string& name, const std::string& parametersSignature,
+  MetaMethod::MetaMethod(unsigned int uid, const Signature &returnSignature,
+      const std::string& name, const Signature &parametersSignature,
       const std::string& description, const MetaMethodParameterVector& parameters,
       const std::string& returnDescription)
   : _p (new MetaMethodPrivate())

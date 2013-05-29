@@ -11,7 +11,7 @@ namespace qi {
   {
   }
 
-  MetaSignal::MetaSignal(unsigned int uid, const std::string &name, const std::string &sig)
+  MetaSignal::MetaSignal(unsigned int uid, const std::string &name, const Signature &sig)
   : _uid(uid)
   , _name(name)
   , _signature(sig)
@@ -30,10 +30,10 @@ namespace qi {
 
   std::string MetaSignal::toString() const
   {
-    return _name + "::" + _signature;
+    return _name + "::" + _signature.toString();
   }
 
-  const std::string &MetaSignal::parametersSignature() const
+  const qi::Signature &MetaSignal::parametersSignature() const
   {
     return _signature;
   }

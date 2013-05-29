@@ -127,7 +127,7 @@ namespace qi{
      * will return [i]
      * @warning if resolveDynamic is true, a valid storage must be given
     */
-    std::string signature(void* storage=0, bool resolveDynamic = false);
+    qi::Signature signature(void* storage=0, bool resolveDynamic = false);
 
     ///@return a Type on which signature() returns sig.
     static Type* fromSignature(const qi::Signature& sig);
@@ -298,7 +298,7 @@ namespace qi{
     GenericValue toTuple(bool homogeneous) const;
     ///@}
 
-    std::string signature(bool resolveDynamic = false) const;
+    qi::Signature signature(bool resolveDynamic = false) const;
     Type::Kind kind() const;
 
     ///@{

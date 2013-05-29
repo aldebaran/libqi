@@ -51,16 +51,16 @@ namespace qi {
     unsigned int uid() const;
     std::string name() const;
     std::string toString() const; //< name::(args)
-    const std::string& parametersSignature() const;
-    const std::string& returnSignature() const;
+    const Signature& parametersSignature() const;
+    const Signature& returnSignature() const;
     std::string description() const;
     MetaMethodParameterVector parameters() const;
     std::string returnDescription() const;
 
     MetaMethodPrivate* _p;
 
-    MetaMethod(unsigned int uid, const std::string& returnSignature,
-      const std::string& name, const std::string& parametersSignature,
+    MetaMethod(unsigned int uid, const qi::Signature& returnSignature,
+      const std::string& name, const qi::Signature& parametersSignature,
       const std::string& description, const MetaMethodParameterVector& parameters,
       const std::string& returnDescription);
   };
@@ -69,7 +69,7 @@ namespace qi {
   class QITYPE_API MetaMethodBuilder {
   public:
     MetaMethodBuilder();
-    MetaMethodBuilder(const std::string &sigreturn, const std::string& name, const std::string &signature, const std::string& doc = "");
+    MetaMethodBuilder(const Signature &sigreturn, const std::string& name, const Signature &signature, const std::string& doc = "");
     MetaMethodBuilder(const MetaMethodBuilder& other);
     ~MetaMethodBuilder();
 
@@ -79,9 +79,9 @@ namespace qi {
 
     void setUid(unsigned int uid);
     void setSignature(const GenericFunction& f);
-    void setReturnSignature(const std::string& sig);
+    void setReturnSignature(const Signature &sig);
     void setName(const std::string& name);
-    void setParametersSignature(const std::string& sig);
+    void setParametersSignature(const qi::Signature& sig);
     void setReturnDescription(const std::string& doc);
     void addParameter(const std::string& name, const std::string& documentation);
     void setDescription(const std::string& documentation);
