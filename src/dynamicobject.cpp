@@ -67,7 +67,10 @@ namespace qi
   DynamicObjectPrivate::~DynamicObjectPrivate()
   {
     for (SignalMap::iterator it = signalMap.begin(); it!= signalMap.end(); ++it)
-      delete it->second;
+    {
+      if (it->first >= Manageable::endId)
+        delete it->second;
+    }
     //properties are also in signals, do not delete
   }
 

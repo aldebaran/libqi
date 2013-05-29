@@ -118,6 +118,8 @@ void StaticObjectTypeBase::metaPost(void* instance, Manageable* context, unsigne
 qi::Future<Link> StaticObjectTypeBase::connect(void* instance, Manageable* context, unsigned int event,
                                                        const SignalSubscriber& subscriber)
 {
+  if (event >= Manageable::startId && event < Manageable::endId)
+    instance = context;
   SignalBase* sb = getSignal(_data, instance, event);
   if (!sb) {
     return qi::makeFutureError<Link>("Cant find signal");
@@ -135,6 +137,8 @@ qi::Future<void> StaticObjectTypeBase::disconnect(void* instance, Manageable* co
   qiLogDebug() << "Disconnect " << linkId;
   unsigned int event = linkId >> 32;
   unsigned int link = linkId & 0xFFFFFFFF;
+  if (event >= Manageable::startId && event < Manageable::endId)
+    instance = context;
   SignalBase* sb = getSignal(_data, instance, event);
   if (!sb)
     return qi::makeFutureError<void>("Cant find signal");
