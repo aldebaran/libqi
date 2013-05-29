@@ -264,11 +264,10 @@ int          qi_value_set_object(qi_value_t* value, qi_object_t *o)
 //# DYNAMIC
 int          qi_value_dynamic_set(qi_value_t *container, qi_value_t* value)
 {
-  qi::GenericValue &gv = qi_value_cpp(value);
-  qi::GenericValue &gvv = qi_value_cpp(value);
+  qi::GenericValue &gvcont = qi_value_cpp(container);
+  qi::GenericValue &gvval = qi_value_cpp(value);
   try {
-    qi::GenericValue gvvv(gvv);
-    gv.setDynamic(gvvv);
+    gvcont.setDynamic(gvval);
     return 1;
   } catch (std::runtime_error&) {}
   return 0;
