@@ -926,8 +926,6 @@ TEST(TestCall, Future)
 TEST(TestCall, Statistics)
 {
   TestSessionPair p;
-  if (p.client() == p.server())
-    return; // yup, methods are not metaAvailable if not a remoteobject.
   qi::GenericObjectBuilder gob;
   int mid = gob.advertiseMethod("sleep", &qi::os::msleep);
   qi::ObjectPtr srv = gob.object();
@@ -950,10 +948,12 @@ TEST(TestCall, Statistics)
   stats = obj->call<qi::ObjectStatistics>("stats");
   m = stats[mid];
   EXPECT_EQ(1u, m.count);
-  obj->call<void>("clearStats");
   obj->call<void>("enableStats", false);
+  obj->call<void>("clearStats");
+  EXPECT_TRUE(!obj->call<bool>("isStatsEnabled").value());
   obj->call<void>("sleep", 0);
-  EXPECT_TRUE(obj->stats().empty());
+  stats = obj->call<qi::ObjectStatistics>("stats");
+  EXPECT_TRUE(stats.empty());
 }
 
 

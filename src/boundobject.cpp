@@ -73,35 +73,10 @@ namespace qi {
       ob->advertiseMethod("property",       &ServiceBoundObject::property, MetaCallType_Auto, qi::Message::BoundObjectFunction_GetProperty);
       ob->advertiseMethod("setProperty",       &ServiceBoundObject::setProperty, MetaCallType_Auto, qi::Message::BoundObjectFunction_SetProperty);
       ob->advertiseMethod("properties",       &ServiceBoundObject::properties, MetaCallType_Auto, qi::Message::BoundObjectFunction_Properties);
-      // Manageable-level stuff, above comment applies.
-      ob->advertiseMethod("isStatsEnabled", &ServiceBoundObject::isStatsEnabled, MetaCallType_Auto, qi::Message::BoundObjectFunction_Properties + 1);
-      ob->advertiseMethod("enableStats",    &ServiceBoundObject::enableStats,    MetaCallType_Auto, qi::Message::BoundObjectFunction_Properties + 2);
-      ob->advertiseMethod("stats",          &ServiceBoundObject::stats,       MetaCallType_Auto, qi::Message::BoundObjectFunction_Properties + 3);
-      ob->advertiseMethod("clearStats",     &ServiceBoundObject::clearStats,     MetaCallType_Auto, qi::Message::BoundObjectFunction_Properties + 4);
       //global currentSocket: we are not multithread or async capable ob->setThreadingModel(ObjectThreadingModel_MultiThread);
     }
     ObjectPtr result = ob->object(self);
     return result;
-  }
-
-  bool ServiceBoundObject::isStatsEnabled()
-  {
-    return _object->isStatsEnabled();
-  }
-
-  void ServiceBoundObject::enableStats(bool enable)
-  {
-    _object->enableStats(enable);
-  }
-
-  ObjectStatistics ServiceBoundObject::stats()
-  {
-    return _object->stats();
-  }
-
-  void ServiceBoundObject::clearStats()
-  {
-    _object->clearStats();
   }
 
   //Bound Method
@@ -156,7 +131,8 @@ namespace qi {
     qi::ObjectPtr    obj;
     unsigned int     funcId;
     //choose between special function (on BoundObject) or normal calls
-    if (msg.function() < static_cast<unsigned int>(qiObjectSpecialMethodMaxUid)) {
+    // Manageable functions are at the end of reserver range but dispatch to _object
+    if (msg.function() < Manageable::startId) {
       obj = _self;
     } else {
       obj = _object;

@@ -65,10 +65,6 @@ namespace qi {
     GenericValue   property(const GenericValue& name);
     void           setProperty(const GenericValue& name, GenericValue value);
     std::vector<std::string> properties();
-    bool           isStatsEnabled();
-    void           enableStats(bool enable);
-    ObjectStatistics stats();
-    void           clearStats();
   public:
     inline qi::TransportSocketPtr currentSocket() const {
 #ifndef NDEBUG
