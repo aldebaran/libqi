@@ -6,9 +6,6 @@ QiMessaging JavaScript
    This library is still under development. Feel free to contact
    llec@aldebaran-robotics.com for more information.
 
-   All references to ``localhost`` correspond to the running ``qim.py``
-   script that is not yet available on the robot.
-
 Introduction
 ============
 
@@ -29,9 +26,14 @@ and its two dependencies: jQuery and Socket.IO.
 
 .. code-block:: html
 
-   <script src="http://localhost:8001/jquery.min.js"></script>
-   <script src="http://localhost:8001/socket.io.min.js"></script>
-   <script src="http://localhost:8001/qimessaging.js"></script>
+   <script src="../../libs/qimessaging/1.0/jquery.min.js"></script>
+   <script src="../../libs/qimessaging/1.0/socket.io.min.js"></script>
+   <script src="../../libs/qimessaging/1.0/qimessaging.js"></script>
+
+.. note::
+   The related path used above would correspond to a page hosted on
+   ``http://nao.local/apps/airnao/index.html`` for instance. The absolute URL
+   would be ``http://nao.local/libs/qimessaging/1.0/qimessaging.js``.
 
 How to use
 ==========
@@ -44,7 +46,11 @@ It is constructed using the URL of the JSON server.
 
 .. code-block:: javascript
 
-   var qim = new QiSession("http://localhost:8001");
+   var qim = new QiSession("http://" + window.location.host + ":8002");
+
+.. note::
+   Using ``window.location.host`` makes sure you connect to the same robot
+   that is hosting the web page.
 
 Once the connection is established, two methods are available: ``service()``
 and ``socket()``.
@@ -133,7 +139,7 @@ be used to deal with low-level
 
 .. code-block:: javascript
 
-   qim.socket().on('connected', function() {
+   qim.socket().on('connect', function() {
      console.log('connected!');
      start();
    });
@@ -152,16 +158,16 @@ Sample
 
    <head>
    <title>QiSession example</title>
-   <script src="http://localhost:8001/jquery.min.js"></script>
-   <script src="http://localhost:8001/socket.io.min.js"></script>
-   <script src="http://localhost:8001/qimessaging.js"></script>
+   <script src="../../libs/qimessaging/1.0/jquery.min.js"></script>
+   <script src="../../libs/qimessaging/1.0/socket.io.min.js"></script>
+   <script src="../../libs/qimessaging/1.0/qimessaging.js"></script>
    </head>
 
    <body>
    <script>
-   var qim = new QiSession("http://nao.local:8080");
+   var qim = new QiSession("http://" + window.location.host + ":8002");
 
-   qim.socket().on('connected', function() {
+   qim.socket().on('connect', function() {
      console.log('connected!');
      start();
    });
@@ -185,7 +191,7 @@ Sample
      service.reply("plaf").done(onReply).fail(onError);
    }
 
-   function do()
+   function start()
    {
      qim.service("serviceTest").done(onService).fail(onError);
    }
