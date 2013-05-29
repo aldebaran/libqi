@@ -73,6 +73,7 @@ TEST(TestURL, ValidUrl)
   EXPECT_EQ("example.com", url.host());
   EXPECT_EQ(5, url.port());
   EXPECT_TRUE(url.isValid());
+  EXPECT_EQ("tcp://example.com:5", url.str());
 
   url = "tcp://:5";
 
@@ -80,6 +81,7 @@ TEST(TestURL, ValidUrl)
   EXPECT_EQ("", url.host());
   EXPECT_EQ(5, url.port());
   EXPECT_TRUE(url.isValid());
+  EXPECT_EQ("tcp://:5", url.str());
 
   url = qi::Url("tcp://example.com", 5);
 
@@ -87,6 +89,7 @@ TEST(TestURL, ValidUrl)
   EXPECT_EQ("example.com", url.host());
   EXPECT_EQ(5, url.port());
   EXPECT_TRUE(url.isValid());
+  EXPECT_EQ("tcp://example.com:5", url.str());
 
   url = qi::Url("tcp://example.com:5", 10);
 
@@ -94,6 +97,7 @@ TEST(TestURL, ValidUrl)
   EXPECT_EQ("example.com", url.host());
   EXPECT_EQ(5, url.port());
   EXPECT_TRUE(url.isValid());
+  EXPECT_EQ("tcp://example.com:5", url.str());
 
   url = qi::Url("example.com:5", "tcp");
 
@@ -101,6 +105,7 @@ TEST(TestURL, ValidUrl)
   EXPECT_EQ("example.com", url.host());
   EXPECT_EQ(5, url.port());
   EXPECT_TRUE(url.isValid());
+  EXPECT_EQ("tcp://example.com:5", url.str());
 
   url = qi::Url("tcp://example.com:5", "http");
 
@@ -108,6 +113,7 @@ TEST(TestURL, ValidUrl)
   EXPECT_EQ("example.com", url.host());
   EXPECT_EQ(5, url.port());
   EXPECT_TRUE(url.isValid());
+  EXPECT_EQ("tcp://example.com:5", url.str());
 
   url = qi::Url("example.com", "tcp", 5);
 
@@ -115,6 +121,7 @@ TEST(TestURL, ValidUrl)
   EXPECT_EQ("example.com", url.host());
   EXPECT_EQ(5, url.port());
   EXPECT_TRUE(url.isValid());
+  EXPECT_EQ("tcp://example.com:5", url.str());
 
   url = qi::Url("tcp://example.com:5", "http", 10);
 
@@ -122,8 +129,19 @@ TEST(TestURL, ValidUrl)
   EXPECT_EQ("example.com", url.host());
   EXPECT_EQ(5, url.port());
   EXPECT_TRUE(url.isValid());
+  EXPECT_EQ("tcp://example.com:5", url.str());
+}
 
-
+TEST(TestURL, CopyUrl)
+{
+  qi::Url url("tcp://example.com:5");
+  EXPECT_TRUE(url.isValid());
+  qi::Url url2(url);
+  EXPECT_EQ("tcp", url.protocol());
+  EXPECT_EQ("example.com", url.host());
+  EXPECT_EQ(5, url.port());
+  EXPECT_TRUE(url2.isValid());
+  EXPECT_EQ("tcp://example.com:5", url.str());
 }
 
 std::string urlOut(const qi::Url& u)

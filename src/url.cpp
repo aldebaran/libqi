@@ -129,7 +129,7 @@ namespace qi {
     , protocol(url_p->protocol)
     , host(url_p->host)
     , port(url_p->port)
-    , components(0)
+    , components(url_p->components)
   {
   }
 
@@ -163,6 +163,9 @@ namespace qi {
     if (!(split_me(url) & PORT)) {
       port = defaultPort;
       components |= PORT;
+      std::stringstream ss;
+        ss << port;
+      this->url += ":" + ss.str();
     }
   }
 
@@ -176,6 +179,7 @@ namespace qi {
     if (!(split_me(url) & SCHEME)) {
       protocol = defaultProtocol;
       components |= SCHEME;
+      this->url = protocol + "://" + url;
     }
   }
 
@@ -190,10 +194,14 @@ namespace qi {
     if (!(result & SCHEME)) {
       protocol = defaultProtocol;
       components |= SCHEME;
+      this->url = protocol + "://" + url;
     }
     if (!(result & PORT)) {
       port = defaultPort;
       components |= PORT;
+      std::stringstream ss;
+        ss << port;
+      this->url += ":" + ss.str();
     }
   }
 
