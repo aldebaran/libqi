@@ -847,10 +847,19 @@ namespace qi
     QI_NORETURN void throwConversionFailure(Type* from, Type* to)
     {
       std::stringstream msg;
-      msg << "Conversion from " << from->infoString()
-        << '(' << from->kind() << ')'
-        << " to " << to->infoString()
-        << '(' << to->kind() << ") failed";
+      msg << "Conversion from ";
+      if (from) {
+        msg << from->infoString() << '(' << from->kind() << ')';
+      } else {
+        msg << "NULL Type";
+      }
+      msg << " to ";
+      if (to) {
+        msg << to->infoString() << '(' << to->kind() << ")";
+      } else {
+        msg << "NULL Type";
+      }
+      msg << " failed";
       qiLogWarning() << msg.str();
       throw std::runtime_error(msg.str());
     }
