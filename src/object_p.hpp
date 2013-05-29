@@ -37,7 +37,9 @@ namespace qi {
     EventLoop                          *eventLoop;
 
     bool statsEnabled;
+    bool traceEnabled;
     ObjectStatistics stats;
+    qi::atomic<int> traceId;
   };
 
 };

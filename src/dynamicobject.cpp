@@ -328,6 +328,67 @@ namespace qi
       return function.call(params);
     }
   }
+  namespace {
+
+    inline void call(qi::Promise<GenericValuePtr>& out,
+                      Manageable* context,
+                      bool lock,
+                      const GenericFunctionParameters& params,
+                      unsigned int methodId,
+                      GenericFunction& func
+                      )
+    {
+      bool stats = context && context->isStatsEnabled();
+      bool trace = context && context->isTraceEnabled();
+      int tid = 0; // trace call id, reused for result sending
+      if (trace)
+      {
+        tid = context->_nextTraceId();
+        qi::os::timeval tv;
+        qi::os::gettimeofday(&tv);
+        std::vector<GenericValue> args;
+        args.resize(params.size()-1);
+        for (unsigned i=0; i<params.size()-1; ++i)
+        {
+          if (!params[i+1].type)
+            args[i] = GenericValue::from("<??" ">");
+          else
+          {
+            switch(params[i+1].type->kind())
+            {
+            case Type::Int:
+            case Type::String:
+            case Type::Float:
+            case Type::List:
+            case Type::Map:
+            case Type::Tuple:
+            case Type::Dynamic:
+              args[i] = params[i+1];
+              break;
+            default:
+            args[i] = GenericValue::from("<??" ">");
+            }
+          }
+        }
+        context->traceObject(EventTrace(
+          tid, EventTrace::Event_Call, methodId, GenericValue::from(args), tv));
+      }
+      qi::int64_t time = stats?qi::os::ustime():0;
+      if (lock)
+        out.setValue(locked_call(func, params, context->mutex()));
+      else
+        out.setValue(func.call(params));
+      if (stats)
+        context->pushStats(methodId, (float)(qi::os::ustime() - time)/1e6);
+      if (trace)
+      {
+        qi::os::timeval tv;
+        qi::os::gettimeofday(&tv);
+        GenericValue val(out.future().value());
+        context->traceObject(EventTrace(tid, EventTrace::Event_Result, methodId, val, tv));
+      }
+    }
+  }
 
   class MFunctorCall
   {
@@ -364,14 +425,7 @@ namespace qi
     {
       try
       {
-        bool stats = context && context->isStatsEnabled();
-        qi::int64_t time = stats?qi::os::ustime():0;
-        if (lock)
-          out->setValue(locked_call(func, params, context->mutex()));
-        else
-          out->setValue(func.call(params));
-        if (stats)
-          context->pushStats(methodId, (float)(qi::os::ustime() - time)/1e6);
+        call(*out, context, lock, params, methodId, func);
       }
       catch(const std::exception& e)
       {
@@ -413,18 +467,12 @@ namespace qi
     if (!sync && !el)
       el = getDefaultThreadPoolEventLoop();
     qiLogDebug() << "metacall sync=" << sync << " el= " << el <<" ct= " << callType;
+    bool doLock = (context && objectThreadingModel == ObjectThreadingModel_SingleThread
+        && methodThreadingModel == MetaCallType_Auto);
     if (sync)
     {
       qi::Promise<GenericValuePtr> out;
-      bool stats = context && context->isStatsEnabled();
-      qi::int64_t time = stats?qi::os::ustime():0;
-      if (context && objectThreadingModel == ObjectThreadingModel_SingleThread
-        && methodThreadingModel == MetaCallType_Auto)
-        out.setValue(locked_call(func, params, context->mutex()));
-      else
-        out.setValue(func.call(params));
-      if (stats)
-        context->pushStats(methodId, (float)(qi::os::ustime() - time)/1e6);
+      call(out, context, doLock, params, methodId, func);
       return out.future();
     }
     else
@@ -432,8 +480,6 @@ namespace qi
       qi::Promise<GenericValuePtr>* out = new qi::Promise<GenericValuePtr>();
       GenericFunctionParameters pCopy = params.copy(noCloneFirst);
       qi::Future<GenericValuePtr> result = out->future();
-      bool doLock = (context && objectThreadingModel == ObjectThreadingModel_SingleThread
-        && methodThreadingModel == MetaCallType_Auto);
       el->post(MFunctorCall(func, pCopy, out, noCloneFirst, context, methodId, doLock));
       return result;
     }

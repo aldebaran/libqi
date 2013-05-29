@@ -38,6 +38,27 @@ namespace qi {
     unsigned count;      //< Number of calls
   };
 
+  struct EventTrace
+  {
+    enum EventKind
+    {
+      Event_Call = 1,
+      Event_Result = 2,
+      Event_Signal = 3
+    };
+    EventTrace() {}
+    EventTrace(unsigned int id, EventKind  kind, unsigned int slotId,
+      const GenericValue& arguments, const qi::os::timeval timestamp)
+    : id(id), kind(kind), slotId(slotId), arguments(arguments), timestamp(timestamp)
+    {}
+
+    unsigned int id; // trace id, used to match call and call result
+    EventKind kind;
+    unsigned int slotId; // method or signal id
+    GenericValue arguments; // call or signal arguments
+    qi::os::timeval timestamp;
+  };
+
   typedef std::map<unsigned int, MethodStatistics> ObjectStatistics;
 /** Per-instance context.
   */
@@ -73,6 +94,17 @@ namespace qi {
     /// Reset all statistical data
     void clearStats();
 
+    ///@return if trace mode is enabled
+    bool isTraceEnabled() const;
+    /** Set trace mode state.
+    *
+    * When enabled, all calls and signal triggers will be reported through the
+    * "traceObject" signal::
+    *
+    * traceObject(EventTrace trace)
+    *
+    */
+    void enableTrace(bool enable);
     /// @}
 
     /// Starting id of features handled by Manageable
@@ -91,9 +123,11 @@ namespace qi {
     static MethodMap&       manageableMmethodMap();
     static SignalMap&       manageableSignalMap();
     static MetaObject&      manageableMetaObject();
-    static void            _build();
+    static void             _build();
+    int                     _nextTraceId();
+    Signal<EventTrace> traceObject;
     ManageablePrivate* _p;
   };
 }
-
+QI_TYPE_ENUM_REGISTER(qi::EventTrace::EventKind);
 #endif  // _QITYPE_MANAGEABLE_HPP_

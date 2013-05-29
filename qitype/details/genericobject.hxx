@@ -318,6 +318,7 @@ namespace qi {
     }
   }
 }
-
 QI_TYPE_STRUCT(qi::MethodStatistics, cumulatedTime, minTime, maxTime, count);
+QI_TYPE_STRUCT(qi::EventTrace, id, kind, slotId, arguments, timestamp);
+QI_TYPE_STRUCT(qi::os::timeval, tv_sec, tv_usec);
 #endif  // _QITYPE_DETAILS_GENERICOBJECT_HXX_

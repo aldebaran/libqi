@@ -735,6 +735,63 @@ TEST(TestObject, statisticsType)
   EXPECT_EQ(2u, stats[mid].count);
 }
 
+void pushTrace(std::vector<qi::EventTrace>& target,
+  const qi::EventTrace& trace)
+{
+  target.push_back(trace);
+}
+
+TEST(TestObject, traceGeneric)
+{
+  qi::GenericObjectBuilder gob;
+  int mid = gob.advertiseMethod("sleep", &qi::os::msleep);
+  qi::ObjectPtr obj = gob.object();
+  std::vector<qi::EventTrace> traces;
+  qi::SignalBase::Link id = obj->connect("traceObject",
+    (boost::function<void(qi::EventTrace)>)
+    boost::bind(&pushTrace, boost::ref(traces), _1));
+  obj->call<void>("enableTrace", true);
+  obj->call<void>("sleep", 100);
+  for (unsigned i=0; i<20 && traces.size()<2; ++i) qi::os::msleep(50);
+  qi::os::msleep(50);
+  ASSERT_EQ(2u, traces.size());
+  EXPECT_EQ(qi::EventTrace::Event_Call, traces[0].kind);
+  EXPECT_EQ(qi::EventTrace::Event_Result, traces[1].kind);
+  EXPECT_EQ(mid, traces[0].slotId);
+  EXPECT_EQ(traces[0].id, traces[1].id);
+  qi::int64_t delta =
+    traces[1].timestamp.tv_sec*1000
+    + traces[1].timestamp.tv_usec/1000
+    - traces[0].timestamp.tv_sec*1000
+    - traces[0].timestamp.tv_usec/1000;
+  EXPECT_LT(std::abs(delta - 100LL), 20LL); // be leniant
+}
+
+TEST(TestObject, traceType)
+{
+  qi::ObjectTypeBuilder<Adder> builder;
+  int mid = builder.advertiseMethod("add", &Adder::add);
+  Adder a1(1);
+  qi::ObjectPtr oa1 = builder.object(&a1);
+
+  EXPECT_EQ(3, oa1->call<int>("add", 2));
+
+  std::vector<qi::EventTrace> traces;
+  qi::SignalBase::Link id = oa1->connect("traceObject",
+    (boost::function<void(qi::EventTrace)>)
+    boost::bind(&pushTrace, boost::ref(traces), _1));
+
+  oa1->call<void>("enableTrace", true);
+
+  EXPECT_EQ(3, oa1->call<int>("add", 2));
+  for (unsigned i=0; i<20 && traces.size()<2; ++i) qi::os::msleep(50);
+  qi::os::msleep(50);
+  ASSERT_EQ(2u, traces.size());
+  EXPECT_EQ(qi::EventTrace::Event_Call, traces[0].kind);
+  EXPECT_EQ(qi::EventTrace::Event_Result, traces[1].kind);
+  EXPECT_EQ(mid, traces[0].slotId);
+}
+
 static void bim(int i, qi::Promise<void> p, const std::string &name) {
   qiLogInfo() << "Bim le callback:" << name << " ,i:" << i;
   if (i == 42)

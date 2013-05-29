@@ -23,6 +23,8 @@ namespace qi {
 
   ManageablePrivate::ManageablePrivate()
   : objectMutex(new boost::timed_mutex)
+  , statsEnabled(false)
+  , traceEnabled(false)
   {
   }
 
@@ -31,7 +33,6 @@ namespace qi {
     _p = new ManageablePrivate();
     _p->eventLoop = 0;
     _p->dying = false;
-    _p->statsEnabled = false;
   }
 
   Manageable::Manageable(const Manageable& b)
@@ -117,6 +118,21 @@ namespace qi {
   {
     boost::mutex::scoped_lock(_p->registrationsMutex);
     _p->stats.clear();
+  }
+
+  bool Manageable::isTraceEnabled() const
+  {
+    return _p->traceEnabled;
+  }
+
+  void Manageable::enableTrace(bool state)
+  {
+    _p->traceEnabled = state;
+  }
+
+  int Manageable::_nextTraceId()
+  {
+    return ++_p->traceId;
   }
 
   const MetaObject &GenericObject::metaObject() {
@@ -438,6 +454,9 @@ namespace qi {
     builder.advertiseMethod("enableStats", &Manageable::enableStats,       MetaCallType_Auto, id++);
     builder.advertiseMethod("stats", &Manageable::stats,                   MetaCallType_Auto, id++);
     builder.advertiseMethod("clearStats", &Manageable::clearStats,         MetaCallType_Auto, id++);
+    builder.advertiseMethod("isTraceEnabled", &Manageable::isTraceEnabled, MetaCallType_Auto, id++);
+    builder.advertiseMethod("enableTrace", &Manageable::enableTrace,       MetaCallType_Auto, id++);
+    builder.advertiseSignal("traceObject", &Manageable::traceObject, id++);
     assert(id <= endId);
     const ObjectTypeData& typeData = builder.typeData();
     *manageable::methodMap = typeData.methodMap;

@@ -23,7 +23,7 @@ TEST(TestObject, Simple)
   qi::GenericObjectBuilder ob;
   ob.advertiseSignal<int>("fire");
   qi::ObjectPtr obj(ob.object());
-  EXPECT_EQ(1U, obj->metaObject().signalMap().size());
+  EXPECT_LE(1U, obj->metaObject().signalMap().size());
   qi::Link linkId = obj->connect("fire", &onFire);
   obj->post("fire", 42);
   EXPECT_TRUE(pPayload.future().wait(2000) != qi::FutureState_Running);
