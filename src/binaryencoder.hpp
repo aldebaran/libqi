@@ -86,10 +86,7 @@ namespace qi {
 
   private:
     BinaryEncoderPrivate *_p;
-
-    //No default CTOR
-    BinaryEncoder() {}
-
+    QI_DISALLOW_COPY_AND_ASSIGN(BinaryEncoder);
   };
 
   template<typename T>
