@@ -221,7 +221,7 @@ namespace qi { namespace py {
         static boost::python::object asignal = qi::py::makePySignal("(i)").attr("__class__");
         if (PyObject_IsInstance(m.ptr(), asignal.ptr())) {
           qiLogDebug() << "Adding signal:" << key;
-          int sig = gob.advertiseSignal(key, qi::py::getSignal(m));
+          gob.advertiseSignal(key, qi::py::getSignal(m));
           continue;
         }
 
@@ -229,7 +229,7 @@ namespace qi { namespace py {
         static boost::python::object aproperty = qi::py::makePyProperty("(i)").attr("__class__");
         if (PyObject_IsInstance(m.ptr(), aproperty.ptr())) {
           qiLogDebug() << "Adding property:" << key;
-          int sig = gob.advertiseProperty(key, qi::py::getProperty(m));
+          gob.advertiseProperty(key, qi::py::getProperty(m));
           continue;
         }
 
