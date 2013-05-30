@@ -46,6 +46,20 @@ qi_future_t* qi_session_connect(qi_session_t *session, const char *address)
   return qi_future_wrap(s->connect(address));
 }
 
+char * qi_session_url(qi_session_t* session)
+{
+  qi::Session *s = reinterpret_cast<qi::Session*>(session);
+  return qi::os::strdup(s->url().str().c_str());
+
+}
+
+int qi_session_set_identity(qi_session_t *session, char *key, char *crt)
+{
+  qi::Session *s = reinterpret_cast<qi::Session*>(session);
+  return (int)s->setIdentity(key, crt);
+}
+
+
 qi_future_t* qi_session_close(qi_session_t *session)
 {
   qi::Session *s = reinterpret_cast<qi::Session*>(session);
