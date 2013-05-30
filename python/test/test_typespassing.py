@@ -1,4 +1,12 @@
+#!/usr/bin/env python
+##
+## Author(s):
+##  - Vincent Barbaresi <vbarbaresi@aldebaran-robotics.com>
+##
+## Copyright (C) 2013 Aldebaran Robotics
+
 import time
+import pytest
 from qi import ServiceDirectory
 from qi import Session
 
@@ -81,8 +89,8 @@ def test_builtin_types():
     assert service.display(0.1337) == 0.1337
 
     # long
-    #assert type(service.display(2 ** 64)) == long
-    #assert service.display(2 ** 64) == 18446744073709551616L
+    assert type(service.display(2 ** 62)) == long
+    assert service.display(2 ** 62) == 4611686018427387904L
 
     # list
     assert service.display([]) == []
@@ -90,7 +98,7 @@ def test_builtin_types():
     assert service.display(["bla", "bli"]) == ["bla", "bli"]
 
     # set
-    # assert service.display(set([1, 2]))
+    assert service.display(set([1, 2]))
 
     # tuple
     assert service.display(()) == ()
@@ -101,20 +109,51 @@ def test_builtin_types():
     assert service.display({}) == {}
     assert service.display({1: "bla", 3: []}) == {1: "bla", 3: []}
 
-
     # bytearray
-    # assert service.display(bytearray("lol"))
+    assert service.display(bytearray("lol"))
 
     # buffer
-    # assert service.display(buffer("lol"))
+    assert service.display(buffer("lol"))
 
     # complex (why not)
-    # assert service.display(complex(1, 2))
+    assert service.display(complex(1, 2))
 
     time.sleep(0.01)
     s.close()
+
+
+def test_object_types():
+    local = "tcp://127.0.0.1:5555"
+    sd = ServiceDirectory()
+    sd.listen(local)
+
+    s = Session()
+    s.connect(local)
+
+    m = TestService()
+    s.register_service("TestService", m)
+    service = s.service("TestService")
+
+    # new style
+    class A(object):
+        pass
+    obj = A()
+
+    service.display(A)
+    service.display(obj)
+
+    # old style
+    class Aold:
+        pass
+    objold = Aold()
+
+    with pytest.raises(RuntimeError):
+        service.display(Aold)
+    service.display(objold)
+
 
 if __name__ == "__main__":
     test_throwing_callback()
     test_unicode_strings()
     test_builtin_types()
+    test_object_types()
