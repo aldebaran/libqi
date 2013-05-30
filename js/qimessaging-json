@@ -3,6 +3,7 @@
 import tornado
 import tornadio2
 import qi
+import _qi
 import sys
 import json
 import base64
@@ -14,6 +15,8 @@ class SetEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, bytearray):
             return base64.b64encode(obj)
+        if isinstance(obj, _qi.Object):
+            return obj.metaObject()
         return json.JSONEncoder.default(self, obj)
 
 class QiMessagingHandler(tornadio2.conn.SocketConnection):
@@ -60,7 +63,7 @@ class QiMessagingHandler(tornadio2.conn.SocketConnection):
             args = params["args"]
             if service == "ServiceDirectory" and method == "service":
                 obj = self.qim.service(str(args[0]))
-                self.reply(idm, "reply", (args[0], obj.metaObject()))
+                self.reply(idm, "reply", (args[0], obj))
             elif method == "registerEvent":
                 obj = self.qim.service(str(service))
                 evt = getattr(obj, args[0])
