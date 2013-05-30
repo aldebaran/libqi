@@ -96,11 +96,20 @@ namespace qi {
         for (urlIt = endpoints.begin(); urlIt != endpoints.end(); ++urlIt) {
           if ((tscmIt = tscm.find((*urlIt).str())) != tscm.end()) {
             TransportSocketConnection& tsc = tscmIt->second;
-            if (tsc.promise.future().hasError()) {
-              // When we have a socket with an error, we will try to connect to
-              // all endpoints in case the old one is completely down.
+            try
+            {
+              if (tsc.promise.future().isFinished() &&
+                  tsc.promise.future().hasError(0)) {
+                // When we have a socket with an error, we will try to connect to
+                // all endpoints in case the old one is completely down.
+                continue;
+              }
+            }
+            catch (...)
+            {
               continue;
             }
+
             qiLogVerbose() << "A connection is pending or already"
                                        << " established.";
             return tsc.promise.future();
