@@ -58,7 +58,7 @@ void onTrace(ObjectMap::value_type ov, const qi::EventTrace& trace)
         name = name + "(??" ")"; // trigraph protect mode on
     }
   }
-  maxLen = std::max(maxLen, name.size());
+  maxLen = std::max(maxLen, (unsigned int)name.size());
   std::string spacing(maxLen + 8 - name.size(), ' ');
   std::string spacing2(maxServiceLength + 8 - ov.first.size(), ' ');
   std::cout << ov.first << spacing2 << trace.id << '\t' << trace.kind << '\t' << name
@@ -149,7 +149,7 @@ int main(int argc, char** argv)
   app.atStop(&cleanup);
   foreach(ObjectMap::value_type& ov, objectMap)
   {
-    maxServiceLength = std::max(maxServiceLength, ov.first.size());
+    maxServiceLength = std::max(maxServiceLength, (unsigned int)ov.first.size());
     ov.second->connect("traceObject", (boost::function<void(qi::EventTrace)>)
       boost::bind(&onTrace, ov, _1));
     ov.second->call<void>("enableTrace", true);
