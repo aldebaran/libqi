@@ -55,6 +55,14 @@ class QiMessagingHandler(tornadio2.conn.SocketConnection):
                 self.reply(idm, "reply", fut.value())
         return rep
 
+    def do_service(self, idm, service):
+        def cb(fut):
+            if fut.has_error():
+                 self.reply(idm, "error", fut.error())
+            else:
+                 self.reply(idm, "reply", (service, fut.value()))
+        return cb
+
     @tornadio2.event
     def call(self, idm, params):
         try:
@@ -62,8 +70,9 @@ class QiMessagingHandler(tornadio2.conn.SocketConnection):
             method = params["method"]
             args = params["args"]
             if service == "ServiceDirectory" and method == "service":
-                obj = self.qim.service(str(args[0]))
-                self.reply(idm, "reply", (args[0], obj))
+                f = self.qim.service(str(args[0]), _async = True)
+                f.add_callback(self.do_service(idm, args[0]))
+                f.wait()
             elif method == "registerEvent":
                 obj = self.qim.service(str(service))
                 evt = getattr(obj, args[0])
