@@ -185,6 +185,8 @@ TEST(TestSignature, Equal) {
   EXPECT_EQ(qi::signatureFromType<float&>::value(), qi::signatureFromType<float>::value());
   EXPECT_EQ(qi::Signature("[s]"), qi::Signature("[s]"));
   EXPECT_EQ(qi::Signature("(ss)<Point,x,y>"), qi::Signature("(ss)")); // really?
+  EXPECT_NE(qi::Signature("(mm)"), "(mmm)");
+
 }
 
 TEST(TestSignature, FromString) {

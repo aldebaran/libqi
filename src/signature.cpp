@@ -151,7 +151,7 @@ bool Signature::operator==(const Signature &rhs) const {
       return false;
     ++it2;
   }
-  return true;
+  return (it2 == end());
 }
 
 }
