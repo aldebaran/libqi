@@ -30,12 +30,12 @@ namespace qi { namespace py {
 
       //return a future, or None (and throw in case of error)
       boost::python::object connect(const std::string &url, bool _async=false) {
+        GILScopedUnlock _unlock;
         if (_async)
           return boost::python::object(toPyFuture(_ses->connect(url)));
         else {
           qi::Future<void> fut = _ses->connect(url);
           {
-            GILScopedUnlock _unlock;
             fut.value(); //throw on error
           }
           return boost::python::object();
@@ -44,12 +44,12 @@ namespace qi { namespace py {
 
       //return a future, or None (and throw in case of error)
       boost::python::object close(bool _async=false) {
+        GILScopedUnlock _unlock;
         if (_async)
           return boost::python::object(toPyFuture(_ses->close()));
         else {
           qi::Future<void> fut = _ses->close();
           {
-            GILScopedUnlock _unlock;
             fut.value(); //throw on error
           }
           return boost::python::object();
@@ -57,13 +57,13 @@ namespace qi { namespace py {
       }
 
       boost::python::object service(const std::string &name, bool _async=false) {
+        GILScopedUnlock _unlock;
         if (_async)
           return boost::python::object(toPyFuture(_ses->service(name)));
         else {
           qi::Future<qi::ObjectPtr>  fut = _ses->service(name);
           qi::ObjectPtr obj;
           {
-            GILScopedUnlock _unlock;
             obj = fut.value(); //throw on error.
           }
           qi::GenericValueRef r(obj);
@@ -72,13 +72,13 @@ namespace qi { namespace py {
       }
 
       boost::python::object services(bool _async=false) {
+        GILScopedUnlock _unlock;
         if (_async)
           return boost::python::object(toPyFuture(_ses->services()));
         else {
           qi::Future< std::vector<ServiceInfo> >  fut = _ses->services();
           std::vector<ServiceInfo> si;
           {
-            GILScopedUnlock _unlock;
             si = fut.value(); //throw on error.
           }
           qi::GenericValueRef r(si);
@@ -87,11 +87,11 @@ namespace qi { namespace py {
       }
 
       boost::python::object registerService(const std::string &name, boost::python::object obj, bool _async=false) {
+        GILScopedUnlock _unlock;
         qi::Future<unsigned int> fut = _ses->registerService(name, qi::GenericValueRef(obj).toObject());
         if (_async)
           return boost::python::object(toPyFuture(fut));
         {
-          GILScopedUnlock _unlock;
           fut.value();
         }
         return boost::python::object(fut.value()); //throw on error

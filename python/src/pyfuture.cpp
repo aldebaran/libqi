@@ -77,6 +77,7 @@ namespace qi {
       //we store a ref on ourself, because our future can get out of scope.
       //so the shared future state will keep a ref on us. When the promise will
       //be destroyed this will destroy the ref on us.
+      GILScopedUnlock _unlock;
       connect(boost::bind<void>(&pyFutureCb, callable, obj));
     }
 

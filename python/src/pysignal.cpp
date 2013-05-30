@@ -41,11 +41,13 @@ namespace qi { namespace py {
       }
 
       qi::uint64_t connect(boost::python::object callable) {
+        GILScopedUnlock _unlock;
         //no need to store a ptr on ourself. (this exist if the callback is triggered)
         return qi::SignalBase::connect(qi::makeDynamicGenericFunction(boost::bind(pysignalCb, _1, callable)));
       }
 
       bool disconnect(qi::uint64_t id) {
+        GILScopedUnlock _unlock;
         return qi::SignalBase::disconnect(id);
       }
 
@@ -65,11 +67,13 @@ namespace qi { namespace py {
       }
 
       qi::uint64_t connect(boost::python::object callable) {
+        GILScopedUnlock _unlock;
         //no need to store a ptr on ourself. (this exist if the callback is triggered)
         return _obj->connect(_sigid, qi::makeDynamicGenericFunction(boost::bind(pysignalCb, _1, callable)));
       }
 
       bool disconnect(qi::uint64_t id) {
+        GILScopedUnlock _unlock;
         return _obj->disconnect(id).hasValue();
       }
 
@@ -90,6 +94,7 @@ namespace qi { namespace py {
     }
 
     boost::python::object makePySignal(const std::string &signature) {
+      GILScopedUnlock _unlock;
       return boost::python::object(PySignal(signature));
     }
 
