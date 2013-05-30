@@ -5,6 +5,7 @@
  */
 
 #include <iostream>
+#include <sstream>
 #include <numeric>
 
 #include <qi/application.hpp>
@@ -13,14 +14,54 @@
 #include <qi/qi.hpp>
 #include <qi/log.hpp>
 
+#include <boost/algorithm/string/trim.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/regex.hpp>
 #include <locale>
+#include <set>
 #include "sdklayout.hpp"
 #include "filesystem.hpp"
 #include "utils.hpp"
 
-namespace qi {
+namespace {
 
+// returns a regex which corresponds to the provided glob pattern,
+static std::string globToRegex(std::string glob)
+{
+  boost::trim(glob);
+  const char expression[] = "(\\*)|(\\?)|(\\\\)|(\\.)";
+  const char format[] = "(?1[\\\\w\\\\.-]*)(?2[\\\\w]{1})(?3\\\\\\\\)(?4\\\\.)";
+  std::stringstream final;
+  std::ostream_iterator<char, char> oi(final);
+  boost::regex re;
+  re.assign(expression);
+  boost::regex_replace(oi, glob.begin(), glob.end(),
+                       re, format, boost::match_default | boost::format_all);
+  return final.str();
+}
+
+// return the path "relative' such that full == base / relative
+// This function assumes that full is a child path of base.
+static std::string relative(const boost::filesystem::path &base,
+                            const boost::filesystem::path &full)
+{
+  boost::filesystem::path relative, parent(full), cleanBase(base);
+  if(cleanBase.filename() == ".")
+  {
+    // base ends with "/", let remove it.
+    cleanBase.remove_filename();
+  }
+  while (parent != cleanBase)
+  {
+    relative = parent.filename() / relative;
+    parent.remove_filename();
+  }
+  return relative.string(qi::unicodeFacet());
+}
+
+}
+
+namespace qi {
 
   class PrivateSDKLayout
   {
@@ -370,6 +411,55 @@ namespace qi {
       qiLogDebug("qi::path") << e.what();
     }
     return std::string();
+  }
+
+  std::vector<std::string> SDKLayout::listData(const std::string &applicationName,
+                                               const std::string &pattern) const
+  {
+
+    std::set<std::string> matchedPaths;
+    std::vector<std::string> fullPaths;
+    std::vector<std::string> paths = dataPaths(applicationName);
+    try
+    {
+      for (std::vector<std::string>::const_iterator it = paths.begin();
+           it != paths.end();
+           ++it)
+      {
+        boost::filesystem::path dataPath(*it, qi::unicodeFacet());
+        // Note that the call to fsconcat is crucial: it will convert the
+        // pattern to a boost::filesystem::path and call make_preferred() which
+        // ensures the pattern is formatted in the same way than the input.
+        // Otherwise on Windows we might fail when trying to match
+        // foo\data\model.txt with foo\data/*.txt (instead of foo\data\*.txt)
+        boost::regex pathRegex(globToRegex(fsconcat(*it, pattern)));
+        for (boost::filesystem::recursive_directory_iterator itD(dataPath);
+             itD != boost::filesystem::recursive_directory_iterator(); // end
+             ++itD)
+        {
+          if (!boost::filesystem::is_directory(itD->path()))
+          {
+            const std::string fullPath = itD->path().string(qi::unicodeFacet());
+            if (boost::regex_match(fullPath, pathRegex))
+            {
+              std::string relativePath = relative(dataPath, itD->path());
+              if (matchedPaths.find(relativePath) == matchedPaths.end())
+              {
+                // we only add the match if it was not found in a previous
+                // dataPath.
+                matchedPaths.insert(relativePath);
+                fullPaths.push_back(fullPath);
+              }
+            }
+          }
+        }
+      }
+    }
+    catch (const boost::filesystem::filesystem_error &e)
+    {
+      qiLogDebug("qi::path") << e.what();
+    }
+    return fullPaths;
   }
 
   std::vector<std::string> SDKLayout::confPaths(const std::string &applicationName) const

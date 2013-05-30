@@ -19,6 +19,9 @@
 #include <qi/os.hpp>
 #include <qi/path.hpp>
 #include "../src/utils.hpp"
+#include <iostream>
+#include <sstream>
+#include <boost/scoped_ptr.hpp>
 
 namespace bfs = boost::filesystem;
 
@@ -420,35 +423,218 @@ TEST(qiPath, readingWritingFindData)
 }
 
 
-TEST(qiPath, dataInSubfolder)
+void writeData(std::string path)
 {
-  // Ugly hack because Gtest mess up with argc/argv ...
-  //std::string binary = std::string(::testing::internal::GetArgvs()[0]);
-  //const char* args = { (char *) binary.c_str() };
-  qi::SDKLayout* sdkl = new qi::SDKLayout();
-
-  bfs::path prefix(sdkl->sdkPrefix(), qi::unicodeFacet());
-  bfs::path fooShare(prefix / "share" / "foo");
-  boost::filesystem::create_directories(fooShare / "bar");
-  std::string bazData = (fooShare / "bar" / "baz.dat").string(qi::unicodeFacet());
+  std::cout << "creating: " << path << std::endl;
   std::ofstream ofs;
-  ofs.open(bazData.c_str(), std::fstream::out | std::fstream::trunc);
-  ofs << "This is baz data";
+  ofs.open(path.c_str(), std::fstream::out | std::fstream::trunc);
+  ofs << path;
   ofs.close();
-
-  std::string actual = sdkl->findData("foo", "bar/baz.dat");
-  std::string expect = bazData;
-  boost::to_lower(expect);
-  boost::to_lower(actual);
-
-  ASSERT_EQ(expect, actual);
-
-  std::cout << "removing: " << bazData << std::endl;
-  remove(bazData.c_str());
-
-  delete sdkl;
 }
 
+// helper function to populate application data directories for testing
+// purposes.
+void createData(std::string root, std::string listing)
+{
+  std::istringstream stream(listing);
+  std::string line;
+  while(std::getline(stream, line))
+  {
+    std::string file_string(fsconcat(root, line));
+    bfs::path file_path(file_string, qi::unicodeFacet());
+    bfs::create_directories(file_path.parent_path());
+    writeData(file_string);
+  }
+}
+
+void createData(bfs::path root, std::string listing)
+{
+  return createData(root.string(qi::unicodeFacet()), listing);
+}
+
+// a fixture which creates files and directories for the findData and listData
+// tests. The tests should not add nor remove files or directories.
+class qiPathData : public ::testing::Test
+{
+protected:
+  static void SetUpTestCase();
+  static void TearDownTestCase();
+  static bfs::path sdkShareFoo;
+  static bfs::path optSdkPrefix;
+  static bfs::path optSdkShareFoo;
+  static bfs::path userShareFooBazDat;
+  static bfs::path userShareFooFooDat;
+  static bfs::path userShareFooUserDat;
+};
+
+bfs::path qiPathData::sdkShareFoo;
+bfs::path qiPathData::optSdkPrefix;
+bfs::path qiPathData::optSdkShareFoo;
+bfs::path qiPathData::userShareFooBazDat;
+bfs::path qiPathData::userShareFooFooDat;
+bfs::path qiPathData::userShareFooUserDat;
+
+void qiPathData::SetUpTestCase()
+{
+  boost::scoped_ptr<qi::SDKLayout> sdkl(new qi::SDKLayout());
+
+  // the sdk dir of the program that is currently running
+  bfs::path prefix(sdkl->sdkPrefix(), qi::unicodeFacet());
+  qiPathData::sdkShareFoo = prefix / "share" / "foo";
+  bfs::remove_all(sdkShareFoo);
+  std::string listing = "bar.dat\n"
+                        "bar.dat.tmp\n"
+                        "bar/baz.dat\n"
+                        "bar/baz_dat\n"
+                        "baz.dat\n"
+                        "baz/baz.dat\n"
+                        "nasty_evil-ch.ars.dat\n"
+                        "dir.dat/check_directories_are_skipped";
+  createData(sdkShareFoo, listing);
+
+  // an optional complementary sdk dir
+  optSdkPrefix = bfs::path(qi::os::tmpdir("optSdk"), qi::unicodeFacet());
+  optSdkShareFoo = optSdkPrefix / "share" / "foo";
+  listing = "bar.dat\n"
+            "foo.dat\n"
+            "bar/baz.dat\n"
+            "bam/baz.dat\n"
+            "opt.dat";
+  createData(optSdkShareFoo, listing);
+
+  // the user dir
+  userShareFooBazDat = sdkl->userWritableDataPath("foo", "baz.dat");
+  writeData(userShareFooBazDat.string(qi::unicodeFacet()));
+  userShareFooFooDat = sdkl->userWritableDataPath("foo", "foo.dat");
+  writeData(userShareFooFooDat.string(qi::unicodeFacet()));
+  userShareFooUserDat = sdkl->userWritableDataPath("foo", "user.dat");
+  writeData(userShareFooUserDat.string(qi::unicodeFacet()));
+}
+
+
+void qiPathData::TearDownTestCase()
+{
+  std::cout << "removing: " << sdkShareFoo << std::endl;
+  bfs::remove_all(sdkShareFoo);
+
+  std::cout << "removing: " << optSdkPrefix << std::endl;
+  bfs::remove_all(optSdkPrefix);
+
+  std::cout << "removing: " << userShareFooBazDat << std::endl;
+  bfs::remove(userShareFooBazDat);
+
+  std::cout << "removing: " << userShareFooFooDat << std::endl;
+  bfs::remove(userShareFooFooDat);
+
+  std::cout << "removing: " << userShareFooUserDat << std::endl;
+  bfs::remove(userShareFooUserDat);
+}
+
+
+// function to help writing compact tests
+bool isInVector(boost::filesystem::path path,
+                const std::vector<std::string> &vector)
+{
+  std::vector<std::string>::const_iterator it =
+      std::find(vector.begin(), vector.end(),
+                path.make_preferred().string(qi::unicodeFacet()));
+  return it != vector.end();
+}
+
+TEST_F(qiPathData, findDataInSubfolder)
+{
+  boost::scoped_ptr<qi::SDKLayout> sdkl(new qi::SDKLayout());
+  std::string actual = sdkl->findData("foo", "bar/baz.dat");
+  std::string expected = (sdkShareFoo / "bar/baz.dat").make_preferred().string(qi::unicodeFacet());
+  ASSERT_EQ(expected, actual);
+}
+
+TEST_F(qiPathData, listDataWithOptSdk)
+{
+  qi::SDKLayout* sdkl = new qi::SDKLayout();
+  sdkl->addOptionalSdkPrefix(optSdkPrefix.string(qi::unicodeFacet()).c_str());
+
+  std::vector<std::string> actual = sdkl->listData("foo", "*.dat");
+  EXPECT_EQ(6, actual.size());
+
+  // user.dat is only available in user.
+  EXPECT_TRUE(isInVector(userShareFooUserDat, actual));
+
+  // foo.dat is available in optSdk and user.
+  EXPECT_TRUE(isInVector(userShareFooFooDat, actual));
+
+  // baz.dat is available in sdk and user.
+  EXPECT_TRUE(isInVector(userShareFooBazDat, actual));
+
+  // bar.dat is available in optSdk and sdk
+  EXPECT_TRUE(isInVector(sdkShareFoo / "bar.dat", actual));
+
+  // nasty-evil_ch.ars.dat is only available in sdk
+  EXPECT_TRUE(isInVector(sdkShareFoo / "nasty_evil-ch.ars.dat", actual));
+
+  // opt.dat is only available in sdk
+  EXPECT_TRUE(isInVector(optSdkShareFoo / "opt.dat", actual));
+}
+
+TEST_F(qiPathData, listDataInSubFolder)
+{
+  boost::scoped_ptr<qi::SDKLayout> sdkl(new qi::SDKLayout());
+  std::string expected = (sdkShareFoo / "bar/baz.dat").make_preferred().string(qi::unicodeFacet());
+  std::vector<std::string> actual;
+
+  actual = sdkl->listData("foo", "bar/baz.dat");
+  ASSERT_EQ(1, actual.size());
+  EXPECT_EQ(actual[0], expected);
+
+#ifdef _WIN32
+  actual = sdkl->listData("foo", "bar\\baz.dat");
+  ASSERT_EQ(1, actual.size());
+  EXPECT_EQ(actual[0], expected);
+#endif
+
+  actual = sdkl->listData("foo", "*bar/baz.dat");
+  ASSERT_EQ(1, actual.size());
+  EXPECT_EQ(actual[0], expected);
+
+  actual = sdkl->listData("foo", "/bar/baz.dat");
+  ASSERT_EQ(1, actual.size());
+  EXPECT_EQ(actual[0], expected);
+
+  // Application names ending with "/" are not really supported.
+  // However, that would work with findData, so let support it with listData
+  // too.
+  actual = sdkl->listData("foo/", "bar/baz.dat");
+  ASSERT_EQ(1, actual.size());
+  EXPECT_EQ(actual[0], expected);
+
+  // Well, in the following case, findData would work but listData does not
+  // because the string "foo//bar/baz.dat" does not match "foo/bar/baz.dat".
+  // A solution would be to normalize paths in fsconcat, but that would have
+  // consequences on all qi::path.
+  //actual = sdkl->listData("foo/", "/bar/baz.dat");
+  //ASSERT_EQ(1, actual.size());
+  //EXPECT_EQ(actual[0], expected);
+
+  actual = sdkl->listData("foo", "/*bar/baz.dat");
+  ASSERT_EQ(1, actual.size());
+  EXPECT_EQ(actual[0], expected);
+
+  actual = sdkl->listData("foo", "*/bar/baz.dat");
+  EXPECT_EQ(0, actual.size());
+}
+
+TEST_F(qiPathData, listDataInSubFolderWithOptSdk)
+{
+  boost::scoped_ptr<qi::SDKLayout> sdkl(new qi::SDKLayout());
+  sdkl->addOptionalSdkPrefix(optSdkPrefix.string(qi::unicodeFacet()).c_str());
+
+  std::vector<std::string> actual = sdkl->listData("foo", "ba?/*.dat");
+  EXPECT_EQ(3, actual.size());
+
+  EXPECT_TRUE(isInVector(sdkShareFoo / "bar/baz.dat", actual));
+  EXPECT_TRUE(isInVector(sdkShareFoo / "baz/baz.dat", actual));
+  EXPECT_TRUE(isInVector(optSdkShareFoo / "bam/baz.dat", actual));
+}
 
 int main(int argc, char* argv[])
 {

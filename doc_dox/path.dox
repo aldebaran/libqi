@@ -7,7 +7,7 @@
   Provide access to various path including:
   - executables, qi::path::findBin
   - libraries, qi::pathfindLib
-  - application data qi::path::findData
+  - application data qi::path::findData and qi::path::listData
   - application configuration qi::path::findConf
   - writable data and configuration paths qi::path::userWritableConfPath, qi::path::userWritableDataPath
 
@@ -54,7 +54,8 @@ a directory looking like this:
 
 Here we assume you have a \c foo executable which:
   - depends on a \c bar dynamic library
-  - need to read data from a file named \c foo.data
+  - need to read data from a file named \c foo.data and XML files in a
+    \c models directory
   - need to read configuration from a file named \c foo.cfg
 
 
@@ -62,15 +63,17 @@ Here we assume you have a \c foo executable which:
 src
 |__ foo
     |__ data
-        |___ foo.data
+    |   |__ foo.data
+    |   |__ models
+    |       |__ nao.xml
+    |       |__ romeo.xml
     |__ etc
         |__ foo.cfg
 
 build
-|___
-    sdk
+|__ sdk
     |__ lib
-         |___ libbar.so
+    |    |__ libbar.so
     |__ bin
          |__ foo
 
@@ -82,16 +85,19 @@ When everything is installed, you have something like:
 \verbatim
 
 prefix
-  |__ lib
-      |__ libbar.so
-  |__ bin
-      |__ foo
-  |__ share
-      |__ foo
-          |__ foo.data
-  |__ etc
-      |__ foo
-          |__ foo.cfg
+|__ lib
+|   |__ libbar.so
+|__ bin
+|   |__ foo
+|__ share
+|   |__ foo
+|       |__ foo.data
+|       |__ models
+|           |__ nao.xml
+|           |__ romeo.xml
+|__ etc
+    |__ foo
+        |__ foo.cfg
 
 
 \endverbatim
@@ -100,15 +106,16 @@ prefix
 
 Here is a list of common requirements:
 
- - Find the files \c foo/foo.cfg, \c foo/foo.data in a clean, simple way,
- while making sure the solution works whereas the project is built or installed
+ - Find the files \c foo/foo.cfg, \c foo/foo.data and \c foo/models/*.xml
+   in a clean, simple way,  while making sure the solution works whereas the
+   project is run from the build directory or installed
 
  - The executable \c foo may need to write or update its configuration
-  files or data but we need to make sure nothing will be written inside
-  the installed directory
+   files or data but we need to make sure nothing will be written inside
+   the installed directory
 
  - Since there will be several \c foo.cfg files, we need to be able to process
-  then in a correct order.
+   then in a correct order.
 
 
 \subsection OverviewSolution The solution

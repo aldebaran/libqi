@@ -76,18 +76,38 @@
   * an empty string otherwise.
   *
   * \verbatim
-  * The file is search in a list of possible directories,
-  * the first match is returned.
-  * The list of paths is constructed like this:
-  *
-  * - first, a standard path in the home directory (like
-  *   ~/.local/share/<applicationName>/<filename>)
-  * - then <sdk_prefix>/share/<applicationName>/<filename> for each known SDK
-  *   prefix.
+  * The file is searched in a list of possible directories, provided by the
+  * :cpp:func:`qi::path::dataPaths(const std::string&)`.
+  * The first match is returned.
   * \endverbatim
   */
 
 /**
+* \fn qi::path::listData(const std::string& applicationName, const std::string& pattern="*")
+  * \param applicationName Name of the application.
+  * \param pattern wilcard pattern of the files to look for.
+  * You can specify subdirectories using "/" as directory separator.
+  * \return An std::vector of the complete, native paths of the files that matched.
+  *
+  * \verbatim
+  * Matches are searched in a list of possible directories, provided by the
+  * :cpp:func:`qi::path::dataPaths(const std::string&)`.
+  * When several matches collide, the first one is
+  * returned.
+  *
+  * For instance if you have the following files on a unix system
+  *   ~/.local/share/foo/models/nao.xml
+  *   ~/.local/share/foo/models/romeo_with_laser_head.xml
+  *   /usr/share/foo/models/nao.xml
+  *   /usr/share/foo/models/romeo.xml
+  * then listData("foo", "models/*.xml") will return
+  *   ~/.local/share/foo/models/nao.xml
+  *   ~/.local/share/foo/models/romeo_with_laser_head.xml
+  *   /usr/share/foo/models/romeo.xml
+  * \endverbatim
+  */
+/**
+
   * \fn qi::path::confPaths(const std::string& applicationName)
   * \param applicationName Name of the application.
   * \return List of configuration directories.
@@ -106,7 +126,15 @@
   * \return A list of directories.
   *
   * \verbatim
-  * This is used by the :cpp:func:`qi::path::findData(const std::string&, const std::string&)`.
+  * This is used by the :cpp:func:`qi::path::findData(const std::string&, const std::string&)`
+  * and the :cpp:func:`qi::path::listData(const std::string&, const std::string&)`.
+  *
+  * The list of paths is constructed like this:
+  *
+  * - first, a standard path in the home directory (like
+  *   ~/.local/share/<applicationName>/<filename>)
+  * - then <sdk_prefix>/share/<applicationName>/<filename> for each known SDK
+  *   prefix.
   *
   * .. warning:: You should not assume those directories exist,
   *    nor that they are writeable.

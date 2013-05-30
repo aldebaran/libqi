@@ -90,6 +90,10 @@ namespace qi
                          const std::string &filename) const;
 
 
+    /** @copydoc qi::path::listData */
+    std::vector<std::string> listData(const std::string &applicationName,
+                                      const std::string &pattern="*") const;
+
 
     /** @copydoc qi::path::getConfigurationPaths */
     std::vector<std::string> confPaths(const std::string &applicationName="") const;

@@ -94,6 +94,12 @@ namespace qi
       return getInstance()->findData(applicationName, filename);
     }
 
+    std::vector<std::string> listData(const std::string &applicationName,
+                                      const std::string &pattern)
+    {
+      return getInstance()->listData(applicationName, pattern);
+    }
+
     std::vector<std::string> confPaths(const std::string &applicationName)
     {
       return getInstance()->confPaths(applicationName);
