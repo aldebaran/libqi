@@ -1,3 +1,9 @@
+#!/usr/bin/env python
+##
+## Author(s):
+##  - Cedric GESTES <gestes@aldebaran-robotics.com>
+##  - Vincent Barbaresi <vbarbaresi@aldebaran-robotics.com>
+##
 ## Copyright (C) 2013 Aldebaran Robotics
 
 import pytest
@@ -117,6 +123,8 @@ def test_future_error():
     f = p.future()
     assert f.has_error() is True
     assert f.error() == "woops"
+    with pytest.raises(RuntimeError):
+        f.value()
 
 
 def test_future_cancel_exception():
@@ -138,13 +146,15 @@ def test_future_callback():
         global called
         assert f.value() == 1337
         assert called is False
-        called = not called
+        called = "aight"
 
     p = Promise()
     f = p.future()
     f.add_callback(callback)
     p.set_value(1337)
-    assert called is True
+    assert called == "aight"
+    assert not f.is_canceled()
+    assert f.is_finished()
 
 
 def test_promise_re_set():
