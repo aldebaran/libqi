@@ -67,7 +67,7 @@ namespace qi {
           return false;
         break;
       default:
-        qiLogError() << "`" << s[current] << "' : Type unknown in `" << s << "'";
+        qiLogError() << "Element '" << s[current] << "' is unknown in signature '" << s << "'";
         return false;
         break;
       }
