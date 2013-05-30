@@ -2,29 +2,50 @@
 */
 
 #include <boost/program_options.hpp>
+#include <boost/algorithm/string.hpp>
+#include <boost/foreach.hpp>
 
 #include <qi/log.hpp>
 #include <qi/application.hpp>
 #include <qimessaging/session.hpp>
 
-qi::ObjectPtr o;
-qi::MetaObject mo;
+#define foreach BOOST_FOREACH
+
+typedef std::map<std::string, qi::ObjectPtr> ObjectMap;
+ObjectMap objectMap;
+
 bool numeric = false;
 bool printMo = false;
+bool disableTrace = false;
+bool cleaned = false;
 std::string sdUrl;
-std::string objectName;
+std::vector<std::string> objectNames;
+unsigned int maxServiceLength = 0;
 qiLogCategory("qitrace");
+
 void cleanup()
 {
-  o->call<void>("enableTrace", false);
+  qiLogVerbose() << "Disabling trace mode on all objects...";
+  foreach(ObjectMap::value_type& ov, objectMap)
+  {
+    try
+    {
+      ov.second->call<void>("enableTrace", false);
+    }
+    catch(...)
+    {}
+  }
+  qiLogVerbose() << "Done";
+  cleaned = true;
 }
 
-void onTrace(const qi::EventTrace& trace)
+void onTrace(ObjectMap::value_type ov, const qi::EventTrace& trace)
 {
   static unsigned int maxLen = 0;
   std::string name = boost::lexical_cast<std::string>(trace.slotId);
   if (!numeric)
   {
+    qi::MetaObject mo = ov.second->metaObject();
     qi::MetaMethod* m = mo.method(trace.slotId);
     if (m)
       name = m->name();
@@ -39,7 +60,8 @@ void onTrace(const qi::EventTrace& trace)
   }
   maxLen = std::max(maxLen, name.size());
   std::string spacing(maxLen + 8 - name.size(), ' ');
-  std::cout << trace.id << '\t' << trace.kind << '\t' << name
+  std::string spacing2(maxServiceLength + 8 - ov.first.size(), ' ');
+  std::cout << ov.first << spacing2 << trace.id << '\t' << trace.kind << '\t' << name
    << spacing << trace.timestamp.tv_sec << '.' << trace.timestamp.tv_usec
    << "\t" << qi::encodeJSON(trace.arguments) << std::endl;
 }
@@ -48,42 +70,92 @@ _QI_COMMAND_LINE_OPTIONS(
   "Qitrace options",
   ("numeric,n", bool_switch(&numeric), "Do not resolve slot Ids to names")
   ("service-directory,s", value<std::string>(&sdUrl), "url to connect to")
-  ("object,o", value<std::string>(&objectName), "Object to monitor")
+  ("object,o", value<std::vector<std::string> >(&objectNames), "Object(s) to monitor, specify multiple times, comma-separate, or use '*'")
   ("print,p", bool_switch(&printMo), "Print out the Metaobject and exit")
+  ("disable,d", bool_switch(&disableTrace), "Disable trace on objects and exit")
   );
 
 int main(int argc, char** argv)
 {
   qi::Application app(argc, argv);
-  if (objectName.empty())
-  {
-    std::cerr << "Object must be specified with -o" << std::endl;
-    return 1;
-  }
   qi::Session s;
   if (sdUrl.empty())
     sdUrl = "localhost";
   qi::Url url(sdUrl, "tcp", 9559);
   qiLogVerbose() << "Connecting to sd";
-  s.connect(sdUrl);
-  qiLogVerbose() << "Fetching service";
-  qi::ObjectPtr o = s.service(objectName);
-  if (!o)
+  s.connect(url);
+  qiLogVerbose() << "Resolving services";
+  // resolve target service names
+  std::vector<std::string> services;
+  for (unsigned i=0; i<objectNames.size(); ++i)
   {
-    std::cerr << "Service " << objectName << " not found" << std::endl;
-    return 1;
+    if (objectNames[i] == "*")
+    {
+      std::vector<qi::ServiceInfo> si = s.services();
+      for (unsigned i=0; i<si.size(); ++i)
+        services.push_back(si[i].name());
+    }
+    else
+    {
+      std::vector<std::string> split;
+      boost::split(split, objectNames[i], boost::algorithm::is_any_of(","));
+      services.insert(services.end(), split.begin(), split.end());
+    }
   }
-  mo = o->metaObject();
-  if (printMo)
+  std::vector<std::string> servicesOk;
+  qiLogVerbose() << "Fetching services: " << boost::join(services, ",");
+  // access services
+  for (unsigned i=0; i<services.size(); ++i)
   {
-    qi::details::printMetaObject(std::cout, mo);
+    qi::ObjectPtr o;
+    try
+    {
+      o = s.service(services[i]);
+    }
+    catch (const std::exception& e)
+    {
+      qiLogError() << "Error fetching " << services[i] << " : " << e.what();
+      services[i] = "";
+      continue;
+    }
+    if (!o)
+    {
+      qiLogError() << "Error fetching " << services[i];
+      services[i] = "";
+      continue;
+    }
+    objectMap[services[i]] = o;
+    servicesOk.push_back(services[i]);
+    if (printMo)
+    {
+      std::cout << "\n\n" << services[i] << "\n";
+      qi::details::printMetaObject(std::cout, o->metaObject());
+    }
+    if (disableTrace)
+    {
+      try
+      {
+        o->call<void>("enableTrace", false);
+      }
+      catch(...)
+      {}
+    }
+  }
+
+  if (printMo || disableTrace || objectMap.empty())
     return 0;
-  }
-  qiLogVerbose() << "Connecting to trace signal";
-  o->connect("traceObject", &onTrace);
-  qiLogVerbose() << "Enabling trace";
-  o->call<void>("enableTrace", true);
+
+  qiLogVerbose() << "Monitoring services: " << boost::join(servicesOk, ",");
   app.atStop(&cleanup);
+  foreach(ObjectMap::value_type& ov, objectMap)
+  {
+    maxServiceLength = std::max(maxServiceLength, ov.first.size());
+    ov.second->connect("traceObject", (boost::function<void(qi::EventTrace)>)
+      boost::bind(&onTrace, ov, _1));
+    ov.second->call<void>("enableTrace", true);
+  }
   app.run();
+  while (!cleaned)
+    qi::os::msleep(20);
   return 0;
 }
