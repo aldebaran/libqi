@@ -182,7 +182,8 @@ namespace qi { namespace py {
       }
 
       qi::GenericObjectBuilder gob;
-      boost::python::object attrs(boost::python::handle<>(PyObject_Dir(obj.ptr())));
+      GILScopedLock _lock;
+      boost::python::object attrs(boost::python::borrowed(PyObject_Dir(obj.ptr())));
 
       for (unsigned i = 0; i < boost::python::len(attrs); ++i) {
         std::string key = boost::python::extract<std::string>(attrs[i]);

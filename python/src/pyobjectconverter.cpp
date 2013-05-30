@@ -30,7 +30,7 @@ void                PyObject_from_GenericValue(qi::GenericValuePtr val, boost::p
 qi::GenericValuePtr GenericValue_from_PyObject(PyObject* val);
 
 boost::python::object toO(PyObject*obj) {
-  return boost::python::object(boost::python::handle<>(obj));
+  return boost::python::object(boost::python::borrowed(obj));
 }
 
 
@@ -305,11 +305,13 @@ class PyObjectType: public qi::TypeDynamic
 public:
   virtual qi::GenericValuePtr get(void* storage)
   {
+    qi::py::GILScopedLock _lock;
     boost::python::object *p = (boost::python::object*) ptrFromStorage(&storage);
     return GenericValue_from_PyObject(p->ptr());
   }
   virtual void set(void** storage, qi::GenericValuePtr src)
   {
+    qi::py::GILScopedLock _lock;
     boost::python::object *p = (boost::python::object*) ptrFromStorage(storage);
     PyObject_from_GenericValue(src, p);
   }
