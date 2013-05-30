@@ -127,7 +127,7 @@ qi_value_t*          qi_object_get_metaobject(qi_object_t *object)
   return ret;
 }
 
-int                 qi_object_event_emit(qi_object_t* object, const char *signature, qi_value_t* params) {
+int                 qi_object_post(qi_object_t* object, const char *signature, qi_value_t* params) {
   qi::AnyObject &obj = qi_object_cpp(object);
   qi::AnyValue  &val = qi_value_cpp(params);
   if (qi_value_get_kind(params) != QI_VALUE_KIND_TUPLE)
@@ -136,21 +136,19 @@ int                 qi_object_event_emit(qi_object_t* object, const char *signat
   return 0;
 }
 
-
-
-qi_future_t*        qi_object_event_connect(qi_object_t* object, const char *signature, qi_object_signal_callback_t f, void* user_data) {
+qi_future_t*        qi_object_signal_connect(qi_object_t* object, const char *signature, qi_object_signal_callback_t f, void* user_data) {
   qi::AnyObject &obj = qi_object_cpp(object);
   std::vector<std::string> vs = qi::signatureSplit(std::string(signature));
   qi::DynamicFunction fn = boost::bind<qi::AnyReference>(&c_signal_callback, _1, vs[2], f, user_data);
   return qi_future_wrap(obj.connect(signature, qi::AnyFunction::fromDynamicFunction(fn)));
 }
 
-qi_future_t*        qi_object_event_disconnect(qi_object_t* object, unsigned long long id) {
+qi_future_t*        qi_object_signal_disconnect(qi_object_t* object, unsigned long long id) {
   qi::AnyObject &obj = qi_object_cpp(object);
   return qi_future_wrap(obj.disconnect(id));
 }
 
-unsigned int        qi_object_builder_register_method(qi_object_builder_t *object_builder, const char *complete_signature, qi_object_method_t func, void *data)
+unsigned int          qi_object_builder_advertise_method(qi_object_builder_t *object_builder, const char *complete_signature, qi_object_method_t func, void *data)
 {
   qi::DynamicObjectBuilder  *ob = reinterpret_cast<qi::DynamicObjectBuilder *>(object_builder);
   std::string signature(complete_signature);
@@ -168,8 +166,7 @@ unsigned int        qi_object_builder_register_method(qi_object_builder_t *objec
   return 0;
 }
 
-
-unsigned int          qi_object_builder_register_event(qi_object_builder_t *object_builder, const char *name, const char *signature)
+unsigned int          qi_object_builder_advertise_signal(qi_object_builder_t *object_builder, const char *name, const char *signature)
 {
   qi::DynamicObjectBuilder *ob = reinterpret_cast<qi::DynamicObjectBuilder *>(object_builder);
   try
@@ -183,7 +180,7 @@ unsigned int          qi_object_builder_register_event(qi_object_builder_t *obje
   return 0;
 }
 
-unsigned int          qi_object_builder_register_property(qi_object_builder_t *object_builder, const char *name, const char *signature)
+unsigned int          qi_object_builder_advertise_property(qi_object_builder_t *object_builder, const char *name, const char *signature)
 {
   qi::DynamicObjectBuilder *ob = reinterpret_cast<qi::DynamicObjectBuilder *>(object_builder);
   try

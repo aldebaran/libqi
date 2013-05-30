@@ -17,7 +17,7 @@ TEST(TestProperties, simple)
   qi_future_t *fut_set, *fut_get;
 
   qi_object_builder_t* ob = qi_object_builder_create();
-  qi_object_builder_register_property(ob, "myproperty", "s");
+  qi_object_builder_advertise_property(ob, "myproperty", "s");
   qi_object_t* obj = qi_object_builder_get_object(ob);
   qi_object_builder_destroy(ob);
 
@@ -51,7 +51,7 @@ TEST(TestProperties, set_args_null)
   qi_future_t *fut_1, *fut_2, *fut_3;
 
   qi_object_builder_t* ob = qi_object_builder_create();
-  qi_object_builder_register_property(ob, "myproperty", "(s)");
+  qi_object_builder_advertise_property(ob, "myproperty", "(s)");
   qi_object_t* obj = qi_object_builder_get_object(ob);
 
   qi_value_t *val = qi_value_create("s");
