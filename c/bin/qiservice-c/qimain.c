@@ -61,8 +61,8 @@ int		main(int argc, char **argv)
     sd_addr = argv[1];
 
   ob = qi_object_builder_create();
-  qi_object_builder_register_method(ob, "reply::s(s)", &reply, 0);
-  qi_object_builder_register_event(ob, "testEvent", "(s)");
+  qi_object_builder_advertise_method(ob, "reply::s(s)", &reply, 0);
+  qi_object_builder_advertise_signal(ob, "testEvent", "(s)");
   object = qi_object_builder_get_object(ob);
   session = qi_session_create();
 
@@ -91,8 +91,8 @@ int		main(int argc, char **argv)
     qi_value_set_string(val, "pifpaf");
     qi_value_tuple_set(cont, 0, val);
     qi_value_destroy(val);
-    ret = qi_object_event_emit(object, "testEvent::(s)", cont);
-    printf("emit: %d\n", ret);
+    ret = qi_object_post(object, "testEvent::(s)", cont);
+    printf("post: %d\n", ret);
     qi_value_destroy(cont);
     sleep(1);
     printf("tic tac\n");
