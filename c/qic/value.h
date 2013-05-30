@@ -73,6 +73,7 @@ extern "C"
   //# LIST
   QIC_API int          qi_value_list_set(qi_value_t *container, unsigned int idx, qi_value_t *element);
   QIC_API qi_value_t*  qi_value_list_get(qi_value_t *container, unsigned int idx);
+  QIC_API int          qi_value_list_push_back(qi_value_t* msg, qi_value_t* val);
   QIC_API int          qi_value_list_size(qi_value_t *container);
 
   //# MAP

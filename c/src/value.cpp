@@ -4,9 +4,12 @@
 ** Copyright (C) 2013 Aldebaran Robotics
 */
 
+#include <qi/log.hpp>
 #include <qic/value.h>
 #include "value_p.h"
 #include "object_p.h"
+
+qiLogCategory("qi.c");
 
 //# GENERIC POD IMPL
 template<typename T>
@@ -161,6 +164,8 @@ int        qi_value_set_string(qi_value_t *container, const char *s)
 
 const char* qi_value_get_string(qi_value_t *msg)
 {
+  if (!msg)
+    return 0;
   qi::GenericValue &gv = qi_value_cpp(msg);
   try {
     return qi::os::strdup(gv.toString().c_str());
@@ -217,7 +222,9 @@ int          qi_value_list_set(qi_value_t *msg, unsigned int idx, qi_value_t *va
   try {
     container[idx].set(val);
     return 1;
-  } catch (std::runtime_error &) {}
+  } catch (std::runtime_error &e) {
+    qiLogError() << "Cant set list item at index " << idx << " :" << e.what();
+  }
   return 0;
 }
 
@@ -231,6 +238,17 @@ qi_value_t*  qi_value_list_get(qi_value_t *msg, unsigned int idx)
   qi::GenericValue &gv = qi_value_cpp(ret);
   gv = container[idx];
   return ret;
+}
+
+int  qi_value_list_push_back(qi_value_t *msg, qi_value_t*val)
+{
+  qi::GenericValue &container = qi_value_cpp(msg);
+  qi::GenericValue &gval = qi_value_cpp(val);
+  if (container.kind() != qi::Type::List) {
+    return 0;
+  }
+  container.append(gval);
+  return 1;
 }
 
 int          qi_value_list_size(qi_value_t *msg)
