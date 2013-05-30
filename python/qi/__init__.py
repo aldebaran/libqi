@@ -42,7 +42,8 @@ if sys.platform.startswith("linux"):
 #######
 
 from _qi import Application, Future, FutureState, FutureTimeout, Object, \
-                Promise, Property, ServiceDirectory, Session, Signal
+                Promise, Property, ServiceDirectory, Session, Signal, \
+                createObject, registerObjectFactory
 
 __all__ = ["Application",
            "Future",
@@ -53,4 +54,6 @@ __all__ = ["Application",
            "Property",
            "ServiceDirectory",
            "Session",
-           "Signal"]
+           "Signal",
+           "createObjet",
+           "registerObjectFactory"]

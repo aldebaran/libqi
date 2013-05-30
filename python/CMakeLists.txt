@@ -25,6 +25,8 @@ add_library(_qi SHARED src/boostpymain.cpp
                    src/pysignal.hpp
                    src/pyservicedirectory.hpp
                    src/pyservicedirectory.cpp
+                   src/pyobjectfactory.hpp
+                   src/pyobjectfactory.cpp
                    src/gil.hpp
                    src/error.hpp
 )
