@@ -464,6 +464,7 @@ namespace qi {
       for (itMM = methods.begin(); itMM != methods.end(); ++itMM) {
         stream << "  " << std::right << std::setfill('0') << std::setw(3)
                << itMM->second.uid() << std::setw(0) << " " << std::left
+               << itMM->second.returnSignature().toString() << " "
                << itMM->second.toString() << std::endl;
 
         if (itMM->second.description() != "")
