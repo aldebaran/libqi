@@ -1,6 +1,13 @@
 /** Copyright (C) 2012 Aldebaran Robotics
 */
 
+#ifndef _WIN32
+#include <fnmatch.h>
+#else
+# include <shlwapi.h>
+# pragma comment(lib, "shlwapi.lib")
+#endif
+
 #include <boost/program_options.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/foreach.hpp>
@@ -10,6 +17,16 @@
 #include <qimessaging/session.hpp>
 
 #define foreach BOOST_FOREACH
+
+
+inline bool globMatch(const std::string& pattern, const std::string& string)
+{
+#ifdef _WIN32
+      return ::PathMatchSpec(string.c_str(), pattern.c_str()) == TRUE;
+#else
+      return !fnmatch(pattern.c_str(), string.c_str(), 0);
+#endif
+}
 
 const char* callType[] = {
   "?", "C", "R", "S"
@@ -76,7 +93,7 @@ _QI_COMMAND_LINE_OPTIONS(
   "Qitrace options",
   ("numeric,n", bool_switch(&numeric), "Do not resolve slot Ids to names")
   ("service-directory,s", value<std::string>(&sdUrl), "url to connect to")
-  ("object,o", value<std::vector<std::string> >(&objectNames), "Object(s) to monitor, specify multiple times, comma-separate, or use '*'")
+  ("object,o", value<std::vector<std::string> >(&objectNames), "Object(s) to monitor, specify multiple times, comma-separate, use '*' for all, use '-globPattern' to remove from list")
   ("print,p", bool_switch(&printMo), "Print out the Metaobject and exit")
   ("disable,d", bool_switch(&disableTrace), "Disable trace on objects and exit")
   );
@@ -98,18 +115,36 @@ int main(int argc, char** argv)
   std::vector<std::string> services;
   for (unsigned i=0; i<objectNames.size(); ++i)
   {
-    if (objectNames[i] == "*")
+
+    std::vector<std::string> split;
+    boost::split(split, objectNames[i], boost::algorithm::is_any_of(","));
+    for (unsigned i=0; i<split.size(); ++i)
     {
-      std::vector<qi::ServiceInfo> si = s.services();
-      for (unsigned i=0; i<si.size(); ++i)
-        services.push_back(si[i].name());
+      if (split[i].empty())
+        continue;
+      else if (split[i] == "*")
+      {
+        std::vector<qi::ServiceInfo> si = s.services();
+        for (unsigned i=0; i<si.size(); ++i)
+          services.push_back(si[i].name());
+      }
+      else if (split[i][0] == '-')
+      {
+        std::string pattern = split[i].substr(1);
+        for (unsigned i=0; i<services.size(); ++i)
+        {
+          if (globMatch(pattern, services[i]))
+          {
+            services[i] = services[services.size() - 1];
+            services.pop_back();
+            --i; // don't forget to check the new element we juste swaped in
+          }
+        }
+      }
+      else
+        services.push_back(split[i]);
     }
-    else
-    {
-      std::vector<std::string> split;
-      boost::split(split, objectNames[i], boost::algorithm::is_any_of(","));
-      services.insert(services.end(), split.begin(), split.end());
-    }
+
   }
   std::vector<std::string> servicesOk;
   qiLogVerbose() << "Fetching services: " << boost::join(services, ",");
