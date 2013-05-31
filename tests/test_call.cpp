@@ -1003,6 +1003,31 @@ TEST(TestCall, Dynamic)
   EXPECT_EQ(expect, args.to<std::vector<int> >());
 }
 
+class TestOverload
+{
+public:
+  const int& getI() const { return i;}
+  int& getI() { return i;}
+  int foo(int i) {return 0;}
+  int foo(std::string) { return 1;}
+  int i;
+};
+
+TEST(TestAdvertise, Overload)
+{
+  TestSessionPair p;
+  qi::ObjectTypeBuilder<TestOverload> builder;
+  builder.advertiseMethod("getI", (int&(TestOverload::*)())&TestOverload::getI);
+  builder.advertiseMethod("foo", (int(TestOverload::*)(int))&TestOverload::foo);
+  builder.advertiseMethod("foo", (int(TestOverload::*)(std::string))&TestOverload::foo);
+  qi::AnyObject o = builder.object(new TestOverload());
+  p.server()->registerService("o", o);
+  qi::AnyObject c = p.client()->service("o");
+  EXPECT_EQ(0, c->call<int>("foo", 1));
+  EXPECT_EQ(0, c->call<int>("foo", 1.5));
+  EXPECT_EQ(1, c->call<int>("foo", "bar"));
+  EXPECT_EQ(1, c->call<int>("foo", std::string("bar")));
+}
 
 int main(int argc, char **argv) {
   qi::Application app(argc, argv);
