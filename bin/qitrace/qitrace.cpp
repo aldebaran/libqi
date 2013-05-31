@@ -11,6 +11,9 @@
 
 #define foreach BOOST_FOREACH
 
+const char* callType[] = {
+  "?", "C", "R", "S"
+};
 typedef std::map<std::string, qi::ObjectPtr> ObjectMap;
 ObjectMap objectMap;
 
@@ -59,9 +62,12 @@ void onTrace(ObjectMap::value_type ov, const qi::EventTrace& trace)
     }
   }
   maxLen = std::max(maxLen, (unsigned int)name.size());
+  unsigned int traceKind = trace.kind;
+  if (traceKind > 3)
+    traceKind = 0;
   std::string spacing(maxLen + 8 - name.size(), ' ');
   std::string spacing2(maxServiceLength + 8 - ov.first.size(), ' ');
-  std::cout << ov.first << spacing2 << trace.id << '\t' << trace.kind << '\t' << name
+  std::cout << ov.first << spacing2 << trace.id << '\t' << callType[traceKind] << ' ' << name
    << spacing << trace.timestamp.tv_sec << '.' << trace.timestamp.tv_usec
    << "\t" << qi::encodeJSON(trace.arguments) << std::endl;
 }
@@ -78,6 +84,9 @@ _QI_COMMAND_LINE_OPTIONS(
 int main(int argc, char** argv)
 {
   qi::Application app(argc, argv);
+  if (std::find(argv + 1, argv + argc, std::string("-h"))-argv < argc
+    ||  std::find(argv + 1, argv + argc, std::string("--help"))-argv < argc)
+    return 0; // Fixme have Application report that!
   qi::Session s;
   if (sdUrl.empty())
     sdUrl = "localhost";
@@ -151,8 +160,8 @@ int main(int argc, char** argv)
   {
     maxServiceLength = std::max(maxServiceLength, (unsigned int)ov.first.size());
     ov.second->connect("traceObject", (boost::function<void(qi::EventTrace)>)
-      boost::bind(&onTrace, ov, _1));
-    ov.second->call<void>("enableTrace", true);
+      boost::bind(&onTrace, ov, _1)).async();
+    ov.second->post("enableTrace", true);
   }
   app.run();
   while (!cleaned)
