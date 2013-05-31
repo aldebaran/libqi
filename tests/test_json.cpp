@@ -69,6 +69,15 @@ TEST(TestJSON, Simple) {
   EXPECT_EQ("42", qi::encodeJSON(gv));
 }
 
+TEST(TestJSON, SimpleAutoGV) {
+  EXPECT_EQ("true", qi::encodeJSON(true));
+  EXPECT_EQ("false", qi::encodeJSON(false));
+  EXPECT_EQ("32", qi::encodeJSON(32));
+  EXPECT_EQ("\"ttc:42\"", qi::encodeJSON("ttc:42"));
+  EXPECT_EQ("32.4", qi::encodeJSON(32.4f));
+  EXPECT_EQ("32.3", qi::encodeJSON((double)32.3));
+}
+
 TEST(TestJSON, String) {
   EXPECT_EQ("\" \\\" \"", qi::encodeJSON(qi::GenericValueRef(" \" ")));
   EXPECT_EQ("\" \\u0000 \"", qi::encodeJSON(qi::GenericValueRef(" \0 ")));

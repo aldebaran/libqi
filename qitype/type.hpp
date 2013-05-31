@@ -494,27 +494,6 @@ QITYPE_API bool operator !=(const GenericIterator & a, const GenericIterator& b)
     template<typename T> GenericValueRef& operator =(const T& v);
   };
 
-  /** @return the value encoded in JSON.
-   */
-  QITYPE_API std::string encodeJSON(const qi::GenericValuePtr &val);
-
-  /**
-    * creates a GV representing a JSON string or throw on parse error.
-    * @param JSON string to decode.
-    * @return a GV representing the JSON string
-    */
-  QITYPE_API qi::GenericValue decodeJSON(const std::string &in);
-
-  /**
-    * set the input GV to represent the JSON sequence between two string iterators or throw on parse error.
-    * @param iterator to the beginning of the sequence to decode.
-    * @param iterator to the end of the sequence to decode.
-    * @param GV to set. Not modified if an error occured.
-    * @return an iterator to the last read char + 1
-    */
-  QITYPE_API std::string::const_iterator decodeJSON(std::string::const_iterator begin,
-                                         std::string::const_iterator end,
-                                         GenericValue &target);
 
   /// Less than operator. Will compare the values within the GenericValue.
   QITYPE_API bool operator < (const GenericValue& a, const GenericValue& b);
@@ -536,11 +515,36 @@ QITYPE_API bool operator !=(const GenericIterator & a, const GenericIterator& b)
   public:
     AutoGenericValuePtr ();
     AutoGenericValuePtr(const AutoGenericValuePtr & b);
-
+    AutoGenericValuePtr(const GenericValuePtr &self)
+      : GenericValuePtr(self)
+    {}
+    AutoGenericValuePtr(const GenericValueRef &self)
+      : GenericValuePtr(self)
+    {}
     template<typename T> AutoGenericValuePtr(const T& ptr);
   };
 
+  /** @return the value encoded in JSON.
+   */
+  QITYPE_API std::string encodeJSON(const qi::AutoGenericValuePtr &val);
 
+  /**
+    * creates a GV representing a JSON string or throw on parse error.
+    * @param JSON string to decode.
+    * @return a GV representing the JSON string
+    */
+  QITYPE_API qi::GenericValue decodeJSON(const std::string &in);
+
+  /**
+    * set the input GV to represent the JSON sequence between two string iterators or throw on parse error.
+    * @param iterator to the beginning of the sequence to decode.
+    * @param iterator to the end of the sequence to decode.
+    * @param GV to set. Not modified if an error occured.
+    * @return an iterator to the last read char + 1
+    */
+  QITYPE_API std::string::const_iterator decodeJSON(std::string::const_iterator begin,
+                                         std::string::const_iterator end,
+                                         GenericValue &target);
 
   class TypeList;
 

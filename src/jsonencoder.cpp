@@ -78,7 +78,7 @@ namespace qi {
     return result;
   }
 
-  std::string encodeJSON(const qi::GenericValuePtr &value) {
+  std::string encodeJSON(const qi::AutoGenericValuePtr &value) {
     std::stringstream ss;
     serialize(value, ss);
     return ss.str();
