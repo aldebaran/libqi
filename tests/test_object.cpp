@@ -8,7 +8,7 @@
 #include <map>
 #include <boost/bind.hpp>
 #include <boost/function.hpp>
-
+#include <boost/assign/list_of.hpp>
 #include <qi/log.hpp>
 #include <qi/application.hpp>
 #include <gtest/gtest.h>
