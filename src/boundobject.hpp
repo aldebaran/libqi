@@ -47,7 +47,7 @@ namespace qi {
 
   //Bound Object, represent an object bound on a server
   // this is not an object..
-  class ServiceBoundObject : public BoundObject, public ObjectHost {
+  class ServiceBoundObject : public BoundObject, public ObjectHost, boost::noncopyable {
   public:
     ServiceBoundObject(unsigned int serviceId, unsigned int objectId,
                        qi::ObjectPtr obj,
@@ -109,7 +109,5 @@ namespace qi {
   qi::BoundObjectPtr makeServiceBoundObjectPtr(unsigned int serviceId, qi::ObjectPtr object, qi::MetaCallType mct = qi::MetaCallType_Auto);
 
 }
-
-QI_TYPE_NOT_CLONABLE(qi::ServiceBoundObject);
 
 #endif  // _SRC_SESSIONSERVER_HPP_

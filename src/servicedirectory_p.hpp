@@ -62,6 +62,4 @@ namespace qi {
 
 }
 
-QI_TYPE_NOT_CLONABLE(qi::ServiceDirectoryBoundObject);
-
 #endif  // _SRC_SERVICEDIRECTORY_P_HPP_

@@ -75,7 +75,6 @@ namespace qi {
 
 }
 
-QI_TYPE_NOT_CLONABLE(qi::Session);
 #ifdef _MSC_VER
 #  pragma warning( pop )
 #endif

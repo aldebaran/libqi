@@ -94,8 +94,4 @@ namespace qi
   TransportSocketPtr makeTransportSocket(const std::string &protocol, qi::EventLoop *eventLoop = getDefaultNetworkEventLoop());
 }
 
-
-QI_TYPE_NOT_CLONABLE(qi::TransportSocket);
-
-
 #endif  // _QIMESSAGING_TRANSPORTSOCKET_HPP_
