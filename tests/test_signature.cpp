@@ -73,6 +73,19 @@ TEST(TestSignature, BasicTypeSignature) {
   EXPECT_EQ("{ii}", qi::signatureFromType< MapInt >::value() );
 }
 
+TEST(TestSignature, SignatureSize) {
+  qi::Signature s("(iiii)");
+  EXPECT_EQ(1, s.size());
+  EXPECT_EQ(4, s.begin().children().size());
+  EXPECT_EQ(0, s.begin().children().begin().children().size());
+
+  s = qi::Signature("[i]");
+  EXPECT_EQ(1, s.size());
+
+  s = qi::Signature("[i]");
+  EXPECT_EQ(1, s.size());
+}
+
 TEST(TestSignature, TypeConstRefPointerMix) {
 
   EXPECT_EQ("b",    qi::signatureFromType<bool>::value());

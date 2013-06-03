@@ -211,6 +211,7 @@ namespace qi {
         break;
       }
       current++;
+      arguments++;
       if (current >= s.size() || s[current] == closing)
         break;
       if (s[current] == '<')
@@ -232,7 +233,7 @@ namespace qi {
           return false;
         }
       }
-      arguments++;
+
     }
 
     // Check complex type validity
@@ -424,7 +425,7 @@ namespace qi {
 
     if (this->size() != 1)
     {
-      qiLogVerbose() << "Signature has more than one element: `" << fullSignature << "'";
+      qiLogVerbose() << "Signature has more than one element: '" << fullSignature << "'";
       _p->_valid = false;
     }
   }
@@ -436,7 +437,7 @@ namespace qi {
 
     if (this->size() != 1)
     {
-      qiLogVerbose() << "Signature has more than one element: `" << subsig << "'";
+      qiLogVerbose() << "Signature has more than one element: '" << subsig << "'";
       _p->_valid = false;
     }
   }
