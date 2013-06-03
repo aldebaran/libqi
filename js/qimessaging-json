@@ -72,7 +72,6 @@ class QiMessagingHandler(tornadio2.conn.SocketConnection):
             if service == "ServiceDirectory" and method == "service":
                 f = self.qim.service(str(args[0]), _async = True)
                 f.add_callback(self.do_service(idm, args[0]))
-                f.wait()
             elif method == "registerEvent":
                 obj = self.qim.service(str(service))
                 evt = getattr(obj, args[0])
