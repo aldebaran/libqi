@@ -46,6 +46,8 @@ def deploy_native_package(platform):
     Package qiMessaging Java bindings and
     deploy them with Maven
     """
+    if platform != "android":
+        platform = "desktop"
     pom_name = "pom-" + platform + ".xml"
     packaging_format = "jar"
     callee = ["qimvn", "package", "--pom", pom_name, "--skip-test"]
@@ -77,7 +79,7 @@ def package_native_libraries(platform):
     artifact_id = jarname + platform
     jar_name = artifact_id + ".jar"
     url = "file://" + default_repo_url + artifact_id
-    config = None
+    config = platform
 
     if platform == "android":
         native_librairies += ["gnustl_shared"]
