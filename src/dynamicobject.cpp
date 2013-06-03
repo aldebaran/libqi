@@ -374,18 +374,37 @@ namespace qi
           tid, EventTrace::Event_Call, methodId, GenericValue::from(args), tv));
       }
       qi::int64_t time = stats?qi::os::ustime():0;
-      if (lock)
-        out.setValue(locked_call(func, params, context->mutex()));
-      else
-        out.setValue(func.call(params));
+      bool success = false;
+      try
+      {
+        if (lock)
+          out.setValue(locked_call(func, params, context->mutex()));
+        else
+          out.setValue(func.call(params));
+        success = true;
+      }
+      catch(const std::exception& e)
+      {
+        out.setError(e.what());
+      }
+      catch(...)
+      {
+        out.setError("Unknown exception caught.");
+      }
       if (stats)
         context->pushStats(methodId, (float)(qi::os::ustime() - time)/1e6f);
       if (trace)
       {
         qi::os::timeval tv;
         qi::os::gettimeofday(&tv);
-        GenericValue val(out.future().value());
-        context->traceObject(EventTrace(tid, EventTrace::Event_Result, methodId, val, tv));
+        GenericValue val;
+        if (success)
+          val = out.future().value();
+        else
+          val = GenericValue::from(out.future().error());
+        context->traceObject(EventTrace(tid,
+          success?EventTrace::Event_Result:EventTrace::Event_Error,
+          methodId, val, tv));
       }
     }
   }
@@ -423,18 +442,7 @@ namespace qi
     }
     void operator()()
     {
-      try
-      {
-        call(*out, context, lock, params, methodId, func);
-      }
-      catch(const std::exception& e)
-      {
-        out->setError(e.what());
-      }
-      catch(...)
-      {
-        out->setError("Unknown exception caught.");
-      }
+      call(*out, context, lock, params, methodId, func);
       params.destroy(noCloneFirst);
       delete out;
     }

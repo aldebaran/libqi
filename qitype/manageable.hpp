@@ -49,7 +49,8 @@ namespace qi {
     {
       Event_Call = 1,
       Event_Result = 2,
-      Event_Signal = 3
+      Event_Error = 3,
+      Event_Signal = 4
     };
     EventTrace() {}
     EventTrace(unsigned int id, EventKind  kind, unsigned int slotId,

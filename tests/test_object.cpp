@@ -755,10 +755,16 @@ void pushTrace(std::vector<qi::EventTrace>& target,
   target.push_back(trace);
 }
 
+int throw_exception(const std::string& content)
+{
+  throw std::runtime_error(content);
+}
+
 TEST(TestObject, traceGeneric)
 {
   qi::GenericObjectBuilder gob;
   int mid = gob.advertiseMethod("sleep", &qi::os::msleep);
+  int mid2 = gob.advertiseMethod("boom", &throw_exception);
   qi::ObjectPtr obj = gob.object();
   std::vector<qi::EventTrace> traces;
   qi::SignalBase::Link id = obj->connect("traceObject",
@@ -779,6 +785,15 @@ TEST(TestObject, traceGeneric)
     - traces[0].timestamp.tv_sec*1000
     - traces[0].timestamp.tv_usec/1000;
   EXPECT_LT(std::abs(delta - 100LL), 20LL); // be leniant
+  traces.clear();
+  obj->call<void>("boom", "o<").wait();
+  for (unsigned i=0; i<20 && traces.size()<2; ++i) qi::os::msleep(50);
+  qi::os::msleep(50);
+  ASSERT_EQ(2u, traces.size());
+  EXPECT_EQ(qi::EventTrace::Event_Call, traces[0].kind);
+  EXPECT_EQ(qi::EventTrace::Event_Error, traces[1].kind);
+  EXPECT_EQ(mid2, traces[0].slotId);
+  EXPECT_EQ(traces[0].id, traces[1].id);
 }
 
 TEST(TestObject, traceType)
