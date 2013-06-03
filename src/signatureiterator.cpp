@@ -441,7 +441,7 @@ namespace qi {
         throw std::runtime_error("Signature " + fullSignature + " is not valid");
 
       funcName = fullSignature.substr(0, idx1);
-      //we should have a valid signature
+      // we should have a valid signature
       qi::Signature parent("(" + fullSignature.substr(idx1+2) + ")");
       qi::Signature sig = parent.begin().children();
 

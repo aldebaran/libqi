@@ -116,11 +116,11 @@ namespace qi {
 
 
   /** Store function parameters as a list of GenericValuePtr.
-  * Storage can be on the stack or allocated
-  * Memory management is the responsibility of the user.
-  * If GenericFunctionParameters is obtained throug copy(), convert() or
-  * fromBuffer(), it must be cleared by destroy()
-  */
+   * Storage can be on the stack or allocated
+   * Memory management is the responsibility of the user.
+   * If GenericFunctionParameters is obtained throug copy(), convert() or
+   * fromBuffer(), it must be cleared by destroy()
+   */
   class QITYPE_API GenericFunctionParameters: public std::vector<GenericValuePtr>
   {
   public:
