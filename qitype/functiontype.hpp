@@ -101,7 +101,7 @@ namespace qi {
     std::vector<Type*> argumentsType() const;
     Type*              resultType() const;
     //dropfirst is useful when you want the parameters signature of a method.
-    Signature          parametersSignature(bool dropFirst) const;
+    Signature          parametersSignature(bool dropFirst=false) const;
     Signature          returnSignature() const;
 
     void swap(GenericFunction& b);
