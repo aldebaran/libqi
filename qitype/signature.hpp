@@ -27,6 +27,7 @@ namespace qi {
   class SignaturePrivate;
 
   class GenericValuePtr;
+  class GenericValue;
   class Type;
   class Signature;
   QITYPE_API qi::Signature makeTupleSignature(const std::vector<qi::GenericValuePtr>& vgv,
@@ -148,6 +149,11 @@ namespace qi {
     inline bool operator!=(const Signature &rhs) const { return !(*this == rhs); }
     bool operator==(const Signature &rhs) const;
 
+    /** Encode the signature in a plain struct,
+    * suitable for further serialization.
+    * [typeString, childrenList, annotationString ]
+    */
+    GenericValue toData() const;
     std::string toSTLSignature(bool constify = false) const;
     std::string toQtSignature(bool constify = false) const;
     const std::string& toString() const;

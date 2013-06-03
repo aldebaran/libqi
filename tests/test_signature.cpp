@@ -634,4 +634,29 @@ TEST(TestSignature, AnnotationStruct)
   EXPECT_EQ("(dds)<Point,x,y,name>", qi::typeOf<Point>()->signature().toString());
 }
 
+std::string trimall(const std::string& s)
+{
+  std::string res;
+  for (unsigned i=0; i<s.size(); ++i)
+    if (s[i] != ' ')
+      res += s[i];
+  return res;
+}
+
+std::string unarmor(const std::string& s)
+{
+  return trimall(s.substr(1, s.size()-2));
+}
+
+TEST(TestSignature, ToData)
+{
+  #define j(a) trimall(qi::encodeJSON(qi::Signature(a).toData()))
+  #define S(a) unarmor(#a)
+  EXPECT_EQ(j("i"), S(([ [ "i", [], "" ] ])));
+  EXPECT_EQ(j("i<foo>"), S(([ [ "i", [], "foo" ] ])));
+  EXPECT_EQ(j("[i<foo>]<bar>"), S(([ ["[", [[ "i", [], "foo" ]], "bar"] ])));
+  EXPECT_EQ(j("(i[f]{if})"),
+    S(( [ ["(", [["i", [], ""],["[", [["f", [], ""]], ""],["{", [["i", [], ""], ["f", [], ""]], "" ]], "" ] ])));
+}
+
 //#endif

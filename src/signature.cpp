@@ -619,7 +619,29 @@ namespace qi {
     return ret;
   }
 
+  static GenericValue signatureToData(Signature::iterator it)
+  {
+    std::vector<GenericValue> res;
+    std::string t;
+    t += (char)it.type();
+    res.push_back(GenericValue::from(t));
+    if (it.hasChildren())
+      res.push_back(it.children().toData());
+    else
+      res.push_back(GenericValue::from(std::vector<GenericValue>()));
+    res.push_back(GenericValue::from(it.annotation()));
+    return GenericValue::from(res);
+  }
 
+  GenericValue Signature::toData() const
+  {
+    std::vector<GenericValue> res;
+    if (!isValid())
+      return GenericValue::from(res);
+    for (Signature::iterator it = begin(); it != end(); ++it)
+      res.push_back(signatureToData(it));
+    return GenericValue::from(res);
+  }
 }
 
 QI_EQUIVALENT_STRING_REGISTER(qi::Signature, &qi::Signature::toString);
