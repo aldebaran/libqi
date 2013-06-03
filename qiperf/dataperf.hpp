@@ -26,12 +26,14 @@ namespace qi
     ~DataPerf();
 
     /// Start measuring time
-    void start(const std::string& benchmarkName, unsigned long loopCount = 1, unsigned long msgSize = 0);
+    void start(const std::string& benchmarkName, unsigned long loopCount = 1, unsigned long msgSize = 0, const std::string& variable = "");
     /// Stop measuring time
     void stop();
 
     /// Return the name of the benchmark.
     std::string getBenchmarkName() const;
+    /// Return the variable of the benchmark
+    std::string getVariable() const;
     /// Return the size of message transmitted.
     unsigned long getMsgSize() const;
     /// Return the average time taken by a single execution of the benchmarked code.

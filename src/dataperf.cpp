@@ -10,7 +10,7 @@
 namespace qi
 {
   DataPerfPrivate::DataPerfPrivate()
-    : benchmarkName(""), wallClockElapsed(0), cpuElapsed(0), fLoopCount(0), fMsgSize(0)
+    : benchmarkName(""), wallClockElapsed(0), cpuElapsed(0), fLoopCount(0), fMsgSize(0), variable("")
   { }
 
   DataPerf::DataPerf()
@@ -22,11 +22,12 @@ namespace qi
     delete _p;
   }
 
-  void DataPerf::start(const std::string& benchmarkName, unsigned long loopCount, unsigned long msgSize)
+  void DataPerf::start(const std::string& benchmarkName, unsigned long loopCount, unsigned long msgSize, const std::string& variable)
   {
     _p->benchmarkName = benchmarkName;
     _p->fLoopCount = loopCount;
     _p->fMsgSize = msgSize;
+    _p->variable = variable;
     _p->cpuTime.restart();
     qi::os::gettimeofday(&(_p->fStartTime));
   }
@@ -44,6 +45,11 @@ namespace qi
   std::string DataPerf::getBenchmarkName() const
   {
     return _p->benchmarkName;
+  }
+
+  std::string DataPerf::getVariable() const
+  {
+    return _p->variable;
   }
 
   unsigned long DataPerf::getMsgSize() const

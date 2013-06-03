@@ -70,13 +70,15 @@ namespace qi
               << "result_value=\"" << std::fixed << std::setprecision(6) << result_value << "\" "
               << "result_type=\"" << result_type << "\" "
               << "test_name=\"" << data.getBenchmarkName() << "\" ";
-      if (data.getMsgSize() != 0)
+      if (data.getVariable() != "")
+        _p->out << "result_variable=\"" << data.getVariable() << "\" ";
+      else if (data.getMsgSize() != 0)
         _p->out << "result_variable=\"" << data.getMsgSize() << "\" ";
       _p->out << "/>" << std::endl;
     }
 
     {
-      std::cout << data.getBenchmarkName() << ": ";
+      std::cout << data.getBenchmarkName() << "-" << data.getVariable() << ": ";
       if (data.getMsgSize() > 0) {
         std::cout
           << std::fixed << std::setprecision(2) << data.getMsgSize() << " b, "

@@ -37,6 +37,8 @@ namespace qi
     unsigned long   fLoopCount;
     //! Size of the message transmitted by this benchmark
     unsigned long   fMsgSize;
+    //! Variable
+    std::string variable;
   };
 }
 
