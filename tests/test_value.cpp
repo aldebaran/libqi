@@ -437,7 +437,7 @@ TEST(Value, Convert_ListToTuple)
   std::pair<qi::GenericValuePtr, bool> res2 = gv2.convert(type);
 
   ASSERT_FALSE(res2.first.type);
-  ASSERT_TRUE(res1.first.type);
+  ASSERT_TRUE(res1.first.type != 0);
   ASSERT_EQ(res1.first.type->info(), type->info());
   ASSERT_EQ(gv1.size(), res1.first.size());
   ASSERT_STREQ("b", res1.first[3][1].asString().c_str());
@@ -453,7 +453,7 @@ TEST(Value, Convert_ListToMap)
   qi::Type *type1= qi::Type::fromSignature("{if}");
   qi::GenericValue gv1 = qi::decodeJSON("[[10.10, 42.42], [20, 43], [30, 44.44]]");
   std::pair<qi::GenericValuePtr, bool> res1 = gv1.convert(type1);
-  ASSERT_TRUE(res1.first.type);
+  ASSERT_TRUE(res1.first.type != 0);
   ASSERT_EQ(res1.first.type->info(), type1->info());
   ASSERT_EQ(gv1.size(), res1.first.size());
   ASSERT_EQ(44.44f, res1.first[30].asFloat());
