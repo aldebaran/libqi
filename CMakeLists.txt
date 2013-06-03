@@ -106,7 +106,6 @@ set(SOURCES ${PUBLIC_HEADERS}
             src/signal_p.hpp
             src/signatureconvertor.cpp
             src/signatureconvertor.hpp
-            src/signatureiterator.cpp
             src/staticobjecttype.cpp
             src/type.cpp
             src/typeint.cpp
