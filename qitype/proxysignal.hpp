@@ -47,10 +47,9 @@ namespace qi
   template<typename T>
   void ProxySignal<T>::onSubscribe(bool enable)
   {
-    std::string sig = _name + "::" + SignalType::signature().toString();
     if (enable)
     {
-      _link = _object->xConnect(sig,
+      _link = _object->connect(_name,
           SignalSubscriber(
             makeDynamicGenericFunction(boost::bind(&ProxySignal<T>::bounceEvent, this, _1))
             ));
@@ -77,7 +76,7 @@ namespace qi
   {
     // Just forward to backend, which will notify us in bouceEvent(),
     // and then we will notify our local Subscribers
-    _object->metaPost(_name + "::" + SignalType::signature().toString(), params);
+    _object->metaPost(_name, params);
   }
 
 }

@@ -138,7 +138,7 @@ namespace qi {
 
   template <typename T> unsigned int ObjectTypeBuilderBase::advertiseSignal(const std::string& name, SignalMemberGetter getter, int id)
   {
-    return xAdvertiseSignal(name + "::" + detail::FunctionSignature<T>::signature(), getter, id);
+    return xAdvertiseSignal(name, detail::FunctionSignature<T>::signature(), getter, id);
   }
 
   template<typename T>

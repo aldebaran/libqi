@@ -43,7 +43,14 @@ namespace qi {
     }
 
     inline int signalId(const std::string &name) {
-      return idFromName(_eventsNameToIdx, name);
+      int res = idFromName(_eventsNameToIdx, name);
+      if (res < 0)
+      { // maybe we were given a full signature, but signal is indexed by name
+        std::vector<std::string> split = signatureSplit(name);
+        if (name != split[1])
+          return signalId(split[1]);
+      }
+      return res;
     }
 
     //if you want to use those methods think twice...
@@ -56,7 +63,7 @@ namespace qi {
     std::vector<MetaMethod> findMethod(const std::string &name);
     std::vector<MetaObject::CompatibleMethod> findCompatibleMethod(const std::string &nameOrSignature);
 
-    std::vector<MetaSignal> findSignal(const std::string &name);
+    MetaSignal* signal(const std::string &name);
 
     int addMethod(MetaMethodBuilder& builder, int uid = -1);
 

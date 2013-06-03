@@ -91,18 +91,14 @@ namespace qi {
     return ret;
   }
 
-  std::vector<MetaSignal> MetaObjectPrivate::findSignal(const std::string &name)
+  MetaSignal* MetaObjectPrivate::signal(const std::string &name)
   {
     boost::recursive_mutex::scoped_lock sl(_eventsMutex);
-    std::vector<MetaSignal>         ret;
-    MetaObject::SignalMap::iterator it;
-
-    for (it = _events.begin(); it != _events.end(); ++it) {
-      MetaSignal &mm = it->second;
-      if (mm.name() == name)
-        ret.push_back(mm);
-    }
-    return ret;
+    int id = signalId(name);
+    if (id < 0)
+      return 0;
+    else
+      return &_events[id];
   }
 
   int MetaObjectPrivate::addMethod(MetaMethodBuilder& builder, int uid) {
@@ -129,13 +125,17 @@ namespace qi {
   }
 
   int MetaObjectPrivate::addSignal(const std::string &name, const Signature &signature, int uid) {
+#ifndef NDEBUG
+    std::vector<std::string> split = signatureSplit(name);
+    if (name != split[1])
+      throw std::runtime_error("Unexpected full signature " + name);
+#endif
     boost::recursive_mutex::scoped_lock sl(_eventsMutex);
     unsigned int id;
-    std::string namesig = name + "::" + signature.toString();
-    NameToIdx::iterator it = _eventsNameToIdx.find(namesig);
+    NameToIdx::iterator it = _eventsNameToIdx.find(name);
     if (it != _eventsNameToIdx.end()) {
       MetaSignal &ms = _events[it->second];
-      qiLogWarning() << "Signal("<< it->second << ") already defined (and reused): " << ms.toString() << "instead of requested: " << namesig;
+      qiLogWarning() << "Signal("<< it->second << ") already defined (and reused): " << ms.toString() << "instead of requested: " << name;
       return 0;
     }
     if (uid >= 0)
@@ -144,7 +144,7 @@ namespace qi {
       id = ++_index;
     MetaSignal ms(id, name, signature);
     _events[id] = ms;
-    _eventsNameToIdx[namesig] = id;
+    _eventsNameToIdx[name] = id;
     // qiLogDebug() << "Adding signal("<< id << "): " << sig;
     return id;
   }
@@ -200,7 +200,7 @@ namespace qi {
           return false;
       }
       _events[newUid] = qi::MetaSignal(newUid, it->second.name(), it->second.parametersSignature());
-      _eventsNameToIdx[it->second.toString()] = newUid;
+      _eventsNameToIdx[it->second.name()] = newUid;
     }
     //todo: update uid
     return true;
@@ -244,7 +244,7 @@ namespace qi {
       for (MetaObject::SignalMap::iterator i = _events.begin();
         i != _events.end(); ++i)
       {
-        _eventsNameToIdx[i->second.toString()] = i->second.uid();
+        _eventsNameToIdx[i->second.name()] = i->second.uid();
         idx = std::max(idx, i->second.uid());
       }
     }
@@ -372,9 +372,9 @@ namespace qi {
     return _p->findCompatibleMethod(name);
   }
 
-  std::vector<MetaSignal> MetaObject::findSignal(const std::string &name) const
+  const MetaSignal* MetaObject::signal(const std::string &name) const
   {
-    return _p->findSignal(name);
+    return _p->signal(name);
   }
 
   qi::MetaObject MetaObject::merge(const qi::MetaObject &source, const qi::MetaObject &dest) {

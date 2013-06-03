@@ -46,6 +46,7 @@ namespace qi {
 
     MetaSignal*       signal(unsigned int id);
     const MetaSignal* signal(unsigned int id) const;
+    const MetaSignal* signal(const std::string &name) const;
 
     MetaProperty*       property(unsigned int id);
     const MetaProperty* property(unsigned int id) const;
@@ -53,7 +54,6 @@ namespace qi {
     std::vector<MetaMethod> findMethod(const std::string &name) const;
     typedef std::pair<MetaMethod, float> CompatibleMethod;
     std::vector<CompatibleMethod> findCompatibleMethod(const std::string &nameOrSignature) const;
-    std::vector<MetaSignal> findSignal(const std::string &name) const;
 
     ///Merge two MetaObject. Dest method and signal ids will be incremented by offset.
     static qi::MetaObject merge(const qi::MetaObject &source, const qi::MetaObject &dest);

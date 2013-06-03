@@ -259,27 +259,14 @@ namespace qi {
       qiLogWarning() << "Operating on invalid GenericObject..";
       return;
     }
-    ///TODO: use findSignal with fuzzy match
-    int eventId = metaObject().signalId(nameWithOptionalSignature);
-    if (eventId < 0) {
-      std::vector<MetaSignal> mml = metaObject().findSignal(qi::signatureSplit(nameWithOptionalSignature)[1]);
-      if (mml.size() == 1)
-        eventId = mml[0].uid();
-    }
+
+    int eventId = metaObject().signalId(qi::signatureSplit(nameWithOptionalSignature)[1]);
     if (eventId < 0)
       eventId = findMethod(nameWithOptionalSignature, in);
     if (eventId < 0) {
       std::stringstream ss;
       std::string name = qi::signatureSplit(nameWithOptionalSignature)[1];
       ss << "Can't find method or signal: " << nameWithOptionalSignature << std::endl;
-
-      ss << "  Signal Candidate(s):" << std::endl;
-      std::vector<MetaSignal>           mml = metaObject().findSignal(name);
-      std::vector<MetaSignal>::const_iterator it;
-      for (it = mml.begin(); it != mml.end(); ++it) {
-        ss << "  " << it->toString() << std::endl;
-      }
-
       ss << "  Method Candidate(s):" << std::endl;
       std::vector<MetaMethod>           mml2 = metaObject().findMethod(name);
       std::vector<MetaMethod>::const_iterator it2;
@@ -294,46 +281,17 @@ namespace qi {
 
   //TODO: use functor.signature instead of nameWithSignature.
   /// Resolve signature and bounce
-  qi::FutureSync<Link> GenericObject::xConnect(const std::string &nameWithSignature, const SignalSubscriber& functor)
+  qi::FutureSync<Link> GenericObject::connect(const std::string &name, const SignalSubscriber& functor)
   {
     if (!type || !value) {
       qiLogWarning() << "Operating on invalid GenericObject..";
       return qi::makeFutureError<Link>("Operating on invalid GenericObject..");
     }
-    int eventId = metaObject().signalId(nameWithSignature);
+    int eventId = metaObject().signalId(name);
 
-  #ifndef QI_REQUIRE_SIGNATURE_EXACT_MATCH
-    if (eventId < 0) {
-      // Try to find an other event with compatible signature
-      std::vector<qi::MetaSignal> mml = metaObject().findSignal(qi::signatureSplit(nameWithSignature)[1]);
-      Signature sargs(signatureSplit(nameWithSignature)[2]);
-      for (unsigned i = 0; i < mml.size(); ++i)
-      {
-        Signature s(mml[i].parametersSignature());
-        qiLogDebug() << "Checking compatibility " << s.toString() << ' '
-         << sargs.toString();
-         // Order is reversed from method call check.
-        if (s.isConvertibleTo(sargs))
-        {
-          qiLogVerbose()
-              << "Signature mismatch, but found compatible type "
-              << mml[i].toString() <<" for " << nameWithSignature;
-          eventId = mml[i].uid();
-          break;
-        }
-      }
-    }
-#endif
     if (eventId < 0) {
       std::stringstream ss;
-      ss << "Can't find signal: " << nameWithSignature << std::endl
-         << "  Candidate(s):" << std::endl;
-      std::vector<MetaSignal>           mml = metaObject().findSignal(qi::signatureSplit(nameWithSignature)[1]);
-      std::vector<MetaSignal>::const_iterator it;
-
-      for (it = mml.begin(); it != mml.end(); ++it) {
-        ss << "  " << it->toString() << std::endl;
-      }
+      ss << "Can't find signal: " << name;
       qiLogError() << ss.str();
       return qi::makeFutureError<Link>(ss.str());
     }

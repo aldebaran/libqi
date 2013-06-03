@@ -39,6 +39,10 @@ TEST(TestObject, Simple)
   EXPECT_EQ(51, lastPayload);
 }
 
+void readString(const std::string&)
+{
+}
+
 TEST(TestObject, ConnectBind)
 {
   qi::GenericObjectBuilder ob;
@@ -51,10 +55,15 @@ TEST(TestObject, ConnectBind)
   EXPECT_EQ(42, lastPayload);
   obj->disconnect(link);
   // The boost bind without _1 gives us a void (void) signature that does not match fire
-  EXPECT_ANY_THROW({
-      obj->connect("fire", boost::bind<void>(&onFire, 51)).value();
-  });
-
+  EXPECT_EQ(
+    qi::SignalBase::invalidLink,
+    obj->connect("fire", boost::bind<void>(&onFire, 51)).value()
+  );
+  // Argument type mismatch
+  EXPECT_EQ(
+    qi::SignalBase::invalidLink,
+    obj->connect("fire", boost::bind<void>(&readString, _1)).value()
+  );
   link = obj->connect("fire2", boost::bind(&onFire, _2));
   EXPECT_TRUE(link != 0);
   pPayload.reset();
