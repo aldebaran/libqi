@@ -185,8 +185,9 @@ TEST(TestSignature, Equal) {
   EXPECT_EQ(qi::signatureFromType<float&>::value(), qi::signatureFromType<float>::value());
   EXPECT_EQ(qi::Signature("[s]"), qi::Signature("[s]"));
   EXPECT_EQ(qi::Signature("(ss)<Point,x,y>"), qi::Signature("(ss)")); // really?
-  EXPECT_NE(qi::Signature("(mm)"), "(mmm)");
 
+  EXPECT_NE(qi::Signature("(mm)"), "(mmm)");
+  EXPECT_NE(qi::Signature("(mm)"), "(mm");
 }
 
 TEST(TestSignature, FromString) {
@@ -234,6 +235,13 @@ TEST(TestSignature, FromString) {
   delete sig;
 
   ASSERT_FALSE(qi::Signature("ddd").isValid());
+
+
+  sig = new qi::Signature("(mm");
+  EXPECT_FALSE(sig->isValid());
+  EXPECT_EQ(sig->begin(), sig->end());
+  EXPECT_FALSE(sig->begin().hasChildren());
+  EXPECT_EQ(sig->begin().children(), "");
 }
 
 TEST(TestSignature, SignatureSplitError) {

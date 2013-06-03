@@ -206,11 +206,13 @@ namespace qi {
           return false;
         break;
       default:
-        qiLogError() << "Element '" << s[current] << "' is unknown in signature '" << s << "'";
+        qiLogVerbose() << "Element '" << s[current] << "' is unknown in signature '" << s << "'";
         return false;
         break;
       }
       current++;
+      if (current >= s.size() || s[current] == closing)
+        break;
       if (s[current] == '<')
       {
         int count = 0;
@@ -226,7 +228,7 @@ namespace qi {
         }
         if (count)
         {
-          qiLogError() << "Annotation not closed in '" << s << "'";
+          qiLogVerbose() << "Annotation not closed in '" << s << "'";
           return false;
         }
       }
@@ -236,12 +238,12 @@ namespace qi {
     // Check complex type validity
     if (type == qi::Signature::Type_Map && (arguments != 2 || s[current] != qi::Signature::Type_Map_End))
     {
-      qiLogError() << "Map must have a key and a value.";
+      qiLogVerbose() << "Map must have a key and a value.";
       return false;
     }
     if (type == qi::Signature::Type_List && (arguments != 1 || s[current] != qi::Signature::Type_List_End))
     {
-      qiLogError() << "List must contain only one element, but has " << arguments;
+      qiLogVerbose() << "List must contain only one element, but has " << arguments;
       return false;
     }
     return true;
@@ -337,7 +339,7 @@ namespace qi {
   // go forward, add a 0, go forward, add a 0, bouhhh a 1! AHHHHHH scary!
   bool SignaturePrivate::split(const char *signature, const char *sig_end) {
     unsigned int i = 0;
-    if (!_is_valid(std::string(signature), i, qi::Signature::Type_None, qi::Signature::Type_None))
+    if (!_is_valid(std::string(signature, sig_end - signature), i, qi::Signature::Type_None, qi::Signature::Type_None))
       return false;
 
     char *current   = _signature;
@@ -383,7 +385,7 @@ namespace qi {
             return false;
           break;
         default:
-          qiLogError() << "Signature element is invalid: `" << signature << "'";
+          qiLogVerbose() << "Signature element is invalid: '" << signature << "'";
           return false;
       }
 
@@ -422,7 +424,7 @@ namespace qi {
 
     if (this->size() != 1)
     {
-      qiLogError() << "Signature has more than one element: `" << fullSignature << "'";
+      qiLogVerbose() << "Signature has more than one element: `" << fullSignature << "'";
       _p->_valid = false;
     }
   }
@@ -434,7 +436,7 @@ namespace qi {
 
     if (this->size() != 1)
     {
-      qiLogError() << "Signature has more than one element: `" << subsig << "'";
+      qiLogVerbose() << "Signature has more than one element: `" << subsig << "'";
       _p->_valid = false;
     }
   }
@@ -448,6 +450,8 @@ namespace qi {
   }
 
   Signature::iterator Signature::begin() const {
+    if (!isValid())
+      return end();
     if (_p->_signature == _p->_end)
       return ::qi::Signature::iterator();
     ::qi::Signature::iterator it(_p->_signature, _p->_end);
@@ -500,6 +504,8 @@ namespace qi {
   }
 
   std::string Signature::iterator::annotation()const {
+    if (!_current)
+      return std::string();
     // Since we have an end marker, use it, it will simplify annotation lookup
     const char* next = _current;
     while (*next && next <= _end)
@@ -529,6 +535,8 @@ namespace qi {
   }
 
   Signature Signature::iterator::children() const {
+    if (!_current)
+      return Signature();
     Signature sig;
     size_t    size;
     size_t    toremove = 0;
@@ -557,11 +565,15 @@ namespace qi {
   }
 
   std::string Signature::toSTLSignature(bool constify) const {
+    if (!isValid())
+      return std::string();
     SignatureConvertor sc(this, SignatureConvertor::STL, constify);
     return sc.signature();
   }
 
   std::string Signature::toQtSignature(bool constify) const {
+    if (!isValid())
+      return std::string();
     SignatureConvertor sc(this, SignatureConvertor::Qt, constify);
     return sc.signature();
   }
