@@ -125,6 +125,8 @@ qi::Future<Link> StaticObjectTypeBase::connect(void* instance, Manageable* conte
     return qi::makeFutureError<Link>("Cant find signal");
   }
   SignalBase::Link id = sb->connect(subscriber);
+  if (id == SignalBase::invalidLink)
+    return qi::Future<Link>(id);
   Link link = ((Link)event << 32) + id;
   assert(link >> 32 == event);
   assert((link & 0xFFFFFFFF) == id);

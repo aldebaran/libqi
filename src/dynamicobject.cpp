@@ -274,6 +274,8 @@ namespace qi
     if (!s)
       return qi::makeFutureError<Link>("Cannot find signal");
     SignalBase::Link l = s->connect(subscriber);
+    if (l == SignalBase::invalidLink)
+      return qi::Future<Link>(l);
     Link link = ((Link)event << 32) + l;
     assert(link >> 32 == event);
     assert((link & 0xFFFFFFFF) == l);
