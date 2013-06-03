@@ -14,6 +14,11 @@
 #include <boost/thread/mutex.hpp>
 #include <boost/function.hpp>
 
+#ifdef _MSC_VER
+#  pragma warning( push )
+#  pragma warning( disable: 4251 ) // dll interface
+#endif
+
 namespace qi {
 
   class ManageablePrivate;
@@ -129,5 +134,10 @@ namespace qi {
     ManageablePrivate* _p;
   };
 }
+
+#ifdef _MSC_VER
+#  pragma warning( pop )
+#endif
+
 QI_TYPE_ENUM_REGISTER(qi::EventTrace::EventKind);
 #endif  // _QITYPE_MANAGEABLE_HPP_
