@@ -32,7 +32,12 @@ namespace qi
         return (*f)(vargs);
       std::vector<GenericValuePtr> args;
       if (transform.dropFirst && !transform.prependValue)
-        args.insert(args.end(), &vargs[1], &vargs[1] + vargs.size()-1);
+      {
+        // VCXX2008 does not accept insert here because GV(GVP) ctor is explicit
+        args.resize(vargs.size()-1);
+        for (unsigned i=0; i<vargs.size()-1; ++i)
+          args[i] = vargs[i+1];
+      }
       else if (transform.dropFirst && transform.prependValue)
       {
         args = vargs;
