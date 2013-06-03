@@ -12,20 +12,38 @@
 #include <qitype/genericobjectbuilder.hpp>
 #include "pyfuture.hpp"
 #include "gil.hpp"
+#include "pysignal.hpp"
 
 qiLogCategory("qi.py");
 
 namespace qi { namespace py {
 
 
+qi::GenericValuePtr triggerBouncer(qi::SignalBase *sig, const std::vector<qi::GenericValuePtr>& args) {
+  sig->trigger(args);
+  return qi::GenericValuePtr();
+}
+
     class PySession {
     public:
       PySession()
         : _ses(new qi::Session)
+        , connected(makePySignal("[m]"))
+        , disconnected(makePySignal("[m]"))
+        , nSigConnected(0)
+        , nSigDisconnected(0)
       {
+        // Get SignalBase from our PySignals
+        qi::SignalBase *conn = getSignal(connected);
+        qi::SignalBase *disconn = getSignal(disconnected);
+        // Connect our PySignals with qi::Session signals, have to use a dynamic generic function to trigger
+        nSigConnected = _ses->connected.connect(qi::makeDynamicGenericFunction(boost::bind(&triggerBouncer, conn, _1)));
+        nSigDisconnected = _ses->disconnected.connect(qi::makeDynamicGenericFunction(boost::bind(&triggerBouncer, disconn, _1)));
       }
 
       ~PySession() {
+        _ses->connected.disconnect(nSigConnected);
+        _ses->disconnected.disconnect(nSigDisconnected);
       }
 
       //return a future, or None (and throw in case of error)
@@ -99,6 +117,12 @@ namespace qi { namespace py {
 
     private:
       boost::shared_ptr<qi::Session> _ses;
+      int nSigConnected;
+      int nSigDisconnected;
+
+    public:
+      boost::python::object connected;
+      boost::python::object disconnected;
     };
 
     void export_pysession() {
@@ -108,6 +132,8 @@ namespace qi { namespace py {
           .def("service", &PySession::service, (boost::python::arg("service"), boost::python::arg("_async") = false))
           .def("services", &PySession::services, (boost::python::arg("_async") = false))
           .def("register_service", &PySession::registerService, (boost::python::arg("name"), boost::python::arg("object"), boost::python::arg("_async") = false))
+          .def_readonly("connected", &PySession::connected)
+          .def_readonly("disconnected", &PySession::disconnected)
           ;
     }
 
