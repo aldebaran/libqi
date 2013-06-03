@@ -29,7 +29,7 @@ inline bool globMatch(const std::string& pattern, const std::string& string)
 }
 
 const char* callType[] = {
-  "?", "C", "R", "S"
+  "?", "C", "R", "E", "S"
 };
 typedef std::map<std::string, qi::ObjectPtr> ObjectMap;
 ObjectMap objectMap;
@@ -80,7 +80,7 @@ void onTrace(ObjectMap::value_type ov, const qi::EventTrace& trace)
   }
   maxLen = std::max(maxLen, (unsigned int)name.size());
   unsigned int traceKind = trace.kind;
-  if (traceKind > 3)
+  if (traceKind > 4)
     traceKind = 0;
   std::string spacing(maxLen + 8 - name.size(), ' ');
   std::string spacing2(maxServiceLength + 8 - ov.first.size(), ' ');
