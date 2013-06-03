@@ -30,19 +30,13 @@ namespace qi {
   typedef boost::function<ObjectSerializationInfo (ObjectPtr)> SerializeObjectCallback;
 
   template <typename T>
-  void encodeBinary(qi::Buffer *buf, const T &t, SerializeObjectCallback onObject=SerializeObjectCallback());
-
-  template <typename T>
   void decodeBinary(qi::BufferReader *buf, T* value, DeserializeObjectCallback onObject=DeserializeObjectCallback());
 
     /** Encode content of \p gvp into \p buf.
   * @param onObject callback invoked each time an object is encountered.
   */
-  template<> QITYPE_API void encodeBinary(qi::Buffer *buf, const GenericValuePtr &gvp, SerializeObjectCallback onObject);
-  template<> inline void encodeBinary(qi::Buffer *buf, const GenericValueRef &gvp, SerializeObjectCallback onObject)
-  {
-    encodeBinary(buf, (const GenericValuePtr&)gvp, onObject);
-  }
+  QITYPE_API void encodeBinary(qi::Buffer *buf, const AutoGenericValuePtr &gvp, SerializeObjectCallback onObject=SerializeObjectCallback());
+
 
   /** Decode content of \p buf into \p gvp.
   * @param buf buffer with serialized data
@@ -50,12 +44,6 @@ namespace qi {
   * @param onObject callback invoked each time an object is encountered.
   */
   QITYPE_API void decodeBinary(qi::BufferReader *buf, GenericValuePtr gvp, DeserializeObjectCallback onObject=DeserializeObjectCallback());
-
-
-  template <typename T>
-  void encodeBinary(qi::Buffer *buf, const T &t, SerializeObjectCallback onObject) {
-    encodeBinary(buf, (const GenericValuePtr&)GenericValuePtr(&t), onObject);
-  }
 
   template <typename T>
   void decodeBinary(qi::BufferReader *buf, T* value, DeserializeObjectCallback onObject) {

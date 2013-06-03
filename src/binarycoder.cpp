@@ -738,9 +738,7 @@ namespace qi {
 
   } // namespace details
 
-  template<>
-  void encodeBinary(qi::Buffer *buf, const qi::GenericValuePtr &gvp,
-    SerializeObjectCallback onObject) {
+  void encodeBinary(qi::Buffer *buf, const qi::AutoGenericValuePtr &gvp, SerializeObjectCallback onObject) {
     BinaryEncoder be(*buf);
     details::SerializeTypeVisitor stv(be, onObject, gvp);
     qi::typeDispatch(stv, gvp);
