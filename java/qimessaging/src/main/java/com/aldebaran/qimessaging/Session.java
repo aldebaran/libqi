@@ -57,12 +57,12 @@ public class Session
 
   /**
    * Try to connect to given address.
-   * @param sdAddr Address to connect to.
+   * @param serviceDirectoryAddress Address to connect to.
    * @throws Exception on error.
    */
-  public Future<Void> connect(String sdAddr) throws Exception
+  public Future<Void> connect(String serviceDirectoryAddress) throws Exception
   {
-    long pFuture = Session.qiSessionConnect(_session, sdAddr);
+    long pFuture = Session.qiSessionConnect(_session, serviceDirectoryAddress);
     Future<Void> future = new Future<Void>(pFuture);
     return future;
   }

@@ -69,6 +69,7 @@ public class EmbeddedTools
       return false;
     }
 
+    LOADED_EMBEDDED_LIBRARY = true;
     return true;
   }
 
