@@ -46,8 +46,11 @@ function QiSession(url)
   });
 
   _socket.on('error', function (data) {
-    _dfd[data["idm"]].reject(data["result"]);
-    delete _dfd[data["idm"]];
+    if (data["idm"] != undefined)
+    {
+      _dfd[data["idm"]].reject(data["result"]);
+      delete _dfd[data["idm"]];
+    }
   });
 
   _socket.on('event', function (data) {
