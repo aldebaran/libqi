@@ -379,7 +379,7 @@ namespace qi
       else
         out.setValue(func.call(params));
       if (stats)
-        context->pushStats(methodId, (float)(qi::os::ustime() - time)/1e6);
+        context->pushStats(methodId, (float)(qi::os::ustime() - time)/1e6f);
       if (trace)
       {
         qi::os::timeval tv;
