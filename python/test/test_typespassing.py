@@ -6,7 +6,6 @@
 ## Copyright (C) 2013 Aldebaran Robotics
 
 import time
-import pytest
 from qi import ServiceDirectory
 from qi import Session
 
@@ -88,9 +87,8 @@ def test_builtin_types():
     # float
     assert service.display(0.1337) == 0.1337
 
-    # long
-    assert type(service.display(2 ** 62)) == long
-    assert service.display(2 ** 62) == 4611686018427387904L
+    # long (32b)
+    assert service.display(2 ** 31) == 2147483648
 
     # list
     assert service.display([]) == []
@@ -147,13 +145,19 @@ def test_object_types():
         pass
     objold = Aold()
 
-    with pytest.raises(RuntimeError):
+    try:
         service.display(Aold)
+    except RuntimeError:
+        pass
+
     service.display(objold)
 
 
-if __name__ == "__main__":
+def main():
     test_throwing_callback()
     test_unicode_strings()
     test_builtin_types()
     test_object_types()
+
+if __name__ == "__main__":
+    main()

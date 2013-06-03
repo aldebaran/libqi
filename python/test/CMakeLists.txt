@@ -36,4 +36,6 @@ function(qi_add_python_qimessaging_test name)
   endif()
 endfunction()
 
-qi_add_python_qimessaging_test(test_future   TIMEOUT 5)
+qi_add_python_qimessaging_test(test_promise   TIMEOUT 5)
+qi_add_python_qimessaging_test(test_signal   TIMEOUT 5)
+qi_add_python_qimessaging_test(test_typespassing   TIMEOUT 5)
