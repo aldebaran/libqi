@@ -7,9 +7,9 @@
 **
 **  QiMessaging master release
 */
-function QiSession(url)
+function QiSession(url, resource)
 {
-  var _socket = io.connect(url);
+  var _socket = io.connect(url, { resource: resource == undefined ? "socket.io" : resource });
   var _dfd = new Array();
   var _sigs = new Array();
   var _idm = 0;
