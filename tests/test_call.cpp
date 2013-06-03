@@ -964,8 +964,8 @@ public:
   qi::Property<qi::GenericValue> onCall;
   int callMe(const qi::ArgumentPack& pack)
   {
-    onCall.set(qi::GenericValue::from(pack.args));
-    return pack.args.size();
+    onCall.set(qi::GenericValue::from(pack.args()));
+    return pack.args().size();
   }
 };
 
