@@ -11,7 +11,11 @@
 #pragma once
 #ifndef _LIBQI_QI_MACRO_HPP_
 #define _LIBQI_QI_MACRO_HPP_
+
+#ifdef __cplusplus
 #include <boost/utility.hpp>
+#endif
+
 #include <qi/preproc.hpp>
 
 // Deprecated
@@ -131,6 +135,7 @@ Please consult the changelog for details. " #x)
   typedef int _qi_not_clonable;                 \
   template<typename U> friend struct ::qi::IsClonable
 
+#ifdef __cplusplus
 namespace boost
 {
   // forward-declare the trait to avoid an include
@@ -164,7 +169,7 @@ namespace qi
     return IsClonable<T>::value;
   }
 }
-
+#endif
 
 
 #if defined(__GNUC__)
