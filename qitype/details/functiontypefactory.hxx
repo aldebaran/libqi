@@ -457,9 +457,9 @@ namespace qi
     {
       // Pack arguments, call, wrap return value in GenericValue
       ArgumentPack nargs;
-      nargs.args.resize(vargs.size()-1);
+      nargs.args().resize(vargs.size()-1);
       for (unsigned i=0; i<vargs.size()-1; ++i)
-        nargs.args[i] = vargs[i+1];
+        nargs.args()[i] = vargs[i+1];
       C* inst = (C*)vargs.front().to<C*>();
       if (!inst)
         qiLogWarning("qitype.ArgumentPackBouncer") << "Null instance";

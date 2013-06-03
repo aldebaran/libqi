@@ -69,9 +69,13 @@ namespace qi {
   public:
     ArgumentPack() {};
     ArgumentPack(const std::vector<GenericValue>& args)
-    : args(args) {}
-    operator const std::vector<GenericValue>&() const { return args;}
-    std::vector<GenericValue> args;
+    : _args(args) {}
+    operator const std::vector<GenericValue>&() const { return _args;}
+    std::vector<GenericValue> &args()             { return _args; }
+    const std::vector<GenericValue> &args() const { return _args; }
+
+  private:
+    std::vector<GenericValue> _args;
   };
 
   /** Represents a generic callable function.

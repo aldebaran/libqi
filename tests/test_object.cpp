@@ -907,7 +907,7 @@ public:
   qi::Property<qi::GenericValue> onCall;
   void callMe(const qi::ArgumentPack& pack)
   {
-    onCall.set(qi::GenericValue::from(pack.args));
+    onCall.set(qi::GenericValue::from(pack.args()));
   }
 };
 
