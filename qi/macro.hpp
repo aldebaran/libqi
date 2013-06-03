@@ -11,7 +11,7 @@
 #pragma once
 #ifndef _LIBQI_QI_MACRO_HPP_
 #define _LIBQI_QI_MACRO_HPP_
-
+#include <boost/utility.hpp>
 #include <qi/preproc.hpp>
 
 // Deprecated
@@ -127,7 +127,45 @@ Please consult the changelog for details. " #x)
 // A macro to disallow copy constructor and operator=
 #define QI_DISALLOW_COPY_AND_ASSIGN(type)       \
   type(type const &);                           \
-  void operator=(type const &)
+  void operator=(type const &);               \
+  typedef int _qi_not_clonable;                 \
+  template<typename U> friend struct ::qi::IsClonable
+
+namespace boost
+{
+  // forward-declare the trait to avoid an include
+  template<typename T1, typename T2> struct is_base_of;
+}
+namespace qi
+{
+  /// Detect if a type is using boost::noncopyable or QI_DISALLOW_COPY_AND_ASSIGN
+  template<typename T> struct IsClonable
+  {
+    typedef char yes[1];
+    typedef char no[2];
+    template <typename C>
+    static no& test(typename C::_qi_not_clonable*);
+
+    template <typename>
+    static yes& test(...);
+
+    static const bool value = sizeof(test<T>(0)) == sizeof(yes)
+    && ! boost::is_base_of<boost::noncopyable, T>::value;
+  };
+
+  ///@return true if T inherits from boost::noncopyable or uses QI_DISALLOW_COPY_AND_ASSIGN
+  template<typename T> bool isClonable()
+  {
+    return IsClonable<T>::value;
+  }
+
+  template<typename T> bool isClonable(T*)
+  {
+    return IsClonable<T>::value;
+  }
+}
+
+
 
 #if defined(__GNUC__)
 # define QI_WARN_UNUSED_RESULT __attribute__((warn_unused_result))
