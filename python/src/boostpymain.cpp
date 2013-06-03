@@ -19,6 +19,11 @@ qiLogCategory("qi.py");
 
 BOOST_PYTHON_MODULE(_qi)
 {
+  // Initialize in case we use _qi without importing qi
+  // No-op when using qi
+  Py_Initialize();
+  PyEval_InitThreads();
+
   qiLogDebug() << "PyEval_ThreadsInit()? : " << PyEval_ThreadsInitialized();
 
   // set the docstring of the current module scope

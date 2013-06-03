@@ -3,7 +3,7 @@
 ##  - Cedric GESTES <gestes@aldebaran-robotics.com>
 ##  - Pierre ROULLON <proullon@aldebaran-robotics.com>
 ##
-## Copyright (C) 2010, 2011 Aldebaran Robotics
+## Copyright (C) 2010 - 2013 Aldebaran Robotics
 ##
 
 """ QiMessaging Python bindings
@@ -41,6 +41,16 @@ if sys.platform.startswith("linux"):
 
 #######
 
-from _qi import Application, Future, FutureState, FutureTimeout, Promise, Session, Signal, Property, ServiceDirectory
+from _qi import Application, Future, FutureState, FutureTimeout, Object, \
+                Promise, Property, ServiceDirectory, Session, Signal
 
-__all__ = [ "Application", "Promise", "Future", "FutureState", "FutureTimeout", "Session", "Signal", "Property", "ServiceDirectory" ]
+__all__ = ["Application",
+           "Future",
+           "FutureState",
+           "FutureTimeout",
+           "Object",
+           "Promise",
+           "Property",
+           "ServiceDirectory",
+           "Session",
+           "Signal"]

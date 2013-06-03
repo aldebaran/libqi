@@ -249,7 +249,7 @@ namespace qi { namespace py {
     }
 
     void export_pyobject() {
-      boost::python::class_<qi::py::PyQiObject>("Object")
+      boost::python::class_<qi::py::PyQiObject>("Object", boost::python::no_init)
           .def("call", boost::python::raw_function(&pyobject_param_shrinker, 1))
           //TODO: .def("post")
           //TODO: .def("setProperty")
