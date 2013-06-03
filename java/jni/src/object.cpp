@@ -115,18 +115,19 @@ jlong     Java_com_aldebaran_qimessaging_Object_connect(JNIEnv *env, jobject job
   // Fixme : May leak global ref.
   instance = env->NewGlobalRef(instance);
 
-  // Create a struct holding a jobject instance, jmethodId id and other needed thing for callback
-  // Pass it to void * data to register_method
-  data = new qi_method_info(instance, signature + "::(i)", jobj, toStdString(env, service));
-  gInfoHandler.push(data);
-
-  // Bind method signature on generic java callback
+  // Remove return value
   sigInfo = qi::signatureSplit(signature);
   signature = sigInfo[1];
   signature.append("::");
   signature.append(sigInfo[2]);
 
-  return obj->xConnect(event + "::" + "(i)",
+  // Create a struct holding a jobject instance, jmethodId id and other needed thing for callback
+  // Pass it to void * data to register_method
+  data = new qi_method_info(instance, signature, jobj, toStdString(env, service));
+  gInfoHandler.push(data);
+
+
+  return obj->xConnect(event,
                        qi::SignalSubscriber(
                          qi::makeDynamicGenericFunction(
                            boost::bind(&event_callback_to_java, (void*) data, _1)),
@@ -163,9 +164,9 @@ void      Java_com_aldebaran_qimessaging_Object_post(JNIEnv *env, jobject QI_UNU
   // Signature construction
   signature = event + "::(";
   for (unsigned i=0; i< params.size(); ++i)
-    signature += params[i].signature(true);
+    signature += params[i].signature(true).toString();
   signature += ")";
 
-  obj->metaPost(signature, params);
+  obj->metaPost(event, params);
   return;
 }

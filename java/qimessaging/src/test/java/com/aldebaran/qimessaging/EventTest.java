@@ -88,7 +88,7 @@ public class EventTest
     };
 
     try {
-      proxy.connect("fire", "fireCallback", callback);
+      proxy.connect("fire::(i)", "fireCallback::(i)", callback);
     } catch (Exception e) {
       fail("Connect to event must succeed : " + e.getMessage());
     }

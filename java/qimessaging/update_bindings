@@ -21,7 +21,7 @@ def jar_package(jarname, file_list, config=None):
     Package file info jar file
     """
     callee = ["qimvn", "jar"]
-    if config:
+    if config and config != "desktop":
         callee += ["-c", config]
 
     callee += [jarname] + file_list
@@ -92,10 +92,6 @@ def package_native_libraries(platform):
     # Deploy generated jar
     if deploy(artifact_id, jar_name, url) is not 0:
         return 1
-    # callee = ["qimvn", "deploy", jar_name, "--artifactId", artifact_id]
-    # callee += ["--groupId", "com.aldebaran", "--url", url]
-    # if subprocess.call(callee) is not 0:
-    #     return 1
 
     # Remove generated jar
     callee = ["rm", jar_name]
