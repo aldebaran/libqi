@@ -308,11 +308,13 @@ namespace qi {
     // Check arity. Does not require to acquire weakLock.
     int sigArity = Signature(signature()).begin().children().size();
     int subArity = -1;
+    Signature subSignature;
     if (src.handler)
     {
       if (src.handler.functionType() == dynamicFunctionType())
         goto proceed; // no arity checking is possible
       subArity = src.handler.argumentsType().size();
+      subSignature = src.handler.parametersSignature();
     }
     else if (src.target)
     {
@@ -329,12 +331,21 @@ namespace qi {
         goto proceed;
       }
       else
-        subArity = Signature(ms->parametersSignature()).size();
+      {
+        subSignature = ms->parametersSignature();
+        subArity = subSignature.size();
+      }
     }
     if (sigArity != subArity)
     {
       qiLogWarning() << "Subscriber has incorrect arity (expected "
         << sigArity  << " , got " << subArity <<")";
+      return invalid;
+    }
+    if (!signature().isConvertibleTo(subSignature))
+    {
+      qiLogWarning() << "Subscriber is not compatible to signal : "
+       << signature().toString() << " vs " << subSignature.toString();
       return invalid;
     }
   proceed:
