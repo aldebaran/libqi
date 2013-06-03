@@ -113,14 +113,18 @@ namespace qi
   };
 
   // TypeManager is accessed by this interface. By default, everything is
-  // constructible and copyable except functions
+  // constructible and copyable except functions or things detected by IsClonable
   template<typename T>
   struct TypeManager
-  : public boost::mpl::if_c<boost::is_function<T>::value,
-  TypeManagerNull<T>, TypeManagerDefault<T> >::type
+  : public boost::mpl::if_c<
+    boost::is_function<T>::value,
+    TypeManagerNull<T>,
+    typename boost::mpl::if_c< ::qi::IsClonable<T>::value,
+                       TypeManagerDefault<T>,
+                       TypeManagerNull<T> >::type>::type
   {};
 
-  // Except for boost::function which maches is_function and is copyable
+  // Except for boost::function which matches is_function and is copyable
   template<typename T>
   struct TypeManager<boost::function<T> >
   : public TypeManagerDefault<boost::function<T> > {};
