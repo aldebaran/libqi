@@ -23,6 +23,9 @@
 #include <qi/qi.hpp>
 #include "filesystem.hpp"
 
+#ifndef SIGKILL
+# define SIGKILL 9
+#endif //!SIGKILL
 
 namespace qi
 {
@@ -91,15 +94,7 @@ namespace qi
       GetExitCodeProcess(handle, &status);
       if(status == STILL_ACTIVE)
       {
-        if(sig == SIGTERM)
-        {
-          ExitProcess(0);
-          qi::os::msleep(100);
-          GetExitCodeProcess(handle, &status);
-          if(status != STILL_ACTIVE)
-            res = 0;
-        }
-        else if(sig == 9) // SIGKILL
+        if(sig == SIGTERM || sig == SIGKILL)
         {
           DWORD error = TerminateProcess(handle, 0);
           qi::os::msleep(100);
