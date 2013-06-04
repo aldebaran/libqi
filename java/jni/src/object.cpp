@@ -127,7 +127,7 @@ jlong     Java_com_aldebaran_qimessaging_Object_connect(JNIEnv *env, jobject job
   gInfoHandler.push(data);
 
 
-  return obj->xConnect(event,
+  return obj->connect(event,
                        qi::SignalSubscriber(
                          qi::makeDynamicGenericFunction(
                            boost::bind(&event_callback_to_java, (void*) data, _1)),
