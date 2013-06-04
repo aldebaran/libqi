@@ -28,6 +28,7 @@ class QiMessagingHandler(tornadio2.conn.SocketConnection):
         print("[%d] New connection from %s" % (self.sid, self.info.ip))
         self.qim = qi.Session()
         self.qim.connect(URL)
+        self.qim.disconnected.connect(lambda x: self.close())
 
     def on_message(self, message):
         pass
