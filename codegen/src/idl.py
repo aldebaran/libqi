@@ -44,76 +44,129 @@ import subprocess
 import shutil
 import re
 
+# load libqitype to access signature_to_json
+from ctypes import *
+
+if sys.platform.startswith('linux'):
+  soname = ".so"
+elif sys.platform.startswith('darwin'):
+  soname = ".dylib"
+else:
+  soname = ".dll"
+
+medir = os.path.dirname(os.path.abspath(__file__))
+pathes = ['../lib']
+qi_type = None
+for p in pathes:
+  try:
+    qi_type = cdll.LoadLibrary(os.path.join(medir, p, 'libqitype' + soname))
+    break
+  except:
+    continue
+
+if qi_type is None:
+  print("From " + medir)
+  raise Exception("Could not load libqitype shared module")
+
+qi_type.signature_to_json.restype = c_char_p
+
+def signature_to_json(s):
+  return handle.signature_to_json(s)
+
 METHODS = 0
 SIGNALS = 1
 PROPERTIES = 2
 
 
-""" IDL type system:
-    PRIMITIVES:
-      - u?(char, short, long, int)
-      - string
-      - dynamic
-    CONTAINERS:
-      - [value_type] : list
-      - {key_type, value_type}: map
-"""
-TYPE_MAP = {
-  'unsigned int': 'uint',
-  'unsigned long': 'uint64',
-  'unsigned short': 'ushort',
-  'unsigned char': 'uchar',
-  'long': 'int64',
-  'char*': 'string',
-  'qi::GenericValue': 'dynamic',
+# C++ -> signature mapping
+CXX_SIG_MAP = {
+  'unsigned int': 'L',
+  'unsigned long': 'L',
+  'unsigned short': 'W',
+  'unsigned char': 'C',
+  'int': 'l',
+  'long': 'l',
+  'short': 'w',
+  'char': 'c',
+  'int64_t': 'l',
+  'uint64_t': 'L',
+  'int32_t': 'i',
+  'uint32_t': 'I',
+  'int16_t': 'w',
+  'uint16_t': 'W',
+  'int8_t': 'c',
+  'uint8_t': 'C',
+  'char*': 's',
+  'string': 's',
+  'void':  'v',
+  'GenericValue': 'm',
 }
 
-REV_MAP = {
-    'uint' : 'unsigned int',
-    'uint64' : 'unsigned long',
-    'dynamic': 'qi::GenericValue',
-    'string' : 'std::string',
-    'int64'  : 'qi::int64_t',
-    'pair'   : 'std::pair'
-}
-
-# signature to IDL type
-SIGNATURE_MAP = {
-    'c'    : 'char',
-    'C'    : 'uchar',
+# signature to C++ type
+SIG_CXX_MAP = {
+    'c'    : 'signed char',
+    'C'    : 'unsigned char',
     'w'    : 'short',
-    'W'    : 'ushort',
-    'i'    : 'int',
-    'I'    : 'uint',
-    'l'    : 'long',
-    'L'    : 'ulong',
+    'W'    : 'unsigned short',
+    'i'    : 'qi::int32_t',
+    'I'    : 'qi::uint32_t',
+    'l'    : 'qi::int64_t',
+    'L'    : 'qi::uint64_t',
     'f'    : 'float',
     'd'    : 'double',
-    's'    : 'string',
-    'm'    : 'dynamic',
+    's'    : 'std::string',
+    'm'    : 'qi::GenericValue',
     'v'    : 'void',
     'b'    : 'bool',
-    'X'    : 'void*'
+    'X'    : 'void*',
+    '['    : 'std::vector',
+    '{'    : 'std::map'
 }
 
-# signature of a tuple to known matching structure
-KNOWN_STRUCT_MAP = {
+CONTAINERS_SIG = '{[('
+
+# annotated name -> cxx type
+ANNOTATION_CXX_MAP = {
 }
 
-def idltype_to_cxxtype(t):
-  """ Return the C++ type to use for idl type t
+def signature_to_cxxtype(s):
+  if not isinstance(s, basestring): #common pitfall, this works with unicode strings too
+    raise Exception("Expected string, got " + str(s) + " which is " + str(type(s)))
+  jsig = qi_type.signature_to_json(s)
+  import json
+  sig = json.loads(jsig)
+  if not len(sig) or not len(sig[0]):
+    raise Exception("Invalid signature: " + s)
+  return signature_to_cxxtype_(sig[0])
+
+def signature_to_cxxtype_(s):
+  """ Return the C++ type to use for parsed signature s
   """
-  # FIXME we are working at text level, this sucks
-  if t in KNOWN_STRUCT_MAP:
-    return KNOWN_STRUCT_MAP[t]
-  t = t.replace('{', 'std::map<').replace('}', ' >')
-  t = t.replace('[', 'std::vector<').replace(']', ' >')
-  #t = t.replace('(', 'boost::mpl::vector<').replace(')', '>')
-  for e in REV_MAP:
-    # Do not replace partial symbols!
-    t = re.sub("(^|[^a-zA-Z])"+e+"([^a-zA-Z]|$)", "\\1" + REV_MAP[e] + "\\2", t)
-  return t
+  (t, children, annotation) = s
+  if t == '(':
+    sname = annotation.split(',')[0]
+    if sname in ANNOTATION_CXX_MAP:
+      return ANNOTATION_CXX_MAP[sname]
+    elif len(children) == 2:
+      return 'std::pair<' + signature_to_cxxtype_(children[0]) + ',' + signature_to_cxxtype_(children[1]) + ' >'
+    else:
+      throw("Unhandled tuple typpe " + str(s))
+  elif t in '{[':
+    res = SIG_CXX_MAP[t] + '<'
+    res += ','.join(map(signature_to_cxxtype_, children))
+    res += ' >'
+    return res
+  elif t == 'o':
+    if len(annotation):
+      return annotation + 'ProxyPtr'
+    return 'qi::ObjectPtr' #FIXME specialized proxy from annotation
+  elif len(annotation): #FIXME some flag to select default or annotation?
+    return annotation
+  else:
+    return SIG_CXX_MAP[t]
 
+
+#mimou
 def parse_toplevel_comma(txt):
   """ Split given string on top-level commas (not within <>)
   """
@@ -169,16 +222,30 @@ def cxx_parsed_to_sig(p):
       IDL signature.
   """
   if (type(p) == list):
-    return ','.join(map(cxx_parsed_to_sig, p))
+    res = map(cxx_parsed_to_sig, p)
+    return ''.join(res)
   if (type(p) == tuple):
     if re.search('vector$', p[0]):
-      return p[0][0:-6] + "[" + cxx_parsed_to_sig(p[1]) + "]" + cxx_parsed_to_sig(p[2])
+      return "[" + cxx_parsed_to_sig(p[1]) + "]"
     elif re.search('map$', p[0]):
-      return p[0][0:-3] + "{" + cxx_parsed_to_sig(p[1]) + "}" + cxx_parsed_to_sig(p[2])
+      return "{" + cxx_parsed_to_sig(p[1]) + "}"
+    elif re.search('pair$', p[0]):
+      return "(" + cxx_parsed_to_sig(p[1]) + ")"
+    elif re.search('Future$', p[0]):
+      return cxx_parsed_to_sig(p[1])
     else: # unknown template
-      return p[0] + "<" + cxx_parsed_to_sig(p[1]) + ">" + p[2]
-  else:
-    return p
+      return 'X' + '<' + ','.join(p) + '>'
+  elif p in CXX_SIG_MAP:
+    return CXX_SIG_MAP[p]
+  #still no match, try without namespace
+  pend = p.split('::')[-1]
+  if pend in CXX_SIG_MAP:
+    return CXX_SIG_MAP[pend]
+  if re.search('Ptr$', p):
+    p = p.replace('ProxyPtr', '').replace('Ptr', '')
+    return 'o<' + p + '>' #This is no duck
+  print("Unhandled type " + p)
+  return 'X<' + p + '>'
 
 
 def cxx_type_to_signature(t):
@@ -192,15 +259,9 @@ def cxx_type_to_signature(t):
   t = re.sub(r"\s([^a-zA-Z])", r"\1", t)
   t = re.sub(r"([^a-zA-Z])\s", r"\1", t)
   t = t.strip()
-  #Known type conversion
-  for e in TYPE_MAP:
-    t = re.sub(e, TYPE_MAP[e], t)
-  #Container handling
-  #For correct result in presence of containers of containers,
-  #we need to parse the type almost fully
-  #Huge hack, we do not realy parse 'a,b' in template
   parsed = cxx_type_parse(t)
   sig = cxx_parsed_to_sig(parsed)
+  print(t + " => " + sig)
   return sig
 
 ANNOTATIONS = ['fast', 'threadSafe']
@@ -362,9 +423,6 @@ def raw_to_idl(dstruct):
     for method in methods:
       (method_name, args, ret, an) = method
       m = etree.SubElement(e, 'method', name=method_name, annotations=','.join(an))
-      r = ret.split("<", 1)
-      if (r[0] == "qi::Future") or (r[0] == "Future"):
-        ret = r[1][:-1]
       etree.SubElement(m, 'return', type=ret)
       for a in args:
         etree.SubElement(m, 'argument', type=a)
@@ -399,9 +457,9 @@ def method_to_cxx(method):
       ("int", "int p1, std::string p2", "p1, p2")
   """
   iret = method[2]
-  cret = idltype_to_cxxtype(iret)
+  cret = signature_to_cxxtype(iret)
   iargs = method[1]
-  cargs = map(idltype_to_cxxtype, iargs)
+  cargs = map(signature_to_cxxtype, iargs)
   typed_args = map(lambda x: cargs[x] + ' p' + str(x), range(len(cargs)))
   typed_args = ','.join(typed_args)
   arg_names = map(lambda x: 'p' + str(x), range(len(cargs)))
@@ -501,7 +559,7 @@ QI_TYPE_NOT_CLONABLE(@NAMESPACES@@INAME@);
   dtor = ''
   for sig in signals:
     name = sig[0]
-    signature = ','.join(map(idltype_to_cxxtype, sig[1]))
+    signature = ','.join(map(signature_to_cxxtype, sig[1]))
     signals_decl += '    qi::Signal<%s> & %s;\n' % (signature, name)
     ctor_decl.append('qi::Signal<%s> & %s' % (signature, name))
     ctor_init.append('%s(%s)' % (name, name))
@@ -511,7 +569,7 @@ QI_TYPE_NOT_CLONABLE(@NAMESPACES@@INAME@);
     fields.append('_interface_' + name)
   for prop in properties:
     name = prop[0]
-    signature = idltype_to_cxxtype(prop[1])
+    signature = signature_to_cxxtype(prop[1])
     signals_decl += '    qi::Property<%s> & %s;\n' % (signature, name)
     ctor_decl.append('qi::Property<%s> & %s' % (signature, name))
     ctor_init.append('%s(%s)' % (name, name))
@@ -722,7 +780,7 @@ namespace detail {
     if method[0][0] == '_':
       continue
     (cret, typed_args, arg_names) = method_to_cxx(method)
-    cargs = map(idltype_to_cxxtype, method[1])
+    cargs = map(signature_to_cxxtype, method[1])
     cargs = map(clean_extra_space, cargs)
     cret = clean_extra_space(cret)
     rawdoc = method[3].split('\n')
@@ -864,9 +922,13 @@ QI_TYPE_PROXY(@namepaces@@className@Proxy);
   for method in methods:
     (cret, typed_args, arg_names) = method_to_cxx(method)
     method_name = method[0]
-    if cret.find('Ptr') == len(cret)-3 and cret.find('Proxy') == -1:
-      fwdecl[cret[0:len(cret)-3]] = 1
-      cret = cret.replace('Ptr', 'ProxyPtr')
+    if cret.find('Ptr') == len(cret)-3:
+      tname = cret[0:-3]
+      if tname.find('Proxy') == len(tname) - 5:
+        tname = tname[0:-5]
+      if tname.split('::')[-1] != 'Object':
+        fwdecl[tname] = 1
+        cret = tname + 'ProxyPtr'
     out_ret = cret
     if (return_future):
       out_ret = 'qi::FutureSync<' + cret + ' >'
@@ -881,10 +943,11 @@ QI_TYPE_PROXY(@namepaces@@className@Proxy);
     typed_args = ''
     argIdx = 0
     for arg in method[1]:
-      if arg.find("Ptr") != -1:
+      cxx_arg = signature_to_cxxtype(arg)
+      if cxx_arg.find("Ptr") != -1:
         typed_args += '::qi::AutoGenericValuePtr p' + str(argIdx)
       else:
-        typed_args += idltype_to_cxxtype(arg) + ' p' + str(argIdx)
+        typed_args += cxx_arg + ' p' + str(argIdx)
       typed_args += ', '
       argIdx = argIdx + 1
     # Add a final optional argument 'MetaCallType calltype=auto'
@@ -898,11 +961,10 @@ QI_TYPE_PROXY(@namepaces@@className@Proxy);
   ctor = ''
   # Make  a Signal field for each signal, bridge it to backend in ctor
   for sig in signals:
-    signal_decl += '  qi::ProxySignal<void(' + ','.join(map(idltype_to_cxxtype, sig[1])) +')> ' + sig[0] + ';\n'
+    signal_decl += '  qi::ProxySignal<void(' + ','.join(map(signature_to_cxxtype, sig[1])) +')> ' + sig[0] + ';\n'
     ctor += '  , {0}(obj, "{0}")\n'.format(sig[0])
   for prop in properties:
-    print(prop[1])
-    signal_decl += '  qi::ProxyProperty<' + idltype_to_cxxtype(prop[1]) + '> ' + prop[0] + ';\n'
+    signal_decl += '  qi::ProxyProperty<' + signature_to_cxxtype(prop[1]) + '> ' + prop[0] + ';\n'
     ctor += '  , {0}(obj, "{0}")\n'.format(prop[0])
   result = skeleton
   open_namespace = ""
@@ -1022,9 +1084,9 @@ def raw_to_cxx_service_skeleton(class_name, data, implement_interface, include):
   (methods, signals) = (data[0], data[1])
   for method in methods:
     method_name = method[0]
-    args = ','.join(map(idltype_to_cxxtype, method[1]))
+    args = ','.join(map(signature_to_cxxtype, method[1]))
     result += '  %s %s(%s);\n' % (
-      idltype_to_cxxtype(method[2]),
+      signature_to_cxxtype(method[2]),
       method_name,
       args
     )
@@ -1032,7 +1094,7 @@ def raw_to_cxx_service_skeleton(class_name, data, implement_interface, include):
   for signal in signals:
     iface_ctor.append('%s' % (signal[0]))
     result += '  qi::Signal<%s> %s;\n' % (
-      ','.join(map(idltype_to_cxxtype, signal[1])),
+      ','.join(map(signature_to_cxxtype, signal[1])),
       signal[0]
     )
   if implement_interface:
@@ -1042,10 +1104,10 @@ def raw_to_cxx_service_skeleton(class_name, data, implement_interface, include):
     method_name = method[0]
     args = method[1]
     for i in range(len(args)):
-      args[i] = idltype_to_cxxtype(args[i]) + ' p' + str(i)
+      args[i] = signature_to_cxxtype(args[i]) + ' p' + str(i)
     args = ','.join(args)
     result += '%s %s::%s(%s)\n{\n  // Implementation of %s\n}\n' % (
-      idltype_to_cxxtype(method[2]),
+      signature_to_cxxtype(method[2]),
       class_name,
       method_name,
       args,
@@ -1244,14 +1306,19 @@ def main(args):
   parser.add_argument("--known-classes", "-k", default="", help="Comma-separated list of other handled classes")
   parser.add_argument("--classes", "-c", default="*", help="Comma-separated list of classes to select, optionally with per class ':operation'")
   parser.add_argument("--class-name", "-n", default="", help="C++ class name separated by include namespaces (ei: ns1::ns2::classname")
+  parser.add_argument("--cxx-signature-mapping", default="", help="Extra C++->signature mapping(type=sig,type2=sig2)")
   parser.add_argument("input", nargs='+', help="input file(s)")
 
   pargs = parser.parse_args(args)
   pargs.input = pargs.input[1:]
 
-  # Fill KNOWN_STRUCT_MAP with static stuff
-  KNOWN_STRUCT_MAP[signature_to_idl('({I(Isss[(ss)]s)}{I(Is)}s)')] = 'qi::MetaObject'
+  # Fill SIG_CXX_MAP with static stuff
+  SIG_CXX_MAP['({I(Isss[(ss)]s)}{I(Is)}s)'] = 'qi::MetaObject'
 
+  for m in pargs.cxx_signature_mapping.split(','):
+    if len(m):
+      m = m.split('=')
+      CXX_SIG_MAP[m[0]] = m[1]
   for c in pargs.known_classes.split(','):
     c = c.strip()
     if len(c):
@@ -1304,7 +1371,9 @@ def main(args):
       c += cls
       if not c in raw:
         raise Exception("Requested class %s not found in %s" % (c, ','.join(raw.keys())))
-      REV_MAP[cls + 'Ptr'] = cls + 'ProxyPtr'
+      CXX_SIG_MAP[cls + 'Ptr'] = 'o<' + cls + '>'
+      CXX_SIG_MAP[cls + 'ProxyPtr'] = 'o<' + cls + '>'
+      ANNOTATION_CXX_MAP[cls] = cls + 'ProxyPtr'
       if pargs.class_name:
         newraw[pargs.class_name] = raw[c]
         if class_op:

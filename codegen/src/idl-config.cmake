@@ -123,19 +123,21 @@ endfunction()
 #! Create an IDL file by parsing C++ header files.
 # \group:SRC C++ source/headers file to parse
 # \group:CLASSES name of the classes for which to generate idl
+# \group:TYPE_MAP Extra c++ types to signature mapping (cxxtype=signature)
 # \param:PREFIX path where to generate IDL files
 # \param:files name of variable that is filled by generated file names
 function(qi_create_idl files)
   cmake_parse_arguments(ARG
     ""
     "PREFIX"
-    "SRC;CLASSES"
+    "SRC;CLASSES;TYPE_MAP"
     ${ARGN})
   _qi_find_idl(IDL)
   set(names "")
   if (NOT ARG_PREFIX)
     set(ARG_PREFIX ".")
   endif()
+  string(REPLACE ";" "," _type_map ${ARG_TYPE_MAP})
   foreach(c ${ARG_CLASSES})
     string(REPLACE "::" ";" split_class ${c})
     list(REVERSE split_class)
@@ -147,6 +149,7 @@ function(qi_create_idl files)
       ${ARG_SRC}
       -c ${c}
       -o ${target}
+      --cxx-signature-mapping "'${_type_map}'"
       -m idl)
     list(APPEND names "${target}")
   endforeach(c)
