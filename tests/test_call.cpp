@@ -925,6 +925,24 @@ TEST(TestCall, Future)
   ASSERT_TRUE(f.hasError());
 }
 
+void arrrg(int v) {
+}
+
+TEST(TestCall, BadArguments)
+{
+  TestSessionPair p;
+  qi::GenericObjectBuilder gob;
+  gob.advertiseMethod("arrrg", &arrrg);
+  qi::ObjectPtr sobj = gob.object();
+  p.server()->registerService("a", sobj);
+  qi::ObjectPtr obj = p.client()->service("a");
+  qi::Future<qi::GenericValuePtr> f = obj->metaCall("arrrg::(i)", qi::GenericFunctionParameters());
+  EXPECT_TRUE(f.hasError(1000));
+
+  qi::Future<qi::GenericValuePtr> f2 = obj->metaCall("arrrg", qi::GenericFunctionParameters());
+  EXPECT_TRUE(f2.hasError(1000));
+}
+
 TEST(TestCall, Statistics)
 {
   TestSessionPair p;

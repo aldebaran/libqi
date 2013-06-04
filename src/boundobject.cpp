@@ -120,6 +120,7 @@ namespace qi {
   }
 
   void ServiceBoundObject::onMessage(const qi::Message &msg, TransportSocketPtr socket) {
+    try {
     if (msg.object() > _objectId)
     {
       qiLogDebug() << "onChildMessage " << msg.address();
@@ -148,10 +149,7 @@ namespace qi {
         std::stringstream ss;
         ss << "No such method " << msg.address();
         qiLogError() << ss.str();
-        qi::Promise<GenericValuePtr> prom;
-        prom.setError(ss.str());
-        serverResultAdapter(prom.future(), _owner?_owner:this, socket, msg.address());
-        return;
+        throw std::runtime_error(ss.str());
       }
       sigparam = mm->parametersSignature();
     }
@@ -222,6 +220,19 @@ namespace qi {
     }
     //########################
     value.destroy();
+    } catch (const std::runtime_error &e) {
+      if (msg.type() == Message::Type_Call) {
+        qi::Promise<GenericValuePtr> prom;
+        prom.setError(e.what());
+        serverResultAdapter(prom.future(), _owner?_owner:this, socket, msg.address());
+      }
+    } catch (...) {
+      if (msg.type() == Message::Type_Call) {
+        qi::Promise<GenericValuePtr> prom;
+        prom.setError("Unknown error catch");
+        serverResultAdapter(prom.future(), _owner?_owner:this, socket, msg.address());
+      }
+    }
   }
 
   void ServiceBoundObject::onSocketDisconnected(TransportSocketPtr client, std::string error)
