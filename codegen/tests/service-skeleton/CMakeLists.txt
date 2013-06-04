@@ -5,7 +5,9 @@
 # The user fills in the skeleton: we do that with string replace
 # The user builds a library with the filled skeleton: we do that
 
-#find python
+
+find_package(idl.py REQUIRED)
+
 find_program(_python_executable
     NAMES python2 python python.exe
     NO_CMAKE_FIND_ROOT_PATH)
@@ -17,7 +19,7 @@ file(MAKE_DIRECTORY  ${CMAKE_CURRENT_BINARY_DIR}/simpleservice)
 
 #generate proxy header from idl
 execute_process(COMMAND
-  ${_python_executable} ${CMAKE_CURRENT_SOURCE_DIR}/../../src/idl.py
+  ${_python_executable} ${IDL.PY_EXECUTABLE}
   ${CMAKE_CURRENT_SOURCE_DIR}/simpleservice.idl
   -m proxy
   -o ${CMAKE_CURRENT_BINARY_DIR}/simpleservice/simpleservice-proxy.hpp
@@ -27,7 +29,7 @@ execute_process(COMMAND
 
 set(skel ${CMAKE_CURRENT_BINARY_DIR}/simpleservice/simpleservice-service.skel)
 execute_process(COMMAND
-  ${_python_executable} ${CMAKE_CURRENT_SOURCE_DIR}/../../src/idl.py
+  ${_python_executable} ${IDL.PY_EXECUTABLE}
   ${CMAKE_CURRENT_SOURCE_DIR}/simpleservice.idl
   -m cxxserviceregister
   -o ${skel}

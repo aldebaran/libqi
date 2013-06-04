@@ -14,7 +14,7 @@ function(_qi_find_idl where)
   endif()
   find_program(IDLPY
     name idl.py
-    PATHS ${cdir}/../../../codegen/src ${cdir}/../../../bin
+    PATHS ${cdir}/../../bin ${cdir}/../bin
     )
   if (NOT IDLPY)
     qi_error("idl.py not found")
