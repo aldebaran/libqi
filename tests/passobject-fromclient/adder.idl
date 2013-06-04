@@ -1,8 +1,8 @@
 <IDL>
 <class name="Adder">
-<method name="registerTask"><return type="int" /><argument type="AddTaskProxyPtr" /></method>
-<method name="popTask"><return type="void" /></method>
-<method name="addAll"><return type="int" /><argument type="int" /></method>
-<property name="value" type="int" />
+<method name="registerTask"><return type="i" /><argument type="o&lt;AddTask>" /></method>
+<method name="popTask"><return type="v" /></method>
+<method name="addAll"><return type="i" /><argument type="i" /></method>
+<property name="value" type="i" />
 </class>
 </IDL>

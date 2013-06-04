@@ -1,13 +1,13 @@
 <IDL>
 <class name="qi::Adder">
   <method name="addTwo">
-    <return type="int" />
-    <argument type="int" />
-    <argument type="int" />
+    <return type="i" />
+    <argument type="i" />
+    <argument type="i" />
   </method>
-  <property name="value" type="int" />
+  <property name="value" type="i" />
   <signal  name="onAdd" >
-    <argument type="int" />
+    <argument type="i" />
   </signal>
 </class>
 </IDL>

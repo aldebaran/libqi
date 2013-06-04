@@ -1,6 +1,6 @@
 <IDL>
 <class name="Adder">
-  <method name="makeTask"><return type="AddTaskProxyPtr" /><argument type="int" /></method>
-  <property name="value" type="int" />
+  <method name="makeTask"><return type="o&lt;AddTask>" /><argument type="i" /></method>
+  <property name="value" type="i" />
 </class>
 </IDL>

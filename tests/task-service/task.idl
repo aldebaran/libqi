@@ -1,36 +1,36 @@
 <IDL>
 <class name="Task">
   <method name="getName">
-    <return type="string" />
+    <return type="s" />
   </method>
   <method name="setParam">
-    <return type="string" />
-    <argument type="string" />
+    <return type="s" />
+    <argument type="s" />
   </method>
   <method name="step">
-    <return type="string" />
-    <argument type="uint" />
+    <return type="s" />
+    <argument type="I" />
   </method>
   <method name="getLastResult">
-    <return type="string" />
+    <return type="s" />
   </method>
-  <signal name="onParamChanged"><argument type="string" /></signal>
-  <signal name="onStep"><argument type="string" /></signal>
+  <signal name="onParamChanged"><argument type="s" /></signal>
+  <signal name="onStep"><argument type="s" /></signal>
 </class>
 <class name="TaskGenerator">
   <method name="newTask">
-    <return type="TaskProxyPtr" />
-    <argument type="string" />
+    <return type="o&lt;Task>" />
+    <argument type="s" />
   </method>
   <method name="step">
-    <return type="void" />
-    <argument type="uint" />
+    <return type="v" />
+    <argument type="I" />
   </method>
   <method name="taskCount">
-    <return type="uint64" />
+    <return type="L" />
   </method>
   <method name="tasks">
-    <return type="[TaskProxyPtr]" />
+    <return type="[o&lt;Task>]" />
   </method>
 </class>
 </IDL>
