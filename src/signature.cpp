@@ -652,4 +652,15 @@ namespace qi {
   }
 }
 
+char* signature_to_json(const char* sig)
+{
+  static char* resc = 0;
+  qi::Signature s(sig);
+  std::string res = qi::encodeJSON(s.toData());
+  if (resc)
+    free(resc);
+  resc = strdup(res.c_str());
+  return resc;
+}
+
 QI_EQUIVALENT_STRING_REGISTER(qi::Signature, &qi::Signature::toString);

@@ -173,6 +173,8 @@ namespace qi {
 
 }
 
+extern "C" QITYPE_API char* signature_to_json(const char* sig);
+
 #ifdef _MSC_VER
 #  pragma warning( pop )
 #endif
