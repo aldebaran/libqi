@@ -88,7 +88,7 @@ def test_builtin_types():
     assert service.display(0.1337) == 0.1337
 
     # long (32b)
-    assert service.display(2 ** 31) == 2147483648
+    assert service.display(2 ** 31 - 1) == 2147483647
 
     # list
     assert service.display([]) == []
