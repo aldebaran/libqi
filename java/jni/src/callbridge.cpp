@@ -64,12 +64,13 @@ qi::GenericValuePtr call_to_java(std::string signature, void* data, const qi::Ge
   int                 index = 0;
   JNIEnv*             env = 0;
   qi_method_info*     info = reinterpret_cast<qi_method_info*>(data);
+  jclass              cls = 0;
   std::vector<std::string>  sigInfo = qi::signatureSplit(signature);
 
   // Attach JNIEnv to current thread to avoid segfault in jni functions. (eventloop dependent)
   if (JVM()->AttachCurrentThread((envPtr) &env, (void *) 0) != JNI_OK || env == 0)
   {
-    qiLogError("qimessaging.java") << "Cannot attach callback thread to Java VM";
+    qiLogError() << "Cannot attach callback thread to Java VM";
     throwJavaError(env, "Cannot attach callback thread to Java VM");
     return res;
   }
@@ -77,7 +78,7 @@ qi::GenericValuePtr call_to_java(std::string signature, void* data, const qi::Ge
   // Check value of method info structure
   if (info == 0)
   {
-    qiLogError("qimessaging.java") << "Internal method informations are not valid";
+    qiLogError() << "Internal method informations are not valid";
     throwJavaError(env, "Internal method informations are not valid");
     return res;
   }
@@ -93,15 +94,21 @@ qi::GenericValuePtr call_to_java(std::string signature, void* data, const qi::Ge
   }
 
   // Find method class and get methodID
-  jclass cls = env->FindClass(info->className.c_str());
+  cls = env->GetObjectClass(info->instance);
+  if (!cls)
+  {
+    qiLogError() << "Service class not found: " << info->className;
+    throw std::runtime_error("Service class not found");
+  }
+
   jmethodID mid = env->GetMethodID(cls, sigInfo[1].c_str(), toJavaSignature(signature).c_str());
 
   if (!mid) // Then maybe method is declared as static...
     mid = env->GetStaticMethodID(cls, sigInfo[1].c_str(), toJavaSignature(signature).c_str());
   if (!mid)
   {
-    qiLogError("qimessaging.jni") << "Cannot find java method " << sigInfo[1] << toJavaSignature(signature).c_str();
-    throw new std::runtime_error("Cannot find method");
+    qiLogError() << "Cannot find java method " << sigInfo[1] << toJavaSignature(signature).c_str();
+    throw std::runtime_error("Cannot find method");
   }
 
   // Finally call method
