@@ -72,6 +72,12 @@ namespace qi { namespace py {
         qiLogDebug() << "adding method:" << mem.toString();
         boost::python::object fun = boost::python::raw_function(PyQiFunctor(mem.name().c_str(), obj));
         boost::python::api::setattr(pyobj, mem.name().c_str(), fun);
+        // Fill __doc__ with Signature and description
+        std::stringstream ssdocstring;
+        ssdocstring << "Signature: " << mem.returnSignature().toString() << "\n";
+        ssdocstring << mem.description();
+        boost::python::object docstring(ssdocstring.str());
+        boost::python::api::setattr(fun, "__doc__", docstring);
       }
     }
 
