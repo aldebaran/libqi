@@ -34,6 +34,7 @@ namespace qi {
    if (ret.hasError())
    {
      fco.setError(ret.error());
+     onSocketDisconnected(ret.error());
      return;
    }
    if (isAdd)
@@ -50,6 +51,7 @@ namespace qi {
   void ServiceDirectoryClient::onMetaObjectFetched(qi::Future<void> future, qi::Promise<void> promise) {
     if (future.hasError()) {
       promise.setError(future.error());
+      onSocketDisconnected(future.error());
       return;
     }
     boost::function<void (unsigned int, std::string)> f;
@@ -67,6 +69,7 @@ namespace qi {
   void ServiceDirectoryClient::onSocketConnected(qi::FutureSync<void> future, qi::Promise<void> promise) {
     if (future.hasError()) {
       promise.setError(future.error());
+      onSocketDisconnected(future.error());
       return;
     }
     qi::Future<void> fut = _remoteObject.fetchMetaObject();
