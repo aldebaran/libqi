@@ -407,10 +407,13 @@ TEST(QiOs, dlerror)
   // expect NULL since no error has occurred since last dlerror call
   EXPECT_TRUE(error1 == NULL) << "Expected NULL, got: " << error1;
 
+#ifndef __linux__
+  // dlclose segfault on linux if an invalid pointer is given
   qi::os::dlerror(); // Reset errno value
   EXPECT_NE(0, qi::os::dlclose((void*) 123));
   const char* error2 = qi::os::dlerror();
   EXPECT_NE((const char*) NULL, error2);
+#endif
 }
 
 #ifdef _MSC_VER
