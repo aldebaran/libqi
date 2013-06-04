@@ -3,7 +3,6 @@
 import tornado
 import tornadio2
 import qi
-import _qi
 import sys
 import json
 import base64
@@ -15,7 +14,7 @@ class SetEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, bytearray):
             return base64.b64encode(obj)
-        if isinstance(obj, _qi.Object):
+        if isinstance(obj, qi.Object):
             return obj.metaObject()
         return json.JSONEncoder.default(self, obj)
 
