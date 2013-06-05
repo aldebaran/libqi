@@ -5,7 +5,7 @@
 
 #include "qicli.hpp"
 
-int subCmd_call(int argc, char **argv, SessionHelper& session, MainOptions const& options)
+int subCmd_call(int argc, char **argv, MainOptions const& options)
 {
   po::options_description     desc("Usage: qicli call Service.Method ARGS...");
   std::string                 fullName;
@@ -23,7 +23,7 @@ int subCmd_call(int argc, char **argv, SessionHelper& session, MainOptions const
   po::variables_map vm;
   if (!poDefault(po::command_line_parser(argc, argv).options(desc).positional(positionalOptions), vm, desc))
     return 1;
-
+  SessionHelper session(options.address, options.verbose);
   std::string serviceName;
   std::string methodName;
 
@@ -37,10 +37,10 @@ int subCmd_call(int argc, char **argv, SessionHelper& session, MainOptions const
   if (!session.getServiceSync(serviceName, service))
     return 1;
 
-  return !service.call(methodName, argList);
+  return service.call(methodName, argList);
 }
 
-int subCmd_post(int argc, char **argv, SessionHelper& session, MainOptions const& options)
+int subCmd_post(int argc, char **argv, MainOptions const& options)
 {
   po::options_description     desc("Usage: qicli post Service.Signal ARGS...");
   std::string                 fullName;
@@ -59,6 +59,7 @@ int subCmd_post(int argc, char **argv, SessionHelper& session, MainOptions const
   if (!poDefault(po::command_line_parser(argc, argv).options(desc).positional(positionalOptions), vm, desc))
     return 1;
 
+  SessionHelper session(options.address, options.verbose);
   std::string serviceName;
   std::string signalName;
 
@@ -72,10 +73,10 @@ int subCmd_post(int argc, char **argv, SessionHelper& session, MainOptions const
   if (!session.getServiceSync(serviceName, service))
     return 1;
 
-  return !service.post(signalName, argList);
+  return service.post(signalName, argList);
 }
 
-int subCmd_service(int argc, char **argv, SessionHelper& session, MainOptions const& options)
+int subCmd_service(int argc, char **argv, MainOptions const& options)
 {
   po::options_description     desc("Usage: qicli services PATTERN...");
   std::vector<std::string>    serviceList;
@@ -84,8 +85,8 @@ int subCmd_service(int argc, char **argv, SessionHelper& session, MainOptions co
       ("service,s", po::value<std::vector<std::string> >(&serviceList), "service to display")
       ("help,h", "Print this help message and exit")
       ("details,d", "print services' details")
-      ("interactive,i", "turn on interactive mode");
-
+      ("interactive,i", "turn on interactive mode")
+      ("number,n", "display services' idx");
 
   po::positional_options_description positionalOptions;
   positionalOptions.add("service", -1);
@@ -94,18 +95,22 @@ int subCmd_service(int argc, char **argv, SessionHelper& session, MainOptions co
   if (!poDefault(po::command_line_parser(argc, argv).options(desc).positional(positionalOptions), vm, desc))
     return 1;
 
+  SessionHelper session(options.address, options.verbose);
   if (serviceList.size() == 0)
     serviceList.push_back(".*");
-  session.xShowServicesInfo(serviceList, vm.count("details"));
+  session.xShowServicesInfo(serviceList, vm.count("details"), vm.count("number"));
 
   if (!vm.count("interactive"))
     return 0;
 
-  session.showServiceInfo(readNumericInput(), true);
+  if (vm.count("number"))
+    session.showServiceInfo(readNumericInput(), true);
+  else
+    session.showServiceInfo(readAlphaInput(), true);
   return 0;
 }
 
-int subCmd_watch(int argc, char **argv, SessionHelper& session, MainOptions const& options)
+int subCmd_watch(int argc, char **argv, MainOptions const& options)
 {
   po::options_description desc("Usage: qicli watch Service.Signal");
   std::string             fullName;
@@ -122,6 +127,7 @@ int subCmd_watch(int argc, char **argv, SessionHelper& session, MainOptions cons
   if (!poDefault(po::command_line_parser(argc, argv).options(desc).positional(positionalOptions), vm, desc))
     return 1;
 
+  SessionHelper session(options.address, options.verbose);
   std::string serviceName;
   std::string signalName;
 
@@ -135,10 +141,10 @@ int subCmd_watch(int argc, char **argv, SessionHelper& session, MainOptions cons
   if (!session.getServiceSync(serviceName, service))
     return 1;
 
-  return !service.watchSignal(signalName, vm.count("time"));
+  return service.watchSignal(signalName, vm.count("time"));
 }
 
-int subCmd_get(int argc, char **argv, SessionHelper& session, MainOptions const& options)
+int subCmd_get(int argc, char **argv, MainOptions const& options)
 {
   po::options_description desc("Usage: qicli get Service.Propertie");
   std::string             fullName;
@@ -154,6 +160,7 @@ int subCmd_get(int argc, char **argv, SessionHelper& session, MainOptions const&
   if (!poDefault(po::command_line_parser(argc, argv).options(desc).positional(positionalOptions), vm, desc))
     return 1;
 
+  SessionHelper session(options.address, options.verbose);
   std::string serviceName;
   std::string propName;
 
@@ -167,10 +174,10 @@ int subCmd_get(int argc, char **argv, SessionHelper& session, MainOptions const&
   if (!session.getServiceSync(serviceName, service))
     return 1;
 
-  return !service.showProp(propName);
+  return service.showProp(propName);
 }
 
-int subCmd_set(int argc, char **argv, SessionHelper& session, MainOptions const& options)
+int subCmd_set(int argc, char **argv, MainOptions const& options)
 {
   po::options_description desc("Usage: qicli get Service.Propertie");
   std::string             fullName;
@@ -189,6 +196,7 @@ int subCmd_set(int argc, char **argv, SessionHelper& session, MainOptions const&
   if (!poDefault(po::command_line_parser(argc, argv).options(desc).positional(positionalOptions), vm, desc))
     return 1;
 
+  SessionHelper session(options.address, options.verbose);
   std::string serviceName;
   std::string propName;
 
@@ -202,5 +210,5 @@ int subCmd_set(int argc, char **argv, SessionHelper& session, MainOptions const&
   if (!session.getServiceSync(serviceName, service))
     return 1;
 
-  return !service.setProp(propName, value);
+  return service.setProp(propName, value);
 }

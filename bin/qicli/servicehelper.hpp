@@ -11,11 +11,11 @@ private:
 public:
   ServiceHelper const& operator=(qi::ObjectPtr const& service);
   qi::ObjectPtr const& objPtr() const;
-  bool call(std::string const& methodName, std::vector<std::string> const& argList);
-  bool post(std::string const& signalName, std::vector<std::string> const& argList);
-  bool showProp(std::string const& propName);
-  bool setProp(std::string const& propName, std::string const& value);
-  bool watchSignal(std::string const& signalName, bool showTime);
+  int call(std::string const& methodName, std::vector<std::string> const& argList);
+  int post(std::string const& signalName, std::vector<std::string> const& argList);
+  int showProp(std::string const& propName);
+  int setProp(std::string const& propName, std::string const& value);
+  int watchSignal(std::string const& signalName, bool showTime);
 
 private:
   std::string _getTime() const;

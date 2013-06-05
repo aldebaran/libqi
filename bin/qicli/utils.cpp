@@ -22,14 +22,17 @@ bool splitName(std::string const& fullName, std::string &beforePoint, std::strin
 int readNumericInput()
 {
   std::string c;
-  std::cout << "[ Enter a number or q to quit ] > ";
+  std::cout << "Enter a service id:";
   std::getline(std::cin, c);
-  if (c == "q")
-  {
-    std::cout << "Quit.";
-    exit(0);
-  }
   return atoi(c.c_str());;
+}
+
+std::string readAlphaInput()
+{
+  std::string str;
+  std::cout << "Enter a service name:";
+  std::getline(std::cin, str);
+  return str;
 }
 
 void showHelp(po::options_description const& desc)

@@ -2,6 +2,42 @@
 
 #include "sessionhelper.hpp"
 
+SessionHelper::SessionHelper(std::string const& address, bool verbose)
+  :_verbose(verbose)
+{
+  if (_verbose)
+  {
+    std::cout << "Connecting to [" << address << "] : ";
+    std::cout.flush();
+  }
+  try
+  {
+    _session.connect(address);
+  }
+  catch (std::exception const& e)
+  {
+    if (_verbose)
+    std::cout << e.what() << std::endl;
+    throw e;
+  }
+  if (_verbose)
+    std::cout << "OK" << std::endl;
+}
+
+SessionHelper::~SessionHelper()
+{
+  if (_verbose)
+  {
+    std::cout << "Closing session : ";
+    std::cout.flush();
+  }
+  qi::FutureSync<void> fut = _session.close();
+  if (fut.hasError() && _verbose)
+    std::cout << "error while closing session: " << fut.error() << std::endl;
+  if (_verbose)
+    std::cout << "OK" << std::endl;
+}
+
 bool SessionHelper::getServiceSync(const std::string &serviceName, ServiceHelper &out)
 {
   qi::FutureSync<qi::ObjectPtr> future = _session.service(serviceName);
@@ -16,11 +52,13 @@ bool SessionHelper::getServiceSync(const std::string &serviceName, ServiceHelper
   return true;
 }
 
-void SessionHelper::_showServiceInfo(qi::ServiceInfo const& infos, bool verbose)
+void SessionHelper::_showServiceInfo(qi::ServiceInfo const& infos, bool verbose, bool number)
 {
   if (!verbose)
   {
-    std::cout << "[" << infos.serviceId() << "]" << infos.name() << std::endl;
+    if (number)
+      std::cout << "[" << infos.serviceId() << "]";
+    std::cout << infos.name() << std::endl;
     return ;
   }
 
@@ -40,7 +78,7 @@ void SessionHelper::_showServiceInfo(qi::ServiceInfo const& infos, bool verbose)
   qi::details::printMetaObject(std::cout, service.objPtr()->metaObject());
 }
 
-void SessionHelper::showServiceInfo(std::string const& serviceName, bool verbose)
+void SessionHelper::showServiceInfo(std::string const& serviceName, bool verbose, bool number)
 {
   std::vector<qi::ServiceInfo> servs = _session.services();
 
@@ -51,10 +89,10 @@ void SessionHelper::showServiceInfo(std::string const& serviceName, bool verbose
   if (i == servs.size())
     return ;
 
-  _showServiceInfo(servs[i], verbose);
+  _showServiceInfo(servs[i], verbose, number);
 }
 
-void SessionHelper::showServiceInfo(unsigned int serviceId, bool verbose)
+void SessionHelper::showServiceInfo(unsigned int serviceId, bool verbose, bool number)
 {
   std::vector<qi::ServiceInfo> servs = _session.services();
 
@@ -65,7 +103,7 @@ void SessionHelper::showServiceInfo(unsigned int serviceId, bool verbose)
   if (i == servs.size())
     return ;
 
-  _showServiceInfo(servs[i], verbose);
+  _showServiceInfo(servs[i], verbose, number);
 }
 
 bool isNumber(std::string const& str)
@@ -78,7 +116,7 @@ bool isNumber(std::string const& str)
   return true;
 }
 
-void SessionHelper::xShowServicesInfo(std::vector<std::string> const& patternVec, bool verbose)
+void SessionHelper::xShowServicesInfo(std::vector<std::string> const& patternVec, bool verbose, bool number)
 {
   std::vector<qi::ServiceInfo> servs = _session.services();
   std::vector<std::string> matchServs;
@@ -97,24 +135,24 @@ void SessionHelper::xShowServicesInfo(std::vector<std::string> const& patternVec
       }
     }
   }
-  showServicesInfo(matchServs, verbose);
+  showServicesInfo(matchServs, verbose, number);
 }
 
-void SessionHelper::showServicesInfo(std::vector<std::string> const& serviceList, bool verbose)
+void SessionHelper::showServicesInfo(std::vector<std::string> const& serviceList, bool verbose, bool number)
 {
   for (unsigned int i = 0; i < serviceList.size(); ++i)
   {
     if (isNumber(serviceList[i]))
-      showServiceInfo(::atoi(serviceList[i].c_str()), verbose);
+      showServiceInfo(::atoi(serviceList[i].c_str()), verbose, number);
     else
-      this->showServiceInfo(serviceList[i], verbose);
+      this->showServiceInfo(serviceList[i], verbose, number);
     if (verbose)
       if (i + 1 != serviceList.size())
         std::cout << "========================================================================" << std::endl;
   }
 }
 
-void SessionHelper::showServicesInfo(bool verbose)
+void SessionHelper::showServicesInfo(bool verbose, bool number)
 {
   std::vector<qi::ServiceInfo> servs = _session.services();
 

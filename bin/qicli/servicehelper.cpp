@@ -28,7 +28,7 @@ qi::ObjectPtr const& ServiceHelper::objPtr() const
   return _service;
 }
 
-bool ServiceHelper::call(std::string const& methodName, std::vector<std::string> const& argList)
+int ServiceHelper::call(std::string const& methodName, std::vector<std::string> const& argList)
 {
   qi::GenericFunctionParameters params;
 
@@ -41,39 +41,38 @@ bool ServiceHelper::call(std::string const& methodName, std::vector<std::string>
   if (result.hasError())
   {
     std::cout << "failed to call method: " << result.error() << std::endl;
-    return false;
+    return 1;
   }
-  std::cout.flush();
   std::cout << qi::encodeJSON(result.value()) << std::endl;
-  return true;
+  return 0;
 }
 
-bool ServiceHelper::showProp(std::string const& propName)
+int ServiceHelper::showProp(std::string const& propName)
 {
   int propId = _service->metaObject().propertyId(propName);
   if (propId == -1)
   {
     std::cout << "error: can't find property: " << propName << std::endl;
-    return false;
+    return 1;
   }
   qi::FutureSync<qi::GenericValue> result = _service->property(propId);
 
   if (result.hasError())
   {
     std::cout << "error: " << result.error() << std::endl;
-    return false;
+    return 1;
   }
   std::cout << qi::encodeJSON(result.value()) << std::endl;
-  return true;
+  return 0;
 }
 
-bool ServiceHelper::setProp(std::string const& propName, std::string const& value)
+int ServiceHelper::setProp(std::string const& propName, std::string const& value)
 {
   int propId = _service->metaObject().propertyId(propName);
   if (propId == -1)
   {
     std::cout << "error: can't find property: " << propName << std::endl;
-    return false;
+    return 1;
   }
   qi::GenericValue gv = qi::decodeJSON(value);
   qi::FutureSync<void> result = _service->setProperty(propId, gv);
@@ -81,9 +80,9 @@ bool ServiceHelper::setProp(std::string const& propName, std::string const& valu
   if (result.hasError())
   {
     std::cout << "error: " << result.error() << std::endl;
-    return false;
+    return 1;
   }
-  return true;
+  return 0;
 }
 
 qi::GenericValuePtr watcher(bool showTime, std::vector<qi::GenericValuePtr> const& params)
@@ -94,7 +93,7 @@ qi::GenericValuePtr watcher(bool showTime, std::vector<qi::GenericValuePtr> cons
   return qi::GenericValuePtr();
 }
 
-bool ServiceHelper::watchSignal(std::string const& signalName, bool showTime)
+int ServiceHelper::watchSignal(std::string const& signalName, bool showTime)
 {
   qi::FutureSync<qi::Link> futLink = _service->connect(signalName,
                                                        qi::SignalSubscriber(
@@ -104,7 +103,7 @@ bool ServiceHelper::watchSignal(std::string const& signalName, bool showTime)
   if (futLink.hasError())
   {
     std::cerr << "error: " << futLink.error() << std::endl;
-    return false;
+    return 1;
   }
 
   qi::Link link = futLink.value();
@@ -112,15 +111,15 @@ bool ServiceHelper::watchSignal(std::string const& signalName, bool showTime)
   if (link == 0)
   {
     std::cerr << "error: link value is 0" << std::endl;
-    return 3;
+    return 1;
   }
 
   ::getchar();
   _service->disconnect(link).wait();
-  return true;
+  return 0;
 }
 
-bool ServiceHelper::post(std::string const& signalName, std::vector<std::string> const& argList)
+int ServiceHelper::post(std::string const& signalName, std::vector<std::string> const& argList)
 {
   qi::GenericFunctionParameters params;
 
@@ -131,9 +130,9 @@ bool ServiceHelper::post(std::string const& signalName, std::vector<std::string>
   if (!ms)
   {
     std::cout << "error: Cannot find signal " << signalName << std::endl;
-    return false;
+    return 1;
   }
 
   _service->metaPost(signalName, params);
-  return true;
+  return 0;
 }

@@ -1,7 +1,7 @@
 #include "qicli.hpp"
 #include "grid.hpp"
 
-int subCmd_top(int argc, char **argv, SessionHelper& session, MainOptions const& options)
+int subCmd_top(int argc, char **argv, MainOptions const& options)
 {
   Grid grid;
 
@@ -11,6 +11,7 @@ int subCmd_top(int argc, char **argv, SessionHelper& session, MainOptions const&
       .column("min call time")
       .column("max call time");
 
+  SessionHelper session(options.address, options.verbose);
   std::vector<qi::ServiceInfo> servs = session.services();
   while (true)
   {

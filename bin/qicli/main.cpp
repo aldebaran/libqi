@@ -66,7 +66,7 @@ int                 main(int argc, char **argv)
     }
   }
 
-  po::options_description desc("Usage: qicli [OPTIONS] [SUBCMD] [ARGS]");
+  po::options_description desc("Usage: qicli [OPTIONS] SUBCMD [-h] [OPTIONS] [ARGS]");
 
   MainOptions options;
 
@@ -92,7 +92,7 @@ int                 main(int argc, char **argv)
   if (vm.count("help") || subCmdArgv == 0)
   {
     showHelp(desc);
-    exit(0);
+    return 0;
   }
 
   if (vm.count("verbose"))
@@ -100,24 +100,14 @@ int                 main(int argc, char **argv)
 
   initApp(vm.count("qilog"));
 
-  SessionHelper session;
-
-  if (options.verbose)
+  int ret;
+  try
   {
-    std::cerr << "connecting to [" << options.address << "] : ";
-    std::cerr.flush();
+    ret = subCmd(subCmdArgc, subCmdArgv, options);
   }
-  try {
-    session.connect(options.address);
-  } catch (std::exception &e) {
-    std::cerr << e.what() << std::endl;
+  catch (...)
+  {
     return 1;
   }
-  if (options.verbose)
-    std::cerr << "OK" << std::endl;
-  int ret = subCmd(subCmdArgc, subCmdArgv, session, options);
-  qi::FutureSync<void> fut = session.close();
-  if (fut.hasError())
-    std::cerr << "error while closing session: " << fut.error() << std::endl;
   return ret;
 }
