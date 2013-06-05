@@ -15,3 +15,4 @@ doc/Doxyfile.qidoc
 doc/doxygen.css
 doc/footer.html
 doc/header.html
+js/doc/qidoc/conf.py
