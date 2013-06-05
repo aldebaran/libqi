@@ -25,6 +25,9 @@
 # include <arpa/inet.h>
 #ifndef ANDROID
 # include <ifaddrs.h>
+#else
+# include <dirent.h>
+# include <linux/if_arp.h>
 #endif
 
 #if defined (__linux__)
@@ -233,7 +236,7 @@ namespace qi {
         }
         ++iPort;
       }
-      while (iPort + 1 > USHRT_MAX);
+      while (static_cast<unsigned int>(iPort + 1) > USHRT_MAX);
 
       if (unavailable)
       {
@@ -249,11 +252,66 @@ namespace qi {
 #ifdef ANDROID
     std::map<std::string, std::vector<std::string> > hostIPAddrs(bool ipv6Addr)
     {
-      qiLogWarning("libqi.hostIPAddrs") << "qi::os::hostIPAddrs is partially implemented on Android: Only return the loopback address.";
       std::map<std::string, std::vector<std::string> > res;
       std::vector<std::string> addrs;
-      addrs.push_back("127.0.0.1");
-      res["lo"] = addrs;
+      std::string interfacesDirectory = "/sys/class/net/";
+      DIR *d;
+      struct dirent *de;
+      std::string interfaceName;
+      uint32_t addr, flags;
+      struct ifreq ifr;
+      int ioctl_sock;
+      static char buf[32];
+
+      // Initialize test socket and open interfaces directory
+      ioctl_sock = socket(AF_INET, SOCK_DGRAM, 0);
+      if (ioctl_sock < 0 ||
+         (d = opendir(interfacesDirectory.c_str())) == 0)
+      {
+        qiLogError("qi.hostIPAddrs") << "socket() failed: " << strerror(errno);
+        return res;
+      }
+
+      // Foreach interface
+      while ((de = readdir(d)))
+      {
+
+        // Get interface name and set it in ifreq struct
+        interfaceName = de->d_name;
+
+        if (interfaceName == "." || interfaceName == "..")
+          continue;
+
+        // set name in ifreq struct
+        memset(&ifr, 0, sizeof(struct ifreq));
+        strncpy(ifr.ifr_name, de->d_name, strlen(de->d_name) + 1);
+
+        // Get interface IP address
+        if (ioctl(ioctl_sock, SIOCGIFADDR, &ifr) < 0)
+          continue;
+        addr = ((struct sockaddr_in*) &ifr.ifr_addr)->sin_addr.s_addr;
+
+        // Get interface flags
+        if (ioctl(ioctl_sock, SIOCGIFFLAGS, &ifr) < 0)
+          continue;
+        flags = ifr.ifr_flags;
+
+        // Check if interface is down
+        if (!(flags & 1) || addr == 0)
+          continue;
+
+        // Set address in map
+        addrs.clear();
+        sprintf(buf,"%d.%d.%d.%d", addr & 255, ((addr >> 8) & 255), ((addr >> 16) & 255), (addr >> 24));
+        addrs.push_back(buf);
+        qiLogVerbose("qi.hostIPAddrs") << "New endpoints for " << interfaceName << ": " << buf;
+
+        // set addrs in map
+        res[interfaceName] = addrs;
+      }
+
+      closedir(d);
+      close(ioctl_sock);
       return res;
     }
 #else
