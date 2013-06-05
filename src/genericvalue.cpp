@@ -73,9 +73,10 @@ namespace qi
       std::pair<GenericValuePtr, bool> pointedDstPair = pointedSrc.convert(dstPointedType);
       if (!pointedDstPair.first.type)
       {
+        qiLogDebug() << "Attempting object->proxy conversion";
         // try object->proxy conversion by simply rewrapping this
         ObjectPtr o(new GenericObject(static_cast<ObjectType*>(pointedSrc.type), pointedSrc.value));
-        return GenericValueRef(o).convert(targetType);
+        return GenericValueRef(o).convert((Type*)targetType);
       }
       if (pointedDstPair.second)
         qiLogError() << "assertion error, allocated converted reference";
