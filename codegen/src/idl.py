@@ -43,32 +43,20 @@ import os
 import subprocess
 import shutil
 import re
-
-# load libqitype to access signature_to_json
-from ctypes import *
-
-if sys.platform.startswith('linux'):
-  soname = ".so"
-elif sys.platform.startswith('darwin'):
-  soname = ".dylib"
-else:
-  soname = ".dll"
+import ctypes
 
 medir = os.path.dirname(os.path.abspath(__file__))
-pathes = ['../lib']
-qi_type = None
-for p in pathes:
-  try:
-    qi_type = cdll.LoadLibrary(os.path.join(medir, p, 'libqitype' + soname))
-    break
-  except:
-    continue
+sys.path.append(os.path.join(medir, '..', 'lib', 'python2.7', 'site-packages'))
+import shlib
+
+qi_type = shlib.load_shlib('qitype', os.path.join(medir, '..'), False)
 
 if qi_type is None:
-  print("From " + medir)
+  #Rerun in verbose mode to give more informations
+  shlib.load_shlib('qitype', os.path.join(medir, '..'), True)
   raise Exception("Could not load libqitype shared module")
 
-qi_type.signature_to_json.restype = c_char_p
+qi_type.signature_to_json.restype = ctypes.c_char_p
 
 def signature_to_json(s):
   return handle.signature_to_json(s)
