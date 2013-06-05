@@ -6,8 +6,6 @@ qi_stage_script(src/shlib.py)
 qi_install_program(src/idl.py)
 qi_install_python(src/shlib.py)
 
-option(WITH_CODEGEN_TESTS       "Run codegen tests"       OFF)
-if (WITH_CODEGEN_TESTS)
+if(NOT APPLE AND NOT I_AM_A_ROBOT)
   add_subdirectory("tests")
 endif()
-
