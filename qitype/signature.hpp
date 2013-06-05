@@ -38,6 +38,7 @@ namespace qi {
                                               const std::string &name = std::string(),
                                               const std::vector<std::string>& names = std::vector<std::string>());
 
+  QITYPE_API qi::Signature makeTupleSignature(const qi::Signature &element);
   QITYPE_API qi::Signature makeListSignature(const qi::Signature &element);
   QITYPE_API qi::Signature makeMapSignature(const qi::Signature &key, const qi::Signature &value);
 

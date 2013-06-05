@@ -31,6 +31,14 @@ namespace qi {
     return qi::Signature(res.str());
   }
 
+  qi::Signature makeTupleSignature(const qi::Signature &element) {
+    std::stringstream res;
+    res << (char)Signature::Type_Tuple;
+    res << element.toString();
+    res << (char)Signature::Type_Tuple_End;
+    return qi::Signature(res.str());
+  }
+
   qi::Signature makeMapSignature(const qi::Signature &key, const qi::Signature &value) {
     std::stringstream res;
     res << (char)Signature::Type_Map;
