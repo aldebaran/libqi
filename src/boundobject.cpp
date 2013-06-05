@@ -121,74 +121,74 @@ namespace qi {
 
   void ServiceBoundObject::onMessage(const qi::Message &msg, TransportSocketPtr socket) {
     try {
-    if (msg.object() > _objectId)
-    {
-      qiLogDebug() << "onChildMessage " << msg.address();
-      ObjectHost::onMessage(msg, socket);
-      return;
-    }
-
-    qiLogDebug() << "onMessage " << msg.address();
-    qi::ObjectPtr    obj;
-    unsigned int     funcId;
-    //choose between special function (on BoundObject) or normal calls
-    // Manageable functions are at the end of reserver range but dispatch to _object
-    if (msg.function() < Manageable::startId) {
-      obj = _self;
-    } else {
-      obj = _object;
-    }
-    funcId = msg.function();
-
-    qi::Signature sigparam;
-    GenericFunctionParameters mfp;
-
-    if (msg.type() == qi::Message::Type_Call) {
-      const qi::MetaMethod *mm = obj->metaObject().method(funcId);
-      if (!mm) {
-        std::stringstream ss;
-        ss << "No such method " << msg.address();
-        qiLogError() << ss.str();
-        throw std::runtime_error(ss.str());
+      if (msg.object() > _objectId)
+      {
+        qiLogDebug() << "onChildMessage " << msg.address();
+        ObjectHost::onMessage(msg, socket);
+        return;
       }
-      sigparam = mm->parametersSignature();
-    }
 
-    else if (msg.type() == qi::Message::Type_Post) {
-      const qi::MetaSignal *ms = obj->metaObject().signal(funcId);
-      if (ms)
-        sigparam = ms->parametersSignature();
-      else {
+      qiLogDebug() << "onMessage " << msg.address();
+      qi::ObjectPtr    obj;
+      unsigned int     funcId;
+      //choose between special function (on BoundObject) or normal calls
+      // Manageable functions are at the end of reserver range but dispatch to _object
+      if (msg.function() < Manageable::startId) {
+        obj = _self;
+      } else {
+        obj = _object;
+      }
+      funcId = msg.function();
+
+      qi::Signature sigparam;
+      GenericFunctionParameters mfp;
+
+      if (msg.type() == qi::Message::Type_Call) {
         const qi::MetaMethod *mm = obj->metaObject().method(funcId);
-        if (mm)
-          sigparam = mm->parametersSignature();
+        if (!mm) {
+          std::stringstream ss;
+          ss << "No such method " << msg.address();
+          qiLogError() << ss.str();
+          throw std::runtime_error(ss.str());
+        }
+        sigparam = mm->parametersSignature();
+      }
+
+      else if (msg.type() == qi::Message::Type_Post) {
+        const qi::MetaSignal *ms = obj->metaObject().signal(funcId);
+        if (ms)
+          sigparam = ms->parametersSignature();
         else {
-          qiLogError() << "No such signal/method on event message " << msg.address();
-          return;
+          const qi::MetaMethod *mm = obj->metaObject().method(funcId);
+          if (mm)
+            sigparam = mm->parametersSignature();
+          else {
+            qiLogError() << "No such signal/method on event message " << msg.address();
+            return;
+          }
         }
       }
-    }
-    else
-    {
-      qiLogError() << "Unexpected message type " << msg.type();
-      return;
-    }
+      else
+      {
+        qiLogError() << "Unexpected message type " << msg.type();
+        return;
+      }
 
-    GenericValuePtr value = msg.value(sigparam, socket);
-    if (sigparam == "m")
-    {
-      // received dynamically typed argument pack, unwrap
-      GenericValue* content = value.ptr<GenericValue>();
-      // steal it
-      GenericValuePtr pContent(content->type, content->value);
-      content->type = 0;
-      content->value = 0;
-      // free the object content
-      value.destroy();
-      value = pContent;
-    }
-    mfp = value.asTupleValuePtr();
-    /* Because of 'global' _currentSocket, we cannot support parallel
+      GenericValuePtr value = msg.value(sigparam, socket);
+      if (sigparam == "m")
+      {
+        // received dynamically typed argument pack, unwrap
+        GenericValue* content = value.ptr<GenericValue>();
+        // steal it
+        GenericValuePtr pContent(content->type, content->value);
+        content->type = 0;
+        content->value = 0;
+        // free the object content
+        value.destroy();
+        value = pContent;
+      }
+      mfp = value.asTupleValuePtr();
+      /* Because of 'global' _currentSocket, we cannot support parallel
     * executions at this point.
     * Both on self, and on obj which can use currentSocket() too.
     *
@@ -200,26 +200,26 @@ namespace qi {
     *
     * As a consequence, users of currentSocket() must set _callType to Direct.
     */
-    switch (msg.type())
-    {
-    case Message::Type_Call: {
+      switch (msg.type())
+      {
+      case Message::Type_Call: {
         boost::mutex::scoped_lock lock(_mutex);
         _currentSocket = socket;
         qi::Future<GenericValuePtr>  fut = obj->metaCall(funcId, mfp,
-            obj==_self ? MetaCallType_Direct: _callType);
+                                                         obj==_self ? MetaCallType_Direct: _callType);
         _currentSocket.reset();
         fut.connect(boost::bind<void>(&serverResultAdapter, _1, _owner?_owner:(ObjectHost*)this, socket, msg.address()));
       }
-      break;
-    case Message::Type_Post: {
+        break;
+      case Message::Type_Post: {
         obj->metaPost(funcId, mfp);
       }
-      break;
-    default:
+        break;
+      default:
         qiLogError() << "unknown request of type " << (int)msg.type() << " on service: " << msg.address();
-    }
-    //########################
-    value.destroy();
+      }
+      //########################
+      value.destroy();
     } catch (const std::runtime_error &e) {
       if (msg.type() == Message::Type_Call) {
         qi::Promise<GenericValuePtr> prom;
