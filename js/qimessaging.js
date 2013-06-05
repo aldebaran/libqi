@@ -62,11 +62,11 @@ function QiSession(url, resource)
     }
   });
 
-  _socket.on('disconnected', function(data) {
-    for (var i in _dfd)
+  _socket.on('disconnect', function(data) {
+    for (var idm in _dfd)
     {
-      _dfd[id].reject("disconnected");
-      delete _dfd[id];
+      _dfd[idm].reject("Call " + idm + " canceled: disconnected");
+      delete _dfd[idm];
     }
   });
 
