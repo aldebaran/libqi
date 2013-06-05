@@ -33,7 +33,7 @@ JNIObject::JNIObject(qi::ObjectPtr *newO)
 JNIObject::JNIObject(jobject value)
 {
   JVM()->GetEnv((void**) &_env, QI_JNI_MIN_VERSION);
-  JVM()->AttachCurrentThread((void**)&_env, (void *) 0);
+  JVM()->AttachCurrentThread((envPtr)&_env, (void *) 0);
 
   _cls = _env->FindClass(QI_OBJECT_CLASS);
   _obj = value;
