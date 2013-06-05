@@ -30,7 +30,6 @@ function(qi_create_proxy idl class_name output_dir _out)
   list(GET split_class 0 class)
   string(TOLOWER ${class} _filename)
   set(_filename "${_filename}_proxy.hpp")
-  message("tgt ${output_dir}/${_filename}")
   set(${_out} ${output_dir}/${_filename} PARENT_SCOPE)
   qi_generate_src(${output_dir}/${_filename}
     SRC ${idl} ${IDL}
