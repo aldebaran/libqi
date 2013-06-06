@@ -32,7 +32,7 @@ namespace qi {
   //all methods ID lesser than this constant are considered special.
   //they are reserved for internal use by qitype/qimessaging.
   //(see boundobject.cpp for details)
-  static const int qiObjectSpecialMethodMaxUid = 100;
+  static const unsigned int qiObjectSpecialMethodMaxUid = 100;
 
   /* We need shared typeid on Future<GenericValuePtr>
    * If we do not export, typeids do not compare equals under some gcc-macos
