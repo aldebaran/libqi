@@ -205,7 +205,7 @@ namespace qi {
   template<typename T>
   inline T* GenericValuePtr::ptr(bool check)
   {
-    if (check && typeOf<T>()->info() != type->info())
+    if (!type || (check && typeOf<T>()->info() != type->info()))
       return 0;
     else
       return (T*)type->ptrFromStorage(&value);
