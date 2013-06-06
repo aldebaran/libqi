@@ -10,9 +10,10 @@
 
 #include <qi/log.hpp>
 #include <qi/application.hpp>
+#include <jnitools.hpp>
 #include "application_jni.hpp"
 
-jlong Java_com_aldebaran_qimessaging_Application_qiApplicationCreate()
+jlong Java_com_aldebaran_qimessaging_Application_qiApplicationCreate(JNIEnv *env, jobject QI_UNUSED(jobj))
 {
   // Emulate empty command line arguments.
   int argc = 1;

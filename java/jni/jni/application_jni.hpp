@@ -14,7 +14,7 @@
 
 extern "C"
 {
-  QIMESSAGING_API jlong Java_com_aldebaran_qimessaging_Application_qiApplicationCreate();
+  QIMESSAGING_API jlong Java_com_aldebaran_qimessaging_Application_qiApplicationCreate(JNIEnv *env, jobject jobj);
   QIMESSAGING_API void  Java_com_aldebaran_qimessaging_Application_qiApplicationDestroy(jlong pApplication);
   QIMESSAGING_API void  Java_com_aldebaran_qimessaging_Application_qiApplicationRun(jlong pApplication);
   QIMESSAGING_API void  Java_com_aldebaran_qimessaging_Application_qiApplicationStop(jlong pApplication);
