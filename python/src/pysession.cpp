@@ -28,10 +28,10 @@ qi::GenericValuePtr triggerBouncer(qi::SignalBase *sig, const std::vector<qi::Ge
     public:
       PySession()
         : _ses(new qi::Session)
-        , connected(makePySignal("[m]"))
-        , disconnected(makePySignal("[m]"))
         , nSigConnected(0)
         , nSigDisconnected(0)
+        , connected(makePySignal("[m]"))
+        , disconnected(makePySignal("[m]"))
       {
         // Get SignalBase from our PySignals
         qi::SignalBase *conn = getSignal(connected);
