@@ -47,12 +47,10 @@ qi::Future<qi::GenericValuePtr>* call_from_java(JNIEnv *env, qi::ObjectPtr objec
     return 0;
   }
 
+  // Destroy arguments
   i = 0;
   for(qi::GenericFunctionParameters::iterator it = params.begin(); it != params.end(); ++it)
-  {
-    qi::GenericValuePtr ptr = (*it);
-    ptr.destroy();
-  }
+    (*it).destroy();
 
   return fut;
 }
@@ -94,16 +92,16 @@ qi::GenericValuePtr call_to_java(std::string signature, void* data, const qi::Ge
   }
 
   // Find method class and get methodID
-  cls = env->GetObjectClass(info->instance);
+  cls = qi::jni::clazz(info->instance);
   if (!cls)
   {
     qiLogError() << "Service class not found: " << info->className;
     throw std::runtime_error("Service class not found");
   }
 
+  // Find method ID
   jmethodID mid = env->GetMethodID(cls, sigInfo[1].c_str(), toJavaSignature(signature).c_str());
-
-  if (!mid) // Then maybe method is declared as static...
+  if (!mid)
     mid = env->GetStaticMethodID(cls, sigInfo[1].c_str(), toJavaSignature(signature).c_str());
   if (!mid)
   {
@@ -111,14 +109,33 @@ qi::GenericValuePtr call_to_java(std::string signature, void* data, const qi::Ge
     throw std::runtime_error("Cannot find method");
   }
 
-  // Finally call method
+  // Call method
   jobject ret = env->CallObjectMethodA(info->instance, mid, args);
 
+  // Did method thrown ?
+  if (env->ExceptionCheck())
+  {
+    env->ExceptionDescribe();
+    env->ExceptionClear();
+    throw std::runtime_error("Remote method thrown exception");
+  }
+
+  // Release instance clazz
+  qi::jni::releaseClazz(cls);
+
+  // Release arguments
+  while (--index >= 0)
+    qi::jni::releaseObject(args[index].l);
   delete[] args;
+
+  // If method return signature is void, return here
   if (sigInfo[0] == "")
     return qi::GenericValuePtr(qi::typeOf<void>());
 
-  return GenericValue_from_JObject(ret).first;
+  // Convert return value in GenericValue
+  res = GenericValue_from_JObject(ret).first;
+  qi::jni::releaseObject(ret);
+  return res;
 }
 
 qi::GenericValuePtr event_callback_to_java(void *vinfo, const std::vector<qi::GenericValuePtr>& params)

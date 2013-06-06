@@ -16,7 +16,12 @@ JNITuple::JNITuple(jobject obj)
 {
   JVM()->GetEnv((void**) &_env, QI_JNI_MIN_VERSION);
   _obj = obj;
-  _cls = _env->FindClass("com/aldebaran/qimessaging/Tuple");
+  _cls = qi::jni::clazz("Tuple");
+  if (!_cls)
+  {
+    qiLogError("qimessaging.jni") << "JNITuple : Cannot find Tuple class template";
+    throwJavaError(_env, "JNITuple : Cannot find Tuple class template");
+  }
 }
 
 JNITuple::JNITuple(int size)
@@ -24,10 +29,17 @@ JNITuple::JNITuple(int size)
   std::stringstream name;
   jmethodID mid = 0;
 
-  name << "com/aldebaran/qimessaging/Tuple" << size;
-
+  name << "Tuple" << size;
   JVM()->GetEnv((void**) &_env, QI_JNI_MIN_VERSION);
-  _cls = _env->FindClass(name.str().c_str());
+
+  _cls = qi::jni::clazz(name.str());
+  if (!_cls)
+  {
+    qiLogError("qimessaging.jni") << "JNITuple : Cannot find " << name.str() << " class template";
+    throwJavaError(_env, "JNITuple : Cannot find Tuple class template");
+  }
+
+
   mid = _env->GetMethodID(_cls, "<init>", "()V");
 
   if (!mid)
@@ -41,7 +53,7 @@ JNITuple::JNITuple(int size)
 
 JNITuple::~JNITuple()
 {
-  _env->DeleteLocalRef(_cls);
+  qi::jni::releaseClazz(_cls);
 }
 
 int JNITuple::size()

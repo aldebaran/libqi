@@ -45,9 +45,10 @@ struct toJObject
 
       // Get Integer class template
       // ... or Boolean if byteSize is 0
-      jclass cls = env->FindClass(byteSize == 0 ? "java/lang/Boolean" : "java/lang/Integer");
+      jclass cls = qi::jni::clazz(byteSize == 0 ? "Boolean" : "Integer");
       if (env->ExceptionCheck())
       {
+        qi::jni::releaseClazz(cls);
         throwJavaError(env, "GenericValue to Integer : FindClass error");
         return;
       }
@@ -56,7 +57,7 @@ struct toJObject
       jmethodID mid = env->GetMethodID(cls, "<init>", byteSize == 0 ? "(Z)V" : "(I)V");
       if (!mid)
       {
-        env->DeleteLocalRef(cls);
+        qi::jni::releaseClazz(cls);
         throwJavaError(env, "GenericValue to Integer : GetMethodID error");
         return;
       }
@@ -65,10 +66,10 @@ struct toJObject
       jint jval = value;
       *result = env->NewObject(cls, mid, jval);
       checkForError();
-      env->DeleteLocalRef(cls);
+      qi::jni::releaseClazz(cls);
     }
 
-    void visitString(char *data, size_t len)//qi::TypeString* type, void* storage)
+    void visitString(char *data, size_t QI_UNUSED(len))
     {
       if (data)
         *result = (jobject) env->NewStringUTF(data);
@@ -91,9 +92,10 @@ struct toJObject
       env->ExceptionClear();
 
       // Get Float class template
-      jclass cls = env->FindClass("java/lang/Float");
+      jclass cls = qi::jni::clazz("Float");
       if (env->ExceptionCheck())
       {
+        qi::jni::releaseClazz(cls);
         throwJavaError(env, "GenericValue to Float : FindClass error");
         return;
       }
@@ -102,7 +104,7 @@ struct toJObject
       jmethodID mid = env->GetMethodID(cls, "<init>","(F)V");
       if (!mid)
       {
-        env->DeleteLocalRef(cls);
+        qi::jni::releaseClazz(cls);
         throwJavaError(env, "GenericValue to Float : GetMethodID error");
         return;
       }
@@ -110,7 +112,7 @@ struct toJObject
       // Instanciate new Float, yeah !
       jfloat jval = value;
       *result = env->NewObject(cls, mid, jval);
-      env->DeleteLocalRef(cls);
+      qi::jni::releaseClazz(cls);
       checkForError();
     }
 
@@ -321,22 +323,22 @@ std::pair<qi::GenericValuePtr, bool> GenericValue_from_JObject(jobject val)
   if (!val)
     throw std::runtime_error("Unable to convert JObject in GenericValue (Value is null)");
 
-  if (JVM()->AttachCurrentThread((envPtr) &env, (void *) 0) != JNI_OK)
-    throw std::runtime_error("Cannot attach current thread to JVM for conversion.");
-
   if (JVM()->GetEnv((void **) &env, QI_JNI_MIN_VERSION) != JNI_OK)
     throw std::runtime_error("No JNIEnvironment available for conversion.");
 
-  jclass stringClass = env->FindClass("java/lang/String");
-  jclass int32Class = env->FindClass("java/lang/Integer");
-  jclass floatClass = env->FindClass("java/lang/Float");
-  jclass doubleClass = env->FindClass("java/lang/Double");
-  jclass boolClass = env->FindClass("java/lang/Boolean");
-  jclass longClass = env->FindClass("java/lang/Long");
-  jclass mapClass = env->FindClass("java/util/Map");
-  jclass listClass = env->FindClass("java/util/ArrayList");
-  jclass tupleClass = env->FindClass("com/aldebaran/qimessaging/Tuple");
-  jclass objectClass = env->FindClass(QI_OBJECT_CLASS);
+  if (JVM()->AttachCurrentThread((envPtr) &env, (void *) 0) != JNI_OK)
+    throw std::runtime_error("Cannot attach current thread to JVM for conversion.");
+
+  jclass stringClass = qi::jni::clazz("String");
+  jclass int32Class = qi::jni::clazz("Integer");
+  jclass floatClass = qi::jni::clazz("Float");
+  jclass doubleClass = qi::jni::clazz("Double");
+  jclass boolClass = qi::jni::clazz("Boolean");
+  jclass longClass = qi::jni::clazz("Long");
+  jclass mapClass = qi::jni::clazz("Map");
+  jclass listClass = qi::jni::clazz("List");
+  jclass tupleClass = qi::jni::clazz("Tuple");
+  jclass objectClass = qi::jni::clazz("Object");
 
   if (val == NULL)
   {
@@ -344,7 +346,9 @@ std::pair<qi::GenericValuePtr, bool> GenericValue_from_JObject(jobject val)
   }
   else if (env->IsInstanceOf(val, stringClass))
   {
-    std::string tmp = std::string(env->GetStringUTFChars((jstring) val, 0));
+    const char* data = env->GetStringUTFChars((jstring) val, 0);
+    std::string tmp = std::string(data);
+    env->ReleaseStringUTFChars((jstring) val, data);
     res = qi::GenericValueRef(*new std::string(tmp));
     copy = true;
   }
@@ -393,7 +397,7 @@ std::pair<qi::GenericValuePtr, bool> GenericValue_from_JObject(jobject val)
     copy = true;
     res = GenericValue_from_JObject_Map(val);
   }
-  else if (env->IsInstanceOf(val, tupleClass))
+  else if (env->IsAssignableFrom(env->GetObjectClass(val), tupleClass))
   {
     res = GenericValue_from_JObject_Tuple(val);
   }
@@ -403,19 +407,21 @@ std::pair<qi::GenericValuePtr, bool> GenericValue_from_JObject(jobject val)
   }
   else
   {
-    throw std::runtime_error("Unable to convert JObject in GenericValue");
+    qiLogError() << "Cannot serialize return value: Unable to convert JObject in GenericValue";
+    throw std::runtime_error("Cannot serialize return value: Unable to convert JObject in GenericValue");
   }
 
-  env->DeleteLocalRef(stringClass);
-  env->DeleteLocalRef(int32Class);
-  env->DeleteLocalRef(floatClass);
-  env->DeleteLocalRef(doubleClass);
-  env->DeleteLocalRef(boolClass);
-  env->DeleteLocalRef(longClass);
-  env->DeleteLocalRef(mapClass);
-  env->DeleteLocalRef(listClass);
-  env->DeleteLocalRef(tupleClass);
-  env->DeleteLocalRef(objectClass);
+
+  qi::jni::releaseClazz(stringClass);
+  qi::jni::releaseClazz(int32Class);
+  qi::jni::releaseClazz(floatClass);
+  qi::jni::releaseClazz(doubleClass);
+  qi::jni::releaseClazz(boolClass);
+  qi::jni::releaseClazz(longClass);
+  qi::jni::releaseClazz(mapClass);
+  qi::jni::releaseClazz(listClass);
+  qi::jni::releaseClazz(tupleClass);
+  qi::jni::releaseClazz(objectClass);
 
   return std::make_pair(res, copy);
 }

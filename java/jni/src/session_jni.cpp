@@ -17,6 +17,8 @@
 #include <session_jni.hpp>
 #include <object_jni.hpp>
 
+qiLogCategory("qimessaging.jni");
+
 jlong Java_com_aldebaran_qimessaging_Session_qiSessionCreate()
 {
   qi::Session *session = new qi::Session();
@@ -26,6 +28,7 @@ jlong Java_com_aldebaran_qimessaging_Session_qiSessionCreate()
 void Java_com_aldebaran_qimessaging_Session_qiSessionDestroy(jlong pSession)
 {
   qi::Session *s = reinterpret_cast<qi::Session*>(pSession);
+  s->close();
   delete s;
 }
 
@@ -50,11 +53,11 @@ jlong Java_com_aldebaran_qimessaging_Session_qiSessionConnect(JNIEnv *env, jobje
 
   qi::Session *s = reinterpret_cast<qi::Session*>(pSession);
   qi::Future<void> *fut = new qi::Future<void>();
-  *fut = s->connect(toStdString(env, jurl).c_str()).async();
+  *fut = s->connect(qi::jni::toString(jurl).c_str()).async();
 
   if (fut->hasError())
   {
-    qiLogError("qimessaging.jni") << "Error : " << fut->error();
+    qiLogError() << "Error : " << fut->error();
     throwJavaError(env, fut->error().c_str());
   }
 
@@ -103,6 +106,7 @@ jboolean  Java_com_aldebaran_qimessaging_Session_registerService(JNIEnv *env, jo
   }
   catch (std::runtime_error &e)
   {
+    qiLogError() << "Throwing exception : " << e.what();
     throwJavaError(env, e.what());
     return false;
   }

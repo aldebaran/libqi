@@ -14,7 +14,7 @@
 JNIList::JNIList()
 {
   JVM()->GetEnv((void**) &_env, QI_JNI_MIN_VERSION);
- _cls = _env->FindClass("java/util/ArrayList");
+ _cls = qi::jni::clazz("List");
 
  jmethodID mid = _env->GetMethodID(_cls, "<init>", "()V");
  if (!mid)
@@ -30,12 +30,12 @@ JNIList::JNIList(jobject obj)
 {
   JVM()->GetEnv((void**) &_env, QI_JNI_MIN_VERSION);
  _obj = obj;
- _cls = _env->FindClass("java/util/ArrayList");
+ _cls = qi::jni::clazz("List");
 }
 
 JNIList::~JNIList()
 {
-  _env->DeleteLocalRef(_cls);
+  qi::jni::releaseClazz(_cls);
 }
 
 int JNIList::size()

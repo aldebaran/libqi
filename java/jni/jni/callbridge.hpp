@@ -10,8 +10,10 @@
 #define _JAVA_JNI_CALLBRIDGE_HPP_
 
 #include <list>
-#include <qimessaging/api.hpp>
 #include <jni.h>
+
+#include <qimessaging/api.hpp>
+#include <jnitools.hpp>
 
 // Generic callback for call forward
 qi::Future<qi::GenericValuePtr>*    call_from_java(JNIEnv *env, qi::ObjectPtr object, const std::string& strMethodName, jobjectArray listParams);
@@ -31,6 +33,17 @@ struct qi_method_info
     sig = jsig;
     jobj = object;
     className = name;
+  }
+
+  ~qi_method_info()
+  {
+    JNIEnv* env = qi::jni::env();
+
+    if (!env)
+      return;
+
+    env->DeleteGlobalRef(instance);
+    env->DeleteGlobalRef(jobj);
   }
 };
 

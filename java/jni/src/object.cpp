@@ -168,5 +168,10 @@ void      Java_com_aldebaran_qimessaging_Object_post(JNIEnv *env, jobject QI_UNU
   signature += ")";
 
   obj->metaPost(event, params);
+
+  // Destroy arguments
+  i = 0;
+  for(qi::GenericFunctionParameters::iterator it = params.begin(); it != params.end(); ++it)
+    (*it).destroy();
   return;
 }

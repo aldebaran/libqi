@@ -13,11 +13,66 @@
 
 qiLogCategory("qimessaging.jni");
 
+std::map<std::string, jobject> supportedTypes;
+
+jint JNI_OnLoad(JavaVM* QI_UNUSED(vm), void* QI_UNUSED(reserved))
+{
+  qiLogInfo() << "qimessagingjni loaded.";
+  return QI_JNI_MIN_VERSION;
+}
+
+/*
+ * To work correctly, QiMessaging<->java type system needs to compare type class template.
+ * Unfortunately, call template cannot be retrieve on native android thread, that is why
+ * type instance are stored in supportedTypes map.
+ */
+void Java_com_aldebaran_qimessaging_EmbeddedTools_initTypeSystem(JNIEnv* env, jobject QI_UNUSED(jobj), jobject str, jobject i, jobject f, jobject d, jobject l, jobject m, jobject al, jobject tuple, jobject obj, jobject b)
+{
+  JVM(env);
+
+  supportedTypes["String"] = env->NewGlobalRef(str);
+  supportedTypes["Integer"] = env->NewGlobalRef(i);
+  supportedTypes["Float"] = env->NewGlobalRef(f);
+  supportedTypes["Double"] = env->NewGlobalRef(d);
+  supportedTypes["Long"] = env->NewGlobalRef(l);
+  supportedTypes["Map"] = env->NewGlobalRef(m);
+  supportedTypes["List"] = env->NewGlobalRef(al);
+  supportedTypes["Tuple"] = env->NewGlobalRef(tuple);
+  supportedTypes["Object"] = env->NewGlobalRef(obj);
+  supportedTypes["Boolean"] = env->NewGlobalRef(b);
+
+  for (std::map<std::string, jobject>::iterator it = supportedTypes.begin(); it != supportedTypes.end(); ++it)
+  {
+    if (it->second == 0)
+      qiLogFatal() << it->first << ": Initialization failed.";
+  }
+}
+
+void Java_com_aldebaran_qimessaging_EmbeddedTools_initTupleInTypeSystem(JNIEnv* env, jobject QI_UNUSED(jobj), jobject t1, jobject t2, jobject t3, jobject t4, jobject t5, jobject t6, jobject t7, jobject t8)
+{
+  JVM(env);
+
+  supportedTypes["Tuple1"] = env->NewGlobalRef(t1);
+  supportedTypes["Tuple2"] = env->NewGlobalRef(t2);
+  supportedTypes["Tuple3"] = env->NewGlobalRef(t3);
+  supportedTypes["Tuple4"] = env->NewGlobalRef(t4);
+  supportedTypes["Tuple5"] = env->NewGlobalRef(t5);
+  supportedTypes["Tuple6"] = env->NewGlobalRef(t6);
+  supportedTypes["Tuple7"] = env->NewGlobalRef(t7);
+  supportedTypes["Tuple8"] = env->NewGlobalRef(t8);
+
+  for (std::map<std::string, jobject>::iterator it = supportedTypes.begin(); it != supportedTypes.end(); ++it)
+  {
+    if (it->second == 0)
+      qiLogError() << it->first << ": Initialization failed.";
+  }
+}
+
 /*
  * JNIEnv structure is thread dependent.
  * To use a JNIEnv* pointer in another thread (such as QiMessaging callback)
  * it must be attach to current thread (via JavaVM->AttachCurrentThread())
- * Therefore we keep a pointer to the JavaVM, witch is thread safe.
+ * Therefore we keep a pointer to the JavaVM, wich is thread safe.
  */
 JavaVM*       JVM(JNIEnv* env)
 {
@@ -29,42 +84,6 @@ JavaVM*       JVM(JNIEnv* env)
   if (gJVM == 0 && env == 0)
     qiLogError() << "JVM singleton wasn't initialised";
   return gJVM;
-}
-
-std::string toStdString(JNIEnv *env, jstring inputString)
-{
-  std::string string;
-  const char *cstring = 0;
-
-  if (!env)
-  {
-    qiLogError() << "Java environment missing.";
-    return string;
-  }
-
-  if (!(cstring = env->GetStringUTFChars(inputString, 0)))
-  {
-    qiLogError() << "Cannot convert Java string into string.";
-  }
-
-  string = cstring;
-  return string;
-}
-
-jstring     toJavaString(JNIEnv *env, const std::string &inputString)
-{
-  jstring   string = 0;
-
-  if (!env)
-  {
-    qiLogError() << "Java environment missing.";
-    return string;
-  }
-
-  if (!(string = env->NewStringUTF(inputString.c_str())))
-    qiLogError() << "Cannot convert string into Java string.";
-
-  return string;
 }
 
 void getJavaSignature(std::string &sig, const std::string& sigInfo)
@@ -129,7 +148,6 @@ void getJavaSignature(std::string &sig, const std::string& sigInfo)
     }
     default:
       qiLogFatal() << "Unknown conversion for [" << sigInfo[i] << "]";
-      exit(1);
       break;
     }
 
@@ -175,16 +193,16 @@ std::string propertyBaseSignature(JNIEnv* env, jclass propertyBase)
 {
   std::string sig;
 
-  jclass stringClass = env->FindClass("java/lang/String");
-  jclass int32Class = env->FindClass("java/lang/Integer");
-  jclass floatClass = env->FindClass("java/lang/Float");
-  jclass doubleClass = env->FindClass("java/lang/Double");
-  jclass boolClass = env->FindClass("java/lang/Boolean");
-  jclass longClass = env->FindClass("java/lang/Long");
-  jclass mapClass = env->FindClass("java/util/Map");
-  jclass listClass = env->FindClass("java/util/ArrayList");
-  jclass tupleClass = env->FindClass("com/aldebaran/qimessaging/Tuple");
-  jclass objectClass = env->FindClass(QI_OBJECT_CLASS);
+  jclass stringClass = qi::jni::clazz("String");
+  jclass int32Class = qi::jni::clazz("Integer");
+  jclass floatClass = qi::jni::clazz("Float");
+  jclass doubleClass = qi::jni::clazz("Double");
+  jclass boolClass = qi::jni::clazz("Boolean");
+  jclass longClass = qi::jni::clazz("Long");
+  jclass mapClass = qi::jni::clazz("Map");
+  jclass listClass = qi::jni::clazz("List");
+  jclass tupleClass = qi::jni::clazz("Tuple");
+  jclass objectClass = qi::jni::clazz("Object");
 
   if (env->IsAssignableFrom(propertyBase, stringClass) == true)
     sig = static_cast<char>(qi::Signature::Type_String);
@@ -219,16 +237,104 @@ std::string propertyBaseSignature(JNIEnv* env, jclass propertyBase)
     sig += static_cast<char>(qi::Signature::Type_Tuple_End);
   }
 
-  env->DeleteLocalRef(stringClass);
-  env->DeleteLocalRef(int32Class);
-  env->DeleteLocalRef(floatClass);
-  env->DeleteLocalRef(doubleClass);
-  env->DeleteLocalRef(boolClass);
-  env->DeleteLocalRef(longClass);
-  env->DeleteLocalRef(mapClass);
-  env->DeleteLocalRef(listClass);
-  env->DeleteLocalRef(tupleClass);
-  env->DeleteLocalRef(objectClass);
+  qi::jni::releaseClazz(stringClass);
+  qi::jni::releaseClazz(int32Class);
+  qi::jni::releaseClazz(floatClass);
+  qi::jni::releaseClazz(doubleClass);
+  qi::jni::releaseClazz(boolClass);
+  qi::jni::releaseClazz(longClass);
+  qi::jni::releaseClazz(mapClass);
+  qi::jni::releaseClazz(listClass);
+  qi::jni::releaseClazz(tupleClass);
+  qi::jni::releaseClazz(objectClass);
 
   return sig;
 }
+
+// JNIEnv.FindClass has not same behavior on desktop and android.
+// Here is a little wrapper to find wanted class anywhere.
+
+namespace qi {
+  namespace jni {
+
+    // Get JNI environment pointer, valid in current thread.
+    JNIEnv*     env()
+    {
+      JNIEnv* env = 0;
+
+      JVM()->GetEnv(reinterpret_cast<void**>(&env), QI_JNI_MIN_VERSION);
+      if (!env)
+      {
+        qiLogError() << "Cannot get JNI environment from JVM";
+        return 0;
+      }
+
+      if (JVM()->AttachCurrentThread(reinterpret_cast<envPtr>(&env), (void*)0) != JNI_OK)
+      {
+        qiLogError() << "Cannot attach current thread to JVM";
+        return 0;
+      }
+
+      return env;
+    }
+
+    // JNIEnv.FindClass has not same behavior on desktop and android.
+    // Here is a little wrapper to find wanted class anywhere.
+    jclass     clazz(const std::string& className)
+    {
+      JNIEnv*   env = qi::jni::env();
+      jclass   cls = 0;
+
+      if (!env)
+        return 0;
+
+      jobject obj = supportedTypes[className];
+      if (!obj)
+      {
+        qiLogError() << className << " unknown in type system";
+        return cls;
+      }
+
+      return env->GetObjectClass(obj);
+    }
+
+    // JNIEnv.FindClass has not same behavior on desktop and android.
+    // Here is a little wrapper to find wanted class anywhere.
+    jclass      clazz(jobject object)
+    {
+      JNIEnv*   env = qi::jni::env();
+
+      if (!env)
+        return 0;
+
+//      return (jclass) env->NewLocalRef(env->GetObjectClass(object));
+      return (jclass) env->GetObjectClass(object);
+    }
+
+    // Release local ref to avoid JNI internal reference table overflow
+    void        releaseClazz(jclass clazz)
+    {
+      JNIEnv*   env = qi::jni::env();
+
+      if (!env || !clazz)
+      {
+        qiLogError() << "Cannot release local class reference. (Env: " << env << ", Clazz: " << clazz << ")";
+        return;
+      }
+
+      env->DeleteLocalRef(clazz);
+    }
+
+    // Release local ref on JNI object
+    void        releaseObject(jobject obj)
+    {
+      JNIEnv*   env = qi::jni::env();
+
+      if (!env)
+        return;
+
+      env->DeleteLocalRef(obj);
+    }
+
+  }// !jni
+}// !qi
