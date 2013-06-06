@@ -73,20 +73,75 @@ void reply(const char *signature, qi_value_t *message, qi_value_t *answer, void 
 }
 
 
-TEST_F(TestCBindings, CallWithComplexTypes)
+TEST_F(TestCBindings, testMetaobject)
 {
-  // Mirror python test.
   qi_session_t*  session;
+  ASSERT_TRUE(qi_application_initialized());
   qi_object_builder_t* ob = qi_object_builder_create();
-  qi_object_builder_register_method(ob, "print", &print, 0);
-  qi_object_t* obj = qi_object_builder_get_object(ob);
+  qi_object_builder_advertise_method(ob, "print::v(s)", &print, 0);
+  qi_object_t* obj = qi_object_create();
+  obj = qi_object_builder_get_object(ob);
 
   session = qi_session_create();
   qi_future_t* fuc = qi_session_connect(session, addr);
   ASSERT_FALSE(qi_future_has_error(fuc, QI_FUTURETIMEOUT_INFINITE));
   qi_future_destroy(fuc);
 
-  fuc = qi_session_listen(session, "tcp://0.0.0.0:0");
+  //session listening
+  fuc = qi_session_listen(session, "tcp://127.0.0.1:9559");
+  qi_future_wait(fuc, QI_FUTURETIMEOUT_INFINITE);
+  qi_future_destroy(fuc);
+
+  //get the service Directory metaobject
+  qi_object_t* proxy = qi_future_get_object(qi_session_get_service(session, "ServiceDirectory"));
+  qi_value_t* metaobject = qi_object_get_metaobject(proxy);
+
+  //qi::GenericValue &gv = *(reinterpret_cast<qi::GenericValue *>(metaobject));
+  //std::cout << "plouf:" << qi::encodeJSON(gv) << std::endl;
+
+  // check the metaobject
+  qi_value_t *first_map = qi_value_tuple_get(metaobject,0);
+  qi_value_t *key = qi_value_create("i");
+  qi_value_set_int64(key, 0);
+  qi_value_t *first_elem_first_map = qi_value_map_get(first_map, key);
+  qi_value_destroy(key);
+  qi_value_destroy(first_map);
+  qi_value_t *first_metaobject_method = qi_value_tuple_get(first_elem_first_map, 2);
+  qi_value_destroy(first_elem_first_map);
+  ASSERT_TRUE(strcmp(qi_value_get_string(first_metaobject_method), "registerEvent") == 0);
+  qi_value_destroy(first_metaobject_method);
+
+  qi_future_t *futc = qi_session_close(session);
+  qi_future_wait(futc, QI_FUTURETIMEOUT_INFINITE);
+  qi_future_destroy(futc);
+  qi_session_destroy(session);
+  qi_object_destroy(obj);
+  qi_object_destroy(proxy);
+  qi_object_builder_destroy(ob);
+}
+
+TEST_F(TestCBindings, CallWithComplexTypes)
+{
+  // Mirror python test.
+  qi_session_t*  session;
+  qi_object_builder_t* ob = qi_object_builder_create();
+  qi_object_builder_advertise_method(ob, "print", &print, 0);
+  qi_object_t* obj = qi_object_builder_get_object(ob);
+
+  session = qi_session_create();
+  qi_future_t* fuc = qi_session_connect(session, addr);
+  ASSERT_FALSE(qi_future_has_error(fuc, QI_FUTURETIMEOUT_INFINITE));
+  ASSERT_TRUE(qi_session_is_connected(session));
+  qi_future_destroy(fuc);
+
+  fuc = qi_session_listen(session, "tcp://127.0.0.1:9559");
+  qi_value_t* values = qi_session_endpoints(session);
+  qi_value_t* value = qi_value_list_get(values, 0);
+
+  const char * endpoint_str = qi_value_get_string(value);
+  ASSERT_TRUE(std::string(endpoint_str) == "tcp://127.0.0.1:9559");
+  ASSERT_EQ(*qi_session_url(session), *addr);
+
   ASSERT_FALSE(qi_future_has_error(fuc, QI_FUTURETIMEOUT_INFINITE));
   qi_future_destroy(fuc);
 
@@ -109,7 +164,7 @@ TEST_F(TestCBindings, TestDestructionOrder)
   qi_session_t*  session;
 
   qi_object_builder_t* ob = qi_object_builder_create();
-  qi_object_builder_register_method(ob, "reply", &reply, 0);
+  qi_object_builder_advertise_method(ob, "reply", &reply, 0);
   qi_object_t* obj = qi_object_builder_get_object(ob);
 
   session = qi_session_create();
@@ -122,6 +177,18 @@ TEST_F(TestCBindings, TestDestructionOrder)
   qi_future_destroy(fuc);
 
   EXPECT_GT(qi_future_get_uint64_default(qi_session_register_service(session, "service", obj), 0), 0u);
+
+  // Test get services
+  qi_future_t* all_services = qi_session_get_services(session);
+  qi_future_wait(all_services, QI_FUTURETIMEOUT_INFINITE);
+
+  //get service name from all_services
+  const char * service_name = qi_value_get_string(qi_value_tuple_get(qi_value_list_get(qi_future_get_value(all_services), 0), 0));
+  ASSERT_TRUE(strcmp(service_name, "ServiceDirectory") == 0);
+
+  service_name =qi_value_get_string(qi_value_tuple_get(qi_value_list_get(qi_future_get_value(all_services), 1), 0));
+  ASSERT_TRUE(strcmp(service_name, "service") == 0);
+
 
   qi_future_t *fu = qi_session_get_service(session, "service");
   qi_value_t* fuv = qi_future_get_value(fu);
@@ -145,7 +212,7 @@ TEST_F(TestCBindings, AlreadyRegistered)
   std::stringstream ss;
 
   qi_object_builder_t* ob = qi_object_builder_create();
-  qi_object_builder_register_method(ob, "reply", &reply, 0);
+  qi_object_builder_advertise_method(ob, "reply", &reply, 0);
   qi_object_t* obj = qi_object_builder_get_object(ob);
 
   session = qi_session_create();
@@ -175,7 +242,7 @@ TEST_F(TestCBindings, Call)
   unsigned long long id;
 
   ob = qi_object_builder_create();
-  qi_object_builder_register_method(ob, "reply::s(s)", &reply, 0);
+  qi_object_builder_advertise_method(ob, "reply::s(s)", &reply, 0);
   object = qi_object_builder_get_object(ob);
 
   session = qi_session_create();
