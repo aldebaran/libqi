@@ -155,8 +155,10 @@ namespace qi {
 
   EventLoopThreadPool::EventLoopThreadPool(int minWorkers, int maxWorkers, int minIdleWorkers, int maxIdleWorkers)
   {
+    qiLogDebug() << this << " EventLoopThreadPool CTOR";
     _stopping = false;
     _pool = new ThreadPool(minWorkers, maxWorkers, minIdleWorkers, maxIdleWorkers);
+    qiLogDebug() << this << " EventLoopThreadPool CTOR done";
   }
 
   bool EventLoopThreadPool::isInEventLoopThread()
@@ -168,6 +170,7 @@ namespace qi {
 
   void EventLoopThreadPool::start()
   {
+    qiLogDebug() << this << " EventLoopThreadPool start (and done)";
   }
 
   void EventLoopThreadPool::run()
@@ -176,11 +179,14 @@ namespace qi {
 
   void EventLoopThreadPool::join()
   {
+    qiLogDebug() << this << " EventLoopThreadPool join";
     _pool->waitForAll();
+    qiLogDebug() << this << " EventLoopThreadPool join done";
   }
 
   void EventLoopThreadPool::stop()
   {
+    qiLogDebug() << this << " EventLoopThreadPool stop (and done)";
     _stopping = true;
   }
 
@@ -309,40 +315,50 @@ namespace qi {
 
   void EventLoop::join()
   {
+    qiLogDebug() << this << " EventLoop join";
     CHECK_STARTED;
     _p->join();
+    qiLogDebug() << this << " EventLoop join done";
   }
 
   void EventLoop::start()
   {
+    qiLogDebug() << this << " EventLoop start";
     if (_p)
       return;
     _p = new EventLoopAsio();
     _p->start();
+    qiLogDebug() << this << " EventLoop start done";
   }
 
   void EventLoop::startThreadPool(int minWorkers, int maxWorkers, int minIdleWorkers, int maxIdleWorkers)
   {
+    qiLogDebug() << this << " EventLoop startThreadPool";
     #define OR(name, val) (name==-1?val:name)
     if (_p)
       return;
     _p = new EventLoopThreadPool(OR(minWorkers, 2), OR(maxWorkers, 8), OR(minIdleWorkers,1), OR(maxIdleWorkers, 4));
     #undef OR
+    qiLogDebug() << this << " EventLoop startThreadPool done";
   }
 
 
   void EventLoop::stop()
   {
+    qiLogDebug() << this << " EventLoop stop";
     CHECK_STARTED;
     _p->stop();
+    qiLogDebug() << this << " EventLoop stop done";
   }
 
   void EventLoop::run()
   {
+    qiLogDebug() << this << " EventLoop run";
     if (_p)
       return;
     _p = new EventLoopAsio();
     _p->run();
+    qiLogDebug() << this << " EventLoop run done";
   }
 
   void *EventLoop::nativeHandle() {
@@ -352,8 +368,10 @@ namespace qi {
 
   void EventLoop::post(const boost::function<void ()>& callback,uint64_t usDelay)
   {
+    qiLogDebug() << this << " EventLoop post " << &callback;
     CHECK_STARTED;
     _p->post(usDelay, callback);
+    qiLogDebug() << this << " EventLoop post done " << &callback;
   }
 
   qi::Future<void>
@@ -490,6 +508,7 @@ namespace qi {
           .connect(boost::bind(&monitor_notify, "object"));
       }
     }
+
     return ctx;
   }
 
