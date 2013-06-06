@@ -161,6 +161,7 @@ namespace qi
     qi::Url listenUrl = url;
     _ssl = listenUrl.protocol() == "tcps";
     using namespace boost::asio;
+#ifndef ANDROID
     // resolve endpoint
     ip::tcp::resolver r(_acceptor.get_io_service());
     ip::tcp::resolver::query q(listenUrl.host(), boost::lexical_cast<std::string>(listenUrl.port()),
@@ -173,7 +174,11 @@ namespace qi
       return qi::makeFutureError<void>(s);
     }
     ip::tcp::endpoint ep = *it;
-    qiLogDebug() <<"Will listen on " << ep.address().to_string() << ' ' << ep.port();
+#else
+    ip::tcp::endpoint ep(boost::asio::ip::address::from_string(url.host()), url.port());
+#endif // #ifndef ANDROID
+
+    qiLogDebug() << "Will listen on " << ep.address().to_string() << ' ' << ep.port();
     _acceptor.open(ep.protocol());
 #ifdef _WIN32
     boost::asio::socket_base::reuse_address option(false);
