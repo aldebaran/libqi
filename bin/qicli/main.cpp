@@ -18,36 +18,9 @@ void init()
   subCmdMap["set"] = &subCmd_set;
 }
 
-void initApp(bool qilog)
-{
-  static char *offArgv[] =
-  {
-    (char*)"qicli",
-    (char*)"-q",
-  };
-
-  static char *onArgv[] =
-  {
-    (char*)"qicli",
-    (char*)"-v",
-  };
-
-  char **argv;
-  int argc = 2;
-
-  if (qilog)
-    argv = onArgv;
-  else
-    argv = offArgv;
-
-  static qi::Application *app;
-
-  app = new qi::Application(argc, argv);
-  (void)app;
-}
-
 int                 main(int argc, char **argv)
 {
+  qi::Application app(argc, argv);
   int             subCmdArgc = 0;
   char            **subCmdArgv = 0;
   SubCmd          subCmd = 0;
@@ -72,10 +45,8 @@ int                 main(int argc, char **argv)
 
   desc.add_options()
       ("address,a", po::value<std::string>(&options.address)->default_value("tcp://127.0.0.1:9559"), "The address of the service directory")
-      ("verbose,v", "turn on verbose mode")
       ("command,c", "sub command to execute")
-      ("help,h", "Print this help message and exit")
-      ("qilog,q", "turn on qilog");
+      ("help,h", "Print this help message and exit");
 
   po::positional_options_description positionalOptions;
   positionalOptions.add("command", 1);
@@ -94,11 +65,6 @@ int                 main(int argc, char **argv)
     showHelp(desc);
     return 0;
   }
-
-  if (vm.count("verbose"))
-    options.verbose = true;
-
-  initApp(vm.count("qilog"));
 
   int ret;
   try {

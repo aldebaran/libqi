@@ -13,7 +13,7 @@ int subCmd_call(int argc, char **argv, const MainOptions &options)
 
   desc.add_options()
       ("method,m", po::value<std::string>(&fullName)->required(), "method's name")
-      ("arg,m", po::value<std::vector<std::string> >(&argList), "method's args")
+      ("arg,a", po::value<std::vector<std::string> >(&argList), "method's args")
       ("help,h", "Print this help message and exit");
 
   po::positional_options_description positionalOptions;
@@ -23,7 +23,7 @@ int subCmd_call(int argc, char **argv, const MainOptions &options)
   po::variables_map vm;
   if (!poDefault(po::command_line_parser(argc, argv).options(desc).positional(positionalOptions), vm, desc))
     return 1;
-  SessionHelper session(options.address, options.verbose);
+  SessionHelper session(options.address);
   std::string serviceName;
   std::string methodName;
 
@@ -59,7 +59,7 @@ int subCmd_post(int argc, char **argv, const MainOptions &options)
   if (!poDefault(po::command_line_parser(argc, argv).options(desc).positional(positionalOptions), vm, desc))
     return 1;
 
-  SessionHelper session(options.address, options.verbose);
+  SessionHelper session(options.address);
   std::string serviceName;
   std::string signalName;
 
@@ -84,7 +84,7 @@ int subCmd_service(int argc, char **argv, const MainOptions &options)
   desc.add_options()
       ("service,s", po::value<std::vector<std::string> >(&serviceList), "service to display")
       ("help,h", "Print this help message and exit")
-      ("details,d", "print services' details")
+      ("details,z", "print services' details")
       ("interactive,i", "turn on interactive mode")
       ("number,n", "display services' idx");
 
@@ -95,10 +95,11 @@ int subCmd_service(int argc, char **argv, const MainOptions &options)
   if (!poDefault(po::command_line_parser(argc, argv).options(desc).positional(positionalOptions), vm, desc))
     return 1;
 
-  SessionHelper session(options.address, options.verbose);
+  SessionHelper session(options.address);
   if (serviceList.size() == 0)
-    serviceList.push_back(".*");
-  session.xShowServicesInfo(serviceList, vm.count("details"), vm.count("number"));
+    session.showServicesInfo(vm.count("details"), vm.count("number"));
+  else
+    session.xShowServicesInfo(serviceList, vm.count("details"), vm.count("number"));
 
   if (!vm.count("interactive"))
     return 0;
@@ -127,7 +128,7 @@ int subCmd_watch(int argc, char **argv, const MainOptions &options)
   if (!poDefault(po::command_line_parser(argc, argv).options(desc).positional(positionalOptions), vm, desc))
     return 1;
 
-  SessionHelper session(options.address, options.verbose);
+  SessionHelper session(options.address);
   std::string serviceName;
   std::string signalName;
 
@@ -160,7 +161,7 @@ int subCmd_get(int argc, char **argv, const MainOptions &options)
   if (!poDefault(po::command_line_parser(argc, argv).options(desc).positional(positionalOptions), vm, desc))
     return 1;
 
-  SessionHelper session(options.address, options.verbose);
+  SessionHelper session(options.address);
   std::string serviceName;
   std::string propName;
 
@@ -196,7 +197,7 @@ int subCmd_set(int argc, char **argv, const MainOptions &options)
   if (!poDefault(po::command_line_parser(argc, argv).options(desc).positional(positionalOptions), vm, desc))
     return 1;
 
-  SessionHelper session(options.address, options.verbose);
+  SessionHelper session(options.address);
   std::string serviceName;
   std::string propName;
 

@@ -1,33 +1,17 @@
+#include <iomanip>
+
 #include <boost/regex.hpp>
 
 #include "sessionhelper.hpp"
 
-SessionHelper::SessionHelper(const std::string &address, bool verbose)
-  :_verbose(verbose)
+SessionHelper::SessionHelper(const std::string &address)
 {
-  if (_verbose)
-  {
-    std::cout << "Connecting to [" << address << "] : ";
-    std::cout.flush();
-  }
-  //could throw
   _session.connect(address);
-  if (_verbose)
-    std::cout << "OK" << std::endl;
 }
 
 SessionHelper::~SessionHelper()
 {
-  if (_verbose)
-  {
-    std::cout << "Closing session : ";
-    std::cout.flush();
-  }
-  qi::FutureSync<void> fut = _session.close();
-  if (fut.hasError() && _verbose)
-    std::cout << "error while closing session: " << fut.error() << std::endl;
-  if (_verbose)
-    std::cout << "OK" << std::endl;
+  _session.close();
 }
 
 bool SessionHelper::getServiceSync(const std::string &serviceName, ServiceHelper &out)
@@ -65,7 +49,7 @@ void SessionHelper::_showServiceInfo(const qi::ServiceInfo &infos, bool verbose,
 
   ServiceHelper service;
 
-  if (!this->getServiceSync(infos.name(), service))
+  if (!getServiceSync(infos.name(), service))
     return ;
   qi::details::printMetaObject(std::cout, service.objPtr()->metaObject());
 }
@@ -137,7 +121,7 @@ void SessionHelper::showServicesInfo(const std::vector<std::string> &serviceList
     if (isNumber(serviceList[i]))
       showServiceInfo(::atoi(serviceList[i].c_str()), verbose, number);
     else
-      this->showServiceInfo(serviceList[i], verbose, number);
+      showServiceInfo(serviceList[i], verbose, number);
     if (verbose)
       if (i + 1 != serviceList.size())
         std::cout << "========================================================================" << std::endl;
@@ -150,7 +134,7 @@ void SessionHelper::showServicesInfo(bool verbose, bool number)
 
   for (unsigned int i = 0; i < servs.size(); ++i)
   {
-    this->_showServiceInfo(servs[i], verbose);
+    _showServiceInfo(servs[i], verbose, number);
     if (verbose)
       if (i + 1 != servs.size())
         std::cout << "========================================================================" << std::endl;

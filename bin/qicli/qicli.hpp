@@ -9,10 +9,6 @@
 struct MainOptions
 {
   std::string   address;
-  bool          verbose;
-  MainOptions()
-    :verbose(false)
-  {}
 };
 
 typedef int (*SubCmd)(int argc, char **argv, const MainOptions &options);

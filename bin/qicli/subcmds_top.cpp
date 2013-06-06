@@ -11,7 +11,7 @@ int subCmd_top(int argc, char **argv, const MainOptions &options)
       .column("min call time")
       .column("max call time");
 
-  SessionHelper session(options.address, options.verbose);
+  SessionHelper session(options.address);
   std::vector<qi::ServiceInfo> servs = session.services();
   while (true)
   {

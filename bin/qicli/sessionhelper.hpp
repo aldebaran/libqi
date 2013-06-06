@@ -8,7 +8,7 @@
 class SessionHelper
 {
 public:
-  SessionHelper(const std::string &address, bool verbose=false);
+  SessionHelper(const std::string &address);
   ~SessionHelper();
   bool getServiceSync(const std::string &serviceName, ServiceHelper &out);
   void _showServiceInfo(const qi::ServiceInfo &infos, bool verbose=false, bool number=false);
@@ -23,7 +23,6 @@ public:
   qi::FutureSync< std::vector<qi::ServiceInfo> > services(qi::Session::ServiceLocality locality = qi::Session::ServiceLocality_All);
 
 private:
-  bool        _verbose;
   qi::Session _session;
 };
 
