@@ -77,7 +77,7 @@ public class Future <T>
   }
 
   @SuppressWarnings("unchecked")
-  public T get() throws InterruptedException, ExecutionException
+  public T get() throws InterruptedException, CallError
   {
 
     java.lang.Object ret = null;
@@ -87,7 +87,7 @@ public class Future <T>
       ret = Future.qiFutureCallGet(_fut);
     } catch (Exception e)
     {
-      throw new ExecutionException(e.getCause());
+      throw new CallError(e.getMessage());
     }
 
     if (isCancelled())
