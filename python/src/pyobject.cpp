@@ -191,7 +191,7 @@ namespace qi { namespace py {
       GILScopedLock _lock;
       boost::python::object attrs(boost::python::borrowed(PyObject_Dir(obj.ptr())));
 
-      for (unsigned i = 0; i < boost::python::len(attrs); ++i) {
+      for (int i = 0; i < boost::python::len(attrs); ++i) {
         std::string key = boost::python::extract<std::string>(attrs[i]);
         boost::python::object m = obj.attr(attrs[i]);
         if (PyMethod_Check(m.ptr())) {
@@ -249,7 +249,7 @@ namespace qi { namespace py {
     static boost::python::object pyobject_param_shrinker(boost::python::tuple args, boost::python::dict kwargs) {
       PyQiObject& pys = boost::python::extract<PyQiObject&>(args[0]);
       boost::python::list l;
-      for (unsigned i = 2; i < boost::python::len(args); ++i)
+      for (int i = 2; i < boost::python::len(args); ++i)
         l.append(args[i]);
       return pys.call(boost::python::extract<boost::python::str>(args[1]), boost::python::tuple(l), kwargs);
     }
