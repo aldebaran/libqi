@@ -2,7 +2,7 @@
 
 #include "sessionhelper.hpp"
 
-SessionHelper::SessionHelper(std::string const& address, bool verbose)
+SessionHelper::SessionHelper(const std::string &address, bool verbose)
   :_verbose(verbose)
 {
   if (_verbose)
@@ -14,7 +14,7 @@ SessionHelper::SessionHelper(std::string const& address, bool verbose)
   {
     _session.connect(address);
   }
-  catch (std::exception const& e)
+  catch (const std::exception &e)
   {
     if (_verbose)
     std::cout << e.what() << std::endl;
@@ -52,7 +52,7 @@ bool SessionHelper::getServiceSync(const std::string &serviceName, ServiceHelper
   return true;
 }
 
-void SessionHelper::_showServiceInfo(qi::ServiceInfo const& infos, bool verbose, bool number)
+void SessionHelper::_showServiceInfo(const qi::ServiceInfo &infos, bool verbose, bool number)
 {
   if (!verbose)
   {
@@ -78,7 +78,7 @@ void SessionHelper::_showServiceInfo(qi::ServiceInfo const& infos, bool verbose,
   qi::details::printMetaObject(std::cout, service.objPtr()->metaObject());
 }
 
-void SessionHelper::showServiceInfo(std::string const& serviceName, bool verbose, bool number)
+void SessionHelper::showServiceInfo(const std::string &serviceName, bool verbose, bool number)
 {
   std::vector<qi::ServiceInfo> servs = _session.services();
 
@@ -106,7 +106,7 @@ void SessionHelper::showServiceInfo(unsigned int serviceId, bool verbose, bool n
   _showServiceInfo(servs[i], verbose, number);
 }
 
-bool isNumber(std::string const& str)
+bool isNumber(const std::string &str)
 {
   for (unsigned int i = 0; i < str.length(); ++i)
   {
@@ -116,7 +116,7 @@ bool isNumber(std::string const& str)
   return true;
 }
 
-void SessionHelper::xShowServicesInfo(std::vector<std::string> const& patternVec, bool verbose, bool number)
+void SessionHelper::xShowServicesInfo(const std::vector<std::string> &patternVec, bool verbose, bool number)
 {
   std::vector<qi::ServiceInfo> servs = _session.services();
   std::vector<std::string> matchServs;
@@ -138,7 +138,7 @@ void SessionHelper::xShowServicesInfo(std::vector<std::string> const& patternVec
   showServicesInfo(matchServs, verbose, number);
 }
 
-void SessionHelper::showServicesInfo(std::vector<std::string> const& serviceList, bool verbose, bool number)
+void SessionHelper::showServicesInfo(const std::vector<std::string> &serviceList, bool verbose, bool number)
 {
   for (unsigned int i = 0; i < serviceList.size(); ++i)
   {

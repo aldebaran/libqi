@@ -1,7 +1,7 @@
 #include "qicli.hpp"
 #include "grid.hpp"
 
-int subCmd_top(int argc, char **argv, MainOptions const& options)
+int subCmd_top(int argc, char **argv, const MainOptions &options)
 {
   Grid grid;
 

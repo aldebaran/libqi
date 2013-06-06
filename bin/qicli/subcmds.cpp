@@ -5,7 +5,7 @@
 
 #include "qicli.hpp"
 
-int subCmd_call(int argc, char **argv, MainOptions const& options)
+int subCmd_call(int argc, char **argv, const MainOptions &options)
 {
   po::options_description     desc("Usage: qicli call Service.Method ARGS...");
   std::string                 fullName;
@@ -40,7 +40,7 @@ int subCmd_call(int argc, char **argv, MainOptions const& options)
   return service.call(methodName, argList);
 }
 
-int subCmd_post(int argc, char **argv, MainOptions const& options)
+int subCmd_post(int argc, char **argv, const MainOptions &options)
 {
   po::options_description     desc("Usage: qicli post Service.Signal ARGS...");
   std::string                 fullName;
@@ -76,7 +76,7 @@ int subCmd_post(int argc, char **argv, MainOptions const& options)
   return service.post(signalName, argList);
 }
 
-int subCmd_service(int argc, char **argv, MainOptions const& options)
+int subCmd_service(int argc, char **argv, const MainOptions &options)
 {
   po::options_description     desc("Usage: qicli services PATTERN...");
   std::vector<std::string>    serviceList;
@@ -110,7 +110,7 @@ int subCmd_service(int argc, char **argv, MainOptions const& options)
   return 0;
 }
 
-int subCmd_watch(int argc, char **argv, MainOptions const& options)
+int subCmd_watch(int argc, char **argv, const MainOptions &options)
 {
   po::options_description desc("Usage: qicli watch Service.Signal");
   std::string             fullName;
@@ -144,7 +144,7 @@ int subCmd_watch(int argc, char **argv, MainOptions const& options)
   return service.watchSignal(signalName, vm.count("time"));
 }
 
-int subCmd_get(int argc, char **argv, MainOptions const& options)
+int subCmd_get(int argc, char **argv, const MainOptions &options)
 {
   po::options_description desc("Usage: qicli get Service.Propertie");
   std::string             fullName;
@@ -177,7 +177,7 @@ int subCmd_get(int argc, char **argv, MainOptions const& options)
   return service.showProp(propName);
 }
 
-int subCmd_set(int argc, char **argv, MainOptions const& options)
+int subCmd_set(int argc, char **argv, const MainOptions &options)
 {
   po::options_description desc("Usage: qicli get Service.Propertie");
   std::string             fullName;

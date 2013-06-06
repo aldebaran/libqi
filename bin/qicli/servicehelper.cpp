@@ -6,7 +6,7 @@
 #include "servicehelper.hpp"
 #include "qicli.hpp"
 
-std::ostream &operator<<(std::ostream &os, std::vector<qi::GenericValuePtr> const& gvv)
+std::ostream &operator<<(std::ostream &os, const std::vector<qi::GenericValuePtr> &gvv)
 {
   for (unsigned int i = 0; i < gvv.size(); ++i)
   {
@@ -17,18 +17,18 @@ std::ostream &operator<<(std::ostream &os, std::vector<qi::GenericValuePtr> cons
   return os;
 }
 
-ServiceHelper const& ServiceHelper::operator=(qi::ObjectPtr const& service)
+const ServiceHelper& ServiceHelper::operator=(const qi::ObjectPtr &service)
 {
   _service = service;
   return *this;
 }
 
-qi::ObjectPtr const& ServiceHelper::objPtr() const
+const qi::ObjectPtr& ServiceHelper::objPtr() const
 {
   return _service;
 }
 
-int ServiceHelper::call(std::string const& methodName, std::vector<std::string> const& argList)
+int ServiceHelper::call(const std::string &methodName, const std::vector<std::string> &argList)
 {
   qi::GenericFunctionParameters params;
 
@@ -47,7 +47,7 @@ int ServiceHelper::call(std::string const& methodName, std::vector<std::string> 
   return 0;
 }
 
-int ServiceHelper::showProp(std::string const& propName)
+int ServiceHelper::showProp(const std::string &propName)
 {
   int propId = _service->metaObject().propertyId(propName);
   if (propId == -1)
@@ -66,7 +66,7 @@ int ServiceHelper::showProp(std::string const& propName)
   return 0;
 }
 
-int ServiceHelper::setProp(std::string const& propName, std::string const& value)
+int ServiceHelper::setProp(const std::string &propName, const std::string &value)
 {
   int propId = _service->metaObject().propertyId(propName);
   if (propId == -1)
@@ -85,7 +85,7 @@ int ServiceHelper::setProp(std::string const& propName, std::string const& value
   return 0;
 }
 
-qi::GenericValuePtr watcher(bool showTime, std::vector<qi::GenericValuePtr> const& params)
+qi::GenericValuePtr watcher(bool showTime, const std::vector<qi::GenericValuePtr> &params)
 {
   if (showTime)
     std::cout << getTime() << " : ";
@@ -93,7 +93,7 @@ qi::GenericValuePtr watcher(bool showTime, std::vector<qi::GenericValuePtr> cons
   return qi::GenericValuePtr();
 }
 
-int ServiceHelper::watchSignal(std::string const& signalName, bool showTime)
+int ServiceHelper::watchSignal(const std::string &signalName, bool showTime)
 {
   qi::FutureSync<qi::Link> futLink = _service->connect(signalName,
                                                        qi::SignalSubscriber(
@@ -119,7 +119,7 @@ int ServiceHelper::watchSignal(std::string const& signalName, bool showTime)
   return 0;
 }
 
-int ServiceHelper::post(std::string const& signalName, std::vector<std::string> const& argList)
+int ServiceHelper::post(const std::string &signalName, const std::vector<std::string> &argList)
 {
   qi::GenericFunctionParameters params;
 

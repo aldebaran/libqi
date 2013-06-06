@@ -7,7 +7,7 @@
 
 #include "qicli.hpp"
 
-bool splitName(std::string const& fullName, std::string &beforePoint, std::string &afterPoint)
+bool splitName(const std::string &fullName, std::string &beforePoint, std::string &afterPoint)
 {
   size_t pos = fullName.find(".");
 
@@ -35,7 +35,7 @@ std::string readAlphaInput()
   return str;
 }
 
-void showHelp(po::options_description const& desc)
+void showHelp(const po::options_description &desc)
 {
   std::cout << std::left << desc << std::endl;
   std::cout << "sub commands:" << std::endl;
@@ -47,7 +47,7 @@ void showHelp(po::options_description const& desc)
   std::cout << "\t" << std::setw(10) << "service" << std::setw(40) << "<PATTERN...>" << std::setw(30) << "display infos of services matching the given patterns" << std::endl;
 }
 
-bool poDefault(po::command_line_parser const& clp, po::variables_map &vm, po::options_description const& desc)
+bool poDefault(const po::command_line_parser &clp, po::variables_map &vm, const po::options_description &desc)
 {
   try {
     po::store(const_cast<po::command_line_parser&>(clp).run(), vm);

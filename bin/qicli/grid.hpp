@@ -13,12 +13,12 @@ private:
   std::list<boost::any>::const_iterator _it;
 
 public:
-  Column(std::string const& name="");
-  Column &entry(boost::any const& entry);
+  Column(const std::string &name="");
+  Column &entry(const boost::any &entry);
   bool displayNext();
   void rewind();
   void clear();
-  std::string const& name() const;
+  const std::string &name() const;
 };
 
 class Grid
@@ -27,10 +27,10 @@ private:
   std::list<Column> _columns;
 
 public:
-  Grid &column(std::string const& name);
-  Grid &column(Column const& column);
+  Grid &column(const std::string &name);
+  Grid &column(const Column &column);
 
-  Column &operator[](std::string const& name);
+  Column &operator[](const std::string &name);
   void display();
   void clear();
 };

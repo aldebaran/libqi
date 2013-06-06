@@ -15,27 +15,27 @@ struct MainOptions
   {}
 };
 
-typedef int (*SubCmd)(int argc, char **argv, MainOptions const& options);
+typedef int (*SubCmd)(int argc, char **argv, const MainOptions &options);
 
 namespace po = boost::program_options;
 
 
 /* SUBCMDS */
-int subCmd_service(int argc, char **argv, MainOptions const& options);
-int subCmd_call(int argc, char **argv, MainOptions const& options);
-int subCmd_post(int argc, char **argv, MainOptions const& options);
-int subCmd_top(int argc, char **argv, MainOptions const& options);
-int subCmd_service(int argc, char **argv, MainOptions const& options);
-int subCmd_watch(int argc, char **argv, MainOptions const& options);
-int subCmd_get(int argc, char **argv, MainOptions const& options);
-int subCmd_set(int argc, char **argv, MainOptions const& options);
+int subCmd_service(int argc, char **argv, const MainOptions &options);
+int subCmd_call(int argc, char **argv, const MainOptions &options);
+int subCmd_post(int argc, char **argv, const MainOptions &options);
+int subCmd_top(int argc, char **argv, const MainOptions &options);
+int subCmd_service(int argc, char **argv, const MainOptions &options);
+int subCmd_watch(int argc, char **argv, const MainOptions &options);
+int subCmd_get(int argc, char **argv, const MainOptions &options);
+int subCmd_set(int argc, char **argv, const MainOptions &options);
 
 /* UTILS */
-bool splitName(std::string const& fullName, std::string &beforePoint, std::string &afterPoint);
+bool splitName(const std::string &fullName, std::string &beforePoint, std::string &afterPoint);
 int readNumericInput();
 std::string readAlphaInput();
-bool poDefault(po::command_line_parser const& clp, po::variables_map &vm, po::options_description const& desc);
-void showHelp(po::options_description const& desc);
+bool poDefault(const po::command_line_parser &clp, po::variables_map &vm, const po::options_description &desc);
+void showHelp(const po::options_description &desc);
 std::string getTime();
 
 #endif /* !QICLI_HPP_ */

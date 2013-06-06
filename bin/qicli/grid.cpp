@@ -3,7 +3,7 @@
 
 #include "grid.hpp"
 
-std::ostream &operator<<(std::ostream &os, boost::any const& any)
+std::ostream &operator<<(std::ostream &os, const boost::any &any)
 {
   if (any.type() == typeid(unsigned int))
     os << boost::any_cast<unsigned int>(any);
@@ -16,11 +16,11 @@ std::ostream &operator<<(std::ostream &os, boost::any const& any)
   return os;
 }
 
-Column::Column(std::string const& name)
+Column::Column(const std::string &name)
   :_name(name)
 {}
 
-Column &Column::entry(boost::any const& entry)
+Column &Column::entry(const boost::any &entry)
 {
   _entries.push_back(entry);
   return *this;
@@ -49,23 +49,23 @@ void Column::clear()
   _entries.clear();
 }
 
-std::string const& Column::name() const
+const std::string& Column::name() const
 {
   return _name;
 }
 
-Grid &Grid::column(std::string const& name)
+Grid &Grid::column(const std::string &name)
 {
   return column(Column(name));
 }
 
-Grid &Grid::column(Column const& column)
+Grid &Grid::column(const Column &column)
 {
   _columns.push_back(column);
   return *this;
 }
 
-Column &Grid::operator[](std::string const& name)
+Column &Grid::operator[](const std::string &name)
 {
   std::list<Column>::iterator begin;
   std::list<Column>::iterator end = _columns.end();
