@@ -325,6 +325,55 @@ namespace qi {
       env->DeleteLocalRef(clazz);
     }
 
+    // Convert jstring into std::string
+    // Use of std::string ensures ref leak safety.
+    std::string toString(jstring inputString)
+    {
+      std::string string;
+      const char *cstring = 0;
+      JNIEnv*   env = qi::jni::env();
+
+      if (!env)
+        return string;
+
+      if (!(cstring = env->GetStringUTFChars(inputString, 0)))
+      {
+        qiLogError() << "Cannot convert Java string into string.";
+        return string;
+      }
+
+      string = cstring;
+      env->ReleaseStringUTFChars(inputString, cstring);
+      return string;
+    }
+
+    // Convert std::string into jstring
+    // Use qi::jni::releaseString to avoir ref leak.
+    jstring     toJstring(const std::string& input)
+    {
+      jstring   string = 0;
+      JNIEnv*   env = qi::jni::env();
+
+      if (!env)
+        return string;
+
+      if (!(string = env->NewStringUTF(input.c_str())))
+        qiLogError() << "Cannot convert string into Java string.";
+
+      return string;
+    }
+
+    // Remove local ref on jstring created with qi::jni::toJstring
+    void        releaseString(jstring input)
+    {
+      JNIEnv*   env = qi::jni::env();
+
+      if (!env)
+        return;
+
+      env->DeleteLocalRef(input);
+    }
+
     // Release local ref on JNI object
     void        releaseObject(jobject obj)
     {

@@ -74,7 +74,7 @@ void Java_com_aldebaran_qimessaging_Session_qiSessionClose(JNIEnv* QI_UNUSED(env
 jobject   Java_com_aldebaran_qimessaging_Session_service(JNIEnv* env, jobject QI_UNUSED(obj), jlong pSession, jstring jname)
 {
   qi::Session *s = reinterpret_cast<qi::Session*>(pSession);
-  std::string serviceName = toStdString(env, jname);
+  std::string serviceName = qi::jni::toString(jname);
 
   qi::ObjectPtr *obj = new qi::ObjectPtr();
   jobject proxy = 0;
@@ -96,7 +96,7 @@ jobject   Java_com_aldebaran_qimessaging_Session_service(JNIEnv* env, jobject QI
 jboolean  Java_com_aldebaran_qimessaging_Session_registerService(JNIEnv *env, jobject QI_UNUSED(jobj), jlong pSession, jstring jname, jobject object)
 {
   qi::Session*    session = reinterpret_cast<qi::Session*>(pSession);
-  std::string     name    = toStdString(env, jname);
+  std::string     name    = qi::jni::toString(jname);
   JNIObject obj(object);
   jlong ret = 0;
 

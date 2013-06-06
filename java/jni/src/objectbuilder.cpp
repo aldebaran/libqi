@@ -16,8 +16,6 @@
 #include <callbridge.hpp>
 #include <objectbuilder.hpp>
 
-qiLogCategory("qimessaging.jni");
-
 jlong   Java_com_aldebaran_qimessaging_GenericObject_qiObjectBuilderCreate(JNIEnv* env, jobject QI_UNUSED(jobj))
 {
   // Keep a pointer on JavaVM singleton if not already set.
@@ -49,12 +47,13 @@ jlong   Java_com_aldebaran_qimessaging_GenericObjectBuilder_create()
   return (jlong) ob;
 }
 
-jobject Java_com_aldebaran_qimessaging_GenericObjectBuilder_object(JNIEnv* QI_UNUSED(env), jobject QI_UNUSED(jobj), jlong pObjectBuilder)
+jobject Java_com_aldebaran_qimessaging_GenericObjectBuilder_object(JNIEnv* env, jobject QI_UNUSED(jobj), jlong pObjectBuilder)
 {
   qi::GenericObjectBuilder *ob = reinterpret_cast<qi::GenericObjectBuilder *>(pObjectBuilder);
   qi::ObjectPtr *obj = new qi::ObjectPtr();
   qi::ObjectPtr &o = *(reinterpret_cast<qi::ObjectPtr *>(obj));
 
+  JVM(env);
   o = ob->object();
 
   JNIObject jobj(obj);
@@ -71,10 +70,10 @@ jlong   Java_com_aldebaran_qimessaging_GenericObjectBuilder_advertiseMethod(JNIE
 {
   extern MethodInfoHandler   gInfoHandler;
   qi::GenericObjectBuilder  *ob = reinterpret_cast<qi::GenericObjectBuilder *>(pObjectBuilder);
-  std::string                signature = toStdString(env, method);
+  std::string                signature = qi::jni::toString(method);
   qi_method_info*            data;
   std::vector<std::string>   sigInfo;
-  std::string                description = toStdString(env, desc);
+  std::string                description = qi::jni::toString(desc);
 
   // Create a new global reference on object instance.
   // jobject structure are local reference and are destroyed when returning to JVM
@@ -84,7 +83,7 @@ jlong   Java_com_aldebaran_qimessaging_GenericObjectBuilder_advertiseMethod(JNIE
   // Create a struct holding a jobject instance, jmethodId id and other needed thing for callback
   // Pass it to void * data to register_method
   // In java_callback, use it directly so we don't have to find method again
-  data = new qi_method_info(instance, signature, jobj, toStdString(env, className));
+  data = new qi_method_info(instance, signature, jobj, qi::jni::toString(className));
   gInfoHandler.push(data);
 
   // Bind method signature on generic java callback
@@ -101,7 +100,7 @@ jlong   Java_com_aldebaran_qimessaging_GenericObjectBuilder_advertiseMethod(JNIE
 jlong   Java_com_aldebaran_qimessaging_GenericObjectBuilder_advertiseSignal(JNIEnv *env, jobject obj, jlong pObjectBuilder, jstring eventSignature)
 {
   qi::GenericObjectBuilder  *ob = reinterpret_cast<qi::GenericObjectBuilder *>(pObjectBuilder);
-  std::vector<std::string>   sigInfo = qi::signatureSplit(toStdString(env, eventSignature));
+  std::vector<std::string>   sigInfo = qi::signatureSplit(qi::jni::toString(eventSignature));
   std::string   event = sigInfo[1];
   std::string   callbackSignature = sigInfo[0] + sigInfo[2];
 
@@ -111,7 +110,7 @@ jlong   Java_com_aldebaran_qimessaging_GenericObjectBuilder_advertiseSignal(JNIE
 jlong   Java_com_aldebaran_qimessaging_GenericObjectBuilder_advertiseProperty(JNIEnv *env, jobject QI_UNUSED(obj), jlong pObjectBuilder, jstring jname, jclass propertyBase)
 {
   qi::GenericObjectBuilder  *ob = reinterpret_cast<qi::GenericObjectBuilder *>(pObjectBuilder);
-  std::string                name = toStdString(env, jname);
+  std::string                name = qi::jni::toString(jname);
 
   std::string sig = propertyBaseSignature(env, propertyBase);
   return (jlong) ob->xAdvertiseProperty(name, sig);

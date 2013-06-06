@@ -38,7 +38,7 @@ void    Java_com_aldebaran_qimessaging_ServiceDirectory_qiTestSDDestroy(jlong pS
   delete sd;
 }
 
-jstring Java_com_aldebaran_qimessaging_ServiceDirectory_qiListenUrl(JNIEnv *env, jobject obj, jlong pSD)
+jstring Java_com_aldebaran_qimessaging_ServiceDirectory_qiListenUrl(JNIEnv* QI_UNUSED(env), jobject QI_UNUSED(obj), jlong pSD)
 {
   qi::ServiceDirectory *sd = reinterpret_cast<qi::ServiceDirectory *>(pSD);
 
@@ -48,7 +48,7 @@ jstring Java_com_aldebaran_qimessaging_ServiceDirectory_qiListenUrl(JNIEnv *env,
     return 0;
   }
 
-  return toJavaString(env, sd->endpoints().at(0).str());
+  return qi::jni::toJstring(sd->endpoints().at(0).str());
 }
 
 void    Java_com_aldebaran_qimessaging_ServiceDirectory_qiTestSDClose(jlong pSD)

@@ -20,7 +20,7 @@ extern MethodInfoHandler gInfoHandler;
 jlong   Java_com_aldebaran_qimessaging_Object_property(JNIEnv* env, jobject jobj, jlong pObj, jstring name)
 {
   qi::ObjectPtr&     obj = *(reinterpret_cast<qi::ObjectPtr*>(pObj));
-  std::string        propName = toStdString(env, name);
+  std::string        propName = qi::jni::toString(name);
 
   qi::Future<qi::GenericValue>* ret = new qi::Future<qi::GenericValue>();
 
@@ -42,7 +42,7 @@ jlong   Java_com_aldebaran_qimessaging_Object_property(JNIEnv* env, jobject jobj
 jlong  Java_com_aldebaran_qimessaging_Object_setProperty(JNIEnv* env, jobject QI_UNUSED(jobj), jlong pObj, jstring name, jobject property)
 {
   qi::ObjectPtr&    obj = *(reinterpret_cast<qi::ObjectPtr*>(pObj));
-  std::string        propName = toStdString(env, name);
+  std::string       propName = qi::jni::toString(name);
 
   JVM(env);
   JVM()->AttachCurrentThread((envPtr) &env, (void*) 0);
@@ -71,7 +71,7 @@ jlong     Java_com_aldebaran_qimessaging_Object_asyncCall(JNIEnv* env, jobject Q
   }
 
   // Get method name and parameters C style.
-  method = toStdString(env, jmethod);
+  method = qi::jni::toString(jmethod);
   try {
     fut = call_from_java(env, obj, method, args);
   } catch (std::exception& e)
@@ -89,7 +89,7 @@ jstring   Java_com_aldebaran_qimessaging_Object_printMetaObject(JNIEnv* env, job
   std::stringstream ss;
 
   qi::details::printMetaObject(ss, obj->metaObject());
-  return toJavaString(env, ss.str());
+  return qi::jni::toJstring(ss.str());
 }
 
 void      Java_com_aldebaran_qimessaging_Object_destroy(JNIEnv* QI_UNUSED(env), jobject QI_UNUSED(jobj), jlong pObject)
@@ -102,8 +102,8 @@ void      Java_com_aldebaran_qimessaging_Object_destroy(JNIEnv* QI_UNUSED(env), 
 jlong     Java_com_aldebaran_qimessaging_Object_connect(JNIEnv *env, jobject jobj, jlong pObject, jstring method, jobject instance, jstring service, jstring eventName)
 {
   qi::ObjectPtr&             obj = *(reinterpret_cast<qi::ObjectPtr *>(pObject));
-  std::string                signature = toStdString(env, method);
-  std::string                event = toStdString(env, eventName);
+  std::string                signature = qi::jni::toString(method);
+  std::string                event = qi::jni::toString(eventName);
   qi_method_info*            data;
   std::vector<std::string>  sigInfo;
 
@@ -112,7 +112,6 @@ jlong     Java_com_aldebaran_qimessaging_Object_connect(JNIEnv *env, jobject job
 
   // Create a new global reference on object instance.
   // jobject structure are local reference and are destroyed when returning to JVM
-  // Fixme : May leak global ref.
   instance = env->NewGlobalRef(instance);
 
   // Remove return value
@@ -123,7 +122,7 @@ jlong     Java_com_aldebaran_qimessaging_Object_connect(JNIEnv *env, jobject job
 
   // Create a struct holding a jobject instance, jmethodId id and other needed thing for callback
   // Pass it to void * data to register_method
-  data = new qi_method_info(instance, signature, jobj, toStdString(env, service));
+  data = new qi_method_info(instance, signature, jobj, qi::jni::toString(service));
   gInfoHandler.push(data);
 
 
@@ -137,7 +136,7 @@ jlong     Java_com_aldebaran_qimessaging_Object_connect(JNIEnv *env, jobject job
 void      Java_com_aldebaran_qimessaging_Object_post(JNIEnv *env, jobject QI_UNUSED(jobj), jlong pObject, jstring eventName, jobjectArray jargs)
 {
   qi::ObjectPtr obj = *(reinterpret_cast<qi::ObjectPtr *>(pObject));
-  std::string   event = toStdString(env, eventName);
+  std::string   event = qi::jni::toString(eventName);
   qi::GenericFunctionParameters params;
   std::string signature;
   jsize size;

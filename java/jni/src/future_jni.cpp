@@ -108,7 +108,7 @@ jboolean Java_com_aldebaran_qimessaging_Future_qiFutureCallIsDone(JNIEnv *env, j
 jboolean Java_com_aldebaran_qimessaging_Future_qiFutureCallConnect(JNIEnv *env, jobject obj, jlong pFuture, jobject callback, jstring jclassName, jobjectArray args)
 {
   qi::Future<qi::GenericValuePtr>* fut = reinterpret_cast<qi::Future<qi::GenericValuePtr>*>(pFuture);
-  std::string className = toStdString(env, jclassName);
+  std::string className = qi::jni::toString(jclassName);
   qi::CallbackInfo* info = 0;
 
   // Attach JNIEnv to current thread to avoid segfault in jni functions. (eventloop dependent)

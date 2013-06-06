@@ -43,6 +43,11 @@ extern "C"
 namespace qi {
   namespace jni {
 
+    // String conversion
+    std::string toString(jstring input);
+    jstring     toJstring(const std::string& input);
+    void        releaseString(jstring input);
+    // TypeSystem tools
     jclass      clazz(const std::string &name);
     jclass      clazz(jobject object);
     void        releaseClazz(jclass clazz);
