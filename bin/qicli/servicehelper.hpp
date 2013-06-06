@@ -5,9 +5,6 @@
 
 class ServiceHelper
 {
-private:
-  qi::ObjectPtr _service;
-
 public:
   const ServiceHelper& operator=(const qi::ObjectPtr &service);
   const qi::ObjectPtr& objPtr() const;
@@ -19,6 +16,9 @@ public:
 
 private:
   std::string _getTime() const;
+
+private:
+  qi::ObjectPtr _service;
 };
 
 #endif /* !QICLI_SERVICEHELPER_HPP_ */

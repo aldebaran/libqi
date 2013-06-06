@@ -101,12 +101,14 @@ int                 main(int argc, char **argv)
   initApp(vm.count("qilog"));
 
   int ret;
-  try
-  {
+  try {
     ret = subCmd(subCmdArgc, subCmdArgv, options);
-  }
-  catch (...)
+  } catch (const std::exception& e)
   {
+    std::cout << e.what() << std::endl;
+    return 1;
+  } catch (...) {
+    std::cout << "unknown error catch" << std::endl;
     return 1;
   }
   return ret;

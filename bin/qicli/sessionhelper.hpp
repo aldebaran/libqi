@@ -7,9 +7,6 @@
 
 class SessionHelper
 {
-private:
-  bool        _verbose;
-  qi::Session _session;
 public:
   SessionHelper(const std::string &address, bool verbose=false);
   ~SessionHelper();
@@ -24,6 +21,10 @@ public:
   qi::FutureSync<void> close();
   qi::FutureSync< qi::ObjectPtr > service(const std::string &service, const std::string &protocol = "");
   qi::FutureSync< std::vector<qi::ServiceInfo> > services(qi::Session::ServiceLocality locality = qi::Session::ServiceLocality_All);
+
+private:
+  bool        _verbose;
+  qi::Session _session;
 };
 
 #endif /* !QICLI_SESSIONHELPER_HPP_ */

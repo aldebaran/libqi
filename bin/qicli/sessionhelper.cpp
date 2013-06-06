@@ -10,16 +10,8 @@ SessionHelper::SessionHelper(const std::string &address, bool verbose)
     std::cout << "Connecting to [" << address << "] : ";
     std::cout.flush();
   }
-  try
-  {
-    _session.connect(address);
-  }
-  catch (const std::exception &e)
-  {
-    if (_verbose)
-    std::cout << e.what() << std::endl;
-    throw e;
-  }
+  //could throw
+  _session.connect(address);
   if (_verbose)
     std::cout << "OK" << std::endl;
 }
