@@ -13,10 +13,12 @@ public class ObjectTest
   public Session          s = null;
   public Session          client = null;
   public ServiceDirectory sd = null;
+  public Application app = null;
 
   @Before
   public void setUp() throws Exception
   {
+    app = new Application(null);
     sd = new ServiceDirectory();
     s = new Session();
     client = new Session();
@@ -70,6 +72,8 @@ public class ObjectTest
     s = null;
     client = null;
     sd = null;
+    app.stop();
+    app = null;
   }
 
   @Test

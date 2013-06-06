@@ -1,6 +1,5 @@
 package com.aldebaran.qimessaging;
 
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -183,47 +182,6 @@ public class FutureTest
     {
       fail("Call has been interrupted ("+ e.getMessage() + ")");
     }
-  }
-
-  @Test
-  public void testCancel()
-  {
-    Future<String> fut = null;
-
-    // Call a 2s long function
-    try
-    {
-      fut = proxy.call("longReply", "plaf");
-    } catch (CallError e)
-    {
-      fail("Error calling answer function : " + e.getMessage());
-    }
-
-    // Try to cancel call
-    if (fut.cancel() == false)
-    {
-      try
-      {
-        Thread.sleep(2000);
-      } catch (InterruptedException e) {}
-      return; // Test has no more sense.
-    }
-
-    boolean exceptionThrown = false;
-    try
-    {
-      fut.get();
-    }
-    catch (ExecutionException e)
-    {
-    }
-    catch (InterruptedException e)
-    {
-      exceptionThrown = true;
-    }
-
-    assertTrue("InterruptedException must be thrown", exceptionThrown);
-    assertTrue("isCancelled must return true", fut.isCancelled());
   }
 
   @Test
