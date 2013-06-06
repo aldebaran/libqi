@@ -845,6 +845,7 @@ namespace qi
       break;
     case Type::Dynamic:
       setDynamic(val);
+      break;
     default:
       throw std::runtime_error("Update not implemented for this type.");
     }
