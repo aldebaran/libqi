@@ -16,12 +16,14 @@
 #include <jnitools.hpp>
 #include <session_jni.hpp>
 #include <object_jni.hpp>
+#include <callbridge.hpp>
 
 qiLogCategory("qimessaging.jni");
 
 jlong Java_com_aldebaran_qimessaging_Session_qiSessionCreate()
 {
   qi::Session *session = new qi::Session();
+
   return (jlong) session;
 }
 
@@ -118,4 +120,27 @@ jboolean  Java_com_aldebaran_qimessaging_Session_registerService(JNIEnv *env, jo
   }
 
   return true;
+}
+
+void      Java_com_aldebaran_qimessaging_Session_onDisconnected(JNIEnv *env, jobject jobj, jlong pSession, jstring jcallbackName, jobject jobjectInstance)
+{
+  extern MethodInfoHandler gInfoHandler;
+  qi::Session*    session = reinterpret_cast<qi::Session*>(pSession);
+  std::string     callbackName = qi::jni::toString(jcallbackName);
+  std::string     signature;
+  qi_method_info*            data;
+
+  // Create a new global reference on object instance.
+  // jobject structure are local reference and are destroyed when returning to JVM
+  jobjectInstance = env->NewGlobalRef(jobjectInstance);
+
+  // Create a struct holding a jobject instance, jmethodId id and other needed thing for callback
+  // Pass it to void * data to register_method
+  signature = callbackName + "::(s)";
+  data = new qi_method_info(jobjectInstance, signature, jobj);
+  gInfoHandler.push(data);
+
+  session->disconnected.connect(qi::makeDynamicGenericFunction(
+                                  boost::bind(&event_callback_to_java, (void*) data, _1)),
+                                qi::MetaCallType_Direct);
 }

@@ -21,6 +21,7 @@ public class Session
   private static native void    qiSessionClose(long pSession);
   private static native Object  service(long pSession, String name);
   private static native boolean registerService(long pSession, String name, Object obj);
+  private static native void    onDisconnected(long pSession, String callback, java.lang.Object obj);
 
   // Members
   private long _session;
@@ -101,4 +102,8 @@ public class Session
     return Session.registerService(_session, name, object);
   }
 
+  public void onDisconnected(String callback, java.lang.Object object)
+  {
+    Session.onDisconnected(_session, callback, object);
+  }
 }

@@ -98,4 +98,19 @@ public class EventTest
     assertTrue("Event callback must have been called ", callbackCalled);
     assertTrue("Parameter value must be 42 (" + callbackParam + ")", callbackParam == 42);
   }
+
+  public void testCallback(String s)
+  {
+    callbackCalled = true;
+  }
+
+  @Test
+  public void testSessionOnDisconnected() throws InterruptedException
+  {
+    callbackCalled = false;
+    client.onDisconnected("testCallback", this);
+    client.close();
+    Thread.sleep(100);
+    assertTrue(callbackCalled);
+  }
 }
