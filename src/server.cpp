@@ -124,7 +124,7 @@ namespace qi {
     //when it's close it's close
     _server.newConnection.disconnectAll();
 
-    qiLogInfo() << "Closing server...";
+    qiLogVerbose() << "Closing server...";
     {
       boost::recursive_mutex::scoped_lock sl(_socketsMutex);
       std::list<TransportSocketPtr>::iterator it;
