@@ -21,6 +21,8 @@ namespace qi {
   namespace detail
   {
 
+    template<typename T> void hold(T data) {}
+
     template <typename T>
     void futureAdapterGeneric(GenericValuePtr val, qi::Promise<T> promise)
     {
@@ -191,6 +193,34 @@ namespace qi {
      return res.future();                                                  \
   }
 
+  QI_GEN(genCall)
+  #undef genCall
+
+  #define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)         \
+  template<typename R,typename T> qi::FutureSync<R> async(   \
+      T* instance,                                                 \
+      const std::string& methodName comma                         \
+      QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoGenericValuePtr)) \
+  {                                                              \
+    ObjectPtr obj = GenericValuePtr(instance).toObject();       \
+    qi::Future<R> res = obj->call<R>(MetaCallType_Queued, methodName comma AUSE);  \
+    res.connect(boost::bind(&detail::hold<ObjectPtr>, obj));   \
+    return res;                                                 \
+  }
+  QI_GEN(genCall)
+  #undef genCall
+
+  #define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)         \
+  template<typename R,typename T> qi::FutureSync<R> async(   \
+      boost::shared_ptr<T> instance,                             \
+      const std::string& methodName comma                         \
+      QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoGenericValuePtr)) \
+  {                                                              \
+    ObjectPtr obj = GenericValueRef(instance).toObject();        \
+    qi::Future<R> res =  obj->call<R>(MetaCallType_Queued, methodName comma AUSE);  \
+    res.connect(boost::bind(&detail::hold<ObjectPtr>, obj));   \
+    return res;                                                 \
+  }
   QI_GEN(genCall)
   #undef genCall
   #undef pushi

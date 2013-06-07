@@ -196,7 +196,35 @@ namespace qi {
     ObjectType*  type;
     void*        value;
   };
-
+#ifdef DOXYGEN
+  /** Perform an asynchronous call on a method.
+   * @param instance a pointer or shared-pointer to an instance of a class known to type system.
+  */
+  template<typename R, typename T>
+  qi::FutureSync<R> async(
+                         T instancePointerOrSharedPointer,
+                         const std::string& methodName,
+                         qi::AutoGenericValuePtr p1 = qi::AutoGenericValuePtr(),
+                         qi::AutoGenericValuePtr p2 = qi::AutoGenericValuePtr(),
+                         qi::AutoGenericValuePtr p3 = qi::AutoGenericValuePtr(),
+                         qi::AutoGenericValuePtr p4 = qi::AutoGenericValuePtr(),
+                         qi::AutoGenericValuePtr p5 = qi::AutoGenericValuePtr(),
+                         qi::AutoGenericValuePtr p6 = qi::AutoGenericValuePtr(),
+                         qi::AutoGenericValuePtr p7 = qi::AutoGenericValuePtr(),
+                         qi::AutoGenericValuePtr p8 = qi::AutoGenericValuePtr());
+#else
+#define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)         \
+    template<typename R,typename T> qi::FutureSync<R> async(   \
+      T* instance,                                                 \
+      const std::string& methodName comma                         \
+      QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoGenericValuePtr));       \
+    template<typename R,typename T> qi::FutureSync<R> async(   \
+      boost::shared_ptr<T> instance,                              \
+      const std::string& methodName comma                         \
+      QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoGenericValuePtr));
+    QI_GEN(genCall)
+    #undef genCall
+#endif
    // C4251
   template <typename FUNCTION_TYPE>
   qi::FutureSync<Link> GenericObject::connect(const std::string& eventName,

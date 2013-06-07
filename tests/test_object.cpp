@@ -15,6 +15,7 @@
 #include <qitype/genericobject.hpp>
 #include <qitype/genericobjectbuilder.hpp>
 #include <qitype/objecttypebuilder.hpp>
+#include <qitype/objectfactory.hpp>
 
 #if defined(_MSC_VER) && _MSC_VER <= 1500
 // vs2008 32 bits does not have std::abs() on int64
@@ -924,6 +925,64 @@ TEST(TestObject, ArgumentPack)
   EXPECT_EQ(expect, args.to<std::vector<int> >());
 }
 
+class Sleeper
+{
+public:
+  int msleep(int duration)
+  {
+    qi::os::msleep(duration);
+    return duration;
+  }
+  Sleeper()
+  {
+    qiLogDebug() << this <<" create";
+  }
+  ~Sleeper()
+  {
+    qiLogDebug() << this <<" destroy";
+    ++dtorCount;
+  }
+  static qi::atomic<int> dtorCount;
+};
+
+qi::atomic<int> Sleeper::dtorCount;
+
+QI_REGISTER_OBJECT(Sleeper, msleep);
+QI_REGISTER_OBJECT_FACTORY_CONSTRUCTOR(Sleeper);
+
+TEST(TestObject, async)
+{
+  {
+  Sleeper rf;
+  qi::Future<int> f = qi::async<int>(&rf, "msleep", 100);
+  EXPECT_EQ(qi::FutureState_Running, f.wait(0));
+  EXPECT_EQ(qi::FutureState_FinishedWithValue, f.wait());
+  EXPECT_EQ(100, f.value());
+
+  boost::shared_ptr<Sleeper> rfptr(new Sleeper);
+  f = qi::async<int>(rfptr, "msleep", 100);
+  EXPECT_EQ(qi::FutureState_Running, f.wait(0));
+  EXPECT_EQ(qi::FutureState_FinishedWithValue, f.wait());
+  EXPECT_EQ(100, f.value());
+
+  qi::ObjectPtr o = qi::GenericValueRef(rfptr).toObject();
+  f = qi::async<int>(o, "msleep", 100);
+  EXPECT_EQ(qi::FutureState_Running, f.wait(0));
+  EXPECT_EQ(qi::FutureState_FinishedWithValue, f.wait());
+  EXPECT_EQ(100, f.value());
+  }
+  for (unsigned i=0; i<50 && *Sleeper::dtorCount <2; ++i)
+    qi::os::msleep(10);
+  EXPECT_EQ(2, *Sleeper::dtorCount);
+
+  // Factory leaks, so can't test no-leak of async...
+  qiLogDebug() << "Factory";
+  qi::ObjectPtr o = qi::createObject("Sleeper");
+  qi::Future<int> f = qi::async<int>(o, "msleep", 100);
+  EXPECT_EQ(qi::FutureState_Running, f.wait(0));
+  EXPECT_EQ(qi::FutureState_FinishedWithValue, f.wait());
+  EXPECT_EQ(100, f.value());
+}
 
 int main(int argc, char **argv)
 {
