@@ -39,12 +39,12 @@ void showHelp(const po::options_description &desc)
 {
   std::cout << std::left << desc << std::endl;
   std::cout << "sub commands:" << std::endl;
-  std::cout << "\t" << std::setw(10) << "call" << std::setw(40) << "<Service.Method> <parameter ...>" << std::setw(30) << "call the given method" << std::endl;
-  std::cout << "\t" << std::setw(10) << "get" << std::setw(40) << "<Service.Property>" << std::setw(30) << "display the property value" << std::endl;
-  std::cout << "\t" << std::setw(10) << "set" << std::setw(40) << "<Service.Property> <Value>" << std::setw(30) << "set the property to value" << std::endl;
-  std::cout << "\t" << std::setw(10) << "watch" << std::setw(40) << "<Service.Signal>" << std::setw(30) << "watch a signal and display its parameters" << std::endl;
-  std::cout << "\t" << std::setw(10) << "post" << std::setw(40) << "<Service.Signal> <parameter ...>" << std::setw(30) << "emit a signal" << std::endl;
-  std::cout << "\t" << std::setw(10) << "service" << std::setw(40) << "<PATTERN...>" << std::setw(30) << "display infos of services matching the given patterns" << std::endl;
+  std::cout << "  service <PATTERN...>" << std::endl;
+  std::cout << "  call    <Service.Method> <parameter ...>" << std::endl;
+  std::cout << "  post    <Service.SignalOrMethod> <parameter ...>" << std::endl;
+  std::cout << "  get     <Service.Property>" << std::endl;
+  std::cout << "  set     <Service.Property> <Value>" << std::endl;
+  std::cout << "  watch   <Service.Signal>" << std::endl;
 }
 
 bool poDefault(const po::command_line_parser &clp, po::variables_map &vm, const po::options_description &desc)
