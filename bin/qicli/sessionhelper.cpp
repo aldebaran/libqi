@@ -32,10 +32,9 @@ void SessionHelper::_showServiceInfo(const qi::ServiceInfo &infos, bool verbose,
 {
   if (!verbose)
   {
-    if (number)
-      std::cout << "[" << infos.serviceId() << "]";
+    std::cout << "[" << std::setw(3) << infos.serviceId() << "] ";
     std::cout << infos.name() << std::endl;
-    return ;
+    return;
   }
 
   std::cout << "    service: " << infos.name() << std::endl
