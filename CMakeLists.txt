@@ -4,7 +4,7 @@
 ##  - Chris Kilner       <ckilner@aldebaran-robotics.com>
 ##  - Laurent LEC        <llec@aldebaran-robotics.com>
 ##
-## Copyright (C) 2009, 2010, 2011, 2012 Aldebaran Robotics
+## Copyright (C) 2009, 2010, 2011, 2012, 2013 Aldebaran Robotics
 ##
 
 cmake_minimum_required(VERSION 2.6.4)
@@ -17,7 +17,6 @@ qi_sanitize_compile_flags(HIDDEN_SYMBOLS)
 
 
 set(WITH_DOTNET OFF)
-option(WITH_EXAMPLES "Examples"          ON)
 option(WITH_PYTHON   "Python bindings"   ON)
 qi_add_optional_package(JNI)
 
@@ -138,7 +137,6 @@ endif(WIN32)
 
 qi_stage_lib(qimessaging)
 
-qi_add_subdirectory(examples WITH_EXAMPLES)
 #qi_gen_doc(DOXYFILES "Doxyfile")
 
 #target_link_libraries(qimessaging "-Wl,--no-undefined")
