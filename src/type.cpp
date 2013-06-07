@@ -394,14 +394,14 @@ namespace qi {
           && (pointedKind == Type::Object || pointedKind == Type::Unknown))
         {
           if(pointedKind != Type::Object)
-            qiLogWarning() << "Shared pointer to unknown type " << type->pointedType()->infoString()
+            qiLogVerbose() << "Shared pointer to unknown type " << type->pointedType()->infoString()
                            << ", assuming object not yet registered";
           ObjectPtr op;
           v.visitObjectPtr(op);
         }
         else
         {
-          qiLogWarning() << "Pointer to unknown type " << type->pointedType()->infoString() << ", signature is X";
+          qiLogVerbose() << "Pointer to unknown type " << type->pointedType()->infoString() << ", signature is X";
           v.visitPointer(GenericValuePtr());
         }
         break;
