@@ -54,8 +54,7 @@ public class App
     }
 
     Object obj = ob.object();
-    ReplyService rs = (ReplyService) service;
-    rs.setObj(obj);
+    service.init(obj);
 
     try {
       s.registerService("serviceTest", obj);

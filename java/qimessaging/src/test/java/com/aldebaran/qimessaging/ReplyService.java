@@ -5,7 +5,7 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Map;
 
-public class ReplyService implements QimessagingService
+public class ReplyService extends QimessagingService
 {
 
   public Object createObject()

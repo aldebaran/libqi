@@ -11,10 +11,8 @@ import com.aldebaran.qimessaging.Object;
 import com.aldebaran.qimessaging.Tuple;
 import com.aldebaran.qimessaging.Tuple3;
 
-public class ReplyService implements QimessagingService
+public class ReplyService extends QimessagingService
 {
-
-  private Object _obj = null;
 
   public Object createObject()
   {
@@ -127,16 +125,11 @@ public class ReplyService implements QimessagingService
     return l;
   }
 
-  public void setObj(Object obj)
-  {
-    _obj = obj;
-  }
-
   public void triggerFireEvent(Integer val)
   {
     System.out.println("Fire event triggered (" + val + ")");
 
-    _obj.post("fire", val);
+    self.post("fire", val);
   }
 
 }
