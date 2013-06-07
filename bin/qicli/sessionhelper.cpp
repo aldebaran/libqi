@@ -116,15 +116,20 @@ void SessionHelper::xShowServicesInfo(const std::vector<std::string> &patternVec
 
 void SessionHelper::showServicesInfo(const std::vector<std::string> &serviceList, bool verbose, bool number)
 {
-  for (unsigned int i = 0; i < serviceList.size(); ++i)
+  std::vector<qi::ServiceInfo> servs = _session.services();
+
+  for (unsigned int i = 0; i < servs.size(); ++i)
   {
-    if (isNumber(serviceList[i]))
-      showServiceInfo(::atoi(serviceList[i].c_str()), verbose, number);
-    else
-      showServiceInfo(serviceList[i], verbose, number);
-    if (verbose)
-      if (i + 1 != serviceList.size())
-        std::cout << "========================================================================" << std::endl;
+    for (unsigned int u = 0; u < serviceList.size(); ++u)
+    {
+      if ((isNumber(serviceList[u]) && static_cast<unsigned int>(::atoi(serviceList[u].c_str())) == servs[i].serviceId())
+          || serviceList[u] == servs[i].name())
+      {
+        _showServiceInfo(servs[i], verbose, number);
+        if (verbose)
+            std::cout << "========================================================================" << std::endl;
+      }
+    }
   }
 }
 
