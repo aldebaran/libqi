@@ -28,7 +28,7 @@ bool SessionHelper::getServiceSync(const std::string &serviceName, ServiceHelper
   return true;
 }
 
-void SessionHelper::showServiceInfo(const qi::ServiceInfo &infos, bool verbose)
+void SessionHelper::showServiceInfo(const qi::ServiceInfo &infos, bool verbose, bool show_hidden)
 {
   if (!verbose)
   {
@@ -53,98 +53,45 @@ void SessionHelper::showServiceInfo(const qi::ServiceInfo &infos, bool verbose)
   qi::details::printMetaObject(std::cout, service.objPtr()->metaObject());
 }
 
-void SessionHelper::showServiceInfo(const std::string &serviceName, bool verbose)
-{
-  std::vector<qi::ServiceInfo> servs = _session.services();
-
-  unsigned int i;
-  for (i = 0; i < servs.size(); ++i)
-    if (servs[i].name() == serviceName)
-      break;
-  if (i == servs.size())
-    return ;
-
-  showServiceInfo(servs[i], verbose);
-}
-
-void SessionHelper::showServiceInfo(unsigned int serviceId, bool verbose)
-{
-  std::vector<qi::ServiceInfo> servs = _session.services();
-
-  unsigned int i;
-  for (i = 0; i < servs.size(); ++i)
-    if (servs[i].serviceId() == serviceId)
-      break;
-  if (i == servs.size())
-    return ;
-  showServiceInfo(servs[i], verbose);
-}
-
 bool isNumber(const std::string &str)
 {
-  for (unsigned int i = 0; i < str.length(); ++i)
-  {
+  for (unsigned int i = 0; i < str.length(); ++i) {
     if (!::isdigit(str[i]))
       return false;
   }
   return true;
 }
 
-void SessionHelper::showServicesInfoPattern(const std::vector<std::string> &patternVec, bool verbose)
+void SessionHelper::showServicesInfoPattern(const std::vector<std::string> &patternVec, bool verbose, bool showHidden)
 {
   std::vector<qi::ServiceInfo> servs = _session.services();
   std::vector<std::string> matchServs;
 
+  //nothing specified, display everything
   if (patternVec.empty()) {
-    showServicesInfo(verbose);
+    for (unsigned int i = 0; i < servs.size(); ++i)
+      showServiceInfo(servs[i], verbose, showHidden);
     return;
   }
+
+  //pattern match, and display
   for (unsigned int u = 0; u < patternVec.size(); ++u)
   {
-    if (isNumber(patternVec[u]))
-      matchServs.push_back(patternVec[u]);
-    else
-    {
+    if (isNumber(patternVec[u])) {
+      int sid = atoi(patternVec[u].c_str());
+      for (unsigned int j = 0; j < servs.size(); ++j) {
+        if (servs[j].serviceId() == sid)
+          showServiceInfo(servs[j], verbose, showHidden);
+      }
+    }
+    else {
       boost::basic_regex<char> reg(patternVec[u]);
       for (unsigned int i = 0; i < servs.size(); ++i)
       {
         if (boost::regex_match(servs[i].name(), reg))
-          matchServs.push_back(servs[i].name());
+          showServiceInfo(servs[i], verbose, showHidden);
       }
     }
-  }
-  showServicesInfo(matchServs, verbose);
-}
-
-void SessionHelper::showServicesInfo(const std::vector<std::string> &serviceList, bool verbose)
-{
-  std::vector<qi::ServiceInfo> servs = _session.services();
-
-  for (unsigned int i = 0; i < servs.size(); ++i)
-  {
-    for (unsigned int u = 0; u < serviceList.size(); ++u)
-    {
-      if ((isNumber(serviceList[u]) && static_cast<unsigned int>(::atoi(serviceList[u].c_str())) == servs[i].serviceId())
-          || serviceList[u] == servs[i].name())
-      {
-        showServiceInfo(servs[i], verbose);
-        if (verbose)
-            std::cout << "========================================================================" << std::endl;
-      }
-    }
-  }
-}
-
-void SessionHelper::showServicesInfo(bool verbose)
-{
-  std::vector<qi::ServiceInfo> servs = _session.services();
-
-  for (unsigned int i = 0; i < servs.size(); ++i)
-  {
-    showServiceInfo(servs[i], verbose);
-    if (verbose)
-      if (i + 1 != servs.size())
-        std::cout << "========================================================================" << std::endl;
   }
 }
 
