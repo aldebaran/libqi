@@ -83,7 +83,7 @@ jlong   Java_com_aldebaran_qimessaging_GenericObjectBuilder_advertiseMethod(JNIE
   // Create a struct holding a jobject instance, jmethodId id and other needed thing for callback
   // Pass it to void * data to register_method
   // In java_callback, use it directly so we don't have to find method again
-  data = new qi_method_info(instance, signature, jobj, qi::jni::toString(className));
+  data = new qi_method_info(instance, signature, jobj);
   gInfoHandler.push(data);
 
   // Bind method signature on generic java callback

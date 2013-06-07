@@ -122,7 +122,7 @@ jlong     Java_com_aldebaran_qimessaging_Object_connect(JNIEnv *env, jobject job
 
   // Create a struct holding a jobject instance, jmethodId id and other needed thing for callback
   // Pass it to void * data to register_method
-  data = new qi_method_info(instance, signature, jobj, qi::jni::toString(service));
+  data = new qi_method_info(instance, signature, jobj);
   gInfoHandler.push(data);
 
 

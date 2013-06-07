@@ -95,7 +95,7 @@ qi::GenericValuePtr call_to_java(std::string signature, void* data, const qi::Ge
   cls = qi::jni::clazz(info->instance);
   if (!cls)
   {
-    qiLogError() << "Service class not found: " << info->className;
+    qiLogError() << "Service class not found";
     throw std::runtime_error("Service class not found");
   }
 

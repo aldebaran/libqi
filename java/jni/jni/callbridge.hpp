@@ -25,14 +25,12 @@ struct qi_method_info
   jobject     instance; // QimessagingService implementation instance
   std::string sig; // Complete signature
   jobject     jobj; // GenericObject Java instance
-  std::string className; // Class specialisation of com.aldebaran.QimessagingService
 
-  qi_method_info(jobject jinstance, const std::string& jsig, jobject object, std::string name)
+  qi_method_info(jobject jinstance, const std::string& jsig, jobject object)
   {
     instance = jinstance;
     sig = jsig;
     jobj = object;
-    className = name;
   }
 
   ~qi_method_info()
