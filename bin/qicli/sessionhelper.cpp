@@ -30,12 +30,11 @@ bool SessionHelper::getServiceSync(const std::string &serviceName, ServiceHelper
 
 void SessionHelper::showServiceInfo(const qi::ServiceInfo &infos, bool verbose, bool show_hidden)
 {
+  std::cout << "[" << std::setw(3) << infos.serviceId() << "] ";
+  std::cout << infos.name() << std::endl;
+
   if (!verbose)
-  {
-    std::cout << "[" << std::setw(3) << infos.serviceId() << "] ";
-    std::cout << infos.name() << std::endl;
     return;
-  }
 
   std::cout << "    service: " << infos.name() << std::endl
             << "         id: " << infos.serviceId() << std::endl
@@ -77,21 +76,27 @@ void SessionHelper::showServicesInfoPattern(const std::vector<std::string> &patt
   //pattern match, and display
   for (unsigned int u = 0; u < patternVec.size(); ++u)
   {
+    bool displayed = false;
     if (isNumber(patternVec[u])) {
       int sid = atoi(patternVec[u].c_str());
       for (unsigned int j = 0; j < servs.size(); ++j) {
-        if (servs[j].serviceId() == sid)
+        if (servs[j].serviceId() == sid) {
           showServiceInfo(servs[j], verbose, showHidden);
+          displayed = true;
+        }
       }
-    }
-    else {
+    } else {
       boost::basic_regex<char> reg(patternVec[u]);
-      for (unsigned int i = 0; i < servs.size(); ++i)
-      {
-        if (boost::regex_match(servs[i].name(), reg))
+      for (unsigned int i = 0; i < servs.size(); ++i) {
+        if (boost::regex_match(servs[i].name(), reg)) {
           showServiceInfo(servs[i], verbose, showHidden);
+          displayed = true;
+        }
       }
     }
+    //no service displayed...
+    if (!displayed)
+      std::cout << "Service not found: " << patternVec[u] << std::endl;
   }
 }
 
