@@ -771,7 +771,6 @@ TEST(TestObject, traceGeneric)
   qi::SignalBase::Link id = obj->connect("traceObject",
     (boost::function<void(qi::EventTrace)>)
     boost::bind(&pushTrace, boost::ref(traces), _1));
-  obj->call<void>("enableTrace", true);
   obj->call<void>("sleep", 100);
   for (unsigned i=0; i<20 && traces.size()<2; ++i) qi::os::msleep(50);
   qi::os::msleep(50);
@@ -786,6 +785,8 @@ TEST(TestObject, traceGeneric)
     - traces[0].timestamp.tv_sec*1000
     - traces[0].timestamp.tv_usec/1000;
   EXPECT_LT(std::abs(delta - 100LL), 20LL); // be leniant
+  ASSERT_TRUE(obj->call<bool>("isTraceEnabled").value());
+  qi::os::msleep(50);
   traces.clear();
   obj->call<void>("boom", "o<").wait();
   for (unsigned i=0; i<20 && traces.size()<2; ++i) qi::os::msleep(50);
@@ -795,6 +796,9 @@ TEST(TestObject, traceGeneric)
   EXPECT_EQ(qi::EventTrace::Event_Error, traces[1].kind);
   EXPECT_EQ(mid2, traces[0].slotId);
   EXPECT_EQ(traces[0].id, traces[1].id);
+  obj->disconnect(id);
+  qi::os::msleep(50);
+  ASSERT_TRUE(!obj->call<bool>("isTraceEnabled").value());
 }
 
 TEST(TestObject, traceType)
@@ -811,8 +815,6 @@ TEST(TestObject, traceType)
     (boost::function<void(qi::EventTrace)>)
     boost::bind(&pushTrace, boost::ref(traces), _1));
 
-  oa1->call<void>("enableTrace", true);
-
   EXPECT_EQ(3, oa1->call<int>("add", 2));
   for (unsigned i=0; i<20 && traces.size()<2; ++i) qi::os::msleep(50);
   qi::os::msleep(50);
@@ -820,6 +822,10 @@ TEST(TestObject, traceType)
   EXPECT_EQ(qi::EventTrace::Event_Call, traces[0].kind);
   EXPECT_EQ(qi::EventTrace::Event_Result, traces[1].kind);
   EXPECT_EQ(mid, traces[0].slotId);
+  ASSERT_TRUE(oa1->call<bool>("isTraceEnabled").value());
+  oa1->disconnect(id);
+  qi::os::msleep(50);
+  ASSERT_TRUE(!oa1->call<bool>("isTraceEnabled").value());
 }
 
 static void bim(int i, qi::Promise<void> p, const std::string &name) {

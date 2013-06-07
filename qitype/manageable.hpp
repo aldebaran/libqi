@@ -100,14 +100,19 @@ namespace qi {
     /// Reset all statistical data
     void clearStats();
 
+    /// Emited each time a call starts and finishes, and for each signal trigger.
+    Signal<EventTrace> traceObject;
+
     ///@return if trace mode is enabled
     bool isTraceEnabled() const;
     /** Set trace mode state.
     *
-    * When enabled, all calls and signal triggers will be reported through the
-    * "traceObject" signal::
+    * @warning This function should usually not be called directly.
+    * Connecting/disconnecting to the traceObject signal automatically
+    * enables/disables tracing mode.
     *
-    * traceObject(EventTrace trace)
+    * When enabled, all calls and signal triggers will be reported through the
+    * "traceObject" signal.
     *
     */
     void enableTrace(bool enable);
@@ -131,7 +136,6 @@ namespace qi {
     static MetaObject&      manageableMetaObject();
     static void             _build();
     int                     _nextTraceId();
-    Signal<EventTrace> traceObject;
     ManageablePrivate* _p;
   };
 }

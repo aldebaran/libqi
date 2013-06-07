@@ -29,6 +29,7 @@ namespace qi {
   }
 
   Manageable::Manageable()
+  : traceObject(boost::bind(&Manageable::enableTrace, this, _1))
   {
     _p = new ManageablePrivate();
     _p->eventLoop = 0;
@@ -36,6 +37,7 @@ namespace qi {
   }
 
   Manageable::Manageable(const Manageable& b)
+  : traceObject(boost::bind(&Manageable::enableTrace, this, _1))
   {
     _p = new ManageablePrivate();
     _p->eventLoop = b._p->eventLoop;
