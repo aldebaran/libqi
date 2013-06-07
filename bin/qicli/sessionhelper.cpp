@@ -36,19 +36,24 @@ void SessionHelper::showServiceInfo(const qi::ServiceInfo &infos, bool verbose, 
   if (!verbose)
     return;
 
-  std::cout << "    service: " << infos.name() << std::endl
-            << "         id: " << infos.serviceId() << std::endl
-            << "    machine: " << infos.machineId() << std::endl
-            << "    process: " << infos.processId() << std::endl
-            << "  endpoints: " << std::endl;
+  std::string firstEp;
+  if (infos.endpoints().begin() != infos.endpoints().end())
+    firstEp = infos.endpoints().begin()->str();
+  std::cout << "  Info:" << std::endl
+            << "    machine   " << infos.machineId() << std::endl
+            << "    process   " << infos.processId() << std::endl
+            << "    endpoints " << firstEp << std::endl;
 
-  for (qi::UrlVector::const_iterator it_urls = infos.endpoints().begin(); it_urls != infos.endpoints().end(); ++it_urls)
-    std::cout << "             " << it_urls->str() << std::endl;
+  for (qi::UrlVector::const_iterator it_urls = infos.endpoints().begin(); it_urls != infos.endpoints().end(); ++it_urls) {
+    if (it_urls != infos.endpoints().begin())
+      std::cout << "              " << it_urls->str() << std::endl;
+  }
 
   ServiceHelper service;
-
-  if (!getServiceSync(infos.name(), service))
-    return ;
+  if (!getServiceSync(infos.name(), service)) {
+    std::cout << "  Can't connect to service " << infos.name();
+    return;
+  }
   qi::details::printMetaObject(std::cout, service.objPtr()->metaObject());
 }
 
