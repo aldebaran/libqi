@@ -78,15 +78,15 @@ int subCmd_post(int argc, char **argv, const MainOptions &options)
 
 int subCmd_service(int argc, char **argv, const MainOptions &options)
 {
-  po::options_description     desc("Usage: qicli services PATTERN...");
+  po::options_description     desc("Usage: qicli service PATTERN...");
   std::vector<std::string>    serviceList;
 
   desc.add_options()
       ("service,s", po::value<std::vector<std::string> >(&serviceList), "service to display")
       ("help,h", "Print this help message and exit")
+      ("list,l", "List services (default when no service specified)")
       ("details,z", "print services' details")
-      ("interactive,i", "turn on interactive mode")
-      ("number,n", "display services' idx");
+      ("all,a", "show hidden services, methods, signals and properties");
 
   po::positional_options_description positionalOptions;
   positionalOptions.add("service", -1);
@@ -95,19 +95,22 @@ int subCmd_service(int argc, char **argv, const MainOptions &options)
   if (!poDefault(po::command_line_parser(argc, argv).options(desc).positional(positionalOptions), vm, desc))
     return 1;
 
+  bool details = false;
+  if (vm.count("details") && vm.count("list"))
+    throw std::runtime_error("You cannot specify --list and --details together.");
+
+  //smart details/list
+  if (vm.count("details"))
+    details = true;
+  else if (vm.count("list"))
+    details = false;
+  else {
+    //list/details not specified, use details if services have been specified.
+    details = (serviceList.size()) != 0;
+  }
+
   SessionHelper session(options.address);
-  if (serviceList.size() == 0)
-    session.showServicesInfo(vm.count("details"), vm.count("number"));
-  else
-    session.xShowServicesInfo(serviceList, vm.count("details"), vm.count("number"));
-
-  if (!vm.count("interactive"))
-    return 0;
-
-  if (vm.count("number"))
-    session.showServiceInfo(readNumericInput(), true);
-  else
-    session.showServiceInfo(readAlphaInput(), true);
+  session.showServicesInfoPattern(serviceList, details);
   return 0;
 }
 
