@@ -40,7 +40,7 @@ namespace qi {
 
   EventLoopAsio::~EventLoopAsio()
   {
-    if (_running && boost::this_thread::get_id() != _id)
+    if (_running && boost::this_thread::get_id() == _id)
       qiLogError() << "Destroying EventLoopPrivate from itself while running";
     stop();
     join();
