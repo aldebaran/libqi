@@ -38,8 +38,10 @@ qimessaging_create_session_test(test_service              SRC test_service.cpp D
 qimessaging_create_session_test(test_send_object              SRC test_send_object.cpp DEPENDS QI QIMESSAGING GTEST TESTSESSION TIMEOUT 10)
 qimessaging_create_session_test(test_proxy           SRC test_proxy.cpp DEPENDS QI QIMESSAGING GTEST TESTSESSION TIMEOUT 10)
 
+# those are idl tests that currently only
+# work on linux, and when not cross-compiling
 if(UNIX AND NOT APPLE)
-  if (NOT I_AM_A_ROBOT)
+  if (NOT I_AM_A_ROBOT AND NOT ANDROID)
     add_subdirectory(passobject-fromservice)
     add_subdirectory(passobject-fromclient)
     add_subdirectory(codegen-interface)
