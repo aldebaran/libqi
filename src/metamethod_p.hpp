@@ -27,7 +27,7 @@ namespace qi {
     MetaMethodPrivate();
 
     void setDescription(const std::string& desc);
-    void addParameter(const MetaMethodParameter& mm);
+    void appendParameter(const MetaMethodParameter& mm);
 
     unsigned int  uid;
     qi::Signature sigreturn;

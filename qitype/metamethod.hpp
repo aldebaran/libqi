@@ -83,7 +83,7 @@ namespace qi {
     void setName(const std::string& name);
     void setParametersSignature(const qi::Signature& sig);
     void setReturnDescription(const std::string& doc);
-    void addParameter(const std::string& name, const std::string& documentation);
+    void appendParameter(const std::string& name, const std::string& documentation);
     void setDescription(const std::string& documentation);
 
     qi::MetaMethod metaMethod();

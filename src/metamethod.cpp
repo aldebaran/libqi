@@ -75,7 +75,7 @@ namespace qi {
     : uid(0), parameters (0)
   {}
 
-  void MetaMethodPrivate::addParameter(const MetaMethodParameter& mm) {
+  void MetaMethodPrivate::appendParameter(const MetaMethodParameter& mm) {
     this->parameters.push_back(mm);
   }
 
@@ -196,11 +196,11 @@ namespace qi {
     this->_p->metaMethod._p->returnDescription = desc;
   }
 
-  void MetaMethodBuilder::addParameter(const std::string& name,
+  void MetaMethodBuilder::appendParameter(const std::string& name,
                                        const std::string& description)
   {
     MetaMethodParameter mmp(name, description);
-    this->_p->metaMethod._p->addParameter(mmp);
+    this->_p->metaMethod._p->appendParameter(mmp);
   }
 
   void MetaMethodBuilder::setDescription(const std::string &description) {
