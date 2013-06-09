@@ -86,7 +86,7 @@ namespace qi {
   };
 
   namespace details {
-    QITYPE_API void printMetaObject(std::ostream &stream, const qi::MetaObject &metaObject);
+    QITYPE_API void printMetaObject(std::ostream &stream, const qi::MetaObject &metaObject, bool color=true, bool showHidden=false, bool showDoc=false);
   }
 
 }
