@@ -41,9 +41,9 @@ def read_header(fname):
 def write_header(fname, header, body):
     """ rewrite the header guard lines """
     with open(fname, "wb") as f:
+        f.write("#pragma once\n")
         for l in header:
             f.write(l)
-        f.write("#pragma once\n\n")
         for l in body:
             f.write(l)
 
