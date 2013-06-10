@@ -4,8 +4,8 @@
 **  See COPYING for the license
 */
 
-#ifndef _QIMESSAGING_MESSAGE_HPP_
-#define _QIMESSAGING_MESSAGE_HPP_
+#ifndef _SRC_MESSAGE_HPP_
+#define _SRC_MESSAGE_HPP_
 
 #include <qimessaging/api.hpp>
 #include <qitype/genericvalue.hpp>
@@ -196,4 +196,4 @@ namespace qi {
 }
 
 
-#endif  // _QIMESSAGING_MESSAGE_HPP_
+#endif  // _SRC_MESSAGE_HPP_

@@ -110,4 +110,4 @@ namespace qi {
 
 }
 
-#endif  // _SRC_SESSIONSERVER_HPP_
+#endif  // _SRC_BOUNDOBJECT_HPP_

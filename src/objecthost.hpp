@@ -3,8 +3,8 @@
 **  See COPYING for the license
 */
 
-#ifndef _QIMESSAGING_OBJECTHOST_HPP_
-#define _QIMESSAGING_OBJECTHOST_HPP_
+#ifndef _SRC_OBJECTHOST_HPP_
+#define _SRC_OBJECTHOST_HPP_
 
 #include <map>
 
@@ -47,4 +47,4 @@ namespace qi
   };
 }
 
-#endif
+#endif  // _SRC_OBJECTHOST_HPP_

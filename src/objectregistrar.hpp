@@ -4,8 +4,8 @@
 **  See COPYING for the license
 */
 
-#ifndef _SRC_OBJECT_HPP_
-#define _SRC_OBJECT_HPP_
+#ifndef _SRC_OBJECTREGISTRAR_HPP_
+#define _SRC_OBJECTREGISTRAR_HPP_
 
 #include <string>
 #include <set>
@@ -95,4 +95,4 @@ namespace qi {
 QI_TYPE_NOT_CONSTRUCTIBLE(qi::ObjectRegistrar);
 
 
-#endif  // _SRC_SESSIONSERVER_HPP_
+#endif  // _SRC_OBJECTREGISTRAR_HPP_

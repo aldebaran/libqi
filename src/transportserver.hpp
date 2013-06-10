@@ -4,8 +4,8 @@
 **  See COPYING for the license
 */
 
-#ifndef _QIMESSAGING_TRANSPORTSERVER_HPP_
-#define _QIMESSAGING_TRANSPORTSERVER_HPP_
+#ifndef _SRC_TRANSPORTSERVER_HPP_
+#define _SRC_TRANSPORTSERVER_HPP_
 
 # include <qimessaging/api.hpp>
 # include <qimessaging/url.hpp>
@@ -74,4 +74,4 @@ namespace qi {
 
 }
 
-#endif  // _QIMESSAGING_TRANSPORTSERVER_HPP_
+#endif  // _SRC_TRANSPORTSERVER_HPP_

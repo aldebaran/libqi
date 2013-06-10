@@ -4,8 +4,8 @@
 **  See COPYING for the license
 */
 
-#ifndef  TRANSPORT_CACHE_HPP_
-# define TRANSPORT_CACHE_HPP_
+#ifndef _SRC_TRANSPORTSOCKETCACHE_HPP_
+#define _SRC_TRANSPORTSOCKETCACHE_HPP_
 
 #include <boost/thread/mutex.hpp>
 #include <qi/future.hpp>
@@ -68,4 +68,4 @@ namespace qi {
   };
 }
 
-#endif   /* !TRANSPORT_CACHE_PP_ */
+#endif  // _SRC_TRANSPORTSOCKETCACHE_HPP_

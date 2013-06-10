@@ -4,8 +4,8 @@
 **  See COPYING for the license
 */
 
-#ifndef _QIMESSAGING_TRANSPORTSOCKET_HPP_
-#define _QIMESSAGING_TRANSPORTSOCKET_HPP_
+#ifndef _SRC_TRANSPORTSOCKET_HPP_
+#define _SRC_TRANSPORTSOCKET_HPP_
 
 # include <qi/future.hpp>
 # include <qimessaging/api.hpp>
@@ -94,4 +94,4 @@ namespace qi
   TransportSocketPtr makeTransportSocket(const std::string &protocol, qi::EventLoop *eventLoop = getDefaultNetworkEventLoop());
 }
 
-#endif  // _QIMESSAGING_TRANSPORTSOCKET_HPP_
+#endif  // _SRC_TRANSPORTSOCKET_HPP_
