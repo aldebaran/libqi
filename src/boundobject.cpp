@@ -101,6 +101,9 @@ namespace qi {
       throw std::runtime_error(ss.str());
     }
     _object->disconnect(it->second.localLinkId);
+    sl.erase(it);
+    if (sl.empty())
+      _links.erase(_currentSocket);
   }
 
 
