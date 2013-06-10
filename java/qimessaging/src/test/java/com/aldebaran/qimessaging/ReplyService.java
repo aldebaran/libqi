@@ -7,6 +7,10 @@ import java.util.Map;
 
 public class ReplyService extends QimessagingService
 {
+  public Boolean iWillThrow() throws Exception
+  {
+    throw new Exception("Expected Failure");
+  }
 
   public Object createObject()
   {
