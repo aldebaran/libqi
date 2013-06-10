@@ -65,6 +65,7 @@ set(H
   qi/threadpool.hpp
   qi/eventloop.hpp
   qi/version.hpp
+  qi/iocolor.hpp
   )
 
 set(C
@@ -96,6 +97,7 @@ set(C
   src/eventloop_p.hpp
   src/sdklayout-boost.cpp
   src/version.cpp
+  src/iocolor.cpp
   )
 
 if (WIN32)
