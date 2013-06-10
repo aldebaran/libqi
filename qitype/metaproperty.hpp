@@ -1,3 +1,4 @@
+#pragma once
 #ifndef _QITYPE_METAPROPERTY_HPP_
 #define _QITYPE_METAPROPERTY_HPP_
 
