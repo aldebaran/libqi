@@ -1,3 +1,4 @@
+#pragma once
 /*
 ** Author(s):
 **  - Cedric GESTES <gestes@aldebaran-robotics.com>
@@ -5,7 +6,6 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-#pragma once
 #ifndef _LIBQI_QI_VERSION_HPP
 # define _LIBQI_QI_VERSION_HPP
 

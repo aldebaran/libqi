@@ -1,3 +1,4 @@
+#pragma once
 /*
  * Copyright (c) 2012 Aldebaran Robotics. All rights reserved.
  * Use of this source code is governed by a BSD-style license that can be
@@ -8,7 +9,6 @@
  *  @brief find bin/lib/data/conf for the current application
  */
 
-#pragma once
 #ifndef _LIBQI_QI_PATH_HPP_
 #define _LIBQI_QI_PATH_HPP_
 

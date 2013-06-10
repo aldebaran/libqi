@@ -1,10 +1,10 @@
+#pragma once
 /*
  * Copyright (c) 2012 Aldebaran Robotics. All rights reserved.
  * Use of this source code is governed by a BSD-style license that can be
  * found in the COPYING file.
  */
 
-#pragma once
 
 #ifndef _SRC_PATH_CONG_HPP
 #define _SRC_PATH_CONG_HPP

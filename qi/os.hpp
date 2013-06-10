@@ -1,10 +1,10 @@
+#pragma once
 /*
  * Copyright (c) 2012, 2013 Aldebaran Robotics. All rights reserved.
  * Use of this source code is governed by a BSD-style license that can be
  * found in the COPYING file.
  */
 
-#pragma once
 #ifndef _LIBQI_QI_OS_HPP_
 #define _LIBQI_QI_OS_HPP_
 

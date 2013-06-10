@@ -1,3 +1,4 @@
+#pragma once
 /*
  * Copyright (C) 2009-2012, Aldebaran Robotics.
  * Imported from urbi-sdk's libport.

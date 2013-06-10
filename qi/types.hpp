@@ -1,3 +1,4 @@
+#pragma once
 /*
 ** Author(s):
 **  - Cuche Herve <hcuche@aldebaran-robotics.com>
