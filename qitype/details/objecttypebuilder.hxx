@@ -41,6 +41,19 @@ namespace qi {
     return xAdvertiseMethod(builder, f, threadingModel, id);
   }
 
+  template <typename FUNCTION_TYPE>
+  unsigned int ObjectTypeBuilderBase::advertiseMethod(MetaMethodBuilder& builder,
+                                                      FUNCTION_TYPE function,
+                                                      MetaCallType threadingModel,
+                                                      int id)
+  {
+    GenericFunction f = makeGenericFunction(function);
+    if (! boost::is_member_function_pointer<FUNCTION_TYPE>::value)
+      f.dropFirstArgument();
+    builder.setSignature(f);
+    return xAdvertiseMethod(builder, f, threadingModel, id);
+  }
+
   template<typename U>
   void ObjectTypeBuilderBase::inherits(int offset)
   {
@@ -78,6 +91,19 @@ namespace qi {
   template <typename T>
   template <typename FUNCTION_TYPE>
   unsigned int ObjectTypeBuilder<T>::advertiseMethod(const std::string& name, FUNCTION_TYPE function, MetaCallType threadingModel, int id)
+  {
+    // Intercept advertise to auto-register parent type if this is a parent method
+    // Note: if FUNCTION_TYPE is a grandparent method, we will incorrectly add it
+    // as a child
+    detail::checkRegisterParent<FUNCTION_TYPE>(
+      *this,
+      typename boost::function_types::is_member_function_pointer<FUNCTION_TYPE >::type());
+    return ObjectTypeBuilderBase::advertiseMethod(name, function, threadingModel, id);
+  }
+
+  template <typename T>
+  template <typename FUNCTION_TYPE>
+  unsigned int ObjectTypeBuilder<T>::advertiseMethod(MetaMethodBuilder& name, FUNCTION_TYPE function, MetaCallType threadingModel, int id)
   {
     // Intercept advertise to auto-register parent type if this is a parent method
     // Note: if FUNCTION_TYPE is a grandparent method, we will incorrectly add it

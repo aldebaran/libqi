@@ -42,20 +42,27 @@ namespace qi {
 
     /// Declare the class type for which this StaticBuilder is.
     template<typename T> void  buildFor(bool autoRegister = true);
+
     template <typename FUNCTION_TYPE>
     inline unsigned int advertiseMethod(const std::string& name, FUNCTION_TYPE function, MetaCallType threadingModel = MetaCallType_Auto, int id = -1);
+
+    template <typename FUNCTION_TYPE>
+    inline unsigned int advertiseMethod(MetaMethodBuilder& name, FUNCTION_TYPE function, MetaCallType threadingModel = MetaCallType_Auto, int id = -1);
+
     template<typename A>
-    unsigned int
-    advertiseSignal(const std::string& eventName, A accessor, int id = -1);
+    unsigned int advertiseSignal(const std::string& eventName, A accessor, int id = -1);
 
     template <typename T>
     inline unsigned int advertiseSignal(const std::string& name, SignalMemberGetter getter, int id = -1);
+
     template <typename A>
     inline unsigned int advertiseProperty(const std::string& propertyName, A accessor);
 
     template<typename T>
     inline unsigned int advertiseProperty(const std::string& eventName, PropertyMemberGetter getter);
-    template<typename P> void inherits(int offset);
+
+    template<typename P>
+    void inherits(int offset);
 
     // Advertise anything, dispatch on {method, event, property} based on T.
     template<typename T>
@@ -63,7 +70,6 @@ namespace qi {
     // input: type-erased
 
     int xAdvertiseMethod(MetaMethodBuilder& builder, GenericFunction func, MetaCallType threadingModel = MetaCallType_Auto, int id = -1);
-
     int xAdvertiseSignal(const std::string &name, const qi::Signature& signature, SignalMemberGetter getter, int id = -1);
     int xAdvertiseProperty(const std::string& name, const qi::Signature& signature, PropertyMemberGetter getter, int id = -1);
     void xBuildFor(Type* type, bool autoRegister = true);
@@ -102,6 +108,13 @@ namespace qi {
                                         FUNCTION_TYPE function,
                                         MetaCallType threadingModel = MetaCallType_Auto,
                                         int id = -1);
+
+    template <typename FUNCTION_TYPE>
+    inline unsigned int advertiseMethod(MetaMethodBuilder& name,
+                                        FUNCTION_TYPE function,
+                                        MetaCallType threadingModel = MetaCallType_Auto,
+                                        int id = -1);
+
 
     /// Register type to typeOf<T>, to avoid both TypeImpl<T> and type() being present
     inline virtual void registerType();
