@@ -1,5 +1,5 @@
 /*
-**  Copyright (C) 2012 Aldebaran Robotics
+**  Copyright (C) 2012, 2013 Aldebaran Robotics
 **  See COPYING for the license
 */
 #include <iostream>
@@ -177,13 +177,19 @@ namespace qi {
     type->metaPost(value, this, event, args);
   }
 
-  static std::string generateErrorString(const std::string &type, const std::string &signature,
-    const std::vector<MetaObject::CompatibleMethod> &candidates, bool logError = true)
+  static std::string generateErrorString(const std::string &signature,
+                                         const std::vector<MetaObject::CompatibleMethod> &candidates,
+                                         bool logError = true)
   {
     std::stringstream                           ss;
     std::vector<MetaObject::CompatibleMethod>::const_iterator it;
 
-    ss << "Can't find " << type << ": " << signature << std::endl
+    if (candidates.size() == 0) {
+      ss << "Can't find method: " << signature << std::endl;
+      return ss.str();
+    }
+
+    ss << "Ambiguous overload for " << signature << ":" << std::endl
        << "  Candidate(s):" << std::endl;
     for (it = candidates.begin(); it != candidates.end(); ++it) {
       const qi::MetaMethod       &mm = it->first;
@@ -232,7 +238,7 @@ namespace qi {
       }
       assert(count);
       if (count > 1)
-        qiLogVerbose() << generateErrorString("ambiguous overload", nameWithOptionalSignature, mml, false);
+        qiLogVerbose() << generateErrorString(nameWithOptionalSignature, mml, false);
       else
         return it->first.uid();
     }
@@ -250,7 +256,7 @@ namespace qi {
     }
     int methodId = findMethod(nameWithOptionalSignature, args);
     if (methodId < 0) {
-      return makeFutureError<GenericValuePtr>(generateErrorString("method", nameWithOptionalSignature, metaObject().findCompatibleMethod(nameWithOptionalSignature)));
+      return makeFutureError<GenericValuePtr>(generateErrorString(nameWithOptionalSignature, metaObject().findCompatibleMethod(nameWithOptionalSignature), false));
     }
     return metaCall(methodId, args, callType);
   }
@@ -453,4 +459,3 @@ namespace qi {
     }
   }
 }
-
