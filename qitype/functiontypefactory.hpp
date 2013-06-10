@@ -28,4 +28,4 @@ namespace qi
 #include <qitype/details/functiontypefactory.hxx>
 
 
-#endif
+#endif  // _QITYPE_FUNCTIONTYPEFACTORY_HPP_

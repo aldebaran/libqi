@@ -3,8 +3,8 @@
 ** Copyright (C) 2012 Aldebaran Robotics
 */
 
-#ifndef QITYPE_DETAILS_BINDTYPE_HXX
-#define QITYPE_DETAILS_BINDTYPE_HXX
+#ifndef _QITYPE_DETAILS_BINDTYPE_HXX_
+#define _QITYPE_DETAILS_BINDTYPE_HXX_
 
 #include <boost/mpl/find_if.hpp>
 #include <boost/mpl/vector.hpp>
@@ -259,4 +259,4 @@ namespace qi
     };
 }
 
-#endif
+#endif  // _QITYPE_DETAILS_BINDTYPE_HXX_

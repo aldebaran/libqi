@@ -40,4 +40,4 @@ QI_TYPE_STRUCT_AGREGATE_CONSTRUCTOR(qi::MetaProperty,
 #  pragma warning( pop )
 #endif
 
-#endif
+#endif  // _QITYPE_METAPROPERTY_HPP_

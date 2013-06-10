@@ -94,4 +94,4 @@ public:
     template<> class TypeImpl<Enum>: public TypeIntImpl<long> {};  \
   }
 
-#endif
+#endif  // _QITYPE_DETAILS_TYPEINT_HXX_

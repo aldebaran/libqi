@@ -4,8 +4,8 @@
 **  See COPYING for the license
 */
 
-#ifndef QITYPE_BINARYENCODER_HPP
-#define QITYPE_BINARYENCODER_HPP
+#ifndef _SRC_BINARYENCODER_HPP_
+#define _SRC_BINARYENCODER_HPP_
 
 #include <boost/function.hpp>
 
@@ -97,4 +97,4 @@ namespace qi {
   }
 }
 
-#endif // QIMESSAGING_BINARYENCODER_HPP
+#endif  // _SRC_BINARYENCODER_HPP_

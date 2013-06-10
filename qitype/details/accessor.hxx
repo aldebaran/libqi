@@ -66,6 +66,6 @@ namespace qi
   }
 }
 
-#endif
+#endif  // _QITYPE_DETAILS_ACCESSOR_HXX_
 
 

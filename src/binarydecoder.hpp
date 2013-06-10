@@ -4,8 +4,8 @@
 **  See COPYING for the license
 */
 
-#ifndef QITYPE_BINARYDECODER_HPP
-#define QITYPE_BINARYDECODER_HPP
+#ifndef _SRC_BINARYDECODER_HPP_
+#define _SRC_BINARYDECODER_HPP_
 
 #include <qi/buffer.hpp>
 #include <qi/bufferreader.hpp>
@@ -84,4 +84,4 @@ namespace qi {
   }
 }
 
-#endif // QIMESSAGING_BINARYDECODER_HPP
+#endif  // _SRC_BINARYDECODER_HPP_

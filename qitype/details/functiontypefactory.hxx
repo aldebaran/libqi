@@ -592,4 +592,4 @@ namespace qi
   }
 
 }
-#endif
+#endif  // _QITYPE_DETAILS_FUNCTIONTYPEFACTORY_HXX_

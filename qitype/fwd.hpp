@@ -35,4 +35,4 @@ namespace qi
   typedef boost::shared_ptr<GenericObject> ObjectPtr;
 }
 
-#endif
+#endif  // _QITYPE_FWD_HPP_

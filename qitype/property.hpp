@@ -122,4 +122,4 @@ namespace qi
 #  pragma warning( pop )
 #endif
 
-#endif
+#endif  // _QITYPE_PROPERTY_HPP_

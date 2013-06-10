@@ -4,8 +4,8 @@
 **  See COPYING for the license
 */
 
-#ifndef QITYPE_BINARYCODEC_HPP
-#define QITYPE_BINARYCODEC_HPP
+#ifndef _QITYPE_BINARYCODEC_HPP_
+#define _QITYPE_BINARYCODEC_HPP_
 
 #include <qitype/api.hpp>
 #include <boost/function.hpp>
@@ -53,4 +53,4 @@ namespace qi {
 
 }
 
-#endif // QIMESSAGING_BINARYENCODER_HPP
+#endif  // _QITYPE_BINARYCODEC_HPP_

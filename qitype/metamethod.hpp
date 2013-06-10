@@ -5,7 +5,7 @@
 */
 
 #ifndef _QITYPE_METAMETHOD_HPP_
-# define _QITYPE_METAMETHOD_HPP_
+#define _QITYPE_METAMETHOD_HPP_
 
 # include <string>
 # include <map>

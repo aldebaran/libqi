@@ -83,4 +83,4 @@ namespace qi
 
 
 
-#endif
+#endif  // _QITYPE_PROXYSIGNAL_HPP_

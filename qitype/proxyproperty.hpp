@@ -105,4 +105,4 @@ namespace qi
     return false;
   }
 }
-#endif
+#endif  // _QITYPE_PROXYPROPERTY_HPP_

@@ -32,4 +32,4 @@ namespace qi
 template<> class TypeImpl<Buffer>: public TypeBufferImpl {};
 }
 
-#endif
+#endif  // _QITYPE_DETAILS_TYPEBUFFER_HXX_

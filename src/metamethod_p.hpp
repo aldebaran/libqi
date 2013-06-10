@@ -4,8 +4,8 @@
 **  See COPYING for the license
 */
 
-#ifndef _QITYPE_METAMETHOD_P_HPP_
-#define _QITYPE_METAMETHOD_P_HPP_
+#ifndef _SRC_METAMETHOD_P_HPP_
+#define _SRC_METAMETHOD_P_HPP_
 
 # include <map>
 # include <string>
@@ -44,4 +44,4 @@ namespace qi {
   };
 }
 
-#endif // _QITYPE_METAMETHOD_P_HPP_
+#endif  // _SRC_METAMETHOD_P_HPP_
