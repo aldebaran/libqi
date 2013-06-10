@@ -307,7 +307,6 @@ namespace qi {
       if (!env)
         return 0;
 
-//      return (jclass) env->NewLocalRef(env->GetObjectClass(object));
       return (jclass) env->GetObjectClass(object);
     }
 
@@ -383,6 +382,37 @@ namespace qi {
         return;
 
       env->DeleteLocalRef(obj);
+    }
+
+    // Return true is jobject is a QiMessaging tuple.
+    bool        isTuple(jobject object)
+    {
+      JNIEnv*     env = qi::jni::env();
+      jclass      cls = 0;
+      std::string className;
+
+      if (!env)
+        return false;
+
+      for (std::map<std::string, jobject>::iterator it = supportedTypes.begin(); it != supportedTypes.end(); ++it)
+      {
+        className = it->first;
+
+        // searching for tuple
+        if (className.find("Tuple") == std::string::npos)
+          continue;
+
+        cls = env->GetObjectClass(it->second);
+        if (env->IsInstanceOf(object, cls))
+        {
+          qi::jni::releaseClazz(cls);
+          return true;
+        }
+
+        qi::jni::releaseClazz(cls);
+      }
+
+      return false;
     }
 
   }// !jni

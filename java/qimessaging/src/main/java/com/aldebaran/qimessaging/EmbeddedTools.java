@@ -81,7 +81,6 @@ public class EmbeddedTools
    */
   public boolean loadEmbeddedLibraries()
   {
-    System.out.println("LOADEMBEDEDDLIBRARIES...");
     if (LOADED_EMBEDDED_LIBRARY == true)
     {
       System.out.print("Native libraries already loaded");

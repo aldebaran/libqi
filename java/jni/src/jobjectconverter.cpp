@@ -397,7 +397,7 @@ std::pair<qi::GenericValuePtr, bool> GenericValue_from_JObject(jobject val)
     copy = true;
     res = GenericValue_from_JObject_Map(val);
   }
-  else if (env->IsAssignableFrom(env->GetObjectClass(val), tupleClass))
+  else if (qi::jni::isTuple(val))
   {
     res = GenericValue_from_JObject_Tuple(val);
   }

@@ -51,6 +51,7 @@ namespace qi {
     jclass      clazz(const std::string &name);
     jclass      clazz(jobject object);
     void        releaseClazz(jclass clazz);
+    bool        isTuple(jobject object);
     // JVM Environment management
     JNIEnv*     env();
     void        releaseObject(jobject obj);
