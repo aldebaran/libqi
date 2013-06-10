@@ -37,27 +37,12 @@ ObjectMap objectMap;
 bool numeric = false;
 bool printMo = false;
 bool disableTrace = false;
+bool traceState = false;
 bool cleaned = false;
 std::string sdUrl;
 std::vector<std::string> objectNames;
 unsigned int maxServiceLength = 0;
 qiLogCategory("qitrace");
-
-void cleanup()
-{
-  qiLogVerbose() << "Disabling trace mode on all objects...";
-  foreach(ObjectMap::value_type& ov, objectMap)
-  {
-    try
-    {
-      ov.second->call<void>("enableTrace", false);
-    }
-    catch(...)
-    {}
-  }
-  qiLogVerbose() << "Done";
-  cleaned = true;
-}
 
 void onTrace(ObjectMap::value_type ov, const qi::EventTrace& trace)
 {
@@ -96,6 +81,7 @@ _QI_COMMAND_LINE_OPTIONS(
   ("object,o", value<std::vector<std::string> >(&objectNames), "Object(s) to monitor, specify multiple times, comma-separate, use '*' for all, use '-globPattern' to remove from list")
   ("print,p", bool_switch(&printMo), "Print out the Metaobject and exit")
   ("disable,d", bool_switch(&disableTrace), "Disable trace on objects and exit")
+  ("trace-status", bool_switch(&traceState), "Show trace status on objects and exit")
   );
 
 int main(int argc, char** argv)
@@ -184,19 +170,27 @@ int main(int argc, char** argv)
       catch(...)
       {}
     }
+    if (traceState)
+    {
+      try
+      {
+        bool s = o->call<bool>("isTraceEnabled");
+        std::cout << services[i] << ": " << s << std::endl;
+      }
+      catch(...)
+      {}
+    }
   }
 
-  if (printMo || disableTrace || objectMap.empty())
+  if (printMo || disableTrace || traceState || objectMap.empty())
     return 0;
 
   qiLogVerbose() << "Monitoring services: " << boost::join(servicesOk, ",");
-  app.atStop(&cleanup);
   foreach(ObjectMap::value_type& ov, objectMap)
   {
     maxServiceLength = std::max(maxServiceLength, (unsigned int)ov.first.size());
     ov.second->connect("traceObject", (boost::function<void(qi::EventTrace)>)
       boost::bind(&onTrace, ov, _1)).async();
-    ov.second->post("enableTrace", true);
   }
   app.run();
   while (!cleaned)
