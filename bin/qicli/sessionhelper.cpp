@@ -1,7 +1,6 @@
 #include <iomanip>
-
 #include <boost/regex.hpp>
-
+#include <qi/iocolor.hpp>
 #include "sessionhelper.hpp"
 
 SessionHelper::SessionHelper(const std::string &address)
@@ -28,10 +27,13 @@ bool SessionHelper::getServiceSync(const std::string &serviceName, ServiceHelper
   return true;
 }
 
-void SessionHelper::showServiceInfo(const qi::ServiceInfo &infos, bool verbose, bool show_hidden)
+void SessionHelper::showServiceInfo(const qi::ServiceInfo &infos, bool verbose, bool showHidden, bool showDoc)
 {
-  std::cout << "[" << std::setw(3) << infos.serviceId() << "] ";
-  std::cout << infos.name() << std::endl;
+  std::cout << qi::StreamColor_Fuchsia
+            << std::right << std::setw(3) << std::setfill('0')
+            << infos.serviceId() << qi::StreamColor_Reset
+            << std::left << std::setw(0) << std::setfill(' ')
+            << " [" << qi::StreamColor_Red << infos.name() << qi::StreamColor_Reset << "]" << std::endl;
 
   if (!verbose)
     return;
@@ -39,14 +41,16 @@ void SessionHelper::showServiceInfo(const qi::ServiceInfo &infos, bool verbose, 
   std::string firstEp;
   if (infos.endpoints().begin() != infos.endpoints().end())
     firstEp = infos.endpoints().begin()->str();
-  std::cout << "  Info:" << std::endl
-            << "    machine   " << infos.machineId() << std::endl
-            << "    process   " << infos.processId() << std::endl
-            << "    endpoints " << firstEp << std::endl;
+  std::cout << qi::StreamColor_Green << "  * " << qi::StreamColor_Fuchsia << "Info" << qi::StreamColor_Reset << ":"
+             << std::endl;
+
+  std::cout << "   machine   " << infos.machineId() << std::endl
+            << "   process   " << infos.processId() << std::endl
+            << "   endpoints " << firstEp << std::endl;
 
   for (qi::UrlVector::const_iterator it_urls = infos.endpoints().begin(); it_urls != infos.endpoints().end(); ++it_urls) {
     if (it_urls != infos.endpoints().begin())
-      std::cout << "              " << it_urls->str() << std::endl;
+      std::cout << "             " << it_urls->str() << std::endl;
   }
 
   ServiceHelper service;
@@ -54,7 +58,7 @@ void SessionHelper::showServiceInfo(const qi::ServiceInfo &infos, bool verbose, 
     std::cout << "  Can't connect to service " << infos.name();
     return;
   }
-  qi::details::printMetaObject(std::cout, service.objPtr()->metaObject());
+  qi::details::printMetaObject(std::cout, service.objPtr()->metaObject(), true, showHidden, showDoc);
 }
 
 bool isNumber(const std::string &str)
@@ -66,7 +70,7 @@ bool isNumber(const std::string &str)
   return true;
 }
 
-void SessionHelper::showServicesInfoPattern(const std::vector<std::string> &patternVec, bool verbose, bool showHidden)
+void SessionHelper::showServicesInfoPattern(const std::vector<std::string> &patternVec, bool verbose, bool showHidden, bool showDoc)
 {
   std::vector<qi::ServiceInfo> servs = _session.services();
   std::vector<std::string> matchServs;
@@ -74,7 +78,7 @@ void SessionHelper::showServicesInfoPattern(const std::vector<std::string> &patt
   //nothing specified, display everything
   if (patternVec.empty()) {
     for (unsigned int i = 0; i < servs.size(); ++i)
-      showServiceInfo(servs[i], verbose, showHidden);
+      showServiceInfo(servs[i], verbose, showHidden, showDoc);
     return;
   }
 
@@ -86,7 +90,7 @@ void SessionHelper::showServicesInfoPattern(const std::vector<std::string> &patt
       int sid = atoi(patternVec[u].c_str());
       for (unsigned int j = 0; j < servs.size(); ++j) {
         if (servs[j].serviceId() == sid) {
-          showServiceInfo(servs[j], verbose, showHidden);
+          showServiceInfo(servs[j], verbose, showHidden, showDoc);
           displayed = true;
         }
       }
@@ -94,7 +98,7 @@ void SessionHelper::showServicesInfoPattern(const std::vector<std::string> &patt
       boost::basic_regex<char> reg(patternVec[u]);
       for (unsigned int i = 0; i < servs.size(); ++i) {
         if (boost::regex_match(servs[i].name(), reg)) {
-          showServiceInfo(servs[i], verbose, showHidden);
+          showServiceInfo(servs[i], verbose, showHidden, showDoc);
           displayed = true;
         }
       }

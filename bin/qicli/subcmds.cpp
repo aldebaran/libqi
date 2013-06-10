@@ -24,12 +24,12 @@ int subCmd_call(int argc, char **argv, const MainOptions &options)
   if (!poDefault(po::command_line_parser(argc, argv).options(desc).positional(positionalOptions), vm, desc))
     return 1;
   SessionHelper session(options.address);
-  std::string serviceName;
-  std::string methodName;
+  std::string   serviceName;
+  std::string   methodName;
 
   if (!::splitName(fullName, serviceName, methodName))
   {
-    std::cerr << "error, Service.Method syntax not respected" << std::endl;
+    std::cerr << "error: Service.Method syntax not respected" << std::endl;
     return 1;
   }
   ServiceHelper service;
@@ -85,8 +85,9 @@ int subCmd_service(int argc, char **argv, const MainOptions &options)
       ("service,s", po::value<std::vector<std::string> >(&serviceList), "service to display")
       ("help,h", "Print this help message and exit")
       ("list,l", "List services (default when no service specified)")
-      ("details,z", "print services' details")
-      ("all,a", "show hidden services, methods, signals and properties");
+      ("info,i", "print service info, methods, signals and properties")
+      ("show-hidden", "show hidden services, methods, signals and properties")
+      ("show-doc", "show documentation for methods, signals and properties");
 
   po::positional_options_description positionalOptions;
   positionalOptions.add("service", -1);
@@ -96,11 +97,11 @@ int subCmd_service(int argc, char **argv, const MainOptions &options)
     return 1;
 
   bool details = false;
-  if (vm.count("details") && vm.count("list"))
-    throw std::runtime_error("You cannot specify --list and --details together.");
+  if (vm.count("info") && vm.count("list"))
+    throw std::runtime_error("You cannot specify --list and --info together.");
 
   //smart details/list
-  if (vm.count("details"))
+  if (vm.count("info"))
     details = true;
   else if (vm.count("list"))
     details = false;
@@ -110,7 +111,7 @@ int subCmd_service(int argc, char **argv, const MainOptions &options)
   }
 
   SessionHelper session(options.address);
-  session.showServicesInfoPattern(serviceList, details);
+  session.showServicesInfoPattern(serviceList, details, vm.count("show-hidden"), vm.count("show-doc"));
   return 0;
 }
 

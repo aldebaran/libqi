@@ -40,7 +40,7 @@ int ServiceHelper::call(const std::string &methodName, const std::vector<std::st
   qi::FutureSync<qi::GenericValuePtr> result = _service->metaCall(methodName, params);
   if (result.hasError())
   {
-    std::cout << "failed to call method: " << result.error() << std::endl;
+    std::cout << "Call error: " << result.error() << std::endl;
     return 1;
   }
   std::cout << qi::encodeJSON(result.value()) << std::endl;
