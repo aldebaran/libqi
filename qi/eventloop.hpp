@@ -4,8 +4,8 @@
 **  See COPYING for the license
 */
 
-#ifndef _QIMESSAGING_EVENTLOOP_HPP_
-#define _QIMESSAGING_EVENTLOOP_HPP_
+#ifndef _QI_EVENTLOOP_HPP_
+#define _QI_EVENTLOOP_HPP_
 
 #ifdef _MSC_VER
 #  pragma warning( disable: 4503 ) // decorated name length
@@ -96,4 +96,4 @@ namespace qi
 #  pragma warning( pop )
 #endif
 
-#endif  // _QIMESSAGING_EVENTLOOP_HPP_
+#endif  // _QI_EVENTLOOP_HPP_

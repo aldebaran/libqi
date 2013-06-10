@@ -6,8 +6,8 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef _LIBQI_QI_VERSION_HPP
-# define _LIBQI_QI_VERSION_HPP
+#ifndef _QI_VERSION_HPP_
+#define _QI_VERSION_HPP_
 
 # include <qi/api.hpp>
 # include <vector>
@@ -28,4 +28,4 @@ namespace qi {
   }
 }
 
-#endif // _LIBQI_QI_VERSION_HPP
+#endif  // _QI_VERSION_HPP_

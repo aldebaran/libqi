@@ -6,8 +6,8 @@
 ** Copyright (C) 2012 Aldebaran Robotics
 */
 
-#ifndef TYPES_HPP_
-# define TYPES_HPP_
+#ifndef _QI_TYPES_HPP_
+#define _QI_TYPES_HPP_
 
 // visual studio 2008 and lower version
 # if defined(_MSC_VER) && (_MSC_VER <= 1500)
@@ -39,4 +39,4 @@ namespace qi
 }
 # endif
 
-#endif	    /* !TYPES_HPP_ */
+#endif  // _QI_TYPES_HPP_

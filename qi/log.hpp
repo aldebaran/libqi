@@ -10,8 +10,8 @@
  */
 
 
-#ifndef _LIBQI_QI_LOG_HPP_
-#define _LIBQI_QI_LOG_HPP_
+#ifndef _QI_LOG_HPP_
+#define _QI_LOG_HPP_
 
 # include <string>
 # include <iostream>
@@ -197,4 +197,4 @@ namespace qi {
 #include <qi/details/log.hxx>
 
 
-#endif  // _LIBQI_QI_LOG_HPP_
+#endif  // _QI_LOG_HPP_

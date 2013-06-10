@@ -5,8 +5,8 @@
  * found in the COPYING file.
  */
 
-#ifndef _LIBQI_QI_LOG_FILELOGHANDLER_HPP_
-#define _LIBQI_QI_LOG_FILELOGHANDLER_HPP_
+#ifndef _QI_LOG_FILELOGHANDLER_HPP_
+#define _QI_LOG_FILELOGHANDLER_HPP_
 
 # include <qi/log.hpp>
 
@@ -42,4 +42,4 @@ namespace qi {
   }; // !log
 }; // !qi
 
-#endif  // _LIBQI_QI_LOG_FILELOGHANDLER_HPP_
+#endif  // _QI_LOG_FILELOGHANDLER_HPP_

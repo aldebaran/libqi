@@ -9,8 +9,8 @@
  *  @brief find bin/lib/data/conf in a 'qi' standard sdk layout
  */
 
-#ifndef _LIBQI_QI_PATH_SDKLAYOUT_HPP_
-#define _LIBQI_QI_PATH_SDKLAYOUT_HPP_
+#ifndef _SRC_SDKLAYOUT_HPP_
+#define _SRC_SDKLAYOUT_HPP_
 
 # include <vector>
 # include <string>
@@ -126,4 +126,4 @@ namespace qi
 
 }
 
-#endif  // _LIBQI_QI_PATH_SDKLAYOUT_HPP_
+#endif  // _SRC_SDKLAYOUT_HPP_

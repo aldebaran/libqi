@@ -9,8 +9,8 @@
  *  @brief
  */
 
-#ifndef _LIBQI_QI_ERROR_HPP_
-#define _LIBQI_QI_ERROR_HPP_
+#ifndef _QI_ERROR_HPP_
+#define _QI_ERROR_HPP_
 
 # include <qi/api.hpp>
 
@@ -66,4 +66,4 @@ namespace qi {
   }
 }
 
-#endif  // _LIBQI_QI_ERROR_HPP_
+#endif  // _QI_ERROR_HPP_

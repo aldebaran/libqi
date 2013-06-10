@@ -6,8 +6,8 @@
  */
 
 
-#ifndef _LIBQI_QI_SHARED_PTR_HPP_
-#define _LIBQI_QI_SHARED_PTR_HPP_
+#ifndef _QI_SHARED_PTR_HPP_
+#define _QI_SHARED_PTR_HPP_
 
 #include <qi/atomic.hpp>
 #include <qi/log.hpp>
@@ -103,4 +103,4 @@ namespace qi
   };
 }
 
-#endif // _LIBQI_QI_SHARED_PTR_HPP_
+#endif  // _QI_SHARED_PTR_HPP_

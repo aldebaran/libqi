@@ -6,8 +6,8 @@
  */
 
 
-#ifndef _LIBQI_QI_ATOMIC_HPP_
-#define _LIBQI_QI_ATOMIC_HPP_
+#ifndef _QI_ATOMIC_HPP_
+#define _QI_ATOMIC_HPP_
 
 #ifdef _MSC_VER
 # include <windows.h>
@@ -158,4 +158,4 @@ namespace qi
   };
 }
 
-#endif // _LIBQI_QI_ATOMIC_HPP_
+#endif  // _QI_ATOMIC_HPP_

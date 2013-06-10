@@ -5,8 +5,8 @@
  * found in the COPYING file.
  */
 
-#ifndef   	QI_OS_P_H_
-# define   	QI_OS_P_H_
+#ifndef _SRC_UTILS_HPP_
+#define _SRC_UTILS_HPP_
 
 # include <string>
 
@@ -20,4 +20,4 @@ std::string fsconcat(const std::string &p0,
 std::string randomstr(std::string::size_type sz);
 std::wstring wrandomstr(std::wstring::size_type sz);
 
-#endif
+#endif  // _SRC_UTILS_HPP_

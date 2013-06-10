@@ -5,8 +5,8 @@
  *
  */
 
-#ifndef QI_PREPROC_HH
-# define QI_PREPROC_HH
+#ifndef _QI_PREPROC_HPP_
+#define _QI_PREPROC_HPP_
 
 # include <boost/preprocessor/seq/for_each.hpp>
 # include <boost/preprocessor/seq/remove.hpp>
@@ -562,4 +562,4 @@ for i in range(0, 10):
 
 
 
-#endif
+#endif  // _QI_PREPROC_HPP_

@@ -5,8 +5,8 @@
  * found in the COPYING file.
  */
 
-#ifndef   	LIBQI_QI_HPP_
-# define   	LIBQI_QI_HPP_
+#ifndef _QI_QI_HPP_
+#define _QI_QI_HPP_
 
 #include <qi/api.hpp>
 #include <locale>
@@ -22,4 +22,4 @@ namespace qi {
   QI_API const codecvt_type &unicodeFacet();
 }
 
-#endif	    /* !QI_PP_ */
+#endif  // _QI_QI_HPP_

@@ -5,8 +5,8 @@
  * found in the COPYING file.
  */
 
-#ifndef   	FILESYSTEM_HPP_
-# define   	FILESYSTEM_HPP_
+#ifndef _SRC_FILESYSTEM_HPP_
+#define _SRC_FILESYSTEM_HPP_
 
 #include <string>
 
@@ -18,4 +18,4 @@ namespace qi
   }
 } // namespace qi::detail
 
-#endif	    /* !FILESYSTEM_PP_ */
+#endif  // _SRC_FILESYSTEM_HPP_

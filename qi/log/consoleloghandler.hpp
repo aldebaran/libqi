@@ -6,8 +6,8 @@
  */
 
 
-#ifndef _LIBQI_QI_LOG_CONSOLELOGHANDLER_HPP_
-#define _LIBQI_QI_LOG_CONSOLELOGHANDLER_HPP_
+#ifndef _QI_LOG_CONSOLELOGHANDLER_HPP_
+#define _QI_LOG_CONSOLELOGHANDLER_HPP_
 
 # include <qi/log.hpp>
 
@@ -48,4 +48,4 @@ namespace qi {
 }
 
 
-#endif  // _LIBQI_QI_LOG_CONSOLELOGHANDLER_HPP_
+#endif  // _QI_LOG_CONSOLELOGHANDLER_HPP_

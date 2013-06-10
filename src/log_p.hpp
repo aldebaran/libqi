@@ -5,8 +5,8 @@
  * found in the COPYING file.
  */
 
-#ifndef   LOG_P_HPP_
-# define  LOG_P_HPP_
+#ifndef _SRC_LOG_P_HPP_
+#define _SRC_LOG_P_HPP_
 
 #include <qi/os.hpp>
 #include <qi/log.hpp>
@@ -49,4 +49,4 @@ namespace qi
   }
 } // namespace qi::detail
 
-#endif	    /* !LOG_P_PP_ */
+#endif  // _SRC_LOG_P_HPP_

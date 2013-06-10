@@ -6,8 +6,8 @@
  */
 
 
-#ifndef _LIBQI_QI_THREADPOOL_HPP_
-# define _LIBQI_QI_THREADPOOL_HPP_
+#ifndef _QI_THREADPOOL_HPP_
+#define _QI_THREADPOOL_HPP_
 
 # include <boost/function.hpp>
 # include <qi/api.hpp>
@@ -59,4 +59,4 @@ namespace qi
   };
 }
 
-#endif // _LIBQI_QI_THREADPOOL_HPP_
+#endif  // _QI_THREADPOOL_HPP_

@@ -6,8 +6,8 @@
  */
 
 
-#ifndef _SRC_PATH_CONG_HPP
-#define _SRC_PATH_CONG_HPP
+#ifndef _SRC_PATH_CONF_HPP_
+#define _SRC_PATH_CONF_HPP_
 
 #include <set>
 #include <string>
@@ -27,4 +27,4 @@ namespace qi {
   } // path
 } // qi
 
-#endif // _SRC_PATH_CONG_HPP
+#endif  // _SRC_PATH_CONF_HPP_

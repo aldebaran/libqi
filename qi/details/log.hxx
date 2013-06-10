@@ -5,8 +5,8 @@
  * found in the COPYING file.
  */
  
-#ifndef _LIBQI_QI_LOG_HXX_
-#define _LIBQI_QI_LOG_HXX_
+#ifndef _QI_DETAILS_LOG_HXX_
+#define _QI_DETAILS_LOG_HXX_
 
 
 #if defined(NO_QI_LOG_DETAILED_CONTEXT) || defined(NDEBUG)
@@ -282,4 +282,4 @@ namespace qi {
   }
 }
 
-#endif
+#endif  // _QI_DETAILS_LOG_HXX_

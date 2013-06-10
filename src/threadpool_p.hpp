@@ -6,8 +6,8 @@
  */
 
 
-#ifndef _LIBQI_QI_THREADPOOL_P_HPP_
-# define _LIBQI_QI_THREADPOOL_P_HPP_
+#ifndef _SRC_THREADPOOL_P_HPP_
+#define _SRC_THREADPOOL_P_HPP_
 
 # include <queue>
 
@@ -57,4 +57,4 @@ namespace qi
   };
 }
 
-#endif // _LIBQI_QI_THREADPOOL_P_HPP_
+#endif  // _SRC_THREADPOOL_P_HPP_

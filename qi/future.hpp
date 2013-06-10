@@ -4,8 +4,8 @@
 **  See COPYING for the license
 */
 
-#ifndef _QITYPE_FUTURE_HPP_
-#define _QITYPE_FUTURE_HPP_
+#ifndef _QI_FUTURE_HPP_
+#define _QI_FUTURE_HPP_
 
 #include <qi/api.hpp>
 #include <vector>
@@ -503,4 +503,4 @@ namespace qi {
 
 #include <qi/details/future.hxx>
 
-#endif  // _QITYPE_FUTURE_HPP_
+#endif  // _QI_FUTURE_HPP_

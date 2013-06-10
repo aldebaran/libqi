@@ -9,8 +9,8 @@
  *  @brief dll import/export and compiler message
  */
 
-#ifndef _LIBQI_QI_MACRO_HPP_
-#define _LIBQI_QI_MACRO_HPP_
+#ifndef _QI_MACRO_HPP_
+#define _QI_MACRO_HPP_
 
 #ifdef __cplusplus
 #include <boost/utility.hpp>
@@ -186,4 +186,4 @@ namespace qi
 #define _QI_UNIQ_DEF_LEVEL1(A, B) _QI_UNIQ_DEF_LEVEL2(A, B)
 #define QI_UNIQ_DEF(A) _QI_UNIQ_DEF_LEVEL1(A, __LINE__)
 
-#endif  // _LIBQI_QI_API_HPP_
+#endif  // _QI_MACRO_HPP_

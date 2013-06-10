@@ -9,8 +9,8 @@
  *  @brief dll import/export and compiler message
  */
 
-#ifndef _LIBQI_QI_API_HPP_
-#define _LIBQI_QI_API_HPP_
+#ifndef _QI_API_HPP_
+#define _QI_API_HPP_
 
 #include <qi/macro.hpp>
 #include <qi/config.hpp>
@@ -26,4 +26,4 @@
 #define QI_API_LEVEL 2
 
 
-#endif  // _LIBQI_QI_CONFIG_HPP_
+#endif  // _QI_API_HPP_

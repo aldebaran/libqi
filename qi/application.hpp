@@ -5,8 +5,8 @@
  * found in the COPYING file.
  */
 
-#ifndef LIBQI_APPLICATION_HPP_
-#define LIBQI_APPLICATION_HPP_
+#ifndef _QI_APPLICATION_HPP_
+#define _QI_APPLICATION_HPP_
 
 #include <boost/function.hpp>
 #include <qi/api.hpp>
@@ -92,4 +92,4 @@ static void QI_UNIQ_DEF(_qi_opt_func)() {                             \
 QI_AT_ENTER(boost::bind(&(QI_UNIQ_DEF(_qi_opt_func))))
 
 
-#endif
+#endif  // _QI_APPLICATION_HPP_

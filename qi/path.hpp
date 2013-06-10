@@ -9,8 +9,8 @@
  *  @brief find bin/lib/data/conf for the current application
  */
 
-#ifndef _LIBQI_QI_PATH_HPP_
-#define _LIBQI_QI_PATH_HPP_
+#ifndef _QI_PATH_HPP_
+#define _QI_PATH_HPP_
 
 # include <string>
 # include <vector>
@@ -101,4 +101,4 @@ namespace qi
   }
 }
 
-#endif  // _LIBQI_QI_PATH_HPP_
+#endif  // _QI_PATH_HPP_

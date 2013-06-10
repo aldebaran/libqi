@@ -5,8 +5,8 @@
  * found in the COPYING file.
  */
 
-#ifndef _LIBQI_QI_OS_HPP_
-#define _LIBQI_QI_OS_HPP_
+#ifndef _QI_OS_HPP_
+#define _QI_OS_HPP_
 
 # include <cstdio>
 # include <string>
@@ -92,4 +92,4 @@ namespace qi {
 }
 
 
-#endif  // _LIBQI_QI_OS_HPP_
+#endif  // _QI_OS_HPP_
