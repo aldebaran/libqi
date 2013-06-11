@@ -9,7 +9,7 @@
 #include <qitype/genericobject.hpp>
 #include <qitype/objectfactory.hpp>
 
-#include <simpleservice/simpleservice-proxy.hpp>
+#include <simpleservice/simpleservice_proxy.hpp>
 
 void notify(int v, qi::Promise<int>& prom)
 {

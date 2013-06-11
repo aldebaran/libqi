@@ -6,6 +6,7 @@
 # The user builds a library with the filled skeleton: we do that
 
 
+find_package(idl REQUIRED)
 find_package(idl.py REQUIRED)
 
 find_program(_python_executable
@@ -17,35 +18,43 @@ find_program(_python_executable
 
 file(MAKE_DIRECTORY  ${CMAKE_CURRENT_BINARY_DIR}/simpleservice)
 
-#generate proxy header from idl
-execute_process(COMMAND
-  ${_python_executable} ${IDL.PY_EXECUTABLE}
-  ${CMAKE_CURRENT_SOURCE_DIR}/simpleservice.idl
-  -m proxy
-  -o ${CMAKE_CURRENT_BINARY_DIR}/simpleservice/simpleservice-proxy.hpp
-)
+qi_create_proxy(${CMAKE_CURRENT_SOURCE_DIR}/simpleservice.idl
+  SimpleService ${CMAKE_CURRENT_BINARY_DIR}/simpleservice/ _simpleservice_proxy)
+
 
 #generate service skeleton from idl
 
 set(skel ${CMAKE_CURRENT_BINARY_DIR}/simpleservice/simpleservice-service.skel)
-execute_process(COMMAND
-  ${_python_executable} ${IDL.PY_EXECUTABLE}
-  ${CMAKE_CURRENT_SOURCE_DIR}/simpleservice.idl
+set(filled_skel ${CMAKE_CURRENT_BINARY_DIR}/simpleservice/simpleservice-service.cpp)
+
+qi_generate_src(${skel}
+  SRC ${IDL.PY_EXECUTABLE}
+  COMMAND ${_python_executable} ${IDL.PY_EXECUTABLE}
+   ${CMAKE_CURRENT_SOURCE_DIR}/simpleservice.idl
   -m cxxserviceregister
   -o ${skel}
 )
 
-# Implement the method in simpleservice-service
-# here the user edits the skeleton file, we use 'sed'
-file(READ ${skel} _fcontent)
-STRING(REPLACE "// Implementation of addOne" "return p0+1;" _seded "${_fcontent}")
-file(WRITE  ${CMAKE_CURRENT_BINARY_DIR}/simpleservice/simpleservice-service.cpp
-"${_seded}")
+
+file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/fill-skel.cmake
+  "file(READ ${skel} _fcontent)
+  STRING(REPLACE \"// Implementation of addOne\" \"return p0+1;\" _seded \"\${_fcontent}\")
+  file(WRITE
+    ${CMAKE_CURRENT_BINARY_DIR}/simpleservice/simpleservice-service.cpp
+    \"\${_seded}\"
+  )"
+)
+
+qi_generate_src(${filled_skel}
+  SRC ${skel}
+  COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/fill-skel.cmake
+)
+
 
 #now build our service
 qi_create_lib(simpleservice
   MODULE
-  SRC ${CMAKE_CURRENT_BINARY_DIR}/simpleservice/simpleservice-service.cpp
+  SRC ${filled_skel} ${_simpleservice_proxy}
   DEPENDS qitype
 )
 
