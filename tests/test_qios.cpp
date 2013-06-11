@@ -73,6 +73,11 @@ TEST_F(QiOSTests, LowLevelAccent)
     << a_newPath.string() << std::endl;
 }
 
+TEST(QiOs, fnmatch)
+{
+  EXPECT_TRUE(qi::os::fnmatch("glob*atch", "globMatch"));
+  EXPECT_FALSE(qi::os::fnmatch("glob*atch", "blobMatch"));
+}
 
 // TODO: us qi::time when it's available :)
 TEST(QiOs, sleep)

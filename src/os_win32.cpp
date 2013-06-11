@@ -21,6 +21,9 @@
 #include <direct.h>   // _mkdir
 #include <iphlpapi.h> // GetComputerName
 
+# include <shlwapi.h>
+# pragma comment(lib, "shlwapi.lib")
+
 #include <qi/error.hpp>
 #include <qi/log.hpp>
 #include <qi/os.hpp>
@@ -537,6 +540,14 @@ namespace qi {
       wcstombs_s(&convertedChars, nstring, origsize, tzInfo.StandardName, _TRUNCATE);
 
       return std::string(nstring);
+    }
+
+    bool fnmatch(const std::string &pattern, const std::string &string)
+    {
+      if (PathMatchSpec(string.c_str(), pattern.c_str()) == S_OK)
+        return true;
+      else
+        return false;
     }
   }
 }

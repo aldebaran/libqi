@@ -17,6 +17,7 @@
 #include <sys/types.h>
 #include <string>
 #include <limits.h>
+#include <fnmatch.h>
 
 # include <pwd.h>
 # include <sys/time.h>
@@ -418,6 +419,11 @@ namespace qi {
         qiLogError("core.common") << "Could not find timezone!";
 
       return link;
+    }
+
+    bool fnmatch(const std::string &pattern, const std::string &string)
+    {
+      return !::fnmatch(pattern.c_str(), string.c_str(), 0);
     }
   }
 }
