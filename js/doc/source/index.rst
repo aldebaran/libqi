@@ -116,9 +116,12 @@ be used by the second one for unregistration.
 
 .. code-block:: javascript
 
+   eventId = 0;
+
    function onMyEvent(data)
    {
      console.log('myEvent triggered, with:', data);
+     service.myEvent.disconnect(eventId).done(onUnregister);
    }
 
    function onUnregister(data)
@@ -126,12 +129,12 @@ be used by the second one for unregistration.
      console.log('myEvent unregistered');
    }
 
-   function onRegister(eventId)
+   function onRegister(data)
    {
-     service.myEvent.disconnect(eventId).done(onUnregister);
+     eventId = data;
    }
 
-   service.myEvent.connect(onMyEvent).done(onRegister);
+   service.myEvent.connect(onMyEvent).done(onRegister).fail(onError);
 
 QiSession.socket()
 ==================
@@ -190,9 +193,28 @@ Sample
      console.log(data);
    }
 
+   eventId = 0;
+
+   function onMyEvent(data)
+   {
+     console.log('myEvent triggered, with:', data);
+     service.myEvent.disconnect(eventId).done(onUnregister);
+   }
+
+   function onUnregister(data)
+   {
+     console.log('myEvent unregistered');
+   }
+
+   function onRegister(data)
+   {
+     eventId = data;
+   }
+
    function onService(service)
    {
      service.reply("plaf").done(onReply).fail(onError);
+     service.myEvent.connect(onMyEvent).done(onRegister).fail(onError);
    }
 
    function start()
