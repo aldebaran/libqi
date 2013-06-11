@@ -31,7 +31,8 @@ and its two dependencies: jQuery and Socket.IO.
    <script src="../../libs/qimessaging/1.0/qimessaging.js"></script>
 
 .. note::
-   The related path used above would correspond to a page hosted on
+   For a robot called ``nao`` and an application called ``airnao``,
+   the related path used above would correspond to a page hosted on
    ``http://nao.local/apps/airnao/index.html`` for instance. The absolute URL
    would be ``http://nao.local/libs/qimessaging/1.0/qimessaging.js``.
 
@@ -42,11 +43,13 @@ The binding provides only one class: ``QiSession``, the JavaScript equivalent
 of QiMessaging sessions. Once connected, it can be used to call services and
 access the socket.
 
-It is constructed using the URL of the JSON server.
+It is constructed using the URL of the JSON server, and the Socket.IO
+namespace.
 
 .. code-block:: javascript
 
-   var qim = new QiSession("http://" + window.location.host + ":8002");
+   var qim = new QiSession("http://" + window.location.host,
+                           "libs/qimessaging/1.0/socket.io");
 
 .. note::
    Using ``window.location.host`` makes sure you connect to the same robot
@@ -165,7 +168,8 @@ Sample
 
    <body>
    <script>
-   var qim = new QiSession("http://" + window.location.host + ":8002");
+   var qim = new QiSession("http://" + window.location.host,
+                           "libs/qimessaging/1.0/socket.io");
 
    qim.socket().on('connect', function() {
      console.log('connected!');
