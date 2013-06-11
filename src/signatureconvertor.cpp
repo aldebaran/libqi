@@ -7,72 +7,14 @@
 #include <qi/log.hpp>
 #include "signatureconvertor.hpp"
 #include <qitype/signature.hpp>
+#include <boost/algorithm/string.hpp>
 
 namespace qi {
 
-  enum PrivateQiSignatureType {
-    QI_STRING     = 0,
-    QI_LIST       = 1,
-    QI_LIST_END   = 2,
-    QI_MAP        = 3,
-    QI_MAP_END    = 4,
-  };
-
-  static const char *gStl[] = {
-    "std::string",
-    "std::vector<",
-    ">",
-    "std::map<",
-    ">"
-  };
-
-  static const char *gStlConst[] = {
-    "const std::string &",
-    "const std::vector<",
-    ">",
-    "const std::map<",
-    ">"
-  };
-
-  static const char *gQt[] = {
-    "QString",
-    "QList<",
-    ">",
-    "QMap<",
-    ">"
-  };
-
-  static const char *gQtConst[] = {
-    "const QString &",
-    "const QList<",
-    ">",
-    "const QMap<",
-    ">"
-  };
-
-
-  SignatureConvertor::SignatureConvertor(const Signature *sig, SignatureType type, bool constify)
-    : _type(type),
-      _done(false),
-      _constify(constify),
+  SignatureConvertor::SignatureConvertor(const Signature *sig)
+    : _done(false),
       _sig(sig)
   {}
-
-  const char *SignatureConvertor::elementTypeSTL(int idx, bool constify) const
-  {
-    if (constify) {
-      if (_type == Qt)
-        return gQtConst[idx];
-      if (_type == STL)
-        return gStlConst[idx];
-    } else {
-      if (_type == Qt)
-        return gQt[idx];
-      if (_type == STL)
-        return gStl[idx];
-    }
-    return 0;
-  }
 
   const std::string &SignatureConvertor::signature() {
     if (!_done) {
@@ -87,93 +29,113 @@ namespace qi {
     qi::Signature::iterator it;
 
     for (it = sig->begin(); it != sig->end(); ++it) {
-      visitSingle(&it, _constify);
+      visitSingle(&it);
     }
   }
 
-  void SignatureConvertor::visitSingle(qi::Signature::iterator *it, bool constify) {
+  void SignatureConvertor::visitSingle(qi::Signature::iterator *it) {
     switch(it->type()) {
       case '[':
-        visitList(it, constify);
+        visitList(it);
         break;
       case '{':
-        visitMap(it, constify);
+        visitMap(it);
         break;
       case '(':
-        visitTuple(it, constify);
+        visitTuple(it);
         break;
       default:
-        visitSimple(it, constify);
+        visitSimple(it);
         break;
     }
   }
 
-  void SignatureConvertor::visitSimple(qi::Signature::iterator *it, bool constify) {
+  void SignatureConvertor::visitSimple(qi::Signature::iterator *it) {
     switch(it->type()) {
       case 'b':
-        _result += "bool";
+        _result += "Bool";
         break;
       case 'c':
-        _result += "char";
+        _result += "Int8";
         break;
       case 'C':
-        _result += "unsigned char";
+        _result += "UInt8";
         break;
       case 'i':
-        _result += "int";
+        _result += "Int32";
         break;
       case 'I':
-        _result += "unsigned int";
+        _result += "UInt32";
         break;
+      case 'l':
+        _result += "Int64";
+        break;
+      case 'L':
+        _result += "UInt64";
+      break;
       case 'f':
-        _result += "float";
+        _result += "Float";
         break;
       case 'd':
-        _result += "double";
+        _result += "Double";
         break;
       case 'v':
-        _result += "void";
+        _result += "Void";
         break;
       case 's':
-          _result += elementTypeSTL(QI_STRING, constify);
+        _result += "String";
+        break;
+      case 'm':
+        _result += "Value";
+        break;
+      case 'o':
+        _result += "Object";
+        break;
+      case 'X':
+        _result += "Unknown";
         break;
       default:
-        _result += "Unknown";
+        _result += "BUG";
         break;
     }
   }
 
-  void SignatureConvertor::visitList(qi::Signature::iterator *it, bool constify) {
-    _result += elementTypeSTL(QI_LIST, constify);
+  void SignatureConvertor::visitList(qi::Signature::iterator *it) {
+    _result += "List<";
     qi::Signature sig = it->children();
     qi::Signature::iterator it2 = sig.begin();
-    visitSingle(&it2, false);
-    _result += elementTypeSTL(QI_LIST_END, constify);
-    if (constify)
-      _result += "&";
+    visitSingle(&it2);
+    _result += ">";
   }
 
-  void SignatureConvertor::visitMap(qi::Signature::iterator *it, bool constify) {
-    _result += elementTypeSTL(QI_MAP, constify);
+  void SignatureConvertor::visitMap(qi::Signature::iterator *it) {
+    _result += "Map<";
     qi::Signature sig = it->children();
     qi::Signature::iterator it2 = sig.begin();
-    visitSingle(&it2, false);
+    visitSingle(&it2);
     _result += ",";
     ++it2;
-    visitSingle(&it2, false);
-    _result += elementTypeSTL(QI_MAP_END, constify);
-    if (constify)
-      _result += "&";
+    visitSingle(&it2);
+    _result += ">";
   }
 
   //not really tuple but fonction arguments
-  void SignatureConvertor::visitTuple(qi::Signature::iterator *it, bool constify) {
+  void SignatureConvertor::visitTuple(qi::Signature::iterator *it) {
+    std::vector<std::string> annot;
+    std::string annotation(it->annotation());
+    boost::algorithm::split(annot, annotation, boost::algorithm::is_any_of(","));
+
+    if (!annotation.empty() && !annot.empty()) {
+      //the first elem is the name
+      _result += annot[0];
+      return;
+    }
     _result += "(";
     qi::Signature sig = it->children();
 
     qi::Signature::iterator it2 = sig.begin();
     while (it2 != sig.end()) {
-      visitSingle(&it2, constify);
+      visitSingle(&it2);
       ++it2;
       if (it2 != sig.end())
         _result += ",";

@@ -16,30 +16,22 @@ namespace qi {
 
   class SignatureConvertor {
   public:
-    enum SignatureType {
-      STL,
-      Qt
-    };
 
-    SignatureConvertor(const qi::Signature *sig, SignatureType type = STL, bool constify = true);
+    SignatureConvertor(const qi::Signature *sig);
 
     const std::string &signature();
 
   protected:
     void visit(const Signature *sig);
-    void visitSingle(qi::Signature::iterator *it, bool constify);
-    void visitSimple(qi::Signature::iterator *it, bool constify);
-    void visitList(qi::Signature::iterator *it, bool constify);
-    void visitMap(qi::Signature::iterator *it, bool constify);
-    void visitTuple(qi::Signature::iterator *it, bool constify);
+    void visitSingle(qi::Signature::iterator *it);
+    void visitSimple(qi::Signature::iterator *it);
+    void visitList(qi::Signature::iterator *it);
+    void visitMap(qi::Signature::iterator *it);
+    void visitTuple(qi::Signature::iterator *it);
 
-    const char *elementTypeSTL(int idx, bool constify) const;
-
-    SignatureType  _type;
-    bool           _done;
-    bool           _constify;
+    bool                 _done;
     const qi::Signature *_sig;
-    std::string    _result;
+    std::string          _result;
   };
 
 };

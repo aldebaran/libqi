@@ -316,20 +316,33 @@ TEST(TestSignature, SignatureSplit) {
   EXPECT_EQ("", sigInfo[2]);
 }
 
+TEST(TestSignature, ItAnnotation) {
+  std::string orig("((m)<Plouf,x>(scf)<Point3d,x,y,z>)");
+  qi::Signature sig(orig);
+  qi::Signature subsig = sig.begin().children();
+
+  EXPECT_EQ(sig.size(), 1);
+  EXPECT_EQ(orig, sig.toString());
+  EXPECT_EQ("(m)<Plouf,x>", subsig.begin().signature().toString());
+  EXPECT_EQ("(scf)<Point3d,x,y,z>", (++subsig.begin()).signature().toString());
+}
 
 TEST(TestSignature, TestToSTLType)
 {
   qi::Signature sig("(s)");
-  EXPECT_EQ("(std::string)", sig.toSTLSignature());
+  EXPECT_EQ("(String)", sig.toPrettySignature());
 
-  qi::Signature sig2("(sib)");
-  EXPECT_EQ("(std::string,int,bool)", sig2.toSTLSignature());
+  qi::Signature sig2("(slb)");
+  EXPECT_EQ("(String,Int64,Bool)", sig2.toPrettySignature());
 
   qi::Signature sig3("{is}");
-  EXPECT_EQ("std::map<int,std::string>", sig3.toSTLSignature());
+  EXPECT_EQ("Map<Int32,String>", sig3.toPrettySignature());
 
   qi::Signature sig4("((m)(scf))");
-  EXPECT_EQ("((Unknown),(std::string,char,float))", sig4.toSTLSignature());
+  EXPECT_EQ("((Value),(String,Int8,Float))", sig4.toPrettySignature());
+
+  qi::Signature sig5("((m)<Plouf,x>(scf)<Point3d,x,y,z>)");
+  EXPECT_EQ("(Plouf,Point3d)", sig5.toPrettySignature());
 }
 
 //expect that the following test to do not build. (static assert)

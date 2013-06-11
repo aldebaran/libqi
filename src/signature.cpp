@@ -573,20 +573,12 @@ namespace qi {
     return sig;
   }
 
-  std::string Signature::toSTLSignature(bool constify) const {
+  std::string Signature::toPrettySignature() const {
     if (!isValid())
       return std::string();
-    SignatureConvertor sc(this, SignatureConvertor::STL, constify);
+    SignatureConvertor sc(this);
     return sc.signature();
   }
-
-  std::string Signature::toQtSignature(bool constify) const {
-    if (!isValid())
-      return std::string();
-    SignatureConvertor sc(this, SignatureConvertor::Qt, constify);
-    return sc.signature();
-  }
-
 
   std::vector<std::string> signatureSplit(const std::string &fullSignature) {
     std::vector<std::string> ret;

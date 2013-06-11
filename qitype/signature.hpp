@@ -155,8 +155,7 @@ namespace qi {
     * [typeString, childrenList, annotationString ]
     */
     GenericValue toData() const;
-    std::string toSTLSignature(bool constify = false) const;
-    std::string toQtSignature(bool constify = false) const;
+    std::string toPrettySignature() const;
     const std::string& toString() const;
 
     /** Tell if arguments with this signature can be converted to \p b.
