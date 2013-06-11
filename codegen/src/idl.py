@@ -117,15 +117,35 @@ CONTAINERS_SIG = '{[('
 ANNOTATION_CXX_MAP = {
 }
 
+def signature_to_json(s):
+  jsig = qi_type.signature_to_json(s)
+  import json
+  sig = json.loads(jsig)
+  return sig
+
 def signature_to_cxxtype(s):
+  """ Take a signature and return a C++ type that matches.
+  """
+  if not isinstance(s, basestring): #common pitfall, this works with unicode strings too
+    raise Exception("Expected string, got " + str(s) + " which is " + str(type(s)))
+  sig = signature_to_json(s)
+  if not len(sig) or not len(sig[0]):
+    raise Exception("Invalid signature: " + s)
+  return signature_to_cxxtype_(sig[0])
+
+def function_signature_to_cxxtypes(s):
+  """ Take a function signature and return
+      An array of C++ types
+  """
   if not isinstance(s, basestring): #common pitfall, this works with unicode strings too
     raise Exception("Expected string, got " + str(s) + " which is " + str(type(s)))
   jsig = qi_type.signature_to_json(s)
   import json
   sig = json.loads(jsig)
-  if not len(sig) or not len(sig[0]):
+  if len(sig)!=1 or not len(sig[0]):
     raise Exception("Invalid signature: " + s)
-  return signature_to_cxxtype_(sig[0])
+  sig = sig[0] #unwrap toplevel array
+  return map(signature_to_cxxtype_, sig[1])
 
 def signature_to_cxxtype_(s):
   """ Return the C++ type to use for parsed signature s
@@ -138,7 +158,7 @@ def signature_to_cxxtype_(s):
     elif len(children) == 2:
       return 'std::pair<' + signature_to_cxxtype_(children[0]) + ',' + signature_to_cxxtype_(children[1]) + ' >'
     else:
-      throw("Unhandled tuple typpe " + str(s))
+      raise Exception("Unhandled tuple typpe " + str(s))
   elif t in '{[':
     res = SIG_CXX_MAP[t] + '<'
     res += ','.join(map(signature_to_cxxtype_, children))
@@ -153,6 +173,14 @@ def signature_to_cxxtype_(s):
   else:
     return SIG_CXX_MAP[t]
 
+def json_to_signature(js):
+  """ Reconstruct signature from JSON representation
+  """
+  (t, children, annotation) = js
+  res = t + map(json_to_signature, children)
+  if len(annotation):
+    res += '<' + annotation + '>'
+  return res
 
 #mimou
 def parse_toplevel_comma(txt):
@@ -761,14 +789,16 @@ namespace detail {
   declvoid = ''
   impl = ''
   postimpl = ''
-  REV_MAP['dynamic'] = 'AL::ALValue'
+  # Use ALValue instead of GenericValue for dynamic kind.
+  SIG_CXX_MAP['m'] = 'AL::ALValue'
+  SIG_CXX_MAP['i'] = 'int'
   # sort the methods
   methods.sort(key=lambda m: m[0])
   for method in methods:
     if method[0][0] == '_':
       continue
     (cret, typed_args, arg_names) = method_to_cxx(method)
-    cargs = map(signature_to_cxxtype, method[1])
+    cargs = function_signature_to_cxxtypes(method[1])
     cargs = map(clean_extra_space, cargs)
     cret = clean_extra_space(cret)
     rawdoc = method[3].split('\n')
@@ -1268,11 +1298,12 @@ def runtime_to_raw(class_name, sd_url):
     if m[0] < 100:
       continue
     method_name = m[2]
-    sig = m[3][1:-1] #remove toplevel tuple
-    sig = signature_split(sig)
-    sig = map(signature_to_idl, sig)
+    sig = m[3]
+    # we must split the signature into its components
+    sig = signature_to_json(sig)
+    sig = sig[0][1] # unwrap toplevel array and method tuple
+    sig = map(json_to_signature, sig)
     rettype = m[1]
-    rettype = signature_to_idl(rettype)
     if method_name == 'metaObject': # HACK
       rettype = 'MetaObject'
     doc = m[4]
