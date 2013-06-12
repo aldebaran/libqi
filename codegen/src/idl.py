@@ -1478,12 +1478,12 @@ def main(args):
       for i in range(len(functions)):
         cargs = [name, raw[c]] + args[i]
         tres = functions[i](*cargs)
-        if type(tres) == type(''):
-          res[1] += tres
-        else:
+        if type(tres) == type([]):
           res[0] += tres[0]
           res[1] += tres[1]
           res[2] += tres[2]
+        else:
+          res[1] += tres
 
       if split_output:
         out_name = pargs.output_file.replace("%s", c)
