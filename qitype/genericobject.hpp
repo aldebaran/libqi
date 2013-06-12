@@ -358,6 +358,19 @@ static bool _qiregister##name() {                                              \
  }                                                                             \
  static bool BOOST_PP_CAT(__qi_registration, __LINE__) = _qiregister##name();
 
+/** Similar to QI_REGISTER_OBJECT() but also registering inheritance from an
+ * other registered class
+ */
+#define QI_REGISTER_CHILD_OBJECT(parent, name, ...)                                             \
+static bool _qiregister##name() {                                              \
+   ::qi::ObjectTypeBuilder<name > b;    \
+   b.inherits<parent>();                \
+   QI_VAARGS_APPLY(__QI_REGISTER_ELEMENT, name, __VA_ARGS__)                   \
+   b.registerType();                                                           \
+   return true;                                                                \
+ }                                                                             \
+ static bool BOOST_PP_CAT(__qi_registration, __LINE__) = _qiregister##name();
+
 /** Register name as a template object type
  * Remaining arguments are the methods, signals and properties of the object.
  * Use QI_TEMPLATE_TYPE_GET() to access the TypeTemplate from a Type.
