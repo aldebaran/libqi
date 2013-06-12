@@ -177,7 +177,7 @@ def json_to_signature(js):
   """ Reconstruct signature from JSON representation
   """
   (t, children, annotation) = js
-  res = t + map(json_to_signature, children)
+  res = t + ''.join(map(json_to_signature, children))
   if len(annotation):
     res += '<' + annotation + '>'
   return res
@@ -375,8 +375,10 @@ def doxyxml_to_raw(doxy_dir):
         match = re.match(r"(qi::)?Signal<(.*)>", t)
       if match:
         t = match.expand(r"\2")
-        sig = cxx_type_to_signature(t)
-        sig = parse_toplevel_comma(sig)
+        sig = "(" + cxx_type_to_signature(t) + ")"
+        sig = signature_to_json(sig)
+        sig = sig[0][1] # unwrap toplevel array and method tuple
+        sig = map(json_to_signature, sig)
         signals.append((name, sig))
       match = re.match(r"(qi::)?Property<(.*)>", t)
       if match:
