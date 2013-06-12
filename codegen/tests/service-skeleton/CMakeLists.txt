@@ -6,7 +6,9 @@
 # The user builds a library with the filled skeleton: we do that
 
 
-find_package(idl REQUIRED)
+# We cannot use our idl infrastructure fully, since we are building the tools
+# required for it.
+
 find_package(idl.py REQUIRED)
 
 find_program(_python_executable
@@ -18,14 +20,26 @@ find_program(_python_executable
 
 file(MAKE_DIRECTORY  ${CMAKE_CURRENT_BINARY_DIR}/simpleservice)
 
-qi_create_proxy(${CMAKE_CURRENT_SOURCE_DIR}/simpleservice.idl
-  SimpleService ${CMAKE_CURRENT_BINARY_DIR}/simpleservice/ _simpleservice_proxy)
+#qi_create_proxy
+qi_generate_src(${CMAKE_CURRENT_BINARY_DIR}/simpleservice/simpleservice_proxy.hpp
+  SRC ${IDL.PY_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/simpleservice.idl
+  COMMAND ${_python_executable}  ${IDL.PY_EXECUTABLE}
+  ${CMAKE_CURRENT_SOURCE_DIR}/simpleservice.idl
+  -c SimpleService
+  -o ${CMAKE_CURRENT_BINARY_DIR}/simpleservice/simpleservice_proxy.hpp
+  -m proxyFuture
+  )
+
+#qi_create_proxy(${CMAKE_CURRENT_SOURCE_DIR}/simpleservice.idl
+#  SimpleService ${CMAKE_CURRENT_BINARY_DIR}/simpleservice/ _simpleservice_proxy)
 
 
 #generate service skeleton from idl
 
 set(skel ${CMAKE_CURRENT_BINARY_DIR}/simpleservice/simpleservice-service.skel)
 set(filled_skel ${CMAKE_CURRENT_BINARY_DIR}/simpleservice/simpleservice-service.cpp)
+
+
 
 qi_generate_src(${skel}
   SRC ${IDL.PY_EXECUTABLE}
@@ -54,7 +68,7 @@ qi_generate_src(${filled_skel}
 #now build our service
 qi_create_lib(simpleservice
   MODULE
-  SRC ${filled_skel} ${_simpleservice_proxy}
+  SRC ${filled_skel} ${CMAKE_CURRENT_BINARY_DIR}/simpleservice/simpleservice_proxy.hpp
   DEPENDS qitype
 )
 
