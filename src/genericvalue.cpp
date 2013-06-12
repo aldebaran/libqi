@@ -544,8 +544,7 @@ namespace qi
     }
 
     if (type->info() == typeOf<ObjectPtr>()->info()
-        && targetType->kind() == Type::Pointer
-        && static_cast<TypePointer*>(targetType)->pointedType()->kind() == Type::Object)
+        && targetType->kind() == Type::Pointer)
     { // Attempt specialized proxy conversion
       qiLogDebug() << "Attempting specialized proxy conversion";
       detail::ProxyGeneratorMap& map = detail::proxyGeneratorMap();
