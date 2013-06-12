@@ -326,16 +326,28 @@ namespace qi {
 
   /** Register \p Proxy as a proxy class.
    * Required for bound methods to accept a ProxyPtr as argument
-   * Proxy must be constructible with an ObjectPtr as
-   * argumen
+   * Proxy must be constructible with an ObjectPtr as argument
    * @return unused value, present to ease registration at static initialisation
    */
   template<typename Proxy>
   bool registerProxy();
 
+  /** Register \p Proxy as a proxy class for interface \p Interface.
+   * Required for bound methods to accept a InterfacePtr as argument
+   * Proxy must be constructible with an ObjectPtr as argument
+   * @return unused value, present to ease registration at static initialisation
+   */
+  template<typename Proxy, typename Interface>
+  bool registerProxyInterface();
+
   #define QI_REGISTER_PROXY(Proxy) \
   namespace {                      \
     static bool BOOST_PP_CAT(_qi_register_proxy_, Proxy) = ::qi::registerProxy<Proxy>(); \
+  }
+
+  #define QI_REGISTER_PROXY_INTERFACE(Proxy, Interface) \
+  namespace {                      \
+    static bool BOOST_PP_CAT(_qi_register_proxy_, Proxy) = ::qi::registerProxyInterface<Proxy, Interface>(); \
   }
 }
 

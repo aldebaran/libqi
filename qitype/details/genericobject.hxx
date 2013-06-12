@@ -317,6 +317,13 @@ namespace qi {
       return GenericValuePtr(&sp).clone();
     }
   }
+  template<typename Proxy, typename Interface>
+  bool registerProxyInterface()
+  {
+    detail::ProxyGeneratorMap& map = detail::proxyGeneratorMap();
+    map[typeOf<Interface>()->info()] = &detail::makeProxy<Proxy>;
+    return true;
+  }
   template<typename Proxy>
   bool registerProxy()
   {
