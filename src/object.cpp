@@ -189,8 +189,13 @@ namespace qi {
       return ss.str();
     }
 
-    ss << "Ambiguous overload for " << signature << ":" << std::endl
-       << "  Candidate(s):" << std::endl;
+    if (candidates.size() == 1) {
+      ss << "Arguments types did not match for " << signature << ":" << std::endl
+         << "  Candidate:" << std::endl;
+    } else {
+      ss << "Ambiguous overload for " << signature << ":" << std::endl
+         << "  Candidate(s):" << std::endl;
+    }
     for (it = candidates.begin(); it != candidates.end(); ++it) {
       const qi::MetaMethod       &mm = it->first;
       ss << "  " << mm.toString() << " (" << it->second << ')' << std::endl;
@@ -238,7 +243,7 @@ namespace qi {
       }
       assert(count);
       if (count > 1)
-        qiLogVerbose() << generateErrorString(nameWithOptionalSignature, mml, false);
+        qiLogVerbose() << generateErrorString(fullSig, mml, false);
       else
         return it->first.uid();
     }
@@ -256,7 +261,9 @@ namespace qi {
     }
     int methodId = findMethod(nameWithOptionalSignature, args);
     if (methodId < 0) {
-      return makeFutureError<GenericValuePtr>(generateErrorString(nameWithOptionalSignature, metaObject().findCompatibleMethod(nameWithOptionalSignature), false));
+      std::string resolvedSig = args.signature(true).toString();
+      std::string fullSig = nameWithOptionalSignature + "::" + resolvedSig;
+      return makeFutureError<GenericValuePtr>(generateErrorString(fullSig, metaObject().findCompatibleMethod(nameWithOptionalSignature), false));
     }
     return metaCall(methodId, args, callType);
   }
