@@ -24,6 +24,11 @@ endfunction()
 
 
 function(qi_create_proxy idl class_name output_dir _out)
+cmake_parse_arguments(ARG
+    "INTERFACE;NO_FUTURE"
+    ""
+    ""
+    ${ARGN})
   _qi_find_idl(IDL)
   string(REPLACE "::" ";" split_class ${class_name})
   list(REVERSE split_class)
@@ -31,13 +36,23 @@ function(qi_create_proxy idl class_name output_dir _out)
   string(TOLOWER ${class} _filename)
   set(_filename "${_filename}_proxy.hpp")
   set(${_out} ${output_dir}/${_filename} PARENT_SCOPE)
+  if(ARG_NO_FUTURE OR ARG_INTERFACE)
+    set(_mode proxy)
+  else()
+    set(_mode proxyFuture)
+  endif()
+  if(ARG_INTERFACE)
+    set(_interface "--interface")
+  endif()
   qi_generate_src(${output_dir}/${_filename}
     SRC ${idl} ${IDL}
     COMMAND ${_python_executable} ${IDL}
       ${idl}
       -c ${class_name}
       -o ${output_dir}/${_filename}
-      -m proxyFuture)
+      -m ${_mode}
+      ${_interface}
+      )
 endfunction()
 
 function(qi_create_interface idl class_name output_dir _out)

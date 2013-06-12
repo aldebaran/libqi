@@ -520,6 +520,7 @@ def raw_to_interface(class_name, data, include, namespaces):
 
 #include <qitype/signal.hpp>
 #include <qitype/property.hpp>
+#include <qitype/genericobject.hpp>
 @include@
 
 @OPEN_NAMESPACE@
@@ -538,7 +539,9 @@ class @INAME@
 
 // Register an object implementing this interface
 #define QI_IMPLEMENT_@INAME@(name, ...) \
-  QI_REGISTER_OBJECT(name, @FIELDS@, ##__VA_ARGS__)
+  QI_REGISTER_CHILD_OBJECT(@INAME@, name, @FIELDS@, ##__VA_ARGS__)
+
+QI_REGISTER_OBJECT(@INAME@, @FIELDS@)
 
 @CTOR0IMPL@
 
@@ -888,6 +891,10 @@ def raw_to_proxy(class_name, data, return_future, implement_interface, include, 
          can be generated with raw_to_interface
   """
 
+  # Note: in interface mode, the generated class has no reason to ever be
+  # used explicitly, so it is given a different name, and ClassProxy is set
+  # to a typedef on IClass. That way other genertors can use to ClassProxyPtr
+
   skeleton = """
 #ifndef @GARD@
 #define @GARD@
@@ -909,10 +916,10 @@ def raw_to_proxy(class_name, data, return_future, implement_interface, include, 
 
 @forward_decls@
 
-class @className@Proxy: public ::qi::Proxy
+class @proxyName@: public ::qi::Proxy @if_inherit@
 {
 public:
-  @className@Proxy(qi::ObjectPtr obj)
+  @proxyName@(qi::ObjectPtr obj)
   : qi::Proxy(obj)
 @constructor_initList@
   {
@@ -924,21 +931,38 @@ public:
 @privateDecl@
 };
 
-QI_REGISTER_PROXY(@className@Proxy);
+@QI_REGISTER_PROXY@
 @close_namespace@
 
-QI_TYPE_PROXY(@namepaces@@className@Proxy);
+QI_TYPE_PROXY(@namepaces@@proxyName@);
 
 #endif //@GARD@
 """
 
-  forward_decls = "class @className@Proxy;\ntypedef boost::shared_ptr<@className@Proxy> @className@ProxyPtr;\n"
+  if return_future and implement_interface:
+    raise Exception("Cannot both return_future and implement_interface")
+  if implement_interface:
+    # In C++ "class foo;" and "typedef bar foo;" conflict, so use a preprocessor
+    # define to inhibit standard fwdecl if the special interface version is used
+    forward_decls = "class I@className@; typedef I@className@ @className@Proxy;typedef boost::shared_ptr<@className@Proxy> @className@ProxyPtr;\n#define FWD_@className@\n"
+    proxy_name = class_name + "ProxyImpl"
+    qi_register_proxy = "QI_REGISTER_PROXY_INTERFACE(@proxyName@, I@className@);"
+  else:
+    proxy_name = class_name + "Proxy"
+    forward_decls = "class @className@Proxy;\ntypedef boost::shared_ptr<@className@Proxy> @className@ProxyPtr;\n"
+    qi_register_proxy = "QI_REGISTER_PROXY(@proxyName@);"
 
   forward_decls = forward_decls.replace('@className@', class_name)
   #generate methods
   (methods, signals, properties) = (data[METHODS], data[SIGNALS], data[PROPERTIES])
   method_impls = ""
   fwdecl = dict()
+  if implement_interface:
+    call_begin = '(::qi::MetaCallType_Auto,'
+    if_inherit = ', public I' + class_name
+  else:
+    call_begin = '(callType,'
+    if_inherit = ''
   for method in methods:
     (cret, typed_args, arg_names) = method_to_cxx(method)
     method_name = method[0]
@@ -971,12 +995,15 @@ QI_TYPE_PROXY(@namepaces@@className@Proxy);
       typed_args += ', '
       argIdx = argIdx + 1
     # Add a final optional argument 'MetaCallType calltype=auto'
-    typed_args = typed_args + '::qi::MetaCallType callType = ::qi::MetaCallType_Auto'
+    if implement_interface:
+      typed_args = typed_args[0:-2] #remove trailing comma
+    else:
+      typed_args = typed_args + '::qi::MetaCallType callType = ::qi::MetaCallType_Auto'
     #NOTE: should we return the future?
     method_impls += '  ' + out_ret + " " + method_name + "(" + typed_args + ") {\n    "
     if (cret != "void" or return_future):
       method_impls += "return "
-    method_impls += '_obj->call<' + cret + ' >' + '(callType,"' + method_name + '"' + arg_names + ");\n  }\n"
+    method_impls += '_obj->call<' + cret + ' >' + call_begin + '"' + method_name + '"' + arg_names + ");\n  }\n"
   signal_decl = ''
   ctor = ''
   # Make  a Signal field for each signal, bridge it to backend in ctor
@@ -997,8 +1024,9 @@ QI_TYPE_PROXY(@namepaces@@className@Proxy);
       ns_full = n + "::"
 
   for k in fwdecl.keys():
-    forward_decls += 'class {0}; typedef boost::shared_ptr<{0}> {0}Ptr;\n'.format(k+'Proxy')
+    forward_decls += '#ifndef FWD_{1}\nclass {0}; typedef boost::shared_ptr<{0}> {0}Ptr;\n#endif\n'.format(k+'Proxy', k)
   replace = {
+      'QI_REGISTER_PROXY': qi_register_proxy,
       'GARD': '_' + class_name.upper() + '_PROXY_HPP_',
       'open_namespace': open_namespace,
       'close_namespace': close_namespace,
@@ -1010,7 +1038,12 @@ QI_TYPE_PROXY(@namepaces@@className@Proxy);
       'include': ''.join(['#include <' + x + '>\n' for x in include]),
       'forward_decls': forward_decls,
       'namepaces': ns_full,
+      'if_inherit': if_inherit,
+      'proxyName': proxy_name
   }
+  for k in replace:
+    qi_register_proxy = qi_register_proxy.replace('@' + k + '@', replace[k])
+  replace['QI_REGISTER_PROXY'] = qi_register_proxy
   for k in replace:
     result = result.replace('@' + k + '@', replace[k])
   return ['', result, '']
@@ -1357,7 +1390,6 @@ def main(args):
     raw = doxyxml_to_raw(doxy_dir)
     #print("DOXYDIR " + doxy_dir)
     shutil.rmtree(doxy_dir)
-
   if not len(pargs.include):
     pargs.include = []
   else:
