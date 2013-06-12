@@ -1,0 +1,23 @@
+<IDL>
+<class name="TaskService">
+  <method name="make">
+    <return type="o&lt;Task>" />
+    <argument type="i" />
+  </method>
+  <method name="add">
+    <return type="i" />
+    <argument type="i"/>
+  </method>
+  <method name="clear">
+    <return type="v" />
+  </method>
+  <method name="accept">
+    <return type="i" />
+    <argument type="o&lt;Task>" />
+  </method>
+  <property name="value" type="i" />
+  <signal  name="onAdd" >
+    <argument type="i" />
+  </signal>
+</class>
+</IDL>

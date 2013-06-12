@@ -1,0 +1,13 @@
+<IDL>
+<class name="Task">
+  <method name="addTwo">
+    <return type="i" />
+    <argument type="i" />
+    <argument type="i" />
+  </method>
+  <property name="value" type="i" />
+  <signal  name="onAdd" >
+    <argument type="i" />
+  </signal>
+</class>
+</IDL>
