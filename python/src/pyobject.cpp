@@ -67,7 +67,7 @@ namespace qi { namespace py {
       for (it = mm.begin(); it != mm.end(); ++it) {
         qi::MetaMethod &mem = it->second;
         //drop special methods
-        if (mem.uid() < qiObjectSpecialMethodMaxUid)
+        if (mem.uid() < qiObjectSpecialMemberMaxUid)
           continue;
         qiLogDebug() << "adding method:" << mem.toString();
         boost::python::object fun = boost::python::raw_function(PyQiFunctor(mem.name().c_str(), obj));
@@ -87,7 +87,7 @@ namespace qi { namespace py {
       for (it = mm.begin(); it != mm.end(); ++it) {
         qi::MetaSignal &ms = it->second;
         //drop special methods
-        if (ms.uid() < qiObjectSpecialMethodMaxUid)
+        if (ms.uid() < qiObjectSpecialMemberMaxUid)
           continue;
         qiLogDebug() << "adding signal:" << ms.toString();
         boost::python::object fun = qi::py::makePyProxySignal(obj, ms);
@@ -101,7 +101,7 @@ namespace qi { namespace py {
       for (it = mm.begin(); it != mm.end(); ++it) {
         qi::MetaProperty &mp = it->second;
         //drop special methods
-        if (mp.uid() < qiObjectSpecialMethodMaxUid)
+        if (mp.uid() < qiObjectSpecialMemberMaxUid)
           continue;
         qiLogDebug() << "adding property:" << mp.toString();
         boost::python::object fun = qi::py::makePyProxyProperty(obj, mp);
