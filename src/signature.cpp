@@ -164,10 +164,10 @@ namespace qi {
   }
 
 
-  static bool _is_valid(const std::string& s, unsigned int& current, qi::Signature::Type type, qi::Signature::Type closing)
+  static bool _is_valid(const char* s, unsigned int size, unsigned int& current, qi::Signature::Type type, qi::Signature::Type closing)
   {
     int         arguments = 0;
-    while (current < s.size() && s[current] != closing)
+    while (current < size && s[current] != closing)
     {
       switch (static_cast<qi::Signature::Type>(s[current]))
       {
@@ -196,7 +196,7 @@ namespace qi {
         break;
       case qi::Signature::Type_List:
       {
-        if (_is_valid(s, ++current, qi::Signature::Type_List, qi::Signature::Type_List_End) == false)
+        if (_is_valid(s, size, ++current, qi::Signature::Type_List, qi::Signature::Type_List_End) == false)
           return false;
 
         break;
@@ -205,12 +205,12 @@ namespace qi {
       {
         if (s[++current] == qi::Signature::Type_Tuple_End)
           return true; // Empty tuple is valid.
-        if (_is_valid(s, current, qi::Signature::Type_Tuple, qi::Signature::Type_Tuple_End) == false)
+        if (_is_valid(s, size, current, qi::Signature::Type_Tuple, qi::Signature::Type_Tuple_End) == false)
           return false;
         break;
       }
       case qi::Signature::Type_Map:
-        if (_is_valid(s, ++current, qi::Signature::Type_Map, qi::Signature::Type_Map_End) == false)
+        if (_is_valid(s, size, ++current, qi::Signature::Type_Map, qi::Signature::Type_Map_End) == false)
           return false;
         break;
       default:
@@ -220,12 +220,12 @@ namespace qi {
       }
       current++;
       arguments++;
-      if (current >= s.size() || s[current] == closing)
+      if (current >= size || s[current] == closing)
         break;
       if (s[current] == '<')
       {
         int count = 0;
-        while (current < s.size())
+        while (current < size)
         {
           if (s[current] == '<')
             ++count;
@@ -348,7 +348,7 @@ namespace qi {
   // go forward, add a 0, go forward, add a 0, bouhhh a 1! AHHHHHH scary!
   bool SignaturePrivate::split(const char *signature, const char *sig_end) {
     unsigned int i = 0;
-    if (!_is_valid(std::string(signature, sig_end - signature), i, qi::Signature::Type_None, qi::Signature::Type_None))
+    if (!_is_valid(signature, sig_end - signature, i, qi::Signature::Type_None, qi::Signature::Type_None))
       return false;
 
     char *current   = _signature;
