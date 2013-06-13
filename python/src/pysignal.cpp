@@ -12,6 +12,7 @@
 #include <qitype/genericobject.hpp>
 #include "gil.hpp"
 #include "error.hpp"
+#include "pyfuture.hpp"
 
 qiLogCategory("py.signal");
 
@@ -40,15 +41,27 @@ namespace qi { namespace py {
       ~PySignal() {
       }
 
-      qi::uint64_t connect(boost::python::object callable) {
+      boost::python::object connect(boost::python::object callable, bool _async = false) {
         GILScopedUnlock _unlock;
         //no need to store a ptr on ourself. (this exist if the callback is triggered)
-        return qi::SignalBase::connect(qi::makeDynamicGenericFunction(boost::bind(pysignalCb, _1, callable)));
+        qi::uint64_t r = qi::SignalBase::connect(qi::makeDynamicGenericFunction(boost::bind(pysignalCb, _1, callable)));
+        if (_async)
+        {
+          return boost::python::object(toPyFuture(qi::Future<qi::uint64_t>(r)));
+        }
+
+        return boost::python::object(r);
       }
 
-      bool disconnect(qi::uint64_t id) {
+      boost::python::object disconnect(qi::uint64_t id, bool _async = false) {
         GILScopedUnlock _unlock;
-        return qi::SignalBase::disconnect(id);
+        bool r = qi::SignalBase::disconnect(id);
+        if (_async)
+        {
+          return boost::python::object(toPyFuture(qi::Future<bool>(r)));
+        }
+
+        return boost::python::object(r);
       }
 
       //this function is named trigger in the qi.Signal object,
@@ -66,15 +79,27 @@ namespace qi { namespace py {
         , _sigid(signal.uid()){
       }
 
-      qi::uint64_t connect(boost::python::object callable) {
+      boost::python::object connect(boost::python::object callable, bool _async = false) {
         GILScopedUnlock _unlock;
         //no need to store a ptr on ourself. (this exist if the callback is triggered)
-        return _obj->connect(_sigid, qi::makeDynamicGenericFunction(boost::bind(pysignalCb, _1, callable)));
+        qi::FutureSync<Link> f = _obj->connect(_sigid, qi::makeDynamicGenericFunction(boost::bind(pysignalCb, _1, callable)));
+        if (_async)
+        {
+          return boost::python::object(toPyFuture(f));
+        }
+
+        return boost::python::object(f.value());
       }
 
-      bool disconnect(qi::uint64_t id) {
+      boost::python::object disconnect(qi::uint64_t id, bool _async = false) {
         GILScopedUnlock _unlock;
-        return _obj->disconnect(id).hasValue();
+        qi::FutureSync<void> f = _obj->disconnect(id);
+        if (_async)
+        {
+          return boost::python::object(toPyFuture(f));
+        }
+
+        return boost::python::object(f.value());
       }
 
       //this function is named trigger in the qi.Signal object,
@@ -115,14 +140,14 @@ namespace qi { namespace py {
     void export_pysignal() {
       boost::python::class_<PySignal>("Signal", boost::python::init<>())
           .def(boost::python::init<const std::string &>())
-          .def("connect", &PySignal::connect, (boost::python::arg("callback")))
-          .def("disconnect", &PySignal::disconnect, (boost::python::arg("id")))
+          .def("connect", &PySignal::connect, (boost::python::arg("callback"), boost::python::arg("_async") = false))
+          .def("disconnect", &PySignal::disconnect, (boost::python::arg("id"), boost::python::arg("_async") = false))
           .def("disconnect_all", &PySignal::disconnectAll)
           .def("__call__", boost::python::raw_function(&signal_param_shrinker<PySignal>));
 
       boost::python::class_<PyProxySignal>("_ProxySignal", boost::python::no_init)
-          .def("connect", &PyProxySignal::connect, (boost::python::arg("callback")))
-          .def("disconnect", &PyProxySignal::disconnect, (boost::python::arg("id")))
+          .def("connect", &PyProxySignal::connect, (boost::python::arg("callback"), boost::python::arg("_async") = false))
+          .def("disconnect", &PyProxySignal::disconnect, (boost::python::arg("id"), boost::python::arg("_async") = false))
           .def("__call__", boost::python::raw_function(&signal_param_shrinker<PyProxySignal>));
 
     }
