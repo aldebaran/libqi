@@ -24,52 +24,52 @@ namespace qi {
   }
 
   qi::Signature makeListSignature(const qi::Signature &element) {
-    std::stringstream res;
-    res << (char)Signature::Type_List;
-    res << element.toString();
-    res << (char)Signature::Type_List_End;
-    return qi::Signature(res.str());
+    std::string res;
+    res += (char)Signature::Type_List;
+    res += element.toString();
+    res += (char)Signature::Type_List_End;
+    return qi::Signature(res);
   }
 
   qi::Signature makeTupleSignature(const qi::Signature &element) {
-    std::stringstream res;
-    res << (char)Signature::Type_Tuple;
-    res << element.toString();
-    res << (char)Signature::Type_Tuple_End;
-    return qi::Signature(res.str());
+    std::string res;
+    res += (char)Signature::Type_Tuple;
+    res += element.toString();
+    res += (char)Signature::Type_Tuple_End;
+    return qi::Signature(res);
   }
 
   qi::Signature makeMapSignature(const qi::Signature &key, const qi::Signature &value) {
-    std::stringstream res;
-    res << (char)Signature::Type_Map;
-    res << key.toString();
-    res << value.toString();
-    res << (char)Signature::Type_Map_End;
-    return qi::Signature(res.str());
+    std::string res;
+    res += (char)Signature::Type_Map;
+    res += key.toString();
+    res += value.toString();
+    res += (char)Signature::Type_Map_End;
+    return qi::Signature(res);
   }
 
   qi::Signature makeTupleSignature(const std::vector<qi::GenericValuePtr>& vgv, bool resolve, const std::string &name, const std::vector<std::string>& names)
   {
-    std::stringstream res;
-    res << (char)Signature::Type_Tuple;
+    std::string res;
+    res += (char)Signature::Type_Tuple;
     for (unsigned int i = 0; i < vgv.size(); ++i)
-      res << vgv[i].signature(resolve).toString();
-    res << (char)Signature::Type_Tuple_End;
+      res += vgv[i].signature(resolve).toString();
+    res += (char)Signature::Type_Tuple_End;
     if (names.size() == vgv.size())
-      res << makeTupleAnnotation(name, names);
-    return qi::Signature(res.str());
+      res += makeTupleAnnotation(name, names);
+    return qi::Signature(res);
   }
 
   qi::Signature makeTupleSignature(const std::vector<Type*>& vt, const std::string &name, const std::vector<std::string>& names)
   {
-    std::stringstream res;
-    res << (char)Signature::Type_Tuple;
+    std::string res;
+    res += (char)Signature::Type_Tuple;
     for (unsigned int i = 0; i < vt.size(); ++i)
-      res << vt[i]->signature().toString();
-    res << (char)Signature::Type_Tuple_End;
+      res += vt[i]->signature().toString();
+    res += (char)Signature::Type_Tuple_End;
     if (names.size() == vt.size())
-      res << makeTupleAnnotation(name, names);
-    return qi::Signature(res.str());
+      res += makeTupleAnnotation(name, names);
+    return qi::Signature(res);
   }
 
   float qi::Signature::isConvertibleTo(const qi::Signature& b) const
