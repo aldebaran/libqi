@@ -48,9 +48,30 @@ namespace qi {
     //convert from FutureSync to PyFuture
     template <typename T>
     PyFuture toPyFuture(qi::FutureSync<T> fut) {
-      qi::Promise<qi::GenericValue> gprom;
-      qi::adaptFuture(fut.async(), gprom);
-      return gprom.future();
+      return toPyFuture(fut.async());
+    }
+
+    //async == true  => convert to PyFuture
+    //async == false => convert to PyObject or throw on error
+    template <typename T>
+    boost::python::object toPyFutureAsync(qi::Future<T> fut, bool async) {
+      if (async)
+        return boost::python::object(toPyFuture(fut));
+      qi::GenericValueRef r(fut.value());
+      return r.to<boost::python::object>(); //throw on error
+    }
+
+    template <>
+    inline boost::python::object toPyFutureAsync<void>(qi::Future<void> fut, bool async) {
+      if (async)
+        return boost::python::object(toPyFuture(fut));
+      fut.value(); //wait for the result
+      return boost::python::object(); //throw on error
+    }
+
+    template <typename T>
+    boost::python::object toPyFutureAsync(qi::FutureSync<T> fut, bool async) {
+      return toPyFutureAsync(fut.async(), async);
     }
 
     boost::python::object makeFuture(qi::Future<qi::GenericValuePtr> fut);
