@@ -18,10 +18,10 @@ namespace qi {
 
   class MetaObjectPrivate {
   public:
-    //by default we start at qiObjectSpecialMethodMaxUid,
-    //the first qiObjectSpecialMethodMaxUid id are reserved for bound object
+    //by default we start at qiObjectSpecialMemberMaxUid,
+    //the first qiObjectSpecialMemberMaxUid id are reserved for bound object
     MetaObjectPrivate()
-      : _index(qiObjectSpecialMethodMaxUid - 1)
+      : _index(qiObjectSpecialMemberMaxUid - 1)
     {
     };
 

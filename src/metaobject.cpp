@@ -446,7 +446,7 @@ namespace qi {
     static bool bypass(const std::string &name, unsigned int uid, bool showHidden) {
       if (showHidden)
         return false;
-      if (uid < qi::qiObjectSpecialMethodMaxUid)
+      if (uid < qi::qiObjectSpecialMemberMaxUid)
         return true;
       if (name.size() >= 1 && name[0] == '_')
         return true;
