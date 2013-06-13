@@ -13,18 +13,28 @@ SessionHelper::~SessionHelper()
   _session.close();
 }
 
-bool SessionHelper::getServiceSync(const std::string &serviceName, ServiceHelper &out)
+ServiceHelper SessionHelper::getService(const std::string &serviceName)
 {
   qi::FutureSync<qi::ObjectPtr> future = _session.service(serviceName);
 
   if (future.hasError())
-  {
-    std::cout << "\terror : " << future.error() << std::endl;
-    return false;
-  }
+    throw std::runtime_error(future.error());
+  return ServiceHelper(future.value(), serviceName);
+}
 
-  out = future.value();
-  return true;
+std::vector<ServiceHelper> SessionHelper::getServices(const std::string &pattern)
+{
+  std::vector<qi::ServiceInfo> servsInfos = _session.services().value();
+  std::vector<ServiceHelper> services;
+  services.reserve(servsInfos.size());
+  boost::basic_regex<char> reg(pattern);
+
+  for (unsigned int i = 0; i < servsInfos.size(); ++i)
+  {
+    if (boost::regex_match(servsInfos[i].name(), reg))
+      services.push_back(getService(servsInfos[i].name()));
+  }
+  return services;
 }
 
 void SessionHelper::showServiceInfo(const qi::ServiceInfo &infos, bool verbose, bool showHidden, bool showDoc)
@@ -53,12 +63,16 @@ void SessionHelper::showServiceInfo(const qi::ServiceInfo &infos, bool verbose, 
       std::cout << "             " << it_urls->str() << std::endl;
   }
 
-  ServiceHelper service;
-  if (!getServiceSync(infos.name(), service)) {
+  try
+  {
+    ServiceHelper service = getService(infos.name());
+    qi::details::printMetaObject(std::cout, service.objPtr()->metaObject(), true, showHidden, showDoc);
+  }
+  catch (...)
+  {
     std::cout << "  Can't connect to service " << infos.name();
     return;
   }
-  qi::details::printMetaObject(std::cout, service.objPtr()->metaObject(), true, showHidden, showDoc);
 }
 
 bool isNumber(const std::string &str)
@@ -87,7 +101,7 @@ void SessionHelper::showServicesInfoPattern(const std::vector<std::string> &patt
   {
     bool displayed = false;
     if (isNumber(patternVec[u])) {
-      int sid = atoi(patternVec[u].c_str());
+      unsigned int sid = atoi(patternVec[u].c_str());
       for (unsigned int j = 0; j < servs.size(); ++j) {
         if (servs[j].serviceId() == sid) {
           showServiceInfo(servs[j], verbose, showHidden, showDoc);

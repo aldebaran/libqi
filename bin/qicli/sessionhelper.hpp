@@ -14,7 +14,8 @@ public:
 
   qi::FutureSync< qi::ObjectPtr > service(const std::string &service, const std::string &protocol = "");
   qi::FutureSync< std::vector<qi::ServiceInfo> > services(qi::Session::ServiceLocality locality = qi::Session::ServiceLocality_All);
-  bool getServiceSync(const std::string &serviceName, ServiceHelper &out);
+  ServiceHelper getService(const std::string &serviceName);
+  std::vector<ServiceHelper> getServices(const std::string &pattern);
 
 private:
   void showServiceInfo(const qi::ServiceInfo &infos, bool verbose, bool showHidden, bool showDoc);

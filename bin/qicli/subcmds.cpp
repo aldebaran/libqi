@@ -32,10 +32,7 @@ int subCmd_call(int argc, char **argv, const MainOptions &options)
     std::cerr << "error: Service.Method syntax not respected" << std::endl;
     return 1;
   }
-  ServiceHelper service;
-
-  if (!session.getServiceSync(serviceName, service))
-    return 1;
+  ServiceHelper service = session.getService(serviceName);
 
   return service.call(methodName, argList);
 }
@@ -68,10 +65,7 @@ int subCmd_post(int argc, char **argv, const MainOptions &options)
     std::cerr << "error, Service.Signal syntax not respected" << std::endl;
     return 1;
   }
-  ServiceHelper service;
-
-  if (!session.getServiceSync(serviceName, service))
-    return 1;
+  ServiceHelper service = session.getService(serviceName);
 
   return service.post(signalName, argList);
 }
@@ -118,35 +112,44 @@ int subCmd_service(int argc, char **argv, const MainOptions &options)
 int subCmd_watch(int argc, char **argv, const MainOptions &options)
 {
   po::options_description desc("Usage: qicli watch Service.Signal");
-  std::string             fullName;
+  std::string             serviceName;
+  std::string             signalName;
 
   desc.add_options()
-      ("signal,s", po::value<std::string>(&fullName)->required(), "signal's name")
+      ("service,s", po::value<std::string>(&serviceName)->default_value(".*"), "service's name")
+      ("signal", po::value<std::string>(&signalName)->default_value(".*"), "signal's name")
       ("time,t", "Print time")
+      ("show-hidden", "watch hidden signals")
       ("help,h", "Print this help message and exit");
 
   po::positional_options_description positionalOptions;
-  positionalOptions.add("signal", 1);
+  positionalOptions.add("service", 1);
+  positionalOptions.add("signal", 2);
 
   po::variables_map vm;
   if (!poDefault(po::command_line_parser(argc, argv).options(desc).positional(positionalOptions), vm, desc))
     return 1;
 
   SessionHelper session(options.address);
-  std::string serviceName;
-  std::string signalName;
 
-  if (!::splitName(fullName, serviceName, signalName))
+  std::vector<ServiceHelper> services = session.getServices(serviceName);
+
+  bool foundOne = false;
+  if (services.empty())
   {
-    std::cerr << "error, Service.Signal syntax not respected" << std::endl;
+    std::cerr << "no services matching the given pattern" << std::endl;
     return 1;
   }
-  ServiceHelper service;
-
-  if (!session.getServiceSync(serviceName, service))
-    return 1;
-
-  return service.watchSignal(signalName, vm.count("time"));
+  for (unsigned int i = 0; i < services.size(); ++i)
+    if (!services[i].watchSignalPattern(signalName, vm.count("time"), vm.count("show-hidden")))
+      foundOne = true;
+  if (foundOne)
+  {
+    ::getchar();
+    for (unsigned int i = 0; i < services.size(); ++i)
+      services[i].disconnectAll();
+  }
+  return 0;
 }
 
 int subCmd_get(int argc, char **argv, const MainOptions &options)
@@ -174,17 +177,14 @@ int subCmd_get(int argc, char **argv, const MainOptions &options)
     std::cerr << "error, Service.Method syntax not respected" << std::endl;
     return 1;
   }
-  ServiceHelper service;
-
-  if (!session.getServiceSync(serviceName, service))
-    return 1;
+  ServiceHelper service = session.getService(serviceName);
 
   return service.showProp(propName);
 }
 
 int subCmd_set(int argc, char **argv, const MainOptions &options)
 {
-  po::options_description desc("Usage: qicli get Service.Propertie");
+  po::options_description desc("Usage: qicli set Service.Propertie Value");
   std::string             fullName;
   std::string             value;
 
@@ -210,10 +210,7 @@ int subCmd_set(int argc, char **argv, const MainOptions &options)
     std::cerr << "error, Service.Method syntax not respected" << std::endl;
     return 1;
   }
-  ServiceHelper service;
-
-  if (!session.getServiceSync(serviceName, service))
-    return 1;
+  ServiceHelper service = session.getService(serviceName);
 
   return service.setProp(propName, value);
 }

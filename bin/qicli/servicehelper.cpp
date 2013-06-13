@@ -1,10 +1,24 @@
 #include <boost/date_time.hpp>
+#include <boost/regex.hpp>
 
 #include <qi/future.hpp>
+#include <qi/iocolor.hpp>
 #include <qitype/functiontype.hpp>
 
 #include "servicehelper.hpp"
 #include "qicli.hpp"
+
+
+ServiceHelper::ServiceHelper(const qi::ObjectPtr &service, const std::string &name)
+  :_name(name),
+    _service(service)
+
+{}
+
+ServiceHelper::ServiceHelper(const ServiceHelper &other)
+  :_name(other._name),
+    _service(other._service)
+{}
 
 std::ostream &operator<<(std::ostream &os, const std::vector<qi::GenericValuePtr> &gvv)
 {
@@ -20,6 +34,13 @@ std::ostream &operator<<(std::ostream &os, const std::vector<qi::GenericValuePtr
 const ServiceHelper& ServiceHelper::operator=(const qi::ObjectPtr &service)
 {
   _service = service;
+  return *this;
+}
+
+const ServiceHelper& ServiceHelper::operator =(const ServiceHelper &other)
+{
+  _service = other._service;
+  _name = other._name;
   return *this;
 }
 
@@ -85,38 +106,89 @@ int ServiceHelper::setProp(const std::string &propName, const std::string &value
   return 0;
 }
 
-qi::GenericValuePtr watcher(bool showTime, const std::vector<qi::GenericValuePtr> &params)
+static bool bypass(const std::string &name, unsigned int uid, bool showHidden) {
+  if (showHidden)
+    return false;
+  if (qi::MetaObject::isPrivateMember(name, uid))
+    return true;
+  return false;
+}
+
+std::list<qi::MetaSignal> ServiceHelper::getMetaSignalsByPattern(const std::string &pattern, bool getHidden)
 {
-  if (showTime)
-    std::cout << getTime() << " : ";
-  std::cout << params << std::endl;
+  qi::MetaObject mo = _service->metaObject();
+  qi::MetaObject::SignalMap signalMap = mo.signalMap();
+
+  qi::MetaObject::SignalMap::const_iterator begin;
+  qi::MetaObject::SignalMap::const_iterator end = signalMap.end();
+
+  std::list<qi::MetaSignal> signalList;
+  boost::basic_regex<char> reg(pattern);
+
+  for (begin = signalMap.begin(); begin != end; ++begin)
+  {
+    if (bypass(begin->second.name(), begin->second.uid(), getHidden))
+      continue;
+    if (boost::regex_match(begin->second.name(), reg))
+      signalList.push_back(begin->second);
+  }
+  return signalList;
+}
+
+qi::GenericValuePtr defaultWatcher(const ServiceHelper::WatchOptions &options, const std::vector<qi::GenericValuePtr> &params)
+{
+  static boost::mutex m;
+  std::ostringstream ss;
+  if (options.showTime)
+    ss << getTime() << ": ";
+  ss << options.serviceName << ".";
+  ss << options.signalName << " : ";
+  ss << params;
+  ss << std::endl;
+  {
+    // gain ownership of std::cout to avoid text overlap on terminal
+    boost::lock_guard<boost::mutex> lock(m);
+    std::cout << ss.str();
+  }
   return qi::GenericValuePtr();
 }
 
-int ServiceHelper::watchSignal(const std::string &signalName, bool showTime)
+int ServiceHelper::watchSignalPattern(const std::string &signalPattern, bool showTime, bool showHidden)
 {
-  qi::FutureSync<qi::Link> futLink = _service->connect(signalName,
-                                                       qi::SignalSubscriber(
-                                                         qi::makeDynamicGenericFunction(
-                                                           boost::bind(watcher, showTime, _1))));
+  std::list<qi::MetaSignal> toWatch = getMetaSignalsByPattern(signalPattern, showHidden);
+  std::list<qi::MetaSignal>::const_iterator begin;
+  std::list<qi::MetaSignal>::const_iterator end = toWatch.end();
 
-  if (futLink.hasError())
+  if (toWatch.empty())
   {
-    std::cerr << "error: " << futLink.error() << std::endl;
+    std::cerr << "error: no signal matching the given pattern \"" << signalPattern << "\" was found in service " << _name << std::endl;
     return 1;
   }
-
-  qi::Link link = futLink.value();
-
-  if (link == 0)
+  WatchOptions options;
+  options.serviceName = _name;
+  options.showTime = showTime;
+  for (begin = toWatch.begin(); begin != end; ++begin)
   {
-    std::cerr << "error: link value is 0" << std::endl;
-    return 1;
-  }
+    options.signalName = begin->name();
+    qi::SignalSubscriber sigSub(qi::makeDynamicGenericFunction(boost::bind(defaultWatcher, options, _1)));
+    qi::FutureSync<qi::Link> futLink = _service->connect(begin->name(), sigSub);
 
-  ::getchar();
-  _service->disconnect(link).wait();
+    qi::Link link = futLink.value();
+
+    if (link != 0)
+      _links.push_back(link);
+  }
   return 0;
+}
+
+void ServiceHelper::disconnectAll()
+{
+  std::list<qi::Link>::const_iterator begin;
+  std::list<qi::Link>::const_iterator end = _links.end();
+
+  for (begin = _links.begin(); begin != end; ++begin)
+    _service->disconnect(*begin).wait();
+  _links.clear();
 }
 
 int ServiceHelper::post(const std::string &signalName, const std::vector<std::string> &argList)

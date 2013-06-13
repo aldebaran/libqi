@@ -39,12 +39,12 @@ void showHelp(const po::options_description &desc)
 {
   std::cout << std::left << desc << std::endl;
   std::cout << "sub commands:" << std::endl;
-  std::cout << "  service <PATTERN...>" << std::endl;
+  std::cout << "  service [<ServicePattern>]" << std::endl;
   std::cout << "  call    <Service.Method> <parameter ...>" << std::endl;
   std::cout << "  post    <Service.SignalOrMethod> <parameter ...>" << std::endl;
   std::cout << "  get     <Service.Property>" << std::endl;
   std::cout << "  set     <Service.Property> <Value>" << std::endl;
-  std::cout << "  watch   <Service.Signal>" << std::endl;
+  std::cout << "  watch   [<ServicePattern>] [<SignalPattern>]" << std::endl;
 }
 
 bool poDefault(const po::command_line_parser &clp, po::variables_map &vm, const po::options_description &desc)
@@ -69,10 +69,8 @@ bool poDefault(const po::command_line_parser &clp, po::variables_map &vm, const 
 std::string getTime()
 {
   std::ostringstream msg;
-  const boost::posix_time::ptime now=
-      boost::posix_time::second_clock::local_time();
-  boost::posix_time::time_facet*const f=
-      new boost::posix_time::time_facet("%H:%M:%S");
+  const boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
+  const boost::posix_time::time_facet *f = new boost::posix_time::time_facet("%H:%M:%S");
   msg.imbue(std::locale(msg.getloc(),f));
   msg << now;
   return msg.str();
