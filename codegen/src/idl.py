@@ -128,9 +128,9 @@ def signature_to_cxxtype(s):
   """
   if not isinstance(s, basestring): #common pitfall, this works with unicode strings too
     raise Exception("Expected string, got " + str(s) + " which is " + str(type(s)))
-  sig = signature_to_json(s)
+  sig = signature_to_json(str(s)) # no unicode!
   if not len(sig) or not len(sig[0]):
-    raise Exception("Invalid signature: " + s)
+    raise Exception("Invalid signature: " + s +", gave " + str(sig))
   return signature_to_cxxtype_(sig[0])
 
 def function_signature_to_cxxtypes(s):
@@ -173,11 +173,16 @@ def signature_to_cxxtype_(s):
   else:
     return SIG_CXX_MAP[t]
 
+PAIR_CLOSING_MAP = {
+  '[': ']',
+  '{': '}',
+  '(': ')'
+}
 def json_to_signature(js):
   """ Reconstruct signature from JSON representation
   """
   (t, children, annotation) = js
-  res = t + ''.join(map(json_to_signature, children))
+  res = t + ''.join(map(json_to_signature, children)) + PAIR_CLOSING_MAP.get(t, '')
   if len(annotation):
     res += '<' + annotation + '>'
   return res
@@ -803,7 +808,8 @@ namespace detail {
     if method[0][0] == '_':
       continue
     (cret, typed_args, arg_names) = method_to_cxx(method)
-    cargs = function_signature_to_cxxtypes(method[1])
+    cargs = map(signature_to_cxxtype, method[1])
+    #function_signature_to_cxxtypes(method[1])
     cargs = map(clean_extra_space, cargs)
     cret = clean_extra_space(cret)
     rawdoc = method[3].split('\n')
