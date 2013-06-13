@@ -21,16 +21,8 @@ namespace qi {
     public:
       //return a future, or None (and throw in case of error)
       boost::python::object listen(const std::string &url, bool _async=false) {
-        if (_async)
-          return boost::python::object(toPyFuture(ServiceDirectory::listen(url)));
-        else {
-          qi::Future<void> fut = ServiceDirectory::listen(url);
-          {
-            GILScopedUnlock _unlock;
-            fut.value(); //throw on error
-          }
-          return boost::python::object();
-        }
+        GILScopedUnlock _unlock;
+        return toPyFutureAsync(ServiceDirectory::listen(url), _async);
       }
 
       //override because python do not know qi::Url
