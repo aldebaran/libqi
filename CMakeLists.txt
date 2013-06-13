@@ -93,6 +93,7 @@ set(SOURCES ${PUBLIC_HEADERS}
             src/jsonencoder.cpp
             src/jsondecoder.cpp
             src/metamethod.cpp
+            src/metaproperty.cpp
             src/metasignal.cpp
             src/metasignal_p.cpp
             src/metasignal_p.hpp

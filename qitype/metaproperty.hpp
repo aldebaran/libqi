@@ -14,13 +14,12 @@ namespace qi
   class QITYPE_API MetaProperty
   {
   public:
-    MetaProperty(unsigned int uid, const std::string& name, const qi::Signature& sig)
-    : _uid(uid), _name(name), _signature(sig) {}
-    MetaProperty() {}
-    const std::string& name() const { return _name;}
-    const qi::Signature& signature() const { return _signature;}
-    std::string toString() const { return _name + "::" + _signature.toString(); }
-    unsigned int uid() const { return _uid;}
+    MetaProperty(unsigned int uid, const std::string& name, const qi::Signature& sig);
+    MetaProperty();
+    const std::string& name() const;
+    const qi::Signature& signature() const;
+    std::string toString() const;
+    unsigned int uid() const;
 
   private:
     unsigned int  _uid;
