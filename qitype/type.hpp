@@ -601,6 +601,8 @@ QITYPE_API bool operator !=(const GenericIterator & a, const GenericIterator& b)
     virtual PointerKind pointerKind() const = 0;
     virtual Type* pointedType() const = 0;
     virtual GenericValuePtr dereference(void* storage) = 0; // must not be destroyed
+    // Set new pointee value. pointer must be a *pointer* to type pointedType()
+    virtual void setPointee(void** storage, void* pointer) = 0;
     virtual Kind kind() const { return Pointer; }
   };
 

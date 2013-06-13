@@ -83,8 +83,8 @@ namespace qi
       // We must re-reference
       GenericValuePtr pointedDst = pointedDstPair.first;
       void* ptr = pointedDst.type->ptrFromStorage(&pointedDst.value);
-      result.type = targetType;
-      result.value = targetType->initializeStorage(&ptr);
+      result = GenericValuePtr((Type*)targetType);
+      targetType->setPointee(&result.value, ptr);
       return std::make_pair(result, false);
     }
     case Type::Object:

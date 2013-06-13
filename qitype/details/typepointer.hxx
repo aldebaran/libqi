@@ -29,6 +29,11 @@ namespace qi
       return result;
     }
 
+    void setPointee(void** storage, void* pointer)
+    {
+      *storage = pointer;
+    }
+
     typedef DefaultTypeImplMethods<T*,
                                      TypeByValue<T*>
                                      > TypeMethodsImpl;
@@ -52,6 +57,11 @@ namespace qi
       result.type = pointedType();
       result.value = result.type->initializeStorage(ptr->get());
       return result;
+    }
+    void setPointee(void** storage, void* pointer)
+    {
+      T* ptr = (T*)ptrFromStorage(storage);
+      *ptr = T((typename T::element_type*)pointer);
     }
      _QI_BOUNCE_TYPE_METHODS(DefaultTypeImplMethods<T>);
   };
