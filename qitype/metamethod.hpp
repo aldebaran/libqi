@@ -57,6 +57,10 @@ namespace qi {
     MetaMethodParameterVector parameters() const;
     std::string returnDescription() const;
 
+    /** return true if method is considered internal, and should not be listed
+     */
+    bool isPrivate() const;
+
     MetaMethodPrivate* _p;
 
     MetaMethod(unsigned int uid, const qi::Signature& returnSignature,

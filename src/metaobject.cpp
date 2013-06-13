@@ -373,6 +373,12 @@ namespace qi {
     return _p->findCompatibleMethod(name);
   }
 
+  bool MetaObject::isPrivateMember(const std::string &name, unsigned int uid)
+  {
+    return uid < qiObjectSpecialMemberMaxUid
+        || (!name.empty() && name[0] == ' ');
+  }
+
   const MetaSignal* MetaObject::signal(const std::string &name) const
   {
     return _p->signal(name);
@@ -446,9 +452,7 @@ namespace qi {
     static bool bypass(const std::string &name, unsigned int uid, bool showHidden) {
       if (showHidden)
         return false;
-      if (uid < qi::qiObjectSpecialMemberMaxUid)
-        return true;
-      if (name.size() >= 1 && name[0] == '_')
+      if (MetaObject::isPrivateMember(name, uid))
         return true;
       return false;
     }
@@ -561,7 +565,6 @@ namespace qi {
     _p->_description = description;
     _p->refreshCache();
   }
-
 
 }
 

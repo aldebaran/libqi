@@ -4,6 +4,7 @@
 */
 
 #include <qitype/functiontype.hpp>
+#include <qitype/genericobject.hpp>
 
 #include "metamethod_p.hpp"
 
@@ -69,6 +70,9 @@ namespace qi {
     return this->_p->returnDescription;
   }
 
+  bool MetaMethod::isPrivate() const {
+    return MetaObject::isPrivateMember(name(), uid());
+  }
 
   // ***** MetaMethodPrivate Implementation *****
   MetaMethodPrivate::MetaMethodPrivate()

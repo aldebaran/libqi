@@ -28,6 +28,10 @@ namespace qi {
     const Signature   &parametersSignature() const;
     unsigned int       uid() const;
 
+    /** return true if signal is considered internal, and should not be listed
+     */
+    bool               isPrivate() const;
+
   private:
     unsigned int  _uid;
     // C4251

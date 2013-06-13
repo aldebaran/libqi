@@ -55,6 +55,10 @@ namespace qi {
     typedef std::pair<MetaMethod, float> CompatibleMethod;
     std::vector<CompatibleMethod> findCompatibleMethod(const std::string &nameOrSignature) const;
 
+    /** return true if member is considered internal, and should not be listed
+     */
+    static bool isPrivateMember(const std::string &name, unsigned int uid);
+
     ///Merge two MetaObject. Dest method and signal ids will be incremented by offset.
     static qi::MetaObject merge(const qi::MetaObject &source, const qi::MetaObject &dest);
 

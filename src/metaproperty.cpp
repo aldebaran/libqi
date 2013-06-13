@@ -28,4 +28,9 @@ namespace qi
   {
     return _uid;
   }
+
+  bool MetaProperty::isPrivate() const
+  {
+    return MetaObject::isPrivateMember(name(), uid());
+  }
 }

@@ -44,4 +44,8 @@ namespace qi {
     return _uid;
   }
 
+  bool MetaSignal::isPrivate() const {
+    return MetaObject::isPrivateMember(name(), uid());
+  }
+
 };

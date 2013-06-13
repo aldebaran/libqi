@@ -21,6 +21,10 @@ namespace qi
     std::string toString() const;
     unsigned int uid() const;
 
+    /** return true if property is considered internal, and should not be listed
+     */
+    bool isPrivate() const;
+
   private:
     unsigned int  _uid;
     std::string   _name;
