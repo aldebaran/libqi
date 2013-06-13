@@ -126,11 +126,18 @@ jlong     Java_com_aldebaran_qimessaging_Object_connect(JNIEnv *env, jobject job
   gInfoHandler.push(data);
 
 
-  return obj->connect(event,
-                       qi::SignalSubscriber(
-                         qi::makeDynamicGenericFunction(
-                           boost::bind(&event_callback_to_java, (void*) data, _1)),
-                         qi::MetaCallType_Direct));
+  try {
+    return obj->connect(event,
+                        qi::SignalSubscriber(
+                          qi::makeDynamicGenericFunction(
+                            boost::bind(&event_callback_to_java, (void*) data, _1)),
+                          qi::MetaCallType_Direct));
+  } catch (std::exception& e)
+  {
+    qiLogError() << e.what();
+    throwJavaError(env, e.what());
+    return 0;
+  }
 }
 
 void      Java_com_aldebaran_qimessaging_Object_post(JNIEnv *env, jobject QI_UNUSED(jobj), jlong pObject, jstring eventName, jobjectArray jargs)
