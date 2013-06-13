@@ -15,7 +15,7 @@
 int iteration = 100000;
 static qi::Atomic<int> callbackValue;
 
-void callback()
+void callback(int /* arg */)
 {
   return; //this is a dummy callback.
 }
