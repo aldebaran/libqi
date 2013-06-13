@@ -22,7 +22,7 @@ namespace qi
     public:
       /// ThreadPool constructor.
       ThreadPool(unsigned int minWorkers = 2, unsigned int maxWorkers = 8,
-                 unsigned int minIdleWorkers = 1, unsigned int maxIdleWorkers = 4);
+                 unsigned int minIdleWorkers = 1, unsigned int maxIdleWorkers = 0);
       /// ThreadPool destructor.
       ~ThreadPool();
 

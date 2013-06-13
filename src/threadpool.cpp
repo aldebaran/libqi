@@ -14,6 +14,8 @@
 #  pragma warning( disable: 4355 )
 #endif
 
+qiLogCategory("qi.threadpool");
+
 namespace qi
 {
   ThreadPoolPrivate::ThreadPoolPrivate(unsigned int minWorkers, unsigned int maxWorkers,
@@ -100,10 +102,12 @@ namespace qi
         if (_tasks.empty())
         {
           /* Should the thread be destroyed ? */
-          if ((((*_workers - *_activeWorkers) > _maxIdleWorkers) && *_workers > _minWorkers)
-               || (*_workers > _maxWorkers))
-          {
-            break;
+          if (_maxIdleWorkers != 0) {
+            if ((((*_workers - *_activeWorkers) > _maxIdleWorkers) && *_workers > _minWorkers)
+                || (*_workers > _maxWorkers))
+            {
+              break;
+            }
           }
 
           /* Notify user that all tasks are done */
@@ -187,13 +191,14 @@ namespace qi
         try
         {
           boost::thread* newThread = new boost::thread(boost::bind(&ThreadPoolPrivate::workLoop, this));
+          qiLogVerbose() << "Created thread:" << newThread->get_id();
 
           _threadsMap[newThread->get_id()] = newThread;
           ++_workers;
         }
         catch (const boost::thread_resource_error &e)
         {
-          qiLogError("qi.threadpool") << e.what();
+          qiLogError() << "creating thread error:" << e.what();
         }
       }
 
@@ -216,6 +221,7 @@ namespace qi
 
         threadToFreeIterator = _threadsMap.find(threadToFreeId);
 
+        qiLogVerbose() << "Freeing thread:" << (*threadToFreeIterator).second->get_id();
         /* Should be immediate since the thread has already quit */
         (*threadToFreeIterator).second->interrupt();
         (*threadToFreeIterator).second->join();

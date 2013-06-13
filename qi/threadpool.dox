@@ -13,6 +13,8 @@
  * \param minIdleWorkers Minimum number of inactive workers and ready to execute
  *                       a task immediately
  * \param maxIdleWorkers Maximum number of workers inactive
+ *
+ * If maxIdleWorkers is 0, then no thread reclamation is done.
  */
 
 /**
