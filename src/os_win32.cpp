@@ -544,10 +544,7 @@ namespace qi {
 
     bool fnmatch(const std::string &pattern, const std::string &string)
     {
-      if (PathMatchSpec(string.c_str(), pattern.c_str()) == S_OK)
-        return true;
-      else
-        return false;
+      return (PathMatchSpec(string.c_str(), pattern.c_str()) == TRUE);
     }
   }
 }
