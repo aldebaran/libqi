@@ -46,7 +46,6 @@ endif()
 if (WIN32)
   set_target_properties(_qi PROPERTIES
     SUFFIX ".pyd"
-    DEBUG_POSTFIX "_d"
     RUNTIME_OUTPUT_DIRECTORY_DEBUG ${QI_SDK_DIR}/${QI_SDK_LIB}
     RUNTIME_OUTPUT_DIRECTORY_RELEASE ${QI_SDK_DIR}/${QI_SDK_LIB}
   )
