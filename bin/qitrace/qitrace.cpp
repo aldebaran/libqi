@@ -19,15 +19,6 @@
 #define foreach BOOST_FOREACH
 
 
-inline bool globMatch(const std::string& pattern, const std::string& string)
-{
-#ifdef _WIN32
-      return ::PathMatchSpec(string.c_str(), pattern.c_str()) == TRUE;
-#else
-      return !fnmatch(pattern.c_str(), string.c_str(), 0);
-#endif
-}
-
 const char* callType[] = {
   "?", "C", "R", "E", "S"
 };
@@ -119,7 +110,7 @@ int main(int argc, char** argv)
         std::string pattern = split[i].substr(1);
         for (unsigned i=0; i<services.size(); ++i)
         {
-          if (globMatch(pattern, services[i]))
+          if (qi::os::fnmatch(pattern, services[i]))
           {
             services[i] = services[services.size() - 1];
             services.pop_back();
