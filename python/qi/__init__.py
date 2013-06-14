@@ -55,5 +55,5 @@ __all__ = ["Application",
            "ServiceDirectory",
            "Session",
            "Signal",
-           "createObjet",
+           "createObject",
            "registerObjectFactory"]
