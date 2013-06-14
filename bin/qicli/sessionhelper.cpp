@@ -6,6 +6,7 @@
 SessionHelper::SessionHelper(const std::string &address)
 {
   _session.connect(address);
+  _session.disconnected.connect(boost::bind(&SessionHelper::onDisconnect, this, _1));
 }
 
 SessionHelper::~SessionHelper()
@@ -141,4 +142,10 @@ qi::FutureSync< qi::ObjectPtr > SessionHelper::service(const std::string &servic
 qi::FutureSync< std::vector<qi::ServiceInfo> > SessionHelper::services(qi::Session::ServiceLocality locality)
 {
   return _session.services(locality);
+}
+
+void SessionHelper::onDisconnect(const std::string &str)
+{
+  std::cout << "connection lost: " << str << std::endl;
+  ::exit(1);
 }

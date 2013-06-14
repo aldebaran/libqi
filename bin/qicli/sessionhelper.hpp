@@ -18,6 +18,7 @@ public:
   std::vector<ServiceHelper> getServices(const std::string &pattern);
 
 private:
+  void onDisconnect(const std::string &);
   void showServiceInfo(const qi::ServiceInfo &infos, bool verbose, bool showHidden, bool showDoc);
   qi::FutureSync<void> connect(const qi::Url &serviceDirectoryURL);
   qi::FutureSync<void> close();
