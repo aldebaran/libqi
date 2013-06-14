@@ -220,15 +220,6 @@ namespace qi {
       qi::atomic<int> nextIndex;
     };
 
-    inline bool globMatch(const std::string& pattern, const std::string& string)
-    {
-#ifdef _WIN32
-      return ::PathMatchSpec(string.c_str(), pattern.c_str()) == TRUE;
-#else
-      return !fnmatch(pattern.c_str(), string.c_str(), 0);
-#endif
-    }
-
     // If we receive a setLevel with a globbing category, we must keep it
     // in mind, in case a new category that matches the glob is created.
     struct GlobRule
@@ -237,7 +228,7 @@ namespace qi {
       : target(t) , id(i), level(l) {}
       bool matches(const std::string& n) const
       {
-        return globMatch(target, n);
+        return os::fnmatch(target, n);
       }
       std::string target; // glob target
       unsigned int id; // listener id or -1 for all
