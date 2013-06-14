@@ -3,7 +3,7 @@
 ** Author(s):
 **  - Pierre ROULLON <proullon@aldebaran-robotics.com>
 **
-** Copyright (C) 2012 Aldebaran Robotics
+** Copyright (C) 2012, 2013 Aldebaran Robotics
 */
 
 #ifndef _JAVA_JNI_SERVICEDIRECTORY_HPP_
