@@ -40,6 +40,9 @@ std::vector<ServiceHelper> SessionHelper::getServices(const std::string &pattern
 
 void SessionHelper::showServiceInfo(const qi::ServiceInfo &infos, bool verbose, bool showHidden, bool showDoc)
 {
+  if (!showHidden &&
+      infos.name().size() > 0 && infos.name()[0] == '_')
+    return;
   std::cout << qi::StreamColor_Fuchsia
             << std::right << std::setw(3) << std::setfill('0')
             << infos.serviceId() << qi::StreamColor_Reset
