@@ -262,6 +262,14 @@ namespace qi {
     }
   }
 
+  template <>
+  struct FutureValueConverter<void, void>
+  {
+    void operator()(void* in, void* out)
+    {
+    }
+  };
+
   template <typename T>
   struct FutureValueConverter<T, void>
   {

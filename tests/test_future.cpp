@@ -591,6 +591,50 @@ TEST(TestWaitForFirst, FailingTest) {
   ASSERT_TRUE(a.hasError());
 }
 
+TEST(TestAdaptFuture, WithVoid) {
+  qi::Promise<void> prom1;
+  qi::Promise<void> prom2;
+  prom1.setError("foo");
+
+  qi::adaptFuture(prom1.future(), prom2);
+  ASSERT_TRUE(prom2.future().hasError());
+  ASSERT_FALSE(prom2.future().hasValue());
+  ASSERT_STREQ("foo", prom2.future().error().c_str());
+}
+
+TEST(TestAdaptFuture, WithInt) {
+  qi::Promise<int> prom1;
+  qi::Promise<int> prom2;
+  prom1.setValue(1);
+
+  qi::adaptFuture(prom1.future(), prom2);
+  ASSERT_TRUE(prom2.future().hasValue());
+  ASSERT_FALSE(prom2.future().hasError());
+  ASSERT_EQ(1, prom2.future().value());
+}
+
+TEST(TestAdaptFuture, WithIntVoid) {
+  qi::Promise<int> prom1;
+  qi::Promise<void> prom2;
+  prom1.setValue(1);
+
+  qi::adaptFuture(prom1.future(), prom2);
+  ASSERT_TRUE(prom2.future().hasValue());
+  ASSERT_FALSE(prom2.future().hasError());
+  ASSERT_EQ(NULL, prom2.future().value());
+}
+
+TEST(TestAdaptFuture, PromiseCancelled) {
+  qi::Promise<void> prom1;
+  qi::Promise<void> prom2;
+  prom1.setCanceled();
+
+  qi::adaptFuture(prom1.future(), prom2);
+  ASSERT_TRUE(prom2.future().isCanceled());
+  ASSERT_FALSE(prom2.future().hasValue());
+  ASSERT_FALSE(prom2.future().hasError());
+}
+
 int main(int argc, char **argv) {
   qi::Application app(argc, argv);
   ::testing::InitGoogleTest(&argc, argv);
