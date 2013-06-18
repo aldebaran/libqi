@@ -300,7 +300,7 @@ qi::GenericValuePtr GenericValue_from_PyObject(PyObject* val)
   return res;
 }
 
-class PyObjectType: public qi::TypeDynamic
+class PyObjectTypeInterface: public qi::DynamicTypeInterface
 {
 public:
   virtual qi::GenericValuePtr get(void* storage)
@@ -320,10 +320,10 @@ public:
 };
 
 /* Register PyObject* -> See the above comment for explanations */
-QI_TYPE_REGISTER_CUSTOM(boost::python::object, PyObjectType);
+QI_TYPE_REGISTER_CUSTOM(boost::python::object, PyObjectTypeInterface);
 
 //register for common wrapper too. (yes we could do better than launching the big BFG, but BFG *does* work.
-QI_TYPE_REGISTER_CUSTOM(boost::python::str, PyObjectType);
-QI_TYPE_REGISTER_CUSTOM(boost::python::list, PyObjectType);
-QI_TYPE_REGISTER_CUSTOM(boost::python::dict, PyObjectType);
-QI_TYPE_REGISTER_CUSTOM(boost::python::tuple, PyObjectType);
+QI_TYPE_REGISTER_CUSTOM(boost::python::str, PyObjectTypeInterface);
+QI_TYPE_REGISTER_CUSTOM(boost::python::list, PyObjectTypeInterface);
+QI_TYPE_REGISTER_CUSTOM(boost::python::dict, PyObjectTypeInterface);
+QI_TYPE_REGISTER_CUSTOM(boost::python::tuple, PyObjectTypeInterface);

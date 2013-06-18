@@ -20,7 +20,7 @@ namespace qi {
   {
     qi::Message ret(Message::Type_Reply, replyaddr);
     TypeTemplate* futureType = QI_TEMPLATE_TYPE_GET(val.type, Future);
-    ObjectType* onext = dynamic_cast<ObjectType*>(futureType->next());
+    ObjectTypeInterface* onext = dynamic_cast<ObjectTypeInterface*>(futureType->next());
     GenericObject gfut(onext, val.value);
     if (gfut.call<bool>("hasError", 0))
     {
@@ -49,7 +49,7 @@ namespace qi {
       if (futureType)
       { // Return value is a future, bounce
         Type* next = futureType->next();
-        ObjectType* onext = dynamic_cast<ObjectType*>(next);
+        ObjectTypeInterface* onext = dynamic_cast<ObjectTypeInterface*>(next);
         GenericObject gfut(onext, val.value);
         boost::function<void()> cb = boost::bind(serverResultAdapterNext, val, host, socket, replyaddr);
         gfut.call<void>("_connect", cb);
