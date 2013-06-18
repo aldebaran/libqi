@@ -226,7 +226,7 @@ namespace qi { namespace py {
           mmb.setName(key);
           mmb.setParametersSignature(ss.str());
           mmb.setReturnSignature("m");
-          gob.xAdvertiseMethod(mmb, qi::makeDynamicGenericFunction(boost::bind(pyCallMethod, _1, m)));
+          gob.xAdvertiseMethod(mmb, qi::AnyFunction::fromDynamicFunction(boost::bind(pyCallMethod, _1, m)));
           continue;
         }
 

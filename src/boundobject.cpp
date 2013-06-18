@@ -81,7 +81,7 @@ namespace qi {
 
   //Bound Method
   Link ServiceBoundObject::registerEvent(unsigned int objectId, unsigned int eventId, Link remoteLinkId) {
-    GenericFunction mc = makeDynamicGenericFunction(boost::bind(&forwardEvent, _1, _serviceId, _objectId, eventId, _currentSocket, this));
+    AnyFunction mc = AnyFunction::fromDynamicFunction(boost::bind(&forwardEvent, _1, _serviceId, _objectId, eventId, _currentSocket, this));
     Link linkId = _object->connect(eventId, mc);
     qiLogDebug() << "SBO rl " << remoteLinkId <<" ll " << linkId;
     _links[_currentSocket][remoteLinkId] = RemoteLink(linkId, eventId);

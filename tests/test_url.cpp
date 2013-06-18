@@ -10,7 +10,7 @@
 #include <gtest/gtest.h>
 
 #include <qitype/type.hpp>
-#include <qitype/functiontypefactory.hpp>
+#include <qitype/functiontype.hpp>
 #include <qimessaging/url.hpp>
 
 
@@ -158,8 +158,8 @@ TEST(TestURL, TypeSystem)
 {
   qi::Type* t = qi::typeOf<qi::Url>();
   EXPECT_EQ(qi::Type::String, t->kind());
-  qi::GenericFunction fout = qi::makeGenericFunction(&urlOut);
-  qi::GenericFunction fin = qi::makeGenericFunction(&urlIn);
+  qi::AnyFunction fout = qi::AnyFunction::from(&urlOut);
+  qi::AnyFunction fin = qi::AnyFunction::from(&urlIn);
   std::vector<qi::GenericValuePtr> args;
   std::string s("tcp://canard:0");
   EXPECT_EQ(s, qi::GenericValueRef(s).to<qi::Url>().str());

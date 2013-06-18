@@ -37,8 +37,8 @@ qi::GenericValuePtr triggerBouncer(qi::SignalBase *sig, const std::vector<qi::Ge
         qi::SignalBase *conn = getSignal(connected);
         qi::SignalBase *disconn = getSignal(disconnected);
         // Connect our PySignals with qi::Session signals, have to use a dynamic generic function to trigger
-        nSigConnected = _ses->connected.connect(qi::makeDynamicGenericFunction(boost::bind(&triggerBouncer, conn, _1)));
-        nSigDisconnected = _ses->disconnected.connect(qi::makeDynamicGenericFunction(boost::bind(&triggerBouncer, disconn, _1)));
+        nSigConnected = _ses->connected.connect(qi::AnyFunction::fromDynamicFunction(boost::bind(&triggerBouncer, conn, _1)));
+        nSigDisconnected = _ses->disconnected.connect(qi::AnyFunction::fromDynamicFunction(boost::bind(&triggerBouncer, disconn, _1)));
       }
 
       ~PySession() {

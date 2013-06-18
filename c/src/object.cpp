@@ -145,7 +145,7 @@ qi_future_t*        qi_object_event_connect(qi_object_t* object, const char *sig
   qi::ObjectPtr &obj = qi_object_cpp(object);
   std::vector<std::string> vs = qi::signatureSplit(std::string(signature));
   qi::DynamicFunction fn = boost::bind<qi::GenericValuePtr>(&c_signal_callback, _1, vs[2], f, user_data);
-  return qi_future_wrap(obj->connect(signature, qi::makeDynamicGenericFunction(fn)));
+  return qi_future_wrap(obj->connect(signature, qi::AnyFunction::fromDynamicFunction(fn)));
 }
 
 qi_future_t*        qi_object_event_disconnect(qi_object_t* object, unsigned long long id) {
@@ -161,7 +161,7 @@ int          qi_object_builder_register_method(qi_object_builder_t *object_build
 
   sigInfo = qi::signatureSplit(signature);
   ob->xAdvertiseMethod(sigInfo[0], sigInfo[1], sigInfo[2],
-    makeDynamicGenericFunction(
+    qi::AnyFunction::fromDynamicFunction(
     boost::bind(&c_call, std::string(complete_signature), func, data, _1)));
   return 0;
 }
