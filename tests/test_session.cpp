@@ -83,7 +83,7 @@ TEST(QiSession, testClose)
   f.wait(3000);
   ASSERT_TRUE(!f.hasError());
 
-  qi::GenericObjectBuilder ob;
+  qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("reply", &reply);
   qi::ObjectPtr obj(ob.object());
 
@@ -115,7 +115,7 @@ TEST(QiSession, getSimpleService)
 {
   TestSessionPair pair;
 
-  qi::GenericObjectBuilder ob;
+  qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("reply", &reply);
   qi::ObjectPtr obj(ob.object());
 
@@ -129,7 +129,7 @@ TEST(QiSession, getSimpleServiceTwice)
 {
   TestSessionPair pair;
 
-  qi::GenericObjectBuilder ob;
+  qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("reply", &reply);
   qi::ObjectPtr obj(ob.object());
 
@@ -172,7 +172,7 @@ TEST(QiSession, getCloseService)
 {
   TestSessionPair p;
 
-  qi::GenericObjectBuilder ob;
+  qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("reply", &reply);
   qi::ObjectPtr obj(ob.object());
 
@@ -193,7 +193,7 @@ TEST(QiSession, AlreadyRegistered)
 {
   TestSessionPair p;
 
-  qi::GenericObjectBuilder ob;
+  qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("reply", &reply);
   qi::ObjectPtr obj(ob.object());
 
@@ -209,7 +209,7 @@ TEST(QiSession, Services)
   qi::Session* s1 = p.client();
   qi::Session* s2 = p.server();
 
-  qi::GenericObjectBuilder ob;
+  qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("reply", &reply);
   qi::ObjectPtr obj(ob.object());
   s1->registerService("srv1.1", obj);
@@ -253,7 +253,7 @@ TEST(QiSession, getCallInConnect)
 {
   TestSessionPair pair;
 
-  qi::GenericObjectBuilder ob;
+  qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("reply", &reply);
   qi::ObjectPtr obj(ob.object());
 

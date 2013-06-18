@@ -50,7 +50,7 @@ class TestObject: public ::testing::Test
 public:
   TestObject() : p2(p1)
   {
-    qi::GenericObjectBuilder obs1, obs2;
+    qi::DynamicObjectBuilder obs1, obs2;
     se1 = obs1.advertiseSignal<const int&>("fire1");
     se2 = obs2.advertiseSignal<const int&>("fire2");
     sm1 = obs1.advertiseMethod("onFire1", &onFire1);

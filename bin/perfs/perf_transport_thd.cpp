@@ -161,7 +161,7 @@ int main_server()
   sd.listen("tcp://127.0.0.1:9559");
   std::cout << "Service Directory ready." << std::endl;
 
-  qi::GenericObjectBuilder ob;
+  qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("reply", &reply);
 
   qi::Session       session;

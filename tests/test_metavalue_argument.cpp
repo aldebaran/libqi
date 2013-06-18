@@ -42,7 +42,7 @@ class TestObject: public ::testing::Test
 public:
   TestObject()
   {
-    qi::GenericObjectBuilder ob;
+    qi::DynamicObjectBuilder ob;
     ob.advertiseSignal<const int&>("fire");
     ob.advertiseMethod("value", &value);
     ob.advertiseMethod("value", &valueList);

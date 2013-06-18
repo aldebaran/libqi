@@ -70,7 +70,7 @@ qi::Buffer replyBuf(const qi::Buffer& buf)
 
 qi::ObjectPtr make_service()
 {
-  qi::GenericObjectBuilder ob;
+  qi::DynamicObjectBuilder ob;
   if (threadsafe)
     ob.setThreadingModel(qi::ObjectThreadingModel_MultiThread);
   ob.advertiseMethod("reply", &reply);

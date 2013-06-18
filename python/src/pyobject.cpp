@@ -193,7 +193,7 @@ namespace qi { namespace py {
         return isthatyoumum()->object();
       }
 
-      qi::GenericObjectBuilder gob;
+      qi::DynamicObjectBuilder gob;
       GILScopedLock _lock;
       boost::python::object attrs(boost::python::borrowed(PyObject_Dir(obj.ptr())));
 

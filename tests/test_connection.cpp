@@ -159,7 +159,7 @@ int main(int argc, char **argv) {
 
   std::cout << "Service Directory ready." << std::endl;
   qi::Session       session;
-  qi::GenericObjectBuilder ob;
+  qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("reply", &reply);
   ob.advertiseMethod("replyBuf", &replyBuf);
   ob.advertiseMethod("replyBufA", &replyBufA);

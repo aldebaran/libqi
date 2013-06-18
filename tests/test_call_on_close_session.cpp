@@ -56,7 +56,7 @@ void test(void)
       qi::Session* s1 = p.server();
       qi::Session* s2 = p.client();
 
-      qi::GenericObjectBuilder ob;
+      qi::DynamicObjectBuilder ob;
       ob.advertiseMethod("reply", &reply);
       qi::ObjectPtr obj(ob.object());
 

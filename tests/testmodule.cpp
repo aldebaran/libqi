@@ -18,7 +18,7 @@ int testMethod(const int& v)
 
 qi::ObjectPtr make_other_object()
 {
-  qi::GenericObjectBuilder ob;
+  qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("testMethod", testMethod);
   return ob.object();
 }
@@ -26,7 +26,7 @@ qi::ObjectPtr make_other_object()
 qi::ObjectPtr setup(const std::string&)
 {
   qiLogDebug() << "setup";
-  qi::GenericObjectBuilder ob;
+  qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("testMethod", testMethod);
   ob.advertiseMethod("make_other_object", make_other_object);
   return ob.object();

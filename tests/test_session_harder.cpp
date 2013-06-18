@@ -41,7 +41,7 @@ static MyStruct reply2(const MyStruct &mystruct) {
 
 
 qi::ObjectPtr newObject() {
-  qi::GenericObjectBuilder ob;
+  qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("reply", &reply);
   ob.advertiseMethod("reply2", &reply2);
   return ob.object();

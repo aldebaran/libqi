@@ -164,7 +164,7 @@ qi::GenericValue pingCopy(qi::GenericValue arg, qi::GenericValue& target)
 TEST(TestCall, CallBufferInList)
 {
   TestSessionPair          p;
-  qi::GenericObjectBuilder ob;
+  qi::DynamicObjectBuilder ob;
   qi::GenericValue val;
   ob.advertiseMethod("pingcopy",
     boost::function<qi::GenericValue(qi::GenericValue)>(boost::bind(&pingCopy, _1, boost::ref(val))));
@@ -203,7 +203,7 @@ TEST(TestCall, CallComplexType)
 {
   std::list<std::pair<std::string, int> >  robots;
   TestSessionPair          p;
-  qi::GenericObjectBuilder ob;
+  qi::DynamicObjectBuilder ob;
   int serviceID;
 
   ob.advertiseMethod("print", &print);
@@ -228,7 +228,7 @@ TEST(TestCall, CallVoid)
 {
   std::list<std::pair<std::string, int> >  robots;
   TestSessionPair          p;
-  qi::GenericObjectBuilder ob;
+  qi::DynamicObjectBuilder ob;
   int serviceID;
 
   ob.advertiseMethod("foobar", &foobar);
@@ -250,7 +250,7 @@ TEST(TestCall, CallVoidErr)
 {
   std::list<std::pair<std::string, int> >  robots;
   TestSessionPair          p;
-  qi::GenericObjectBuilder ob;
+  qi::DynamicObjectBuilder ob;
   int serviceID;
 
   ob.advertiseMethod("fooerr", &fooerr);
@@ -270,7 +270,7 @@ TEST(TestCall, CallVoidErr)
 TEST(TestCall, TestDoubleToFloatConvertion)
 {
   TestSessionPair p;
-  qi::GenericObjectBuilder ob;
+  qi::DynamicObjectBuilder ob;
   int serviceID;
   double duration = 0.42;
 
@@ -289,7 +289,7 @@ TEST(TestCall, TestDoubleToFloatConvertion)
 TEST(TestCall, TestFloatToDoubleConvertion)
 {
   TestSessionPair p;
-  qi::GenericObjectBuilder ob;
+  qi::DynamicObjectBuilder ob;
   int serviceID;
   float duration = 0.42f;
 
@@ -306,7 +306,7 @@ TEST(TestCall, TestFloatToDoubleConvertion)
 }
 
 qi::ObjectPtr createObject() {
-  qi::GenericObjectBuilder ob;
+  qi::DynamicObjectBuilder ob;
 
   ob.advertiseMethod("fakesvec", &fakesvec);
   ob.advertiseMethod("fakegvec", &fakegvec);
@@ -516,7 +516,7 @@ TEST(TestEventLoop, MonitorEventLoop)
   bool loopStuck = false;
   qi::Future<void> f = qi::getDefaultObjectEventLoop()->monitorEventLoop(qi::getDefaultNetworkEventLoop(), 100000);
   f.connect(boost::bind(&set_true, &loopStuck));
-  qi::GenericObjectBuilder ob;
+  qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("delay", &qi::os::msleep);
   qi::ObjectPtr obj(ob.object());
   obj->forceEventLoop(qi::getDefaultObjectEventLoop());
@@ -555,7 +555,7 @@ void servicecall_addone(qi::Promise<int>& prom, qi::Session* s)
 TEST(TestCall, PairClientListen)
 {
   TestSessionPair p;
-  qi::GenericObjectBuilder ob;
+  qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("addOne", &addOne);
   qi::ObjectPtr obj(ob.object());
   p.client()->registerService("adder", obj);
@@ -571,12 +571,12 @@ TEST(TestCall, DeadLock)
   // One object calls another, both in singleThread mode
   TestSessionPair p;
 
-  qi::GenericObjectBuilder ob;
+  qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("addOne", &addOne);
   qi::ObjectPtr obj(ob.object());
   p.server()->registerService("adder", obj);
 
-  qi::GenericObjectBuilder ob2;
+  qi::DynamicObjectBuilder ob2;
   ob2.advertiseMethod("serviceCall",
     (boost::function<int(std::string, std::string, int)>)
     boost::bind(&service_call, p.client(), _1, _2, _3));
@@ -646,7 +646,7 @@ TEST(TestCall, TestObjectPassing)
   TestSessionPair p;
   qi::Promise<int> eventValue;
 
-  qi::GenericObjectBuilder ob;
+  qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("makeObjectCall", &makeObjectCall);
   ob.advertiseMethod("bindObjectEvent", boost::bind(&bindObjectEvent, _1, _2, eventValue));
   qi::ObjectPtr obj(ob.object());
@@ -655,7 +655,7 @@ TEST(TestCall, TestObjectPassing)
 
   qi::ObjectPtr unregisteredObj;
   {
-    qi::GenericObjectBuilder ob;
+    qi::DynamicObjectBuilder ob;
     ob.advertiseMethod("add", &addOne);
     ob.advertiseSignal<int>("fire");
     unregisteredObj = ob.object();
@@ -698,7 +698,7 @@ TEST(TestCall, TestObjectPassing)
 TEST(TestCall, TestObjectPassingReverse)
 { // Test server->client object passing (through emit)
   TestSessionPair p;
-  qi::GenericObjectBuilder ob;
+  qi::DynamicObjectBuilder ob;
   ob.advertiseSignal<qi::ObjectPtr, const std::string&, int>("makeObjectCallEvent");
 
   qi::ObjectPtr obj(ob.object());
@@ -708,7 +708,7 @@ TEST(TestCall, TestObjectPassingReverse)
 
   qi::ObjectPtr unregisteredObj;
   {
-    qi::GenericObjectBuilder ob;
+    qi::DynamicObjectBuilder ob;
     ob.advertiseMethod("add", &addOne);
     ob.advertiseSignal<int>("fire");
     unregisteredObj = ob.object();
@@ -738,7 +738,7 @@ TEST(TestCall, TestObjectPassingReverse)
 
 qi::ObjectPtr makeAdder(qi::ObjectWeakPtr& weak)
 {
-  qi::GenericObjectBuilder ob;
+  qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("add", &addOne);
   ob.advertiseSignal<int>("fire");
   qi::ObjectPtr res = ob.object();
@@ -750,7 +750,7 @@ qi::ObjectPtr makeAdder(qi::ObjectWeakPtr& weak)
 TEST(TestCall, TestObjectPassingReturn)
 {
   TestSessionPair p;
-  qi::GenericObjectBuilder ob;
+  qi::DynamicObjectBuilder ob;
   qi::ObjectWeakPtr weak;
   ob.advertiseMethod("makeAdder", boost::function<qi::ObjectPtr()>(boost::bind(&makeAdder, boost::ref(weak))));
   qi::ObjectPtr obj(ob.object());
@@ -800,7 +800,7 @@ QI_REGISTER_OBJECT(TestClass, ping);
 TEST(TestCall, TestConcreteObjectPassingReturn)
 {
   TestSessionPair p;
-  qi::GenericObjectBuilder ob;
+  qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("getTest", &TestClass::make);
   qi::ObjectPtr obj(ob.object());
   p.server()->registerService("getter", obj);
@@ -833,7 +833,7 @@ TEST(TestCall, Overflow)
 {
   using namespace qi;
   TestSessionPair p;
-  GenericObjectBuilder ob;
+  DynamicObjectBuilder ob;
   ob.advertiseMethod("pingChar", &pingChar);
   ob.advertiseMethod("pingUChar", &pingUChar);
   ob.advertiseMethod("pingInt", &pingInt);
@@ -870,7 +870,7 @@ TEST(TestCall, ForceOverload)
 {
   using namespace qi;
   TestSessionPair p;
-  GenericObjectBuilder ob;
+  DynamicObjectBuilder ob;
   ob.advertiseMethod("pingChar", &pingChar);
   ob.advertiseMethod("pingUChar", &pingUChar);
   ob.advertiseMethod("pingInt", &pingInt);
@@ -910,7 +910,7 @@ qi::Future<int> delaySet(unsigned long msDelay, int value)
 TEST(TestCall, Future)
 {
   TestSessionPair p;
-  qi::GenericObjectBuilder gob;
+  qi::DynamicObjectBuilder gob;
   gob.advertiseMethod("delaySet", &delaySet);
   qi::ObjectPtr sobj = gob.object();
   p.server()->registerService("delayer", sobj);
@@ -931,7 +931,7 @@ void arrrg(int v) {
 TEST(TestCall, BadArguments)
 {
   TestSessionPair p;
-  qi::GenericObjectBuilder gob;
+  qi::DynamicObjectBuilder gob;
   gob.advertiseMethod("arrrg", &arrrg);
   qi::ObjectPtr sobj = gob.object();
   p.server()->registerService("a", sobj);
@@ -946,7 +946,7 @@ TEST(TestCall, BadArguments)
 TEST(TestCall, Statistics)
 {
   TestSessionPair p;
-  qi::GenericObjectBuilder gob;
+  qi::DynamicObjectBuilder gob;
   int mid = gob.advertiseMethod("sleep", &qi::os::msleep);
   qi::ObjectPtr srv = gob.object();
   p.server()->registerService("sleep", srv);

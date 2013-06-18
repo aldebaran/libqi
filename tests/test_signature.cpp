@@ -27,7 +27,7 @@ int main(int argc, char* argv[])
   std::string finalSig;
   SigGenerator MyGenerator(2 , 4 , 5);
 
-  qi::GenericObjectBuilder ob;
+  qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("reply", &reply);
   qi::ObjectPtr obj(ob.object());
 

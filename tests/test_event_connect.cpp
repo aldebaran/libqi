@@ -25,7 +25,7 @@ void onFire2(const int& pl)
 
 void testDelete(bool afirst, bool disconnectFirst)
 {
-  qi::GenericObjectBuilder oba, obb;
+  qi::DynamicObjectBuilder oba, obb;
   qi::Link fireId = oba.advertiseSignal<int>("fire");
   qi::Link onFireId = obb.advertiseMethod("onFire", &onFire);
   qi::Link onFireId2 = obb.advertiseMethod("onFire2", &onFire2);

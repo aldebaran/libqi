@@ -110,13 +110,13 @@ qi_future_t *qi_object_call(qi_object_t *object, const char *signature_c, qi_val
 
 qi_object_builder_t *qi_object_builder_create()
 {
-  qi::GenericObjectBuilder *ob = new qi::GenericObjectBuilder();
+  qi::DynamicObjectBuilder *ob = new qi::DynamicObjectBuilder();
   return (qi_object_builder_t *) ob;
 }
 
 void        qi_object_builder_destroy(qi_object_builder_t *object_builder)
 {
-  qi::GenericObjectBuilder *ob = reinterpret_cast<qi::GenericObjectBuilder *>(object_builder);
+  qi::DynamicObjectBuilder *ob = reinterpret_cast<qi::DynamicObjectBuilder *>(object_builder);
   delete ob;
 }
 
@@ -155,7 +155,7 @@ qi_future_t*        qi_object_event_disconnect(qi_object_t* object, unsigned lon
 
 int          qi_object_builder_register_method(qi_object_builder_t *object_builder, const char *complete_signature, qi_object_method_t func, void *data)
 {
-  qi::GenericObjectBuilder  *ob = reinterpret_cast<qi::GenericObjectBuilder *>(object_builder);
+  qi::DynamicObjectBuilder  *ob = reinterpret_cast<qi::DynamicObjectBuilder *>(object_builder);
   std::string signature(complete_signature);
   std::vector<std::string>  sigInfo;
 
@@ -168,7 +168,7 @@ int          qi_object_builder_register_method(qi_object_builder_t *object_build
 
 int          qi_object_builder_register_event(qi_object_builder_t *object_builder, const char *complete_signature)
 {
-  qi::GenericObjectBuilder  *ob = reinterpret_cast<qi::GenericObjectBuilder *>(object_builder);
+  qi::DynamicObjectBuilder  *ob = reinterpret_cast<qi::DynamicObjectBuilder *>(object_builder);
   std::vector<std::string>  sigInfo;
   sigInfo = qi::signatureSplit(complete_signature);
   return ob->xAdvertiseSignal(sigInfo[1], sigInfo[2]);
@@ -176,14 +176,14 @@ int          qi_object_builder_register_event(qi_object_builder_t *object_builde
 
 int          qi_object_builder_register_property(qi_object_builder_t *object_builder, const char *complete_signature)
 {
-  qi::GenericObjectBuilder  *ob = reinterpret_cast<qi::GenericObjectBuilder *>(object_builder);
+  qi::DynamicObjectBuilder  *ob = reinterpret_cast<qi::DynamicObjectBuilder *>(object_builder);
   std::vector<std::string>  sigInfo;
   sigInfo = qi::signatureSplit(complete_signature);
   return ob->xAdvertiseProperty(sigInfo[1], sigInfo[2]);
 }
 
 qi_object_t*         qi_object_builder_get_object(qi_object_builder_t *object_builder) {
-  qi::GenericObjectBuilder *ob = reinterpret_cast<qi::GenericObjectBuilder *>(object_builder);
+  qi::DynamicObjectBuilder *ob = reinterpret_cast<qi::DynamicObjectBuilder *>(object_builder);
   qi_object_t *obj = qi_object_create();
   qi::ObjectPtr &o = *(reinterpret_cast<qi::ObjectPtr *>(obj));
 

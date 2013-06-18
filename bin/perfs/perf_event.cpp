@@ -35,7 +35,7 @@ public:
 
 void advertise_event(int iteration) //test  event advertising.
 {
-  qi::GenericObjectBuilder myObjectPointerBuilder;
+  qi::DynamicObjectBuilder myObjectPointerBuilder;
   std::stringstream eventName;
   eventName << "testEvent";
 
@@ -51,14 +51,14 @@ void advertise_method(int iteration)// test method advertising.
 {
   for (int i = 1; i < iteration; i++)
   {
-    qi::GenericObjectBuilder myObjectPointerBuilder;
+    qi::DynamicObjectBuilder myObjectPointerBuilder;
     myObjectPointerBuilder.advertiseMethod("callback", &callback);
   }
 }
 
 void connect_event(int iteration)//test event connection perf.
 {
-  qi::GenericObjectBuilder myObjectPointerBuilder;
+  qi::DynamicObjectBuilder myObjectPointerBuilder;
   qi::Link eventId = myObjectPointerBuilder.advertiseSignal<int>("testEvent");
   qi::Link callbackID = myObjectPointerBuilder.advertiseMethod("callback", &callback);
   qi::ObjectPtr myObjectPointer = myObjectPointerBuilder.object();
@@ -99,7 +99,7 @@ void emit_event(int iteration, const T &param)//test int emit-event perf.
 {
   TestSessionPair  p;
 
-  qi::GenericObjectBuilder myObjectPointerBuilder;
+  qi::DynamicObjectBuilder myObjectPointerBuilder;
   myObjectPointerBuilder.advertiseSignal<T>("testEvent");
   qi::ObjectPtr myObjectPointer = myObjectPointerBuilder.object();
 

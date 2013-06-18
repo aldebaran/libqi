@@ -30,7 +30,7 @@ class TestObject: public ::testing::Test
 public:
   TestObject()
   {
-    qi::GenericObjectBuilder ob;
+    qi::DynamicObjectBuilder ob;
     ob.advertiseSignal<const int&>("fire");
     oserver = ob.object();
   }
@@ -126,7 +126,7 @@ void cb(int a, int b)
 
 TEST(TestSignal, TwoLongPost)
 {
-  qi::GenericObjectBuilder gob;
+  qi::DynamicObjectBuilder gob;
   qi::Signal<int, int> sig;
   gob.advertiseSignal("sig1", &sig);
   qi::ObjectPtr op = gob.object();

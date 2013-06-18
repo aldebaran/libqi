@@ -19,7 +19,7 @@ std::string __test_ping()
 
 qi::ObjectPtr DefaultService::getDefaultService()
 {
-  qi::GenericObjectBuilder ob;
+  qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("ping", &__test_ping);
   return qi::ObjectPtr(ob.object());
 }

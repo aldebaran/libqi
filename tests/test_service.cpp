@@ -62,7 +62,7 @@ TEST(QiService, RemoteObjectCacheServerClose)
   TestSessionPair p;
   if (p.server() == p.client()) // we close and not unregister, so does not work in direct mode
     return;
-  qi::GenericObjectBuilder ob;
+  qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("reply", &reply);
   qi::ObjectPtr obj(ob.object());
 
@@ -83,7 +83,7 @@ TEST(QiService, RemoteObjectCacheUnregister)
 {
   TestSessionPair p;
 
-  qi::GenericObjectBuilder ob;
+  qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("reply", &reply);
   qi::ObjectPtr obj(ob.object());
 
@@ -105,7 +105,7 @@ TEST(QiService, RemoteObjectCacheABAUnregister)
 {
   TestSessionPair p;
 
-  qi::GenericObjectBuilder ob;
+  qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("reply", &reply);
   qi::ObjectPtr obj(ob.object());
 
@@ -142,7 +142,7 @@ TEST(QiService, RemoteObjectCacheABANewServer)
   qi::Session     ses;
   if (p.server() == p.client()) // we close and not unregister, so does not work in direct mode
     return;
-  qi::GenericObjectBuilder ob;
+  qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("reply", &reply);
   qi::ObjectPtr obj(ob.object());
 
@@ -182,7 +182,7 @@ TEST(QiService, RemoteObjectNackTransactionWhenServerClosed)
   TestSessionPair p;
   if (p.server() == p.client()) // we close and not unregister, so does not work in direct mode
     return;
-  qi::GenericObjectBuilder ob;
+  qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("msleep", &qi::os::msleep);
   qi::ObjectPtr obj(ob.object());
 
@@ -267,7 +267,7 @@ TEST(QiService, GenericProperty)
 {
   TestSessionPair p;
   qi::DynamicObject* dobj = new qi::DynamicObject();
-  qi::GenericObjectBuilder builder(dobj);
+  qi::DynamicObjectBuilder builder(dobj);
   unsigned int propId = builder.advertiseProperty<int>("offset");
   qi::PropertyBase* prop;
   builder.advertiseMethod("ping",

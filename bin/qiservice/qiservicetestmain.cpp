@@ -153,7 +153,7 @@ int main(int argc, char *argv[])
     {
       std::string masterAddress = vm["master-address"].as<std::string>();
       qi::Session       session;
-      qi::GenericObjectBuilder ob;
+      qi::DynamicObjectBuilder ob;
       ob.advertiseMethod<std::string (const std::string&)>("reply", &reply);
       ob.advertiseMethod<void ()>("error", &error);
       ob.advertiseMethod<std::string (const int&)>("reply", &reply);

@@ -213,7 +213,7 @@ int main_server()
   std::cout << "Service Directory ready." << std::endl;
 
   qi::Session session;
-  qi::GenericObjectBuilder ob;
+  qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("reply", &reply);
   qi::ObjectPtr  obj(ob.object());
   ServerEvent srv;

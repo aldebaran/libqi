@@ -37,7 +37,7 @@ TEST(Test, Recurse)
 {
   TestSessionPair       p1;
   TestSessionPair       p2(p1);
-  qi::GenericObjectBuilder     ob1, ob2;
+  qi::DynamicObjectBuilder     ob1, ob2;
   ob1.advertiseMethod("onFire1", &onFire1);
   ob2.advertiseMethod("onFire2", &onFire2);
   qi::ObjectPtr    oserver1(ob1.object()), oserver2(ob2.object());

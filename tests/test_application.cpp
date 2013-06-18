@@ -19,7 +19,7 @@ TEST(Test, TestApplicationDestruction)
 {
   qi::ServiceDirectory     sd;
   qi::Session              server, client;
-  qi::GenericObjectBuilder ob1;
+  qi::DynamicObjectBuilder ob1;
   qi::ObjectPtr            oclient1;
 
   {

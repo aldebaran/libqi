@@ -99,7 +99,7 @@ TEST(TestTestSession, TestTestSessionOnly)
   TestSession          server(sd.endpoints()[0].str(), true, TestMode::getTestMode());
 
   // #3 Build a dumb service
-  qi::GenericObjectBuilder ob;
+  qi::DynamicObjectBuilder ob;
   ob.advertiseMethod<int (int)>("++", &incr);
 
   // #3.1 Get instance of object.
@@ -134,7 +134,7 @@ TEST(TestTestSession, TestTestSessionPair)
   ASSERT_EQ(pDirect.client(), pDirect.server());
 
   // #1 Build a dumb service
-  qi::GenericObjectBuilder ob;
+  qi::DynamicObjectBuilder ob;
   ob.advertiseMethod<int (int)>("++", &incr);
 
   // #1.1 Get instance of object
@@ -165,7 +165,7 @@ TEST(TestTestSession, TestSameObject)
   int i = 0;
 
   // #1 Build a dumb service
-  qi::GenericObjectBuilder ob;
+  qi::DynamicObjectBuilder ob;
   ob.advertiseMethod<int (int)>("++", &incr);
 
   // #1.1 Get instance of object
@@ -193,7 +193,7 @@ TEST(TestTestSession, TestThroughSD)
   int i = 0;
 
   // #1 Build a dumb service
-  qi::GenericObjectBuilder ob;
+  qi::DynamicObjectBuilder ob;
   ob.advertiseMethod<int (int)>("++", &incr);
 
   // #1.1 Get instance of object
