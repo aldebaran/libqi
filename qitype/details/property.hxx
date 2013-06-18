@@ -13,7 +13,7 @@ namespace qi
 
   inline void GenericProperty::set(const GenericValue& v)
   {
-    std::pair<GenericValuePtr, bool> conv = v.convert(_type);
+    std::pair<AnyReference, bool> conv = v.convert(_type);
     if (!conv.first.type)
       throw std::runtime_error(std::string("Failed converting ") + v.type->infoString() + " to " + _type->infoString());
 

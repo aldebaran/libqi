@@ -7,7 +7,7 @@
 #ifndef _QITYPE_GENERICVALUE_HPP_
 #define _QITYPE_GENERICVALUE_HPP_
 
-//GenericValuePtr is included in type.hpp (for obscur header include order).
+//AnyReference is included in type.hpp (for obscur header include order).
 #include <qitype/type.hpp>
 
 #endif  // _QITYPE_GENERICVALUE_HPP_

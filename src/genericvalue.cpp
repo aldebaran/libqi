@@ -35,20 +35,20 @@ namespace qi
   }
 
 
-  std::pair<GenericValuePtr, bool> GenericValuePtr::convert(DynamicTypeInterface* targetType) const
+  std::pair<AnyReference, bool> AnyReference::convert(DynamicTypeInterface* targetType) const
   {
-    GenericValuePtr result;
+    AnyReference result;
 
     result.type = targetType;
     result.value = targetType->initializeStorage();
     static_cast<DynamicTypeInterface*>(targetType)->set(&result.value, *this);
     return std::make_pair(result, true);
-    return std::make_pair(GenericValuePtr(), false);
+    return std::make_pair(AnyReference(), false);
   }
 
-  std::pair<GenericValuePtr, bool> GenericValuePtr::convert(PointerTypeInterface* targetType) const
+  std::pair<AnyReference, bool> AnyReference::convert(PointerTypeInterface* targetType) const
   {
-    GenericValuePtr result;
+    AnyReference result;
 
     switch (type->kind())
     {
@@ -65,37 +65,37 @@ namespace qi
         else
         {
           qiLogDebug() << "Conversion between non-object pointers not supported";
-          return std::make_pair(GenericValuePtr(), false);
+          return std::make_pair(AnyReference(), false);
         }
       }
-      GenericValuePtr pointedSrc = static_cast<PointerTypeInterface*>(type)->dereference(value);
+      AnyReference pointedSrc = static_cast<PointerTypeInterface*>(type)->dereference(value);
       // try object conversion (inheritance)
-      std::pair<GenericValuePtr, bool> pointedDstPair = pointedSrc.convert(dstPointedType);
+      std::pair<AnyReference, bool> pointedDstPair = pointedSrc.convert(dstPointedType);
       if (!pointedDstPair.first.type)
       {
         qiLogDebug() << "Attempting object->proxy conversion";
         // try object->proxy conversion by simply rewrapping this
         ObjectPtr o(new GenericObject(static_cast<ObjectTypeInterface*>(pointedSrc.type), pointedSrc.value));
-        return GenericValueRef(o).convert((TypeInterface*)targetType);
+        return AnyReference(o).convert((TypeInterface*)targetType);
       }
       if (pointedDstPair.second)
         qiLogError() << "assertion error, allocated converted reference";
       // We must re-reference
-      GenericValuePtr pointedDst = pointedDstPair.first;
+      AnyReference pointedDst = pointedDstPair.first;
       void* ptr = pointedDst.type->ptrFromStorage(&pointedDst.value);
-      result = GenericValuePtr((TypeInterface*)targetType);
+      result = AnyReference((TypeInterface*)targetType);
       targetType->setPointee(&result.value, ptr);
       return std::make_pair(result, false);
     }
     case TypeInterface::Object:
     {
-      std::pair<GenericValuePtr, bool> gv = convert(
+      std::pair<AnyReference, bool> gv = convert(
                                               static_cast<PointerTypeInterface*>(targetType)->pointedType());
       if (!gv.first.type)
         return gv;
       // Re-pointerise it
       void* ptr = gv.first.type->ptrFromStorage(&gv.first.value);
-      GenericValuePtr result;
+      AnyReference result;
       result.type = targetType;
       result.value = targetType->initializeStorage(&ptr);
       return std::make_pair(result, false);
@@ -103,12 +103,12 @@ namespace qi
     default:
       break;
     }
-    return std::make_pair(GenericValuePtr(), false);
+    return std::make_pair(AnyReference(), false);
   }
 
-  std::pair<GenericValuePtr, bool> GenericValuePtr::convert(ListTypeInterface* targetType) const
+  std::pair<AnyReference, bool> AnyReference::convert(ListTypeInterface* targetType) const
   {
-    GenericValuePtr result;
+    AnyReference result;
 
     switch (type->kind())
     {
@@ -120,23 +120,23 @@ namespace qi
       TypeInterface* srcElemType = sourceListType->elementType();
       TypeInterface* dstElemType = targetListType->elementType();
       bool needConvert = (srcElemType->info() != dstElemType->info());
-      result = GenericValuePtr((TypeInterface*)targetListType);
+      result = AnyReference((TypeInterface*)targetListType);
 
       GenericIterator iend = end();
       for (GenericIterator it = begin(); it!= iend; ++it)
       {
-        GenericValuePtr val = *it;
+        AnyReference val = *it;
         if (!needConvert)
           result._append(val);
         else
         {
-          std::pair<GenericValuePtr,bool> c = val.convert(dstElemType);
+          std::pair<AnyReference,bool> c = val.convert(dstElemType);
           if (!c.first.type)
           {
             qiLogDebug() << "List element conversion failure from "
                          << val.type->infoString() << " to " << dstElemType->infoString();
             result.destroy();
-            return std::make_pair(GenericValuePtr(), false);
+            return std::make_pair(AnyReference(), false);
           }
           result._append(c.first);
           if (c.second)
@@ -148,12 +148,12 @@ namespace qi
     default:
       break;
     }
-    return std::make_pair(GenericValuePtr(), false);
+    return std::make_pair(AnyReference(), false);
   }
 
-  std::pair<GenericValuePtr, bool> GenericValuePtr::convert(StringTypeInterface* targetType) const
+  std::pair<AnyReference, bool> AnyReference::convert(StringTypeInterface* targetType) const
   {
-    GenericValuePtr result;
+    AnyReference result;
 
     switch (type->kind())
     {
@@ -171,17 +171,17 @@ namespace qi
     case TypeInterface::Raw:
     {
       qiLogWarning() << "Conversion attempt from raw to string";
-      return std::make_pair(GenericValuePtr(), false);
+      return std::make_pair(AnyReference(), false);
     }
     default:
       break;
     }
-    return std::make_pair(GenericValuePtr(), false);
+    return std::make_pair(AnyReference(), false);
   }
 
-  std::pair<GenericValuePtr, bool> GenericValuePtr::convert(RawTypeInterface* targetType) const
+  std::pair<AnyReference, bool> AnyReference::convert(RawTypeInterface* targetType) const
   {
-    GenericValuePtr result;
+    AnyReference result;
 
     switch (type->kind())
     {
@@ -206,12 +206,12 @@ namespace qi
     default:
       break;
     }
-    return std::make_pair(GenericValuePtr(), false);
+    return std::make_pair(AnyReference(), false);
   }
 
-  std::pair<GenericValuePtr, bool> GenericValuePtr::convert(FloatTypeInterface* targetType) const
+  std::pair<AnyReference, bool> AnyReference::convert(FloatTypeInterface* targetType) const
   {
-    GenericValuePtr result;
+    AnyReference result;
 
     switch (type->kind())
     {
@@ -225,7 +225,7 @@ namespace qi
     }
     case TypeInterface::Int:
     {
-      GenericValuePtr result(static_cast<TypeInterface*>(targetType));
+      AnyReference result(static_cast<TypeInterface*>(targetType));
       int64_t v = static_cast<IntTypeInterface*>(type)->get(value);
       if (static_cast<IntTypeInterface*>(type)->isSigned())
         result.setInt(v);
@@ -236,12 +236,12 @@ namespace qi
     default:
       break;
     }
-    return std::make_pair(GenericValuePtr(), false);
+    return std::make_pair(AnyReference(), false);
   }
 
-  std::pair<GenericValuePtr, bool> GenericValuePtr::convert(IntTypeInterface* targetType) const
+  std::pair<AnyReference, bool> AnyReference::convert(IntTypeInterface* targetType) const
   {
-    GenericValuePtr result;
+    AnyReference result;
 
     switch (type->kind())
     {
@@ -252,7 +252,7 @@ namespace qi
       int64_t v = tsrc->get(value);
       /* Bounce to GVP to perform overflow checks
       */
-      GenericValuePtr result((TypeInterface*)tdst);
+      AnyReference result((TypeInterface*)tdst);
       if (tsrc->isSigned())
         result.setInt(v);
       else
@@ -264,7 +264,7 @@ namespace qi
     {
       double v = static_cast<FloatTypeInterface*>(type)->get(value);
       IntTypeInterface* tdst = static_cast<IntTypeInterface*>(targetType);
-      GenericValuePtr result((TypeInterface*)tdst);
+      AnyReference result((TypeInterface*)tdst);
       // bounce to setDouble for overflow check
       result.setDouble(v);
       return std::make_pair(result, true);
@@ -272,12 +272,12 @@ namespace qi
     default:
       break;
     }
-    return std::make_pair(GenericValuePtr(), false);
+    return std::make_pair(AnyReference(), false);
   }
 
-  std::pair<GenericValuePtr, bool> GenericValuePtr::convert(StructTypeInterface* targetType) const
+  std::pair<AnyReference, bool> AnyReference::convert(StructTypeInterface* targetType) const
   {
-    GenericValuePtr result;
+    AnyReference result;
     StructTypeInterface* tdst = targetType;
 
     switch (type->kind())
@@ -291,19 +291,19 @@ namespace qi
       if (dstTypes.size() != sourceData.size())
       {
         qiLogWarning() << "Conversion failure: tuple size mismatch between " << tsrc->signature().toString() << " and " << tdst->signature().toString();
-        return std::make_pair(GenericValuePtr(), false);
+        return std::make_pair(AnyReference(), false);
       }
 
       std::vector<void*> targetData;
       std::vector<bool> mustDestroy;
       for (unsigned i=0; i<dstTypes.size(); ++i)
       {
-        std::pair<GenericValuePtr, bool> conv = GenericValuePtr(srcTypes[i], sourceData[i]).convert(dstTypes[i]);
+        std::pair<AnyReference, bool> conv = AnyReference(srcTypes[i], sourceData[i]).convert(dstTypes[i]);
         if (!conv.first.type)
         {
           qiLogWarning() << "Conversion failure in tuple member between "
                          << srcTypes[i]->infoString() << " and " << dstTypes[i]->infoString();
-          return std::make_pair(GenericValuePtr(), false);
+          return std::make_pair(AnyReference(), false);
         }
         targetData.push_back(conv.first.value);
         mustDestroy.push_back(conv.second);
@@ -339,19 +339,19 @@ namespace qi
       {
         qiLogWarning() << "Conversion failure: containers size mismatch between "
                        << tsrc->signature().toString() << " and " << tdst->signature().toString();
-        return std::make_pair(GenericValuePtr(), false);
+        return std::make_pair(AnyReference(), false);
       }
 
       unsigned int i = 0;
       while (srcBegin != srcEnd)
       {
-        std::pair<GenericValuePtr, bool> conv = (*srcBegin).convert(dstTypes[i]);
+        std::pair<AnyReference, bool> conv = (*srcBegin).convert(dstTypes[i]);
         if (!conv.first.type)
         {
           for (unsigned u = 0; u < targetData.size(); ++u)
             if (mustDestroy[u])
               dstTypes[u]->destroy(targetData[u]);
-          return std::make_pair(GenericValuePtr(), false);
+          return std::make_pair(AnyReference(), false);
         }
         targetData.push_back(conv.first.value);
         mustDestroy.push_back(conv.second);
@@ -372,18 +372,18 @@ namespace qi
     default:
       break;
     }
-    return std::make_pair(GenericValuePtr(), false);
+    return std::make_pair(AnyReference(), false);
   }
 
-  std::pair<GenericValuePtr, bool> GenericValuePtr::convert(MapTypeInterface* targetType) const
+  std::pair<AnyReference, bool> AnyReference::convert(MapTypeInterface* targetType) const
   {
-    GenericValuePtr result;
+    AnyReference result;
 
     switch (type->kind())
     {
     case TypeInterface::Map:
     {
-      result = GenericValuePtr(static_cast<TypeInterface*>(targetType));
+      result = AnyReference(static_cast<TypeInterface*>(targetType));
 
       MapTypeInterface* targetMapType = static_cast<MapTypeInterface*>(targetType);
       MapTypeInterface* srcMapType = static_cast<MapTypeInterface*>(type);
@@ -400,19 +400,19 @@ namespace qi
       GenericIterator iend = end();
       for (GenericIterator it = begin(); it != iend; ++it)
       {
-        std::pair<GenericValuePtr, bool> ck, cv;
-        GenericValuePtr kv = *it;
+        std::pair<AnyReference, bool> ck, cv;
+        AnyReference kv = *it;
         if (!sameKey)
         {
           ck = kv[0].convert(targetKeyType);
           if (!ck.first.type)
-            return std::make_pair(GenericValuePtr(), false);
+            return std::make_pair(AnyReference(), false);
         }
         if (!sameElem)
         {
           cv = kv[1].convert(targetElementType);
           if (!cv.first.type)
-            return std::make_pair(GenericValuePtr(), false);
+            return std::make_pair(AnyReference(), false);
         }
         result._insert(sameKey?kv[0]:ck.first, sameElem?kv[1]:cv.first);
         if (!sameKey && ck.second)
@@ -426,7 +426,7 @@ namespace qi
     {
       // Accept [(kv)] and convert to {kv}
       // Also accept [[m]] , [[k]] if k=v and size match, and other compatible stuffs
-      result = GenericValuePtr(static_cast<TypeInterface*>(targetType));
+      result = AnyReference(static_cast<TypeInterface*>(targetType));
       ListTypeInterface* tsrc = static_cast<ListTypeInterface*>(type);
 
       GenericIterator srcBegin = tsrc->begin(value);
@@ -436,11 +436,11 @@ namespace qi
 
       while (srcBegin != srcEnd)
       {
-        std::pair<GenericValuePtr, bool> conv = (*srcBegin).convert(pairType);
+        std::pair<AnyReference, bool> conv = (*srcBegin).convert(pairType);
         if (!conv.first.type)
         {
           result.destroy();
-          return std::make_pair(GenericValuePtr(), false);
+          return std::make_pair(AnyReference(), false);
         }
         result._insert(conv.first[0], conv.first[1]);
         if (conv.second)
@@ -452,10 +452,10 @@ namespace qi
     default:
       break;
     }
-    return std::make_pair(GenericValuePtr(), false);
+    return std::make_pair(AnyReference(), false);
   }
 
-  std::pair<GenericValuePtr, bool> GenericValuePtr::convert(TypeInterface* targetType) const
+  std::pair<AnyReference, bool> AnyReference::convert(TypeInterface* targetType) const
   {
     // qiLogDebug() << "convert " << type->infoString() << ' ' << targetType->infoString();
     /* Can have false-negative (same effective type, different Type instances
@@ -467,10 +467,10 @@ namespace qi
 
     if (!targetType || !type) {
       qiLogWarning() << "Conversion error: can't convert to/from a null type.";
-      return std::make_pair(GenericValuePtr(), false);
+      return std::make_pair(AnyReference(), false);
     }
 
-    GenericValuePtr result;
+    AnyReference result;
     TypeInterface::Kind skind = type->kind();
     TypeInterface::Kind dkind = targetType->kind();
 
@@ -509,7 +509,7 @@ namespace qi
             )
           return std::make_pair(*this, false);
         else
-          return std::make_pair(GenericValuePtr(), false);
+          return std::make_pair(AnyReference(), false);
       }
       default:
         break;
@@ -540,7 +540,7 @@ namespace qi
               static_cast<ObjectTypeInterface*>(pT->pointedType()),
               pT->dereference(value).value),
             boost::bind(dropIt, GenericValue(*this)));
-      return std::make_pair(GenericValueRef(o).clone(), true);
+      return std::make_pair(AnyReference(o).clone(), true);
     }
 
     if (type->info() == typeOf<ObjectPtr>()->info()
@@ -552,7 +552,7 @@ namespace qi
                                                  static_cast<PointerTypeInterface*>(targetType)->pointedType()->info());
       if (it != map.end())
       {
-        GenericValuePtr res = (it->second)(*(ObjectPtr*)value);
+        AnyReference res = (it->second)(*(ObjectPtr*)value);
         return std::make_pair(res, true);
       }
       else
@@ -566,8 +566,8 @@ namespace qi
 
     if (type->kind() == TypeInterface::Dynamic)
     {
-      GenericValuePtr gv = asDynamic();
-      std::pair<GenericValuePtr, bool> result = gv.convert(targetType);
+      AnyReference gv = asDynamic();
+      std::pair<AnyReference, bool> result = gv.convert(targetType);
       return result;
     }
 
@@ -593,19 +593,19 @@ namespace qi
     if (type->info() == targetType->info())
       return std::make_pair(*this, false);
 
-    return std::make_pair(GenericValuePtr(), false);
+    return std::make_pair(AnyReference(), false);
   }
 
-  GenericValuePtr GenericValuePtr::convertCopy(TypeInterface* targetType) const
+  AnyReference AnyReference::convertCopy(TypeInterface* targetType) const
   {
-    std::pair<GenericValuePtr, bool> res = convert(targetType);
+    std::pair<AnyReference, bool> res = convert(targetType);
     if (res.second)
       return res.first;
     else
       return res.first.clone();
   }
 
-  bool operator< (const GenericValuePtr& a, const GenericValuePtr& b)
+  bool operator< (const AnyReference& a, const AnyReference& b)
   {
     //qiLogDebug() << "Compare " << a.type << ' ' << b.type;
 #define GET(v, t) static_cast< t ## TypeInterface *>(v.type)->get(v.value)
@@ -667,8 +667,8 @@ namespace qi
       while (ita != enda)
       {
         assert (! (itb == endb));
-        GenericValuePtr ea = *ita;
-        GenericValuePtr eb = *itb;
+        AnyReference ea = *ita;
+        AnyReference eb = *itb;
         if (ea < eb)
           return true;
         else if (eb < ea)
@@ -692,10 +692,10 @@ namespace qi
   }
   bool operator< (const GenericValue& a, const GenericValue& b)
   {
-    return (const GenericValuePtr&)a < (const GenericValuePtr&)b;
+    return (const AnyReference&)a < (const AnyReference&)b;
   }
 
-  bool operator==(const GenericValuePtr& a, const GenericValuePtr& b)
+  bool operator==(const AnyReference& a, const AnyReference& b)
   {
     if (a.kind() == TypeInterface::Iterator && b.kind() == TypeInterface::Iterator
         && a.type->info() == b.type->info())
@@ -708,15 +708,15 @@ namespace qi
 
   bool operator==(const GenericValue& a, const GenericValue& b)
   {
-    return (const GenericValuePtr&)a == (const GenericValuePtr&)b;
+    return (const AnyReference&)a == (const AnyReference&)b;
   }
 
   bool operator==(const GenericIterator& a, const GenericIterator& b)
   {
-    return (const GenericValuePtr&)a == (const GenericValuePtr&)b;
+    return (const AnyReference&)a == (const AnyReference&)b;
   }
 
-  GenericValue GenericValuePtr::toTuple(bool homogeneous) const
+  GenericValue AnyReference::toTuple(bool homogeneous) const
   {
     if (kind() == TypeInterface::Tuple)
       return GenericValue(*this);
@@ -731,12 +731,12 @@ namespace qi
       td = static_cast<DynamicTypeInterface*>(te);
     if (!homogeneous && !td)
       throw std::runtime_error("Element type is not dynamic");
-    std::vector<GenericValuePtr> elems;
+    std::vector<AnyReference> elems;
     GenericIterator it = begin();
     GenericIterator iend = end();
     while (it != iend)
     {
-      GenericValuePtr e = *it;
+      AnyReference e = *it;
       if (homogeneous)
         elems.push_back(e);
       else
@@ -748,12 +748,12 @@ namespace qi
     return GenericValue(makeGenericTuple(elems), false, true);
   }
 
-  ObjectPtr GenericValuePtr::toObject() const
+  ObjectPtr AnyReference::toObject() const
   {
     return to<ObjectPtr>();
   }
 
-  GenericValuePtr GenericValuePtr::_element(const GenericValuePtr& key, bool throwOnFailure)
+  AnyReference AnyReference::_element(const AnyReference& key, bool throwOnFailure)
   {
     if (kind() == TypeInterface::List)
     {
@@ -764,19 +764,19 @@ namespace qi
         if (throwOnFailure)
           throw std::runtime_error("Index out of range");
         else
-          return GenericValuePtr();
+          return AnyReference();
       }
-      return GenericValuePtr(t->elementType(), t->element(value, ikey));
+      return AnyReference(t->elementType(), t->element(value, ikey));
     }
     else if (kind() == TypeInterface::Map)
     {
       MapTypeInterface* t = static_cast<MapTypeInterface*>(type);
-      std::pair<GenericValuePtr, bool> c = key.convert(t->keyType());
+      std::pair<AnyReference, bool> c = key.convert(t->keyType());
       if (!c.first.type)
         throw std::runtime_error("Incompatible key type");
       // HACK: should be two separate booleans
       bool autoInsert = throwOnFailure;
-      GenericValuePtr result
+      AnyReference result
           = t->element(&value, c.first.value, autoInsert);
       if (c.second)
         c.first.destroy();
@@ -792,31 +792,31 @@ namespace qi
         if (throwOnFailure)
           throw std::runtime_error("Index out of range");
         else
-          return GenericValuePtr();
+          return AnyReference();
       }
-      return GenericValuePtr(types[ikey], t->get(value, ikey));
+      return AnyReference(types[ikey], t->get(value, ikey));
     }
     else
       throw std::runtime_error("Expected List, Map or Tuple kind");
   }
 
-  void GenericValuePtr::_append(const GenericValuePtr& elem)
+  void AnyReference::_append(const AnyReference& elem)
   {
     if (kind() != TypeInterface::List)
       throw std::runtime_error("Expected a list");
     ListTypeInterface* t = static_cast<ListTypeInterface*>(type);
-    std::pair<GenericValuePtr, bool> c = elem.convert(t->elementType());
+    std::pair<AnyReference, bool> c = elem.convert(t->elementType());
     t->pushBack(&value, c.first.value);
     if (c.second)
       c.first.destroy();
   }
 
-  void GenericValuePtr::_insert(const GenericValuePtr& key, const GenericValuePtr& val)
+  void AnyReference::_insert(const AnyReference& key, const AnyReference& val)
   {
     if (kind() != TypeInterface::Map)
       throw std::runtime_error("Expected a map");
-    std::pair<GenericValuePtr, bool> ck(key, false);
-    std::pair<GenericValuePtr, bool> cv(val, false);
+    std::pair<AnyReference, bool> ck(key, false);
+    std::pair<AnyReference, bool> cv(val, false);
     MapTypeInterface* t = static_cast<MapTypeInterface*>(type);
     if (key.type != t->keyType())
       ck = key.convert(t->keyType());
@@ -829,7 +829,7 @@ namespace qi
       cv.first.destroy();
   }
 
-  void GenericValuePtr::update(const GenericValuePtr& val)
+  void AnyReference::update(const AnyReference& val)
   {
     switch(kind())
     {
@@ -850,7 +850,7 @@ namespace qi
     }
   }
 
-  void GenericValuePtr::setInt(int64_t v)
+  void AnyReference::setInt(int64_t v)
   {
     if (kind() == TypeInterface::Int)
     {
@@ -873,14 +873,14 @@ namespace qi
       throw std::runtime_error("Value is not Int or Float");
   }
 
-  void GenericValuePtr::setDynamic(const qi::GenericValuePtr &element) {
+  void AnyReference::setDynamic(const qi::AnyReference &element) {
     if (kind() != TypeInterface::Dynamic)
       throw std::runtime_error("Value is not a Dynamic");
     DynamicTypeInterface* t = static_cast<DynamicTypeInterface*>(this->type);
     t->set(&value, element);
   }
 
-  void GenericValuePtr::setUInt(uint64_t v)
+  void AnyReference::setUInt(uint64_t v)
   {
     if (kind() == TypeInterface::Int)
     {
@@ -900,7 +900,7 @@ namespace qi
       throw std::runtime_error("Value is not Int or Float");
   }
 
-  void GenericValuePtr::setDouble(double v)
+  void AnyReference::setDouble(double v)
   {
     if (kind() == TypeInterface::Float)
       static_cast<FloatTypeInterface*>(type)->set(&value, v);

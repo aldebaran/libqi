@@ -54,12 +54,12 @@ namespace qi {
   template<> class TypeImpl<boost::any>: public DynamicTypeInterface
   {
   public:
-    GenericValuePtr get(void* storage)
+    AnyReference get(void* storage)
     {
       qiLogVerbose("qitype.impl") << "get on boost::any not implemented";
-      return GenericValuePtr();
+      return AnyReference();
     };
-    void set(void** storage, GenericValuePtr source)
+    void set(void** storage, AnyReference source)
     {
       qiLogVerbose("qitype.impl") << "set on boost::any not implemented";
     }

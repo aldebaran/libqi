@@ -24,12 +24,12 @@ StaticObjectTypeBase::metaObject(void* )
 }
 
 
-qi::Future<GenericValuePtr>
+qi::Future<AnyReference>
 StaticObjectTypeBase::metaCall(void* instance, Manageable* context, unsigned int methodId,
                                const GenericFunctionParameters& params,
                                MetaCallType callType)
 {
-  qi::Promise<GenericValuePtr> out;
+  qi::Promise<AnyReference> out;
   ObjectTypeData::MethodMap::iterator i;
   i = _data.methodMap.find(methodId);
   if (i == _data.methodMap.end())
@@ -42,7 +42,7 @@ StaticObjectTypeBase::metaCall(void* instance, Manageable* context, unsigned int
   MetaCallType methodThreadingModel = i->second.second;
 
   AnyFunction method = i->second.first;
-  GenericValuePtr self;
+  AnyReference self;
   if (methodId >= Manageable::startId  && methodId < Manageable::endId)
   {
     self.type = qi::typeOf<Manageable>();

@@ -214,7 +214,7 @@ namespace qi
   template<typename R comma argstypedecl> \
   void* makeCall(R(*f)(argstype), void** args)  \
   { \
-    detail::GenericValuePtrCopy val; \
+    detail::AnyReferenceCopy val; \
     val(), f( \
       BOOST_PP_REPEAT(n, callArg, _) \
       ); \
@@ -235,7 +235,7 @@ namespace qi
   void* makeCall(boost::function<R(argstype)> f, void** args)  \
   { \
     BOOST_PP_REPEAT(n, declType, _) \
-    detail::GenericValuePtrCopy val; \
+    detail::AnyReferenceCopy val; \
     val(), f( \
       BOOST_PP_REPEAT(n, callArgBF, _) \
       ); \
@@ -248,7 +248,7 @@ namespace qi
   template<typename R comma argstypedecl> \
   void* makeCall(R(Class::*f)(argstype), void* instance, void** args)  \
   { \
-    detail::GenericValuePtrCopy val; \
+    detail::AnyReferenceCopy val; \
     Class* cptr = *(Class**)instance; \
     val(), ((*cptr).*f)( \
       BOOST_PP_REPEAT(n, callArg, _) \
@@ -451,7 +451,7 @@ namespace qi
     }
 
     template<typename C, typename R>
-    GenericValuePtr bouncer(const std::vector<GenericValuePtr>& vargs,
+    AnyReference bouncer(const std::vector<AnyReference>& vargs,
       R (C::*fun)(const AnyArguments&)
       )
     {
@@ -463,10 +463,10 @@ namespace qi
       C* inst = (C*)vargs.front().to<C*>();
       if (!inst)
         qiLogWarning("qitype.AnyArgumentsBouncer") << "Null instance";
-      detail::GenericValuePtrCopy output;
+      detail::AnyReferenceCopy output;
       output(), (*inst.*fun)(nargs); // output clones
       GenericValue* v = new GenericValue(output, false, true); // steal output
-      return GenericValuePtr::fromPtr(v);
+      return AnyReference::fromPtr(v);
     }
 
     template<typename C, typename R>

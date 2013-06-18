@@ -146,7 +146,7 @@ namespace qi {
   class SignatureTypeVisitor
   {
   public:
-    SignatureTypeVisitor(GenericValuePtr value, bool resolveDynamic)
+    SignatureTypeVisitor(AnyReference value, bool resolveDynamic)
     : _value(value)
     , _resolveDynamic(resolveDynamic)
     {
@@ -238,14 +238,14 @@ namespace qi {
         return;
       }
 
-      GenericValuePtr e = *it;
+      AnyReference e = *it;
       qi::Signature ksig = e[0].signature(true);
       qi::Signature vsig = e[1].signature(true);
       // Check that ksig/vsig is always the same, set to empty if not
       ++it;
       for(; it!= iend; ++it)
       {
-        GenericValuePtr e = *it;
+        AnyReference e = *it;
         qi::Signature k = e[0].signature(true);
         qi::Signature v = e[1].signature(true);
         if (ksig.isValid() && ksig != k)
@@ -289,17 +289,17 @@ namespace qi {
       result = qi::Signature::fromType(Signature::Type_Object);
     }
 
-    void visitPointer(GenericValuePtr)
+    void visitPointer(AnyReference)
     {
       result = qi::Signature::fromType(Signature::Type_Unknown);
     }
 
-    void visitUnknown(GenericValuePtr)
+    void visitUnknown(AnyReference)
     {
       result = qi::Signature::fromType(Signature::Type_Unknown);
     }
 
-    void visitTuple(const std::string &name, const std::vector<GenericValuePtr>& vals, const std::vector<std::string>& annotations)
+    void visitTuple(const std::string &name, const std::vector<AnyReference>& vals, const std::vector<std::string>& annotations)
     {
       std::string res;
       res = qi::makeTupleSignature(vals, _resolveDynamic).toString();
@@ -319,7 +319,7 @@ namespace qi {
       result = qi::Signature(res);
     }
 
-    void visitDynamic(GenericValuePtr pointee)
+    void visitDynamic(AnyReference pointee)
     {
       if (_resolveDynamic)
         result = pointee.signature(true);
@@ -327,18 +327,18 @@ namespace qi {
         result = qi::Signature::fromType(Signature::Type_Dynamic);
     }
 
-    void visitRaw(GenericValuePtr)
+    void visitRaw(AnyReference)
     {
       result = qi::Signature::fromType(Signature::Type_Raw);
     }
 
-    void visitIterator(GenericValuePtr v)
+    void visitIterator(AnyReference v)
     {
       visitUnknown(v);
     }
 
     qi::Signature    result;
-    GenericValuePtr _value;
+    AnyReference _value;
     bool            _resolveDynamic;
   };
 
@@ -346,7 +346,7 @@ namespace qi {
   {
     if (resolveDynamic)
     {
-      GenericValuePtr value(this, storage);
+      AnyReference value(this, storage);
       SignatureTypeVisitor ts(value, resolveDynamic);
       typeDispatch(ts, value);
       return qi::Signature(ts.result);
@@ -355,7 +355,7 @@ namespace qi {
     { // We might be called without a valid storage in that mode, which
       // is not supported by typeDispatch()
       // Still reuse methods from SignatureTypeVisitor to avoid duplication
-      GenericValuePtr value(this, storage);
+      AnyReference value(this, storage);
       SignatureTypeVisitor v(value, resolveDynamic);
       switch(kind())
       {
@@ -402,7 +402,7 @@ namespace qi {
         else
         {
           qiLogVerbose() << "Pointer to unknown type " << type->pointedType()->infoString() << ", signature is X";
-          v.visitPointer(GenericValuePtr());
+          v.visitPointer(AnyReference());
         }
         break;
       }
@@ -570,11 +570,11 @@ namespace qi {
     }
     friend TypeInterface* makeListIteratorType(TypeInterface*);
   public:
-    GenericValueRef dereference(void* storage)
+    AnyReference dereference(void* storage)
     {
       std::vector<void*>::iterator& ptr = *(std::vector<void*>::iterator*)
         ptrFromStorage(&storage);
-      GenericValuePtr res;
+      AnyReference res;
       res.type = _elementType;
       res.value = *ptr;
       return res;
@@ -631,7 +631,7 @@ namespace qi {
     {
       std::vector<void*>& ptr = *(std::vector<void*>*)ptrFromStorage(&storage);
       std::vector<void*>::iterator it = ptr.begin();
-      GenericValuePtr v = GenericValueRef(it);
+      AnyReference v = AnyReference(it);
       // Hugly type swap, works because we know backend storage matches
       v.type = makeListIteratorType(_elementType);
       return GenericIterator(v);
@@ -640,7 +640,7 @@ namespace qi {
     {
       std::vector<void*>& ptr = *(std::vector<void*>*)ptrFromStorage(&storage);
       std::vector<void*>::iterator it = ptr.end();
-      GenericValuePtr v = GenericValueRef(it);
+      AnyReference v = AnyReference(it);
       // Hugly type swap, works because we know backend storage matches
       v.type = makeListIteratorType(_elementType);
       return GenericIterator(v);
@@ -815,7 +815,7 @@ namespace qi {
     typedef DefaultTypeImplMethods<std::vector<void*> > Methods;
   };
 
-  GenericValuePtr makeGenericTuple(const std::vector<GenericValuePtr>& values)
+  AnyReference makeGenericTuple(const std::vector<AnyReference>& values)
   {
     std::vector<TypeInterface*> types;
     types.reserve(values.size());
@@ -823,7 +823,7 @@ namespace qi {
       types.push_back(values[i].type);
 
     StructTypeInterface* tupleType = static_cast<StructTypeInterface*>(makeTupleType(types));
-    GenericValuePtr result;
+    AnyReference result;
     result.type = tupleType;
     result.value = tupleType->initializeStorage();
     std::vector<void*> storages;
@@ -833,19 +833,19 @@ namespace qi {
     return result;
   }
 
-  GenericValuePtr makeGenericTuplePtr(
+  AnyReference makeGenericTuplePtr(
     const std::vector<TypeInterface*>&types,
     const std::vector<void*>&values)
   {
     StructTypeInterface* tupleType = static_cast<StructTypeInterface*>(makeTupleType(types));
-    return GenericValuePtr(tupleType, tupleType->initializeStorage((void*)(const void*)&values));
+    return AnyReference(tupleType, tupleType->initializeStorage((void*)(const void*)&values));
   }
 
 
 
 
   // element of map is of type _pairType, see below
-  typedef std::map<GenericValuePtr, void*> DefaultMapStorage;
+  typedef std::map<AnyReference, void*> DefaultMapStorage;
 
   // Default map, using a vector<pair<void*, void*> > as storage
   static TypeInterface* makeMapIteratorType(TypeInterface* kt);
@@ -864,7 +864,7 @@ namespace qi {
     }
     friend TypeInterface* makeMapIteratorType(TypeInterface* kt);
   public:
-    GenericValueRef dereference(void* storage)
+    AnyReference dereference(void* storage)
     {
       /* Result is a pair<GV, void*>
        * and we must return something we store, pretending it is of
@@ -875,7 +875,7 @@ namespace qi {
       */
       DefaultMapStorage::iterator& it = *(DefaultMapStorage::iterator*)
         ptrFromStorage(&storage);
-      return GenericValuePtr(_elementType, it->second);
+      return AnyReference(_elementType, it->second);
     }
     void next(void** storage)
     {
@@ -956,7 +956,7 @@ namespace qi {
     {
       DefaultMapStorage& ptr = *(DefaultMapStorage*)ptrFromStorage(&storage);
       DefaultMapStorage::iterator it = ptr.begin();
-      GenericValuePtr val = GenericValueRef(it);
+      AnyReference val = AnyReference(it);
       val.type = makeMapIteratorType(_pairType);
       return GenericIterator(val);
     }
@@ -964,22 +964,22 @@ namespace qi {
     {
       DefaultMapStorage& ptr = *(DefaultMapStorage*)ptrFromStorage(&storage);
       DefaultMapStorage::iterator it = ptr.end();
-      GenericValuePtr val = GenericValueRef(it);
+      AnyReference val = AnyReference(it);
       val.type = makeMapIteratorType(_pairType);
       return GenericIterator(val);
 
     }
 
     // Unconditional insert, assumes key is not present, return value
-    GenericValuePtr _insert(DefaultMapStorage& ptr, void* keyStorage, void* valueStorage, bool copyValue)
+    AnyReference _insert(DefaultMapStorage& ptr, void* keyStorage, void* valueStorage, bool copyValue)
     {
       // key is referenced in map key, and map value for the pair
-      GenericValuePtr key(_keyType, keyStorage);
+      AnyReference key(_keyType, keyStorage);
       key = key.clone();
-      GenericValuePtr value(_elementType, valueStorage);
+      AnyReference value(_elementType, valueStorage);
       if (copyValue)
         value = value.clone();
-      // must cast or wrong GenericValuePtr ctor is called
+      // must cast or wrong AnyReference ctor is called
       // We know that _pairType is a DefaultTupleType, so optimize:
       // if we construct a value from _pairType it will allocate the pair content
       void* pairPtr = DefaultTupleType::Methods::initializeStorage();
@@ -994,7 +994,7 @@ namespace qi {
     void insert(void** storage, void* keyStorage, void* valueStorage)
     {
       DefaultMapStorage& ptr = *(DefaultMapStorage*)ptrFromStorage(storage);
-      DefaultMapStorage::iterator i = ptr.find(GenericValuePtr(_keyType, keyStorage));
+      DefaultMapStorage::iterator i = ptr.find(AnyReference(_keyType, keyStorage));
       if (i != ptr.end())
       {// Replace: clear previous storage
         // Now, normally tuple (_pairType is one) only have inplace set
@@ -1003,7 +1003,7 @@ namespace qi {
         std::vector<void*>& elem = _pairType->backend(i->second);
         assert(elem.size() == 2);
         _elementType->destroy(elem[1]);
-        elem[1] = GenericValuePtr(_elementType, valueStorage).clone().value;
+        elem[1] = AnyReference(_elementType, valueStorage).clone().value;
       }
       else
       {
@@ -1011,17 +1011,17 @@ namespace qi {
       }
     }
 
-    GenericValuePtr element(void** pstorage, void* keyStorage, bool autoInsert)
+    AnyReference element(void** pstorage, void* keyStorage, bool autoInsert)
     {
       DefaultMapStorage& ptr = *(DefaultMapStorage*) ptrFromStorage(pstorage);
-      DefaultMapStorage::iterator i = ptr.find(GenericValuePtr(_keyType, keyStorage));
+      DefaultMapStorage::iterator i = ptr.find(AnyReference(_keyType, keyStorage));
       if (i != ptr.end())
       {
-        GenericValuePtr elem(_pairType, i->second);
+        AnyReference elem(_pairType, i->second);
         return elem[1];
       }
       if (!autoInsert)
-        return GenericValuePtr();
+        return AnyReference();
       return _insert(ptr, keyStorage, _elementType->initializeStorage(), false);
     }
 
@@ -1049,7 +1049,7 @@ namespace qi {
       for (DefaultMapStorage::iterator it = src.begin(); it != src.end(); ++it)
       {
         // do not double-clone the key, which is in the pair also
-        GenericValuePtr clonedPair(_pairType, _pairType->clone(it->second));
+        AnyReference clonedPair(_pairType, _pairType->clone(it->second));
         dst[clonedPair[0]] = clonedPair.value;
       }
       return result;
@@ -1162,7 +1162,7 @@ namespace qi {
   void* ListTypeInterface::element(void* storage, int index)
   {
     // Default implementation using iteration
-    GenericValuePtr self(this, storage);
+    AnyReference self(this, storage);
     GenericIterator it = self.begin();
     GenericIterator iend = self.end();
     int p = 0;

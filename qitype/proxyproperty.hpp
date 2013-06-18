@@ -39,7 +39,7 @@ namespace qi
     }
     ~ProxyProperty();
     void onSubscribe(bool enable);
-    GenericValuePtr bounceEvent(const std::vector<GenericValuePtr> args);
+    AnyReference bounceEvent(const std::vector<AnyReference> args);
     virtual void trigger(const GenericFunctionParameters& params, MetaCallType);
   private:
     T _getter();
@@ -77,11 +77,11 @@ namespace qi
   }
 
   template<typename T>
-  GenericValuePtr ProxyProperty<T>::bounceEvent(const std::vector<GenericValuePtr> args)
+  AnyReference ProxyProperty<T>::bounceEvent(const std::vector<AnyReference> args)
   {
     // Receive notify from backend, trigger on our signal, bypassing our trigger overload
     SignalType::trigger(args);
-    return GenericValuePtr(typeOf<void>());
+    return AnyReference(typeOf<void>());
   }
 
   template<typename T>

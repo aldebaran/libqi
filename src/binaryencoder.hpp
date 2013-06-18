@@ -18,7 +18,7 @@
 
 
 namespace qi {
-  class GenericValuePtr;
+  class AnyReference;
   class BinaryEncoderPrivate;
 
   /** This class provides data deserialization, using
@@ -62,7 +62,7 @@ namespace qi {
     void write(const char *);
     void write(const std::string& i);
 
-    void writeValue(const GenericValuePtr &value, boost::function<void()> recurse = boost::function<void()>());
+    void writeValue(const AnyReference &value, boost::function<void()> recurse = boost::function<void()>());
     void writeRaw(const Buffer &buffer);
 
     template<typename T>
@@ -93,7 +93,7 @@ namespace qi {
   void BinaryEncoder::write(const T &v)
   {
     //last arguments specified, or VS2010 segfault with an internal error...
-    encodeBinary(&buffer(), GenericValueRef(v), SerializeObjectCallback());
+    encodeBinary(&buffer(), AnyReference(v), SerializeObjectCallback());
   }
 }
 

@@ -15,13 +15,13 @@ namespace qi {
    * Dispatcher must implement TypeDispatcher.
    */
   template<typename Dispatcher>
-  Dispatcher& typeDispatch(const Dispatcher& dispatcher, GenericValuePtr value);
+  Dispatcher& typeDispatch(const Dispatcher& dispatcher, AnyReference value);
 
 
   // class QITYPE_API TypeDispatcher
   // {
   // public:
-  //   void visitUnknown(qi::GenericValuePtr value);
+  //   void visitUnknown(qi::AnyReference value);
   //   void visitVoid();
   //   void visitInt(qi::int64_t value, bool isSigned, int byteSize);
   //   void visitFloat(double value, int byteSize);
@@ -29,11 +29,11 @@ namespace qi {
   //   void visitList(qi::GenericIterator begin, qi::GenericIterator end);
   //   void visitMap(qi::GenericIterator begin, qi::GenericIterator end);
   //   void visitObject(qi::GenericObject value);
-  //   void visitPointer(qi::GenericValuePtr pointee);
-  //   void visitTuple(const std::string &className, const std::vector<qi::GenericValuePtr>& tuple, const std::vector<std::string>& elementNames);
-  //   void visitDynamic(qi::GenericValuePtr pointee);
-  //   void visitRaw(qi::GenericValuePtr value);
-  //   void visitIterator(qi::GenericValuePtr value);
+  //   void visitPointer(qi::AnyReference pointee);
+  //   void visitTuple(const std::string &className, const std::vector<qi::AnyReference>& tuple, const std::vector<std::string>& elementNames);
+  //   void visitDynamic(qi::AnyReference pointee);
+  //   void visitRaw(qi::AnyReference value);
+  //   void visitIterator(qi::AnyReference value);
   //   void visitObjectPtr(qi::ObjectPtr& ptr);
   // };
 

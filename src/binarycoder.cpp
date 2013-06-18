@@ -21,9 +21,9 @@ qiLogCategory("qitype.binarycoder");
 namespace qi {
   namespace details
   {
-    void serialize(GenericValuePtr val, BinaryEncoder& out, SerializeObjectCallback context=SerializeObjectCallback());
-    void deserialize(GenericValuePtr what, BinaryDecoder& in, DeserializeObjectCallback context=DeserializeObjectCallback());
-    GenericValuePtr deserialize(qi::TypeInterface *type, BinaryDecoder& in, DeserializeObjectCallback context=DeserializeObjectCallback());
+    void serialize(AnyReference val, BinaryEncoder& out, SerializeObjectCallback context=SerializeObjectCallback());
+    void deserialize(AnyReference what, BinaryDecoder& in, DeserializeObjectCallback context=DeserializeObjectCallback());
+    AnyReference deserialize(qi::TypeInterface *type, BinaryDecoder& in, DeserializeObjectCallback context=DeserializeObjectCallback());
   }
   class BinaryDecoder;
   class BinaryEncoder;
@@ -191,7 +191,7 @@ namespace qi {
     }
   }
 
-  void BinaryDecoder::read(GenericValuePtr &value)
+  void BinaryDecoder::read(AnyReference &value)
   {
     std::string signature;
     read(signature);
@@ -269,7 +269,7 @@ namespace qi {
     //                         << " at " << buffer().size();
   }
 
-  void BinaryEncoder::writeValue(const GenericValuePtr &value, boost::function<void()> recurse)
+  void BinaryEncoder::writeValue(const AnyReference &value, boost::function<void()> recurse)
   {
     qi::Signature sig = value.signature();
     beginDynamic(sig);
@@ -384,12 +384,12 @@ namespace qi {
     class SerializeTypeVisitor
     {
     public:
-      SerializeTypeVisitor(BinaryEncoder& out, SerializeObjectCallback context, GenericValuePtr value)
+      SerializeTypeVisitor(BinaryEncoder& out, SerializeObjectCallback context, AnyReference value)
         : out(out)
         , context(context)
         , value(value)
       {}
-      void visitUnknown(GenericValuePtr value)
+      void visitUnknown(AnyReference value)
       {
         qiLogError() << "Type " << value.type->infoString() <<" not serializable";
       }
@@ -446,7 +446,7 @@ namespace qi {
         out.beginMap(value.size(), type->keyType()->signature(), type->elementType()->signature());
         for(; it != end; ++it)
         {
-          GenericValuePtr v = *it;
+          AnyReference v = *it;
           serialize(v[0], out, context);
           serialize(v[1], out, context);
         }
@@ -460,7 +460,7 @@ namespace qi {
         visitObjectPtr(o);
       }
 
-      void visitPointer(GenericValuePtr pointee)
+      void visitPointer(AnyReference pointee)
       {
         qiLogError() << "Pointer serialization not implemented";
       }
@@ -475,7 +475,7 @@ namespace qi {
         out.write(osi.objectId);
       }
 
-      void visitTuple(const std::string &name, const std::vector<GenericValuePtr>& vals, const std::vector<std::string>& annotations)
+      void visitTuple(const std::string &name, const std::vector<AnyReference>& vals, const std::vector<std::string>& annotations)
       {
         out.beginTuple(qi::makeTupleSignature(vals));
         for (unsigned i=0; i<vals.size(); ++i)
@@ -483,26 +483,26 @@ namespace qi {
         out.endTuple();
       }
 
-      void visitDynamic(GenericValuePtr pointee)
+      void visitDynamic(AnyReference pointee)
       {
         //Remaining types
         out.writeValue(pointee, boost::bind(&typeDispatch<SerializeTypeVisitor>,
                                             SerializeTypeVisitor(out, context, pointee), pointee));
       }
 
-      void visitRaw(GenericValuePtr raw)
+      void visitRaw(AnyReference raw)
       {
         out.writeRaw(raw.to<Buffer>());
       }
 
-      void visitIterator(GenericValuePtr)
+      void visitIterator(AnyReference)
       {
         qiLogError() << "Type " << value.type->infoString() <<" not serializable";
       }
 
       BinaryEncoder& out;
       SerializeObjectCallback context;
-      GenericValuePtr value;
+      AnyReference value;
     };
 
     class DeserializeTypeVisitor
@@ -516,7 +516,7 @@ namespace qi {
         , context(context)
       {}
 
-      void visitUnknown(GenericValuePtr)
+      void visitUnknown(AnyReference)
       {
         qiLogError() << "Type " << result.type->infoString() <<" not deserializable";
       }
@@ -602,7 +602,7 @@ namespace qi {
           return;
         for (unsigned i = 0; i < sz; ++i)
         {
-          GenericValuePtr v = deserialize(elementType, in, context);
+          AnyReference v = deserialize(elementType, in, context);
           result._append(v);
           v.destroy();
         }
@@ -618,8 +618,8 @@ namespace qi {
           return;
         for (unsigned i = 0; i < sz; ++i)
         {
-          GenericValuePtr k = deserialize(keyType, in, context);
-          GenericValuePtr v = deserialize(elementType, in, context);
+          AnyReference k = deserialize(keyType, in, context);
+          AnyReference v = deserialize(elementType, in, context);
           result._insert(k, v);
           k.destroy();
           v.destroy();
@@ -641,12 +641,12 @@ namespace qi {
         qiLogError() << "No signature deserializes to object";
       }
 
-      void visitPointer(GenericValuePtr pointee)
+      void visitPointer(AnyReference pointee)
       {
         qiLogError() << " Pointer serialization not implemented";
       }
 
-      void visitTuple(const std::string &, const std::vector<GenericValuePtr>&, const std::vector<std::string>&)
+      void visitTuple(const std::string &, const std::vector<AnyReference>&, const std::vector<std::string>&)
 
       {
         StructTypeInterface* type = static_cast<StructTypeInterface*>(result.type);
@@ -658,7 +658,7 @@ namespace qi {
         valstypes.resize(types.size());
         for (unsigned i = 0; i<types.size(); ++i)
         {
-          GenericValuePtr val = deserialize(types[i], in, context);
+          AnyReference val = deserialize(types[i], in, context);
           if (!val.type)
             throw std::runtime_error("Deserialization of tuple field failed");
           vals[i] = val.value;
@@ -671,7 +671,7 @@ namespace qi {
         }
       }
 
-      void visitDynamic(GenericValuePtr pointee)
+      void visitDynamic(AnyReference pointee)
       {
         std::string sig;
         in.read(sig);
@@ -688,28 +688,28 @@ namespace qi {
         }
 
         DeserializeTypeVisitor dtv(*this);
-        dtv.result = GenericValuePtr(type);
+        dtv.result = AnyReference(type);
         typeDispatch<DeserializeTypeVisitor>(dtv, dtv.result);
         static_cast<DynamicTypeInterface*>(result.type)->set(&result.value, dtv.result);
         dtv.result.destroy();
       }
-      void visitIterator(GenericValuePtr)
+      void visitIterator(AnyReference)
       {
         qiLogError() << "Type " << result.type->infoString() <<" not deserializable";
       }
 
-      void visitRaw(GenericValuePtr)
+      void visitRaw(AnyReference)
       {
         Buffer b;
         in.read(b);
         static_cast<RawTypeInterface*>(result.type)->set(&result.value, (char*)b.data(), b.size());
       }
-      GenericValuePtr result;
+      AnyReference result;
       BinaryDecoder& in;
       DeserializeObjectCallback context;
     }; //class
 
-     void serialize(GenericValuePtr val, BinaryEncoder& out, SerializeObjectCallback context)
+     void serialize(AnyReference val, BinaryEncoder& out, SerializeObjectCallback context)
     {
       details::SerializeTypeVisitor stv(out, context, val);
       qi::typeDispatch(stv, val);
@@ -718,7 +718,7 @@ namespace qi {
       }
     }
 
-    void deserialize(GenericValuePtr what, BinaryDecoder& in, DeserializeObjectCallback context)
+    void deserialize(AnyReference what, BinaryDecoder& in, DeserializeObjectCallback context)
     {
       details::DeserializeTypeVisitor dtv(in, context);
       dtv.result = what;
@@ -729,16 +729,16 @@ namespace qi {
       what = dtv.result;
     }
 
-    GenericValuePtr deserialize(qi::TypeInterface *type, BinaryDecoder& in, DeserializeObjectCallback context)
+    AnyReference deserialize(qi::TypeInterface *type, BinaryDecoder& in, DeserializeObjectCallback context)
     {
-      GenericValuePtr res(type);
+      AnyReference res(type);
       deserialize(res, in, context);
       return res;
     }
 
   } // namespace details
 
-  void encodeBinary(qi::Buffer *buf, const qi::AutoGenericValuePtr &gvp, SerializeObjectCallback onObject) {
+  void encodeBinary(qi::Buffer *buf, const qi::AutoAnyReference &gvp, SerializeObjectCallback onObject) {
     BinaryEncoder be(*buf);
     details::SerializeTypeVisitor stv(be, onObject, gvp);
     qi::typeDispatch(stv, gvp);
@@ -750,7 +750,7 @@ namespace qi {
     }
   }
 
-  void decodeBinary(qi::BufferReader *buf, qi::GenericValuePtr gvp,
+  void decodeBinary(qi::BufferReader *buf, qi::AnyReference gvp,
     DeserializeObjectCallback onObject) {
     BinaryDecoder in(buf);
     details::DeserializeTypeVisitor dtv(in, onObject);

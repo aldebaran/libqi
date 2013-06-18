@@ -78,14 +78,14 @@ namespace qi {
     void setCallType(MetaCallType callType);
     /// Trigger the signal with given arguments, and call type set by setCallType()
     void operator()(
-      qi::AutoGenericValuePtr p1 = qi::AutoGenericValuePtr(),
-      qi::AutoGenericValuePtr p2 = qi::AutoGenericValuePtr(),
-      qi::AutoGenericValuePtr p3 = qi::AutoGenericValuePtr(),
-      qi::AutoGenericValuePtr p4 = qi::AutoGenericValuePtr(),
-      qi::AutoGenericValuePtr p5 = qi::AutoGenericValuePtr(),
-      qi::AutoGenericValuePtr p6 = qi::AutoGenericValuePtr(),
-      qi::AutoGenericValuePtr p7 = qi::AutoGenericValuePtr(),
-      qi::AutoGenericValuePtr p8 = qi::AutoGenericValuePtr());
+      qi::AutoAnyReference p1 = qi::AutoAnyReference(),
+      qi::AutoAnyReference p2 = qi::AutoAnyReference(),
+      qi::AutoAnyReference p3 = qi::AutoAnyReference(),
+      qi::AutoAnyReference p4 = qi::AutoAnyReference(),
+      qi::AutoAnyReference p5 = qi::AutoAnyReference(),
+      qi::AutoAnyReference p6 = qi::AutoAnyReference(),
+      qi::AutoAnyReference p7 = qi::AutoAnyReference(),
+      qi::AutoAnyReference p8 = qi::AutoAnyReference());
 
     std::vector<SignalSubscriber> subscribers();
     static const SignalBase::Link invalidLink;

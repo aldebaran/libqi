@@ -119,14 +119,14 @@ namespace qi
     }
   };
   #define pushArg(z, n, _) \
-    args.push_back(AutoGenericValuePtr(p ##n));
+    args.push_back(AutoAnyReference(p ##n));
   #define makeBounce(n, argstypedecl, argstype, argsdecl, argsues, comma)     \
   template<typename R comma argstypedecl> \
   class BounceToSignalBase<R(argstype)>  {  \
   public:                      \
     BounceToSignalBase(SignalBase& signalBase) : signalBase(signalBase) {} \
     R operator()(argsdecl) {   \
-      std::vector<GenericValuePtr> args; \
+      std::vector<AnyReference> args; \
       BOOST_PP_REPEAT(n, pushArg, _);    \
       signalBase.trigger(args);          \
     }                                    \

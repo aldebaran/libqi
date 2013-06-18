@@ -35,19 +35,19 @@ namespace qi {
     /** Encode content of \p gvp into \p buf.
   * @param onObject callback invoked each time an object is encountered.
   */
-  QITYPE_API void encodeBinary(qi::Buffer *buf, const AutoGenericValuePtr &gvp, SerializeObjectCallback onObject=SerializeObjectCallback());
+  QITYPE_API void encodeBinary(qi::Buffer *buf, const AutoAnyReference &gvp, SerializeObjectCallback onObject=SerializeObjectCallback());
 
 
   /** Decode content of \p buf into \p gvp.
   * @param buf buffer with serialized data
-  * @param gvp initialized GenericValuePtr of correct type. Will be filled in.
+  * @param gvp initialized AnyReference of correct type. Will be filled in.
   * @param onObject callback invoked each time an object is encountered.
   */
-  QITYPE_API void decodeBinary(qi::BufferReader *buf, GenericValuePtr gvp, DeserializeObjectCallback onObject=DeserializeObjectCallback());
+  QITYPE_API void decodeBinary(qi::BufferReader *buf, AnyReference gvp, DeserializeObjectCallback onObject=DeserializeObjectCallback());
 
   template <typename T>
   void decodeBinary(qi::BufferReader *buf, T* value, DeserializeObjectCallback onObject) {
-    decodeBinary(buf, GenericValuePtr::fromPtr(value), onObject);
+    decodeBinary(buf, AnyReference::fromPtr(value), onObject);
   }
 
 }

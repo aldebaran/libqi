@@ -101,7 +101,7 @@ namespace qi
   public:
     DynamicObjectTypeInterface() {}
     virtual const MetaObject& metaObject(void* instance);
-    virtual qi::Future<GenericValuePtr> metaCall(void* instance, Manageable* context, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto);
+    virtual qi::Future<AnyReference> metaCall(void* instance, Manageable* context, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto);
     virtual void metaPost(void* instance, Manageable* context, unsigned int signal, const GenericFunctionParameters& params);
     virtual qi::Future<Link> connect(void* instance, Manageable* context, unsigned int event, const SignalSubscriber& subscriber);
     /// Disconnect an event link. Returns if disconnection was successful.
@@ -204,9 +204,9 @@ namespace qi
       return i->second;
   }
 
-  qi::Future<GenericValuePtr> DynamicObject::metaCall(Manageable* context, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType)
+  qi::Future<AnyReference> DynamicObject::metaCall(Manageable* context, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType)
   {
-    qi::Promise<GenericValuePtr> out;
+    qi::Promise<AnyReference> out;
     DynamicObjectPrivate::MethodMap::iterator i = _p->methodMap.find(method);
     if (i == _p->methodMap.end())
     {
@@ -218,9 +218,9 @@ namespace qi
     GenericFunctionParameters p;
     p.reserve(params.size()+1);
     if (method >= Manageable::startId && method < Manageable::endId)
-      p.push_back(GenericValueRef(context));
+      p.push_back(AnyReference(context));
     else
-      p.push_back(GenericValueRef(this));
+      p.push_back(AnyReference(this));
     p.insert(p.end(), params.begin(), params.end());
     return ::qi::metaCall(context->eventLoop(), _p->threadingModel,
       i->second.second, callType, context, method, i->second.first, p);
@@ -298,7 +298,7 @@ namespace qi
     return qi::Future<void>(0);
   }
 
-  static GenericValuePtr locked_call(AnyFunction& function,
+  static AnyReference locked_call(AnyFunction& function,
                                      const GenericFunctionParameters& params,
                                      Manageable::TimedMutexPtr lock)
   {
@@ -332,7 +332,7 @@ namespace qi
   }
   namespace {
 
-    inline void call(qi::Promise<GenericValuePtr>& out,
+    inline void call(qi::Promise<AnyReference>& out,
                       Manageable* context,
                       bool lock,
                       const GenericFunctionParameters& params,
@@ -415,7 +415,7 @@ namespace qi
   {
   public:
     MFunctorCall(AnyFunction& func, GenericFunctionParameters& params,
-       qi::Promise<GenericValuePtr>* out, bool noCloneFirst, Manageable* context, unsigned int methodId, bool lock)
+       qi::Promise<AnyReference>* out, bool noCloneFirst, Manageable* context, unsigned int methodId, bool lock)
     : noCloneFirst(noCloneFirst)
     {
       this->out = out;
@@ -423,8 +423,8 @@ namespace qi
       this->context = context;
       this->lock = lock;
       std::swap(this->func, func);
-      std::swap((std::vector<GenericValuePtr>&) params,
-        (std::vector<GenericValuePtr>&) this->params);
+      std::swap((std::vector<AnyReference>&) params,
+        (std::vector<AnyReference>&) this->params);
     }
     MFunctorCall(const MFunctorCall& b)
     {
@@ -433,8 +433,8 @@ namespace qi
     void operator = (const MFunctorCall& b)
     {
       // Implement move semantic on =
-      std::swap( (std::vector<GenericValuePtr>&) params,
-        (std::vector<GenericValuePtr>&) b.params);
+      std::swap( (std::vector<AnyReference>&) params,
+        (std::vector<AnyReference>&) b.params);
       std::swap(func, const_cast<MFunctorCall&>(b).func);
       context = b.context;
       methodId = b.methodId;
@@ -448,7 +448,7 @@ namespace qi
       params.destroy(noCloneFirst);
       delete out;
     }
-    qi::Promise<GenericValuePtr>* out;
+    qi::Promise<AnyReference>* out;
     GenericFunctionParameters params;
     AnyFunction func;
     bool noCloneFirst;
@@ -457,7 +457,7 @@ namespace qi
     unsigned int methodId;
   };
 
-  qi::Future<GenericValuePtr> metaCall(EventLoop* el,
+  qi::Future<AnyReference> metaCall(EventLoop* el,
     ObjectThreadingModel objectThreadingModel,
     MetaCallType methodThreadingModel,
     MetaCallType callType,
@@ -481,15 +481,15 @@ namespace qi
         && methodThreadingModel == MetaCallType_Auto);
     if (sync)
     {
-      qi::Promise<GenericValuePtr> out;
+      qi::Promise<AnyReference> out;
       call(out, context, doLock, params, methodId, func);
       return out.future();
     }
     else
     {
-      qi::Promise<GenericValuePtr>* out = new qi::Promise<GenericValuePtr>();
+      qi::Promise<AnyReference>* out = new qi::Promise<AnyReference>();
       GenericFunctionParameters pCopy = params.copy(noCloneFirst);
-      qi::Future<GenericValuePtr> result = out->future();
+      qi::Future<AnyReference> result = out->future();
       el->post(MFunctorCall(func, pCopy, out, noCloneFirst, context, methodId, doLock));
       return result;
     }
@@ -502,7 +502,7 @@ namespace qi
     return reinterpret_cast<DynamicObject*>(instance)->metaObject();
   }
 
-  qi::Future<GenericValuePtr> DynamicObjectTypeInterface::metaCall(void* instance, Manageable* context, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType)
+  qi::Future<AnyReference> DynamicObjectTypeInterface::metaCall(void* instance, Manageable* context, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType)
   {
     return reinterpret_cast<DynamicObject*>(instance)
       ->metaCall(context, method, params, callType);

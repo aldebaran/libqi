@@ -10,7 +10,7 @@
 namespace qi {
 
   template<typename TypeDispatcher>
-  TypeDispatcher& typeDispatch(const TypeDispatcher &vv, GenericValuePtr value)
+  TypeDispatcher& typeDispatch(const TypeDispatcher &vv, AnyReference value)
   {
     if (!value.type)
       throw std::runtime_error("NULL type");
@@ -60,16 +60,16 @@ namespace qi {
       }
       case TypeInterface::Pointer:
       {
-        GenericValuePtr pointee = *value;
+        AnyReference pointee = *value;
         PointerTypeInterface* type = static_cast<PointerTypeInterface*>(value.type);
         if (type->pointerKind() == PointerTypeInterface::Shared
           && pointee.kind() == TypeInterface::Object)
         { // shared_ptr<Foo> p with Foo object type.
           // Create our own shared_ptr, that holds p and delete it on destruction
           qiLogDebug("qitype.typedispatcher") << "Detected object shared ptr";
-          GenericValuePtr shared_ptr = value.clone();
+          AnyReference shared_ptr = value.clone();
           ObjectPtr o(new GenericObject(static_cast<ObjectTypeInterface*>(pointee.type), pointee.value),
-            boost::bind(&GenericValuePtr::destroy, shared_ptr));
+            boost::bind(&AnyReference::destroy, shared_ptr));
           v.visitObjectPtr(o);
         }
         else
@@ -79,7 +79,7 @@ namespace qi {
       case TypeInterface::Tuple:
       {
         StructTypeInterface* ttuple = static_cast<StructTypeInterface*>(value.type);
-        std::vector<GenericValuePtr> tuple = ttuple->values(value.value);
+        std::vector<AnyReference> tuple = ttuple->values(value.value);
         v.visitTuple(ttuple->className(), tuple, ttuple->elementsName());
         break;
       }

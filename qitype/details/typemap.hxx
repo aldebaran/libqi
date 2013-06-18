@@ -24,7 +24,7 @@ public:
   virtual GenericIterator begin(void* storage);
   virtual GenericIterator end(void* storage);
   virtual void insert(void** storage, void* keyStorage, void* valueStorage);
-  virtual GenericValuePtr element(void** storage, void* keyStorage, bool autoInsert);
+  virtual AnyReference element(void** storage, void* keyStorage, bool autoInsert);
   _QI_BOUNCE_TYPE_METHODS(MethodsImpl);
 };
 
@@ -88,7 +88,7 @@ MapTypeInterfaceImpl<M>::insert(void** storage, void* keyStorage, void* valueSto
     it->second = val;
 }
 
-template<typename M> GenericValuePtr
+template<typename M> AnyReference
 MapTypeInterfaceImpl<M>::element(void** storage, void* keyStorage, bool autoInsert)
 {
   //static TypeInterface* elemType = typeOf<typename M::mapped_type>();
@@ -99,12 +99,12 @@ MapTypeInterfaceImpl<M>::element(void** storage, void* keyStorage, bool autoInse
   if (it == ptr->end())
   {
     if (!autoInsert)
-      return GenericValuePtr();
+      return AnyReference();
     typename M::mapped_type& e = (*ptr)[*key];
-    return GenericValuePtr::fromRef(e);
+    return AnyReference(e);
   }
   else
-    return GenericValuePtr::fromRef(((typename M::mapped_type&)(it->second)));
+    return AnyReference(((typename M::mapped_type&)(it->second)));
 }
 
 

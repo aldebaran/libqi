@@ -78,7 +78,7 @@ namespace qi {
     std::vector<GenericValue> _args;
   };
 
-  typedef boost::function<GenericValuePtr(const std::vector<GenericValuePtr>&)> DynamicFunction;
+  typedef boost::function<AnyReference(const std::vector<AnyReference>&)> DynamicFunction;
 
   /** Represents a generic callable function.
    * This class has value semantic.
@@ -92,9 +92,9 @@ namespace qi {
     AnyFunction(const AnyFunction& b);
     AnyFunction(FunctionTypeInterface* type, void* value);
     AnyFunction& operator = (const AnyFunction& b);
-    GenericValuePtr call(const std::vector<GenericValuePtr>& args);
-    GenericValuePtr call(GenericValuePtr arg1, const std::vector<GenericValuePtr>& args);
-    GenericValuePtr operator()(const std::vector<GenericValuePtr>& args);
+    AnyReference call(const std::vector<AnyReference>& args);
+    AnyReference call(AnyReference arg1, const std::vector<AnyReference>& args);
+    AnyReference operator()(const std::vector<AnyReference>& args);
 
     /// Change signature, drop the first argument passed to call.
     const AnyFunction& dropFirstArgument() const;
@@ -130,7 +130,7 @@ namespace qi {
     static AnyFunction from(F func, C instance);
 
 
-    /// @return a AnyFunction that takes arguments as a list of unconverted GenericValuePtr.
+    /// @return a AnyFunction that takes arguments as a list of unconverted AnyReference.
     static AnyFunction fromDynamicFunction(DynamicFunction f);
 
   private:
@@ -140,17 +140,17 @@ namespace qi {
   };
 
 
-  /** Store function parameters as a list of GenericValuePtr.
+  /** Store function parameters as a list of AnyReference.
    * Storage can be on the stack or allocated
    * Memory management is the responsibility of the user.
    * If GenericFunctionParameters is obtained throug copy(), convert() or
    * fromBuffer(), it must be cleared by destroy()
    */
-  class QITYPE_API GenericFunctionParameters: public std::vector<GenericValuePtr>
+  class QITYPE_API GenericFunctionParameters: public std::vector<AnyReference>
   {
   public:
     GenericFunctionParameters();
-    GenericFunctionParameters(const std::vector<GenericValuePtr>&);
+    GenericFunctionParameters(const std::vector<AnyReference>&);
     /// Copy arguments. destroy() must be called on the result
     GenericFunctionParameters copy(bool notFirst=false) const;
     /// Convert the arguments to given signature. destroy() must be called on the result.

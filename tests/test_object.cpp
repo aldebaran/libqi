@@ -113,13 +113,13 @@ C* ptrfun(C* ptr) { return ptr;}
 C& reffun(const C& ref) { return const_cast<C&>(ref);}
 C valuefun(C val) { return val;}
 
-std::vector<qi::GenericValuePtr> convert(qi::AutoGenericValuePtr v1 = qi::AutoGenericValuePtr(),
-  qi::AutoGenericValuePtr v2 = qi::AutoGenericValuePtr(),
-  qi::AutoGenericValuePtr v3 = qi::AutoGenericValuePtr(),
-  qi::AutoGenericValuePtr v4 = qi::AutoGenericValuePtr(),
-  qi::AutoGenericValuePtr v5 = qi::AutoGenericValuePtr())
+std::vector<qi::AnyReference> convert(qi::AutoAnyReference v1 = qi::AutoAnyReference(),
+  qi::AutoAnyReference v2 = qi::AutoAnyReference(),
+  qi::AutoAnyReference v3 = qi::AutoAnyReference(),
+  qi::AutoAnyReference v4 = qi::AutoAnyReference(),
+  qi::AutoAnyReference v5 = qi::AutoAnyReference())
 {
-  std::vector<qi::GenericValuePtr> res;
+  std::vector<qi::AnyReference> res;
   if (v1.value)
     res.push_back(v1);
   if (v2.value)
@@ -187,7 +187,7 @@ public:
   int v;
 };
 
-template<typename T> bool checkValue(qi::GenericValuePtr v, const T& val)
+template<typename T> bool checkValue(qi::AnyReference v, const T& val)
 {
   T actual = v.as<T>();
   bool ok = actual == val;
@@ -204,14 +204,14 @@ TEST(TestObject, Typing)
   qi::AnyFunction fv2 = qi::AnyFunction::from(&fun);
   qiLogDebug() << "Foo::fun";
   qi::AnyFunction mv = qi::AnyFunction::from(&Foo::fun);
-  std::vector<qi::GenericValuePtr> args1 = convert(1, 2);
-  qi::GenericValuePtr res = fv2.call(args1);
+  std::vector<qi::AnyReference> args1 = convert(1, 2);
+  qi::AnyReference res = fv2.call(args1);
   ASSERT_TRUE(checkValue(res, 3));
 
   qi::AnyFunction adderAdd = qi::AnyFunction::from(&Adder::add);
   Adder add1(1);
-  std::vector<qi::GenericValuePtr> argsAdd = convert(41);
-  res = adderAdd.call(qi::GenericValueRef(add1), argsAdd);
+  std::vector<qi::AnyReference> argsAdd = convert(41);
+  res = adderAdd.call(qi::AnyReference(add1), argsAdd);
   ASSERT_TRUE(checkValue(res, 42));
 }
 
@@ -413,7 +413,7 @@ TEST(TestObject, SerializeSimple)
 TEST(TestObject, ConvertSimple)
 {
   Point p; p.x = 1; p.y = 2;
-  FPoint p2 = qi::GenericValueRef(p).to<FPoint>();
+  FPoint p2 = qi::AnyReference(p).to<FPoint>();
   ASSERT_EQ(p2.x, p.x);
   ASSERT_EQ(p2.y, p.y);
 }
@@ -490,7 +490,7 @@ TEST(TestObject, convertComplex)
   comp.stuff.push_back(v);
   v.push_back(3);
   comp.stuff.push_back(v);
-  Complex2 comp2 = qi::GenericValueRef(comp).to<Complex2>();
+  Complex2 comp2 = qi::AnyReference(comp).to<Complex2>();
   ASSERT_EQ(comp2.foo, comp.foo);
   ASSERT_EQ(comp.points.size(), comp2.points.size());
   ASSERT_EQ(comp.points.front().x, comp2.points.front().x);
@@ -588,8 +588,8 @@ TEST(TestObject, TypeType)
 {
   using namespace qi;
   int i = 12;
-  std::vector<GenericValuePtr> vals = convert(i);
-  GenericValuePtr val = vals[0];
+  std::vector<AnyReference> vals = convert(i);
+  AnyReference val = vals[0];
   qiLogDebug() << "type ptr " << val.type->infoString() << " "
   <<(void*)val.type;
   ASSERT_EQ(TypeInterface::Int, val.kind());
@@ -971,7 +971,7 @@ TEST(TestObject, async)
   EXPECT_EQ(qi::FutureState_FinishedWithValue, f.wait());
   EXPECT_EQ(100, f.value());
 
-  qi::ObjectPtr o = qi::GenericValueRef(rfptr).toObject();
+  qi::ObjectPtr o = qi::AnyReference(rfptr).toObject();
   f = qi::async<int>(o, "msleep", 100);
   EXPECT_EQ(qi::FutureState_Running, f.wait(0));
   EXPECT_EQ(qi::FutureState_FinishedWithValue, f.wait());

@@ -51,7 +51,7 @@ namespace qi
     SignalBase*     signal(unsigned int id) const;
     PropertyBase*   property(unsigned int) const;
 
-    virtual qi::Future<GenericValuePtr> metaCall(Manageable* context, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto);
+    virtual qi::Future<AnyReference> metaCall(Manageable* context, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto);
     virtual void metaPost(Manageable* context, unsigned int event, const GenericFunctionParameters& params);
     /// Calls given functor when event is fired. Takes ownership of functor.
     virtual qi::Future<Link> metaConnect(unsigned int event, const SignalSubscriber& subscriber);

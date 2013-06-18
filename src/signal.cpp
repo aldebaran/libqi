@@ -67,17 +67,17 @@ namespace qi {
   }
 
   void SignalBase::operator()(
-      qi::AutoGenericValuePtr p1,
-      qi::AutoGenericValuePtr p2,
-      qi::AutoGenericValuePtr p3,
-      qi::AutoGenericValuePtr p4,
-      qi::AutoGenericValuePtr p5,
-      qi::AutoGenericValuePtr p6,
-      qi::AutoGenericValuePtr p7,
-      qi::AutoGenericValuePtr p8)
+      qi::AutoAnyReference p1,
+      qi::AutoAnyReference p2,
+      qi::AutoAnyReference p3,
+      qi::AutoAnyReference p4,
+      qi::AutoAnyReference p5,
+      qi::AutoAnyReference p6,
+      qi::AutoAnyReference p7,
+      qi::AutoAnyReference p8)
   {
-    qi::AutoGenericValuePtr* vals[8]= {&p1, &p2, &p3, &p4, &p5, &p6, &p7, &p8};
-    std::vector<qi::GenericValuePtr> params;
+    qi::AutoAnyReference* vals[8]= {&p1, &p2, &p3, &p4, &p5, &p6, &p7, &p8};
+    std::vector<qi::AnyReference> params;
     for (unsigned i = 0; i < 8; ++i)
       if (vals[i]->value)
         params.push_back(*vals[i]);

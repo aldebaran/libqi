@@ -24,7 +24,7 @@ namespace qi {
     template<typename T> void hold(T data) {}
 
     template <typename T>
-    void futureAdapterGeneric(GenericValuePtr val, qi::Promise<T> promise)
+    void futureAdapterGeneric(AnyReference val, qi::Promise<T> promise)
     {
       TemplateTypeInterface* ft1 = QI_TEMPLATE_TYPE_GET(val.type, Future);
       TemplateTypeInterface* ft2 = QI_TEMPLATE_TYPE_GET(val.type, FutureSync);
@@ -42,7 +42,7 @@ namespace qi {
     }
 
     template <typename T>
-    inline void futureAdapter(qi::Future<qi::GenericValuePtr> metaFut, qi::Promise<T> promise)
+    inline void futureAdapter(qi::Future<qi::AnyReference> metaFut, qi::Promise<T> promise)
     {
 
       //error handling
@@ -51,7 +51,7 @@ namespace qi {
         return;
       }
 
-      GenericValuePtr val =  metaFut.value();
+      AnyReference val =  metaFut.value();
       TemplateTypeInterface* ft1 = QI_TEMPLATE_TYPE_GET(val.type, Future);
       TemplateTypeInterface* ft2 = QI_TEMPLATE_TYPE_GET(val.type, FutureSync);
       TemplateTypeInterface* futureType = ft1 ? ft1 : ft2;
@@ -67,7 +67,7 @@ namespace qi {
       TypeInterface* targetType = typeOf<T>();
       try
       {
-        std::pair<GenericValuePtr, bool> conv = val.convert(targetType);
+        std::pair<AnyReference, bool> conv = val.convert(targetType);
         if (!conv.first.type)
           promise.setError(std::string("Unable to convert call result to target type:")
             + val.type->infoString() + " -> " + targetType->infoString());
@@ -115,7 +115,7 @@ namespace qi {
     }
 
     template <>
-    inline void futureAdapter<void>(qi::Future<qi::GenericValuePtr> metaFut, qi::Promise<void> promise)
+    inline void futureAdapter<void>(qi::Future<qi::AnyReference> metaFut, qi::Promise<void> promise)
     {
       //error handling
       if (metaFut.hasError()) {
@@ -130,24 +130,24 @@ namespace qi {
 
   /* Generate qi::FutureSync<R> GenericObject::call(methodname, args...)
    * for all argument counts
-   * The function packs arguments in a vector<GenericValuePtr>, computes the
+   * The function packs arguments in a vector<AnyReference>, computes the
    * signature and bounce those to metaCall.
    */
   #define pushi(z, n,_) params.push_back(p ## n);
 #define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)                           \
   template<typename R> qi::FutureSync<R> GenericObject::call(             \
       const std::string& methodName       comma                           \
-      QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoGenericValuePtr))             \
+      QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoAnyReference))             \
   {                                                                        \
      if (!value || !type) {                                                \
       return makeFutureError<R>("Invalid GenericObject");                  \
      }                                                                     \
-     std::vector<qi::GenericValuePtr> params;                              \
+     std::vector<qi::AnyReference> params;                              \
      params.reserve(n);                                                    \
      BOOST_PP_REPEAT(n, pushi, _)                                          \
      std::string sigret;                                                   \
      qi::Promise<R> res;                                                   \
-     qi::Future<GenericValuePtr> fmeta = metaCall(methodName, params);      \
+     qi::Future<AnyReference> fmeta = metaCall(methodName, params);      \
      fmeta.connect(boost::bind<void>(&detail::futureAdapter<R>, _1, res));  \
      return res.future();                                                  \
   }
@@ -157,17 +157,17 @@ namespace qi {
   #define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)                           \
   template<typename R> qi::FutureSync<R> GenericObject::async(             \
       const std::string& methodName       comma                           \
-      QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoGenericValuePtr))             \
+      QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoAnyReference))             \
   {                                                                        \
      if (!value || !type) {                                                \
       return makeFutureError<R>("Invalid GenericObject");                  \
      }                                                                     \
-     std::vector<qi::GenericValuePtr> params;                              \
+     std::vector<qi::AnyReference> params;                              \
      params.reserve(n);                                                    \
      BOOST_PP_REPEAT(n, pushi, _)                                          \
      std::string sigret;                                                   \
      qi::Promise<R> res;                                                   \
-     qi::Future<GenericValuePtr> fmeta = metaCall(methodName, params, MetaCallType_Queued);   \
+     qi::Future<AnyReference> fmeta = metaCall(methodName, params, MetaCallType_Queued);   \
      fmeta.connect(boost::bind<void>(&detail::futureAdapter<R>, _1, res));  \
      return res.future();                                                  \
   }
@@ -178,17 +178,17 @@ namespace qi {
   template<typename R> qi::FutureSync<R> GenericObject::call(             \
       MetaCallType callType,                                              \
       const std::string& methodName       comma                           \
-      QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoGenericValuePtr))             \
+      QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoAnyReference))             \
   {                                                                        \
      if (!value || !type) {                                                \
       return makeFutureError<R>("Invalid GenericObject");                  \
      }                                                                     \
-     std::vector<qi::GenericValuePtr> params;                              \
+     std::vector<qi::AnyReference> params;                              \
      params.reserve(n);                                                    \
      BOOST_PP_REPEAT(n, pushi, _)                                          \
      std::string sigret;                                                   \
      qi::Promise<R> res;                                                   \
-     qi::Future<GenericValuePtr> fmeta = metaCall(methodName, params, callType);   \
+     qi::Future<AnyReference> fmeta = metaCall(methodName, params, callType);   \
      fmeta.connect(boost::bind<void>(&detail::futureAdapter<R>, _1, res));  \
      return res.future();                                                  \
   }
@@ -200,9 +200,9 @@ namespace qi {
   template<typename R,typename T> qi::FutureSync<R> async(   \
       T* instance,                                                 \
       const std::string& methodName comma                         \
-      QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoGenericValuePtr)) \
+      QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoAnyReference)) \
   {                                                              \
-    ObjectPtr obj = GenericValueRef(instance).toObject();       \
+    ObjectPtr obj = AnyReference(instance).toObject();       \
     qi::Future<R> res = obj->call<R>(MetaCallType_Queued, methodName comma AUSE);  \
     res.connect(boost::bind(&detail::hold<ObjectPtr>, obj));   \
     return res;                                                 \
@@ -214,9 +214,9 @@ namespace qi {
   template<typename R,typename T> qi::FutureSync<R> async(   \
       boost::shared_ptr<T> instance,                             \
       const std::string& methodName comma                         \
-      QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoGenericValuePtr)) \
+      QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoAnyReference)) \
   {                                                              \
-    ObjectPtr obj = GenericValueRef(instance).toObject();        \
+    ObjectPtr obj = AnyReference(instance).toObject();        \
     qi::Future<R> res =  obj->call<R>(MetaCallType_Queued, methodName comma AUSE);  \
     res.connect(boost::bind(&detail::hold<ObjectPtr>, obj));   \
     return res;                                                 \
@@ -243,7 +243,7 @@ namespace qi {
     int pid = metaObject().propertyId(name);
     if (pid < 0)
       return makeFutureError<void>("Property not found");
-    return type->setProperty(value, pid, GenericValue(GenericValueRef(val)));
+    return type->setProperty(value, pid, GenericValue(AnyReference(val)));
   }
 
   /* An ObjectPtr is actually of a Dynamic type: The underlying TypeInterface*
@@ -252,20 +252,20 @@ namespace qi {
   template<> class QITYPE_API TypeImpl<ObjectPtr>: public DynamicTypeInterface
   {
   public:
-    virtual GenericValuePtr get(void* storage)
+    virtual AnyReference get(void* storage)
     {
       ObjectPtr* val = (ObjectPtr*)ptrFromStorage(&storage);
-      GenericValuePtr result;
+      AnyReference result;
       if (!*val)
       {
-        return GenericValuePtr();
+        return AnyReference();
       }
       result.type = (*val)->type;
       result.value = (*val)->value;
       return result;
     }
 
-    virtual void set(void** storage, GenericValuePtr source)
+    virtual void set(void** storage, AnyReference source)
     {
       qiLogCategory("qitype.object");
       ObjectPtr* val = (ObjectPtr*)ptrFromStorage(storage);
@@ -307,14 +307,14 @@ namespace qi {
 
   namespace detail
   {
-    typedef std::map<TypeInfo, boost::function<GenericValuePtr(ObjectPtr)> > ProxyGeneratorMap;
+    typedef std::map<TypeInfo, boost::function<AnyReference(ObjectPtr)> > ProxyGeneratorMap;
     QITYPE_API ProxyGeneratorMap& proxyGeneratorMap();
 
     template<typename Proxy>
-    GenericValuePtr makeProxy(ObjectPtr ptr)
+    AnyReference makeProxy(ObjectPtr ptr)
     {
       boost::shared_ptr<Proxy> sp(new Proxy(ptr));
-      return GenericValuePtr::fromRef(sp).clone();
+      return AnyReference(sp).clone();
     }
   }
   template<typename Proxy, typename Interface>
@@ -340,7 +340,7 @@ namespace qi {
     // create a T, wrap in a ObjectPtr
     template<typename T> ObjectPtr constructObject()
     {
-      return GenericValuePtr::fromPtr(new T()).toObject();
+      return AnyReference::fromPtr(new T()).toObject();
     }
 
     // in genericobjectbuilder.hxx

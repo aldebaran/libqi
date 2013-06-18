@@ -24,15 +24,15 @@ namespace qi
   class StructTypeInterface;
   class DynamicTypeInterface;
 
-  class GenericValuePtr;
-  class GenericValueRef;
+  class AnyReference;
+  class AnyReference;
   class GenericValue;
   class GenericIterator;
   class GenericListPtr;
   class GenericMapPtr;
   class GenericValue;
   class GenericObject;
-  class AutoGenericValuePtr;
+  class AutoAnyReference;
   class Manageable;
   typedef boost::shared_ptr<GenericObject> ObjectPtr;
 }

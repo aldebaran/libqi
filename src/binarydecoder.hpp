@@ -18,7 +18,7 @@
 #include <qitype/api.hpp>
 
 namespace qi {
-  class GenericValuePtr;
+  class AnyReference;
   class BinaryDecoderPrivate;
 
   /** This class provides data serialization, using
@@ -59,7 +59,7 @@ namespace qi {
     void read(double   &d);
     void read(std::string& i);
 
-    void read(qi::GenericValuePtr &value);
+    void read(qi::AnyReference &value);
     void read(qi::Buffer &buffer);
 
     template<typename T> void read(T& v);
@@ -79,7 +79,7 @@ namespace qi {
   template<typename T>
   void BinaryDecoder::read(T& v)
   {
-    GenericValueRef gv(v);
+    AnyReference gv(v);
     decodeBinary(&bufferReader(), gv);
   }
 }

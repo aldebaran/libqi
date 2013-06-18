@@ -44,7 +44,7 @@ namespace qi {
   {
   public:
     virtual const MetaObject& metaObject(void* instance) = 0;
-    virtual qi::Future<GenericValuePtr> metaCall(void* instance, Manageable* context, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto)=0;
+    virtual qi::Future<AnyReference> metaCall(void* instance, Manageable* context, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto)=0;
     virtual void metaPost(void* instance, Manageable* context, unsigned int signal, const GenericFunctionParameters& params)=0;
     virtual qi::Future<Link> connect(void* instance, Manageable* context, unsigned int event, const SignalSubscriber& subscriber)=0;
     /// Disconnect an event link. Returns if disconnection was successful.

@@ -28,7 +28,7 @@ namespace qi
   public:
     virtual ~PropertyBase() {}
     virtual SignalBase* signal() = 0;
-    virtual void setValue(GenericValueRef value) = 0;
+    virtual void setValue(AnyReference value) = 0;
     virtual GenericValue value() const = 0;
   };
 
@@ -73,8 +73,8 @@ namespace qi
     : PropertyImpl<T>(getter, setter, onsubscribe)
     {}
     virtual SignalBase* signal() { return this;}
-    virtual void setValue(GenericValueRef value)  { PropertyImpl<T>::set(value.to<T>());}
-    virtual GenericValue value() const { return GenericValue(GenericValueRef(PropertyImpl<T>::get()));}
+    virtual void setValue(AnyReference value)  { PropertyImpl<T>::set(value.to<T>());}
+    virtual GenericValue value() const { return GenericValue(AnyReference(PropertyImpl<T>::get()));}
   };
 
   template<>
@@ -88,7 +88,7 @@ namespace qi
     {
     }
     virtual SignalBase* signal() { return this;}
-    virtual void setValue(GenericValueRef value)  { set(GenericValue(value, false, false));}
+    virtual void setValue(AnyReference value)  { set(GenericValue(value, false, false));}
     virtual GenericValue value() const { return get();}
   };
 
@@ -104,7 +104,7 @@ namespace qi
       std::vector<TypeInterface*> types(&_type, &_type + 1);
       _setSignature(makeTupleSignature(types));
     }
-    virtual void setValue(GenericValueRef value)  { set(GenericValue(value, false, false));}
+    virtual void setValue(AnyReference value)  { set(GenericValue(value, false, false));}
     void set(const GenericValue& v);
     virtual qi::Signature signature() const {
       return makeTupleSignature(std::vector<TypeInterface*>(&_type, &_type + 1));

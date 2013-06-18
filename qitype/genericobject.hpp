@@ -33,7 +33,7 @@ namespace qi {
   //(see boundobject.cpp for details)
   static const unsigned int qiObjectSpecialMemberMaxUid = 100;
 
-  /* We need shared typeid on Future<GenericValuePtr>
+  /* We need shared typeid on Future<AnyReference>
    * If we do not export, typeids do not compare equals under some gcc-macos
    * Furthermore we get:
    * - macos: compiler warning and incorrect code if the template implementation is
@@ -75,62 +75,62 @@ namespace qi {
   template<typename R>
   qi::FutureSync<R> call(
                          const std::string& eventName,
-                         qi::AutoGenericValuePtr p1 = qi::AutoGenericValuePtr(),
-                         qi::AutoGenericValuePtr p2 = qi::AutoGenericValuePtr(),
-                         qi::AutoGenericValuePtr p3 = qi::AutoGenericValuePtr(),
-                         qi::AutoGenericValuePtr p4 = qi::AutoGenericValuePtr(),
-                         qi::AutoGenericValuePtr p5 = qi::AutoGenericValuePtr(),
-                         qi::AutoGenericValuePtr p6 = qi::AutoGenericValuePtr(),
-                         qi::AutoGenericValuePtr p7 = qi::AutoGenericValuePtr(),
-                         qi::AutoGenericValuePtr p8 = qi::AutoGenericValuePtr());
+                         qi::AutoAnyReference p1 = qi::AutoAnyReference(),
+                         qi::AutoAnyReference p2 = qi::AutoAnyReference(),
+                         qi::AutoAnyReference p3 = qi::AutoAnyReference(),
+                         qi::AutoAnyReference p4 = qi::AutoAnyReference(),
+                         qi::AutoAnyReference p5 = qi::AutoAnyReference(),
+                         qi::AutoAnyReference p6 = qi::AutoAnyReference(),
+                         qi::AutoAnyReference p7 = qi::AutoAnyReference(),
+                         qi::AutoAnyReference p8 = qi::AutoAnyReference());
   template<typename R>
   qi::FutureSync<R> call(
                          qi::MetaCallType callType,
                          const std::string& eventName,
-                         qi::AutoGenericValuePtr p1 = qi::AutoGenericValuePtr(),
-                         qi::AutoGenericValuePtr p2 = qi::AutoGenericValuePtr(),
-                         qi::AutoGenericValuePtr p3 = qi::AutoGenericValuePtr(),
-                         qi::AutoGenericValuePtr p4 = qi::AutoGenericValuePtr(),
-                         qi::AutoGenericValuePtr p5 = qi::AutoGenericValuePtr(),
-                         qi::AutoGenericValuePtr p6 = qi::AutoGenericValuePtr(),
-                         qi::AutoGenericValuePtr p7 = qi::AutoGenericValuePtr(),
-                         qi::AutoGenericValuePtr p8 = qi::AutoGenericValuePtr());
+                         qi::AutoAnyReference p1 = qi::AutoAnyReference(),
+                         qi::AutoAnyReference p2 = qi::AutoAnyReference(),
+                         qi::AutoAnyReference p3 = qi::AutoAnyReference(),
+                         qi::AutoAnyReference p4 = qi::AutoAnyReference(),
+                         qi::AutoAnyReference p5 = qi::AutoAnyReference(),
+                         qi::AutoAnyReference p6 = qi::AutoAnyReference(),
+                         qi::AutoAnyReference p7 = qi::AutoAnyReference(),
+                         qi::AutoAnyReference p8 = qi::AutoAnyReference());
 
   template<typename R>
   qi::FutureSync<R> async(
                          const std::string& eventName,
-                         qi::AutoGenericValuePtr p1 = qi::AutoGenericValuePtr(),
-                         qi::AutoGenericValuePtr p2 = qi::AutoGenericValuePtr(),
-                         qi::AutoGenericValuePtr p3 = qi::AutoGenericValuePtr(),
-                         qi::AutoGenericValuePtr p4 = qi::AutoGenericValuePtr(),
-                         qi::AutoGenericValuePtr p5 = qi::AutoGenericValuePtr(),
-                         qi::AutoGenericValuePtr p6 = qi::AutoGenericValuePtr(),
-                         qi::AutoGenericValuePtr p7 = qi::AutoGenericValuePtr(),
-                         qi::AutoGenericValuePtr p8 = qi::AutoGenericValuePtr());
+                         qi::AutoAnyReference p1 = qi::AutoAnyReference(),
+                         qi::AutoAnyReference p2 = qi::AutoAnyReference(),
+                         qi::AutoAnyReference p3 = qi::AutoAnyReference(),
+                         qi::AutoAnyReference p4 = qi::AutoAnyReference(),
+                         qi::AutoAnyReference p5 = qi::AutoAnyReference(),
+                         qi::AutoAnyReference p6 = qi::AutoAnyReference(),
+                         qi::AutoAnyReference p7 = qi::AutoAnyReference(),
+                         qi::AutoAnyReference p8 = qi::AutoAnyReference());
 #else
     // Declare genCall, using overloads for all argument count instead of default values.
     #define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma) \
     template<typename R> qi::FutureSync<R> call(       \
       const std::string& methodName comma              \
-      QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoGenericValuePtr));
+      QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoAnyReference));
     QI_GEN(genCall)
     #undef genCall
     #define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma) \
     template<typename R> qi::FutureSync<R> async(     \
       const std::string& methodName comma              \
-      QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoGenericValuePtr));
+      QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoAnyReference));
     QI_GEN(genCall)
     #undef genCall
     #define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma) \
     template<typename R> qi::FutureSync<R> call(     \
       qi::MetaCallType callType,                         \
       const std::string& methodName comma              \
-      QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoGenericValuePtr));
+      QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoAnyReference));
     QI_GEN(genCall)
     #undef genCall
 #endif // DOXYGEN
 
-    qi::Future<GenericValuePtr> metaCall(unsigned int method, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto);
+    qi::Future<AnyReference> metaCall(unsigned int method, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto);
     /** Find method named \p named callable with arguments \p parameters
     */
     unsigned int findMethod(const std::string& name, const GenericFunctionParameters& parameters);
@@ -138,17 +138,17 @@ namespace qi {
     * @param signature method name or method signature 'name::(args)'
     *        if signature is given, an exact match is required
     */
-    qi::Future<GenericValuePtr> metaCall(const std::string &nameWithOptionalSignature, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto);
+    qi::Future<AnyReference> metaCall(const std::string &nameWithOptionalSignature, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto);
 
     void post(const std::string& eventName,
-                   qi::AutoGenericValuePtr p1 = qi::AutoGenericValuePtr(),
-                   qi::AutoGenericValuePtr p2 = qi::AutoGenericValuePtr(),
-                   qi::AutoGenericValuePtr p3 = qi::AutoGenericValuePtr(),
-                   qi::AutoGenericValuePtr p4 = qi::AutoGenericValuePtr(),
-                   qi::AutoGenericValuePtr p5 = qi::AutoGenericValuePtr(),
-                   qi::AutoGenericValuePtr p6 = qi::AutoGenericValuePtr(),
-                   qi::AutoGenericValuePtr p7 = qi::AutoGenericValuePtr(),
-                   qi::AutoGenericValuePtr p8 = qi::AutoGenericValuePtr());
+                   qi::AutoAnyReference p1 = qi::AutoAnyReference(),
+                   qi::AutoAnyReference p2 = qi::AutoAnyReference(),
+                   qi::AutoAnyReference p3 = qi::AutoAnyReference(),
+                   qi::AutoAnyReference p4 = qi::AutoAnyReference(),
+                   qi::AutoAnyReference p5 = qi::AutoAnyReference(),
+                   qi::AutoAnyReference p6 = qi::AutoAnyReference(),
+                   qi::AutoAnyReference p7 = qi::AutoAnyReference(),
+                   qi::AutoAnyReference p8 = qi::AutoAnyReference());
 
     void metaPost(unsigned int event, const GenericFunctionParameters& params);
     void metaPost(const std::string &nameWithOptionalSignature, const GenericFunctionParameters &in);
@@ -203,24 +203,24 @@ namespace qi {
   qi::FutureSync<R> async(
                          T instancePointerOrSharedPointer,
                          const std::string& methodName,
-                         qi::AutoGenericValuePtr p1 = qi::AutoGenericValuePtr(),
-                         qi::AutoGenericValuePtr p2 = qi::AutoGenericValuePtr(),
-                         qi::AutoGenericValuePtr p3 = qi::AutoGenericValuePtr(),
-                         qi::AutoGenericValuePtr p4 = qi::AutoGenericValuePtr(),
-                         qi::AutoGenericValuePtr p5 = qi::AutoGenericValuePtr(),
-                         qi::AutoGenericValuePtr p6 = qi::AutoGenericValuePtr(),
-                         qi::AutoGenericValuePtr p7 = qi::AutoGenericValuePtr(),
-                         qi::AutoGenericValuePtr p8 = qi::AutoGenericValuePtr());
+                         qi::AutoAnyReference p1 = qi::AutoAnyReference(),
+                         qi::AutoAnyReference p2 = qi::AutoAnyReference(),
+                         qi::AutoAnyReference p3 = qi::AutoAnyReference(),
+                         qi::AutoAnyReference p4 = qi::AutoAnyReference(),
+                         qi::AutoAnyReference p5 = qi::AutoAnyReference(),
+                         qi::AutoAnyReference p6 = qi::AutoAnyReference(),
+                         qi::AutoAnyReference p7 = qi::AutoAnyReference(),
+                         qi::AutoAnyReference p8 = qi::AutoAnyReference());
 #else
 #define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)         \
     template<typename R,typename T> qi::FutureSync<R> async(   \
       T* instance,                                                 \
       const std::string& methodName comma                         \
-      QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoGenericValuePtr));       \
+      QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoAnyReference));       \
     template<typename R,typename T> qi::FutureSync<R> async(   \
       boost::shared_ptr<T> instance,                              \
       const std::string& methodName comma                         \
-      QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoGenericValuePtr));
+      QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoAnyReference));
     QI_GEN(genCall)
     #undef genCall
 #endif
@@ -246,7 +246,7 @@ namespace qi {
    * When the call is finally made, if ObjectThreadingModel
    * is SingleThread, acquire the object lock.
   */
-  QITYPE_API qi::Future<GenericValuePtr> metaCall(EventLoop* el,
+  QITYPE_API qi::Future<AnyReference> metaCall(EventLoop* el,
     ObjectThreadingModel objectThreadingModel,
     MetaCallType methodThreadingModel,
     MetaCallType callType,
@@ -271,7 +271,7 @@ namespace qi {
       Proxy* ptr = static_cast<Proxy*>(instance);
       return ptr->asObject()->metaObject();
     }
-    virtual qi::Future<GenericValuePtr> metaCall(void* instance, Manageable* context, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto)
+    virtual qi::Future<AnyReference> metaCall(void* instance, Manageable* context, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto)
     {
       Proxy* ptr = static_cast<Proxy*>(instance);
       return ptr->asObject()->metaCall(method, params, callType);

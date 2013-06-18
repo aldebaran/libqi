@@ -123,7 +123,7 @@ namespace qi{
     /** @return the serialization signature corresponding to what the type
      * would emit
      * @param resolveDynamic: if true, resolve dynamic types as deep as possible
-     * for example a list<GenericValuePtr> that happens to only contain int32
+     * for example a list<AnyReference> that happens to only contain int32
      * will return [i]
      * @warning if resolveDynamic is true, a valid storage must be given
     */
@@ -183,15 +183,15 @@ namespace qi{
   /** Class that holds any value, with informations to manipulate it.
    *  operator=() makes a shallow copy.
    *
-   * \warning GenericValuePtr should not be used directly as call arguments.
+   * \warning AnyReference should not be used directly as call arguments.
    * Use qi::GenericValue which has value semantics instead.
    *
    */
-  class QITYPE_API GenericValuePtr
+  class QITYPE_API AnyReference
   {
   public:
 
-    GenericValuePtr();
+    AnyReference();
 
     ///@{
     /// Low level Internal API
@@ -199,32 +199,32 @@ namespace qi{
     /** Store type and allocate storage of value.
      * @param type use this type for initialization
      */
-    explicit GenericValuePtr(TypeInterface* type);
+    explicit AnyReference(TypeInterface* type);
 
     /** Create a generic value with type and a value who should have
      * already been allocated.
      * @param type type of this generic value
      * @param value an already alloc place to store value
      */
-    GenericValuePtr(TypeInterface* type, void* value) : type(type), value(value) {}
+    AnyReference(TypeInterface* type, void* value) : type(type), value(value) {}
 
     /// @return the pair (convertedValue, trueIfCopiedAndNeedsDestroy)
-    std::pair<GenericValuePtr, bool> convert(TypeInterface* targetType) const;
+    std::pair<AnyReference, bool> convert(TypeInterface* targetType) const;
 
-    std::pair<GenericValuePtr, bool> convert(ListTypeInterface* targetType) const;
-    std::pair<GenericValuePtr, bool> convert(StructTypeInterface* targetType) const;
-    std::pair<GenericValuePtr, bool> convert(MapTypeInterface* targetType) const;
-    std::pair<GenericValuePtr, bool> convert(IntTypeInterface* targetType) const;
-    std::pair<GenericValuePtr, bool> convert(FloatTypeInterface* targetType) const;
-    std::pair<GenericValuePtr, bool> convert(RawTypeInterface* targetType) const;
-    std::pair<GenericValuePtr, bool> convert(StringTypeInterface* targetType) const;
-    std::pair<GenericValuePtr, bool> convert(PointerTypeInterface* targetType) const;
-    std::pair<GenericValuePtr, bool> convert(DynamicTypeInterface* targetType) const;
-
-
+    std::pair<AnyReference, bool> convert(ListTypeInterface* targetType) const;
+    std::pair<AnyReference, bool> convert(StructTypeInterface* targetType) const;
+    std::pair<AnyReference, bool> convert(MapTypeInterface* targetType) const;
+    std::pair<AnyReference, bool> convert(IntTypeInterface* targetType) const;
+    std::pair<AnyReference, bool> convert(FloatTypeInterface* targetType) const;
+    std::pair<AnyReference, bool> convert(RawTypeInterface* targetType) const;
+    std::pair<AnyReference, bool> convert(StringTypeInterface* targetType) const;
+    std::pair<AnyReference, bool> convert(PointerTypeInterface* targetType) const;
+    std::pair<AnyReference, bool> convert(DynamicTypeInterface* targetType) const;
 
 
-    /** Return the typed pointer behind a GenericValuePtr. T *must* be the type
+
+
+    /** Return the typed pointer behind a AnyReference. T *must* be the type
      * of the value.
      * @return a pointer to the value as a T or 0 if value is not a T.
      * @param check if false, does not validate type before converting
@@ -236,12 +236,12 @@ namespace qi{
     bool isValue() const;
 
     /// Helper function that converts and always clone
-    GenericValuePtr convertCopy(TypeInterface* targetType) const;
+    AnyReference convertCopy(TypeInterface* targetType) const;
 
     // get item with key/ïndex 'key'. Return empty GVP or throw in case of failure
-    GenericValuePtr _element(const GenericValuePtr& key, bool throwOnFailure);
-    void _append(const GenericValuePtr& element);
-    void _insert(const GenericValuePtr& key, const GenericValuePtr& val);
+    AnyReference _element(const AnyReference& key, bool throwOnFailure);
+    void _append(const AnyReference& element);
+    void _insert(const AnyReference& key, const AnyReference& val);
     TypeInterface*   type;
     void*   value;
     ///@}
@@ -251,25 +251,23 @@ namespace qi{
      */
 
     /** Construct a GenericValue with storage pointing to ptr.
-     * @warning the GenericValuePtr will become invalid if ptr
+     * @warning the AnyReference will become invalid if ptr
      * is destroyed (if it gets deleted or points to the stack and goes
      * out of scope).
      */
-    //template <typename T>
-    //explicit GenericValuePtr(const T& ref);
+    template <typename T>
+    explicit AnyReference(const T& ref);
 
     template <typename T>
-    static GenericValuePtr fromPtr(const T* ptr);
+    static AnyReference fromPtr(const T* ptr);
 
-    template <typename T>
-    static GenericValuePtr fromRef(const T& ptr);
 
     /** Assignment operator.
      *  Previous content is lost, and will leak if not deleted outside or
      *  with destroy().
      */
-    GenericValuePtr& operator = (const GenericValuePtr& b);
-    GenericValuePtr clone() const;
+    AnyReference& operator = (const AutoAnyReference& b);
+    AnyReference clone() const;
     /// Deletes storage.
     void destroy();
     ///@}
@@ -314,13 +312,13 @@ namespace qi{
      *  They will fail by throwing an exception if the requested operation
      * is incompatible with the current value type.
      *
-     * @warning a GenericValuePtr referring to a container element will
+     * @warning a AnyReference referring to a container element will
      * become invalid as soon as the container is modified.
      *
     */
 
     /// Update the value with the one in b
-    void  update(const GenericValuePtr& b);
+    void  update(const AnyReference& b);
 
     /** @return a typed reference to the underlying value
      *  @warning This method will only succeed if T exactly matches
@@ -341,21 +339,21 @@ namespace qi{
     std::string& asString() { return as<std::string>();}
 
     /** @return contained GenericValue or throw if type is not dynamic.
-     * @note Returned GenericValuePtr might be empty.
+     * @note Returned AnyReference might be empty.
     */
-    GenericValuePtr asDynamic() const;
+    AnyReference asDynamic() const;
 
     /// @{
     /** Container partial unboxing.
      *  The following functions unbox the container-part of the value.
-     *  The values in the contairer are exposed as GenericValuePtr.
+     *  The values in the contairer are exposed as AnyReference.
      *  The values can be modified using the set and as function families,
      *  But the container itself is a copy.
      * @warning for better performances use the begin() and end() iterator API
     */
-    std::vector<GenericValuePtr> asTupleValuePtr();
-    std::vector<GenericValuePtr> asListValuePtr();
-    std::map<GenericValuePtr, GenericValuePtr> asMapValuePtr();
+    std::vector<AnyReference> asTupleValuePtr();
+    std::vector<AnyReference> asListValuePtr();
+    std::map<AnyReference, AnyReference> asMapValuePtr();
     /// @}
 
     /// Update the value to val, which will be converted if required.
@@ -373,7 +371,7 @@ namespace qi{
     void  setFloat(float v);
     void  setDouble(double v);
     void  setString(const std::string& v);
-    void  setDynamic(const GenericValuePtr &value);
+    void  setDynamic(const AnyReference &value);
 
     ///@{
     /// In-place container manipulation.
@@ -390,7 +388,7 @@ namespace qi{
      *  is changed.
     */
     template<typename K>
-    GenericValueRef     operator[](const K& key);
+    AnyReference     operator[](const K& key);
     /// Call operator[](key).as<E>, element type must match E
     template<typename E, typename K> E& element(const K& key);
     size_t size() const;
@@ -399,69 +397,69 @@ namespace qi{
     /** Similar to operator[](), but return an empty GenericValue
      * If the key is not present.
      */
-    template<typename K> GenericValuePtr find(const K& key);
+    template<typename K> AnyReference find(const K& key);
 
     /// Return an iterator on the beginning of the container
     GenericIterator begin() const; //we lie on const but GV does not honor it yet
     /// Return an iterator on the end of the container
     GenericIterator end() const;
     /// Dereference pointer or iterator
-    GenericValueRef operator*();
+    AnyReference operator*();
     ///@}
 
     ///@}
 
   };
 
-  QITYPE_API bool operator< (const GenericValuePtr& a, const GenericValuePtr& b);
-  QITYPE_API bool operator==(const GenericValuePtr& a, const GenericValuePtr& b);
-  QITYPE_API bool operator!=(const GenericValuePtr& a, const GenericValuePtr& b);
-  /** GenericValuePtr with copy semantics
+  QITYPE_API bool operator< (const AnyReference& a, const AnyReference& b);
+  QITYPE_API bool operator==(const AnyReference& a, const AnyReference& b);
+  QITYPE_API bool operator!=(const AnyReference& a, const AnyReference& b);
+  /** AnyReference with copy semantics
   */
-  class QITYPE_API GenericValue: public GenericValuePtr
+  class QITYPE_API GenericValue: public AnyReference
   {
   public:
 
     GenericValue();
     /// Share ownership of value with b.
     GenericValue(const GenericValue& b);
-    explicit GenericValue(const GenericValuePtr& b, bool copy, bool free);
-    explicit GenericValue(const GenericValuePtr& b);
-    explicit GenericValue(const GenericValueRef& b);
+    explicit GenericValue(const AnyReference& b, bool copy, bool free);
+    explicit GenericValue(const AutoAnyReference& b);
     explicit GenericValue(qi::TypeInterface *type);
     /// Create and return a GenericValue of type T
     template<typename T> static GenericValue make();
 
     /// @{
     /** The following functions construct a GenericValue from containers of
-     * GenericValuePtr.
+     * AnyReference.
     */
-    static GenericValue makeTuple(const std::vector<GenericValuePtr>& values);
+    static GenericValue makeTuple(const std::vector<AnyReference>& values);
     template<typename T>
-    static GenericValue makeList(const std::vector<GenericValuePtr>& values);
-    static GenericValue makeGenericList(const std::vector<GenericValuePtr>& values);
+    static GenericValue makeList(const std::vector<AnyReference>& values);
+    static GenericValue makeGenericList(const std::vector<AnyReference>& values);
     template<typename K, typename V>
-    static GenericValue makeMap(const std::map<GenericValuePtr, GenericValuePtr>& values);
-    static GenericValue makeGenericMap(const std::map<GenericValuePtr, GenericValuePtr>& values);
+    static GenericValue makeMap(const std::map<AnyReference, AnyReference>& values);
+    static GenericValue makeGenericMap(const std::map<AnyReference, AnyReference>& values);
 
     /// @}
 
     ~GenericValue();
-    void operator = (const GenericValuePtr& b);
+    void operator = (const AnyReference& b);
     void operator = (const GenericValue& b);
     void reset();
     void reset(qi::TypeInterface *type);
     template <typename T>
-    void set(const T& t) { GenericValuePtr::set<T>(t); }
-    void reset(const GenericValuePtr& src);
-    void reset(const GenericValuePtr& src, bool copy, bool free);
+    void set(const T& t) { AnyReference::set<T>(t); }
+    void reset(const AnyReference& src);
+    void reset(const AnyReference& src, bool copy, bool free);
     void swap(GenericValue& b);
 
-    template<typename T> static GenericValue from(const T& r) { return GenericValue(GenericValuePtr::fromRef(r));}
+    template<typename T>
+    static GenericValue from(const T& r) { return GenericValue(r);}
 
   private:
     //we dont accept GVP here.  (block set<T> with T=GVP)
-    void set(const GenericValuePtr& t);
+    void set(const AnyReference& t);
     bool _allocated;
   };
 
@@ -470,41 +468,23 @@ namespace qi{
   class GenericIterator: public GenericValue
   {
   public:
-    typedef GenericValueRef value_type;
-    typedef GenericValueRef* pointer;
-    typedef GenericValueRef& reference;
+    typedef AnyReference value_type;
+    typedef AnyReference* pointer;
+    typedef AnyReference& reference;
     typedef ptrdiff_t difference_type;
     typedef std::forward_iterator_tag iterator_category;
     GenericIterator();
-    GenericIterator(const GenericValuePtr& p);
+    GenericIterator(const AnyReference& p);
     GenericIterator(const GenericValue& v);
     template<typename T> GenericIterator(const T& ref);
     /// Iterator increment
     GenericIterator operator ++();
     /// Dereference
-    GenericValueRef operator*();
+    AnyReference operator*();
   };
-QITYPE_API bool operator==(const GenericIterator& a, const GenericIterator & b);
-QITYPE_API bool operator !=(const GenericIterator & a, const GenericIterator& b);
 
-  /** GenericValueRef with c++ ref semantics:
-   *  - Must be constructed from a GenericValuePtr
-   *  - Cannot be assigned later on
-   *  - Behaves like a value
-  */
-  class QITYPE_API GenericValueRef: public GenericValuePtr
-  {
-  public:
-    GenericValueRef(const GenericValuePtr&);
-    template<typename T>
-    GenericValueRef(const T& ref);
-
-    template<typename T>
-    GenericValueRef& operator=(const T& v);
-
-    GenericValueRef& operator=(const GenericValuePtr& v);
-    GenericValueRef& operator=(const GenericValueRef& v);
-  };
+  QITYPE_API bool operator==(const GenericIterator& a, const GenericIterator & b);
+  QITYPE_API bool operator !=(const GenericIterator & a, const GenericIterator& b);
 
 
   /// Less than operator. Will compare the values within the GenericValue.
@@ -514,7 +494,7 @@ QITYPE_API bool operator !=(const GenericIterator & a, const GenericIterator& b)
   QITYPE_API bool operator==(const GenericValue& a, const GenericValue& b);
   QITYPE_API bool operator!=(const GenericValue& a, const GenericValue& b);
 
-  /** Generates GenericValuePtr from everything transparently.
+  /** Generates AnyReference from everything transparently.
    * To be used as type of meta-function call argument
    *
    *  Example:
@@ -522,27 +502,23 @@ QITYPE_API bool operator !=(const GenericIterator & a, const GenericIterator& b)
    *  can be called with any argument type:
    *    metaCall("foo", 12);
    */
-  class QITYPE_API AutoGenericValuePtr: public GenericValuePtr
+  class QITYPE_API AutoAnyReference: public AnyReference
   {
   public:
-    AutoGenericValuePtr ();
-    AutoGenericValuePtr(const AutoGenericValuePtr & b);
+    AutoAnyReference ();
+    AutoAnyReference(const AutoAnyReference & b);
 
-    AutoGenericValuePtr(const GenericValuePtr &self)
-      : GenericValuePtr(self)
-    {}
-
-    AutoGenericValuePtr(const GenericValueRef &self)
-      : GenericValuePtr(self)
+    AutoAnyReference(const AnyReference &self)
+      : AnyReference(self)
     {}
 
     template<typename T>
-    AutoGenericValuePtr(const T& ptr);
+    AutoAnyReference(const T& ptr);
   };
 
   /** @return the value encoded in JSON.
    */
-  QITYPE_API std::string encodeJSON(const qi::AutoGenericValuePtr &val);
+  QITYPE_API std::string encodeJSON(const qi::AutoAnyReference &val);
 
   /**
     * creates a GV representing a JSON string or throw on parse error.
@@ -616,7 +592,7 @@ QITYPE_API bool operator !=(const GenericIterator & a, const GenericIterator& b)
     };
     virtual PointerKind pointerKind() const = 0;
     virtual TypeInterface* pointedType() const = 0;
-    virtual GenericValuePtr dereference(void* storage) = 0; // must not be destroyed
+    virtual AnyReference dereference(void* storage) = 0; // must not be destroyed
     // Set new pointee value. pointer must be a *pointer* to type pointedType()
     virtual void setPointee(void** storage, void* pointer) = 0;
     virtual Kind kind() const { return Pointer; }
@@ -626,7 +602,7 @@ QITYPE_API bool operator !=(const GenericIterator & a, const GenericIterator& b)
   {
   public:
     // Returned reference is expected to point to somewhere in the iterator, or the container
-    virtual GenericValueRef dereference(void* storage) = 0;
+    virtual AnyReference dereference(void* storage) = 0;
     virtual void  next(void** storage) = 0;
     virtual bool equals(void* s1, void* s2) = 0;
     virtual Kind kind() const { return Iterator;}
@@ -653,7 +629,7 @@ QITYPE_API bool operator !=(const GenericIterator & a, const GenericIterator& b)
     virtual GenericIterator begin(void* storage) = 0;
     virtual GenericIterator end(void* storage) = 0;
     virtual void insert(void** storage, void* keyStorage, void* valueStorage) = 0;
-    virtual GenericValuePtr element(void** storage, void* keyStorage, bool autoInsert) = 0;
+    virtual AnyReference element(void** storage, void* keyStorage, bool autoInsert) = 0;
     virtual Kind kind() const { return Map; }
     // Since our typesystem has no erased operator < or operator ==,
     // MapTypeInterface does not provide a find()
@@ -662,7 +638,7 @@ QITYPE_API bool operator !=(const GenericIterator & a, const GenericIterator& b)
   class QITYPE_API StructTypeInterface: public TypeInterface
   {
   public:
-    std::vector<GenericValuePtr> values(void* storage);
+    std::vector<AnyReference> values(void* storage);
     virtual std::vector<TypeInterface*> memberTypes() = 0;
     virtual std::vector<void*> get(void* storage); // must not be destroyed
     virtual void* get(void* storage, unsigned int index) = 0; // must not be destroyed
@@ -676,8 +652,8 @@ QITYPE_API bool operator !=(const GenericIterator & a, const GenericIterator& b)
   class QITYPE_API DynamicTypeInterface: public TypeInterface
   {
   public:
-    virtual GenericValuePtr get(void* storage) = 0;
-    virtual void set(void** storage, GenericValuePtr source) = 0;
+    virtual AnyReference get(void* storage) = 0;
+    virtual void set(void** storage, AnyReference source) = 0;
     virtual Kind kind() const { return Dynamic; }
   };
 
@@ -691,10 +667,10 @@ QITYPE_API bool operator !=(const GenericIterator & a, const GenericIterator& b)
   QITYPE_API TypeInterface* makeTupleType(const std::vector<TypeInterface*>& memberTypes, const std::string &name = std::string(), const std::vector<std::string>& elementNames = std::vector<std::string>());
 
   ///@return an allocated Tuple made from copies of \param values
-  QITYPE_API GenericValuePtr makeGenericTuple(const std::vector<GenericValuePtr>& values);
+  QITYPE_API AnyReference makeGenericTuple(const std::vector<AnyReference>& values);
 
   ///@return a Tuple pointing to \param values as its storage
-  QITYPE_API GenericValuePtr makeGenericTuplePtr(
+  QITYPE_API AnyReference makeGenericTuplePtr(
     const std::vector<TypeInterface*>&types,
     const std::vector<void*>&values);
 

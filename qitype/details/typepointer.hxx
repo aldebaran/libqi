@@ -20,9 +20,9 @@ namespace qi
       return typeOf<T>();
     }
     PointerKind pointerKind() const { return Raw;}
-    GenericValuePtr dereference(void* storage)
+    AnyReference dereference(void* storage)
     {
-      GenericValuePtr result;
+      AnyReference result;
       result.type = pointedType();
       // We are in DirectAccess mode, so storage is a T*.
       result.value = result.type->initializeStorage(storage);
@@ -50,10 +50,10 @@ namespace qi
       return typeOf<typename T::element_type>();
     }
     PointerKind pointerKind() const { return Shared;}
-    GenericValuePtr dereference(void* storage)
+    AnyReference dereference(void* storage)
     {
       T* ptr = (T*)ptrFromStorage(&storage);
-      GenericValuePtr result;
+      AnyReference result;
       result.type = pointedType();
       result.value = result.type->initializeStorage(ptr->get());
       return result;

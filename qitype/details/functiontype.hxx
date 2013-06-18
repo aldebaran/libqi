@@ -28,7 +28,7 @@ namespace qi
     return _argumentsType;
   }
 
-  inline GenericValuePtr AnyFunction::operator()(const std::vector<GenericValuePtr>& args)
+  inline AnyReference AnyFunction::operator()(const std::vector<AnyReference>& args)
   {
     return call(args);
   }

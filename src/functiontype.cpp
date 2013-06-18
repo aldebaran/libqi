@@ -11,25 +11,25 @@ qiLogCategory("qitype.functiontype");
 
 namespace qi
 {
-  GenericValuePtr AnyFunction::call(
-    GenericValuePtr arg1, const std::vector<GenericValuePtr>& remaining)
+  AnyReference AnyFunction::call(
+    AnyReference arg1, const std::vector<AnyReference>& remaining)
   {
-    std::vector<GenericValuePtr> args;
+    std::vector<AnyReference> args;
     args.reserve(remaining.size()+1);
     args.push_back(arg1);
     args.insert(args.end(), remaining.begin(), remaining.end());
     return call(args);
   }
 
-  GenericValuePtr AnyFunction::call(
-    const std::vector<GenericValuePtr>& vargs)
+  AnyReference AnyFunction::call(
+    const std::vector<AnyReference>& vargs)
   {
     if (type == dynamicFunctionTypeInterface())
     {
       DynamicFunction* f = (DynamicFunction*)value;
       if (!transform.dropFirst && !transform.prependValue)
         return (*f)(vargs);
-      std::vector<GenericValuePtr> args;
+      std::vector<AnyReference> args;
       if (transform.dropFirst && !transform.prependValue)
       {
         // VCXX2008 does not accept insert here because GV(GVP) ctor is explicit
@@ -53,13 +53,13 @@ namespace qi
     unsigned deltaCount = (transform.dropFirst? -1:0) + (transform.prependValue?1:0);
     const std::vector<TypeInterface*>& target = type->argumentsType();
     unsigned sz = vargs.size();
-    const GenericValuePtr* args = sz > 0 ? &vargs[0] : 0;
+    const AnyReference* args = sz > 0 ? &vargs[0] : 0;
 
     if (target.size() != sz + deltaCount)
     {
       throw std::runtime_error(_QI_LOG_FORMAT("Argument count mismatch, expected %s, got %s (transform %s)",
         target.size(), sz, deltaCount));
-      return GenericValuePtr();
+      return AnyReference();
     }
     if (transform.dropFirst)
     {
@@ -68,10 +68,10 @@ namespace qi
     }
     unsigned offset = transform.prependValue? 1:0;
 #if QI_HAS_VARIABLE_LENGTH_ARRAY
-    GenericValuePtr toDestroy[sz+offset];
+    AnyReference toDestroy[sz+offset];
     void* convertedArgs[sz+offset];
 #else
-    GenericValuePtr* toDestroy = new GenericValuePtr[sz+offset];
+    AnyReference* toDestroy = new AnyReference[sz+offset];
     void** convertedArgs = new void*[sz+offset];
 #endif
     if (transform.prependValue)
@@ -89,13 +89,13 @@ namespace qi
         //qiLogDebug() << "needs conversion "
         //<< args[i].type->infoString() << " -> "
         //<< target[i]->infoString();
-        std::pair<GenericValuePtr,bool> v = args[i].convert(target[i+offset]);
+        std::pair<AnyReference,bool> v = args[i].convert(target[i+offset]);
         if (!v.first.type)
         {
           // Try pointer dereference
           if (args[i].kind() == TypeInterface::Pointer)
           {
-            GenericValuePtr deref = *const_cast<GenericValuePtr&>(args[i]);
+            AnyReference deref = *const_cast<AnyReference&>(args[i]);
             if (deref.type == target[i+offset] || deref.type->info() == target[i+offset]->info())
               v = std::make_pair(deref, false);
             else
@@ -107,7 +107,7 @@ namespace qi
               args[i].type->infoString(),
               target[i]->infoString(),
               args[i].type->infoString() == target[i]->infoString()));
-            return GenericValuePtr();
+            return AnyReference();
           }
         }
         if (v.second)
@@ -117,7 +117,7 @@ namespace qi
     }
     void* res;
     res = type->call(value, convertedArgs, sz+offset);
-    GenericValuePtr result;
+    AnyReference result;
     result.type = resultType();
     result.value = res;
     for (unsigned i=0; i<toDestroyPos; ++i)
@@ -226,8 +226,8 @@ namespace qi
   {
   }
 
-  GenericFunctionParameters::GenericFunctionParameters(const std::vector<GenericValuePtr>& args)
-  :std::vector<GenericValuePtr>(args)
+  GenericFunctionParameters::GenericFunctionParameters(const std::vector<AnyReference>& args)
+  :std::vector<AnyReference>(args)
   {
   }
 
@@ -249,7 +249,7 @@ namespace qi
   GenericFunctionParameters::convert(const Signature& sig) const
   {
     GenericFunctionParameters dst;
-    const std::vector<GenericValuePtr>& src = *this;
+    const std::vector<AnyReference>& src = *this;
     if (sig.size() != src.size())
     {
       qiLogError() << "convert: signature/params size mismatch"
@@ -273,7 +273,7 @@ namespace qi
 
   Signature GenericFunctionParameters::signature(bool dyn) const
   {
-    const std::vector<GenericValuePtr>& params = *this;
+    const std::vector<AnyReference>& params = *this;
     return qi::makeTupleSignature(params, dyn);
   }
 

@@ -193,7 +193,7 @@ TEST(TestSignal, SignalNBind)
 {
   int res = 0;
   boost::shared_ptr<SigHolder> so(new SigHolder);
-  qi::ObjectPtr op = qi::GenericValueRef(so).to<qi::ObjectPtr>();
+  qi::ObjectPtr op = qi::AnyReference(so).to<qi::ObjectPtr>();
   qi::details::printMetaObject(std::cerr, op->metaObject());
   op->connect("s1", (boost::function<void(int)>)boost::bind<void>(&lol, _1, boost::ref(res)));
   op->post("s1", 2);

@@ -989,13 +989,13 @@ QI_TYPE_PROXY(@namepaces@@proxyName@);
     # a compatible object.
     # But we have no parent class to let C++ typecheck.
     # We could make this method a template, but let's rather take a
-    # AutoGenericValuePtr.
+    # AutoAnyReference.
     typed_args = ''
     argIdx = 0
     for arg in method[1]:
       cxx_arg = signature_to_cxxtype(arg)
       if cxx_arg.find("Ptr") != -1:
-        typed_args += '::qi::AutoGenericValuePtr p' + str(argIdx)
+        typed_args += '::qi::AutoAnyReference p' + str(argIdx)
       else:
         typed_args += cxx_arg + ' p' + str(argIdx)
       typed_args += ', '

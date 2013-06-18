@@ -10,7 +10,7 @@
 
 namespace qi {
 
-  static void serialize(GenericValuePtr val, std::stringstream& out);
+  static void serialize(AnyReference val, std::stringstream& out);
 
   //Taken from boost::json
   inline char to_hex_char(unsigned int c)
@@ -78,7 +78,7 @@ namespace qi {
     return result;
   }
 
-  std::string encodeJSON(const qi::AutoGenericValuePtr &value) {
+  std::string encodeJSON(const qi::AutoAnyReference &value) {
     std::stringstream ss;
     serialize(value, ss);
     return ss.str();
@@ -93,7 +93,7 @@ namespace qi {
       //force C local, for int and float formatting
       out.imbue(std::locale("C"));
     }
-    void visitUnknown(GenericValuePtr v)
+    void visitUnknown(AnyReference v)
     {
       qiLogError("qi.type") << "JSON Error: Type " << v.type->infoString() <<" not serializable";
       out << "\"Error: no serialization for unknown type:" << v.type->infoString() << "\"";
@@ -167,7 +167,7 @@ namespace qi {
       bool clear = begin != end;
       while (begin != end)
       {
-        GenericValuePtr e = *begin;
+        AnyReference e = *begin;
         serialize(e[0], out);
         out << " : ";
         serialize(e[1], out);
@@ -193,13 +193,13 @@ namespace qi {
       out << "\"Error: no serialization for object\"";
     }
 
-    void visitPointer(GenericValuePtr pointee)
+    void visitPointer(AnyReference pointee)
     {
       qiLogError("qi.type") << "JSON Error: error a pointer!!!";
       out << "\"Error: no serialization for pointer\"";
     }
 
-    void visitTuple(const std::string &name, const std::vector<GenericValuePtr> &vals, const std::vector<std::string> &annotations)
+    void visitTuple(const std::string &name, const std::vector<AnyReference> &vals, const std::vector<std::string> &annotations)
     {
       //is the tuple is annotated serialize as an object
       if (annotations.size()) {
@@ -229,21 +229,21 @@ namespace qi {
       out << " ]";
     }
 
-    void visitDynamic(GenericValuePtr pointee)
+    void visitDynamic(AnyReference pointee)
     {
       if (pointee.isValid()) {
         serialize(pointee, out);
       }
     }
 
-    void visitRaw(GenericValuePtr raw)
+    void visitRaw(AnyReference raw)
     {
       //TODO: implement buffer support
       qiLogError("qi.type") << "JSON Error: raw data encoder not implemented!!!";
       out << "\"Error: no serialization for Buffer\"";
     }
 
-    void visitIterator(GenericValuePtr)
+    void visitIterator(AnyReference)
     {
       qiLogError("qi.type") << "JSON Error: no serialization for iterator!!!";
       out << "\"Error: no serialization for iterator\"";
@@ -252,7 +252,7 @@ namespace qi {
     std::stringstream& out;
   };
 
-  static void serialize(GenericValuePtr val, std::stringstream& out)
+  static void serialize(AnyReference val, std::stringstream& out)
   {
     SerializeJSONTypeVisitor stv(out);
     qi::typeDispatch(stv, val);

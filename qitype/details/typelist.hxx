@@ -31,10 +31,10 @@ template<typename T> class TypeSimpleIteratorImpl: public IteratorTypeInterface
 {
 public:
   typedef T Storage;
-  virtual GenericValueRef dereference(void* storage)
+  virtual AnyReference dereference(void* storage)
   {
     T* ptr = (T*)ptrFromStorage(&storage);
-    return GenericValueRef(*(*ptr));
+    return AnyReference(*(*ptr));
   }
   virtual void next(void** storage)
   {
@@ -52,7 +52,7 @@ public:
   static GenericIterator make(const T& val)
   {
     static TypeSimpleIteratorImpl<T>* type = new TypeSimpleIteratorImpl<T>();
-    return GenericValue(GenericValuePtr(type, type->initializeStorage(const_cast<void*>((const void*)&val))));
+    return GenericValue(AnyReference(type, type->initializeStorage(const_cast<void*>((const void*)&val))));
   }
 };
 

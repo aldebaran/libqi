@@ -146,10 +146,10 @@ namespace qi {
     return type->metaObject(value);
   }
 
-  qi::Future<GenericValuePtr>
+  qi::Future<AnyReference>
   GenericObject::metaCall(unsigned int method, const GenericFunctionParameters& params, MetaCallType callType)
   {
-    qi::Promise<GenericValuePtr> out;
+    qi::Promise<AnyReference> out;
     if (!type || !value) {
       qiLogWarning() << "Operating on invalid GenericObject..";
       out.setError("Invalid object");
@@ -250,10 +250,10 @@ namespace qi {
     return -1;
   }
 
-  qi::Future<GenericValuePtr>
+  qi::Future<AnyReference>
   GenericObject::metaCall(const std::string &nameWithOptionalSignature, const GenericFunctionParameters& args, MetaCallType callType)
   {
-    qi::Promise<GenericValuePtr> out;
+    qi::Promise<AnyReference> out;
     if (!type || !value) {
       qiLogWarning() << "Operating on invalid GenericObject..";
       out.setError("Invalid object");
@@ -263,7 +263,7 @@ namespace qi {
     if (methodId < 0) {
       std::string resolvedSig = args.signature(true).toString();
       std::string fullSig = nameWithOptionalSignature + "::" + resolvedSig;
-      return makeFutureError<GenericValuePtr>(generateErrorString(fullSig, metaObject().findCompatibleMethod(nameWithOptionalSignature), false));
+      return makeFutureError<AnyReference>(generateErrorString(fullSig, metaObject().findCompatibleMethod(nameWithOptionalSignature), false));
     }
     return metaCall(methodId, args, callType);
   }
@@ -356,21 +356,21 @@ namespace qi {
   }*/
 
   void GenericObject::post(const std::string& nameWithOptionalSignature,
-                         qi::AutoGenericValuePtr p1,
-                         qi::AutoGenericValuePtr p2,
-                         qi::AutoGenericValuePtr p3,
-                         qi::AutoGenericValuePtr p4,
-                         qi::AutoGenericValuePtr p5,
-                         qi::AutoGenericValuePtr p6,
-                         qi::AutoGenericValuePtr p7,
-                         qi::AutoGenericValuePtr p8)
+                         qi::AutoAnyReference p1,
+                         qi::AutoAnyReference p2,
+                         qi::AutoAnyReference p3,
+                         qi::AutoAnyReference p4,
+                         qi::AutoAnyReference p5,
+                         qi::AutoAnyReference p6,
+                         qi::AutoAnyReference p7,
+                         qi::AutoAnyReference p8)
   {
     if (!type || !value) {
       qiLogWarning() << "Operating on invalid GenericObject..";
       return;
     }
-    qi::AutoGenericValuePtr* vals[8]= {&p1, &p2, &p3, &p4, &p5, &p6, &p7, &p8};
-    std::vector<qi::GenericValuePtr> params;
+    qi::AutoAnyReference* vals[8]= {&p1, &p2, &p3, &p4, &p5, &p6, &p7, &p8};
+    std::vector<qi::AnyReference> params;
     for (unsigned i=0; i<8; ++i)
       if (vals[i]->type)
         params.push_back(*vals[i]);
