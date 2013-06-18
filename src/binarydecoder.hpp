@@ -79,7 +79,7 @@ namespace qi {
   template<typename T>
   void BinaryDecoder::read(T& v)
   {
-    GenericValuePtr gv(&v);
+    GenericValueRef gv(v);
     decodeBinary(&bufferReader(), gv);
   }
 }

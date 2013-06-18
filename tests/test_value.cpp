@@ -27,7 +27,7 @@ TEST(Value, Ref)
   GenericValueRef rd(d);
   rd = 15;
   ASSERT_EQ(d, 15);
-  GenericValuePtr p(&d);
+  GenericValuePtr p = GenericValuePtr::fromPtr(&d);
   GenericValueRef vr(p);
   vr = 16;
   ASSERT_EQ(d, 16);
@@ -36,7 +36,7 @@ TEST(Value, Ref)
 TEST(Value, InPlaceSet)
 {
   std::string s("foo");
-  GenericValuePtr v(&s);
+  GenericValueRef v(s);
   v.setString("bar");
   ASSERT_EQ("bar", s);
   v.setString("pifpouf");
@@ -56,7 +56,7 @@ TEST(Value, InPlaceSet)
 TEST(Value, Update)
 {
   std::string s("foo");
-  GenericValuePtr v(&s);
+  GenericValueRef v(s);
   v.update(GenericValueRef("bar"));
   ASSERT_EQ("bar", s);
   v.update(GenericValueRef(std::string("baz")));
@@ -74,7 +74,7 @@ TEST(Value, Update)
 TEST(Value, As)
 {
   std::string s("foo");
-  GenericValuePtr v(&s);
+  GenericValueRef v(s);
   ASSERT_EQ(&v.asString(), &s);
   ASSERT_ANY_THROW(v.asDouble());
   double d = 1.5;
@@ -113,7 +113,7 @@ TEST(Value, Map)
   map["foo"] = 1;
   map["bar"] = 2;
   map["baz"] = 3;
-  GenericValuePtr v(&map);
+  GenericValueRef v(map);
   ASSERT_EQ(3u, v.size());
 
   ASSERT_EQ(v["foo"].toInt(), 1);
@@ -221,7 +221,7 @@ TEST(Value, Tuple)
 {
   // Create a Dynamic tuple from vector
   std::vector<GenericValue> v;
-  GenericValuePtr gv(&v);
+  GenericValueRef gv(v);
   gv.append(GenericValue::from(12.0));
   gv.append(GenericValue::from("foo")); // cstring not std::string
   GenericValue gtuple = gv.toTuple(false);
@@ -347,7 +347,7 @@ TEST(Value, DefaultMap)
 TEST(Value, STL)
 {
   std::vector<int> v;
-  GenericValuePtr gv(&v);
+  GenericValueRef gv(v);
   gv.append(1);
   gv.append(3);
   gv.append(2);

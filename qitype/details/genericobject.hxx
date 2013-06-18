@@ -202,7 +202,7 @@ namespace qi {
       const std::string& methodName comma                         \
       QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoGenericValuePtr)) \
   {                                                              \
-    ObjectPtr obj = GenericValuePtr(instance).toObject();       \
+    ObjectPtr obj = GenericValueRef(instance).toObject();       \
     qi::Future<R> res = obj->call<R>(MetaCallType_Queued, methodName comma AUSE);  \
     res.connect(boost::bind(&detail::hold<ObjectPtr>, obj));   \
     return res;                                                 \
@@ -340,7 +340,7 @@ namespace qi {
     // create a T, wrap in a ObjectPtr
     template<typename T> ObjectPtr constructObject()
     {
-      return GenericValuePtr(new T()).toObject();
+      return GenericValuePtr::fromPtr(new T()).toObject();
     }
 
     // in genericobjectbuilder.hxx

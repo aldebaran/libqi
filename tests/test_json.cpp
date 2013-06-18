@@ -34,7 +34,7 @@ TEST(TestJSON, MapIntTableString) {
   mps[0] = vs;
   mps[2] = vs;
 
-  qi::GenericValuePtr gv(&mps);
+  qi::GenericValueRef gv(mps);
 
   EXPECT_EQ("{ 0 : [ \"pif\", \"paf\", \"pof\" ], 2 : [ \"pif\", \"paf\", \"pof\" ] }", qi::encodeJSON(gv));
 }
@@ -50,7 +50,7 @@ TEST(TestJSON, MST) {
   mps["0"] = vs;
   mps["2"] = vs;
 
-  qi::GenericValuePtr gv(&mps);
+  qi::GenericValueRef gv(mps);
 
   EXPECT_EQ("{ \"0\" : [ \"pif\", \"paf\", \"pof\" ], \"2\" : [ \"pif\", \"paf\", \"pof\" ] }", qi::encodeJSON(gv));
 

@@ -466,7 +466,7 @@ namespace qi
       detail::GenericValuePtrCopy output;
       output(), (*inst.*fun)(nargs); // output clones
       GenericValue* v = new GenericValue(output, false, true); // steal output
-      return GenericValuePtr(v);
+      return GenericValuePtr::fromPtr(v);
     }
 
     template<typename C, typename R>

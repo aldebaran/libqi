@@ -496,8 +496,14 @@ QITYPE_API bool operator !=(const GenericIterator & a, const GenericIterator& b)
   {
   public:
     GenericValueRef(const GenericValuePtr&);
-    template<typename T> GenericValueRef(const T& ref);
-    template<typename T> GenericValueRef& operator =(const T& v);
+    template<typename T>
+    GenericValueRef(const T& ref);
+
+    template<typename T>
+    GenericValueRef& operator=(const T& v);
+
+    GenericValueRef& operator=(const GenericValuePtr& v);
+    GenericValueRef& operator=(const GenericValueRef& v);
   };
 
 

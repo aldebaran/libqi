@@ -47,8 +47,7 @@ namespace qi {
 
   template <typename T>
   void decodeBinary(qi::BufferReader *buf, T* value, DeserializeObjectCallback onObject) {
-    qi::GenericValuePtr gvp(value);
-    decodeBinary(buf, gvp, onObject);
+    decodeBinary(buf, GenericValuePtr::fromPtr(value), onObject);
   }
 
 }
