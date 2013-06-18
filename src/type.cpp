@@ -850,7 +850,7 @@ namespace qi {
   // Default map, using a vector<pair<void*, void*> > as storage
   static TypeInterface* makeMapIteratorType(TypeInterface* kt);
 
-  class DefaultMapIteratorType: public TypeIterator
+  class DefaultMapIteratorType: public IteratorTypeInterface
   {
   public:
   private:

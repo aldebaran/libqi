@@ -700,7 +700,7 @@ namespace qi
     if (a.kind() == TypeInterface::Iterator && b.kind() == TypeInterface::Iterator
         && a.type->info() == b.type->info())
     {
-      return static_cast<TypeIterator*>(a.type)->equals(a.value, b.value);
+      return static_cast<IteratorTypeInterface*>(a.type)->equals(a.value, b.value);
     }
     else
       return ! (a < b) && !(b<a);

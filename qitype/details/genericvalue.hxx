@@ -558,7 +558,7 @@ namespace qi {
     if (kind() == TypeInterface::Pointer)
       return static_cast<PointerTypeInterface*>(type)->dereference(value);
     else if (kind() == TypeInterface::Iterator)
-      return static_cast<TypeIterator*>(type)->dereference(value);
+      return static_cast<IteratorTypeInterface*>(type)->dereference(value);
     else
       throw std::runtime_error("Expected pointer or iterator");
   }
@@ -566,7 +566,7 @@ namespace qi {
   inline GenericValueRef GenericIterator::operator*()
   {
     if (kind() == TypeInterface::Iterator)
-      return static_cast<TypeIterator*>(type)->dereference(value);
+      return static_cast<IteratorTypeInterface*>(type)->dereference(value);
     else
       throw std::runtime_error("Expected iterator");
   }
@@ -614,7 +614,7 @@ namespace qi {
   {
     if (kind() != TypeInterface::Iterator)
       throw std::runtime_error("Expected an iterator");
-    static_cast<TypeIterator*>(type)->next(&value);
+    static_cast<IteratorTypeInterface*>(type)->next(&value);
     return *this;
   }
 

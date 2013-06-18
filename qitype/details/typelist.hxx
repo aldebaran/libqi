@@ -27,7 +27,7 @@ public:
 };
 
 // Type impl for any class that behaves as a forward iterator (++, *, ==)
-template<typename T> class TypeSimpleIteratorImpl: public TypeIterator
+template<typename T> class TypeSimpleIteratorImpl: public IteratorTypeInterface
 {
 public:
   typedef T Storage;

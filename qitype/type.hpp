@@ -606,7 +606,7 @@ QITYPE_API bool operator !=(const GenericIterator & a, const GenericIterator& b)
     virtual Kind kind() const { return Pointer; }
   };
 
-  class QITYPE_API TypeIterator: public TypeInterface
+  class QITYPE_API IteratorTypeInterface: public TypeInterface
   {
   public:
     // Returned reference is expected to point to somewhere in the iterator, or the container
