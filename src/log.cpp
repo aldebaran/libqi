@@ -117,7 +117,7 @@ namespace qi {
     {
       std::stringstream ss;
       ss << date.tv_sec << "."
-        << std::setw(7) << std::setfill('0') << date.tv_usec;
+        << std::setw(6) << std::setfill('0') << date.tv_usec;
 
       return ss.str();
     }
