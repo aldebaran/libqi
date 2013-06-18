@@ -25,7 +25,7 @@ namespace qi
   GenericValuePtr GenericFunction::call(
     const std::vector<GenericValuePtr>& vargs)
   {
-    if (type == dynamicFunctionType())
+    if (type == dynamicFunctionTypeInterface())
     {
       DynamicFunction* f = (DynamicFunction*)value;
       if (!transform.dropFirst && !transform.prependValue)
@@ -181,7 +181,7 @@ namespace qi
 
   qi::Signature GenericFunction::parametersSignature(bool dropFirst) const
   {
-    if (type == dynamicFunctionType())
+    if (type == dynamicFunctionTypeInterface())
       return "m";
     if (!dropFirst)
       return qi::makeTupleSignature(argumentsType());
@@ -196,7 +196,7 @@ namespace qi
 
   qi::Signature GenericFunction::returnSignature() const
   {
-    if (type == dynamicFunctionType())
+    if (type == dynamicFunctionTypeInterface())
       return "m";
     // Detect if returned type is a qi::Future and return underlying value type.
     TypeTemplate* ft1 = QI_TEMPLATE_TYPE_GET(resultType(), Future);
@@ -210,7 +210,7 @@ namespace qi
 
   qi::Signature CallableType::parametersSignature() const
   {
-    if (this == dynamicFunctionType())
+    if (this == dynamicFunctionTypeInterface())
       return "m";
     else
       return qi::makeTupleSignature(_argumentsType);
@@ -218,7 +218,7 @@ namespace qi
 
   qi::Signature CallableType::returnSignature() const
   {
-    if (this == dynamicFunctionType())
+    if (this == dynamicFunctionTypeInterface())
       return "m";
     return _resultType->signature();
   }
@@ -278,10 +278,10 @@ namespace qi
     return qi::makeTupleSignature(params, dyn);
   }
 
-  class DynamicFunctionType: public FunctionType
+  class DynamicFunctionTypeInterfaceInterface: public FunctionTypeInterface
   {
   public:
-    DynamicFunctionType()
+    DynamicFunctionTypeInterfaceInterface()
     {
       _resultType = typeOf<GenericValue>();
     }
@@ -293,17 +293,17 @@ namespace qi
     _QI_BOUNCE_TYPE_METHODS(DefaultTypeImplMethods<DynamicFunction>);
   };
 
-  FunctionType* dynamicFunctionType()
+  FunctionTypeInterface* dynamicFunctionTypeInterface()
   {
-    static FunctionType* type = 0;
+    static FunctionTypeInterface* type = 0;
     if (!type)
-      type = new DynamicFunctionType();
+      type = new DynamicFunctionTypeInterfaceInterface();
     return type;
   }
 
   GenericFunction makeDynamicGenericFunction(DynamicFunction f)
   {
-    FunctionType* d = dynamicFunctionType();
+    FunctionTypeInterface* d = dynamicFunctionTypeInterface();
     GenericFunction result(d, d->clone(d->initializeStorage(&f)));
     return result;
   }

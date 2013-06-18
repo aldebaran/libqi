@@ -12,7 +12,7 @@ qiLogCategory("qitype.object");
 
 namespace qi {
 
-  GenericObject::GenericObject(ObjectType *type, void *value)
+  GenericObject::GenericObject(ObjectTypeInterface *type, void *value)
   : type(type)
   , value(value)
   {
@@ -377,11 +377,11 @@ namespace qi {
     metaPost(nameWithOptionalSignature, GenericFunctionParameters(params));
   }
 
-  int ObjectType::inherits(Type* other)
+  int ObjectTypeInterface::inherits(Type* other)
   {
     /* A registered class C can have to Type* around:
     * - TypeImpl<C*>
-    * - The staticObjectType that was created by the builder.
+    * - The staticObjectTypeInterface that was created by the builder.
     * So assume that any of them can be in the parentTypes list.
     */
     if (this == other)
@@ -392,7 +392,7 @@ namespace qi {
     {
       if (parents[i].first->info() == other->info())
         return parents[i].second;
-      ObjectType* op = dynamic_cast<ObjectType*>(parents[i].first);
+      ObjectTypeInterface* op = dynamic_cast<ObjectTypeInterface*>(parents[i].first);
       if (op)
       {
         int offset = op->inherits(other);
@@ -404,7 +404,7 @@ namespace qi {
         }
       }
       qiLogDebug() << parents[i].first->infoString() << " does not match " << other->infoString()
-      <<" " << ((op != 0) == (dynamic_cast<ObjectType*>(other) != 0));
+      <<" " << ((op != 0) == (dynamic_cast<ObjectTypeInterface*>(other) != 0));
     }
     return -1;
   }

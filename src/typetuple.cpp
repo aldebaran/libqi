@@ -19,7 +19,7 @@ namespace qi
     }
   }
 
-  std::vector<GenericValuePtr> TypeTuple::values(void* storage)
+  std::vector<GenericValuePtr> StructTypeInterface::values(void* storage)
   {
     std::vector<Type*> types = memberTypes();
     std::vector<void*> values = get(storage);
@@ -29,7 +29,7 @@ namespace qi
     return result;
   }
 
-  std::vector<void*> TypeTuple::get(void* storage)
+  std::vector<void*> StructTypeInterface::get(void* storage)
   {
     std::vector<void*> result;
     unsigned count = memberTypes().size();
@@ -38,7 +38,7 @@ namespace qi
     return result;
   }
 
-  void TypeTuple::set(void** storage, std::vector<void*> values)
+  void StructTypeInterface::set(void** storage, std::vector<void*> values)
   {
     for (unsigned i=0; i<values.size(); ++i)
       set(storage, i, values[i]);

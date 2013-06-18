@@ -11,8 +11,8 @@
 
 namespace qi {
 
-template<typename T> class TypeIntImpl:
-  public TypeInt
+template<typename T> class IntTypeInterfaceImpl:
+  public IntTypeInterface
 {
 public:
   typedef typename detail::TypeImplMethodsBySize<T>::type
@@ -37,7 +37,7 @@ public:
 };
 
   template<typename T> class TypeBoolImpl:
-    public TypeInt
+    public IntTypeInterface
   {
   public:
     typedef typename detail::TypeImplMethodsBySize<T>::type
@@ -67,7 +67,7 @@ public:
 namespace qi {
 
 
-template<typename T> class TypeFloatImpl: public TypeFloat
+template<typename T> class FloatTypeInterfaceImpl: public FloatTypeInterface
 {
 public:
   typedef typename detail::TypeImplMethodsBySize<T>::type
@@ -91,7 +91,7 @@ public:
 
 #define QI_TYPE_ENUM_REGISTER(Enum)                                \
   namespace qi {                                                   \
-    template<> class TypeImpl<Enum>: public TypeIntImpl<long> {};  \
+    template<> class TypeImpl<Enum>: public IntTypeInterfaceImpl<long> {};  \
   }
 
 #endif  // _QITYPE_DETAILS_TYPEINT_HXX_

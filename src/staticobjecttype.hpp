@@ -58,7 +58,7 @@ struct ObjectTypeData
  * - Manageable accessor
  * - typeinfo
  */
-class StaticObjectTypeBase: public ObjectType
+class StaticObjectTypeBase: public ObjectTypeInterface
 {
 public:
   void initialize(const MetaObject& mo, const ObjectTypeData& data);

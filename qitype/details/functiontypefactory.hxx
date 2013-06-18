@@ -305,11 +305,11 @@ namespace qi
   *  member function pointer: T is the linearized signature
   */
   template<typename T, typename S>
-  class FunctionTypeEq: public FunctionType
+  class FunctionTypeInterfaceEq: public FunctionTypeInterface
   {
   public:
     typedef typename boost::function_types::result_type<T>::type ReturnType;
-    FunctionTypeEq(unsigned long refMask)
+    FunctionTypeInterfaceEq(unsigned long refMask)
     : refMask(refMask)
     {
 #ifdef QITYPE_TRACK_FUNCTIONTYPE_INSTANCES
@@ -351,17 +351,17 @@ namespace qi
       return v;
     }
     unsigned long refMask;
-    static FunctionTypeEq<T, S>* make(unsigned long refMask, std::vector<Type*> argsType,
+    static FunctionTypeInterfaceEq<T, S>* make(unsigned long refMask, std::vector<Type*> argsType,
       Type* returnType)
     { // we need to hash/compare on all the arguments
       std::vector<Type*> key(argsType);
       key.push_back(returnType);
-      typedef std::map<InfosKeyMask,  FunctionTypeEq<T, S>* > FTMap;
+      typedef std::map<InfosKeyMask,  FunctionTypeInterfaceEq<T, S>* > FTMap;
       static FTMap ftMap;
-      FunctionTypeEq<T, S>* & fptr = ftMap[InfosKeyMask(key, refMask)];
+      FunctionTypeInterfaceEq<T, S>* & fptr = ftMap[InfosKeyMask(key, refMask)];
       if (!fptr)
       {
-        fptr = new FunctionTypeEq<T, S>(refMask);
+        fptr = new FunctionTypeInterfaceEq<T, S>(refMask);
         fptr->_resultType = returnType;
         fptr->_argumentsType = argsType;
       }
@@ -444,7 +444,7 @@ namespace qi
       typedef typename FunctionPointerSynthetizer<EqComponents,
         boost::is_member_function_pointer<F>::value>::type EqFunPtr;
       unsigned long mask = EqFunction<F>::refMask;
-      FunctionType* ftype = FunctionTypeEq<MapedF, EqFunPtr>::make(mask, argumentsType, resultType);
+      FunctionTypeInterface* ftype = FunctionTypeInterfaceEq<MapedF, EqFunPtr>::make(mask, argumentsType, resultType);
 
       qiLogDebug("qitype.makeGenericFunction") << "bare mask " << (unsigned long)EqFunction<F>::refMask;
       return GenericFunction(ftype, ftype->clone(ftype->initializeStorage(&func)));
@@ -492,7 +492,7 @@ namespace qi
         boost::add_pointer<
         boost::remove_const<
         boost::remove_reference<boost::mpl::_1> > > > >(detail::fill_arguments(&argumentsType));
-      FunctionType* ftype = FunctionTypeEq<F, boost::function<F> >::make(0, argumentsType, resultType);
+      FunctionTypeInterface* ftype = FunctionTypeInterfaceEq<F, boost::function<F> >::make(0, argumentsType, resultType);
       return GenericFunction(ftype, new boost::function<F>(func));
     }
 

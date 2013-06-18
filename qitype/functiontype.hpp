@@ -18,7 +18,7 @@
 
 namespace qi {
 
-  /// Signature information for both callable types FunctionType and MethodType
+  /// Signature information for both callable types FunctionTypeInterface and MethodType
   class QITYPE_API CallableType
   {
   public:
@@ -33,7 +33,7 @@ namespace qi {
     std::vector<Type*> _argumentsType;
   };
 
-  class QITYPE_API FunctionType: public Type, public CallableType
+  class QITYPE_API FunctionTypeInterface: public Type, public CallableType
   {
   public:
     /** Call the function func with argument args that must be of the correct type.
@@ -42,7 +42,7 @@ namespace qi {
     virtual void* call(void* storage, void** args, unsigned int argc) = 0;
   };
 
-  template<typename T> FunctionType* makeFunctionType();
+  template<typename T> FunctionTypeInterface* makeFunctionTypeInterface();
 
   struct ArgumentTransformation
   {
@@ -88,7 +88,7 @@ namespace qi {
     GenericFunction();
     ~GenericFunction();
     GenericFunction(const GenericFunction& b);
-    GenericFunction(FunctionType* type, void* value);
+    GenericFunction(FunctionTypeInterface* type, void* value);
     GenericFunction& operator = (const GenericFunction& b);
     GenericValuePtr call(const std::vector<GenericValuePtr>& args);
     GenericValuePtr call(GenericValuePtr arg1, const std::vector<GenericValuePtr>& args);
@@ -111,9 +111,9 @@ namespace qi {
     void swap(GenericFunction& b);
 
     operator bool() const;
-    FunctionType* functionType() const;
+    FunctionTypeInterface* functionType() const;
   private:
-    FunctionType*  type;
+    FunctionTypeInterface*  type;
     void* value; //type-dependant storage
     mutable ArgumentTransformation transform;
   };
@@ -142,7 +142,7 @@ namespace qi {
   /// @return a GenericFunction that takes arguments as a list of unconverted GenericValuePtr.
   QITYPE_API GenericFunction makeDynamicGenericFunction(DynamicFunction f);
   /// @return the type used by dynamic functions
-  QITYPE_API FunctionType* dynamicFunctionType();
+  QITYPE_API FunctionTypeInterface* dynamicFunctionTypeInterface();
 }
 
 #include <qitype/details/functiontype.hxx>

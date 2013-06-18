@@ -40,7 +40,7 @@ namespace qi {
    *
    */
 
-  class QITYPE_API ObjectType: public Type
+  class QITYPE_API ObjectTypeInterface: public Type
   {
   public:
     virtual const MetaObject& metaObject(void* instance) = 0;

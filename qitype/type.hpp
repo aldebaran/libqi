@@ -212,14 +212,14 @@ namespace qi{
     std::pair<GenericValuePtr, bool> convert(Type* targetType) const;
 
     std::pair<GenericValuePtr, bool> convert(TypeList* targetType) const;
-    std::pair<GenericValuePtr, bool> convert(TypeTuple* targetType) const;
-    std::pair<GenericValuePtr, bool> convert(TypeMap* targetType) const;
-    std::pair<GenericValuePtr, bool> convert(TypeInt* targetType) const;
-    std::pair<GenericValuePtr, bool> convert(TypeFloat* targetType) const;
-    std::pair<GenericValuePtr, bool> convert(TypeRaw* targetType) const;
-    std::pair<GenericValuePtr, bool> convert(TypeString* targetType) const;
+    std::pair<GenericValuePtr, bool> convert(StructTypeInterface* targetType) const;
+    std::pair<GenericValuePtr, bool> convert(MapTypeInterface* targetType) const;
+    std::pair<GenericValuePtr, bool> convert(IntTypeInterface* targetType) const;
+    std::pair<GenericValuePtr, bool> convert(FloatTypeInterface* targetType) const;
+    std::pair<GenericValuePtr, bool> convert(RawTypeInterface* targetType) const;
+    std::pair<GenericValuePtr, bool> convert(StringTypeInterface* targetType) const;
     std::pair<GenericValuePtr, bool> convert(TypePointer* targetType) const;
-    std::pair<GenericValuePtr, bool> convert(TypeDynamic* targetType) const;
+    std::pair<GenericValuePtr, bool> convert(DynamicTypeInterface* targetType) const;
 
 
 
@@ -548,10 +548,10 @@ QITYPE_API bool operator !=(const GenericIterator & a, const GenericIterator& b)
 
   class TypeList;
 
-  class TypeTuple;
+  class StructTypeInterface;
 
   // Interfaces for specialized types
-  class QITYPE_API TypeInt: public Type
+  class QITYPE_API IntTypeInterface: public Type
   {
   public:
     virtual int64_t get(void* value) const = 0;
@@ -561,7 +561,7 @@ QITYPE_API bool operator !=(const GenericIterator & a, const GenericIterator& b)
     virtual Kind kind() const { return Int;}
   };
 
-  class QITYPE_API TypeFloat: public Type
+  class QITYPE_API FloatTypeInterface: public Type
   {
   public:
     virtual double get(void* value) const = 0;
@@ -571,7 +571,7 @@ QITYPE_API bool operator !=(const GenericIterator & a, const GenericIterator& b)
   };
 
   class Buffer;
-  class QITYPE_API TypeString: public Type
+  class QITYPE_API StringTypeInterface: public Type
   {
   public:
     std::string getString(void* storage) const;
@@ -582,7 +582,7 @@ QITYPE_API bool operator !=(const GenericIterator & a, const GenericIterator& b)
 
   };
 
-  class QITYPE_API TypeRaw: public Type
+  class QITYPE_API RawTypeInterface: public Type
   {
   public:
     virtual std::pair<char*, size_t> get(void* storage) const = 0;
@@ -628,7 +628,7 @@ QITYPE_API bool operator !=(const GenericIterator & a, const GenericIterator& b)
     virtual Kind kind() const { return List;}
   };
 
-  class QITYPE_API TypeMap: public Type
+  class QITYPE_API MapTypeInterface: public Type
   {
   public:
     virtual Type* elementType() const = 0;
@@ -640,10 +640,10 @@ QITYPE_API bool operator !=(const GenericIterator & a, const GenericIterator& b)
     virtual GenericValuePtr element(void** storage, void* keyStorage, bool autoInsert) = 0;
     virtual Kind kind() const { return Map; }
     // Since our typesystem has no erased operator < or operator ==,
-    // TypeMap does not provide a find()
+    // MapTypeInterface does not provide a find()
   };
 
-  class QITYPE_API TypeTuple: public Type
+  class QITYPE_API StructTypeInterface: public Type
   {
   public:
     std::vector<GenericValuePtr> values(void* storage);
@@ -657,7 +657,7 @@ QITYPE_API bool operator !=(const GenericIterator & a, const GenericIterator& b)
     virtual std::string className() { return std::string(); }
   };
 
-  class QITYPE_API TypeDynamic: public Type
+  class QITYPE_API DynamicTypeInterface: public Type
   {
   public:
     virtual GenericValuePtr get(void* storage) = 0;

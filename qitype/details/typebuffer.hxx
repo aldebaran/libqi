@@ -11,7 +11,7 @@
 
 namespace qi
 {
-  class TypeBufferImpl: public TypeRaw
+  class TypeBufferImpl: public RawTypeInterface
   {
   public:
     virtual std::pair<char*, size_t> get(void *storage) const

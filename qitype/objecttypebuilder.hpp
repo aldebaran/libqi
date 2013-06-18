@@ -24,7 +24,7 @@ namespace qi {
   class MetaObject;
 
   class SignalBase;
-  class ObjectType;
+  class ObjectTypeInterface;
   class Type;
   template<typename T> class SignalF;
   class ObjectTypeBuilderPrivate;
@@ -82,7 +82,7 @@ namespace qi {
     // output
     const MetaObject& metaObject();
     ObjectPtr object(void* ptr, boost::function<void (GenericObject*)> onDestroy = boost::function<void (GenericObject*)>());
-    ObjectType* type();
+    ObjectTypeInterface* type();
 
     /// Register type to typeof. Called by type()
     inline virtual void registerType() {};

@@ -59,7 +59,7 @@ namespace qi {
   *  static version wrapping class C: Type<C>
   *  dynamic version: Type<DynamicObject>
   *
-  * All the methods are convenience wrappers that bounce to the ObjectType,
+  * All the methods are convenience wrappers that bounce to the ObjectTypeInterface,
   * except Event Loop management
   * This class has pointer semantic. Do not use directly, use ObjectPtr,
   * obtained through Session, DynamicObjectBuilder or ObjectTypeBuilder.
@@ -67,7 +67,7 @@ namespace qi {
   class QITYPE_API GenericObject: public Manageable
   {
   public:
-    GenericObject(ObjectType *type, void *value);
+    GenericObject(ObjectTypeInterface *type, void *value);
     ~GenericObject();
     const MetaObject &metaObject();
 
@@ -193,7 +193,7 @@ namespace qi {
 
 
     //bool isValid() { return type && value;}
-    ObjectType*  type;
+    ObjectTypeInterface*  type;
     void*        value;
   };
 #ifdef DOXYGEN
@@ -264,7 +264,7 @@ namespace qi {
     qi::ObjectPtr _obj;
   };
 
-  class TypeProxy: public ObjectType
+  class TypeProxy: public ObjectTypeInterface
   {
   public:
     virtual const MetaObject& metaObject(void* instance)

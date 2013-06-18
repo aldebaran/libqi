@@ -13,15 +13,15 @@ namespace qi
 {
   class TypeInfo;
   class Type;
-  class TypeInt;
-  class TypeFloat;
-  class TypeString;
-  class TypeRaw;
+  class IntTypeInterface;
+  class FloatTypeInterface;
+  class StringTypeInterface;
+  class RawTypeInterface;
   class TypePointer;
   class TypeList;
-  class TypeMap;
-  class TypeTuple;
-  class TypeDynamic;
+  class MapTypeInterface;
+  class StructTypeInterface;
+  class DynamicTypeInterface;
   class GenericValuePtr;
   class GenericValueRef;
   class GenericValue;

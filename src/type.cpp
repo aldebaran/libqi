@@ -227,7 +227,7 @@ namespace qi {
 
     void visitMap(GenericIterator it, GenericIterator iend)
     {
-      TypeMap* type =  static_cast<TypeMap*>(_value.type);
+      MapTypeInterface* type =  static_cast<MapTypeInterface*>(_value.type);
       if (!_resolveDynamic) {
         result = qi::makeMapSignature(type->keyType()->signature(), type->elementType()->signature());
         return;
@@ -364,13 +364,13 @@ namespace qi {
         break;
       case Type::Int:
       {
-        TypeInt* tint = static_cast<TypeInt*>(value.type);
+        IntTypeInterface* tint = static_cast<IntTypeInterface*>(value.type);
         v.visitInt(0, tint->isSigned(), tint->size());
         break;
       }
       case Type::Float:
       {
-        TypeFloat* tfloat = static_cast<TypeFloat*>(value.type);
+        FloatTypeInterface* tfloat = static_cast<FloatTypeInterface*>(value.type);
         v.visitFloat(0, tfloat->size());
         break;
       }
@@ -407,9 +407,9 @@ namespace qi {
         break;
       }
       case Type::Tuple: {
-        std::vector<Type*>       memberTypes = static_cast<TypeTuple*>(this)->memberTypes();
-        std::vector<std::string> annotations = static_cast<TypeTuple*>(this)->elementsName();
-        std::string              name        = static_cast<TypeTuple*>(this)->className();
+        std::vector<Type*>       memberTypes = static_cast<StructTypeInterface*>(this)->memberTypes();
+        std::vector<std::string> annotations = static_cast<StructTypeInterface*>(this)->elementsName();
+        std::string              name        = static_cast<StructTypeInterface*>(this)->className();
         v.result = qi::makeTupleSignature(memberTypes, name, annotations);
         break;
       }
@@ -708,7 +708,7 @@ namespace qi {
 
 
 
-  class DefaultTupleType: public TypeTuple
+  class DefaultTupleType: public StructTypeInterface
   {
   private:
     DefaultTupleType(const std::vector<Type*>& types, const std::string& className = std::string(), const std::vector<std::string>& elementsName = std::vector<std::string>())
@@ -822,7 +822,7 @@ namespace qi {
     for (unsigned i=0; i<values.size(); ++i)
       types.push_back(values[i].type);
 
-    TypeTuple* tupleType = static_cast<TypeTuple*>(makeTupleType(types));
+    StructTypeInterface* tupleType = static_cast<StructTypeInterface*>(makeTupleType(types));
     GenericValuePtr result;
     result.type = tupleType;
     result.value = tupleType->initializeStorage();
@@ -837,7 +837,7 @@ namespace qi {
     const std::vector<Type*>&types,
     const std::vector<void*>&values)
   {
-    TypeTuple* tupleType = static_cast<TypeTuple*>(makeTupleType(types));
+    StructTypeInterface* tupleType = static_cast<StructTypeInterface*>(makeTupleType(types));
     return GenericValuePtr(tupleType, tupleType->initializeStorage((void*)(const void*)&values));
   }
 
@@ -923,7 +923,7 @@ namespace qi {
     return result;
   }
 
-  class DefaultMapType: public TypeMap
+  class DefaultMapType: public MapTypeInterface
   {
   public:
   private:
@@ -1073,7 +1073,7 @@ namespace qi {
   // We want exactly one instance per element type
   Type* makeMapType(Type* kt, Type* et)
   {
-    typedef std::map<std::pair<TypeInfo, TypeInfo>, TypeMap*> Map;
+    typedef std::map<std::pair<TypeInfo, TypeInfo>, MapTypeInterface*> Map;
     static Map * map = 0;
     if (!map)
       map = new Map();
@@ -1081,7 +1081,7 @@ namespace qi {
     TypeInfo ek(et->info());
     Map::key_type key(kk, ek);
     Map::iterator it;
-    TypeMap* result;
+    MapTypeInterface* result;
     it = map->find(key);
     if (it == map->end())
     {
@@ -1139,7 +1139,7 @@ namespace qi {
   //TODO: not threadsafe
   Type* makeTupleType(const std::vector<Type*>& types, const std::string &name, const std::vector<std::string>& elementNames)
   {
-    typedef std::map<InfosKey, TypeTuple*> Map;
+    typedef std::map<InfosKey, StructTypeInterface*> Map;
     static Map* map = 0;
     if (!map)
       map = new Map;
@@ -1147,13 +1147,13 @@ namespace qi {
     Map::iterator it = map->find(key);
     if (it == map->end())
     {
-      TypeTuple* result = new DefaultTupleType(types, name, elementNames);
+      StructTypeInterface* result = new DefaultTupleType(types, name, elementNames);
       (*map)[key] = result;
       return result;
     }
     else
     {
-      TypeTuple* res = it->second;
+      StructTypeInterface* res = it->second;
       assert(res->memberTypes().size() == types.size());
       return res;
     }

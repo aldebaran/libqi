@@ -311,7 +311,7 @@ namespace qi {
     Signature subSignature;
     if (src.handler)
     {
-      if (src.handler.functionType() == dynamicFunctionType())
+      if (src.handler.functionType() == dynamicFunctionTypeInterface())
         goto proceed; // no arity checking is possible
       subArity = src.handler.argumentsType().size();
       subSignature = src.handler.parametersSignature();

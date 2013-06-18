@@ -11,16 +11,16 @@
 
 namespace qi
 {
-  inline std::string TypeString::getString(void* storage) const
+  inline std::string StringTypeInterface::getString(void* storage) const
   {
     std::pair<char*, size_t> res = get(storage);
     return std::string(res.first, res.second);
   }
-  inline void TypeString::set(void** storage, const std::string& val)
+  inline void StringTypeInterface::set(void** storage, const std::string& val)
   {
     set(storage, val.c_str(), val.size());
   }
-  class QITYPE_API TypeStringImpl: public TypeString
+  class QITYPE_API StringTypeInterfaceImpl: public StringTypeInterface
   {
   public:
     typedef DefaultTypeImplMethods<std::string,
@@ -40,9 +40,9 @@ namespace qi
     _QI_BOUNCE_TYPE_METHODS(Methods);
   };
 
-  template<> class TypeImpl<std::string>: public TypeStringImpl{};
+  template<> class TypeImpl<std::string>: public StringTypeInterfaceImpl{};
 
-  class QITYPE_API TypeCStringImpl: public TypeString
+  class QITYPE_API TypeCStringImpl: public StringTypeInterface
   {
   public:
     virtual std::pair<char*, size_t> get(void* storage) const
@@ -68,7 +68,7 @@ namespace qi
   template<> class TypeImpl<char*>: public TypeCStringImpl{};
 
 
-  template<int I> class TypeImpl<char [I]>: public TypeString
+  template<int I> class TypeImpl<char [I]>: public StringTypeInterface
   {
   public:
     virtual void* clone(void* src)
@@ -104,7 +104,7 @@ namespace qi
   * F must be a member function pointer, member object pointer, or free function
   * returning a const string&.
   */
-  template<typename T, typename F> class TypeEquivalentString: public TypeString
+  template<typename T, typename F> class TypeEquivalentString: public StringTypeInterface
   {
   public:
     TypeEquivalentString(F f): _getter(f) {}
@@ -125,7 +125,7 @@ namespace qi
     F _getter;
   };
   template<typename T, typename F>
-  TypeString* makeTypeEquivalentString(T*, F f)
+  StringTypeInterface* makeTypeEquivalentString(T*, F f)
   {
     return new TypeEquivalentString<T, F>(f);
   }

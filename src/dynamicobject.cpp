@@ -96,10 +96,10 @@ namespace qi
     return 0;
   }
 
-  class DynamicObjectType: public ObjectType, public DefaultTypeImplMethods<DynamicObject>
+  class DynamicObjectTypeInterface: public ObjectTypeInterface, public DefaultTypeImplMethods<DynamicObject>
   {
   public:
-    DynamicObjectType() {}
+    DynamicObjectTypeInterface() {}
     virtual const MetaObject& metaObject(void* instance);
     virtual qi::Future<GenericValuePtr> metaCall(void* instance, Manageable* context, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto);
     virtual void metaPost(void* instance, Manageable* context, unsigned int signal, const GenericFunctionParameters& params);
@@ -495,47 +495,47 @@ namespace qi
     }
   }
 
-  //DynamicObjectType implementation: just bounces everything to metaobject
+  //DynamicObjectTypeInterface implementation: just bounces everything to metaobject
 
-  const MetaObject& DynamicObjectType::metaObject(void* instance)
+  const MetaObject& DynamicObjectTypeInterface::metaObject(void* instance)
   {
     return reinterpret_cast<DynamicObject*>(instance)->metaObject();
   }
 
-  qi::Future<GenericValuePtr> DynamicObjectType::metaCall(void* instance, Manageable* context, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType)
+  qi::Future<GenericValuePtr> DynamicObjectTypeInterface::metaCall(void* instance, Manageable* context, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType)
   {
     return reinterpret_cast<DynamicObject*>(instance)
       ->metaCall(context, method, params, callType);
   }
 
-  void DynamicObjectType::metaPost(void* instance, Manageable* context, unsigned int signal, const GenericFunctionParameters& params)
+  void DynamicObjectTypeInterface::metaPost(void* instance, Manageable* context, unsigned int signal, const GenericFunctionParameters& params)
   {
     reinterpret_cast<DynamicObject*>(instance)->metaPost(context, signal, params);
   }
 
-  qi::Future<Link> DynamicObjectType::connect(void* instance, Manageable* context, unsigned int event, const SignalSubscriber& subscriber)
+  qi::Future<Link> DynamicObjectTypeInterface::connect(void* instance, Manageable* context, unsigned int event, const SignalSubscriber& subscriber)
   {
     return reinterpret_cast<DynamicObject*>(instance)->metaConnect(event, subscriber);
   }
 
-  qi::Future<void> DynamicObjectType::disconnect(void* instance, Manageable* context, Link linkId)
+  qi::Future<void> DynamicObjectTypeInterface::disconnect(void* instance, Manageable* context, Link linkId)
   {
     return reinterpret_cast<DynamicObject*>(instance)->metaDisconnect(linkId);
   }
 
-  const std::vector<std::pair<Type*, int> >& DynamicObjectType::parentTypes()
+  const std::vector<std::pair<Type*, int> >& DynamicObjectTypeInterface::parentTypes()
   {
     static std::vector<std::pair<Type*, int> > empty;
     return empty;
   }
 
-  qi::Future<GenericValue> DynamicObjectType::property(void* instance, unsigned int id)
+  qi::Future<GenericValue> DynamicObjectTypeInterface::property(void* instance, unsigned int id)
   {
     return reinterpret_cast<DynamicObject*>(instance)
       ->metaProperty(id);
   }
 
-  qi::Future<void> DynamicObjectType::setProperty(void* instance, unsigned int id, GenericValue value)
+  qi::Future<void> DynamicObjectTypeInterface::setProperty(void* instance, unsigned int id, GenericValue value)
   {
     return reinterpret_cast<DynamicObject*>(instance)
       ->metaSetProperty(id, value);
@@ -555,7 +555,7 @@ namespace qi
     boost::function<void (GenericObject*)> onDelete)
   {
     ObjectPtr op;
-    static DynamicObjectType* type = new DynamicObjectType();
+    static DynamicObjectTypeInterface* type = new DynamicObjectTypeInterface();
     if (destroyObject || onDelete)
       op = ObjectPtr(new GenericObject(type, obj),
         boost::bind(&cleanupDynamicObject, _1, destroyObject, onDelete));

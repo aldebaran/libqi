@@ -10,14 +10,14 @@
 namespace qi
 {
   // List container
-template<typename M> class TypeMapImpl:
-public TypeMap
+template<typename M> class MapTypeInterfaceImpl:
+public MapTypeInterface
 {
 public:
   typedef DefaultTypeImplMethods<M,
                                TypeByPointer<M>
                                > MethodsImpl;
-  TypeMapImpl();
+  MapTypeInterfaceImpl();
   virtual Type* elementType() const;
   virtual Type* keyType() const;
   virtual size_t size(void* storage);
@@ -32,27 +32,27 @@ public:
 
 namespace qi {
 template<typename M>
-TypeMapImpl<M>::TypeMapImpl()
+MapTypeInterfaceImpl<M>::MapTypeInterfaceImpl()
 {
 }
 
 
 template<typename M> Type*
-TypeMapImpl<M>::elementType() const
+MapTypeInterfaceImpl<M>::elementType() const
 {
   static Type* result = typeOf<typename M::mapped_type>();
   return result;
 }
 
 template<typename M> Type*
-TypeMapImpl<M>::keyType() const
+MapTypeInterfaceImpl<M>::keyType() const
 {
   static Type* result = typeOf<typename M::key_type>();
   return result;
 }
 
 template<typename M> size_t
-TypeMapImpl<M>::size(void* storage)
+MapTypeInterfaceImpl<M>::size(void* storage)
 {
   M* ptr = (M*)ptrFromStorage(&storage);
   return ptr->size();
@@ -60,21 +60,21 @@ TypeMapImpl<M>::size(void* storage)
 
 
 template<typename M> GenericIterator
-TypeMapImpl<M>::begin(void* storage)
+MapTypeInterfaceImpl<M>::begin(void* storage)
 {
   M* ptr = (M*)ptrFromStorage(&storage);
   return TypeSimpleIteratorImpl<typename M::iterator>::make(ptr->begin());
 }
 
 template<typename M> GenericIterator
-TypeMapImpl<M>::end(void* storage)
+MapTypeInterfaceImpl<M>::end(void* storage)
 {
   M* ptr = (M*)ptrFromStorage(&storage);
   return TypeSimpleIteratorImpl<typename M::iterator>::make(ptr->end());
 }
 
 template<typename M> void
-TypeMapImpl<M>::insert(void** storage, void* keyStorage, void* valueStorage)
+MapTypeInterfaceImpl<M>::insert(void** storage, void* keyStorage, void* valueStorage)
 {
   static Type* elemType = typeOf<typename M::mapped_type>();
   static Type* keyType = typeOf<typename M::key_type>();
@@ -89,7 +89,7 @@ TypeMapImpl<M>::insert(void** storage, void* keyStorage, void* valueStorage)
 }
 
 template<typename M> GenericValuePtr
-TypeMapImpl<M>::element(void** storage, void* keyStorage, bool autoInsert)
+MapTypeInterfaceImpl<M>::element(void** storage, void* keyStorage, bool autoInsert)
 {
   //static Type* elemType = typeOf<typename M::mapped_type>();
   static Type* keyType = typeOf<typename M::key_type>();
@@ -110,7 +110,7 @@ TypeMapImpl<M>::element(void** storage, void* keyStorage, bool autoInsert)
 
 
 template<typename K, typename V, typename C, typename A>
-struct TypeImpl<std::map<K,V, C, A> >: public TypeMapImpl<std::map<K, V,C,A> > {};
+struct TypeImpl<std::map<K,V, C, A> >: public MapTypeInterfaceImpl<std::map<K, V,C,A> > {};
 
 }
 #endif  // _QITYPE_DETAILS_TYPEMAP_HXX_

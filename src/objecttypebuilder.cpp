@@ -22,7 +22,7 @@ namespace qi {
     , autoRegister(true)
     {}
     ObjectTypeData data;
-    ObjectType*    type;
+    ObjectTypeInterface*    type;
     MetaObject     metaObject;
     ObjectThreadingModel threadingModel;
     bool                 autoRegister;
@@ -114,7 +114,7 @@ namespace qi {
     return _p->data;
   }
 
-  ObjectType* ObjectTypeBuilderBase::type()
+  ObjectTypeInterface* ObjectTypeBuilderBase::type()
   {
     if (!_p->type)
     {

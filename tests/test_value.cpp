@@ -286,7 +286,7 @@ QI_TYPE_STRUCT_AGREGATE_CONSTRUCTOR(Point2,
 TEST(Value, Tuple2)
 {
   Point2 p;
-  TypeTuple* t = static_cast<qi::TypeTuple*>(qi::typeOf<Point2>());
+  StructTypeInterface* t = static_cast<qi::StructTypeInterface*>(qi::typeOf<Point2>());
   ASSERT_EQ(6u, t->memberTypes().size());
   EXPECT_EQ("(ddsddd)<Point2,x,y,str,z,a,b>", t->signature());
   std::vector<GenericValue> vd;

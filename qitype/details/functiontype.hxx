@@ -43,7 +43,7 @@ namespace qi
     transform = b.transform;
   }
 
-  inline GenericFunction::GenericFunction(FunctionType* type, void* value)
+  inline GenericFunction::GenericFunction(FunctionTypeInterface* type, void* value)
   : type(type)
   , value(value)
   {
@@ -76,7 +76,7 @@ namespace qi
     return type != 0;
   }
 
-  inline FunctionType* GenericFunction::functionType() const
+  inline FunctionTypeInterface* GenericFunction::functionType() const
   {
     return type;
   }

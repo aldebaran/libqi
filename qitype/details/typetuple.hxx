@@ -49,7 +49,7 @@ namespace qi
 
 #define __QI_TYPE_STRUCT_DECLARE(name, extra)                             \
 namespace qi {                                                            \
-  template<> struct TypeImpl<name>: public ::qi::TypeTuple                \
+  template<> struct TypeImpl<name>: public ::qi::StructTypeInterface                \
   {                                                                       \
   public:                                                                 \
     typedef name ClassType;                                               \
@@ -255,7 +255,7 @@ QI_TYPE_REGISTER_CUSTOM(name, _qi_::qi::TypeImpl<name>)
  */
 #define QI_TYPE_STRUCT_BOUNCE(name, bounceTo, conversion)                 \
 namespace qi {                                                            \
-template<> class TypeImpl<name>: public ::qi::TypeTupleBouncer<name, bounceTo>  \
+template<> class TypeImpl<name>: public ::qi::StructTypeInterfaceBouncer<name, bounceTo>  \
 {                                                                         \
 public:                                                                   \
   void adaptStorage(void** storage, void** adapted)                       \
@@ -279,15 +279,15 @@ QI_TYPE_REGISTER_CUSTOM(name, _qi_::qi::TypeImpl<name>)
 
 namespace qi {
   //TODO
-  template<typename T, typename TO> class TypeTupleBouncer: public TypeTuple
+  template<typename T, typename TO> class StructTypeInterfaceBouncer: public StructTypeInterface
   {
   public:
-    TypeTuple* bounceType()
+    StructTypeInterface* bounceType()
     {
       static Type* result = 0;
       if (!result)
         result = typeOf<TO>();
-      return static_cast<TypeTuple*>(result);
+      return static_cast<StructTypeInterface*>(result);
     }
 
     virtual void adaptStorage(void** storage, void** adapted) = 0;
@@ -316,7 +316,7 @@ namespace qi {
   };
 
   template<typename F, typename S>
-  class TypeImpl<std::pair<F, S> >: public TypeTuple
+  class TypeImpl<std::pair<F, S> >: public StructTypeInterface
   {
   public:
     typedef DefaultTypeImplMethods<std::pair<F, S> > Methods;

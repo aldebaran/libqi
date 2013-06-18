@@ -16,7 +16,7 @@ namespace qi {
 
 
 
-  template<> class TypeImpl<GenericValue>: public TypeDynamic
+  template<> class TypeImpl<GenericValue>: public DynamicTypeInterface
   {
   public:
     virtual GenericValuePtr get(void* storage)
@@ -132,7 +132,7 @@ namespace qi {
   }
 
 
-  // Kind -> handler Type (TypeInt, TypeList...)  accessor
+  // Kind -> handler Type (IntTypeInterface, TypeList...)  accessor
 
   class KindNotConvertible;
 
@@ -144,9 +144,9 @@ namespace qi {
 #define TYPE_OF_KIND(k, t) template<> struct TypeOfKind<k> { typedef t type;}
 
 
-  TYPE_OF_KIND(Type::Int, TypeInt);
-  TYPE_OF_KIND(Type::Float,  TypeFloat);
-  TYPE_OF_KIND(Type::String, TypeString);
+  TYPE_OF_KIND(Type::Int, IntTypeInterface);
+  TYPE_OF_KIND(Type::Float,  FloatTypeInterface);
+  TYPE_OF_KIND(Type::String, StringTypeInterface);
 
 #undef TYPE_OF_KIND
 
@@ -298,7 +298,7 @@ namespace qi {
   GenericValuePtr::asTupleValuePtr()
   {
     if (kind() == Type::Tuple)
-      return static_cast<TypeTuple*>(type)->values(value);
+      return static_cast<StructTypeInterface*>(type)->values(value);
     else if (kind() == Type::List || kind() == Type::Map)
     {
       std::vector<GenericValuePtr> result;
@@ -493,7 +493,7 @@ namespace qi {
   {
     if (kind() != Type::String)
       throw std::runtime_error("Value is not of kind string");
-    static_cast<TypeString*>(type)->set(&value, &v[0], v.size());
+    static_cast<StringTypeInterface*>(type)->set(&value, &v[0], v.size());
   }
 
   template<typename E, typename K>
@@ -514,9 +514,9 @@ namespace qi {
     if (kind() == Type::List)
       return static_cast<TypeList*>(type)->size(value);
     if (kind() == Type::Map)
-      return static_cast<TypeMap*>(type)->size(value);
+      return static_cast<MapTypeInterface*>(type)->size(value);
     if (kind() == Type::Tuple)
-      return static_cast<TypeTuple*>(type)->memberTypes().size();
+      return static_cast<StructTypeInterface*>(type)->memberTypes().size();
     else
       throw std::runtime_error("Expected List, Map or Tuple.");
   }
@@ -542,7 +542,7 @@ namespace qi {
   {
     if (kind() != Type::Dynamic)
       throw std::runtime_error("Not of dynamic kind");
-    TypeDynamic* d = static_cast<TypeDynamic*>(type);
+    DynamicTypeInterface* d = static_cast<DynamicTypeInterface*>(type);
     return d->get(value);
   }
 
@@ -624,7 +624,7 @@ namespace qi {
     if (kind() == Type::List)
       return static_cast<TypeList*>(type)->begin(value);
     else if (kind() == Type::Map)
-      return static_cast<TypeMap*>(type)->begin(value);
+      return static_cast<MapTypeInterface*>(type)->begin(value);
     else
       throw std::runtime_error("Expected list or map");
   }
@@ -635,7 +635,7 @@ namespace qi {
     if (kind() == Type::List)
       return static_cast<TypeList*>(type)->end(value);
     else if (kind() == Type::Map)
-      return static_cast<TypeMap*>(type)->end(value);
+      return static_cast<MapTypeInterface*>(type)->end(value);
     else
       throw std::runtime_error("Expected list or map");
   }

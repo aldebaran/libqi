@@ -132,7 +132,7 @@ namespace qi
   }
 
 /* To avoid the diamond inheritance problem (interface inheritance between
- * for instance Type and TypeInt, and we want to reuse implementations),
+ * for instance Type and IntTypeInterface, and we want to reuse implementations),
  * Provide methods in a class that does not inherit from Type, and a macro
  * to generate the virtual bouncers.
  */

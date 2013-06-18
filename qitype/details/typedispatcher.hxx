@@ -25,20 +25,20 @@ namespace qi {
         break;
       case Type::Int:
       {
-        TypeInt* tint = static_cast<TypeInt*>(value.type);
+        IntTypeInterface* tint = static_cast<IntTypeInterface*>(value.type);
 
         v.visitInt(value.toInt(), tint->isSigned(), tint->size());
         break;
       }
       case Type::Float:
       {
-        TypeFloat* tfloat = static_cast<TypeFloat*>(value.type);
+        FloatTypeInterface* tfloat = static_cast<FloatTypeInterface*>(value.type);
         v.visitFloat(value.toDouble(), tfloat->size());
         break;
       }
       case Type::String:
       {
-        TypeString* tstring = static_cast<TypeString*>(value.type);
+        StringTypeInterface* tstring = static_cast<StringTypeInterface*>(value.type);
         std::pair<char*, size_t> content = tstring->get(value.value);
         v.visitString(content.first, content.second);
         break;
@@ -55,7 +55,7 @@ namespace qi {
       }
       case Type::Object:
       {
-        v.visitObject(GenericObject(static_cast<ObjectType*>(value.type), value.value));
+        v.visitObject(GenericObject(static_cast<ObjectTypeInterface*>(value.type), value.value));
         break;
       }
       case Type::Pointer:
@@ -68,7 +68,7 @@ namespace qi {
           // Create our own shared_ptr, that holds p and delete it on destruction
           qiLogDebug("qitype.typedispatcher") << "Detected object shared ptr";
           GenericValuePtr shared_ptr = value.clone();
-          ObjectPtr o(new GenericObject(static_cast<ObjectType*>(pointee.type), pointee.value),
+          ObjectPtr o(new GenericObject(static_cast<ObjectTypeInterface*>(pointee.type), pointee.value),
             boost::bind(&GenericValuePtr::destroy, shared_ptr));
           v.visitObjectPtr(o);
         }
@@ -78,7 +78,7 @@ namespace qi {
       }
       case Type::Tuple:
       {
-        TypeTuple* ttuple = static_cast<TypeTuple*>(value.type);
+        StructTypeInterface* ttuple = static_cast<StructTypeInterface*>(value.type);
         std::vector<GenericValuePtr> tuple = ttuple->values(value.value);
         v.visitTuple(ttuple->className(), tuple, ttuple->elementsName());
         break;

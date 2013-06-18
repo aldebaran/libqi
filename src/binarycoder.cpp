@@ -442,7 +442,7 @@ namespace qi {
 
       void visitMap(GenericIterator it, GenericIterator end)
       {
-        TypeMap* type = static_cast<TypeMap*>(value.type);
+        MapTypeInterface* type = static_cast<MapTypeInterface*>(value.type);
         out.beginMap(value.size(), type->keyType()->signature(), type->elementType()->signature());
         for(; it != end; ++it)
         {
@@ -610,8 +610,8 @@ namespace qi {
 
       void visitMap(GenericIterator, GenericIterator)
       {
-        Type* keyType = static_cast<TypeMap*>(result.type)->keyType();
-        Type* elementType = static_cast<TypeMap*>(result.type)->elementType();
+        Type* keyType = static_cast<MapTypeInterface*>(result.type)->keyType();
+        Type* elementType = static_cast<MapTypeInterface*>(result.type)->elementType();
         qi::uint32_t sz = 0;
         in.read(sz);
         if (in.status() != BinaryDecoder::Status_Ok)
@@ -649,7 +649,7 @@ namespace qi {
       void visitTuple(const std::string &, const std::vector<GenericValuePtr>&, const std::vector<std::string>&)
 
       {
-        TypeTuple* type = static_cast<TypeTuple*>(result.type);
+        StructTypeInterface* type = static_cast<StructTypeInterface*>(result.type);
         std::vector<Type*> types = type->memberTypes();
         // Be safe, do not assume deserialize will give us the type we asked.
         std::vector<void*> vals;
@@ -690,7 +690,7 @@ namespace qi {
         DeserializeTypeVisitor dtv(*this);
         dtv.result = GenericValuePtr(type);
         typeDispatch<DeserializeTypeVisitor>(dtv, dtv.result);
-        static_cast<TypeDynamic*>(result.type)->set(&result.value, dtv.result);
+        static_cast<DynamicTypeInterface*>(result.type)->set(&result.value, dtv.result);
         dtv.result.destroy();
       }
       void visitIterator(GenericValuePtr)
@@ -702,7 +702,7 @@ namespace qi {
       {
         Buffer b;
         in.read(b);
-        static_cast<TypeRaw*>(result.type)->set(&result.value, (char*)b.data(), b.size());
+        static_cast<RawTypeInterface*>(result.type)->set(&result.value, (char*)b.data(), b.size());
       }
       GenericValuePtr result;
       BinaryDecoder& in;

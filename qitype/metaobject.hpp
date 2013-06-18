@@ -19,7 +19,7 @@
 namespace qi {
 
   class MetaObjectPrivate;
-  /// Description of the signals and methods accessible on an ObjectType
+  /// Description of the signals and methods accessible on an ObjectTypeInterface
   class QITYPE_API MetaObject  {
   public:
     MetaObject();

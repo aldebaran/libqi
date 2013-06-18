@@ -35,13 +35,13 @@ namespace qi
   }
 
 
-  std::pair<GenericValuePtr, bool> GenericValuePtr::convert(TypeDynamic* targetType) const
+  std::pair<GenericValuePtr, bool> GenericValuePtr::convert(DynamicTypeInterface* targetType) const
   {
     GenericValuePtr result;
 
     result.type = targetType;
     result.value = targetType->initializeStorage();
-    static_cast<TypeDynamic*>(targetType)->set(&result.value, *this);
+    static_cast<DynamicTypeInterface*>(targetType)->set(&result.value, *this);
     return std::make_pair(result, true);
     return std::make_pair(GenericValuePtr(), false);
   }
@@ -75,7 +75,7 @@ namespace qi
       {
         qiLogDebug() << "Attempting object->proxy conversion";
         // try object->proxy conversion by simply rewrapping this
-        ObjectPtr o(new GenericObject(static_cast<ObjectType*>(pointedSrc.type), pointedSrc.value));
+        ObjectPtr o(new GenericObject(static_cast<ObjectTypeInterface*>(pointedSrc.type), pointedSrc.value));
         return GenericValueRef(o).convert((Type*)targetType);
       }
       if (pointedDstPair.second)
@@ -151,7 +151,7 @@ namespace qi
     return std::make_pair(GenericValuePtr(), false);
   }
 
-  std::pair<GenericValuePtr, bool> GenericValuePtr::convert(TypeString* targetType) const
+  std::pair<GenericValuePtr, bool> GenericValuePtr::convert(StringTypeInterface* targetType) const
   {
     GenericValuePtr result;
 
@@ -163,8 +163,8 @@ namespace qi
         return std::make_pair(*this, false);
       result.type = targetType;
       result.value = targetType->initializeStorage();
-      std::pair<char*, size_t> v = static_cast<TypeString*>(type)->get(value);
-      static_cast<TypeString*>(targetType)->set(&result.value,
+      std::pair<char*, size_t> v = static_cast<StringTypeInterface*>(type)->get(value);
+      static_cast<StringTypeInterface*>(targetType)->set(&result.value,
                                                 v.first, v.second);
       return std::make_pair(result, true);
     }
@@ -179,7 +179,7 @@ namespace qi
     return std::make_pair(GenericValuePtr(), false);
   }
 
-  std::pair<GenericValuePtr, bool> GenericValuePtr::convert(TypeRaw* targetType) const
+  std::pair<GenericValuePtr, bool> GenericValuePtr::convert(RawTypeInterface* targetType) const
   {
     GenericValuePtr result;
 
@@ -191,16 +191,16 @@ namespace qi
         return std::make_pair(*this, false);
       result.type = targetType;
       result.value = targetType->initializeStorage();
-      std::pair<char*, size_t> v = static_cast<TypeRaw*>(type)->get(value);
-      static_cast<TypeRaw*>(result.type)->set(&result.value, v.first, v.second);
+      std::pair<char*, size_t> v = static_cast<RawTypeInterface*>(type)->get(value);
+      static_cast<RawTypeInterface*>(result.type)->set(&result.value, v.first, v.second);
       return std::make_pair(result, true);
     }
     case Type::String:
     {
-      std::pair<char*, size_t> data = static_cast<TypeString*>(type)->get(value);
+      std::pair<char*, size_t> data = static_cast<StringTypeInterface*>(type)->get(value);
       result.type = targetType;
       result.value = targetType->initializeStorage();
-      static_cast<TypeRaw*>(result.type)->set(&result.value, data.first, data.second);
+      static_cast<RawTypeInterface*>(result.type)->set(&result.value, data.first, data.second);
       return std::make_pair(result, true);
     }
     default:
@@ -209,7 +209,7 @@ namespace qi
     return std::make_pair(GenericValuePtr(), false);
   }
 
-  std::pair<GenericValuePtr, bool> GenericValuePtr::convert(TypeFloat* targetType) const
+  std::pair<GenericValuePtr, bool> GenericValuePtr::convert(FloatTypeInterface* targetType) const
   {
     GenericValuePtr result;
 
@@ -219,15 +219,15 @@ namespace qi
     {
       result.type = targetType;
       result.value = targetType->initializeStorage();
-      static_cast<TypeFloat*>(targetType)->set(&result.value,
-                                               static_cast<TypeFloat*>(type)->get(value));
+      static_cast<FloatTypeInterface*>(targetType)->set(&result.value,
+                                               static_cast<FloatTypeInterface*>(type)->get(value));
       return std::make_pair(result, true);
     }
     case Type::Int:
     {
       GenericValuePtr result(static_cast<Type*>(targetType));
-      int64_t v = static_cast<TypeInt*>(type)->get(value);
-      if (static_cast<TypeInt*>(type)->isSigned())
+      int64_t v = static_cast<IntTypeInterface*>(type)->get(value);
+      if (static_cast<IntTypeInterface*>(type)->isSigned())
         result.setInt(v);
       else
         result.setUInt((uint64_t)v);
@@ -239,7 +239,7 @@ namespace qi
     return std::make_pair(GenericValuePtr(), false);
   }
 
-  std::pair<GenericValuePtr, bool> GenericValuePtr::convert(TypeInt* targetType) const
+  std::pair<GenericValuePtr, bool> GenericValuePtr::convert(IntTypeInterface* targetType) const
   {
     GenericValuePtr result;
 
@@ -247,8 +247,8 @@ namespace qi
     {
     case Type::Int:
     {
-      TypeInt* tsrc = static_cast<TypeInt*>(type);
-      TypeInt* tdst = static_cast<TypeInt*>(targetType);
+      IntTypeInterface* tsrc = static_cast<IntTypeInterface*>(type);
+      IntTypeInterface* tdst = static_cast<IntTypeInterface*>(targetType);
       int64_t v = tsrc->get(value);
       /* Bounce to GVP to perform overflow checks
       */
@@ -262,8 +262,8 @@ namespace qi
     }
     case Type::Float:
     {
-      double v = static_cast<TypeFloat*>(type)->get(value);
-      TypeInt* tdst = static_cast<TypeInt*>(targetType);
+      double v = static_cast<FloatTypeInterface*>(type)->get(value);
+      IntTypeInterface* tdst = static_cast<IntTypeInterface*>(targetType);
       GenericValuePtr result((Type*)tdst);
       // bounce to setDouble for overflow check
       result.setDouble(v);
@@ -275,16 +275,16 @@ namespace qi
     return std::make_pair(GenericValuePtr(), false);
   }
 
-  std::pair<GenericValuePtr, bool> GenericValuePtr::convert(TypeTuple* targetType) const
+  std::pair<GenericValuePtr, bool> GenericValuePtr::convert(StructTypeInterface* targetType) const
   {
     GenericValuePtr result;
-    TypeTuple* tdst = targetType;
+    StructTypeInterface* tdst = targetType;
 
     switch (type->kind())
     {
     case Type::Tuple:
     {
-      TypeTuple* tsrc = static_cast<TypeTuple*>(type);
+      StructTypeInterface* tsrc = static_cast<StructTypeInterface*>(type);
       std::vector<void*> sourceData = tsrc->get(value);
       std::vector<Type*> srcTypes = tsrc->memberTypes();
       std::vector<Type*> dstTypes = tdst->memberTypes();
@@ -375,7 +375,7 @@ namespace qi
     return std::make_pair(GenericValuePtr(), false);
   }
 
-  std::pair<GenericValuePtr, bool> GenericValuePtr::convert(TypeMap* targetType) const
+  std::pair<GenericValuePtr, bool> GenericValuePtr::convert(MapTypeInterface* targetType) const
   {
     GenericValuePtr result;
 
@@ -385,8 +385,8 @@ namespace qi
     {
       result = GenericValuePtr(static_cast<Type*>(targetType));
 
-      TypeMap* targetMapType = static_cast<TypeMap*>(targetType);
-      TypeMap* srcMapType = static_cast<TypeMap*>(type);
+      MapTypeInterface* targetMapType = static_cast<MapTypeInterface*>(targetType);
+      MapTypeInterface* srcMapType = static_cast<MapTypeInterface*>(type);
 
       Type* srcKeyType = srcMapType->keyType();
       Type* srcElementType = srcMapType->elementType();
@@ -479,23 +479,23 @@ namespace qi
       switch(dkind)
       {
       case Type::Float:
-        return convert(static_cast<TypeFloat*>(targetType));
+        return convert(static_cast<FloatTypeInterface*>(targetType));
       case Type::Int:
-        return convert(static_cast<TypeInt*>(targetType));
+        return convert(static_cast<IntTypeInterface*>(targetType));
       case Type::String:
-        return convert(static_cast<TypeString*>(targetType));
+        return convert(static_cast<StringTypeInterface*>(targetType));
       case Type::List:
         return convert(static_cast<TypeList*>(targetType));
       case Type::Map:
-        return convert(static_cast<TypeMap*>(targetType));
+        return convert(static_cast<MapTypeInterface*>(targetType));
       case Type::Pointer:
         return convert(static_cast<TypePointer*>(targetType));
       case Type::Tuple:
-        return convert(static_cast<TypeTuple*>(targetType));
+        return convert(static_cast<StructTypeInterface*>(targetType));
       case Type::Dynamic:
-        return convert(static_cast<TypeDynamic*>(targetType));
+        return convert(static_cast<DynamicTypeInterface*>(targetType));
       case Type::Raw:
-        return convert(static_cast<TypeRaw*>(targetType));
+        return convert(static_cast<RawTypeInterface*>(targetType));
       case Type::Unknown:
       {
         /* Under clang macos, typeInfo() comparison fails
@@ -516,17 +516,17 @@ namespace qi
       } // switch
     } // skind == dkind
     if (skind == Type::List && dkind == Type::Tuple)
-      return convert(static_cast<TypeTuple*>(targetType));
+      return convert(static_cast<StructTypeInterface*>(targetType));
     else if (skind == Type::List && dkind == Type::Map)
-      return convert(static_cast<TypeMap*>(targetType));
+      return convert(static_cast<MapTypeInterface*>(targetType));
     else if (skind == Type::Float && dkind == Type::Int)
-      return convert(static_cast<TypeInt*>(targetType));
+      return convert(static_cast<IntTypeInterface*>(targetType));
     else if (skind == Type::Int && dkind == Type::Float)
-      return convert(static_cast<TypeFloat*>(targetType));
+      return convert(static_cast<FloatTypeInterface*>(targetType));
     else if (skind == Type::String && dkind == Type::Raw)
-      return convert(static_cast<TypeRaw*>(targetType));
+      return convert(static_cast<RawTypeInterface*>(targetType));
     else if (skind == Type::Raw && dkind == Type::String)
-      return convert(static_cast<TypeString*>(targetType));
+      return convert(static_cast<StringTypeInterface*>(targetType));
 
     if (targetType->info() == typeOf<ObjectPtr>()->info()
         && type->kind() == Type::Pointer
@@ -537,7 +537,7 @@ namespace qi
       TypePointer* pT = static_cast<TypePointer*>(type);
       ObjectPtr o(
             new GenericObject(
-              static_cast<ObjectType*>(pT->pointedType()),
+              static_cast<ObjectTypeInterface*>(pT->pointedType()),
               pT->dereference(value).value),
             boost::bind(dropIt, GenericValue(*this)));
       return std::make_pair(GenericValueRef(o).clone(), true);
@@ -562,7 +562,7 @@ namespace qi
     }
 
     if (targetType->kind() == Type::Dynamic)
-      return convert(static_cast<TypeDynamic*>(targetType));
+      return convert(static_cast<DynamicTypeInterface*>(targetType));
 
     if (type->kind() == Type::Dynamic)
     {
@@ -577,7 +577,7 @@ namespace qi
     if (skind == Type::Object)
     {
       // Try inheritance
-      ObjectType* osrc = static_cast<ObjectType*>(type);
+      ObjectTypeInterface* osrc = static_cast<ObjectTypeInterface*>(type);
       qiLogDebug() << "inheritance check "
         << osrc <<" " << (osrc?osrc->inherits(targetType):false);
       int inheritOffset = 0;
@@ -608,7 +608,7 @@ namespace qi
   bool operator< (const GenericValuePtr& a, const GenericValuePtr& b)
   {
     //qiLogDebug() << "Compare " << a.type << ' ' << b.type;
-#define GET(v, t) static_cast<Type ## t *>(v.type)->get(v.value)
+#define GET(v, t) static_cast< t ## TypeInterface *>(v.type)->get(v.value)
     if (!a.type)
       return b.type != 0;
     if (!b.type)
@@ -726,9 +726,9 @@ namespace qi
 
     TypeList* t = static_cast<TypeList*>(type);
     Type* te = t->elementType();
-    TypeDynamic* td = 0;
+    DynamicTypeInterface* td = 0;
     if (te->kind() == Type::Dynamic)
-      td = static_cast<TypeDynamic*>(te);
+      td = static_cast<DynamicTypeInterface*>(te);
     if (!homogeneous && !td)
       throw std::runtime_error("Element type is not dynamic");
     std::vector<GenericValuePtr> elems;
@@ -770,7 +770,7 @@ namespace qi
     }
     else if (kind() == Type::Map)
     {
-      TypeMap* t = static_cast<TypeMap*>(type);
+      MapTypeInterface* t = static_cast<MapTypeInterface*>(type);
       std::pair<GenericValuePtr, bool> c = key.convert(t->keyType());
       if (!c.first.type)
         throw std::runtime_error("Incompatible key type");
@@ -784,7 +784,7 @@ namespace qi
     }
     else if (kind() == Type::Tuple)
     {
-      TypeTuple* t = static_cast<TypeTuple*>(type);
+      StructTypeInterface* t = static_cast<StructTypeInterface*>(type);
       int ikey = (int)key.toInt();
       std::vector<Type*> types = t->memberTypes();
       if (ikey < 0 || static_cast<size_t>(ikey) >= types.size())
@@ -817,7 +817,7 @@ namespace qi
       throw std::runtime_error("Expected a map");
     std::pair<GenericValuePtr, bool> ck(key, false);
     std::pair<GenericValuePtr, bool> cv(val, false);
-    TypeMap* t = static_cast<TypeMap*>(type);
+    MapTypeInterface* t = static_cast<MapTypeInterface*>(type);
     if (key.type != t->keyType())
       ck = key.convert(t->keyType());
     if (val.type != t->elementType())
@@ -854,7 +854,7 @@ namespace qi
   {
     if (kind() == Type::Int)
     {
-      TypeInt* type = static_cast<TypeInt*>(this->type);
+      IntTypeInterface* type = static_cast<IntTypeInterface*>(this->type);
       if (!type->isSigned() && v < 0)
         throw std::runtime_error(_QI_LOG_FORMAT_HASARG_0("Converting negative value %s to unsigned type", v));
       // not signed gives us an extra bit, but signed can go down an extra value
@@ -867,7 +867,7 @@ namespace qi
       type->set(&value, v);
     }
     else if (kind() == Type::Float)
-      static_cast<TypeFloat*>(type)->set(&value,
+      static_cast<FloatTypeInterface*>(type)->set(&value,
         static_cast<double>(v));
     else
       throw std::runtime_error("Value is not Int or Float");
@@ -876,7 +876,7 @@ namespace qi
   void GenericValuePtr::setDynamic(const qi::GenericValuePtr &element) {
     if (kind() != Type::Dynamic)
       throw std::runtime_error("Value is not a Dynamic");
-    TypeDynamic* t = static_cast<TypeDynamic*>(this->type);
+    DynamicTypeInterface* t = static_cast<DynamicTypeInterface*>(this->type);
     t->set(&value, element);
   }
 
@@ -884,7 +884,7 @@ namespace qi
   {
     if (kind() == Type::Int)
     {
-      TypeInt* type = static_cast<TypeInt*>(this->type);
+      IntTypeInterface* type = static_cast<IntTypeInterface*>(this->type);
       if (type->size() > 0 && type->size() < 8 && (v >= (1ULL << (8*type->size() - (type->isSigned()?1:0)))))
         throw std::runtime_error(_QI_LOG_FORMAT_HASARG_0("Overflow converting %s to %s bytes", v, type->size()));
       if (type->size() == 0 && (v > 1))
@@ -894,7 +894,7 @@ namespace qi
       type->set(&value, (int64_t)v);
     }
     else if (kind() == Type::Float)
-      static_cast<TypeFloat*>(type)->set(&value,
+      static_cast<FloatTypeInterface*>(type)->set(&value,
         static_cast<double>(static_cast<uint64_t>(v)));
     else
       throw std::runtime_error("Value is not Int or Float");
@@ -903,10 +903,10 @@ namespace qi
   void GenericValuePtr::setDouble(double v)
   {
     if (kind() == Type::Float)
-      static_cast<TypeFloat*>(type)->set(&value, v);
+      static_cast<FloatTypeInterface*>(type)->set(&value, v);
     else if (kind() == Type::Int)
     {
-      TypeInt* type = static_cast<TypeInt*>(this->type);
+      IntTypeInterface* type = static_cast<IntTypeInterface*>(this->type);
       if (v < 0 && !type->isSigned())
         throw std::runtime_error(_QI_LOG_FORMAT_HASARG_0("Converting negative value %s to unsigned type", v));
       if (type->size() == 0 && std::min(std::abs(v), std::abs(v-1)) > 0.01)

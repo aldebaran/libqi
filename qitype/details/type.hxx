@@ -51,7 +51,7 @@ namespace qi {
       : public TypeImpl<T> {};
 
   //any
-  template<> class TypeImpl<boost::any>: public TypeDynamic
+  template<> class TypeImpl<boost::any>: public DynamicTypeInterface
   {
   public:
     GenericValuePtr get(void* storage)
