@@ -78,7 +78,7 @@ namespace qi{
    *  - process change: Values are serialized.
    *
    */
-  class QITYPE_API Type
+  class QITYPE_API TypeInterface
   {
   public:
     virtual const TypeInfo& info() =0;
@@ -130,21 +130,21 @@ namespace qi{
     qi::Signature signature(void* storage=0, bool resolveDynamic = false);
 
     ///@return a Type on which signature() returns sig.
-    static Type* fromSignature(const qi::Signature& sig);
+    static TypeInterface* fromSignature(const qi::Signature& sig);
   };
 
   /// Runtime Type factory getter. Used by typeOf<T>()
-  QITYPE_API Type*  getType(const std::type_info& type);
+  QITYPE_API TypeInterface*  getType(const std::type_info& type);
 
   /// Runtime Type factory setter.
-  QITYPE_API bool registerType(const std::type_info& typeId, Type* type);
+  QITYPE_API bool registerType(const std::type_info& typeId, TypeInterface* type);
 
   /** Get type from a type. Will return a static TypeImpl<T> if T is not registered
    */
-  template<typename T> Type* typeOf();
+  template<typename T> TypeInterface* typeOf();
 
   /// Get type from a value. No need to delete the result
-  template<typename T> Type* typeOf(const T& v)
+  template<typename T> TypeInterface* typeOf(const T& v)
   {
     return typeOf<T>();
   }
@@ -199,17 +199,17 @@ namespace qi{
     /** Store type and allocate storage of value.
      * @param type use this type for initialization
      */
-    explicit GenericValuePtr(Type* type);
+    explicit GenericValuePtr(TypeInterface* type);
 
     /** Create a generic value with type and a value who should have
      * already been allocated.
      * @param type type of this generic value
      * @param value an already alloc place to store value
      */
-    GenericValuePtr(Type* type, void* value) : type(type), value(value) {}
+    GenericValuePtr(TypeInterface* type, void* value) : type(type), value(value) {}
 
     /// @return the pair (convertedValue, trueIfCopiedAndNeedsDestroy)
-    std::pair<GenericValuePtr, bool> convert(Type* targetType) const;
+    std::pair<GenericValuePtr, bool> convert(TypeInterface* targetType) const;
 
     std::pair<GenericValuePtr, bool> convert(ListTypeInterface* targetType) const;
     std::pair<GenericValuePtr, bool> convert(StructTypeInterface* targetType) const;
@@ -236,13 +236,13 @@ namespace qi{
     bool isValue() const;
 
     /// Helper function that converts and always clone
-    GenericValuePtr convertCopy(Type* targetType) const;
+    GenericValuePtr convertCopy(TypeInterface* targetType) const;
 
     // get item with key/ïndex 'key'. Return empty GVP or throw in case of failure
     GenericValuePtr _element(const GenericValuePtr& key, bool throwOnFailure);
     void _append(const GenericValuePtr& element);
     void _insert(const GenericValuePtr& key, const GenericValuePtr& val);
-    Type*   type;
+    TypeInterface*   type;
     void*   value;
     ///@}
 
@@ -299,7 +299,7 @@ namespace qi{
     ///@}
 
     qi::Signature signature(bool resolveDynamic = false) const;
-    Type::Kind kind() const;
+    TypeInterface::Kind kind() const;
 
     ///@{
     /** Read and update functions
@@ -422,7 +422,7 @@ namespace qi{
     explicit GenericValue(const GenericValuePtr& b, bool copy, bool free);
     explicit GenericValue(const GenericValuePtr& b);
     explicit GenericValue(const GenericValueRef& b);
-    explicit GenericValue(qi::Type *type);
+    explicit GenericValue(qi::TypeInterface *type);
     /// Create and return a GenericValue of type T
     template<typename T> static GenericValue make();
 
@@ -444,7 +444,7 @@ namespace qi{
     void operator = (const GenericValuePtr& b);
     void operator = (const GenericValue& b);
     void reset();
-    void reset(qi::Type *type);
+    void reset(qi::TypeInterface *type);
     template <typename T>
     void set(const T& t) { GenericValuePtr::set<T>(t); }
     void reset(const GenericValuePtr& src);
@@ -551,7 +551,7 @@ QITYPE_API bool operator !=(const GenericIterator & a, const GenericIterator& b)
   class StructTypeInterface;
 
   // Interfaces for specialized types
-  class QITYPE_API IntTypeInterface: public Type
+  class QITYPE_API IntTypeInterface: public TypeInterface
   {
   public:
     virtual int64_t get(void* value) const = 0;
@@ -561,7 +561,7 @@ QITYPE_API bool operator !=(const GenericIterator & a, const GenericIterator& b)
     virtual Kind kind() const { return Int;}
   };
 
-  class QITYPE_API FloatTypeInterface: public Type
+  class QITYPE_API FloatTypeInterface: public TypeInterface
   {
   public:
     virtual double get(void* value) const = 0;
@@ -571,7 +571,7 @@ QITYPE_API bool operator !=(const GenericIterator & a, const GenericIterator& b)
   };
 
   class Buffer;
-  class QITYPE_API StringTypeInterface: public Type
+  class QITYPE_API StringTypeInterface: public TypeInterface
   {
   public:
     std::string getString(void* storage) const;
@@ -582,7 +582,7 @@ QITYPE_API bool operator !=(const GenericIterator & a, const GenericIterator& b)
 
   };
 
-  class QITYPE_API RawTypeInterface: public Type
+  class QITYPE_API RawTypeInterface: public TypeInterface
   {
   public:
     virtual std::pair<char*, size_t> get(void* storage) const = 0;
@@ -590,7 +590,7 @@ QITYPE_API bool operator !=(const GenericIterator & a, const GenericIterator& b)
     virtual Kind kind() const { return Raw; }
   };
 
-  class QITYPE_API PointerTypeInterface: public Type
+  class QITYPE_API PointerTypeInterface: public TypeInterface
   {
   public:
     enum PointerKind
@@ -599,14 +599,14 @@ QITYPE_API bool operator !=(const GenericIterator & a, const GenericIterator& b)
       Shared,
     };
     virtual PointerKind pointerKind() const = 0;
-    virtual Type* pointedType() const = 0;
+    virtual TypeInterface* pointedType() const = 0;
     virtual GenericValuePtr dereference(void* storage) = 0; // must not be destroyed
     // Set new pointee value. pointer must be a *pointer* to type pointedType()
     virtual void setPointee(void** storage, void* pointer) = 0;
     virtual Kind kind() const { return Pointer; }
   };
 
-  class QITYPE_API TypeIterator: public Type
+  class QITYPE_API TypeIterator: public TypeInterface
   {
   public:
     // Returned reference is expected to point to somewhere in the iterator, or the container
@@ -616,10 +616,10 @@ QITYPE_API bool operator !=(const GenericIterator & a, const GenericIterator& b)
     virtual Kind kind() const { return Iterator;}
   };
 
-  class QITYPE_API ListTypeInterface: public Type
+  class QITYPE_API ListTypeInterface: public TypeInterface
   {
   public:
-    virtual Type* elementType() const = 0;
+    virtual TypeInterface* elementType() const = 0;
     virtual size_t size(void* storage) = 0;
     virtual GenericIterator begin(void* storage) = 0;
     virtual GenericIterator end(void* storage) = 0;
@@ -628,11 +628,11 @@ QITYPE_API bool operator !=(const GenericIterator & a, const GenericIterator& b)
     virtual Kind kind() const { return List;}
   };
 
-  class QITYPE_API MapTypeInterface: public Type
+  class QITYPE_API MapTypeInterface: public TypeInterface
   {
   public:
-    virtual Type* elementType() const = 0;
-    virtual Type* keyType() const = 0;
+    virtual TypeInterface* elementType() const = 0;
+    virtual TypeInterface* keyType() const = 0;
     virtual size_t size(void* storage) = 0;
     virtual GenericIterator begin(void* storage) = 0;
     virtual GenericIterator end(void* storage) = 0;
@@ -643,11 +643,11 @@ QITYPE_API bool operator !=(const GenericIterator & a, const GenericIterator& b)
     // MapTypeInterface does not provide a find()
   };
 
-  class QITYPE_API StructTypeInterface: public Type
+  class QITYPE_API StructTypeInterface: public TypeInterface
   {
   public:
     std::vector<GenericValuePtr> values(void* storage);
-    virtual std::vector<Type*> memberTypes() = 0;
+    virtual std::vector<TypeInterface*> memberTypes() = 0;
     virtual std::vector<void*> get(void* storage); // must not be destroyed
     virtual void* get(void* storage, unsigned int index) = 0; // must not be destroyed
     virtual void set(void** storage, std::vector<void*>);
@@ -657,7 +657,7 @@ QITYPE_API bool operator !=(const GenericIterator & a, const GenericIterator& b)
     virtual std::string className() { return std::string(); }
   };
 
-  class QITYPE_API DynamicTypeInterface: public Type
+  class QITYPE_API DynamicTypeInterface: public TypeInterface
   {
   public:
     virtual GenericValuePtr get(void* storage) = 0;
@@ -666,20 +666,20 @@ QITYPE_API bool operator !=(const GenericIterator & a, const GenericIterator& b)
   };
 
   ///@return a Type of kind List that can contains elements of type elementType.
-  QITYPE_API Type* makeListType(Type* elementType);
+  QITYPE_API TypeInterface* makeListType(TypeInterface* elementType);
 
   ///@return a Type of kind Map with given key and element types
-  QITYPE_API Type* makeMapType(Type* keyType, Type* ElementType);
+  QITYPE_API TypeInterface* makeMapType(TypeInterface* keyType, TypeInterface* ElementType);
 
   ///@return a Type of kind Tuple with givent memberTypes
-  QITYPE_API Type* makeTupleType(const std::vector<Type*>& memberTypes, const std::string &name = std::string(), const std::vector<std::string>& elementNames = std::vector<std::string>());
+  QITYPE_API TypeInterface* makeTupleType(const std::vector<TypeInterface*>& memberTypes, const std::string &name = std::string(), const std::vector<std::string>& elementNames = std::vector<std::string>());
 
   ///@return an allocated Tuple made from copies of \param values
   QITYPE_API GenericValuePtr makeGenericTuple(const std::vector<GenericValuePtr>& values);
 
   ///@return a Tuple pointing to \param values as its storage
   QITYPE_API GenericValuePtr makeGenericTuplePtr(
-    const std::vector<Type*>&types,
+    const std::vector<TypeInterface*>&types,
     const std::vector<void*>&values);
 
   /** Declare a templated-type taking one type argument.
@@ -707,8 +707,8 @@ QITYPE_API bool operator !=(const GenericIterator & a, const GenericIterator& b)
 #include <qitype/details/typetuple.hxx>
 #include <qitype/details/typebuffer.hxx>
 
-QI_NO_TYPE(qi::Type)
-QI_NO_TYPE(qi::Type*)
+QI_NO_TYPE(qi::TypeInterface)
+QI_NO_TYPE(qi::TypeInterface*)
 
 #ifdef _MSC_VER
 #  pragma warning( pop )

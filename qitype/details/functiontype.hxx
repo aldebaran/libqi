@@ -13,17 +13,17 @@
 
 namespace qi
 {
-  inline CallableType::CallableType()
+  inline CallableTypeInterface::CallableTypeInterface()
   : _resultType(0)
   {
   }
 
-  inline Type* CallableType::resultType()
+  inline TypeInterface* CallableTypeInterface::resultType()
   {
     return _resultType;
   }
 
-  inline const std::vector<Type*>& CallableType::argumentsType()
+  inline const std::vector<TypeInterface*>& CallableTypeInterface::argumentsType()
   {
     return _argumentsType;
   }

@@ -57,14 +57,14 @@ namespace qi {
       TypeTemplate* futureType = ft1 ? ft1 : ft2;
       if (futureType)
       {
-        Type* next = futureType->next();
+        TypeInterface* next = futureType->next();
         ObjectTypeInterface* onext = dynamic_cast<ObjectTypeInterface*>(next);
         GenericObject gfut(onext, val.value);
         boost::function<void()> cb = boost::bind(futureAdapterGeneric<T>, val, promise);
         gfut.call<void>("_connect", cb);
         return;
       }
-      Type* targetType = typeOf<T>();
+      TypeInterface* targetType = typeOf<T>();
       try
       {
         std::pair<GenericValuePtr, bool> conv = val.convert(targetType);
@@ -246,7 +246,7 @@ namespace qi {
     return type->setProperty(value, pid, GenericValue(GenericValueRef(val)));
   }
 
-  /* An ObjectPtr is actually of a Dynamic type: The underlying Type*
+  /* An ObjectPtr is actually of a Dynamic type: The underlying TypeInterface*
    * is not allways the same.
   */
   template<> class QITYPE_API TypeImpl<ObjectPtr>: public DynamicTypeInterface
@@ -279,17 +279,17 @@ namespace qi {
           qiLogWarning() << "NULL ObjectPtr";
         *val = *src;
       }
-      else if (source.kind() == Type::Dynamic)
+      else if (source.kind() == TypeInterface::Dynamic)
       { // try to dereference dynamic type in case it contains an object
         set(storage, source.asDynamic());
       }
-      else if (source.kind() == Type::Object)
+      else if (source.kind() == TypeInterface::Object)
       { // wrap object in objectptr: we do not keep it alive,
         // but source type offers no tracking capability
         ObjectPtr op(new GenericObject(static_cast<ObjectTypeInterface*>(source.type), source.value));
         *val = op;
       }
-      else if (source.kind() == Type::Pointer)
+      else if (source.kind() == TypeInterface::Pointer)
       {
         PointerTypeInterface* ptype = static_cast<PointerTypeInterface*>(source.type);
         // FIXME: find a way!

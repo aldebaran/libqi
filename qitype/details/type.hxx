@@ -29,7 +29,7 @@
 
 namespace qi {
   // void
-  template<> class TypeImpl<void>: public Type
+  template<> class TypeImpl<void>: public TypeInterface
   {
   public:
    const TypeInfo& info()
@@ -79,13 +79,13 @@ namespace qi  {
     private:
       ForbiddenInTypeSystem();
     };
-    template<typename T> inline Type* typeOfBackend()
+    template<typename T> inline TypeInterface* typeOfBackend()
     {
-      Type* result = getType(typeid(T));
+      TypeInterface* result = getType(typeid(T));
       if (!result)
       {
 
-        static Type* defaultResult = 0;
+        static TypeInterface* defaultResult = 0;
         // Is this really a problem?
         if (!defaultResult)
         {
@@ -118,12 +118,12 @@ namespace qi  {
     };
   }
 
-  template<typename T> Type* typeOf()
+  template<typename T> TypeInterface* typeOf()
   {
     return detail::typeOfBackend<typename detail::TypeOfAdapter<T>::type>();
   }
 
-  inline Type::Kind Type::kind() const
+  inline TypeInterface::Kind TypeInterface::kind() const
   {
     return Unknown;
   }
@@ -279,29 +279,30 @@ namespace qi  {
   }
 
   // Provide a base class for all templated type impls
-  class QITYPE_API TypeTemplate: public Type
+  class QITYPE_API TypeTemplate: public TypeInterface
   {
   public:
     // Return erased template argument type
-    virtual Type* templateArgument() = 0;
+    virtual TypeInterface* templateArgument() = 0;
     // If this type is also an object, return it.
-    virtual Type* next() { return 0;}
+    virtual TypeInterface* next() { return 0;}
   };
 
   // To detect a templated type, make all the Type of its instanciations
   // inherit fro a single class
-  template<template<typename> class T> class QITYPE_TEMPLATE_API TypeOfTemplate: public TypeTemplate
+  template<template<typename> class T>
+  class QITYPE_TEMPLATE_API TypeOfTemplate: public TypeTemplate
   {
   public:
-
   };
 
   // Default Type for template type T instanciated with type I
-  template<template<typename> class T, typename I> class QITYPE_TEMPLATE_API TypeOfTemplateDefaultImpl:
+  template<template<typename> class T, typename I>
+  class QITYPE_TEMPLATE_API TypeOfTemplateDefaultImpl:
   public TypeOfTemplate<T>
   {
   public:
-     virtual Type* templateArgument()
+     virtual TypeInterface* templateArgument()
     {
       return typeOf<I>();
     }

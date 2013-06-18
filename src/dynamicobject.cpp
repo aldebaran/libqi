@@ -106,7 +106,7 @@ namespace qi
     virtual qi::Future<Link> connect(void* instance, Manageable* context, unsigned int event, const SignalSubscriber& subscriber);
     /// Disconnect an event link. Returns if disconnection was successful.
     virtual qi::Future<void> disconnect(void* instance, Manageable* context, Link linkId);
-    virtual const std::vector<std::pair<Type*, int> >& parentTypes();
+    virtual const std::vector<std::pair<TypeInterface*, int> >& parentTypes();
     virtual qi::Future<GenericValue> property(void* instance, unsigned int id);
     virtual qi::Future<void> setProperty(void* instance, unsigned int id, GenericValue val);
     _QI_BOUNCE_TYPE_METHODS(DefaultTypeImplMethods<DynamicObject>);
@@ -193,7 +193,7 @@ namespace qi
         throw std::runtime_error("Id is not id of a property");
       // Fetch its type
       qi::Signature sig = p->signature();
-      Type* type = Type::fromSignature(sig);
+      TypeInterface* type = TypeInterface::fromSignature(sig);
       if (!type)
         throw std::runtime_error("Unable to construct a type from " + sig.toString());
       PropertyBase* res = new GenericProperty(type);
@@ -358,13 +358,13 @@ namespace qi
           {
             switch(params[i+1].type->kind())
             {
-            case Type::Int:
-            case Type::String:
-            case Type::Float:
-            case Type::List:
-            case Type::Map:
-            case Type::Tuple:
-            case Type::Dynamic:
+            case TypeInterface::Int:
+            case TypeInterface::String:
+            case TypeInterface::Float:
+            case TypeInterface::List:
+            case TypeInterface::Map:
+            case TypeInterface::Tuple:
+            case TypeInterface::Dynamic:
               args[i] = params[i+1];
               break;
             default:
@@ -523,9 +523,9 @@ namespace qi
     return reinterpret_cast<DynamicObject*>(instance)->metaDisconnect(linkId);
   }
 
-  const std::vector<std::pair<Type*, int> >& DynamicObjectTypeInterface::parentTypes()
+  const std::vector<std::pair<TypeInterface*, int> >& DynamicObjectTypeInterface::parentTypes()
   {
-    static std::vector<std::pair<Type*, int> > empty;
+    static std::vector<std::pair<TypeInterface*, int> > empty;
     return empty;
   }
 

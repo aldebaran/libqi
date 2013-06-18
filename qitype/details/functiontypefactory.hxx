@@ -226,7 +226,7 @@ namespace qi
  // hacks are disabled for boost::function (refMask forced to 0)
  // so use ptrFromStorage.
  #define declType(z, n, _) \
-   static Type* type_ ## n  = typeOf<typename boost::remove_reference<P ## n>::type>();
+   static TypeInterface* type_ ## n  = typeOf<typename boost::remove_reference<P ## n>::type>();
  #define callArgBF(z, n, _) \
    BOOST_PP_COMMA_IF(n) *(typename boost::remove_reference<P ## n>::type  *)type_##n -> ptrFromStorage(&args[n])
 
@@ -276,11 +276,11 @@ namespace qi
 #endif
 }
 
-  struct InfosKeyMask: public std::vector<Type*>
+  struct InfosKeyMask: public std::vector<TypeInterface*>
   {
   public:
-    InfosKeyMask(const std::vector<Type*>& b, unsigned long mask)
-    : std::vector<Type*>(b), _mask(mask) {}
+    InfosKeyMask(const std::vector<TypeInterface*>& b, unsigned long mask)
+    : std::vector<TypeInterface*>(b), _mask(mask) {}
     bool operator < (const InfosKeyMask& b) const
     {
       if (size() != b.size())
@@ -333,7 +333,7 @@ namespace qi
       // v is storage for type ReturnType we claimed we were
       // adapt return value if needed
       if (boost::is_pointer<ReturnType>::value
-        &&  _resultType->kind() != Type::Pointer)
+        &&  _resultType->kind() != TypeInterface::Pointer)
       {
         // if refMask&1, real return type is some Foo& and v is Foo*
         // else, return type is Foo with sizeof(Foo) == sizeof(void*) and v is a Foo
@@ -351,10 +351,10 @@ namespace qi
       return v;
     }
     unsigned long refMask;
-    static FunctionTypeInterfaceEq<T, S>* make(unsigned long refMask, std::vector<Type*> argsType,
-      Type* returnType)
+    static FunctionTypeInterfaceEq<T, S>* make(unsigned long refMask, std::vector<TypeInterface*> argsType,
+      TypeInterface* returnType)
     { // we need to hash/compare on all the arguments
-      std::vector<Type*> key(argsType);
+      std::vector<TypeInterface*> key(argsType);
       key.push_back(returnType);
       typedef std::map<InfosKeyMask,  FunctionTypeInterfaceEq<T, S>* > FTMap;
       static FTMap ftMap;
@@ -396,22 +396,22 @@ namespace qi
     {
       typedef T* type;
     };
-    // Fill a vector<Type*> from a T*
+    // Fill a vector<TypeInterface*> from a T*
     struct fill_arguments
     {
-      inline fill_arguments(std::vector<Type*>* target)
+      inline fill_arguments(std::vector<TypeInterface*>* target)
       : target(target) {}
 
       template<typename T> void operator()(T*) const
       {
-        Type* result = typeOf<
+        TypeInterface* result = typeOf<
           typename remove_constptr<
             typename boost::remove_const<
                typename boost::remove_reference<T>::type
             >::type>::type>();
         target->push_back(result);
       }
-      std::vector<Type*>* target;
+      std::vector<TypeInterface*>* target;
     };
 
     // build a function pointer or member function pointer type
@@ -429,9 +429,9 @@ namespace qi
     {
       typedef typename boost::function_types::parameter_types<F>::type ArgsType;
       typedef typename boost::function_types::result_type<F>::type ResType;
-      Type* resultType = typeOf<ResType>();
-      std::vector<Type*> argumentsType;
-      // Generate and store a Type* for each argument
+      TypeInterface* resultType = typeOf<ResType>();
+      std::vector<TypeInterface*> argumentsType;
+      // Generate and store a TypeInterface* for each argument
       boost::mpl::for_each<
         boost::mpl::transform_view<ArgsType,
         boost::add_pointer<
@@ -474,7 +474,7 @@ namespace qi
     {
       AnyFunction res = AnyFunction::fromDynamicFunction(boost::bind(&bouncer<C, R>, _1, fun));
       // The signature storage in GO will drop first argument, and bug if none is present
-      const_cast<std::vector<Type*> &>(res.functionType()->argumentsType()).push_back(typeOf<GenericValue>());
+      const_cast<std::vector<TypeInterface*> &>(res.functionType()->argumentsType()).push_back(typeOf<GenericValue>());
       return res;
     }
 
@@ -485,8 +485,8 @@ namespace qi
       */
       typedef typename boost::function_types::parameter_types<F>::type ArgsType;
       typedef typename boost::function_types::result_type<F>::type ResType;
-      Type* resultType = typeOf<ResType>();
-      std::vector<Type*> argumentsType;
+      TypeInterface* resultType = typeOf<ResType>();
+      std::vector<TypeInterface*> argumentsType;
       boost::mpl::for_each<
         boost::mpl::transform_view<ArgsType,
         boost::add_pointer<

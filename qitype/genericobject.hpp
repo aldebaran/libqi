@@ -291,9 +291,9 @@ namespace qi {
        Proxy* ptr = static_cast<Proxy*>(instance);
        return ptr->asObject()->disconnect(linkId);
     }
-    virtual const std::vector<std::pair<Type*, int> >& parentTypes()
+    virtual const std::vector<std::pair<TypeInterface*, int> >& parentTypes()
     {
-      static std::vector<std::pair<Type*, int> > empty;
+      static std::vector<std::pair<TypeInterface*, int> > empty;
       return empty;
     }
     virtual qi::Future<GenericValue> property(void* instance, unsigned int id)
@@ -392,7 +392,7 @@ static bool _qiregister##name() {                                              \
     {                                                                                                  \
     public:                                                                                            \
       TypeOfTemplateImpl(): _next(0) {}                                                                \
-      virtual Type* next()                                                                             \
+      virtual TypeInterface* next()                                                                             \
       {                                                                                                \
         if (!_next)                                                                                    \
         {                                                                                              \
@@ -402,7 +402,7 @@ static bool _qiregister##name() {                                              \
         }                                                                                              \
         return _next;                                                                                  \
       }                                                                                                \
-      Type* _next;                                                                                     \
+      TypeInterface* _next;                                                                                     \
     };                                                                                                 \
   } \
   QI_TEMPLATE_TYPE_DECLARE(name)

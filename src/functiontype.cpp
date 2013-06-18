@@ -51,7 +51,7 @@ namespace qi
     * - prepend an arg
     */
     unsigned deltaCount = (transform.dropFirst? -1:0) + (transform.prependValue?1:0);
-    const std::vector<Type*>& target = type->argumentsType();
+    const std::vector<TypeInterface*>& target = type->argumentsType();
     unsigned sz = vargs.size();
     const GenericValuePtr* args = sz > 0 ? &vargs[0] : 0;
 
@@ -93,7 +93,7 @@ namespace qi
         if (!v.first.type)
         {
           // Try pointer dereference
-          if (args[i].kind() == Type::Pointer)
+          if (args[i].kind() == TypeInterface::Pointer)
           {
             GenericValuePtr deref = *const_cast<GenericValuePtr&>(args[i]);
             if (deref.type == target[i+offset] || deref.type->info() == target[i+offset]->info())
@@ -148,14 +148,14 @@ namespace qi
     return prependArgument(arg);
   }
 
-  Type* AnyFunction::resultType() const
+  TypeInterface* AnyFunction::resultType() const
   {
     return type->resultType();
   }
 
-  std::vector<Type*> AnyFunction::argumentsType() const
+  std::vector<TypeInterface*> AnyFunction::argumentsType() const
   {
-    std::vector<Type*> res = type->argumentsType();
+    std::vector<TypeInterface*> res = type->argumentsType();
     if (transform.dropFirst && transform.prependValue) // optimize that case
       res[0] = typeOf<GenericValue>();
     else if (transform.dropFirst)
@@ -166,13 +166,13 @@ namespace qi
       // do not access res[1], it might not exist and invalid access might be
       // detected by debug-mode stl
       res.push_back(0);
-      memmove(&res[0]+1, &res[0], (res.size()-1)*sizeof(Type*));
+      memmove(&res[0]+1, &res[0], (res.size()-1)*sizeof(TypeInterface*));
       res[0] = typeOf<GenericValue>();
     }
     else if (transform.prependValue)
     {
       // We bind one argument, so it is not present in apparent signature, remove it
-      memmove(&res[0], &res[0]+1, (res.size()-1)*sizeof(Type*));
+      memmove(&res[0], &res[0]+1, (res.size()-1)*sizeof(TypeInterface*));
       res.pop_back();
     }
     return res;
@@ -184,11 +184,11 @@ namespace qi
       return "m";
     if (!dropFirst)
       return qi::makeTupleSignature(argumentsType());
-    std::vector<Type*> vtype = argumentsType();
+    std::vector<TypeInterface*> vtype = argumentsType();
     if (vtype.empty())
       throw std::runtime_error("Can't drop the first argument, the argument list is empty");
-    //ninja! : drop the first Type*
-    memmove(&vtype[0], &vtype[0]+1, (vtype.size()-1)*sizeof(Type*));
+    //ninja! : drop the first TypeInterface*
+    memmove(&vtype[0], &vtype[0]+1, (vtype.size()-1)*sizeof(TypeInterface*));
     vtype.pop_back();
     return qi::makeTupleSignature(vtype);
   }
@@ -207,7 +207,7 @@ namespace qi
       return resultType()->signature();
   }
 
-  qi::Signature CallableType::parametersSignature() const
+  qi::Signature CallableTypeInterface::parametersSignature() const
   {
     if (this == dynamicFunctionTypeInterface())
       return "m";
@@ -215,7 +215,7 @@ namespace qi
       return qi::makeTupleSignature(_argumentsType);
   }
 
-  qi::Signature CallableType::returnSignature() const
+  qi::Signature CallableTypeInterface::returnSignature() const
   {
     if (this == dynamicFunctionTypeInterface())
       return "m";
@@ -260,7 +260,7 @@ namespace qi
     int idx = 0;
     for (;it != sig.end(); ++it,++idx)
     {
-      Type* compatible = qi::Type::fromSignature(*it);
+      TypeInterface* compatible = qi::TypeInterface::fromSignature(*it);
       if (!compatible)
       {
         qiLogError() << "convert: unknown type " << (*it).toString();

@@ -25,7 +25,7 @@ namespace qi
     }
     /* Helpers around accessors
     */
-    template<typename A> Type* fieldType(A)
+    template<typename A> TypeInterface* fieldType(A)
     {
       return qi::typeOf<typename detail::Accessor<A>::value_type>();
     }
@@ -53,7 +53,7 @@ namespace qi {                                                            \
   {                                                                       \
   public:                                                                 \
     typedef name ClassType;                                               \
-    virtual std::vector< ::qi::Type*> memberTypes();                      \
+    virtual std::vector< ::qi::TypeInterface*> memberTypes();                      \
     virtual std::vector<std::string> elementsName();                      \
     virtual std::string className();                                      \
     virtual void* get(void* storage, unsigned int index);                 \
@@ -69,10 +69,10 @@ namespace qi {                                                            \
 #define __QI_TUPLE_FIELD_NAME(_, what, field) res.push_back(BOOST_PP_STRINGIZE(QI_DELAY(field)));
 #define __QI_TYPE_STRUCT_IMPLEMENT(name, inl, onSet, ...)                                    \
 namespace qi {                                                                        \
-  inl std::vector< ::qi::Type*> TypeImpl<name>::memberTypes()                                \
+  inl std::vector< ::qi::TypeInterface*> TypeImpl<name>::memberTypes()                                \
   {                                                                                   \
     name* ptr = 0;                                                                    \
-    std::vector< ::qi::Type*> res;                                                           \
+    std::vector< ::qi::TypeInterface*> res;                                                           \
     QI_VAARGS_APPLY(__QI_TUPLE_TYPE, _, __VA_ARGS__);                                 \
     return res;                                                                       \
   }                                                                                   \
@@ -136,9 +136,9 @@ namespace qi {                                                                  
 #define __QI_ATUPLE_FROMDATA(idx, what, field) ::qi::detail::fieldValue(ptr, __QI_STRUCT_ACCESS(field), &data[idx])
 #define __QI_TYPE_STRUCT_AGREGATE_CONSTRUCTOR_IMPLEMENT(name, inl, onSet, ...)\
 namespace qi {                                                                        \
-  inl std::vector< ::qi::Type*> TypeImpl<name>::memberTypes()                                \
+  inl std::vector< ::qi::TypeInterface*> TypeImpl<name>::memberTypes()                                \
   {                                                                                   \
-    std::vector< ::qi::Type*> res;                                                           \
+    std::vector< ::qi::TypeInterface*> res;                                                           \
     QI_VAARGS_APPLY(__QI_ATUPLE_TYPE, name, __VA_ARGS__);                                 \
     return res;                                                                       \
   }                                                                                   \
@@ -284,7 +284,7 @@ namespace qi {
   public:
     StructTypeInterface* bounceType()
     {
-      static Type* result = 0;
+      static TypeInterface* result = 0;
       if (!result)
         result = typeOf<TO>();
       return static_cast<StructTypeInterface*>(result);
@@ -293,7 +293,7 @@ namespace qi {
     virtual void adaptStorage(void** storage, void** adapted) = 0;
 
     typedef DefaultTypeImplMethods<T> Methods;
-    virtual std::vector<Type*> memberTypes()
+    virtual std::vector<TypeInterface*> memberTypes()
     {
       return bounceType()->memberTypes();
     }
@@ -321,12 +321,12 @@ namespace qi {
   public:
     typedef DefaultTypeImplMethods<std::pair<F, S> > Methods;
     typedef typename std::pair<F, S> BackendType;
-    std::vector<Type*> memberTypes()
+    std::vector<TypeInterface*> memberTypes()
     {
-      static std::vector<Type*>* result=0;
+      static std::vector<TypeInterface*>* result=0;
       if (!result)
       {
-        result = new std::vector<Type*>();
+        result = new std::vector<TypeInterface*>();
         result->push_back(typeOf<F>());
         result->push_back(typeOf<S>());
       }

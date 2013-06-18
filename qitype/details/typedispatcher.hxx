@@ -17,53 +17,53 @@ namespace qi {
     TypeDispatcher& v = const_cast<TypeDispatcher&>(vv);
     switch(value.kind())
     {
-      case Type::Void:
+      case TypeInterface::Void:
         v.visitVoid();
         break;
-      case Type::Unknown:
+      case TypeInterface::Unknown:
         v.visitUnknown(value);
         break;
-      case Type::Int:
+      case TypeInterface::Int:
       {
         IntTypeInterface* tint = static_cast<IntTypeInterface*>(value.type);
 
         v.visitInt(value.toInt(), tint->isSigned(), tint->size());
         break;
       }
-      case Type::Float:
+      case TypeInterface::Float:
       {
         FloatTypeInterface* tfloat = static_cast<FloatTypeInterface*>(value.type);
         v.visitFloat(value.toDouble(), tfloat->size());
         break;
       }
-      case Type::String:
+      case TypeInterface::String:
       {
         StringTypeInterface* tstring = static_cast<StringTypeInterface*>(value.type);
         std::pair<char*, size_t> content = tstring->get(value.value);
         v.visitString(content.first, content.second);
         break;
       }
-      case Type::List:
+      case TypeInterface::List:
       {
         v.visitList(value.begin(), value.end());
         break;
       }
-      case Type::Map:
+      case TypeInterface::Map:
       {
         v.visitMap(value.begin(), value.end());
         break;
       }
-      case Type::Object:
+      case TypeInterface::Object:
       {
         v.visitObject(GenericObject(static_cast<ObjectTypeInterface*>(value.type), value.value));
         break;
       }
-      case Type::Pointer:
+      case TypeInterface::Pointer:
       {
         GenericValuePtr pointee = *value;
         PointerTypeInterface* type = static_cast<PointerTypeInterface*>(value.type);
         if (type->pointerKind() == PointerTypeInterface::Shared
-          && pointee.kind() == Type::Object)
+          && pointee.kind() == TypeInterface::Object)
         { // shared_ptr<Foo> p with Foo object type.
           // Create our own shared_ptr, that holds p and delete it on destruction
           qiLogDebug("qitype.typedispatcher") << "Detected object shared ptr";
@@ -76,14 +76,14 @@ namespace qi {
           v.visitPointer(pointee);
         break;
       }
-      case Type::Tuple:
+      case TypeInterface::Tuple:
       {
         StructTypeInterface* ttuple = static_cast<StructTypeInterface*>(value.type);
         std::vector<GenericValuePtr> tuple = ttuple->values(value.value);
         v.visitTuple(ttuple->className(), tuple, ttuple->elementsName());
         break;
       }
-      case Type::Dynamic:
+      case TypeInterface::Dynamic:
       {
         if (value.type->info() == typeOf<ObjectPtr>()->info())
         {
@@ -94,12 +94,12 @@ namespace qi {
           v.visitDynamic(value.asDynamic());
         break;
       }
-      case Type::Raw:
+      case TypeInterface::Raw:
       {
         v.visitRaw(value);
         break;
       }
-      case Type::Iterator:
+      case TypeInterface::Iterator:
       {
         v.visitIterator(value);
         break;

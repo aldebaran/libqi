@@ -21,7 +21,7 @@ namespace qi {
     // - typeid
     // - cloner/deleter
     // - serializer, ...
-    // => wee need all Type* methods, but we do not want another Type*
+    // => wee need all TypeInterface* methods, but we do not want another TypeInterface*
     // to anwser to typeOf<T>
     xBuildFor(new DefaultTypeImpl<T>(), autoRegister);
   }

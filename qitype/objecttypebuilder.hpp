@@ -25,7 +25,7 @@ namespace qi {
 
   class SignalBase;
   class ObjectTypeInterface;
-  class Type;
+  class TypeInterface;
   template<typename T> class SignalF;
   class ObjectTypeBuilderPrivate;
   struct ObjectTypeData;
@@ -72,8 +72,8 @@ namespace qi {
     int xAdvertiseMethod(MetaMethodBuilder& builder, AnyFunction func, MetaCallType threadingModel = MetaCallType_Auto, int id = -1);
     int xAdvertiseSignal(const std::string &name, const qi::Signature& signature, SignalMemberGetter getter, int id = -1);
     int xAdvertiseProperty(const std::string& name, const qi::Signature& signature, PropertyMemberGetter getter, int id = -1);
-    void xBuildFor(Type* type, bool autoRegister = true);
-    void inherits(Type* parentType, int offset);
+    void xBuildFor(TypeInterface* type, bool autoRegister = true);
+    void inherits(TypeInterface* parentType, int offset);
 
     // Configuration
 

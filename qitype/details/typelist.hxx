@@ -19,7 +19,7 @@ public:
                                > MethodsImpl;
   ListTypeInterfaceImpl();
   virtual size_t size(void* storage);
-  virtual Type* elementType() const;
+  virtual TypeInterface* elementType() const;
   virtual GenericIterator begin(void* storage);
   virtual GenericIterator end(void* storage);
   virtual void pushBack(void** storage, void* valueStorage);
@@ -62,10 +62,10 @@ ListTypeInterfaceImpl<T>::ListTypeInterfaceImpl()
 {
 }
 
-template<typename T> Type*
+template<typename T> TypeInterface*
 ListTypeInterfaceImpl<T>::elementType() const
 {
-  static Type* result = typeOf<typename T::value_type>();
+  static TypeInterface* result = typeOf<typename T::value_type>();
   return result;
 }
 
@@ -86,7 +86,7 @@ ListTypeInterfaceImpl<T>::end(void* storage)
 template<typename T> void
 ListTypeInterfaceImpl<T>::pushBack(void** storage, void* valueStorage)
 {
-  static Type* elemType = typeOf<typename T::value_type>();
+  static TypeInterface* elemType = typeOf<typename T::value_type>();
   T* ptr = (T*) ptrFromStorage(storage);
   ptr->push_back(*(typename T::value_type*)elemType->ptrFromStorage(&valueStorage));
 }

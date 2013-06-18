@@ -28,13 +28,13 @@ namespace qi {
 
   class GenericValuePtr;
   class GenericValue;
-  class Type;
+  class TypeInterface;
   class Signature;
   QITYPE_API qi::Signature makeTupleSignature(const std::vector<qi::GenericValuePtr>& vgv,
                                               bool resolveDynamic = false,
                                               const std::string &name = std::string(),
                                               const std::vector<std::string>& names = std::vector<std::string>());
-  QITYPE_API qi::Signature makeTupleSignature(const std::vector<Type*>& vgv,
+  QITYPE_API qi::Signature makeTupleSignature(const std::vector<TypeInterface*>& vgv,
                                               const std::string &name = std::string(),
                                               const std::vector<std::string>& names = std::vector<std::string>());
 

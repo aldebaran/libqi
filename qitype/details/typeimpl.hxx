@@ -277,7 +277,7 @@ virtual bool  less(void* a, void* b) { return Bounce::less(a, b);}
 
 template<typename T, typename _Access    = TypeByPointer<T> >
 class DefaultTypeImpl
-: public Type
+: public TypeInterface
 {
 public:
   typedef DefaultTypeImplMethods<T, _Access> MethodsImpl;

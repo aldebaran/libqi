@@ -18,8 +18,8 @@ public:
                                TypeByPointer<M>
                                > MethodsImpl;
   MapTypeInterfaceImpl();
-  virtual Type* elementType() const;
-  virtual Type* keyType() const;
+  virtual TypeInterface* elementType() const;
+  virtual TypeInterface* keyType() const;
   virtual size_t size(void* storage);
   virtual GenericIterator begin(void* storage);
   virtual GenericIterator end(void* storage);
@@ -37,17 +37,17 @@ MapTypeInterfaceImpl<M>::MapTypeInterfaceImpl()
 }
 
 
-template<typename M> Type*
+template<typename M> TypeInterface*
 MapTypeInterfaceImpl<M>::elementType() const
 {
-  static Type* result = typeOf<typename M::mapped_type>();
+  static TypeInterface* result = typeOf<typename M::mapped_type>();
   return result;
 }
 
-template<typename M> Type*
+template<typename M> TypeInterface*
 MapTypeInterfaceImpl<M>::keyType() const
 {
-  static Type* result = typeOf<typename M::key_type>();
+  static TypeInterface* result = typeOf<typename M::key_type>();
   return result;
 }
 
@@ -76,8 +76,8 @@ MapTypeInterfaceImpl<M>::end(void* storage)
 template<typename M> void
 MapTypeInterfaceImpl<M>::insert(void** storage, void* keyStorage, void* valueStorage)
 {
-  static Type* elemType = typeOf<typename M::mapped_type>();
-  static Type* keyType = typeOf<typename M::key_type>();
+  static TypeInterface* elemType = typeOf<typename M::mapped_type>();
+  static TypeInterface* keyType = typeOf<typename M::key_type>();
   M* ptr = (M*) ptrFromStorage(storage);
   typename M::key_type& key = *(typename M::key_type*)keyType->ptrFromStorage(&keyStorage);
   typename M::mapped_type& val = *(typename M::mapped_type*)elemType->ptrFromStorage(&valueStorage);
@@ -91,8 +91,8 @@ MapTypeInterfaceImpl<M>::insert(void** storage, void* keyStorage, void* valueSto
 template<typename M> GenericValuePtr
 MapTypeInterfaceImpl<M>::element(void** storage, void* keyStorage, bool autoInsert)
 {
-  //static Type* elemType = typeOf<typename M::mapped_type>();
-  static Type* keyType = typeOf<typename M::key_type>();
+  //static TypeInterface* elemType = typeOf<typename M::mapped_type>();
+  static TypeInterface* keyType = typeOf<typename M::key_type>();
   M* ptr = (M*) ptrFromStorage(storage);
   typename M::key_type* key = (typename M::key_type*)keyType->ptrFromStorage(&keyStorage);
   typename M::iterator it = ptr->find(*key);

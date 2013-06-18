@@ -103,7 +103,7 @@ namespace qi {
     }
   }
 
-  typedef std::map<TypeInfo, Type*> TypeFactory;
+  typedef std::map<TypeInfo, TypeInterface*> TypeFactory;
   static TypeFactory& typeFactory()
   {
     static TypeFactory* res = 0;
@@ -112,7 +112,7 @@ namespace qi {
     return *res;
   }
 
-  QITYPE_API Type* getType(const std::type_info& type)
+  QITYPE_API TypeInterface* getType(const std::type_info& type)
   {
     static boost::mutex* mutex = 0;
     if (!mutex)
@@ -124,7 +124,7 @@ namespace qi {
   }
 
   /// Type factory setter
-  QITYPE_API bool registerType(const std::type_info& typeId, Type* type)
+  QITYPE_API bool registerType(const std::type_info& typeId, TypeInterface* type)
   {
     qiLogCategory("qitype.type"); // method can be called at static init
     qiLogDebug() << "registerType "  << typeId.name() << " "
@@ -342,7 +342,7 @@ namespace qi {
     bool            _resolveDynamic;
   };
 
-  Signature Type::signature(void* storage, bool resolveDynamic)
+  Signature TypeInterface::signature(void* storage, bool resolveDynamic)
   {
     if (resolveDynamic)
     {
@@ -359,41 +359,41 @@ namespace qi {
       SignatureTypeVisitor v(value, resolveDynamic);
       switch(kind())
       {
-      case Type::Void:
+      case TypeInterface::Void:
         return qi::Signature::fromType(Signature::Type_Void);
         break;
-      case Type::Int:
+      case TypeInterface::Int:
       {
         IntTypeInterface* tint = static_cast<IntTypeInterface*>(value.type);
         v.visitInt(0, tint->isSigned(), tint->size());
         break;
       }
-      case Type::Float:
+      case TypeInterface::Float:
       {
         FloatTypeInterface* tfloat = static_cast<FloatTypeInterface*>(value.type);
         v.visitFloat(0, tfloat->size());
         break;
       }
-      case Type::String:
+      case TypeInterface::String:
         v.result = qi::Signature::fromType(Signature::Type_String);
         break;
-      case Type::List:
+      case TypeInterface::List:
         v.visitList(GenericIterator(), GenericIterator());
         break;
-      case Type::Map:
+      case TypeInterface::Map:
         v.visitMap(GenericIterator(), GenericIterator());
         break;
-      case Type::Object:
+      case TypeInterface::Object:
         v.result = qi::Signature::fromType(Signature::Type_Object);
         break;
-      case Type::Pointer:
+      case TypeInterface::Pointer:
       {
         PointerTypeInterface* type = static_cast<PointerTypeInterface*>(value.type);
-        Type::Kind pointedKind = type->pointedType()->kind();
+        TypeInterface::Kind pointedKind = type->pointedType()->kind();
         if (type->pointerKind() == PointerTypeInterface::Shared
-          && (pointedKind == Type::Object || pointedKind == Type::Unknown))
+          && (pointedKind == TypeInterface::Object || pointedKind == TypeInterface::Unknown))
         {
-          if(pointedKind != Type::Object)
+          if(pointedKind != TypeInterface::Object)
             qiLogVerbose() << "Shared pointer to unknown type " << type->pointedType()->infoString()
                            << ", assuming object not yet registered";
           ObjectPtr op;
@@ -406,24 +406,24 @@ namespace qi {
         }
         break;
       }
-      case Type::Tuple: {
-        std::vector<Type*>       memberTypes = static_cast<StructTypeInterface*>(this)->memberTypes();
+      case TypeInterface::Tuple: {
+        std::vector<TypeInterface*>       memberTypes = static_cast<StructTypeInterface*>(this)->memberTypes();
         std::vector<std::string> annotations = static_cast<StructTypeInterface*>(this)->elementsName();
         std::string              name        = static_cast<StructTypeInterface*>(this)->className();
         v.result = qi::makeTupleSignature(memberTypes, name, annotations);
         break;
       }
-      case Type::Dynamic:
+      case TypeInterface::Dynamic:
         if (value.type->info() == typeOf<ObjectPtr>()->info())
           v.result = qi::Signature::fromType(Signature::Type_Object);
         else
           v.result = qi::Signature::fromType(Signature::Type_Dynamic);
         break;
-      case Type::Raw:
+      case TypeInterface::Raw:
         v.result = qi::Signature::fromType(Signature::Type_Raw);
         break;
-      case Type::Unknown:
-      case Type::Iterator:
+      case TypeInterface::Unknown:
+      case TypeInterface::Iterator:
          v.result = qi::Signature::fromType(Signature::Type_Unknown);
          break;
       }
@@ -432,24 +432,24 @@ namespace qi {
   }
 
 
-  static Type* fromSignature(const qi::Signature::iterator & i)
+  static TypeInterface* fromSignature(const qi::Signature::iterator & i)
   {
-    static Type* tv = typeOf<void>();
-    static Type* tb = typeOf<bool>();
-    static Type* t8 = typeOf<int8_t>();
-    static Type* t16 = typeOf<int16_t>();
-    static Type* t32 = typeOf<int32_t>();
-    static Type* t64 = typeOf<int64_t>();
-    static Type* tu8  = typeOf<uint8_t>();
-    static Type* tu16 = typeOf<uint16_t>();
-    static Type* tu32 = typeOf<uint32_t>();
-    static Type* tu64 = typeOf<uint64_t>();
-    static Type* tfloat = typeOf<float>();
-    static Type* tdouble = typeOf<double>();
-    static Type* tstring = typeOf<std::string>();
-    static Type* tgv = typeOf<GenericValue>();
-    static Type* tbuffer = typeOf<Buffer>();
-    static Type* tobjectptr = typeOf<ObjectPtr>();
+    static TypeInterface* tv = typeOf<void>();
+    static TypeInterface* tb = typeOf<bool>();
+    static TypeInterface* t8 = typeOf<int8_t>();
+    static TypeInterface* t16 = typeOf<int16_t>();
+    static TypeInterface* t32 = typeOf<int32_t>();
+    static TypeInterface* t64 = typeOf<int64_t>();
+    static TypeInterface* tu8  = typeOf<uint8_t>();
+    static TypeInterface* tu16 = typeOf<uint16_t>();
+    static TypeInterface* tu32 = typeOf<uint32_t>();
+    static TypeInterface* tu64 = typeOf<uint64_t>();
+    static TypeInterface* tfloat = typeOf<float>();
+    static TypeInterface* tdouble = typeOf<double>();
+    static TypeInterface* tstring = typeOf<std::string>();
+    static TypeInterface* tgv = typeOf<GenericValue>();
+    static TypeInterface* tbuffer = typeOf<Buffer>();
+    static TypeInterface* tobjectptr = typeOf<ObjectPtr>();
     switch(i.type())
     {
     case Signature::Type_None:
@@ -481,7 +481,7 @@ namespace qi {
       return tstring;
     case Signature::Type_List:
       {
-        Type* el = fromSignature(i.children().begin());
+        TypeInterface* el = fromSignature(i.children().begin());
         if (!el)
         {
           qiLogError() << "Cannot get type from list of unknown type.";
@@ -491,8 +491,8 @@ namespace qi {
       }
     case Signature::Type_Map:
       {
-        Type* k = fromSignature(i.children().begin());
-        Type* e = fromSignature(++i.children().begin());
+        TypeInterface* k = fromSignature(i.children().begin());
+        TypeInterface* e = fromSignature(++i.children().begin());
         if (!k || !e)
         {
           qiLogError() <<" Cannot get type from map of unknown "
@@ -503,11 +503,11 @@ namespace qi {
       }
     case Signature::Type_Tuple:
       {
-        std::vector<Type*> types;
+        std::vector<TypeInterface*> types;
         Signature c = i.children();
         for (Signature::iterator child = c.begin(); child != c.end(); child++)
         {
-          Type* t = fromSignature(child);
+          TypeInterface* t = fromSignature(child);
           if (!t)
           {
             qiLogError() << "Cannot get type from tuple of unknown element type";
@@ -519,7 +519,7 @@ namespace qi {
         std::vector<std::string> vannotations;
         std::string annotation = i.annotation();
         boost::algorithm::split(vannotations, annotation, boost::algorithm::is_any_of(","));
-        Type* res;
+        TypeInterface* res;
         //first annotation is the name, then the name of each elements
         if (vannotations.size() >= 1)
           res = makeTupleType(types, vannotations[0], std::vector<std::string>(vannotations.begin()+1, vannotations.end()));
@@ -540,24 +540,24 @@ namespace qi {
     }
   }
 
-  Type* Type::fromSignature(const qi::Signature& sig)
+  TypeInterface* TypeInterface::fromSignature(const qi::Signature& sig)
   {
     if (sig.size() != 1)
       qiLogWarning() << "fromSignature(): signature has more than one element: " << sig.toString();
     Signature::iterator i = sig.begin();
-    Type* result = ::qi::fromSignature(i);
+    TypeInterface* result = ::qi::fromSignature(i);
     // qiLogDebug() << "fromSignature() " << i.signature() << " -> " << (result?result->infoString():"NULL");
     return result;
   }
 
   // Default list
-  static Type* makeListIteratorType(Type* element);
+  static TypeInterface* makeListIteratorType(TypeInterface* element);
 
   class DefaultListIteratorType: public TypeSimpleIteratorImpl<std::vector<void*>::iterator >
   {
   public:
   private:
-    DefaultListIteratorType(Type* elementType)
+    DefaultListIteratorType(TypeInterface* elementType)
     : _elementType(elementType)
     {
       // We need an unique name, but elementType->nifo().aString() is not
@@ -568,7 +568,7 @@ namespace qi {
         + ">(" + boost::lexical_cast<std::string>(this);
       _info = TypeInfo(_name);
     }
-    friend Type* makeListIteratorType(Type*);
+    friend TypeInterface* makeListIteratorType(TypeInterface*);
   public:
     GenericValueRef dereference(void* storage)
     {
@@ -583,20 +583,20 @@ namespace qi {
     {
       return _info;
     }
-    Type* _elementType;
+    TypeInterface* _elementType;
     std::string _name;
     TypeInfo _info;
   };
 
   // We want exactly one instance per element type
-  static Type* makeListIteratorType(Type* element)
+  static TypeInterface* makeListIteratorType(TypeInterface* element)
   {
-    static std::map<TypeInfo, Type*>* map = 0;
+    static std::map<TypeInfo, TypeInterface*>* map = 0;
     if (!map)
-      map = new std::map<TypeInfo, Type*>();
+      map = new std::map<TypeInfo, TypeInterface*>();
     TypeInfo key = element->info();
-    std::map<TypeInfo, Type*>::iterator it;
-    Type* result;
+    std::map<TypeInfo, TypeInterface*>::iterator it;
+    TypeInterface* result;
     it = map->find(key);
     if (it == map->end())
     {
@@ -612,7 +612,7 @@ namespace qi {
   {
   public:
   private:
-    DefaultListType(Type* elementType)
+    DefaultListType(TypeInterface* elementType)
     : _elementType(elementType)
     {
        _name = "DefaultListType<"
@@ -620,10 +620,10 @@ namespace qi {
         + ">(" + boost::lexical_cast<std::string>(this);
         _info = TypeInfo(_name);
     }
-    friend Type* makeListType(Type* element);
+    friend TypeInterface* makeListType(TypeInterface* element);
   public:
 
-    Type* elementType() const
+    TypeInterface* elementType() const
     {
       return _elementType;
     }
@@ -680,21 +680,21 @@ namespace qi {
     typedef DefaultTypeImplMethods<std::vector<void*> > Methods;
     void* initializeStorage(void* ptr=0) { return Methods::initializeStorage(ptr);} \
     void* ptrFromStorage(void**s) { return Methods::ptrFromStorage(s);}
-    Type* _elementType;
+    TypeInterface* _elementType;
     std::string _name;
     TypeInfo _info;
 
   };
 
     // We want exactly one instance per element type
-  Type* makeListType(Type* element)
+  TypeInterface* makeListType(TypeInterface* element)
   {
-    static std::map<TypeInfo, Type*>* map = 0;
+    static std::map<TypeInfo, TypeInterface*>* map = 0;
     if (!map)
-      map = new std::map<TypeInfo, Type*>();
+      map = new std::map<TypeInfo, TypeInterface*>();
     TypeInfo key(element->info());
-    std::map<TypeInfo, Type*>::iterator it;
-    Type* result;
+    std::map<TypeInfo, TypeInterface*>::iterator it;
+    TypeInterface* result;
     it = map->find(key);
     if (it == map->end())
     {
@@ -711,7 +711,7 @@ namespace qi {
   class DefaultTupleType: public StructTypeInterface
   {
   private:
-    DefaultTupleType(const std::vector<Type*>& types, const std::string& className = std::string(), const std::vector<std::string>& elementsName = std::vector<std::string>())
+    DefaultTupleType(const std::vector<TypeInterface*>& types, const std::string& className = std::string(), const std::vector<std::string>& elementsName = std::vector<std::string>())
     : _className(className)
     , _types(types)
     , _elementName(elementsName)
@@ -724,10 +724,10 @@ namespace qi {
       _info = TypeInfo(_name);
     }
 
-    friend Type* makeTupleType(const std::vector<Type*>&, const std::string&, const std::vector<std::string>&);
+    friend TypeInterface* makeTupleType(const std::vector<TypeInterface*>&, const std::string&, const std::vector<std::string>&);
 
   public:
-    virtual std::vector<Type*> memberTypes() { return _types;}
+    virtual std::vector<TypeInterface*> memberTypes() { return _types;}
 
     virtual void* get(void* storage, unsigned int index)
     {
@@ -808,7 +808,7 @@ namespace qi {
 
   public:
     std::string              _className;
-    std::vector<Type*>       _types;
+    std::vector<TypeInterface*>       _types;
     std::vector<std::string> _elementName;
     std::string              _name;
     TypeInfo                 _info;
@@ -817,7 +817,7 @@ namespace qi {
 
   GenericValuePtr makeGenericTuple(const std::vector<GenericValuePtr>& values)
   {
-    std::vector<Type*> types;
+    std::vector<TypeInterface*> types;
     types.reserve(values.size());
     for (unsigned i=0; i<values.size(); ++i)
       types.push_back(values[i].type);
@@ -834,7 +834,7 @@ namespace qi {
   }
 
   GenericValuePtr makeGenericTuplePtr(
-    const std::vector<Type*>&types,
+    const std::vector<TypeInterface*>&types,
     const std::vector<void*>&values)
   {
     StructTypeInterface* tupleType = static_cast<StructTypeInterface*>(makeTupleType(types));
@@ -848,13 +848,13 @@ namespace qi {
   typedef std::map<GenericValuePtr, void*> DefaultMapStorage;
 
   // Default map, using a vector<pair<void*, void*> > as storage
-  static Type* makeMapIteratorType(Type* kt);
+  static TypeInterface* makeMapIteratorType(TypeInterface* kt);
 
   class DefaultMapIteratorType: public TypeIterator
   {
   public:
   private:
-    DefaultMapIteratorType(Type* elementType)
+    DefaultMapIteratorType(TypeInterface* elementType)
     : _elementType(elementType)
     {
       _name = "DefaultMapIteratorType<"
@@ -862,7 +862,7 @@ namespace qi {
       + "(" + boost::lexical_cast<std::string>(this) + ")";
       _info = TypeInfo(_name);
     }
-    friend Type* makeMapIteratorType(Type* kt);
+    friend TypeInterface* makeMapIteratorType(TypeInterface* kt);
   public:
     GenericValueRef dereference(void* storage)
     {
@@ -896,22 +896,22 @@ namespace qi {
       return _info;
     }
     _QI_BOUNCE_TYPE_METHODS_NOINFO(DefaultTypeImplMethods<DefaultMapStorage::iterator>);
-    Type* _elementType;
+    TypeInterface* _elementType;
     std::string _name;
     TypeInfo _info;
   };
 
   // We want exactly one instance per element type
-  static Type* makeMapIteratorType(Type* te)
+  static TypeInterface* makeMapIteratorType(TypeInterface* te)
   {
-    typedef std::map<TypeInfo, Type*> Map;
+    typedef std::map<TypeInfo, TypeInterface*> Map;
     static Map * map = 0;
     if (!map)
       map = new Map();
     TypeInfo ti(te->info());
     Map::key_type key(ti);
     Map::iterator it;
-    Type* result;
+    TypeInterface* result;
     it = map->find(key);
     if (it == map->end())
     {
@@ -927,7 +927,7 @@ namespace qi {
   {
   public:
   private:
-    DefaultMapType(Type* keyType, Type* elementType)
+    DefaultMapType(TypeInterface* keyType, TypeInterface* elementType)
     : _keyType(keyType)
     , _elementType(elementType)
     {
@@ -936,19 +936,19 @@ namespace qi {
       + elementType->info().asString()
       + "(" + boost::lexical_cast<std::string>(this) + ")";
       _info = TypeInfo(_name);
-      std::vector<Type*> kvtype;
+      std::vector<TypeInterface*> kvtype;
       kvtype.push_back(_keyType);
       kvtype.push_back(_elementType);
       _pairType = static_cast<DefaultTupleType*>(makeTupleType(kvtype));
       assert(dynamic_cast<DefaultTupleType*>(_pairType));
     }
-    friend Type* makeMapType(Type* kt, Type* et);
+    friend TypeInterface* makeMapType(TypeInterface* kt, TypeInterface* et);
   public:
-    Type* elementType() const
+    TypeInterface* elementType() const
     {
       return _elementType;
     }
-    Type* keyType () const
+    TypeInterface* keyType () const
     {
       return _keyType;
     }
@@ -1062,8 +1062,8 @@ namespace qi {
     void* initializeStorage(void* ptr=0) { return Methods::initializeStorage(ptr);}   \
     virtual void* ptrFromStorage(void**s) { return Methods::ptrFromStorage(s);}
     bool less(void* a, void* b) { return Methods::less(a, b);}
-    Type* _keyType;
-    Type* _elementType;
+    TypeInterface* _keyType;
+    TypeInterface* _elementType;
     DefaultTupleType* _pairType;
     TypeInfo _info;
     std::string _name;
@@ -1071,7 +1071,7 @@ namespace qi {
 
 
   // We want exactly one instance per element type
-  Type* makeMapType(Type* kt, Type* et)
+  TypeInterface* makeMapType(TypeInterface* kt, TypeInterface* et)
   {
     typedef std::map<std::pair<TypeInfo, TypeInfo>, MapTypeInterface*> Map;
     static Map * map = 0;
@@ -1098,7 +1098,7 @@ namespace qi {
   struct InfosKey
   {
   public:
-    InfosKey(const std::vector<Type*>& types, const std::string &name = std::string(), const std::vector<std::string>& elements = std::vector<std::string>())
+    InfosKey(const std::vector<TypeInterface*>& types, const std::string &name = std::string(), const std::vector<std::string>& elements = std::vector<std::string>())
       : _types(types)
       , _name(name)
       , _elements(elements)
@@ -1131,13 +1131,13 @@ namespace qi {
     }
 
   private:
-    std::vector<Type*>       _types;
+    std::vector<TypeInterface*>       _types;
     std::string              _name;
     std::vector<std::string> _elements;
   };
 
   //TODO: not threadsafe
-  Type* makeTupleType(const std::vector<Type*>& types, const std::string &name, const std::vector<std::string>& elementNames)
+  TypeInterface* makeTupleType(const std::vector<TypeInterface*>& types, const std::string &name, const std::vector<std::string>& elementNames)
   {
     typedef std::map<InfosKey, StructTypeInterface*> Map;
     static Map* map = 0;

@@ -12,7 +12,8 @@
 namespace qi
 {
   class TypeInfo;
-  class Type;
+
+  class TypeInterface;
   class IntTypeInterface;
   class FloatTypeInterface;
   class StringTypeInterface;
@@ -22,6 +23,7 @@ namespace qi
   class MapTypeInterface;
   class StructTypeInterface;
   class DynamicTypeInterface;
+
   class GenericValuePtr;
   class GenericValueRef;
   class GenericValue;

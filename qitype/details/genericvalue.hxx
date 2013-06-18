@@ -107,7 +107,7 @@ namespace qi {
   {
   }
 
-  inline GenericValuePtr::GenericValuePtr(Type* type)
+  inline GenericValuePtr::GenericValuePtr(TypeInterface* type)
     : type(type)
     , value(type->initializeStorage())
   {
@@ -116,17 +116,17 @@ namespace qi {
   template<typename T>
   GenericValuePtr::GenericValuePtr(T* ptr)
   {
-    static Type* t = 0;
+    static TypeInterface* t = 0;
     if (!t)
       t = typeOf<typename boost::remove_const<T>::type>();
     type = t;
     value = type->initializeStorage(const_cast<void*>((const void*)ptr));
   }
 
-  inline Type::Kind GenericValuePtr::kind() const
+  inline TypeInterface::Kind GenericValuePtr::kind() const
   {
     if (!type)
-      return Type::Void;
+      return TypeInterface::Void;
     else
       return type->kind();
   }
@@ -136,7 +136,7 @@ namespace qi {
 
   class KindNotConvertible;
 
-  template<Type::Kind T> struct TypeOfKind
+  template<TypeInterface::Kind T> struct TypeOfKind
   {
     typedef KindNotConvertible type;
   };
@@ -144,9 +144,9 @@ namespace qi {
 #define TYPE_OF_KIND(k, t) template<> struct TypeOfKind<k> { typedef t type;}
 
 
-  TYPE_OF_KIND(Type::Int, IntTypeInterface);
-  TYPE_OF_KIND(Type::Float,  FloatTypeInterface);
-  TYPE_OF_KIND(Type::String, StringTypeInterface);
+  TYPE_OF_KIND(TypeInterface::Int, IntTypeInterface);
+  TYPE_OF_KIND(TypeInterface::Float,  FloatTypeInterface);
+  TYPE_OF_KIND(TypeInterface::String, StringTypeInterface);
 
 #undef TYPE_OF_KIND
 
@@ -156,9 +156,9 @@ namespace qi {
   namespace detail
   {
     struct Nothing {};
-    template<Type::Kind k> struct MakeKind
+    template<TypeInterface::Kind k> struct MakeKind
     {
-      static const Type::Kind value = k;
+      static const TypeInterface::Kind value = k;
     };
 
     template<typename C, typename T, typename F> struct IfElse
@@ -181,8 +181,8 @@ namespace qi {
   public detail::IfElse<cond, typename detail::MakeKind<type>, detail::Nothing>::type
 
   template<typename T> struct KindOfType
-      : IF(typename boost::is_integral<T>::type, Type::Int)
-  , IF(typename boost::is_floating_point<T>::type, Type::Float)
+      : IF(typename boost::is_integral<T>::type, TypeInterface::Int)
+  , IF(typename boost::is_floating_point<T>::type, TypeInterface::Float)
   {
   };
 
@@ -191,7 +191,7 @@ namespace qi {
   namespace detail {
 
     // Optimized GenericValuePtr::as<T> for direct access to a subType getter
-    template<typename T, Type::Kind k>
+    template<typename T, TypeInterface::Kind k>
     inline T valueAs(const GenericValuePtr& v)
     {
       if (v.kind() == k)
@@ -228,13 +228,13 @@ namespace qi {
 
   namespace detail
   {
-    QI_NORETURN  QITYPE_API void throwConversionFailure(Type* from, Type* to);
+    QI_NORETURN  QITYPE_API void throwConversionFailure(TypeInterface* from, TypeInterface* to);
   }
 
   template<typename T>
   inline T GenericValuePtr::to() const
   {
-    Type* targetType = typeOf<T>();
+    TypeInterface* targetType = typeOf<T>();
     std::pair<GenericValuePtr, bool> conv = convert(targetType);
     if (!conv.first.type)
     {
@@ -256,22 +256,22 @@ namespace qi {
 
   inline int64_t GenericValuePtr::toInt() const
   {
-    return detail::valueAs<int64_t, Type::Int>(*this);
+    return detail::valueAs<int64_t, TypeInterface::Int>(*this);
   }
 
   inline uint64_t GenericValuePtr::toUInt() const
   {
-    return detail::valueAs<uint64_t, Type::Int>(*this);
+    return detail::valueAs<uint64_t, TypeInterface::Int>(*this);
   }
 
   inline float GenericValuePtr::toFloat() const
   {
-    return detail::valueAs<float, Type::Float>(*this);
+    return detail::valueAs<float, TypeInterface::Float>(*this);
   }
 
   inline double GenericValuePtr::toDouble() const
   {
-    return detail::valueAs<double, Type::Float>(*this);
+    return detail::valueAs<double, TypeInterface::Float>(*this);
   }
 
 
@@ -297,9 +297,9 @@ namespace qi {
   inline std::vector<GenericValuePtr>
   GenericValuePtr::asTupleValuePtr()
   {
-    if (kind() == Type::Tuple)
+    if (kind() == TypeInterface::Tuple)
       return static_cast<StructTypeInterface*>(type)->values(value);
-    else if (kind() == Type::List || kind() == Type::Map)
+    else if (kind() == TypeInterface::List || kind() == TypeInterface::Map)
     {
       std::vector<GenericValuePtr> result;
       GenericIterator iend = end();
@@ -321,7 +321,7 @@ namespace qi {
   inline std::map<GenericValuePtr, GenericValuePtr>
   GenericValuePtr::asMapValuePtr()
   {
-    if (kind() != Type::Map)
+    if (kind() != TypeInterface::Map)
       throw std::runtime_error("Expected a map");
     std::map<GenericValuePtr, GenericValuePtr> result;
     GenericIterator iend = end();
@@ -403,7 +403,7 @@ namespace qi {
     *this = b;
   }
 
-  inline GenericValue::GenericValue(qi::Type *type)
+  inline GenericValue::GenericValue(qi::TypeInterface *type)
     : GenericValuePtr(type)
     , _allocated(true)
   {
@@ -465,7 +465,7 @@ namespace qi {
     value = 0;
   }
 
-  inline void GenericValue::reset(qi::Type *ttype)
+  inline void GenericValue::reset(qi::TypeInterface *ttype)
   {
     reset();
     _allocated = true;
@@ -491,7 +491,7 @@ namespace qi {
 
   inline void GenericValuePtr::setString(const std::string& v)
   {
-    if (kind() != Type::String)
+    if (kind() != TypeInterface::String)
       throw std::runtime_error("Value is not of kind string");
     static_cast<StringTypeInterface*>(type)->set(&value, &v[0], v.size());
   }
@@ -511,11 +511,11 @@ namespace qi {
   inline size_t
   GenericValuePtr::size() const
   {
-    if (kind() == Type::List)
+    if (kind() == TypeInterface::List)
       return static_cast<ListTypeInterface*>(type)->size(value);
-    if (kind() == Type::Map)
+    if (kind() == TypeInterface::Map)
       return static_cast<MapTypeInterface*>(type)->size(value);
-    if (kind() == Type::Tuple)
+    if (kind() == TypeInterface::Tuple)
       return static_cast<StructTypeInterface*>(type)->memberTypes().size();
     else
       throw std::runtime_error("Expected List, Map or Tuple.");
@@ -540,7 +540,7 @@ namespace qi {
 
   inline GenericValuePtr GenericValuePtr::asDynamic() const
   {
-    if (kind() != Type::Dynamic)
+    if (kind() != TypeInterface::Dynamic)
       throw std::runtime_error("Not of dynamic kind");
     DynamicTypeInterface* d = static_cast<DynamicTypeInterface*>(type);
     return d->get(value);
@@ -555,9 +555,9 @@ namespace qi {
 
   inline GenericValueRef GenericValuePtr::operator*()
   {
-    if (kind() == Type::Pointer)
+    if (kind() == TypeInterface::Pointer)
       return static_cast<PointerTypeInterface*>(type)->dereference(value);
-    else if (kind() == Type::Iterator)
+    else if (kind() == TypeInterface::Iterator)
       return static_cast<TypeIterator*>(type)->dereference(value);
     else
       throw std::runtime_error("Expected pointer or iterator");
@@ -565,7 +565,7 @@ namespace qi {
 
   inline GenericValueRef GenericIterator::operator*()
   {
-    if (kind() == Type::Iterator)
+    if (kind() == TypeInterface::Iterator)
       return static_cast<TypeIterator*>(type)->dereference(value);
     else
       throw std::runtime_error("Expected iterator");
@@ -612,7 +612,7 @@ namespace qi {
   inline GenericIterator
   GenericIterator::operator++()
   {
-    if (kind() != Type::Iterator)
+    if (kind() != TypeInterface::Iterator)
       throw std::runtime_error("Expected an iterator");
     static_cast<TypeIterator*>(type)->next(&value);
     return *this;
@@ -621,9 +621,9 @@ namespace qi {
   inline GenericIterator
   GenericValuePtr::begin() const
   {
-    if (kind() == Type::List)
+    if (kind() == TypeInterface::List)
       return static_cast<ListTypeInterface*>(type)->begin(value);
-    else if (kind() == Type::Map)
+    else if (kind() == TypeInterface::Map)
       return static_cast<MapTypeInterface*>(type)->begin(value);
     else
       throw std::runtime_error("Expected list or map");
@@ -632,9 +632,9 @@ namespace qi {
   inline GenericIterator
   GenericValuePtr::end() const
   {
-    if (kind() == Type::List)
+    if (kind() == TypeInterface::List)
       return static_cast<ListTypeInterface*>(type)->end(value);
-    else if (kind() == Type::Map)
+    else if (kind() == TypeInterface::Map)
       return static_cast<MapTypeInterface*>(type)->end(value);
     else
       throw std::runtime_error("Expected list or map");

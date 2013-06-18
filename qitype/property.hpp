@@ -96,21 +96,21 @@ namespace qi
   class QITYPE_API GenericProperty: public Property<GenericValue>
   {
   public:
-    GenericProperty(Type* type, Getter getter = Getter(), Setter setter = Setter())
+    GenericProperty(TypeInterface* type, Getter getter = Getter(), Setter setter = Setter())
     :Property<GenericValue>(getter, setter)
     , _type(type)
     { // Initialize with default value for given type
       set(GenericValue(_type));
-      std::vector<Type*> types(&_type, &_type + 1);
+      std::vector<TypeInterface*> types(&_type, &_type + 1);
       _setSignature(makeTupleSignature(types));
     }
     virtual void setValue(GenericValueRef value)  { set(GenericValue(value, false, false));}
     void set(const GenericValue& v);
     virtual qi::Signature signature() const {
-      return makeTupleSignature(std::vector<Type*>(&_type, &_type + 1));
+      return makeTupleSignature(std::vector<TypeInterface*>(&_type, &_type + 1));
     }
   private:
-    Type* _type;
+    TypeInterface* _type;
   };
 
 

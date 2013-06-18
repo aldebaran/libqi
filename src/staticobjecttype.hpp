@@ -27,7 +27,7 @@ struct ObjectTypeData
   {}
 
   /* One might want this in the ObjectType virtuals, but that would
-   * bypass ObjectType::metaCall which would have to be removed.
+   * bypass ObjectTypeInterface::metaCall which would have to be removed.
    * -> RemoteObject, ALBridge needs to be rewriten.
    */
   typedef boost::function<SignalBase* (void*)> SignalGetter;
@@ -45,8 +45,8 @@ struct ObjectTypeData
 
   MethodMap methodMap;
 
-  Type* classType;
-  std::vector<std::pair<Type*, int> > parentTypes;
+  TypeInterface* classType;
+  std::vector<std::pair<TypeInterface*, int> > parentTypes;
   ObjectThreadingModel threadingModel;
 };
 
@@ -72,7 +72,7 @@ public:
   virtual qi::Future<GenericValue> property(void* instance, unsigned int id);
   virtual qi::Future<void> setProperty(void* instance, unsigned int id, GenericValue value);
 
-  virtual const std::vector<std::pair<Type*, int> >& parentTypes();
+  virtual const std::vector<std::pair<TypeInterface*, int> >& parentTypes();
   virtual void* initializeStorage(void*);
   virtual void* ptrFromStorage(void**);
   virtual void* clone(void* inst);

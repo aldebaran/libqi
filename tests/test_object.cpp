@@ -592,12 +592,12 @@ TEST(TestObject, TypeType)
   GenericValuePtr val = vals[0];
   qiLogDebug() << "type ptr " << val.type->infoString() << " "
   <<(void*)val.type;
-  ASSERT_EQ(Type::Int, val.kind());
+  ASSERT_EQ(TypeInterface::Int, val.kind());
   ASSERT_EQ(12, val.toInt());
   float onePointFive = 1.5f;
   vals = convert(onePointFive);
   val = vals[0];
-  ASSERT_EQ(Type::Float, val.kind());
+  ASSERT_EQ(TypeInterface::Float, val.kind());
   ASSERT_EQ(1.5, val.toDouble());
 
   /* We go through a named variable.
@@ -609,12 +609,12 @@ TEST(TestObject, TypeType)
   double dv = 1.5;
   vals = convert(dv);
   val = vals[0];
-  ASSERT_EQ(Type::Float, val.kind());
+  ASSERT_EQ(TypeInterface::Float, val.kind());
   ASSERT_EQ(1.5, val.toDouble());
 
   vals = convert("foo");
   val = vals[0];
-  ASSERT_EQ(Type::String, val.kind());
+  ASSERT_EQ(TypeInterface::String, val.kind());
   ASSERT_EQ(std::string("foo"), val.toString());
 }
 

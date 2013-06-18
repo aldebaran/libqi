@@ -21,7 +21,7 @@ namespace qi
 
   std::vector<GenericValuePtr> StructTypeInterface::values(void* storage)
   {
-    std::vector<Type*> types = memberTypes();
+    std::vector<TypeInterface*> types = memberTypes();
     std::vector<void*> values = get(storage);
     std::vector<GenericValuePtr> result;
     for (unsigned i=0; i<types.size(); ++i)

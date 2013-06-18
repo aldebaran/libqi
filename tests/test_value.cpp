@@ -310,7 +310,7 @@ TEST(Value, Tuple2)
 
 TEST(Value, DefaultMap)
 { // this one has tricky code and deserves a test)
-  Type* dmt = Type::fromSignature(qi::Signature("{si}"));
+  TypeInterface* dmt = TypeInterface::fromSignature(qi::Signature("{si}"));
   GenericValue val = GenericValue(GenericValuePtr(dmt), false, true);
   ASSERT_EQ(0u, val.size());
   val["foo"] = 12;
@@ -429,7 +429,7 @@ TEST(Value, Overflow)
 
 TEST(Value, Convert_ListToTuple)
 {
-  qi::Type *type = qi::Type::fromSignature("(fsf[s])");
+  qi::TypeInterface *type = qi::TypeInterface::fromSignature("(fsf[s])");
   qi::GenericValue gv1 = qi::decodeJSON("[42, \"plop\", 1.42, [\"a\", \"b\"]]");
   qi::GenericValue gv2 = qi::decodeJSON("[42, \"plop\", 1.42, [\"a\", 42]]");
 
@@ -442,7 +442,7 @@ TEST(Value, Convert_ListToTuple)
   ASSERT_EQ(gv1.size(), res1.first.size());
   ASSERT_STREQ("b", res1.first[3][1].asString().c_str());
 
-  qi::Type *dest3 = qi::Type::fromSignature("(fffI)");
+  qi::TypeInterface *dest3 = qi::TypeInterface::fromSignature("(fffI)");
   qi::GenericValue gv3 = qi::decodeJSON("[1.1, 2.2, 3.3, \"42\"]");
   std::pair<qi::GenericValuePtr, bool> res3 = gv3.convert(dest3);
   ASSERT_FALSE(res3.first.type);
@@ -450,7 +450,7 @@ TEST(Value, Convert_ListToTuple)
 
 TEST(Value, Convert_ListToMap)
 {
-  qi::Type *type1= qi::Type::fromSignature("{if}");
+  qi::TypeInterface *type1= qi::TypeInterface::fromSignature("{if}");
   qi::GenericValue gv1 = qi::decodeJSON("[[10.10, 42.42], [20, 43], [30, 44.44]]");
   std::pair<qi::GenericValuePtr, bool> res1 = gv1.convert(type1);
   ASSERT_TRUE(res1.first.type != 0);
@@ -458,7 +458,7 @@ TEST(Value, Convert_ListToMap)
   ASSERT_EQ(gv1.size(), res1.first.size());
   ASSERT_EQ(44.44f, res1.first[30].asFloat());
 
-  qi::Type *type2 = qi::Type::fromSignature("{if}");
+  qi::TypeInterface *type2 = qi::TypeInterface::fromSignature("{if}");
   qi::GenericValue gv2 = qi::decodeJSON("[[10.10, 42.42], [20, 43], [\"plop\", 44.44]]");
   std::pair<qi::GenericValuePtr, bool> res2 = gv2.convert(type2);
   ASSERT_FALSE(res2.first.type);

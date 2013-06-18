@@ -14,7 +14,7 @@ namespace qi
   template<typename T> class PointerTypeInterfaceImpl: public PointerTypeInterface
   {
   public:
-    Type* pointedType() const
+    TypeInterface* pointedType() const
     {
       // Caching the result here is dangerous if T uses runtime factory.
       return typeOf<T>();
@@ -45,7 +45,7 @@ namespace qi
   template<typename T> class TypeSharedPointerImpl: public PointerTypeInterface
   {
   public:
-    Type* pointedType() const
+    TypeInterface* pointedType() const
     {
       return typeOf<typename T::element_type>();
     }

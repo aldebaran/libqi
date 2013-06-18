@@ -23,7 +23,7 @@ namespace qi {
   {
     void serialize(GenericValuePtr val, BinaryEncoder& out, SerializeObjectCallback context=SerializeObjectCallback());
     void deserialize(GenericValuePtr what, BinaryDecoder& in, DeserializeObjectCallback context=DeserializeObjectCallback());
-    GenericValuePtr deserialize(qi::Type *type, BinaryDecoder& in, DeserializeObjectCallback context=DeserializeObjectCallback());
+    GenericValuePtr deserialize(qi::TypeInterface *type, BinaryDecoder& in, DeserializeObjectCallback context=DeserializeObjectCallback());
   }
   class BinaryDecoder;
   class BinaryEncoder;
@@ -195,7 +195,7 @@ namespace qi {
   {
     std::string signature;
     read(signature);
-    Type* type = 0; // Type::getCompatibleTypeWithSignature(signature);
+    TypeInterface* type = 0; // TypeInterface::getCompatibleTypeWithSignature(signature);
     if (!type)
       qiLogError() << "Could not find metatype for signature " << signature;
     else
@@ -584,7 +584,7 @@ namespace qi {
         in.read(s);
 
         //optimise when result is of type std::string
-        static Type* tstring = qi::typeOf<std::string>();
+        static TypeInterface* tstring = qi::typeOf<std::string>();
         if ((result.type == tstring) || (result.type->info() == tstring->info())) {
           std::swap(s, result.as<std::string>());
           return;
@@ -595,7 +595,7 @@ namespace qi {
 
       void visitList(GenericIterator, GenericIterator)
       {
-        Type* elementType = static_cast<ListTypeInterface*>(result.type)->elementType();
+        TypeInterface* elementType = static_cast<ListTypeInterface*>(result.type)->elementType();
         qi::uint32_t sz = 0;
         in.read(sz);
         if (in.status() != BinaryDecoder::Status_Ok)
@@ -610,8 +610,8 @@ namespace qi {
 
       void visitMap(GenericIterator, GenericIterator)
       {
-        Type* keyType = static_cast<MapTypeInterface*>(result.type)->keyType();
-        Type* elementType = static_cast<MapTypeInterface*>(result.type)->elementType();
+        TypeInterface* keyType = static_cast<MapTypeInterface*>(result.type)->keyType();
+        TypeInterface* elementType = static_cast<MapTypeInterface*>(result.type)->elementType();
         qi::uint32_t sz = 0;
         in.read(sz);
         if (in.status() != BinaryDecoder::Status_Ok)
@@ -650,10 +650,10 @@ namespace qi {
 
       {
         StructTypeInterface* type = static_cast<StructTypeInterface*>(result.type);
-        std::vector<Type*> types = type->memberTypes();
+        std::vector<TypeInterface*> types = type->memberTypes();
         // Be safe, do not assume deserialize will give us the type we asked.
         std::vector<void*> vals;
-        std::vector<Type*> valstypes;
+        std::vector<TypeInterface*> valstypes;
         vals.resize(types.size());
         valstypes.resize(types.size());
         for (unsigned i = 0; i<types.size(); ++i)
@@ -679,7 +679,7 @@ namespace qi {
         if (sig.empty()) {
           return;
         }
-        Type* type = Type::fromSignature(qi::Signature(sig));
+        TypeInterface* type = TypeInterface::fromSignature(qi::Signature(sig));
         if (!type)
         {
           qiLogError() << "Cannot find a type to deserialize signature " << sig << " within a dynamic value.";
@@ -729,7 +729,7 @@ namespace qi {
       what = dtv.result;
     }
 
-    GenericValuePtr deserialize(qi::Type *type, BinaryDecoder& in, DeserializeObjectCallback context)
+    GenericValuePtr deserialize(qi::TypeInterface *type, BinaryDecoder& in, DeserializeObjectCallback context)
     {
       GenericValuePtr res(type);
       deserialize(res, in, context);

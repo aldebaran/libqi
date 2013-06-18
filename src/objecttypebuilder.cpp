@@ -83,7 +83,7 @@ namespace qi {
     return id;
   }
 
-  void ObjectTypeBuilderBase::xBuildFor(Type* type, bool autoRegister)
+  void ObjectTypeBuilderBase::xBuildFor(TypeInterface* type, bool autoRegister)
   {
     _p->data.classType = type;
     _p->autoRegister = autoRegister;
@@ -127,9 +127,9 @@ namespace qi {
     return _p->type;
   }
 
-  void ObjectTypeBuilderBase::inherits(Type* type, int offset)
+  void ObjectTypeBuilderBase::inherits(TypeInterface* type, int offset)
   {
-    std::vector<std::pair<Type*, int> >& p = _p->data.parentTypes;
+    std::vector<std::pair<TypeInterface*, int> >& p = _p->data.parentTypes;
     if (type->info() != _p->data.classType->info() && std::find(p.begin(), p.end(),
       std::make_pair(type, offset)) == p.end())
     {

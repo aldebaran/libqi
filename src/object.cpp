@@ -377,16 +377,16 @@ namespace qi {
     metaPost(nameWithOptionalSignature, GenericFunctionParameters(params));
   }
 
-  int ObjectTypeInterface::inherits(Type* other)
+  int ObjectTypeInterface::inherits(TypeInterface* other)
   {
-    /* A registered class C can have to Type* around:
+    /* A registered class C can have to TypeInterface* around:
     * - TypeImpl<C*>
     * - The staticObjectTypeInterface that was created by the builder.
     * So assume that any of them can be in the parentTypes list.
     */
     if (this == other)
       return 0;
-    const std::vector<std::pair<Type*, int> >& parents = parentTypes();
+    const std::vector<std::pair<TypeInterface*, int> >& parents = parentTypes();
     qiLogDebug() << infoString() <<" has " << parents.size() <<" parents";
     for (unsigned i=0; i<parents.size(); ++i)
     {

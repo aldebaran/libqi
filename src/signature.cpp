@@ -60,7 +60,7 @@ namespace qi {
     return qi::Signature(res);
   }
 
-  qi::Signature makeTupleSignature(const std::vector<Type*>& vt, const std::string &name, const std::vector<std::string>& names)
+  qi::Signature makeTupleSignature(const std::vector<TypeInterface*>& vt, const std::string &name, const std::vector<std::string>& names)
   {
     std::string res;
     res += (char)Signature::Type_Tuple;

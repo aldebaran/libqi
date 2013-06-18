@@ -19,21 +19,21 @@
 namespace qi {
 
   /// Signature information for both callable types FunctionTypeInterface and MethodType
-  class QITYPE_API CallableType
+  class QITYPE_API CallableTypeInterface
   {
   public:
-    CallableType();
-    Type* resultType();
-    const std::vector<Type*>& argumentsType();
+    CallableTypeInterface();
+    TypeInterface* resultType();
+    const std::vector<TypeInterface*>& argumentsType();
     qi::Signature parametersSignature() const;
     qi::Signature returnSignature() const;
   protected:
-    Type*              _resultType;
+    TypeInterface*              _resultType;
     // C4251
-    std::vector<Type*> _argumentsType;
+    std::vector<TypeInterface*> _argumentsType;
   };
 
-  class QITYPE_API FunctionTypeInterface: public Type, public CallableType
+  class QITYPE_API FunctionTypeInterface: public TypeInterface, public CallableTypeInterface
   {
   public:
     /** Call the function func with argument args that must be of the correct type.
@@ -104,8 +104,8 @@ namespace qi {
     const AnyFunction& prependArgument(void* value) const;
 
     /// Return expected argument types, taking transform into account
-    std::vector<Type*> argumentsType() const;
-    Type*              resultType() const;
+    std::vector<TypeInterface*> argumentsType() const;
+    TypeInterface*              resultType() const;
     //dropfirst is useful when you want the parameters signature of a method.
     Signature          parametersSignature(bool dropFirst=false) const;
     Signature          returnSignature() const;
