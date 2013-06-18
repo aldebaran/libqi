@@ -176,39 +176,6 @@
  */
 
 /**
- * \fn qi::os::gettext(const std::string &)
- * \brief translate message
- * \param msgid Id of the message to be translated.
- * \return If a translation was found in one of the specified catalogs,
- *         it is converted to the locale's codeset and returned.
- *         Otherwise, msgid is returned.
- *         The resulting string is statically allocated and must
- *         not be modified or freed.
- *
- * \note The gettext, dgettext and dcgettext functions attempt to translate
- *       a text string into the user's native language, by looking up the translation
- *       in a message  catalog.
- */
-
-/**
- * \fn qi::os::dgettext(const std::string &, const std::string &)
- * \brief translate message
- * \param msgid Id of the message to be translated.
- * \param domainname if this argument is NULL, the domain name specified
- *                   through a preceding textdomain call is used,
- *                   otherwise try to find translation into domain name.
- * \return If a translation was found in one of the specified catalogs,
- *         it is converted to the locale's codeset and returned.
- *         Otherwise, msgid is returned.
- *         The resulting string is statically allocated and must
- *         not be modified or freed.
- *
- * \note The  gettext,  dgettext  and dcgettext functions attempt to translate
- *       a text string into the user's native language, by looking up the translation
- *       in a  message catalog.
- */
-
-/**
  * \fn qi::os::gettimeofday(qi::os::timeval*)
  * \brief The gettimeofday() function shall obtain the current time.
  * \param tp The timeval structure used to return the current time.

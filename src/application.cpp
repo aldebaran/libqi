@@ -14,7 +14,6 @@
 #include <qi/path.hpp>
 #include <src/sdklayout.hpp>
 #include <numeric>
-#include <locale>
 #include <boost/filesystem.hpp>
 #include <boost/thread.hpp>
 #include <boost/asio.hpp>
@@ -28,11 +27,6 @@
 #endif
 #ifdef _WIN32
 #include <windows.h>
-#endif
-
-#ifdef WITH_INTL
-# include <libintl.h>
-extern int _nl_msg_cat_cntr;
 #endif
 
 qiLogCategory("qi.Application");
@@ -339,43 +333,6 @@ namespace qi {
     args.resize(argc);
     for (int i=0; i<argc; ++i)
       args[i] = argv[i];
-  }
-
-
-  void Application::loadTranslationDict(const std::string &dictName)
-  {
-    // find conf file to know dictionary path
-    std::string applicationData = fsconcat("locale", qi::Application::name());
-    boost::filesystem::path intlConfPath(::qi::path::findData(applicationData, ".confintl"),
-                                         ::qi::unicodeFacet());
-    std::string parentDirDict = intlConfPath.parent_path().string(::qi::unicodeFacet());
-
-#ifdef WITH_INTL
-    // default local initialisation: take environment variable into account.
-    setlocale(LC_ALL, "");
-    bindtextdomain(dictName.c_str(), parentDirDict.c_str());
-    textdomain(dictName.c_str());
-#endif
-  }
-
-  bool Application::setTranslationLocale(const std::string &locale)
-  {
-    std::string appName = qi::Application::name();
-    std::string relAppData = fsconcat("locale", appName);
-
-    std::string dictPath = ::qi::path::findData(relAppData, fsconcat(locale, "LC_MESSAGES", appName + ".mo"));
-#ifdef WITH_INTL
-    if (!dictPath.empty())
-    {
-      // For more explanation take a look at
-      // http://www.gnu.org/software/gettext/manual/html_node/gettext-grok.html
-      ::qi::os::setenv("LANGUAGE", locale.c_str());
-
-      ++_nl_msg_cat_cntr;
-      return true;
-    }
-#endif
-    return false;
   }
 
   bool Application::initialized()

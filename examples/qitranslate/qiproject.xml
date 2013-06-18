@@ -1,6 +1,6 @@
 <project name="qitranslate" >
   <depends buildtime="true" runtime="true" names="libqi" />
-  <translate name="translate"
+  <translate name="qitranslate"
     domain="translate" linguas="fr_FR en_US" tr="gettext"
    />
 </project>

@@ -1,0 +1,58 @@
+// -*- mode:c++; -*-
+
+/**
+ * \namespace qi
+ * \brief Localization of your source code -
+ *        make your application or library speak in the user's language.
+ */
+
+/**
+ * \fn qi::Translator::Translator(const std::string &)
+ * \brief Constructor.
+ * \param name Application or Library name
+ */
+
+/**
+ * \fn qi::Translator::translate(const std::string &, const std::string &, const std::string &)
+ * \brief Translate a message.
+ *
+ * \param message Message
+ * \param domain Domain name
+ * \param locale Locale name
+ * \return The translated message
+ */
+
+/**
+ * \fn qi::Translator::setCurrentLocale(const std::string &)
+ * \brief Change the locale at runtime.
+ *
+ * \param locale Locale name formatted as xx_XX (country and language code).
+ */
+
+/**
+ * \fn qi::Translator::setDefaultDomain(const std::string &)
+ * \brief Set the default Domain.
+ *
+ * \param domain Domain name.
+ */
+
+/**
+ * \fn qi::Translator::addDomain(const std::string &)
+ * \brief Add a new dicationary of messages.
+ *
+ * \param domain Domain name.
+ */
+
+
+/**
+ * \fn qi::tr(const std::string &, const std::string &, const std::string &)
+ * \copydoc qi::Translator::translate
+ */
+
+/**
+ * \fn qi::defaultTranslator(const std::string &)
+ * \brief Get a reference on the default Translator.
+ *
+ * \param name Application or Library name
+ * \return A reference on default qi::Translator
+ */

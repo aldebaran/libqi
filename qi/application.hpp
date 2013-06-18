@@ -31,8 +31,6 @@ namespace qi {
     static std::string name();
     static void setArguments(int argc, char** argv);
     static void setArguments(const std::vector<std::string>& arguments);
-    static void loadTranslationDict(const std::string &dictName);
-    static bool setTranslationLocale(const std::string &locale);
 
     static void* loadModule(const std::string& name, int flags=-1);
     static void unloadModule(void* handle);
