@@ -300,7 +300,7 @@ namespace qi
     return type;
   }
 
-  AnyFunction makeDynamicGenericFunction(DynamicFunction f)
+  AnyFunction AnyFunction::fromDynamicFunction(DynamicFunction f)
   {
     FunctionTypeInterface* d = dynamicFunctionTypeInterface();
     AnyFunction result(d, d->clone(d->initializeStorage(&f)));
