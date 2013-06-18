@@ -602,15 +602,15 @@ namespace qi {
   }
 
   inline GenericIterator::GenericIterator(const GenericValuePtr& p)
-  :GenericValue(p)
+    : GenericValue(p)
   {}
 
   inline GenericIterator::GenericIterator(const GenericValue& v)
-  : GenericValue(v)
+    : GenericValue(v)
   {}
 
   inline GenericValueRef::GenericValueRef(const GenericValuePtr& src)
-  :GenericValuePtr(src)
+    : GenericValuePtr(src)
   {
     if (!type)
       throw std::runtime_error("Reference to empty GenericValuePtr");
@@ -628,6 +628,22 @@ namespace qi {
     set(v);
     return *this;
   }
+
+  inline GenericValueRef& GenericValueRef::operator=(const GenericValuePtr& v)
+  {
+    type = v.type;
+    value = v.value;
+    return *this;
+  }
+
+  inline GenericValueRef& GenericValueRef::operator=(const GenericValueRef& v)
+  {
+    type = v.type;
+    value = v.value;
+    return *this;
+  }
+
+
 
   inline GenericIterator
   GenericIterator::operator++()
