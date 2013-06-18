@@ -98,7 +98,7 @@ namespace qi {
   template<typename FUNCTION_TYPE>
   inline SignalSubscriber& SignalBase::connect(FUNCTION_TYPE  callback, MetaCallType model)
   {
-    return connect(makeAnyFunction(callback), model);
+    return connect(AnyFunction::from(callback), model);
   }
 
   template<typename T>

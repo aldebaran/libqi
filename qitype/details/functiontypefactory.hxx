@@ -519,7 +519,7 @@ namespace qi
         typedef typename boost::function<typename boost_bind_function_type<
         boost::_bi::bind_t<R, F, B> >::type> CompatType;
         CompatType f = v;
-        return makeAnyFunction(f);
+        return AnyFunction::from(f);
       }
     };
     template<typename T> struct AnyFunctionMaker<boost::function<T> >
@@ -543,7 +543,7 @@ namespace qi
   }
 
   template<typename T>
-  AnyFunction makeAnyFunction(T f)
+  AnyFunction AnyFunction::from(T f)
   {
     return detail::AnyFunctionMaker<T>::make(f);
   }
@@ -567,7 +567,7 @@ namespace qi
   }
 
   template<typename F, typename C>
-  AnyFunction makeAnyFunction(F func, C instance)
+  AnyFunction AnyFunction::from(F func, C instance)
   {
     /* Taking a AnyFunction of F will likely imply a typeOf<C> which is
     * unnecessary. So use a fake class in signature.
@@ -579,7 +579,7 @@ namespace qi
     typedef typename boost::mpl::push_front<ArgsFakeClass, Result>::type ComponentsFaked;
     typedef typename boost::function_types::member_function_pointer<ComponentsFaked>::type MethodTypeFaked;
     MethodTypeFaked newFunk = *(MethodTypeFaked*)(void*)&func;
-    AnyFunction res = makeAnyFunction(newFunk);
+    AnyFunction res = AnyFunction::from(newFunk);
 
     // Dynamic-cast instance to expected pointer type.
     typedef typename boost::mpl::at_c<Args, 0>::type FirstArg;

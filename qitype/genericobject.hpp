@@ -231,7 +231,7 @@ namespace qi {
                                                       MetaCallType model)
   {
     return connect(eventName,
-      SignalSubscriber(makeAnyFunction(callback), model));
+      SignalSubscriber(AnyFunction::from(callback), model));
   }
 
 

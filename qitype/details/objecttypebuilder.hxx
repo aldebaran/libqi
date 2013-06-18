@@ -33,7 +33,7 @@ namespace qi {
                                                       int id)
   {
     MetaMethodBuilder builder;
-    AnyFunction f = makeAnyFunction(function);
+    AnyFunction f = AnyFunction::from(function);
     if (! boost::is_member_function_pointer<FUNCTION_TYPE>::value)
       f.dropFirstArgument();
     builder.setName(name);
@@ -47,7 +47,7 @@ namespace qi {
                                                       MetaCallType threadingModel,
                                                       int id)
   {
-    AnyFunction f = makeAnyFunction(function);
+    AnyFunction f = AnyFunction::from(function);
     if (! boost::is_member_function_pointer<FUNCTION_TYPE>::value)
       f.dropFirstArgument();
     builder.setSignature(f);
