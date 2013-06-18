@@ -912,7 +912,7 @@ class ArgPack
 {
 public:
   qi::Property<qi::GenericValue> onCall;
-  void callMe(const qi::ArgumentPack& pack)
+  void callMe(const qi::AnyArguments& pack)
   {
     onCall.set(qi::GenericValue::from(pack.args()));
   }
@@ -920,7 +920,7 @@ public:
 
 QI_REGISTER_OBJECT(ArgPack, onCall, callMe);
 
-TEST(TestObject, ArgumentPack)
+TEST(TestObject, AnyArguments)
 {
   boost::shared_ptr<ArgPack> ap(new ArgPack);
   qi::ObjectPtr o = qi::GenericValue::from(ap).to<qi::ObjectPtr>();

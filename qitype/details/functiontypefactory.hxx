@@ -452,17 +452,17 @@ namespace qi
 
     template<typename C, typename R>
     GenericValuePtr bouncer(const std::vector<GenericValuePtr>& vargs,
-      R (C::*fun)(const ArgumentPack&)
+      R (C::*fun)(const AnyArguments&)
       )
     {
       // Pack arguments, call, wrap return value in GenericValue
-      ArgumentPack nargs;
+      AnyArguments nargs;
       nargs.args().resize(vargs.size()-1);
       for (unsigned i=0; i<vargs.size()-1; ++i)
         nargs.args()[i] = vargs[i+1];
       C* inst = (C*)vargs.front().to<C*>();
       if (!inst)
-        qiLogWarning("qitype.ArgumentPackBouncer") << "Null instance";
+        qiLogWarning("qitype.AnyArgumentsBouncer") << "Null instance";
       detail::GenericValuePtrCopy output;
       output(), (*inst.*fun)(nargs); // output clones
       GenericValue* v = new GenericValue(output, false, true); // steal output
@@ -470,7 +470,7 @@ namespace qi
     }
 
     template<typename C, typename R>
-    GenericFunction makeGenericFunctionBare(R (C::*fun)(const ArgumentPack&))
+    GenericFunction makeGenericFunctionBare(R (C::*fun)(const AnyArguments&))
     {
       GenericFunction res = makeDynamicGenericFunction(boost::bind(&bouncer<C, R>, _1, fun));
       // The signature storage in GO will drop first argument, and bug if none is present

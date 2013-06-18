@@ -63,12 +63,12 @@ namespace qi {
     void* boundValue;
   };
 
-  /// A function with ArgumentPack as its sole argument will behave as if makeDynamicGenericFunction was called.
-  class QITYPE_API ArgumentPack
+  /// A function with AnyArguments as its sole argument will behave as if makeDynamicGenericFunction was called.
+  class QITYPE_API AnyArguments
   {
   public:
-    ArgumentPack() {};
-    ArgumentPack(const std::vector<GenericValue>& args)
+    AnyArguments() {};
+    AnyArguments(const std::vector<GenericValue>& args)
     : _args(args) {}
     operator const std::vector<GenericValue>&() const { return _args;}
     std::vector<GenericValue> &args()             { return _args; }
