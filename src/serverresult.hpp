@@ -48,7 +48,7 @@ namespace qi {
       TypeTemplate* futureType = QI_TEMPLATE_TYPE_GET(val.type, Future);
       if (futureType)
       { // Return value is a future, bounce
-        Type* next = futureType->next();
+        TypeInterface* next = futureType->next();
         ObjectTypeInterface* onext = dynamic_cast<ObjectTypeInterface*>(next);
         GenericObject gfut(onext, val.value);
         boost::function<void()> cb = boost::bind(serverResultAdapterNext, val, host, socket, replyaddr);

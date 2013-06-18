@@ -40,7 +40,7 @@ int main(int argc, char* argv[])
     finalSig = MyGenerator.signature(); //generate a signature
     std::cout << "Test with Generated signature:" << finalSig << std::endl;
 
-    qi::Type *t = qi::Type::fromSignature(finalSig);
+    qi::TypeInterface *t = qi::TypeInterface::fromSignature(finalSig);
     qi::GenericValue gv(t);
 
     //wrap the tuple args into a dynamic.

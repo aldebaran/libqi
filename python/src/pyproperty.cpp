@@ -14,7 +14,7 @@ namespace qi { namespace py {
     class PyProperty : public qi::GenericProperty {
     public:
       PyProperty(const std::string &signature)
-        : qi::GenericProperty(qi::Type::fromSignature(signature))
+        : qi::GenericProperty(qi::TypeInterface::fromSignature(signature))
       {
       }
 

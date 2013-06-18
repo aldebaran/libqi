@@ -276,9 +276,9 @@ namespace qi {
 
   GenericValue ServiceBoundObject::property(const GenericValue& prop)
   {
-    if (prop.kind() == Type::String)
+    if (prop.kind() == TypeInterface::String)
       return _object->property<GenericValue>(prop.toString());
-    else if (prop.kind() == Type::Int)
+    else if (prop.kind() == TypeInterface::Int)
       return _object->type->property(_object->value, prop.toUInt());
     else
       throw std::runtime_error("Expected int or string for property index");
@@ -287,9 +287,9 @@ namespace qi {
   void ServiceBoundObject::setProperty(const GenericValue& prop, GenericValue val)
   {
     qi::Future<void> result;
-    if (prop.kind() == Type::String)
+    if (prop.kind() == TypeInterface::String)
       result = _object->setProperty(prop.toString(), val);
-    else if (prop.kind() == Type::Int)
+    else if (prop.kind() == TypeInterface::Int)
       result = _object->type->setProperty(_object->value, prop.toUInt(), val);
     else
       throw std::runtime_error("Expected int or string for property index");

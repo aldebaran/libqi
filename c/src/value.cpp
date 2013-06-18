@@ -56,7 +56,7 @@ qi_value_t* qi_value_create(const char *signature)
     v = new qi::GenericValue();
   else {
     //TODO: check signature correctness
-    qi::Type *type = qi::Type::fromSignature(signature);
+    qi::TypeInterface *type = qi::TypeInterface::fromSignature(signature);
     v = new qi::GenericValue(type);
   }
   return (qi_value_t*)v;
@@ -75,7 +75,7 @@ int         qi_value_reset(qi_value_t* value, const char *signature)
     v->reset();
   else {
     //TODO: check signature correctness
-    qi::Type *type = qi::Type::fromSignature(signature);
+    qi::TypeInterface *type = qi::TypeInterface::fromSignature(signature);
     v->reset(type);
   }
   return 1;
@@ -181,7 +181,7 @@ int        qi_value_tuple_set(qi_value_t *msg, unsigned int idx, qi_value_t *val
   qi::GenericValue &val = qi_value_cpp(value);
 
   try {
-    if (container.kind() != qi::Type::Tuple || idx >= container.size()) {
+    if (container.kind() != qi::TypeInterface::Tuple || idx >= container.size()) {
       return 0;
     }
     container[idx].set(val);
@@ -192,7 +192,7 @@ int        qi_value_tuple_set(qi_value_t *msg, unsigned int idx, qi_value_t *val
 
 qi_value_t*  qi_value_tuple_get(qi_value_t *msg, unsigned int idx) {
   qi::GenericValue &container = qi_value_cpp(msg);
-  if (container.kind() != qi::Type::Tuple || idx >= container.size()) {
+  if (container.kind() != qi::TypeInterface::Tuple || idx >= container.size()) {
     return 0;
   }
   qi_value_t* ret = qi_value_create("");
@@ -204,7 +204,7 @@ qi_value_t*  qi_value_tuple_get(qi_value_t *msg, unsigned int idx) {
 int          qi_value_tuple_size(qi_value_t *msg)
 {
   qi::GenericValue &container = qi_value_cpp(msg);
-  if (container.kind() != qi::Type::Tuple) {
+  if (container.kind() != qi::TypeInterface::Tuple) {
     return -1;
   }
   return container.size();
@@ -216,7 +216,7 @@ int          qi_value_list_set(qi_value_t *msg, unsigned int idx, qi_value_t *va
   qi::GenericValue &container = qi_value_cpp(msg);
   qi::GenericValue &val = qi_value_cpp(value);
 
-  if (container.kind() != qi::Type::List || idx >= container.size()) {
+  if (container.kind() != qi::TypeInterface::List || idx >= container.size()) {
     return 0;
   }
   try {
@@ -231,7 +231,7 @@ int          qi_value_list_set(qi_value_t *msg, unsigned int idx, qi_value_t *va
 qi_value_t*  qi_value_list_get(qi_value_t *msg, unsigned int idx)
 {
   qi::GenericValue &container = qi_value_cpp(msg);
-  if (container.kind() != qi::Type::List || idx >= container.size()) {
+  if (container.kind() != qi::TypeInterface::List || idx >= container.size()) {
     return 0;
   }
   qi_value_t* ret = qi_value_create("");
@@ -244,7 +244,7 @@ int  qi_value_list_push_back(qi_value_t *msg, qi_value_t*val)
 {
   qi::GenericValue &container = qi_value_cpp(msg);
   qi::GenericValue &gval = qi_value_cpp(val);
-  if (container.kind() != qi::Type::List) {
+  if (container.kind() != qi::TypeInterface::List) {
     return 0;
   }
   container.append(gval);
@@ -254,7 +254,7 @@ int  qi_value_list_push_back(qi_value_t *msg, qi_value_t*val)
 int          qi_value_list_size(qi_value_t *msg)
 {
   qi::GenericValue &container = qi_value_cpp(msg);
-  if (container.kind() != qi::Type::List) {
+  if (container.kind() != qi::TypeInterface::List) {
     return -1;
   }
   return container.size();
@@ -308,7 +308,7 @@ qi_value_t*  qi_value_dynamic_get(qi_value_t *container)
 unsigned int qi_value_map_size(qi_value_t *msg)
 {
   qi::GenericValue &container = qi_value_cpp(msg);
-  if (container.kind() != qi::Type::Map) {
+  if (container.kind() != qi::TypeInterface::Map) {
     return -1;
   }
   return container.size();
@@ -320,7 +320,7 @@ int         qi_value_map_set(qi_value_t *msg, qi_value_t *key, qi_value_t *value
   qi::GenericValue &k = qi_value_cpp(key);
   qi::GenericValue &val = qi_value_cpp(value);
 
-  if (container.kind() != qi::Type::Map) {
+  if (container.kind() != qi::TypeInterface::Map) {
     return 0;
   }
   try {
@@ -336,7 +336,7 @@ qi_value_t*  qi_value_map_get(qi_value_t *msg, qi_value_t *key)
   qi::GenericValue &k = qi_value_cpp(key);
 
   qi::GenericValuePtr r;
-  if (container.kind() != qi::Type::Map) {
+  if (container.kind() != qi::TypeInterface::Map) {
     return 0;
   }
   try {

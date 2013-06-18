@@ -366,7 +366,7 @@ namespace qi {
   }
 
   GenericValuePtr Message::value(const qi::Signature &signature, const qi::TransportSocketPtr &socket) const {
-    qi::Type* type = qi::Type::fromSignature(signature);
+    qi::TypeInterface* type = qi::TypeInterface::fromSignature(signature);
     if (!type) {
       qiLogError() <<"fromBuffer: unknown type " << signature.toString();
       throw std::runtime_error("Could not construct type for " + signature.toString());
@@ -380,7 +380,7 @@ namespace qi {
 
   void Message::setValue(const GenericValuePtr &value, ObjectHost* context) {
     cow();
-    if (value.type->kind() != qi::Type::Void)
+    if (value.type->kind() != qi::TypeInterface::Void)
     {
       encodeBinary(&_p->buffer, value, boost::bind(serializeObject, _1, context));
     }
@@ -406,7 +406,7 @@ namespace qi {
       /* We need to send a dynamic containing the value tuple to push the
       * signature. This wraps correctly without copying the data.
       */
-      std::vector<qi::Type*> types;
+      std::vector<qi::TypeInterface*> types;
       std::vector<void*> values;
       types.resize(in.size());
       values.resize(in.size());
@@ -429,7 +429,7 @@ namespace qi {
     {
       if (*its != *itd)
       {
-        ::qi::Type* target = ::qi::Type::fromSignature(*itd);
+        ::qi::TypeInterface* target = ::qi::TypeInterface::fromSignature(*itd);
         if (!target)
           throw std::runtime_error("remote call: Failed to obtain a type from signature " + (*itd).toString());
         std::pair<GenericValuePtr, bool> c = nargs[i].convert(target);
