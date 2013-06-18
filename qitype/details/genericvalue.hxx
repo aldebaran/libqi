@@ -132,7 +132,7 @@ namespace qi {
   }
 
 
-  // Kind -> handler Type (IntTypeInterface, TypeList...)  accessor
+  // Kind -> handler Type (IntTypeInterface, ListTypeInterface...)  accessor
 
   class KindNotConvertible;
 
@@ -512,7 +512,7 @@ namespace qi {
   GenericValuePtr::size() const
   {
     if (kind() == Type::List)
-      return static_cast<TypeList*>(type)->size(value);
+      return static_cast<ListTypeInterface*>(type)->size(value);
     if (kind() == Type::Map)
       return static_cast<MapTypeInterface*>(type)->size(value);
     if (kind() == Type::Tuple)
@@ -622,7 +622,7 @@ namespace qi {
   GenericValuePtr::begin() const
   {
     if (kind() == Type::List)
-      return static_cast<TypeList*>(type)->begin(value);
+      return static_cast<ListTypeInterface*>(type)->begin(value);
     else if (kind() == Type::Map)
       return static_cast<MapTypeInterface*>(type)->begin(value);
     else
@@ -633,7 +633,7 @@ namespace qi {
   GenericValuePtr::end() const
   {
     if (kind() == Type::List)
-      return static_cast<TypeList*>(type)->end(value);
+      return static_cast<ListTypeInterface*>(type)->end(value);
     else if (kind() == Type::Map)
       return static_cast<MapTypeInterface*>(type)->end(value);
     else

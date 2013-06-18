@@ -106,7 +106,7 @@ namespace qi
     return std::make_pair(GenericValuePtr(), false);
   }
 
-  std::pair<GenericValuePtr, bool> GenericValuePtr::convert(TypeList* targetType) const
+  std::pair<GenericValuePtr, bool> GenericValuePtr::convert(ListTypeInterface* targetType) const
   {
     GenericValuePtr result;
 
@@ -114,8 +114,8 @@ namespace qi
     {
     case Type::List:
     {
-      TypeList* targetListType = static_cast<TypeList*>(targetType);
-      TypeList* sourceListType = static_cast<TypeList*>(type);
+      ListTypeInterface* targetListType = static_cast<ListTypeInterface*>(targetType);
+      ListTypeInterface* sourceListType = static_cast<ListTypeInterface*>(type);
 
       Type* srcElemType = sourceListType->elementType();
       Type* dstElemType = targetListType->elementType();
@@ -324,7 +324,7 @@ namespace qi
       // No explicit type-check, convert will do it
       // handles for instance [i] -> (iii) if size matches
       // or [m] -> (anything) if effective types match
-      TypeList* tsrc = static_cast<TypeList*>(type);
+      ListTypeInterface* tsrc = static_cast<ListTypeInterface*>(type);
 
       GenericIterator srcBegin = tsrc->begin(value);
       GenericIterator srcEnd = tsrc->end(value);
@@ -427,7 +427,7 @@ namespace qi
       // Accept [(kv)] and convert to {kv}
       // Also accept [[m]] , [[k]] if k=v and size match, and other compatible stuffs
       result = GenericValuePtr(static_cast<Type*>(targetType));
-      TypeList* tsrc = static_cast<TypeList*>(type);
+      ListTypeInterface* tsrc = static_cast<ListTypeInterface*>(type);
 
       GenericIterator srcBegin = tsrc->begin(value);
       GenericIterator srcEnd = tsrc->end(value);
@@ -485,7 +485,7 @@ namespace qi
       case Type::String:
         return convert(static_cast<StringTypeInterface*>(targetType));
       case Type::List:
-        return convert(static_cast<TypeList*>(targetType));
+        return convert(static_cast<ListTypeInterface*>(targetType));
       case Type::Map:
         return convert(static_cast<MapTypeInterface*>(targetType));
       case Type::Pointer:
@@ -724,7 +724,7 @@ namespace qi
       throw std::runtime_error("Expected Tuple or List kind");
     // convert list to tuple
 
-    TypeList* t = static_cast<TypeList*>(type);
+    ListTypeInterface* t = static_cast<ListTypeInterface*>(type);
     Type* te = t->elementType();
     DynamicTypeInterface* td = 0;
     if (te->kind() == Type::Dynamic)
@@ -757,7 +757,7 @@ namespace qi
   {
     if (kind() == Type::List)
     {
-      TypeList* t = static_cast<TypeList*>(type);
+      ListTypeInterface* t = static_cast<ListTypeInterface*>(type);
       int ikey = (int)key.toInt();
       if (ikey < 0 || static_cast<size_t>(ikey) >= t->size(value))
       {
@@ -804,7 +804,7 @@ namespace qi
   {
     if (kind() != Type::List)
       throw std::runtime_error("Expected a list");
-    TypeList* t = static_cast<TypeList*>(type);
+    ListTypeInterface* t = static_cast<ListTypeInterface*>(type);
     std::pair<GenericValuePtr, bool> c = elem.convert(t->elementType());
     t->pushBack(&value, c.first.value);
     if (c.second)

@@ -10,14 +10,14 @@
 namespace qi
 {
   // List container
-template<typename T> class TypeListImpl:
-public TypeList
+template<typename T> class ListTypeInterfaceImpl:
+public ListTypeInterface
 {
 public:
   typedef DefaultTypeImplMethods<T,
                                TypeByPointer<T>
                                > MethodsImpl;
-  TypeListImpl();
+  ListTypeInterfaceImpl();
   virtual size_t size(void* storage);
   virtual Type* elementType() const;
   virtual GenericIterator begin(void* storage);
@@ -58,33 +58,33 @@ public:
 
 
 template<typename T>
-TypeListImpl<T>::TypeListImpl()
+ListTypeInterfaceImpl<T>::ListTypeInterfaceImpl()
 {
 }
 
 template<typename T> Type*
-TypeListImpl<T>::elementType() const
+ListTypeInterfaceImpl<T>::elementType() const
 {
   static Type* result = typeOf<typename T::value_type>();
   return result;
 }
 
 template<typename T> GenericIterator
-TypeListImpl<T>::begin(void* storage)
+ListTypeInterfaceImpl<T>::begin(void* storage)
 {
   T* ptr = (T*)ptrFromStorage(&storage);
   return TypeSimpleIteratorImpl<typename T::iterator>::make(ptr->begin());
 }
 
 template<typename T> GenericIterator
-TypeListImpl<T>::end(void* storage)
+ListTypeInterfaceImpl<T>::end(void* storage)
 {
   T* ptr = (T*)ptrFromStorage(&storage);
   return TypeSimpleIteratorImpl<typename T::iterator>::make(ptr->end());
 }
 
 template<typename T> void
-TypeListImpl<T>::pushBack(void** storage, void* valueStorage)
+ListTypeInterfaceImpl<T>::pushBack(void** storage, void* valueStorage)
 {
   static Type* elemType = typeOf<typename T::value_type>();
   T* ptr = (T*) ptrFromStorage(storage);
@@ -92,15 +92,15 @@ TypeListImpl<T>::pushBack(void** storage, void* valueStorage)
 }
 
 template<typename T> size_t
-TypeListImpl<T>::size(void* storage)
+ListTypeInterfaceImpl<T>::size(void* storage)
 {
   T* ptr = (T*) ptrFromStorage(&storage);
   return ptr->size();
 }
 
 // There is no way to register a template container type :(
-template<typename T> struct TypeImpl<std::vector<T> >: public TypeListImpl<std::vector<T> > {};
-template<typename T> struct TypeImpl<std::list<T> >: public TypeListImpl<std::list<T> > {};
+template<typename T> struct TypeImpl<std::vector<T> >: public ListTypeInterfaceImpl<std::vector<T> > {};
+template<typename T> struct TypeImpl<std::list<T> >: public ListTypeInterfaceImpl<std::list<T> > {};
 
 }
 

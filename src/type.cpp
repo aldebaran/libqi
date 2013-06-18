@@ -190,7 +190,7 @@ namespace qi {
 
     void visitList(GenericIterator it, GenericIterator iend)
     {
-      qi::Signature esig = static_cast<TypeList*>(_value.type)->elementType()->signature();
+      qi::Signature esig = static_cast<ListTypeInterface*>(_value.type)->elementType()->signature();
       if (!_resolveDynamic) {
         result = qi::makeListSignature(esig);
         return;
@@ -608,7 +608,7 @@ namespace qi {
     return result;
   }
 
-  class DefaultListType: public TypeListImpl<std::vector<void*> >
+  class DefaultListType: public ListTypeInterfaceImpl<std::vector<void*> >
   {
   public:
   private:
@@ -1159,7 +1159,7 @@ namespace qi {
     }
   }
 
-  void* TypeList::element(void* storage, int index)
+  void* ListTypeInterface::element(void* storage, int index)
   {
     // Default implementation using iteration
     GenericValuePtr self(this, storage);

@@ -211,7 +211,7 @@ namespace qi{
     /// @return the pair (convertedValue, trueIfCopiedAndNeedsDestroy)
     std::pair<GenericValuePtr, bool> convert(Type* targetType) const;
 
-    std::pair<GenericValuePtr, bool> convert(TypeList* targetType) const;
+    std::pair<GenericValuePtr, bool> convert(ListTypeInterface* targetType) const;
     std::pair<GenericValuePtr, bool> convert(StructTypeInterface* targetType) const;
     std::pair<GenericValuePtr, bool> convert(MapTypeInterface* targetType) const;
     std::pair<GenericValuePtr, bool> convert(IntTypeInterface* targetType) const;
@@ -546,7 +546,7 @@ QITYPE_API bool operator !=(const GenericIterator & a, const GenericIterator& b)
                                          std::string::const_iterator end,
                                          GenericValue &target);
 
-  class TypeList;
+  class ListTypeInterface;
 
   class StructTypeInterface;
 
@@ -616,7 +616,7 @@ QITYPE_API bool operator !=(const GenericIterator & a, const GenericIterator& b)
     virtual Kind kind() const { return Iterator;}
   };
 
-  class QITYPE_API TypeList: public Type
+  class QITYPE_API ListTypeInterface: public Type
   {
   public:
     virtual Type* elementType() const = 0;

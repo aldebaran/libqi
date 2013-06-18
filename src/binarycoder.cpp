@@ -434,7 +434,7 @@ namespace qi {
 
       void visitList(GenericIterator it, GenericIterator end)
       {
-        out.beginList(value.size(), static_cast<TypeList*>(value.type)->elementType()->signature());
+        out.beginList(value.size(), static_cast<ListTypeInterface*>(value.type)->elementType()->signature());
         for (; it != end; ++it)
           serialize(*it, out, context);
         out.endList();
@@ -595,7 +595,7 @@ namespace qi {
 
       void visitList(GenericIterator, GenericIterator)
       {
-        Type* elementType = static_cast<TypeList*>(result.type)->elementType();
+        Type* elementType = static_cast<ListTypeInterface*>(result.type)->elementType();
         qi::uint32_t sz = 0;
         in.read(sz);
         if (in.status() != BinaryDecoder::Status_Ok)

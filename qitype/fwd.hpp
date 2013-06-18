@@ -18,7 +18,7 @@ namespace qi
   class StringTypeInterface;
   class RawTypeInterface;
   class TypePointer;
-  class TypeList;
+  class ListTypeInterface;
   class MapTypeInterface;
   class StructTypeInterface;
   class DynamicTypeInterface;
