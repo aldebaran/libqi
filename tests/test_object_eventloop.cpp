@@ -65,7 +65,7 @@ void fireSameThreadIn(qi::ObjectPtr obj, qi::EventLoop* el, void* tid)
 
 qi::ObjectPtr makeObj()
 {
-  qi::GenericObjectBuilder ob;
+  qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("sameThread", &sameThread);
   ob.advertiseSignal<unsigned long>("fire");
   qi::ObjectPtr res = ob.object();
@@ -74,7 +74,7 @@ qi::ObjectPtr makeObj()
 
 qi::ObjectPtr makeObjWithThreadModel(qi::ObjectThreadingModel model)
 {
-  qi::GenericObjectBuilder ob;
+  qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("sameThread", &sameThread);
   ob.advertiseMethod("delayms", &qi::os::msleep);
   ob.advertiseMethod("delaymsThreadSafe", &qi::os::msleep, "", qi::MetaCallType_Queued);

@@ -313,7 +313,7 @@ TEST(TestObject, ABI)
 
 TEST(TestObject, Simple) {
   Foo                   foo;
-  qi::GenericObjectBuilder ob;
+  qi::DynamicObjectBuilder ob;
 
   ob.advertiseMethod("test", &fun);
   ob.advertiseMethod("testVal", &funVal);
@@ -400,7 +400,7 @@ Point swapPoint(const Point& b)
 
 TEST(TestObject, SerializeSimple)
 {
-  qi::GenericObjectBuilder ob;
+  qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("swapPoint", &swapPoint);
   qi::ObjectPtr obj(ob.object());
   Point p;
@@ -469,7 +469,7 @@ TEST(TestObject, SerializeComplex)
   v.push_back(3);
   comp.stuff.push_back(v);
 
-  qi::GenericObjectBuilder ob;
+  qi::DynamicObjectBuilder ob;
   unsigned id = ob.advertiseMethod("echo", &echoBack);
   qi::ObjectPtr obj(ob.object());
   std::cerr << obj->metaObject().methodMap()[id].toString() << std::endl;
@@ -629,7 +629,7 @@ public:
 
 TEST(TestObject, CallBackRegistration)
 {
-  qi::GenericObjectBuilder gob;
+  qi::DynamicObjectBuilder gob;
 
   gob.advertiseSignal("testcb");
   qi::ObjectPtr obj = gob.object();
@@ -664,7 +664,7 @@ qi::FutureSync<int> delaySetSync(unsigned long msDelay, int value)
 
 TEST(TestObject, Future)
 {
-  qi::GenericObjectBuilder gob;
+  qi::DynamicObjectBuilder gob;
   gob.advertiseMethod("delaySet", &delaySet);
   qi::ObjectPtr obj = gob.object();
   qi::Future<int> f = obj->call<int>("delaySet", 500, 41);
@@ -680,7 +680,7 @@ TEST(TestObject, Future)
 
 TEST(TestObject, FutureSync)
 {
-  qi::GenericObjectBuilder gob;
+  qi::DynamicObjectBuilder gob;
   gob.advertiseMethod("delaySetSync", &delaySetSync);
   qi::ObjectPtr obj = gob.object();
   qi::Future<int> f = obj->call<int>("delaySetSync", 500, 41);
@@ -696,7 +696,7 @@ TEST(TestObject, FutureSync)
 
 TEST(TestObject, statisticsGeneric)
 {
-  qi::GenericObjectBuilder gob;
+  qi::DynamicObjectBuilder gob;
   int mid = gob.advertiseMethod("sleep", &qi::os::msleep);
   qi::ObjectPtr obj = gob.object();
   obj->call<void>("sleep", 10);
@@ -763,7 +763,7 @@ int throw_exception(const std::string& content)
 
 TEST(TestObject, traceGeneric)
 {
-  qi::GenericObjectBuilder gob;
+  qi::DynamicObjectBuilder gob;
   int mid = gob.advertiseMethod("sleep", &qi::os::msleep);
   int mid2 = gob.advertiseMethod("boom", &throw_exception);
   qi::ObjectPtr obj = gob.object();
@@ -848,7 +848,7 @@ TEST(TestObject, AdvertiseRealSignal)
 
   qi::Signal<int> sig;
   sig.connect(boost::bind<void>(&bim, _1, plocal, "local"));
-  qi::GenericObjectBuilder gob;
+  qi::DynamicObjectBuilder gob;
   int id = gob.advertiseSignal("sig", &sig);
   ASSERT_LT(0, id);
   qi::ObjectPtr obj = gob.object();
@@ -880,7 +880,7 @@ std::string add(const std::string &str) {
 
 TEST(TestObject, AdvertiseBadType)
 {
-  qi::GenericObjectBuilder gob;
+  qi::DynamicObjectBuilder gob;
 
   //missing ::
   EXPECT_EQ(-1, gob.xAdvertiseMethod("s", "addbadsignature", "s)", qi::AnyFunction::from(&add)));

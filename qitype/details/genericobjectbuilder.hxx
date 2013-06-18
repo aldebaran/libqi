@@ -13,7 +13,7 @@
 namespace qi {
 
   template <typename FUNCTION_TYPE>
-  unsigned int GenericObjectBuilder::advertiseMethod(const std::string& name,
+  unsigned int DynamicObjectBuilder::advertiseMethod(const std::string& name,
                                                      FUNCTION_TYPE function,
                                                      const std::string& desc,
                                                      MetaCallType threadingModel)
@@ -27,7 +27,7 @@ namespace qi {
   }
 
   template <typename OBJECT_TYPE, typename METHOD_TYPE>
-  inline unsigned int GenericObjectBuilder::advertiseMethod(const std::string& name,
+  inline unsigned int DynamicObjectBuilder::advertiseMethod(const std::string& name,
                                                             OBJECT_TYPE object,
                                                             METHOD_TYPE method,
                                                             const std::string& desc,
@@ -42,7 +42,7 @@ namespace qi {
   }
 
   template <typename FUNCTION_TYPE>
-  inline unsigned int GenericObjectBuilder::advertiseMethod(MetaMethodBuilder& builder,
+  inline unsigned int DynamicObjectBuilder::advertiseMethod(MetaMethodBuilder& builder,
                                                             FUNCTION_TYPE function,
                                                             MetaCallType threadingModel)
   {
@@ -52,7 +52,7 @@ namespace qi {
   }
 
   template <typename OBJECT_TYPE, typename METHOD_TYPE>
-  inline unsigned int GenericObjectBuilder::advertiseMethod(MetaMethodBuilder& builder,
+  inline unsigned int DynamicObjectBuilder::advertiseMethod(MetaMethodBuilder& builder,
                                                             OBJECT_TYPE object,
                                                             METHOD_TYPE method,
                                                             MetaCallType threadingModel)
@@ -64,7 +64,7 @@ namespace qi {
 
   #define gen(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma) \
   QI_GEN_MAYBE_TEMPLATE_OPEN(comma) ATYPEDECL QI_GEN_MAYBE_TEMPLATE_CLOSE(comma) \
-  inline int GenericObjectBuilder::advertiseSignal(const std::string& s) \
+  inline int DynamicObjectBuilder::advertiseSignal(const std::string& s) \
   { \
     return advertiseSignalF<void(ATYPES)>(s); \
   }
@@ -72,12 +72,12 @@ namespace qi {
   QI_GEN_RANGE(gen, 8)
   #undef gen
 
-  template <typename T> int GenericObjectBuilder::advertiseSignalF(const std::string& name)
+  template <typename T> int DynamicObjectBuilder::advertiseSignalF(const std::string& name)
   {
     return xAdvertiseSignal(name, detail::FunctionSignature<T>::signature());
   }
 
-  template <typename T> unsigned int GenericObjectBuilder::advertiseProperty(const std::string& name)
+  template <typename T> unsigned int DynamicObjectBuilder::advertiseProperty(const std::string& name)
   {
     // we must end up with name event, get_name and set_name methods
     unsigned int isig = advertiseSignal<const T&>(name);
@@ -90,7 +90,7 @@ namespace qi {
     // create an object with a single method name fname bouncing to func
     template<typename T> ObjectPtr makeObject(const std::string& fname, T func)
     {
-      GenericObjectBuilder gob;
+      DynamicObjectBuilder gob;
       gob.advertiseMethod(fname, func);
       return gob.object();
     }

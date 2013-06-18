@@ -13,14 +13,14 @@
 namespace qi {
 
   class DynamicObject;
-  class GenericObjectBuilderPrivate;
-  class QITYPE_API GenericObjectBuilder
+  class DynamicObjectBuilderPrivate;
+  class QITYPE_API DynamicObjectBuilder
   {
   public:
-    GenericObjectBuilder();
-    GenericObjectBuilder(DynamicObject *dynobject, bool deleteOnDestroy = true);
+    DynamicObjectBuilder();
+    DynamicObjectBuilder(DynamicObject *dynobject, bool deleteOnDestroy = true);
 
-    ~GenericObjectBuilder();
+    ~DynamicObjectBuilder();
 
     template <typename OBJECT_TYPE, typename METHOD_TYPE>
     inline unsigned int advertiseMethod(const std::string& name,
@@ -85,8 +85,8 @@ namespace qi {
 
     void markProperty(unsigned int ev, unsigned int getter, unsigned int setter);
   public:
-    GenericObjectBuilderPrivate *_p;
-    QI_DISALLOW_COPY_AND_ASSIGN(GenericObjectBuilder);
+    DynamicObjectBuilderPrivate *_p;
+    QI_DISALLOW_COPY_AND_ASSIGN(DynamicObjectBuilder);
   };
 }
 

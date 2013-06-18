@@ -13,22 +13,22 @@ qiLogCategory("qitype.objectbuilder");
 
 namespace qi
 {
-  class GenericObjectBuilderPrivate
+  class DynamicObjectBuilderPrivate
   {
   public:
-    GenericObjectBuilderPrivate()
+    DynamicObjectBuilderPrivate()
       : _object(new DynamicObject())
       , _deleteOnDestroy(true)
       , _objptr()
     {}
 
-    GenericObjectBuilderPrivate(DynamicObject *dynobject, bool deleteOnDestroy)
+    DynamicObjectBuilderPrivate(DynamicObject *dynobject, bool deleteOnDestroy)
       : _object(dynobject)
       , _deleteOnDestroy(deleteOnDestroy)
       , _objptr()
     {}
 
-    ~GenericObjectBuilderPrivate()
+    ~DynamicObjectBuilderPrivate()
     {}
 
     DynamicObject* _object;
@@ -36,16 +36,16 @@ namespace qi
     qi::ObjectPtr  _objptr;
   };
 
-  GenericObjectBuilder::GenericObjectBuilder()
-    : _p(new GenericObjectBuilderPrivate)
+  DynamicObjectBuilder::DynamicObjectBuilder()
+    : _p(new DynamicObjectBuilderPrivate)
   {
   }
 
-  GenericObjectBuilder::GenericObjectBuilder(DynamicObject *dynobject, bool deleteOnDestroy)
-    : _p(new GenericObjectBuilderPrivate(dynobject, deleteOnDestroy))
+  DynamicObjectBuilder::DynamicObjectBuilder(DynamicObject *dynobject, bool deleteOnDestroy)
+    : _p(new DynamicObjectBuilderPrivate(dynobject, deleteOnDestroy))
   {}
 
-  GenericObjectBuilder::~GenericObjectBuilder()
+  DynamicObjectBuilder::~DynamicObjectBuilder()
   {
     delete _p;
   }
@@ -61,7 +61,7 @@ namespace qi
     return true;
   }
 
-  int GenericObjectBuilder::xAdvertiseMethod(const qi::Signature& sigret,
+  int DynamicObjectBuilder::xAdvertiseMethod(const qi::Signature& sigret,
                                              const std::string& name,
                                              const qi::Signature& signature,
                                              AnyFunction func,
@@ -69,7 +69,7 @@ namespace qi
                                              MetaCallType threadingModel)
   {
     if (!isSignatureValid(sigret, name, signature)) {
-      qiLogWarning() << "GenericObjectBuilder: Called xAdvertiseMethod with an invalid signature.";
+      qiLogWarning() << "DynamicObjectBuilder: Called xAdvertiseMethod with an invalid signature.";
       return -1;
     }
     MetaMethodBuilder mmb;
@@ -80,19 +80,19 @@ namespace qi
     return xAdvertiseMethod(mmb, func, threadingModel);
   }
 
-  int GenericObjectBuilder::xAdvertiseMethod(MetaMethodBuilder& builder,
+  int DynamicObjectBuilder::xAdvertiseMethod(MetaMethodBuilder& builder,
                                              AnyFunction func,
                                              MetaCallType threadingModel)
   {
     MetaMethod mm = builder.metaMethod();
     if (!isSignatureValid(mm.returnSignature(), mm.name(), mm.parametersSignature())) {
-      qiLogWarning() << "GenericObjectBuilder: Called xAdvertiseMethod("<< mm.returnSignature().toString() << "," << mm.name() << "," << mm.parametersSignature().toString() << ") with an invalid signature.";
+      qiLogWarning() << "DynamicObjectBuilder: Called xAdvertiseMethod("<< mm.returnSignature().toString() << "," << mm.name() << "," << mm.parametersSignature().toString() << ") with an invalid signature.";
       return -1;
     }
     //TODO: check that func is compatible with MM
     if (_p->_objptr) {
       qiLogWarning()
-          << "GenericObjectBuilder: Called xAdvertiseMethod with method '"
+          << "DynamicObjectBuilder: Called xAdvertiseMethod with method '"
           << mm.toString()
           << "' but object is already created.";
     }
@@ -104,14 +104,14 @@ namespace qi
     return nextId;
   }
 
-  int GenericObjectBuilder::xAdvertiseSignal(const std::string &name, const qi::Signature& signature)
+  int DynamicObjectBuilder::xAdvertiseSignal(const std::string &name, const qi::Signature& signature)
   {
     if (!Signature(signature).isValid() || name.empty()) {
-      qiLogWarning() << "GenericObjectBuilder: Called xAdvertiseSignal("<< name << "," << signature.toString() << ") with an invalid signature.";
+      qiLogWarning() << "DynamicObjectBuilder: Called xAdvertiseSignal("<< name << "," << signature.toString() << ") with an invalid signature.";
       return -1;
     }
     if (_p->_objptr) {
-      qiLogWarning() << "GenericObjectBuilder: Called xAdvertiseSignal on event '" << signature.toString() << "' but object is already created.";
+      qiLogWarning() << "DynamicObjectBuilder: Called xAdvertiseSignal on event '" << signature.toString() << "' but object is already created.";
     }
     int nextId = _p->_object->metaObject()._p->addSignal(name, signature);
     if (nextId < 0)
@@ -119,14 +119,14 @@ namespace qi
     return nextId;
   }
 
-  int GenericObjectBuilder::advertiseSignal(const std::string &name, qi::SignalBase *sig)
+  int DynamicObjectBuilder::advertiseSignal(const std::string &name, qi::SignalBase *sig)
   {
     int nextId = xAdvertiseSignal(name, sig->signature());
     _p->_object->setSignal(nextId, sig);
     return nextId;
   }
 
-  int GenericObjectBuilder::advertiseProperty(const std::string &name, qi::PropertyBase *prop)
+  int DynamicObjectBuilder::advertiseProperty(const std::string &name, qi::PropertyBase *prop)
   {
     //todo: prop.signature()
     int nextId = xAdvertiseProperty(name, prop->signal()->signature());
@@ -134,21 +134,21 @@ namespace qi
     return nextId;
   }
 
-  int GenericObjectBuilder::xAdvertiseProperty(const std::string& name, const Signature &sig, int id)
+  int DynamicObjectBuilder::xAdvertiseProperty(const std::string& name, const Signature &sig, int id)
   {
     if (!Signature(sig).isValid() || name.empty()) {
-      qiLogWarning() << "GenericObjectBuilder: Called xAdvertiseProperty("<< name << "," << sig.toString() << ") with an invalid signature.";
+      qiLogWarning() << "DynamicObjectBuilder: Called xAdvertiseProperty("<< name << "," << sig.toString() << ") with an invalid signature.";
       return -1;
     }
     return _p->_object->metaObject()._p->addProperty(name, sig, id);
   }
 
 
-  void GenericObjectBuilder::setDescription(const std::string &desc) {
+  void DynamicObjectBuilder::setDescription(const std::string &desc) {
     _p->_object->metaObject()._p->setDescription(desc);
   }
 
-  ObjectPtr GenericObjectBuilder::object(boost::function<void (GenericObject*)> onDelete)
+  ObjectPtr DynamicObjectBuilder::object(boost::function<void (GenericObject*)> onDelete)
   {
     if (!_p->_objptr)
     {
@@ -158,7 +158,7 @@ namespace qi
     return _p->_objptr;
   }
 
-  void GenericObjectBuilder::setThreadingModel(ObjectThreadingModel model)
+  void DynamicObjectBuilder::setThreadingModel(ObjectThreadingModel model)
   {
     _p->_object->setThreadingModel(model);
   }

@@ -20,7 +20,7 @@ void onFire(const int& pl)
 
 TEST(TestObject, Simple)
 {
-  qi::GenericObjectBuilder ob;
+  qi::DynamicObjectBuilder ob;
   ob.advertiseSignal<int>("fire");
   qi::ObjectPtr obj(ob.object());
   EXPECT_LE(1U, obj->metaObject().signalMap().size());
@@ -45,7 +45,7 @@ void readString(const std::string&)
 
 TEST(TestObject, ConnectBind)
 {
-  qi::GenericObjectBuilder ob;
+  qi::DynamicObjectBuilder ob;
   ob.advertiseSignal<int>("fire");
   ob.advertiseSignal<int, int>("fire2");
   qi::ObjectPtr obj(ob.object());
@@ -76,7 +76,7 @@ TEST(TestObject, ConnectBind)
 TEST(TestObject, EmitMethod)
 {
   lastPayload = 0;
-  qi::GenericObjectBuilder ob;
+  qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("fire", &onFire);
   qi::ObjectPtr obj(ob.object());
   pPayload.reset();
