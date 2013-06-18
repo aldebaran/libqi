@@ -19,7 +19,7 @@ namespace qi {
     TransportSocketPtr socket, const qi::MessageAddress &replyaddr)
   {
     qi::Message ret(Message::Type_Reply, replyaddr);
-    TypeTemplate* futureType = QI_TEMPLATE_TYPE_GET(val.type, Future);
+    TemplateTypeInterface* futureType = QI_TEMPLATE_TYPE_GET(val.type, Future);
     ObjectTypeInterface* onext = dynamic_cast<ObjectTypeInterface*>(futureType->next());
     GenericObject gfut(onext, val.value);
     if (gfut.call<bool>("hasError", 0))
@@ -45,7 +45,7 @@ namespace qi {
       ret.setError(future.error());
     } else {
       qi::GenericValuePtr val = future.value();
-      TypeTemplate* futureType = QI_TEMPLATE_TYPE_GET(val.type, Future);
+      TemplateTypeInterface* futureType = QI_TEMPLATE_TYPE_GET(val.type, Future);
       if (futureType)
       { // Return value is a future, bounce
         TypeInterface* next = futureType->next();
