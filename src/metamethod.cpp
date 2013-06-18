@@ -189,7 +189,7 @@ namespace qi {
     this->_p->metaMethod._p->sigreturn = sig;
   }
 
-  void MetaMethodBuilder::setSignature(const GenericFunction& f)
+  void MetaMethodBuilder::setSignature(const AnyFunction& f)
   {
     //this is always a method: drop the first argument
     setParametersSignature(f.parametersSignature(true));

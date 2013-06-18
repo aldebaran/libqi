@@ -5,14 +5,13 @@
 #include <qi/future.hpp>
 #include <qitype/signature.hpp>
 #include <qitype/functiontype.hpp>
-#include <qitype/functiontypefactory.hpp>
 #include <qitype/genericobject.hpp>
 
 qiLogCategory("qitype.functiontype");
 
 namespace qi
 {
-  GenericValuePtr GenericFunction::call(
+  GenericValuePtr AnyFunction::call(
     GenericValuePtr arg1, const std::vector<GenericValuePtr>& remaining)
   {
     std::vector<GenericValuePtr> args;
@@ -22,7 +21,7 @@ namespace qi
     return call(args);
   }
 
-  GenericValuePtr GenericFunction::call(
+  GenericValuePtr AnyFunction::call(
     const std::vector<GenericValuePtr>& vargs)
   {
     if (type == dynamicFunctionTypeInterface())
@@ -130,31 +129,31 @@ namespace qi
     return result;
   }
 
-  const GenericFunction& GenericFunction::dropFirstArgument() const
+  const AnyFunction& AnyFunction::dropFirstArgument() const
   {
     transform.dropFirst = true;
     return *this;
   }
 
-  const GenericFunction& GenericFunction::prependArgument(void* arg) const
+  const AnyFunction& AnyFunction::prependArgument(void* arg) const
   {
     transform.prependValue = true;
     transform.boundValue = arg;
     return *this;
   }
 
-  const GenericFunction& GenericFunction::replaceFirstArgument(void* arg) const
+  const AnyFunction& AnyFunction::replaceFirstArgument(void* arg) const
   {
     transform.dropFirst = true;
     return prependArgument(arg);
   }
 
-  Type* GenericFunction::resultType() const
+  Type* AnyFunction::resultType() const
   {
     return type->resultType();
   }
 
-  std::vector<Type*> GenericFunction::argumentsType() const
+  std::vector<Type*> AnyFunction::argumentsType() const
   {
     std::vector<Type*> res = type->argumentsType();
     if (transform.dropFirst && transform.prependValue) // optimize that case
@@ -179,7 +178,7 @@ namespace qi
     return res;
   }
 
-  qi::Signature GenericFunction::parametersSignature(bool dropFirst) const
+  qi::Signature AnyFunction::parametersSignature(bool dropFirst) const
   {
     if (type == dynamicFunctionTypeInterface())
       return "m";
@@ -194,7 +193,7 @@ namespace qi
     return qi::makeTupleSignature(vtype);
   }
 
-  qi::Signature GenericFunction::returnSignature() const
+  qi::Signature AnyFunction::returnSignature() const
   {
     if (type == dynamicFunctionTypeInterface())
       return "m";
@@ -301,10 +300,10 @@ namespace qi
     return type;
   }
 
-  GenericFunction makeDynamicGenericFunction(DynamicFunction f)
+  AnyFunction makeDynamicAnyFunction(DynamicFunction f)
   {
     FunctionTypeInterface* d = dynamicFunctionTypeInterface();
-    GenericFunction result(d, d->clone(d->initializeStorage(&f)));
+    AnyFunction result(d, d->clone(d->initializeStorage(&f)));
     return result;
   }
 

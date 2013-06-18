@@ -43,11 +43,11 @@ namespace qi
 
     MetaObject &metaObject();
 
-    void setMethod(unsigned int id, GenericFunction callable, MetaCallType threadingModel = MetaCallType_Auto);
+    void setMethod(unsigned int id, AnyFunction callable, MetaCallType threadingModel = MetaCallType_Auto);
     void setSignal(unsigned int id, SignalBase* signal);
     void setProperty(unsigned int id, PropertyBase* property);
 
-    GenericFunction method(unsigned int id) const;
+    AnyFunction method(unsigned int id) const;
     SignalBase*     signal(unsigned int id) const;
     PropertyBase*   property(unsigned int) const;
 

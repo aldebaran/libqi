@@ -33,7 +33,7 @@ namespace qi {
                                                       int id)
   {
     MetaMethodBuilder builder;
-    GenericFunction f = makeGenericFunction(function);
+    AnyFunction f = makeAnyFunction(function);
     if (! boost::is_member_function_pointer<FUNCTION_TYPE>::value)
       f.dropFirstArgument();
     builder.setName(name);
@@ -47,7 +47,7 @@ namespace qi {
                                                       MetaCallType threadingModel,
                                                       int id)
   {
-    GenericFunction f = makeGenericFunction(function);
+    AnyFunction f = makeAnyFunction(function);
     if (! boost::is_member_function_pointer<FUNCTION_TYPE>::value)
       f.dropFirstArgument();
     builder.setSignature(f);

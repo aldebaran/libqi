@@ -28,55 +28,55 @@ namespace qi
     return _argumentsType;
   }
 
-  inline GenericValuePtr GenericFunction::operator()(const std::vector<GenericValuePtr>& args)
+  inline GenericValuePtr AnyFunction::operator()(const std::vector<GenericValuePtr>& args)
   {
     return call(args);
   }
 
-  inline GenericFunction::GenericFunction()
+  inline AnyFunction::AnyFunction()
   : type(0), value(0) {}
 
-  inline GenericFunction::GenericFunction(const GenericFunction& b)
+  inline AnyFunction::AnyFunction(const AnyFunction& b)
   {
     type = b.type;
     value = type?type->clone(b.value):0;
     transform = b.transform;
   }
 
-  inline GenericFunction::GenericFunction(FunctionTypeInterface* type, void* value)
+  inline AnyFunction::AnyFunction(FunctionTypeInterface* type, void* value)
   : type(type)
   , value(value)
   {
   }
 
-  inline GenericFunction& GenericFunction::operator=(const GenericFunction& b)
+  inline AnyFunction& AnyFunction::operator=(const AnyFunction& b)
   {
-    this->~GenericFunction();
+    this->~AnyFunction();
     type = b.type;
     value = type?type->clone(b.value):0;
     transform = b.transform;
     return *this;
   }
 
-  inline GenericFunction::~GenericFunction()
+  inline AnyFunction::~AnyFunction()
   {
     if (type)
       type->destroy(value);
   }
 
-  inline void GenericFunction::swap(GenericFunction& b)
+  inline void AnyFunction::swap(AnyFunction& b)
   {
     std::swap(value, b.value);
     std::swap(type, b.type);
     std::swap(transform, b.transform);
   }
 
-  inline GenericFunction::operator bool() const
+  inline AnyFunction::operator bool() const
   {
     return type != 0;
   }
 
-  inline FunctionTypeInterface* GenericFunction::functionType() const
+  inline FunctionTypeInterface* AnyFunction::functionType() const
   {
     return type;
   }
@@ -84,7 +84,7 @@ namespace qi
 
 namespace std
 {
-  template<> inline void swap(::qi::GenericFunction& a, ::qi::GenericFunction & b)
+  template<> inline void swap(::qi::AnyFunction& a, ::qi::AnyFunction & b)
   {
     a.swap(b);
   }

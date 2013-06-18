@@ -20,7 +20,7 @@
 
 namespace qi {
   class MetaMethodParameterPrivate;
-  class GenericFunction;
+  class AnyFunction;
   class QITYPE_API MetaMethodParameter {
   public:
     MetaMethodParameter();
@@ -82,7 +82,7 @@ namespace qi {
     std::string name() const;
 
     void setUid(unsigned int uid);
-    void setSignature(const GenericFunction& f);
+    void setSignature(const AnyFunction& f);
     void setReturnSignature(const Signature &sig);
     void setName(const std::string& name);
     void setParametersSignature(const qi::Signature& sig);

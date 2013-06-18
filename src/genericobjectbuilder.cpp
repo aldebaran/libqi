@@ -64,7 +64,7 @@ namespace qi
   int GenericObjectBuilder::xAdvertiseMethod(const qi::Signature& sigret,
                                              const std::string& name,
                                              const qi::Signature& signature,
-                                             GenericFunction func,
+                                             AnyFunction func,
                                              const std::string& desc,
                                              MetaCallType threadingModel)
   {
@@ -81,7 +81,7 @@ namespace qi
   }
 
   int GenericObjectBuilder::xAdvertiseMethod(MetaMethodBuilder& builder,
-                                             GenericFunction func,
+                                             AnyFunction func,
                                              MetaCallType threadingModel)
   {
     MetaMethod mm = builder.metaMethod();

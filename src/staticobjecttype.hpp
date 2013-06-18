@@ -40,7 +40,7 @@ struct ObjectTypeData
 
   typedef std::map<
     unsigned int,
-    std::pair<GenericFunction, MetaCallType>
+    std::pair<AnyFunction, MetaCallType>
   > MethodMap;
 
   MethodMap methodMap;

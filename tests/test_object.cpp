@@ -199,16 +199,16 @@ template<typename T> bool checkValue(qi::GenericValuePtr v, const T& val)
 TEST(TestObject, Typing)
 {
   qiLogDebug() << "vfun";
-  qi::GenericFunction fv = qi::makeGenericFunction(&vfun);
+  qi::AnyFunction fv = qi::makeAnyFunction(&vfun);
   qiLogDebug() << "fun";
-  qi::GenericFunction fv2 = qi::makeGenericFunction(&fun);
+  qi::AnyFunction fv2 = qi::makeAnyFunction(&fun);
   qiLogDebug() << "Foo::fun";
-  qi::GenericFunction mv = qi::makeGenericFunction(&Foo::fun);
+  qi::AnyFunction mv = qi::makeAnyFunction(&Foo::fun);
   std::vector<qi::GenericValuePtr> args1 = convert(1, 2);
   qi::GenericValuePtr res = fv2.call(args1);
   ASSERT_TRUE(checkValue(res, 3));
 
-  qi::GenericFunction adderAdd = qi::makeGenericFunction(&Adder::add);
+  qi::AnyFunction adderAdd = qi::makeAnyFunction(&Adder::add);
   Adder add1(1);
   std::vector<qi::GenericValuePtr> argsAdd = convert(41);
   res = adderAdd.call(qi::GenericValueRef(add1), argsAdd);
@@ -222,92 +222,92 @@ TEST(TestObject, ABI)
   ObjectTypeBuilder<Foo> b;
   b.inherits<Parent>();
   b.registerType();
-  GenericFunction f;
-  f = makeGenericFunction(&ping8);
+  AnyFunction f;
+  f = makeAnyFunction(&ping8);
   EXPECT_EQ(42, f.call(convert(42)).toInt());
-  f = makeGenericFunction(&ping16);
+  f = makeAnyFunction(&ping16);
   EXPECT_EQ(42, f.call(convert(42)).toInt());
-  f = makeGenericFunction(&ping32);
+  f = makeAnyFunction(&ping32);
   EXPECT_EQ(42, f.call(convert(42)).toInt());
-  f = makeGenericFunction(&ping64);
+  f = makeAnyFunction(&ping64);
   EXPECT_EQ(42, f.call(convert(42)).toInt());
-  f = makeGenericFunction(&pingFloat);
+  f = makeAnyFunction(&pingFloat);
   EXPECT_EQ(42.42f, f.call(convert(42.42f)).toFloat());
-  f = makeGenericFunction(&pingDouble);
+  f = makeAnyFunction(&pingDouble);
   EXPECT_EQ(42.42, f.call(convert(42.42)).toDouble());
 
   Foo foo;
-  f = makeGenericFunction(&Foo::ping8);
+  f = makeAnyFunction(&Foo::ping8);
   EXPECT_EQ(45, f.call(convert(&foo, 42)).toInt());
   EXPECT_EQ(45, f.call(convert(foo, 42)).toInt());
-  f = makeGenericFunction(&Foo::ping8, &foo);
+  f = makeAnyFunction(&Foo::ping8, &foo);
   EXPECT_EQ(45, f.call(convert(42)).toInt());
 
-  f = makeGenericFunction(&Foo::ping16);
+  f = makeAnyFunction(&Foo::ping16);
   EXPECT_EQ(45, f.call(convert(&foo, 42)).toInt());
   EXPECT_EQ(45, f.call(convert(foo, 42)).toInt());
-  f = makeGenericFunction(&Foo::ping16, &foo);
+  f = makeAnyFunction(&Foo::ping16, &foo);
   EXPECT_EQ(45, f.call(convert(42)).toInt());
 
-  f = makeGenericFunction(&Foo::ping32);
+  f = makeAnyFunction(&Foo::ping32);
   EXPECT_EQ(45, f.call(convert(&foo, 42)).toInt());
   EXPECT_EQ(45, f.call(convert(foo, 42)).toInt());
-  f = makeGenericFunction(&Foo::ping32, &foo);
+  f = makeAnyFunction(&Foo::ping32, &foo);
   EXPECT_EQ(45, f.call(convert(42)).toInt());
 
-  f = makeGenericFunction(&Foo::ping64);
+  f = makeAnyFunction(&Foo::ping64);
   EXPECT_EQ(45, f.call(convert(&foo, 42)).toInt());
   EXPECT_EQ(45, f.call(convert(foo, 42)).toInt());
-  f = makeGenericFunction(&Foo::ping64, &foo);
+  f = makeAnyFunction(&Foo::ping64, &foo);
   EXPECT_EQ(45, f.call(convert(42)).toInt());
 
-  f = makeGenericFunction(&Foo::pingFloat);
+  f = makeAnyFunction(&Foo::pingFloat);
   EXPECT_EQ(45.42f, f.call(convert(&foo, 42.42f)).toFloat());
   EXPECT_EQ(45.42f, f.call(convert(foo, 42.42f)).toFloat());
-  f = makeGenericFunction(&Foo::pingFloat, &foo);
+  f = makeAnyFunction(&Foo::pingFloat, &foo);
   EXPECT_EQ(45.42f, f.call(convert(42.42f)).toFloat());
 
-  f = makeGenericFunction(&Foo::pingDouble);
+  f = makeAnyFunction(&Foo::pingDouble);
   EXPECT_EQ(45.42, f.call(convert(&foo, 42.42)).toDouble());
   EXPECT_EQ(45.42, f.call(convert(foo, 42.42)).toDouble());
-  f = makeGenericFunction(&Foo::pingDouble, &foo);
+  f = makeAnyFunction(&Foo::pingDouble, &foo);
   EXPECT_EQ(45.42, f.call(convert(42.42)).toDouble());
 
-  f = makeGenericFunction(&Parent::pping32);
+  f = makeAnyFunction(&Parent::pping32);
   EXPECT_EQ(44, f.call(convert(&foo, 42)).toInt());
   EXPECT_EQ(44, f.call(convert(foo, 42)).toInt());
   EXPECT_EQ(44, f.call(convert(static_cast<Parent*>(&foo), 42)).toInt());
   EXPECT_EQ(44, f.call(convert(static_cast<Parent&>(foo), 42)).toInt());
-  f = makeGenericFunction(&Parent::pping32, &foo);
+  f = makeAnyFunction(&Parent::pping32, &foo);
   EXPECT_EQ(44, f.call(convert(42)).toInt());
-  f = makeGenericFunction(&Parent::pping32, static_cast<Parent*>(&foo));
+  f = makeAnyFunction(&Parent::pping32, static_cast<Parent*>(&foo));
   EXPECT_EQ(44, f.call(convert(42)).toInt());
 
-  f = makeGenericFunction(&Foo::pingV);
+  f = makeAnyFunction(&Foo::pingV);
   f.call(convert(&foo, 42));
   EXPECT_EQ(45, foo.r);
 
-  f = makeGenericFunction(&Foo::pingB);
+  f = makeAnyFunction(&Foo::pingB);
   EXPECT_EQ(true, f.call(convert(&foo, true)).toInt() != 0);
   EXPECT_EQ(true, f.call(convert(&foo, false)).toInt() == 0);
 
-  f = makeGenericFunction(&Foo::vping32);
+  f = makeAnyFunction(&Foo::vping32);
   EXPECT_EQ(45, f.call(convert(&foo, 42)).toInt());
   EXPECT_EQ(45, f.call(convert(foo, 42)).toInt());
-  f = makeGenericFunction(&Foo::vping32, &foo);
+  f = makeAnyFunction(&Foo::vping32, &foo);
   EXPECT_EQ(45, f.call(convert(42)).toInt());
   EXPECT_EQ(45, f.call(convert(42)).toInt());
-  f = makeGenericFunction(&Parent::vping32);
+  f = makeAnyFunction(&Parent::vping32);
   EXPECT_EQ(45, f.call(convert(&foo, 42)).toInt());
   EXPECT_EQ(45, f.call(convert(static_cast<Parent*>(&foo), 42)).toInt());
   EXPECT_EQ(45, f.call(convert(foo, 42)).toInt());
 
-  f = makeGenericFunction(&Foo::getRefF);
+  f = makeAnyFunction(&Foo::getRefF);
   EXPECT_EQ(3, f.call(convert(&foo)).toInt());
 
-  f = makeGenericFunction(&Foo::pingString);
+  f = makeAnyFunction(&Foo::pingString);
   EXPECT_EQ("foo3", f.call(convert(&foo, "foo")).toString());
-  f = makeGenericFunction(&Foo::pingConstString);
+  f = makeAnyFunction(&Foo::pingConstString);
   EXPECT_EQ("bar", f.call(convert(&foo, "bar")).toString());
 }
 
@@ -883,20 +883,20 @@ TEST(TestObject, AdvertiseBadType)
   qi::GenericObjectBuilder gob;
 
   //missing ::
-  EXPECT_EQ(-1, gob.xAdvertiseMethod("s", "addbadsignature", "s)", qi::makeGenericFunction(&add)));
+  EXPECT_EQ(-1, gob.xAdvertiseMethod("s", "addbadsignature", "s)", qi::makeAnyFunction(&add)));
   //missing param sig
-  EXPECT_EQ(-1, gob.xAdvertiseMethod("s", "addbadsignature", "", qi::makeGenericFunction(&add)));
+  EXPECT_EQ(-1, gob.xAdvertiseMethod("s", "addbadsignature", "", qi::makeAnyFunction(&add)));
   //missing ()
-  EXPECT_EQ(-1, gob.xAdvertiseMethod("s", "addbadsignature", "::", qi::makeGenericFunction(&add)));
+  EXPECT_EQ(-1, gob.xAdvertiseMethod("s", "addbadsignature", "::", qi::makeAnyFunction(&add)));
   //missing ()
-  EXPECT_EQ(-1, gob.xAdvertiseMethod("s", "addbadsignature", "ss", qi::makeGenericFunction(&add)));
+  EXPECT_EQ(-1, gob.xAdvertiseMethod("s", "addbadsignature", "ss", qi::makeAnyFunction(&add)));
   //G do not exists
-  EXPECT_EQ(-1, gob.xAdvertiseMethod("s", "addbadsignature", "(G)", qi::makeGenericFunction(&add)));
+  EXPECT_EQ(-1, gob.xAdvertiseMethod("s", "addbadsignature", "(G)", qi::makeAnyFunction(&add)));
 
   //bad return type
-  EXPECT_EQ(-1, gob.xAdvertiseMethod("TOOBADDDDD", "addbadsignature", "(s)", qi::makeGenericFunction(&add)));
+  EXPECT_EQ(-1, gob.xAdvertiseMethod("TOOBADDDDD", "addbadsignature", "(s)", qi::makeAnyFunction(&add)));
   //two return type
-  EXPECT_EQ(-1, gob.xAdvertiseMethod("si", "addbadsignature", "(s)", qi::makeGenericFunction(&add)));
+  EXPECT_EQ(-1, gob.xAdvertiseMethod("si", "addbadsignature", "(s)", qi::makeAnyFunction(&add)));
 
   EXPECT_EQ(-1, gob.xAdvertiseSignal("ploufffffffPlifffff", ""));
 
@@ -904,7 +904,7 @@ TEST(TestObject, AdvertiseBadType)
   EXPECT_EQ(-1, gob.xAdvertiseProperty("plouf", "ss"));
   EXPECT_EQ(-1, gob.xAdvertiseProperty("plouf", "("));
   //signature mismatch
-  //TODO: EXPECT_EQ(-1, gob.xAdvertiseMethod("i", "add", "(i)", qi::makeGenericFunction(&add)));
+  //TODO: EXPECT_EQ(-1, gob.xAdvertiseMethod("i", "add", "(i)", qi::makeAnyFunction(&add)));
 }
 
 

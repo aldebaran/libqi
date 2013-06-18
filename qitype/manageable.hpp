@@ -123,7 +123,7 @@ namespace qi {
     /// Stop id of features handled by Manageable
     static const uint32_t endId = 99;
     typedef std::map<unsigned int,
-      std::pair<GenericFunction, MetaCallType>
+      std::pair<AnyFunction, MetaCallType>
     > MethodMap;
     typedef boost::function<SignalBase* (void*)> SignalGetter;
     typedef std::map<unsigned int, SignalGetter> SignalMap;

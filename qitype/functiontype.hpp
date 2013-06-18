@@ -63,7 +63,7 @@ namespace qi {
     void* boundValue;
   };
 
-  /// A function with AnyArguments as its sole argument will behave as if makeDynamicGenericFunction was called.
+  /// A function with AnyArguments as its sole argument will behave as if makeDynamicAnyFunction was called.
   class QITYPE_API AnyArguments
   {
   public:
@@ -82,24 +82,24 @@ namespace qi {
    * This class has value semantic.
    *
    */
-  class QITYPE_API GenericFunction
+  class QITYPE_API AnyFunction
   {
   public:
-    GenericFunction();
-    ~GenericFunction();
-    GenericFunction(const GenericFunction& b);
-    GenericFunction(FunctionTypeInterface* type, void* value);
-    GenericFunction& operator = (const GenericFunction& b);
+    AnyFunction();
+    ~AnyFunction();
+    AnyFunction(const AnyFunction& b);
+    AnyFunction(FunctionTypeInterface* type, void* value);
+    AnyFunction& operator = (const AnyFunction& b);
     GenericValuePtr call(const std::vector<GenericValuePtr>& args);
     GenericValuePtr call(GenericValuePtr arg1, const std::vector<GenericValuePtr>& args);
     GenericValuePtr operator()(const std::vector<GenericValuePtr>& args);
 
     /// Change signature, drop the first argument passed to call.
-    const GenericFunction& dropFirstArgument() const;
+    const AnyFunction& dropFirstArgument() const;
     /// Replace first argument by \p value which must be storage for correct type.
-    const GenericFunction& replaceFirstArgument(void* value) const;
+    const AnyFunction& replaceFirstArgument(void* value) const;
     /// Prepend extra argument \p value to argument list
-    const GenericFunction& prependArgument(void* value) const;
+    const AnyFunction& prependArgument(void* value) const;
 
     /// Return expected argument types, taking transform into account
     std::vector<Type*> argumentsType() const;
@@ -108,10 +108,25 @@ namespace qi {
     Signature          parametersSignature(bool dropFirst=false) const;
     Signature          returnSignature() const;
 
-    void swap(GenericFunction& b);
+    void swap(AnyFunction& b);
 
     operator bool() const;
     FunctionTypeInterface* functionType() const;
+
+    /*** @return an AnyFunction wrapping func.
+    * func can be:
+    * - a boost::bind object
+    * - a boost::function
+    * - a function pointer
+    * - a member function pointer
+    *
+    */
+    template<typename F>
+    static AnyFunction from(F func);
+    /// @return a AnyFunction binding \p instance to member function \p func
+    template<typename F, typename C>
+    static AnyFunction from(F func, C instance);
+
   private:
     FunctionTypeInterface*  type;
     void* value; //type-dependant storage
@@ -139,14 +154,14 @@ namespace qi {
   };
 
   typedef boost::function<GenericValuePtr(const std::vector<GenericValuePtr>&)> DynamicFunction;
-  /// @return a GenericFunction that takes arguments as a list of unconverted GenericValuePtr.
-  QITYPE_API GenericFunction makeDynamicGenericFunction(DynamicFunction f);
+  /// @return a AnyFunction that takes arguments as a list of unconverted GenericValuePtr.
+  QITYPE_API AnyFunction makeDynamicAnyFunction(DynamicFunction f);
   /// @return the type used by dynamic functions
   QITYPE_API FunctionTypeInterface* dynamicFunctionTypeInterface();
 }
 
 #include <qitype/details/functiontype.hxx>
-
+#include <qitype/details/functiontypefactory.hxx>
 #ifdef _MSC_VER
 #  pragma warning( pop )
 #endif

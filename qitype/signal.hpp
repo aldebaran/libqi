@@ -11,7 +11,6 @@
 #include <qi/eventloop.hpp>
 
 #include <qitype/functiontype.hpp>
-#include <qitype/functiontypefactory.hpp>
 #include <qitype/typeobject.hpp>
 
 #include <boost/thread/thread.hpp>
@@ -55,7 +54,7 @@ namespace qi {
     SignalSubscriber& connect(FUNCTION_TYPE f, MetaCallType model=MetaCallType_Auto);
 
     SignalSubscriber& connect(qi::ObjectPtr target, unsigned int slot);
-    SignalSubscriber& connect(GenericFunction callback, MetaCallType model=MetaCallType_Auto);
+    SignalSubscriber& connect(AnyFunction callback, MetaCallType model=MetaCallType_Auto);
     SignalSubscriber& connect(const SignalSubscriber& s);
 
     bool disconnectAll();
@@ -99,7 +98,7 @@ namespace qi {
   template<typename FUNCTION_TYPE>
   inline SignalSubscriber& SignalBase::connect(FUNCTION_TYPE  callback, MetaCallType model)
   {
-    return connect(makeGenericFunction(callback), model);
+    return connect(makeAnyFunction(callback), model);
   }
 
   template<typename T>
@@ -122,7 +121,7 @@ namespace qi {
     {
       return SignalBase::connect(f, model);
     }
-    inline SignalSubscriber& connect(GenericFunction f, MetaCallType model=MetaCallType_Auto)
+    inline SignalSubscriber& connect(AnyFunction f, MetaCallType model=MetaCallType_Auto)
     {
       return SignalBase::connect(f, model);
     }
@@ -201,7 +200,7 @@ template<
      : source(0), linkId(SignalBase::invalidLink), weakLock(0), target(0), method(0), enabled(true)
    {}
 
-   SignalSubscriber(GenericFunction func, MetaCallType model=MetaCallType_Auto, detail::WeakLock* lock = 0);
+   SignalSubscriber(AnyFunction func, MetaCallType model=MetaCallType_Auto, detail::WeakLock* lock = 0);
 
    SignalSubscriber(qi::ObjectPtr target, unsigned int method);
 
@@ -246,7 +245,7 @@ template<
 
    // Target information, kept here to be able to introspect a Subscriber
    //   Mode 1: Direct functor call
-   GenericFunction      handler;
+   AnyFunction          handler;
    detail::WeakLock*    weakLock; // try to acquire weakLocker, disconnect if can't
    MetaCallType threadingModel;
 

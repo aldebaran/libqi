@@ -19,7 +19,7 @@ namespace qi {
                                                      MetaCallType threadingModel)
   {
     MetaMethodBuilder builder;
-    GenericFunction f = makeGenericFunction(function).dropFirstArgument();
+    AnyFunction f = makeAnyFunction(function).dropFirstArgument();
     builder.setName(name);
     builder.setSignature(f);
     builder.setDescription(desc);
@@ -34,7 +34,7 @@ namespace qi {
                                                             MetaCallType threadingModel)
   {
     MetaMethodBuilder builder;
-    GenericFunction f = makeGenericFunction(method, object).dropFirstArgument();
+    AnyFunction f = makeAnyFunction(method, object).dropFirstArgument();
     builder.setName(name);
     builder.setSignature(f);
     builder.setDescription(desc);
@@ -46,7 +46,7 @@ namespace qi {
                                                             FUNCTION_TYPE function,
                                                             MetaCallType threadingModel)
   {
-    GenericFunction f = makeGenericFunction(function).dropFirstArgument();
+    AnyFunction f = makeAnyFunction(function).dropFirstArgument();
     builder.setSignature(f);
     return xAdvertiseMethod(builder, f, threadingModel);
   }
@@ -57,7 +57,7 @@ namespace qi {
                                                             METHOD_TYPE method,
                                                             MetaCallType threadingModel)
   {
-    GenericFunction f = makeGenericFunction(method, object).dropFirstArgument();
+    AnyFunction f = makeAnyFunction(method, object).dropFirstArgument();
     builder.setSignature(f);
     return xAdvertiseMethod(builder, f, threadingModel);
   }

@@ -55,7 +55,7 @@ namespace qi
     public:
       static void set(SignalSubscriber& sub, O ptr, MF function)
       {
-        sub.handler = makeGenericFunction(function, ptr);
+        sub.handler = makeAnyFunction(function, ptr);
         sub.weakLock = 0;
       }
     };
@@ -68,7 +68,7 @@ namespace qi
       static void set(SignalSubscriber& sub, boost::shared_ptr<O> ptr, MF function)
       {
         // bind the pointer, not the shared ptr
-        sub.handler = makeGenericFunction(function, ptr.get());
+        sub.handler = makeAnyFunction(function, ptr.get());
         // Register a locker on the weak pointer
         sub.weakLock = new BoostWeakPointerLock<O>(ptr);
 

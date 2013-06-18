@@ -425,7 +425,7 @@ namespace qi
     };
     // Accept a function pointer or member function pointer
     template<typename F>
-    GenericFunction makeGenericFunctionBare(F func)
+    AnyFunction makeAnyFunctionBare(F func)
     {
       typedef typename boost::function_types::parameter_types<F>::type ArgsType;
       typedef typename boost::function_types::result_type<F>::type ResType;
@@ -446,8 +446,8 @@ namespace qi
       unsigned long mask = EqFunction<F>::refMask;
       FunctionTypeInterface* ftype = FunctionTypeInterfaceEq<MapedF, EqFunPtr>::make(mask, argumentsType, resultType);
 
-      qiLogDebug("qitype.makeGenericFunction") << "bare mask " << (unsigned long)EqFunction<F>::refMask;
-      return GenericFunction(ftype, ftype->clone(ftype->initializeStorage(&func)));
+      qiLogDebug("qitype.makeAnyFunction") << "bare mask " << (unsigned long)EqFunction<F>::refMask;
+      return AnyFunction(ftype, ftype->clone(ftype->initializeStorage(&func)));
     }
 
     template<typename C, typename R>
@@ -470,15 +470,15 @@ namespace qi
     }
 
     template<typename C, typename R>
-    GenericFunction makeGenericFunctionBare(R (C::*fun)(const AnyArguments&))
+    AnyFunction makeAnyFunctionBare(R (C::*fun)(const AnyArguments&))
     {
-      GenericFunction res = makeDynamicGenericFunction(boost::bind(&bouncer<C, R>, _1, fun));
+      AnyFunction res = makeDynamicAnyFunction(boost::bind(&bouncer<C, R>, _1, fun));
       // The signature storage in GO will drop first argument, and bug if none is present
       const_cast<std::vector<Type*> &>(res.functionType()->argumentsType()).push_back(typeOf<GenericValue>());
       return res;
     }
 
-    template<typename F> GenericFunction makeGenericFunctionBare(boost::function<F> func)
+    template<typename F> AnyFunction makeAnyFunctionBare(boost::function<F> func)
     {
       /* Do not try to reduce anything on a boost::function.
       * It will bounce to an internal template backend anyway
@@ -493,49 +493,49 @@ namespace qi
         boost::remove_const<
         boost::remove_reference<boost::mpl::_1> > > > >(detail::fill_arguments(&argumentsType));
       FunctionTypeInterface* ftype = FunctionTypeInterfaceEq<F, boost::function<F> >::make(0, argumentsType, resultType);
-      return GenericFunction(ftype, new boost::function<F>(func));
+      return AnyFunction(ftype, new boost::function<F>(func));
     }
 
     // Use helper structures for which template partial specialisation is possible
-    template<typename T> struct GenericFunctionMaker
+    template<typename T> struct AnyFunctionMaker
     {
-      static GenericFunction make(T func)
+      static AnyFunction make(T func)
       {
-        return makeGenericFunctionBare(func);
+        return makeAnyFunctionBare(func);
       }
     };
-    template<typename T> struct GenericFunctionMaker<T*>
+    template<typename T> struct AnyFunctionMaker<T*>
     {
-      static GenericFunction make(T* func)
+      static AnyFunction make(T* func)
       {
-        return makeGenericFunctionBare(func);
+        return makeAnyFunctionBare(func);
       }
     };
     template<typename R, typename F, typename B>
-    struct GenericFunctionMaker<boost::_bi::bind_t<R, F, B> >
+    struct AnyFunctionMaker<boost::_bi::bind_t<R, F, B> >
     {
-      static GenericFunction make(boost::_bi::bind_t<R, F, B> v)
+      static AnyFunction make(boost::_bi::bind_t<R, F, B> v)
       {
         typedef typename boost::function<typename boost_bind_function_type<
         boost::_bi::bind_t<R, F, B> >::type> CompatType;
         CompatType f = v;
-        return makeGenericFunction(f);
+        return makeAnyFunction(f);
       }
     };
-    template<typename T> struct GenericFunctionMaker<boost::function<T> >
+    template<typename T> struct AnyFunctionMaker<boost::function<T> >
     {
-      static GenericFunction make(boost::function<T> func)
+      static AnyFunction make(boost::function<T> func)
       {
          assert(sizeof(boost::function<T>) == sizeof(boost::function<void ()>));
-         GenericFunction res = detail::makeGenericFunctionBare(func);
+         AnyFunction res = detail::makeAnyFunctionBare(func);
          return res;
       }
     };
-    template<typename T> struct GenericFunctionMaker<const T&>
-    : public GenericFunctionMaker<T> {};
-    template<> struct GenericFunctionMaker<GenericFunction>
+    template<typename T> struct AnyFunctionMaker<const T&>
+    : public AnyFunctionMaker<T> {};
+    template<> struct AnyFunctionMaker<AnyFunction>
     {
-      static GenericFunction make(GenericFunction func)
+      static AnyFunction make(AnyFunction func)
       {
         return func;
       }
@@ -543,9 +543,9 @@ namespace qi
   }
 
   template<typename T>
-  GenericFunction makeGenericFunction(T f)
+  AnyFunction makeAnyFunction(T f)
   {
-    return detail::GenericFunctionMaker<T>::make(f);
+    return detail::AnyFunctionMaker<T>::make(f);
   }
 
   namespace detail
@@ -567,9 +567,9 @@ namespace qi
   }
 
   template<typename F, typename C>
-  GenericFunction makeGenericFunction(F func, C instance)
+  AnyFunction makeAnyFunction(F func, C instance)
   {
-    /* Taking a GenericFunction of F will likely imply a typeOf<C> which is
+    /* Taking a AnyFunction of F will likely imply a typeOf<C> which is
     * unnecessary. So use a fake class in signature.
     */
     typedef typename boost::function_types::result_type<F>::type Result;
@@ -579,14 +579,14 @@ namespace qi
     typedef typename boost::mpl::push_front<ArgsFakeClass, Result>::type ComponentsFaked;
     typedef typename boost::function_types::member_function_pointer<ComponentsFaked>::type MethodTypeFaked;
     MethodTypeFaked newFunk = *(MethodTypeFaked*)(void*)&func;
-    GenericFunction res = makeGenericFunction(newFunk);
+    AnyFunction res = makeAnyFunction(newFunk);
 
     // Dynamic-cast instance to expected pointer type.
     typedef typename boost::mpl::at_c<Args, 0>::type FirstArg;
     // Get expected
     FirstArg* ptr = dynamic_cast<FirstArg*>(detail::Pointer<C>::pointer(instance));
     if (!ptr && instance)
-      throw std::runtime_error("makeGenericFunction: failed to dynamic_cast bound value to expected type");
+      throw std::runtime_error("makeAnyFunction: failed to dynamic_cast bound value to expected type");
     res.prependArgument((void*)(const void*)ptr);
     return res;
   }

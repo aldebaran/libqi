@@ -72,10 +72,10 @@ namespace qi {
     int xAdvertiseMethod(const Signature &sigret,
                          const std::string &name,
                          const Signature &signature,
-                         GenericFunction func, const std::string& desc = "",
+                         AnyFunction func, const std::string& desc = "",
                          MetaCallType threadingModel = MetaCallType_Auto);
 
-    int xAdvertiseMethod(MetaMethodBuilder& builder, GenericFunction func,
+    int xAdvertiseMethod(MetaMethodBuilder& builder, AnyFunction func,
                          MetaCallType threadingModel = MetaCallType_Auto);
 
     int xAdvertiseSignal(const std::string &name, const Signature &signature);

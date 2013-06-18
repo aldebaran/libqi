@@ -34,7 +34,7 @@ namespace qi
     bool                                dying;
     typedef std::map<unsigned int, SignalBase*> SignalMap;
     typedef std::map<unsigned int,
-      std::pair<GenericFunction, MetaCallType>
+      std::pair<AnyFunction, MetaCallType>
     > MethodMap;
     SignalMap           signalMap;
     MethodMap           methodMap;
@@ -142,7 +142,7 @@ namespace qi
     return _p->threadingModel;
   }
 
-  void DynamicObject::setMethod(unsigned int id, GenericFunction callable, MetaCallType threadingModel)
+  void DynamicObject::setMethod(unsigned int id, AnyFunction callable, MetaCallType threadingModel)
   {
     _p->methodMap[id] = std::make_pair(callable, threadingModel);
   }
@@ -158,11 +158,11 @@ namespace qi
     _p->propertyMap[id] = property;
   }
 
-  GenericFunction DynamicObject::method(unsigned int id) const
+  AnyFunction DynamicObject::method(unsigned int id) const
   {
     DynamicObjectPrivate::MethodMap::iterator i = _p->methodMap.find(id);
     if (i == _p->methodMap.end())
-      return GenericFunction();
+      return AnyFunction();
     else
       return i->second.first;
   }
@@ -298,7 +298,7 @@ namespace qi
     return qi::Future<void>(0);
   }
 
-  static GenericValuePtr locked_call(GenericFunction& function,
+  static GenericValuePtr locked_call(AnyFunction& function,
                                      const GenericFunctionParameters& params,
                                      Manageable::TimedMutexPtr lock)
   {
@@ -337,7 +337,7 @@ namespace qi
                       bool lock,
                       const GenericFunctionParameters& params,
                       unsigned int methodId,
-                      GenericFunction& func
+                      AnyFunction& func
                       )
     {
       bool stats = context && context->isStatsEnabled();
@@ -414,7 +414,7 @@ namespace qi
   class MFunctorCall
   {
   public:
-    MFunctorCall(GenericFunction& func, GenericFunctionParameters& params,
+    MFunctorCall(AnyFunction& func, GenericFunctionParameters& params,
        qi::Promise<GenericValuePtr>* out, bool noCloneFirst, Manageable* context, unsigned int methodId, bool lock)
     : noCloneFirst(noCloneFirst)
     {
@@ -450,7 +450,7 @@ namespace qi
     }
     qi::Promise<GenericValuePtr>* out;
     GenericFunctionParameters params;
-    GenericFunction func;
+    AnyFunction func;
     bool noCloneFirst;
     Manageable* context;
     bool lock;
@@ -463,7 +463,7 @@ namespace qi
     MetaCallType callType,
     Manageable* context,
     unsigned int methodId,
-    GenericFunction func, const GenericFunctionParameters& params, bool noCloneFirst)
+    AnyFunction func, const GenericFunctionParameters& params, bool noCloneFirst)
   {
     // Implement rules described in header
     bool sync = true;

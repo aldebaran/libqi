@@ -41,7 +41,7 @@ StaticObjectTypeBase::metaCall(void* instance, Manageable* context, unsigned int
   EventLoop* el = context->eventLoop();
   MetaCallType methodThreadingModel = i->second.second;
 
-  GenericFunction method = i->second.first;
+  AnyFunction method = i->second.first;
   GenericValuePtr self;
   if (methodId >= Manageable::startId  && methodId < Manageable::endId)
   {

@@ -1,1 +1,1 @@
-.. cpp:autoclass:: qi::GenericFunction
+.. cpp:autoclass:: qi::AnyFunction

@@ -12,7 +12,7 @@
 namespace qi
 {
 
-  /*** @return a GenericFunction wrapping func.
+  /*** @return a AnyFunction wrapping func.
   * func can be:
   * - a boost::bind object
   * - a boost::function
@@ -20,9 +20,9 @@ namespace qi
   * - a member function pointer
   *
   */
-  template<typename F> GenericFunction makeGenericFunction(F func);
-  /// @return a GenericFunction binding \p instance to member function \p func
-  template<typename F, typename C> GenericFunction makeGenericFunction(F func, C instance);
+  template<typename F> AnyFunction makeAnyFunction(F func);
+  /// @return a AnyFunction binding \p instance to member function \p func
+  template<typename F, typename C> AnyFunction makeAnyFunction(F func, C instance);
 }
 
 #include <qitype/details/functiontypefactory.hxx>

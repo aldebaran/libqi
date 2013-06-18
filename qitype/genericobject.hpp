@@ -16,7 +16,6 @@
 #include <qitype/metasignal.hpp>
 #include <qitype/metamethod.hpp>
 #include <qitype/metaobject.hpp>
-#include <qitype/functiontypefactory.hpp>
 #include <qitype/signal.hpp>
 #include <qi/eventloop.hpp>
 #include <qitype/typeobject.hpp>
@@ -232,7 +231,7 @@ namespace qi {
                                                       MetaCallType model)
   {
     return connect(eventName,
-      SignalSubscriber(makeGenericFunction(callback), model));
+      SignalSubscriber(makeAnyFunction(callback), model));
   }
 
 
@@ -253,7 +252,7 @@ namespace qi {
     MetaCallType callType,
     Manageable* manageable,
     unsigned int methodId,
-    GenericFunction func, const GenericFunctionParameters& params, bool noCloneFirst=false);
+    AnyFunction func, const GenericFunctionParameters& params, bool noCloneFirst=false);
 
   class QITYPE_API Proxy
   {

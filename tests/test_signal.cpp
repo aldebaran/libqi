@@ -9,7 +9,6 @@
 #include <qitype/signal.hpp>
 #include <qi/future.hpp>
 #include <qi/application.hpp>
-#include <qitype/functiontypefactory.hpp>
 #include <qitype/genericobject.hpp>
 
 qiLogCategory("test");
@@ -38,7 +37,7 @@ TEST(TestSignal, TestCompilation)
   qi::Promise<void>      prom;
 
   //do not count
-  s.connect(qi::makeGenericFunction(&Foo::func, f));
+  s.connect(qi::makeAnyFunction(&Foo::func, f));
   s.connect(boost::bind<void>(&Foo::func, f, _1));
 
   s.connect(boost::bind(&foo, &res, 12, _1));
@@ -71,7 +70,7 @@ TEST(TestSignal, SharedPtr)
   // Redundant with Copy test, but just to be sure, check that shared_ptr
   // is correctly transmited.
   qi::Signal<boost::shared_ptr<int> > sig;
-  sig.connect(qi::makeGenericFunction(&write42), qi::MetaCallType_Queued);
+  sig.connect(qi::makeAnyFunction(&write42), qi::MetaCallType_Queued);
   {
     boost::shared_ptr<int> ptr(new int(12));
     sig(ptr);
@@ -90,7 +89,7 @@ TEST(TestSignal, Copy)
   // Check that reference argument type are copied when an async call is made
   qi::Signal<int&, bool*> sig;
   qiLogDebug() << "sync";
-  sig.connect(qi::makeGenericFunction(byRef), qi::MetaCallType_Direct);
+  sig.connect(qi::makeAnyFunction(byRef), qi::MetaCallType_Direct);
   bool done = false;
   int i = 0;
   qiLogDebug() << "iref is " << &i;
@@ -99,7 +98,7 @@ TEST(TestSignal, Copy)
   //ASSERT_EQ(0, i); // byref, but still copies for small types
   qiLogDebug() << "async";
   sig =  qi::Signal<int&, bool*>();
-  sig.connect(qi::makeGenericFunction(byRef), qi::MetaCallType_Queued);
+  sig.connect(qi::makeAnyFunction(byRef), qi::MetaCallType_Queued);
   i = 0;
   done = false;
   qiLogDebug() << "done is " << &done;

@@ -26,7 +26,7 @@ namespace qi {
 
 
 
-  SignalSubscriber::SignalSubscriber(GenericFunction func, MetaCallType model, detail::WeakLock* lock)
+  SignalSubscriber::SignalSubscriber(AnyFunction func, MetaCallType model, detail::WeakLock* lock)
      : handler(func), weakLock(lock), threadingModel(model), target(0), method(0), enabled(true)
    {
    }
@@ -287,7 +287,7 @@ namespace qi {
     }
   }
 
-  SignalSubscriber& SignalBase::connect(GenericFunction callback, MetaCallType model)
+  SignalSubscriber& SignalBase::connect(AnyFunction callback, MetaCallType model)
   {
     return connect(SignalSubscriber(callback, model));
   }
