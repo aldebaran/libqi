@@ -980,7 +980,7 @@ class ArgPack
 {
 public:
   qi::Property<qi::GenericValue> onCall;
-  int callMe(const qi::ArgumentPack& pack)
+  int callMe(const qi::AnyArguments& pack)
   {
     onCall.set(qi::GenericValue::from(pack.args()));
     return pack.args().size();
