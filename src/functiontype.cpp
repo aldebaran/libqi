@@ -198,9 +198,9 @@ namespace qi
     if (type == dynamicFunctionTypeInterface())
       return "m";
     // Detect if returned type is a qi::Future and return underlying value type.
-    TypeTemplate* ft1 = QI_TEMPLATE_TYPE_GET(resultType(), Future);
-    TypeTemplate* ft2 = QI_TEMPLATE_TYPE_GET(resultType(), FutureSync);
-    TypeTemplate* futureType = ft1 ? ft1 : ft2;
+    TemplateTypeInterface* ft1 = QI_TEMPLATE_TYPE_GET(resultType(), Future);
+    TemplateTypeInterface* ft2 = QI_TEMPLATE_TYPE_GET(resultType(), FutureSync);
+    TemplateTypeInterface* futureType = ft1 ? ft1 : ft2;
     if (futureType)
       return futureType->templateArgument()->signature();
     else

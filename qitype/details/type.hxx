@@ -279,7 +279,7 @@ namespace qi  {
   }
 
   // Provide a base class for all templated type impls
-  class QITYPE_API TypeTemplate: public TypeInterface
+  class QITYPE_API TemplateTypeInterface: public TypeInterface
   {
   public:
     // Return erased template argument type
@@ -291,7 +291,7 @@ namespace qi  {
   // To detect a templated type, make all the Type of its instanciations
   // inherit fro a single class
   template<template<typename> class T>
-  class QITYPE_TEMPLATE_API TypeOfTemplate: public TypeTemplate
+  class QITYPE_TEMPLATE_API TypeOfTemplate: public TemplateTypeInterface
   {
   public:
   };

@@ -689,7 +689,7 @@ QITYPE_API bool operator !=(const GenericIterator & a, const GenericIterator& b)
   namespace qi {              \
     template<typename T> class QITYPE_TEMPLATE_API TypeImpl<n<T> >: public TypeOfTemplateImpl<n, T> {}; \
   }
-  /** Return a TypeTemplate pointer if \p typeInst represents an instantiation
+  /** Return a TemplateTypeInterface pointer if \p typeInst represents an instantiation
    * of template type templateName, 0 otherwise
    */
   #define QI_TEMPLATE_TYPE_GET(typeInst, templateName) \

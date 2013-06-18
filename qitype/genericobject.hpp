@@ -384,7 +384,7 @@ static bool _qiregister##name() {                                              \
 
 /** Register name as a template object type
  * Remaining arguments are the methods, signals and properties of the object.
- * Use QI_TEMPLATE_TYPE_GET() to access the TypeTemplate from a Type.
+ * Use QI_TEMPLATE_TYPE_GET() to access the TemplateTypeInterface from a Type.
  */
 #define QI_REGISTER_TEMPLATE_OBJECT(name, ...)                                                         \
   namespace qi {                                                                                       \

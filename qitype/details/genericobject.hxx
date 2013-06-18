@@ -26,9 +26,9 @@ namespace qi {
     template <typename T>
     void futureAdapterGeneric(GenericValuePtr val, qi::Promise<T> promise)
     {
-      TypeTemplate* ft1 = QI_TEMPLATE_TYPE_GET(val.type, Future);
-      TypeTemplate* ft2 = QI_TEMPLATE_TYPE_GET(val.type, FutureSync);
-      TypeTemplate* futureType = ft1 ? ft1 : ft2;
+      TemplateTypeInterface* ft1 = QI_TEMPLATE_TYPE_GET(val.type, Future);
+      TemplateTypeInterface* ft2 = QI_TEMPLATE_TYPE_GET(val.type, FutureSync);
+      TemplateTypeInterface* futureType = ft1 ? ft1 : ft2;
       ObjectTypeInterface* onext = dynamic_cast<ObjectTypeInterface*>(futureType->next());
       GenericObject gfut(onext, val.value);
       if (gfut.call<bool>("hasError", 0))
@@ -52,9 +52,9 @@ namespace qi {
       }
 
       GenericValuePtr val =  metaFut.value();
-      TypeTemplate* ft1 = QI_TEMPLATE_TYPE_GET(val.type, Future);
-      TypeTemplate* ft2 = QI_TEMPLATE_TYPE_GET(val.type, FutureSync);
-      TypeTemplate* futureType = ft1 ? ft1 : ft2;
+      TemplateTypeInterface* ft1 = QI_TEMPLATE_TYPE_GET(val.type, Future);
+      TemplateTypeInterface* ft2 = QI_TEMPLATE_TYPE_GET(val.type, FutureSync);
+      TemplateTypeInterface* futureType = ft1 ? ft1 : ft2;
       if (futureType)
       {
         TypeInterface* next = futureType->next();
@@ -269,7 +269,7 @@ namespace qi {
     {
       qiLogCategory("qitype.object");
       ObjectPtr* val = (ObjectPtr*)ptrFromStorage(storage);
-      TypeTemplate* templ = dynamic_cast<TypeTemplate*>(source.type);
+      TemplateTypeInterface* templ = dynamic_cast<TemplateTypeInterface*>(source.type);
       if (templ)
         source.type = templ->next();
       if (source.type->info() == info())
