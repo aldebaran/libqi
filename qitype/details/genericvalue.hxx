@@ -78,7 +78,7 @@ namespace qi {
 
   template<typename T> AutoGenericValuePtr::AutoGenericValuePtr(const T& ptr)
   {
-    *(GenericValuePtr*)this = GenericValuePtr(&ptr);
+    *(GenericValuePtr*)this = GenericValuePtr::fromRef(ptr);
   }
 
   inline AutoGenericValuePtr::AutoGenericValuePtr()
@@ -408,7 +408,7 @@ namespace qi {
 
     template<typename T> void operator,(GenericValuePtrCopy& g, const T& any)
     {
-      *(GenericValuePtr*)&g = GenericValuePtr(&any).clone();
+      *(GenericValuePtr*)&g = GenericValuePtr::fromRef(any).clone();
     }
   }
 
@@ -501,7 +501,7 @@ namespace qi {
   template<typename T>
   void GenericValuePtr::set(const T& v)
   {
-    update(GenericValuePtr(&v));
+    update(GenericValuePtr::fromRef(v));
    }
 
   inline void GenericValuePtr::setFloat(float v)
@@ -525,7 +525,7 @@ namespace qi {
   template<typename K>
   GenericValueRef GenericValuePtr::operator[](const K& key)
   {
-    return _element(GenericValuePtr(&key), true);
+    return _element(GenericValuePtr::fromRef(key), true);
   }
 
   inline size_t
@@ -543,19 +543,19 @@ namespace qi {
 
   template<typename T> void GenericValuePtr::append(const T& element)
   {
-    _append(GenericValuePtr(&element));
+    _append(GenericValuePtr::fromRef(element));
   }
 
   template<typename K, typename V>
   void GenericValuePtr::insert(const K& key, const V& val)
   {
-    _insert(GenericValuePtr(&key), GenericValuePtr(&val));
+    _insert(GenericValuePtr::fromRef(key), GenericValuePtr::fromRef(val));
   }
 
   template<typename K>
   GenericValuePtr GenericValuePtr::find(const K& key)
   {
-    return _element(GenericValuePtr(&key), false);
+    return _element(GenericValuePtr::fromRef(key), false);
   }
 
   inline GenericValuePtr GenericValuePtr::asDynamic() const
@@ -619,7 +619,7 @@ namespace qi {
   template<typename T>
   GenericValueRef::GenericValueRef(const T& v)
   {
-    *(GenericValuePtr*)this = GenericValuePtr(&v);
+    *(GenericValuePtr*)this = GenericValuePtr::fromRef(v);
   }
 
   template<typename T>

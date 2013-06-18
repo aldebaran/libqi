@@ -101,10 +101,10 @@ MapTypeInterfaceImpl<M>::element(void** storage, void* keyStorage, bool autoInse
     if (!autoInsert)
       return GenericValuePtr();
     typename M::mapped_type& e = (*ptr)[*key];
-    return GenericValuePtr(&e);
+    return GenericValuePtr::fromRef(e);
   }
   else
-    return GenericValuePtr(&((typename M::mapped_type&)(it->second)));
+    return GenericValuePtr::fromRef(((typename M::mapped_type&)(it->second)));
 }
 
 

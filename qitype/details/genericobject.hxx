@@ -314,7 +314,7 @@ namespace qi {
     GenericValuePtr makeProxy(ObjectPtr ptr)
     {
       boost::shared_ptr<Proxy> sp(new Proxy(ptr));
-      return GenericValuePtr(&sp).clone();
+      return GenericValuePtr::fromRef(sp).clone();
     }
   }
   template<typename Proxy, typename Interface>

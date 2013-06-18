@@ -42,13 +42,13 @@ TEST(Value, InPlaceSet)
   v.setString("pifpouf");
   ASSERT_EQ("pifpouf", s);
   double d = 12;
-  v = GenericValuePtr(&d);
+  v = GenericValuePtr::fromRef(d);
   v.setDouble(15.5);
   ASSERT_EQ(15.5, d);
   v.setInt(16);
   ASSERT_EQ(16.0, d);
   int i = 14;
-  v = GenericValuePtr(&i);
+  v = GenericValuePtr::fromRef(i);
   v.setInt(13);
   ASSERT_EQ(13, i);
 }
@@ -63,7 +63,7 @@ TEST(Value, Update)
   ASSERT_EQ("baz", s);
   ASSERT_ANY_THROW(v.update(GenericValueRef(42)));
   double d = 5.0;
-  v = GenericValuePtr(&d);
+  v = GenericValuePtr::fromRef(d);
   v.update(GenericValueRef(42));
   ASSERT_EQ(42, d);
   v.update(GenericValueRef(42.42));
@@ -78,11 +78,11 @@ TEST(Value, As)
   ASSERT_EQ(&v.asString(), &s);
   ASSERT_ANY_THROW(v.asDouble());
   double d = 1.5;
-  v = GenericValuePtr(&d);
+  v = GenericValuePtr::fromRef(d);
   ASSERT_EQ(&d, &v.asDouble());
   ASSERT_ANY_THROW(v.asInt32());
   qi::uint32_t ui = 2; // vcxx uint32_t unqualified is ambiguous.
-  v = GenericValuePtr(&ui);
+  v = GenericValuePtr::fromRef(ui);
   ASSERT_EQ(&ui, &v.asUInt32());
   ASSERT_ANY_THROW(v.asInt32());
   ASSERT_ANY_THROW(v.asInt16());
@@ -188,7 +188,7 @@ TEST(Value, list)
   ASSERT_ANY_THROW(v.set(std::vector<int>()));
   std::vector<int> vint;
   vint.push_back(12);
-  v = GenericValuePtr(&vint);
+  v = GenericValuePtr::fromRef(vint);
   v.append(7);
   ASSERT_EQ(7, v[1].toInt());
   ASSERT_EQ(7, v[1].toFloat());
@@ -236,7 +236,7 @@ TEST(Value, Tuple)
   // create a static tuple
   std::vector<double> vd;
   vd.push_back(1);
-  gv = GenericValuePtr(&vd);
+  gv = GenericValuePtr::fromRef(vd);
   gv.append(2);
   gtuple = gv.toTuple(true);
   Point p;
