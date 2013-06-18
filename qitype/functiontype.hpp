@@ -63,7 +63,7 @@ namespace qi {
     void* boundValue;
   };
 
-  /// A function with AnyArguments as its sole argument will behave as if makeDynamicAnyFunction was called.
+  /// A function with AnyArguments as its sole argument will behave as if makeDynamicGenericFunction was called.
   class QITYPE_API AnyArguments
   {
   public:
@@ -155,7 +155,7 @@ namespace qi {
 
   typedef boost::function<GenericValuePtr(const std::vector<GenericValuePtr>&)> DynamicFunction;
   /// @return a AnyFunction that takes arguments as a list of unconverted GenericValuePtr.
-  QITYPE_API AnyFunction makeDynamicAnyFunction(DynamicFunction f);
+  QITYPE_API AnyFunction makeDynamicGenericFunction(DynamicFunction f);
   /// @return the type used by dynamic functions
   QITYPE_API FunctionTypeInterface* dynamicFunctionTypeInterface();
 }

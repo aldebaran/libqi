@@ -472,7 +472,7 @@ namespace qi
     template<typename C, typename R>
     AnyFunction makeAnyFunctionBare(R (C::*fun)(const AnyArguments&))
     {
-      AnyFunction res = makeDynamicAnyFunction(boost::bind(&bouncer<C, R>, _1, fun));
+      AnyFunction res = makeDynamicGenericFunction(boost::bind(&bouncer<C, R>, _1, fun));
       // The signature storage in GO will drop first argument, and bug if none is present
       const_cast<std::vector<Type*> &>(res.functionType()->argumentsType()).push_back(typeOf<GenericValue>());
       return res;
