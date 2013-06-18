@@ -556,7 +556,7 @@ namespace qi {
   inline GenericValueRef GenericValuePtr::operator*()
   {
     if (kind() == Type::Pointer)
-      return static_cast<TypePointer*>(type)->dereference(value);
+      return static_cast<PointerTypeInterface*>(type)->dereference(value);
     else if (kind() == Type::Iterator)
       return static_cast<TypeIterator*>(type)->dereference(value);
     else

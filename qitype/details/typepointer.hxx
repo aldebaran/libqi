@@ -11,7 +11,7 @@
 
 namespace qi
 {
-  template<typename T> class TypePointerImpl: public TypePointer
+  template<typename T> class PointerTypeInterfaceImpl: public PointerTypeInterface
   {
   public:
     Type* pointedType() const
@@ -40,9 +40,9 @@ namespace qi
     _QI_BOUNCE_TYPE_METHODS(TypeMethodsImpl);
   };
 
-  template<typename T> class TypeImpl<T*>: public TypePointerImpl<T>{};
+  template<typename T> class TypeImpl<T*>: public PointerTypeInterfaceImpl<T>{};
 
-  template<typename T> class TypeSharedPointerImpl: public TypePointer
+  template<typename T> class TypeSharedPointerImpl: public PointerTypeInterface
   {
   public:
     Type* pointedType() const

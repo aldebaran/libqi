@@ -388,9 +388,9 @@ namespace qi {
         break;
       case Type::Pointer:
       {
-        TypePointer* type = static_cast<TypePointer*>(value.type);
+        PointerTypeInterface* type = static_cast<PointerTypeInterface*>(value.type);
         Type::Kind pointedKind = type->pointedType()->kind();
-        if (type->pointerKind() == TypePointer::Shared
+        if (type->pointerKind() == PointerTypeInterface::Shared
           && (pointedKind == Type::Object || pointedKind == Type::Unknown))
         {
           if(pointedKind != Type::Object)

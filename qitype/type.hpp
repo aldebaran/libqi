@@ -218,7 +218,7 @@ namespace qi{
     std::pair<GenericValuePtr, bool> convert(FloatTypeInterface* targetType) const;
     std::pair<GenericValuePtr, bool> convert(RawTypeInterface* targetType) const;
     std::pair<GenericValuePtr, bool> convert(StringTypeInterface* targetType) const;
-    std::pair<GenericValuePtr, bool> convert(TypePointer* targetType) const;
+    std::pair<GenericValuePtr, bool> convert(PointerTypeInterface* targetType) const;
     std::pair<GenericValuePtr, bool> convert(DynamicTypeInterface* targetType) const;
 
 
@@ -590,7 +590,7 @@ QITYPE_API bool operator !=(const GenericIterator & a, const GenericIterator& b)
     virtual Kind kind() const { return Raw; }
   };
 
-  class QITYPE_API TypePointer: public Type
+  class QITYPE_API PointerTypeInterface: public Type
   {
   public:
     enum PointerKind

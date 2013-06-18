@@ -61,8 +61,8 @@ namespace qi {
       case Type::Pointer:
       {
         GenericValuePtr pointee = *value;
-        TypePointer* type = static_cast<TypePointer*>(value.type);
-        if (type->pointerKind() == TypePointer::Shared
+        PointerTypeInterface* type = static_cast<PointerTypeInterface*>(value.type);
+        if (type->pointerKind() == PointerTypeInterface::Shared
           && pointee.kind() == Type::Object)
         { // shared_ptr<Foo> p with Foo object type.
           // Create our own shared_ptr, that holds p and delete it on destruction

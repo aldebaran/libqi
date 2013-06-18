@@ -46,7 +46,7 @@ namespace qi
     return std::make_pair(GenericValuePtr(), false);
   }
 
-  std::pair<GenericValuePtr, bool> GenericValuePtr::convert(TypePointer* targetType) const
+  std::pair<GenericValuePtr, bool> GenericValuePtr::convert(PointerTypeInterface* targetType) const
   {
     GenericValuePtr result;
 
@@ -54,8 +54,8 @@ namespace qi
     {
     case Type::Pointer:
     {
-      Type* srcPointedType = static_cast<TypePointer*>(type)->pointedType();
-      Type* dstPointedType = static_cast<TypePointer*>(targetType)->pointedType();
+      Type* srcPointedType = static_cast<PointerTypeInterface*>(type)->pointedType();
+      Type* dstPointedType = static_cast<PointerTypeInterface*>(targetType)->pointedType();
       // We only try to handle conversion for pointer to objects
       if (srcPointedType->kind() != Type::Object || dstPointedType->kind() != Type::Object)
       {
@@ -68,7 +68,7 @@ namespace qi
           return std::make_pair(GenericValuePtr(), false);
         }
       }
-      GenericValuePtr pointedSrc = static_cast<TypePointer*>(type)->dereference(value);
+      GenericValuePtr pointedSrc = static_cast<PointerTypeInterface*>(type)->dereference(value);
       // try object conversion (inheritance)
       std::pair<GenericValuePtr, bool> pointedDstPair = pointedSrc.convert(dstPointedType);
       if (!pointedDstPair.first.type)
@@ -90,7 +90,7 @@ namespace qi
     case Type::Object:
     {
       std::pair<GenericValuePtr, bool> gv = convert(
-                                              static_cast<TypePointer*>(targetType)->pointedType());
+                                              static_cast<PointerTypeInterface*>(targetType)->pointedType());
       if (!gv.first.type)
         return gv;
       // Re-pointerise it
@@ -489,7 +489,7 @@ namespace qi
       case Type::Map:
         return convert(static_cast<MapTypeInterface*>(targetType));
       case Type::Pointer:
-        return convert(static_cast<TypePointer*>(targetType));
+        return convert(static_cast<PointerTypeInterface*>(targetType));
       case Type::Tuple:
         return convert(static_cast<StructTypeInterface*>(targetType));
       case Type::Dynamic:
@@ -530,11 +530,11 @@ namespace qi
 
     if (targetType->info() == typeOf<ObjectPtr>()->info()
         && type->kind() == Type::Pointer
-        && static_cast<TypePointer*>(type)->pointedType()->kind() == Type::Object)
+        && static_cast<PointerTypeInterface*>(type)->pointedType()->kind() == Type::Object)
     { // Pointer to concrete object -> ObjectPtr
       // Keep a copy of this in ObjectPtr, and destroy on ObjectPtr destruction
       // That way if this is a shared_ptr, we link to it correctly
-      TypePointer* pT = static_cast<TypePointer*>(type);
+      PointerTypeInterface* pT = static_cast<PointerTypeInterface*>(type);
       ObjectPtr o(
             new GenericObject(
               static_cast<ObjectTypeInterface*>(pT->pointedType()),
@@ -549,7 +549,7 @@ namespace qi
       qiLogDebug() << "Attempting specialized proxy conversion";
       detail::ProxyGeneratorMap& map = detail::proxyGeneratorMap();
       detail::ProxyGeneratorMap::iterator it = map.find(
-                                                 static_cast<TypePointer*>(targetType)->pointedType()->info());
+                                                 static_cast<PointerTypeInterface*>(targetType)->pointedType()->info());
       if (it != map.end())
       {
         GenericValuePtr res = (it->second)(*(ObjectPtr*)value);
@@ -557,7 +557,7 @@ namespace qi
       }
       else
         qiLogDebug() << "type "
-                     << static_cast<TypePointer*>(targetType)->pointedType()->infoString()
+                     << static_cast<PointerTypeInterface*>(targetType)->pointedType()->infoString()
                      <<" not found in proxy map";
     }
 
@@ -572,7 +572,7 @@ namespace qi
     }
 
     if (skind == Type::Object && dkind == Type::Pointer)
-      return convert(static_cast<TypePointer*>(targetType));
+      return convert(static_cast<PointerTypeInterface*>(targetType));
 
     if (skind == Type::Object)
     {

@@ -291,9 +291,9 @@ namespace qi {
       }
       else if (source.kind() == Type::Pointer)
       {
-        TypePointer* ptype = static_cast<TypePointer*>(source.type);
+        PointerTypeInterface* ptype = static_cast<PointerTypeInterface*>(source.type);
         // FIXME: find a way!
-        if (ptype->pointerKind() == TypePointer::Shared)
+        if (ptype->pointerKind() == PointerTypeInterface::Shared)
           qiLogInfo() << "ObjectPtr will *not* track original shared pointer";
         set(storage, *source);
       }

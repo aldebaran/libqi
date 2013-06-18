@@ -17,7 +17,7 @@ namespace qi
   class FloatTypeInterface;
   class StringTypeInterface;
   class RawTypeInterface;
-  class TypePointer;
+  class PointerTypeInterface;
   class ListTypeInterface;
   class MapTypeInterface;
   class StructTypeInterface;
