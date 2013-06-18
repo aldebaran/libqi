@@ -263,8 +263,8 @@ private:
     double z, double a
     , double b
     )
-  : x(x), y(y), s(s), z(z), a(a)
-  , b(b)
+  : x(x), y(y), z(z), a(a)
+  , b(b), s(s)
   {}
   friend class ::qi::TypeImpl<Point2>;
 };
