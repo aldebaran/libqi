@@ -236,16 +236,12 @@ namespace qi
     {
       return qi::makeFutureError<void>(std::string("setProperty: ") + e.what());
     }
-    qi::Promise<void> p;
-    p.setValue(0);
-    return p.future();
+    return qi::Future<void>(0);
   }
 
   qi::Future<AnyValue> DynamicObject::metaProperty(unsigned int id)
   {
-    qi::Promise<AnyValue> p;
-    p.setValue(property(id)->value());
-    return p.future();
+    return qi::Future<AnyValue>(property(id)->value());
   }
 
   void DynamicObject::metaPost(Manageable* context, unsigned int event, const GenericFunctionParameters& params)
