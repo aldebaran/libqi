@@ -60,8 +60,8 @@ protected:
 public:
   TestSessionPair      p;
   qi::Promise<int>     prom;
-  qi::ObjectPtr        oserver;
-  qi::ObjectPtr        oclient;
+  qi::AnyObject        oserver;
+  qi::AnyObject        oclient;
 };
 
 
@@ -129,11 +129,11 @@ TEST(TestSignal, TwoLongPost)
   qi::DynamicObjectBuilder gob;
   qi::Signal<int, int> sig;
   gob.advertiseSignal("sig1", &sig);
-  qi::ObjectPtr op = gob.object();
+  qi::AnyObject op = gob.object();
 
   TestSessionPair p;
   p.server()->registerService("MyService", op);
-  qi::ObjectPtr clientOp = p.client()->service("MyService").value();
+  qi::AnyObject clientOp = p.client()->service("MyService").value();
   clientOp->connect("sig1", &cb);
 
   qi::GenericFunctionParameters params;

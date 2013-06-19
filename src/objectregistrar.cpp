@@ -118,7 +118,7 @@ namespace qi {
 
   }
 
-  qi::Future<unsigned int> ObjectRegistrar::registerService(const std::string &name, qi::ObjectPtr obj)
+  qi::Future<unsigned int> ObjectRegistrar::registerService(const std::string &name, qi::AnyObject obj)
   {
     if (Server::endpoints().empty()) {
       qiLogError() << "Could not register service: " << name << " because the current server has not endpoint";
@@ -221,10 +221,10 @@ namespace qi {
     return qi::ServiceInfo();
   }
 
-  qi::ObjectPtr ObjectRegistrar::registeredServiceObject(const std::string &service) {
+  qi::AnyObject ObjectRegistrar::registeredServiceObject(const std::string &service) {
     unsigned int serviceId = objectId(service);
     if (!serviceId)
-      return qi::ObjectPtr();
+      return qi::AnyObject();
 
     {
       boost::mutex::scoped_lock sl(_servicesMutex);
@@ -232,7 +232,7 @@ namespace qi {
       if (it != _services.end())
         return it->second.object;
     }
-    return ObjectPtr();
+    return AnyObject();
   }
 
 }

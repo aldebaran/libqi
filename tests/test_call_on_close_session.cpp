@@ -26,7 +26,7 @@ static std::string reply(const std::string &msg)
   return msg;
 }
 
-void myCall(qi::ObjectPtr myService)
+void myCall(qi::AnyObject myService)
 {
   try
   {
@@ -58,11 +58,11 @@ void test(void)
 
       qi::DynamicObjectBuilder ob;
       ob.advertiseMethod("reply", &reply);
-      qi::ObjectPtr obj(ob.object());
+      qi::AnyObject obj(ob.object());
 
       s1->registerService("service1", obj);
 
-      qi::ObjectPtr myService;
+      qi::AnyObject myService;
       myService = s2->service("service1");
 
       boost::thread myThread(boost::bind(&myCall, myService));

@@ -22,7 +22,7 @@
 const char* callType[] = {
   "?", "C", "R", "E", "S"
 };
-typedef std::map<std::string, qi::ObjectPtr> ObjectMap;
+typedef std::map<std::string, qi::AnyObject> ObjectMap;
 ObjectMap objectMap;
 
 bool numeric = false;
@@ -128,7 +128,7 @@ int main(int argc, char** argv)
   // access services
   for (unsigned i=0; i<services.size(); ++i)
   {
-    qi::ObjectPtr o;
+    qi::AnyObject o;
     try
     {
       o = s.service(services[i]);

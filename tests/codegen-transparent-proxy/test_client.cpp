@@ -2,7 +2,7 @@
 #include "task_interface.hpp"
 
 // If I was not linked with service, I would need that
-// to make ObjectPtr -> ITaskPtr conversion available
+// to make AnyObject -> ITaskPtr conversion available
 #include "task_proxy.hpp"
 
 #include "taskservice_proxy.hpp"
@@ -30,7 +30,7 @@ TEST(TransparentProxy, ClientIMpl)
 {
   TestSessionPair p;
   p.server()->registerService("builder", qi::createObject("TaskServiceService"));
-  qi::ObjectPtr o = p.client()->service("builder").value()->call<qi::ObjectPtr>("create");
+  qi::AnyObject o = p.client()->service("builder").value()->call<qi::AnyObject>("create");
   EXPECT_TRUE(o);
   TaskServiceProxyPtr pp = qi::GenericValue::from(o).to<TaskServiceProxyPtr>();
   pp->value.set(3);
@@ -46,7 +46,7 @@ TEST(TransparentProxy, ServerImpl)
 {
   TestSessionPair p;
   p.server()->registerService("builder", qi::createObject("TaskServiceService"));
-  qi::ObjectPtr o = p.client()->service("builder").value()->call<qi::ObjectPtr>("create");
+  qi::AnyObject o = p.client()->service("builder").value()->call<qi::AnyObject>("create");
   EXPECT_TRUE(o);
   TaskServiceProxyPtr pp = qi::GenericValue::from(o).to<TaskServiceProxyPtr>();
   pp->value.set(3);

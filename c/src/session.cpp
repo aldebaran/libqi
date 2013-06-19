@@ -76,7 +76,7 @@ qi_future_t* qi_session_listen(qi_session_t *session, const char *address)
 qi_future_t* qi_session_register_service(qi_session_t *session, const char *name, qi_object_t *object)
 {
   qi::Session *s = reinterpret_cast<qi::Session*>(session);
-  qi::ObjectPtr  *obj = reinterpret_cast<qi::ObjectPtr *>(object);
+  qi::AnyObject  *obj = reinterpret_cast<qi::AnyObject *>(object);
   return qi_future_wrap(s->registerService(name, *obj));
 }
 

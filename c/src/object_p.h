@@ -11,13 +11,13 @@
 
 #include <qitype/genericobject.hpp>
 
-inline qi::ObjectPtr &qi_object_cpp(qi_object_t *value) {
-  qi::ObjectPtr &o = *(reinterpret_cast<qi::ObjectPtr *>(value));
+inline qi::AnyObject &qi_object_cpp(qi_object_t *value) {
+  qi::AnyObject &o = *(reinterpret_cast<qi::AnyObject *>(value));
   return o;
 };
 
-inline qi_object_t*         qi_object_create_from(qi::ObjectPtr obj) {
-  qi::ObjectPtr *o = new qi::ObjectPtr(obj);
+inline qi_object_t*         qi_object_create_from(qi::AnyObject obj) {
+  qi::AnyObject *o = new qi::AnyObject(obj);
   return (qi_object_t *)o;
 }
 

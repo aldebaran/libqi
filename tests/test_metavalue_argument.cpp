@@ -85,9 +85,9 @@ public:
   qi::Promise<int>     prom;
   qi::ServiceDirectory sd;
   qi::Session          session;
-  qi::ObjectPtr        oserver;
+  qi::AnyObject        oserver;
   qi::Session          sclient;
-  qi::ObjectPtr        oclient;
+  qi::AnyObject        oclient;
 };
 
 
@@ -96,7 +96,7 @@ TEST_F(TestObject, meta)
   using namespace qi;
   qi::int64_t time = os::ustime();
   // Remote test
-  ObjectPtr target = oclient;
+  AnyObject target = oclient;
   std::string function = "value";
   ASSERT_TRUE(target);
   {

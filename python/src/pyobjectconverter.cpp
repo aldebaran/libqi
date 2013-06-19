@@ -98,7 +98,7 @@ struct ToPyObject
     throw std::runtime_error("Error in conversion: Unable to convert object without refcount to Python");
   }
 
-  void visitObjectPtr(qi::ObjectPtr& obj)
+  void visitAnyObject(qi::AnyObject& obj)
   {
     result = qi::py::makePyQiObject(obj);
   }
@@ -295,7 +295,7 @@ qi::AnyReference GenericValue_from_PyObject(PyObject* val)
   }
   else // if (PyInstance_Check(val))   //instance are old style python class
   {
-    res = qi::AnyReference(qi::py::makeQiObjectPtr(boost::python::object(boost::python::borrowed(val)))).clone();
+    res = qi::AnyReference(qi::py::makeQiAnyObject(boost::python::object(boost::python::borrowed(val)))).clone();
   }
   return res;
 }

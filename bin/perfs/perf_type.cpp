@@ -199,7 +199,7 @@ static void test_signal()
     /*
     qi::DynamicObjectBuilder gob;
     int mid = gob.advertiseMethod("counterInc", &counterInc);
-    qi::ObjectPtr obj = gob.object();
+    qi::AnyObject obj = gob.object();
     obj->moveToEventLoop(0);
     for (unsigned i=0; i<nsub; ++i)
       qsig.connect(obj, mid);

@@ -168,9 +168,9 @@ TEST(TestCall, CallBufferInList)
   qi::GenericValue val;
   ob.advertiseMethod("pingcopy",
     boost::function<qi::GenericValue(qi::GenericValue)>(boost::bind(&pingCopy, _1, boost::ref(val))));
-  qi::ObjectPtr obj(ob.object());
+  qi::AnyObject obj(ob.object());
   p.server()->registerService("test", obj);
-  qi::ObjectPtr proxy = p.client()->service("test");
+  qi::AnyObject proxy = p.client()->service("test");
   std::vector<qi::GenericValue> args;
   args.push_back(qi::GenericValue::from(12));
   qi::Buffer buf;
@@ -207,11 +207,11 @@ TEST(TestCall, CallComplexType)
   int serviceID;
 
   ob.advertiseMethod("print", &print);
-  qi::ObjectPtr obj(ob.object());
+  qi::AnyObject obj(ob.object());
 
   serviceID = p.server()->registerService("serviceCall", obj);
 
-  qi::ObjectPtr proxy = p.client()->service("serviceCall");
+  qi::AnyObject proxy = p.client()->service("serviceCall");
 
   robots.push_back(std::make_pair("Gibouna", 1234567));
   robots.push_back(std::make_pair("Wall-E", 2345678));
@@ -232,11 +232,11 @@ TEST(TestCall, CallVoid)
   int serviceID;
 
   ob.advertiseMethod("foobar", &foobar);
-  qi::ObjectPtr obj(ob.object());
+  qi::AnyObject obj(ob.object());
 
   serviceID = p.server()->registerService("serviceCall", obj);
 
-  qi::ObjectPtr proxy = p.client()->service("serviceCall");
+  qi::AnyObject proxy = p.client()->service("serviceCall");
 
 
   std::cout << "Calling" << std::endl;
@@ -254,11 +254,11 @@ TEST(TestCall, CallVoidErr)
   int serviceID;
 
   ob.advertiseMethod("fooerr", &fooerr);
-  qi::ObjectPtr obj(ob.object());
+  qi::AnyObject obj(ob.object());
 
   serviceID = p.server()->registerService("serviceCall", obj);
 
-  qi::ObjectPtr proxy = p.client()->service("serviceCall");
+  qi::AnyObject proxy = p.client()->service("serviceCall");
 
   std::cout << "Calling" << std::endl;
   qi::Future<void> fut = proxy->call<void>("fooerr");
@@ -275,11 +275,11 @@ TEST(TestCall, TestDoubleToFloatConvertion)
   double duration = 0.42;
 
   ob.advertiseMethod("fakeRGB", &fakeRGBf);
-  qi::ObjectPtr obj(ob.object());
+  qi::AnyObject obj(ob.object());
 
   serviceID = p.server()->registerService("serviceConv", obj);
   ASSERT_TRUE(serviceID != 0);
-  qi::ObjectPtr proxy = p.client()->service("serviceConv");
+  qi::AnyObject proxy = p.client()->service("serviceConv");
   ASSERT_TRUE(proxy != 0);
 
   std::cout << "Calling FakeRGB" << std::endl;
@@ -294,18 +294,18 @@ TEST(TestCall, TestFloatToDoubleConvertion)
   float duration = 0.42f;
 
   ob.advertiseMethod("fakeRGB", &fakeRGBd);
-  qi::ObjectPtr obj(ob.object());
+  qi::AnyObject obj(ob.object());
 
   serviceID = p.server()->registerService("serviceConv", obj);
   ASSERT_TRUE(serviceID != 0);
-  qi::ObjectPtr proxy = p.client()->service("serviceConv");
+  qi::AnyObject proxy = p.client()->service("serviceConv");
   ASSERT_TRUE(proxy != 0);
 
   std::cout << "Calling FakeRGB" << std::endl;
   qi::Future<int> fut = proxy->call<int>("fakeRGB", "Haha", 42, duration);
 }
 
-qi::ObjectPtr createObject() {
+qi::AnyObject createObject() {
   qi::DynamicObjectBuilder ob;
 
   ob.advertiseMethod("fakesvec", &fakesvec);
@@ -326,10 +326,10 @@ qi::ObjectPtr createObject() {
 TEST(TestCall, TestGenericConversion) {
   TestSessionPair p;
   int serviceID;
-  qi::ObjectPtr obj = createObject();
+  qi::AnyObject obj = createObject();
   serviceID = p.server()->registerService("serviceConv", obj);
   ASSERT_TRUE(serviceID != 0);
-  qi::ObjectPtr proxy = p.client()->service("serviceConv");
+  qi::AnyObject proxy = p.client()->service("serviceConv");
   ASSERT_TRUE(proxy != 0);
 
   std::vector<std::string>      svec;
@@ -377,10 +377,10 @@ TEST(TestCall, TestGenericConversion) {
 TEST(TestCall, TestGenericConversionComplexList) {
   TestSessionPair p;
   int serviceID;
-  qi::ObjectPtr obj = createObject();
+  qi::AnyObject obj = createObject();
   serviceID = p.server()->registerService("serviceConv", obj);
   ASSERT_TRUE(serviceID != 0);
-  qi::ObjectPtr proxy = p.client()->service("serviceConv");
+  qi::AnyObject proxy = p.client()->service("serviceConv");
   ASSERT_TRUE(proxy != 0);
 
 
@@ -430,10 +430,10 @@ TEST(TestCall, TestGenericConversionComplexList) {
 TEST(TestCall, TestGenericConversionComplexMap) {
   TestSessionPair p;
   int serviceID;
-  qi::ObjectPtr obj = createObject();
+  qi::AnyObject obj = createObject();
   serviceID = p.server()->registerService("serviceConv", obj);
   ASSERT_TRUE(serviceID != 0);
-  qi::ObjectPtr proxy = p.client()->service("serviceConv");
+  qi::AnyObject proxy = p.client()->service("serviceConv");
   ASSERT_TRUE(proxy != 0);
 
 
@@ -472,10 +472,10 @@ TEST(TestCall, TestGenericConversionComplexMap) {
 TEST(TestCall, TestGenericConversionTuple) {
   TestSessionPair p;
   int serviceID;
-  qi::ObjectPtr obj = createObject();
+  qi::AnyObject obj = createObject();
   serviceID = p.server()->registerService("serviceConv", obj);
   ASSERT_TRUE(serviceID != 0);
-  qi::ObjectPtr proxy = p.client()->service("serviceConv");
+  qi::AnyObject proxy = p.client()->service("serviceConv");
   ASSERT_TRUE(proxy != 0);
 
   qi::Future<double> f;
@@ -518,10 +518,10 @@ TEST(TestEventLoop, MonitorEventLoop)
   f.connect(boost::bind(&set_true, &loopStuck));
   qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("delay", &qi::os::msleep);
-  qi::ObjectPtr obj(ob.object());
+  qi::AnyObject obj(ob.object());
   obj->forceEventLoop(qi::getDefaultObjectEventLoop());
   p.server()->registerService("delayer", obj);
-  qi::ObjectPtr proxy = p.client()->service("delayer");
+  qi::AnyObject proxy = p.client()->service("delayer");
   ASSERT_TRUE(!loopStuck);
   proxy->call<void>("delay", 1000).wait();
   ASSERT_TRUE(loopStuck);
@@ -533,14 +533,14 @@ int service_call(qi::Session* s, const std::string& obj,
   const std::string& method, int arg)
 {
   qiLogDebug() << "TEST: servicecall";
-  qi::ObjectPtr o = s->service(obj);
+  qi::AnyObject o = s->service(obj);
   return o->call<int>(method, arg);
 }
 
 void servicecall_addone(qi::Promise<int>& prom, qi::Session* s)
 {
   qiLogDebug() << "TEST: call servicecall";
-  qi::ObjectPtr obj2Proxy = s->service("caller");
+  qi::AnyObject obj2Proxy = s->service("caller");
   qiLogDebug() << "TEST: got service";
   qi::Future<int> v = obj2Proxy->call<int>("serviceCall", "adder", "addOne", 5);
   v.wait(500);
@@ -557,9 +557,9 @@ TEST(TestCall, PairClientListen)
   TestSessionPair p;
   qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("addOne", &addOne);
-  qi::ObjectPtr obj(ob.object());
+  qi::AnyObject obj(ob.object());
   p.client()->registerService("adder", obj);
-  qi::ObjectPtr o = p.server()->service("adder");
+  qi::AnyObject o = p.server()->service("adder");
   ASSERT_TRUE(o);
 }
 
@@ -573,14 +573,14 @@ TEST(TestCall, DeadLock)
 
   qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("addOne", &addOne);
-  qi::ObjectPtr obj(ob.object());
+  qi::AnyObject obj(ob.object());
   p.server()->registerService("adder", obj);
 
   qi::DynamicObjectBuilder ob2;
   ob2.advertiseMethod("serviceCall",
     (boost::function<int(std::string, std::string, int)>)
     boost::bind(&service_call, p.client(), _1, _2, _3));
-  qi::ObjectPtr obj2(ob2.object());
+  qi::AnyObject obj2(ob2.object());
   p.client()->registerService("caller", obj2);
 
   qi::Promise<int> prom;
@@ -597,7 +597,7 @@ TEST(TestCall, DeadLock)
   ASSERT_EQ(6, prom.future().value());
 }
 
-void onEvent(int v, qi::Promise<int>& eventValue, qi::ObjectPtr* ptr)
+void onEvent(int v, qi::Promise<int>& eventValue, qi::AnyObject* ptr)
 {
   qiLogDebug() << "onEvent";
   if (v == 0)
@@ -611,20 +611,20 @@ void onEvent(int v, qi::Promise<int>& eventValue, qi::ObjectPtr* ptr)
 }
 
 
-void bindObjectEvent(qi::ObjectPtr ptr, const std::string& eventName,
+void bindObjectEvent(qi::AnyObject ptr, const std::string& eventName,
   qi::Promise<int>& eventValue)
 {
   // Keep ptr alive
   ptr->connect(eventName, boost::bind(&onEvent, _1, eventValue,
-    new qi::ObjectPtr(ptr)));
+    new qi::AnyObject(ptr)));
 }
 
-int makeObjectCall(qi::ObjectPtr ptr, const std::string& fname, int arg)
+int makeObjectCall(qi::AnyObject ptr, const std::string& fname, int arg)
 {
   return ptr->call<int>(fname, arg).value();
 }
 
-void bounceFuture(qi::Future<int> s, qi::Promise<int> d, qi::ObjectPtr obj)
+void bounceFuture(qi::Future<int> s, qi::Promise<int> d, qi::AnyObject obj)
 {
   if (s.hasValue())
     d.setValue(s.value());
@@ -632,7 +632,7 @@ void bounceFuture(qi::Future<int> s, qi::Promise<int> d, qi::ObjectPtr obj)
     d.setError(s.error());
 }
 
-void onMakeObjectCall(qi::ObjectPtr ptr, const std::string& fname, int arg,
+void onMakeObjectCall(qi::AnyObject ptr, const std::string& fname, int arg,
   qi::Promise<int>& result)
 {
   qiLogDebug() << "onMakeObjectCall";
@@ -649,11 +649,11 @@ TEST(TestCall, TestObjectPassing)
   qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("makeObjectCall", &makeObjectCall);
   ob.advertiseMethod("bindObjectEvent", boost::bind(&bindObjectEvent, _1, _2, eventValue));
-  qi::ObjectPtr obj(ob.object());
+  qi::AnyObject obj(ob.object());
   p.server()->registerService("s", obj);
-  qi::ObjectPtr proxy = p.client()->service("s");
+  qi::AnyObject proxy = p.client()->service("s");
 
-  qi::ObjectPtr unregisteredObj;
+  qi::AnyObject unregisteredObj;
   {
     qi::DynamicObjectBuilder ob;
     ob.advertiseMethod("add", &addOne);
@@ -699,14 +699,14 @@ TEST(TestCall, TestObjectPassingReverse)
 { // Test server->client object passing (through emit)
   TestSessionPair p;
   qi::DynamicObjectBuilder ob;
-  ob.advertiseSignal<qi::ObjectPtr, const std::string&, int>("makeObjectCallEvent");
+  ob.advertiseSignal<qi::AnyObject, const std::string&, int>("makeObjectCallEvent");
 
-  qi::ObjectPtr obj(ob.object());
+  qi::AnyObject obj(ob.object());
 
   p.server()->registerService("s", obj);
-  qi::ObjectPtr proxy = p.client()->service("s");
+  qi::AnyObject proxy = p.client()->service("s");
 
-  qi::ObjectPtr unregisteredObj;
+  qi::AnyObject unregisteredObj;
   {
     qi::DynamicObjectBuilder ob;
     ob.advertiseMethod("add", &addOne);
@@ -736,12 +736,12 @@ TEST(TestCall, TestObjectPassingReverse)
   ASSERT_EQ(42, value.future().value());
 }
 
-qi::ObjectPtr makeAdder(qi::ObjectWeakPtr& weak)
+qi::AnyObject makeAdder(qi::ObjectWeakPtr& weak)
 {
   qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("add", &addOne);
   ob.advertiseSignal<int>("fire");
-  qi::ObjectPtr res = ob.object();
+  qi::AnyObject res = ob.object();
   qiLogDebug() << "unregistered object is " << res.get();
   weak = res;
   return res;
@@ -752,13 +752,13 @@ TEST(TestCall, TestObjectPassingReturn)
   TestSessionPair p;
   qi::DynamicObjectBuilder ob;
   qi::ObjectWeakPtr weak;
-  ob.advertiseMethod("makeAdder", boost::function<qi::ObjectPtr()>(boost::bind(&makeAdder, boost::ref(weak))));
-  qi::ObjectPtr obj(ob.object());
+  ob.advertiseMethod("makeAdder", boost::function<qi::AnyObject()>(boost::bind(&makeAdder, boost::ref(weak))));
+  qi::AnyObject obj(ob.object());
 
   p.server()->registerService("s", obj);
-  qi::ObjectPtr proxy = p.client()->service("s");
+  qi::AnyObject proxy = p.client()->service("s");
 
-  qi::ObjectPtr adder = proxy->call<qi::ObjectPtr>("makeAdder");
+  qi::AnyObject adder = proxy->call<qi::AnyObject>("makeAdder");
   ASSERT_TRUE(weak.lock());
   // One is client side, the other server side
   if (p.client() != p.server())
@@ -802,10 +802,10 @@ TEST(TestCall, TestConcreteObjectPassingReturn)
   TestSessionPair p;
   qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("getTest", &TestClass::make);
-  qi::ObjectPtr obj(ob.object());
+  qi::AnyObject obj(ob.object());
   p.server()->registerService("getter", obj);
-  qi::ObjectPtr proxy = p.client()->service("getter");
-  qi::ObjectPtr test = proxy->call<qi::ObjectPtr>("getTest", 1);
+  qi::AnyObject proxy = p.client()->service("getter");
+  qi::AnyObject test = proxy->call<qi::AnyObject>("getTest", 1);
   ASSERT_EQ(3, test->call<int>("ping", 2));
 }
 
@@ -840,10 +840,10 @@ TEST(TestCall, Overflow)
   ob.advertiseMethod("pingUInt", &pingUInt);
 
   ob.xAdvertiseMethod("i", "pingChar_i", "(i)", AnyFunction::from(&pingChar).dropFirstArgument());
-  ObjectPtr obj = ob.object();
+  AnyObject obj = ob.object();
   p.server()->registerService("ping", obj);
 
-  ObjectPtr client = p.client()->service("ping");
+  AnyObject client = p.client()->service("ping");
   ASSERT_EQ(1, client->call<int>("pingChar", 1));
   try
   {
@@ -877,10 +877,10 @@ TEST(TestCall, ForceOverload)
   ob.advertiseMethod("pingString", &pingString);
   ob.advertiseMethod("ping", &pingInt);
   ob.advertiseMethod("ping", &pingString);
-  ObjectPtr obj = ob.object();
+  AnyObject obj = ob.object();
   p.server()->registerService("ping", obj);
 
-  ObjectPtr client = p.client()->service("ping");
+  AnyObject client = p.client()->service("ping");
   // no .value() on expectthrow: we expect a synchronous exception
   EXPECTTHROW(client->call<std::string>("pingInt", "foo"));
   ASSERT_EQ("foo", client->call<std::string>("ping", "foo").value());
@@ -912,9 +912,9 @@ TEST(TestCall, Future)
   TestSessionPair p;
   qi::DynamicObjectBuilder gob;
   gob.advertiseMethod("delaySet", &delaySet);
-  qi::ObjectPtr sobj = gob.object();
+  qi::AnyObject sobj = gob.object();
   p.server()->registerService("delayer", sobj);
-  qi::ObjectPtr obj = p.client()->service("delayer");
+  qi::AnyObject obj = p.client()->service("delayer");
   qi::Future<int> f = obj->call<int>("delaySet", 500, 41);
   ASSERT_TRUE(!f.isFinished());
   f.wait();
@@ -933,9 +933,9 @@ TEST(TestCall, BadArguments)
   TestSessionPair p;
   qi::DynamicObjectBuilder gob;
   gob.advertiseMethod("arrrg", &arrrg);
-  qi::ObjectPtr sobj = gob.object();
+  qi::AnyObject sobj = gob.object();
   p.server()->registerService("a", sobj);
-  qi::ObjectPtr obj = p.client()->service("a");
+  qi::AnyObject obj = p.client()->service("a");
   qi::Future<qi::AnyReference> f = obj->metaCall("arrrg::(i)", qi::GenericFunctionParameters());
   EXPECT_TRUE(f.hasError(1000));
 
@@ -948,9 +948,9 @@ TEST(TestCall, Statistics)
   TestSessionPair p;
   qi::DynamicObjectBuilder gob;
   int mid = gob.advertiseMethod("sleep", &qi::os::msleep);
-  qi::ObjectPtr srv = gob.object();
+  qi::AnyObject srv = gob.object();
   p.server()->registerService("sleep", srv);
-  qi::ObjectPtr obj = p.client()->service("sleep");
+  qi::AnyObject obj = p.client()->service("sleep");
   obj->call<void>("sleep", 10);
   EXPECT_TRUE(obj->stats().empty());
   obj->call<void>("enableStats", true);
@@ -993,9 +993,9 @@ TEST(TestCall, Dynamic)
 {
   TestSessionPair p;
   boost::shared_ptr<ArgPack> ap(new ArgPack);
-  qi::ObjectPtr os = qi::GenericValue::from(ap).to<qi::ObjectPtr>();
+  qi::AnyObject os = qi::GenericValue::from(ap).to<qi::AnyObject>();
   p.server()->registerService("packer", os);
-  qi::ObjectPtr o = p.client()->service("packer");
+  qi::AnyObject o = p.client()->service("packer");
   qi::details::printMetaObject(std::cerr, o->metaObject());
   EXPECT_EQ(3, o->call<int>("callMe", 1, 2, 3));
   qi::GenericValue args = o->property<qi::GenericValue>("onCall");

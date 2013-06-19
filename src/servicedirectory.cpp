@@ -54,7 +54,7 @@ namespace qi
     sdbo->updateServiceInfo(si);
   }
 
-  qi::ObjectPtr createSDP(ServiceDirectoryBoundObject* self) {
+  qi::AnyObject createSDP(ServiceDirectoryBoundObject* self) {
     static qi::ObjectTypeBuilder<ServiceDirectoryBoundObject>* ob = 0;
     if (!ob)
     {

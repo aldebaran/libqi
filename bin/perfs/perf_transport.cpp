@@ -49,7 +49,7 @@ static int pipeline = 1;
 static bool threadsafe = false;
 static int msDelay = 0;
 
-static int run_client(qi::ObjectPtr obj);
+static int run_client(qi::AnyObject obj);
 
 std::string reply(const std::string &msg)
 {
@@ -68,20 +68,20 @@ qi::Buffer replyBuf(const qi::Buffer& buf)
   return res;
 }
 
-qi::ObjectPtr make_service()
+qi::AnyObject make_service()
 {
   qi::DynamicObjectBuilder ob;
   if (threadsafe)
     ob.setThreadingModel(qi::ObjectThreadingModel_MultiThread);
   ob.advertiseMethod("reply", &reply);
   ob.advertiseMethod("replyBuf", &replyBuf);
-  qi::ObjectPtr obj(ob.object());
+  qi::AnyObject obj(ob.object());
   return obj;
 }
 
 int main_local()
 {
-  qi::ObjectPtr obj = make_service();
+  qi::AnyObject obj = make_service();
   run_client(obj);
   return 0;
 }
@@ -100,9 +100,9 @@ int main_client(std::string QI_UNUSED(src))
     return -1;
   }
   std::cout <<"Getting service... " << std::endl;
-  qi::Future<qi::ObjectPtr> futobj = session.service("serviceTest");
+  qi::Future<qi::AnyObject> futobj = session.service("serviceTest");
   futobj.wait();
-  qi::ObjectPtr obj = futobj.value();
+  qi::AnyObject obj = futobj.value();
   std::cerr <<"Done" << std::endl;
   if (!obj)
   {
@@ -113,7 +113,7 @@ int main_client(std::string QI_UNUSED(src))
 }
 
 
-int run_client(qi::ObjectPtr obj)
+int run_client(qi::AnyObject obj)
 {
   qi::DataPerf dp;
 
@@ -211,7 +211,7 @@ int main_server()
   std::cout << "Service Directory ready on " << serverUrl.str() << std::endl;
 
   qi::Session       session;
-  qi::ObjectPtr obj = make_service();
+  qi::AnyObject obj = make_service();
 
   session.connect(sd.endpoints()[0]);
 

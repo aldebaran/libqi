@@ -25,7 +25,7 @@ void call(int count, const std::string &addr)
   qiLogInfo() << "Connecting to:" << addr;
   session.connect(addr);
 
-  qi::ObjectPtr obj = session.service("serviceTest");
+  qi::AnyObject obj = session.service("serviceTest");
 
   for (int i = 0; i < count; ++i) {
     std::string result = obj->call<std::string>("reply", "plaf");
@@ -42,7 +42,7 @@ void recEvent(qi::Application *app, const std::string &addr) {
   qi::Session session;
   session.connect(addr);
 
-  qi::ObjectPtr obj = session.service("serviceTest");
+  qi::AnyObject obj = session.service("serviceTest");
 
   obj->connect("testEvent", &eventCb);
 

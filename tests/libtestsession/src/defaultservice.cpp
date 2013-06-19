@@ -17,11 +17,11 @@ std::string __test_ping()
   return "pong";
 }
 
-qi::ObjectPtr DefaultService::getDefaultService()
+qi::AnyObject DefaultService::getDefaultService()
 {
   qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("ping", &__test_ping);
-  return qi::ObjectPtr(ob.object());
+  return qi::AnyObject(ob.object());
 }
 
 bool DefaultService::generateUniqueServiceName(std::string &name)

@@ -33,8 +33,8 @@ namespace qi {
     bool setIdentity(const std::string& key, const std::string& crt);
 
     //Create a BoundObject
-    bool addObject(unsigned int idx, qi::ObjectPtr obj);
-    bool addObject(unsigned int idx, qi::BoundObjectPtr obj);
+    bool addObject(unsigned int idx, qi::AnyObject obj);
+    bool addObject(unsigned int idx, qi::BoundAnyObject obj);
     bool removeObject(unsigned int idx);
 
     std::vector<qi::Url> endpoints() const;
@@ -53,10 +53,10 @@ namespace qi {
 
   private:
     //bool: true if it's a socketobject
-    typedef std::map<unsigned int, BoundObjectPtr> BoundObjectPtrMap;
+    typedef std::map<unsigned int, BoundAnyObject> BoundAnyObjectMap;
 
     //ObjectList
-    BoundObjectPtrMap                   _boundObjects;
+    BoundAnyObjectMap                   _boundObjects;
     boost::mutex                        _boundObjectsMutex;
 
     //SocketList

@@ -57,7 +57,7 @@ public:
   }
 
 public:
-  qi::ObjectPtr obj;
+  qi::AnyObject obj;
 
 private:
   qi::Session session;
@@ -165,7 +165,7 @@ int main(int argc, char **argv) {
   ob.advertiseMethod("replyBufA", &replyBufA);
   ob.advertiseMethod("replyBufB", &replyBufB);
   ob.advertiseMethod("replyBufBA", &replyBufBA);
-  qi::ObjectPtr        obj(ob.object());
+  qi::AnyObject        obj(ob.object());
 
   session.connect(connectionAddr);
 

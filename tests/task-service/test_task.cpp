@@ -23,7 +23,7 @@ public:
   TestTask()
   {
     static bool init = false;
-    static qi::ObjectPtr tgs;
+    static qi::AnyObject tgs;
     if (!init)
     {
       std::vector<std::string> objs = qi::loadObject("task");
@@ -55,8 +55,8 @@ protected:
 
 public:
   TestSessionPair      p;
-  qi::ObjectPtr        taskGenService;
-  qi::ObjectPtr        taskGenClient;
+  qi::AnyObject        taskGenService;
+  qi::AnyObject        taskGenClient;
   TaskGeneratorProxy*  taskGenProxy; // specialized version of taskClient
 };
 
@@ -112,7 +112,7 @@ TEST_F(TestTask, Signals)
 struct Context
 {
   qi::Session*          session;
-  qi::ObjectPtr         taskGenClient;
+  qi::AnyObject         taskGenClient;
   TaskGeneratorProxy*   taskGenProxy;
   std::vector<TaskProxyPtr> tasks;
 };

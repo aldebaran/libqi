@@ -29,8 +29,8 @@ void testDelete(bool afirst, bool disconnectFirst)
   qi::Link fireId = oba.advertiseSignal<int>("fire");
   qi::Link onFireId = obb.advertiseMethod("onFire", &onFire);
   qi::Link onFireId2 = obb.advertiseMethod("onFire2", &onFire2);
-  qi::ObjectPtr *a = new qi::ObjectPtr(oba.object());
-  qi::ObjectPtr *b = new qi::ObjectPtr(obb.object());
+  qi::AnyObject *a = new qi::AnyObject(oba.object());
+  qi::AnyObject *b = new qi::AnyObject(obb.object());
   qi::Link linkId = (*a)->connect(fireId, *b, onFireId);
   (*a)->connect(fireId, *b, onFireId2);
   //std::vector<qi::SignalSubscriber> subs = (*a)->subscribers(fireId);

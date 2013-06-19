@@ -138,7 +138,7 @@ namespace qi {
     return _p->_servicesHandler.services(locality);
   }
 
-  qi::FutureSync< qi::ObjectPtr > Session::service(const std::string &service,
+  qi::FutureSync< qi::AnyObject > Session::service(const std::string &service,
                                                const std::string &protocol)
   {
     return _p->_serviceHandler.service(service, protocol);
@@ -156,7 +156,7 @@ namespace qi {
     return _p->_serverObject.setIdentity(key, crt);
   }
 
-  qi::FutureSync<unsigned int> Session::registerService(const std::string &name, qi::ObjectPtr obj)
+  qi::FutureSync<unsigned int> Session::registerService(const std::string &name, qi::AnyObject obj)
   {
     if (!obj)
       return makeFutureError<unsigned int>("registerService: Object is empty");

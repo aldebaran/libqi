@@ -40,7 +40,7 @@ static MyStruct reply2(const MyStruct &mystruct) {
 }
 
 
-qi::ObjectPtr newObject() {
+qi::AnyObject newObject() {
   qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("reply", &reply);
   ob.advertiseMethod("reply2", &reply2);
@@ -52,7 +52,7 @@ void alternateModule(qi::Session *session) {
   {
     boost::this_thread::interruption_point();
     //a--;
-    qi::ObjectPtr obj = newObject();
+    qi::AnyObject obj = newObject();
     qi::Future<unsigned int> fut = session->registerService("TestToto", obj);
     if (fut.hasError()) {
       std::cout << "Error registering service: " << fut.error() << std::endl;
@@ -84,7 +84,7 @@ TEST(QiSession, RegisterUnregisterTwoSession)
   while (a) {
     a--;
     try {
-      qi::Future<qi::ObjectPtr> fut = p.client()->service("TestToto");
+      qi::Future<qi::AnyObject> fut = p.client()->service("TestToto");
       if (fut.hasError()) {
         std::cout << "Call error:" << fut.error() << std::endl;
         continue;
@@ -113,7 +113,7 @@ TEST(QiSession, RegisterUnregisterSameSession)
     a--;
     try
     {
-      qi::Future<qi::ObjectPtr> fut = p.server()->service("TestToto");
+      qi::Future<qi::AnyObject> fut = p.server()->service("TestToto");
       if (fut.hasError()) {
         std::cout << "Call error:" << fut.error() << std::endl;
         continue;
@@ -145,7 +145,7 @@ TEST(QiSession, RegisterUnregisterTwoSessionStruct)
     a--;
     try
     {
-      qi::Future<qi::ObjectPtr> fut = p.client()->service("TestToto");
+      qi::Future<qi::AnyObject> fut = p.client()->service("TestToto");
       if (fut.hasError()) {
         std::cout << "Call error:" << fut.error() << std::endl;
         continue;
@@ -190,7 +190,7 @@ TEST(QiSession, RegisterUnregisterSameSessionStruct)
     a--;
     try
     {
-      qi::Future<qi::ObjectPtr> fut = p.server()->service("TestToto");
+      qi::Future<qi::AnyObject> fut = p.server()->service("TestToto");
       if (fut.hasError()) {
         std::cout << "Call error:" << fut.error() << std::endl;
         continue;
@@ -227,7 +227,7 @@ TEST(QiSession, ConnectToMultipleConstellation)
   TestSessionPair constellation3;
   qi::Session     traveler;
 
-  qi::ObjectPtr obj = newObject();
+  qi::AnyObject obj = newObject();
   constellation1.server()->registerService("test1", obj);
   constellation2.server()->registerService("test2", obj);
   constellation3.server()->registerService("test3", obj);
@@ -236,7 +236,7 @@ TEST(QiSession, ConnectToMultipleConstellation)
   f = traveler.connect(constellation1.serviceDirectoryEndpoints()[0].str());
   f.wait(3000);
   ASSERT_TRUE(!f.hasError());
-  qi::ObjectPtr proxy = constellation1.server()->service("test1");
+  qi::AnyObject proxy = constellation1.server()->service("test1");
   std::string res = proxy->call<std::string>("reply", "plaf");
   ASSERT_TRUE(res.compare("plaf") == 0);
   traveler.close();

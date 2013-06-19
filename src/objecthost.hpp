@@ -22,7 +22,7 @@ namespace qi
 {
   class Message;
   class BoundObject;
-  typedef boost::shared_ptr<BoundObject> BoundObjectPtr;
+  typedef boost::shared_ptr<BoundObject> BoundAnyObject;
 
   class ObjectHost
   {
@@ -30,7 +30,7 @@ namespace qi
     ObjectHost(unsigned int service);
     ~ObjectHost();
     void onMessage(const qi::Message &msg, TransportSocketPtr socket);
-    unsigned int addObject(BoundObjectPtr obj, unsigned int objId = 0);
+    unsigned int addObject(BoundAnyObject obj, unsigned int objId = 0);
     void removeObject(unsigned int);
     unsigned int service() { return _service;}
     unsigned int nextId() { return ++_nextId;}
@@ -38,7 +38,7 @@ namespace qi
   protected:
     void clear();
   private:
-    typedef std::map<unsigned int, BoundObjectPtr > ObjectMap;
+    typedef std::map<unsigned int, BoundAnyObject > ObjectMap;
     boost::recursive_mutex    _mutex;
     unsigned int    _service;
     ObjectMap       _objectMap;

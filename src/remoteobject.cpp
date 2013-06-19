@@ -47,7 +47,7 @@ namespace qi {
     , _service(service)
     , _object(1)
     , _linkMessageDispatcher(0)
-    , _self(makeDynamicObjectPtr(this, false))
+    , _self(makeDynamicAnyObject(this, false))
   {
     /* simple metaObject with only special methods. (<100)
      * Will be *replaced* by metaObject received from remote end, when
@@ -64,7 +64,7 @@ namespace qi {
     , _service(service)
     , _object(object)
     , _linkMessageDispatcher(0)
-    , _self(makeDynamicObjectPtr(this, false))
+    , _self(makeDynamicAnyObject(this, false))
   {
     setMetaObject(metaObject);
     setTransportSocket(socket);

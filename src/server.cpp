@@ -31,22 +31,22 @@ namespace qi {
     close();
   }
 
-  bool Server::addObject(unsigned int id, qi::ObjectPtr obj)
+  bool Server::addObject(unsigned int id, qi::AnyObject obj)
   {
     if (!obj)
       return false;
-    BoundObjectPtr bop = makeServiceBoundObjectPtr(id, obj, _defaultCallType);
+    BoundAnyObject bop = makeServiceBoundAnyObject(id, obj, _defaultCallType);
     return addObject(id, bop);
   }
 
-  bool Server::addObject(unsigned int id, qi::BoundObjectPtr obj)
+  bool Server::addObject(unsigned int id, qi::BoundAnyObject obj)
   {
     if (!obj)
       return false;
     //register into _boundObjects
     {
       boost::mutex::scoped_lock sl(_boundObjectsMutex);
-      BoundObjectPtrMap::iterator it;
+      BoundAnyObjectMap::iterator it;
       it = _boundObjects.find(id);
       if (it != _boundObjects.end()) {
         return false;
@@ -61,7 +61,7 @@ namespace qi {
   {
     {
       boost::mutex::scoped_lock sl(_boundObjectsMutex);
-      BoundObjectPtrMap::iterator it;
+      BoundAnyObjectMap::iterator it;
       it = _boundObjects.find(idx);
       if (it == _boundObjects.end()) {
         return false;
@@ -83,12 +83,12 @@ namespace qi {
   }
 
   void Server::onMessageReady(const qi::Message &msg, TransportSocketPtr socket) {
-    qi::BoundObjectPtr obj;
+    qi::BoundAnyObject obj;
     // qiLogDebug() << "Server Recv (" << msg.type() << "):" << msg.address();
 
     {
       boost::mutex::scoped_lock sl(_boundObjectsMutex);
-      BoundObjectPtrMap::iterator it;
+      BoundAnyObjectMap::iterator it;
 
       it = _boundObjects.find(msg.service());
       if (it == _boundObjects.end())
@@ -157,11 +157,11 @@ namespace qi {
       return;
     }
 
-    BoundObjectPtrMap::iterator it;
+    BoundAnyObjectMap::iterator it;
     {
       boost::mutex::scoped_lock sl(_boundObjectsMutex);
       for (it = _boundObjects.begin(); it != _boundObjects.end(); ++it) {
-        BoundObjectPtr o = it->second;
+        BoundAnyObject o = it->second;
         try
         {
           o->onSocketDisconnected(socket, error);

@@ -17,7 +17,7 @@ namespace qi {
     , _addLink(0)
     , _removeLink(0)
   {
-    _object = makeDynamicObjectPtr(&_remoteObject, false);
+    _object = makeDynamicAnyObject(&_remoteObject, false);
   }
 
   ServiceDirectoryClient::~ServiceDirectoryClient()

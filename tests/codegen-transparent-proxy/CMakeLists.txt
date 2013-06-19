@@ -12,7 +12,7 @@ qi_create_interface(${CMAKE_CURRENT_SOURCE_DIR}/taskservice.idl
   ${CMAKE_CURRENT_BINARY_DIR} _itaskservice
   )
 
-# Task proxy in transparent mode (to allow ObjectPtr->ITaskPtr conversion)
+# Task proxy in transparent mode (to allow AnyObject->ITaskPtr conversion)
 qi_create_proxy(${CMAKE_CURRENT_SOURCE_DIR}/task.idl
   Task
   ${CMAKE_CURRENT_BINARY_DIR}

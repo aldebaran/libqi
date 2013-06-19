@@ -32,7 +32,7 @@ namespace qi {
       , remoteObject(0)
     {}
 
-    qi::Promise<qi::ObjectPtr>    promise;
+    qi::Promise<qi::AnyObject>    promise;
     std::string                   name;
     unsigned int                  serviceId;
     RemoteObject                 *remoteObject;
@@ -46,7 +46,7 @@ namespace qi {
 
     void close();
 
-    qi::Future<qi::ObjectPtr> service(const std::string &service,
+    qi::Future<qi::AnyObject> service(const std::string &service,
                                       const std::string &protocol);
 
     void removeService(const std::string &service);
@@ -69,7 +69,7 @@ namespace qi {
     qi::Atomic<int>                _requestsIndex;
 
     //maintain a cache of remote object
-    typedef std::map<std::string, ObjectPtr> RemoteObjectMap;
+    typedef std::map<std::string, AnyObject> RemoteObjectMap;
     RemoteObjectMap                 _remoteObjects;
     boost::mutex                    _remoteObjectsMutex;
 

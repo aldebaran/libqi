@@ -33,7 +33,7 @@ namespace qi { namespace py {
 
     class PyProxyProperty {
     public:
-      PyProxyProperty(qi::ObjectPtr obj, const qi::MetaProperty &signal)
+      PyProxyProperty(qi::AnyObject obj, const qi::MetaProperty &signal)
         : _obj(obj)
         , _sigid(signal.uid()){
       }
@@ -49,7 +49,7 @@ namespace qi { namespace py {
       }
 
     private:
-      qi::ObjectPtr _obj;
+      qi::AnyObject _obj;
       unsigned int  _sigid;
     };
 
@@ -61,7 +61,7 @@ namespace qi { namespace py {
       return boost::python::extract<PyProperty*>(obj);
     }
 
-    boost::python::object makePyProxyProperty(const qi::ObjectPtr &obj, const qi::MetaProperty &prop) {
+    boost::python::object makePyProxyProperty(const qi::AnyObject &obj, const qi::MetaProperty &prop) {
       return boost::python::object(PyProxyProperty(obj, prop));
     }
 

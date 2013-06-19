@@ -74,7 +74,7 @@ namespace qi { namespace py {
 
     class PyProxySignal {
     public:
-      PyProxySignal(qi::ObjectPtr obj, const qi::MetaSignal &signal)
+      PyProxySignal(qi::AnyObject obj, const qi::MetaSignal &signal)
         : _obj(obj)
         , _sigid(signal.uid()){
       }
@@ -110,7 +110,7 @@ namespace qi { namespace py {
       }
 
     private:
-      qi::ObjectPtr _obj;
+      qi::AnyObject _obj;
       unsigned int  _sigid;
     };
 
@@ -123,7 +123,7 @@ namespace qi { namespace py {
       return boost::python::object(PySignal(signature));
     }
 
-    boost::python::object makePyProxySignal(const qi::ObjectPtr &obj, const qi::MetaSignal &signal) {
+    boost::python::object makePyProxySignal(const qi::AnyObject &obj, const qi::MetaSignal &signal) {
       return boost::python::object(PyProxySignal(obj, signal));
     }
 

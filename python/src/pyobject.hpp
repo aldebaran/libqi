@@ -15,8 +15,8 @@
 
 namespace qi {
   namespace py {
-    boost::python::object makePyQiObject(qi::ObjectPtr obj, const std::string &name = std::string());
-    qi::ObjectPtr         makeQiObjectPtr(boost::python::object obj);
+    boost::python::object makePyQiObject(qi::AnyObject obj, const std::string &name = std::string());
+    qi::AnyObject         makeQiAnyObject(boost::python::object obj);
     void export_pyobject();
   }
 }

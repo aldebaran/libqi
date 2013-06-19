@@ -12,8 +12,8 @@ TEST(Interface, Adder0)
   // In case of multiple tests, not sure if addService worked.
   p.server()->registerService("a0s", qi::createObject("Adder0Service"));
   p.server()->registerService("a1s", qi::createObject("Adder1Service"));
-  qi::ObjectPtr a0 = p.client()->service("a0s").value()->call<qi::ObjectPtr>("create");
-  qi::ObjectPtr a1 = p.client()->service("a1s").value()->call<qi::ObjectPtr>("create");
+  qi::AnyObject a0 = p.client()->service("a0s").value()->call<qi::AnyObject>("create");
+  qi::AnyObject a1 = p.client()->service("a1s").value()->call<qi::AnyObject>("create");
   ASSERT_TRUE(a0);
   ASSERT_TRUE(a1);
   a0->setProperty("value", 1);

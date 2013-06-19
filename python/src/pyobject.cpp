@@ -32,7 +32,7 @@ namespace qi { namespace py {
 
     struct PyQiFunctor {
     public:
-      PyQiFunctor(const std::string &funName, qi::ObjectPtr obj)
+      PyQiFunctor(const std::string &funName, qi::AnyObject obj)
         : _object(obj)
         , _funName(funName)
       {}
@@ -62,12 +62,12 @@ namespace qi { namespace py {
       }
 
     public:
-      qi::ObjectPtr _object;
+      qi::AnyObject _object;
       std::string   _funName;
     };
 
 
-    void populateMethods(boost::python::object pyobj, qi::ObjectPtr obj) {
+    void populateMethods(boost::python::object pyobj, qi::AnyObject obj) {
       qi::MetaObject::MethodMap           mm = obj->metaObject().methodMap();
       qi::MetaObject::MethodMap::iterator it;
       for (it = mm.begin(); it != mm.end(); ++it) {
@@ -87,7 +87,7 @@ namespace qi { namespace py {
       }
     }
 
-    void populateSignals(boost::python::object pyobj, qi::ObjectPtr obj) {
+    void populateSignals(boost::python::object pyobj, qi::AnyObject obj) {
       qi::MetaObject::SignalMap           mm = obj->metaObject().signalMap();
       qi::MetaObject::SignalMap::iterator it;
       for (it = mm.begin(); it != mm.end(); ++it) {
@@ -101,7 +101,7 @@ namespace qi { namespace py {
       }
     }
 
-    void populateProperties(boost::python::object pyobj, qi::ObjectPtr obj) {
+    void populateProperties(boost::python::object pyobj, qi::AnyObject obj) {
       qi::MetaObject::PropertyMap           mm = obj->metaObject().propertyMap();
       qi::MetaObject::PropertyMap::iterator it;
       for (it = mm.begin(); it != mm.end(); ++it) {
@@ -121,7 +121,7 @@ namespace qi { namespace py {
       PyQiObject()
       {}
 
-      PyQiObject(const qi::ObjectPtr &obj)
+      PyQiObject(const qi::AnyObject &obj)
         : _object(obj)
       {}
 
@@ -133,15 +133,15 @@ namespace qi { namespace py {
         return qi::AnyReference(_object->metaObject()).to<boost::python::object>();
       }
 
-      qi::ObjectPtr object() {
+      qi::AnyObject object() {
         return _object;
       }
 
     private:
-      qi::ObjectPtr _object;
+      qi::AnyObject _object;
     };
 
-    boost::python::object makePyQiObject(qi::ObjectPtr obj, const std::string &name) {
+    boost::python::object makePyQiObject(qi::AnyObject obj, const std::string &name) {
       boost::python::object result = boost::python::object(qi::py::PyQiObject(obj));
       qi::py::populateMethods(result, obj);
       qi::py::populateSignals(result, obj);
@@ -183,13 +183,13 @@ namespace qi { namespace py {
       (void)obj;
     }
 
-    qi::ObjectPtr makeQiObjectPtr(boost::python::object obj)
+    qi::AnyObject makeQiAnyObject(boost::python::object obj)
     {
-      //is that a qi::ObjectPtr?
+      //is that a qi::AnyObject?
       boost::python::extract<PyQiObject*> isthatyoumum(obj);
 
       if (isthatyoumum.check()) {
-        qiLogDebug() << "this PyObject is already a qi::ObjectPtr. Just returning it.";
+        qiLogDebug() << "this PyObject is already a qi::AnyObject. Just returning it.";
         return isthatyoumum()->object();
       }
 

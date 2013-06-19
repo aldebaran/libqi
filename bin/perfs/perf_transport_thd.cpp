@@ -34,7 +34,7 @@ static int gLoopCount = 10000;
 static const int gThreadCount = 1;
 static bool clientDone = false;
 
-int client_calls(qi::Session *session, qi::ObjectPtr obj)
+int client_calls(qi::Session *session, qi::AnyObject obj)
 {
   if (!obj)
   {
@@ -80,7 +80,7 @@ int main_client(bool shared)
   const unsigned int nbThreads = 4;
   qi::Session session;
   session.connect("tcp://127.0.0.1:9559");
-  qi::ObjectPtr obj;
+  qi::AnyObject obj;
   boost::thread thd[nbThreads];
 
   qiLogInfo() << "Will spawn " << nbThreads << " threads";
@@ -165,7 +165,7 @@ int main_server()
   ob.advertiseMethod("reply", &reply);
 
   qi::Session       session;
-  qi::ObjectPtr obj(ob.object());
+  qi::AnyObject obj(ob.object());
 
   session.connect("tcp://127.0.0.1:9559");
 

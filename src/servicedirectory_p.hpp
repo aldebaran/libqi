@@ -56,7 +56,7 @@ namespace qi {
 
     void                         updateServiceInfo();
 
-    BoundObjectPtr               _sdbo;
+    BoundAnyObject               _sdbo;
     Server                       _server;
   };
 

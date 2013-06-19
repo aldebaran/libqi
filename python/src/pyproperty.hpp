@@ -19,7 +19,7 @@ namespace qi {
   namespace py {
     boost::python::object makePyProperty(const std::string &signature);
     qi::PropertyBase *getProperty(boost::python::object obj);
-     boost::python::object makePyProxyProperty(const qi::ObjectPtr &obj, const qi::MetaProperty &prop);
+     boost::python::object makePyProxyProperty(const qi::AnyObject &obj, const qi::MetaProperty &prop);
     void export_pyproperty();
   }
 }

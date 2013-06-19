@@ -15,8 +15,8 @@ TEST(Interface, Adder0)
   // In case of multiple tests, not sure if addService worked.
   p.server()->registerService("a0s", createObject("Adder0Service"));
   p.server()->registerService("a1s", createObject("Adder1Service"));
-  ObjectPtr a0 = p.client()->service("a0s").value()->call<ObjectPtr>("create");
-  ObjectPtr a1 = p.client()->service("a1s").value()->call<ObjectPtr>("create");
+  AnyObject a0 = p.client()->service("a0s").value()->call<AnyObject>("create");
+  AnyObject a1 = p.client()->service("a1s").value()->call<AnyObject>("create");
   ASSERT_TRUE(a0);
   ASSERT_TRUE(a1);
   a0->setProperty("value", 1);

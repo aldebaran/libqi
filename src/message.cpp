@@ -322,7 +322,7 @@ namespace qi {
 
   namespace {
     ObjectSerializationInfo serializeObject(
-      ObjectPtr object,
+      AnyObject object,
       ObjectHost* context)
     {
       if (!context)
@@ -351,14 +351,14 @@ namespace qi {
       ptr->call<void>("terminate", static_cast<RemoteObject*>(dobj)->service()).async();
     }
 
-    ObjectPtr deserializeObject(const ObjectSerializationInfo& osi,
+    AnyObject deserializeObject(const ObjectSerializationInfo& osi,
       TransportSocketPtr context)
     {
       if (!context)
         throw std::runtime_error("Unable to deserialize object without a valid TransportSocket");
       qiLogDebug() << "Creating unregistered object " << osi.serviceId << '/' << osi.objectId << " on " << context.get();
       RemoteObject* ro = new RemoteObject(osi.serviceId, osi.objectId, osi.metaObject, context);
-      ObjectPtr o = makeDynamicObjectPtr(ro, true, &onProxyLost);
+      AnyObject o = makeDynamicAnyObject(ro, true, &onProxyLost);
       qiLogDebug() << "New object is " << o.get() << "on ro " << ro;
       assert(o);
       return o;

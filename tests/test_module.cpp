@@ -17,7 +17,7 @@ TEST(Module, Load)
 {
   session->loadService("naoqi/testmodule");
 
-  qi::ObjectPtr o = session->service("test");
+  qi::AnyObject o = session->service("test");
   ASSERT_TRUE(o);
   int res = o->call<int>("testMethod", 12);
   ASSERT_EQ(13, res);

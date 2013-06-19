@@ -85,7 +85,7 @@ TEST(QiSession, testClose)
 
   qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("reply", &reply);
-  qi::ObjectPtr obj(ob.object());
+  qi::AnyObject obj(ob.object());
 
   f = session.listen("tcp://127.0.0.1:0");
   f.wait(3000);
@@ -95,7 +95,7 @@ TEST(QiSession, testClose)
   qi::Future<unsigned int> idx = session.registerService("serviceTest", obj);
   ASSERT_FALSE(idx.hasError());
 
-  qi::ObjectPtr object = session.service("serviceTest");
+  qi::AnyObject object = session.service("serviceTest");
   EXPECT_TRUE(object);
 
 
@@ -117,11 +117,11 @@ TEST(QiSession, getSimpleService)
 
   qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("reply", &reply);
-  qi::ObjectPtr obj(ob.object());
+  qi::AnyObject obj(ob.object());
 
   pair.server()->registerService("serviceTest", obj);
 
-  qi::ObjectPtr object = pair.server()->service("serviceTest");
+  qi::AnyObject object = pair.server()->service("serviceTest");
   EXPECT_TRUE(object);
 }
 
@@ -131,12 +131,12 @@ TEST(QiSession, getSimpleServiceTwice)
 
   qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("reply", &reply);
-  qi::ObjectPtr obj(ob.object());
+  qi::AnyObject obj(ob.object());
 
   pair.server()->registerService("serviceTest", obj);
 
-  qi::Future<qi::ObjectPtr> f1 = pair.client()->service("serviceTest");
-  qi::Future<qi::ObjectPtr> f2 = pair.client()->service("serviceTest");
+  qi::Future<qi::AnyObject> f1 = pair.client()->service("serviceTest");
+  qi::Future<qi::AnyObject> f2 = pair.client()->service("serviceTest");
   f1.wait();
   f2.wait();
 
@@ -147,8 +147,8 @@ TEST(QiSession, getSimpleServiceTwiceUnexisting)
 {
   TestSessionPair pair;
 
-  qi::Future<qi::ObjectPtr> f1 = pair.server()->service("xxxLOL");
-  qi::Future<qi::ObjectPtr> f2 = pair.server()->service("xxxLOL");
+  qi::Future<qi::AnyObject> f1 = pair.server()->service("xxxLOL");
+  qi::Future<qi::AnyObject> f2 = pair.server()->service("xxxLOL");
   f1.wait();
   f2.wait();
 
@@ -161,7 +161,7 @@ TEST(QiSession, getUnregisterService)
   TestSessionPair p;
 
   EXPECT_ANY_THROW({
-    qi::ObjectPtr object = p.client()->service("windowsVista(c)");
+    qi::AnyObject object = p.client()->service("windowsVista(c)");
   });
 
   p.client()->close();
@@ -174,7 +174,7 @@ TEST(QiSession, getCloseService)
 
   qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("reply", &reply);
-  qi::ObjectPtr obj(ob.object());
+  qi::AnyObject obj(ob.object());
 
   p.server()->registerService("serviceTest", obj);
   p.server()->close();
@@ -195,7 +195,7 @@ TEST(QiSession, AlreadyRegistered)
 
   qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("reply", &reply);
-  qi::ObjectPtr obj(ob.object());
+  qi::AnyObject obj(ob.object());
 
 
   ASSERT_GT(p.server()->registerService("service", obj), static_cast<unsigned int>(0));
@@ -211,7 +211,7 @@ TEST(QiSession, Services)
 
   qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("reply", &reply);
-  qi::ObjectPtr obj(ob.object());
+  qi::AnyObject obj(ob.object());
   s1->registerService("srv1.1", obj);
   s1->registerService("srv1.2", obj);
   s2->registerService("srv2.1", obj);
@@ -255,10 +255,10 @@ TEST(QiSession, getCallInConnect)
 
   qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("reply", &reply);
-  qi::ObjectPtr obj(ob.object());
+  qi::AnyObject obj(ob.object());
 
   pair.server()->registerService("serviceTest", obj);
-  qi::ObjectPtr object = pair.server()->service("serviceTest");
+  qi::AnyObject object = pair.server()->service("serviceTest");
 
   EXPECT_TRUE(object);
   qi::Session ses;
@@ -281,7 +281,7 @@ TEST(QiSession, asyncConnect) {
   s.connect(sd.endpoints()[0]).async();
   try {
     //we dont know the success or failure of the operation.
-    qi::ObjectPtr obj = s.service("IDontWantToSegfaultHere");
+    qi::AnyObject obj = s.service("IDontWantToSegfaultHere");
   } catch(...) {
   }
 }

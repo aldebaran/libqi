@@ -23,7 +23,7 @@ namespace qi {
   //hold all information about a service
   struct BoundService {
     std::string   name;
-    qi::ObjectPtr object;
+    qi::AnyObject object;
     unsigned int  id;
     ServiceInfo   serviceInfo;
   };
@@ -39,14 +39,14 @@ namespace qi {
     virtual ~ObjectRegistrar();
 
     //register/unregister services
-    qi::Future<unsigned int>     registerService(const std::string &name, qi::ObjectPtr obj);
+    qi::Future<unsigned int>     registerService(const std::string &name, qi::AnyObject obj);
     qi::Future<void>             unregisterService(unsigned int idx);
     void                         updateServiceInfo();
 
     //list services
     std::vector<qi::ServiceInfo>  registeredServices();
     qi::ServiceInfo               registeredService(const std::string &service);
-    qi::ObjectPtr                 registeredServiceObject(const std::string &service);
+    qi::AnyObject                 registeredServiceObject(const std::string &service);
 
     using Server::close;
     using Server::listen;
@@ -55,7 +55,7 @@ namespace qi {
 
   private:
     //throw on error
-    qi::ObjectPtr  object(unsigned int serviceId);
+    qi::AnyObject  object(unsigned int serviceId);
     //0 on error
     unsigned int   objectId(const std::string &name);
 
@@ -65,7 +65,7 @@ namespace qi {
 
   private:
     typedef std::map<unsigned int, BoundService>                       BoundServiceMap;
-    typedef std::map<int, std::pair<qi::ObjectPtr, qi::ServiceInfo> > RegisterServiceMap;
+    typedef std::map<int, std::pair<qi::AnyObject, qi::ServiceInfo> > RegisterServiceMap;
     typedef std::map<std::string, unsigned int>                        ServiceNameToIndexMap;
 
   public:

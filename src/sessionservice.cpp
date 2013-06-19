@@ -158,7 +158,7 @@ namespace qi {
         sr->promise.setValue(it->second);
       } else {
 
-        ObjectPtr o = makeDynamicObjectPtr(sr->remoteObject);
+        AnyObject o = makeDynamicAnyObject(sr->remoteObject);
         //register the remote object in the cache
         _remoteObjects[sr->name] = o;
         sr->promise.setValue(o);
@@ -226,18 +226,18 @@ namespace qi {
     fut.connect(boost::bind<void>(&Session_Service::onTransportSocketResult, this, _1, requestId));
   }
 
-  qi::Future<qi::ObjectPtr> Session_Service::service(const std::string &service,
+  qi::Future<qi::AnyObject> Session_Service::service(const std::string &service,
                                                      const std::string &protocol)
   {
-    qi::Future<qi::ObjectPtr> result;
+    qi::Future<qi::AnyObject> result;
     if (protocol == "" || protocol == "local") {
       //qiLogError() << "service is not implemented for local service, it always return a remote service";
       //look for local object registered in the server
-      qi::ObjectPtr go = _server->registeredServiceObject(service);
+      qi::AnyObject go = _server->registeredServiceObject(service);
       if (go)
-        return qi::Future<qi::ObjectPtr>(go);
+        return qi::Future<qi::AnyObject>(go);
       if (protocol == "local") {
-        qi::Promise<qi::ObjectPtr> prom;
+        qi::Promise<qi::AnyObject> prom;
         prom.setError(std::string("No local object found for ") + service);
         return prom.future();
       }
@@ -248,7 +248,7 @@ namespace qi {
       boost::mutex::scoped_lock sl(_remoteObjectsMutex);
       RemoteObjectMap::iterator it = _remoteObjects.find(service);
       if (it != _remoteObjects.end()) {
-        return qi::Future<qi::ObjectPtr>(it->second);
+        return qi::Future<qi::AnyObject>(it->second);
       }
     }
 

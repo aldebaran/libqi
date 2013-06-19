@@ -64,10 +64,10 @@ TEST(QiService, RemoteObjectCacheServerClose)
     return;
   qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("reply", &reply);
-  qi::ObjectPtr obj(ob.object());
+  qi::AnyObject obj(ob.object());
 
   p.server()->registerService("serviceTest", obj);
-  qi::Future<qi::ObjectPtr> fut;
+  qi::Future<qi::AnyObject> fut;
   fut = p.client()->service("serviceTest");
   EXPECT_FALSE(fut.hasError());
 
@@ -85,10 +85,10 @@ TEST(QiService, RemoteObjectCacheUnregister)
 
   qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("reply", &reply);
-  qi::ObjectPtr obj(ob.object());
+  qi::AnyObject obj(ob.object());
 
   unsigned int idx = p.server()->registerService("serviceTest", obj);
-  qi::Future<qi::ObjectPtr> fut;
+  qi::Future<qi::AnyObject> fut;
   fut = p.client()->service("serviceTest");
   EXPECT_FALSE(fut.hasError());
 
@@ -107,10 +107,10 @@ TEST(QiService, RemoteObjectCacheABAUnregister)
 
   qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("reply", &reply);
-  qi::ObjectPtr obj(ob.object());
+  qi::AnyObject obj(ob.object());
 
   unsigned int idx = p.server()->registerService("serviceTest", obj);
-  qi::Future<qi::ObjectPtr> fut;
+  qi::Future<qi::AnyObject> fut;
   fut = p.client()->service("serviceTest");
   EXPECT_FALSE(fut.hasError());
 
@@ -144,10 +144,10 @@ TEST(QiService, RemoteObjectCacheABANewServer)
     return;
   qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("reply", &reply);
-  qi::ObjectPtr obj(ob.object());
+  qi::AnyObject obj(ob.object());
 
   unsigned int idx = p.server()->registerService("serviceTest", obj);
-  qi::Future<qi::ObjectPtr> fut;
+  qi::Future<qi::AnyObject> fut;
   fut = p.client()->service("serviceTest");
   EXPECT_FALSE(fut.hasError());
 
@@ -184,10 +184,10 @@ TEST(QiService, RemoteObjectNackTransactionWhenServerClosed)
     return;
   qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("msleep", &qi::os::msleep);
-  qi::ObjectPtr obj(ob.object());
+  qi::AnyObject obj(ob.object());
 
   p.server()->registerService("serviceTest", obj);
-  qi::Future<qi::ObjectPtr> fut;
+  qi::Future<qi::AnyObject> fut;
   fut = p.client()->service("serviceTest");
   EXPECT_FALSE(fut.hasError());
 
@@ -226,11 +226,11 @@ TEST(QiService, ClassProperty)
   ASSERT_TRUE(builder.advertiseProperty("offset", &Foo::prop) > 0);
 
   Foo f;
-  qi::ObjectPtr obj = builder.object(&f);
+  qi::AnyObject obj = builder.object(&f);
 
   p.server()->registerService("foo", obj);
 
-  qi::ObjectPtr client = p.client()->service("foo");
+  qi::AnyObject client = p.client()->service("foo");
   qi::details::printMetaObject(std::cerr, obj->metaObject());
   std::cerr <<"--" << std::endl;
   qi::details::printMetaObject(std::cerr, client->metaObject());
@@ -272,12 +272,12 @@ TEST(QiService, GenericProperty)
   qi::PropertyBase* prop;
   builder.advertiseMethod("ping",
     (boost::function<int (int)>)boost::bind(&prop_ping, boost::ref(prop), _1));
-  qi::ObjectPtr obj = builder.object();
+  qi::AnyObject obj = builder.object();
   prop = dobj->property(propId);
   prop->setValue(qi::GenericValue(qi::AnyReference(0)));
   p.server()->registerService("foo", obj);
 
-  qi::ObjectPtr client = p.client()->service("foo");
+  qi::AnyObject client = p.client()->service("foo");
 
   client->setProperty("offset", 1);
   ASSERT_EQ(1, prop->value().toInt());

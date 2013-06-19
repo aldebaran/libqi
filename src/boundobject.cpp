@@ -30,7 +30,7 @@ namespace qi {
 
 
   ServiceBoundObject::ServiceBoundObject(unsigned int serviceId, unsigned int objectId,
-                                         qi::ObjectPtr object,
+                                         qi::AnyObject object,
                                          qi::MetaCallType mct,
                                          bool bindTerminate,
                                          ObjectHost* owner)
@@ -54,7 +54,7 @@ namespace qi {
     onDestroy(this);
   }
 
-  qi::ObjectPtr ServiceBoundObject::createServiceBoundObjectType(ServiceBoundObject *self, bool bindTerminate) {
+  qi::AnyObject ServiceBoundObject::createServiceBoundObjectType(ServiceBoundObject *self, bool bindTerminate) {
     static qi::ObjectTypeBuilder<ServiceBoundObject>* ob = 0;
     if (!ob)
     {
@@ -75,7 +75,7 @@ namespace qi {
       ob->advertiseMethod("properties",       &ServiceBoundObject::properties, MetaCallType_Auto, qi::Message::BoundObjectFunction_Properties);
       //global currentSocket: we are not multithread or async capable ob->setThreadingModel(ObjectThreadingModel_MultiThread);
     }
-    ObjectPtr result = ob->object(self);
+    AnyObject result = ob->object(self);
     return result;
   }
 
@@ -142,7 +142,7 @@ namespace qi {
       }
 
       qiLogDebug() << "onMessage " << msg.address();
-      qi::ObjectPtr    obj;
+      qi::AnyObject    obj;
       unsigned int     funcId;
       //choose between special function (on BoundObject) or normal calls
       // Manageable functions are at the end of reserver range but dispatch to _object
@@ -269,7 +269,7 @@ namespace qi {
     }
   }
 
-  qi::BoundObjectPtr makeServiceBoundObjectPtr(unsigned int serviceId, qi::ObjectPtr object, qi::MetaCallType mct) {
+  qi::BoundAnyObject makeServiceBoundAnyObject(unsigned int serviceId, qi::AnyObject object, qi::MetaCallType mct) {
     boost::shared_ptr<ServiceBoundObject> ret = boost::make_shared<ServiceBoundObject>(serviceId, Message::GenericObject_Main, object, mct);
     return ret;
   }

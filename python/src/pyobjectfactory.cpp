@@ -35,7 +35,7 @@ namespace qi {
     static boost::python::object pycreate_object(boost::python::str name)
     {
       std::string objectName = boost::python::extract<std::string>(name);
-      qi::ObjectPtr object = qi::createObject(objectName);
+      qi::AnyObject object = qi::createObject(objectName);
 
       if(!object)
         throw PyCreateException(objectName);
@@ -43,17 +43,17 @@ namespace qi {
       return makePyQiObject(object, objectName);
     }
 
-    static qi::ObjectPtr pyconstruct_object(boost::python::object class_)
+    static qi::AnyObject pyconstruct_object(boost::python::object class_)
     {
-      qi::ObjectPtr obj;
-      PY_CATCH_ERROR(obj = makeQiObjectPtr(class_()));
+      qi::AnyObject obj;
+      PY_CATCH_ERROR(obj = makeQiAnyObject(class_()));
       return obj;
     }
 
     static void pyregister_object_factory(boost::python::str class_name, boost::python::object class_)
     {
       std::string name = boost::python::extract<std::string>(class_name);
-      boost::function<qi::ObjectPtr (const std::string&)> func = boost::bind(&qi::py::pyconstruct_object, class_);
+      boost::function<qi::AnyObject (const std::string&)> func = boost::bind(&qi::py::pyconstruct_object, class_);
       qi::registerObjectFactory(name, func);
     }
 

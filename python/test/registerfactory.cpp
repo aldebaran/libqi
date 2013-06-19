@@ -15,8 +15,8 @@ TEST(PythonRegister, Register)
   py::object main = py::import("__main__");
   py::object local(main.attr("__dict__"));
   py::exec_file(file_name, local, local);
-  qi::ObjectPtr object = qi::createObject("TestPython");
-  qi::ObjectPtr object2 = qi::createObject("TestPython2");
+  qi::AnyObject object = qi::createObject("TestPython");
+  qi::AnyObject object2 = qi::createObject("TestPython2");
   EXPECT_TRUE(object);
   EXPECT_TRUE(object2);
   }
@@ -29,12 +29,12 @@ TEST(PythonRegister, Register)
 
 TEST(PythonRegister, Execute)
 {
-  qi::ObjectPtr object = qi::createObject("TestPython");
+  qi::AnyObject object = qi::createObject("TestPython");
   ASSERT_TRUE(object);
   int value = object->call<int>("get");
   EXPECT_EQ(42, value);
 
-  qi::ObjectPtr object2 = qi::createObject("TestPython2");
+  qi::AnyObject object2 = qi::createObject("TestPython2");
   ASSERT_TRUE(object2);
   value = object2->call<int>("get");
   EXPECT_EQ(43, value);

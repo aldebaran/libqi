@@ -20,7 +20,7 @@ TEST(Test, TestApplicationDestruction)
   qi::ServiceDirectory     sd;
   qi::Session              server, client;
   qi::DynamicObjectBuilder ob1;
-  qi::ObjectPtr            oclient1;
+  qi::AnyObject            oclient1;
 
   {
     qi::Application app(_argc, _argv);
@@ -30,7 +30,7 @@ TEST(Test, TestApplicationDestruction)
     server.listen("tcp://0.0.0.0:0");
     client.connect(sd.endpoints()[0].str());
 
-    qi::ObjectPtr    oserver1(ob1.object());
+    qi::AnyObject    oserver1(ob1.object());
 
     server.registerService("coin1", oserver1).wait();
 

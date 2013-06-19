@@ -41,7 +41,7 @@ namespace qi {
 
     qi::FutureSync< std::vector<ServiceInfo> > services(ServiceLocality locality = ServiceLocality_All);
 
-    qi::FutureSync< qi::ObjectPtr > service(const std::string &service,
+    qi::FutureSync< qi::AnyObject > service(const std::string &service,
                                             const std::string &protocol = "");
 
     //Server
@@ -52,7 +52,7 @@ namespace qi {
     //close both client and server side
     qi::FutureSync<void>    close();
 
-    qi::FutureSync<unsigned int> registerService(const std::string &name, ObjectPtr object);
+    qi::FutureSync<unsigned int> registerService(const std::string &name, AnyObject object);
     qi::FutureSync<void>         unregisterService(unsigned int idx);
 
 

@@ -25,7 +25,7 @@
 /*!
  * \internal
  * \fn DefaultService::getDefaultService()
- * \brief Return a qi::ObjectPtr pointing to default QiMessaging service.
+ * \brief Return a qi::AnyObject pointing to default QiMessaging service.
  * \since 1.18
  * \author Pierre Roullon
  */
@@ -41,7 +41,7 @@ class  DefaultService
 {
 public:
   static bool   generateUniqueServiceName(std::string &name);
-  static qi::ObjectPtr getDefaultService();
+  static qi::AnyObject getDefaultService();
 };
 
 #endif // !_TESTS_LIBTESTSESSION_DEFAULTSERVICE_HPP_

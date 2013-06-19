@@ -76,7 +76,7 @@ protected:
     services = p2.client()->services();
     EXPECT_EQ(nbConnectedServices, services.size());
 
-    qi::Future<qi::ObjectPtr> fut;
+    qi::Future<qi::AnyObject> fut;
     fut = p2.client()->service("coin1");
     ASSERT_FALSE(fut.hasError());
     oclient1 = fut.value();
@@ -118,8 +118,8 @@ public:
   qi::Promise<int>     prom1, prom2;
   TestSessionPair      p1;
   TestSessionPair      p2;
-  qi::ObjectPtr        oserver1, oserver2;
-  qi::ObjectPtr        oclient1, oclient2;
+  qi::AnyObject        oserver1, oserver2;
+  qi::AnyObject        oclient1, oclient2;
 };
 
 

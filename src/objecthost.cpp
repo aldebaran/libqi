@@ -23,7 +23,7 @@ ObjectHost::ObjectHost(unsigned int service)
 
 void ObjectHost::onMessage(const qi::Message &msg, TransportSocketPtr socket)
 {
-  BoundObjectPtr obj;
+  BoundAnyObject obj;
   {
     boost::recursive_mutex::scoped_lock lock(_mutex);
     ObjectMap::iterator it = _objectMap.find(msg.object());
@@ -39,7 +39,7 @@ void ObjectHost::onMessage(const qi::Message &msg, TransportSocketPtr socket)
   obj->onMessage(msg, socket);
 }
 
-unsigned int ObjectHost::addObject(BoundObjectPtr obj, unsigned int id)
+unsigned int ObjectHost::addObject(BoundAnyObject obj, unsigned int id)
 {
   boost::recursive_mutex::scoped_lock lock(_mutex);
   if (!id)

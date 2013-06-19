@@ -14,7 +14,7 @@
 #include <qimessaging/session.hpp>
 #include <testsession/testsessionpair.hpp>
 
-qi::ObjectPtr          oclient1, oclient2;
+qi::AnyObject          oclient1, oclient2;
 static qi::Promise<bool> payload;
 
 void onFire1(const int& pl)
@@ -40,7 +40,7 @@ TEST(Test, Recurse)
   qi::DynamicObjectBuilder     ob1, ob2;
   ob1.advertiseMethod("onFire1", &onFire1);
   ob2.advertiseMethod("onFire2", &onFire2);
-  qi::ObjectPtr    oserver1(ob1.object()), oserver2(ob2.object());
+  qi::AnyObject    oserver1(ob1.object()), oserver2(ob2.object());
   unsigned int           nbServices = TestMode::getTestMode() == TestMode::Mode_Nightmare ? 2 : 1;
 
   // Two objects with a fire event and a onFire method.

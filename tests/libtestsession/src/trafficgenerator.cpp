@@ -84,7 +84,7 @@ void __chaosThread(void *data)
       session->connect(serviceDirectory).wait(1000);
 
     // #2.1 Get proxy on service.
-    qi::ObjectPtr proxy = session->service(service);
+    qi::AnyObject proxy = session->service(service);
 
     if (proxy.get() == 0)
     {

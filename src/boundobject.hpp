@@ -50,7 +50,7 @@ namespace qi {
   class ServiceBoundObject : public BoundObject, public ObjectHost, boost::noncopyable {
   public:
     ServiceBoundObject(unsigned int serviceId, unsigned int objectId,
-                       qi::ObjectPtr obj,
+                       qi::AnyObject obj,
                        qi::MetaCallType mct = qi::MetaCallType_Queued,
                        bool bindTerminate = false,
                        ObjectHost* owner = 0);
@@ -81,7 +81,7 @@ namespace qi {
 
     qi::Signal<ServiceBoundObject*> onDestroy;
   private:
-    qi::ObjectPtr createServiceBoundObjectType(ServiceBoundObject *self, bool bindTerminate = false);
+    qi::AnyObject createServiceBoundObjectType(ServiceBoundObject *self, bool bindTerminate = false);
 
   private:
     // remote link id -> local link id
@@ -95,8 +95,8 @@ namespace qi {
     qi::TransportSocketPtr _currentSocket;
     unsigned int           _serviceId;
     unsigned int           _objectId;
-    qi::ObjectPtr          _object;
-    qi::ObjectPtr          _self;
+    qi::AnyObject          _object;
+    qi::AnyObject          _self;
     qi::MetaCallType       _callType;
     qi::ObjectHost*        _owner;
     boost::mutex           _mutex; // prevent parallel onMessage on self execution
@@ -104,9 +104,9 @@ namespace qi {
   };
 
 
-  typedef boost::shared_ptr<BoundObject> BoundObjectPtr;
+  typedef boost::shared_ptr<BoundObject> BoundAnyObject;
 
-  qi::BoundObjectPtr makeServiceBoundObjectPtr(unsigned int serviceId, qi::ObjectPtr object, qi::MetaCallType mct = qi::MetaCallType_Auto);
+  qi::BoundAnyObject makeServiceBoundAnyObject(unsigned int serviceId, qi::AnyObject object, qi::MetaCallType mct = qi::MetaCallType_Auto);
 
 }
 

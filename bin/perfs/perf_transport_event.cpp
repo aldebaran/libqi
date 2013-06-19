@@ -68,7 +68,7 @@ public:
   }
 
 public:
-  std::map<unsigned int, qi::ObjectPtr> _services;
+  std::map<unsigned int, qi::AnyObject> _services;
   qi::TransportServer                *_ts;
   std::vector<std::string>            _endpoints;
   qi::Session                        *_session;
@@ -104,7 +104,7 @@ public:
   }
 
 
-  unsigned int registerService(const std::string &name, qi::ObjectPtr obj)
+  unsigned int registerService(const std::string &name, qi::AnyObject obj)
   {
     qi::Message     msg;
     qi::ServiceInfo si;
@@ -149,7 +149,7 @@ int main_client(std::string QI_UNUSED(str))
   qi::Session  session;
   session.connect("tcp://127.0.0.1:9559");
 
-  qi::ObjectPtr obj = session.service("serviceTest");
+  qi::AnyObject obj = session.service("serviceTest");
 
   for (int i = 0; i < 12; ++i)
   {
@@ -215,7 +215,7 @@ int main_server()
   qi::Session session;
   qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("reply", &reply);
-  qi::ObjectPtr  obj(ob.object());
+  qi::AnyObject  obj(ob.object());
   ServerEvent srv;
   session.connect("tcp://127.0.0.1:9559");
 

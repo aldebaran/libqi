@@ -103,13 +103,13 @@ TEST(TestTestSession, TestTestSessionOnly)
   ob.advertiseMethod<int (int)>("++", &incr);
 
   // #3.1 Get instance of object.
-  qi::ObjectPtr obj(ob.object());
+  qi::AnyObject obj(ob.object());
 
   // #4 Bind service on server session.
   ASSERT_TRUE(server.session()->registerService("test", obj).hasValue(4000));
 
   // #5 Get proxy on 'test' service.
-  qi::ObjectPtr proxy = client.session()->service("test");
+  qi::AnyObject proxy = client.session()->service("test");
   ASSERT_NE((void *) 0, proxy.get());
 
   // #6 Make a call and assert result is 1.
@@ -138,15 +138,15 @@ TEST(TestTestSession, TestTestSessionPair)
   ob.advertiseMethod<int (int)>("++", &incr);
 
   // #1.1 Get instance of object
-  qi::ObjectPtr obj(ob.object());
+  qi::AnyObject obj(ob.object());
 
   // #2 Bind object on server sessions.
   pSD.server()->registerService("IncrSD", obj);
   pDirect.server()->registerService("IncrDirect", obj);
 
   // #3 Get proxy on services.
-  qi::ObjectPtr proxyDirect = pDirect.client()->service("IncrDirect");
-  qi::ObjectPtr proxySD = pSD.server()->service("IncrSD");
+  qi::AnyObject proxyDirect = pDirect.client()->service("IncrDirect");
+  qi::AnyObject proxySD = pSD.server()->service("IncrSD");
 
   ASSERT_NE((void *) 0, proxyDirect.get());
   ASSERT_NE((void *) 0, proxySD.get());
@@ -169,7 +169,7 @@ TEST(TestTestSession, TestSameObject)
   ob.advertiseMethod<int (int)>("++", &incr);
 
   // #1.1 Get instance of object
-  qi::ObjectPtr obj(ob.object());
+  qi::AnyObject obj(ob.object());
 
   // #2 Bind object on server session;
   unsigned int id = p.server()->registerService("Incr", obj);
@@ -179,7 +179,7 @@ TEST(TestTestSession, TestSameObject)
   // #3.2 Assert that client and server are same object.
   ASSERT_EQ(p.client(), p.server());
 
-  qi::ObjectPtr proxy = p.client()->service("Incr");
+  qi::AnyObject proxy = p.client()->service("Incr");
   ASSERT_NE((void *) 0, proxy.get());
 
   // #4 Call ++ method from Incr service.
@@ -197,7 +197,7 @@ TEST(TestTestSession, TestThroughSD)
   ob.advertiseMethod<int (int)>("++", &incr);
 
   // #1.1 Get instance of object
-  qi::ObjectPtr obj(ob.object());
+  qi::AnyObject obj(ob.object());
 
   // #2.1 Get server session from TestSession.
   ASSERT_NE((qi::Session *) 0, p.server());
@@ -213,7 +213,7 @@ TEST(TestTestSession, TestThroughSD)
   ASSERT_NE(p.server(), p.client());
 
   // #3.3 Get proxy on Incr service
-  qi::ObjectPtr proxy = p.client()->service("Incr");
+  qi::AnyObject proxy = p.client()->service("Incr");
   ASSERT_NE((void *) 0, proxy.get());
 
   // #4 Call ++ method from Incr service.

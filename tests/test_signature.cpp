@@ -29,14 +29,14 @@ int main(int argc, char* argv[])
 
   qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("reply", &reply);
-  qi::ObjectPtr obj(ob.object());
+  qi::AnyObject obj(ob.object());
 
 
   p.server()->registerService("serviceTest", obj);
 
   while(1)
   {
-    qi::ObjectPtr obj = p.server()->service("serviceTest");
+    qi::AnyObject obj = p.server()->service("serviceTest");
     finalSig = MyGenerator.signature(); //generate a signature
     std::cout << "Test with Generated signature:" << finalSig << std::endl;
 

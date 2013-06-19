@@ -26,7 +26,7 @@ static std::string reply(const std::string &msg)
   return msg;
 }
 
-qi::ObjectPtr genObject() {
+qi::AnyObject genObject() {
   qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("reply1", &reply);
   ob.advertiseMethod("reply2", &reply);

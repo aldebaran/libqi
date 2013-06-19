@@ -85,19 +85,19 @@ void qiFutureCAdapter(qi::Future<qi::AnyReference> result, qi::Promise<qi::Gener
 
 qi_object_t *qi_object_create()
 {
-  qi::ObjectPtr *obj = new qi::ObjectPtr();
+  qi::AnyObject *obj = new qi::AnyObject();
   return (qi_object_t *) obj;
 }
 
 void        qi_object_destroy(qi_object_t *object)
 {
-  qi::ObjectPtr *obj = &qi_object_cpp(object);
+  qi::AnyObject *obj = &qi_object_cpp(object);
   delete obj;
 }
 
 qi_future_t *qi_object_call(qi_object_t *object, const char *signature_c, qi_value_t *params)
 {
-  qi::ObjectPtr             &obj = qi_object_cpp(object);
+  qi::AnyObject             &obj = qi_object_cpp(object);
   qi::GenericValue           gv  = qi_value_cpp(params);
 
   qi::Future<qi::AnyReference> res = obj->metaCall(signature_c, gv.asTupleValuePtr());
@@ -122,7 +122,7 @@ void        qi_object_builder_destroy(qi_object_builder_t *object_builder)
 
 qi_value_t*          qi_object_get_metaobject(qi_object_t *object)
 {
-  qi::ObjectPtr &obj = *(reinterpret_cast<qi::ObjectPtr *>(object));
+  qi::AnyObject &obj = *(reinterpret_cast<qi::AnyObject *>(object));
   const qi::MetaObject &mo = obj->metaObject();
   qi_value_t *ret = qi_value_create("");
 
@@ -131,7 +131,7 @@ qi_value_t*          qi_object_get_metaobject(qi_object_t *object)
 }
 
 int                 qi_object_event_emit(qi_object_t* object, const char *signature, qi_value_t* params) {
-  qi::ObjectPtr       &obj = qi_object_cpp(object);
+  qi::AnyObject       &obj = qi_object_cpp(object);
   qi::AnyReference &val = qi_value_cpp(params);
   if (qi_value_get_kind(params) != QI_VALUE_KIND_TUPLE)
     return -1;
@@ -142,14 +142,14 @@ int                 qi_object_event_emit(qi_object_t* object, const char *signat
 
 
 qi_future_t*        qi_object_event_connect(qi_object_t* object, const char *signature, qi_object_signal_callback_t f, void* user_data) {
-  qi::ObjectPtr &obj = qi_object_cpp(object);
+  qi::AnyObject &obj = qi_object_cpp(object);
   std::vector<std::string> vs = qi::signatureSplit(std::string(signature));
   qi::DynamicFunction fn = boost::bind<qi::AnyReference>(&c_signal_callback, _1, vs[2], f, user_data);
   return qi_future_wrap(obj->connect(signature, qi::AnyFunction::fromDynamicFunction(fn)));
 }
 
 qi_future_t*        qi_object_event_disconnect(qi_object_t* object, unsigned long long id) {
-  qi::ObjectPtr &obj = qi_object_cpp(object);
+  qi::AnyObject &obj = qi_object_cpp(object);
   return qi_future_wrap(obj->disconnect(id));
 }
 
@@ -185,7 +185,7 @@ int          qi_object_builder_register_property(qi_object_builder_t *object_bui
 qi_object_t*         qi_object_builder_get_object(qi_object_builder_t *object_builder) {
   qi::DynamicObjectBuilder *ob = reinterpret_cast<qi::DynamicObjectBuilder *>(object_builder);
   qi_object_t *obj = qi_object_create();
-  qi::ObjectPtr &o = *(reinterpret_cast<qi::ObjectPtr *>(obj));
+  qi::AnyObject &o = *(reinterpret_cast<qi::AnyObject *>(obj));
 
   o = ob->object();
   return obj;

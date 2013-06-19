@@ -63,7 +63,7 @@ namespace qi {
     qi::TransportSocketPtr _sdSocket;
     unsigned int           _sdSocketDisconnectedLink;
     qi::RemoteObject       _remoteObject;
-    qi::ObjectPtr          _object;
+    qi::AnyObject          _object;
     qi::Link               _addLink;
     qi::Link               _removeLink;
   };

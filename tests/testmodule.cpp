@@ -16,14 +16,14 @@ int testMethod(const int& v)
   return v+1;
 }
 
-qi::ObjectPtr make_other_object()
+qi::AnyObject make_other_object()
 {
   qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("testMethod", testMethod);
   return ob.object();
 }
 
-qi::ObjectPtr setup(const std::string&)
+qi::AnyObject setup(const std::string&)
 {
   qiLogDebug() << "setup";
   qi::DynamicObjectBuilder ob;

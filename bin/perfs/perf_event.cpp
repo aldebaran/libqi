@@ -61,7 +61,7 @@ void connect_event(int iteration)//test event connection perf.
   qi::DynamicObjectBuilder myObjectPointerBuilder;
   qi::Link eventId = myObjectPointerBuilder.advertiseSignal<int>("testEvent");
   qi::Link callbackID = myObjectPointerBuilder.advertiseMethod("callback", &callback);
-  qi::ObjectPtr myObjectPointer = myObjectPointerBuilder.object();
+  qi::AnyObject myObjectPointer = myObjectPointerBuilder.object();
   qi::Link myLinkId;
 
   for (int i = 1; i < iteration; i++)
@@ -76,7 +76,7 @@ void emit_event_without_session(int iteration)//test emit-event perf without ses
   qi::ObjectTypeBuilder<Service> obt;
   obt.advertiseSignal("ping", &Service::ping);
 
-  qi::ObjectPtr myObjectPointer = qi::ObjectPtr(new qi::GenericObject(obt.type(), new Service));
+  qi::AnyObject myObjectPointer = qi::AnyObject(new qi::GenericObject(obt.type(), new Service));
 
   for (int i = 1; i < iteration; i++)
   {
@@ -101,7 +101,7 @@ void emit_event(int iteration, const T &param)//test int emit-event perf.
 
   qi::DynamicObjectBuilder myObjectPointerBuilder;
   myObjectPointerBuilder.advertiseSignal<T>("testEvent");
-  qi::ObjectPtr myObjectPointer = myObjectPointerBuilder.object();
+  qi::AnyObject myObjectPointer = myObjectPointerBuilder.object();
 
   if(!p.server()->registerService("service", myObjectPointer).wait())
   {
@@ -120,7 +120,7 @@ void emit_event(int iteration)//test emit empty events.
 
   qi::ObjectTypeBuilder<Service> obt;
   obt.advertiseSignal("ping", &Service::ping);
-  qi::ObjectPtr myObjectPointer = qi::ObjectPtr(new qi::GenericObject(obt.type(), new Service));
+  qi::AnyObject myObjectPointer = qi::AnyObject(new qi::GenericObject(obt.type(), new Service));
 
   if(!p.server()->registerService("service", myObjectPointer).wait())
   {
@@ -138,7 +138,7 @@ void test_callback()  //test callbacks performances without session
   qi::ObjectTypeBuilder<Service> obt; //advertising Event
   obt.advertiseSignal("ping", &Service::ping);
 
-  qi::ObjectPtr myObjectPointer = qi::ObjectPtr(new qi::GenericObject(obt.type(), new Service));
+  qi::AnyObject myObjectPointer = qi::AnyObject(new qi::GenericObject(obt.type(), new Service));
 
   myObjectPointer->connect("ping", &cb); //connecting event to callback
   for (int i=0; i < iteration; i++) //Emitting Events
@@ -155,11 +155,11 @@ void test_callback_session(qi::DataPerfSuite &out ,std::string testname) //testi
 {
   TestSessionPair  p;
   qi::DataPerf dp;
-  qi::ObjectPtr oclient;
+  qi::AnyObject oclient;
 
   qi::ObjectTypeBuilder<Service> obt;  //building service2
   obt.advertiseSignal("ping", &Service::ping);
-  qi::ObjectPtr oserver = qi::ObjectPtr(new qi::GenericObject(obt.type(), new Service));
+  qi::AnyObject oserver = qi::AnyObject(new qi::GenericObject(obt.type(), new Service));
   if(!p.server()->registerService("service", oserver).wait())
   {
     throw std::runtime_error("Impossible to register Service");

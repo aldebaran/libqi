@@ -65,7 +65,7 @@ namespace qi {
     boost::mutex    _mutex;
     qi::SignalBase::Link                            _linkMessageDispatcher;
     qi::SignalBase::Link                            _linkDisconnected;
-    qi::ObjectPtr                                   _self;
+    qi::AnyObject                                   _self;
   };
 
 }
