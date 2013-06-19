@@ -122,8 +122,8 @@ namespace qi
       bool needConvert = (srcElemType->info() != dstElemType->info());
       result = AnyReference((TypeInterface*)targetListType);
 
-      GenericIterator iend = end();
-      for (GenericIterator it = begin(); it!= iend; ++it)
+      AnyIterator iend = end();
+      for (AnyIterator it = begin(); it!= iend; ++it)
       {
         AnyReference val = *it;
         if (!needConvert)
@@ -326,8 +326,8 @@ namespace qi
       // or [m] -> (anything) if effective types match
       ListTypeInterface* tsrc = static_cast<ListTypeInterface*>(type);
 
-      GenericIterator srcBegin = tsrc->begin(value);
-      GenericIterator srcEnd = tsrc->end(value);
+      AnyIterator srcBegin = tsrc->begin(value);
+      AnyIterator srcEnd = tsrc->end(value);
 
       std::vector<TypeInterface*> dstTypes = tdst->memberTypes();
       std::vector<void*> targetData;
@@ -397,8 +397,8 @@ namespace qi
       bool sameKey = srcKeyType->info() == targetKeyType->info();
       bool sameElem = srcElementType->info() == targetElementType->info();
 
-      GenericIterator iend = end();
-      for (GenericIterator it = begin(); it != iend; ++it)
+      AnyIterator iend = end();
+      for (AnyIterator it = begin(); it != iend; ++it)
       {
         std::pair<AnyReference, bool> ck, cv;
         AnyReference kv = *it;
@@ -429,8 +429,8 @@ namespace qi
       result = AnyReference(static_cast<TypeInterface*>(targetType));
       ListTypeInterface* tsrc = static_cast<ListTypeInterface*>(type);
 
-      GenericIterator srcBegin = tsrc->begin(value);
-      GenericIterator srcEnd = tsrc->end(value);
+      AnyIterator srcBegin = tsrc->begin(value);
+      AnyIterator srcEnd = tsrc->end(value);
 
       TypeInterface *pairType = (*result.end()).type;
 
@@ -660,10 +660,10 @@ namespace qi
       size_t lb = b.size();
       if (la != lb)
         return la < lb;
-      GenericIterator ita   = a.begin();
-      GenericIterator enda = a.end();
-      GenericIterator itb   = b.begin();
-      GenericIterator endb = b.end();
+      AnyIterator ita   = a.begin();
+      AnyIterator enda = a.end();
+      AnyIterator itb   = b.begin();
+      AnyIterator endb = b.end();
       while (ita != enda)
       {
         assert (! (itb == endb));
@@ -711,7 +711,7 @@ namespace qi
     return (const AnyReference&)a == (const AnyReference&)b;
   }
 
-  bool operator==(const GenericIterator& a, const GenericIterator& b)
+  bool operator==(const AnyIterator& a, const AnyIterator& b)
   {
     return (const AnyReference&)a == (const AnyReference&)b;
   }
@@ -732,8 +732,8 @@ namespace qi
     if (!homogeneous && !td)
       throw std::runtime_error("Element type is not dynamic");
     std::vector<AnyReference> elems;
-    GenericIterator it = begin();
-    GenericIterator iend = end();
+    AnyIterator it = begin();
+    AnyIterator iend = end();
     while (it != iend)
     {
       AnyReference e = *it;

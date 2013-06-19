@@ -311,8 +311,8 @@ namespace qi {
     else if (kind() == TypeInterface::List || kind() == TypeInterface::Map)
     {
       std::vector<AnyReference> result;
-      GenericIterator iend = end();
-      GenericIterator it = begin();
+      AnyIterator iend = end();
+      AnyIterator it = begin();
       for(; it != iend; ++it)
         result.push_back(*it);
       return result;
@@ -333,8 +333,8 @@ namespace qi {
     if (kind() != TypeInterface::Map)
       throw std::runtime_error("Expected a map");
     std::map<AnyReference, AnyReference> result;
-    GenericIterator iend = end();
-    GenericIterator it = begin();
+    AnyIterator iend = end();
+    AnyIterator it = begin();
     for(; it != iend; ++it)
     {
       AnyReference elem = *it;
@@ -566,7 +566,7 @@ namespace qi {
       throw std::runtime_error("Expected pointer or iterator");
   }
 
-  inline AnyReference GenericIterator::operator*()
+  inline AnyReference AnyIterator::operator*()
   {
     if (kind() == TypeInterface::Iterator)
       return static_cast<IteratorTypeInterface*>(type)->dereference(value);
@@ -575,25 +575,25 @@ namespace qi {
   }
 
   template<typename T>
-  GenericIterator::GenericIterator(const T& ref)
+  AnyIterator::AnyIterator(const T& ref)
   : GenericValue(AnyReference(ref))
   {
 
   }
-  inline GenericIterator::GenericIterator()
+  inline AnyIterator::AnyIterator()
   {
   }
 
-  inline GenericIterator::GenericIterator(const AnyReference& p)
+  inline AnyIterator::AnyIterator(const AnyReference& p)
     : GenericValue(p)
   {}
 
-  inline GenericIterator::GenericIterator(const GenericValue& v)
+  inline AnyIterator::AnyIterator(const GenericValue& v)
     : GenericValue(v)
   {}
 
-  inline GenericIterator
-  GenericIterator::operator++()
+  inline AnyIterator
+  AnyIterator::operator++()
   {
     if (kind() != TypeInterface::Iterator)
       throw std::runtime_error("Expected an iterator");
@@ -601,7 +601,7 @@ namespace qi {
     return *this;
   }
 
-  inline GenericIterator
+  inline AnyIterator
   AnyReference::begin() const
   {
     if (kind() == TypeInterface::List)
@@ -612,7 +612,7 @@ namespace qi {
       throw std::runtime_error("Expected list or map");
   }
 
-  inline GenericIterator
+  inline AnyIterator
   AnyReference::end() const
   {
     if (kind() == TypeInterface::List)
@@ -631,7 +631,7 @@ namespace qi {
   {
     return !(a==b);
   }
-  inline bool operator != (const GenericIterator& a, const GenericIterator& b)
+  inline bool operator != (const AnyIterator& a, const AnyIterator& b)
   {
     return !(a==b);
   }

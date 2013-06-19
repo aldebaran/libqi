@@ -21,8 +21,8 @@ public:
   virtual TypeInterface* elementType() const;
   virtual TypeInterface* keyType() const;
   virtual size_t size(void* storage);
-  virtual GenericIterator begin(void* storage);
-  virtual GenericIterator end(void* storage);
+  virtual AnyIterator begin(void* storage);
+  virtual AnyIterator end(void* storage);
   virtual void insert(void** storage, void* keyStorage, void* valueStorage);
   virtual AnyReference element(void** storage, void* keyStorage, bool autoInsert);
   _QI_BOUNCE_TYPE_METHODS(MethodsImpl);
@@ -59,14 +59,14 @@ MapTypeInterfaceImpl<M>::size(void* storage)
 }
 
 
-template<typename M> GenericIterator
+template<typename M> AnyIterator
 MapTypeInterfaceImpl<M>::begin(void* storage)
 {
   M* ptr = (M*)ptrFromStorage(&storage);
   return TypeSimpleIteratorImpl<typename M::iterator>::make(ptr->begin());
 }
 
-template<typename M> GenericIterator
+template<typename M> AnyIterator
 MapTypeInterfaceImpl<M>::end(void* storage)
 {
   M* ptr = (M*)ptrFromStorage(&storage);

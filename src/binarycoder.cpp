@@ -432,7 +432,7 @@ namespace qi {
         out.writeString(data, len);
       }
 
-      void visitList(GenericIterator it, GenericIterator end)
+      void visitList(AnyIterator it, AnyIterator end)
       {
         out.beginList(value.size(), static_cast<ListTypeInterface*>(value.type)->elementType()->signature());
         for (; it != end; ++it)
@@ -440,7 +440,7 @@ namespace qi {
         out.endList();
       }
 
-      void visitMap(GenericIterator it, GenericIterator end)
+      void visitMap(AnyIterator it, AnyIterator end)
       {
         MapTypeInterface* type = static_cast<MapTypeInterface*>(value.type);
         out.beginMap(value.size(), type->keyType()->signature(), type->elementType()->signature());
@@ -593,7 +593,7 @@ namespace qi {
         result.setString(s);
       }
 
-      void visitList(GenericIterator, GenericIterator)
+      void visitList(AnyIterator, AnyIterator)
       {
         TypeInterface* elementType = static_cast<ListTypeInterface*>(result.type)->elementType();
         qi::uint32_t sz = 0;
@@ -608,7 +608,7 @@ namespace qi {
         }
       }
 
-      void visitMap(GenericIterator, GenericIterator)
+      void visitMap(AnyIterator, AnyIterator)
       {
         TypeInterface* keyType = static_cast<MapTypeInterface*>(result.type)->keyType();
         TypeInterface* elementType = static_cast<MapTypeInterface*>(result.type)->elementType();

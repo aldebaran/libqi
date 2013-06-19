@@ -188,7 +188,7 @@ namespace qi {
       result = qi::Signature::fromType(Signature::Type_String);
     }
 
-    void visitList(GenericIterator it, GenericIterator iend)
+    void visitList(AnyIterator it, AnyIterator iend)
     {
       qi::Signature esig = static_cast<ListTypeInterface*>(_value.type)->elementType()->signature();
       if (!_resolveDynamic) {
@@ -225,7 +225,7 @@ namespace qi {
       result = qi::makeListSignature(sigFirst.isValid()?sigFirst:esig);
     }
 
-    void visitMap(GenericIterator it, GenericIterator iend)
+    void visitMap(AnyIterator it, AnyIterator iend)
     {
       MapTypeInterface* type =  static_cast<MapTypeInterface*>(_value.type);
       if (!_resolveDynamic) {
@@ -378,10 +378,10 @@ namespace qi {
         v.result = qi::Signature::fromType(Signature::Type_String);
         break;
       case TypeInterface::List:
-        v.visitList(GenericIterator(), GenericIterator());
+        v.visitList(AnyIterator(), AnyIterator());
         break;
       case TypeInterface::Map:
-        v.visitMap(GenericIterator(), GenericIterator());
+        v.visitMap(AnyIterator(), AnyIterator());
         break;
       case TypeInterface::Object:
         v.result = qi::Signature::fromType(Signature::Type_Object);
@@ -627,23 +627,23 @@ namespace qi {
     {
       return _elementType;
     }
-    GenericIterator begin(void* storage)
+    AnyIterator begin(void* storage)
     {
       std::vector<void*>& ptr = *(std::vector<void*>*)ptrFromStorage(&storage);
       std::vector<void*>::iterator it = ptr.begin();
       AnyReference v = AnyReference(it);
       // Hugly type swap, works because we know backend storage matches
       v.type = makeListIteratorType(_elementType);
-      return GenericIterator(v);
+      return AnyIterator(v);
     }
-    GenericIterator end(void* storage)
+    AnyIterator end(void* storage)
     {
       std::vector<void*>& ptr = *(std::vector<void*>*)ptrFromStorage(&storage);
       std::vector<void*>::iterator it = ptr.end();
       AnyReference v = AnyReference(it);
       // Hugly type swap, works because we know backend storage matches
       v.type = makeListIteratorType(_elementType);
-      return GenericIterator(v);
+      return AnyIterator(v);
     }
     void* clone(void* storage)
     {
@@ -952,21 +952,21 @@ namespace qi {
     {
       return _keyType;
     }
-    GenericIterator begin(void* storage)
+    AnyIterator begin(void* storage)
     {
       DefaultMapStorage& ptr = *(DefaultMapStorage*)ptrFromStorage(&storage);
       DefaultMapStorage::iterator it = ptr.begin();
       AnyReference val = AnyReference(it);
       val.type = makeMapIteratorType(_pairType);
-      return GenericIterator(val);
+      return AnyIterator(val);
     }
-    GenericIterator end(void* storage)
+    AnyIterator end(void* storage)
     {
       DefaultMapStorage& ptr = *(DefaultMapStorage*)ptrFromStorage(&storage);
       DefaultMapStorage::iterator it = ptr.end();
       AnyReference val = AnyReference(it);
       val.type = makeMapIteratorType(_pairType);
-      return GenericIterator(val);
+      return AnyIterator(val);
 
     }
 
@@ -1163,8 +1163,8 @@ namespace qi {
   {
     // Default implementation using iteration
     AnyReference self(this, storage);
-    GenericIterator it = self.begin();
-    GenericIterator iend = self.end();
+    AnyIterator it = self.begin();
+    AnyIterator iend = self.end();
     int p = 0;
     while (p!= index && it!= iend)
     {

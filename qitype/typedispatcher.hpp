@@ -26,8 +26,8 @@ namespace qi {
   //   void visitInt(qi::int64_t value, bool isSigned, int byteSize);
   //   void visitFloat(double value, int byteSize);
   //   void visitString(char* data, size_t size);
-  //   void visitList(qi::GenericIterator begin, qi::GenericIterator end);
-  //   void visitMap(qi::GenericIterator begin, qi::GenericIterator end);
+  //   void visitList(qi::AnyIterator begin, qi::AnyIterator end);
+  //   void visitMap(qi::AnyIterator begin, qi::AnyIterator end);
   //   void visitObject(qi::GenericObject value);
   //   void visitPointer(qi::AnyReference pointee);
   //   void visitTuple(const std::string &className, const std::vector<qi::AnyReference>& tuple, const std::vector<std::string>& elementNames);

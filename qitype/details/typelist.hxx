@@ -20,8 +20,8 @@ public:
   ListTypeInterfaceImpl();
   virtual size_t size(void* storage);
   virtual TypeInterface* elementType() const;
-  virtual GenericIterator begin(void* storage);
-  virtual GenericIterator end(void* storage);
+  virtual AnyIterator begin(void* storage);
+  virtual AnyIterator end(void* storage);
   virtual void pushBack(void** storage, void* valueStorage);
   _QI_BOUNCE_TYPE_METHODS(MethodsImpl);
 };
@@ -49,7 +49,7 @@ public:
   }
   typedef DefaultTypeImplMethods<Storage> TypeImpl;
   _QI_BOUNCE_TYPE_METHODS(TypeImpl);
-  static GenericIterator make(const T& val)
+  static AnyIterator make(const T& val)
   {
     static TypeSimpleIteratorImpl<T>* type = new TypeSimpleIteratorImpl<T>();
     return GenericValue(AnyReference(type, type->initializeStorage(const_cast<void*>((const void*)&val))));
@@ -69,14 +69,14 @@ ListTypeInterfaceImpl<T>::elementType() const
   return result;
 }
 
-template<typename T> GenericIterator
+template<typename T> AnyIterator
 ListTypeInterfaceImpl<T>::begin(void* storage)
 {
   T* ptr = (T*)ptrFromStorage(&storage);
   return TypeSimpleIteratorImpl<typename T::iterator>::make(ptr->begin());
 }
 
-template<typename T> GenericIterator
+template<typename T> AnyIterator
 ListTypeInterfaceImpl<T>::end(void* storage)
 {
   T* ptr = (T*)ptrFromStorage(&storage);

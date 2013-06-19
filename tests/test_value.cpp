@@ -321,8 +321,8 @@ TEST(Value, DefaultMap)
   ASSERT_EQ(13, val.element<int>("bar"));
   val.element<int>("foo") = 10;
   ASSERT_EQ(10, val.find("foo").toInt());
-  GenericIterator b = val.begin();
-  GenericIterator end = val.end();
+  AnyIterator b = val.begin();
+  AnyIterator end = val.end();
   qi::int64_t sum = 0;
   while (b != end)
   {
@@ -359,7 +359,7 @@ TEST(Value, STL)
       boost::lambda::bind(&AnyReference::toInt, boost::lambda::_1)));
   ASSERT_EQ(3u, w.size());
   ASSERT_EQ(v, w);
-  GenericIterator mine = std::min_element(gv.begin(), gv.end());
+  AnyIterator mine = std::min_element(gv.begin(), gv.end());
   ASSERT_EQ(1, (*mine).toInt());
   mine = std::find_if(gv.begin(), gv.end(),
     boost::lambda::bind(&AnyReference::toInt, boost::lambda::_1) == 3);

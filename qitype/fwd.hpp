@@ -27,7 +27,7 @@ namespace qi
   class AnyReference;
   class AnyReference;
   class GenericValue;
-  class GenericIterator;
+  class AnyIterator;
   class GenericListPtr;
   class GenericMapPtr;
   class GenericValue;

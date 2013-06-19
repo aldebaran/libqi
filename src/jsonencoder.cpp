@@ -146,7 +146,7 @@ namespace qi {
       out << "\"" << add_esc_chars(std::string(data, size)) << "\"";
     }
 
-    void visitList(GenericIterator begin, GenericIterator end)
+    void visitList(AnyIterator begin, AnyIterator end)
     {
       out << "[ ";
       bool clear = begin != end;
@@ -161,7 +161,7 @@ namespace qi {
       out << " ]";
     }
 
-    void visitMap(GenericIterator begin, GenericIterator end)
+    void visitMap(AnyIterator begin, AnyIterator end)
     {
       out << "{ ";
       bool clear = begin != end;

@@ -400,9 +400,9 @@ namespace qi{
     template<typename K> AnyReference find(const K& key);
 
     /// Return an iterator on the beginning of the container
-    GenericIterator begin() const; //we lie on const but GV does not honor it yet
+    AnyIterator begin() const; //we lie on const but GV does not honor it yet
     /// Return an iterator on the end of the container
-    GenericIterator end() const;
+    AnyIterator end() const;
     /// Dereference pointer or iterator
     AnyReference operator*();
     ///@}
@@ -465,7 +465,7 @@ namespace qi{
 
   /** GenericValue with Iterator kind, behaving as a STL-compatible iterator
   */
-  class GenericIterator: public GenericValue
+  class AnyIterator: public GenericValue
   {
   public:
     typedef AnyReference value_type;
@@ -473,18 +473,18 @@ namespace qi{
     typedef AnyReference& reference;
     typedef ptrdiff_t difference_type;
     typedef std::forward_iterator_tag iterator_category;
-    GenericIterator();
-    GenericIterator(const AnyReference& p);
-    GenericIterator(const GenericValue& v);
-    template<typename T> GenericIterator(const T& ref);
+    AnyIterator();
+    AnyIterator(const AnyReference& p);
+    AnyIterator(const GenericValue& v);
+    template<typename T> AnyIterator(const T& ref);
     /// Iterator increment
-    GenericIterator operator ++();
+    AnyIterator operator ++();
     /// Dereference
     AnyReference operator*();
   };
 
-  QITYPE_API bool operator==(const GenericIterator& a, const GenericIterator & b);
-  QITYPE_API bool operator !=(const GenericIterator & a, const GenericIterator& b);
+  QITYPE_API bool operator==(const AnyIterator& a, const AnyIterator & b);
+  QITYPE_API bool operator !=(const AnyIterator & a, const AnyIterator& b);
 
 
   /// Less than operator. Will compare the values within the GenericValue.
@@ -613,8 +613,8 @@ namespace qi{
   public:
     virtual TypeInterface* elementType() const = 0;
     virtual size_t size(void* storage) = 0;
-    virtual GenericIterator begin(void* storage) = 0;
-    virtual GenericIterator end(void* storage) = 0;
+    virtual AnyIterator begin(void* storage) = 0;
+    virtual AnyIterator end(void* storage) = 0;
     virtual void pushBack(void** storage, void* valueStorage) = 0;
     virtual void* element(void* storage, int index);
     virtual Kind kind() const { return List;}
@@ -626,8 +626,8 @@ namespace qi{
     virtual TypeInterface* elementType() const = 0;
     virtual TypeInterface* keyType() const = 0;
     virtual size_t size(void* storage) = 0;
-    virtual GenericIterator begin(void* storage) = 0;
-    virtual GenericIterator end(void* storage) = 0;
+    virtual AnyIterator begin(void* storage) = 0;
+    virtual AnyIterator end(void* storage) = 0;
     virtual void insert(void** storage, void* keyStorage, void* valueStorage) = 0;
     virtual AnyReference element(void** storage, void* keyStorage, bool autoInsert) = 0;
     virtual Kind kind() const { return Map; }
