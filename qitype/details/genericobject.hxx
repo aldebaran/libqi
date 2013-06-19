@@ -279,17 +279,17 @@ namespace qi {
           qiLogWarning() << "NULL AnyObject";
         *val = *src;
       }
-      else if (source.kind() == TypeInterface::Dynamic)
+      else if (source.kind() == TypeKind_Dynamic)
       { // try to dereference dynamic type in case it contains an object
         set(storage, source.asDynamic());
       }
-      else if (source.kind() == TypeInterface::Object)
+      else if (source.kind() == TypeKind_Object)
       { // wrap object in objectptr: we do not keep it alive,
         // but source type offers no tracking capability
         AnyObject op(new GenericObject(static_cast<ObjectTypeInterface*>(source.type), source.value));
         *val = op;
       }
-      else if (source.kind() == TypeInterface::Pointer)
+      else if (source.kind() == TypeKind_Pointer)
       {
         PointerTypeInterface* ptype = static_cast<PointerTypeInterface*>(source.type);
         // FIXME: find a way!

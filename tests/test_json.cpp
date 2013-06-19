@@ -245,7 +245,7 @@ TEST(TestJSONDecoder, Array) {
   ASSERT_NO_THROW(qi::decodeJSON("[42]"));
   ASSERT_NO_THROW(qi::decodeJSON("[1, 2]"));
   ASSERT_NO_THROW(qi::decodeJSON("[1, 2, [1, 2, 3, [42], 45], 1.2]"));
-  ASSERT_EQ(qi::TypeInterface::List, qi::decodeJSON("[42]").kind());
+  ASSERT_EQ(qi::TypeKind_List, qi::decodeJSON("[42]").kind());
 
   // size 1
   ASSERT_NO_THROW(qi::decodeJSON("[42]").size());
@@ -256,9 +256,9 @@ TEST(TestJSONDecoder, Array) {
 
   // complex array
   qi::AnyValue val = qi::decodeJSON("[1, [2, 3]]");
-  ASSERT_EQ(qi::TypeInterface::List, val.kind());
-  ASSERT_EQ(qi::TypeInterface::Int, val[0].asDynamic().kind());
-  ASSERT_EQ(qi::TypeInterface::List, val[1].asDynamic().kind());
+  ASSERT_EQ(qi::TypeKind_List, val.kind());
+  ASSERT_EQ(qi::TypeKind_Int, val[0].asDynamic().kind());
+  ASSERT_EQ(qi::TypeKind_List, val[1].asDynamic().kind());
   ASSERT_EQ(2U, qi::decodeJSON("[1, [2, 3]]")[1].asDynamic().size());
 }
 
@@ -273,9 +273,9 @@ TEST(TestJSONDecoder, Object) {
   ASSERT_ANY_THROW(qi::decodeJSON("{42:42}"));
   ASSERT_ANY_THROW(qi::decodeJSON("{\"42\":}"));
 
-  ASSERT_EQ(qi::TypeInterface::Map, qi::decodeJSON("{}").kind());
+  ASSERT_EQ(qi::TypeKind_Map, qi::decodeJSON("{}").kind());
   ASSERT_EQ(1U, qi::decodeJSON("{\"a\":42}").size());
-  ASSERT_EQ(qi::TypeInterface::Int, qi::decodeJSON("{\"a\":42}")["a"].asDynamic().kind());
+  ASSERT_EQ(qi::TypeKind_Int, qi::decodeJSON("{\"a\":42}")["a"].asDynamic().kind());
 
 }
 
@@ -286,9 +286,9 @@ TEST(TestJSONDecoder, special) {
   ASSERT_NO_THROW(qi::decodeJSON("null"));
   ASSERT_ANY_THROW(qi::decodeJSON("tru"));
 
-  ASSERT_EQ(qi::TypeInterface::Int, qi::decodeJSON("true").kind());
-  ASSERT_EQ(qi::TypeInterface::Int, qi::decodeJSON("false").kind());
-  ASSERT_EQ(qi::TypeInterface::Void, qi::decodeJSON("null").kind());
+  ASSERT_EQ(qi::TypeKind_Int, qi::decodeJSON("true").kind());
+  ASSERT_EQ(qi::TypeKind_Int, qi::decodeJSON("false").kind());
+  ASSERT_EQ(qi::TypeKind_Void, qi::decodeJSON("null").kind());
 
   ASSERT_EQ(0U, static_cast<qi::IntTypeInterface*>(qi::decodeJSON("true").type)->size());
   ASSERT_EQ(0U, static_cast<qi::IntTypeInterface*>(qi::decodeJSON("false").type)->size());
@@ -304,7 +304,7 @@ TEST(TestJSONDecoder, itOverload) {
   ASSERT_NO_THROW(qi::decodeJSON(testString.begin() + 13, testString.end(), val));
   ASSERT_EQ('\"', *qi::decodeJSON(testString.begin() + 13, testString.end(), val));
   qi::decodeJSON(testString.begin() + 13, testString.end(), val);
-  ASSERT_EQ(qi::TypeInterface::List, val.kind());
+  ASSERT_EQ(qi::TypeKind_List, val.kind());
 
   std::string testString2 = "<jsonString=\"[\"a\", 42\"/>";
   ASSERT_ANY_THROW(qi::decodeJSON(testString2.begin() + 13, testString2.end(), val));

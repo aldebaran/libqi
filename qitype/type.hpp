@@ -93,26 +93,7 @@ namespace qi{
     virtual void* clone(void*)=0;
     virtual void destroy(void*)=0;
 
-    //warning update the C enum when updating this one.
-    enum Kind
-    {
-      Void     = 0,
-      Int      = 1,
-      Float    = 2,
-      String   = 3,
-      List     = 4,
-      Map      = 5,
-      Object   = 6,
-      Pointer  = 7,
-      Tuple    = 8,
-      Dynamic  = 9,
-      Raw      = 10,
-      Unknown  = 11,
-      Iterator = 12,
-    };
-
-
-    virtual Kind kind() const;
+    virtual TypeKind kind() const;
 
     // Less must always work: compare pointers if you have to.
     virtual bool less(void* a, void* b) = 0;
@@ -303,7 +284,7 @@ namespace qi{
     ///@}
 
     qi::Signature signature(bool resolveDynamic = false) const;
-    TypeInterface::Kind kind() const;
+    TypeKind kind() const;
 
     ///@{
     /** Read and update functions
@@ -550,7 +531,7 @@ namespace qi{
     virtual unsigned int size() const = 0; // size in bytes
     virtual bool isSigned() const = 0; // return if type is signed
     virtual void set(void** storage, int64_t value) = 0;
-    virtual Kind kind() const { return Int;}
+    virtual TypeKind kind() const { return TypeKind_Int;}
   };
 
   class QITYPE_API FloatTypeInterface: public TypeInterface
@@ -559,7 +540,7 @@ namespace qi{
     virtual double get(void* value) const = 0;
     virtual unsigned int size() const = 0; // size in bytes
     virtual void set(void** storage, double value) = 0;
-    virtual Kind kind() const { return Float;}
+    virtual TypeKind kind() const { return TypeKind_Float;}
   };
 
   class Buffer;
@@ -570,7 +551,7 @@ namespace qi{
     virtual std::pair<char*, size_t> get(void* storage) const = 0;
     void set(void** storage, const std::string& value);
     virtual void set(void** storage, const char* ptr, size_t sz) = 0;
-    virtual Kind kind() const { return String; }
+    virtual TypeKind kind() const { return TypeKind_String; }
 
   };
 
@@ -579,7 +560,7 @@ namespace qi{
   public:
     virtual std::pair<char*, size_t> get(void* storage) const = 0;
     virtual void set(void** storage, const char* ptr, size_t sz) = 0;
-    virtual Kind kind() const { return Raw; }
+    virtual TypeKind kind() const { return TypeKind_Raw; }
   };
 
   class QITYPE_API PointerTypeInterface: public TypeInterface
@@ -595,7 +576,7 @@ namespace qi{
     virtual AnyReference dereference(void* storage) = 0; // must not be destroyed
     // Set new pointee value. pointer must be a *pointer* to type pointedType()
     virtual void setPointee(void** storage, void* pointer) = 0;
-    virtual Kind kind() const { return Pointer; }
+    virtual TypeKind kind() const { return TypeKind_Pointer; }
   };
 
   class QITYPE_API IteratorTypeInterface: public TypeInterface
@@ -605,7 +586,7 @@ namespace qi{
     virtual AnyReference dereference(void* storage) = 0;
     virtual void  next(void** storage) = 0;
     virtual bool equals(void* s1, void* s2) = 0;
-    virtual Kind kind() const { return Iterator;}
+    virtual TypeKind kind() const { return TypeKind_Iterator;}
   };
 
   class QITYPE_API ListTypeInterface: public TypeInterface
@@ -617,7 +598,7 @@ namespace qi{
     virtual AnyIterator end(void* storage) = 0;
     virtual void pushBack(void** storage, void* valueStorage) = 0;
     virtual void* element(void* storage, int index);
-    virtual Kind kind() const { return List;}
+    virtual TypeKind kind() const { return TypeKind_List;}
   };
 
   class QITYPE_API MapTypeInterface: public TypeInterface
@@ -630,7 +611,7 @@ namespace qi{
     virtual AnyIterator end(void* storage) = 0;
     virtual void insert(void** storage, void* keyStorage, void* valueStorage) = 0;
     virtual AnyReference element(void** storage, void* keyStorage, bool autoInsert) = 0;
-    virtual Kind kind() const { return Map; }
+    virtual TypeKind kind() const { return TypeKind_Map; }
     // Since our typesystem has no erased operator < or operator ==,
     // MapTypeInterface does not provide a find()
   };
@@ -644,7 +625,7 @@ namespace qi{
     virtual void* get(void* storage, unsigned int index) = 0; // must not be destroyed
     virtual void set(void** storage, std::vector<void*>);
     virtual void set(void** storage, unsigned int index, void* valStorage) = 0; // will copy
-    virtual Kind kind() const { return Tuple; }
+    virtual TypeKind kind() const { return TypeKind_Tuple; }
     virtual std::vector<std::string> elementsName() { return std::vector<std::string>();}
     virtual std::string className() { return std::string(); }
   };
@@ -654,7 +635,7 @@ namespace qi{
   public:
     virtual AnyReference get(void* storage) = 0;
     virtual void set(void** storage, AnyReference source) = 0;
-    virtual Kind kind() const { return Dynamic; }
+    virtual TypeKind kind() const { return TypeKind_Dynamic; }
   };
 
   ///@return a Type of kind List that can contains elements of type elementType.

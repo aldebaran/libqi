@@ -132,10 +132,10 @@ namespace qi {
     value = type->initializeStorage(const_cast<void*>((const void*)&ptr));
   }
 
-  inline TypeInterface::Kind AnyReference::kind() const
+  inline TypeKind AnyReference::kind() const
   {
     if (!type)
-      return TypeInterface::Void;
+      return TypeKind_Void;
     else
       return type->kind();
   }
@@ -145,7 +145,7 @@ namespace qi {
 
   class KindNotConvertible;
 
-  template<TypeInterface::Kind T> struct TypeOfKind
+  template<TypeKind T> struct TypeOfKind
   {
     typedef KindNotConvertible type;
   };
@@ -153,9 +153,9 @@ namespace qi {
 #define TYPE_OF_KIND(k, t) template<> struct TypeOfKind<k> { typedef t type;}
 
 
-  TYPE_OF_KIND(TypeInterface::Int, IntTypeInterface);
-  TYPE_OF_KIND(TypeInterface::Float,  FloatTypeInterface);
-  TYPE_OF_KIND(TypeInterface::String, StringTypeInterface);
+  TYPE_OF_KIND(TypeKind_Int, IntTypeInterface);
+  TYPE_OF_KIND(TypeKind_Float,  FloatTypeInterface);
+  TYPE_OF_KIND(TypeKind_String, StringTypeInterface);
 
 #undef TYPE_OF_KIND
 
@@ -165,9 +165,9 @@ namespace qi {
   namespace detail
   {
     struct Nothing {};
-    template<TypeInterface::Kind k> struct MakeKind
+    template<TypeKind k> struct MakeKind
     {
-      static const TypeInterface::Kind value = k;
+      static const TypeKind value = k;
     };
 
     template<typename C, typename T, typename F> struct IfElse
@@ -190,8 +190,8 @@ namespace qi {
   public detail::IfElse<cond, typename detail::MakeKind<type>, detail::Nothing>::type
 
   template<typename T> struct KindOfType
-      : IF(typename boost::is_integral<T>::type, TypeInterface::Int)
-  , IF(typename boost::is_floating_point<T>::type, TypeInterface::Float)
+      : IF(typename boost::is_integral<T>::type, TypeKind_Int)
+  , IF(typename boost::is_floating_point<T>::type, TypeKind_Float)
   {
   };
 
@@ -200,7 +200,7 @@ namespace qi {
   namespace detail {
 
     // Optimized AnyReference::as<T> for direct access to a subType getter
-    template<typename T, TypeInterface::Kind k>
+    template<typename T, TypeKind k>
     inline T valueAs(const AnyReference& v)
     {
       if (v.kind() == k)
@@ -265,22 +265,22 @@ namespace qi {
 
   inline int64_t AnyReference::toInt() const
   {
-    return detail::valueAs<int64_t, TypeInterface::Int>(*this);
+    return detail::valueAs<int64_t, TypeKind_Int>(*this);
   }
 
   inline uint64_t AnyReference::toUInt() const
   {
-    return detail::valueAs<uint64_t, TypeInterface::Int>(*this);
+    return detail::valueAs<uint64_t, TypeKind_Int>(*this);
   }
 
   inline float AnyReference::toFloat() const
   {
-    return detail::valueAs<float, TypeInterface::Float>(*this);
+    return detail::valueAs<float, TypeKind_Float>(*this);
   }
 
   inline double AnyReference::toDouble() const
   {
-    return detail::valueAs<double, TypeInterface::Float>(*this);
+    return detail::valueAs<double, TypeKind_Float>(*this);
   }
 
 
@@ -306,9 +306,9 @@ namespace qi {
   inline std::vector<AnyReference>
   AnyReference::asTupleValuePtr()
   {
-    if (kind() == TypeInterface::Tuple)
+    if (kind() == TypeKind_Tuple)
       return static_cast<StructTypeInterface*>(type)->values(value);
-    else if (kind() == TypeInterface::List || kind() == TypeInterface::Map)
+    else if (kind() == TypeKind_List || kind() == TypeKind_Map)
     {
       std::vector<AnyReference> result;
       AnyIterator iend = end();
@@ -330,7 +330,7 @@ namespace qi {
   inline std::map<AnyReference, AnyReference>
   AnyReference::asMapValuePtr()
   {
-    if (kind() != TypeInterface::Map)
+    if (kind() != TypeKind_Map)
       throw std::runtime_error("Expected a map");
     std::map<AnyReference, AnyReference> result;
     AnyIterator iend = end();
@@ -494,7 +494,7 @@ namespace qi {
 
   inline void AnyReference::setString(const std::string& v)
   {
-    if (kind() != TypeInterface::String)
+    if (kind() != TypeKind_String)
       throw std::runtime_error("Value is not of kind string");
     static_cast<StringTypeInterface*>(type)->set(&value, &v[0], v.size());
   }
@@ -514,11 +514,11 @@ namespace qi {
   inline size_t
   AnyReference::size() const
   {
-    if (kind() == TypeInterface::List)
+    if (kind() == TypeKind_List)
       return static_cast<ListTypeInterface*>(type)->size(value);
-    if (kind() == TypeInterface::Map)
+    if (kind() == TypeKind_Map)
       return static_cast<MapTypeInterface*>(type)->size(value);
-    if (kind() == TypeInterface::Tuple)
+    if (kind() == TypeKind_Tuple)
       return static_cast<StructTypeInterface*>(type)->memberTypes().size();
     else
       throw std::runtime_error("Expected List, Map or Tuple.");
@@ -543,7 +543,7 @@ namespace qi {
 
   inline AnyReference AnyReference::asDynamic() const
   {
-    if (kind() != TypeInterface::Dynamic)
+    if (kind() != TypeKind_Dynamic)
       throw std::runtime_error("Not of dynamic kind");
     DynamicTypeInterface* d = static_cast<DynamicTypeInterface*>(type);
     return d->get(value);
@@ -558,9 +558,9 @@ namespace qi {
 
   inline AnyReference AnyReference::operator*()
   {
-    if (kind() == TypeInterface::Pointer)
+    if (kind() == TypeKind_Pointer)
       return static_cast<PointerTypeInterface*>(type)->dereference(value);
-    else if (kind() == TypeInterface::Iterator)
+    else if (kind() == TypeKind_Iterator)
       return static_cast<IteratorTypeInterface*>(type)->dereference(value);
     else
       throw std::runtime_error("Expected pointer or iterator");
@@ -568,7 +568,7 @@ namespace qi {
 
   inline AnyReference AnyIterator::operator*()
   {
-    if (kind() == TypeInterface::Iterator)
+    if (kind() == TypeKind_Iterator)
       return static_cast<IteratorTypeInterface*>(type)->dereference(value);
     else
       throw std::runtime_error("Expected iterator");
@@ -595,7 +595,7 @@ namespace qi {
   inline AnyIterator
   AnyIterator::operator++()
   {
-    if (kind() != TypeInterface::Iterator)
+    if (kind() != TypeKind_Iterator)
       throw std::runtime_error("Expected an iterator");
     static_cast<IteratorTypeInterface*>(type)->next(&value);
     return *this;
@@ -604,9 +604,9 @@ namespace qi {
   inline AnyIterator
   AnyReference::begin() const
   {
-    if (kind() == TypeInterface::List)
+    if (kind() == TypeKind_List)
       return static_cast<ListTypeInterface*>(type)->begin(value);
-    else if (kind() == TypeInterface::Map)
+    else if (kind() == TypeKind_Map)
       return static_cast<MapTypeInterface*>(type)->begin(value);
     else
       throw std::runtime_error("Expected list or map");
@@ -615,9 +615,9 @@ namespace qi {
   inline AnyIterator
   AnyReference::end() const
   {
-    if (kind() == TypeInterface::List)
+    if (kind() == TypeKind_List)
       return static_cast<ListTypeInterface*>(type)->end(value);
-    else if (kind() == TypeInterface::Map)
+    else if (kind() == TypeKind_Map)
       return static_cast<MapTypeInterface*>(type)->end(value);
     else
       throw std::runtime_error("Expected list or map");

@@ -333,7 +333,7 @@ namespace qi
       // v is storage for type ReturnType we claimed we were
       // adapt return value if needed
       if (boost::is_pointer<ReturnType>::value
-        &&  _resultType->kind() != TypeInterface::Pointer)
+        &&  _resultType->kind() != TypeKind_Pointer)
       {
         // if refMask&1, real return type is some Foo& and v is Foo*
         // else, return type is Foo with sizeof(Foo) == sizeof(void*) and v is a Foo

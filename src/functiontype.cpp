@@ -93,7 +93,7 @@ namespace qi
         if (!v.first.type)
         {
           // Try pointer dereference
-          if (args[i].kind() == TypeInterface::Pointer)
+          if (args[i].kind() == TypeKind_Pointer)
           {
             AnyReference deref = *const_cast<AnyReference&>(args[i]);
             if (deref.type == target[i+offset] || deref.type->info() == target[i+offset]->info())

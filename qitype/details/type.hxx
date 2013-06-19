@@ -41,7 +41,7 @@ namespace qi {
     void* ptrFromStorage(void** ) { return 0;}
     void* clone(void*)                       { return 0;}
     void destroy(void* ptr)                  {}
-    Kind kind() const { return Void;}
+    TypeKind kind() const { return TypeKind_Void;}
     bool less(void* a, void* b) { return false;}
   };
 
@@ -123,9 +123,9 @@ namespace qi  {
     return detail::typeOfBackend<typename detail::TypeOfAdapter<T>::type>();
   }
 
-  inline TypeInterface::Kind TypeInterface::kind() const
+  inline TypeKind TypeInterface::kind() const
   {
-    return Unknown;
+    return TypeKind_Unknown;
   }
 
   namespace detail {

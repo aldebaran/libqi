@@ -359,41 +359,41 @@ namespace qi {
       SignatureTypeVisitor v(value, resolveDynamic);
       switch(kind())
       {
-      case TypeInterface::Void:
+      case TypeKind_Void:
         return qi::Signature::fromType(Signature::Type_Void);
         break;
-      case TypeInterface::Int:
+      case TypeKind_Int:
       {
         IntTypeInterface* tint = static_cast<IntTypeInterface*>(value.type);
         v.visitInt(0, tint->isSigned(), tint->size());
         break;
       }
-      case TypeInterface::Float:
+      case TypeKind_Float:
       {
         FloatTypeInterface* tfloat = static_cast<FloatTypeInterface*>(value.type);
         v.visitFloat(0, tfloat->size());
         break;
       }
-      case TypeInterface::String:
+      case TypeKind_String:
         v.result = qi::Signature::fromType(Signature::Type_String);
         break;
-      case TypeInterface::List:
+      case TypeKind_List:
         v.visitList(AnyIterator(), AnyIterator());
         break;
-      case TypeInterface::Map:
+      case TypeKind_Map:
         v.visitMap(AnyIterator(), AnyIterator());
         break;
-      case TypeInterface::Object:
+      case TypeKind_Object:
         v.result = qi::Signature::fromType(Signature::Type_Object);
         break;
-      case TypeInterface::Pointer:
+      case TypeKind_Pointer:
       {
         PointerTypeInterface* type = static_cast<PointerTypeInterface*>(value.type);
-        TypeInterface::Kind pointedKind = type->pointedType()->kind();
+        TypeKind pointedKind = type->pointedType()->kind();
         if (type->pointerKind() == PointerTypeInterface::Shared
-          && (pointedKind == TypeInterface::Object || pointedKind == TypeInterface::Unknown))
+          && (pointedKind == TypeKind_Object || pointedKind == TypeKind_Unknown))
         {
-          if(pointedKind != TypeInterface::Object)
+          if(pointedKind != TypeKind_Object)
             qiLogVerbose() << "Shared pointer to unknown type " << type->pointedType()->infoString()
                            << ", assuming object not yet registered";
           AnyObject op;
@@ -406,24 +406,24 @@ namespace qi {
         }
         break;
       }
-      case TypeInterface::Tuple: {
+      case TypeKind_Tuple: {
         std::vector<TypeInterface*>       memberTypes = static_cast<StructTypeInterface*>(this)->memberTypes();
         std::vector<std::string> annotations = static_cast<StructTypeInterface*>(this)->elementsName();
         std::string              name        = static_cast<StructTypeInterface*>(this)->className();
         v.result = qi::makeTupleSignature(memberTypes, name, annotations);
         break;
       }
-      case TypeInterface::Dynamic:
+      case TypeKind_Dynamic:
         if (value.type->info() == typeOf<AnyObject>()->info())
           v.result = qi::Signature::fromType(Signature::Type_Object);
         else
           v.result = qi::Signature::fromType(Signature::Type_Dynamic);
         break;
-      case TypeInterface::Raw:
+      case TypeKind_Raw:
         v.result = qi::Signature::fromType(Signature::Type_Raw);
         break;
-      case TypeInterface::Unknown:
-      case TypeInterface::Iterator:
+      case TypeKind_Unknown:
+      case TypeKind_Iterator:
          v.result = qi::Signature::fromType(Signature::Type_Unknown);
          break;
       }

@@ -354,13 +354,13 @@ namespace qi
           {
             switch(params[i+1].type->kind())
             {
-            case TypeInterface::Int:
-            case TypeInterface::String:
-            case TypeInterface::Float:
-            case TypeInterface::List:
-            case TypeInterface::Map:
-            case TypeInterface::Tuple:
-            case TypeInterface::Dynamic:
+            case TypeKind_Int:
+            case TypeKind_String:
+            case TypeKind_Float:
+            case TypeKind_List:
+            case TypeKind_Map:
+            case TypeKind_Tuple:
+            case TypeKind_Dynamic:
               args[i] = params[i+1];
               break;
             default:
