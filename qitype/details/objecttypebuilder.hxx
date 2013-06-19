@@ -115,7 +115,7 @@ namespace qi {
   }
 
   template <typename T>
-  ObjectPtr ObjectTypeBuilder<T>::object(T* ptr, boost::function<void (GenericObject*)> onDestroy)
+  AnyObject ObjectTypeBuilder<T>::object(T* ptr, boost::function<void (GenericObject*)> onDestroy)
   {
     return ObjectTypeBuilderBase::object(static_cast<void*>(ptr), onDestroy);
   }

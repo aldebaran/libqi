@@ -13,7 +13,7 @@
 
 namespace qi
 {
-  /** Property proxy using ObjectPtr as backend
+  /** Property proxy using AnyObject as backend
   * @warning reading and writing the property are synchronous operations
   * and might take time if backend object is a remote proxy.
   */
@@ -27,7 +27,7 @@ namespace qi
      * onSubscribe needs to be passed to Signal constructor, and we want to keep
      * it that way.
     */
-    ProxyProperty(ObjectPtr object, const std::string& propertyName)
+    ProxyProperty(AnyObject object, const std::string& propertyName)
     : Property<T>(
       boost::bind(&ProxyProperty<T>::_getter, this),
       boost::bind(&ProxyProperty<T>::_setter, this, _1, _2),

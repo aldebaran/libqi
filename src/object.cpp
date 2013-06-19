@@ -339,7 +339,7 @@ namespace qi {
     return type->setProperty(value, id, val);
   }
 
-  qi::FutureSync<Link> GenericObject::connect(unsigned int signal, ObjectPtr target, unsigned int slot)
+  qi::FutureSync<Link> GenericObject::connect(unsigned int signal, AnyObject target, unsigned int slot)
   {
     return connect(signal, SignalSubscriber(target, slot));
   }

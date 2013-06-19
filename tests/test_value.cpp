@@ -161,14 +161,14 @@ TEST(Value, Map)
 static bool triggered = false;
 static void nothing(GenericObject*) {triggered = true;}
 
-TEST(Value, ObjectPtr)
+TEST(Value, AnyObject)
 {
   {
-    ObjectPtr o((GenericObject*)1, &nothing);
+    AnyObject o((GenericObject*)1, &nothing);
     ASSERT_TRUE(o);
     ASSERT_TRUE(o.get() != 0);
     AnyReference v = AnyReference(o);
-    qi::ObjectPtr out = v.to<ObjectPtr>();
+    qi::AnyObject out = v.to<AnyObject>();
     ASSERT_TRUE(out);
     ASSERT_EQ(o.get(), out.get());
     out = v.toObject();

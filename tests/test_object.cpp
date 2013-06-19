@@ -327,7 +327,7 @@ TEST(TestObject, Simple) {
   ob.advertiseMethod("ptrtest", &ptrfun);
   ob.advertiseMethod("reftest", &reffun);
   ob.advertiseMethod("valuetest", &valuefun);
-  qi::ObjectPtr obj(ob.object());
+  qi::AnyObject obj(ob.object());
 
 
   EXPECT_EQ(42, obj->call<int>("test", 21, 21));
@@ -402,7 +402,7 @@ TEST(TestObject, SerializeSimple)
 {
   qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("swapPoint", &swapPoint);
-  qi::ObjectPtr obj(ob.object());
+  qi::AnyObject obj(ob.object());
   Point p;
   p.x = 1; p.y = 2;
   Point res = obj->call<Point>("swapPoint", p);
@@ -471,7 +471,7 @@ TEST(TestObject, SerializeComplex)
 
   qi::DynamicObjectBuilder ob;
   unsigned id = ob.advertiseMethod("echo", &echoBack);
-  qi::ObjectPtr obj(ob.object());
+  qi::AnyObject obj(ob.object());
   std::cerr << obj->metaObject().methodMap()[id].toString() << std::endl;
   Complex res = obj->call<Complex>("echo", comp);
   ASSERT_EQ(res, comp);
@@ -513,8 +513,8 @@ TEST(TestObject, ObjectTypeBuilder)
   builder.advertiseMethod("increment2", &Incrementer::increment);
   Adder a1(1);
   Adder a2(2);
-  qi::ObjectPtr oa1 = builder.object(&a1);
-  qi::ObjectPtr oa2 = builder.object(&a2);
+  qi::AnyObject oa1 = builder.object(&a1);
+  qi::AnyObject oa2 = builder.object(&a2);
   ASSERT_TRUE(!oa1->eventLoop()); // no eventloop override
   ASSERT_EQ(2, oa1->call<int>("add", 1));
   ASSERT_EQ(3, oa2->call<int>("add", 1));
@@ -558,8 +558,8 @@ TEST(TestObject, ObjectTypeBuilderAsync)
   builder.advertiseMethod("increment2", &Incrementer::increment, qi::MetaCallType_Queued);
   MAdder a1(1);
   MAdder a2(2);
-  qi::ObjectPtr oa1 = builder.object(&a1);
-  qi::ObjectPtr oa2 = builder.object(&a2);
+  qi::AnyObject oa1 = builder.object(&a1);
+  qi::AnyObject oa2 = builder.object(&a2);
   ASSERT_EQ(2, oa1->call<int>("add", 1));
   ASSERT_EQ(3, oa2->call<int>("add", 1));
   ASSERT_EQ(5, oa1->call<int>("addTwo", 3, 2));
@@ -570,7 +570,7 @@ TEST(TestObject, ObjectTypeBuilderAsync)
   // ASSERT_EQ(3, oa1->call<int>("addAdderByPtr", oa2));
   // Copies a2
   ASSERT_EQ(4, oa1->call<int>("addAdderByRef", a2));
-  // ObjectPtr: no copy
+  // AnyObject: no copy
   ASSERT_EQ(3, oa1->call<int>("addAdderByRef", oa2));
   ASSERT_EQ(3, oa1->call<int>("addAdderByConstPtr", &a2));
   // GenericObject is T not T*
@@ -632,7 +632,7 @@ TEST(TestObject, CallBackRegistration)
   qi::DynamicObjectBuilder gob;
 
   gob.advertiseSignal("testcb");
-  qi::ObjectPtr obj = gob.object();
+  qi::AnyObject obj = gob.object();
   CPPCB c;
   obj->connect("testcb", boost::bind(&CPPCB::cb, &c));
   obj->connect("testcb", &ccb);
@@ -666,7 +666,7 @@ TEST(TestObject, Future)
 {
   qi::DynamicObjectBuilder gob;
   gob.advertiseMethod("delaySet", &delaySet);
-  qi::ObjectPtr obj = gob.object();
+  qi::AnyObject obj = gob.object();
   qi::Future<int> f = obj->call<int>("delaySet", 500, 41);
   ASSERT_TRUE(!f.isFinished());
   f.wait();
@@ -682,7 +682,7 @@ TEST(TestObject, FutureSync)
 {
   qi::DynamicObjectBuilder gob;
   gob.advertiseMethod("delaySetSync", &delaySetSync);
-  qi::ObjectPtr obj = gob.object();
+  qi::AnyObject obj = gob.object();
   qi::Future<int> f = obj->call<int>("delaySetSync", 500, 41);
   ASSERT_TRUE(!f.isFinished());
   f.wait();
@@ -698,7 +698,7 @@ TEST(TestObject, statisticsGeneric)
 {
   qi::DynamicObjectBuilder gob;
   int mid = gob.advertiseMethod("sleep", &qi::os::msleep);
-  qi::ObjectPtr obj = gob.object();
+  qi::AnyObject obj = gob.object();
   obj->call<void>("sleep", 10);
   EXPECT_TRUE(obj->stats().empty());
   obj->enableStats(true);
@@ -734,7 +734,7 @@ TEST(TestObject, statisticsType)
   qi::ObjectTypeBuilder<Adder> builder;
   int mid = builder.advertiseMethod("add", &Adder::add);
   Adder a1(1);
-  qi::ObjectPtr oa1 = builder.object(&a1);
+  qi::AnyObject oa1 = builder.object(&a1);
 
   EXPECT_EQ(3, oa1->call<int>("add", 2));
 
@@ -766,7 +766,7 @@ TEST(TestObject, traceGeneric)
   qi::DynamicObjectBuilder gob;
   int mid = gob.advertiseMethod("sleep", &qi::os::msleep);
   int mid2 = gob.advertiseMethod("boom", &throw_exception);
-  qi::ObjectPtr obj = gob.object();
+  qi::AnyObject obj = gob.object();
   std::vector<qi::EventTrace> traces;
   qi::SignalBase::Link id = obj->connect("traceObject",
     (boost::function<void(qi::EventTrace)>)
@@ -806,7 +806,7 @@ TEST(TestObject, traceType)
   qi::ObjectTypeBuilder<Adder> builder;
   int mid = builder.advertiseMethod("add", &Adder::add);
   Adder a1(1);
-  qi::ObjectPtr oa1 = builder.object(&a1);
+  qi::AnyObject oa1 = builder.object(&a1);
 
   EXPECT_EQ(3, oa1->call<int>("add", 2));
 
@@ -851,7 +851,7 @@ TEST(TestObject, AdvertiseRealSignal)
   qi::DynamicObjectBuilder gob;
   int id = gob.advertiseSignal("sig", &sig);
   ASSERT_LT(0, id);
-  qi::ObjectPtr obj = gob.object();
+  qi::AnyObject obj = gob.object();
   obj->connect("sig", boost::bind<void>(&bim, _1, premote, "remote"));
 
   //test remote trigger
@@ -923,7 +923,7 @@ QI_REGISTER_OBJECT(ArgPack, onCall, callMe);
 TEST(TestObject, AnyArguments)
 {
   boost::shared_ptr<ArgPack> ap(new ArgPack);
-  qi::ObjectPtr o = qi::GenericValue::from(ap).to<qi::ObjectPtr>();
+  qi::AnyObject o = qi::GenericValue::from(ap).to<qi::AnyObject>();
   qi::details::printMetaObject(std::cerr, o->metaObject());
   o->call<void>("callMe", 1, 2, 3);
   qi::GenericValue args = o->property<qi::GenericValue>("onCall");
@@ -971,7 +971,7 @@ TEST(TestObject, async)
   EXPECT_EQ(qi::FutureState_FinishedWithValue, f.wait());
   EXPECT_EQ(100, f.value());
 
-  qi::ObjectPtr o = qi::AnyReference(rfptr).toObject();
+  qi::AnyObject o = qi::AnyReference(rfptr).toObject();
   f = qi::async<int>(o, "msleep", 100);
   EXPECT_EQ(qi::FutureState_Running, f.wait(0));
   EXPECT_EQ(qi::FutureState_FinishedWithValue, f.wait());
@@ -983,7 +983,7 @@ TEST(TestObject, async)
 
   // Factory leaks, so can't test no-leak of async...
   qiLogDebug() << "Factory";
-  qi::ObjectPtr o = qi::createObject("Sleeper");
+  qi::AnyObject o = qi::createObject("Sleeper");
   qi::Future<int> f = qi::async<int>(o, "msleep", 100);
   EXPECT_EQ(qi::FutureState_Running, f.wait(0));
   EXPECT_EQ(qi::FutureState_FinishedWithValue, f.wait());

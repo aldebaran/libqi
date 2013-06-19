@@ -551,16 +551,16 @@ namespace qi
     delete obj;
   }
 
-  ObjectPtr     makeDynamicObjectPtr(DynamicObject *obj, bool destroyObject,
+  AnyObject     makeDynamicAnyObject(DynamicObject *obj, bool destroyObject,
     boost::function<void (GenericObject*)> onDelete)
   {
-    ObjectPtr op;
+    AnyObject op;
     static DynamicObjectTypeInterface* type = new DynamicObjectTypeInterface();
     if (destroyObject || onDelete)
-      op = ObjectPtr(new GenericObject(type, obj),
+      op = AnyObject(new GenericObject(type, obj),
         boost::bind(&cleanupDynamicObject, _1, destroyObject, onDelete));
     else
-      op = ObjectPtr(new GenericObject(type, obj));
+      op = AnyObject(new GenericObject(type, obj));
     return op;
   }
 

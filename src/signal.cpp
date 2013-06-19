@@ -19,7 +19,7 @@ qiLogCategory("qitype.signal");
 
 namespace qi {
 
-  SignalSubscriber::SignalSubscriber(qi::ObjectPtr target, unsigned int method)
+  SignalSubscriber::SignalSubscriber(qi::AnyObject target, unsigned int method)
   : weakLock(0), threadingModel(MetaCallType_Direct),  target(new qi::ObjectWeakPtr(target)), method(method), enabled(true)
   { // The slot has its own threading model: be synchronous
   }
@@ -225,7 +225,7 @@ namespace qi {
     }
     else if (target)
     {
-      ObjectPtr lockedTarget = target->lock();
+      AnyObject lockedTarget = target->lock();
       if (!lockedTarget)
       {
         source->disconnect(linkId);
@@ -292,7 +292,7 @@ namespace qi {
     return connect(SignalSubscriber(callback, model));
   }
 
-  SignalSubscriber& SignalBase::connect(qi::ObjectPtr o, unsigned int slot)
+  SignalSubscriber& SignalBase::connect(qi::AnyObject o, unsigned int slot)
   {
     return connect(SignalSubscriber(o, slot));
   }
@@ -318,7 +318,7 @@ namespace qi {
     }
     else if (src.target)
     {
-      ObjectPtr locked = src.target->lock();
+      AnyObject locked = src.target->lock();
       if (!locked)
       {
         qiLogVerbose() << "connecting a dead slot (weak ptr out)";

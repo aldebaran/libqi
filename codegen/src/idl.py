@@ -167,7 +167,7 @@ def signature_to_cxxtype_(s):
   elif t == 'o':
     if len(annotation):
       return annotation + 'ProxyPtr'
-    return 'qi::ObjectPtr' #FIXME specialized proxy from annotation
+    return 'qi::AnyObject' #FIXME specialized proxy from annotation
   elif len(annotation): #FIXME some flag to select default or annotation?
     return annotation
   else:
@@ -925,7 +925,7 @@ def raw_to_proxy(class_name, data, return_future, implement_interface, include, 
 class @proxyName@: public ::qi::Proxy @if_inherit@
 {
 public:
-  @proxyName@(qi::ObjectPtr obj)
+  @proxyName@(qi::AnyObject obj)
   : qi::Proxy(obj)
 @constructor_initList@
   {
@@ -984,7 +984,7 @@ QI_TYPE_PROXY(@namepaces@@proxyName@);
       out_ret = 'qi::FutureSync<' + cret + ' >'
     if arg_names:
       arg_names = ', ' + arg_names # comma used in call
-    # Handle ObjectPtr in argument
+    # Handle AnyObject in argument
     # If a function takes a FooProxyPtr, it actually accepts AnyPtr with Any
     # a compatible object.
     # But we have no parent class to let C++ typecheck.
@@ -1204,7 +1204,7 @@ I@name@Ptr interface_from_bound(@impl@ ptr)
 @name@ProxyPtr proxy_from_interface(I@name@Ptr ptr)
 {
   // Get GenericObject from pointer
-  qi::ObjectPtr obj = I@name@builder.object(ptr.get(),
+  qi::AnyObject obj = I@name@builder.object(ptr.get(),
     boost::bind(&release_ptr<I@name@Ptr>, ptr));
   return @name@ProxyPtr(new @name@Proxy(obj));
 }

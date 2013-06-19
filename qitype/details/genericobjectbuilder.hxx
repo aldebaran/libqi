@@ -88,7 +88,7 @@ namespace qi {
   namespace detail
   {
     // create an object with a single method name fname bouncing to func
-    template<typename T> ObjectPtr makeObject(const std::string& fname, T func)
+    template<typename T> AnyObject makeObject(const std::string& fname, T func)
     {
       DynamicObjectBuilder gob;
       gob.advertiseMethod(fname, func);

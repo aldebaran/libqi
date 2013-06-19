@@ -22,7 +22,7 @@ TEST(TestObject, Simple)
 {
   qi::DynamicObjectBuilder ob;
   ob.advertiseSignal<int>("fire");
-  qi::ObjectPtr obj(ob.object());
+  qi::AnyObject obj(ob.object());
   EXPECT_LE(1U, obj->metaObject().signalMap().size());
   qi::Link linkId = obj->connect("fire", &onFire);
   obj->post("fire", 42);
@@ -48,7 +48,7 @@ TEST(TestObject, ConnectBind)
   qi::DynamicObjectBuilder ob;
   ob.advertiseSignal<int>("fire");
   ob.advertiseSignal<int, int>("fire2");
-  qi::ObjectPtr obj(ob.object());
+  qi::AnyObject obj(ob.object());
   qi::Link link = obj->connect("fire", boost::bind<void>(&onFire, _1));
   obj->post("fire", 42);
   EXPECT_TRUE(pPayload.future().wait(2000) != qi::FutureState_Running);
@@ -78,7 +78,7 @@ TEST(TestObject, EmitMethod)
   lastPayload = 0;
   qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("fire", &onFire);
-  qi::ObjectPtr obj(ob.object());
+  qi::AnyObject obj(ob.object());
   pPayload.reset();
   obj->post("fire", 23);
   EXPECT_TRUE(pPayload.future().wait(2000) != qi::FutureState_Running);

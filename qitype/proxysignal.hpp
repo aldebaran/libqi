@@ -13,12 +13,12 @@
 namespace qi
 {
 
-  /// Signal proxy, using an ObjectPtr and signal id as backend.
+  /// Signal proxy, using an AnyObject and signal id as backend.
   template<typename T> class ProxySignal: public SignalF<T>
   {
   public:
     typedef SignalF<T> SignalType;
-    ProxySignal(ObjectPtr object, const std::string& signalName)
+    ProxySignal(AnyObject object, const std::string& signalName)
     : SignalType(boost::bind(&ProxySignal<T>::onSubscribe, this, _1))
     , _name(signalName)
     , _object(object.get())

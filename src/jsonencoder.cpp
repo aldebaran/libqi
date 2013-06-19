@@ -186,7 +186,7 @@ namespace qi {
       out << "\"Error: no serialization for object\"";
     }
 
-    void visitObjectPtr(ObjectPtr& value)
+    void visitAnyObject(AnyObject& value)
     {
       // TODO: implement?
       qiLogError("qi.type") << "JSON Error: Serializing an object without a shared pointer";

@@ -455,9 +455,9 @@ namespace qi {
 
       void visitObject(GenericObject value)
       {
-        // No refcount, user called us with some kind of Object, not ObjectPtr
-        ObjectPtr o(new GenericObject(value));
-        visitObjectPtr(o);
+        // No refcount, user called us with some kind of Object, not AnyObject
+        AnyObject o(new GenericObject(value));
+        visitAnyObject(o);
       }
 
       void visitPointer(AnyReference pointee)
@@ -465,7 +465,7 @@ namespace qi {
         qiLogError() << "Pointer serialization not implemented";
       }
 
-      void visitObjectPtr(ObjectPtr& ptr)
+      void visitAnyObject(AnyObject& ptr)
       {
         if (!context)
           throw std::runtime_error("Object serialization callback required but not provided");
@@ -625,7 +625,7 @@ namespace qi {
           v.destroy();
         }
       }
-      void visitObjectPtr(ObjectPtr& o)
+      void visitAnyObject(AnyObject& o)
       {
         ObjectSerializationInfo osi;
         in.read(osi.metaObject);

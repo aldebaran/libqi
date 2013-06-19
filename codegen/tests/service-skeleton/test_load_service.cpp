@@ -21,7 +21,7 @@ TEST(TestLoadService, Load)
   std::vector<std::string> objs = qi::loadObject("simpleservice");
   ASSERT_EQ(1, objs.size());
   ASSERT_EQ(std::string("SimpleService"), objs[0]);
-  qi::ObjectPtr obj = qi::createObject("SimpleService");
+  qi::AnyObject obj = qi::createObject("SimpleService");
   ASSERT_TRUE(obj);
   ASSERT_EQ(2, obj->call<int>("addOne", 1).value());
   SimpleServiceProxy proxy(obj);

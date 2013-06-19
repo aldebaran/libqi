@@ -81,7 +81,7 @@ namespace qi {
     int xAdvertiseSignal(const std::string &name, const Signature &signature);
     int xAdvertiseProperty(const std::string& name, const Signature& sig, int id=-1);
     void setDescription(const std::string& desc);
-    qi::ObjectPtr object(boost::function<void (GenericObject*)> onDelete = boost::function<void (GenericObject*)>());
+    qi::AnyObject object(boost::function<void (GenericObject*)> onDelete = boost::function<void (GenericObject*)>());
 
     void markProperty(unsigned int ev, unsigned int getter, unsigned int setter);
   public:

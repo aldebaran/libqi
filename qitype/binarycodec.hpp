@@ -24,10 +24,10 @@ namespace qi {
   };
 
   /// Type of callback invoked by sdeerializer when it encounters an object
-  typedef boost::function<ObjectPtr (const ObjectSerializationInfo&)> DeserializeObjectCallback;
+  typedef boost::function<AnyObject (const ObjectSerializationInfo&)> DeserializeObjectCallback;
 
   /// Type of callback invoked by serializer when it encounters an object.
-  typedef boost::function<ObjectSerializationInfo (ObjectPtr)> SerializeObjectCallback;
+  typedef boost::function<ObjectSerializationInfo (AnyObject)> SerializeObjectCallback;
 
   template <typename T>
   void decodeBinary(qi::BufferReader *buf, T* value, DeserializeObjectCallback onObject=DeserializeObjectCallback());

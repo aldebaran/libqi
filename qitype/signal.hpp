@@ -33,7 +33,7 @@ namespace qi {
 
 
   class GenericObject;
-  typedef boost::shared_ptr<GenericObject> ObjectPtr;
+  typedef boost::shared_ptr<GenericObject> AnyObject;
   typedef boost::weak_ptr<GenericObject> ObjectWeakPtr;
   class SignalBasePrivate;
 
@@ -53,7 +53,7 @@ namespace qi {
     template<typename FUNCTION_TYPE>
     SignalSubscriber& connect(FUNCTION_TYPE f, MetaCallType model=MetaCallType_Auto);
 
-    SignalSubscriber& connect(qi::ObjectPtr target, unsigned int slot);
+    SignalSubscriber& connect(qi::AnyObject target, unsigned int slot);
     SignalSubscriber& connect(AnyFunction callback, MetaCallType model=MetaCallType_Auto);
     SignalSubscriber& connect(const SignalSubscriber& s);
 
@@ -126,7 +126,7 @@ namespace qi {
       return SignalBase::connect(f, model);
     }
     /// Auto-disconnects on target destruction
-    inline SignalSubscriber& connect(qi::ObjectPtr target, unsigned int slot)
+    inline SignalSubscriber& connect(qi::AnyObject target, unsigned int slot)
     {
       return SignalBase::connect(target, slot);
     }
@@ -202,7 +202,7 @@ template<
 
    SignalSubscriber(AnyFunction func, MetaCallType model=MetaCallType_Auto, detail::WeakLock* lock = 0);
 
-   SignalSubscriber(qi::ObjectPtr target, unsigned int method);
+   SignalSubscriber(qi::AnyObject target, unsigned int method);
 
    template<typename O, typename MF>
    SignalSubscriber(O* ptr, MF function, MetaCallType model=MetaCallType_Auto);

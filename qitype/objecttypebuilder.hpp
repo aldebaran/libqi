@@ -81,7 +81,7 @@ namespace qi {
 
     // output
     const MetaObject& metaObject();
-    ObjectPtr object(void* ptr, boost::function<void (GenericObject*)> onDestroy = boost::function<void (GenericObject*)>());
+    AnyObject object(void* ptr, boost::function<void (GenericObject*)> onDestroy = boost::function<void (GenericObject*)>());
     ObjectTypeInterface* type();
 
     /// Register type to typeof. Called by type()
@@ -119,7 +119,7 @@ namespace qi {
     /// Register type to typeOf<T>, to avoid both TypeImpl<T> and type() being present
     inline virtual void registerType();
 
-    inline ObjectPtr object(T* ptr, boost::function<void (GenericObject*)> onDestroy = boost::function<void (GenericObject*)>());
+    inline AnyObject object(T* ptr, boost::function<void (GenericObject*)> onDestroy = boost::function<void (GenericObject*)>());
 
   };
 }

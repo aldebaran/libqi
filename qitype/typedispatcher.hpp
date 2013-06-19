@@ -34,7 +34,7 @@ namespace qi {
   //   void visitDynamic(qi::AnyReference pointee);
   //   void visitRaw(qi::AnyReference value);
   //   void visitIterator(qi::AnyReference value);
-  //   void visitObjectPtr(qi::ObjectPtr& ptr);
+  //   void visitAnyObject(qi::AnyObject& ptr);
   // };
 
 }

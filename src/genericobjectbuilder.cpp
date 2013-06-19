@@ -33,7 +33,7 @@ namespace qi
 
     DynamicObject* _object;
     bool           _deleteOnDestroy;
-    qi::ObjectPtr  _objptr;
+    qi::AnyObject  _objptr;
   };
 
   DynamicObjectBuilder::DynamicObjectBuilder()
@@ -148,11 +148,11 @@ namespace qi
     _p->_object->metaObject()._p->setDescription(desc);
   }
 
-  ObjectPtr DynamicObjectBuilder::object(boost::function<void (GenericObject*)> onDelete)
+  AnyObject DynamicObjectBuilder::object(boost::function<void (GenericObject*)> onDelete)
   {
     if (!_p->_objptr)
     {
-      _p->_objptr = makeDynamicObjectPtr(_p->_object, _p->_deleteOnDestroy, onDelete);
+      _p->_objptr = makeDynamicAnyObject(_p->_object, _p->_deleteOnDestroy, onDelete);
       _p->_object->setManageable(_p->_objptr.get());
     }
     return _p->_objptr;

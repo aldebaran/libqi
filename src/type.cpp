@@ -284,7 +284,7 @@ namespace qi {
       result = qi::Signature::fromType(Signature::Type_Object);
     }
 
-    void visitObjectPtr(ObjectPtr& )
+    void visitAnyObject(AnyObject& )
     {
       result = qi::Signature::fromType(Signature::Type_Object);
     }
@@ -396,8 +396,8 @@ namespace qi {
           if(pointedKind != TypeInterface::Object)
             qiLogVerbose() << "Shared pointer to unknown type " << type->pointedType()->infoString()
                            << ", assuming object not yet registered";
-          ObjectPtr op;
-          v.visitObjectPtr(op);
+          AnyObject op;
+          v.visitAnyObject(op);
         }
         else
         {
@@ -414,7 +414,7 @@ namespace qi {
         break;
       }
       case TypeInterface::Dynamic:
-        if (value.type->info() == typeOf<ObjectPtr>()->info())
+        if (value.type->info() == typeOf<AnyObject>()->info())
           v.result = qi::Signature::fromType(Signature::Type_Object);
         else
           v.result = qi::Signature::fromType(Signature::Type_Dynamic);
@@ -449,7 +449,7 @@ namespace qi {
     static TypeInterface* tstring = typeOf<std::string>();
     static TypeInterface* tgv = typeOf<GenericValue>();
     static TypeInterface* tbuffer = typeOf<Buffer>();
-    static TypeInterface* tobjectptr = typeOf<ObjectPtr>();
+    static TypeInterface* tobjectptr = typeOf<AnyObject>();
     switch(i.type())
     {
     case Signature::Type_None:

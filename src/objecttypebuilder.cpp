@@ -100,12 +100,12 @@ namespace qi {
     return _p->metaObject;
   }
 
-  ObjectPtr ObjectTypeBuilderBase::object(void* ptr,
+  AnyObject ObjectTypeBuilderBase::object(void* ptr,
     boost::function<void (GenericObject*)> onDestroy)
   {
-    ObjectPtr ret = onDestroy?
-      ObjectPtr(new GenericObject(type(), ptr), onDestroy):
-      ObjectPtr(new GenericObject(type(), ptr));
+    AnyObject ret = onDestroy?
+      AnyObject(new GenericObject(type(), ptr), onDestroy):
+      AnyObject(new GenericObject(type(), ptr));
     return ret;
   }
 

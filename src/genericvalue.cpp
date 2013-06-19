@@ -75,7 +75,7 @@ namespace qi
       {
         qiLogDebug() << "Attempting object->proxy conversion";
         // try object->proxy conversion by simply rewrapping this
-        ObjectPtr o(new GenericObject(static_cast<ObjectTypeInterface*>(pointedSrc.type), pointedSrc.value));
+        AnyObject o(new GenericObject(static_cast<ObjectTypeInterface*>(pointedSrc.type), pointedSrc.value));
         return AnyReference(o).convert((TypeInterface*)targetType);
       }
       if (pointedDstPair.second)
@@ -528,14 +528,14 @@ namespace qi
     else if (skind == TypeInterface::Raw && dkind == TypeInterface::String)
       return convert(static_cast<StringTypeInterface*>(targetType));
 
-    if (targetType->info() == typeOf<ObjectPtr>()->info()
+    if (targetType->info() == typeOf<AnyObject>()->info()
         && type->kind() == TypeInterface::Pointer
         && static_cast<PointerTypeInterface*>(type)->pointedType()->kind() == TypeInterface::Object)
-    { // Pointer to concrete object -> ObjectPtr
-      // Keep a copy of this in ObjectPtr, and destroy on ObjectPtr destruction
+    { // Pointer to concrete object -> AnyObject
+      // Keep a copy of this in AnyObject, and destroy on AnyObject destruction
       // That way if this is a shared_ptr, we link to it correctly
       PointerTypeInterface* pT = static_cast<PointerTypeInterface*>(type);
-      ObjectPtr o(
+      AnyObject o(
             new GenericObject(
               static_cast<ObjectTypeInterface*>(pT->pointedType()),
               pT->dereference(value).value),
@@ -543,7 +543,7 @@ namespace qi
       return std::make_pair(AnyReference(o).clone(), true);
     }
 
-    if (type->info() == typeOf<ObjectPtr>()->info()
+    if (type->info() == typeOf<AnyObject>()->info()
         && targetType->kind() == TypeInterface::Pointer)
     { // Attempt specialized proxy conversion
       qiLogDebug() << "Attempting specialized proxy conversion";
@@ -552,7 +552,7 @@ namespace qi
                                                  static_cast<PointerTypeInterface*>(targetType)->pointedType()->info());
       if (it != map.end())
       {
-        AnyReference res = (it->second)(*(ObjectPtr*)value);
+        AnyReference res = (it->second)(*(AnyObject*)value);
         return std::make_pair(res, true);
       }
       else
@@ -748,9 +748,9 @@ namespace qi
     return GenericValue(makeGenericTuple(elems), false, true);
   }
 
-  ObjectPtr AnyReference::toObject() const
+  AnyObject AnyReference::toObject() const
   {
-    return to<ObjectPtr>();
+    return to<AnyObject>();
   }
 
   AnyReference AnyReference::_element(const AnyReference& key, bool throwOnFailure)

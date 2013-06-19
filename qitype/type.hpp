@@ -290,7 +290,7 @@ namespace qi{
     std::string  toString() const;
     template<typename T> std::vector<T> toList() const;
     template<typename K, typename V> std::map<K, V> toMap() const;
-    ObjectPtr    toObject() const;
+    AnyObject    toObject() const;
 
     /** Convert the value to a tuple.
      * If value is currently a tuple, it will be returned.

@@ -51,7 +51,7 @@ namespace qi {
   class SignalBase;
 
   class GenericObject;
-  typedef boost::shared_ptr<GenericObject> ObjectPtr;
+  typedef boost::shared_ptr<GenericObject> AnyObject;
   typedef boost::weak_ptr<GenericObject>   ObjectWeakPtr;
 
   /* ObjectValue
@@ -60,7 +60,7 @@ namespace qi {
   *
   * All the methods are convenience wrappers that bounce to the ObjectTypeInterface,
   * except Event Loop management
-  * This class has pointer semantic. Do not use directly, use ObjectPtr,
+  * This class has pointer semantic. Do not use directly, use AnyObject,
   * obtained through Session, DynamicObjectBuilder or ObjectTypeBuilder.
   */
   class QITYPE_API GenericObject: public Manageable
@@ -175,7 +175,7 @@ namespace qi {
      * If target and this are proxies, the message will be routed through
      * the current process.
      */
-    qi::FutureSync<Link> connect(unsigned int signal, qi::ObjectPtr target, unsigned int slot);
+    qi::FutureSync<Link> connect(unsigned int signal, qi::AnyObject target, unsigned int slot);
 
     /// Disconnect an event link. Returns if disconnection was successful.
     qi::FutureSync<void> disconnect(Link linkId);
@@ -257,10 +257,10 @@ namespace qi {
   class QITYPE_API Proxy
   {
   public:
-    Proxy(qi::ObjectPtr obj) : _obj(obj) {}
-    qi::ObjectPtr asObject() { return _obj;}
+    Proxy(qi::AnyObject obj) : _obj(obj) {}
+    qi::AnyObject asObject() { return _obj;}
   protected:
-    qi::ObjectPtr _obj;
+    qi::AnyObject _obj;
   };
 
   class TypeProxy: public ObjectTypeInterface
@@ -299,13 +299,13 @@ namespace qi {
     virtual qi::Future<GenericValue> property(void* instance, unsigned int id)
     {
       Proxy* ptr = static_cast<Proxy*>(instance);
-      ObjectPtr obj = ptr->asObject();
+      AnyObject obj = ptr->asObject();
       return obj->type->property(obj->value, id);
     }
     virtual qi::Future<void> setProperty(void* instance, unsigned int id, GenericValue value)
     {
       Proxy* ptr = static_cast<Proxy*>(instance);
-      ObjectPtr obj = ptr->asObject();
+      AnyObject obj = ptr->asObject();
       return obj->type->setProperty(obj->value, id, value);
     }
 
@@ -325,7 +325,7 @@ namespace qi {
 
   /** Register \p Proxy as a proxy class.
    * Required for bound methods to accept a ProxyPtr as argument
-   * Proxy must be constructible with an ObjectPtr as argument
+   * Proxy must be constructible with an AnyObject as argument
    * @return unused value, present to ease registration at static initialisation
    */
   template<typename Proxy>
@@ -333,7 +333,7 @@ namespace qi {
 
   /** Register \p Proxy as a proxy class for interface \p Interface.
    * Required for bound methods to accept a InterfacePtr as argument
-   * Proxy must be constructible with an ObjectPtr as argument
+   * Proxy must be constructible with an AnyObject as argument
    * @return unused value, present to ease registration at static initialisation
    */
   template<typename Proxy, typename Interface>

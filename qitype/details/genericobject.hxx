@@ -202,9 +202,9 @@ namespace qi {
       const std::string& methodName comma                         \
       QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoAnyReference)) \
   {                                                              \
-    ObjectPtr obj = AnyReference(instance).toObject();       \
+    AnyObject obj = AnyReference(instance).toObject();       \
     qi::Future<R> res = obj->call<R>(MetaCallType_Queued, methodName comma AUSE);  \
-    res.connect(boost::bind(&detail::hold<ObjectPtr>, obj));   \
+    res.connect(boost::bind(&detail::hold<AnyObject>, obj));   \
     return res;                                                 \
   }
   QI_GEN(genCall)
@@ -216,9 +216,9 @@ namespace qi {
       const std::string& methodName comma                         \
       QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoAnyReference)) \
   {                                                              \
-    ObjectPtr obj = AnyReference(instance).toObject();        \
+    AnyObject obj = AnyReference(instance).toObject();        \
     qi::Future<R> res =  obj->call<R>(MetaCallType_Queued, methodName comma AUSE);  \
-    res.connect(boost::bind(&detail::hold<ObjectPtr>, obj));   \
+    res.connect(boost::bind(&detail::hold<AnyObject>, obj));   \
     return res;                                                 \
   }
   QI_GEN(genCall)
@@ -246,15 +246,15 @@ namespace qi {
     return type->setProperty(value, pid, GenericValue(AnyReference(val)));
   }
 
-  /* An ObjectPtr is actually of a Dynamic type: The underlying TypeInterface*
+  /* An AnyObject is actually of a Dynamic type: The underlying TypeInterface*
    * is not allways the same.
   */
-  template<> class QITYPE_API TypeImpl<ObjectPtr>: public DynamicTypeInterface
+  template<> class QITYPE_API TypeImpl<AnyObject>: public DynamicTypeInterface
   {
   public:
     virtual AnyReference get(void* storage)
     {
-      ObjectPtr* val = (ObjectPtr*)ptrFromStorage(&storage);
+      AnyObject* val = (AnyObject*)ptrFromStorage(&storage);
       AnyReference result;
       if (!*val)
       {
@@ -268,15 +268,15 @@ namespace qi {
     virtual void set(void** storage, AnyReference source)
     {
       qiLogCategory("qitype.object");
-      ObjectPtr* val = (ObjectPtr*)ptrFromStorage(storage);
+      AnyObject* val = (AnyObject*)ptrFromStorage(storage);
       TemplateTypeInterface* templ = dynamic_cast<TemplateTypeInterface*>(source.type);
       if (templ)
         source.type = templ->next();
       if (source.type->info() == info())
       { // source is objectptr
-        ObjectPtr* src = (ObjectPtr*)source.type->ptrFromStorage(&source.value);
+        AnyObject* src = (AnyObject*)source.type->ptrFromStorage(&source.value);
         if (!*src)
-          qiLogWarning() << "NULL ObjectPtr";
+          qiLogWarning() << "NULL AnyObject";
         *val = *src;
       }
       else if (source.kind() == TypeInterface::Dynamic)
@@ -286,7 +286,7 @@ namespace qi {
       else if (source.kind() == TypeInterface::Object)
       { // wrap object in objectptr: we do not keep it alive,
         // but source type offers no tracking capability
-        ObjectPtr op(new GenericObject(static_cast<ObjectTypeInterface*>(source.type), source.value));
+        AnyObject op(new GenericObject(static_cast<ObjectTypeInterface*>(source.type), source.value));
         *val = op;
       }
       else if (source.kind() == TypeInterface::Pointer)
@@ -294,24 +294,24 @@ namespace qi {
         PointerTypeInterface* ptype = static_cast<PointerTypeInterface*>(source.type);
         // FIXME: find a way!
         if (ptype->pointerKind() == PointerTypeInterface::Shared)
-          qiLogInfo() << "ObjectPtr will *not* track original shared pointer";
+          qiLogInfo() << "AnyObject will *not* track original shared pointer";
         set(storage, *source);
       }
       else
-        throw std::runtime_error((std::string)"Cannot assign non-object " + source.type->infoString() + " to ObjectPtr");
+        throw std::runtime_error((std::string)"Cannot assign non-object " + source.type->infoString() + " to AnyObject");
 
     }
-    typedef DefaultTypeImplMethods<ObjectPtr> Methods;
+    typedef DefaultTypeImplMethods<AnyObject> Methods;
     _QI_BOUNCE_TYPE_METHODS(Methods);
   };
 
   namespace detail
   {
-    typedef std::map<TypeInfo, boost::function<AnyReference(ObjectPtr)> > ProxyGeneratorMap;
+    typedef std::map<TypeInfo, boost::function<AnyReference(AnyObject)> > ProxyGeneratorMap;
     QITYPE_API ProxyGeneratorMap& proxyGeneratorMap();
 
     template<typename Proxy>
-    AnyReference makeProxy(ObjectPtr ptr)
+    AnyReference makeProxy(AnyObject ptr)
     {
       boost::shared_ptr<Proxy> sp(new Proxy(ptr));
       return AnyReference(sp).clone();
@@ -337,20 +337,20 @@ namespace qi {
     /* Factory helper functions
     */
 
-    // create a T, wrap in a ObjectPtr
-    template<typename T> ObjectPtr constructObject()
+    // create a T, wrap in a AnyObject
+    template<typename T> AnyObject constructObject()
     {
       return AnyReference::fromPtr(new T()).toObject();
     }
 
     // in genericobjectbuilder.hxx
-    template<typename T> ObjectPtr makeObject(const std::string& fname, T func);
+    template<typename T> AnyObject makeObject(const std::string& fname, T func);
 
     // Create a factory function for an object with one method functionName bouncing to func
-    template<typename T> boost::function<ObjectPtr(const std::string&)>
+    template<typename T> boost::function<AnyObject(const std::string&)>
     makeObjectFactory(const std::string functionName, T func)
     {
-      return ( boost::function<ObjectPtr(const std::string&)>)
+      return ( boost::function<AnyObject(const std::string&)>)
         boost::bind(&makeObject<T>, functionName, func);
     }
   }

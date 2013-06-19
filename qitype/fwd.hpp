@@ -34,7 +34,7 @@ namespace qi
   class GenericObject;
   class AutoAnyReference;
   class Manageable;
-  typedef boost::shared_ptr<GenericObject> ObjectPtr;
+  typedef boost::shared_ptr<GenericObject> AnyObject;
 }
 
 #endif  // _QITYPE_FWD_HPP_

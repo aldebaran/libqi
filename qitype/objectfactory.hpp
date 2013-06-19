@@ -18,9 +18,9 @@
 
 namespace qi {
 
-  QITYPE_API bool registerObjectFactory(const std::string& name, boost::function<qi::ObjectPtr (const std::string&)> factory);
+  QITYPE_API bool registerObjectFactory(const std::string& name, boost::function<qi::AnyObject (const std::string&)> factory);
 
-  QITYPE_API qi::ObjectPtr createObject(const std::string& name);
+  QITYPE_API qi::AnyObject createObject(const std::string& name);
 
   /// Get all factory names. Order is guaranteed to be the registration order
   QITYPE_API std::vector<std::string> listObjectFactories();

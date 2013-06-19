@@ -68,9 +68,9 @@ namespace qi {
           // Create our own shared_ptr, that holds p and delete it on destruction
           qiLogDebug("qitype.typedispatcher") << "Detected object shared ptr";
           AnyReference shared_ptr = value.clone();
-          ObjectPtr o(new GenericObject(static_cast<ObjectTypeInterface*>(pointee.type), pointee.value),
+          AnyObject o(new GenericObject(static_cast<ObjectTypeInterface*>(pointee.type), pointee.value),
             boost::bind(&AnyReference::destroy, shared_ptr));
-          v.visitObjectPtr(o);
+          v.visitAnyObject(o);
         }
         else
           v.visitPointer(pointee);
@@ -85,10 +85,10 @@ namespace qi {
       }
       case TypeInterface::Dynamic:
       {
-        if (value.type->info() == typeOf<ObjectPtr>()->info())
+        if (value.type->info() == typeOf<AnyObject>()->info())
         {
-          ObjectPtr* o = (ObjectPtr*)value.type->ptrFromStorage(&value.value);
-          v.visitObjectPtr(*o);
+          AnyObject* o = (AnyObject*)value.type->ptrFromStorage(&value.value);
+          v.visitAnyObject(*o);
         }
         else
           v.visitDynamic(value.asDynamic());
