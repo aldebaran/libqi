@@ -85,7 +85,7 @@ QI_REGISTER_OBJECT(Foo, subscribe1, subscribe2, unsubscribe1, unsubscribe2,
 TEST(Proxy, Signal)
 {
   boost::shared_ptr<Foo> foo(new Foo);
-  qi::ObjectPtr gfoo = qi::GenericValueRef(foo).toObject();
+  qi::ObjectPtr gfoo = qi::AnyReference(foo).toObject();
   ASSERT_TRUE(!!gfoo);
   qi::details::printMetaObject(std::cerr, gfoo->metaObject());
   // The session must die before foo.
@@ -139,7 +139,7 @@ QI_REGISTER_OBJECT(Bar, subscribe, unsubscribe, count, get, set, prop);
 TEST(Proxy, Property)
 {
   boost::shared_ptr<Bar> bar(new Bar);
-  qi::ObjectPtr gbar = qi::GenericValueRef(bar).toObject();
+  qi::ObjectPtr gbar = qi::AnyReference(bar).toObject();
   ASSERT_TRUE(!!gbar);
   // The session must die before bar.
   TestSessionPair p;

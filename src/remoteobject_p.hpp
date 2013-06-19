@@ -46,7 +46,7 @@ namespace qi {
     void onSocketDisconnected(std::string error);
 
     virtual void metaPost(Manageable* context, unsigned int event, const GenericFunctionParameters& args);
-    virtual qi::Future<GenericValuePtr> metaCall(Manageable* context, unsigned int method, const GenericFunctionParameters& args, qi::MetaCallType callType = qi::MetaCallType_Auto);
+    virtual qi::Future<AnyReference> metaCall(Manageable* context, unsigned int method, const GenericFunctionParameters& args, qi::MetaCallType callType = qi::MetaCallType_Auto);
 
     //metaObject received
     void onMetaObject(qi::Future<qi::MetaObject> fut, qi::Promise<void> prom);
@@ -61,7 +61,7 @@ namespace qi {
     TransportSocketPtr                              _socket;
     unsigned int                                    _service;
     unsigned int                                    _object;
-    std::map<int, qi::Promise<GenericValuePtr> > _promises;
+    std::map<int, qi::Promise<AnyReference> > _promises;
     boost::mutex    _mutex;
     qi::SignalBase::Link                            _linkMessageDispatcher;
     qi::SignalBase::Link                            _linkDisconnected;

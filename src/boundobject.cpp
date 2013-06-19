@@ -13,7 +13,7 @@ qiLogCategory("qimessaging.boundobject");
 
 namespace qi {
 
-  static GenericValuePtr forwardEvent(const GenericFunctionParameters& params,
+  static AnyReference forwardEvent(const GenericFunctionParameters& params,
                                    unsigned int service, unsigned int object,
                                    unsigned int event, TransportSocketPtr client,
                                    ObjectHost* context)
@@ -25,7 +25,7 @@ namespace qi {
     msg.setType(Message::Type_Event);
     msg.setObject(object);
     client->send(msg);
-    return GenericValuePtr();
+    return AnyReference();
   }
 
 
@@ -187,13 +187,13 @@ namespace qi {
         return;
       }
 
-      GenericValuePtr value = msg.value(sigparam, socket);
+      AnyReference value = msg.value(sigparam, socket);
       if (sigparam == "m")
       {
         // received dynamically typed argument pack, unwrap
         GenericValue* content = value.ptr<GenericValue>();
         // steal it
-        GenericValuePtr pContent(content->type, content->value);
+        AnyReference pContent(content->type, content->value);
         content->type = 0;
         content->value = 0;
         // free the object content
@@ -218,7 +218,7 @@ namespace qi {
       case Message::Type_Call: {
         boost::mutex::scoped_lock lock(_mutex);
         _currentSocket = socket;
-        qi::Future<GenericValuePtr>  fut = obj->metaCall(funcId, mfp,
+        qi::Future<AnyReference>  fut = obj->metaCall(funcId, mfp,
                                                          obj==_self ? MetaCallType_Direct: _callType);
         _currentSocket.reset();
         fut.connect(boost::bind<void>(&serverResultAdapter, _1, _owner?_owner:(ObjectHost*)this, socket, msg.address()));
@@ -235,13 +235,13 @@ namespace qi {
       value.destroy();
     } catch (const std::runtime_error &e) {
       if (msg.type() == Message::Type_Call) {
-        qi::Promise<GenericValuePtr> prom;
+        qi::Promise<AnyReference> prom;
         prom.setError(e.what());
         serverResultAdapter(prom.future(), _owner?_owner:this, socket, msg.address());
       }
     } catch (...) {
       if (msg.type() == Message::Type_Call) {
-        qi::Promise<GenericValuePtr> prom;
+        qi::Promise<AnyReference> prom;
         prom.setError("Unknown error catch");
         serverResultAdapter(prom.future(), _owner?_owner:this, socket, msg.address());
       }

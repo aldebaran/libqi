@@ -21,7 +21,7 @@ ServiceHelper::ServiceHelper(const ServiceHelper &other)
 {
 }
 
-std::ostream &operator<<(std::ostream &os, const std::vector<qi::GenericValuePtr> &gvv)
+std::ostream &operator<<(std::ostream &os, const std::vector<qi::AnyReference> &gvv)
 {
   for (unsigned int i = 0; i < gvv.size(); ++i)
   {
@@ -107,7 +107,7 @@ int ServiceHelper::showProperty(const std::string &propertyName)
     std::cout << "error: property not found" << std::endl;
     return 1;
   }
-  qi::FutureSync<qi::GenericValue> result = _service->property(propertyId);
+  qi::FutureSync<qi::AnyValue> result = _service->property(propertyId);
 
   if (result.hasError())
     std::cout << "error: " << result.error() << std::endl;
@@ -165,7 +165,7 @@ int ServiceHelper::call(const std::string &methodName, const qi::GenericFunction
   return 0;
 }
 
-qi::GenericValuePtr ServiceHelper::defaultWatcher(const ServiceHelper::WatchOptions &options, const std::vector<qi::GenericValuePtr> &params)
+qi::AnyReference ServiceHelper::defaultWatcher(const ServiceHelper::WatchOptions &options, const std::vector<qi::AnyReference> &params)
 {
   static boost::mutex m;
   std::ostringstream ss;
@@ -180,7 +180,7 @@ qi::GenericValuePtr ServiceHelper::defaultWatcher(const ServiceHelper::WatchOpti
     boost::lock_guard<boost::mutex> lock(m);
     std::cout << ss.str();
   }
-  return qi::GenericValuePtr();
+  return qi::AnyReference();
 }
 
 bool ServiceHelper::byPassMember(const std::string &name, unsigned int uid, bool showHidden) const

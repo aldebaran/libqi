@@ -342,9 +342,9 @@ TEST(TestCall, TestGenericConversion) {
   svec.push_back("toto");
 
   qi::GenericValue gv;
-  gv = qi::GenericValueRef(std::string("titi"));
+  gv = qi::AnyReference(std::string("titi"));
   gvec.push_back(gv);
-  gv = qi::GenericValueRef(std::string("toto"));
+  gv = qi::AnyReference(std::string("toto"));
   gvec.push_back(gv);
 
   qi::Future<int> fut;
@@ -398,7 +398,7 @@ TEST(TestCall, TestGenericConversionComplexList) {
   std::vector<qi::GenericValue> paf;
   paf.push_back(qi::GenericValue::from(std::string("titi")));
   sg.push_back(qi::GenericValue::from(paf));
-  paf[0] = qi::GenericValueRef(std::string("toto"));
+  paf[0] = qi::AnyReference(std::string("toto"));
   sg.push_back(qi::GenericValue::from(paf));
 
   qi::Future<int> fut;
@@ -488,17 +488,17 @@ TEST(TestCall, TestGenericConversionTuple) {
   EXPECT_EQ(6, f.value());
 
   GenericTuple gt;
-  gt.e1 = qi::GenericValueRef(1.0);
-  gt.e2 = qi::GenericValueRef(2U);
+  gt.e1 = qi::AnyReference(1.0);
+  gt.e2 = qi::AnyReference(2U);
   std::map<std::string, qi::GenericValue> map;
-  map["foo"] = qi::GenericValueRef(3);
-  gt.e3 = qi::GenericValueRef(map);
+  map["foo"] = qi::AnyReference(3);
+  gt.e3 = qi::AnyReference(map);
   f = proxy->call<double>("eatSpecific", gt);
   EXPECT_FALSE(f.hasError());
   EXPECT_EQ(6, f.value());
 
   std::map<unsigned int, std::string> ravMap;
-  gt.e3 = qi::GenericValueRef(ravMap);
+  gt.e3 = qi::AnyReference(ravMap);
   f = proxy->call<double>("eatSpecific", gt);
   EXPECT_FALSE(f.hasError());
   EXPECT_EQ(3, f.value());
@@ -936,10 +936,10 @@ TEST(TestCall, BadArguments)
   qi::ObjectPtr sobj = gob.object();
   p.server()->registerService("a", sobj);
   qi::ObjectPtr obj = p.client()->service("a");
-  qi::Future<qi::GenericValuePtr> f = obj->metaCall("arrrg::(i)", qi::GenericFunctionParameters());
+  qi::Future<qi::AnyReference> f = obj->metaCall("arrrg::(i)", qi::GenericFunctionParameters());
   EXPECT_TRUE(f.hasError(1000));
 
-  qi::Future<qi::GenericValuePtr> f2 = obj->metaCall("arrrg", qi::GenericFunctionParameters());
+  qi::Future<qi::AnyReference> f2 = obj->metaCall("arrrg", qi::GenericFunctionParameters());
   EXPECT_TRUE(f2.hasError(1000));
 }
 

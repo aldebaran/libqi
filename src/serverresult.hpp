@@ -14,7 +14,7 @@
 namespace qi {
 
   // second bounce when returned type is a future
-  inline void serverResultAdapterNext(GenericValuePtr val,// the future
+  inline void serverResultAdapterNext(AnyReference val,// the future
     ObjectHost* host,
     TransportSocketPtr socket, const qi::MessageAddress &replyaddr)
   {
@@ -36,7 +36,7 @@ namespace qi {
       qiLogError("qimessaging.serverresult") << "Can't generate an answer for address:" << replyaddr;
   }
 
-  inline void serverResultAdapter(qi::Future<GenericValuePtr> future,
+  inline void serverResultAdapter(qi::Future<AnyReference> future,
     ObjectHost* host, TransportSocketPtr socket, const qi::MessageAddress &replyaddr) {
     qi::Message ret(Message::Type_Reply, replyaddr);
 
@@ -44,7 +44,7 @@ namespace qi {
       ret.setType(qi::Message::Type_Error);
       ret.setError(future.error());
     } else {
-      qi::GenericValuePtr val = future.value();
+      qi::AnyReference val = future.value();
       TemplateTypeInterface* futureType = QI_TEMPLATE_TYPE_GET(val.type, Future);
       if (futureType)
       { // Return value is a future, bounce

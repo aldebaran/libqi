@@ -57,7 +57,7 @@ namespace qi {
     boost::python::object toPyFutureAsync(qi::Future<T> fut, bool async) {
       if (async)
         return boost::python::object(toPyFuture(fut));
-      qi::GenericValueRef r(fut.value());
+      qi::AnyReference r(fut.value());
       return r.to<boost::python::object>(); //throw on error
     }
 
@@ -74,7 +74,7 @@ namespace qi {
       return toPyFutureAsync(fut.async(), async);
     }
 
-    boost::python::object makeFuture(qi::Future<qi::GenericValuePtr> fut);
+    boost::python::object makeFuture(qi::Future<qi::AnyReference> fut);
     void export_pyfuture();
 
   }

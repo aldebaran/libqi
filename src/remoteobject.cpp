@@ -106,7 +106,7 @@ namespace qi {
   {
     {
       boost::mutex::scoped_lock lock(_mutex);
-      std::map<int, qi::Promise<GenericValuePtr> >::iterator it = _promises.begin();
+      std::map<int, qi::Promise<AnyReference> >::iterator it = _promises.begin();
       while (it != _promises.end()) {
         qiLogVerbose() << "Reporting error for request " << it->first << "(socket disconnected)";
         it->second.setError("Socket disconnected");
@@ -160,7 +160,7 @@ namespace qi {
 
           // Remove top-level tuple
           //sig = sig.substr(1, sig.length()-2);
-          GenericValuePtr value = msg.value(sig, _socket);
+          AnyReference value = msg.value(sig, _socket);
           GenericFunctionParameters args = value.asTupleValuePtr();
           qiLogDebug() << "Triggering local event listeners";
           sb->trigger(args);
@@ -185,10 +185,10 @@ namespace qi {
       return;
     }
 
-    qi::Promise<GenericValuePtr> promise;
+    qi::Promise<AnyReference> promise;
     {
       boost::mutex::scoped_lock lock(_mutex);
-      std::map<int, qi::Promise<GenericValuePtr> >::iterator it;
+      std::map<int, qi::Promise<AnyReference> >::iterator it;
       it = _promises.find(msg.id());
       if (it != _promises.end()) {
         promise = _promises[msg.id()];
@@ -212,7 +212,7 @@ namespace qi {
            return;
         }
         try {
-          qi::GenericValuePtr val = msg.value(mm->returnSignature(), _socket);
+          qi::AnyReference val = msg.value(mm->returnSignature(), _socket);
           promise.setValue(val);
         } catch (std::runtime_error &err) {
           promise.setError(err.what());
@@ -225,7 +225,7 @@ namespace qi {
       case qi::Message::Type_Error: {
         try {
           static std::string sigerr("m");
-          qi::GenericValuePtr gvp = msg.value(sigerr, _socket).asDynamic();
+          qi::AnyReference gvp = msg.value(sigerr, _socket).asDynamic();
           std::string err = gvp.asString();
           qiLogVerbose() << "Received error message"  << msg.address() << ":" << err;
           promise.setError(err);
@@ -242,9 +242,9 @@ namespace qi {
   }
 
 
-  qi::Future<GenericValuePtr> RemoteObject::metaCall(Manageable*, unsigned int method, const qi::GenericFunctionParameters &in, MetaCallType callType)
+  qi::Future<AnyReference> RemoteObject::metaCall(Manageable*, unsigned int method, const qi::GenericFunctionParameters &in, MetaCallType callType)
   {
-    qi::Promise<GenericValuePtr> out;
+    qi::Promise<AnyReference> out;
     qi::Message msg;
     qi::Signature funcSig = metaObject().method(method)->parametersSignature();
     msg.setValues(in, funcSig, this);

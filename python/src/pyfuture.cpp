@@ -110,9 +110,9 @@ namespace qi {
       }
     };
 
-    boost::python::object makeFuture(qi::Future<qi::GenericValuePtr> fut) {
+    boost::python::object makeFuture(qi::Future<qi::AnyReference> fut) {
       PyPromise prom;
-      qi::adaptFuture(fut, prom, qi::FutureValueConverterTakeGenericValuePtr<qi::GenericValue>());
+      qi::adaptFuture(fut, prom, qi::FutureValueConverterTakeAnyReference<qi::GenericValue>());
       return boost::python::object(prom.future());
     }
 

@@ -160,15 +160,15 @@ TEST(TestURL, TypeSystem)
   EXPECT_EQ(qi::TypeInterface::String, t->kind());
   qi::AnyFunction fout = qi::AnyFunction::from(&urlOut);
   qi::AnyFunction fin = qi::AnyFunction::from(&urlIn);
-  std::vector<qi::GenericValuePtr> args;
+  std::vector<qi::AnyReference> args;
   std::string s("tcp://canard:0");
-  EXPECT_EQ(s, qi::GenericValueRef(s).to<qi::Url>().str());
-  args.push_back(qi::GenericValueRef(s));
+  EXPECT_EQ(s, qi::AnyReference(s).to<qi::Url>().str());
+  args.push_back(qi::AnyReference(s));
   qi::Url u = fout.call(args).to<qi::Url>();
   EXPECT_EQ(s, u.str());
-  EXPECT_EQ(u, qi::Url(qi::GenericValueRef(u).to<std::string>()));
+  EXPECT_EQ(u, qi::Url(qi::AnyReference(u).to<std::string>()));
   args.clear();
-  args.push_back(qi::GenericValueRef(u));
+  args.push_back(qi::AnyReference(u));
   std::string res = fin.call(args).to<std::string>();
   EXPECT_EQ(res, u.str());
 }

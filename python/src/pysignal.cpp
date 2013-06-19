@@ -18,17 +18,17 @@ qiLogCategory("py.signal");
 
 namespace qi { namespace py {
 
-    static qi::GenericValuePtr pysignalCb(const std::vector<qi::GenericValuePtr>& cargs, boost::python::object callable) {
+    static qi::AnyReference pysignalCb(const std::vector<qi::AnyReference>& cargs, boost::python::object callable) {
       GILScopedLock _lock;
       boost::python::list   args;
       boost::python::object ret;
 
-      std::vector<qi::GenericValuePtr>::const_iterator it;
+      std::vector<qi::AnyReference>::const_iterator it;
       for (it = cargs.begin(); it != cargs.end(); ++it) {
         args.append(it->to<boost::python::object>());
       }
       PY_CATCH_ERROR(ret = callable(*boost::python::tuple(args)));
-      return qi::GenericValueRef(ret).clone();
+      return qi::AnyReference(ret).clone();
     }
 
     class PySignal : public qi::SignalBase {
@@ -68,7 +68,7 @@ namespace qi { namespace py {
       //the python wrapper add a __call__ method bound to this one. (see qi/__init__.py)
       void trig(boost::python::tuple args, boost::python::dict kwargs) {
         GILScopedUnlock _unlock;
-        qi::SignalBase::trigger(qi::GenericValueRef(args).asDynamic().asTupleValuePtr());
+        qi::SignalBase::trigger(qi::AnyReference(args).asDynamic().asTupleValuePtr());
       }
     };
 
@@ -106,7 +106,7 @@ namespace qi { namespace py {
       //the python wrapper add a __call__ method bound to this one. (see qi/__init__.py)
       void trig(boost::python::tuple args, boost::python::dict kwargs) {
         GILScopedUnlock _unlock;
-        _obj->metaPost(_sigid, qi::GenericValueRef(args).asDynamic().asTupleValuePtr());
+        _obj->metaPost(_sigid, qi::AnyReference(args).asDynamic().asTupleValuePtr());
       }
 
     private:

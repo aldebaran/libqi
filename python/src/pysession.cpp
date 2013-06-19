@@ -19,9 +19,9 @@ qiLogCategory("qi.py");
 namespace qi { namespace py {
 
 
-qi::GenericValuePtr triggerBouncer(qi::SignalBase *sig, const std::vector<qi::GenericValuePtr>& args) {
+qi::AnyReference triggerBouncer(qi::SignalBase *sig, const std::vector<qi::AnyReference>& args) {
   sig->trigger(args);
-  return qi::GenericValuePtr();
+  return qi::AnyReference();
 }
 
     class PySession {
@@ -71,7 +71,7 @@ qi::GenericValuePtr triggerBouncer(qi::SignalBase *sig, const std::vector<qi::Ge
 
       boost::python::object registerService(const std::string &name, boost::python::object obj, bool _async=false) {
         GILScopedUnlock _unlock;
-        return toPyFutureAsync(_ses->registerService(name, qi::GenericValueRef(obj).toObject()), _async);
+        return toPyFutureAsync(_ses->registerService(name, qi::AnyReference(obj).toObject()), _async);
       }
 
     private:

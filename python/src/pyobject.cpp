@@ -43,7 +43,7 @@ namespace qi { namespace py {
         std::string funN = boost::python::extract<std::string>(pykwargs.get("_overload", _funName));
         qiLogDebug() << "calling a method: " << funN << " args:" << qi::encodeJSON(val);
 
-        qi::Future<qi::GenericValuePtr> fut;
+        qi::Future<qi::AnyReference> fut;
         {
           //calling c++, so release the GIL.
           GILScopedUnlock _unlock;
@@ -130,7 +130,7 @@ namespace qi { namespace py {
       }
 
       boost::python::object metaObject() {
-        return qi::GenericValueRef(_object->metaObject()).to<boost::python::object>();
+        return qi::AnyReference(_object->metaObject()).to<boost::python::object>();
       }
 
       qi::ObjectPtr object() {
@@ -151,12 +151,12 @@ namespace qi { namespace py {
 
 
     //TODO: DO NOT DUPLICATE
-    static qi::GenericValuePtr pyCallMethod(const std::vector<qi::GenericValuePtr>& cargs, boost::python::object callable) {
+    static qi::AnyReference pyCallMethod(const std::vector<qi::AnyReference>& cargs, boost::python::object callable) {
       qi::py::GILScopedLock _lock;
       boost::python::list   args;
       boost::python::object ret;
 
-      std::vector<qi::GenericValuePtr>::const_iterator it = cargs.begin();
+      std::vector<qi::AnyReference>::const_iterator it = cargs.begin();
       ++it; //drop the first arg which is DynamicObject*
       for (; it != cargs.end(); ++it) {
         qiLogDebug() << "argument: " << qi::encodeJSON(*it);
@@ -171,7 +171,7 @@ namespace qi { namespace py {
         throw std::runtime_error(err);
       }
 
-      qi::GenericValuePtr gvret = qi::GenericValueRef(ret).clone();
+      qi::AnyReference gvret = qi::AnyReference(ret).clone();
       qiLogDebug() << "method returned:" << qi::encodeJSON(gvret);
       return gvret;
     }

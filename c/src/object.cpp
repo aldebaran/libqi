@@ -20,7 +20,7 @@
 qiLogCategory("qimessaging.object");
 
 
-static qi::GenericValuePtr c_call(const std::string &complete_sig,
+static qi::AnyReference c_call(const std::string &complete_sig,
                                           qi_object_method_t func,
                                               void* data,
                                   const qi::GenericFunctionParameters& params)
@@ -41,8 +41,8 @@ static qi::GenericValuePtr c_call(const std::string &complete_sig,
   if (func)
     func(complete_sig.c_str(), value, ret, data);
 
-  qi::GenericValuePtr &gvpr = qi_value_cpp(ret);
-  qi::GenericValuePtr re = gvpr;
+  qi::AnyReference &gvpr = qi_value_cpp(ret);
+  qi::AnyReference re = gvpr;
   //just reset the gvp, we dont want destroy to destroy it...
   gvpr.type = 0;
   gvpr.value = 0;
@@ -51,7 +51,7 @@ static qi::GenericValuePtr c_call(const std::string &complete_sig,
   return re;
 }
 
-static qi::GenericValuePtr c_signal_callback(const std::vector<qi::GenericValuePtr>& args,
+static qi::AnyReference c_signal_callback(const std::vector<qi::AnyReference>& args,
                                              const std::string &params_sigs,
                                              qi_object_signal_callback_t f,
                                              void *user_data) {
@@ -62,7 +62,7 @@ static qi::GenericValuePtr c_signal_callback(const std::vector<qi::GenericValueP
   gvp = qi::GenericValue::makeTuple(args);
   f(params, user_data);
   qi_value_destroy(params);
-  return qi::GenericValuePtr();
+  return qi::AnyReference();
 }
 
 
@@ -72,7 +72,7 @@ extern "C"
 {
 #endif
 
-void qiFutureCAdapter(qi::Future<qi::GenericValuePtr> result, qi::Promise<qi::GenericValue> promise) {
+void qiFutureCAdapter(qi::Future<qi::AnyReference> result, qi::Promise<qi::GenericValue> promise) {
   if (result.hasError()) {
     promise.setError(result.error());
     return;
@@ -100,7 +100,7 @@ qi_future_t *qi_object_call(qi_object_t *object, const char *signature_c, qi_val
   qi::ObjectPtr             &obj = qi_object_cpp(object);
   qi::GenericValue           gv  = qi_value_cpp(params);
 
-  qi::Future<qi::GenericValuePtr> res = obj->metaCall(signature_c, gv.asTupleValuePtr());
+  qi::Future<qi::AnyReference> res = obj->metaCall(signature_c, gv.asTupleValuePtr());
   qi::Promise<qi::GenericValue> prom;
   res.connect(boost::bind<void>(&qiFutureCAdapter, _1, prom));
   return qi_cpp_promise_get_future(prom);
@@ -132,7 +132,7 @@ qi_value_t*          qi_object_get_metaobject(qi_object_t *object)
 
 int                 qi_object_event_emit(qi_object_t* object, const char *signature, qi_value_t* params) {
   qi::ObjectPtr       &obj = qi_object_cpp(object);
-  qi::GenericValuePtr &val = qi_value_cpp(params);
+  qi::AnyReference &val = qi_value_cpp(params);
   if (qi_value_get_kind(params) != QI_VALUE_KIND_TUPLE)
     return -1;
   obj->metaPost(signature, val.asTupleValuePtr());
@@ -144,7 +144,7 @@ int                 qi_object_event_emit(qi_object_t* object, const char *signat
 qi_future_t*        qi_object_event_connect(qi_object_t* object, const char *signature, qi_object_signal_callback_t f, void* user_data) {
   qi::ObjectPtr &obj = qi_object_cpp(object);
   std::vector<std::string> vs = qi::signatureSplit(std::string(signature));
-  qi::DynamicFunction fn = boost::bind<qi::GenericValuePtr>(&c_signal_callback, _1, vs[2], f, user_data);
+  qi::DynamicFunction fn = boost::bind<qi::AnyReference>(&c_signal_callback, _1, vs[2], f, user_data);
   return qi_future_wrap(obj->connect(signature, qi::AnyFunction::fromDynamicFunction(fn)));
 }
 

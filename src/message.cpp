@@ -315,8 +315,8 @@ namespace qi {
       return;
     }
     // Error message is of type m (dynamic)
-    GenericValue v(GenericValueRef(error), false, false);
-    GenericValueRef vr(v);
+    GenericValue v(AnyReference(error), false, false);
+    AnyReference vr(v);
     setValue(vr);
   }
 
@@ -365,7 +365,7 @@ namespace qi {
     }
   }
 
-  GenericValuePtr Message::value(const qi::Signature &signature, const qi::TransportSocketPtr &socket) const {
+  AnyReference Message::value(const qi::Signature &signature, const qi::TransportSocketPtr &socket) const {
     qi::TypeInterface* type = qi::TypeInterface::fromSignature(signature);
     if (!type) {
       qiLogError() <<"fromBuffer: unknown type " << signature.toString();
@@ -373,12 +373,12 @@ namespace qi {
     qiLogDebug() << "Serialized message body: " << _p->buffer.size();
     }
     qi::BufferReader br(_p->buffer);
-    GenericValuePtr res(type);
+    AnyReference res(type);
     decodeBinary(&br, res, boost::bind(deserializeObject, _1, socket));
     return res;
   }
 
-  void Message::setValue(const GenericValuePtr &value, ObjectHost* context) {
+  void Message::setValue(const AnyReference &value, ObjectHost* context) {
     cow();
     if (value.type->kind() != qi::TypeInterface::Void)
     {
@@ -386,7 +386,7 @@ namespace qi {
     }
   }
 
-  void Message::setValues(const std::vector<qi::GenericValuePtr>& values, ObjectHost* context)
+  void Message::setValues(const std::vector<qi::AnyReference>& values, ObjectHost* context)
   {
     cow();
     SerializeObjectCallback scb = boost::bind(serializeObject, _1, context);
@@ -395,7 +395,7 @@ namespace qi {
   }
 
   //convert args then call setValues
-  void Message::setValues(const std::vector<qi::GenericValuePtr>& in, const qi::Signature& expectedSignature, ObjectHost* context) {
+  void Message::setValues(const std::vector<qi::AnyReference>& in, const qi::Signature& expectedSignature, ObjectHost* context) {
     qi::Signature argsSig = qi::makeTupleSignature(in, false);
     if (expectedSignature == argsSig) {
       setValues(in, context);
@@ -415,12 +415,12 @@ namespace qi {
         types[i] = in[i].type;
         values[i] = in[i].value;
       }
-      GenericValuePtr tuple = makeGenericTuplePtr(types, values);
+      AnyReference tuple = makeGenericTuplePtr(types, values);
       GenericValue val(tuple, false, false);
-      setValue(GenericValueRef(val), context);
+      setValue(AnyReference(val), context);
       return;
     }
-    std::vector<GenericValuePtr> nargs(in);
+    std::vector<AnyReference> nargs(in);
     Signature src = argsSig.begin().children();
     Signature dst = expectedSignature.begin().children();
     Signature::iterator its = src.begin(), itd = dst.begin();
@@ -432,7 +432,7 @@ namespace qi {
         ::qi::TypeInterface* target = ::qi::TypeInterface::fromSignature(*itd);
         if (!target)
           throw std::runtime_error("remote call: Failed to obtain a type from signature " + (*itd).toString());
-        std::pair<GenericValuePtr, bool> c = nargs[i].convert(target);
+        std::pair<AnyReference, bool> c = nargs[i].convert(target);
         if (!c.first.type)
         {
           throw std::runtime_error(

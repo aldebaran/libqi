@@ -295,7 +295,7 @@ qi_value_t*  qi_value_dynamic_get(qi_value_t *container)
 {
   qi::GenericValue &gv = qi_value_cpp(container);
   try {
-    qi::GenericValuePtr gvp = gv.asDynamic();
+    qi::AnyReference gvp = gv.asDynamic();
     qi_value_t *ret = qi_value_create("");
     qi::GenericValue &val = qi_value_cpp(ret);
     val = gvp.clone();
@@ -335,7 +335,7 @@ qi_value_t*  qi_value_map_get(qi_value_t *msg, qi_value_t *key)
   qi::GenericValue &container = qi_value_cpp(msg);
   qi::GenericValue &k = qi_value_cpp(key);
 
-  qi::GenericValuePtr r;
+  qi::AnyReference r;
   if (container.kind() != qi::TypeInterface::Map) {
     return 0;
   }
