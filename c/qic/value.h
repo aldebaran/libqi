@@ -17,7 +17,7 @@ extern "C"
 {
 #endif
 
-  //this follow qi::TypeInterface::Kind
+  //this follow qi::TypeKind
   typedef enum {
     QI_VALUE_KIND_VOID     = 0,
     QI_VALUE_KIND_INT      = 1,

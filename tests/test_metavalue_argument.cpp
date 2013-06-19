@@ -141,7 +141,7 @@ TEST_F(TestObject, meta)
   args.push_back(AnyValue::from("foo"));
   args.push_back(AnyValue::from(in));
   target->call<void>(function, args).wait();
-  ASSERT_EQ(v.kind(), TypeInterface::List);
+  ASSERT_EQ(v.kind(), TypeKind_List);
   ASSERT_EQ(static_cast<size_t>(3), v.size());
 
   // iterate
@@ -195,7 +195,7 @@ TEST_F(TestObject, meta)
   args.push_back(AnyValue::from("foo"));
   args.push_back(AnyValue::from(in));
   target->call<void>(function, args).wait();
-  ASSERT_EQ(v.kind(), TypeInterface::List);
+  ASSERT_EQ(v.kind(), TypeKind_List);
   // iterate
   ASSERT_EQ(12, v[0].toDouble());
   ASSERT_EQ("foo", v[1].toString());
@@ -243,7 +243,7 @@ TEST_F(TestObject, meta)
   args.push_back(AnyValue::from("foo"));
   args.push_back(AnyValue::from(in));
   target->call<void>(function, args).wait();
-  ASSERT_EQ(v.kind(), TypeInterface::List);
+  ASSERT_EQ(v.kind(), TypeKind_List);
   // iterate
   ASSERT_EQ(12, v[0].toDouble());
   ASSERT_EQ("foo", v[1].toString());

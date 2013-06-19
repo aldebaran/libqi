@@ -62,7 +62,7 @@ namespace qi {
     void           unregisterEvent(unsigned int serviceId, unsigned int eventId, Link linkId);
     qi::MetaObject metaObject(unsigned int serviceId);
     void           terminate(unsigned int serviceId); //bound only in special cases
-    AnyValue   property(const AnyValue& name);
+    qi::AnyValue   property(const AnyValue& name);
     void           setProperty(const AnyValue& name, AnyValue value);
     std::vector<std::string> properties();
   public:

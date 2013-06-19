@@ -181,7 +181,7 @@ int        qi_value_tuple_set(qi_value_t *msg, unsigned int idx, qi_value_t *val
   qi::AnyValue &val = qi_value_cpp(value);
 
   try {
-    if (container.kind() != qi::TypeInterface::Tuple || idx >= container.size()) {
+    if (container.kind() != qi::TypeKind_Tuple || idx >= container.size()) {
       return 0;
     }
     container[idx].set(val);
@@ -192,7 +192,7 @@ int        qi_value_tuple_set(qi_value_t *msg, unsigned int idx, qi_value_t *val
 
 qi_value_t*  qi_value_tuple_get(qi_value_t *msg, unsigned int idx) {
   qi::AnyValue &container = qi_value_cpp(msg);
-  if (container.kind() != qi::TypeInterface::Tuple || idx >= container.size()) {
+  if (container.kind() != qi::TypeKind_Tuple || idx >= container.size()) {
     return 0;
   }
   qi_value_t* ret = qi_value_create("");
@@ -204,7 +204,7 @@ qi_value_t*  qi_value_tuple_get(qi_value_t *msg, unsigned int idx) {
 int          qi_value_tuple_size(qi_value_t *msg)
 {
   qi::AnyValue &container = qi_value_cpp(msg);
-  if (container.kind() != qi::TypeInterface::Tuple) {
+  if (container.kind() != qi::TypeKind_Tuple) {
     return -1;
   }
   return container.size();
@@ -216,7 +216,7 @@ int          qi_value_list_set(qi_value_t *msg, unsigned int idx, qi_value_t *va
   qi::AnyValue &container = qi_value_cpp(msg);
   qi::AnyValue &val = qi_value_cpp(value);
 
-  if (container.kind() != qi::TypeInterface::List || idx >= container.size()) {
+  if (container.kind() != qi::TypeKind_List || idx >= container.size()) {
     return 0;
   }
   try {
@@ -231,7 +231,7 @@ int          qi_value_list_set(qi_value_t *msg, unsigned int idx, qi_value_t *va
 qi_value_t*  qi_value_list_get(qi_value_t *msg, unsigned int idx)
 {
   qi::AnyValue &container = qi_value_cpp(msg);
-  if (container.kind() != qi::TypeInterface::List || idx >= container.size()) {
+  if (container.kind() != qi::TypeKind_List || idx >= container.size()) {
     return 0;
   }
   qi_value_t* ret = qi_value_create("");
@@ -244,7 +244,7 @@ int  qi_value_list_push_back(qi_value_t *msg, qi_value_t*val)
 {
   qi::AnyValue &container = qi_value_cpp(msg);
   qi::AnyValue &gval = qi_value_cpp(val);
-  if (container.kind() != qi::TypeInterface::List) {
+  if (container.kind() != qi::TypeKind_List) {
     return 0;
   }
   container.append(gval);
@@ -254,7 +254,7 @@ int  qi_value_list_push_back(qi_value_t *msg, qi_value_t*val)
 int          qi_value_list_size(qi_value_t *msg)
 {
   qi::AnyValue &container = qi_value_cpp(msg);
-  if (container.kind() != qi::TypeInterface::List) {
+  if (container.kind() != qi::TypeKind_List) {
     return -1;
   }
   return container.size();
@@ -308,7 +308,7 @@ qi_value_t*  qi_value_dynamic_get(qi_value_t *container)
 unsigned int qi_value_map_size(qi_value_t *msg)
 {
   qi::AnyValue &container = qi_value_cpp(msg);
-  if (container.kind() != qi::TypeInterface::Map) {
+  if (container.kind() != qi::TypeKind_Map) {
     return -1;
   }
   return container.size();
@@ -320,7 +320,7 @@ int         qi_value_map_set(qi_value_t *msg, qi_value_t *key, qi_value_t *value
   qi::AnyValue &k = qi_value_cpp(key);
   qi::AnyValue &val = qi_value_cpp(value);
 
-  if (container.kind() != qi::TypeInterface::Map) {
+  if (container.kind() != qi::TypeKind_Map) {
     return 0;
   }
   try {
@@ -336,7 +336,7 @@ qi_value_t*  qi_value_map_get(qi_value_t *msg, qi_value_t *key)
   qi::AnyValue &k = qi_value_cpp(key);
 
   qi::AnyReference r;
-  if (container.kind() != qi::TypeInterface::Map) {
+  if (container.kind() != qi::TypeKind_Map) {
     return 0;
   }
   try {

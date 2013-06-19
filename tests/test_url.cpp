@@ -157,7 +157,7 @@ qi::Url urlIn(const std::string& s)
 TEST(TestURL, TypeSystem)
 {
   qi::TypeInterface* t = qi::typeOf<qi::Url>();
-  EXPECT_EQ(qi::TypeInterface::String, t->kind());
+  EXPECT_EQ(qi::TypeKind_String, t->kind());
   qi::AnyFunction fout = qi::AnyFunction::from(&urlOut);
   qi::AnyFunction fin = qi::AnyFunction::from(&urlIn);
   std::vector<qi::AnyReference> args;

@@ -380,7 +380,7 @@ namespace qi {
 
   void Message::setValue(const AnyReference &value, ObjectHost* context) {
     cow();
-    if (value.type->kind() != qi::TypeInterface::Void)
+    if (value.type->kind() != qi::TypeKind_Void)
     {
       encodeBinary(&_p->buffer, value, boost::bind(serializeObject, _1, context));
     }
