@@ -911,10 +911,10 @@ TEST(TestObject, AdvertiseBadType)
 class ArgPack
 {
 public:
-  qi::Property<qi::GenericValue> onCall;
+  qi::Property<qi::AnyValue> onCall;
   void callMe(const qi::AnyArguments& pack)
   {
-    onCall.set(qi::GenericValue::from(pack.args()));
+    onCall.set(qi::AnyValue::from(pack.args()));
   }
 };
 
@@ -923,10 +923,10 @@ QI_REGISTER_OBJECT(ArgPack, onCall, callMe);
 TEST(TestObject, AnyArguments)
 {
   boost::shared_ptr<ArgPack> ap(new ArgPack);
-  qi::AnyObject o = qi::GenericValue::from(ap).to<qi::AnyObject>();
+  qi::AnyObject o = qi::AnyValue::from(ap).to<qi::AnyObject>();
   qi::details::printMetaObject(std::cerr, o->metaObject());
   o->call<void>("callMe", 1, 2, 3);
-  qi::GenericValue args = o->property<qi::GenericValue>("onCall");
+  qi::AnyValue args = o->property<qi::AnyValue>("onCall");
   std::vector<int> expect = boost::assign::list_of(1)(2)(3);
   EXPECT_EQ(expect, args.to<std::vector<int> >());
 }

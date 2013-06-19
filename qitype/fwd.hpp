@@ -26,11 +26,11 @@ namespace qi
 
   class AnyReference;
   class AnyReference;
-  class GenericValue;
+  class AnyValue;
   class AnyIterator;
   class GenericListPtr;
   class GenericMapPtr;
-  class GenericValue;
+  class AnyValue;
   class GenericObject;
   class AutoAnyReference;
   class Manageable;

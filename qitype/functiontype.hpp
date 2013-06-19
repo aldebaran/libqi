@@ -68,14 +68,14 @@ namespace qi {
   {
   public:
     AnyArguments() {};
-    AnyArguments(const std::vector<GenericValue>& args)
+    AnyArguments(const std::vector<AnyValue>& args)
     : _args(args) {}
-    operator const std::vector<GenericValue>&() const { return _args;}
-    std::vector<GenericValue> &args()             { return _args; }
-    const std::vector<GenericValue> &args() const { return _args; }
+    operator const std::vector<AnyValue>&() const { return _args;}
+    std::vector<AnyValue> &args()             { return _args; }
+    const std::vector<AnyValue> &args() const { return _args; }
 
   private:
-    std::vector<GenericValue> _args;
+    std::vector<AnyValue> _args;
   };
 
   typedef boost::function<AnyReference(const std::vector<AnyReference>&)> DynamicFunction;

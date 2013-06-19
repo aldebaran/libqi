@@ -52,7 +52,7 @@ public:
   static AnyIterator make(const T& val)
   {
     static TypeSimpleIteratorImpl<T>* type = new TypeSimpleIteratorImpl<T>();
-    return GenericValue(AnyReference(type, type->initializeStorage(const_cast<void*>((const void*)&val))));
+    return AnyValue(AnyReference(type, type->initializeStorage(const_cast<void*>((const void*)&val))));
   }
 };
 

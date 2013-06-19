@@ -455,7 +455,7 @@ namespace qi
       R (C::*fun)(const AnyArguments&)
       )
     {
-      // Pack arguments, call, wrap return value in GenericValue
+      // Pack arguments, call, wrap return value in AnyValue
       AnyArguments nargs;
       nargs.args().resize(vargs.size()-1);
       for (unsigned i=0; i<vargs.size()-1; ++i)
@@ -465,7 +465,7 @@ namespace qi
         qiLogWarning("qitype.AnyArgumentsBouncer") << "Null instance";
       detail::AnyReferenceCopy output;
       output(), (*inst.*fun)(nargs); // output clones
-      GenericValue* v = new GenericValue(output, false, true); // steal output
+      AnyValue* v = new AnyValue(output, false, true); // steal output
       return AnyReference::fromPtr(v);
     }
 
@@ -474,7 +474,7 @@ namespace qi
     {
       AnyFunction res = AnyFunction::fromDynamicFunction(boost::bind(&bouncer<C, R>, _1, fun));
       // The signature storage in GO will drop first argument, and bug if none is present
-      const_cast<std::vector<TypeInterface*> &>(res.functionType()->argumentsType()).push_back(typeOf<GenericValue>());
+      const_cast<std::vector<TypeInterface*> &>(res.functionType()->argumentsType()).push_back(typeOf<AnyValue>());
       return res;
     }
 

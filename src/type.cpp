@@ -447,7 +447,7 @@ namespace qi {
     static TypeInterface* tfloat = typeOf<float>();
     static TypeInterface* tdouble = typeOf<double>();
     static TypeInterface* tstring = typeOf<std::string>();
-    static TypeInterface* tgv = typeOf<GenericValue>();
+    static TypeInterface* tgv = typeOf<AnyValue>();
     static TypeInterface* tbuffer = typeOf<Buffer>();
     static TypeInterface* tobjectptr = typeOf<AnyObject>();
     switch(i.type())

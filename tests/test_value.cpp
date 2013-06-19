@@ -128,7 +128,7 @@ TEST(Value, Map)
 
   // Create a new element
   qiLogDebug() << "Insert bimm";
-  ASSERT_ANY_THROW(v[GenericValue::from("bimm")].setString("foo"));
+  ASSERT_ANY_THROW(v[AnyValue::from("bimm")].setString("foo"));
   v["bimm"].setInt(42);
   qiLogDebug() << "Check bimm";
   ASSERT_EQ(v["bimm"].toInt(), 42);
@@ -137,7 +137,7 @@ TEST(Value, Map)
 
   // Create a new element of an existing string length
   qiLogDebug() << "Insert pif";
-  v[GenericValue::from("pif")].setInt(43);
+  v[AnyValue::from("pif")].setInt(43);
   qiLogDebug() << "Check pif";
   ASSERT_EQ(v["pif"].toInt(), 43);
   ASSERT_EQ(v[std::string("pif")].toInt(), 43);
@@ -220,11 +220,11 @@ QI_TYPE_STRUCT(Point, x, y);
 TEST(Value, Tuple)
 {
   // Create a Dynamic tuple from vector
-  std::vector<GenericValue> v;
+  std::vector<AnyValue> v;
   AnyReference gv(v);
-  gv.append(GenericValue::from(12.0));
-  gv.append(GenericValue::from("foo")); // cstring not std::string
-  GenericValue gtuple = gv.toTuple(false);
+  gv.append(AnyValue::from(12.0));
+  gv.append(AnyValue::from("foo")); // cstring not std::string
+  AnyValue gtuple = gv.toTuple(false);
   TStruct t;
   t.d = 12.0;
   t.s = "foo";
@@ -289,13 +289,13 @@ TEST(Value, Tuple2)
   StructTypeInterface* t = static_cast<qi::StructTypeInterface*>(qi::typeOf<Point2>());
   ASSERT_EQ(6u, t->memberTypes().size());
   EXPECT_EQ("(ddsddd)<Point2,x,y,str,z,a,b>", t->signature());
-  std::vector<GenericValue> vd;
-  vd.push_back(GenericValue(AutoAnyReference(1.5)));
-  vd.push_back(GenericValue(AutoAnyReference(2.5)));
-  vd.push_back(GenericValue(AutoAnyReference("coin")));
-  vd.push_back(GenericValue(AutoAnyReference(1.5)));
-  vd.push_back(GenericValue(AutoAnyReference(1.5)));
-  vd.push_back(GenericValue(AutoAnyReference(3.5)));
+  std::vector<AnyValue> vd;
+  vd.push_back(AnyValue(AutoAnyReference(1.5)));
+  vd.push_back(AnyValue(AutoAnyReference(2.5)));
+  vd.push_back(AnyValue(AutoAnyReference("coin")));
+  vd.push_back(AnyValue(AutoAnyReference(1.5)));
+  vd.push_back(AnyValue(AutoAnyReference(1.5)));
+  vd.push_back(AnyValue(AutoAnyReference(3.5)));
   p = AnyReference(vd).toTuple(true).to<Point2>();
   EXPECT_EQ(1.5, p.x);
   EXPECT_EQ(2.5, p.y);
@@ -311,7 +311,7 @@ TEST(Value, Tuple2)
 TEST(Value, DefaultMap)
 { // this one has tricky code and deserves a test)
   TypeInterface* dmt = TypeInterface::fromSignature(qi::Signature("{si}"));
-  GenericValue val = GenericValue(AnyReference(dmt), false, true);
+  AnyValue val = AnyValue(AnyReference(dmt), false, true);
   ASSERT_EQ(0u, val.size());
   val["foo"] = 12;
   ASSERT_EQ(1u, val.size());
@@ -337,7 +337,7 @@ TEST(Value, DefaultMap)
   ASSERT_EQ(2u, valCopy.size());
   // reset val, checks valCopy still works
   val.reset();
-  val = GenericValue::from(5);
+  val = AnyValue::from(5);
   ASSERT_EQ(13, valCopy.element<int>("bar"));
   ASSERT_EQ(2u, valCopy.size());
   valCopy.destroy();
@@ -423,15 +423,15 @@ TEST(Value, Overflow)
   ASSERT_TRUE(AnyReference(0xFF22334455667788ULL).to<double>() > 0);
   ASSERT_TRUE(AnyReference((qi::int64_t)0xFF22334455667788).to<double>() < 0);
   // check other access path
-  ASSERT_ANY_THROW(GenericValue::make<char>().setInt(128));
-  ASSERT_ANY_THROW(GenericValue::make<char>().update(AnyReference(128)));
+  ASSERT_ANY_THROW(AnyValue::make<char>().setInt(128));
+  ASSERT_ANY_THROW(AnyValue::make<char>().update(AnyReference(128)));
 }
 
 TEST(Value, Convert_ListToTuple)
 {
   qi::TypeInterface *type = qi::TypeInterface::fromSignature("(fsf[s])");
-  qi::GenericValue gv1 = qi::decodeJSON("[42, \"plop\", 1.42, [\"a\", \"b\"]]");
-  qi::GenericValue gv2 = qi::decodeJSON("[42, \"plop\", 1.42, [\"a\", 42]]");
+  qi::AnyValue gv1 = qi::decodeJSON("[42, \"plop\", 1.42, [\"a\", \"b\"]]");
+  qi::AnyValue gv2 = qi::decodeJSON("[42, \"plop\", 1.42, [\"a\", 42]]");
 
   std::pair<qi::AnyReference, bool> res1 = gv1.convert(type);
   std::pair<qi::AnyReference, bool> res2 = gv2.convert(type);
@@ -443,7 +443,7 @@ TEST(Value, Convert_ListToTuple)
   ASSERT_STREQ("b", res1.first[3][1].asString().c_str());
 
   qi::TypeInterface *dest3 = qi::TypeInterface::fromSignature("(fffI)");
-  qi::GenericValue gv3 = qi::decodeJSON("[1.1, 2.2, 3.3, \"42\"]");
+  qi::AnyValue gv3 = qi::decodeJSON("[1.1, 2.2, 3.3, \"42\"]");
   std::pair<qi::AnyReference, bool> res3 = gv3.convert(dest3);
   ASSERT_FALSE(res3.first.type);
 }
@@ -451,7 +451,7 @@ TEST(Value, Convert_ListToTuple)
 TEST(Value, Convert_ListToMap)
 {
   qi::TypeInterface *type1= qi::TypeInterface::fromSignature("{if}");
-  qi::GenericValue gv1 = qi::decodeJSON("[[10.10, 42.42], [20, 43], [30, 44.44]]");
+  qi::AnyValue gv1 = qi::decodeJSON("[[10.10, 42.42], [20, 43], [30, 44.44]]");
   std::pair<qi::AnyReference, bool> res1 = gv1.convert(type1);
   ASSERT_TRUE(res1.first.type != 0);
   ASSERT_EQ(res1.first.type->info(), type1->info());
@@ -459,7 +459,7 @@ TEST(Value, Convert_ListToMap)
   ASSERT_EQ(44.44f, res1.first[30].asFloat());
 
   qi::TypeInterface *type2 = qi::TypeInterface::fromSignature("{if}");
-  qi::GenericValue gv2 = qi::decodeJSON("[[10.10, 42.42], [20, 43], [\"plop\", 44.44]]");
+  qi::AnyValue gv2 = qi::decodeJSON("[[10.10, 42.42], [20, 43], [\"plop\", 44.44]]");
   std::pair<qi::AnyReference, bool> res2 = gv2.convert(type2);
   ASSERT_FALSE(res2.first.type);
 }

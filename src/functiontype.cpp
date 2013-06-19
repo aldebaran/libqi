@@ -157,7 +157,7 @@ namespace qi
   {
     std::vector<TypeInterface*> res = type->argumentsType();
     if (transform.dropFirst && transform.prependValue) // optimize that case
-      res[0] = typeOf<GenericValue>();
+      res[0] = typeOf<AnyValue>();
     else if (transform.dropFirst)
     {
       // First argument passed to us will be ignored, so apparent signature
@@ -167,7 +167,7 @@ namespace qi
       // detected by debug-mode stl
       res.push_back(0);
       memmove(&res[0]+1, &res[0], (res.size()-1)*sizeof(TypeInterface*));
-      res[0] = typeOf<GenericValue>();
+      res[0] = typeOf<AnyValue>();
     }
     else if (transform.prependValue)
     {
@@ -282,7 +282,7 @@ namespace qi
   public:
     DynamicFunctionTypeInterfaceInterface()
     {
-      _resultType = typeOf<GenericValue>();
+      _resultType = typeOf<AnyValue>();
     }
     virtual void* call(void* func, void** args, unsigned int argc)
     {

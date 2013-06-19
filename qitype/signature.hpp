@@ -27,7 +27,7 @@ namespace qi {
   class SignaturePrivate;
 
   class AnyReference;
-  class GenericValue;
+  class AnyValue;
   class TypeInterface;
   class Signature;
   QITYPE_API qi::Signature makeTupleSignature(const std::vector<qi::AnyReference>& vgv,
@@ -154,7 +154,7 @@ namespace qi {
     * suitable for further serialization.
     * [typeString, childrenList, annotationString ]
     */
-    GenericValue toData() const;
+    AnyValue toData() const;
     std::string toPrettySignature() const;
     const std::string& toString() const;
 

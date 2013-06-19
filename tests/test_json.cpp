@@ -64,7 +64,7 @@ TEST(TestJSON, Simple) {
   EXPECT_EQ("32.4", qi::encodeJSON(qi::AnyReference(32.4f)));
   EXPECT_EQ("32.3", qi::encodeJSON(qi::AnyReference((double)32.3)));
 
-  qi::GenericValue gv(qi::TypeInterface::fromSignature(qi::Signature("c")));
+  qi::AnyValue gv(qi::TypeInterface::fromSignature(qi::Signature("c")));
   gv.setInt(42);
   EXPECT_EQ("42", qi::encodeJSON(gv));
 }
@@ -87,25 +87,25 @@ TEST(TestJSON, String) {
 }
 
 TEST(TestJSON, CharTuple) {
-  qi::GenericValue gv(qi::TypeInterface::fromSignature(qi::Signature("(c)")));
+  qi::AnyValue gv(qi::TypeInterface::fromSignature(qi::Signature("(c)")));
   EXPECT_EQ("[ 0 ]", qi::encodeJSON(gv));
 }
 
 TEST(TestJSON, EmptyValue) {
-  qi::GenericValue gv(qi::TypeInterface::fromSignature(qi::Signature("m")));
+  qi::AnyValue gv(qi::TypeInterface::fromSignature(qi::Signature("m")));
   EXPECT_EQ("", qi::encodeJSON(gv));
 }
 
 TEST(TestJSON, Dynamics) {
   qi::AnyReference gv(qi::TypeInterface::fromSignature(qi::Signature("m")));
-  qi::GenericValue gvr = qi::GenericValue::from("plouf");
+  qi::AnyValue gvr = qi::AnyValue::from("plouf");
   gv.setDynamic(gvr);
   EXPECT_EQ("\"plouf\"", qi::encodeJSON(gv));
 }
 
 TEST(TestJSON, NamedStruct) {
   MPoint mp(41, 42);
-  qi::GenericValue gvr = qi::GenericValue::from(mp);
+  qi::AnyValue gvr = qi::AnyValue::from(mp);
   EXPECT_EQ("{ \"x\" : 41, \"y\" : 42 }", qi::encodeJSON(gvr));
 }
 
@@ -255,7 +255,7 @@ TEST(TestJSONDecoder, Array) {
   ASSERT_EQ(6U, qi::decodeJSON("[1, 2, 3, 4, 5, 6]").size());
 
   // complex array
-  qi::GenericValue val = qi::decodeJSON("[1, [2, 3]]");
+  qi::AnyValue val = qi::decodeJSON("[1, [2, 3]]");
   ASSERT_EQ(qi::TypeInterface::List, val.kind());
   ASSERT_EQ(qi::TypeInterface::Int, val[0].asDynamic().kind());
   ASSERT_EQ(qi::TypeInterface::List, val[1].asDynamic().kind());
@@ -300,7 +300,7 @@ TEST(TestJSONDecoder, special) {
 TEST(TestJSONDecoder, itOverload) {
   std::string testString = "<jsonString=\"[\"a\", 42]\"/>";
 
-  qi::GenericValue val;
+  qi::AnyValue val;
   ASSERT_NO_THROW(qi::decodeJSON(testString.begin() + 13, testString.end(), val));
   ASSERT_EQ('\"', *qi::decodeJSON(testString.begin() + 13, testString.end(), val));
   qi::decodeJSON(testString.begin() + 13, testString.end(), val);

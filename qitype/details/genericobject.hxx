@@ -36,7 +36,7 @@ namespace qi {
         promise.setError(gfut.call<std::string>("error", 0));
         return;
       }
-      GenericValue v = gfut.call<GenericValue>("value", 0);
+      AnyValue v = gfut.call<AnyValue>("value", 0);
       promise.setValue(v.to<T>());
       val.destroy();
     }
@@ -87,14 +87,14 @@ namespace qi {
     }
 
     template <typename T>
-    inline void futureAdapterVal(qi::Future<qi::GenericValue> metaFut, qi::Promise<T> promise)
+    inline void futureAdapterVal(qi::Future<qi::AnyValue> metaFut, qi::Promise<T> promise)
     {
       //error handling
       if (metaFut.hasError()) {
         promise.setError(metaFut.error());
         return;
       }
-      const GenericValue& val =  metaFut.value();
+      const AnyValue& val =  metaFut.value();
       try
       {
         promise.setValue(val.to<T>());
@@ -106,7 +106,7 @@ namespace qi {
     }
 
     template<>
-    inline void futureAdapterVal(qi::Future<qi::GenericValue> metaFut, qi::Promise<GenericValue> promise)
+    inline void futureAdapterVal(qi::Future<qi::AnyValue> metaFut, qi::Promise<AnyValue> promise)
     {
       if (metaFut.hasError())
         promise.setError(metaFut.error());
@@ -231,7 +231,7 @@ namespace qi {
     int pid = metaObject().propertyId(name);
     if (pid < 0)
       return makeFutureError<T>("Property not found");
-    qi::Future<GenericValue> f = type->property(value, pid);
+    qi::Future<AnyValue> f = type->property(value, pid);
     qi::Promise<T> p;
     f.connect(boost::bind(&detail::futureAdapterVal<T>,_1, p));
     return p.future();
@@ -243,7 +243,7 @@ namespace qi {
     int pid = metaObject().propertyId(name);
     if (pid < 0)
       return makeFutureError<void>("Property not found");
-    return type->setProperty(value, pid, GenericValue(AnyReference(val)));
+    return type->setProperty(value, pid, AnyValue(AnyReference(val)));
   }
 
   /* An AnyObject is actually of a Dynamic type: The underlying TypeInterface*

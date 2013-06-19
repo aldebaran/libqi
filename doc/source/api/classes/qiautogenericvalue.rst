@@ -1,1 +1,1 @@
-.. cpp:autoclass:: qi::AutoGenericValue
+.. cpp:autoclass:: qi::AutoAnyValue

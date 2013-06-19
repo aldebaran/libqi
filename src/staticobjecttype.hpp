@@ -69,8 +69,8 @@ public:
   virtual qi::Future<Link> connect(void* instance, Manageable* context, unsigned int event, const SignalSubscriber& subscriber);
   /// Disconnect an event link. Returns if disconnection was successful.
   virtual qi::Future<void> disconnect(void* instance, Manageable* context, Link linkId);
-  virtual qi::Future<GenericValue> property(void* instance, unsigned int id);
-  virtual qi::Future<void> setProperty(void* instance, unsigned int id, GenericValue value);
+  virtual qi::Future<AnyValue> property(void* instance, unsigned int id);
+  virtual qi::Future<void> setProperty(void* instance, unsigned int id, AnyValue value);
 
   virtual const std::vector<std::pair<TypeInterface*, int> >& parentTypes();
   virtual void* initializeStorage(void*);

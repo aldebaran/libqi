@@ -187,8 +187,8 @@ namespace qi {
     qi::FutureSync<void> setProperty(const std::string& name, const T& val);
 
     //Low Level Properties
-    qi::FutureSync<GenericValue> property(unsigned int id);
-    qi::FutureSync<void> setProperty(unsigned int id, const GenericValue &val);
+    qi::FutureSync<AnyValue> property(unsigned int id);
+    qi::FutureSync<void> setProperty(unsigned int id, const AnyValue &val);
 
 
     //bool isValid() { return type && value;}
@@ -296,13 +296,13 @@ namespace qi {
       static std::vector<std::pair<TypeInterface*, int> > empty;
       return empty;
     }
-    virtual qi::Future<GenericValue> property(void* instance, unsigned int id)
+    virtual qi::Future<AnyValue> property(void* instance, unsigned int id)
     {
       Proxy* ptr = static_cast<Proxy*>(instance);
       AnyObject obj = ptr->asObject();
       return obj->type->property(obj->value, id);
     }
-    virtual qi::Future<void> setProperty(void* instance, unsigned int id, GenericValue value)
+    virtual qi::Future<void> setProperty(void* instance, unsigned int id, AnyValue value)
     {
       Proxy* ptr = static_cast<Proxy*>(instance);
       AnyObject obj = ptr->asObject();

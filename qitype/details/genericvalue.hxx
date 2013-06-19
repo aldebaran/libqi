@@ -16,21 +16,21 @@ namespace qi {
 
 
 
-  template<> class TypeImpl<GenericValue>: public DynamicTypeInterface
+  template<> class TypeImpl<AnyValue>: public DynamicTypeInterface
   {
   public:
     virtual AnyReference get(void* storage)
     {
-      GenericValue* ptr = (GenericValue*)ptrFromStorage(&storage);
+      AnyValue* ptr = (AnyValue*)ptrFromStorage(&storage);
       return *ptr;
     }
     virtual void set(void** storage, AnyReference src)
     {
-      GenericValue* val = (GenericValue*)ptrFromStorage(storage);
+      AnyValue* val = (AnyValue*)ptrFromStorage(storage);
       val->reset(src, true, true);
     }
-    // Default cloner will do just right since GenericValue is by-value.
-    typedef DefaultTypeImplMethods<GenericValue> Methods;
+    // Default cloner will do just right since AnyValue is by-value.
+    typedef DefaultTypeImplMethods<AnyValue> Methods;
     _QI_BOUNCE_TYPE_METHODS(Methods);
   };
 
@@ -343,29 +343,29 @@ namespace qi {
     return result;
   }
 
-  inline GenericValue
-  GenericValue::makeTuple(const std::vector<AnyReference>& values)
+  inline AnyValue
+  AnyValue::makeTuple(const std::vector<AnyReference>& values)
   {
-    return GenericValue(makeGenericTuple(values), false, true);
+    return AnyValue(makeGenericTuple(values), false, true);
   }
 
   template<typename T>
-  GenericValue GenericValue::makeList(const std::vector<AnyReference>& values)
+  AnyValue AnyValue::makeList(const std::vector<AnyReference>& values)
   {
-    GenericValue res = make<std::vector<T> >();
+    AnyValue res = make<std::vector<T> >();
     for (unsigned i=0; i<values.size(); ++i)
       res.append(values[i].to<T>());
     return res;
   }
   inline
-  GenericValue GenericValue::makeGenericList(const std::vector<AnyReference>& values)
+  AnyValue AnyValue::makeGenericList(const std::vector<AnyReference>& values)
   {
-    return makeList<GenericValue>(values);
+    return makeList<AnyValue>(values);
   }
   template<typename K, typename V>
-  GenericValue GenericValue::makeMap(const std::map<AnyReference, AnyReference>& values)
+  AnyValue AnyValue::makeMap(const std::map<AnyReference, AnyReference>& values)
   {
-    GenericValue res = make<std::map<K, V> >();
+    AnyValue res = make<std::map<K, V> >();
     std::map<AnyReference, AnyReference>::const_iterator it;
     for(it = values.begin(); it != values.end(); ++it)
       res.insert(it->first.to<K>(), it->second.to<V>());
@@ -373,9 +373,9 @@ namespace qi {
   }
 
   inline
-  GenericValue GenericValue::makeGenericMap(const std::map<AnyReference, AnyReference>& values)
+  AnyValue AnyValue::makeGenericMap(const std::map<AnyReference, AnyReference>& values)
   {
-    return makeMap<GenericValue, GenericValue>(values);
+    return makeMap<AnyValue, AnyValue>(values);
   }
 
   namespace detail
@@ -401,57 +401,57 @@ namespace qi {
     }
   }
 
-  inline GenericValue::GenericValue()
+  inline AnyValue::AnyValue()
   : _allocated(false)
   {}
 
 
-  inline GenericValue::GenericValue(const GenericValue& b)
+  inline AnyValue::AnyValue(const AnyValue& b)
   : _allocated(false)
   {
     *this = b;
   }
 
-  inline GenericValue::GenericValue(qi::TypeInterface *type)
+  inline AnyValue::AnyValue(qi::TypeInterface *type)
     : AnyReference(type)
     , _allocated(true)
   {
   }
 
-  inline GenericValue::GenericValue(const AnyReference& b, bool copy, bool free)
+  inline AnyValue::AnyValue(const AnyReference& b, bool copy, bool free)
   : _allocated(false)
   {
     reset(b, copy, free);
   }
 
-  inline GenericValue::GenericValue(const AutoAnyReference& b)
+  inline AnyValue::AnyValue(const AutoAnyReference& b)
   : _allocated(false)
   {
     reset(b);
   }
 
   template<typename T>
-  GenericValue GenericValue::make()
+  AnyValue AnyValue::make()
   {
-    return GenericValue(AnyReference(typeOf<T>()), false, true);
+    return AnyValue(AnyReference(typeOf<T>()), false, true);
   }
 
-  inline void GenericValue::operator=(const GenericValue& b)
-  {
-    reset(b, true, true);
-  }
-
-  inline void GenericValue::operator=(const AnyReference& b)
+  inline void AnyValue::operator=(const AnyValue& b)
   {
     reset(b, true, true);
   }
 
-  inline void GenericValue::reset(const AnyReference& b)
+  inline void AnyValue::operator=(const AnyReference& b)
   {
     reset(b, true, true);
   }
 
-  inline void GenericValue::reset(const AnyReference& b, bool copy, bool free)
+  inline void AnyValue::reset(const AnyReference& b)
+  {
+    reset(b, true, true);
+  }
+
+  inline void AnyValue::reset(const AnyReference& b, bool copy, bool free)
   {
     reset();
     *(AnyReference*)this = b;
@@ -460,7 +460,7 @@ namespace qi {
       *(AnyReference*)this = clone();
   }
 
-  inline void GenericValue::reset()
+  inline void AnyValue::reset()
   {
     if (_allocated)
       destroy();
@@ -468,7 +468,7 @@ namespace qi {
     value = 0;
   }
 
-  inline void GenericValue::reset(qi::TypeInterface *ttype)
+  inline void AnyValue::reset(qi::TypeInterface *ttype)
   {
     reset();
     _allocated = true;
@@ -476,7 +476,7 @@ namespace qi {
     value = type->initializeStorage();
   }
 
-  inline GenericValue::~GenericValue()
+  inline AnyValue::~AnyValue()
   {
     reset();
   }
@@ -550,7 +550,7 @@ namespace qi {
   }
 
 
-  inline void GenericValue::swap(GenericValue& b)
+  inline void AnyValue::swap(AnyValue& b)
   {
     std::swap((::qi::AnyReference&)*this, (::qi::AnyReference&)b);
     std::swap(_allocated, b._allocated);
@@ -576,7 +576,7 @@ namespace qi {
 
   template<typename T>
   AnyIterator::AnyIterator(const T& ref)
-  : GenericValue(AnyReference(ref))
+  : AnyValue(AnyReference(ref))
   {
 
   }
@@ -585,11 +585,11 @@ namespace qi {
   }
 
   inline AnyIterator::AnyIterator(const AnyReference& p)
-    : GenericValue(p)
+    : AnyValue(p)
   {}
 
-  inline AnyIterator::AnyIterator(const GenericValue& v)
-    : GenericValue(v)
+  inline AnyIterator::AnyIterator(const AnyValue& v)
+    : AnyValue(v)
   {}
 
   inline AnyIterator
@@ -627,7 +627,7 @@ namespace qi {
   {
     return !(a==b);
   }
-  inline bool operator != (const GenericValue& a, const GenericValue& b)
+  inline bool operator != (const AnyValue& a, const AnyValue& b)
   {
     return !(a==b);
   }
@@ -657,9 +657,9 @@ namespace qi {
 
   /// FutureValueConverter implementation for AnyReference -> T
   /// that destroys the value
-  template<> struct FutureValueConverterTakeAnyReference<GenericValue>
+  template<> struct FutureValueConverterTakeAnyReference<AnyValue>
   {
-    void operator()(const AnyReference& in, GenericValue& out)
+    void operator()(const AnyReference& in, AnyValue& out)
     {
       out.reset(in, false, true);
     }
@@ -669,18 +669,18 @@ namespace qi {
   struct FutureValueConverter;
 
   template <typename T>
-  struct FutureValueConverter<T, qi::GenericValue>
+  struct FutureValueConverter<T, qi::AnyValue>
   {
-    void operator()(const T& in, qi::GenericValue &out)
+    void operator()(const T& in, qi::AnyValue &out)
     {
-      out = qi::GenericValue::from(in);
+      out = qi::AnyValue::from(in);
     }
   };
 
   template <>
-  struct FutureValueConverter<void, qi::GenericValue>
+  struct FutureValueConverter<void, qi::AnyValue>
   {
-    void operator()(void *in, qi::GenericValue &out)
+    void operator()(void *in, qi::AnyValue &out)
     {
     }
   };
@@ -688,14 +688,14 @@ namespace qi {
 
 namespace std
 {
-  inline void swap(::qi::GenericValue& a, ::qi::GenericValue& b)
+  inline void swap(::qi::AnyValue& a, ::qi::AnyValue& b)
   {
     a.swap(b);
   }
 }
 
 /* Since AnyReference does not handle its memory, it cannot be used
-* inside a AnyReference. use GenericValue instead.
+* inside a AnyReference. use AnyValue instead.
 */
 QI_NO_TYPE(qi::AnyReference);
 

@@ -54,14 +54,14 @@ namespace qi {
     };
     EventTrace() {}
     EventTrace(unsigned int id, EventKind  kind, unsigned int slotId,
-      const GenericValue& arguments, const qi::os::timeval timestamp)
+      const AnyValue& arguments, const qi::os::timeval timestamp)
     : id(id), kind(kind), slotId(slotId), arguments(arguments), timestamp(timestamp)
     {}
 
     unsigned int id; // trace id, used to match call and call result
     EventKind kind;
     unsigned int slotId; // method or signal id
-    GenericValue arguments; // call or signal arguments
+    AnyValue arguments; // call or signal arguments
     qi::os::timeval timestamp;
   };
 

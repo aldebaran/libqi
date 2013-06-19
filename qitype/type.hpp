@@ -184,7 +184,7 @@ namespace qi{
    *  operator=() makes a shallow copy.
    *
    * \warning AnyReference should not be used directly as call arguments.
-   * Use qi::GenericValue which has value semantics instead.
+   * Use qi::AnyValue which has value semantics instead.
    *
    */
   class QITYPE_API AnyReference
@@ -250,7 +250,7 @@ namespace qi{
     /** Construction and assign.
      */
 
-    /** Construct a GenericValue with storage pointing to ptr.
+    /** Construct a AnyValue with storage pointing to ptr.
      * @warning the AnyReference will become invalid if ptr
      * is destroyed (if it gets deleted or points to the stack and goes
      * out of scope).
@@ -299,7 +299,7 @@ namespace qi{
      * of the list element type. If false, the effective type of elements
      * of kind dynamic will be used.
      */
-    GenericValue toTuple(bool homogeneous) const;
+    AnyValue toTuple(bool homogeneous) const;
     ///@}
 
     qi::Signature signature(bool resolveDynamic = false) const;
@@ -338,7 +338,7 @@ namespace qi{
     float& asFloat() { return as<float>();}
     std::string& asString() { return as<std::string>();}
 
-    /** @return contained GenericValue or throw if type is not dynamic.
+    /** @return contained AnyValue or throw if type is not dynamic.
      * @note Returned AnyReference might be empty.
     */
     AnyReference asDynamic() const;
@@ -394,7 +394,7 @@ namespace qi{
     size_t size() const;
     template<typename T> void append(const T& element);
     template<typename K, typename V> void insert(const K& key, const V& val);
-    /** Similar to operator[](), but return an empty GenericValue
+    /** Similar to operator[](), but return an empty AnyValue
      * If the key is not present.
      */
     template<typename K> AnyReference find(const K& key);
@@ -416,46 +416,46 @@ namespace qi{
   QITYPE_API bool operator!=(const AnyReference& a, const AnyReference& b);
   /** AnyReference with copy semantics
   */
-  class QITYPE_API GenericValue: public AnyReference
+  class QITYPE_API AnyValue: public AnyReference
   {
   public:
 
-    GenericValue();
+    AnyValue();
     /// Share ownership of value with b.
-    GenericValue(const GenericValue& b);
-    explicit GenericValue(const AnyReference& b, bool copy, bool free);
-    explicit GenericValue(const AutoAnyReference& b);
-    explicit GenericValue(qi::TypeInterface *type);
-    /// Create and return a GenericValue of type T
-    template<typename T> static GenericValue make();
+    AnyValue(const AnyValue& b);
+    explicit AnyValue(const AnyReference& b, bool copy, bool free);
+    explicit AnyValue(const AutoAnyReference& b);
+    explicit AnyValue(qi::TypeInterface *type);
+    /// Create and return a AnyValue of type T
+    template<typename T> static AnyValue make();
 
     /// @{
-    /** The following functions construct a GenericValue from containers of
+    /** The following functions construct a AnyValue from containers of
      * AnyReference.
     */
-    static GenericValue makeTuple(const std::vector<AnyReference>& values);
+    static AnyValue makeTuple(const std::vector<AnyReference>& values);
     template<typename T>
-    static GenericValue makeList(const std::vector<AnyReference>& values);
-    static GenericValue makeGenericList(const std::vector<AnyReference>& values);
+    static AnyValue makeList(const std::vector<AnyReference>& values);
+    static AnyValue makeGenericList(const std::vector<AnyReference>& values);
     template<typename K, typename V>
-    static GenericValue makeMap(const std::map<AnyReference, AnyReference>& values);
-    static GenericValue makeGenericMap(const std::map<AnyReference, AnyReference>& values);
+    static AnyValue makeMap(const std::map<AnyReference, AnyReference>& values);
+    static AnyValue makeGenericMap(const std::map<AnyReference, AnyReference>& values);
 
     /// @}
 
-    ~GenericValue();
+    ~AnyValue();
     void operator = (const AnyReference& b);
-    void operator = (const GenericValue& b);
+    void operator = (const AnyValue& b);
     void reset();
     void reset(qi::TypeInterface *type);
     template <typename T>
     void set(const T& t) { AnyReference::set<T>(t); }
     void reset(const AnyReference& src);
     void reset(const AnyReference& src, bool copy, bool free);
-    void swap(GenericValue& b);
+    void swap(AnyValue& b);
 
     template<typename T>
-    static GenericValue from(const T& r) { return GenericValue(r);}
+    static AnyValue from(const T& r) { return AnyValue(r);}
 
   private:
     //we dont accept GVP here.  (block set<T> with T=GVP)
@@ -463,9 +463,9 @@ namespace qi{
     bool _allocated;
   };
 
-  /** GenericValue with Iterator kind, behaving as a STL-compatible iterator
+  /** AnyValue with Iterator kind, behaving as a STL-compatible iterator
   */
-  class AnyIterator: public GenericValue
+  class AnyIterator: public AnyValue
   {
   public:
     typedef AnyReference value_type;
@@ -475,7 +475,7 @@ namespace qi{
     typedef std::forward_iterator_tag iterator_category;
     AnyIterator();
     AnyIterator(const AnyReference& p);
-    AnyIterator(const GenericValue& v);
+    AnyIterator(const AnyValue& v);
     template<typename T> AnyIterator(const T& ref);
     /// Iterator increment
     AnyIterator operator ++();
@@ -487,12 +487,12 @@ namespace qi{
   QITYPE_API bool operator !=(const AnyIterator & a, const AnyIterator& b);
 
 
-  /// Less than operator. Will compare the values within the GenericValue.
-  QITYPE_API bool operator < (const GenericValue& a, const GenericValue& b);
+  /// Less than operator. Will compare the values within the AnyValue.
+  QITYPE_API bool operator < (const AnyValue& a, const AnyValue& b);
 
   /// Value equality operator. Will compare the values within.
-  QITYPE_API bool operator==(const GenericValue& a, const GenericValue& b);
-  QITYPE_API bool operator!=(const GenericValue& a, const GenericValue& b);
+  QITYPE_API bool operator==(const AnyValue& a, const AnyValue& b);
+  QITYPE_API bool operator!=(const AnyValue& a, const AnyValue& b);
 
   /** Generates AnyReference from everything transparently.
    * To be used as type of meta-function call argument
@@ -525,7 +525,7 @@ namespace qi{
     * @param JSON string to decode.
     * @return a GV representing the JSON string
     */
-  QITYPE_API qi::GenericValue decodeJSON(const std::string &in);
+  QITYPE_API qi::AnyValue decodeJSON(const std::string &in);
 
   /**
     * set the input GV to represent the JSON sequence between two string iterators or throw on parse error.
@@ -536,7 +536,7 @@ namespace qi{
     */
   QITYPE_API std::string::const_iterator decodeJSON(std::string::const_iterator begin,
                                          std::string::const_iterator end,
-                                         GenericValue &target);
+                                         AnyValue &target);
 
   class ListTypeInterface;
 

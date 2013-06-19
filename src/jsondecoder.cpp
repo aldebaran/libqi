@@ -13,7 +13,7 @@ struct JSONParseInfos
   std::string::const_iterator const end;
 };
 
-static bool decodeValue(JSONParseInfos &infos, GenericValue &value);
+static bool decodeValue(JSONParseInfos &infos, AnyValue &value);
 
 static void skipWhiteSpaces(JSONParseInfos &infos)
 {
@@ -129,18 +129,18 @@ static bool getFloat(JSONParseInfos &infos, double &result)
   return true;
 }
 
-static bool decodeArray(JSONParseInfos &infos, GenericValue &value)
+static bool decodeArray(JSONParseInfos &infos, AnyValue &value)
 {
   std::string::const_iterator save = infos.it;
 
   if (infos.it == infos.end || *infos.it != '[')
     return false;
   ++infos.it;
-  std::vector<GenericValue>   tmpArray;
+  std::vector<AnyValue>   tmpArray;
 
   while (true)
   {
-    GenericValue subElement;
+    AnyValue subElement;
 
     if (!decodeValue(infos, subElement))
       break;
@@ -155,27 +155,27 @@ static bool decodeArray(JSONParseInfos &infos, GenericValue &value)
     return false;
   }
   ++infos.it;
-  value = GenericValue(tmpArray);
+  value = AnyValue(tmpArray);
   return true;
 }
 
-static bool decodeFloat(JSONParseInfos &infos, GenericValue &value)
+static bool decodeFloat(JSONParseInfos &infos, AnyValue &value)
 {
   double tmpFloat;
 
   if (!getFloat(infos, tmpFloat))
     return false;
-  value = GenericValue(tmpFloat);
+  value = AnyValue(tmpFloat);
   return true;
 }
 
-static bool decodeInteger(JSONParseInfos &infos, GenericValue &value)
+static bool decodeInteger(JSONParseInfos &infos, AnyValue &value)
 {
   qi::int64_t tmpInteger;
 
   if (!getInteger(infos, tmpInteger))
     return false;
-  value = GenericValue(tmpInteger);
+  value = AnyValue(tmpInteger);
   return true;
 }
 
@@ -229,17 +229,17 @@ static bool getCleanString(JSONParseInfos &infos, std::string &result)
   return true;
 }
 
-static bool decodeString(JSONParseInfos &infos, GenericValue &value)
+static bool decodeString(JSONParseInfos &infos, AnyValue &value)
 {
   std::string tmpString;
 
   if (!getCleanString(infos, tmpString))
     return false;
-  value = GenericValue(tmpString);
+  value = AnyValue(tmpString);
   return true;
 }
 
-static bool decodeObject(JSONParseInfos &infos, GenericValue &value)
+static bool decodeObject(JSONParseInfos &infos, AnyValue &value)
 {
   std::string::const_iterator save = infos.it;
 
@@ -247,7 +247,7 @@ static bool decodeObject(JSONParseInfos &infos, GenericValue &value)
     return false;
   ++infos.it;
 
-  std::map<std::string, GenericValue> tmpMap;
+  std::map<std::string, AnyValue> tmpMap;
   while (true)
   {
     skipWhiteSpaces(infos);
@@ -262,7 +262,7 @@ static bool decodeObject(JSONParseInfos &infos, GenericValue &value)
       return false;
     }
     ++infos.it;
-    GenericValue tmpValue;
+    AnyValue tmpValue;
     if (!decodeValue(infos, tmpValue))
     {
       infos.it = save;
@@ -281,7 +281,7 @@ static bool decodeObject(JSONParseInfos &infos, GenericValue &value)
     return false;
   }
   ++infos.it;
-  value = GenericValue(tmpMap);
+  value = AnyValue(tmpMap);
   return true;
 }
 
@@ -305,22 +305,22 @@ static bool match(JSONParseInfos &infos, std::string const& expected)
   return true;
 }
 
-static bool decodeSpecial(JSONParseInfos &infos, GenericValue &value)
+static bool decodeSpecial(JSONParseInfos &infos, AnyValue &value)
 {
   if (infos.it == infos.end)
     return false;
   if (match(infos, "true"))
-    value = GenericValue(true);
+    value = AnyValue(true);
   else if (match(infos, "false"))
-    value = GenericValue::from(false);
+    value = AnyValue::from(false);
   else if (match(infos, "null"))
-    value = GenericValue();
+    value = AnyValue();
   else
     return false;
   return true;
 }
 
-static bool decodeValue(JSONParseInfos &infos, GenericValue &value)
+static bool decodeValue(JSONParseInfos &infos, AnyValue &value)
 {
   skipWhiteSpaces(infos);
   if (decodeSpecial(infos, value)
@@ -339,7 +339,7 @@ static bool decodeValue(JSONParseInfos &infos, GenericValue &value)
 
 std::string::const_iterator decodeJSON(std::string::const_iterator begin,
                                        std::string::const_iterator end,
-                                       GenericValue &target)
+                                       AnyValue &target)
 {
   JSONParseInfos infos(begin, end);
   if (!decodeValue(infos, target))
@@ -347,9 +347,9 @@ std::string::const_iterator decodeJSON(std::string::const_iterator begin,
   return infos.it;
 }
 
-GenericValue decodeJSON(const std::string &in)
+AnyValue decodeJSON(const std::string &in)
 {
-  GenericValue value;
+  AnyValue value;
   decodeJSON(in.begin(), in.end(), value);
   return value;
 }

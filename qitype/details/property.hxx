@@ -11,13 +11,13 @@
 namespace qi
 {
 
-  inline void GenericProperty::set(const GenericValue& v)
+  inline void GenericProperty::set(const AnyValue& v)
   {
     std::pair<AnyReference, bool> conv = v.convert(_type);
     if (!conv.first.type)
       throw std::runtime_error(std::string("Failed converting ") + v.type->infoString() + " to " + _type->infoString());
 
-    Property<GenericValue>::set(GenericValue(conv.first, false, false));
+    Property<AnyValue>::set(AnyValue(conv.first, false, false));
     if (conv.second)
       conv.first.destroy();
   }

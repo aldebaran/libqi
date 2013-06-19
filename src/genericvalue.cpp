@@ -29,7 +29,7 @@ namespace qi
 
   namespace
   {
-    static void dropIt(const GenericValue& v)
+    static void dropIt(const AnyValue& v)
     {
     }
   }
@@ -539,7 +539,7 @@ namespace qi
             new GenericObject(
               static_cast<ObjectTypeInterface*>(pT->pointedType()),
               pT->dereference(value).value),
-            boost::bind(dropIt, GenericValue(*this)));
+            boost::bind(dropIt, AnyValue(*this)));
       return std::make_pair(AnyReference(o).clone(), true);
     }
 
@@ -690,7 +690,7 @@ namespace qi
 #undef GET
     return a.value < b.value;
   }
-  bool operator< (const GenericValue& a, const GenericValue& b)
+  bool operator< (const AnyValue& a, const AnyValue& b)
   {
     return (const AnyReference&)a < (const AnyReference&)b;
   }
@@ -706,7 +706,7 @@ namespace qi
       return ! (a < b) && !(b<a);
   }
 
-  bool operator==(const GenericValue& a, const GenericValue& b)
+  bool operator==(const AnyValue& a, const AnyValue& b)
   {
     return (const AnyReference&)a == (const AnyReference&)b;
   }
@@ -716,10 +716,10 @@ namespace qi
     return (const AnyReference&)a == (const AnyReference&)b;
   }
 
-  GenericValue AnyReference::toTuple(bool homogeneous) const
+  AnyValue AnyReference::toTuple(bool homogeneous) const
   {
     if (kind() == TypeInterface::Tuple)
-      return GenericValue(*this);
+      return AnyValue(*this);
     else if (kind() != TypeInterface::List)
       throw std::runtime_error("Expected Tuple or List kind");
     // convert list to tuple
@@ -745,7 +745,7 @@ namespace qi
     }
 
     //makeGenericTuple allocates, steal the result
-    return GenericValue(makeGenericTuple(elems), false, true);
+    return AnyValue(makeGenericTuple(elems), false, true);
   }
 
   AnyObject AnyReference::toObject() const

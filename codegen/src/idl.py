@@ -87,7 +87,7 @@ CXX_SIG_MAP = {
   'char*': 's',
   'string': 's',
   'void':  'v',
-  'GenericValue': 'm',
+  'AnyValue': 'm',
 }
 
 # signature to C++ type
@@ -103,7 +103,7 @@ SIG_CXX_MAP = {
     'f'    : 'float',
     'd'    : 'double',
     's'    : 'std::string',
-    'm'    : 'qi::GenericValue',
+    'm'    : 'qi::AnyValue',
     'v'    : 'void',
     'b'    : 'bool',
     'X'    : 'void*',
@@ -799,7 +799,7 @@ namespace detail {
   declvoid = ''
   impl = ''
   postimpl = ''
-  # Use ALValue instead of GenericValue for dynamic kind.
+  # Use ALValue instead of AnyValue for dynamic kind.
   SIG_CXX_MAP['m'] = 'AL::ALValue'
   SIG_CXX_MAP['i'] = 'int'
   # sort the methods

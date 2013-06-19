@@ -331,11 +331,11 @@ namespace qi {
     return type->disconnect(value, this, linkId);
   }
 
-  qi::FutureSync<GenericValue> GenericObject::property(unsigned int id) {
+  qi::FutureSync<AnyValue> GenericObject::property(unsigned int id) {
     return type->property(value, id);
   }
 
-  qi::FutureSync<void> GenericObject::setProperty(unsigned int id, const GenericValue& val) {
+  qi::FutureSync<void> GenericObject::setProperty(unsigned int id, const AnyValue& val) {
     return type->setProperty(value, id, val);
   }
 

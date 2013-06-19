@@ -29,7 +29,7 @@ namespace qi
     virtual ~PropertyBase() {}
     virtual SignalBase* signal() = 0;
     virtual void setValue(AnyReference value) = 0;
-    virtual GenericValue value() const = 0;
+    virtual AnyValue value() const = 0;
   };
 
   template<typename T>
@@ -74,38 +74,38 @@ namespace qi
     {}
     virtual SignalBase* signal() { return this;}
     virtual void setValue(AnyReference value)  { PropertyImpl<T>::set(value.to<T>());}
-    virtual GenericValue value() const { return GenericValue(AnyReference(PropertyImpl<T>::get()));}
+    virtual AnyValue value() const { return AnyValue(AnyReference(PropertyImpl<T>::get()));}
   };
 
   template<>
-  class QITYPE_API Property<GenericValue>: public PropertyImpl<GenericValue>
+  class QITYPE_API Property<AnyValue>: public PropertyImpl<AnyValue>
   {
   public:
 
     Property(Getter getter = Getter(), Setter setter = Setter(),
       SignalBase::OnSubscribers onsubscribe = SignalBase::OnSubscribers())
-    : PropertyImpl<GenericValue>(getter, setter, onsubscribe)
+    : PropertyImpl<AnyValue>(getter, setter, onsubscribe)
     {
     }
     virtual SignalBase* signal() { return this;}
-    virtual void setValue(AnyReference value)  { set(GenericValue(value, false, false));}
-    virtual GenericValue value() const { return get();}
+    virtual void setValue(AnyReference value)  { set(AnyValue(value, false, false));}
+    virtual AnyValue value() const { return get();}
   };
 
-  /// Type-erased property, simulating a typed property but using GenericValue.
-  class QITYPE_API GenericProperty: public Property<GenericValue>
+  /// Type-erased property, simulating a typed property but using AnyValue.
+  class QITYPE_API GenericProperty: public Property<AnyValue>
   {
   public:
     GenericProperty(TypeInterface* type, Getter getter = Getter(), Setter setter = Setter())
-    :Property<GenericValue>(getter, setter)
+    :Property<AnyValue>(getter, setter)
     , _type(type)
     { // Initialize with default value for given type
-      set(GenericValue(_type));
+      set(AnyValue(_type));
       std::vector<TypeInterface*> types(&_type, &_type + 1);
       _setSignature(makeTupleSignature(types));
     }
-    virtual void setValue(AnyReference value)  { set(GenericValue(value, false, false));}
-    void set(const GenericValue& v);
+    virtual void setValue(AnyReference value)  { set(AnyValue(value, false, false));}
+    void set(const AnyValue& v);
     virtual qi::Signature signature() const {
       return makeTupleSignature(std::vector<TypeInterface*>(&_type, &_type + 1));
     }

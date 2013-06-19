@@ -150,17 +150,17 @@ qi::Future<void> StaticObjectTypeBase::disconnect(void* instance, Manageable* co
   return qi::Future<void>(0);
 }
 
-qi::Future<GenericValue> StaticObjectTypeBase::property(void* instance, unsigned int id)
+qi::Future<AnyValue> StaticObjectTypeBase::property(void* instance, unsigned int id)
 {
   PropertyBase* p = ::qi::property(_data, instance, id);
   if (!p)
-    return qi::makeFutureError<GenericValue>("Can't find event");
-  qi::Promise<GenericValue> res;
+    return qi::makeFutureError<AnyValue>("Can't find event");
+  qi::Promise<AnyValue> res;
   res.setValue(p->value());
   return res.future();
 }
 
-qi::Future<void> StaticObjectTypeBase::setProperty(void* instance, unsigned int id, GenericValue value)
+qi::Future<void> StaticObjectTypeBase::setProperty(void* instance, unsigned int id, AnyValue value)
 {
   PropertyBase* p = ::qi::property(_data, instance, id);
   if (!p)

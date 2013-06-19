@@ -107,8 +107,8 @@ namespace qi
     /// Disconnect an event link. Returns if disconnection was successful.
     virtual qi::Future<void> disconnect(void* instance, Manageable* context, Link linkId);
     virtual const std::vector<std::pair<TypeInterface*, int> >& parentTypes();
-    virtual qi::Future<GenericValue> property(void* instance, unsigned int id);
-    virtual qi::Future<void> setProperty(void* instance, unsigned int id, GenericValue val);
+    virtual qi::Future<AnyValue> property(void* instance, unsigned int id);
+    virtual qi::Future<void> setProperty(void* instance, unsigned int id, AnyValue val);
     _QI_BOUNCE_TYPE_METHODS(DefaultTypeImplMethods<DynamicObject>);
   };
 
@@ -226,7 +226,7 @@ namespace qi
       i->second.second, callType, context, method, i->second.first, p);
   }
 
-  qi::Future<void> DynamicObject::metaSetProperty(unsigned int id, GenericValue val)
+  qi::Future<void> DynamicObject::metaSetProperty(unsigned int id, AnyValue val)
   {
     try
     {
@@ -241,9 +241,9 @@ namespace qi
     return p.future();
   }
 
-  qi::Future<GenericValue> DynamicObject::metaProperty(unsigned int id)
+  qi::Future<AnyValue> DynamicObject::metaProperty(unsigned int id)
   {
-    qi::Promise<GenericValue> p;
+    qi::Promise<AnyValue> p;
     p.setValue(property(id)->value());
     return p.future();
   }
@@ -348,12 +348,12 @@ namespace qi
         tid = context->_nextTraceId();
         qi::os::timeval tv;
         qi::os::gettimeofday(&tv);
-        std::vector<GenericValue> args;
+        std::vector<AnyValue> args;
         args.resize(params.size()-1);
         for (unsigned i=0; i<params.size()-1; ++i)
         {
           if (!params[i+1].type)
-            args[i] = GenericValue::from("<??" ">");
+            args[i] = AnyValue::from("<??" ">");
           else
           {
             switch(params[i+1].type->kind())
@@ -368,12 +368,12 @@ namespace qi
               args[i] = params[i+1];
               break;
             default:
-            args[i] = GenericValue::from("<??" ">");
+            args[i] = AnyValue::from("<??" ">");
             }
           }
         }
         context->traceObject(EventTrace(
-          tid, EventTrace::Event_Call, methodId, GenericValue::from(args), tv));
+          tid, EventTrace::Event_Call, methodId, AnyValue::from(args), tv));
       }
       qi::int64_t time = stats?qi::os::ustime():0;
       bool success = false;
@@ -399,11 +399,11 @@ namespace qi
       {
         qi::os::timeval tv;
         qi::os::gettimeofday(&tv);
-        GenericValue val;
+        AnyValue val;
         if (success)
           val = out.future().value();
         else
-          val = GenericValue::from(out.future().error());
+          val = AnyValue::from(out.future().error());
         context->traceObject(EventTrace(tid,
           success?EventTrace::Event_Result:EventTrace::Event_Error,
           methodId, val, tv));
@@ -529,13 +529,13 @@ namespace qi
     return empty;
   }
 
-  qi::Future<GenericValue> DynamicObjectTypeInterface::property(void* instance, unsigned int id)
+  qi::Future<AnyValue> DynamicObjectTypeInterface::property(void* instance, unsigned int id)
   {
     return reinterpret_cast<DynamicObject*>(instance)
       ->metaProperty(id);
   }
 
-  qi::Future<void> DynamicObjectTypeInterface::setProperty(void* instance, unsigned int id, GenericValue value)
+  qi::Future<void> DynamicObjectTypeInterface::setProperty(void* instance, unsigned int id, AnyValue value)
   {
     return reinterpret_cast<DynamicObject*>(instance)
       ->metaSetProperty(id, value);

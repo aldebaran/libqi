@@ -1,6 +1,6 @@
 .. _qitype-value:
 
-GenericValue API
+AnyValue API
 ================
 
 Overview
@@ -10,7 +10,7 @@ The library provide generic container that can be used to manipulate values. Gen
 
 
 - :cpp:class:`qi::GenericMethod`
-- :cpp:class:`qi::GenericValue`
+- :cpp:class:`qi::AnyValue`
 - :cpp:class:`qi::GenericFunctionParameters`
 - :cpp:class:`qi::AnyFunction`
 - :cpp:class:`qi::AutoGenericBalue`
@@ -23,4 +23,4 @@ The library provide generic container that can be used to manipulate values. Gen
 - GenericMap
 - GenericTuple
 - GenericObject
-- GenericValue
+- AnyValue
