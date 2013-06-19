@@ -56,8 +56,7 @@ namespace qi {
   inline
   AnyReference& AnyReference::operator = (const AutoAnyReference& b)
   {
-    type = b.type;
-    value = b.value;
+    update(b);
     return *this;
   }
 
@@ -122,16 +121,6 @@ namespace qi {
     void *value = t->initializeStorage(const_cast<void*>((const void*)ptr));
     return AnyReference(t, value);
   }
-
-//  template<typename T>
-//  AnyReference AnyReference(const T& ptr)
-//  {
-//    static TypeInterface* t = 0;
-//    if (!t)
-//      t = typeOf<typename boost::remove_const<T>::type>();
-//    void *value = t->initializeStorage(const_cast<void*>((const void*)&ptr));
-//    return AnyReference(t, value);
-//  }
 
   template<typename T>
   AnyReference::AnyReference(const T& ptr)
@@ -602,42 +591,6 @@ namespace qi {
   inline GenericIterator::GenericIterator(const GenericValue& v)
     : GenericValue(v)
   {}
-
-//  inline AnyReference::AnyReference(const AnyReference& src)
-//    : AnyReference(src)
-//  {
-//    if (!type)
-//      throw std::runtime_error("Reference to empty AnyReference");
-//  }
-
-//  template<typename T>
-//  AnyReference::AnyReference(const T& v)
-//  {
-//    *(AnyReference*)this = AnyReference(v);
-//  }
-
-//  template<typename T>
-//  AnyReference& AnyReference::operator=(const T& v)
-//  {
-//    set(v);
-//    return *this;
-//  }
-
-//  inline AnyReference& AnyReference::operator=(const AnyReference& v)
-//  {
-//    type = v.type;
-//    value = v.value;
-//    return *this;
-//  }
-
-//  inline AnyReference& AnyReference::operator=(const AnyReference& v)
-//  {
-//    type = v.type;
-//    value = v.value;
-//    return *this;
-//  }
-
-
 
   inline GenericIterator
   GenericIterator::operator++()
