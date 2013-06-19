@@ -71,7 +71,7 @@ struct ToPyObject
       result = toO(PyString_FromString(""));
   }
 
-  void visitList(qi::GenericIterator it, qi::GenericIterator end)
+  void visitList(qi::AnyIterator it, qi::AnyIterator end)
   {
     boost::python::list l;
 
@@ -82,7 +82,7 @@ struct ToPyObject
     result = l;
   }
 
-  void visitMap(qi::GenericIterator it, qi::GenericIterator end)
+  void visitMap(qi::AnyIterator it, qi::AnyIterator end)
   {
     boost::python::dict d;
     result = d;
