@@ -462,6 +462,7 @@ protected:
   static bfs::path sdkShareFoo;
   static bfs::path optSdkPrefix;
   static bfs::path optSdkShareFoo;
+  static bfs::path optSdkShareFuu;
   static bfs::path userShareFooBazDat;
   static bfs::path userShareFooFooDat;
   static bfs::path userShareFooUserDat;
@@ -470,6 +471,7 @@ protected:
 bfs::path qiPathData::sdkShareFoo;
 bfs::path qiPathData::optSdkPrefix;
 bfs::path qiPathData::optSdkShareFoo;
+bfs::path qiPathData::optSdkShareFuu;
 bfs::path qiPathData::userShareFooBazDat;
 bfs::path qiPathData::userShareFooFooDat;
 bfs::path qiPathData::userShareFooUserDat;
@@ -501,6 +503,11 @@ void qiPathData::SetUpTestCase()
             "bam/baz.dat\n"
             "opt.dat";
   createData(optSdkShareFoo, listing);
+
+  // an other optional complementary sdk dir
+  optSdkShareFuu = optSdkPrefix / "share" / "fuu";
+  listing = "fuu.dat";
+  createData(optSdkShareFuu, listing);
 
   // the user dir
   userShareFooBazDat = sdkl->userWritableDataPath("foo", "baz.dat");
@@ -574,6 +581,12 @@ TEST_F(qiPathData, listDataWithOptSdk)
 
   // opt.dat is only available in sdk
   EXPECT_TRUE(isInVector(optSdkShareFoo / "opt.dat", actual));
+
+  actual = sdkl->listData("fuu", "*.dat");
+  EXPECT_EQ(1, actual.size());
+
+  // fuu.dat is only available in sdk
+  EXPECT_TRUE(isInVector(optSdkShareFuu / "fuu.dat", actual));
 }
 
 TEST_F(qiPathData, listDataInSubFolder)

@@ -22,6 +22,7 @@
 #include "sdklayout.hpp"
 #include "filesystem.hpp"
 #include "utils.hpp"
+#include <boost/system/error_code.hpp>
 
 namespace {
 
@@ -420,20 +421,38 @@ namespace qi {
     std::set<std::string> matchedPaths;
     std::vector<std::string> fullPaths;
     std::vector<std::string> paths = dataPaths(applicationName);
-    try
+    for (std::vector<std::string>::const_iterator it = paths.begin();
+         it != paths.end();
+         ++it)
     {
-      for (std::vector<std::string>::const_iterator it = paths.begin();
-           it != paths.end();
-           ++it)
+      boost::filesystem::path dataPath(*it, qi::unicodeFacet());
+      // Note that the call to fsconcat is crucial: it will convert the
+      // pattern to a boost::filesystem::path and call make_preferred() which
+      // ensures the pattern is formatted in the same way than the input.
+      // Otherwise on Windows we might fail when trying to match
+      // foo\data\model.txt with foo\data/*.txt (instead of foo\data\*.txt)
+      boost::regex pathRegex(globToRegex(fsconcat(*it, pattern)));
+      try
       {
-        boost::filesystem::path dataPath(*it, qi::unicodeFacet());
-        // Note that the call to fsconcat is crucial: it will convert the
-        // pattern to a boost::filesystem::path and call make_preferred() which
-        // ensures the pattern is formatted in the same way than the input.
-        // Otherwise on Windows we might fail when trying to match
-        // foo\data\model.txt with foo\data/*.txt (instead of foo\data\*.txt)
-        boost::regex pathRegex(globToRegex(fsconcat(*it, pattern)));
-        for (boost::filesystem::recursive_directory_iterator itD(dataPath);
+        boost::system::error_code ec;
+        boost::filesystem::recursive_directory_iterator itD(dataPath,
+            boost::filesystem::symlink_option::none, ec);
+        if (ec)
+        {
+          if (ec == boost::system::errc::no_such_file_or_directory)
+          {
+            // The directory made up by dataPaths() does not exist.
+            // This is expected. Continue with the next one.
+            continue;
+          }
+          else
+          {
+            // This error is truly not expected, throw it
+            throw boost::filesystem::filesystem_error(
+                "boost::filesystem::directory_iterator::construct", ec);
+          }
+        }
+        for (;
              itD != boost::filesystem::recursive_directory_iterator(); // end
              ++itD)
         {
@@ -454,10 +473,11 @@ namespace qi {
           }
         }
       }
-    }
-    catch (const boost::filesystem::filesystem_error &e)
-    {
-      qiLogDebug("qi::path") << e.what();
+      catch (const boost::filesystem::filesystem_error &e)
+      {
+        // log and continue
+        qiLogDebug("qi::path") << e.what();
+      }
     }
     return fullPaths;
   }
