@@ -7,9 +7,10 @@
 #include <cmath>
 #include <gtest/gtest.h>
 #include <map>
-#include <qitype/genericvalue.hpp>
+#include <qitype/anyvalue.hpp>
 #include <qi/application.hpp>
 #include <qitype/type.hpp>
+#include <qitype/jsoncodec.hpp>
 
 struct MPoint {
   MPoint(int x=0, int y=0)

@@ -16,10 +16,12 @@ namespace qi
     std::pair<char*, size_t> res = get(storage);
     return std::string(res.first, res.second);
   }
+
   inline void StringTypeInterface::set(void** storage, const std::string& val)
   {
     set(storage, val.c_str(), val.size());
   }
+
   class QITYPE_API StringTypeInterfaceImpl: public StringTypeInterface
   {
   public:
@@ -40,7 +42,9 @@ namespace qi
     _QI_BOUNCE_TYPE_METHODS(Methods);
   };
 
-  template<> class TypeImpl<std::string>: public StringTypeInterfaceImpl{};
+  template<>
+  class TypeImpl<std::string>: public StringTypeInterfaceImpl
+  {};
 
   class QITYPE_API TypeCStringImpl: public StringTypeInterface
   {
@@ -65,7 +69,9 @@ namespace qi
     _QI_BOUNCE_TYPE_METHODS_NOCLONE(Methods);
   };
 
-  template<> class TypeImpl<char*>: public TypeCStringImpl{};
+  template<>
+  class TypeImpl<char*>: public TypeCStringImpl
+  {};
 
 
   template<int I> class TypeImpl<char [I]>: public StringTypeInterface
@@ -124,6 +130,7 @@ namespace qi
     _QI_BOUNCE_TYPE_METHODS(Impl);
     F _getter;
   };
+
   template<typename T, typename F>
   StringTypeInterface* makeTypeEquivalentString(T*, F f)
   {

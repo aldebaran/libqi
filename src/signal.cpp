@@ -9,7 +9,7 @@
 #include <boost/make_shared.hpp>
 
 #include <qitype/signal.hpp>
-#include <qitype/genericvalue.hpp>
+#include <qitype/anyvalue.hpp>
 #include <qitype/genericobject.hpp>
 
 #include "object_p.hpp"

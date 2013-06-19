@@ -5,7 +5,7 @@
 
 #include <boost/lexical_cast.hpp>
 
-#include <qitype/genericvalue.hpp>
+#include <qitype/anyreference.hpp>
 #include <qitype/genericobject.hpp>
 
 #if defined(_MSC_VER) && _MSC_VER <= 1500
@@ -922,6 +922,96 @@ namespace qi
     }
     else
       throw std::runtime_error("Value is not Int or Float");
+  }
+
+  std::vector<AnyReference> AnyReference::asTupleValuePtr()
+  {
+    if (kind() == TypeKind_Tuple)
+      return static_cast<StructTypeInterface*>(type)->values(value);
+    else if (kind() == TypeKind_List || kind() == TypeKind_Map)
+    {
+      std::vector<AnyReference> result;
+      AnyIterator iend = end();
+      AnyIterator it = begin();
+      for(; it != iend; ++it)
+        result.push_back(*it);
+      return result;
+    }
+    else
+      throw std::runtime_error("Expected tuple, list or map");
+  }
+
+  AnyIterator AnyReference::begin() const
+  {
+    if (kind() == TypeKind_List)
+      return static_cast<ListTypeInterface*>(type)->begin(value);
+    else if (kind() == TypeKind_Map)
+      return static_cast<MapTypeInterface*>(type)->begin(value);
+    else
+      throw std::runtime_error("Expected list or map");
+  }
+
+  AnyIterator AnyReference::end() const
+  {
+    if (kind() == TypeKind_List)
+      return static_cast<ListTypeInterface*>(type)->end(value);
+    else if (kind() == TypeKind_Map)
+      return static_cast<MapTypeInterface*>(type)->end(value);
+    else
+      throw std::runtime_error("Expected list or map");
+  }
+
+  std::map<AnyReference, AnyReference> AnyReference::asMapValuePtr()
+  {
+    if (kind() != TypeKind_Map)
+      throw std::runtime_error("Expected a map");
+    std::map<AnyReference, AnyReference> result;
+    AnyIterator iend = end();
+    AnyIterator it = begin();
+    for(; it != iend; ++it)
+    {
+      AnyReference elem = *it;
+      result[elem[0]] = elem[1];
+    }
+    return result;
+  }
+
+  void AnyReference::setString(const std::string& v)
+  {
+    if (kind() != TypeKind_String)
+      throw std::runtime_error("Value is not of kind string");
+    static_cast<StringTypeInterface*>(type)->set(&value, &v[0], v.size());
+  }
+
+  size_t AnyReference::size() const
+  {
+    if (kind() == TypeKind_List)
+      return static_cast<ListTypeInterface*>(type)->size(value);
+    if (kind() == TypeKind_Map)
+      return static_cast<MapTypeInterface*>(type)->size(value);
+    if (kind() == TypeKind_Tuple)
+      return static_cast<StructTypeInterface*>(type)->memberTypes().size();
+    else
+      throw std::runtime_error("Expected List, Map or Tuple.");
+  }
+
+
+  AnyReference AnyReference::asDynamic() const
+  {
+    if (kind() != TypeKind_Dynamic)
+      throw std::runtime_error("Not of dynamic kind");
+    DynamicTypeInterface* d = static_cast<DynamicTypeInterface*>(type);
+    return d->get(value);
+  }
+
+  AnyReference AnyReference::operator*()
+  {
+    if (kind() == TypeKind_Pointer)
+      return static_cast<PointerTypeInterface*>(type)->dereference(value);
+    else if (kind() == TypeKind_Iterator)
+      return static_cast<IteratorTypeInterface*>(type)->dereference(value);
+    else
+      throw std::runtime_error("Expected pointer or iterator");
   }
 
   namespace detail

@@ -12,7 +12,7 @@
 #include <qi/buffer.hpp>
 
 #include <qitype/type.hpp>
-#include <qitype/genericvalue.hpp>
+#include <qitype/anyvalue.hpp>
 #include <qitype/genericobject.hpp>
 #include <qitype/binarycodec.hpp>
 

@@ -7,14 +7,13 @@
 #ifndef _QITYPE_DETAILS_FUNCTIONTYPE_HXX_
 #define _QITYPE_DETAILS_FUNCTIONTYPE_HXX_
 
-
-#include <qitype/genericvalue.hpp>
+#include <qitype/details/anyvalue.hpp>
 #include <qitype/details/bindtype.hxx>
 
 namespace qi
 {
   inline CallableTypeInterface::CallableTypeInterface()
-  : _resultType(0)
+    : _resultType(0)
   {
   }
 
@@ -34,7 +33,8 @@ namespace qi
   }
 
   inline AnyFunction::AnyFunction()
-  : type(0), value(0) {}
+  : type(0), value(0)
+  {}
 
   inline AnyFunction::AnyFunction(const AnyFunction& b)
   {
@@ -44,8 +44,8 @@ namespace qi
   }
 
   inline AnyFunction::AnyFunction(FunctionTypeInterface* type, void* value)
-  : type(type)
-  , value(value)
+    : type(type)
+    , value(value)
   {
   }
 
@@ -80,6 +80,7 @@ namespace qi
   {
     return type;
   }
+
 } // namespace qi
 
 namespace std

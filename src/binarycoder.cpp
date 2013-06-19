@@ -4,7 +4,7 @@
 */
 
 #include <qitype/binarycodec.hpp>
-#include <qitype/genericvalue.hpp>
+#include <qitype/anyvalue.hpp>
 
 #include "binaryencoder.hpp"
 #include "binarydecoder.hpp"

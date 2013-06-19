@@ -7,6 +7,9 @@
 #ifndef _QITYPE_DETAILS_TYPELIST_HXX_
 #define _QITYPE_DETAILS_TYPELIST_HXX_
 
+#include <qitype/details/anyreference.hpp>
+#include <qitype/details/anyiterator.hpp>
+
 namespace qi
 {
   // List container
@@ -27,7 +30,8 @@ public:
 };
 
 // Type impl for any class that behaves as a forward iterator (++, *, ==)
-template<typename T> class TypeSimpleIteratorImpl: public IteratorTypeInterface
+template<typename T>
+class TypeSimpleIteratorImpl: public IteratorTypeInterface
 {
 public:
   typedef T Storage;

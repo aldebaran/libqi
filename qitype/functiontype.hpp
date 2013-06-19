@@ -165,6 +165,7 @@ namespace qi {
 
 #include <qitype/details/functiontype.hxx>
 #include <qitype/details/functiontypefactory.hxx>
+
 #ifdef _MSC_VER
 #  pragma warning( pop )
 #endif

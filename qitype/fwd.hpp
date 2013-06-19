@@ -24,17 +24,20 @@ namespace qi
   class StructTypeInterface;
   class DynamicTypeInterface;
 
-  class AnyReference;
+  class AutoAnyReference;
+
   class AnyReference;
   class AnyValue;
   class AnyIterator;
+
   class GenericListPtr;
   class GenericMapPtr;
-  class AnyValue;
-  class GenericObject;
-  class AutoAnyReference;
   class Manageable;
+
+  class GenericObject;
   typedef boost::shared_ptr<GenericObject> AnyObject;
+
+  class Signature;
 
   //warning update the C enum when updating this one.
   enum TypeKind

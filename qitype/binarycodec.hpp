@@ -11,8 +11,9 @@
 #include <boost/function.hpp>
 #include <qi/buffer.hpp>
 #include <qi/bufferreader.hpp>
-#include <qitype/genericvalue.hpp>
+#include <qitype/anyvalue.hpp>
 #include <qitype/metaobject.hpp>
+
 namespace qi {
 
   /// Informations passed when serializing an object
@@ -49,6 +50,9 @@ namespace qi {
   void decodeBinary(qi::BufferReader *buf, T* value, DeserializeObjectCallback onObject) {
     decodeBinary(buf, AnyReference::fromPtr(value), onObject);
   }
+
+
+
 
 }
 

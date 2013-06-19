@@ -1,5 +1,10 @@
-#include <cerrno>
+/*
+**  Copyright (C) 2013 Aldebaran Robotics
+**  See COPYING for the license
+*/
+
 #include <qitype/type.hpp>
+#include <qitype/jsoncodec.hpp>
 
 namespace qi {
 

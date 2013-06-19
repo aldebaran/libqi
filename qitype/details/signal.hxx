@@ -9,6 +9,7 @@
 
 #include <qitype/manageable.hpp>
 #include <boost/bind.hpp>
+#include <qitype/details/functionsignature.hxx>
 
 namespace qi
 {

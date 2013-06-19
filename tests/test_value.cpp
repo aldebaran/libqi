@@ -11,6 +11,7 @@
 #include <qi/application.hpp>
 #include <qitype/genericobject.hpp>
 #include <qitype/genericobjectbuilder.hpp>
+#include <qitype/jsoncodec.hpp>
 
 using namespace qi;
 qiLogCategory("test");

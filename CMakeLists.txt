@@ -30,34 +30,44 @@ endif()
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 set(PUBLIC_HEADERS
-                   qitype/api.hpp
-                   qitype/binarycodec.hpp
+                   qitype/details/anyreference.hpp
+                   qitype/details/anyvalue.hpp
                    qitype/details/accessor.hxx
                    qitype/details/bindtype.hxx
                    qitype/details/functiontype.hxx
                    qitype/details/functiontypefactory.hxx
                    qitype/details/genericobjectbuilder.hxx
                    qitype/details/genericobject.hxx
-                   qitype/details/genericvalue.hxx
+                   qitype/details/anyvalue.hxx
+                   qitype/details/anyiterator.hxx
+                   qitype/details/anyreference.hxx
+                   qitype/details/functionsignature.hxx
+                   qitype/details/hasless.hxx
                    qitype/details/objecttypebuilder.hxx
                    qitype/details/property.hxx
                    qitype/details/signal.hxx
                    qitype/details/type.hxx
                    qitype/details/typebuffer.hxx
                    qitype/details/typedispatcher.hxx
+                   qitype/details/typedynamic.hxx
                    qitype/details/typeimpl.hxx
+                   qitype/details/typeinterface.hpp
                    qitype/details/typeint.hxx
                    qitype/details/typelist.hxx
                    qitype/details/typemap.hxx
                    qitype/details/typepointer.hxx
                    qitype/details/typestring.hxx
                    qitype/details/typetuple.hxx
+                   qitype/api.hpp
+                   qitype/anyreference.hpp
+                   qitype/anyvalue.hpp
+                   qitype/binarycodec.hpp
                    qitype/dynamicobject.hpp
                    qitype/functiontype.hpp
                    qitype/fwd.hpp
                    qitype/genericobjectbuilder.hpp
                    qitype/genericobject.hpp
-                   qitype/genericvalue.hpp
+                   qitype/jsoncodec.hpp
                    qitype/manageable.hpp
                    qitype/metamethod.hpp
                    qitype/metaobject.hpp
@@ -88,7 +98,8 @@ set(SOURCES ${PUBLIC_HEADERS}
             src/dynamicobject.cpp
             src/functiontype.cpp
             src/genericobjectbuilder.cpp
-            src/genericvalue.cpp
+            src/anyreference.cpp
+            src/anyvalue.cpp
             src/jsonencoder.cpp
             src/jsondecoder.cpp
             src/metamethod.cpp

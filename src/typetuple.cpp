@@ -3,7 +3,7 @@
 **  See COPYING for the license
 */
 #include <qitype/type.hpp>
-#include <qitype/genericvalue.hpp>
+#include <qitype/anyvalue.hpp>
 
 namespace qi
 {

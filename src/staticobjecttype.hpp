@@ -9,7 +9,7 @@
 
 #include <qitype/api.hpp>
 #include <qitype/property.hpp>
-#include <qitype/genericvalue.hpp>
+#include <qitype/anyvalue.hpp>
 #include <qitype/type.hpp>
 #include <qitype/metaobject.hpp>
 #include <qitype/genericobject.hpp>

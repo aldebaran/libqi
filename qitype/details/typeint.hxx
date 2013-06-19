@@ -11,53 +11,60 @@
 
 namespace qi {
 
-template<typename T> class IntTypeInterfaceImpl:
-  public IntTypeInterface
-{
-public:
-  typedef typename detail::TypeImplMethodsBySize<T>::type
-   ImplType;
-  virtual int64_t get(void* value) const
-  {
-    return *(T*)ImplType::Access::ptrFromStorage(&value);
-  }
-  virtual void set(void** storage, int64_t value)
-  {
-    *(T*)ImplType::Access::ptrFromStorage(storage) = (T)value;
-  }
-  virtual unsigned int size() const
-  {
-    return sizeof(T);
-  }
-  virtual bool isSigned() const
-  {
-    return boost::is_signed<T>::value;
-  }
-  _QI_BOUNCE_TYPE_METHODS(ImplType);
-};
-
-  template<typename T> class TypeBoolImpl:
-    public IntTypeInterface
+  template<typename T>
+  class IntTypeInterfaceImpl: public IntTypeInterface
   {
   public:
-    typedef typename detail::TypeImplMethodsBySize<T>::type
-     ImplType;
+    typedef typename detail::TypeImplMethodsBySize<T>::type ImplType;
+
     virtual int64_t get(void* value) const
     {
       return *(T*)ImplType::Access::ptrFromStorage(&value);
     }
+
+    virtual void set(void** storage, int64_t value)
+    {
+      *(T*)ImplType::Access::ptrFromStorage(storage) = (T)value;
+    }
+
+    virtual unsigned int size() const
+    {
+      return sizeof(T);
+    }
+
+    virtual bool isSigned() const
+    {
+      return boost::is_signed<T>::value;
+    }
+
+    _QI_BOUNCE_TYPE_METHODS(ImplType);
+  };
+
+  template<typename T> class TypeBoolImpl: public IntTypeInterface
+  {
+  public:
+    typedef typename detail::TypeImplMethodsBySize<T>::type ImplType;
+
+    virtual int64_t get(void* value) const
+    {
+      return *(T*)ImplType::Access::ptrFromStorage(&value);
+    }
+
     virtual void set(void** storage, int64_t value)
     {
       *(T*)ImplType::Access::ptrFromStorage(storage) = (T)(value != 0);
     }
+
     virtual unsigned int size() const
     {
       return 0;
     }
+
     virtual bool isSigned() const
     {
       return 0;
     }
+
     _QI_BOUNCE_TYPE_METHODS(ImplType);
   };
 
@@ -67,31 +74,32 @@ public:
 namespace qi {
 
 
-template<typename T> class FloatTypeInterfaceImpl: public FloatTypeInterface
-{
-public:
-  typedef typename detail::TypeImplMethodsBySize<T>::type
-  ImplType;
-  virtual double get(void* value) const
+  template<typename T>
+  class FloatTypeInterfaceImpl: public FloatTypeInterface
   {
-    return *(T*)ImplType::Access::ptrFromStorage(&value);
-  }
-  virtual void set(void** storage, double value)
-  {
-    *(T*)ImplType::Access::ptrFromStorage(storage) = (T)value;
-  }
-  virtual unsigned int size() const
-  {
-    return sizeof(T);
-  }
-  _QI_BOUNCE_TYPE_METHODS(ImplType);
-};
+  public:
+    typedef typename detail::TypeImplMethodsBySize<T>::type ImplType;
+
+    virtual double get(void* value) const
+    {
+      return *(T*)ImplType::Access::ptrFromStorage(&value);
+    }
+
+    virtual void set(void** storage, double value)
+    {
+      *(T*)ImplType::Access::ptrFromStorage(storage) = (T)value;
+    }
+
+    virtual unsigned int size() const
+    {
+      return sizeof(T);
+    }
+
+    _QI_BOUNCE_TYPE_METHODS(ImplType);
+  };
 
 }
 
-#define QI_TYPE_ENUM_REGISTER(Enum)                                \
-  namespace qi {                                                   \
-    template<> class TypeImpl<Enum>: public IntTypeInterfaceImpl<long> {};  \
-  }
+
 
 #endif  // _QITYPE_DETAILS_TYPEINT_HXX_

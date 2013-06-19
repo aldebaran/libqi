@@ -16,7 +16,8 @@
 #define __QI_SIGNATURE_UNKNOWN_INSTEAD_OF_ASSERT
 
 #include <qitype/signature.hpp>
-#include <qitype/genericvalue.hpp>
+#include <qitype/anyvalue.hpp>
+#include <qitype/jsoncodec.hpp>
 
 #include <vector>
 #include <map>

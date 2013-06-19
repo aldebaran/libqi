@@ -5,6 +5,7 @@
 #include "metasignal_p.hpp"
 #include <qitype/metasignal.hpp>
 #include <qitype/genericobject.hpp>
+
 namespace qi {
 
   MetaSignal::MetaSignal()

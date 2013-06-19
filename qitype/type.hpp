@@ -18,6 +18,7 @@
 #include <qitype/api.hpp>
 #include <qitype/fwd.hpp>
 #include <qitype/signature.hpp>
+#include <qitype/details/typeinterface.hpp>
 
 #ifdef _MSC_VER
 #  pragma warning( push )
@@ -29,498 +30,41 @@
 #endif
 
 /* A lot of class are found in this headers... to kill circular dependencies.
-   Furthermore we need that all "default template" types are registered (included)
+   Futhermore we need that all "default template" types are registered (included)
    when type.hpp is used. (for typeOf to works reliably)
 */
 
 namespace qi{
 
 
-  /** This class is used to uniquely identify a type.
-   *
-   */
-  class QITYPE_API TypeInfo
-  {
-  public:
-    TypeInfo();
-    /// Construct a TypeInfo from a std::type_info
-    TypeInfo(const std::type_info& info);
-    /// Contruct a TypeInfo from a custom string.
-    TypeInfo(const std::string& ti);
+    /// Declare that a type has no accessible default constructor.
+    /// \warning Be careful to put the declaration outside any namespaces.
+  #define QI_TYPE_NOT_CONSTRUCTIBLE(T) \
+    namespace qi { namespace detail {  \
+    template<> struct TypeManager<T>: public TypeManagerNonDefaultConstructible<T> {};}}
+
+    /// Declare that a type has no metatype and cannot be used in a Value
+    /// \warning Be careful to put the declaration outside any namespaces.
+  #define QI_NO_TYPE(T) namespace qi {template<> class TypeImpl<T>: public detail::ForbiddenInTypeSystem {};}
+
+    /// Declare that a type has no accessible copy constructor
+    /// \warning Be careful to put the declaration outside any namespaces.
+  #define QI_TYPE_NOT_CLONABLE(T)     \
+    namespace qi { namespace detail { \
+    template<> struct TypeManager<T>: public TypeManagerNull<T> {};}}
+
+    /// Register TypeImpl<t> in runtime type factory for 't'. Must be called from a .cpp file
+    /// \warning Be careful to put the declaration outside any namespaces.
+  #define QI_TYPE_REGISTER(t) \
+    QI_TYPE_REGISTER_CUSTOM(t, qi::TypeImpl<t>)
+
+    /// Register 'typeimpl' in runtime type factory for 'type'.
+    /// \warning Be careful to put the declaration outside any namespaces.
+  #define QI_TYPE_REGISTER_CUSTOM(type, typeimpl) \
+    static bool BOOST_PP_CAT(__qi_registration, __LINE__) = qi::registerType(typeid(type), new typeimpl)
 
-    std::string asString() const;
-    std::string asDemangledString() const;
-
-    //TODO: DIE
-    const char* asCString() const;
-
-    bool operator==(const TypeInfo& b) const;
-    bool operator!=(const TypeInfo& b) const;
-    bool operator<(const TypeInfo& b) const;
-
-  private:
-    const std::type_info* stdInfo;
-    // C4251
-    std::string           customInfo;
-  };
-
-  /** Interface for all the operations we need on any type:
-   *
-   *  - cloning/destruction in clone() and destroy()
-   *  - Access to value from storage and storage creation in
-   *    ptrFromStorage() and initializeStorage()
-   *  - Type of specialized interface through kind()
-   *
-   * Our aim is to transport arbitrary values through:
-   *  - synchronous calls: Nothing to do, values are just transported and
-   *    converted.
-   *  - asynchronous call/thread change: Values are copied.
-   *  - process change: Values are serialized.
-   *
-   */
-  class QITYPE_API TypeInterface
-  {
-  public:
-    virtual const TypeInfo& info() =0;
-
-    // Initialize and return a new storage, from nothing or a T*
-    virtual void* initializeStorage(void* ptr=0)=0;
-
-    // Get pointer to type from pointer to storage
-    // Use a pointer and not a reference to avoid the case where the compiler makes a copy on the stack
-    virtual void* ptrFromStorage(void**)=0;
-
-    virtual void* clone(void*)=0;
-    virtual void destroy(void*)=0;
-
-    virtual TypeKind kind() const;
-
-    // Less must always work: compare pointers if you have to.
-    virtual bool less(void* a, void* b) = 0;
-
-    //TODO: DIE
-    inline const char* infoString() { return info().asCString(); } // for easy gdb access
-
-    /** @return the serialization signature corresponding to what the type
-     * would emit
-     * @param resolveDynamic: if true, resolve dynamic types as deep as possible
-     * for example a list<AnyReference> that happens to only contain int32
-     * will return [i]
-     * @warning if resolveDynamic is true, a valid storage must be given
-    */
-    qi::Signature signature(void* storage=0, bool resolveDynamic = false);
-
-    ///@return a Type on which signature() returns sig.
-    static TypeInterface* fromSignature(const qi::Signature& sig);
-  };
-
-  /// Runtime Type factory getter. Used by typeOf<T>()
-  QITYPE_API TypeInterface*  getType(const std::type_info& type);
-
-  /// Runtime Type factory setter.
-  QITYPE_API bool registerType(const std::type_info& typeId, TypeInterface* type);
-
-  /** Get type from a type. Will return a static TypeImpl<T> if T is not registered
-   */
-  template<typename T> TypeInterface* typeOf();
-
-  /// Get type from a value. No need to delete the result
-  template<typename T> TypeInterface* typeOf(const T& v)
-  {
-    return typeOf<T>();
-  }
-
-
-//MACROS
-
-  /// Declare that a type has no accessible default constructor.
-  /// \warning Be careful to put the declaration outside any namespaces.
-#define QI_TYPE_NOT_CONSTRUCTIBLE(T) \
-  namespace qi { namespace detail {  \
-  template<> struct TypeManager<T>: public TypeManagerNonDefaultConstructible<T> {};}}
-
-  /// Declare that a type has no metatype and cannot be used in a Value
-  /// \warning Be careful to put the declaration outside any namespaces.
-#define QI_NO_TYPE(T) namespace qi {template<> class TypeImpl<T>: public detail::ForbiddenInTypeSystem {};}
-
-  /// Declare that a type has no accessible copy constructor
-  /// \warning Be careful to put the declaration outside any namespaces.
-#define QI_TYPE_NOT_CLONABLE(T)     \
-  namespace qi { namespace detail { \
-  template<> struct TypeManager<T>: public TypeManagerNull<T> {};}}
-
-  /// Register TypeImpl<t> in runtime type factory for 't'. Must be called from a .cpp file
-  /// \warning Be careful to put the declaration outside any namespaces.
-#define QI_TYPE_REGISTER(t) \
-  QI_TYPE_REGISTER_CUSTOM(t, qi::TypeImpl<t>)
-
-  /// Register 'typeimpl' in runtime type factory for 'type'.
-  /// \warning Be careful to put the declaration outside any namespaces.
-#define QI_TYPE_REGISTER_CUSTOM(type, typeimpl) \
-  static bool BOOST_PP_CAT(__qi_registration, __LINE__) = qi::registerType(typeid(type), new typeimpl)
-
-
-
-  /** Class that holds any value, with informations to manipulate it.
-   *  operator=() makes a shallow copy.
-   *
-   * \warning AnyReference should not be used directly as call arguments.
-   * Use qi::AnyValue which has value semantics instead.
-   *
-   */
-  class QITYPE_API AnyReference
-  {
-  public:
-
-    AnyReference();
-
-    ///@{
-    /// Low level Internal API
-
-    /** Store type and allocate storage of value.
-     * @param type use this type for initialization
-     */
-    explicit AnyReference(TypeInterface* type);
-
-    /** Create a generic value with type and a value who should have
-     * already been allocated.
-     * @param type type of this generic value
-     * @param value an already alloc place to store value
-     */
-    AnyReference(TypeInterface* type, void* value) : type(type), value(value) {}
-
-    /// @return the pair (convertedValue, trueIfCopiedAndNeedsDestroy)
-    std::pair<AnyReference, bool> convert(TypeInterface* targetType) const;
-
-    std::pair<AnyReference, bool> convert(ListTypeInterface* targetType) const;
-    std::pair<AnyReference, bool> convert(StructTypeInterface* targetType) const;
-    std::pair<AnyReference, bool> convert(MapTypeInterface* targetType) const;
-    std::pair<AnyReference, bool> convert(IntTypeInterface* targetType) const;
-    std::pair<AnyReference, bool> convert(FloatTypeInterface* targetType) const;
-    std::pair<AnyReference, bool> convert(RawTypeInterface* targetType) const;
-    std::pair<AnyReference, bool> convert(StringTypeInterface* targetType) const;
-    std::pair<AnyReference, bool> convert(PointerTypeInterface* targetType) const;
-    std::pair<AnyReference, bool> convert(DynamicTypeInterface* targetType) const;
-
-
-
-
-    /** Return the typed pointer behind a AnyReference. T *must* be the type
-     * of the value.
-     * @return a pointer to the value as a T or 0 if value is not a T.
-     * @param check if false, does not validate type before converting
-     */
-    template<typename T> T* ptr(bool check = true);
-
-    bool isValid() const;
-    /// @return true if value is valid and not void
-    bool isValue() const;
-
-    /// Helper function that converts and always clone
-    AnyReference convertCopy(TypeInterface* targetType) const;
-
-    // get item with key/ïndex 'key'. Return empty GVP or throw in case of failure
-    AnyReference _element(const AnyReference& key, bool throwOnFailure);
-    void _append(const AnyReference& element);
-    void _insert(const AnyReference& key, const AnyReference& val);
-    TypeInterface*   type;
-    void*   value;
-    ///@}
-
-    ///@{
-    /** Construction and assign.
-     */
-
-    /** Construct a AnyValue with storage pointing to ptr.
-     * @warning the AnyReference will become invalid if ptr
-     * is destroyed (if it gets deleted or points to the stack and goes
-     * out of scope).
-     */
-    template <typename T>
-    explicit AnyReference(const T& ref);
-
-    template <typename T>
-    static AnyReference fromPtr(const T* ptr);
-
-
-    /** Assignment operator.
-     *  Previous content is lost, and will leak if not deleted outside or
-     *  with destroy().
-     */
-    AnyReference& operator = (const AutoAnyReference& b);
-    AnyReference clone() const;
-    /// Deletes storage.
-    void destroy();
-    ///@}
-
-
-    ///@{
-    /** The following methods return a typed copy of the stored value,
-     * converting if necessary.
-     * They throw in case of conversion failure.
-     */
-
-     /// Convert to anything or throw trying.
-    template<typename T> T to() const;
-    /// Similar to previous method, but uses a dummy value to get the target type
-    template<typename T> T to(const T&) const;
-    int64_t      toInt()    const;
-    uint64_t     toUInt()   const;
-    float        toFloat()  const;
-    double       toDouble() const;
-    std::string  toString() const;
-    template<typename T> std::vector<T> toList() const;
-    template<typename K, typename V> std::map<K, V> toMap() const;
-    AnyObject    toObject() const;
-
-    /** Convert the value to a tuple.
-     * If value is currently a tuple, it will be returned.
-     * If value is a list its elements will become the tuple components.
-     * @param homogeneous if true, all tuple elements will be of the type
-     * of the list element type. If false, the effective type of elements
-     * of kind dynamic will be used.
-     */
-    AnyValue toTuple(bool homogeneous) const;
-    ///@}
-
-    qi::Signature signature(bool resolveDynamic = false) const;
-    TypeKind kind() const;
-
-    ///@{
-    /** Read and update functions
-     *  The following functions access or modify the existing value.
-     *  They never change the storage location or type.
-     *  They will fail by throwing an exception if the requested operation
-     * is incompatible with the current value type.
-     *
-     * @warning a AnyReference referring to a container element will
-     * become invalid as soon as the container is modified.
-     *
-    */
-
-    /// Update the value with the one in b
-    void  update(const AnyReference& b);
-
-    /** @return a typed reference to the underlying value
-     *  @warning This method will only succeed if T exactly matches
-     *  the type of the value stored. No conversion will be performed.
-     *  So if you only want a value and not a reference, use to() instead.
-     */
-    template<typename T> T& as();
-    int64_t& asInt64() { return as<int64_t>();}
-    uint64_t& asUInt64() { return as<uint64_t>();}
-    int32_t& asInt32() { return as<int32_t>();}
-    uint32_t& asUInt32() { return as<uint32_t>();}
-    int16_t& asInt16() { return as<int16_t>();}
-    uint16_t& asUInt16() { return as<uint16_t>();}
-    int8_t& asInt8() { return as<int8_t>();}
-    uint8_t& asUInt8() { return as<uint8_t>();}
-    double& asDouble() { return as<double>();}
-    float& asFloat() { return as<float>();}
-    std::string& asString() { return as<std::string>();}
-
-    /** @return contained AnyValue or throw if type is not dynamic.
-     * @note Returned AnyReference might be empty.
-    */
-    AnyReference asDynamic() const;
-
-    /// @{
-    /** Container partial unboxing.
-     *  The following functions unbox the container-part of the value.
-     *  The values in the contairer are exposed as AnyReference.
-     *  The values can be modified using the set and as function families,
-     *  But the container itself is a copy.
-     * @warning for better performances use the begin() and end() iterator API
-    */
-    std::vector<AnyReference> asTupleValuePtr();
-    std::vector<AnyReference> asListValuePtr();
-    std::map<AnyReference, AnyReference> asMapValuePtr();
-    /// @}
-
-    /// Update the value to val, which will be converted if required.
-    template<typename T> void set(const T& val);
-    void set(int64_t v) { setInt(v);}
-    void set(int32_t v) { setInt(v);}
-    void set(uint64_t v) { setUInt(v);}
-    void set(uint32_t v) { setUInt(v);}
-    void set(float v) { setFloat(v);}
-    void set(double v) { setDouble(v);}
-    void set(const std::string& v) { setString(v);}
-
-    void  setInt(int64_t v);
-    void  setUInt(uint64_t v);
-    void  setFloat(float v);
-    void  setDouble(double v);
-    void  setString(const std::string& v);
-    void  setDynamic(const AnyReference &value);
-
-    ///@{
-    /// In-place container manipulation.
-
-    /** Return a reference to container element at index or key idx.
-     *  Use set methods on the result for inplace modification.
-     *  Behavior depends on the container kind:
-     *  - List or tuple: The key must be of integral type. Boundary checks
-     *    are performed.
-     *  - Map: The key must be of a convertible type to the container key type.
-     *    If the key is not found in the container, a new default-valued
-     *    Element will be created, inserted. and returned.
-     *  @warning the returned value is only valid until owning container
-     *  is changed.
-    */
-    template<typename K>
-    AnyReference     operator[](const K& key);
-    /// Call operator[](key).as<E>, element type must match E
-    template<typename E, typename K> E& element(const K& key);
-    size_t size() const;
-    template<typename T> void append(const T& element);
-    template<typename K, typename V> void insert(const K& key, const V& val);
-    /** Similar to operator[](), but return an empty AnyValue
-     * If the key is not present.
-     */
-    template<typename K> AnyReference find(const K& key);
-
-    /// Return an iterator on the beginning of the container
-    AnyIterator begin() const; //we lie on const but GV does not honor it yet
-    /// Return an iterator on the end of the container
-    AnyIterator end() const;
-    /// Dereference pointer or iterator
-    AnyReference operator*();
-    ///@}
-
-    ///@}
-
-  };
-
-  QITYPE_API bool operator< (const AnyReference& a, const AnyReference& b);
-  QITYPE_API bool operator==(const AnyReference& a, const AnyReference& b);
-  QITYPE_API bool operator!=(const AnyReference& a, const AnyReference& b);
-  /** AnyReference with copy semantics
-  */
-  class QITYPE_API AnyValue: public AnyReference
-  {
-  public:
-
-    AnyValue();
-    /// Share ownership of value with b.
-    AnyValue(const AnyValue& b);
-    explicit AnyValue(const AnyReference& b, bool copy, bool free);
-    explicit AnyValue(const AutoAnyReference& b);
-    explicit AnyValue(qi::TypeInterface *type);
-    /// Create and return a AnyValue of type T
-    template<typename T> static AnyValue make();
-
-    /// @{
-    /** The following functions construct a AnyValue from containers of
-     * AnyReference.
-    */
-    static AnyValue makeTuple(const std::vector<AnyReference>& values);
-    template<typename T>
-    static AnyValue makeList(const std::vector<AnyReference>& values);
-    static AnyValue makeGenericList(const std::vector<AnyReference>& values);
-    template<typename K, typename V>
-    static AnyValue makeMap(const std::map<AnyReference, AnyReference>& values);
-    static AnyValue makeGenericMap(const std::map<AnyReference, AnyReference>& values);
-
-    /// @}
-
-    ~AnyValue();
-    void operator = (const AnyReference& b);
-    void operator = (const AnyValue& b);
-    void reset();
-    void reset(qi::TypeInterface *type);
-    template <typename T>
-    void set(const T& t) { AnyReference::set<T>(t); }
-    void reset(const AnyReference& src);
-    void reset(const AnyReference& src, bool copy, bool free);
-    void swap(AnyValue& b);
-
-    template<typename T>
-    static AnyValue from(const T& r) { return AnyValue(r);}
-
-  private:
-    //we dont accept GVP here.  (block set<T> with T=GVP)
-    void set(const AnyReference& t);
-    bool _allocated;
-  };
-
-  /** AnyValue with Iterator kind, behaving as a STL-compatible iterator
-  */
-  class AnyIterator: public AnyValue
-  {
-  public:
-    typedef AnyReference value_type;
-    typedef AnyReference* pointer;
-    typedef AnyReference& reference;
-    typedef ptrdiff_t difference_type;
-    typedef std::forward_iterator_tag iterator_category;
-    AnyIterator();
-    AnyIterator(const AnyReference& p);
-    AnyIterator(const AnyValue& v);
-    template<typename T> AnyIterator(const T& ref);
-    /// Iterator increment
-    AnyIterator operator ++();
-    /// Dereference
-    AnyReference operator*();
-  };
-
-  QITYPE_API bool operator==(const AnyIterator& a, const AnyIterator & b);
-  QITYPE_API bool operator !=(const AnyIterator & a, const AnyIterator& b);
-
-
-  /// Less than operator. Will compare the values within the AnyValue.
-  QITYPE_API bool operator < (const AnyValue& a, const AnyValue& b);
-
-  /// Value equality operator. Will compare the values within.
-  QITYPE_API bool operator==(const AnyValue& a, const AnyValue& b);
-  QITYPE_API bool operator!=(const AnyValue& a, const AnyValue& b);
-
-  /** Generates AnyReference from everything transparently.
-   * To be used as type of meta-function call argument
-   *
-   *  Example:
-   *    void metaCall(ValueGen arg1, ValueGen arg2);
-   *  can be called with any argument type:
-   *    metaCall("foo", 12);
-   */
-  class QITYPE_API AutoAnyReference: public AnyReference
-  {
-  public:
-    AutoAnyReference ();
-    AutoAnyReference(const AutoAnyReference & b);
-
-    AutoAnyReference(const AnyReference &self)
-      : AnyReference(self)
-    {}
-
-    template<typename T>
-    AutoAnyReference(const T& ptr);
-  };
-
-  /** @return the value encoded in JSON.
-   */
-  QITYPE_API std::string encodeJSON(const qi::AutoAnyReference &val);
-
-  /**
-    * creates a GV representing a JSON string or throw on parse error.
-    * @param JSON string to decode.
-    * @return a GV representing the JSON string
-    */
-  QITYPE_API qi::AnyValue decodeJSON(const std::string &in);
-
-  /**
-    * set the input GV to represent the JSON sequence between two string iterators or throw on parse error.
-    * @param iterator to the beginning of the sequence to decode.
-    * @param iterator to the end of the sequence to decode.
-    * @param GV to set. Not modified if an error occurred.
-    * @return an iterator to the last read char + 1
-    */
-  QITYPE_API std::string::const_iterator decodeJSON(std::string::const_iterator begin,
-                                         std::string::const_iterator end,
-                                         AnyValue &target);
 
   class ListTypeInterface;
-
   class StructTypeInterface;
 
   // Interfaces for specialized types
@@ -647,13 +191,7 @@ namespace qi{
   ///@return a Type of kind Tuple with givent memberTypes
   QITYPE_API TypeInterface* makeTupleType(const std::vector<TypeInterface*>& memberTypes, const std::string &name = std::string(), const std::vector<std::string>& elementNames = std::vector<std::string>());
 
-  ///@return an allocated Tuple made from copies of \param values
-  QITYPE_API AnyReference makeGenericTuple(const std::vector<AnyReference>& values);
 
-  ///@return a Tuple pointing to \param values as its storage
-  QITYPE_API AnyReference makeGenericTuplePtr(
-    const std::vector<TypeInterface*>&types,
-    const std::vector<void*>&values);
 
   /** Declare a templated-type taking one type argument.
   * Required to be able to use QI_TEMPLATE_TYPE_GET
@@ -662,23 +200,25 @@ namespace qi{
   namespace qi {              \
     template<typename T> class QITYPE_TEMPLATE_API TypeImpl<n<T> >: public TypeOfTemplateImpl<n, T> {}; \
   }
-  /** Return a TemplateTypeInterface pointer if \p typeInst represents an instantiation
+  /** Return a TemplateTypeInterface pointer if \p typeInst represents an instanciation
    * of template type templateName, 0 otherwise
    */
   #define QI_TEMPLATE_TYPE_GET(typeInst, templateName) \
    dynamic_cast< ::qi::TypeOfTemplate<templateName>*>(typeInst)
+
+
+  #define QI_TYPE_ENUM_REGISTER(Enum)                                \
+    namespace qi {                                                   \
+      template<> class TypeImpl<Enum>: public IntTypeInterfaceImpl<long> {};  \
+    }
+
+#define QI_TYPE_STRUCT_DECLARE(name)                                      \
+ __QI_TYPE_STRUCT_DECLARE(name, /**/)
+
 }
 
 #include <qitype/details/typeimpl.hxx>
 #include <qitype/details/type.hxx>
-#include <qitype/details/genericvalue.hxx>
-#include <qitype/details/typeint.hxx>
-#include <qitype/details/typelist.hxx>
-#include <qitype/details/typemap.hxx>
-#include <qitype/details/typestring.hxx>
-#include <qitype/details/typepointer.hxx>
-#include <qitype/details/typetuple.hxx>
-#include <qitype/details/typebuffer.hxx>
 
 QI_NO_TYPE(qi::TypeInterface)
 QI_NO_TYPE(qi::TypeInterface*)
@@ -688,5 +228,16 @@ QI_NO_TYPE(qi::TypeInterface*)
 // restore the disabling of this warning
 #  pragma warning( disable: 4503 )
 #endif
+
+
+//#include <qitype/details/genericvalue.hxx>
+#include <qitype/details/typeint.hxx>
+#include <qitype/details/typelist.hxx>
+#include <qitype/details/typemap.hxx>
+#include <qitype/details/typestring.hxx>
+#include <qitype/details/typepointer.hxx>
+#include <qitype/details/typetuple.hxx>
+#include <qitype/details/typebuffer.hxx>
+#include <qitype/details/typedynamic.hxx>
 
 #endif  // _QITYPE_TYPE_HPP_

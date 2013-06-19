@@ -9,7 +9,7 @@
 
 #include <qitype/type.hpp>
 #include <qitype/signature.hpp>
-#include <qitype/genericvalue.hpp>
+#include <qitype/anyvalue.hpp>
 #include <qitype/genericobject.hpp>
 #include <qitype/typedispatcher.hpp>
 
