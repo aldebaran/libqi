@@ -16,16 +16,16 @@
 #include "value_p.h"
 #include <boost/bind.hpp>
 
-inline qi::Promise<qi::GenericValue> *qi_promise_cpp(qi_promise_t *value) {
-  return reinterpret_cast<qi::Promise<qi::GenericValue> *>(value);
+inline qi::Promise<qi::AnyValue> *qi_promise_cpp(qi_promise_t *value) {
+  return reinterpret_cast<qi::Promise<qi::AnyValue> *>(value);
 };
 
-inline qi::Future<qi::GenericValue> *qi_future_cpp(qi_future_t *value) {
-  return reinterpret_cast<qi::Future<qi::GenericValue> *>(value);
+inline qi::Future<qi::AnyValue> *qi_future_cpp(qi_future_t *value) {
+  return reinterpret_cast<qi::Future<qi::AnyValue> *>(value);
 };
 
-inline qi_future_t* qi_cpp_promise_get_future(qi::Promise<qi::GenericValue> &prom) {
-  qi::Future<qi::GenericValue>*  fut = new qi::Future<qi::GenericValue>(prom.future());
+inline qi_future_t* qi_cpp_promise_get_future(qi::Promise<qi::AnyValue> &prom) {
+  qi::Future<qi::AnyValue>*  fut = new qi::Future<qi::AnyValue>(prom.future());
   return (qi_future_t *) fut;
 }
 
@@ -37,8 +37,8 @@ inline void qi_future_c_adapter(qi::Future<T> fut, qi_promise_t* prom) {
     return;
   }
   qi_value_t* val = qi_value_create("");
-  qi::GenericValue &gvp = qi_value_cpp(val);
-  gvp = qi::GenericValue::from(fut.value());
+  qi::AnyValue &gvp = qi_value_cpp(val);
+  gvp = qi::AnyValue::from(fut.value());
   qi_promise_set_value(prom, val);
   qi_value_destroy(val);
   qi_promise_destroy(prom);

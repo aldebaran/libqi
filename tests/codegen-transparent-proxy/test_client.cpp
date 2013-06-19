@@ -32,7 +32,7 @@ TEST(TransparentProxy, ClientIMpl)
   p.server()->registerService("builder", qi::createObject("TaskServiceService"));
   qi::AnyObject o = p.client()->service("builder").value()->call<qi::AnyObject>("create");
   EXPECT_TRUE(o);
-  TaskServiceProxyPtr pp = qi::GenericValue::from(o).to<TaskServiceProxyPtr>();
+  TaskServiceProxyPtr pp = qi::AnyValue::from(o).to<TaskServiceProxyPtr>();
   pp->value.set(3);
   EXPECT_TRUE(pp);
   boost::shared_ptr<CTask> task(new CTask());
@@ -48,7 +48,7 @@ TEST(TransparentProxy, ServerImpl)
   p.server()->registerService("builder", qi::createObject("TaskServiceService"));
   qi::AnyObject o = p.client()->service("builder").value()->call<qi::AnyObject>("create");
   EXPECT_TRUE(o);
-  TaskServiceProxyPtr pp = qi::GenericValue::from(o).to<TaskServiceProxyPtr>();
+  TaskServiceProxyPtr pp = qi::AnyValue::from(o).to<TaskServiceProxyPtr>();
   pp->value.set(3);
   EXPECT_TRUE(pp);
   ITaskPtr task = pp->make(1);

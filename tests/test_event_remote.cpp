@@ -137,8 +137,8 @@ TEST(TestSignal, TwoLongPost)
   clientOp->connect("sig1", &cb);
 
   qi::GenericFunctionParameters params;
-  params.push_back(qi::GenericValue(42L).clone());
-  params.push_back(qi::GenericValue(43L).clone());
+  params.push_back(qi::AnyValue(42L).clone());
+  params.push_back(qi::AnyValue(43L).clone());
 
   clientOp->metaPost("sig1", params);
   for(unsigned int i=0; i<100 && (verifA == 0 || verifB == 0); ++i)

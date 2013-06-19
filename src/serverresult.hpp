@@ -29,7 +29,7 @@ namespace qi {
     }
     else
     {
-      GenericValue v = gfut.call<GenericValue>("value", 0);
+      AnyValue v = gfut.call<AnyValue>("value", 0);
       ret.setValue(v, host);
     }
     if (!socket->send(ret))

@@ -38,7 +38,7 @@ namespace qi { namespace py {
       {}
 
       boost::python::object operator()(boost::python::tuple pyargs, boost::python::dict pykwargs) {
-        qi::GenericValue val = qi::GenericValue::from(pyargs);
+        qi::AnyValue val = qi::AnyValue::from(pyargs);
         bool async = boost::python::extract<bool>(pykwargs.get("_async", false));
         std::string funN = boost::python::extract<std::string>(pykwargs.get("_overload", _funName));
         qiLogDebug() << "calling a method: " << funN << " args:" << qi::encodeJSON(val);

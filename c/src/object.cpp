@@ -33,9 +33,9 @@ static qi::AnyReference c_call(const std::string &complete_sig,
   qi::GenericFunctionParameters remove_first;
   if (params.size() > 1)
     remove_first.insert(remove_first.end(), params.begin()+1, params.end());
-  qi::GenericValue &gvp = qi_value_cpp(value);
+  qi::AnyValue &gvp = qi_value_cpp(value);
   //TODO: there is a copy here
-  gvp = qi::GenericValue::makeTuple(remove_first);
+  gvp = qi::AnyValue::makeTuple(remove_first);
   std::cout << "Complete sig:" << complete_sig << std::endl;
 
   if (func)
@@ -58,8 +58,8 @@ static qi::AnyReference c_signal_callback(const std::vector<qi::AnyReference>& a
   qiLogInfo() << "Signal Callback(" << params_sigs << ")";
 
   qi_value_t* params = qi_value_create(params_sigs.c_str());
-  qi::GenericValue &gvp = qi_value_cpp(params);
-  gvp = qi::GenericValue::makeTuple(args);
+  qi::AnyValue &gvp = qi_value_cpp(params);
+  gvp = qi::AnyValue::makeTuple(args);
   f(params, user_data);
   qi_value_destroy(params);
   return qi::AnyReference();
@@ -72,12 +72,12 @@ extern "C"
 {
 #endif
 
-void qiFutureCAdapter(qi::Future<qi::AnyReference> result, qi::Promise<qi::GenericValue> promise) {
+void qiFutureCAdapter(qi::Future<qi::AnyReference> result, qi::Promise<qi::AnyValue> promise) {
   if (result.hasError()) {
     promise.setError(result.error());
     return;
   }
-  qi::GenericValue gv;
+  qi::AnyValue gv;
   //we take the ownership of the GVP content. we are now responsible for freeing it.
   gv.reset(result.value(), false, true);
   promise.setValue(gv);
@@ -98,10 +98,10 @@ void        qi_object_destroy(qi_object_t *object)
 qi_future_t *qi_object_call(qi_object_t *object, const char *signature_c, qi_value_t *params)
 {
   qi::AnyObject             &obj = qi_object_cpp(object);
-  qi::GenericValue           gv  = qi_value_cpp(params);
+  qi::AnyValue           gv  = qi_value_cpp(params);
 
   qi::Future<qi::AnyReference> res = obj->metaCall(signature_c, gv.asTupleValuePtr());
-  qi::Promise<qi::GenericValue> prom;
+  qi::Promise<qi::AnyValue> prom;
   res.connect(boost::bind<void>(&qiFutureCAdapter, _1, prom));
   return qi_cpp_promise_get_future(prom);
 }
@@ -126,7 +126,7 @@ qi_value_t*          qi_object_get_metaobject(qi_object_t *object)
   const qi::MetaObject &mo = obj->metaObject();
   qi_value_t *ret = qi_value_create("");
 
-  qi_value_cpp(ret) = qi::GenericValue::from(mo);
+  qi_value_cpp(ret) = qi::AnyValue::from(mo);
   return ret;
 }
 

@@ -54,8 +54,8 @@ namespace qi {
     virtual qi::Future<Link> metaConnect(unsigned int event, const SignalSubscriber& sub);
     virtual qi::Future<void> metaDisconnect(Link linkId);
 
-    virtual qi::Future<GenericValue> metaProperty(unsigned int id);
-    virtual qi::Future<void> metaSetProperty(unsigned int id, GenericValue val);
+    virtual qi::Future<AnyValue> metaProperty(unsigned int id);
+    virtual qi::Future<void> metaSetProperty(unsigned int id, AnyValue val);
 
   protected:
     TransportSocketPtr                              _socket;

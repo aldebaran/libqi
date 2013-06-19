@@ -25,9 +25,9 @@
 
 qiLogCategory("qipy.convert");
 
-boost::python::object PyObject_from_GenericValue(qi::AnyReference val);
-void                PyObject_from_GenericValue(qi::AnyReference val, boost::python::object *target);
-qi::AnyReference GenericValue_from_PyObject(PyObject* val);
+boost::python::object PyObject_from_AnyValue(qi::AnyReference val);
+void                PyObject_from_AnyValue(qi::AnyReference val, boost::python::object *target);
+qi::AnyReference AnyValue_from_PyObject(PyObject* val);
 
 boost::python::object toO(PyObject*obj) {
   return boost::python::object(boost::python::borrowed(obj));
@@ -77,7 +77,7 @@ struct ToPyObject
 
     for (; it != end; ++it)
     {
-      l.append(PyObject_from_GenericValue((*it)));
+      l.append(PyObject_from_AnyValue((*it)));
     }
     result = l;
   }
@@ -89,7 +89,7 @@ struct ToPyObject
 
     for (; it != end; ++it)
     {
-      d[PyObject_from_GenericValue((*it)[0])] = PyObject_from_GenericValue((*it)[1]);
+      d[PyObject_from_AnyValue((*it)[0])] = PyObject_from_AnyValue((*it)[1]);
     }
   }
 
@@ -114,7 +114,7 @@ struct ToPyObject
     boost::python::list l;
     for (size_t i = 0; i < len; i++)
     {
-      l.append(PyObject_from_GenericValue(tuple[i]));
+      l.append(PyObject_from_AnyValue(tuple[i]));
     }
     //named tuple
     if (!annotations.size()){
@@ -139,7 +139,7 @@ struct ToPyObject
 
   void visitDynamic(qi::AnyReference pointee)
   {
-    result = PyObject_from_GenericValue(pointee);
+    result = PyObject_from_AnyValue(pointee);
   }
 
   void visitRaw(qi::AnyReference value)
@@ -167,7 +167,7 @@ struct ToPyObject
 };
 
 
-boost::python::object PyObject_from_GenericValue(qi::AnyReference val)
+boost::python::object PyObject_from_AnyValue(qi::AnyReference val)
 {
   boost::python::object result;
   ToPyObject tpo(result);
@@ -175,44 +175,44 @@ boost::python::object PyObject_from_GenericValue(qi::AnyReference val)
   return result;
 }
 
-void PyObject_from_GenericValue(qi::AnyReference val, boost::python::object* target)
+void PyObject_from_AnyValue(qi::AnyReference val, boost::python::object* target)
 {
   ToPyObject tal(*target);
   qi::typeDispatch(tal, val);
 }
 
-qi::AnyReference GenericValue_from_PyObject_List(PyObject* val)
+qi::AnyReference AnyValue_from_PyObject_List(PyObject* val)
 {
-  std::vector<qi::GenericValue> res;
+  std::vector<qi::AnyValue> res;
   Py_ssize_t len = PyList_Size(val);
 
   for (Py_ssize_t i = 0; i < len; i++)
   {
     PyObject* current = PyList_GetItem(val, i);
-    res.push_back(qi::GenericValue(GenericValue_from_PyObject(current)));
+    res.push_back(qi::AnyValue(AnyValue_from_PyObject(current)));
   }
 
   return qi::AnyReference(res).clone();
 }
 
-qi::AnyReference GenericValue_from_PyObject_Map(PyObject* dict)
+qi::AnyReference AnyValue_from_PyObject_Map(PyObject* dict)
 {
-  std::map<qi::GenericValue, qi::GenericValue>& res = *new std::map<qi::GenericValue, qi::GenericValue>();
+  std::map<qi::AnyValue, qi::AnyValue>& res = *new std::map<qi::AnyValue, qi::AnyValue>();
   PyObject *key, *value;
   Py_ssize_t pos = 0;
 
   while (PyDict_Next(dict, &pos, &key, &value))
   {
-    qi::AnyReference newkey = GenericValue_from_PyObject(key);
-    qi::AnyReference newvalue = GenericValue_from_PyObject(value);
+    qi::AnyReference newkey = AnyValue_from_PyObject(key);
+    qi::AnyReference newvalue = AnyValue_from_PyObject(value);
 
-    res[qi::GenericValue(newkey)] = newvalue;
+    res[qi::AnyValue(newkey)] = newvalue;
   }
 
   return qi::AnyReference(res).clone();
 }
 
-qi::AnyReference GenericValue_from_PyObject_Tuple(PyObject* val)
+qi::AnyReference AnyValue_from_PyObject_Tuple(PyObject* val)
 {
   std::vector<qi::AnyReference> res;
   Py_ssize_t len = PyTuple_Size(val);
@@ -220,7 +220,7 @@ qi::AnyReference GenericValue_from_PyObject_Tuple(PyObject* val)
   for (Py_ssize_t i = 0; i < len; i++)
   {
     PyObject* current = PyTuple_GetItem(val, i);
-    qi::AnyReference currentConverted = GenericValue_from_PyObject(current);
+    qi::AnyReference currentConverted = AnyValue_from_PyObject(current);
     res.push_back(currentConverted);
   }
 
@@ -241,7 +241,7 @@ class PythonScopedRef
     PyObject* _p;
 };
 
-qi::AnyReference GenericValue_from_PyObject(PyObject* val)
+qi::AnyReference AnyValue_from_PyObject(PyObject* val)
 {
   qi::AnyReference res;
   // May be not needed but we keep a ref on Py_None for the comparison, better safe than sorry
@@ -275,15 +275,15 @@ qi::AnyReference GenericValue_from_PyObject(PyObject* val)
   }
   else if (PyList_CheckExact(val))
   {
-    res = GenericValue_from_PyObject_List(val);
+    res = AnyValue_from_PyObject_List(val);
   }
   else if (PyDict_CheckExact(val))
   {
-    res = GenericValue_from_PyObject_Map(val);
+    res = AnyValue_from_PyObject_Map(val);
   }
   else if (PyTuple_CheckExact(val))
   {
-    res = GenericValue_from_PyObject_Tuple(val);
+    res = AnyValue_from_PyObject_Tuple(val);
   }
   else if (PyBool_Check(val))
   {
@@ -291,7 +291,7 @@ qi::AnyReference GenericValue_from_PyObject(PyObject* val)
     res = qi::AnyReference(b).clone();
   }
   else if (PyModule_CheckExact(val) || PyClass_Check(val)) {
-    throw std::runtime_error("Unable to convert Python Module or Class to GenericValue");
+    throw std::runtime_error("Unable to convert Python Module or Class to AnyValue");
   }
   else // if (PyInstance_Check(val))   //instance are old style python class
   {
@@ -307,13 +307,13 @@ public:
   {
     qi::py::GILScopedLock _lock;
     boost::python::object *p = (boost::python::object*) ptrFromStorage(&storage);
-    return GenericValue_from_PyObject(p->ptr());
+    return AnyValue_from_PyObject(p->ptr());
   }
   virtual void set(void** storage, qi::AnyReference src)
   {
     qi::py::GILScopedLock _lock;
     boost::python::object *p = (boost::python::object*) ptrFromStorage(storage);
-    PyObject_from_GenericValue(src, p);
+    PyObject_from_AnyValue(src, p);
   }
   typedef qi::DefaultTypeImplMethods<boost::python::object> Methods;
   _QI_BOUNCE_TYPE_METHODS(Methods);

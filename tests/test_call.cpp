@@ -76,7 +76,7 @@ int fakeemptysvec(const std::vector<std::string> &svec) {
   return 0;
 }
 
-int fakeemptygvec(const std::vector<qi::GenericValue> &sval) {
+int fakeemptygvec(const std::vector<qi::AnyValue> &sval) {
   std::cout << "sval.size(): " << sval.size() << std::endl;
   EXPECT_TRUE(sval.empty());
   return 0;
@@ -89,7 +89,7 @@ int fakesvec(const std::vector<std::string> &svec) {
   return 0;
 }
 
-int fakegvec(const std::vector<qi::GenericValue> &sval) {
+int fakegvec(const std::vector<qi::AnyValue> &sval) {
   std::cout << "sval.size(): " << sval.size() << std::endl;
   EXPECT_EQ("titi", sval[0].toString());
   EXPECT_EQ("toto", sval[1].toString());
@@ -103,14 +103,14 @@ int fakesvvec(const std::vector< std::vector<std::string> > &svec) {
   return 0;
 }
 
-int fakegvvec(const std::vector< std::vector<qi::GenericValue> > &sval) {
+int fakegvvec(const std::vector< std::vector<qi::AnyValue> > &sval) {
   std::cout << "sval.size(): " << sval.size() << std::endl;
   EXPECT_EQ("titi", sval[0][0].toString());
   EXPECT_EQ("toto", sval[1][0].toString());
   return 0;
 }
 
-int fakegvvec2(const std::vector< qi::GenericValue > &sval) {
+int fakegvvec2(const std::vector< qi::AnyValue > &sval) {
   std::cout << "sval.size(): " << sval.size() << std::endl;
   EXPECT_EQ("titi", sval[0].to< std::vector<std::string> >()[0]);
   EXPECT_EQ("toto", sval[1].to< std::vector<std::string> >()[0]);
@@ -124,7 +124,7 @@ int fakesmvvec(std::map<std::string, std::vector< std::vector<std::string> > > &
   return 0;
 }
 
-int fakegmvvec(std::map<std::string, std::vector< std::vector<qi::GenericValue> > > &sval) {
+int fakegmvvec(std::map<std::string, std::vector< std::vector<qi::AnyValue> > > &sval) {
   std::cout << "sval.size(): " << sval.size() << std::endl;
   EXPECT_EQ("titi", sval["i"][0][0].toString());
   EXPECT_EQ("toto", sval["j"][0][0].toString());
@@ -133,9 +133,9 @@ int fakegmvvec(std::map<std::string, std::vector< std::vector<qi::GenericValue> 
 
 struct GenericTuple
 {
-  qi::GenericValue e1;
-  qi::GenericValue e2;
-  qi::GenericValue e3;
+  qi::AnyValue e1;
+  qi::AnyValue e2;
+  qi::AnyValue e3;
 };
 QI_TYPE_STRUCT(GenericTuple, e1, e2, e3);
 
@@ -155,7 +155,7 @@ double eatSpecific(const SpecificTuple& v)
     return v.e1 + v.e2;
 }
 
-qi::GenericValue pingCopy(qi::GenericValue arg, qi::GenericValue& target)
+qi::AnyValue pingCopy(qi::AnyValue arg, qi::AnyValue& target)
 {
   target = arg;
   return arg;
@@ -165,19 +165,19 @@ TEST(TestCall, CallBufferInList)
 {
   TestSessionPair          p;
   qi::DynamicObjectBuilder ob;
-  qi::GenericValue val;
+  qi::AnyValue val;
   ob.advertiseMethod("pingcopy",
-    boost::function<qi::GenericValue(qi::GenericValue)>(boost::bind(&pingCopy, _1, boost::ref(val))));
+    boost::function<qi::AnyValue(qi::AnyValue)>(boost::bind(&pingCopy, _1, boost::ref(val))));
   qi::AnyObject obj(ob.object());
   p.server()->registerService("test", obj);
   qi::AnyObject proxy = p.client()->service("test");
-  std::vector<qi::GenericValue> args;
-  args.push_back(qi::GenericValue::from(12));
+  std::vector<qi::AnyValue> args;
+  args.push_back(qi::AnyValue::from(12));
   qi::Buffer buf;
   buf.write("canard", strlen("canard")+1);
-  args.push_back(qi::GenericValue::from(buf));
-  args.push_back(qi::GenericValue::from("foo"));
-  qi::GenericValue result = proxy->call<qi::GenericValue>("pingcopy", args);
+  args.push_back(qi::AnyValue::from(buf));
+  args.push_back(qi::AnyValue::from("foo"));
+  qi::AnyValue result = proxy->call<qi::AnyValue>("pingcopy", args);
   {
     ASSERT_EQ(3u, val.size());
     ASSERT_EQ(12, val[0].toInt());
@@ -186,9 +186,9 @@ TEST(TestCall, CallBufferInList)
     ASSERT_EQ("foo", val[2].toString());
   }
   {
-    std::vector<qi::GenericValue> l = result.to<std::vector<qi::GenericValue> >();
+    std::vector<qi::AnyValue> l = result.to<std::vector<qi::AnyValue> >();
     ASSERT_EQ(3u, l.size());
-    std::vector<qi::GenericValue>::iterator it = l.begin();
+    std::vector<qi::AnyValue>::iterator it = l.begin();
     ASSERT_EQ(12, (*it).toInt());
     ++it;
     qi::Buffer bufRes = (*it).to<qi::Buffer>();
@@ -333,15 +333,15 @@ TEST(TestCall, TestGenericConversion) {
   ASSERT_TRUE(proxy != 0);
 
   std::vector<std::string>      svec;
-  std::vector<qi::GenericValue> gvec;
+  std::vector<qi::AnyValue> gvec;
 
   std::vector<std::string>      esvec;
-  std::vector<qi::GenericValue> egvec;
+  std::vector<qi::AnyValue> egvec;
 
   svec.push_back("titi");
   svec.push_back("toto");
 
-  qi::GenericValue gv;
+  qi::AnyValue gv;
   gv = qi::AnyReference(std::string("titi"));
   gvec.push_back(gv);
   gv = qi::AnyReference(std::string("toto"));
@@ -389,17 +389,17 @@ TEST(TestCall, TestGenericConversionComplexList) {
   sss[0].push_back("titi");
   sss[1].push_back("toto");
 
-  std::vector<std::vector<qi::GenericValue> > ssg;
+  std::vector<std::vector<qi::AnyValue> > ssg;
   ssg.resize(2);
-  ssg[0].push_back(qi::GenericValue::from(std::string("titi")));
-  ssg[1].push_back(qi::GenericValue::from(std::string("toto")));
+  ssg[0].push_back(qi::AnyValue::from(std::string("titi")));
+  ssg[1].push_back(qi::AnyValue::from(std::string("toto")));
 
-  std::vector<qi::GenericValue>               sg;
-  std::vector<qi::GenericValue> paf;
-  paf.push_back(qi::GenericValue::from(std::string("titi")));
-  sg.push_back(qi::GenericValue::from(paf));
+  std::vector<qi::AnyValue>               sg;
+  std::vector<qi::AnyValue> paf;
+  paf.push_back(qi::AnyValue::from(std::string("titi")));
+  sg.push_back(qi::AnyValue::from(paf));
   paf[0] = qi::AnyReference(std::string("toto"));
-  sg.push_back(qi::GenericValue::from(paf));
+  sg.push_back(qi::AnyValue::from(paf));
 
   qi::Future<int> fut;
 
@@ -438,20 +438,20 @@ TEST(TestCall, TestGenericConversionComplexMap) {
 
 
   std::vector<std::vector<std::string> >      sss;
-  std::vector<std::vector<qi::GenericValue> > ssg;
+  std::vector<std::vector<qi::AnyValue> > ssg;
 
   std::map<std::string, std::vector<std::vector<std::string> > >      msvvs;
-  std::map<std::string, std::vector<std::vector<qi::GenericValue> > > msvvg;
+  std::map<std::string, std::vector<std::vector<qi::AnyValue> > > msvvg;
 
   sss.resize(2);
   ssg.resize(2);
   sss[0].push_back("titi");
-  ssg[0].push_back(qi::GenericValue::from(std::string("titi")));
+  ssg[0].push_back(qi::AnyValue::from(std::string("titi")));
   msvvs["i"] = sss;
   msvvg["i"] = ssg;
 
   sss[0][0] = "toto";
-  ssg[0][0] = qi::GenericValue::from(std::string("toto"));
+  ssg[0][0] = qi::AnyValue::from(std::string("toto"));
   msvvs["j"] = sss;
   msvvg["j"] = ssg;
 
@@ -490,7 +490,7 @@ TEST(TestCall, TestGenericConversionTuple) {
   GenericTuple gt;
   gt.e1 = qi::AnyReference(1.0);
   gt.e2 = qi::AnyReference(2U);
-  std::map<std::string, qi::GenericValue> map;
+  std::map<std::string, qi::AnyValue> map;
   map["foo"] = qi::AnyReference(3);
   gt.e3 = qi::AnyReference(map);
   f = proxy->call<double>("eatSpecific", gt);
@@ -979,10 +979,10 @@ TEST(TestCall, Statistics)
 class ArgPack
 {
 public:
-  qi::Property<qi::GenericValue> onCall;
+  qi::Property<qi::AnyValue> onCall;
   int callMe(const qi::AnyArguments& pack)
   {
-    onCall.set(qi::GenericValue::from(pack.args()));
+    onCall.set(qi::AnyValue::from(pack.args()));
     return pack.args().size();
   }
 };
@@ -993,12 +993,12 @@ TEST(TestCall, Dynamic)
 {
   TestSessionPair p;
   boost::shared_ptr<ArgPack> ap(new ArgPack);
-  qi::AnyObject os = qi::GenericValue::from(ap).to<qi::AnyObject>();
+  qi::AnyObject os = qi::AnyValue::from(ap).to<qi::AnyObject>();
   p.server()->registerService("packer", os);
   qi::AnyObject o = p.client()->service("packer");
   qi::details::printMetaObject(std::cerr, o->metaObject());
   EXPECT_EQ(3, o->call<int>("callMe", 1, 2, 3));
-  qi::GenericValue args = o->property<qi::GenericValue>("onCall");
+  qi::AnyValue args = o->property<qi::AnyValue>("onCall");
   std::vector<int> expect = boost::assign::list_of(1)(2)(3);
   EXPECT_EQ(expect, args.to<std::vector<int> >());
 }

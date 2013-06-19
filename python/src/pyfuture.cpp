@@ -33,41 +33,41 @@ namespace qi {
     {}
 
     PyFuture::PyFuture(const PyFuture& fut)
-      : qi::Future<qi::GenericValue>(fut)
+      : qi::Future<qi::AnyValue>(fut)
     {}
 
-    PyFuture::PyFuture(const qi::Future<qi::GenericValue>& fut)
-      : qi::Future<qi::GenericValue>(fut)
+    PyFuture::PyFuture(const qi::Future<qi::AnyValue>& fut)
+      : qi::Future<qi::AnyValue>(fut)
     {}
 
     boost::python::object PyFuture::value(int msecs) const {
-      qi::GenericValue gv;
+      qi::AnyValue gv;
       {
         GILScopedUnlock _unlock;
         //throw in case of error
-        gv = qi::Future<qi::GenericValue>::value(msecs);
+        gv = qi::Future<qi::AnyValue>::value(msecs);
       }
       return gv.to<boost::python::object>();
     }
 
     std::string PyFuture::error(int msecs) const {
       GILScopedUnlock _unlock;
-      return qi::Future<qi::GenericValue>::error(msecs);
+      return qi::Future<qi::AnyValue>::error(msecs);
     }
 
     FutureState PyFuture::wait(int msecs) const {
       GILScopedUnlock _unlock;
-      return qi::Future<qi::GenericValue>::wait(msecs);
+      return qi::Future<qi::AnyValue>::wait(msecs);
     }
 
     bool PyFuture::hasError(int msecs) const{
       GILScopedUnlock _unlock;
-      return qi::Future<qi::GenericValue>::hasError(msecs);
+      return qi::Future<qi::AnyValue>::hasError(msecs);
     }
 
     bool PyFuture::hasValue(int msecs) const {
       GILScopedUnlock _unlock;
-      return qi::Future<qi::GenericValue>::hasValue(msecs);
+      return qi::Future<qi::AnyValue>::hasValue(msecs);
     }
 
     void PyFuture::add_callback(boost::python::object callable) {
@@ -85,34 +85,34 @@ namespace qi {
 
 
 
-    class PyPromise: public qi::Promise<qi::GenericValue> {
+    class PyPromise: public qi::Promise<qi::AnyValue> {
     public:
       PyPromise() {};
 
       PyPromise(boost::python::object callable)
-        : qi::Promise<qi::GenericValue> (boost::bind<void>(&pyFutureCbProm, callable, this))
+        : qi::Promise<qi::AnyValue> (boost::bind<void>(&pyFutureCbProm, callable, this))
       {
       }
 
       void setValue(const boost::python::object &pyval) {
         //TODO: remove the useless copy here.
-        qi::GenericValue gvr = qi::GenericValue::from(pyval);
+        qi::AnyValue gvr = qi::AnyValue::from(pyval);
         {
           GILScopedUnlock _unlock;
-          qi::Promise<qi::GenericValue>::setValue(gvr);
+          qi::Promise<qi::AnyValue>::setValue(gvr);
         }
       }
 
       PyFuturePtr future() {
         PyFuturePtr pfp(new PyFuture);
-        *pfp = qi::Promise<qi::GenericValue>::future();
+        *pfp = qi::Promise<qi::AnyValue>::future();
         return pfp;
       }
     };
 
     boost::python::object makeFuture(qi::Future<qi::AnyReference> fut) {
       PyPromise prom;
-      qi::adaptFuture(fut, prom, qi::FutureValueConverterTakeAnyReference<qi::GenericValue>());
+      qi::adaptFuture(fut, prom, qi::FutureValueConverterTakeAnyReference<qi::AnyValue>());
       return boost::python::object(prom.future());
     }
 

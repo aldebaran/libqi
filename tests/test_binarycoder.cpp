@@ -644,8 +644,8 @@ TEST(testSerializable, Struct) {
 TEST(testSerializable, Value) {
   qi::Buffer buf;
   qi::BufferReader bufr(buf);
-  qi::GenericValue gv(qi::TypeInterface::fromSignature("m"));
-  qi::GenericValue gv2;
+  qi::AnyValue gv(qi::TypeInterface::fromSignature("m"));
+  qi::AnyValue gv2;
 
   qi::encodeBinary(&buf, gv);
   qi::decodeBinary(&bufr, &gv2);

@@ -315,7 +315,7 @@ namespace qi {
       return;
     }
     // Error message is of type m (dynamic)
-    GenericValue v(AnyReference(error), false, false);
+    AnyValue v(AnyReference(error), false, false);
     AnyReference vr(v);
     setValue(vr);
   }
@@ -416,7 +416,7 @@ namespace qi {
         values[i] = in[i].value;
       }
       AnyReference tuple = makeGenericTuplePtr(types, values);
-      GenericValue val(tuple, false, false);
+      AnyValue val(tuple, false, false);
       setValue(AnyReference(val), context);
       return;
     }

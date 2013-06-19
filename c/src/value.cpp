@@ -14,7 +14,7 @@ qiLogCategory("qi.c");
 //# GENERIC POD IMPL
 template<typename T>
 int       qi_value_set_pod(qi_value_t  *msg, T val) {
-  qi::GenericValue &gv = qi_value_cpp(msg);
+  qi::AnyValue &gv = qi_value_cpp(msg);
   try {
     gv.set<T>(val);
     return 1;
@@ -24,7 +24,7 @@ int       qi_value_set_pod(qi_value_t  *msg, T val) {
 
 template<typename T>
 int qi_value_get_pod(qi_value_t *msg, T *result) {
-  qi::GenericValue &gv = qi_value_cpp(msg);
+  qi::AnyValue &gv = qi_value_cpp(msg);
   try {
     *result = gv.to<T>();
     return 1;
@@ -35,7 +35,7 @@ int qi_value_get_pod(qi_value_t *msg, T *result) {
 
 template<typename T>
 T qi_value_get_pod_default(qi_value_t *msg, T defvalue) {
-  qi::GenericValue &gv = qi_value_cpp(msg);
+  qi::AnyValue &gv = qi_value_cpp(msg);
   try {
     return gv.to<T>();
   } catch (std::runtime_error &) {
@@ -50,27 +50,27 @@ extern "C"
 
 qi_value_t* qi_value_create(const char *signature)
 {
-  qi::GenericValue* v;
+  qi::AnyValue* v;
 
   if (!signature || !strcmp(signature, ""))
-    v = new qi::GenericValue();
+    v = new qi::AnyValue();
   else {
     //TODO: check signature correctness
     qi::TypeInterface *type = qi::TypeInterface::fromSignature(signature);
-    v = new qi::GenericValue(type);
+    v = new qi::AnyValue(type);
   }
   return (qi_value_t*)v;
 }
 
 void qi_value_destroy(qi_value_t* val)
 {
-  qi::GenericValue *v = &qi_value_cpp(val);
+  qi::AnyValue *v = &qi_value_cpp(val);
   delete v;
 }
 
 int         qi_value_reset(qi_value_t* value, const char *signature)
 {
-  qi::GenericValue *v = &qi_value_cpp(value);
+  qi::AnyValue *v = &qi_value_cpp(value);
   if (!signature || !strcmp(signature, ""))
     v->reset();
   else {
@@ -83,15 +83,15 @@ int         qi_value_reset(qi_value_t* value, const char *signature)
 
 void        qi_value_swap(qi_value_t* dest, qi_value_t* src)
 {
-  qi::GenericValue *s = &qi_value_cpp(src);
-  qi::GenericValue *d = &qi_value_cpp(dest);
+  qi::AnyValue *s = &qi_value_cpp(src);
+  qi::AnyValue *d = &qi_value_cpp(dest);
   s->swap(*d);
 }
 
 qi_value_t* qi_value_copy(qi_value_t* src)
 {
-  qi::GenericValue *s = &qi_value_cpp(src);
-  qi::GenericValue *d = new qi::GenericValue;
+  qi::AnyValue *s = &qi_value_cpp(src);
+  qi::AnyValue *d = new qi::AnyValue;
   *d = *s;
   return (qi_value_t*)d;
 }
@@ -100,13 +100,13 @@ qi_value_t* qi_value_copy(qi_value_t* src)
 qi_value_kind_t qi_value_get_kind(qi_value_t* value) {
   if (!value)
     return QI_VALUE_KIND_UNKNOWN;
-  qi::GenericValue &val = qi_value_cpp(value);
+  qi::AnyValue &val = qi_value_cpp(value);
   return (qi_value_kind_t)(val.kind());
 }
 
 const char*     qi_value_get_signature(qi_value_t* value, int resolveDynamics)
 {
-  qi::GenericValue &val = qi_value_cpp(value);
+  qi::AnyValue &val = qi_value_cpp(value);
   return qi::os::strdup(val.signature(!!resolveDynamics).toString().c_str());
 }
 
@@ -153,7 +153,7 @@ double qi_value_get_double_default(qi_value_t *container, double defvalue)
 //# STRING
 int        qi_value_set_string(qi_value_t *container, const char *s)
 {
-  qi::GenericValue &gv = qi_value_cpp(container);
+  qi::AnyValue &gv = qi_value_cpp(container);
   try {
     gv.setString(s);
     return 1;
@@ -166,7 +166,7 @@ const char* qi_value_get_string(qi_value_t *msg)
 {
   if (!msg)
     return 0;
-  qi::GenericValue &gv = qi_value_cpp(msg);
+  qi::AnyValue &gv = qi_value_cpp(msg);
   try {
     return qi::os::strdup(gv.toString().c_str());
   } catch (std::runtime_error &) {
@@ -177,8 +177,8 @@ const char* qi_value_get_string(qi_value_t *msg)
 //# TUPLE
 int        qi_value_tuple_set(qi_value_t *msg, unsigned int idx, qi_value_t *value)
 {
-  qi::GenericValue &container = qi_value_cpp(msg);
-  qi::GenericValue &val = qi_value_cpp(value);
+  qi::AnyValue &container = qi_value_cpp(msg);
+  qi::AnyValue &val = qi_value_cpp(value);
 
   try {
     if (container.kind() != qi::TypeInterface::Tuple || idx >= container.size()) {
@@ -191,19 +191,19 @@ int        qi_value_tuple_set(qi_value_t *msg, unsigned int idx, qi_value_t *val
 }
 
 qi_value_t*  qi_value_tuple_get(qi_value_t *msg, unsigned int idx) {
-  qi::GenericValue &container = qi_value_cpp(msg);
+  qi::AnyValue &container = qi_value_cpp(msg);
   if (container.kind() != qi::TypeInterface::Tuple || idx >= container.size()) {
     return 0;
   }
   qi_value_t* ret = qi_value_create("");
-  qi::GenericValue &gv = qi_value_cpp(ret);
+  qi::AnyValue &gv = qi_value_cpp(ret);
   gv = container[idx];
   return ret;
 }
 
 int          qi_value_tuple_size(qi_value_t *msg)
 {
-  qi::GenericValue &container = qi_value_cpp(msg);
+  qi::AnyValue &container = qi_value_cpp(msg);
   if (container.kind() != qi::TypeInterface::Tuple) {
     return -1;
   }
@@ -213,8 +213,8 @@ int          qi_value_tuple_size(qi_value_t *msg)
 //# LIST
 int          qi_value_list_set(qi_value_t *msg, unsigned int idx, qi_value_t *value)
 {
-  qi::GenericValue &container = qi_value_cpp(msg);
-  qi::GenericValue &val = qi_value_cpp(value);
+  qi::AnyValue &container = qi_value_cpp(msg);
+  qi::AnyValue &val = qi_value_cpp(value);
 
   if (container.kind() != qi::TypeInterface::List || idx >= container.size()) {
     return 0;
@@ -230,20 +230,20 @@ int          qi_value_list_set(qi_value_t *msg, unsigned int idx, qi_value_t *va
 
 qi_value_t*  qi_value_list_get(qi_value_t *msg, unsigned int idx)
 {
-  qi::GenericValue &container = qi_value_cpp(msg);
+  qi::AnyValue &container = qi_value_cpp(msg);
   if (container.kind() != qi::TypeInterface::List || idx >= container.size()) {
     return 0;
   }
   qi_value_t* ret = qi_value_create("");
-  qi::GenericValue &gv = qi_value_cpp(ret);
+  qi::AnyValue &gv = qi_value_cpp(ret);
   gv = container[idx];
   return ret;
 }
 
 int  qi_value_list_push_back(qi_value_t *msg, qi_value_t*val)
 {
-  qi::GenericValue &container = qi_value_cpp(msg);
-  qi::GenericValue &gval = qi_value_cpp(val);
+  qi::AnyValue &container = qi_value_cpp(msg);
+  qi::AnyValue &gval = qi_value_cpp(val);
   if (container.kind() != qi::TypeInterface::List) {
     return 0;
   }
@@ -253,7 +253,7 @@ int  qi_value_list_push_back(qi_value_t *msg, qi_value_t*val)
 
 int          qi_value_list_size(qi_value_t *msg)
 {
-  qi::GenericValue &container = qi_value_cpp(msg);
+  qi::AnyValue &container = qi_value_cpp(msg);
   if (container.kind() != qi::TypeInterface::List) {
     return -1;
   }
@@ -263,14 +263,14 @@ int          qi_value_list_size(qi_value_t *msg)
 //# OBJECT
 qi_object_t* qi_value_get_object(qi_value_t* val)
 {
-  qi::GenericValue &gv = qi_value_cpp(val);
+  qi::AnyValue &gv = qi_value_cpp(val);
   qi::AnyObject obj = gv.as<qi::AnyObject>();
   return qi_object_create_from(obj);
 }
 
 int          qi_value_set_object(qi_value_t* value, qi_object_t *o)
 {
-  qi::GenericValue &gv = qi_value_cpp(value);
+  qi::AnyValue &gv = qi_value_cpp(value);
   qi::AnyObject &obj = qi_object_cpp(o);
   try {
     gv.set<qi::AnyObject>(obj);
@@ -282,8 +282,8 @@ int          qi_value_set_object(qi_value_t* value, qi_object_t *o)
 //# DYNAMIC
 int          qi_value_dynamic_set(qi_value_t *container, qi_value_t* value)
 {
-  qi::GenericValue &gvcont = qi_value_cpp(container);
-  qi::GenericValue &gvval = qi_value_cpp(value);
+  qi::AnyValue &gvcont = qi_value_cpp(container);
+  qi::AnyValue &gvval = qi_value_cpp(value);
   try {
     gvcont.setDynamic(gvval);
     return 1;
@@ -293,11 +293,11 @@ int          qi_value_dynamic_set(qi_value_t *container, qi_value_t* value)
 
 qi_value_t*  qi_value_dynamic_get(qi_value_t *container)
 {
-  qi::GenericValue &gv = qi_value_cpp(container);
+  qi::AnyValue &gv = qi_value_cpp(container);
   try {
     qi::AnyReference gvp = gv.asDynamic();
     qi_value_t *ret = qi_value_create("");
-    qi::GenericValue &val = qi_value_cpp(ret);
+    qi::AnyValue &val = qi_value_cpp(ret);
     val = gvp.clone();
     return ret;
   } catch (std::runtime_error&) {}
@@ -307,7 +307,7 @@ qi_value_t*  qi_value_dynamic_get(qi_value_t *container)
 //# MAP
 unsigned int qi_value_map_size(qi_value_t *msg)
 {
-  qi::GenericValue &container = qi_value_cpp(msg);
+  qi::AnyValue &container = qi_value_cpp(msg);
   if (container.kind() != qi::TypeInterface::Map) {
     return -1;
   }
@@ -316,9 +316,9 @@ unsigned int qi_value_map_size(qi_value_t *msg)
 
 int         qi_value_map_set(qi_value_t *msg, qi_value_t *key, qi_value_t *value)
 {
-  qi::GenericValue &container = qi_value_cpp(msg);
-  qi::GenericValue &k = qi_value_cpp(key);
-  qi::GenericValue &val = qi_value_cpp(value);
+  qi::AnyValue &container = qi_value_cpp(msg);
+  qi::AnyValue &k = qi_value_cpp(key);
+  qi::AnyValue &val = qi_value_cpp(value);
 
   if (container.kind() != qi::TypeInterface::Map) {
     return 0;
@@ -332,8 +332,8 @@ int         qi_value_map_set(qi_value_t *msg, qi_value_t *key, qi_value_t *value
 
 qi_value_t*  qi_value_map_get(qi_value_t *msg, qi_value_t *key)
 {
-  qi::GenericValue &container = qi_value_cpp(msg);
-  qi::GenericValue &k = qi_value_cpp(key);
+  qi::AnyValue &container = qi_value_cpp(msg);
+  qi::AnyValue &k = qi_value_cpp(key);
 
   qi::AnyReference r;
   if (container.kind() != qi::TypeInterface::Map) {
@@ -342,7 +342,7 @@ qi_value_t*  qi_value_map_get(qi_value_t *msg, qi_value_t *key)
   try {
     r = container._element(k, true);
     qi_value_t* ret = qi_value_create("");
-    qi::GenericValue &gv = qi_value_cpp(ret);
+    qi::AnyValue &gv = qi_value_cpp(ret);
     gv = r;
     return ret;
   } catch (std::runtime_error &) {}

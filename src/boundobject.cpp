@@ -191,7 +191,7 @@ namespace qi {
       if (sigparam == "m")
       {
         // received dynamically typed argument pack, unwrap
-        GenericValue* content = value.ptr<GenericValue>();
+        AnyValue* content = value.ptr<AnyValue>();
         // steal it
         AnyReference pContent(content->type, content->value);
         content->type = 0;
@@ -274,17 +274,17 @@ namespace qi {
     return ret;
   }
 
-  GenericValue ServiceBoundObject::property(const GenericValue& prop)
+  AnyValue ServiceBoundObject::property(const AnyValue& prop)
   {
     if (prop.kind() == TypeInterface::String)
-      return _object->property<GenericValue>(prop.toString());
+      return _object->property<AnyValue>(prop.toString());
     else if (prop.kind() == TypeInterface::Int)
       return _object->type->property(_object->value, prop.toUInt());
     else
       throw std::runtime_error("Expected int or string for property index");
   }
 
-  void ServiceBoundObject::setProperty(const GenericValue& prop, GenericValue val)
+  void ServiceBoundObject::setProperty(const AnyValue& prop, AnyValue val)
   {
     qi::Future<void> result;
     if (prop.kind() == TypeInterface::String)

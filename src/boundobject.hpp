@@ -62,8 +62,8 @@ namespace qi {
     void           unregisterEvent(unsigned int serviceId, unsigned int eventId, Link linkId);
     qi::MetaObject metaObject(unsigned int serviceId);
     void           terminate(unsigned int serviceId); //bound only in special cases
-    GenericValue   property(const GenericValue& name);
-    void           setProperty(const GenericValue& name, GenericValue value);
+    AnyValue   property(const AnyValue& name);
+    void           setProperty(const AnyValue& name, AnyValue value);
     std::vector<std::string> properties();
   public:
     inline qi::TransportSocketPtr currentSocket() const {

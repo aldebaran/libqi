@@ -23,23 +23,23 @@ unsigned int niter = 10000;
 unsigned int maxContainerSize = 1000;
 bool withNative = true;
 
-std::pair<qi::GenericValue, bool> c1 (const qi::GenericValue& src, qi::Type* dst)
+std::pair<qi::AnyValue, bool> c1 (const qi::AnyValue& src, qi::Type* dst)
 {
   return src.convert(dst);
 }
 
 template<typename D, typename S>
 qi::uint64_t benchConvOne(const S& src,
-  std::pair<qi::GenericValue, bool> (*conv)(const qi::GenericValue&, qi::Type*)
+  std::pair<qi::AnyValue, bool> (*conv)(const qi::AnyValue&, qi::Type*)
   , unsigned niter = 10000)
 {
   using namespace qi;
   qi::uint64_t start = os::ustime();
   for (unsigned i=0; i<niter;++i)
   {
-    GenericValue gsrc = toValue(src);
+    AnyValue gsrc = toValue(src);
     Type* tdst = typeOf<D>();
-    std::pair<GenericValue, bool> result = conv(gsrc, tdst);
+    std::pair<AnyValue, bool> result = conv(gsrc, tdst);
     if (result.second)
       result.first.destroy();
   }

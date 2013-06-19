@@ -45,7 +45,7 @@ namespace qi { namespace py {
 
       //TODO: support async
       void setValue(boost::python::object obj) {
-        _obj->setProperty(_sigid, qi::GenericValue::from(obj));
+        _obj->setProperty(_sigid, qi::AnyValue::from(obj));
       }
 
     private:

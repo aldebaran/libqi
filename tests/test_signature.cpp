@@ -12,7 +12,7 @@
 #include <testsession/testsessionpair.hpp>
 #include <qi/log.hpp>
 
-qi::GenericValue reply(const qi::GenericValue &myval) {
+qi::AnyValue reply(const qi::AnyValue &myval) {
 
   qi::AnyReference val(myval);
   qiLogDebug("reply") << "Message received with the signature =" << myval.signature(false).toString() << ":" << qi::encodeJSON(val) << std::endl;
@@ -41,7 +41,7 @@ int main(int argc, char* argv[])
     std::cout << "Test with Generated signature:" << finalSig << std::endl;
 
     qi::TypeInterface *t = qi::TypeInterface::fromSignature(finalSig);
-    qi::GenericValue gv(t);
+    qi::AnyValue gv(t);
 
     //wrap the tuple args into a dynamic.
     qi::AnyReference dynval = qi::AnyReference(gv);

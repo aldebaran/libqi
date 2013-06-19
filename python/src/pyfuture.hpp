@@ -23,11 +23,11 @@ namespace qi {
     //converter between shared_ptr and pyobject refcount. this allow us to get the python
     //object associated to this in add_callback.
     //see the fac of boost::python for more information
-    class PyFuture : public qi::Future<qi::GenericValue>, public boost::enable_shared_from_this<PyFuture> {
+    class PyFuture : public qi::Future<qi::AnyValue>, public boost::enable_shared_from_this<PyFuture> {
     public:
       PyFuture();
       PyFuture(const PyFuture& fut);
-      PyFuture(const qi::Future<qi::GenericValue>& fut);
+      PyFuture(const qi::Future<qi::AnyValue>& fut);
       boost::python::object value(int msecs = qi::FutureTimeout_Infinite) const;
       std::string error(int msecs = qi::FutureTimeout_Infinite) const;
       void add_callback(boost::python::object callable);
@@ -40,7 +40,7 @@ namespace qi {
     //convert from Future to PyFuture
     template <typename T>
     PyFuture toPyFuture(qi::Future<T> fut) {
-      qi::Promise<qi::GenericValue> gprom;
+      qi::Promise<qi::AnyValue> gprom;
       qi::adaptFuture(fut, gprom);
       return gprom.future();
     }

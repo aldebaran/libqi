@@ -24,7 +24,7 @@ std::string reply(const std::string &msg) {
   return msg + "bim";
 }
 
-qi::GenericValue reply(const qi::GenericValue &myval) {
+qi::AnyValue reply(const qi::AnyValue &myval) {
   static int i = 0;
   qi::AnyReference val(myval);
   qiLogInfo() << i++ << " Message received with the signature: " << myval.signature(false).toString() << " = " << qi::encodeJSON(val) << std::endl;
@@ -162,7 +162,7 @@ int main(int argc, char *argv[])
       ob.advertiseMethod("replyVector", &replyVector);
       ob.advertiseMethod("replyMap", &replyMap);
       ob.advertiseMethod("replyMap2", &replyMap2);
-      ob.advertiseMethod<qi::GenericValue (const qi::GenericValue&)>("reply", &reply);
+      ob.advertiseMethod<qi::AnyValue (const qi::AnyValue&)>("reply", &reply);
       ob.advertiseSignal<const std::string&>("testEvent");
       ob.advertiseMethod<bool (unsigned int)>("slip", &slip);
       qi::AnyObject obj(ob.object());
