@@ -75,8 +75,12 @@ TEST_F(QiOSTests, LowLevelAccent)
 
 TEST(QiOs, fnmatch)
 {
-  EXPECT_TRUE(qi::os::fnmatch("glob*atch", "globMatch"));
-  EXPECT_FALSE(qi::os::fnmatch("glob*atch", "blobMatch"));
+  EXPECT_TRUE(qi::os::fnmatch("fnmatch", "fnmatch"));
+  EXPECT_FALSE(qi::os::fnmatch("fnmatc", "fnmatch"));
+  EXPECT_TRUE(qi::os::fnmatch("fn*ch", "fnmatch"));
+  EXPECT_FALSE(qi::os::fnmatch("fz*ch", "fnmatch"));
+  EXPECT_TRUE(qi::os::fnmatch("fn???ch", "fnmatch"));
+  EXPECT_FALSE(qi::os::fnmatch("fn?z?ch", "fnmatch"));
 }
 
 // TODO: us qi::time when it's available :)
