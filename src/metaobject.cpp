@@ -376,7 +376,7 @@ namespace qi {
   bool MetaObject::isPrivateMember(const std::string &name, unsigned int uid)
   {
     return uid < qiObjectSpecialMemberMaxUid
-        || (!name.empty() && name[0] == ' ');
+        || (name.size() > 0 && name[0] == '_');
   }
 
   const MetaSignal* MetaObject::signal(const std::string &name) const
