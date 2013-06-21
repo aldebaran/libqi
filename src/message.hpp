@@ -10,7 +10,7 @@
 #include <qimessaging/api.hpp>
 #include <qitype/anyvalue.hpp>
 #include <qi/buffer.hpp>
-#include <qitype/functiontype.hpp>
+#include <qitype/anyfunction.hpp>
 #include <qi/types.hpp>
 
 
