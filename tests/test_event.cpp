@@ -24,7 +24,7 @@ TEST(TestObject, Simple)
   ob.advertiseSignal<int>("fire");
   qi::AnyObject obj(ob.object());
   EXPECT_LE(1U, obj->metaObject().signalMap().size());
-  qi::Link linkId = obj->connect("fire", &onFire);
+  qi::SignalLink linkId = obj->connect("fire", &onFire);
   obj->post("fire", 42);
   EXPECT_TRUE(pPayload.future().wait(2000) != qi::FutureState_Running);
   EXPECT_EQ(42, lastPayload);
@@ -49,19 +49,19 @@ TEST(TestObject, ConnectBind)
   ob.advertiseSignal<int>("fire");
   ob.advertiseSignal<int, int>("fire2");
   qi::AnyObject obj(ob.object());
-  qi::Link link = obj->connect("fire", boost::bind<void>(&onFire, _1));
+  qi::SignalLink link = obj->connect("fire", boost::bind<void>(&onFire, _1));
   obj->post("fire", 42);
   EXPECT_TRUE(pPayload.future().wait(2000) != qi::FutureState_Running);
   EXPECT_EQ(42, lastPayload);
   obj->disconnect(link);
   // The boost bind without _1 gives us a void (void) signature that does not match fire
   EXPECT_EQ(
-    qi::SignalBase::invalidLink,
+    qi::SignalBase::invalidSignalLink,
     obj->connect("fire", boost::bind<void>(&onFire, 51)).value()
   );
   // Argument type mismatch
   EXPECT_EQ(
-    qi::SignalBase::invalidLink,
+    qi::SignalBase::invalidSignalLink,
     obj->connect("fire", boost::bind<void>(&readString, _1)).value()
   );
   link = obj->connect("fire2", boost::bind(&onFire, _2));

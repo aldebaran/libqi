@@ -116,26 +116,26 @@ void StaticObjectTypeBase::metaPost(void* instance, Manageable* context, unsigne
   }
 }
 
-qi::Future<Link> StaticObjectTypeBase::connect(void* instance, Manageable* context, unsigned int event,
+qi::Future<SignalLink> StaticObjectTypeBase::connect(void* instance, Manageable* context, unsigned int event,
                                                        const SignalSubscriber& subscriber)
 {
   if (event >= Manageable::startId && event < Manageable::endId)
     instance = context;
   SignalBase* sb = getSignal(_data, instance, event);
   if (!sb) {
-    return qi::makeFutureError<Link>("Can't find signal");
+    return qi::makeFutureError<SignalLink>("Cant find signal");
   }
-  SignalBase::Link id = sb->connect(subscriber);
-  if (id == SignalBase::invalidLink)
-    return qi::Future<Link>(id);
-  Link link = ((Link)event << 32) + id;
+  SignalLink id = sb->connect(subscriber);
+  if (id == SignalBase::invalidSignalLink)
+    return qi::Future<SignalLink>(id);
+  SignalLink link = ((SignalLink)event << 32) + id;
   assert(link >> 32 == event);
   assert((link & 0xFFFFFFFF) == id);
   qiLogDebug() << "Connect " << event <<' ' << id << ' ' << link;
-  return qi::Future<Link>(link);
+  return qi::Future<SignalLink>(link);
 }
 
-qi::Future<void> StaticObjectTypeBase::disconnect(void* instance, Manageable* context, Link linkId)
+qi::Future<void> StaticObjectTypeBase::disconnect(void* instance, Manageable* context, SignalLink linkId)
 {
   qiLogDebug() << "Disconnect " << linkId;
   unsigned int event = linkId >> 32;
@@ -144,10 +144,10 @@ qi::Future<void> StaticObjectTypeBase::disconnect(void* instance, Manageable* co
     instance = context;
   SignalBase* sb = getSignal(_data, instance, event);
   if (!sb)
-    return qi::makeFutureError<void>("Can't find signal");
+    return qi::makeFutureError<void>("Cant find signal");
   bool b = sb->disconnect(link);
   if (!b)
-    return qi::makeFutureError<void>("Can't unregister signal");
+    return qi::makeFutureError<void>("Cant unregister signal");
   return qi::Future<void>(0);
 }
 
@@ -155,7 +155,7 @@ qi::Future<AnyValue> StaticObjectTypeBase::property(void* instance, unsigned int
 {
   PropertyBase* p = ::qi::property(_data, instance, id);
   if (!p)
-    return qi::makeFutureError<AnyValue>("Can't find event");
+    return qi::makeFutureError<AnyValue>("Cant find event");
   qi::Promise<AnyValue> res;
   res.setValue(p->value());
   return res.future();
@@ -165,7 +165,7 @@ qi::Future<void> StaticObjectTypeBase::setProperty(void* instance, unsigned int 
 {
   PropertyBase* p = ::qi::property(_data, instance, id);
   if (!p)
-    return qi::makeFutureError<void>("Can't find event");
+    return qi::makeFutureError<void>("Cant find event");
   qiLogDebug() << "SetProperty " << id << " " << encodeJSON(value);
   try
   {

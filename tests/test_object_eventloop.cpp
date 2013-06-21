@@ -99,7 +99,7 @@ TEST(TestEventLoop, Event)
 {
   unsigned long mainId = (unsigned long)(void*)new TID(boost::this_thread::get_id());
   qi::AnyObject o1 = makeObj();
-  qi::Link link = o1->connect("fire", &vSameThread);
+  qi::SignalLink link = o1->connect("fire", &vSameThread);
   o1->post("fire", mainId);
   ASSERT_TRUE(result.future().wait(3000) != qi::FutureState_Running);
   ASSERT_TRUE(result.future().value());

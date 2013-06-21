@@ -29,7 +29,7 @@ TEST(TestLoadService, Load)
   ASSERT_EQ(42, proxy.addOne(41));
   //specialized connect/disconnect
   qi::Promise<int> prom;
-  qi::SignalBase::Link link = proxy.sig.connect(boost::bind(&notify, _1, boost::ref(prom)));
+  qi::SignalLink link = proxy.sig.connect(boost::bind(&notify, _1, boost::ref(prom)));
   obj->post("sig", 1);
   ASSERT_EQ(1, prom.future().value());
   proxy.sig.disconnect(link);

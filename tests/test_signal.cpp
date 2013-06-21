@@ -144,10 +144,10 @@ TEST(TestSignal, BadArity)
 {
   qi::Signal<> s;
   // caught at compile-time by signal<T>
-  ASSERT_EQ(qi::SignalBase::invalidLink, ((qi::SignalBase&)s).connect(&foo));
+  ASSERT_EQ(qi::SignalBase::invalidSignalLink, ((qi::SignalBase&)s).connect(&foo));
   //idem
-  ASSERT_EQ(qi::SignalBase::invalidLink, ((qi::SignalBase&)s).connect(&foo2));
-  ASSERT_EQ(qi::SignalBase::invalidLink, s.connect((Foo*)0, &Foo::func1));
+  ASSERT_EQ(qi::SignalBase::invalidSignalLink, ((qi::SignalBase&)s).connect(&foo2));
+  ASSERT_EQ(qi::SignalBase::invalidSignalLink, s.connect((Foo*)0, &Foo::func1));
 }
 
 void lol(int v, int& target)

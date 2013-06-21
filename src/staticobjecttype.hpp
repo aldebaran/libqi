@@ -66,9 +66,9 @@ public:
   virtual const MetaObject& metaObject(void* instance);
   virtual qi::Future<AnyReference> metaCall(void* instance, Manageable* context, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto);
   virtual void metaPost(void* instance, Manageable* context, unsigned int signal, const GenericFunctionParameters& params);
-  virtual qi::Future<Link> connect(void* instance, Manageable* context, unsigned int event, const SignalSubscriber& subscriber);
+  virtual qi::Future<SignalLink> connect(void* instance, Manageable* context, unsigned int event, const SignalSubscriber& subscriber);
   /// Disconnect an event link. Returns if disconnection was successful.
-  virtual qi::Future<void> disconnect(void* instance, Manageable* context, Link linkId);
+  virtual qi::Future<void> disconnect(void* instance, Manageable* context, SignalLink linkId);
   virtual qi::Future<AnyValue> property(void* instance, unsigned int id);
   virtual qi::Future<void> setProperty(void* instance, unsigned int id, AnyValue value);
 

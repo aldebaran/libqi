@@ -768,7 +768,7 @@ TEST(TestObject, traceGeneric)
   int mid2 = gob.advertiseMethod("boom", &throw_exception);
   qi::AnyObject obj = gob.object();
   std::vector<qi::EventTrace> traces;
-  qi::SignalBase::Link id = obj->connect("traceObject",
+  qi::SignalLink id = obj->connect("traceObject",
     (boost::function<void(qi::EventTrace)>)
     boost::bind(&pushTrace, boost::ref(traces), _1));
   obj->call<void>("sleep", 100);
@@ -811,7 +811,7 @@ TEST(TestObject, traceType)
   EXPECT_EQ(3, oa1->call<int>("add", 2));
 
   std::vector<qi::EventTrace> traces;
-  qi::SignalBase::Link id = oa1->connect("traceObject",
+  qi::SignalLink id = oa1->connect("traceObject",
     (boost::function<void(qi::EventTrace)>)
     boost::bind(&pushTrace, boost::ref(traces), _1));
 

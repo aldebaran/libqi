@@ -350,7 +350,7 @@ namespace qi {
     }
   proceed:
     boost::recursive_mutex::scoped_lock sl(_p->mutex);
-    Link res = ++linkUid;
+    SignalLink res = ++linkUid;
     SignalSubscriberPtr s = boost::make_shared<SignalSubscriber>(src);
     s->linkId = res;
     s->source = this;
@@ -405,7 +405,7 @@ namespace qi {
     _p->signature = s;
   }
 
-  bool SignalBasePrivate::disconnect(const SignalBase::Link& l)
+  bool SignalBasePrivate::disconnect(const SignalLink& l)
   {
 
     SignalSubscriberPtr s;
@@ -439,7 +439,7 @@ namespace qi {
     return true;
   }
 
-  bool SignalBase::disconnect(const Link &link) {
+  bool SignalBase::disconnect(const SignalLink &link) {
     if (!_p)
       return false;
     else
@@ -454,7 +454,7 @@ namespace qi {
     boost::shared_ptr<SignalBasePrivate> p(_p);
     _p.reset();
     SignalSubscriberMap::iterator i;
-    std::vector<Link> links;
+    std::vector<SignalLink> links;
     for (i = p->subscriberMap.begin(); i!= p->subscriberMap.end(); ++i)
     {
       links.push_back(i->first);
@@ -488,6 +488,6 @@ namespace qi {
     return ret;
   }
 
-  QITYPE_API const SignalBase::Link SignalBase::invalidLink = ((unsigned int)-1);
+  QITYPE_API const SignalLink SignalBase::invalidSignalLink = ((unsigned int)-1);
 
 }

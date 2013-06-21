@@ -54,9 +54,9 @@ namespace qi
     virtual qi::Future<AnyReference> metaCall(Manageable* context, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto);
     virtual void metaPost(Manageable* context, unsigned int event, const GenericFunctionParameters& params);
     /// Calls given functor when event is fired. Takes ownership of functor.
-    virtual qi::Future<Link> metaConnect(unsigned int event, const SignalSubscriber& subscriber);
+    virtual qi::Future<SignalLink> metaConnect(unsigned int event, const SignalSubscriber& subscriber);
     /// Disconnect an event link. Returns if disconnection was successful.
-    virtual qi::Future<void> metaDisconnect(Link linkId);
+    virtual qi::Future<void> metaDisconnect(SignalLink linkId);
     virtual qi::Future<AnyValue> metaProperty(unsigned int id);
     virtual qi::Future<void> metaSetProperty(unsigned int id, AnyValue val);
 

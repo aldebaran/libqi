@@ -103,9 +103,9 @@ namespace qi
     virtual const MetaObject& metaObject(void* instance);
     virtual qi::Future<AnyReference> metaCall(void* instance, Manageable* context, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto);
     virtual void metaPost(void* instance, Manageable* context, unsigned int signal, const GenericFunctionParameters& params);
-    virtual qi::Future<Link> connect(void* instance, Manageable* context, unsigned int event, const SignalSubscriber& subscriber);
+    virtual qi::Future<SignalLink> connect(void* instance, Manageable* context, unsigned int event, const SignalSubscriber& subscriber);
     /// Disconnect an event link. Returns if disconnection was successful.
-    virtual qi::Future<void> disconnect(void* instance, Manageable* context, Link linkId);
+    virtual qi::Future<void> disconnect(void* instance, Manageable* context, SignalLink linkId);
     virtual const std::vector<std::pair<TypeInterface*, int> >& parentTypes();
     virtual qi::Future<AnyValue> property(void* instance, unsigned int id);
     virtual qi::Future<void> setProperty(void* instance, unsigned int id, AnyValue val);
@@ -264,22 +264,22 @@ namespace qi
     return;
   }
 
-  qi::Future<Link> DynamicObject::metaConnect(unsigned int event, const SignalSubscriber& subscriber)
+  qi::Future<SignalLink> DynamicObject::metaConnect(unsigned int event, const SignalSubscriber& subscriber)
   {
     SignalBase * s = _p->createSignal(event);
     if (!s)
-      return qi::makeFutureError<Link>("Cannot find signal");
-    SignalBase::Link l = s->connect(subscriber);
-    if (l == SignalBase::invalidLink)
-      return qi::Future<Link>(l);
-    Link link = ((Link)event << 32) + l;
+      return qi::makeFutureError<SignalLink>("Cannot find signal");
+    SignalLink l = s->connect(subscriber);
+    if (l == SignalBase::invalidSignalLink)
+      return qi::Future<SignalLink>(l);
+    SignalLink link = ((SignalLink)event << 32) + l;
     assert(link >> 32 == event);
     assert((link & 0xFFFFFFFF) == l);
     qiLogDebug() << "New subscriber " << link <<" to event " << event;
-    return qi::Future<Link>(link);
+    return qi::Future<SignalLink>(link);
   }
 
-  qi::Future<void> DynamicObject::metaDisconnect(Link linkId)
+  qi::Future<void> DynamicObject::metaDisconnect(SignalLink linkId)
   {
     unsigned int event = linkId >> 32;
     unsigned int link = linkId & 0xFFFFFFFF;
@@ -509,12 +509,12 @@ namespace qi
     reinterpret_cast<DynamicObject*>(instance)->metaPost(context, signal, params);
   }
 
-  qi::Future<Link> DynamicObjectTypeInterface::connect(void* instance, Manageable* context, unsigned int event, const SignalSubscriber& subscriber)
+  qi::Future<SignalLink> DynamicObjectTypeInterface::connect(void* instance, Manageable* context, unsigned int event, const SignalSubscriber& subscriber)
   {
     return reinterpret_cast<DynamicObject*>(instance)->metaConnect(event, subscriber);
   }
 
-  qi::Future<void> DynamicObjectTypeInterface::disconnect(void* instance, Manageable* context, Link linkId)
+  qi::Future<void> DynamicObjectTypeInterface::disconnect(void* instance, Manageable* context, SignalLink linkId)
   {
     return reinterpret_cast<DynamicObject*>(instance)->metaDisconnect(linkId);
   }

@@ -26,7 +26,7 @@ namespace qi {
   };
   class SignalSubscriber;
   class Manageable;
-  typedef qi::uint64_t Link;
+  typedef qi::uint64_t SignalLink;
   /* We will have 2 implementations for 2 classes of C++ class:
    * - DynamicObject: Use DynamicObjectBuilder
    * - T: Use ObjectTypeBuilder
@@ -46,9 +46,9 @@ namespace qi {
     virtual const MetaObject& metaObject(void* instance) = 0;
     virtual qi::Future<AnyReference> metaCall(void* instance, Manageable* context, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto)=0;
     virtual void metaPost(void* instance, Manageable* context, unsigned int signal, const GenericFunctionParameters& params)=0;
-    virtual qi::Future<Link> connect(void* instance, Manageable* context, unsigned int event, const SignalSubscriber& subscriber)=0;
+    virtual qi::Future<SignalLink> connect(void* instance, Manageable* context, unsigned int event, const SignalSubscriber& subscriber)=0;
     /// Disconnect an event link. Returns if disconnection was successful.
-    virtual qi::Future<void> disconnect(void* instance, Manageable* context, Link linkId)=0;
+    virtual qi::Future<void> disconnect(void* instance, Manageable* context, SignalLink linkId)=0;
     /// @return parent types with associated poniter offset
     virtual const std::vector<std::pair<TypeInterface*, int> >& parentTypes() = 0;
     virtual qi::Future<AnyValue> property(void* instance, unsigned int id) = 0;

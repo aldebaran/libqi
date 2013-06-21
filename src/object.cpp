@@ -296,11 +296,11 @@ namespace qi {
 
   //TODO: use functor.signature instead of nameWithSignature.
   /// Resolve signature and bounce
-  qi::FutureSync<Link> GenericObject::connect(const std::string &name, const SignalSubscriber& functor)
+  qi::FutureSync<SignalLink> GenericObject::connect(const std::string &name, const SignalSubscriber& functor)
   {
     if (!type || !value) {
       qiLogWarning() << "Operating on invalid GenericObject..";
-      return qi::makeFutureError<Link>("Operating on invalid GenericObject..");
+      return qi::makeFutureError<SignalLink>("Operating on invalid GenericObject..");
     }
     int eventId = metaObject().signalId(name);
 
@@ -308,21 +308,21 @@ namespace qi {
       std::stringstream ss;
       ss << "Can't find signal: " << name;
       qiLogError() << ss.str();
-      return qi::makeFutureError<Link>(ss.str());
+      return qi::makeFutureError<SignalLink>(ss.str());
     }
     return connect(eventId, functor);
   }
 
-  qi::FutureSync<Link> GenericObject::connect(unsigned int event, const SignalSubscriber& sub)
+  qi::FutureSync<SignalLink> GenericObject::connect(unsigned int event, const SignalSubscriber& sub)
   {
     if (!type || !value) {
       qiLogWarning() << "Operating on invalid GenericObject..";
-      return qi::makeFutureError<Link>("Operating on invalid GenericObject..");
+      return qi::makeFutureError<SignalLink>("Operating on invalid GenericObject..");
     }
     return type->connect(value, this, event, sub);
   }
 
-  qi::FutureSync<void> GenericObject::disconnect(Link linkId)
+  qi::FutureSync<void> GenericObject::disconnect(SignalLink linkId)
   {
     if (!type || !value) {
       qiLogWarning() << "Operating on invalid GenericObject..";
@@ -339,7 +339,7 @@ namespace qi {
     return type->setProperty(value, id, val);
   }
 
-  qi::FutureSync<Link> GenericObject::connect(unsigned int signal, AnyObject target, unsigned int slot)
+  qi::FutureSync<SignalLink> GenericObject::connect(unsigned int signal, AnyObject target, unsigned int slot)
   {
     return connect(signal, SignalSubscriber(target, slot));
   }

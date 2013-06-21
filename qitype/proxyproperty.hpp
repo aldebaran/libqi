@@ -34,7 +34,7 @@ namespace qi
       boost::bind(&ProxyProperty<T>::onSubscribe, this, _1))
     , _name(propertyName)
     , _object(object.get())
-    , _link(SignalBase::invalidLink)
+    , _link(SignalBase::invalidSignalLink)
     {
     }
     ~ProxyProperty();
@@ -46,14 +46,14 @@ namespace qi
     bool _setter(T&, const T&);
     std::string _name;
     GenericObject* _object;
-    SignalBase::Link _link;
+    SignalLink _link;
   };
 
   template<typename T>
   ProxyProperty<T>::~ProxyProperty()
   {
     SignalType::disconnectAll();
-    if (_link != SignalBase::invalidLink)
+    if (_link != SignalBase::invalidSignalLink)
       onSubscribe(false);
   }
 
@@ -72,7 +72,7 @@ namespace qi
       bool ok = !_object->disconnect(_link).hasError();
       if (!ok)
         qiLogError("qitype.proxysignal") << "Failed to disconnect from parent signal";
-      _link = SignalBase::invalidLink;
+      _link = SignalBase::invalidSignalLink;
     }
   }
 

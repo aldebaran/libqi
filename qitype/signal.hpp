@@ -37,6 +37,8 @@ namespace qi {
   typedef boost::weak_ptr<GenericObject> ObjectWeakPtr;
   class SignalBasePrivate;
 
+  typedef qi::uint64_t SignalLink;
+
   class QITYPE_API SignalBase
   {
   public:
@@ -47,8 +49,6 @@ namespace qi {
     SignalBase(const SignalBase& b);
     SignalBase& operator = (const SignalBase& b);
     virtual qi::Signature signature() const;
-
-    typedef qi::uint64_t Link;
 
     template<typename FUNCTION_TYPE>
     SignalSubscriber& connect(FUNCTION_TYPE f, MetaCallType model=MetaCallType_Auto);
@@ -63,7 +63,7 @@ namespace qi {
      * anymore as soon as this function returns, but might be called in an
      * other thread while this function runs.
      */
-    bool disconnect(const Link& link);
+    bool disconnect(const SignalLink& link);
 
     /** Trigger the signal with given type-erased parameters.
     * @param params the signal arguments
@@ -88,7 +88,7 @@ namespace qi {
       qi::AutoAnyReference p8 = qi::AutoAnyReference());
 
     std::vector<SignalSubscriber> subscribers();
-    static const SignalBase::Link invalidLink;
+    static const SignalLink invalidSignalLink;
   public:
     void _setSignature(const Signature &s);
     // C4251
@@ -197,7 +197,7 @@ template<
  {
  public:
    SignalSubscriber()
-     : source(0), linkId(SignalBase::invalidLink), weakLock(0), target(0), method(0), enabled(true)
+     : source(0), linkId(SignalBase::invalidSignalLink), weakLock(0), target(0), method(0), enabled(true)
    {}
 
    SignalSubscriber(AnyFunction func, MetaCallType model=MetaCallType_Auto, detail::WeakLock* lock = 0);
@@ -233,34 +233,34 @@ template<
 
    void addActive(bool acquireLock, boost::thread::id tid = boost::this_thread::get_id());
    void removeActive(bool acquireLock, boost::thread::id tid = boost::this_thread::get_id());
-   operator SignalBase::Link() const
+   operator SignalLink() const
    {
      return linkId;
    }
  public:
    // Source information
-   SignalBase*        source;
+   SignalBase* source;
    /// Uid that can be passed to GenericObject::disconnect()
-   SignalBase::Link  linkId;
+   SignalLink  linkId;
 
    // Target information, kept here to be able to introspect a Subscriber
    //   Mode 1: Direct functor call
-   AnyFunction          handler;
-   detail::WeakLock*    weakLock; // try to acquire weakLocker, disconnect if can't
-   MetaCallType threadingModel;
+   AnyFunction       handler;
+   detail::WeakLock* weakLock; // try to acquire weakLocker, disconnect if cant
+   MetaCallType      threadingModel;
 
    //  Mode 2: metaCall
-   ObjectWeakPtr*       target;
-   unsigned int         method;
+   ObjectWeakPtr*    target;
+   unsigned int      method;
 
-   boost::mutex                 mutex;
+   boost::mutex      mutex;
    // Fields below are protected by lock
 
    // If enabled is set to false while lock is acquired,
    // No more callback will trigger (activeThreads will se no push-back)
    bool                         enabled;
    // Number of calls in progress.
-   // Each entry there is a subscriber call that can no longer be aborted
+   // Each entry there is a subscriber call that can no longuer be aborted
    std::vector<boost::thread::id> activeThreads; // order not preserved
  };
  typedef boost::shared_ptr<SignalSubscriber> SignalSubscriberPtr;

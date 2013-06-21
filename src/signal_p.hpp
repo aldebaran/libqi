@@ -13,13 +13,13 @@
 
 namespace qi {
 
-  typedef std::map<SignalBase::Link, SignalSubscriberPtr> SignalSubscriberMap;
+  typedef std::map<SignalLink, SignalSubscriberPtr> SignalSubscriberMap;
 
   class SignalBasePrivate
   {
   public:
     SignalBasePrivate(): defaultCallType(MetaCallType_Auto) {}
-    bool disconnect(const SignalBase::Link& l);
+    bool disconnect(const SignalLink& l);
     bool reset();
 
   public:
