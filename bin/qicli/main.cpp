@@ -12,7 +12,6 @@ void init()
   subCmdMap["service"] = &subCmd_service;
   subCmdMap["call"] = &subCmd_call;
   subCmdMap["post"] = &subCmd_post;
-  subCmdMap["top"] = &subCmd_top;
   subCmdMap["watch"] = &subCmd_watch;
   subCmdMap["get"] = &subCmd_get;
   subCmdMap["set"] = &subCmd_set;
