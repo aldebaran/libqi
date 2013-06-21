@@ -14,8 +14,8 @@ namespace qi {
 
   ServiceDirectoryClient::ServiceDirectoryClient()
     : _remoteObject(qi::Message::Service_ServiceDirectory)
-    , _addLink(0)
-    , _removeLink(0)
+    , _addSignalLink(0)
+    , _removeSignalLink(0)
   {
     _object = makeDynamicAnyObject(&_remoteObject, false);
   }
@@ -25,7 +25,7 @@ namespace qi {
     close();
   }
 
- void ServiceDirectoryClient::onSDEventConnected(qi::Future<Link> ret,
+ void ServiceDirectoryClient::onSDEventConnected(qi::Future<SignalLink> ret,
    qi::Promise<void> fco, bool isAdd)
  {
    if (fco.future().isFinished()) {
@@ -38,10 +38,10 @@ namespace qi {
      return;
    }
    if (isAdd)
-     _addLink = ret.value();
+     _addSignalLink = ret.value();
    else
-     _removeLink = ret.value();
-   if (_addLink && _removeLink)
+     _removeSignalLink = ret.value();
+   if (_addSignalLink && _removeSignalLink)
    {
      fco.setValue(0);
      connected();
@@ -57,10 +57,10 @@ namespace qi {
     boost::function<void (unsigned int, std::string)> f;
 
     f = boost::bind<void>(&ServiceDirectoryClient::onServiceAdded, this, _1, _2);
-    qi::Future<Link> fut1 = _object->connect("serviceAdded", f);
+    qi::Future<SignalLink> fut1 = _object->connect("serviceAdded", f);
 
     f = boost::bind<void>(&ServiceDirectoryClient::onServiceRemoved, this, _1, _2);
-    qi::Future<Link> fut2 = _object->connect("serviceRemoved", f);
+    qi::Future<SignalLink> fut2 = _object->connect("serviceRemoved", f);
 
     fut1.connect(boost::bind<void>(&ServiceDirectoryClient::onSDEventConnected, this, _1, promise, true));
     fut2.connect(boost::bind<void>(&ServiceDirectoryClient::onSDEventConnected, this, _1, promise, false));
@@ -87,7 +87,7 @@ namespace qi {
     _sdSocket = qi::makeTransportSocket(serviceDirectoryURL.protocol());
     if (!_sdSocket)
       return qi::makeFutureError<void>("!sdSocket");
-    _sdSocketDisconnectedLink = _sdSocket->disconnected.connect(boost::bind<void>(&ServiceDirectoryClient::onSocketDisconnected, this, _1));
+    _sdSocketDisconnectedSignalLink = _sdSocket->disconnected.connect(boost::bind<void>(&ServiceDirectoryClient::onSocketDisconnected, this, _1));
     _remoteObject.setTransportSocket(_sdSocket);
 
     qi::Promise<void> promise;
@@ -113,7 +113,7 @@ namespace qi {
     // So pass shared pointer by pointer: that way a single delete statement
     // will end all copies.
     fut.connect(boost::bind(&sharedPtrHolder, new TransportSocketPtr(_sdSocket)));
-    _sdSocket->disconnected.disconnect(_sdSocketDisconnectedLink);
+    _sdSocket->disconnected.disconnect(_sdSocketDisconnectedSignalLink);
     _sdSocket.reset();
     return fut;
   }
@@ -139,22 +139,22 @@ namespace qi {
   void ServiceDirectoryClient::onSocketDisconnected(std::string error) {
     disconnected(error);
     try {
-      if (_addLink != 0)
+      if (_addSignalLink != 0)
       {
-        _object->disconnect(_addLink);
+        _object->disconnect(_addSignalLink);
       }
     } catch (std::runtime_error &e) {
       qiLogDebug() << "Cannot disconnect SDC::serviceAdded: " << e.what();
     }
     try {
-      if (_removeLink != 0)
+      if (_removeSignalLink != 0)
       {
-        _object->disconnect(_removeLink);
+        _object->disconnect(_removeSignalLink);
       }
     } catch (std::runtime_error &e) {
         qiLogDebug() << "Cannot disconnect SDC::serviceRemoved: " << e.what();
     }
-    _addLink = _removeLink = 0;
+    _addSignalLink = _removeSignalLink = 0;
   }
 
   qi::Future< std::vector<ServiceInfo> > ServiceDirectoryClient::services() {

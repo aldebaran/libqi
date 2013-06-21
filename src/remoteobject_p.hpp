@@ -51,8 +51,8 @@ namespace qi {
     //metaObject received
     void onMetaObject(qi::Future<qi::MetaObject> fut, qi::Promise<void> prom);
 
-    virtual qi::Future<Link> metaConnect(unsigned int event, const SignalSubscriber& sub);
-    virtual qi::Future<void> metaDisconnect(Link linkId);
+    virtual qi::Future<SignalLink> metaConnect(unsigned int event, const SignalSubscriber& sub);
+    virtual qi::Future<void> metaDisconnect(SignalLink linkId);
 
     virtual qi::Future<AnyValue> metaProperty(unsigned int id);
     virtual qi::Future<void> metaSetProperty(unsigned int id, AnyValue val);
@@ -63,8 +63,8 @@ namespace qi {
     unsigned int                                    _object;
     std::map<int, qi::Promise<AnyReference> > _promises;
     boost::mutex    _mutex;
-    qi::SignalBase::Link                            _linkMessageDispatcher;
-    qi::SignalBase::Link                            _linkDisconnected;
+    qi::SignalLink                            _linkMessageDispatcher;
+    qi::SignalLink                            _linkDisconnected;
     qi::AnyObject                                   _self;
   };
 

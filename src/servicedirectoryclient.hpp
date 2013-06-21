@@ -55,17 +55,17 @@ namespace qi {
     void onMetaObjectFetched(qi::Future<void> fut, qi::Promise<void> prom);
 
     //wait for serviceAdded/serviceRemoved are connected
-    void onSDEventConnected(qi::Future<Link> ret,
+    void onSDEventConnected(qi::Future<SignalLink> ret,
                             qi::Promise<void> fco,
                             bool isAdd);
 
   private:
     qi::TransportSocketPtr _sdSocket;
-    unsigned int           _sdSocketDisconnectedLink;
+    unsigned int           _sdSocketDisconnectedSignalLink;
     qi::RemoteObject       _remoteObject;
     qi::AnyObject          _object;
-    qi::Link               _addLink;
-    qi::Link               _removeLink;
+    qi::SignalLink               _addSignalLink;
+    qi::SignalLink               _removeSignalLink;
   };
 }
 

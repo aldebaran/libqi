@@ -82,7 +82,7 @@ namespace qi { namespace py {
       boost::python::object connect(boost::python::object callable, bool _async = false) {
         GILScopedUnlock _unlock;
         //no need to store a ptr on ourself. (this exist if the callback is triggered)
-        qi::FutureSync<Link> f = _obj->connect(_sigid, qi::AnyFunction::fromDynamicFunction(boost::bind(pysignalCb, _1, callable)));
+        qi::FutureSync<SignalLink> f = _obj->connect(_sigid, qi::AnyFunction::fromDynamicFunction(boost::bind(pysignalCb, _1, callable)));
         if (_async)
         {
           return boost::python::object(toPyFuture(f));

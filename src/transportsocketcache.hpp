@@ -19,8 +19,8 @@ namespace qi {
     qi::Url                             url;
     qi::TransportSocketPtr              socket;
     qi::Promise<qi::TransportSocketPtr> promise;
-    unsigned int                        connectLink;
-    unsigned int                        disconnectLink;
+    unsigned int                        connectSignalLink;
+    unsigned int                        disconnectSignalLink;
   };
 
   struct TransportSocketConnectionAttempt {

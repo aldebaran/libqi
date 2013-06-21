@@ -59,15 +59,15 @@ void advertise_method(int iteration)// test method advertising.
 void connect_event(int iteration)//test event connection perf.
 {
   qi::DynamicObjectBuilder myObjectPointerBuilder;
-  qi::Link eventId = myObjectPointerBuilder.advertiseSignal<int>("testEvent");
-  qi::Link callbackID = myObjectPointerBuilder.advertiseMethod("callback", &callback);
+  qi::SignalLink eventId = myObjectPointerBuilder.advertiseSignal<int>("testEvent");
+  qi::SignalLink callbackID = myObjectPointerBuilder.advertiseMethod("callback", &callback);
   qi::AnyObject myObjectPointer = myObjectPointerBuilder.object();
-  qi::Link myLinkId;
+  qi::SignalLink mySignalLinkId;
 
   for (int i = 1; i < iteration; i++)
   {
-    myLinkId = myObjectPointer->connect(eventId, myObjectPointer, callbackID);
-    myObjectPointer->disconnect(myLinkId);
+    mySignalLinkId = myObjectPointer->connect(eventId, myObjectPointer, callbackID);
+    myObjectPointer->disconnect(mySignalLinkId);
   }
 }
 

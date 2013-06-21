@@ -323,7 +323,7 @@ namespace qi {
     }
   }
 
-  static void onEventConnected(qi::Future<Link> fut, qi::Promise<Link> prom, Link id) {
+  static void onEventConnected(qi::Future<SignalLink> fut, qi::Promise<SignalLink> prom, SignalLink id) {
     if (fut.hasError()) {
       prom.setError(fut.error());
       return;
@@ -331,20 +331,20 @@ namespace qi {
     prom.setValue(id);
   }
 
-  qi::Future<Link> RemoteObject::metaConnect(unsigned int event, const SignalSubscriber& sub)
+  qi::Future<SignalLink> RemoteObject::metaConnect(unsigned int event, const SignalSubscriber& sub)
   {
-    qi::Promise<Link> prom;
+    qi::Promise<SignalLink> prom;
 
     // Bind the subscriber locally.
-    Link uid = DynamicObject::metaConnect(event, sub);
+    SignalLink uid = DynamicObject::metaConnect(event, sub);
 
     qiLogDebug() <<"connect() to " << event <<" gave " << uid;
-    qi::Future<Link> fut = _self->call<Link>("registerEvent", _service, event, uid);
+    qi::Future<SignalLink> fut = _self->call<SignalLink>("registerEvent", _service, event, uid);
     fut.connect(boost::bind<void>(&onEventConnected, _1, prom, uid));
     return prom.future();
   }
 
-  qi::Future<void> RemoteObject::metaDisconnect(Link linkId)
+  qi::Future<void> RemoteObject::metaDisconnect(SignalLink linkId)
   {
     unsigned int event = linkId >> 16;
     //disconnect locally

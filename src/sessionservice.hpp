@@ -74,7 +74,7 @@ namespace qi {
     boost::mutex                    _remoteObjectsMutex;
 
   private:
-    qi::SignalBase::Link    _linkServiceRemoved;
+    qi::SignalLink    _linkServiceRemoved;
     TransportSocketCache   *_socketCache;
     ServiceDirectoryClient *_sdClient;  //not owned by us
     ObjectRegistrar        *_server;    //not owned by us

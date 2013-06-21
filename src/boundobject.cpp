@@ -80,27 +80,27 @@ namespace qi {
   }
 
   //Bound Method
-  Link ServiceBoundObject::registerEvent(unsigned int objectId, unsigned int eventId, Link remoteLinkId) {
+  SignalLink ServiceBoundObject::registerEvent(unsigned int objectId, unsigned int eventId, SignalLink remoteSignalLinkId) {
     AnyFunction mc = AnyFunction::fromDynamicFunction(boost::bind(&forwardEvent, _1, _serviceId, _objectId, eventId, _currentSocket, this));
-    Link linkId = _object->connect(eventId, mc);
-    qiLogDebug() << "SBO rl " << remoteLinkId <<" ll " << linkId;
-    _links[_currentSocket][remoteLinkId] = RemoteLink(linkId, eventId);
+    SignalLink linkId = _object->connect(eventId, mc);
+    qiLogDebug() << "SBO rl " << remoteSignalLinkId <<" ll " << linkId;
+    _links[_currentSocket][remoteSignalLinkId] = RemoteSignalLink(linkId, eventId);
     return linkId;
   }
 
   //Bound Method
-  void ServiceBoundObject::unregisterEvent(unsigned int objectId, unsigned int QI_UNUSED(event), Link remoteLinkId) {
-    ServiceLinks&          sl = _links[_currentSocket];
-    ServiceLinks::iterator it = sl.find(remoteLinkId);
+  void ServiceBoundObject::unregisterEvent(unsigned int objectId, unsigned int QI_UNUSED(event), SignalLink remoteSignalLinkId) {
+    ServiceSignalLinks&          sl = _links[_currentSocket];
+    ServiceSignalLinks::iterator it = sl.find(remoteSignalLinkId);
 
     if (it == sl.end())
     {
       std::stringstream ss;
-      ss << "Unregister request failed for " << remoteLinkId <<" " << objectId;
+      ss << "Unregister request failed for " << remoteSignalLinkId <<" " << objectId;
       qiLogError() << ss.str();
       throw std::runtime_error(ss.str());
     }
-    _object->disconnect(it->second.localLinkId);
+    _object->disconnect(it->second.localSignalLinkId);
     sl.erase(it);
     if (sl.empty())
       _links.erase(_currentSocket);
@@ -251,14 +251,14 @@ namespace qi {
   void ServiceBoundObject::onSocketDisconnected(TransportSocketPtr client, std::string error)
   {
     // Disconnect event links set for this client.
-    BySocketServiceLinks::iterator it = _links.find(client);
+    BySocketServiceSignalLinks::iterator it = _links.find(client);
     if (it != _links.end())
     {
-      for (ServiceLinks::iterator jt = it->second.begin(); jt != it->second.end(); ++jt)
+      for (ServiceSignalLinks::iterator jt = it->second.begin(); jt != it->second.end(); ++jt)
       {
         try
         {
-          _object->disconnect(jt->second.localLinkId);
+          _object->disconnect(jt->second.localSignalLinkId);
         }
         catch (const std::runtime_error& e)
         {

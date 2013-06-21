@@ -23,16 +23,16 @@ namespace qi {
   class ServiceDirectoryClient;
 
   // (service, linkId)
-  struct RemoteLink
+  struct RemoteSignalLink
   {
-    RemoteLink()
-      : localLinkId(0)
+    RemoteSignalLink()
+      : localSignalLinkId(0)
       , event(0)
     {}
-    RemoteLink(Link localLinkId, unsigned int event)
-    : localLinkId(localLinkId)
+    RemoteSignalLink(SignalLink localSignalLinkId, unsigned int event)
+    : localSignalLinkId(localSignalLinkId)
     , event(event) {}
-    Link localLinkId;
+    SignalLink localSignalLinkId;
     unsigned int event;
   };
 
@@ -58,8 +58,8 @@ namespace qi {
 
   public:
     //PUBLIC BOUND METHODS
-    Link           registerEvent(unsigned int serviceId, unsigned int eventId, Link linkId);
-    void           unregisterEvent(unsigned int serviceId, unsigned int eventId, Link linkId);
+    SignalLink           registerEvent(unsigned int serviceId, unsigned int eventId, SignalLink linkId);
+    void           unregisterEvent(unsigned int serviceId, unsigned int eventId, SignalLink linkId);
     qi::MetaObject metaObject(unsigned int serviceId);
     void           terminate(unsigned int serviceId); //bound only in special cases
     qi::AnyValue   property(const AnyValue& name);
@@ -85,11 +85,11 @@ namespace qi {
 
   private:
     // remote link id -> local link id
-    typedef std::map<Link, RemoteLink>             ServiceLinks;
-    typedef std::map<qi::TransportSocketPtr, ServiceLinks> BySocketServiceLinks;
+    typedef std::map<SignalLink, RemoteSignalLink>             ServiceSignalLinks;
+    typedef std::map<qi::TransportSocketPtr, ServiceSignalLinks> BySocketServiceSignalLinks;
 
     //Event handling (no lock needed)
-    BySocketServiceLinks  _links;
+    BySocketServiceSignalLinks  _links;
 
   private:
     qi::TransportSocketPtr _currentSocket;

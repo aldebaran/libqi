@@ -289,9 +289,9 @@ TEST(QiService, GenericProperty)
   // test event
   int hit = 0;
   qiLogVerbose() << "Connecting to signal";
-  ASSERT_NE(qi::SignalBase::invalidLink, prop->signal()->connect(boost::bind(&inc, &hit, _1)));
-  ASSERT_NE(qi::SignalBase::invalidLink, obj->connect("offset", boost::bind(&inc, &hit, _1)));
-  ASSERT_NE(qi::SignalBase::invalidLink, client->connect("offset", boost::bind(&inc, &hit, _1)));
+  ASSERT_NE(qi::SignalBase::invalidSignalLink, prop->signal()->connect(boost::bind(&inc, &hit, _1)));
+  ASSERT_NE(qi::SignalBase::invalidSignalLink, obj->connect("offset", boost::bind(&inc, &hit, _1)));
+  ASSERT_NE(qi::SignalBase::invalidSignalLink, client->connect("offset", boost::bind(&inc, &hit, _1)));
   qiLogVerbose() << "Triggering prop set";
   prop->setValue(qi::AnyValue(qi::AnyReference(1)));
   PERSIST(, hit == 3, 500);

@@ -78,7 +78,7 @@ namespace qi {
     }
   }
 
-  qi::SignalBase::Link
+  qi::SignalLink
   MessageDispatcher::messagePendingConnect(unsigned int serviceId, unsigned int objectId, boost::function<void (const qi::Message&)> fun) {
     boost::recursive_mutex::scoped_lock sl(_signalMapMutex);
     boost::shared_ptr<OnMessageSignal> &sig = _signalMap[Target(serviceId, objectId)];
@@ -89,7 +89,7 @@ namespace qi {
     return sig->connect(fun);
   }
 
-  bool MessageDispatcher::messagePendingDisconnect(unsigned int serviceId, unsigned int objectId, qi::SignalBase::Link linkId)
+  bool MessageDispatcher::messagePendingDisconnect(unsigned int serviceId, unsigned int objectId, qi::SignalLink linkId)
   {
     // Do not hold the lock when invoking disconnect()
     // or deadlock may occur as disconnect() waits for

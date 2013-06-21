@@ -64,11 +64,11 @@ namespace qi
 
     static const unsigned int ALL_OBJECTS = (unsigned int)-1;
 
-    qi::SignalBase::Link messagePendingConnect(unsigned int serviceId, unsigned int objectId, boost::function<void (const qi::Message&)> fun) {
+    qi::SignalLink messagePendingConnect(unsigned int serviceId, unsigned int objectId, boost::function<void (const qi::Message&)> fun) {
       return _dispatcher.messagePendingConnect(serviceId, objectId, fun);
     }
 
-    bool                 messagePendingDisconnect(unsigned int serviceId, unsigned int objectId, qi::SignalBase::Link linkId) {
+    bool                 messagePendingDisconnect(unsigned int serviceId, unsigned int objectId, qi::SignalLink linkId) {
       return _dispatcher.messagePendingDisconnect(serviceId, objectId, linkId);
     }
 

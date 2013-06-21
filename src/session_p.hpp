@@ -37,10 +37,10 @@ namespace qi {
 
     //ServiceDirectoryClient have a transportsocket not belonging to transportsocketcache
     ServiceDirectoryClient _sdClient;
-    unsigned int           _sdClientConnectedLink;
-    unsigned int           _sdClientDisconnectedLink;
-    unsigned int           _sdClientServiceAddedLink;
-    unsigned int           _sdClientServiceRemovedLink;
+    unsigned int           _sdClientConnectedSignalLink;
+    unsigned int           _sdClientDisconnectedSignalLink;
+    unsigned int           _sdClientServiceAddedSignalLink;
+    unsigned int           _sdClientServiceRemovedSignalLink;
 
     ObjectRegistrar        _serverObject;
     Session_Service        _serviceHandler;

@@ -36,17 +36,17 @@ namespace qi {
     _self->serviceRegistered.setCallType(qi::MetaCallType_Queued);
     _self->serviceUnregistered.setCallType(qi::MetaCallType_Queued);
 
-    _sdClientConnectedLink    = _sdClient.connected.connect(boost::bind<void>(&SessionPrivate::onConnected, this));
-    _sdClientDisconnectedLink = _sdClient.disconnected.connect(boost::bind<void>(&SessionPrivate::onDisconnected, this, _1));
-    _sdClientServiceAddedLink = _sdClient.serviceAdded.connect(boost::bind<void>(&SessionPrivate::onServiceAdded, this, _1, _2));
-    _sdClientServiceRemovedLink = _sdClient.serviceRemoved.connect(boost::bind<void>(&SessionPrivate::onServiceRemoved, this, _1, _2));
+    _sdClientConnectedSignalLink    = _sdClient.connected.connect(boost::bind<void>(&SessionPrivate::onConnected, this));
+    _sdClientDisconnectedSignalLink = _sdClient.disconnected.connect(boost::bind<void>(&SessionPrivate::onDisconnected, this, _1));
+    _sdClientServiceAddedSignalLink = _sdClient.serviceAdded.connect(boost::bind<void>(&SessionPrivate::onServiceAdded, this, _1, _2));
+    _sdClientServiceRemovedSignalLink = _sdClient.serviceRemoved.connect(boost::bind<void>(&SessionPrivate::onServiceRemoved, this, _1, _2));
   }
 
   SessionPrivate::~SessionPrivate() {
-    _sdClient.connected.disconnect(_sdClientConnectedLink);
-    _sdClient.disconnected.disconnect(_sdClientDisconnectedLink);
-    _sdClient.serviceAdded.disconnect(_sdClientServiceAddedLink);
-    _sdClient.serviceRemoved.disconnect(_sdClientServiceRemovedLink);
+    _sdClient.connected.disconnect(_sdClientConnectedSignalLink);
+    _sdClient.disconnected.disconnect(_sdClientDisconnectedSignalLink);
+    _sdClient.serviceAdded.disconnect(_sdClientServiceAddedSignalLink);
+    _sdClient.serviceRemoved.disconnect(_sdClientServiceRemovedSignalLink);
     _self->disconnected.disconnectAll();
     _self->connected.disconnectAll();
     close();

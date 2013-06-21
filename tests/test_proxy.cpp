@@ -58,7 +58,7 @@ public:
   qi::Signal<> sig2;
 
   int _count1, _count2;
-  qi::SignalBase::Link _l1, _l2;
+  qi::SignalLink _l1, _l2;
 };
 
 void Foo::subscribe1()
@@ -99,7 +99,7 @@ TEST(Proxy, Signal)
   PERSIST_ASSERT(, foo->count1() == 3, 500);
   // small hack, reuse foo function to test callback on proxy signal
   Foo foo2;
-  qi::SignalBase::Link l =  proxy1.connect(boost::bind(&Foo::on1, &foo2, _1, _2));
+  qi::SignalLink l =  proxy1.connect(boost::bind(&Foo::on1, &foo2, _1, _2));
   proxy1(3, 4);
   PERSIST_ASSERT(, foo->count1() == 10, 500);
   PERSIST_ASSERT(, foo2.count1() == 7, 500);
@@ -130,7 +130,7 @@ public:
     prop.disconnect(_link);
   }
   qi::Property<int> prop;
-  qi::SignalBase::Link _link;
+  qi::SignalLink _link;
   int _count;
 };
 
@@ -167,7 +167,7 @@ TEST(Proxy, Property)
   PERSIST_ASSERT(, bar->count() == 3, 500);
 
   Bar bar2;
-  qi::SignalBase::Link l = pp.connect(boost::bind(&Bar::onProp, &bar2, _1));
+  qi::SignalLink l = pp.connect(boost::bind(&Bar::onProp, &bar2, _1));
   bar->set(4);
   // this one is async (remote notify of local property set)
   PERSIST_ASSERT(, bar2.count() == 4, 500);

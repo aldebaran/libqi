@@ -35,8 +35,8 @@ namespace qi {
         TransportSocketConnectionMap::iterator tscmIt;
         for (tscmIt = tscm.begin(); tscmIt != tscm.end(); ++tscmIt) {
           TransportSocketConnection& tsc = tscmIt->second;
-          tsc.socket->disconnected.disconnect(tscmIt->second.disconnectLink);
-          tsc.socket->connected.disconnect(tscmIt->second.connectLink);
+          tsc.socket->disconnected.disconnect(tscmIt->second.disconnectSignalLink);
+          tsc.socket->connected.disconnect(tscmIt->second.connectSignalLink);
           //remove callback before calling disconnect. (we dont need them)
           if (tscmIt->second.socket->isConnected())
             tscmIt->second.socket->disconnect();
@@ -149,8 +149,8 @@ namespace qi {
         tsc.socket = socket;
         tsc.promise = prom;
         tsc.url = url;
-        tsc.connectLink = socket->connected.connect(boost::bind(&TransportSocketCache::onSocketConnected, this, socket, servInfo, url));
-        tsc.disconnectLink = socket->disconnected.connect(boost::bind(&TransportSocketCache::onSocketDisconnected, this, _1, socket, servInfo, url));
+        tsc.connectSignalLink = socket->connected.connect(boost::bind(&TransportSocketCache::onSocketConnected, this, socket, servInfo, url));
+        tsc.disconnectSignalLink = socket->disconnected.connect(boost::bind(&TransportSocketCache::onSocketDisconnected, this, _1, socket, servInfo, url));
         socket->connect(url).async();
         tsca.socket_count++;
       }
