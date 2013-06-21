@@ -43,6 +43,15 @@ if(UNIX)
   )
 endif()
 
+#set rpath so that _qi can find its dependencies when loaded.
+if(UNIX AND NOT APPLE)
+  # Use a relative rpath at installation
+  set_target_properties(_qi
+    PROPERTIES
+      INSTALL_RPATH "\$ORIGIN/../lib"
+  )
+endif()
+
 if (WIN32)
   set_target_properties(_qi PROPERTIES
     SUFFIX ".pyd"
