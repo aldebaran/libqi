@@ -11,7 +11,7 @@
 #include <qitype/metasignal.hpp>
 #include <qitype/metaobject.hpp>
 #include <qitype/metamethod.hpp>
-#include <qitype/genericobject.hpp>
+#include <qitype/anyobject.hpp>
 #include <boost/thread/recursive_mutex.hpp>
 
 namespace qi {

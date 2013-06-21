@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>  // gtest must be included first...!
 #include <string>
-#include <qitype/genericobject.hpp>
+#include <qitype/anyobject.hpp>
 #include <qitype/message.hpp>
 #include <qitype/datastream.hpp>
 

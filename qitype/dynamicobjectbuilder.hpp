@@ -8,7 +8,7 @@
 #define _QITYPE_GENERICOBJECTBUILDER_HPP_
 
 #include <qitype/api.hpp>
-#include <qitype/genericobject.hpp>
+#include <qitype/anyobject.hpp>
 
 namespace qi {
 

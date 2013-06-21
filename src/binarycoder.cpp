@@ -10,7 +10,7 @@
 #include "binarydecoder.hpp"
 
 #include <qi/log.hpp>
-#include <qitype/genericobject.hpp>
+#include <qitype/anyobject.hpp>
 #include <qitype/typedispatcher.hpp>
 #include <qi/types.hpp>
 #include <vector>

@@ -2,7 +2,7 @@
 **  Copyright (C) 2012 Aldebaran Robotics
 **  See COPYING for the license
 */
-#include <qitype/type.hpp>
+#include <qitype/typeinterface.hpp>
 #include <qitype/anyvalue.hpp>
 
 namespace qi

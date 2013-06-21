@@ -8,9 +8,9 @@
 
 #include <qitype/api.hpp>
 #include <qitype/anyvalue.hpp>
-#include <qitype/type.hpp>
+#include <qitype/typeinterface.hpp>
 #include <qitype/anyvalue.hpp>
-#include <qitype/genericobject.hpp>
+#include <qitype/anyobject.hpp>
 #include <qitype/anyfunction.hpp>
 #include <qitype/metaobject.hpp>
 #include <qitype/signal.hpp>

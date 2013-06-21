@@ -13,8 +13,8 @@
 
 #include <qitype/api.hpp>
 #include <qitype/fwd.hpp>
-#include <qitype/type.hpp>
-#include <qitype/genericobjectbuilder.hpp>
+#include <qitype/typeinterface.hpp>
+#include <qitype/dynamicobjectbuilder.hpp>
 
 namespace qi {
 

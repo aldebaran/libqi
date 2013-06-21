@@ -5,7 +5,7 @@
 */
 
 #include <qitype/typeobject.hpp>
-#include <qitype/genericobject.hpp>
+#include <qitype/anyobject.hpp>
 
 namespace qi {
 

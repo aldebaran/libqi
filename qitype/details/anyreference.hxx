@@ -323,8 +323,6 @@ namespace qi {
     return _element(AnyReference(key), true);
   }
 
-
-
   template<typename T> void AnyReference::append(const T& element)
   {
     _append(AnyReference(element));
@@ -348,6 +346,25 @@ namespace qi {
   {
     return !(a==b);
   }
+
+  /// FutureValueConverter implementation for AnyReference -> T
+  /// that destroys the value
+  template <typename T>
+  struct FutureValueConverterTakeAnyReference
+  {
+    void operator()(const AnyReference& in, T& out)
+    {
+      try {
+        out = in.to<T>();
+      }
+      catch (const std::exception& e)
+      {
+        const_cast<AnyReference&>(in).destroy();
+        throw e;
+      }
+      const_cast<AnyReference&>(in).destroy();
+    }
+  };
 
 }
 

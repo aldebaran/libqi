@@ -7,8 +7,8 @@
 #include <map>
 #include <gtest/gtest.h>
 #include <qi/application.hpp>
-#include <qitype/genericobject.hpp>
-#include <qitype/genericobjectbuilder.hpp>
+#include <qitype/anyobject.hpp>
+#include <qitype/dynamicobjectbuilder.hpp>
 
 static int lastPayload = 0;
 static qi::Promise<int> pPayload;

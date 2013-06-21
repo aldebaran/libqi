@@ -4,8 +4,8 @@
 */
 
 #include <qi/future.hpp>
-#include <qitype/type.hpp>
-#include <qitype/genericobjectbuilder.hpp>
+#include <qitype/typeinterface.hpp>
+#include <qitype/dynamicobjectbuilder.hpp>
 #include <qitype/dynamicobject.hpp>
 #include "metaobject_p.hpp"
 

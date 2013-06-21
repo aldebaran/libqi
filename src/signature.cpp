@@ -5,7 +5,7 @@
 #include <cstring>
 
 #include <qitype/signature.hpp>
-#include <qitype/type.hpp>
+#include <qitype/typeinterface.hpp>
 #include <qitype/jsoncodec.hpp>
 #include <boost/make_shared.hpp>
 #include "signatureconvertor.hpp"

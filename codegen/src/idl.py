@@ -525,7 +525,7 @@ def raw_to_interface(class_name, data, include, namespaces):
 
 #include <qitype/signal.hpp>
 #include <qitype/property.hpp>
-#include <qitype/genericobject.hpp>
+#include <qitype/anyobject.hpp>
 @include@
 
 @OPEN_NAMESPACE@
@@ -912,7 +912,7 @@ def raw_to_proxy(class_name, data, return_future, implement_interface, include, 
 #include <qi/types.hpp>
 #include <qitype/signal.hpp>
 #include <qitype/property.hpp>
-#include <qitype/genericobject.hpp>
+#include <qitype/anyobject.hpp>
 #include <qitype/proxysignal.hpp>
 #include <qitype/proxyproperty.hpp>
 
@@ -1062,7 +1062,7 @@ def raw_to_cxx_typebuild(class_name, data, use_interface, register_to_factory, i
   @param register_to_factory: '', 'service' or 'factory'
   """
   template = """
-#include <qitype/genericobject.hpp>
+#include <qitype/anyobject.hpp>
 #include <qitype/objecttypebuilder.hpp>
 #include <qitype/objectfactory.hpp>
 

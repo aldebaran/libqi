@@ -9,7 +9,7 @@
 
 #include <boost/function.hpp>
 
-#include <qitype/type.hpp>
+#include <qitype/typeinterface.hpp>
 
 #ifdef _MSC_VER
 #  pragma warning( push )

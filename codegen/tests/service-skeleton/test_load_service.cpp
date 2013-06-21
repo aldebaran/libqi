@@ -6,7 +6,7 @@
 
 #include <qi/application.hpp>
 
-#include <qitype/genericobject.hpp>
+#include <qitype/anyobject.hpp>
 #include <qitype/objectfactory.hpp>
 
 #include <simpleservice/simpleservice_proxy.hpp>

@@ -8,7 +8,7 @@
 #define _QITYPE_DETAILS_GENERICOBJECT_HXX_
 
 #include <qi/future.hpp>
-#include <qitype/type.hpp>
+#include <qitype/typeinterface.hpp>
 #include <qitype/typeobject.hpp>
 #include <qitype/details/typeimpl.hxx>
 #include <qitype/objecttypebuilder.hpp>

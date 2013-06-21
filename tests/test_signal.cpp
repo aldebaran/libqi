@@ -9,7 +9,7 @@
 #include <qitype/signal.hpp>
 #include <qi/future.hpp>
 #include <qi/application.hpp>
-#include <qitype/genericobject.hpp>
+#include <qitype/anyobject.hpp>
 
 qiLogCategory("test");
 

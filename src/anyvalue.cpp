@@ -6,4 +6,4 @@
 #include <boost/lexical_cast.hpp>
 
 #include <qitype/anyvalue.hpp>
-#include <qitype/genericobject.hpp>
+#include <qitype/anyobject.hpp>

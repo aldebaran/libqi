@@ -10,7 +10,7 @@
 
 #include <qitype/signal.hpp>
 #include <qitype/anyvalue.hpp>
-#include <qitype/genericobject.hpp>
+#include <qitype/anyobject.hpp>
 
 #include "object_p.hpp"
 #include "signal_p.hpp"

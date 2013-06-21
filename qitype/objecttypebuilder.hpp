@@ -13,9 +13,9 @@
 #include <boost/function.hpp>
 #include <qitype/signature.hpp>
 #include <sstream>
-#include <qitype/type.hpp>
+#include <qitype/typeinterface.hpp>
 #include <qitype/details/accessor.hxx>
-#include <qitype/genericobject.hpp>
+#include <qitype/anyobject.hpp>
 #include <qitype/property.hpp>
 
 

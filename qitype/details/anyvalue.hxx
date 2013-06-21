@@ -168,25 +168,6 @@ namespace qi {
 
   /// FutureValueConverter implementation for AnyReference -> T
   /// that destroys the value
-  template <typename T>
-  struct FutureValueConverterTakeAnyReference
-  {
-    void operator()(const AnyReference& in, T& out)
-    {
-      try {
-        out = in.to<T>();
-      }
-      catch (const std::exception& e)
-      {
-        const_cast<AnyReference&>(in).destroy();
-        throw e;
-      }
-      const_cast<AnyReference&>(in).destroy();
-    }
-  };
-
-  /// FutureValueConverter implementation for AnyReference -> T
-  /// that destroys the value
   template<>
   struct FutureValueConverterTakeAnyReference<AnyValue>
   {

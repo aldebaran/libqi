@@ -7,7 +7,7 @@
 #define _QITYPE_DETAILS_TYPEINT_HXX_
 #include <boost/type_traits/is_signed.hpp>
 
-#include <qitype/type.hpp>
+#include <qitype/typeinterface.hpp>
 
 namespace qi {
 

@@ -59,14 +59,14 @@ set(PUBLIC_HEADERS
                    qitype/details/typestring.hxx
                    qitype/details/typetuple.hxx
                    qitype/api.hpp
+                   qitype/anyfunction.hpp
+                   qitype/anyobject.hpp
                    qitype/anyreference.hpp
                    qitype/anyvalue.hpp
-                   qitype/anyfunction.hpp
                    qitype/binarycodec.hpp
                    qitype/dynamicobject.hpp
+                   qitype/dynamicobjectbuilder.hpp
                    qitype/fwd.hpp
-                   qitype/genericobjectbuilder.hpp
-                   qitype/genericobject.hpp
                    qitype/jsoncodec.hpp
                    qitype/manageable.hpp
                    qitype/metamethod.hpp
@@ -80,7 +80,7 @@ set(PUBLIC_HEADERS
                    qitype/proxysignal.hpp
                    qitype/signal.hpp
                    qitype/signature.hpp
-                   qitype/type.hpp
+                   qitype/typeinterface.hpp
                    qitype/typeobject.hpp
                    qitype/typedispatcher.hpp)
 

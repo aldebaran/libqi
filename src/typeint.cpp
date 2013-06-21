@@ -4,7 +4,7 @@
 */
 #include <boost/type_traits/is_signed.hpp>
 
-#include <qitype/type.hpp>
+#include <qitype/typeinterface.hpp>
 #include <qitype/details/typeint.hxx>
 
 namespace qi {

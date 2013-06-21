@@ -9,8 +9,8 @@
 #include <boost/lambda/lambda.hpp>
 #include <boost/lambda/bind.hpp>
 #include <qi/application.hpp>
-#include <qitype/genericobject.hpp>
-#include <qitype/genericobjectbuilder.hpp>
+#include <qitype/anyobject.hpp>
+#include <qitype/dynamicobjectbuilder.hpp>
 #include <qitype/jsoncodec.hpp>
 
 using namespace qi;

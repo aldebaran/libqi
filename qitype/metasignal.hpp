@@ -7,7 +7,7 @@
 #ifndef _QITYPE_METASIGNAL_HPP_
 #define _QITYPE_METASIGNAL_HPP_
 
-#include <qitype/type.hpp>
+#include <qitype/typeinterface.hpp>
 
 #ifdef _MSC_VER
 #  pragma warning( push )

@@ -1,5 +1,5 @@
 #include <qitype/metaproperty.hpp>
-#include <qitype/genericobject.hpp>
+#include <qitype/anyobject.hpp>
 
 namespace qi
 {

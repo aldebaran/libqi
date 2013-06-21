@@ -4,7 +4,7 @@
 */
 
 #include <qitype/anyfunction.hpp>
-#include <qitype/genericobject.hpp>
+#include <qitype/anyobject.hpp>
 
 #include "metamethod_p.hpp"
 

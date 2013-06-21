@@ -7,7 +7,7 @@
 #ifndef _QITYPE_DETAILS_GENERICOBJECTBUILDER_HXX_
 #define _QITYPE_DETAILS_GENERICOBJECTBUILDER_HXX_
 
-#include <qitype/genericobjectbuilder.hpp>
+#include <qitype/dynamicobjectbuilder.hpp>
 #include <qitype/metamethod.hpp>
 
 namespace qi {

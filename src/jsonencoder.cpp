@@ -6,7 +6,7 @@
 #include <sstream>
 #include <iomanip>
 #include <qitype/jsoncodec.hpp>
-#include <qitype/genericobject.hpp>
+#include <qitype/anyobject.hpp>
 #include <qitype/typedispatcher.hpp>
 
 namespace qi {

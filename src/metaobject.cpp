@@ -3,7 +3,7 @@
 **  See COPYING for the license
 */
 
-#include <qitype/type.hpp>
+#include <qitype/typeinterface.hpp>
 #include <qitype/metaobject.hpp>
 #include <qitype/signature.hpp>
 #include "metaobject_p.hpp"

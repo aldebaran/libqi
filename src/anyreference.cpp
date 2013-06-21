@@ -6,7 +6,7 @@
 #include <boost/lexical_cast.hpp>
 
 #include <qitype/anyreference.hpp>
-#include <qitype/genericobject.hpp>
+#include <qitype/anyobject.hpp>
 
 #if defined(_MSC_VER) && _MSC_VER <= 1500
 // vs2008 32 bits does not have std::abs() on int64

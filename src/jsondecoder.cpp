@@ -3,7 +3,7 @@
 **  See COPYING for the license
 */
 
-#include <qitype/type.hpp>
+#include <qitype/typeinterface.hpp>
 #include <qitype/jsoncodec.hpp>
 
 namespace qi {

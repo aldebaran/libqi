@@ -4,7 +4,7 @@
 */
 
 #include <boost/thread.hpp>
-#include <qitype/genericobject.hpp>
+#include <qitype/anyobject.hpp>
 #include <qitype/objecttypebuilder.hpp>
 #include "staticobjecttype.hpp"
 #include "metaobject_p.hpp"

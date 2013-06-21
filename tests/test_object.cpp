@@ -12,8 +12,8 @@
 #include <qi/log.hpp>
 #include <qi/application.hpp>
 #include <gtest/gtest.h>
-#include <qitype/genericobject.hpp>
-#include <qitype/genericobjectbuilder.hpp>
+#include <qitype/anyobject.hpp>
+#include <qitype/dynamicobjectbuilder.hpp>
 #include <qitype/objecttypebuilder.hpp>
 #include <qitype/objectfactory.hpp>
 

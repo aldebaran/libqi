@@ -7,10 +7,10 @@
 #include <boost/thread/mutex.hpp>
 #include <boost/algorithm/string.hpp>
 
-#include <qitype/type.hpp>
+#include <qitype/typeinterface.hpp>
 #include <qitype/signature.hpp>
 #include <qitype/anyvalue.hpp>
-#include <qitype/genericobject.hpp>
+#include <qitype/anyobject.hpp>
 #include <qitype/typedispatcher.hpp>
 
 #ifdef __GNUC__

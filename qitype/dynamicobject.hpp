@@ -7,7 +7,7 @@
 #ifndef _QITYPE_DYNAMICOBJECT_HPP_
 #define _QITYPE_DYNAMICOBJECT_HPP_
 
-#include <qitype/genericobject.hpp>
+#include <qitype/anyobject.hpp>
 #include <qitype/property.hpp>
 
 #ifdef _MSC_VER

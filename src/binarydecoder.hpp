@@ -10,9 +10,9 @@
 #include <qi/buffer.hpp>
 #include <qi/bufferreader.hpp>
 
-#include <qitype/type.hpp>
+#include <qitype/typeinterface.hpp>
 #include <qitype/anyvalue.hpp>
-#include <qitype/genericobject.hpp>
+#include <qitype/anyobject.hpp>
 
 #include <qitype/binarycodec.hpp>
 #include <qitype/api.hpp>
