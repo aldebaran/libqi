@@ -11,6 +11,7 @@
 #include <qimessaging/session.hpp>
 #include <testsession/testsessionpair.hpp>
 #include <qi/log.hpp>
+#include <qitype/jsoncodec.hpp>
 
 qi::AnyValue reply(const qi::AnyValue &myval) {
 

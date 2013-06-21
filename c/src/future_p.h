@@ -10,7 +10,7 @@
 # define   	_QIMESSAGING_FUTURE_C_P_H_
 
 #include <qi/future.hpp>
-#include <qitype/genericvalue.hpp>
+#include <qitype/anyvalue.hpp>
 #include <qic/future.h>
 #include <qic/value.h>
 #include "value_p.h"

@@ -14,6 +14,7 @@
 #include "gil.hpp"
 #include "error.hpp"
 #include <qitype/genericobjectbuilder.hpp>
+#include <qitype/jsoncodec.hpp>
 
 qiLogCategory("qipy.object");
 

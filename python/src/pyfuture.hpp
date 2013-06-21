@@ -12,7 +12,7 @@
 
 #include <boost/python.hpp>
 #include <qi/future.hpp>
-#include <qitype/genericvalue.hpp>
+#include <qitype/anyvalue.hpp>
 #include <boost/smart_ptr/enable_shared_from_this.hpp>
 
 namespace qi {

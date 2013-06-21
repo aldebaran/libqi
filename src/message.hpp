@@ -8,7 +8,7 @@
 #define _SRC_MESSAGE_HPP_
 
 #include <qimessaging/api.hpp>
-#include <qitype/genericvalue.hpp>
+#include <qitype/anyvalue.hpp>
 #include <qi/buffer.hpp>
 #include <qitype/functiontype.hpp>
 #include <qi/types.hpp>

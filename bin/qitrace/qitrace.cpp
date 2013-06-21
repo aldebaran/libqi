@@ -15,6 +15,7 @@
 #include <qi/log.hpp>
 #include <qi/application.hpp>
 #include <qimessaging/session.hpp>
+#include <qitype/jsoncodec.hpp>
 
 #define foreach BOOST_FOREACH
 

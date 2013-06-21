@@ -12,7 +12,7 @@
 #include "value_p.h"
 
 #include <qitype/genericobject.hpp>
-#include <qitype/genericvalue.hpp>
+#include <qitype/anyvalue.hpp>
 #include <qitype/genericobjectbuilder.hpp>
 
 

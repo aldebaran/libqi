@@ -15,7 +15,7 @@
 #include <qi/application.hpp>
 
 #include <qitype/type.hpp>
-#include <qitype/genericvalue.hpp>
+#include <qitype/anyvalue.hpp>
 #include <qitype/genericobjectbuilder.hpp>
 #include <qitype/signal.hpp>
 

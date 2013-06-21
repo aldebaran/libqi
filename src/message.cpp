@@ -9,7 +9,7 @@
 #include <boost/make_shared.hpp>
 #include <boost/dynamic_bitset.hpp>
 
-#include <qitype/genericvalue.hpp>
+#include <qitype/anyvalue.hpp>
 #include "message.hpp"
 
 #include <qi/atomic.hpp>

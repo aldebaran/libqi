@@ -10,10 +10,9 @@
 #include <string>
 #include <vector>
 
-#include <qitype/genericvalue.hpp>
-#include <qitype/signature.hpp>
 #include <qimessaging/api.hpp>
 #include <qimessaging/url.hpp>
+#include <qitype/type.hpp>
 
 namespace qi
 {
