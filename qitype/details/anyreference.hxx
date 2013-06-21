@@ -351,10 +351,5 @@ namespace qi {
 
 }
 
-/* Since AnyReference does not handle its memory, it cannot be used
-* inside a AnyReference. use AnyValue instead.
-*/
-//TODO: QI_NO_TYPE(qi::AnyReference);
-
 #endif  // _QITYPE_DETAILS_ANYREFERENCE_HXX_
 

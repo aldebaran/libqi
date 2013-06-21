@@ -217,8 +217,17 @@ namespace qi{
 
 }
 
+
 #include <qitype/details/typeimpl.hxx>
 #include <qitype/details/type.hxx>
+#include <qitype/details/typeint.hxx>
+#include <qitype/details/typelist.hxx>
+#include <qitype/details/typemap.hxx>
+#include <qitype/details/typestring.hxx>
+#include <qitype/details/typepointer.hxx>
+#include <qitype/details/typetuple.hxx>
+#include <qitype/details/typebuffer.hxx>
+#include <qitype/details/typedynamic.hxx>
 
 QI_NO_TYPE(qi::TypeInterface)
 QI_NO_TYPE(qi::TypeInterface*)
@@ -228,16 +237,5 @@ QI_NO_TYPE(qi::TypeInterface*)
 // restore the disabling of this warning
 #  pragma warning( disable: 4503 )
 #endif
-
-
-//#include <qitype/details/genericvalue.hxx>
-#include <qitype/details/typeint.hxx>
-#include <qitype/details/typelist.hxx>
-#include <qitype/details/typemap.hxx>
-#include <qitype/details/typestring.hxx>
-#include <qitype/details/typepointer.hxx>
-#include <qitype/details/typetuple.hxx>
-#include <qitype/details/typebuffer.hxx>
-#include <qitype/details/typedynamic.hxx>
 
 #endif  // _QITYPE_TYPE_HPP_
