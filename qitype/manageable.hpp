@@ -8,7 +8,7 @@
 #define _QITYPE_MANAGEABLE_HPP_
 
 #include <qitype/api.hpp>
-#include <qitype/functiontype.hpp>
+#include <qitype/anyfunction.hpp>
 #include <qitype/typeobject.hpp>
 #include <qitype/signal.hpp>
 #include <boost/thread/mutex.hpp>

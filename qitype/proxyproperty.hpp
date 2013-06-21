@@ -9,7 +9,7 @@
 
 #include <qi/log.hpp>
 #include <qitype/property.hpp>
-#include <qitype/functiontype.hpp>
+#include <qitype/anyfunction.hpp>
 
 namespace qi
 {

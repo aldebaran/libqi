@@ -30,18 +30,18 @@ endif()
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 set(PUBLIC_HEADERS
-                   qitype/details/anyreference.hpp
-                   qitype/details/anyvalue.hpp
                    qitype/details/accessor.hxx
+                   qitype/details/anyreference.hpp
+                   qitype/details/anyreference.hxx
+                   qitype/details/anyvalue.hpp
+                   qitype/details/anyvalue.hxx
+                   qitype/details/anyfunction.hxx
+                   qitype/details/anyfunctionfactory.hxx
+                   qitype/details/anyiterator.hxx
                    qitype/details/bindtype.hxx
-                   qitype/details/functiontype.hxx
-                   qitype/details/functiontypefactory.hxx
+                   qitype/details/functionsignature.hxx
                    qitype/details/genericobjectbuilder.hxx
                    qitype/details/genericobject.hxx
-                   qitype/details/anyvalue.hxx
-                   qitype/details/anyiterator.hxx
-                   qitype/details/anyreference.hxx
-                   qitype/details/functionsignature.hxx
                    qitype/details/hasless.hxx
                    qitype/details/objecttypebuilder.hxx
                    qitype/details/property.hxx
@@ -61,9 +61,9 @@ set(PUBLIC_HEADERS
                    qitype/api.hpp
                    qitype/anyreference.hpp
                    qitype/anyvalue.hpp
+                   qitype/anyfunction.hpp
                    qitype/binarycodec.hpp
                    qitype/dynamicobject.hpp
-                   qitype/functiontype.hpp
                    qitype/fwd.hpp
                    qitype/genericobjectbuilder.hpp
                    qitype/genericobject.hpp

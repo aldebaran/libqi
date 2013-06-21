@@ -8,13 +8,14 @@
 #define _QITYPE_PROXYSIGNAL_HPP_
 
 #include <qitype/signal.hpp>
-#include <qitype/functiontype.hpp>
+#include <qitype/anyfunction.hpp>
 
 namespace qi
 {
 
   /// Signal proxy, using an AnyObject and signal id as backend.
-  template<typename T> class ProxySignal: public SignalF<T>
+  template<typename T>
+  class ProxySignal: public SignalF<T>
   {
   public:
     typedef SignalF<T> SignalType;

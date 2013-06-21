@@ -11,7 +11,7 @@
 #include <qitype/type.hpp>
 #include <qitype/anyvalue.hpp>
 #include <qitype/genericobject.hpp>
-#include <qitype/functiontype.hpp>
+#include <qitype/anyfunction.hpp>
 #include <qitype/metaobject.hpp>
 #include <qitype/signal.hpp>
 #include <qitype/dynamicobject.hpp>

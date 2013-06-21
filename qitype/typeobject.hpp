@@ -9,7 +9,7 @@
 
 #include <qitype/metaobject.hpp>
 #include <qi/future.hpp>
-#include <qitype/functiontype.hpp>
+#include <qitype/anyfunction.hpp>
 
 namespace qi {
 

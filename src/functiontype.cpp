@@ -4,7 +4,7 @@
 */
 #include <qi/future.hpp>
 #include <qitype/signature.hpp>
-#include <qitype/functiontype.hpp>
+#include <qitype/anyfunction.hpp>
 #include <qitype/genericobject.hpp>
 
 qiLogCategory("qitype.functiontype");

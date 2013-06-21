@@ -3,7 +3,7 @@
 **  See COPYING for the license
 */
 
-#include <qitype/functiontype.hpp>
+#include <qitype/anyfunction.hpp>
 #include <qitype/genericobject.hpp>
 
 #include "metamethod_p.hpp"
