@@ -3,13 +3,14 @@
 
 #include <qi/future.hpp>
 #include <qi/iocolor.hpp>
-#include <qitype/functiontype.hpp>
+#include <qitype/anyfunction.hpp>
+#include <qitype/jsoncodec.hpp>
 #include <boost/foreach.hpp>
 #include "servicehelper.hpp"
 #include "qicli.hpp"
 
 
-ServiceHelper::ServiceHelper(const qi::ObjectPtr &service, const std::string &name)
+ServiceHelper::ServiceHelper(const qi::AnyObject& service, const std::string &name)
   :_name(name),
     _service(service)
 
@@ -75,7 +76,7 @@ std::list<std::string> ServiceHelper::getMatchingPropertiesName(const std::strin
   return getMatchingMembersName<qi::MetaProperty>(_service->metaObject().propertyMap(), pattern, getHidden);
 }
 
-const ServiceHelper& ServiceHelper::operator=(const qi::ObjectPtr &service)
+const ServiceHelper& ServiceHelper::operator=(const qi::AnyObject &service)
 {
   _service = service;
   return *this;
@@ -93,7 +94,7 @@ const std::string &ServiceHelper::name() const
   return _name;
 }
 
-const qi::ObjectPtr& ServiceHelper::objPtr() const
+const qi::AnyObject& ServiceHelper::objPtr() const
 {
   return _service;
 }
@@ -116,7 +117,7 @@ int ServiceHelper::showProperty(const std::string &propertyName)
   return 0;
 }
 
-int ServiceHelper::setProperty(const std::string &propertyName, const qi::GenericValue &gvArg)
+int ServiceHelper::setProperty(const std::string &propertyName, const qi::AnyValue& gvArg)
 {
   std::cout << _name << "." << propertyName << ": ";
   qi::FutureSync<void> result = _service->setProperty(propertyName, gvArg);
@@ -133,8 +134,8 @@ int ServiceHelper::watch(const std::string &signalName, bool showTime)
   WatchOptions options;
   options.showTime = showTime;
   options.signalName = signalName;
-  qi::SignalSubscriber sigSub(qi::makeDynamicGenericFunction(boost::bind(&ServiceHelper::defaultWatcher, this, options, _1)));
-  qi::FutureSync<qi::Link> futLink = _service->connect(signalName, sigSub);
+  qi::SignalSubscriber sigSub(qi::AnyFunction::fromDynamicFunction(boost::bind(&ServiceHelper::defaultWatcher, this, options, _1)));
+  qi::FutureSync<qi::SignalLink> futLink = _service->connect(signalName, sigSub);
   if (futLink.hasError())
   {
     std::cout << _name << "." << signalName << ": " << futLink.error() << std::endl;
@@ -156,7 +157,7 @@ int ServiceHelper::call(const std::string &methodName, const qi::GenericFunction
 {
   std::cout << _name << "." << methodName << ": ";
   std::cout.flush();
-  qi::FutureSync<qi::GenericValuePtr> result = _service->metaCall(methodName, gvArgList);
+  qi::FutureSync<qi::AnyReference> result = _service->metaCall(methodName, gvArgList);
   if (result.hasError())
     std::cout << "error: " << result.error() << std::endl;
   else

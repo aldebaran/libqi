@@ -2,7 +2,7 @@
 #include <boost/regex.hpp>
 #include <qi/iocolor.hpp>
 #include <boost/foreach.hpp>
-
+#include <qitype/jsoncodec.hpp>
 #include "sessionhelper.hpp"
 #include "qicli.hpp"
 
@@ -78,7 +78,7 @@ bool SessionHelper::byPassService(const std::string &name, bool showHidden)
 
 ServiceHelper SessionHelper::getServiceHelper(const std::string &serviceName)
 {
-  qi::FutureSync<qi::ObjectPtr> future = _session.service(serviceName);
+  qi::FutureSync<qi::AnyObject> future = _session.service(serviceName);
 
   if (future.hasError())
     throw std::runtime_error(future.error());
@@ -218,7 +218,7 @@ qi::GenericFunctionParameters SessionHelper::decodeJsonArgs(const std::vector<st
 
   for (unsigned int i = 0; i < jsonArgList.size(); ++i)
   {
-    qi::GenericValue gvArg = qi::decodeJSON(jsonArgList[i]);
+    qi::AnyValue gvArg = qi::decodeJSON(jsonArgList[i]);
     gvArgList.push_back(gvArg.clone());
   }
   return gvArgList;
