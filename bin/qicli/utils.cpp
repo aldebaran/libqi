@@ -7,18 +7,6 @@
 
 #include "qicli.hpp"
 
-bool splitName(const std::string &fullName, std::string &beforePoint, std::string &afterPoint)
-{
-  size_t pos = fullName.find(".");
-
-  if (pos == std::string::npos || pos == fullName.length() - 1 || pos == 0)
-    return false;
-
-  beforePoint = fullName.substr(0, pos);
-  afterPoint = fullName.substr(pos + 1);
-  return true;
-}
-
 int readNumericInput()
 {
   std::string c;
@@ -39,12 +27,12 @@ void showHelp(const po::options_description &desc)
 {
   std::cout << std::left << desc << std::endl;
   std::cout << "sub commands:" << std::endl;
-  std::cout << "  service [<ServicePattern>]" << std::endl;
-  std::cout << "  call    <Service.Method> <parameter ...>" << std::endl;
-  std::cout << "  post    <Service.SignalOrMethod> <parameter ...>" << std::endl;
-  std::cout << "  get     <Service.Property>" << std::endl;
-  std::cout << "  set     <Service.Property> <Value>" << std::endl;
-  std::cout << "  watch   [<ServicePattern>] [<SignalPattern>]" << std::endl;
+  std::cout << "  service [<ServicePattern>...]" << std::endl;
+  std::cout << "  call    <ServicePattern.MethodPattern> [<JsonParameter>...]" << std::endl;
+  std::cout << "  post    <ServicePattern.SignalPattern> [<JsonParameter>...]" << std::endl;
+  std::cout << "  get     <ServicePattern.PropertyPattern>..." << std::endl;
+  std::cout << "  set     <ServicePattern.PropertyPattern>... <JsonParameter>" << std::endl;
+  std::cout << "  watch   <ServicePattern.SignalPattern>..." << std::endl;
 }
 
 bool poDefault(const po::command_line_parser &clp, po::variables_map &vm, const po::options_description &desc)
@@ -74,4 +62,13 @@ std::string getTime()
   msg.imbue(std::locale(msg.getloc(),f));
   msg << now;
   return msg.str();
+}
+
+bool isNumber(const std::string &str)
+{
+  for (unsigned int i = 0; i < str.length(); ++i) {
+    if (!::isdigit(str[i]))
+      return false;
+  }
+  return true;
 }

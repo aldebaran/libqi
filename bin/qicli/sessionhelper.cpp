@@ -1,12 +1,15 @@
 #include <iomanip>
 #include <boost/regex.hpp>
 #include <qi/iocolor.hpp>
+#include <boost/foreach.hpp>
+
 #include "sessionhelper.hpp"
+#include "qicli.hpp"
 
 SessionHelper::SessionHelper(const std::string &address)
 {
   _session.connect(address);
-  _session.disconnected.connect(boost::bind(&SessionHelper::onDisconnect, this, _1));
+  _servicesInfos = _session.services();
 }
 
 SessionHelper::~SessionHelper()
@@ -14,7 +17,66 @@ SessionHelper::~SessionHelper()
   _session.close();
 }
 
-ServiceHelper SessionHelper::getService(const std::string &serviceName)
+void SessionHelper::info(const std::vector<std::string> &patternVec, bool verbose, bool showHidden, bool showDoc)
+{
+  std::set<std::string> matchServs;
+
+  //pattern match, and display
+  for (unsigned int i = 0; i < patternVec.size(); ++i)
+  {
+    std::list<std::string> tmp = getMatchingServices(patternVec[i], showHidden);
+    matchServs.insert(tmp.begin(), tmp.end());
+  }
+
+  if (matchServs.empty())
+    throw std::runtime_error("No service matching the given patterns were found");
+
+  for (unsigned int j = 0; j < _servicesInfos.size(); ++j)
+    BOOST_FOREACH(const std::string &it, matchServs)
+      if (it == _servicesInfos[j].name())
+        showServiceInfo(_servicesInfos[j], verbose, showHidden, showDoc);
+}
+
+void SessionHelper::call(const std::string &pattern, const std::vector<std::string> &jsonArgList, bool hidden)
+{
+  forEachService(pattern, boost::bind(&ServiceHelper::call, _1, _2, decodeJsonArgs(jsonArgList)),
+                  &ServiceHelper::getMatchingMethodsName, hidden);
+}
+
+void SessionHelper::post(const std::string &pattern, const std::vector<std::string> &jsonArgList, bool hidden)
+{
+  forEachService(pattern, boost::bind(&ServiceHelper::post, _1, _2, decodeJsonArgs(jsonArgList)),
+                  &ServiceHelper::getMatchingSignalsName, hidden);
+}
+
+void SessionHelper::get(const std::vector<std::string> &patternList, bool hidden)
+{
+  forEachService(patternList, boost::bind(&ServiceHelper::showProperty, _1, _2),
+                  &ServiceHelper::getMatchingPropertiesName, hidden);
+}
+
+void SessionHelper::set(const std::vector<std::string> &patternList, const std::string &jsonValue, bool hidden)
+{
+  forEachService(patternList, boost::bind(&ServiceHelper::setProperty, _1, _2, qi::decodeJSON(jsonValue)),
+                  &ServiceHelper::getMatchingPropertiesName, hidden);
+}
+
+void SessionHelper::watch(const std::vector<std::string> &patternList, bool showTime, bool hidden)
+{
+  forEachService(patternList, boost::bind(&ServiceHelper::watch, _1, _2, showTime),
+                  &ServiceHelper::getMatchingSignalsName, hidden);
+}
+
+bool SessionHelper::byPassService(const std::string &name, bool showHidden)
+{
+  if (showHidden)
+    return false;
+  if (!name.empty() && name[0] == '_')
+    return true;
+  return false;
+}
+
+ServiceHelper SessionHelper::getServiceHelper(const std::string &serviceName)
 {
   qi::FutureSync<qi::ObjectPtr> future = _session.service(serviceName);
 
@@ -23,26 +85,53 @@ ServiceHelper SessionHelper::getService(const std::string &serviceName)
   return ServiceHelper(future.value(), serviceName);
 }
 
-std::vector<ServiceHelper> SessionHelper::getServices(const std::string &pattern)
+std::list<std::string> SessionHelper::getMatchingServices(const std::string &pattern, bool getHidden)
 {
-  std::vector<qi::ServiceInfo> servsInfos = _session.services().value();
-  std::vector<ServiceHelper> services;
-  services.reserve(servsInfos.size());
-  boost::basic_regex<char> reg(pattern);
+  std::list<std::string>         matchingServices;
 
-  for (unsigned int i = 0; i < servsInfos.size(); ++i)
+  for (unsigned int i = 0; i < _servicesInfos.size(); ++i)
   {
-    if (boost::regex_match(servsInfos[i].name(), reg))
-      services.push_back(getService(servsInfos[i].name()));
+    if ((isNumber(pattern) && static_cast<unsigned int>(::atoi(pattern.c_str())) == _servicesInfos[i].serviceId())
+        || _servicesInfos[i].name() == pattern)
+    {
+      matchingServices.push_back(_servicesInfos[i].name());
+      return matchingServices;
+    }
+    if (byPassService(_servicesInfos[i].name(), getHidden))
+      continue;
+    if (qi::os::fnmatch(pattern, _servicesInfos[i].name()))
+      matchingServices.push_back(_servicesInfos[i].name());
   }
-  return services;
+  return matchingServices;
+}
+
+SessionHelper::MatchMap SessionHelper::getMatchMap(const std::vector<std::string> &patternList, ShPatternResolver patternResolver, bool hidden)
+{
+  MatchMap matchMap;
+
+  for (unsigned int i = 0; i < patternList.size(); ++i)
+  {
+    std::string servicePattern;
+    std::string memberPattern;
+
+    splitName(patternList[i], servicePattern, memberPattern, true);
+    std::list<std::string> matchingServices = getMatchingServices(servicePattern, hidden);
+
+    BOOST_FOREACH(const std::string &it, matchingServices)
+    {
+      if (!matchMap.count(it))
+        matchMap[it].first = getServiceHelper(it);
+
+      std::pair<ServiceHelper, std::set<std::string> > &matchPair = matchMap[it];
+      std::list<std::string> matchingMembers = (matchPair.first.*patternResolver)(memberPattern, hidden);
+      matchMap[it].second.insert(matchingMembers.begin(), matchingMembers.end());
+    }
+  }
+  return matchMap;
 }
 
 void SessionHelper::showServiceInfo(const qi::ServiceInfo &infos, bool verbose, bool showHidden, bool showDoc)
 {
-  if (!showHidden &&
-      infos.name().size() > 0 && infos.name()[0] == '_')
-    return;
   std::cout << qi::StreamColor_Fuchsia
             << std::right << std::setw(3) << std::setfill('0')
             << infos.serviceId() << qi::StreamColor_Reset
@@ -56,7 +145,7 @@ void SessionHelper::showServiceInfo(const qi::ServiceInfo &infos, bool verbose, 
   if (infos.endpoints().begin() != infos.endpoints().end())
     firstEp = infos.endpoints().begin()->str();
   std::cout << qi::StreamColor_Green << "  * " << qi::StreamColor_Fuchsia << "Info" << qi::StreamColor_Reset << ":"
-             << std::endl;
+            << std::endl;
 
   std::cout << "   machine   " << infos.machineId() << std::endl
             << "   process   " << infos.processId() << std::endl
@@ -69,7 +158,7 @@ void SessionHelper::showServiceInfo(const qi::ServiceInfo &infos, bool verbose, 
 
   try
   {
-    ServiceHelper service = getService(infos.name());
+    ServiceHelper service = getServiceHelper(infos.name());
     qi::details::printMetaObject(std::cout, service.objPtr()->metaObject(), true, showHidden, showDoc);
   }
   catch (...)
@@ -79,76 +168,58 @@ void SessionHelper::showServiceInfo(const qi::ServiceInfo &infos, bool verbose, 
   }
 }
 
-bool isNumber(const std::string &str)
+void SessionHelper::forEachService(const std::string &pattern, ShMethod methodToCall, ShPatternResolver patternResolver, bool hidden)
 {
-  for (unsigned int i = 0; i < str.length(); ++i) {
-    if (!::isdigit(str[i]))
+  std::vector<std::string> tmpPatternList(1);
+  tmpPatternList[0] = pattern;
+  forEachService(tmpPatternList, methodToCall, patternResolver, hidden);
+}
+
+void SessionHelper::forEachService(const std::vector<std::string> &patternList, ShMethod methodToCall, ShPatternResolver patternResolver, bool hidden)
+{
+  MatchMap matchMap = getMatchMap(patternList, patternResolver, hidden);
+
+  if (matchMap.empty())
+    throw std::runtime_error("no services matching the given pattern(s) were found");
+
+  bool foundOne = false;
+  BOOST_FOREACH(MatchMapPair &it, matchMap)
+  {
+    if (!it.second.second.empty())
+      foundOne = true;
+
+    BOOST_FOREACH(const std::string &it2, it.second.second)
+      methodToCall(it.second.first, it2);
+  }
+  if (!foundOne)
+    throw std::runtime_error("no Service.Member combinaisons matching the given pattern(s) were found");
+}
+
+bool SessionHelper::splitName(const std::string &fullName, std::string &beforePoint, std::string &afterPoint, bool throwOnError)
+{
+  size_t pos = fullName.find(".");
+
+  if (pos == std::string::npos || pos == fullName.length() - 1 || pos == 0)
+  {
+    if (throwOnError)
+      throw (std::runtime_error("Service.Member syntax not respected"));
+    else
       return false;
   }
+
+  beforePoint = fullName.substr(0, pos);
+  afterPoint = fullName.substr(pos + 1);
   return true;
 }
 
-void SessionHelper::showServicesInfoPattern(const std::vector<std::string> &patternVec, bool verbose, bool showHidden, bool showDoc)
+qi::GenericFunctionParameters SessionHelper::decodeJsonArgs(const std::vector<std::string> &jsonArgList)
 {
-  std::vector<qi::ServiceInfo> servs = _session.services();
-  std::vector<std::string> matchServs;
+  qi::GenericFunctionParameters gvArgList;
 
-  //nothing specified, display everything
-  if (patternVec.empty()) {
-    for (unsigned int i = 0; i < servs.size(); ++i)
-      showServiceInfo(servs[i], verbose, showHidden, showDoc);
-    return;
-  }
-
-  //pattern match, and display
-  for (unsigned int u = 0; u < patternVec.size(); ++u)
+  for (unsigned int i = 0; i < jsonArgList.size(); ++i)
   {
-    bool displayed = false;
-    if (isNumber(patternVec[u])) {
-      unsigned int sid = atoi(patternVec[u].c_str());
-      for (unsigned int j = 0; j < servs.size(); ++j) {
-        if (servs[j].serviceId() == sid) {
-          showServiceInfo(servs[j], verbose, showHidden, showDoc);
-          displayed = true;
-        }
-      }
-    } else {
-      boost::basic_regex<char> reg(patternVec[u]);
-      for (unsigned int i = 0; i < servs.size(); ++i) {
-        if (boost::regex_match(servs[i].name(), reg)) {
-          showServiceInfo(servs[i], verbose, showHidden, showDoc);
-          displayed = true;
-        }
-      }
-    }
-    //no service displayed...
-    if (!displayed)
-      std::cout << "Service not found: " << patternVec[u] << std::endl;
+    qi::GenericValue gvArg = qi::decodeJSON(jsonArgList[i]);
+    gvArgList.push_back(gvArg.clone());
   }
-}
-
-qi::FutureSync<void> SessionHelper::connect(const qi::Url &serviceDirectoryURL)
-{
-  return _session.connect(serviceDirectoryURL);
-}
-
-qi::FutureSync<void> SessionHelper::close()
-{
-  return _session.close();
-}
-
-qi::FutureSync< qi::ObjectPtr > SessionHelper::service(const std::string &service, const std::string &protocol)
-{
-  return _session.service(service, protocol);
-}
-
-qi::FutureSync< std::vector<qi::ServiceInfo> > SessionHelper::services(qi::Session::ServiceLocality locality)
-{
-  return _session.services(locality);
-}
-
-void SessionHelper::onDisconnect(const std::string &str)
-{
-  std::cout << "connection lost: " << str << std::endl;
-  ::exit(1);
+  return gvArgList;
 }

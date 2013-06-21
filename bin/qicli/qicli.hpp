@@ -26,11 +26,11 @@ int subCmd_get(int argc, char **argv, const MainOptions &options);
 int subCmd_set(int argc, char **argv, const MainOptions &options);
 
 /* UTILS */
-bool splitName(const std::string &fullName, std::string &beforePoint, std::string &afterPoint);
 int readNumericInput();
 std::string readAlphaInput();
 bool poDefault(const po::command_line_parser &clp, po::variables_map &vm, const po::options_description &desc);
 void showHelp(const po::options_description &desc);
 std::string getTime();
+bool isNumber(const std::string &str);
 
 #endif /* !QICLI_HPP_ */

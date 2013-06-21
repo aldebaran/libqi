@@ -5,74 +5,9 @@
 
 #include "qicli.hpp"
 
-int subCmd_call(int argc, char **argv, const MainOptions &options)
-{
-  po::options_description     desc("Usage: qicli call Service.Method ARGS...");
-  std::string                 fullName;
-  std::vector<std::string>    argList;
-
-  desc.add_options()
-      ("method,m", po::value<std::string>(&fullName)->required(), "method's name")
-      ("arg,a", po::value<std::vector<std::string> >(&argList), "method's args")
-      ("help,h", "Print this help message and exit");
-
-  po::positional_options_description positionalOptions;
-  positionalOptions.add("method", 1);
-  positionalOptions.add("arg", -1);
-
-  po::variables_map vm;
-  if (!poDefault(po::command_line_parser(argc, argv).options(desc).positional(positionalOptions), vm, desc))
-    return 1;
-  SessionHelper session(options.address);
-  std::string   serviceName;
-  std::string   methodName;
-
-  if (!::splitName(fullName, serviceName, methodName))
-  {
-    std::cerr << "error: Service.Method syntax not respected" << std::endl;
-    return 1;
-  }
-  ServiceHelper service = session.getService(serviceName);
-
-  return service.call(methodName, argList);
-}
-
-int subCmd_post(int argc, char **argv, const MainOptions &options)
-{
-  po::options_description     desc("Usage: qicli post Service.Signal ARGS...");
-  std::string                 fullName;
-  std::vector<std::string>    argList;
-
-  desc.add_options()
-      ("signal,s", po::value<std::string>(&fullName)->required(), "signal's name")
-      ("arg,a", po::value<std::vector<std::string> >(&argList), "method's args")
-      ("help,h", "Print this help message and exit");
-
-  po::positional_options_description positionalOptions;
-  positionalOptions.add("signal", 1);
-  positionalOptions.add("arg", -1);
-
-  po::variables_map vm;
-  if (!poDefault(po::command_line_parser(argc, argv).options(desc).positional(positionalOptions), vm, desc))
-    return 1;
-
-  SessionHelper session(options.address);
-  std::string serviceName;
-  std::string signalName;
-
-  if (!::splitName(fullName, serviceName, signalName))
-  {
-    std::cerr << "error, Service.Signal syntax not respected" << std::endl;
-    return 1;
-  }
-  ServiceHelper service = session.getService(serviceName);
-
-  return service.post(signalName, argList);
-}
-
 int subCmd_service(int argc, char **argv, const MainOptions &options)
 {
-  po::options_description     desc("Usage: qicli service PATTERN...");
+  po::options_description     desc("Usage: qicli service [<ServicePattern>...]");
   std::vector<std::string>    serviceList;
 
   desc.add_options()
@@ -80,7 +15,7 @@ int subCmd_service(int argc, char **argv, const MainOptions &options)
       ("help,h", "Print this help message and exit")
       ("list,l", "List services (default when no service specified)")
       ("info,i", "print service info, methods, signals and properties")
-      ("show-hidden", "show hidden services, methods, signals and properties")
+      ("hidden", "show hidden services, methods, signals and properties")
       ("show-doc", "show documentation for methods, signals and properties");
 
   po::positional_options_description positionalOptions;
@@ -104,27 +39,54 @@ int subCmd_service(int argc, char **argv, const MainOptions &options)
     details = (serviceList.size()) != 0;
   }
 
+  if (serviceList.empty())
+    serviceList.push_back("*");
+
   SessionHelper session(options.address);
-  session.showServicesInfoPattern(serviceList, details, vm.count("show-hidden"), vm.count("show-doc"));
+  session.info(serviceList, details, vm.count("hidden"), vm.count("show-doc"));
   return 0;
 }
 
-int subCmd_watch(int argc, char **argv, const MainOptions &options)
+int subCmd_call(int argc, char **argv, const MainOptions &options)
 {
-  po::options_description desc("Usage: qicli watch Service.Signal");
-  std::string             serviceName;
-  std::string             signalName;
+  po::options_description     desc("Usage: qicli call <ServicePattern.MethodPattern> [<JsonParameter>...]");
+  std::string                 fullName;
+  std::vector<std::string>    argList;
 
   desc.add_options()
-      ("service,s", po::value<std::string>(&serviceName)->default_value(".*"), "service's name")
-      ("signal", po::value<std::string>(&signalName)->default_value(".*"), "signal's name")
-      ("time,t", "Print time")
-      ("show-hidden", "watch hidden signals")
+      ("method,m", po::value<std::string>(&fullName)->required(), "method's name")
+      ("arg,a", po::value<std::vector<std::string> >(&argList), "method's args")
+      ("hidden", "call hidden methods if they match the given pattern")
       ("help,h", "Print this help message and exit");
 
   po::positional_options_description positionalOptions;
-  positionalOptions.add("service", 1);
-  positionalOptions.add("signal", 2);
+  positionalOptions.add("method", 1);
+  positionalOptions.add("arg", -1);
+
+  po::variables_map vm;
+  if (!poDefault(po::command_line_parser(argc, argv).options(desc).positional(positionalOptions), vm, desc))
+    return 1;
+  SessionHelper session(options.address);
+
+  session.call(fullName, argList, vm.count("hidden"));
+  return 0;
+}
+
+int subCmd_post(int argc, char **argv, const MainOptions &options)
+{
+  po::options_description     desc("Usage: qicli post <ServicePattern.SignalPattern> [<JsonParameter>...]");
+  std::string                 fullName;
+  std::vector<std::string>    argList;
+
+  desc.add_options()
+      ("signal,s", po::value<std::string>(&fullName)->required(), "signal's name")
+      ("arg,a", po::value<std::vector<std::string> >(&argList), "method's args")
+      ("hidden", "post hidden signals if they match the given pattern")
+      ("help,h", "Print this help message and exit");
+
+  po::positional_options_description positionalOptions;
+  positionalOptions.add("signal", 1);
+  positionalOptions.add("arg", -1);
 
   po::variables_map vm;
   if (!poDefault(po::command_line_parser(argc, argv).options(desc).positional(positionalOptions), vm, desc))
@@ -132,85 +94,84 @@ int subCmd_watch(int argc, char **argv, const MainOptions &options)
 
   SessionHelper session(options.address);
 
-  std::vector<ServiceHelper> services = session.getServices(serviceName);
-
-  bool foundOne = false;
-  if (services.empty())
-  {
-    std::cerr << "no services matching the given pattern" << std::endl;
-    return 1;
-  }
-  for (unsigned int i = 0; i < services.size(); ++i)
-    if (!services[i].watchSignalPattern(signalName, vm.count("time"), vm.count("show-hidden")))
-      foundOne = true;
-  if (foundOne)
-  {
-    ::getchar();
-    for (unsigned int i = 0; i < services.size(); ++i)
-      services[i].disconnectAll();
-  }
+  session.post(fullName, argList, vm.count("hidden"));
   return 0;
 }
 
 int subCmd_get(int argc, char **argv, const MainOptions &options)
 {
-  po::options_description desc("Usage: qicli get Service.Propertie");
-  std::string             fullName;
+  po::options_description   desc("Usage: qicli get <ServicePattern.PropertyPattern>...");
+  std::vector<std::string>  patternList;
 
   desc.add_options()
-      ("prop,p", po::value<std::string>(&fullName)->required(), "propertie's name")
+      ("prop,p", po::value<std::vector<std::string> >(&patternList), "property's name")
+      ("hidden", "get hidden properties if they match the given pattern")
       ("help,h", "Print this help message and exit");
 
   po::positional_options_description positionalOptions;
-  positionalOptions.add("prop", 1);
+  positionalOptions.add("prop", -1);
 
   po::variables_map vm;
   if (!poDefault(po::command_line_parser(argc, argv).options(desc).positional(positionalOptions), vm, desc))
     return 1;
 
   SessionHelper session(options.address);
-  std::string serviceName;
-  std::string propName;
 
-  if (!::splitName(fullName, serviceName, propName))
-  {
-    std::cerr << "error, Service.Method syntax not respected" << std::endl;
-    return 1;
-  }
-  ServiceHelper service = session.getService(serviceName);
-
-  return service.showProp(propName);
+  session.get(patternList, vm.count("hidden"));
+  return 0;
 }
 
 int subCmd_set(int argc, char **argv, const MainOptions &options)
 {
-  po::options_description desc("Usage: qicli set Service.Propertie Value");
-  std::string             fullName;
-  std::string             value;
+  po::options_description   desc("Usage: qicli set <ServicePattern.PropertyPattern>... <JsonParameter>");
+  std::vector<std::string>  argList;
 
   desc.add_options()
-      ("prop,p", po::value<std::string>(&fullName)->required(), "propertie's name")
-      ("value,v", po::value<std::string>(&value)->required(), "value to set")
+      ("prop,p", po::value<std::vector<std::string> >(&argList), "property's name")
+      ("hidden", "set hidden properties if they match the given pattern")
       ("help,h", "Print this help message and exit");
 
   po::positional_options_description positionalOptions;
-  positionalOptions.add("prop", 1);
-  positionalOptions.add("value", 2);
+  positionalOptions.add("prop", -1);
+
+  po::variables_map vm;
+  if (!poDefault(po::command_line_parser(argc, argv).options(desc).positional(positionalOptions), vm, desc))
+    return 1;
+
+  if (argList.size() < 2)
+  {
+    showHelp(desc);
+    return 1;
+  }
+  std::string jsonValue = argList.back();
+  argList.pop_back();
+
+  SessionHelper session(options.address);
+  session.set(argList, jsonValue, vm.count("hidden"));
+  return 0;
+}
+
+int subCmd_watch(int argc, char **argv, const MainOptions &options)
+{
+  po::options_description   desc("Usage: qicli watch <ServicePattern.SignalPattern>...");
+  std::vector<std::string>  patternList;
+
+  desc.add_options()
+      ("signal,s", po::value<std::vector<std::string> >(&patternList), "service's name")
+      ("time,t", "Print time")
+      ("hidden", "watch hidden signals if they match the given pattern")
+      ("help,h", "Print this help message and exit");
+
+  po::positional_options_description positionalOptions;
+  positionalOptions.add("signal", -1);
 
   po::variables_map vm;
   if (!poDefault(po::command_line_parser(argc, argv).options(desc).positional(positionalOptions), vm, desc))
     return 1;
 
   SessionHelper session(options.address);
-  std::string serviceName;
-  std::string propName;
 
-  if (!::splitName(fullName, serviceName, propName))
-  {
-    std::cerr << "error, Service.Method syntax not respected" << std::endl;
-    return 1;
-  }
-  ServiceHelper service = session.getService(serviceName);
-
-  return service.setProp(propName, value);
+  session.watch(patternList, vm.count("time"), vm.count("hidden"));
+  ::getchar();
+  return 0;
 }

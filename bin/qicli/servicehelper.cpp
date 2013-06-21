@@ -4,7 +4,7 @@
 #include <qi/future.hpp>
 #include <qi/iocolor.hpp>
 #include <qitype/functiontype.hpp>
-
+#include <boost/foreach.hpp>
 #include "servicehelper.hpp"
 #include "qicli.hpp"
 
@@ -18,7 +18,8 @@ ServiceHelper::ServiceHelper(const qi::ObjectPtr &service, const std::string &na
 ServiceHelper::ServiceHelper(const ServiceHelper &other)
   :_name(other._name),
     _service(other._service)
-{}
+{
+}
 
 std::ostream &operator<<(std::ostream &os, const std::vector<qi::GenericValuePtr> &gvv)
 {
@@ -31,17 +32,65 @@ std::ostream &operator<<(std::ostream &os, const std::vector<qi::GenericValuePtr
   return os;
 }
 
+template<typename T>
+std::list<std::string> ServiceHelper::getMatchingMembersName(const std::map<unsigned int, T> &metaMemberMap, const std::string &pattern, bool getHidden) const
+{
+  std::list<std::string> metaMemberVec;
+
+  if (isNumber(pattern))
+  {
+    unsigned int uid = ::atoi(pattern.c_str());
+    if (metaMemberMap.count(uid))
+      metaMemberVec.push_back(metaMemberMap.find(uid)->second.name());
+    return metaMemberVec;
+  }
+  std::pair<unsigned int, T> it;
+  BOOST_FOREACH(it, metaMemberMap)
+  {
+    if (it.second.name() == pattern)
+    {
+      metaMemberVec.push_back(it.second.name());
+      return metaMemberVec;
+    }
+    if (byPassMember(it.second.name(), it.second.uid(), getHidden))
+      continue;
+    if (qi::os::fnmatch(pattern, it.second.name()))
+      metaMemberVec.push_back(it.second.name());
+  }
+  return metaMemberVec;
+}
+
+std::list<std::string> ServiceHelper::getMatchingSignalsName(const std::string &pattern, bool getHidden) const
+{
+  return getMatchingMembersName<qi::MetaSignal>(_service->metaObject().signalMap(), pattern, getHidden);
+}
+
+std::list<std::string> ServiceHelper::getMatchingMethodsName(const std::string &pattern, bool getHidden) const
+{
+  return getMatchingMembersName<qi::MetaMethod>(_service->metaObject().methodMap(), pattern, getHidden);
+}
+
+std::list<std::string> ServiceHelper::getMatchingPropertiesName(const std::string &pattern, bool getHidden) const
+{
+  return getMatchingMembersName<qi::MetaProperty>(_service->metaObject().propertyMap(), pattern, getHidden);
+}
+
 const ServiceHelper& ServiceHelper::operator=(const qi::ObjectPtr &service)
 {
   _service = service;
   return *this;
 }
 
-const ServiceHelper& ServiceHelper::operator =(const ServiceHelper &other)
+const ServiceHelper& ServiceHelper::operator=(const ServiceHelper &other)
 {
   _service = other._service;
   _name = other._name;
   return *this;
+}
+
+const std::string &ServiceHelper::name() const
+{
+  return _name;
 }
 
 const qi::ObjectPtr& ServiceHelper::objPtr() const
@@ -49,99 +98,80 @@ const qi::ObjectPtr& ServiceHelper::objPtr() const
   return _service;
 }
 
-int ServiceHelper::call(const std::string &methodName, const std::vector<std::string> &argList)
+int ServiceHelper::showProperty(const std::string &propertyName)
 {
-  qi::GenericFunctionParameters params;
-
-  for (unsigned int i = 0; i < argList.size(); ++i)
+  std::cout << _name << "." << propertyName << ": ";
+  int propertyId = _service->metaObject().propertyId(propertyName);
+  if (propertyId == -1)
   {
-    qi::GenericValue gv = qi::decodeJSON(argList[i]);
-    params.push_back(gv.clone());
-  }
-  qi::FutureSync<qi::GenericValuePtr> result = _service->metaCall(methodName, params);
-  if (result.hasError())
-  {
-    std::cout << "Call error: " << result.error() << std::endl;
+    std::cout << "error: property not found" << std::endl;
     return 1;
   }
-  std::cout << qi::encodeJSON(result.value()) << std::endl;
-  return 0;
-}
-
-int ServiceHelper::showProp(const std::string &propName)
-{
-  int propId = _service->metaObject().propertyId(propName);
-  if (propId == -1)
-  {
-    std::cout << "error: can't find property: " << propName << std::endl;
-    return 1;
-  }
-  qi::FutureSync<qi::GenericValue> result = _service->property(propId);
+  qi::FutureSync<qi::GenericValue> result = _service->property(propertyId);
 
   if (result.hasError())
-  {
     std::cout << "error: " << result.error() << std::endl;
-    return 1;
-  }
-  std::cout << qi::encodeJSON(result.value()) << std::endl;
+  else
+    std::cout << qi::encodeJSON(result.value()) << std::endl;
   return 0;
 }
 
-int ServiceHelper::setProp(const std::string &propName, const std::string &value)
+int ServiceHelper::setProperty(const std::string &propertyName, const qi::GenericValue &gvArg)
 {
-  int propId = _service->metaObject().propertyId(propName);
-  if (propId == -1)
-  {
-    std::cout << "error: can't find property: " << propName << std::endl;
-    return 1;
-  }
-  qi::GenericValue gv = qi::decodeJSON(value);
-  qi::FutureSync<void> result = _service->setProperty(propId, gv);
+  std::cout << _name << "." << propertyName << ": ";
+  qi::FutureSync<void> result = _service->setProperty(propertyName, gvArg);
 
   if (result.hasError())
-  {
     std::cout << "error: " << result.error() << std::endl;
+  else
+    std::cout << "OK" << std::endl;
+  return 0;
+}
+
+int ServiceHelper::watch(const std::string &signalName, bool showTime)
+{
+  WatchOptions options;
+  options.showTime = showTime;
+  options.signalName = signalName;
+  qi::SignalSubscriber sigSub(qi::makeDynamicGenericFunction(boost::bind(&ServiceHelper::defaultWatcher, this, options, _1)));
+  qi::FutureSync<qi::Link> futLink = _service->connect(signalName, sigSub);
+  if (futLink.hasError())
+  {
+    std::cout << _name << "." << signalName << ": " << futLink.error() << std::endl;
     return 1;
   }
   return 0;
 }
 
-static bool bypass(const std::string &name, unsigned int uid, bool showHidden) {
-  if (showHidden)
-    return false;
-  if (qi::MetaObject::isPrivateMember(name, uid))
-    return true;
-  return false;
-}
-
-std::list<qi::MetaSignal> ServiceHelper::getMetaSignalsByPattern(const std::string &pattern, bool getHidden)
+int ServiceHelper::post(const std::string &signalName, const qi::GenericFunctionParameters &gvArgList)
 {
-  qi::MetaObject mo = _service->metaObject();
-  qi::MetaObject::SignalMap signalMap = mo.signalMap();
-
-  qi::MetaObject::SignalMap::const_iterator begin;
-  qi::MetaObject::SignalMap::const_iterator end = signalMap.end();
-
-  std::list<qi::MetaSignal> signalList;
-  boost::basic_regex<char> reg(pattern);
-
-  for (begin = signalMap.begin(); begin != end; ++begin)
-  {
-    if (bypass(begin->second.name(), begin->second.uid(), getHidden))
-      continue;
-    if (boost::regex_match(begin->second.name(), reg))
-      signalList.push_back(begin->second);
-  }
-  return signalList;
+  std::cout << _name << "." << signalName << ": ";
+  std::cout.flush();
+  _service->metaPost(signalName, gvArgList);
+  std::cout << "OK" << std::endl;
+  return 0;
 }
 
-qi::GenericValuePtr defaultWatcher(const ServiceHelper::WatchOptions &options, const std::vector<qi::GenericValuePtr> &params)
+int ServiceHelper::call(const std::string &methodName, const qi::GenericFunctionParameters &gvArgList)
+{
+  std::cout << _name << "." << methodName << ": ";
+  std::cout.flush();
+  qi::FutureSync<qi::GenericValuePtr> result = _service->metaCall(methodName, gvArgList);
+  if (result.hasError())
+    std::cout << "error: " << result.error() << std::endl;
+  else
+    std::cout << qi::encodeJSON(result.value()) << std::endl;
+
+  return 0;
+}
+
+qi::GenericValuePtr ServiceHelper::defaultWatcher(const ServiceHelper::WatchOptions &options, const std::vector<qi::GenericValuePtr> &params)
 {
   static boost::mutex m;
   std::ostringstream ss;
   if (options.showTime)
     ss << getTime() << ": ";
-  ss << options.serviceName << ".";
+  ss << _name << ".";
   ss << options.signalName << " : ";
   ss << params;
   ss << std::endl;
@@ -153,58 +183,11 @@ qi::GenericValuePtr defaultWatcher(const ServiceHelper::WatchOptions &options, c
   return qi::GenericValuePtr();
 }
 
-int ServiceHelper::watchSignalPattern(const std::string &signalPattern, bool showTime, bool showHidden)
+bool ServiceHelper::byPassMember(const std::string &name, unsigned int uid, bool showHidden) const
 {
-  std::list<qi::MetaSignal> toWatch = getMetaSignalsByPattern(signalPattern, showHidden);
-  std::list<qi::MetaSignal>::const_iterator begin;
-  std::list<qi::MetaSignal>::const_iterator end = toWatch.end();
-
-  if (toWatch.empty())
-  {
-    std::cerr << "error: no signal matching the given pattern \"" << signalPattern << "\" was found in service " << _name << std::endl;
-    return 1;
-  }
-  WatchOptions options;
-  options.serviceName = _name;
-  options.showTime = showTime;
-  for (begin = toWatch.begin(); begin != end; ++begin)
-  {
-    options.signalName = begin->name();
-    qi::SignalSubscriber sigSub(qi::makeDynamicGenericFunction(boost::bind(defaultWatcher, options, _1)));
-    qi::FutureSync<qi::Link> futLink = _service->connect(begin->name(), sigSub);
-
-    qi::Link link = futLink.value();
-
-    if (link != 0)
-      _links.push_back(link);
-  }
-  return 0;
-}
-
-void ServiceHelper::disconnectAll()
-{
-  std::list<qi::Link>::const_iterator begin;
-  std::list<qi::Link>::const_iterator end = _links.end();
-
-  for (begin = _links.begin(); begin != end; ++begin)
-    _service->disconnect(*begin).wait();
-  _links.clear();
-}
-
-int ServiceHelper::post(const std::string &signalName, const std::vector<std::string> &argList)
-{
-  qi::GenericFunctionParameters params;
-
-  for (unsigned int i = 0; i < argList.size(); ++i)
-    params.push_back(qi::decodeJSON(argList[i]).clone());
-
-  qi::MetaSignal const * ms = _service->metaObject().signal(_service->metaObject().signalId(signalName));
-  if (!ms)
-  {
-    std::cout << "error: Cannot find signal " << signalName << std::endl;
-    return 1;
-  }
-
-  _service->metaPost(signalName, params);
-  return 0;
+  if (showHidden)
+    return false;
+  if (qi::MetaObject::isPrivateMember(name, uid))
+    return true;
+  return false;
 }
