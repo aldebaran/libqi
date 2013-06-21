@@ -8,7 +8,7 @@
 #include "pyproperty.hpp"
 #include <boost/python.hpp>
 #include <qitype/property.hpp>
-#include <qitype/genericobject.hpp>
+#include <qitype/anyobject.hpp>
 namespace qi { namespace py {
 
     class PyProperty : public qi::GenericProperty {

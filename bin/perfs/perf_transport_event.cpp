@@ -24,7 +24,7 @@
 
 #include "transportserver.hpp"
 #include <qimessaging/url.hpp>
-#include <qitype/genericobjectbuilder.hpp>
+#include <qitype/dynamicobjectbuilder.hpp>
 #include "../src/session_p.hpp"
 
 static int gLoopCount = 10000;

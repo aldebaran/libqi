@@ -15,8 +15,8 @@
 #include <qi/qi.hpp>
 #include <qi/application.hpp>
 #include <qi/eventloop.hpp>
-#include <qitype/genericobject.hpp>
-#include <qitype/genericobjectbuilder.hpp>
+#include <qitype/anyobject.hpp>
+#include <qitype/dynamicobjectbuilder.hpp>
 #include <qimessaging/session.hpp>
 #include <testsession/testsessionpair.hpp>
 #include <qimessaging/servicedirectory.hpp>

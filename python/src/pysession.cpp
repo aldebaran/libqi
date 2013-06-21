@@ -9,7 +9,7 @@
 #include <qimessaging/session.hpp>
 #include <boost/python.hpp>
 #include <boost/python/stl_iterator.hpp>
-#include <qitype/genericobjectbuilder.hpp>
+#include <qitype/dynamicobjectbuilder.hpp>
 #include "pyfuture.hpp"
 #include "gil.hpp"
 #include "pysignal.hpp"

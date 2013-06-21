@@ -14,8 +14,8 @@
 #include <qi/os.hpp>
 #include <qi/log.hpp>
 #include <qimessaging/session.hpp>
-#include <qitype/genericobject.hpp>
-#include <qitype/genericobjectbuilder.hpp>
+#include <qitype/anyobject.hpp>
+#include <qitype/dynamicobjectbuilder.hpp>
 #include <qitype/jsoncodec.hpp>
 
 qiLogCategory("qiservice");

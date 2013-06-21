@@ -13,7 +13,7 @@
 #include "pyproperty.hpp"
 #include "gil.hpp"
 #include "error.hpp"
-#include <qitype/genericobjectbuilder.hpp>
+#include <qitype/dynamicobjectbuilder.hpp>
 #include <qitype/jsoncodec.hpp>
 
 qiLogCategory("qipy.object");

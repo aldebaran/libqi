@@ -12,7 +12,7 @@
 #include <qi/qi.hpp>
 #include <qi/application.hpp>
 #include <qi/eventloop.hpp>
-#include <qitype/genericobject.hpp>
+#include <qitype/anyobject.hpp>
 #include <qitype/objecttypebuilder.hpp>
 #include <qitype/proxysignal.hpp>
 #include <qitype/proxyproperty.hpp>

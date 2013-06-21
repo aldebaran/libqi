@@ -7,7 +7,7 @@
 
 #include <qi/application.hpp>
 
-#include <qitype/genericobject.hpp>
+#include <qitype/anyobject.hpp>
 #include <qimessaging/session.hpp>
 #include <qimessaging/servicedirectory.hpp>
 #include <qitype/objectfactory.hpp>

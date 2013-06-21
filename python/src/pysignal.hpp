@@ -11,7 +11,7 @@
 # define   	PYSIGNAL_HPP_
 
 #include <boost/python.hpp>
-#include <qitype/type.hpp>
+#include <qitype/typeinterface.hpp>
 #include <qitype/metasignal.hpp>
 
 namespace qi {

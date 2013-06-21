@@ -1,4 +1,4 @@
-#include <qitype/genericobject.hpp>
+#include <qitype/anyobject.hpp>
 #include <qitype/objectfactory.hpp>
 #include "adder_interface.hpp"
 

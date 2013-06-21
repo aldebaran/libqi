@@ -10,7 +10,7 @@
 #include <qimessaging/api.hpp>
 #include <qimessaging/serviceinfo.hpp>
 #include <qi/future.hpp>
-#include <qitype/genericobject.hpp>
+#include <qitype/anyobject.hpp>
 
 #include <vector>
 #include <string>

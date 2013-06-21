@@ -4,7 +4,7 @@
 */
 #include <qimessaging/url.hpp>
 #include <sstream>
-#include <qitype/type.hpp>
+#include <qitype/typeinterface.hpp>
 
 namespace qi {
 

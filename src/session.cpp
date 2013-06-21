@@ -12,7 +12,7 @@
 #include <qimessaging/session.hpp>
 #include "message.hpp"
 #include "transportsocket.hpp"
-#include <qitype/genericobject.hpp>
+#include <qitype/anyobject.hpp>
 #include <qimessaging/serviceinfo.hpp>
 #include <qitype/objectfactory.hpp>
 #include "remoteobject_p.hpp"

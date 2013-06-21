@@ -5,7 +5,7 @@
 
 #include <string>
 
-#include <qitype/type.hpp>
+#include <qitype/typeinterface.hpp>
 #include <qimessaging/serviceinfo.hpp>
 #include <qimessaging/url.hpp>
 

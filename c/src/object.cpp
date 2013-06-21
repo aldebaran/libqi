@@ -11,9 +11,9 @@
 #include "object_p.h"
 #include "value_p.h"
 
-#include <qitype/genericobject.hpp>
+#include <qitype/anyobject.hpp>
 #include <qitype/anyvalue.hpp>
-#include <qitype/genericobjectbuilder.hpp>
+#include <qitype/dynamicobjectbuilder.hpp>
 
 
 

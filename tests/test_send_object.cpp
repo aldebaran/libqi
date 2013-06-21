@@ -5,7 +5,7 @@
 
 #include <gtest/gtest.h>
 #include <qi/application.hpp>
-#include <qitype/genericobject.hpp>
+#include <qitype/anyobject.hpp>
 #include <qimessaging/session.hpp>
 #include <testsession/testsessionpair.hpp>
 

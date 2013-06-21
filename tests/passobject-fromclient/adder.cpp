@@ -1,4 +1,4 @@
-#include <qitype/genericobject.hpp>
+#include <qitype/anyobject.hpp>
 #include <qitype/objectfactory.hpp>
 
 #include <boost/weak_ptr.hpp>

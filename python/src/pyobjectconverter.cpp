@@ -9,9 +9,9 @@
 #include <utility>
 #include <qi/log.hpp>
 #include <qitype/signature.hpp>
-#include <qitype/genericobject.hpp>
+#include <qitype/anyobject.hpp>
 #include <qitype/typedispatcher.hpp>
-#include <qitype/type.hpp>
+#include <qitype/typeinterface.hpp>
 #include <qitype/metaobject.hpp>
 #include <qitype/metamethod.hpp>
 #include <boost/python.hpp>

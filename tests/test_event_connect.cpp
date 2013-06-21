@@ -6,8 +6,8 @@
 
 #include <map>
 #include <gtest/gtest.h>
-#include <qitype/genericobject.hpp>
-#include <qitype/genericobjectbuilder.hpp>
+#include <qitype/anyobject.hpp>
+#include <qitype/dynamicobjectbuilder.hpp>
 #include <qi/application.hpp>
 
 static int lastPayload = 0;

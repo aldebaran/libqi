@@ -6,7 +6,7 @@
 #include <boost/python.hpp>
 #include <map>
 
-#include <qitype/genericobject.hpp>
+#include <qitype/anyobject.hpp>
 #include <qitype/objectfactory.hpp>
 #include "pyobjectfactory.hpp"
 #include "pyobject.hpp"

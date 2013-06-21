@@ -12,13 +12,13 @@
 #include <gtest/gtest.h>
 
 #include <qimessaging/session.hpp>
-#include <qitype/genericobject.hpp>
-#include <qitype/genericobjectbuilder.hpp>
+#include <qitype/anyobject.hpp>
+#include <qitype/dynamicobjectbuilder.hpp>
 #include <qimessaging/servicedirectory.hpp>
 #include <qimessaging/gateway.hpp>
 #include <qi/os.hpp>
 #include <qi/application.hpp>
-#include <qitype/type.hpp>
+#include <qitype/typeinterface.hpp>
 #include <boost/thread.hpp>
 #include <testsession/testsessionpair.hpp>
 

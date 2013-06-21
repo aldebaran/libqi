@@ -10,7 +10,7 @@
 #ifndef   	PYOBJECT_HPP_
 # define   	PYOBJECT_HPP_
 
-#include <qitype/genericobject.hpp>
+#include <qitype/anyobject.hpp>
 #include <boost/python.hpp>
 
 namespace qi {

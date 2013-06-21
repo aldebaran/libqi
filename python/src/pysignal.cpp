@@ -9,7 +9,7 @@
 #include <boost/python.hpp>
 #include <boost/python/raw_function.hpp>
 #include <qitype/signal.hpp>
-#include <qitype/genericobject.hpp>
+#include <qitype/anyobject.hpp>
 #include "gil.hpp"
 #include "error.hpp"
 #include "pyfuture.hpp"

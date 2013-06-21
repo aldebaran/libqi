@@ -11,9 +11,9 @@
 #include <gtest/gtest.h>
 #include <qi/qi.hpp>
 #include <qi/application.hpp>
-#include <qitype/type.hpp>
-#include <qitype/genericobject.hpp>
-#include <qitype/genericobjectbuilder.hpp>
+#include <qitype/typeinterface.hpp>
+#include <qitype/anyobject.hpp>
+#include <qitype/dynamicobjectbuilder.hpp>
 #include <qimessaging/session.hpp>
 #include <qimessaging/servicedirectory.hpp>
 

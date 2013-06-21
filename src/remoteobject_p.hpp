@@ -8,7 +8,7 @@
 #define _SRC_REMOTEOBJECT_P_HPP_
 
 #include "transportsocket.hpp"
-#include <qitype/genericobject.hpp>
+#include <qitype/anyobject.hpp>
 #include <qitype/dynamicobject.hpp>
 #include <qitype/signal.hpp>
 
