@@ -28,7 +28,7 @@ int main(int argc, char** argv)
   qi::Application app(argc, argv);
   qi::Session s;
   if (sd.empty())
-    sd = "tcp://localhost:9559";
+    sd = "tcp://127.0.0.1:9559";
   else
   {
     size_t p = sd.find(':');
