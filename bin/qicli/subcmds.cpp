@@ -5,6 +5,8 @@
 
 #include "qicli.hpp"
 
+static const int qicli_call_cmd_style = po::command_line_style::unix_style ^ po::command_line_style::allow_short;
+
 int subCmd_service(int argc, char **argv, const MainOptions &options)
 {
   po::options_description     desc("Usage: qicli service [<ServicePattern>...]");
@@ -64,7 +66,8 @@ int subCmd_call(int argc, char **argv, const MainOptions &options)
   positionalOptions.add("arg", -1);
 
   po::variables_map vm;
-  if (!poDefault(po::command_line_parser(argc, argv).options(desc).positional(positionalOptions), vm, desc))
+  if (!poDefault(po::command_line_parser(argc, argv).options(desc).positional(positionalOptions)
+                 .style(qicli_call_cmd_style), vm, desc))
     return 1;
   SessionHelper session(options.address);
 
@@ -89,7 +92,8 @@ int subCmd_post(int argc, char **argv, const MainOptions &options)
   positionalOptions.add("arg", -1);
 
   po::variables_map vm;
-  if (!poDefault(po::command_line_parser(argc, argv).options(desc).positional(positionalOptions), vm, desc))
+  if (!poDefault(po::command_line_parser(argc, argv).options(desc).positional(positionalOptions)
+                 .style(qicli_call_cmd_style), vm, desc))
     return 1;
 
   SessionHelper session(options.address);
@@ -135,7 +139,8 @@ int subCmd_set(int argc, char **argv, const MainOptions &options)
   positionalOptions.add("prop", -1);
 
   po::variables_map vm;
-  if (!poDefault(po::command_line_parser(argc, argv).options(desc).positional(positionalOptions), vm, desc))
+  if (!poDefault(po::command_line_parser(argc, argv).options(desc).positional(positionalOptions)
+                 .style(qicli_call_cmd_style), vm, desc))
     return 1;
 
   if (argList.size() < 2)
