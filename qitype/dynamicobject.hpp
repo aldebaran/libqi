@@ -47,9 +47,9 @@ namespace qi
     void setSignal(unsigned int id, SignalBase* signal);
     void setProperty(unsigned int id, PropertyBase* property);
 
-    AnyFunction method(unsigned int id) const;
-    SignalBase*     signal(unsigned int id) const;
-    PropertyBase*   property(unsigned int) const;
+    AnyFunction   method(unsigned int id) const;
+    SignalBase*   signal(unsigned int id) const;
+    PropertyBase* property(unsigned int) const;
 
     virtual qi::Future<AnyReference> metaCall(Manageable* context, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto);
     virtual void metaPost(Manageable* context, unsigned int event, const GenericFunctionParameters& params);
