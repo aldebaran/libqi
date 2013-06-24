@@ -101,8 +101,9 @@ set(SOURCES ${PUBLIC_HEADERS}
             src/anyvalue.cpp
             src/anyobject_p.hpp
             src/anyobject.cpp
-            src/jsonencoder.cpp
+            src/jsoncodec_p.hpp
             src/jsondecoder.cpp
+            src/jsonencoder.cpp
             src/metamethod.cpp
             src/metaproperty.cpp
             src/metasignal.cpp
