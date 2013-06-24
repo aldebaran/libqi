@@ -42,19 +42,22 @@ namespace qi
   //warning update the C enum when updating this one.
   enum TypeKind
   {
-    TypeKind_Void     = 0,
-    TypeKind_Int      = 1,
-    TypeKind_Float    = 2,
-    TypeKind_String   = 3,
-    TypeKind_List     = 4,
-    TypeKind_Map      = 5,
-    TypeKind_Object   = 6,
-    TypeKind_Pointer  = 7,
-    TypeKind_Tuple    = 8,
-    TypeKind_Dynamic  = 9,
-    TypeKind_Raw      = 10,
-    TypeKind_Unknown  = 11,
-    TypeKind_Iterator = 12,
+    TypeKind_Unknown  = 0,
+    TypeKind_Void     = 1,
+    TypeKind_Int      = 2,
+    TypeKind_Float    = 3,
+    TypeKind_String   = 4,
+    TypeKind_List     = 5,
+    TypeKind_Map      = 6,
+    TypeKind_Object   = 7,
+    TypeKind_Pointer  = 8,
+    TypeKind_Tuple    = 9,
+    TypeKind_Dynamic  = 10,
+    TypeKind_Raw      = 11,
+    TypeKind_Iterator = 13,
+    TypeKind_Function = 14,
+    TypeKind_Signal   = 15,
+    TypeKind_Property = 16,
   };
 
 }

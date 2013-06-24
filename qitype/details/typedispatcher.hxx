@@ -104,6 +104,10 @@ namespace qi {
         v.visitIterator(value);
         break;
       }
+      case TypeKind_Function:
+      case TypeKind_Signal:
+      case TypeKind_Property:
+        qiLogError("qitype.typedispatcher") << "Signal and Property not handled";
     }
     return v;
   }
