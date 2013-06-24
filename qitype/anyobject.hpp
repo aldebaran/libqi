@@ -4,8 +4,8 @@
 **  See COPYING for the license
 */
 
-#ifndef _QITYPE_GENERICOBJECT_HPP_
-#define _QITYPE_GENERICOBJECT_HPP_
+#ifndef _QITYPE_ANYOBJECT_HPP_
+#define _QITYPE_ANYOBJECT_HPP_
 
 #include <map>
 #include <string>
@@ -415,4 +415,4 @@ static bool _qiregister##name() {                                              \
 #  pragma warning( pop )
 #endif
 
-#endif  // _QITYPE_GENERICOBJECT_HPP_
+#endif  // _QITYPE_ANYOBJECT_HPP_

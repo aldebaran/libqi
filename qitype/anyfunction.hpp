@@ -4,8 +4,8 @@
 **  See COPYING for the license
 */
 
-#ifndef _QITYPE_FUNCTIONTYPE_HPP_
-#define _QITYPE_FUNCTIONTYPE_HPP_
+#ifndef _QITYPE_ANYFUNCTION_HPP_
+#define _QITYPE_ANYFUNCTION_HPP_
 
 #include <boost/function.hpp>
 
@@ -170,4 +170,4 @@ namespace qi {
 #  pragma warning( pop )
 #endif
 
-#endif  // _QITYPE_FUNCTIONTYPE_HPP_
+#endif  // _QITYPE_ANYFUNCTION_HPP_

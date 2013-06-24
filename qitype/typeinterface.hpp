@@ -4,8 +4,8 @@
 **  See COPYING for the license
 */
 
-#ifndef _QITYPE_TYPE_HPP_
-#define _QITYPE_TYPE_HPP_
+#ifndef _QITYPE_TYPEINTERFACE_HPP_
+#define _QITYPE_TYPEINTERFACE_HPP_
 
 #include <typeinfo>
 #include <string>
@@ -238,4 +238,4 @@ QI_NO_TYPE(qi::TypeInterface*)
 #  pragma warning( disable: 4503 )
 #endif
 
-#endif  // _QITYPE_TYPE_HPP_
+#endif  // _QITYPE_TYPEINTERFACE_HPP_

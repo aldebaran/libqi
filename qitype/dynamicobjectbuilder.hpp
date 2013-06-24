@@ -4,8 +4,8 @@
 **  See COPYING for the license
 */
 
-#ifndef _QITYPE_GENERICOBJECTBUILDER_HPP_
-#define _QITYPE_GENERICOBJECTBUILDER_HPP_
+#ifndef _QITYPE_DYNAMICOBJECTBUILDER_HPP_
+#define _QITYPE_DYNAMICOBJECTBUILDER_HPP_
 
 #include <qitype/api.hpp>
 #include <qitype/anyobject.hpp>
@@ -92,4 +92,4 @@ namespace qi {
 
 #include <qitype/details/genericobjectbuilder.hxx>
 
-#endif  // _QITYPE_GENERICOBJECTBUILDER_HPP_
+#endif  // _QITYPE_DYNAMICOBJECTBUILDER_HPP_
