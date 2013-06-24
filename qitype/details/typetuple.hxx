@@ -217,6 +217,8 @@ friend class qi::TypeImpl<name>;
  *
  * The class must provide a constructor that accepts all fields as argument, in
  * the order in which they are declared in the macro.
+ *
+ * Must be called outside any namespace.
  */
 #define QI_TYPE_STRUCT_AGREGATE_CONSTRUCTOR(name, ...)     \
   __QI_TYPE_STRUCT_DECLARE(name,                             \
