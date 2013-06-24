@@ -17,22 +17,23 @@ extern "C"
 {
 #endif
 
+
   //this follow qi::TypeKind
   typedef enum {
-    QI_VALUE_KIND_VOID     = 0,
-    QI_VALUE_KIND_INT      = 1,
-    QI_VALUE_KIND_FLOAT    = 2,
-    QI_VALUE_KIND_STRING   = 3,
-    QI_VALUE_KIND_LIST     = 4,
-    QI_VALUE_KIND_MAP      = 5,
-    QI_VALUE_KIND_OBJECT   = 6,
-    QI_VALUE_KIND_POINTER  = 7,
-    QI_VALUE_KIND_TUPLE    = 8,
-    QI_VALUE_KIND_DYNAMIC  = 9,
-    QI_VALUE_KIND_RAW      = 10,
-    QI_VALUE_KIND_UNKNOWN  = 11,
-    QI_VALUE_KIND_ITERATOR = 12,
-    QI_VALUE_KIND_INVALID  = 13,
+  QI_VALUE_KIND_INVALID  = -1,
+  QI_VALUE_KIND_UNKNOWN  = 0,
+  QI_VALUE_KIND_VOID     = 1,
+  QI_VALUE_KIND_INT      = 2,
+  QI_VALUE_KIND_FLOAT    = 3,
+  QI_VALUE_KIND_STRING   = 4,
+  QI_VALUE_KIND_LIST     = 5,
+  QI_VALUE_KIND_MAP      = 6,
+  QI_VALUE_KIND_OBJECT   = 7,
+  QI_VALUE_KIND_POINTER  = 8,
+  QI_VALUE_KIND_TUPLE    = 9,
+  QI_VALUE_KIND_DYNAMIC  = 10,
+  QI_VALUE_KIND_RAW      = 11,
+  QI_VALUE_KIND_ITERATOR = 12,
   } qi_value_kind_t;
 
 
