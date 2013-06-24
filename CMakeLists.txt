@@ -92,14 +92,15 @@ qi_create_config_h(_confighpp qitype/config.hpp.in qitype/config.hpp)
 qi_install_header(${PUBLIC_HEADERS} KEEP_RELATIVE_PATHS)
 
 set(SOURCES ${PUBLIC_HEADERS}
-            src/binarydecoder.hpp
-            src/binaryencoder.hpp
-            src/binarycoder.cpp
+            src/binarycodec.cpp
+            src/binarycodec_p.hpp
             src/dynamicobject.cpp
-            src/functiontype.cpp
-            src/genericobjectbuilder.cpp
+            src/dynamicobjectbuilder.cpp
+            src/anyfunction.cpp
             src/anyreference.cpp
             src/anyvalue.cpp
+            src/anyobject_p.hpp
+            src/anyobject.cpp
             src/jsonencoder.cpp
             src/jsondecoder.cpp
             src/metamethod.cpp
@@ -109,8 +110,6 @@ set(SOURCES ${PUBLIC_HEADERS}
             src/metasignal_p.hpp
             src/metaobject.cpp
             src/metaobject_p.hpp
-            src/object_p.hpp
-            src/object.cpp
             src/objectfactory.cpp
             src/objecttypebuilder.cpp
             src/signal.cpp
@@ -118,9 +117,9 @@ set(SOURCES ${PUBLIC_HEADERS}
             src/signatureconvertor.cpp
             src/signatureconvertor.hpp
             src/staticobjecttype.cpp
-            src/type.cpp
-            src/typeint.cpp
-            src/typetuple.cpp
+            src/typeinterface.cpp
+            src/inttypeinterface.cpp
+            src/structtypeinterface.cpp
             src/signature.cpp
             )
 

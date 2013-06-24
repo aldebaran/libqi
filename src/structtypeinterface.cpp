@@ -7,8 +7,6 @@
 
 namespace qi
 {
-
-
   namespace detail {
     std::string normalizeClassName(const std::string &name) {
       //::qi::Foo -> Foo
@@ -43,5 +41,4 @@ namespace qi
     for (unsigned i=0; i<values.size(); ++i)
       set(storage, i, values[i]);
   }
-
 }

@@ -6,8 +6,7 @@
 #include <qitype/binarycodec.hpp>
 #include <qitype/anyvalue.hpp>
 
-#include "binaryencoder.hpp"
-#include "binarydecoder.hpp"
+#include "binarycodec_p.hpp"
 
 #include <qi/log.hpp>
 #include <qitype/anyobject.hpp>

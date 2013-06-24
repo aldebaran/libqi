@@ -6,7 +6,7 @@
 
 #include <qitype/anyobject.hpp>
 #include "staticobjecttype.hpp"
-#include "object_p.hpp"
+#include "anyobject_p.hpp"
 
 qiLogCategory("qitype.object");
 
