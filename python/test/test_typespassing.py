@@ -74,7 +74,7 @@ def test_builtin_types():
     service = s.service("TestService")
 
     # None
-
+    assert service.display(None) is None
     # bool
     t, f = service.display(True), service.display(False)
     assert t == 1L  # is True ?
@@ -95,8 +95,11 @@ def test_builtin_types():
     assert service.display([1]) == [1]
     assert service.display(["bla", "bli"]) == ["bla", "bli"]
 
-    # set
-    assert service.display(set([1, 2]))
+    # sets
+    assert service.display(set([1, 2])) == (1, 2)
+    assert service.display(frozenset([1, 2])) == (1, 2)
+    assert service.display(frozenset([frozenset("a"), frozenset("b")])) \
+     == (("b",), ("a",))
 
     # tuple
     assert service.display(()) == ()
@@ -108,13 +111,15 @@ def test_builtin_types():
     assert service.display({1: "bla", 3: []}) == {1: "bla", 3: []}
 
     # bytearray
-    assert service.display(bytearray("lol"))
+    assert service.display(bytearray("lol")) == "lol"
 
-    # buffer
-    assert service.display(buffer("lol"))
-
+    # buffer (not implemented)
+    try:
+        service.display(buffer("lol"))
+    except RuntimeError:
+        pass  # OK
     # complex (why not)
-    assert service.display(complex(1, 2))
+    assert service.display(complex(1.5, 2)) == 1.5
 
     time.sleep(0.01)
     s.close()

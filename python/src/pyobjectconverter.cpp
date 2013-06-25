@@ -212,19 +212,20 @@ qi::AnyReference AnyValue_from_PyObject_Map(PyObject* dict)
   return qi::AnyReference(res).clone();
 }
 
-qi::AnyReference AnyValue_from_PyObject_Tuple(PyObject* val)
+qi::AnyReference AnyValue_from_PyObject_Iter(PyObject* iter)
 {
   std::vector<qi::AnyReference> res;
-  Py_ssize_t len = PyTuple_Size(val);
-
-  for (Py_ssize_t i = 0; i < len; i++)
-  {
-    PyObject* current = PyTuple_GetItem(val, i);
-    qi::AnyReference currentConverted = AnyValue_from_PyObject(current);
+  PyObject* item;
+  while ((item = PyIter_Next(iter))) {
+    qi::AnyReference currentConverted = AnyValue_from_PyObject(item);
     res.push_back(currentConverted);
   }
-
   return qi::makeGenericTuple(res);
+}
+
+qi::AnyReference AnyValue_from_PyObject_Iterable(PyObject* val)
+{
+  return AnyValue_from_PyObject_Iter(PyObject_GetIter(val));
 }
 
 class PythonScopedRef
@@ -281,15 +282,50 @@ qi::AnyReference AnyValue_from_PyObject(PyObject* val)
   {
     res = AnyValue_from_PyObject_Map(val);
   }
-  else if (PyTuple_CheckExact(val))
+  else if (PyTuple_CheckExact(val) || PyAnySet_CheckExact(val)) // tuple or (frozen) set
   {
-    res = AnyValue_from_PyObject_Tuple(val);
+    res = AnyValue_from_PyObject_Iterable(val);
   }
   else if (PyBool_Check(val))
   {
     bool b = (PyInt_AsLong(val) != 0);
     res = qi::AnyReference(b).clone();
   }
+  // TODO: implement type conversions
+  else if (PyByteArray_CheckExact(val))
+  {
+    res = qi::AnyReference(PyByteArray_AsString(val)).clone();
+  }
+  else if (val == Py_Ellipsis)
+  {
+    throw std::runtime_error("Type not implemented");
+    res = qi::AnyReference(qi::typeOf<void>());
+  }
+  else if (PyComplex_CheckExact(val))
+  {
+    res = qi::AnyReference(PyComplex_RealAsDouble(val)).clone();
+  }
+  else if (PyBuffer_Check(val))
+  {
+    throw std::runtime_error("Type not implemented");
+    res = qi::AnyReference(qi::typeOf<void>());
+  }
+  else if (PyMemoryView_Check(val))
+  {
+    throw std::runtime_error("Type not implemented");
+    res = qi::AnyReference(qi::typeOf<void>());
+  }
+  else if (PyFile_Check(val))
+  {
+    throw std::runtime_error("Type not implemented");
+    res = qi::AnyReference(qi::typeOf<void>());
+  }
+  else if (PySlice_Check(val))
+  {
+    throw std::runtime_error("Type not implemented");
+    res = qi::AnyReference(qi::typeOf<void>());
+  }
+
   else if (PyModule_CheckExact(val) || PyClass_Check(val)) {
     throw std::runtime_error("Unable to convert Python Module or Class to AnyValue");
   }
@@ -297,6 +333,7 @@ qi::AnyReference AnyValue_from_PyObject(PyObject* val)
   {
     res = qi::AnyReference(qi::py::makeQiAnyObject(boost::python::object(boost::python::borrowed(val)))).clone();
   }
+
   return res;
 }
 
