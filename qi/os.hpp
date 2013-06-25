@@ -29,6 +29,10 @@ namespace qi {
     QI_API std::string tmp();
     QI_API std::string gethostname();
     QI_API int isatty(int fd = 1);
+
+    /**
+      * handles * and ? wilcards
+      */
     QI_API bool fnmatch(const std::string &pattern, const std::string &string);
 
     // lib C
