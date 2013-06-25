@@ -171,7 +171,7 @@ namespace qi {
     inline operator const ValueTypeCast&() const { return _p->value(FutureTimeout_Infinite); }
 
     /** Wait for future to contain a value or an error
-     @param msecs: Maximum time to wait in milliseconds, 0 means forever and -1 means return immediately.
+     @param msecs: Maximum time to wait in milliseconds, 0 means return immediately.
      @return true if future contains a value or an error, false if timeout was reached
      */
     inline FutureState wait(int msecs = FutureTimeout_Infinite) const          { return _p->wait(msecs); }
