@@ -1,4 +1,10 @@
+/*
+**  Copyright (C) 2013 Aldebaran Robotics
+**  See COPYING for the license
+*/
+
 #include <qitype/jsoncodec.hpp>
+#include <qitype/anyvalue.hpp>
 
 #include "jsoncodec_p.hpp"
 
@@ -347,8 +353,8 @@ namespace qi {
     return false;
   }
 
-  std::string::const_iterator decodeJSON(std::string::const_iterator begin,
-                                         std::string::const_iterator end,
+  std::string::const_iterator decodeJSON(const std::string::const_iterator &begin,
+                                         const std::string::const_iterator &end,
                                          AnyValue &target)
   {
     JsonDecoderPrivate parser(begin, end);

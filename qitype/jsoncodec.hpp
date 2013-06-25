@@ -8,7 +8,6 @@
 #define _QITYPE_JSONCODEC_HPP_
 
 #include <qitype/api.hpp>
-#include <boost/function.hpp>
 #include <qitype/anyvalue.hpp>
 
 namespace qi {
@@ -31,8 +30,8 @@ namespace qi {
     * @param GV to set. Not modified if an error occured.
     * @return an iterator to the last read char + 1
     */
-  QITYPE_API std::string::const_iterator decodeJSON(std::string::const_iterator begin,
-                                         std::string::const_iterator end,
+  QITYPE_API std::string::const_iterator decodeJSON(const std::string::const_iterator &begin,
+                                         const std::string::const_iterator &end,
                                          AnyValue &target);
 
 
