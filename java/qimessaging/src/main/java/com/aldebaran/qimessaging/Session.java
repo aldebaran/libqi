@@ -34,7 +34,7 @@ public class Session
   public Session(String sdAddr) throws Exception
   {
     _session = Session.qiSessionCreate();
-    Session.qiSessionConnect(_session, sdAddr);
+    this.connect(sdAddr).sync();
   }
 
   /**
@@ -64,7 +64,7 @@ public class Session
   public Future<Void> connect(String serviceDirectoryAddress) throws Exception
   {
     long pFuture = Session.qiSessionConnect(_session, serviceDirectoryAddress);
-    Future<Void> future = new Future<Void>(pFuture);
+    com.aldebaran.qimessaging.Future<Void> future = new com.aldebaran.qimessaging.Future<Void>(pFuture);
     return future;
   }
 

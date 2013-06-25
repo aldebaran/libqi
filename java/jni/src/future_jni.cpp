@@ -13,6 +13,8 @@
 #include <future_jni.hpp>
 #include <callbridge.hpp>
 
+qiLogCategory("qimessaging.java");
+
 void      java_future_callback(const qi::Future<qi::GenericValuePtr>& future)
 {
   JNIEnv *env = 0;
@@ -21,7 +23,7 @@ void      java_future_callback(const qi::Future<qi::GenericValuePtr>& future)
   // Attach JNIEnv to current thread to avoid segfault in jni functions. (eventloop dependent)
   if (JVM()->AttachCurrentThread((envPtr) &env, (void *) 0) != JNI_OK || env == 0)
   {
-    qiLogError("qimessaging.java") << "Cannot attach callback thread to Java VM";
+    qiLogError() << "Cannot attach callback thread to Java VM";
     throw std::runtime_error("Cannot attach callback thread to Java VM");
   }
 
@@ -29,7 +31,7 @@ void      java_future_callback(const qi::Future<qi::GenericValuePtr>& future)
   qi::CallbackInfo* info = qi::FutureHandler::methodInfo(future);
   if ((cls = env->FindClass(info->className.c_str())) == 0)
   {
-    qiLogError("qimessaging.jni") << "Cannot find com.aldebaran.qimessaging.Callback implementation";
+    qiLogError() << "Cannot find com.aldebaran.qimessaging.Callback implementation";
     throw new std::runtime_error("Cannot find com.aldebaran.qimessaging.Callback interface");
   }
 
@@ -114,7 +116,7 @@ jboolean Java_com_aldebaran_qimessaging_Future_qiFutureCallConnect(JNIEnv *env, 
   // Attach JNIEnv to current thread to avoid segfault in jni functions. (eventloop dependent)
   if (JVM()->AttachCurrentThread((envPtr) &env, (void *) 0) != JNI_OK || env == 0)
   {
-    qiLogError("qimessaging.java") << "Cannot attach callback thread to Java VM";
+    qiLogError() << "Cannot attach callback thread to Java VM";
     throwJavaError(env, "Cannot attach callback thread to Java VM");
     return false;
   }
@@ -125,8 +127,12 @@ jboolean Java_com_aldebaran_qimessaging_Future_qiFutureCallConnect(JNIEnv *env, 
   return true;
 }
 
-void  Java_com_aldebaran_qimessaging_Future_qiFutureCallWaitWithTimeout(JNIEnv *env, jobject obj, jlong pFuture, jint timeout)
+void  Java_com_aldebaran_qimessaging_Future_qiFutureCallWaitWithTimeout(JNIEnv* QI_UNUSED(env), jobject QI_UNUSED(obj), jlong pFuture, jint timeout)
 {
   qi::Future<qi::GenericValuePtr>* fut = reinterpret_cast<qi::Future<qi::GenericValuePtr>*>(pFuture);
-  fut->wait(timeout);
+
+  if (timeout)
+    fut->wait(timeout);
+  else
+    fut->wait();
 }

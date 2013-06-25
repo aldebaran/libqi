@@ -57,12 +57,6 @@ jlong Java_com_aldebaran_qimessaging_Session_qiSessionConnect(JNIEnv *env, jobje
   qi::Future<void> *fut = new qi::Future<void>();
   *fut = s->connect(qi::jni::toString(jurl)).async();
 
-  if (fut->hasError())
-  {
-    qiLogError() << "Error : " << fut->error();
-    throwJavaError(env, fut->error().c_str());
-  }
-
   return (jlong) fut;
 }
 

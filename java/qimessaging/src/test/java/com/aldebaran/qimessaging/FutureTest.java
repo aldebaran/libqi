@@ -69,7 +69,7 @@ public class FutureTest
     assertTrue("Service must be registered", s.registerService("serviceTest", obj));
 
     // Connect client session to service directory
-    client.connect(url);
+    client.connect(url).sync();
 
     // Get a proxy to serviceTest
     proxy = client.service("serviceTest");
@@ -248,5 +248,43 @@ public class FutureTest
     }
 
     assertEquals("plafbim !", ret);
+  }
+
+  @Test
+  public void testTimeout() throws InterruptedException, CallError
+  {
+    Future<Void> fut = null;
+    try
+    {
+      fut = proxy.call("longReply", "plaf");
+      fut.sync(1, TimeUnit.SECONDS);
+    } catch (Exception e)
+    {
+    }
+
+    assertFalse(fut.isDone());
+    fut.sync(500, TimeUnit.MILLISECONDS);
+    assertFalse(fut.isDone());
+    fut.sync(500, TimeUnit.SECONDS);
+    assertTrue(fut.isDone());
+    assertEquals("plafbim !", fut.get());
+  }
+
+  @Test
+  public void testSessionTimeout()
+  {
+    Session test = new Session();
+    Future<Void> fut = null;
+
+    try {
+      // Arbitrary chosen non valid address
+      fut = test.connect("tcp://198.18.0.1:9559");
+      fut.sync(1, TimeUnit.SECONDS);
+    } catch (Exception e) {
+      fail("No way! : " + e.getMessage());
+    }
+
+    assertFalse(fut.isDone());
+    assertFalse(test.isConnected());
   }
 }

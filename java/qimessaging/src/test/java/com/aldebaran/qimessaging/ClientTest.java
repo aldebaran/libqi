@@ -28,7 +28,7 @@ public class ClientTest
 
     // Try to connect session to service directory.
     try {
-      s.connect(url);
+      s.connect(url).sync();
     } catch (Exception e)
     {
       fail("Connection to service directory must succeed : "+e.getMessage());

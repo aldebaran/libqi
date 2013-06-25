@@ -59,7 +59,7 @@ public class IntegrationTest
     assertTrue("Service must be registered", s.registerService("serviceTest", obj));
 
     // Connect client session to service directory
-    client.connect(url);
+    client.connect(url).sync();
 
     // Get a proxy to serviceTest
     proxy = client.service("serviceTest");
