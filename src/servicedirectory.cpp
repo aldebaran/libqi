@@ -218,7 +218,7 @@ namespace qi
       {
         std::stringstream ss;
         ss << "Unregister Service: Can't find service #" << idx;
-        qiLogError() << ss.str();
+        qiLogVerbose() << ss.str();
         throw std::runtime_error(ss.str());
       }
     }
@@ -304,8 +304,8 @@ namespace qi
     }
 
     std::stringstream ss;
-    ss << "Can't find service #" << svcinfo.serviceId();
-    qiLogError() << ss.str();
+    ss << "updateServiceInfo: Can't find service #" << svcinfo.serviceId();
+    qiLogVerbose() << ss.str();
     throw std::runtime_error(ss.str());
   }
 
