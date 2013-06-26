@@ -20,6 +20,8 @@ import java.util.Map;
 public class EmbeddedTools
 {
 
+  private File tmpDir = null;
+
   public static boolean LOADED_EMBEDDED_LIBRARY = false;
   private static native void initTypeSystem(java.lang.Object str, java.lang.Object i, java.lang.Object f, java.lang.Object d, java.lang.Object l, java.lang.Object m, java.lang.Object al, java.lang.Object t, java.lang.Object o, java.lang.Object b);
   private static native void initTupleInTypeSystem(java.lang.Object t1, java.lang.Object t2, java.lang.Object t3, java.lang.Object t4, java.lang.Object t5, java.lang.Object t6, java.lang.Object t7, java.lang.Object t8);
@@ -73,6 +75,14 @@ public class EmbeddedTools
     // Initialize tuple
     EmbeddedTools.initTupleInTypeSystem(t1, t2, t3, t4, t5, t6, t7, t8);
     return true;
+  }
+
+  /**
+   * Override directory where native libraries are extracted.
+   */
+  public void overrideTempDirectory(File newValue)
+  {
+    tmpDir = newValue;
   }
 
   /**
@@ -140,7 +150,7 @@ public class EmbeddedTools
     // Extract and load native library
     try
     {
-      final File libfile = File.createTempFile(libname, getSuitableLibraryExtention());
+      final File libfile = File.createTempFile(libname, getSuitableLibraryExtention(), tmpDir);
       libfile.deleteOnExit();
 
       final InputStream in = nativeLibrary.openStream();
@@ -163,6 +173,7 @@ public class EmbeddedTools
       // Rename tmp file to actual library name
       String pathToTmp = libfile.getAbsolutePath().substring(0, endIndex);
       File so = new File(pathToTmp + "/" + libname + getSuitableLibraryExtention());
+      System.out.printf("Extracting %s in %s...\n", libname + getSuitableLibraryExtention(), pathToTmp);
 
       libfile.renameTo(so);
       System.load(so.getAbsolutePath());
