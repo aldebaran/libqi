@@ -312,6 +312,40 @@ TEST(QiService, GenericProperty)
   EXPECT_TRUE(client->setProperty("offset", "astring").hasError());
 }
 
+
+class Bar
+{
+public:
+  void ping() { }
+};
+
+QI_REGISTER_OBJECT(Bar, ping)
+
+TEST(QiService, RemoteServiceRegistrationAfterDisconnection)
+{
+  TestSessionPair p;
+
+  // Create an object
+  boost::shared_ptr<Bar> bar(new Bar());
+  qi::AnyObject barAsObject = qi::AnyValue::from(bar).to<qi::AnyObject>();
+
+  // Register the object with the provider, find it back from the client
+  p.server()->registerService("Bar", barAsObject);
+  qi::AnyObject barAsRemoteService = p.client()->service("Bar");
+  ASSERT_TRUE(barAsRemoteService != NULL);
+
+  // Disconnect the provider, it should unregister any related services
+  p.server()->close();
+  p.server()->connect(p.serviceDirectoryEndpoints()[0]);
+
+  // Register the object again with the provider, find it back from the client
+  p.server()->registerService("Bar", barAsObject);
+
+  barAsRemoteService = p.client()->service("Bar");
+
+  ASSERT_TRUE(barAsRemoteService != NULL);
+}
+
 int main(int argc, char **argv)
 {
   qi::Application app(argc, argv);
