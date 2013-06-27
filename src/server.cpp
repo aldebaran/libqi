@@ -28,6 +28,9 @@ namespace qi {
 
   Server::~Server()
   {
+    //we can call reset on server and socket they are only owned by us.
+    //when it's close it's close
+    _server.newConnection.disconnectAll();
     close();
   }
 
@@ -119,10 +122,6 @@ namespace qi {
 
       _dying = true;
     }
-
-    //we can call reset on server and socket they are only owned by us.
-    //when it's close it's close
-    _server.newConnection.disconnectAll();
 
     qiLogVerbose() << "Closing server...";
     {
