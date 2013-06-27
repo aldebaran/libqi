@@ -23,6 +23,9 @@
 #  pragma warning( disable: 4251 )
 #endif
 
+// Macro to be more expressive when emitting a signal. Does nothing, it's normal.
+#define QI_EMIT
+
 namespace qi {
 
   class ManageablePrivate;
