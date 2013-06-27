@@ -102,7 +102,7 @@ namespace qi {
   }
 
   qi::FutureSync<void> ServiceDirectoryClient::close() {
-    onSocketDisconnected("ServiceDirectoryClient closed");
+    onSocketDisconnected("User closed the connection");
 
     if (!_sdSocket)
       return qi::Future<void>(0);
@@ -127,12 +127,12 @@ namespace qi {
   }
 
   void ServiceDirectoryClient::onServiceRemoved(unsigned int idx, const std::string &name) {
-    qiLogVerbose() << "ServiceDirectory: Service Removed #" << idx << ": " << name << std::endl;
+    qiLogVerbose() << "ServiceDirectoryClient: Service Removed #" << idx << ": " << name << std::endl;
     serviceRemoved(idx, name);
   }
 
   void ServiceDirectoryClient::onServiceAdded(unsigned int idx, const std::string &name) {
-    qiLogVerbose() << "ServiceDirectory: Service Added #" << idx << ": " << name << std::endl;
+    qiLogVerbose() << "ServiceDirectoryClient: Service Added #" << idx << ": " << name << std::endl;
     serviceAdded(idx, name);
   }
 
