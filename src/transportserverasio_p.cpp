@@ -149,11 +149,15 @@ namespace qi
       if (_endpoints.size() != currentEndpoints.size() ||
           !std::equal(_endpoints.begin(), _endpoints.end(), currentEndpoints.begin()))
       {
-        qiLogVerbose() << "Updating endpoints...";
-
+        std::stringstream ss;
+        std::vector<qi::Url>::iterator it;
+        for (it = currentEndpoints.begin(); it != currentEndpoints.end(); ++it)
+          ss << "ep: " << it->str() << std::endl;
+        qiLogVerbose() << "Updating endpoints..." << this << std::endl << ss.str();
         _endpoints = currentEndpoints;
         _self->endpointsChanged();
       }
+
     }
 
     _asyncEndpoints = context->async(boost::bind(_updateEndpoints, shared_from_this()),
