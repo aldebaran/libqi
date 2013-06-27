@@ -897,3 +897,12 @@ namespace qi {
   } // namespace log
 } // namespace qi
 
+
+
+namespace
+{
+  // trick to avoid wrapping in a function: setCategory returns void so can't
+  // be used in expr.
+  static bool __unused_debug = qi::os::getenv("QI_DEBUG").empty()
+    && (::qi::log::setCategory("qi.*", ::qi::log::info), false);
+}
