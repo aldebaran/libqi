@@ -65,6 +65,10 @@ namespace qi
     }
     qi::TransportSocketPtr socket = qi::TcpTransportSocketPtr(new TcpTransportSocket(context, _ssl, s));
     self->newConnection(socket);
+
+    if (socket.unique()) {
+      qiLogError() << "bug: socket not stored by the newConnection handler (usecount:" << socket.use_count() << ")";
+    }
 #ifdef WITH_SSL
     _s = new boost::asio::ssl::stream<boost::asio::ip::tcp::socket>(_acceptor.get_io_service(), _sslContext);
 #else
