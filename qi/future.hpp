@@ -172,7 +172,7 @@ namespace qi {
 
     /** Wait for future to contain a value or an error
      @param msecs: Maximum time to wait in milliseconds, 0 means return immediately.
-     @return true if future contains a value or an error, false if timeout was reached
+     @return a FutureState corresponding to the state of the future.
      */
     inline FutureState wait(int msecs = FutureTimeout_Infinite) const          { return _p->wait(msecs); }
 
