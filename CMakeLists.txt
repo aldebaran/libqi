@@ -54,7 +54,6 @@ set(PUBLIC_HEADERS
                    qitype/details/typetuple.hxx
                    qitype/dynamicobject.hpp
                    qitype/functiontype.hpp
-                   qitype/functiontypefactory.hpp
                    qitype/fwd.hpp
                    qitype/genericobjectbuilder.hpp
                    qitype/genericobject.hpp
