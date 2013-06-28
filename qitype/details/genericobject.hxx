@@ -149,7 +149,7 @@ namespace qi {
      params.reserve(n);                                                    \
      BOOST_PP_REPEAT(n, pushi, _)                                          \
      std::string sigret;                                                   \
-     qi::Promise<R> res;                                                   \
+     qi::Promise<R> res(qi::FutureCallbackType_Sync);                      \
      qi::Future<AnyReference> fmeta = metaCall(methodName, params);      \
      fmeta.connect(boost::bind<void>(&detail::futureAdapter<R>, _1, res));  \
      return res.future();                                                  \
@@ -169,7 +169,7 @@ namespace qi {
      params.reserve(n);                                                    \
      BOOST_PP_REPEAT(n, pushi, _)                                          \
      std::string sigret;                                                   \
-     qi::Promise<R> res;                                                   \
+     qi::Promise<R> res(qi::FutureCallbackType_Sync);                                            \
      qi::Future<AnyReference> fmeta = metaCall(methodName, params, MetaCallType_Queued);   \
      fmeta.connect(boost::bind<void>(&detail::futureAdapter<R>, _1, res));  \
      return res.future();                                                  \
@@ -190,7 +190,7 @@ namespace qi {
      params.reserve(n);                                                    \
      BOOST_PP_REPEAT(n, pushi, _)                                          \
      std::string sigret;                                                   \
-     qi::Promise<R> res;                                                   \
+     qi::Promise<R> res(qi::FutureCallbackType_Sync);                       \
      qi::Future<AnyReference> fmeta = metaCall(methodName, params, callType);   \
      fmeta.connect(boost::bind<void>(&detail::futureAdapter<R>, _1, res));  \
      return res.future();                                                  \
@@ -235,7 +235,7 @@ namespace qi {
     if (pid < 0)
       return makeFutureError<T>("Property not found");
     qi::Future<AnyValue> f = type->property(value, pid);
-    qi::Promise<T> p;
+    qi::Promise<T> p(qi::FutureCallbackType_Sync);
     f.connect(boost::bind(&detail::futureAdapterVal<T>,_1, p));
     return p.future();
   }

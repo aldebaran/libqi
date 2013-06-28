@@ -30,13 +30,11 @@ StaticObjectTypeBase::metaCall(void* instance, Manageable* context, unsigned int
                                const GenericFunctionParameters& params,
                                MetaCallType callType)
 {
-  qi::Promise<AnyReference> out;
   ObjectTypeData::MethodMap::iterator i;
   i = _data.methodMap.find(methodId);
   if (i == _data.methodMap.end())
   {
-    out.setError("No such method");
-    return out.future();
+    return qi::makeFutureError<AnyReference>("No such method");
   }
 
   EventLoop* el = context->eventLoop();
@@ -156,9 +154,7 @@ qi::Future<AnyValue> StaticObjectTypeBase::property(void* instance, unsigned int
   PropertyBase* p = ::qi::property(_data, instance, id);
   if (!p)
     return qi::makeFutureError<AnyValue>("Cant find event");
-  qi::Promise<AnyValue> res;
-  res.setValue(p->value());
-  return res.future();
+  return qi::Future<AnyValue>(p->value());
 }
 
 qi::Future<void> StaticObjectTypeBase::setProperty(void* instance, unsigned int id, AnyValue value)
@@ -175,9 +171,7 @@ qi::Future<void> StaticObjectTypeBase::setProperty(void* instance, unsigned int 
   {
     return qi::makeFutureError<void>(std::string("setProperty: ") + e.what());
   }
-  qi::Promise<void> res;
-  res.setValue(0);
-  return res.future();
+  return qi::Future<void>(0);
 }
 
 

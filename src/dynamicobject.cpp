@@ -206,14 +206,12 @@ namespace qi
 
   qi::Future<AnyReference> DynamicObject::metaCall(Manageable* context, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType)
   {
-    qi::Promise<AnyReference> out;
     DynamicObjectPrivate::MethodMap::iterator i = _p->methodMap.find(method);
     if (i == _p->methodMap.end())
     {
       std::stringstream ss;
       ss << "Can't find methodID: " << method;
-      out.setError(ss.str());
-      return out.future();
+      return qi::makeFutureError<AnyReference>(ss.str());
     }
     GenericFunctionParameters p;
     p.reserve(params.size()+1);

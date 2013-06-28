@@ -150,22 +150,19 @@ namespace qi {
   GenericObject::metaCall(unsigned int method, const GenericFunctionParameters& params, MetaCallType callType)
   {
     FutureCallbackType futureType = (callType == MetaCallType_Direct) ? FutureCallbackType_Sync: FutureCallbackType_Async;
-    qi::Promise<AnyReference> out(futureType);
     if (!type || !value) {
-      qiLogWarning() << "Operating on invalid GenericObject..";
-      out.setError("Invalid object");
-      return out.future();
+      const std::string s = "Operating on invalid GenericObject..";
+      qiLogWarning() << s;
+      return qi::makeFutureError<AnyReference>(s, futureType);
     }
     try {
       return type->metaCall(value, this, method, params, callType);
     } catch (const std::exception &e) {
-      out.setError(e.what());
-      return out.future();
+      return qi::makeFutureError<AnyReference>(e.what(), futureType);
     }
     catch (...)
     {
-      out.setError("Unknown exception caught");
-      return out.future();
+      return qi::makeFutureError<AnyReference>("Unknown exception caught", futureType);
     }
   }
 
@@ -254,11 +251,10 @@ namespace qi {
   qi::Future<AnyReference>
   GenericObject::metaCall(const std::string &nameWithOptionalSignature, const GenericFunctionParameters& args, MetaCallType callType)
   {
-    qi::Promise<AnyReference> out;
     if (!type || !value) {
-      qiLogWarning() << "Operating on invalid GenericObject..";
-      out.setError("Invalid object");
-      return out.future();
+      const std::string s = "Invalid object";
+      qiLogError() << s;
+      return qi::makeFutureError<AnyReference>(s);
     }
     int methodId = findMethod(nameWithOptionalSignature, args);
     if (methodId < 0) {
