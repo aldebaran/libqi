@@ -959,24 +959,25 @@ QI_REGISTER_OBJECT_FACTORY_CONSTRUCTOR(Sleeper);
 TEST(TestObject, async)
 {
   {
-  Sleeper rf;
-  qi::Future<int> f = qi::async<int>(&rf, "msleep", 100);
-  EXPECT_EQ(qi::FutureState_Running, f.wait(0));
-  EXPECT_EQ(qi::FutureState_FinishedWithValue, f.wait());
-  EXPECT_EQ(100, f.value());
+    Sleeper rf;
+    qi::Future<int> f = qi::async<int>(&rf, "msleep", 100);
+    EXPECT_EQ(qi::FutureState_Running, f.wait(0));
+    EXPECT_EQ(qi::FutureState_FinishedWithValue, f.wait());
+    EXPECT_EQ(100, f.value());
 
-  boost::shared_ptr<Sleeper> rfptr(new Sleeper);
-  f = qi::async<int>(rfptr, "msleep", 100);
-  EXPECT_EQ(qi::FutureState_Running, f.wait(0));
-  EXPECT_EQ(qi::FutureState_FinishedWithValue, f.wait());
-  EXPECT_EQ(100, f.value());
+    boost::shared_ptr<Sleeper> rfptr(new Sleeper);
+    f = qi::async<int>(rfptr, "msleep", 100);
+    EXPECT_EQ(qi::FutureState_Running, f.wait(0));
+    EXPECT_EQ(qi::FutureState_FinishedWithValue, f.wait());
+    EXPECT_EQ(100, f.value());
 
-  qi::AnyObject o = qi::AnyReference(rfptr).toObject();
-  f = qi::async<int>(o, "msleep", 100);
-  EXPECT_EQ(qi::FutureState_Running, f.wait(0));
-  EXPECT_EQ(qi::FutureState_FinishedWithValue, f.wait());
-  EXPECT_EQ(100, f.value());
+    qi::AnyObject o = qi::AnyReference(rfptr).toObject();
+    f = qi::async<int>(o, "msleep", 100);
+    EXPECT_EQ(qi::FutureState_Running, f.wait(0));
+    EXPECT_EQ(qi::FutureState_FinishedWithValue, f.wait());
+    EXPECT_EQ(100, f.value());
   }
+
   for (unsigned i=0; i<50 && *Sleeper::dtorCount <2; ++i)
     qi::os::msleep(10);
   EXPECT_EQ(2, *Sleeper::dtorCount);
