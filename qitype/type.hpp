@@ -255,8 +255,14 @@ namespace qi{
      * is destroyed (if it gets deleted or points to the stack and goes
      * out of scope).
      */
-    template<typename T>
-    explicit GenericValuePtr(T* ptr);
+    //template <typename T>
+    //explicit GenericValuePtr(const T& ref);
+
+    template <typename T>
+    static GenericValuePtr fromPtr(const T* ptr);
+
+    template <typename T>
+    static GenericValuePtr fromRef(const T& ptr);
 
     /** Assignment operator.
      *  Previous content is lost, and will leak if not deleted outside or
@@ -515,13 +521,17 @@ QITYPE_API bool operator !=(const GenericIterator & a, const GenericIterator& b)
   public:
     AutoGenericValuePtr ();
     AutoGenericValuePtr(const AutoGenericValuePtr & b);
+
     AutoGenericValuePtr(const GenericValuePtr &self)
       : GenericValuePtr(self)
     {}
+
     AutoGenericValuePtr(const GenericValueRef &self)
       : GenericValuePtr(self)
     {}
-    template<typename T> AutoGenericValuePtr(const T& ptr);
+
+    template<typename T>
+    AutoGenericValuePtr(const T& ptr);
   };
 
   /** @return the value encoded in JSON.

@@ -114,14 +114,34 @@ namespace qi {
   }
 
   template<typename T>
-  GenericValuePtr::GenericValuePtr(T* ptr)
+  GenericValuePtr GenericValuePtr::fromPtr(const T* ptr)
   {
     static TypeInterface* t = 0;
     if (!t)
       t = typeOf<typename boost::remove_const<T>::type>();
-    type = t;
-    value = type->initializeStorage(const_cast<void*>((const void*)ptr));
+    void *value = t->initializeStorage(const_cast<void*>((const void*)ptr));
+    return GenericValuePtr(t, value);
   }
+
+  template<typename T>
+  GenericValuePtr GenericValuePtr::fromRef(const T& ptr)
+  {
+    static TypeInterface* t = 0;
+    if (!t)
+      t = typeOf<typename boost::remove_const<T>::type>();
+    void *value = t->initializeStorage(const_cast<void*>((const void*)&ptr));
+    return GenericValuePtr(t, value);
+  }
+
+//  template<typename T>
+//  GenericValuePtr::GenericValuePtr(const T& ptr)
+//  {
+//    static TypeInterface* t = 0;
+//    if (!t)
+//      t = typeOf<typename boost::remove_const<T>::type>();
+//    type = t;
+//    value = type->initializeStorage(const_cast<void*>((const void*)&ptr));
+//  }
 
   inline TypeInterface::Kind GenericValuePtr::kind() const
   {
