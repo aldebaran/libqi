@@ -13,6 +13,7 @@
 #include <qi/threadpool.hpp>
 
 #include <qi/eventloop.hpp>
+#include <qi/future.hpp>
 
 #include "eventloop_p.hpp"
 

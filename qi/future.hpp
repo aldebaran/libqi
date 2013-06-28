@@ -60,6 +60,11 @@ namespace qi {
     FutureState_FinishedWithValue,  /// The operation is finished with a value
   };
 
+  enum FutureCallbackType {
+    FutureCallbackType_Sync  = 0,
+    FutureCallbackType_Async = 1
+  };
+
   enum FutureTimeout {
     FutureTimeout_Infinite = ((int) 0x7fffffff),
     FutureTimeout_None     = 0,
@@ -145,9 +150,9 @@ namespace qi {
     {
       return _p.get() < b._p.get();
     }
-    explicit Future<T>(const ValueType& v)
+    explicit Future<T>(const ValueType& v, FutureCallbackType async = FutureCallbackType_Async)
     {
-      Promise<T> promise;
+      Promise<T> promise(async);
       promise.setValue(v);
       *this = promise.future();
     }
@@ -361,8 +366,9 @@ namespace qi {
   public:
     typedef typename FutureType<T>::type ValueType;
 
-    Promise() {
+    explicit Promise(FutureCallbackType async = FutureCallbackType_Async) {
       _f._p->reportStart();
+      _f._p->_async = async;
     }
 
     /** Create a canceleable promise. If Future<T>::cancel is invoked,
@@ -370,10 +376,11 @@ namespace qi {
      * setError() or setCanceled() as quickly as possible, but can do so
      * in an asynchronous way.
      */
-    Promise(boost::function<void (qi::Promise<T>)> cancelCallback)
+    explicit Promise(boost::function<void (qi::Promise<T>)> cancelCallback, FutureCallbackType async = FutureCallbackType_Async)
     {
       _f._p->reportStart();
       _f._p->setOnCancel(boost::bind<void>(cancelCallback, *this));
+      _f._p->_async = async;
     }
 
     /** notify all future that a value has been set.
@@ -420,11 +427,11 @@ namespace qi {
   class FutureBarrier {
   public:
     /// FutureBarrier constructor taking no argument.
-    FutureBarrier()
+    FutureBarrier(FutureCallbackType async = FutureCallbackType_Async)
       : _closed(false)
       , _count(0)
       , _futures()
-      , _promise()
+      , _promise(async)
     {}
 
     /// Adds the future to the barrier.
@@ -467,7 +474,7 @@ namespace qi {
   };
 
   template <typename T>
-  qi::Future<T> makeFutureError(const std::string &value);
+  qi::Future<T> makeFutureError(const std::string &value, FutureCallbackType async = FutureCallbackType_Async);
 
   /// Helper function to wait on a vector of futures.
   template <typename T>

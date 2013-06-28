@@ -10,6 +10,7 @@
 #include <vector>
 #include <utility> // pair
 #include <boost/bind.hpp>
+#include <qi/eventloop.hpp>
 
 #include <qi/log.hpp>
 
@@ -53,6 +54,7 @@ namespace qi {
       typedef typename FutureType<T>::type ValueType;
       FutureBaseTyped()
         : _value()
+        , _async(FutureCallbackType_Async)
       {
       }
 
@@ -75,6 +77,27 @@ namespace qi {
         _onCancel = onCancel;
       }
 
+
+      void callCbNotify(qi::Future<T>& future)
+      {
+        for(unsigned i = 0; i<_onResult.size(); ++i)
+        {
+          try {
+            if (_async == FutureCallbackType_Async)
+              getDefaultObjectEventLoop()->post(boost::bind(_onResult[i], future));
+            else
+              _onResult[i](future);
+          } catch(const std::exception& e) {
+            qiLogError("qi.future") << "Exception caught in future callback "
+                                    << e.what();
+          } catch (...) {
+            qiLogError("qi.future")
+                << "Unknown exception caught in future callback";
+          }
+        }
+        notifyFinish();
+      }
+
       void setValue(qi::Future<T>& future, const ValueType &value)
       {
         // report-ready + onResult() must be atomic to avoid
@@ -83,25 +106,15 @@ namespace qi {
         boost::recursive_mutex::scoped_lock lock(mutex());
         if (!isRunning())
           throw FutureException(FutureException::ExceptionState_PromiseAlreadySet);
+
         _value = value;
         reportValue();
-        for(unsigned i = 0; i<_onResult.size(); ++i)
-        {
-          try
-          {
-            _onResult[i](future);
-          }
-          catch(const std::exception& e)
-          {
-            qiLogError("qi.future") << "Exception caught in future callback " << e.what();
-          }
-          catch (...) {
-            qiLogError("qi.future") << "Unknown exception caught in future callback";
-          }
-        }
-        notifyFinish();
+        callCbNotify(future);
       }
 
+      /*
+       * inplace api for promise
+       */
       void set(qi::Future<T>& future)
       {
         // report-ready + onResult() must be atomic to avoid
@@ -110,22 +123,9 @@ namespace qi {
         boost::recursive_mutex::scoped_lock lock(mutex());
         if (!isRunning())
           throw FutureException(FutureException::ExceptionState_PromiseAlreadySet);
+
         reportValue();
-        for(unsigned i=0; i<_onResult.size(); ++i)
-        {
-          try
-          {
-            _onResult[i](future);
-          }
-          catch(const std::exception& e)
-          {
-            qiLogError("qi.future") << "Exception caught in future callback " << e.what();
-          }
-          catch (...) {
-            qiLogError("qi.future") << "Unknown exception caught in future callback";
-          }
-        }
-        notifyFinish();
+        callCbNotify(future);
       }
 
       void setError(qi::Future<T>& future, const std::string &message)
@@ -133,21 +133,20 @@ namespace qi {
         boost::recursive_mutex::scoped_lock lock(mutex());
         if (!isRunning())
           throw FutureException(FutureException::ExceptionState_PromiseAlreadySet);
+
         reportError(message);
-        for(unsigned i = 0; i<_onResult.size(); ++i)
-          _onResult[i](future);
-        notifyFinish();
+        callCbNotify(future);
       }
 
       void setCanceled(qi::Future<T>& future) {
         boost::recursive_mutex::scoped_lock lock(mutex());
         if (!isRunning())
           throw FutureException(FutureException::ExceptionState_PromiseAlreadySet);
+
         reportCanceled();
-        for(unsigned i = 0; i<_onResult.size(); ++i)
-          _onResult[i](future);
-        notifyFinish();
+        callCbNotify(future);
       }
+
 
       void connect(qi::Future<T> future, const boost::function<void (qi::Future<T>)> &s)
       {
@@ -159,7 +158,10 @@ namespace qi {
         }
         //result already ready, notify the callback
         if (ready) {
-          s(future);
+          if (_async == FutureCallbackType_Async)
+            getDefaultObjectEventLoop()->post(boost::bind(s, future));
+          else
+            s(future);
         }
       }
 
@@ -180,6 +182,7 @@ namespace qi {
       Callbacks                _onResult;
       ValueType                _value;
       boost::function<void ()> _onCancel;
+      FutureCallbackType       _async;
     };
 
     template <typename T>
@@ -202,8 +205,8 @@ namespace qi {
   } // namespace detail
 
   template <typename T>
-  qi::Future<T> makeFutureError(const std::string &error) {
-    qi::Promise<T> prom;
+  qi::Future<T> makeFutureError(const std::string &error, FutureCallbackType async) {
+    qi::Promise<T> prom(async);
     prom.setError(error);
     return prom.future();
   }

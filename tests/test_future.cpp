@@ -78,7 +78,7 @@ public:
 TEST_F(TestFuture, SimpleType) {
   TestFutureI tf(gGlobalI, gGlobalE);
 
-  qi::Promise<int> pro;
+  qi::Promise<int> pro(qi::FutureCallbackType_Sync);
 
   qi::Future<int>  fut = pro.future();
 
@@ -98,7 +98,7 @@ TEST_F(TestFuture, SimpleType) {
 TEST_F(TestFuture, ComplexType) {
   TestFutureS tf(gGlobalS, gGlobalE);
 
-  qi::Promise<std::string> pro;
+  qi::Promise<std::string> pro(qi::FutureCallbackType_Sync);
 
   qi::Future<std::string>  fut = pro.future();
 
@@ -149,7 +149,7 @@ TEST_F(TestFuture, TestTimeout) {
 TEST_F(TestFuture, TestError) {
   TestFutureI tf(gGlobalI, gGlobalE);
 
-  qi::Promise<int> pro;
+  qi::Promise<int> pro(qi::FutureCallbackType_Sync);
 
   qi::Future<int>  fut = pro.future();
   fut.connect(boost::bind(&TestFutureI::onFutureFinished, tf, _1));
@@ -393,7 +393,7 @@ static void doNothing(qi::Promise<int> promise) { ; }
 
 TEST(TestFutureCancel, Canceleable)
 {
-  qi::Promise<int> p(doCancel);
+  qi::Promise<int> p(&doCancel);
   qi::Future<int> f = p.future();
 
   ASSERT_FALSE(f.isFinished());
@@ -407,7 +407,7 @@ TEST(TestFutureCancel, Canceleable)
   ASSERT_FALSE(f.hasValue(qi::FutureTimeout_None));
 
 
-  p = qi::Promise<int>(doError);
+  p = qi::Promise<int>(&doError);
   f = p.future();
 
   ASSERT_FALSE(f.isFinished());
@@ -420,7 +420,7 @@ TEST(TestFutureCancel, Canceleable)
   ASSERT_TRUE(f.hasError(qi::FutureTimeout_None));
   ASSERT_FALSE(f.hasValue(qi::FutureTimeout_None));
 
-  p = qi::Promise<int>(doValue);
+  p = qi::Promise<int>(&doValue);
   f = p.future();
 
   ASSERT_FALSE(f.isFinished());
@@ -433,7 +433,7 @@ TEST(TestFutureCancel, Canceleable)
   ASSERT_FALSE(f.hasError(qi::FutureTimeout_None));
   ASSERT_TRUE(f.hasValue(qi::FutureTimeout_None));
 
-  p = qi::Promise<int>(doNothing);
+  p = qi::Promise<int>(&doNothing);
   f = p.future();
 
   ASSERT_FALSE(f.isFinished());

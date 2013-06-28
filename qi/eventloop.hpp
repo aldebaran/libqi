@@ -16,7 +16,6 @@
 
 #include <qi/types.hpp>
 #include <qi/api.hpp>
-#include <qi/future.hpp>
 
 #ifdef _MSC_VER
 #  pragma warning( push )
@@ -25,6 +24,8 @@
 
 namespace qi
 {
+  template<typename T> class Future;
+
   class EventLoopPrivate;
   class AsyncCallHandlePrivate;
   class QI_API EventLoop

@@ -1,7 +1,8 @@
 /**
- * \fn qi::makeFutureError<T>(const std::string&)
+ * \fn qi::makeFutureError<T>(const std::string&, bool)
  * \brief Helper function to return a future with the error set.
  * \param error the error message.
+ * \param async whether callbacks should be asynchronously called
  */
 
 /**
