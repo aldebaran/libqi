@@ -56,7 +56,7 @@ int main(int argc, char **argv) {
   file = std::string(argv[1]);
   std::string path = std::string(argv[2]);
   std::string path2 = std::string(argv[3]);
-  PyObject* sysPath = PySys_GetObject("path");
+  PyObject* sysPath = PySys_GetObject((char*)"path");
   PyList_Insert(sysPath, 0, PyString_FromString(path.c_str()));
   PyList_Insert(sysPath, 0, PyString_FromString(path2.c_str()));
 
