@@ -327,7 +327,10 @@ namespace qi {
       ++begin;
     }
     if (begin != expected.end())
+    {
+      _it = save;
       return false;
+    }
     return true;
   }
 
