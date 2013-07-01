@@ -74,6 +74,11 @@ qi::AnyReference triggerBouncer(qi::SignalBase *sig, const std::vector<qi::AnyRe
         return toPyFutureAsync(_ses->registerService(name, qi::AnyReference(obj).toObject()), _async);
       }
 
+      boost::python::object unregisterService(const unsigned int &id, bool _async=false) {
+        GILScopedUnlock _unlock;
+        return toPyFutureAsync(_ses->unregisterService(id), _async);
+      }
+
     private:
       boost::shared_ptr<qi::Session> _ses;
       int nSigConnected;
@@ -91,6 +96,7 @@ qi::AnyReference triggerBouncer(qi::SignalBase *sig, const std::vector<qi::AnyRe
           .def("service", &PySession::service, (boost::python::arg("service"), boost::python::arg("_async") = false))
           .def("services", &PySession::services, (boost::python::arg("_async") = false))
           .def("registerService", &PySession::registerService, (boost::python::arg("name"), boost::python::arg("object"), boost::python::arg("_async") = false))
+          .def("unregisterService", &PySession::unregisterService, (boost::python::arg("id"), boost::python::arg("_async") = false))
           .def_readonly("connected", &PySession::connected)
           .def_readonly("disconnected", &PySession::disconnected)
           ;
