@@ -21,7 +21,7 @@ qiLogCategory("qipy.object");
 namespace qi { namespace py {
 
 
-    boost::python::object import_inspect() {
+    boost::python::object importInspect() {
       static bool plouf = false;
       static boost::python::object obj;
       if (!plouf) {
@@ -207,7 +207,7 @@ namespace qi { namespace py {
           boost::python::object desc = m.attr("__doc__");
           if (desc)
             mmb.setDescription(boost::python::extract<std::string>(desc));
-          boost::python::object inspect = import_inspect();
+          boost::python::object inspect = importInspect();
           //returns: (args, varargs, keywords, defaults)
           boost::python::object tu = inspect.attr("getargspec")(m);
           int argsz = boost::python::len(tu[0]);
@@ -253,7 +253,7 @@ namespace qi { namespace py {
       return gob.object(boost::bind<void>(&doNothing, _1, obj));
     }
 
-    static boost::python::object pyobject_param_shrinker(boost::python::tuple args, boost::python::dict kwargs) {
+    static boost::python::object pyobjectParamShrinker(boost::python::tuple args, boost::python::dict kwargs) {
       PyQiObject& pys = boost::python::extract<PyQiObject&>(args[0]);
       boost::python::list l;
       for (int i = 2; i < boost::python::len(args); ++i)
@@ -263,13 +263,13 @@ namespace qi { namespace py {
 
     void export_pyobject() {
       boost::python::class_<qi::py::PyQiObject>("Object", boost::python::no_init)
-          .def("call", boost::python::raw_function(&pyobject_param_shrinker, 1))
+          .def("call", boost::python::raw_function(&pyobjectParamShrinker, 1))
           //TODO: .def("post")
           //TODO: .def("setProperty")
           //TODO: .def("property")
           .def("metaObject", &qi::py::PyQiObject::metaObject);
       //import inspect in our current namespace
-      import_inspect();
+      importInspect();
     }
   }
 }

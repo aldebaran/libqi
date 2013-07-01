@@ -70,7 +70,7 @@ namespace qi {
       return qi::Future<qi::AnyValue>::hasValue(msecs);
     }
 
-    void PyFuture::add_callback(boost::python::object callable) {
+    void PyFuture::addCallback(boost::python::object callable) {
 
       //because we use shared_ptr, we get a correct pyObject here.
       boost::python::object obj(shared_from_this());
@@ -131,23 +131,23 @@ namespace qi {
 
       boost::python::class_<PyPromise>("Promise")
           .def(boost::python::init<boost::python::object>())
-          .def("set_canceled", &PyPromise::setCanceled)
-          .def("set_error", &PyPromise::setError)
-          .def("set_value", &PyPromise::setValue)
+          .def("setCanceled", &PyPromise::setCanceled)
+          .def("setError", &PyPromise::setError)
+          .def("setValue", &PyPromise::setValue)
           .def("future", &PyPromise::future);
 
       boost::python::class_<PyFuture, boost::shared_ptr<PyFuture> >("Future")
           .def("value", &PyFuture::value, (boost::python::args("timeout") = qi::FutureTimeout_Infinite))
           .def("error", &PyFuture::error, (boost::python::args("timeout") = qi::FutureTimeout_Infinite))
           .def("wait", &PyFuture::wait, (boost::python::args("timeout") = qi::FutureTimeout_Infinite))
-          .def("has_error", &PyFuture::hasError, (boost::python::args("timeout") = qi::FutureTimeout_Infinite))
-          .def("has_value", &PyFuture::hasValue, (boost::python::args("timeout") = qi::FutureTimeout_Infinite))
+          .def("hasError", &PyFuture::hasError, (boost::python::args("timeout") = qi::FutureTimeout_Infinite))
+          .def("hasValue", &PyFuture::hasValue, (boost::python::args("timeout") = qi::FutureTimeout_Infinite))
           .def("cancel", &PyFuture::cancel)
-          .def("is_finished", &PyFuture::isFinished)
-          .def("is_running", &PyFuture::isRunning)
-          .def("is_canceled", &PyFuture::isCanceled)
-          .def("is_canceleable", &PyFuture::isCanceleable)
-          .def("add_callback", &PyFuture::add_callback);
+          .def("isFinished", &PyFuture::isFinished)
+          .def("isRunning", &PyFuture::isRunning)
+          .def("isCanceled", &PyFuture::isCanceled)
+          .def("isCanceleable", &PyFuture::isCanceleable)
+          .def("addCallback", &PyFuture::addCallback);
     }
   }
 }

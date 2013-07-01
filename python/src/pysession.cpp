@@ -90,7 +90,7 @@ qi::AnyReference triggerBouncer(qi::SignalBase *sig, const std::vector<qi::AnyRe
           .def("close", &PySession::close, (boost::python::arg("_async") = false))
           .def("service", &PySession::service, (boost::python::arg("service"), boost::python::arg("_async") = false))
           .def("services", &PySession::services, (boost::python::arg("_async") = false))
-          .def("register_service", &PySession::registerService, (boost::python::arg("name"), boost::python::arg("object"), boost::python::arg("_async") = false))
+          .def("registerService", &PySession::registerService, (boost::python::arg("name"), boost::python::arg("object"), boost::python::arg("_async") = false))
           .def_readonly("connected", &PySession::connected)
           .def_readonly("disconnected", &PySession::disconnected)
           ;

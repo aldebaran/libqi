@@ -27,7 +27,7 @@ def test_throwing_callback():
     s.connect(local)
     f = s.service("ServiceDirectory", _async=True)
 
-    f.add_callback(raising)
+    f.addCallback(raising)
     time.sleep(0.01)
     s.close()
 
@@ -41,7 +41,7 @@ def test_unicode_strings():
     s.connect(local)
 
     m = TestService()
-    s.register_service("TestService", m)
+    s.registerService("TestService", m)
     service = s.service("TestService")
     # ASCII range
     unicode_string = ''.join([unichr(i) for i in range(1, 128)])
@@ -70,7 +70,7 @@ def test_builtin_types():
     s.connect(local)
 
     m = TestService()
-    s.register_service("TestService", m)
+    s.registerService("TestService", m)
     service = s.service("TestService")
 
     # None
@@ -134,7 +134,7 @@ def test_object_types():
     s.connect(local)
 
     m = TestService()
-    s.register_service("TestService", m)
+    s.registerService("TestService", m)
     service = s.service("TestService")
 
     # new style
