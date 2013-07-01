@@ -153,6 +153,48 @@ namespace qi {
       return std::string();
     }
 
+    std::string& Version::operator()()
+    {
+      return version;
+    }
+
+    const std::string& Version::operator()() const
+    {
+      return version;
+    }
+
+    bool Version::operator<(const Version& pi) const
+    {
+      return qi::version::compare(version, pi.version) < 0;
+    }
+
+    bool Version::operator==(const Version& pi) const
+    {
+      return !qi::version::compare(version, pi.version);
+    }
+
+    bool Version::operator>(const Version& pi) const
+    {
+      const Version& cpi = *this;
+      return (cpi != pi) && !(cpi < pi);
+    }
+
+    bool Version::operator!=(const Version& pi) const
+    {
+      const Version& cpi = *this;
+      return !(cpi == pi);
+    }
+
+    bool Version::operator<=(const Version& pi) const
+    {
+      const Version& cpi = *this;
+      return !(cpi > pi);
+    }
+
+    bool Version::operator>=(const Version& pi) const
+    {
+      const Version& cpi = *this;
+      return !(cpi < pi);
+    }
   }
 }
-

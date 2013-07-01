@@ -27,3 +27,15 @@
  * \param version The string containing the version number.
  * \return The version number, if any.
  */
+
+/**
+ * \struct qi::version::Version
+ * \brief Struct representing a version number
+ * \var qi::Version::version string for the version
+ */
+
+/**
+ * \fn qi::version::operator()
+ * \brief Return the version
+ * \return The version number
+ */

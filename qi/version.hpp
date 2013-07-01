@@ -16,6 +16,20 @@
 namespace qi {
   namespace version {
 
+    struct QI_API Version
+    {
+      std::string version;
+
+      std::string& operator()();
+      const std::string& operator()() const;
+      bool operator< (const Version& pi) const;
+      bool operator> (const Version& pi) const;
+      bool operator==(const Version& pi) const;
+      bool operator!=(const Version& pi) const;
+      bool operator<=(const Version& pi) const;
+      bool operator>=(const Version& pi) const;
+    };
+
     //convert a version's string into a vector<string> with each comparable part
     QI_API std::vector<std::string> explode(const std::string &version);
 

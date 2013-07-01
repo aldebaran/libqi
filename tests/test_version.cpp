@@ -49,6 +49,38 @@ TEST(TestVersion, TestVersionCompare) {
 
 }
 
+TEST(TestVersion, comparisonOperators)
+{
+  qi::version::Version p1, p2;
+  p1() = "1.0.0";
+  p2() = "2.0.0";
+
+  ASSERT_FALSE(p1() > p2()) << p1() << " > " << p2();
+  ASSERT_TRUE(p1() < p2()) << p1() << " < " << p2();
+  ASSERT_FALSE(p1() == p2()) << p1() << " == " << p2();
+  ASSERT_TRUE(p1() != p2()) << p1() << " != " << p2();
+  ASSERT_FALSE(p1() >= p2()) << p1() << " >= " << p2();
+  ASSERT_TRUE(p1() <= p2()) << p1() << " <= " << p2();
+
+  p2() = "1.0.0";
+
+  ASSERT_FALSE(p1() > p2()) << p1() << " > " << p2();
+  ASSERT_FALSE(p1() < p2()) << p1() << " < " << p2();
+  ASSERT_TRUE(p1() == p2()) << p1() << " == " << p2();
+  ASSERT_FALSE(p1() != p2()) << p1() << " != " << p2();
+  ASSERT_TRUE(p1() >= p2()) << p1() << " >= " << p2();
+  ASSERT_TRUE(p1() <= p2()) << p1() << " <= " << p2();
+
+  p1() = "2.0.0";
+
+  ASSERT_TRUE(p1() > p2()) << p1() << " > " << p2();
+  ASSERT_FALSE(p1() < p2()) << p1() << " < " << p2();
+  ASSERT_FALSE(p1() == p2()) << p1() << " == " << p2();
+  ASSERT_TRUE(p1() != p2()) << p1() << " != " << p2();
+  ASSERT_TRUE(p1() >= p2()) << p1() << " >= " << p2();
+  ASSERT_FALSE(p1() <= p2()) << p1() << " <= " << p2();
+}
+
 // It's important that the << operator is defined in the SAME
 // namespace that defines Foo.  C++'s look-up rules rely on that.
 ::std::ostream& operator<<(::std::ostream& os, const std::vector<std::string>& foo) {
