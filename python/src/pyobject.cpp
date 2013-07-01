@@ -49,8 +49,14 @@ namespace qi { namespace py {
           GILScopedUnlock _unlock;
           fut = _object->metaCall(funN, val.asDynamic().asTupleValuePtr());
         }
-        if (!async)
+        if (!async) {
+          {
+            //do not lock while waiting!
+            GILScopedUnlock _unlock;
+            fut.wait();
+          }
           return fut.value().to<boost::python::object>();
+        }
         else
           return qi::py::makeFuture(fut);
       }
