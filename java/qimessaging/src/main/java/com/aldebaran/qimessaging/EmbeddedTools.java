@@ -134,7 +134,7 @@ public class EmbeddedTools
 
   public boolean loadEmbeddedLibrary(String libname)
   {
-    boolean usingEmbedded = false;
+    System.out.printf("Loading %s\n", libname);
 
     // Locate native library within qimessaging.jar
     StringBuilder path = new StringBuilder();
@@ -157,13 +157,8 @@ public class EmbeddedTools
       return true;
     }
 
-    // Delete if already exists
-    File toDelete = new File(tmpDir.getAbsolutePath() + path.toString());
-    if (toDelete.exists())
-    {
-      System.out.printf("Deleting %s\n", toDelete.getAbsolutePath());
-      toDelete.delete();
-    }
+    // Make sure there is enough space
+    deleteExistingLibrary(path.toString());
 
     // Extract and load native library
     try
@@ -192,11 +187,13 @@ public class EmbeddedTools
       String pathToTmp = libfile.getAbsolutePath().substring(0, endIndex);
       File so = new File(pathToTmp + "/" + libname + getSuitableLibraryExtention());
       System.out.printf("Extracting %s in %s...\n", libname + getSuitableLibraryExtention(), pathToTmp);
-
       libfile.renameTo(so);
+
+      System.out.printf("Loading %s\n", so.getAbsolutePath());
       System.load(so.getAbsolutePath());
 
-      usingEmbedded = true;
+      // Library is loaded in memory, delete it from disk
+      deleteExistingLibrary("/" + libname + getSuitableLibraryExtention());
     }
     catch (IOException x)
     {
@@ -209,6 +206,35 @@ public class EmbeddedTools
       return false;
     }
 
-    return usingEmbedded;
+    return true;
+  }
+
+  /**
+   * Delete library if it already exists
+   * @param pathToLib Path of library to delete
+   */
+  private void deleteExistingLibrary(String pathToLib)
+  {
+    try
+    {
+      // If tmpDir is not overridden, get default temp directory
+      if (tmpDir == null)
+        tmpDir = new File(System.getProperty("java.io.tmpdir"));
+
+      File toDelete = new File(tmpDir.getAbsolutePath() + pathToLib);
+      if (toDelete.exists())
+      {
+        System.out.printf("Deleting %s\n", toDelete.getAbsolutePath());
+        toDelete.delete();
+      }
+      else
+      {
+        System.out.printf("%s does not exists\n", toDelete.getAbsolutePath());
+      }
+
+    } catch (Exception e)
+    {
+      System.out.printf("Error cleaning extraction directory: %s\n", e);
+    }
   }
 }
