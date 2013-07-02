@@ -136,6 +136,10 @@ public class EmbeddedTools
   {
     System.out.printf("Loading %s\n", libname);
 
+    // If tmpDir is not overridden, get default temporary directory
+    if (tmpDir == null)
+      tmpDir = new File(System.getProperty("java.io.tmpdir"));
+
     // Locate native library within qimessaging.jar
     StringBuilder path = new StringBuilder();
     path.append("/" + libname+getSuitableLibraryExtention());
@@ -148,18 +152,20 @@ public class EmbeddedTools
       return false;
     }
 
-    // Make sure there is enough space
+    // Delete library if it already exist to make some disk space
     deleteExistingLibrary(path.toString());
 
     // Extract and load native library
     try
     {
+      // Open file inside jar
       final File libfile = File.createTempFile(libname, getSuitableLibraryExtention(), tmpDir);
       libfile.deleteOnExit();
 
       final InputStream in = nativeLibrary.openStream();
       final OutputStream out = new BufferedOutputStream(new FileOutputStream(libfile));
 
+      // Extract it in a temporary file
       int len = 0;
       byte[] buffer = new byte[10000];
       while ((len = in.read(buffer)) > -1)
@@ -167,19 +173,17 @@ public class EmbeddedTools
         out.write(buffer, 0, len);
       }
 
+      // Close files
       out.close();
       in.close();
 
-      int actualPathLength = libfile.getAbsolutePath().length();
-      int actualNameLength = libfile.getName().length();
-      int endIndex = actualPathLength - actualNameLength;
-
       // Rename tmp file to actual library name
-      String pathToTmp = libfile.getAbsolutePath().substring(0, endIndex);
+      String pathToTmp = tmpDir.getAbsolutePath();
       File so = new File(pathToTmp + "/" + libname + getSuitableLibraryExtention());
       System.out.printf("Extracting %s in %s...\n", libname + getSuitableLibraryExtention(), pathToTmp);
       libfile.renameTo(so);
 
+      // Load library
       System.out.printf("Loading %s\n", so.getAbsolutePath());
       System.load(so.getAbsolutePath());
 
@@ -208,10 +212,6 @@ public class EmbeddedTools
   {
     try
     {
-      // If tmpDir is not overridden, get default temp directory
-      if (tmpDir == null)
-        tmpDir = new File(System.getProperty("java.io.tmpdir"));
-
       File toDelete = new File(tmpDir.getAbsolutePath() + pathToLib);
       if (toDelete.exists())
       {
