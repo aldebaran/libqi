@@ -18,13 +18,11 @@ namespace qi {
   public:
     ObjectTypeBuilderPrivate()
     : type(0)
-    , threadingModel(ObjectThreadingModel_SingleThread)
     , autoRegister(true)
     {}
     ObjectTypeData data;
     ObjectTypeInterface*    type;
     MetaObject     metaObject;
-    ObjectThreadingModel threadingModel;
     bool                 autoRegister;
   };
 
@@ -91,7 +89,7 @@ namespace qi {
 
   void ObjectTypeBuilderBase::setThreadingModel(ObjectThreadingModel model)
   {
-    _p->threadingModel = model;
+    _p->data.threadingModel = model;
   }
 
   const MetaObject& ObjectTypeBuilderBase::metaObject()
