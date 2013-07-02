@@ -9,7 +9,7 @@
 
 TEST(log, logasync)
 {
-  qi::log::init(qi::log::info, 0, false);
+  qi::log::init(qi::LogLevel_Info, 0, false);
   atexit(qi::log::destroy);
 
    for (int i = 0; i < 1000; i++)

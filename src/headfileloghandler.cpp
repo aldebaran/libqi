@@ -72,7 +72,7 @@ namespace qi {
       delete _p;
     }
 
-    void HeadFileLogHandler::log(const qi::log::LogLevel verb,
+    void HeadFileLogHandler::log(const qi::LogLevel verb,
                                  const qi::os::timeval   date,
                                  const char              *category,
                                  const char              *msg,
@@ -90,8 +90,8 @@ namespace qi {
         }
         else
         {
-          std::string logline = qi::detail::logline(date, category, msg, file, fct, line);
-          fprintf(_p->_file, "%s %s", logLevelToString(verb), logline.c_str());
+          std::string logline = qi::detail::logline(qi::detail::fileLogContext, date, category, msg, file, fct, line, verb);
+          fprintf(_p->_file, "%s", logline.c_str());
           fflush(_p->_file);
 
           _p->_count++;

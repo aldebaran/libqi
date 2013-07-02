@@ -4,57 +4,46 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the COPYING file.
  */
- 
+
 #ifndef _QI_DETAILS_LOG_HXX_
 #define _QI_DETAILS_LOG_HXX_
 
 
 #if defined(NO_QI_LOG_DETAILED_CONTEXT) || defined(NDEBUG)
-#   define _qiLogDebug(...)      qi::log::LogStream(qi::log::debug, "", __FUNCTION__, 0, __VA_ARGS__).self()
+#   define _qiLogDebug(...)      qi::log::LogStream(qi::LogLevel_Debug, "", __FUNCTION__, 0, __VA_ARGS__).self()
 #else
-#   define _qiLogDebug(...)      qi::log::LogStream(qi::log::debug, __FILE__, __FUNCTION__, __LINE__, __VA_ARGS__).self()
+#   define _qiLogDebug(...)      qi::log::LogStream(qi::LogLevel_Debug, __FILE__, __FUNCTION__, __LINE__, __VA_ARGS__).self()
 #endif
 
 #if defined(NO_QI_LOG_DETAILED_CONTEXT) || defined(NDEBUG)
-# define _qiLogVerbose(...)      qi::log::LogStream(qi::log::verbose, "", __FUNCTION__, 0, __VA_ARGS__).self()
+# define _qiLogVerbose(...)      qi::log::LogStream(qi::LogLevel_Verbose, "", __FUNCTION__, 0, __VA_ARGS__).self()
 #else
-# define _qiLogVerbose(...)      qi::log::LogStream(qi::log::verbose, __FILE__, __FUNCTION__, __LINE__, __VA_ARGS__).self()
+# define _qiLogVerbose(...)      qi::log::LogStream(qi::LogLevel_Verbose, __FILE__, __FUNCTION__, __LINE__, __VA_ARGS__).self()
 #endif
 
 #if defined(NO_QI_LOG_DETAILED_CONTEXT) || defined(NDEBUG)
-# define _qiLogInfo(...)         qi::log::LogStream(qi::log::info, "", __FUNCTION__, 0, __VA_ARGS__).self()
+# define _qiLogInfo(...)         qi::log::LogStream(qi::LogLevel_Info, "", __FUNCTION__, 0, __VA_ARGS__).self()
 #else
-# define _qiLogInfo(...)         qi::log::LogStream(qi::log::info, __FILE__, __FUNCTION__, __LINE__, __VA_ARGS__).self()
+# define _qiLogInfo(...)         qi::log::LogStream(qi::LogLevel_Info, __FILE__, __FUNCTION__, __LINE__, __VA_ARGS__).self()
 #endif
 
 #if defined(NO_QI_LOG_DETAILED_CONTEXT) || defined(NDEBUG)
-# define _qiLogWarning(...)      qi::log::LogStream(qi::log::warning, "", __FUNCTION__, 0, __VA_ARGS__).self()
+# define _qiLogWarning(...)      qi::log::LogStream(qi::LogLevel_Warning, "", __FUNCTION__, 0, __VA_ARGS__).self()
 #else
-# define _qiLogWarning(...)      qi::log::LogStream(qi::log::warning, __FILE__, __FUNCTION__, __LINE__, __VA_ARGS__).self()
+# define _qiLogWarning(...)      qi::log::LogStream(qi::LogLevel_Warning, __FILE__, __FUNCTION__, __LINE__, __VA_ARGS__).self()
 #endif
 
 #if defined(NO_QI_LOG_DETAILED_CONTEXT) || defined(NDEBUG)
-# define _qiLogError(...)        qi::log::LogStream(qi::log::error, "", __FUNCTION__, 0, __VA_ARGS__).self()
+# define _qiLogError(...)        qi::log::LogStream(qi::LogLevel_Error, "", __FUNCTION__, 0, __VA_ARGS__).self()
 #else
-# define _qiLogError(...)        qi::log::LogStream(qi::log::error, __FILE__, __FUNCTION__, __LINE__, __VA_ARGS__).self()
+# define _qiLogError(...)        qi::log::LogStream(qi::LogLevel_Error, __FILE__, __FUNCTION__, __LINE__, __VA_ARGS__).self()
 #endif
 
 #if defined(NO_QI_LOG_DETAILED_CONTEXT) || defined(NDEBUG)
-# define _qiLogFatal(...)        qi::log::LogStream(qi::log::fatal, "", __FUNCTION__, 0, __VA_ARGS__).self()
+# define _qiLogFatal(...)        qi::log::LogStream(qi::LogLevel_Fatal, "", __FUNCTION__, 0, __VA_ARGS__).self()
 #else
-# define _qiLogFatal(...)        qi::log::LogStream(qi::log::fatal, __FILE__, __FUNCTION__, __LINE__, __VA_ARGS__).self()
+# define _qiLogFatal(...)        qi::log::LogStream(qi::LogLevel_Fatal, __FILE__, __FUNCTION__, __LINE__, __VA_ARGS__).self()
 #endif
-
-
-// enum level {
-//   silent = 0,
-//   fatal,
-//   error,
-//   warning,
-//   info,
-//   verbose,
-//   debug
-// };
 
 
 #  define _QI_FORMAT_ELEM(_, a, elem) % (elem)
@@ -79,8 +68,8 @@
 #  define _QI_LOG_MESSAGE(Type, Message)                        \
   do                                                            \
   {                                                             \
-    if (::qi::log::detail::isVisible(_QI_LOG_CATEGORY_GET(), ::qi::log::Type))  \
-      ::qi::log::log(::qi::log::Type,                           \
+    if (::qi::log::detail::isVisible(_QI_LOG_CATEGORY_GET(), ::qi::Type))  \
+      ::qi::log::log(::qi::Type,                                \
                          _QI_LOG_CATEGORY_GET(),                \
                          Message,                               \
                          "", __FUNCTION__, 0);                  \
@@ -90,8 +79,8 @@
 #  define _QI_LOG_MESSAGE(Type, Message)                        \
   do                                                            \
   {                                                             \
-    if (::qi::log::detail::isVisible(_QI_LOG_CATEGORY_GET(), ::qi::log::Type))  \
-      ::qi::log::log(::qi::log::Type,                           \
+    if (::qi::log::detail::isVisible(_QI_LOG_CATEGORY_GET(), ::qi::Type))  \
+      ::qi::log::log(::qi::Type,                                \
                          _QI_LOG_CATEGORY_GET(),                \
                          Message,                               \
                          __FILE__, __FUNCTION__, __LINE__);     \
@@ -108,7 +97,7 @@
 
 // no extra argument
 #define _QI_LOG_MESSAGE_STREAM_HASCAT_1(Type, TypeCased, ...) \
-  ::qi::log::detail::isVisible(_QI_LOG_CATEGORY_GET(), ::qi::log::Type) \
+  ::qi::log::detail::isVisible(_QI_LOG_CATEGORY_GET(), ::qi::Type) \
   && BOOST_PP_CAT(_qiLog, TypeCased)(_QI_LOG_CATEGORY_GET())
 
 // Visual bouncer for macro evalution order glitch.
@@ -157,10 +146,11 @@
 
 namespace qi {
   namespace log{
-
     namespace detail {
+
       // Used to remove warning "statement has no effect"
       inline bool qiFalse() {return false;}
+
       class NullStream {
       public:
         NullStream(...)
@@ -182,42 +172,50 @@ namespace qi {
           return self();
         }
       };
+
       // Hack required to silence spurious warning in compile-time disabled macros
       // We need an operator with priority below << and above &&
-      inline bool operator < (bool b, const NullStream& ns)
+      inline bool operator<(bool b, const NullStream& ns)
       {
         return false;
       }
 
       struct Category
       {
-        std::string name;
-        LogLevel mainLevel;
-        std::vector<LogLevel> levels;
+        Category()
+          : maxLevel(qi::LogLevel_Silent)
+        {}
+
+        Category(const std::string &name)
+          : name(name)
+          , maxLevel(qi::LogLevel_Silent)
+        {}
+
+        std::string               name;
+        qi::LogLevel              maxLevel; //max level among all subscribers
+        std::vector<qi::LogLevel> levels;   //level by subscribers
+
+        void setLevel(SubscriberId sub, qi::LogLevel level);
       };
+
       QI_API boost::format getFormat(const std::string& s);
-      /// @return a pointer to the global loglevel setting
-      QI_API LogLevel* globalLogLevelPtr();
-      // We will end up with one instance per module, but we don't care
-      inline LogLevel globalLogLevel()
+
+      //inlined for perf
+      inline bool isVisible(Category* category, qi::LogLevel level)
       {
-        static LogLevel* l = globalLogLevelPtr();
-        return *l;
-      }
-      inline bool isVisible(Category* category, LogLevel level)
-      {
-        return level <= globalLogLevel() && level <= category->mainLevel;
+        return level <= category->maxLevel;
       }
     }
-    typedef detail::Category* category_type;
+
+    typedef detail::Category* CategoryType;
     class LogStream: public std::stringstream
     {
     public:
-      LogStream(const LogLevel    level,
-                const char        *file,
-                const char        *function,
-                const int         line,
-                const char        *category)
+      LogStream(const qi::LogLevel level,
+                const char         *file,
+                const char         *function,
+                const int          line,
+                const char         *category)
         : _logLevel(level)
         , _category(category)
         , _categoryType(0)
@@ -226,11 +224,11 @@ namespace qi {
         , _line(line)
       {
       }
-      LogStream(const LogLevel    level,
-                const char        *file,
-                const char        *function,
-                const int         line,
-                category_type     category)
+      LogStream(const qi::LogLevel level,
+                const char         *file,
+                const char         *function,
+                const int          line,
+                CategoryType       category)
         : _logLevel(level)
         , _category(0)
         , _categoryType(category)
@@ -239,12 +237,12 @@ namespace qi {
         , _line(line)
       {
       }
-      LogStream(const LogLevel    level,
-                const char        *file,
-                const char        *function,
-                const int         line,
-                const char        *category,
-                const std::string& message)
+      LogStream(const qi::LogLevel  level,
+                const char         *file,
+                const char         *function,
+                const int           line,
+                const char         *category,
+                const std::string&  message)
         : _logLevel(level)
         , _category(category)
         , _categoryType(0)
@@ -268,12 +266,12 @@ namespace qi {
       }
 
     private:
-      LogLevel    _logLevel;
-      const char *_category;
-      category_type _categoryType;
-      const char *_file;
-      const char *_function;
-      int         _line;
+      qi::LogLevel  _logLevel;
+      const char   *_category;
+      CategoryType  _categoryType;
+      const char   *_file;
+      const char   *_function;
+      int           _line;
 
       //avoid copy
       LogStream(const LogStream &rhs);

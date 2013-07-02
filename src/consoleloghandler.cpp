@@ -84,9 +84,9 @@ namespace qi {
       void textColorBG(char bg) const;
       void textColorFG(char fg) const;
       void textColorAttr(char attr) const;
-      void header(const LogLevel verb) const;
-      PrivateConsoleLogHandler::ConsoleColor colorForHeader(const LogLevel verb) const;
-      void coloredLog(const LogLevel verb, const qi::os::timeval date,
+      void header(const qi::LogLevel verb, bool verbose = true) const;
+      PrivateConsoleLogHandler::ConsoleColor colorForHeader(const qi::LogLevel verb) const;
+      void coloredLog(const qi::LogLevel verb, const qi::os::timeval date,
                       const char *category,
                       const char *msg,
                       const char *file,
@@ -160,29 +160,29 @@ namespace qi {
     }
 #endif
 
-    PrivateConsoleLogHandler::ConsoleColor PrivateConsoleLogHandler::colorForHeader(const LogLevel verb) const
+    PrivateConsoleLogHandler::ConsoleColor PrivateConsoleLogHandler::colorForHeader(const qi::LogLevel verb) const
     {
-      if (verb == fatal)
+      if (verb == LogLevel_Fatal)
         return magenta;
-      if (verb == error)
+      if (verb == LogLevel_Error)
         return red;
-      if (verb == warning)
+      if (verb == LogLevel_Warning)
         return yellow;
-      if (verb == info)
+      if (verb == LogLevel_Info)
         return blue;
-      if (verb == verbose)
+      if (verb == LogLevel_Verbose)
         return green;
-      if (verb == debug)
+      if (verb == LogLevel_Debug)
         return white;
       return white;
     }
 
-    void PrivateConsoleLogHandler::header(const LogLevel verb) const
+    void PrivateConsoleLogHandler::header(const qi::LogLevel verb, bool verbose) const
     {
       //display log level
       textColorAttr(reset);
       textColorFG(colorForHeader(verb));
-      printf("%s ", logLevelToString(verb));
+      printf("%s ", logLevelToString(verb, verbose));
       textColorAttr(reset);
     }
 
@@ -208,15 +208,15 @@ namespace qi {
         _p->_color = 0;
         return;
       }
-      if (qi::log::color() == COLOR_NEVER)
+      if (qi::log::color() == LogColor_Never)
         _p->_color = 0;
-      if (qi::log::color() == COLOR_AUTO) {
+      if (qi::log::color() == LogColor_Auto) {
         if (qi::os::isatty())
           _p->_color = 1;
         else
           _p->_color = 0;
       }
-      if (qi::log::color() == COLOR_ALWAYS)
+      if (qi::log::color() == LogColor_Always)
         _p->_color = 1;
     }
 
@@ -235,7 +235,7 @@ namespace qi {
       return nbr % qi::log::PrivateConsoleLogHandler::max_color;
     }
 
-    void PrivateConsoleLogHandler::coloredLog(const LogLevel verb,
+    void PrivateConsoleLogHandler::coloredLog(const qi::LogLevel verb,
                     const qi::os::timeval date,
                     const char *category,
                     const char *msg,
@@ -243,19 +243,22 @@ namespace qi {
                     const char *fct,
                     const int   line)
     {
-      int categories = qi::detail::categoriesFromContext();
+      int context = qi::log::context();
 
       static boost::mutex mutex;
       boost::mutex::scoped_lock scopedLock(mutex, boost::defer_lock_t());
-      static bool useLock = qi::os::getenv("QI_LOG_NOTUSELOCK").empty();
+      static bool useLock = qi::os::getenv("QI_LOG_NOLOCK").empty();
       if (useLock)
         scopedLock.lock();
-      if (categories & qi::detail::LOG_VERBOSITY) {
+
+      if (context & qi::LogContextAttr_Verbosity) {
         header(verb);
       }
-      if (categories & qi::detail::LOG_DATE)
-        printf("%s ", qi::detail::dateToString(date).c_str());
-      if (categories & qi::detail::LOG_TID) {
+      if (context & qi::LogContextAttr_ShortVerbosity) {
+        header(verb, false);
+      }
+
+      if (context & qi::LogContextAttr_Tid) {
         int tidColor = intToColor(qi::os::gettid());
         textColorBG(tidColor);
         textColorFG(InvertConsoleColor[tidColor]);
@@ -263,27 +266,31 @@ namespace qi {
         textColorAttr(reset);
         printf(" ");
       }
-      if (categories & qi::detail::LOG_CATEGORY) {
-        std::string cat = qi::detail::categoryToFixedCategory(category);
-        textColorFG(stringToColor(cat.c_str()));
-        printf("%s", cat.c_str());
+
+      if (context & qi::LogContextAttr_Date)
+        printf("%s ", qi::detail::dateToString(date).c_str());
+
+      if (context & qi::LogContextAttr_Category) {
+        textColorFG(stringToColor(category));
+        printf("%s: ", category);
         textColorAttr(qi::log::PrivateConsoleLogHandler::reset);
-        printf(": ");
       }
-      if (categories & qi::detail::LOG_FILE) {
+      if (context & qi::LogContextAttr_File) {
         printf("%s", file);
         if (line != 0)
           printf("(%i)", line);
         printf(" ");
       }
-      if (categories & qi::detail::LOG_FUNCTION)
+      if (context & qi::LogContextAttr_Function)
         printf("%s() ", fct);
+      if (context & qi::LogContextAttr_Return)
+        printf("\n");
       std::string ss = msg;
       ss.reserve(qi::detail::rtrim(msg));
       printf("%s\n", ss.c_str());
     }
 
-    void ConsoleLogHandler::log(const LogLevel        verb,
+    void ConsoleLogHandler::log(const qi::LogLevel    verb,
                                 const qi::os::timeval date,
                                 const char            *category,
                                 const char            *msg,
@@ -291,29 +298,20 @@ namespace qi {
                                 const char            *fct,
                                 const int             line)
     {
-      if (verb > qi::log::verbosity())
-      {
+#ifndef _WIN32
+      _p->textColorAttr(_p->reset);
+      _p->textColorFG(_p->white);
+#endif
+      if (_p->_color) {
+        _p->coloredLog(verb, date, category, msg, file, fct, line);
         return;
       }
-      else
-      {
-#ifndef _WIN32
-        _p->textColorAttr(_p->reset);
-        _p->textColorFG(_p->white);
-#endif
-        if (_p->_color) {
-          _p->coloredLog(verb, date, category, msg, file, fct, line);
-          return;
-        } else {
-          _p->header(verb);
 
-          std::string logline = qi::detail::logline(date, category, msg, file, fct, line);
-          printf("%s", logline.c_str());
-          fflush(stdout);
-        }
-      }
+      std::string logline = qi::detail::logline(qi::log::context(), date, category, msg, file, fct, line, verb);
+      printf("%s", logline.c_str());
       fflush(stdout);
     }
+
   }
 }
 

@@ -6,7 +6,7 @@
  */
 
 /**
- * \fn qi::log::ConsoleLogHandler::log(const qi::log::LogLevel, const qi::os::timeval,
+ * \fn qi::log::ConsoleLogHandler::log(const qi::LogLevel, const qi::os::timeval,
  *                                     const char*, const char*, const char*,
  *                                     const char*, const int)
  * \param verb verbosity of the log message.

@@ -23,7 +23,7 @@ int main(int argc, char **argv)
           ("quiet,q", "Do not show logs on console.")
           ("context,c", po::value<int>(), "Show context logs: [0-7] (0: none, 1: categories, 2: date, 3: file+line, 4: date+categories, 5: date+line+file, 6: categories+line+file, 7: all (date+categories+line+file+function)).")
           ("synchronous-log", "Activate synchronous logs.")
-          ("log-level,L", po::value<int>(&globalVerbosity)->default_value(4), "Change the log minimum level: [0-6] (0: silent, 1: fatal, 2: error, 3: warning, 4: info, 5: verbose, 6: debug). Default: 4 (info)")
+          ("log-level,L", po::value<int>(&globalVerbosity), "Change the log minimum level: [0-6] (0: silent, 1: fatal, 2: error, 3: warning, 4: info, 5: verbose, 6: debug). Default: 4 (info)")
     ;
 
   // Map containing all the options with their values
@@ -49,18 +49,16 @@ int main(int argc, char **argv)
   }
 
   // set default log verbosity
-  qi::log::setVerbosity(qi::log::info);
   // set default log context
-  qi::log::setContext(0);
 
   if (vm.count("log-level"))
   {
     if (globalVerbosity > 0 && globalVerbosity <= 6)
-      qi::log::setVerbosity((qi::log::LogLevel)globalVerbosity);
+      qi::log::setVerbosity((qi::LogLevel)globalVerbosity);
     if (globalVerbosity > 6)
-      qi::log::setVerbosity(qi::log::debug);
+      qi::log::setVerbosity(qi::LogLevel_Debug);
     if (globalVerbosity <= 0)
-      qi::log::setVerbosity(qi::log::silent);
+      qi::log::setVerbosity(qi::LogLevel_Silent);
   }
 
   // Remove consoleloghandler (default log handler)
@@ -68,10 +66,10 @@ int main(int argc, char **argv)
     qi::log::removeLogHandler("consoleloghandler");
 
   if (vm.count("debug"))
-    qi::log::setVerbosity(qi::log::debug);
+    qi::log::setVerbosity(qi::LogLevel_Debug);
 
   if (vm.count("verbose"))
-    qi::log::setVerbosity(qi::log::verbose);
+    qi::log::setVerbosity(qi::LogLevel_Verbose);
 
   if (vm.count("context"))
   {

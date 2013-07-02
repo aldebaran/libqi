@@ -66,7 +66,7 @@ namespace qi {
       delete _p;
     }
 
-    void TailFileLogHandler::log(const qi::log::LogLevel verb,
+    void TailFileLogHandler::log(const qi::LogLevel verb,
                                  const qi::os::timeval   date,
                                  const char              *category,
                                  const char              *msg,
@@ -84,8 +84,8 @@ namespace qi {
       {
         fseek(_p->_file, 0, SEEK_END);
 
-        std::string logline = qi::detail::logline(date, category, msg, file, fct, line);
-        _p->_writeSize += fprintf(_p->_file, "%s %s", logLevelToString(verb), logline.c_str());
+        std::string logline = qi::detail::logline(qi::detail::fileLogContext, date, category, msg, file, fct, line, verb);
+        _p->_writeSize += fprintf(_p->_file, "%s", logline.c_str());
         fflush(_p->_file);
       }
 

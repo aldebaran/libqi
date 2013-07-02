@@ -50,7 +50,7 @@ int main(int argc, char **argv)
     if (vm.count("log-level"))
     {
         if (globalVerbosity > 0 && globalVerbosity <= 6)
-            qi::log::setVerbosity((qi::log::LogLevel)globalVerbosity);
+            qi::log::setVerbosity((qi::LogLevel)globalVerbosity);
         if (globalVerbosity > 6)
             qi::log::setVerbosity(qi::log::debug);
         if (globalVerbosity <= 0)

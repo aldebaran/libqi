@@ -26,7 +26,7 @@ namespace qi {
       virtual ~FileLogHandler();
 
       /// Writes a log message to the file.
-      void log(const qi::log::LogLevel verb,
+      void log(const qi::LogLevel verb,
                const qi::os::timeval   date,
                const char              *category,
                const char              *msg,

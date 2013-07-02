@@ -28,7 +28,7 @@ namespace qi {
 
       /// \brief Writes a log message to the file if it is part of the first
       ///        length lines.
-      void log(const qi::log::LogLevel verb,
+      void log(const qi::LogLevel verb,
                const qi::os::timeval   date,
                const char              *category,
                const char              *msg,

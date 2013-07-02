@@ -16,7 +16,7 @@
 
 TEST(log, logsync)
 {
-  qi::log::init(qi::log::info, 0, true);
+  qi::log::init(qi::LogLevel_Info, 0, true);
   atexit(qi::log::destroy);
 
    for (int i = 0; i < 1000; i++)
@@ -24,26 +24,6 @@ TEST(log, logsync)
    // Just a test to check for compilation warning.
    if (true)
      qiLogInfo() << "canard";
-}
-
-
-TEST(log, logline)
-{
-  ::qi::log::setContext(0);
-  qi::os::timeval tv;
-  tv.tv_sec = 0;
-  tv.tv_usec = 0;
-  std::stringstream snewline;
-  snewline << std::endl;
-  std::string newline = snewline.str();
-  using qi::detail::logline;
-  EXPECT_EQ(logline(tv, "", "foo", "", "", 0)     , "foo" + newline);
-  EXPECT_EQ(logline(tv, "", "foo\r", "", "", 0)   , "foo" + newline);
-  EXPECT_EQ(logline(tv, "", "foo\n", "", "", 0)   , "foo" + newline);
-  EXPECT_EQ(logline(tv, "", "foo\r\n", "", "", 0) , "foo" + newline);
-  EXPECT_EQ(logline(tv, "", "foo\r\n\n\r\r\n\n\r", "", "", 0) , "foo\r\n\n\r\r\n\n" + newline);
-  EXPECT_EQ(logline(tv, "", "foo\r\n\n\r\r\n\n\r\n", "", "", 0) , "foo\r\n\n\r\r\n\n" + newline);
-  EXPECT_EQ(logline(tv, "", "foo\r\n\n\r\r\n\n\n", "", "", 0) , "foo\r\n\n\r\r\n\n" + newline);
 }
 
 TEST(log, ifCorrectness)
@@ -138,8 +118,11 @@ TEST(log, formatting)
   qi::log::removeLogHandler("copy");
 }
 
-void set (bool& b)
+void set (const char* cat, bool& b)
 {
+  //remove log from the logger itself
+  if (std::string(cat) == "qi.log")
+    return;
   b = true;
 }
 
@@ -148,12 +131,12 @@ TEST(log, filtering)
   #define YES EXPECT_TRUE(tag); tag = false
   #define NO  EXPECT_TRUE(!tag); tag = false // yes false
   bool tag = false;
-  qi::log::addLogHandler("set", boost::bind(&set, boost::ref(tag)));
+  qi::log::SubscriberId id = qi::log::addLogHandler("set", boost::bind(&set, _3, boost::ref(tag)));
   qiLogError("qi.test") << "coin";
   YES;
   NO; // ensure reset works
   // global level
-  qi::log::setVerbosity(qi::log::silent);
+  qi::log::setVerbosity(qi::LogLevel_Silent, id);
   qiLogError("qi.test") << "coin";
   NO;
   {
@@ -161,13 +144,13 @@ TEST(log, filtering)
     qiLogErrorF("coin");
     NO;
   }
-  qi::log::setVerbosity(qi::log::error);
+  qi::log::setVerbosity(qi::LogLevel_Error, id);
   qiLogError("qi.test") << "coin";
   YES;
-  qi::log::disableCategory("qi.test");
+  qi::log::disableCategory("qi.test", id);
   qiLogError("qi.test") << "coin";
   NO;
-  qi::log::enableCategory("qi.test");
+  qi::log::enableCategory("qi.test", id);
   qiLogError("qi.test") << "coin";
   YES;
   {
@@ -177,7 +160,7 @@ TEST(log, filtering)
   }
   // ensure re-enabling category made us debug capable.
   // enable put us at error level, all this soon obsoletized, ignore
-  //qi::log::setVerbosity(qi::log::debug);
+  //qi::log::setVerbosity(qi::LogLevel_Debug);
   //qiLogDebug("qi.test") << "coin";
   //YES;
   // and finish in all-on state
@@ -196,32 +179,30 @@ TEST(log, filteringPerHandler)
   #define NONO NO1; NO2
   bool tag1 = false;
   bool tag2 = false;
-  unsigned int id1 = qi::log::addLogHandler("set1", boost::bind(&set, boost::ref(tag1)));
-  unsigned int id2 = qi::log::addLogHandler("set2", boost::bind(&set, boost::ref(tag2)));
+  unsigned int id1 = qi::log::addLogHandler("set1", boost::bind(&set, _3, boost::ref(tag1)));
+  unsigned int id2 = qi::log::addLogHandler("set2", boost::bind(&set, _3, boost::ref(tag2)));
+  tag1 = tag2 = false;
+
   NONO;
   qiLogError("qi.test") << "coin";
   YESYES;
   NONO;
-  qi::log::setVerbosity(id1, qi::log::silent);
+  qi::log::setVerbosity(qi::LogLevel_Silent, id1);
   qiLogError("qi.test") << "coin";
   NOYES;
-  qi::log::setVerbosity(id2, qi::log::silent);
+  qi::log::setVerbosity(qi::LogLevel_Silent, id2);
   qiLogError("qi.test") << "coin";
   NONO;
-  qi::log::setVerbosity(id1, qi::log::debug);
+  qi::log::setVerbosity(qi::LogLevel_Debug, id1);
   qiLogError("qi.test") << "coin";
   YESNO;
-  qi::log::setCategory(id1, "qi.test", qi::log::silent);
+  qi::log::setCategory("qi.test", qi::LogLevel_Silent, id1);
   qiLogError("qi.test") << "coin";
   NONO;
-  qi::log::setVerbosity(id2, qi::log::debug);
+  qi::log::setVerbosity(qi::LogLevel_Debug, id2);
   qiLogError("qi.test") << "coin";
   NOYES;
-  qi::log::setVerbosity(id1, qi::log::silent);
-  qi::log::setCategory(id1, "qi.test", qi::log::debug);
-  qiLogError("qi.test") << "coin";
-  NOYES;
-  qi::log::setVerbosity(id1, qi::log::debug);
+  qi::log::setVerbosity(qi::LogLevel_Debug, id1);
   qiLogError("qi.test") << "coin";
   YESYES;
   qi::log::removeLogHandler("set1");
@@ -233,15 +214,15 @@ TEST(log, globbing)
   #define YES EXPECT_TRUE(tag); tag = false
   #define NO  EXPECT_TRUE(!tag); tag = false // yes false
   bool tag = false;
-  qi::log::addLogHandler("set", boost::bind(&set, boost::ref(tag)));
+  qi::log::SubscriberId id = qi::log::addLogHandler("set", boost::bind(&set, _3, boost::ref(tag)));
   qiLogError("qi.test") << "coin";
   YES;
   NO; // ensure reset works
-  qi::log::setCategory("qi.*", qi::log::silent);
+  qi::log::setCategory("qi.*", qi::LogLevel_Silent, id);
   qiLogError("qi.test") << "coin";
   NO;
   // No priority or stacking between globbing or exact, they just apply
-  qi::log::setCategory("qi.test", qi::log::verbose);
+  qi::log::setCategory("qi.test", qi::LogLevel_Verbose, id);
   qiLogError("qi.test") << "coin";
   YES;
   // Check globbing applies to new category
@@ -261,7 +242,7 @@ TEST(log, perf)
   // Compare perf of (disabled, enabled) x (QI_LOG, qiLog)
   qi::log::addLogHandler("nothing", boost::bind(&nothing));
   qi::log::removeLogHandler("consoleloghandler");
-  qi::log::setVerbosity(qi::log::info);
+  qi::log::setVerbosity(qi::LogLevel_Info);
   qi::int64_t t;
   qiLogCategory("qi.test");
   long count = 1000;
@@ -334,7 +315,7 @@ TEST(log, jukebox_DISABLED)
 
 TEST(log, emptyLogWithCat)
 {
-  qi::log::init(qi::log::debug, 0, true);
+  qi::log::init(qi::LogLevel_Debug, 0, true);
 
   qiLogDebug("log.test1");
   qiLogVerbose("log.test1");

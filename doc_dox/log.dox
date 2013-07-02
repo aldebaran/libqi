@@ -51,7 +51,7 @@ This allow easy log filtering. Add improve the readablilty into logs GUI.
 The default handler log to console. The color is enable on tty.
 The handler can be added or deleted. You just need to give a delegate to a log function with the following prototype:
 \verbatim
-void logfct(const qi::log::LogLevel verb,
+void logfct(const qi::LogLevel verb,
             const char              *category,
             const char              *msg,
             const char              *file = "",

@@ -35,7 +35,7 @@ the following prototype:
 
 .. code-block:: cpp
 
-    void logfct(const qi::log::LogLevel verbosity,
+    void logfct(const qi::LogLevel verbosity,
                 const char*             category,
                 const char*             message,
                 const char*             filename = "",

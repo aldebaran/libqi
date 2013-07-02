@@ -9,9 +9,9 @@
  * instance at the beginning of your source file or function.
  *
  *
- * Logging is performed by invoking the QI_LOG_* macro families, one
- * per severity level: QI_LOG_ERROR, QI_LOG_WARNING, QI_LOG_INFO, QI_LOG_VERBOSE
- * and QI_LOG_DEBUG.
+ * Logging is performed by invoking the QiLog* macro families, one
+ * per severity level: QiLogError, QiLogWarning, QiLogInfo, QiLogVerbose,
+ * and QiLogDebug.
  * Those macros accept either a format syntax inside them,
  * or a stream syntax outside.
  *
@@ -30,16 +30,13 @@
  *
  * Listeners for all log messages can be added with addLogHandler().
  *
- * Logs can be filtered at multiple levels:
- *  - A global cap on severity through setVerbosity()
- *  - A per-category cap with setCategory().
- *  - A per-listener per-category cap with setCategory()
+ * Logs can be filtered per-listener per-category with setCategory()
  * Globbing is supported each time a category name must be specified:
  *
  * \verbatim
  *   setCategory("internal.*", silent);
  *
- * One can also set a filtering rule in QI_LOG_CATEGORIES environment variable.
+ * One can also set a filtering rule in QI_LOG_FILTERS environment variable.
  * syntax is colon-separated list of rules of the form (+|-)CAT or CAT=level.
  * For example, -internal.*:file=verbose
  *
@@ -91,30 +88,30 @@
 
 
 /**
- * \enum qi::log::LogLevel
+ * \enum qi::LogLevel
  * \brief Log level verbosity.
  */
 
 /**
- * \var qi::log::silent
+ * \var qi::LogLevel_Silent
  * \brief silent log level
  *
- * \var qi::log::LogLevel::fatal
+ * \var qi::LogLevel_Fatal
  * \brief fatal log level
  *
- * \var qi::log::error
+ * \var qi::LogLevel_Error
  * \brief error log level
  *
- * \var qi::log::warning
+ * \var qi::LogLevel_Warning
  * \brief warning log level
  *
- * \var qi::log::info
+ * \var qi::LogLevel_Info
  * \brief info log level
  *
- * \var qi::log::verbose
+ * \var qi::LogLevel_Verbose
  * \brief verbose log level
  *
- * \var qi::log::debug
+ * \var qi::LogLevel_Debug
  * \brief debug log level
  */
 
@@ -125,7 +122,7 @@
  */
 
 /**
- * \fn qi::log::init(qi::log::LogLevel, int, bool)
+ * \fn qi::log::init(qi::LogLevel, int, bool)
  * \brief init the logging system (could be avoided)
  * \param verb Log verbosity
  * \param ctx Display Context
@@ -148,7 +145,7 @@
  */
 
 /**
- * \fn qi::log::log(const qi::log::LogLevel, const char*, const char*, const char*, const char*, const int)
+ * \fn qi::log::log(const qi::LogLevel, const char*, const char*, const char*, const char*, const int)
  * \brief Log function. You should call qiLog* macros instead.
  *
  * \param verb The verbosity of the message.
@@ -160,7 +157,7 @@
  */
 
 /**
- * \fn qi::log::logLevelToString(const qi::log::LogLevel)
+ * \fn qi::log::logLevelToString(const qi::LogLevel)
  * \brief Convert log verbosity to a readable string.
  * \param verb Verbosity value.
  * \return Returns a string matching the log level verbosity.
@@ -176,7 +173,7 @@
 
 
 /**
- * \fn qi::log::setVerbosity(const qi::log::LogLevel);
+ * \fn qi::log::setVerbosity(qi::LogLevel, SubscriberId);
  * \brief Set log verbosity.
  * \param lv Maximal verbosity level shown in the logs.
  *
@@ -191,7 +188,7 @@
 
 
 /**
- * \fn qi::log::setContext(int);
+ * \fn qi::log::setContext(qi::LogContext);
  * \brief Set log context verbosity.
  *
  * Display log context (line, function, file).

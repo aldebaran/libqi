@@ -47,66 +47,42 @@
 #define FUNC_SIZE 64
 #define LOG_SIZE 2048
 
+qiLogCategory("qi.log");
+
 namespace qi {
   namespace detail {
-    int categoriesFromContext()
-    {
-      int ret = LOG_VERBOSITY;
-      switch (qi::log::context())
-      {
-        case 1:
-          ret |= LOG_CATEGORY;
-          break;
-        case 2:
-          ret |= LOG_DATE;
-          break;
-        case 3:
-          ret |= LOG_FILE;
-          break;
-        case 4:
-          ret |= LOG_DATE | LOG_CATEGORY;
-          break;
-        case 5:
-          ret |= LOG_DATE | LOG_FILE;
-          break;
-        case 6:
-          ret |= LOG_CATEGORY | LOG_FILE;
-          break;
-        case 7:
-          ret |= LOG_DATE | LOG_TID | LOG_CATEGORY | LOG_FILE | LOG_FUNCTION;
-          break;
-      }
-      return ret;
-    }
 
-    std::string logline(const              os::timeval date,
+    std::string logline(LogContext         context,
+                        const              os::timeval date,
                         const char        *category,
                         const char        *msg,
                         const char        *file,
                         const char        *fct,
                         const int          line,
-                        const qi::log::LogLevel     verb
-                       )
+                        const qi::LogLevel verb)
     {
-      int categories = qi::detail::categoriesFromContext();
       std::stringstream logline;
 
-      if (verb != qi::log::silent && categories & qi::detail::LOG_VERBOSITY)
+      if (context & qi::LogContextAttr_Verbosity)
         logline << qi::log::logLevelToString(verb) << " ";
-      if (categories & qi::detail::LOG_DATE)
+      if (context & qi::LogContextAttr_ShortVerbosity)
+        logline << qi::log::logLevelToString(verb, false) << " ";
+      if (context & qi::LogContextAttr_Date)
         logline << qi::detail::dateToString(date) << " ";
-      if (categories & qi::detail::LOG_TID)
+      if (context & qi::LogContextAttr_Tid)
         logline << qi::detail::tidToString() << " ";
-      if (categories & qi::detail::LOG_CATEGORY)
-        logline << qi::detail::categoryToFixedCategory(category) << ": ";
-      if (categories & qi::detail::LOG_FILE) {
+      if (context & qi::LogContextAttr_Category)
+        logline << category << ": ";
+      if (context & qi::LogContextAttr_File) {
         logline << file;
         if (line != 0)
           logline << "(" << line << ")";
         logline << " ";
       }
-      if (categories & qi::detail::LOG_FUNCTION)
+      if (context & qi::LogContextAttr_Function)
         logline << fct << "() ";
+      if (context & qi::LogContextAttr_Return)
+        logline << std::endl;
       logline.write(msg, qi::detail::rtrim(msg));
       logline << std::endl;
 
@@ -131,16 +107,6 @@ namespace qi {
       return ss.str();
     }
 
-    const std::string categoryToFixedCategory(const char *category, int size)
-    {
-      if (size == 0)
-        return std::string(category);
-
-      std::string fixedCategory = category;
-      fixedCategory.resize(size, ' ');
-      return fixedCategory;
-    }
-
     /* Emulate previous behavior that ensured a single newline was
     * present at the end on message.
     */
@@ -161,7 +127,7 @@ namespace qi {
 
     typedef struct sPrivateLog
     {
-      LogLevel        _logLevel;
+      qi::LogLevel    _logLevel;
       char            _category[CAT_SIZE];
       char            _file[FILE_SIZE];
       char            _function[FUNC_SIZE];
@@ -179,28 +145,27 @@ namespace qi {
       struct Handler
       {
         logFuncHandler func;
-        unsigned int index; // index of this handler in category levels
-        LogLevel verbosity; // max verbosity this handler accepts
+        unsigned int   index; // index of this handler in category levels
       };
 
       void run();
       void printLog();
       // Invoke handlers who enabled given level/category
-      void dispatch(const qi::log::LogLevel,
+      void dispatch(const qi::LogLevel,
                     const qi::os::timeval,
                     const char*,
                     const char*,
                     const char*,
                     const char*,
                     int);
-      void dispatch(const qi::log::LogLevel level,
+      void dispatch(const qi::LogLevel level,
                     const qi::os::timeval date,
                     detail::Category& category,
                     const char* log,
                     const char* file,
                     const char* function,
                     int line);
-      Handler* logHandler(Subscriber id);
+      Handler* logHandler(SubscriberId id);
     public:
       bool                       LogInit;
       boost::thread              LogThread;
@@ -224,22 +189,27 @@ namespace qi {
     // in mind, in case a new category that matches the glob is created.
     struct GlobRule
     {
-      GlobRule(std::string t, unsigned int i, LogLevel l)
-      : target(t) , id(i), level(l) {}
+      GlobRule(std::string t, unsigned int i, qi::LogLevel l)
+      : target(t)
+      , id(i)
+      , level(l)
+      {}
+
       bool matches(const std::string& n) const
       {
         return os::fnmatch(target, n);
       }
-      std::string target; // glob target
-      unsigned int id; // listener id or -1 for all
-      LogLevel level;
-      static const unsigned int ALL = 0xFFFF; // std::numeric_limits<unsigned int>
+
+      std::string  target;       // glob target
+      unsigned int id;           // listener id or -1 for all
+      qi::LogLevel level;
     };
-    std::vector<GlobRule> _glGlobRules;
+
+    static std::vector<GlobRule> _glGlobRules;
 
     // categories must be accessible at static init: cannot go in Log class
     typedef std::map<std::string, detail::Category*> CategoryMap;
-    static CategoryMap*   _glCategories = 0;
+    static CategoryMap* _glCategories = 0;
     inline CategoryMap& _categories()
     {
       if (!_glCategories)
@@ -247,22 +217,18 @@ namespace qi {
       return *_glCategories;
     }
 
-    static LogLevel               _glVerbosity = qi::log::info;
-    static int                    _glContext = false;
+    static int                    _glContext = 0;
     static bool                   _glSyncLog = false;
     static bool                   _glInit    = false;
-    static ConsoleLogHandler      *_glConsoleLogHandler;
-    static ColorWhen              _glColorWhen = COLOR_AUTO;
+    static ConsoleLogHandler     *_glConsoleLogHandler;
+    static LogColor              _glColorWhen = LogColor_Auto;
 
-    static Log                    *LogInstance;
+    static Log                   *LogInstance;
     static privateLog             LogBuffer[RTLOG_BUFFERS];
     static volatile unsigned long LogPush = 0;
 
     namespace detail {
-      LogLevel* globalLogLevelPtr()
-      {
-        return &_glVerbosity;
-      }
+
       // This pattern allows to continue logging at static destruction time
       // even if the static FormatMap is destroyed
       class FormatMap: public boost::unordered_map<std::string, boost::format>
@@ -283,8 +249,7 @@ namespace qi {
         bool& ward_;
       };
 
-      boost::format
-      getFormat(const std::string& s)
+      boost::format getFormat(const std::string& s)
       {
         static bool map_ok(false);
         static FormatMap map(map_ok);
@@ -312,23 +277,23 @@ namespace qi {
       }
     }
 
+    namespace detail {
+      void Category::setLevel(SubscriberId sub, qi::LogLevel level)
+      {
+        if (levels.size() <= sub)
+          levels.resize(sub + 1, LogLevel_Debug);
+        levels[sub] = level;
+        maxLevel = *std::max_element(levels.begin(), levels.end());
+      }
+    }
+
     // check and apply existing glob if they match given category
     static void checkGlobs(detail::Category* cat)
     {
-      for (unsigned i=0; i<_glGlobRules.size(); ++i)
-      {
+      for (unsigned i=0; i<_glGlobRules.size(); ++i) {
         GlobRule& g = _glGlobRules[i];
         if (g.matches(cat->name))
-        {
-          if (g.id != GlobRule::ALL)
-          {
-            if (cat->levels.size() <= g.id)
-              cat->levels.resize(g.id + 1, debug);
-            cat->levels[g.id] = g.level;
-          }
-          else
-            cat->mainLevel = g.level;
-        }
+          cat->setLevel(g.id, g.level);
       }
     }
 
@@ -339,17 +304,9 @@ namespace qi {
       for (CategoryMap::iterator it = c.begin(); it != c.end(); ++it)
       {
         assert(it->first == it->second->name);
-        if (g.matches(it->first))
-        {
+        if (g.matches(it->first)) {
           detail::Category* cat = it->second;
-          if (g.id != GlobRule::ALL)
-          {
-            if (cat->levels.size() <= g.id)
-              cat->levels.resize(g.id + 1, debug);
-            cat->levels[g.id] = g.level;
-          }
-          else
-            cat->mainLevel = g.level;
+          cat->setLevel(g.id, g.level);
         }
       }
     }
@@ -407,7 +364,7 @@ namespace qi {
       }
     }
 
-    void Log::dispatch(const qi::log::LogLevel level,
+    void Log::dispatch(const qi::LogLevel level,
                        const qi::os::timeval date,
                        const char*  category,
                        const char* log,
@@ -418,7 +375,7 @@ namespace qi {
       dispatch(level, date, *addCategory(category), log, file, function, line);
     }
 
-    void Log::dispatch(const qi::log::LogLevel level,
+    void Log::dispatch(const qi::LogLevel level,
                        const qi::os::timeval date,
                        detail::Category& category,
                        const char* log,
@@ -429,12 +386,11 @@ namespace qi {
       if (!logHandlers.empty())
       {
         LogHandlerMap::iterator it;
-        for (it = logHandlers.begin();
-               it != logHandlers.end(); ++it)
+        for (it = logHandlers.begin(); it != logHandlers.end(); ++it)
         {
           Handler& h = it->second;
           unsigned int index = h.index;
-          if (h.verbosity >= level && (category.levels.size() <= index || category.levels[index] >= level))
+          if (category.levels.size() <= index || category.levels[index] >= level)
             h.func(level, date, category.name.c_str(), log, file, function, line);
         }
       }
@@ -487,7 +443,7 @@ namespace qi {
      #endif
     }
 
-    void init(qi::log::LogLevel verb,
+    void init(qi::LogLevel verb,
               int ctx,
               bool synchronous)
     {
@@ -525,9 +481,9 @@ namespace qi {
         LogInstance->printLog();
     }
 
-    void log(const LogLevel        verb,
-             category_type        category,
-             const std::string&   msg,
+    void log(const qi::LogLevel    verb,
+             CategoryType          category,
+             const std::string&    msg,
              const char           *file,
              const char           *fct,
              const int             line)
@@ -547,7 +503,7 @@ namespace qi {
       log(verb, category->name.c_str(), msg.c_str(), file, fct, line);
     }
 
-    void log(const LogLevel        verb,
+    void log(const qi::LogLevel    verb,
              const char           *category,
              const char           *msg,
              const char           *file,
@@ -607,7 +563,7 @@ namespace qi {
       }
     }
 
-    Log::Handler* Log::logHandler(Subscriber id)
+    Log::Handler* Log::logHandler(SubscriberId id)
     {
        boost::mutex::scoped_lock l(LogInstance->LogHandlerLock);
        LogHandlerMap::iterator it;
@@ -619,7 +575,7 @@ namespace qi {
        return 0;
     }
 
-    Subscriber addLogHandler(const std::string& name, logFuncHandler fct)
+    SubscriberId addLogHandler(const std::string& name, logFuncHandler fct)
     {
       if (!LogInstance)
         return -1;
@@ -629,7 +585,6 @@ namespace qi {
       Log::Handler h;
       h.index = id;
       h.func = fct;
-      h.verbosity = debug;
       LogInstance->logHandlers[name] = h;
       return id;
     }
@@ -642,29 +597,38 @@ namespace qi {
       LogInstance->logHandlers.erase(name);
     }
 
-    LogLevel stringToLogLevel(const char* verb)
+    qi::LogLevel stringToLogLevel(const char* verb)
     {
       std::string v(verb);
-      if (v == "silent")
-        return qi::log::silent;
-      if (v == "fatal")
-        return qi::log::fatal;
-      if (v == "error")
-        return qi::log::error;
-      if (v == "warning")
-        return qi::log::warning;
-      if (v == "info")
-        return qi::log::info;
-      if (v == "verbose")
-        return qi::log::verbose;
-      if (v == "debug")
-        return qi::log::debug;
-      return qi::log::info;
+      if (v == "silent" || v == "0")
+        return qi::LogLevel_Silent;
+      if (v == "fatal" || v == "1")
+        return qi::LogLevel_Fatal;
+      if (v == "error" || v == "2")
+        return qi::LogLevel_Error;
+      if (v == "warning" || v == "3")
+        return qi::LogLevel_Warning;
+      if (v == "info" || v == "4")
+        return qi::LogLevel_Info;
+      if (v == "verbose" || v == "5")
+        return qi::LogLevel_Verbose;
+      if (v == "debug" || v == "6")
+        return qi::LogLevel_Debug;
+      return qi::LogLevel_Info;
     }
 
-    const char *logLevelToString(const LogLevel verb)
+    const char *logLevelToString(const qi::LogLevel level, bool verbose)
     {
       static const char *sverb[] = {
+        "[SILENT]", // never shown
+        "[F]",
+        "[E]",
+        "[W]",
+        "[I]",
+        "[V]",
+        "[D]"
+      };
+      static const char *verb[] = {
         "[SILENT]", // never shown
         "[FATAL]",
         "[ERROR]",
@@ -673,26 +637,22 @@ namespace qi {
         "[VERB ]",
         "[DEBUG]"
       };
-      return sverb[verb];
+      if (verbose)
+        return verb[level];
+      return sverb[level];
     }
 
-    void setVerbosity(const LogLevel lv)
+    qi::LogLevel verbosity(SubscriberId sub)
     {
-      _glVerbosity = lv;
-
-      qiLogVerbose("qi.log") << "Verbosity set to " << _glVerbosity;
-    };
-
-    LogLevel verbosity()
-    {
-      return _glVerbosity;
+      CategoryType cat = addCategory("*");
+      if (sub < cat->levels.size())
+        cat->levels[sub];
+      return LogLevel_Info;
     };
 
     void setContext(int ctx)
     {
-
       _glContext = ctx;
-
       qiLogVerbose("qi.log") << "Context set to " << _glContext;
     };
 
@@ -701,13 +661,13 @@ namespace qi {
       return _glContext;
     };
 
-    void setColor(ColorWhen color)
+    void setColor(LogColor color)
     {
       _glColorWhen = color;
       _glConsoleLogHandler->updateColor();
     };
 
-    ColorWhen color()
+    LogColor color()
     {
       return _glColorWhen;
     }
@@ -717,15 +677,13 @@ namespace qi {
       _glSyncLog = sync;
     };
 
-    category_type addCategory(const std::string& name)
+    CategoryType addCategory(const std::string& name)
     {
       CategoryMap& c = _categories();
       CategoryMap::iterator i = c.find(name);
       if (i == c.end())
       {
-        detail::Category* res = new detail::Category;
-        res->name = name;
-        res->mainLevel = debug;
+        detail::Category* res = new detail::Category(name);
         c[name] = res;
         checkGlobs(res);
         return res;
@@ -734,40 +692,29 @@ namespace qi {
         return i->second;
     }
 
-    bool isVisible(const std::string& category, LogLevel level)
+    bool isVisible(const std::string& category, qi::LogLevel level)
     {
       return log::isVisible(addCategory(category), level);
     }
 
-    bool isVisible(category_type category, LogLevel level)
+    bool isVisible(CategoryType category, qi::LogLevel level)
     {
       return detail::isVisible(category, level);
     }
 
-    void enableCategory(const std::string& cat)
+    void enableCategory(const std::string& cat, SubscriberId sub)
     {
-      setCategory(cat, _glVerbosity);
+      setCategory(cat, verbosity(sub), sub);
     }
 
-    void disableCategory(const std::string& cat)
+    void disableCategory(const std::string& cat, SubscriberId sub)
     {
-      setCategory(cat, silent);
+      setCategory(cat, LogLevel_Silent, sub);
     }
 
-    void setCategory(const std::string& cat, LogLevel level)
+    void setCategory(const std::string& catName, qi::LogLevel level, SubscriberId sub)
     {
-      if (cat.find('*') != cat.npos)
-      {
-        GlobRule rule(cat, GlobRule::ALL, level);
-        applyGlob(rule);
-        mergeGlob(rule);
-      }
-      else
-        addCategory(cat)->mainLevel = level;
-    }
-
-    void setCategory(Subscriber sub, const std::string& catName, LogLevel level)
-    {
+      qiLogVerbose() << "setCategory(cat=" << catName << ", level=" << (int)level << ", sub=" << (int)sub << ")";
       if (catName.find('*') != catName.npos)
       {
         GlobRule rule(catName, sub, level);
@@ -776,10 +723,8 @@ namespace qi {
       }
       else
       {
-        category_type cat = addCategory(catName);
-        if (cat->levels.size() <= sub)
-          cat->levels.resize(sub + 1, debug);
-        cat->levels[sub] = level;
+        CategoryType cat = addCategory(catName);
+        cat->setLevel(sub, level);
       }
     }
 
@@ -792,12 +737,12 @@ namespace qi {
       return res;
     }
 
-    void setVerbosity(Subscriber sub, LogLevel level)
+    void setVerbosity(qi::LogLevel level, SubscriberId sub)
     {
-      LogInstance->logHandler(sub)->verbosity = level;
+      setCategory("*", level, sub);
     }
 
-    void setVerbosity(const std::string& rules)
+    void setVerbosity(const std::string& rules, SubscriberId sub)
     {
       // See doc in header for format
       size_t pos = 0;
@@ -823,15 +768,15 @@ namespace qi {
         {
           std::string sLevel = token.substr(sep+1);
           std::string cat = token.substr(0, sep);
-          LogLevel level = stringToLogLevel(sLevel.c_str());
-          setCategory(cat, level);
+          qi::LogLevel level = stringToLogLevel(sLevel.c_str());
+          setCategory(cat, level, sub);
         }
         else
         {
           if (token[0] == '-')
-            setCategory(token.substr(1), silent);
+            setCategory(token.substr(1), LogLevel_Silent, sub);
           else
-            setCategory(token, debug);
+            setCategory(token, LogLevel_Debug, sub);
         }
         if (next == rules.npos)
           break;
@@ -841,54 +786,57 @@ namespace qi {
 
     static void _setVerbosityInt(int v)
     {
-      setVerbosity((LogLevel)v);
+      setVerbosity((qi::LogLevel)v);
     }
 
     static void _setVerbose(bool on)
     {
       if (on)
-        setVerbosity(verbose);
+        setVerbosity(LogLevel_Verbose);
     }
+
     static void _setDebug(bool on)
     {
       if (on)
-        setVerbosity(debug);
+        setVerbosity(LogLevel_Debug);
     }
+
     static void _quiet(bool on)
     {
       if (on)
         removeLogHandler("consoleloghandler");
     }
+
     static void _setColor(const std::string &color)
     {
       if (color == "always")
-        setColor(COLOR_ALWAYS);
+        setColor(LogColor_Always);
       else if (color == "never")
-        setColor(COLOR_NEVER);
+        setColor(LogColor_Never);
       else
-        setColor(COLOR_AUTO);
+        setColor(LogColor_Auto);
     }
 
     _QI_COMMAND_LINE_OPTIONS(
       "Logging options",
-      ("verbose,v", bool_switch()->notifier(&_setVerbose), "Set verbose verbosity.")
-      ("debug,d", bool_switch()->notifier(&_setDebug), "Set debug verbosity.")
-      ("quiet,q",  bool_switch()->notifier(&_quiet), "Do not show logs on console.")
-      ("context,c", value<int>()->notifier(&setContext), "Show context logs: [0-7] (0: none, 1: categories, 2: date, 3: file+line, 4: date+categories, 5: date+line+file, 6: categories+line+file, 7: all (date+categories+line+file+function)).")
-      ("synchronous-log", bool_switch()->notifier(boost::bind(&setSynchronousLog, true)),  "Activate synchronous logs.")
-      ("log-level,L", value<int>()->notifier(&_setVerbosityInt), "Change the log minimum level: [0-6] (0: silent, 1: fatal, 2: error, 3: warning, 4: info, 5: verbose, 6: debug). Default: 4 (info)")
-      ("color", value<std::string>()->notifier(&_setColor), "Tell if we should put color or not in log (auto, always, never).")
+      ("qi-log-verbose", bool_switch()->notifier(&_setVerbose), "Set verbose verbosity.")
+      ("qi-log-debug", bool_switch()->notifier(&_setDebug), "Set debug verbosity.")
+      ("qi-log-quiet",  bool_switch()->notifier(&_quiet), "Do not show logs on console.")
+      ("qi-log-context", value<int>()->notifier(&setContext), "Show context logs: [0-7] (0: none, 1: categories, 2: date, 3: file+line, 4: date+categories, 5: date+line+file, 6: categories+line+file, 7: all (date+categories+line+file+function)).")
+      ("qi-log-synchronous", bool_switch()->notifier(boost::bind(&setSynchronousLog, true)),  "Activate synchronous logs.")
+      ("qi-log-level", value<int>()->notifier(&_setVerbosityInt), "Change the log minimum level: [0-6] (0: silent, 1: fatal, 2: error, 3: warning, 4: info, 5: verbose, 6: debug). Default: 4 (info)")
+      ("qi-log-color", value<std::string>()->notifier(&_setColor), "Tell if we should put color or not in log (auto, always, never).")
       )
 
     int process_env()
     {
-      const char* verbose = std::getenv("VERBOSE");
+      const char* verbose = std::getenv("QI_LOG_LEVEL");
       if (verbose)
-        setVerbosity((LogLevel)atoi(verbose));
-      const char *context = std::getenv("CONTEXT");
+        setVerbosity(stringToLogLevel(verbose));
+      const char *context = std::getenv("QI_LOG_CONTEXT");
       if (context)
         _glContext = (atoi(context));
-      const char* rules = std::getenv("QI_LOG_CATEGORIES");
+      const char* rules = std::getenv("QI_LOG_FILTERS");
       if (rules)
         setVerbosity(rules);
       return 0;
@@ -897,12 +845,3 @@ namespace qi {
   } // namespace log
 } // namespace qi
 
-
-
-namespace
-{
-  // trick to avoid wrapping in a function: setCategory returns void so can't
-  // be used in expr.
-  static bool __unused_debug = qi::os::getenv("QI_DEBUG").empty()
-    && (::qi::log::setCategory("qi.*", ::qi::log::info), false);
-}

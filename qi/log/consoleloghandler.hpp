@@ -29,7 +29,7 @@ namespace qi {
       ~ConsoleLogHandler();
 
       /// Prints a log message on the console.
-      void log(const qi::log::LogLevel verb,
+      void log(const qi::LogLevel verb,
                const qi::os::timeval   date,
                const char              *category,
                const char              *msg,
