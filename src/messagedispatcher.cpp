@@ -95,9 +95,9 @@ namespace qi {
     // or deadlock may occur as disconnect() waits for
     // handlers to finish before returning.
     boost::shared_ptr<OnMessageSignal> sig;
-    SignalMap::iterator it;
     {
       boost::recursive_mutex::scoped_lock sl(_signalMapMutex);
+      SignalMap::iterator it;
       it = _signalMap.find(Target(serviceId, objectId));
       if (it != _signalMap.end())
         sig = it->second;
@@ -105,9 +105,15 @@ namespace qi {
         return false;
     }
     bool ok = sig->disconnect(linkId);
-    boost::recursive_mutex::scoped_lock sl(_signalMapMutex);
-    if (sig->subscribers().empty())
-      _signalMap.erase(it);
+    if (!sig->hasSubscribers())
+    {
+      // We need to re-acquire lock and check emptyness when locked
+       boost::recursive_mutex::scoped_lock sl(_signalMapMutex);
+       SignalMap::iterator it;
+       it = _signalMap.find(Target(serviceId, objectId));
+       if (it != _signalMap.end() && !it->second->hasSubscribers())
+         _signalMap.erase(it);
+    }
     return ok;
   }
 
