@@ -86,6 +86,14 @@ public class EmbeddedTools
   }
 
   /**
+   * Override directory where native libraries are extracted.
+   */
+  public void overrideTempDirectory(File newValue)
+  {
+    tmpDir = newValue;
+  }
+
+  /**
    * Native C++ librairies are package with java sources.
    * This way, we are able to load them anywhere, anytime.
    */
@@ -112,9 +120,11 @@ public class EmbeddedTools
       return false;
     }
 
+    System.out.printf("Libraries loaded. Initializing type system...\n");
     LOADED_EMBEDDED_LIBRARY = true;
     if (initTypeSystem() == false)
     {
+      System.out.printf("Cannot initialize type system\n");
       LOADED_EMBEDDED_LIBRARY = false;
       return false;
     }
@@ -145,6 +155,14 @@ public class EmbeddedTools
         return false;
       }
       return true;
+    }
+
+    // Delete if already exists
+    File toDelete = new File(tmpDir.getAbsolutePath() + path.toString());
+    if (toDelete.exists())
+    {
+      System.out.printf("Deleting %s\n", toDelete.getAbsolutePath());
+      toDelete.delete();
     }
 
     // Extract and load native library
@@ -182,7 +200,13 @@ public class EmbeddedTools
     }
     catch (IOException x)
     {
-      usingEmbedded = false;
+      System.out.printf("Cannot extract native library %s: %s\n", libname, x);
+      return false;
+    }
+    catch (UnsatisfiedLinkError e)
+    {
+      System.out.printf("Cannot load native library %s: %s\n", libname, e);
+      return false;
     }
 
     return usingEmbedded;
