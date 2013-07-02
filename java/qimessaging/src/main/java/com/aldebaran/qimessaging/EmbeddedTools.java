@@ -144,17 +144,8 @@ public class EmbeddedTools
     URL nativeLibrary = null;
     if ((nativeLibrary = EmbeddedTools.class.getResource(path.toString())) == null)
     {
-      try
-      {
-        System.loadLibrary(libname);
-      }
-      catch (UnsatisfiedLinkError e)
-      {
-        if (libname != "libgnustl_shared") // Disable warning to avoid false positive.
-          System.out.printf("[WARN ] Unsatified link error : %s\n", e.getMessage());
-        return false;
-      }
-      return true;
+      System.out.printf("Cannot find %s in ressource\n", path.toString());
+      return false;
     }
 
     // Make sure there is enough space
@@ -229,7 +220,7 @@ public class EmbeddedTools
       }
       else
       {
-        System.out.printf("%s does not exists\n", toDelete.getAbsolutePath());
+        System.out.printf("Cannot delete %s: Does not exist\n", toDelete.getAbsolutePath());
       }
 
     } catch (Exception e)
