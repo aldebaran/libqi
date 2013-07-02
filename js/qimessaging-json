@@ -49,7 +49,7 @@ class QiMessagingHandler(tornadio2.conn.SocketConnection):
 
     def do_reply(self, idm):
         def rep(fut):
-            if fut.has_error():
+            if fut.hasError():
                 self.reply(idm, "error", fut.error())
             else:
                 self.reply(idm, "reply", fut.value())
@@ -57,7 +57,7 @@ class QiMessagingHandler(tornadio2.conn.SocketConnection):
 
     def do_service(self, idm, service):
         def cb(fut):
-            if fut.has_error():
+            if fut.hasError():
                  self.reply(idm, "error", fut.error())
             else:
                  self.reply(idm, "reply", (service, fut.value()))
@@ -71,17 +71,17 @@ class QiMessagingHandler(tornadio2.conn.SocketConnection):
             args = params["args"]
             if service == "ServiceDirectory" and method == "service":
                 f = self.qim.service(str(args[0]), _async = True)
-                f.add_callback(self.do_service(idm, args[0]))
+                f.addCallback(self.do_service(idm, args[0]))
             elif method == "registerEvent":
                 obj = self.qim.service(str(service))
                 evt = getattr(obj, args[0])
                 f = evt.connect(self.do_callback(service, args[0]), _async = True)
-                f.add_callback(self.do_reply(idm))
+                f.addCallback(self.do_reply(idm))
             elif method == "unregisterEvent":
                 obj = self.qim.service(str(service))
                 evt = getattr(obj, args[0])
                 f = evt.disconnect(args[1], _async = True)
-                f.add_callback(self.do_reply(idm))
+                f.addCallback(self.do_reply(idm))
             else:
                 obj = self.qim.service(str(service))
                 met = getattr(obj, method)
@@ -89,7 +89,7 @@ class QiMessagingHandler(tornadio2.conn.SocketConnection):
                     fut = met(_async = True)
                 else:
                     fut = met(*args, _async = True)
-                fut.add_callback(self.do_reply(idm))
+                fut.addCallback(self.do_reply(idm))
         except (AttributeError, RuntimeError) as exc:
             self.reply(idm, 'error', str(exc))
 
