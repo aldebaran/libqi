@@ -86,14 +86,6 @@ public class EmbeddedTools
   }
 
   /**
-   * Override directory where native libraries are extracted.
-   */
-  public void overrideTempDirectory(File newValue)
-  {
-    tmpDir = newValue;
-  }
-
-  /**
    * Native C++ librairies are package with java sources.
    * This way, we are able to load them anywhere, anytime.
    */
