@@ -475,6 +475,14 @@ namespace qi {
     return res;
   }
 
+  bool SignalBase::hasSubscribers()
+  {
+    if (!_p)
+      return false;
+    boost::recursive_mutex::scoped_lock sl(_p->mutex);
+    return !_p->subscriberMap.empty();
+  }
+
   bool SignalBasePrivate::reset() {
     bool ret = true;
     boost::recursive_mutex::scoped_lock sl(mutex);

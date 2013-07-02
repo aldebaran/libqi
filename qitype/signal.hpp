@@ -88,6 +88,7 @@ namespace qi {
       qi::AutoAnyReference p8 = qi::AutoAnyReference());
 
     std::vector<SignalSubscriber> subscribers();
+    bool hasSubscribers();
     static const SignalLink invalidSignalLink;
   public:
     void _setSignature(const Signature &s);
