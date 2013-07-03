@@ -128,7 +128,18 @@ namespace qi
       {
         qi::os::setCurrentThreadName(tpWorker);
         ++_activeWorkers;
-        (*task)();
+        try
+        {
+          (*task)();
+        }
+        catch(const std::exception& e)
+        {
+          qiLogError() << std::string("Exception caught in thread pool task: ") + e.what();
+        }
+        catch(...)
+        {
+          qiLogError() << "Unknown xception caught in thread pool task";
+        }
         delete task;
         --_activeWorkers;
         qi::os::setCurrentThreadName(tpIdle);
