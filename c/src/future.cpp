@@ -26,7 +26,7 @@ extern "C"
 
 
 //##Warning: please update qipy_promise_cancelable_create if you change something with the placement new.
-qi_promise_t* qi_promise_create()
+qi_promise_t* qi_promise_create(int async)
 {
   //use placement new, because the other ctor do, and we want the same destroy impl.
   qi_promise_t *mem = (qi_promise_t *)malloc(sizeof(qi::Promise<qi::AnyValue>));
@@ -34,11 +34,12 @@ qi_promise_t* qi_promise_create()
   return mem;
 }
 
-qi_promise_t* qi_promise_cancelable_create(qi_future_cancel_t cb, void *user_data)
+qi_promise_t* qi_promise_cancelable_create(int async, qi_future_cancel_t cb, void *user_data)
 {
   //use a placement new to have qi_promise_t before constructing the object
   qi_promise_t *mem = (qi_promise_t *)malloc(sizeof(qi::Promise<qi::AnyValue>));
-  new(mem) qi::Promise<qi::AnyValue>(boost::bind<void>(cb, mem, user_data));
+  qi::FutureCallbackType fct = async != 0 ? qi::FutureCallbackType_Async : qi::FutureCallbackType_Sync;
+  new(mem) qi::Promise<qi::AnyValue>(boost::bind<void>(cb, mem, user_data), fct);
   return mem;
 }
 

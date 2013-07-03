@@ -150,17 +150,21 @@ called = False
 
 def test_future_callback():
 
+    result = Promise()
+
     def callback(f):
         global called
         assert f.isRunning() is False
         assert f.value() == 1337
         assert called is False
         called = "aight"
+        result.set_value("bim")
 
     p = Promise()
     f = p.future()
     f.addCallback(callback)
     p.setValue(1337)
+    result.future().wait(1000)
     assert called == "aight"
     assert not f.isCanceled()
     assert f.isFinished()
@@ -169,19 +173,26 @@ def test_future_callback():
 called1, called2 = "", ""
 def test_future_two_callbacks():
 
+    result1 = Promise()
+    result2 = Promise()
     def callback1(f):
         global called1
         called1 = "1"
+        result1.set_value("bim")
 
     def callback2(f):
         global called2
         called2 = "2"
+        result2.set_value("bim")
 
     p = Promise()
     f = p.future()
     f.addCallback(callback1)
     f.addCallback(callback2)
     p.setValue(42)
+
+    result1.future().wait(1000)
+    result2.future().wait(1000)
 
     assert called1 == "1"
     assert called2 == "2"

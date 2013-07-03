@@ -129,7 +129,7 @@ namespace qi {
 
   //retrieve the metaObject from the network
   qi::Future<void> RemoteObject::fetchMetaObject() {
-    qi::Promise<void> prom;
+    qi::Promise<void> prom(qi::FutureCallbackType_Sync);
     qi::Future<qi::MetaObject> fut = _self->call<qi::MetaObject>("metaObject", 0U);
     fut.connect(boost::bind<void>(&RemoteObject::onMetaObject, this, _1, prom));
     return prom.future();
@@ -333,7 +333,7 @@ namespace qi {
 
   qi::Future<SignalLink> RemoteObject::metaConnect(unsigned int event, const SignalSubscriber& sub)
   {
-    qi::Promise<SignalLink> prom;
+    qi::Promise<SignalLink> prom(qi::FutureCallbackType_Sync);
 
     // Bind the subscriber locally.
     SignalLink uid = DynamicObject::metaConnect(event, sub);

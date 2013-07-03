@@ -7,6 +7,8 @@
 
 #include <qic/future.h>
 #include <qic/value.h>
+
+#include <qi/os.hpp> // that's cheating!
 #include <gtest/gtest.h>
 
 bool isCallbackCalled = false;
@@ -31,6 +33,7 @@ void future_callback_simple(qi_future_t* fut, void *data)
 
 TEST(TestFuture, SimpleType)
 {
+  isCallbackCalled = false;
   qi_value_t *val = qi_value_create("i");
   int answer = 42;
   qi_value_set_int64(val, answer);
@@ -39,7 +42,7 @@ TEST(TestFuture, SimpleType)
   res = qi_value_get_int64_default(val, 0);
   EXPECT_EQ(42, res);
 
-  qi_promise_t* promise = qi_promise_create();
+  qi_promise_t* promise = qi_promise_create(true);
   qi_future_t*  future = qi_promise_get_future(promise);
 
   qi_future_add_callback(future, future_callback_simple, 0);
@@ -53,7 +56,10 @@ TEST(TestFuture, SimpleType)
 
   qi_value_t *rest = qi_future_get_value(future);
   EXPECT_EQ(42, qi_value_get_int64_default(rest, 0));
-
+  // WaIt for callback
+  for (unsigned i=0; i<50 && !isCallbackCalled; ++i)
+    qi::os::msleep(10);
+  EXPECT_TRUE(isCallbackCalled);
   qi_value_destroy(rest);
   qi_future_destroy(future);
   qi_promise_destroy(promise);
@@ -61,7 +67,7 @@ TEST(TestFuture, SimpleType)
 
 TEST(TestFuture, Error)
 {
-  qi_promise_t* promise = qi_promise_create();
+  qi_promise_t* promise = qi_promise_create(true);
   qi_future_t*  future = qi_promise_get_future(promise);
 
   qi_promise_set_error(promise, "it's friday");
@@ -81,7 +87,7 @@ TEST(TestFuture, Error)
 
 TEST(TestFuture, NotCancelable)
 {
-  qi_promise_t* promise = qi_promise_create();
+  qi_promise_t* promise = qi_promise_create(true);
   qi_future_t*  future = qi_promise_get_future(promise);
   ASSERT_FALSE(qi_future_is_cancelable(future));
   qi_future_destroy(future);
@@ -104,7 +110,7 @@ void onCancel(qi_promise_t *prom, void *) {
 
 TEST(TestFuture, CancelableError)
 {
-  qi_promise_t* promise = qi_promise_cancelable_create(onError, 0);
+  qi_promise_t* promise = qi_promise_cancelable_create(0, onError, 0);
   qi_future_t*  future = qi_promise_get_future(promise);
   ASSERT_TRUE(qi_future_is_cancelable(future));
   qi_future_cancel(future);
@@ -118,7 +124,7 @@ TEST(TestFuture, CancelableError)
 
 TEST(TestFuture, CancelableValue)
 {
-  qi_promise_t* promise = qi_promise_cancelable_create(onValue, 0);
+  qi_promise_t* promise = qi_promise_cancelable_create(0, onValue, 0);
   qi_future_t*  future = qi_promise_get_future(promise);
   ASSERT_TRUE(qi_future_is_cancelable(future));
   qi_future_cancel(future);
@@ -132,7 +138,7 @@ TEST(TestFuture, CancelableValue)
 
 TEST(TestFuture, CancelableCancel)
 {
-  qi_promise_t* promise = qi_promise_cancelable_create(onCancel, 0);
+  qi_promise_t* promise = qi_promise_cancelable_create(0, onCancel, 0);
   qi_future_t*  future = qi_promise_get_future(promise);
   ASSERT_TRUE(qi_future_is_cancelable(future));
   qi_future_cancel(future);

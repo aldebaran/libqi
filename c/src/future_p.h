@@ -46,14 +46,14 @@ inline void qi_future_c_adapter(qi::Future<T> fut, qi_promise_t* prom) {
 
 template <typename T>
 inline qi_future_t* qi_future_wrap(qi::Future<T> fut) {
-  qi_promise_t* prom = qi_promise_create();
+  qi_promise_t* prom = qi_promise_create(true);
   fut.connect(boost::bind<void>(&qi_future_c_adapter<T>, _1, prom));
   return qi_promise_get_future(prom);
 }
 
 template <typename T>
 inline qi_future_t* qi_future_wrap(qi::FutureSync<T> fut) {
-  qi_promise_t* prom = qi_promise_create();
+  qi_promise_t* prom = qi_promise_create(true);
   qi_future_t* fufu = qi_promise_get_future(prom);
   //async to avoid exception handling. we really want a future here, not a FutureSync
   fut.async().connect(boost::bind<void>(&qi_future_c_adapter<T>, _1, prom));

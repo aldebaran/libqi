@@ -92,7 +92,7 @@ namespace qi {
     _sdSocketDisconnectedSignalLink = _sdSocket->disconnected.connect(boost::bind<void>(&ServiceDirectoryClient::onSocketDisconnected, this, _1));
     _remoteObject.setTransportSocket(_sdSocket);
 
-    qi::Promise<void> promise;
+    qi::Promise<void> promise(qi::FutureCallbackType_Sync);
     qi::Future<void> fut = _sdSocket->connect(serviceDirectoryURL);
     fut.connect(&ServiceDirectoryClient::onSocketConnected, this, _1, promise);
     return promise.future();

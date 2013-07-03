@@ -101,7 +101,7 @@ qi_future_t *qi_object_call(qi_object_t *object, const char *signature_c, qi_val
   qi::AnyValue           gv  = qi_value_cpp(params);
 
   qi::Future<qi::AnyReference> res = obj->metaCall(signature_c, gv.asTupleValuePtr());
-  qi::Promise<qi::AnyValue> prom;
+  qi::Promise<qi::AnyValue> prom(qi::FutureCallbackType_Sync);
   res.connect(boost::bind<void>(&qiFutureCAdapter, _1, prom));
   return qi_cpp_promise_get_future(prom);
 }
