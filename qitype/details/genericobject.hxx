@@ -31,12 +31,12 @@ namespace qi {
       TemplateTypeInterface* futureType = ft1 ? ft1 : ft2;
       ObjectTypeInterface* onext = dynamic_cast<ObjectTypeInterface*>(futureType->next());
       GenericObject gfut(onext, val.value);
-      if (gfut.call<bool>("hasError", 0))
+      if (gfut.call<bool>(MetaCallType_Direct, "hasError", 0))
       {
         promise.setError(gfut.call<std::string>("error", 0));
         return;
       }
-      AnyValue v = gfut.call<AnyValue>("value", 0);
+      AnyValue v = gfut.call<AnyValue>(MetaCallType_Direct, "value", 0);
       promise.setValue(v.to<T>());
       val.destroy();
     }
@@ -61,7 +61,10 @@ namespace qi {
         ObjectTypeInterface* onext = dynamic_cast<ObjectTypeInterface*>(next);
         GenericObject gfut(onext, val.value);
         boost::function<void()> cb = boost::bind(futureAdapterGeneric<T>, val, promise);
-        gfut.call<void>("_connect", cb);
+        // Careful, gfut will die at the end of this block, but it is
+        // stored in call data. So call must finish before we exit this block,
+        // and thus must be synchronous.
+        gfut.call<void>(MetaCallType_Direct, "_connect", cb).wait();
         return;
       }
       TypeInterface* targetType = typeOf<T>();
