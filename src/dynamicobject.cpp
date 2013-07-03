@@ -477,7 +477,7 @@ namespace qi
         && methodThreadingModel == MetaCallType_Auto);
     if (sync)
     {
-      qi::Promise<AnyReference> out;
+      qi::Promise<AnyReference> out(FutureCallbackType_Sync);
       call(out, context, doLock, params, methodId, func);
       return out.future();
     }

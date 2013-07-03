@@ -149,7 +149,8 @@ namespace qi {
   qi::Future<AnyReference>
   GenericObject::metaCall(unsigned int method, const GenericFunctionParameters& params, MetaCallType callType)
   {
-    qi::Promise<AnyReference> out;
+    FutureCallbackType futureType = (callType == MetaCallType_Direct) ? FutureCallbackType_Sync: FutureCallbackType_Async;
+    qi::Promise<AnyReference> out(futureType);
     if (!type || !value) {
       qiLogWarning() << "Operating on invalid GenericObject..";
       out.setError("Invalid object");
