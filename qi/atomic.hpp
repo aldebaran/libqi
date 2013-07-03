@@ -150,7 +150,7 @@ namespace qi
 #endif
 
   template<typename T>
-  QI_API_DEPRECATED class atomic : public Atomic<T>
+  class QI_API_DEPRECATED atomic : public Atomic<T>
   {
   public:
     atomic() : Atomic<T>() {}

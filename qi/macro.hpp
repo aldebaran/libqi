@@ -19,9 +19,9 @@
 #include <qi/preproc.hpp>
 
 // Deprecated
-#if defined(__GNUC__) && defined(WITH_DEPRECATED) && !defined(QI_NO_API_DEPRECATED)
+#if defined(__GNUC__) && !defined(QI_NO_API_DEPRECATED)
 #  define QI_API_DEPRECATED __attribute__((deprecated))
-#elif defined(_MSC_VER) && defined(WITH_DEPRECATED) && !defined(QI_NO_API_DEPRECATED)
+#elif defined(_MSC_VER) && !defined(QI_NO_API_DEPRECATED)
 #  define QI_API_DEPRECATED __declspec(deprecated)
 #else
 #  define QI_API_DEPRECATED
