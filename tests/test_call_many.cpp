@@ -44,8 +44,8 @@ TEST(Test, Recurse)
   unsigned int           nbServices = TestMode::getTestMode() == TestMode::Mode_Nightmare ? 2 : 1;
 
   // Two objects with a fire event and a onFire method.
-  ASSERT_TRUE(p1.server()->registerService("coin1", oserver1).hasValue(4000));
-  ASSERT_TRUE(p2.server()->registerService("coin2", oserver2).hasValue(4000));
+  ASSERT_NO_THROW(p1.server()->registerService("coin1", oserver1).hasValue(4000));
+  ASSERT_NO_THROW(p2.server()->registerService("coin2", oserver2).hasValue(4000));
   EXPECT_EQ(nbServices, p1.server()->services(qi::Session::ServiceLocality_Local).value().size());
   EXPECT_EQ(nbServices, p2.server()->services(qi::Session::ServiceLocality_Local).value().size());
   oclient1 = p2.client()->service("coin1");
@@ -65,7 +65,7 @@ TEST(Test, Recurse)
     niter = 50;
   }
   oclient1->call<void>("onFire1", niter);
-  ASSERT_TRUE(payload.future().hasValue(8000));
+  ASSERT_NO_THROW(payload.future().hasValue(15000));
   oclient1.reset();
   oclient2.reset();
 }
