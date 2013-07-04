@@ -186,7 +186,7 @@ void test_callback_session(qi::DataPerfSuite &out ,std::string testname) //testi
 
 int main(int argc, char* argv[])
 {
-  qi::log::setVerbosity(qi::log::fatal);
+  qi::log::setVerbosity(qi::LogLevel_Fatal);
   std::string fname;
   if (argc > 2)
     fname = argv[2];

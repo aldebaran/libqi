@@ -189,13 +189,6 @@ namespace qi {
 
 }
 
-namespace
-{
-  // trick to avoid wrapping in a function: setCategory returns void so can't
-  // be used in expr.
-  static bool __unused_debug = qi::os::getenv("QIMESSAGING_DEBUG").empty()
-    && (::qi::log::setCategory("qimessaging.*", ::qi::log::info), false);
-}
 
 #ifdef _MSC_VER
 # pragma warning( pop )
