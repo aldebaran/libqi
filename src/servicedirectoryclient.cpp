@@ -13,7 +13,8 @@ namespace qi {
 
 
   ServiceDirectoryClient::ServiceDirectoryClient()
-    : _remoteObject(qi::Message::Service_ServiceDirectory)
+    : Trackable<ServiceDirectoryClient>(this)
+    , _remoteObject(qi::Message::Service_ServiceDirectory)
     , _addSignalLink(0)
     , _removeSignalLink(0)
   {
@@ -22,6 +23,7 @@ namespace qi {
 
   ServiceDirectoryClient::~ServiceDirectoryClient()
   {
+    destroy();
     close();
   }
 
@@ -62,8 +64,8 @@ namespace qi {
     f = boost::bind<void>(&ServiceDirectoryClient::onServiceRemoved, this, _1, _2);
     qi::Future<SignalLink> fut2 = _object->connect("serviceRemoved", f);
 
-    fut1.connect(boost::bind<void>(&ServiceDirectoryClient::onSDEventConnected, this, _1, promise, true));
-    fut2.connect(boost::bind<void>(&ServiceDirectoryClient::onSDEventConnected, this, _1, promise, false));
+    fut1.connect(&ServiceDirectoryClient::onSDEventConnected, this, _1, promise, true);
+    fut2.connect(&ServiceDirectoryClient::onSDEventConnected, this, _1, promise, false);
   }
 
   void ServiceDirectoryClient::onSocketConnected(qi::FutureSync<void> future, qi::Promise<void> promise) {
@@ -73,7 +75,7 @@ namespace qi {
       return;
     }
     qi::Future<void> fut = _remoteObject.fetchMetaObject();
-    fut.connect(boost::bind<void>(&ServiceDirectoryClient::onMetaObjectFetched, this, _1, promise));
+    fut.connect(&ServiceDirectoryClient::onMetaObjectFetched, this, _1, promise);
   }
 
   //we ensure in that function that connect to all events are already setup when we said we are connect.
@@ -92,7 +94,7 @@ namespace qi {
 
     qi::Promise<void> promise;
     qi::Future<void> fut = _sdSocket->connect(serviceDirectoryURL);
-    fut.connect(boost::bind<void>(&ServiceDirectoryClient::onSocketConnected, this, _1, promise));
+    fut.connect(&ServiceDirectoryClient::onSocketConnected, this, _1, promise);
     return promise.future();
   }
 
@@ -106,14 +108,17 @@ namespace qi {
 
     if (!_sdSocket)
       return qi::Future<void>(0);
+    // We just manually triggered onSocketDisconnected, so unlink
+    // from socket signal before disconnecting it.
+    _sdSocket->disconnected.disconnect(_sdSocketDisconnectedSignalLink);
     qi::Future<void> fut = _sdSocket->disconnect();
     // Hold the socket shared ptr alive until the future returns.
     // otherwise, the destructor will block us until disconnect terminates
     // Nasty glitch: socket is reusing promises, so this future hook will stay
     // So pass shared pointer by pointer: that way a single delete statement
     // will end all copies.
-    fut.connect(boost::bind(&sharedPtrHolder, new TransportSocketPtr(_sdSocket)));
-    _sdSocket->disconnected.disconnect(_sdSocketDisconnectedSignalLink);
+    fut.connect(&sharedPtrHolder, new TransportSocketPtr(_sdSocket));
+
     _sdSocket.reset();
     return fut;
   }

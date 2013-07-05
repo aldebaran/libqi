@@ -10,6 +10,7 @@
 #include <vector>
 #include <string>
 #include <qitype/signal.hpp>
+#include <qi/trackable.hpp>
 #include <qimessaging/serviceinfo.hpp>
 #include <qimessaging/session.hpp>
 #include "remoteobject_p.hpp"
@@ -17,7 +18,7 @@
 namespace qi {
 
   class TransportSocket;
-  class ServiceDirectoryClient {
+  class ServiceDirectoryClient: public qi::Trackable<ServiceDirectoryClient> {
   public:
     ServiceDirectoryClient();
     ~ServiceDirectoryClient();
