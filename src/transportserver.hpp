@@ -70,6 +70,7 @@ namespace qi {
     std::string                           _identityKey;
     std::string                           _identityCertificate;
     std::vector<TransportServerImplPtr>   _impl;
+    mutable boost::mutex                 _implMutex;
   };
 
 }

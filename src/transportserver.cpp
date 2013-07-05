@@ -62,8 +62,11 @@ namespace qi
       qiLogError("TransportServer") << s;
       return qi::makeFutureError<void>(s);
     }
-
-    _impl.push_back(TransportServerImplPtr(impl));
+    TransportServerImplPtr implPtr(impl);
+    {
+      boost::mutex::scoped_lock l(_implMutex);
+      _impl.push_back(implPtr);
+    }
     return impl->listen(url);
   }
 
@@ -93,7 +96,7 @@ namespace qi
   std::vector<qi::Url> TransportServer::endpoints() const
   {
     std::vector<qi::Url> r;
-
+    boost::mutex::scoped_lock l(_implMutex);
     for (std::vector<TransportServerImplPtr>::const_iterator it = _impl.begin();
          it != _impl.end();
          it++)
@@ -106,6 +109,7 @@ namespace qi
   }
 
   void TransportServer::close() {
+    boost::mutex::scoped_lock l(_implMutex);
     for (std::vector<TransportServerImplPtr>::const_iterator it = _impl.begin();
          it != _impl.end();
          it++)
