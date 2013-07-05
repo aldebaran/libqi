@@ -13,8 +13,8 @@
 #include <qitype/details/typeimpl.hxx>
 #include <qitype/objecttypebuilder.hpp>
 
-QI_REGISTER_TEMPLATE_OBJECT(qi::Future    , connect, _connect, isFinished, value, wait, isRunning, isCanceled, hasError, error);
-QI_REGISTER_TEMPLATE_OBJECT(qi::FutureSync, connect, _connect, isFinished, value, wait, isRunning, isCanceled, hasError, error, async);
+QI_REGISTER_TEMPLATE_OBJECT(qi::Future    , _connect, isFinished, value, wait, isRunning, isCanceled, hasError, error);
+QI_REGISTER_TEMPLATE_OBJECT(qi::FutureSync, _connect, isFinished, value, wait, isRunning, isCanceled, hasError, error, async);
 
 namespace qi {
 
