@@ -186,21 +186,36 @@ namespace qi {
     };
 
     template <typename T>
-    void waitForFirstHelper(qi::Promise<bool>& bprom,
-                            qi::Promise< qi::Future<T> >& prom,
-                            qi::Future<T>& fut) {
-      if (prom.future().isFinished())
-        return;
-      if (!fut.hasError())
-        prom.setValue(fut);
-      bprom.setValue(true);
-    }
-
-    template <typename T>
-    void waitForFirstHelperFailure(qi::Promise< qi::Future<T> >& prom) {
-      if (prom.future().isFinished())
-        return;
-      prom.setValue(makeFutureError<T>("No future returned successfully."));
+    void waitForFirstHelper(qi::Promise< qi::Future<T> >& prom,
+                            qi::Future<T>& fut,
+                            qi::atomic<int>* count) {
+      if (!prom.future().isFinished() && !fut.hasError())
+      {
+        // An other future can trigger at the same time.
+        // Don't bother to lock, just catch the FutureAlreadySet exception
+        try
+        {
+          prom.setValue(fut);
+        }
+        catch(const FutureException& f)
+        {}
+      }
+      if (! --*count)
+      {
+        // I'm the last
+        if (!prom.future().isFinished())
+        {
+          // same 'race' as above. between two setError, not between a value and
+          // an error.
+          try
+          {
+            prom.setValue(makeFutureError<T>("No future returned successfully."));
+          }
+          catch(const FutureException& f)
+          {}
+        }
+        delete count;
+      }
     }
   } // namespace detail
 
@@ -226,18 +241,11 @@ namespace qi {
   qi::FutureSync< qi::Future<T> > waitForFirst(std::vector< Future<T> >& vect) {
     typename std::vector< Future<T> >::iterator it;
     qi::Promise< qi::Future<T> > prom;
-    qi::FutureBarrier<bool> barrier;
-
+    qi::atomic<int>* count = new qi::atomic<int>();
+    count->swap((int)vect.size());
     for (it = vect.begin(); it != vect.end(); ++it) {
-      qi::Promise<bool> rprom;
-
-      it->connect(boost::bind<void>(&detail::waitForFirstHelper<T>, rprom, prom, *it));
-      barrier.addFuture(rprom.future());
+      it->connect(boost::bind<void>(&detail::waitForFirstHelper<T>, prom, *it, count));
     }
-
-    // On failure, we set the promise to an error.
-    barrier.future().connect(boost::bind<void>(&detail::waitForFirstHelperFailure<T>, prom));
-
     return prom.future();
   }
 
