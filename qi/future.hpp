@@ -11,6 +11,8 @@
 #include <vector>
 #include <qi/atomic.hpp>
 #include <qi/config.hpp>
+#include <qi/trackable.hpp>
+
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/function.hpp>
@@ -256,6 +258,25 @@ namespace qi {
     typedef boost::function<void (Future<T>) > Connection;
     inline void connect(const Connection& s) { _p->connect(*this, s);}
 
+#ifdef DOGYGEN
+    /** Connect a callback with binding and tracking support.
+    *
+    * If the first argument is a weak_ptr or a pointer inheriting from
+    * qi::Trackable, the callback will not be called if tracked object was
+    * destroyed.
+    */
+    template<typename FUNCTYPE, typename ARG0>
+    void connect(FUNCTYPE fun, ARG0 tracked, ...);
+#else
+#define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma) \
+    template<typename AF, typename THIS comma ATYPEDECL>      \
+    inline void connect(const AF& fun, const THIS& arg0 comma ADECL)  \
+    {                                                                    \
+      connect(::qi::bind<void(Future<T>)>(fun, arg0 comma AUSE));    \
+    }
+    QI_GEN(genCall)
+#undef genCall
+#endif
 
     // Our companion library libqitype requires a connect with same signature for all instantiations
     inline void _connect(const boost::function<void()>& s) { connect(boost::bind(s));}

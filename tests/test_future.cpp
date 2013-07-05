@@ -1,8 +1,6 @@
 /*
-** Author(s):
-**  - Cedric GESTES <gestes@aldebaran-robotics.com>
 **
-** Copyright (C) 2010, 2012 Aldebaran Robotics
+** Copyright (C) 2010, 2012, 2013, Aldebaran Robotics
 */
 
 #include <map>
@@ -15,6 +13,304 @@
 #include <qi/application.hpp>
 #include <qi/future.hpp>
 #include <qi/eventloop.hpp>
+#include <qi/trackable.hpp>
+
+#include <boost/function.hpp>
+#include <boost/lambda/lambda.hpp>
+#include <boost/lambda/bind.hpp>
+
+qiLogCategory("test");
+class SetValue: private boost::noncopyable
+{
+public:
+  SetValue(int& tgt)
+  :target(tgt)
+  {
+  }
+  int exchange(int v)
+  {
+    int old = target;
+    target = v;
+    return old;
+  }
+  int delayExchange(int msDelay, int value)
+  {
+    qiLogDebug() << "delayexchange enter";
+    state = 1;
+    qi::os::msleep(msDelay);
+    state = 2;
+    qiLogDebug() << "delayexchange leave";
+    return exchange(value);
+  }
+  int& target;
+  int state;
+private:
+
+};
+int exchange(int& target, int value)
+{
+  int old = target;
+  target = value;
+  return old;
+}
+
+TEST(TestBind, Simple)
+{
+  int v = 0;
+  qi::bind<void(int)>(&exchange, boost::ref(v), _1)(15);
+  EXPECT_EQ(15, v);
+  qi::bind<void(void)>(&exchange, boost::ref(v), 16)();
+  EXPECT_EQ(16, v);
+}
+
+TEST(TestBind, MemFun)
+{
+  int v = 0;
+  SetValue s1(v);
+  qi::bind<void(int)>(&SetValue::exchange, &s1, _1)(1);
+  EXPECT_EQ(1, v);
+  qi::bind<void(void)>(&SetValue::exchange, &s1, 2)();
+  EXPECT_EQ(2, v);
+  qi::bind<void(int)>(&SetValue::exchange, boost::ref(s1), _1)(3);
+  EXPECT_EQ(3, v);
+  qi::bind<void(void)>(&SetValue::exchange, boost::ref(s1), 4)();
+  EXPECT_EQ(4, v);
+}
+
+TEST(TestBind, SharedPtr)
+{
+  int v = 0;
+  boost::shared_ptr<SetValue> s(new SetValue(v));
+  qi::bind<void(int)>(&SetValue::exchange, s, _1)(1);
+  EXPECT_EQ(1, v);
+  qi::bind<void(void)>(&SetValue::exchange, s, 2)();
+  EXPECT_EQ(2, v);
+
+  boost::function<void(void)> f =  qi::bind<void(void)>(&SetValue::exchange, s, 3);
+  s.reset();
+  f();
+  EXPECT_EQ(3, v);
+}
+
+TEST(TestBind, WeakPtr)
+{
+  int v = 0;
+  boost::shared_ptr<SetValue> s(new SetValue(v));
+  boost::weak_ptr<SetValue> w(s);
+  qi::bind<void(int)>(&SetValue::exchange, w, _1)(1);
+  EXPECT_EQ(1, v);
+  qi::bind<void(void)>(&SetValue::exchange, w, 2)();
+  EXPECT_EQ(2, v);
+
+  boost::function<void(void)> f =  qi::bind<void(void)>(&SetValue::exchange, w, 3);
+  s.reset();
+  f();
+  EXPECT_EQ(2, v);
+}
+
+class SetValue2: public SetValue, public qi::Trackable<SetValue2>
+{
+public:
+  SetValue2(int& target)
+  :SetValue(target)
+  , qi::Trackable<SetValue2>(this)
+  , state(0)
+  {}
+  ~SetValue2()
+  {
+    qiLogVerbose() << "entering dtor";
+    state = 1;
+    destroy();
+    state = 2;
+    qiLogVerbose() << "finishing dtor";
+  }
+  void delayExchangeP(int msDelay, int value, qi::Promise<int> result)
+  {
+    result.setValue(delayExchange(msDelay, value));
+  }
+  qi::Future<int> asyncDelayExchange(int msDelay, int value)
+  {
+    qi::Promise<int> promise;
+    boost::thread(&SetValue2::delayExchangeP, this, msDelay, value, promise);
+    return promise.future();
+  }
+  int state;
+};
+
+// wrap a call, waiting before, and notifying state
+void wrap(boost::function<void()> op, int msDelay, int* notify)
+{
+  *notify = 1;
+  if (msDelay)
+    qi::os::msleep(msDelay);
+  *notify = 2;
+  op();
+  *notify = 3;
+}
+
+TEST(TestBind, Trackable)
+{
+  int v = 0;
+  {
+    SetValue2 s1(v);
+    qi::bind<void(int)>(&SetValue2::exchange, &s1, _1)(1);
+    EXPECT_EQ(1, v);
+    qi::bind<void(void)>(&SetValue2::exchange, &s1, 2)();
+    EXPECT_EQ(2, v);
+    qi::bind<void(int)>(&SetValue2::exchange, boost::ref(s1), _1)(3);
+    EXPECT_EQ(3, v);
+    qi::bind<void(void)>(&SetValue2::exchange, boost::ref(s1), 4)();
+    EXPECT_EQ(4, v);
+  }
+
+  boost::function<void(void)> f;
+  {
+    SetValue2 s1(v);
+    f = qi::bind<void(void)>(&SetValue2::exchange, &s1, 5);
+  }
+  f(); // s1 is trackable, bound and deleted: callback not executed
+  EXPECT_EQ(4, v);
+
+  // check waiting behavior of destroy
+  int notify = 0;
+  qi::int64_t time;
+  {
+    SetValue2 s1(v);
+    boost::thread(wrap,
+      qi::bind<void(void)>(&SetValue2::delayExchange, &s1, 100, 10),
+      0,
+      &notify);
+    time = qi::os::ustime();
+    // wait enough for operation to start
+    while (!notify)
+      qi::os::msleep(10);
+    qi::os::msleep(20);
+    time = qi::os::ustime();
+    // exit scope, deleting s1, which should block until operation terminates
+  }
+  time = qi::os::ustime() - time;
+  EXPECT_GT(time, 60000); // 100 - 20 - 10 - margin
+  EXPECT_EQ(10, v);
+
+  // check disable-call behavior again in our more complex threaded setup
+  {
+    notify = 0;
+    SetValue2 s1(v);
+    boost::thread(wrap,
+      qi::bind<void(void)>(&SetValue2::delayExchange, &s1, 100, 11),
+      50,
+      &notify);
+  }
+  while (notify != 3)
+    qi::os::msleep(10);
+  EXPECT_EQ(10, v); //call not made
+}
+
+void _delayValue(int msDelay, qi::Promise<void> p)
+{
+  qi::os::msleep(msDelay);
+  p.setValue(0);
+}
+
+qi::Future<void> delayValue(int msDelay)
+{
+  qi::Promise<void> p;
+  if (msDelay >= 0)
+    boost::thread(_delayValue, msDelay, p);
+  else
+    p.setValue(0);
+  return p.future();
+}
+
+void set_from_future(int* tgt, qi::Future<void> f)
+{
+  *tgt = f.isFinished()?2:0;
+}
+
+TEST(FutureTrack, WeakPtr)
+{
+  int v = 0;
+  boost::shared_ptr<SetValue> s(new SetValue(v));
+  boost::weak_ptr<SetValue> w(s);
+  delayValue(-1).connect(&SetValue::exchange, w, 1);
+  for (int i=0; i<50&&v!=1; ++i)
+    qi::os::msleep(10);
+  EXPECT_EQ(1, v);
+  v=0;
+  // check that _1 works in connect
+  delayValue(-1).connect(&set_from_future, &v, _1);
+  for (int i=0; i<50&&v!=2; ++i)
+    qi::os::msleep(10);
+  EXPECT_EQ(2, v);
+
+  delayValue(100).connect(&SetValue::exchange, w, 3);
+  for (int i=0; i<50&&v!=3; ++i)
+    qi::os::msleep(10);
+  EXPECT_EQ(3, v);
+
+  delayValue(100).connect(&SetValue::exchange, w, 4);
+  s.reset(); // reset before future finishes, w invalid, cb not called
+  qi::os::msleep(100);
+  EXPECT_EQ(3, v);
+  s = boost::shared_ptr<SetValue>(new SetValue(v));
+  w = boost::weak_ptr<SetValue>(s);
+
+  delayValue(-1).connect(&SetValue::delayExchange, w, 200, 10);
+  qi::int64_t time = qi::os::ustime();
+  // wait for delayExchange to start
+  while (s->state != 1)
+    qi::os::msleep(10);
+  s.reset();
+  // let's block until object is gone
+  while (w.lock())
+    qi::os::msleep(20);
+  time = qi::os::ustime() - time;
+  EXPECT_GT(time, 160000);
+  qi::os::msleep(20); // poor man's memory barrier, v is written from an other thread
+  EXPECT_EQ(10, v);
+}
+
+TEST(FutureTrack, Trackable)
+{
+  // copy-paste of weak-ptr, but use a trackable on stack instead of shared_ptr
+  int v =0;
+  SetValue2* w = new SetValue2(v);
+  delayValue(-1).connect(&SetValue2::exchange, w, 1);
+  for (int i=0; i<50&&v!=1; ++i)
+    qi::os::msleep(10);
+  EXPECT_EQ(1, v);
+  v=0;
+  // check that _1 works in connect
+  delayValue(-1).connect(&set_from_future, &v, _1);
+  for (int i=0; i<50&&v!=2; ++i)
+    qi::os::msleep(10);
+  EXPECT_EQ(2, v);
+
+  delayValue(100).connect(&SetValue2::exchange, w, 3);
+  for (int i=0; i<50&&v!=3; ++i)
+    qi::os::msleep(10);
+  EXPECT_EQ(3, v);
+
+  delayValue(100).connect(&SetValue2::exchange, w, 4);
+  delete w; // reset before future finishes, w invalid, cb not called
+  qi::os::msleep(100);
+  EXPECT_EQ(3, v);
+  qiLogDebug() << "destruction-lock test";
+  w = new SetValue2(v);
+
+  delayValue(0).connect(&SetValue::delayExchange, w, 200, 10);
+  qi::int64_t time = qi::os::ustime();
+  qi::os::msleep(100); // give time for delayExchange to start executing
+  qiLogVerbose() << "deleting w";
+  delete w; // blocks until delayExchange finishes
+  qiLogVerbose() << "w deleted";
+  time = qi::os::ustime() - time;
+  EXPECT_GT(time, 160000);
+  qi::os::msleep(20); // poor man's memory barrier, v is written from an other thread
+  EXPECT_EQ(10, v);
+}
+
+
 
 class TestFuture : public ::testing::Test
 {
