@@ -84,7 +84,7 @@ namespace qi {
         {
           try {
             if (_async == FutureCallbackType_Async)
-              getDefaultObjectEventLoop()->post(boost::bind(_onResult[i], future));
+              getDefaultThreadPoolEventLoop()->post(boost::bind(_onResult[i], future));
             else
               _onResult[i](future);
           } catch(const std::exception& e) {
@@ -159,7 +159,7 @@ namespace qi {
         //result already ready, notify the callback
         if (ready) {
           if (_async == FutureCallbackType_Async)
-            getDefaultObjectEventLoop()->post(boost::bind(s, future));
+            getDefaultThreadPoolEventLoop()->post(boost::bind(s, future));
           else
             s(future);
         }
