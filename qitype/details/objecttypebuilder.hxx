@@ -179,22 +179,32 @@ namespace qi {
     static const char* interfaceMarker = "_interface_";
     static const unsigned int interfaceMarkerLength = strlen(interfaceMarker);
 
-    template<typename T> struct SigProp
-    {
-      static const unsigned value = 0;
-    };
-    template<typename T> struct SigProp<SignalF<T> >
-    {
-      static const unsigned value = 1;
-    };
-    template<QI_SIGNAL_TEMPLATE_DECL> struct SigProp<Signal<QI_SIGNAL_TEMPLATE> >
-    {
-      static const unsigned value = 1;
-    };
-    template<typename T> struct SigProp<Property<T> >
+    // Trait that detect inheritance from PropertyBase SignalBase or none of the above.
+
+    template<typename T, bool b> struct SigPropInheritsSignal
+    {};
+    template<typename T, bool b> struct SigPropInheritsProperty
+    {};
+
+    template<typename T> struct SigProp : public
+    SigPropInheritsProperty<T, boost::is_base_of<PropertyBase, T>::value> {};
+
+    template<typename T> struct SigPropInheritsProperty<T, true>
     {
       static const unsigned value = 2;
     };
+    template<typename T> struct SigPropInheritsProperty<T, false>
+    : public SigPropInheritsSignal<T, boost::is_base_of<SignalBase, T>::value> {};
+
+    template<typename T> struct SigPropInheritsSignal<T, true>
+    {
+       static const unsigned value = 1;
+    };
+    template<typename T> struct SigPropInheritsSignal<T, false>
+    {
+       static const unsigned value = 0;
+    };
+
     template<unsigned> struct Dummy {};
     template<typename A> unsigned int advertise(ObjectTypeBuilderBase* builder, const std::string& name, A accessor, Dummy<0>)
     {
