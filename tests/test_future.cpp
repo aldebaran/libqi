@@ -893,6 +893,8 @@ TEST(TestAdaptFuture, WithVoid) {
   prom1.setError("foo");
 
   qi::adaptFuture(prom1.future(), prom2);
+  while(prom2.future().isRunning())
+    qi::os::msleep(5);
   ASSERT_TRUE(prom2.future().hasError());
   ASSERT_FALSE(prom2.future().hasValue());
   ASSERT_STREQ("foo", prom2.future().error().c_str());
@@ -904,6 +906,8 @@ TEST(TestAdaptFuture, WithInt) {
   prom1.setValue(1);
 
   qi::adaptFuture(prom1.future(), prom2);
+  while(prom2.future().isRunning())
+    qi::os::msleep(5);
   ASSERT_TRUE(prom2.future().hasValue());
   ASSERT_FALSE(prom2.future().hasError());
   ASSERT_EQ(1, prom2.future().value());
@@ -915,6 +919,8 @@ TEST(TestAdaptFuture, WithIntVoid) {
   prom1.setValue(1);
 
   qi::adaptFuture(prom1.future(), prom2);
+  while(prom2.future().isRunning())
+    qi::os::msleep(5);
   ASSERT_TRUE(prom2.future().hasValue());
   ASSERT_FALSE(prom2.future().hasError());
   ASSERT_EQ(NULL, prom2.future().value());
@@ -926,6 +932,8 @@ TEST(TestAdaptFuture, PromiseCancelled) {
   prom1.setCanceled();
 
   qi::adaptFuture(prom1.future(), prom2);
+  while(prom2.future().isRunning())
+    qi::os::msleep(5);
   ASSERT_TRUE(prom2.future().isCanceled());
   ASSERT_FALSE(prom2.future().hasValue());
   ASSERT_FALSE(prom2.future().hasError());
