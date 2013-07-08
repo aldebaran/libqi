@@ -5,8 +5,8 @@
 ** Copyright (C) 2013 Aldebaran Robotics
 */
 
-#ifndef  _QI_IOCOLOR_HPP_
-# define _QI_IOCOLOR_HPP_
+#ifndef _QI_IOCOLOR_HPP_
+#define _QI_IOCOLOR_HPP_
 
 #include <qi/api.hpp>
 
@@ -51,5 +51,5 @@ namespace std {
   QI_API std::ostream& operator<<(std::ostream& os, qi::StreamColor col);
 }
 
-#endif
+#endif  // _QI_IOCOLOR_HPP_
 

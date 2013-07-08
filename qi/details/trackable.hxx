@@ -5,8 +5,8 @@
  * found in the COPYING file.
  */
 
-#ifndef _QI_TRACKABLE_HXX_
-#define _QI_TRACKABLE_HXX_
+#ifndef _QI_DETAILS_TRACKABLE_HXX_
+#define _QI_DETAILS_TRACKABLE_HXX_
 
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
@@ -172,4 +172,4 @@ template<typename RF, typename AF, typename ARG0 comma ATYPEDECL>      \
 #endif // DOXYGEN
 }
 
-#endif
+#endif  // _QI_DETAILS_TRACKABLE_HXX_

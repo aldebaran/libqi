@@ -82,4 +82,4 @@ namespace qi
 }
 
 #include <qi/details/trackable.hxx>
-#endif
+#endif  // _QI_TRACKABLE_HPP_

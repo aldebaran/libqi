@@ -4,8 +4,8 @@
  * found in the COPYING file.
  */
 
-#ifndef TRANSLATOR_HPP_
-# define TRANSLATOR_HPP_
+#ifndef _QI_TRANSLATOR_HPP_
+#define _QI_TRANSLATOR_HPP_
 
 # include <string>
 # include <qi/api.hpp>
@@ -48,4 +48,4 @@ namespace qi
 
 }
 
-#endif // !TRANSLATOR_HPP_
+#endif  // _QI_TRANSLATOR_HPP_
