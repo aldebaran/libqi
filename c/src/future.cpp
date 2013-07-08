@@ -91,11 +91,16 @@ qi_future_t*  qi_future_clone(qi_future_t* fu)
   return (qi_future_t *)clo;
 }
 
+static void future_Callback(qi::Future<qi::AnyValue> fut, qi_future_callback_t cb, void *miscdata) {
+  qi_future_t *fu = qi_cpp_future_copy(fut);
+  cb(fu, miscdata);
+}
+
 void    qi_future_add_callback(qi_future_t *fu, qi_future_callback_t cb, void *miscdata)
 {
   qiLogDebug() << "qi_future_add_cb(" << fu << ")";
   qi::Future<qi::AnyValue> *fut = qi_future_cpp(fu);
-  fut->connect(boost::bind<void>(cb, fu, miscdata));
+  fut->connect(boost::bind<void>(&future_Callback, _1, cb, miscdata));
 }
 
 void    qi_future_wait(qi_future_t *fu, int timeout)

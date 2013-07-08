@@ -29,6 +29,7 @@ void future_callback_simple(qi_future_t* fut, void *data)
   EXPECT_EQ(42, result);
   isCallbackCalled = true;
   qi_value_destroy(val);
+  qi_future_destroy(fut);
 }
 
 TEST(TestFuture, SimpleType)
@@ -42,7 +43,7 @@ TEST(TestFuture, SimpleType)
   res = qi_value_get_int64_default(val, 0);
   EXPECT_EQ(42, res);
 
-  qi_promise_t* promise = qi_promise_create(true);
+  qi_promise_t* promise = qi_promise_create(1);
   qi_future_t*  future = qi_promise_get_future(promise);
 
   qi_future_add_callback(future, future_callback_simple, 0);

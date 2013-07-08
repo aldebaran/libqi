@@ -24,9 +24,13 @@ inline qi::Future<qi::AnyValue> *qi_future_cpp(qi_future_t *value) {
   return reinterpret_cast<qi::Future<qi::AnyValue> *>(value);
 };
 
-inline qi_future_t* qi_cpp_promise_get_future(qi::Promise<qi::AnyValue> &prom) {
-  qi::Future<qi::AnyValue>*  fut = new qi::Future<qi::AnyValue>(prom.future());
+inline qi_future_t* qi_cpp_future_copy(const qi::Future<qi::AnyValue> &fu) {
+  qi::Future<qi::AnyValue>*  fut = new qi::Future<qi::AnyValue>(fu);
   return (qi_future_t *) fut;
+}
+
+inline qi_future_t* qi_cpp_promise_get_future(qi::Promise<qi::AnyValue> &prom) {
+  return qi_cpp_future_copy(prom.future());
 }
 
 template <typename T>

@@ -21,7 +21,7 @@ extern "C"
   #define QI_FUTURETIMEOUT_NONE     (0)
   #define QI_FUTURETIMEOUT_INFINITE ((int)0x7ffffff)
 
-  QIC_API qi_promise_t* qi_promise_create(int async);
+  QIC_API qi_promise_t* qi_promise_create(int async_callback);
   QIC_API qi_promise_t* qi_promise_cancelable_create(int async, qi_future_cancel_t cb, void *user_data);
   QIC_API void          qi_promise_destroy(qi_promise_t *pr);
 
