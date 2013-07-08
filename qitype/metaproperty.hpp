@@ -1,4 +1,9 @@
 #pragma once
+/*
+**  Copyright (C) 2013 Aldebaran Robotics
+**  See COPYING for the license
+*/
+
 #ifndef _QITYPE_METAPROPERTY_HPP_
 #define _QITYPE_METAPROPERTY_HPP_
 

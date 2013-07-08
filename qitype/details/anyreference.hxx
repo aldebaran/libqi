@@ -1,9 +1,8 @@
 #pragma once
 /*
-**  Copyright (C) 2012 Aldebaran Robotics
+**  Copyright (C) 2013 Aldebaran Robotics
 **  See COPYING for the license
 */
-
 
 #ifndef _QITYPE_DETAILS_ANYREFERENCE_HXX_
 #define _QITYPE_DETAILS_ANYREFERENCE_HXX_
