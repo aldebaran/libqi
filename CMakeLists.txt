@@ -23,6 +23,7 @@ endif()
 set(WITH_QT_QTCORE OFF)
 
 qi_add_optional_package(QT_QTCORE "Enable QT")
+qi_add_optional_package(BOOST_LOCALE "Enable qi::translate")
 
 enable_testing()
 include(CMakeDependentOption)
@@ -66,7 +67,6 @@ set(H
   qi/eventloop.hpp
   qi/version.hpp
   qi/iocolor.hpp
-  qi/translator.hpp
   )
 
 set(C
@@ -99,8 +99,12 @@ set(C
   src/sdklayout-boost.cpp
   src/version.cpp
   src/iocolor.cpp
-  src/translator.cpp
   )
+
+if(WITH_BOOST_LOCALE)
+  list(APPEND H qi/translator.hpp)
+  list(APPEND C src/translator.cpp)
+endif()
 
 if (WIN32)
   list(APPEND C
@@ -155,7 +159,11 @@ if (WITH_QT_QTCORE)
   qi_use_lib(qi QT_QTCORE)
 endif()
 
-qi_use_lib(qi BOOST_FILESYSTEM BOOST_THREAD BOOST_PROGRAM_OPTIONS BOOST_REGEX BOOST_LOCALE)
+qi_use_lib(qi BOOST_FILESYSTEM BOOST_THREAD BOOST_PROGRAM_OPTIONS BOOST_REGEX)
+
+if(WITH_BOOST_LOCALE)
+  qi_use_lib(qi BOOST_LOCALE)
+endif()
 
 if (UNIX)
   qi_use_lib(qi PTHREAD)
