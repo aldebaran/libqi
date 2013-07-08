@@ -159,10 +159,10 @@ namespace qi
     return fun;
   }
 #define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma) \
-template<typename RF, typename AF, typename THIS comma ATYPEDECL>      \
-  boost::function<RF> bind(const AF& fun, const THIS& arg0 comma ADECL)  \
+template<typename RF, typename AF, typename ARG0 comma ATYPEDECL>      \
+  boost::function<RF> bind(const AF& fun, const ARG0& arg0 comma ADECL)  \
   {                                                                      \
-    typedef typename detail::BindTransform<THIS, boost::is_base_of<TrackableBase, typename boost::remove_pointer<THIS>::type>::value> Transform;     \
+    typedef typename detail::BindTransform<ARG0, boost::is_base_of<TrackableBase, typename boost::remove_pointer<ARG0>::type>::value> Transform;     \
     typename Transform::type transformed = Transform::transform(arg0);   \
     boost::function<RF> f = boost::bind(fun, transformed comma AUSE);           \
     return Transform::wrap(arg0, f);                                     \

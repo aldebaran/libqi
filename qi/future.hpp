@@ -269,8 +269,8 @@ namespace qi {
     void connect(FUNCTYPE fun, ARG0 tracked, ...);
 #else
 #define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma) \
-    template<typename AF, typename THIS comma ATYPEDECL>      \
-    inline void connect(const AF& fun, const THIS& arg0 comma ADECL)  \
+    template<typename AF, typename ARG0 comma ATYPEDECL>      \
+    inline void connect(const AF& fun, const ARG0& arg0 comma ADECL)  \
     {                                                                    \
       connect(::qi::bind<void(Future<T>)>(fun, arg0 comma AUSE));    \
     }
