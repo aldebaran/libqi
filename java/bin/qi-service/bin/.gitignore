@@ -1,6 +1,0 @@
-# Ignore eclipse generated files
-.classpath
-.project
-
-# Ignore maven output directory
-target/
