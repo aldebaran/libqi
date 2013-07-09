@@ -9,37 +9,32 @@
 #ifndef _QI_VERSION_HPP_
 #define _QI_VERSION_HPP_
 
-# include <qi/api.hpp>
-# include <vector>
-# include <string>
+#include <boost/shared_ptr.hpp>
+#include <qi/api.hpp>
+#include <vector>
+#include <string>
 
 namespace qi {
-  namespace version {
+  class VersionPrivate;
+  class QI_API Version
+  {
+    public:
+      Version();
+      Version(const std::string& version);
+      Version(const char* version);
 
-    struct QI_API Version
-    {
-      std::string version;
+      const std::string& toString() const;
 
-      std::string& operator()();
-      const std::string& operator()() const;
-      bool operator< (const Version& pi) const;
-      bool operator> (const Version& pi) const;
-      bool operator==(const Version& pi) const;
-      bool operator!=(const Version& pi) const;
-      bool operator<=(const Version& pi) const;
-      bool operator>=(const Version& pi) const;
-    };
+      bool operator< (const Version& rhs) const;
+      bool operator> (const Version& rhs) const;
+      bool operator==(const Version& rhs) const;
+      bool operator!=(const Version& rhs) const;
+      bool operator<=(const Version& rhs) const;
+      bool operator>=(const Version& rhs) const;
 
-    //convert a version's string into a vector<string> with each comparable part
-    QI_API std::vector<std::string> explode(const std::string &version);
-
-    //compare two version's strings. a < b return -1
-    QI_API int                      compare(const std::string &versionA,
-                                            const std::string &versionB);
-
-    QI_API std::string              extract(const std::string &version);
-
-  }
+    private:
+      boost::shared_ptr<VersionPrivate> _p;
+  };
 }
 
 #endif  // _QI_VERSION_HPP_
