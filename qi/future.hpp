@@ -403,7 +403,7 @@ namespace qi {
     }
 
     /* get the future from the promise, you can call this function many times. */
-    Future<T> future() { return _f; }
+    Future<T> future() const { return _f; }
 
     /** Gives access to the underlying value for in-place modification.
      *  trigger() must be called after the value is written to trigger the promise.
