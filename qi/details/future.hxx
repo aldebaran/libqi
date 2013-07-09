@@ -100,7 +100,7 @@ namespace qi {
 
       void setValue(qi::Future<T>& future, const ValueType &value)
       {
-        // report-ready + onResult() must be atomic to avoid
+        // report-ready + onResult() must be Atomic to avoid
         // missing callbacks/double calls in case connect() is invoked at
         // the same time
         boost::recursive_mutex::scoped_lock lock(mutex());
@@ -117,7 +117,7 @@ namespace qi {
        */
       void set(qi::Future<T>& future)
       {
-        // report-ready + onResult() must be atomic to avoid
+        // report-ready + onResult() must be Atomic to avoid
         // missing callbacks/double calls in case connect() is invoked at
         // the same time
         boost::recursive_mutex::scoped_lock lock(mutex());
@@ -188,7 +188,7 @@ namespace qi {
     template <typename T>
     void waitForFirstHelper(qi::Promise< qi::Future<T> >& prom,
                             qi::Future<T>& fut,
-                            qi::atomic<int>* count) {
+                            qi::Atomic<int>* count) {
       if (!prom.future().isFinished() && !fut.hasError())
       {
         // An other future can trigger at the same time.
@@ -241,7 +241,7 @@ namespace qi {
   qi::FutureSync< qi::Future<T> > waitForFirst(std::vector< Future<T> >& vect) {
     typename std::vector< Future<T> >::iterator it;
     qi::Promise< qi::Future<T> > prom;
-    qi::atomic<int>* count = new qi::atomic<int>();
+    qi::Atomic<int>* count = new qi::Atomic<int>();
     count->swap((int)vect.size());
     for (it = vect.begin(); it != vect.end(); ++it) {
       it->connect(boost::bind<void>(&detail::waitForFirstHelper<T>, prom, *it, count));
