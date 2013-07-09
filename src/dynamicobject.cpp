@@ -468,6 +468,7 @@ namespace qi
     else // callType default is synchronous
       sync = (callType != MetaCallType_Queued);
 
+    bool elForced = el;
     if (!sync && !el)
       el = getDefaultThreadPoolEventLoop();
     qiLogDebug() << "metacall sync=" << sync << " el= " << el <<" ct= " << callType;
@@ -481,7 +482,10 @@ namespace qi
     }
     else
     {
-      qi::Promise<AnyReference>* out = new qi::Promise<AnyReference>();
+      // If call is handled by our thread pool, we can safely switch the promise
+      // to synchronous mode.
+      qi::Promise<AnyReference>* out = new qi::Promise<AnyReference>(
+        elForced?FutureCallbackType_Async:FutureCallbackType_Sync);
       GenericFunctionParameters pCopy = params.copy(noCloneFirst);
       qi::Future<AnyReference> result = out->future();
       el->post(MFunctorCall(func, pCopy, out, noCloneFirst, context, methodId, doLock));
