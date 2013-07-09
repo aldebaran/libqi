@@ -149,7 +149,7 @@ namespace qi {
                              int> logFuncHandler;
 
     QI_API void init(qi::LogLevel   verb = qi::LogLevel_Info,
-                     qi::LogContext context = qi::LogContextAttr_Verbosity | qi::LogContextAttr_Tid | qi::LogContextAttr_Category,
+                     qi::LogContext context = qi::LogContextAttr_ShortVerbosity | qi::LogContextAttr_Tid | qi::LogContextAttr_Category,
                      bool           synchronous = true);
 
     QI_API void destroy();
