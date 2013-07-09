@@ -244,7 +244,12 @@ namespace qi {
 
   qi::Future<AnyReference> RemoteObject::metaCall(Manageable*, unsigned int method, const qi::GenericFunctionParameters &in, MetaCallType callType)
   {
-    qi::Promise<AnyReference> out;
+    /* The promise will be set:
+     - From here in case of error
+     - From a network callback, called asynchronously in thread pool
+     So it is safe to use a sync promise.
+     */
+    qi::Promise<AnyReference> out(FutureCallbackType_Sync);
     qi::Message msg;
     qi::Signature funcSig = metaObject().method(method)->parametersSignature();
     msg.setValues(in, funcSig, this);
