@@ -2,9 +2,7 @@
   <depends buildtime="true" runtime="true"
     names="boost pthread" />
   <depends buildtime="true" names="gtest" />
-  <doxydoc name="libqi" src="." dest="ref/libqi" />
-  <sphinxdoc name="libqi-api" src="doc">
-    <depends name="libqi" />
-  </sphinxdoc>
+  <doxydoc dest="ref/libqi" name="libqi" />
   <project src="examples" />
+  <project src="doc" />
 </project>

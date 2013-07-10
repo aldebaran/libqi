@@ -1,0 +1,5 @@
+<project version="3">
+  <qidoc name="libqi-api" type="sphinx">
+    <depends name="libqi" />
+  </qidoc>
+</project>
