@@ -38,8 +38,8 @@ namespace qi
     ~EventLoop();
     /// Return true if current thread is the event loop thread.
     bool isInEventLoopThread();
-    /// Start in a thread (in case useThread=false was passed to constructor).
-    void start();
+    /// Start in threaded mode
+    void start(int nthreads = 0);
     /// Start in thread-pool mode: each asyncCall() will be run in parallel
     void startThreadPool(int minWorkers=-1, int maxWorkers=-1, int minIdleWorkers=-1, int maxIdleWorkers=-1);
     /// Wait for run thread to terminate
