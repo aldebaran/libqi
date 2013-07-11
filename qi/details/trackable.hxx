@@ -45,6 +45,7 @@ namespace qi
   inline void Trackable<T>::_destroyed()
   {
     // unblock
+    boost::mutex::scoped_lock lock(_mutex);
     _wasDestroyed = true;
     _cond.notify_all();
   }
