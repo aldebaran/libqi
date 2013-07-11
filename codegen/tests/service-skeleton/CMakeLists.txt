@@ -74,6 +74,10 @@ qi_create_lib(simpleservice
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
-qi_create_gtest(test_load_service SRC test_load_service.cpp DEPENDS QI QITYPE GTEST TIMEOUT 10)
+qi_create_gtest(test_load_service
+  SRC
+    test_load_service.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/simpleservice/simpleservice_proxy.hpp
+  DEPENDS QI QITYPE GTEST TIMEOUT 10)
 
 
