@@ -24,7 +24,7 @@ namespace qi {
   class ServerClient;
 
 
-  class RemoteObject : public qi::DynamicObject, public ObjectHost {
+  class RemoteObject : public qi::DynamicObject, public ObjectHost, public Trackable<RemoteObject> {
   public:
     RemoteObject();
     RemoteObject(unsigned int service, qi::TransportSocketPtr socket = qi::TransportSocketPtr());
@@ -59,12 +59,13 @@ namespace qi {
 
   protected:
     TransportSocketPtr                              _socket;
+    boost::mutex                                    _socketMutex;
     unsigned int                                    _service;
     unsigned int                                    _object;
-    std::map<int, qi::Promise<AnyReference> > _promises;
-    boost::mutex    _mutex;
-    qi::SignalLink                            _linkMessageDispatcher;
-    qi::SignalLink                            _linkDisconnected;
+    std::map<int, qi::Promise<AnyReference> >       _promises;
+    boost::mutex                                    _promisesMutex;
+    qi::SignalLink                                  _linkMessageDispatcher;
+    qi::SignalLink                                  _linkDisconnected;
     qi::AnyObject                                   _self;
   };
 

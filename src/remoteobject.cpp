@@ -43,6 +43,7 @@ namespace qi {
 
   RemoteObject::RemoteObject(unsigned int service, qi::TransportSocketPtr socket)
     : ObjectHost(service)
+    , Trackable<RemoteObject>(this)
     , _socket()
     , _service(service)
     , _object(1)
@@ -60,6 +61,7 @@ namespace qi {
 
   RemoteObject::RemoteObject(unsigned int service, unsigned int object, qi::MetaObject metaObject, TransportSocketPtr socket)
     : ObjectHost(service)
+    , Trackable<RemoteObject>(this)
     , _socket()
     , _service(service)
     , _object(object)
@@ -74,6 +76,7 @@ namespace qi {
   {
     //close may already have been called. (by Session_Service.close)
     close();
+    destroy();
   }
 
   //### RemoteObject
@@ -82,14 +85,14 @@ namespace qi {
     if (socket == _socket)
       return;
     if (_socket) {
-      _socket->messagePendingDisconnect(_service,
-        _object <= Message::GenericObject_Main?TransportSocket::ALL_OBJECTS:_object,
-        _linkMessageDispatcher);
-      _socket->disconnected.disconnect(_linkDisconnected);
+      close();
     }
+
+     boost::mutex::scoped_lock lock(_socketMutex);
     _socket = socket;
     //do not set the socket on the remote object
     if (socket) {
+      qiLogDebug() << "Adding connection to socket" << (void*)_socket.get();
       // We must hook on ALL_OBJECTS in case our objectHost gets filled, even
       // if we are a sub-object.
       // We have no mechanism to bounce objectHost registration
@@ -97,23 +100,15 @@ namespace qi {
       _linkMessageDispatcher = _socket->messagePendingConnect(_service,
         TransportSocket::ALL_OBJECTS,
         boost::bind<void>(&RemoteObject::onMessagePending, this, _1));
-      _linkDisconnected      = _socket->disconnected.connect (boost::bind<void>(&RemoteObject::onSocketDisconnected, this, _1));
+      _linkDisconnected      = _socket->disconnected.connect (
+         boost::bind(&RemoteObject::onSocketDisconnected, this, _1)).track(weakPtr());
     }
   }
 
   //should be done in the object thread
   void RemoteObject::onSocketDisconnected(std::string error)
   {
-    {
-      boost::mutex::scoped_lock lock(_mutex);
-      std::map<int, qi::Promise<AnyReference> >::iterator it = _promises.begin();
-      while (it != _promises.end()) {
-        qiLogVerbose() << "Reporting error for request " << it->first << "(socket disconnected)";
-        it->second.setError("Socket disconnected");
-        _promises.erase(it);
-        it = _promises.begin();
-      }
-    }
+    close();
   }
 
   void RemoteObject::onMetaObject(qi::Future<qi::MetaObject> fut, qi::Promise<void> prom) {
@@ -187,7 +182,7 @@ namespace qi {
 
     qi::Promise<AnyReference> promise;
     {
-      boost::mutex::scoped_lock lock(_mutex);
+      boost::mutex::scoped_lock lock(_promisesMutex);
       std::map<int, qi::Promise<AnyReference> >::iterator it;
       it = _promises.find(msg.id());
       if (it != _promises.end()) {
@@ -251,15 +246,15 @@ namespace qi {
      */
     qi::Promise<AnyReference> out(FutureCallbackType_Sync);
     qi::Message msg;
-    qi::Signature funcSig = metaObject().method(method)->parametersSignature();
-    msg.setValues(in, funcSig, this);
-    msg.setType(qi::Message::Type_Call);
-    msg.setService(_service);
-    msg.setObject(_object);
-    msg.setFunction(method);
-    // qiLogDebug() << this << " metacall " << msg.service() << " " << msg.function() <<" " << msg.id();
+   // qiLogDebug() << this << " metacall " << msg.service() << " " << msg.function() <<" " << msg.id();
     {
-      boost::mutex::scoped_lock lock(_mutex);
+      boost::mutex::scoped_lock lock(_promisesMutex);
+      // Check socket while holding the lock to avoid a race with close()
+      // where we would add a promise to the map after said map got cleared
+      if (!_socket || !_socket->isConnected())
+      {
+        return makeFutureError<AnyReference>("Socket is not connected");
+      }
       if (_promises.find(msg.id()) != _promises.end())
       {
         qiLogError() << "There is already a pending promise with id "
@@ -267,9 +262,16 @@ namespace qi {
       }
       _promises[msg.id()] = out;
     }
+    qi::Signature funcSig = metaObject().method(method)->parametersSignature();
+    msg.setValues(in, funcSig, this);
+    msg.setType(qi::Message::Type_Call);
+    msg.setService(_service);
+    msg.setObject(_object);
+    msg.setFunction(method);
 
+    TransportSocketPtr sock = _socket;
     //error will come back as a error message
-    if (!_socket || !_socket->isConnected() || !_socket->send(msg)) {
+    if (!sock || !sock->isConnected() || !sock->send(msg)) {
       qi::MetaMethod*   meth = metaObject().method(method);
       std::stringstream ss;
       if (meth) {
@@ -279,7 +281,7 @@ namespace qi {
       } else {
         ss << "Network error while sending data an unknown method (id=" << method << ").";
       }
-      if (!_socket->isConnected()) {
+      if (!sock || !sock->isConnected()) {
         ss << " Socket is not connected.";
         qiLogVerbose() << ss.str();
       } else {
@@ -288,7 +290,7 @@ namespace qi {
       out.setError(ss.str());
 
       {
-        boost::mutex::scoped_lock lock(_mutex);
+        boost::mutex::scoped_lock lock(_promisesMutex);
         _promises.erase(msg.id());
       }
     }
@@ -322,7 +324,8 @@ namespace qi {
     msg.setService(_service);
     msg.setObject(_object);
     msg.setFunction(event);
-    if (!_socket->send(msg)) {
+    TransportSocketPtr sock = _socket;
+    if (!sock || !sock->send(msg)) {
       qiLogError() << "error while emitting event";
       return;
     }
@@ -361,17 +364,39 @@ namespace qi {
       qiLogWarning() << ss.str();
       return qi::makeFutureError<void>(ss.str());
     }
-    if (_socket->isConnected())
+    TransportSocketPtr sock = _socket;
+    if (sock && sock->isConnected())
       return _self->call<void>("unregisterEvent", _service, event, linkId);
     return qi::makeFutureError<void>("No remote unregister: socket disconnected");
   }
 
-  void RemoteObject::close() {
-    if (_socket) {
-      _socket->messagePendingDisconnect(_service,
-        TransportSocket::ALL_OBJECTS,
-        _linkMessageDispatcher);
-      _socket->disconnected.disconnect(_linkDisconnected);
+  void RemoteObject::close()
+  {
+    qiLogDebug() << "Socket disconnection";
+    TransportSocketPtr socket;
+    {
+       boost::mutex::scoped_lock lock(_socketMutex);
+       socket = _socket;
+       _socket.reset();
+    }
+    if (socket)
+    { // Do not hold any lock when invoking signals.
+        qiLogDebug() << "Removing connection from socket" << (void*)socket.get();
+        socket->messagePendingDisconnect(_service, TransportSocket::ALL_OBJECTS, _linkMessageDispatcher);
+        socket->disconnected.disconnect(_linkDisconnected);
+    }
+    std::map<int, qi::Promise<AnyReference> > promises;
+    {
+      boost::mutex::scoped_lock lock(_promisesMutex);
+      promises = _promises;
+      _promises.clear();
+    }
+    // Nobody should be able to add anything to promises at this point.
+    std::map<int, qi::Promise<AnyReference> >::iterator it;
+    for (it = promises.begin(); it != promises.end(); ++it)
+    {
+      qiLogVerbose() << "Reporting error for request " << it->first << "(socket disconnected)";
+      it->second.setError("Socket disconnected");
     }
   }
 

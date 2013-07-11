@@ -212,6 +212,7 @@ namespace qi
 
   void TcpTransportSocket::error(const boost::system::error_code& erc)
   {
+    qiLogDebug() << "socket error:" << erc.message();
     boost::recursive_mutex::scoped_lock lock(_closingMutex);
     _abort = true;
     _status = qi::TransportSocket::Status_Disconnected;
