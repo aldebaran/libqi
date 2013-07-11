@@ -9,6 +9,11 @@
 # pragma warning(disable: 4355)
 #endif
 
+#ifdef _WIN32
+#include <Winsock2.h> // needed by mstcpip.h
+#include <Mstcpip.h> // for tcp_keepalive struct
+#endif
+
 #ifdef ANDROID
 #include <linux/in.h> // for  IPPROTO_TCP
 #endif
@@ -78,8 +83,7 @@ namespace qi
       _status = qi::TransportSocket::Status_Connected;
 
       // Transmit each Message without delay
-      const boost::asio::ip::tcp::no_delay option( true );
-      _socket->lowest_layer().set_option(option);
+      setSocketOptions();
     }
     else
     {
@@ -361,14 +365,77 @@ namespace qi
           {
             return;
           }
-          // Transmit each Message without delay
-          const boost::asio::ip::tcp::no_delay option( true );
-          _socket->lowest_layer().set_option(option);
+          setSocketOptions();
         }
 
         startReading();
       }
     }
+  }
+
+  void TcpTransportSocket::setSocketOptions()
+  {
+    // Transmit each Message without delay
+    const boost::asio::ip::tcp::no_delay option( true );
+    _socket->lowest_layer().set_option(option);
+
+    // Enable TCP keepalive for faster timeout detection.
+    static const char* envTimeout = getenv("QI_TCP_PING_TIMEOUT");
+    int timeout = 30;
+    if (envTimeout)
+      timeout = strtol(envTimeout, 0, 0);
+    if (!timeout)
+      return; // feature disabled
+    // we can't honor timeout < 10s proprely
+    timeout = std::max(timeout, 10);
+    boost::asio::ip::tcp::socket::native_handle_type handle
+      = _socket->lowest_layer().native_handle();
+#ifdef _WIN32
+    /* http://msdn.microsoft.com/en-us/library/windows/desktop/dd877220(v=vs.85).aspx
+    On Windows Vista and later, the number of keep-alive probes (data retransmissions) is set to 10 and cannot be changed.
+    On Windows Server 2003, Windows XP, and Windows 2000, the default setting for number of keep-alive probes is 5.
+    The number of keep-alive probes is controllable through the TcpMaxDataRetransmissions and PPTPTcpMaxDataRetransmissions registry settings.
+    The number of keep-alive probes is set to the larger of the two registry key values.
+    If this number is 0, then keep-alive probes will not be sent.
+    If this number is above 255, then it is adjusted to 255.
+    */
+    tcp_keepalive params;
+    params.onoff = 1;
+    params.keepalivetime = 5000; // entry is in milliseconds
+    // set interval to target timeout divided by probe count
+    params.keepaliveinterval = timeout * 1000 / 10;
+    DWORD bytesReturned;
+    if (WSAIoctl(handle, SIO_KEEPALIVE_VALS, &params, sizeof(params),
+      0, 0, &bytesReturned, 0, 0)!= 0)
+    {
+      qiLogWarning() << "Failed to set socket keepalive with code " << WSAGetLastError();
+    }
+#else
+    int optval = 1;
+    int optlen = sizeof(optval);
+    if(setsockopt(handle, SOL_SOCKET, SO_KEEPALIVE, &optval, optlen) < 0)
+      qiLogWarning() << "Failed to set so_keepalive: " << strerror(errno);
+    else
+    {
+      /* SOL_TCP level options: unit is seconds for times
+      TCP_KEEPCNT: overrides tcp_keepalive_probes 9
+        mark dead when that many probes are lost
+      TCP_KEEPIDLE: overrides tcp_keepalive_time 7200
+        only enable keepalive if that delay ever occurr between data sent
+      TCP_KEEPINTVL: overrides  tcp_keepalive_intvl 75
+        interval between probes
+      */
+      optval = timeout / 10;
+      if (setsockopt(handle, SOL_TCP, TCP_KEEPINTVL, &optval, optlen) < 0)
+        qiLogWarning() << "Failed to set TCP_KEEPINTVL: " << strerror(errno);
+      optval = 5;
+      if (setsockopt(handle, SOL_TCP, TCP_KEEPIDLE , &optval, optlen) < 0)
+        qiLogWarning() << "Failed to set TCP_KEEPIDLE : " << strerror(errno);
+      optval = 10;
+      if (setsockopt(handle, SOL_TCP, TCP_KEEPCNT  , &optval, optlen) < 0)
+        qiLogWarning() << "Failed to set TCP_KEEPCNT  : " << strerror(errno);
+    }
+#endif
   }
 
   qi::FutureSync<void> TcpTransportSocket::disconnect()

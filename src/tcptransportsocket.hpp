@@ -50,6 +50,7 @@ namespace qi
     void onReadData(const boost::system::error_code& erc, std::size_t);
     void send_(qi::Message msg);
     void sendCont(const boost::system::error_code& erc, qi::Message msg);
+    void setSocketOptions();
     bool _ssl;
     bool _sslHandshake;
 #ifdef WITH_SSL
