@@ -958,7 +958,7 @@ TEST(TestCall, Statistics)
   obj->call<void>("sleep", 100);
   qi::ObjectStatistics stats = obj->call<qi::ObjectStatistics>("stats");
   EXPECT_EQ(1u, stats.size());
-  qi::MethodStatistics& m = stats[mid];
+  qi::MethodStatistics m = stats[mid];
   EXPECT_EQ(2u, m.count);
   // Don't expect too much sleep precision
   EXPECT_GT(0.01, std::abs(m.minTime - 0.010));
