@@ -18,7 +18,6 @@ qi_sanitize_compile_flags(HIDDEN_SYMBOLS)
 
 set(WITH_DOTNET OFF)
 option(WITH_PYTHON   "Python bindings"   ON)
-qi_add_optional_package(JNI)
 
 # Desactivate Python and .NET bindings for Android
 if (ANDROID)
@@ -143,7 +142,6 @@ qi_stage_lib(qimessaging)
 
 qi_add_subdirectory(c)
 
-qi_add_subdirectory("java"   WITH_JNI)
 qi_add_subdirectory("python" WITH_PYTHON)
 qi_add_subdirectory("dotnet" WITH_DOTNET)
 qi_add_subdirectory("js")
@@ -158,4 +156,3 @@ message(STATUS "WITH_EXAMPLES  : ${WITH_EXAMPLES}")
 message(STATUS "WITH_PYTHON    : ${WITH_PYTHON}")
 message(STATUS "WITH_DOTNET    : ${WITH_DOTNET}")
 message(STATUS "WITH_SSL       : ${WITH_SSL}")
-message(STATUS "WITH_JNI       : ${WITH_JNI}")
