@@ -27,6 +27,7 @@ namespace qi {
   class SignalSubscriber;
   class Manageable;
   typedef qi::uint64_t SignalLink;
+
   /* We will have 2 implementations for 2 classes of C++ class:
    * - DynamicObject: Use DynamicObjectBuilder
    * - T: Use ObjectTypeBuilder
@@ -39,7 +40,6 @@ namespace qi {
    *  ->RemoteObject, ALBridge will have to adapt
    *
    */
-
   class QITYPE_API ObjectTypeInterface: public TypeInterface
   {
   public:

@@ -220,14 +220,14 @@ namespace qi{
 
 #include <qitype/details/typeimpl.hxx>
 #include <qitype/details/type.hxx>
-#include <qitype/details/typeint.hxx>
-#include <qitype/details/typelist.hxx>
-#include <qitype/details/typemap.hxx>
-#include <qitype/details/typestring.hxx>
-#include <qitype/details/typepointer.hxx>
-#include <qitype/details/typetuple.hxx>
-#include <qitype/details/typebuffer.hxx>
-#include <qitype/details/typedynamic.hxx>
+#include <qitype/details/inttypeinterface.hxx>
+#include <qitype/details/listtypeinterface.hxx>
+#include <qitype/details/maptypeinterface.hxx>
+#include <qitype/details/stringtypeinterface.hxx>
+#include <qitype/details/pointertypeinterface.hxx>
+#include <qitype/details/structtypeinterface.hxx>
+#include <qitype/details/buffertypeinterface.hxx>
+#include <qitype/details/dynamictypeinterface.hxx>
 
 QI_NO_TYPE(qi::TypeInterface)
 QI_NO_TYPE(qi::TypeInterface*)

@@ -409,7 +409,7 @@ static bool _qiregister##name() {                                              \
 
 
 
-#include <qitype/details/genericobject.hxx>
+#include <qitype/details/anyobject.hxx>
 
 #ifdef _MSC_VER
 #  pragma warning( pop )

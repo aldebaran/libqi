@@ -3,9 +3,7 @@
 **  See COPYING for the license
 */
 #include <boost/type_traits/is_signed.hpp>
-
 #include <qitype/typeinterface.hpp>
-#include <qitype/details/typeint.hxx>
 
 namespace qi {
 #define INTEGRAL_TYPE(t) \

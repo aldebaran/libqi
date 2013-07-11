@@ -40,24 +40,24 @@ set(PUBLIC_HEADERS
                    qitype/details/anyiterator.hxx
                    qitype/details/bindtype.hxx
                    qitype/details/functionsignature.hxx
-                   qitype/details/genericobjectbuilder.hxx
-                   qitype/details/genericobject.hxx
+                   qitype/details/dynamicobjectbuilder.hxx
+                   qitype/details/anyobject.hxx
                    qitype/details/hasless.hxx
                    qitype/details/objecttypebuilder.hxx
                    qitype/details/property.hxx
                    qitype/details/signal.hxx
                    qitype/details/type.hxx
-                   qitype/details/typebuffer.hxx
+                   qitype/details/buffertypeinterface.hxx
                    qitype/details/typedispatcher.hxx
-                   qitype/details/typedynamic.hxx
+                   qitype/details/dynamictypeinterface.hxx
                    qitype/details/typeimpl.hxx
                    qitype/details/typeinterface.hpp
-                   qitype/details/typeint.hxx
-                   qitype/details/typelist.hxx
-                   qitype/details/typemap.hxx
-                   qitype/details/typepointer.hxx
-                   qitype/details/typestring.hxx
-                   qitype/details/typetuple.hxx
+                   qitype/details/inttypeinterface.hxx
+                   qitype/details/listtypeinterface.hxx
+                   qitype/details/maptypeinterface.hxx
+                   qitype/details/pointertypeinterface.hxx
+                   qitype/details/stringtypeinterface.hxx
+                   qitype/details/structtypeinterface.hxx
                    qitype/api.hpp
                    qitype/anyfunction.hpp
                    qitype/anyobject.hpp
