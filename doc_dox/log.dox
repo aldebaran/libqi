@@ -72,7 +72,7 @@ addLogHandler("nameofloghandler");
 \subsection verbosity Verbosity
 There is now 7 logs levels that you can change using --log-level (-L) [log_level_number] option in order form 0 to 6:
       - silent: hide logs.
-      - fatal: This one is used before exit the program if a fatal error occured,
+      - fatal: This one is used before exit the program if a fatal error occurred,
       - error: classical error,
       - warning: useful to warn user,
       - info: useful to user informations, logs level by default (also show all lower log level).

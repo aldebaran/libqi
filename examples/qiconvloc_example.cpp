@@ -9,7 +9,7 @@
  */
 int main(int argc, char *argv[])
 {
-  // Create string with one wierd (ñ) char
+  // Create string with one weird (ñ) char
   char iso[] = {'L', 'a', ' ', 'P', 'e', 0xF1, 'a', 0};
 
   // Use latin1 to convert string to UTF8

@@ -425,7 +425,7 @@ for i in range(0, 10):
 #define _QI_IS_EMPTY_HELPER__ a,b
 #define _QI_IS_ONE_HELPER__1 a,b
 
-// To supress a VCXX warning, the two macro below must be called with CAT(_, arg)
+// To suppress a VCXX warning, the two macro below must be called with CAT(_, arg)
 // otherwise due to evaluation ordering, code ends up calling QI_IS_ONE() which
 // triggers a warning
 

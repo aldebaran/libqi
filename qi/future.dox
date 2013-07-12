@@ -120,7 +120,7 @@
  *
  * Since it is returning a :cpp:class:`qi::Future`. You can connect to it using
  * the standard pattern again and execute a callback (*sunList*) when all the
- * results has been aquired. This what *[2]* does.
+ * results has been acquired. This what *[2]* does.
  *
  * To summaries, this function will: use an asynchronous call to the function
  * identity (just to have an asynchronous call), multiply all the results with

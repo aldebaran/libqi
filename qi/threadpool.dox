@@ -146,7 +146,7 @@
 
 /**
  * \fn qi::ThreadPool::waitForAll()
- * If all workers are inactive and there is no task left, returns immediatly.
+ * If all workers are inactive and there is no task left, returns immediately.
  * Otherwise sleeps until all tasks in the pool are completed.
  */
 
@@ -155,7 +155,7 @@
  * \param f Boost function with type void(void) that represents the task.
  * \return True if the task has been added to the tasks queue.
  *
- * Adds a task to the pool. The task will begin immediatly if there is
+ * Adds a task to the pool. The task will begin immediately if there is
  * at least one idling worker. Otherwise the tasks will be executed as soon
  * as all tasks scheduled before have begun and a worker is idling.
  */

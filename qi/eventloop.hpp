@@ -31,7 +31,7 @@ namespace qi
   {
   public:
     /** Create a new eventLoop.
-     * You must then call eiter start(), run() or startThreadPool() to start event processing.
+     * You must then call either start(), run() or startThreadPool() to start event processing.
     */
     EventLoop();
     ~EventLoop();

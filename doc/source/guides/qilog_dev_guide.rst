@@ -45,7 +45,7 @@ the following prototype:
 Then you can add or remove an handler with
 :cpp:func:`qi::log::addLogHandler(const std::string&, qi::log::logFuncHandler)`
 and :cpp:func:`qi::log::removeLogHandler(const std::string&)` using the
-folowing code:
+following code:
 
 .. code-block:: cpp
 
@@ -63,7 +63,7 @@ option in order from 0 to 6. Options work only if program initializes
 :cpp:class:`qi::Application` in its main.
 
 - ``silent``: hides every log.
-- ``fatal``: used before the program exits if a fatal error occured.
+- ``fatal``: used before the program exits if a fatal error occurred.
 - ``error``: classical error.
 - ``warning``: useful to warn the user about something that failed but is not an error.
 - ``info``: standard messages should be logged using this verbosity, it is the highest

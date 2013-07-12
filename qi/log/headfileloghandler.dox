@@ -34,6 +34,6 @@
  * If the file could not be open, this function will fail silently, otherwise
  * it will directly write the log message to the file and flush its output.
  *
- * When ``length`` messages will be writen to the file, it will discard all
+ * When ``length`` messages will be written to the file, it will discard all
  * messages.
  */

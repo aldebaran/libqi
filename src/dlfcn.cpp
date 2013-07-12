@@ -50,7 +50,7 @@ namespace qi {
       if (!handle)
         return 0;
      #ifdef _WIN32
-      // Mimic unix dlclose (0 on sucess)
+      // Mimic unix dlclose (0 on success)
       return FreeLibrary((HINSTANCE) handle) != 0 ? 0 : -1;
      #else
       return ::dlclose(handle);
