@@ -359,6 +359,31 @@ namespace qi {
         res = existsLib(p, "lib" + libName);
         if (res != std::string())
           return res;
+
+        // If it's not in lib/, it's in bin/
+        p = boost::filesystem::path(fsconcat(*it, "bin", prefix.string(qi::unicodeFacet())), qi::unicodeFacet());
+
+        res = existsLib(p, libName + ".dll");
+        if (res != std::string())
+          return res;
+        res = existsLib(p, "lib" + libName + ".dll");
+        if (res != std::string())
+          return res;
+        res = existsLib(p, "lib" + libName);
+        if (res != std::string())
+          return res;
+
+#ifndef NDEBUG
+        res = existsLib(p, libName + "_d.dll");
+        if (res != std::string())
+          return res;
+        res = existsLib(p, "lib" + libName + "_d.dll");
+        if (res != std::string())
+          return res;
+        res = existsLib(p, "lib" + libName);
+        if (res != std::string())
+          return res;
+#endif
 #endif
       }
     }

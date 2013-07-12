@@ -159,6 +159,11 @@ TEST(qiPath, ClearPrefixesPath)
   ASSERT_TRUE(expected == prefixes);
 }
 
+TEST(qiPath, FindLib)
+{
+  ASSERT_FALSE(qi::path::findLib("qi").empty());
+}
+
 #ifndef _WIN32
 TEST(qiPath, FindBin)
 {
