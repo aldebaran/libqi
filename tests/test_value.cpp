@@ -353,11 +353,17 @@ TEST(Value, STL)
   gv.append(3);
   gv.append(2);
   std::vector<int> w;
+#if defined(_MSC_VER) && _MSC_VER <= 1500
+  // Yup, it's broken.
+  for (unsigned i=0; i<3; ++i)
+    v.push_back(gv[i].toInt());
+#else
   // seems there are overloads for push_back, need to explicitly cast to signature
   std::for_each(gv.begin(), gv.end(),
     boost::lambda::bind((void (std::vector<int>::*)(const int&))&std::vector<int>::push_back,
       boost::ref(w),
       boost::lambda::bind(&AnyReference::toInt, boost::lambda::_1)));
+#endif
   ASSERT_EQ(3u, w.size());
   ASSERT_EQ(v, w);
   AnyIterator mine = std::min_element(gv.begin(), gv.end());
