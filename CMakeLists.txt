@@ -44,6 +44,8 @@ endif()
 set(H
   qi/details/future.hxx
   qi/details/log.hxx
+  qi/details/warn_push_ignore_deprecated.hpp
+  qi/details/warn_pop_ignore_deprecated.hpp
   qi/api.hpp
   qi/application.hpp
   qi/atomic.hpp
