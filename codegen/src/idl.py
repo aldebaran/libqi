@@ -985,7 +985,7 @@ QI_TYPE_PROXY(@namepaces@@proxyName@);
     if arg_names:
       arg_names = ', ' + arg_names # comma used in call
     # Handle ObjectPtr in argument
-    # If a function takes a FooProxyPtr, it actualy accepts AnyPtr with Any
+    # If a function takes a FooProxyPtr, it actually accepts AnyPtr with Any
     # a compatible object.
     # But we have no parent class to let C++ typecheck.
     # We could make this method a template, but let's rather take a

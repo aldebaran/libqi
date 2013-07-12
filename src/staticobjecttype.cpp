@@ -122,7 +122,7 @@ qi::Future<Link> StaticObjectTypeBase::connect(void* instance, Manageable* conte
     instance = context;
   SignalBase* sb = getSignal(_data, instance, event);
   if (!sb) {
-    return qi::makeFutureError<Link>("Cant find signal");
+    return qi::makeFutureError<Link>("Can't find signal");
   }
   SignalBase::Link id = sb->connect(subscriber);
   if (id == SignalBase::invalidLink)
@@ -143,10 +143,10 @@ qi::Future<void> StaticObjectTypeBase::disconnect(void* instance, Manageable* co
     instance = context;
   SignalBase* sb = getSignal(_data, instance, event);
   if (!sb)
-    return qi::makeFutureError<void>("Cant find signal");
+    return qi::makeFutureError<void>("Can't find signal");
   bool b = sb->disconnect(link);
   if (!b)
-    return qi::makeFutureError<void>("Cant unregister signal");
+    return qi::makeFutureError<void>("Can't unregister signal");
   return qi::Future<void>(0);
 }
 
@@ -154,7 +154,7 @@ qi::Future<GenericValue> StaticObjectTypeBase::property(void* instance, unsigned
 {
   PropertyBase* p = ::qi::property(_data, instance, id);
   if (!p)
-    return qi::makeFutureError<GenericValue>("Cant find event");
+    return qi::makeFutureError<GenericValue>("Can't find event");
   qi::Promise<GenericValue> res;
   res.setValue(p->value());
   return res.future();
@@ -164,7 +164,7 @@ qi::Future<void> StaticObjectTypeBase::setProperty(void* instance, unsigned int 
 {
   PropertyBase* p = ::qi::property(_data, instance, id);
   if (!p)
-    return qi::makeFutureError<void>("Cant find event");
+    return qi::makeFutureError<void>("Can't find event");
   qiLogDebug() << "SetProperty " << id << " " << encodeJSON(value);
   try
   {

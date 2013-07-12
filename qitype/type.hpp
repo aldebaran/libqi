@@ -29,7 +29,7 @@
 #endif
 
 /* A lot of class are found in this headers... to kill circular dependencies.
-   Futhermore we need that all "default template" types are registered (included)
+   Furthermore we need that all "default template" types are registered (included)
    when type.hpp is used. (for typeOf to works reliably)
 */
 
@@ -308,7 +308,7 @@ namespace qi{
      *  They will fail by throwing an exception if the requested operation
      * is incompatible with the current value type.
      *
-     * @warning a GenericValuePtr refering to a container element will
+     * @warning a GenericValuePtr referring to a container element will
      * become invalid as soon as the container is modified.
      *
     */
@@ -539,7 +539,7 @@ QITYPE_API bool operator !=(const GenericIterator & a, const GenericIterator& b)
     * set the input GV to represent the JSON sequence between two string iterators or throw on parse error.
     * @param iterator to the beginning of the sequence to decode.
     * @param iterator to the end of the sequence to decode.
-    * @param GV to set. Not modified if an error occured.
+    * @param GV to set. Not modified if an error occurred.
     * @return an iterator to the last read char + 1
     */
   QITYPE_API std::string::const_iterator decodeJSON(std::string::const_iterator begin,
@@ -689,7 +689,7 @@ QITYPE_API bool operator !=(const GenericIterator & a, const GenericIterator& b)
   namespace qi {              \
     template<typename T> class QITYPE_TEMPLATE_API TypeImpl<n<T> >: public TypeOfTemplateImpl<n, T> {}; \
   }
-  /** Return a TypeTemplate pointer if \p typeInst represents an instanciation
+  /** Return a TypeTemplate pointer if \p typeInst represents an instantiation
    * of template type templateName, 0 otherwise
    */
   #define QI_TEMPLATE_TYPE_GET(typeInst, templateName) \

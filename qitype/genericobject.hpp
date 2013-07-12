@@ -40,7 +40,7 @@ namespace qi {
    * - macos: compiler warning and incorrect code if the template implementation is
    *   used before the extern declaration
    * - macos: compiler error if the extern is seen before a non-extern forced
-   *  instanciation
+   *  instantiation
    * - linux: linker error: if the symbol is marked hidden in some .o files,
    * and not hidden in others, hidden has precedence, and the extern prevents
    * the usage of the inlined code version.

@@ -224,7 +224,7 @@ namespace qi {
       std::string resolvedSig = args.signature(dyn==1).toString();
       std::string fullSig = nameWithOptionalSignature + "::" + resolvedSig;
       qiLogDebug() << "Finding method for resolved signature " << fullSig;
-      // First try an exact match, wich is much faster if we're lucky.
+      // First try an exact match, which is much faster if we're lucky.
       int methodId = mo.methodId(fullSig);
       if (methodId >= 0)
         return methodId;

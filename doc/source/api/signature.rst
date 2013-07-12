@@ -21,7 +21,7 @@ Generate an effective signature starting from the type and the value. The goals 
 
 .. note::
 
-   what should we do with small heterogenous list? and what about homogenous tuple?
+   what should we do with small heterogeneous list? and what about homogenous tuple?
    I think it's the isCompatible that should handle those cases.
 
 Signature isCompatible

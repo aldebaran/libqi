@@ -64,7 +64,7 @@ namespace qi {
 
     template<typename T>
     unsigned int advertiseProperty(const std::string& name);
-    /// Ownership is transfered to the object
+    /// Ownership is transferred to the object
     int advertiseProperty(const std::string &name, qi::PropertyBase *sig);
 
     void setThreadingModel(ObjectThreadingModel model);

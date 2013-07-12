@@ -561,7 +561,7 @@ namespace qi {
     : _elementType(elementType)
     {
       // We need an unique name, but elementType->nifo().aString() is not
-      // garanteed unique. So use our address. The factory system ensures
+      // guaranteed unique. So use our address. The factory system ensures
       // non-duplication.
       _name = "DefaultListIteratorType<"
         + _elementType->info().asString()

@@ -100,7 +100,7 @@ namespace qi {
     /// Reset all statistical data
     void clearStats();
 
-    /// Emited each time a call starts and finishes, and for each signal trigger.
+    /// Emitted each time a call starts and finishes, and for each signal trigger.
     Signal<EventTrace> traceObject;
 
     ///@return if trace mode is enabled

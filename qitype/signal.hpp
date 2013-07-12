@@ -247,7 +247,7 @@ template<
    // Target information, kept here to be able to introspect a Subscriber
    //   Mode 1: Direct functor call
    GenericFunction      handler;
-   detail::WeakLock*    weakLock; // try to acquire weakLocker, disconnect if cant
+   detail::WeakLock*    weakLock; // try to acquire weakLocker, disconnect if can't
    MetaCallType threadingModel;
 
    //  Mode 2: metaCall
@@ -261,7 +261,7 @@ template<
    // No more callback will trigger (activeThreads will se no push-back)
    bool                         enabled;
    // Number of calls in progress.
-   // Each entry there is a subscriber call that can no longuer be aborted
+   // Each entry there is a subscriber call that can no longer be aborted
    std::vector<boost::thread::id> activeThreads; // order not preserved
  };
  typedef boost::shared_ptr<SignalSubscriber> SignalSubscriberPtr;

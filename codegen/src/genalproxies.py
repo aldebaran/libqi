@@ -27,8 +27,8 @@ def main(args):
     if s[0] == '_':
       continue
     fname = s.lower() + 'proxy'
-    pathes = os.path.join(prefix, "alproxies", fname + '.h') + ',' + os.path.join(prefix, "src", fname + '.cpp')
-    cmd = ['idl.py', sd_url + '/' + s, '--output-mode=alproxy', '-o', pathes]
+    paths = os.path.join(prefix, "alproxies", fname + '.h') + ',' + os.path.join(prefix, "src", fname + '.cpp')
+    cmd = ['idl.py', sd_url + '/' + s, '--output-mode=alproxy', '-o', paths]
     os.system(' '.join(cmd))
 
 main(sys.argv)

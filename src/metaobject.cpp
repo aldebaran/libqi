@@ -387,11 +387,11 @@ namespace qi {
   qi::MetaObject MetaObject::merge(const qi::MetaObject &source, const qi::MetaObject &dest) {
     qi::MetaObject result = source;
     if (!result._p->addMethods(dest.methodMap()))
-      qiLogError() << "cant merge metaobject (methods)";
+      qiLogError() << "can't merge metaobject (methods)";
     if (!result._p->addSignals(dest.signalMap()))
-      qiLogError() << "cant merge metaobject (signals)";
+      qiLogError() << "can't merge metaobject (signals)";
     if (!result._p->addProperties(dest.propertyMap()))
-      qiLogError() << "cant merge metaobject (properties)";
+      qiLogError() << "can't merge metaobject (properties)";
     result._p->setDescription(dest.description());
     return result;
   }

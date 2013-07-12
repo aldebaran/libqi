@@ -134,7 +134,7 @@ namespace qi {
         if (d != s)
           return 0;
     }
-    assert(is==end() && id==b.end()); // we allready exited on size mismatch
+    assert(is==end() && id==b.end()); // we already exited on size mismatch
     return 1.0f - childErr - ((float)error) / 100.0f;
   }
 

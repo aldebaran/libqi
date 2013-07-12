@@ -86,7 +86,7 @@ namespace qi  {
       {
 
         static Type* defaultResult = 0;
-        // Is this realy a problem?
+        // Is this really a problem?
         if (!defaultResult)
         {
           qiLogDebug("qitype.typeof") << "first typeOf request for unregistered type "

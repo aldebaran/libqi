@@ -336,7 +336,7 @@ namespace qi
         &&  _resultType->kind() != Type::Pointer)
       {
         // if refMask&1, real return type is some Foo& and v is Foo*
-        // else, return type is Foo whith sizeof(Foo) == sizeof(void*) and v is a Foo
+        // else, return type is Foo with sizeof(Foo) == sizeof(void*) and v is a Foo
         void* vstorage = _resultType->initializeStorage(
           (refMask&1)? v: &v);
         vstorage = _resultType->clone(vstorage);
@@ -440,7 +440,7 @@ namespace qi
       typedef typename EqFunction<F>::type MapedF;
       // regenerate eq function pointer type
       typedef typename boost::function_types::components<MapedF>::type EqComponents;
-      // would have used mpl::if_ but it has lazyness issues it seems
+      // would have used mpl::if_ but it has laziness issues it seems
       typedef typename FunctionPointerSynthetizer<EqComponents,
         boost::is_member_function_pointer<F>::value>::type EqFunPtr;
       unsigned long mask = EqFunction<F>::refMask;
