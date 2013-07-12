@@ -388,7 +388,12 @@ TEST(Value, STL)
 
 
   std::vector<AnyReference> vg;
+#if defined(_MSC_VER) && _MSC_VER <= 1500
+  for (unsigned i=0; i<v.size(); ++i)
+    vg.push_back(AnyReference(v[i]));
+#else
   vg.insert(vg.end(), v.begin(), v.end());
+#endif
   std::sort(vg.begin(), vg.end());
   ASSERT_EQ(321, vg[0].toInt() + vg[1].toInt()*2 + vg[2].toInt() * 3);
 }
