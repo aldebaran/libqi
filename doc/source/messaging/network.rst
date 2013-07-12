@@ -107,7 +107,7 @@ address then a direct connection to the service is established.
 
   * communication are done on 1 machine but between multiple processes.
   * There is the same machineID but different processID.
-  * Communication through tcp/ip, ssl (not really usefull since we manage
+  * Communication through tcp/ip, ssl (not really useful since we manage
     those connections), dbus, any other backend.
 
 * RPC (Remote Process Communication):
@@ -115,7 +115,7 @@ address then a direct connection to the service is established.
   * communication are done between multiple machines
     (multiple computers robots).
   * There is the differents machineID and processID.
-  * Communication through tcp/ip, ssl (not really usefull since we manage
+  * Communication through tcp/ip, ssl (not really useful since we manage
     those connections), any other backend that allow remote connection.
 
 .. _qimessaging-external_network:
@@ -126,11 +126,11 @@ Remote connection protocol (Gateway)
 To connect to a robot using the external network interface of the device,
 we support a tcp/ip gateway that can use SSL, and an XMPP to connect using
 a third party server. The gateway allow to support NAT and proxy traversal.
-Futhermore it allow to apply specific security/permission to all external
+Furthermore it allow to apply specific security/permission to all external
 connection.
 
 We need to manage multiple computer, with multiple addresses, inside one robot.
-We must dispatch each message comming from external network though one address
+We must dispatch each message coming from external network though one address
 using gateway and :ref:`Service Directory <qimessaging-servicedirectory>`.
 
 more information on :ref:`qimessaging-gateway`.

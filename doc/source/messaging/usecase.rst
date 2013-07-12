@@ -41,7 +41,7 @@ Use Case
   Robot can have multiple computer with differents IP addresses that communicate together to from a single robot.
   In that case it's particularly important to differenciate between internal and external busses.
   They do not need the same security level and do not have the same constraint. We want the internal network to never change, to be a DMZ.
-  We want the external network to be very controled, external network can have address that change according to the desire of the client. (for example from one hotspot to another).
+  We want the external network to be very controlled, external network can have address that change according to the desire of the client. (for example from one hotspot to another).
 
   To easily support Choregraphe and external PC tools, only one public address have to be used to connect to the robot. So we need to have a public gateway, that forward request from/to services.
   The public gateway (the program that forward the data), need to run on the computer that have both internal and external address.

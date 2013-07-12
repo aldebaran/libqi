@@ -223,7 +223,7 @@ int          qi_value_list_set(qi_value_t *msg, unsigned int idx, qi_value_t *va
     container[idx].set(val);
     return 1;
   } catch (std::runtime_error &e) {
-    qiLogError() << "Cant set list item at index " << idx << " :" << e.what();
+    qiLogError() << "Can't set list item at index " << idx << " :" << e.what();
   }
   return 0;
 }

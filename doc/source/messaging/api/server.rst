@@ -48,7 +48,7 @@ Classes
 
     :param session: the session used to register services on the master
     :param url: url to bind the server on
-    :return: true on sucess, false on error
+    :return: true on success, false on error
 
   .. cpp:function:: void stop()
 

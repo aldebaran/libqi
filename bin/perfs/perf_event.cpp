@@ -141,7 +141,7 @@ void test_callback()  //test callbacks performances without session
   qi::ObjectPtr myObjectPointer = qi::ObjectPtr(new qi::GenericObject(obt.type(), new Service));
 
   myObjectPointer->connect("ping", &cb); //connecting event to callback
-  for (int i=0; i < iteration; i++) //Emiting Events
+  for (int i=0; i < iteration; i++) //Emitting Events
   {
     myObjectPointer->post("ping");
   }
@@ -169,7 +169,7 @@ void test_callback_session(qi::DataPerfSuite &out ,std::string testname) //testi
 
   dp.start(testname, iteration);
 
-  for (int i=0; i < iteration; i++) //Emiting Events
+  for (int i=0; i < iteration; i++) //Emitting Events
   {
     oclient->post("ping");
   }

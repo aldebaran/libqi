@@ -59,7 +59,7 @@ namespace qi {
     std::vector<qi::Url> endpoints() const;
 
   public:
-    /** Emited each time a new connection happens. startReading must be
+    /** Emitted each time a new connection happens. startReading must be
      * called on the socket
      */
     // C4251

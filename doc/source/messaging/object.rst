@@ -44,7 +44,7 @@ We generate only part of the page:
 
 Signatures can be generated for multiple languages. (python, c++, java, .NET, matlab, ..)
 
-We generate a fragment of page that should be included in a user written page. This is idea is to split generated code and hand written code for easier maintainance.
+We generate a fragment of page that should be included in a user written page. This is idea is to split generated code and hand written code for easier maintenance.
 
 
 

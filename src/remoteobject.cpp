@@ -318,7 +318,7 @@ namespace qi {
     msg.setObject(_object);
     msg.setFunction(event);
     if (!_socket->send(msg)) {
-      qiLogError() << "error while emiting event";
+      qiLogError() << "error while emitting event";
       return;
     }
   }

@@ -55,7 +55,7 @@ namespace qi_client_dotnet
             future.Wait();
 
             if (future.IsError() == true)
-                Console.WriteLine("An error occured");
+                Console.WriteLine("An error occurred");
 
             // LEGENDARY
             if (future.IsReady() == true && future.IsError() == false)

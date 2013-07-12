@@ -44,7 +44,7 @@ Synchronous
 Network Thread
 ++++++++++++++
 
-A Network Thread will dispatch the events comming from everywhere. You can work with pool thread or self created threads into your process. You need them each time you create a Client or Server, it will allow to work asynchronously.
+A Network Thread will dispatch the events coming from everywhere. You can work with pool thread or self created threads into your process. You need them each time you create a Client or Server, it will allow to work asynchronously.
 
 .. warning::
 

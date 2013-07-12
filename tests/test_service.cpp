@@ -200,7 +200,7 @@ TEST(QiService, RemoteObjectNackTransactionWhenServerClosed)
   fret.wait(1000);
   //once the server is close, the answer should be ready.
   EXPECT_TRUE(fret.isFinished());
-  //the service is closed, so it cant send an answer.
+  //the service is closed, so it can't send an answer.
   EXPECT_TRUE(fret.hasError(1000));
 }
 

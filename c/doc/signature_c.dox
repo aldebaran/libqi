@@ -30,7 +30,7 @@
   *
   * \param[in] signature : Signature to use.
   *
-  * \return pointertoqi_signature_t on sucess, NULL on failure
+  * \return pointertoqi_signature_t on success, NULL on failure
   * \since 1.18
   */
 
@@ -40,7 +40,7 @@
   *
   * \param[in] signature : Signature to use.
   *
-  * \return pointertoqi_signature_t on sucess, NULL on failure
+  * \return pointertoqi_signature_t on success, NULL on failure
   * \since 1.18
   *
   * \code {.cpp}

@@ -37,7 +37,7 @@ Private classes go into <src>/*
 Private implementation headers should be named '<classname>_p.hpp'
 
   - this distinguishes public and private headers, otherwise we can have two files with the same name which is not pratical.
-  - futhermore this denotates that the content should never be public, it's the private part of a class.
+  - furthermore this denotates that the content should never be public, it's the private part of a class.
 
 - Qt classes are not in a namespace
 - Qt classes are prefixed with 'Qi'
@@ -226,7 +226,7 @@ Exceptions issues:
 - it's not really compatible with asynchronous design, where error reporting should be asynchronous too, but the error can catched at the caller place, and rethrow at the callee place. (qi::Future can help having both)
 - exceptions increase the library size
 - it's really hard to write exception-safe code. (RAII really help here)
-- Exception catching of a user defined type in a binary other than the one which threw the exception requires a typeinfo lookup. (and rtti do not work well accross dll boundary http://gcc.gnu.org/faq.html#dso)
+- Exception catching of a user defined type in a binary other than the one which threw the exception requires a typeinfo lookup. (and rtti do not work well across dll boundary http://gcc.gnu.org/faq.html#dso)
 - it break ABI: memory allocated in one place should be deallocated in the same place (remember that object do not have the same size in release/debug with MSVC), so if user catch a ref, this can crash.
 - Avoiding leak is really hard (all function should handle exceptions, again RAII really help)
 
@@ -247,7 +247,7 @@ This could be fixed with a RAII smart pointer class:
   boost::shared_ptr<A> a = boost::make_shared<A>();
 
   functionthatthrow();
-  //a is cleanup here whatever happend.
+  //a is cleanup here whatever happened.
 
 even more vicious:
 
@@ -265,7 +265,7 @@ even more vicious:
 
   void main() {
     EvilObject *eo = new EvilObject;
-    //leak, but you cant guess that reading functionthatdonotthrow
+    //leak, but you can't guess that reading functionthatdonotthrow
     functionthatdonotthrow(*eo);
   }
 

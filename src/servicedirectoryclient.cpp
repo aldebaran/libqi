@@ -77,7 +77,7 @@ namespace qi {
   }
 
   //we ensure in that function that connect to all events are already setup when we said we are connect.
-  //that way we cant be connected without being fully ready.
+  //that way we can't be connected without being fully ready.
   qi::FutureSync<void> ServiceDirectoryClient::connect(const qi::Url &serviceDirectoryURL) {
     if (isConnected()) {
       const char* s = "Session is already connected";

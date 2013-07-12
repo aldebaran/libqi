@@ -42,7 +42,7 @@ int client_calls(qi::Session *session, qi::ObjectPtr obj)
 
     if (!obj)
     {
-      std::cerr << "cant get serviceTest" << std::endl;
+      std::cerr << "can't get serviceTest" << std::endl;
       return -1;
     }
   }
@@ -93,7 +93,7 @@ int main_client(bool shared)
 
     if (!obj)
     {
-      std::cerr << "cant get serviceTest" << std::endl;
+      std::cerr << "can't get serviceTest" << std::endl;
       return -1;
     }
   }

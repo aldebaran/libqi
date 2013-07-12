@@ -47,7 +47,7 @@ Classes
 
     pure virtual
 
-    Called when an error occured to the Future<T> being watched.
+    Called when an error occurred to the Future<T> being watched.
 
     :param future: the future
     :param data: pointer to user data
@@ -102,7 +102,7 @@ Classes
 
   .. cpp:function:: bool hasError() const
 
-    :return: true if error occured
+    :return: true if error occurred
 
   .. cpp:function:: const std::string &error() const
 

@@ -7,7 +7,7 @@ ServiceDirectory
 ----------------
 
 Only service on lpc/ipc/rpc can be registered. It should not be possible to register service behind a gateway nor XMPP.
-Clients connected using the gateway will continue using the same gateway whatever happend.
+Clients connected using the gateway will continue using the same gateway whatever happened.
 The endpoint selection mecanism apply only to client on on at least the same subnetwork.
 
 All clients who want to connect to a service could ask the ServiceDirectory about service location and available endpoints.

@@ -85,7 +85,7 @@ Tracing / debuggable
 --------------------
 
 We need a tracing infrastructure to understand what's going on in the system.
-We need to be able to display current running task, bandwith usage for each services, frequency of calls and events.
+We need to be able to display current running task, bandwidth usage for each services, frequency of calls and events.
 
 It should be possible to activate the debug mode without too much performance penality.
 

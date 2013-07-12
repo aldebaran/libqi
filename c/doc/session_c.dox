@@ -24,7 +24,7 @@
   /*!
   * \fn qi_session_create()
   * \brief Allocate and initialise qi_session_t.
-  * \return Pointer QiMessaging session on sucess, 0 on error.
+  * \return Pointer QiMessaging session on success, 0 on error.
   * \note This pointer must be destroy using qi_session_destroy.
   * \see qi_session_destroy
   * \since 1.18

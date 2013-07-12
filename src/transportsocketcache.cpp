@@ -23,7 +23,7 @@ namespace qi {
       _dying = true;
       MachineConnectionMap socketsCopy;
       {
-        // Do not hold _socketsMutex while iterating or deadlock may occurr
+        // Do not hold _socketsMutex while iterating or deadlock may occur
         // between disconnect() that waits for callback handler
         // and callback handler that tries to acquire _socketsMutex
         boost::mutex::scoped_lock sl(_socketsMutex);

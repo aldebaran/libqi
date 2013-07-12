@@ -92,7 +92,7 @@ namespace qi {
   bool MessageDispatcher::messagePendingDisconnect(unsigned int serviceId, unsigned int objectId, qi::SignalBase::Link linkId)
   {
     // Do not hold the lock when invoking disconnect()
-    // or deadlock may occurr as disconnect() waits for
+    // or deadlock may occur as disconnect() waits for
     // handlers to finish before returning.
     boost::shared_ptr<OnMessageSignal> sig;
     SignalMap::iterator it;

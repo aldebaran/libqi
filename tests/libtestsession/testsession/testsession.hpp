@@ -35,7 +35,7 @@
 
 /*!
  * \class TestMode
- * \brief Provide usefull methods to manipulate libtestsession different modes.
+ * \brief Provide useful methods to manipulate libtestsession different modes.
  * \since 1.18
  * \author Pierre Roullon
  */

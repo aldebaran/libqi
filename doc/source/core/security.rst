@@ -30,7 +30,7 @@ An application can be constitued of services and behaviors.
 Remote Application
 ------------------
 
-Remote application should be handled with care, we cant control them, we dont know how they are made. They should not have access to the whole remote device.
+Remote application should be handled with care, we can't control them, we dont know how they are made. They should not have access to the whole remote device.
 It's very important for them to be restricted by a set of permission.
 
 SessionID

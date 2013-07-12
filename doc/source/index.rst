@@ -142,7 +142,7 @@ Indices and tables
       - choregraphe: the full package :)
          - xareditor, timelineeditor, metadataeditor, ressourceeditor, ..
          - oscilloscope mode : inspect all signals (streams, events, parameters, ..)
-         - gather and display statistics about service's usage, trafic, latency, ..
+         - gather and display statistics about service's usage, traffic, latency, ..
       - representation of the robot, ik3d
 
 

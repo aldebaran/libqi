@@ -106,7 +106,7 @@ int main_client(std::string QI_UNUSED(src))
   std::cerr <<"Done" << std::endl;
   if (!obj)
   {
-    std::cerr << "cant get serviceTest " << futobj.error() << std::endl;
+    std::cerr << "can't get serviceTest " << futobj.error() << std::endl;
     return -1;
   }
   return run_client(obj);

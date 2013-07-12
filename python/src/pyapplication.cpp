@@ -45,7 +45,7 @@ namespace qi {
         // #2 Create c application
         _app = boost::shared_ptr<qi::Application>(new qi::Application(argc, argv));
 
-        // #3 Free C arguements
+        // #3 Free C arguments
         i = 0;
         delete[] argv;
       }

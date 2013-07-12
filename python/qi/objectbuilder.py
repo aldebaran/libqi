@@ -27,7 +27,7 @@ class ObjectBuilder:
         """ Allocate and return QiMessaging object instance from object builder.
 
         Returns:
-            Object on sucess, None on error
+            Object on success, None on error
         """
         obj = _qipy.qi_object_builder_get_object(self._builder)
 

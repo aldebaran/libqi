@@ -690,7 +690,7 @@ TEST(TestCall, TestObjectPassing)
   eventValue.future().wait(1000);
   ASSERT_TRUE(!eventValue.future().isFinished());
 
-  // Check that unregisteredObj is no longuer held
+  // Check that unregisteredObj is no longer held
   unregisteredObj.reset();
   ASSERT_FALSE(unregisteredWeakObj.lock());
 }
