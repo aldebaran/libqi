@@ -190,8 +190,6 @@ namespace qi {
     QI_API void setVerbosity(const std::string& rules, SubscriberId sub = 0);
     QI_API void setVerbosity(const qi::LogLevel lv, SubscriberId sub = 0);
 
-    //deprecated 1.22
-    /*QI_API_DEPRECATED*/ inline void setVerbosity(SubscriberId sub, const qi::log::LogLevel lv) { setVerbosity((qi::LogLevel)lv, sub); }
 
     /// Add/get a category
     QI_API CategoryType addCategory(const std::string& name);
@@ -202,8 +200,6 @@ namespace qi {
     /// Set per-subscriber \param cat to level \param level. Globbing is supported.
     QI_API void setCategory(const std::string& cat, qi::LogLevel level, SubscriberId sub = 0);
 
-    // Deprecated 1.22
-    /*QI_API_DEPRECATED*/ inline void setCategory(SubscriberId sub, const std::string& cat, qi::log::LogLevel level) { setCategory(cat, (qi::LogLevel)level, sub); }
 
     /// \return true if given combination of category and level is enabled.
     QI_API bool isVisible(CategoryType category, qi::LogLevel level);
@@ -226,6 +222,14 @@ namespace qi {
     QI_API void removeLogHandler(const std::string& name);
 
     QI_API void flush();
+
+
+   #include <qi/details/warn_push_ignore_deprecated.hpp>
+    // Deprecated 1.22
+    QI_API_DEPRECATED inline void setVerbosity(SubscriberId sub, const qi::log::LogLevel lv) { setVerbosity((qi::LogLevel)lv, sub); }
+    // Deprecated 1.22
+    QI_API_DEPRECATED inline void setCategory(SubscriberId sub, const std::string& cat, qi::log::LogLevel level) { setCategory(cat, (qi::LogLevel)level, sub); }
+   #include <qi/details/warn_pop_ignore_deprecated.hpp>
 
   }
 }
