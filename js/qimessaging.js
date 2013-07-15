@@ -12,6 +12,7 @@ function QiSession(url, resource)
   var _socket = io.connect(url, { resource: resource == undefined ? "socket.io" : resource });
   var _dfd = new Array();
   var _sigs = new Array();
+  var _sigIdxToLink = new Array();
   var _idm = 0;
 
   _socket.on('reply', function (data) {
@@ -37,6 +38,11 @@ function QiSession(url, resource)
       }
 
       _dfd[data["idm"]].resolve(o);
+    }
+    else if (_dfd[data["idm"]].__event != undefined)
+    {
+      _sigIdxToLink[data["result"]] = _dfd[data["idm"]].__event;
+      _dfd[data["idm"]].resolve(data["result"]);
     }
     else
     {
@@ -70,7 +76,7 @@ function QiSession(url, resource)
     }
   });
 
-  function createMetaCall(service, method)
+  function createMetaCall(service, method, data)
   {
     return function() {
       var idm = ++_idm;
@@ -78,6 +84,10 @@ function QiSession(url, resource)
       if (service == "ServiceDirectory" && method == "service")
       {
         _dfd[idm].__service = 1;
+      }
+      else if (method == "registerEvent")
+      {
+        _dfd[idm].__event = data;
       }
       _socket.emit('call', { idm: idm, params: { service: service, method: method, args: Array.prototype.slice.call(arguments, 0) } });
 
@@ -90,12 +100,13 @@ function QiSession(url, resource)
     var e = new Object();
     _sigs[service][signal] = new Array();
     e.connect = function(cb) {
-      var i = _sigs[service][signal].push(cb);
-      return createMetaCall(service, "registerEvent")(signal, i);
+      var i = _sigs[service][signal].push(cb) - 1;
+      return createMetaCall(service, "registerEvent", i)(signal);
     }
-    e.disconnect = function(i) {
-      delete _sigs[service][signal][i];
-      return createMetaCall(service, "unregisterEvent")(signal, i)
+    e.disconnect = function(l) {
+      delete _sigs[service][signal][_sigIdxToLink[l]];
+      delete _sigIdxToLink[l];
+      return createMetaCall(service, "unregisterEvent")(signal, l);
     }
     return e;
   }
