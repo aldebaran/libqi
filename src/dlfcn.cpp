@@ -8,6 +8,7 @@
 #include <qi/os.hpp>
 
 #include <boost/filesystem.hpp>
+#include <boost/thread/tss.hpp>
 
 #include <iostream>
 #include <cstring>
@@ -70,18 +71,31 @@ namespace qi {
       return function;
     }
 
+#ifdef _WIN32
+
+    void cleanup(char* ptr)
+    {
+      delete[] ptr;
+    }
+
+#endif // !_WIN32
+
     const char *dlerror(void) {
      #ifdef _WIN32
-      static char err[255];
       DWORD lastError = GetLastError();
       // Unix dlerror() return null if error code is 0
       if (lastError == 0)
         return NULL;
 
-      DWORD result = FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM, 0, lastError, 0, err, sizeof(err), 0);
+      static boost::thread_specific_ptr<char> err(cleanup);
+      if (!err.get())
+        err.reset(static_cast<char*>(new char[255]));
+
+      DWORD result = FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM, 0, lastError, 0, err.get(), sizeof(char) * 255, 0);
+
       // Unix dlerror() resets its value after a call, ensure same behavior
       SetLastError(0);
-      return err;
+      return err.get();
      #else
       return ::dlerror();
      #endif
