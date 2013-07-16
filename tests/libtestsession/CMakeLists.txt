@@ -24,13 +24,7 @@ function(qimessaging_create_session_test name)
   endif()
 endfunction()
 
-set(PUBLIC_HEADERS
-    testsession/testsession.hpp
-    testsession/testsessionpair.hpp
-)
-
-qi_install_header(${PUBLIC_HEADERS} KEEP_RELATIVE_PATHS)
-qi_create_lib(testsession STATIC SRC ${PUBLIC_HEADERS}
+qi_create_lib(testsession STATIC NO_INSTALL
               src/testmode.cpp
               src/testsessionpair.cpp
               src/testsession.cpp
