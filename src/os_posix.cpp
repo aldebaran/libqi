@@ -87,6 +87,9 @@ namespace qi {
 
     std::string home()
     {
+#ifdef ANDROID
+      return "/mnt/sdcard";
+#endif
       std::string envHome = qi::os::getenv("HOME");
       if (envHome != "")
       {

@@ -138,7 +138,7 @@ namespace qi {
       }
       else
       {
-        qiLogError("getMachineId") << "Unable to create file: " << idFilePath;
+        qiLogError("getMachineId") << "Unable to create file: '" << idFilePath << "'";
       }
 
       return idString;
