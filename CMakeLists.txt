@@ -44,6 +44,7 @@ endif()
 set(H
   qi/details/future.hxx
   qi/details/log.hxx
+  qi/details/trackable.hxx
   qi/details/warn_push_ignore_deprecated.hpp
   qi/details/warn_pop_ignore_deprecated.hpp
   qi/api.hpp
@@ -66,6 +67,7 @@ set(H
   qi/shared_ptr.hpp
   qi/qi.hpp
   qi/threadpool.hpp
+  qi/trackable.hpp
   qi/eventloop.hpp
   qi/version.hpp
   qi/iocolor.hpp
