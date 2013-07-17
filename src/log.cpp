@@ -817,14 +817,39 @@ namespace qi {
         setColor(LogColor_Auto);
     }
 
+    static const std::string contextLogOption = ""
+        "Show context logs, it's a bitfield (add the value bellow):\n"
+        " 1 : Verbosity\n"
+        " 2 : ShortVerbosity\n"
+        " 4 : ThreadId\n"
+        " 8 : Category\n"
+        " 16: File\n"
+        " 32: Function\n"
+        " 64: EndOfLine\n"
+        "some useful values for context are:\n"
+        " 26 : (verb+threadId+cat)\n"
+        " 30 : (verb+threadId+date+cat)\n"
+        " 126: (verb+threadId+date+cat+file+fun)\n"
+        " 254: (verb+threadId+date+cat+file+fun+eol)";
+
+    static const std::string levelLogOption = ""
+        "Change the log minimum level: [0-6] (default:4)\n"
+        " 0: silent\n"
+        " 1: fatal\n"
+        " 2: error\n"
+        " 3: warning\n"
+        " 4: info\n"
+        " 5: verbose\n"
+        " 6: debug";
+
     _QI_COMMAND_LINE_OPTIONS(
       "Logging options",
       ("qi-log-verbose", bool_switch()->notifier(&_setVerbose), "Set verbose verbosity.")
       ("qi-log-debug", bool_switch()->notifier(&_setDebug), "Set debug verbosity.")
       ("qi-log-quiet",  bool_switch()->notifier(&_quiet), "Do not show logs on console.")
-      ("qi-log-context", value<int>()->notifier(&setContext), "Show context logs: [0-7] (0: none, 1: categories, 2: date, 3: file+line, 4: date+categories, 5: date+line+file, 6: categories+line+file, 7: all (date+categories+line+file+function)).")
+      ("qi-log-context", value<int>()->notifier(&setContext), contextLogOption.c_str())
       ("qi-log-synchronous", bool_switch()->notifier(boost::bind(&setSynchronousLog, true)),  "Activate synchronous logs.")
-      ("qi-log-level", value<int>()->notifier(&_setVerbosityInt), "Change the log minimum level: [0-6] (0: silent, 1: fatal, 2: error, 3: warning, 4: info, 5: verbose, 6: debug). Default: 4 (info)")
+      ("qi-log-level", value<int>()->notifier(&_setVerbosityInt), levelLogOption.c_str())
       ("qi-log-color", value<std::string>()->notifier(&_setColor), "Tell if we should put color or not in log (auto, always, never).")
       )
 
