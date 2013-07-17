@@ -37,6 +37,7 @@ set(PUBLIC_HEADERS
                    qitype/details/anyvalue.hxx
                    qitype/details/anyfunction.hxx
                    qitype/details/anyfunctionfactory.hxx
+                   qitype/details/anyiterator.hpp
                    qitype/details/anyiterator.hxx
                    qitype/details/bindtype.hxx
                    qitype/details/functionsignature.hxx
