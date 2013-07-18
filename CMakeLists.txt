@@ -119,5 +119,8 @@ list(APPEND SOURCES ${_confighpp})
 qi_create_lib(qitype ${SOURCES} SHARED DEPENDS QI BOOST BOOST_DATE_TIME BOOST_THREAD)
 qi_stage_lib(qitype)
 
-add_subdirectory("tests")
-add_subdirectory("codegen")
+if(NOT ANDROID)
+  add_subdirectory("tests")
+  add_subdirectory("codegen")
+endif()
+
