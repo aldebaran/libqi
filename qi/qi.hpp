@@ -13,7 +13,7 @@
 
 namespace qi {
 
-  QI_API QI_API_DEPRECATED void init(int argc, char *argv[]);
+  QI_API QI_API_DEPRECATED void init(int& argc, char **& argv);
   QI_API QI_API_DEPRECATED int argc();
   QI_API QI_API_DEPRECATED const char** argv();
   QI_API QI_API_DEPRECATED const char *program();

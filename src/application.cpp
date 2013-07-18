@@ -477,7 +477,7 @@ namespace qi {
   }
 
   //this is not threadsafe
-  void init(int argc, char* argv[])
+  void init(int& argc, char**& argv)
   {
     static qi::Application *app = 0;
 
