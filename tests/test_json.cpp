@@ -273,7 +273,6 @@ TEST(TestJSONDecoder, Object) {
   ASSERT_ANY_THROW(qi::decodeJSON("{"));
   ASSERT_ANY_THROW(qi::decodeJSON("{42:42}"));
   ASSERT_ANY_THROW(qi::decodeJSON("{\"42\":}"));
-  ASSERT_ANY_THROW(qi::decodeJSON("{\"key\"}"));
 
   ASSERT_EQ(qi::TypeKind_Map, qi::decodeJSON("{}").kind());
   ASSERT_EQ(1U, qi::decodeJSON("{\"a\":42}").size());
@@ -287,7 +286,6 @@ TEST(TestJSONDecoder, special) {
   ASSERT_NO_THROW(qi::decodeJSON("false"));
   ASSERT_NO_THROW(qi::decodeJSON("null"));
   ASSERT_ANY_THROW(qi::decodeJSON("tru"));
-  ASSERT_NO_THROW(qi::decodeJSON("tru", qi::JSONRule_Permissive));
 
   ASSERT_EQ(qi::TypeKind_Int, qi::decodeJSON("true").kind());
   ASSERT_EQ(qi::TypeKind_Int, qi::decodeJSON("false").kind());
@@ -312,25 +310,6 @@ TEST(TestJSONDecoder, itOverload) {
   std::string testString2 = "<jsonString=\"[\"a\", 42\"/>";
   ASSERT_ANY_THROW(qi::decodeJSON(testString2.begin() + 13, testString2.end(), val));
 
-}
-
-TEST(TestJSONDecoder, rule) {
-  ASSERT_NO_THROW(qi::decodeJSON("json", qi::JSONRule_Permissive));
-  ASSERT_ANY_THROW(qi::decodeJSON("json", qi::JSONRule_Strict));
-  ASSERT_NO_THROW(qi::decodeJSON("[json]", qi::JSONRule_Permissive));
-  ASSERT_NO_THROW(qi::decodeJSON("[json, json]", qi::JSONRule_Permissive));
-  ASSERT_NO_THROW(qi::decodeJSON("{json:json}", qi::JSONRule_Permissive));
-  ASSERT_ANY_THROW(qi::decodeJSON("{json}", qi::JSONRule_Permissive));
-
-  ASSERT_EQ(qi::TypeKind_String, qi::decodeJSON("json", qi::JSONRule_Permissive).kind());
-  ASSERT_EQ(qi::TypeKind_String, qi::decodeJSON("[json]", qi::JSONRule_Permissive)[0].asDynamic().kind());
-  ASSERT_EQ(qi::TypeKind_String, qi::decodeJSON("[json, json]", qi::JSONRule_Permissive)[1].asDynamic().kind());
-  ASSERT_EQ(qi::TypeKind_String, qi::decodeJSON("{json:json}", qi::JSONRule_Permissive)["json"].asDynamic().kind());
-
-  ASSERT_STREQ("json", qi::decodeJSON("[json]", qi::JSONRule_Permissive)[0].asDynamic().asString().c_str());
-  ASSERT_STREQ("json", qi::decodeJSON("[json, json]", qi::JSONRule_Permissive)[1].asDynamic().asString().c_str());
-  ASSERT_STREQ("json", qi::decodeJSON("{json:json}", qi::JSONRule_Permissive)["json"].asDynamic().asString().c_str());
-  ASSERT_STREQ("json", qi::decodeJSON("json", qi::JSONRule_Permissive).asString().c_str());
 }
 
 int main(int argc, char **argv)

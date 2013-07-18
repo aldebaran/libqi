@@ -9,21 +9,16 @@
 
 # include <string>
 # include <qitype/anyvalue.hpp>
-# include <qitype/jsoncodec.hpp>
 
 namespace qi {
 
   class JsonDecoderPrivate
   {
-  private:
-    static const std::string  _strictJsonTokenSet;
-    static const std::string  _permissiveJsonTokenSet;
-
   public:
     JsonDecoderPrivate(const std::string &in);
     JsonDecoderPrivate(const std::string::const_iterator &begin,
                       const std::string::const_iterator &end);
-    std::string::const_iterator decode(AnyValue &out, JSONRule rule=JSONRule_Strict);
+    std::string::const_iterator decode(AnyValue &out);
 
   private:
     void skipWhiteSpaces();
@@ -42,16 +37,10 @@ namespace qi {
     bool decodeSpecial(AnyValue &value);
     bool decodeValue(AnyValue &value);
 
-    bool isJsonToken(const std::string::const_iterator &it) const;
-    bool isEndOfJsonString(const std::string::const_iterator &it) const;
-    bool isBeginningOfJsonString(const std::string::const_iterator &it) const;
-
-
   private:
     std::string::const_iterator const _begin;
     std::string::const_iterator const _end;
     std::string::const_iterator       _it;
-    JSONRule                          _rule;
   };
 
 }

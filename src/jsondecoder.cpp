@@ -10,27 +10,21 @@
 
 namespace qi {
 
-  const std::string  JsonDecoderPrivate::_strictJsonTokenSet = "[]{},:\"";
-  const std::string  JsonDecoderPrivate::_permissiveJsonTokenSet = "[]{},:";
-
   JsonDecoderPrivate::JsonDecoderPrivate(const std::string &in)
     :_begin(in.begin()),
       _end(in.end()),
-      _it(_begin),
-      _rule(JSONRule_Strict)
+      _it(_begin)
   {}
 
   JsonDecoderPrivate::JsonDecoderPrivate(const std::string::const_iterator &begin,
                     const std::string::const_iterator &end)
     :_begin(begin),
       _end(end),
-      _it(_begin),
-      _rule(JSONRule_Strict)
+      _it(_begin)
   {}
 
-  std::string::const_iterator JsonDecoderPrivate::decode(AnyValue &out, JSONRule rule)
+  std::string::const_iterator JsonDecoderPrivate::decode(AnyValue &out)
   {
-    _rule = rule;
     _it = _begin;
     if (!decodeValue(out))
       throw std::runtime_error("parse error");
@@ -205,15 +199,12 @@ namespace qi {
   {
     std::string::const_iterator save = _it;
 
-    if (_it == _end)
-      return false;
-    if (!isBeginningOfJsonString(_it))
+    if (_it == _end || *_it != '"')
       return false;
     std::string tmpString;
 
-    if (_rule == JSONRule_Strict)
-      ++_it;
-    while (_it != _end && !isEndOfJsonString(_it))
+    ++_it;
+    for (;_it != _end && *_it != '"';)
     {
       if (*_it == '\\')
       {
@@ -244,13 +235,12 @@ namespace qi {
         ++_it;
       }
     }
-    if (_rule == JSONRule_Strict && _it == _end)
+    if (_it == _end)
     {
       _it = save;
       return false;
     }
-    if (_rule == JSONRule_Strict)
-      ++_it;
+    ++_it;
     result = tmpString;
     return true;
   }
@@ -353,11 +343,11 @@ namespace qi {
   {
     skipWhiteSpaces();
     if (decodeSpecial(value)
+        || decodeString(value)
         || decodeFloat(value)
         || decodeInteger(value)
         || decodeArray(value)
         || decodeObject(value)
-        || decodeString(value)
         )
     {
       skipWhiteSpaces();
@@ -366,46 +356,20 @@ namespace qi {
     return false;
   }
 
-  bool JsonDecoderPrivate::isJsonToken(const std::string::const_iterator &it) const
-  {
-    if (_rule == JSONRule_Strict && _strictJsonTokenSet.find(*it) != std::string::npos)
-        return true;
-    if (_rule == JSONRule_Permissive && _permissiveJsonTokenSet.find(*it) != std::string::npos)
-        return true;
-    return false;
-  }
-
-  bool JsonDecoderPrivate::isEndOfJsonString(const std::string::const_iterator &it) const
-  {
-    if (_rule == JSONRule_Strict)
-      return *it == '"';
-    else
-     return *it == ' ' || isJsonToken(it);
-  }
-
-  bool JsonDecoderPrivate::isBeginningOfJsonString(const std::string::const_iterator &it) const
-  {
-    if (_rule == JSONRule_Strict)
-      return *it == '"';
-    else
-      return *it != ' ' && !isJsonToken(it);
-  }
-
-
   std::string::const_iterator decodeJSON(const std::string::const_iterator &begin,
                                          const std::string::const_iterator &end,
-                                         AnyValue &target, JSONRule rule)
+                                         AnyValue &target)
   {
     JsonDecoderPrivate parser(begin, end);
     return parser.decode(target);
   }
 
-  AnyValue decodeJSON(const std::string &in, JSONRule rule)
+  AnyValue decodeJSON(const std::string &in)
   {
     AnyValue value;
     JsonDecoderPrivate parser(in);
 
-    parser.decode(value, rule);
+    parser.decode(value);
     return value;
   }
 

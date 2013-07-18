@@ -12,12 +12,6 @@
 
 namespace qi {
 
-  enum JSONRule
-  {
-    JSONRule_Strict,
-    JSONRule_Permissive,
-  };
-
   /** @return the value encoded in JSON.
    */
   QITYPE_API std::string encodeJSON(const qi::AutoAnyReference &val);
@@ -27,7 +21,7 @@ namespace qi {
     * @param JSON string to decode.
     * @return a GV representing the JSON string
     */
-  QITYPE_API qi::AnyValue decodeJSON(const std::string &in, JSONRule rule=JSONRule_Strict);
+  QITYPE_API qi::AnyValue decodeJSON(const std::string &in);
 
   /**
     * set the input GV to represent the JSON sequence between two string iterators or throw on parse error.
@@ -38,7 +32,7 @@ namespace qi {
     */
   QITYPE_API std::string::const_iterator decodeJSON(const std::string::const_iterator &begin,
                                          const std::string::const_iterator &end,
-                                         AnyValue &target, JSONRule rule=JSONRule_Strict);
+                                         AnyValue &target);
 
 
 
