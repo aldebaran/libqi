@@ -19,10 +19,10 @@ public:
 
 public:
   void info(const std::vector<std::string> &patternVec, bool verbose, bool showHidden, bool showDoc);
-  void call(const std::string &pattern, const std::vector<std::string> &jsonArgList, bool hidden);
-  void post(const std::string &pattern, const std::vector<std::string> &jsonArgList, bool hidden);
+  void call(const std::string &pattern, const std::vector<std::string> &jsonArgList, bool hidden, bool json);
+  void post(const std::string &pattern, const std::vector<std::string> &jsonArgList, bool hidden, bool json);
   void get(const std::vector<std::string> &patternList, bool hidden);
-  void set(const std::vector<std::string> &patternList, const std::string &jsonValue, bool hidden);
+  void set(const std::vector<std::string> &patternList, const std::string &jsonValue, bool hidden, bool json);
   void watch(const std::vector<std::string> &patternList, bool showTime, bool hidden);
 
 private:
@@ -30,7 +30,9 @@ private:
   MatchMap                      getMatchMap(const std::vector<std::string> &patternList, ShPatternResolver patternResolver, bool hidden);
   void                          forEachService(const std::string &pattern, ShMethod methodToCall, ShPatternResolver patternResolver, bool hidden);
   void                          forEachService(const std::vector<std::string> &patternList, ShMethod methodToCall, ShPatternResolver patternResolver, bool hidden);
-  qi::GenericFunctionParameters decodeJsonArgs(const std::vector<std::string> &jsonArgList);
+  qi::AnyValue                  decodeArgByCast(const std::string &arg);
+  qi::AnyValue                  decodeArg(const std::string &arg, bool json);
+  qi::GenericFunctionParameters decodeArgs(const std::vector<std::string> &jsonArgList, bool json);
   ServiceHelper                 getServiceHelper(const std::string &serviceName);
   std::list<std::string>        getMatchingServices(const std::string &patternList, bool getHidden);
   void                          showServiceInfo(const qi::ServiceInfo &infos, bool verbose, bool showHidden, bool showDoc);

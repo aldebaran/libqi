@@ -59,6 +59,7 @@ int subCmd_call(int argc, char **argv, const MainOptions &options)
       ("method,m", po::value<std::string>(&fullName)->required(), "method's name")
       ("arg,a", po::value<std::vector<std::string> >(&argList), "method's args")
       ("hidden", "call hidden methods if they match the given pattern")
+      ("json", "method parameters' will be treaded as JSON strings")
       ("help,h", "Print this help message and exit");
 
   po::positional_options_description positionalOptions;
@@ -71,7 +72,7 @@ int subCmd_call(int argc, char **argv, const MainOptions &options)
     return 1;
   SessionHelper session(options.address);
 
-  session.call(fullName, argList, vm.count("hidden"));
+  session.call(fullName, argList, vm.count("hidden"), vm.count("json"));
   return 0;
 }
 
@@ -85,6 +86,7 @@ int subCmd_post(int argc, char **argv, const MainOptions &options)
       ("signal,s", po::value<std::string>(&fullName)->required(), "signal's name")
       ("arg,a", po::value<std::vector<std::string> >(&argList), "method's args")
       ("hidden", "post hidden signals if they match the given pattern")
+      ("json", "signal parameters' will be treaded as JSON strings")
       ("help,h", "Print this help message and exit");
 
   po::positional_options_description positionalOptions;
@@ -98,7 +100,7 @@ int subCmd_post(int argc, char **argv, const MainOptions &options)
 
   SessionHelper session(options.address);
 
-  session.post(fullName, argList, vm.count("hidden"));
+  session.post(fullName, argList, vm.count("hidden"), vm.count("json"));
   return 0;
 }
 
@@ -133,6 +135,7 @@ int subCmd_set(int argc, char **argv, const MainOptions &options)
   desc.add_options()
       ("prop,p", po::value<std::vector<std::string> >(&argList), "property's name")
       ("hidden", "set hidden properties if they match the given pattern")
+      ("json", "parameter will be treaded as a JSON string")
       ("help,h", "Print this help message and exit");
 
   po::positional_options_description positionalOptions;
@@ -152,7 +155,7 @@ int subCmd_set(int argc, char **argv, const MainOptions &options)
   argList.pop_back();
 
   SessionHelper session(options.address);
-  session.set(argList, jsonValue, vm.count("hidden"));
+  session.set(argList, jsonValue, vm.count("hidden"), vm.count("json"));
   return 0;
 }
 

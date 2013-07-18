@@ -3,6 +3,8 @@
 #include <qi/iocolor.hpp>
 #include <boost/foreach.hpp>
 #include <qitype/jsoncodec.hpp>
+#include <boost/lexical_cast.hpp>
+
 #include "sessionhelper.hpp"
 #include "qicli.hpp"
 
@@ -38,15 +40,15 @@ void SessionHelper::info(const std::vector<std::string> &patternVec, bool verbos
         showServiceInfo(_servicesInfos[j], verbose, showHidden, showDoc);
 }
 
-void SessionHelper::call(const std::string &pattern, const std::vector<std::string> &jsonArgList, bool hidden)
+void SessionHelper::call(const std::string &pattern, const std::vector<std::string> &argList, bool hidden, bool json)
 {
-  forEachService(pattern, boost::bind(&ServiceHelper::call, _1, _2, decodeJsonArgs(jsonArgList)),
+  forEachService(pattern, boost::bind(&ServiceHelper::call, _1, _2, decodeArgs(argList, json)),
                   &ServiceHelper::getMatchingMethodsName, hidden);
 }
 
-void SessionHelper::post(const std::string &pattern, const std::vector<std::string> &jsonArgList, bool hidden)
+void SessionHelper::post(const std::string &pattern, const std::vector<std::string> &argList, bool hidden, bool json)
 {
-  forEachService(pattern, boost::bind(&ServiceHelper::post, _1, _2, decodeJsonArgs(jsonArgList)),
+  forEachService(pattern, boost::bind(&ServiceHelper::post, _1, _2, decodeArgs(argList, json)),
                   &ServiceHelper::getMatchingSignalsName, hidden);
 }
 
@@ -56,9 +58,9 @@ void SessionHelper::get(const std::vector<std::string> &patternList, bool hidden
                   &ServiceHelper::getMatchingPropertiesName, hidden);
 }
 
-void SessionHelper::set(const std::vector<std::string> &patternList, const std::string &jsonValue, bool hidden)
+void SessionHelper::set(const std::vector<std::string> &patternList, const std::string &arg, bool hidden, bool json)
 {
-  forEachService(patternList, boost::bind(&ServiceHelper::setProperty, _1, _2, qi::decodeJSON(jsonValue)),
+  forEachService(patternList, boost::bind(&ServiceHelper::setProperty, _1, _2, decodeArg(arg, json)),
                   &ServiceHelper::getMatchingPropertiesName, hidden);
 }
 
@@ -213,13 +215,38 @@ bool SessionHelper::splitName(const std::string &fullName, std::string &beforePo
   return true;
 }
 
-qi::GenericFunctionParameters SessionHelper::decodeJsonArgs(const std::vector<std::string> &jsonArgList)
+qi::AnyValue SessionHelper::decodeArgByCast(const std::string &arg)
+{
+  try {
+    return qi::AnyValue(boost::lexical_cast<qi::int64_t>(arg));
+  } catch (const boost::bad_lexical_cast &) {
+    try {
+      return qi::AnyValue(boost::lexical_cast<double>(arg));
+    } catch (const boost::bad_lexical_cast &) {
+      try {
+        return qi::AnyValue(boost::lexical_cast<std::string>(arg));
+      } catch (const boost::bad_lexical_cast &) {
+        throw std::runtime_error("error while decoding arg");
+      }
+    }
+  }
+}
+
+qi::AnyValue SessionHelper::decodeArg(const std::string &arg, bool json)
+{
+  if (json)
+    return qi::decodeJSON(arg);
+  else
+    return decodeArgByCast(arg);
+}
+
+qi::GenericFunctionParameters SessionHelper::decodeArgs(const std::vector<std::string> &argList, bool json)
 {
   qi::GenericFunctionParameters gvArgList;
 
-  for (unsigned int i = 0; i < jsonArgList.size(); ++i)
+  for (unsigned int i = 0; i < argList.size(); ++i)
   {
-    qi::AnyValue gvArg = qi::decodeJSON(jsonArgList[i]);
+    qi::AnyValue gvArg = decodeArg(argList[i], json);
     gvArgList.push_back(gvArg.clone());
   }
   return gvArgList;
