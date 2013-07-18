@@ -57,7 +57,7 @@ void SessionHelper::get(const std::vector<std::string> &patternList, bool hidden
 
 void SessionHelper::set(const std::vector<std::string> &patternList, const std::string &jsonValue, bool hidden)
 {
-  forEachService(patternList, boost::bind(&ServiceHelper::setProperty, _1, _2, qi::decodeJSON(jsonValue, qi::JSONRule_Permissive)),
+  forEachService(patternList, boost::bind(&ServiceHelper::setProperty, _1, _2, qi::decodeJSON(jsonValue)),
                   &ServiceHelper::getMatchingPropertiesName, hidden);
 }
 
@@ -218,7 +218,7 @@ qi::GenericFunctionParameters SessionHelper::decodeJsonArgs(const std::vector<st
 
   for (unsigned int i = 0; i < jsonArgList.size(); ++i)
   {
-    qi::AnyValue gvArg = qi::decodeJSON(jsonArgList[i], qi::JSONRule_Permissive);
+    qi::AnyValue gvArg = qi::decodeJSON(jsonArgList[i]);
     gvArgList.push_back(gvArg.clone());
   }
   return gvArgList;
