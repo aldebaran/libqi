@@ -4,6 +4,7 @@
 
 #include <qimessaging/session.hpp>
 #include <boost/date_time.hpp>
+#include <qi/iocolor.hpp>
 
 #include "qicli.hpp"
 
@@ -71,4 +72,21 @@ bool isNumber(const std::string &str)
       return false;
   }
   return true;
+}
+
+void printError(const std::string &errorStr)
+{
+  std::cout << qi::StreamColor_Red << "ERROR: "
+            << errorStr << qi::StreamColor_Reset << std::endl;
+}
+
+void printSuccess()
+{
+  std::cout << qi::StreamColor_Green << "OK" << qi::StreamColor_Reset << std::endl;
+}
+
+void printServiceMember(const std::string &service, const std::string &member)
+{
+  std::cout << qi::StreamColor_Bold << service << "." << member
+            << ":" << qi::StreamColor_Reset << " ";
 }

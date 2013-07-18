@@ -32,5 +32,8 @@ bool poDefault(const po::command_line_parser &clp, po::variables_map &vm, const 
 void showHelp(const po::options_description &desc);
 std::string getTime();
 bool isNumber(const std::string &str);
+void printError(const std::string &errorStr);
+void printSuccess();
+void printServiceMember(const std::string &service, const std::string &member);
 
 #endif /* !QICLI_HPP_ */

@@ -32,7 +32,7 @@ void SessionHelper::info(const std::vector<std::string> &patternVec, bool verbos
   }
 
   if (matchServs.empty())
-    throw std::runtime_error("No service matching the given patterns were found");
+    throw std::runtime_error("no services matching the given pattern(s) were found");
 
   for (unsigned int j = 0; j < _servicesInfos.size(); ++j)
     BOOST_FOREACH(const std::string &it, matchServs)
@@ -195,7 +195,7 @@ void SessionHelper::forEachService(const std::vector<std::string> &patternList, 
       methodToCall(it.second.first, it2);
   }
   if (!foundOne)
-    throw std::runtime_error("no Service.Member combinaisons matching the given pattern(s) were found");
+    throw std::runtime_error("no Service.Member combinations matching the given pattern(s) were found");
 }
 
 bool SessionHelper::splitName(const std::string &fullName, std::string &beforePoint, std::string &afterPoint, bool throwOnError)

@@ -70,10 +70,10 @@ int                 main(int argc, char **argv)
     ret = subCmd(subCmdArgc, subCmdArgv, options);
   } catch (const std::exception& e)
   {
-    std::cout << "error: " << e.what() << std::endl;
+    printError(e.what());
     return 1;
   } catch (...) {
-    std::cout << "unknown error catch" << std::endl;
+    printError("unknown error catched");
     return 1;
   }
   return ret;
