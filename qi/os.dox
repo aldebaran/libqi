@@ -408,6 +408,16 @@
  * \brief Return elapsed time since program started in microseconds.
  */
 
+ /**
+ * \fn qi::os::cputime()
+ * \brief Return CPU time used by the calling thread as a pair (userTime, systemTime)
+ *        in microseconds.
+ *
+ * \warning under Linux, systemTime is always 0 and merged in userTime. Also value
+ * might be inaccurate if CPU frequency scaling is used and the thread is not
+ * constrained to a single core.
+ */
+
 /**
  * \fn qi::os::waitpid(int pid, int* status);
  * \brief Wait for process to change state.

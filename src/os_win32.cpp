@@ -546,5 +546,16 @@ namespace qi {
     {
       return (PathMatchSpec(string.c_str(), pattern.c_str()) == TRUE);
     }
+
+    std::pair<int64_t, int64_t> cputime()
+    {
+      FILETIME tCreate, tExit, tKernel, tUser;
+      GetThreadTimes(GetCurrentThread(), &tCreate, &tExit, &tKernel, &tUser);
+      // unit : 100ns
+      return std::make_pair(
+        ((int64_t)tUser.dwLowDateTime / 10 + ((int64_t)tUser.dwHighDateTime << 31) / 5),
+        ((int64_t)tKernel.dwLowDateTime / 10 + ((int64_t)tKernel.dwHighDateTime << 31) / 5)
+        );
+    }
   }
 }

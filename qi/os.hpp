@@ -53,6 +53,8 @@ namespace qi {
     };
     QI_API int gettimeofday(qi::os::timeval *tp);
     QI_API qi::int64_t ustime();
+    QI_API std::pair<int64_t, int64_t> cputime();
+
     QI_API qi::os::timeval operator+(const qi::os::timeval &lhs,
                                      const qi::os::timeval &rhs);
     QI_API qi::os::timeval operator+(const qi::os::timeval &lhs,

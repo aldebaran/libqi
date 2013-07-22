@@ -33,6 +33,7 @@
 
 #if defined (__linux__)
 # include <sys/prctl.h>
+# include <sys/resource.h>
 #endif
 
 
@@ -43,6 +44,8 @@
 #include <qi/qi.hpp>
 #include "filesystem.hpp"
 #include "utils.hpp"
+
+qiLogCategory("qi.os");
 
 namespace qi {
   namespace os {
@@ -427,6 +430,35 @@ namespace qi {
     bool fnmatch(const std::string &pattern, const std::string &string)
     {
       return !::fnmatch(pattern.c_str(), string.c_str(), 0);
+    }
+
+    std::pair<int64_t, int64_t> cputime()
+    {
+#ifdef __linux__
+      // use clock_gettime, which does not split user and system time
+      static const int64_t seq_to_usec = 1000000LL;
+      timespec ts;
+      int res = clock_gettime(CLOCK_THREAD_CPUTIME_ID, &ts);
+      if (res < 0)
+      {
+        qiLogError() << "clock_gettime: " << strerror(errno);
+        return std::make_pair(0, 0);
+      }
+      return std::make_pair(
+        ts.tv_sec * seq_to_usec + ts.tv_nsec / 1000, 0);
+#else
+      // use getrusage (does not get updated often enough under linux
+      rusage r;
+      int res = getrusage(RUSAGE_THREAD, &r);
+      if (res < 0)
+      {
+        qiLogError() << "getrusage: " << strerror(errno);
+        return std::make_pair(0, 0);
+      }
+      return std::make_pair(
+        r.ru_utime.tv_sec * seq_to_usec + r.ru_utime.tv_usec,
+        r.ru_stime.tv_sec * seq_to_usec + r.ru_stime.tv_usec);
+#endif
     }
   }
 }

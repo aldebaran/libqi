@@ -180,7 +180,7 @@ if(MSVC)
 endif()
 
 if(UNIX AND NOT APPLE)
-  qi_use_lib(qi DL)
+  qi_use_lib(qi DL RT)
 endif()
 
 if(WIN32)
