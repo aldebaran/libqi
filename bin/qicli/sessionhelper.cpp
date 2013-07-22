@@ -14,6 +14,7 @@ SessionHelper::SessionHelper(const std::string &address)
 
 SessionHelper::~SessionHelper()
 {
+  _currentMatchMap.clear();
   _session.close();
 }
 
@@ -177,13 +178,13 @@ void SessionHelper::forEachService(const std::string &pattern, ShMethod methodTo
 
 void SessionHelper::forEachService(const std::vector<std::string> &patternList, ShMethod methodToCall, ShPatternResolver patternResolver, bool hidden)
 {
-  MatchMap matchMap = getMatchMap(patternList, patternResolver, hidden);
+  _currentMatchMap = getMatchMap(patternList, patternResolver, hidden);
 
-  if (matchMap.empty())
+  if (_currentMatchMap.empty())
     throw std::runtime_error("no services matching the given pattern(s) were found");
 
   bool foundOne = false;
-  BOOST_FOREACH(MatchMapPair &it, matchMap)
+  BOOST_FOREACH(MatchMapPair &it, _currentMatchMap)
   {
     if (!it.second.second.empty())
       foundOne = true;

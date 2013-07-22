@@ -18,6 +18,7 @@ public:
 public:
   ServiceHelper(const qi::AnyObject &service=qi::AnyObject(), const std::string &name="");
   ServiceHelper(const ServiceHelper &other);
+  ~ServiceHelper();
 
   int                         call(const std::string &methodName, const qi::GenericFunctionParameters &gvArgList);
   int                         post(const std::string &signalName, const qi::GenericFunctionParameters &gvArgList);
@@ -41,6 +42,7 @@ private:
 
 private:
   std::string         _name;
+  std::list<qi::SignalLink> _signalLinks;
   qi::AnyObject       _service;
 };
 

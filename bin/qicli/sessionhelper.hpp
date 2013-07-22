@@ -38,7 +38,7 @@ private:
 
 private:
   qi::Session                   _session;
-  std::list<ServiceHelper>      _watchedServices;
+  MatchMap                      _currentMatchMap;
   std::vector<qi::ServiceInfo>  _servicesInfos;
 };
 

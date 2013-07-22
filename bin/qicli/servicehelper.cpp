@@ -13,13 +13,26 @@
 ServiceHelper::ServiceHelper(const qi::AnyObject& service, const std::string &name)
   :_name(name),
     _service(service)
-
 {}
 
 ServiceHelper::ServiceHelper(const ServiceHelper &other)
   :_name(other._name),
     _service(other._service)
+{}
+
+ServiceHelper::~ServiceHelper()
 {
+  BOOST_FOREACH(qi::SignalLink link, _signalLinks)
+  {
+    if (link != qi::SignalBase::invalidSignalLink)
+    {
+      qi::FutureSync<void> fut = _service->disconnect(link);
+      if (fut.hasError())
+        printError("cannot disconnect signal: " + fut.error());
+    }
+    else
+      printError("cannot disconnect signal: invalid link");
+  }
 }
 
 std::ostream &operator<<(std::ostream &os, const std::vector<qi::AnyReference> &gvv)
@@ -141,6 +154,7 @@ int ServiceHelper::watch(const std::string &signalName, bool showTime)
     std::cout << _name << "." << signalName << ": " << futLink.error() << std::endl;
     return 1;
   }
+  _signalLinks.push_back(futLink.value());
   return 0;
 }
 
