@@ -129,7 +129,7 @@ namespace qi {
         std::stringstream ss;
         ss << "Cannot negotiate QiMessaging connection: "
            << "remote end doesn't support binary protocol v" << msg.version();
-        serverResultAdapter(qi::makeFutureError<GenericValuePtr>(ss.str()),
+        serverResultAdapter(qi::makeFutureError<AnyReference>(ss.str()),
                             _owner ? _owner : this, socket, msg.address());
         return;
       }
