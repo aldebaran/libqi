@@ -124,6 +124,16 @@ namespace qi {
 
   void ServiceBoundObject::onMessage(const qi::Message &msg, TransportSocketPtr socket) {
     try {
+      if (msg.version() > qi::Message::currentVersion())
+      {
+        std::stringstream ss;
+        ss << "Cannot negotiate QiMessaging connection: "
+           << "remote end doesn't support binary protocol v" << msg.version();
+        serverResultAdapter(qi::makeFutureError<GenericValuePtr>(ss.str()),
+                            _owner ? _owner : this, socket, msg.address());
+        return;
+      }
+
       if (msg.object() > _objectId)
       {
         qiLogDebug() << "onChildMessage " << msg.address();

@@ -80,6 +80,10 @@ namespace qi {
 
   class Message {
   public:
+    static unsigned int currentVersion()
+    {
+      return 0;
+    }
 
 
     // Fixed service id numbers
