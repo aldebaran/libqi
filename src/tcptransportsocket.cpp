@@ -23,6 +23,12 @@
 
 #include "tcptransportsocket.hpp"
 
+// for macos
+#ifndef SOL_TCP
+#define SOL_TCP IPPROTO_TCP
+#endif
+
+
 #include <qi/log.hpp>
 
 qiLogCategory("qimessaging.transportsocket");
