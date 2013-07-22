@@ -23,12 +23,6 @@
 
 #include "tcptransportsocket.hpp"
 
-// for macos
-#ifndef SOL_TCP
-#define SOL_TCP IPPROTO_TCP
-#endif
-
-
 #include <qi/log.hpp>
 
 qiLogCategory("qimessaging.transportsocket");
@@ -423,6 +417,7 @@ namespace qi
       qiLogWarning() << "Failed to set so_keepalive: " << strerror(errno);
     else
     {
+# if __linux__
       /* SOL_TCP level options: unit is seconds for times
       TCP_KEEPCNT: overrides tcp_keepalive_probes 9
         mark dead when that many probes are lost
@@ -440,6 +435,14 @@ namespace qi
       optval = 10;
       if (setsockopt(handle, SOL_TCP, TCP_KEEPCNT  , &optval, optlen) < 0)
         qiLogWarning() << "Failed to set TCP_KEEPCNT  : " << strerror(errno);
+# else
+      // Macos only have TCP_KEEPALIVE wich is linux's TCP_KEEPIDLE
+      // So best we can do is lower that, which will reduce delay from
+      // hours to tens of minutes.
+      optval = 5;
+      if (setsockopt(handle, IPPROTO_TCP, TCP_KEEPALIVE , &optval, optlen) < 0)
+        qiLogWarning() << "Failed to set TCP_KEEPALIVE : " << strerror(errno);
+# endif
     }
 #endif
   }
