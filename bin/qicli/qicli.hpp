@@ -25,6 +25,7 @@ int subCmd_watch(int argc, char **argv, const MainOptions &options);
 int subCmd_get(int argc, char **argv, const MainOptions &options);
 int subCmd_set(int argc, char **argv, const MainOptions &options);
 int subCmd_trace(int argc, char **argv, const MainOptions &options);
+int subCmd_top(int argc, char **argv, const MainOptions &options);
 
 /* UTILS */
 int readNumericInput();

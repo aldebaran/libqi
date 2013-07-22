@@ -15,8 +15,10 @@ set(SRCS
   servicehelper.cpp
   main.cpp
   subcmds.cpp
-  utils.cpp)
+  utils.cpp
   qitrace.cpp
+  qitop.cpp
+)
 
 qi_create_bin(qicli
   ${SRCS}
