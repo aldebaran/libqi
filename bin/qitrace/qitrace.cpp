@@ -1,18 +1,13 @@
 /** Copyright (C) 2012 Aldebaran Robotics
 */
 
-#ifndef _WIN32
-#include <fnmatch.h>
-#else
-# include <shlwapi.h>
-# pragma comment(lib, "shlwapi.lib")
-#endif
 
 #include <boost/program_options.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/foreach.hpp>
 
 #include <qi/log.hpp>
+#include <qi/os.hpp>
 #include <qi/application.hpp>
 #include <qimessaging/session.hpp>
 #include <qitype/jsoncodec.hpp>
@@ -31,6 +26,7 @@ bool printMo = false;
 bool disableTrace = false;
 bool traceState = false;
 bool cleaned = false;
+bool full = false;
 std::string sdUrl;
 std::vector<std::string> objectNames;
 unsigned int maxServiceLength = 0;
@@ -38,37 +34,57 @@ qiLogCategory("qitrace");
 
 void onTrace(ObjectMap::value_type ov, const qi::EventTrace& trace)
 {
+  static qi::int64_t secStart = 0;
+  if (!secStart && !full)
+    secStart = trace.timestamp().tv_sec;
   static unsigned int maxLen = 0;
-  std::string name = boost::lexical_cast<std::string>(trace.slotId);
+  std::string name = boost::lexical_cast<std::string>(trace.slotId());
   if (!numeric)
   {
     qi::MetaObject mo = ov.second->metaObject();
-    qi::MetaMethod* m = mo.method(trace.slotId);
+    qi::MetaMethod* m = mo.method(trace.slotId());
     if (m)
       name = m->name();
     else
     {
-      qi::MetaSignal* s = mo.signal(trace.slotId);
+      qi::MetaSignal* s = mo.signal(trace.slotId());
       if (s)
         name = s->name();
       else
         name = name + "(??" ")"; // trigraph protect mode on
     }
   }
+  if (!full && name.size() > 25)
+  {
+    name = name.substr(0, 22) + "...";
+  }
+  std::string serviceName = ov.first;
+  if (!full && serviceName.size() > 17)
+    serviceName = serviceName.substr(0, 14) + "...";
   maxLen = std::max(maxLen, (unsigned int)name.size());
-  unsigned int traceKind = trace.kind;
+  unsigned int traceKind = trace.kind();
   if (traceKind > 4)
     traceKind = 0;
-  std::string spacing(maxLen + 8 - name.size(), ' ');
-  std::string spacing2(maxServiceLength + 8 - ov.first.size(), ' ');
-  std::cout << ov.first << spacing2 << trace.id << '\t' << callType[traceKind] << ' ' << name
-   << spacing << trace.timestamp.tv_sec << '.' << trace.timestamp.tv_usec
-   << "\t" << qi::encodeJSON(trace.arguments) << std::endl;
+  std::string spacing(maxLen + 2 - name.size(), ' ');
+  std::string spacing2((full?maxServiceLength:17) + 2 - ov.first.size(), ' ');
+  if (trace.kind() == qi::EventTrace::Event_Result)
+  {
+    std::cout << serviceName << spacing2 << trace.id() << ' ' << callType[traceKind] << ' ' << name
+      << spacing << (trace.timestamp().tv_sec - secStart) << '.' << trace.timestamp().tv_usec
+      << ' ' << trace.userUsTime() << ' ' << trace.systemUsTime() << ' ' << qi::encodeJSON(trace.arguments()) << std::endl;
+  }
+  else
+  {
+    std::cout << serviceName << spacing2 << trace.id() << ' ' << callType[traceKind] << ' ' << name
+      << spacing << (trace.timestamp().tv_sec - secStart) << '.' << trace.timestamp().tv_usec
+      << ' ' << qi::encodeJSON(trace.arguments()) << std::endl;
+  }
 }
 
 _QI_COMMAND_LINE_OPTIONS(
   "Qitrace options",
   ("numeric,n", bool_switch(&numeric), "Do not resolve slot Ids to names")
+  ("full,f", bool_switch(&full), "Do not abreviate anything")
   ("service-directory,s", value<std::string>(&sdUrl), "url to connect to")
   ("object,o", value<std::vector<std::string> >(&objectNames), "Object(s) to monitor, specify multiple times, comma-separate, use '*' for all, use '-globPattern' to remove from list")
   ("print,p", bool_switch(&printMo), "Print out the Metaobject and exit")
