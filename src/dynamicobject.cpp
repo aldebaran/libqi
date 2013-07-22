@@ -369,7 +369,12 @@ namespace qi
         context->traceObject(EventTrace(
           tid, EventTrace::Event_Call, methodId, AnyValue::from(args), tv));
       }
+
       qi::int64_t time = stats?qi::os::ustime():0;
+      std::pair<int64_t, int64_t> cputime, cpuendtime;
+      if (stats||trace)
+         cputime = qi::os::cputime();
+
       bool success = false;
       try
       {
@@ -387,8 +392,16 @@ namespace qi
       {
         out.setError("Unknown exception caught.");
       }
+      if (stats||trace)
+      {
+        cpuendtime = qi::os::cputime();
+        cpuendtime.first -= cputime.first;
+        cpuendtime.second -= cputime.second;
+      }
       if (stats)
-        context->pushStats(methodId, (float)(qi::os::ustime() - time)/1e6f);
+        context->pushStats(methodId, (float)(qi::os::ustime() - time)/1e6f,
+                           (float)cpuendtime.first / 1e6f,
+                           (float)cpuendtime.second / 1e6f);
       if (trace)
       {
         qi::os::timeval tv;
@@ -400,7 +413,7 @@ namespace qi
           val = AnyValue::from(out.future().error());
         context->traceObject(EventTrace(tid,
           success?EventTrace::Event_Result:EventTrace::Event_Error,
-          methodId, val, tv));
+          methodId, val, tv, cpuendtime.first, cpuendtime.second));
       }
     }
   }

@@ -707,15 +707,17 @@ TEST(TestObject, statisticsGeneric)
   qi::ObjectStatistics stats = obj->stats();
   EXPECT_EQ(1u, stats.size());
   qi::MethodStatistics& m = stats[mid];
-  EXPECT_EQ(2u, m.count);
+  EXPECT_EQ(2u, m.count());
   // Don't expect too much sleep precision
-  EXPECT_GT(0.01, std::abs(m.minTime - 0.010));
-  EXPECT_GT(0.03, std::abs(m.maxTime - 0.100));
+  EXPECT_GT(0.01, std::abs(m.wall().minValue() - 0.010));
+  EXPECT_GT(0.03, std::abs(m.wall().maxValue() - 0.100));
+  EXPECT_GT(0.01, m.system().maxValue());
+  EXPECT_GT(0.01, m.user().maxValue());
   obj->clearStats();
   obj->call<void>("sleep", 0);
   stats = obj->stats();
   m = stats[mid];
-  EXPECT_EQ(1u, m.count);
+  EXPECT_EQ(1u, m.count());
   obj->clearStats();
   obj->enableStats(false);
   obj->call<void>("sleep", 0);
@@ -726,7 +728,7 @@ TEST(TestObject, statisticsGeneric)
   obj->call<void>("sleep", 0);
   stats = obj->call<qi::ObjectStatistics>("stats");
   m = stats[mid];
-  EXPECT_EQ(1u, m.count);
+  EXPECT_EQ(1u, m.count());
 }
 
 TEST(TestObject, statisticsType)
@@ -743,11 +745,11 @@ TEST(TestObject, statisticsType)
   oa1->enableStats(true);
   oa1->call<int>("add", 2);
   stats = oa1->stats();
-  EXPECT_EQ(1u, stats[mid].count);
+  EXPECT_EQ(1u, stats[mid].count());
 
   oa1->call<int>("add", 2);
   stats = oa1->call<qi::ObjectStatistics>("stats");
-  EXPECT_EQ(2u, stats[mid].count);
+  EXPECT_EQ(2u, stats[mid].count());
 }
 
 void pushTrace(std::vector<qi::EventTrace>& target,
@@ -775,15 +777,15 @@ TEST(TestObject, traceGeneric)
   for (unsigned i=0; i<20 && traces.size()<2; ++i) qi::os::msleep(50);
   qi::os::msleep(50);
   ASSERT_EQ(2u, traces.size());
-  EXPECT_EQ(qi::EventTrace::Event_Call, traces[0].kind);
-  EXPECT_EQ(qi::EventTrace::Event_Result, traces[1].kind);
-  EXPECT_EQ(mid, traces[0].slotId);
-  EXPECT_EQ(traces[0].id, traces[1].id);
+  EXPECT_EQ(qi::EventTrace::Event_Call, traces[0].kind());
+  EXPECT_EQ(qi::EventTrace::Event_Result, traces[1].kind());
+  EXPECT_EQ(mid, traces[0].slotId());
+  EXPECT_EQ(traces[0].id(), traces[1].id());
   qi::int64_t delta =
-    traces[1].timestamp.tv_sec*1000
-    + traces[1].timestamp.tv_usec/1000
-    - traces[0].timestamp.tv_sec*1000
-    - traces[0].timestamp.tv_usec/1000;
+    traces[1].timestamp().tv_sec*1000
+    + traces[1].timestamp().tv_usec/1000
+    - traces[0].timestamp().tv_sec*1000
+    - traces[0].timestamp().tv_usec/1000;
   EXPECT_LT(std::abs(delta - 100LL), 20LL); // be leniant
   ASSERT_TRUE(obj->call<bool>("isTraceEnabled").value());
   qi::os::msleep(50);
@@ -792,10 +794,10 @@ TEST(TestObject, traceGeneric)
   for (unsigned i=0; i<20 && traces.size()<2; ++i) qi::os::msleep(50);
   qi::os::msleep(50);
   ASSERT_EQ(2u, traces.size());
-  EXPECT_EQ(qi::EventTrace::Event_Call, traces[0].kind);
-  EXPECT_EQ(qi::EventTrace::Event_Error, traces[1].kind);
-  EXPECT_EQ(mid2, traces[0].slotId);
-  EXPECT_EQ(traces[0].id, traces[1].id);
+  EXPECT_EQ(qi::EventTrace::Event_Call, traces[0].kind());
+  EXPECT_EQ(qi::EventTrace::Event_Error, traces[1].kind());
+  EXPECT_EQ(mid2, traces[0].slotId());
+  EXPECT_EQ(traces[0].id(), traces[1].id());
   obj->disconnect(id);
   qi::os::msleep(50);
   ASSERT_TRUE(!obj->call<bool>("isTraceEnabled").value());
@@ -819,9 +821,9 @@ TEST(TestObject, traceType)
   for (unsigned i=0; i<20 && traces.size()<2; ++i) qi::os::msleep(50);
   qi::os::msleep(50);
   ASSERT_EQ(2u, traces.size());
-  EXPECT_EQ(qi::EventTrace::Event_Call, traces[0].kind);
-  EXPECT_EQ(qi::EventTrace::Event_Result, traces[1].kind);
-  EXPECT_EQ(mid, traces[0].slotId);
+  EXPECT_EQ(qi::EventTrace::Event_Call, traces[0].kind());
+  EXPECT_EQ(qi::EventTrace::Event_Result, traces[1].kind());
+  EXPECT_EQ(mid, traces[0].slotId());
   ASSERT_TRUE(oa1->call<bool>("isTraceEnabled").value());
   oa1->disconnect(id);
   qi::os::msleep(50);

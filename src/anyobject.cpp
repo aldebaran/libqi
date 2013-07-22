@@ -92,22 +92,11 @@ namespace qi {
     _p->statsEnabled = state;
   }
 
-  void Manageable::pushStats(int slotId, float value)
+  void Manageable::pushStats(int slotId, float wallTime, float userTime, float systemTime)
   {
     boost::mutex::scoped_lock(_p->registrationsMutex);
     MethodStatistics& ms = _p->stats[slotId];
-    ms.cumulatedTime += value;
-    if (!ms.count)
-    {
-      ms.minTime = value;
-      ms.maxTime = value;
-    }
-    else
-    {
-      ms.minTime = std::min(ms.minTime, value);
-      ms.maxTime = std::max(ms.maxTime, value);
-    }
-    ++ms.count;
+    ms.push(wallTime, userTime, systemTime);
   }
 
   ObjectStatistics Manageable::stats() const

@@ -200,8 +200,8 @@ friend class qi::TypeImpl<name>;
  *
  * Call like that:
  *    QI_TYPE_STRUCT_AGREGATE_CONSTRUCTOR(Point,
- *       ("x", &Point::getX),
- *       ("y", &Point::y))
+ *       ("x", getX),
+ *       ("y", y))
  *
  * The first macro argument is the class full name including namespace.
  * Remaining arguments can be:

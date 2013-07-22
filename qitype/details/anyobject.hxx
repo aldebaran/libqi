@@ -358,7 +358,22 @@ namespace qi {
     }
   }
 }
-QI_TYPE_STRUCT(qi::MethodStatistics, cumulatedTime, minTime, maxTime, count);
-QI_TYPE_STRUCT(qi::EventTrace, id, kind, slotId, arguments, timestamp);
+QI_TYPE_STRUCT_AGREGATE_CONSTRUCTOR(qi::MinMaxSum,
+  ("minValue",       minValue),
+  ("maxValue",       maxValue),
+  ("cumulatedValue", cumulatedValue));
+QI_TYPE_STRUCT_AGREGATE_CONSTRUCTOR(qi::MethodStatistics,
+  ("count",  count),
+  ("wall",   wall),
+  ("user",   user),
+  ("system", system));
+QI_TYPE_STRUCT_AGREGATE_CONSTRUCTOR(qi::EventTrace,
+  ("id",           id),
+  ("kind",         kind),
+  ("slotId",       slotId),
+  ("arguments",    arguments),
+  ("timestamp",    timestamp),
+  ("userUsTime",   userUsTime),
+  ("systemUsTime", systemUsTime));
 QI_TYPE_STRUCT(qi::os::timeval, tv_sec, tv_usec);
 #endif  // _QITYPE_DETAILS_GENERICOBJECT_HXX_
