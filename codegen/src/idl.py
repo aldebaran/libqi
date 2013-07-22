@@ -14,6 +14,7 @@
     method: (name, [argtype], rettype, annotations)
     signal: (name, [argtype], annotations)
     property: [name, type, annotations]
+    annotation: magic strings concatenation (fast, threadsafe, ...)
 
     Code parser:
     - Invoke Doxygen and parse its XML output to produce an IDL file.
@@ -342,6 +343,7 @@ def doxyxml_to_raw(doxy_dir):
     rawAn = etree.tostring(class_root.find("briefdescription"), 'us-ascii', 'text')
     rawAn += etree.tostring(class_root.find("detaileddescription"), 'us-ascii', 'text')
     class_annotations = []
+
     for a in ANNOTATIONS:
       if '___' + a + '___' in rawAn:
         class_annotations.append(a)
@@ -360,11 +362,13 @@ def doxyxml_to_raw(doxy_dir):
       # Look for annotation
       raw_an = etree.tostring(m.find("briefdescription"), 'us-ascii', 'text')
       raw_an += etree.tostring(m.find("detaileddescription"), 'us-ascii', 'text')
+
       an = []
       for a in ANNOTATIONS:
         if '___' + a + '___' in raw_an:
           an.append(a)
       methods.append((method_name, argstype, rettype, ' '.join(an)))
+
     signals = []
     properties = []
     # Parse signals and properties
@@ -442,10 +446,10 @@ def raw_to_idl(dstruct):
   for cls in dstruct:
 
     (methods, signals, properties, an) = dstruct[cls]
-    e = etree.SubElement(root, 'class', name=cls, annotations=','.join(an))
+    e = etree.SubElement(root, 'class', name=cls, annotations=an)
     for method in methods:
       (method_name, args, ret, an) = method
-      m = etree.SubElement(e, 'method', name=method_name, annotations=','.join(an))
+      m = etree.SubElement(e, 'method', name=method_name, annotations=an)
       etree.SubElement(m, 'return', type=ret)
       for a in args:
         etree.SubElement(m, 'argument', type=a)
@@ -1072,7 +1076,7 @@ def raw_to_cxx_typebuild(class_name, data, use_interface, register_to_factory, i
 
 static int @TYPE@init()
 {
- qi::ObjectTypeBuilder<@TYPE@> builder;
+  qi::ObjectTypeBuilder<@TYPE@> builder;
 @ADVERTISE@
   builder.registerType();
   return 0;
@@ -1091,6 +1095,7 @@ static int _init_@TYPE@ = @TYPE@init();
     include = ''
   advertise = ''
   (methods, signals, properties, annotations) = (data[0], data[1], data[2], data[3])
+
   if 'threadSafe' in annotations:
     advertise += '  builder.setThreadingModel(qi::ObjectThreadingModel_MultiThread);\n'
 
