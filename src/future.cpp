@@ -10,6 +10,8 @@
 #include <boost/thread.hpp>
 #include <boost/pool/singleton_pool.hpp>
 
+qiLogCategory("qi.future");
+
 namespace qi {
 
   namespace detail {
@@ -63,7 +65,7 @@ namespace qi {
     FutureState FutureBase::wait(int msecs) const {
       static bool detectEventLoopWait = !os::getenv("QI_DETECT_FUTURE_WAIT_FROM_NETWORK_EVENTLOOP").empty();
       if (detectEventLoopWait && getDefaultNetworkEventLoop()->isInEventLoopThread())
-        qiLogWarning("qi.future") << "Future wait in network thread.";
+        qiLogWarning() << "Future wait in network thread.";
       boost::recursive_mutex::scoped_lock lock(_p->_mutex);
       if (_p->_state != FutureState_Running)
         return _p->_state;

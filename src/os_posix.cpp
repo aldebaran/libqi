@@ -148,7 +148,7 @@ namespace qi {
         }
         catch (const boost::filesystem::filesystem_error &e)
         {
-          qiLogDebug("qi::os") << "Attempt " << i << " fail to create tmpdir! " << e.what();
+          qiLogDebug() << "Attempt " << i << " fail to create tmpdir! " << e.what();
         }
       }
       while (i < TMP_MAX && !isCreated);
@@ -259,11 +259,10 @@ namespace qi {
       if (unavailable)
       {
         iPort = 0;
-        qiLogError("core.common.network") << "findAvailablePort Socket Cannot find available port, Last Error: "
-                                          << unavailable << std::endl;
+        qiLogError() << "Socket Cannot find available port, Last Error: "
+                     << unavailable << std::endl;
       }
-      qiLogDebug("core.common.network") << "findAvailablePort: Returning port: "
-                                        << iPort << std::endl;
+      qiLogDebug() << "Returning port: " << iPort << std::endl;
       return iPort;
     }
 
@@ -286,7 +285,7 @@ namespace qi {
       if (ioctl_sock < 0 ||
          (d = opendir(interfacesDirectory.c_str())) == 0)
       {
-        qiLogError("qi.hostIPAddrs") << "socket() failed: " << strerror(errno);
+        qiLogError() << "socket() failed: " << strerror(errno);
         return res;
       }
 
@@ -343,7 +342,7 @@ namespace qi {
 
       ret = getifaddrs(&ifAddrStruct);
       if (ret == -1) {
-        qiLogError("getifaddrs") << "getifaddrs failed: " << strerror(errno);
+        qiLogError() << "getifaddrs failed: " << strerror(errno);
         return std::map<std::string, std::vector<std::string> >();
       }
 
@@ -433,7 +432,7 @@ namespace qi {
       if (link.empty())
         link = readLink("/etc/localtime");
       if (link.empty())
-        qiLogError("core.common") << "Could not find timezone!";
+        qiLogError() << "Could not find timezone!";
 
       return link;
     }

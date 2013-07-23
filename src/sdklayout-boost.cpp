@@ -24,6 +24,8 @@
 #include "utils.hpp"
 #include <boost/system/error_code.hpp>
 
+qiLogCategory("qi.path");
+
 namespace {
 
 // returns a regex which corresponds to the provided glob pattern,
@@ -100,7 +102,7 @@ namespace qi {
     void checkInit()
     {
       if (_mode == "error" || _sdkPrefixes.empty()) {
-        qiLogDebug("qi::path") << "please call qi::init first before using qi::path";
+        qiLogDebug() << "please call qi::init first before using qi::path";
       }
     }
 
@@ -154,7 +156,7 @@ namespace qi {
         }
         catch (const boost::filesystem::filesystem_error &e)
         {
-          qiLogDebug("qi::path") << e.what();
+          qiLogDebug() << e.what();
           return std::string();
         }
       }
@@ -204,7 +206,7 @@ namespace qi {
     }
     catch (const boost::filesystem::filesystem_error &e)
     {
-      qiLogDebug("qi::path") << e.what();
+      qiLogDebug() << e.what();
     }
     _p->_sdkPrefixes.push_back(prefixPath.string(qi::unicodeFacet()));
   }
@@ -263,7 +265,7 @@ namespace qi {
     }
     catch (const boost::filesystem::filesystem_error &e)
     {
-      qiLogDebug("qi::path") << e.what();
+      qiLogDebug() << e.what();
     }
     return std::string();
   }
@@ -286,7 +288,7 @@ namespace qi {
     }
     catch (const boost::filesystem::filesystem_error &e)
     {
-      qiLogDebug("qi::path") << e.what();
+      qiLogDebug() << e.what();
     }
     return std::string();
   }
@@ -389,7 +391,7 @@ namespace qi {
     }
     catch (const boost::filesystem::filesystem_error &e)
     {
-      qiLogDebug("qi::path") << e.what();
+      qiLogDebug() << e.what();
     }
 
     return std::string();
@@ -412,7 +414,7 @@ namespace qi {
     }
     catch (const boost::filesystem::filesystem_error &e)
     {
-      qiLogDebug("qi::path") << e.what();
+      qiLogDebug() << e.what();
     }
     return std::string();
   }
@@ -434,7 +436,7 @@ namespace qi {
     }
     catch (const boost::filesystem::filesystem_error &e)
     {
-      qiLogDebug("qi::path") << e.what();
+      qiLogDebug() << e.what();
     }
     return std::string();
   }
@@ -501,7 +503,7 @@ namespace qi {
       catch (const boost::filesystem::filesystem_error &e)
       {
         // log and continue
-        qiLogDebug("qi::path") << e.what();
+        qiLogDebug() << e.what();
       }
     }
     return fullPaths;
@@ -531,7 +533,7 @@ namespace qi {
     }
     catch (const boost::filesystem::filesystem_error &e)
     {
-      qiLogDebug("qi::path") << e.what();
+      qiLogDebug() << e.what();
       return std::vector<std::string>();
     }
 

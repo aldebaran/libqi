@@ -18,6 +18,8 @@
 #include <qi/os.hpp>
 #include <cstdio>
 
+qiLogCategory("qi.log.fileloghandler");
+
 namespace qi {
   namespace log {
     class PrivateFileLogHandler
@@ -40,7 +42,7 @@ namespace qi {
       }
       catch (const boost::filesystem::filesystem_error &e)
       {
-        qiLogWarning("qi.log.fileloghandler") << e.what() << std::endl;
+        qiLogWarning() << e.what();
       }
 
       // Open the file.
@@ -49,8 +51,7 @@ namespace qi {
       if (file)
         _p->_file = file;
       else
-        qiLogWarning("qi.log.fileloghandler") << "Cannot open "
-                                              << filePath << std::endl;
+        qiLogWarning() << "Cannot open " << filePath;
     }
 
     FileLogHandler::~FileLogHandler()

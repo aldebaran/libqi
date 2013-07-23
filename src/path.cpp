@@ -15,6 +15,8 @@
 
 #include <boost/filesystem.hpp>
 
+qiLogCategory("qi.path");
+
 namespace qi
 {
   SDKLayout* gInstance = NULL;
@@ -78,7 +80,7 @@ namespace qi
                          const std::string &filename)
     {
       if(filename == "") {
-        qiLogError("qi::path:") << "Filename cannot be empty!";
+        qiLogError() << "Filename cannot be empty!";
         return std::string();
       }
       return getInstance()->findConf(applicationName, filename);
@@ -88,7 +90,7 @@ namespace qi
                          const std::string &filename)
     {
       if(filename == "") {
-        qiLogError("qi::path:") << "Filename cannot be empty!";
+        qiLogError() << "Filename cannot be empty!";
         return std::string();
       }
       return getInstance()->findData(applicationName, filename);
@@ -138,8 +140,6 @@ namespace qi
     }
   };
 
-
-
   SDKLayout* getInstance()
   {
     if (gInstance == NULL) {
@@ -164,6 +164,4 @@ namespace qi
 
     return gInstance;
   }
-
 }
-

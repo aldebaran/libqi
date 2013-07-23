@@ -19,6 +19,8 @@
 #include <cstdio>
 #include <boost/thread/mutex.hpp>
 
+qiLogCategory("qi.log.headfileloghandler");
+
 namespace qi {
   namespace log {
     class PrivateHeadFileLogHandler
@@ -45,9 +47,9 @@ namespace qi {
         if (!boost::filesystem::exists(fPath.make_preferred().parent_path()))
           boost::filesystem::create_directories(fPath.make_preferred().parent_path());
       }
-      catch (boost::filesystem::filesystem_error &e)
+      catch (const boost::filesystem::filesystem_error &e)
       {
-        qiLogWarning("qi.log.headfileloghandler") << e.what() << std::endl;
+        qiLogWarning() << e.what() << std::endl;
       }
       // Open the file.
       FILE* file = qi::os::fopen(fPath.make_preferred().string().c_str(), "w+");
@@ -59,8 +61,8 @@ namespace qi {
       }
       else
       {
-        qiLogWarning("qi.log.headfileloghandler") << "Cannot open "
-                                                  << filePath << std::endl;
+        qiLogWarning() << "Cannot open "
+                       << filePath << std::endl;
       }
     }
 

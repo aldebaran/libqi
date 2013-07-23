@@ -33,6 +33,8 @@
 
 #include "utils.hpp"
 
+qiLogCategory("qi.os");
+
 namespace qi {
   namespace os {
 
@@ -333,8 +335,8 @@ namespace qi {
         WSADATA wsaData;
         int nRet = WSAStartup(wVersionRequested, &wsaData);
         if (nRet == SOCKET_ERROR)
-          qiLogError("core.common.network") << "WSAStartup returned error: %d\n"
-                                            << WSAGetLastError() << std::endl;
+          qiLogError() << "WSAStartup returned error: %d\n"
+                       << WSAGetLastError() << std::endl;
         else
           static_bWSAInit = true;
       }
@@ -387,13 +389,13 @@ namespace qi {
         unavailable = WSAGetLastError();
         std::string error = GetLastErrorMessage(unavailable);
 
-        qiLogError("core.common.network") << "freePort Socket Bind Error: "
-                                          << error << std::endl;
+        qiLogError() << "freePort Socket Bind Error: "
+                     << error << std::endl;
         iPort = 0;
       }
 
-      qiLogDebug("core.common.network") << "freePort: Returning port: "
-                                        << iPort << std::endl;
+      qiLogDebug() << "freePort: Returning port: "
+                   << iPort << std::endl;
       return iPort;
     }
 
@@ -418,7 +420,7 @@ namespace qi {
       ULONG ulOutBufLen = 0;
       if ((pAdapterInfo = (IP_ADAPTER_INFO *) malloc(sizeof(IP_ADAPTER_INFO))) == NULL)
       {
-        qiLogError("core.common.network", "Error allocation memory needed to get hostIPAddrs");
+        qiLogError() << "Error allocation memory needed to get hostIPAddrs";
         return std::map<std::string, std::vector<std::string> >();
       }
 
@@ -427,20 +429,20 @@ namespace qi {
       ** http://msdn.microsoft.com/en-us/library/windows/desktop/aa365917(v=vs.85).aspx */
       if ((dwRetVal = GetAdaptersInfo(pAdapterInfo, &ulOutBufLen)) != ERROR_BUFFER_OVERFLOW)
       {
-        qiLogError("core.common.network") << "GetAdaptersInfo failed with error " << dwRetVal << " (1)";
+        qiLogError() << "GetAdaptersInfo failed with error " << dwRetVal << " (1)";
         return std::map<std::string, std::vector<std::string> >();
       }
 
       free(pAdapterInfo);
       if ((pAdapterInfo = (IP_ADAPTER_INFO *) malloc(ulOutBufLen)) == NULL)
       {
-        qiLogError("core.common.network", "Error allocation memory needed to get hostIPAddrs");
+        qiLogError() << "Error allocation memory needed to get hostIPAddrs";
         return std::map<std::string, std::vector<std::string> >();
       }
 
       if ((dwRetVal = GetAdaptersInfo(pAdapterInfo, &ulOutBufLen)) != NO_ERROR)
       {
-        qiLogError("core.common.network") << "GetAdaptersInfo failed with error " << dwRetVal << " (2)";
+        qiLogError() << "GetAdaptersInfo failed with error " << dwRetVal << " (2)";
         return std::map<std::string, std::vector<std::string> >();
       }
 
@@ -517,7 +519,7 @@ namespace qi {
 
       if (!ret)
       {
-        qiLogError("qi.os") << "setCPUThreadAffinity : " << GetLastErrorMessage(GetLastError());
+        qiLogError() << GetLastErrorMessage(GetLastError());
         return false;
       }
       return true;
@@ -530,7 +532,7 @@ namespace qi {
 
       if (err == TIME_ZONE_ID_INVALID)
       {
-        qiLogError("core.common") << "Cannot get timezone.";
+        qiLogError() << "Cannot get timezone.";
         return std::string();
       }
 

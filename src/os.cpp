@@ -14,6 +14,8 @@
 #include <qi/error.hpp>
 #include <qi/path.hpp>
 
+qiLogCategory("qi.os");
+
 namespace qi {
   namespace os {
     /* Have the static variable we need inside the function so that we
@@ -138,7 +140,7 @@ namespace qi {
       }
       else
       {
-        qiLogError("getMachineId") << "Unable to create file: '" << idFilePath << "'";
+        qiLogError() << "Unable to create file: " << idFilePath;
       }
 
       return idString;

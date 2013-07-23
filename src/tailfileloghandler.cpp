@@ -18,6 +18,8 @@
 
 #define FILESIZEMAX 1024 * 1024
 
+qiLogCategory("qi.log.tailfileloghandler");
+
 namespace qi {
   namespace log {
     class PrivateTailFileLogHandler
@@ -43,9 +45,9 @@ namespace qi {
         if (!boost::filesystem::exists(fPath.make_preferred().parent_path()))
           boost::filesystem::create_directories(fPath.make_preferred().parent_path());
       }
-      catch (boost::filesystem::filesystem_error &e)
+      catch (const boost::filesystem::filesystem_error &e)
       {
-        qiLogWarning("qi.log.tailfileloghandler") << e.what() << std::endl;
+        qiLogWarning() << e.what() << std::endl;
       }
 
       // Open the file.
@@ -54,8 +56,8 @@ namespace qi {
       if (file)
         _p->_file = file;
       else
-        qiLogWarning("qi.log.tailfileloghandler") << "Cannot open "
-                                                  << filePath << std::endl;
+        qiLogWarning() << "Cannot open "
+                       << filePath << std::endl;
     }
 
 

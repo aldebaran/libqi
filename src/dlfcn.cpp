@@ -24,6 +24,8 @@
 
 #include "filesystem.hpp"
 
+qiLogCategory("qi.dlfcn");
+
 namespace qi {
   namespace os {
 
@@ -31,12 +33,12 @@ namespace qi {
       std::string fullName = path::findLib(filename);
       if (fullName.empty())
       {
-        qiLogError("qi.dlopen") << "Could not locate library " << filename;
+        qiLogError() << "Could not locate library " << filename;
         fullName = filename; // Do not return here, let sys call fails and set errno.
       }
       void *handle = NULL;
       boost::filesystem::path fname(fullName, qi::unicodeFacet());
-      qiLogDebug("qi.dlopen") << "opening " << fname;
+      qiLogDebug() << "opening " << fname;
      #ifdef _WIN32
       handle = LoadLibraryW(fname.wstring(qi::unicodeFacet()).c_str());
      #else

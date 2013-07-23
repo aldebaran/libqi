@@ -31,7 +31,6 @@
 
 qiLogCategory("qi.Application");
 
-
 namespace qi {
   static int         globalArgc = -1;
   static char**      globalArgv = 0;
@@ -481,7 +480,7 @@ namespace qi {
   {
     static qi::Application *app = 0;
 
-    qiLogError("qi") << "qi::init() is deprecated, use qi::Application";
+    qiLogError() << "qi::init() is deprecated, use qi::Application";
     if (!app)
       app = new qi::Application(argc, argv);
   }
