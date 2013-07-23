@@ -78,7 +78,7 @@ namespace qi {
 #endif
       static int InvertConsoleColor[max_color];
 
-
+      PrivateConsoleLogHandler();
       void textColorBG(char bg) const;
       void textColorFG(char fg) const;
       void textColorAttr(char attr) const;
@@ -92,6 +92,8 @@ namespace qi {
                       const int   line);
 
       bool _color;
+      bool _useLock;
+      boost::mutex _mutex;
 
 #ifdef _WIN32
       void* _winScreenHandle;
@@ -184,6 +186,15 @@ namespace qi {
       textColorAttr(reset);
     }
 
+    PrivateConsoleLogHandler::PrivateConsoleLogHandler()
+      : _color(true)
+      , _useLock(qi::os::getenv("QI_LOG_NOLOCK").empty())
+#ifdef _WIN32
+      , _winScreenHandle(GetStdHandle(STD_OUTPUT_HANDLE))
+#endif
+    {
+    }
+
     ConsoleLogHandler::~ConsoleLogHandler()
     {
       delete _p;
@@ -192,9 +203,6 @@ namespace qi {
     ConsoleLogHandler::ConsoleLogHandler()
       : _p(new PrivateConsoleLogHandler)
     {
-#ifdef _WIN32
-      _p->_winScreenHandle = GetStdHandle(STD_OUTPUT_HANDLE);
-#endif
       updateColor();
     }
 
@@ -243,10 +251,8 @@ namespace qi {
     {
       int context = qi::log::context();
 
-      static boost::mutex mutex;
-      boost::mutex::scoped_lock scopedLock(mutex, boost::defer_lock_t());
-      static bool useLock = qi::os::getenv("QI_LOG_NOLOCK").empty();
-      if (useLock)
+      boost::mutex::scoped_lock scopedLock(_mutex, boost::defer_lock_t());
+      if (_useLock)
         scopedLock.lock();
 
       if (context & qi::LogContextAttr_Verbosity) {

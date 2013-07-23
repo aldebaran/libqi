@@ -420,7 +420,6 @@ namespace qi {
     {
       if (!LogInit)
         return;
-
       LogInit = false;
 
       if (!_glSyncLog)
@@ -655,7 +654,7 @@ namespace qi {
     void setContext(int ctx)
     {
       _glContext = ctx;
-      qiLogVerbose("qi.log") << "Context set to " << _glContext;
+      qiLogVerbose() << "Context set to " << _glContext;
     };
 
     int context()
