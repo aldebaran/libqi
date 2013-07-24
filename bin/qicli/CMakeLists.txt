@@ -16,6 +16,7 @@ set(SRCS
   main.cpp
   subcmds.cpp
   utils.cpp)
+  qitrace.cpp
 
 qi_create_bin(qicli
   ${SRCS}

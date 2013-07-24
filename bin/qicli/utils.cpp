@@ -4,6 +4,7 @@
 
 #include <qimessaging/session.hpp>
 #include <boost/date_time.hpp>
+#include <boost/algorithm/string.hpp>
 #include <qi/iocolor.hpp>
 
 #include "qicli.hpp"
@@ -34,6 +35,8 @@ void showHelp(const po::options_description &desc)
   std::cout << "  get     <ServicePattern.PropertyPattern>..." << std::endl;
   std::cout << "  set     <ServicePattern.PropertyPattern>... <JsonParameter>" << std::endl;
   std::cout << "  watch   <ServicePattern.SignalPattern>..." << std::endl;
+  std::cout << "  top     -o services -i interval" << std::endl;
+  std::cout << "  trace   -o services" << std::endl;
 }
 
 bool poDefault(const po::command_line_parser &clp, po::variables_map &vm, const po::options_description &desc)
@@ -89,4 +92,41 @@ void printServiceMember(const std::string &service, const std::string &member)
 {
   std::cout << qi::StreamColor_Bold << service << "." << member
             << ":" << qi::StreamColor_Reset << " ";
+}
+
+std::vector<std::string> parseServiceList(
+  const std::vector<std::string>& objectNames,
+  const std::vector<std::string>& allServices)
+{
+  std::vector<std::string> services;
+  for (unsigned i=0; i<objectNames.size(); ++i)
+  {
+    std::vector<std::string> split;
+    boost::split(split, objectNames[i], boost::algorithm::is_any_of(","));
+    for (unsigned i=0; i<split.size(); ++i)
+    {
+      if (split[i].empty())
+        continue;
+      else if (split[i] == "*")
+      {
+        services.insert(services.end(), allServices.begin(), allServices.end());
+      }
+      else if (split[i][0] == '-')
+      {
+        std::string pattern = split[i].substr(1);
+        for (unsigned i=0; i<services.size(); ++i)
+        {
+          if (qi::os::fnmatch(pattern, services[i]))
+          {
+            services[i] = services[services.size() - 1];
+            services.pop_back();
+            --i; // don't forget to check the new element we juste swaped in
+          }
+        }
+      }
+      else
+        services.push_back(split[i]);
+    }
+  }
+  return services;
 }
