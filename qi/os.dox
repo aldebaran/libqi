@@ -479,3 +479,11 @@
  * .. versionadded:: 1.22
  * \endverbatim
  */
+
+/**
+ * \fn qi::os::memoryUsage(unsigned int pid);
+ * \param pid PID of a process
+ * \brief Get the memory usage of a process
+ * \return Returns a value > 0 corresponding to the memory in RAM used by the process in kB.
+ * Otherwise returns a value of 0, meaning that it was impossible to get the memory usage.
+ */

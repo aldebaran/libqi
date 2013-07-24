@@ -184,7 +184,7 @@ if(UNIX AND NOT APPLE AND NOT ANDROID)
 endif()
 
 if(WIN32)
-  qi_use_lib(qi WSOCK IPHLPAPI)
+  qi_use_lib(qi WSOCK IPHLPAPI PSAPI)
 endif()
 
 qi_install_header(${H} KEEP_RELATIVE_PATHS)

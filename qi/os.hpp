@@ -87,6 +87,8 @@ namespace qi {
     QI_API long numberOfCPUs();
     QI_API std::string getMachineId();
     QI_API std::string generateUuid();
+    // in kB
+    QI_API size_t memoryUsage(unsigned int pid);
 
     //since 1.12.1
     QI_API_DEPRECATED QI_API std::string tmpdir(const char *prefix = "");

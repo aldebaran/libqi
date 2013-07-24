@@ -20,6 +20,7 @@
 #include <winsock2.h>
 #include <direct.h>   // _mkdir
 #include <iphlpapi.h> // GetComputerName
+#include <psapi.h>
 
 # include <shlwapi.h>
 # pragma comment(lib, "shlwapi.lib")
@@ -556,6 +557,27 @@ namespace qi {
         ((int64_t)tUser.dwLowDateTime / 10 + ((int64_t)tUser.dwHighDateTime << 31) / 5),
         ((int64_t)tKernel.dwLowDateTime / 10 + ((int64_t)tKernel.dwHighDateTime << 31) / 5)
         );
+    }
+
+    size_t memoryUsage(unsigned int pid)
+    {
+      HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, (DWORD) pid);
+      if (hProcess == NULL)
+      {
+        qiLogWarning() << "cannot get memory usage for PID " << pid << ": process doesn't exist";
+        return 0;
+      }
+
+      PROCESS_MEMORY_COUNTERS counters;
+      if (!GetProcessMemoryInfo(hProcess, &counters, sizeof(counters)))
+      {
+        qiLogWarning() << "cannot get memory usage for PID " << pid << ": " << GetLastErrorMessage(GetLastError());
+        CloseHandle(hProcess);
+        return 0;
+      }
+
+      CloseHandle(hProcess);
+      return (size_t) (counters.PagefileUsage / 1024);
     }
   }
 }

@@ -18,6 +18,8 @@
 #include <string>
 #include <limits.h>
 #include <fnmatch.h>
+#include <fstream>
+#include <boost/regex.hpp>
 
 # include <pwd.h>
 # include <sys/time.h>
@@ -40,6 +42,10 @@
 # include <mach/mach_init.h>
 # include <mach/thread_info.h>
 # include <mach/thread_act.h>
+#endif
+
+#ifdef __APPLE__
+#include <libproc.h>
 #endif
 
 #include <pthread.h>
@@ -460,6 +466,61 @@ namespace qi {
 	threadInfo.user_time.seconds * seq_to_usec + threadInfo.user_time.microseconds,
         threadInfo.system_time.seconds * seq_to_usec + threadInfo.system_time.microseconds
      );
+#endif
+    }
+
+    size_t memoryUsage(unsigned int pid)
+    {
+      // linux version will be more accurate than mac, since mac is based on the resident size
+#if defined(__linux__)
+      // It's based on PSS (Proportionnal Set Size)
+      // unshared pages + a fraction of each shared pages (proportionnal on how many processes are using the shared page)
+
+      std::stringstream ss;
+      ss << "/proc/" << pid << "/smaps";
+
+      size_t totalPss = 0;
+      std::ifstream smaps(ss.str().c_str(), std::ios_base::in | std::ios_base::binary);
+      if (smaps)
+      {
+        boost::cmatch result;
+        static boost::regex pssRegex("^Pss:[ ]+([0-9]+) kB$");
+        for(std::string line; std::getline(smaps, line); )
+        {
+          if (boost::regex_match(line.c_str(), result, pssRegex))
+          {
+            size_t pss;
+            std::istringstream iss(result[1]);
+            iss >> pss;
+            totalPss += pss;
+          }
+        }
+      }
+      else
+      {
+        qiLogWarning() << "cannot get memory usage for PID " << pid << ": process doesn't exist";
+      }
+
+      return totalPss;
+#elif defined(__APPLE__)
+      struct proc_taskinfo taskInfo;
+      int ret = proc_pidinfo(pid, PROC_PIDTASKINFO, 0, &taskInfo, sizeof(taskInfo));
+      if (ret <= 0)
+      {
+        qiLogWarning() << "cannot get memory usage for PID " << pid << ": " << strerror(errno);
+        return 0;
+      }
+      else if (ret < sizeof(taskInfo))
+      {
+        qiLogWarning() << "cannot get memory usage for PID " << pid;
+        return 0;
+      }
+
+      size_t size = (size_t) (taskInfo.pti_resident_size / 1024);
+      return size;
+#else
+      qiLogWarning() << "memory usage unavailable for this platform";
+      return 0;
 #endif
     }
   }
