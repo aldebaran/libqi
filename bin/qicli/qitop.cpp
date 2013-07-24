@@ -74,7 +74,7 @@ void main_loop()
 
   while (true)
   {
-    unsigned int maxLen = 0;
+    unsigned int maxLen = 4;
     // Reset all counters
     foreach(ObjectMap::value_type& ov, objectMap)
       ov.second->call<void>("clearStats");
