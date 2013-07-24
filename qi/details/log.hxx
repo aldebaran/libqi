@@ -203,7 +203,7 @@ namespace qi {
       //inlined for perf
       inline bool isVisible(Category* category, qi::LogLevel level)
       {
-        return level <= category->maxLevel;
+        return category && level <= category->maxLevel;
       }
     }
 
