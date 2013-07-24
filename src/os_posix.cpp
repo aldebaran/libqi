@@ -434,9 +434,9 @@ namespace qi {
 
     std::pair<int64_t, int64_t> cputime()
     {
+      static const int64_t seq_to_usec = 1000000LL;
 #ifdef __linux__
       // use clock_gettime, which does not split user and system time
-      static const int64_t seq_to_usec = 1000000LL;
       timespec ts;
       int res = clock_gettime(CLOCK_THREAD_CPUTIME_ID, &ts);
       if (res < 0)
@@ -447,17 +447,19 @@ namespace qi {
       return std::make_pair(
         ts.tv_sec * seq_to_usec + ts.tv_nsec / 1000, 0);
 #else
+      return std::make_pair(0, 0);
+
       // use getrusage (does not get updated often enough under linux
-      rusage r;
-      int res = getrusage(RUSAGE_THREAD, &r);
-      if (res < 0)
-      {
-        qiLogError() << "getrusage: " << strerror(errno);
-        return std::make_pair(0, 0);
-      }
-      return std::make_pair(
-        r.ru_utime.tv_sec * seq_to_usec + r.ru_utime.tv_usec,
-        r.ru_stime.tv_sec * seq_to_usec + r.ru_stime.tv_usec);
+      // rusage r;
+      // int res = getrusage(RUSAGE_THREAD, &r);
+      // if (res < 0)
+      // {
+      //   qiLogError() << "getrusage: " << strerror(errno);
+      //   return std::make_pair(0, 0);
+      // }
+      // return std::make_pair(
+      //   r.ru_utime.tv_sec * seq_to_usec + r.ru_utime.tv_usec,
+      //   r.ru_stime.tv_sec * seq_to_usec + r.ru_stime.tv_usec);
 #endif
     }
   }
