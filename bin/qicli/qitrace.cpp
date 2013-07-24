@@ -30,7 +30,7 @@ static bool disableTrace = false;
 static bool traceState = false;
 static bool cleaned = false;
 static bool full = false;
-static std::string sdUrl;
+
 static std::vector<std::string> objectNames;
 static unsigned int maxServiceLength = 0;
 qiLogCategory("qitrace");
@@ -102,11 +102,9 @@ int subCmd_trace(int argc, char **argv, const MainOptions &options)
     return 1;
 
   qi::Session s;
-  if (sdUrl.empty())
-    sdUrl = "localhost";
-  qi::Url url(sdUrl, "tcp", 9559);
+
   qiLogVerbose() << "Connecting to sd";
-  s.connect(url);
+  s.connect(options.address);
   qiLogVerbose() << "Resolving services";
 
   std::vector<std::string> allServices;
