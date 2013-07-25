@@ -9,7 +9,8 @@
 #include <qitype/jsoncodec.hpp>
 #include <boost/make_shared.hpp>
 #include "signatureconvertor.hpp"
-qiLogCategory("qi.signature");
+
+qiLogCategory("qitype.signature");
 
 namespace qi {
 

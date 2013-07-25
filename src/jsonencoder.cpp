@@ -9,6 +9,8 @@
 #include <qitype/anyobject.hpp>
 #include <qitype/typedispatcher.hpp>
 
+qiLogCategory("qitype.jsonencoder");
+
 namespace qi {
 
   static void serialize(AnyReference val, std::stringstream& out);
@@ -96,7 +98,7 @@ namespace qi {
     }
     void visitUnknown(AnyReference v)
     {
-      qiLogError("qi.type") << "JSON Error: Type " << v.type->infoString() <<" not serializable";
+      qiLogError() << "JSON Error: Type " << v.type->infoString() <<" not serializable";
       out << "\"Error: no serialization for unknown type:" << v.type->infoString() << "\"";
     }
 
@@ -128,7 +130,7 @@ namespace qi {
       case -8: out << ((uint64_t)value);break;
 
       default:
-        qiLogError("qi.type") << "Unknown integer type " << isSigned << " " << byteSize;
+        qiLogError() << "Unknown integer type " << isSigned << " " << byteSize;
       }
     }
 
@@ -139,7 +141,7 @@ namespace qi {
       else if (byteSize == 8)
         out << ((double)value);
       else
-        qiLogError("qi.type") << "serialize on unknown float type " << byteSize;
+        qiLogError() << "serialize on unknown float type " << byteSize;
     }
 
     void visitString(const char* data, size_t size)
@@ -183,20 +185,20 @@ namespace qi {
     void visitObject(GenericObject value)
     {
       // TODO: implement?
-      qiLogError("qi.type") << "JSON Error: Serializing an object without a shared pointer";
+      qiLogError() << "JSON Error: Serializing an object without a shared pointer";
       out << "\"Error: no serialization for object\"";
     }
 
     void visitAnyObject(AnyObject& value)
     {
       // TODO: implement?
-      qiLogError("qi.type") << "JSON Error: Serializing an object without a shared pointer";
+      qiLogError() << "JSON Error: Serializing an object without a shared pointer";
       out << "\"Error: no serialization for object\"";
     }
 
     void visitPointer(AnyReference pointee)
     {
-      qiLogError("qi.type") << "JSON Error: error a pointer!!!";
+      qiLogError() << "JSON Error: error a pointer!!!";
       out << "\"Error: no serialization for pointer\"";
     }
 
@@ -240,13 +242,13 @@ namespace qi {
     void visitRaw(AnyReference raw)
     {
       //TODO: implement buffer support
-      qiLogError("qi.type") << "JSON Error: raw data encoder not implemented!!!";
+      qiLogError() << "JSON Error: raw data encoder not implemented!!!";
       out << "\"Error: no serialization for Buffer\"";
     }
 
     void visitIterator(AnyReference)
     {
-      qiLogError("qi.type") << "JSON Error: no serialization for iterator!!!";
+      qiLogError() << "JSON Error: no serialization for iterator!!!";
       out << "\"Error: no serialization for iterator\"";
     }
 
