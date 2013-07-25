@@ -123,6 +123,8 @@ int subCmd_get(int argc, char **argv, const MainOptions &options)
 
   SessionHelper session(options.address);
 
+  if (patternList.empty())
+      patternList.push_back("*.*");
   session.get(patternList, vm.count("hidden"));
   return 0;
 }
@@ -179,6 +181,8 @@ int subCmd_watch(int argc, char **argv, const MainOptions &options)
 
   SessionHelper session(options.address);
 
+  if (patternList.empty())
+      patternList.push_back("*.*");
   session.watch(patternList, vm.count("time"), vm.count("hidden"));
   ::getchar();
   return 0;

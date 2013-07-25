@@ -61,12 +61,14 @@ int                 main(int argc, char **argv)
     return false;
   }
 
-  if (vm.count("help") || subCmdArgv == 0)
+  if (vm.count("help"))
   {
     showHelp(desc);
     return 0;
   }
 
+  if (subCmdArgv == 0)
+      subCmd = &subCmd_service;
   // Accept and fill missing protocol and/or port from address
   qi::Url url(options.address, "tcp", 9559);
   if (url.isValid())
