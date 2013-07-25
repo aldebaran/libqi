@@ -182,7 +182,7 @@ namespace qi {
       typedef std::map<std::string, Handler> LogHandlerMap;
       LogHandlerMap logHandlers;
 
-      qi::atomic<int> nextIndex;
+      qi::Atomic<int> nextIndex;
     };
 
     // If we receive a setLevel with a globbing category, we must keep it
