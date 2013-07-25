@@ -86,19 +86,22 @@ void onTrace(ObjectMap::value_type ov, const qi::EventTrace& trace)
 
 int subCmd_trace(int argc, char **argv, const MainOptions &options)
 {
-  po::options_description     desc("Usage: qicli trace [-o services]");
+  po::options_description     desc("Usage: qicli trace [<ServicePattern>..]");
   std::vector<std::string>    serviceList;
 
   desc.add_options()
   ("numeric,n", po::bool_switch(&numeric), "Do not resolve slot Ids to names")
   ("full,f", po::bool_switch(&full), "Do not abreviate anything")
-  ("object,o", po::value<std::vector<std::string> >(&objectNames), "Object(s) to monitor, specify multiple times, comma-separate, use '*' for all, use '-globPattern' to remove from list")
+  ("service,s", po::value<std::vector<std::string> >(&objectNames), "Object(s) to monitor, specify multiple times, comma-separate, use '*' for all, use '-globPattern' to remove from list")
   ("print,p", po::bool_switch(&printMo), "Print out the Metaobject and exit")
   ("disable,d", po::bool_switch(&disableTrace), "Disable trace on objects and exit")
   ("trace-status", po::bool_switch(&traceState), "Show trace status on objects and exit");
 
+  po::positional_options_description positionalOptions;
+  positionalOptions.add("service", -1);
+
   po::variables_map vm;
-  if (!poDefault(po::command_line_parser(argc, argv).options(desc), vm, desc))
+  if (!poDefault(po::command_line_parser(argc, argv).options(desc).positional(positionalOptions), vm, desc))
     return 1;
 
   qi::Session s;

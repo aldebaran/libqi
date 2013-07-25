@@ -35,8 +35,8 @@ void showHelp(const po::options_description &desc)
   std::cout << "  get     <ServicePattern.PropertyPattern>..." << std::endl;
   std::cout << "  set     <ServicePattern.PropertyPattern>... <JsonParameter>" << std::endl;
   std::cout << "  watch   <ServicePattern.SignalPattern>..." << std::endl;
-  std::cout << "  top     -o services -i interval" << std::endl;
-  std::cout << "  trace   -o services" << std::endl;
+  std::cout << "  top     [-i interval] [<ServicePattern> ..]" << std::endl;
+  std::cout << "  trace   [<ServicePattern> ..]" << std::endl;
 }
 
 bool poDefault(const po::command_line_parser &clp, po::variables_map &vm, const po::options_description &desc)
