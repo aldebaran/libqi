@@ -950,10 +950,10 @@ public:
     qiLogDebug() << this <<" destroy";
     ++dtorCount;
   }
-  static qi::atomic<int> dtorCount;
+  static qi::Atomic<int> dtorCount;
 };
 
-qi::atomic<int> Sleeper::dtorCount;
+qi::Atomic<int> Sleeper::dtorCount;
 
 QI_REGISTER_OBJECT(Sleeper, msleep);
 QI_REGISTER_OBJECT_FACTORY_CONSTRUCTOR(Sleeper);
