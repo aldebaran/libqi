@@ -179,7 +179,7 @@ if(MSVC)
   qi_use_lib(qi BOOST_DATE_TIME)
 endif()
 
-if(UNIX AND NOT APPLE)
+if(UNIX AND NOT APPLE AND NOT ANDROID)
   qi_use_lib(qi DL RT)
 endif()
 
