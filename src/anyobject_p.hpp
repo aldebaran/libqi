@@ -39,7 +39,7 @@ namespace qi {
     bool statsEnabled;
     bool traceEnabled;
     ObjectStatistics stats;
-    qi::atomic<int> traceId;
+    qi::Atomic<int> traceId;
   };
 
 };
