@@ -36,6 +36,11 @@
 # include <sys/resource.h>
 #endif
 
+#if defined (__MACH__)
+# include <mach/mach_init.h>
+# include <mach/thread_info.h>
+# include <mach/thread_act.h>
+#endif
 
 #include <pthread.h>
 #include <qi/os.hpp>
@@ -447,19 +452,14 @@ namespace qi {
       return std::make_pair(
         ts.tv_sec * seq_to_usec + ts.tv_nsec / 1000, 0);
 #else
-      return std::make_pair(0, 0);
+      thread_basic_info threadInfo;
+      unsigned int count = THREAD_BASIC_INFO_COUNT;
+      int error = thread_info(mach_thread_self(), THREAD_BASIC_INFO, (thread_info_t)&threadInfo, &count);
 
-      // use getrusage (does not get updated often enough under linux
-      // rusage r;
-      // int res = getrusage(RUSAGE_THREAD, &r);
-      // if (res < 0)
-      // {
-      //   qiLogError() << "getrusage: " << strerror(errno);
-      //   return std::make_pair(0, 0);
-      // }
-      // return std::make_pair(
-      //   r.ru_utime.tv_sec * seq_to_usec + r.ru_utime.tv_usec,
-      //   r.ru_stime.tv_sec * seq_to_usec + r.ru_stime.tv_usec);
+      return std::make_pair(
+	threadInfo.user_time.seconds * seq_to_usec + threadInfo.user_time.microseconds,
+        threadInfo.system_time.seconds * seq_to_usec + threadInfo.system_time.microseconds
+     );
 #endif
     }
   }
