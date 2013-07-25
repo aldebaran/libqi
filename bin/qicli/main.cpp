@@ -67,6 +67,11 @@ int                 main(int argc, char **argv)
     return 0;
   }
 
+  // Accept and fill missing protocol and/or port from address
+  qi::Url url(options.address, "tcp", 9559);
+  if (url.isValid())
+    options.address = url.str();
+
   int ret;
   try {
     ret = subCmd(subCmdArgc, subCmdArgv, options);
