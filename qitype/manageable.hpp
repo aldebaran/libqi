@@ -13,6 +13,7 @@
 #include <qitype/signal.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/function.hpp>
+#include <algorithm>
 
 #ifdef _MSC_VER
 #  pragma warning( push )
