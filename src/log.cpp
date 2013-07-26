@@ -833,7 +833,8 @@ namespace qi {
         " 26 : (verb+threadId+cat)\n"
         " 30 : (verb+threadId+date+cat)\n"
         " 126: (verb+threadId+date+cat+file+fun)\n"
-        " 254: (verb+threadId+date+cat+file+fun+eol)";
+        " 254: (verb+threadId+date+cat+file+fun+eol)\n"
+        "Can be set with env var QI_LOG_CONTEXT";
 
     static const std::string levelLogOption = ""
         "Change the log minimum level: [0-6] (default:4)\n"
@@ -843,7 +844,8 @@ namespace qi {
         " 3: warning\n"
         " 4: info\n"
         " 5: verbose\n"
-        " 6: debug";
+        " 6: debug\n"
+        "Can be set with env var QI_LOG_LEVEL";
 
     _QI_COMMAND_LINE_OPTIONS(
       "Logging options",
