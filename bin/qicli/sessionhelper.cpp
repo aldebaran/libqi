@@ -40,34 +40,34 @@ void SessionHelper::info(const std::vector<std::string> &patternVec, bool verbos
         showServiceInfo(_servicesInfos[j], verbose, showHidden, showDoc);
 }
 
-void SessionHelper::call(const std::string &pattern, const std::vector<std::string> &argList, bool hidden, bool json)
+void SessionHelper::call(const std::string &pattern, const std::vector<std::string> &argList, bool hidden, bool json, bool cont)
 {
   forEachService(pattern, boost::bind(&ServiceHelper::call, _1, _2, decodeArgs(argList, json)),
-                  &ServiceHelper::getMatchingMethodsName, hidden);
+                  &ServiceHelper::getMatchingMethodsName, hidden, cont);
 }
 
 void SessionHelper::post(const std::string &pattern, const std::vector<std::string> &argList, bool hidden, bool json)
 {
   forEachService(pattern, boost::bind(&ServiceHelper::post, _1, _2, decodeArgs(argList, json)),
-                  &ServiceHelper::getMatchingSignalsName, hidden);
+                  &ServiceHelper::getMatchingSignalsName, hidden, false);
 }
 
-void SessionHelper::get(const std::vector<std::string> &patternList, bool hidden)
+void SessionHelper::get(const std::vector<std::string> &patternList, bool hidden, bool cont)
 {
   forEachService(patternList, boost::bind(&ServiceHelper::showProperty, _1, _2),
-                  &ServiceHelper::getMatchingPropertiesName, hidden);
+                  &ServiceHelper::getMatchingPropertiesName, hidden, cont);
 }
 
-void SessionHelper::set(const std::vector<std::string> &patternList, const std::string &arg, bool hidden, bool json)
+void SessionHelper::set(const std::vector<std::string> &patternList, const std::string &arg, bool hidden, bool json, bool cont)
 {
   forEachService(patternList, boost::bind(&ServiceHelper::setProperty, _1, _2, decodeArg(arg, json)),
-                  &ServiceHelper::getMatchingPropertiesName, hidden);
+                  &ServiceHelper::getMatchingPropertiesName, hidden, cont);
 }
 
-void SessionHelper::watch(const std::vector<std::string> &patternList, bool showTime, bool hidden)
+void SessionHelper::watch(const std::vector<std::string> &patternList, bool showTime, bool hidden, bool cont)
 {
   forEachService(patternList, boost::bind(&ServiceHelper::watch, _1, _2, showTime),
-                  &ServiceHelper::getMatchingSignalsName, hidden);
+                  &ServiceHelper::getMatchingSignalsName, hidden, cont);
 }
 
 bool SessionHelper::byPassService(const std::string &name, bool showHidden)
@@ -171,14 +171,14 @@ void SessionHelper::showServiceInfo(const qi::ServiceInfo &infos, bool verbose, 
   }
 }
 
-void SessionHelper::forEachService(const std::string &pattern, ShMethod methodToCall, ShPatternResolver patternResolver, bool hidden)
+void SessionHelper::forEachService(const std::string &pattern, ShMethod methodToCall, ShPatternResolver patternResolver, bool hidden, bool cont)
 {
   std::vector<std::string> tmpPatternList(1);
   tmpPatternList[0] = pattern;
-  forEachService(tmpPatternList, methodToCall, patternResolver, hidden);
+  forEachService(tmpPatternList, methodToCall, patternResolver, hidden, cont);
 }
 
-void SessionHelper::forEachService(const std::vector<std::string> &patternList, ShMethod methodToCall, ShPatternResolver patternResolver, bool hidden)
+void SessionHelper::forEachService(const std::vector<std::string> &patternList, ShMethod methodToCall, ShPatternResolver patternResolver, bool hidden, bool cont)
 {
   _currentMatchMap = getMatchMap(patternList, patternResolver, hidden);
 
@@ -192,7 +192,10 @@ void SessionHelper::forEachService(const std::vector<std::string> &patternList, 
       foundOne = true;
 
     BOOST_FOREACH(const std::string &it2, it.second.second)
-      methodToCall(it.second.first, it2);
+    {
+        if (!methodToCall(it.second.first, it2) && !cont)
+            return ;
+    }
   }
   if (!foundOne)
     throw std::runtime_error("no Service.Member combinations matching the given pattern(s) were found");

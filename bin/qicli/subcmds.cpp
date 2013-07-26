@@ -60,6 +60,7 @@ int subCmd_call(int argc, char **argv, const MainOptions &options)
       ("arg,a", po::value<std::vector<std::string> >(&argList), "method's args")
       ("hidden", "call hidden methods if they match the given pattern")
       ("json", "method parameters' will be treaded as JSON strings")
+      ("continue", "continue on error")
       ("help,h", "Print this help message and exit");
 
   po::positional_options_description positionalOptions;
@@ -72,7 +73,7 @@ int subCmd_call(int argc, char **argv, const MainOptions &options)
     return 1;
   SessionHelper session(options.address);
 
-  session.call(fullName, argList, vm.count("hidden"), vm.count("json"));
+  session.call(fullName, argList, vm.count("hidden"), vm.count("json"), vm.count("continue"));
   return 0;
 }
 
@@ -112,6 +113,7 @@ int subCmd_get(int argc, char **argv, const MainOptions &options)
   desc.add_options()
       ("prop,p", po::value<std::vector<std::string> >(&patternList), "property's name")
       ("hidden", "get hidden properties if they match the given pattern")
+      ("continue", "continue on error")
       ("help,h", "Print this help message and exit");
 
   po::positional_options_description positionalOptions;
@@ -125,7 +127,7 @@ int subCmd_get(int argc, char **argv, const MainOptions &options)
 
   if (patternList.empty())
       patternList.push_back("*.*");
-  session.get(patternList, vm.count("hidden"));
+  session.get(patternList, vm.count("hidden"), vm.count("continue"));
   return 0;
 }
 
@@ -138,6 +140,7 @@ int subCmd_set(int argc, char **argv, const MainOptions &options)
       ("prop,p", po::value<std::vector<std::string> >(&argList), "property's name")
       ("hidden", "set hidden properties if they match the given pattern")
       ("json", "parameter will be treaded as a JSON string")
+      ("continue", "continue on error")
       ("help,h", "Print this help message and exit");
 
   po::positional_options_description positionalOptions;
@@ -157,7 +160,7 @@ int subCmd_set(int argc, char **argv, const MainOptions &options)
   argList.pop_back();
 
   SessionHelper session(options.address);
-  session.set(argList, jsonValue, vm.count("hidden"), vm.count("json"));
+  session.set(argList, jsonValue, vm.count("hidden"), vm.count("json"), vm.count("continue"));
   return 0;
 }
 
@@ -170,6 +173,7 @@ int subCmd_watch(int argc, char **argv, const MainOptions &options)
       ("signal,s", po::value<std::vector<std::string> >(&patternList), "service's name")
       ("time,t", "Print time")
       ("hidden", "watch hidden signals if they match the given pattern")
+      ("continue", "continue on error")
       ("help,h", "Print this help message and exit");
 
   po::positional_options_description positionalOptions;
@@ -183,7 +187,7 @@ int subCmd_watch(int argc, char **argv, const MainOptions &options)
 
   if (patternList.empty())
       patternList.push_back("*.*");
-  session.watch(patternList, vm.count("time"), vm.count("hidden"));
+  session.watch(patternList, vm.count("time"), vm.count("hidden"), vm.count("continue"));
   ::getchar();
   return 0;
 }

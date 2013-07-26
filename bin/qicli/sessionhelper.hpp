@@ -19,17 +19,17 @@ public:
 
 public:
   void info(const std::vector<std::string> &patternVec, bool verbose, bool showHidden, bool showDoc);
-  void call(const std::string &pattern, const std::vector<std::string> &jsonArgList, bool hidden, bool json);
+  void call(const std::string &pattern, const std::vector<std::string> &jsonArgList, bool hidden, bool json, bool cont);
   void post(const std::string &pattern, const std::vector<std::string> &jsonArgList, bool hidden, bool json);
-  void get(const std::vector<std::string> &patternList, bool hidden);
-  void set(const std::vector<std::string> &patternList, const std::string &jsonValue, bool hidden, bool json);
-  void watch(const std::vector<std::string> &patternList, bool showTime, bool hidden);
+  void get(const std::vector<std::string> &patternList, bool hidden, bool cont);
+  void set(const std::vector<std::string> &patternList, const std::string &jsonValue, bool hidden, bool json, bool cont);
+  void watch(const std::vector<std::string> &patternList, bool showTime, bool hidden, bool cont);
 
 private:
   bool                          byPassService(const std::string &name, bool showHidden);
   MatchMap                      getMatchMap(const std::vector<std::string> &patternList, ShPatternResolver patternResolver, bool hidden);
-  void                          forEachService(const std::string &pattern, ShMethod methodToCall, ShPatternResolver patternResolver, bool hidden);
-  void                          forEachService(const std::vector<std::string> &patternList, ShMethod methodToCall, ShPatternResolver patternResolver, bool hidden);
+  void                          forEachService(const std::string &pattern, ShMethod methodToCall, ShPatternResolver patternResolver, bool hidden, bool cont);
+  void                          forEachService(const std::vector<std::string> &patternList, ShMethod methodToCall, ShPatternResolver patternResolver, bool hidden, bool cont);
   qi::AnyValue                  decodeArgByCast(const std::string &arg);
   qi::AnyValue                  decodeArg(const std::string &arg, bool json);
   qi::GenericFunctionParameters decodeArgs(const std::vector<std::string> &jsonArgList, bool json);
