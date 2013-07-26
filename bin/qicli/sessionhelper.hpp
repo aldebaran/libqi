@@ -9,7 +9,7 @@ class SessionHelper
 {
 private:
   typedef std::list<std::string> (ServiceHelper::*ShPatternResolver)(const std::string &memberPattern, bool getHidden) const;
-  typedef boost::function<int (ServiceHelper& sh, const std::string& memberName)> ShMethod;
+  typedef boost::function<bool (ServiceHelper& sh, const std::string& memberName)> ShMethod;
   typedef std::map<std::string, std::pair<ServiceHelper, std::set<std::string> > > MatchMap;
   typedef std::pair<const std::string, std::pair<ServiceHelper, std::set<std::string> > > MatchMapPair;
 

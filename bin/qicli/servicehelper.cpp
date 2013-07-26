@@ -113,37 +113,41 @@ const qi::AnyObject& ServiceHelper::objPtr() const
   return _service;
 }
 
-int ServiceHelper::showProperty(const std::string &propertyName)
+bool ServiceHelper::showProperty(const std::string &propertyName)
 {
   printServiceMember(_name, propertyName);
   int propertyId = _service->metaObject().propertyId(propertyName);
   if (propertyId == -1)
   {
     printError("property not found");
-    return 1;
+    return false;
   }
   qi::FutureSync<qi::AnyValue> result = _service->property(propertyId);
 
   if (result.hasError())
+  {
     printError(result.error());
-  else
-    std::cout << qi::encodeJSON(result.value()) << std::endl;
-  return 0;
+    return false;
+  }
+  std::cout << qi::encodeJSON(result.value()) << std::endl;
+  return true;
 }
 
-int ServiceHelper::setProperty(const std::string &propertyName, const qi::AnyValue& gvArg)
+bool ServiceHelper::setProperty(const std::string &propertyName, const qi::AnyValue& gvArg)
 {
   printServiceMember(_name, propertyName);
   qi::FutureSync<void> result = _service->setProperty(propertyName, gvArg);
 
   if (result.hasError())
+  {
     printError(result.error());
-  else
-    printSuccess();
-  return 0;
+    return false;
+  }
+  printSuccess();
+  return true;
 }
 
-int ServiceHelper::watch(const std::string &signalName, bool showTime)
+bool ServiceHelper::watch(const std::string &signalName, bool showTime)
 {
   WatchOptions options;
   options.showTime = showTime;
@@ -154,32 +158,33 @@ int ServiceHelper::watch(const std::string &signalName, bool showTime)
   {
     printServiceMember(_name, signalName);
     printError(futLink.error());
-    return 1;
+    return false;
   }
   _signalLinks.push_back(futLink.value());
-  return 0;
+  return true;
 }
 
-int ServiceHelper::post(const std::string &signalName, const qi::GenericFunctionParameters &gvArgList)
+bool ServiceHelper::post(const std::string &signalName, const qi::GenericFunctionParameters &gvArgList)
 {
   printServiceMember(_name, signalName);
   std::cout.flush();
   _service->metaPost(signalName, gvArgList);
   printSuccess();
-  return 0;
+  return true;
 }
 
-int ServiceHelper::call(const std::string &methodName, const qi::GenericFunctionParameters &gvArgList)
+bool ServiceHelper::call(const std::string &methodName, const qi::GenericFunctionParameters &gvArgList)
 {
   printServiceMember(_name, methodName);
   std::cout.flush();
   qi::FutureSync<qi::AnyReference> result = _service->metaCall(methodName, gvArgList);
   if (result.hasError())
+  {
     printError(result.error());
-  else
-    std::cout << qi::encodeJSON(result.value()) << std::endl;
-
-  return 0;
+    return false;
+  }
+  std::cout << qi::encodeJSON(result.value()) << std::endl;
+  return true;
 }
 
 qi::AnyReference ServiceHelper::defaultWatcher(const ServiceHelper::WatchOptions &options, const std::vector<qi::AnyReference> &params)

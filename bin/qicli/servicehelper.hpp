@@ -20,11 +20,11 @@ public:
   ServiceHelper(const ServiceHelper &other);
   ~ServiceHelper();
 
-  int                         call(const std::string &methodName, const qi::GenericFunctionParameters &gvArgList);
-  int                         post(const std::string &signalName, const qi::GenericFunctionParameters &gvArgList);
-  int                         showProperty(const std::string &propertyName);
-  int                         setProperty(const std::string &propertyName, const qi::AnyValue &gvArg);
-  int                         watch(const std::string &signalName, bool showTime=false);
+  bool                        call(const std::string &methodName, const qi::GenericFunctionParameters &gvArgList);
+  bool                        post(const std::string &signalName, const qi::GenericFunctionParameters &gvArgList);
+  bool                        showProperty(const std::string &propertyName);
+  bool                        setProperty(const std::string &propertyName, const qi::AnyValue &gvArg);
+  bool                        watch(const std::string &signalName, bool showTime=false);
 
   const ServiceHelper&        operator=(const ServiceHelper &other);
   const ServiceHelper&        operator=(const qi::AnyObject &service);
