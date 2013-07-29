@@ -152,6 +152,18 @@ namespace qi
       error(erc);
       return;
     }
+    // check magic
+    if (_msg->_p->header.magic != MessagePrivate::magic)
+    {
+      qiLogWarning() << "Incorrect magic from "
+        << _socket->lowest_layer().remote_endpoint().address().to_string()
+        << ", disconnecting"
+           " (expected " << MessagePrivate::magic
+        << ", got " << _msg->_p->header.magic << ").";
+      error(erc);
+      return;
+    }
+
     size_t payload = _msg->_p->header.size;
     if (payload)
     {
