@@ -194,7 +194,7 @@ void SessionHelper::forEachService(const std::vector<std::string> &patternList, 
     BOOST_FOREACH(const std::string &it2, it.second.second)
     {
         if (!methodToCall(it.second.first, it2) && !cont)
-            return ;
+          throw std::runtime_error("");
     }
   }
   if (!foundOne)

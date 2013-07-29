@@ -79,6 +79,8 @@ bool isNumber(const std::string &str)
 
 void printError(const std::string &errorStr)
 {
+  if (errorStr.empty())
+    return ;
   std::cout << qi::StreamColor_Red << "ERROR: "
             << errorStr << qi::StreamColor_Reset << std::endl;
 }
