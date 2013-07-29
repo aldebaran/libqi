@@ -167,6 +167,29 @@ namespace qi
     size_t payload = _msg->_p->header.size;
     if (payload)
     {
+      static size_t maxPayload = 0;
+      static bool init = false;
+      // Not thread-safe, limited consequences
+      // worst case: first received messages will not honor limit)
+      if (!init)
+      {
+        init = true;
+        std::string l = os::getenv("QI_MAX_MESSAGE_PAYLOAD");
+        if (!l.empty())
+          maxPayload = strtol(l.c_str(), 0, 0);
+        else
+          maxPayload = 50000000; // reasonable default
+      }
+      if (maxPayload && payload > maxPayload)
+      {
+        qiLogWarning() << "Receiving message of size " << payload
+          << " above maximum configured payload " << maxPayload << ", closing link."
+             " (configure with environment variable QI_MAX_MESSAGE_PAYLOAD)";
+        boost::system::error_code erc;
+        error(erc);
+        return;
+      }
+
       void* ptr = _msg->_p->buffer.reserve(payload);
 
       boost::recursive_mutex::scoped_lock l(_closingMutex);
@@ -223,6 +246,7 @@ namespace qi
         qiLogWarning() << "Dispatch to user took " << duration << "us";
     }
     delete _msg;
+    _msg = 0;
     startReading();
   }
 
