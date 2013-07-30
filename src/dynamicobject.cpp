@@ -254,7 +254,7 @@ namespace qi
     // Allow emit on a method
     // FIXME: call errors are lost
     if (metaObject().method(event)) {
-      metaCall(context, event, params, MetaCallType_Auto);
+      metaCall(context, event, params, MetaCallType_Queued);
       //TODO: return metacall status: check params
       return;
     }
