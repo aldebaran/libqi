@@ -146,7 +146,7 @@ namespace qi {
       // Prevent run from exiting
       globalIoWork = new boost::asio::io_service::work(*globalIoService);
       // Start io_service in a thread. It will call our handlers.
-      globalIoThread = new boost::thread(boost::bind(&run_io_service));
+      globalIoThread = new boost::thread(&run_io_service);
       // We want signal handlers to work as late as possible.
       ::atexit(&stop_io_service);
       globalSignalSet = new std::list<boost::asio::signal_set*>;
