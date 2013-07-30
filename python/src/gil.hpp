@@ -16,8 +16,11 @@
 namespace qi {
   namespace py {
 
-    //Allow calling python from an unknown thread
-    // (acquire the GIL and setup the thread)
+    //Acquire the GIL if needed
+    //and setup the thread in the python world if needed
+    //
+    //Use that before calling python (even from an unknown thread)
+    //Can be nested
     class GILScopedLock
     {
     public:
@@ -39,26 +42,16 @@ namespace qi {
       PyGILState_STATE _state;
     };
 
-    //Unlock the GIL, allow python to process other thread
-    //SHOULD NEVER BE CALLED TWICE, DO NOT NEST
+    //Unlock the GIL, allow python to process other python threads
+    //Use that while doing C++ computation (sleep, IO, whatever).
+    //
+    //This can be called from a thread not previously managed by python.
+    //Can be nested
     class GILScopedUnlock
     {
     public:
-      GILScopedUnlock()
-        : _save(0)
-      {
-        qiLogCategory("qi.py.gil");
-        qiLogDebug() << "ScopedUnLockEnter(Begin)";
-        _save = PyEval_SaveThread();
-        qiLogDebug() << "ScopedUnLockEnter(End)";
-      }
-
-      ~GILScopedUnlock() {
-        qiLogCategory("qi.py.gil");
-        qiLogDebug() << "ScopedUnLockQuit(Begin)";
-        PyEval_RestoreThread(_save);
-        qiLogDebug() << "ScopedUnLockQuit(End)";
-      }
+      GILScopedUnlock();
+      ~GILScopedUnlock();
 
     private:
       PyThreadState* _save;
