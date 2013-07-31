@@ -205,7 +205,12 @@ namespace qi {
         // We will check enabled when we will be scheduled in the target
         // thread, and we hold this SignalSubscriber alive, so no need to
         // explicitly track the asynccall
-        getDefaultThreadPoolEventLoop()->post(FunctorCall(copy, new SignalSubscriberPtr(shared_from_this())));
+
+        // courtesy-check of el, but it should be kept alive longuer than us
+        qi::EventLoop* el = getDefaultThreadPoolEventLoop();
+        if (!el) // this is an assert basicaly, no sense trying to do something clever.
+          throw std::runtime_error("Event loop was destroyed");
+        el->post(FunctorCall(copy, new SignalSubscriberPtr(shared_from_this())));
       }
       else
       {
