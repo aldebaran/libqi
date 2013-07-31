@@ -10,7 +10,6 @@
 #ifdef __linux__
 #include <dirent.h>
 #include <unistd.h>
-#include <cstdio>
 #endif
 
 namespace qi
@@ -19,23 +18,19 @@ namespace qi
   {
     int getNumFD()
     {
-      int fd_count = -1;
+      int fdCount = -1;
 
 #ifdef __linux__
-      char buf[64];
-
-      snprintf(buf, 64, "/proc/%i/fd/", getpid());
-
-      DIR *dir = opendir(buf);
+      DIR *dir = opendir("/proc/self/fd/");
       if (dir == NULL)
         return -1;
 
       while (readdir(dir) != NULL)
-        ++fd_count;
+        ++fdCount;
       closedir(dir);
 #endif
 
-      return fd_count;
+      return fdCount;
     }
   }
 }
