@@ -33,7 +33,7 @@ class subscriber:
     while (self.done != True):
       time.sleep(0.1)
 
-def main():
+def test_signal():
   print "\nInit..."
   app = qi.Application()
   sub1 = subscriber()
@@ -78,6 +78,9 @@ def main():
   mysignal(42)
   sub1.wait()
 
+  assert sub1.done == True
+  assert sub2.done == False
+
   assert mysignal.disconnect_all() == True
   print "\nTest #5 : Trigger with five parameters"
   mysignal.connect(sub1.callback_5args)
@@ -86,6 +89,11 @@ def main():
   sub2.done = False
   mysignal(42, "hey", "a", 0.42, (0,1))
   sub1.wait()
+  assert sub1.done == True
+  assert sub2.done == False
+
+def main():
+  test_signal()
 
 if __name__ == "__main__":
   main()
