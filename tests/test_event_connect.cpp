@@ -13,22 +13,27 @@
 static int lastPayload = 0;
 static int lastPayload2 = 0;
 static int completed = 0;
-void onFire(const int& pl)
+
+void onFire(const int& pl, qi::Promise<void> p)
 {
   lastPayload = pl;
+  p.setValue(0);
 }
-void onFire2(const int& pl)
+void onFire2(const int& pl, qi::Promise<void> p)
 {
   lastPayload2 = pl;
+  p.setValue(0);
 }
 
 
 void testDelete(bool afirst, bool disconnectFirst)
 {
+  qi::Promise<void> p0;
+  qi::Promise<void> p1;
   qi::DynamicObjectBuilder oba, obb;
   qi::SignalLink fireId = oba.advertiseSignal<int>("fire");
-  qi::SignalLink onFireId = obb.advertiseMethod("onFire", &onFire);
-  qi::SignalLink onFireId2 = obb.advertiseMethod("onFire2", &onFire2);
+  qi::SignalLink onFireId = obb.advertiseMethod("onFire", boost::bind<void>(&onFire, _1, p0));
+  qi::SignalLink onFireId2 = obb.advertiseMethod("onFire2", boost::bind<void>(&onFire2, _1, p1));
   qi::AnyObject *a = new qi::AnyObject(oba.object());
   qi::AnyObject *b = new qi::AnyObject(obb.object());
   qi::SignalLink linkId = (*a)->connect(fireId, *b, onFireId);
@@ -38,14 +43,21 @@ void testDelete(bool afirst, bool disconnectFirst)
   // Subs ordering is unspecified
   //EXPECT_EQ(subs[0].method + subs[1].method, onFireId + onFireId2);
   (*a)->post("fire", 12);
+  EXPECT_TRUE(p0.future().hasValue(1000));
+  EXPECT_TRUE(p1.future().hasValue(1000));
   EXPECT_EQ(12, lastPayload);
   EXPECT_EQ(12, lastPayload2);
+  p0.reset();
+  p1.reset();
   if (disconnectFirst)
   {
     (*a)->disconnect(linkId);
     (*a)->post("fire", 13);
+    EXPECT_TRUE(p1.future().hasValue(1000));
     EXPECT_EQ(12, lastPayload);
     EXPECT_EQ(13, lastPayload2);
+    p0.reset();
+    p1.reset();
   }
   if (afirst)
   {
