@@ -158,10 +158,10 @@ namespace qi {
       }
       catch(const std::exception& e)
       {
-        qiLogVerbose() << "Exception caught from signal subscriber: " << e.what();
+        qiLogWarning() << "Exception caught from signal subscriber: " << e.what();
       }
       catch (...) {
-        qiLogVerbose() << "Unknown exception caught from signal subscriber";
+        qiLogWarning() << "Unknown exception caught from signal subscriber";
       }
 
       (*sub)->removeActive(true);
