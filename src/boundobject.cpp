@@ -15,11 +15,12 @@ namespace qi {
 
   static AnyReference forwardEvent(const GenericFunctionParameters& params,
                                    unsigned int service, unsigned int object,
-                                   unsigned int event, TransportSocketPtr client,
+                                   unsigned int event, Signature sig,
+                                   TransportSocketPtr client,
                                    ObjectHost* context)
   {
     qi::Message msg;
-    msg.setValues(params, context);
+    msg.setValues(params, sig, context);
     msg.setService(service);
     msg.setFunction(event);
     msg.setType(Message::Type_Event);
@@ -81,7 +82,11 @@ namespace qi {
 
   //Bound Method
   SignalLink ServiceBoundObject::registerEvent(unsigned int objectId, unsigned int eventId, SignalLink remoteSignalLinkId) {
-    AnyFunction mc = AnyFunction::fromDynamicFunction(boost::bind(&forwardEvent, _1, _serviceId, _objectId, eventId, _currentSocket, this));
+    // fetch signature
+    const MetaSignal* ms = _object->metaObject().signal(eventId);
+    if (!ms)
+      throw std::runtime_error("No such signal");
+    AnyFunction mc = AnyFunction::fromDynamicFunction(boost::bind(&forwardEvent, _1, _serviceId, _objectId, eventId, ms->parametersSignature(), _currentSocket, this));
     SignalLink linkId = _object->connect(eventId, mc);
     qiLogDebug() << "SBO rl " << remoteSignalLinkId <<" ll " << linkId;
     _links[_currentSocket][remoteSignalLinkId] = RemoteSignalLink(linkId, eventId);
