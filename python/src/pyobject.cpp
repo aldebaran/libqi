@@ -23,7 +23,7 @@ namespace qi { namespace py {
 
     boost::python::object importInspect() {
       static bool plouf = false;
-      static boost::python::object obj;
+      static boost::python::object& obj = *new boost::python::object;
       if (!plouf) {
         obj = boost::python::import("inspect");
         plouf = true;
