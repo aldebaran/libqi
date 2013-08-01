@@ -222,7 +222,18 @@ namespace qi {
           addActive(false);
         }
         //do not throw
-        handler(args);
+        try
+        {
+          handler(args);
+        }
+        catch(const std::exception& e)
+        {
+          qiLogWarning() << "Exception caught from signal subscriber: " << e.what();
+        }
+        catch (...)
+        {
+          qiLogWarning() << "Unknown exception caught from signal subscriber";
+        }
         if (weakLock)
           weakLock->unlock();
         removeActive(true);
