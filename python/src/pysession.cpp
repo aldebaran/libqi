@@ -30,8 +30,8 @@ qi::AnyReference triggerBouncer(qi::SignalBase *sig, const std::vector<qi::AnyRe
         : _ses(new qi::Session)
         , nSigConnected(0)
         , nSigDisconnected(0)
-        , connected(makePySignal("[m]"))
-        , disconnected(makePySignal("[m]"))
+        , connected(makePySignal())
+        , disconnected(makePySignal())
       {
         // Get SignalBase from our PySignals
         qi::SignalBase *conn = getSignal(connected);

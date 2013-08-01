@@ -33,13 +33,13 @@ namespace qi { namespace py {
 
     class PySignal {
     public:
-      PySignal(const qi::Signature &signature = "[m]")
+      PySignal(const qi::Signature &signature = "m")
         : _sig(new qi::SignalBase(signature))
       {
       }
 
       PySignal(const PySignal& rhs)
-        : _sig(new qi::SignalBase(qi::Signature("[m]")))
+        : _sig(new qi::SignalBase(qi::Signature("m")))
       {
 
         *_sig = *rhs._sig;
