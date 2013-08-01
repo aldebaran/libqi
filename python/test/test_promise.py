@@ -15,8 +15,10 @@ from qi import Future
 
 def wait(promise, t=0.1):
     time.sleep(t)
-    promise.setValue("mjolk")
-
+    try:
+        promise.setValue("mjolk")
+    except:
+        pass
 
 def test_empty_future_value():
     f = Future()
@@ -36,7 +38,6 @@ def test_many_futures_create():
         assert f.hasValue()
         assert f.value() == 1337
 
-
 def test_future_wait():
     def wait(promise):
         time.sleep(0.1)
@@ -45,16 +46,17 @@ def test_future_wait():
     p = Promise()
     f = p.future()
     threading.Thread(target=wait, args=[p]).start()
-
     assert f.isFinished() is False
     assert f.value() == "lol"
     assert f.isFinished() is True
 
 
 def test_many_futures_wait_cancel():
-
     def cancel(p):
-        p.setValue("Kappa")
+        try:
+            p.setValue("Kappa")
+        except:
+            pass #ok: cancel called many times
 
     ps = [Promise(cancel) for _ in range(50)]
     fs = [p.future() for p in ps]
@@ -73,7 +75,10 @@ def test_many_futures_wait_cancel():
 def test_many_promises_wait_cancel():
 
     def cancel(p):
-        p.setValue("Kappa")
+        try:
+            p.setValue("Kappa")
+        except:
+            pass #ok: cancel called many times
 
     ps = [Promise(cancel) for _ in range(50)]
     fs = [p.future() for p in ps]
@@ -104,7 +109,7 @@ def test_future_no_timeout():
 def test_future_timeout_immediate():
     p = Promise()
     f = p.future()
-    threading.Thread(target=wait).start()
+    threading.Thread(target=wait, args=[p]).start()
     try:
         f.value(timeout=0)
     except RuntimeError:
@@ -158,13 +163,14 @@ def test_future_callback():
         assert f.value() == 1337
         assert called is False
         called = "aight"
-        result.set_value("bim")
+        result.setValue("bim")
 
     p = Promise()
     f = p.future()
     f.addCallback(callback)
     p.setValue(1337)
     result.future().wait(1000)
+    assert result.future().hasValue(0)
     assert called == "aight"
     assert not f.isCanceled()
     assert f.isFinished()
@@ -178,12 +184,12 @@ def test_future_two_callbacks():
     def callback1(f):
         global called1
         called1 = "1"
-        result1.set_value("bim")
+        result1.setValue("bim")
 
     def callback2(f):
         global called2
         called2 = "2"
-        result2.set_value("bim")
+        result2.setValue("bim")
 
     p = Promise()
     f = p.future()
@@ -194,6 +200,8 @@ def test_future_two_callbacks():
     result1.future().wait(1000)
     result2.future().wait(1000)
 
+    assert result1.future().hasValue(0)
+    assert result2.future().hasValue(0)
     assert called1 == "1"
     assert called2 == "2"
 
@@ -231,33 +239,19 @@ def test_future_exception():
 
 def main():
     test_empty_future_value()
-
     test_many_futures_create()
-
     test_future_wait()
-
     test_many_futures_wait_cancel()
-
     test_many_promises_wait_cancel()
-
     test_future_no_timeout()
-
     test_future_timeout_immediate()
-
     test_future_timeout()
-
     test_future_error()
-
     test_future_cancel_exception()
-
     test_future_callback()
-
     test_promise_re_set()
-
     test_future_exception()
-
     test_future_two_callbacks()
-
     test_future_callback_noargs()
 
 if __name__ == "__main__":
