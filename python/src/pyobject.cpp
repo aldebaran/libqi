@@ -153,27 +153,45 @@ namespace qi { namespace py {
 
     //TODO: DO NOT DUPLICATE
     static qi::AnyReference pyCallMethod(const std::vector<qi::AnyReference>& cargs, boost::python::object callable) {
-      qi::py::GILScopedLock _lock;
-      boost::python::list   args;
-      boost::python::object ret;
-
-      std::vector<qi::AnyReference>::const_iterator it = cargs.begin();
-      ++it; //drop the first arg which is DynamicObject*
-      for (; it != cargs.end(); ++it) {
-        qiLogDebug() << "argument: " << qi::encodeJSON(*it);
-        args.append(it->to<boost::python::object>());
-      }
-      qiLogDebug() << "before method call";
+      qi::AnyReference gvret;
       try {
-        ret = callable(*boost::python::tuple(args));
-      } catch (const boost::python::error_already_set &e) {
-        std::string err = PyFormatError();
-        qiLogDebug() << "call exception:" << err;
-        throw std::runtime_error(err);
-      }
+        qi::py::GILScopedLock _lock;
+        boost::python::list   args;
+        boost::python::object ret;
 
-      qi::AnyReference gvret = qi::AnyReference(ret).clone();
-      qiLogDebug() << "method returned:" << qi::encodeJSON(gvret);
+        std::vector<qi::AnyReference>::const_iterator it = cargs.begin();
+        ++it; //drop the first arg which is DynamicObject*
+        for (; it != cargs.end(); ++it) {
+          qiLogDebug() << "argument: " << qi::encodeJSON(*it);
+          args.append(it->to<boost::python::object>());
+        }
+        qiLogDebug() << "before method call";
+        try {
+          ret = callable(*boost::python::tuple(args));
+        } catch (const boost::python::error_already_set &e) {
+          std::string err = PyFormatError();
+          qiLogDebug() << "call exception:" << err;
+          throw std::runtime_error(err);
+        }
+
+        //convert python future to future, to allow the middleware to make magic with it.
+        //serverresult will support async return value for call. (call returning future)
+        boost::python::extract< PyFuturePtr > extractor(ret);
+        if (extractor.check()) {
+          qiLogDebug() << "Future detected";
+          PyFuturePtr pfut = extractor();
+          if (pfut) { //pfut == 0, can mean ret is None.
+            qi::Future<qi::AnyValue> fut = *pfut;
+            return qi::AnyReference(fut).clone();
+          }
+        }
+
+        gvret = qi::AnyReference(ret).clone();
+        qiLogDebug() << "method returned:" << qi::encodeJSON(gvret);
+
+      } catch (const boost::python::error_already_set &e) {
+        throw std::runtime_error("python failed");
+      }
       return gvret;
     }
 
