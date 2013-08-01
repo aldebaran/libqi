@@ -19,18 +19,28 @@ namespace qi {
     TransportSocketPtr socket, const qi::MessageAddress &replyaddr)
   {
     qi::Message ret(Message::Type_Reply, replyaddr);
-    TemplateTypeInterface* futureType = QI_TEMPLATE_TYPE_GET(val.type, Future);
-    ObjectTypeInterface* onext = dynamic_cast<ObjectTypeInterface*>(futureType->next());
-    GenericObject gfut(onext, val.value);
-    if (gfut.call<bool>("hasError", 0))
-    {
+    try {
+      TemplateTypeInterface* futureType = QI_TEMPLATE_TYPE_GET(val.type, Future);
+      ObjectTypeInterface* onext = dynamic_cast<ObjectTypeInterface*>(futureType->next());
+      GenericObject gfut(onext, val.value);
+      if (gfut.call<bool>("hasError", 0))
+      {
+        ret.setType(qi::Message::Type_Error);
+        ret.setError(gfut.call<std::string>("error", 0));
+      }
+      else
+      {
+        AnyValue v = gfut.call<AnyValue>("value", 0);
+        ret.setValue(v, host);
+      }
+    } catch (const std::exception &e) {
+      //be more than safe. we always want to nack the client in case of error
       ret.setType(qi::Message::Type_Error);
-      ret.setError(gfut.call<std::string>("error", 0));
-    }
-    else
-    {
-      AnyValue v = gfut.call<AnyValue>("value", 0);
-      ret.setValue(v, host);
+      ret.setError(std::string("Uncaught error:") + e.what());
+    } catch (...) {
+      //be more than safe. we always want to nack the client in case of error
+      ret.setType(qi::Message::Type_Error);
+      ret.setError("Unknown error caught while forwarding the answer");
     }
     if (!socket->send(ret))
       qiLogError("qimessaging.serverresult") << "Can't generate an answer for address:" << replyaddr;
@@ -44,19 +54,30 @@ namespace qi {
       ret.setType(qi::Message::Type_Error);
       ret.setError(future.error());
     } else {
-      qi::AnyReference val = future.value();
-      TemplateTypeInterface* futureType = QI_TEMPLATE_TYPE_GET(val.type, Future);
-      if (futureType)
-      { // Return value is a future, bounce
-        TypeInterface* next = futureType->next();
-        ObjectTypeInterface* onext = dynamic_cast<ObjectTypeInterface*>(next);
-        GenericObject gfut(onext, val.value);
-        boost::function<void()> cb = boost::bind(serverResultAdapterNext, val, host, socket, replyaddr);
-        gfut.call<void>("_connect", cb);
-        return;
+      try {
+        qi::AnyReference val = future.value();
+        TemplateTypeInterface* futureType = QI_TEMPLATE_TYPE_GET(val.type, Future);
+        if (futureType)
+        { // Return value is a future, bounce
+          TypeInterface* next = futureType->next();
+          ObjectTypeInterface* onext = dynamic_cast<ObjectTypeInterface*>(next);
+          GenericObject gfut(onext, val.value);
+          boost::function<void()> cb = boost::bind(serverResultAdapterNext, val, host, socket, replyaddr);
+          gfut.call<void>("_connect", cb);
+          return;
+        }
+        ret.setValue(val, host);
+        //may leak if something throw inbetween.
+        val.destroy();
+      } catch (const std::exception &e) {
+        //be more than safe. we always want to nack the client in case of error
+        ret.setType(qi::Message::Type_Error);
+        ret.setError(std::string("Uncaught error:") + e.what());
+      } catch (...) {
+        //be more than safe. we always want to nack the client in case of error
+        ret.setType(qi::Message::Type_Error);
+        ret.setError("Unknown error caught while sending the answer");
       }
-      ret.setValue(val, host);
-      val.destroy();
     }
     if (!socket->send(ret))
       qiLogError("qimessaging.serverresult") << "Can't generate an answer for address:" << replyaddr;
