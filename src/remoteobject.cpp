@@ -156,8 +156,13 @@ namespace qi {
           // Remove top-level tuple
           //sig = sig.substr(1, sig.length()-2);
           AnyReference value = msg.value(sig, _socket);
-          GenericFunctionParameters args = value.asTupleValuePtr();
-          qiLogDebug() << "Triggering local event listeners";
+
+          GenericFunctionParameters args;
+          if (sig == "m")
+            args = value.asDynamic().asTupleValuePtr();
+          else
+            args = value.asTupleValuePtr();
+          qiLogDebug() << "Triggering local event listeners with args : " << args.size();
           sb->trigger(args);
           value.destroy();
         }
