@@ -31,23 +31,28 @@ def onServiceAvailable(fut):
 def onTestEvent(v):
     print "Event:", v
 
-def client(session):
+def onTestEventGeneric(*args):
+    print "EventGeneric:", args
 
+def  main():
+    """ Entry point of qiservice
+    """
+    session = qi.Session()
     f = session.connect("tcp://127.0.0.1:9559", _async=True)
-    print "connected?", not f.has_error()
+    print "connected?", not f.hasError()
 
     #3 Get service serviceTest
     fut = session.service("serviceTest", _async=True)
-
-    fut.add_callback(onServiceAvailable)
+    fut.addCallback(onServiceAvailable)
 
     obj = fut.value()
 
-    obj.testEvent.connect(onTestEvent)
+    #obj.testEvent.connect(onTestEvent)
+    obj.testEventGeneric.connect(onTestEventGeneric)
 
     print "repl:", obj.call("reply", "plouf")
     f = obj.reply("plaf", _async=True)
-    f.add_callback(onReply)
+    f.addCallback(onReply)
 
     i = 0
     while i < 2:
@@ -55,16 +60,6 @@ def client(session):
         time.sleep(1)
         i = i + 1
     session.close()
-
-
-def  main():
-    """ Entry point of qiservice
-    """
-
-    #2 Open a session onto service directory.
-    session = qi.Session()
-
-    client(session)
 
 if __name__ == "__main__":
     main()

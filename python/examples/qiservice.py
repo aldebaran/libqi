@@ -12,8 +12,9 @@ import qi
 
 class ServiceTest:
     def __init__(self):
-        self.onFoo = qi.Signal("i")
+        self.onFoo = qi.Signal("(i)")
         self.testEvent = qi.Signal("(s)")
+        self.testEventGeneric = qi.Signal()
 
     def reply(self, plaf):
         print "v:", plaf
@@ -39,9 +40,6 @@ def get_servicedirectory_address():
 def main():
     """ Entry point of qiservice
     """
-    #0 Declare app
-    app = qi.Application()
-
     #1 Check if user give us service directory address.
     sd_addr = get_servicedirectory_address()
 
@@ -55,13 +53,14 @@ def main():
     while True:
       mystr = "bim" + str(i)
       print "posting:", mystr
+      myplouf = [ "bim", 42 ]
       m.testEvent(mystr)
+      m.testEventGeneric(myplouf)
       time.sleep(1);
       i += 1
 
     #6 Clean
     s.close()
-    app.stop()
     #main : Done.
 
 if __name__ == "__main__":
