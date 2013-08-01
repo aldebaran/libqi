@@ -222,6 +222,44 @@ TEST(TestSignal, SignalThrow)
 }
 
 
+void dynTest0(int& tgt)                     { tgt |= 1;}
+void dynTest1(int& tgt, int)                { tgt |= 2;}
+void dynTest2(int& tgt, int, int)           { tgt |= 4;}
+void dynTest3(int& tgt, int, std::string)   { tgt |= 8;}
+void dynTestN(int& tgt, const qi::AnyArguments& a)   { tgt |= 32;}
+qi::AnyReference dynTestN2(int& tgt, const std::vector<qi::AnyReference>& a)   { tgt |= 16; return qi::AnyReference();}
+
+
+TEST(TestSignal, Dynamic)
+{
+  qi::SignalBase s(qi::Signature("m"));
+  int trig = 0;
+  s.setCallType(qi::MetaCallType_Direct);
+  s.connect((boost::function<void()>) boost::bind(&dynTest0, boost::ref(trig)));
+  s.connect((boost::function<void(int)>) boost::bind(&dynTest1, boost::ref(trig), _1));
+  s.connect((boost::function<void(int, int)>) boost::bind(&dynTest2, boost::ref(trig), _1, _2));
+  s.connect((boost::function<void(int, std::string)>) boost::bind(&dynTest3, boost::ref(trig), _1, _2));
+  s.connect(qi::AnyFunction::fromDynamicFunction(boost::bind(&dynTestN2, boost::ref(trig), _1)));
+  s.connect((boost::function<void(const qi::AnyArguments&)>)(boost::bind(&dynTestN, boost::ref(trig), _1)));
+  int a, b;
+  std::string c;
+  qi::GenericFunctionParameters params;
+  s.trigger(params);
+  EXPECT_EQ(49, trig);
+  params.push_back(qi::AnyReference(a));
+  trig = 0;
+  s.trigger(params);
+  EXPECT_EQ(50, trig);
+  params.push_back(qi::AnyReference(b));
+  trig = 0;
+  s.trigger(params);
+  EXPECT_EQ(52, trig);
+  params[1] = qi::AnyReference(c);
+  trig = 0;
+  s.trigger(params);
+  EXPECT_EQ(56, trig);
+}
+
 int main(int argc, char **argv) {
   qi::Application app(argc, argv);
   ::testing::InitGoogleTest(&argc, argv);

@@ -325,6 +325,10 @@ namespace qi {
     int sigArity = Signature(signature()).begin().children().size();
     int subArity = -1;
     Signature subSignature;
+
+    if (signature() == "m")
+      goto proceed; // no check possible
+
     if (src.handler)
     {
       if (src.handler.functionType() == dynamicFunctionTypeInterface())
