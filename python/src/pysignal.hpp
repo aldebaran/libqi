@@ -17,7 +17,7 @@
 namespace qi {
   class SignalBase;
   namespace py {
-    boost::python::object makePySignal(const std::string &signature);
+    boost::python::object makePySignal(const std::string &signature = "m");
     boost::python::object makePyProxySignal(const qi::AnyObject &obj, const qi::MetaSignal &signal);
     qi::SignalBase *getSignal(boost::python::object obj);
     void export_pysignal();
