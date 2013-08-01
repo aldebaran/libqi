@@ -60,15 +60,11 @@ def client(session):
 def  main():
     """ Entry point of qiservice
     """
-    #0 Declare app
-    _application = qi.Application()
 
     #2 Open a session onto service directory.
     session = qi.Session()
 
     client(session)
-
-    _application.stop()
 
 if __name__ == "__main__":
     main()

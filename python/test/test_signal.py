@@ -35,7 +35,6 @@ class subscriber:
 
 def test_signal():
   print "\nInit..."
-  app = qi.Application()
   sub1 = subscriber()
   sub2 = subscriber()
   mysignal = qi.Signal()

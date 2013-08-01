@@ -45,8 +45,14 @@ from _qi import Application, Future, FutureState, FutureTimeout, Object, \
                 Promise, Property, ServiceDirectory, Session, Signal, \
                 createObject, registerObjectFactory
 
-__all__ = ["Application",
-           "Future",
+_app = Application()
+#application is a singleton, it should live till the end of the program
+#because it own eventloops
+def Application():
+    global _app
+    return _app
+
+__all__ = ["Future",
            "FutureState",
            "FutureTimeout",
            "Object",
