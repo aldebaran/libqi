@@ -1,3 +1,4 @@
+#!/usr/bin/python2
 ##
 ## Copyright (C) 2012 Aldebaran Robotics
 ##
@@ -47,7 +48,7 @@ def main():
     s = qi.Session()
     s.connect(sd_addr)
     m = ServiceTest()
-    s.register_service("serviceTest", m)
+    s.registerService("serviceTest", m)
 
     #5 Call Application.run() to join event loop.
     i = 0
