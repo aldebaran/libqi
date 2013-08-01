@@ -486,10 +486,36 @@ namespace qi
       return AnyReference::fromPtr(v);
     }
 
+    template<typename R>
+    AnyReference bouncerBF(const std::vector<AnyReference>& vargs,
+                         boost::function<R (const AnyArguments&)> f
+                         )
+    {
+      AnyArguments nargs;
+      if(!vargs.empty())
+      {
+        nargs.args().resize(vargs.size()-1);
+        for (unsigned i=0; i<vargs.size()-1; ++i)
+          nargs.args()[i] = vargs[i+1];
+      }
+      detail::AnyReferenceCopy output;
+      output(), f(nargs);
+      AnyValue* v = new AnyValue(output, false, true); // steal output
+      return AnyReference::fromPtr(v);
+    }
+
     template<typename C, typename R>
     AnyFunction makeAnyFunctionBare(R (C::*fun)(const AnyArguments&))
     {
       AnyFunction res = AnyFunction::fromDynamicFunction(boost::bind(&bouncer<C, R>, _1, fun));
+      // The signature storage in GO will drop first argument, and bug if none is present
+      const_cast<std::vector<TypeInterface*> &>(res.functionType()->argumentsType()).push_back(typeOf<AnyValue>());
+      return res;
+    }
+
+    template<typename R> AnyFunction makeAnyFunctionBare(boost::function<R (const AnyArguments&)> fun)
+    {
+       AnyFunction res = AnyFunction::fromDynamicFunction(boost::bind(&bouncerBF<R>, _1, fun));
       // The signature storage in GO will drop first argument, and bug if none is present
       const_cast<std::vector<TypeInterface*> &>(res.functionType()->argumentsType()).push_back(typeOf<AnyValue>());
       return res;
