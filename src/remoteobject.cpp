@@ -23,6 +23,8 @@ namespace qi {
 
   static qi::MetaObject &createRemoteObjectSpecialMetaObject() {
     static qi::MetaObject *mo = 0;
+    static boost::mutex mutex;
+    boost::mutex::scoped_lock lock(mutex);
 
     if (!mo) {
 
