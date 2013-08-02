@@ -96,6 +96,16 @@ namespace qi
       return getInstance()->findData(applicationName, filename);
     }
 
+    std::vector<std::string> findListData(const std::string &applicationName,
+                                          const std::string &filename)
+    {
+      if(filename == "") {
+        qiLogError() << "Filename cannot be empty!";
+        return std::vector<std::string>();
+      }
+      return getInstance()->findListData(applicationName, filename);
+    }
+
     std::vector<std::string> listData(const std::string &applicationName,
                                       const std::string &pattern)
     {

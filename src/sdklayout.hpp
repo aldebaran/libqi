@@ -89,6 +89,10 @@ namespace qi
     std::string findData(const std::string &applicationName,
                          const std::string &filename) const;
 
+    /** @copydoc qi::path::findData */
+    std::vector<std::string> findListData(const std::string &applicationName,
+                                          const std::string &filename) const;
+
 
     /** @copydoc qi::path::listData */
     std::vector<std::string> listData(const std::string &applicationName,
