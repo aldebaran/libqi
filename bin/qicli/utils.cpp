@@ -29,7 +29,7 @@ void showHelp(const po::options_description &desc)
 {
   std::cout << std::left << desc << std::endl;
   std::cout << "sub commands:" << std::endl;
-  std::cout << "  service [<ServicePattern>...]" << std::endl;
+  std::cout << "  info    [<ServicePattern>...]" << std::endl;
   std::cout << "  call    <ServicePattern.MethodPattern> [<JsonParameter>...]" << std::endl;
   std::cout << "  post    <ServicePattern.SignalPattern> [<JsonParameter>...]" << std::endl;
   std::cout << "  get     <ServicePattern.PropertyPattern>..." << std::endl;

@@ -9,7 +9,7 @@ std::map<std::string, SubCmd> subCmdMap;
 
 void init()
 {
-  subCmdMap["service"] = &subCmd_service;
+  subCmdMap["info"] = &subCmd_info;
   subCmdMap["call"] = &subCmd_call;
   subCmdMap["post"] = &subCmd_post;
   subCmdMap["watch"] = &subCmd_watch;
@@ -68,7 +68,7 @@ int                 main(int argc, char **argv)
   }
 
   if (subCmdArgv == 0)
-      subCmd = &subCmd_service;
+      subCmd = &subCmd_info;
   // Accept and fill missing protocol and/or port from address
   qi::Url url(options.address, "tcp", 9559);
   if (url.isValid())

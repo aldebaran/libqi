@@ -17,7 +17,7 @@ namespace po = boost::program_options;
 
 
 /* SUBCMDS */
-int subCmd_service(int argc, char **argv, const MainOptions &options);
+int subCmd_info(int argc, char **argv, const MainOptions &options);
 int subCmd_call(int argc, char **argv, const MainOptions &options);
 int subCmd_post(int argc, char **argv, const MainOptions &options);
 int subCmd_service(int argc, char **argv, const MainOptions &options);

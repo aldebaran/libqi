@@ -7,9 +7,9 @@
 
 static const int qicli_call_cmd_style = po::command_line_style::unix_style ^ po::command_line_style::allow_short;
 
-int subCmd_service(int argc, char **argv, const MainOptions &options)
+int subCmd_info(int argc, char **argv, const MainOptions &options)
 {
-  po::options_description     desc("Usage: qicli service [<ServicePattern>...]");
+  po::options_description     desc("Usage: qicli info [<ServicePattern>...]");
   std::vector<std::string>    serviceList;
 
   desc.add_options()
