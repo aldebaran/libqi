@@ -29,6 +29,7 @@
 #include <boost/function_types/parameter_types.hpp>
 #include <boost/bind.hpp>
 #include <boost/any.hpp>
+#include <boost/thread/mutex.hpp>
 
 #include <qitype/anyreference.hpp>
 
@@ -375,6 +376,8 @@ namespace qi
       key.push_back(returnType);
       typedef std::map<InfosKeyMask,  FunctionTypeInterfaceEq<T, S>* > FTMap;
       static FTMap ftMap;
+      static boost::mutex mutex;
+      boost::mutex::scoped_lock lock(mutex);
       FunctionTypeInterfaceEq<T, S>* & fptr = ftMap[InfosKeyMask(key, refMask)];
       if (!fptr)
       {
