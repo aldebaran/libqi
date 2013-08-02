@@ -20,6 +20,41 @@
 #include <qi/application.hpp>
 #include <testsession/testsessionpair.hpp>
 
+qi::Atomic<int> nThreadFinished;
+void create_session(bool bare)
+{
+  {
+    qi::Session s;
+    if (!bare)
+      s.listen("tcp://localhost:0");
+  }
+  ++nThreadFinished;
+}
+
+
+// KEEP ME FIRST
+TEST(QiSession, create)
+{
+  /* A lot of static init is going on, check that it is thread safe
+  */
+  boost::thread(create_session, true);
+  boost::thread(create_session, true);
+  boost::thread(create_session, true);
+  boost::thread(create_session, true);
+  qi::os::msleep(50);
+  boost::thread(create_session, false);
+  boost::thread(create_session, false);
+  boost::thread(create_session, false);
+  boost::thread(create_session, false);
+  qi::os::msleep(50);
+  boost::thread(create_session, false);
+  boost::thread(create_session, true);
+  boost::thread(create_session, false);
+  boost::thread(create_session, true);
+  while (*nThreadFinished != 12)
+    qi::os::msleep(10);
+}
+
 static std::string reply(const std::string &msg)
 {
   return msg;
