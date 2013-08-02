@@ -500,7 +500,7 @@ void qiPathData::SetUpTestCase()
   createData(sdkShareFoo, listing);
 
   // an optional complementary sdk dir
-  optSdkPrefix = bfs::path(qi::os::tmpdir("optSdk"), qi::unicodeFacet());
+  optSdkPrefix = bfs::path(qi::os::mktmpdir("optSdk"), qi::unicodeFacet());
   optSdkShareFoo = optSdkPrefix / "share" / "foo";
   listing = "bar.dat\n"
             "foo.dat\n"

@@ -11,7 +11,7 @@ class PathConfTest: public ::testing::Test {
   protected:
     virtual void SetUp()
     {
-      _tmp = boost::filesystem::path(qi::os::tmpdir("test-path-conf"));
+      _tmp = boost::filesystem::path(qi::os::mktmpdir("test-path-conf"));
       boost::filesystem::create_directories(_tmp);
     }
 
