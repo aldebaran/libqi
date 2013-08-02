@@ -18,16 +18,18 @@
 namespace qi {
   namespace py {
 
+    class PyPromise;
     //all blocking function are wrapped here to unlock the GIL while blocking.
     //PyFuture should always be a shared_ptr, because boost::python provide convenient
     //converter between shared_ptr and pyobject refcount. this allow us to get the python
     //object associated to this in add_callback.
     //see the fac of boost::python for more information
     class PyFuture : public qi::Future<qi::AnyValue>, public boost::enable_shared_from_this<PyFuture> {
-    public:
+    protected:
       PyFuture();
-      PyFuture(const PyFuture& fut);
       PyFuture(const qi::Future<qi::AnyValue>& fut);
+      friend class PyPromise;
+    public:
       boost::python::object value(int msecs = qi::FutureTimeout_Infinite) const;
       std::string error(int msecs = qi::FutureTimeout_Infinite) const;
       void addCallback(boost::python::object callable);
@@ -36,18 +38,28 @@ namespace qi {
       bool        hasValue(int msecs) const;
     };
 
+    typedef boost::shared_ptr<PyFuture> PyFuturePtr;
+
+    class PyPromise: public qi::Promise<qi::AnyValue> {
+    public:
+      PyPromise();
+      PyPromise(boost::python::object callable);
+      void setValue(const boost::python::object &pyval);
+      PyFuturePtr future();
+    };
+
 
     //convert from Future to PyFuture
     template <typename T>
-    PyFuture toPyFuture(qi::Future<T> fut) {
-      qi::Promise<qi::AnyValue> gprom;
+    PyFuturePtr toPyFuture(qi::Future<T> fut) {
+      PyPromise gprom;
       qi::adaptFuture(fut, gprom);
       return gprom.future();
     }
 
     //convert from FutureSync to PyFuture
     template <typename T>
-    PyFuture toPyFuture(qi::FutureSync<T> fut) {
+    PyFuturePtr toPyFuture(qi::FutureSync<T> fut) {
       return toPyFuture(fut.async());
     }
 

@@ -41,7 +41,7 @@ if sys.platform.startswith("linux"):
 
 #######
 
-from _qi import Application, Future, FutureState, FutureTimeout, Object, \
+from _qi import Application, FutureState, FutureTimeout, Object, \
                 Promise, Property, ServiceDirectory, Session, Signal, \
                 createObject, registerObjectFactory
 
@@ -52,8 +52,7 @@ def Application():
     global _app
     return _app
 
-__all__ = ["Future",
-           "FutureState",
+__all__ = ["FutureState",
            "FutureTimeout",
            "Object",
            "Promise",

@@ -32,9 +32,6 @@ namespace qi {
     PyFuture::PyFuture()
     {}
 
-    PyFuture::PyFuture(const PyFuture& fut)
-      : qi::Future<qi::AnyValue>(fut)
-    {}
 
     PyFuture::PyFuture(const qi::Future<qi::AnyValue>& fut)
       : qi::Future<qi::AnyValue>(fut)
@@ -81,34 +78,29 @@ namespace qi {
       connect(boost::bind<void>(&pyFutureCb, callable, obj));
     }
 
-    typedef boost::shared_ptr<PyFuture> PyFuturePtr;
+    PyPromise::PyPromise()
+    {
+    }
 
+    PyPromise::PyPromise(boost::python::object callable)
+      : qi::Promise<qi::AnyValue> (boost::bind<void>(&pyFutureCbProm, callable, this))
+    {
+    }
 
-
-    class PyPromise: public qi::Promise<qi::AnyValue> {
-    public:
-      PyPromise() {};
-
-      PyPromise(boost::python::object callable)
-        : qi::Promise<qi::AnyValue> (boost::bind<void>(&pyFutureCbProm, callable, this))
+    void PyPromise::setValue(const boost::python::object &pyval) {
+      //TODO: remove the useless copy here.
+      qi::AnyValue gvr = qi::AnyValue::from(pyval);
       {
+        GILScopedUnlock _unlock;
+        qi::Promise<qi::AnyValue>::setValue(gvr);
       }
+    }
 
-      void setValue(const boost::python::object &pyval) {
-        //TODO: remove the useless copy here.
-        qi::AnyValue gvr = qi::AnyValue::from(pyval);
-        {
-          GILScopedUnlock _unlock;
-          qi::Promise<qi::AnyValue>::setValue(gvr);
-        }
-      }
-
-      PyFuturePtr future() {
-        PyFuturePtr pfp(new PyFuture);
-        *pfp = qi::Promise<qi::AnyValue>::future();
-        return pfp;
-      }
-    };
+    PyFuturePtr PyPromise::future() {
+      PyFuturePtr pfp(new PyFuture);
+      *pfp = qi::Promise<qi::AnyValue>::future();
+      return pfp;
+    }
 
     boost::python::object makeFuture(qi::Future<qi::AnyReference> fut) {
       PyPromise prom;
@@ -136,7 +128,7 @@ namespace qi {
           .def("setValue", &PyPromise::setValue)
           .def("future", &PyPromise::future);
 
-      boost::python::class_<PyFuture, boost::shared_ptr<PyFuture> >("Future")
+      boost::python::class_<PyFuture, boost::shared_ptr<PyFuture> >("Future", boost::python::no_init)
           .def("value", &PyFuture::value, (boost::python::args("timeout") = qi::FutureTimeout_Infinite))
           .def("error", &PyFuture::error, (boost::python::args("timeout") = qi::FutureTimeout_Infinite))
           .def("wait", &PyFuture::wait, (boost::python::args("timeout") = qi::FutureTimeout_Infinite))

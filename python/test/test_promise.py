@@ -10,8 +10,6 @@ import time
 import threading
 
 from qi import Promise
-from qi import Future
-
 
 def wait(promise, t=0.1):
     time.sleep(t)
@@ -19,14 +17,6 @@ def wait(promise, t=0.1):
         promise.setValue("mjolk")
     except:
         pass
-
-def test_empty_future_value():
-    f = Future()
-    try:
-        f.value()
-    except RuntimeError:
-        pass
-
 
 def test_many_futures_create():
     def wait(p):
@@ -238,7 +228,6 @@ def test_future_exception():
 
 
 def main():
-    test_empty_future_value()
     test_many_futures_create()
     test_future_wait()
     test_many_futures_wait_cancel()
