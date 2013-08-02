@@ -4,10 +4,13 @@
  * found in the COPYING file.
  */
 
+#include <fstream>
+
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_generators.hpp>
 #include <boost/uuid/uuid_io.hpp>
-#include <fstream>
+#include <boost/thread/mutex.hpp>
+
 #include <qi/os.hpp>
 #include <qi/log.hpp>
 #include <qi/types.hpp>
@@ -118,6 +121,10 @@ namespace qi {
       if (initialized)
         return idString;
 
+      static boost::mutex mutex;
+      boost::mutex::scoped_lock lock(mutex);
+      if (initialized)
+        return idString;
       std::string idFilePath(qi::path::userWritableConfPath("qimessaging", "machine_id"));
       std::ifstream idFile(idFilePath.c_str());
 
