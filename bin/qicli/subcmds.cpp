@@ -16,7 +16,7 @@ int subCmd_info(int argc, char **argv, const MainOptions &options)
       ("service,s", po::value<std::vector<std::string> >(&serviceList), "service to display")
       ("help,h", "Print this help message and exit")
       ("list,l", "List services (default when no service specified)")
-      ("info,i", "print service info, methods, signals and properties")
+      ("details,d", "print service info, methods, signals and properties")
       ("hidden", "show hidden services, methods, signals and properties")
       ("show-doc", "show documentation for methods, signals and properties");
 
@@ -28,11 +28,11 @@ int subCmd_info(int argc, char **argv, const MainOptions &options)
     return 1;
 
   bool details = false;
-  if (vm.count("info") && vm.count("list"))
-    throw std::runtime_error("You cannot specify --list and --info together.");
+  if (vm.count("details") && vm.count("list"))
+    throw std::runtime_error("You cannot specify --list and --details together.");
 
   //smart details/list
-  if (vm.count("info"))
+  if (vm.count("details"))
     details = true;
   else if (vm.count("list"))
     details = false;
