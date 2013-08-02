@@ -9,6 +9,12 @@
 import sys
 import time
 import qi
+import threading
+
+def makeIt(p):
+    time.sleep(1)
+    print "PAFFF"
+    p.setValue(42)
 
 class ServiceTest:
     def __init__(self):
@@ -24,6 +30,16 @@ class ServiceTest:
         d= dict()
         print "I Will throw"
         r = d['pleaseraise']
+
+    def fut(self):
+        p = qi.Promise()
+        #p.setValue(42)
+        threading.Thread(target=makeIt, args=[p]).run()
+        return p.future()
+
+    def nothing(self):
+        print "nothing"
+        pass
 
 def get_servicedirectory_address():
     """ Parse command line arguments
