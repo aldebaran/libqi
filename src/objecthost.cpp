@@ -50,8 +50,15 @@ unsigned int ObjectHost::addObject(BoundAnyObject obj, unsigned int id)
 
 void ObjectHost::removeObject(unsigned int id)
 {
+  /* Ensure we are not in the middle of iteration when
+  *  removing our ref on BoundAnyObject.
+  */
   boost::recursive_mutex::scoped_lock lock(_mutex);
-  _objectMap.erase(id);
+  ObjectMap::iterator it = _objectMap.find(id);
+  if (it == _objectMap.end())
+    return;
+  BoundAnyObject obj = it->second;
+  _objectMap.erase(it);
 }
 
 void ObjectHost::clear()
