@@ -135,7 +135,7 @@ namespace qi {
   //should be done in the object thread
   void RemoteObject::onMessagePending(const qi::Message &msg)
   {
-    qiLogDebug() << this << "(" << _service << '/' << _object << " msg " << msg.address() << " " << msg.buffer().size();
+    qiLogDebug() << this << "(" << _service << '/' << _object << ") msg " << msg.address() << " " << msg.buffer().size();
     if (msg.object() != _object)
     {
       qiLogDebug() << "Passing message to host";

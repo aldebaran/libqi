@@ -139,14 +139,15 @@ namespace qi {
         return;
       }
 
+      qiLogDebug() << this << "(" << service() << '/' << _objectId << ") msg " << msg.address() << " " << msg.buffer().size();
+
       if (msg.object() > _objectId)
       {
-        qiLogDebug() << "onChildMessage " << msg.address();
+        qiLogDebug() << "Passing message to children";
         ObjectHost::onMessage(msg, socket);
         return;
       }
 
-      qiLogDebug() << "onMessage " << msg.address();
       qi::AnyObject    obj;
       unsigned int     funcId;
       //choose between special function (on BoundObject) or normal calls
