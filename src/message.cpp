@@ -347,8 +347,23 @@ namespace qi {
       qiLogDebug() << "Proxy on argument object lost, invoking terminate...";
       DynamicObject* dobj = reinterpret_cast<DynamicObject*>(ptr->value);
       // dobj is a RemoteObject
+      /* Warning, we are in a shared_ptr destruction callback.
+      * So we cannot reacquire the shared_ptr, which call/post will try to
+      * do using shared_from_this().
+      * So go through backend
+      */
       //FIXME: use post()
-      ptr->call<void>("terminate", static_cast<RemoteObject*>(dobj)->service()).async();
+      int mid = dobj->metaObject().methodId("terminate::(I)");
+      if (mid<0)
+      {
+        qiLogError() << "terminate() method not found, object will not be destroyed";
+        return;
+      }
+      GenericFunctionParameters params;
+      // Argument is unused by remote end, but better pass something valid just in case.
+      int sid = static_cast<RemoteObject*>(dobj)->service();
+      params.push_back(AnyReference(sid));
+      dobj->metaPost(AnyObject(), mid, params);
     }
 
     AnyObject deserializeObject(const ObjectSerializationInfo& osi,

@@ -13,6 +13,11 @@
 
 namespace qi {
 
+  namespace detail
+  {
+    static inline void _genericobject_noop(GenericObject*)
+    {}
+  }
   // second bounce when returned type is a future
   inline void serverResultAdapterNext(AnyReference val,// the future
     ObjectHost* host,
@@ -23,6 +28,8 @@ namespace qi {
       TemplateTypeInterface* futureType = QI_TEMPLATE_TYPE_GET(val.type, Future);
       ObjectTypeInterface* onext = dynamic_cast<ObjectTypeInterface*>(futureType->next());
       GenericObject gfut(onext, val.value);
+      // Need a live shared_ptr for shared_from_this() to work.
+      AnyObject ao(&gfut, &detail::_genericobject_noop);
       if (gfut.call<bool>("hasError", 0))
       {
         ret.setType(qi::Message::Type_Error);
@@ -62,6 +69,8 @@ namespace qi {
           TypeInterface* next = futureType->next();
           ObjectTypeInterface* onext = dynamic_cast<ObjectTypeInterface*>(next);
           GenericObject gfut(onext, val.value);
+          // Need a live sha@red_ptr for shared_from_this() to work.
+          AnyObject ao(&gfut, &detail::_genericobject_noop);
           boost::function<void()> cb = boost::bind(serverResultAdapterNext, val, host, socket, replyaddr);
           gfut.call<void>("_connect", cb);
           return;

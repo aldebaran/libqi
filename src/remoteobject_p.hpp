@@ -45,8 +45,8 @@ namespace qi {
     //TransportSocket.disconnected
     void onSocketDisconnected(std::string error);
 
-    virtual void metaPost(Manageable* context, unsigned int event, const GenericFunctionParameters& args);
-    virtual qi::Future<AnyReference> metaCall(Manageable* context, unsigned int method, const GenericFunctionParameters& args, qi::MetaCallType callType = qi::MetaCallType_Auto);
+    virtual void metaPost(AnyObject context, unsigned int event, const GenericFunctionParameters& args);
+    virtual qi::Future<AnyReference> metaCall(AnyObject context, unsigned int method, const GenericFunctionParameters& args, qi::MetaCallType callType = qi::MetaCallType_Auto);
 
     //metaObject received
     void onMetaObject(qi::Future<qi::MetaObject> fut, qi::Promise<void> prom);
