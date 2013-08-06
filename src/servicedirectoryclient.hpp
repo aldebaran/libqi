@@ -67,6 +67,7 @@ namespace qi {
     qi::AnyObject          _object;
     qi::SignalLink               _addSignalLink;
     qi::SignalLink               _removeSignalLink;
+    boost::mutex           _mutex;
   };
 }
 

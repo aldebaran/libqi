@@ -39,11 +39,16 @@ namespace qi {
      onSocketDisconnected(ret.error());
      return;
    }
-   if (isAdd)
-     _addSignalLink = ret.value();
-   else
-     _removeSignalLink = ret.value();
-   if (_addSignalLink && _removeSignalLink)
+   bool ready = false;
+   {
+     boost::mutex::scoped_lock lock(_mutex);
+     if (isAdd)
+       _addSignalLink = ret.value();
+     else
+       _removeSignalLink = ret.value();
+     ready = _addSignalLink && _removeSignalLink;
+   }
+   if (ready)
    {
      fco.setValue(0);
      connected();
@@ -104,22 +109,27 @@ namespace qi {
   }
 
   qi::FutureSync<void> ServiceDirectoryClient::close() {
+    qi::TransportSocketPtr socket;
+    { // can't hold lock while disconnecting signals, so swap _sdSocket.
+      boost::mutex::scoped_lock lock(_mutex);
+      std::swap(socket, _sdSocket);
+    }
     onSocketDisconnected("User closed the connection");
 
-    if (!_sdSocket)
+    if (!socket)
       return qi::Future<void>(0);
     // We just manually triggered onSocketDisconnected, so unlink
     // from socket signal before disconnecting it.
-    _sdSocket->disconnected.disconnect(_sdSocketDisconnectedSignalLink);
-    qi::Future<void> fut = _sdSocket->disconnect();
+    socket->disconnected.disconnect(_sdSocketDisconnectedSignalLink);
+    qi::Future<void> fut = socket->disconnect();
     // Hold the socket shared ptr alive until the future returns.
     // otherwise, the destructor will block us until disconnect terminates
     // Nasty glitch: socket is reusing promises, so this future hook will stay
     // So pass shared pointer by pointer: that way a single delete statement
     // will end all copies.
-    fut.connect(&sharedPtrHolder, new TransportSocketPtr(_sdSocket));
+    fut.connect(&sharedPtrHolder, new TransportSocketPtr(socket));
 
-    _sdSocket.reset();
+    socket.reset();
     return fut;
   }
 
@@ -143,23 +153,29 @@ namespace qi {
 
   void ServiceDirectoryClient::onSocketDisconnected(std::string error) {
     disconnected(error);
+    qi::SignalLink add=0, remove=0;
+    qi::AnyObject object;
+    {
+      boost::mutex::scoped_lock lock(_mutex);
+      std::swap(add, _addSignalLink);
+      std::swap(remove, _removeSignalLink);
+    }
     try {
-      if (_addSignalLink != 0)
+      if (add != 0)
       {
-        _object->disconnect(_addSignalLink);
+        _object->disconnect(add);
       }
     } catch (std::runtime_error &e) {
       qiLogDebug() << "Cannot disconnect SDC::serviceAdded: " << e.what();
     }
     try {
-      if (_removeSignalLink != 0)
+      if (remove != 0)
       {
-        _object->disconnect(_removeSignalLink);
+        _object->disconnect(remove);
       }
     } catch (std::runtime_error &e) {
         qiLogDebug() << "Cannot disconnect SDC::serviceRemoved: " << e.what();
     }
-    _addSignalLink = _removeSignalLink = 0;
   }
 
   qi::Future< std::vector<ServiceInfo> > ServiceDirectoryClient::services() {
