@@ -267,11 +267,11 @@ namespace qi
     {
       boost::mutex::scoped_lock l(_sendQueueMutex);
       boost::system::error_code er;
-      if (_socket && _socket->lowest_layer().is_open())
+      if (_socket)
       {
+        // Unconditionally try to shutdown if socket is present, it might be in connecting state.
         _socket->lowest_layer().shutdown(boost::asio::ip::tcp::socket::shutdown_both, er);
         _socket->lowest_layer().close(er);
-
       }
     }
     _socket.reset();
