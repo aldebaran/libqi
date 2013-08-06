@@ -500,7 +500,9 @@ namespace qi {
       else
       #endif
       // FIXME suboptimal
-      log(verb, category->name.c_str(), msg.c_str(), file, fct, line);
+      // log is also a qi namespace, this line confuses some compilers if
+      // namespace is not explicit
+      ::qi::log::log(verb, category->name.c_str(), msg.c_str(), file, fct, line);
     }
 
     void log(const qi::LogLevel    verb,
