@@ -165,7 +165,9 @@ static void nothing(GenericObject*) {triggered = true;}
 TEST(Value, AnyObject)
 {
   {
-    AnyObject o((GenericObject*)1, &nothing);
+    qi::GenericObject go(0, 0);
+    // GenericObject uses intrusive refcount and must be valid
+    AnyObject o(&go, &nothing);
     ASSERT_TRUE(o);
     ASSERT_TRUE(o.get() != 0);
     AnyReference v = AnyReference(o);

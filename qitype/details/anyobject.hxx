@@ -31,6 +31,8 @@ namespace qi {
       TemplateTypeInterface* futureType = ft1 ? ft1 : ft2;
       ObjectTypeInterface* onext = dynamic_cast<ObjectTypeInterface*>(futureType->next());
       GenericObject gfut(onext, val.value);
+      // Need a live shared_ptr for shared_from_this() to work.
+      AnyObject ao(&gfut, hold<GenericObject*>);
       if (gfut.call<bool>(MetaCallType_Direct, "hasError", 0))
       {
         promise.setError(gfut.call<std::string>("error", 0));
@@ -44,7 +46,7 @@ namespace qi {
     template <typename T>
     inline void futureAdapter(qi::Future<qi::AnyReference> metaFut, qi::Promise<T> promise)
     {
-
+      qiLogDebug("qi.object") << "futureAdapter";
       //error handling
       if (metaFut.hasError()) {
         promise.setError(metaFut.error());
@@ -55,16 +57,23 @@ namespace qi {
       TemplateTypeInterface* ft1 = QI_TEMPLATE_TYPE_GET(val.type, Future);
       TemplateTypeInterface* ft2 = QI_TEMPLATE_TYPE_GET(val.type, FutureSync);
       TemplateTypeInterface* futureType = ft1 ? ft1 : ft2;
+      qiLogDebug("qi.object") << "isFuture " << !!ft1 << ' ' << !!ft2;
       if (futureType)
       {
         TypeInterface* next = futureType->next();
         ObjectTypeInterface* onext = dynamic_cast<ObjectTypeInterface*>(next);
         GenericObject gfut(onext, val.value);
+        // Need a live shared_ptr for shared_from_this() to work.
+        AnyObject ao(&gfut, &hold<GenericObject*>);
         boost::function<void()> cb = boost::bind(futureAdapterGeneric<T>, val, promise);
         // Careful, gfut will die at the end of this block, but it is
         // stored in call data. So call must finish before we exit this block,
         // and thus must be synchronous.
-        gfut.call<void>(MetaCallType_Direct, "_connect", cb).wait();
+        qi::Future<void> waitResult = gfut.call<void>(MetaCallType_Direct, "_connect", cb);
+        waitResult.wait();
+        qiLogDebug("qi.object") << "future connected " << !waitResult.hasError();
+        if (waitResult.hasError())
+          qiLogWarning("qi.object") << waitResult.error();
         return;
       }
       TypeInterface* targetType = typeOf<T>();

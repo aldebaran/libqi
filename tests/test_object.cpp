@@ -641,11 +641,13 @@ TEST(TestObject, CallBackRegistration)
 
 void _delaySet(qi::Promise<int> p, unsigned long msDelay, int value)
 {
+  qiLogVerbose() << "Entering delaySet";
   qi::os::msleep(msDelay);
   if (value == -1)
     p.setError("-1");
   else
     p.setValue(value);
+  qiLogVerbose() << "Leaving delaySet";
 }
 
 qi::Future<int> delaySet(unsigned long msDelay, int value)
@@ -973,7 +975,9 @@ TEST(TestObject, async)
     EXPECT_EQ(qi::FutureState_FinishedWithValue, f.wait());
     EXPECT_EQ(100, f.value());
 
+    qiLogDebug() << "converting to AnyObject";
     qi::AnyObject o = qi::AnyReference(rfptr).toObject();
+    qiLogDebug() << "convesion done";
     f = qi::async<int>(o, "msleep", 100);
     EXPECT_EQ(qi::FutureState_Running, f.wait(0));
     EXPECT_EQ(qi::FutureState_FinishedWithValue, f.wait());

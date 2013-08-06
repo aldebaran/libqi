@@ -26,7 +26,7 @@ StaticObjectTypeBase::metaObject(void* )
 
 
 qi::Future<AnyReference>
-StaticObjectTypeBase::metaCall(void* instance, Manageable* context, unsigned int methodId,
+StaticObjectTypeBase::metaCall(void* instance, AnyObject context, unsigned int methodId,
                                const GenericFunctionParameters& params,
                                MetaCallType callType)
 {
@@ -45,7 +45,7 @@ StaticObjectTypeBase::metaCall(void* instance, Manageable* context, unsigned int
   if (methodId >= Manageable::startId  && methodId < Manageable::endId)
   {
     self.type = qi::typeOf<Manageable>();
-    self.value = context;
+    self.value = static_cast<Manageable*>(context.get());
   }
   else
   {
@@ -100,7 +100,7 @@ static SignalBase* getSignal(ObjectTypeData& data, void* instance, unsigned int 
   return sig;
 }
 
-void StaticObjectTypeBase::metaPost(void* instance, Manageable* context, unsigned int signal,
+void StaticObjectTypeBase::metaPost(void* instance, AnyObject context, unsigned int signal,
                                     const GenericFunctionParameters& params)
 {
   SignalBase* sb = getSignal(_data, instance, signal);
@@ -114,11 +114,11 @@ void StaticObjectTypeBase::metaPost(void* instance, Manageable* context, unsigne
   }
 }
 
-qi::Future<SignalLink> StaticObjectTypeBase::connect(void* instance, Manageable* context, unsigned int event,
+qi::Future<SignalLink> StaticObjectTypeBase::connect(void* instance, AnyObject context, unsigned int event,
                                                        const SignalSubscriber& subscriber)
 {
   if (event >= Manageable::startId && event < Manageable::endId)
-    instance = context;
+    instance = static_cast<Manageable*>(context.get());
   SignalBase* sb = getSignal(_data, instance, event);
   if (!sb) {
     return qi::makeFutureError<SignalLink>("Cant find signal");
@@ -133,13 +133,13 @@ qi::Future<SignalLink> StaticObjectTypeBase::connect(void* instance, Manageable*
   return qi::Future<SignalLink>(link);
 }
 
-qi::Future<void> StaticObjectTypeBase::disconnect(void* instance, Manageable* context, SignalLink linkId)
+qi::Future<void> StaticObjectTypeBase::disconnect(void* instance, AnyObject context, SignalLink linkId)
 {
   qiLogDebug() << "Disconnect " << linkId;
   unsigned int event = linkId >> 32;
   unsigned int link = linkId & 0xFFFFFFFF;
   if (event >= Manageable::startId && event < Manageable::endId)
-    instance = context;
+    instance = static_cast<Manageable*>(context.get());
   SignalBase* sb = getSignal(_data, instance, event);
   if (!sb)
     return qi::makeFutureError<void>("Cant find signal");

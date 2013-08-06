@@ -29,8 +29,10 @@ namespace qi
 
   namespace
   {
-    static void dropIt(const AnyValue& v)
+    static void dropIt(GenericObject* ptr, const AnyValue& v)
     {
+      qiLogDebug() << "dropIt";
+      delete ptr;
     }
   }
 
@@ -56,6 +58,7 @@ namespace qi
     {
       TypeInterface* srcPointedType = static_cast<PointerTypeInterface*>(type)->pointedType();
       TypeInterface* dstPointedType = static_cast<PointerTypeInterface*>(targetType)->pointedType();
+      qiLogDebug() << "Pointees are " << srcPointedType->infoString() << " " << dstPointedType->infoString();
       // We only try to handle conversion for pointer to objects
       if (srcPointedType->kind() != TypeKind_Object || dstPointedType->kind() != TypeKind_Object)
       {
@@ -457,7 +460,9 @@ namespace qi
 
   std::pair<AnyReference, bool> AnyReference::convert(TypeInterface* targetType) const
   {
-    // qiLogDebug() << "convert " << type->infoString() << ' ' << targetType->infoString();
+    qiLogDebug() << "convert "
+      << type->infoString() << '(' << type->kind() << ") "
+      << targetType->infoString() << '(' << targetType->kind() << ')' ;
     /* Can have false-negative (same effective type, different Type instances
      * but we do not care, correct check (by comparing info() result
      * is more expensive than the dummy conversion that will happen.
@@ -539,7 +544,7 @@ namespace qi
             new GenericObject(
               static_cast<ObjectTypeInterface*>(pT->pointedType()),
               pT->dereference(value).value),
-            boost::bind(dropIt, AnyValue(*this)));
+            boost::bind(dropIt, _1, AnyValue(*this)));
       return std::make_pair(AnyReference(o).clone(), true);
     }
 

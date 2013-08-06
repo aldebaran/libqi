@@ -9,6 +9,9 @@
 
 #include <map>
 #include <string>
+
+#include <boost/smart_ptr/enable_shared_from_this.hpp>
+
 #include <qi/atomic.hpp>
 #include <qitype/api.hpp>
 #include <qitype/manageable.hpp>
@@ -63,7 +66,9 @@ namespace qi {
   * This class has pointer semantic. Do not use directly, use AnyObject,
   * obtained through Session, DynamicObjectBuilder or ObjectTypeBuilder.
   */
-  class QITYPE_API GenericObject: public Manageable
+  class QITYPE_API GenericObject
+    : public Manageable
+    , public boost::enable_shared_from_this<GenericObject>
   {
   public:
     GenericObject(ObjectTypeInterface *type, void *value);
@@ -250,7 +255,7 @@ namespace qi {
     ObjectThreadingModel objectThreadingModel,
     MetaCallType methodThreadingModel,
     MetaCallType callType,
-    Manageable* manageable,
+    AnyObject manageable,
     unsigned int methodId,
     AnyFunction func, const GenericFunctionParameters& params, bool noCloneFirst=false);
 
@@ -271,22 +276,22 @@ namespace qi {
       Proxy* ptr = static_cast<Proxy*>(instance);
       return ptr->asObject()->metaObject();
     }
-    virtual qi::Future<AnyReference> metaCall(void* instance, Manageable* context, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto)
+    virtual qi::Future<AnyReference> metaCall(void* instance, AnyObject context, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto)
     {
       Proxy* ptr = static_cast<Proxy*>(instance);
       return ptr->asObject()->metaCall(method, params, callType);
     }
-    virtual void metaPost(void* instance, Manageable* context, unsigned int signal, const GenericFunctionParameters& params)
+    virtual void metaPost(void* instance, AnyObject context, unsigned int signal, const GenericFunctionParameters& params)
     {
       Proxy* ptr = static_cast<Proxy*>(instance);
       ptr->asObject()->metaPost(signal, params);
     }
-    virtual qi::Future<SignalLink> connect(void* instance, Manageable* context, unsigned int event, const SignalSubscriber& subscriber)
+    virtual qi::Future<SignalLink> connect(void* instance, AnyObject context, unsigned int event, const SignalSubscriber& subscriber)
     {
       Proxy* ptr = static_cast<Proxy*>(instance);
       return ptr->asObject()->connect(event, subscriber);
     }
-    virtual qi::Future<void> disconnect(void* instance, Manageable* context, SignalLink linkId)
+    virtual qi::Future<void> disconnect(void* instance, AnyObject context, SignalLink linkId)
     {
        Proxy* ptr = static_cast<Proxy*>(instance);
        return ptr->asObject()->disconnect(linkId);
