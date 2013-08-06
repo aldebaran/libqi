@@ -16,25 +16,24 @@ function QiSession(url, resource)
   var _idm = 0;
 
   _socket.on('reply', function (data) {
-    if (_dfd[data["idm"]].__service != undefined)
+    if (data["result"] != null && data["result"]["metaobject"] != undefined)
     {
       var o = new Object();
-      var s = data["result"][0]
-      o.__mobj = data["result"];
+      o.__mobj = data["result"]["metaobject"];
+      o.__pyobj = data["result"]["pyobject"];
+      o.__name = _dfd[data["idm"]].__service;
+      _sigs[o.__pyobj] = new Array();
 
-      var f = data["result"][1][0];
+      var f = o.__mobj[0];
       for (var i in f)
       {
-        var m = f[i][2];
-        o[m] = createMetaCall(s, m);
+        o[f[i][2]] = createMetaCall(o.__pyobj, f[i][2]);
       }
 
-      _sigs[s] = new Array();
-      var es = data["result"][1][1];
-      for (var i in es)
+      var e = o.__mobj[1];
+      for (var i in e)
       {
-        var e = es[i][1];
-        o[e] = createMetaSignal(s, e)
+        o[e[i][1]] = createMetaSignal(o.__pyobj, e[i][1]);
       }
 
       _dfd[data["idm"]].resolve(o);
@@ -60,8 +59,8 @@ function QiSession(url, resource)
   });
 
   _socket.on('event', function (data) {
-    var res = data["result"]
-    var cbs = _sigs[res["service"]][res["signal"]]
+    var res = data["result"];
+    var cbs = _sigs[res["obj"]][res["signal"]];
     for (var i in cbs)
     {
       cbs[i](res["data"])
@@ -76,37 +75,38 @@ function QiSession(url, resource)
     }
   });
 
-  function createMetaCall(service, method, data)
+  function createMetaCall(obj, method, data)
   {
     return function() {
       var idm = ++_idm;
+      var args = Array.prototype.slice.call(arguments, 0);
       _dfd[idm] = $.Deferred();
-      if (service == "ServiceDirectory" && method == "service")
+      if (obj == "ServiceDirectory" && method == "service")
       {
-        _dfd[idm].__service = 1;
+        _dfd[idm].__service = args[0];
       }
       else if (method == "registerEvent")
       {
         _dfd[idm].__event = data;
       }
-      _socket.emit('call', { idm: idm, params: { service: service, method: method, args: Array.prototype.slice.call(arguments, 0) } });
+      _socket.emit('call', { idm: idm, params: { obj: obj, method: method, args: args } });
 
       return _dfd[idm].promise();
     }
   }
 
-  function createMetaSignal(service, signal)
+  function createMetaSignal(obj, signal)
   {
     var e = new Object();
-    _sigs[service][signal] = new Array();
+    _sigs[obj][signal] = new Array();
     e.connect = function(cb) {
-      var i = _sigs[service][signal].push(cb) - 1;
-      return createMetaCall(service, "registerEvent", i)(signal);
+      var i = _sigs[obj][signal].push(cb) - 1;
+      return createMetaCall(obj, "registerEvent", i)(signal);
     }
     e.disconnect = function(l) {
-      delete _sigs[service][signal][_sigIdxToLink[l]];
+      delete _sigs[obj][signal][_sigIdxToLink[l]];
       delete _sigIdxToLink[l];
-      return createMetaCall(service, "unregisterEvent")(signal, l);
+      return createMetaCall(obj, "unregisterEvent")(signal, l);
     }
     return e;
   }

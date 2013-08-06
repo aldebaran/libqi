@@ -6,16 +6,17 @@ import qi
 import sys
 import json
 import base64
+from threading import Lock
+import mutex
 
 URL = None
 sid = 1
+mutex = Lock()
 
 class SetEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, bytearray):
             return base64.b64encode(obj)
-        if isinstance(obj, qi.Object):
-            return obj.metaObject()
         return json.JSONEncoder.default(self, obj)
 
 class QiMessagingHandler(tornadio2.conn.SocketConnection):
@@ -23,6 +24,7 @@ class QiMessagingHandler(tornadio2.conn.SocketConnection):
     def on_open(self, info):
         global sid
         self.info = info
+        self.objs = dict()
         self.sid = sid
         sid = sid + 1
         print("[%d] New connection from %s" % (self.sid, self.info.ip))
@@ -35,16 +37,23 @@ class QiMessagingHandler(tornadio2.conn.SocketConnection):
 
     def reply(self, idm, mtype, data):
         try:
+            if isinstance(data, qi.Object):
+                o = len(self.objs)
+                self.objs[o] = data
+                data = { "pyobject": o, "metaobject": data.metaObject() }
             evt = dict(name = mtype, args = { "idm": idm, "result": data })
             message = u'5:::%s' % (json.dumps(evt, cls=SetEncoder))
+            global mutex
+            mutex.acquire(True)
             self.session.send_message(message)
+            mutex.release()
         except AttributeError as exc:
             print idm, str(exc)
 
     def do_callback(self, service, signal):
         def cbk(*args):
             self.reply(-1, "event",
-                       { "service": service, "signal": signal, "data": args })
+                       { "obj": service, "signal": signal, "data": args })
         return cbk
 
     def do_reply(self, idm):
@@ -55,35 +64,27 @@ class QiMessagingHandler(tornadio2.conn.SocketConnection):
                 self.reply(idm, "reply", fut.value())
         return rep
 
-    def do_service(self, idm, service):
-        def cb(fut):
-            if fut.hasError():
-                 self.reply(idm, "error", fut.error())
-            else:
-                 self.reply(idm, "reply", (service, fut.value()))
-        return cb
-
     @tornadio2.event
     def call(self, idm, params):
         try:
-            service = params["service"]
+            service = params["obj"]
             method = params["method"]
             args = params["args"]
             if service == "ServiceDirectory" and method == "service":
                 f = self.qim.service(str(args[0]), _async = True)
-                f.addCallback(self.do_service(idm, args[0]))
+                f.addCallback(self.do_reply(idm))
             elif method == "registerEvent":
-                obj = self.qim.service(str(service))
+                obj = self.objs[service]
                 evt = getattr(obj, args[0])
                 f = evt.connect(self.do_callback(service, args[0]), _async = True)
                 f.addCallback(self.do_reply(idm))
             elif method == "unregisterEvent":
-                obj = self.qim.service(str(service))
+                obj = self.objs[service]
                 evt = getattr(obj, args[0])
                 f = evt.disconnect(args[1], _async = True)
                 f.addCallback(self.do_reply(idm))
             else:
-                obj = self.qim.service(str(service))
+                obj = self.objs[service]
                 met = getattr(obj, method)
                 if args is None:
                     fut = met(_async = True)
