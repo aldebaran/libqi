@@ -366,7 +366,103 @@ namespace qi {
         boost::bind(&makeObject<T>, functionName, func);
     }
   }
+
+  template<typename T> class Object<T, false>
+  {
+  public:
+    Object() {}
+    Object(T* ptr)
+    {
+      TypeInterface* type = typeOf<T>();
+      if (type->kind() != TypeKind_Object)
+      {
+        // Try template
+        TemplateTypeInterface* t = dynamic_cast<TemplateTypeInterface*>(type);
+        if (t)
+          type = t->next();
+        if (type->kind() != TypeKind_Object)
+          throw std::runtime_error("Object<T> can only be used on registered object types.");
+      }
+      ObjectTypeInterface* otype = static_cast<ObjectTypeInterface*>(type);
+      _obj = AnyObject(new GenericObject(otype, ptr), &deleteObject);
+    }
+    Object(qi::Future<AnyObject> fobj)
+    {
+      init(fobj.value());
+    }
+    Object(qi::FutureSync<AnyObject> fobj)
+    {
+      init(fobj.value());
+    }
+    Object(AnyObject obj)
+    {
+      init(obj);
+    }
+    void init(AnyObject obj)
+    {
+      if (obj->type->info() != typeOf<T>()->info())
+      {
+        throw std::runtime_error(std::string("Object<T> construted from a different AnyObject type ") + obj->type->infoString());
+      }
+      _obj = obj;
+    }
+
+    operator bool() const   { return _obj;}
+    operator AnyObject()    { return _obj;}
+    AnyObject asAnyObject() { return _obj;}
+
+    T* operator ->()
+    {
+      return reinterpret_cast<T*>(_obj->value);
+    }
+
+    T& operator *()
+    {
+      return *reinterpret_cast<T*>(_obj->value);
+    }
+
+  private:
+    static void deleteObject(GenericObject* obj)
+    {
+      delete reinterpret_cast<T*>(obj->value);
+      delete obj;
+    }
+    AnyObject _obj;
+  };
+
+  template<typename T> class Object<T, true>
+  {
+  public:
+    Object() {}
+    Object(T* ptr)
+    {
+      _proxy = boost::shared_ptr<T>(ptr);
+    }
+    Object(qi::Future<AnyObject> fobj)
+    {
+      _proxy = boost::shared_ptr<T>(new T(fobj.value()));
+    }
+    Object(qi::FutureSync<AnyObject> fobj)
+    {
+      _proxy = boost::shared_ptr<T>(new T(fobj.value()));
+    }
+    Object(AnyObject obj)
+    {
+      _proxy = boost::shared_ptr<T>(new T(obj));
+    }
+
+    operator AnyObject()    { return _proxy->asObject();}
+    AnyObject asAnyObject() { return _proxy->asObject();}
+    T* operator ->() { return _proxy.get();}
+    T& operator *()  { return *_proxy;}
+    operator bool() const   { return _proxy;}
+  private:
+    boost::shared_ptr<T> _proxy;
+  };
+
 }
+
+
 QI_TYPE_STRUCT_AGREGATE_CONSTRUCTOR(qi::MinMaxSum,
   ("minValue",       minValue),
   ("maxValue",       maxValue),

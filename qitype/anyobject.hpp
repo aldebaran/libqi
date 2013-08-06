@@ -268,6 +268,24 @@ namespace qi {
     qi::AnyObject _obj;
   };
 
+  template<typename T, bool b = boost::is_base_of<Proxy, T>::value> class Object
+  {
+  public:
+    Object();
+    /// Takes ownership of ptr
+    Object(T* ptr);
+    /// AnyObject must be of type T, or T must be a proxy type.
+    Object(AnyObject ao);
+
+    operator AnyObject();
+    operator bool() const;
+    T* operator ->();
+    T& operator *();
+
+    AnyObject asAnyObject();
+    T& asT();
+  };
+
   class TypeProxy: public ObjectTypeInterface
   {
   public:
