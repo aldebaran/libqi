@@ -35,6 +35,7 @@ void create_session(bool bare)
 // KEEP ME FIRST
 TEST(QiSession, create)
 {
+  nThreadFinished = 0;
   /* A lot of static init is going on, check that it is thread safe
   */
   boost::thread(create_session, true);
