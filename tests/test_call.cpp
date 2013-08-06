@@ -1029,6 +1029,45 @@ TEST(TestAdvertise, Overload)
   EXPECT_EQ(1, c->call<int>("foo", std::string("bar")));
 }
 
+// hand-written specialized proxy on TestClall
+class TestClassProxy: public qi::Proxy
+{
+public:
+  TestClassProxy(qi::AnyObject o)
+  : qi::Proxy(o) {}
+  qi::Future<int> ping(int v) { return asObject()->call<int>("ping", v);}
+};
+
+QI_TYPE_PROXY(TestClassProxy);
+
+TEST(TestObjectT, Complete)
+{
+  TestSessionPair p;
+  qi::Object<TestClass> o = qi::Object<TestClass>(new TestClass());
+  p.server()->registerService("s", o);
+  // Server! This is expected to fail on client in sd mode, TestClass is no proxy
+  qi::Object<TestClass> olocal = p.server()->service("s");
+  ASSERT_TRUE(!!olocal);
+  EXPECT_EQ(12, olocal->ping(12));
+  EXPECT_EQ(12, (*olocal).ping(12));
+  EXPECT_EQ(12, olocal.asAnyObject()->call<int>("ping", 12).value());
+
+  qi::registerProxy<TestClassProxy>();
+  // Object<T> way, does not require proxy registration actually
+  qi::Object<TestClassProxy> oproxy = p.client()->service("s");
+  // Look! It's the same code as above!
+  EXPECT_EQ(12, oproxy->ping(12));
+  EXPECT_EQ(12, (*oproxy).ping(12));
+  EXPECT_EQ(12, oproxy.asAnyObject()->call<int>("ping", 12).value());
+  // old way for comparison. I don't see anything wrong with that :p
+  boost::shared_ptr<TestClassProxy> oldproxy =
+    qi::AnyValue(p.client()->service("s").value()).to<boost::shared_ptr<TestClassProxy> >();
+  ASSERT_TRUE(!!oldproxy);
+  EXPECT_EQ(12, oldproxy->ping(12));
+  EXPECT_EQ(12, (*oldproxy).ping(12));
+  EXPECT_EQ(12, oldproxy->asObject()->call<int>("ping", 12).value());
+}
+
 int main(int argc, char **argv) {
   qi::Application app(argc, argv);
   TestMode::initTestMode(argc, argv);
