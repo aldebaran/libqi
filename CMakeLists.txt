@@ -58,6 +58,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/c)
 
 set(PUBLIC_HEADERS
                    qimessaging/api.hpp
+                   qimessaging/applicationsession.hpp
                    qimessaging/gateway.hpp
                    qimessaging/servicedirectory.hpp
                    qimessaging/serviceinfo.hpp
@@ -69,6 +70,7 @@ qi_install_header(${PUBLIC_HEADERS} KEEP_RELATIVE_PATHS)
 set(SRCS ${CONFIG_H}
          ${PUBLIC_HEADERS}
 
+         src/applicationsession.cpp
          src/boundobject.cpp
          src/boundobject.hpp
          src/gateway.cpp

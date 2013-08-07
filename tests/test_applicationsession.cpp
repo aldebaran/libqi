@@ -1,0 +1,68 @@
+/*
+ ** Author(s):
+ **  - Ly William Chhim <lwchhim@aldebaran-robotics.com>
+ **
+ ** Copyright (C) 2013 Aldebaran Robotics
+ */
+
+#include <gtest/gtest.h>
+
+#include <qimessaging/applicationsession.hpp>
+#include <qimessaging/servicedirectory.hpp>
+
+static bool _stopped = false;
+static qi::ServiceDirectory _sd;
+static char **_argv = 0;
+static int _argc = 3;
+static std::string _url;
+
+void onStop()
+{
+  _stopped = true;
+}
+
+TEST(QiApplicationSession, defaultConnect)
+{
+  ASSERT_TRUE(qi::ApplicationSession::session().isConnected());
+
+  ASSERT_EQ(_url, qi::ApplicationSession::session().url());
+
+  ASSERT_FALSE(_stopped);
+  _sd.close();
+  qi::os::msleep(100);
+  ASSERT_TRUE(_stopped);
+
+  EXPECT_THROW(qi::ApplicationSession::session().connect("ftp://invalidurl:42"),
+               qi::FutureUserException);
+  ASSERT_FALSE(qi::ApplicationSession::session().isConnected());
+}
+
+TEST(QiApplicationSession, checkArgs)
+{
+  EXPECT_EQ(1, qi::ApplicationSession::argc());
+  EXPECT_EQ(std::string("foo"), qi::ApplicationSession::argv()[0]);
+
+  EXPECT_EQ(3, _argc);
+  EXPECT_EQ(std::string("foo"), _argv[0]);
+  EXPECT_EQ(std::string("--qi-url"), _argv[1]);
+  EXPECT_EQ(_url, _argv[2]);
+  EXPECT_EQ(0, _argv[3]);
+}
+
+int main(int argc, char** argv)
+{
+  ::testing::InitGoogleTest(&argc, argv);
+
+  _sd.listen("tcp://127.0.0.1:0");
+  _url = _sd.endpoints()[0].str();
+
+  _argv = new char*[4];
+  strcpy((_argv[0] = new char[4]), "foo");
+  strcpy((_argv[1] = new char[10]), "--qi-url");
+  strcpy((_argv[2] = new char[100]), _url.c_str());
+  _argv[3] = 0;
+
+  qi::ApplicationSession app(_argc, _argv, qi::ApplicationSession_None, "This url will be ignored");
+  app.atStop(&onStop);
+  return RUN_ALL_TESTS();
+}
