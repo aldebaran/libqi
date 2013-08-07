@@ -1,5 +1,4 @@
 #include <boost/program_options.hpp>
-#include <qi/application.hpp>
 
 #include "qicli.hpp"
 
@@ -21,10 +20,10 @@ void init()
 
 int                 main(int argc, char **argv)
 {
-  qi::Application app(argc, argv);
-  int             subCmdArgc = 0;
-  char            **subCmdArgv = 0;
-  SubCmd          subCmd = 0;
+  qi::ApplicationSession app(argc, argv);
+  int                    subCmdArgc = 0;
+  char                   **subCmdArgv = 0;
+  SubCmd                 subCmd = 0;
 
   init();
   for (int i = 0; i < argc; ++i)
@@ -41,10 +40,7 @@ int                 main(int argc, char **argv)
   }
   po::options_description desc("Usage: qicli [OPTIONS] SUBCMD [-h] [OPTIONS] [ARGS]");
 
-  MainOptions options;
-
   desc.add_options()
-      ("address,a", po::value<std::string>(&options.address)->default_value("tcp://127.0.0.1:9559"), "The address of the service directory")
       ("help,h", "Print this help message and exit");
 
   po::positional_options_description positionalOptions;
@@ -65,14 +61,9 @@ int                 main(int argc, char **argv)
     return 0;
   }
 
-  // Accept and fill missing protocol and/or port from address
-  qi::Url url(options.address, "tcp", 9559);
-  if (url.isValid())
-    options.address = url.str();
-
   int ret;
   try {
-    ret = subCmd(subCmdArgc, subCmdArgv, options);
+    ret = subCmd(subCmdArgc, subCmdArgv, app);
   } catch (const std::exception& e)
   {
     printError(e.what());

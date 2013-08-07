@@ -14,7 +14,7 @@ private:
   typedef std::pair<const std::string, std::pair<ServiceHelper, std::set<std::string> > > MatchMapPair;
 
 public:
-  SessionHelper(const std::string &address);
+  SessionHelper(qi::ApplicationSession& app);
   ~SessionHelper();
 
 public:
@@ -38,7 +38,7 @@ private:
   bool                          splitName(const std::string &fullName, std::string &beforePoint, std::string &afterPoint, bool throwOnError);
 
 private:
-  qi::Session                   _session;
+  qi::Session&                  _session;
   MatchMap                      _currentMatchMap;
   std::vector<qi::ServiceInfo>  _servicesInfos;
 };

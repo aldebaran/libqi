@@ -3,21 +3,22 @@
 #include <qi/iocolor.hpp>
 #include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
+#include <qimessaging/applicationsession.hpp>
 
 #include "sessionhelper.hpp"
 #include "almemoryhelper.hpp"
 #include "qicli.hpp"
 
-SessionHelper::SessionHelper(const std::string &address)
+SessionHelper::SessionHelper(qi::ApplicationSession& app)
+  : _session(app.session())
 {
-  _session.connect(address);
+  app.start();
   _servicesInfos = _session.services();
 }
 
 SessionHelper::~SessionHelper()
 {
   _currentMatchMap.clear();
-  _session.close();
 }
 
 void SessionHelper::info(const std::vector<std::string> &patternVec, bool verbose, bool showHidden, bool showDoc, bool showRaw, bool parseable)

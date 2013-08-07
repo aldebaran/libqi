@@ -8,8 +8,7 @@
 
 #include <qi/log.hpp>
 #include <qi/os.hpp>
-#include <qi/application.hpp>
-#include <qimessaging/session.hpp>
+#include <qimessaging/applicationsession.hpp>
 #include <qitype/jsoncodec.hpp>
 
 
@@ -84,7 +83,7 @@ void onTrace(ObjectMap::value_type ov, const qi::EventTrace& trace)
   }
 }
 
-int subCmd_trace(int argc, char **argv, const MainOptions &options)
+int subCmd_trace(int argc, char **argv, qi::ApplicationSession& app)
 {
   po::options_description     desc("Usage: qicli trace [<ServicePattern>..]");
   std::vector<std::string>    serviceList;
@@ -104,10 +103,10 @@ int subCmd_trace(int argc, char **argv, const MainOptions &options)
   if (!poDefault(po::command_line_parser(argc, argv).options(desc).positional(positionalOptions), vm, desc))
     return 1;
 
-  qi::Session s;
+  qiLogVerbose() << "Connecting to service directory";
+  app.start();
+  qi::Session& s = app.session();
 
-  qiLogVerbose() << "Connecting to sd";
-  s.connect(options.address);
   qiLogVerbose() << "Resolving services";
 
   std::vector<std::string> allServices;

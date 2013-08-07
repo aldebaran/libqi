@@ -152,7 +152,7 @@ _qicli-info () {
 }
 
 __retrieveInfo () {
-  for line in `qicli --address $1 info -dz`;
+  for line in `qicli --qi-url $1 info -dz`;
   do
     service=$(echo $line | cut -d':' -f1);
     for info in $(echo $line | cut -d':' -f$2 | tr "," " ");
@@ -165,7 +165,7 @@ __retrieveInfo () {
 __qicli_services () {
   declare -a services
 
-  services=(${(f)"$(_call_program services qicli --address $1 info -zl 2>/dev/null)"})
+  services=(${(f)"$(_call_program services qicli --qi-url $1 info -zl 2>/dev/null)"})
   _describe -t qicli-services 'Services' services && ret=0
 }
 
@@ -202,17 +202,14 @@ _qicli() {
     "--qi-log-color=[Tell if we should put color or not in log.]:When:(auto never always)" \
     "--loop-monitor-latency=[Warn if even loop is stuck more thant given duration in seconds]:Duration in second" \
     "(- -h --help)"{-h,--help}"[Show command line options]" \
-    "(-a --address)"{-a,--address}"=[The address of the service directory]:" \
+    "--qi-url=[The address of the service directory]:" \
     "(-): :->command" \
     "(-)*:: :->option-or-argument" \
     && return
 
-  address=$opt_args[-a]
+  address=$opt_args[--qi-url]
   if [[ -z $address ]]; then
-    address=$opt_args[--address]
-    if [[ -z $address ]]; then
-      address="tcp://127.0.0.1:9559"
-    fi
+    address="tcp://127.0.0.1:9559"
   fi
 
   case $state in
