@@ -56,6 +56,25 @@ TEST(QiSession, create)
     qi::os::msleep(10);
 }
 
+static void session_close(qi::Session* s, qi::Atomic<int>* counter)
+{
+  s->close();
+  ++(*counter);
+}
+
+TEST(QiSession, multiClose)
+{
+  qi::Atomic<int> counter;
+  TestSessionPair p;
+  boost::thread(session_close, p.client(), &counter);
+  boost::thread(session_close, p.client(), &counter);
+  boost::thread(session_close, p.server(), &counter);
+  boost::thread(session_close, p.server(), &counter);
+  boost::thread(session_close, p.server(), &counter);
+  while (*counter != 5)
+    qi::os::msleep(50);
+}
+
 static std::string reply(const std::string &msg)
 {
   return msg;
