@@ -39,22 +39,20 @@ int                 main(int argc, char **argv)
       break;
     }
   }
-
   po::options_description desc("Usage: qicli [OPTIONS] SUBCMD [-h] [OPTIONS] [ARGS]");
 
   MainOptions options;
 
   desc.add_options()
       ("address,a", po::value<std::string>(&options.address)->default_value("tcp://127.0.0.1:9559"), "The address of the service directory")
-      ("command,c", "sub command to execute")
       ("help,h", "Print this help message and exit");
 
   po::positional_options_description positionalOptions;
-  positionalOptions.add("command", 1);
+  positionalOptions.add("", 1);
   po::variables_map vm;
 
   try {
-    po::store(po::command_line_parser(argc, argv).options(desc).run(), vm);
+    po::store(po::command_line_parser(argc, argv).options(desc).positional(positionalOptions).run(), vm);
     po::notify(vm);
   } catch (po::error &e) {
     std::cerr << e.what() << std::endl;
