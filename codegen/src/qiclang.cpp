@@ -166,6 +166,14 @@ Location CXSourceLocation_to_Location(CXSourceLocation loc)
   return res;
 }
 
+void fillComment(CXCursor cursor, Comment& target)
+{
+  target.commentRaw = clstring(clang_Cursor_getRawCommentText(cursor));
+  CXComment comment = clang_Cursor_getParsedComment(cursor);
+  target.commentHtml = clstring(clang_FullComment_getAsHTML(comment));
+  target.commentXml = clstring(clang_FullComment_getAsXML(comment));
+}
+
 
 Type CXType_to_Type(CXType t)
 {
@@ -345,6 +353,7 @@ void index_indexDeclaration(CXClientData d, const CXIdxDeclInfo * decl)
       if (tu.classByUsr.find(usr)== tu.classByUsr.end())
       {
         Class c(usr);
+        fillComment(ent->cursor, c);
         c.name = clstring(clang_getCursorSpelling(ent->cursor)).str();
         c.ns = namespaces(ent->cursor);
         tu.addClass(c);
@@ -363,6 +372,7 @@ void index_indexDeclaration(CXClientData d, const CXIdxDeclInfo * decl)
       if (!owner)
         break;
       Method m;
+      fillComment(ent->cursor, m);
       m.name = owner->name;
       CXCursor methodCursor = ent->cursor;
       CXType ftype = clang_getCursorType(methodCursor);
@@ -377,6 +387,7 @@ void index_indexDeclaration(CXClientData d, const CXIdxDeclInfo * decl)
       break;
     {
       Field f;
+      fillComment(ent->cursor, f);
       CXType t = clang_getCursorType(ent->cursor);
       f.type = CXType_to_Type(t);
       f.name = clstring(clang_getCursorSpelling(decl->cursor)).str();
@@ -396,6 +407,7 @@ void index_indexDeclaration(CXClientData d, const CXIdxDeclInfo * decl)
       if (ac != CX_CXXPublic && ac != CX_CXXInvalidAccessSpecifier)
         break;
       Method m;
+      fillComment(ent->cursor, m);
       m.isStatic = (ent->kind!=CXIdxEntity_CXXInstanceMethod);
       CXCursor methodCursor = ent->cursor;
       // bare name
@@ -514,7 +526,7 @@ public:
     /// return false to abort visit of this node and children
     virtual bool enter(SerialisationNode& node, const std::string& name) { return true;}
     virtual void attribute(SerialisationNode& node, const std::string& key, const std::string& val) {}
-    virtual void endAttributes(SerialisationNode& node) {}
+    virtual void endAttributes(SerialisationNode& node, const std::string& data) {}
     virtual bool child(SerialisationNode& node, SerialisationNode& child) { return true;}
     virtual void leave(SerialisationNode& node, const std::string& name) {}
   };
@@ -523,6 +535,7 @@ public:
   : name(name)
   {}
   std::string name;
+  std::string data;
   std::map<std::string, std::string> attributes;
   std::vector<SerialisationNode> children;
   SerialisationNode& setName(const std::string& k)
@@ -564,6 +577,13 @@ public:
       child(name, v);
     return *this;
   }
+  SerialisationNode& childData(const std::string& name, const std::string& data)
+  {
+    SerialisationNode c(name);
+    c.data = data;
+    children.push_back(c);
+    return *this;
+  }
   void visit(Visitor& v)
   {
     if (!v.enter(*this, this->name))
@@ -573,7 +593,7 @@ public:
     {
       v.attribute(*this, it->first, it->second);
     }
-    v.endAttributes(*this);
+    v.endAttributes(*this, data);
     for (unsigned i=0; i<children.size(); ++i)
     {
       if (v.child(*this, children[i]))
@@ -589,7 +609,7 @@ public:
   XmlVisitor(std::ostream& o) : o(o) {}
   virtual bool enter(SerialisationNode& node, const std::string& name)
   {
-    if (node.attributes.empty() && node.children.empty())
+    if (node.attributes.empty() && node.children.empty() && node.data.empty())
       return false;
     o << indent << '<' + name;
     indent += "  ";
@@ -599,16 +619,18 @@ public:
   {
     o << ' ' << key << "=\"" << val << "\"";
   }
-  virtual void endAttributes(SerialisationNode& node)
+  virtual void endAttributes(SerialisationNode& node, const std::string& data)
   {
     o << '>';
-    if (!node.children.empty())
+    if (!node.children.empty() || !node.data.empty())
       o << std::endl;
+    if (!node.data.empty())
+      o << node.data << std::endl;
   }
   virtual void leave(SerialisationNode& node, const std::string& name)
   {
     indent = indent.substr(2);
-    if (!node.children.empty())
+    if (!node.children.empty() || !node.data.empty())
       o << indent;
     o << "</" << name << ">" << std::endl;
   }
@@ -638,6 +660,14 @@ SerialisationNode& operator << (SerialisationNode& node, const Location& l)
   return node.attr("location", l.toString());
 }
 
+SerialisationNode& operator << (SerialisationNode& node, const Comment& t)
+{
+  return node.setName("comment")
+             .childData("bare", t.commentRaw)
+             .childData("html", t.commentHtml)
+             .childData("xml", t.commentXml);
+}
+
 SerialisationNode& operator << (SerialisationNode& node, const Type& t)
 {
   return node.setName("type")
@@ -652,6 +682,7 @@ SerialisationNode& operator << (SerialisationNode& node, const Field& f)
 {
   return node.setName("field")
     .attr("name", f.name)
+    .child("comments", (Comment&)f)
     .child("type", f.type);
 }
 
@@ -660,6 +691,7 @@ SerialisationNode& operator << (SerialisationNode& node, const Method& m)
   return node.setName("method").attr("static", m.isStatic)
     .attr("name", m.name)
     .attr("namespace", m.namespaces())
+    .child("comments", (Comment&)m)
     .child("result", m.result)
     .child("arguments", m.arguments);
 }
@@ -670,6 +702,7 @@ SerialisationNode& operator << (SerialisationNode& node, const Class& c)
     .attr("usr", c.usr)
     .attr("name", c.name)
     .attr("namespace", c.namespaces())
+    .child("comments", (Comment&)c)
     .child("constructors", c.constructors)
     .child("methods", c.methods)
     .child("fields", c.fields);

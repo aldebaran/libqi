@@ -47,7 +47,9 @@ namespace qi
     class Comment
     {
     public:
-      std::string comment;
+      std::string commentRaw;
+      std::string commentXml;
+      std::string commentHtml;
     };
     
     class Type: public NSNamed
@@ -82,7 +84,7 @@ namespace qi
     class Class: public Comment, public NSNamed
     {
     public:
-      Class(const std::string& usr);
+      explicit Class(const std::string& usr);
 
       void dump(std::ostream& os) const;
 
