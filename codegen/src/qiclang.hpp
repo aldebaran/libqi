@@ -1,8 +1,7 @@
 #pragma once
 /*
  * Copyright (c) 2013 Aldebaran Robotics. All rights reserved.
- * Use of this source code is governed by a BSD-style license that can be
- * found in the COPYING file.
+ * See COPYING for the license
  */
  
 #ifndef _QI_QICLANG_HPP_
@@ -41,6 +40,7 @@ namespace qi
     {
     public:
       std::vector<std::string> ns;
+      std::string namespaces() const;
       std::string toString() const;
     };
 

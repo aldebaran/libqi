@@ -1,9 +1,8 @@
 /*
  * Copyright (c) 2013 Aldebaran Robotics. All rights reserved.
- * Use of this source code is governed by a BSD-style license that can be
- * found in the COPYING file.
+ *  See COPYING for the license
  */
- 
+
 #include <iostream>
 #include <vector>
 #include <map>
@@ -14,6 +13,7 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/bind.hpp>
+#include <boost/lexical_cast.hpp>
 
 #include <clang-c/Index.h>
 
@@ -43,6 +43,7 @@ private:
   clstring(const clstring& b) {}
 };
 
+
 std::ostream& operator << (std::ostream& o, const clstring& cl)
 {
   return o << cl.str();
@@ -61,6 +62,18 @@ std::string NSNamed::toString() const
   for (unsigned i=0; i<ns.size(); ++i)
     res += ns[i] + "::";
   res += name;
+  return res;
+}
+
+std::string NSNamed::namespaces() const
+{
+  std::string res;
+  for (unsigned i=0; i<ns.size(); ++i)
+  {
+    res += ns[i];
+    if (i != ns.size()-1)
+      res += "::";
+  }
   return res;
 }
 
@@ -491,6 +504,184 @@ Diagnostic TranslationUnit::parse(int argc, char** argv)
   return res;
 }
 
+
+class SerialisationNode
+{
+public:
+  class Visitor
+  {
+  public:
+    /// return false to abort visit of this node and children
+    virtual bool enter(SerialisationNode& node, const std::string& name) { return true;}
+    virtual void attribute(SerialisationNode& node, const std::string& key, const std::string& val) {}
+    virtual void endAttributes(SerialisationNode& node) {}
+    virtual bool child(SerialisationNode& node, SerialisationNode& child) { return true;}
+    virtual void leave(SerialisationNode& node, const std::string& name) {}
+  };
+  SerialisationNode() {}
+  SerialisationNode(const std::string& name)
+  : name(name)
+  {}
+  std::string name;
+  std::map<std::string, std::string> attributes;
+  std::vector<SerialisationNode> children;
+  SerialisationNode& setName(const std::string& k)
+  {
+    name = k;
+    return *this;
+  }
+  SerialisationNode& attr(const std::string& k, bool b)
+  {
+    return attr(k, b?"1":"0");
+  }
+  SerialisationNode& attr(const std::string& k, const std::string& v)
+  {
+    attributes[k] = v;
+    return *this;
+  }
+  template<typename T>
+  SerialisationNode& attr(const std::string& k, const T& v)
+  {
+    attributes[k] = boost::lexical_cast<std::string>(v);
+    return *this;
+  }
+  SerialisationNode& child(const SerialisationNode& b)
+  {
+    children.push_back(b);
+    return *this;
+  }
+  template<typename T>
+  SerialisationNode& child(const std::string& name, const T& v)
+  {
+    SerialisationNode node(name);
+    node << v;
+    return child(node);
+  }
+  template<typename T>
+  SerialisationNode& maybeChild(const std::string& name, const T& v)
+  {
+    if (!v.empty())
+      child(name, v);
+    return *this;
+  }
+  void visit(Visitor& v)
+  {
+    if (!v.enter(*this, this->name))
+      return;
+    for(std::map<std::string, std::string>::iterator it = attributes.begin();
+      it != attributes.end(); ++it)
+    {
+      v.attribute(*this, it->first, it->second);
+    }
+    v.endAttributes(*this);
+    for (unsigned i=0; i<children.size(); ++i)
+    {
+      if (v.child(*this, children[i]))
+        children[i].visit(v);
+    }
+    v.leave(*this, this->name);
+  }
+};
+
+class XmlVisitor: public SerialisationNode::Visitor
+{
+public:
+  XmlVisitor(std::ostream& o) : o(o) {}
+  virtual bool enter(SerialisationNode& node, const std::string& name)
+  {
+    if (node.attributes.empty() && node.children.empty())
+      return false;
+    o << indent << '<' + name;
+    indent += "  ";
+    return true;
+  }
+  virtual void attribute(SerialisationNode& node, const std::string& key, const std::string& val)
+  {
+    o << ' ' << key << "=\"" << val << "\"";
+  }
+  virtual void endAttributes(SerialisationNode& node)
+  {
+    o << '>';
+    if (!node.children.empty())
+      o << std::endl;
+  }
+  virtual void leave(SerialisationNode& node, const std::string& name)
+  {
+    indent = indent.substr(2);
+    if (!node.children.empty())
+      o << indent;
+    o << "</" << name << ">" << std::endl;
+  }
+  private:
+    std::ostream& o;
+    std::string indent;
+};
+
+template<typename T> SerialisationNode& operator << (SerialisationNode& s, const T* v)
+{
+  return s << *v;
+}
+
+template<typename T> SerialisationNode& operator << (SerialisationNode& s, const std::vector<T>& v)
+{
+  for (unsigned i=0; i<v.size(); ++i)
+  {
+    SerialisationNode n;
+    n << v[i];
+    s.child(n);
+  }
+  return s;
+}
+
+SerialisationNode& operator << (SerialisationNode& node, const Location& l)
+{
+  return node.attr("location", l.toString());
+}
+
+SerialisationNode& operator << (SerialisationNode& node, const Type& t)
+{
+  return node.setName("type")
+             .attr("name", t.name)
+             .attr("namespace", t.namespaces())
+             .attr("const", t.isConst)
+             .attr("ref", t.isRef)
+             .maybeChild("templates", t.templateArguments);
+}
+
+SerialisationNode& operator << (SerialisationNode& node, const Field& f)
+{
+  return node.setName("field")
+    .attr("name", f.name)
+    .child("type", f.type);
+}
+
+SerialisationNode& operator << (SerialisationNode& node, const Method& m)
+{
+  return node.setName("method").attr("static", m.isStatic)
+    .attr("name", m.name)
+    .attr("namespace", m.namespaces())
+    .child("result", m.result)
+    .child("arguments", m.arguments);
+}
+
+SerialisationNode& operator << (SerialisationNode& node, const Class& c)
+{
+  return node.setName("class")
+    .attr("usr", c.usr)
+    .attr("name", c.name)
+    .attr("namespace", c.namespaces())
+    .child("constructors", c.constructors)
+    .child("methods", c.methods)
+    .child("fields", c.fields);
+}
+
+SerialisationNode& operator << (SerialisationNode& node, const TranslationUnit& tu)
+{
+  node.setName("tu");
+  return node << tu.methods << tu.classes;
+}
+
+
   } // namespace clang
 } // namespace qi
 using namespace qi::clang;
@@ -510,7 +701,11 @@ int main(int argc, char** argv)
     tu.filter = boost::bind(&filter_contains, _1, filt);
   }
   Diagnostic d = tu.parse(argc -1, argv + 1);
-  tu.dump(std::cout);
+  SerialisationNode tuNode;
+  tuNode << tu;
+  XmlVisitor v(std::cout);
+  tuNode.visit(v);
+  //tu.dump(std::cout);
   d.dump(std::cerr);
   return 0;
 }
