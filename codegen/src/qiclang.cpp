@@ -655,6 +655,11 @@ template<typename T> SerialisationNode& operator << (SerialisationNode& s, const
   return s;
 }
 
+inline std::string cdata(const std::string& s)
+{
+  return "<![CDATA[" + s + "]]>";
+}
+
 SerialisationNode& operator << (SerialisationNode& node, const Location& l)
 {
   return node.attr("location", l.toString());
@@ -663,8 +668,8 @@ SerialisationNode& operator << (SerialisationNode& node, const Location& l)
 SerialisationNode& operator << (SerialisationNode& node, const Comment& t)
 {
   return node.setName("comment")
-             .childData("bare", t.commentRaw)
-             .childData("html", t.commentHtml)
+             .childData("bare", cdata(t.commentRaw)) // this is obviously cheating
+             .childData("html", cdata(t.commentHtml))
              .childData("xml", t.commentXml);
 }
 
