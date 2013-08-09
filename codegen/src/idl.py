@@ -159,7 +159,11 @@ def signature_to_cxxtype_(s):
     elif len(children) == 2:
       return 'std::pair<' + signature_to_cxxtype_(children[0]) + ',' + signature_to_cxxtype_(children[1]) + ' >'
     else:
-      raise Exception("Unhandled tuple typpe " + str(s))
+      # Try a complete match in SIG_CXX_MAP
+      sig_string = json_to_signature(s)
+      if sig_string in SIG_CXX_MAP:
+        return SIG_CXX_MAP[sig_string]
+      raise Exception("Unhandled tuple type " + str(s))
   elif t in '{[':
     res = SIG_CXX_MAP[t] + '<'
     res += ','.join(map(signature_to_cxxtype_, children))
@@ -1394,6 +1398,7 @@ def main(args):
     if len(m):
       m = m.split('=')
       CXX_SIG_MAP[m[0]] = m[1]
+      SIG_CXX_MAP[m[1]] = m[0]
   for c in pargs.known_classes.split(','):
     c = c.strip()
     if len(c):
