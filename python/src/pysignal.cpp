@@ -60,6 +60,7 @@ namespace qi { namespace py {
         GILScopedUnlock _unlock;
         //no need to store a ptr on ourself. (this exist if the callback is triggered)
         qi::uint64_t r = _sig->connect(qi::AnyFunction::fromDynamicFunction(boost::bind(pysignalCb, _1, callable)));
+        GILScopedLock _lock;
         if (_async)
         {
           return boost::python::object(toPyFuture(qi::Future<qi::uint64_t>(r)));
@@ -71,6 +72,7 @@ namespace qi { namespace py {
       boost::python::object disconnect(qi::uint64_t id, bool _async = false) {
         GILScopedUnlock _unlock;
         bool r = _sig->disconnect(id);
+        GILScopedLock _lock;
         if (_async)
         {
           return boost::python::object(toPyFuture(qi::Future<bool>(r)));
@@ -82,6 +84,7 @@ namespace qi { namespace py {
       boost::python::object disconnectAll(bool _async = false) {
         GILScopedUnlock _unlock;
         bool r = _sig->disconnectAll();
+        GILScopedLock _lock;
         if (_async)
         {
           return boost::python::object(toPyFuture(qi::Future<bool>(r)));
@@ -111,6 +114,7 @@ namespace qi { namespace py {
         GILScopedUnlock _unlock;
         //no need to store a ptr on ourself. (this exist if the callback is triggered)
         qi::FutureSync<SignalLink> f = _obj->connect(_sigid, qi::AnyFunction::fromDynamicFunction(boost::bind(pysignalCb, _1, callable)));
+        GILScopedLock _lock;
         if (_async)
         {
           return boost::python::object(toPyFuture(f));
@@ -122,6 +126,7 @@ namespace qi { namespace py {
       boost::python::object disconnect(qi::uint64_t id, bool _async = false) {
         GILScopedUnlock _unlock;
         qi::FutureSync<void> f = _obj->disconnect(id);
+        GILScopedLock _lock;
         if (_async)
         {
           return boost::python::object(toPyFuture(f));
@@ -150,7 +155,7 @@ namespace qi { namespace py {
     }
 
     boost::python::object makePySignal(const std::string &signature) {
-      GILScopedUnlock _unlock;
+      GILScopedLock _lock;
       return boost::python::object(PySignal(signature));
     }
 
