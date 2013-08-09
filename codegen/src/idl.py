@@ -668,11 +668,16 @@ def raw_to_al_proxy(class_name, data):
 #ifndef @UPNAME@PROXY_H_
 #define @UPNAME@PROXY_H_
 
-#include <alproxies/api.h>
-#include <boost/shared_ptr.hpp>
-#include <alvalue/alvalue.h>
 #include <string>
 #include <vector>
+
+#include <boost/shared_ptr.hpp>
+
+#include <qi/types.hpp>
+#include <qitype/anyobject.hpp>
+
+#include <alvalue/alvalue.h>
+#include <alproxies/api.h>
 
 namespace AL
 {
