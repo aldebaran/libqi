@@ -1,3 +1,11 @@
+
+find_package(clang)
+
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
+
+qi_create_bin(qiclang SRC src/qiclang.cpp DEPENDS clang)
+qi_stage_bin(qiclang)
+
 qi_stage_cmake(src/idl-config.cmake)
 #qi_install_program forces current_build_dir as prefix
 
