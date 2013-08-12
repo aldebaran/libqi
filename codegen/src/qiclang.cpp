@@ -4,6 +4,7 @@
  */
 
 #include <iostream>
+#include <fstream>
 #include <vector>
 #include <map>
 #include <string>
@@ -731,19 +732,64 @@ bool filter_contains(const Location& l, const std::string& s)
 int main(int argc, char** argv)
 {
   TranslationUnit tu;
-  if (argc > 2 && std::string(argv[1]) == "--filter")
+  std::string output;
+  bool append = false;
+  bool raw = false;
+  int argp = 0;
+  while (argp < argc)
   {
-    std::string filt = argv[2];
-    argc -=2;
-    argv +=2;
-    tu.filter = boost::bind(&filter_contains, _1, filt);
+    std::string arg(argv[++argp]);
+    if (arg == "--")
+    {
+      ++argp;
+      break;
+    }
+    if (arg == "--help" || arg == "-h")
+    {
+      std::cerr << "Usage: " << argv[0] << " [OPTIONS] -- [CLANG_CMDLINE]" << std::endl
+         << "  --filter STRING    : Only output components in locations containing STRING.\n"
+            "  --output PATH      : Write output to PATH (defaults stdout)\n"
+            "  --append           : Append to output instead of overwriting\n"
+            "  --raw              : Output a RAW representation instead of XML\n"
+            ;
+      return 0;
+    }
+    if (arg == "--filter")
+    {
+      std::string filt = argv[++argp];
+      tu.filter = boost::bind(&filter_contains, _1, filt);
+    }
+    else if (arg == "--output")
+      output = argv[++argp];
+    else if (arg == "--append")
+      append = true;
+    else if (arg == "--raw")
+      raw = true;
+    else
+      break;
   }
-  Diagnostic d = tu.parse(argc -1, argv + 1);
+  Diagnostic d = tu.parse(argc -argp, argv + argp);
   SerialisationNode tuNode;
   tuNode << tu;
-  XmlVisitor v(std::cout);
-  tuNode.visit(v);
-  //tu.dump(std::cout);
+  std::ostream* outputStream;
+  if (output == "-" || output.empty())
+  {
+    outputStream = &std::cout;
+  }
+  else
+  {
+    outputStream = new std::ofstream(output.c_str(),
+      append? ( std::ios::out | std::ios::app) : std::ios::out);
+  }
+  if (raw)
+    tu.dump(*outputStream);
+  else
+  {
+    XmlVisitor v(*outputStream);
+    tuNode.visit(v);
+  }
   d.dump(std::cerr);
+  if (outputStream != &std::cout)
+    delete (std::ofstream*)outputStream;
   return 0;
 }
