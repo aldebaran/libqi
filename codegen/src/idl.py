@@ -87,8 +87,12 @@ CXX_SIG_MAP = {
   'uint8_t': 'C',
   'char*': 's',
   'string': 's',
+  'basic_string': 's',
   'void':  'v',
   'AnyValue': 'm',
+  'bool'    : 'b',
+  'float'   : 'f',
+  'double'  : 'd'
 }
 
 # signature to C++ type
@@ -289,6 +293,91 @@ def cxx_type_to_signature(t):
   return sig
 
 ANNOTATIONS = ['fast', 'threadSafe']
+
+def run_qiclang(files, output_path):
+  """ Invoke qiclang on given source files
+  :param files: A list of files to scan
+  :param output: Path to output file with resulting XML
+  """
+  for i in range(len(files)):
+    f = files[i]
+    args = ["qiclang", "--filter", f, "--output", output_path]
+    if not i == 0:
+      args.append("--append")
+    args.append("--")
+    args.append(f)
+    print(args)
+    subprocess.call(args)
+
+def qiclang_type_to_signature(node):
+  """ Convert a qiclang type node (C++ type information) to a
+      signature.
+  """
+  if node.tag != "type":
+    raise "Expected node type, got " + node.tag
+  name = node.get("name")
+  namespace = node.get("namespace")
+  if name in CXX_SIG_MAP:
+    return CXX_SIG_MAP[name]
+  fullname = namespace + "::" + name
+  if fullname in CXX_SIG_MAP:
+    return CXX_SIG_MAP[fullname]
+  if name == "vector" or name == "set":
+    return "[" + qiclang_type_to_signature(node.find("./templates/type")) + "]"
+  if name == "map":
+    return "{" + ''.join(map(qiclang_type_to_signature,
+      node.findall("./templates/type")[0:2])) + "}"
+  if name == "Future":
+    return qiclang_type_to_signature(node.find("./templates/type"))
+  if name == "Pair":
+    return "(" + ''.join(map(qiclang_type_to_signature,
+      node.findall("./templates/type")[0:2])) + ")"
+  if re.search('Ptr$', name):
+    p = name.replace('ProxyPtr', '').replace('Ptr', '')
+    return 'o<' + p + '>' #This is no duck
+  return "X<" + fullname + ">"
+
+def qiclang_to_raw(input_path):
+  """ Parse qiclang output XML to produce our raw representation
+  """
+  res = dict()
+  index_tree = etree.parse(input_path)
+  for cls in index_tree.getroot().findall("./class"):
+    fullname = cls.get("namespace")
+    if len(fullname):
+      fullname += "::"
+    fullname += cls.get("name")
+    cdoc = xml_extract_text(cls.find("./comment/bare"))
+    methods = []
+    #methods
+    for m in cls.findall("./methods/method"):
+      mname = m.get("name")
+      mdoc = xml_extract_text(m.find("./comment/bare"))
+      mres = qiclang_type_to_signature(m.find("./type"))
+      margs = []
+      for a in m.findall("./arguments/type"):
+        margs.append(qiclang_type_to_signature(a))
+      methods.append((mname, margs, mres, mdoc))
+    #signals and properties
+    sigs = []
+    props = []
+    for f in cls.findall("./fields/field"):
+      fname = f.get("name")
+      fdoc = xml_extract_text(f.find("./comment/bare"))
+      tnode = f.find("type")
+      tname = tnode.get("name")
+      tnamespace = tnode.get("namespace")
+      tfullname = tnamespace + "::" + tname
+      if tfullname == "qi::Signal":
+        templ_nodes = tnode.findall("./templates/type")
+        tsig = ''.join(map(qiclang_type_to_signature, templ_nodes))
+        sigs.append((fname,  tsig , fdoc))
+      elif tfullname == "qi::Property":
+        tsig = qiclang_type_to_signature(tnode.find("./templates/type"))
+        props.append((fname, tsig, fdoc))
+    res[fullname] = (methods, sigs, props, cdoc)
+  return res
+
 def run_doxygen(files):
   """ Invoke doxygen on given source files or directories
   :param files: A list of file or directory to scan
@@ -1354,10 +1443,15 @@ def main(args):
     url = '/'.join(pargs.input[0].split('/')[0:-1])
     raw = runtime_to_raw(service, url)
   else:
-    doxy_dir = run_doxygen(pargs.input)
-    raw = doxyxml_to_raw(doxy_dir)
+    f = tempfile.mkstemp()
+    run_qiclang(pargs.input, f[1])
+    raw = qiclang_to_raw(f[1])
+    print(f)
+    #shutil.rm(f)
+    #doxy_dir = run_doxygen(pargs.input)
+    #raw = doxyxml_to_raw(doxy_dir)
     #print("DOXYDIR " + doxy_dir)
-    shutil.rmtree(doxy_dir)
+    #shutil.rmtree(doxy_dir)
   if not len(pargs.include):
     pargs.include = []
   else:
