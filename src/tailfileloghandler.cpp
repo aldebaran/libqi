@@ -86,7 +86,7 @@ namespace qi {
       {
         fseek(_p->_file, 0, SEEK_END);
 
-        std::string logline = qi::detail::logline(qi::detail::fileLogContext, date, category, msg, file, fct, line, verb);
+        std::string logline = qi::detail::logline(qi::log::context(), date, category, msg, file, fct, line, verb);
         _p->_writeSize += fprintf(_p->_file, "%s", logline.c_str());
         fflush(_p->_file);
       }

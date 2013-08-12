@@ -17,8 +17,6 @@ namespace qi
 {
   namespace detail
   {
-    static LogContext fileLogContext = qi::LogContextAttr_Verbosity | qi::LogContextAttr_Tid | qi::LogContextAttr_Date | qi::LogContextAttr_Category;
-
     // export so we can test it
     std::string logline(LogContext             context,
                         const qi::os::timeval  date,
