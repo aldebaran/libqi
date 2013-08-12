@@ -234,11 +234,18 @@ namespace qi {
       return builder->advertiseMethod(name, accessor);
     }
   }
-  template<typename E>
+  template<typename T>
   unsigned int
-  ObjectTypeBuilderBase::advertise(const std::string& name, E e)
+  ObjectTypeBuilderBase::advertiseId(const std::string& name, T element)
   {
-    return detail::advertiseBounce(this, name, e, typename detail::Accessor<E>::is_accessor());
+    return detail::advertiseBounce(this, name, element, typename detail::Accessor<T>::is_accessor());
+  }
+  template<typename T>
+  ObjectTypeBuilderBase&
+  ObjectTypeBuilderBase::advertise(const std::string& name, T element)
+  {
+    detail::advertiseBounce(this, name, element, typename detail::Accessor<T>::is_accessor());
+    return *this;
   }
 
 }

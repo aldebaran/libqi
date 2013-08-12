@@ -66,7 +66,10 @@ namespace qi {
 
     // Advertise anything, dispatch on {method, event, property} based on T.
     template<typename T>
-    unsigned int advertise(const std::string& name, T element);
+    ObjectTypeBuilderBase& advertise(const std::string& name, T element);
+    // Like advertise, but return the id
+    template<typename T>
+    unsigned int advertiseId(const std::string& name, T element);
     // input: type-erased
 
     int xAdvertiseMethod(MetaMethodBuilder& builder, AnyFunction func, MetaCallType threadingModel = MetaCallType_Auto, int id = -1);
