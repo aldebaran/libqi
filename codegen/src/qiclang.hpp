@@ -94,6 +94,11 @@ namespace qi
       std::vector<Field>  fields;
     };
 
+    class Enum: public Comment, public NSNamed
+    {
+    public:
+    };
+
     typedef boost::function<bool (const Location&)> ProcessFilterCallback;
 
     /// Parsing diagnostic messages.
@@ -138,6 +143,7 @@ namespace qi
       ProcessFilterCallback filter;
       std::vector<Method> methods;
       std::vector<Class*> classes;
+      std::vector<Enum> enums;
       std::map<std::string, Class*> classByUsr;
     };
   }

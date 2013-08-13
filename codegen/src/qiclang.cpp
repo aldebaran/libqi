@@ -362,6 +362,13 @@ void index_indexDeclaration(CXClientData d, const CXIdxDeclInfo * decl)
     }
     break;
   case CXIdxEntity_Enum:
+    {
+      Enum e;
+      e.name = clstring(clang_getCursorSpelling(ent->cursor)).str();
+      e.ns =  namespaces(ent->cursor);
+      tu.enums.push_back(e);
+    }
+    break;
   case CXIdxEntity_EnumConstant:
     break;
   case CXIdxEntity_CXXConstructor:
@@ -684,6 +691,14 @@ SerialisationNode& operator << (SerialisationNode& node, const Type& t)
              .maybeChild("templates", t.templateArguments);
 }
 
+SerialisationNode& operator << (SerialisationNode& node, const Enum& e)
+{
+  return node.setName("enum")
+    .attr("name", e.name)
+    .attr("namespace", e.namespaces())
+    .child("comments", (Comment&)e);
+}
+
 SerialisationNode& operator << (SerialisationNode& node, const Field& f)
 {
   return node.setName("field")
@@ -717,7 +732,7 @@ SerialisationNode& operator << (SerialisationNode& node, const Class& c)
 SerialisationNode& operator << (SerialisationNode& node, const TranslationUnit& tu)
 {
   node.setName("tu");
-  return node << tu.methods << tu.classes;
+  return node << tu.methods << tu.classes << tu.enums;
 }
 
 
