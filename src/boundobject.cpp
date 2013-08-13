@@ -134,7 +134,7 @@ namespace qi {
         std::stringstream ss;
         ss << "Cannot negotiate QiMessaging connection: "
            << "remote end doesn't support binary protocol v" << msg.version();
-        serverResultAdapter(qi::makeFutureError<AnyReference>(ss.str()),
+        serverResultAdapter(qi::makeFutureError<AnyReference>(ss.str()), Signature(),
                             _owner ? _owner : this, socket, msg.address());
         return;
       }
@@ -226,8 +226,12 @@ namespace qi {
         _currentSocket = socket;
         qi::Future<AnyReference>  fut = obj->metaCall(funcId, mfp,
                                                          obj==_self ? MetaCallType_Direct: _callType);
+        Signature retSig;
+        const MetaMethod* mm = obj->metaObject().method(funcId);
+        if (mm)
+          retSig = mm->returnSignature();
         _currentSocket.reset();
-        fut.connect(boost::bind<void>(&serverResultAdapter, _1, _owner?_owner:(ObjectHost*)this, socket, msg.address()));
+        fut.connect(boost::bind<void>(&serverResultAdapter, _1, retSig, _owner?_owner:(ObjectHost*)this, socket, msg.address()));
       }
         break;
       case Message::Type_Post: {
@@ -243,13 +247,13 @@ namespace qi {
       if (msg.type() == Message::Type_Call) {
         qi::Promise<AnyReference> prom;
         prom.setError(e.what());
-        serverResultAdapter(prom.future(), _owner?_owner:this, socket, msg.address());
+        serverResultAdapter(prom.future(), Signature(), _owner?_owner:this, socket, msg.address());
       }
     } catch (...) {
       if (msg.type() == Message::Type_Call) {
         qi::Promise<AnyReference> prom;
         prom.setError("Unknown error catch");
-        serverResultAdapter(prom.future(), _owner?_owner:this, socket, msg.address());
+        serverResultAdapter(prom.future(), Signature(), _owner?_owner:this, socket, msg.address());
       }
     }
   }

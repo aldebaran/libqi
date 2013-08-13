@@ -317,7 +317,7 @@ namespace qi {
     // Error message is of type m (dynamic)
     AnyValue v(AnyReference(error), false, false);
     AnyReference vr(v);
-    setValue(vr);
+    setValue(vr, "m");
   }
 
   namespace {
@@ -393,9 +393,26 @@ namespace qi {
     return res;
   }
 
-  void Message::setValue(const AnyReference &value, ObjectHost* context) {
+  void Message::setValue(const AnyReference &value, const Signature& sig, ObjectHost* context) {
     cow();
-    if (value.type->kind() != qi::TypeKind_Void)
+    Signature effective = value.type->signature();
+    if (effective != sig)
+    {
+      TypeInterface* ti = TypeInterface::fromSignature(sig);
+      if (!ti)
+        qiLogWarning() << "setValue(): cannot construct type for signature " << sig.toString();
+      std::pair<AnyReference, bool> conv = value.convert(ti);
+      if (!conv.first.type)
+        qiLogWarning() << "Setvalue(): failed to convert effective value "
+          << value.type->signature().toString()
+          << " to expected type "
+          << sig.toString();
+      else
+        encodeBinary(&_p->buffer, conv.first, boost::bind(serializeObject, _1, context));
+      if (conv.second)
+        conv.first.destroy();
+    }
+    else if (value.type->kind() != qi::TypeKind_Void)
     {
       encodeBinary(&_p->buffer, value, boost::bind(serializeObject, _1, context));
     }
@@ -432,7 +449,7 @@ namespace qi {
       }
       AnyReference tuple = makeGenericTuplePtr(types, values);
       AnyValue val(tuple, false, false);
-      setValue(AnyReference(val), context);
+      encodeBinary(&_p->buffer, AnyReference(val), boost::bind(serializeObject, _1, context));
       return;
     }
     /* This check does not makes sense for this transport layer who does not care,

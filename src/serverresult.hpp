@@ -20,6 +20,7 @@ namespace qi {
   }
   // second bounce when returned type is a future
   inline void serverResultAdapterNext(AnyReference val,// the future
+    Signature targetSignature,
     ObjectHost* host,
     TransportSocketPtr socket, const qi::MessageAddress &replyaddr)
   {
@@ -38,7 +39,7 @@ namespace qi {
       else
       {
         AnyValue v = gfut.call<AnyValue>("value", 0);
-        ret.setValue(v, host);
+        ret.setValue(v, targetSignature, host);
       }
     } catch (const std::exception &e) {
       //be more than safe. we always want to nack the client in case of error
@@ -54,6 +55,7 @@ namespace qi {
   }
 
   inline void serverResultAdapter(qi::Future<AnyReference> future,
+    const qi::Signature& targetSignature,
     ObjectHost* host, TransportSocketPtr socket, const qi::MessageAddress &replyaddr) {
     qi::Message ret(Message::Type_Reply, replyaddr);
 
@@ -71,11 +73,11 @@ namespace qi {
           GenericObject gfut(onext, val.value);
           // Need a live sha@red_ptr for shared_from_this() to work.
           AnyObject ao(&gfut, &detail::_genericobject_noop);
-          boost::function<void()> cb = boost::bind(serverResultAdapterNext, val, host, socket, replyaddr);
+          boost::function<void()> cb = boost::bind(serverResultAdapterNext, val, targetSignature, host, socket, replyaddr);
           gfut.call<void>("_connect", cb);
           return;
         }
-        ret.setValue(val, host);
+        ret.setValue(val, targetSignature, host);
         //may leak if something throw inbetween.
         val.destroy();
       } catch (const std::exception &e) {
