@@ -7,7 +7,7 @@
     Representations used:
     - IDL: XML file describing the interface
     - RAW: Internal representation of the IDL
-    raw: (methods, signals, properties, annotations)
+    raw: NAME -> (methods, signals, properties, annotations)
     methods: [method]
     signals: [signal]
     properties: [property]
@@ -66,6 +66,14 @@ METHODS = 0
 SIGNALS = 1
 PROPERTIES = 2
 
+# Full names of CXX enums found
+CXX_ENUMS = []
+
+# List of fullnames of encountered CXX types marked as X
+CXX_UNKNOWN = []
+
+# Strucs (indexed by fullname) we are capable of binding
+CXX_STRUCTS = dict()
 
 # C++ -> signature mapping
 CXX_SIG_MAP = {
@@ -294,6 +302,19 @@ def cxx_type_to_signature(t):
 
 ANNOTATIONS = ['fast', 'threadSafe']
 
+def normalize_full_name(namespace, name=0):
+  """ Concatenate namespace and name in a consistent way
+      Accepts two arguments, or one tuple
+  """
+  if not name:
+    name = namespace[1]
+    namespace = namespace[0]
+  res = namespace
+  if len(res):
+    res += "::"
+  res += name
+  return res
+
 def run_qiclang(files, output_path):
   """ Invoke qiclang on given source files
   :param files: A list of files to scan
@@ -309,6 +330,11 @@ def run_qiclang(files, output_path):
     print(args)
     subprocess.call(args)
 
+def qiclang_type_name(node):
+  name = node.get("name")
+  namespace = node.get("namespace")
+  return normalize_full_name(namespace, name)
+
 def qiclang_type_to_signature(node):
   """ Convert a qiclang type node (C++ type information) to a
       signature.
@@ -319,7 +345,9 @@ def qiclang_type_to_signature(node):
   namespace = node.get("namespace")
   if name in CXX_SIG_MAP:
     return CXX_SIG_MAP[name]
-  fullname = namespace + "::" + name
+  fullname = normalize_full_name(namespace, name)
+  if fullname in CXX_ENUMS:
+    return "i<" + fullname + ">"
   if fullname in CXX_SIG_MAP:
     return CXX_SIG_MAP[fullname]
   if name == "vector" or name == "set":
@@ -332,22 +360,192 @@ def qiclang_type_to_signature(node):
   if name == "Pair":
     return "(" + ''.join(map(qiclang_type_to_signature,
       node.findall("./templates/type")[0:2])) + ")"
-  if re.search('Ptr$', name):
-    p = name.replace('ProxyPtr', '').replace('Ptr', '')
-    return 'o<' + p + '>' #This is no duck
+  if fullname == "boost::shared_ptr":
+    cnode = node.find("./templates/type")
+    cname = normalize_full_name(cnode.get("namespace"), cnode.get("name"));
+    return 'o<' + cname + '>'
+  #if re.search('Ptr$', name):
+  #  p = name.replace('ProxyPtr', '').replace('Ptr', '')
+  #  return 'o<' + p + '>' #This is no duck
+  if not fullname in CXX_UNKNOWN:
+    CXX_UNKNOWN.append(fullname)
   return "X<" + fullname + ">"
+
+class StructField:
+  def __init__(self, name):
+    self.name = name
+    self.getter = None
+    self.setter = None
+    self.accessible = False
+    self.type_name = None #Base type fullname, not that useful
+    self.signature = None
+    self.index = None
+    self.constructible = [] #array of (ctorId, argumentIndex)
+  def valid(self):
+    return (self.accessible
+      or (self.getter and self.setter)
+      or (self.getter and len(self.constructible))
+      )
+  def accessors(self): # return (getterFuncOrField, setterFuncOrField)
+    if self.accessible:
+      return (self.name, self.name)
+    else:
+      return (self.getter, self.setter)
+
+class Struct:
+  def __init__(self):
+    self.fields = dict()
+    self.constructors = []
+  def field(self, name):
+    if not name in self.fields:
+      self.fields[name] = StructField(name)
+    return self.fields[name]
+  def remove_unuseable(self):
+    for k in self.fields:
+      if not self.fields[k].valid():
+        del self.fields[k]
+  def unambiguous_signature(self): # true if signature can be used as field uid
+    sigs = []
+    for k in self.fields:
+      if self.fields[k].signature in sigs:
+        return False
+      sigs.append(self.fields[k].signature)
+    return True
+  def from_signature(self, sig):
+    for k in self.fields:
+      if self.fields[k].signature == sig:
+        return (k, self.fields[k])
+    return (None, None)
+  def by_index(self): #[(name, field), (name, field), ...] sorted by index
+    byidx = dict()
+    for k in self.fields:
+      idx = self.fields[k].index
+      if idx is None:
+        raise "Field " + k + " has no index"
+      if idx in byidx:
+        raise "Duplicate index " + idx + " for fields " + k + ", " + byidx[idx][0]
+      byidx[idx] = (k, self.fields[k])
+    keys = byidx.keys()
+    keys.sort()
+    return map(lambda x: byidx[x], keys)
+
+def qiclang_struct(node):
+  """ Handle a struct XML node. Figure out the fields and how to read/write them
+  """
+  fullname = normalize_full_name(node.get("namespace"), node.get("name"))
+  s = Struct()
+  index = 0
+  # First scan accessible fields
+  for f in node.findall("./fields/field"):
+    fname = f.get("name")
+    fdoc = xml_extract_text(f.find("./comment/bare"))
+    tnode = f.find("type")
+    tname = tnode.get("name")
+    tnamespace = tnode.get("namespace")
+    tfullname = normalize_full_name(tnamespace, tname)
+    field = s.field(fname)
+    field.accessible = True
+    field.type_name = tfullname
+    field.signature = qiclang_type_to_signature(tnode)
+    field.index = index
+    index = index + 1
+  # Then scan methods to detect setters and getters
+  index = 0
+  for m in node.findall("./methods/method"):
+    mname = m.get("name")
+    mdoc = xml_extract_text(m.find("./comment/bare"))
+    mres = qiclang_type_to_signature(m.find("./type"))
+    margs = []
+    for a in m.findall("./arguments/type"):
+      margs.append(qiclang_type_to_signature(a))
+    if len(margs) == 0:
+      #Maybe a getter
+      fname = mname
+      if fname[0:3].lower() == "get":
+        fname = fname[3].lower() + fname[4:]
+      f = s.field(fname)
+      f.getter = mname
+      if f.index is None:
+        f.index = index
+        index = index + 1
+      if f.type_name is None:
+        f.type_name = qiclang_type_name(m.find("./type"))
+        f.signature = mres
+    elif len(margs) == 1:
+      #Maybe a setter
+      fname = mname
+      if fname[0:3].lower() != "set":
+        continue
+      fname = fname[3].lower() + fname[4:]
+      f = s.field(fname)
+      f.setter = mname
+      if f.type_name is None:
+        f.type_name = qiclang_type_name(m.find("./arguments/type"))
+        f.signature = margs[0]
+  unamb = s.unambiguous_signature() # check if a sig can identify a unique field
+  #Finally, scan constructors for a way to set our fields
+  for m in node.findall("./constructors/method"):
+    margs = map(qiclang_type_to_signature, m.findall("./arguments/type"))
+    if not len(margs):
+      continue #default ctor
+    if unamb:
+      # signature uniquely identifies argument, easy as pie
+      field_args = []
+      for i in range(len(margs)):
+        sig = margs[i]
+        (name, field) = s.from_signature(sig)
+        if not name:
+          break
+        field_args.append(name)
+      if len(field_args) != len(margs):
+        continue #A constructor argument matches no field, ignore this ctor
+      # This constructor is usable
+      s.constructors.append(field_args)
+      cid = len(s.constructors) - 1
+      for i in range(len(field_args)):
+        s.fields[field_args[i]].constructible.append((cid, i))
+    else: # cannot just use signature to match constructor argument to field
+      pass
+  s.remove_unuseable()
+  # And figure out the best way to get/set each field from all that
+  c=[]
+  ok = False
+  for c in [[]] + s.constructors:
+    fail = False
+    for f in s.fields:
+      if not (f in c or s.fields[f].setter or s.fields[f].accessible):
+        fail = True
+        break
+    if not fail:
+      ok = True
+      break
+  if not ok:
+    raise "Could not figure out how to set fields for struct"
+  ordered_fields = s.by_index()
+  ordered_fieldnames = map(lambda x: x[0], ordered_fields)
+  raw_sig = '(' + ''.join(map(lambda x: x[1].signature, ordered_fields)) + ')'
+  sig = raw_sig + '<' + ','.join([fullname] + ordered_fieldnames) + '>'
+  access = map(lambda x: x[1].accessors(), ordered_fields)
+  return (fullname, sig, c, access)
 
 def qiclang_to_raw(input_path):
   """ Parse qiclang output XML to produce our raw representation
   """
   res = dict()
   index_tree = etree.parse(input_path)
+
+  for enum in index_tree.findall("./enum"):
+    CXX_ENUMS.append(normalize_full_name(enum.get("namespace"), enum.get("name")))
+
   for cls in index_tree.getroot().findall("./class"):
-    fullname = cls.get("namespace")
-    if len(fullname):
-      fullname += "::"
-    fullname += cls.get("name")
+    fullname = normalize_full_name(cls.get("namespace"), cls.get("name"))
     cdoc = xml_extract_text(cls.find("./comment/bare"))
+    if cdoc.find("#struct") != -1:
+      s = qiclang_struct(cls)
+      SIG_CXX_MAP[s[1]] = s[0]
+      CXX_SIG_MAP[s[0]] = s[1]
+      CXX_STRUCTS[s[0]] = s
+      continue
     methods = []
     #methods
     for m in cls.findall("./methods/method"):
@@ -367,7 +565,7 @@ def qiclang_to_raw(input_path):
       tnode = f.find("type")
       tname = tnode.get("name")
       tnamespace = tnode.get("namespace")
-      tfullname = tnamespace + "::" + tname
+      tfullname = normalize_full_name(tnamespace, tname)
       if tfullname == "qi::Signal":
         templ_nodes = tnode.findall("./templates/type")
         tsig = ''.join(map(qiclang_type_to_signature, templ_nodes))
