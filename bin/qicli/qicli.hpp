@@ -11,6 +11,15 @@ struct MainOptions
   std::string   address;
 };
 
+struct WatchOptions
+{
+  std::string signalName;
+  bool showTime;
+  WatchOptions()
+    :showTime(false)
+  {}
+};
+
 typedef int (*SubCmd)(int argc, char **argv, const MainOptions &options);
 
 namespace po = boost::program_options;
@@ -37,6 +46,10 @@ bool isNumber(const std::string &str);
 void printError(const std::string &errorStr);
 void printSuccess();
 void printServiceMember(const std::string &service, const std::string &member);
+qi::AnyValue decodeArg(const std::string &arg, bool json);
+qi::GenericFunctionParameters decodeArgs(const std::vector<std::string> &argList, bool json);
+
+std::ostream &operator<<(std::ostream &os, const std::vector<qi::AnyReference> &gvv);
 
 /** Given available services list @param allServices, parse list of requested services
  * @param names, that may contain globbing pattern and a '-' prefix to remove

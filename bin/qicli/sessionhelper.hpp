@@ -30,9 +30,6 @@ private:
   MatchMap                      getMatchMap(const std::vector<std::string> &patternList, ShPatternResolver patternResolver, bool hidden);
   void                          forEachService(const std::string &pattern, ShMethod methodToCall, ShPatternResolver patternResolver, bool hidden, bool cont);
   void                          forEachService(const std::vector<std::string> &patternList, ShMethod methodToCall, ShPatternResolver patternResolver, bool hidden, bool cont);
-  qi::AnyValue                  decodeArgByCast(const std::string &arg);
-  qi::AnyValue                  decodeArg(const std::string &arg, bool json);
-  qi::GenericFunctionParameters decodeArgs(const std::vector<std::string> &jsonArgList, bool json);
   ServiceHelper                 getServiceHelper(const std::string &serviceName);
   std::list<std::string>        getMatchingServices(const std::string &patternList, bool getHidden);
   void                          showServiceInfo(const qi::ServiceInfo &infos, bool verbose, bool showHidden, bool showDoc);

@@ -3,18 +3,10 @@
 
 #include <qimessaging/session.hpp>
 
+struct WatchOptions;
+
 class ServiceHelper
 {
-public:
-  struct WatchOptions
-  {
-    std::string signalName;
-    bool showTime;
-    WatchOptions()
-      :showTime(false)
-    {}
-  };
-
 public:
   ServiceHelper(const qi::AnyObject &service=qi::AnyObject(), const std::string &name="");
   ServiceHelper(const ServiceHelper &other);
@@ -37,7 +29,7 @@ public:
   std::list<std::string>   getMatchingMethodsName(const std::string &pattern, bool getHidden) const;
   std::list<std::string>   getMatchingPropertiesName(const std::string &pattern, bool getHidden) const;
 private:
-  qi::AnyReference    defaultWatcher(const ServiceHelper::WatchOptions &options, const std::vector<qi::AnyReference> &params);
+  qi::AnyReference    defaultWatcher(const WatchOptions &options, const std::vector<qi::AnyReference> &params);
   bool                byPassMember(const std::string &name, unsigned int uid, bool showHidden) const;
 
 private:

@@ -36,17 +36,6 @@ ServiceHelper::~ServiceHelper()
   }
 }
 
-std::ostream &operator<<(std::ostream &os, const std::vector<qi::AnyReference> &gvv)
-{
-  for (unsigned int i = 0; i < gvv.size(); ++i)
-  {
-    os << qi::encodeJSON(gvv[i]);
-    if (i + 1 != gvv.size())
-      os << " ";
-  }
-  return os;
-}
-
 template<typename T>
 std::list<std::string> ServiceHelper::getMatchingMembersName(const std::map<unsigned int, T> &metaMemberMap, const std::string &pattern, bool getHidden) const
 {
@@ -187,7 +176,7 @@ bool ServiceHelper::call(const std::string &methodName, const qi::GenericFunctio
   return true;
 }
 
-qi::AnyReference ServiceHelper::defaultWatcher(const ServiceHelper::WatchOptions &options, const std::vector<qi::AnyReference> &params)
+qi::AnyReference ServiceHelper::defaultWatcher(const WatchOptions &options, const std::vector<qi::AnyReference> &params)
 {
   static boost::mutex m;
   std::ostringstream ss;

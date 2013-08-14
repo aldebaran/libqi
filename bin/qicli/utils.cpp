@@ -6,6 +6,7 @@
 #include <boost/date_time.hpp>
 #include <boost/algorithm/string.hpp>
 #include <qi/iocolor.hpp>
+#include <qitype/jsoncodec.hpp>
 
 #include "qicli.hpp"
 
@@ -131,4 +132,52 @@ std::vector<std::string> parseServiceList(
     }
   }
   return services;
+}
+
+qi::AnyValue decodeArgByCast(const std::string &arg)
+{
+  try {
+    return qi::AnyValue(boost::lexical_cast<qi::int64_t>(arg));
+  } catch (const boost::bad_lexical_cast &) {
+    try {
+      return qi::AnyValue(boost::lexical_cast<double>(arg));
+    } catch (const boost::bad_lexical_cast &) {
+      try {
+        return qi::AnyValue(boost::lexical_cast<std::string>(arg));
+      } catch (const boost::bad_lexical_cast &) {
+        throw std::runtime_error("error while decoding arg");
+      }
+    }
+  }
+}
+
+qi::AnyValue decodeArg(const std::string &arg, bool json)
+{
+  if (json)
+    return qi::decodeJSON(arg);
+  else
+    return decodeArgByCast(arg);
+}
+
+qi::GenericFunctionParameters decodeArgs(const std::vector<std::string> &argList, bool json)
+{
+  qi::GenericFunctionParameters gvArgList;
+
+  for (unsigned int i = 0; i < argList.size(); ++i)
+  {
+    qi::AnyValue gvArg = decodeArg(argList[i], json);
+    gvArgList.push_back(gvArg.clone());
+  }
+  return gvArgList;
+}
+
+std::ostream &operator<<(std::ostream &os, const std::vector<qi::AnyReference> &gvv)
+{
+  for (unsigned int i = 0; i < gvv.size(); ++i)
+  {
+    os << qi::encodeJSON(gvv[i]);
+    if (i + 1 != gvv.size())
+      os << " ";
+  }
+  return os;
 }

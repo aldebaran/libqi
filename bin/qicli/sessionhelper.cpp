@@ -2,7 +2,6 @@
 #include <boost/regex.hpp>
 #include <qi/iocolor.hpp>
 #include <boost/foreach.hpp>
-#include <qitype/jsoncodec.hpp>
 #include <boost/lexical_cast.hpp>
 
 #include "sessionhelper.hpp"
@@ -218,39 +217,3 @@ bool SessionHelper::splitName(const std::string &fullName, std::string &beforePo
   return true;
 }
 
-qi::AnyValue SessionHelper::decodeArgByCast(const std::string &arg)
-{
-  try {
-    return qi::AnyValue(boost::lexical_cast<qi::int64_t>(arg));
-  } catch (const boost::bad_lexical_cast &) {
-    try {
-      return qi::AnyValue(boost::lexical_cast<double>(arg));
-    } catch (const boost::bad_lexical_cast &) {
-      try {
-        return qi::AnyValue(boost::lexical_cast<std::string>(arg));
-      } catch (const boost::bad_lexical_cast &) {
-        throw std::runtime_error("error while decoding arg");
-      }
-    }
-  }
-}
-
-qi::AnyValue SessionHelper::decodeArg(const std::string &arg, bool json)
-{
-  if (json)
-    return qi::decodeJSON(arg);
-  else
-    return decodeArgByCast(arg);
-}
-
-qi::GenericFunctionParameters SessionHelper::decodeArgs(const std::vector<std::string> &argList, bool json)
-{
-  qi::GenericFunctionParameters gvArgList;
-
-  for (unsigned int i = 0; i < argList.size(); ++i)
-  {
-    qi::AnyValue gvArg = decodeArg(argList[i], json);
-    gvArgList.push_back(gvArg.clone());
-  }
-  return gvArgList;
-}
