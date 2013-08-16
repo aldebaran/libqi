@@ -114,7 +114,6 @@ namespace qi {
       boost::mutex::scoped_lock lock(_mutex);
       std::swap(socket, _sdSocket);
     }
-    onSocketDisconnected("User closed the connection");
 
     if (!socket)
       return qi::Future<void>(0);
@@ -122,6 +121,9 @@ namespace qi {
     // from socket signal before disconnecting it.
     socket->disconnected.disconnect(_sdSocketDisconnectedSignalLink);
     qi::Future<void> fut = socket->disconnect();
+
+    onSocketDisconnected("User closed the connection");
+
     // Hold the socket shared ptr alive until the future returns.
     // otherwise, the destructor will block us until disconnect terminates
     // Nasty glitch: socket is reusing promises, so this future hook will stay
