@@ -34,11 +34,11 @@ namespace qi
   {
   public:
     Adder1()
-      : IAdder(
-               *new qi::Signal<int>(),
-               *new qi::Property<int>(qi::Property<int>::Getter(), clamp_positive)
-               )
-    {}
+      : IAdder()
+    {
+      value = qi::Property<int>(Property<int>::Getter(),
+        &clamp_positive);
+    }
     int addTwo(int a, int b)
     {
       int res = a+b+value.get();
