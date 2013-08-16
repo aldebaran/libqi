@@ -726,6 +726,8 @@ namespace qi {
       {
         CategoryType cat = addCategory(catName);
         cat->setLevel(sub, level);
+        GlobRule rule(catName, sub, level);
+        mergeGlob(rule);
       }
     }
 
@@ -740,7 +742,27 @@ namespace qi {
 
     void setVerbosity(qi::LogLevel level, SubscriberId sub)
     {
-      setCategory("*", level, sub);
+      // Check if there is already a '*' rule, replace it if so
+      bool found = false;
+      for (unsigned i=0; i<_glGlobRules.size(); ++i)
+      {
+        if (_glGlobRules[i].target == "*" && _glGlobRules[i].id == sub)
+        {
+          _glGlobRules[i].level = level;
+          found = true;
+          break;
+        }
+      }
+      if (!found)
+      {
+        // Prepend the rule
+        GlobRule rule("*", sub, level);
+        _glGlobRules.insert(_glGlobRules.begin(), rule);
+      }
+      // Then reprocess all categories
+      CategoryMap& c = _categories();
+      for (CategoryMap::iterator it = c.begin(); it != c.end(); ++it)
+        checkGlobs(it->second);
     }
 
     void setVerbosity(const std::string& rules, SubscriberId sub)

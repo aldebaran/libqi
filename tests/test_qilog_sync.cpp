@@ -136,9 +136,25 @@ TEST(log, filtering)
   YES;
   NO; // ensure reset works
   // global level
+  qiLogError("init.yes") << "coin";
+  YES;
+  qiLogError("initglob.yes") << "coin";
+  YES;
+  qi::log::setCategory("init.yes", qi::LogLevel_Info, id);
+  qi::log::setCategory("init.no", qi::LogLevel_Info, id);
+  qi::log::setCategory("initglob.*", qi::LogLevel_Info, id);
   qi::log::setVerbosity(qi::LogLevel_Silent, id);
+  // Test that global level is applied, but is overriden by all setCategory
   qiLogError("qi.test") << "coin";
   NO;
+  qiLogError("init.yes") << "coin";
+  YES;
+  qiLogError("init.no") << "coin";
+  YES;
+  qiLogError("initglob.yes") << "coin";
+  YES;
+  qiLogError("initglob.no") << "coin";
+  YES;
   {
     qiLogCategory("qi.test");
     qiLogErrorF("coin");
@@ -146,6 +162,10 @@ TEST(log, filtering)
   }
   qi::log::setVerbosity(qi::LogLevel_Error, id);
   qiLogError("qi.test") << "coin";
+  YES;
+  qiLogError("init.yes") << "coin";
+  YES;
+  qiLogError("init.no") << "coin";
   YES;
   qi::log::disableCategory("qi.test", id);
   qiLogError("qi.test") << "coin";
@@ -158,12 +178,20 @@ TEST(log, filtering)
     qiLogErrorF("coin");
     YES;
   }
-  // ensure re-enabling category made us debug capable.
-  // enable put us at error level, all this soon obsoletized, ignore
-  //qi::log::setVerbosity(qi::LogLevel_Debug);
-  //qiLogDebug("qi.test") << "coin";
-  //YES;
-  // and finish in all-on state
+  qi::log::setVerbosity(qi::LogLevel_Silent, id);
+  // Test that global level is applied, but is overriden by all setCategory
+  qiLogError("qi.test") << "coin";
+  YES; //enableCategory overrides setVerbosity
+  qiLogError("qi.newCat") << "coin";
+  NO;
+  qiLogError("init.yes") << "coin";
+  YES;
+  qiLogError("init.no") << "coin";
+  YES;
+  qiLogError("initglob.yes") << "coin";
+  YES;
+  qiLogError("initglob.no") << "coin";
+  YES;
   qi::log::removeLogHandler("set");
 }
 
@@ -203,6 +231,9 @@ TEST(log, filteringPerHandler)
   qiLogError("qi.test") << "coin";
   NOYES;
   qi::log::setVerbosity(qi::LogLevel_Debug, id1);
+  qiLogError("qi.test") << "coin";
+  NOYES; // setCategory overrides setVerbosity for id1
+  qi::log::setCategory("qi.test", qi::LogLevel_Debug, id1);
   qiLogError("qi.test") << "coin";
   YESYES;
   qi::log::removeLogHandler("set1");

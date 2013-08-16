@@ -175,7 +175,10 @@
 /**
  * \fn qi::log::setVerbosity(qi::LogLevel, SubscriberId);
  * \brief Set log verbosity.
- * \param lv Maximal verbosity level shown in the logs.
+ * \param lv Default verbosity level shown in the logs.
+ *
+ * \note the level set by this function is a default value, overriden by
+ * all setCategory() calls.
  *
  * If you don't want any log use silent mode.
  */
