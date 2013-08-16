@@ -28,6 +28,7 @@ namespace qi {
     qi::Signature                  signature;
     boost::recursive_mutex         mutex;
     MetaCallType                   defaultCallType;
+    SignalBase::Trigger            triggerOverride;
   };
 
 }

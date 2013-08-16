@@ -90,10 +90,17 @@ namespace qi {
     std::vector<SignalSubscriber> subscribers();
     bool hasSubscribers();
     static const SignalLink invalidSignalLink;
+  protected:
+    typedef boost::function<void(const GenericFunctionParameters& params, MetaCallType callType)> Trigger;
+    void callSubscribers(const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto);
+    void setTriggerOverride(Trigger trigger);
+    void setOnSubscribers(OnSubscribers onSubscribers);
+    void callOnSubscribe(bool v);
   public:
     void _setSignature(const Signature &s);
     // C4251
     boost::shared_ptr<SignalBasePrivate> _p;
+    friend class SignalBasePrivate;
   };
 
   template<typename FUNCTION_TYPE>

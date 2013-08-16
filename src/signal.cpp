@@ -93,6 +93,30 @@ namespace qi {
 
   void SignalBase::trigger(const GenericFunctionParameters& params, MetaCallType callType)
   {
+    if (!_p)
+      return;
+    if (_p->triggerOverride)
+      _p->triggerOverride(params, callType);
+    else
+      callSubscribers(params, callType);
+  }
+
+  void SignalBase::setTriggerOverride(Trigger t)
+  {
+    if (!_p)
+      _p = boost::make_shared<SignalBasePrivate>();
+    _p->triggerOverride = t;
+  }
+
+  void SignalBase::setOnSubscribers(OnSubscribers onSubscribers)
+  {
+    if (!_p)
+      _p = boost::make_shared<SignalBasePrivate>();
+    _p->onSubscribers = onSubscribers;
+  }
+
+  void SignalBase::callSubscribers(const GenericFunctionParameters& params, MetaCallType callType)
+  {
     MetaCallType mct = callType;
 
     if (!_p)

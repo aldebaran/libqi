@@ -20,64 +20,82 @@ namespace qi
   public:
     typedef SignalF<T> SignalType;
     ProxySignal(AnyObject object, const std::string& signalName)
-    : SignalType(boost::bind(&ProxySignal<T>::onSubscribe, this, _1))
-    , _name(signalName)
-    , _object(object.get())
-    , _link(SignalBase::invalidSignalLink)
+    : SignalType()
     {
+      setup(object, signalName);
     }
+    ProxySignal() {}
     ~ProxySignal();
-    void onSubscribe(bool enable);
+    void setup(AnyObject object, const std::string& signalName)
+    {
+      setOnSubscribers(boost::bind(&ProxySignal<T>::onSubscribe, this, _1,
+        object.get(), signalName, SignalBase::invalidSignalLink));
+      setTriggerOverride(boost::bind(&ProxySignal<T>::triggerOverride, this, _1, _2,
+        object.get(), signalName));
+    }
+    void onSubscribe(bool enable, GenericObject* object, std::string signalName, SignalLink link);
     AnyReference bounceEvent(const std::vector<AnyReference> args);
-    virtual void trigger(const GenericFunctionParameters& params, MetaCallType);
-  private:
-    std::string _name;
-    GenericObject* _object;
-    SignalLink _link;
+    void triggerOverride(const GenericFunctionParameters& params,
+      MetaCallType callType, GenericObject* object, std::string signalName);
   };
 
+  template<typename T>
+  void makeProxySignal(SignalF<T>& target, AnyObject object, const std::string& signalName)
+  {
+    ProxySignal<T>& proxy = static_cast<ProxySignal<T> &>(target);
+    proxy.setup(object, signalName);
+  }
+
+  template<typename T>
+  void makeProxySignal(ProxySignal<T>& target, AnyObject object, const std::string& signalName)
+  {
+    target.setup(object, signalName);
+  }
 
   template<typename T>
   ProxySignal<T>::~ProxySignal()
   {
-    SignalType::disconnectAll();
-    if (_link != SignalBase::invalidSignalLink)
-      onSubscribe(false);
+    SignalType::disconnectAll(); // will invoke onsubscribe
   }
 
   template<typename T>
-  void ProxySignal<T>::onSubscribe(bool enable)
+  void ProxySignal<T>::onSubscribe(bool enable, GenericObject* object, std::string signalName,
+    SignalLink link)
   {
     if (enable)
     {
-      _link = _object->connect(_name,
-          SignalSubscriber(
+      link = object->connect(signalName,
+        SignalSubscriber(
             AnyFunction::fromDynamicFunction(boost::bind(&ProxySignal<T>::bounceEvent, this, _1))
             ));
     }
     else
     {
-      bool ok = !_object->disconnect(_link).hasError();
+      bool ok = !object->disconnect(link).hasError();
       if (!ok)
         qiLogError("qitype.proxysignal") << "Failed to disconnect from parent signal";
-      _link = SignalBase::invalidSignalLink;
+      link = SignalBase::invalidSignalLink;
     }
+    // link change, rebind ourselve
+    setOnSubscribers(boost::bind(&ProxySignal<T>::onSubscribe, this, _1,
+        object, signalName, link));
   }
 
   template<typename T>
   AnyReference ProxySignal<T>::bounceEvent(const std::vector<AnyReference> args)
   {
     // Trigger on our signal, bypassing our trigger overload
-    SignalType::trigger(args);
+    SignalType::callSubscribers(args);
     return AnyReference(typeOf<void>());
   }
 
   template<typename T>
-  void ProxySignal<T>::trigger(const GenericFunctionParameters& params, MetaCallType)
+  void ProxySignal<T>::triggerOverride(const GenericFunctionParameters& params, MetaCallType,
+     GenericObject* object, std::string signalName)
   {
     // Just forward to backend, which will notify us in bouceEvent(),
     // and then we will notify our local Subscribers
-    _object->metaPost(_name, params);
+    object->metaPost(signalName, params);
   }
 
 }

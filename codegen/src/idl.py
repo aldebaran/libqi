@@ -541,13 +541,8 @@ def raw_to_interface(class_name, data, include, namespaces):
 class @INAME@
 {
   public:
-    @CTOR0DECL@
-    @INAME@(@CTOR1ARGS@);
     virtual ~@INAME@();
 @DECLS@
-
-@GETTERS@
-    bool _allocated; // are sigs/props allocated by us
 };
 
 // Register an object implementing this interface
@@ -556,18 +551,8 @@ class @INAME@
 
 QI_REGISTER_OBJECT(@INAME@, @FIELDS@)
 
-@CTOR0IMPL@
-
-inline @INAME@::@INAME@(@CTOR1ARGS@)
-@CTOR1@
-{}
-
 inline @INAME@::~@INAME@()
 {
-  if (_allocated)
-  {
-@DELETE@
-  }
 }
 
 typedef boost::shared_ptr<@INAME@> @INAME@Ptr;
@@ -587,48 +572,16 @@ QI_TYPE_NOT_CLONABLE(@NAMESPACES@@INAME@);
     methods_decl += '    virtual %s %s (%s) = 0;\n' % (cret, method_name, typed_args)
     fields.append(method_name)
   signals_decl = ''
-  ctor_decl = []
-  ctor_init = []   # all sig/prop in argument ctor
-  ctor_init0 = []  # no argument ctor
-  dtor = ''
   for sig in signals:
     name = sig[0]
     signature = ','.join(map(signature_to_cxxtype, sig[1]))
-    signals_decl += '    qi::Signal<%s> & %s;\n' % (signature, name)
-    ctor_decl.append('qi::Signal<%s> & %s' % (signature, name))
-    ctor_init.append('%s(%s)' % (name, name))
-    ctor_init0.append('%s(*new qi::Signal<%s>)' % (name, signature))
-    dtor += '    delete &%s;\n' % (name)
-    getters += '    qi::Signal<%s> & _interface_%s() { return %s;}\n' % (signature, name, name)
-    fields.append('_interface_' + name)
+    signals_decl += '    qi::Signal<%s> %s;\n' % (signature, name)
+    fields.append(name)
   for prop in properties:
     name = prop[0]
     signature = signature_to_cxxtype(prop[1])
-    signals_decl += '    qi::Property<%s> & %s;\n' % (signature, name)
-    ctor_decl.append('qi::Property<%s> & %s' % (signature, name))
-    ctor_init.append('%s(%s)' % (name, name))
-    ctor_init0.append('%s(*new qi::Property<%s>)' % (name, signature))
-    dtor += '    delete &%s;\n' % (name)
-    getters += '    qi::Property<%s>& _interface_%s() { return %s;}\n' % (signature, name, name)
-    fields.append('_interface_' + name)
-  no_sigprop = (len(ctor_init) == 0)
-  ctor_init.append('_allocated(false)')
-  ctor_init0.append('_allocated(true)')
-  ctor_decl = ','.join(ctor_decl)
-  ctor_init =   ':    ' + '\n      ,'.join(ctor_init)
-  ctor_init0 =  ':    ' + '\n      ,'.join(ctor_init0)
-  if no_sigprop:
-    ctor0impl = ''
-    ctor0decl = ''
-  else:
-    getters = '   // Accessors required for proper bindings, since constructing a getter on a reference member is impossible\n' + getters
-    ctor0impl = """
-inline @INAME@::@INAME@()
-%s
-{}
-""" % (ctor_init0)
-    ctor0decl = '    %s();\n' % ('I'+class_name)
-
+    signals_decl += '    qi::Property<%s> %s;\n' % (signature, name)
+    fields.append(name)
   open_namespace = ""
   close_namespace = ""
   ns_full = ""
@@ -639,15 +592,8 @@ inline @INAME@::@INAME@()
       ns_full = n + "::"
 
   replace = {
-   '@CTOR0IMPL@': ctor0impl,
-   '@CTOR0DECL@': ctor0decl,
    '@INAME@': 'I' + class_name,
-   '@CTOR0@': ctor_init0,
-   '@CTOR1@': ctor_init,
-   '@CTOR1ARGS@': ctor_decl,
-   '@DELETE@': dtor,
    '@DECLS@': methods_decl + signals_decl,
-   '@GETTERS@': getters,
    '@FIELDS@': ','.join(fields),
    '@include@': ''.join(['#include <' + x + '>\n' for x in include]),
    '@OPEN_NAMESPACE@': open_namespace,
@@ -940,7 +886,6 @@ class @proxyName@: public ::qi::Proxy @if_inherit@
 public:
   @proxyName@(qi::AnyObject obj)
   : qi::Proxy(obj)
-@constructor_initList@
   {
 @constructor@
   }
@@ -1027,11 +972,13 @@ QI_TYPE_PROXY(@namepaces@@proxyName@);
   ctor = ''
   # Make  a Signal field for each signal, bridge it to backend in ctor
   for sig in signals:
-    signal_decl += '  qi::ProxySignal<void(' + ','.join(map(signature_to_cxxtype, sig[1])) +')> ' + sig[0] + ';\n'
-    ctor += '  , {0}(obj, "{0}")\n'.format(sig[0])
+    ctor += '    qi::makeProxySignal({0}, obj, "{0}");\n'.format(sig[0])
+    if not implement_interface:
+      signal_decl += '  qi::ProxySignal<void({1})> {0};\n'.format(sig[0], ','.join(map(signature_to_cxxtype, sig[1])))
   for prop in properties:
-    signal_decl += '  qi::ProxyProperty<' + signature_to_cxxtype(prop[1]) + '> ' + prop[0] + ';\n'
-    ctor += '  , {0}(obj, "{0}")\n'.format(prop[0])
+    ctor += '    qi::makeProxyProperty({0}, obj, "{0}");\n'.format(prop[0])
+    if not implement_interface:
+      signal_decl += '  qi::ProxyProperty<{1}> {0};\n'.format(prop[0], signature_to_cxxtype(prop[1]))
   result = skeleton
   open_namespace = ""
   close_namespace = ""
@@ -1052,8 +999,7 @@ QI_TYPE_PROXY(@namepaces@@proxyName@);
       'className': class_name,
       'publicDecl': method_impls + signal_decl,
       'privateDecl': '',
-      'constructor': '',
-      'constructor_initList': ctor,
+      'constructor': ctor,
       'include': ''.join(['#include <' + x + '>\n' for x in include]),
       'forward_decls': forward_decls,
       'namepaces': ns_full,
@@ -1120,14 +1066,10 @@ static int _init_@TYPE@ = @TYPE@init();
   for s in signals:
     name = s[0]
     field = name
-    if use_interface:
-      field = '_interface_' + name
     advertise += '  builder.advertise("%s", &%s::%s);\n' % (name, class_name, field);
   for s in properties:
     name = s[0]
     field = name
-    if use_interface:
-      field = '_interface_' + name
     advertise += '  builder.advertise("%s", &%s::%s);\n' % (name, class_name, field);
   register = ''
   if register_to_factory == 'service':

@@ -55,7 +55,7 @@ namespace qi
     T get() const;
     void set(const T& v);
     void operator = (const T& v) { set(v);}
-  private:
+  protected:
     Getter _getter;
     Setter _setter;
     T      _value;
