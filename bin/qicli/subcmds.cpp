@@ -88,6 +88,7 @@ int subCmd_post(int argc, char **argv, const MainOptions &options)
       ("arg,a", po::value<std::vector<std::string> >(&argList), "method's args")
       ("hidden", "post hidden signals if they match the given pattern")
       ("json", "signal parameters' will be treaded as JSON strings")
+      ("almemory", "post on almemory event")
       ("help,h", "Print this help message and exit");
 
   po::positional_options_description positionalOptions;
@@ -101,7 +102,14 @@ int subCmd_post(int argc, char **argv, const MainOptions &options)
 
   SessionHelper session(options.address);
 
-  session.post(fullName, argList, vm.count("hidden"), vm.count("json"));
+  if (vm.count("almemory"))
+  {
+    if (argList.empty() || argList.size() > 1)
+      throw std::runtime_error("bad number of argument, almemory events only accept one argument");
+   session.postOnAlmemory(fullName, argList[0], vm.count("json"));
+  }
+  else
+    session.post(fullName, argList, vm.count("hidden"), vm.count("json"));
   return 0;
 }
 
@@ -174,6 +182,7 @@ int subCmd_watch(int argc, char **argv, const MainOptions &options)
       ("time,t", "Print time")
       ("hidden", "watch hidden signals if they match the given pattern")
       ("continue", "continue on error")
+      ("almemory,m", "watch ALMemory events")
       ("help,h", "Print this help message and exit");
 
   po::positional_options_description positionalOptions;
@@ -186,8 +195,16 @@ int subCmd_watch(int argc, char **argv, const MainOptions &options)
   SessionHelper session(options.address);
 
   if (patternList.empty())
+  {
+    if (vm.count("almemory"))
+      patternList.push_back("*");
+    else
       patternList.push_back("*.*");
-  session.watch(patternList, vm.count("time"), vm.count("hidden"), vm.count("continue"));
+  }
+  if (vm.count("almemory"))
+    session.watchAlmemory(patternList, vm.count("time"));
+  else
+    session.watch(patternList, vm.count("time"), vm.count("hidden"), vm.count("continue"));
   ::getchar();
   return 0;
 }

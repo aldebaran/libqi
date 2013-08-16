@@ -21,9 +21,11 @@ public:
   void info(const std::vector<std::string> &patternVec, bool verbose, bool showHidden, bool showDoc);
   void call(const std::string &pattern, const std::vector<std::string> &jsonArgList, bool hidden, bool json, bool cont);
   void post(const std::string &pattern, const std::vector<std::string> &jsonArgList, bool hidden, bool json);
+  void postOnAlmemory(const std::string &pattern, const std::string &arg, bool json);
   void get(const std::vector<std::string> &patternList, bool hidden, bool cont);
   void set(const std::vector<std::string> &patternList, const std::string &jsonValue, bool hidden, bool json, bool cont);
   void watch(const std::vector<std::string> &patternList, bool showTime, bool hidden, bool cont);
+  void watchAlmemory(const std::vector<std::string> &patternList, bool showTime);
 
 private:
   bool                          byPassService(const std::string &name, bool showHidden);

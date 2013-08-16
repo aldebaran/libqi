@@ -5,6 +5,7 @@
 #include <boost/lexical_cast.hpp>
 
 #include "sessionhelper.hpp"
+#include "almemoryhelper.hpp"
 #include "qicli.hpp"
 
 SessionHelper::SessionHelper(const std::string &address)
@@ -51,6 +52,13 @@ void SessionHelper::post(const std::string &pattern, const std::vector<std::stri
                   &ServiceHelper::getMatchingSignalsName, hidden, false);
 }
 
+void SessionHelper::postOnAlmemory(const std::string &pattern, const std::string &arg, bool json)
+{
+  ALMemoryHelper alm(_session);
+
+  alm.post(pattern, arg, json);
+}
+
 void SessionHelper::get(const std::vector<std::string> &patternList, bool hidden, bool cont)
 {
   forEachService(patternList, boost::bind(&ServiceHelper::showProperty, _1, _2),
@@ -67,6 +75,13 @@ void SessionHelper::watch(const std::vector<std::string> &patternList, bool show
 {
   forEachService(patternList, boost::bind(&ServiceHelper::watch, _1, _2, showTime),
                   &ServiceHelper::getMatchingSignalsName, hidden, cont);
+}
+
+void SessionHelper::watchAlmemory(const std::vector<std::string> &patternList, bool showTime)
+{
+  ALMemoryHelper alm(_session);
+
+  alm.watch(patternList, showTime);
 }
 
 bool SessionHelper::byPassService(const std::string &name, bool showHidden)

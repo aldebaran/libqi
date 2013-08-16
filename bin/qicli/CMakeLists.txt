@@ -13,6 +13,8 @@ set(SRCS
   servicehelper.hpp
   sessionhelper.cpp
   servicehelper.cpp
+  almemoryhelper.hpp
+  almemoryhelper.cpp
   main.cpp
   subcmds.cpp
   utils.cpp
