@@ -1,5 +1,5 @@
 /*
-**  Copyright (C) 2012 Aldebaran Robotics
+**  Copyright (C) 2012, 2013 Aldebaran Robotics
 **  See COPYING for the license
 */
 #include "staticobjecttype.hpp"
@@ -100,6 +100,10 @@ static SignalBase* getSignal(ObjectTypeData& data, void* instance, unsigned int 
   return sig;
 }
 
+static void reportError(qi::Future<AnyReference> fut) {
+  qiLogError() << fut.error();
+}
+
 void StaticObjectTypeBase::metaPost(void* instance, AnyObject context, unsigned int signal,
                                     const GenericFunctionParameters& params)
 {
@@ -110,7 +114,8 @@ void StaticObjectTypeBase::metaPost(void* instance, AnyObject context, unsigned 
   }
   else
   { // try method
-    metaCall(instance, context, signal, params, MetaCallType_Queued);
+    qi::Future<AnyReference> fut = metaCall(instance, context, signal, params, MetaCallType_Queued);
+    fut.connect(&reportError);
   }
 }
 

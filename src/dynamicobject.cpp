@@ -243,6 +243,10 @@ namespace qi
     return qi::Future<AnyValue>(property(id)->value());
   }
 
+  static void reportError(qi::Future<AnyReference> fut) {
+    qiLogError() << fut.error();
+  }
+
   void DynamicObject::metaPost(AnyObject   context, unsigned int event, const GenericFunctionParameters& params)
   {
     SignalBase * s = _p->createSignal(event);
@@ -253,10 +257,9 @@ namespace qi
     }
 
     // Allow emit on a method
-    // FIXME: call errors are lost
     if (metaObject().method(event)) {
-      metaCall(context, event, params, MetaCallType_Queued);
-      //TODO: return metacall status: check params
+      qi::Future<AnyReference> fut = metaCall(context, event, params, MetaCallType_Queued);
+      fut.connect(&reportError);
       return;
     }
     qiLogError() << "No such event " << event;
