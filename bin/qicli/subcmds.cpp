@@ -56,12 +56,12 @@ int subCmd_call(int argc, char **argv, const MainOptions &options)
   std::vector<std::string>    argList;
 
   desc.add_options()
-      ("method,m", po::value<std::string>(&fullName)->required(), "method's name")
-      ("arg,a", po::value<std::vector<std::string> >(&argList), "method's args")
+      ("method", po::value<std::string>(&fullName)->required(), "method's name")
+      ("arg", po::value<std::vector<std::string> >(&argList), "method's args")
       ("hidden", "call hidden methods if they match the given pattern")
       ("json", "method parameters' will be treaded as JSON strings")
       ("continue", "continue on error")
-      ("help,h", "Print this help message and exit");
+      ("help", "Print this help message and exit");
 
   po::positional_options_description positionalOptions;
   positionalOptions.add("method", 1);
@@ -84,12 +84,12 @@ int subCmd_post(int argc, char **argv, const MainOptions &options)
   std::vector<std::string>    argList;
 
   desc.add_options()
-      ("signal,s", po::value<std::string>(&fullName)->required(), "signal's name")
-      ("arg,a", po::value<std::vector<std::string> >(&argList), "method's args")
+      ("signal", po::value<std::string>(&fullName)->required(), "signal's name")
+      ("arg", po::value<std::vector<std::string> >(&argList), "method's args")
       ("hidden", "post hidden signals if they match the given pattern")
       ("json", "signal parameters' will be treaded as JSON strings")
       ("almemory", "post on almemory event")
-      ("help,h", "Print this help message and exit");
+      ("help", "Print this help message and exit");
 
   po::positional_options_description positionalOptions;
   positionalOptions.add("signal", 1);
@@ -145,11 +145,11 @@ int subCmd_set(int argc, char **argv, const MainOptions &options)
   std::vector<std::string>  argList;
 
   desc.add_options()
-      ("prop,p", po::value<std::vector<std::string> >(&argList), "property's name")
+      ("prop", po::value<std::vector<std::string> >(&argList), "property's name")
       ("hidden", "set hidden properties if they match the given pattern")
       ("json", "parameter will be treaded as a JSON string")
       ("continue", "continue on error")
-      ("help,h", "Print this help message and exit");
+      ("help", "Print this help message and exit");
 
   po::positional_options_description positionalOptions;
   positionalOptions.add("prop", -1);
