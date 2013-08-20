@@ -1,0 +1,3 @@
+<project version="3">
+  <qidoc dest="ref/libqimessaging/c" name="libqimessaging-c" type="doxygen" />
+</project>
