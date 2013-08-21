@@ -182,7 +182,7 @@ qi::AnyReference ServiceHelper::defaultWatcher(const WatchOptions &options, cons
   std::ostringstream ss;
   if (options.showTime)
     ss << getTime() << ": ";
-  printServiceMember(_name, options.signalName);
+  ss << qi::StreamColor_Bold << options.signalName << ": " << qi::StreamColor_Reset << " ";
   ss << params;
   ss << std::endl;
   {
