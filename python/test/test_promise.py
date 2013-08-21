@@ -215,7 +215,6 @@ def test_promise_re_set():
     except RuntimeError:
         pass
 
-
 def test_future_exception():
     p = Promise()
     f = p.future()
@@ -226,6 +225,19 @@ def test_future_exception():
     f.addCallback(raising)
     p.setValue(42)
 
+# This test doesn't assert, it's only segfault check
+# No segfault => no bug
+def test_future_many_callback():
+    def callback(f):
+        pass
+
+    for _ in range(0, 10000):
+        p = Promise()
+        f = p.future()
+        f.addCallback(callback)
+        p.setValue(0)
+
+    time.sleep(1)
 
 def main():
     test_many_futures_create()
@@ -242,6 +254,7 @@ def main():
     test_future_exception()
     test_future_two_callbacks()
     test_future_callback_noargs()
+    test_future_many_callback()
 
 if __name__ == "__main__":
     main()

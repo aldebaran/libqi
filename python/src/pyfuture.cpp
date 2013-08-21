@@ -15,11 +15,9 @@
 namespace qi {
   namespace py {
 
-
-
-    static void pyFutureCb(boost::python::object callable, boost::python::object pp) {
+    void pyFutureCb(boost::python::object callable, qi::Future<qi::AnyValue>& pp) {
       GILScopedLock _lock;
-      PY_CATCH_ERROR(callable(pp));
+      PY_CATCH_ERROR(callable(PyFuture(pp)));
     }
 
     class PyPromise;
@@ -68,14 +66,11 @@ namespace qi {
     }
 
     void PyFuture::addCallback(boost::python::object callable) {
-
-      //because we use shared_ptr, we get a correct pyObject here.
-      boost::python::object obj(shared_from_this());
-      //we store a ref on ourself, because our future can get out of scope.
-      //so the shared future state will keep a ref on us. When the promise will
-      //be destroyed this will destroy the ref on us.
+      // Create a copy to avoid destruction from someone
+      qi::Future<qi::AnyValue> fut((qi::Future<qi::AnyValue>)(*this));
       GILScopedUnlock _unlock;
-      connect(boost::bind<void>(&pyFutureCb, callable, obj));
+      // Use _1 from connect is not good: ask HC NC
+      connect(boost::bind<void>(&pyFutureCb, callable, fut));
     }
 
     PyPromise::PyPromise()
