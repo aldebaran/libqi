@@ -50,6 +50,11 @@ namespace qi {
         delete[] argv;
       }
 
+      ~PyApplication() {
+        qi::py::GILScopedUnlock _unlock;
+        _app.reset();
+      }
+
       void run() {
         qi::py::GILScopedUnlock _unlock;
         _app->run();
