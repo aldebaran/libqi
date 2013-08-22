@@ -1,14 +1,11 @@
+#pragma once
 /*
-**
-** Author(s):
-**  - Cedric GESTES <gestes@aldebaran-robotics.com>
-**
-** Copyright (C) 2013 Aldebaran Robotics
+**  Copyright (C) 2013 Aldebaran Robotics
+**  See COPYING for the license
 */
 
-
-#ifndef   	PYPROPERTY_HPP_
-# define   	PYPROPERTY_HPP_
+#ifndef _PYTHON_SRC_PYPROPERTY_HPP_
+#define _PYTHON_SRC_PYPROPERTY_HPP_
 
 #include <boost/python.hpp>
 #include <qitype/metaproperty.hpp>
@@ -24,4 +21,4 @@ namespace qi {
   }
 }
 
-#endif	    /* !PYSESSION_HPP_ */
+#endif  // _PYTHON_SRC_PYPROPERTY_HPP_

@@ -1,8 +1,7 @@
-/**
-* @author Aldebaran Robotics
-* Aldebaran Robotics (c) 2012 All Rights Reserved
+/*
+**  Copyright (C) 2013 Aldebaran Robotics
+**  See COPYING for the license
 */
-
 #include <boost/python.hpp>
 #include <map>
 

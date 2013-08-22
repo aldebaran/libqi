@@ -1,11 +1,7 @@
 /*
-**
-** Author(s):
-**  - Julien Freche <jfreche@aldebaran-robotics.com>
-**
-** Copyright (C) 2012, 2013 Aldebaran Robotics
+**  Copyright (C) 2013 Aldebaran Robotics
+**  See COPYING for the license
 */
-
 #include <utility>
 #include <qi/log.hpp>
 #include <qitype/signature.hpp>

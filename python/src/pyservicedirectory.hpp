@@ -1,14 +1,11 @@
+#pragma once
 /*
-**
-** Author(s):
-**  - Cedric GESTES <gestes@aldebaran-robotics.com>
-**
-** Copyright (C) 2013 Aldebaran Robotics
+**  Copyright (C) 2013 Aldebaran Robotics
+**  See COPYING for the license
 */
 
-
-#ifndef   	PYSERVICEDIRECTORY_HPP_
-# define   	PYSERVICEDIRECTORY_HPP_
+#ifndef _PYTHON_SRC_PYSERVICEDIRECTORY_HPP_
+#define _PYTHON_SRC_PYSERVICEDIRECTORY_HPP_
 
 namespace qi {
   namespace py {
@@ -19,4 +16,4 @@ namespace qi {
 }
 
 
-#endif	    /* !PYSERVICEDIRECTORY_HPP_ */
+#endif  // _PYTHON_SRC_PYSERVICEDIRECTORY_HPP_

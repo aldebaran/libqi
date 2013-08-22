@@ -1,14 +1,11 @@
+#pragma once
 /*
-**
-** Author(s):
-**  - Cedric GESTES <gestes@aldebaran-robotics.com>
-**
-** Copyright (C) 2013 Aldebaran Robotics
+**  Copyright (C) 2013 Aldebaran Robotics
+**  See COPYING for the license
 */
 
-
-#ifndef   	ERROR_HPP_
-# define   	ERROR_HPP_
+#ifndef _PYTHON_SRC_ERROR_HPP_
+#define _PYTHON_SRC_ERROR_HPP_
 
 #include <qi/log.hpp>
 #include <boost/python.hpp>
@@ -47,4 +44,4 @@ inline std::string PyFormatError()
 
 
 
-#endif	    /* !ERROR_HPP_ */
+#endif  // _PYTHON_SRC_ERROR_HPP_

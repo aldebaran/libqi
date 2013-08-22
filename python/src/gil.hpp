@@ -1,14 +1,11 @@
+#pragma once
 /*
-**
-** Author(s):
-**  - Cedric GESTES <gestes@aldebaran-robotics.com>
-**
-** Copyright (C) 2013 Aldebaran Robotics
+**  Copyright (C) 2013 Aldebaran Robotics
+**  See COPYING for the license
 */
 
-
-#ifndef   	GIL_HPP_
-# define   	GIL_HPP_
+#ifndef _PYTHON_SRC_GIL_HPP_
+#define _PYTHON_SRC_GIL_HPP_
 
 #include <qi/log.hpp>
 #include <boost/python.hpp>
@@ -60,4 +57,4 @@ namespace qi {
 }
 
 
-#endif	    /* !GIL_HPP_ */
+#endif  // _PYTHON_SRC_GIL_HPP_

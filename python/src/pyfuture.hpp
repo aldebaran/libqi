@@ -1,14 +1,11 @@
+#pragma once
 /*
-**
-** Author(s):
-**  - Cedric GESTES <gestes@aldebaran-robotics.com>
-**
-** Copyright (C) 2013 Aldebaran Robotics
+**  Copyright (C) 2013 Aldebaran Robotics
+**  See COPYING for the license
 */
 
-
-#ifndef   	PYFUTURE_HPP_
-# define   	PYFUTURE_HPP_
+#ifndef _PYTHON_SRC_PYFUTURE_HPP_
+#define _PYTHON_SRC_PYFUTURE_HPP_
 
 #include <boost/python.hpp>
 #include <qi/future.hpp>
@@ -96,4 +93,4 @@ namespace qi {
 }
 
 
-#endif	    /* !QIFUTURE_PP_ */
+#endif  // _PYTHON_SRC_PYFUTURE_HPP_

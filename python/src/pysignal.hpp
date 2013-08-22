@@ -1,14 +1,11 @@
+#pragma once
 /*
-**
-** Author(s):
-**  - Cedric GESTES <gestes@aldebaran-robotics.com>
-**
-** Copyright (C) 2013 Aldebaran Robotics
+**  Copyright (C) 2013 Aldebaran Robotics
+**  See COPYING for the license
 */
 
-
-#ifndef   	PYSIGNAL_HPP_
-# define   	PYSIGNAL_HPP_
+#ifndef _PYTHON_SRC_PYSIGNAL_HPP_
+#define _PYTHON_SRC_PYSIGNAL_HPP_
 
 #include <boost/python.hpp>
 #include <qitype/typeinterface.hpp>
@@ -24,4 +21,4 @@ namespace qi {
   }
 }
 
-#endif	    /* !PYSIGNAL_HPP_ */
+#endif  // _PYTHON_SRC_PYSIGNAL_HPP_

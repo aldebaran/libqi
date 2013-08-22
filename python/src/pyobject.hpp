@@ -1,14 +1,11 @@
+#pragma once
 /*
-**
-** Author(s):
-**  - Cedric GESTES <gestes@aldebaran-robotics.com>
-**
-** Copyright (C) 2013 Aldebaran Robotics
+**  Copyright (C) 2013 Aldebaran Robotics
+**  See COPYING for the license
 */
 
-
-#ifndef   	PYOBJECT_HPP_
-# define   	PYOBJECT_HPP_
+#ifndef _PYTHON_SRC_PYOBJECT_HPP_
+#define _PYTHON_SRC_PYOBJECT_HPP_
 
 #include <qitype/anyobject.hpp>
 #include <boost/python.hpp>
@@ -22,4 +19,4 @@ namespace qi {
 }
 
 
-#endif	    /* !PYOBJECT_HPP_ */
+#endif  // _PYTHON_SRC_PYOBJECT_HPP_

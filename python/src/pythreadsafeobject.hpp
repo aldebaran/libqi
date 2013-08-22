@@ -1,13 +1,11 @@
+#pragma once
 /*
-**
-** Author(s):
-**  - Cedric GESTES <gestes@aldebaran-robotics.com>
-**
-** Copyright (C) 2013 Aldebaran Robotics
+**  Copyright (C) 2013 Aldebaran Robotics
+**  See COPYING for the license
 */
 
-#ifndef   PYTHREADSAFEOBJECT_HPP_
-# define  PYTHREADSAFEOBJECT_HPP_
+#ifndef _PYTHON_SRC_PYTHREADSAFEOBJECT_HPP_
+#define _PYTHON_SRC_PYTHREADSAFEOBJECT_HPP_
 
 #include <boost/python.hpp>
 
@@ -64,4 +62,4 @@ namespace qi {
 }
 
 
-#endif  /* !PYTHREADSAFEOBJECT_PP_ */
+#endif  // _PYTHON_SRC_PYTHREADSAFEOBJECT_HPP_

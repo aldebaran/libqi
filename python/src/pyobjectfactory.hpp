@@ -1,10 +1,11 @@
-/**
-* @author Aldebaran Robotics
-* Aldebaran Robotics (c) 2012 All Rights Reserved
+#pragma once
+/*
+**  Copyright (C) 2013 Aldebaran Robotics
+**  See COPYING for the license
 */
 
-#ifndef PYOBJECTFACTORY_HPP_
-#define PYOBJECTFACTORY_HPP_
+#ifndef _PYTHON_SRC_PYOBJECTFACTORY_HPP_
+#define _PYTHON_SRC_PYOBJECTFACTORY_HPP_
 
 namespace qi {
   namespace py {
@@ -12,4 +13,4 @@ namespace qi {
   }
 }
 
-#endif /* !PYOBJECTFACTORY_HPP_ */
+#endif  // _PYTHON_SRC_PYOBJECTFACTORY_HPP_

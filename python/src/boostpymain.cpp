@@ -1,11 +1,7 @@
 /*
-**
-** Author(s):
-**  - Cedric GESTES <gestes@aldebaran-robotics.com>
-**
-** Copyright (C) 2013 Aldebaran Robotics
+**  Copyright (C) 2013 Aldebaran Robotics
+**  See COPYING for the license
 */
-
 #include <boost/python.hpp>
 #include "pyapplication.hpp"
 #include "pyfuture.hpp"
