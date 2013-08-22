@@ -180,49 +180,50 @@ namespace qi {
   // We received a ServiceInfo, and want to establish a connection
   void Session_Service::onServiceInfoResult(qi::Future<qi::ServiceInfo> result, long requestId, std::string protocol) {
     qiLogDebug() << "Got serviceinfo message";
-    boost::recursive_mutex::scoped_lock sl(_requestsMutex);
-    ServiceRequest *sr = serviceRequest(requestId);
-    if (!sr)
-      return;
-    if (result.hasError()) {
-      sr->promise.setError(result.error());
-      removeRequest(requestId);
-      return;
-    }
-    const qi::ServiceInfo &si = result.value();
-    sr->serviceId = si.serviceId();
-    //empty serviceInfo
-    if (!si.endpoints().size()) {
-      std::stringstream ss;
-      ss << "No endpoints returned for service:" << sr->name << " (id:" << sr->serviceId << ")";
-      qiLogVerbose() << ss.str();
-      sr->promise.setError(ss.str());
-      removeRequest(requestId);
-      return;
-    }
-
-    if (protocol != "")
     {
-      std::vector<qi::Url>::const_iterator it = si.endpoints().begin();
-
-      for (;
-           it != si.endpoints().end() && it->protocol() != protocol;
-           it++)
-      {
-        continue;
+      boost::recursive_mutex::scoped_lock sl(_requestsMutex);
+      ServiceRequest *sr = serviceRequest(requestId);
+      if (!sr)
+        return;
+      if (result.hasError()) {
+        sr->promise.setError(result.error());
+        removeRequest(requestId);
+        return;
+      }
+      const qi::ServiceInfo &si = result.value();
+      sr->serviceId = si.serviceId();
+      //empty serviceInfo
+      if (!si.endpoints().size()) {
+        std::stringstream ss;
+        ss << "No endpoints returned for service:" << sr->name << " (id:" << sr->serviceId << ")";
+        qiLogVerbose() << ss.str();
+        sr->promise.setError(ss.str());
+        removeRequest(requestId);
+        return;
       }
 
-      if (it == si.endpoints().end())
+      if (protocol != "")
       {
-        std::stringstream ss;
-        ss << "No " << protocol << " endpoint available for service:" << sr->name << " (id:" << sr->serviceId << ")";
-        qiLogVerbose("session.service") << ss.str();
-        sr->promise.setError(ss.str());
+        std::vector<qi::Url>::const_iterator it = si.endpoints().begin();
+
+        for (;
+             it != si.endpoints().end() && it->protocol() != protocol;
+             it++)
+        {
+          continue;
+        }
+
+        if (it == si.endpoints().end())
+        {
+          std::stringstream ss;
+          ss << "No " << protocol << " endpoint available for service:" << sr->name << " (id:" << sr->serviceId << ")";
+          qiLogVerbose("session.service") << ss.str();
+          sr->promise.setError(ss.str());
+        }
       }
     }
-
     qiLogDebug() << "Requesting socket from cache";
-    qi::Future<qi::TransportSocketPtr> fut = _socketCache->socket(si, protocol);
+    qi::Future<qi::TransportSocketPtr> fut = _socketCache->socket(result.value(), protocol);
     fut.connect(boost::bind<void>(&Session_Service::onTransportSocketResult, this, _1, requestId));
   }
 
