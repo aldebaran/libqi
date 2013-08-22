@@ -69,14 +69,15 @@ namespace qi { namespace py {
         {
           return boost::python::object(toPyFuture(qi::Future<qi::uint64_t>(r)));
         }
-
         return boost::python::object(r);
       }
 
       boost::python::object disconnect(qi::uint64_t id, bool _async = false) {
-        GILScopedUnlock _unlock;
-        bool r = _sig->disconnect(id);
-        GILScopedLock _lock;
+        bool r;
+        {
+          GILScopedUnlock _unlock;
+          r = _sig->disconnect(id);
+        }
         if (_async)
         {
           return boost::python::object(toPyFuture(qi::Future<bool>(r)));
@@ -86,9 +87,11 @@ namespace qi { namespace py {
       }
 
       boost::python::object disconnectAll(bool _async = false) {
-        GILScopedUnlock _unlock;
-        bool r = _sig->disconnectAll();
-        GILScopedLock _lock;
+        bool r;
+        {
+          GILScopedUnlock _unlock;
+          r = _sig->disconnectAll();
+        }
         if (_async)
         {
           return boost::python::object(toPyFuture(qi::Future<bool>(r)));
@@ -126,15 +129,12 @@ namespace qi { namespace py {
       }
 
       boost::python::object disconnect(qi::uint64_t id, bool _async = false) {
-        GILScopedUnlock _unlock;
-        qi::FutureSync<void> f = _obj->disconnect(id);
-        GILScopedLock _lock;
-        if (_async)
+        qi::Future<void> f;
         {
-          return boost::python::object(toPyFuture(f));
+          GILScopedUnlock _unlock;
+          f = _obj->disconnect(id);
         }
-
-        return boost::python::object(f.value());
+        return toPyFutureAsync(f, _async);
       }
 
       //this function is named trigger in the qi.Signal object,
