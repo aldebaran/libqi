@@ -189,6 +189,7 @@ namespace qi {
   {
     qiLogDebug() << this << " EventLoopThreadPool stop (and done)";
     _stopping = true;
+    _pool->stop();
   }
 
   void* EventLoopThreadPool::nativeHandle()
@@ -338,7 +339,7 @@ namespace qi {
     #define OR(name, val) (name==-1?val:name)
     if (_p)
       return;
-    _p = new EventLoopThreadPool(OR(minWorkers, 2), OR(maxWorkers, 8), OR(minIdleWorkers,1), OR(maxIdleWorkers, 4));
+    _p = new EventLoopThreadPool(OR(minWorkers, 2), OR(maxWorkers, 100), OR(minIdleWorkers,1), OR(maxIdleWorkers, 0));
     #undef OR
     qiLogDebug() << this << " EventLoop startThreadPool done";
   }
