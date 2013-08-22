@@ -10,6 +10,7 @@
 #include <boost/python.hpp>
 #include <qi/future.hpp>
 #include <qitype/anyvalue.hpp>
+#include "gil.hpp"
 #include <boost/smart_ptr/enable_shared_from_this.hpp>
 
 namespace qi {
@@ -69,6 +70,10 @@ namespace qi {
     boost::python::object toPyFutureAsync(qi::Future<T> fut, bool async) {
       if (async)
         return boost::python::object(toPyFuture(fut));
+      {
+        GILScopedUnlock _;
+        fut.wait();
+      }
       qi::AnyReference r(fut.value());
       return r.to<boost::python::object>(); //throw on error
     }
@@ -77,7 +82,10 @@ namespace qi {
     inline boost::python::object toPyFutureAsync<void>(qi::Future<void> fut, bool async) {
       if (async)
         return boost::python::object(toPyFuture(fut));
-      fut.value(); //wait for the result
+      {
+        GILScopedUnlock _;
+        fut.value(); //wait for the result
+      }
       return boost::python::object(); //throw on error
     }
 
