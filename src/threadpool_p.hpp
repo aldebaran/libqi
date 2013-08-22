@@ -30,6 +30,8 @@ namespace qi
       bool schedule(const boost::function<void(void)>& f);
       void notifyManager();
       void waitForAll();
+      void stop();
+      void reset();
 
       std::map<boost::thread::id, boost::thread*> _threadsMap;
       qi::Atomic<unsigned int>                    _activeWorkers;
@@ -51,8 +53,9 @@ namespace qi
       boost::mutex                                _managerMutex;
       boost::mutex                                _terminatedThreadsMutex;
       std::queue<boost::thread::id>               _terminatedThreads;
-      std::queue<boost::function<void(void)>* >    _tasks;
+      std::queue<boost::function<void(void)>* >   _tasks;
       boost::thread                               _manager;
+      bool                                        _closing;
 
   };
 }

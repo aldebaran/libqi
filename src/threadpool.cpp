@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 Aldebaran Robotics. All rights reserved.
+ * Copyright (c) 2012, 2013 Aldebaran Robotics. All rights reserved.
  * Use of this source code is governed by a BSD-style license that can be
  * found in the COPYING file.
  */
@@ -39,12 +39,14 @@ namespace qi
       _tasks(),
       /* _manager must be the last initialized */
       // warning C4355: 'this' : used in base member initializer list
-      _manager (boost::thread(boost::bind(&ThreadPoolPrivate::manageThreads, this)))
+      _manager (boost::thread(boost::bind(&ThreadPoolPrivate::manageThreads, this))),
+      _closing(false)
   {
   }
 
   ThreadPoolPrivate::~ThreadPoolPrivate()
   {
+    stop();
     _manager.interrupt();
     _manager.join();
 
@@ -57,6 +59,29 @@ namespace qi
     }
   }
 
+  void ThreadPoolPrivate::stop() {
+    //clear the task list and block schedule from adding more threads!
+    {
+      boost::mutex::scoped_lock lock(_tasksMutex);
+      while (!_tasks.empty())
+      {
+        boost::function<void(void)> *task = _tasks.front();
+        _tasks.pop();
+        if (task)
+          delete task;
+      }
+      _closing = true;
+    }
+  }
+
+  void ThreadPoolPrivate::reset() {
+    stop();
+    {
+      boost::mutex::scoped_lock lock(_tasksMutex);
+      _closing = false;
+    }
+  }
+
   void ThreadPoolPrivate::notifyManager()
   {
     _managerCondition.notify_all();
@@ -66,7 +91,8 @@ namespace qi
   {
     {
       boost::mutex::scoped_lock lock(_tasksMutex);
-
+      if (_closing)
+        return false;
       _tasks.push(new  boost::function<void(void)>(f));
     }
     _tasksCondition.notify_one();
@@ -214,9 +240,10 @@ namespace qi
       }
 
       /* Check if we have too much threads */
-      if (((*_workers - *_activeWorkers) > _maxIdleWorkers) || (*_workers > _maxWorkers))
-        _tasksCondition.notify_all();
-
+      if (_maxIdleWorkers != 0) {
+        if (((*_workers - *_activeWorkers) > _maxIdleWorkers) || (*_workers > _maxWorkers))
+          _tasksCondition.notify_all();
+      }
       /* Join and free terminated threads */
       while (!_terminatedThreads.empty())
       {
@@ -315,6 +342,14 @@ namespace qi
   unsigned int ThreadPool::getMaxIdleWorkers() const
   {
     return _p->_maxIdleWorkers;
+  }
+
+  void ThreadPool::stop() {
+    _p->stop();
+  }
+
+  void ThreadPool::reset() {
+    _p->reset();
   }
 
   unsigned int ThreadPool::getMinWorkers() const

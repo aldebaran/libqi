@@ -48,6 +48,12 @@ namespace qi
       /// Returns minimum number of inactive workers in the pool.
       unsigned int getMaxIdleWorkers() const;
 
+      /// Stop the threadpool, no more will be accepted
+      void stop();
+
+      /// Put the threadpool back in a state where it accept request
+      void reset();
+
       /// Sleeps until all tasks are completed
       void waitForAll();
 
