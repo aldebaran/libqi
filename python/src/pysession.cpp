@@ -39,8 +39,12 @@ qi::AnyReference triggerBouncer(qi::SignalBase *sig, const std::vector<qi::AnyRe
       }
 
       ~PySession() {
-        _ses->connected.disconnect(nSigConnected);
-        _ses->disconnected.disconnect(nSigDisconnected);
+        {
+          GILScopedUnlock _unlock;
+          _ses->connected.disconnect(nSigConnected);
+          _ses->disconnected.disconnect(nSigDisconnected);
+          _ses.reset();
+        }
       }
 
 
