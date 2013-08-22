@@ -13,12 +13,13 @@
 #include "gil.hpp"
 #include "error.hpp"
 #include "pyfuture.hpp"
+#include "pythreadsafeobject.hpp"
 
 qiLogCategory("py.signal");
 
 namespace qi { namespace py {
 
-    static qi::AnyReference pysignalCb(const std::vector<qi::AnyReference>& cargs, boost::python::object callable) {
+    static qi::AnyReference pysignalCb(const std::vector<qi::AnyReference>& cargs, const PyThreadSafeObject& callable) {
       GILScopedLock _lock;
       boost::python::list   args;
       boost::python::object ret;
@@ -27,7 +28,7 @@ namespace qi { namespace py {
       for (it = cargs.begin(); it != cargs.end(); ++it) {
         args.append(it->to<boost::python::object>());
       }
-      PY_CATCH_ERROR(ret = callable(*boost::python::tuple(args)));
+      PY_CATCH_ERROR(ret = callable.object()(*boost::python::tuple(args)));
       return qi::AnyReference(ret).clone();
     }
 
@@ -57,10 +58,13 @@ namespace qi { namespace py {
       }
 
       boost::python::object connect(boost::python::object callable, bool _async = false) {
-        GILScopedUnlock _unlock;
-        //no need to store a ptr on ourself. (this exist if the callback is triggered)
-        qi::uint64_t r = _sig->connect(qi::AnyFunction::fromDynamicFunction(boost::bind(pysignalCb, _1, callable)));
-        GILScopedLock _lock;
+        PyThreadSafeObject obj(callable);
+        qi::uint64_t r;
+        {
+          GILScopedUnlock _unlock;
+          //no need to store a ptr on ourself. (this exist if the callback is triggered)
+          r = _sig->connect(qi::AnyFunction::fromDynamicFunction(boost::bind(pysignalCb, _1, obj)));
+        }
         if (_async)
         {
           return boost::python::object(toPyFuture(qi::Future<qi::uint64_t>(r)));
@@ -111,16 +115,14 @@ namespace qi { namespace py {
       }
 
       boost::python::object connect(boost::python::object callable, bool _async = false) {
-        GILScopedUnlock _unlock;
-        //no need to store a ptr on ourself. (this exist if the callback is triggered)
-        qi::FutureSync<SignalLink> f = _obj->connect(_sigid, qi::AnyFunction::fromDynamicFunction(boost::bind(pysignalCb, _1, callable)));
-        GILScopedLock _lock;
-        if (_async)
+        PyThreadSafeObject obj(callable);
+        qi::Future<SignalLink> f;
         {
-          return boost::python::object(toPyFuture(f));
+          GILScopedUnlock _unlock;
+          //no need to store a ptr on ourself. (this exist if the callback is triggered)
+          f = _obj->connect(_sigid, qi::AnyFunction::fromDynamicFunction(boost::bind(pysignalCb, _1, obj)));
         }
-
-        return boost::python::object(f.value());
+        return toPyFutureAsync(f, _async);
       }
 
       boost::python::object disconnect(qi::uint64_t id, bool _async = false) {
@@ -185,7 +187,6 @@ namespace qi { namespace py {
           .def("connect", &PyProxySignal::connect, (boost::python::arg("callback"), boost::python::arg("_async") = false))
           .def("disconnect", &PyProxySignal::disconnect, (boost::python::arg("id"), boost::python::arg("_async") = false))
           .def("__call__", boost::python::raw_function(&signal_param_shrinker<PyProxySignal>));
-
     }
 
   }
