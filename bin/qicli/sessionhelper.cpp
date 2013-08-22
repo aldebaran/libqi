@@ -112,13 +112,15 @@ std::list<std::string> SessionHelper::getMatchingServices(const std::string &pat
         || _servicesInfos[i].name() == pattern)
     {
       matchingServices.push_back(_servicesInfos[i].name());
-      return matchingServices;
+      break;
     }
     if (byPassService(_servicesInfos[i].name(), getHidden))
       continue;
     if (qi::os::fnmatch(pattern, _servicesInfos[i].name()))
       matchingServices.push_back(_servicesInfos[i].name());
   }
+  if (matchingServices.empty())
+    std::cout << "No matching services found for pattern: " << pattern << std::endl;
   return matchingServices;
 }
 

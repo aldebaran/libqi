@@ -54,13 +54,15 @@ std::list<std::string> ServiceHelper::getMatchingMembersName(const std::map<unsi
     if (it.second.name() == pattern)
     {
       metaMemberVec.push_back(it.second.name());
-      return metaMemberVec;
+      break;
     }
     if (byPassMember(it.second.name(), it.second.uid(), getHidden))
       continue;
     if (qi::os::fnmatch(pattern, it.second.name()))
       metaMemberVec.push_back(it.second.name());
   }
+  if (metaMemberVec.empty())
+    std::cout << _name << ": No matching members found for pattern: " << pattern << std::endl;
   return metaMemberVec;
 }
 
