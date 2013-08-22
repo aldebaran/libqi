@@ -226,22 +226,56 @@ def test_future_exception():
     f.addCallback(raising)
     p.setValue(42)
 
+# This test doesn't assert, it's only segfault check
+# No segfault => no bug
+def test_future_many_callback(nbr_fut = 10000):
+    def callback(f):
+        pass
+
+    for _ in xrange(nbr_fut):
+        p = Promise()
+        f = p.future()
+        f.addCallback(callback)
+        p.setValue(0)
+
+# This test is ok
+import threading
+def test_many_callback_threaded():
+    nbr_threads = 100
+    thr_list = list()
+    for i in xrange(nbr_threads):
+        thr = threading.Thread(target=test_future_many_callback, kwargs={"nbr_fut": 500})
+        thr_list.append(thr)
+
+    for i in xrange(nbr_threads):
+        thr_list[i].start()
+
+    for i in xrange(nbr_threads):
+        thr_list[i].join()
+
+    for i in xrange(nbr_threads):
+        if thr_list[i].isAlive():
+            print "IT IS ALIIIIVE: " + str(i)
+    print "finish"
+
 
 def main():
-    test_many_futures_create()
-    test_future_wait()
-    test_many_futures_wait_cancel()
-    test_many_promises_wait_cancel()
-    test_future_no_timeout()
-    test_future_timeout_immediate()
-    test_future_timeout()
-    test_future_error()
-    test_future_cancel_exception()
-    test_future_callback()
-    test_promise_re_set()
-    test_future_exception()
-    test_future_two_callbacks()
-    test_future_callback_noargs()
+    #test_many_futures_create()
+    #test_future_wait()
+    #test_many_futures_wait_cancel()
+    #test_many_promises_wait_cancel()
+    #test_future_no_timeout()
+    #test_future_timeout_immediate()
+    #test_future_timeout()
+    #test_future_error()
+    #test_future_cancel_exception()
+    #test_future_callback()
+    #test_promise_re_set()
+    #test_future_exception()
+    #test_future_two_callbacks()
+    #test_future_callback_noargs()
+    test_future_many_callback()
+    test_many_callback_threaded()
 
 if __name__ == "__main__":
     main()
