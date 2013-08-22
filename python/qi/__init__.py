@@ -46,6 +46,20 @@ from _qi import Application, FutureState, FutureTimeout, Object, \
                 createObject, registerObjectFactory
 
 _app = Application()
+
+
+#we want to stop all thread before python start destroying
+#module and the like. (this avoid callback calling python while
+#it's destroying)
+def _stopApplication():
+    global _app
+    _app.stop()
+    del _app
+    _app = None
+
+import atexit
+atexit.register(_stopApplication)
+
 #application is a singleton, it should live till the end of the program
 #because it own eventloops
 def Application():
