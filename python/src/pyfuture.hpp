@@ -19,6 +19,7 @@ namespace qi {
   namespace py {
 
     class PyPromise;
+    class PyThreadSafeObject;
     //all blocking function are wrapped here to unlock the GIL while blocking.
     //PyFuture should always be a shared_ptr, because boost::python provide convenient
     //converter between shared_ptr and pyobject refcount. this allow us to get the python
@@ -29,10 +30,12 @@ namespace qi {
       PyFuture();
       PyFuture(const qi::Future<qi::AnyValue>& fut);
       friend class PyPromise;
+      friend void pyFutureCb(const qi::Future<qi::AnyValue>& fut, const PyThreadSafeObject& callable);
+
     public:
       boost::python::object value(int msecs = qi::FutureTimeout_Infinite) const;
       std::string error(int msecs = qi::FutureTimeout_Infinite) const;
-      void addCallback(boost::python::object callable);
+      void addCallback(const boost::python::object &callable);
       FutureState wait(int msecs) const;
       bool        hasError(int msecs) const;
       bool        hasValue(int msecs) const;

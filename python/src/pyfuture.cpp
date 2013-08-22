@@ -11,19 +11,21 @@
 #include <boost/python.hpp>
 #include "gil.hpp"
 #include "error.hpp"
+#include "pythreadsafeobject.hpp"
 
 namespace qi {
   namespace py {
 
-
-
-    static void pyFutureCb(boost::python::object callable, boost::python::object pp) {
+    void pyFutureCb(const qi::Future<qi::AnyValue>& fut, const PyThreadSafeObject& callable) {
       GILScopedLock _lock;
-      PY_CATCH_ERROR(callable(pp));
+      PyFuturePtr pfut(new PyFuture(fut));
+      //reconstruct a pyfuture from the c++ future (the c++ one is always valid here)
+      //both pypromise and pyfuture could have disappeared here.
+      PY_CATCH_ERROR(callable.object()(pfut));
     }
 
     class PyPromise;
-    static void pyFutureCbProm(boost::python::object callable, PyPromise *pp) {
+    static void pyFutureCbProm(const boost::python::object &callable, PyPromise *pp) {
       GILScopedLock _lock;
       PY_CATCH_ERROR(callable(pp));
     }
@@ -67,15 +69,12 @@ namespace qi {
       return qi::Future<qi::AnyValue>::hasValue(msecs);
     }
 
-    void PyFuture::addCallback(boost::python::object callable) {
-
-      //because we use shared_ptr, we get a correct pyObject here.
-      boost::python::object obj(shared_from_this());
-      //we store a ref on ourself, because our future can get out of scope.
-      //so the shared future state will keep a ref on us. When the promise will
-      //be destroyed this will destroy the ref on us.
-      GILScopedUnlock _unlock;
-      connect(boost::bind<void>(&pyFutureCb, callable, obj));
+    void PyFuture::addCallback(const boost::python::object &callable) {
+      PyThreadSafeObject obj(callable);
+      {
+        GILScopedUnlock _unlock;
+        connect(boost::bind<void>(&pyFutureCb, _1, obj));
+      }
     }
 
     PyPromise::PyPromise()
