@@ -18,7 +18,6 @@
 namespace qi {
   namespace py {
 
-    extern void pyFutureCb(boost::python::object callable, qi::Future<qi::AnyValue>& pp);
     class PyPromise;
     //all blocking function are wrapped here to unlock the GIL while blocking.
     //PyFuture should always be a shared_ptr, because boost::python provide convenient
@@ -30,7 +29,6 @@ namespace qi {
       PyFuture();
       PyFuture(const qi::Future<qi::AnyValue>& fut);
       friend class PyPromise;
-      friend void pyFutureCb(boost::python::object callable, qi::Future<qi::AnyValue>& pp);
     public:
       boost::python::object value(int msecs = qi::FutureTimeout_Infinite) const;
       std::string error(int msecs = qi::FutureTimeout_Infinite) const;
