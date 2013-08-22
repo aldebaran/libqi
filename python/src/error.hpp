@@ -19,7 +19,7 @@
    {                                                        \
      DO;                                                    \
    }                                                        \
-   catch (const boost::python::error_already_set &e)        \
+   catch (const boost::python::error_already_set &)         \
    {                                                        \
      qiLogError("python") << PyFormatError();               \
    }
