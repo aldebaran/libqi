@@ -21,6 +21,7 @@ add_library(_qi SHARED src/boostpymain.cpp
                    src/pyobjectconverter.cpp
                    src/pyproperty.cpp
                    src/pyproperty.hpp
+                   src/pythreadsafeobject.hpp
                    src/pysignal.cpp
                    src/pysignal.hpp
                    src/pyservicedirectory.hpp
