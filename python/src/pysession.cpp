@@ -49,34 +49,59 @@ qi::AnyReference triggerBouncer(qi::SignalBase *sig, const std::vector<qi::AnyRe
 
       //return a future, or None (and throw in case of error)
       boost::python::object connect(const std::string &url, bool _async=false) {
-        GILScopedUnlock _unlock;
-        return toPyFutureAsync(_ses->connect(url), _async);
+        qi::Future<void> fut;
+        {
+          GILScopedUnlock _unlock;
+          fut = _ses->connect(url);
+        }
+        return toPyFutureAsync(fut, _async);
       }
 
       //return a future, or None (and throw in case of error)
       boost::python::object close(bool _async=false) {
-        GILScopedUnlock _unlock;
-        return toPyFutureAsync(_ses->close(), _async);
+        qi::Future<void> fut;
+        {
+          GILScopedUnlock _unlock;
+          fut = _ses->close();
+        }
+        return toPyFutureAsync(fut, _async);
       }
 
       boost::python::object service(const std::string &name, bool _async=false) {
-        GILScopedUnlock _unlock;
-        return toPyFutureAsync(_ses->service(name), _async);
+        qi::Future<qi::AnyObject> fut;
+        {
+          GILScopedUnlock _unlock;
+          fut = _ses->service(name);
+        }
+        return toPyFutureAsync(fut, _async);
       }
 
       boost::python::object services(bool _async=false) {
-        GILScopedUnlock _unlock;
-        return toPyFutureAsync(_ses->services(), _async);
+        qi::Future< std::vector<ServiceInfo> > fut;
+        {
+          GILScopedUnlock _unlock;
+          fut = _ses->services();
+        }
+        return toPyFutureAsync(fut, _async);
       }
 
       boost::python::object registerService(const std::string &name, boost::python::object obj, bool _async=false) {
-        GILScopedUnlock _unlock;
-        return toPyFutureAsync(_ses->registerService(name, qi::AnyReference(obj).toObject()), _async);
+        qi::AnyObject anyobj = qi::AnyReference(obj).toObject();
+        qi::Future<unsigned int> fut;
+        {
+          GILScopedUnlock _unlock;
+          fut = _ses->registerService(name, anyobj);
+        }
+        return toPyFutureAsync(fut, _async);
       }
 
       boost::python::object unregisterService(const unsigned int &id, bool _async=false) {
-        GILScopedUnlock _unlock;
-        return toPyFutureAsync(_ses->unregisterService(id), _async);
+        qi::Future<void> fut;
+        {
+          GILScopedUnlock _unlock;
+          fut = _ses->unregisterService(id);
+        }
+        return toPyFutureAsync(fut, _async);
       }
 
     private:
