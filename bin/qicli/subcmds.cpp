@@ -182,7 +182,7 @@ int subCmd_watch(int argc, char **argv, const MainOptions &options)
       ("time,t", "Print time")
       ("hidden", "watch hidden signals if they match the given pattern")
       ("continue", "continue on error")
-      ("almemory,m", "watch ALMemory events")
+      ("almemory", "watch ALMemory events")
       ("help,h", "Print this help message and exit");
 
   po::positional_options_description positionalOptions;
