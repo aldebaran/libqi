@@ -51,7 +51,10 @@ struct ToPyObject
 
   void visitInt(qi::int64_t value, bool isSigned, int byteSize)
   {
-    result = toO(PyLong_FromLongLong(static_cast<long long>(value)));
+    if (byteSize == 0)
+      result = toO(PyBool_FromLong(static_cast<long>(value)));
+    else
+      result = toO(PyLong_FromLongLong(static_cast<long long>(value)));
   }
 
   void visitFloat(double value, int byteSize)
