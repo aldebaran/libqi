@@ -47,6 +47,13 @@ class ServiceTest:
         print "ploK"
         return name[index]
 
+    @qi.bind(qi.Dynamic, qi.AnyArguments)
+    def special(self, *args):
+        print "args:", args
+
+    def special2(self, *args):
+        print "args2:", args
+
 def get_servicedirectory_address():
     """ Parse command line arguments
 

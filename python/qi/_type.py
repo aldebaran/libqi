@@ -62,3 +62,10 @@ class Dynamic(object):
 
 class Buffer(object):
     signature = 'r'
+
+#yes this look similar to Dynamic but it's not.
+#eg: qi.bind(Void, (Dynamic, Dynamic))  this mean a tuple of two dynamic.
+#eg: qi.bind(Void, AnyArguments)        this is not a tuple. (m not in tuple, mean anythings)
+#eg: qi.bind(Void, Dynamic)             this is a function with one argument
+class AnyArguments(object):
+    signature = 'm'

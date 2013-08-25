@@ -23,6 +23,7 @@
 """
 
 import types
+from _type import AnyArguments
 
 class bind():
   def __init__(self, retType, paramsType, methodName = None):
@@ -43,6 +44,8 @@ class bind():
     else:
       if isinstance(paramsType, types.TupleType) or isinstance(paramsType, types.ListType):
         self._sig = "(%s)" % "".join([x.signature for x in paramsType])
+      elif isinstance(paramsType, AnyArguments) or issubclass(paramsType, AnyArguments):
+        self._sig = "m"
       else:
         self._sig = "(%s)" % paramsType.signature
 
