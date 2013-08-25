@@ -199,6 +199,53 @@ namespace qi { namespace py {
       (void)obj;
     }
 
+    void registerMethod(qi::DynamicObjectBuilder& gob, const std::string &key, boost::python::object& m, const std::string& qisig)
+    {
+      qi::MetaMethodBuilder mmb;
+      mmb.setName(key);
+      boost::python::object desc = m.attr("__doc__");
+      boost::python::object pyqiretsig = boost::python::getattr(m, "__qi_return_signature__", boost::python::object());
+      if (desc)
+        mmb.setDescription(boost::python::extract<std::string>(desc));
+      boost::python::object inspect = importInspect();
+      //returns: (args, varargs, keywords, defaults)
+      boost::python::object tu = inspect.attr("getargspec")(m);
+      int argsz = boost::python::len(tu[0]);
+
+      argsz = argsz > 0 ? argsz - 1 : 0;
+
+      if (argsz < 0) {
+        qiLogError() << "Method " << key << " is missing the self argument.";
+        return;
+      }
+      std::stringstream ss;
+      ss << "(";
+      for (int i = 0; i < argsz; ++i)
+        ss << "m";
+      ss << ")";
+      qiLogDebug() << "Adding method: " << ss.str();
+      if (!qisig.empty())
+        mmb.setParametersSignature(qisig);
+      else
+        mmb.setParametersSignature(ss.str());
+
+      std::string qiretsig;
+      if (pyqiretsig) {
+        boost::python::extract<std::string> e(pyqiretsig);
+        if (e.check())
+          qiretsig = e();
+        else
+          qiLogWarning() << "Return signature for " << key << "is not a string";
+      }
+
+      if (!qiretsig.empty())
+        mmb.setReturnSignature(qiretsig);
+      else
+        mmb.setReturnSignature("m");
+
+      gob.xAdvertiseMethod(mmb, qi::AnyFunction::fromDynamicFunction(boost::bind(pyCallMethod, _1, m)));
+    }
+
     qi::AnyObject makeQiAnyObject(boost::python::object obj)
     {
       //is that a qi::AnyObject?
@@ -216,33 +263,27 @@ namespace qi { namespace py {
       for (int i = 0; i < boost::python::len(attrs); ++i) {
         std::string key = boost::python::extract<std::string>(attrs[i]);
         boost::python::object m = obj.attr(attrs[i]);
+
+        boost::python::object pyqiname = boost::python::getattr(m, "__qi_name__", boost::python::object());
+        boost::python::object pyqisig = boost::python::getattr(m, "__qi_signature__", boost::python::object());
+        std::string qisig;
+
+        if (pyqisig) {
+          boost::python::extract<std::string> e(pyqisig);
+          if (e.check())
+            qisig = e();
+        }
+        if (qisig == "DONOTBIND")
+          continue;
+        //override name by the one provide by @bind
+        if (pyqiname) {
+          boost::python::extract<std::string> e(pyqiname);
+          if (e.check())
+            key = e();
+        }
+
         if (PyMethod_Check(m.ptr())) {
-          qi::MetaMethodBuilder mmb;
-          mmb.setName(key);
-          boost::python::object desc = m.attr("__doc__");
-          if (desc)
-            mmb.setDescription(boost::python::extract<std::string>(desc));
-          boost::python::object inspect = importInspect();
-          //returns: (args, varargs, keywords, defaults)
-          boost::python::object tu = inspect.attr("getargspec")(m);
-          int argsz = boost::python::len(tu[0]);
-
-          argsz = argsz > 0 ? argsz - 1 : 0;
-
-          if (argsz < 0) {
-            qiLogError() << "Method " << key << " is missing the self argument.";
-            continue;
-          }
-          std::stringstream ss;
-          ss << "(";
-          for (int i = 0; i < argsz; ++i)
-            ss << "m";
-          ss << ")";
-          qiLogDebug() << "Adding method: " << ss.str();
-          mmb.setName(key);
-          mmb.setParametersSignature(ss.str());
-          mmb.setReturnSignature("m");
-          gob.xAdvertiseMethod(mmb, qi::AnyFunction::fromDynamicFunction(boost::bind(pyCallMethod, _1, m)));
+          registerMethod(gob, key, m, qisig);
           continue;
         }
 

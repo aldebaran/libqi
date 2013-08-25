@@ -1,6 +1,6 @@
 #!/usr/bin/python2
 ##
-## Copyright (C) 2012 Aldebaran Robotics
+## Copyright (C) 2012, 2013 Aldebaran Robotics
 ##
 
 """ Python service providing the famous 'reply::s(s)' function
@@ -37,9 +37,15 @@ class ServiceTest:
         threading.Thread(target=makeIt, args=[p]).run()
         return p.future()
 
+    @qi.nobind
     def nothing(self):
         print "nothing"
         pass
+
+    @qi.bind(qi.String, (qi.String, qi.Int), "plik")
+    def plok(self, name, index):
+        print "ploK"
+        return name[index]
 
 def get_servicedirectory_address():
     """ Parse command line arguments
