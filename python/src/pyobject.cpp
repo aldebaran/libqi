@@ -204,6 +204,39 @@ namespace qi { namespace py {
       (void)obj;
     }
 
+    //get the signature for the function
+    //if vargs => return m
+    //else: return (m...m) with the good number of m
+    std::string generateDefaultParamSignature(const std::string &key, boost::python::object& argspec)
+    {
+      //argspec[0] = args
+      int argsz = boost::python::len(argspec[0]);
+
+      //argspec[1] = name of vargs
+      if (argspec[1])
+      {
+        //m is accept everything
+        return "m";
+      }
+
+      if (argsz == 0) {
+        std::stringstream serr;
+        serr << "Method " << key << " is missing the self argument.";
+        throw std::runtime_error(serr.str());
+      }
+
+      //drop self.
+      argsz = argsz - 1;
+
+      std::stringstream ss;
+
+      ss << "(";
+      for (int i = 0; i < argsz; ++i)
+        ss << "m";
+      ss << ")";
+      return ss.str();
+    }
+
     void registerMethod(qi::DynamicObjectBuilder& gob, const std::string &key, boost::python::object& m, const std::string& qisig)
     {
       qi::MetaMethodBuilder mmb;
@@ -215,24 +248,15 @@ namespace qi { namespace py {
       boost::python::object inspect = importInspect();
       //returns: (args, varargs, keywords, defaults)
       boost::python::object tu = inspect.attr("getargspec")(m);
-      int argsz = boost::python::len(tu[0]);
 
-      argsz = argsz > 0 ? argsz - 1 : 0;
 
-      if (argsz < 0) {
-        qiLogError() << "Method " << key << " is missing the self argument.";
-        return;
-      }
-      std::stringstream ss;
-      ss << "(";
-      for (int i = 0; i < argsz; ++i)
-        ss << "m";
-      ss << ")";
-      qiLogDebug() << "Adding method: " << ss.str();
+      std::string defparamsig = generateDefaultParamSignature(key, tu);
+
+      qiLogDebug() << "Adding method: " << defparamsig;
       if (!qisig.empty())
         mmb.setParametersSignature(qisig);
       else
-        mmb.setParametersSignature(ss.str());
+        mmb.setParametersSignature(defparamsig);
 
       std::string qiretsig;
       if (pyqiretsig) {
