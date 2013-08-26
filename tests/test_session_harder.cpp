@@ -22,6 +22,8 @@
 #include <boost/thread.hpp>
 #include <testsession/testsessionpair.hpp>
 
+qiLogCategory("test");
+
 struct MyStruct {
   int i;
   int j;
@@ -90,7 +92,6 @@ TEST(QiSession, RegisterUnregisterTwoSession)
         continue;
       }
       std::string ret = fut.value()->call<std::string>("reply", "plif");
-      std::cout << "ret:" << ret << std::endl;
     }
     catch(const std::exception& e)
     {
@@ -163,7 +164,6 @@ TEST(QiSession, RegisterUnregisterTwoSessionStruct)
       ASSERT_EQ(ms.i, ret.value().i);
       ASSERT_EQ(ms.j, ret.value().j);
       ASSERT_EQ(ms.titi, ret.value().titi);
-      std::cout << "returned" << std::endl;
     }
      catch(const std::exception& e)
     {
@@ -208,7 +208,6 @@ TEST(QiSession, RegisterUnregisterSameSessionStruct)
       ASSERT_EQ(ms.i, ret.value().i);
       ASSERT_EQ(ms.j, ret.value().j);
       ASSERT_EQ(ms.titi, ret.value().titi);
-      std::cout << "returned" << std::endl;
     }
     catch(const std::exception& e)
     {
@@ -252,6 +251,8 @@ TEST(QiSession, ConnectToMultipleConstellation)
 
   f = traveler.connect(constellation3.serviceDirectoryEndpoints()[0].str());
   f.wait(3000);
+  if (f.hasError())
+    qiLogError() << f.error();
   ASSERT_TRUE(!f.hasError());
   proxy = constellation3.server()->service("test3");
   res = proxy->call<std::string>("reply", "plaf");

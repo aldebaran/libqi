@@ -20,6 +20,8 @@
 #include <qi/application.hpp>
 #include <testsession/testsessionpair.hpp>
 
+qiLogCategory("test");
+
 qi::Atomic<int> nThreadFinished;
 void create_session(bool bare)
 {
@@ -161,6 +163,8 @@ TEST(QiSession, testClose)
 
   f = session.connect(sd.endpoints()[0]);
   f.wait(3000);
+  if (f.hasError())
+    qiLogError() << f.error();
   ASSERT_TRUE(!f.hasError());
 
   EXPECT_ANY_THROW(session.unregisterService(idx.value()));
