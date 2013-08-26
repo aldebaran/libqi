@@ -87,6 +87,7 @@ namespace qi {
               getDefaultThreadPoolEventLoop()->post(boost::bind(_onResult[i], future));
             else
               _onResult[i](future);
+          } catch(const qi::PointerLockException&) { // do nothing
           } catch(const std::exception& e) {
             qiLogError("qi.future") << "Exception caught in future callback "
                                     << e.what();

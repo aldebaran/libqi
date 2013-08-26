@@ -71,11 +71,12 @@ namespace qi
     bool                      _wasDestroyed;
   };
 
+  class QI_API PointerLockException: public std::exception {};
 #ifdef DOXYGEN
   /** Bind a set of arguments or placeholders to a function.
   *
-  * Handles boost::weak_ptr and qi::Trackable:
-  * will try to lock and do nothing in case of failure
+  * Handles first function argument of kind boost::weak_ptr and qi::Trackable:
+  * will try to lock and throw qi::PointerLockException in case of failure
   */
   template<typename RF, typename AF> boost::function<RF> bind(const AF& fun, ...);
 #endif

@@ -85,9 +85,10 @@ namespace qi
     {
     public:
       typedef typename boost::function_types::result_type<F>::type Result;
-      LockAndCall(const WT& arg, boost::function<F> func)
+      LockAndCall(const WT& arg, boost::function<F> func, bool throwOnLockFailure)
       : _wptr(arg)
       , _f(func)
+      , _throwOnLockFailure(throwOnLockFailure)
       {}
 
 #define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma) \
@@ -99,12 +100,16 @@ namespace qi
         if (s)                                     \
           return _f(AUSE);                        \
         else                                       \
-          return Result();                         \
+          if (_throwOnLockFailure)                 \
+            throw PointerLockException();            \
+          else                                      \
+            return Result();                        \
       }
       QI_GEN(genCall)
 #undef genCall
       WT _wptr;
       boost::function<F> _f;
+      bool _throwOnLockFailure;
     };
 
     template<typename T, bool IS_TRACKABLE> struct BindTransform
@@ -115,7 +120,7 @@ namespace qi
         return arg;
       }
       template<typename F>
-      static boost::function<F> wrap(const T& arg, boost::function<F> func)
+      static boost::function<F> wrap(const T& arg, boost::function<F> func, bool throwOnLockFailure)
       {
         return func;
       }
@@ -131,9 +136,9 @@ namespace qi
         return arg.lock().get();
       }
       template<typename F>
-      static boost::function<F> wrap(const boost::weak_ptr<T>& arg, boost::function<F> func)
+      static boost::function<F> wrap(const boost::weak_ptr<T>& arg, boost::function<F> func, bool throwOnLockFailure)
       {
-        return LockAndCall<boost::weak_ptr<T>, boost::shared_ptr<T>, F>(arg, func);
+        return LockAndCall<boost::weak_ptr<T>, boost::shared_ptr<T>, F>(arg, func, throwOnLockFailure);
       }
     };
 
@@ -146,9 +151,9 @@ namespace qi
         return arg;
       }
       template<typename F>
-      static boost::function<F> wrap(T*const & arg, boost::function<F> func)
+      static boost::function<F> wrap(T*const & arg, boost::function<F> func, bool throwOnLockFailure)
       {
-        return LockAndCall<boost::weak_ptr<T>, boost::shared_ptr<T>, F>(arg->weakPtr(), func);
+        return LockAndCall<boost::weak_ptr<T>, boost::shared_ptr<T>, F>(arg->weakPtr(), func, throwOnLockFailure);
       }
     };
   }
@@ -165,8 +170,8 @@ template<typename RF, typename AF, typename ARG0 comma ATYPEDECL>      \
   {                                                                      \
     typedef typename detail::BindTransform<ARG0, boost::is_base_of<TrackableBase, typename boost::remove_pointer<ARG0>::type>::value> Transform;     \
     typename Transform::type transformed = Transform::transform(arg0);   \
-    boost::function<RF> f = boost::bind(fun, transformed comma AUSE);           \
-    return Transform::wrap(arg0, f);                                     \
+    boost::function<RF> f = boost::bind(fun, transformed comma AUSE);    \
+    return Transform::wrap(arg0, f, true);                               \
   }
   QI_GEN(genCall)
 #undef genCall
