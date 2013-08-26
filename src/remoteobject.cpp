@@ -103,7 +103,7 @@ namespace qi {
         TransportSocket::ALL_OBJECTS,
         boost::bind<void>(&RemoteObject::onMessagePending, this, _1));
       _linkDisconnected      = _socket->disconnected.connect (
-         boost::bind(&RemoteObject::onSocketDisconnected, this, _1)).track(weakPtr());
+         &RemoteObject::onSocketDisconnected, weakPtr(), _1);
     }
   }
 

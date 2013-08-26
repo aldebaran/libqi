@@ -289,7 +289,7 @@ TEST(QiService, GenericProperty)
   // test event
   int hit = 0;
   qiLogVerbose() << "Connecting to signal";
-  ASSERT_NE(qi::SignalBase::invalidSignalLink, prop->signal()->connect(boost::bind(&inc, &hit, _1)));
+  ASSERT_NE(qi::SignalBase::invalidSignalLink, prop->signal()->connect((boost::function<void(int)>)boost::bind(&inc, &hit, _1)));
   ASSERT_NE(qi::SignalBase::invalidSignalLink, obj->connect("offset", boost::bind(&inc, &hit, _1)));
   ASSERT_NE(qi::SignalBase::invalidSignalLink, client->connect("offset", boost::bind(&inc, &hit, _1)));
   qiLogVerbose() << "Triggering prop set";
@@ -336,12 +336,19 @@ TEST(QiService, RemoteServiceRegistrationAfterDisconnection)
 
   // Disconnect the provider, it should unregister any related services
   p.server()->close();
-  p.server()->connect(p.serviceDirectoryEndpoints()[0]);
+  qi::Future<void> fc = p.server()->connect(p.serviceDirectoryEndpoints()[0]);
+  fc.wait(1000);
+  if (fc.hasError())
+    qiLogError() << fc.error();
+  ASSERT_TRUE(fc.hasValue());
 
   // Register the object again with the provider, find it back from the client
-  p.server()->registerService("Bar", barAsObject);
+  ASSERT_NO_THROW(p.server()->registerService("Bar", barAsObject));
 
-  barAsRemoteService = p.client()->service("Bar");
+  qi::Future<qi::AnyObject> f = p.client()->service("Bar");
+  f.wait(1000);
+  ASSERT_TRUE(f.hasValue());
+  barAsRemoteService = f.value();
 
   ASSERT_TRUE(barAsRemoteService != NULL);
 }
