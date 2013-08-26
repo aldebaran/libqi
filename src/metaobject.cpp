@@ -490,7 +490,7 @@ namespace qi {
              << " " << std::setw(offset) << name << std::setw(0);
     }
 
-    void printMetaObject(std::ostream &stream, const qi::MetaObject &mobj, bool color, bool showHidden, bool showDoc) {
+    void printMetaObject(std::ostream &stream, const qi::MetaObject &mobj, bool color, bool showHidden, bool showDoc, bool raw) {
       qi::MetaObject::MethodMap   methods = mobj.methodMap();
       qi::MetaObject::SignalMap   events = mobj.signalMap();
       qi::MetaObject::PropertyMap props = mobj.propertyMap();
@@ -507,10 +507,14 @@ namespace qi {
         if (bypass(itMM->second.name(), itMM->second.uid(), showHidden))
           continue;
         printIdName(stream, color, offsetMeth, itMM->second.uid(), itMM->second.name());
-        stream << " " << FC(StreamColor_Blue, color) << itMM->second.returnSignature().toPrettySignature() << FC(StreamColor_Reset, color)
-               << " " << FC(StreamColor_Yellow, color) << itMM->second.parametersSignature().toPrettySignature() << FC(StreamColor_Reset, color)
-               << std::endl;
-
+        if (raw)
+          stream << " " << FC(StreamColor_Blue, color) << itMM->second.returnSignature().toString() << FC(StreamColor_Reset, color)
+                 << " " << FC(StreamColor_Yellow, color) << itMM->second.parametersSignature().toString() << FC(StreamColor_Reset, color)
+                 << std::endl;
+        else
+          stream << " " << FC(StreamColor_Blue, color) << itMM->second.returnSignature().toPrettySignature() << FC(StreamColor_Reset, color)
+                 << " " << FC(StreamColor_Yellow, color) << itMM->second.parametersSignature().toPrettySignature() << FC(StreamColor_Reset, color)
+                 << std::endl;
         if (!showDoc)
           continue;
         if (itMM->second.description() != "")
