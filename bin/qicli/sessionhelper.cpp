@@ -20,7 +20,7 @@ SessionHelper::~SessionHelper()
   _session.close();
 }
 
-void SessionHelper::info(const std::vector<std::string> &patternVec, bool verbose, bool showHidden, bool showDoc)
+void SessionHelper::info(const std::vector<std::string> &patternVec, bool verbose, bool showHidden, bool showDoc, bool showRaw)
 {
   std::set<std::string> matchServs;
 
@@ -37,7 +37,7 @@ void SessionHelper::info(const std::vector<std::string> &patternVec, bool verbos
   for (unsigned int j = 0; j < _servicesInfos.size(); ++j)
     BOOST_FOREACH(const std::string &it, matchServs)
       if (it == _servicesInfos[j].name())
-        showServiceInfo(_servicesInfos[j], verbose, showHidden, showDoc);
+        showServiceInfo(_servicesInfos[j], verbose, showHidden, showDoc, showRaw);
 }
 
 void SessionHelper::call(const std::string &pattern, const std::vector<std::string> &argList, bool hidden, bool json, bool cont)
@@ -149,7 +149,7 @@ SessionHelper::MatchMap SessionHelper::getMatchMap(const std::vector<std::string
   return matchMap;
 }
 
-void SessionHelper::showServiceInfo(const qi::ServiceInfo &infos, bool verbose, bool showHidden, bool showDoc)
+void SessionHelper::showServiceInfo(const qi::ServiceInfo &infos, bool verbose, bool showHidden, bool showDoc, bool showRaw)
 {
   std::cout << qi::StreamColor_Fuchsia
             << std::right << std::setw(3) << std::setfill('0')
@@ -178,7 +178,7 @@ void SessionHelper::showServiceInfo(const qi::ServiceInfo &infos, bool verbose, 
   try
   {
     ServiceHelper service = getServiceHelper(infos.name());
-    qi::details::printMetaObject(std::cout, service.objPtr()->metaObject(), true, showHidden, showDoc);
+    qi::details::printMetaObject(std::cout, service.objPtr()->metaObject(), true, showHidden, showDoc, showRaw);
   }
   catch (...)
   {

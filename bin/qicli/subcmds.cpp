@@ -18,7 +18,8 @@ int subCmd_info(int argc, char **argv, const MainOptions &options)
       ("list,l", "List services (default when no service specified)")
       ("details,d", "print service info, methods, signals and properties")
       ("hidden", "show hidden services, methods, signals and properties")
-      ("show-doc", "show documentation for methods, signals and properties");
+      ("show-doc", "show documentation for methods, signals and properties")
+      ("raw-signature", "show the raw signature");
 
   po::positional_options_description positionalOptions;
   positionalOptions.add("service", -1);
@@ -45,7 +46,7 @@ int subCmd_info(int argc, char **argv, const MainOptions &options)
     serviceList.push_back("*");
 
   SessionHelper session(options.address);
-  session.info(serviceList, details, vm.count("hidden"), vm.count("show-doc"));
+  session.info(serviceList, details, vm.count("hidden"), vm.count("show-doc"), vm.count("raw-signature"));
   return 0;
 }
 
