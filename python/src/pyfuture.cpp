@@ -21,9 +21,9 @@ namespace qi {
     }
 
     class PyPromise;
-    static void pyFutureCbProm(const boost::python::object &callable, PyPromise *pp) {
+    static void pyFutureCbProm(const PyThreadSafeObject &callable, PyPromise *pp) {
       GILScopedLock _lock;
-      PY_CATCH_ERROR(callable(pp));
+      PY_CATCH_ERROR(callable.object()(pp));
     }
 
 
@@ -78,7 +78,7 @@ namespace qi {
     }
 
     PyPromise::PyPromise(boost::python::object callable)
-      : qi::Promise<qi::AnyValue> (boost::bind<void>(&pyFutureCbProm, callable, this))
+      : qi::Promise<qi::AnyValue> (boost::bind<void>(&pyFutureCbProm, PyThreadSafeObject(callable), this))
     {
     }
 
