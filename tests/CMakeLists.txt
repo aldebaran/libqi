@@ -26,6 +26,7 @@ qimessaging_create_session_test(test_call_many            SRC test_call_many.cpp
 qimessaging_create_session_test(test_session              SRC test_session.cpp              DEPENDS QI QIMESSAGING GTEST TESTSESSION TIMEOUT 30)
 qimessaging_create_session_test(test_session_harder       SRC test_session_harder.cpp       DEPENDS QI QIMESSAGING GTEST TESTSESSION TIMEOUT 10)
 qimessaging_create_session_test(test_call                 SRC test_call.cpp                 DEPENDS QI QIMESSAGING GTEST TESTSESSION TIMEOUT 20)
+qimessaging_create_session_test(test_autoservice          SRC test_autoservice.cpp          DEPENDS QI QIMESSAGING GTEST TESTSESSION TIMEOUT 30)
 #qi_create_gtest(test_application          SRC test_application.cpp          DEPENDS QI QIMESSAGING GTEST TIMEOUT 2)
 qi_create_gtest(test_metavalue_argument   SRC test_metavalue_argument.cpp   DEPENDS QI QIMESSAGING GTEST TIMEOUT 10)
 qi_create_gtest(test_testsession          SRC test_testsession.cpp          DEPENDS QI QIMESSAGING GTEST TESTSESSION TIMEOUT 2)
