@@ -19,6 +19,11 @@ ObjectHost::ObjectHost(unsigned int service)
  ObjectHost::~ObjectHost()
  {
    onDestroy();
+   // deleting our map will trigger calls to removeObject
+   // so does clear() while iterating
+   ObjectMap map;
+   std::swap(map, _objectMap);
+   map.clear();
  }
 
 void ObjectHost::onMessage(const qi::Message &msg, TransportSocketPtr socket)
@@ -54,11 +59,14 @@ void ObjectHost::removeObject(unsigned int id)
   *  removing our ref on BoundAnyObject.
   */
   boost::recursive_mutex::scoped_lock lock(_mutex);
-  ObjectMap::iterator it = _objectMap.find(id);
-  if (it == _objectMap.end())
-    return;
-  BoundAnyObject obj = it->second;
-  _objectMap.erase(it);
+  BoundAnyObject obj;
+  {
+    ObjectMap::iterator it = _objectMap.find(id);
+    if (it == _objectMap.end())
+      return;
+    obj = it->second;
+    _objectMap.erase(it);
+  }
 }
 
 void ObjectHost::clear()
