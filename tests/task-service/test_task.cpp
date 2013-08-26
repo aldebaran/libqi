@@ -117,7 +117,7 @@ struct Context
   std::vector<TaskProxyPtr> tasks;
 };
 
-void on_step(const std::string& s, unsigned& i)
+void on_step(const std::string& s, qi::Atomic<int>& i)
 {
   //std::cerr << "##STEP " << s << std::endl;
   ++i;
@@ -145,7 +145,7 @@ TEST_F(TestTask, ManyManyTasks)
   }
   qiLogInfo() << "Setup clients: " << (qi::os::ustime() - time) << std::endl;
   time = qi::os::ustime();
-  unsigned counter = 0;
+  qi::Atomic<int> counter;
   for (unsigned i=0; i<NCLIENTS; ++i)
   {
     for (unsigned j=0; j<NTASKS; ++j)
@@ -161,9 +161,9 @@ TEST_F(TestTask, ManyManyTasks)
   qiLogInfo() << "Setup tasks: " << (qi::os::ustime() - time) << std::endl;
   time = qi::os::ustime();
   taskGenProxy->step(1);
-  for (unsigned step=0; step<1000 && counter < TOTAL_CLIENTS; ++step)
+  for (unsigned step=0; step<1000 && *counter < TOTAL_CLIENTS; ++step)
     qi::os::msleep(5);
-  ASSERT_EQ(counter, TOTAL_CLIENTS);
+  ASSERT_EQ(*counter, TOTAL_CLIENTS);
   std::cerr << "Run: " << (qi::os::ustime() - time) << std::endl;
   // Teardown
   for (unsigned i=0; i<NCLIENTS; ++i)
