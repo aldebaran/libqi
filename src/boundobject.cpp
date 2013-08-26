@@ -235,7 +235,10 @@ namespace qi {
       }
         break;
       case Message::Type_Post: {
-        obj->metaPost(funcId, mfp);
+        if (obj == _self) // we need a sync call (see comment above), post does not provide it
+          obj->metaCall(funcId, mfp, MetaCallType_Direct);
+        else
+          obj->metaPost(funcId, mfp);
       }
         break;
       default:
