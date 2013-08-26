@@ -7,7 +7,3 @@ qi_install_program(src/idl.py)
 if (NOT ANDROID)
   qi_install_python(src/shlib.py)
 endif()
-
-if(NOT APPLE AND NOT I_AM_A_ROBOT AND NOT ANDROID)
-  add_subdirectory("tests")
-endif()
