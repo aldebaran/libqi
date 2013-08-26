@@ -49,14 +49,11 @@ namespace qi {
     SignalBase(const SignalBase& b);
     SignalBase& operator = (const SignalBase& b);
     virtual qi::Signature signature() const;
-
-    template<typename FUNCTION_TYPE>
-    SignalSubscriber& connect(FUNCTION_TYPE f, MetaCallType model=MetaCallType_Auto);
-
-    SignalSubscriber& connect(qi::AnyObject target, unsigned int slot);
-    SignalSubscriber& connect(AnyFunction callback, MetaCallType model=MetaCallType_Auto);
+    template<typename F>
+    SignalSubscriber& connect(const boost::function<F>& func);
     SignalSubscriber& connect(const SignalSubscriber& s);
-
+    SignalSubscriber& connect(AnyObject object, const unsigned int slot);
+    SignalSubscriber& connect(AnyObject object, const std::string& slot);
     bool disconnectAll();
 
     /** Disconnect a SignalHandler. The associated callback will not be called
@@ -103,12 +100,6 @@ namespace qi {
     friend class SignalBasePrivate;
   };
 
-  template<typename FUNCTION_TYPE>
-  inline SignalSubscriber& SignalBase::connect(FUNCTION_TYPE  callback, MetaCallType model)
-  {
-    return connect(AnyFunction::from(callback), model);
-  }
-
   template<typename T>
   class SignalF: public SignalBase, public boost::function<T>
   {
@@ -125,26 +116,45 @@ namespace qi {
     virtual qi::Signature signature() const;
     using boost::function<T>::operator();
 
-    inline SignalSubscriber& connect(boost::function<T> f, MetaCallType model=MetaCallType_Auto)
-    {
-      return SignalBase::connect(f, model);
-    }
-    inline SignalSubscriber& connect(AnyFunction f, MetaCallType model=MetaCallType_Auto)
-    {
-      return SignalBase::connect(f, model);
-    }
-    /// Auto-disconnects on target destruction
-    inline SignalSubscriber& connect(qi::AnyObject target, unsigned int slot)
-    {
-      return SignalBase::connect(target, slot);
-    }
-    template<typename U>
-    inline SignalSubscriber& connect(SignalF<U>& signal);
-    /// IF O is a shared_ptr, will auto-disconnect if object is destroyed
-    template<typename O, typename MF>
-    inline SignalSubscriber& connect(O* target, MF method, MetaCallType model=MetaCallType_Auto);
-    template<typename O, typename MF>
-    inline SignalSubscriber& connect(boost::shared_ptr<O> target, MF method, MetaCallType model=MetaCallType_Auto);
+#ifdef DOXYGEN
+    /** Connect a subscriber to this signal.
+    *
+    * Multiple forms can be used:
+    * - connect(function, argOrPlaceholder1, argOrPlaceholder2, ...)
+    *   Where function is a function or callable object (such as a boost::function).
+    *   If the first argument is a weak ptr or inherits qi::Trackable, the slot
+    *   will automatically disconnect if object is no longuer available.
+    * - connect(AnyObject target, unsigned int slot)
+    * - connect(AnyObject target, const std::string& slotName)
+    * - connect(AnyFunction func)
+    * - connect(const SignalSubscriber&)
+    * - connect(qi::Signal<U>& otherSignal)
+    *
+    * @return a SignalSubscriber object. This object can be implicitly
+    * converted to a SignalLink.
+    */
+    SignalSubscriber& connect(...);
+#else
+
+   template<typename CALLABLE> SignalSubscriber& connect(CALLABLE c);
+   SignalSubscriber& connect(AnyFunction func);
+   SignalSubscriber& connect(const SignalSubscriber& sub);
+   SignalSubscriber& connect(const boost::function<T>& func);
+   template<typename U> SignalSubscriber&  connect(SignalF<U>& signal);
+
+
+   #define genConnect(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma) \
+   template<typename F, typename P comma ATYPEDECL>            \
+   SignalSubscriber& connect(F func, P p comma ADECL)         \
+   {                                                            \
+     return connect(::qi::bind<T>(func, p comma AUSE));         \
+   }
+   QI_GEN(genConnect)
+   #undef genConnect
+
+   SignalSubscriber& connect(AnyObject obj, unsigned int slot);
+   SignalSubscriber& connect(AnyObject obj, const std::string& slot);
+#endif
   };
 
 namespace detail
@@ -183,18 +193,6 @@ template<
 #define QI_SIGNAL_TEMPLATE_DECL typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename P6, typename P7
 #define QI_SIGNAL_TEMPLATE P0,P1,P2,P3,P4,P5,P6,P7
 
-  namespace detail
-  {
-    /// Interface for a weak-lock recursive mechanism: if lock fail, unregister callback
-    class WeakLock
-    {
-    public:
-      virtual ~WeakLock(){}
-      virtual bool tryLock() = 0;
-      virtual void unlock() = 0;
-      virtual WeakLock* clone() = 0;
-    };
-  }
 
  /** Event subscriber info.
   *
@@ -205,18 +203,12 @@ template<
  {
  public:
    SignalSubscriber()
-     : source(0), linkId(SignalBase::invalidSignalLink), weakLock(0), target(0), method(0), enabled(true)
+     : source(0), linkId(SignalBase::invalidSignalLink), target(0), method(0), enabled(true)
    {}
 
-   SignalSubscriber(AnyFunction func, MetaCallType model=MetaCallType_Auto, detail::WeakLock* lock = 0);
 
+   SignalSubscriber(AnyFunction func, MetaCallType callType = MetaCallType_Auto);
    SignalSubscriber(qi::AnyObject target, unsigned int method);
-
-   template<typename O, typename MF>
-   SignalSubscriber(O* ptr, MF function, MetaCallType model=MetaCallType_Auto);
-
-   template<typename O, typename MF>
-   SignalSubscriber(boost::shared_ptr<O> ptr, MF function, MetaCallType model=MetaCallType_Auto);
 
    SignalSubscriber(const SignalSubscriber& b);
 
@@ -232,9 +224,7 @@ template<
     */
    void call(const GenericFunctionParameters& args, MetaCallType callType);
 
-   /// Auto-disconnect if \p ptr cannot be locked
-   template<typename T>
-   SignalSubscriber& track(boost::weak_ptr<T> ptr);
+   SignalSubscriber& setCallType(MetaCallType ct);
 
    //wait till all threads are inactive except the current thread.
    void waitForInactive();
@@ -254,7 +244,6 @@ template<
    // Target information, kept here to be able to introspect a Subscriber
    //   Mode 1: Direct functor call
    AnyFunction       handler;
-   detail::WeakLock* weakLock; // try to acquire weakLocker, disconnect if cant
    MetaCallType      threadingModel;
 
    //  Mode 2: metaCall

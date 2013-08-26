@@ -20,25 +20,24 @@ qiLogCategory("qitype.signal");
 namespace qi {
 
   SignalSubscriber::SignalSubscriber(qi::AnyObject target, unsigned int method)
-  : weakLock(0), threadingModel(MetaCallType_Direct),  target(new qi::ObjectWeakPtr(target)), method(method), enabled(true)
+  : threadingModel(MetaCallType_Direct),  target(new qi::ObjectWeakPtr(target)), method(method), enabled(true)
   { // The slot has its own threading model: be synchronous
   }
 
 
 
-  SignalSubscriber::SignalSubscriber(AnyFunction func, MetaCallType model, detail::WeakLock* lock)
-     : handler(func), weakLock(lock), threadingModel(model), target(0), method(0), enabled(true)
+  SignalSubscriber::SignalSubscriber(AnyFunction func, MetaCallType model)
+     : handler(func), threadingModel(model), target(0), method(0), enabled(true)
    {
    }
 
   SignalSubscriber::~SignalSubscriber()
   {
     delete target;
-    delete weakLock;
   }
 
   SignalSubscriber::SignalSubscriber(const SignalSubscriber& b)
-  : weakLock(0), target(0)
+  : target(0)
   {
     *this = b;
   }
@@ -48,7 +47,6 @@ namespace qi {
     source = b.source;
     linkId = b.linkId;
     handler = b.handler;
-    weakLock = b.weakLock?b.weakLock->clone():0;
     threadingModel = b.threadingModel;
     target = b.target?new ObjectWeakPtr(*b.target):0;
     method = b.method;
@@ -191,8 +189,6 @@ namespace qi {
       (*sub)->removeActive(true);
       params->destroy();
       delete params;
-      if ((*sub)->weakLock)
-        (*sub)->weakLock->unlock();
       delete sub;
     }
 
@@ -206,16 +202,6 @@ namespace qi {
     // this is held alive by caller
     if (handler)
     {
-      // Try to acquire weakLock, for both the sync and async cases
-      if (weakLock)
-      {
-        bool locked = weakLock->tryLock();
-        if (!locked)
-        {
-          source->disconnect(linkId);
-          return;
-        }
-      }
       bool async = true;
       if (threadingModel != MetaCallType_Auto)
         async = (threadingModel == MetaCallType_Queued);
@@ -246,9 +232,15 @@ namespace qi {
           addActive(false);
         }
         //do not throw
+        bool mustDisconnect = false;
         try
         {
           handler(args);
+        }
+        catch(const qi::PointerLockException&)
+        {
+          qiLogDebug() << "PointerLockFailure excepton, will disconnect";
+          mustDisconnect = true;
         }
         catch(const std::exception& e)
         {
@@ -258,9 +250,9 @@ namespace qi {
         {
           qiLogWarning() << "Unknown exception caught from signal subscriber";
         }
-        if (weakLock)
-          weakLock->unlock();
         removeActive(true);
+        if (mustDisconnect)
+          source->disconnect(linkId);
       }
     }
     else if (target)
@@ -325,11 +317,6 @@ namespace qi {
         activeThreads.pop_back();
       }
     }
-  }
-
-  SignalSubscriber& SignalBase::connect(AnyFunction callback, MetaCallType model)
-  {
-    return connect(SignalSubscriber(callback, model));
   }
 
   SignalSubscriber& SignalBase::connect(qi::AnyObject o, unsigned int slot)
@@ -538,6 +525,20 @@ namespace qi {
       it = subscriberMap.begin();
     }
     return ret;
+  }
+
+  SignalSubscriber& SignalBase::connect(AnyObject obj, const std::string& slot)
+  {
+    const MetaObject& mo = obj->metaObject();
+    const MetaSignal* sig = mo.signal(slot);
+    if (sig)
+      return connect(SignalSubscriber(obj, sig->uid()));
+    std::vector<MetaMethod> method = mo.findMethod(slot);
+    if (method.empty())
+      throw std::runtime_error("No match found for slot " + slot);
+    if (method.size() > 1)
+      throw std::runtime_error("Ambiguous slot name " + slot);
+    return connect(SignalSubscriber(obj, method.front().uid()));
   }
 
   QITYPE_API const SignalLink SignalBase::invalidSignalLink = ((unsigned int)-1);

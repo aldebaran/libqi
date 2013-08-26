@@ -70,7 +70,7 @@ TEST(TestSignal, SharedPtr)
   // Redundant with Copy test, but just to be sure, check that shared_ptr
   // is correctly transmited.
   qi::Signal<boost::shared_ptr<int> > sig;
-  sig.connect(qi::AnyFunction::from(&write42), qi::MetaCallType_Queued);
+  sig.connect(qi::AnyFunction::from(&write42)).setCallType(qi::MetaCallType_Queued);
   {
     boost::shared_ptr<int> ptr(new int(12));
     sig(ptr);
@@ -89,7 +89,7 @@ TEST(TestSignal, Copy)
   // Check that reference argument type are copied when an async call is made
   qi::Signal<int&, bool*> sig;
   qiLogDebug() << "sync";
-  sig.connect(qi::AnyFunction::from(byRef), qi::MetaCallType_Direct);
+  sig.connect(qi::AnyFunction::from(byRef)).setCallType(qi::MetaCallType_Direct);
   bool done = false;
   int i = 0;
   qiLogDebug() << "iref is " << &i;
@@ -98,7 +98,7 @@ TEST(TestSignal, Copy)
   //ASSERT_EQ(0, i); // byref, but still copies for small types
   qiLogDebug() << "async";
   sig =  qi::Signal<int&, bool*>();
-  sig.connect(qi::AnyFunction::from(byRef), qi::MetaCallType_Queued);
+  sig.connect(qi::AnyFunction::from(byRef)).setCallType(qi::MetaCallType_Queued);
   i = 0;
   done = false;
   qiLogDebug() << "done is " << &done;
@@ -114,7 +114,7 @@ TEST(TestSignal, AutoDisconnect)
   int r = 0;
   boost::shared_ptr<Foo> foo(new Foo());
   qi::Signal<int*, int> sig;
-  sig.connect(foo, &Foo::func1, qi::MetaCallType_Direct);
+  sig.connect(&Foo::func1, boost::weak_ptr<Foo>(foo), _1, _2).setCallType(qi::MetaCallType_Direct);
   sig(&r, 0);
   ASSERT_EQ(1, r);
   foo.reset();
@@ -122,32 +122,14 @@ TEST(TestSignal, AutoDisconnect)
   ASSERT_EQ(1, r);
 }
 
-TEST(TestSignal, AutoDisconnectTrack)
-{
-  // Test auto-disconnect using external tracker
-  int r = 0;
-  boost::shared_ptr<int> s(new int(2));
-  Foo* ptr = new Foo();
-  qi::Signal<int*, int> sig;
-  sig.connect(ptr, &Foo::func1, qi::MetaCallType_Direct).track(boost::weak_ptr<int>(s));
-  sig(&r, 0);
-  ASSERT_EQ(1, r);
-  sig(&r, 1);
-  ASSERT_EQ(2, r);
-  s.reset();
-  sig(&r, 1);
-  ASSERT_EQ(2, r);
-}
-
-
 TEST(TestSignal, BadArity)
 {
+  // Test runtime detection of arity errors
   qi::Signal<> s;
-  // caught at compile-time by signal<T>
-  ASSERT_EQ(qi::SignalBase::invalidSignalLink, ((qi::SignalBase&)s).connect(&foo));
-  //idem
-  ASSERT_EQ(qi::SignalBase::invalidSignalLink, ((qi::SignalBase&)s).connect(&foo2));
-  ASSERT_EQ(qi::SignalBase::invalidSignalLink, s.connect((Foo*)0, &Foo::func1));
+  // avoid using s.connect() which will catch the problem at compile-time
+  ASSERT_EQ(qi::SignalBase::invalidSignalLink, s.connect(qi::SignalSubscriber(qi::AnyFunction::from(&foo))));
+  ASSERT_EQ(qi::SignalBase::invalidSignalLink, s.connect(qi::SignalSubscriber(qi::AnyFunction::from(&foo2))));
+  ASSERT_EQ(qi::SignalBase::invalidSignalLink, s.connect(qi::AnyFunction::from(  (boost::function<void(int*, int)>)boost::bind(&Foo::func1, (Foo*)0, _1, _2))));
 }
 
 void lol(int v, int& target)

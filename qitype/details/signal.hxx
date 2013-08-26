@@ -13,100 +13,52 @@
 
 namespace qi
 {
-  namespace detail
+
+
+  template<typename T>
+  SignalSubscriber& SignalF<T>::connect(AnyFunction f)
   {
-
-    template<typename T>
-    class BoostWeakPointerLock: public WeakLock
-    {
-    public:
-      BoostWeakPointerLock(typename boost::weak_ptr<T> ptr)
-      : lockCount(0)
-      , weakPointer(ptr)
-      {
-      }
-
-      bool tryLock()
-      {
-        ++lockCount;
-        sharedPointer = weakPointer.lock();
-        return sharedPointer;
-      }
-
-      void unlock()
-      {
-        if (!--lockCount)
-          sharedPointer.reset();
-      }
-
-      WeakLock* clone()
-      {
-        return new BoostWeakPointerLock(weakPointer);
-      }
-    private:
-      qi::Atomic<int>  lockCount;
-      boost::shared_ptr<T> sharedPointer;
-      boost::weak_ptr<T>   weakPointer;
-    };
-
-    // Subscriber from unknown pointer type and member function
-    template<typename O, typename MF>
-    class SignalSubscriberHelper
-    {
-    public:
-      static void set(SignalSubscriber& sub, O ptr, MF function)
-      {
-        sub.handler = AnyFunction::from(function, ptr);
-        sub.weakLock = 0;
-      }
-    };
-
-    // Subscriber from shared pointer and member function
-    template<typename O, typename MF>
-    class SignalSubscriberHelper<boost::shared_ptr<O>, MF>
-    {
-    public:
-      static void set(SignalSubscriber& sub, boost::shared_ptr<O> ptr, MF function)
-      {
-        // bind the pointer, not the shared ptr
-        sub.handler = AnyFunction::from(function, ptr.get());
-        // Register a locker on the weak pointer
-        sub.weakLock = new BoostWeakPointerLock<O>(ptr);
-
-      }
-    };
+    return SignalBase::connect(SignalSubscriber(f));
+  }
+  template<typename T>
+  SignalSubscriber& SignalF<T>::connect(const SignalSubscriber& sub)
+  {
+    return SignalBase::connect(sub);
+  }
+  template<typename T>
+  template<typename U>
+  SignalSubscriber&  SignalF<T>::connect(SignalF<U>& signal)
+  {
+    return connect((boost::function<U>&)signal);
+  }
+  template<typename T>
+  SignalSubscriber& SignalF<T>::connect(const boost::function<T>& fun)
+  {
+    return connect(AnyFunction::from(fun));
+  }
+  template<typename F>
+  SignalSubscriber& SignalBase::connect(const boost::function<F>& fun)
+  {
+    return connect(AnyFunction::from(fun));
+  }
+  template<typename T>
+  template<typename CALLABLE>
+  SignalSubscriber&  SignalF<T>::connect(CALLABLE c)
+  {
+    return connect((boost::function<T>)c);
+  }
+  template<typename T>
+  SignalSubscriber& SignalF<T>::connect(AnyObject obj, const std::string& slot)
+  {
+    return SignalBase::connect(obj, slot);
   }
 
   template<typename T>
-  template<typename O, typename MF>
-  inline SignalSubscriber& SignalF<T>::connect(O* target, MF method, MetaCallType threadingModel)
+  SignalSubscriber& SignalF<T>::connect(AnyObject obj, unsigned int slot)
   {
-    return SignalBase::connect(SignalSubscriber(target, method, threadingModel));
+    return connect(SignalSubscriber(obj, slot));
   }
 
-  template<typename T>
-  template<typename O, typename MF>
-  inline SignalSubscriber& SignalF<T>::connect(boost::shared_ptr<O> target, MF method, MetaCallType threadingModel)
-  {
-    return SignalBase::connect(SignalSubscriber(target, method, threadingModel));
-  }
-
-  template<typename O, typename MF>
-  SignalSubscriber::SignalSubscriber(O* ptr, MF function, MetaCallType model)
-  {
-    enabled = true;
-    target = 0;
-    threadingModel = model;
-    detail::SignalSubscriberHelper<O*, MF>::set(*this, ptr, function);
-  }
-  template<typename O, typename MF>
-  SignalSubscriber::SignalSubscriber(boost::shared_ptr<O> ptr, MF function, MetaCallType model)
-  {
-    enabled = true;
-    target = 0;
-    threadingModel = model;
-    detail::SignalSubscriberHelper<boost::shared_ptr<O>, MF>::set(*this, ptr, function);
-  }
   namespace detail
   {
 
@@ -167,19 +119,10 @@ namespace qi
     return detail::functionArgumentsSignature<T>();
   }
 
-  template<typename T>
-  template<typename U>
-  SignalSubscriber& SignalF<T>::connect(SignalF<U>& signal)
+  inline
+  SignalSubscriber& SignalSubscriber::setCallType(MetaCallType ct)
   {
-    return connect((boost::function<U>&)signal);
-  }
-
-  template<typename T>
-  SignalSubscriber& SignalSubscriber::track(boost::weak_ptr<T> ptr)
-  {
-    if (weakLock)
-      throw std::runtime_error("Only one weak lock supported");
-    weakLock = new detail::BoostWeakPointerLock<T>(ptr);
+    threadingModel = ct;
     return *this;
   }
 } // qi
