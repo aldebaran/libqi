@@ -244,7 +244,7 @@ def test_many_callback_threaded():
     nbr_threads = 100
     thr_list = list()
     for i in xrange(nbr_threads):
-        thr = threading.Thread(target=test_future_many_callback, kwargs={"nbr_fut": 500})
+        thr = threading.Thread(target=test_future_many_callback, kwargs={"nbr_fut": 10})
         thr_list.append(thr)
 
     for i in xrange(nbr_threads):
@@ -260,22 +260,22 @@ def test_many_callback_threaded():
 
 
 def main():
-    #test_many_futures_create()
-    #test_future_wait()
-    #test_many_futures_wait_cancel()
-    #test_many_promises_wait_cancel()
-    #test_future_no_timeout()
-    #test_future_timeout_immediate()
-    #test_future_timeout()
-    #test_future_error()
-    #test_future_cancel_exception()
-    #test_future_callback()
-    #test_promise_re_set()
-    #test_future_exception()
-    #test_future_two_callbacks()
-    #test_future_callback_noargs()
+    test_many_futures_create()
+    test_future_wait()
+    test_many_futures_wait_cancel()
+    test_many_promises_wait_cancel()
+    test_future_no_timeout()
+    test_future_timeout_immediate()
+    test_future_timeout()
+    test_future_error()
+    test_future_cancel_exception()
+    test_future_callback()
+    test_promise_re_set()
+    test_future_exception()
+    test_future_two_callbacks()
+    test_future_callback_noargs()
     test_future_many_callback()
-    test_many_callback_threaded()
+    #test_many_callback_threaded()
 
 if __name__ == "__main__":
     main()
