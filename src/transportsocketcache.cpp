@@ -8,6 +8,16 @@ qiLogCategory("qimessaging.socketcache");
 
 namespace qi {
 
+  template<typename T>
+  void multiSetError(qi::Promise<T>& p, const std::string &err) {
+    try {
+      p.setError(err);
+    } catch (const qi::FutureException& f) {
+      if (f.state() != qi::FutureException::ExceptionState_PromiseAlreadySet)
+        throw;
+    }
+  }
+
   TransportSocketCache::~TransportSocketCache() {
     close();
   }
@@ -40,8 +50,7 @@ namespace qi {
           //remove callback before calling disconnect. (we dont need them)
           if (tscmIt->second.socket->isConnected())
             tscmIt->second.socket->disconnect();
-          tscmIt->second.promise.reset();
-          tscmIt->second.promise.setError("session closed");
+          multiSetError(tscmIt->second.promise, "session closed");
         }
       }
     }
@@ -172,7 +181,7 @@ namespace qi {
       TransportSocketConnectionAttempt& tsca = mamIt->second;
 
       if (_dying) {
-        tsca.promise.setError("TransportSocketCache is closed.");
+        multiSetError(tsca.promise, "TransportSocketCache is closed.");
         return;
       }
 
@@ -188,7 +197,7 @@ namespace qi {
       ss << "Failed to connect to service " << servInfo.name() << " on "
          << "machine " << servInfo.machineId() << ". All endpoints are "
          << "unavailable.";
-      tsca.promise.setError(ss.str());
+      multiSetError(tsca.promise, ss.str());
     } // ! boost::mutex::scoped_lock
   }
 
@@ -216,7 +225,7 @@ namespace qi {
       TransportSocketConnectionAttempt& tsca = mamIt->second;
 
       if (_dying) {
-        tsca.promise.setError("TransportSocketCache is closed.");
+        multiSetError(tsca.promise, "TransportSocketCache is closed.");
         return;
       }
 
