@@ -63,13 +63,6 @@ namespace qi
     //clear the task list and block schedule from adding more threads!
     {
       boost::mutex::scoped_lock lock(_tasksMutex);
-      while (!_tasks.empty())
-      {
-        boost::function<void(void)> *task = _tasks.front();
-        _tasks.pop();
-        if (task)
-          delete task;
-      }
       _closing = true;
     }
   }
