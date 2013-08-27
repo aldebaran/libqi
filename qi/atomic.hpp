@@ -149,13 +149,6 @@ namespace qi
 
 #endif
 
-  template<typename T>
-  class QI_API_DEPRECATED atomic : public Atomic<T>
-  {
-  public:
-    atomic() : Atomic<T>() {}
-    atomic(T value) : Atomic<T>(value) {}
-  };
 }
 
 #endif  // _QI_ATOMIC_HPP_

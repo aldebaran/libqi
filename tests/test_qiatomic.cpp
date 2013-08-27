@@ -39,8 +39,6 @@ void test_type()
 {
   // new API
   sub_test_type<qi::Atomic, T>();
-  // legacy API
-  sub_test_type<qi::atomic, T>();
 }
 
 TEST(QiAtomic, tas)
