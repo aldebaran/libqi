@@ -6,7 +6,7 @@
 # include <qitype/anyobject.hpp>
 # include <qimessaging/session.hpp>
 
-class WatchOptions;
+struct WatchOptions;
 
 class ALMemoryHelper
 {
