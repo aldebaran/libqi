@@ -197,7 +197,7 @@ namespace qi {
         {
           prom.setValue(fut);
         }
-        catch(const FutureException& f)
+        catch(const FutureException&)
         {}
       }
       if (! --*count)
@@ -211,7 +211,7 @@ namespace qi {
           {
             prom.setValue(makeFutureError<T>("No future returned successfully."));
           }
-          catch(const FutureException& f)
+          catch(const FutureException&)
           {}
         }
         delete count;
