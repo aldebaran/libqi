@@ -40,6 +40,7 @@ namespace qi
       unsigned int                                _maxWorkers;
       unsigned int                                _minIdleWorkers;
       unsigned int                                _maxIdleWorkers;
+      bool                                        _warnMaxThd;
 
     private:
       unsigned int getNewThreadsCount();

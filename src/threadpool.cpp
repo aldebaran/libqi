@@ -29,6 +29,7 @@ namespace qi
       _maxWorkers(maxWorkers),
       _minIdleWorkers(minIdleWorkers),
       _maxIdleWorkers(maxIdleWorkers),
+      _warnMaxThd(true),
       _tasksCondition(),
       _managerCondition(),
       _userCondition(),
@@ -231,6 +232,14 @@ namespace qi
           qiLogError() << "creating thread error:" << e.what();
         }
       }
+
+      if (_warnMaxThd && *_workers == _maxWorkers)
+      {
+        _warnMaxThd = false;
+        qiLogWarning() <<  "The maximum number of thread pool workers (" << _maxWorkers << ") was reached.";
+      }
+      if (*_workers < (_maxWorkers - _maxWorkers / 10))
+        _warnMaxThd = true;
 
       /* Check if we have too much threads */
       if (_maxIdleWorkers != 0) {
