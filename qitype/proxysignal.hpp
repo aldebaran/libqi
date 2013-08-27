@@ -28,9 +28,9 @@ namespace qi
     ~ProxySignal();
     void setup(AnyObject object, const std::string& signalName)
     {
-      setOnSubscribers(boost::bind(&ProxySignal<T>::onSubscribe, this, _1,
+      SignalBase::setOnSubscribers(boost::bind(&ProxySignal<T>::onSubscribe, this, _1,
         object.get(), signalName, SignalBase::invalidSignalLink));
-      setTriggerOverride(boost::bind(&ProxySignal<T>::triggerOverride, this, _1, _2,
+      SignalBase::setTriggerOverride(boost::bind(&ProxySignal<T>::triggerOverride, this, _1, _2,
         object.get(), signalName));
     }
     void onSubscribe(bool enable, GenericObject* object, std::string signalName, SignalLink link);
@@ -77,7 +77,7 @@ namespace qi
       link = SignalBase::invalidSignalLink;
     }
     // link change, rebind ourselve
-    setOnSubscribers(boost::bind(&ProxySignal<T>::onSubscribe, this, _1,
+    SignalBase::setOnSubscribers(boost::bind(&ProxySignal<T>::onSubscribe, this, _1,
         object, signalName, link));
   }
 

@@ -65,9 +65,9 @@ namespace qi
   void ProxyProperty<T>::setup(AnyObject object, const std::string& propertyName)
   {
     // signal part
-    setOnSubscribers(boost::bind(&ProxyProperty<T>::onSubscribe, this, _1,
-        object.get(), propertyName, SignalBase::invalidSignalLink));
-    setTriggerOverride(boost::bind(&ProxyProperty<T>::triggerOverride, this, _1, _2,
+    SignalBase::setOnSubscribers(boost::bind(&ProxyProperty<T>::onSubscribe, this, _1,
+      object.get(), propertyName, SignalBase::invalidSignalLink));
+    SignalBase::setTriggerOverride(boost::bind(&ProxyProperty<T>::triggerOverride, this, _1, _2,
       object.get(), propertyName));
 
     // property part
@@ -93,8 +93,8 @@ namespace qi
       link = SignalBase::invalidSignalLink;
     }
     // rebind onSubscribe since link changed
-    setOnSubscribers(boost::bind(&ProxyProperty<T>::onSubscribe, this, _1,
-        object, propertyName, link));
+    SignalBase::setOnSubscribers(boost::bind(&ProxyProperty<T>::onSubscribe, this, _1,
+      object, propertyName, link));
   }
 
   template<typename T>
