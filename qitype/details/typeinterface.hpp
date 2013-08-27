@@ -17,6 +17,12 @@
    when type.hpp is used. (for typeOf to works reliably)
 */
 
+
+#ifdef _MSC_VER
+#  pragma warning( push )
+#  pragma warning( disable: 4251 )
+#endif
+
 namespace qi {
 
 
@@ -135,5 +141,9 @@ namespace qi {
 
 }
 
+
+#ifdef _MSC_VER
+#  pragma warning( pop )
+#endif
 
 #endif  // _QITYPE_DETAILS_TYPEINTERFACE_HPP_
