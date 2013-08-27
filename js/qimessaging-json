@@ -102,13 +102,11 @@ if __name__ == "__main__":
     QI_APP = qi.Application()
     qim.connect(URL)
 
-    ROUTER = tornadio2.router.TornadioRouter(QiMessagingHandler)
+    ROUTER = tornadio2.TornadioRouter(QiMessagingHandler)
 
     SOCK_APP = tornado.web.Application(
       ROUTER.urls,
       socket_io_port = 8002
     )
 
-    tornadio2.server.SocketServer(SOCK_APP, auto_start=False)
-
-    tornado.ioloop.IOLoop.instance().start()
+    tornadio2.server.SocketServer(SOCK_APP)
