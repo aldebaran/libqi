@@ -34,7 +34,7 @@ class ServiceTest:
     def fut(self):
         p = qi.Promise()
         #p.setValue(42)
-        threading.Thread(target=makeIt, args=[p]).run()
+        threading.Thread(target=makeIt, args=[p]).start()
         return p.future()
 
     @qi.nobind
