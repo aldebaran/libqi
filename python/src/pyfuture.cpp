@@ -77,6 +77,11 @@ namespace qi {
     {
     }
 
+    PyPromise::PyPromise(const qi::Promise<qi::AnyValue> &ref)
+      : qi::Promise<qi::AnyValue>(ref)
+    {
+    }
+
     PyPromise::PyPromise(boost::python::object callable)
       : qi::Promise<qi::AnyValue> (boost::bind<void>(&pyFutureCbProm, PyThreadSafeObject(callable), this))
     {
@@ -96,13 +101,6 @@ namespace qi {
       *pfp = qi::Promise<qi::AnyValue>::future();
       return pfp;
     }
-
-    boost::python::object makeFuture(qi::Future<qi::AnyReference> fut) {
-      PyPromise prom;
-      qi::adaptFuture(fut, prom, qi::FutureValueConverterTakeAnyReference<qi::AnyValue>());
-      return boost::python::object(prom.future());
-    }
-
 
     void export_pyfuture() {
       boost::python::enum_<qi::FutureState>("FutureState")

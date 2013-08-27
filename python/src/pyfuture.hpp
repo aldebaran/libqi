@@ -44,6 +44,7 @@ namespace qi {
     class PyPromise: public qi::Promise<qi::AnyValue> {
     public:
       PyPromise();
+      PyPromise(const qi::Promise<qi::AnyValue> &ref);
       PyPromise(boost::python::object callable);
       void setValue(const boost::python::object &pyval);
       PyFuturePtr future();
@@ -94,7 +95,6 @@ namespace qi {
       return toPyFutureAsync(fut.async(), async);
     }
 
-    boost::python::object makeFuture(qi::Future<qi::AnyReference> fut);
     void export_pyfuture();
 
   }
