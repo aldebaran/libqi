@@ -35,11 +35,14 @@ do                                           \
 
 #define PERSIST_ASSERT(code, cond, msdelay)  \
  PERSIST_CHECK(code, cond, ASSERT_TRUE, msdelay)
+
 #define PERSIST_EXPECT(code, cond, msdelay)  \
  PERSIST_CHECK(code, cond, EXPECT_TRUE, msdelay)
+
+//cast to void to avoid unused warning.
 #define PERSIST(code, cond, msdelay)  \
- PERSIST_CHECK(code, cond, ,msdelay)
- 
+  PERSIST_CHECK(code, cond, (void),msdelay)
+
 qiLogCategory("test");
 
 class Foo
