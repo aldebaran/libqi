@@ -8,6 +8,11 @@
 #include "staticobjecttype.hpp"
 #include "anyobject_p.hpp"
 
+#ifdef _MSC_VER
+#  pragma warning( push )
+#  pragma warning( disable: 4355 )
+#endif
+
 qiLogCategory("qitype.object");
 
 namespace qi {
@@ -452,3 +457,9 @@ namespace qi {
     }
   }
 }
+
+
+#ifdef _MSC_VER
+#  pragma warning( pop )
+#endif
+
