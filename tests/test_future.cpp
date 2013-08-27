@@ -19,6 +19,11 @@
 #include <boost/lambda/lambda.hpp>
 #include <boost/lambda/bind.hpp>
 
+#ifdef _MSC_VER
+#  pragma warning( push )
+#  pragma warning( disable: 4355 )
+#endif
+
 qiLogCategory("test");
 class SetValue: private boost::noncopyable
 {
@@ -944,3 +949,7 @@ int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }
+
+#ifdef _MSC_VER
+#  pragma warning( pop )
+#endif
