@@ -96,7 +96,6 @@ class QiMessagingHandler(tornadio2.conn.SocketConnection):
 
     def on_close(self):
         self.qim.close()
-        self.qim = None
         print("[%d] Disconnected" % (self.sid))
 
 if __name__ == "__main__":
