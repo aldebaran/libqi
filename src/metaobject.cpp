@@ -108,11 +108,11 @@ namespace qi {
     qi::MetaMethod method = builder.metaMethod();
     NameToIdx::iterator it = _methodsNameToIdx.find(method.toString());
     if (it != _methodsNameToIdx.end()) {
-      qiLogWarning()
-          << "Method("<< it->second << ") already defined (and reused): "
-          << method.toString();
-      return 0;
+      qiLogWarning() << "Method("<< it->second << ") already defined (and overriden): "
+                     << method.toString();
+      return it->second;
     }
+
     if (-1 < uid)
       id = uid;
     else
