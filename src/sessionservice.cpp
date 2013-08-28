@@ -116,21 +116,24 @@ namespace qi {
 
   void Session_Service::onTransportSocketResult(qi::Future<TransportSocketPtr> value, long requestId) {
     qiLogDebug() << "Got transport socket for service";
-    boost::recursive_mutex::scoped_lock sl(_requestsMutex);
-    ServiceRequest *sr = serviceRequest(requestId);
-    if (!sr)
-      return;
+    qi::Future<void> fut;
+    {
+      boost::recursive_mutex::scoped_lock sl(_requestsMutex);
+      ServiceRequest *sr = serviceRequest(requestId);
+      if (!sr)
+        return;
 
-    if (value.hasError()) {
-      sr->promise.setError(value.error());
-      removeRequest(requestId);
-      return;
+      if (value.hasError()) {
+        sr->promise.setError(value.error());
+        removeRequest(requestId);
+        return;
+      }
+
+      sr->remoteObject = new qi::RemoteObject(sr->serviceId, value.value());
+
+      //ask the remoteObject to fetch the metaObject
+      fut = sr->remoteObject->fetchMetaObject();
     }
-
-    sr->remoteObject = new qi::RemoteObject(sr->serviceId, value.value());
-
-    //ask the remoteObject to fetch the metaObject
-    qi::Future<void> fut = sr->remoteObject->fetchMetaObject();
     fut.connect(boost::bind<void>(&Session_Service::onRemoteObjectComplete, this, _1, requestId));
   }
 
