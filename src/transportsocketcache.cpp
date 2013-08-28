@@ -93,7 +93,7 @@ namespace qi {
     {
       boost::mutex::scoped_lock sl(_socketsMutex);
       if (_dying)
-        return qi::makeFutureError<qi::TransportSocketPtr>("TransportSocketCache is closed.", qi::FutureCallbackType_Sync);
+        return qi::makeFutureError<qi::TransportSocketPtr>("TransportSocketCache is closed.");
 
       // From here, we will see if we have a pending/established connection to
       // machineId on one of the endpoints (they all share the same promise
@@ -128,7 +128,7 @@ namespace qi {
 
       // Launching connections to all endpoints at the same time. They all share
       // the same promise.
-      qi::Promise<qi::TransportSocketPtr> prom(qi::FutureCallbackType_Sync);
+      qi::Promise<qi::TransportSocketPtr> prom;
       if (endpoints.empty())
       {
         prom.setError("No endpoint available.");
