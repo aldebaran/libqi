@@ -26,7 +26,7 @@ import types
 from _type import AnyArguments
 
 class bind():
-  def __init__(self, retType, paramsType, methodName = None):
+  def __init__(self, retType, paramsType = None, methodName = None):
     """ bind constructor
 
     .. args::
@@ -35,12 +35,16 @@ class bind():
     #return value
     if isinstance(retType, types.StringType):
       self._retsig = retType
+    elif retType is None:
+      self._retsig = None
     else:
       self._retsig = retType.signature
 
     #parameters
     if isinstance(paramsType, types.StringType):
       self._sig = paramsType
+    elif paramsType is None:
+      self._sig = None
     else:
       if isinstance(paramsType, types.TupleType) or isinstance(paramsType, types.ListType):
         self._sig = "(%s)" % "".join([x.signature for x in paramsType])
@@ -48,7 +52,6 @@ class bind():
         self._sig = "m"
       else:
         self._sig = "(%s)" % paramsType.signature
-
     self._name = methodName
 
   def __call__(self, f):
