@@ -23,6 +23,7 @@
 """
 
 import types
+import inspect
 from _type import AnyArguments
 
 class bind():
@@ -33,25 +34,20 @@ class bind():
        sig : Signature to bind to the function.
     """
     #return value
-    if isinstance(retType, types.StringType):
-      self._retsig = retType
-    elif retType is None:
+    if retType is None:
       self._retsig = None
     else:
-      self._retsig = retType.signature
+      self._retsig = str(retType)
 
     #parameters
-    if isinstance(paramsType, types.StringType):
-      self._sig = paramsType
-    elif paramsType is None:
+    if paramsType is None:
       self._sig = None
+    elif isinstance(paramsType, types.TupleType) or isinstance(paramsType, types.ListType):
+      self._sig = "(%s)" % "".join([str(x) for x in paramsType])
+    elif isinstance(paramsType, AnyArguments) or (inspect.isclass(paramsType) and issubclass(paramsType, AnyArguments)):
+      self._sig = "m"
     else:
-      if isinstance(paramsType, types.TupleType) or isinstance(paramsType, types.ListType):
-        self._sig = "(%s)" % "".join([x.signature for x in paramsType])
-      elif isinstance(paramsType, AnyArguments) or issubclass(paramsType, AnyArguments):
-        self._sig = "m"
-      else:
-        self._sig = "(%s)" % paramsType.signature
+      raise Exception("Invalid types for parameters")
     self._name = methodName
 
   def __call__(self, f):
