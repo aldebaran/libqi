@@ -51,7 +51,7 @@ do                                           \
 #define PERSIST_EXPECT(code, cond, msdelay)  \
  PERSIST_CHECK(code, cond, EXPECT_TRUE, msdelay)
 #define PERSIST(code, cond, msdelay)  \
- PERSIST_CHECK(code, cond, ,msdelay)
+  PERSIST_CHECK(code, cond, (void),msdelay)
 //check for server closed
 //check for socket disconnected
 //check for service unregistered
