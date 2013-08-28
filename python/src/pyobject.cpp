@@ -237,17 +237,17 @@ namespace qi { namespace py {
       return ss.str();
     }
 
-    void registerMethod(qi::DynamicObjectBuilder& gob, const std::string &key, boost::python::object& m, const std::string& qisig)
+    void registerMethod(qi::DynamicObjectBuilder& gob, const std::string& key, boost::python::object& method, const std::string& qisig)
     {
       qi::MetaMethodBuilder mmb;
       mmb.setName(key);
-      boost::python::object desc = m.attr("__doc__");
-      boost::python::object pyqiretsig = boost::python::getattr(m, "__qi_return_signature__", boost::python::object());
+      boost::python::object desc = method.attr("__doc__");
+      boost::python::object pyqiretsig = boost::python::getattr(method, "__qi_return_signature__", boost::python::object());
       if (desc)
         mmb.setDescription(boost::python::extract<std::string>(desc));
       boost::python::object inspect = importInspect();
       //returns: (args, varargs, keywords, defaults)
-      boost::python::object tu = inspect.attr("getargspec")(m);
+      boost::python::object tu = inspect.attr("getargspec")(method);
 
 
       std::string defparamsig = generateDefaultParamSignature(key, tu);
@@ -268,7 +268,7 @@ namespace qi { namespace py {
       else
         mmb.setReturnSignature("m");
 
-      gob.xAdvertiseMethod(mmb, qi::AnyFunction::fromDynamicFunction(boost::bind(pyCallMethod, _1, m)));
+      gob.xAdvertiseMethod(mmb, qi::AnyFunction::fromDynamicFunction(boost::bind(pyCallMethod, _1, method)));
     }
 
     qi::AnyObject makeQiAnyObject(boost::python::object obj)
