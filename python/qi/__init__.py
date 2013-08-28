@@ -45,7 +45,7 @@ from _qi import Application, FutureState, FutureTimeout, Object, \
                 Promise, Property, ServiceDirectory, Session, Signal, \
                 createObject, registerObjectFactory
 
-from _type import Int, Float, String, List, Map, Struct, Object, Dynamic, Buffer, AnyArguments
+from _type import Void, Int, Float, String, List, Map, Struct, Object, Dynamic, Buffer, AnyArguments
 from _binder import bind, nobind
 
 _app = Application()
@@ -80,7 +80,7 @@ __all__ = ["FutureState",
            "createObject",
            "registerObjectFactory",
 
-           "Int", "Float", "String", "List", "Map", "Struct", "Object", "Dynamic", "Buffer", "AnyArguments"
+           "Void", "Int", "Float", "String", "List", "Map", "Struct", "Object", "Dynamic", "Buffer", "AnyArguments"
            "bind", "nobind"
 
 ]
