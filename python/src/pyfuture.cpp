@@ -14,10 +14,9 @@ namespace qi {
 
     void pyFutureCb(const qi::Future<qi::AnyValue>& fut, const PyThreadSafeObject& callable) {
       GILScopedLock _lock;
-      PyFuturePtr pfut(new PyFuture(fut));
       //reconstruct a pyfuture from the c++ future (the c++ one is always valid here)
       //both pypromise and pyfuture could have disappeared here.
-      PY_CATCH_ERROR(callable.object()(pfut));
+      PY_CATCH_ERROR(callable.object()(PyFuture(fut)));
     }
 
     class PyPromise;
@@ -96,10 +95,8 @@ namespace qi {
       }
     }
 
-    PyFuturePtr PyPromise::future() {
-      PyFuturePtr pfp(new PyFuture);
-      *pfp = qi::Promise<qi::AnyValue>::future();
-      return pfp;
+    PyFuture PyPromise::future() {
+      return qi::Promise<qi::AnyValue>::future();
     }
 
     void export_pyfuture() {
@@ -121,7 +118,7 @@ namespace qi {
           .def("setValue", &PyPromise::setValue)
           .def("future", &PyPromise::future);
 
-      boost::python::class_<PyFuture, boost::shared_ptr<PyFuture> >("Future", boost::python::no_init)
+      boost::python::class_<PyFuture>("Future", boost::python::no_init)
           .def("value", &PyFuture::value, (boost::python::args("timeout") = qi::FutureTimeout_Infinite))
           .def("error", &PyFuture::error, (boost::python::args("timeout") = qi::FutureTimeout_Infinite))
           .def("wait", &PyFuture::wait, (boost::python::args("timeout") = qi::FutureTimeout_Infinite))

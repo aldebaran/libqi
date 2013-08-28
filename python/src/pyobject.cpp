@@ -178,9 +178,9 @@ namespace qi { namespace py {
 
         //convert python future to future, to allow the middleware to make magic with it.
         //serverresult will support async return value for call. (call returning future)
-        boost::python::extract< PyFuturePtr > extractor(ret);
+        boost::python::extract< PyFuture* > extractor(ret);
         if (extractor.check()) {
-          PyFuturePtr pfut = extractor();
+          PyFuture* pfut = extractor();
           if (pfut) { //pfut == 0, can mean ret is None.
             qiLogDebug() << "Future detected";
             qi::Future<qi::AnyValue> fut = *pfut;
