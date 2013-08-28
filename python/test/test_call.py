@@ -39,7 +39,7 @@ class FooService:
     def oldname(self):
         return 42
 
-    @qi.bind(qi.Int, (qi.Int, qi.Int))
+    @qi.bind(qi.Int64, (qi.Int32, qi.Int32))
     def add(self, a, b):
         return a + b
 
@@ -53,14 +53,14 @@ class FooService:
         t.start()
         return p.future()
 
-    @qi.bind(qi.Int)
+    @qi.bind(qi.Int32)
     def bind_retfutint(self):
         p = qi.Promise("(i)")
         t = threading.Thread(target=setValue, args=(p,))
         t.start()
         return p.future()
 
-    @qi.bind(qi.Int(1, True))
+    @qi.bind(qi.Int32())
     def retc(self, name, index):
         return name[index]
 
@@ -147,7 +147,7 @@ class Invalid1:
 def test_missingself():
     sd = qi.ServiceDirectory()
     try:
-        sd.listen("tcp://127.0.0.1:9559")
+        sd.listen("tcp://127.0.0.1:0")
         local = sd.endpoints()[0]
 
         print "## TestInvalid (missing self)"
@@ -168,7 +168,7 @@ class Invalid2:
 def test_badbind():
     sd = qi.ServiceDirectory()
     try:
-        sd.listen("tcp://127.0.0.1:9559")
+        sd.listen("tcp://127.0.0.1:0")
         local = sd.endpoints()[0]
 
         print "## TestInvalid (bind: bad return value)"
@@ -182,14 +182,14 @@ def test_badbind():
         sd.close()
 
 class Invalid3:
-    @qi.bind(qi.Int, [42])
+    @qi.bind(qi.Float, [42])
     def titi(self, a):
         pass
 
 def test_badbind2():
     sd = qi.ServiceDirectory()
     try:
-        sd.listen("tcp://127.0.0.1:9559")
+        sd.listen("tcp://127.0.0.1:0")
         local = sd.endpoints()[0]
 
         print "## TestInvalid (bind: bad params value)"

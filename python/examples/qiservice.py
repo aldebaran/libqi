@@ -42,7 +42,7 @@ class ServiceTest:
         print "nothing"
         pass
 
-    @qi.bind(qi.String, (qi.String, qi.Int), "plik")
+    @qi.bind(qi.String, (qi.String, qi.Int32), "plik")
     def plok(self, name, index):
         print "ploK"
         return name[index]

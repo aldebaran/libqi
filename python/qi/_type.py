@@ -12,64 +12,59 @@ class _MetaSignature(type):
 
 #allow print str(Void())
 class _Signature(object):
+    __metaclass__ = _MetaSignature
     def __str__(self):
         return self.signature
 
 class Void(_Signature):
-    __metaclass__ = _MetaSignature
     signature = 'v'
 
+class Bool(_Signature):
+    signature = 'b'
 
-class Int(_Signature):
-    __metaclass__ = _MetaSignature
-    #default sig of type 'l', use ctor to refine
+class Int8(_Signature):
+    signature = 'c'
+
+class UInt8(_Signature):
+    signature = 'C'
+
+class Int16(_Signature):
+    signature = 'w'
+
+class UInt16(_Signature):
+    signature = 'W'
+
+class Int32(_Signature):
+    signature = 'i'
+
+class UInt32(_Signature):
+    signature = 'I'
+
+class Int64(_Signature):
     signature = 'l'
 
-    def __init__(self, size=8, signed=True):
-        #unsigned: UPPER CASE
-        ar = { -8 : 'L',
-               -4 : 'I',
-               -2 : 'W',
-               -1 : 'C',
-                0 : 'b',
-                1 : 'c',
-                2 : 'w',
-                4 : 'i',
-                8 : 'l', }
-        if signed:
-            self.signature = ar[size]
-        else:
-            self.signature = ar[-size]
-
+class UInt64(_Signature):
+    signature = 'L'
 
 class Float(_Signature):
-    __metaclass__ = _MetaSignature
-    #default sig of type 'd', use ctor to refine
+    signature = 'f'
+
+class Double(_Signature):
     signature = 'd'
-    def __init__(self, size=8):
-        if size == 4:
-            self.signature = 'f'
-        elif size == 8:
-            self.signature = 'd'
-        else:
-            raise Exception("Invalid size for float: %d" % (size))
 
 class String(_Signature):
     __metaclass__ = _MetaSignature
     signature = "s"
 
 class List(_Signature):
-    __metaclass__ = _MetaSignature
     def __init__(self, elementType):
         self.signature = "[%s]" % elementType.signature
 
 class Map(_Signature):
-    __metaclass__ = _MetaSignature
     def __init__(self, keyType, elementType):
-        self.signature = "{%s%s}" % (keyType,signature, elementType.signature)
+        self.signature = "{%s%s}" % (keyType.signature, elementType.signature)
 
 class Struct(_Signature):
-    __metaclass__ = _MetaSignature
     def __init__(self, fields):
         self.signature = "(%s)" % fields.join("")
 
