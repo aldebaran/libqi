@@ -402,11 +402,16 @@ namespace qi {
       if (!ti)
         qiLogWarning() << "setValue(): cannot construct type for signature " << sig.toString();
       std::pair<AnyReference, bool> conv = value.convert(ti);
-      if (!conv.first.type)
-        qiLogWarning() << "Setvalue(): failed to convert effective value "
-          << value.type->signature().toString()
-          << " to expected type "
-          << sig.toString();
+      if (!conv.first.type) {
+        std::stringstream ss;
+        ss << "Setvalue(): failed to convert effective value "
+           << value.type->signature().toString()
+           << " to expected type "
+           << sig.toString();
+        qiLogWarning() << ss.str();
+        setType(qi::Message::Type_Error);
+        setError(ss.str());
+      }
       else
         encodeBinary(&_p->buffer, conv.first, boost::bind(serializeObject, _1, context));
       if (conv.second)
