@@ -8,6 +8,7 @@
 #define _SRC_SESSIONSERVICE_HPP_
 
 #include <qi/future.hpp>
+#include <qi/trackable.hpp>
 #include <string>
 #include <boost/thread/mutex.hpp>
 #include <qimessaging/session.hpp>
@@ -38,7 +39,7 @@ namespace qi {
     RemoteObject                 *remoteObject;
   };
 
-  class Session_Service
+  class Session_Service: public qi::Trackable<Session_Service>
   {
   public:
     Session_Service(TransportSocketCache *socketCache, ServiceDirectoryClient *sdClient, ObjectRegistrar *server);

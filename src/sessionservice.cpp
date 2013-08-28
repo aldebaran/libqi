@@ -22,12 +22,13 @@ namespace qi {
     ptr->_destructionBarrier.setValue(0);
   }
   Session_Service::Session_Service(TransportSocketCache *socketCache, ServiceDirectoryClient *sdClient, ObjectRegistrar *server)
-    : _socketCache(socketCache)
+    : qi::Trackable<Session_Service>(this)
+    , _socketCache(socketCache)
     , _sdClient(sdClient)
     , _server(server)
     , _self(this, sessionServiceWaitBarrier) // create a shared_ptr so that shared_from_this works
   {
-    _linkServiceRemoved = _sdClient->serviceRemoved.connect(boost::bind<void>(&Session_Service::onServiceRemoved, this, _1, _2));
+    _linkServiceRemoved = _sdClient->serviceRemoved.connect(&Session_Service::onServiceRemoved, this, _1, _2);
   }
 
   Session_Service::~Session_Service()
@@ -36,6 +37,7 @@ namespace qi {
     _self.reset(); // now existing weak_ptrs cannot from this cannot be locked
     _destructionBarrier.future().wait();
     close();
+    destroy();
   }
 
   void Session_Service::onServiceRemoved(const unsigned int &index, const std::string &service) {
@@ -134,7 +136,7 @@ namespace qi {
       //ask the remoteObject to fetch the metaObject
       fut = sr->remoteObject->fetchMetaObject();
     }
-    fut.connect(boost::bind<void>(&Session_Service::onRemoteObjectComplete, this, _1, requestId));
+    fut.connect(&Session_Service::onRemoteObjectComplete, this, _1, requestId);
   }
 
   void Session_Service::onRemoteObjectComplete(qi::Future<void> future, long requestId) {
@@ -227,7 +229,7 @@ namespace qi {
     }
     qiLogDebug() << "Requesting socket from cache";
     qi::Future<qi::TransportSocketPtr> fut = _socketCache->socket(result.value(), protocol);
-    fut.connect(boost::bind<void>(&Session_Service::onTransportSocketResult, this, _1, requestId));
+    fut.connect(&Session_Service::onTransportSocketResult, this, _1, requestId);
   }
 
   qi::Future<qi::AnyObject> Session_Service::service(const std::string &service,
