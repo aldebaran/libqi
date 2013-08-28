@@ -41,11 +41,18 @@ namespace qi { namespace py {
         std::string funN = boost::python::extract<std::string>(pykwargs.get("_overload", _funName));
         qiLogDebug() << "calling a method: " << funN << " args:" << qi::encodeJSON(val);
 
-        qi::Future<qi::AnyReference> fut;
+
+        qi::Future<qi::AnyValue> fut;
+        qi::Promise<qi::AnyValue> res(qi::FutureCallbackType_Sync);
+        PyPromise pyprom(res);
         {
           //calling c++, so release the GIL.
           GILScopedUnlock _unlock;
-          fut = _object->metaCall(funN, val.asDynamic().asTupleValuePtr());
+          qi::Future<qi::AnyReference> fmeta = _object->metaCall(funN, val.asDynamic().asTupleValuePtr());
+          //because futureAdapter support AnyRef containing Future<T>  (that will be converted to a Future<T>
+          // instead of Future<Future<T>>
+          fmeta.connect(boost::bind<void>(&detail::futureAdapter<qi::AnyValue>, _1, res));
+          fut = res.future();
         }
         if (!async) {
           {
@@ -55,15 +62,13 @@ namespace qi { namespace py {
           }
           return fut.value().to<boost::python::object>();
         }
-        else
-          return qi::py::makeFuture(fut);
+        return boost::python::object(pyprom.future());
       }
 
     public:
       qi::AnyObject _object;
       std::string   _funName;
     };
-
 
     void populateMethods(boost::python::object pyobj, qi::AnyObject obj) {
       qi::MetaObject::MethodMap           mm = obj->metaObject().methodMap();
@@ -175,9 +180,9 @@ namespace qi { namespace py {
         //serverresult will support async return value for call. (call returning future)
         boost::python::extract< PyFuturePtr > extractor(ret);
         if (extractor.check()) {
-          qiLogDebug() << "Future detected";
           PyFuturePtr pfut = extractor();
           if (pfut) { //pfut == 0, can mean ret is None.
+            qiLogDebug() << "Future detected";
             qi::Future<qi::AnyValue> fut = *pfut;
             return qi::AnyReference(fut).clone();
           }
