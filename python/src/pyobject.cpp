@@ -260,11 +260,7 @@ namespace qi { namespace py {
 
       std::string qiretsig;
       if (pyqiretsig) {
-        boost::python::extract<std::string> e(pyqiretsig);
-        if (e.check())
-          qiretsig = e();
-        else
-          qiLogWarning() << "Return signature for " << key << "is not a string";
+        qiretsig = boost::python::extract<std::string>(pyqiretsig);
       }
 
       if (!qiretsig.empty())
@@ -297,19 +293,14 @@ namespace qi { namespace py {
         boost::python::object pyqisig = boost::python::getattr(m, "__qi_signature__", boost::python::object());
         std::string qisig;
 
-        if (pyqisig) {
-          boost::python::extract<std::string> e(pyqisig);
-          if (e.check())
-            qisig = e();
-        }
+        if (pyqisig)
+          qisig = boost::python::extract<std::string>(pyqisig);
+
         if (qisig == "DONOTBIND")
           continue;
         //override name by the one provide by @bind
-        if (pyqiname) {
-          boost::python::extract<std::string> e(pyqiname);
-          if (e.check())
-            key = e();
-        }
+        if (pyqiname)
+          key = boost::python::extract<std::string>(pyqiname);
 
         if (PyMethod_Check(m.ptr())) {
           registerMethod(gob, key, m, qisig);
