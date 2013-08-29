@@ -164,7 +164,7 @@ namespace qi {
   template <typename A>
   unsigned int ObjectTypeBuilderBase::advertiseProperty(const std::string& name, A accessor)
   {
-    unsigned id = advertiseSignal(name, accessor);
+    unsigned int id = advertiseSignal(name, accessor);
     PropertyMemberGetter pg = boost::bind(&propertyAccess<A>, accessor, _1);
     typedef typename detail::Accessor<A>::value_type::PropertyType PropertyType;
     return xAdvertiseProperty(name, typeOf<PropertyType>()->signature(), pg, id);

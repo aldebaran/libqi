@@ -107,24 +107,27 @@ namespace qi
     return nextId;
   }
 
-  int DynamicObjectBuilder::xAdvertiseSignal(const std::string &name, const qi::Signature& signature)
+  unsigned int DynamicObjectBuilder::xAdvertiseSignal(const std::string &name, const qi::Signature& signature)
   {
     if (!Signature(signature).isValid() || name.empty()) {
-      qiLogWarning() << "DynamicObjectBuilder: Called xAdvertiseSignal("<< name << "," << signature.toString() << ") with an invalid signature.";
-      return -1;
+      std::stringstream err;
+      if (name.empty())
+        err << "DynamicObjectBuilder: Called xAdvertiseSignal with a signal name empty and signature " << signature.toString() << ".";
+      else
+        err << "DynamicObjectBuilder: Called xAdvertiseSignal("<< name << "," << signature.toString() << ") with an invalid signature.";
+      throw std::runtime_error(err.str());
     }
     if (_p->_objptr) {
       qiLogWarning() << "DynamicObjectBuilder: Called xAdvertiseSignal on event '" << signature.toString() << "' but object is already created.";
     }
-    int nextId = _p->_object->metaObject()._p->addSignal(name, signature);
-    if (nextId < 0)
-      return -1;
+    // throw on error
+    unsigned int nextId = _p->_object->metaObject()._p->addSignal(name, signature);
     return nextId;
   }
 
-  int DynamicObjectBuilder::advertiseSignal(const std::string &name, qi::SignalBase *sig)
+  unsigned int DynamicObjectBuilder::advertiseSignal(const std::string &name, qi::SignalBase *sig)
   {
-    int nextId = xAdvertiseSignal(name, sig->signature());
+    unsigned int nextId = xAdvertiseSignal(name, sig->signature());
     _p->_object->setSignal(nextId, sig);
     return nextId;
   }

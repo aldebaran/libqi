@@ -121,29 +121,27 @@ namespace qi {
     return uid;
   }
 
-  int MetaObjectPrivate::addSignal(const std::string &name, const Signature &signature, int uid) {
+  unsigned int MetaObjectPrivate::addSignal(const std::string &name, const Signature &signature, int uid) {
 #ifndef NDEBUG
     std::vector<std::string> split = signatureSplit(name);
     if (name != split[1])
       throw std::runtime_error("Unexpected full signature " + name);
 #endif
     boost::recursive_mutex::scoped_lock sl(_eventsMutex);
-    unsigned int id;
     NameToIdx::iterator it = _eventsNameToIdx.find(name);
     if (it != _eventsNameToIdx.end()) {
       MetaSignal &ms = _events[it->second];
-      qiLogWarning() << "Signal("<< it->second << ") already defined (and reused): " << ms.toString() << "instead of requested: " << name;
-      return 0;
+      qiLogWarning() << "Signal("<< it->second << ") already defined (and overriden): " << ms.toString() << "instead of requested: " << name;
+      return it->second;
     }
-    if (uid >= 0)
-      id = uid;
-    else
-      id = ++_index;
-    MetaSignal ms(id, name, signature);
-    _events[id] = ms;
-    _eventsNameToIdx[name] = id;
-    // qiLogDebug() << "Adding signal("<< id << "): " << sig;
-    return id;
+
+    if (uid == -1)
+      uid = ++_index;
+    MetaSignal ms(uid, name, signature);
+    _events[uid] = ms;
+    _eventsNameToIdx[name] = uid;
+
+    return uid;
   }
 
   int MetaObjectPrivate::addProperty(const std::string& name, const qi::Signature& sig, int id)

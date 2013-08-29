@@ -67,7 +67,7 @@ namespace qi {
 
     unsigned int addMethod(MetaMethodBuilder& builder, int uid = -1);
 
-    int addSignal(const std::string &name, const Signature &signature, int id = -1);
+    unsigned int addSignal(const std::string &name, const Signature &signature, int id = -1);
 
     int addProperty(const std::string& name, const Signature &sig, int id = -1);
 

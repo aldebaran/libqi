@@ -853,7 +853,7 @@ TEST(TestObject, AdvertiseRealSignal)
   qi::Signal<int> sig;
   sig.connect(boost::bind<void>(&bim, _1, plocal, "local"));
   qi::DynamicObjectBuilder gob;
-  int id = gob.advertiseSignal("sig", &sig);
+  unsigned int id = gob.advertiseSignal("sig", &sig);
   ASSERT_LT(0, id);
   qi::AnyObject obj = gob.object();
   obj->connect("sig", boost::bind<void>(&bim, _1, premote, "remote"));
@@ -902,9 +902,9 @@ TEST(TestObject, AdvertiseBadType)
   //two return type
   EXPECT_THROW(gob.xAdvertiseMethod("si", "addbadsignature", "(s)", qi::AnyFunction::from(&add)), std::runtime_error);
 
-  EXPECT_EQ(-1, gob.xAdvertiseSignal("ploufffffffPlifffff", ""));
+  EXPECT_THROW(gob.xAdvertiseSignal("ploufffffffPlifffff", ""), std::runtime_error);
 
-  EXPECT_EQ(-1, gob.xAdvertiseSignal("", "si"));
+  EXPECT_THROW(gob.xAdvertiseSignal("", "si"), std::runtime_error);
   EXPECT_EQ(-1, gob.xAdvertiseProperty("plouf", "ss"));
   EXPECT_EQ(-1, gob.xAdvertiseProperty("plouf", "("));
   //signature mismatch

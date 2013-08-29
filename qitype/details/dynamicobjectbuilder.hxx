@@ -68,7 +68,7 @@ namespace qi {
 
   #define gen(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma) \
   QI_GEN_MAYBE_TEMPLATE_OPEN(comma) ATYPEDECL QI_GEN_MAYBE_TEMPLATE_CLOSE(comma) \
-  inline int DynamicObjectBuilder::advertiseSignal(const std::string& s) \
+  inline unsigned int DynamicObjectBuilder::advertiseSignal(const std::string& s) \
   { \
     return advertiseSignalF<void(ATYPES)>(s); \
   }
@@ -76,7 +76,7 @@ namespace qi {
   QI_GEN_RANGE(gen, 8)
   #undef gen
 
-  template <typename T> int DynamicObjectBuilder::advertiseSignalF(const std::string& name)
+  template <typename T> unsigned int DynamicObjectBuilder::advertiseSignalF(const std::string& name)
   {
     return xAdvertiseSignal(name, detail::FunctionSignature<T>::signature());
   }

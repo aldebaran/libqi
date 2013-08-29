@@ -50,21 +50,21 @@ namespace qi {
                                         FUNCTION_TYPE function,
                                         MetaCallType threadingModel = MetaCallType_Auto);
 
-    int advertiseSignal(const std::string& name);
-    template<typename P0> int advertiseSignal(const std::string& name);
-    template<typename P0, typename P1> int advertiseSignal(const std::string& name);
-    template<typename P0, typename P1, typename P2> int advertiseSignal(const std::string& name);
-    template<typename P0, typename P1, typename P2, typename P3> int advertiseSignal(const std::string& name);
-    template<typename P0, typename P1, typename P2, typename P3,typename P4> int advertiseSignal(const std::string& name);
-    template<typename P0, typename P1, typename P2, typename P3,typename P4,typename P5> int advertiseSignal(const std::string& name);
-    template<typename P0, typename P1, typename P2, typename P3,typename P4,typename P5,typename P6> int advertiseSignal(const std::string& name);
-    template<typename P0, typename P1, typename P2, typename P3,typename P4,typename P5,typename P6, typename P7> int advertiseSignal(const std::string& name);
+    unsigned int advertiseSignal(const std::string& name);
+    template<typename P0> unsigned int advertiseSignal(const std::string& name);
+    template<typename P0, typename P1> unsigned int advertiseSignal(const std::string& name);
+    template<typename P0, typename P1, typename P2> unsigned int advertiseSignal(const std::string& name);
+    template<typename P0, typename P1, typename P2, typename P3> unsigned int advertiseSignal(const std::string& name);
+    template<typename P0, typename P1, typename P2, typename P3,typename P4> unsigned int advertiseSignal(const std::string& name);
+    template<typename P0, typename P1, typename P2, typename P3,typename P4,typename P5> unsigned int advertiseSignal(const std::string& name);
+    template<typename P0, typename P1, typename P2, typename P3,typename P4,typename P5,typename P6> unsigned int advertiseSignal(const std::string& name);
+    template<typename P0, typename P1, typename P2, typename P3,typename P4,typename P5,typename P6, typename P7> unsigned int advertiseSignal(const std::string& name);
 
     /// Advertise a signal using a function signature
     template<typename T>
-    int advertiseSignalF(const std::string& name);
+    unsigned int advertiseSignalF(const std::string& name);
 
-    int advertiseSignal(const std::string &name, qi::SignalBase *signal);
+    unsigned int advertiseSignal(const std::string &name, qi::SignalBase *signal);
 
     template<typename T>
     unsigned int advertiseProperty(const std::string& name);
@@ -82,7 +82,7 @@ namespace qi {
     unsigned int xAdvertiseMethod(MetaMethodBuilder& builder, AnyFunction func,
                                   MetaCallType threadingModel = MetaCallType_Auto);
 
-    int xAdvertiseSignal(const std::string &name, const Signature &signature);
+    unsigned int xAdvertiseSignal(const std::string &name, const Signature &signature);
     int xAdvertiseProperty(const std::string& name, const Signature& sig, int id=-1);
     void setDescription(const std::string& desc);
     qi::AnyObject object(boost::function<void (GenericObject*)> onDelete = boost::function<void (GenericObject*)>());
