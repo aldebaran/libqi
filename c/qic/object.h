@@ -35,7 +35,7 @@ extern "C"
   QIC_API qi_object_builder_t* qi_object_builder_create();
   QIC_API void                 qi_object_builder_destroy(qi_object_builder_t *object);
 
-  QIC_API int                  qi_object_builder_register_method(qi_object_builder_t *object, const char *complete_signature, qi_object_method_t func, void *user_data);
+  QIC_API unsigned int         qi_object_builder_register_method(qi_object_builder_t *object, const char *complete_signature, qi_object_method_t func, void *user_data);
   QIC_API int                  qi_object_builder_register_event(qi_object_builder_t *object, const char *complete_signature);
   QIC_API int                  qi_object_builder_register_property(qi_object_builder_t *object, const char *complete_signature);
   QIC_API qi_object_t*         qi_object_builder_get_object(qi_object_builder_t *object_builder);

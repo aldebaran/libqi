@@ -268,8 +268,8 @@ namespace qi { namespace py {
       else
         mmb.setReturnSignature("m");
 
-      if (gob.xAdvertiseMethod(mmb, qi::AnyFunction::fromDynamicFunction(boost::bind(pyCallMethod, _1, method))) < 0)
-        throw std::runtime_error(std::string("Invalid signature for function: ") + mmb.metaMethod().toString());
+      // Throw on error
+      gob.xAdvertiseMethod(mmb, qi::AnyFunction::fromDynamicFunction(boost::bind(pyCallMethod, _1, method)));
     }
 
     qi::AnyObject makeQiAnyObject(boost::python::object obj)
@@ -305,6 +305,7 @@ namespace qi { namespace py {
 
         if (PyMethod_Check(m.ptr())) {
           registerMethod(gob, key, m, qisig);
+
           continue;
         }
 

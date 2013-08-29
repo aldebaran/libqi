@@ -2,7 +2,7 @@
 ** Author(s):
 **  - Pierre Roullon <proullon@aldebaran-robotics.com>
 **
-** Copyright (C) 2010, 2011, 2012 Aldebararan Robotics
+** Copyright (C) 2010, 2011, 2012, 2013 Aldebararan Robotics
 */
 #include <qic/object.h>
 #include <qic/future.h>
@@ -153,16 +153,21 @@ qi_future_t*        qi_object_event_disconnect(qi_object_t* object, unsigned lon
   return qi_future_wrap(obj->disconnect(id));
 }
 
-int          qi_object_builder_register_method(qi_object_builder_t *object_builder, const char *complete_signature, qi_object_method_t func, void *data)
+unsigned int        qi_object_builder_register_method(qi_object_builder_t *object_builder, const char *complete_signature, qi_object_method_t func, void *data)
 {
   qi::DynamicObjectBuilder  *ob = reinterpret_cast<qi::DynamicObjectBuilder *>(object_builder);
   std::string signature(complete_signature);
   std::vector<std::string>  sigInfo;
-
   sigInfo = qi::signatureSplit(signature);
-  ob->xAdvertiseMethod(sigInfo[0], sigInfo[1], sigInfo[2],
-    qi::AnyFunction::fromDynamicFunction(
-    boost::bind(&c_call, std::string(complete_signature), func, data, _1)));
+  try {
+    return ob->xAdvertiseMethod(sigInfo[0], sigInfo[1], sigInfo[2],
+      qi::AnyFunction::fromDynamicFunction(
+      boost::bind(&c_call, std::string(complete_signature), func, data, _1)));
+  }
+  catch (const std::runtime_error &e)
+  {
+    qiLogWarning() << e.what();
+  }
   return 0;
 }
 
@@ -194,4 +199,3 @@ qi_object_t*         qi_object_builder_get_object(qi_object_builder_t *object_bu
 #ifdef __cplusplus
 }
 #endif
-
