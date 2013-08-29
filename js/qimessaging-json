@@ -88,6 +88,12 @@ class QiMessagingHandler(tornadio2.conn.SocketConnection):
         except (AttributeError, RuntimeError) as exc:
             self.reply(idm, 'error', str(exc))
 
+    def on_qiclose(self):
+        try:
+            self.close()
+        except AttributeError:
+            pass
+
     def on_close(self):
         print("[%d] Disconnected" % (self.sid))
 
