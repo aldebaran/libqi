@@ -144,7 +144,7 @@ namespace qi {
     return uid;
   }
 
-  int MetaObjectPrivate::addProperty(const std::string& name, const qi::Signature& sig, int id)
+  unsigned int MetaObjectPrivate::addProperty(const std::string& name, const qi::Signature& sig, int id)
   {
     boost::recursive_mutex::scoped_lock sl(_propertiesMutex);
     for (MetaObject::PropertyMap::iterator it = _properties.begin(); it != _properties.end(); ++it)
@@ -152,7 +152,7 @@ namespace qi {
       if (it->second.name() == name)
       {
         qiLogWarning() << "Property already exists: " << name;
-        return 0;
+        return it->second.uid() ;
       }
     }
     if (id == -1)

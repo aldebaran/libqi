@@ -905,8 +905,8 @@ TEST(TestObject, AdvertiseBadType)
   EXPECT_THROW(gob.xAdvertiseSignal("ploufffffffPlifffff", ""), std::runtime_error);
 
   EXPECT_THROW(gob.xAdvertiseSignal("", "si"), std::runtime_error);
-  EXPECT_EQ(-1, gob.xAdvertiseProperty("plouf", "ss"));
-  EXPECT_EQ(-1, gob.xAdvertiseProperty("plouf", "("));
+  EXPECT_THROW(gob.xAdvertiseProperty("plouf", "ss"), std::runtime_error);
+  EXPECT_THROW(gob.xAdvertiseProperty("plouf", "("), std::runtime_error);
   //signature mismatch
   //TODO: EXPECT_EQ(-1, gob.xAdvertiseMethod("i", "add", "(i)", qi::AnyFunction::from(&add)));
 }

@@ -70,13 +70,11 @@ namespace qi {
     return nextId;
   }
 
-  int ObjectTypeBuilderBase::xAdvertiseProperty(const std::string& name, const qi::Signature& signature, PropertyMemberGetter getter, int id)
+  unsigned int ObjectTypeBuilderBase::xAdvertiseProperty(const std::string& name, const qi::Signature& signature, PropertyMemberGetter getter, int id)
   {
-    int res = _p->metaObject._p->addProperty(name, signature, id);
-    if (res < 0)
-      return -1;
+    unsigned int res = _p->metaObject._p->addProperty(name, signature, id);
     _p->data.propertyGetterMap[res] = getter;
-    return id;
+    return res;
   }
 
   void ObjectTypeBuilderBase::xBuildFor(TypeInterface* type, bool autoRegister)

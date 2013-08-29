@@ -132,19 +132,23 @@ namespace qi
     return nextId;
   }
 
-  int DynamicObjectBuilder::advertiseProperty(const std::string &name, qi::PropertyBase *prop)
+  unsigned int DynamicObjectBuilder::advertiseProperty(const std::string &name, qi::PropertyBase *prop)
   {
     //todo: prop.signature()
-    int nextId = xAdvertiseProperty(name, prop->signal()->signature());
+    unsigned int nextId = xAdvertiseProperty(name, prop->signal()->signature());
     _p->_object->setProperty(nextId, prop);
     return nextId;
   }
 
-  int DynamicObjectBuilder::xAdvertiseProperty(const std::string& name, const Signature &sig, int id)
+  unsigned int DynamicObjectBuilder::xAdvertiseProperty(const std::string& name, const Signature &sig, int id)
   {
     if (!Signature(sig).isValid() || name.empty()) {
-      qiLogWarning() << "DynamicObjectBuilder: Called xAdvertiseProperty("<< name << "," << sig.toString() << ") with an invalid signature.";
-      return -1;
+      std::stringstream err;
+      if (name.empty())
+        err << "DynamicObjectBuilder: Called xAdvertiseProperty with a property name empty and signature " << sig.toString() << ".";
+      else
+        err << "DynamicObjectBuilder: Called xAdvertiseProperty("<< name << "," << sig.toString() << ") with an invalid signature.";
+      throw std::runtime_error(err.str());
     }
     return _p->_object->metaObject()._p->addProperty(name, sig, id);
   }

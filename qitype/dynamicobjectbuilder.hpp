@@ -69,7 +69,7 @@ namespace qi {
     template<typename T>
     unsigned int advertiseProperty(const std::string& name);
     /// Ownership is transferred to the object
-    int advertiseProperty(const std::string &name, qi::PropertyBase *sig);
+    unsigned int advertiseProperty(const std::string &name, qi::PropertyBase *sig);
 
     void setThreadingModel(ObjectThreadingModel model);
 
@@ -83,7 +83,7 @@ namespace qi {
                                   MetaCallType threadingModel = MetaCallType_Auto);
 
     unsigned int xAdvertiseSignal(const std::string &name, const Signature &signature);
-    int xAdvertiseProperty(const std::string& name, const Signature& sig, int id=-1);
+    unsigned int xAdvertiseProperty(const std::string& name, const Signature& sig, int id=-1);
     void setDescription(const std::string& desc);
     qi::AnyObject object(boost::function<void (GenericObject*)> onDelete = boost::function<void (GenericObject*)>());
 

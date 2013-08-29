@@ -69,7 +69,7 @@ namespace qi {
 
     unsigned int addSignal(const std::string &name, const Signature &signature, int id = -1);
 
-    int addProperty(const std::string& name, const Signature &sig, int id = -1);
+    unsigned int addProperty(const std::string& name, const Signature &sig, int id = -1);
 
     // Recompute data cached in *ToIdx
     void refreshCache();
