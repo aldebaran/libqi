@@ -178,6 +178,10 @@ namespace qi {
         } // end mutex-protected scope
         (*sub)->handler(*params);
       }
+      catch(const qi::PointerLockException&)
+      {
+        qiLogDebug() << "PointerLockFailure excepton, will disconnect";
+      }
       catch(const std::exception& e)
       {
         qiLogWarning() << "Exception caught from signal subscriber: " << e.what();
