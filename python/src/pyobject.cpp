@@ -321,8 +321,7 @@ namespace qi { namespace py {
         static boost::python::object aproperty = qi::py::makePyProperty("(i)").attr("__class__");
         if (PyObject_IsInstance(m.ptr(), aproperty.ptr())) {
           qiLogDebug() << "Adding property:" << key;
-          if (gob.advertiseProperty(key, qi::py::getProperty(m)) < 0)
-            throw std::runtime_error("Invalid signature for property");
+          gob.advertiseProperty(key, qi::py::getProperty(m));
           continue;
         }
 
