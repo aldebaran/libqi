@@ -65,7 +65,7 @@ namespace qi {
 
     MetaSignal* signal(const std::string &name);
 
-    int addMethod(MetaMethodBuilder& builder, int uid = -1);
+    unsigned int addMethod(MetaMethodBuilder& builder, int uid = -1);
 
     int addSignal(const std::string &name, const Signature &signature, int id = -1);
 

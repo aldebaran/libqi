@@ -22,6 +22,7 @@ namespace qi {
 
     ~DynamicObjectBuilder();
 
+    // throw on error
     template <typename OBJECT_TYPE, typename METHOD_TYPE>
     inline unsigned int advertiseMethod(const std::string& name,
                                         OBJECT_TYPE object,
@@ -29,18 +30,21 @@ namespace qi {
                                         const std::string& desc = "",
                                         MetaCallType threadingModel = MetaCallType_Auto);
 
+    // throw on error
     template <typename FUNCTION_TYPE>
     inline unsigned int advertiseMethod(const std::string& name,
                                         FUNCTION_TYPE function,
                                         const std::string& desc = "",
                                         MetaCallType threadingModel = MetaCallType_Auto);
 
+    // throw on error
     template <typename OBJECT_TYPE, typename METHOD_TYPE>
     inline unsigned int advertiseMethod(MetaMethodBuilder& builder,
                                         OBJECT_TYPE object,
                                         METHOD_TYPE method,
                                         MetaCallType threadingModel = MetaCallType_Auto);
 
+    // throw on error
     template <typename FUNCTION_TYPE>
     inline unsigned int advertiseMethod(MetaMethodBuilder& builder,
                                         FUNCTION_TYPE function,
@@ -69,14 +73,14 @@ namespace qi {
 
     void setThreadingModel(ObjectThreadingModel model);
 
-    int xAdvertiseMethod(const Signature &sigret,
-                         const std::string &name,
-                         const Signature &signature,
-                         AnyFunction func, const std::string& desc = "",
-                         MetaCallType threadingModel = MetaCallType_Auto);
+    unsigned int xAdvertiseMethod(const Signature &sigret,
+                                  const std::string &name,
+                                  const Signature &signature,
+                                  AnyFunction func, const std::string& desc = "",
+                                  MetaCallType threadingModel = MetaCallType_Auto);
 
-    int xAdvertiseMethod(MetaMethodBuilder& builder, AnyFunction func,
-                         MetaCallType threadingModel = MetaCallType_Auto);
+    unsigned int xAdvertiseMethod(MetaMethodBuilder& builder, AnyFunction func,
+                                  MetaCallType threadingModel = MetaCallType_Auto);
 
     int xAdvertiseSignal(const std::string &name, const Signature &signature);
     int xAdvertiseProperty(const std::string& name, const Signature& sig, int id=-1);

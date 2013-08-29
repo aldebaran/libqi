@@ -887,20 +887,20 @@ TEST(TestObject, AdvertiseBadType)
   qi::DynamicObjectBuilder gob;
 
   //missing ::
-  EXPECT_EQ(-1, gob.xAdvertiseMethod("s", "addbadsignature", "s)", qi::AnyFunction::from(&add)));
+  EXPECT_THROW(gob.xAdvertiseMethod("s", "addbadsignature", "s)", qi::AnyFunction::from(&add)), std::runtime_error);
   //missing param sig
-  EXPECT_EQ(-1, gob.xAdvertiseMethod("s", "addbadsignature", "", qi::AnyFunction::from(&add)));
+  EXPECT_THROW(gob.xAdvertiseMethod("s", "addbadsignature", "", qi::AnyFunction::from(&add)), std::runtime_error);
   //missing ()
-  EXPECT_EQ(-1, gob.xAdvertiseMethod("s", "addbadsignature", "::", qi::AnyFunction::from(&add)));
+  EXPECT_THROW(gob.xAdvertiseMethod("s", "addbadsignature", "::", qi::AnyFunction::from(&add)), std::runtime_error);
   //missing ()
-  EXPECT_EQ(-1, gob.xAdvertiseMethod("s", "addbadsignature", "ss", qi::AnyFunction::from(&add)));
+  EXPECT_THROW(gob.xAdvertiseMethod("s", "addbadsignature", "ss", qi::AnyFunction::from(&add)), std::runtime_error);
   //G do not exists
-  EXPECT_EQ(-1, gob.xAdvertiseMethod("s", "addbadsignature", "(G)", qi::AnyFunction::from(&add)));
+  EXPECT_THROW(gob.xAdvertiseMethod("s", "addbadsignature", "(G)", qi::AnyFunction::from(&add)), std::runtime_error);
 
   //bad return type
-  EXPECT_EQ(-1, gob.xAdvertiseMethod("TOOBADDDDD", "addbadsignature", "(s)", qi::AnyFunction::from(&add)));
+  EXPECT_THROW(gob.xAdvertiseMethod("TOOBADDDDD", "addbadsignature", "(s)", qi::AnyFunction::from(&add)), std::runtime_error);
   //two return type
-  EXPECT_EQ(-1, gob.xAdvertiseMethod("si", "addbadsignature", "(s)", qi::AnyFunction::from(&add)));
+  EXPECT_THROW(gob.xAdvertiseMethod("si", "addbadsignature", "(s)", qi::AnyFunction::from(&add)), std::runtime_error);
 
   EXPECT_EQ(-1, gob.xAdvertiseSignal("ploufffffffPlifffff", ""));
 

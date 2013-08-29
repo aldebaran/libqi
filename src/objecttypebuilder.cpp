@@ -41,10 +41,10 @@ namespace qi {
     delete _p;
   }
 
-  int ObjectTypeBuilderBase::xAdvertiseMethod(MetaMethodBuilder& builder,
-                                              AnyFunction func,
-                                              MetaCallType threadingModel,
-                                              int id)
+  unsigned int ObjectTypeBuilderBase::xAdvertiseMethod(MetaMethodBuilder& builder,
+                                                       AnyFunction func,
+                                                       MetaCallType threadingModel,
+                                                       int id)
   {
     if (_p->type) {
       qiLogWarning()
@@ -52,9 +52,8 @@ namespace qi {
           << builder.metaMethod().toString()
           << "' but type is already created.";
     }
-    int nextId = _p->metaObject._p->addMethod(builder, id);
-    if (nextId < 0)
-      return -1;
+
+    unsigned int nextId = _p->metaObject._p->addMethod(builder, id);
     _p->data.methodMap[nextId] = std::make_pair(func, threadingModel);
     return nextId;
   }

@@ -102,9 +102,8 @@ namespace qi {
       return &_events[id];
   }
 
-  int MetaObjectPrivate::addMethod(MetaMethodBuilder& builder, int uid) {
+  unsigned int MetaObjectPrivate::addMethod(MetaMethodBuilder& builder, int uid) {
     boost::recursive_mutex::scoped_lock sl(_methodsMutex);
-    unsigned int id;
     qi::MetaMethod method = builder.metaMethod();
     NameToIdx::iterator it = _methodsNameToIdx.find(method.toString());
     if (it != _methodsNameToIdx.end()) {
@@ -113,16 +112,13 @@ namespace qi {
       return it->second;
     }
 
-    if (-1 < uid)
-      id = uid;
-    else
-      id = ++_index;
+    if (uid == -1)
+      uid = ++_index;
+    builder.setUid(uid);
+    _methods[uid] = builder.metaMethod();
+    _methodsNameToIdx[method.toString()] = uid;
 
-    builder.setUid(id);
-    _methods[id] = builder.metaMethod();
-    _methodsNameToIdx[method.toString()] = id;
-    // qiLogDebug() << "Adding method("<< id << "): " << sigret << " " << signature;
-    return id;
+    return uid;
   }
 
   int MetaObjectPrivate::addSignal(const std::string &name, const Signature &signature, int uid) {

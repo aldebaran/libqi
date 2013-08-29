@@ -38,6 +38,8 @@ namespace qi {
       f.dropFirstArgument();
     builder.setName(name);
     builder.setSignature(f);
+
+    // throw on error
     return xAdvertiseMethod(builder, f, threadingModel, id);
   }
 
@@ -51,6 +53,8 @@ namespace qi {
     if (! boost::is_member_function_pointer<FUNCTION_TYPE>::value)
       f.dropFirstArgument();
     builder.setSignature(f);
+
+    // throw on error
     return xAdvertiseMethod(builder, f, threadingModel, id);
   }
 
@@ -98,6 +102,8 @@ namespace qi {
     detail::checkRegisterParent<FUNCTION_TYPE>(
       *this,
       typename boost::function_types::is_member_function_pointer<FUNCTION_TYPE >::type());
+
+    // throw on error
     return ObjectTypeBuilderBase::advertiseMethod(name, function, threadingModel, id);
   }
 
@@ -111,6 +117,8 @@ namespace qi {
     detail::checkRegisterParent<FUNCTION_TYPE>(
       *this,
       typename boost::function_types::is_member_function_pointer<FUNCTION_TYPE >::type());
+
+    // throw on error
     return ObjectTypeBuilderBase::advertiseMethod(name, function, threadingModel, id);
   }
 

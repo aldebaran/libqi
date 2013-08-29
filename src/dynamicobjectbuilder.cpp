@@ -61,33 +61,37 @@ namespace qi
     return true;
   }
 
-  int DynamicObjectBuilder::xAdvertiseMethod(const qi::Signature& sigret,
-                                             const std::string& name,
-                                             const qi::Signature& signature,
-                                             AnyFunction func,
-                                             const std::string& desc,
-                                             MetaCallType threadingModel)
+  unsigned int DynamicObjectBuilder::xAdvertiseMethod(const qi::Signature& sigret,
+                                                      const std::string& name,
+                                                      const qi::Signature& signature,
+                                                      AnyFunction func,
+                                                      const std::string& desc,
+                                                      MetaCallType threadingModel)
   {
     if (!isSignatureValid(sigret, name, signature)) {
-      qiLogWarning() << "DynamicObjectBuilder: Called xAdvertiseMethod with an invalid signature.";
-      return -1;
+      std::stringstream err;
+      err << "DynamicObjectBuilder: Called xAdvertiseMethod("<< sigret.toString() << "," << name << "," << signature.toString() << ") with an invalid signature.";
+      throw std::runtime_error(err.str());
     }
     MetaMethodBuilder mmb;
     mmb.setReturnSignature(sigret);
     mmb.setName(name);
     mmb.setParametersSignature(signature);
     mmb.setDescription(desc);
+
+    // throw on error
     return xAdvertiseMethod(mmb, func, threadingModel);
   }
 
-  int DynamicObjectBuilder::xAdvertiseMethod(MetaMethodBuilder& builder,
-                                             AnyFunction func,
-                                             MetaCallType threadingModel)
+  unsigned int DynamicObjectBuilder::xAdvertiseMethod(MetaMethodBuilder& builder,
+                                                      AnyFunction func,
+                                                      MetaCallType threadingModel)
   {
     MetaMethod mm = builder.metaMethod();
     if (!isSignatureValid(mm.returnSignature(), mm.name(), mm.parametersSignature())) {
-      qiLogWarning() << "DynamicObjectBuilder: Called xAdvertiseMethod("<< mm.returnSignature().toString() << "," << mm.name() << "," << mm.parametersSignature().toString() << ") with an invalid signature.";
-      return -1;
+      std::stringstream err;
+      err << "DynamicObjectBuilder: Called xAdvertiseMethod("<< mm.returnSignature().toString() << "," << mm.name() << "," << mm.parametersSignature().toString() << ") with an invalid signature.";
+      throw std::runtime_error(err.str());
     }
     //TODO: check that func is compatible with MM
     if (_p->_objptr) {
@@ -97,9 +101,8 @@ namespace qi
           << "' but object is already created.";
     }
 
-    int nextId = _p->_object->metaObject()._p->addMethod(builder);
-    if (nextId < 0)
-      return -1;
+    unsigned int nextId = _p->_object->metaObject()._p->addMethod(builder);
+
     _p->_object->setMethod(nextId, func, threadingModel);
     return nextId;
   }

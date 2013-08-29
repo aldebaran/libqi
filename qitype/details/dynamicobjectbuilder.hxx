@@ -23,6 +23,7 @@ namespace qi {
     builder.setName(name);
     builder.setSignature(f);
     builder.setDescription(desc);
+    // throw on error
     return xAdvertiseMethod(builder, f, threadingModel);
   }
 
@@ -38,6 +39,7 @@ namespace qi {
     builder.setName(name);
     builder.setSignature(f);
     builder.setDescription(desc);
+    // throw on error
     return xAdvertiseMethod(builder, f, threadingModel);
   }
 
@@ -48,6 +50,7 @@ namespace qi {
   {
     AnyFunction f = AnyFunction::from(function).dropFirstArgument();
     builder.setSignature(f);
+    // throw on error
     return xAdvertiseMethod(builder, f, threadingModel);
   }
 
@@ -59,6 +62,7 @@ namespace qi {
   {
     AnyFunction f = AnyFunction::from(method, object).dropFirstArgument();
     builder.setSignature(f);
+    // throw on error
     return xAdvertiseMethod(builder, f, threadingModel);
   }
 
