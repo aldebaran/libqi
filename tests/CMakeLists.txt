@@ -18,11 +18,8 @@ set_target_properties(check_env  PROPERTIES FOLDER tests)
 set_target_properties(test_application  PROPERTIES FOLDER tests)
 
 qi_create_gtest(test_qipath      SRC test_qipath.cpp ../src/utils.cpp DEPENDS QI GTEST)
-qi_create_gtest(test_qipath_from_bin SRC test_qipath.cpp ../src/utils.cpp DEPENDS QI GTEST)
-if(TARGET test_qipath_from_bin)
-  set_tests_properties(test_qipath_from_bin PROPERTIES
-      WORKING_DIRERCTORY ${QI_SDK_DIR}/${QI_SDK_BIN})
-endif()
+qi_create_gtest(test_qipath_from_bin SRC test_qipath.cpp ../src/utils.cpp
+  DEPENDS QI GTEST)
 qi_create_gtest(test_qilocal             SRC test_locale.cpp      DEPENDS QI GTEST)
 qi_create_gtest(test_path_conf           SRC test_path_conf.cpp ../src/path_conf.cpp DEPENDS QI GTEST)
 qi_create_gtest(test_qios                SRC test_qios.cpp        DEPENDS QI GTEST)
