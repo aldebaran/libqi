@@ -313,8 +313,7 @@ namespace qi { namespace py {
         static boost::python::object asignal = qi::py::makePySignal("(i)").attr("__class__");
         if (PyObject_IsInstance(m.ptr(), asignal.ptr())) {
           qiLogDebug() << "Adding signal:" << key;
-          if (gob.advertiseSignal(key, qi::py::getSignal(m)) < 0)
-            throw std::runtime_error("Invalid signature for signal");
+          gob.advertiseSignal(key, qi::py::getSignal(m));
           continue;
         }
 

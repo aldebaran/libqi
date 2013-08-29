@@ -171,12 +171,20 @@ unsigned int        qi_object_builder_register_method(qi_object_builder_t *objec
   return 0;
 }
 
-int          qi_object_builder_register_event(qi_object_builder_t *object_builder, const char *complete_signature)
+unsigned int        qi_object_builder_register_event(qi_object_builder_t *object_builder, const char *complete_signature)
 {
   qi::DynamicObjectBuilder  *ob = reinterpret_cast<qi::DynamicObjectBuilder *>(object_builder);
   std::vector<std::string>  sigInfo;
   sigInfo = qi::signatureSplit(complete_signature);
-  return ob->xAdvertiseSignal(sigInfo[1], sigInfo[2]);
+  try
+  {
+    return ob->xAdvertiseSignal(sigInfo[1], sigInfo[2]);
+  }
+  catch (const std::runtime_error &e)
+  {
+    qiLogWarning() << e.what();
+  }
+  return 0;
 }
 
 int          qi_object_builder_register_property(qi_object_builder_t *object_builder, const char *complete_signature)
