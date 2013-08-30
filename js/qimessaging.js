@@ -16,38 +16,42 @@ function QiSession(url, resource)
   var _idm = 0;
 
   _socket.on('reply', function (data) {
+    var idm = data["idm"];
+
     if (data["result"] != null && data["result"]["metaobject"] != undefined)
     {
       var o = new Object();
-      o.__mobj = data["result"]["metaobject"];
-      o.__pyobj = data["result"]["pyobject"];
-      o.__name = _dfd[data["idm"]].__service;
-      _sigs[o.__pyobj] = new Array();
+      o.__MetaObject = data["result"]["metaobject"];
+      o.__MetaObject.pyobj = data["result"]["pyobject"];
+      o.__MetaObject.name = _dfd[idm].__service;
+      _sigs[o.__MetaObject.pyobj] = new Array();
 
-      var f = o.__mobj["methods"];
-      for (var i in f)
+      var methods = o.__MetaObject["methods"];
+      for (var i in methods)
       {
-        o[f[i]["name"]] = createMetaCall(o.__pyobj, f[i]["name"]);
+        var methodName = methods[i]["name"];
+        o[methodName] = createMetaCall(o.__MetaObject.pyobj, methodName);
       }
 
-      var e = o.__mobj["signals"];
-      for (var i in e)
+      var signals = o.__MetaObject["signals"];
+      for (var i in signals)
       {
-        o[e[i]["name"]] = createMetaSignal(o.__pyobj, e[i]["name"]);
+        var signalName = signals[i]["name"]
+        o[signalName] = createMetaSignal(o.__MetaObject.pyobj, signalName);
       }
 
-      _dfd[data["idm"]].resolve(o);
+      _dfd[idm].resolve(o);
     }
-    else if (_dfd[data["idm"]].__signal != undefined)
+    else if (_dfd[idm].__signal != undefined)
     {
-      _sigIdxToLink[data["result"]] = _dfd[data["idm"]].__signal;
-      _dfd[data["idm"]].resolve(data["result"]);
+      _sigIdxToLink[data["result"]] = _dfd[idm].__signal;
+      _dfd[idm].resolve(data["result"]);
     }
     else
     {
-      _dfd[data["idm"]].resolve(data["result"]);
+      _dfd[idm].resolve(data["result"]);
     }
-    delete _dfd[data["idm"]];
+    delete _dfd[idm];
   });
 
   _socket.on('error', function (data) {
@@ -60,10 +64,10 @@ function QiSession(url, resource)
 
   _socket.on('signal', function (data) {
     var res = data["result"];
-    var cbs = _sigs[res["obj"]][res["signal"]];
-    for (var i in cbs)
+    var callbacks = _sigs[res["obj"]][res["signal"]];
+    for (var i in callbacks)
     {
-      cbs[i](res["data"])
+      callbacks[i](res["data"])
     }
   });
 
