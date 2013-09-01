@@ -6,12 +6,10 @@ import qi
 import sys
 import simplejson as json
 import base64
-from threading import Lock
 import mutex
 
 URL = None
 sid = 1
-mutex = Lock()
 
 class SetEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -43,10 +41,7 @@ class QiMessagingHandler(tornadio2.conn.SocketConnection):
                 data = { "pyobject": o, "metaobject": data.metaObject() }
             evt = dict(name = mtype, args = { "idm": idm, "result": data })
             message = u'5:::%s' % (json.dumps(evt, cls=SetEncoder))
-            global mutex
-            mutex.acquire(True)
             self.session.send_message(message)
-            mutex.release()
         except AttributeError as exc:
             print idm, str(exc)
 
