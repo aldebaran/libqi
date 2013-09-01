@@ -6,6 +6,7 @@
 ## Copyright (C) 2013 Aldebaran Robotics
 
 import time
+import qi
 from qi import ServiceDirectory
 from qi import Session
 
@@ -158,11 +159,24 @@ def test_object_types():
     service.display(objold)
 
 
+def test_qi_object_instance():
+    local = "tcp://127.0.0.1:5555"
+    sd = ServiceDirectory()
+    sd.listen(local)
+
+    s = Session()
+    s.connect(local)
+
+    m = s.service("ServiceDirectory")
+    assert isinstance(m, qi.Object)
+
+
 def main():
     test_throwing_callback()
     test_unicode_strings()
     test_builtin_types()
     test_object_types()
+    test_qi_object_instance()
 
 if __name__ == "__main__":
     main()
