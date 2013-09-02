@@ -28,8 +28,8 @@ namespace qi
   * shared_ptr wrapper.
   *
   * @warning when inheriting from this class, you *must* invoke the destroy()
-  * method from the beginning of your destructor, so that your object is
-  * still valid.
+  * method from your destructor, before any operation that puts your object in
+  * an invalid state.
   *
   * @warning since destroy() blocks until all shared pointers are destroyed,
   * deadlocks may occur if used improperly.
