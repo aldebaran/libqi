@@ -49,7 +49,7 @@ namespace qi {
     MetaMethod& operator= (const MetaMethod& other);
 
     unsigned int uid() const;
-    std::string name() const;
+    const std::string& name() const;
     std::string toString() const; //< name::(args)
     const Signature& parametersSignature() const;
     const Signature& returnSignature() const;

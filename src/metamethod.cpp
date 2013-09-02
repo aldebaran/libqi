@@ -42,7 +42,7 @@ namespace qi {
     return this->_p->uid;
   }
 
-  std::string MetaMethod::name() const {
+  const std::string& MetaMethod::name() const {
     return this->_p->name;
   }
 
