@@ -109,7 +109,7 @@ TEST(TestBind, WeakPtr)
 
   boost::function<void(void)> f =  qi::bind<void(void)>(&SetValue::exchange, w, 3);
   s.reset();
-  f();
+  EXPECT_ANY_THROW(f());
   EXPECT_EQ(2, v);
 }
 
@@ -149,7 +149,11 @@ void wrap(boost::function<void()> op, int msDelay, int* notify)
   if (msDelay)
     qi::os::msleep(msDelay);
   *notify = 2;
-  op();
+  try {
+    op();
+  }
+  catch (const qi::PointerLockException&)
+  {}
   *notify = 3;
 }
 
@@ -173,7 +177,7 @@ TEST(TestBind, Trackable)
     SetValue2 s1(v);
     f = qi::bind<void(void)>(&SetValue2::exchange, &s1, 5);
   }
-  f(); // s1 is trackable, bound and deleted: callback not executed
+  EXPECT_ANY_THROW(f()); // s1 is trackable, bound and deleted: callback not executed
   EXPECT_EQ(4, v);
 
   // check waiting behavior of destroy

@@ -162,7 +162,12 @@ namespace qi {
           if (_async == FutureCallbackType_Async)
             getDefaultThreadPoolEventLoop()->post(boost::bind(s, future));
           else
-            s(future);
+          {
+            try {
+              s(future);
+            } catch(const ::qi::PointerLockException&)
+            {/*do nothing*/}
+          }
         }
       }
 
