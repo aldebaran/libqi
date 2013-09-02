@@ -158,11 +158,12 @@ namespace qi
     _p->propertyMap[id] = property;
   }
 
-  AnyFunction DynamicObject::method(unsigned int id) const
+  const AnyFunction& DynamicObject::method(unsigned int id) const
   {
+    static AnyFunction empty;
     DynamicObjectPrivate::MethodMap::iterator i = _p->methodMap.find(id);
     if (i == _p->methodMap.end())
-      return AnyFunction();
+      return empty;
     else
       return i->second.first;
   }

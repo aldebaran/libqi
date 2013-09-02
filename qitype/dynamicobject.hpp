@@ -47,7 +47,7 @@ namespace qi
     void setSignal(unsigned int id, SignalBase* signal);
     void setProperty(unsigned int id, PropertyBase* property);
 
-    AnyFunction   method(unsigned int id) const;
+    const AnyFunction&   method(unsigned int id) const;
     SignalBase*   signal(unsigned int id) const;
     PropertyBase* property(unsigned int) const;
 
