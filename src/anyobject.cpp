@@ -266,7 +266,9 @@ namespace qi {
       return;
     }
 
-    int eventId = metaObject().signalId(qi::signatureSplit(nameWithOptionalSignature)[1]);
+    bool hasSig = (nameWithOptionalSignature.find(':') != std::string::npos);
+    int eventId = metaObject().signalId(
+      hasSig ? qi::signatureSplit(nameWithOptionalSignature)[1] : nameWithOptionalSignature);
     if (eventId < 0)
       eventId = findMethod(nameWithOptionalSignature, in);
     if (eventId < 0) {
