@@ -21,7 +21,7 @@ namespace qi {
    * Threadsafety warning: do not call listen and addSocketObject at the same time
    *
    */
-  class Server {
+  class Server: public qi::Trackable<Server> {
   public:
     QI_DISALLOW_COPY_AND_ASSIGN(Server);
     Server();

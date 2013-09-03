@@ -18,12 +18,13 @@ namespace qi {
 
   //Server
   Server::Server()
-    : _boundObjectsMutex()
+    : qi::Trackable<Server>(this)
+    ,_boundObjectsMutex()
     , _server()
     , _dying(false)
     , _defaultCallType(qi::MetaCallType_Queued)
   {
-    _server.newConnection.connect(boost::bind<void>(&Server::onTransportServerNewConnection, this, _1));
+    _server.newConnection.connect(&Server::onTransportServerNewConnection, this, _1);
   }
 
   Server::~Server()
@@ -32,6 +33,7 @@ namespace qi {
     //when it's close it's close
     _server.newConnection.disconnectAll();
     close();
+    destroy();
   }
 
   bool Server::addObject(unsigned int id, qi::AnyObject obj)
@@ -80,8 +82,8 @@ namespace qi {
     if (!socket)
       return;
     _sockets.push_back(socket);
-    socket->disconnected.connect(boost::bind<void>(&Server::onSocketDisconnected, this, socket, _1));
-    socket->messageReady.connect(boost::bind<void>(&Server::onMessageReady, this, _1, socket));
+    socket->disconnected.connect(&Server::onSocketDisconnected, this, socket, _1);
+    socket->messageReady.connect(&Server::onMessageReady, this, _1, socket);
     socket->startReading();
   }
 
