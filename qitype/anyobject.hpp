@@ -120,12 +120,14 @@ namespace qi {
       QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoAnyReference));
     QI_GEN(genCall)
     #undef genCall
+
     #define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma) \
     template<typename R> qi::FutureSync<R> async(     \
       const std::string& methodName comma              \
       QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoAnyReference));
     QI_GEN(genCall)
     #undef genCall
+
     #define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma) \
     template<typename R> qi::FutureSync<R> call(     \
       qi::MetaCallType callType,                         \
@@ -133,6 +135,7 @@ namespace qi {
       QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoAnyReference));
     QI_GEN(genCall)
     #undef genCall
+
 #endif // DOXYGEN
 
     qi::Future<AnyReference> metaCall(unsigned int method, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto);
