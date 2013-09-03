@@ -33,7 +33,7 @@ namespace qi {
       std::string fullName = path::findLib(filename);
       if (fullName.empty())
       {
-        qiLogError() << "Could not locate library " << filename;
+        qiLogVerbose() << "Could not locate library " << filename;
         fullName = filename; // Do not return here, let sys call fails and set errno.
       }
       void *handle = NULL;

@@ -244,9 +244,14 @@ namespace qi {
   void* Application::loadModule(const std::string& moduleName, int flags)
   {
     void* handle = os::dlopen(moduleName.c_str(), flags);
-    qiLogDebug() << "Loadmodule " << handle;
     if (!handle)
+    {
       qiLogVerbose() << "dlopen failed with " << os::dlerror();
+    }
+    else
+    {
+      qiLogDebug() << "Loadmodule " << handle;
+    }
     // Reprocess atEnter list in case the module had AT_ENTER
     FunctionList& fl = lazyGet(globalAtEnter);
     qiLogDebug() << "Executing " << fl.size() << " atEnter handlers";
