@@ -23,21 +23,6 @@ namespace qi {
     this->_p->uid = newUid;
   }
 
-  MetaMethod::MetaMethod(const MetaMethod& other)
-    : _p (new MetaMethodPrivate())
-  {
-    *(this->_p) = *(other._p);
-  }
-
-  MetaMethod& MetaMethod::operator =(const MetaMethod& other) {
-    *(this->_p) = *(other._p);
-    return (*this);
-  }
-
-  MetaMethod::~MetaMethod() {
-    delete this->_p;
-  }
-
   unsigned int MetaMethod::uid() const {
     return this->_p->uid;
   }

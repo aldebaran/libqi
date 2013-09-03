@@ -42,11 +42,7 @@ namespace qi {
   class QITYPE_API MetaMethod {
   public:
     MetaMethod();
-    MetaMethod(const MetaMethod& other);
     MetaMethod(unsigned int newUid, const MetaMethod& other);
-    ~MetaMethod();
-
-    MetaMethod& operator= (const MetaMethod& other);
 
     unsigned int uid() const;
     const std::string& name() const;
@@ -61,7 +57,7 @@ namespace qi {
      */
     bool isPrivate() const;
 
-    MetaMethodPrivate* _p;
+    boost::shared_ptr<MetaMethodPrivate> _p;
 
     MetaMethod(unsigned int uid, const qi::Signature& returnSignature,
       const std::string& name, const qi::Signature& parametersSignature,
