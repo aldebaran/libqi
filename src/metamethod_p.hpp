@@ -36,6 +36,8 @@ namespace qi {
     std::string   description;
     MetaMethodParameterVector parameters;
     std::string   returnDescription;
+    MetaMethod*   next; // next method with same name, used by MetaObject
+    friend class MetaObjectPrivate;
   };
 
   class MetaMethodBuilderPrivate {

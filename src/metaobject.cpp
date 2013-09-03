@@ -7,6 +7,7 @@
 #include <qitype/metaobject.hpp>
 #include <qitype/signature.hpp>
 #include "metaobject_p.hpp"
+#include "metamethod_p.hpp"
 #include <boost/algorithm/string/predicate.hpp>
 #include <qi/iocolor.hpp>
 #include <iomanip>
@@ -40,21 +41,159 @@ namespace qi {
     }
     _index = rhs._index;
     _description = rhs._description;
+    // cache data uses pointers to map entries and must be refreshed
+    refreshCache();
     return (*this);
   }
 
-  std::vector<qi::MetaMethod> MetaObjectPrivate::findMethod(const std::string &name)
+  std::vector<qi::MetaMethod> MetaObjectPrivate::findMethod(const std::string &name) const
   {
     boost::recursive_mutex::scoped_lock sl(_methodsMutex);
     std::vector<qi::MetaMethod>         ret;
-    MetaObject::MethodMap::iterator     it;
+    MetaObject::MethodMap::const_iterator     it;
 
     for (it = _methods.begin(); it != _methods.end(); ++it) {
-      qi::MetaMethod &mm = it->second;
+      const qi::MetaMethod &mm = it->second;
       if (mm.name() == name)
         ret.push_back(mm);
     }
     return ret;
+  }
+
+  int MetaObject::findMethod(const std::string& nameWithOptionalSignature, const GenericFunctionParameters& args, bool* canCache) const
+  {
+    return _p->findMethod(nameWithOptionalSignature, args, canCache);
+  }
+
+  std::string MetaObjectPrivate::generateErrorString(
+    const std::string& signature,
+    const std::vector<std::pair<MetaMethod, float> >& candidates,
+    bool logError)
+  {
+    std::stringstream                           ss;
+    std::vector<std::pair<MetaMethod, float> >::const_iterator it;
+
+    if (candidates.size() == 0) {
+      ss << "Can't find method: " << signature << std::endl;
+      return ss.str();
+    }
+
+    if (candidates.size() == 1) {
+      ss << "Arguments types did not match for " << signature << ":" << std::endl
+         << "  Candidate:" << std::endl;
+    } else {
+      ss << "Ambiguous overload for " << signature << ":" << std::endl
+         << "  Candidate(s):" << std::endl;
+    }
+    for (it = candidates.begin(); it != candidates.end(); ++it) {
+      const qi::MetaMethod       &mm = it->first;
+      ss << "  " << mm.toString() << " (" << it->second << ')' << std::endl;
+    }
+    if (logError)
+      qiLogError() << ss.str();
+    return ss.str();
+  }
+
+  struct less_pair_second
+  {
+    template<typename T> bool operator()(const T& a, const T& b) const
+    {
+      return a.second < b.second;
+    }
+  };
+
+  int MetaObjectPrivate::findMethod(const std::string& nameWithOptionalSignature, const GenericFunctionParameters& args, bool* canCache) const
+  {
+    MetaObject::MethodMap::const_iterator it;
+    if (nameWithOptionalSignature.find(':') != nameWithOptionalSignature.npos)
+    { // full name and signature was given, there can be only one match
+      if (canCache)
+        *canCache = true;
+      NameToIdx::const_iterator itRev =  _methodsNameToIdx.find(nameWithOptionalSignature);
+      if (itRev == _methodsNameToIdx.end())
+        return -1;
+      else
+        return itRev->second;
+    }
+    // Only name given, try to find an unique match with given argument count
+    OverloadMap::const_iterator overloadIt = _methodNameToOverload.find(nameWithOptionalSignature);
+    if (overloadIt == _methodNameToOverload.end())
+    { // no match for the name, no chance
+      if (canCache)
+        *canCache = true;
+      return -1;
+    }
+    MetaMethod* firstMatch = 0;
+    bool ambiguous = false;
+    size_t nargs = args.size();
+    for (MetaMethod* mm = overloadIt->second; mm; mm=mm->_p->next)
+    {
+      assert(mm->name() == nameWithOptionalSignature);
+      const Signature& sig = mm->parametersSignature();
+      if (sig == "m" || sig.begin().children().size() == nargs)
+      {
+        if (firstMatch)
+        { // this is the second match, ambiguity that needs args to resolve
+          ambiguous = true;
+          break;
+        }
+        else
+        {
+          firstMatch = mm;
+          // go on to check for more matches
+        }
+      }
+    }
+    if (canCache)
+      *canCache = !ambiguous || !firstMatch;
+    if (!firstMatch)
+      return -1; // no match
+    if (!ambiguous)
+      return firstMatch->uid();
+    // resolve ambiguity by using arguments
+    for (unsigned dyn = 0; dyn<2; ++dyn)
+    {
+      Signature sResolved = args.signature(dyn==1);
+      std::string resolvedSig = sResolved.toString();
+      std::string fullSig = nameWithOptionalSignature + "::" + resolvedSig;
+      qiLogDebug() << "Finding method for resolved signature " << fullSig;
+      // First try an exact match, which is much faster if we're lucky.
+      NameToIdx::const_iterator itRev =  _methodsNameToIdx.find(nameWithOptionalSignature);
+      if (itRev != _methodsNameToIdx.end())
+        return itRev->second;
+      typedef std::vector<std::pair<MetaMethod, float> > Methods;
+
+      typedef std::vector<std::pair<const MetaMethod*, float> > MethodsPtr;
+      MethodsPtr mml;
+
+      // embed findCompatibleMethod
+      for (MetaMethod* mm = overloadIt->second; mm; mm=mm->_p->next)
+      { // still suboptimal, we are rescanning all overloads regardless of arg count
+        float score = sResolved.isConvertibleTo(mm->parametersSignature());
+        if (score)
+          mml.push_back(std::make_pair(mm, score));
+      }
+
+      if (mml.empty())
+        continue;
+      if (mml.size() == 1)
+        return mml.front().first->uid();
+
+      // get best match
+      MethodsPtr::iterator it = std::max_element(mml.begin(), mml.end(), less_pair_second());
+      int count = 0;
+      for (unsigned i=0; i<mml.size(); ++i)
+      {
+        if (mml[i].second == it->second)
+          ++count;
+      }
+      assert(count);
+      if (count > 1)
+        qiLogVerbose() << generateErrorString(fullSig, const_cast<MetaObjectPrivate*>(this)->findCompatibleMethod(nameWithOptionalSignature), false);
+      else
+        return it->first->uid();
+    }
+    return -1;
   }
 
   std::vector<MetaObject::CompatibleMethod> MetaObjectPrivate::findCompatibleMethod(const std::string &nameOrSignature)
@@ -226,11 +365,23 @@ namespace qi {
     {
       boost::recursive_mutex::scoped_lock sl(_methodsMutex);
       _methodsNameToIdx.clear();
+      _methodNameToOverload.clear();
       for (MetaObject::MethodMap::iterator i = _methods.begin();
         i != _methods.end(); ++i)
       {
         _methodsNameToIdx[i->second.toString()] = i->second.uid();
         idx = std::max(idx, i->second.uid());
+        OverloadMap::iterator overloadIt = _methodNameToOverload.find(i->second.name());
+        if (overloadIt == _methodNameToOverload.end())
+        {
+          _methodNameToOverload[i->second.name()] = &i->second;
+          i->second._p->next = 0;
+        }
+        else
+        { // push_front
+          i->second._p->next =  overloadIt->second;
+          overloadIt->second = &i->second;
+        }
       }
     }
     {
@@ -243,7 +394,8 @@ namespace qi {
         idx = std::max(idx, i->second.uid());
       }
     }
-    _index = idx;
+    // never lower index
+    _index = std::max(idx, *_index);
   }
 
   void MetaObjectPrivate::setDescription(const std::string &desc) {
@@ -387,6 +539,7 @@ namespace qi {
     if (!result._p->addProperties(dest.propertyMap()))
       qiLogError() << "can't merge metaobject (properties)";
     result._p->setDescription(dest.description());
+    result._p->refreshCache();
     return result;
   }
 
@@ -431,6 +584,7 @@ namespace qi {
   }
 
   qi::MetaObject MetaObjectBuilder::metaObject() {
+    _p->metaObject._p->refreshCache();
     return _p->metaObject;
   }
 

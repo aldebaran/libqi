@@ -19,6 +19,8 @@
 namespace qi {
 
   class MetaObjectPrivate;
+  class GenericFunctionParameters;
+
   /// Description of the signals and methods accessible on an ObjectTypeInterface
   class QITYPE_API MetaObject  {
   public:
@@ -51,6 +53,18 @@ namespace qi {
     MetaProperty*       property(unsigned int id);
     const MetaProperty* property(unsigned int id) const;
 
+    /** Find a method matching @param nameWithOptionalSignature that can be
+    *   called with arguments @param args.
+    *   @return the mathing method id, or -1 if none or an ambiguous set was found.
+    *   @warning This method optimises for speed at the expense of possible false positive:
+    *            It returns a match as soon as there is only one possible candidate
+    *            remaining, even though this candidate can prove later on to be
+    *            incompatible with the arguments.
+    *   @param canCache if set, will be filled with true if the returned method
+    *          can be cached regardless of the arguments types (but not argument count),
+    *          and false otherwise.
+    */
+    int findMethod(const std::string& nameWithOptionalSignature, const GenericFunctionParameters& args, bool* canCache=0) const;
     std::vector<MetaMethod> findMethod(const std::string &name) const;
     typedef std::pair<MetaMethod, float> CompatibleMethod;
     std::vector<CompatibleMethod> findCompatibleMethod(const std::string &nameOrSignature) const;

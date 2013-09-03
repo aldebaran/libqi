@@ -60,7 +60,7 @@ namespace qi {
     bool addSignals(const MetaObject::SignalMap &mms);
     bool addProperties(const MetaObject::PropertyMap &mms);
 
-    std::vector<MetaMethod> findMethod(const std::string &name);
+    std::vector<MetaMethod> findMethod(const std::string &name) const;
     std::vector<MetaObject::CompatibleMethod> findCompatibleMethod(const std::string &nameOrSignature);
 
     MetaSignal* signal(const std::string &name);
@@ -76,6 +76,8 @@ namespace qi {
 
     void setDescription(const std::string& desc);
 
+    int findMethod(const std::string& nameWithOptionalSignature, const GenericFunctionParameters& args, bool* canCache) const;
+
   private:
     friend class MetaObject;
 
@@ -88,6 +90,9 @@ namespace qi {
     NameToIdx                           _methodsNameToIdx;
     MetaObject::MethodMap               _methods;
     mutable boost::recursive_mutex      _methodsMutex;
+
+    typedef std::map<std::string, MetaMethod*> OverloadMap;
+    OverloadMap                         _methodNameToOverload;
 
     //name::sig() -> Index
     NameToIdx                           _eventsNameToIdx;
@@ -103,6 +108,11 @@ namespace qi {
 
     // Global uid for event subscribers.
     static qi::Atomic<int> uid;
+
+    // Generate an error message for overload resolution failure
+    static std::string generateErrorString(const std::string &signature,
+                                           const std::vector<std::pair<MetaMethod, float> > &candidates,
+                                            bool logError = true);
     friend class TypeImpl<MetaObjectPrivate>;
     friend class TypeImpl<MetaObject>;
   };

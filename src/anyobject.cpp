@@ -7,6 +7,7 @@
 #include <qitype/anyobject.hpp>
 #include "staticobjecttype.hpp"
 #include "anyobject_p.hpp"
+#include "metaobject_p.hpp" // for generateErrorString
 
 #ifdef _MSC_VER
 #  pragma warning( push )
@@ -169,77 +170,9 @@ namespace qi {
     type->metaPost(value, shared_from_this(), event, args);
   }
 
-  static std::string generateErrorString(const std::string &signature,
-                                         const std::vector<MetaObject::CompatibleMethod> &candidates,
-                                         bool logError = true)
-  {
-    std::stringstream                           ss;
-    std::vector<MetaObject::CompatibleMethod>::const_iterator it;
-
-    if (candidates.size() == 0) {
-      ss << "Can't find method: " << signature << std::endl;
-      return ss.str();
-    }
-
-    if (candidates.size() == 1) {
-      ss << "Arguments types did not match for " << signature << ":" << std::endl
-         << "  Candidate:" << std::endl;
-    } else {
-      ss << "Ambiguous overload for " << signature << ":" << std::endl
-         << "  Candidate(s):" << std::endl;
-    }
-    for (it = candidates.begin(); it != candidates.end(); ++it) {
-      const qi::MetaMethod       &mm = it->first;
-      ss << "  " << mm.toString() << " (" << it->second << ')' << std::endl;
-    }
-    if (logError)
-      qiLogError() << ss.str();
-    return ss.str();
-  }
-
-  struct less_pair_second
-  {
-    template<typename T> bool operator()(const T& a, const T& b) const
-    {
-      return a.second < b.second;
-    }
-  };
-
   unsigned int GenericObject::findMethod(const std::string& nameWithOptionalSignature, const GenericFunctionParameters& args)
   {
-    typedef std::vector<MetaObject::CompatibleMethod> Methods;
-    const MetaObject& mo = metaObject();
-    if (nameWithOptionalSignature.find(':') != nameWithOptionalSignature.npos)
-      return mo.methodId(nameWithOptionalSignature);
-    for (unsigned dyn = 0; dyn<2; ++dyn)
-    {
-      std::string resolvedSig = args.signature(dyn==1).toString();
-      std::string fullSig = nameWithOptionalSignature + "::" + resolvedSig;
-      qiLogDebug() << "Finding method for resolved signature " << fullSig;
-      // First try an exact match, which is much faster if we're lucky.
-      int methodId = mo.methodId(fullSig);
-      if (methodId >= 0)
-        return methodId;
-      Methods mml = mo.findCompatibleMethod(fullSig);
-      if (mml.empty())
-        continue;
-      if (mml.size() == 1)
-        return mml.front().first.uid();
-      // get best match
-      Methods::iterator it = std::max_element(mml.begin(), mml.end(), less_pair_second());
-      int count = 0;
-      for (unsigned i=0; i<mml.size(); ++i)
-      {
-        if (mml[i].second == it->second)
-          ++count;
-      }
-      assert(count);
-      if (count > 1)
-        qiLogVerbose() << generateErrorString(fullSig, mml, false);
-      else
-        return it->first.uid();
-    }
-    return -1;
+    return metaObject().findMethod(nameWithOptionalSignature, args);
   }
 
   qi::Future<AnyReference>
@@ -254,7 +187,7 @@ namespace qi {
     if (methodId < 0) {
       std::string resolvedSig = args.signature(true).toString();
       std::string fullSig = nameWithOptionalSignature + "::" + resolvedSig;
-      return makeFutureError<AnyReference>(generateErrorString(fullSig, metaObject().findCompatibleMethod(nameWithOptionalSignature), false));
+      return makeFutureError<AnyReference>(MetaObjectPrivate::generateErrorString(fullSig, metaObject().findCompatibleMethod(nameWithOptionalSignature), false));
     }
     return metaCall(methodId, args, callType);
   }

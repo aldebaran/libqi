@@ -997,6 +997,54 @@ TEST(TestObject, async)
   EXPECT_EQ(100, f.value());
 }
 
+qi::GenericFunctionParameters args(
+  qi::AutoAnyReference p1=qi::AutoAnyReference(),
+  qi::AutoAnyReference p2=qi::AutoAnyReference(),
+  qi::AutoAnyReference p3=qi::AutoAnyReference())
+{
+  qi::GenericFunctionParameters res;
+  if (p1.type) res.push_back(p1); else return res;
+  if (p2.type) res.push_back(p2); else return res;
+  if (p3.type) res.push_back(p3); else return res;
+  return res;
+}
+
+TEST(TestMetaObject, findMethod)
+{
+  qi::MetaObjectBuilder b;
+  unsigned int f   = b.addMethod("i", "f", "(i)");
+  unsigned int g1  = b.addMethod("i", "g", "(i)");
+  unsigned int g2  = b.addMethod("i", "g", "(ii)");
+  unsigned int h1i = b.addMethod("i", "h", "(i)");
+  unsigned int h1s = b.addMethod("i", "h", "(s)");
+  unsigned int h2  = b.addMethod("i", "h", "(ii)");
+
+  qi::MetaObject mo = b.metaObject();
+  bool canCache;
+  int mid;
+  mid = mo.findMethod("f", args(1), &canCache);
+  EXPECT_EQ(mid, f); EXPECT_TRUE(canCache);
+  mid = mo.findMethod("g", args(1), &canCache);
+  EXPECT_EQ(mid, g1); EXPECT_TRUE(canCache);
+  mid = mo.findMethod("g", args(1, 1), &canCache);
+  EXPECT_EQ(mid, g2); EXPECT_TRUE(canCache);
+  // no garantee is made on result of findmethod(g, "foo"), so not tested
+  mid = mo.findMethod("h", args(1), &canCache);
+  EXPECT_EQ(mid, h1i); EXPECT_FALSE(canCache);
+  mid = mo.findMethod("h", args("foo"), &canCache);
+  EXPECT_EQ(mid, h1s); EXPECT_FALSE(canCache);
+  mid = mo.findMethod("h", args(1, 1), &canCache);
+  EXPECT_EQ(mid, h2); EXPECT_TRUE(canCache);
+
+  mid = mo.findMethod("h::(i)", args(1), &canCache);
+  EXPECT_EQ(mid, h1i); EXPECT_TRUE(canCache);
+
+  // check null canCache
+  mo.findMethod("h::(i)", args(1), 0);
+  mid = mo.findMethod("h", args("foo"), 0);
+  EXPECT_TRUE(true);
+}
+
 int main(int argc, char **argv)
 {
   qi::Application app(argc, argv);
