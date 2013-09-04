@@ -13,32 +13,63 @@ static void onDisconnected(const std::string& /*errorMessage*/)
   ::qi::Application::stop();
 }
 
-namespace qi
+static std::string _address;
+static std::string _listenAddress;
+static void parseAddress()
 {
   namespace po = boost::program_options;
+  po::options_description desc("ApplicationSession options");
+
+  desc.add_options()
+      ("qi-url", po::value<std::string>(&_address), "The address of the service directory")
+      ("qi-listen-url", po::value<std::string>(&_listenAddress), "The url to listen to");
+  po::variables_map vm;
+  po::parsed_options parsed = po::command_line_parser(qi::Application::arguments()).options(desc).allow_unregistered().run();
+  po::store(parsed, vm);
+  po::notify(vm);
+  qi::Application::setArguments(po::collect_unrecognized(parsed.options, po::include_positional));
+
+  {
+    po::options_description descTmp;
+    descTmp.add_options()
+      ("help,h", "");
+    po::variables_map vmTmp;
+    po::store(po::command_line_parser(qi::Application::arguments()).options(descTmp).allow_unregistered().run(), vmTmp);
+    if (vmTmp.count("help"))
+      std::cout << desc << std::endl;
+  }
+}
+
+// This function is used to add the callback before the call of Application's constructor
+static int& addParseOptions(int& argc)
+{
+  qi::Application::atEnter(parseAddress);
+  return argc;
+}
+
+namespace qi
+{
   class ApplicationSessionPrivate : public Trackable<ApplicationSessionPrivate>
   {
   public:
     ApplicationSessionPrivate(const Url& url, ApplicationSessionOptions opt);
     virtual ~ApplicationSessionPrivate();
 
-    Url  retrieveUrl(const Url& url) const;
+    void connect();
   public:
-    Session                   _session;
+    Url          _url;
+    Session      _session;
+    bool         _init;
+    boost::mutex _mutex;
   };
-
-  static ApplicationSessionPrivate* _p = 0;
 
   ApplicationSession::ApplicationSession(int&                      argc,
                                          char**&                   argv,
                                          ApplicationSessionOptions opt,
                                          const Url&                url)
-    : Application(argc, argv)
+    : Application(::addParseOptions(argc), argv)
   {
-    if (!_p)
-    {
-      _p = new ApplicationSessionPrivate(url, opt);
-    }
+    _p = new ApplicationSessionPrivate(url, opt);
   }
 
   ApplicationSession::ApplicationSession(const std::string&        name,
@@ -46,12 +77,9 @@ namespace qi
                                          char**&                   argv,
                                          ApplicationSessionOptions opt,
                                          const Url&                url)
-    : Application(name, argc, argv)
+    : Application(name, ::addParseOptions(argc), argv)
   {
-    if (!_p)
-    {
-      _p = new ApplicationSessionPrivate(url, opt);
-    }
+    _p = new ApplicationSessionPrivate(url, opt);
   }
 
 
@@ -66,21 +94,48 @@ namespace qi
     return _p->_session;
   }
 
+  const Url& ApplicationSession::url()
+  {
+    return _p->_url;
+  }
+
+  const Url& ApplicationSession::listenUrl()
+  {
+    return _listenAddress;
+  }
+
+  void ApplicationSession::start()
+  {
+    {
+      boost::mutex::scoped_lock lock(_p->_mutex);
+
+      if (_p->_init)
+      {
+        return;
+      }
+      _p->_init = true;
+    }
+
+    // The connection is asynchronous, therefore a wait is expected here
+    _p->connect();
+  }
+
+  void ApplicationSession::run()
+  {
+    start();
+    Application::run();
+  }
+
   ApplicationSessionPrivate::ApplicationSessionPrivate(const Url& url, ApplicationSessionOptions opt)
     : Trackable<ApplicationSessionPrivate>(this)
+    , _init(false)
   {
     if (!(opt & ApplicationSession_NoAutoExit))
     {
       _session.disconnected.connect(&::onDisconnected);
     }
 
-    Url urlTmp = retrieveUrl(url);
-
-    if (!(opt & ApplicationSession_NoAutoConnect))
-    {
-      // The connection is synchronous, therefore a wait is expected here
-      _session.connect(urlTmp);
-    }
+    _url = _address.empty() ? url : Url(_address, "tcp", 9559);
   }
 
   ApplicationSessionPrivate::~ApplicationSessionPrivate()
@@ -88,20 +143,14 @@ namespace qi
     destroy();
   }
 
-  Url ApplicationSessionPrivate::retrieveUrl(const Url& url) const
+  void ApplicationSessionPrivate::connect()
   {
-    po::options_description options;
+    _session.connect(_url);
 
-    options.add_options()
-        ("qi-url", po::value<std::string>()->default_value(url.str()), "The address of the service directory");
-    po::variables_map vm;
-    po::parsed_options parsed = po::command_line_parser(Application::arguments()).options(options).allow_unregistered().run();
-    po::store(parsed, vm);
-    po::notify(vm);
-
-    Application::setArguments(po::collect_unrecognized(parsed.options, po::include_positional));
-
-    // can't fail since qi-url's option has a default value
-    return vm["qi-url"].as<std::string>();
+    if (!_listenAddress.empty())
+    {
+      Url listenUrl(_listenAddress, "tcp", 0);
+      _session.listen(listenUrl);
+    }
   }
 }

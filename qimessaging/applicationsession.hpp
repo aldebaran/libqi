@@ -12,18 +12,18 @@
 
 namespace qi
 {
-  /** By default, ApplicationSession will automatically connect the session and
-   *  will automatically call Application::stop() when the session is over.
+  class ApplicationSessionPrivate;
+  /** By default, ApplicationSession will automatically will automatically
+   *  call Application::stop() when the session is over.
    *  If you want a different behaviour you have to call the constructor with
-   *  the desired options below.
+   *  the desired option below.
    *
-   *  Ex : qi::ApplicationSession app(argc, argv, qi::ApplicationSession_NoAutoConnect | qi::ApplicationSession_NoAutoExit)
+   *  Ex: qi::ApplicationSession app(argc, argv, qi::ApplicationSession_NoAutoExit)
    */
   enum Options
   {
     ApplicationSession_None          = 0,
-    ApplicationSession_NoAutoConnect = 1,
-    ApplicationSession_NoAutoExit    = 1 << 1,
+    ApplicationSession_NoAutoExit    = 1,
   };
   typedef qi::uint32_t ApplicationSessionOptions;
 
@@ -36,13 +36,35 @@ namespace qi
   {
   public:
     /** ApplicationSession will check first if there is a --qi-url given in argv,
-     *  if not it will take the url in the constructor instead.
+     *  if not it will take the url in the constructor instead setting its url.
+     *  If --qi-listen-url is set the session will listen on the provided url.
      */
     ApplicationSession(int& argc, char**& argv, ApplicationSessionOptions opt = ApplicationSession_None, const Url& url = "tcp://127.0.0.1:9559");
     ApplicationSession(const std::string& name, int& argc, char**& argv, ApplicationSessionOptions opt = ApplicationSession_None, const Url& url = "tcp://127.0.0.1:9559");
     virtual ~ApplicationSession();
 
-    static Session& session();
+    Session&   session();
+
+    /** Returns the intern url used by ApplicationSession parsed on the
+     *  command line by --qi-url or given in the constructor.
+     */
+    const Url& url();
+
+    /** Returns the intern url used by ApplicationSession parsed on the
+     *  command line by --qi-listen-url.
+     */
+    const Url& listenUrl();
+
+    /** Establishes the session's connection and moreover starts listening if
+     * --qi-listen-url was given.
+     */
+    void       start();
+
+    /** Runs the application and automatically calls start() if it hasn't been done yet.
+     */
+    void       run();
+  private:
+    ApplicationSessionPrivate* _p;
   private:
     QI_DISALLOW_COPY_AND_ASSIGN(ApplicationSession);
   };
