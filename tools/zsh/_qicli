@@ -1,0 +1,204 @@
+#compdef qicli
+
+_qicli_commands() {
+  local -a qicli_commands
+  qicli_commands=(
+  info:'Give info about services.'
+  call:'Call a method.'
+  post:'Post on a signal.'
+  get:'Get a property.'
+  set:'Set a property.'
+  watch:'Watch a signal.'
+  top:'Give informations about methods.'
+  trace:'Exploit get trace data.')
+
+  integer ret=1
+  _describe -t qicli-commands 'commands' qicli_commands && ret=0
+  return ret
+}
+
+_qicli-top() {
+  local curcontext=$curcontext state line ret=1
+  declare -A opt_args
+  _arguments -C \
+    "(-n --numeric)"{-n,--numeric}"[Do not resolve slot Ids to name]" \
+  && return
+
+  return ret
+}
+
+_qicli-watch() {
+  local curcontext=$curcontext state line ret=1
+  declare -A opt_args
+  _arguments -C \
+    "(-h --help)"{-h,--help}"[Print help for this call command]" \
+    "--signal[service's name]:Service name:->signals" \
+    "--time[Print time]" \
+    "--continue[Continue on error]" \
+    "--hidden[Call hidden methods if they match the given pattern]" \
+    "--almemory[Watch ALMemory events]" \
+  && return
+
+  case $state in
+    (signals)
+      __qicli_signals $1
+      ;;
+  esac
+
+  return ret
+}
+
+_qicli-set() {
+  local curcontext=$curcontext state line ret=1
+  declare -A opt_args
+  _arguments -C \
+    "(-h --help)"{-h,--help}"[Print help for this call command]" \
+    "--json[Method parameters will be treated as JSON strings]" \
+    "--continue[Continue on error]" \
+    "--hidden[Call hidden methods if they match the given pattern]" \
+    "--prop[Property's name]:Property's name:->property" \
+    && return
+
+    return ret
+}
+
+_qicli-get() {
+  local curcontext=$curcontext state line ret=1
+  declare -A opt_args
+  _arguments -C \
+    "(-h --help)"{-h,--help}"[Print help for this call command]" \
+    "--continue[Continue on error]" \
+    "--hidden[Call hidden methods if they match the given pattern]" \
+    "--prop[Property's name]:Property's name:->property" \
+    && return
+
+  return ret
+}
+
+_qicli-post() {
+  local curcontext=$curcontext state line ret=1
+  declare -A opt_args
+  _arguments -C \
+    "(-h --help)"{-h,--help}"[Print help for this call command]" \
+    "--arg[method's arg]:" \
+    "--json[Method parameters will be treated as JSON strings]" \
+    "--signal[signal's name]:Signals name:->signals" \
+    "--hidden[Call hidden methods if they match the given pattern]" \
+    "--almemory[Post on almemory event]" \
+    && return
+
+  case $state in
+    (signals)
+      __qicli_signals $1
+      ;;
+  esac
+
+  return ret
+}
+
+_qicli-call () {
+  local curcontext=$curcontext state line ret=1
+  declare -A opt_args
+  _arguments -C \
+    "(-h --help)"{-h,--help}"[Print help for this call command]" \
+    "--method[Method's name]:Methods name:->methods" \
+    "--hidden[Call hidden methods if they match the given pattern]" \
+    "--arg[method's arg]:" \
+    "--json[Method parameters will be treated as JSON strings]" \
+    "--continue[Continue on error]" \
+    && return
+
+  case $state in
+    (methods)
+      __qicli_methods $1
+      ;;
+  esac
+
+  return ret
+}
+
+_qicli-info () {
+  local curcontext=$curcontext state line ret=1
+  declare -A opt_args
+  _arguments -w -C -S -s \
+    '(- -h --help)'{-h,--help}'[Print help for this info command]' \
+    "(-d --details)"{-d,--details}"[Print service info, methods, signals and properties]" \
+    "(-s --service)"{-s,--service}="[Service to display]:Services:->services" \
+    "(-l --list)"{-l,--list}"[List services (default)]" \
+    "--hidden[Show hidden services, methods, signals and properties]" \
+    "--show-doc[Show documentation for methods, signals and properties]" \
+    "--raw-signature[Show the raw signature]" \
+    && return
+
+  case $state in
+    (services)
+      __qicli_services $1
+      ;;
+  esac
+
+  return ret
+}
+
+__qicli_services () {
+  declare -a services
+
+  services=(${(f)"$(_call_program services qicli --address $1 info -l 2>/dev/null | cut -d' ' -f2 2>/dev/null | sed -r 's/(\[|])//g' 2>/dev/null)"})
+  _describe -t qicli-services 'Services' services && ret=0
+}
+
+__qicli_methods () {
+  declare -a methods
+  tmp_methods="$(_call_program methods qicli --address $1 info --details | awk 'BEGIN {service="";methods=0} /^[0-9]{3}/ {gsub("\\[|\\]", "", $2); service=$2}; / * Signals:/ {methods=0}; methods == 1 {print service "." $2}; / * Methods:/ {methods=1}')"
+  methods=(${(f)tmp_methods})
+  _multi_parts . methods && ret=0
+}
+
+__qicli_signals () {
+  declare -a signals
+  tmp_signals="$(_call_program signals qicli --address $1 info --details | awk 'BEGIN {service="";signals=0} /^[0-9]{3}/ {gsub("\\[|\\]", "", $2); service=$2; signals=0}; signals == 1 {print service "." $2}; / * Signals:/ {signals=1}')"
+  signals=(${(f)tmp_signals})
+  _multi_parts . signals && ret=0
+}
+
+_qicli() {
+  integer ret=1
+  local curcontext=$curcontext state line
+  declare -A opt_args
+
+  _arguments -C \
+    "(--qi-log-quiet --qi-log-debug --qi-log-level)--qi-log-verbose[Set verbose verbosity.]" \
+    "(--qi-log-quiet --qi-log-verbose --qi-log-level)--qi-log-debug[Set debug verbosity.]" \
+    "(--qi-log-verbose --qi-log-level --qi-log-debug)--qi-log-quiet[Do not show logs on console.]" \
+    "--qi-log-context=[Show context logs, it's a bitfield.]:Context number" \
+    "--qi-log-synchronous[Activate synchronous logs.]" \
+    "(--qi-log-debug --qi-log-verbose --qi-log-quiet)--qi-log-level=[Change the log minimum level.]:Level:(0 1 2 3 4 5 6)" \
+    "--qi-log-color=[Tell if we should put color or not in log.]:When:(auto never always)" \
+    "--loop-monitor-latency=[Warn if even loop is stuck more thant given duration in seconds]:Duration in second" \
+    "(- -h --help)"{-h,--help}"[Show command line options]" \
+    "(-a --address)"{-a,--address}"=[The address of the service directory]:" \
+    "(-): :->command" \
+    "(-)*:: :->option-or-argument" \
+    && return
+
+  address=$opt_args[-a]
+  if [[ -z $address ]]; then
+    address=$opt_args[--address]
+    if [[ -z $address ]]; then
+      address="tcp://127.0.0.1:9559"
+    fi
+  fi
+
+  case $state in
+    (command)
+      _qicli_commands && ret=0
+      ;;
+    (option-or-argument)
+      curcontext=${curcontext%:*:*}:qicli-$words[1]:
+
+      _call_function ret _qicli-$words[1] $address
+      ;;
+  esac
+  return ret
+}
+
+_qicli
