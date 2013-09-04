@@ -225,10 +225,11 @@
  */
 
 /**
- * \fn qi::log::addLogHandler(const std::string&, qi::log::logFuncHandler);
+ * \fn qi::log::addLogHandler(const std::string&, qi::log::logFuncHandlere, qi::LogLevel defaultVerbosity = qi::LogLevel_Info);
  * \brief Add a log handler.
  * \param name Name of the handler, useful to remove handler (prefer lowercase).
  * \param fct Boost delegate to log handler function.
+ * \param defaultVerbosity default log verbosity.
  */
 
 /**

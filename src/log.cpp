@@ -281,7 +281,18 @@ namespace qi {
       void Category::setLevel(SubscriberId sub, qi::LogLevel level)
       {
         if (levels.size() <= sub)
-          levels.resize(sub + 1, LogLevel_Debug);
+        {
+          bool willUseDefault = (levels.size() < sub);
+          levels.resize(sub + 1, LogLevel_Info);
+          if (willUseDefault)
+          { // should not happen
+            // cannot qilog here or deadlock
+            std::cerr << "Default level for category " << name
+              << " will be used for subscriber " << sub
+              << ", use setVerbosity() after adding the subscriber"
+              << std::endl;
+          }
+        }
         levels[sub] = level;
         maxLevel = *std::max_element(levels.begin(), levels.end());
       }
@@ -576,7 +587,8 @@ namespace qi {
        return 0;
     }
 
-    SubscriberId addLogHandler(const std::string& name, logFuncHandler fct)
+    SubscriberId addLogHandler(const std::string& name, logFuncHandler fct,
+                               qi::LogLevel defaultLevel)
     {
       if (!LogInstance)
         return -1;
@@ -587,6 +599,7 @@ namespace qi {
       h.index = id;
       h.func = fct;
       LogInstance->logHandlers[name] = h;
+      setVerbosity(id, defaultLevel);
       return id;
     }
 
@@ -757,7 +770,13 @@ namespace qi {
       {
         // Prepend the rule
         GlobRule rule("*", sub, level);
-        _glGlobRules.insert(_glGlobRules.begin(), rule);
+        // Insert the rule with initial '*' rule set, ordered by subscriber id
+        // to avoid spurious unset-verbosity warning
+        std::vector<GlobRule>::iterator insertIt = _glGlobRules.begin();
+        while (insertIt != _glGlobRules.end()
+          && insertIt->target == "*" && insertIt->id < sub)
+          ++insertIt;
+        _glGlobRules.insert(insertIt, rule);
       }
       // Then reprocess all categories
       CategoryMap& c = _categories();

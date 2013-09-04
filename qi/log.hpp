@@ -217,7 +217,8 @@ namespace qi {
     QI_API void setSynchronousLog(bool sync);
 
     QI_API SubscriberId addLogHandler(const std::string& name,
-                                    qi::log::logFuncHandler fct);
+                                    qi::log::logFuncHandler fct,
+                                    qi::LogLevel defaultLevel = LogLevel_Info);
 
     QI_API void removeLogHandler(const std::string& name);
 
