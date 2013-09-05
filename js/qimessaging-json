@@ -29,7 +29,7 @@ class QiMessagingHandler(tornadio2.conn.SocketConnection):
         self.sid = sid
         sid = sid + 1
         print("[%d] New connection from %s" % (self.sid, self.info.ip))
-        self.qim.disconnected.connect(lambda x: self.close())
+        qim.disconnected.connect(lambda x: self.close())
 
     def on_message(self, message):
         pass
@@ -65,7 +65,7 @@ class QiMessagingHandler(tornadio2.conn.SocketConnection):
             method = params["method"]
             args = params["args"]
             if service == "ServiceDirectory" and method == "service":
-                f = self.qim.service(str(args[0]), _async = True)
+                f = qim.service(str(args[0]), _async = True)
                 f.addCallback(self.do_reply(idm))
             elif method == "registerEvent":
                 obj = self.objs[service]
