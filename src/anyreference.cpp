@@ -78,7 +78,11 @@ namespace qi
       {
         qiLogDebug() << "Attempting object->proxy conversion";
         // try object->proxy conversion by simply rewrapping this
-        AnyObject o(new GenericObject(static_cast<ObjectTypeInterface*>(pointedSrc.type), pointedSrc.value));
+        AnyObject o(
+              new GenericObject(
+                static_cast<ObjectTypeInterface*>(pointedSrc.type),
+                pointedSrc.value),
+              boost::bind(dropIt, _1, qi::AnyValue(*this)));
         return AnyReference(o).convert((TypeInterface*)targetType);
       }
       if (pointedDstPair.second)
