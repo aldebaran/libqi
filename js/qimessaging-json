@@ -39,9 +39,7 @@ class QiMessagingHandler(tornadio2.conn.SocketConnection):
                 o = len(self.objs)
                 self.objs[o] = data
                 data = { "pyobject": o, "metaobject": data.metaObject() }
-            evt = dict(name = mtype, args = { "idm": idm, "result": data })
-            message = u'5:::%s' % (json.dumps(evt, cls=SetEncoder))
-            self.session.send_message(message)
+            self.emit(mtype, idm=idm, result=data, cls=SetEncoder)
         except AttributeError as exc:
             print idm, str(exc)
 
