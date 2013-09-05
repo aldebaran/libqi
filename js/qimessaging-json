@@ -7,6 +7,7 @@ import sys
 import simplejson as json
 import base64
 import mutex
+import tornado
 
 URL = None
 sid = 1
@@ -39,7 +40,7 @@ class QiMessagingHandler(tornadio2.conn.SocketConnection):
                 o = len(self.objs)
                 self.objs[o] = data
                 data = { "pyobject": o, "metaobject": data.metaObject() }
-            self.emit(mtype, idm=idm, result=data, cls=SetEncoder)
+            tornado.ioloop.IOLoop.instance().add_callback(self.emit, mtype, idm=idm, result=data, cls=SetEncoder)
         except AttributeError as exc:
             print idm, str(exc)
 
