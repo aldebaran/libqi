@@ -3,8 +3,6 @@
 **  See COPYING for the license
 */
 #include "pysession.hpp"
-#include <qimessaging/session.hpp>
-#include <boost/python.hpp>
 #include <boost/python/stl_iterator.hpp>
 #include <qitype/dynamicobjectbuilder.hpp>
 #include "pyfuture.hpp"
@@ -24,8 +22,8 @@ qi::AnyReference triggerBouncer(qi::SignalBase *sig, const std::vector<qi::AnyRe
 
     class PySession {
     public:
-      PySession()
-        : _ses(new qi::Session)
+      PySession(boost::shared_ptr<qi::Session> session = boost::shared_ptr<qi::Session>(new qi::Session()))
+        : _ses(session)
         , nSigConnected(0)
         , nSigDisconnected(0)
         , connected(makePySignal())
@@ -47,7 +45,6 @@ qi::AnyReference triggerBouncer(qi::SignalBase *sig, const std::vector<qi::AnyRe
           _ses.reset();
         }
       }
-
 
       //return a future, or None (and throw in case of error)
       boost::python::object connect(const std::string &url, bool _async=false) {
@@ -145,7 +142,7 @@ qi::AnyReference triggerBouncer(qi::SignalBase *sig, const std::vector<qi::AnyRe
     };
 
     void export_pysession() {
-      boost::python::class_<PySession>("Session")
+      boost::python::class_<PySession, boost::shared_ptr<PySession> >("Session")
           .def("connect", &PySession::connect, (boost::python::arg("url"), boost::python::arg("_async") = false),
                "connect(url) -> None\n"
                "Connect the session to a ServiceDirectory")
@@ -192,6 +189,12 @@ qi::AnyReference triggerBouncer(qi::SignalBase *sig, const std::vector<qi::AnyRe
           //todo: serviceRegistered
           //todo: serviceUnregistered
           ;
+    }
+
+    boost::python::object makePySession(boost::shared_ptr<qi::Session> ses)
+    {
+      GILScopedLock _lock;
+      return boost::python::object(boost::shared_ptr<PySession>(new PySession(ses)));
     }
 
   }

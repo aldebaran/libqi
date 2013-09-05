@@ -11,6 +11,7 @@ namespace qi {
   namespace py {
 
     void export_pyapplication();
+    void export_pyapplicationsession();
 
   }
 }

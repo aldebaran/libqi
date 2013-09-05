@@ -42,6 +42,7 @@ if sys.platform.startswith("linux"):
 #######
 
 from _qi import Application as _Application
+from _qi import ApplicationSession as _ApplicationSession
 from _qi import FutureState, FutureTimeout, Future, \
                 Promise, Property, Session, Signal, \
                 createObject, registerObjectFactory
@@ -71,10 +72,26 @@ atexit.register(_stopApplication)
 
 #application is a singleton, it should live till the end of the program
 #because it own eventloops
-def Application():
+def ApplicationSession(args=None):
     global _app
     if _app is None:
-        _app = _Application()
+        if args is None:
+            _app = _ApplicationSession()
+        else:
+            _app = _ApplicationSession(args)
+    else:
+        raise Exception("Application was already initialized")
+    return _app
+
+def Application(args=None):
+    global _app
+    if _app is None:
+        if args is None:
+            _app = _Application()
+        else:
+            _app = _Application(args)
+    else:
+        raise Exception("Application was already initialized")
     return _app
 
 __all__ = ["FutureState",

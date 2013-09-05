@@ -35,4 +35,5 @@ BOOST_PYTHON_MODULE(_qi)
   qi::py::export_pysignal();
   qi::py::export_pyproperty();
   qi::py::export_pyobjectfactory();
+  qi::py::export_pyapplicationsession();
 }
