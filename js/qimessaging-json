@@ -4,7 +4,7 @@ import tornado
 import tornadio2
 import qi
 import sys
-import json
+import simplejson as json
 import base64
 from threading import Lock
 import mutex
