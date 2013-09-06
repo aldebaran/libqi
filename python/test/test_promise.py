@@ -11,12 +11,17 @@ import threading
 
 from qi import Promise
 
-def wait(promise, t=0.1):
-    time.sleep(t)
+def waiterSetValue(promise, waiter):
+    #time.sleep(t)
+    waiter.wait()
     try:
         promise.setValue("mjolk")
     except:
         pass
+
+def waitSetValue(p, t=0.01):
+    time.sleep(t)
+    p.setValue("mjolk")
 
 def test_many_futures_create():
     def wait(p):
@@ -29,15 +34,11 @@ def test_many_futures_create():
         assert f.value() == 1337
 
 def test_future_wait():
-    def wait(promise):
-        time.sleep(0.1)
-        promise.setValue("lol")
-
     p = Promise()
     f = p.future()
-    threading.Thread(target=wait, args=[p]).start()
+    threading.Thread(target=waitSetValue, args=[p, 0.1]).start()
     assert f.isFinished() is False
-    assert f.value() == "lol"
+    assert f.value() == "mjolk"
     assert f.isFinished() is True
 
 
@@ -48,12 +49,14 @@ def test_many_futures_wait_cancel():
         except:
             pass #ok: cancel called many times
 
+    waiter = Promise();
     ps = [Promise(cancel) for _ in range(50)]
     fs = [p.future() for p in ps]
     for p in ps:
-        threading.Thread(target=wait, args=[p]).start()
+        threading.Thread(target=waiterSetValue, args=[p, waiter.future()]).start()
     # Cancel only one future
     fs[25].cancel()
+    waiter.setValue(None)
 
     for i, f in enumerate(fs):
         if i == 25:
@@ -63,20 +66,20 @@ def test_many_futures_wait_cancel():
 
 
 def test_many_promises_wait_cancel():
-
     def cancel(p):
         try:
             p.setValue("Kappa")
         except:
             pass #ok: cancel called many times
 
+    waiter = Promise();
     ps = [Promise(cancel) for _ in range(50)]
     fs = [p.future() for p in ps]
     for p in ps:
-        threading.Thread(target=wait, args=[p]).start()
+        threading.Thread(target=waiterSetValue, args=[p, waiter.future()]).start()
     # Cancel only one promise
     ps[25].setCanceled()
-
+    waiter.setValue(None)
     for i, f in enumerate(fs):
         if i == 25:
             try:
@@ -90,16 +93,16 @@ def test_many_promises_wait_cancel():
 def test_future_no_timeout():
     p = Promise()
     f = p.future()
-    threading.Thread(target=wait, args=[p, 0.01]).start()
-    # 10ms + 3ms
-    assert f.value(timeout=12) == "mjolk"
+    threading.Thread(target=waitSetValue, args=[p]).start()
+    # 1sec to be secure
+    assert f.value(timeout=1000) == "mjolk"
     assert f.hasError() is False
 
 
 def test_future_timeout_immediate():
     p = Promise()
     f = p.future()
-    threading.Thread(target=wait, args=[p]).start()
+    threading.Thread(target=waitSetValue, args=[p, 1]).start()
     try:
         f.value(timeout=0)
     except RuntimeError:
@@ -109,7 +112,7 @@ def test_future_timeout_immediate():
 def test_future_timeout():
     p = Promise()
     f = p.future()
-    threading.Thread(target=wait, args=[p, 0.01]).start()
+    threading.Thread(target=waitSetValue, args=[p, 1]).start()
     try:
         # 10ms - 3ms
         f.value(timeout=8)
