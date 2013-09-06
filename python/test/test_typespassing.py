@@ -9,7 +9,7 @@ import time
 import qi
 from qi import ServiceDirectory
 from qi import Session
-
+import pytest
 
 class TestService:
     def display(self, t):
@@ -170,6 +170,28 @@ def test_qi_object_instance():
     m = s.service("ServiceDirectory")
     assert isinstance(m, qi.Object)
 
+def test_type():
+    assert qi.Int8 == qi.Int8
+    assert qi.Int8() == qi.Int8()
+    assert qi.Int8 == qi.Int8()
+    assert qi.Int8() == qi.Int8
+    with pytest.raises(Exception):
+        assert qi.Map != qi.Int8
+    with pytest.raises(Exception):
+        assert qi.List != qi.List(qi.Int8)
+    assert qi.List(qi.Int8) == qi.List(qi.Int8)
+    assert qi.List(qi.Int8()) == qi.List(qi.Int8())
+    assert qi.List(qi.Int8()) == qi.List(qi.Int8)
+    assert qi.List(qi.Int8) == qi.List(qi.Int8())
+    assert qi.Object != qi.Int8
+    assert qi.Object != qi.Int8()
+    assert qi.Object != qi.Int32()
+    assert qi.Int8() != qi.UInt8()
+    assert (qi.Int8() != qi.Int8()) == False
+    assert (qi.Int8 != qi.Int8) == False
+    assert (qi.Int8 != qi.Int8()) == False
+    assert (qi.Int8() != qi.Int8) == False
+
 
 def main():
     test_throwing_callback()
@@ -177,6 +199,7 @@ def main():
     test_builtin_types()
     test_object_types()
     test_qi_object_instance()
+    test_type()
 
 if __name__ == "__main__":
     main()

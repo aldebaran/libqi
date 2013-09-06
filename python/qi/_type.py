@@ -5,16 +5,35 @@
 ## Copyright (C) 2010 - 2013 Aldebaran Robotics
 ##
 
+import types
+
 #allow print str(Void)
 class _MetaSignature(type):
     def __str__(self):
         return self.signature
+
+    #support comparing class and instance (Int8 == Int8())
+    def __eq__(self, other):
+        if isinstance(other, types.StringType):
+            return other == self.signature
+        return other.signature == self.signature
+    def __ne__(self, other):
+        if isinstance(other, types.StringType):
+            return other != self.signature
+        return other.signature != self.signature
 
 #allow print str(Void())
 class _Signature(object):
     __metaclass__ = _MetaSignature
     def __str__(self):
         return self.signature
+
+    def __eq__(self, other):
+        if isinstance(other, types.StringType):
+            return other == self.signature()
+        return other.signature == self.signature
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
 class Void(_Signature):
     signature = 'v'
