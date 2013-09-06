@@ -41,12 +41,16 @@ if sys.platform.startswith("linux"):
 
 #######
 
-from _qi import Application, FutureState, FutureTimeout, Object, \
+from _qi import Application, FutureState, FutureTimeout, \
                 Promise, Property, ServiceDirectory, Session, Signal, \
                 createObject, registerObjectFactory
 
 from _type import Void, Bool, Int8, UInt8, Int16, UInt16, Int32, UInt32, Int64, UInt64, Float, Double, String, List, Map, Struct, Object, Dynamic, Buffer, AnyArguments
+from _type import typeof, _isinstance
 from _binder import bind, nobind
+
+#rename isinstance here. (isinstance should not be used in this file)
+isinstance = _isinstance
 
 _app = Application()
 
@@ -81,7 +85,8 @@ __all__ = ["FutureState",
            "registerObjectFactory",
 
            "Void", "Bool", "Int8", "UInt8", "Int16", "UInt16", "Int32", "UInt32", "Int64", "UInt64",
-           "Float", "Double", "String", "List", "Map", "Struct", "Object", "Dynamic", "Buffer", "AnyArguments"
+           "Float", "Double", "String", "List", "Map", "Struct", "Object", "Dynamic", "Buffer", "AnyArguments",
+           "typeof", "isinstance"
            "bind", "nobind"
 
 ]

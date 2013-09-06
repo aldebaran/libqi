@@ -168,7 +168,11 @@ def test_qi_object_instance():
     s.connect(local)
 
     m = s.service("ServiceDirectory")
-    assert isinstance(m, qi.Object)
+    assert qi.typeof(m) == qi.Object
+    assert qi.typeof(m) == qi.Object()
+    assert qi.isinstance(m, qi.Object)
+    assert qi.isinstance(m, qi.Object())
+
 
 def test_type():
     assert qi.Int8 == qi.Int8

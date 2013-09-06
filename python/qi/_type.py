@@ -5,6 +5,7 @@
 ## Copyright (C) 2010 - 2013 Aldebaran Robotics
 ##
 
+import _qi
 import types
 
 #allow print str(Void)
@@ -106,3 +107,15 @@ class Buffer(_Signature):
 class AnyArguments(_Signature):
     __metaclass__ = _MetaSignature
     signature = 'm'
+
+
+#return the qi.type of the parameter
+def typeof(a):
+    if isinstance(a, _qi.Object):
+        return Object
+    raise NotImplementedError("typeOf is only implemented for Object right now")
+
+#cant be called isinstance or typeof will run into infinite loop
+#see qi.__init__ for the renaming
+def _isinstance(a, type):
+    return typeof(a) == type
