@@ -15,6 +15,12 @@ This documentation is a work in progress. Please comments, modify :)
 
 Take a look at the :ref:`global architecture overview <architecture>`
 
+User guides
+-----------
+
+ - :ref:`Writing a client in C++ <guide-cxx-client>`
+ - :ref:`Writing a service in C++ <guide-cxx-service>`
+
 Standards
 ---------
 
@@ -46,6 +52,8 @@ Software Stack
    :maxdepth: 2
    :hidden:
 
+   guide/cxx-service
+   guide/cxx-client
    architecture
    std/index
    messaging/index
