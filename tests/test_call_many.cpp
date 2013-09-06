@@ -53,7 +53,7 @@ TEST(Test, Recurse)
 #ifdef WIN32
   int niter = 1000;
 #else
-  int niter = 10000;
+  int niter = 1000;
 #endif
   if (TestMode::getTestMode() == TestMode::Mode_SSL)
   {
@@ -65,7 +65,7 @@ TEST(Test, Recurse)
     niter = 50;
   }
   oclient1->call<void>("onFire1", niter);
-  ASSERT_NO_THROW(payload.future().hasValue(15000));
+  ASSERT_NO_THROW(payload.future().hasValue(20000));
   oclient1.reset();
   oclient2.reset();
 }
