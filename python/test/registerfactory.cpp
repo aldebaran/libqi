@@ -43,7 +43,8 @@ TEST(PythonRegister, Execute)
 int main(int argc, char **argv) {
   qi::Application app(argc, argv);
   ::testing::InitGoogleTest(&argc, argv);
-
+  if (argc > 4)
+    qi::os::setenv("PYTHONHOME", argv[4]);
   Py_Initialize();
   PySys_SetArgv(argc, argv);
   if(argc < 4) {

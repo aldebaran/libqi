@@ -45,6 +45,14 @@ qi_create_lib(testregisterobject SHARED SRC testregisterobject.cpp NO_INSTALL)
 qi_use_lib(testregisterobject QI QITYPE QIMESSAGING)
 qi_add_python_qimessaging_test(test_createobject)
 
+
+if(UNIX AND NOT APPLE)
+  # If we link with toolchain python, we must set PYTHONHOME to use .py files
+  # from toolchain python and not system.
+  # At this point it only works on linux for unknown reasons.
+  set(PYTHONHOME "${PYTHON_INCLUDE_DIRS}/../..")
+endif()
+
 qi_create_gtest(test_python_registerpythonclass SRC registerfactory.cpp
                 DEPENDS QI QITYPE QIMESSAGING GTEST BOOST_PYTHON
-                ARGUMENTS "${CMAKE_CURRENT_SOURCE_DIR}/test_registerfactory.py" "${CMAKE_CURRENT_SOURCE_DIR}/.." "${QI_SDK_DIR}/${QI_SDK_LIB}")
+                ARGUMENTS "${CMAKE_CURRENT_SOURCE_DIR}/test_registerfactory.py" "${CMAKE_CURRENT_SOURCE_DIR}/.." "${QI_SDK_DIR}/${QI_SDK_LIB}" "${PYTHONHOME}")
