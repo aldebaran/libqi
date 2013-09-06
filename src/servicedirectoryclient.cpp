@@ -120,6 +120,10 @@ namespace qi {
     // We just manually triggered onSocketDisconnected, so unlink
     // from socket signal before disconnecting it.
     socket->disconnected.disconnect(_sdSocketDisconnectedSignalLink);
+    // Manually trigger close on our remoteobject or it will be called
+    // asynchronously from socket.disconnected signal, and we would need to
+    // wait fo it.
+    _remoteObject.close();
     qi::Future<void> fut = socket->disconnect();
 
     onSocketDisconnected("User closed the connection");
