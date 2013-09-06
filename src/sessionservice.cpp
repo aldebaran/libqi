@@ -84,8 +84,9 @@ namespace qi {
     }
   }
 
-  static void deleteLater(qi::RemoteObject *remote) {
+  static void deleteLater(qi::RemoteObject *remote, ServiceRequest   *sr) {
     delete remote;
+    delete sr;
   }
 
   void Session_Service::removeRequest(long requestId)
@@ -112,8 +113,9 @@ namespace qi {
     //we do not call delete on RemoteObject, because remoteObject->close disconnect onMessagePending,
     //which is the signal we are coming from.  (when called from onRemoteObjectComplete)
     //delete later as a workaround.
-    qi::getDefaultNetworkEventLoop()->post(boost::bind(&deleteLater, remote));
-    delete sr;
+    //At this point the RemoteObject can be either in remote (RemoteObject*)
+    //or in sr->promise (promise<AnyObject>), so async them both
+    qi::getDefaultNetworkEventLoop()->post(boost::bind(&deleteLater, remote, sr));
   }
 
   void Session_Service::onTransportSocketResult(qi::Future<TransportSocketPtr> value, long requestId) {
