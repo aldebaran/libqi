@@ -24,6 +24,9 @@ function(qi_add_python_qimessaging_test name)
       ${ARGN}
   )
   if(BUILD_TESTS)
+    if("${QIBUILD_VERSION}" VERSION_GREATER "3.1")
+      return() # done by default in qibuild 3.2
+    endif()
     if(WIN32)
       set_tests_properties(${_test_name} PROPERTIES
             ENVIRONMENT "PATH=${QI_SDK_DIR}/${QI_SDK_BIN}"
