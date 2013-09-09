@@ -135,12 +135,18 @@ namespace qi {
   //  - all => ask the sd, append local services, return the result
   qi::FutureSync< std::vector<ServiceInfo> > Session::services(ServiceLocality locality)
   {
+    if (!isConnected()) {
+      return qi::makeFutureError< std::vector<ServiceInfo> >("Session not connected.");
+    }
     return _p->_servicesHandler.services(locality);
   }
 
   qi::FutureSync< qi::AnyObject > Session::service(const std::string &service,
                                                const std::string &protocol)
   {
+    if (!isConnected()) {
+      return qi::makeFutureError< qi::AnyObject >("Session not connected.");
+    }
     return _p->_serviceHandler.service(service, protocol);
   }
 
@@ -166,11 +172,19 @@ namespace qi {
       listen(listeningAddress);
     }
 
+    if (!isConnected()) {
+      return qi::makeFutureError< unsigned int >("Session not connected.");
+    }
+
     return _p->_serverObject.registerService(name, obj);
   }
 
   qi::FutureSync<void> Session::unregisterService(unsigned int idx)
   {
+    if (!isConnected()) {
+      return qi::makeFutureError<void>("Session not connected.");
+    }
+
     return _p->_serverObject.unregisterService(idx);
   }
 
@@ -181,6 +195,7 @@ namespace qi {
 
   std::vector<std::string> Session::loadService(const std::string& name, int flags)
   {
+    //TODO: what happens if the session is not connected?
     std::vector<std::string> names = ::qi::loadObject(name, flags);
     for (unsigned int i = 0; i < names.size(); ++i)
       registerService(names[i], createObject(names[i]));
