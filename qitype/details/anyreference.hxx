@@ -203,21 +203,36 @@ namespace qi {
   namespace detail
   {
     QI_NORETURN QITYPE_API void throwConversionFailure(TypeInterface* from, TypeInterface* to);
+    template<typename T>
+    struct AnyReferenceHelper
+    {
+      static inline T to(const AnyReference& ref)
+      {
+        TypeInterface* targetType = typeOf<T>();
+        std::pair<AnyReference, bool> conv = ref.convert(targetType);
+        if (!conv.first.type)
+        {
+          detail::throwConversionFailure(ref.type, targetType);
+        }
+        T result = *conv.first.ptr<T>(false);
+        if (conv.second)
+          conv.first.destroy();
+        return result;
+      }
+    };
+    template<>
+    struct AnyReferenceHelper<void>
+    {
+      static inline void to(const AnyReference& ref)
+      {
+      }
+    };
   }
 
   template<typename T>
   inline T AnyReference::to() const
   {
-    TypeInterface* targetType = typeOf<T>();
-    std::pair<AnyReference, bool> conv = convert(targetType);
-    if (!conv.first.type)
-    {
-      detail::throwConversionFailure(type, targetType);
-    }
-    T result = *conv.first.ptr<T>(false);
-    if (conv.second)
-      conv.first.destroy();
-    return result;
+    return detail::AnyReferenceHelper<T>::to(*this);
   }
 
   inline bool    AnyReference::isValid() const {
