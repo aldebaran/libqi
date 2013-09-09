@@ -1,5 +1,6 @@
 project = u'qi Messaging'
 
-sys.path.insert(0, os.path.abspath('..'))
-extensions += [ 'mycpp', 'extendcpp' ]
+#provided by qiapidoc extensions += ['mycpp' ]
+
+extensions.extend(['qiapidoc' ,'sphinx.ext.graphviz'])
 
