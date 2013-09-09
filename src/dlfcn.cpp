@@ -93,7 +93,8 @@ namespace qi {
       if (!err.get())
         err.reset(static_cast<char*>(new char[255]));
 
-      DWORD result = FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM, 0, lastError, 0, err.get(), sizeof(err.get()), 0);
+      DWORD result = FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM, 0, lastError, 0, err.get(), sizeof(char) * 255, 0);
+
 
       // Unix dlerror() resets its value after a call, ensure same behavior
       SetLastError(0);
