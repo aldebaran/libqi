@@ -10,7 +10,6 @@ qiMessaging API Reference
   datastream
   functor
   future
-  message
   object
   server
   session
