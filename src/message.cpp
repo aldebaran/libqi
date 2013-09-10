@@ -461,14 +461,14 @@ namespace qi {
     * But it checks a general rule that is true for all the messages we use and
     * it can help catch many mistakes.
     */
-    if (expectedSignature.size() != 1 || expectedSignature.begin().type() != Signature::Type_Tuple)
+    if (expectedSignature.type() != Signature::Type_Tuple)
       throw std::runtime_error("Expected a tuple, got " + expectedSignature.toString());
     std::vector<AnyReference> nargs(in);
-    Signature src = argsSig.begin().children();
-    Signature dst = expectedSignature.begin().children();
+    SignatureVector src = argsSig.children();
+    SignatureVector dst = expectedSignature.children();
     if (src.size() != dst.size())
       throw std::runtime_error("remote call: signature size mismatch");
-    Signature::iterator its = src.begin(), itd = dst.begin();
+    SignatureVector::iterator its = src.begin(), itd = dst.begin();
     boost::dynamic_bitset<> allocated(nargs.size());
     for (unsigned i = 0; i< nargs.size(); ++i, ++its, ++itd)
     {
