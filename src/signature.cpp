@@ -17,6 +17,8 @@ namespace qi {
   static std::string makeTupleAnnotation(const std::string& name, const std::vector<std::string>& annotations) {
     std::string res;
 
+    if (name.empty() && annotations.empty())
+      return res;
     res += '<';
     res += name;
     for (unsigned i = 0; i < annotations.size(); ++i)
@@ -74,13 +76,15 @@ namespace qi {
     return qi::Signature(res);
   }
 
+#define RET_CALC (1.0f - childErr - ((float)error) / 100.0f)
+
   float qi::Signature::isConvertibleTo(const qi::Signature& b) const
   {
     /* The returned float is just a basic heuristic, it does not handle:
-   * - comparison between integral types
-   * - Weaker error score for deeper (in containers) struct.
-  */
-    if (size() != b.size())
+     * - comparison between integral types
+     * - Weaker error score for deeper (in containers) struct.
+     */
+    if (children().size() != b.children().size())
       return 0;
     int error = 0;
     float childErr = 0.0f;
@@ -88,56 +92,58 @@ namespace qi {
     static const char integral[] = "bcCwWiIlL";
     static const char floating[] = "fd";
     static const char container[] = "[{(";
-    Signature::iterator is = begin();
-    Signature::iterator id = b.begin();
-    for (;is!=end() && id!= b.end(); ++is,++id)
+
+    Signature::Type s = type();
+    Signature::Type d = b.type();
+    if (d == Type_Unknown)
     {
-      Signature::Type s = is.type();
-      Signature::Type d = id.type();
-      if (d == Type_Unknown)
-      {
-        // We cannot anwser the question for unknown types. So let it pass
-        // and the conversion code will decide.
-        // Type_Unknown is not serializable anyway.
-        if (s != Type_Unknown)
-          error += 10; // Weird but can happen with object pointers
-        continue;
-      }
-      if (d == Type_Dynamic // Dynamic can convert to whatever
-          || s == Type_None) // None means parent is empty container
-      {
-        error += 5; // big malus for dynamic
-        continue;
-      }
-      // Main switch on source sig
-      if (strchr(numeric, s))
-      { // Numeric
-        if (!strchr(numeric, d))
-          return 0;
-        // Distance heuristic
-        if (strchr(integral, s) && strchr(floating, d))
-          error += 2; // integral->float
-        if (strchr(floating, s) && strchr(integral, d))
-          error += 3; // float->integral
-        if (s!= 'b' && d == 'b')
-          error += 4; // ->bool
-      }
-      else if (strchr(container, s))
-      { // Container, list or map
-        if (d != s)
-          return 0; // Must be same container
-        float childRes = is.children().isConvertibleTo(id.children());
+      // We cannot anwser the question for unknown types. So let it pass
+      // and the conversion code will decide.
+      // Type_Unknown is not serializable anyway.
+      if (s != Type_Unknown)
+        error += 10; // Weird but can happen with object pointers
+      return RET_CALC;
+    }
+
+    if (d == Type_Dynamic // Dynamic can convert to whatever
+        || s == Type_None) // None means parent is empty container
+    {
+      error += 5; // big malus for dynamic
+      return RET_CALC;
+    }
+
+    // Main switch on source sig
+    if (strchr(numeric, s))
+    { // Numeric
+      if (!strchr(numeric, d))
+        return 0;
+      // Distance heuristic
+      if (strchr(integral, s) && strchr(floating, d))
+        error += 2; // integral->float
+      if (strchr(floating, s) && strchr(integral, d))
+        error += 3; // float->integral
+      if (s!= 'b' && d == 'b')
+        error += 4; // ->bool
+    }
+    else if (strchr(container, s))
+    { // Container, list or map
+      if (d != s)
+        return 0; // Must be same container
+      SignatureVector::const_iterator its;
+      SignatureVector::const_iterator itd;
+      itd = b.children().begin();
+      for (its = children().begin(); its != children().end(); ++its, ++itd) {
+        float childRes = its->isConvertibleTo(*itd);
         if (!childRes)
           return 0; // Just check subtype compatibility
         // the lower the error the better
         childErr += 1.0f - childRes*1.01;
       }
-      else
-        if (d != s)
-          return 0;
+      assert(its==children().end() && itd==b.children().end()); // we already exited on size mismatch
     }
-    assert(is==end() && id==b.end()); // we already exited on size mismatch
-    return 1.0f - childErr - ((float)error) / 100.0f;
+    else if (d != s)
+      return 0;
+    return RET_CALC;
   }
 
   Signature Signature::fromType(Signature::Type t)
@@ -148,31 +154,90 @@ namespace qi {
 
   //compare signature without taking annotation into account
   bool Signature::operator==(const Signature &rhs) const {
-    Signature::iterator it;
-    Signature::iterator it2;
-    it2 = begin();
-    for (it = rhs.begin(); it != rhs.end(); ++it) {
-      if (it2 == end()) //not the same number of elements
+    if (type() != rhs.type())
+      return false;
+    if (children().size() != rhs.children().size())
+      return false;
+    SignatureVector::const_iterator it;
+    SignatureVector::const_iterator it2;
+    it2 = children().begin();
+    for (it = rhs.children().begin(); it != rhs.children().end(); ++it) {
+      if (it2 == children().end()) //not the same number of elements
         return false;
-      if (it.type() != it2.type()) //different types
+      if (it->type() != it2->type()) //different types
         return false;
-      if (it.hasChildren() != it2.hasChildren())
-        return false;
-      if (it.hasChildren() && it.children() != it2.children()) //different children
+      if (*it != *it2) //different children
         return false;
       ++it2;
     }
-    return (it2 == end());
+    return true;
+  }
+
+  //find a open char, starting from end, finishing at start
+  static size_t _find_begin(const std::string &str, size_t start, char open, char close)
+  {
+    int count = 0; // start at 0
+    int i = str.size() - 1;
+
+    if (str[i] != close) {
+      qiLogDebug() << "_find_begin error:" << str << "(" << i << ") is not " << close;
+      return std::string::npos;
+    }
+
+    while (i > start)
+    { // update count with current before testing
+      if (str[i] == close)
+        ++count;
+      else if (str[i] == open)
+        --count;
+      if (!count)
+        return i;
+      --i;
+    }
+    return std::string::npos;
+  }
+
+  static size_t _find_end(const std::string &str, size_t index, char copen, char close)
+  {
+    int         count  = 0;
+
+    if (str[index] != copen) {
+      qiLogDebug() << "_find_end error:" << str << "(" << index << ") is not " << copen;
+      return std::string::npos;
+    }
+
+    while ((index < str.size()))
+    {
+      if (str[index] == copen)
+        count++;
+      if (str[index] == close)
+        count--;
+      if (count == 0)
+        return index;
+      index++;
+    }
+    return std::string::npos;
   }
 
 
-  static bool _is_valid(const char* s, unsigned int size, unsigned int& current, qi::Signature::Type type, qi::Signature::Type closing)
-  {
-    int         arguments = 0;
-    while (current < size && s[current] != closing)
+  class SignaturePrivate {
+  public:
+    void parseChildren(const std::string &signature, size_t index);
+    void eatChildren(const std::string &signature, int idxStart, int expectedEnd, int elementCount);
+    void init(const std::string &signature, int begin, int end);
+
+    std::string            _signature;
+    std::vector<Signature> _children;
+  };
+
+  static size_t findNext(const std::string &signature, int index) {
+
+    if (index >= signature.size())
+      return std::string::npos;
+
+    //verify that the current signature is correct
+    switch(static_cast<qi::Signature::Type>(signature[index]))
     {
-      switch (static_cast<qi::Signature::Type>(s[current]))
-      {
       case qi::Signature::Type_Void:
       case qi::Signature::Type_Bool:
       case qi::Signature::Type_Int8:
@@ -186,393 +251,193 @@ namespace qi {
       case qi::Signature::Type_Float:
       case qi::Signature::Type_Double:
       case qi::Signature::Type_String:
-      case qi::Signature::Type_List_End:
-      case qi::Signature::Type_Map_End:
-      case qi::Signature::Type_Tuple_End:
       case qi::Signature::Type_Dynamic:
       case qi::Signature::Type_Raw:
-      case qi::Signature::Type_Pointer:
       case qi::Signature::Type_Object:
       case qi::Signature::Type_Unknown:
       case qi::Signature::Type_None:
+        index++;
         break;
       case qi::Signature::Type_List:
-      {
-        if (_is_valid(s, size, ++current, qi::Signature::Type_List, qi::Signature::Type_List_End) == false)
-          return false;
-
+        index = _find_end(signature, index, '[', ']');
+        if (index == std::string::npos)
+          return std::string::npos;
+        index++;
         break;
-      }
-      case qi::Signature::Type_Tuple:
-      {
-        if (s[++current] == qi::Signature::Type_Tuple_End)
-          return true; // Empty tuple is valid.
-        if (_is_valid(s, size, current, qi::Signature::Type_Tuple, qi::Signature::Type_Tuple_End) == false)
-          return false;
-        break;
-      }
       case qi::Signature::Type_Map:
-        if (_is_valid(s, size, ++current, qi::Signature::Type_Map, qi::Signature::Type_Map_End) == false)
-          return false;
+        index = _find_end(signature, index, '{', '}');
+        if (index == std::string::npos)
+          return std::string::npos;
+        index++;
+        break;
+      case qi::Signature::Type_Tuple:
+        index = _find_end(signature, index, '(', ')');
+        if (index == std::string::npos)
+          return std::string::npos;
+        index++;
         break;
       default:
-        qiLogVerbose() << "Element '" << s[current] << "' is unknown in signature '" << s << "'";
+        qiLogDebug() << "Signature element is invalid: '" << signature << "'";
         return false;
-        break;
+    }
+    // handle annotation
+    if (index < signature.size() && signature[index] == '<')
+    {
+      index = _find_end(signature, index, '<', '>');
+      if (index == std::string::npos)
+        return std::string::npos;
+      index++;
+    }
+    return index;
+  }
+
+
+  void SignaturePrivate::eatChildren(const std::string &signature, int idxStart, int expectedEnd, int elementCount = -1) {
+    int i = 0;
+
+    //empty tuple, move on!
+    if (elementCount == -1 or elementCount == 0) {
+      if (idxStart == expectedEnd)
+        return;
+    }
+    //iterate over each subelement.
+    while (true) {
+      int idxStop = findNext(signature, idxStart);
+      _children.push_back(qi::Signature(signature, idxStart, idxStop));
+      ++i;
+      //ouch too far..
+      if (idxStop > expectedEnd) {
+        std::stringstream ss;
+        ss << "Bad element for signature '" << signature << "' at pos:" << idxStart << " (gone too far)";
+        throw std::runtime_error(ss.str());
       }
-      current++;
-      arguments++;
-      if (current >= size || s[current] == closing)
-        break;
-      if (s[current] == '<')
-      {
-        int count = 0;
-        while (current < size)
-        {
-          if (s[current] == '<')
-            ++count;
-          else if (s[current] == '>')
-            --count;
-          ++current;
-          if (!count)
-            break;
+      if (elementCount == -1) {
+        //check if it's the last item.
+        if (idxStop == expectedEnd)
+          return;
+      } else if (elementCount == i) {
+        //we have the good number of item, are we at the good position?
+        if (idxStop != expectedEnd) {
+          std::stringstream ss;
+          ss << "Bad element for signature '" << signature << "' at pos:" << idxStart;
+          throw std::runtime_error(ss.str());
         }
-        if (count)
-        {
-          qiLogVerbose() << "Annotation not closed in '" << s << "'";
-          return false;
-        }
+        return;
       }
-
+      if (idxStart == idxStop)
+        throw std::runtime_error("Infinite loop detected..");
+      idxStart = idxStop;
     }
-
-    // Check complex type validity
-    if (type == qi::Signature::Type_Map && (arguments != 2 || s[current] != qi::Signature::Type_Map_End))
-    {
-      qiLogVerbose() << "Map must have a key and a value.";
-      return false;
-    }
-    if (type == qi::Signature::Type_List && (arguments != 1 || s[current] != qi::Signature::Type_List_End))
-    {
-      qiLogVerbose() << "List must contain only one element, but has " << arguments;
-      return false;
-    }
-    return true;
   }
 
-  static const char* _find_begin(const char* current, const char* start, char open, char close)
-  {
-    int count = 0; // start at 0
-    while (current >= start)
-    { // update count with current before testing
-      if (*current == close)
-        ++count;
-      else if (*current == open)
-        --count;
-      if (!count)
-        return current;
-      --current;
-    }
-    return 0;
-  }
+  void SignaturePrivate::parseChildren(const std::string &signature, size_t index) {
+    if (index >= signature.size())
+      throw std::runtime_error("Invalid index");
 
-  static int _find_end(char **pcurrent, const char **psignature, const char *sigend, char copen, char close)
-  {
-    int         opencount  = 1;
-    int         closecount = 0;
-    char       *current    = *pcurrent;
-    const char *signature  = *psignature;
-
-    *current = *signature;
-    signature++;
-    current++;
-    while ((signature < sigend) && (opencount != closecount))
+    //verify that the current signature is correct
+    switch(static_cast<qi::Signature::Type>(signature[index]))
     {
-      if (*signature == copen)
-        opencount++;
-      if (*signature == close)
-        closecount++;
-      *current = *signature;
-      signature++;
-      current++;
-    }
-    *pcurrent   = current;
-    *psignature = signature;
-
-    return opencount != closecount ? 0 : 1;
-  }
-
-
-  class SignaturePrivate {
-  public:
-    SignaturePrivate()
-      : _signature(0),
-        _end(0),
-        _valid(false)
-    {
-    }
-
-    ~SignaturePrivate() {
-      delete [] _signature;
-    }
-
-    bool split(const char *, const char *);
-    void init(const char *signature, size_t len);
-
-    char          *_signature;
-    const char    *_end;
-    bool           _valid;
-    std::string    _fsig;
-  };
-
-  void SignaturePrivate::init(const char *signature, size_t len) {
-    if (!signature) {
-      _valid = false;
-      return;
-    }
-    //worst case: each char is a POD, we need 2x space (for \0)
-    size_t size = len * 2;
-
-    if (_signature)
-      delete[] _signature;
-    if (size == 0)
-      size = 1;
-    _signature = new char[size];
-    if (size == 1)
-      _signature[0] = 0;
-    _end = _signature + size;
-    _valid = split(signature, signature + len);
-    if (_valid)
-      _fsig = std::string(signature, len);
-  }
-
-
-  // go forward, add a 0, go forward, add a 0, bouhhh a 1! AHHHHHH scary!
-  bool SignaturePrivate::split(const char *signature, const char *sig_end) {
-    unsigned int i = 0;
-    if (!_is_valid(signature, sig_end - signature, i, qi::Signature::Type_None, qi::Signature::Type_None))
-      return false;
-
-    char *current   = _signature;
-    while(*signature)
-    {
-      if (signature >= sig_end || _signature >= _end)
+      case qi::Signature::Type_Void:
+      case qi::Signature::Type_Bool:
+      case qi::Signature::Type_Int8:
+      case qi::Signature::Type_UInt8:
+      case qi::Signature::Type_Int16:
+      case qi::Signature::Type_UInt16:
+      case qi::Signature::Type_Int32:
+      case qi::Signature::Type_UInt32:
+      case qi::Signature::Type_Int64:
+      case qi::Signature::Type_UInt64:
+      case qi::Signature::Type_Float:
+      case qi::Signature::Type_Double:
+      case qi::Signature::Type_String:
+      case qi::Signature::Type_Dynamic:
+      case qi::Signature::Type_Raw:
+      case qi::Signature::Type_Object:
+      case qi::Signature::Type_Unknown:
+      case qi::Signature::Type_None:
+        return;
         break;
-      //verify that the current signature is correct
-      switch(static_cast<qi::Signature::Type>(*signature))
-      {
-        case qi::Signature::Type_Void:
-        case qi::Signature::Type_Bool:
-        case qi::Signature::Type_Int8:
-        case qi::Signature::Type_UInt8:
-        case qi::Signature::Type_Int16:
-        case qi::Signature::Type_UInt16:
-        case qi::Signature::Type_Int32:
-        case qi::Signature::Type_UInt32:
-        case qi::Signature::Type_Int64:
-        case qi::Signature::Type_UInt64:
-        case qi::Signature::Type_Float:
-        case qi::Signature::Type_Double:
-        case qi::Signature::Type_String:
-        case qi::Signature::Type_Dynamic:
-        case qi::Signature::Type_Raw:
-        case qi::Signature::Type_Object:
-        case qi::Signature::Type_Unknown:
-        case qi::Signature::Type_None:
-          *current = *signature;
-          current++;
-          signature++;
-          break;
-        case qi::Signature::Type_List:
-          if (!_find_end(&current, &signature, sig_end, '[', ']'))
-            return false;
-          break;
-        case qi::Signature::Type_Map:
-          if (!_find_end(&current, &signature, sig_end, '{', '}'))
-            return false;
-          break;
-        case qi::Signature::Type_Tuple:
-          if (!_find_end(&current, &signature, sig_end, '(', ')'))
-            return false;
-          break;
-        default:
-          qiLogVerbose() << "Signature element is invalid: '" << signature << "'";
-          return false;
+      case qi::Signature::Type_List: {
+        int index_should_stop = _find_end(signature, index, '[', ']');
+        eatChildren(signature, index + 1, index_should_stop, 1);
+        break;
       }
-
-      while (*signature == '*') { // dead code?
-        *current = *signature;
-        current++;
-        signature++;
+      case qi::Signature::Type_Map: {
+        int index_should_stop = _find_end(signature, index, '{', '}');
+        eatChildren(signature, index + 1, index_should_stop, 2);
+        break;
       }
-      // handle annotation
-      if (signature < sig_end && *signature == '<')
-      {
-        if (!_find_end(&current, &signature, sig_end, '<', '>'))
-          return false;
+      case qi::Signature::Type_Tuple: {
+        int index_should_stop = _find_end(signature, index, '(', ')');
+        eatChildren(signature, index + 1, index_should_stop);
+        break;
       }
-
-      *current = 0;
-      current++;
-      //std::cout << "elt:" << prev << std::endl;
+      default: {
+        std::stringstream ss;
+        ss << "Signature element is invalid: '" << signature << "'";
+        throw std::runtime_error(ss.str());
+      }
     }
-    if (current != _signature)
-      _end = current - 1;
-    else
-      _end = _signature;
-    return true;
-  };
+  }
 
+  //empty signature are invalid
+  void SignaturePrivate::init(const std::string &signature, int begin, int end) {
+    int index = findNext(signature, begin);
+    if (index != end) {
+      throw std::runtime_error("Invalid signature");
+    }
+    parseChildren(signature, begin);
+    _signature.assign(signature, begin, end - begin);
+  }
 
-
-  Signature::Signature(const char *fullSignature)
+  Signature::Signature()
     : _p(boost::make_shared<SignaturePrivate>())
   {
-    if (!fullSignature)
-      return;
-    size_t size = strlen(fullSignature);
-    _p->init(fullSignature, size);
-
-    if (this->size() != 1)
-    {
-      qiLogVerbose() << "Signature has more than one element: '" << fullSignature << "'";
-      _p->_valid = false;
-    }
   }
 
-  Signature::Signature(const std::string &subsig)
+  Signature::Signature(const char *signature)
     : _p(boost::make_shared<SignaturePrivate>())
   {
-    _p->init(subsig.c_str(), subsig.size());
+    _p->_signature.assign(signature);
+    _p->init(_p->_signature, 0, _p->_signature.size());
+  }
 
-    if (this->size() != 1)
-    {
-      qiLogVerbose() << "Signature has more than one element: '" << subsig << "'";
-      _p->_valid = false;
-    }
+
+  Signature::Signature(const std::string &signature)
+    : _p(boost::make_shared<SignaturePrivate>())
+  {
+    _p->init(signature, 0, signature.size());
+  }
+
+  Signature::Signature(const std::string &signature, size_t begin, size_t end)
+    : _p(boost::make_shared<SignaturePrivate>())
+  {
+    _p->init(signature, begin, end);
   }
 
   bool Signature::isValid() const {
-    return _p->_valid;
+    return type() != qi::Signature::Type_None;
   }
 
   const std::string& Signature::toString() const {
-    return _p->_fsig;
+    return _p->_signature;
   }
 
-  Signature::iterator Signature::begin() const {
-    if (!isValid())
-      return end();
-    if (_p->_signature == _p->_end)
-      return ::qi::Signature::iterator();
-    ::qi::Signature::iterator it(_p->_signature, _p->_end);
-    return it;
-  };
-
-  Signature::iterator Signature::end() const {
-    ::qi::Signature::iterator it;
-    return it;
-  };
-
-  unsigned int Signature::size() const {
-    unsigned int res = 0;
-    for (iterator i = begin(); i != end(); ++i, ++res)
-      ;
-    return res;
+  bool Signature::hasChildren() const {
+    return children().size() != 0;
   }
 
-
-  ::qi::Signature::iterator &Signature::iterator::operator++() {
-    if (!_current)
-      return *this;
-    //go to next \0
-    while (*_current && (_current <= _end)) {
-      ++_current;
-    }
-    //eat one more
-    if (!*_current)
-      _current++;
-    if (_current >= _end)
-      _current = 0;
-    return *this;
+  const SignatureVector& Signature::children() const {
+    return _p->_children;
   }
 
-  ::qi::Signature::iterator &Signature::iterator::operator++(int) {
-    this->operator++();
-    return *this;
-  }
-
-  Signature::Type Signature::iterator::type()const {
-    if (!_current)
-      return Type_None;
-    return static_cast<Type>(*_current);
-  }
-
-  Signature Signature::iterator::signature()const {
-    if (!_current)
-      return Signature();
-    return Signature(_current);
-  }
-
-  std::string Signature::iterator::annotation()const {
-    if (!_current)
+  std::string Signature::annotation()const {
+    if (_p->_signature.empty())
       return std::string();
-    // Since we have an end marker, use it, it will simplify annotation lookup
-    const char* next = _current;
-    while (*next && next <= _end)
-      ++next;
-    --next; // last caracter of this element
-    if (*next != '>')
-      return std::string();
-    const char* astart = _find_begin(next, _current, '<', '>');
-    if (!astart)
-      return std::string();
-    return std::string(astart + 1, next);
-  }
-
-  bool Signature::iterator::hasChildren() const {
-    if (!_current)
-      return false;
-
-    switch (*_current) {
-      case '[':
-      case '{':
-      case '(':
-      case '@':
-        return true;
-      default:
-       return false;
-    };
-  }
-
-  Signature Signature::iterator::children() const {
-    if (!_current)
-      return Signature();
-    Signature sig;
-    size_t    size;
-    size_t    toremove = 0;
-
-    const char *fullSignature = _current;
-    if (!fullSignature)
-      return sig;
-
-    size = strlen(fullSignature);
-
-    if (size < 2)
-      return sig;
-    // remove annotation
-    if (fullSignature[size - 1] == '>')
-    {
-      const char* astart = _find_begin(fullSignature + size - 1, _current, '<', '>');
-      size = astart - fullSignature;
-    }
-    while (toremove <= (size - 2)) {
-      if (fullSignature[size - 1 - toremove] != '*')
-        break;
-      toremove++;
-    }
-    sig._p->init(fullSignature + 1, size - toremove - 2);
-    return sig;
+    size_t begin = _find_begin(_p->_signature, 0, '<', '>');
+    if (begin != std::string::npos)
+      return std::string(_p->_signature.substr(begin + 1, _p->_signature.size() - begin - 2));
+    return std::string();
   }
 
   std::string Signature::toPrettySignature() const {
@@ -582,6 +447,13 @@ namespace qi {
     return sc.signature();
   }
 
+  Signature::Type Signature::type() const {
+    if (_p->_signature.empty())
+      return Type_None;
+    return static_cast<Type>(_p->_signature[0]);
+  }
+
+  //TODO: There is many Room for improvement HERE
   std::vector<std::string> signatureSplit(const std::string &fullSignature) {
     std::vector<std::string> ret;
     std::string retSig;
@@ -597,21 +469,19 @@ namespace qi {
       funcName = fullSignature.substr(0, idx1);
       // we should have a valid signature
       qi::Signature parent("(" + fullSignature.substr(idx1+2) + ")");
-      qi::Signature sig = parent.begin().children();
+      const qi::SignatureVector& childs = parent.children();
 
       // Expect valid signatures.
-      if (fullSignature.substr(idx1+2) == "" || parent.isValid() == false || sig.isValid() == false)
+      if (fullSignature.substr(idx1+2) == "" || parent.isValid() == false)
         throw std::runtime_error("Signature " + fullSignature + " is not valid");
 
-      if (sig.isValid() && sig.size() == 2)
+      if (childs.size() == 2)
       {
-        qi::Signature::iterator it = sig.begin();
-        retSig = it.signature().toString();
-        ++it;
-        parSig = it.signature().toString();
+        retSig = childs.at(0).toString();
+        parSig = childs.at(1).toString();
       }
-      else if (sig.isValid() && sig.size() == 1)
-        parSig = sig.begin().signature().toString();
+      else if (childs.size() == 1)
+        parSig = childs.at(0).toString();
     } else {
       funcName = fullSignature;
     }
@@ -621,27 +491,24 @@ namespace qi {
     return ret;
   }
 
-  static AnyValue signatureToData(Signature::iterator it)
-  {
-    std::vector<AnyValue> res;
-    std::string t;
-    t += (char)it.type();
-    res.push_back(AnyValue::from(t));
-    if (it.hasChildren())
-      res.push_back(it.children().toData());
-    else
-      res.push_back(AnyValue::from(std::vector<AnyValue>()));
-    res.push_back(AnyValue::from(it.annotation()));
-    return AnyValue::from(res);
-  }
-
   AnyValue Signature::toData() const
   {
     std::vector<AnyValue> res;
-    if (!isValid())
-      return AnyValue::from(res);
-    for (Signature::iterator it = begin(); it != end(); ++it)
-      res.push_back(signatureToData(it));
+    std::string t;
+    t += (char)type();
+    res.push_back(AnyValue::from(t));
+    if (hasChildren()) {
+      const SignatureVector& cvec = children();
+      SignatureVector::const_iterator it;
+      std::vector<AnyValue> sub;
+      for (it = cvec.begin(); it != cvec.end(); ++it) {
+        sub.push_back(it->toData());
+      }
+      res.push_back(AnyValue::from(sub));
+    }
+    else
+      res.push_back(AnyValue::from(std::vector<AnyValue>()));
+    res.push_back(AnyValue::from(annotation()));
     return AnyValue::from(res);
   }
 }

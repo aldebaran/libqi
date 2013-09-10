@@ -57,21 +57,24 @@ namespace qi {
       and must balance all (), {}, [] and <> within
   * for tuple annotation has the following form: "<TupleName,elementName0,...,elementName1>"
   */
+  class Signature;
+  typedef std::vector<Signature> SignatureVector;
+
   class QITYPE_API Signature {
-  public:
+  protected:
+    Signature(const std::string &signature, size_t begin, size_t end);
+    friend class SignaturePrivate;
 
   public:
-    Signature(const char *signature = 0);
+    Signature();
+    Signature(const char *signature);
     Signature(const std::string &signature);
 
     bool isValid() const;
 
-    // Number of elements in the signature.
-    unsigned int size() const;
+    bool hasChildren() const;
 
-    class iterator;
-    iterator begin() const;
-    iterator end() const;
+    const SignatureVector& children() const;
 
     //TODO use the type than "network type"
     enum Type {
@@ -117,35 +120,8 @@ namespace qi {
       Type_Unknown  = 'X'
     };
 
-    class QITYPE_API iterator {
-    public:
-      typedef Signature                 value_type;
-      typedef std::forward_iterator_tag iterator_category;
-      typedef ptrdiff_t                 difference_type;
-      typedef Signature*                pointer;
-      typedef Signature&                reference;
-      iterator() : _current(0), _end(0) {}
-      iterator          &operator++();
-      iterator          &operator++(int);
-      inline bool        operator!=(const iterator &rhs) const { return _current != rhs._current; }
-      inline bool        operator==(const iterator &rhs) const { return _current == rhs._current; };
-      inline Signature   operator*() const                     { return signature(); }
-
-      // accesors
-      Type          type()const;
-      qi::Signature signature()const;
-      std::string   annotation()const;
-      bool          isValid()const;
-
-      bool          hasChildren()const;
-      Signature     children()const;
-
-    protected:
-      iterator(const char *begin, const char *end) : _current(begin), _end(end) {}
-      const char *_current;
-      const char *_end;
-      friend class qi::Signature;
-    };
+    Type type() const;
+    std::string annotation() const;
 
     inline bool operator!=(const Signature &rhs) const { return !(*this == rhs); }
     bool operator==(const Signature &rhs) const;
@@ -168,7 +144,9 @@ namespace qi {
   protected:
     // C4251
     boost::shared_ptr<SignaturePrivate> _p;
+
   };
+
 
 }
 

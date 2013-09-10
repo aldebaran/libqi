@@ -130,9 +130,7 @@ def signature_to_cxxtype(s):
   if not isinstance(s, basestring): #common pitfall, this works with unicode strings too
     raise Exception("Expected string, got " + str(s) + " which is " + str(type(s)))
   sig = signature_to_json(str(s)) # no unicode!
-  if not len(sig) or not len(sig[0]):
-    raise Exception("Invalid signature: " + s +", gave " + str(sig))
-  return signature_to_cxxtype_(sig[0])
+  return signature_to_cxxtype_(sig)
 
 def function_signature_to_cxxtypes(s):
   """ Take a function signature and return
@@ -143,10 +141,7 @@ def function_signature_to_cxxtypes(s):
   jsig = qi_type.signature_to_json(s)
   import json
   sig = json.loads(jsig)
-  if len(sig)!=1 or not len(sig[0]):
-    raise Exception("Invalid signature: " + s)
-  sig = sig[0] #unwrap toplevel array
-  return map(signature_to_cxxtype_, sig[1])
+  return map(signature_to_cxxtype_, sig)
 
 def signature_to_cxxtype_(s):
   """ Return the C++ type to use for parsed signature s

@@ -76,15 +76,14 @@ TEST(TestSignature, BasicTypeSignature) {
 
 TEST(TestSignature, SignatureSize) {
   qi::Signature s("(iiii)");
-  EXPECT_EQ(1, s.size());
-  EXPECT_EQ(4, s.begin().children().size());
-  EXPECT_EQ(0, s.begin().children().begin().children().size());
+  EXPECT_EQ(4, s.children().size());
+  EXPECT_EQ(0, s.children().at(0).children().size());
 
   s = qi::Signature("[i]");
-  EXPECT_EQ(1, s.size());
+  EXPECT_EQ(1, s.children().size());
 
-  s = qi::Signature("[i]");
-  EXPECT_EQ(1, s.size());
+  s = qi::Signature("{ii}");
+  EXPECT_EQ(2, s.children().size());
 }
 
 TEST(TestSignature, TypeConstRefPointerMix) {
@@ -197,47 +196,53 @@ TEST(TestSignature, ComplexConstRefPtr) {
 
 TEST(TestSignature, Equal) {
   EXPECT_EQ(qi::signatureFromType<float&>::value(), qi::signatureFromType<float>::value());
-  EXPECT_EQ(qi::Signature("[s]"), qi::Signature("[s]"));
-  EXPECT_EQ(qi::Signature("(ss)<Point,x,y>"), qi::Signature("(ss)")); // really?
+  EXPECT_TRUE(qi::Signature("[s]") == qi::Signature("[s]"));
+  EXPECT_TRUE(qi::Signature("(ss)<Point,x,y>") == qi::Signature("(ss)")); // really?
 
-  EXPECT_NE(qi::Signature("(mm)"), "(mmm)");
-  EXPECT_NE(qi::Signature("(mm)"), "(mm");
+  EXPECT_TRUE(qi::Signature("(mm)") != "(mmm)");
+  EXPECT_TRUE(qi::Signature("(mm)") != "(m)");
 }
 
+TEST(TestSignature, InvalidSignature) {
+
+
+  //empty signature are invalid
+  EXPECT_THROW(qi::Signature(""), std::runtime_error);
+  EXPECT_THROW(qi::Signature("("), std::runtime_error);
+  EXPECT_THROW(qi::Signature("{"), std::runtime_error);
+  EXPECT_THROW(qi::Signature("["), std::runtime_error);
+  EXPECT_THROW(qi::Signature("plafbim"), std::runtime_error);
+  EXPECT_THROW(qi::Signature("(m)(sib)"), std::runtime_error);
+  EXPECT_THROW(qi::Signature("ddd"), std::runtime_error);
+  EXPECT_THROW(qi::Signature("(mm"), std::runtime_error);
+}
+
+TEST(TestSignature, InvalidNumberOfArgs) {
+  //empty signature are invalid
+  EXPECT_THROW(qi::Signature("[iii]"), std::runtime_error);
+  EXPECT_THROW(qi::Signature("{iii}"), std::runtime_error);
+  EXPECT_THROW(qi::Signature("{i}"), std::runtime_error);
+}
+
+
 TEST(TestSignature, FromString) {
-
   qi::Signature *sig;
-
-  sig = new qi::Signature("");
-  EXPECT_FALSE(sig->isValid());
-  delete sig;
 
   sig = new qi::Signature();
   EXPECT_FALSE(sig->isValid());
   delete sig;
 
-  sig = new qi::Signature("(");
-  EXPECT_FALSE(sig->isValid());
-  delete sig;
-
-  sig = new qi::Signature("{");
-  EXPECT_FALSE(sig->isValid());
-  delete sig;
-
-  sig = new qi::Signature("[");
-  EXPECT_FALSE(sig->isValid());
-  delete sig;
-
-  sig = new qi::Signature("plafbim");
-  EXPECT_FALSE(sig->isValid());
-  delete sig;
 
   sig = new qi::Signature("(s)");
   EXPECT_TRUE(sig->isValid());
   delete sig;
 
-  sig = new qi::Signature("(m)(sib)");
-  EXPECT_FALSE(sig->isValid());
+  sig = new qi::Signature("()");
+  EXPECT_TRUE(sig->isValid());
+  delete sig;
+
+  sig = new qi::Signature("()<>");
+  EXPECT_TRUE(sig->isValid());
   delete sig;
 
   ASSERT_NO_THROW(sig = new qi::Signature("(((sIsI[(sssW)]s)))"));
@@ -247,15 +252,6 @@ TEST(TestSignature, FromString) {
   ASSERT_NO_THROW(sig = new qi::Signature("({I(Isss[(ss)]s)}{I(Is)}{I(Iss)}s)"));
   EXPECT_TRUE(sig->isValid());
   delete sig;
-
-  ASSERT_FALSE(qi::Signature("ddd").isValid());
-
-
-  sig = new qi::Signature("(mm");
-  EXPECT_FALSE(sig->isValid());
-  EXPECT_EQ(sig->begin(), sig->end());
-  EXPECT_FALSE(sig->begin().hasChildren());
-  EXPECT_EQ(sig->begin().children(), "");
 }
 
 TEST(TestSignature, SignatureSplitError) {
@@ -320,12 +316,11 @@ TEST(TestSignature, SignatureSplit) {
 TEST(TestSignature, ItAnnotation) {
   std::string orig("((m)<Plouf,x>(scf)<Point3d,x,y,z>)");
   qi::Signature sig(orig);
-  qi::Signature subsig = sig.begin().children();
+  qi::SignatureVector subsig = sig.children();
 
-  EXPECT_EQ(sig.size(), 1);
   EXPECT_EQ(orig, sig.toString());
-  EXPECT_EQ("(m)<Plouf,x>", subsig.begin().signature().toString());
-  EXPECT_EQ("(scf)<Point3d,x,y,z>", (++subsig.begin()).signature().toString());
+  EXPECT_EQ("(m)<Plouf,x>", subsig[0].toString());
+  EXPECT_EQ("(scf)<Point3d,x,y,z>", subsig[1].toString());
 }
 
 TEST(TestSignature, TestToSTLType)
@@ -493,6 +488,15 @@ TEST(TestSignature, WeirdSharedPtr) {
 
 qiLogCategory("test.signature()");
 
+void stackIt(std::vector<qi::Signature>& stack, const qi::Signature& sig) {
+  qiLogInfo() << "Pushing:" << sig.toString() << ", annot:" << sig.annotation();
+  qi::SignatureVector child = sig.children();
+  for (qi::SignatureVector::const_reverse_iterator it = child.rbegin(); it != child.rend(); ++it) {
+    stackIt(stack, *it);
+  }
+  stack.push_back(sig);
+}
+
 class SignatureValidator
 {
 public:
@@ -500,11 +504,7 @@ public:
   SignatureValidator(qi::Signature s)
   : good(true), count(0)
   {
-    stack.push_back(Item());
-    stack.front().first = s;
-    stack.front().second = stack.front().first.begin();
-    if (stack.front().second == stack.front().first.end())
-      stack.pop_back();
+    stackIt(stack, s);
   }
 
   SignatureValidator& operator()(char t, const char* annotation)
@@ -517,43 +517,23 @@ public:
       good = false;
       return *this;
     }
-    assert(stack.back().second != stack.back().first.end());
-    qi::Signature::iterator& it = stack.back().second;
-    if (it.type() != t)
+    qi::Signature& schi = stack.back();
+    if (schi.type() != t)
     {
-      qiLogError() << "Type mismatch " << t << " " << it.type();
+      qiLogError() << "Type mismatch " << t << " " << schi.type();
       good = false;
       return *this;
     }
-    if (it.annotation() != annotation)
+    if (schi.annotation() != annotation)
     {
-      qiLogError() << "Annotation mismatch " << annotation << " vs " << it.annotation();
+      qiLogError() << "Annotation mismatch " << annotation << " vs " << schi.annotation();
       good = false;
       return *this;
     }
-    next();
+    stack.pop_back();
     return *this;
   }
-  void next()
-  {
-    ++count;
-    if (stack.back().second.hasChildren())
-    { // go down
-      Item i;
-      i.first = stack.back().second.children();
-      i.second = i.first.begin();
-      stack.push_back(i);
-      return;
-    }
-    // go next then up-next until we hit a valid element
-    ++stack.back().second;
-    while (!stack.empty() && stack.back().second == stack.back().first.end())
-    {
-      stack.pop_back();
-      if (!stack.empty())
-        ++stack.back().second;
-    }
-  }
+
   operator bool() const
   {
     if (!stack.empty())
@@ -563,8 +543,8 @@ public:
     }
     return good;
   }
-  typedef std::pair<qi::Signature, qi::Signature::iterator> Item;
-  std::vector<Item> stack;
+
+  std::vector<qi::Signature> stack;
   mutable bool good;
   int count;
 };
@@ -572,26 +552,25 @@ public:
 
 qi::Signature tuple(const std::string& str)
 {
-  return qi::Signature("(" + str + ")").begin().children();
+  return qi::Signature("(" + str + ")");
 }
 
 TEST(TestSignature, Annotation) {
   using qi::Signature;
   Signature s("i<foo>");
-  Signature::iterator it = s.begin();
-  EXPECT_EQ("foo", it.annotation());
-  EXPECT_EQ('i', it.type());
+  EXPECT_EQ("foo", s.annotation());
+  EXPECT_EQ('i', s.type());
 
   s = Signature("i<foo<bar><<baz@5'\"[]><>a>>");
-  it = s.begin();
-  EXPECT_EQ('i', it.type());
-  EXPECT_EQ("foo<bar><<baz@5'\"[]><>a>", it.annotation());
+  EXPECT_EQ('i', s.type());
+  EXPECT_EQ("foo<bar><<baz@5'\"[]><>a>", s.annotation());
 
-  s = Signature("(ii<foo>i<bar>ii<bam<baz>>)").begin().children();
+  s = Signature("(ii<foo>i<bar>ii<bam<baz>>)");
   qiLogInfo() << "sig: " << s.toString();
-  EXPECT_EQ(5u, s.size());
+  EXPECT_EQ(5u, s.children().size());
   EXPECT_TRUE(
     SignatureValidator(s)
+    ('(', "")
     ('i', "")
     ('i', "foo")
     ('i', "bar")
@@ -599,6 +578,7 @@ TEST(TestSignature, Annotation) {
     ('i', "bam<baz>")
     );
 EXPECT_TRUE(SignatureValidator(tuple("i<foo>[i<bar>]<baz>{i<bim>I<bam>}<boum>(i<pif>I<paf>)<pouf>"))
+  ('(', "")
   ('i', "foo")
   ('[', "baz")
   ('i', "bar")
@@ -626,13 +606,13 @@ EXPECT_TRUE(SignatureValidator(tuple("i<foo>[i<bar>]<baz>{i<bim>I<bam>}<boum>(i<
 
 TEST(TestSignature, AnnotationInvalid) {
   using qi::Signature;
-  EXPECT_TRUE(!Signature("i<foo")  .isValid());
-  EXPECT_TRUE(!Signature("ifoo>")  .isValid());
-  EXPECT_TRUE(!Signature("[ifoo>]").isValid());
-  EXPECT_TRUE(!Signature("[i]>")   .isValid());
-  EXPECT_TRUE(!Signature("<>")     .isValid());
-  EXPECT_TRUE(!Signature(">")      .isValid());
-  EXPECT_TRUE(!Signature("<")      .isValid());
+  EXPECT_THROW(Signature("i<foo")  , std::runtime_error);
+  EXPECT_THROW(Signature("ifoo>")  , std::runtime_error);
+  EXPECT_THROW(Signature("[ifoo>]"), std::runtime_error);
+  EXPECT_THROW(Signature("[i]>")   , std::runtime_error);
+  EXPECT_THROW(Signature("<>")     , std::runtime_error);
+  EXPECT_THROW(Signature(">")      , std::runtime_error);
+  EXPECT_THROW(Signature("<")      , std::runtime_error);
 }
 
 struct Point
@@ -666,11 +646,45 @@ TEST(TestSignature, ToData)
 {
   #define j(a) trimall(qi::encodeJSON(qi::Signature(a).toData()))
   #define S(a) unarmor(#a)
-  EXPECT_EQ(j("i"), S(([ [ "i", [], "" ] ])));
-  EXPECT_EQ(j("i<foo>"), S(([ [ "i", [], "foo" ] ])));
-  EXPECT_EQ(j("[i<foo>]<bar>"), S(([ ["[", [[ "i", [], "foo" ]], "bar"] ])));
+  EXPECT_EQ(j("i"),             S(([ "i", [], "" ])));
+  EXPECT_EQ(j("i<foo>"),        S(([ "i", [], "foo" ])));
+  EXPECT_EQ(j("[i<foo>]<bar>"), S((["[", [[ "i", [], "foo" ]], "bar"])));
   EXPECT_EQ(j("(i[f]{if})"),
-    S(( [ ["(", [["i", [], ""],["[", [["f", [], ""]], ""],["{", [["i", [], ""], ["f", [], ""]], "" ]], "" ] ])));
+    S(( ["(", [["i", [], ""],["[", [["f", [], ""]], ""],["{", [["i", [], ""], ["f", [], ""]], "" ]], "" ])));
 }
+
+
+#define verif_iter(_it, _sig, _type, _hasChildren) \
+{\
+  EXPECT_STREQ(_sig, (_it).toString().c_str());\
+  EXPECT_TRUE(_hasChildren == (_it).hasChildren()); \
+  EXPECT_EQ(qi::Signature::_type, (_it).type());\
+}
+
+
+TEST(TestSignatureIterator, Simple) {
+
+  qi::SignatureVector::iterator it;
+
+  qi::Signature signature("(is)");
+  qi::SignatureVector sig = signature.children();
+
+  EXPECT_TRUE(signature.isValid());
+  EXPECT_TRUE(sig.size() == 2);
+  it = sig.begin();
+  verif_iter(*it, "i", Type_Int32, false);
+  ++it;
+  verif_iter(*it, "s", Type_String, false);
+}
+
+TEST(TestSignatureIterator, Empty) {
+  qi::Signature sig3;
+
+  EXPECT_TRUE(sig3.children().size() == 0);
+  verif_iter(sig3, "", Type_None, false);
+  EXPECT_STREQ("", sig3.toString().c_str());
+}
+
+
 
 //#endif

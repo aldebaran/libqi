@@ -432,7 +432,7 @@ namespace qi {
   }
 
 
-  static TypeInterface* fromSignature(const qi::Signature::iterator & i)
+  static TypeInterface* fromSignature(const qi::Signature& sig)
   {
     static TypeInterface* tv = typeOf<void>();
     static TypeInterface* tb = typeOf<bool>();
@@ -450,7 +450,7 @@ namespace qi {
     static TypeInterface* tgv = typeOf<AnyValue>();
     static TypeInterface* tbuffer = typeOf<Buffer>();
     static TypeInterface* tobjectptr = typeOf<AnyObject>();
-    switch(i.type())
+    switch(sig.type())
     {
     case Signature::Type_None:
     case Signature::Type_Void:
@@ -481,7 +481,7 @@ namespace qi {
       return tstring;
     case Signature::Type_List:
       {
-        TypeInterface* el = fromSignature(i.children().begin());
+        TypeInterface* el = fromSignature(sig.children().at(0));
         if (!el)
         {
           qiLogError() << "Cannot get type from list of unknown type.";
@@ -491,8 +491,8 @@ namespace qi {
       }
     case Signature::Type_Map:
       {
-        TypeInterface* k = fromSignature(i.children().begin());
-        TypeInterface* e = fromSignature(++i.children().begin());
+        TypeInterface* k = fromSignature(sig.children().at(0));
+        TypeInterface* e = fromSignature(sig.children().at(1));
         if (!k || !e)
         {
           qiLogError() <<" Cannot get type from map of unknown "
@@ -504,10 +504,10 @@ namespace qi {
     case Signature::Type_Tuple:
       {
         std::vector<TypeInterface*> types;
-        Signature c = i.children();
-        for (Signature::iterator child = c.begin(); child != c.end(); child++)
+        const SignatureVector& c = sig.children();
+        for (SignatureVector::const_iterator child = c.begin(); child != c.end(); child++)
         {
-          TypeInterface* t = fromSignature(child);
+          TypeInterface* t = fromSignature(*child);
           if (!t)
           {
             qiLogError() << "Cannot get type from tuple of unknown element type";
@@ -517,7 +517,7 @@ namespace qi {
           types.push_back(t);
         }
         std::vector<std::string> vannotations;
-        std::string annotation = i.annotation();
+        std::string annotation = sig.annotation();
         boost::algorithm::split(vannotations, annotation, boost::algorithm::is_any_of(","));
         TypeInterface* res;
         //first annotation is the name, then the name of each elements
@@ -525,7 +525,7 @@ namespace qi {
           res = makeTupleType(types, vannotations[0], std::vector<std::string>(vannotations.begin()+1, vannotations.end()));
         else
           res = makeTupleType(types);
-        qiLogDebug() <<"Resulting tuple " << i.signature().toString() << " " << res->infoString();
+        //qiLogDebug() <<"Resulting tuple " << sig.toString() << " " << res->infoString();
         return res;
       }
     case Signature::Type_Dynamic:
@@ -535,17 +535,14 @@ namespace qi {
     case Signature::Type_Object:
       return tobjectptr;
     default:
-      qiLogWarning() << "Cannot get type from signature " << i.signature().toString();
+      qiLogWarning() << "Cannot get type from signature " << sig.toString();
       return 0;
     }
   }
 
   TypeInterface* TypeInterface::fromSignature(const qi::Signature& sig)
   {
-    if (sig.size() != 1)
-      qiLogWarning() << "fromSignature(): signature has more than one element: " << sig.toString();
-    Signature::iterator i = sig.begin();
-    TypeInterface* result = ::qi::fromSignature(i);
+    TypeInterface* result = ::qi::fromSignature(sig);
     // qiLogDebug() << "fromSignature() " << i.signature() << " -> " << (result?result->infoString():"NULL");
     return result;
   }

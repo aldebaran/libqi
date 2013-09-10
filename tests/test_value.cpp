@@ -291,7 +291,7 @@ TEST(Value, Tuple2)
   Point2 p;
   StructTypeInterface* t = static_cast<qi::StructTypeInterface*>(qi::typeOf<Point2>());
   ASSERT_EQ(6u, t->memberTypes().size());
-  EXPECT_EQ("(ddsddd)<Point2,x,y,str,z,a,b>", t->signature());
+  EXPECT_TRUE("(ddsddd)<Point2,x,y,str,z,a,b>" == t->signature());
   std::vector<AnyValue> vd;
   vd.push_back(AnyValue(AutoAnyReference(1.5)));
   vd.push_back(AnyValue(AutoAnyReference(2.5)));

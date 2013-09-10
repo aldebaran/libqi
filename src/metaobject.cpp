@@ -130,7 +130,7 @@ namespace qi {
     {
       assert(mm->name() == nameWithOptionalSignature);
       const Signature& sig = mm->parametersSignature();
-      if (sig == "m" || sig.begin().children().size() == nargs)
+      if (sig == "m" || sig.children().size() == nargs)
       {
         if (firstMatch)
         { // this is the second match, ambiguity that needs args to resolve

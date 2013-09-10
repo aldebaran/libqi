@@ -22,12 +22,12 @@ namespace qi {
     const std::string &signature();
 
   protected:
-    void visit(const Signature *sig);
-    void visitSingle(qi::Signature::iterator *it);
-    void visitSimple(qi::Signature::iterator *it);
-    void visitList(qi::Signature::iterator *it);
-    void visitMap(qi::Signature::iterator *it);
-    void visitTuple(qi::Signature::iterator *it);
+    void visit(const SignatureVector& elements);
+    void visit(const qi::Signature& sig);
+    void visitSimple(const qi::Signature &sig);
+    void visitList(const qi::Signature &sig);
+    void visitMap(const qi::Signature &sig);
+    void visitTuple(const qi::Signature &sig);
 
     bool                 _done;
     const qi::Signature *_sig;

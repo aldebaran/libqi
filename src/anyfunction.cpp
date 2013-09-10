@@ -250,15 +250,16 @@ namespace qi
   {
     GenericFunctionParameters dst;
     const std::vector<AnyReference>& src = *this;
-    if (sig.size() != src.size())
+    if (sig.children().size() != src.size())
     {
       qiLogError() << "convert: signature/params size mismatch"
-      << sig.toString() << " " << sig.size() << " " << src.size();
+      << sig.toString() << " " << sig.children().size() << " " << src.size();
       return dst;
     }
-    Signature::iterator it = sig.begin();
+    const SignatureVector &elts = sig.children();
+    SignatureVector::const_iterator it;
     int idx = 0;
-    for (;it != sig.end(); ++it,++idx)
+    for (;it != elts.end(); ++it,++idx)
     {
       TypeInterface* compatible = qi::TypeInterface::fromSignature(*it);
       if (!compatible)

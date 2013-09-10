@@ -337,7 +337,7 @@ namespace qi {
       _p = boost::make_shared<SignalBasePrivate>();
     }
     // Check arity. Does not require to acquire weakLock.
-    int sigArity = Signature(signature()).begin().children().size();
+    int sigArity = signature().children().size();
     int subArity = -1;
     Signature subSignature;
 
@@ -368,7 +368,7 @@ namespace qi {
       else
       {
         subSignature = ms->parametersSignature();
-        subArity = subSignature.size();
+        subArity = subSignature.children().size();
       }
     }
     if (sigArity != subArity)

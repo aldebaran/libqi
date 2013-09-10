@@ -81,8 +81,8 @@ namespace qi {
       {
         std::pair<AnyReference, bool> conv = val.convert(targetType);
         if (!conv.first.type)
-          promise.setError(std::string("Unable to convert call result to target type:")
-            + val.signature(true).toPrettySignature() + " -> " + targetType->signature().toPrettySignature() );
+          promise.setError(std::string("Unable to convert call result to target type: from")
+            + val.signature(true).toPrettySignature() + " to " + targetType->signature().toPrettySignature() );
         else
         {
           T* res = (T*)conv.first.type->ptrFromStorage(&conv.first.value);

@@ -18,40 +18,40 @@ namespace qi {
 
   const std::string &SignatureConvertor::signature() {
     if (!_done) {
-      visit(_sig);
+      visit(*_sig);
       _done = true;
     }
     return _result;
   }
 
-  void SignatureConvertor::visit(const qi::Signature *sig) {
+  void SignatureConvertor::visit(const qi::SignatureVector& elements) {
 
-    qi::Signature::iterator it;
+    SignatureVector::const_iterator it;
 
-    for (it = sig->begin(); it != sig->end(); ++it) {
-      visitSingle(&it);
+    for (it = elements.begin(); it != elements.end(); ++it) {
+      visit(*it);
     }
   }
 
-  void SignatureConvertor::visitSingle(qi::Signature::iterator *it) {
-    switch(it->type()) {
+  void SignatureConvertor::visit(const qi::Signature& sig) {
+    switch(sig.type()) {
       case '[':
-        visitList(it);
+        visitList(sig);
         break;
       case '{':
-        visitMap(it);
+        visitMap(sig);
         break;
       case '(':
-        visitTuple(it);
+        visitTuple(sig);
         break;
       default:
-        visitSimple(it);
+        visitSimple(sig);
         break;
     }
   }
 
-  void SignatureConvertor::visitSimple(qi::Signature::iterator *it) {
-    switch(it->type()) {
+  void SignatureConvertor::visitSimple(const Signature& sig) {
+    switch(sig.type()) {
       case 'b':
         _result += "Bool";
         break;
@@ -100,29 +100,24 @@ namespace qi {
     }
   }
 
-  void SignatureConvertor::visitList(qi::Signature::iterator *it) {
+  void SignatureConvertor::visitList(const Signature& sig) {
     _result += "List<";
-    qi::Signature sig = it->children();
-    qi::Signature::iterator it2 = sig.begin();
-    visitSingle(&it2);
+    visit(sig.children().at(0));
     _result += ">";
   }
 
-  void SignatureConvertor::visitMap(qi::Signature::iterator *it) {
+  void SignatureConvertor::visitMap(const Signature& sig) {
     _result += "Map<";
-    qi::Signature sig = it->children();
-    qi::Signature::iterator it2 = sig.begin();
-    visitSingle(&it2);
+    visit(sig.children().at(0));
     _result += ",";
-    ++it2;
-    visitSingle(&it2);
+    visit(sig.children().at(1));
     _result += ">";
   }
 
   //not really tuple but fonction arguments
-  void SignatureConvertor::visitTuple(qi::Signature::iterator *it) {
+  void SignatureConvertor::visitTuple(const Signature &sig) {
     std::vector<std::string> annot;
-    std::string annotation(it->annotation());
+    std::string annotation(sig.annotation());
     boost::algorithm::split(annot, annotation, boost::algorithm::is_any_of(","));
 
     if (!annotation.empty() && !annot.empty()) {
@@ -131,13 +126,13 @@ namespace qi {
       return;
     }
     _result += "(";
-    qi::Signature sig = it->children();
+    const qi::SignatureVector& csig = sig.children();
 
-    qi::Signature::iterator it2 = sig.begin();
-    while (it2 != sig.end()) {
-      visitSingle(&it2);
-      ++it2;
-      if (it2 != sig.end())
+    qi::SignatureVector::const_iterator it = csig.begin();
+    while (it != csig.end()) {
+      visit(*it);
+      ++it;
+      if (it != csig.end())
         _result += ",";
       else
         break;
