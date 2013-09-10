@@ -6,13 +6,20 @@
 
 // Disable one to test the disabled macros
 #define NO_QI_INFO
+
+#include <cstring>
+
 #include <gtest/gtest.h>
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
+#include <boost/lexical_cast.hpp>
+#include <boost/thread.hpp>
 
 #include <qi/log.hpp>
+#include <qi/atomic.hpp>
+
 #include "../src/log_p.hpp"
-#include <cstring>
+
 
 TEST(log, logsync)
 {
@@ -365,4 +372,46 @@ TEST(log, emptyLog)
   qiLogWarning();
   qiLogError();
   qiLogFatal();
+}
+
+void nullHandler(const qi::LogLevel,
+                             const qi::os::timeval,
+                             const char*,
+                             const char*,
+                             const char*,
+                             const char*,
+                             int) {}
+void makeCats(int uid, unsigned count, qi::Atomic<int>& finished)
+{
+  for (unsigned i=0; i<count; ++i)
+  {
+    std::stringstream s;
+    s << "cat_" << uid << "_" << i;
+    qi::log::addCategory(s.str());
+  }
+  ++finished;
+}
+
+void addHandler(qi::Atomic<int>& pos, qi::Atomic<int>& count)
+{
+  int p = ++pos;
+  qi::log::SubscriberId id = qi::log::addLogHandler("foo" + boost::lexical_cast<std::string>(p),
+    nullHandler);
+  ++count;
+}
+
+TEST(log, threadSafeness)
+{
+  qi::Atomic<int> count;
+  for (unsigned i=0; i<10; ++i)
+    boost::thread(makeCats, i, 1000, boost::ref(count));
+  while (*count < 10)
+    qi::os::msleep(50);
+  qi::Atomic<int> pos;
+  count = 0;
+  for (unsigned i=0; i<10; ++i)
+    boost::thread(addHandler, boost::ref(pos), boost::ref(count));
+  while (*count < 10)
+    qi::os::msleep(50);
+  EXPECT_TRUE(true);
 }

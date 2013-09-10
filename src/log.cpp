@@ -18,6 +18,7 @@
 
 #include <boost/thread/thread.hpp>
 #include <boost/thread/condition_variable.hpp>
+#include <boost/thread/recursive_mutex.hpp>
 #include <boost/program_options.hpp>
 #include <boost/unordered_map.hpp>
 
@@ -217,6 +218,15 @@ namespace qi {
       return *_glCategories;
     }
 
+    // protects globs and categories, both the map and the per-category vector
+    static boost::recursive_mutex          *_glMutex   = 0;
+    inline boost::recursive_mutex& _mutex()
+    {
+      if (!_glMutex)
+        _glMutex = new boost::recursive_mutex();
+      return *_glMutex;
+    }
+
     static int                    _glContext = 0;
     static bool                   _glSyncLog = false;
     static bool                   _glInit    = false;
@@ -280,6 +290,7 @@ namespace qi {
     namespace detail {
       void Category::setLevel(SubscriberId sub, qi::LogLevel level)
       {
+        boost::recursive_mutex::scoped_lock lock(_mutex());
         if (levels.size() <= sub)
         {
           bool willUseDefault = (levels.size() < sub);
@@ -301,6 +312,7 @@ namespace qi {
     // check and apply existing glob if they match given category
     static void checkGlobs(detail::Category* cat)
     {
+      boost::recursive_mutex::scoped_lock lock(_mutex());
       for (unsigned i=0; i<_glGlobRules.size(); ++i) {
         GlobRule& g = _glGlobRules[i];
         if (g.matches(cat->name))
@@ -311,6 +323,7 @@ namespace qi {
     // apply a globbing rule to existing categories
     static void applyGlob(const GlobRule& g)
     {
+      boost::recursive_mutex::scoped_lock lock(_mutex());
       CategoryMap& c = _categories();
       for (CategoryMap::iterator it = c.begin(); it != c.end(); ++it)
       {
@@ -325,6 +338,7 @@ namespace qi {
     // Check if globRule replaces an existiing one, then replace or append
     static void mergeGlob(const GlobRule& p)
     {
+      boost::recursive_mutex::scoped_lock lock(_mutex());
       for (unsigned i=0; i<_glGlobRules.size(); ++i)
       {
         GlobRule& c = _glGlobRules[i];
@@ -394,6 +408,7 @@ namespace qi {
                        const char* function,
                        int line)
     {
+      boost::recursive_mutex::scoped_lock lock(_mutex());
       if (!logHandlers.empty())
       {
         LogHandlerMap::iterator it;
