@@ -256,9 +256,13 @@ namespace qi {
     }
   public: //Signals
     typedef boost::function<void (Future<T>) > Connection;
+    /** Connect a callback function that will be called once
+    * when the Future finishes (that is, switches from running to an other
+    * state.
+    */
     inline void connect(const Connection& s) { _p->connect(*this, s);}
 
-#ifdef DOGYGEN
+#ifdef DOXYGEN
     /** Connect a callback with binding and tracking support.
     *
     * If the first argument is a weak_ptr or a pointer inheriting from
