@@ -283,6 +283,8 @@ namespace qi { namespace py {
       }
 
       qi::DynamicObjectBuilder gob;
+      //let the GIL handle the thread-safety for us
+      gob.setThreadingModel(ObjectThreadingModel_MultiThread);
       GILScopedLock _lock;
       boost::python::object attrs(boost::python::borrowed(PyObject_Dir(obj.ptr())));
 
