@@ -171,9 +171,9 @@ namespace qi {
                "isCanceled() -> bool\n"
                "Is the future canceled?")
 
-          .def("isCanceleable", &PyFuture::isCanceleable,
-               "isCanceleable() -> bool\n"
-               "Is the future canceleable. (not all future are canceleable)")
+          .def("isCancelable", &PyFuture::isCanceleable,
+               "isCancelable() -> bool\n"
+               "Is the future cancelable. (not all future are cancelable)")
 
           .def("addCallback", &PyFuture::addCallback,
                "addCallback(cb) -> None\n"

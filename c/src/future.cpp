@@ -150,7 +150,7 @@ int qi_future_is_canceled(qi_future_t *fu)
 int qi_future_is_cancelable(qi_future_t *fu)
 {
   qi::Future<qi::AnyValue> *fut = qi_future_cpp(fu);
-  return fut->isCanceleable();
+  return fut->isCancelable();
 }
 
 void qi_future_cancel(qi_future_t *fu)
