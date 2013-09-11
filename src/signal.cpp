@@ -405,6 +405,9 @@ namespace qi {
   SignalBase::SignalBase(const qi::Signature& sig, OnSubscribers onSubscribers)
     : _p(new SignalBasePrivate)
   {
+    //Dynamic mean AnyArguments here.
+    if (sig.type() != qi::Signature::Type_Dynamic && sig.type() != qi::Signature::Type_Tuple)
+      throw std::runtime_error("Signal signature should be tuple, or AnyArguments");
     _p->onSubscribers = onSubscribers;
     _p->signature = sig;
   }
