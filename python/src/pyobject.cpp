@@ -341,9 +341,20 @@ namespace qi { namespace py {
       return pys.call(boost::python::extract<boost::python::str>(args[1]), boost::python::tuple(l), kwargs);
     }
 
+    static boost::python::object pyobjectParamShrinkerAsync(boost::python::tuple args, boost::python::dict kwargs) {
+      PyQiObject& pys = boost::python::extract<PyQiObject&>(args[0]);
+      boost::python::list l;
+      for (int i = 2; i < boost::python::len(args); ++i)
+        l.append(args[i]);
+      kwargs.attr("_async") = true;
+      return pys.call(boost::python::extract<boost::python::str>(args[1]), boost::python::tuple(l), kwargs);
+    }
+
+
     void export_pyobject() {
       boost::python::class_<qi::py::PyQiObject>("Object", boost::python::no_init)
           .def("call", boost::python::raw_function(&pyobjectParamShrinker, 1))
+          .def("async", boost::python::raw_function(&pyobjectParamShrinkerAsync, 1))
           //TODO: .def("post")
           //TODO: .def("setProperty")
           //TODO: .def("property")
