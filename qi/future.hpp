@@ -241,7 +241,7 @@ namespace qi {
     * Exact effect is controlled by the cancel implementation, but it is
     * expected to set a value or an error to the Future as fast as possible.
     * Note that cancelation may be asynchronous.
-    * @throw ExceptionState_FutureNotCancelable if isCanceleable() is false.
+    * @throw ExceptionState_FutureNotCancelable if isCancelable() is false.
     */
     void cancel()
     {
@@ -250,9 +250,9 @@ namespace qi {
 
     /** return true if the future can be canceled. This does not mean that cancel will succeed.
      */
-    bool isCanceleable() const
+    bool isCancelable() const
     {
-      return _p->isCanceleable();
+      return _p->isCancelable();
     }
   public: //Signals
     typedef boost::function<void (Future<T>) > Connection;
@@ -369,7 +369,7 @@ namespace qi {
     bool hasValue(int msecs = FutureTimeout_Infinite) const            { _sync = false; return _future.hasValue(msecs); }
     const std::string &error(int msecs = FutureTimeout_Infinite) const { _sync = false; return _future.error(msecs); }
     void cancel()                                                      { _sync = false; _future.cancel(); }
-    bool isCanceleable() const                                         { _sync = false; return _future.isCanceleable(); }
+    bool isCancelable() const                                          { _sync = false; return _future.isCancelable(); }
     void connect(const Connection& s)                                  { _sync = false; _future.connect(s);}
     void _connect(const boost::function<void()>& s)                    { _sync = false; _future._connect(s);}
 

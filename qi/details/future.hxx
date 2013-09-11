@@ -58,7 +58,7 @@ namespace qi {
       {
       }
 
-      bool isCanceleable() const
+      bool isCancelable() const
       {
         return _onCancel;
       }

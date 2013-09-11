@@ -453,7 +453,7 @@ namespace qi {
       // monitor async is setup
       ctx->mon = ctx->helper->async(boost::bind(&monitor_pingtimeout, ctx), ctx->maxDelay);
       ctx->target->post(boost::bind(&monitor_ping, ctx));
-      assert(ctx->mon.isCanceleable());
+      assert(ctx->mon.isCancelable());
     }
   }
 

@@ -639,7 +639,7 @@ TEST(TestFutureSync, NoThrow) {
   EXPECT_NO_THROW(qi::FutureSync<int>(prom.future()).isFinished());
   EXPECT_NO_THROW(qi::FutureSync<int>(prom.future()).error());
   EXPECT_NO_THROW(qi::FutureSync<int>(prom.future()).cancel());
-  EXPECT_NO_THROW(qi::FutureSync<int>(prom.future()).isCanceleable());
+  EXPECT_NO_THROW(qi::FutureSync<int>(prom.future()).isCancelable());
 }
 
 void do_nothing(TestFutureI*) {}
@@ -703,11 +703,11 @@ TEST(TestFutureCancel, Canceleable)
 
   ASSERT_FALSE(f.isFinished());
   ASSERT_FALSE(f.isCanceled());
-  ASSERT_TRUE(f.isCanceleable());
+  ASSERT_TRUE(f.isCancelable());
   f.cancel();
   ASSERT_TRUE(f.isFinished());
   ASSERT_TRUE(f.isCanceled());
-  ASSERT_TRUE(f.isCanceleable());
+  ASSERT_TRUE(f.isCancelable());
   ASSERT_FALSE(f.hasError(qi::FutureTimeout_None));
   ASSERT_FALSE(f.hasValue(qi::FutureTimeout_None));
 
@@ -717,11 +717,11 @@ TEST(TestFutureCancel, Canceleable)
 
   ASSERT_FALSE(f.isFinished());
   ASSERT_FALSE(f.isCanceled());
-  ASSERT_TRUE(f.isCanceleable());
+  ASSERT_TRUE(f.isCancelable());
   f.cancel();
   ASSERT_TRUE(f.isFinished());
   ASSERT_FALSE(f.isCanceled());
-  ASSERT_TRUE(f.isCanceleable());
+  ASSERT_TRUE(f.isCancelable());
   ASSERT_TRUE(f.hasError(qi::FutureTimeout_None));
   ASSERT_FALSE(f.hasValue(qi::FutureTimeout_None));
 
@@ -730,11 +730,11 @@ TEST(TestFutureCancel, Canceleable)
 
   ASSERT_FALSE(f.isFinished());
   ASSERT_FALSE(f.isCanceled());
-  ASSERT_TRUE(f.isCanceleable());
+  ASSERT_TRUE(f.isCancelable());
   f.cancel();
   ASSERT_TRUE(f.isFinished());
   ASSERT_FALSE(f.isCanceled());
-  ASSERT_TRUE(f.isCanceleable());
+  ASSERT_TRUE(f.isCancelable());
   ASSERT_FALSE(f.hasError(qi::FutureTimeout_None));
   ASSERT_TRUE(f.hasValue(qi::FutureTimeout_None));
 
@@ -743,11 +743,11 @@ TEST(TestFutureCancel, Canceleable)
 
   ASSERT_FALSE(f.isFinished());
   ASSERT_FALSE(f.isCanceled());
-  ASSERT_TRUE(f.isCanceleable());
+  ASSERT_TRUE(f.isCancelable());
   f.cancel();
   ASSERT_FALSE(f.isFinished());
   ASSERT_FALSE(f.isCanceled());
-  ASSERT_TRUE(f.isCanceleable());
+  ASSERT_TRUE(f.isCancelable());
   EXPECT_THROW(f.hasError(qi::FutureTimeout_None), qi::FutureException);
   EXPECT_THROW(f.hasValue(qi::FutureTimeout_None), qi::FutureException);
 }
