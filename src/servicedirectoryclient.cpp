@@ -144,7 +144,7 @@ namespace qi {
   }
 
   qi::Url              ServiceDirectoryClient::url() const {
-    return _sdSocket->url();
+    return _sdSocket ? _sdSocket->url() : qi::Url();
   }
 
   void ServiceDirectoryClient::onServiceRemoved(unsigned int idx, const std::string &name) {
