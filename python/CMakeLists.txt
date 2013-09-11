@@ -1,9 +1,6 @@
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../)
 
-qi_install_python(${CMAKE_CURRENT_SOURCE_DIR}/qi
-  KEEP_RELATIVE_PATHS
-)
 
 # do not use qi_create_lib: it does not all
 # the python-specific stuff we need.
@@ -33,8 +30,6 @@ add_library(_qi SHARED src/boostpymain.cpp
                    src/error.hpp
 )
 
-# Install the library next to the .py files
-qi_install_python(TARGETS _qi)
 
 # Fix the library name: no lib prefix, correct extension
 set_target_properties(_qi PROPERTIES PREFIX "")
@@ -64,6 +59,12 @@ endif()
 
 qi_use_lib(_qi BOOST_PYTHON QI QITYPE QIMESSAGING PYTHON)
 
+# Install the library next to the .py files
+qi_install_python(TARGETS _qi)
+
+qi_install_python(${CMAKE_CURRENT_SOURCE_DIR}/qi
+  KEEP_RELATIVE_PATHS
+)
 
 # Add automatic testing for Python bindings
 add_subdirectory(test)
