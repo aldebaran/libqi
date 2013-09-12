@@ -1,9 +1,10 @@
+.. _api-future:
 .. cpp:namespace:: qi
 .. cpp:auto_template:: True
 .. default-role:: cpp:guess
-.. _api-future:
-Promise and Future Documentation
-********************************
+
+qi::Promise, qi::Future API
+***************************
 
 qi::Future
 ==========

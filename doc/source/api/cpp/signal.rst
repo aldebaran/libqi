@@ -1,10 +1,10 @@
+.. _api-signal:
 .. cpp:namespace:: qi
 .. cpp:auto_template:: True
 .. default-role:: cpp:guess
 
-.. _api-signal:
-Signal Documentation
-********************
+qi::Signal API
+**************
 
 qi::Signal<T>
 =============
