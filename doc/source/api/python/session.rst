@@ -1,10 +1,10 @@
 .. _api-py-session:
 
 qi.Session API
-==============
+**************
 
 Introduction
-------------
+============
 
 A session connect to a :py:class:`qi.ServiceDirectory`. Once connected the session can:
 
@@ -12,14 +12,14 @@ A session connect to a :py:class:`qi.ServiceDirectory`. Once connected the sessi
 - get proxy on services using :py:meth:`qi.Session.service`
 
 Reference
----------
+=========
 
 .. autoclass:: qi.Session
    :members:
 
 
 Examples
---------
+========
 
 Getting a service:
 

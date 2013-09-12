@@ -1,10 +1,10 @@
 .. _api-py-property:
 
 qi.Property API
-===============
+***************
 
 Introduction
-------------
+============
 
 Reference
 ---------

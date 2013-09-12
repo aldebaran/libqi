@@ -145,7 +145,7 @@ namespace qi {
 
           .def("wait", &PyFuture::wait, (boost::python::args("timeout") = qi::FutureTimeout_Infinite),
                "wait(timeout) -> qi.FutureState\n"
-               "Wait for the future to be ready. Raise an exception on timeout. Return a qi.FutureState." )
+               "Wait for the future to be ready. Raise an exception on timeout. Return a :py:data:`qi.FutureState`." )
 
           .def("hasError", &PyFuture::hasError, (boost::python::args("timeout") = qi::FutureTimeout_Infinite),
                "hasError(timeout) -> bool\n"

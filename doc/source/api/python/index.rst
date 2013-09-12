@@ -4,7 +4,7 @@ python qi API documentation
 ---------------------------
 
 .. toctree::
-  :maxdepth: 2
+  :maxdepth: 1
 
   session
   servicedirectory

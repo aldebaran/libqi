@@ -63,7 +63,7 @@ Software Stack
    messaging/index
    core/index
    messaging/api/index
-   api/py
+   api/python/index
 
 ..
    connectivity

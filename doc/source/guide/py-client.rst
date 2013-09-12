@@ -1,10 +1,10 @@
 .. _guide-py-client:
 
 How to write a qimessaging client in Python
-===========================================
+*******************************************
 
 Introduction
--------------
+============
 
 This guide will teach you how to write a qimessaging client in Python, to
 interact with the various services offered by the robot.

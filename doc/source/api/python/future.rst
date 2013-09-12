@@ -1,10 +1,10 @@
 .. _api-py-future:
 
 qi.Future API
-=============
+*************
 
 Introduction
-------------
+============
 
 Promise and Future are a way to synchronise data between multiples threads.
 The number of future associated to a promise is not limited.
@@ -16,45 +16,30 @@ by the promise.
 
 
 Reference
----------
+=========
 
 .. py:data:: qi.FutureState
 
-  global constant that describe the state of the Future.
-  This is the status returned by :py:func:`qi.Future.wait`
+  Constants that describe the state of the Future.
+  This is the status returned by :py:meth:`qi.Future.wait`
 
-  .. py:data:: qi.FutureState.None
-
-    The future is not bound.
-
-  .. py:data:: qi.FutureState.Running
-
-    The future is attached to a Promise.
-
-  .. py:data:: qi.FutureState.Canceled
-
-    The future has been canceled
-
-  .. py:data:: qi.FutureState.FinishedWithError
-
-    The future has finished and a value is available
-
-  .. py:data:: qi.FutureState.FinisehdWithValue
-
-    The future has finished and an error is available
+  ================================    ====================================================
+  qi.FutureState.None                 The future is not bound.
+  qi.FutureState.Running              The future is attached to a Promise.
+  qi.FutureState.Canceled             The future has been canceled
+  qi.FutureState.FinishedWithError    The future has finished and a value is available
+  qi.FutureState.FinishedWithValue    The future has finished and an error is available
+  ================================    ====================================================
 
 
 .. py:data:: qi.FutureTimeout
 
-  global constant to use for timeout arguments.
+  Constants to use for timeout arguments.
 
-  .. py:data:: qi.FutureTimeout.None
-
-    Do not wait.
-
-  .. py:data:: qi.FutureTimeout.Infinite
-
-    Block forever
+  ================================    ====================================================
+  qi.FutureTimeout.None               Do not wait.
+  qi.FutureTimeout.Infinite           Block forever
+  ================================    ====================================================
 
 .. autoclass:: qi.Promise
    :members:
@@ -62,9 +47,8 @@ Reference
 .. autoclass:: qi.Future
    :members:
 
-
 Examples
---------
+========
 
 Simple example:
 
