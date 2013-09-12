@@ -79,6 +79,15 @@
   * The file is searched in a list of possible directories, provided by the
   * :cpp:func:`qi::path::dataPaths(const std::string&)`.
   * The first match is returned.
+  *
+  * For instance if you have the following files on a unix system
+  *
+  *   ~/.local/share/foo/models/nao.xml
+  *   /usr/share/foo/models/nao.xml
+  *
+  * then listData("foo", "models/nao.xml") will return
+  *
+  *   ~/.local/share/foo/models/nao.xml
   * \endverbatim
   */
 
@@ -87,12 +96,21 @@
   * \param applicationName Name of the application.
   * \param filename Name of the file to look for.
   * You can specify subdirectories using "/" as directory separator.
-  * \return A list of all file matching. If there is no file, return an empty
-  * list.
+  * \return An std::vector of the complete, native path of the files that matched.
   *
   * \verbatim
   * The file is searched in a list of possible directories, provided by the
-  * :cpp:func:`qi::path::dataPaths(const std::string&)`.
+  * :cpp:func:`qi::path::dataPaths(const std::string&)`, all the matches are returned.
+  *
+  * For instance if you have the following files on a unix system
+  *
+  *   ~/.local/share/foo/models/nao.xml
+  *   /usr/share/foo/models/nao.xml
+  *
+  * then listData("foo", "models/nao.xml") will return
+  *
+  *   ~/.local/share/foo/models/nao.xml
+  *   /usr/share/foo/models/nao.xml
   * \endverbatim
   */
 
@@ -110,11 +128,14 @@
   * returned.
   *
   * For instance if you have the following files on a unix system
+  *
   *   ~/.local/share/foo/models/nao.xml
   *   ~/.local/share/foo/models/romeo_with_laser_head.xml
   *   /usr/share/foo/models/nao.xml
   *   /usr/share/foo/models/romeo.xml
+  *
   * then listData("foo", "models/*.xml") will return
+  *
   *   ~/.local/share/foo/models/nao.xml
   *   ~/.local/share/foo/models/romeo_with_laser_head.xml
   *   /usr/share/foo/models/romeo.xml
