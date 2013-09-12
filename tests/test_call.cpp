@@ -1051,7 +1051,7 @@ TEST(TestObjectT, Complete)
   EXPECT_EQ(12, olocal->ping(12));
   EXPECT_EQ(12, (*olocal).ping(12));
   EXPECT_EQ(12, olocal.asAnyObject()->call<int>("ping", 12).value());
-
+  EXPECT_EQ(12, olocal.call<int>("ping", 12).value());
   qi::registerProxy<TestClassProxy>();
   // Object<T> way, does not require proxy registration actually
   qi::Object<TestClassProxy> oproxy = p.client()->service("s");
@@ -1059,6 +1059,12 @@ TEST(TestObjectT, Complete)
   EXPECT_EQ(12, oproxy->ping(12));
   EXPECT_EQ(12, (*oproxy).ping(12));
   EXPECT_EQ(12, oproxy.asAnyObject()->call<int>("ping", 12).value());
+  EXPECT_EQ(12, oproxy.call<int>("ping", 12).value());
+
+  // No interface, Object<Empty>
+  qi::Object<> gproxy = p.client()->service("s");
+  EXPECT_EQ(12, gproxy.call<int>("ping", 12).value());
+
   // old way for comparison. I don't see anything wrong with that :p
   boost::shared_ptr<TestClassProxy> oldproxy =
     qi::AnyValue(p.client()->service("s").value()).to<boost::shared_ptr<TestClassProxy> >();
