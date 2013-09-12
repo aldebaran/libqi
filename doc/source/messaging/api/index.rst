@@ -6,10 +6,12 @@ qiMessaging API Reference
 .. toctree::
   :maxdepth: 1
 
+  future
+  signal
+  event
   buffer
   datastream
   functor
-  future
   object
   server
   session

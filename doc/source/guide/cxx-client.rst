@@ -1,5 +1,11 @@
 .. _guide-cxx-client:
 
+.. cpp:namespace:: qi
+
+.. cpp:auto_template:: True
+
+.. default-role:: cpp:guess
+
 How to write a qimessaging client in C++
 ========================================
 
@@ -20,17 +26,15 @@ Prerequisites
 Creating a session
 ------------------
 
-loadservice is cool :cpp:func:`qi::Session::loadService`
 The first step to interact with qimessaging services is to connect a
-:cpp:class:`qi::Session`
-
-
-to the _`Service Directory` of the robot. The Service Directory address is
-represented by an _`URL`.
+:cpp:class:`qi::Session` to the ::ref:`Service Directory<api-ServiceDirectory>` of the robot.
+The Service Directory address is represented by a standard URL.
 
 One simple way to achive this is to use the helper class _`ApplicationSession`,
 which will fetch the URL from the command line (using the *--qi-url* option),
-or use a default value of *localhost*::
+or use a default value of *localhost*:
+
+.. code-block:: cpp
 
   #include <iostream>
   #include <qimessaging/applicationsession.hpp>
@@ -50,7 +54,9 @@ Each service comes with it's own header in the SDK, that defines the set of
 methods, signals and properties available (more on this later). Let us make the
 robot speak by using the *say* method of the *ALTextToSpeech* service. For this
 we need to include the altexttospeech header, request an *Object<ALTextToSpeech>*
-from the session, and call its say function. The complete code becomes::
+from the session, and call its say function. The complete code becomes:
+
+.. code-block:: cpp
 
   #include <qimessaging/applicationsession.hpp>
   #include <qicore/altexttospeech.hpp>
@@ -68,15 +74,18 @@ name of the service that implements it, but it might not always be the case.
 Multiple services can provide the same interface, allowing you to chose the
 one that better suits your needs.
 
-The _`qi::Object` template that wraps the ALTextToSpeech instance is used here to
+The `qi::Object` template that wraps the ALTextToSpeech instance is used here to
 provide reference-counting: the tts object will get disposed of as soon as
-all references to it are removed.
+all references to it are removed. The *->* operator gives you access to
+the underlying interface, whereas `Object` itself exposes a :ref:` generic interface<guide-generic-interface>`
 
 Making asynchronous calls using qi::async
 -----------------------------------------
 
 Most of the API are designed to block until the operation started by the call
-completes. For example with this code inside our main::
+completes. For example with this code inside our main:
+
+.. code-block:: cpp
 
   qi::Object<ALTextToSpeech> tts = session.service("ALTextToSpeech");
   qi::Object<ALMotion> motion = session.service("ALMotion");
@@ -85,9 +94,11 @@ completes. For example with this code inside our main::
 
 The robot will only start moving when he finishes speaking.
 
-To perform both actions simultaneously, the API provides _`qi::async` that
+To perform both actions simultaneously, the API provides `qi::async` that
 performs a call in an asynchronous manner, and notifies you when the call
-finishes using a _`qi::Future`::
+finishes using a :cpp:class:`qi::Future`:
+
+.. code-block:: cpp
 
   qi::Object<ALTextToSpeech> tts = session.service("ALTextToSpeech");
   qi::Object<ALMotion> motion = session.service("ALMotion");
@@ -97,7 +108,7 @@ finishes using a _`qi::Future`::
   sayOp.wait();
   moveOp.wait();
 
-Look at the :cpp:class:`qi::Future` for more complete documentation, but here is what you
+Look at the `qi::Future` for more complete documentation, but here is what you
 most definitely need to know:
 
 - If the method throws an exception, it is stored in the *Future*, and can be
@@ -109,25 +120,54 @@ most definitely need to know:
   *qi::Future::connect()*.
 
 
-Using signal
-------------
+Using signal and properties
+---------------------------
 
-Using properties
----
+Instances of `Signal` and `Property` defined by service interfaces can be used
+throug an `Object<T>` as if they were local signal and properties.
 
-passing an object as argument
+Passing an object as argument
 -----------------------------
+
+Some methods in the services you will use expect an object as argument, for
+instance *Logger::addListener(Object<LogListener> listener);*. To call this
+method, you must first implement the *LogListener* interface into your own
+class, and then wrap a pointer to an instance of this class into an
+*Object<LogListener>* that will take ownership of the pointer:
+
+.. code-block:: cpp
+
+  class MyLogListener: public LogListener
+  {
+    // Implement LogListener interface
+  };
+
+  void someFunction()
+  {
+    Object<LogListener> o(new MyLogListener());
+    Object<Logger> logger = session.service("Logger");
+    logger->addListener(o);
+  }
+
+In the example above, your instance of *MyLogListener* will be kept alive as
+long as the logger service holds an *Object<LogListener>* on it.
 
 
 Generic api
 -----------
 
-If you wish to use a service for which no interface is available, but for
-which you know the API, you can use the _`qi::AnyObject` generic API made
-available throug *qi::Object<Empty>*::
+.. _guide-generic-interface
 
-  qi::Object<Empty> obj = session.service("ALTextToSpeech");
+If you wish to use a service for which no interface is available, but for
+which you know the API, you can use the `qi::AnyObject` generic API made
+available through *qi::Object<Empty>*:
+
+.. code-block:: cpp
+
+  qi::Anyobject obj = session.service("ALTextToSpeech");
   obj.call("say", "Hello once more.");
+
+Nota that this generic API is available on all `Object<T>`.
 
 Methods are also provided to emit and connect signals, read/write properties,
 and access the service API.
