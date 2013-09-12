@@ -1,0 +1,11 @@
+{% extends "defindex.html" %}
+{% block bodyclass %}main-index{% endblock %}
+{% block sidebarwrapper %}{% endblock %}
+
+{% block body %}
+
+  <h3>{{ _('Table Of Contents') }}</h3>
+  {{ toctree(maxdepth=2, titles_only=False, collapse=False) }}
+
+{% endblock %}
+

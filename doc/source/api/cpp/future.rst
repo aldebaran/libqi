@@ -1,12 +1,12 @@
 .. cpp:namespace:: qi
-
 .. cpp:auto_template:: True
-
 .. default-role:: cpp:guess
+.. _api-future:
+Promise and Future Documentation
+********************************
 
 qi::Future
 ==========
-.. _api-future:
 
 .. code-block:: c++
 
@@ -171,7 +171,7 @@ same object). The next example illustrates it's basic use case:
      }
   }
 
- 
+
 In plain English:
 
 - Create a *Promise* and return the future() obtained with `Promise::future`.
@@ -254,4 +254,3 @@ Calling a function returning a FutureSync
 
 
 .. cpp:autoclass:: qi::FutureSync
-

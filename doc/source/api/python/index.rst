@@ -1,7 +1,7 @@
 .. _py-api-index:
 
-python qi API documentation
----------------------------
+Python qi API reference
+-----------------------
 
 .. toctree::
   :maxdepth: 1

@@ -1,14 +1,12 @@
-.. _qimessaging-api-index:
+.. _cpp-api-index:
 
-qiMessaging API Reference
--------------------------
+C++ qi API Reference
+--------------------
 
 .. toctree::
   :maxdepth: 1
 
   future
   signal
-
-
-- :doc:`/cpp-classindex`
-- :doc:`/cpp-funcindex`
+  ../../cpp-classindex
+  ../../cpp-funcindex
