@@ -175,10 +175,30 @@ namespace qi { namespace py {
     void export_pysignal() {
       boost::python::class_<PySignal>("Signal", boost::python::init<>())
           .def(boost::python::init<const std::string &>())
-          .def("connect", &PySignal::connect, (boost::python::arg("callback"), boost::python::arg("_async") = false))
-          .def("disconnect", &PySignal::disconnect, (boost::python::arg("id"), boost::python::arg("_async") = false))
-          .def("disconnect_all", &PySignal::disconnectAll, (boost::python::arg("_async") = false))
-          .def("__call__", boost::python::raw_function(&signal_param_shrinker<PySignal>));
+          .def("connect", &PySignal::connect, (boost::python::arg("callback"), boost::python::arg("_async") = false),
+               "connect(callback) -> int\n"
+               ":param callback: the callback that will be called when the signal is triggered\n"
+               ":return: the connection id of the registered callback.\n"
+               "\n"
+               "Connect the signal to a callback, the callback will be called each time the signal is triggered. "
+               "Use the id returned to unregister the callback")
+
+          .def("disconnect", &PySignal::disconnect, (boost::python::arg("id"), boost::python::arg("_async") = false),
+               "disconnect(id) -> bool\n"
+               ":param id: the connection id returned by connect\n"
+               ":return: true on success\n"
+               "\n"
+               "Disconnect the callback associated to id.")
+
+          .def("disconnectAll", &PySignal::disconnectAll, (boost::python::arg("_async") = false),
+               "disconnectAll() -> bool\n"
+               ":return: true on success\n"
+               "\n"
+               "disconnect all callback associated to the signal. This function should be used very carefully. It's extremely rare that it is needed.")
+
+          .def("__call__", boost::python::raw_function(&signal_param_shrinker<PySignal>),
+               "__call__(*args) -> None\n"
+               "Trigger the signal");
 
       boost::python::class_<PyProxySignal>("_ProxySignal", boost::python::no_init)
           .def("connect", &PyProxySignal::connect, (boost::python::arg("callback"), boost::python::arg("_async") = false))

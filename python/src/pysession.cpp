@@ -117,14 +117,41 @@ qi::AnyReference triggerBouncer(qi::SignalBase *sig, const std::vector<qi::AnyRe
 
     void export_pysession() {
       boost::python::class_<PySession>("Session")
-          .def("connect", &PySession::connect, (boost::python::arg("url"), boost::python::arg("_async") = false))
-          .def("close", &PySession::close, (boost::python::arg("_async") = false))
-          .def("service", &PySession::service, (boost::python::arg("service"), boost::python::arg("_async") = false))
-          .def("services", &PySession::services, (boost::python::arg("_async") = false))
-          .def("registerService", &PySession::registerService, (boost::python::arg("name"), boost::python::arg("object"), boost::python::arg("_async") = false))
-          .def("unregisterService", &PySession::unregisterService, (boost::python::arg("id"), boost::python::arg("_async") = false))
+          .def("connect", &PySession::connect, (boost::python::arg("url"), boost::python::arg("_async") = false),
+               "connect(url) -> None\n"
+               "Connect the session to a ServiceDirectory")
+
+          .def("close", &PySession::close, (boost::python::arg("_async") = false),
+               "close() -> None\n"
+               "Close the Session")
+
+          //TODO: endpoints()
+          //TODO: listen(url)
+
+          .def("service", &PySession::service, (boost::python::arg("service"), boost::python::arg("_async") = false),
+               "service(name) -> Object\n"
+               "return an Object representing a Service, the service could have been registered to the service directory "
+               "by this session or by another.")
+
+          .def("services", &PySession::services, (boost::python::arg("_async") = false),
+               "services() -> list\n"
+               "return the list of all services registered on the ServiceDirectory")
+
+          .def("registerService", &PySession::registerService, (boost::python::arg("name"), boost::python::arg("object"), boost::python::arg("_async") = false),
+               "registerService(name, object) -> int\n"
+               "Register an Object as a service on the ServiceDirectory, the name should be unique on the servicedirectory."
+               "This function returns the id associated to the service in the ServiceDirectory, the id can be used to unregister the service.")
+
+          .def("unregisterService", &PySession::unregisterService, (boost::python::arg("id"), boost::python::arg("_async") = false),
+               "unregisterService(id) -> None\n"
+               "Unregister a service. The service should be owned by the current session. Use the Id returned by registerService.")
+
           .def_readonly("connected", &PySession::connected)
+
           .def_readonly("disconnected", &PySession::disconnected)
+
+          //todo: serviceRegistered
+          //todo: serviceUnregistered
           ;
     }
 

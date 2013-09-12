@@ -64,8 +64,15 @@ namespace qi { namespace py {
 
     void export_pyproperty() {
       boost::python::class_<PyProperty>("Property", boost::python::init<const std::string &>())
-          .def("value", &PyProperty::val)
-          .def("setValue", &PyProperty::setVal, (boost::python::arg("value")));
+          .def("value", &PyProperty::val,
+               "value() -> value\n"
+               ":return: the value stored inside the property")
+
+          .def("setValue", &PyProperty::setVal, (boost::python::arg("value")),
+               "setValue(value) -> None\n"
+               ":param value: the value of the property\n"
+               "\n"
+               "set the value of the property");
 
       boost::python::class_<PyProxyProperty>("_ProxyProperty", boost::python::no_init)
           .def("value", &PyProxyProperty::value)

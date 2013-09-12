@@ -14,48 +14,6 @@ Then you have others thread that depend on the result of that task, you give the
 associated to that promise, the future will block until the value or an error is set
 by the promise.
 
-Simple example:
-
-.. code-block:: python
-
-  import qi
-  import time
-
-  def doSomeWork(p):
-    #do your work here instead of sleeping
-    time.sleep(1)
-    p.setValue(42)
-
-  p = qi.Promise()
-  f = p.future()
-  threading.Thread(target=doSomeWork, args=[p]).start()
-  print "result:", f.value()
-
-With callback:
-
-.. code-block:: python
-
-  import qi
-  import time
-
-  def doSomeWork(p):
-    #do your work here instead of sleeping
-    time.sleep(1)
-    p.setValue(42)
-
-  def resultReady(f):
-    if f.hasValue():
-      print "Value:", f.value()
-    elif f.hasError():
-      print "Error:", f.error()
-
-  p = qi.Promise()
-  f = p.future()
-  threading.Thread(target=doSomeWork, args=[p]).start()
-
-  #resultReady will be called even if the result is already there.
-  f.addCallback(resultReady)
-
 
 Reference
 ---------
@@ -103,3 +61,49 @@ Reference
 
 .. autoclass:: qi.Future
    :members:
+
+
+Examples
+--------
+
+Simple example:
+
+.. code-block:: python
+
+  import qi
+  import time
+
+  def doSomeWork(p):
+    #do your work here instead of sleeping
+    time.sleep(1)
+    p.setValue(42)
+
+  p = qi.Promise()
+  f = p.future()
+  threading.Thread(target=doSomeWork, args=[p]).start()
+  print "result:", f.value()
+
+With callback:
+
+.. code-block:: python
+
+  import qi
+  import time
+
+  def doSomeWork(p):
+    #do your work here instead of sleeping
+    time.sleep(1)
+    p.setValue(42)
+
+  def resultReady(f):
+    if f.hasValue():
+      print "Value:", f.value()
+    elif f.hasError():
+      print "Error:", f.error()
+
+  p = qi.Promise()
+  f = p.future()
+  threading.Thread(target=doSomeWork, args=[p]).start()
+
+  #resultReady will be called even if the result is already there.
+  f.addCallback(resultReady)

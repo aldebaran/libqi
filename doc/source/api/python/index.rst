@@ -6,8 +6,9 @@ python qi API documentation
 .. toctree::
   :maxdepth: 2
 
+  session
+  servicedirectory
   future
   signal
-  servicedirectory
-  session
+  property
   type
