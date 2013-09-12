@@ -386,11 +386,18 @@ namespace qi {
   };
 
 
+  /** A Promise is used to create and satisfy a Future.
+  */
   template <typename T>
   class Promise {
   public:
     typedef typename FutureType<T>::type ValueType;
 
+    /** Create a standard promise.
+     *  @param async specify how callbacks registered with Future::connect
+     *         are called: synchronously from the Promise setter, or
+     *         asynchronously from a thread pool.
+     */
     explicit Promise(FutureCallbackType async = FutureCallbackType_Async) {
       _f._p->reportStart();
       _f._p->_async = async;
@@ -434,7 +441,7 @@ namespace qi {
       _f._p->reset();
     }
 
-    /* get the future from the promise, you can call this function many times. */
+    /// Get a future linked to this promise. Can be called multiple times.
     Future<T> future() const { return _f; }
 
     /** Gives access to the underlying value for in-place modification.
