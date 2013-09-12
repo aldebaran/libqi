@@ -1,6 +1,8 @@
-project = u'qi Messaging'
+project = u'qi SDK Documentation'
 
-#provided by qiapidoc extensions += ['mycpp' ]
+extensions.extend(['sphinx.ext.autodoc',
+                   'qiapidoc',
+                   'sphinx.ext.graphviz'])
 
 extensions.extend(['sphinx.ext.autodoc', 'qiapidoc' ,'sphinx.ext.graphviz'])
 
@@ -10,3 +12,5 @@ html_additional_pages = {
     'contents' : 'contents.html'
 }
 
+html_theme_path = ["../source/_themes"]
+html_theme = "alcodedocs"

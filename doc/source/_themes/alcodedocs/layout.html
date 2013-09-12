@@ -1,0 +1,135 @@
+{% extends "basic/layout.html" %}
+
+{%- macro secondnav() %}
+  {%- if prev %}
+    &laquo; <a href="{{ prev.link|e }}" title="{{ prev.title|e }}">previous</a>
+    {{ reldelim2 }}
+  {%- endif %}
+  {%- if parents  %}
+    {%- set upind = parents|length -1 %}
+    <a href="{{ parents[upind].link|e }}" title="{{ parents[upind].title|e }}" accesskey="U">up</a>
+  {%- else %}
+    <a title="{{ docstitle }}" href="{{ pathto('index') }}" accesskey="U">up</a>
+  {%- endif %}
+  {%- if next %}
+  {{ reldelim2 }}
+    <a href="{{ next.link|e }}" title="{{ next.title|e }}">next</a> &raquo;
+  {%- endif %}
+{%- endmacro %}
+
+
+{%- macro footernav() %}
+  {%- if prev %}
+    &laquo; <a href="{{ prev.link|e }}" title="{{ prev.title|e }}">{{ prev.title }}</a>
+    {{ reldelim2 }}
+  {%- endif %}
+  {%- if parents  %}
+    {%- set upind = parents|length -1 %}
+    <a href="{{ parents[upind].link|e }}" title="{{ parents[upind].title|e }}" accesskey="U">{{ parents[upind].title|e }}</a>
+  {%- else %}
+    <a title="{{ docstitle }}" href="{{ pathto('index') }}" accesskey="U">up</a>
+  {%- endif %}
+  {%- if next %}
+  {{ reldelim2 }}
+    <a href="{{ next.link|e }}" title="{{ next.title|e }}">{{ next.title }}</a> &raquo;
+  {%- endif %}
+{%- endmacro %}
+
+{% block extrahead %}
+{{ super() }}
+<script>
+$(window).ready(function () {
+    var width_label = 0;
+    $('dl.function-index dt > span').each(function () {
+        $(this).css('width', 'auto');
+        width_label = Math.max(width_label, $(this).width());
+    }).width(width_label + 30);
+})
+
+</script>
+
+{% if theme_build_type == "release"%}
+<script type="text/javascript" src="/static/js/ga-status.js"></script>
+{% endif %}
+
+{% endblock %}
+
+{% block document %}
+  <div id="custom-doc" class="{% block bodyclass %}{{ 'yui-t3' if pagename != 'index' else '' }}{% endblock %}">
+    <div id="hd">
+      <h1><a href="{{ pathto('index') }}">{{ docstitle }}</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="{{ pathto('index') }}">Home</a>
+        {{ reldelim2 }}
+        <a title="Site map" href="{{ pathto('contents') }}">Site map</a>
+        {{ reldelim2 }}
+        <a title="Search" href="{{ pathto('search') }}">Search</a>
+        {{ reldelim2 }}
+        <a title="Index" href="{{ pathto('genindex') }}">Index</a>
+      </div>
+      <div class="nav">{{ secondnav() }}</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="{{ pagename|replace('/', '-') }}">
+            {% block body %}{% endblock %}
+          </div>
+          <div class="footernav">{{ footernav() }}</div>
+        </div>
+      </div>
+      {% block sidebarwrapper %}
+        {% if pagename != 'index' %}
+          <div class="yui-b" id="sidebar">
+            {{ sidebar() }}
+            {%- if last_updated %}
+              <h3>Last update:</h3>
+              <p class="topless">{{ last_updated }}</p>
+            {%- endif %}
+          </div>
+        {% endif %}
+      {% endblock %}
+    </div>
+
+    <div id="ft">
+      <div class="nav">{{ secondnav() }}</div>
+    </div>
+  </div>
+{% endblock %}
+
+
+{%- block sidebartoc %}
+  {%- include "searchbox.html" %}
+
+  {%- if show_source and has_source and sourcename %}
+    <ul class="this-page-menu">
+      <li><a href="{{ pathto('_sources/' + sourcename, true)|e }}"
+             rel="nofollow">{{ _('Show Source') }}</a></li>
+    </ul>
+  {%- endif %}
+
+
+  <h3>{{ _('Table Of Contents') }}</h3>
+  {{ toctree(maxdepth=-1, titles_only=True) }}
+
+  {%- if display_toc %}
+    <h3><a href="{{ pathto(master_doc) }}">{{ _('On this page') }}</a></h3>
+    {{ toc }}
+  {%- endif %}
+
+{%- endblock %}
+{%- block sidebarrel %}
+{%- endblock %}
+{%- block sidebarsourcelink %}
+{%- endblock %}
+{%- block sidebarsearch %}
+{%- endblock %}
+
+
+{# Empty some default blocks out #}
+{% block relbar1 %}{% endblock %}
+{% block relbar2 %}{% endblock %}
+{% block sidebar1 %}{% endblock %}
+{% block sidebar2 %}{% endblock %}
+{% block footer %}{% endblock %}

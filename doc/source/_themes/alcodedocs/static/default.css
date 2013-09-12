@@ -1,0 +1,29 @@
+@import url(reset-fonts-grids.css);
+@import url(djangodocs.css);
+@import url(homepage.css);
+
+
+dl.function-index {
+    border-top: none;
+    margin: 0;
+    padding: 0;
+}
+
+dl.function-index dt {
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+dl.function-index dt tt {
+    padding: 0 3px;
+}
+
+dl.function-index dt > span {
+    width: 35%;
+    display: inline-block;
+    text-align: right;
+}
+
+.cpp-func {
+    font-weight: normal;
+}
