@@ -8,14 +8,6 @@ qiMessaging API Reference
 
   future
   signal
-  event
-  buffer
-  datastream
-  functor
-  object
-  server
-  session
-  signature
 
 
 - :doc:`/cpp-classindex`

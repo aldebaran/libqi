@@ -62,7 +62,7 @@ Software Stack
    std/index
    messaging/index
    core/index
-   messaging/api/index
+   api/cpp/index
    api/python/index
 
 ..
