@@ -21,6 +21,9 @@ User guides
  - :ref:`Writing a client in C++ <guide-cxx-client>`
  - :ref:`Writing a service in C++ <guide-cxx-service>`
 
+ - :ref:`Writing a client in Python <guide-py-client>`
+ - :ref:`Writing a service in Python <guide-py-service>`
+
 Standards
 ---------
 
@@ -33,6 +36,7 @@ References
  - `C++ reference <./cpp/index.html>`_
  - `C reference <./c/index.html>`_
  - `JavaScript reference <./js/index.html>`_
+ - :ref:`py-api-index`
 
 Topics
 ------

@@ -100,7 +100,7 @@ namespace qi {
     }
 
     void export_pyfuture() {
-      boost::python::enum_<qi::FutureState>("FutureState")
+      boost::python::enum_<qi::FutureState>("FutureState", "Represent the state of the Future")
           .value("None", qi::FutureState_None)
           .value("Running", qi::FutureState_Running)
           .value("Canceled", qi::FutureState_Canceled)
@@ -113,23 +113,36 @@ namespace qi {
 
       boost::python::class_<PyPromise>("Promise")
           .def(boost::python::init<boost::python::object>())
-          .def("setCanceled", &PyPromise::setCanceled)
-          .def("setError", &PyPromise::setError)
-          .def("setValue", &PyPromise::setValue)
-          .def("future", &PyPromise::future);
+          .def("setCanceled", &PyPromise::setCanceled, "Set the state of the promise to Canceled")
+          .def("setError", &PyPromise::setError, "Set the error of the promise")
+          .def("setValue", &PyPromise::setValue, "Set the value of the promise")
+          .def("future", &PyPromise::future, "Get a qi.Future from the promise, you can get multiple from the same promise.");
 
       boost::python::class_<PyFuture>("Future", boost::python::no_init)
-          .def("value", &PyFuture::value, (boost::python::args("timeout") = qi::FutureTimeout_Infinite))
-          .def("error", &PyFuture::error, (boost::python::args("timeout") = qi::FutureTimeout_Infinite))
-          .def("wait", &PyFuture::wait, (boost::python::args("timeout") = qi::FutureTimeout_Infinite))
-          .def("hasError", &PyFuture::hasError, (boost::python::args("timeout") = qi::FutureTimeout_Infinite))
-          .def("hasValue", &PyFuture::hasValue, (boost::python::args("timeout") = qi::FutureTimeout_Infinite))
-          .def("cancel", &PyFuture::cancel)
-          .def("isFinished", &PyFuture::isFinished)
-          .def("isRunning", &PyFuture::isRunning)
-          .def("isCanceled", &PyFuture::isCanceled)
-          .def("isCanceleable", &PyFuture::isCanceleable)
-          .def("addCallback", &PyFuture::addCallback);
+          .def("value", &PyFuture::value, (boost::python::args("timeout") = qi::FutureTimeout_Infinite),
+               "return the value of the Future. Block until the future is ready. Raise an exception if the future has error. "
+               "If a timeout is specified in parameter, and the future is not ready past that time, the function raise an exception.")
+          .def("error", &PyFuture::error, (boost::python::args("timeout") = qi::FutureTimeout_Infinite),
+               "return the error of the Future. Block until the future is ready. "
+               "Raise an exception if the function timeout or the future has no error")
+          .def("wait", &PyFuture::wait, (boost::python::args("timeout") = qi::FutureTimeout_Infinite),
+               "Wait for the future to be ready. Raise an exception on timeout." )
+          .def("hasError", &PyFuture::hasError, (boost::python::args("timeout") = qi::FutureTimeout_Infinite),
+               "Return true or false depending on the future having an error. Raise an exception on timeout")
+          .def("hasValue", &PyFuture::hasValue, (boost::python::args("timeout") = qi::FutureTimeout_Infinite),
+               "Return true or false depending on the future having a value. Raise an exception on timeout")
+          .def("cancel", &PyFuture::cancel,
+               "If the future is cancelable, ask for cancelation.")
+          .def("isFinished", &PyFuture::isFinished,
+               "Is the future not running anymore? (true if hasError or hasValue or isCanceled)")
+          .def("isRunning", &PyFuture::isRunning,
+               "Is the future still running?")
+          .def("isCanceled", &PyFuture::isCanceled,
+               "Is the future canceled?")
+          .def("isCanceleable", &PyFuture::isCanceleable, "Is the future canceleable. (not all future are canceleable)")
+          .def("addCallback", &PyFuture::addCallback,
+               "Add a callback that will be called then the future become ready. The callback will be called even if the future is already ready."
+               "The first argument of the callback is the future itself.");
     }
   }
 }

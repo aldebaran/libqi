@@ -2,5 +2,4 @@ project = u'qi Messaging'
 
 #provided by qiapidoc extensions += ['mycpp' ]
 
-extensions.extend(['qiapidoc' ,'sphinx.ext.graphviz'])
-
+extensions.extend(['sphinx.ext.autodoc', 'qiapidoc' ,'sphinx.ext.graphviz'])
