@@ -11,4 +11,5 @@ python qi API documentation
   future
   signal
   property
-  type
+  types
+  bind

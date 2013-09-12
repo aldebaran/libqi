@@ -1,4 +1,4 @@
-.. _api-py-property:
+.. _api-py-types:
 
 qi.Types* API
 *************

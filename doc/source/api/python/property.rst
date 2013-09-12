@@ -7,10 +7,10 @@ Introduction
 ============
 
 Reference
----------
+=========
 
 .. autoclass:: qi.Property
    :members:
 
 Examples
---------
+========
