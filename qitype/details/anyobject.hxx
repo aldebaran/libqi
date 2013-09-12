@@ -365,9 +365,101 @@ namespace qi {
       return ( boost::function<AnyObject(const std::string&)>)
         boost::bind(&makeObject<T>, functionName, func);
     }
+
+    // bounce to a genericobject obtained by (O*)this->asAnyObject()
+    template<typename O> class GenericObjectBounce
+    {
+    public:
+      const MetaObject &metaObject() { return go()->metaObject();}
+      qi::Future<AnyReference> metaCall(unsigned int method, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto)
+      {
+        return go()->metaCall(method, params, callType);
+      }
+      unsigned int findMethod(const std::string& name, const GenericFunctionParameters& parameters)
+      {
+        return go()->findMethod(name, parameters);
+      }
+      qi::Future<AnyReference> metaCall(const std::string &nameWithOptionalSignature, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto)
+      {
+        return go()->metaCall(nameWithOptionalSignature, params, callType);
+      }
+      void metaPost(unsigned int event, const GenericFunctionParameters& params)
+      {
+        return go()->metaPost(event, params);
+      }
+      void metaPost(const std::string &nameWithOptionalSignature, const GenericFunctionParameters &in)
+      {
+        return go()->metaPost(nameWithOptionalSignature, in);
+      }
+      template <typename FUNCTOR_TYPE>
+      qi::FutureSync<SignalLink> connect(const std::string& eventName, FUNCTOR_TYPE callback,
+        MetaCallType threadingModel = MetaCallType_Direct)
+      {
+        return go()->connect(eventName, callback, threadingModel);
+      }
+      qi::FutureSync<SignalLink> connect(const std::string &name, const SignalSubscriber& functor)
+      {
+        return go()->connect(name, functor);
+      }
+      qi::FutureSync<SignalLink> connect(unsigned int signal, const SignalSubscriber& subscriber)
+      {
+        return go()->connect(signal, subscriber);
+      }
+      qi::FutureSync<SignalLink> connect(unsigned int signal, qi::AnyObject target, unsigned int slot)
+      {
+        return go()->connect(signal, target, slot);
+      }
+      qi::FutureSync<void> disconnect(SignalLink linkId)
+      {
+        return go()->disconnect(linkId);
+      }
+      template<typename T>
+      qi::FutureSync<T> property(const std::string& name)
+      {
+        return go()->template property<T>(name);
+      }
+      template<typename T>
+      qi::FutureSync<void> setProperty(const std::string& name, const T& val)
+      {
+        return go()->setProperty(name, val);
+      }
+      qi::FutureSync<AnyValue> property(unsigned int id)
+      {
+        return go()->property(id);
+      }
+      qi::FutureSync<void> setProperty(unsigned int id, const AnyValue &val)
+      {
+        return go()->setProperty(id, val);
+      }
+      #define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)         \
+      template<typename R> qi::FutureSync<R> async(                     \
+        const std::string& methodName comma                              \
+        QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoAnyReference)) {              \
+          return go()->template async<R>(methodName comma AUSE);         \
+        }                                                                \
+        template<typename R> qi::FutureSync<R> call(                     \
+        const std::string& methodName comma                              \
+        QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoAnyReference)) {              \
+          return go()->template call<R>(methodName comma AUSE);          \
+        }                                                                \
+        template<typename R> qi::FutureSync<R> call(                     \
+          qi::MetaCallType callType,                                     \
+        const std::string& methodName comma                              \
+        QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoAnyReference)) {              \
+          return go()->template call<R>(methodName, callType comma AUSE);\
+        }
+        QI_GEN(genCall)
+        #undef genCall
+    private:
+      GenericObject* go()
+      {
+        return reinterpret_cast<O*>(this)->asAnyObject().get();
+      }
+    };
   }
 
   template<typename T> class Object<T, false>
+   : public detail::GenericObjectBounce<Object<T, false> >
   {
   public:
     Object() {}
@@ -400,9 +492,14 @@ namespace qi {
     }
     void init(AnyObject obj)
     {
-      if (obj->type->info() != typeOf<T>()->info())
+      if (obj->type->info() != typeOf<T>()->info() && !boost::is_same<T, Empty>::value)
       {
-        throw std::runtime_error(std::string("Object<T> construted from a different AnyObject type ") + obj->type->infoString());
+        throw std::runtime_error(
+          std::string("Object<T> constructed from a different AnyObject type ")
+            + obj->type->infoString()
+            + " "
+            + typeOf<T>()->infoString()
+            );
       }
       _obj = obj;
     }
@@ -431,6 +528,7 @@ namespace qi {
   };
 
   template<typename T> class Object<T, true>
+  : public detail::GenericObjectBounce< Object<T, true> >
   {
   public:
     Object() {}

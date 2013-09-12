@@ -271,7 +271,10 @@ namespace qi {
     qi::AnyObject _obj;
   };
 
-  template<typename T, bool b = boost::is_base_of<Proxy, T>::value> class Object
+  class Empty {};
+
+  template<typename T=Empty, bool b = boost::is_base_of<Proxy, T>::value> class Object
+  : public GenericObject
   {
   public:
     Object();
