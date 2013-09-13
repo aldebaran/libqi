@@ -8,11 +8,20 @@
 #include <qi/application.hpp>
 #include <boost/python.hpp>
 #include "gil.hpp"
+#include <boost/thread.hpp>
+#include <qi/atomic.hpp>
 
 qiLogCategory("qimpy");
 
 namespace qi {
   namespace py {
+    void destroylater(boost::shared_ptr<qi::Application>, qi::Atomic<int> *doClose)
+    {
+      //wait til ~PyApplication have been destroyed
+      while (!(**doClose))
+        qi::os::msleep(1);
+      delete doClose;
+    }
 
     class PyApplication {
     public:
@@ -46,9 +55,18 @@ namespace qi {
         delete[] argv;
       }
 
+
+      //delay the destruction of _app to a thread, because the destruction can lock
+      //app destroy eventloop that wait for all socket/server to be destroyed.
+      //that way python can continue to destroy object, and eventually destroy the last socket/server
+      //that will release the thread finally
       ~PyApplication() {
         qi::py::GILScopedUnlock _unlock;
+        //force the destruction to happend into the other thread
+        qi::Atomic<int>* goClosing = new qi::Atomic<int>;
+        boost::thread(&destroylater, _app, goClosing);
         _app.reset();
+        ++(*goClosing);
       }
 
       void run() {
