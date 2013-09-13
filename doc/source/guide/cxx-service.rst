@@ -141,3 +141,37 @@ register it to an existing *ServiceDirectory*::
 Deploying your service
 ----------------------
 
+
+
+Graphical view of the standard workflow
+---------------------------------------
+
+.. graphviz::
+
+  digraph workflow {
+    Interface      [label="Interface\nfoo.hpp"];
+    IDL            [label="IDL\nfoo.idl"];
+    Support        [label="Client support\nfoo.cpp"];
+    ImplSkel       [label="Implementantion Skeleton\nfooimpl.cpp"];
+    ImplFull       [label="Implementation\nfooimpl.cpp"];
+    ImplSo         [label="Service module\nfooimpl.so" color="blue"];
+    SupportSo      [label="Support library\nfoo.so" color="blue"];
+
+    Interface -> IDL      [label = "-m IDL" ];
+    IDL -> Support        [label = "-m proxy"];
+    IDL -> ImplSkel       [label = "-m cxxserviceregister"];
+    ImplSkel -> ImplFull  [color=red];
+    ImplFull -> ImplSo    [color=blue];
+    Support -> SupportSo  [color=blue];
+
+    node [color="white" fontcolor="white" label=""]; la lb lc ld le lf;
+    la -> lb [label = "generation using idl"];
+    lc -> ld [color=red label="User-written"];
+    le->lf [color=blue label="Compilation"];
+    }
+
+
+Binding an existing class without an interface
+----------------------------------------------
+
+
