@@ -23,7 +23,7 @@ struct ObjectTypeData
 {
   ObjectTypeData()
   : classType(0)
-  , threadingModel(ObjectThreadingModel_SingleThread)
+  , threadingModel(ObjectThreadingModel_Default)
   {}
 
   /* One might want this in the ObjectType virtuals, but that would

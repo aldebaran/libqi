@@ -31,7 +31,9 @@ namespace qi {
     /// Object is not thread safe, all method calls must occur in the same thread
     ObjectThreadingModel_SingleThread = 0,
     /// Object is thread safe, multiple calls can occur in different threads in parallel
-    ObjectThreadingModel_MultiThread = 1
+    ObjectThreadingModel_MultiThread = 1,
+
+    ObjectThreadingModel_Default = ObjectThreadingModel_SingleThread
   };
 
   /// Stores min, max and sum of values fed to it

@@ -46,7 +46,7 @@ namespace qi
   };
 
   DynamicObjectPrivate::DynamicObjectPrivate()
-  : threadingModel(ObjectThreadingModel_SingleThread)
+  : threadingModel(ObjectThreadingModel_Default)
   {
   }
 
