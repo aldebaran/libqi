@@ -27,7 +27,7 @@ namespace qi {
   }
 
   ManageablePrivate::ManageablePrivate()
-  : objectMutex(new boost::timed_mutex)
+  : objectMutex(new boost::recursive_timed_mutex)
   , statsEnabled(false)
   , traceEnabled(false)
   {

@@ -308,14 +308,14 @@ namespace qi
     }
     if (!msWait)
     {
-       boost::timed_mutex::scoped_lock l(*lock);
+       boost::recursive_timed_mutex::scoped_lock l(*lock);
        return function.call(params);
     }
     else
     {
       boost::system_time timeout = boost::get_system_time() + boost::posix_time::milliseconds(msWait);
       qiLogDebug() << "Aquiering module lock...";
-      boost::timed_mutex::scoped_lock l(*lock, timeout);
+      boost::recursive_timed_mutex::scoped_lock l(*lock, timeout);
       qiLogDebug() << "Checking lock acquisition...";
       if (!l.owns_lock())
       {

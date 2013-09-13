@@ -147,7 +147,7 @@ namespace qi {
     ///@return forced event loop or 0 if not set
     EventLoop* eventLoop() const;
 
-    typedef boost::shared_ptr<boost::timed_mutex> TimedMutexPtr;
+    typedef boost::shared_ptr<boost::recursive_timed_mutex> TimedMutexPtr;
     ///@return the mutex associated with managed object.
     TimedMutexPtr mutex(); // non-recursive of course!
 
