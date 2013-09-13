@@ -296,7 +296,7 @@ namespace qi {
     int i = 0;
 
     //empty tuple, move on!
-    if (elementCount == -1 or elementCount == 0) {
+    if (elementCount == -1 || elementCount == 0) {
       if (idxStart == expectedEnd)
         return;
     }
