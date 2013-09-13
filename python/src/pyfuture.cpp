@@ -171,7 +171,7 @@ namespace qi {
                "isCanceled() -> bool\n"
                "Is the future canceled?")
 
-          .def("isCancelable", &PyFuture::isCanceleable,
+          .def("isCancelable", &PyFuture::isCancelable,
                "isCancelable() -> bool\n"
                "Is the future cancelable. (not all future are cancelable)")
 
