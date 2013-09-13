@@ -59,7 +59,7 @@ def test_signal():
 
   print "\nTest #3 : Disconnect All"
   mysignal.connect(callback2)
-  assert mysignal.disconnect_all() == True
+  assert mysignal.disconnectAll() == True
 
   sub1.done = False
   sub2.done = False
@@ -80,7 +80,7 @@ def test_signal():
   assert sub1.done == True
   assert sub2.done == False
 
-  assert mysignal.disconnect_all() == True
+  assert mysignal.disconnectAll() == True
   print "\nTest #5 : Trigger with five parameters"
   mysignal.connect(sub1.callback_5args)
 
