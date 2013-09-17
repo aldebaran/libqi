@@ -21,6 +21,10 @@ qiLogCategory("qimessaging.transportsocket");
 namespace qi
 {
 
+  TransportSocket::~TransportSocket()
+  {
+  }
+
   TransportSocketPtr makeTransportSocket(const std::string &protocol, qi::EventLoop *eventLoop) {
     TransportSocketPtr ret;
 

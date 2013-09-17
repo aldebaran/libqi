@@ -24,6 +24,7 @@ namespace qi
     QI_DISALLOW_COPY_AND_ASSIGN(TransportSocket);
 
   public:
+    virtual ~TransportSocket();
     enum Status {
       Status_Disconnected  = 0,
       Status_Connecting    = 1,
