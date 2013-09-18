@@ -11,6 +11,7 @@ int subCmd_info(int argc, char **argv, const MainOptions &options)
 {
   po::options_description     desc("Usage: qicli info [<ServicePattern>...]");
   std::vector<std::string>    serviceList;
+  bool zOpt = false;
 
   desc.add_options()
       ("service,s", po::value<std::vector<std::string> >(&serviceList), "service to display")
@@ -19,7 +20,8 @@ int subCmd_info(int argc, char **argv, const MainOptions &options)
       ("details,d", "print service info, methods, signals and properties")
       ("hidden", "show hidden services, methods, signals and properties")
       ("show-doc", "show documentation for methods, signals and properties")
-      ("raw-signature", "show the raw signature");
+      ("raw-signature", "show the raw signature")
+      (",z", po::bool_switch(&zOpt), "prints the result in a parseable format");
 
   po::positional_options_description positionalOptions;
   positionalOptions.add("service", -1);
@@ -46,7 +48,7 @@ int subCmd_info(int argc, char **argv, const MainOptions &options)
     serviceList.push_back("*");
 
   SessionHelper session(options.address);
-  session.info(serviceList, details, vm.count("hidden"), vm.count("show-doc"), vm.count("raw-signature"));
+  session.info(serviceList, details, vm.count("hidden"), vm.count("show-doc"), vm.count("raw-signature"), zOpt);
   return 0;
 }
 

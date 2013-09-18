@@ -18,7 +18,7 @@ public:
   ~SessionHelper();
 
 public:
-  void info(const std::vector<std::string> &patternVec, bool verbose, bool showHidden, bool showDoc, bool showRaw);
+  void info(const std::vector<std::string> &patternVec, bool verbose, bool showHidden, bool showDoc, bool showRaw, bool parseable);
   void call(const std::string &pattern, const std::vector<std::string> &jsonArgList, bool hidden, bool json, bool cont);
   void post(const std::string &pattern, const std::vector<std::string> &jsonArgList, bool hidden, bool json);
   void postOnAlmemory(const std::string &pattern, const std::string &arg, bool json);
@@ -34,7 +34,7 @@ private:
   void                          forEachService(const std::vector<std::string> &patternList, ShMethod methodToCall, ShPatternResolver patternResolver, bool hidden, bool cont);
   ServiceHelper                 getServiceHelper(const std::string &serviceName);
   std::list<std::string>        getMatchingServices(const std::string &patternList, bool getHidden);
-  void                          showServiceInfo(const qi::ServiceInfo &infos, bool verbose, bool showHidden, bool showDoc, bool showRaw);
+  void                          showServiceInfo(const qi::ServiceInfo &infos, bool verbose, bool showHidden, bool showDoc, bool showRaw, bool parseable);
   bool                          splitName(const std::string &fullName, std::string &beforePoint, std::string &afterPoint, bool throwOnError);
 
 private:

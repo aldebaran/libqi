@@ -59,6 +59,12 @@ _qicli-set() {
     "--prop[Property's name]:Property's name:->property" \
     && return
 
+    case $state in
+     (property)
+       __qicli_properties $1
+       ;;
+    esac
+
     return ret
 }
 
@@ -71,6 +77,12 @@ _qicli-get() {
     "--hidden[Call hidden methods if they match the given pattern]" \
     "--prop[Property's name]:Property's name:->property" \
     && return
+
+    case $state in
+     (property)
+       __qicli_properties $1
+       ;;
+    esac
 
   return ret
 }
@@ -139,25 +151,40 @@ _qicli-info () {
   return ret
 }
 
+__retrieveInfo () {
+  for line in `qicli --address $1 info -dz`;
+  do
+    service=$(echo $line | cut -d':' -f1);
+    for info in $(echo $line | cut -d':' -f$2 | tr "," " ");
+    do
+      echo $service.$info;
+    done
+  done
+}
+
 __qicli_services () {
   declare -a services
 
-  services=(${(f)"$(_call_program services qicli --address $1 info -l 2>/dev/null | cut -d' ' -f2 2>/dev/null | sed -r 's/(\[|])//g' 2>/dev/null)"})
+  services=(${(f)"$(_call_program services qicli --address $1 info -zl 2>/dev/null)"})
   _describe -t qicli-services 'Services' services && ret=0
 }
 
 __qicli_methods () {
   declare -a methods
-  tmp_methods="$(_call_program methods qicli --address $1 info --details | awk 'BEGIN {service="";methods=0} /^[0-9]{3}/ {gsub("\\[|\\]", "", $2); service=$2}; / * Signals:/ {methods=0}; methods == 1 {print service "." $2}; / * Methods:/ {methods=1}')"
-  methods=(${(f)tmp_methods})
+  methods=(${(f)"$(__retrieveInfo $1 2)"})
   _multi_parts . methods && ret=0
 }
 
 __qicli_signals () {
   declare -a signals
-  tmp_signals="$(_call_program signals qicli --address $1 info --details | awk 'BEGIN {service="";signals=0} /^[0-9]{3}/ {gsub("\\[|\\]", "", $2); service=$2; signals=0}; signals == 1 {print service "." $2}; / * Signals:/ {signals=1}')"
-  signals=(${(f)tmp_signals})
+  signals=(${(f)"$(__retrieveInfo $1 3)"})
   _multi_parts . signals && ret=0
+}
+
+__qicli_properties () {
+  declare -a properties
+  properties=(${(f)"$(__retrieveInfo $1 4)"})
+  _multi_parts . properties && ret=0
 }
 
 _qicli() {
