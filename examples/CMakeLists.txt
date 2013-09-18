@@ -25,3 +25,5 @@ if (UNIX AND WITH_BOOST_LOCALE)
   qi_use_lib(qiconvloc_example QI BOOST_LOCALE)
   set_target_properties(qiconvloc_example PROPERTIES FOLDER "examples")
 endif()
+
+add_subdirectory(qitranslate)
