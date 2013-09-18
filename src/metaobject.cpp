@@ -638,7 +638,7 @@ namespace qi {
              << " " << std::setw(offset) << name << std::setw(0);
     }
 
-    void printMetaObject(std::ostream &stream, const qi::MetaObject &mobj, bool color, bool showHidden, bool showDoc, bool raw) {
+    void printMetaObject(std::ostream &stream, const qi::MetaObject &mobj, bool color, bool showHidden, bool showDoc, bool raw, bool parseable) {
       qi::MetaObject::MethodMap   methods = mobj.methodMap();
       qi::MetaObject::SignalMap   events = mobj.signalMap();
       qi::MetaObject::PropertyMap props = mobj.propertyMap();
@@ -647,13 +647,26 @@ namespace qi {
       int offsetSigs  = std::min(calcOffset(events, showHidden), 30);
       int offsetMeth  = std::min(calcOffset(methods, showHidden), 30);
 
-      if (methods.size())
+      if (parseable)
+      {
+        stream << ":";
+      }
+      else if (methods.size())
+      {
         printCat(stream, color, "Methods");
+      }
       qi::MetaObject::MethodMap::const_iterator itMM;
       qi::MetaMethodParameterVector::const_iterator itMMPV;
+      std::string comma = "";
       for (itMM = methods.begin(); itMM != methods.end(); ++itMM) {
         if (bypass(itMM->second.name(), itMM->second.uid(), showHidden))
           continue;
+        if (parseable)
+        {
+          stream << comma << itMM->second.name();
+          comma = ",";
+          continue;
+        }
         printIdName(stream, color, offsetMeth, itMM->second.uid(), itMM->second.name());
         if (raw)
           stream << " " << FC(StreamColor_Blue, color) << itMM->second.returnSignature().toString() << FC(StreamColor_Reset, color)
@@ -680,29 +693,57 @@ namespace qi {
                  << std::endl;
       }
 
-      if (events.size())
+      if (parseable)
+      {
+        stream << ":";
+        comma = "";
+      }
+      else if (events.size())
+      {
         printCat(stream, color, "Signals");
+      }
       qi::MetaObject::SignalMap::const_iterator it3;
       for (it3 = events.begin(); it3 != events.end(); ++it3)
       {
         if (bypass(it3->second.name(), it3->second.uid(), showHidden))
           continue;
+        if (parseable)
+        {
+          stream << comma << it3->second.name();
+          comma = ",";
+          continue;
+        }
         printIdName(stream, color, offsetSigs, it3->second.uid(), it3->second.name());
         stream << " " << FC(StreamColor_Yellow, color) << it3->second.parametersSignature().toPrettySignature() << FC(StreamColor_Reset, color)
                << std::endl;
       }
 
-      if (props.size())
+      if (parseable)
+      {
+        stream << ":";
+        comma = "";
+      }
+      else if (props.size())
+      {
         printCat(stream, color, "Properties");
+      }
       for (qi::MetaObject::PropertyMap::const_iterator it = props.begin();
         it != props.end(); ++it)
       {
         if (bypass(it->second.name(), it->second.uid(), showHidden))
           continue;
+        if (parseable)
+        {
+          stream << comma << it->second.name();
+          comma = ",";
+          continue;
+        }
         printIdName(stream, color, offsetProps, it->second.uid(), it->second.name());
         stream << " " << FC(StreamColor_Yellow, color) << it->second.signature().toPrettySignature() << FC(StreamColor_Reset, color)
                << std::endl;
       }
+      if (parseable)
+        stream << std::endl;
     }
   }
 
