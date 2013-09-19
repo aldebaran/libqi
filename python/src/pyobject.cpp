@@ -279,6 +279,18 @@ namespace qi { namespace py {
       gob.xAdvertiseMethod(mmb, qi::AnyFunction::fromDynamicFunction(boost::bind(pyCallMethod, _1, method)));
     }
 
+    ObjectThreadingModel getThreadingModel(boost::python::object &obj) {
+      boost::python::object pyqisig = boost::python::getattr(obj, "__qi_threading__", boost::python::object());
+      std::string qisig;
+      if (pyqisig)
+        qisig = boost::python::extract<std::string>(pyqisig);
+      if (qisig == "multi")
+        return ObjectThreadingModel_MultiThread;
+      else if (qisig == "single")
+        return ObjectThreadingModel_SingleThread;
+      return ObjectThreadingModel_SingleThread;
+    }
+
     qi::AnyObject makeQiAnyObject(boost::python::object obj)
     {
       //is that a qi::AnyObject?
@@ -290,8 +302,9 @@ namespace qi { namespace py {
       }
 
       qi::DynamicObjectBuilder gob;
+
       //let the GIL handle the thread-safety for us
-      gob.setThreadingModel(ObjectThreadingModel_MultiThread);
+      gob.setThreadingModel(getThreadingModel(obj));
       GILScopedLock _lock;
       boost::python::object attrs(boost::python::borrowed(PyObject_Dir(obj.ptr())));
 

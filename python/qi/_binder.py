@@ -76,3 +76,31 @@ class nobind():
     """
     f.__qi_signature__ = "DONOTBIND"
     return f
+
+class singleThreaded():
+    def __init(self, _):
+        pass
+
+    def __call__(self, f):
+        """ Function generator.
+            Return the function with tag to prevent binding
+
+        .. args::
+            f : function to bind.
+        """
+        f.__qi_threading__ = "single"
+        return f
+
+class multiThreaded():
+    def __init(self, _):
+        pass
+
+    def __call__(self, f):
+        """ Function generator.
+            Return the function with tag to prevent binding
+
+        .. args::
+            f : function to bind.
+        """
+        f.__qi_threading__ = "multi"
+        return f
