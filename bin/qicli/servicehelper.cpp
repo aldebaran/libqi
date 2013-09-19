@@ -27,7 +27,7 @@ ServiceHelper::~ServiceHelper()
   {
     if (link != qi::SignalBase::invalidSignalLink)
     {
-      qi::FutureSync<void> fut = _service->disconnect(link);
+      qi::FutureSync<void> fut = _service.disconnect(link);
       if (fut.hasError())
         printError("cannot disconnect signal: " + fut.error());
     }
@@ -68,17 +68,17 @@ std::list<std::string> ServiceHelper::getMatchingMembersName(const std::map<unsi
 
 std::list<std::string> ServiceHelper::getMatchingSignalsName(const std::string &pattern, bool getHidden) const
 {
-  return getMatchingMembersName<qi::MetaSignal>(_service->metaObject().signalMap(), pattern, getHidden);
+  return getMatchingMembersName<qi::MetaSignal>(_service.metaObject().signalMap(), pattern, getHidden);
 }
 
 std::list<std::string> ServiceHelper::getMatchingMethodsName(const std::string &pattern, bool getHidden) const
 {
-  return getMatchingMembersName<qi::MetaMethod>(_service->metaObject().methodMap(), pattern, getHidden);
+  return getMatchingMembersName<qi::MetaMethod>(_service.metaObject().methodMap(), pattern, getHidden);
 }
 
 std::list<std::string> ServiceHelper::getMatchingPropertiesName(const std::string &pattern, bool getHidden) const
 {
-  return getMatchingMembersName<qi::MetaProperty>(_service->metaObject().propertyMap(), pattern, getHidden);
+  return getMatchingMembersName<qi::MetaProperty>(_service.metaObject().propertyMap(), pattern, getHidden);
 }
 
 const ServiceHelper& ServiceHelper::operator=(const qi::AnyObject &service)
@@ -107,13 +107,13 @@ const qi::AnyObject& ServiceHelper::objPtr() const
 bool ServiceHelper::showProperty(const std::string &propertyName)
 {
   printServiceMember(_name, propertyName);
-  int propertyId = _service->metaObject().propertyId(propertyName);
+  int propertyId = _service.metaObject().propertyId(propertyName);
   if (propertyId == -1)
   {
     printError("property not found");
     return false;
   }
-  qi::FutureSync<qi::AnyValue> result = _service->property(propertyId);
+  qi::FutureSync<qi::AnyValue> result = _service.property(propertyId);
 
   if (result.hasError())
   {
@@ -127,7 +127,7 @@ bool ServiceHelper::showProperty(const std::string &propertyName)
 bool ServiceHelper::setProperty(const std::string &propertyName, const qi::AnyValue& gvArg)
 {
   printServiceMember(_name, propertyName);
-  qi::FutureSync<void> result = _service->setProperty(propertyName, gvArg);
+  qi::FutureSync<void> result = _service.setProperty(propertyName, gvArg);
 
   if (result.hasError())
   {
@@ -144,7 +144,7 @@ bool ServiceHelper::watch(const std::string &signalName, bool showTime)
   options.showTime = showTime;
   options.signalName = signalName;
   qi::SignalSubscriber sigSub(qi::AnyFunction::fromDynamicFunction(boost::bind(&ServiceHelper::defaultWatcher, this, options, _1)));
-  qi::FutureSync<qi::SignalLink> futLink = _service->connect(signalName, sigSub);
+  qi::FutureSync<qi::SignalLink> futLink = _service.connect(signalName, sigSub);
   if (futLink.hasError())
   {
     printServiceMember(_name, signalName);
@@ -159,7 +159,7 @@ bool ServiceHelper::post(const std::string &signalName, const qi::GenericFunctio
 {
   printServiceMember(_name, signalName);
   std::cout.flush();
-  _service->metaPost(signalName, gvArgList);
+  _service.metaPost(signalName, gvArgList);
   printSuccess();
   return true;
 }
@@ -168,7 +168,7 @@ bool ServiceHelper::call(const std::string &methodName, const qi::GenericFunctio
 {
   printServiceMember(_name, methodName);
   std::cout.flush();
-  qi::FutureSync<qi::AnyReference> result = _service->metaCall(methodName, gvArgList);
+  qi::FutureSync<qi::AnyReference> result = _service.metaCall(methodName, gvArgList);
   if (result.hasError())
   {
     printError(result.error());

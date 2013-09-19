@@ -43,7 +43,7 @@ void onTrace(ObjectMap::value_type ov, const qi::EventTrace& trace)
   std::string name = boost::lexical_cast<std::string>(trace.slotId());
   if (!numeric)
   {
-    qi::MetaObject mo = ov.second->metaObject();
+    qi::MetaObject mo = ov.second.metaObject();
     qi::MetaMethod* m = mo.method(trace.slotId());
     if (m)
       name = m->name();
@@ -142,13 +142,13 @@ int subCmd_trace(int argc, char **argv, qi::ApplicationSession& app)
     if (printMo)
     {
       std::cout << "\n\n" << services[i] << "\n";
-      qi::details::printMetaObject(std::cout, o->metaObject());
+      qi::details::printMetaObject(std::cout, o.metaObject());
     }
     if (disableTrace)
     {
       try
       {
-        o->call<void>("enableTrace", false);
+        o.call<void>("enableTrace", false);
       }
       catch(...)
       {}
@@ -157,7 +157,7 @@ int subCmd_trace(int argc, char **argv, qi::ApplicationSession& app)
     {
       try
       {
-        bool s = o->call<bool>("isTraceEnabled");
+        bool s = o.call<bool>("isTraceEnabled");
         std::cout << services[i] << ": " << s << std::endl;
       }
       catch(...)
@@ -172,7 +172,7 @@ int subCmd_trace(int argc, char **argv, qi::ApplicationSession& app)
   foreach(ObjectMap::value_type& ov, objectMap)
   {
     maxServiceLength = std::max(maxServiceLength, (unsigned int)ov.first.size());
-    ov.second->connect("traceObject", (boost::function<void(qi::EventTrace)>)
+    ov.second.connect("traceObject", (boost::function<void(qi::EventTrace)>)
       boost::bind(&onTrace, ov, _1)).async();
   }
   qi::Application::run();

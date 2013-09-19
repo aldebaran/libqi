@@ -127,7 +127,7 @@ namespace qi {
   //retrieve the metaObject from the network
   qi::Future<void> RemoteObject::fetchMetaObject() {
     qi::Promise<void> prom(qi::FutureCallbackType_Sync);
-    qi::Future<qi::MetaObject> fut = _self->call<qi::MetaObject>("metaObject", 0U);
+    qi::Future<qi::MetaObject> fut = _self.call<qi::MetaObject>("metaObject", 0U);
     fut.connect(boost::bind<void>(&RemoteObject::onMetaObject, this, _1, prom));
     return prom.future();
   }
@@ -152,7 +152,7 @@ namespace qi {
           // Signal associated with properties have incorrect signature,
           // Trust MetaObject.
           //std::string sig = sb->signature();
-          const MetaSignal* ms  = _self->metaObject().signal(msg.event());
+          const MetaSignal* ms  = _self.metaObject().signal(msg.event());
           qi::Signature sig = ms->parametersSignature();
 
           // Remove top-level tuple
@@ -362,7 +362,7 @@ namespace qi {
     SignalLink uid = DynamicObject::metaConnect(event, sub);
 
     qiLogDebug() <<"connect() to " << event <<" gave " << uid;
-    qi::Future<SignalLink> fut = _self->call<SignalLink>("registerEvent", _service, event, uid);
+    qi::Future<SignalLink> fut = _self.call<SignalLink>("registerEvent", _service, event, uid);
     fut.connect(boost::bind<void>(&onEventConnected, _1, prom, uid));
     return prom.future();
   }
@@ -381,7 +381,7 @@ namespace qi {
     }
     TransportSocketPtr sock = _socket;
     if (sock && sock->isConnected())
-      return _self->call<void>("unregisterEvent", _service, event, linkId);
+      return _self.call<void>("unregisterEvent", _service, event, linkId);
     return qi::makeFutureError<void>("No remote unregister: socket disconnected");
   }
 
@@ -419,13 +419,13 @@ namespace qi {
  {
    qiLogDebug() << "bouncing property";
    // FIXME: perform some validations on this end?
-   return _self->call<AnyValue>("property", id);
+   return _self.call<AnyValue>("property", id);
  }
 
  qi::Future<void> RemoteObject::metaSetProperty(unsigned int id, AnyValue val)
  {
    qiLogDebug() << "bouncing setProperty";
-   return _self->call<void>("setProperty", id, val);
+   return _self.call<void>("setProperty", id, val);
  }
 }
 

@@ -49,7 +49,7 @@ protected:
 
   void TearDown()
   {
-    taskGenClient.reset();
+    taskGenClient = qi::AnyObject();
     delete taskGenProxy;
   }
 
@@ -65,9 +65,34 @@ TEST_F(TestTask, Basic)
   ASSERT_EQ(0U, taskGenProxy->taskCount());
 }
 
+TEST_F(TestTask, AnyTask)
+{
+  qi::details::printMetaObject(std::cerr, taskGenProxy->asObject().metaObject());
+  qi::AnyObject task = taskGenProxy->asObject().call<qi::AnyObject>("newTask", "coin");
+  ASSERT_TRUE(task);
+  std::string n = task.call<std::string>("getName");
+
+  ASSERT_EQ(n, "coin");
+
+  unsigned count = taskGenProxy->taskCount();
+  ASSERT_EQ(1U, count);
+
+  task.call<void>("setParam","foo");
+  task.call<void>("step", 42);
+  std::string lr = task.call<std::string>("getLastResult");
+  ASSERT_EQ("coin foo 42 1", lr);
+  // Release the task, ensure it gets destroyed
+  qiLogVerbose() << "Releasing task and waiting";
+  task.reset();
+  qi::os::msleep(400);
+  qiLogVerbose() << "Done";
+  count = taskGenProxy->taskCount();
+  ASSERT_EQ(0U, count);
+}
+
 TEST_F(TestTask, Task)
 {
-  qi::details::printMetaObject(std::cerr, taskGenProxy->asObject()->metaObject());
+  qi::details::printMetaObject(std::cerr, taskGenProxy->asObject().metaObject());
   TaskProxyPtr task = taskGenProxy->newTask("coin");
   ASSERT_TRUE(task);
   std::string n = task->getName();

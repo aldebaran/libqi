@@ -36,13 +36,13 @@ void testDelete(bool afirst, bool disconnectFirst)
   qi::SignalLink onFireId2 = obb.advertiseMethod("onFire2", boost::bind<void>(&onFire2, _1, p1));
   qi::AnyObject *a = new qi::AnyObject(oba.object());
   qi::AnyObject *b = new qi::AnyObject(obb.object());
-  qi::SignalLink linkId = (*a)->connect(fireId, *b, onFireId);
-  (*a)->connect(fireId, *b, onFireId2);
+  qi::SignalLink linkId = (*a).connect(fireId, *b, onFireId);
+  (*a).connect(fireId, *b, onFireId2);
   //std::vector<qi::SignalSubscriber> subs = (*a)->subscribers(fireId);
   //EXPECT_EQ(static_cast<unsigned int>(2), subs.size());
   // Subs ordering is unspecified
   //EXPECT_EQ(subs[0].method + subs[1].method, onFireId + onFireId2);
-  (*a)->post("fire", 12);
+  (*a).post("fire", 12);
   EXPECT_TRUE(p0.future().hasValue(1000));
   EXPECT_TRUE(p1.future().hasValue(1000));
   EXPECT_EQ(12, lastPayload);
@@ -51,8 +51,8 @@ void testDelete(bool afirst, bool disconnectFirst)
   p1.reset();
   if (disconnectFirst)
   {
-    (*a)->disconnect(linkId);
-    (*a)->post("fire", 13);
+    (*a).disconnect(linkId);
+    (*a).post("fire", 13);
     EXPECT_TRUE(p1.future().hasValue(1000));
     EXPECT_EQ(12, lastPayload);
     EXPECT_EQ(13, lastPayload2);
@@ -67,7 +67,7 @@ void testDelete(bool afirst, bool disconnectFirst)
   else
   {
     delete b;
-    (*a)->post("fire", 12);
+    (*a).post("fire", 12);
     delete a;
   }
   ++completed;

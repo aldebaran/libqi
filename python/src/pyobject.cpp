@@ -54,7 +54,7 @@ namespace qi { namespace py {
         {
           //calling c++, so release the GIL.
           GILScopedUnlock _unlock;
-          qi::Future<qi::AnyReference> fmeta = _object->metaCall(funN, val.asDynamic().asTupleValuePtr());
+          qi::Future<qi::AnyReference> fmeta = _object.metaCall(funN, val.asDynamic().asTupleValuePtr());
           //because futureAdapter support AnyRef containing Future<T>  (that will be converted to a Future<T>
           // instead of Future<Future<T>>
           fmeta.connect(boost::bind<void>(&detail::futureAdapter<qi::AnyValue>, _1, res));
@@ -78,7 +78,7 @@ namespace qi { namespace py {
     };
 
     void populateMethods(boost::python::object pyobj, qi::AnyObject obj) {
-      qi::MetaObject::MethodMap           mm = obj->metaObject().methodMap();
+      qi::MetaObject::MethodMap           mm = obj.metaObject().methodMap();
       qi::MetaObject::MethodMap::iterator it;
       for (it = mm.begin(); it != mm.end(); ++it) {
         qi::MetaMethod &mem = it->second;
@@ -98,7 +98,7 @@ namespace qi { namespace py {
     }
 
     void populateSignals(boost::python::object pyobj, qi::AnyObject obj) {
-      qi::MetaObject::SignalMap           mm = obj->metaObject().signalMap();
+      qi::MetaObject::SignalMap           mm = obj.metaObject().signalMap();
       qi::MetaObject::SignalMap::iterator it;
       for (it = mm.begin(); it != mm.end(); ++it) {
         qi::MetaSignal &ms = it->second;
@@ -112,7 +112,7 @@ namespace qi { namespace py {
     }
 
     void populateProperties(boost::python::object pyobj, qi::AnyObject obj) {
-      qi::MetaObject::PropertyMap           mm = obj->metaObject().propertyMap();
+      qi::MetaObject::PropertyMap           mm = obj.metaObject().propertyMap();
       qi::MetaObject::PropertyMap::iterator it;
       for (it = mm.begin(); it != mm.end(); ++it) {
         qi::MetaProperty &mp = it->second;
@@ -140,7 +140,7 @@ namespace qi { namespace py {
       }
 
       boost::python::object metaObject() {
-        return qi::AnyReference(_object->metaObject()).to<boost::python::object>();
+        return qi::AnyReference(_object.metaObject()).to<boost::python::object>();
       }
 
       qi::AnyObject object() {

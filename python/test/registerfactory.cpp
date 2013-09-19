@@ -31,12 +31,12 @@ TEST(PythonRegister, Execute)
 {
   qi::AnyObject object = qi::createObject("TestPython");
   ASSERT_TRUE(object);
-  int value = object->call<int>("get");
+  int value = object.call<int>("get");
   EXPECT_EQ(42, value);
 
   qi::AnyObject object2 = qi::createObject("TestPython2");
   ASSERT_TRUE(object2);
-  value = object2->call<int>("get");
+  value = object2.call<int>("get");
   EXPECT_EQ(43, value);
 }
 

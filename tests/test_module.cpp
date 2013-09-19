@@ -19,7 +19,7 @@ TEST(Module, Load)
 
   qi::AnyObject o = session->service("test");
   ASSERT_TRUE(o);
-  int res = o->call<int>("testMethod", 12);
+  int res = o.call<int>("testMethod", 12);
   ASSERT_EQ(13, res);
 }
 

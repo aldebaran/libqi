@@ -100,7 +100,7 @@ qi_future_t *qi_object_call(qi_object_t *object, const char *signature_c, qi_val
   qi::AnyObject             &obj = qi_object_cpp(object);
   qi::AnyValue           gv  = qi_value_cpp(params);
 
-  qi::Future<qi::AnyReference> res = obj->metaCall(signature_c, gv.asTupleValuePtr());
+  qi::Future<qi::AnyReference> res = obj.metaCall(signature_c, gv.asTupleValuePtr());
   qi::Promise<qi::AnyValue> prom(qi::FutureCallbackType_Sync);
   res.connect(boost::bind<void>(&qiFutureCAdapter, _1, prom));
   return qi_cpp_promise_get_future(prom);
@@ -123,7 +123,7 @@ void        qi_object_builder_destroy(qi_object_builder_t *object_builder)
 qi_value_t*          qi_object_get_metaobject(qi_object_t *object)
 {
   qi::AnyObject &obj = *(reinterpret_cast<qi::AnyObject *>(object));
-  const qi::MetaObject &mo = obj->metaObject();
+  const qi::MetaObject &mo = obj.metaObject();
   qi_value_t *ret = qi_value_create("");
 
   qi_value_cpp(ret) = qi::AnyValue::from(mo);
@@ -135,7 +135,7 @@ int                 qi_object_event_emit(qi_object_t* object, const char *signat
   qi::AnyReference &val = qi_value_cpp(params);
   if (qi_value_get_kind(params) != QI_VALUE_KIND_TUPLE)
     return -1;
-  obj->metaPost(signature, val.asTupleValuePtr());
+  obj.metaPost(signature, val.asTupleValuePtr());
   return 0;
 }
 
@@ -145,12 +145,12 @@ qi_future_t*        qi_object_event_connect(qi_object_t* object, const char *sig
   qi::AnyObject &obj = qi_object_cpp(object);
   std::vector<std::string> vs = qi::signatureSplit(std::string(signature));
   qi::DynamicFunction fn = boost::bind<qi::AnyReference>(&c_signal_callback, _1, vs[2], f, user_data);
-  return qi_future_wrap(obj->connect(signature, qi::AnyFunction::fromDynamicFunction(fn)));
+  return qi_future_wrap(obj.connect(signature, qi::AnyFunction::fromDynamicFunction(fn)));
 }
 
 qi_future_t*        qi_object_event_disconnect(qi_object_t* object, unsigned long long id) {
   qi::AnyObject &obj = qi_object_cpp(object);
-  return qi_future_wrap(obj->disconnect(id));
+  return qi_future_wrap(obj.disconnect(id));
 }
 
 unsigned int        qi_object_builder_register_method(qi_object_builder_t *object_builder, const char *complete_signature, qi_object_method_t func, void *data)

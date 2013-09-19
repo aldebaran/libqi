@@ -77,7 +77,7 @@ namespace qi
       id = ob->advertiseSignal("serviceRemoved", &ServiceDirectoryBoundObject::serviceRemoved);
       assert(id == qi::Message::ServiceDirectoryAction_ServiceRemoved);
     }
-    return ob->object(self);
+    return ob->object(self, &AnyObject::deleteGenericObjectOnly);
   }
 
   ServiceDirectoryBoundObject::ServiceDirectoryBoundObject()

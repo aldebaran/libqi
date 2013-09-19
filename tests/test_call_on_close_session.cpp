@@ -30,7 +30,7 @@ void myCall(qi::AnyObject myService)
 {
   try
   {
-    myService->call<std::string>("reply::s(s)", "ok");
+    myService.call<std::string>("reply::s(s)", "ok");
     qi::os::msleep(300);
   }
   catch(std::exception e)

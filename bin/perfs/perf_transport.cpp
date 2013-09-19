@@ -139,7 +139,7 @@ int run_client(qi::AnyObject obj)
         if (ops[j % pipeline].value().size() != buf.size())
           std::cout << "error content" << std::endl;
       }
-      qi::Future<qi::Buffer> result = obj->call<qi::Buffer>("replyBuf", buf);
+      qi::Future<qi::Buffer> result = obj.call<qi::Buffer>("replyBuf", buf);
       ops[j % pipeline] = result;
       qi::os::gettimeofday(&tstop);
       latencySum += (tstop.tv_sec - tstart.tv_sec)* 1000000LL

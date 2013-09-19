@@ -63,10 +63,15 @@ void ObjectHost::removeObject(unsigned int id)
   {
     ObjectMap::iterator it = _objectMap.find(id);
     if (it == _objectMap.end())
+    {
+      qiLogDebug() << this << " No match in host for " << id;
       return;
+    }
     obj = it->second;
     _objectMap.erase(it);
+    qiLogDebug() << this << " count " << obj.use_count();
   }
+  qiLogDebug() << this << " Object removed";
 }
 
 void ObjectHost::clear()

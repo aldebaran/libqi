@@ -37,12 +37,12 @@ namespace qi { namespace py {
 
       //TODO: support async
       boost::python::object value() const {
-        return _obj->property(_sigid).value().to<boost::python::object>();
+        return _obj.property(_sigid).value().to<boost::python::object>();
       }
 
       //TODO: support async
       void setValue(boost::python::object obj) {
-        _obj->setProperty(_sigid, qi::AnyValue::from(obj));
+        _obj.setProperty(_sigid, qi::AnyValue::from(obj));
       }
 
     private:

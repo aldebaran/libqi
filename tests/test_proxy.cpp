@@ -90,12 +90,12 @@ TEST(Proxy, Signal)
   boost::shared_ptr<Foo> foo(new Foo);
   qi::AnyObject gfoo = qi::AnyReference(foo).toObject();
   ASSERT_TRUE(!!gfoo);
-  qi::details::printMetaObject(std::cerr, gfoo->metaObject());
+  qi::details::printMetaObject(std::cerr, gfoo.metaObject());
   // The session must die before foo.
   TestSessionPair p;
   p.server()->registerService("foo", gfoo);
   qi::AnyObject client = p.client()->service("foo");
-  ASSERT_EQ(0, client->call<int>("count1"));
+  ASSERT_EQ(0, client.call<int>("count1"));
   qi::ProxySignal<void(int, int)> proxy1(client, "sig1");
   foo->subscribe1();
   proxy1(1, 2);
@@ -150,7 +150,7 @@ TEST(Proxy, Property)
   // we need that to force two clients
   p.server()->registerService("bar2", gbar);
   qi::AnyObject client = p.client()->service("bar");
-  ASSERT_EQ(0, client->call<int>("count"));
+  ASSERT_EQ(0, client.call<int>("count"));
 
   qi::ProxyProperty<int> pp(client, "prop");
   bar->set(1);

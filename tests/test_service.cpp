@@ -71,7 +71,7 @@ TEST(QiService, RemoteObjectCacheServerClose)
   fut = p.client()->service("serviceTest");
   EXPECT_FALSE(fut.hasError());
 
-  EXPECT_EQ(std::string("titi"), fut.value()->call<std::string>("reply", "titi").value());
+  EXPECT_EQ(std::string("titi"), fut.value().call<std::string>("reply", "titi").value());
 
   p.server()->close();
 
@@ -92,7 +92,7 @@ TEST(QiService, RemoteObjectCacheUnregister)
   fut = p.client()->service("serviceTest");
   EXPECT_FALSE(fut.hasError());
 
-  EXPECT_EQ(std::string("titi"), fut.value()->call<std::string>("reply", "titi").value());
+  EXPECT_EQ(std::string("titi"), fut.value().call<std::string>("reply", "titi").value());
 
   p.server()->unregisterService(idx);
 
@@ -114,7 +114,7 @@ TEST(QiService, RemoteObjectCacheABAUnregister)
   fut = p.client()->service("serviceTest");
   EXPECT_FALSE(fut.hasError());
 
-  EXPECT_EQ(std::string("titi"), fut.value()->call<std::string>("reply", "titi").value());
+  EXPECT_EQ(std::string("titi"), fut.value().call<std::string>("reply", "titi").value());
 
   p.server()->unregisterService(idx);
 
@@ -127,7 +127,7 @@ TEST(QiService, RemoteObjectCacheABAUnregister)
   fut = p.client()->service("serviceTest");
   EXPECT_FALSE(fut.hasError());
 
-  qi::Future<std::string> fret = fut.value()->call<std::string>("reply", "titi");
+  qi::Future<std::string> fret = fut.value().call<std::string>("reply", "titi");
   if (fret.hasError()) {
     std::cout << "Error returned:" << fret.error();
   }
@@ -151,7 +151,7 @@ TEST(QiService, RemoteObjectCacheABANewServer)
   fut = p.client()->service("serviceTest");
   EXPECT_FALSE(fut.hasError());
 
-  EXPECT_EQ(std::string("titi"), fut.value()->call<std::string>("reply", "titi").value());
+  EXPECT_EQ(std::string("titi"), fut.value().call<std::string>("reply", "titi").value());
 
   p.server()->close();
 
@@ -168,7 +168,7 @@ TEST(QiService, RemoteObjectCacheABANewServer)
   fut = p.client()->service("serviceTest");
   EXPECT_FALSE(fut.hasError());
 
-  qi::Future<std::string> fret = fut.value()->call<std::string>("reply", "titi");
+  qi::Future<std::string> fret = fut.value().call<std::string>("reply", "titi");
   if (fret.hasError()) {
     std::cout << "Error returned:" << fret.error();
   }
@@ -191,7 +191,7 @@ TEST(QiService, RemoteObjectNackTransactionWhenServerClosed)
   fut = p.client()->service("serviceTest");
   EXPECT_FALSE(fut.hasError());
 
-  qi::Future<void> fret = fut.value()->call<void>("msleep", 2000);
+  qi::Future<void> fret = fut.value().call<void>("msleep", 2000);
   qi::Future<void> fclose = p.server()->close();
   fclose.wait(1000);
   EXPECT_TRUE(fclose.isFinished());
@@ -226,36 +226,36 @@ TEST(QiService, ClassProperty)
   ASSERT_TRUE(builder.advertiseProperty("offset", &Foo::prop) > 0);
 
   Foo f;
-  qi::AnyObject obj = builder.object(&f);
+  qi::AnyObject obj = builder.object(&f, &qi::AnyObject::deleteGenericObjectOnly);
 
   p.server()->registerService("foo", obj);
 
   qi::AnyObject client = p.client()->service("foo");
-  qi::details::printMetaObject(std::cerr, obj->metaObject());
+  qi::details::printMetaObject(std::cerr, obj.metaObject());
   std::cerr <<"--" << std::endl;
-  qi::details::printMetaObject(std::cerr, client->metaObject());
+  qi::details::printMetaObject(std::cerr, client.metaObject());
   qiLogDebug() << "setProp";
-  client->setProperty<int>("offset", 1).value();
+  client.setProperty<int>("offset", 1).value();
   qiLogDebug() << "setProp done";
   ASSERT_EQ(1, f.prop.get());
-  ASSERT_EQ(2, client->call<int>("ping", 1));
+  ASSERT_EQ(2, client.call<int>("ping", 1));
   f.prop.set(2);
-  ASSERT_EQ(3, client->call<int>("ping", 1));
-  ASSERT_EQ(2, client->property<int>("offset"));
+  ASSERT_EQ(3, client.call<int>("ping", 1));
+  ASSERT_EQ(2, client.property<int>("offset"));
 
   // test event
   int hit = 0;
   f.prop.connect(boost::bind(&inc, &hit, _1));
-  obj->connect("offset", boost::bind(&inc, &hit,_1));
-  client->connect("offset", boost::bind(&inc, &hit,_1));
+  obj.connect("offset", boost::bind(&inc, &hit,_1));
+  client.connect("offset", boost::bind(&inc, &hit,_1));
   f.prop.set(1);
   PERSIST_ASSERT(, hit == 3, 500);
-  client->setProperty("offset", 2);
+  client.setProperty("offset", 2);
   PERSIST_ASSERT(, hit == 6, 500);
 
   // test error handling
-   EXPECT_TRUE(client->setProperty("canard", 5).hasError());
-   EXPECT_TRUE(client->setProperty("offset", "astring").hasError());
+   EXPECT_TRUE(client.setProperty("canard", 5).hasError());
+   EXPECT_TRUE(client.setProperty("offset", "astring").hasError());
 }
 
 int prop_ping(qi::PropertyBase* &p, int v)
@@ -279,37 +279,37 @@ TEST(QiService, GenericProperty)
 
   qi::AnyObject client = p.client()->service("foo");
 
-  client->setProperty("offset", 1);
+  client.setProperty("offset", 1);
   ASSERT_EQ(1, prop->value().toInt());
-  ASSERT_EQ(2, client->call<int>("ping", 1));
+  ASSERT_EQ(2, client.call<int>("ping", 1));
   prop->setValue(qi::AnyValue(qi::AnyReference(2)));
-  ASSERT_EQ(3, client->call<int>("ping", 1));
-  ASSERT_EQ(2, client->property<int>("offset"));
+  ASSERT_EQ(3, client.call<int>("ping", 1));
+  ASSERT_EQ(2, client.property<int>("offset"));
 
   // test event
   int hit = 0;
   qiLogVerbose() << "Connecting to signal";
   ASSERT_NE(qi::SignalBase::invalidSignalLink, prop->signal()->connect((boost::function<void(int)>)boost::bind(&inc, &hit, _1)));
-  ASSERT_NE(qi::SignalBase::invalidSignalLink, obj->connect("offset", boost::bind(&inc, &hit, _1)));
-  ASSERT_NE(qi::SignalBase::invalidSignalLink, client->connect("offset", boost::bind(&inc, &hit, _1)));
+  ASSERT_NE(qi::SignalBase::invalidSignalLink, obj.connect("offset", boost::bind(&inc, &hit, _1)));
+  ASSERT_NE(qi::SignalBase::invalidSignalLink, client.connect("offset", boost::bind(&inc, &hit, _1)));
   qiLogVerbose() << "Triggering prop set";
   prop->setValue(qi::AnyValue(qi::AnyReference(1)));
   PERSIST(, hit == 3, 500);
   qi::os::msleep(500);
   EXPECT_EQ(3, hit);
-  client->setProperty<int>("offset", 2);
+  client.setProperty<int>("offset", 2);
   PERSIST(, hit == 6, 500);
   qi::os::msleep(500);
   EXPECT_EQ(6, hit);
   if (client != obj)
   {
-    client->call<void>("setProperty", "offset", 3);
+    client.call<void>("setProperty", "offset", 3);
     EXPECT_EQ(3, prop->value().toInt());
   }
 
   // test error handling
-  EXPECT_TRUE(client->setProperty("canard", 5).hasError());
-  EXPECT_TRUE(client->setProperty("offset", "astring").hasError());
+  EXPECT_TRUE(client.setProperty("canard", 5).hasError());
+  EXPECT_TRUE(client.setProperty("offset", "astring").hasError());
 }
 
 

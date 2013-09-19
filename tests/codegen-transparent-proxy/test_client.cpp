@@ -30,7 +30,7 @@ TEST(TransparentProxy, ClientIMpl)
 {
   TestSessionPair p;
   p.server()->registerService("builder", qi::createObject("TaskServiceService"));
-  qi::AnyObject o = p.client()->service("builder").value()->call<qi::AnyObject>("create");
+  qi::AnyObject o = p.client()->service("builder").value().call<qi::AnyObject>("create");
   EXPECT_TRUE(o);
   TaskServiceProxyPtr pp = qi::AnyValue::from(o).to<TaskServiceProxyPtr>();
   pp->value.set(3);
@@ -46,7 +46,7 @@ TEST(TransparentProxy, ServerImpl)
 {
   TestSessionPair p;
   p.server()->registerService("builder", qi::createObject("TaskServiceService"));
-  qi::AnyObject o = p.client()->service("builder").value()->call<qi::AnyObject>("create");
+  qi::AnyObject o = p.client()->service("builder").value().call<qi::AnyObject>("create");
   EXPECT_TRUE(o);
   TaskServiceProxyPtr pp = qi::AnyValue::from(o).to<TaskServiceProxyPtr>();
   pp->value.set(3);

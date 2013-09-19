@@ -49,7 +49,7 @@ int main(int argc, char* argv[])
     qi::GenericFunctionParameters gfp;
     gfp.push_back(dynval);
 
-    qi::Future<qi::AnyReference> ret = obj->metaCall("reply::m(m)", gfp);
+    qi::Future<qi::AnyReference> ret = obj.metaCall("reply::m(m)", gfp);
 
     ret.hasValue();
     qi::AnyReference lol = ret.value();

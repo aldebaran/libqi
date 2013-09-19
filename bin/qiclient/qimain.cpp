@@ -23,7 +23,7 @@ void call(int count, qi::Session& session)
   qi::AnyObject obj = session.service("serviceTest");
 
   for (int i = 0; i < count; ++i) {
-    std::string result = obj->call<std::string>("reply", "plaf");
+    std::string result = obj.call<std::string>("reply", "plaf");
     std::cout << "result" << i << ":" << result << std::endl;
   }
 }
@@ -35,7 +35,7 @@ void eventCb(const std::string &event) {
 void recEvent(qi::ApplicationSession& app) {
   qi::AnyObject obj = app.session().service("serviceTest");
 
-  obj->connect("testEvent", &eventCb);
+  obj.connect("testEvent", &eventCb);
 
   app.run();
 }

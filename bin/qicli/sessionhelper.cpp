@@ -189,7 +189,7 @@ void SessionHelper::showServiceInfo(const qi::ServiceInfo &infos, bool verbose, 
   try
   {
     ServiceHelper service = getServiceHelper(infos.name());
-    qi::details::printMetaObject(std::cout, service.objPtr()->metaObject(), true, showHidden, showDoc, showRaw, parseable);
+    qi::details::printMetaObject(std::cout, service.objPtr().metaObject(), true, showHidden, showDoc, showRaw, parseable);
   }
   catch (...)
   {

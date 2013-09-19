@@ -24,9 +24,9 @@ TEST(Test, One)
   server.listen("tcp://localhost:0");
   ASSERT_EQ(1u, server.loadService("adder").size());
   // test building the proxy from a GenericObject ourselve
-  AdderProxy ap(client.service("AdderService").value()->call<qi::AnyObject>("create"));
+  AdderProxy ap(client.service("AdderService").value().call<qi::AnyObject>("create"));
   // Test getting it directly using typesystem conversion.
-  AdderProxyPtr ap2 = client.service("AdderService").value()->call<AdderProxyPtr>("create");
+  AdderProxyPtr ap2 = client.service("AdderService").value().call<AdderProxyPtr>("create");
   ASSERT_TRUE(!!ap2);
   ap.value.set(2);
   qiLogVerbose() << "MakeTask";

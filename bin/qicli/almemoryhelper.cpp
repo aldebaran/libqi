@@ -21,7 +21,7 @@ void ALMemoryHelper::post(const std::string &pattern, const std::string &arg, bo
   std::vector<std::string> matchList = getMatchingEvents(pattern);
   for (unsigned int i = 0; i < matchList.size(); ++i)
   {
-    qi::Future<void> raiseResult = _alm->call<void>("raiseMicroEvent", matchList[i], decodeArg(arg, json));
+    qi::Future<void> raiseResult = _alm.call<void>("raiseMicroEvent", matchList[i], decodeArg(arg, json));
     if (raiseResult.hasError())
       throw std::runtime_error("cannot raise event \"" + matchList[i] + "\": " + raiseResult.error());
   }
@@ -32,14 +32,14 @@ void ALMemoryHelper::watch(const std::vector<std::string> &patternList, bool sho
   std::vector<std::string> matchList = getMatchingEvents(patternList);
   for (unsigned int i = 0; i < matchList.size(); ++i)
   {
-    qi::AnyObject subscriber = _alm->call<qi::AnyObject>("subscriber", matchList[i]);
+    qi::AnyObject subscriber = _alm.call<qi::AnyObject>("subscriber", matchList[i]);
 
     WatchOptions options;
 
     options.showTime = showTime;
     options.signalName = matchList[i];
     qi::SignalSubscriber sigSub(qi::AnyFunction::fromDynamicFunction(boost::bind(&ALMemoryHelper::defaultWatcher, this, options, _1)));
-    qi::FutureSync<qi::SignalLink> futLink = subscriber->connect("signal", sigSub);
+    qi::FutureSync<qi::SignalLink> futLink = subscriber.connect("signal", sigSub);
     if (futLink.hasError())
       throw std::runtime_error("cannot watch event \"" + matchList[i] + "\": " + futLink.error());
     _subscriberList.push_back(subscriber);
@@ -100,7 +100,7 @@ std::vector<std::string> ALMemoryHelper::getMatchingEvents(const std::vector<std
 
 std::vector<std::string> ALMemoryHelper::getEventList()
 {
-  qi::Future<std::vector<std::string> > eventListFut = _alm->call<std::vector<std::string> >("getEventList");
+  qi::Future<std::vector<std::string> > eventListFut = _alm.call<std::vector<std::string> >("getEventList");
   if (eventListFut.hasError())
     throw std::runtime_error("cannot get ALMemory event list: " + eventListFut.error());
 

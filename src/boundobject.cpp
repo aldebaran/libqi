@@ -6,6 +6,7 @@
 #include <boost/make_shared.hpp>
 
 #include <qitype/anyobject.hpp>
+#include <qitype/objecttypebuilder.hpp>
 #include "boundobject.hpp"
 #include "serverresult.hpp"
 
@@ -49,10 +50,14 @@ namespace qi {
 
   ServiceBoundObject::~ServiceBoundObject()
   {
+    qiLogDebug() << "~ServiceBoundObject()";
     ObjectHost::clear();
     if (_owner)
       _owner->removeObject(_objectId);
     onDestroy(this);
+    qiLogDebug() << "~ServiceBoundObject() reseting object " << _object.use_count();
+    _object.reset();
+    qiLogDebug() << "~ServiceBoundObject() finishing";
   }
 
   qi::AnyObject ServiceBoundObject::createServiceBoundObjectType(ServiceBoundObject *self, bool bindTerminate) {
@@ -76,18 +81,18 @@ namespace qi {
       ob->advertiseMethod("properties",       &ServiceBoundObject::properties, MetaCallType_Auto, qi::Message::BoundObjectFunction_Properties);
       //global currentSocket: we are not multithread or async capable ob->setThreadingModel(ObjectThreadingModel_MultiThread);
     }
-    AnyObject result = ob->object(self);
+    AnyObject result = ob->object(self, &AnyObject::deleteGenericObjectOnly);
     return result;
   }
 
   //Bound Method
   SignalLink ServiceBoundObject::registerEvent(unsigned int objectId, unsigned int eventId, SignalLink remoteSignalLinkId) {
     // fetch signature
-    const MetaSignal* ms = _object->metaObject().signal(eventId);
+    const MetaSignal* ms = _object.metaObject().signal(eventId);
     if (!ms)
       throw std::runtime_error("No such signal");
     AnyFunction mc = AnyFunction::fromDynamicFunction(boost::bind(&forwardEvent, _1, _serviceId, _objectId, eventId, ms->parametersSignature(), _currentSocket, this));
-    SignalLink linkId = _object->connect(eventId, mc);
+    SignalLink linkId = _object.connect(eventId, mc);
     qiLogDebug() << "SBO rl " << remoteSignalLinkId <<" ll " << linkId;
     _links[_currentSocket][remoteSignalLinkId] = RemoteSignalLink(linkId, eventId);
     return linkId;
@@ -105,7 +110,7 @@ namespace qi {
       qiLogError() << ss.str();
       throw std::runtime_error(ss.str());
     }
-    _object->disconnect(it->second.localSignalLinkId);
+    _object.disconnect(it->second.localSignalLinkId);
     sl.erase(it);
     if (sl.empty())
       _links.erase(_currentSocket);
@@ -115,7 +120,7 @@ namespace qi {
   //Bound Method
   qi::MetaObject ServiceBoundObject::metaObject(unsigned int objectId) {
     //we inject specials methods here
-    return qi::MetaObject::merge(_self->metaObject(), _object->metaObject());
+    return qi::MetaObject::merge(_self.metaObject(), _object.metaObject());
   }
 
   void ServiceBoundObject::terminate(unsigned int)
@@ -163,7 +168,7 @@ namespace qi {
       GenericFunctionParameters mfp;
 
       if (msg.type() == qi::Message::Type_Call) {
-        const qi::MetaMethod *mm = obj->metaObject().method(funcId);
+        const qi::MetaMethod *mm = obj.metaObject().method(funcId);
         if (!mm) {
           std::stringstream ss;
           ss << "No such method " << msg.address();
@@ -174,11 +179,11 @@ namespace qi {
       }
 
       else if (msg.type() == qi::Message::Type_Post) {
-        const qi::MetaSignal *ms = obj->metaObject().signal(funcId);
+        const qi::MetaSignal *ms = obj.metaObject().signal(funcId);
         if (ms)
           sigparam = ms->parametersSignature();
         else {
-          const qi::MetaMethod *mm = obj->metaObject().method(funcId);
+          const qi::MetaMethod *mm = obj.metaObject().method(funcId);
           if (mm)
             sigparam = mm->parametersSignature();
           else {
@@ -224,10 +229,10 @@ namespace qi {
       case Message::Type_Call: {
         boost::mutex::scoped_lock lock(_mutex);
         _currentSocket = socket;
-        qi::Future<AnyReference>  fut = obj->metaCall(funcId, mfp,
+        qi::Future<AnyReference>  fut = obj.metaCall(funcId, mfp,
                                                          obj==_self ? MetaCallType_Direct: _callType);
         Signature retSig;
-        const MetaMethod* mm = obj->metaObject().method(funcId);
+        const MetaMethod* mm = obj.metaObject().method(funcId);
         if (mm)
           retSig = mm->returnSignature();
         _currentSocket.reset();
@@ -236,9 +241,9 @@ namespace qi {
         break;
       case Message::Type_Post: {
         if (obj == _self) // we need a sync call (see comment above), post does not provide it
-          obj->metaCall(funcId, mfp, MetaCallType_Direct);
+          obj.metaCall(funcId, mfp, MetaCallType_Direct);
         else
-          obj->metaPost(funcId, mfp);
+          obj.metaPost(funcId, mfp);
       }
         break;
       default:
@@ -271,7 +276,7 @@ namespace qi {
       {
         try
         {
-          _object->disconnect(jt->second.localSignalLinkId);
+          _object.disconnect(jt->second.localSignalLinkId);
         }
         catch (const std::runtime_error& e)
         {
@@ -290,9 +295,12 @@ namespace qi {
   AnyValue ServiceBoundObject::property(const AnyValue& prop)
   {
     if (prop.kind() == TypeKind_String)
-      return _object->property<AnyValue>(prop.toString());
+      return _object.property<AnyValue>(prop.toString());
     else if (prop.kind() == TypeKind_Int)
-      return _object->type->property(_object->value, prop.toUInt());
+    { // missing accessor, go to bacend
+      GenericObject* go = _object.get();
+      return go->type->property(go->value, prop.toUInt());
+    }
     else
       throw std::runtime_error("Expected int or string for property index");
   }
@@ -301,9 +309,12 @@ namespace qi {
   {
     qi::Future<void> result;
     if (prop.kind() == TypeKind_String)
-      result = _object->setProperty(prop.toString(), val);
+      result = _object.setProperty(prop.toString(), val);
     else if (prop.kind() == TypeKind_Int)
-      result = _object->type->setProperty(_object->value, prop.toUInt(), val);
+    {
+      GenericObject* go = _object.get();
+      result = go->type->setProperty(go->value, prop.toUInt(), val);
+    }
     else
       throw std::runtime_error("Expected int or string for property index");
     if (!result.isFinished())
@@ -316,7 +327,7 @@ namespace qi {
   {
     // FIXME implement
     std::vector<std::string> res;
-    const MetaObject& mo = _object->metaObject();
+    const MetaObject& mo = _object.metaObject();
     MetaObject::PropertyMap map = mo.propertyMap();
     for (MetaObject::PropertyMap::iterator it = map.begin(); it != map.end(); ++it)
       res.push_back(it->second.name());

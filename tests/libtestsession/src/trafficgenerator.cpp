@@ -101,7 +101,7 @@ void __chaosThread(void *data)
       nbCalls = rand() % 50 + 1;
 
       // #2.2.2 Call method.
-      std::string pong = proxy->call<std::string>(methodToCall);
+      std::string pong = proxy.call<std::string>(methodToCall);
 
       // #2.2.3 Sleep a random time between 0 and 9ms.
       qi::os::msleep(rand() % 10);

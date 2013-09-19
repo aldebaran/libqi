@@ -120,7 +120,7 @@ namespace qi { namespace py {
         {
           GILScopedUnlock _unlock;
           //no need to store a ptr on ourself. (this exist if the callback is triggered)
-          f = _obj->connect(_sigid, qi::AnyFunction::fromDynamicFunction(boost::bind(pysignalCb, _1, obj)));
+          f = _obj.connect(_sigid, qi::AnyFunction::fromDynamicFunction(boost::bind(pysignalCb, _1, obj)));
         }
         return toPyFutureAsync(f, _async);
       }
@@ -129,7 +129,7 @@ namespace qi { namespace py {
         qi::Future<void> f;
         {
           GILScopedUnlock _unlock;
-          f = _obj->disconnect(id);
+          f = _obj.disconnect(id);
         }
         return toPyFutureAsync(f, _async);
       }
@@ -138,7 +138,7 @@ namespace qi { namespace py {
       //the python wrapper add a __call__ method bound to this one. (see qi/__init__.py)
       void trig(boost::python::tuple args, boost::python::dict kwargs) {
         GILScopedUnlock _unlock;
-        _obj->metaPost(_sigid, qi::AnyReference(args).asDynamic().asTupleValuePtr());
+        _obj.metaPost(_sigid, qi::AnyReference(args).asDynamic().asTupleValuePtr());
       }
 
     private:

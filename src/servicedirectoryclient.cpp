@@ -64,10 +64,10 @@ namespace qi {
     boost::function<void (unsigned int, std::string)> f;
 
     f = boost::bind<void>(&ServiceDirectoryClient::onServiceAdded, this, _1, _2);
-    qi::Future<SignalLink> fut1 = _object->connect("serviceAdded", f);
+    qi::Future<SignalLink> fut1 = _object.connect("serviceAdded", f);
 
     f = boost::bind<void>(&ServiceDirectoryClient::onServiceRemoved, this, _1, _2);
-    qi::Future<SignalLink> fut2 = _object->connect("serviceRemoved", f);
+    qi::Future<SignalLink> fut2 = _object.connect("serviceRemoved", f);
 
     fut1.connect(&ServiceDirectoryClient::onSDEventConnected, this, _1, promise, true);
     fut2.connect(&ServiceDirectoryClient::onSDEventConnected, this, _1, promise, false);
@@ -169,7 +169,7 @@ namespace qi {
     try {
       if (add != 0)
       {
-        _object->disconnect(add);
+        _object.disconnect(add);
       }
     } catch (std::runtime_error &e) {
       qiLogDebug() << "Cannot disconnect SDC::serviceAdded: " << e.what();
@@ -177,7 +177,7 @@ namespace qi {
     try {
       if (remove != 0)
       {
-        _object->disconnect(remove);
+        _object.disconnect(remove);
       }
     } catch (std::runtime_error &e) {
         qiLogDebug() << "Cannot disconnect SDC::serviceRemoved: " << e.what();
@@ -185,27 +185,27 @@ namespace qi {
   }
 
   qi::Future< std::vector<ServiceInfo> > ServiceDirectoryClient::services() {
-    return _object->call< std::vector<ServiceInfo> >("services");
+    return _object.call< std::vector<ServiceInfo> >("services");
   }
 
   qi::Future<ServiceInfo>              ServiceDirectoryClient::service(const std::string &name) {
-    return _object->call< ServiceInfo >("service", name);
+    return _object.call< ServiceInfo >("service", name);
   }
 
   qi::Future<unsigned int>             ServiceDirectoryClient::registerService(const ServiceInfo &svcinfo) {
-    return _object->call< unsigned int >("registerService", svcinfo);
+    return _object.call< unsigned int >("registerService", svcinfo);
   }
 
   qi::Future<void>                     ServiceDirectoryClient::unregisterService(const unsigned int &idx) {
-    return _object->call<void>("unregisterService", idx);
+    return _object.call<void>("unregisterService", idx);
   }
 
   qi::Future<void>                     ServiceDirectoryClient::serviceReady(const unsigned int &idx) {
-    return _object->call<void>("serviceReady", idx);
+    return _object.call<void>("serviceReady", idx);
   }
 
   qi::Future<void>                     ServiceDirectoryClient::updateServiceInfo(const ServiceInfo &svcinfo) {
-    return _object->call<void>("updateServiceInfo", svcinfo);
+    return _object.call<void>("updateServiceInfo", svcinfo);
   }
 
 }
