@@ -614,7 +614,7 @@ namespace qi {
       h.index = id;
       h.func = fct;
       LogInstance->logHandlers[name] = h;
-      setVerbosity(id, defaultLevel);
+      setVerbosity(defaultLevel, id);
       return id;
     }
 
@@ -842,27 +842,9 @@ namespace qi {
       }
     }
 
-    static void _setVerbosityInt(int v)
+    static void _setVerbosity(const std::string &verbosity)
     {
-      setVerbosity((qi::LogLevel)v);
-    }
-
-    static void _setVerbose(bool on)
-    {
-      if (on)
-        setVerbosity(LogLevel_Verbose);
-    }
-
-    static void _setDebug(bool on)
-    {
-      if (on)
-        setVerbosity(LogLevel_Debug);
-    }
-
-    static void _quiet(bool on)
-    {
-      if (on)
-        removeLogHandler("consoleloghandler");
+      setVerbosity(stringToLogLevel(verbosity.c_str()));
     }
 
     static void _setColor(const std::string &color)
@@ -873,6 +855,11 @@ namespace qi {
         setColor(LogColor_Never);
       else
         setColor(LogColor_Auto);
+    }
+
+    static void _setFilters(const std::string &filters)
+    {
+      setVerbosity(filters);
     }
 
     static const std::string contextLogOption = ""
@@ -903,16 +890,26 @@ namespace qi {
         " 6: debug\n"
         "Can be set with env var QI_LOG_LEVEL";
 
+    static const std::string filterLogOption = ""
+        "Set log filtering options.\n"
+
+        " Colon separated list of rules.\n"
+        " Each rule can be:\n"
+        "  - +CAT      : enable category CAT\n"
+        "  - -CAT      : disable category CAT\n"
+        "  - CAT=level : set category CAT to level\n"
+        " Each category can include a '*' for globbing.\n"
+        "Can be set with env var QI_LOG_FILTERS\n"
+        "Example: 'qi.*=debug:-qi.foo:+qi.foo.bar' (all qi.* logs in info, remove all qi.foo logs except qi.foo.bar)";
+
     _QI_COMMAND_LINE_OPTIONS(
       "Logging options",
-      ("qi-log-verbose", bool_switch()->notifier(&_setVerbose), "Set verbose verbosity.")
-      ("qi-log-debug", bool_switch()->notifier(&_setDebug), "Set debug verbosity.")
-      ("qi-log-quiet",  bool_switch()->notifier(&_quiet), "Do not show logs on console.")
-      ("qi-log-context", value<int>()->notifier(&setContext), contextLogOption.c_str())
+      ("qi-log-context",     value<int>()->notifier(&setContext), contextLogOption.c_str())
       ("qi-log-synchronous", bool_switch()->notifier(boost::bind(&setSynchronousLog, true)),  "Activate synchronous logs.")
-      ("qi-log-level", value<int>()->notifier(&_setVerbosityInt), levelLogOption.c_str())
-      ("qi-log-color", value<std::string>()->notifier(&_setColor), "Tell if we should put color or not in log (auto, always, never).")
-      )
+      ("qi-log-level",       value<std::string>()->notifier(&_setVerbosity), levelLogOption.c_str())
+      ("qi-log-color",       value<std::string>()->notifier(&_setColor), "Tell if we should put color or not in log (auto, always, never).")
+      ("qi-log-filters",     value<std::string>()->notifier(&_setFilters), filterLogOption.c_str())
+    )
 
     int process_env()
     {
