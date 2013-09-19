@@ -388,9 +388,12 @@ namespace qi {
         , context(context)
         , value(value)
       {}
+
       void visitUnknown(AnyReference value)
       {
-        qiLogError() << "Type " << value.type->infoString() <<" not serializable";
+        std::stringstream ss;
+        ss << "Type " << value.type->infoString() <<" not serializable";
+        throw std::runtime_error(ss.str());
       }
 
       void visitVoid()
@@ -411,8 +414,11 @@ namespace qi {
           case -4: out.write((uint32_t)value);break;
           case 8:  out.write((int64_t)value); break;
           case -8: out.write((uint64_t)value);break;
-          default:
-            qiLogError() << "Unknown integer type " << isSigned << " " << byteSize;
+          default: {
+            std::stringstream ss;
+            ss << "Unknown integer type " << isSigned << " " << byteSize;
+            throw std::runtime_error(ss.str());
+          }
         }
       }
 
@@ -422,8 +428,11 @@ namespace qi {
           out.write((float)value);
         else if (byteSize == 8)
           out.write((double)value);
-        else
-          qiLogError() << "serialize on unknown float type " << byteSize;
+        else {
+          std::stringstream ss;
+          ss << "serialize on unknown float type " << byteSize;
+          throw std::runtime_error(ss.str());
+        }
       }
 
       void visitString(char* data, size_t len)
@@ -461,7 +470,9 @@ namespace qi {
 
       void visitPointer(AnyReference pointee)
       {
-        qiLogError() << "Pointer serialization not implemented";
+        std::stringstream ss;
+        ss << "Pointer serialization not implemented";
+        throw std::runtime_error(ss.str());
       }
 
       void visitAnyObject(AnyObject& ptr)
@@ -496,7 +507,9 @@ namespace qi {
 
       void visitIterator(AnyReference)
       {
-        qiLogError() << "Type " << value.type->infoString() <<" not serializable";
+        std::stringstream ss;
+        ss << "Type " << value.type->infoString() <<" not serializable";
+        throw std::runtime_error(ss.str());
       }
 
       BinaryEncoder& out;
@@ -517,7 +530,9 @@ namespace qi {
 
       void visitUnknown(AnyReference)
       {
-        qiLogError() << "Type " << result.type->infoString() <<" not deserializable";
+        std::stringstream ss;
+        ss << "Type " << result.type->infoString() <<" not deserializable";
+        throw std::runtime_error(ss.str());
       }
 
       void visitVoid()
@@ -557,8 +572,11 @@ namespace qi {
         case -8: {
           uint64_t b; in.read(b); result.setUInt(b);
         } break;
-        default:
-          qiLogError() << "Unknown integer type " << isSigned << " " << byteSize;
+        default: {
+          std::stringstream ss;
+          ss << "Unknown integer type " << isSigned << " " << byteSize;
+          throw std::runtime_error(ss.str());
+        }
         }
       }
 
@@ -572,9 +590,11 @@ namespace qi {
           double t;
           in.read(t);
           result.setDouble(t);
+        } else {
+          std::stringstream ss;
+          ss << "Unknown float type " << byteSize;
+          throw std::runtime_error(ss.str());
         }
-        else
-          qiLogError() << "Unknown float type " << byteSize;
       }
 
       void visitString(char*, size_t)
@@ -639,12 +659,16 @@ namespace qi {
 
       void visitObject(GenericObject value)
       {
-        qiLogError() << "No signature deserializes to object";
+        std::stringstream ss;
+        ss << "No signature deserializes to object";
+        throw std::runtime_error(ss.str());
       }
 
       void visitPointer(AnyReference pointee)
       {
-        qiLogError() << " Pointer serialization not implemented";
+        std::stringstream ss;
+        ss << "Pointer serialization not implemented";
+        throw std::runtime_error(ss.str());
       }
 
       void visitTuple(const std::string &, const std::vector<AnyReference>&, const std::vector<std::string>&)
@@ -683,9 +707,9 @@ namespace qi {
         TypeInterface* type = TypeInterface::fromSignature(qi::Signature(sig));
         if (!type)
         {
-          qiLogError() << "Cannot find a type to deserialize signature " << sig << " within a dynamic value.";
-          result.destroy();
-          return;
+          std::stringstream ss;
+          ss << "Cannot find a type to deserialize signature " << sig << " within a dynamic value.";
+          throw std::runtime_error(ss.str());
         }
 
         DeserializeTypeVisitor dtv(*this);
@@ -696,7 +720,9 @@ namespace qi {
       }
       void visitIterator(AnyReference)
       {
-        qiLogError() << "Type " << result.type->infoString() <<" not deserializable";
+        std::stringstream ss;
+        ss << "Type " << result.type->infoString() <<" not deserializable";
+        throw std::runtime_error(ss.str());
       }
 
       void visitRaw(AnyReference)
@@ -710,12 +736,14 @@ namespace qi {
       DeserializeObjectCallback context;
     }; //class
 
-     void serialize(AnyReference val, BinaryEncoder& out, SerializeObjectCallback context)
+    void serialize(AnyReference val, BinaryEncoder& out, SerializeObjectCallback context)
     {
       details::SerializeTypeVisitor stv(out, context, val);
       qi::typeDispatch(stv, val);
       if (out.status() != BinaryEncoder::Status_Ok) {
-        qiLogError() << "OSerialization error " << BinaryEncoder::statusToStr(out.status());
+        std::stringstream ss;
+        ss << "OSerialization error " << BinaryEncoder::statusToStr(out.status());
+        throw std::runtime_error(ss.str());
       }
     }
 
@@ -725,7 +753,9 @@ namespace qi {
       dtv.result = what;
       qi::typeDispatch(dtv, dtv.result);
       if (in.status() != BinaryDecoder::Status_Ok) {
-        qiLogError() << "ISerialization error " << BinaryDecoder::statusToStr(in.status());
+        std::stringstream ss;
+        ss << "ISerialization error " << BinaryDecoder::statusToStr(in.status());
+        throw std::runtime_error(ss.str());
       }
       what = dtv.result;
     }
@@ -733,7 +763,12 @@ namespace qi {
     AnyReference deserialize(qi::TypeInterface *type, BinaryDecoder& in, DeserializeObjectCallback context)
     {
       AnyReference res(type);
-      deserialize(res, in, context);
+      try {
+        deserialize(res, in, context);
+      } catch (const std::runtime_error&) {
+        res.destroy();
+        throw;
+      }
       return res;
     }
 

@@ -35,6 +35,7 @@ namespace qi {
 
     /** Encode content of \p gvp into \p buf.
   * @param onObject callback invoked each time an object is encountered.
+  * @throw std::runtime_error when the encoding fail
   */
   QITYPE_API void encodeBinary(qi::Buffer *buf, const AutoAnyReference &gvp, SerializeObjectCallback onObject=SerializeObjectCallback());
 
@@ -43,6 +44,8 @@ namespace qi {
   * @param buf buffer with serialized data
   * @param gvp initialized AnyReference of correct type. Will be filled in.
   * @param onObject callback invoked each time an object is encountered.
+  *
+  * @throw std::runtime_error when the decoding fail
   */
   QITYPE_API void decodeBinary(qi::BufferReader *buf, AnyReference gvp, DeserializeObjectCallback onObject=DeserializeObjectCallback());
 
