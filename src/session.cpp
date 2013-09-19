@@ -25,7 +25,6 @@ namespace qi {
 
   SessionPrivate::SessionPrivate(qi::Session *session)
     : _self(session)
-    , _id(qi::os::generateUuid())
     , _sdClient()
     , _serverObject(&_sdClient, session)
     , _serviceHandler(&_socketsCache, &_sdClient, &_serverObject)
@@ -107,7 +106,6 @@ namespace qi {
   Session::~Session()
   {
     close();
-    delete _p;
   }
 
 

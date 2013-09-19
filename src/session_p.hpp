@@ -33,7 +33,6 @@ namespace qi {
 
   public:
     Session               *_self;
-    const std::string      _id;
 
     //ServiceDirectoryClient have a transportsocket not belonging to transportsocketcache
     ServiceDirectoryClient _sdClient;

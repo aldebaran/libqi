@@ -23,6 +23,7 @@ namespace qi {
     , _dying(false)
     , _sdClient(sdClient)
     , _session(session)
+    , _id(qi::os::generateUuid())
   {
     _server.endpointsChanged.connect(boost::bind(&ObjectRegistrar::updateServiceInfo, this));
   }
@@ -46,7 +47,7 @@ namespace qi {
     si.setProcessId(qi::os::getpid());
     si.setMachineId(qi::os::getMachineId());
     si.setEndpoints(Server::endpoints());
-    si.setSessionId(_session->_p->_id);
+    si.setSessionId(_id);
 
     boost::mutex::scoped_lock sl(_servicesMutex);
     for (std::map<unsigned int, BoundService>::iterator it = _services.begin();
@@ -129,7 +130,7 @@ namespace qi {
     si.setProcessId(qi::os::getpid());
     si.setMachineId(qi::os::getMachineId());
     si.setEndpoints(Server::endpoints());
-    si.setSessionId(_session->_p->_id);
+    si.setSessionId(_id);
 
     long id = ++_registerServiceRequestIndex;
     {

@@ -11,7 +11,7 @@
 #include <qimessaging/serviceinfo.hpp>
 #include <qi/future.hpp>
 #include <qitype/anyobject.hpp>
-
+#include <boost/shared_ptr.hpp>
 #include <vector>
 #include <string>
 
@@ -67,10 +67,8 @@ namespace qi {
     // C4251
     qi::Signal<std::string>               disconnected;
 
-  public:
-    SessionPrivate      *_p;
   private:
-    QI_DISALLOW_COPY_AND_ASSIGN(Session);
+    boost::shared_ptr<SessionPrivate>    _p;
   };
 
 }
