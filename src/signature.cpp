@@ -84,8 +84,6 @@ namespace qi {
      * - comparison between integral types
      * - Weaker error score for deeper (in containers) struct.
      */
-    if (children().size() != b.children().size())
-      return 0;
     int error = 0;
     float childErr = 0.0f;
     static const char numeric[] = "bcCwWiIlLfd";
@@ -129,6 +127,8 @@ namespace qi {
     { // Container, list or map
       if (d != s)
         return 0; // Must be same container
+      if (children().size() != b.children().size())
+        return 0;
       SignatureVector::const_iterator its;
       SignatureVector::const_iterator itd;
       itd = b.children().begin();

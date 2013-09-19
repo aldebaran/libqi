@@ -283,6 +283,14 @@ TEST(TestSignature, SignatureSplitError) {
   EXPECT_NO_THROW(qi::signatureSplit("titi::s({i{is}})"));
 }
 
+TEST(TestSignature, IsCompatible) {
+  qi::Signature s("(s[m])");
+  EXPECT_EQ(s.isConvertibleTo("(si)"), 0.);
+  EXPECT_EQ(s.isConvertibleTo("(sf)"), 0.);
+  EXPECT_EQ(s.isConvertibleTo("(ss)"), 0.);
+  EXPECT_GT(s.isConvertibleTo("(sm)"), 0.);
+}
+
 TEST(TestSignature, SignatureSplit) {
   std::vector<std::string> sigInfo;
 
