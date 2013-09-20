@@ -119,8 +119,7 @@ TEST(QiSession, RegisterUnregisterSameSession)
         std::cout << "Call error:" << fut.error() << std::endl;
         continue;
       }
-      std::string ret = fut.value()->call<std::string>("reply", "plif");
-      std::cout << "ret:" << ret << std::endl;
+      fut.value()->call<std::string>("reply", "plif");
     }
     catch(const std::exception& e)
     {
