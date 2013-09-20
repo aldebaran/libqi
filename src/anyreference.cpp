@@ -438,7 +438,11 @@ namespace qi
       AnyIterator srcBegin = tsrc->begin(value);
       AnyIterator srcEnd = tsrc->end(value);
 
-      TypeInterface *pairType = (*result.end()).type;
+      std::vector<TypeInterface*> vectorValueType;
+      vectorValueType.push_back(static_cast<MapTypeInterface*>(targetType)->keyType());
+      vectorValueType.push_back(static_cast<MapTypeInterface*>(targetType)->elementType());
+
+      TypeInterface *pairType = makeTupleType(vectorValueType);
 
       while (srcBegin != srcEnd)
       {
