@@ -124,7 +124,7 @@ namespace qi {
       return false;
     if (!getExponent(exponent))
     {
-      if (*_it != '.')
+      if (_it == _end || *_it != '.')
       {
         _it = save;
         return false;
