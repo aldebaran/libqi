@@ -123,10 +123,13 @@ namespace qi {
     inline virtual void registerType();
 
     inline AnyObject object(T* ptr, boost::function<void (GenericObject*)> onDestroy = boost::function<void (GenericObject*)>());
-
   };
 }
 
 #include <qitype/details/objecttypebuilder.hxx>
+
+QI_REGISTER_TEMPLATE_OBJECT(qi::Future    , _connect, isFinished, value, wait, isRunning, isCanceled, hasError, error);
+QI_REGISTER_TEMPLATE_OBJECT(qi::FutureSync, _connect, isFinished, value, wait, isRunning, isCanceled, hasError, error, async);
+
 
 #endif  // _QITYPE_OBJECTTYPEBUILDER_HPP_

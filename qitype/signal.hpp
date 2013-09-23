@@ -31,10 +31,6 @@ namespace qi {
   class SignalSubscriber;
   class EventLoop;
 
-
-  class GenericObject;
-  typedef boost::shared_ptr<GenericObject> AnyObject;
-  typedef boost::weak_ptr<GenericObject> ObjectWeakPtr;
   class SignalBasePrivate;
 
   typedef qi::uint64_t SignalLink;
@@ -157,8 +153,8 @@ template<QI_SIGNAL_TEMPLATE_DECL> class Signal;
    QI_GEN(genConnect)
    #undef genConnect
 
-   SignalSubscriber& connect(AnyObject obj, unsigned int slot);
-   SignalSubscriber& connect(AnyObject obj, const std::string& slot);
+   SignalSubscriber& connect(const AnyObject &obj, unsigned int slot);
+   SignalSubscriber& connect(const AnyObject &obj, const std::string& slot);
 #endif
   };
 
@@ -211,7 +207,7 @@ template<
 
 
    SignalSubscriber(AnyFunction func, MetaCallType callType = MetaCallType_Auto);
-   SignalSubscriber(qi::AnyObject target, unsigned int method);
+   SignalSubscriber(const AnyObject& target, unsigned int method);
 
    SignalSubscriber(const SignalSubscriber& b);
 
@@ -250,7 +246,7 @@ template<
    MetaCallType      threadingModel;
 
    //  Mode 2: metaCall
-   ObjectWeakPtr*    target;
+   AnyWeakObject*    target;
    unsigned int      method;
 
    boost::mutex      mutex;

@@ -39,7 +39,7 @@ void call_samethread(qi::AnyObject obj, qi::Promise<bool> res,
 {
   if (!tid)
     tid = new TID(boost::this_thread::get_id());
-  res.setValue(obj->call<bool>("sameThread", (unsigned long)tid));
+  res.setValue(obj.call<bool>("sameThread", (unsigned long)tid));
 }
 
 // Calls the sameThread method in givent event loop.
@@ -55,7 +55,7 @@ void fire_samethread(qi::AnyObject obj, void* tid)
 {
   if (!tid)
     tid = new TID(boost::this_thread::get_id());
-  obj->post("fire", (unsigned long) tid);
+  obj.post("fire", (unsigned long) tid);
 }
 
 // Fire sameThread in given event loop
@@ -111,7 +111,7 @@ qi::AnyObject makeStaticObjWithThreadModel(EventObject &obj, qi::ObjectThreading
   ob.advertiseMethod("delaymsFast", &EventObject::delayms, qi::MetaCallType_Direct);
   ob.advertiseSignal("fire", &EventObject::fire);
   ob.setThreadingModel(model);
-  qi::AnyObject res = ob.object(&obj);
+  qi::AnyObject res = ob.object(&obj, &qi::AnyObject::deleteGenericObjectOnly);
   return res;
 }
 
@@ -120,7 +120,7 @@ TEST(TestEventLoop, Basic)
   void* mainId = new TID(boost::this_thread::get_id());
   qi::AnyObject o1 = makeDynamicObj();
   // Call is synchronous, no reason not to
-  ASSERT_TRUE(o1->call<bool>("sameThread", (unsigned long)mainId));
+  ASSERT_TRUE(o1.call<bool>("sameThread", (unsigned long)mainId));
   // FIXME more!
 }
 
@@ -128,8 +128,8 @@ TEST(TestEventLoop, Event)
 {
   unsigned long mainId = (unsigned long)(void*)new TID(boost::this_thread::get_id());
   qi::AnyObject o1 = makeDynamicObj();
-  qi::SignalLink link = o1->connect("fire", &vSameThread);
-  o1->post("fire", mainId);
+  qi::SignalLink link = o1.connect("fire", &vSameThread);
+  o1.post("fire", mainId);
   ASSERT_TRUE(result.future().wait(3000) != qi::FutureState_Running);
   ASSERT_TRUE(result.future().value());
   result.reset();
@@ -137,8 +137,8 @@ TEST(TestEventLoop, Event)
   ASSERT_TRUE(result.future().wait(3000) != qi::FutureState_Running);
   ASSERT_TRUE(result.future().value());
   result.reset();
-  o1->disconnect(link);
-  link = o1->connect("fire", &vSameThread, qi::MetaCallType_Queued);
+  o1.disconnect(link);
+  link = o1.connect("fire", &vSameThread, qi::MetaCallType_Queued);
   fireSameThreadIn(o1, qi::getDefaultObjectEventLoop(), 0);
   ASSERT_TRUE(result.future().wait(3000) != qi::FutureState_Running);
   ASSERT_FALSE(result.future().value());
@@ -152,8 +152,8 @@ TEST(TestThreadModel, notThreadSafe)
   ASSERT_TRUE(callSameThreadIn(o1, qi::getDefaultObjectEventLoop(),
     0));
   qi::int64_t start = qi::os::ustime();
-  qi::Future<void> f1 = o1->call<void>("delayms", 150);
-  o1->call<void>("delayms", 150).wait();
+  qi::Future<void> f1 = o1.call<void>("delayms", 150);
+  o1.call<void>("delayms", 150).wait();
   f1.wait();
   // we expect >300ms result, take 10% marging to take into acount
   // timer granularity and sleep duration inprecision.
@@ -167,8 +167,8 @@ TEST(TestThreadModel, ThreadSafe)
   ASSERT_TRUE(callSameThreadIn(o1, qi::getDefaultObjectEventLoop(),
     0));
   qi::int64_t start = qi::os::ustime();
-  qi::Future<void> f1 = o1->call<void>("delaymsThreadSafe", 150);
-  o1->call<void>("delaymsThreadSafe", 150).wait();
+  qi::Future<void> f1 = o1.call<void>("delaymsThreadSafe", 150);
+  o1.call<void>("delaymsThreadSafe", 150).wait();
   f1.wait();
   ASSERT_LT(qi::os::ustime() - start, 270000);
 }
@@ -177,18 +177,18 @@ TEST(TestThreadModel, MethodModel)
 {
   qi::AnyObject o1 = makeDynamicObjWithThreadModel(qi::ObjectThreadingModel_SingleThread);
   qi::int64_t start = qi::os::ustime();
-  qi::Future<void> f1 = o1->call<void>("delaymsThreadSafe", 150);
+  qi::Future<void> f1 = o1.call<void>("delaymsThreadSafe", 150);
   ASSERT_LT(qi::os::ustime() - start, 100000);
   f1.wait();
   start = qi::os::ustime();
   // fast method->synchronous call
-  f1 = o1->call<void>("delaymsFast", 150);
+  f1 = o1.call<void>("delaymsFast", 150);
   ASSERT_GT(qi::os::ustime() - start, 100000);
   ASSERT_TRUE(f1.isFinished());
   // Thread-safe method: parallel call
   start = qi::os::ustime();
-  f1 = o1->call<void>("delaymsThreadSafe", 150);
-  o1->call<void>("delaymsThreadSafe", 150).wait();
+  f1 = o1.call<void>("delaymsThreadSafe", 150);
+  o1.call<void>("delaymsThreadSafe", 150).wait();
   f1.wait();
   ASSERT_LT(qi::os::ustime() - start, 270000);
 }
@@ -201,8 +201,8 @@ TEST(TestThreadModelStatic, notThreadSafeObjectStatic)
   ASSERT_TRUE(callSameThreadIn(o1, qi::getDefaultObjectEventLoop(),
     0));
   qi::int64_t start = qi::os::ustime();
-  qi::Future<void> f1 = o1->call<void>("delayms", 150);
-  o1->call<void>("delayms", 150).wait();
+  qi::Future<void> f1 = o1.call<void>("delayms", 150);
+  o1.call<void>("delayms", 150).wait();
   f1.wait();
   // we expect >300ms result, take 10% marging to take into acount
   // timer granularity and sleep duration inprecision.
@@ -217,8 +217,8 @@ TEST(TestThreadModelStatic, ThreadSafe)
   ASSERT_TRUE(callSameThreadIn(o1, qi::getDefaultObjectEventLoop(),
     0));
   qi::int64_t start = qi::os::ustime();
-  qi::Future<void> f1 = o1->call<void>("delaymsThreadSafe", 150);
-  o1->call<void>("delaymsThreadSafe", 150).wait();
+  qi::Future<void> f1 = o1.call<void>("delaymsThreadSafe", 150);
+  o1.call<void>("delaymsThreadSafe", 150).wait();
   f1.wait();
   ASSERT_LT(qi::os::ustime() - start, 270000);
 }
@@ -228,18 +228,18 @@ TEST(TestThreadModelStatic, MethodModel)
   EventObject e;
   qi::AnyObject o1 = makeStaticObjWithThreadModel(e, qi::ObjectThreadingModel_SingleThread);
   qi::int64_t start = qi::os::ustime();
-  qi::Future<void> f1 = o1->call<void>("delaymsThreadSafe", 150);
+  qi::Future<void> f1 = o1.call<void>("delaymsThreadSafe", 150);
   ASSERT_LT(qi::os::ustime() - start, 100000);
   f1.wait();
   start = qi::os::ustime();
   // fast method->synchronous call
-  f1 = o1->call<void>("delaymsFast", 150);
+  f1 = o1.call<void>("delaymsFast", 150);
   ASSERT_GT(qi::os::ustime() - start, 100000);
   ASSERT_TRUE(f1.isFinished());
   // Thread-safe method: parallel call
   start = qi::os::ustime();
-  f1 = o1->call<void>("delaymsThreadSafe", 150);
-  o1->call<void>("delaymsThreadSafe", 150).wait();
+  f1 = o1.call<void>("delaymsThreadSafe", 150);
+  o1.call<void>("delaymsThreadSafe", 150).wait();
   f1.wait();
   ASSERT_LT(qi::os::ustime() - start, 270000);
 }

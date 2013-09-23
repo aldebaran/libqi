@@ -39,6 +39,9 @@ namespace qi
 
   std::pair<AnyReference, bool> AnyReference::convert(DynamicTypeInterface* targetType) const
   {
+    // same-type check (not done before, useful mainly for AnyObject)
+    if (targetType->info() == type->info())
+      return std::make_pair(*this, false);
     AnyReference result;
 
     result.type = targetType;
@@ -77,7 +80,7 @@ namespace qi
       {
         qiLogDebug() << "Attempting object->proxy conversion";
         // try object->proxy conversion by simply rewrapping this
-        AnyObject o(
+        detail::ManagedObjectPtr o(
               new GenericObject(
                 static_cast<ObjectTypeInterface*>(pointedSrc.type),
                 pointedSrc.value),
@@ -549,12 +552,11 @@ namespace qi
       // Keep a copy of this in AnyObject, and destroy on AnyObject destruction
       // That way if this is a shared_ptr, we link to it correctly
       PointerTypeInterface* pT = static_cast<PointerTypeInterface*>(type);
-      AnyObject o(
-            new GenericObject(
+      AnyObject obj(new GenericObject(
               static_cast<ObjectTypeInterface*>(pT->pointedType()),
               pT->dereference(value).value),
-            boost::bind(dropIt, _1, AnyValue(*this)));
-      return std::make_pair(AnyReference(o).clone(), true);
+             boost::bind(&AnyObject::deleteGenericObjectOnlyAndKeep<AnyValue>, _1, AnyValue(*this)));
+      return std::make_pair(AnyReference(obj).clone(), true);
     }
 
     if (type->info() == typeOf<AnyObject>()->info()
@@ -699,6 +701,7 @@ namespace qi
     case TypeKind_Raw:
     case TypeKind_Unknown:
     case TypeKind_Iterator:
+    case TypeKind_Function:
       return a.value < b.value;
     }
 #undef GET

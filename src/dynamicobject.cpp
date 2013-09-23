@@ -222,7 +222,7 @@ namespace qi
     else
       p.push_back(AnyReference(this));
     p.insert(p.end(), params.begin(), params.end());
-    return ::qi::metaCall(context->eventLoop(), _p->threadingModel,
+    return ::qi::metaCall(context.eventLoop(), _p->threadingModel,
       i->second.second, callType, context, method, i->second.first, p);
   }
 
@@ -253,7 +253,7 @@ namespace qi
     ref.destroy();
   }
 
-  void DynamicObject::metaPost(AnyObject   context, unsigned int event, const GenericFunctionParameters& params)
+  void DynamicObject::metaPost(AnyObject context, unsigned int event, const GenericFunctionParameters& params)
   {
     SignalBase * s = _p->createSignal(event);
     if (s)
@@ -345,12 +345,12 @@ namespace qi
                       AnyFunction& func
                       )
     {
-      bool stats = context && context->isStatsEnabled();
-      bool trace = context && context->isTraceEnabled();
+      bool stats = context && context.isStatsEnabled();
+      bool trace = context && context.isTraceEnabled();
       int tid = 0; // trace call id, reused for result sending
       if (trace)
       {
-        tid = context->_nextTraceId();
+        tid = context.get()->_nextTraceId();
         qi::os::timeval tv;
         qi::os::gettimeofday(&tv);
         std::vector<AnyValue> args;
@@ -377,7 +377,7 @@ namespace qi
             }
           }
         }
-        context->traceObject(EventTrace(
+        context.get()->traceObject(EventTrace(
           tid, EventTrace::Event_Call, methodId, AnyValue::from(args), tv));
       }
 
@@ -390,7 +390,7 @@ namespace qi
       try
       {
         if (lock)
-          out.setValue(locked_call(func, params, context->mutex()));
+          out.setValue(locked_call(func, params, context.get()->mutex()));
         else
           out.setValue(func.call(params));
         success = true;
@@ -410,7 +410,7 @@ namespace qi
         cpuendtime.second -= cputime.second;
       }
       if (stats)
-        context->pushStats(methodId, (float)(qi::os::ustime() - time)/1e6f,
+        context.get()->pushStats(methodId, (float)(qi::os::ustime() - time)/1e6f,
                            (float)cpuendtime.first / 1e6f,
                            (float)cpuendtime.second / 1e6f);
       if (trace)
@@ -422,7 +422,7 @@ namespace qi
           val = out.future().value();
         else
           val = AnyValue::from(out.future().error());
-        context->traceObject(EventTrace(tid,
+        context.get()->traceObject(EventTrace(tid,
           success?EventTrace::Event_Result:EventTrace::Event_Error,
           methodId, val, tv, cpuendtime.first, cpuendtime.second));
       }
@@ -433,7 +433,8 @@ namespace qi
   {
   public:
     MFunctorCall(AnyFunction& func, GenericFunctionParameters& params,
-       qi::Promise<AnyReference>* out, bool noCloneFirst, AnyObject context, unsigned int methodId, bool lock)
+       qi::Promise<AnyReference>* out, bool noCloneFirst,
+       AnyObject context, unsigned int methodId, bool lock)
     : noCloneFirst(noCloneFirst)
     {
       this->out = out;
@@ -575,7 +576,7 @@ namespace qi
     delete obj;
   }
 
-  AnyObject     makeDynamicAnyObject(DynamicObject *obj, bool destroyObject,
+  AnyObject makeDynamicAnyObject(DynamicObject *obj, bool destroyObject,
     boost::function<void (GenericObject*)> onDelete)
   {
     AnyObject op;
@@ -589,11 +590,10 @@ namespace qi
 #endif
 
     if (destroyObject || onDelete)
-      op = AnyObject(new GenericObject(type, obj),
+      return AnyObject(new GenericObject(type, obj),
         boost::bind(&cleanupDynamicObject, _1, destroyObject, onDelete));
     else
-      op = AnyObject(new GenericObject(type, obj));
-    return op;
+      return AnyObject(new GenericObject(type, obj), &AnyObject::deleteGenericObjectOnly);
   }
 
 }

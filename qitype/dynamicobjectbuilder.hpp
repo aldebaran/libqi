@@ -9,6 +9,7 @@
 
 #include <qitype/api.hpp>
 #include <qitype/anyobject.hpp>
+#include <qitype/property.hpp>
 
 namespace qi {
 

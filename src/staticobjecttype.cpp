@@ -37,7 +37,7 @@ StaticObjectTypeBase::metaCall(void* instance, AnyObject context, unsigned int m
     return qi::makeFutureError<AnyReference>("No such method");
   }
 
-  EventLoop* el = context->eventLoop();
+  EventLoop* el = context.eventLoop();
   MetaCallType methodThreadingModel = i->second.second;
 
   AnyFunction method = i->second.first;

@@ -455,8 +455,8 @@ namespace qi {
       void visitObject(GenericObject value)
       {
         // No refcount, user called us with some kind of Object, not AnyObject
-        AnyObject o(new GenericObject(value));
-        visitAnyObject(o);
+        AnyObject ao(&value, &AnyObject::noDelete);
+        visitAnyObject(ao);
       }
 
       void visitPointer(AnyReference pointee)

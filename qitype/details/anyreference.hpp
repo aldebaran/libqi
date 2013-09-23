@@ -133,7 +133,7 @@ namespace qi {
     template<typename K, typename V>
     std::map<K, V> toMap() const;
 
-    AnyObject    toObject() const;
+    AnyObject  toObject() const;
 
     /** Convert the value to a tuple.
    * If value is currently a tuple, it will be returned.

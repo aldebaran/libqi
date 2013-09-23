@@ -33,7 +33,7 @@ namespace qi
 
     DynamicObject* _object;
     bool           _deleteOnDestroy;
-    qi::AnyObject  _objptr;
+    AnyObject      _objptr;
   };
 
   DynamicObjectBuilder::DynamicObjectBuilder()

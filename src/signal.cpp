@@ -19,8 +19,11 @@ qiLogCategory("qitype.signal");
 
 namespace qi {
 
-  SignalSubscriber::SignalSubscriber(qi::AnyObject target, unsigned int method)
-  : threadingModel(MetaCallType_Direct),  target(new qi::ObjectWeakPtr(target)), method(method), enabled(true)
+  SignalSubscriber::SignalSubscriber(const AnyObject& target, unsigned int method)
+  : threadingModel(MetaCallType_Direct)
+  , target(new AnyWeakObject(target))
+  , method(method)
+  , enabled(true)
   { // The slot has its own threading model: be synchronous
   }
 
@@ -48,7 +51,7 @@ namespace qi {
     linkId = b.linkId;
     handler = b.handler;
     threadingModel = b.threadingModel;
-    target = b.target?new ObjectWeakPtr(*b.target):0;
+    target = b.target?new AnyWeakObject(*b.target):0;
     method = b.method;
     enabled = b.enabled;
   }
@@ -267,7 +270,7 @@ namespace qi {
         source->disconnect(linkId);
       }
       else // no need to keep anything locked, whatever happens this is not used
-        lockedTarget->metaPost(method, args);
+        lockedTarget.metaPost(method, args);
     }
   }
 
@@ -323,7 +326,7 @@ namespace qi {
     }
   }
 
-  SignalSubscriber& SignalBase::connect(qi::AnyObject o, unsigned int slot)
+  SignalSubscriber& SignalBase::connect(AnyObject o, unsigned int slot)
   {
     return connect(SignalSubscriber(o, slot));
   }
@@ -359,7 +362,7 @@ namespace qi {
         qiLogVerbose() << "connecting a dead slot (weak ptr out)";
         return invalid;
       }
-      const MetaMethod* ms = locked->metaObject().method(src.method);
+      const MetaMethod* ms = locked.metaObject().method(src.method);
       if (!ms)
       {
         qiLogWarning() << "Method " << src.method <<" not found, proceeding anyway";
@@ -536,7 +539,7 @@ namespace qi {
 
   SignalSubscriber& SignalBase::connect(AnyObject obj, const std::string& slot)
   {
-    const MetaObject& mo = obj->metaObject();
+    const MetaObject& mo = obj.metaObject();
     const MetaSignal* sig = mo.signal(slot);
     if (sig)
       return connect(SignalSubscriber(obj, sig->uid()));

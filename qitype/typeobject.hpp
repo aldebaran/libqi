@@ -13,9 +13,6 @@
 
 namespace qi {
 
-  class GenericObject;
-  typedef boost::shared_ptr<GenericObject> AnyObject;
-
   /** Specifies how a call should be made.
    *  Can be used at both call-site, and callback-registration site.
    */

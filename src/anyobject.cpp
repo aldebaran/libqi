@@ -5,6 +5,7 @@
 #include <iostream>
 
 #include <qitype/anyobject.hpp>
+#include <qitype/objecttypebuilder.hpp>
 #include "staticobjecttype.hpp"
 #include "anyobject_p.hpp"
 #include "metaobject_p.hpp" // for generateErrorString

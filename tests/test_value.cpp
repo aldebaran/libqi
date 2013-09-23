@@ -165,18 +165,22 @@ static void nothing(GenericObject*) {triggered = true;}
 TEST(Value, AnyObject)
 {
   {
-    qi::GenericObject go(0, 0);
     // GenericObject uses intrusive refcount and must be valid
-    AnyObject o(&go, &nothing);
-    ASSERT_TRUE(o);
-    ASSERT_TRUE(o.get() != 0);
-    AnyReference v = AnyReference(o);
+    // Also object does some typechecking
+    qi::DynamicObjectBuilder dynBuild;
+    qi::AnyObject ori = dynBuild.object(&nothing);
+    qi::GenericObject& go = *ori.get();
+
+    AnyReference v = AnyReference(ori);
+    qi::detail::ManagedObjectPtr mo = v.to<qi::detail::ManagedObjectPtr>();
+    ASSERT_TRUE(mo);
+    ASSERT_EQ(mo.get(), &go);
     qi::AnyObject out = v.to<AnyObject>();
     ASSERT_TRUE(out);
-    ASSERT_EQ(o.get(), out.get());
+    ASSERT_TRUE(out == ori);
     out = v.toObject();
     ASSERT_TRUE(out);
-    ASSERT_EQ(o.get(), out.get());
+    ASSERT_EQ(out.get(), mo.get());
   }
   ASSERT_TRUE(triggered);
 }

@@ -10,6 +10,7 @@
 #include <qi/future.hpp>
 #include <qi/application.hpp>
 #include <qitype/anyobject.hpp>
+#include <qitype/objecttypebuilder.hpp>
 
 qiLogCategory("test");
 
@@ -201,16 +202,16 @@ TEST(TestSignal, SignalNBind)
   int res = 0;
   boost::shared_ptr<SigHolder> so(new SigHolder);
   qi::AnyObject op = qi::AnyReference(so).to<qi::AnyObject>();
-  qi::details::printMetaObject(std::cerr, op->metaObject());
-  op->connect("s1", (boost::function<void(int)>)boost::bind<void>(&lol, _1, boost::ref(res)));
-  op->post("s1", 2);
+  qi::details::printMetaObject(std::cerr, op.metaObject());
+  op.connect("s1", (boost::function<void(int)>)boost::bind<void>(&lol, _1, boost::ref(res)));
+  op.post("s1", 2);
   for (unsigned i=0; i<30 && res!=2; ++i) qi::os::msleep(10);
   ASSERT_EQ(2, res);
   so->s1(3);
   for (unsigned i=0; i<30 && res!=3; ++i) qi::os::msleep(10);
   ASSERT_EQ(3, res);
   so->s0.connect( boost::bind<void>(&lol, 42, boost::ref(res)));
-  op->post("s0");
+  op.post("s0");
   for (unsigned i=0; i<30 && res!=42; ++i) qi::os::msleep(10);
   ASSERT_EQ(42, res);
 }

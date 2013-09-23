@@ -11,12 +11,400 @@
 #include <qitype/typeinterface.hpp>
 #include <qitype/typeobject.hpp>
 #include <qitype/details/typeimpl.hxx>
-#include <qitype/objecttypebuilder.hpp>
-
-QI_REGISTER_TEMPLATE_OBJECT(qi::Future    , _connect, isFinished, value, wait, isRunning, isCanceled, hasError, error);
-QI_REGISTER_TEMPLATE_OBJECT(qi::FutureSync, _connect, isFinished, value, wait, isRunning, isCanceled, hasError, error, async);
 
 namespace qi {
+
+  namespace detail {
+  // bounce to a genericobject obtained by (O*)this->asAnyObject()
+    /* Everything need to be const:
+    *  anyobj.call bounces to anyobj.asObject().call, and the
+    * second would work on const object
+    */
+    template<typename O> class GenericObjectBounce
+    {
+    public:
+      const MetaObject &metaObject() const { return go()->metaObject();}
+      inline qi::Future<AnyReference> metaCall(unsigned int method, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto) const
+      {
+        return go()->metaCall(method, params, callType);
+      }
+      inline unsigned int findMethod(const std::string& name, const GenericFunctionParameters& parameters) const
+      {
+        return go()->findMethod(name, parameters);
+      }
+      inline qi::Future<AnyReference> metaCall(const std::string &nameWithOptionalSignature, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto) const
+      {
+        return go()->metaCall(nameWithOptionalSignature, params, callType);
+      }
+      inline void metaPost(unsigned int event, const GenericFunctionParameters& params) const
+      {
+        return go()->metaPost(event, params);
+      }
+      inline void metaPost(const std::string &nameWithOptionalSignature, const GenericFunctionParameters &in) const
+      {
+        return go()->metaPost(nameWithOptionalSignature, in);
+      }
+      inline void post(const std::string& eventName,
+        qi::AutoAnyReference p1 = qi::AutoAnyReference(),
+        qi::AutoAnyReference p2 = qi::AutoAnyReference(),
+        qi::AutoAnyReference p3 = qi::AutoAnyReference(),
+        qi::AutoAnyReference p4 = qi::AutoAnyReference(),
+        qi::AutoAnyReference p5 = qi::AutoAnyReference(),
+        qi::AutoAnyReference p6 = qi::AutoAnyReference(),
+        qi::AutoAnyReference p7 = qi::AutoAnyReference(),
+        qi::AutoAnyReference p8 = qi::AutoAnyReference()) const
+      {
+        return go()->post(eventName, p1, p2, p3, p4, p5, p6, p7, p8);
+      }
+      template <typename FUNCTOR_TYPE>
+      inline qi::FutureSync<SignalLink> connect(const std::string& eventName, FUNCTOR_TYPE callback,
+        MetaCallType threadingModel = MetaCallType_Direct) const
+      {
+        return go()->connect(eventName, callback, threadingModel);
+      }
+      inline qi::FutureSync<SignalLink> connect(const std::string &name, const SignalSubscriber& functor) const
+      {
+        return go()->connect(name, functor);
+      }
+      inline qi::FutureSync<SignalLink> connect(unsigned int signal, const SignalSubscriber& subscriber) const
+      {
+        return go()->connect(signal, subscriber);
+      }
+      // Cannot inline here, AnyObject not fully declared
+      qi::FutureSync<SignalLink> connect(unsigned int signal, AnyObject target, unsigned int slot) const;
+      inline qi::FutureSync<void> disconnect(SignalLink linkId) const
+      {
+        return go()->disconnect(linkId);
+      }
+      template<typename T>
+      inline qi::FutureSync<T> property(const std::string& name) const
+      {
+        return go()->template property<T>(name);
+      }
+      template<typename T>
+      inline qi::FutureSync<void> setProperty(const std::string& name, const T& val) const
+      {
+        return go()->setProperty(name, val);
+      }
+      inline qi::FutureSync<AnyValue> property(unsigned int id) const
+      {
+        return go()->property(id);
+      }
+      inline qi::FutureSync<void> setProperty(unsigned int id, const AnyValue &val) const
+      {
+        return go()->setProperty(id, val);
+      }
+      inline EventLoop* eventLoop() const
+      {
+        return go()->eventLoop();
+      }
+      inline bool isStatsEnabled() const
+      {
+        return go()->isStatsEnabled();
+      }
+      inline void enableStats(bool enable) const
+      {
+        return go()->enableStats(enable);
+      }
+      inline ObjectStatistics stats() const
+      {
+        return go()->stats();
+      }
+      inline void clearStats() const
+      {
+        return go()->clearStats();
+      }
+      inline bool isTraceEnabled() const
+      {
+        return go()->isTraceEnabled();
+      }
+      inline void enableTrace(bool enable)
+      {
+        return go()->enableTrace(enable);
+      }
+      inline void forceEventLoop(qi::EventLoop* el)
+      {
+        return go()->forceEventLoop(el);
+      }
+      #define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)         \
+      template<typename R> qi::FutureSync<R> async(                     \
+        const std::string& methodName comma                              \
+        QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoAnyReference)) const {        \
+          return go()->template async<R>(methodName comma AUSE);         \
+        }                                                                \
+        template<typename R> qi::FutureSync<R> call(                     \
+        const std::string& methodName comma                              \
+        QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoAnyReference)) const {        \
+          return go()->template call<R>(methodName comma AUSE);          \
+        }                                                                \
+        template<typename R> qi::FutureSync<R> call(                     \
+          qi::MetaCallType callType,                                     \
+        const std::string& methodName comma                              \
+        QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoAnyReference)) const {        \
+          return go()->template call<R>(callType, methodName comma AUSE);\
+        }
+        QI_GEN(genCall)
+        #undef genCall
+    private:
+      inline GenericObject* go() const
+      {
+        return reinterpret_cast<const O*>(this)->get();
+      }
+    };
+  }
+
+  template<typename T> class Object<T, false>
+   : public detail::GenericObjectBounce<Object<T, false> >
+  {
+  public:
+    typedef typename boost::is_base_of<Proxy, T>::type isProxy;
+    Object();
+
+    Object(const Object<Empty>& o);
+    template<typename U> Object(const Object<U>& o);
+
+    Object(qi::Future<Object<Empty> > fobj);
+    Object(qi::FutureSync<Object<Empty> > fobj);
+
+    /// @{
+
+    /** This constructors take ownership of the underlying pointers.
+    * If a callback is given, it will be called instead of the default
+    * behavior of deleting the stored GenericObject and the underlying T object.
+    */
+
+    Object(GenericObject* go);
+    Object(T* ptr);
+    Object(GenericObject* go, boost::function<void(GenericObject*)> deleter);
+    Object(T* ptr, boost::function<void(T*)> deleter);
+
+    /// @}
+
+    bool operator <(const Object& b) const;
+    template<typename U> bool operator !=(const Object<U>& b) const;
+    template<typename U> bool operator ==(const Object<U>& b) const;
+    operator bool() const;
+    operator Object<Empty>() const;
+
+    T& asT();
+    T* operator ->();
+    const T* operator->() const;
+
+    T& operator *();
+    bool unique() const;
+    GenericObject* get() const;
+    void reset();
+    unsigned use_count() const { return _obj.use_count();}
+    // no-op deletor callback
+    static void noDeleteT(T*) {qiLogDebug("qi.object") << "AnyObject noop T deleter";}
+    static void noDelete(GenericObject*) {qiLogDebug("qi.object") << "AnyObject noop deleter";}
+    // deletor callback that deletes only the GenericObject and not the content
+    static void deleteGenericObjectOnly(GenericObject* obj) { qiLogDebug("qi.object") << "AnyObject GO deleter"; delete obj;}
+    template<typename U>
+    static void deleteGenericObjectOnlyAndKeep(GenericObject* obj, U) { qiLogDebug("qi.object") << "AnyObject GO-keep deleter";delete obj;}
+    static void deleteCustomDeleter(GenericObject* obj, boost::function<void(T*)> deleter)
+    {
+      qiLogDebug("qi.object") << "custom deleter";
+      deleter((T*)obj->value);
+      delete obj;
+    }
+  private:
+    friend class GenericObject;
+    friend class AnyWeakObject;
+    template <typename, bool> friend class Object;
+    Object(detail::ManagedObjectPtr obj)
+    {
+      init(obj);
+    }
+    void init(detail::ManagedObjectPtr obj);
+    static void deleteObject(GenericObject* obj)
+    {
+      qiLogCategory("qi.object");
+      qiLogDebug() << "deleteObject " << obj;
+      obj->type->destroy(obj->value);
+      delete obj;
+    }
+    /* Do not change this, Object<T> must be binary-equivalent to ManagedObjectPtr.
+    */
+    detail::ManagedObjectPtr _obj;
+  };
+
+  class AnyWeakObject: public boost::weak_ptr<GenericObject>
+  {
+  public:
+    AnyWeakObject() {}
+    template<typename T>
+    AnyWeakObject(const Object<T>& o)
+    : boost::weak_ptr<GenericObject>(o._obj) {}
+    AnyObject lock() { return AnyObject(boost::weak_ptr<GenericObject>::lock());}
+  };
+
+  template<typename T> inline Object<T, false>::Object() {}
+  template<typename T> inline Object<T, false>::Object(const Object<Empty>& o)
+  {
+    init(o._obj);
+  }
+  template<typename T> template<typename U>inline Object<T, false>::Object(const Object<U>& o)
+  {
+    init(o._obj);
+  }
+  template<typename T> inline Object<T, false>::Object(GenericObject* go)
+  {
+    init(detail::ManagedObjectPtr(go, &deleteObject));
+  }
+  template<typename T> inline Object<T, false>::Object(GenericObject* go, boost::function<void(GenericObject*)> deleter)
+  {
+    init(detail::ManagedObjectPtr(go, deleter));
+  }
+  template<typename T> inline Object<T, false>::Object(T* ptr)
+  {
+    TypeInterface* type = typeOf<T>();
+    if (type->kind() != TypeKind_Object)
+    {
+      // Try template
+      TemplateTypeInterface* t = dynamic_cast<TemplateTypeInterface*>(type);
+      if (t)
+        type = t->next();
+      if (type->kind() != TypeKind_Object)
+        throw std::runtime_error("Object<T> can only be used on registered object types.");
+    }
+    ObjectTypeInterface* otype = static_cast<ObjectTypeInterface*>(type);
+    _obj = detail::ManagedObjectPtr(new GenericObject(otype, ptr), &deleteObject);
+  }
+  template<typename T> inline Object<T, false>::Object(T* ptr, boost::function<void(T*)> deleter)
+  {
+    TypeInterface* type = typeOf<T>();
+    if (type->kind() != TypeKind_Object)
+    {
+      // Try template
+      TemplateTypeInterface* t = dynamic_cast<TemplateTypeInterface*>(type);
+      if (t)
+        type = t->next();
+      if (type->kind() != TypeKind_Object)
+        throw std::runtime_error("Object<T> can only be used on registered object types.");
+    }
+    ObjectTypeInterface* otype = static_cast<ObjectTypeInterface*>(type);
+    if (deleter)
+      _obj = detail::ManagedObjectPtr(new GenericObject(otype, ptr),
+        boost::bind(&Object::deleteCustomDeleter, _1, deleter));
+    else
+      _obj = detail::ManagedObjectPtr(new GenericObject(otype, ptr), &deleteObject);
+  }
+  template<typename T> inline Object<T, false>::Object(qi::Future<Object<Empty> > fobj)
+  {
+    init(fobj.value()._obj);
+  }
+  template<typename T> inline Object<T, false>::Object(qi::FutureSync<Object<Empty> > fobj)
+  {
+    init(fobj.value()._obj);
+  }
+
+  template<typename T> inline void Object<T, false>::init(detail::ManagedObjectPtr obj)
+  {
+    if (obj && obj->type->info() != typeOf<T>()->info() && !boost::is_same<T, Empty>::value)
+    {
+      throw std::runtime_error(
+        std::string("Object<T> constructed from a different AnyObject type ")
+        + obj->type->infoString()
+        + " "
+        + typeOf<T>()->infoString()
+        );
+    }
+    _obj = obj;
+  }
+  template<typename T> inline bool Object<T, false>::operator <(const Object& b) const { return _obj < b._obj;}
+  template<typename T> template<typename U> bool Object<T, false>::operator !=(const Object<U>& b) const
+  {
+    return !(*this ==b);
+  }
+  template<typename T> template<typename U> bool Object<T, false>::operator ==(const Object<U>& b) const
+  {
+    return get() == b.get();
+  }
+  template<typename T> Object<T, false>::operator bool() const   { return _obj && _obj->type;}
+
+  template<typename T> Object<T, false>::operator Object<Empty>() const { return Object<Empty>(_obj);}
+  template<typename T> T& Object<T, false>::asT()
+  {
+    return *reinterpret_cast<T*>(_obj->value);
+  }
+  template<typename T> T* Object<T, false>::operator ->()
+  {
+      return &asT();
+  }
+  template<typename T> const T* Object<T, false>::operator->() const
+  {
+    return &asT();
+  }
+  template<typename T> T& Object<T, false>::operator *()
+  {
+    return asT();
+  }
+  template<typename T> bool Object<T, false>::unique() const
+  {
+    return _obj.unique();
+  }
+  template<typename T> GenericObject* Object<T, false>::get() const
+  {
+    return _obj.get();
+  }
+  template<typename T> void Object<T, false>::reset()
+  {
+    _obj.reset();
+  }
+
+  class QITYPE_API Proxy
+  {
+  public:
+    Proxy(AnyObject obj) : _obj(obj) {}
+    Proxy() {}
+    Object<Empty> asObject() const;
+  protected:
+    Object<Empty> _obj;
+  };
+
+  template<typename T> class Object<T, true>
+  : public detail::GenericObjectBounce< Object<T, true> >
+  {
+  public:
+    Object() {}
+    Object(T* ptr)
+    : _proxy(*ptr)
+    {
+    }
+    Object(qi::Future<Object<Empty> > fobj)
+    : _proxy(fobj.value())
+    {
+    }
+    Object(qi::FutureSync<Object<Empty> > fobj)
+    : _proxy(fobj.value())
+    {
+    }
+    Object(detail::ManagedObjectPtr obj)
+    : _proxy(obj)
+    {
+    }
+
+    template<typename U>
+    Object(Object<U> obj)
+    : _proxy(obj._obj)
+    {
+    }
+    GenericObject* get() const { return _proxy.asObject().get();}
+    template<typename U>
+    bool operator <(const Object<U>& b) const { return get() < b.get();}
+    template<typename U>
+    bool operator ==(const Object<U>& b) const { return get() == b.get();}
+    template<typename U>
+    bool operator !=(const Object<U>& b) const { return get() != b.get();}
+
+    operator Object<Empty>() const { return _proxy.asObject();}
+    T* operator ->() { return &_proxy;}
+    T& operator *()  { return _proxy;}
+    operator bool() const   { return _proxy.asObject();}
+  private:
+    T _proxy;
+  };
 
   namespace detail
   {
@@ -32,7 +420,7 @@ namespace qi {
       ObjectTypeInterface* onext = dynamic_cast<ObjectTypeInterface*>(futureType->next());
       GenericObject gfut(onext, val.value);
       // Need a live shared_ptr for shared_from_this() to work.
-      AnyObject ao(&gfut, hold<GenericObject*>);
+      boost::shared_ptr<GenericObject> ao(&gfut, hold<GenericObject*>);
       if (gfut.call<bool>(MetaCallType_Direct, "hasError", 0))
       {
         promise.setError(gfut.call<std::string>("error", 0));
@@ -64,7 +452,7 @@ namespace qi {
         ObjectTypeInterface* onext = dynamic_cast<ObjectTypeInterface*>(next);
         GenericObject gfut(onext, val.value);
         // Need a live shared_ptr for shared_from_this() to work.
-        AnyObject ao(&gfut, &hold<GenericObject*>);
+        boost::shared_ptr<GenericObject> ao(&gfut, &hold<GenericObject*>);
         boost::function<void()> cb = boost::bind(futureAdapterGeneric<T>, val, promise);
         // Careful, gfut will die at the end of this block, but it is
         // stored in call data. So call must finish before we exit this block,
@@ -215,7 +603,7 @@ namespace qi {
       QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoAnyReference)) \
   {                                                              \
     AnyObject obj = AnyReference(instance).toObject();       \
-    qi::Future<R> res = obj->call<R>(MetaCallType_Queued, methodName comma AUSE);  \
+    qi::Future<R> res = obj.template call<R>(MetaCallType_Queued, methodName comma AUSE);  \
     res.connect(boost::bind(&detail::hold<AnyObject>, obj));   \
     return res;                                                 \
   }
@@ -229,7 +617,22 @@ namespace qi {
       QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoAnyReference)) \
   {                                                              \
     AnyObject obj = AnyReference(instance).toObject();        \
-    qi::Future<R> res =  obj->call<R>(MetaCallType_Queued, methodName comma AUSE);  \
+    qi::Future<R> res = obj.call<R>(MetaCallType_Queued, methodName comma AUSE);  \
+    res.connect(boost::bind(&detail::hold<AnyObject>, obj));   \
+    return res;                                                 \
+  }
+  QI_GEN(genCall)
+  #undef genCall
+  #undef pushi
+
+  #define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)         \
+  template<typename R,typename T> qi::FutureSync<R> async(   \
+      Object<T> instance,                             \
+      const std::string& methodName comma                         \
+      QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoAnyReference)) \
+  {                                                              \
+    AnyObject obj = instance;                                    \
+    qi::Future<R> res =  obj.call<R>(MetaCallType_Queued, methodName comma AUSE);  \
     res.connect(boost::bind(&detail::hold<AnyObject>, obj));   \
     return res;                                                 \
   }
@@ -260,13 +663,14 @@ namespace qi {
 
   /* An AnyObject is actually of a Dynamic type: The underlying TypeInterface*
    * is not allways the same.
+   * Override backend shared_ptr<GenericObject>
   */
-  template<> class QITYPE_API TypeImpl<AnyObject>: public DynamicTypeInterface
+  template<> class QITYPE_API TypeImpl<boost::shared_ptr<GenericObject> >: public DynamicTypeInterface
   {
   public:
     virtual AnyReference get(void* storage)
     {
-      AnyObject* val = (AnyObject*)ptrFromStorage(&storage);
+      detail::ManagedObjectPtr* val = (detail::ManagedObjectPtr*)ptrFromStorage(&storage);
       AnyReference result;
       if (!*val)
       {
@@ -280,15 +684,15 @@ namespace qi {
     virtual void set(void** storage, AnyReference source)
     {
       qiLogCategory("qitype.object");
-      AnyObject* val = (AnyObject*)ptrFromStorage(storage);
+      detail::ManagedObjectPtr* val = (detail::ManagedObjectPtr*)ptrFromStorage(storage);
       TemplateTypeInterface* templ = dynamic_cast<TemplateTypeInterface*>(source.type);
       if (templ)
         source.type = templ->next();
       if (source.type->info() == info())
       { // source is objectptr
-        AnyObject* src = (AnyObject*)source.type->ptrFromStorage(&source.value);
+        detail::ManagedObjectPtr* src = (detail::ManagedObjectPtr*)source.type->ptrFromStorage(&source.value);
         if (!*src)
-          qiLogWarning() << "NULL AnyObject";
+          qiLogWarning() << "NULL Object";
         *val = *src;
       }
       else if (source.kind() == TypeKind_Dynamic)
@@ -298,7 +702,7 @@ namespace qi {
       else if (source.kind() == TypeKind_Object)
       { // wrap object in objectptr: we do not keep it alive,
         // but source type offers no tracking capability
-        AnyObject op(new GenericObject(static_cast<ObjectTypeInterface*>(source.type), source.value));
+        detail::ManagedObjectPtr op(new GenericObject(static_cast<ObjectTypeInterface*>(source.type), source.value));
         *val = op;
       }
       else if (source.kind() == TypeKind_Pointer)
@@ -306,15 +710,22 @@ namespace qi {
         PointerTypeInterface* ptype = static_cast<PointerTypeInterface*>(source.type);
         // FIXME: find a way!
         if (ptype->pointerKind() == PointerTypeInterface::Shared)
-          qiLogInfo() << "AnyObject will *not* track original shared pointer";
+          qiLogInfo() << "Object will *not* track original shared pointer";
         set(storage, *source);
       }
       else
-        throw std::runtime_error((std::string)"Cannot assign non-object " + source.type->infoString() + " to AnyObject");
+        throw std::runtime_error((std::string)"Cannot assign non-object " + source.type->infoString() + " to Object");
 
     }
-    typedef DefaultTypeImplMethods<AnyObject> Methods;
+    typedef DefaultTypeImplMethods<detail::ManagedObjectPtr> Methods;
     _QI_BOUNCE_TYPE_METHODS(Methods);
+  };
+
+  // Pretend that Object<T> is exactly shared_ptr<GenericObject>
+  // Will be overriden for proxy objects below, for which this statement is false
+  // (because a proxy has members beside the shared_ptr: signals and events
+  template<typename T> class QITYPE_API TypeImpl<Object<T> >: public TypeImpl<boost::shared_ptr<GenericObject> >
+  {
   };
 
   namespace detail
@@ -350,11 +761,69 @@ namespace qi {
     */
 
     // create a T, wrap in a AnyObject
-    template<typename T> AnyObject constructObject()
+    template<typename T> Object<T> constructObject()
     {
-      return AnyReference::fromPtr(new T()).toObject();
+      return Object<T>(new T());
+    }
+  }
+
+
+    /* A proxy instance can have members: signals and properties.
+  * So it need a type of its own, we cannot pretend it's a AnyObject.
+  */
+  class TypeProxy: public ObjectTypeInterface
+  {
+  public:
+    TypeProxy()
+    {
+    }
+    virtual const MetaObject& metaObject(void* instance)
+    {
+      Proxy* ptr = static_cast<Proxy*>(instance);
+      return ptr->asObject().metaObject();
+    }
+    virtual qi::Future<AnyReference> metaCall(void* instance, AnyObject context, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto)
+    {
+      Proxy* ptr = static_cast<Proxy*>(instance);
+      return ptr->asObject().metaCall(method, params, callType);
+    }
+    virtual void metaPost(void* instance, AnyObject context, unsigned int signal, const GenericFunctionParameters& params)
+    {
+      Proxy* ptr = static_cast<Proxy*>(instance);
+      ptr->asObject().metaPost(signal, params);
+    }
+    virtual qi::Future<SignalLink> connect(void* instance, AnyObject context, unsigned int event, const SignalSubscriber& subscriber)
+    {
+      Proxy* ptr = static_cast<Proxy*>(instance);
+      return ptr->asObject().connect(event, subscriber);
+    }
+    virtual qi::Future<void> disconnect(void* instance, AnyObject context, SignalLink linkId)
+    {
+       Proxy* ptr = static_cast<Proxy*>(instance);
+       return ptr->asObject().disconnect(linkId);
+    }
+    virtual const std::vector<std::pair<TypeInterface*, int> >& parentTypes()
+    {
+      static std::vector<std::pair<TypeInterface*, int> > empty;
+      return empty;
+    }
+    virtual qi::Future<AnyValue> property(void* instance, unsigned int id)
+    {
+      Proxy* ptr = static_cast<Proxy*>(instance);
+      GenericObject* obj = ptr->asObject().get();
+      return obj->type->property(obj->value, id);
+    }
+    virtual qi::Future<void> setProperty(void* instance, unsigned int id, AnyValue value)
+    {
+      Proxy* ptr = static_cast<Proxy*>(instance);
+      GenericObject* obj = ptr->asObject().get();
+      return obj->type->setProperty(obj->value, id, value);
     }
 
+  };
+
+  namespace detail
+  {
     // in genericobjectbuilder.hxx
     template<typename T> AnyObject makeObject(const std::string& fname, T func);
 
@@ -366,198 +835,17 @@ namespace qi {
         boost::bind(&makeObject<T>, functionName, func);
     }
 
-    // bounce to a genericobject obtained by (O*)this->asAnyObject()
-    template<typename O> class GenericObjectBounce
+    template<typename O>
+    inline qi::FutureSync<SignalLink> GenericObjectBounce<O>::connect(unsigned int signal, AnyObject target, unsigned int slot) const
     {
-    public:
-      const MetaObject &metaObject() { return go()->metaObject();}
-      qi::Future<AnyReference> metaCall(unsigned int method, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto)
-      {
-        return go()->metaCall(method, params, callType);
-      }
-      unsigned int findMethod(const std::string& name, const GenericFunctionParameters& parameters)
-      {
-        return go()->findMethod(name, parameters);
-      }
-      qi::Future<AnyReference> metaCall(const std::string &nameWithOptionalSignature, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto)
-      {
-        return go()->metaCall(nameWithOptionalSignature, params, callType);
-      }
-      void metaPost(unsigned int event, const GenericFunctionParameters& params)
-      {
-        return go()->metaPost(event, params);
-      }
-      void metaPost(const std::string &nameWithOptionalSignature, const GenericFunctionParameters &in)
-      {
-        return go()->metaPost(nameWithOptionalSignature, in);
-      }
-      template <typename FUNCTOR_TYPE>
-      qi::FutureSync<SignalLink> connect(const std::string& eventName, FUNCTOR_TYPE callback,
-        MetaCallType threadingModel = MetaCallType_Direct)
-      {
-        return go()->connect(eventName, callback, threadingModel);
-      }
-      qi::FutureSync<SignalLink> connect(const std::string &name, const SignalSubscriber& functor)
-      {
-        return go()->connect(name, functor);
-      }
-      qi::FutureSync<SignalLink> connect(unsigned int signal, const SignalSubscriber& subscriber)
-      {
-        return go()->connect(signal, subscriber);
-      }
-      qi::FutureSync<SignalLink> connect(unsigned int signal, qi::AnyObject target, unsigned int slot)
-      {
-        return go()->connect(signal, target, slot);
-      }
-      qi::FutureSync<void> disconnect(SignalLink linkId)
-      {
-        return go()->disconnect(linkId);
-      }
-      template<typename T>
-      qi::FutureSync<T> property(const std::string& name)
-      {
-        return go()->template property<T>(name);
-      }
-      template<typename T>
-      qi::FutureSync<void> setProperty(const std::string& name, const T& val)
-      {
-        return go()->setProperty(name, val);
-      }
-      qi::FutureSync<AnyValue> property(unsigned int id)
-      {
-        return go()->property(id);
-      }
-      qi::FutureSync<void> setProperty(unsigned int id, const AnyValue &val)
-      {
-        return go()->setProperty(id, val);
-      }
-      #define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)         \
-      template<typename R> qi::FutureSync<R> async(                     \
-        const std::string& methodName comma                              \
-        QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoAnyReference)) {              \
-          return go()->template async<R>(methodName comma AUSE);         \
-        }                                                                \
-        template<typename R> qi::FutureSync<R> call(                     \
-        const std::string& methodName comma                              \
-        QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoAnyReference)) {              \
-          return go()->template call<R>(methodName comma AUSE);          \
-        }                                                                \
-        template<typename R> qi::FutureSync<R> call(                     \
-          qi::MetaCallType callType,                                     \
-        const std::string& methodName comma                              \
-        QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoAnyReference)) {              \
-          return go()->template call<R>(methodName, callType comma AUSE);\
-        }
-        QI_GEN(genCall)
-        #undef genCall
-    private:
-      GenericObject* go()
-      {
-        return reinterpret_cast<O*>(this)->asAnyObject().get();
-      }
-    };
+      return go()->connect(signal, target, slot);
+    }
   }
 
-  template<typename T> class Object<T, false>
-   : public detail::GenericObjectBounce<Object<T, false> >
+  inline AnyObject Proxy::asObject() const
   {
-  public:
-    Object() {}
-    Object(T* ptr)
-    {
-      TypeInterface* type = typeOf<T>();
-      if (type->kind() != TypeKind_Object)
-      {
-        // Try template
-        TemplateTypeInterface* t = dynamic_cast<TemplateTypeInterface*>(type);
-        if (t)
-          type = t->next();
-        if (type->kind() != TypeKind_Object)
-          throw std::runtime_error("Object<T> can only be used on registered object types.");
-      }
-      ObjectTypeInterface* otype = static_cast<ObjectTypeInterface*>(type);
-      _obj = AnyObject(new GenericObject(otype, ptr), &deleteObject);
-    }
-    Object(qi::Future<AnyObject> fobj)
-    {
-      init(fobj.value());
-    }
-    Object(qi::FutureSync<AnyObject> fobj)
-    {
-      init(fobj.value());
-    }
-    Object(AnyObject obj)
-    {
-      init(obj);
-    }
-    void init(AnyObject obj)
-    {
-      if (obj->type->info() != typeOf<T>()->info() && !boost::is_same<T, Empty>::value)
-      {
-        throw std::runtime_error(
-          std::string("Object<T> constructed from a different AnyObject type ")
-            + obj->type->infoString()
-            + " "
-            + typeOf<T>()->infoString()
-            );
-      }
-      _obj = obj;
-    }
-
-    operator bool() const   { return _obj;}
-    operator AnyObject()    { return _obj;}
-    AnyObject asAnyObject() { return _obj;}
-
-    T* operator ->()
-    {
-      return reinterpret_cast<T*>(_obj->value);
-    }
-
-    T& operator *()
-    {
-      return *reinterpret_cast<T*>(_obj->value);
-    }
-
-  private:
-    static void deleteObject(GenericObject* obj)
-    {
-      delete reinterpret_cast<T*>(obj->value);
-      delete obj;
-    }
-    AnyObject _obj;
-  };
-
-  template<typename T> class Object<T, true>
-  : public detail::GenericObjectBounce< Object<T, true> >
-  {
-  public:
-    Object() {}
-    Object(T* ptr)
-    {
-      _proxy = boost::shared_ptr<T>(ptr);
-    }
-    Object(qi::Future<AnyObject> fobj)
-    {
-      _proxy = boost::shared_ptr<T>(new T(fobj.value()));
-    }
-    Object(qi::FutureSync<AnyObject> fobj)
-    {
-      _proxy = boost::shared_ptr<T>(new T(fobj.value()));
-    }
-    Object(AnyObject obj)
-    {
-      _proxy = boost::shared_ptr<T>(new T(obj));
-    }
-
-    operator AnyObject()    { return _proxy->asObject();}
-    AnyObject asAnyObject() { return _proxy->asObject();}
-    T* operator ->() { return _proxy.get();}
-    T& operator *()  { return *_proxy;}
-    operator bool() const   { return _proxy;}
-  private:
-    boost::shared_ptr<T> _proxy;
-  };
-
+    return AnyObject(_obj);
+  }
 }
 
 

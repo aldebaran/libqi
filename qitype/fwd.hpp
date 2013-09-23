@@ -34,8 +34,15 @@ namespace qi
   class GenericMapPtr;
   class Manageable;
 
+  class Empty;
+  class Proxy;
+  template<typename T=Empty, bool b = boost::is_base_of<Proxy, T>::value> class Object;
+  template<typename T> class Object<T, false>;
+  template<typename T> class Object<T, true>;
+  typedef Object<Empty, false> AnyObject;
+
   class GenericObject;
-  typedef boost::shared_ptr<GenericObject> AnyObject;
+  class AnyWeakObject;
 
   class Signature;
 
