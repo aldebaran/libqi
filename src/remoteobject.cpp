@@ -246,6 +246,14 @@ namespace qi {
 
   qi::Future<AnyReference> RemoteObject::metaCall(AnyObject, unsigned int method, const qi::GenericFunctionParameters &in, MetaCallType callType)
   {
+    MetaMethod *mm = metaObject().method(method);
+    if (!mm) {
+      std::stringstream ss;
+      ss << "Method " << method << " not found on service " << _service;
+      return makeFutureError<AnyReference>(ss.str());
+    }
+
+
     /* The promise will be set:
      - From here in case of error
      - From a network callback, called asynchronously in thread pool
@@ -269,7 +277,7 @@ namespace qi {
       }
       _promises[msg.id()] = out;
     }
-    qi::Signature funcSig = metaObject().method(method)->parametersSignature();
+    qi::Signature funcSig = mm->parametersSignature();
     msg.setValues(in, funcSig, this);
     msg.setType(qi::Message::Type_Call);
     msg.setService(_service);
