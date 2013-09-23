@@ -112,15 +112,32 @@ namespace qi {
     return *res;
   }
 
+  typedef std::map<std::string, TypeInterface*> FallbackTypeFactory;
+  static FallbackTypeFactory& fallbackTypeFactory()
+  {
+    static FallbackTypeFactory* res = 0;
+    if (!res)
+      res = new FallbackTypeFactory;
+    return *res;
+  }
+
   QITYPE_API TypeInterface* getType(const std::type_info& type)
   {
+    static bool fallback = !qi::os::getenv("QI_TYPE_RTTI_FALLBACK").empty();
     static boost::mutex* mutex = 0;
     if (!mutex)
       mutex = new boost::mutex;
     boost::mutex::scoped_lock sl(*mutex);
+
     // We create-if-not-exist on purpose: to detect access that occur before
     // registration
-    return typeFactory()[TypeInfo(type)];
+    TypeInterface* result = typeFactory()[TypeInfo(type)];
+    if (result || !fallback)
+      return result;
+    result = fallbackTypeFactory()[type.name()];
+    if (result)
+      qiLogError("qitype.type") << "RTTI failure for " << type.name();
+    return result;
   }
 
   /// Type factory setter
@@ -140,6 +157,7 @@ namespace qi {
           " registration detected for type " << typeId.name();
     }
     typeFactory()[TypeInfo(typeId)] = type;
+    fallbackTypeFactory()[typeId.name()] = type;
     return true;
   }
 
