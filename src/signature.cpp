@@ -440,6 +440,8 @@ namespace qi {
   std::string Signature::annotation()const {
     if (_p->_signature.empty())
       return std::string();
+    if (_p->_signature[_p->_signature.length()-1] != '>')
+      return std::string();
     size_t begin = _find_begin(_p->_signature, 0, '<', '>');
     if (begin != std::string::npos)
       return std::string(_p->_signature.substr(begin + 1, _p->_signature.size() - begin - 2));
