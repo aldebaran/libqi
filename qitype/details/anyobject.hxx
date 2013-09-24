@@ -160,11 +160,11 @@ namespace qi {
     typedef typename boost::is_base_of<Proxy, T>::type isProxy;
     Object();
 
-    Object(const Object<Empty>& o);
-    template<typename U> Object(const Object<U>& o);
+    template<typename U> Object(const Object<U, true>& o);
+    template<typename U> Object(const Object<U, false>& o);
 
-    Object(qi::Future<Object<Empty> > fobj);
-    Object(qi::FutureSync<Object<Empty> > fobj);
+    Object(const qi::Future<Object<Empty> >& fobj);
+    Object(const qi::FutureSync<Object<Empty> >& fobj);
 
     /// @{
 
@@ -240,13 +240,13 @@ namespace qi {
   };
 
   template<typename T> inline Object<T, false>::Object() {}
-  template<typename T> inline Object<T, false>::Object(const Object<Empty>& o)
+  template<typename T> template<typename U>inline Object<T, false>::Object(const Object<U, false>& o)
   {
     init(o._obj);
   }
-  template<typename T> template<typename U>inline Object<T, false>::Object(const Object<U>& o)
+  template<typename T> template<typename U>inline Object<T, false>::Object(const Object<U, true>& o)
   {
-    init(o._obj);
+    *this = Object<T>((Object<Empty>)o);
   }
   template<typename T> inline Object<T, false>::Object(GenericObject* go)
   {
@@ -290,11 +290,11 @@ namespace qi {
     else
       _obj = detail::ManagedObjectPtr(new GenericObject(otype, ptr), &deleteObject);
   }
-  template<typename T> inline Object<T, false>::Object(qi::Future<Object<Empty> > fobj)
+  template<typename T> inline Object<T, false>::Object(const qi::Future<Object<Empty> >& fobj)
   {
     init(fobj.value()._obj);
   }
-  template<typename T> inline Object<T, false>::Object(qi::FutureSync<Object<Empty> > fobj)
+  template<typename T> inline Object<T, false>::Object(const qi::FutureSync<Object<Empty> >& fobj)
   {
     init(fobj.value()._obj);
   }
