@@ -7,6 +7,8 @@
 #ifndef _QITYPE_DETAILS_GENERICOBJECT_HXX_
 #define _QITYPE_DETAILS_GENERICOBJECT_HXX_
 
+#include <boost/mpl/if.hpp>
+
 #include <qi/future.hpp>
 #include <qitype/typeinterface.hpp>
 #include <qitype/typeobject.hpp>
@@ -163,8 +165,11 @@ namespace qi {
     template<typename U> Object(const Object<U, true>& o);
     template<typename U> Object(const Object<U, false>& o);
 
-    Object(const qi::Future<Object<Empty> >& fobj);
-    Object(const qi::FutureSync<Object<Empty> >& fobj);
+    // Disable the ctor taking future if T is Empty, as it would conflict with
+    // Future cast operator
+    typedef typename boost::mpl::if_<typename boost::is_same<T, Empty>::type, Empty, Object<Empty> >::type MaybeAnyObject;
+    Object(const qi::Future<MaybeAnyObject>& fobj);
+    Object(const qi::FutureSync<MaybeAnyObject>& fobj);
 
     /// @{
 
@@ -290,11 +295,11 @@ namespace qi {
     else
       _obj = detail::ManagedObjectPtr(new GenericObject(otype, ptr), &deleteObject);
   }
-  template<typename T> inline Object<T, false>::Object(const qi::Future<Object<Empty> >& fobj)
+  template<typename T> inline Object<T, false>::Object(const qi::Future<MaybeAnyObject>& fobj)
   {
     init(fobj.value()._obj);
   }
-  template<typename T> inline Object<T, false>::Object(const qi::FutureSync<Object<Empty> >& fobj)
+  template<typename T> inline Object<T, false>::Object(const qi::FutureSync<MaybeAnyObject>& fobj)
   {
     init(fobj.value()._obj);
   }
