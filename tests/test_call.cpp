@@ -16,6 +16,7 @@
 #include <qi/application.hpp>
 #include <qi/eventloop.hpp>
 #include <qitype/anyobject.hpp>
+#include <qitype/dynamicobject.hpp>
 #include <qitype/dynamicobjectbuilder.hpp>
 #include <qitype/objecttypebuilder.hpp>
 #include <qimessaging/session.hpp>
@@ -782,6 +783,7 @@ public:
   ~TestClass()
   {
     qiLogDebug() << "~TestClass " << this;
+    ++destructionCount;
   }
   int ping(int w)
   {
@@ -794,9 +796,19 @@ public:
     qiLogDebug() << "Making a TestClass " << v << ' ' << tc;
     return boost::shared_ptr<TestClass>(tc);
   }
+  bool unregisterService(qi::Session* session, int sid, qi::Atomic<int>* checker)
+  {
+    session->unregisterService(sid).wait();
+    qi::os::msleep(100);
+    return !(**checker);
+  }
   int v;
+  static qi::Atomic<int> destructionCount;
 };
-QI_REGISTER_OBJECT(TestClass, ping);
+
+qi::Atomic<int> TestClass::destructionCount;
+
+QI_REGISTER_OBJECT(TestClass, ping, unregisterService);
 
 TEST(TestCall, TestConcreteObjectPassingReturn)
 {
@@ -1135,6 +1147,103 @@ TEST(TestObjectT, weak)
     AnyWeakObject awo2(ao);
   }
 }
+
+void inc_atomic_and_delete(TestClass* obj, qi::Atomic<int>* a)
+{
+  delete obj;
+  ++(*a);
+}
+
+TEST(TestObject, callAndDropPointer)
+{
+  // We check that the object is deleted after the call
+  int currentDCount = *TestClass::destructionCount;
+  TestSessionPair p;
+  Session& s  = *p.server();
+  qi::Atomic<int> checker;
+  Object<TestClass> svc(new TestClass, boost::bind(&inc_atomic_and_delete, _1, &checker));
+  int sid = s.registerService("test", svc);
+  qi::GenericObject* go = svc.get();
+  svc.reset();
+  // the object should be present while the call runs
+  EXPECT_TRUE(go->call<bool>("unregisterService", &s, sid, &checker));
+  // ... and should be gone by now
+  EXPECT_EQ(1, *checker);
+  EXPECT_EQ(currentDCount + 1, *TestClass::destructionCount);
+}
+
+TEST(TestObject, asyncCallAndDropPointer)
+{
+  // We check that the object is deleted after the call
+  int currentDCount = *TestClass::destructionCount;
+  TestSessionPair p;
+  Session& s  = *p.server();
+  qi::Atomic<int> checker;
+  Object<TestClass> svc(new TestClass, boost::bind(&inc_atomic_and_delete, _1, &checker));
+  int sid = s.registerService("test", svc);
+  qi::GenericObject* go = svc.get();
+  svc.reset();
+  // the object should be present while the call runs
+  qi::Future<bool> f = go->async<bool>("unregisterService", &s, sid, &checker);
+  f.wait();
+  EXPECT_TRUE(f.value());
+  // ... and should be gone by now
+  EXPECT_EQ(1, *checker);
+  EXPECT_EQ(currentDCount + 1, *TestClass::destructionCount);
+}
+
+
+void inc_atomic_and_delete_go(GenericObject* obj, qi::Atomic<int>* a)
+{
+  delete (qi::DynamicObject*)obj->value;
+  ++(*a);
+}
+
+class MyDynamicObject: public DynamicObject
+{
+public:
+  ~MyDynamicObject()
+  {
+    ++TestClass::destructionCount;
+  }
+};
+
+TEST(TestObject, asyncCallAndDropPointerGeneric)
+{
+  qi::Atomic<int> checker;
+
+  TestClass to; // this instance doesn't matter realy
+  int currentDCount = *TestClass::destructionCount;
+
+  DynamicObject* dobj = new MyDynamicObject();
+  AnyObject svc;
+  {
+    qi::DynamicObjectBuilder builder(dobj, false);
+    builder.advertiseMethod("unregisterService", &to, &TestClass::unregisterService);
+
+    svc = builder.object(
+      boost::bind(&inc_atomic_and_delete_go, _1, &checker));
+  }
+  // We check that the object is deleted after the call
+  TestSessionPair p;
+  Session& s  = *p.server();
+
+  int sid = s.registerService("test", svc);
+  qi::GenericObject* go = svc.get();
+  svc.reset();
+  EXPECT_EQ(0, *checker); // are you there?
+  // the object should be present while the call runs
+  qi::Future<bool> f = go->async<bool>("unregisterService", &s, sid, &checker);
+  f.wait();
+  EXPECT_TRUE(f.value());
+  // ... and should be gone by now, but maybe asynchronously
+  for(unsigned i=0; i<10 && !*checker; ++i)
+    qi::os::msleep(100);
+  EXPECT_EQ(1, *checker);
+  EXPECT_EQ(currentDCount + 1, *TestClass::destructionCount);
+}
+
+
 
 int main(int argc, char **argv) {
   qi::Application app(argc, argv);
