@@ -253,7 +253,9 @@ namespace qi {
   }
   template<typename T> template<typename U>inline Object<T, false>::Object(const Object<U, true>& o)
   {
-    *this = Object<T>((Object<Empty>)o);
+    // Cannot use a cast to get o to an AnyObject or it could bounce to this
+    // very method
+    *this = Object<T>(o.asObject());
   }
   template<typename T> inline Object<T, false>::Object(GenericObject* go)
   {
@@ -412,6 +414,7 @@ namespace qi {
     template<typename U>
     bool operator !=(const Object<U>& b) const { return get() != b.get();}
 
+    Object<Empty> asObject() const { return _proxy.asObject();}
     operator Object<Empty>() const { return _proxy.asObject();}
     T* operator ->() { return &_proxy;}
     T& operator *()  { return _proxy;}
