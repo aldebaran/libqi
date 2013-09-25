@@ -29,53 +29,113 @@ namespace qi {
     MetaObject& operator=(const MetaObject &other);
     ~MetaObject();
 
+    /**
+    *   @param name The method's name.
+    *   @return The method's id or -1 if the method wasn't found.
+    */
     int methodId(const std::string &name) const;
+    /**
+    *   @param name The name of the signal or its full signature.
+    *   @return The signal's id or -1 if the signal wasn't found.
+    */
     int signalId(const std::string &name) const;
+    /**
+    *   @param name The property's name.
+    *   @return The property's id or -1 if the property wasn't found.
+    */
     int propertyId(const std::string& name) const;
 
     typedef std::map<unsigned int, MetaMethod> MethodMap;
+    /**
+    *   @return The map of all the methods.
+    */
     MethodMap methodMap() const;
 
     //not called signals because it conflict with Qt keywords :S
     typedef std::map<unsigned int, MetaSignal> SignalMap;
+    /**
+    *   @return The map of all the signals.
+    */
     SignalMap signalMap() const;
 
     typedef std::map<unsigned int, MetaProperty> PropertyMap;
+    /**
+    *   @return The map of all the properties.
+    */
     PropertyMap propertyMap() const;
 
+    /**
+    *   @param id The method's id.
+    *   @return The desired method or null if the id is invalid.
+    */
     MetaMethod*       method(unsigned int id);
     const MetaMethod* method(unsigned int id) const;
 
+    /**
+    *   @param id The signal's id.
+    *   @return The desired signal or null if the id is invalid.
+    */
     MetaSignal*       signal(unsigned int id);
     const MetaSignal* signal(unsigned int id) const;
+    /**
+    *   @param name The name of the signal or its full signature.
+    *   @return The desired signal or null if the signal wasn't found.
+    */
     const MetaSignal* signal(const std::string &name) const;
 
+    /**
+    *   @param id The property's id.
+    *   @return The desired property of null if the id is invalid.
+    */
     MetaProperty*       property(unsigned int id);
     const MetaProperty* property(unsigned int id) const;
 
     /** Find a method matching @param nameWithOptionalSignature that can be
     *   called with arguments @param args.
-    *   @return the mathing method id, or -1 if none or an ambiguous set was found.
+    *   @return The mathing method id, or -1 if none or an ambiguous set was found.
     *   @warning This method optimises for speed at the expense of possible false positive:
     *            It returns a match as soon as there is only one possible candidate
     *            remaining, even though this candidate can prove later on to be
     *            incompatible with the arguments.
-    *   @param canCache if set, will be filled with true if the returned method
+    *   @param nameWithOptionalSignature The method's name or its full signature.
+    *   @param args The parameters' type of the method.
+    *   @param canCache If set, will be filled with true if the returned method
     *          can be cached regardless of the arguments types (but not argument count),
     *          and false otherwise.
     */
     int findMethod(const std::string& nameWithOptionalSignature, const GenericFunctionParameters& args, bool* canCache=0) const;
+    /**
+    *   @param name The exact method's name.
+    *   @return A vector containing all the overloaded version of the method.
+    */
     std::vector<MetaMethod> findMethod(const std::string &name) const;
     typedef std::pair<MetaMethod, float> CompatibleMethod;
+    /** Find all the methods compatible with @param nameOrSignature. If no
+    *   signature is specified, the method relies on findMethod.
+    *   @param nameOrSignature Either the name or the signature of the method.
+    *   @return A vector containing all the compatible method and their
+    *   associated compatibility's score.
+    */
     std::vector<CompatibleMethod> findCompatibleMethod(const std::string &nameOrSignature) const;
 
-    /** return true if member is considered internal, and should not be listed
-     */
+    /**
+    *   @param name The member's name.
+    *   @param uid The uid's name.
+    *   @return True if the member is considered internal, and should not be
+    *   listed.
+    */
     static bool isPrivateMember(const std::string &name, unsigned int uid);
 
-    ///Merge two MetaObject. Dest method and signal ids will be incremented by offset.
+    /** Merge two MetaObject. Dest method and signal ids will be incremented by offset.
+    *   @param source The source object.
+    *   @param dest The destination object.
+    *   @return The merge's result of the two objects.
+    */
     static qi::MetaObject merge(const qi::MetaObject &source, const qi::MetaObject &dest);
 
+    /**
+    *   @return The object's description.
+    */
     std::string description() const;
 
     MetaObjectPrivate   *_p;
