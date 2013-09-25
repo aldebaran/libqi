@@ -168,6 +168,17 @@ namespace qi
     return _p->_objptr;
   }
 
+  DynamicObject* DynamicObjectBuilder::bareObject()
+  {
+    _p->_object->metaObject()._p->refreshCache();
+    return _p->_object;
+  }
+
+  void DynamicObjectBuilder::setManageable(DynamicObject* obj, Manageable* m)
+  {
+    obj->setManageable(m);
+  }
+
   void DynamicObjectBuilder::setThreadingModel(ObjectThreadingModel model)
   {
     _p->_object->setThreadingModel(model);

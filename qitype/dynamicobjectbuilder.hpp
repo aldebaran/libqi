@@ -87,9 +87,12 @@ namespace qi {
     unsigned int xAdvertiseProperty(const std::string& name, const Signature& sig, int id=-1);
     void setDescription(const std::string& desc);
     qi::AnyObject object(boost::function<void (GenericObject*)> onDelete = boost::function<void (GenericObject*)>());
-
+    /// Return an AnyObject that shares life type with \p other.
+    template<typename T> qi::AnyObject object(boost::shared_ptr<T> other);
     void markProperty(unsigned int ev, unsigned int getter, unsigned int setter);
-  public:
+  private:
+    DynamicObject* bareObject();
+    void setManageable(DynamicObject* obj, Manageable* m);
     DynamicObjectBuilderPrivate *_p;
     QI_DISALLOW_COPY_AND_ASSIGN(DynamicObjectBuilder);
   };

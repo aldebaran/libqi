@@ -68,10 +68,23 @@ namespace qi
     boost::shared_ptr<DynamicObjectPrivate> _p;
   };
 
-  //Make an GenericObject of DynamicObject kind from a DynamicObject
+  //Make an AnyObject of DynamicObject kind from a DynamicObject
   QITYPE_API AnyObject     makeDynamicAnyObject(DynamicObject *obj, bool destroyObject = true,
     boost::function<void (GenericObject*)> onDelete = boost::function<void (GenericObject*)>());
 
+  QITYPE_API AnyObject makeDynamicSharedAnyObjectImpl(DynamicObject* obj, boost::shared_ptr<Empty> other);
+
+  /** Make an AnyObject that shares its ref counter with \p other
+  * Note that \p obj will not be destroyed when the shared counter reaches 0.
+  */
+  template<typename T>
+  inline AnyObject makeDynamicSharedAnyObject(DynamicObject *obj, boost::shared_ptr<T> other)
+  {
+    return makeDynamicSharedAnyObjectImpl(obj, boost::shared_ptr<Empty>(other, 0));
+  }
+
+
+  QITYPE_API ObjectTypeInterface* getDynamicTypeInterface();
 }
 
 #ifdef _MSC_VER

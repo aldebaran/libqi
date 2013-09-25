@@ -576,19 +576,22 @@ namespace qi
     delete obj;
   }
 
+  ObjectTypeInterface* getDynamicTypeInterface()
+  {
+    static DynamicObjectTypeInterface* type = new DynamicObjectTypeInterface();
+    return type;
+  }
+
+  AnyObject makeDynamicSharedAnyObjectImpl(DynamicObject* obj, boost::shared_ptr<Empty> other)
+  {
+    GenericObject* go = new GenericObject(getDynamicTypeInterface(), obj);
+    return AnyObject(go, other);
+  }
+
   AnyObject makeDynamicAnyObject(DynamicObject *obj, bool destroyObject,
     boost::function<void (GenericObject*)> onDelete)
   {
-    AnyObject op;
-#ifndef WIN32
-    static DynamicObjectTypeInterface* type = new DynamicObjectTypeInterface();
-#else
-    // Multiple parallel calls is possible, but will have minimal consequences
-    static DynamicObjectTypeInterface* type = 0;
-    if (!type)
-      type = new DynamicObjectTypeInterface();
-#endif
-
+    ObjectTypeInterface* type = getDynamicTypeInterface();
     if (destroyObject || onDelete)
       return AnyObject(new GenericObject(type, obj),
         boost::bind(&cleanupDynamicObject, _1, destroyObject, onDelete));

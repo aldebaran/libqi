@@ -89,6 +89,14 @@ namespace qi {
     return isig;
   }
 
+  template<typename T> qi::AnyObject DynamicObjectBuilder::object(boost::shared_ptr<T> other)
+  {
+    DynamicObject* dobj = bareObject();
+    qi::AnyObject ao = makeDynamicAnyObject(dobj, other);
+    setManageable(dobj, ao.get());
+    return ao;
+  }
+
   namespace detail
   {
     // create an object with a single method name fname bouncing to func
