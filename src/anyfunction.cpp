@@ -62,6 +62,18 @@ namespace qi
     QI_DISALLOW_COPY_AND_ASSIGN(AnyReferenceArrayDestroyer);
   };
 
+
+#ifdef _WIN32
+  namespace detail
+  {
+    boost::mutex _initializationMutex;
+    QITYPE_API boost::mutex& initializationMutex()
+    {
+      return _initializationMutex;
+    }
+  }
+#endif
+
   AnyReference AnyFunction::call(AnyReference arg1, const std::vector<AnyReference>& remaining)
   {
     std::vector<AnyReference> args;
