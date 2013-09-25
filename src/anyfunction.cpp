@@ -11,6 +11,16 @@ qiLogCategory("qitype.functiontype");
 
 namespace qi
 {
+#ifdef _WIN32
+  namespace detail
+  {
+    boost::mutex _initializationMutex;
+    QITYPE_API boost::mutex& initializationMutex()
+    {
+      return _initializationMutex;
+    }
+  }
+#endif
 
   //make destroy exception-safe for AnyFunction::call
   class AnyReferenceArrayDestroyer {

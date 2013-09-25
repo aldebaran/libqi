@@ -312,6 +312,12 @@ namespace qi
     }
     unsigned long _mask;
   };
+#ifdef _WIN32
+    namespace detail {
+    QITYPE_API boost::mutex& initializationMutex();
+    }
+#endif
+
 
   /* T is the *reducted* function type
   *  S is the storage type of the function
@@ -375,9 +381,14 @@ namespace qi
       std::vector<TypeInterface*> key(argsType);
       key.push_back(returnType);
       typedef std::map<InfosKeyMask,  FunctionTypeInterfaceEq<T, S>* > FTMap;
+#ifdef _WIN32
+      boost::mutex::scoped_lock lock(detail::initializationMutex());
+      static FTMap ftMap;
+#else
       static FTMap ftMap;
       static boost::mutex mutex;
       boost::mutex::scoped_lock lock(mutex);
+#endif
       FunctionTypeInterfaceEq<T, S>* & fptr = ftMap[InfosKeyMask(key, refMask)];
       if (!fptr)
       {

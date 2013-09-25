@@ -120,16 +120,24 @@ namespace qi {
 
     template<typename T>
     struct FunctionSignature<boost::function<T> >: public FunctionSignature<T> {};
-
+#ifdef _WIN32
+    QITYPE_API boost::mutex& initializationMutex();
+#endif
     template<typename T> inline
     qi::Signature functionArgumentsSignature()
     {
+#ifdef _WIN32
+       boost::mutex::scoped_lock _lock(initializationMutex());
+#endif
+
       static bool done = false;
       static std::string sigs;
       if (!done)
       {
+#ifndef _WIN32
         static boost::mutex mut;
         boost::mutex::scoped_lock _lock(mut);
+#endif
         if (!done) {
           sigs += '(';
           typedef typename boost::function_types::parameter_types<T>::type ArgsType;
