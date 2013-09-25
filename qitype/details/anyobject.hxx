@@ -182,8 +182,10 @@ namespace qi {
     Object(T* ptr);
     Object(GenericObject* go, boost::function<void(GenericObject*)> deleter);
     Object(T* ptr, boost::function<void(T*)> deleter);
-
     /// @}
+
+    /// Shares ref counter with \p other, which much handle the destrutiong of \p go.
+    template<typename U> Object(GenericObject* go, boost::shared_ptr<U> other);
 
     bool operator <(const Object& b) const;
     template<typename U> bool operator !=(const Object<U>& b) const;
@@ -261,6 +263,13 @@ namespace qi {
   {
     init(detail::ManagedObjectPtr(go, deleter));
   }
+  template<typename T> template<typename U> Object<T, false>::Object(GenericObject* go, boost::shared_ptr<U> other)
+  {
+    init(detail::ManagedObjectPtr(other, go));
+    // Notify the shared_from_this of GenericObject
+    _obj->_internal_accept_owner(&other, go);
+  }
+
   template<typename T> inline Object<T, false>::Object(T* ptr)
   {
     TypeInterface* type = typeOf<T>();
