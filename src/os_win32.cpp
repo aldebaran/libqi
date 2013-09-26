@@ -494,6 +494,16 @@ namespace qi {
       }
     }
 
+    std::string currentThreadName()
+    {
+      /*
+       * It is impossible to get or set the name of the current thread on Windows.
+       * Even if the setCurrentThreadName seems to do it, the RaiseException is
+       * only catched by the debugger, which remember the name, it's not stored anywhere else.
+       */
+      return std::string("");
+    }
+
     long numberOfCPUs()
     {
       SYSTEM_INFO info;

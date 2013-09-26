@@ -94,6 +94,14 @@ TEST(QiOs, msleep)
   qi::os::msleep(1000);
 }
 
+TEST(QiOs, currentThreadName)
+{
+#if !defined(_WIN32)
+  qi::os::setCurrentThreadName("Iamathread");
+  ASSERT_EQ(std::string("Iamathread"), qi::os::currentThreadName());
+#endif
+}
+
 TEST(QiOs, MemoryUsage)
 {
   ASSERT_TRUE(qi::os::memoryUsage(qi::os::getpid()) > 0);

@@ -263,6 +263,12 @@
  * \param name The new name of the current thread.
  */
 
+/**
+ * \fn qi::os::currentThreadName()
+ * \brief returns the current thread name as a std::string
+ * \return a std::string of at most 16 characters
+ * \warning Not implemented on Windows, always returns an empty string
+
 /** \fn bool setCurrentThreadCPUAffinity(const std::vector<int> &cpus)
  *  \brief Set the CPU affinity for the current thread.
  *  \param cpus a vector of CPU core ids
