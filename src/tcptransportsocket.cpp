@@ -317,8 +317,11 @@ namespace qi
     using namespace boost::asio;
     // Resolve url
     ip::tcp::resolver r(_socket->get_io_service());
-    ip::tcp::resolver::query q(_url.host(), boost::lexical_cast<std::string>(_url.port()),
-                               boost::asio::ip::tcp::resolver::query::all_matching);
+    ip::tcp::resolver::query q(_url.host(), boost::lexical_cast<std::string>(_url.port())
+                           #ifndef ANDROID
+                               , boost::asio::ip::tcp::resolver::query::all_matching
+                           #endif
+                               );
     // Synchronous resolution
 
     try
