@@ -11,8 +11,48 @@ qiLogCategory("qitype.functiontype");
 
 namespace qi
 {
-  AnyReference AnyFunction::call(
-    AnyReference arg1, const std::vector<AnyReference>& remaining)
+
+  //make destroy exception-safe for AnyFunction::call
+  class AnyReferenceArrayDestroyer {
+  public:
+    AnyReferenceArrayDestroyer(AnyReference *toDestroy, void **convertedArgs, bool shouldDelete)
+      : toDestroy(toDestroy)
+      , convertedArgs(convertedArgs)
+      , toDestroyPos(0)
+      , shouldDelete(shouldDelete)
+    {
+    }
+
+    ~AnyReferenceArrayDestroyer() {
+      destroy();
+    }
+
+    void destroy() {
+      if (toDestroy) {
+        for (unsigned i = 0; i < toDestroyPos; ++i)
+          toDestroy[i].destroy();
+        if (shouldDelete)
+          delete[] toDestroy;
+        toDestroy = 0;
+      }
+      if (shouldDelete && convertedArgs) {
+        delete[] convertedArgs;
+        convertedArgs = 0;
+      }
+    }
+
+
+  public:
+    AnyReference* toDestroy;
+    void**        convertedArgs;
+    unsigned int  toDestroyPos;
+    bool          shouldDelete;
+
+  private:
+    QI_DISALLOW_COPY_AND_ASSIGN(AnyReferenceArrayDestroyer);
+  };
+
+  AnyReference AnyFunction::call(AnyReference arg1, const std::vector<AnyReference>& remaining)
   {
     std::vector<AnyReference> args;
     args.reserve(remaining.size()+1);
@@ -21,8 +61,7 @@ namespace qi
     return call(args);
   }
 
-  AnyReference AnyFunction::call(
-    const std::vector<AnyReference>& vargs)
+  AnyReference AnyFunction::call(const std::vector<AnyReference>& vargs)
   {
     if (type == dynamicFunctionTypeInterface())
     {
@@ -46,6 +85,7 @@ namespace qi
         throw std::runtime_error("Cannot prepend argument to dynamic function type");
       return (*f)(args);
     }
+
     /* We must honor transform, who can have any combination of the following enabled:
     * - drop first arg
     * - prepend an arg
@@ -68,22 +108,23 @@ namespace qi
     }
     unsigned offset = transform.prependValue? 1:0;
 #if QI_HAS_VARIABLE_LENGTH_ARRAY
-    AnyReference toDestroy[sz+offset];
-    void* convertedArgs[sz+offset];
+    AnyReference sstoDestroy[sz+offset];
+    void* ssconvertedArgs[sz+offset];
+    AnyReferenceArrayDestroyer arad(sstoDestroy, ssconvertedArgs, false);
 #else
-    AnyReference* toDestroy = new AnyReference[sz+offset];
-    void** convertedArgs = new void*[sz+offset];
+    AnyReference* sstoDestroy = new AnyReference[sz+offset];
+    void** ssconvertedArgs = new void*[sz+offset];
+    AnyReferenceArrayDestroyer arad(sstoDestroy, ssconvertedArgs, true);
 #endif
     if (transform.prependValue)
-      convertedArgs[0] = transform.boundValue;
-    unsigned int toDestroyPos = 0;
+      arad.convertedArgs[0] = transform.boundValue;
     for (unsigned i=0; i<sz; ++i)
     {
       //qiLogDebug() << "argument " << i
       //   << " " << args[i].type->infoString() << ' ' << args[i].value
       //   << " to " << target[i]->infoString();
       if (args[i].type == target[i+offset] || args[i].type->info() == target[i+offset]->info())
-        convertedArgs[i+offset] = args[i].value;
+        arad.convertedArgs[i+offset] = args[i].value;
       else
       {
         //qiLogDebug() << "needs conversion "
@@ -111,21 +152,17 @@ namespace qi
           }
         }
         if (v.second)
-          toDestroy[toDestroyPos++] = v.first;
-        convertedArgs[i+offset] = v.first.value;
+          arad.toDestroy[arad.toDestroyPos++] = v.first;
+        arad.convertedArgs[i+offset] = v.first.value;
       }
     }
     void* res;
-    res = type->call(value, convertedArgs, sz+offset);
+    res = type->call(value, arad.convertedArgs, sz+offset);
     AnyReference result;
     result.type = resultType();
     result.value = res;
-    for (unsigned i=0; i<toDestroyPos; ++i)
-      toDestroy[i].destroy();
-#if ! QI_HAS_VARIABLE_LENGTH_ARRAY
-    delete[] toDestroy;
-    delete[] convertedArgs;
-#endif
+
+    arad.destroy();
     return result;
   }
 
