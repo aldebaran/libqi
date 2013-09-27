@@ -134,7 +134,7 @@ namespace qi {
   inline void AnyValue::reset()
   {
     if (_allocated)
-      destroy();
+      AnyReference::destroy();
     type = 0;
     value = 0;
   }

@@ -53,9 +53,13 @@ namespace qi {
     void swap(AnyValue& b);
 
     template<typename T>
-    static AnyValue from(const T& r) { return AnyValue(r);}
+    static AnyValue from(const T& r) { return AnyValue(r); }
 
   private:
+    //hide AnyReference::destroy
+    //simply assign an empty AnyValue.
+    void destroy() { return AnyReferenceBase::destroy(); }
+
     //we dont accept GVP here.  (block set<T> with T=GVP)
     void set(const AnyReference& t);
     bool _allocated;
