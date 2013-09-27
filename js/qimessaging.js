@@ -24,16 +24,16 @@ function QiSession(url, resource)
       o.__name = _dfd[data["idm"]].__service;
       _sigs[o.__pyobj] = new Array();
 
-      var f = o.__mobj[0];
+      var f = o.__mobj["methods"];
       for (var i in f)
       {
-        o[f[i][2]] = createMetaCall(o.__pyobj, f[i][2]);
+        o[f[i]["name"]] = createMetaCall(o.__pyobj, f[i]["name"]);
       }
 
-      var e = o.__mobj[1];
+      var e = o.__mobj["signals"];
       for (var i in e)
       {
-        o[e[i][1]] = createMetaSignal(o.__pyobj, e[i][1]);
+        o[e[i]["name"]] = createMetaSignal(o.__pyobj, e[i]["name"]);
       }
 
       _dfd[data["idm"]].resolve(o);
