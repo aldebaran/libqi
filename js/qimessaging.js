@@ -38,9 +38,9 @@ function QiSession(url, resource)
 
       _dfd[data["idm"]].resolve(o);
     }
-    else if (_dfd[data["idm"]].__event != undefined)
+    else if (_dfd[data["idm"]].__signal != undefined)
     {
-      _sigIdxToLink[data["result"]] = _dfd[data["idm"]].__event;
+      _sigIdxToLink[data["result"]] = _dfd[data["idm"]].__signal;
       _dfd[data["idm"]].resolve(data["result"]);
     }
     else
@@ -58,7 +58,7 @@ function QiSession(url, resource)
     }
   });
 
-  _socket.on('event', function (data) {
+  _socket.on('signal', function (data) {
     var res = data["result"];
     var cbs = _sigs[res["obj"]][res["signal"]];
     for (var i in cbs)
@@ -87,7 +87,7 @@ function QiSession(url, resource)
       }
       else if (method == "registerEvent")
       {
-        _dfd[idm].__event = data;
+        _dfd[idm].__signal = data;
       }
       _socket.emit('call', { idm: idm, params: { obj: obj, method: method, args: args } });
 
