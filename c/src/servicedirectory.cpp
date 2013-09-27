@@ -58,7 +58,6 @@ qi_value_t*       qi_servicedirectory_endpoints(qi_servicedirectory_t *servicedi
   }
   qi_value_t *val = qi_value_create("");
   qi::AnyValue &gvp = qi_value_cpp(val);
-  gvp.destroy();
   gvp = qi::AnyValue::from(epss);
   return val;
 }
