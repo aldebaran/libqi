@@ -16,8 +16,6 @@ class SetEncoder(json.JSONEncoder):
             return base64.b64encode(obj)
         return json.JSONEncoder.default(self, obj)
 
-qim = qi.Session()
-
 class QiMessagingHandler(tornadio2.conn.SocketConnection):
 
     def on_open(self, info):
@@ -26,8 +24,10 @@ class QiMessagingHandler(tornadio2.conn.SocketConnection):
         self.objs = dict()
         self.sid = sid
         sid = sid + 1
+        self.qim = qi.Session()
+        self.qim.connect(URL)
         print("[%d] New connection from %s" % (self.sid, self.info.ip))
-        qim.disconnected.connect(lambda x: self.close())
+        self.qim.disconnected.connect(lambda x: self.close())
 
     def on_message(self, message):
         pass
@@ -66,7 +66,7 @@ class QiMessagingHandler(tornadio2.conn.SocketConnection):
             method = params["method"]
             args = params["args"]
             if service == "ServiceDirectory" and method == "service":
-                f = qim.service(str(args[0]), _async = True)
+                f = self.qim.service(str(args[0]), _async = True)
                 f.addCallback(self.do_reply(idm))
             elif method == "registerEvent":
                 obj = self.objs[service]
@@ -107,7 +107,6 @@ if __name__ == "__main__":
     print("Will connect to " + URL)
 
     QI_APP = qi.Application()
-    qim.connect(URL)
 
     ROUTER = tornadio2.TornadioRouter(QiMessagingHandler)
 
