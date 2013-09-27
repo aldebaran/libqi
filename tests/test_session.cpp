@@ -345,6 +345,18 @@ TEST(QiSession, asyncConnect) {
   }
 }
 
+TEST(QiSession, urlOnClosed)
+{
+  qi::ServiceDirectory sd;
+  sd.listen("tcp://127.0.0.1:0");
+  qi::Session s;
+  EXPECT_ANY_THROW(s.url());
+  s.connect(sd.endpoints()[0]);
+  EXPECT_NO_THROW(s.url());
+  s.close();
+  EXPECT_ANY_THROW(s.url());
+}
+
 int main(int argc, char **argv)
 {
   qi::Application app(argc, argv);

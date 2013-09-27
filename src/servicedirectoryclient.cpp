@@ -144,7 +144,9 @@ namespace qi {
   }
 
   qi::Url              ServiceDirectoryClient::url() const {
-    return _sdSocket ? _sdSocket->url() : qi::Url();
+    if (!_sdSocket)
+      throw std::runtime_error("Session disconnected");
+    return _sdSocket->url();
   }
 
   void ServiceDirectoryClient::onServiceRemoved(unsigned int idx, const std::string &name) {
