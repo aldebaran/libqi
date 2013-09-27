@@ -6,8 +6,6 @@ import qi
 import sys
 import simplejson as json
 import base64
-import mutex
-import tornado
 
 URL = None
 sid = 1
