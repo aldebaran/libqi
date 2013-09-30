@@ -118,4 +118,9 @@ def typeof(a):
 #cant be called isinstance or typeof will run into infinite loop
 #see qi.__init__ for the renaming
 def _isinstance(a, type):
-    return typeof(a) == type
+    if type != Object:
+      raise NotImplementedError("isinstance is only implemented for Object right now")
+    try:
+      return typeof(a) == type
+    except NotImplementedError:
+      return False
