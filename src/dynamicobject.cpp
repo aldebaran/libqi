@@ -578,7 +578,14 @@ namespace qi
 
   ObjectTypeInterface* getDynamicTypeInterface()
   {
+#ifndef _WIN32
     static DynamicObjectTypeInterface* type = new DynamicObjectTypeInterface();
+#else
+    // Multiple parallel calls is possible, but will have minimal consequences
+    static DynamicObjectTypeInterface* type = 0;
+    if (!type)
+      type = new DynamicObjectTypeInterface();
+#endif
     return type;
   }
 
