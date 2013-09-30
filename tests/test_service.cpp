@@ -212,7 +212,7 @@ public:
   qi::Property<int> prop;
 };
 
-void inc (int* daInt, int unused)
+void inc (qi::Atomic<int>* daInt, int unused)
 {
   ++(*daInt);
 }
@@ -244,14 +244,14 @@ TEST(QiService, ClassProperty)
   ASSERT_EQ(2, client.property<int>("offset"));
 
   // test event
-  int hit = 0;
+  qi::Atomic<int> hit = 0;
   f.prop.connect(boost::bind(&inc, &hit, _1));
   obj.connect("offset", boost::bind(&inc, &hit,_1));
   client.connect("offset", boost::bind(&inc, &hit,_1));
   f.prop.set(1);
-  PERSIST_ASSERT(, hit == 3, 500);
+  PERSIST_ASSERT(, (*hit) == 3, 500);
   client.setProperty("offset", 2);
-  PERSIST_ASSERT(, hit == 6, 500);
+  PERSIST_ASSERT(, (*hit) == 6, 500);
 
   // test error handling
    EXPECT_TRUE(client.setProperty("canard", 5).hasError());
@@ -287,20 +287,20 @@ TEST(QiService, GenericProperty)
   ASSERT_EQ(2, client.property<int>("offset"));
 
   // test event
-  int hit = 0;
+  qi::Atomic<int> hit;
   qiLogVerbose() << "Connecting to signal";
   ASSERT_NE(qi::SignalBase::invalidSignalLink, prop->signal()->connect((boost::function<void(int)>)boost::bind(&inc, &hit, _1)));
   ASSERT_NE(qi::SignalBase::invalidSignalLink, obj.connect("offset", boost::bind(&inc, &hit, _1)));
   ASSERT_NE(qi::SignalBase::invalidSignalLink, client.connect("offset", boost::bind(&inc, &hit, _1)));
   qiLogVerbose() << "Triggering prop set";
   prop->setValue(qi::AnyValue(qi::AnyReference(1)));
-  PERSIST(, hit == 3, 500);
+  PERSIST(, (*hit) == 3, 500);
   qi::os::msleep(500);
-  EXPECT_EQ(3, hit);
+  EXPECT_EQ(3, *hit);
   client.setProperty<int>("offset", 2);
-  PERSIST(, hit == 6, 500);
+  PERSIST(, (*hit) == 6, 500);
   qi::os::msleep(500);
-  EXPECT_EQ(6, hit);
+  EXPECT_EQ(6, *hit);
   if (client != obj)
   {
     client.call<void>("setProperty", "offset", 3);
