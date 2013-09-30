@@ -133,6 +133,8 @@ template<QI_SIGNAL_TEMPLATE_DECL> class Signal;
     *
     * @return a SignalSubscriber object. This object can be implicitly
     * converted to a SignalLink.
+    * @throw runtime_error if the connection could not be made (because of invalid callback
+    * arity or argument type)
     */
     SignalSubscriber& connect(...);
 #else

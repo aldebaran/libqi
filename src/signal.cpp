@@ -334,7 +334,6 @@ namespace qi {
   SignalSubscriber& SignalBase::connect(const SignalSubscriber& src)
   {
     qiLogDebug() << (void*)this << " connecting new subscriber";
-    static SignalSubscriber invalid;
     if (!_p)
     {
       _p = boost::make_shared<SignalBasePrivate>();
@@ -358,10 +357,7 @@ namespace qi {
     {
       AnyObject locked = src.target->lock();
       if (!locked)
-      {
-        qiLogVerbose() << "connecting a dead slot (weak ptr out)";
-        return invalid;
-      }
+        throw std::runtime_error("Target object cannot be locked");
       const MetaMethod* ms = locked.metaObject().method(src.method);
       if (!ms)
       {
@@ -376,15 +372,17 @@ namespace qi {
     }
     if (sigArity != subArity)
     {
-      qiLogWarning() << "Subscriber has incorrect arity (expected "
+      std::stringstream s;
+      s << "Subscriber has incorrect arity (expected "
         << sigArity  << " , got " << subArity <<")";
-      return invalid;
+      throw std::runtime_error(s.str());
     }
     if (!signature().isConvertibleTo(subSignature))
     {
-      qiLogWarning() << "Subscriber is not compatible to signal : "
-       << signature().toString() << " vs " << subSignature.toString();
-      return invalid;
+      std::stringstream s;
+      s << "Subscriber is not compatible to signal : "
+        << signature().toString() << " vs " << subSignature.toString();
+      throw std::runtime_error(s.str());
     }
   proceed:
     boost::recursive_mutex::scoped_lock sl(_p->mutex);

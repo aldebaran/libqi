@@ -128,9 +128,9 @@ TEST(TestSignal, BadArity)
   // Test runtime detection of arity errors
   qi::Signal<> s;
   // avoid using s.connect() which will catch the problem at compile-time
-  ASSERT_EQ(qi::SignalBase::invalidSignalLink, s.connect(qi::SignalSubscriber(qi::AnyFunction::from(&foo))));
-  ASSERT_EQ(qi::SignalBase::invalidSignalLink, s.connect(qi::SignalSubscriber(qi::AnyFunction::from(&foo2))));
-  ASSERT_EQ(qi::SignalBase::invalidSignalLink, s.connect(qi::AnyFunction::from(  (boost::function<void(int*, int)>)boost::bind(&Foo::func1, (Foo*)0, _1, _2))));
+  EXPECT_ANY_THROW(s.connect(qi::SignalSubscriber(qi::AnyFunction::from(&foo))));
+  EXPECT_ANY_THROW(s.connect(qi::SignalSubscriber(qi::AnyFunction::from(&foo2))));
+  EXPECT_ANY_THROW(s.connect(qi::AnyFunction::from(  (boost::function<void(int*, int)>)boost::bind(&Foo::func1, (Foo*)0, _1, _2))));
 }
 
 void lol(int v, int& target)
