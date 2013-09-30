@@ -36,7 +36,7 @@ class QiMessagingHandler(tornadio2.conn.SocketConnection):
 
     def reply(self, idm, mtype, data):
         try:
-            if isinstance(data, qi.Object):
+            if qi.isinstance(data, qi.Object):
                 o = len(self.objs)
                 self.objs[o] = data
                 data = { "pyobject": o, "metaobject": data.metaObject() }
