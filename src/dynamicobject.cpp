@@ -575,7 +575,15 @@ namespace qi
     boost::function<void (GenericObject*)> onDelete)
   {
     AnyObject op;
+#ifndef WIN32
     static DynamicObjectTypeInterface* type = new DynamicObjectTypeInterface();
+#else
+    // Multiple parallel calls is possible, but will have minimal consequences
+    static DynamicObjectTypeInterface* type = 0;
+    if (!type)
+      type = new DynamicObjectTypeInterface();
+#endif
+
     if (destroyObject || onDelete)
       op = AnyObject(new GenericObject(type, obj),
         boost::bind(&cleanupDynamicObject, _1, destroyObject, onDelete));
