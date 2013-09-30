@@ -48,12 +48,12 @@ namespace qi
     /** Returns the intern url used by ApplicationSession parsed on the
      *  command line by --qi-url or given in the constructor.
      */
-    const Url& url();
+    Url url();
 
     /** Returns the intern url used by ApplicationSession parsed on the
      *  command line by --qi-listen-url.
      */
-    const Url& listenUrl();
+    Url listenUrl();
 
     /** Establishes the session's connection and moreover starts listening if
      * --qi-listen-url was given.

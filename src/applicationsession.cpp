@@ -94,12 +94,12 @@ namespace qi
     return _p->_session;
   }
 
-  const Url& ApplicationSession::url()
+  Url ApplicationSession::url()
   {
     return _p->_url;
   }
 
-  const Url& ApplicationSession::listenUrl()
+  Url ApplicationSession::listenUrl()
   {
     return _listenAddress;
   }
