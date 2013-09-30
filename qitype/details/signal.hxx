@@ -31,6 +31,15 @@ namespace qi
   {
     return connect((boost::function<U>&)signal);
   }
+
+  template<typename T>
+  template<QI_SIGNAL_TEMPLATE_DECL>
+  SignalSubscriber&  SignalF<T>::connect(Signal<QI_SIGNAL_TEMPLATE>& signal)
+  {
+    typedef typename detail::VoidFunctionType<QI_SIGNAL_TEMPLATE>::type ftype;
+    return connect((boost::function<ftype>&)signal);
+  }
+
   template<typename T>
   SignalSubscriber& SignalF<T>::connect(const boost::function<T>& fun)
   {

@@ -148,6 +148,31 @@ TEST(TestSignal, SignalSignal)
   ASSERT_EQ(10, res);
 }
 
+class SignalTest {
+public:
+  SignalTest() : payload(0) {}
+  qi::Signal<int> sig;
+  qi::Signal<int> sig2;
+  void callback(int val) {
+    payload = val;
+  }
+  int payload;
+};
+
+
+TEST(TestSignal, SignalSignal2)
+{
+  SignalTest st;
+  st.sig2.connect(&SignalTest::callback, boost::ref(st), _1);
+  st.sig.connect(st.sig2);
+  qiLogDebug() << "sigptrs are " << &st.sig << " " << &st.sig2;
+  st.sig(4242);
+  for (unsigned i=0; i<50 && st.payload != 4242; ++i)
+    qi::os::msleep(20);
+  EXPECT_EQ(st.payload, 4242);
+  qi::os::sleep(4);
+}
+
 TEST(TestSignal, SignalN)
 {
   qi::Signal<int> sig;

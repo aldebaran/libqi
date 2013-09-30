@@ -100,6 +100,11 @@ namespace qi {
     friend class SignalBasePrivate;
   };
 
+#define QI_SIGNAL_TEMPLATE_DECL typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename P6, typename P7
+#define QI_SIGNAL_TEMPLATE P0,P1,P2,P3,P4,P5,P6,P7
+
+template<QI_SIGNAL_TEMPLATE_DECL> class Signal;
+
   template<typename T>
   class SignalF: public SignalBase, public boost::function<T>
   {
@@ -141,7 +146,7 @@ namespace qi {
    SignalSubscriber& connect(const SignalSubscriber& sub);
    SignalSubscriber& connect(const boost::function<T>& func);
    template<typename U> SignalSubscriber&  connect(SignalF<U>& signal);
-
+   template<QI_SIGNAL_TEMPLATE_DECL> SignalSubscriber&  connect(Signal<QI_SIGNAL_TEMPLATE>& signal);
 
    #define genConnect(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma) \
    template<typename F, typename P comma ATYPEDECL>            \
@@ -190,8 +195,6 @@ template<
     : ParentType(onSubscribers) {}
     using boost::function<FunctionType>::operator();
   };
-#define QI_SIGNAL_TEMPLATE_DECL typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename P6, typename P7
-#define QI_SIGNAL_TEMPLATE P0,P1,P2,P3,P4,P5,P6,P7
 
 
  /** Event subscriber info.
