@@ -167,7 +167,7 @@ namespace qi {
   */
 
     /// Update the value with the one in b
-    void update(const AnyReference& b);
+    void update(const AutoAnyReference& b);
 
     /** @return a typed reference to the underlying value
    *  @warning This method will only succeed if T exactly matches
