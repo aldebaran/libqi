@@ -23,7 +23,7 @@ namespace qi {
     virtual AnyReference get(void* storage)
     {
       AnyValue* ptr = (AnyValue*)ptrFromStorage(&storage);
-      return *ptr;
+      return ptr->asReference();
     }
 
     virtual void set(void** storage, AnyReference src)
@@ -84,7 +84,7 @@ namespace qi {
   }
 
   inline AnyValue::AnyValue(qi::TypeInterface *type)
-    : AnyReference(type)
+    : AnyReferenceBase(type)
     , _allocated(true)
   {
   }
@@ -109,7 +109,7 @@ namespace qi {
 
   inline void AnyValue::operator=(const AnyValue& b)
   {
-    reset(b, true, true);
+    reset(b.asReference(), true, true);
   }
 
   inline void AnyValue::operator=(const AnyReference& b)
@@ -125,16 +125,16 @@ namespace qi {
   inline void AnyValue::reset(const AnyReference& b, bool copy, bool free)
   {
     reset();
-    *(AnyReference*)this = b;
+    *(AnyReferenceBase*)this = b;
     _allocated = free;
     if (copy)
-      *(AnyReference*)this = clone();
+      *(AnyReferenceBase*)this = clone();
   }
 
   inline void AnyValue::reset()
   {
     if (_allocated)
-      AnyReference::destroy();
+      AnyReferenceBase::destroy();
     type = 0;
     value = 0;
   }

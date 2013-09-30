@@ -201,7 +201,7 @@ TEST(TestSignal, SignalNBind)
 {
   int res = 0;
   boost::shared_ptr<SigHolder> so(new SigHolder);
-  qi::AnyObject op = qi::AnyReference(so).to<qi::AnyObject>();
+  qi::AnyObject op = qi::AnyReference::from(so).to<qi::AnyObject>();
   qi::details::printMetaObject(std::cerr, op.metaObject());
   op.connect("s1", (boost::function<void(int)>)boost::bind<void>(&lol, _1, boost::ref(res)));
   op.post("s1", 2);
@@ -254,15 +254,15 @@ TEST(TestSignal, Dynamic)
   qi::GenericFunctionParameters params;
   s.trigger(params);
   EXPECT_EQ(49, trig);
-  params.push_back(qi::AnyReference(a));
+  params.push_back(qi::AnyReference::from(a));
   trig = 0;
   s.trigger(params);
   EXPECT_EQ(50, trig);
-  params.push_back(qi::AnyReference(b));
+  params.push_back(qi::AnyReference::from(b));
   trig = 0;
   s.trigger(params);
   EXPECT_EQ(52, trig);
-  params[1] = qi::AnyReference(c);
+  params[1] = qi::AnyReference::from(c);
   trig = 0;
   s.trigger(params);
   EXPECT_EQ(56, trig);

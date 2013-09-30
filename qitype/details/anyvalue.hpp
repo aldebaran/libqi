@@ -15,7 +15,7 @@ namespace qi {
 
   /** AnyReference with copy semantics
    */
-  class QITYPE_API AnyValue: public AnyReference
+  class QITYPE_API AnyValue: public AnyReferenceBase
   {
   public:
 
@@ -47,13 +47,21 @@ namespace qi {
     void reset();
     void reset(qi::TypeInterface *type);
     template <typename T>
-    void set(const T& t) { AnyReference::set<T>(t); }
+    void set(const T& t) { AnyReferenceBase::set<T>(t); }
     void reset(const AnyReference& src);
     void reset(const AnyReference& src, bool copy, bool free);
     void swap(AnyValue& b);
 
+    AnyReference asReference() const {
+      //AnyRef == AnyRefBase
+      return *reinterpret_cast<const AnyReference*>(static_cast<const AnyReferenceBase*>(this));
+    }
+
     template<typename T>
-    static AnyValue from(const T& r) { return AnyValue(r); }
+    static AnyValue from(const T& r) {
+      //explicit AutoAnyReference to avoid ambiguous call for object implementing cast to AnyValue
+      return AnyValue(AutoAnyReference(r));
+    }
 
   private:
     //hide AnyReference::destroy

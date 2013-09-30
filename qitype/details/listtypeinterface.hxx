@@ -38,7 +38,7 @@ public:
   virtual AnyReference dereference(void* storage)
   {
     T* ptr = (T*)ptrFromStorage(&storage);
-    return AnyReference(*(*ptr));
+    return AnyReference::from(*(*ptr));
   }
   virtual void next(void** storage)
   {

@@ -28,6 +28,7 @@ namespace qi
   public:
     virtual ~PropertyBase() {}
     virtual SignalBase* signal() = 0;
+    //TODO: why not AutoAnyReference?
     virtual void setValue(AnyReference value) = 0;
     virtual AnyValue value() const = 0;
   };

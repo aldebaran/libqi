@@ -85,7 +85,7 @@ namespace qi {
   template<typename T>
   void BinaryDecoder::read(T& v)
   {
-    AnyReference gv(v);
+    AnyReference gv = AnyReference::from(v);
     decodeBinary(&bufferReader(), gv);
   }
 
@@ -161,7 +161,7 @@ namespace qi {
   void BinaryEncoder::write(const T &v)
   {
     //last arguments specified, or VS2010 segfault with an internal error...
-    encodeBinary(&buffer(), AnyReference(v), SerializeObjectCallback());
+    encodeBinary(&buffer(), AnyReference::from(v), SerializeObjectCallback());
   }
 }
 

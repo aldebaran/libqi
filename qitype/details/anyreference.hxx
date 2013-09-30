@@ -30,18 +30,18 @@ namespace qi {
   template<typename T>
   AutoAnyReference::AutoAnyReference(const T& ptr)
   {
-    *(AnyReference*)this = AnyReference(ptr);
+    *(AnyReference*)this = AnyReference::from(ptr);
   }
 
-  inline
-  AnyReference& AnyReference::operator=(const AutoAnyReference& b)
-  {
-    update(b);
-    return *this;
-  }
+//  inline
+//  AnyReferenceBase& AnyReferenceBase::operator=(const AutoAnyReference& b)
+//  {
+//    update(b);
+//    return *this;
+//  }
 
   inline
-  AnyReference AnyReference::clone() const
+  AnyReference AnyReferenceBase::clone() const
   {
     AnyReference res;
     res.type = type;
@@ -50,7 +50,7 @@ namespace qi {
   }
 
 
-  inline qi::Signature AnyReference::signature(bool resolveDynamic) const
+  inline qi::Signature AnyReferenceBase::signature(bool resolveDynamic) const
   {
     if (!type)
       return qi::Signature();
@@ -58,27 +58,27 @@ namespace qi {
       return type->signature(value, resolveDynamic);
   }
 
-  inline void AnyReference::destroy()
+  inline void AnyReferenceBase::destroy()
   {
     if (type)
       type->destroy(value);
     value = type = 0;
   }
 
-  inline AnyReference::AnyReference()
+  inline AnyReferenceBase::AnyReferenceBase()
     : type(0)
     , value(0)
   {
   }
 
-  inline AnyReference::AnyReference(TypeInterface* type)
+  inline AnyReferenceBase::AnyReferenceBase(TypeInterface* type)
     : type(type)
     , value(type->initializeStorage())
   {
   }
 
   template<typename T>
-  AnyReference AnyReference::fromPtr(const T* ptr)
+  AnyReference AnyReferenceBase::fromPtr(const T* ptr)
   {
     static TypeInterface* t = 0;
     if (!t)
@@ -88,16 +88,16 @@ namespace qi {
   }
 
   template<typename T>
-  AnyReference::AnyReference(const T& ptr)
+  AnyReference AnyReferenceBase::from(const T& ptr)
   {
+    AnyReference ref;
     static TypeInterface* t = 0;
     if (!t)
       t = typeOf<typename boost::remove_const<T>::type>();
-    type = t;
-    value = type->initializeStorage(const_cast<void*>((const void*)&ptr));
+    return AnyReference(t, t->initializeStorage(const_cast<void*>((const void*)&ptr)));
   }
 
-  inline TypeKind AnyReference::kind() const
+  inline TypeKind AnyReferenceBase::kind() const
   {
     if (!type)
       return TypeKind_Void;
@@ -164,9 +164,9 @@ namespace qi {
 
   namespace detail {
 
-    // Optimized AnyReference::as<T> for direct access to a subType getter
+    // Optimized AnyReferenceBase::as<T> for direct access to a subType getter
     template<typename T, TypeKind k>
-    inline T valueAs(const AnyReference& v)
+    inline T valueAs(const AnyReferenceBase& v)
     {
       if (v.kind() == k)
         return static_cast<T>(
@@ -177,7 +177,7 @@ namespace qi {
   }
 
   template<typename T>
-  inline T* AnyReference::ptr(bool check)
+  inline T* AnyReferenceBase::ptr(bool check)
   {
     if (!type || (check && typeOf<T>()->info() != type->info()))
       return 0;
@@ -186,7 +186,7 @@ namespace qi {
   }
 
   template<typename T>
-  inline T& AnyReference::as()
+  inline T& AnyReferenceBase::as()
   {
     T* p = ptr<T>(true);
     if (!p)
@@ -195,7 +195,7 @@ namespace qi {
   }
 
   template<typename T>
-  inline T AnyReference::to(const T&) const
+  inline T AnyReferenceBase::to(const T&) const
   {
     return to<T>();
   }
@@ -206,7 +206,7 @@ namespace qi {
     template<typename T>
     struct AnyReferenceHelper
     {
-      static inline T to(const AnyReference& ref)
+      static inline T to(const AnyReferenceBase& ref)
       {
         TypeInterface* targetType = typeOf<T>();
         std::pair<AnyReference, bool> conv = ref.convert(targetType);
@@ -223,69 +223,69 @@ namespace qi {
     template<>
     struct AnyReferenceHelper<void>
     {
-      static inline void to(const AnyReference& ref)
+      static inline void to(const AnyReferenceBase& ref)
       {
       }
     };
   }
 
   template<typename T>
-  inline T AnyReference::to() const
+  inline T AnyReferenceBase::to() const
   {
     return detail::AnyReferenceHelper<T>::to(*this);
   }
 
-  inline bool    AnyReference::isValid() const {
+  inline bool    AnyReferenceBase::isValid() const {
     return type != 0;
   }
 
-  inline bool    AnyReference::isValue() const {
+  inline bool    AnyReferenceBase::isValue() const {
     return type != 0 && type->info() != typeOf<void>()->info();
   }
 
-  inline int64_t AnyReference::toInt() const
+  inline int64_t AnyReferenceBase::toInt() const
   {
     return detail::valueAs<int64_t, TypeKind_Int>(*this);
   }
 
-  inline uint64_t AnyReference::toUInt() const
+  inline uint64_t AnyReferenceBase::toUInt() const
   {
     return detail::valueAs<uint64_t, TypeKind_Int>(*this);
   }
 
-  inline float AnyReference::toFloat() const
+  inline float AnyReferenceBase::toFloat() const
   {
     return detail::valueAs<float, TypeKind_Float>(*this);
   }
 
-  inline double AnyReference::toDouble() const
+  inline double AnyReferenceBase::toDouble() const
   {
     return detail::valueAs<double, TypeKind_Float>(*this);
   }
 
 
-  inline std::string AnyReference::toString() const
+  inline std::string AnyReferenceBase::toString() const
   {
     return to<std::string>();
   }
 
   template<typename T>
   std::vector<T>
-  AnyReference::toList() const
+  AnyReferenceBase::toList() const
   {
     return to<std::vector<T> >();
   }
 
   template<typename K, typename V>
   std::map<K, V>
-  AnyReference::toMap() const
+  AnyReferenceBase::toMap() const
   {
     return to<std::map<K, V> >();
   }
 
 
   inline std::vector<AnyReference>
-  AnyReference::asListValuePtr()
+  AnyReferenceBase::asListValuePtr()
   {
     return asTupleValuePtr();
   }
@@ -310,48 +310,49 @@ namespace qi {
 
     template<typename T> void operator,(AnyReferenceCopy& g, const T& any)
     {
-      *(AnyReference*)&g = AnyReference(any).clone();
+      *(AnyReference*)&g = AnyReference::from(any).clone();
     }
   }
 
   template<typename T>
-  void AnyReference::set(const T& v)
+  void AnyReferenceBase::set(const T& v)
   {
-    update(AnyReference(v));
+    update(AnyReferenceBase::from(v));
    }
 
-  inline void AnyReference::setFloat(float v)
+  inline void AnyReferenceBase::setFloat(float v)
   {
     setDouble(static_cast<double>(v));
   }
 
   template<typename E, typename K>
-  E& AnyReference::element(const K& key)
+  E& AnyReferenceBase::element(const K& key)
   {
     return (*this)[key].template as<E>();
   }
 
   template<typename K>
-  AnyReference AnyReference::operator[](const K& key)
+  AnyReference AnyReferenceBase::operator[](const K& key)
   {
-    return _element(AnyReference(key), true);
+    return _element(AnyReferenceBase::from(key), true);
   }
 
-  template<typename T> void AnyReference::append(const T& element)
+  template<typename T>
+  void AnyReferenceBase::append(const T& element)
   {
-    _append(AnyReference(element));
+    _append(AnyReference::from(element));
   }
 
   template<typename K, typename V>
-  void AnyReference::insert(const K& key, const V& val)
+  void AnyReferenceBase::insert(const K& key, const V& val)
   {
-    _insert(AnyReference(key), AnyReference(val));
+    _insert(AnyReference::from(key), AnyReference::from(val));
   }
 
   template<typename K>
-  AnyReference AnyReference::find(const K& key)
+  AnyReference AnyReferenceBase::find(const K& key)
   {
-    return _element(AnyReference(key), false);
+    return _element(AnyReference::from(key), false);
   }
 
 

@@ -21,7 +21,7 @@ namespace qi {
 
   template<typename T>
   AnyIterator::AnyIterator(const T& ref)
-    : AnyValue(AnyReference(ref))
+    : AnyValue(AnyReference::from(ref))
   {}
 
   inline AnyIterator::AnyIterator()

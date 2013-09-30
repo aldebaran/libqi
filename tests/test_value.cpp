@@ -19,37 +19,37 @@ qiLogCategory("test");
 TEST(Value, Ref)
 {
   std::string s("foo");
-  AnyReference r(s);
-  r = "bar";
+  AutoAnyReference r(s);
+  r.update("bar");
   ASSERT_EQ("bar", s);
   ASSERT_EQ("bar", r.toString());
-  ASSERT_ANY_THROW(r = 5);
+  ASSERT_ANY_THROW(r.update(5));
   double d = 12;
-  AnyReference rd(d);
-  rd = 15;
+  AutoAnyReference rd(d);
+  rd.update(15);
   ASSERT_EQ(d, 15);
   AnyReference p = AnyReference::fromPtr(&d);
-  AnyReference vr(p);
-  vr = 16;
+  AutoAnyReference vr(p);
+  vr.update(16);
   ASSERT_EQ(d, 16);
 }
 
 TEST(Value, InPlaceSet)
 {
   std::string s("foo");
-  AnyReference v(s);
+  AutoAnyReference v(s);
   v.setString("bar");
   ASSERT_EQ("bar", s);
   v.setString("pifpouf");
   ASSERT_EQ("pifpouf", s);
   double d = 12;
-  v = AnyReference(d);
+  v = AutoAnyReference(d);
   v.setDouble(15.5);
   ASSERT_EQ(15.5, d);
   v.setInt(16);
   ASSERT_EQ(16.0, d);
   int i = 14;
-  v = AnyReference(i);
+  v = AutoAnyReference(i);
   v.setInt(13);
   ASSERT_EQ(13, i);
 }
@@ -57,33 +57,33 @@ TEST(Value, InPlaceSet)
 TEST(Value, Update)
 {
   std::string s("foo");
-  AnyReference v(s);
-  v.update(AnyReference("bar"));
+  AutoAnyReference v(s);
+  v.update(AutoAnyReference("bar"));
   ASSERT_EQ("bar", s);
-  v.update(AnyReference(std::string("baz")));
+  v.update(AutoAnyReference(std::string("baz")));
   ASSERT_EQ("baz", s);
-  ASSERT_ANY_THROW(v.update(AnyReference(42)));
+  ASSERT_ANY_THROW(v.update(AutoAnyReference(42)));
   double d = 5.0;
-  v = AnyReference(d);
-  v.update(AnyReference(42));
+  v = AutoAnyReference(d);
+  v.update(AutoAnyReference(42));
   ASSERT_EQ(42, d);
-  v.update(AnyReference(42.42));
+  v.update(AutoAnyReference(42.42));
   ASSERT_DOUBLE_EQ(42.42, d);
-  ASSERT_ANY_THROW(v.update(AnyReference("bar")));
+  ASSERT_ANY_THROW(v.update(AutoAnyReference("bar")));
 }
 
 TEST(Value, As)
 {
   std::string s("foo");
-  AnyReference v(s);
+  AutoAnyReference v(s);
   ASSERT_EQ(&v.asString(), &s);
   ASSERT_ANY_THROW(v.asDouble());
   double d = 1.5;
-  v = AnyReference(d);
+  v = AutoAnyReference(d);
   ASSERT_EQ(&d, &v.asDouble());
   ASSERT_ANY_THROW(v.asInt32());
   qi::uint32_t ui = 2; // vcxx uint32_t unqualified is ambiguous.
-  v = AnyReference(ui);
+  v = AutoAnyReference(ui);
   ASSERT_EQ(&ui, &v.asUInt32());
   ASSERT_ANY_THROW(v.asInt32());
   ASSERT_ANY_THROW(v.asInt16());
@@ -93,18 +93,18 @@ TEST(Value, Basic)
 {
   AnyReference v;
   int twelve = 12;
-  v = AnyReference(twelve);
+  v = AutoAnyReference(twelve);
   ASSERT_TRUE(v.type != 0);
   ASSERT_TRUE(v.value != 0);
   ASSERT_EQ(v.toInt(), 12);
   ASSERT_EQ(v.toFloat(), 12.0f);
   ASSERT_EQ(v.toDouble(), 12.0);
   double five = 5.0;
-  v = AnyReference(five);
+  v = AutoAnyReference(five);
   ASSERT_EQ(v.toInt(), 5);
   ASSERT_EQ(v.toFloat(), 5.0f);
   ASSERT_EQ(v.toDouble(), 5.0);
-  v = AnyReference("foo");
+  v = AutoAnyReference("foo");
   ASSERT_EQ("foo", v.toString());
 }
 
@@ -114,7 +114,7 @@ TEST(Value, Map)
   map["foo"] = 1;
   map["bar"] = 2;
   map["baz"] = 3;
-  AnyReference v(map);
+  AutoAnyReference v(map);
   ASSERT_EQ(3u, v.size());
 
   ASSERT_EQ(v["foo"].toInt(), 1);
@@ -124,7 +124,7 @@ TEST(Value, Map)
   ASSERT_EQ(v["baz"].toInt(), 4);
 
   // write to ref
-  v["baz"] = 5;
+  v["baz"].update(5);
   ASSERT_EQ(v["baz"].toInt(), 5);
 
   // Create a new element
@@ -171,7 +171,7 @@ TEST(Value, AnyObject)
     qi::AnyObject ori = dynBuild.object(&nothing);
     qi::GenericObject& go = *ori.get();
 
-    AnyReference v = AnyReference(ori);
+    AnyReference v = AnyReference::from(ori);
     qi::detail::ManagedObjectPtr mo = v.to<qi::detail::ManagedObjectPtr>();
     ASSERT_TRUE(mo);
     ASSERT_EQ(mo.get(), &go);
@@ -189,13 +189,13 @@ TEST(Value, AnyObject)
 TEST(Value, list)
 {
   int one = 1;
-  AnyReference v = AnyReference(one);
+  AnyReference v = AnyReference::from(one);
   v.set(5);
   ASSERT_ANY_THROW(v.set("foo"));
   ASSERT_ANY_THROW(v.set(std::vector<int>()));
   std::vector<int> vint;
   vint.push_back(12);
-  v = AnyReference(vint);
+  v = AnyReference::from(vint);
   v.append(7);
   ASSERT_EQ(7, v[1].toInt());
   ASSERT_EQ(7, v[1].toFloat());
@@ -228,7 +228,7 @@ TEST(Value, Tuple)
 {
   // Create a Dynamic tuple from vector
   std::vector<AnyValue> v;
-  AnyReference gv(v);
+  AutoAnyReference gv(v);
   gv.append(AnyValue::from(12.0));
   gv.append(AnyValue::from("foo")); // cstring not std::string
   AnyValue gtuple = gv.toTuple(false);
@@ -243,7 +243,7 @@ TEST(Value, Tuple)
   // create a static tuple
   std::vector<double> vd;
   vd.push_back(1);
-  gv = AnyReference(vd);
+  gv = AnyReference::from(vd);
   gv.append(2);
   gtuple = gv.toTuple(true);
   Point p;
@@ -303,7 +303,7 @@ TEST(Value, Tuple2)
   vd.push_back(AnyValue(AutoAnyReference(1.5)));
   vd.push_back(AnyValue(AutoAnyReference(1.5)));
   vd.push_back(AnyValue(AutoAnyReference(3.5)));
-  p = AnyReference(vd).toTuple(true).to<Point2>();
+  p = AnyReference::from(vd).toTuple(true).to<Point2>();
   EXPECT_EQ(1.5, p.x);
   EXPECT_EQ(2.5, p.y);
   EXPECT_EQ("coin", p.s);
@@ -320,7 +320,7 @@ TEST(Value, DefaultMap)
   TypeInterface* dmt = TypeInterface::fromSignature(qi::Signature("{si}"));
   AnyValue val = AnyValue(AnyReference(dmt), false, true);
   ASSERT_EQ(0u, val.size());
-  val["foo"] = 12;
+  val["foo"].update(12);
   ASSERT_EQ(1u, val.size());
   ASSERT_EQ(12, val.find("foo").toInt());
   ASSERT_EQ(0, val.find("bar").type);
@@ -354,7 +354,7 @@ TEST(Value, DefaultMap)
 TEST(Value, STL)
 {
   std::vector<int> v;
-  AnyReference gv(v);
+  AutoAnyReference gv(v);
   gv.append(1);
   gv.append(3);
   gv.append(2);
@@ -383,23 +383,23 @@ TEST(Value, STL)
     boost::lambda::bind(&AnyReference::toInt, boost::lambda::_1) == 42);
   ASSERT_EQ(mine, gv.end());
 
+//TODO: we do not want that anymore?
   std::vector<int> v2;
   v2.push_back(10);
   v2.push_back(1);
   v2.push_back(100);
   // v has correct size
-  std::copy(v2.begin(), v2.end(), gv.begin());
+  for (int i = 0; i < v2.size(); ++i) {
+    gv[i].update(v2[i]);
+  }
+  //std::copy(v2.begin(), v2.end(), gv.begin());
   ASSERT_EQ(v2, v);
   // copy other-way-round requires cast from AnyReference to int
 
 
   std::vector<AnyReference> vg;
-#if defined(_MSC_VER) && _MSC_VER <= 1500
   for (unsigned i=0; i<v.size(); ++i)
-    vg.push_back(AnyReference(v[i]));
-#else
-  vg.insert(vg.end(), v.begin(), v.end());
-#endif
+    vg.push_back(AnyReference::from(v[i]));
   std::sort(vg.begin(), vg.end());
   ASSERT_EQ(321, vg[0].toInt() + vg[1].toInt()*2 + vg[2].toInt() * 3);
 }
@@ -416,33 +416,33 @@ TEST(Value, Overflow)
     (void)test; //remove unused warning
   }
   long twelve = 12;
-  AnyReference(12).to<char>();
-  ASSERT_EQ(12,AnyReference(twelve).to<qi::int64_t>());
-  AnyReference(127).to<char>();
-  ASSERT_ANY_THROW(AnyReference(128).to<char>());
-  AnyReference(-128).to<char>();
-  ASSERT_ANY_THROW(AnyReference(254).to<char>());
-  AnyReference(255).to<unsigned char>();
-  AnyReference(0xFF11223344).to<qi::int64_t>();
-  AnyReference(0xFF11223344).to<qi::uint64_t>();
-  ASSERT_ANY_THROW(AnyReference(256).to<unsigned char>());
-  ASSERT_ANY_THROW(AnyReference(-1).to<unsigned char>());
+  AnyReference::from(12).to<char>();
+  ASSERT_EQ(12,AnyReference::from(twelve).to<qi::int64_t>());
+  AnyReference::from(127).to<char>();
+  ASSERT_ANY_THROW(AnyReference::from(128).to<char>());
+  AnyReference::from(-128).to<char>();
+  ASSERT_ANY_THROW(AnyReference::from(254).to<char>());
+  AnyReference::from(255).to<unsigned char>();
+  AnyReference::from(0xFF11223344).to<qi::int64_t>();
+  AnyReference::from(0xFF11223344).to<qi::uint64_t>();
+  ASSERT_ANY_THROW(AnyReference::from(256).to<unsigned char>());
+  ASSERT_ANY_THROW(AnyReference::from(-1).to<unsigned char>());
   // check correct sign propagation
-  ASSERT_EQ(-120, AnyReference((char)-120).to<int>());
-  AnyReference(12).to<double>();
-  AnyReference(13).to<float>();
-  ASSERT_ANY_THROW(AnyReference(-5.0).to<unsigned int>());
-  ASSERT_ANY_THROW(AnyReference(-5.0f).to<unsigned int>());
-  ASSERT_ANY_THROW(AnyReference(-256.0).to<char>());
-  ASSERT_ANY_THROW(AnyReference(256.0).to<unsigned char>());
-  ASSERT_ANY_THROW(AnyReference(1.0e80).to<qi::uint64_t>());
-  ASSERT_TRUE(AnyReference((qi::uint32_t)0xFF223344).to<double>() > 0);
-  ASSERT_TRUE(AnyReference((qi::int32_t)0xFF223344).to<double>() < 0);
-  ASSERT_TRUE(AnyReference(0xFF22334455667788ULL).to<double>() > 0);
-  ASSERT_TRUE(AnyReference((qi::int64_t)0xFF22334455667788).to<double>() < 0);
+  ASSERT_EQ(-120, AnyReference::from((char)-120).to<int>());
+  AnyReference::from(12).to<double>();
+  AnyReference::from(13).to<float>();
+  ASSERT_ANY_THROW(AnyReference::from(-5.0).to<unsigned int>());
+  ASSERT_ANY_THROW(AnyReference::from(-5.0f).to<unsigned int>());
+  ASSERT_ANY_THROW(AnyReference::from(-256.0).to<char>());
+  ASSERT_ANY_THROW(AnyReference::from(256.0).to<unsigned char>());
+  ASSERT_ANY_THROW(AnyReference::from(1.0e80).to<qi::uint64_t>());
+  ASSERT_TRUE(AnyReference::from((qi::uint32_t)0xFF223344).to<double>() > 0);
+  ASSERT_TRUE(AnyReference::from((qi::int32_t)0xFF223344).to<double>() < 0);
+  ASSERT_TRUE(AnyReference::from(0xFF22334455667788ULL).to<double>() > 0);
+  ASSERT_TRUE(AnyReference::from((qi::int64_t)0xFF22334455667788).to<double>() < 0);
   // check other access path
   ASSERT_ANY_THROW(AnyValue::make<char>().setInt(128));
-  ASSERT_ANY_THROW(AnyValue::make<char>().update(AnyReference(128)));
+  ASSERT_ANY_THROW(AnyValue::make<char>().update(AnyReference::from(128)));
 }
 
 TEST(Value, Convert_ListToTuple)

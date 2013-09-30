@@ -15,6 +15,8 @@
 
 namespace qi {
 
+
+  class AnyReference;
   /** Class that holds any value, with informations to manipulate it.
    *  operator=() makes a shallow copy.
    *
@@ -22,11 +24,11 @@ namespace qi {
    * Use qi::AnyValue which has value semantics instead.
    *
    */
-  class QITYPE_API AnyReference
+  class QITYPE_API AnyReferenceBase
   {
-  public:
+  protected:
 
-    AnyReference();
+    AnyReferenceBase();
 
     ///@{
     /// Low level Internal API
@@ -34,14 +36,16 @@ namespace qi {
     /** Store type and allocate storage of value.
    * @param type use this type for initialization
    */
-    explicit AnyReference(TypeInterface* type);
+    explicit AnyReferenceBase(TypeInterface* type);
 
     /** Create a generic value with type and a value who should have
    * already been allocated.
    * @param type type of this generic value
    * @param value an already alloc place to store value
    */
-    AnyReference(TypeInterface* type, void* value) : type(type), value(value) {}
+    AnyReferenceBase(TypeInterface* type, void* value) : type(type), value(value) {}
+
+  public:
 
     /// @return the pair (convertedValue, trueIfCopiedAndNeedsDestroy)
     std::pair<AnyReference, bool> convert(TypeInterface* targetType) const;
@@ -90,7 +94,7 @@ namespace qi {
    * out of scope).
    */
     template <typename T>
-    explicit AnyReference(const T& ref);
+    static AnyReference from(const T& ref);
 
     template <typename T>
     static AnyReference fromPtr(const T* ptr);
@@ -100,7 +104,9 @@ namespace qi {
    *  Previous content is lost, and will leak if not deleted outside or
    *  with destroy().
    */
-    AnyReference& operator=(const AutoAnyReference& b);
+    //TODO: DROP THAT FUNCTION. that is dangerous
+    //AnyReferenceBase& operator=(const AutoAnyReference& b);
+
     AnyReference clone() const;
     /// Deletes storage.
     void destroy();
@@ -266,6 +272,27 @@ namespace qi {
 
   };
 
+  class AnyReference : public AnyReferenceBase {
+  public:
+    AnyReference()
+      : AnyReferenceBase()
+    {}
+
+    AnyReference(const AnyReferenceBase& rhs)
+      : AnyReferenceBase(rhs)
+    {}
+
+    explicit AnyReference(TypeInterface* type)
+      : AnyReferenceBase(type)
+    {}
+
+    AnyReference(TypeInterface* type, void* value)
+      : AnyReferenceBase(type, value)
+    {}
+
+
+  };
+
   QITYPE_API bool operator< (const AnyReference& a, const AnyReference& b);
   QITYPE_API bool operator==(const AnyReference& a, const AnyReference& b);
   QITYPE_API bool operator!=(const AnyReference& a, const AnyReference& b);
@@ -293,6 +320,11 @@ namespace qi {
     AutoAnyReference(const AutoAnyReference & b);
 
     AutoAnyReference(const AnyReference &self)
+      : AnyReference(self)
+    {}
+
+
+    AutoAnyReference(const AnyReferenceBase &self)
       : AnyReference(self)
     {}
 

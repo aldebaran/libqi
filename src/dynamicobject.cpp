@@ -218,9 +218,9 @@ namespace qi
     GenericFunctionParameters p;
     p.reserve(params.size()+1);
     if (method >= Manageable::startId && method < Manageable::endId)
-      p.push_back(AnyReference(m));
+      p.push_back(AnyReference::from(m));
     else
-      p.push_back(AnyReference(this));
+      p.push_back(AnyReference::from(this));
     p.insert(p.end(), params.begin(), params.end());
     return ::qi::metaCall(context.eventLoop(), _p->threadingModel,
       i->second.second, callType, context, method, i->second.first, p);
@@ -230,7 +230,7 @@ namespace qi
   {
     try
     {
-      property(id)->setValue(val);
+      property(id)->setValue(val.asReference());
     }
     catch(const std::exception& e)
     {

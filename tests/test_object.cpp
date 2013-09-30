@@ -211,7 +211,7 @@ TEST(TestObject, Typing)
   qi::AnyFunction adderAdd = qi::AnyFunction::from(&Adder::add);
   Adder add1(1);
   std::vector<qi::AnyReference> argsAdd = convert(41);
-  res = adderAdd.call(qi::AnyReference(add1), argsAdd);
+  res = adderAdd.call(qi::AnyReference::from(add1), argsAdd);
   ASSERT_TRUE(checkValue(res, 42));
 }
 
@@ -413,7 +413,7 @@ TEST(TestObject, SerializeSimple)
 TEST(TestObject, ConvertSimple)
 {
   Point p; p.x = 1; p.y = 2;
-  FPoint p2 = qi::AnyReference(p).to<FPoint>();
+  FPoint p2 = qi::AnyReference::from(p).to<FPoint>();
   ASSERT_EQ(p2.x, p.x);
   ASSERT_EQ(p2.y, p.y);
 }
@@ -490,7 +490,7 @@ TEST(TestObject, convertComplex)
   comp.stuff.push_back(v);
   v.push_back(3);
   comp.stuff.push_back(v);
-  Complex2 comp2 = qi::AnyReference(comp).to<Complex2>();
+  Complex2 comp2 = qi::AnyReference::from(comp).to<Complex2>();
   ASSERT_EQ(comp2.foo, comp.foo);
   ASSERT_EQ(comp.points.size(), comp2.points.size());
   ASSERT_EQ(comp.points.front().x, comp2.points.front().x);
@@ -976,7 +976,7 @@ TEST(TestObject, async)
     EXPECT_EQ(100, f.value());
 
     qiLogDebug() << "converting to AnyObject";
-    qi::AnyObject o = qi::AnyReference(rfptr).toObject();
+    qi::AnyObject o = qi::AnyReference::from(rfptr).toObject();
     qiLogDebug() << "convesion done";
     f = qi::async<int>(o, "msleep", 100);
     EXPECT_EQ(qi::FutureState_Running, f.wait(0));

@@ -619,7 +619,7 @@ namespace qi {
       const std::string& methodName comma                         \
       QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoAnyReference)) \
   {                                                              \
-    AnyObject obj = AnyReference(instance).toObject();       \
+    AnyObject obj = AnyReference::from(instance).toObject();       \
     qi::Future<R> res = obj.template call<R>(MetaCallType_Queued, methodName comma AUSE);  \
     res.connect(boost::bind(&detail::hold<AnyObject>, obj));   \
     return res;                                                 \
@@ -633,7 +633,7 @@ namespace qi {
       const std::string& methodName comma                         \
       QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoAnyReference)) \
   {                                                              \
-    AnyObject obj = AnyReference(instance).toObject();        \
+    AnyObject obj = AnyReference::from(instance).toObject();        \
     qi::Future<R> res = obj.call<R>(MetaCallType_Queued, methodName comma AUSE);  \
     res.connect(boost::bind(&detail::hold<AnyObject>, obj));   \
     return res;                                                 \
@@ -675,7 +675,7 @@ namespace qi {
     int pid = metaObject().propertyId(name);
     if (pid < 0)
       return makeFutureError<void>("Property not found");
-    return type->setProperty(value, pid, AnyValue(AnyReference(val)));
+    return type->setProperty(value, pid, AnyValue::from(val));
   }
 
   /* An AnyObject is actually of a Dynamic type: The underlying TypeInterface*
@@ -754,7 +754,7 @@ namespace qi {
     AnyReference makeProxy(AnyObject ptr)
     {
       boost::shared_ptr<Proxy> sp(new Proxy(ptr));
-      return AnyReference(sp).clone();
+      return AnyReference::from(sp).clone();
     }
   }
   template<typename Proxy, typename Interface>

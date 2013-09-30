@@ -101,10 +101,10 @@ MapTypeInterfaceImpl<M>::element(void** storage, void* keyStorage, bool autoInse
     if (!autoInsert)
       return AnyReference();
     typename M::mapped_type& e = (*ptr)[*key];
-    return AnyReference(e);
+    return AnyReference::from(e);
   }
   else
-    return AnyReference(((typename M::mapped_type&)(it->second)));
+    return AnyReference::from(((typename M::mapped_type&)(it->second)));
 }
 
 

@@ -251,6 +251,7 @@ namespace qi {
     Object();
     /// Takes ownership of ptr
     Object(T* ptr);
+
     /** Construct from an other Object will only work if conversion is
     * from T to U is possible, or if T is a proxy type.
     */

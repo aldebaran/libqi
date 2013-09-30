@@ -630,7 +630,7 @@ namespace qi {
     {
       std::vector<void*>& ptr = *(std::vector<void*>*)ptrFromStorage(&storage);
       std::vector<void*>::iterator it = ptr.begin();
-      AnyReference v = AnyReference(it);
+      AnyReference v = AnyReference::from(it);
       // Hugly type swap, works because we know backend storage matches
       v.type = makeListIteratorType(_elementType);
       return AnyIterator(v);
@@ -639,7 +639,7 @@ namespace qi {
     {
       std::vector<void*>& ptr = *(std::vector<void*>*)ptrFromStorage(&storage);
       std::vector<void*>::iterator it = ptr.end();
-      AnyReference v = AnyReference(it);
+      AnyReference v = AnyReference::from(it);
       // Hugly type swap, works because we know backend storage matches
       v.type = makeListIteratorType(_elementType);
       return AnyIterator(v);
@@ -967,7 +967,7 @@ namespace qi {
     {
       DefaultMapStorage& ptr = *(DefaultMapStorage*)ptrFromStorage(&storage);
       DefaultMapStorage::iterator it = ptr.begin();
-      AnyReference val = AnyReference(it);
+      AnyReference val = AnyReference::from(it);
       val.type = makeMapIteratorType(_pairType);
       return AnyIterator(val);
     }
@@ -975,7 +975,7 @@ namespace qi {
     {
       DefaultMapStorage& ptr = *(DefaultMapStorage*)ptrFromStorage(&storage);
       DefaultMapStorage::iterator it = ptr.end();
-      AnyReference val = AnyReference(it);
+      AnyReference val = AnyReference::from(it);
       val.type = makeMapIteratorType(_pairType);
       return AnyIterator(val);
 

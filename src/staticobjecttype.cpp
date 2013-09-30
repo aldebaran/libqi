@@ -175,7 +175,7 @@ qi::Future<void> StaticObjectTypeBase::setProperty(void* instance, unsigned int 
   qiLogDebug() << "SetProperty " << id << " " << encodeJSON(value);
   try
   {
-    p->setValue(value);
+    p->setValue(value.asReference());
   }
   catch(const std::exception& e)
   {

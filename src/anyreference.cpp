@@ -37,7 +37,7 @@ namespace qi
   }
 
 
-  std::pair<AnyReference, bool> AnyReference::convert(DynamicTypeInterface* targetType) const
+  std::pair<AnyReference, bool> AnyReferenceBase::convert(DynamicTypeInterface* targetType) const
   {
     // same-type check (not done before, useful mainly for AnyObject)
     if (targetType->info() == type->info())
@@ -46,11 +46,11 @@ namespace qi
 
     result.type = targetType;
     result.value = targetType->initializeStorage();
-    static_cast<DynamicTypeInterface*>(targetType)->set(&result.value, *this);
+    static_cast<DynamicTypeInterface*>(targetType)->set(&result.value, AnyReference(*this));
     return std::make_pair(result, true);
   }
 
-  std::pair<AnyReference, bool> AnyReference::convert(PointerTypeInterface* targetType) const
+  std::pair<AnyReference, bool> AnyReferenceBase::convert(PointerTypeInterface* targetType) const
   {
     AnyReference result;
 
@@ -85,7 +85,7 @@ namespace qi
                 static_cast<ObjectTypeInterface*>(pointedSrc.type),
                 pointedSrc.value),
               boost::bind(dropIt, _1, qi::AnyValue(*this)));
-        return AnyReference(o).convert((TypeInterface*)targetType);
+        return AnyReference::from(o).convert((TypeInterface*)targetType);
       }
       if (pointedDstPair.second)
         qiLogError() << "assertion error, allocated converted reference";
@@ -115,7 +115,7 @@ namespace qi
     return std::make_pair(AnyReference(), false);
   }
 
-  std::pair<AnyReference, bool> AnyReference::convert(ListTypeInterface* targetType) const
+  std::pair<AnyReference, bool> AnyReferenceBase::convert(ListTypeInterface* targetType) const
   {
     AnyReference result;
 
@@ -160,7 +160,7 @@ namespace qi
     return std::make_pair(AnyReference(), false);
   }
 
-  std::pair<AnyReference, bool> AnyReference::convert(StringTypeInterface* targetType) const
+  std::pair<AnyReference, bool> AnyReferenceBase::convert(StringTypeInterface* targetType) const
   {
     AnyReference result;
 
@@ -188,7 +188,7 @@ namespace qi
     return std::make_pair(AnyReference(), false);
   }
 
-  std::pair<AnyReference, bool> AnyReference::convert(RawTypeInterface* targetType) const
+  std::pair<AnyReference, bool> AnyReferenceBase::convert(RawTypeInterface* targetType) const
   {
     AnyReference result;
 
@@ -218,7 +218,7 @@ namespace qi
     return std::make_pair(AnyReference(), false);
   }
 
-  std::pair<AnyReference, bool> AnyReference::convert(FloatTypeInterface* targetType) const
+  std::pair<AnyReference, bool> AnyReferenceBase::convert(FloatTypeInterface* targetType) const
   {
     AnyReference result;
 
@@ -248,7 +248,7 @@ namespace qi
     return std::make_pair(AnyReference(), false);
   }
 
-  std::pair<AnyReference, bool> AnyReference::convert(IntTypeInterface* targetType) const
+  std::pair<AnyReference, bool> AnyReferenceBase::convert(IntTypeInterface* targetType) const
   {
     AnyReference result;
 
@@ -284,7 +284,7 @@ namespace qi
     return std::make_pair(AnyReference(), false);
   }
 
-  std::pair<AnyReference, bool> AnyReference::convert(StructTypeInterface* targetType) const
+  std::pair<AnyReference, bool> AnyReferenceBase::convert(StructTypeInterface* targetType) const
   {
     AnyReference result;
     StructTypeInterface* tdst = targetType;
@@ -384,7 +384,7 @@ namespace qi
     return std::make_pair(AnyReference(), false);
   }
 
-  std::pair<AnyReference, bool> AnyReference::convert(MapTypeInterface* targetType) const
+  std::pair<AnyReference, bool> AnyReferenceBase::convert(MapTypeInterface* targetType) const
   {
     AnyReference result;
 
@@ -468,7 +468,7 @@ namespace qi
     return std::make_pair(AnyReference(), false);
   }
 
-  std::pair<AnyReference, bool> AnyReference::convert(TypeInterface* targetType) const
+  std::pair<AnyReference, bool> AnyReferenceBase::convert(TypeInterface* targetType) const
   {
     qiLogDebug() << "convert "
       << type->infoString() << '(' << type->kind() << ") "
@@ -556,7 +556,7 @@ namespace qi
               static_cast<ObjectTypeInterface*>(pT->pointedType()),
               pT->dereference(value).value),
              boost::bind(&AnyObject::deleteGenericObjectOnlyAndKeep<AnyValue>, _1, AnyValue(*this)));
-      return std::make_pair(AnyReference(obj).clone(), true);
+      return std::make_pair(AnyReference::from(obj).clone(), true);
     }
 
     if (type->info() == typeOf<AnyObject>()->info()
@@ -612,7 +612,7 @@ namespace qi
     return std::make_pair(AnyReference(), false);
   }
 
-  AnyReference AnyReference::convertCopy(TypeInterface* targetType) const
+  AnyReference AnyReferenceBase::convertCopy(TypeInterface* targetType) const
   {
     std::pair<AnyReference, bool> res = convert(targetType);
     if (res.second)
@@ -707,9 +707,10 @@ namespace qi
 #undef GET
     return a.value < b.value;
   }
+
   bool operator< (const AnyValue& a, const AnyValue& b)
   {
-    return (const AnyReference&)a < (const AnyReference&)b;
+    return a.asReference() < b.asReference();
   }
 
   bool operator==(const AnyReference& a, const AnyReference& b)
@@ -720,20 +721,20 @@ namespace qi
       return static_cast<IteratorTypeInterface*>(a.type)->equals(a.value, b.value);
     }
     else
-      return ! (a < b) && !(b<a);
+      return ! (a < b) && !(b < a);
   }
 
   bool operator==(const AnyValue& a, const AnyValue& b)
   {
-    return (const AnyReference&)a == (const AnyReference&)b;
+    return a.asReference() == b.asReference();
   }
 
   bool operator==(const AnyIterator& a, const AnyIterator& b)
   {
-    return (const AnyReference&)a == (const AnyReference&)b;
+    return a.asReference() == b.asReference();
   }
 
-  AnyValue AnyReference::toTuple(bool homogeneous) const
+  AnyValue AnyReferenceBase::toTuple(bool homogeneous) const
   {
     if (kind() == TypeKind_Tuple)
       return AnyValue(*this);
@@ -765,12 +766,12 @@ namespace qi
     return AnyValue(makeGenericTuple(elems), false, true);
   }
 
-  AnyObject AnyReference::toObject() const
+  AnyObject AnyReferenceBase::toObject() const
   {
     return to<AnyObject>();
   }
 
-  AnyReference AnyReference::_element(const AnyReference& key, bool throwOnFailure)
+  AnyReference AnyReferenceBase::_element(const AnyReference& key, bool throwOnFailure)
   {
     if (kind() == TypeKind_List)
     {
@@ -817,7 +818,7 @@ namespace qi
       throw std::runtime_error("Expected List, Map or Tuple kind");
   }
 
-  void AnyReference::_append(const AnyReference& elem)
+  void AnyReferenceBase::_append(const AnyReference& elem)
   {
     if (kind() != TypeKind_List)
       throw std::runtime_error("Expected a list");
@@ -828,7 +829,7 @@ namespace qi
       c.first.destroy();
   }
 
-  void AnyReference::_insert(const AnyReference& key, const AnyReference& val)
+  void AnyReferenceBase::_insert(const AnyReference& key, const AnyReference& val)
   {
     if (kind() != TypeKind_Map)
       throw std::runtime_error("Expected a map");
@@ -846,7 +847,7 @@ namespace qi
       cv.first.destroy();
   }
 
-  void AnyReference::update(const AnyReference& val)
+  void AnyReferenceBase::update(const AutoAnyReference& val)
   {
     switch(kind())
     {
@@ -867,7 +868,7 @@ namespace qi
     }
   }
 
-  void AnyReference::setInt(int64_t v)
+  void AnyReferenceBase::setInt(int64_t v)
   {
     if (kind() == TypeKind_Int)
     {
@@ -890,14 +891,14 @@ namespace qi
       throw std::runtime_error("Value is not Int or Float");
   }
 
-  void AnyReference::setDynamic(const qi::AnyReference &element) {
+  void AnyReferenceBase::setDynamic(const qi::AnyReference &element) {
     if (kind() != TypeKind_Dynamic)
       throw std::runtime_error("Value is not a Dynamic");
     DynamicTypeInterface* t = static_cast<DynamicTypeInterface*>(this->type);
     t->set(&value, element);
   }
 
-  void AnyReference::setUInt(uint64_t v)
+  void AnyReferenceBase::setUInt(uint64_t v)
   {
     if (kind() == TypeKind_Int)
     {
@@ -917,7 +918,7 @@ namespace qi
       throw std::runtime_error("Value is not Int or Float");
   }
 
-  void AnyReference::setDouble(double v)
+  void AnyReferenceBase::setDouble(double v)
   {
     if (kind() == TypeKind_Float)
       static_cast<FloatTypeInterface*>(type)->set(&value, v);
@@ -941,7 +942,7 @@ namespace qi
       throw std::runtime_error("Value is not Int or Float");
   }
 
-  std::vector<AnyReference> AnyReference::asTupleValuePtr()
+  std::vector<AnyReference> AnyReferenceBase::asTupleValuePtr()
   {
     if (kind() == TypeKind_Tuple)
       return static_cast<StructTypeInterface*>(type)->values(value);
@@ -958,7 +959,7 @@ namespace qi
       throw std::runtime_error("Expected tuple, list or map");
   }
 
-  AnyIterator AnyReference::begin() const
+  AnyIterator AnyReferenceBase::begin() const
   {
     if (kind() == TypeKind_List)
       return static_cast<ListTypeInterface*>(type)->begin(value);
@@ -968,7 +969,7 @@ namespace qi
       throw std::runtime_error("Expected list or map");
   }
 
-  AnyIterator AnyReference::end() const
+  AnyIterator AnyReferenceBase::end() const
   {
     if (kind() == TypeKind_List)
       return static_cast<ListTypeInterface*>(type)->end(value);
@@ -978,7 +979,7 @@ namespace qi
       throw std::runtime_error("Expected list or map");
   }
 
-  std::map<AnyReference, AnyReference> AnyReference::asMapValuePtr()
+  std::map<AnyReference, AnyReference> AnyReferenceBase::asMapValuePtr()
   {
     if (kind() != TypeKind_Map)
       throw std::runtime_error("Expected a map");
@@ -993,14 +994,14 @@ namespace qi
     return result;
   }
 
-  void AnyReference::setString(const std::string& v)
+  void AnyReferenceBase::setString(const std::string& v)
   {
     if (kind() != TypeKind_String)
       throw std::runtime_error("Value is not of kind string");
     static_cast<StringTypeInterface*>(type)->set(&value, &v[0], v.size());
   }
 
-  size_t AnyReference::size() const
+  size_t AnyReferenceBase::size() const
   {
     if (kind() == TypeKind_List)
       return static_cast<ListTypeInterface*>(type)->size(value);
@@ -1013,7 +1014,7 @@ namespace qi
   }
 
 
-  AnyReference AnyReference::asDynamic() const
+  AnyReference AnyReferenceBase::asDynamic() const
   {
     if (kind() != TypeKind_Dynamic)
       throw std::runtime_error("Not of dynamic kind");
@@ -1021,7 +1022,7 @@ namespace qi
     return d->get(value);
   }
 
-  AnyReference AnyReference::operator*()
+  AnyReference AnyReferenceBase::operator*()
   {
     if (kind() == TypeKind_Pointer)
       return static_cast<PointerTypeInterface*>(type)->dereference(value);
