@@ -516,7 +516,7 @@ TEST(TestEventLoop, MonitorEventLoop)
 {
   TestSessionPair p;
   bool loopStuck = false;
-  qi::Future<void> f = qi::getDefaultObjectEventLoop()->monitorEventLoop(qi::getDefaultNetworkEventLoop(), 100000);
+  qi::Future<void> f = qi::getDefaultObjectEventLoop()->monitorEventLoop(qi::getDefaultNetworkEventLoop(), 50000);
   f.connect(boost::bind(&set_true, &loopStuck));
   qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("delay", &qi::os::msleep);
@@ -525,7 +525,7 @@ TEST(TestEventLoop, MonitorEventLoop)
   p.server()->registerService("delayer", obj);
   qi::AnyObject proxy = p.client()->service("delayer");
   ASSERT_TRUE(!loopStuck);
-  proxy.call<void>("delay", 1000).wait();
+  proxy.call<void>("delay", 500).wait();
   ASSERT_TRUE(loopStuck);
   qiLogDebug() << "Cancelling monitorEventLoop";
   f.cancel(); // or eventloops will get stuck
@@ -689,7 +689,7 @@ TEST(TestCall, TestObjectPassing)
   eventValue.reset();
   ASSERT_TRUE(!eventValue.future().isFinished());
   unregisteredObj.post("fire", 1);
-  eventValue.future().wait(1000);
+  eventValue.future().wait(2000);
   ASSERT_TRUE(!eventValue.future().isFinished());
 
   // Check that unregisteredObj is no longer held
@@ -924,18 +924,19 @@ TEST(TestCall, Future)
 {
   TestSessionPair p;
   qi::DynamicObjectBuilder gob;
+  gob.setThreadingModel(qi::ObjectThreadingModel_MultiThread);
   gob.advertiseMethod("delaySet", &delaySet);
   qi::AnyObject sobj = gob.object();
   p.server()->registerService("delayer", sobj);
   qi::AnyObject obj = p.client()->service("delayer");
   qi::Future<int> f = obj.call<int>("delaySet", 500, 41);
+  qi::Future<int> f2 =  obj.call<int>("delaySet", 500, -1);
   ASSERT_TRUE(!f.isFinished());
+  ASSERT_TRUE(!f2.isFinished());
   f.wait();
   ASSERT_EQ(41, f.value());
-  f =  obj.call<int>("delaySet", 500, -1);
-  ASSERT_TRUE(!f.isFinished());
-  f.wait();
-  ASSERT_TRUE(f.hasError());
+  f2.wait();
+  ASSERT_TRUE(f2.hasError());
 }
 
 void arrrg(int v) {
@@ -1187,7 +1188,9 @@ TEST(TestObject, asyncCallAndDropPointer)
   qi::Future<bool> f = go->async<bool>("unregisterService", &s, sid, &checker);
   f.wait();
   EXPECT_TRUE(f.value());
-  // ... and should be gone by now
+  // ... and should be gone eventually
+  for (unsigned i=0; i<20 && !*checker; ++i)
+    qi::os::msleep(50);
   EXPECT_EQ(1, *checker);
   EXPECT_EQ(currentDCount + 1, *TestClass::destructionCount);
 }
