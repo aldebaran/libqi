@@ -29,7 +29,7 @@ namespace qi
     virtual ~PropertyBase() {}
     virtual SignalBase* signal() = 0;
     //TODO: why not AutoAnyReference?
-    virtual void setValue(AnyReference value) = 0;
+    virtual void setValue(AutoAnyReference value) = 0;
     virtual AnyValue value() const = 0;
   };
 
@@ -74,8 +74,8 @@ namespace qi
     : PropertyImpl<T>(getter, setter, onsubscribe)
     {}
     virtual SignalBase* signal() { return this;}
-    virtual void setValue(AnyReference value)  { PropertyImpl<T>::set(value.to<T>());}
-    virtual AnyValue value() const { return AnyValue(AnyReference(PropertyImpl<T>::get()));}
+    virtual void setValue(AutoAnyReference value)  { PropertyImpl<T>::set(value.to<T>());}
+    virtual AnyValue value() const { return AnyValue::from(PropertyImpl<T>::get());}
   };
 
   template<>
@@ -89,7 +89,7 @@ namespace qi
     {
     }
     virtual SignalBase* signal() { return this;}
-    virtual void setValue(AnyReference value)  { set(AnyValue(value, false, false));}
+    virtual void setValue(AutoAnyReference value)  { set(AnyValue(value, false, false));}
     virtual AnyValue value() const { return get();}
   };
 
@@ -105,7 +105,7 @@ namespace qi
       std::vector<TypeInterface*> types(&_type, &_type + 1);
       _setSignature(makeTupleSignature(types));
     }
-    virtual void setValue(AnyReference value)  { set(AnyValue(value, false, false));}
+    virtual void setValue(AutoAnyReference value)  { set(AnyValue(value, false, false));}
     void set(const AnyValue& v);
     virtual qi::Signature signature() const {
       return makeTupleSignature(std::vector<TypeInterface*>(&_type, &_type + 1));
