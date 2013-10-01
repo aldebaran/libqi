@@ -11,7 +11,9 @@
 #include "gil.hpp"
 #include "error.hpp"
 #include <qitype/dynamicobjectbuilder.hpp>
+#include <qitype/objecttypebuilder.hpp> //for TYPE_TEMPLATE(Future)
 #include <qitype/jsoncodec.hpp>
+
 
 qiLogCategory("qipy.object");
 
