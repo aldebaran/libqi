@@ -24,6 +24,7 @@ if (UNIX AND WITH_BOOST_LOCALE)
   qi_create_bin(qiconvloc_example qiconvloc_example.cpp NO_INSTALL)
   qi_use_lib(qiconvloc_example QI BOOST_LOCALE)
   set_target_properties(qiconvloc_example PROPERTIES FOLDER "examples")
+  add_subdirectory(qitranslate)
 endif()
 
-add_subdirectory(qitranslate)
+
