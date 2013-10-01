@@ -503,6 +503,17 @@ namespace qi {
       val.destroy();
     }
 
+    template <>
+    inline void futureAdapter<void>(qi::Future<qi::AnyReference> metaFut, qi::Promise<void> promise)
+    {
+      //error handling
+      if (metaFut.hasError()) {
+        promise.setError(metaFut.error());
+        return;
+      }
+      promise.setValue(0);
+    }
+
     template <typename T>
     inline void futureAdapterVal(qi::Future<qi::AnyValue> metaFut, qi::Promise<T> promise)
     {
@@ -530,18 +541,6 @@ namespace qi {
       else
         promise.setValue(metaFut.value());
     }
-
-    template <>
-    inline void futureAdapter<void>(qi::Future<qi::AnyReference> metaFut, qi::Promise<void> promise)
-    {
-      //error handling
-      if (metaFut.hasError()) {
-        promise.setError(metaFut.error());
-        return;
-      }
-      promise.setValue(0);
-    }
-
   }
 
 
