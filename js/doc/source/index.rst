@@ -2,15 +2,11 @@
 QiMessaging JavaScript
 **********************
 
-.. warning::
-   This library is still under development. Feel free to contact
-   llec@aldebaran-robotics.com for more information.
-
 Introduction
 ============
 
 QiMessaging provides JavaScript bindings to call remote services (modules)
-and subscribe to signals (events) through a web browser using JSON.
+and subscribe to signals (events) in a web browser.
 
 `Socket.IO <http://socket.io/>`_ is used in order to establish full-duplex
 communication between the robot and the browser, and easily deal with
@@ -21,8 +17,15 @@ The library was designed around the `jQuery <http://www.jquery.com/>`_
 most function calls return a
 `promise <http://api.jquery.com/deferred.promise/>`_.
 
-The client page therefore requires three script inclusions: QiMessaging itself,
-and its two dependencies: jQuery and Socket.IO.
+Please make sure you are familiar with those libraries before starting.
+
+How to use
+==========
+
+The client page requires three script inclusions: QiMessaging itself,
+and its two dependencies: jQuery and Socket.IO. Assuming your page is
+stored in the root folder of you application (``application/html/index.html``),
+you should add the following lines:
 
 .. code-block:: html
 
@@ -31,20 +34,18 @@ and its two dependencies: jQuery and Socket.IO.
    <script src="../../libs/qimessaging/1.0/qimessaging.js"></script>
 
 .. note::
-   For a robot called ``nao`` and an application called ``airnao``,
-   the related path used above would correspond to a page hosted on
-   ``http://nao.local/apps/airnao/index.html`` for instance. The absolute URL
-   would be ``http://nao.local/libs/qimessaging/1.0/qimessaging.js``.
+   The absolute URL would be
+   ``http://nao.local/libs/qimessaging/1.0/qimessaging.js``.
 
 .. warning::
    If you plan to use jQuery for your application, do not rely on the providing
-   one, which may change. You may want to take a look at `jQuery.noConflict() <http://api.jquery.com/jQuery.noConflict>`_.
+   one, which can change. You may instead want to take a look at
+   `jQuery.noConflict() <http://api.jquery.com/jQuery.noConflict>`_.
 
+QiSession
+=========
 
-How to use
-==========
-
-The binding provides only one class: ``QiSession``, the JavaScript equivalent
+The bindings provide only one class: ``QiSession``, the JavaScript equivalent
 of QiMessaging sessions, ie. a connection to the robot. Once connected, it can
 be used to call services and access the socket.
 
@@ -66,22 +67,27 @@ and ``socket()``.
 QiSession.service()
 ===================
 
-Services are also known in NAOqi as modules. You can call this function to
-get a JavaScript proxy to any service.
+You can call this function to get a JavaScript proxy to any service, also known
+as modules. Services are JavaScript bound objects providing corresponding API
+:ref:`calls` and :ref:`signals`.
 
 In case of success, this method calls the ``done()`` callback with an
-object corresponding to the requested service.
+object corresponding to the requested service. Otherwise, the ``fail()``
+callback is called.
 
 .. code-block:: javascript
 
-   function onService(proxy)
+   function onError(data)
    {
+     console.log(data);
    }
 
-   qim.service("ALTextToSpeech").done(onService);
+   function onService(proxy)
+   {
+     proxy.say("Hello, world!");
+   }
 
-Services are JavaScript bound objects providing corresponding API :ref:`calls`
-and :ref:`signals`.
+   qim.service("ALTextToSpeech").done(onService).fail(onError);
 
 .. _calls:
 
@@ -247,3 +253,7 @@ Sample
    </body>
 
    </html>
+
+.. note::
+   If you have any question or request, feel free to contact
+   llec@aldebaran-robotics.com.
