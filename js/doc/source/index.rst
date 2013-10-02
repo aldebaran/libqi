@@ -157,7 +157,8 @@ QiSession.socket()
 
 This function will return the underlying `socket.io` object, that can
 be used to deal with low-level
-`socket events <https://github.com/LearnBoost/socket.io/wiki/Exposed-events>`_.
+`client events
+<https://github.com/LearnBoost/socket.io/wiki/Exposed-events#client>`_.
 
 .. code-block:: javascript
 
