@@ -81,6 +81,12 @@ namespace qi {
     boost::recursive_mutex::scoped_lock sl(_socketsMutex);
     if (!socket)
       return;
+    if (_dying)
+    {
+      qiLogDebug() << "Incoming connectiong while closing, dropping...";
+      socket->disconnect();
+      return;
+    }
     _sockets.push_back(socket);
     socket->disconnected.connect(&Server::onSocketDisconnected, this, socket, _1);
     socket->messageReady.connect(&Server::onMessageReady, this, _1, socket);
@@ -128,10 +134,14 @@ namespace qi {
 
     qiLogVerbose() << "Closing server...";
     {
-      boost::recursive_mutex::scoped_lock sl(_socketsMutex);
+      std::list<TransportSocketPtr> socketsCopy;
+      {
+        boost::recursive_mutex::scoped_lock sl(_socketsMutex);
+        std::swap(_sockets, socketsCopy);
+      }
       std::list<TransportSocketPtr>::iterator it;
       //TODO move that logic into TransportServer
-      for (it = _sockets.begin(); it != _sockets.end(); ++it) {
+      for (it = socketsCopy.begin(); it != socketsCopy.end(); ++it) {
         (*it)->connected.disconnectAll();
         (*it)->disconnected.disconnectAll();
         (*it)->messageReady.disconnectAll();
@@ -143,6 +153,8 @@ namespace qi {
 
   qi::Future<void> Server::listen(const qi::Url &address)
   {
+    // Assume this means we are back on-line.
+    _dying = false;
     return _server.listen(address);
   }
 
@@ -153,42 +165,47 @@ namespace qi {
 
   void Server::onSocketDisconnected(TransportSocketPtr socket, std::string error)
   {
-    boost::mutex::scoped_lock l(_stateMutex);
-    if (_dying)
+    TransportSocketPtr match;
     {
-      return;
-    }
-
-    BoundAnyObjectMap::iterator it;
-    {
-      boost::mutex::scoped_lock sl(_boundObjectsMutex);
-      for (it = _boundObjects.begin(); it != _boundObjects.end(); ++it) {
-        BoundAnyObject o = it->second;
-        try
-        {
-          o->onSocketDisconnected(socket, error);
-        }
-        catch (const std::runtime_error& e)
-        {
-          qiLogError() << e.what();
-        }
-      }
-    }
-
-    {
-      std::list<TransportSocketPtr>::iterator it;
-      boost::recursive_mutex::scoped_lock sl(_socketsMutex);
-      for (it = _sockets.begin(); it != _sockets.end(); ++it)
+      boost::mutex::scoped_lock l(_stateMutex);
+      if (_dying)
       {
-        if (it->get() == socket.get())
-        {
-          (*it)->connected.disconnectAll();
-          (*it)->disconnected.disconnectAll();
-          (*it)->messageReady.disconnectAll();
-          _sockets.erase(it);
-          break;
+        return;
+      }
+
+      BoundAnyObjectMap::iterator it;
+      {
+        boost::mutex::scoped_lock sl(_boundObjectsMutex);
+        for (it = _boundObjects.begin(); it != _boundObjects.end(); ++it) {
+          BoundAnyObject o = it->second;
+          try
+          {
+            o->onSocketDisconnected(socket, error);
+          }
+          catch (const std::runtime_error& e)
+          {
+            qiLogError() << e.what();
+          }
         }
       }
+
+      {
+        {
+          boost::recursive_mutex::scoped_lock sl(_socketsMutex);
+          std::list<TransportSocketPtr>::iterator it = std::find(_sockets.begin(), _sockets.end(), socket);
+          if (it != _sockets.end())
+          {
+            match = *it;
+            _sockets.erase(it);
+          }
+        }
+      }
+    }
+    if (match)
+    {
+      match->connected.disconnectAll();
+      match->disconnected.disconnectAll();
+      match->messageReady.disconnectAll();
     }
   }
 
