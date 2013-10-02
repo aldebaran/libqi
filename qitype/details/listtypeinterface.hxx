@@ -55,7 +55,9 @@ public:
   _QI_BOUNCE_TYPE_METHODS(TypeImpl);
   static AnyIterator make(const T& val)
   {
-    static TypeSimpleIteratorImpl<T>* type = new TypeSimpleIteratorImpl<T>();
+    static TypeSimpleIteratorImpl<T>* type = 0;
+    if (!type)
+      type = new TypeSimpleIteratorImpl<T>();
     return AnyValue(AnyReference(type, type->initializeStorage(const_cast<void*>((const void*)&val))));
   }
 };
@@ -69,7 +71,9 @@ ListTypeInterfaceImpl<T>::ListTypeInterfaceImpl()
 template<typename T> TypeInterface*
 ListTypeInterfaceImpl<T>::elementType() const
 {
-  static TypeInterface* result = typeOf<typename T::value_type>();
+  static TypeInterface* result = 0;
+  if (!result)
+    result = typeOf<typename T::value_type>();
   return result;
 }
 
@@ -90,7 +94,9 @@ ListTypeInterfaceImpl<T>::end(void* storage)
 template<typename T> void
 ListTypeInterfaceImpl<T>::pushBack(void** storage, void* valueStorage)
 {
-  static TypeInterface* elemType = typeOf<typename T::value_type>();
+  static TypeInterface* elemType = 0;
+  if (!elemType)
+    elemType = typeOf<typename T::value_type>();
   T* ptr = (T*) ptrFromStorage(storage);
   ptr->push_back(*(typename T::value_type*)elemType->ptrFromStorage(&valueStorage));
 }

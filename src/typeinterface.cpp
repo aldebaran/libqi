@@ -688,8 +688,12 @@ namespace qi {
     // We want exactly one instance per element type
   TypeInterface* makeListType(TypeInterface* element)
   {
+#ifdef _WIN32
+    boost::mutex::scoped_lock lock(detail::initializationMutex());
+#else
     static boost::mutex mutex;
     boost::mutex::scoped_lock lock(mutex);
+#endif
     static std::map<TypeInfo, TypeInterface*>* map = 0;
     if (!map)
       map = new std::map<TypeInfo, TypeInterface*>();
@@ -906,8 +910,12 @@ namespace qi {
   static TypeInterface* makeMapIteratorType(TypeInterface* te)
   {
     typedef std::map<TypeInfo, TypeInterface*> Map;
+#ifdef _WIN32
+    boost::mutex::scoped_lock lock(detail::initializationMutex());
+#else
     static boost::mutex mutex;
     boost::mutex::scoped_lock lock(mutex);
+#endif
     static Map * map = 0;
     if (!map)
       map = new Map();
@@ -1076,8 +1084,12 @@ namespace qi {
   // We want exactly one instance per element type
   TypeInterface* makeMapType(TypeInterface* kt, TypeInterface* et)
   {
+#ifdef _WIN32
+    boost::mutex::scoped_lock lock(detail::initializationMutex());
+#else
     static boost::mutex mutex;
     boost::mutex::scoped_lock lock(mutex);
+#endif
     typedef std::map<std::pair<TypeInfo, TypeInfo>, MapTypeInterface*> Map;
     static Map * map = 0;
     if (!map)

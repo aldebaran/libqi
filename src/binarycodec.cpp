@@ -583,7 +583,9 @@ namespace qi {
         in.read(s);
 
         //optimise when result is of type std::string
-        static TypeInterface* tstring = qi::typeOf<std::string>();
+        static TypeInterface* tstring = 0;
+        if (!tstring)
+          tstring = qi::typeOf<std::string>();
         if ((result.type == tstring) || (result.type->info() == tstring->info())) {
           std::swap(s, result.as<std::string>());
           return;

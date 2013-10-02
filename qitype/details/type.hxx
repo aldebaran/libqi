@@ -13,6 +13,7 @@
 #include <vector>
 #include <list>
 #include <qitype/details/bindtype.hxx>
+#include <boost/thread/mutex.hpp>
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/transform_view.hpp>
 #include <boost/type_traits/remove_reference.hpp>
@@ -30,6 +31,11 @@
 namespace qi  {
 
   namespace detail {
+#ifdef _WIN32
+    // Access a global mutex, for threadsafe static initialization. Cannot be called before main.
+    QITYPE_API boost::mutex& initializationMutex();
+#endif
+
     // Try to get a nice error message for QI_NO_TYPE
     class ForbiddenInTypeSystem: public TypeImpl<int>
     {
