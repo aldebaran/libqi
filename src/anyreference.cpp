@@ -45,7 +45,6 @@ namespace qi
     result.value = targetType->initializeStorage();
     static_cast<DynamicTypeInterface*>(targetType)->set(&result.value, *this);
     return std::make_pair(result, true);
-    return std::make_pair(AnyReference(), false);
   }
 
   std::pair<AnyReference, bool> AnyReference::convert(PointerTypeInterface* targetType) const
@@ -487,6 +486,8 @@ namespace qi
     {
       switch(dkind)
       {
+      case TypeKind_Void:
+        return std::make_pair(qi::AnyReference(targetType), true);
       case TypeKind_Float:
         return convert(static_cast<FloatTypeInterface*>(targetType));
       case TypeKind_Int:

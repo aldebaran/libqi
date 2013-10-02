@@ -194,6 +194,7 @@ namespace qi {
   {
     void operator()(void *in, qi::AnyValue &out)
     {
+      out = qi::AnyValue::make<void>();
     }
   };
 }
