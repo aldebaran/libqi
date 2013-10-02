@@ -81,7 +81,8 @@ namespace qi
     qi::detail::Keeper<T> keeper = qi::detail::Keeper<T>(_object);
     if (keeper._obj)
       return keeper;
-    throw std::runtime_error("Service " + _name + " unavailable");
+    else
+      throw std::runtime_error("Service " + _name + " unavailable");
   }
 
   template <typename T>
@@ -91,7 +92,8 @@ namespace qi
     qi::detail::Keeper<T> keeper = qi::detail::Keeper<T>(_object);
     if (keeper._obj)
       return keeper;
-    throw std::runtime_error("Service " + _name + " unavailable");
+    else
+      throw std::runtime_error("Service " + _name + " unavailable");
   }
 
   template <typename T>
@@ -100,7 +102,8 @@ namespace qi
     boost::mutex::scoped_lock scoped_lock(_mutex);
     if (_object)
       return &(*_object);
-    throw std::runtime_error("Service " + _name + " unavailable");
+    else
+      throw std::runtime_error("Service " + _name + " unavailable");
   }
 
   template <typename T>
@@ -109,7 +112,8 @@ namespace qi
     boost::mutex::scoped_lock scoped_lock(_mutex);
     if (_object)
       return &(*_object);
-    throw std::runtime_error("Service " + _name + " unavailable");
+    else
+      throw std::runtime_error("Service " + _name + " unavailable");
   }
 
   template <typename T>
@@ -128,7 +132,11 @@ namespace qi
   template <typename T>
   qi::AnyObject AutoService<T>::asAnyObject()
   {
-    return _object.asAnyObject();
+    boost::mutex::scoped_lock scoped_lock(_mutex);
+    if (_object)
+      return _object.asAnyObject();
+    else
+      throw std::runtime_error("Service " + _name + " unavailable");
   }
 
   /**
