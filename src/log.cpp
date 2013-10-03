@@ -770,6 +770,7 @@ namespace qi {
 
     void setVerbosity(qi::LogLevel level, SubscriberId sub)
     {
+      boost::recursive_mutex::scoped_lock lock(_mutex());
       // Check if there is already a '*' rule, replace it if so
       bool found = false;
       for (unsigned i=0; i<_glGlobRules.size(); ++i)
