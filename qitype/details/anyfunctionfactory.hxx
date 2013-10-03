@@ -241,10 +241,16 @@ namespace qi
     QI_GEN(makeCall)
 #undef makeCall
 
+#ifdef _WIN32
+#define STATIC_IF_SAFE
+#else
+#define STATIC_IF_SAFE static
+#endif
+
     // hacks are disabled for boost::function (refMask forced to 0)
     // so use ptrFromStorage.
 #define declType(z, n, _) \
-  static TypeInterface* type_ ## n  = typeOf<typename boost::remove_reference<P ## n>::type>();
+  STATIC_IF_SAFE TypeInterface* type_ ## n  = typeOf<typename boost::remove_reference<P ## n>::type>();
 #define callArgBF(z, n, _) \
   BOOST_PP_COMMA_IF(n) *(typename boost::remove_reference<P ## n>::type  *)type_##n -> ptrFromStorage(&args[n])
 
