@@ -56,6 +56,9 @@ namespace qi { namespace py {
 
       boost::python::object connect(boost::python::object callable, bool _async = false) {
         PyThreadSafeObject obj(callable);
+
+        if (!PyCallable_Check(callable.ptr()))
+          throw std::runtime_error("Not a callable");
         qi::uint64_t r;
         {
           GILScopedUnlock _unlock;
@@ -116,6 +119,8 @@ namespace qi { namespace py {
 
       boost::python::object connect(boost::python::object callable, bool _async = false) {
         PyThreadSafeObject obj(callable);
+        if (!PyCallable_Check(callable.ptr()))
+          throw std::runtime_error("Not a callable");
         qi::Future<SignalLink> f;
         {
           GILScopedUnlock _unlock;
