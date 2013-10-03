@@ -23,9 +23,12 @@ namespace qi {
 
   static qi::MetaObject &createRemoteObjectSpecialMetaObject() {
     static qi::MetaObject *mo = 0;
+#ifdef _WIN32
+    boost::mutex::scoped_lock lock(detail::initializationMutex());
+#else
     static boost::mutex mutex;
     boost::mutex::scoped_lock lock(mutex);
-
+#endif
     if (!mo) {
 
       mo = new qi::MetaObject;
