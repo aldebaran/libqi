@@ -207,9 +207,12 @@ namespace qi{
    dynamic_cast< ::qi::TypeOfTemplate<templateName>*>(typeInst)
 
 
+  /**
+   * TODO: Find the right size of enum values
+   */
   #define QI_TYPE_ENUM_REGISTER(Enum)                                \
     namespace qi {                                                   \
-      template<> class TypeImpl<Enum>: public IntTypeInterfaceImpl<long> {};  \
+      template<> class TypeImpl<Enum>: public IntTypeInterfaceImpl<int> {};  \
     }
 
 #define QI_TYPE_STRUCT_DECLARE(name)                                      \
