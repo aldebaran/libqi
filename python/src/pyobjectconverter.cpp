@@ -21,6 +21,37 @@
 
 qiLogCategory("qipy.convert");
 
+
+namespace qi { namespace py {
+  static LeakStack _leakStack;
+
+  LeakStack& leakStack()
+  {
+    return _leakStack;
+  }
+
+  LeakBlock::LeakBlock()
+  {
+    leakStack().resize(leakStack().size()+1);
+  }
+  LeakBlock::~LeakBlock()
+  {
+    LeakFrame& f = leakStack().back();
+    for (unsigned i=0; i<f.size(); ++i)
+      f[i].destroy();
+    leakStack().pop_back();
+  }
+  void leakPush(qi::AnyReference ref)
+  {
+    /* There are cases we cannot catch: call return value handled
+    * by serverresult, so outside of python methods scope
+    */
+    if (leakStack().empty())
+      leakStack().resize(1);
+    leakStack().back().push_back(ref);
+  }
+}}
+
 boost::python::object PyObject_from_AnyValue(qi::AnyReference val);
 void                PyObject_from_AnyValue(qi::AnyReference val, boost::python::object *target);
 qi::AnyReference AnyValue_from_PyObject(PyObject* val);
@@ -241,6 +272,8 @@ class PythonScopedRef
     PyObject* _p;
 };
 
+
+
 qi::AnyReference AnyValue_from_PyObject(PyObject* val)
 {
   qi::AnyReference res;
@@ -337,7 +370,7 @@ qi::AnyReference AnyValue_from_PyObject(PyObject* val)
   } catch (const boost::python::error_already_set &) {
     throw std::runtime_error("python type conversion failure");
   }
-
+  qi::py::leakPush(res);
   return res;
 }
 

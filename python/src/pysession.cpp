@@ -10,6 +10,7 @@
 #include "pyfuture.hpp"
 #include "gil.hpp"
 #include "pysignal.hpp"
+#include "pyobject.hpp"
 
 qiLogCategory("qi.py");
 
@@ -87,6 +88,7 @@ qi::AnyReference triggerBouncer(qi::SignalBase *sig, const std::vector<qi::AnyRe
       }
 
       boost::python::object registerService(const std::string &name, boost::python::object obj, bool _async=false) {
+        qi::py::LeakBlock block;
         qi::AnyObject anyobj = qi::AnyReference(obj).toObject();
         qi::Future<unsigned int> fut;
         {

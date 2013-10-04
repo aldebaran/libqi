@@ -15,6 +15,16 @@ namespace qi {
     boost::python::object makePyQiObject(qi::AnyObject obj, const std::string &name = std::string());
     qi::AnyObject         makeQiAnyObject(boost::python::object obj);
     void export_pyobject();
+    void leakPush(qi::AnyReference ref);
+    typedef std::vector<qi::AnyReference> LeakFrame;
+    typedef std::vector<LeakFrame > LeakStack;
+    LeakStack& leakStack();
+    class LeakBlock
+    {
+    public:
+      LeakBlock();
+      ~LeakBlock();
+    };
   }
 }
 
