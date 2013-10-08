@@ -315,9 +315,8 @@ namespace qi {
       return;
     }
     // Error message is of type m (dynamic)
-    AnyValue v(AnyReference(error), false, false);
-    AnyReference vr(v);
-    setValue(vr, "m");
+    AnyValue v(AnyReference::from(error), false, false);
+    setValue(AnyReference::from(v), "m");
   }
 
   namespace {
@@ -362,7 +361,7 @@ namespace qi {
       GenericFunctionParameters params;
       // Argument is unused by remote end, but better pass something valid just in case.
       int sid = static_cast<RemoteObject*>(dobj)->service();
-      params.push_back(AnyReference(sid));
+      params.push_back(AnyReference::from(sid));
       dobj->metaPost(AnyObject(), mid, params);
     }
 
@@ -388,6 +387,7 @@ namespace qi {
     qiLogDebug() << "Serialized message body: " << _p->buffer.size();
     }
     qi::BufferReader br(_p->buffer);
+    //TODO: not exception safe
     AnyReference res(type);
     decodeBinary(&br, res, boost::bind(deserializeObject, _1, socket));
     return res;
@@ -454,7 +454,7 @@ namespace qi {
       }
       AnyReference tuple = makeGenericTuplePtr(types, values);
       AnyValue val(tuple, false, false);
-      encodeBinary(&_p->buffer, AnyReference(val), boost::bind(serializeObject, _1, context));
+      encodeBinary(&_p->buffer, AnyReference::from(val), boost::bind(serializeObject, _1, context));
       return;
     }
     /* This check does not makes sense for this transport layer who does not care,

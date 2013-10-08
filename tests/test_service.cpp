@@ -274,7 +274,7 @@ TEST(QiService, GenericProperty)
     (boost::function<int (int)>)boost::bind(&prop_ping, boost::ref(prop), _1));
   qi::AnyObject obj = builder.object();
   prop = dobj->property(propId);
-  prop->setValue(qi::AnyValue(qi::AnyReference(0)));
+  prop->setValue(0);
   p.server()->registerService("foo", obj);
 
   qi::AnyObject client = p.client()->service("foo");
@@ -282,7 +282,7 @@ TEST(QiService, GenericProperty)
   client.setProperty("offset", 1);
   ASSERT_EQ(1, prop->value().toInt());
   ASSERT_EQ(2, client.call<int>("ping", 1));
-  prop->setValue(qi::AnyValue(qi::AnyReference(2)));
+  prop->setValue(2);
   ASSERT_EQ(3, client.call<int>("ping", 1));
   ASSERT_EQ(2, client.property<int>("offset"));
 
@@ -293,7 +293,7 @@ TEST(QiService, GenericProperty)
   ASSERT_NE(qi::SignalBase::invalidSignalLink, obj.connect("offset", boost::bind(&inc, &hit, _1)));
   ASSERT_NE(qi::SignalBase::invalidSignalLink, client.connect("offset", boost::bind(&inc, &hit, _1)));
   qiLogVerbose() << "Triggering prop set";
-  prop->setValue(qi::AnyValue(qi::AnyReference(1)));
+  prop->setValue(1);
   PERSIST(, (*hit) == 3, 500);
   qi::os::msleep(500);
   EXPECT_EQ(3, *hit);

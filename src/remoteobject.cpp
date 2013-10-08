@@ -160,6 +160,7 @@ namespace qi {
 
           // Remove top-level tuple
           //sig = sig.substr(1, sig.length()-2);
+          //TODO: Optimise
           AnyReference value = msg.value(sig, _socket);
 
           GenericFunctionParameters args;
@@ -169,7 +170,6 @@ namespace qi {
             args = value.asTupleValuePtr();
           qiLogDebug() << "Triggering local event listeners with args : " << args.size();
           sb->trigger(args);
-          value.destroy();
         }
         catch (const std::exception& e)
         {

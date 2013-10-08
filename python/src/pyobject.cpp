@@ -142,7 +142,7 @@ namespace qi { namespace py {
       }
 
       boost::python::object metaObject() {
-        return qi::AnyReference(_object.metaObject()).to<boost::python::object>();
+        return qi::AnyReference::from(_object.metaObject()).to<boost::python::object>();
       }
 
       qi::AnyObject object() {
@@ -194,11 +194,11 @@ namespace qi { namespace py {
           if (pfut) { //pfut == 0, can mean ret is None.
             qiLogDebug() << "Future detected";
             qi::Future<qi::AnyValue> fut = *pfut;
-            return qi::AnyReference(fut).clone();
+            return qi::AnyReference::from(fut).clone();
           }
         }
 
-        gvret = qi::AnyReference(ret).clone();
+        gvret = qi::AnyReference::from(ret).clone();
         qiLogDebug() << "method returned:" << qi::encodeJSON(gvret);
       } catch (const boost::python::error_already_set &e) {
         throw std::runtime_error("python failed");

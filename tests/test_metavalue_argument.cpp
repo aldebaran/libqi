@@ -34,7 +34,7 @@ void value(qi::AnyValue mv)
 
 void valueList(std::vector<qi::AnyValue> mv)
 {
-  v = qi::AnyReference(mv).clone();
+  v = qi::AnyValue(mv);
 }
 
 class TestObject: public ::testing::Test

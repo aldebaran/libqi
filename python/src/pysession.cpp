@@ -89,7 +89,7 @@ qi::AnyReference triggerBouncer(qi::SignalBase *sig, const std::vector<qi::AnyRe
 
       boost::python::object registerService(const std::string &name, boost::python::object obj, bool _async=false) {
         qi::py::LeakBlock block;
-        qi::AnyObject anyobj = qi::AnyReference(obj).toObject();
+        qi::AnyObject anyobj = qi::AnyReference::from(obj).toObject();
         qi::Future<unsigned int> fut;
         {
           GILScopedUnlock _unlock;

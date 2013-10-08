@@ -344,9 +344,9 @@ TEST(TestCall, TestGenericConversion) {
   svec.push_back("toto");
 
   qi::AnyValue gv;
-  gv = qi::AnyReference(std::string("titi"));
+  gv = qi::AnyValue::from(std::string("titi"));
   gvec.push_back(gv);
-  gv = qi::AnyReference(std::string("toto"));
+  gv = qi::AnyValue::from(std::string("toto"));
   gvec.push_back(gv);
 
   qi::Future<int> fut;
@@ -400,7 +400,7 @@ TEST(TestCall, TestGenericConversionComplexList) {
   std::vector<qi::AnyValue> paf;
   paf.push_back(qi::AnyValue::from(std::string("titi")));
   sg.push_back(qi::AnyValue::from(paf));
-  paf[0] = qi::AnyReference(std::string("toto"));
+  paf[0] = qi::AnyValue::from(std::string("toto"));
   sg.push_back(qi::AnyValue::from(paf));
 
   qi::Future<int> fut;
@@ -490,17 +490,17 @@ TEST(TestCall, TestGenericConversionTuple) {
   EXPECT_EQ(6, f.value());
 
   GenericTuple gt;
-  gt.e1 = qi::AnyReference(1.0);
-  gt.e2 = qi::AnyReference(2U);
+  gt.e1 = qi::AnyReference::from(1.0);
+  gt.e2 = qi::AnyReference::from(2U);
   std::map<std::string, qi::AnyValue> map;
-  map["foo"] = qi::AnyReference(3);
-  gt.e3 = qi::AnyReference(map);
+  map["foo"] = qi::AnyReference::from(3);
+  gt.e3 = qi::AnyReference::from(map);
   f = proxy.call<double>("eatSpecific", gt);
   EXPECT_FALSE(f.hasError());
   EXPECT_EQ(6, f.value());
 
   std::map<unsigned int, std::string> ravMap;
-  gt.e3 = qi::AnyReference(ravMap);
+  gt.e3 = qi::AnyReference::from(ravMap);
   f = proxy.call<double>("eatSpecific", gt);
   EXPECT_FALSE(f.hasError());
   EXPECT_EQ(3, f.value());
@@ -1007,7 +1007,7 @@ TEST(TestCall, Dynamic)
 {
   TestSessionPair p;
   boost::shared_ptr<ArgPack> ap(new ArgPack);
-  qi::AnyObject os = qi::AnyValue::from(ap).to<qi::AnyObject>();
+  qi::AnyObject os = qi::AnyReference::from(ap).to<qi::AnyObject>();
   p.server()->registerService("packer", os);
   qi::AnyObject o = p.client()->service("packer");
   qi::details::printMetaObject(std::cerr, o.metaObject());

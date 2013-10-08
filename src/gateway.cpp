@@ -181,7 +181,7 @@ void GatewayPrivate::handleMsgFromClient(TransportSocketPtr client, Message cons
 
     Message sdMsg;
     unsigned int service = msg->service();
-    sdMsg.setValue(AnyReference(service), "I");
+    sdMsg.setValue(AnyReference::from(service), "I");
 
     // associate the transportSoket client = 0
     // this will allow S.1 to be handle correctly
@@ -250,7 +250,7 @@ void GatewayPrivate::handleMsgFromService(TransportSocketPtr service, const Mess
 
       // create new message for the client
       Message  ans(Message::Type_Reply, msg->address());
-      ans.setValue(AnyReference(result), typeOf<ServiceInfo>()->signature() );
+      ans.setValue(result, typeOf<ServiceInfo>()->signature() );
 
       // id should be rewritten then sent to the client
       ans.setId(itReq->second.first);
@@ -334,7 +334,7 @@ void GatewayPrivate::onMessageReady(const qi::Message &msg, qi::TransportSocketP
         ans.setFunction(qi::Message::ServerFunction_Connect);
         ans.setObject(qi::Message::GenericObject_Main);
         std::string empty;
-        ans.setValue(AnyReference(empty), "s");
+        ans.setValue(empty, "s");
         socket->send(ans);
       }
       else

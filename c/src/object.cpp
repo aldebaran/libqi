@@ -41,8 +41,8 @@ static qi::AnyReference c_call(const std::string &complete_sig,
   if (func)
     func(complete_sig.c_str(), value, ret, data);
 
-  qi::AnyReference &gvpr = qi_value_cpp(ret);
-  qi::AnyReference re = gvpr;
+  qi::AnyValue &gvpr = qi_value_cpp(ret);
+  qi::AnyReference re = gvpr.asReference();
   //just reset the gvp, we dont want destroy to destroy it...
   gvpr.type = 0;
   gvpr.value = 0;
@@ -131,8 +131,8 @@ qi_value_t*          qi_object_get_metaobject(qi_object_t *object)
 }
 
 int                 qi_object_event_emit(qi_object_t* object, const char *signature, qi_value_t* params) {
-  qi::AnyObject       &obj = qi_object_cpp(object);
-  qi::AnyReference &val = qi_value_cpp(params);
+  qi::AnyObject &obj = qi_object_cpp(object);
+  qi::AnyValue  &val = qi_value_cpp(params);
   if (qi_value_get_kind(params) != QI_VALUE_KIND_TUPLE)
     return -1;
   obj.metaPost(signature, val.asTupleValuePtr());

@@ -26,7 +26,7 @@ std::string reply(const std::string &msg) {
 
 qi::AnyValue reply(const qi::AnyValue &myval) {
   static int i = 0;
-  qi::AnyReference val(myval);
+  qi::AnyReference val = qi::AnyReference::from(myval);
   qiLogInfo() << i++ << " Message received with the signature: " << myval.signature(false).toString() << " = " << qi::encodeJSON(val) << std::endl;
   return myval;
 }

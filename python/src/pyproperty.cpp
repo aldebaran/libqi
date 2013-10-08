@@ -24,7 +24,7 @@ namespace qi { namespace py {
 
       //change the name to avoid warning "hidden overload in base class" : YES WE KNOW :)
       void setVal(boost::python::object obj) {
-        qi::GenericProperty::setValue(qi::AnyReference(obj));
+        qi::GenericProperty::setValue(obj);
       }
     };
 

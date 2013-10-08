@@ -285,7 +285,7 @@ int          qi_value_dynamic_set(qi_value_t *container, qi_value_t* value)
   qi::AnyValue &gvcont = qi_value_cpp(container);
   qi::AnyValue &gvval = qi_value_cpp(value);
   try {
-    gvcont.setDynamic(gvval);
+    gvcont.setDynamic(gvval.asReference());
     return 1;
   } catch (std::runtime_error&) {}
   return 0;
@@ -340,7 +340,7 @@ qi_value_t*  qi_value_map_get(qi_value_t *msg, qi_value_t *key)
     return 0;
   }
   try {
-    r = container._element(k, true);
+    r = container._element(k.asReference(), true);
     qi_value_t* ret = qi_value_create("");
     qi::AnyValue &gv = qi_value_cpp(ret);
     gv = r;

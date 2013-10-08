@@ -70,8 +70,7 @@ namespace qi {
         GILScopedUnlock _;
         fut.wait();
       }
-      qi::AnyReference r(fut.value());
-      return r.to<boost::python::object>(); //throw on error
+      return qi::AnyReference::from(fut.value()).template to<boost::python::object>(); //throw on error
     }
 
     template <>

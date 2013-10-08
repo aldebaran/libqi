@@ -15,7 +15,7 @@
 
 qi::AnyValue reply(const qi::AnyValue &myval) {
 
-  qi::AnyReference val(myval);
+  qi::AnyReference val = qi::AnyReference::from(myval);
   qiLogDebug("reply") << "Message received with the signature =" << myval.signature(false).toString() << ":" << qi::encodeJSON(val) << std::endl;
   return myval;
 }
@@ -45,7 +45,7 @@ int main(int argc, char* argv[])
     qi::AnyValue gv(t);
 
     //wrap the tuple args into a dynamic.
-    qi::AnyReference dynval = qi::AnyReference(gv);
+    qi::AnyReference dynval = qi::AnyReference::from(gv);
     qi::GenericFunctionParameters gfp;
     gfp.push_back(dynval);
 

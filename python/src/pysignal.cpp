@@ -26,7 +26,7 @@ namespace qi { namespace py {
         args.append(it->to<boost::python::object>());
       }
       PY_CATCH_ERROR(ret = callable.object()(*boost::python::tuple(args)));
-      return qi::AnyReference(ret).clone();
+      return qi::AnyReference::from(ret).clone();
     }
 
     class PySignal {
@@ -103,7 +103,7 @@ namespace qi { namespace py {
       //the python wrapper add a __call__ method bound to this one. (see qi/__init__.py)
       void trig(boost::python::tuple args, boost::python::dict kwargs) {
         GILScopedUnlock _unlock;
-        _sig->trigger(qi::AnyReference(args).asDynamic().asTupleValuePtr());
+        _sig->trigger(qi::AnyReference::from(args).asDynamic().asTupleValuePtr());
       }
 
     public:
@@ -143,7 +143,7 @@ namespace qi { namespace py {
       //the python wrapper add a __call__ method bound to this one. (see qi/__init__.py)
       void trig(boost::python::tuple args, boost::python::dict kwargs) {
         GILScopedUnlock _unlock;
-        _obj.metaPost(_sigid, qi::AnyReference(args).asDynamic().asTupleValuePtr());
+        _obj.metaPost(_sigid, qi::AnyReference::from(args).asDynamic().asTupleValuePtr());
       }
 
     private:

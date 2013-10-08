@@ -222,7 +222,7 @@ qi::AnyReference AnyValue_from_PyObject_List(PyObject* val)
     res.push_back(qi::AnyValue(AnyValue_from_PyObject(current)));
   }
 
-  return qi::AnyReference(res).clone();
+  return qi::AnyReference::from(res).clone();
 }
 
 qi::AnyReference AnyValue_from_PyObject_Map(PyObject* dict)
@@ -239,7 +239,7 @@ qi::AnyReference AnyValue_from_PyObject_Map(PyObject* dict)
     res[qi::AnyValue(newkey)] = newvalue;
   }
 
-  return qi::AnyReference(res).clone();
+  return qi::AnyReference::from(res).clone();
 }
 
 qi::AnyReference AnyValue_from_PyObject_Iter(PyObject* iter)
@@ -284,12 +284,12 @@ qi::AnyReference AnyValue_from_PyObject(PyObject* val)
 
     if (PyString_CheckExact(val))
     {
-      res = qi::AnyReference(std::string(PyString_AsString(val))).clone();
+      res = qi::AnyReference::from(std::string(PyString_AsString(val))).clone();
     }
     else if (PyUnicode_CheckExact(val))
     {
       PyObject *pstring = PyUnicode_AsUTF8String(val);
-      res = qi::AnyReference(std::string(PyString_AsString(pstring))).clone();
+      res = qi::AnyReference::from(std::string(PyString_AsString(pstring))).clone();
       Py_DECREF(pstring);
     }
     else if (val == Py_None)
@@ -298,15 +298,15 @@ qi::AnyReference AnyValue_from_PyObject(PyObject* val)
     }
     else if (PyFloat_CheckExact(val))
     {
-      res = qi::AnyReference(PyFloat_AsDouble(val)).clone();
+      res = qi::AnyReference::from(PyFloat_AsDouble(val)).clone();
     }
     else if (PyLong_CheckExact(val))
     {
-      res = qi::AnyReference(PyLong_AsLong(val)).clone();
+      res = qi::AnyReference::from(PyLong_AsLong(val)).clone();
     }
     else if (PyInt_CheckExact(val))
     {
-      res = qi::AnyReference(PyInt_AsLong(val)).clone();
+      res = qi::AnyReference::from(PyInt_AsLong(val)).clone();
     }
     else if (PyList_CheckExact(val))
     {
@@ -323,41 +323,36 @@ qi::AnyReference AnyValue_from_PyObject(PyObject* val)
     else if (PyBool_Check(val))
     {
       bool b = (PyInt_AsLong(val) != 0);
-      res = qi::AnyReference(b).clone();
+      res = qi::AnyReference::from(b).clone();
     }
     // TODO: implement type conversions
     else if (PyByteArray_CheckExact(val))
     {
-      res = qi::AnyReference(PyByteArray_AsString(val)).clone();
+      res = qi::AnyReference::from(PyByteArray_AsString(val)).clone();
     }
     else if (val == Py_Ellipsis)
     {
       throw std::runtime_error("Type not implemented");
-      res = qi::AnyReference(qi::typeOf<void>());
     }
     else if (PyComplex_CheckExact(val))
     {
-      res = qi::AnyReference(PyComplex_RealAsDouble(val)).clone();
+      res = qi::AnyReference::from(PyComplex_RealAsDouble(val)).clone();
     }
     else if (PyBuffer_Check(val))
     {
       throw std::runtime_error("Type not implemented");
-      res = qi::AnyReference(qi::typeOf<void>());
     }
     else if (PyMemoryView_Check(val))
     {
       throw std::runtime_error("Type not implemented");
-      res = qi::AnyReference(qi::typeOf<void>());
     }
     else if (PyFile_Check(val))
     {
       throw std::runtime_error("Type not implemented");
-      res = qi::AnyReference(qi::typeOf<void>());
     }
     else if (PySlice_Check(val))
     {
       throw std::runtime_error("Type not implemented");
-      res = qi::AnyReference(qi::typeOf<void>());
     }
 
     else if (PyModule_CheckExact(val) || PyClass_Check(val)) {
@@ -365,7 +360,7 @@ qi::AnyReference AnyValue_from_PyObject(PyObject* val)
     }
     else // if (PyInstance_Check(val))   //instance are old style python class
     {
-      res = qi::AnyReference(qi::py::makeQiAnyObject(boost::python::object(boost::python::borrowed(val)))).clone();
+      res = qi::AnyReference::from(qi::py::makeQiAnyObject(boost::python::object(boost::python::borrowed(val)))).clone();
     }
   } catch (const boost::python::error_already_set &) {
     throw std::runtime_error("python type conversion failure");
