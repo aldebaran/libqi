@@ -393,7 +393,7 @@ namespace qi {
     return res;
   }
 
-  void Message::setValue(const AnyReference &value, const Signature& sig, ObjectHost* context) {
+  void Message::setValue(const AutoAnyReference &value, const Signature& sig, ObjectHost* context) {
     cow();
     Signature effective = value.type->signature();
     if (effective != sig)
