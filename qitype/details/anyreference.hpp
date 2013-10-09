@@ -12,6 +12,7 @@
 #include <vector>
 #include <map>
 #include <qi/types.hpp>
+#include <stdexcept>
 
 namespace qi {
 
@@ -290,6 +291,11 @@ namespace qi {
       : AnyReferenceBase(type, value)
     {}
 
+  private:
+    //block the dangerous automatic cast from AnyValue to AnyRef
+    //use AnyValue::asReference() to take a ref on the content of a value.
+    //use AnyValue::from(value) to take a ref on the value.
+    AnyReference(const AnyValue& val) { throw std::runtime_error("invalid internal operation."); };
 
   };
 

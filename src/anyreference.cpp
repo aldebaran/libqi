@@ -702,6 +702,8 @@ namespace qi
     case TypeKind_Unknown:
     case TypeKind_Iterator:
     case TypeKind_Function:
+    case TypeKind_Signal:
+    case TypeKind_Property:
       return a.value < b.value;
     }
 #undef GET
