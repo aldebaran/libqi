@@ -10,7 +10,7 @@ namespace qi { namespace py {
 
     class PyProperty : public qi::GenericProperty {
     public:
-      PyProperty(const std::string &signature)
+      PyProperty(const std::string &signature = "m")
         : qi::GenericProperty(qi::TypeInterface::fromSignature(signature))
       {
       }
@@ -63,7 +63,8 @@ namespace qi { namespace py {
     }
 
     void export_pyproperty() {
-      boost::python::class_<PyProperty>("Property", boost::python::init<const std::string &>())
+      boost::python::class_<PyProperty>("Property", boost::python::init<>())
+          .def(boost::python::init<const std::string &>())
           .def("value", &PyProperty::val,
                "value() -> value\n"
                ":return: the value stored inside the property")
