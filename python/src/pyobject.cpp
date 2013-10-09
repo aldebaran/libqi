@@ -10,6 +10,7 @@
 #include "pyproperty.hpp"
 #include "gil.hpp"
 #include "error.hpp"
+#include "pythreadsafeobject.hpp"
 #include <qitype/dynamicobjectbuilder.hpp>
 #include <qitype/objecttypebuilder.hpp> //for TYPE_TEMPLATE(Future)
 #include <qitype/jsoncodec.hpp>
@@ -207,7 +208,8 @@ namespace qi { namespace py {
     }
 
     //callback just needed to keep a ref on obj
-    static void doNothing(qi::GenericObject *go, boost::python::object obj)
+    //Use PyThreadSafeObject to be GILSafe
+    static void doNothing(qi::GenericObject *go, PyThreadSafeObject obj)
     {
       (void)go;
       (void)obj;
@@ -363,6 +365,7 @@ namespace qi { namespace py {
       }
       //this is a useless callback, needed to keep a ref on obj.
       //when the GO is destructed, the ref is released.
+      //doNothing use PyThreadSafeObject to lock the GIL as needed
       return gob.object(boost::bind<void>(&doNothing, _1, obj));
     }
 

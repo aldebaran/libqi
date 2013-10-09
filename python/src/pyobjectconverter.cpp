@@ -369,6 +369,9 @@ qi::AnyReference AnyValue_from_PyObject(PyObject* val)
   return res;
 }
 
+/** we reimplement some primitives here, to manipulate boost::py::object
+ *  under the GIL
+ */
 class PyObjectTypeInterface: public qi::DynamicTypeInterface
 {
 public:
@@ -379,14 +382,43 @@ public:
     boost::python::object *p = (boost::python::object*) ptrFromStorage(&storage);
     return AnyValue_from_PyObject(p->ptr());
   }
+
   virtual void set(void** storage, qi::AnyReference src)
   {
     qi::py::GILScopedLock _lock;
     boost::python::object *p = (boost::python::object*) ptrFromStorage(storage);
     PyObject_from_AnyValue(src, p);
   }
+
+  virtual void* initializeStorage(void* ptr = 0) {
+    qi::py::GILScopedLock _lock;
+    boost::python::object *ret =  new boost::python::object;
+    if (ptr) {
+      boost::python::object *p = (boost::python::object*) ptrFromStorage(&ptr);
+      *ret = *p;
+    }
+    return ret;
+  }
+
+  virtual void* clone(void* storage) {
+    qi::py::GILScopedLock _lock;
+    boost::python::object *p = (boost::python::object*) ptrFromStorage(&storage);
+    return new boost::python::object(*p);
+  }
+
+  virtual void destroy(void* storage) {
+    qi::py::GILScopedLock _lock;
+    boost::python::object *p = (boost::python::object*) ptrFromStorage(&storage);
+    delete p;
+  }
+
   typedef qi::DefaultTypeImplMethods<boost::python::object> Methods;
-  _QI_BOUNCE_TYPE_METHODS(Methods);
+
+  virtual const ::qi::TypeInfo& info()  { return Methods::info(); }
+  virtual void* ptrFromStorage(void**s) { return Methods::ptrFromStorage(s); }
+  virtual bool  less(void* a, void* b)  { return Methods::less(a, b); }
+
+
 };
 
 /* Register PyObject* -> See the above comment for explanations */
