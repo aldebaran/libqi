@@ -486,7 +486,7 @@ namespace qi {
       {
         std::pair<AnyReference, bool> conv = val.convert(targetType);
         if (!conv.first.type)
-          promise.setError(std::string("Unable to convert call result to target type: from")
+          promise.setError(std::string("Unable to convert call result to target type: from ")
             + val.signature(true).toPrettySignature() + " to " + targetType->signature().toPrettySignature() );
         else
         {
