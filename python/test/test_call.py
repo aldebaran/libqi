@@ -69,26 +69,31 @@ def docalls(sserver, sclient):
     sserver.registerService("FooService", m)
     s = sclient.service("FooService")
 
+    print "simple test"
     assert s.simple() == 42
 
-    #TODO: missing support in python
+    print "vargs"
     assert s.vargs(42) == (42,)
     assert s.vargs("titi", "toto") == ("titi", "toto",)
 
+    print "vargs drop"
     assert s.vargsdrop(4, 42) == (42,)
 
-
+    print "hidden"
     try:
         s.hidden()
         assert False
     except:
         pass
 
+    print "bound methods"
     assert s.bind_vargs(42) == (42,)
     assert s.bind_vargs("titi", "toto") == ("titi", "toto",)
 
+    print "renamed"
     assert s.renamed() == 42
 
+    print "test types restrictions"
     assert s.add(40, 2) == 42
     try:
         s.add("40", "2")
@@ -96,7 +101,9 @@ def docalls(sserver, sclient):
     except:
         pass
 
+    print "test future"
     assert s.retfutint() == 42
+    print "test bound future"
     assert s.bind_retfutint() == 42
 
 
@@ -203,8 +210,8 @@ def test_badbind2():
         sd.close()
 
 def main():
-    test_callsd()
     test_calldirect()
+    test_callsd()
     test_missingself()
     test_badbind()
     test_badbind2()
