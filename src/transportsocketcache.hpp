@@ -48,7 +48,7 @@ namespace qi {
     void close();
 
     qi::Future<qi::TransportSocketPtr> socket(const ServiceInfo& servInfo, const std::string protocol);
-
+    void insert(const std::string& machineId, const Url& url, TransportSocketPtr socket);
   protected:
     //TransportSocket
     void onSocketConnected(TransportSocketPtr client, const ServiceInfo &servInfo, const Url &url);
