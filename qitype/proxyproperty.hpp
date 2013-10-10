@@ -66,13 +66,13 @@ namespace qi
   {
     // signal part
     SignalBase::setOnSubscribers(boost::bind(&ProxyProperty<T>::onSubscribe, this, _1,
-      object.get(), propertyName, SignalBase::invalidSignalLink));
+      object.asGenericObject(), propertyName, SignalBase::invalidSignalLink));
     SignalBase::setTriggerOverride(boost::bind(&ProxyProperty<T>::triggerOverride, this, _1, _2,
-      object.get(), propertyName));
+      object.asGenericObject(), propertyName));
 
     // property part
-    this->_getter = boost::bind(&ProxyProperty<T>::getter, this, object.get(), propertyName);
-    this->_setter = boost::bind(&ProxyProperty<T>::setter, this, _1, _2, object.get(), propertyName);
+    this->_getter = boost::bind(&ProxyProperty<T>::getter, this, object.asGenericObject(), propertyName);
+    this->_setter = boost::bind(&ProxyProperty<T>::setter, this, _1, _2, object.asGenericObject(), propertyName);
   }
 
   template<typename T>

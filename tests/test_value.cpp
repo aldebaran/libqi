@@ -169,7 +169,7 @@ TEST(Value, AnyObject)
     // Also object does some typechecking
     qi::DynamicObjectBuilder dynBuild;
     qi::AnyObject ori = dynBuild.object(&nothing);
-    qi::GenericObject& go = *ori.get();
+    qi::GenericObject& go = *ori.asGenericObject();
 
     AnyReference v = AnyReference::from(ori);
     qi::detail::ManagedObjectPtr mo = v.to<qi::detail::ManagedObjectPtr>();
@@ -180,7 +180,7 @@ TEST(Value, AnyObject)
     ASSERT_TRUE(out == ori);
     out = v.toObject();
     ASSERT_TRUE(out);
-    ASSERT_EQ(out.get(), mo.get());
+    ASSERT_EQ(out.asGenericObject(), mo.get());
   }
   ASSERT_TRUE(triggered);
 }

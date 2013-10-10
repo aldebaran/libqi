@@ -150,7 +150,7 @@ namespace qi {
     private:
       inline GenericObject* go() const
       {
-        return reinterpret_cast<const O*>(this)->get();
+          return reinterpret_cast<const O*>(this)->asGenericObject();
       }
     };
   }
@@ -201,7 +201,7 @@ namespace qi {
     T& operator *();
     const T& operator *() const;
     bool unique() const;
-    GenericObject* get() const;
+    GenericObject* asGenericObject() const;
     void reset();
     unsigned use_count() const { return _obj.use_count();}
     // no-op deletor callback
@@ -337,7 +337,7 @@ namespace qi {
   }
   template<typename T> template<typename U> bool Object<T, false>::operator ==(const Object<U>& b) const
   {
-    return get() == b.get();
+    return asGenericObject() == b.asGenericObject();
   }
   template<typename T> Object<T, false>::operator bool() const   { return _obj && _obj->type;}
 
@@ -370,7 +370,7 @@ namespace qi {
   {
     return _obj.unique();
   }
-  template<typename T> GenericObject* Object<T, false>::get() const
+  template<typename T> GenericObject* Object<T, false>::asGenericObject() const
   {
     return _obj.get();
   }
@@ -416,13 +416,13 @@ namespace qi {
     : _proxy(obj._obj)
     {
     }
-    GenericObject* get() const { return _proxy.asObject().get();}
+    GenericObject* asGenericObject() const { return _proxy.asObject().asGenericObject();}
     template<typename U>
-    bool operator <(const Object<U>& b) const { return get() < b.get();}
+    bool operator <(const Object<U>& b) const { return asGenericObject() < b.asGenericObject();}
     template<typename U>
-    bool operator ==(const Object<U>& b) const { return get() == b.get();}
+    bool operator ==(const Object<U>& b) const { return asGenericObject() == b.asGenericObject();}
     template<typename U>
-    bool operator !=(const Object<U>& b) const { return get() != b.get();}
+    bool operator !=(const Object<U>& b) const { return asGenericObject() != b.asGenericObject();}
 
     Object<Empty> asObject() const { return _proxy.asObject();}
     operator Object<Empty>() const { return _proxy.asObject();}
@@ -836,13 +836,13 @@ namespace qi {
     virtual qi::Future<AnyValue> property(void* instance, unsigned int id)
     {
       Proxy* ptr = static_cast<Proxy*>(instance);
-      GenericObject* obj = ptr->asObject().get();
+      GenericObject* obj = ptr->asObject().asGenericObject();
       return obj->type->property(obj->value, id);
     }
     virtual qi::Future<void> setProperty(void* instance, unsigned int id, AnyValue value)
     {
       Proxy* ptr = static_cast<Proxy*>(instance);
-      GenericObject* obj = ptr->asObject().get();
+      GenericObject* obj = ptr->asObject().asGenericObject();
       return obj->type->setProperty(obj->value, id, value);
     }
 

@@ -214,7 +214,7 @@ namespace qi
       ss << "Can't find methodID: " << method;
       return qi::makeFutureError<AnyReference>(ss.str());
     }
-    Manageable* m = static_cast<Manageable*>(context.get());
+    Manageable* m = static_cast<Manageable*>(context.asGenericObject());
     GenericFunctionParameters p;
     p.reserve(params.size()+1);
     if (method >= Manageable::startId && method < Manageable::endId)
@@ -350,7 +350,7 @@ namespace qi
       int tid = 0; // trace call id, reused for result sending
       if (trace)
       {
-        tid = context.get()->_nextTraceId();
+        tid = context.asGenericObject()->_nextTraceId();
         qi::os::timeval tv;
         qi::os::gettimeofday(&tv);
         std::vector<AnyValue> args;
@@ -377,7 +377,7 @@ namespace qi
             }
           }
         }
-        context.get()->traceObject(EventTrace(
+        context.asGenericObject()->traceObject(EventTrace(
           tid, EventTrace::Event_Call, methodId, AnyValue::from(args), tv));
       }
 
@@ -390,7 +390,7 @@ namespace qi
       try
       {
         if (lock)
-          out.setValue(locked_call(func, params, context.get()->mutex()));
+          out.setValue(locked_call(func, params, context.asGenericObject()->mutex()));
         else
           out.setValue(func.call(params));
         success = true;
@@ -410,7 +410,7 @@ namespace qi
         cpuendtime.second -= cputime.second;
       }
       if (stats)
-        context.get()->pushStats(methodId, (float)(qi::os::ustime() - time)/1e6f,
+        context.asGenericObject()->pushStats(methodId, (float)(qi::os::ustime() - time)/1e6f,
                            (float)cpuendtime.first / 1e6f,
                            (float)cpuendtime.second / 1e6f);
       if (trace)
@@ -422,7 +422,7 @@ namespace qi
           val = out.future().value();
         else
           val = AnyValue::from(out.future().error());
-        context.get()->traceObject(EventTrace(tid,
+        context.asGenericObject()->traceObject(EventTrace(tid,
           success?EventTrace::Event_Result:EventTrace::Event_Error,
           methodId, val, tv, cpuendtime.first, cpuendtime.second));
       }

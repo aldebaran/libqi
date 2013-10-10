@@ -45,7 +45,7 @@ StaticObjectTypeBase::metaCall(void* instance, AnyObject context, unsigned int m
   if (methodId >= Manageable::startId  && methodId < Manageable::endId)
   {
     self.type = qi::typeOf<Manageable>();
-    self.value = static_cast<Manageable*>(context.get());
+    self.value = static_cast<Manageable*>(context.asGenericObject());
   }
   else
   {
@@ -128,7 +128,7 @@ qi::Future<SignalLink> StaticObjectTypeBase::connect(void* instance, AnyObject c
                                                        const SignalSubscriber& subscriber)
 {
   if (event >= Manageable::startId && event < Manageable::endId)
-    instance = static_cast<Manageable*>(context.get());
+    instance = static_cast<Manageable*>(context.asGenericObject());
   SignalBase* sb = getSignal(_data, instance, event);
   if (!sb) {
     return qi::makeFutureError<SignalLink>("Cant find signal");
@@ -149,7 +149,7 @@ qi::Future<void> StaticObjectTypeBase::disconnect(void* instance, AnyObject cont
   unsigned int event = linkId >> 32;
   unsigned int link = linkId & 0xFFFFFFFF;
   if (event >= Manageable::startId && event < Manageable::endId)
-    instance = static_cast<Manageable*>(context.get());
+    instance = static_cast<Manageable*>(context.asGenericObject());
   SignalBase* sb = getSignal(_data, instance, event);
   if (!sb)
     return qi::makeFutureError<void>("Cant find signal");

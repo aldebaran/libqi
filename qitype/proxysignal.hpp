@@ -29,9 +29,9 @@ namespace qi
     void setup(AnyObject object, const std::string& signalName)
     {
       SignalBase::setOnSubscribers(boost::bind(&ProxySignal<T>::onSubscribe, this, _1,
-        object.get(), signalName, SignalBase::invalidSignalLink));
+        object.asGenericObject(), signalName, SignalBase::invalidSignalLink));
       SignalBase::setTriggerOverride(boost::bind(&ProxySignal<T>::triggerOverride, this, _1, _2,
-        object.get(), signalName));
+        object.asGenericObject(), signalName));
     }
     void onSubscribe(bool enable, GenericObject* object, std::string signalName, SignalLink link);
     AnyReference bounceEvent(const std::vector<AnyReference> args);

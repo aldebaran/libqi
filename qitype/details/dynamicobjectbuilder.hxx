@@ -93,7 +93,7 @@ namespace qi {
   {
     DynamicObject* dobj = bareObject();
     qi::AnyObject ao = makeDynamicAnyObject(dobj, other);
-    setManageable(dobj, ao.get());
+    setManageable(dobj, ao.asGenericObject());
     return ao;
   }
 
