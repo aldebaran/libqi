@@ -744,7 +744,7 @@ qi::AnyObject makeAdder(qi::AnyWeakObject& weak)
   ob.advertiseMethod("add", &addOne);
   ob.advertiseSignal<int>("fire");
   qi::AnyObject res = ob.object();
-  qiLogDebug() << "unregistered object is " << res.get();
+  qiLogDebug() << "unregistered object is " << res.asGenericObject();
   weak = res;
   return res;
 }
@@ -764,7 +764,7 @@ TEST(TestCall, TestObjectPassingReturn)
   ASSERT_TRUE(weak.lock());
   // One is client side, the other server side
   if (p.client() != p.server())
-    ASSERT_FALSE(weak.lock().get() == adder.get());
+    ASSERT_FALSE(weak.lock().asGenericObject() == adder.asGenericObject());
   ASSERT_TRUE(adder);
   qi::Future<int> f = adder.call<int>("add", 41);
   f.wait(1000);
@@ -1065,7 +1065,7 @@ TEST(TestObjectT, Complete)
   ASSERT_TRUE(!!olocal);
   EXPECT_EQ(12, olocal->ping(12));
   EXPECT_EQ(12, (*olocal).ping(12));
-  EXPECT_EQ(12, olocal.get()->call<int>("ping", 12).value());
+  EXPECT_EQ(12, olocal.asGenericObject()->call<int>("ping", 12).value());
   EXPECT_EQ(12, olocal.call<int>("ping", 12).value());
   qi::registerProxy<TestClassProxy>();
   // Object<T> way, does not require proxy registration actually
@@ -1074,7 +1074,7 @@ TEST(TestObjectT, Complete)
   // Look! It's the same code as above!
   EXPECT_EQ(12, oproxy->ping(12));
   EXPECT_EQ(12, (*oproxy).ping(12));
-  EXPECT_EQ(12, oproxy.get()->call<int>("ping", 12).value());
+  EXPECT_EQ(12, oproxy.asGenericObject()->call<int>("ping", 12).value());
   EXPECT_EQ(12, oproxy.call<int>("ping", 12).value());
 
   // No interface, Object<Empty>
@@ -1164,7 +1164,7 @@ TEST(TestObject, callAndDropPointer)
   qi::Atomic<int> checker;
   Object<TestClass> svc(new TestClass, boost::bind(&inc_atomic_and_delete, _1, &checker));
   int sid = s.registerService("test", svc);
-  qi::GenericObject* go = svc.get();
+  qi::GenericObject* go = svc.asGenericObject();
   svc.reset();
   // the object should be present while the call runs
   EXPECT_TRUE(go->call<bool>("unregisterService", &s, sid, &checker));
@@ -1182,7 +1182,7 @@ TEST(TestObject, asyncCallAndDropPointer)
   qi::Atomic<int> checker;
   Object<TestClass> svc(new TestClass, boost::bind(&inc_atomic_and_delete, _1, &checker));
   int sid = s.registerService("test", svc);
-  qi::GenericObject* go = svc.get();
+  qi::GenericObject* go = svc.asGenericObject();
   svc.reset();
   // the object should be present while the call runs
   qi::Future<bool> f = go->async<bool>("unregisterService", &s, sid, &checker);
@@ -1232,7 +1232,7 @@ TEST(TestObject, asyncCallAndDropPointerGeneric)
   Session& s  = *p.server();
 
   int sid = s.registerService("test", svc);
-  qi::GenericObject* go = svc.get();
+  qi::GenericObject* go = svc.asGenericObject();
   svc.reset();
   EXPECT_EQ(0, *checker); // are you there?
   // the object should be present while the call runs

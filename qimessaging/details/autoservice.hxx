@@ -64,6 +64,7 @@ namespace qi
   {
     if (name == _name)
     {
+      boost::mutex::scoped_lock scoped_lock(_mutex);
       qi::Future<qi::AnyObject> future = _session.service(name);
       future.connect(&AutoService::onServiceModified, this, future);
     }
@@ -97,7 +98,7 @@ namespace qi
   }
 
   template <typename T>
-  T* AutoService<T>::get() const
+  const T* AutoService<T>::get() const
   {
     boost::mutex::scoped_lock scoped_lock(_mutex);
     if (_object)
@@ -130,11 +131,11 @@ namespace qi
   }
 
   template <typename T>
-  qi::AnyObject AutoService<T>::asAnyObject()
+  qi::GenericObject* AutoService<T>::asGenericObject() const
   {
     boost::mutex::scoped_lock scoped_lock(_mutex);
     if (_object)
-      return _object.asAnyObject();
+      return _object.asGenericObject();
     else
       throw std::runtime_error("Service " + _name + " unavailable");
   }

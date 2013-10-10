@@ -69,7 +69,7 @@ namespace qi
      */
     T& operator*();
     T* get();
-    T* get() const;
+    const T* get() const;
 
     /**
      * Notify when the service is available.
@@ -88,7 +88,7 @@ namespace qi
      */
     qi::Signal<void> serviceRemoved;
 
-    qi::AnyObject asAnyObject();
+    qi::GenericObject* asGenericObject() const;
 
   private:
     void onServiceModified(const qi::Future<qi::AnyObject>& future);

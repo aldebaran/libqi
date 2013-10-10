@@ -306,7 +306,7 @@ namespace qi {
       return _object.property<AnyValue>(prop.toString());
     else if (prop.kind() == TypeKind_Int)
     { // missing accessor, go to bacend
-      GenericObject* go = _object.get();
+      GenericObject* go = _object.asGenericObject();
       return go->type->property(go->value, prop.toUInt());
     }
     else
@@ -320,7 +320,7 @@ namespace qi {
       result = _object.setProperty(prop.toString(), val);
     else if (prop.kind() == TypeKind_Int)
     {
-      GenericObject* go = _object.get();
+      GenericObject* go = _object.asGenericObject();
       result = go->type->setProperty(go->value, prop.toUInt(), val);
     }
     else

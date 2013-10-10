@@ -332,7 +332,7 @@ namespace qi {
       boost::shared_ptr<BoundObject> bo(sbo);
       context->addObject(bo, oid);
       qiLogDebug() << "Hooking " << oid <<" on " << context;
-      qiLogDebug() << "sbo " << sbo << "obj " << object.get();
+      qiLogDebug() << "sbo " << sbo << "obj " << object.asGenericObject();
       // Transmit the metaObject augmented by ServiceBoundObject.
       ObjectSerializationInfo res;
       res.metaObject = sbo->metaObject(oid);
@@ -373,7 +373,7 @@ namespace qi {
       qiLogDebug() << "Creating unregistered object " << osi.serviceId << '/' << osi.objectId << " on " << context.get();
       RemoteObject* ro = new RemoteObject(osi.serviceId, osi.objectId, osi.metaObject, context);
       AnyObject o = makeDynamicAnyObject(ro, true, &onProxyLost);
-      qiLogDebug() << "New object is " << o.get() << "on ro " << ro;
+      qiLogDebug() << "New object is " << o.asGenericObject() << "on ro " << ro;
       assert(o);
       return o;
     }

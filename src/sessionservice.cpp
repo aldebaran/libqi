@@ -63,7 +63,7 @@ namespace qi {
       boost::mutex::scoped_lock sl(_remoteObjectsMutex);
       RemoteObjectMap::iterator it = _remoteObjects.begin();
       for (; it != _remoteObjects.end(); ++it) {
-        reinterpret_cast<RemoteObject*>(it->second.get()->value)->close();
+        reinterpret_cast<RemoteObject*>(it->second.asGenericObject()->value)->close();
       }
       _remoteObjects.clear();
     }

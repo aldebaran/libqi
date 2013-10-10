@@ -86,7 +86,7 @@ void __chaosThread(void *data)
     // #2.1 Get proxy on service.
     qi::AnyObject proxy = session->service(service);
 
-    if (proxy.get() == 0)
+    if (proxy.asGenericObject() == 0)
     {
       qiLogError() << "[Nightmare] Cannot get proxy on " << service << ", aborting thread.";
       mutex->unlock();

@@ -199,7 +199,7 @@ TEST(QiSession, getSimpleServiceTwice)
   f1.wait();
   f2.wait();
 
-  EXPECT_TRUE(f1.value().get() == f2.value().get());
+  EXPECT_TRUE(f1.value().asGenericObject() == f2.value().asGenericObject());
 }
 
 TEST(QiSession, getSimpleServiceTwiceUnexisting)
