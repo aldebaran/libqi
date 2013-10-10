@@ -194,10 +194,12 @@ namespace qi {
     operator Object<Empty>() const;
 
     T& asT();
+    const T& asT() const;
     T* operator ->();
     const T* operator->() const;
 
     T& operator *();
+    const T& operator *() const;
     bool unique() const;
     GenericObject* get() const;
     void reset();
@@ -344,6 +346,10 @@ namespace qi {
   {
     return *reinterpret_cast<T*>(_obj->value);
   }
+  template<typename T> const T& Object<T, false>::asT() const
+  {
+    return *reinterpret_cast<const T*>(_obj->value);
+  }
   template<typename T> T* Object<T, false>::operator ->()
   {
       return &asT();
@@ -353,6 +359,10 @@ namespace qi {
     return &asT();
   }
   template<typename T> T& Object<T, false>::operator *()
+  {
+    return asT();
+  }
+  template<typename T> const T& Object<T, false>::operator *() const
   {
     return asT();
   }
