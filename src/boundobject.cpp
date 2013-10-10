@@ -62,6 +62,14 @@ namespace qi {
 
   qi::AnyObject ServiceBoundObject::createServiceBoundObjectType(ServiceBoundObject *self, bool bindTerminate) {
     static qi::ObjectTypeBuilder<ServiceBoundObject>* ob = 0;
+
+#ifdef _WIN32
+    boost::mutex::scoped_lock lock(detail::initializationMutex());
+#else
+    static boost::mutex mutex;
+    boost::mutex::scoped_lock lock(mutex);
+#endif
+
     if (!ob)
     {
       ob = new qi::ObjectTypeBuilder<ServiceBoundObject>();
