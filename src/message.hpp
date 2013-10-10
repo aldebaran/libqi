@@ -123,6 +123,7 @@ namespace qi {
       ServiceDirectoryAction_UpdateServiceInfo   = 105,
       ServiceDirectoryAction_ServiceAdded        = 106,
       ServiceDirectoryAction_ServiceRemoved      = 107,
+      ServiceDirectoryAction_MachineId           = 108,
     };
 
     enum Type

@@ -61,6 +61,8 @@ namespace qi
       assert(id == qi::Message::ServiceDirectoryAction_ServiceAdded);
       id = ob->advertiseSignal("serviceRemoved", &ServiceDirectoryBoundObject::serviceRemoved);
       assert(id == qi::Message::ServiceDirectoryAction_ServiceRemoved);
+      id = ob->advertiseMethod("machineId", &ServiceDirectoryBoundObject::machineId);
+      assert(id == qi::Message::ServiceDirectoryAction_MachineId);
     }
     return ob->object(self, &AnyObject::deleteGenericObjectOnly);
   }
@@ -376,6 +378,10 @@ namespace qi
     return f;
   }
 
+  std::string ServiceDirectoryBoundObject::machineId()
+  {
+    return qi::os::getMachineId();
+  }
 
 } // !qi
 

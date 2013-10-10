@@ -34,6 +34,7 @@ namespace qi
     void                     unregisterService(const unsigned int &idx);
     void                     serviceReady(const unsigned int &idx);
     void                     updateServiceInfo(const ServiceInfo &svcinfo);
+    std::string              machineId();
 
     qi::Signal<unsigned int, std::string>  serviceAdded;
     qi::Signal<unsigned int, std::string>  serviceRemoved;

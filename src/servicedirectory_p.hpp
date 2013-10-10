@@ -12,7 +12,6 @@
 namespace qi {
 
 
-
 }
 
 #endif  // _SRC_SERVICEDIRECTORY_P_HPP_
