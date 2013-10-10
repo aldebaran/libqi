@@ -56,6 +56,13 @@ namespace qi
 
   qi::AnyObject createSDP(ServiceDirectoryBoundObject* self) {
     static qi::ObjectTypeBuilder<ServiceDirectoryBoundObject>* ob = 0;
+#ifdef _WIN32
+    boost::mutex::scoped_lock lock(detail::initializationMutex());
+#else
+    static boost::mutex mutex;
+    boost::mutex::scoped_lock lock(mutex);
+#endif
+
     if (!ob)
     {
       ob = new qi::ObjectTypeBuilder<ServiceDirectoryBoundObject>();
