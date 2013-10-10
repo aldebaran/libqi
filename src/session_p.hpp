@@ -33,6 +33,8 @@ namespace qi {
     void onServiceRemoved(unsigned int idx, const std::string &name);
 
   public:
+    // internal, add sd socket to socket cache
+    void addSdSocketToCache(Future<void>, const qi::Url& url);
     Session               *_self;
 
     //ServiceDirectoryClient have a transportsocket not belonging to transportsocketcache

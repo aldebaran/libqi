@@ -70,7 +70,8 @@ namespace qi {
     // C4251
     qi::Signal<std::string>               disconnected;
 
-  private:
+  protected:
+    friend class SessionPrivate;
     boost::shared_ptr<SessionPrivate>    _p;
   };
 

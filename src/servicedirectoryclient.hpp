@@ -37,12 +37,14 @@ namespace qi {
     qi::Future< void >                     unregisterService(const unsigned int &idx);
     qi::Future< void >                     serviceReady(const unsigned int &idx);
     qi::Future< void >                     updateServiceInfo(const ServiceInfo &svcinfo);
+    qi::Future< std::string >              machineId();
 
     qi::Signal<>                                  connected;
     qi::Signal<std::string>                       disconnected;
     qi::Signal<unsigned int, std::string>         serviceAdded;
     qi::Signal<unsigned int, std::string>         serviceRemoved;
 
+    TransportSocketPtr socket();
   private:
     //ServiceDirectory Interface
     void onServiceAdded(unsigned int idx, const std::string &name);

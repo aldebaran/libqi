@@ -186,6 +186,11 @@ namespace qi {
     }
   }
 
+  TransportSocketPtr ServiceDirectoryClient::socket()
+  {
+    return _sdSocket;
+  }
+
   qi::Future< std::vector<ServiceInfo> > ServiceDirectoryClient::services() {
     return _object.call< std::vector<ServiceInfo> >("services");
   }
@@ -210,4 +215,7 @@ namespace qi {
     return _object.call<void>("updateServiceInfo", svcinfo);
   }
 
+  qi::Future<std::string>              ServiceDirectoryClient::machineId() {
+    return _object.call<std::string>("machineId");
+  }
 }
