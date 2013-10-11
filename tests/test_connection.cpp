@@ -14,7 +14,6 @@
 #include <qimessaging/session.hpp>
 #include <qitype/anyobject.hpp>
 #include <qitype/dynamicobjectbuilder.hpp>
-#include <qimessaging/servicedirectory.hpp>
 #include <qimessaging/gateway.hpp>
 #include <qi/application.hpp>
 #include <qi/os.hpp>
@@ -152,13 +151,12 @@ TEST(QiMessagingConnexion, testBuffer)
 int main(int argc, char **argv) {
   qi::Application app(argc, argv);
   ::testing::InitGoogleTest(&argc, argv);
-  qi::ServiceDirectory sd;
+  qi::Session       session;
 
-  sd.listen("tcp://127.0.0.1:0");
-  connectionAddr = sd.endpoints()[0].str();
+  session.listenStandalone("tcp://127.0.0.1:0");
+  connectionAddr = session.endpoints()[0].str();
 
   std::cout << "Service Directory ready." << std::endl;
-  qi::Session       session;
   qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("reply", &reply);
   ob.advertiseMethod("replyBuf", &replyBuf);
@@ -167,9 +165,6 @@ int main(int argc, char **argv) {
   ob.advertiseMethod("replyBufBA", &replyBufBA);
   qi::AnyObject        obj(ob.object());
 
-  session.connect(connectionAddr);
-
-  session.listen("tcp://127.0.0.1:0");
   unsigned int id = session.registerService("serviceTest", obj);
   std::cout << "serviceTest ready:" << id << std::endl;
 
@@ -182,7 +177,6 @@ int main(int argc, char **argv) {
 #endif
 
   int res = RUN_ALL_TESTS();
-  sd.close();
   session.close();
 
 

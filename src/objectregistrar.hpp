@@ -85,6 +85,8 @@ namespace qi {
     ServiceDirectoryClient             *_sdClient;
     Session                            *_session;
     const std::string                   _id;
+
+    friend class Session_SD;
   };
 
 }

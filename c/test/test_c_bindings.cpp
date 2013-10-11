@@ -8,7 +8,6 @@
 #include <qic/session.h>
 #include <qic/value.h>
 #include <qic/object.h>
-#include <qic/servicedirectory.h>
 #include <qic/future.h>
 #include <qic/value.h>
 #include <qic/application.h>
@@ -20,18 +19,18 @@ class TestCBindings: public ::testing::Test
 public:
   TestCBindings()
   {
-    sd = qi_servicedirectory_create();
+    sd = qi_session_create();
   }
 
   ~TestCBindings() {
-    qi_servicedirectory_destroy(sd);
+    qi_session_destroy(sd);
   }
 
 protected:
   void SetUp()
   {
-    qi_servicedirectory_listen(sd, "tcp://127.0.0.1:0");
-    qi_value_t *val = qi_servicedirectory_endpoints(sd);
+    qi_session_listen_standalone(sd, "tcp://127.0.0.1:0");
+    qi_value_t *val = qi_session_endpoints(sd);
     qi_value_t *ele = qi_value_list_get(val, 0);
     addr = qi_value_get_string(ele);
     printf("session address: %s\n", addr);
@@ -43,12 +42,12 @@ protected:
   {
     free((void*)addr);
     addr = 0;
-    qi_servicedirectory_close(sd);
+    qi_session_close(sd);
   }
 
 public:
-  qi_servicedirectory_t *sd;
-  const char            *addr;
+  qi_session_t *sd;
+  const char   *addr;
 };
 
 

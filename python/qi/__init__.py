@@ -42,7 +42,7 @@ if sys.platform.startswith("linux"):
 #######
 
 from _qi import Application, FutureState, FutureTimeout, Future, \
-                Promise, Property, ServiceDirectory, Session, Signal, \
+                Promise, Property, Session, Signal, \
                 createObject, registerObjectFactory
 
 from _type import Void, Bool, Int8, UInt8, Int16, UInt16, Int32, UInt32, Int64, UInt64, Float, Double, String, List, Map, Struct, Object, Dynamic, Buffer, AnyArguments
@@ -78,7 +78,6 @@ __all__ = ["FutureState",
            "Future",
            "Promise",
            "Property",
-           "ServiceDirectory",
            "Session",
            "Signal",
            "createObject",

@@ -2,7 +2,6 @@
 #include <qi/application.hpp>
 #include <qitype/objectfactory.hpp>
 #include <qimessaging/session.hpp>
-#include <qimessaging/servicedirectory.hpp>
 #include <testsession/testsessionpair.hpp>
 
 

@@ -9,8 +9,6 @@
 #include <qitype/objectfactory.hpp>
 #include <qimessaging/session.hpp>
 #include <testsession/testsessionpair.hpp>
-#include <qimessaging/servicedirectory.hpp>
-
 
 #include "task_proxy.hpp"
 #include "taskgenerator_proxy.hpp"

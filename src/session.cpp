@@ -29,6 +29,7 @@ namespace qi {
     , _serverObject(&_sdClient, session)
     , _serviceHandler(&_socketsCache, &_sdClient, &_serverObject)
     , _servicesHandler(&_sdClient, &_serverObject)
+    , _sd(&_serverObject)
   {
     _self->connected.setCallType(qi::MetaCallType_Queued);
     _self->disconnected.setCallType(qi::MetaCallType_Queued);
@@ -153,6 +154,24 @@ namespace qi {
   {
     qiLogInfo() << "Session listener created on " << address.str();
     return _p->_serverObject.listen(address);
+  }
+
+  static void startConnect(qi::Future<void> f, qi::Promise<void> p, const qi::Url& addr) {
+    if (f.hasError()) {
+      p.setError(f.error());
+      return;
+    }
+
+  }
+
+  qi::FutureSync<void> Session::listenStandalone(const qi::Url &address)
+  {
+    qi::Promise<void> p;
+    //will listen and connect
+    _p->_sd.listenStandalone(address);
+    connect(endpoints()[0]);
+    p.setValue(0);
+    return p.future();
   }
 
   bool Session::setIdentity(const std::string& key, const std::string& crt)

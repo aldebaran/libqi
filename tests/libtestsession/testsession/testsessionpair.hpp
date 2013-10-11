@@ -66,7 +66,6 @@
 #ifndef _TESTS_LIBTESTSESSION_TESTSESSIONPAIR_HPP_
 #define _TESTS_LIBTESTSESSION_TESTSESSIONPAIR_HPP_
 
-#include <qimessaging/servicedirectory.hpp>
 #include <qimessaging/session.hpp>
 #include <testsession/testsession.hpp>
 
@@ -84,10 +83,10 @@ public:
   std::vector<qi::Url> serviceDirectoryEndpoints() const;
 
 private:
+  qi::Session          _sd;
   TestMode::Mode       _mode;
   TestSession         *_client;
   TestSession         *_server;
-  qi::ServiceDirectory _sd;
 };
 
 #endif // !_TESTS_LIBTESTSESSION_TESTSESSIONPAIR_HPP_

@@ -52,6 +52,9 @@ namespace qi {
     //close both client and server side
     qi::FutureSync<void>    close();
 
+    //this create a listen and create a service directory
+    qi::FutureSync<void> listenStandalone(const qi::Url &address);
+
     qi::FutureSync<unsigned int> registerService(const std::string &name, AnyObject object);
     qi::FutureSync<void>         unregisterService(unsigned int idx);
 

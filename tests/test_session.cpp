@@ -14,7 +14,6 @@
 #include <qimessaging/session.hpp>
 #include <qitype/anyobject.hpp>
 #include <qitype/dynamicobjectbuilder.hpp>
-#include <qimessaging/servicedirectory.hpp>
 #include <qimessaging/gateway.hpp>
 #include <qi/os.hpp>
 #include <qi/application.hpp>
@@ -130,9 +129,9 @@ TEST(QiSession, testClose)
 {
   qi::Session session;
 
-  qi::ServiceDirectory sd;
+  qi::Session sd;
 
-  qi::Future<void> f = sd.listen("tcp://127.0.0.1:0");
+  qi::Future<void> f = sd.listenStandalone("tcp://127.0.0.1:0");
   f.wait(3000);
   ASSERT_TRUE(!f.hasError());
 
@@ -292,9 +291,9 @@ TEST(QiSession, Services)
 
 TEST(QiSession, TestServiceDirectoryEndpoints)
 {
-  qi::ServiceDirectory sd;
+  qi::Session sd;
 
-  qi::Future<void> f = sd.listen("tcp://0.0.0.0:0");
+  qi::Future<void> f = sd.listenStandalone("tcp://0.0.0.0:0");
   f.wait(3000);
   ASSERT_TRUE(!f.hasError());
 
@@ -333,8 +332,8 @@ TEST(QiSession, getCallInConnect)
 }
 
 TEST(QiSession, asyncConnect) {
-  qi::ServiceDirectory sd;
-  sd.listen("tcp://127.0.0.1:0");
+  qi::Session sd;
+  sd.listenStandalone("tcp://127.0.0.1:0");
 
   qi::Session s;
   s.connect(sd.endpoints()[0]).async();
@@ -347,8 +346,8 @@ TEST(QiSession, asyncConnect) {
 
 TEST(QiSession, urlOnClosed)
 {
-  qi::ServiceDirectory sd;
-  sd.listen("tcp://127.0.0.1:0");
+  qi::Session sd;
+  sd.listenStandalone("tcp://127.0.0.1:0");
   qi::Session s;
   EXPECT_ANY_THROW(s.url());
   s.connect(sd.endpoints()[0]);

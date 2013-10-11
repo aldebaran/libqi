@@ -85,14 +85,14 @@ TEST(TestTestSession, TestForceMode)
 TEST(TestTestSession, TestTestSessionOnly)
 {
   int i = 0;
-  qi::ServiceDirectory sd;
-  std::stringstream    listenUrl;
+  qi::Session       sd;
+  std::stringstream listenUrl;
 
   // #1 Force test mode to service directory.
   TestMode::forceTestMode(TestMode::Mode_SD);
 
   // #2 Initialize service directory and test sessions.
-  qi::Future<void> f = sd.listen("tcp://0.0.0.0:0");
+  qi::Future<void> f = sd.listenStandalone("tcp://0.0.0.0:0");
   f.wait(3000);
   ASSERT_TRUE(!f.hasError());
   TestSession          client(sd.endpoints()[0].str(), false);

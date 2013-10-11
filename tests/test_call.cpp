@@ -21,8 +21,6 @@
 #include <qitype/objecttypebuilder.hpp>
 #include <qimessaging/session.hpp>
 #include <testsession/testsessionpair.hpp>
-#include <qimessaging/servicedirectory.hpp>
-#include <testsession/testsessionpair.hpp>
 #include "src/message.hpp"
 
 qiLogCategory("test");

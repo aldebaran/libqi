@@ -7,8 +7,6 @@
 
 import time
 import qi
-from qi import ServiceDirectory
-from qi import Session
 import pytest
 
 class TestService:
@@ -21,10 +19,10 @@ def test_throwing_callback():
         raise Exception("woops")
 
     local = "tcp://127.0.0.1:5555"
-    sd = ServiceDirectory()
-    sd.listen(local)
+    sd = qi.Session()
+    sd.listenStandalone(local)
 
-    s = Session()
+    s = qi.Session()
     s.connect(local)
     f = s.service("ServiceDirectory", _async=True)
 
@@ -35,10 +33,10 @@ def test_throwing_callback():
 
 def test_unicode_strings():
     local = "tcp://127.0.0.1:5555"
-    sd = ServiceDirectory()
-    sd.listen(local)
+    sd = qi.Session()
+    sd.listenStandalone(local)
 
-    s = Session()
+    s = qi.Session()
     s.connect(local)
 
     m = TestService()
@@ -64,10 +62,10 @@ def test_unicode_strings():
 
 def test_builtin_types():
     local = "tcp://127.0.0.1:5555"
-    sd = ServiceDirectory()
-    sd.listen(local)
+    sd = qi.Session()
+    sd.listenStandalone(local)
 
-    s = Session()
+    s = qi.Session()
     s.connect(local)
 
     m = TestService()
@@ -128,10 +126,10 @@ def test_builtin_types():
 
 def test_object_types():
     local = "tcp://127.0.0.1:5555"
-    sd = ServiceDirectory()
-    sd.listen(local)
+    sd = qi.Session()
+    sd.listenStandalone(local)
 
-    s = Session()
+    s = qi.Session()
     s.connect(local)
 
     m = TestService()
@@ -161,10 +159,10 @@ def test_object_types():
 
 def test_qi_object_instance():
     local = "tcp://127.0.0.1:5555"
-    sd = ServiceDirectory()
-    sd.listen(local)
+    sd = qi.Session()
+    sd.listenStandalone(local)
 
-    s = Session()
+    s = qi.Session()
     s.connect(local)
 
     m = s.service("ServiceDirectory")

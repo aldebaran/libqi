@@ -15,7 +15,6 @@
 #include <qitype/anyobject.hpp>
 #include <qitype/dynamicobjectbuilder.hpp>
 #include <qimessaging/session.hpp>
-#include <qimessaging/servicedirectory.hpp>
 
 qiLogCategory("test");
 
@@ -54,7 +53,7 @@ public:
 protected:
   void SetUp()
   {
-    qi::Future<void> f = sd.listen("tcp://127.0.0.1:0");
+    qi::Future<void> f = sd.listenStandalone("tcp://127.0.0.1:0");
     f.wait(3000);
     ASSERT_TRUE(!f.hasError());
     f = session.connect(sd.endpoints()[0]);
@@ -83,7 +82,7 @@ protected:
 
 public:
   qi::Promise<int>     prom;
-  qi::ServiceDirectory sd;
+  qi::Session          sd;
   qi::Session          session;
   qi::AnyObject        oserver;
   qi::Session          sclient;

@@ -5,22 +5,22 @@
 
 #include <gtest/gtest.h>
 #include <qi/application.hpp>
-#include <qimessaging/servicedirectory.hpp>
+#include <qi/log.hpp>
+#include <qimessaging/session.hpp>
 
 TEST(Module, pass_obj)
 {
-  qi::ServiceDirectory sd;
+  qi::Session sd;
 
-  try
-    {
+  try {
+    sd.listenStandalone("tcp://127.0.0.1:0");
     sd.listen("tcp://127.0.0.1:0");
-    sd.listen("tcp://127.0.0.1:0");
-    }
-    catch(std::runtime_error&e)
-    {
-      qiLogError("test_sd") << e.what();
-      ASSERT_TRUE(false);
-    }
+  }
+  catch(std::runtime_error& e)
+  {
+    qiLogError("test_sd") << e.what();
+    ASSERT_TRUE(false);
+  }
 }
 
 int main(int argc, char **argv) {

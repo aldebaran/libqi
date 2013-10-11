@@ -8,10 +8,9 @@
 #include <gtest/gtest.h>
 
 #include <qimessaging/applicationsession.hpp>
-#include <qimessaging/servicedirectory.hpp>
 
 static bool _stopped = false;
-static qi::ServiceDirectory _sd;
+static qi::Session _sd;
 static qi::ApplicationSession* _app;
 static char **_argv = 0;
 static int _argc = 5;
@@ -53,7 +52,7 @@ int main(int argc, char** argv)
 {
   ::testing::InitGoogleTest(&argc, argv);
 
-  _sd.listen("tcp://127.0.0.1:0");
+  _sd.listenStandalone("tcp://127.0.0.1:0");
   _url = _sd.endpoints()[0].str();
 
   _argv = new char*[6];

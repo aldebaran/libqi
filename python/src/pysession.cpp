@@ -78,6 +78,24 @@ qi::AnyReference triggerBouncer(qi::SignalBase *sig, const std::vector<qi::AnyRe
         return toPyFutureAsync(fut, _async);
       }
 
+      boost::python::object listen(const std::string &url, bool _async=false) {
+        qi::Future<void> fut;
+        {
+          GILScopedUnlock _unlock;
+          fut = _ses->listen(url);
+        }
+        return toPyFutureAsync(fut, _async);
+      }
+
+      boost::python::object listenStandalone(const std::string &url, bool _async=false) {
+        qi::Future<void> fut;
+        {
+          GILScopedUnlock _unlock;
+          fut = _ses->listenStandalone(url);
+        }
+        return toPyFutureAsync(fut, _async);
+      }
+
       boost::python::object services(bool _async=false) {
         qi::Future< std::vector<ServiceInfo> > fut;
         {
@@ -107,6 +125,15 @@ qi::AnyReference triggerBouncer(qi::SignalBase *sig, const std::vector<qi::AnyRe
         return toPyFutureAsync(fut, _async);
       }
 
+      boost::python::object endpoints() {
+        boost::python::list ret;
+        std::vector<qi::Url>  eps = _ses->endpoints();
+        for (unsigned int i = 0; i < eps.size(); ++i) {
+          ret.append(eps.at(i).str());
+        }
+        return ret;
+      }
+
     private:
       boost::shared_ptr<qi::Session> _ses;
       int nSigConnected;
@@ -127,8 +154,18 @@ qi::AnyReference triggerBouncer(qi::SignalBase *sig, const std::vector<qi::AnyRe
                "close() -> None\n"
                "Close the Session")
 
+          .def("listen", &PySession::listen, (boost::python::arg("url"), boost::python::arg("_async") = false),
+               "listen(url) -> None\n"
+               "Listen on that specific Url")
+
+          .def("listenStandalone", &PySession::listenStandalone, (boost::python::arg("url"), boost::python::arg("_async") = false),
+               "listenStandalone(url) -> None\n"
+               "Create a session with a standalone ServiceDirectory")
+
           //TODO: endpoints()
-          //TODO: listen(url)
+          .def("endpoints", &PySession::endpoints,
+               "endpoints() -> list\n"
+               "Return the current list of endpoints of the session")
 
           .def("service", &PySession::service, (boost::python::arg("service"), boost::python::arg("_async") = false),
                "service(name) -> Object\n"

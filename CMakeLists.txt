@@ -62,7 +62,6 @@ set(PUBLIC_HEADERS
                    qimessaging/autoservice.hpp
                    qimessaging/details/autoservice.hxx
                    qimessaging/gateway.hpp
-                   qimessaging/servicedirectory.hpp
                    qimessaging/serviceinfo.hpp
                    qimessaging/session.hpp
                    qimessaging/url.hpp
@@ -86,7 +85,7 @@ set(SRCS ${CONFIG_H}
          src/remoteobject.cpp
          src/remoteobject_p.hpp
          src/servicedirectory.cpp
-         src/servicedirectory_p.hpp
+         src/servicedirectory.hpp
          src/servicedirectoryclient.hpp
          src/servicedirectoryclient.cpp
          src/serviceinfo.cpp

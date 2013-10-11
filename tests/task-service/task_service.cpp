@@ -12,7 +12,6 @@
 #include <qitype/dynamicobjectbuilder.hpp>
 #include <qimessaging/session.hpp>
 #include <testsession/testsessionpair.hpp>
-#include <qimessaging/servicedirectory.hpp>
 #include <testsession/testsessionpair.hpp>
 #include "task_service.hpp"
 #include "task_bind.hpp"

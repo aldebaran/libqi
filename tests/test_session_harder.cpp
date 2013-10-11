@@ -14,7 +14,6 @@
 #include <qimessaging/session.hpp>
 #include <qitype/anyobject.hpp>
 #include <qitype/dynamicobjectbuilder.hpp>
-#include <qimessaging/servicedirectory.hpp>
 #include <qimessaging/gateway.hpp>
 #include <qi/os.hpp>
 #include <qi/application.hpp>

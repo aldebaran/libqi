@@ -12,8 +12,8 @@ def funky(o):
     return
 
 def main():
-    sd = qi.ServiceDirectory()
-    sd.listen('tcp://127.0.0.1:5555')
+    sd = qi.Session()
+    sd.listenStandalone('tcp://127.0.0.1:5555')
     s = qi.Session()
     s.connect('tcp://127.0.0.1:5555')
     o = s.service('ServiceDirectory')

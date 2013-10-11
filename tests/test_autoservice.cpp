@@ -9,7 +9,6 @@
 #include <qitype/dynamicobjectbuilder.hpp>
 #include <qitype/dynamicobject.hpp>
 #include <qitype/objecttypebuilder.hpp>
-#include <qimessaging/servicedirectory.hpp>
 #include <qimessaging/gateway.hpp>
 #include <qi/os.hpp>
 #include <qi/application.hpp>

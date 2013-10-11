@@ -18,8 +18,6 @@
 #include <qitype/proxyproperty.hpp>
 #include <qimessaging/session.hpp>
 #include <testsession/testsessionpair.hpp>
-#include <qimessaging/servicedirectory.hpp>
-#include <testsession/testsessionpair.hpp>
 
 #define PERSIST_CHECK(code, cond, what, msdelay)  \
 do                                           \

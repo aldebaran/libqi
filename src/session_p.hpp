@@ -13,6 +13,7 @@
 #include "sessionservice.hpp"
 #include "sessionservices.hpp"
 #include "transportsocketcache.hpp"
+#include "servicedirectory.hpp"
 
 namespace qi {
 
@@ -44,6 +45,7 @@ namespace qi {
     ObjectRegistrar        _serverObject;
     Session_Service        _serviceHandler;
     Session_Services       _servicesHandler;
+    Session_SD             _sd;
     TransportSocketCache   _socketsCache;
   };
 }
