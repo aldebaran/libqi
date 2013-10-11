@@ -31,6 +31,7 @@ namespace qi {
   ObjectRegistrar::~ObjectRegistrar()
   {
     _dying = true;
+    qi::Trackable<Server>::destroy();
   }
 
   void serviceReady(qi::Future<void> fut, qi::Promise<unsigned int> result, unsigned int idx) {
