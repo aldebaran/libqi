@@ -154,7 +154,10 @@ namespace qi {
   }
 
   qi::Url Session::url() const {
-    return _p->_sdClient.url();
+    if (_p->_sdClient.isLocal())
+      return endpoints()[0];
+    else
+      return _p->_sdClient.url();
   }
 
   //3 cases:
@@ -185,22 +188,30 @@ namespace qi {
     return _p->_serverObject.listen(address);
   }
 
-  static void startConnect(qi::Future<void> f, qi::Promise<void> p, const qi::Url& addr) {
-    if (f.hasError()) {
-      p.setError(f.error());
-      return;
-    }
-
+  qi::FutureSync<void> Session::listenStandalone(const qi::Url &address)
+  {
+    return _p->listenStandalone(address);
   }
 
-  qi::FutureSync<void> Session::listenStandalone(const qi::Url &address)
+  qi::FutureSync<void> SessionPrivate::listenStandalone(const qi::Url& address)
   {
     qi::Promise<void> p;
     //will listen and connect
-    _p->_sd.listenStandalone(address);
-    connect(endpoints()[0]);
-    p.setValue(0);
+    qi::Future<void> f = _sd.listenStandalone(address);
+    f.connect(&SessionPrivate::listenStandaloneCont, _self->_p, p, _1);
     return p.future();
+  }
+
+  void SessionPrivate::listenStandaloneCont(qi::Promise<void> p, qi::Future<void> f)
+  {
+    if (f.hasError())
+      p.setError(f.error());
+    else
+    {
+      _sdClient.setServiceDirectory(static_cast<ServiceBoundObject*>(_sd._sdbo.get())->object());
+      // _sdClient will trigger its connected, which will trigger our connected
+      p.setValue(0);
+    }
   }
 
   bool Session::setIdentity(const std::string& key, const std::string& crt)

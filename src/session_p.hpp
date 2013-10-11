@@ -24,6 +24,7 @@ namespace qi {
     virtual ~SessionPrivate();
 
     qi::FutureSync<void> connect(const qi::Url &serviceDirectoryURL);
+    qi::FutureSync<void> listenStandalone(const qi::Url& listenUrl);
     qi::FutureSync<void> close();
     bool isConnected() const;
 
@@ -33,6 +34,7 @@ namespace qi {
     void onServiceRemoved(unsigned int idx, const std::string &name);
 
   public:
+    void listenStandaloneCont(qi::Promise<void> p, qi::Future<void> f);
     // internal, add sd socket to socket cache
     void addSdSocketToCache(Future<void>, const qi::Url& url);
     Session               *_self;

@@ -63,6 +63,7 @@ namespace qi
     void             updateServiceInfo();
 
   private:
+    friend class SessionPrivate;
     ObjectRegistrar*             _server;
     BoundAnyObject               _sdbo;
     bool                         _init;

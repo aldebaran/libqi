@@ -360,7 +360,6 @@ namespace qi
       it->second.setEndpoints(_server->endpoints());
       return f;
     }
-
     ServiceInfo si;
     si.setName("ServiceDirectory");
     si.setServiceId(qi::Message::Service_ServiceDirectory);

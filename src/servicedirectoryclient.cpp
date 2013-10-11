@@ -17,9 +17,11 @@ namespace qi {
     , _remoteObject(qi::Message::Service_ServiceDirectory)
     , _addSignalLink(0)
     , _removeSignalLink(0)
+    , _localSd(false)
   {
     _object = makeDynamicAnyObject(&_remoteObject, false);
   }
+
 
   ServiceDirectoryClient::~ServiceDirectoryClient()
   {
@@ -103,6 +105,21 @@ namespace qi {
     return promise.future();
   }
 
+  void ServiceDirectoryClient::setServiceDirectory(AnyObject serviceDirectoryService)
+  {
+    _object = serviceDirectoryService;
+    _localSd = true;
+    boost::function<void (unsigned int, std::string)> f;
+
+    f = boost::bind<void>(&ServiceDirectoryClient::onServiceAdded, this, _1, _2);
+    _addSignalLink  = _object.connect("serviceAdded", f);
+
+    f = boost::bind<void>(&ServiceDirectoryClient::onServiceRemoved, this, _1, _2);
+    _removeSignalLink = _object.connect("serviceRemoved", f);
+
+    connected();
+  }
+
   static void sharedPtrHolder(TransportSocketPtr* ptr)
   {
     delete ptr;
@@ -140,10 +157,14 @@ namespace qi {
   }
 
   bool                 ServiceDirectoryClient::isConnected() const {
+    if (_localSd)
+      return true;
     return _sdSocket == 0 ? false : _sdSocket->isConnected();
   }
 
   qi::Url              ServiceDirectoryClient::url() const {
+    if (_localSd)
+      throw std::runtime_error("Service directory is local, url() unknown.");
     if (!_sdSocket)
       throw std::runtime_error("Session disconnected");
     return _sdSocket->url();
@@ -189,6 +210,11 @@ namespace qi {
   TransportSocketPtr ServiceDirectoryClient::socket()
   {
     return _sdSocket;
+  }
+
+  bool ServiceDirectoryClient::isLocal()
+  {
+    return _localSd;
   }
 
   qi::Future< std::vector<ServiceInfo> > ServiceDirectoryClient::services() {
