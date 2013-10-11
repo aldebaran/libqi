@@ -101,8 +101,12 @@ static SignalBase* getSignal(ObjectTypeData& data, void* instance, unsigned int 
 }
 
 static void reportError(qi::Future<AnyReference> fut) {
-  if (fut.hasError())
+  if (fut.hasError()) {
     qiLogError() << fut.error();
+    return;
+  }
+  qi::AnyReference ref = fut.value();
+  ref.destroy();
 }
 
 void StaticObjectTypeBase::metaPost(void* instance, AnyObject context, unsigned int signal,

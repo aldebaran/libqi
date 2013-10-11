@@ -245,8 +245,12 @@ namespace qi
   }
 
   static void reportError(qi::Future<AnyReference> fut) {
-    if (fut.hasError())
+    if (fut.hasError()) {
       qiLogError() << fut.error();
+      return;
+    }
+    qi::AnyReference ref = fut.value();
+    ref.destroy();
   }
 
   void DynamicObject::metaPost(AnyObject   context, unsigned int event, const GenericFunctionParameters& params)
