@@ -683,7 +683,7 @@ TEST(TestFutureCancel, AsyncCallCanceleable)
   qi::Future<void> f = qi::getDefaultNetworkEventLoop()->async(
     boost::bind(&setTrue, &b), 200);
   f.cancel();
-  ASSERT_FALSE(f.isFinished());
+  // f is going to cancel asynchronously, so it can already be cancelled, or not
   qi::os::msleep(400);
   ASSERT_TRUE(!b);
   ASSERT_TRUE(f.isFinished());
