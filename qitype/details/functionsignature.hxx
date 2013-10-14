@@ -8,6 +8,7 @@
 #define _QITYPE_DETAILS_FUNCTIONSIGNATURE_HXX_
 
 #include <boost/thread/mutex.hpp>
+#include <qi/macro.hpp>
 
 namespace qi {
   namespace detail {
@@ -120,37 +121,27 @@ namespace qi {
 
     template<typename T>
     struct FunctionSignature<boost::function<T> >: public FunctionSignature<T> {};
-#ifdef _WIN32
-    QITYPE_API boost::mutex& initializationMutex();
-#endif
+
+    template<typename T> inline
+    qi::Signature _functionArgumentsSignature()
+    {
+      std::string sigs;
+      sigs += '(';
+      typedef typename boost::function_types::parameter_types<T>::type ArgsType;
+      boost::mpl::for_each<
+        boost::mpl::transform_view<ArgsType,
+        boost::add_pointer<
+        boost::remove_const<
+        boost::remove_reference<boost::mpl::_1> > > > > (qi::detail::signature_function_arg_apply(&sigs));
+      sigs += ')';
+      return Signature(sigs);
+    }
     template<typename T> inline
     qi::Signature functionArgumentsSignature()
     {
-#ifdef _WIN32
-       boost::mutex::scoped_lock _lock(initializationMutex());
-#endif
-
-      static bool done = false;
-      static std::string sigs;
-      if (!done)
-      {
-#ifndef _WIN32
-        static boost::mutex mut;
-        boost::mutex::scoped_lock _lock(mut);
-#endif
-        if (!done) {
-          sigs += '(';
-          typedef typename boost::function_types::parameter_types<T>::type ArgsType;
-          boost::mpl::for_each<
-              boost::mpl::transform_view<ArgsType,
-              boost::add_pointer<
-              boost::remove_const<
-              boost::remove_reference<boost::mpl::_1> > > > > (qi::detail::signature_function_arg_apply(&sigs));
-          sigs += ')';
-          done = true;
-        }
-      }
-      return Signature(sigs);
+      static Signature* res;
+      QI_ONCE(res = new Signature(_functionArgumentsSignature<T>()));
+      return *res;
     }
   }
 }
