@@ -23,36 +23,49 @@ namespace qi
   class QIMESSAGING_API ApplicationSession : public Application
   {
   public:
-    /** By default, ApplicationSession will automatically will automatically
-     *  call Application::stop() when the session is over.
-     *  If you want a different behaviour you have to call the constructor with
-     *  the desired option below.
+    /** By default, ApplicationSession will automatically call qi::Application::stop()
+     *  when the session is over. If you want a different behaviour you have to
+     *  call the constructor with the desired option below.
      *
      *  Ex: qi::ApplicationSession app(argc, argv, qi::ApplicationSession::Option_NoAutoExit)
      */
     enum Option
     {
-      Option_None       = 0,
-      Option_NoAutoExit = 1,
+      Option_None       = 0, //!< No option, this is the default behavior.
+      Option_NoAutoExit = 1, //!< With this option the application won't stop once the session is disconnected.
     };
 
     /** ApplicationSession will check first if there is a --qi-url given in argv,
      *  if not it will take the url in the constructor instead setting its url.
      *  If --qi-listen-url is set the session will listen on the provided url.
+     *  @param argc The number of arguments.
+     *  @param argv The array containing all the arguments given to the program.
+     *  @param opt Either ApplicationSession::Option_None or
+     *  ApplicationSession::Option_NoAutoExit. The default behavior of
+     *  ApplicationSession is to call stop() once the session gets disconnected.
+     *  @see qi::ApplicationSession::Option
+     *  @param url The default url used if no --qi-url was found in the options.
      */
     ApplicationSession(int& argc, char**& argv, ApplicationSessionOptions opt = Option_None, const Url& url = "tcp://127.0.0.1:9559");
     ApplicationSession(const std::string& name, int& argc, char**& argv, ApplicationSessionOptions opt = Option_None, const Url& url = "tcp://127.0.0.1:9559");
     virtual ~ApplicationSession();
 
+    /**
+     * @return The embedded session used by ApplicationSession.
+     */
     Session&   session();
 
-    /** Returns the intern url used by ApplicationSession parsed on the
-     *  command line by --qi-url or given in the constructor.
+    /**
+     *  @return The url used by ApplicationSession parsed on the command line by
+     *  --qi-url if specified, otherwise the default url given in the constructor.
+     *  @see qi::ApplicationSession::ApplicationSession for parsing information.
      */
     Url url();
 
-    /** Returns the intern url used by ApplicationSession parsed on the
-     *  command line by --qi-listen-url.
+    /**
+     *  @return The url used by ApplicationSession parsed on the command line by
+     *  --qi-listen-url, or an empty string if the option wasn't given.
+     *  @see qi::ApplicationSession::ApplicationSession for parsing information.
      */
     Url listenUrl();
 
