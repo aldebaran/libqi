@@ -21,29 +21,19 @@ qiLogCategory("qimessaging.remoteobject");
 namespace qi {
 
 
-  static qi::MetaObject &createRemoteObjectSpecialMetaObject() {
-    static qi::MetaObject *mo = 0;
-#ifdef _WIN32
-    boost::mutex::scoped_lock lock(detail::initializationMutex());
-#else
-    static boost::mutex mutex;
-    boost::mutex::scoped_lock lock(mutex);
-#endif
-    if (!mo) {
+  static qi::MetaObject* createRemoteObjectSpecialMetaObject() {
+    qi::MetaObject *mo = new qi::MetaObject;
+    qi::MetaObjectBuilder mob;
+    mob.addMethod("L", "registerEvent", "(IIL)", qi::Message::BoundObjectFunction_RegisterEvent);
+    mob.addMethod("v", "unregisterEvent", "(IIL)", qi::Message::BoundObjectFunction_UnregisterEvent);
+    mob.addMethod(typeOf<MetaObject>()->signature(), "metaObject", "(I)", qi::Message::BoundObjectFunction_MetaObject);
 
-      mo = new qi::MetaObject;
-      qi::MetaObjectBuilder mob;
-      mob.addMethod("L", "registerEvent", "(IIL)", qi::Message::BoundObjectFunction_RegisterEvent);
-      mob.addMethod("v", "unregisterEvent", "(IIL)", qi::Message::BoundObjectFunction_UnregisterEvent);
-      mob.addMethod(typeOf<MetaObject>()->signature(), "metaObject", "(I)", qi::Message::BoundObjectFunction_MetaObject);
+    *mo = mob.metaObject();
 
-      *mo = mob.metaObject();
-
-      assert(mo->methodId("registerEvent::(IIL)") == qi::Message::BoundObjectFunction_RegisterEvent);
-      assert(mo->methodId("unregisterEvent::(IIL)") == qi::Message::BoundObjectFunction_UnregisterEvent);
-      assert(mo->methodId("metaObject::(I)") == qi::Message::BoundObjectFunction_MetaObject);
-    }
-    return *mo;
+    assert(mo->methodId("registerEvent::(IIL)") == qi::Message::BoundObjectFunction_RegisterEvent);
+    assert(mo->methodId("unregisterEvent::(IIL)") == qi::Message::BoundObjectFunction_UnregisterEvent);
+    assert(mo->methodId("metaObject::(I)") == qi::Message::BoundObjectFunction_MetaObject);
+    return mo;
   }
 
   RemoteObject::RemoteObject(unsigned int service, qi::TransportSocketPtr socket)
@@ -59,7 +49,9 @@ namespace qi {
      * Will be *replaced* by metaObject received from remote end, when
      * fetchMetaObject is invoked and retuns.
     */
-    setMetaObject(createRemoteObjectSpecialMetaObject());
+    static qi::MetaObject* mo = 0;
+    QI_ONCE(mo = createRemoteObjectSpecialMetaObject());
+    setMetaObject(*mo);
     setTransportSocket(socket);
     //fetchMetaObject should be called to make sure the metaObject is valid.
   }
