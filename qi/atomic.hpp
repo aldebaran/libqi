@@ -63,7 +63,13 @@ namespace qi
   public:
     BOOST_STATIC_ASSERT_MSG(sizeof(T) == sizeof(int), "qi::Atomic is only supprted for int-like types");
 
-    volatile T _value;
+    volatile
+#ifdef _MSC_VER
+    long
+#else
+    T
+#endif
+       _value;
   };
 
   template <typename T>
@@ -112,51 +118,51 @@ namespace qi
   template <>
   inline int AtomicBase<int>::operator++()
   {
-    return _InterlockedIncrement(reinterpret_cast<long*>(&_value));
+    return _InterlockedIncrement(&_value);
   }
 
   template <>
   inline int AtomicBase<int>::operator--()
   {
-    return _InterlockedDecrement(reinterpret_cast<long*>(&_value));
+    return _InterlockedDecrement(&_value);
   }
 
   template<>
   inline AtomicBase<int>& AtomicBase<int>::operator=(int value)
   {
-    InterlockedExchange(reinterpret_cast<long*>(&_value), value);
+    InterlockedExchange(&_value, value);
     return *this;
   }
 
   template<>
   inline int AtomicBase<int>::swap(int value)
   {
-    return InterlockedExchange(reinterpret_cast<long*>(&_value), value);
+    return InterlockedExchange(&_value, value);
   }
 
   template <>
   inline unsigned int AtomicBase<unsigned int>::operator++()
   {
-    return _InterlockedIncrement(reinterpret_cast<long*>(&_value));
+    return _InterlockedIncrement(&_value);
   }
 
   template <>
   inline unsigned int AtomicBase<unsigned int>::operator--()
   {
-    return _InterlockedDecrement(reinterpret_cast<long*>(&_value));
+    return _InterlockedDecrement(&_value);
   }
 
   template<>
   inline AtomicBase<unsigned int>& AtomicBase<unsigned int>::operator=(unsigned int value)
   {
-    InterlockedExchange(reinterpret_cast<long*>(&_value), value);
+    InterlockedExchange(&_value, value);
     return *this;
   }
 
   template<>
   inline unsigned int AtomicBase<unsigned int>::swap(unsigned int value)
   {
-    return InterlockedExchange(reinterpret_cast<long*>(&_value), value);
+    return InterlockedExchange(&_value, value);
   }
 
 #endif
