@@ -43,12 +43,7 @@ namespace qi {
   }
 
   SessionPrivate::~SessionPrivate() {
-    _sdClient.connected.disconnect(_sdClientConnectedSignalLink);
-    _sdClient.disconnected.disconnect(_sdClientDisconnectedSignalLink);
-    _sdClient.serviceAdded.disconnect(_sdClientServiceAddedSignalLink);
-    _sdClient.serviceRemoved.disconnect(_sdClientServiceRemovedSignalLink);
-    _self->disconnected.disconnectAll();
-    _self->connected.disconnectAll();
+    sessionDestroy();
     close();
   }
 
@@ -114,6 +109,20 @@ namespace qi {
     return f;
   }
 
+  void SessionPrivate::sessionDestroy()
+  {
+    _sdClient.connected.disconnect(_sdClientConnectedSignalLink);
+    _sdClient.disconnected.disconnect(_sdClientDisconnectedSignalLink);
+    _sdClient.serviceAdded.disconnect(_sdClientServiceAddedSignalLink);
+    _sdClient.serviceRemoved.disconnect(_sdClientServiceRemovedSignalLink);
+    if (_self)
+    {
+      _self->disconnected.disconnectAll();
+      _self->connected.disconnectAll();
+      _self = 0;
+    }
+  }
+
   qi::FutureSync<void> SessionPrivate::close()
   {
     _serviceHandler.close();
@@ -136,6 +145,7 @@ namespace qi {
   Session::~Session()
   {
     close();
+    _p->sessionDestroy();
   }
 
 

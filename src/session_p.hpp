@@ -35,6 +35,8 @@ namespace qi {
 
   public:
     void listenStandaloneCont(qi::Promise<void> p, qi::Future<void> f);
+    // session is being destroyed, unlink from _self
+    void sessionDestroy();
     // internal, add sd socket to socket cache
     void addSdSocketToCache(Future<void>, const qi::Url& url);
     Session               *_self;
