@@ -13,7 +13,10 @@
 #define _QI_MACRO_HPP_
 
 #ifdef __cplusplus
+#include <boost/bind.hpp>
+#include <boost/function.hpp>
 #include <boost/utility.hpp>
+#include <qi/atomic.hpp>
 #endif
 
 #include <qi/preproc.hpp>
@@ -168,7 +171,17 @@ namespace qi
   {
     return IsClonable<T>::value;
   }
+
+  namespace details
+  {
+    template<typename T> void newAndAssign(T** ptr)
+    {
+      *ptr = new T();
+    }
+  }
 }
+
+
 #endif
 
 
@@ -186,4 +199,31 @@ namespace qi
 #define _QI_UNIQ_DEF_LEVEL1(A, B) _QI_UNIQ_DEF_LEVEL2(A, B)
 #define QI_UNIQ_DEF(A) _QI_UNIQ_DEF_LEVEL1(A, __LINE__)
 
+#define _QI_INSTANCIATE(_, a, elem) ::qi::details::newAndAssign(&elem);
+
+/* The code below relies on the fact that initialisation of the qi::Atomic
+* can happen at static initialization time, and that proper memory barriers
+* are setup by its ++, swap and get operations.
+ */
+/** Accept a list of pointers (expected to be static function variables)
+ *  and new them once in a thrad-safe manner.
+ *  Implementation aims for minimal overhead when initialization is done.
+ */
+#define QI_THREADSAFE_NEW(...)  \
+ QI_ONCE(QI_VAARGS_APPLY(_QI_INSTANCIATE, _, __VA_ARGS__);)
+
+/// Execute code once, parallel calls are blocked until code finishes.
+#define QI_ONCE(code) \
+  static qi::AtomicBase<int> QI_UNIQ_DEF(atomic_guard_a) = {0}; \
+ static qi::AtomicBase<int> QI_UNIQ_DEF(atomic_guard_b) = {0}; \
+ while (!*QI_UNIQ_DEF(atomic_guard_a))                  \
+ {                                                      \
+   int v = 1;                                           \
+   int tok = QI_UNIQ_DEF(atomic_guard_b).swap(v);       \
+   if (tok == 0)                                        \
+   {                                                    \
+     code;                                              \
+     ++QI_UNIQ_DEF(atomic_guard_a);                     \
+   }                                                    \
+ }
 #endif  // _QI_MACRO_HPP_
