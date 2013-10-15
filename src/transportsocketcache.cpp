@@ -18,6 +18,12 @@ namespace qi {
     }
   }
 
+  TransportSocketCache::TransportSocketCache()
+  : _dying(false)
+  {
+
+  }
+
   TransportSocketCache::~TransportSocketCache() {
     close();
   }

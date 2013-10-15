@@ -42,6 +42,7 @@ namespace qi {
    */
   class TransportSocketCache {
   public:
+    TransportSocketCache();
     ~TransportSocketCache();
 
     void init();
