@@ -214,16 +214,16 @@ namespace qi
 
 /// Execute code once, parallel calls are blocked until code finishes.
 #define QI_ONCE(code) \
-  static qi::AtomicBase<int> QI_UNIQ_DEF(atomic_guard_a) = {0}; \
+ static qi::AtomicBase<int> QI_UNIQ_DEF(atomic_guard_a) = {0}; \
  static qi::AtomicBase<int> QI_UNIQ_DEF(atomic_guard_b) = {0}; \
- while (!*QI_UNIQ_DEF(atomic_guard_a))                  \
- {                                                      \
-   int v = 1;                                           \
-   int tok = QI_UNIQ_DEF(atomic_guard_b).swap(v);       \
-   if (tok == 0)                                        \
+ while (!QI_UNIQ_DEF(atomic_guard_a).setIfEquals(1, 1))       \
+ {                                                           \
+   bool tok = QI_UNIQ_DEF(atomic_guard_b).setIfEquals(0,1);  \
+   if (tok)                                                  \
    {                                                    \
      code;                                              \
      ++QI_UNIQ_DEF(atomic_guard_a);                     \
    }                                                    \
  }
+
 #endif  // _QI_MACRO_HPP_
