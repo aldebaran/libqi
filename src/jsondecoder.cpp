@@ -333,7 +333,7 @@ namespace qi {
     else if (match("false"))
       value = AnyValue::from(false);
     else if (match("null"))
-      value = AnyValue();
+      value = AnyValue(qi::typeOf<void>());
     else
       return false;
     return true;

@@ -100,7 +100,7 @@ namespace qi {
   inline TypeKind AnyReferenceBase::kind() const
   {
     if (!type)
-      return TypeKind_Void;
+      throw std::runtime_error("Can't take the kind of an invalid value");
     else
       return type->kind();
   }
