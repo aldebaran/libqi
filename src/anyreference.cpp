@@ -1034,6 +1034,15 @@ namespace qi
       throw std::runtime_error("Expected pointer or iterator");
   }
 
+  std::vector<TypeInterface*> AnyReferenceBase::membersType() const
+  {
+    if (kind() == TypeKind_Tuple)
+      return static_cast<StructTypeInterface*>(type)->memberTypes();
+    else
+      throw std::runtime_error("Expected tuple");
+  }
+
+
   namespace detail
   {
     QI_NORETURN void throwConversionFailure(TypeInterface* from, TypeInterface* to)

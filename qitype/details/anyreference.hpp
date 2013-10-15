@@ -271,6 +271,8 @@ namespace qi {
 
     ///@}
 
+    /// @return list of tuple elements type, or throw if not a tuple
+    std::vector<TypeInterface*> membersType() const;
   };
 
   class AnyReference : public AnyReferenceBase {
