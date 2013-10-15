@@ -135,36 +135,41 @@ namespace qi {                                                                  
 #define __QI_TYPE_STRUCT_AGREGATE_CONSTRUCTOR_IMPLEMENT(name, inl, onSet, ...)\
   namespace qi {                                                                        \
   inl std::vector< ::qi::TypeInterface*> TypeImpl<name>::memberTypes()                                \
-{                                                                                   \
-  std::vector< ::qi::TypeInterface*> res;                                                           \
-  QI_VAARGS_APPLY(__QI_ATUPLE_TYPE, name, __VA_ARGS__);                                 \
-  return res;                                                                       \
+  {                                                                                   \
+    std::vector< ::qi::TypeInterface*> res;                                                           \
+    QI_VAARGS_APPLY(__QI_ATUPLE_TYPE, name, __VA_ARGS__);                                 \
+    return res;                                                                       \
   }                                                                                   \
+  \
   inl void* TypeImpl<name>::get(void* storage, unsigned int index)                    \
-{                                                                                   \
-  unsigned int i = 0;                                                                        \
-  name* ptr = (name*)ptrFromStorage(&storage);                                      \
-  QI_VAARGS_APPLY(__QI_ATUPLE_GET, name, __VA_ARGS__);                                  \
-  return 0;                                                                         \
+  {                                                                                   \
+    unsigned int i = 0;                                                                        \
+    name* ptr = (name*)ptrFromStorage(&storage);                                      \
+    QI_VAARGS_APPLY(__QI_ATUPLE_GET, name, __VA_ARGS__);                                  \
+    return 0;                                                                         \
   }                                                                                   \
+  \
   inl void TypeImpl<name>::set(void** storage, unsigned int index, void* valueStorage)\
-{\
-  throw std::runtime_error("single-field set not implemented");\
+  {\
+    throw std::runtime_error("single-field set not implemented");\
   }\
+  \
   inl void TypeImpl<name>::set(void** storage, std::vector<void*> data) \
-{\
-  name* ptr = (name*)ptrFromStorage(storage);         \
-  *ptr = name(QI_VAARGS_MAP(__QI_ATUPLE_FROMDATA, name, __VA_ARGS__)); \
+  {\
+    name* ptr = (name*)ptrFromStorage(storage);         \
+    *ptr = name(QI_VAARGS_MAP(__QI_ATUPLE_FROMDATA, name, __VA_ARGS__)); \
   }\
+  \
   inl std::vector<std::string> TypeImpl<name>::elementsName() \
-{  \
-  std::vector<std::string> res; \
-  QI_VAARGS_APPLY(__QI_ATUPLE_FIELD_NAME, _, __VA_ARGS__); \
-  return res; \
+  {  \
+    std::vector<std::string> res; \
+    QI_VAARGS_APPLY(__QI_ATUPLE_FIELD_NAME, _, __VA_ARGS__); \
+    return res; \
   }\
   inl std::string TypeImpl<name>::className() \
-{ \
-  return ::qi::detail::normalizeClassName(BOOST_PP_STRINGIZE(name));\
+  \
+  { \
+    return ::qi::detail::normalizeClassName(BOOST_PP_STRINGIZE(name));\
   } \
   }
 
