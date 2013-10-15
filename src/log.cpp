@@ -708,6 +708,7 @@ namespace qi {
 
     CategoryType addCategory(const std::string& name)
     {
+      boost::recursive_mutex::scoped_lock lock(_mutex());
       CategoryMap& c = _categories();
       CategoryMap::iterator i = c.find(name);
       if (i == c.end())
@@ -761,6 +762,7 @@ namespace qi {
 
     std::vector<std::string> categories()
     {
+      boost::recursive_mutex::scoped_lock lock(_mutex());
       std::vector<std::string> res;
       CategoryMap& c = _categories();
       for (CategoryMap::iterator it = c.begin(); it != c.end(); ++it)
