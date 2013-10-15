@@ -38,10 +38,15 @@ namespace qi
   }
 
   /* /!\ WARNING
-  * The volatile is needed, because there is no memory barrier
-  * surrounding the simple getter operator.
+  * The 'volatile' is needed even though we use atomic compiler builtins.
+  * Without the volatile, a thread doing
+  *    while (!setIfEquals(1,1))
+  * Is never unstuck by a thread doing
+  *    setIfEquals(0,1)
+  *
   * AtomicBase has public member so that it can be initialized at
-  * static-initialization time.
+  * static-initialization time (to make thread-safe static initialization inside
+  * functions)
   */
   template <typename T>
   struct AtomicBase
@@ -53,6 +58,11 @@ namespace qi
     inline T operator++();
     inline T operator--();
     inline AtomicBase<T>& operator=(T value);
+    /** If value is \p testValue, replace it with \p setValue.
+     * \return true if swap was performed
+     */
+    inline bool setIfEquals(T testValue, T setValue);
+
     inline T swap(T value);
 
     inline T operator*()
@@ -111,6 +121,11 @@ namespace qi
     {
       return __sync_lock_test_and_set(&_value, value);
     }
+    template <typename T>
+    inline bool AtomicBase<T>::setIfEquals(T testValue, T setValue)
+    {
+      return __sync_bool_compare_and_swap(&_value, testValue, setValue);
+    }
 #endif
 
 #ifdef _MSC_VER
@@ -141,6 +156,12 @@ namespace qi
   }
 
   template <>
+  inline bool AtomicBase<int>::setIfEquals(int testValue, int setValue)
+  {
+    return _InterlockedCompareExchange(&_value, setValue, testValue) == testValue;
+  }
+
+  template <>
   inline unsigned int AtomicBase<unsigned int>::operator++()
   {
     return _InterlockedIncrement(&_value);
@@ -165,6 +186,11 @@ namespace qi
     return InterlockedExchange(&_value, value);
   }
 
+  template <>
+  inline bool AtomicBase<unsigned int>::setIfEquals(unsigned int testValue, unsigned int setValue)
+  {
+    return _InterlockedCompareExchange(&_value, setValue, testValue) == testValue;
+  }
 #endif
 
 }
