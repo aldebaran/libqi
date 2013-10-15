@@ -38,12 +38,13 @@ class QiMessagingHandler(tornadio2.conn.SocketConnection):
                 o = len(self.objs)
                 self.objs[o] = data
                 data = { "pyobject": o, "metaobject": data.metaObject() }
-            if mtype == "signal":
-                tornado.ioloop.IOLoop.instance().add_callback(self.emit, mtype, result=data, cls=SetEncoder)
-            else:
-                tornado.ioloop.IOLoop.instance().add_callback(self.emit, mtype, idm=idm, result=data, cls=SetEncoder)
-        except AttributeError as exc:
-            print idm, str(exc)
+            evt = dict(name = mtype, args = { "result": data })
+            if mtype != "signal":
+                evt["args"]["idm"] = idm
+            message = u'5:::%s' % (json.dumps(evt, cls=SetEncoder, allow_nan=False))
+            tornado.ioloop.IOLoop.instance().add_callback(self.session.send_message, message)
+        except (AttributeError, ValueError) as exc:
+            self.reply(idm, "error", str(exc))
 
     def do_callback(self, service, signal):
         def cbk(*args):
