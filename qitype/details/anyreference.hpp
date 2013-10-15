@@ -190,6 +190,10 @@ namespace qi {
     float& asFloat()        { return as<float>();}
     std::string& asString() { return as<std::string>();}
 
+    /// @return a pair of (char*, size) corresponding to the raw buffer. No copy made.
+    std::pair<char*, size_t> asRaw() const;
+
+
     /** @return contained AnyValue or throw if type is not dynamic.
      * @note Returned AnyReference might be empty.
      */

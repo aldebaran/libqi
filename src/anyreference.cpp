@@ -468,6 +468,12 @@ namespace qi
     return std::make_pair(AnyReference(), false);
   }
 
+  std::pair<char*, size_t> AnyReferenceBase::asRaw() const {
+    if (kind() != TypeKind_Raw)
+      throw std::runtime_error("asRaw only available for raw kind");
+    return static_cast<RawTypeInterface*>(type)->get(value);
+  }
+
   std::pair<AnyReference, bool> AnyReferenceBase::convert(TypeInterface* targetType) const
   {
     qiLogDebug() << "convert "
@@ -530,8 +536,9 @@ namespace qi
       }
       default:
         break;
-      } // switch
-    } // skind == dkind
+      }
+    }
+    // skind != dkind
     if (skind == TypeKind_List && dkind == TypeKind_Tuple)
       return convert(static_cast<StructTypeInterface*>(targetType));
     else if (skind == TypeKind_List && dkind == TypeKind_Map)
