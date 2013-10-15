@@ -1,3 +1,0 @@
-<project version="3">
-  <qidoc dest="ref/libqimessaging/js" name="libqimessaging-js" type="sphinx" />
-</project>

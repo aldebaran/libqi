@@ -5,5 +5,4 @@
      <depends name="libqi" />
   </doxydoc>
   <project src="doc" />
-  <project src="js/doc" />
 </project>
