@@ -190,20 +190,6 @@ namespace qi {
     }
   }
 
-  void BinaryDecoder::read(AnyReference &value)
-  {
-    std::string signature;
-    read(signature);
-    TypeInterface* type = 0; // TypeInterface::getCompatibleTypeWithSignature(signature);
-    if (!type)
-      qiLogError() << "Could not find metatype for signature " << signature;
-    else
-    {
-      value.type = type;
-      value.value = 0; // value.type->deserialize(*this);
-    }
-  }
-
   // Output
   BinaryEncoder::BinaryEncoder(qi::Buffer &buffer)
     : _p(new BinaryEncoderPrivate(buffer))

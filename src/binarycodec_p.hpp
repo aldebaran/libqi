@@ -65,7 +65,6 @@ namespace qi {
     void read(double   &d);
     void read(std::string& i);
 
-    void read(qi::AnyReference &value);
     void read(qi::Buffer &buffer);
 
     template<typename T> void read(T& v);
