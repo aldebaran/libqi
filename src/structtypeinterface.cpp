@@ -36,7 +36,7 @@ namespace qi
     return result;
   }
 
-  void StructTypeInterface::set(void** storage, std::vector<void*> values)
+  void StructTypeInterface::set(void** storage, const std::vector<void*>& values)
   {
     for (unsigned i=0; i<values.size(); ++i)
       set(storage, i, values[i]);

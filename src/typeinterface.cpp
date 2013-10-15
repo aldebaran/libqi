@@ -821,17 +821,11 @@ namespace qi {
   {
     std::vector<TypeInterface*> types;
     types.reserve(values.size());
-    for (unsigned i=0; i<values.size(); ++i)
+    for (unsigned i=0; i<values.size(); ++i) {
       types.push_back(values[i].type);
-
-    StructTypeInterface* tupleType = static_cast<StructTypeInterface*>(makeTupleType(types));
-    AnyReference result;
-    result.type = tupleType;
-    result.value = tupleType->initializeStorage();
-    std::vector<void*> storages;
-    for (unsigned i=0; i<values.size(); ++i)
-      storages.push_back(values[i].value);
-    tupleType->set(&result.value, storages);
+    }
+    AnyReference result(makeTupleType(types));
+    result.setTuple(values);
     return result;
   }
 

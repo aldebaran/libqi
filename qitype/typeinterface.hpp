@@ -167,7 +167,7 @@ namespace qi{
     virtual std::vector<TypeInterface*> memberTypes() = 0;
     virtual std::vector<void*> get(void* storage); // must not be destroyed
     virtual void* get(void* storage, unsigned int index) = 0; // must not be destroyed
-    virtual void set(void** storage, std::vector<void*>);
+    virtual void set(void** storage, const std::vector<void*>&);
     virtual void set(void** storage, unsigned int index, void* valStorage) = 0; // will copy
     virtual TypeKind kind() const { return TypeKind_Tuple; }
     virtual std::vector<std::string> elementsName() { return std::vector<std::string>();}

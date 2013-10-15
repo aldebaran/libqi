@@ -207,8 +207,8 @@ namespace qi {
      *  But the container itself is a copy.
      * @warning for better performances use the begin() and end() iterator API
      */
-    std::vector<AnyReference> asTupleValuePtr();
-    std::vector<AnyReference> asListValuePtr();
+    std::vector<AnyReference>            asTupleValuePtr();
+    std::vector<AnyReference>            asListValuePtr();
     std::map<AnyReference, AnyReference> asMapValuePtr();
     /// @}
 
@@ -230,6 +230,14 @@ namespace qi {
     void  setDouble(double v);
     void  setString(const std::string& v);
     void  setDynamic(const AnyReference &value);
+
+    /// set the value of the raw buffer, a copy will be made.
+    /// @throw std::runtime_error when kind is not Raw
+    void  setRaw(const char *buffer, size_t size);
+
+    /// set the values of the tuple. A copy will be made.
+    /// @throw std::runtime_error when kind is not Tuple
+    void  setTuple(const std::vector<AnyReference>& values);
 
     ///@{
     /// In-place container manipulation.

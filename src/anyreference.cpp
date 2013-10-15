@@ -872,6 +872,13 @@ namespace qi
     case TypeKind_Dynamic:
       setDynamic(val);
       break;
+    case TypeKind_Tuple:
+      //asTupleValuePtr is not const, so copy val to a non-const AnyReference
+      setTuple(AnyReference(val).asTupleValuePtr());
+    case TypeKind_Raw: {
+        std::pair<char*, size_t> pa = val.asRaw();
+        setRaw(pa.first, pa.second);
+      }
     default:
       throw std::runtime_error("Update not implemented for this type.");
     }
@@ -905,6 +912,12 @@ namespace qi
       throw std::runtime_error("Value is not a Dynamic");
     DynamicTypeInterface* t = static_cast<DynamicTypeInterface*>(this->type);
     t->set(&value, element);
+  }
+
+  void AnyReferenceBase::setRaw(const char *buffer, size_t size) {
+    if (kind() != TypeKind_Raw)
+      throw std::runtime_error("Value is not a Raw");
+    static_cast<RawTypeInterface*>(type)->set(&value, buffer, size);
   }
 
   void AnyReferenceBase::setUInt(uint64_t v)
@@ -1008,6 +1021,26 @@ namespace qi
     if (kind() != TypeKind_String)
       throw std::runtime_error("Value is not of kind string");
     static_cast<StringTypeInterface*>(type)->set(&value, &v[0], v.size());
+  }
+
+  void AnyReferenceBase::setTuple(const std::vector<AnyReference>& values) {
+    if (kind() != TypeKind_Tuple)
+      throw std::runtime_error("Value is not a Tuple");
+    StructTypeInterface* stype = static_cast<StructTypeInterface*>(type);
+    std::vector<TypeInterface*> types = stype->memberTypes();
+    std::vector<void*> vals;
+
+    if (types.size() != values.size())
+      throw std::runtime_error(_QI_LOG_FORMAT("Can't change values of the tuple, size mismatch (%d != %d)", types.size(), values.size()));
+    vals.resize(types.size());
+    for (unsigned int i = 0; i < values.size(); ++i) {
+      //TODO: implement conversion here
+      if (types[i]->info() == values[i].type->info())
+        vals[i] = values[i].value;
+      else
+        throw std::runtime_error("Type mismatchs when assigning values to tuple");
+    }
+    stype->set(&value, vals);
   }
 
   size_t AnyReferenceBase::size() const

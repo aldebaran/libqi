@@ -658,27 +658,22 @@ namespace qi {
       }
 
       void visitTuple(const std::string &, const std::vector<AnyReference>&, const std::vector<std::string>&)
-
       {
-        StructTypeInterface* type = static_cast<StructTypeInterface*>(result.type);
-        std::vector<TypeInterface*> types = type->memberTypes();
-        // Be safe, do not assume deserialize will give us the type we asked.
-        std::vector<void*> vals;
-        std::vector<TypeInterface*> valstypes;
+        std::vector<TypeInterface*> types = result.membersType();
+        std::vector<AnyReference>   vals;
         vals.resize(types.size());
-        valstypes.resize(types.size());
         for (unsigned i = 0; i<types.size(); ++i)
         {
           AnyReference val = deserialize(types[i], in, context);
-          if (!val.type)
+          if (!val.isValid())
             throw std::runtime_error("Deserialization of tuple field failed");
-          vals[i] = val.value;
-          valstypes[i] = val.type;
+          vals[i] = val;
         }
-        type->set(&result.value, vals);
-        for (unsigned i = 0; i<types.size(); ++i)
+        //TODO: there is a copy here.
+        result.setTuple(vals);
+        for (unsigned i = 0; i<vals.size(); ++i)
         {
-          valstypes[i]->destroy(vals[i]);
+          vals[i].destroy();
         }
       }
 
