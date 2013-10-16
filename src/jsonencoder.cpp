@@ -98,8 +98,8 @@ namespace qi {
     }
     void visitUnknown(AnyReference v)
     {
-      qiLogError() << "JSON Error: Type " << v.type->infoString() <<" not serializable";
-      out << "\"Error: no serialization for unknown type:" << v.type->infoString() << "\"";
+      qiLogError() << "JSON Error: Type " << v.type()->infoString() <<" not serializable";
+      out << "\"Error: no serialization for unknown type:" << v.type()->infoString() << "\"";
     }
 
     void visitVoid()

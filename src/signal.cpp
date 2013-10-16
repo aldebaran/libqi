@@ -80,7 +80,7 @@ namespace qi {
     qi::AutoAnyReference* vals[8]= {&p1, &p2, &p3, &p4, &p5, &p6, &p7, &p8};
     std::vector<qi::AnyReference> params;
     for (unsigned i = 0; i < 8; ++i)
-      if (vals[i]->value)
+      if (vals[i]->isValid())
         params.push_back(*vals[i]);
     qi::Signature signature = qi::makeTupleSignature(params);
 

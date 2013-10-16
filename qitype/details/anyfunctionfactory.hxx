@@ -236,7 +236,7 @@ namespace qi
   val(), f( \
   BOOST_PP_REPEAT(n, callArg, _) \
   ); \
-  return val.value; \
+  return val.rawValue(); \
   }
     QI_GEN(makeCall)
 #undef makeCall
@@ -263,7 +263,7 @@ namespace qi
   val(), f( \
   BOOST_PP_REPEAT(n, callArgBF, _) \
   ); \
-  return val.value; \
+  return val.rawValue(); \
   }
     QI_GEN(makeCall)
 #undef makeCall
@@ -277,7 +277,7 @@ namespace qi
   val(), ((*cptr).*f)( \
   BOOST_PP_REPEAT(n, callArg, _) \
   ); \
-  return val.value; \
+  return val.rawValue(); \
   }
     QI_GEN(makeCall)
 #undef makeCall

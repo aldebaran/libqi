@@ -44,13 +44,11 @@ StaticObjectTypeBase::metaCall(void* instance, AnyObject context, unsigned int m
   AnyReference self;
   if (methodId >= Manageable::startId  && methodId < Manageable::endId)
   {
-    self.type = qi::typeOf<Manageable>();
-    self.value = static_cast<Manageable*>(context.asGenericObject());
+    self = AnyReference(qi::typeOf<Manageable>(), static_cast<Manageable*>(context.asGenericObject()));
   }
   else
   {
-    self.type = this;
-    self.value = instance;
+    self = AnyReference(this, instance);
   }
   GenericFunctionParameters p2;
   p2.reserve(params.size()+1);

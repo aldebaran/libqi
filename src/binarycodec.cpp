@@ -260,13 +260,13 @@ namespace qi {
     beginDynamic(sig);
 
     if (sig.isValid()) {
-      assert(value.type);
+      assert(value.type());
       if (!recurse)
         details::serialize(value, *this);
       else
         recurse();
     } else {
-      assert(!value.type);
+      assert(!value.type());
     }
     endDynamic();
   }
@@ -378,7 +378,7 @@ namespace qi {
       void visitUnknown(AnyReference value)
       {
         std::stringstream ss;
-        ss << "Type " << value.type->infoString() <<" not serializable";
+        ss << "Type " << value.type()->infoString() <<" not serializable";
         throw std::runtime_error(ss.str());
       }
 
@@ -428,7 +428,7 @@ namespace qi {
 
       void visitList(AnyIterator it, AnyIterator end)
       {
-        out.beginList(value.size(), static_cast<ListTypeInterface*>(value.type)->elementType()->signature());
+        out.beginList(value.size(), static_cast<ListTypeInterface*>(value.type())->elementType()->signature());
         for (; it != end; ++it)
           serialize(*it, out, context);
         out.endList();
@@ -436,7 +436,7 @@ namespace qi {
 
       void visitMap(AnyIterator it, AnyIterator end)
       {
-        MapTypeInterface* type = static_cast<MapTypeInterface*>(value.type);
+        MapTypeInterface* type = static_cast<MapTypeInterface*>(value.type());
         out.beginMap(value.size(), type->keyType()->signature(), type->elementType()->signature());
         for(; it != end; ++it)
         {
@@ -494,7 +494,7 @@ namespace qi {
       void visitIterator(AnyReference)
       {
         std::stringstream ss;
-        ss << "Type " << value.type->infoString() <<" not serializable";
+        ss << "Type " << value.type()->infoString() <<" not serializable";
         throw std::runtime_error(ss.str());
       }
 
@@ -517,14 +517,13 @@ namespace qi {
       void visitUnknown(AnyReference)
       {
         std::stringstream ss;
-        ss << "Type " << result.type->infoString() <<" not deserializable";
+        ss << "Type " << result.type()->infoString() <<" not deserializable";
         throw std::runtime_error(ss.str());
       }
 
       void visitVoid()
       {
-        result.type = typeOf<void>();
-        result.value = 0;
+        result = AnyReference(typeOf<void>(), 0);
       }
 
       void visitInt(int64_t value, bool isSigned, int byteSize)
@@ -592,7 +591,7 @@ namespace qi {
         static TypeInterface* tstring = 0;
         if (!tstring)
           tstring = qi::typeOf<std::string>();
-        if ((result.type == tstring) || (result.type->info() == tstring->info())) {
+        if ((result.type() == tstring) || (result.type()->info() == tstring->info())) {
           std::swap(s, result.as<std::string>());
           return;
         }
@@ -602,7 +601,7 @@ namespace qi {
 
       void visitList(AnyIterator, AnyIterator)
       {
-        TypeInterface* elementType = static_cast<ListTypeInterface*>(result.type)->elementType();
+        TypeInterface* elementType = static_cast<ListTypeInterface*>(result.type())->elementType();
         qi::uint32_t sz = 0;
         in.read(sz);
         if (in.status() != BinaryDecoder::Status_Ok)
@@ -617,8 +616,8 @@ namespace qi {
 
       void visitMap(AnyIterator, AnyIterator)
       {
-        TypeInterface* keyType = static_cast<MapTypeInterface*>(result.type)->keyType();
-        TypeInterface* elementType = static_cast<MapTypeInterface*>(result.type)->elementType();
+        TypeInterface* keyType = static_cast<MapTypeInterface*>(result.type())->keyType();
+        TypeInterface* elementType = static_cast<MapTypeInterface*>(result.type())->elementType();
         qi::uint32_t sz = 0;
         in.read(sz);
         if (in.status() != BinaryDecoder::Status_Ok)
@@ -696,13 +695,13 @@ namespace qi {
         DeserializeTypeVisitor dtv(*this);
         dtv.result = AnyReference(type);
         typeDispatch<DeserializeTypeVisitor>(dtv, dtv.result);
-        static_cast<DynamicTypeInterface*>(result.type)->set(&result.value, dtv.result);
+        result.setDynamic(dtv.result);
         dtv.result.destroy();
       }
       void visitIterator(AnyReference)
       {
         std::stringstream ss;
-        ss << "Type " << result.type->infoString() <<" not deserializable";
+        ss << "Type " << result.type()->infoString() <<" not deserializable";
         throw std::runtime_error(ss.str());
       }
 
@@ -710,7 +709,7 @@ namespace qi {
       {
         Buffer b;
         in.read(b);
-        static_cast<RawTypeInterface*>(result.type)->set(&result.value, (char*)b.data(), b.size());
+        result.setRaw((char*)b.data(), b.size());
       }
       AnyReference result;
       BinaryDecoder& in;

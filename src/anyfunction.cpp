@@ -81,7 +81,7 @@ namespace qi
       else if (transform.dropFirst && transform.prependValue)
       {
         args = vargs;
-        args[0].value = transform.boundValue;
+        args[0] = AnyReference(args[0].type(), transform.boundValue);
       }
       else // prepend && ! drop
         throw std::runtime_error("Cannot prepend argument to dynamic function type");
@@ -125,47 +125,43 @@ namespace qi
       //qiLogDebug() << "argument " << i
       //   << " " << args[i].type->infoString() << ' ' << args[i].value
       //   << " to " << target[i]->infoString();
-      if (args[i].type == target[i+offset] || args[i].type->info() == target[i+offset]->info())
-        arad.convertedArgs[i+offset] = args[i].value;
+      if (args[i].type() == target[i+offset] || args[i].type()->info() == target[i+offset]->info())
+        arad.convertedArgs[i+offset] = args[i].rawValue();
       else
       {
         //qiLogDebug() << "needs conversion "
         //<< args[i].type->infoString() << " -> "
         //<< target[i]->infoString();
         std::pair<AnyReference,bool> v = args[i].convert(target[i+offset]);
-        if (!v.first.type)
+        if (!v.first.type())
         {
           // Try pointer dereference
           if (args[i].kind() == TypeKind_Pointer)
           {
             AnyReference deref = *const_cast<AnyReference&>(args[i]);
-            if (deref.type == target[i+offset] || deref.type->info() == target[i+offset]->info())
+            if (deref.type() == target[i+offset] || deref.type()->info() == target[i+offset]->info())
               v = std::make_pair(deref, false);
             else
               v = deref.convert(target[i+offset]);
           }
-          if (!v.first.type)
+          if (!v.first.type())
           {
             throw std::runtime_error(_QI_LOG_FORMAT("Call argument conversion failure from %s to %s (equals: %s)",
-              args[i].type->infoString(),
+              args[i].type()->infoString(),
               target[i]->infoString(),
-              args[i].type->infoString() == target[i]->infoString()));
+              args[i].type()->infoString() == target[i]->infoString()));
             return AnyReference();
           }
         }
         if (v.second)
           arad.toDestroy[arad.toDestroyPos++] = v.first;
-        arad.convertedArgs[i+offset] = v.first.value;
+        arad.convertedArgs[i+offset] = v.first.rawValue();
       }
     }
     void* res;
     res = type->call(value, arad.convertedArgs, sz+offset);
-    AnyReference result;
-    result.type = resultType();
-    result.value = res;
-
     arad.destroy();
-    return result;
+    return AnyReference(resultType(), res);
   }
 
   const AnyFunction& AnyFunction::dropFirstArgument() const
@@ -304,7 +300,7 @@ namespace qi
       if (!compatible)
       {
         qiLogError() << "convert: unknown type " << (*it).toString();
-        compatible = src[idx].type;
+        compatible = src[idx].type();
       }
       dst.push_back(src[idx].convertCopy(compatible));
     }

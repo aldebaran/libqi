@@ -40,11 +40,14 @@ namespace qi {
     explicit AnyReferenceBase(TypeInterface* type);
 
     /** Create a generic value with type and a value who should have
-   * already been allocated.
-   * @param type type of this generic value
-   * @param value an already alloc place to store value
-   */
-    AnyReferenceBase(TypeInterface* type, void* value) : type(type), value(value) {}
+     * already been allocated.
+     * @param type type of this generic value
+     * @param value an already alloc place to store value
+     */
+    AnyReferenceBase(TypeInterface* type, void* value)
+      : _type(type)
+      , _value(value)
+    {}
 
   public:
 
@@ -64,11 +67,12 @@ namespace qi {
 
 
     /** Return the typed pointer behind a AnyReference. T *must* be the type
-   * of the value.
-   * @return a pointer to the value as a T or 0 if value is not a T.
-   * @param check if false, does not validate type before converting
-   */
-    template<typename T> T* ptr(bool check = true);
+     * of the value.
+     * @return a pointer to the value as a T or 0 if value is not a T.
+     * @param check if false, does not validate type before converting
+     */
+    template<typename T>
+    T* ptr(bool check = true);
 
     bool isValid() const;
     /// @return true if value is valid and not void
@@ -81,19 +85,17 @@ namespace qi {
     AnyReference _element(const AnyReference& key, bool throwOnFailure);
     void _append(const AnyReference& element);
     void _insert(const AnyReference& key, const AnyReference& val);
-    TypeInterface*   type;
-    void*   value;
     ///@}
 
     ///@{
     /** Construction and assign.
-   */
+     */
 
     /** Construct a AnyValue with storage pointing to ptr.
-   * @warning the AnyReference will become invalid if ptr
-   * is destroyed (if it gets deleted or points to the stack and goes
-   * out of scope).
-   */
+     * @warning the AnyReference will become invalid if ptr
+     * is destroyed (if it gets deleted or points to the stack and goes
+     * out of scope).
+     */
     template <typename T>
     static AnyReference from(const T& ref);
 
@@ -116,9 +118,9 @@ namespace qi {
 
     ///@{
     /** The following methods return a typed copy of the stored value,
-   * converting if necessary.
-   * They throw in case of conversion failure.
-   */
+     * converting if necessary.
+     * They throw in case of conversion failure.
+     */
 
     /// Convert to anything or throw trying.
     template<typename T>
@@ -157,37 +159,34 @@ namespace qi {
 
     ///@{
     /** Read and update functions
-   *  The following functions access or modify the existing value.
-   *  They never change the storage location or type.
-   *  They will fail by throwing an exception if the requested operation
-   * is incompatible with the current value type.
-   *
-   * @warning a AnyReference refering to a container element will
-   * become invalid as soon as the container is modified.
-   *
-  */
-
-    /// Update the value with the one in b
-    void update(const AutoAnyReference& b);
+     *  The following functions access or modify the existing value.
+     *  They never change the storage location or type.
+     *  They will fail by throwing an exception if the requested operation
+     * is incompatible with the current value type.
+     *
+     * @warning a AnyReference refering to a container element will
+     * become invalid as soon as the container is modified.
+     *
+     */
 
     /** @return a typed reference to the underlying value
-   *  @warning This method will only succeed if T exactly matches
-   *  the type of the value stored. No conversion will be performed.
-   *  So if you only want a value and not a reference, use to() instead.
-   */
+     *  @warning This method will only succeed if T exactly matches
+     *  the type of the value stored. No conversion will be performed.
+     *  So if you only want a value and not a reference, use to() instead.
+     */
     template<typename T>
     T& as();
 
-    int64_t& asInt64()      { return as<int64_t>();}
-    uint64_t& asUInt64()    { return as<uint64_t>();}
-    int32_t& asInt32()      { return as<int32_t>();}
-    uint32_t& asUInt32()    { return as<uint32_t>();}
-    int16_t& asInt16()      { return as<int16_t>();}
-    uint16_t& asUInt16()    { return as<uint16_t>();}
-    int8_t& asInt8()        { return as<int8_t>();}
-    uint8_t& asUInt8()      { return as<uint8_t>();}
-    double& asDouble()      { return as<double>();}
-    float& asFloat()        { return as<float>();}
+    int64_t&     asInt64()  { return as<int64_t>();}
+    uint64_t&    asUInt64() { return as<uint64_t>();}
+    int32_t&     asInt32()  { return as<int32_t>();}
+    uint32_t&    asUInt32() { return as<uint32_t>();}
+    int16_t&     asInt16()  { return as<int16_t>();}
+    uint16_t&    asUInt16() { return as<uint16_t>();}
+    int8_t&      asInt8()   { return as<int8_t>();}
+    uint8_t&     asUInt8()  { return as<uint8_t>();}
+    double&      asDouble() { return as<double>();}
+    float&       asFloat()  { return as<float>();}
     std::string& asString() { return as<std::string>();}
 
     /// @return a pair of (char*, size) corresponding to the raw buffer. No copy made.
@@ -211,6 +210,11 @@ namespace qi {
     std::vector<AnyReference>            asListValuePtr();
     std::map<AnyReference, AnyReference> asMapValuePtr();
     /// @}
+
+
+    ///TODO: update == set  (remove one)
+    /// Update the value with the one in b
+    void update(const AutoAnyReference& b);
 
     /// Update the value to val, which will be converted if required.
     template<typename T>
@@ -271,20 +275,29 @@ namespace qi {
     /** Similar to operator[](), but return an empty AnyValue
      * If the key is not present.
      */
-    template<typename K> AnyReference find(const K& key);
+    template<typename K>
+    AnyReference find(const K& key);
 
     /// Return an iterator on the beginning of the container
     AnyIterator begin() const; //we lie on const but GV does not honor it yet
     /// Return an iterator on the end of the container
     AnyIterator end() const;
+
+    ///support Dynamic (return the content of the dynamic)
     /// Dereference pointer or iterator
     AnyReference operator*();
     ///@}
 
     ///@}
 
+    TypeInterface* type() const { return _type; }
     /// @return list of tuple elements type, or throw if not a tuple
     std::vector<TypeInterface*> membersType() const;
+    void*          rawValue() const { return _value; }
+
+  protected:
+    TypeInterface* _type;
+    void*          _value;
   };
 
   class AnyReference : public AnyReferenceBase {

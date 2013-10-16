@@ -441,11 +441,11 @@ namespace qi {
     template <typename T>
     void futureAdapterGeneric(AnyReference val, qi::Promise<T> promise)
     {
-      TemplateTypeInterface* ft1 = QI_TEMPLATE_TYPE_GET(val.type, Future);
-      TemplateTypeInterface* ft2 = QI_TEMPLATE_TYPE_GET(val.type, FutureSync);
+      TemplateTypeInterface* ft1 = QI_TEMPLATE_TYPE_GET(val.type(), Future);
+      TemplateTypeInterface* ft2 = QI_TEMPLATE_TYPE_GET(val.type(), FutureSync);
       TemplateTypeInterface* futureType = ft1 ? ft1 : ft2;
       ObjectTypeInterface* onext = dynamic_cast<ObjectTypeInterface*>(futureType->next());
-      GenericObject gfut(onext, val.value);
+      GenericObject gfut(onext, val.rawValue());
       // Need a live shared_ptr for shared_from_this() to work.
       boost::shared_ptr<GenericObject> ao(&gfut, hold<GenericObject*>);
       if (gfut.call<bool>(MetaCallType_Direct, "hasError", 0))
@@ -469,15 +469,15 @@ namespace qi {
       }
 
       AnyReference val =  metaFut.value();
-      TemplateTypeInterface* ft1 = QI_TEMPLATE_TYPE_GET(val.type, Future);
-      TemplateTypeInterface* ft2 = QI_TEMPLATE_TYPE_GET(val.type, FutureSync);
+      TemplateTypeInterface* ft1 = QI_TEMPLATE_TYPE_GET(val.type(), Future);
+      TemplateTypeInterface* ft2 = QI_TEMPLATE_TYPE_GET(val.type(), FutureSync);
       TemplateTypeInterface* futureType = ft1 ? ft1 : ft2;
       qiLogDebug("qi.object") << "isFuture " << !!ft1 << ' ' << !!ft2;
       if (futureType)
       {
         TypeInterface* next = futureType->next();
         ObjectTypeInterface* onext = dynamic_cast<ObjectTypeInterface*>(next);
-        GenericObject gfut(onext, val.value);
+        GenericObject gfut(onext, val.rawValue());
         // Need a live shared_ptr for shared_from_this() to work.
         boost::shared_ptr<GenericObject> ao(&gfut, &hold<GenericObject*>);
         boost::function<void()> cb = boost::bind(futureAdapterGeneric<T>, val, promise);
@@ -495,13 +495,12 @@ namespace qi {
       try
       {
         std::pair<AnyReference, bool> conv = val.convert(targetType);
-        if (!conv.first.type)
+        if (!conv.first.type())
           promise.setError(std::string("Unable to convert call result to target type: from ")
             + val.signature(true).toPrettySignature() + " to " + targetType->signature().toPrettySignature() );
         else
         {
-          T* res = (T*)conv.first.type->ptrFromStorage(&conv.first.value);
-          promise.setValue(*res);
+          promise.setValue(*conv.first.ptr<T>(false));
         }
         if (conv.second)
           conv.first.destroy();
@@ -702,21 +701,19 @@ namespace qi {
       {
         return AnyReference();
       }
-      result.type = (*val)->type;
-      result.value = (*val)->value;
-      return result;
+      return AnyReference((*val)->type, (*val)->value);
     }
 
     virtual void set(void** storage, AnyReference source)
     {
       qiLogCategory("qitype.object");
       detail::ManagedObjectPtr* val = (detail::ManagedObjectPtr*)ptrFromStorage(storage);
-      TemplateTypeInterface* templ = dynamic_cast<TemplateTypeInterface*>(source.type);
+      TemplateTypeInterface* templ = dynamic_cast<TemplateTypeInterface*>(source.type());
       if (templ)
-        source.type = templ->next();
-      if (source.type->info() == info())
+        source = AnyReference(templ->next(), source.rawValue());
+      if (source.type()->info() == info())
       { // source is objectptr
-        detail::ManagedObjectPtr* src = (detail::ManagedObjectPtr*)source.type->ptrFromStorage(&source.value);
+        detail::ManagedObjectPtr* src = source.ptr<detail::ManagedObjectPtr>(false);
         if (!*src)
           qiLogWarning() << "NULL Object";
         *val = *src;
@@ -728,19 +725,19 @@ namespace qi {
       else if (source.kind() == TypeKind_Object)
       { // wrap object in objectptr: we do not keep it alive,
         // but source type offers no tracking capability
-        detail::ManagedObjectPtr op(new GenericObject(static_cast<ObjectTypeInterface*>(source.type), source.value));
+        detail::ManagedObjectPtr op(new GenericObject(static_cast<ObjectTypeInterface*>(source.type()), source.rawValue()));
         *val = op;
       }
       else if (source.kind() == TypeKind_Pointer)
       {
-        PointerTypeInterface* ptype = static_cast<PointerTypeInterface*>(source.type);
+        PointerTypeInterface* ptype = static_cast<PointerTypeInterface*>(source.type());
         // FIXME: find a way!
         if (ptype->pointerKind() == PointerTypeInterface::Shared)
           qiLogInfo() << "Object will *not* track original shared pointer";
         set(storage, *source);
       }
       else
-        throw std::runtime_error((std::string)"Cannot assign non-object " + source.type->infoString() + " to Object");
+        throw std::runtime_error((std::string)"Cannot assign non-object " + source.type()->infoString() + " to Object");
 
     }
     typedef DefaultTypeImplMethods<detail::ManagedObjectPtr> Methods;

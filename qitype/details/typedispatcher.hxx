@@ -12,7 +12,7 @@ namespace qi {
   template<typename TypeDispatcher>
   TypeDispatcher& typeDispatch(const TypeDispatcher &vv, AnyReference value)
   {
-    if (!value.type)
+    if (!value.type())
       throw std::runtime_error("NULL type");
     TypeDispatcher& v = const_cast<TypeDispatcher&>(vv);
     switch(value.kind())
@@ -25,21 +25,21 @@ namespace qi {
         break;
       case TypeKind_Int:
       {
-        IntTypeInterface* tint = static_cast<IntTypeInterface*>(value.type);
+        IntTypeInterface* tint = static_cast<IntTypeInterface*>(value.type());
 
         v.visitInt(value.toInt(), tint->isSigned(), tint->size());
         break;
       }
       case TypeKind_Float:
       {
-        FloatTypeInterface* tfloat = static_cast<FloatTypeInterface*>(value.type);
+        FloatTypeInterface* tfloat = static_cast<FloatTypeInterface*>(value.type());
         v.visitFloat(value.toDouble(), tfloat->size());
         break;
       }
       case TypeKind_String:
       {
-        StringTypeInterface* tstring = static_cast<StringTypeInterface*>(value.type);
-        std::pair<char*, size_t> content = tstring->get(value.value);
+        StringTypeInterface* tstring = static_cast<StringTypeInterface*>(value.type());
+        std::pair<char*, size_t> content = tstring->get(value.rawValue());
         v.visitString(content.first, content.second);
         break;
       }
@@ -55,20 +55,20 @@ namespace qi {
       }
       case TypeKind_Object:
       {
-        v.visitObject(GenericObject(static_cast<ObjectTypeInterface*>(value.type), value.value));
+        v.visitObject(GenericObject(static_cast<ObjectTypeInterface*>(value.type()), value.rawValue()));
         break;
       }
       case TypeKind_Pointer:
       {
         AnyReference pointee = *value;
-        PointerTypeInterface* type = static_cast<PointerTypeInterface*>(value.type);
+        PointerTypeInterface* type = static_cast<PointerTypeInterface*>(value.type());
         if (type->pointerKind() == PointerTypeInterface::Shared
           && pointee.kind() == TypeKind_Object)
         { // shared_ptr<Foo> p with Foo object type.
           // Create our own shared_ptr, that holds p and delete it on destruction
           qiLogDebug("qitype.typedispatcher") << "Detected object shared ptr";
           AnyReference shared_ptr = value.clone();
-          AnyObject ao(new GenericObject(static_cast<ObjectTypeInterface*>(pointee.type), pointee.value),
+          AnyObject ao(new GenericObject(static_cast<ObjectTypeInterface*>(pointee.type()), pointee.rawValue()),
             boost::bind(&AnyObject::deleteCustomDeleter, _1, (boost::function<void(Empty*)>)boost::bind(&AnyReference::destroy, shared_ptr)));
           v.visitAnyObject(ao);
         }
@@ -78,16 +78,16 @@ namespace qi {
       }
       case TypeKind_Tuple:
       {
-        StructTypeInterface* ttuple = static_cast<StructTypeInterface*>(value.type);
-        std::vector<AnyReference> tuple = ttuple->values(value.value);
+        StructTypeInterface* ttuple = static_cast<StructTypeInterface*>(value.type());
+        std::vector<AnyReference> tuple = ttuple->values(value.rawValue());
         v.visitTuple(ttuple->className(), tuple, ttuple->elementsName());
         break;
       }
       case TypeKind_Dynamic:
       {
-        if (value.type->info() == typeOf<AnyObject>()->info())
+        if (value.type()->info() == typeOf<AnyObject>()->info())
         {
-          AnyObject* o = (AnyObject*)value.type->ptrFromStorage(&value.value);
+          AnyObject* o = value.ptr<AnyObject>(false);
           v.visitAnyObject(*o);
         }
         else

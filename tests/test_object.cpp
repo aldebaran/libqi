@@ -120,11 +120,11 @@ std::vector<qi::AnyReference> convert(qi::AutoAnyReference v1 = qi::AutoAnyRefer
   qi::AutoAnyReference v5 = qi::AutoAnyReference())
 {
   std::vector<qi::AnyReference> res;
-  if (v1.value)
+  if (v1.rawValue())
     res.push_back(v1);
-  if (v2.value)
+  if (v2.rawValue())
     res.push_back(v2);
-  if (v3.value)
+  if (v3.rawValue())
     res.push_back(v3);
   return res;
 }
@@ -590,8 +590,8 @@ TEST(TestObject, TypeType)
   int i = 12;
   std::vector<AnyReference> vals = convert(i);
   AnyReference val = vals[0];
-  qiLogDebug() << "type ptr " << val.type->infoString() << " "
-  <<(void*)val.type;
+  qiLogDebug() << "type ptr " << val.type()->infoString() << " "
+  <<(void*)val.type();
   ASSERT_EQ(TypeKind_Int, val.kind());
   ASSERT_EQ(12, val.toInt());
   float onePointFive = 1.5f;
@@ -1003,9 +1003,9 @@ qi::GenericFunctionParameters args(
   qi::AutoAnyReference p3=qi::AutoAnyReference())
 {
   qi::GenericFunctionParameters res;
-  if (p1.type) res.push_back(p1); else return res;
-  if (p2.type) res.push_back(p2); else return res;
-  if (p3.type) res.push_back(p3); else return res;
+  if (p1.type()) res.push_back(p1); else return res;
+  if (p2.type()) res.push_back(p2); else return res;
+  if (p3.type()) res.push_back(p3); else return res;
   return res;
 }
 

@@ -135,16 +135,16 @@ namespace qi {
   {
     if (_allocated)
       AnyReferenceBase::destroy();
-    type = 0;
-    value = 0;
+    _type = 0;
+    _value = 0;
   }
 
   inline void AnyValue::reset(qi::TypeInterface *ttype)
   {
     reset();
     _allocated = true;
-    type = ttype;
-    value = type->initializeStorage();
+    _type = ttype;
+    _value = _type->initializeStorage();
   }
 
   inline AnyValue::~AnyValue()

@@ -94,8 +94,8 @@ TEST(Value, Basic)
   AnyReference v;
   int twelve = 12;
   v = AutoAnyReference(twelve);
-  ASSERT_TRUE(v.type != 0);
-  ASSERT_TRUE(v.value != 0);
+  ASSERT_TRUE(v.type() != 0);
+  ASSERT_TRUE(v.rawValue() != 0);
   ASSERT_EQ(v.toInt(), 12);
   ASSERT_EQ(v.toFloat(), 12.0f);
   ASSERT_EQ(v.toDouble(), 12.0);
@@ -152,7 +152,7 @@ TEST(Value, Map)
   ASSERT_EQ(v["pouf"].toInt(), 65);
 
   ASSERT_EQ(6u, v.size());
-  ASSERT_TRUE(!v.find("nokey").type);
+  ASSERT_TRUE(!v.find("nokey").type());
   // wrong keytype
   ASSERT_ANY_THROW(v.find(42));
   // append on map
@@ -323,7 +323,7 @@ TEST(Value, DefaultMap)
   val["foo"].update(12);
   ASSERT_EQ(1u, val.size());
   ASSERT_EQ(12, val.find("foo").toInt());
-  ASSERT_EQ(0, val.find("bar").type);
+  ASSERT_EQ(0, val.find("bar").type());
   val.insert(std::string("bar"), 13);
   ASSERT_EQ(13, val.element<int>("bar"));
   val.element<int>("foo") = 10;
@@ -454,16 +454,16 @@ TEST(Value, Convert_ListToTuple)
   std::pair<qi::AnyReference, bool> res1 = gv1.convert(type);
   std::pair<qi::AnyReference, bool> res2 = gv2.convert(type);
 
-  ASSERT_FALSE(res2.first.type);
-  ASSERT_TRUE(res1.first.type != 0);
-  ASSERT_EQ(res1.first.type->info(), type->info());
+  ASSERT_FALSE(res2.first.type());
+  ASSERT_TRUE(res1.first.type() != 0);
+  ASSERT_EQ(res1.first.type()->info(), type->info());
   ASSERT_EQ(gv1.size(), res1.first.size());
   ASSERT_STREQ("b", res1.first[3][1].asString().c_str());
 
   qi::TypeInterface *dest3 = qi::TypeInterface::fromSignature("(fffI)");
   qi::AnyValue gv3 = qi::decodeJSON("[1.1, 2.2, 3.3, \"42\"]");
   std::pair<qi::AnyReference, bool> res3 = gv3.convert(dest3);
-  ASSERT_FALSE(res3.first.type);
+  ASSERT_FALSE(res3.first.type());
 }
 
 TEST(Value, Convert_ListToMap)
@@ -471,15 +471,15 @@ TEST(Value, Convert_ListToMap)
   qi::TypeInterface *type1= qi::TypeInterface::fromSignature("{if}");
   qi::AnyValue gv1 = qi::decodeJSON("[[10.10, 42.42], [20, 43], [30, 44.44]]");
   std::pair<qi::AnyReference, bool> res1 = gv1.convert(type1);
-  ASSERT_TRUE(res1.first.type != 0);
-  ASSERT_EQ(res1.first.type->info(), type1->info());
+  ASSERT_TRUE(res1.first.type() != 0);
+  ASSERT_EQ(res1.first.type()->info(), type1->info());
   ASSERT_EQ(gv1.size(), res1.first.size());
   ASSERT_EQ(44.44f, res1.first[30].asFloat());
 
   qi::TypeInterface *type2 = qi::TypeInterface::fromSignature("{if}");
   qi::AnyValue gv2 = qi::decodeJSON("[[10.10, 42.42], [20, 43], [\"plop\", 44.44]]");
   std::pair<qi::AnyReference, bool> res2 = gv2.convert(type2);
-  ASSERT_FALSE(res2.first.type);
+  ASSERT_FALSE(res2.first.type());
 }
 
 int main(int argc, char **argv) {

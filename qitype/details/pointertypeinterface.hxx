@@ -22,11 +22,9 @@ namespace qi
     PointerKind pointerKind() const { return Raw;}
     AnyReference dereference(void* storage)
     {
-      AnyReference result;
-      result.type = pointedType();
       // We are in DirectAccess mode, so storage is a T*.
-      result.value = result.type->initializeStorage(storage);
-      return result;
+      void* value = pointedType()->initializeStorage(storage);
+      return AnyReference(pointedType(), value);
     }
 
     void setPointee(void** storage, void* pointer)
@@ -53,10 +51,8 @@ namespace qi
     AnyReference dereference(void* storage)
     {
       T* ptr = (T*)ptrFromStorage(&storage);
-      AnyReference result;
-      result.type = pointedType();
-      result.value = result.type->initializeStorage(ptr->get());
-      return result;
+      void *value = pointedType()->initializeStorage(ptr->get());
+      return AnyReference(pointedType(), value);
     }
     void setPointee(void** storage, void* pointer)
     {

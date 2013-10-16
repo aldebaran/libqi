@@ -291,8 +291,8 @@ TEST(TestJSONDecoder, special) {
   ASSERT_EQ(qi::TypeKind_Int, qi::decodeJSON("false").kind());
   ASSERT_EQ(qi::TypeKind_Void, qi::decodeJSON("null").kind());
 
-  ASSERT_EQ(0U, static_cast<qi::IntTypeInterface*>(qi::decodeJSON("true").type)->size());
-  ASSERT_EQ(0U, static_cast<qi::IntTypeInterface*>(qi::decodeJSON("false").type)->size());
+  ASSERT_EQ(0U, static_cast<qi::IntTypeInterface*>(qi::decodeJSON("true").type())->size());
+  ASSERT_EQ(0U, static_cast<qi::IntTypeInterface*>(qi::decodeJSON("false").type())->size());
 
   ASSERT_EQ(1, qi::decodeJSON("true").toInt());
   ASSERT_EQ(0, qi::decodeJSON("false").toInt());

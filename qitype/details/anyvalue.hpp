@@ -13,20 +13,31 @@
 
 namespace qi {
 
-  /** AnyReference with copy semantics
+
+  /** Represent any value supported by the typesystem.
+   *  when constructed or set the value is copied.
+   *  as a pointer to the real value.
+   *  to convert the value if needed and copy to the required type.
    */
   class QITYPE_API AnyValue: public AnyReferenceBase
   {
   public:
 
     AnyValue();
-    /// Share ownership of value with b.
     AnyValue(const AnyValue& b);
     explicit AnyValue(const AnyReference& b, bool copy, bool free);
     explicit AnyValue(const AutoAnyReference& b);
     explicit AnyValue(qi::TypeInterface *type);
     /// Create and return a AnyValue of type T
     template<typename T> static AnyValue make();
+
+    /// @return the contained value, and reset the AnyValue.
+    /// @warning you should destroy the returned value or no, depending on how the AnyValue was initialized.
+    AnyReference release() {
+      AnyReference ref = AnyReference(_type, _value);
+      _allocated = _value = _type = 0;
+      return ref;
+    }
 
     /// @{
     /** The following functions construct a AnyValue from containers of
@@ -42,14 +53,18 @@ namespace qi {
     /// @}
 
     ~AnyValue();
-    void operator = (const AnyReference& b);
-    void operator = (const AnyValue& b);
+    void operator=(const AnyReference& b);
+    void operator=(const AnyValue& b);
+
     void reset();
     void reset(qi::TypeInterface *type);
+
     template <typename T>
     void set(const T& t) { AnyReferenceBase::set<T>(t); }
+
     void reset(const AnyReference& src);
     void reset(const AnyReference& src, bool copy, bool free);
+
     void swap(AnyValue& b);
 
     AnyReference asReference() const {

@@ -357,11 +357,11 @@ namespace qi
         args.resize(params.size()-1);
         for (unsigned i=0; i<params.size()-1; ++i)
         {
-          if (!params[i+1].type)
+          if (!params[i+1].type())
             args[i] = AnyValue::from("<??" ">");
           else
           {
-            switch(params[i+1].type->kind())
+            switch(params[i+1].type()->kind())
             {
             case TypeKind_Int:
             case TypeKind_String:
