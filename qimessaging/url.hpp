@@ -107,6 +107,7 @@ namespace qi {
      */
     unsigned short port() const;
 
+  private:
     UrlPrivate* _p;
   };
 
