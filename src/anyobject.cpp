@@ -187,8 +187,7 @@ namespace qi {
     int methodId = findMethod(nameWithOptionalSignature, args);
     if (methodId < 0) {
       std::string resolvedSig = args.signature(true).toString();
-      std::string fullSig = nameWithOptionalSignature + "::" + resolvedSig;
-      return makeFutureError<AnyReference>(MetaObjectPrivate::generateErrorString(fullSig, metaObject().findCompatibleMethod(nameWithOptionalSignature), false));
+      return makeFutureError<AnyReference>(MetaObjectPrivate::generateErrorString(nameWithOptionalSignature, metaObject().findCompatibleMethod(nameWithOptionalSignature), false));
     }
     return metaCall(methodId, args, callType);
   }
