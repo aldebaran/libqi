@@ -104,11 +104,6 @@ namespace qi {
       Server::addObject(idx, bs.object);
     }
 
-    // ack the Service directory to tell that we are ready
-    //TODO: async handle.
-    qi::Future<void> fut2 = _sdClient->serviceReady(idx);
-    fut2.connect(boost::bind(&serviceReady, _1, result, idx));
-
     {
       boost::mutex::scoped_lock sl(_serviceNameToIndexMutex);
       _serviceNameToIndex[si.name()] = idx;
@@ -118,6 +113,9 @@ namespace qi {
       _registerServiceRequest.erase(it);
     }
 
+    // ack the Service directory to tell that we are ready
+    qi::Future<void> fut2 = _sdClient->serviceReady(idx);
+    fut2.connect(boost::bind(&serviceReady, _1, result, idx));
   }
 
   qi::Future<unsigned int> ObjectRegistrar::registerService(const std::string &name, qi::AnyObject obj)

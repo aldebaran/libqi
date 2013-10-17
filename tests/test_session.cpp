@@ -17,6 +17,7 @@
 #include <qimessaging/gateway.hpp>
 #include <qi/os.hpp>
 #include <qi/application.hpp>
+
 #include <testsession/testsessionpair.hpp>
 
 qiLogCategory("test");
@@ -354,6 +355,63 @@ TEST(QiSession, urlOnClosed)
   EXPECT_NO_THROW(s.url());
   s.close();
   EXPECT_ANY_THROW(s.url());
+}
+
+TEST(QiSession, serviceRegisteredCtrl)
+{
+  // Control test for the test serviceRegistered, to ensure we properly detect
+  // remote services
+  qi::DynamicObjectBuilder ob;
+  ob.advertiseMethod("reply", &reply);
+  qi::AnyObject obj(ob.object());
+
+  qi::Session sd;
+  sd.listenStandalone("tcp://127.0.0.1:0");
+  qi::Session s;
+  s.connect(sd.endpoints()[0]);
+  sd.registerService("s", obj);
+  qi::AnyObject c = s.service("s");
+  ASSERT_TRUE(c);
+  qi::DynamicObject* dobj = (qi::DynamicObject*)c.asGenericObject()->value;
+  qi::DynamicObject* sdobj = (qi::DynamicObject*)obj.asGenericObject()->value;
+  ASSERT_NE(dobj, sdobj);
+
+  c = sd.service("s");
+  ASSERT_TRUE(c);
+  dobj = (qi::DynamicObject*)c.asGenericObject()->value;
+  sdobj = (qi::DynamicObject*)obj.asGenericObject()->value;
+  ASSERT_EQ(dobj, sdobj);
+}
+
+
+void fetch_service(qi::Session& s, const std::string& name, qi::AnyObject& ao)
+{
+  ao = s.service(name);
+}
+
+TEST(QiSession, serviceRegistered)
+{
+  // Check a nasty race situation where a service is advertised as registered
+  // by the session before being realy present
+  // The symptom is not a session.service() failure, but a spurious use of
+  // remote mode.
+  qi::Session sd;
+  sd.listenStandalone("tcp://127.0.0.1:0");
+  qi::AnyObject ao;
+  sd.serviceRegistered.connect(&fetch_service, boost::ref(sd), _2, boost::ref(ao));
+
+  qi::DynamicObjectBuilder ob;
+  ob.advertiseMethod("reply", &reply);
+  qi::AnyObject obj(ob.object());
+  sd.registerService("s", obj);
+  for (unsigned i=0; i<200 && !ao; ++i)
+    qi::os::msleep(10);
+  // check we got the object, and that it is not a remoteobject
+  ASSERT_TRUE(ao);
+  qi::DynamicObject* dobj = (qi::DynamicObject*)ao.asGenericObject()->value;
+  ASSERT_TRUE(dobj);
+
+  ASSERT_EQ(obj.asGenericObject()->value, ao.asGenericObject()->value);
 }
 
 int main(int argc, char **argv)
