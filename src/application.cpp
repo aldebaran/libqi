@@ -212,7 +212,7 @@ namespace qi {
   {
     readPathConf();
     if (globalInitialized)
-      qiLogError() << "Application was already initialized";
+      throw std::logic_error("Application was already initialized");
     globalInitialized = true;
     globalArgc = argc;
     globalArgv = argv;
