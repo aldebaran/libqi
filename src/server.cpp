@@ -84,7 +84,7 @@ namespace qi {
     if (_dying)
     {
       qiLogDebug() << "Incoming connectiong while closing, dropping...";
-      socket->disconnect();
+      socket->disconnect().async();
       return;
     }
     _sockets.push_back(socket);
