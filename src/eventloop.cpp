@@ -574,15 +574,7 @@ namespace qi {
     ctx = 0;
   }
 
-  static EventLoop*    _netEventLoop = 0;
-  static EventLoop*    _objEventLoop = 0;
   static EventLoop*    _poolEventLoop = 0;
-  static double        _monitorInterval = 0;
-
-  static void monitor_notify(const char* which)
-  {
-    qiLogError() << which << " event loop stuck?";
-  }
 
   //the initialisation is protected by a mutex,
   //we then use an atomic to prevent having a mutex on a fastpath.
@@ -609,14 +601,6 @@ namespace qi {
         else
           ctx->start(nthreads);
         Application::atExit(boost::bind(&eventloop_stop, boost::ref(ctx)));
-        if (!isPool && _netEventLoop && _objEventLoop && _monitorInterval)
-        {
-          int64_t d = static_cast<qi::int64_t>(_monitorInterval * 1e6);
-          _netEventLoop->monitorEventLoop(_objEventLoop, d)
-              .connect(boost::bind(&monitor_notify, "network"));
-          _objEventLoop->monitorEventLoop(_netEventLoop, d)
-              .connect(boost::bind(&monitor_notify, "object"));
-        }
       }
     }
     ++init;
@@ -625,29 +609,19 @@ namespace qi {
 
   EventLoop* getDefaultNetworkEventLoop()
   {
-    static qi::Atomic<int> init;
-    return _get(_netEventLoop, false, init, 0);
+    return getDefaultThreadPoolEventLoop();
+
   }
 
   EventLoop* getDefaultObjectEventLoop()
   {
-    static qi::Atomic<int> init;
-    return _get(_objEventLoop, false, init, 1);
+    return getDefaultThreadPoolEventLoop();
   }
 
   EventLoop* getDefaultThreadPoolEventLoop()
   {
-    static qi::Atomic<int> init;
-    return _get(_poolEventLoop, true, init, 0);
+    qi::Atomic<int> init(0);
+    return _get(_poolEventLoop, false, init, 0);
   }
-  static void setMonitorInterval(double v)
-  {
-    _monitorInterval = v;
-  }
-  namespace {
-  _QI_COMMAND_LINE_OPTIONS(
-    "EventLoop monitoring",
-    ("loop-monitor-latency", value<double>()->notifier(&setMonitorInterval), "Warn if event loop is stuck more than given duration in seconds")
-    )
-  }
+
 }
