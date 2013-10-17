@@ -378,7 +378,7 @@ namespace qi
     _connecting = false;
     if (erc)
     {
-      qiLogWarning("qimessaging.TransportSocketLibEvent") << "connect: " << erc.message();
+      qiLogWarning() << "connect: " << erc.message();
       _status = qi::TransportSocket::Status_Disconnected;
       pSetError(_connectPromise, erc.message());
       pSetValue(_disconnectPromise);
