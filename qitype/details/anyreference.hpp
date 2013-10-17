@@ -283,8 +283,7 @@ namespace qi {
     /// Return an iterator on the end of the container
     AnyIterator end() const;
 
-    ///support Dynamic (return the content of the dynamic)
-    /// Dereference pointer or iterator
+    /// Dereference pointer, iterator or dynamic
     AnyReference operator*();
     ///@}
 

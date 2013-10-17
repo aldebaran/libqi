@@ -1069,6 +1069,8 @@ namespace qi
       return static_cast<PointerTypeInterface*>(_type)->dereference(_value);
     else if (kind() == TypeKind_Iterator)
       return static_cast<IteratorTypeInterface*>(_type)->dereference(_value);
+    else if (kind() == TypeKind_Dynamic)
+      return static_cast<DynamicTypeInterface*>(_type)->get(_value);
     else
       throw std::runtime_error("Expected pointer or iterator");
   }
