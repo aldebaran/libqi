@@ -347,6 +347,7 @@ namespace qi
     {
       bool stats = context && context.isStatsEnabled();
       bool trace = context && context.isTraceEnabled();
+      qi::AnyReference retref;
       int tid = 0; // trace call id, reused for result sending
       if (trace)
       {
@@ -389,37 +390,50 @@ namespace qi
       bool success = false;
       try
       {
+        qi::AnyReference ret;
+        //the return value is destroyed by ServerResult in the future callback.
         if (lock)
-          out.setValue(locked_call(func, params, context.asGenericObject()->mutex()));
+          ret = locked_call(func, params, context.asGenericObject()->mutex());
         else
-          out.setValue(func.call(params));
+          ret = func.call(params);
+        //copy the value for tracing later. (we want the tracing to happend after setValue
+        if (trace)
+          retref = ret.clone();
+        //the reference, is dropped here... not cool man!
+        out.setValue(ret);
         success = true;
       }
       catch(const std::exception& e)
       {
+        success = false;
         out.setError(e.what());
       }
       catch(...)
       {
+        success = false;
         out.setError("Unknown exception caught.");
       }
+
       if (stats||trace)
       {
         cpuendtime = qi::os::cputime();
         cpuendtime.first -= cputime.first;
         cpuendtime.second -= cputime.second;
       }
+
       if (stats)
         context.asGenericObject()->pushStats(methodId, (float)(qi::os::ustime() - time)/1e6f,
                            (float)cpuendtime.first / 1e6f,
                            (float)cpuendtime.second / 1e6f);
+
+
       if (trace)
       {
         qi::os::timeval tv;
         qi::os::gettimeofday(&tv);
         AnyValue val;
         if (success)
-          val = out.future().value();
+          val = AnyValue(retref, false, true);
         else
           val = AnyValue::from(out.future().error());
         context.asGenericObject()->traceObject(EventTrace(tid,
