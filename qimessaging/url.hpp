@@ -27,6 +27,8 @@ namespace qi {
    *    - protocol://
    *    - :port
    *    - *empty string*
+   *
+   *  @note This class is copyable.
    */
   class QIMESSAGING_API Url
   {
@@ -34,11 +36,13 @@ namespace qi {
     /** Creates an empty url.
      */
     Url();
+
     /**
      *  @param url The url string, the port and the protocol will be extracted
      *  if they're present.
      */
     Url(const std::string &url);
+
     /**
      *  @param url The url string, the port and the protocol will be extracted
      *  if they're present.
@@ -46,6 +50,7 @@ namespace qi {
      *  in the url string.
      */
     Url(const std::string &url, unsigned short defaultPort);
+
     /**
      *  @param url The url string, the port and the protocol will be extracted
      *  if they're present.
@@ -53,6 +58,7 @@ namespace qi {
      *  been found in the url string.
      */
     Url(const std::string &url, const std::string &defaultProtocol);
+
     /**
      *  @param url The url string, the port and the protocol will be extracted
      *  if they're present.
@@ -62,11 +68,14 @@ namespace qi {
      *  in the url string.
      */
     Url(const std::string &url, const std::string &defaultProtocol, unsigned short defaultPort);
+
     /**
-     *  @param url The url string, the port and the protocol will be extracted
-     *  if they're present.
+     * @cond
      */
     Url(const char *url);
+    /**
+     * @endcond
+     */
 
     /** Compares the url strings.
      */
@@ -74,17 +83,21 @@ namespace qi {
 
     virtual ~Url();
 
+    /**
+     * @cond
+     */
     Url(const qi::Url& url);
     Url& operator= (const Url& rhs);
-
-    /** Equivalent to this->str() < rhs.str().
-     */
     bool operator< (const Url& rhs) const;
+    /**
+     * @endcond
+     */
 
     /**
      *  @return True if the port and the protocol had been set.
      */
     bool isValid() const;
+
     /**
      *  @return The url string used by the Url class, the port and/or the
      *  protocol may have been appended if they had been given in the
@@ -97,11 +110,13 @@ namespace qi {
      *  set.
      */
     const std::string& protocol() const;
+
     /**
      *  @return The host part of the url or an empty string if no host part was
      *  found.
      */
     const std::string& host() const;
+
     /**
      *  @return The port of the url, 0 if no port were given.
      */
