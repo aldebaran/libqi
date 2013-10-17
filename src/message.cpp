@@ -395,17 +395,17 @@ namespace qi {
 
   void Message::setValue(const AutoAnyReference &value, const Signature& sig, ObjectHost* context) {
     cow();
-    Signature effective = value.type->signature();
+    Signature effective = value.type()->signature();
     if (effective != sig)
     {
       TypeInterface* ti = TypeInterface::fromSignature(sig);
       if (!ti)
         qiLogWarning() << "setValue(): cannot construct type for signature " << sig.toString();
       std::pair<AnyReference, bool> conv = value.convert(ti);
-      if (!conv.first.type) {
+      if (!conv.first.type()) {
         std::stringstream ss;
         ss << "Setvalue(): failed to convert effective value "
-           << value.type->signature().toString()
+           << value.type()->signature().toString()
            << " to expected type "
            << sig.toString();
         qiLogWarning() << ss.str();
@@ -417,7 +417,7 @@ namespace qi {
       if (conv.second)
         conv.first.destroy();
     }
-    else if (value.type->kind() != qi::TypeKind_Void)
+    else if (value.type()->kind() != qi::TypeKind_Void)
     {
       encodeBinary(&_p->buffer, value, boost::bind(serializeObject, _1, context));
     }
@@ -449,8 +449,8 @@ namespace qi {
       values.resize(in.size());
       for (unsigned i=0; i<in.size(); ++i)
       {
-        types[i] = in[i].type;
-        values[i] = in[i].value;
+        types[i] = in[i].type();
+        values[i] = in[i].rawValue();
       }
       AnyReference tuple = makeGenericTuplePtr(types, values);
       AnyValue val(tuple, false, false);
@@ -478,7 +478,7 @@ namespace qi {
         if (!target)
           throw std::runtime_error("remote call: Failed to obtain a type from signature " + (*itd).toString());
         std::pair<AnyReference, bool> c = nargs[i].convert(target);
-        if (!c.first.type)
+        if (!c.first.type())
         {
           throw std::runtime_error(
                 _QI_LOG_FORMAT("remote call: failed to convert argument %s from %s to %s", i, (*its).toString(), (*itd).toString()));

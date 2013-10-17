@@ -71,7 +71,7 @@ struct ToPyObject
   void visitUnknown(qi::AnyReference value)
   {
     /* Encapuslate the value in Capsule */
-    result = toO(PyCapsule_New(value.value, NULL, NULL));
+    result = toO(PyCapsule_New(value.rawValue(), NULL, NULL));
   }
 
   void visitVoid()

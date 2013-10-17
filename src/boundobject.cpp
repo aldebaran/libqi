@@ -208,9 +208,8 @@ namespace qi {
         // received dynamically typed argument pack, unwrap
         AnyValue* content = value.ptr<AnyValue>();
         // steal it
-        AnyReference pContent(content->type, content->value);
-        content->type = 0;
-        content->value = 0;
+        AnyReference pContent = content->release();
+
         // free the object content
         value.destroy();
         value = pContent;

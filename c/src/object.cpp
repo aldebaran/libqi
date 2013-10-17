@@ -21,9 +21,9 @@ qiLogCategory("qimessaging.object");
 
 
 static qi::AnyReference c_call(const std::string &complete_sig,
-                                          qi_object_method_t func,
-                                              void* data,
-                                  const qi::GenericFunctionParameters& params)
+                               qi_object_method_t func,
+                               void* data,
+                               const qi::GenericFunctionParameters& params)
 {
   //TODO: move to register
   std::vector<std::string> vs = qi::signatureSplit(std::string(complete_sig));
@@ -42,10 +42,7 @@ static qi::AnyReference c_call(const std::string &complete_sig,
     func(complete_sig.c_str(), value, ret, data);
 
   qi::AnyValue &gvpr = qi_value_cpp(ret);
-  qi::AnyReference re = gvpr.asReference();
-  //just reset the gvp, we dont want destroy to destroy it...
-  gvpr.type = 0;
-  gvpr.value = 0;
+  qi::AnyReference re(gvpr.release());
   qi_value_destroy(value);
   qi_value_destroy(ret);
   return re;

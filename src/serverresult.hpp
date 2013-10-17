@@ -26,9 +26,9 @@ namespace qi {
   {
     qi::Message ret(Message::Type_Reply, replyaddr);
     try {
-      TemplateTypeInterface* futureType = QI_TEMPLATE_TYPE_GET(val.type, Future);
+      TemplateTypeInterface* futureType = QI_TEMPLATE_TYPE_GET(val.type(), Future);
       ObjectTypeInterface* onext = dynamic_cast<ObjectTypeInterface*>(futureType->next());
-      GenericObject gfut(onext, val.value);
+      GenericObject gfut(onext, val.rawValue());
       // Need a live shared_ptr for shared_from_this() to work.
       detail::ManagedObjectPtr ao(&gfut, &detail::_genericobject_noop);
       if (gfut.call<bool>("hasError", 0))
@@ -65,12 +65,12 @@ namespace qi {
     } else {
       try {
         qi::AnyReference val = future.value();
-        TemplateTypeInterface* futureType = QI_TEMPLATE_TYPE_GET(val.type, Future);
+        TemplateTypeInterface* futureType = QI_TEMPLATE_TYPE_GET(val.type(), Future);
         if (futureType)
         { // Return value is a future, bounce
           TypeInterface* next = futureType->next();
           ObjectTypeInterface* onext = dynamic_cast<ObjectTypeInterface*>(next);
-          GenericObject gfut(onext, val.value);
+          GenericObject gfut(onext, val.rawValue());
           // Need a live sha@red_ptr for shared_from_this() to work.
           detail::ManagedObjectPtr ao(&gfut, &detail::_genericobject_noop);
           boost::function<void()> cb = boost::bind(serverResultAdapterNext, val, targetSignature, host, socket, replyaddr);
