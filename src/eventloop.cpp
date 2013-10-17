@@ -141,6 +141,9 @@ namespace qi {
 
   qi::Future<void> EventLoopAsio::asyncCall(uint64_t usDelay, boost::function<void ()> cb)
   {
+    if (!_work)
+      return qi::makeFutureError<void>("Schedule attempt on destroyed thread pool");
+
     boost::shared_ptr<boost::asio::deadline_timer> timer = boost::make_shared<boost::asio::deadline_timer>(boost::ref(_io));
     timer->expires_from_now(boost::posix_time::microseconds(usDelay));
     qi::Promise<void> prom(boost::bind(&boost::asio::deadline_timer::cancel, timer));
