@@ -369,9 +369,9 @@ namespace qi {
     class SerializeTypeVisitor
     {
     public:
-      SerializeTypeVisitor(BinaryEncoder& out, SerializeObjectCallback context, AnyReference value)
+      SerializeTypeVisitor(BinaryEncoder& out, SerializeObjectCallback serializeObjectCb, AnyReference value)
         : out(out)
-        , context(context)
+        , serializeObjectCb(serializeObjectCb)
         , value(value)
       {}
 
@@ -430,7 +430,7 @@ namespace qi {
       {
         out.beginList(value.size(), static_cast<ListTypeInterface*>(value.type())->elementType()->signature());
         for (; it != end; ++it)
-          serialize(*it, out, context);
+          serialize(*it, out, serializeObjectCb);
         out.endList();
       }
 
@@ -441,8 +441,8 @@ namespace qi {
         for(; it != end; ++it)
         {
           AnyReference v = *it;
-          serialize(v[0], out, context);
-          serialize(v[1], out, context);
+          serialize(v[0], out, serializeObjectCb);
+          serialize(v[1], out, serializeObjectCb);
         }
         out.endMap();
       }
@@ -463,9 +463,9 @@ namespace qi {
 
       void visitAnyObject(AnyObject& ptr)
       {
-        if (!context)
+        if (!serializeObjectCb)
           throw std::runtime_error("Object serialization callback required but not provided");
-        ObjectSerializationInfo osi = context(ptr);
+        ObjectSerializationInfo osi = serializeObjectCb(ptr);
         out.write(osi.metaObject);
         out.write(osi.serviceId);
         out.write(osi.objectId);
@@ -475,7 +475,7 @@ namespace qi {
       {
         out.beginTuple(qi::makeTupleSignature(vals));
         for (unsigned i=0; i<vals.size(); ++i)
-          serialize(vals[i], out, context);
+          serialize(vals[i], out, serializeObjectCb);
         out.endTuple();
       }
 
@@ -483,7 +483,7 @@ namespace qi {
       {
         //Remaining types
         out.writeValue(pointee, boost::bind(&typeDispatch<SerializeTypeVisitor>,
-                                            SerializeTypeVisitor(out, context, pointee), pointee));
+                                            SerializeTypeVisitor(out, serializeObjectCb, pointee), pointee));
       }
 
       void visitRaw(AnyReference raw)
@@ -499,7 +499,7 @@ namespace qi {
       }
 
       BinaryEncoder& out;
-      SerializeObjectCallback context;
+      SerializeObjectCallback serializeObjectCb;
       AnyReference value;
     };
 
