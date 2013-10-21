@@ -64,6 +64,7 @@ set(H
   qi/preproc.hpp
   qi/types.hpp
   qi/path.hpp
+  qi/periodictask.hpp
   qi/shared_ptr.hpp
   qi/stats.hpp
   qi/qi.hpp
@@ -96,6 +97,7 @@ set(C
   src/os.cpp
   src/path_conf.cpp
   src/path_conf.hpp
+  src/periodictask.cpp
   src/utils.hpp
   src/utils.cpp
   src/threadpool.cpp

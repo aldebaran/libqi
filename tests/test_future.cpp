@@ -14,6 +14,7 @@
 #include <qi/future.hpp>
 #include <qi/eventloop.hpp>
 #include <qi/trackable.hpp>
+#include <qi/periodictask.hpp>
 
 #include <boost/function.hpp>
 #include <boost/lambda/lambda.hpp>
@@ -946,6 +947,73 @@ TEST(TestAdaptFuture, PromiseCancelled) {
   ASSERT_TRUE(prom2.future().isCanceled());
   ASSERT_FALSE(prom2.future().hasValue());
   ASSERT_FALSE(prom2.future().hasError());
+}
+
+void empty() {}
+
+TEST(TestPeriodicTask, Exception)
+{
+  {
+    qi::PeriodicTask pt;
+    EXPECT_ANY_THROW(pt.start());
+    EXPECT_ANY_THROW(pt.setUsPeriod(-123));
+    pt.setUsPeriod(1000);
+    EXPECT_ANY_THROW(pt.start());
+  }
+  {
+    qi::PeriodicTask pt;
+    pt.setCallback(&empty);
+    EXPECT_ANY_THROW(pt.start()); // interval not set
+  }
+}
+
+void inc(qi::Atomic<int>& tgt)
+{
+  ++tgt;
+}
+
+TEST(TestPeriodicTask, FutureFuck)
+{
+  for (unsigned i=0; i<500; ++i)
+  {
+    qi::Future<void> f;
+    qi::Promise<void> p;
+    f = p.future();
+    p.setValue(0);
+    f.wait();
+  }
+}
+
+TEST(TestPeriodicTask, Basic)
+{
+  qi::Atomic<int> a;
+  qi::PeriodicTask pt;
+  pt.setCallback(&inc, boost::ref(a));
+  pt.setUsPeriod(100000);
+  pt.start();
+  qi::os::msleep(450);
+  EXPECT_GE(2, std::abs(*a - 5)); // be leniant for our overloaded buildslaves
+  pt.stop();
+  int cur = *a;
+  qi::os::msleep(60);
+  EXPECT_EQ(cur, *a); // stop means stop
+  pt.start();
+  qi::os::msleep(150);
+  EXPECT_GE(1, std::abs(*a - cur - 2));
+}
+
+TEST(TestPeriodicTask, DeadLock)
+{
+  qi::Atomic<int> a;
+  for (unsigned i=0; i<500; ++i)
+  {
+    qi::PeriodicTask pt;
+    pt.setCallback(&inc, boost::ref(a));
+    pt.setUsPeriod(0);
+    pt.start();
+    qi::os::msleep(i%20);
+    pt.stop();
+  }
 }
 
 int main(int argc, char **argv) {

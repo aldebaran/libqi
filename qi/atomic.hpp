@@ -30,11 +30,12 @@ namespace qi
 {
   inline long testAndSet(long* cond)
   {
-#ifdef __GNUC__
+#if defined __GNUC__
     return __sync_bool_compare_and_swap(cond, 0, 1);
-#endif
-#ifdef _MSC_VER
+#elif defined _MSC_VER
     return 1 - InterlockedCompareExchange(cond, 1, 0);
+#else
+  #error "Unknown platform, testAndSet not implemented"
 #endif
   }
 
