@@ -63,16 +63,16 @@ namespace qi {
         return _onCancel;
       }
 
-      void cancel()
+      void cancel(qi::Future<T>& future)
       {
         if (isFinished())
           return;
         if (!_onCancel)
           throw FutureException(FutureException::ExceptionState_FutureNotCancelable);
-        _onCancel();
+        _onCancel(Promise<T>(future));
       }
 
-      void setOnCancel(boost::function<void ()> onCancel)
+      void setOnCancel(boost::function<void (Promise<T>)> onCancel)
       {
         _onCancel = onCancel;
       }
@@ -187,7 +187,7 @@ namespace qi {
       typedef std::vector<boost::function<void (qi::Future<T>)> > Callbacks;
       Callbacks                _onResult;
       ValueType                _value;
-      boost::function<void ()> _onCancel;
+      boost::function<void (Promise<T>)> _onCancel;
       FutureCallbackType       _async;
     };
 
