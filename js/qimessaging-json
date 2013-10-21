@@ -67,26 +67,20 @@ class QiMessagingHandler(tornadio2.conn.SocketConnection):
             method = params["method"]
             args = params["args"]
             if service == "ServiceDirectory" and method == "service":
-                f = self.qim.service(str(args[0]), _async = True)
-                f.addCallback(self.do_reply(idm))
+                fut = self.qim.service(str(args[0]), _async = True)
             elif method == "registerEvent":
                 obj = self.objs[service]
                 evt = getattr(obj, args[0])
-                f = evt.connect(self.do_callback(service, args[0]), _async = True)
-                f.addCallback(self.do_reply(idm))
+                fut = evt.connect(self.do_callback(service, args[0]), _async = True)
             elif method == "unregisterEvent":
                 obj = self.objs[service]
                 evt = getattr(obj, args[0])
-                f = evt.disconnect(args[1], _async = True)
-                f.addCallback(self.do_reply(idm))
+                fut = evt.disconnect(args[1], _async = True)
             else:
                 obj = self.objs[service]
                 met = getattr(obj, method)
-                if args is None:
-                    fut = met(_async = True)
-                else:
-                    fut = met(*args, _async = True)
-                fut.addCallback(self.do_reply(idm))
+                fut = met(*args, _async = True)
+            fut.addCallback(self.do_reply(idm))
         except (AttributeError, RuntimeError) as exc:
             self.reply(idm, 'error', str(exc))
 
