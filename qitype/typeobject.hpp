@@ -53,7 +53,7 @@ namespace qi {
     virtual const std::vector<std::pair<TypeInterface*, int> >& parentTypes() = 0;
     virtual qi::Future<AnyValue> property(void* instance, unsigned int id) = 0;
     virtual qi::Future<void> setProperty(void* instance, unsigned int id, AnyValue value) = 0;
-    virtual TypeKind kind() const { return TypeKind_Object;}
+    virtual TypeKind kind() { return TypeKind_Object;}
     /// @return -1 if there is no inheritance, or the pointer offset
     int inherits(TypeInterface* other);
   };

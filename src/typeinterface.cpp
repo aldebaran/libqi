@@ -617,8 +617,7 @@ namespace qi {
     }
     friend TypeInterface* makeListType(TypeInterface* element);
   public:
-
-    TypeInterface* elementType() const
+    TypeInterface* elementType()
     {
       return _elementType;
     }
@@ -940,11 +939,11 @@ namespace qi {
     }
     friend TypeInterface* makeMapType(TypeInterface* kt, TypeInterface* et);
   public:
-    TypeInterface* elementType() const
+    TypeInterface* elementType()
     {
       return _elementType;
     }
-    TypeInterface* keyType () const
+    TypeInterface* keyType ()
     {
       return _keyType;
     }

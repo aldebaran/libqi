@@ -92,7 +92,7 @@ namespace qi  {
     return detail::typeOfBackend<typename detail::TypeOfAdapter<T>::type>();
   }
 
-  inline TypeKind TypeInterface::kind() const
+  inline TypeKind TypeInterface::kind()
   {
     return TypeKind_Unknown;
   }

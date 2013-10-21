@@ -83,7 +83,7 @@ namespace qi {
     virtual void* clone(void*)=0;
     virtual void destroy(void*)=0;
 
-    virtual TypeKind kind() const;
+    virtual TypeKind kind();
 
     // Less must always work: compare pointers if you have to.
     virtual bool less(void* a, void* b) = 0;

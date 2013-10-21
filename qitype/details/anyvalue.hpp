@@ -35,7 +35,9 @@ namespace qi {
     /// @warning you should destroy the returned value or no, depending on how the AnyValue was initialized.
     AnyReference release() {
       AnyReference ref = AnyReference(_type, _value);
-      _allocated = _value = _type = 0;
+      _allocated = false;
+      _value = 0;
+      _type = 0;
       return ref;
     }
 
