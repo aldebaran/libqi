@@ -41,7 +41,8 @@ if sys.platform.startswith("linux"):
 
 #######
 
-from _qi import Application, FutureState, FutureTimeout, Future, \
+from _qi import Application as _Application
+from _qi import FutureState, FutureTimeout, Future, \
                 Promise, Property, Session, Signal, \
                 createObject, registerObjectFactory
 
@@ -52,7 +53,7 @@ from _binder import bind, nobind
 #rename isinstance here. (isinstance should not be used in this file)
 isinstance = _isinstance
 
-_app = Application()
+_app = None
 
 
 #we want to stop all thread before python start destroying
@@ -60,9 +61,10 @@ _app = Application()
 #it's destroying)
 def _stopApplication():
     global _app
-    _app.stop()
-    del _app
-    _app = None
+    if _app is not None:
+        _app.stop()
+        del _app
+        _app = None
 
 import atexit
 atexit.register(_stopApplication)
@@ -71,6 +73,8 @@ atexit.register(_stopApplication)
 #because it own eventloops
 def Application():
     global _app
+    if _app is None:
+        _app = _Application()
     return _app
 
 __all__ = ["FutureState",
