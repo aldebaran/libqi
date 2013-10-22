@@ -70,11 +70,6 @@ namespace qi
     QI_API std::string findData(const std::string& applicationName,
                                 const std::string& filename);
 
-    /// Look for a file in all dataPaths(applicationName) directories,
-    /// return all the matches.
-    QI_API std::vector<std::string> findListData(const std::string& applicationName,
-                                                 const std::string& filename);
-
     /// List data files matching the given pattern in all
     /// dataPaths(applicationName) directories. For each match, return the
     ///  occurence from the first dataPaths prefix.

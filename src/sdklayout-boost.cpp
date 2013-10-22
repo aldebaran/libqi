@@ -441,30 +441,6 @@ namespace qi {
     return std::string();
   }
 
-  std::vector<std::string> SDKLayout::findListData(
-                          const std::string &applicationName,
-                          const std::string &filename) const
-  {
-    std::vector<std::string> datas;
-    std::vector<std::string> paths = dataPaths(applicationName);
-    try
-    {
-      std::vector<std::string>::const_iterator it;
-      for (it = paths.begin(); it != paths.end(); ++it)
-      {
-        boost::filesystem::path p(fsconcat(*it, filename), qi::unicodeFacet());
-
-        if (boost::filesystem::exists(p))
-          datas.push_back(p.string(qi::unicodeFacet()));
-      }
-    }
-    catch (const boost::filesystem::filesystem_error &e)
-    {
-      qiLogDebug() << e.what();
-    }
-    return datas;
-  }
-
   std::vector<std::string> SDKLayout::listData(const std::string &applicationName,
                                                const std::string &pattern) const
   {

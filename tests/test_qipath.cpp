@@ -661,12 +661,6 @@ TEST_F(qiPathData, findDataDir)
 
   std::string barDir = sdkl->findData("foo", "bar");
   EXPECT_EQ(barDir, expected);
-  std::vector<std::string> barDirVersions = sdkl->findListData("foo", "bar");
-
-  EXPECT_FALSE(barDirVersions.empty());
-  if (!barDirVersions.empty()) {
-    EXPECT_EQ(barDirVersions[0], expected);
-  }
 
   std::vector<std::string> barDirMatches = sdkl->listData("foo", "bar");
   EXPECT_TRUE(barDirMatches.empty()); // listData discards directories

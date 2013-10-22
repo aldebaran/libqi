@@ -92,29 +92,6 @@
   */
 
 /**
-  * \fn qi::path::findListData(const std::string& applicationName, const std::string& filename)
-  * \param applicationName Name of the application.
-  * \param filename Name of the file to look for.
-  * You can specify subdirectories using "/" as directory separator.
-  * \return An std::vector of the complete, native path of the files that matched.
-  *
-  * \verbatim
-  * The file is searched in a list of possible directories, provided by the
-  * :cpp:func:`qi::path::dataPaths(const std::string&)`, all the matches are returned.
-  *
-  * For instance if you have the following files on a unix system
-  *
-  *   ~/.local/share/foo/models/nao.xml
-  *   /usr/share/foo/models/nao.xml
-  *
-  * then listData("foo", "models/nao.xml") will return
-  *
-  *   ~/.local/share/foo/models/nao.xml
-  *   /usr/share/foo/models/nao.xml
-  * \endverbatim
-  */
-
-/**
 * \fn qi::path::listData(const std::string& applicationName, const std::string& pattern="*")
   * \param applicationName Name of the application.
   * \param pattern wilcard pattern of the files to look for.
