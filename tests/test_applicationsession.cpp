@@ -63,7 +63,7 @@ int main(int argc, char** argv)
   strcpy((_argv[4] = new char[100]), "tcp://localhost:0");
   _argv[5] = 0;
 
-  qi::ApplicationSession app(_argc, _argv, qi::ApplicationSession_None, "This url will be ignored");
+  qi::ApplicationSession app(_argc, _argv, qi::ApplicationSession::Option_None, "This url will be ignored");
   app.atStop(&onStop);
   _app = &app;
   return RUN_ALL_TESTS();

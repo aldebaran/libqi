@@ -23,7 +23,7 @@ namespace qi {
 
     static void initApp(boost::shared_ptr<qi::ApplicationSession>& app, int& argc, char**& argv)
     {
-      app = boost::shared_ptr<qi::ApplicationSession>(new qi::ApplicationSession(argc, argv, qi::ApplicationSession_NoAutoExit));
+      app = boost::shared_ptr<qi::ApplicationSession>(new qi::ApplicationSession(argc, argv, qi::ApplicationSession::Option_NoAutoExit));
     }
 
     template<typename T> void initNoArg(T& app)

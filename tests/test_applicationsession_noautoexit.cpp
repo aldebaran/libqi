@@ -58,7 +58,7 @@ int main(int argc, char** argv)
   strcpy((_argv[2] = new char[10]), "given");
   _argv[3] = 0;
 
-  qi::ApplicationSession app(_argc, _argv, qi::ApplicationSession_NoAutoExit, _sd.endpoints()[0]);
+  qi::ApplicationSession app(_argc, _argv, qi::ApplicationSession::Option_NoAutoExit, _sd.endpoints()[0]);
   _app = &app;
   app.atStop(&onStop);
   return RUN_ALL_TESTS();

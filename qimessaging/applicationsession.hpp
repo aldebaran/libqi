@@ -13,18 +13,6 @@
 namespace qi
 {
   class ApplicationSessionPrivate;
-  /** By default, ApplicationSession will automatically will automatically
-   *  call Application::stop() when the session is over.
-   *  If you want a different behaviour you have to call the constructor with
-   *  the desired option below.
-   *
-   *  Ex: qi::ApplicationSession app(argc, argv, qi::ApplicationSession_NoAutoExit)
-   */
-  enum Options
-  {
-    ApplicationSession_None          = 0,
-    ApplicationSession_NoAutoExit    = 1,
-  };
   typedef qi::uint32_t ApplicationSessionOptions;
 
   /** ApplicationSession is an application with an embedded session.
@@ -35,12 +23,25 @@ namespace qi
   class QIMESSAGING_API ApplicationSession : public Application
   {
   public:
+    /** By default, ApplicationSession will automatically will automatically
+     *  call Application::stop() when the session is over.
+     *  If you want a different behaviour you have to call the constructor with
+     *  the desired option below.
+     *
+     *  Ex: qi::ApplicationSession app(argc, argv, qi::ApplicationSession::Option_NoAutoExit)
+     */
+    enum Option
+    {
+      Option_None       = 0,
+      Option_NoAutoExit = 1,
+    };
+
     /** ApplicationSession will check first if there is a --qi-url given in argv,
      *  if not it will take the url in the constructor instead setting its url.
      *  If --qi-listen-url is set the session will listen on the provided url.
      */
-    ApplicationSession(int& argc, char**& argv, ApplicationSessionOptions opt = ApplicationSession_None, const Url& url = "tcp://127.0.0.1:9559");
-    ApplicationSession(const std::string& name, int& argc, char**& argv, ApplicationSessionOptions opt = ApplicationSession_None, const Url& url = "tcp://127.0.0.1:9559");
+    ApplicationSession(int& argc, char**& argv, ApplicationSessionOptions opt = Option_None, const Url& url = "tcp://127.0.0.1:9559");
+    ApplicationSession(const std::string& name, int& argc, char**& argv, ApplicationSessionOptions opt = Option_None, const Url& url = "tcp://127.0.0.1:9559");
     virtual ~ApplicationSession();
 
     Session&   session();

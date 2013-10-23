@@ -130,7 +130,7 @@ namespace qi
     : Trackable<ApplicationSessionPrivate>(this)
     , _init(false)
   {
-    if (!(opt & ApplicationSession_NoAutoExit))
+    if (!(opt & qi::ApplicationSession::Option_NoAutoExit))
     {
       _session.disconnected.connect(&::onDisconnected);
     }
