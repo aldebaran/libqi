@@ -68,7 +68,7 @@ namespace qi {
 
   static void stop_io_service()
   {
-    qiLogInfo() << "Unregistering all signal handlers.";
+    qiLogVerbose() << "Unregistering all signal handlers.";
     //dont call ioservice->stop, just remove all events for the ioservice
     //deleting the object holding the run() method from quitting
     delete globalIoWork;
