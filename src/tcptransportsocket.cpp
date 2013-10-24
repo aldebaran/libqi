@@ -1,5 +1,5 @@
 /*
-**  Copyright (C) 2012 Aldebaran Robotics
+**  Copyright (C) 2012, 2013 Aldebaran Robotics
 **  See COPYING for the license
 */
 
@@ -24,9 +24,9 @@
 #include "tcptransportsocket.hpp"
 
 #include <qi/log.hpp>
+#include <qi/os.hpp>
 
 qiLogCategory("qimessaging.transportsocket");
-
 
 /**
  * ###
@@ -327,6 +327,13 @@ namespace qi
     try
     {
       ip::tcp::resolver::iterator it = r.resolve(q);
+      static bool disableIPV6 = qi::os::getenv("QIMESSAGING_ENABLE_IPV6").empty();
+      if (disableIPV6)
+      {
+        while (it != ip::tcp::resolver::iterator() &&
+               it->endpoint().address().is_v6())
+          ++it;
+      }
       // asynchronous connect
       _socket->lowest_layer().async_connect(*it,
         boost::bind(&TcpTransportSocket::onConnected, shared_from_this(), _1));
@@ -601,4 +608,3 @@ namespace qi
   }
 
 }
-
