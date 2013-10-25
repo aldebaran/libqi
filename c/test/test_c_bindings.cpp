@@ -88,7 +88,7 @@ TEST_F(TestCBindings, testMetaobject)
   qi_future_destroy(fuc);
 
   //session listening
-  fuc = qi_session_listen(session, "tcp://127.0.0.1:9559");
+  fuc = qi_session_listen(session, "tcp://127.0.0.1:0");
   qi_future_wait(fuc, QI_FUTURETIMEOUT_INFINITE);
   qi_future_destroy(fuc);
 
@@ -134,13 +134,11 @@ TEST_F(TestCBindings, CallWithComplexTypes)
   ASSERT_TRUE(qi_session_is_connected(session));
   qi_future_destroy(fuc);
 
-  fuc = qi_session_listen(session, "tcp://127.0.0.1:9559");
+  fuc = qi_session_listen(session, "tcp://127.0.0.1:0");
   qi_value_t* values = qi_session_endpoints(session);
-  qi_value_t* value = qi_value_list_get(values, 0);
+  int epcount = qi_value_list_size(values);
 
-  const char * endpoint_str = qi_value_get_string(value);
-  ASSERT_TRUE(std::string(endpoint_str) == "tcp://127.0.0.1:9559");
-  ASSERT_EQ(*qi_session_url(session), *addr);
+  ASSERT_GT(epcount, 0);
 
   ASSERT_FALSE(qi_future_has_error(fuc, QI_FUTURETIMEOUT_INFINITE));
   qi_future_destroy(fuc);
