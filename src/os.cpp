@@ -42,18 +42,14 @@ namespace qi {
     }
 
 
-    static inline void update_tv(qi::os::timeval *t)
+    static inline void normalize_tv(qi::os::timeval *t)
     {
-      const long usecPerSec = 1000 * 1000;
-      while (t->tv_usec >= usecPerSec)
-      {
-        t->tv_sec++;
-        t->tv_usec -= usecPerSec;
-      }
-      while (t->tv_usec < 0)
-      {
-        t->tv_sec--;
+      const qi::int64_t usecPerSec = 1000 * 1000;
+      t->tv_sec += t->tv_usec/usecPerSec;
+      t->tv_usec %= usecPerSec;
+      if (t->tv_usec < 0) {
         t->tv_usec += usecPerSec;
+        --t->tv_sec;
       }
     }
 
@@ -63,7 +59,7 @@ namespace qi {
       qi::os::timeval res;
       res.tv_sec = lhs.tv_sec + rhs.tv_sec;
       res.tv_usec = lhs.tv_usec + rhs.tv_usec;
-      update_tv(&res);
+      normalize_tv(&res);
 
       return res;
     }
@@ -76,7 +72,7 @@ namespace qi {
       qi::os::timeval res;
       res.tv_sec = lhs.tv_sec + (us / usecPerSec);
       res.tv_usec = lhs.tv_usec + (us % usecPerSec);
-      update_tv(&res);
+      normalize_tv(&res);
 
       return res;
     }
@@ -87,7 +83,7 @@ namespace qi {
       qi::os::timeval res;
       res.tv_sec = lhs.tv_sec - rhs.tv_sec;
       res.tv_usec = lhs.tv_usec - rhs.tv_usec;
-      update_tv(&res);
+      normalize_tv(&res);
 
       return res;
     }
@@ -100,7 +96,7 @@ namespace qi {
       qi::os::timeval res;
       res.tv_sec = lhs.tv_sec - (us / usecPerSec);
       res.tv_usec = lhs.tv_usec - (us % usecPerSec);
-      update_tv(&res);
+      normalize_tv(&res);
 
       return res;
     }
