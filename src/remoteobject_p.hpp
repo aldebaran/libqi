@@ -23,6 +23,15 @@ namespace qi {
   class TransportSocket;
   class ServerClient;
 
+  struct RemoteSignalLinks {
+    RemoteSignalLinks()
+      : remoteSignalLink(qi::SignalBase::invalidSignalLink)
+    {}
+
+    std::vector<qi::SignalLink> localSignalLink;
+    qi::SignalLink              remoteSignalLink;
+    qi::Future<qi::SignalLink>  future;
+  };
 
   class RemoteObject : public qi::DynamicObject, public ObjectHost, public Trackable<RemoteObject> {
   public:
@@ -58,6 +67,8 @@ namespace qi {
     virtual qi::Future<void> metaSetProperty(unsigned int id, AnyValue val);
 
   protected:
+    typedef std::map<qi::uint64_t, RemoteSignalLinks>  LocalToRemoteSignalLinkMap;
+
     TransportSocketPtr                              _socket;
     boost::mutex                                    _socketMutex;
     unsigned int                                    _service;
@@ -67,6 +78,9 @@ namespace qi {
     qi::SignalLink                                  _linkMessageDispatcher;
     qi::SignalLink                                  _linkDisconnected;
     qi::AnyObject                                   _self;
+
+    boost::recursive_mutex                          _localToRemoteSignalLinkMutex;
+    LocalToRemoteSignalLinkMap                      _localToRemoteSignalLink;
   };
 
 }

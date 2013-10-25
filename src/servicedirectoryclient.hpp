@@ -71,8 +71,8 @@ namespace qi {
     unsigned int           _sdSocketDisconnectedSignalLink;
     qi::RemoteObject       _remoteObject;
     qi::AnyObject          _object;
-    qi::SignalLink               _addSignalLink;
-    qi::SignalLink               _removeSignalLink;
+    qi::SignalLink         _addSignalLink;
+    qi::SignalLink         _removeSignalLink;
     boost::mutex           _mutex;
     bool                   _localSd; // true if sd is local (no socket)
   };

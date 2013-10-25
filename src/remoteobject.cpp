@@ -341,7 +341,7 @@ namespace qi {
     }
   }
 
-  static void onEventConnected(qi::Future<SignalLink> fut, qi::Promise<SignalLink> prom, SignalLink id) {
+  static void onEventConnected(RemoteObject* ro, qi::Future<SignalLink> fut, qi::Promise<SignalLink> prom, SignalLink id) {
     if (fut.hasError()) {
       prom.setError(fut.error());
       return;
@@ -356,15 +356,29 @@ namespace qi {
     // Bind the subscriber locally.
     SignalLink uid = DynamicObject::metaConnect(event, sub);
 
-    qiLogDebug() <<"connect() to " << event <<" gave " << uid;
-    qi::Future<SignalLink> fut = _self.call<SignalLink>("registerEvent", _service, event, uid);
-    fut.connect(boost::bind<void>(&onEventConnected, _1, prom, uid));
+    boost::recursive_mutex::scoped_lock _lock(_localToRemoteSignalLinkMutex);
+    //maintain a map of localsignal -> remotesignal
+    //(we only use one remotesignal, for many locals)
+    LocalToRemoteSignalLinkMap::iterator it;
+    RemoteSignalLinks &rsl = _localToRemoteSignalLink[event];
+    rsl.localSignalLink.push_back(uid);
+
+    if (rsl.remoteSignalLink == qi::SignalBase::invalidSignalLink) {
+      rsl.remoteSignalLink = uid;
+      qiLogDebug() <<"connect() to " << event <<" gave " << uid << "(new remote connection)";
+      rsl.future = _self.call<SignalLink>("registerEvent", _service, event, uid);
+    } else {
+      qiLogDebug() <<"connect() to " << event << " gave " << uid << " (reusing remote connection)";
+    }
+
+    rsl.future.connect(boost::bind<void>(&onEventConnected, this, _1, prom, uid));
     return prom.future();
   }
 
   qi::Future<void> RemoteObject::metaDisconnect(SignalLink linkId)
   {
-    unsigned int event = linkId >> 16;
+    boost::recursive_mutex::scoped_lock _lock(_localToRemoteSignalLinkMutex);
+    unsigned int event = linkId >> 32;
     //disconnect locally
     qi::Future<void> fut = DynamicObject::metaDisconnect(linkId);
     if (fut.hasError())
@@ -374,10 +388,37 @@ namespace qi {
       qiLogWarning() << ss.str();
       return qi::makeFutureError<void>(ss.str());
     }
-    TransportSocketPtr sock = _socket;
-    if (sock && sock->isConnected())
-      return _self.call<void>("unregisterEvent", _service, event, linkId);
-    return qi::makeFutureError<void>("No remote unregister: socket disconnected");
+
+    LocalToRemoteSignalLinkMap::iterator it;
+    it = _localToRemoteSignalLink.find(event);
+    if (it == _localToRemoteSignalLink.end()) {
+      qiLogWarning() << "Cant find " << event << " in the localtoremote signal map";
+      return fut;
+    }
+    qi::SignalLink toDisco = qi::SignalBase::invalidSignalLink;
+    {
+      RemoteSignalLinks &rsl = it->second;
+      std::vector<SignalLink>::iterator vslit;
+      vslit = std::find(rsl.localSignalLink.begin(), rsl.localSignalLink.end(), linkId);
+
+      if (vslit != rsl.localSignalLink.end()) {
+        rsl.localSignalLink.erase(vslit);
+      } else {
+        qiLogWarning() << "Cant find " << linkId << " in the remote signal vector (event:" << event << ")";
+      }
+
+      //only drop the remote connection when no more local connection are registered
+      if (rsl.localSignalLink.size() == 0) {
+        toDisco = rsl.remoteSignalLink;
+        _localToRemoteSignalLink.erase(it);
+      }
+    }
+    if (toDisco != qi::SignalBase::invalidSignalLink) {
+      TransportSocketPtr sock = _socket;
+      if (sock && sock->isConnected())
+        return _self.call<void>("unregisterEvent", _service, event, toDisco);
+    }
+    return fut;
   }
 
   void RemoteObject::close()
@@ -408,6 +449,10 @@ namespace qi {
       qiLogVerbose() << "Reporting error for request " << it->first << "(socket disconnected)";
       it->second.setError("Socket disconnected");
     }
+
+    //@warning: remove connection are not removed
+    //          not very important ATM, because RemoteObject
+    //          cant be reconnected
   }
 
  qi::Future<AnyValue> RemoteObject::metaProperty(unsigned int id)
