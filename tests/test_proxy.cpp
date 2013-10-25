@@ -113,14 +113,14 @@ TEST(Proxy, Signal)
 class Bar
 {
 public:
-  Bar() :_count(0){}
+  Bar() :_sum(0){}
   void set(int v) {prop.set(v);}
   int get() { return prop.get();}
-  int count() { return _count;}
+  int sum() { return _sum;}
   void onProp(int v)
   {
     qiLogDebug() << "onprop " << v <<" " << this;
-    _count += v;
+    _sum += v;
   }
   void subscribe()
   {
@@ -132,10 +132,10 @@ public:
   }
   qi::Property<int> prop;
   qi::SignalLink _link;
-  int _count;
+  int _sum;
 };
 
-QI_REGISTER_OBJECT(Bar, subscribe, unsubscribe, count, get, set, prop);
+QI_REGISTER_OBJECT(Bar, subscribe, unsubscribe, sum, get, set, prop);
 
 TEST(Proxy, Property)
 {
@@ -148,7 +148,7 @@ TEST(Proxy, Property)
   // we need that to force two clients
   p.server()->registerService("bar2", gbar);
   qi::AnyObject client = p.client()->service("bar");
-  ASSERT_EQ(0, client.call<int>("count"));
+  ASSERT_EQ(0, client.call<int>("sum"));
 
   qi::ProxyProperty<int> pp(client, "prop");
   bar->set(1);
@@ -165,21 +165,21 @@ TEST(Proxy, Property)
   qiLogDebug() << "set 3";
   pp.set(3);
   // this is an event, all notify are asychronous
-  PERSIST_ASSERT(, bar->count() == 3, 500);
+  PERSIST_ASSERT(, bar->sum() == 3, 500);
 
   Bar bar2;
   qi::SignalLink l = pp.connect(boost::bind(&Bar::onProp, &bar2, _1));
   bar->set(4);
   // this one is async (remote notify of local property set)
-  PERSIST_ASSERT(, bar2.count() == 4, 500);
+  PERSIST_ASSERT(, bar2.sum() == 4, 500);
   pp.disconnect(l);
   bar->set(5); // we expect an async op *not* to happen, no choice but wait.
   qi::os::msleep(200);
-  ASSERT_EQ(4, bar2.count());
+  ASSERT_EQ(4, bar2.sum());
   // reconnect to see if disconnect did not break anything
   l = pp.connect(boost::bind(&Bar::onProp, &bar2, _1));
   bar->set(4);
-  PERSIST_ASSERT(, bar2.count() == 8, 500);
+  PERSIST_ASSERT(, bar2.sum() == 8, 500);
 
   // proxy-proxy
   qi::AnyObject client2 = p.client()->service("bar2");
@@ -188,14 +188,14 @@ TEST(Proxy, Property)
   pp2.connect(boost::bind(&Bar::onProp, &bar3, _1));
   qiLogDebug() << "set 2";
   pp.set(2);
-  PERSIST(, bar3.count() == 2, 1000);
-  ASSERT_EQ(2, bar3.count());
-  PERSIST(, bar2.count() == 10, 500);
-  ASSERT_EQ(10, bar2.count());
+  PERSIST(, bar3.sum() == 2, 1000);
+  ASSERT_EQ(2, bar3.sum());
+  PERSIST(, bar2.sum() == 10, 500);
+  ASSERT_EQ(10, bar2.sum());
   qiLogDebug() << "set 3";
   pp2.set(3);
-  PERSIST_ASSERT(, bar2.count() == 13, 500);
-  PERSIST_ASSERT(, bar3.count() == 5, 500);
+  PERSIST_ASSERT(, bar2.sum() == 13, 500);
+  PERSIST_ASSERT(, bar3.sum() == 5, 500);
 }
 
 
