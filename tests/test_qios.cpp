@@ -15,7 +15,7 @@
 #ifdef ANDROID
 # include <sys/socket.h>
 #endif
-
+#include <limits>
 #include <fstream>
 #include <cstdio>
 
@@ -100,60 +100,97 @@ TEST(QiOs, MemoryUsage)
   ASSERT_EQ(0, qi::os::memoryUsage(0));
 }
 
-TEST(QiOs, timeValOperatorEasy)
+TEST(QiOs, timeValOperator)
 {
+  qi::os::timeval t0;
+  t0.tv_sec = 2000;
+  t0.tv_usec = 999999;
+
   qi::os::timeval t1;
   t1.tv_sec = 2000;
   t1.tv_usec = 2000;
+
   qi::os::timeval t2;
   t2.tv_sec = 10;
   t2.tv_usec = 10;
 
+  // same values as t2, but not normalized
+  qi::int64_t delta = 4;
+  qi::os::timeval t2a;
+  t2a.tv_sec = 10 - delta;
+  t2a.tv_usec = 10 + delta*1000*1000;
+
+  delta = -1;
+  qi::os::timeval t2b;
+  t2b.tv_sec = 10 - delta;
+  t2b.tv_usec = 10 + delta*1000*1000;
+
+  delta = 4000;
+  qi::os::timeval t2c;
+  t2c.tv_sec = 10 - delta;
+  t2c.tv_usec = 10 + delta*1000*1000;
+
+  delta = std::numeric_limits<qi::int64_t>::max()/(1000*1000);
+  qi::os::timeval t2d;
+  t2d.tv_sec = 10 - delta;
+  t2d.tv_usec = 10 + delta*1000*1000;
+
   qi::os::timeval res;
 
-  res = t1 + t2;
-  ASSERT_EQ(2010, res.tv_sec);
-  ASSERT_EQ(2010, res.tv_usec);
+  res = t0 + t2;
+  EXPECT_EQ(2011, res.tv_sec);
+  EXPECT_EQ(9, res.tv_usec);
 
-  res = res - t1;
-  ASSERT_EQ(t2.tv_sec, res.tv_sec);
-  ASSERT_EQ(t2.tv_usec, res.tv_usec);
+  res = t1 + t2;
+  EXPECT_EQ(2010, res.tv_sec);
+  EXPECT_EQ(2010, res.tv_usec);
+
+  res = t1 + t2a;
+  EXPECT_EQ(2010, res.tv_sec);
+  EXPECT_EQ(2010, res.tv_usec);
+  res = t1 + t2b;
+  EXPECT_EQ(2010, res.tv_sec);
+  EXPECT_EQ(2010, res.tv_usec);
+  res = t1 + t2c;
+  EXPECT_EQ(2010, res.tv_sec);
+  EXPECT_EQ(2010, res.tv_usec);
+  res = t1 + t2d;
+  EXPECT_EQ(2010, res.tv_sec);
+  EXPECT_EQ(2010, res.tv_usec);
+
+  // check overflow, when summing two (not normalized) values with
+  // lots of usec
+  // Won't pass because currently the implementation does not
+  // normalize before summing.
+  res = t2d + t2d;
+  EXPECT_EQ(20, res.tv_sec);
+  EXPECT_EQ(20, res.tv_usec);
+
+  res =  t1 -t2;
+  EXPECT_EQ(1990, res.tv_sec);
+  EXPECT_EQ(1990, res.tv_usec);
+
+  res = t2 - t1;
+  // result gets normalized
+  // -1990*1000*1000 - 1990 == -1991*1000*1000 + 1000*1000 - 1990
+  EXPECT_EQ(-1991, res.tv_sec);
+  EXPECT_EQ(1000*1000 - 1990, res.tv_usec);
 
   res = t2 + 10L;
-  ASSERT_EQ(t2.tv_sec, res.tv_sec);
-  ASSERT_EQ(t2.tv_usec + 10, res.tv_usec);
-
-  res = t2 - 10L;
-  ASSERT_EQ(t2.tv_sec, res.tv_sec);
-  ASSERT_EQ(t2.tv_usec - 10, res.tv_usec);
-}
-
-TEST(QiOs, timeValOperatorHard)
-{
-  qi::os::timeval t1;
-  t1.tv_sec = 2000;
-  t1.tv_usec = 999999;
-  qi::os::timeval t2;
-  t2.tv_sec = 10;
-  t2.tv_usec = 2;
-
-  qi::os::timeval res;
-
-  res = t1 + t2;
-  ASSERT_EQ(2011, res.tv_sec);
-  ASSERT_EQ(1, res.tv_usec);
-
-  res = res - t1;
-  ASSERT_EQ(t2.tv_sec, res.tv_sec);
-  ASSERT_EQ(t2.tv_usec, res.tv_usec);
+  EXPECT_EQ(10, res.tv_sec);
+  EXPECT_EQ(20, res.tv_usec);
 
   res = t2 + 1000000L;
-  ASSERT_EQ(t2.tv_sec + 1, res.tv_sec);
-  ASSERT_EQ(t2.tv_usec, res.tv_usec);
+  ASSERT_EQ(11, res.tv_sec);
+  ASSERT_EQ(10, res.tv_usec);
+
+  res = t2 - 10L;
+  EXPECT_EQ(10, res.tv_sec);
+  EXPECT_EQ(0, res.tv_usec);
 
   res = t2 - 1000000L;
-  ASSERT_EQ(t2.tv_sec - 1, res.tv_sec);
-  ASSERT_EQ(t2.tv_usec, res.tv_usec);
+  ASSERT_EQ(9, res.tv_sec);
+  ASSERT_EQ(10, res.tv_usec);
 }
 
 TEST(QiOs, env)
