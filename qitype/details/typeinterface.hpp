@@ -54,7 +54,52 @@ namespace qi {
     std::string           customInfo;
   };
 
-  /** Interface for all the operations we need on any type:
+  /**
+   * TypeInterface base interface. Further interfaces inheriting from
+   * TypeInterface define operations specific to some type (like lists,
+   * strings, integral values...).
+   *
+   * Type erasure is implemented using the following model. A value or a
+   * reference is represented by a void* paired with a TypeInterface to
+   * manipulate the data.
+   *
+   * A TypeInterface implements basic operations on values of the type it
+   * represents. It manipulates said value through an opaque *storage* pointer,
+   * initialized by clone() or initializeStorage(). Thus, TypeInterface
+   * instances do not usually hold any data, may exist as singletons inside
+   * programs and must not be freed.
+   *
+   * To obtain a TypeInterface for a known C++ type, use typeOf<>() or
+   * typeFromSignature().
+   *
+   * Great care must be taken when manipulating storage: depending on the
+   * circunstances, it can point to a value allocated by the TypeInterface on
+   * the heap, or to a user-provided value on the heap or on the stack.
+   *
+   * As an example, here is a type erased union:
+   *
+   * @code
+   * struct MyUnion {
+   *   enum Type type;
+   *   union Data {
+   *     int i;
+   *     float f;
+   *   } data;
+   * };
+   *
+   * +-----------------------+ <-- storage of Dynamic
+   * | Type type             |
+   * | +-------------------+ | <-- storage returned when get() is called
+   * | | int i / float f   | |
+   * | +-------------------+ |
+   * +-----------------------+
+   * @endcode
+   *
+   * DynamicTypeInterface::get() checks the type with the internal Type enum
+   * and returns a reference with the right TypeInterface to manipulate the
+   * inner data and a pointer to that inner data.
+   *
+   * This base TypeInterface has all the operations we need on any type:
    *
    *  - cloning/destruction in clone() and destroy()
    *  - Access to value from storage and storage creation in
@@ -62,30 +107,56 @@ namespace qi {
    *  - Type of specialized interface through kind()
    *
    * Our aim is to transport arbitrary values through:
+   *
    *  - synchronous calls: Nothing to do, values are just transported and
    *    converted.
    *  - asynchronous call/thread change: Values are copied.
    *  - process change: Values are serialized.
-   *
    */
   class QITYPE_API TypeInterface
   {
   public:
+    /// Get the TypeInfo corresponding to this type.
     virtual const TypeInfo& info() =0;
 
-    // Initialize and return a new storage, from nothing or a T*
+    /**
+     * Initialize and return a new storage, from nothing or a T*.
+     *
+     * If ptr is not null, it should be used as a storage (the method can
+     * usually just return ptr in that case).
+     */
     virtual void* initializeStorage(void* ptr=0)=0;
 
-    // Get pointer to type from pointer to storage
+    /**
+     * Get pointer to type from pointer to storage.
+     *
+     * This allows for storing an integer value (for instance) directily into
+     * the pointer and avoid an allocation.
+     *
+     * This method should be called on storage before casting it to a specific
+     * type.
+     */
     // Use a pointer and not a reference to avoid the case where the compiler makes a copy on the stack
     virtual void* ptrFromStorage(void**)=0;
 
+    /// Allocate a storage and copy the value given as an argument.
     virtual void* clone(void*)=0;
+    /// Free all resources of a storage
     virtual void destroy(void*)=0;
 
+    /**
+     * Get the kind of the data.
+     *
+     * This is used to downcast the TypeInterface object to a specialized
+     * interface.
+     */
     virtual TypeKind kind();
 
-    // Less must always work: compare pointers if you have to.
+    /**
+     * Return true if a is less than b
+     *
+     * Less must always work: compare pointers if you have to.
+     */
     virtual bool less(void* a, void* b) = 0;
 
     //TODO: DIE
