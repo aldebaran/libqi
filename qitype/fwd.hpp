@@ -31,8 +31,6 @@ namespace qi
   class AnyValue;
   class AnyIterator;
 
-  class GenericListPtr;
-  class GenericMapPtr;
   class Manageable;
 
   class Empty;
