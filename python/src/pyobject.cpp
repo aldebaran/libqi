@@ -31,11 +31,6 @@ namespace qi { namespace py {
       return obj;
     }
 
-    static void cleanup(LeakBlock* block)
-    {
-      delete block;
-    }
-
     struct PyQiFunctor {
     public:
       PyQiFunctor(const std::string &funName, qi::AnyObject obj)
@@ -44,7 +39,6 @@ namespace qi { namespace py {
       {}
 
       boost::python::object operator()(boost::python::tuple pyargs, boost::python::dict pykwargs) {
-        qi::py::LeakBlock*  leakBlock = new LeakBlock();
         qi::AnyValue val = qi::AnyValue::from(pyargs);
         bool async = boost::python::extract<bool>(pykwargs.get("_async", false));
         std::string funN = boost::python::extract<std::string>(pykwargs.get("_overload", _funName));
@@ -62,7 +56,6 @@ namespace qi { namespace py {
           // instead of Future<Future<T>>
           fmeta.connect(boost::bind<void>(&detail::futureAdapter<qi::AnyValue>, _1, res));
           fut = res.future();
-          fut.connect(&cleanup, leakBlock);
         }
         if (!async) {
           {
@@ -167,7 +160,6 @@ namespace qi { namespace py {
     static qi::AnyReference pyCallMethod(const std::vector<qi::AnyReference>& cargs, boost::python::object callable) {
       qi::AnyReference gvret;
       try {
-        qi::py::LeakBlock leakBlock;
         qi::py::GILScopedLock _lock;
         boost::python::list   args;
         boost::python::object ret;
