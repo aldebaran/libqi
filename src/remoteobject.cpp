@@ -190,9 +190,10 @@ namespace qi {
       if (it != _promises.end()) {
         promise = _promises[msg.id()];
         _promises.erase(it);
+        qiLogDebug() << "Handling promise id:" << msg.id();
       } else  {
         qiLogError() << "no promise found for req id:" << msg.id()
-        << "  obj: " << msg.service() << "  func: " << msg.function();
+                     << "  obj: " << msg.service() << "  func: " << msg.function() << " type: " << msg.type();
         return;
       }
     }
@@ -270,6 +271,7 @@ namespace qi {
         qiLogError() << "There is already a pending promise with id "
                                    << msg.id();
       }
+      qiLogDebug() << "Adding promise id:" << msg.id();
       _promises[msg.id()] = out;
     }
     qi::Signature funcSig = mm->parametersSignature();
@@ -301,6 +303,7 @@ namespace qi {
 
       {
         boost::mutex::scoped_lock lock(_promisesMutex);
+        qiLogDebug() << "Removing promise id:" << msg.id();
         _promises.erase(msg.id());
       }
     }

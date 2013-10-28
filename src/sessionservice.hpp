@@ -50,6 +50,7 @@ namespace qi {
     qi::Future<qi::AnyObject> service(const std::string &service,
                                       const std::string &protocol);
 
+    void addService(const std::string& name, const qi::AnyObject &obj);
     void removeService(const std::string &service);
 
   private:
@@ -72,7 +73,7 @@ namespace qi {
     //maintain a cache of remote object
     typedef std::map<std::string, AnyObject> RemoteObjectMap;
     RemoteObjectMap                 _remoteObjects;
-    boost::mutex                    _remoteObjectsMutex;
+    boost::recursive_mutex          _remoteObjectsMutex;
 
   private:
     qi::SignalLink    _linkServiceRemoved;

@@ -47,7 +47,7 @@ namespace qi {
 
   void Session_Service::removeService(const std::string &service) {
     {
-      boost::mutex::scoped_lock sl(_remoteObjectsMutex);
+      boost::recursive_mutex::scoped_lock sl(_remoteObjectsMutex);
       RemoteObjectMap::iterator it = _remoteObjects.find(service);
       if (it != _remoteObjects.end()) {
         qiLogVerbose() << "Session: Removing cached RemoteObject " << service;
@@ -60,7 +60,7 @@ namespace qi {
     //cleanup all RemoteObject
     //they are not valid anymore after this function
     {
-      boost::mutex::scoped_lock sl(_remoteObjectsMutex);
+      boost::recursive_mutex::scoped_lock sl(_remoteObjectsMutex);
       RemoteObjectMap::iterator it = _remoteObjects.begin();
       for (; it != _remoteObjects.end(); ++it) {
         reinterpret_cast<RemoteObject*>(it->second.asGenericObject()->value)->close();
@@ -155,7 +155,7 @@ namespace qi {
     }
 
     {
-      boost::mutex::scoped_lock sl(_remoteObjectsMutex);
+      boost::recursive_mutex::scoped_lock sl(_remoteObjectsMutex);
       RemoteObjectMap::iterator it = _remoteObjects.find(sr->name);
       if (it != _remoteObjects.end()) {
         //another object have been registered before us, return it
@@ -167,7 +167,7 @@ namespace qi {
 
         AnyObject o = makeDynamicAnyObject(sr->remoteObject);
         //register the remote object in the cache
-        _remoteObjects[sr->name] = o;
+        addService(sr->name, o);
         sr->promise.setValue(o);
         sr->remoteObject = 0;
       }
@@ -234,6 +234,16 @@ namespace qi {
     fut.connect(&Session_Service::onTransportSocketResult, this, _1, requestId);
   }
 
+  void Session_Service::addService(const std::string& name, const qi::AnyObject &obj) {
+    boost::recursive_mutex::scoped_lock sl(_remoteObjectsMutex);
+    RemoteObjectMap::iterator it = _remoteObjects.find(name);
+    qiLogDebug() << "Adding remoteobject:" << name << " :" << &obj;
+    if (it == _remoteObjects.end())
+      _remoteObjects[name] = obj;
+    else
+      throw std::runtime_error("Service already in cache: " + name);
+  }
+
   qi::Future<qi::AnyObject> Session_Service::service(const std::string &service,
                                                      const std::string &protocol)
   {
@@ -253,7 +263,7 @@ namespace qi {
 
     //look for already registered remote objects
     {
-      boost::mutex::scoped_lock sl(_remoteObjectsMutex);
+      boost::recursive_mutex::scoped_lock sl(_remoteObjectsMutex);
       RemoteObjectMap::iterator it = _remoteObjects.find(service);
       if (it != _remoteObjects.end()) {
         return qi::Future<qi::AnyObject>(it->second);

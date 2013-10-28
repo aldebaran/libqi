@@ -31,6 +31,8 @@ namespace qi {
     bool                 isConnected() const;
     qi::Url              url() const;
 
+    qi::AnyObject        object() { return _object; }
+
   public:
     //Bound Interface
     qi::Future< std::vector<ServiceInfo> > services();

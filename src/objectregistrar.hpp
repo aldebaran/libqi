@@ -65,7 +65,7 @@ namespace qi {
 
   private:
     typedef std::map<unsigned int, BoundService>                       BoundServiceMap;
-    typedef std::map<int, std::pair<qi::AnyObject, qi::ServiceInfo> > RegisterServiceMap;
+    typedef std::map<int, std::pair<qi::AnyObject, qi::ServiceInfo> >  RegisterServiceMap;
     typedef std::map<std::string, unsigned int>                        ServiceNameToIndexMap;
 
   public:

@@ -102,6 +102,10 @@ namespace qi {
       qiLogInfo() << s;
       return qi::makeFutureError<void>(s);
     }
+    //add the servicedirectory object into the service cache (avoid having
+    // two remoteObject registered on the same transportSocket)
+    _serviceHandler.addService("ServiceDirectory", _sdClient.object());
+
     _socketsCache.init();
     qi::Future<void> f = _sdClient.connect(serviceDirectoryURL);
     // go through hoops to get shared_ptr on this
