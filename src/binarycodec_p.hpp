@@ -7,7 +7,7 @@
 #ifndef _SRC_BINARYDECODER_HPP_
 #define _SRC_BINARYDECODER_HPP_
 
-#include <qitype/api.hpp>
+#include <boost/noncopyable.hpp>
 
 #include <qi/buffer.hpp>
 #include <qi/bufferreader.hpp>
@@ -93,7 +93,7 @@ namespace qi {
    *
    *
    */
-  class QITYPE_API BinaryEncoder {
+  class QITYPE_API BinaryEncoder : private boost::noncopyable {
   public:
     enum Status {
       Status_Ok                     = 0,
@@ -153,7 +153,6 @@ namespace qi {
 
   private:
     BinaryEncoderPrivate *_p;
-    QI_DISALLOW_COPY_AND_ASSIGN(BinaryEncoder);
   };
 
   template<typename T>

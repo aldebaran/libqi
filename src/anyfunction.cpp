@@ -2,6 +2,7 @@
 **  Copyright (C) 2012 Aldebaran Robotics
 **  See COPYING for the license
 */
+#include <boost/noncopyable.hpp>
 #include <qi/future.hpp>
 #include <qitype/signature.hpp>
 #include <qitype/anyfunction.hpp>
@@ -13,7 +14,7 @@ namespace qi
 {
 
   //make destroy exception-safe for AnyFunction::call
-  class AnyReferenceArrayDestroyer {
+  class AnyReferenceArrayDestroyer : private boost::noncopyable {
   public:
     AnyReferenceArrayDestroyer(AnyReference *toDestroy, void **convertedArgs, bool shouldDelete)
       : toDestroy(toDestroy)
@@ -47,9 +48,6 @@ namespace qi
     void**        convertedArgs;
     unsigned int  toDestroyPos;
     bool          shouldDelete;
-
-  private:
-    QI_DISALLOW_COPY_AND_ASSIGN(AnyReferenceArrayDestroyer);
   };
 
 
