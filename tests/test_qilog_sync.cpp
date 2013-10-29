@@ -133,6 +133,36 @@ void set (const char* cat, bool& b)
   b = true;
 }
 
+TEST(log, filteringChange)
+{
+  #define YES EXPECT_TRUE(tag); tag = false
+  #define NO  EXPECT_TRUE(!tag); tag = false // yes false
+  bool tag = false;
+  qi::log::SubscriberId id = qi::log::addLogHandler("set", boost::bind(&set, _3, boost::ref(tag)));
+  qiLogDebug("init.test2") << "DLoL2";
+  qiLogInfo("init.test2") << "ILoL2";
+  qiLogVerbose("init.test2") << "VLoL2";
+
+  qi::log::setCategory("init.*", qi::LogLevel_Silent, id);
+  qi::log::setCategory("ini*", qi::LogLevel_Debug, id);
+  qi::log::setCategory("init.*", qi::LogLevel_Verbose, id);
+
+  tag = false;
+  qiLogDebug("init.test") << "DLoL";
+  YES;
+  qiLogWarning("init.test") << "WLoL";
+  YES;
+  qiLogVerbose("init.test") << "VLoL";
+  YES;
+
+  qiLogDebug("init.test2") << "DLoL2";
+  YES;
+  qiLogWarning("init.test2") << "WLoL2";
+  YES;
+  qiLogVerbose("init.test2") << "VLoL2";
+  YES;
+}
+
 TEST(log, filtering)
 {
   #define YES EXPECT_TRUE(tag); tag = false

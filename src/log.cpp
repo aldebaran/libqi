@@ -330,7 +330,7 @@ namespace qi {
         assert(it->first == it->second->name);
         if (g.matches(it->first)) {
           detail::Category* cat = it->second;
-          cat->setLevel(g.id, g.level);
+          checkGlobs(cat);
         }
       }
     }
@@ -748,8 +748,8 @@ namespace qi {
       if (catName.find('*') != catName.npos)
       {
         GlobRule rule(catName, sub, level);
-        applyGlob(rule);
         mergeGlob(rule);
+        applyGlob(rule);
       }
       else
       {
