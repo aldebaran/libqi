@@ -7,6 +7,7 @@
 
 #ifndef QIMESSAGING_APPLICATIONSESSION_HPP_
 #define QIMESSAGING_APPLICATIONSESSION_HPP_
+#include <boost/noncopyable.hpp>
 #include <qi/application.hpp>
 #include <qimessaging/session.hpp>
 
@@ -20,7 +21,7 @@ namespace qi
    *  Be careful with the scope of the object, once the destructor is called,
    *  the session is destroyed as well.
    */
-  class QIMESSAGING_API ApplicationSession : public Application
+  class QIMESSAGING_API ApplicationSession : public Application, private boost::noncopyable
   {
   public:
     /** By default, ApplicationSession will automatically call qi::Application::stop()
@@ -79,8 +80,6 @@ namespace qi
     void       run();
   private:
     ApplicationSessionPrivate* _p;
-  private:
-    QI_DISALLOW_COPY_AND_ASSIGN(ApplicationSession);
   };
 }
 

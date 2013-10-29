@@ -7,7 +7,7 @@
 #ifndef _SRC_TRANSPORTSERVER_HPP_
 #define _SRC_TRANSPORTSERVER_HPP_
 
-# include <qimessaging/api.hpp>
+# include <boost/noncopyable.hpp>
 # include <qimessaging/url.hpp>
 # include <qi/eventloop.hpp>
 # include <qitype/signal.hpp>
@@ -43,10 +43,8 @@ namespace qi {
   class TransportSocket;
   typedef boost::shared_ptr<TransportSocket> TransportSocketPtr;
 
-  class TransportServer
+  class TransportServer : private boost::noncopyable
   {
-    QI_DISALLOW_COPY_AND_ASSIGN(TransportServer);
-
   public:
     TransportServer();
     virtual ~TransportServer();
