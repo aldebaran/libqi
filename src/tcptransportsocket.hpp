@@ -44,12 +44,12 @@ namespace qi
     typedef boost::shared_ptr<boost::asio::ip::tcp::socket> SocketPtr;
 #endif
     void error(const boost::system::error_code& erc);
-    void onConnected(const boost::system::error_code& erc);
-    void handshake(const boost::system::error_code& erc);
-    void onReadHeader(const boost::system::error_code& erc, std::size_t);
-    void onReadData(const boost::system::error_code& erc, std::size_t);
+    void onConnected(const boost::system::error_code& erc, SocketPtr s);
+    void handshake(const boost::system::error_code& erc, SocketPtr s);
+    void onReadHeader(const boost::system::error_code& erc, std::size_t, SocketPtr s);
+    void onReadData(const boost::system::error_code& erc, std::size_t, SocketPtr s);
     void send_(qi::Message msg);
-    void sendCont(const boost::system::error_code& erc, qi::Message msg);
+    void sendCont(const boost::system::error_code& erc, qi::Message msg, SocketPtr s);
     void setSocketOptions();
     bool _ssl;
     bool _sslHandshake;
