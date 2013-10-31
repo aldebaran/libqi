@@ -53,7 +53,7 @@ void callbackCounter(const int& value)
 void callbackCounterBis(const int& value, std::string secondValue)
 {
   ++i;
-  std::cout << "callback called " << i._value <<" times" << std::endl;
+  std::cout << "callback called " << *i <<" times" << std::endl;
 }
 
 class TestObject: public ::testing::Test
@@ -337,6 +337,40 @@ TEST_F(TestObject, multipleConnect)
   qi::os::msleep(additional_timeout); //additional timeout to wait for unwanted callback
   ASSERT_EQ(*i, 18);
 
+}
+
+TEST_F(TestObject, serviceDirectoryEvent)
+{
+  i = 0;
+  qi::AnyObject sd = p1.client()->service("ServiceDirectory");
+
+  typedef std::map<unsigned int, qi::MetaSignal> SignalMap;
+  SignalMap s_map;
+  s_map = sd.metaObject().signalMap();
+
+  unsigned int signal_id;
+  for (SignalMap::iterator it = s_map.begin(); it!= s_map.end(); ++it)
+  {
+    if (it->second.name() == "serviceAdded")
+    {
+      signal_id = it->second.uid();
+    }
+  }
+  sd.connect(signal_id, oserver1, secondCallbackId);
+  sd.connect(signal_id, oserver1, secondCallbackId);
+  sd.connect(signal_id, oserver1, secondCallbackId);
+  sd.connect(signal_id, oserver1, secondCallbackId);
+
+  ASSERT_TRUE(p1.server()->registerService("test", oserver1).hasValue(1000));
+
+  int waiting_time = 0;
+  while(*i != 4 && waiting_time < 10000)
+  {
+    qi::os::msleep(10);
+    waiting_time += 10;
+  }
+  qi::os::msleep(10);
+  ASSERT_EQ(*i, 4);
 }
 
 int main(int argc, char *argv[])
