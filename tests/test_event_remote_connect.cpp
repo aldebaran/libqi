@@ -11,6 +11,7 @@
 #include <qi/application.hpp>
 #include <qitype/anyobject.hpp>
 #include <qitype/dynamicobjectbuilder.hpp>
+#include <qi/atomic.hpp>
 #include <qimessaging/session.hpp>
 
 #include <testsession/testsessionpair.hpp>
@@ -25,6 +26,7 @@ qiLogCategory("test");
  */
 
 static qi::Promise<int> *payload1;
+qi::Atomic<int> i = 0;
 
 void onFire1(const int& pl)
 {
@@ -42,7 +44,17 @@ void onFire2(const int& pl)
   payload2->setValue(pl);
 }
 
+void callbackCounter(const int& value)
+{
+  ++i;
+  std::cout << "callback called " << i._value <<" times" << std::endl;
+}
 
+void callbackCounterBis(const int& value, std::string secondValue)
+{
+  ++i;
+  std::cout << "callback called " << i._value <<" times" << std::endl;
+}
 
 class TestObject: public ::testing::Test
 {
@@ -53,6 +65,8 @@ public:
     se1 = obs1.advertiseSignal<const int&>("fire1");
     se2 = obs2.advertiseSignal<const int&>("fire2");
     sm1 = obs1.advertiseMethod("onFire1", &onFire1);
+    callbackId = obs1.advertiseMethod("callbackCounter", &callbackCounter);
+    secondCallbackId = obs1.advertiseMethod("callbackCounter", &callbackCounterBis);
     sm2 = obs2.advertiseMethod("onFire2", &onFire2);
     oserver1 = obs1.object();
     oserver2 = obs2.object();
@@ -82,6 +96,7 @@ protected:
 
     fut = p1.client()->service("coin2");
     ASSERT_FALSE(fut.hasError());
+
     oclient2 = fut.value();
 
     oe1 = oclient1.metaObject().signalId("fire1::(i)");
@@ -110,6 +125,7 @@ protected:
 public:
   unsigned int se1, se2;
   unsigned int sm1, sm2;
+  unsigned int callbackId, secondCallbackId;
 
   unsigned int oe1, oe2;
   unsigned int om1, om2;
@@ -189,14 +205,6 @@ TEST_F(TestObject, Connect8)
   EXPECT_EQ(12, payload1->future().value());
 }
 
-
-
-
-
-
-
-
-
 TEST_F(TestObject, Connect10)
 {
   oclient1.connect(oe1, oclient2, om2).wait(2000);
@@ -260,6 +268,75 @@ TEST_F(TestObject, Connect17)
   oclient1.post("fire1", 12);
   ASSERT_TRUE(payload2->future().hasValue(2000));
   EXPECT_EQ(12, payload2->future().value());
+}
+
+TEST_F(TestObject, multipleConnect)
+{
+  int additional_timeout = 5;//time to wait after having received the correct number of callbacks
+  qi::SignalLink link1 = oclient2.connect(se2, oserver1, callbackId).value(2000);
+  qi::SignalLink link2 = oclient2.connect(se2, oserver1, callbackId).value(2000);
+  qi::SignalLink link3 = oclient2.connect(se2, oserver1, callbackId).value(2000);
+  qi::SignalLink link4 = oclient2.connect(se2, oserver1, callbackId).value(2000);
+
+  ASSERT_NE(link1, link2);
+  ASSERT_NE(link2, link3);
+  ASSERT_NE(link3, link4);
+
+  oclient2.post("fire2", 42);
+  oclient2.post("fire2", 42);
+
+  int waiting_time = 0;
+  while(i._value != 8 && waiting_time < 10000)//waiting 10 seconds max
+  {
+    qi::os::msleep(additional_timeout); //additional timeout to wait for unwanted callback
+    waiting_time += additional_timeout;
+  }
+  qi::os::msleep(additional_timeout);
+  ASSERT_EQ(i._value, 8);
+
+  //disconnect 3/4 callbacks
+  oclient2.disconnect(link2);
+  oclient2.disconnect(link3);
+  oclient2.disconnect(link4);
+
+  oclient2.post("fire2", 42);//post signal twice
+  oclient2.post("fire2", 42);
+
+  while(i._value != 10 && waiting_time < 10000)//waiting 10 seconds max
+  {
+    qi::os::msleep(additional_timeout); //additional timeout to wait for unwanted callback
+    waiting_time += additional_timeout;
+  }
+  qi::os::msleep(additional_timeout); //additional timeout to wait for unwanted callback
+  ASSERT_EQ(i._value, 10);
+  //i = 0;
+
+  //reconnect callbacks
+  link2 = oclient2.connect(se2, oserver1, callbackId).value(2000);
+  link3 = oclient2.connect(se2, oserver1, callbackId).value(2000);
+  link4 = oclient2.connect(se2, oserver1, callbackId).value(2000);
+
+  oclient2.post("fire2", 42);//post signal twice
+  oclient2.post("fire2", 42);
+
+  while((*i) != 10 && waiting_time < 10000)//waiting 10 seconds max
+  {
+    qi::os::msleep(additional_timeout); //additional timeout to wait for unwanted callback
+    waiting_time += additional_timeout;
+  }
+  qi::os::msleep(additional_timeout); //additional timeout to wait for unwanted callback
+  ASSERT_EQ(*i, 18);
+
+  oclient2.disconnect(link1);
+  oclient2.disconnect(link2);
+  oclient2.disconnect(link3);
+  oclient2.disconnect(link4);
+
+  oclient2.post("fire2", 42);
+
+  qi::os::msleep(additional_timeout); //additional timeout to wait for unwanted callback
+  ASSERT_EQ(*i, 18);
+
 }
 
 int main(int argc, char *argv[])
