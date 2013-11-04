@@ -968,6 +968,7 @@ qi::AnyReference AnyReference_from_PyObject(PyObject* obj)
 
     return res;
   }
+  throw std::runtime_error("Unreachable code reached"); // g++ won't compile without that line
 }
 
 /* Register PyObject* -> See the above comment for explanations */
