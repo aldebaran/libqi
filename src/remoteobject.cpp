@@ -105,7 +105,8 @@ namespace qi {
   //should be done in the object thread
   void RemoteObject::onSocketDisconnected(std::string error)
   {
-    close();
+    close(true);
+    throw PointerLockException();
   }
 
   void RemoteObject::onMetaObject(qi::Future<qi::MetaObject> fut, qi::Promise<void> prom) {
@@ -424,7 +425,7 @@ namespace qi {
     return fut;
   }
 
-  void RemoteObject::close()
+  void RemoteObject::close(bool fromSignal)
   {
     qiLogDebug() << "Socket disconnection";
     TransportSocketPtr socket;
@@ -437,7 +438,8 @@ namespace qi {
     { // Do not hold any lock when invoking signals.
         qiLogDebug() << "Removing connection from socket" << (void*)socket.get();
         socket->messagePendingDisconnect(_service, TransportSocket::ALL_OBJECTS, _linkMessageDispatcher);
-        socket->disconnected.disconnect(_linkDisconnected);
+        if (!fromSignal)
+          socket->disconnected.disconnect(_linkDisconnected);
     }
     std::map<int, qi::Promise<AnyReference> > promises;
     {

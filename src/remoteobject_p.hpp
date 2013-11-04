@@ -45,7 +45,8 @@ namespace qi {
     qi::Future<void> fetchMetaObject();
 
     void setTransportSocket(qi::TransportSocketPtr socket);
-    void close();
+    // Set fromSignal if close is invoked from disconnect signal callback
+    void close(bool fromSignal = false);
     unsigned int service() const { return _service;}
 
   protected:
