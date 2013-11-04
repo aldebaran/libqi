@@ -340,7 +340,7 @@ namespace qi {
     msg.setFunction(event);
     TransportSocketPtr sock = _socket;
     if (!sock || !sock->send(msg)) {
-      qiLogError() << "error while emitting event";
+      qiLogVerbose() << "error while emitting event";
       return;
     }
   }
