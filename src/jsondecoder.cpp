@@ -5,7 +5,7 @@
 
 #include <qitype/jsoncodec.hpp>
 #include <qitype/anyvalue.hpp>
-
+#include <boost/lexical_cast.hpp>
 #include "jsoncodec_p.hpp"
 
 namespace qi {
@@ -141,7 +141,7 @@ namespace qi {
     else
       floatStr = beforePoint + exponent;
 
-    result = ::atof(floatStr.c_str());
+    result = boost::lexical_cast<double>(floatStr.c_str());
     return true;
   }
 
