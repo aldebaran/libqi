@@ -680,6 +680,40 @@ TEST(TestObject, Future)
   std::cerr << "ERR " << f.error() << std::endl;
 }
 
+void forward(qi::Future<int> f, qi::Promise<void> p) {
+  if (f.hasError()) {
+    p.setError(f.error());
+    return;
+  }
+  p.setValue(0);
+}
+
+qi::Future<void> delaySetV(unsigned long msDelay, int value, qi::Promise<int>prom)
+{
+  qi::Promise<void> p;
+  prom.future().connect(boost::bind<void>(&forward, _1, p));
+  boost::thread(_delaySet, prom, msDelay, value);
+  return p.future();
+}
+
+TEST(TestObject, FutureVoid)
+{
+  qi::DynamicObjectBuilder gob;
+  qi::Promise<int> prom;
+  gob.advertiseMethod("delaySet", boost::bind(&delaySetV, _1, _2, prom));
+  qi::AnyObject obj = gob.object();
+  qi::Future<void> f = obj.call<void>("delaySet", 500, 41);
+  ASSERT_TRUE(!f.isFinished());
+  f.wait();
+  ASSERT_EQ(41, prom.future().value());
+  prom.reset();
+  f =  obj.call<void>("delaySet", 500, -1);
+  ASSERT_TRUE(!f.isFinished());
+  f.wait();
+  ASSERT_TRUE(f.hasError());
+  std::cerr << "ERR " << f.error() << std::endl;
+}
+
 TEST(TestObject, FutureSync)
 {
   qi::DynamicObjectBuilder gob;
