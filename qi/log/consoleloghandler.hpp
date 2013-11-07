@@ -9,6 +9,7 @@
 #ifndef _QI_LOG_CONSOLELOGHANDLER_HPP_
 #define _QI_LOG_CONSOLELOGHANDLER_HPP_
 
+# include <boost/noncopyable.hpp>
 # include <qi/log.hpp>
 
 namespace qi {
@@ -17,7 +18,7 @@ namespace qi {
     class PrivateConsoleLogHandler;
 
     /// Print colored logs to the console.
-    class QI_API ConsoleLogHandler
+    class QI_API ConsoleLogHandler : private boost::noncopyable
     {
     public:
       /// Initialize everything the console log handler needs to print on the
@@ -41,7 +42,6 @@ namespace qi {
 
 
     protected:
-      QI_DISALLOW_COPY_AND_ASSIGN(ConsoleLogHandler);
       PrivateConsoleLogHandler* _p;
     };
   }

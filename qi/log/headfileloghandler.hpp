@@ -8,6 +8,7 @@
 #ifndef _QI_LOG_HEADFILELOGHANDLER_HPP_
 #define _QI_LOG_HEADFILELOGHANDLER_HPP_
 
+# include <boost/noncopyable.hpp>
 # include <qi/log.hpp>
 # include <string>
 
@@ -16,7 +17,7 @@ namespace qi {
     class PrivateHeadFileLogHandler;
 
     /// Log the first length lines to a file.
-    class QI_API HeadFileLogHandler
+    class QI_API HeadFileLogHandler : private boost::noncopyable
     {
     public:
       /// \brief Initialize the head file handler on the file. File is opened
@@ -37,7 +38,6 @@ namespace qi {
                const int               line);
 
     private:
-      QI_DISALLOW_COPY_AND_ASSIGN(HeadFileLogHandler);
       PrivateHeadFileLogHandler* _p;
     }; // !HeadFileLogHandler
 

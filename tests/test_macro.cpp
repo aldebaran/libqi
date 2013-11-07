@@ -6,11 +6,11 @@
 
 #include <gtest/gtest.h>
 
+#include <boost/noncopyable.hpp>
 #include <boost/utility.hpp>
 #include <boost/type_traits.hpp>
 #include <boost/thread.hpp>
 #include <qi/atomic.hpp>
-#include <qi/macro.hpp>
 #include <qi/os.hpp>
 #include <qi/preproc.hpp>
 #include <qi/traits.hpp>
@@ -22,12 +22,10 @@ public:
   int i;
 };
 
-class CloneKo
+class CloneKo : private boost::noncopyable
 {
 public:
   int i;
-private:
-  QI_DISALLOW_COPY_AND_ASSIGN(CloneKo);
 };
 
 class CloneKo2: boost::noncopyable

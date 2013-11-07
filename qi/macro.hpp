@@ -131,8 +131,12 @@ namespace qi {
 };
 #endif
 
-// A macro to disallow copy constructor and operator=
+#define QI_DEPRECATE_MACRO(name)                \
+  QI_COMPILER_WARNING(name macro is deprecated.)
+
+// This macro is deprecated, use boost::noncopyable instead
 #define QI_DISALLOW_COPY_AND_ASSIGN(type)       \
+  QI_DEPRECATE_MACRO(QI_DISALLOW_COPY_AND_ASSIGN) \
   type(type const &);                           \
   void operator=(type const &);               \
   typedef int _qi_not_clonable;                 \

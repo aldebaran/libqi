@@ -44,7 +44,30 @@
  */
 
 /**
+ * \def QI_DEPRECATE_MACRO(name)
+ * \brief A macro used to deprecate another macro. Generate a compiler warning
+ * when the given macro is used.
+ * \param name The name of the macro.
+ * \verbatim
+ * Example:
+ *
+ * .. code-block:: cpp
+ *
+ *     #define MAX(x,y)(QI_DEPRECATE_MACRO(MAX), x > y ?  x : y)
+ * \endverbatim
+ */
+
+/**
  * \def QI_DISALLOW_COPY_AND_ASSIGN(type)
+ * \deprecated Use boost::noncopyable instead
+ * \verbatim
+ * Example:
+ *
+ * .. code-block:: cpp
+ *
+ *     class Foo : private boost::nonpyable
+ *     {};
+ * \endverbatim
  * \brief A macro to disallow copy constructor and operator=
  * \param type The class name of which we want to forbid copy.
  *
