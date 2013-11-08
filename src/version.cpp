@@ -14,6 +14,11 @@
 namespace qi {
   namespace version {
 
+    class VersionPrivate {
+    public:
+      std::string _version;
+    };
+
     static std::string eat_number(const std::string &str, unsigned int &index)
     {
       std::locale              loc("C");
@@ -153,24 +158,36 @@ namespace qi {
       return std::string();
     }
 
+    Version::Version()
+      : _p(new VersionPrivate())
+    {
+    }
+
+    Version::Version(const std::string &version)
+      : _p(new VersionPrivate())
+    {
+      _p->_version = version;
+    }
+
+
     std::string& Version::operator()()
     {
-      return version;
+      return _p->_version;
     }
 
     const std::string& Version::operator()() const
     {
-      return version;
+      return _p->_version;
     }
 
     bool Version::operator<(const Version& pi) const
     {
-      return qi::version::compare(version, pi.version) < 0;
+      return qi::version::compare(_p->_version, pi._p->_version) < 0;
     }
 
     bool Version::operator==(const Version& pi) const
     {
-      return !qi::version::compare(version, pi.version);
+      return !qi::version::compare(_p->_version, pi._p->_version);
     }
 
     bool Version::operator>(const Version& pi) const
