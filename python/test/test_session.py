@@ -16,15 +16,15 @@ def test_session_callbacks():
         isdisconnected = True
         print("Disconnected!")
 
-    local = "tcp://127.0.0.1:5555"
-    sd = qi.ServiceDirectory()
-    sd.listen(local)
+    local = "tcp://127.0.0.1:0"
+    sd = qi.Session()
+    sd.listenStandalone(local)
 
     s = qi.Session()
     assert isconnected is False
     s.connected.connect(callback_conn)
     s.disconnected.connect(callback_disconn)
-    s.connect(local)
+    s.connect(sd.endpoints()[0])
     time.sleep(0.01)
 
     assert isconnected is True
