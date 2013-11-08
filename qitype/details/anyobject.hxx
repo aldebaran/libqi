@@ -454,8 +454,37 @@ namespace qi {
         return;
       }
       AnyValue v = gfut.call<AnyValue>(MetaCallType_Direct, "value", 0);
-      promise.setValue(v.to<T>());
+      promise.setValue(v.to<typename FutureType<T>::type>());
       val.destroy();
+    }
+
+    // futureAdapter helper that detects and handles value of kind future
+    // return true if value was a future and was handled
+    template <typename T>
+    inline bool handleFuture(AnyReference val, Promise<T> promise)
+    {
+      TemplateTypeInterface* ft1 = QI_TEMPLATE_TYPE_GET(val.type(), Future);
+      TemplateTypeInterface* ft2 = QI_TEMPLATE_TYPE_GET(val.type(), FutureSync);
+      TemplateTypeInterface* futureType = ft1 ? ft1 : ft2;
+      qiLogDebug("qi.object") << "isFuture " << !!ft1 << ' ' << !!ft2;
+      if (!futureType)
+        return false;
+
+      TypeInterface* next = futureType->next();
+      ObjectTypeInterface* onext = dynamic_cast<ObjectTypeInterface*>(next);
+      GenericObject gfut(onext, val.rawValue());
+      // Need a live shared_ptr for shared_from_this() to work.
+      boost::shared_ptr<GenericObject> ao(&gfut, &hold<GenericObject*>);
+      boost::function<void()> cb = boost::bind(futureAdapterGeneric<T>, val, promise);
+      // Careful, gfut will die at the end of this block, but it is
+      // stored in call data. So call must finish before we exit this block,
+      // and thus must be synchronous.
+      qi::Future<void> waitResult = gfut.call<void>(MetaCallType_Direct, "_connect", cb);
+      waitResult.wait();
+      qiLogDebug("qi.object") << "future connected " << !waitResult.hasError();
+      if (waitResult.hasError())
+        qiLogWarning("qi.object") << waitResult.error();
+      return true;
     }
 
     template <typename T>
@@ -469,28 +498,9 @@ namespace qi {
       }
 
       AnyReference val =  metaFut.value();
-      TemplateTypeInterface* ft1 = QI_TEMPLATE_TYPE_GET(val.type(), Future);
-      TemplateTypeInterface* ft2 = QI_TEMPLATE_TYPE_GET(val.type(), FutureSync);
-      TemplateTypeInterface* futureType = ft1 ? ft1 : ft2;
-      qiLogDebug("qi.object") << "isFuture " << !!ft1 << ' ' << !!ft2;
-      if (futureType)
-      {
-        TypeInterface* next = futureType->next();
-        ObjectTypeInterface* onext = dynamic_cast<ObjectTypeInterface*>(next);
-        GenericObject gfut(onext, val.rawValue());
-        // Need a live shared_ptr for shared_from_this() to work.
-        boost::shared_ptr<GenericObject> ao(&gfut, &hold<GenericObject*>);
-        boost::function<void()> cb = boost::bind(futureAdapterGeneric<T>, val, promise);
-        // Careful, gfut will die at the end of this block, but it is
-        // stored in call data. So call must finish before we exit this block,
-        // and thus must be synchronous.
-        qi::Future<void> waitResult = gfut.call<void>(MetaCallType_Direct, "_connect", cb);
-        waitResult.wait();
-        qiLogDebug("qi.object") << "future connected " << !waitResult.hasError();
-        if (waitResult.hasError())
-          qiLogWarning("qi.object") << waitResult.error();
+      if (handleFuture(val, promise))
         return;
-      }
+
       TypeInterface* targetType = typeOf<T>();
       try
       {
@@ -520,7 +530,9 @@ namespace qi {
         promise.setError(metaFut.error());
         return;
       }
-      promise.setValue(0);
+      AnyReference val =  metaFut.value();
+      if (!handleFuture(val, promise))
+        promise.setValue(0);
     }
 
     template <typename T>
