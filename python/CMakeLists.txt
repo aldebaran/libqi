@@ -21,6 +21,8 @@ add_library(_qi SHARED src/boostpymain.cpp
                    src/pythreadsafeobject.hpp
                    src/pysignal.cpp
                    src/pysignal.hpp
+                   src/pyasync.cpp
+                   src/pyasync.hpp
                    src/pyobjectfactory.hpp
                    src/pyobjectfactory.cpp
                    src/gil.hpp

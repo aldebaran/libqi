@@ -1,24 +1,54 @@
 #! /usr/bin/python2
 
 import qi
-import time
 
-def my_callback(f):
-    print f.value()
+def add(a, b):
+    return a + b
 
-def funky(o):
-    f = o.services(_async = True)
-    f.add_callback(my_callback)
-    return
+
+def err():
+    raise RuntimeError("sdsd")
+
+
+def test_async_fun():
+    f = qi.async(add, 21, 21)
+    assert(f.value() == 42)
+
+
+def test_async_error():
+    f = qi.async(err)
+    assert(f.hasError() == True)
+    assert(f.error().startswith("RuntimeError: sdsd"))
+
+class Adder:
+    def __init__(self):
+        self.v = 0
+
+    def add(self, a):
+        self.v += a
+        return self.v
+
+    def val(self):
+        return self.v
+
+def test_async_meth():
+    ad = Adder()
+    f = qi.async(ad.add, 21)
+    assert(f.value() == 21)
+    f = qi.async(ad.add, 21)
+    assert(f.value() == 42)
+    f = qi.async(ad.val)
+    assert(f.value() == 42)
+
+def test_async_delay():
+    f = qi.async(add, 21,  21, delay=1000)
+    assert(f.value() == 42)
 
 def main():
-    sd = qi.Session()
-    sd.listenStandalone('tcp://127.0.0.1:5555')
-    s = qi.Session()
-    s.connect('tcp://127.0.0.1:5555')
-    o = s.service('ServiceDirectory')
-    funky(o)
-    time.sleep(2)
+    test_async_fun()
+    test_async_error()
+    test_async_meth()
+    test_async_delay()
 
 if __name__ == "__main__":
     main()

@@ -45,7 +45,7 @@ from _qi import Application as _Application
 from _qi import ApplicationSession as _ApplicationSession
 from _qi import FutureState, FutureTimeout, Future, \
                 Promise, Property, Session, Signal, \
-                createObject, registerObjectFactory
+                createObject, registerObjectFactory, async
 
 from _type import Void, Bool, Int8, UInt8, Int16, UInt16, Int32, UInt32, Int64, UInt64, Float, Double, String, List, Map, Struct, Object, Dynamic, Buffer, AnyArguments
 from _type import typeof, _isinstance
@@ -103,6 +103,7 @@ __all__ = ["FutureState",
            "Signal",
            "createObject",
            "registerObjectFactory",
+           "async",
 
            "Void", "Bool", "Int8", "UInt8", "Int16", "UInt16", "Int32", "UInt32", "Int64", "UInt64",
            "Float", "Double", "String", "List", "Map", "Struct", "Object", "Dynamic", "Buffer", "AnyArguments",
