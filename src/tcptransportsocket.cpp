@@ -316,35 +316,56 @@ namespace qi
     qiLogVerbose() << "Trying to connect to " << _url.host() << ":" << _url.port();
     using namespace boost::asio;
     // Resolve url
-    ip::tcp::resolver r(_socket->get_io_service());
+    _r = boost::shared_ptr<boost::asio::ip::tcp::resolver>(new boost::asio::ip::tcp::resolver(_socket->get_io_service()));
     ip::tcp::resolver::query q(_url.host(), boost::lexical_cast<std::string>(_url.port())
                            #ifndef ANDROID
                                , boost::asio::ip::tcp::resolver::query::all_matching
                            #endif
                                );
-    // Synchronous resolution
 
+    _r->async_resolve(q,
+                      boost::bind(&TcpTransportSocket::onResolved,
+                                  shared_from_this(),
+                                  boost::asio::placeholders::error,
+                                  boost::asio::placeholders::iterator));
+    return _connectPromise.future();
+  }
+
+  void TcpTransportSocket::onResolved(const boost::system::error_code& erc,
+                                      boost::asio::ip::tcp::resolver::iterator it)
+  {
     try
     {
-      ip::tcp::resolver::iterator it = r.resolve(q);
-      static bool disableIPV6 = qi::os::getenv("QIMESSAGING_ENABLE_IPV6").empty();
-      if (disableIPV6)
+      if (erc)
       {
-        while (it != ip::tcp::resolver::iterator() &&
-               it->endpoint().address().is_v6())
-          ++it;
+        qiLogWarning() << "resolved: " << erc.message();
+        _status = qi::TransportSocket::Status_Disconnected;
+        pSetError(_connectPromise, erc.message());
       }
-      // asynchronous connect
-      _socket->lowest_layer().async_connect(*it,
-        boost::bind(&TcpTransportSocket::onConnected, shared_from_this(), _1, _socket));
-      return _connectPromise.future();
+      else
+      {
+        static bool disableIPV6 = qi::os::getenv("QIMESSAGING_ENABLE_IPV6").empty();
+        if (disableIPV6)
+        {
+          while (it != boost::asio::ip::tcp::resolver::iterator() &&
+                 it->endpoint().address().is_v6())
+            ++it;
+        }
+        // asynchronous connect
+        _socket->lowest_layer().async_connect(*it,
+                                              boost::bind(&TcpTransportSocket::onConnected,
+                                                          shared_from_this(),
+                                                          boost::asio::placeholders::error,
+                                                          _socket));
+        _r.reset();
+      }
     }
     catch (const std::exception& e)
     {
       const char* s = e.what();
-      qiLogError() << s;
+      qiLogError() << s
+                   << " only IPv6 were resolved on " << url().str();
       pSetError(_connectPromise, s);
-      return _connectPromise.future();
     }
   }
 

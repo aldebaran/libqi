@@ -45,6 +45,8 @@ namespace qi
 #endif
     void error(const boost::system::error_code& erc);
     void onConnected(const boost::system::error_code& erc, SocketPtr s);
+    void onResolved(const boost::system::error_code& erc,
+                    boost::asio::ip::tcp::resolver::iterator it);
     void handshake(const boost::system::error_code& erc, SocketPtr s);
     void onReadHeader(const boost::system::error_code& erc, std::size_t, SocketPtr s);
     void onReadData(const boost::system::error_code& erc, std::size_t, SocketPtr s);
@@ -70,6 +72,7 @@ namespace qi
     std::deque<Message> _sendQueue;
     bool                _sending;
     boost::recursive_mutex        _closingMutex;
+    boost::shared_ptr<boost::asio::ip::tcp::resolver> _r;
   };
 
   typedef boost::shared_ptr<TcpTransportSocket> TcpTransportSocketPtr;
