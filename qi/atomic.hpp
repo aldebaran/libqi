@@ -11,6 +11,7 @@
 
 #ifdef _MSC_VER
 # include <windows.h>
+# include <intrin.h>
 
 extern "C" long __cdecl _InterlockedIncrement(long volatile *);
 extern "C" long __cdecl _InterlockedDecrement(long volatile *);
@@ -194,5 +195,33 @@ namespace qi
 #endif
 
 }
+
+#define _QI_INSTANCIATE(_, a, elem) ::qi::details::newAndAssign(&elem);
+
+/* The code below relies on the fact that initialisation of the qi::Atomic
+* can happen at static initialization time, and that proper memory barriers
+* are setup by its ++, swap and get operations.
+ */
+/** Accept a list of pointers (expected to be static function variables)
+ *  and new them once in a thrad-safe manner.
+ *  Implementation aims for minimal overhead when initialization is done.
+ */
+#define QI_THREADSAFE_NEW(...)  \
+ QI_ONCE(QI_VAARGS_APPLY(_QI_INSTANCIATE, _, __VA_ARGS__);)
+
+/// Execute code once, parallel calls are blocked until code finishes.
+#define QI_ONCE(code) \
+ static qi::AtomicBase<int> QI_UNIQ_DEF(atomic_guard_a) = {0}; \
+ static qi::AtomicBase<int> QI_UNIQ_DEF(atomic_guard_b) = {0}; \
+ while (!QI_UNIQ_DEF(atomic_guard_a).setIfEquals(1, 1))       \
+ {                                                           \
+   bool tok = QI_UNIQ_DEF(atomic_guard_b).setIfEquals(0,1);  \
+   if (tok)                                                  \
+   {                                                    \
+     code;                                              \
+     ++QI_UNIQ_DEF(atomic_guard_a);                     \
+   }                                                    \
+ }
+
 
 #endif  // _QI_ATOMIC_HPP_

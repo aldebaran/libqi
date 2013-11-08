@@ -12,12 +12,7 @@
 #ifndef _QI_MACRO_HPP_
 #define _QI_MACRO_HPP_
 
-#ifdef __cplusplus
-#include <boost/bind.hpp>
-#include <boost/function.hpp>
-#include <boost/utility.hpp>
-#include <qi/atomic.hpp>
-#endif
+
 
 #include <qi/preproc.hpp>
 
@@ -49,8 +44,6 @@
 #endif
 
 // For shared library
-
-
 
 
 /** @return the proper type specification for import/export
@@ -131,58 +124,19 @@ Please consult the changelog for details. " #x)
 #endif
 
 
+#ifdef __cplusplus
+namespace qi {
+  template <typename T>
+  struct IsClonable;
+};
+#endif
+
 // A macro to disallow copy constructor and operator=
 #define QI_DISALLOW_COPY_AND_ASSIGN(type)       \
   type(type const &);                           \
   void operator=(type const &);               \
   typedef int _qi_not_clonable;                 \
   template<typename U> friend struct ::qi::IsClonable
-
-#ifdef __cplusplus
-namespace boost
-{
-  // forward-declare the trait to avoid an include
-  template<typename T1, typename T2> struct is_base_of;
-}
-namespace qi
-{
-  /// Detect if a type is using boost::noncopyable or QI_DISALLOW_COPY_AND_ASSIGN
-  template<typename T> struct IsClonable
-  {
-    typedef char yes[1];
-    typedef char no[2];
-    template <typename C>
-    static no& test(typename C::_qi_not_clonable*);
-
-    template <typename>
-    static yes& test(...);
-
-    static const bool value = sizeof(test<T>(0)) == sizeof(yes)
-    && ! boost::is_base_of<boost::noncopyable, T>::value;
-  };
-
-  ///@return true if T inherits from boost::noncopyable or uses QI_DISALLOW_COPY_AND_ASSIGN
-  template<typename T> bool isClonable()
-  {
-    return IsClonable<T>::value;
-  }
-
-  template<typename T> bool isClonable(T*)
-  {
-    return IsClonable<T>::value;
-  }
-
-  namespace details
-  {
-    template<typename T> void newAndAssign(T** ptr)
-    {
-      *ptr = new T();
-    }
-  }
-}
-
-
-#endif
 
 
 #if defined(__GNUC__)
@@ -199,31 +153,5 @@ namespace qi
 #define _QI_UNIQ_DEF_LEVEL1(A, B) _QI_UNIQ_DEF_LEVEL2(A, B)
 #define QI_UNIQ_DEF(A) _QI_UNIQ_DEF_LEVEL1(A, __LINE__)
 
-#define _QI_INSTANCIATE(_, a, elem) ::qi::details::newAndAssign(&elem);
-
-/* The code below relies on the fact that initialisation of the qi::Atomic
-* can happen at static initialization time, and that proper memory barriers
-* are setup by its ++, swap and get operations.
- */
-/** Accept a list of pointers (expected to be static function variables)
- *  and new them once in a thrad-safe manner.
- *  Implementation aims for minimal overhead when initialization is done.
- */
-#define QI_THREADSAFE_NEW(...)  \
- QI_ONCE(QI_VAARGS_APPLY(_QI_INSTANCIATE, _, __VA_ARGS__);)
-
-/// Execute code once, parallel calls are blocked until code finishes.
-#define QI_ONCE(code) \
- static qi::AtomicBase<int> QI_UNIQ_DEF(atomic_guard_a) = {0}; \
- static qi::AtomicBase<int> QI_UNIQ_DEF(atomic_guard_b) = {0}; \
- while (!QI_UNIQ_DEF(atomic_guard_a).setIfEquals(1, 1))       \
- {                                                           \
-   bool tok = QI_UNIQ_DEF(atomic_guard_b).setIfEquals(0,1);  \
-   if (tok)                                                  \
-   {                                                    \
-     code;                                              \
-     ++QI_UNIQ_DEF(atomic_guard_a);                     \
-   }                                                    \
- }
 
 #endif  // _QI_MACRO_HPP_

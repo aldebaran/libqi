@@ -13,6 +13,7 @@
 #include <qi/macro.hpp>
 #include <qi/os.hpp>
 #include <qi/preproc.hpp>
+#include <qi/traits.hpp>
 
 
 class CloneOk
