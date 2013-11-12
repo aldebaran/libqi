@@ -95,7 +95,7 @@ namespace qi {
     }
     _sdSocket = qi::makeTransportSocket(serviceDirectoryURL.protocol());
     if (!_sdSocket)
-      return qi::makeFutureError<void>("!sdSocket");
+      return qi::makeFutureError<void>(std::string("unrecognized protocol '") + serviceDirectoryURL.protocol() + "' in url '" + serviceDirectoryURL.str() + "'");
     _sdSocketDisconnectedSignalLink = _sdSocket->disconnected.connect(&ServiceDirectoryClient::onSocketDisconnected, this, _1);
     _remoteObject.setTransportSocket(_sdSocket);
 
