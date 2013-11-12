@@ -25,7 +25,6 @@
 # include <shlwapi.h>
 # pragma comment(lib, "shlwapi.lib")
 
-#include <qi/error.hpp>
 #include <qi/log.hpp>
 #include <qi/os.hpp>
 #include <qi/qi.hpp>

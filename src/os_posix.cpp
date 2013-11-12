@@ -51,7 +51,6 @@
 #include <pthread.h>
 #include <qi/os.hpp>
 #include <qi/log.hpp>
-#include <qi/error.hpp>
 #include <qi/qi.hpp>
 #include "filesystem.hpp"
 #include "utils.hpp"
