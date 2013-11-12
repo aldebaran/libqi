@@ -18,6 +18,8 @@ namespace qi {
 
 
   class AnyReference;
+  typedef std::vector<AnyReference> AnyReferenceVector;
+
   /** Class that holds any value, with informations to manipulate it.
    *  operator=() makes a shallow copy.
    *
