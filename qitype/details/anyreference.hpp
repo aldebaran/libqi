@@ -299,7 +299,7 @@ namespace qi {
     void*          _value;
   };
 
-  class AnyReference : public AnyReferenceBase {
+  class QITYPE_API AnyReference : public AnyReferenceBase {
   public:
     AnyReference()
       : AnyReferenceBase()
