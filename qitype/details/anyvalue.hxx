@@ -197,6 +197,16 @@ namespace qi {
       out = qi::AnyValue::make<void>();
     }
   };
+
+  inline AnyReferenceVector asAnyReferenceVector(const AnyValueVector& vect) {
+    AnyReferenceVector result;
+    result.resize(vect.size());
+    for (unsigned int i = 0; i < vect.size(); ++i) {
+      result[i] = vect[i].asReference();
+    }
+    return result;
+  }
+
 }
 
 namespace std

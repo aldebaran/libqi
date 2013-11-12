@@ -98,6 +98,9 @@ namespace qi {
   QITYPE_API bool operator!=(const AnyValue& a, const AnyValue& b);
 
   typedef std::vector<AnyValue> AnyValueVector;
+
+  inline AnyReferenceVector asAnyReferenceVector(const AnyValueVector& vect);
+
 }
 
 #include <qitype/details/anyvalue.hxx>
