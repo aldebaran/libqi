@@ -97,6 +97,7 @@ namespace qi {
   QITYPE_API bool operator==(const AnyValue& a, const AnyValue& b);
   QITYPE_API bool operator!=(const AnyValue& a, const AnyValue& b);
 
+  typedef std::vector<AnyValue> AnyValueVector;
 }
 
 #include <qitype/details/anyvalue.hxx>

@@ -325,6 +325,7 @@ namespace qi {
 
   };
 
+  typedef std::vector<AnyReference> AnyReferenceVector;
   QITYPE_API bool operator< (const AnyReference& a, const AnyReference& b);
   QITYPE_API bool operator==(const AnyReference& a, const AnyReference& b);
   QITYPE_API bool operator!=(const AnyReference& a, const AnyReference& b);
