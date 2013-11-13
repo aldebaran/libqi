@@ -1,11 +1,19 @@
 ## Copyright (c) 2012 Aldebaran Robotics. All rights reserved.
 ## Use of this source code is governed by a BSD-style license that can be
 ## found in the COPYING file.
-qi_create_bin(testlaunch NO_INSTALL testlaunch.cpp)
-qi_create_bin(testlaunchloop NO_INSTALL testlaunchloop.cpp)
-qi_create_bin(check_env  NO_INSTALL check_env.cpp)
-qi_create_bin(check_machineid  NO_INSTALL check_machineid.cpp)
-qi_create_bin(test_application  NO_INSTALL test_application.cpp)
+if(${QIBUILD_VERSION} VERSION_GREATER "3.1")
+  qi_create_test_helper(testlaunch         testlaunch.cpp)
+  qi_create_test_helper(testlaunchloop     testlaunchloop.cpp)
+  qi_create_test_helper(check_env          check_env.cpp)
+  qi_create_test_helper(check_machineid    check_machineid.cpp)
+  qi_create_test_helper(test_application   test_application.cpp)
+else()
+  qi_create_bin(testlaunch       NO_INSTALL testlaunch.cpp)
+  qi_create_bin(testlaunchloop   NO_INSTALL testlaunchloop.cpp)
+  qi_create_bin(check_env        NO_INSTALL check_env.cpp)
+  qi_create_bin(check_machineid  NO_INSTALL check_machineid.cpp)
+  qi_create_bin(test_application NO_INSTALL test_application.cpp)
+endif()
 
 qi_use_lib(testlaunchloop QI)
 qi_use_lib(check_env QI)
