@@ -52,23 +52,23 @@ namespace qi
 
 
 
-  AnyReference AnyFunction::call(AnyReference arg1, const std::vector<AnyReference>& remaining)
+  AnyReference AnyFunction::call(AnyReference arg1, const AnyReferenceVector& remaining)
   {
-    std::vector<AnyReference> args;
+    AnyReferenceVector args;
     args.reserve(remaining.size()+1);
     args.push_back(arg1);
     args.insert(args.end(), remaining.begin(), remaining.end());
     return call(args);
   }
 
-  AnyReference AnyFunction::call(const std::vector<AnyReference>& vargs)
+  AnyReference AnyFunction::call(const AnyReferenceVector& vargs)
   {
     if (type == dynamicFunctionTypeInterface())
     {
       DynamicFunction* f = (DynamicFunction*)value;
       if (!transform.dropFirst && !transform.prependValue)
         return (*f)(vargs);
-      std::vector<AnyReference> args;
+      AnyReferenceVector args;
       if (transform.dropFirst && !transform.prependValue)
       {
         // VCXX2008 does not accept insert here because GV(GVP) ctor is explicit
@@ -259,8 +259,8 @@ namespace qi
   {
   }
 
-  GenericFunctionParameters::GenericFunctionParameters(const std::vector<AnyReference>& args)
-  :std::vector<AnyReference>(args)
+  GenericFunctionParameters::GenericFunctionParameters(const AnyReferenceVector& args)
+  :AnyReferenceVector(args)
   {
   }
 
@@ -282,7 +282,7 @@ namespace qi
   GenericFunctionParameters::convert(const Signature& sig) const
   {
     GenericFunctionParameters dst;
-    const std::vector<AnyReference>& src = *this;
+    const AnyReferenceVector& src = *this;
     if (sig.children().size() != src.size())
     {
       qiLogError() << "convert: signature/params size mismatch"
@@ -307,7 +307,7 @@ namespace qi
 
   Signature GenericFunctionParameters::signature(bool dyn) const
   {
-    const std::vector<AnyReference>& params = *this;
+    const AnyReferenceVector& params = *this;
     return qi::makeTupleSignature(params, dyn);
   }
 

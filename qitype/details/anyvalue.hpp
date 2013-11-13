@@ -45,10 +45,10 @@ namespace qi {
     /** The following functions construct a AnyValue from containers of
      * AnyReference.
      */
-    static AnyValue makeTuple(const std::vector<AnyReference>& values);
+    static AnyValue makeTuple(const AnyReferenceVector& values);
     template<typename T>
-    static AnyValue makeList(const std::vector<AnyReference>& values);
-    static AnyValue makeGenericList(const std::vector<AnyReference>& values);
+    static AnyValue makeList(const AnyReferenceVector& values);
+    static AnyValue makeGenericList(const AnyReferenceVector& values);
     template<typename K, typename V>
     static AnyValue makeMap(const std::map<AnyReference, AnyReference>& values);
     static AnyValue makeGenericMap(const std::map<AnyReference, AnyReference>& values);

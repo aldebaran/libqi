@@ -88,7 +88,7 @@ namespace qi
   public:                      \
     BounceToSignalBase(SignalBase& signalBase) : signalBase(signalBase) {} \
     R operator()(argsdecl) {   \
-      std::vector<AnyReference> args; \
+      AnyReferenceVector args; \
       BOOST_PP_REPEAT(n, pushArg, _);    \
       signalBase.trigger(args);          \
     }                                    \

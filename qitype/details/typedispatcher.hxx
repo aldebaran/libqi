@@ -79,7 +79,7 @@ namespace qi {
       case TypeKind_Tuple:
       {
         StructTypeInterface* ttuple = static_cast<StructTypeInterface*>(value.type());
-        std::vector<AnyReference> tuple = ttuple->values(value.rawValue());
+        AnyReferenceVector tuple = ttuple->values(value.rawValue());
         v.visitTuple(ttuple->className(), tuple, ttuple->elementsName());
         break;
       }

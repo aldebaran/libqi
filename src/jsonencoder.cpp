@@ -202,7 +202,7 @@ namespace qi {
       out << "\"Error: no serialization for pointer\"";
     }
 
-    void visitTuple(const std::string &name, const std::vector<AnyReference> &vals, const std::vector<std::string> &annotations)
+    void visitTuple(const std::string &name, const AnyReferenceVector &vals, const std::vector<std::string> &annotations)
     {
       //is the tuple is annotated serialize as an object
       if (annotations.size()) {

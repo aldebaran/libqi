@@ -471,7 +471,7 @@ namespace qi {
         out.write(osi.objectId);
       }
 
-      void visitTuple(const std::string &name, const std::vector<AnyReference>& vals, const std::vector<std::string>& annotations)
+      void visitTuple(const std::string &name, const AnyReferenceVector& vals, const std::vector<std::string>& annotations)
       {
         out.beginTuple(qi::makeTupleSignature(vals));
         for (unsigned i=0; i<vals.size(); ++i)
@@ -656,10 +656,10 @@ namespace qi {
         throw std::runtime_error(ss.str());
       }
 
-      void visitTuple(const std::string &, const std::vector<AnyReference>&, const std::vector<std::string>&)
+      void visitTuple(const std::string &, const AnyReferenceVector&, const std::vector<std::string>&)
       {
         std::vector<TypeInterface*> types = result.membersType();
-        std::vector<AnyReference>   vals;
+        AnyReferenceVector   vals;
         vals.resize(types.size());
         for (unsigned i = 0; i<types.size(); ++i)
         {

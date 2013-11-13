@@ -493,21 +493,21 @@ namespace qi {
 
   AnyValue Signature::toData() const
   {
-    std::vector<AnyValue> res;
+    AnyValueVector res;
     std::string t;
     t += (char)type();
     res.push_back(AnyValue::from(t));
     if (hasChildren()) {
       const SignatureVector& cvec = children();
       SignatureVector::const_iterator it;
-      std::vector<AnyValue> sub;
+      AnyValueVector sub;
       for (it = cvec.begin(); it != cvec.end(); ++it) {
         sub.push_back(it->toData());
       }
       res.push_back(AnyValue::from(sub));
     }
     else
-      res.push_back(AnyValue::from(std::vector<AnyValue>()));
+      res.push_back(AnyValue::from(AnyValueVector()));
     res.push_back(AnyValue::from(annotation()));
     return AnyValue::from(res);
   }

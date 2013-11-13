@@ -478,7 +478,7 @@ namespace qi
     }
 
     template<typename C, typename R>
-    AnyReference bouncer(const std::vector<AnyReference>& vargs,
+    AnyReference bouncer(const AnyReferenceVector& vargs,
                          R (C::*fun)(const AnyArguments&)
                          )
     {
@@ -497,7 +497,7 @@ namespace qi
     }
 
     template<typename R>
-    AnyReference bouncerBF(const std::vector<AnyReference>& vargs,
+    AnyReference bouncerBF(const AnyReferenceVector& vargs,
                          boost::function<R (const AnyArguments&)> f
                          )
     {

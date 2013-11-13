@@ -38,13 +38,13 @@ namespace qi {
   };
 
   inline AnyValue
-  AnyValue::makeTuple(const std::vector<AnyReference>& values)
+  AnyValue::makeTuple(const AnyReferenceVector& values)
   {
     return AnyValue(makeGenericTuple(values), false, true);
   }
 
   template<typename T>
-  AnyValue AnyValue::makeList(const std::vector<AnyReference>& values)
+  AnyValue AnyValue::makeList(const AnyReferenceVector& values)
   {
     AnyValue res = make<std::vector<T> >();
     for (unsigned i=0; i<values.size(); ++i)
@@ -52,7 +52,7 @@ namespace qi {
     return res;
   }
   inline
-  AnyValue AnyValue::makeGenericList(const std::vector<AnyReference>& values)
+  AnyValue AnyValue::makeGenericList(const AnyReferenceVector& values)
   {
     return makeList<AnyValue>(values);
   }

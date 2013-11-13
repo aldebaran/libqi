@@ -588,7 +588,7 @@ TEST(TestObject, TypeType)
 {
   using namespace qi;
   int i = 12;
-  std::vector<AnyReference> vals = convert(i);
+  AnyReferenceVector vals = convert(i);
   AnyReference val = vals[0];
   qiLogDebug() << "type ptr " << val.type()->infoString() << " "
   <<(void*)val.type();

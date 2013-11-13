@@ -36,7 +36,7 @@ namespace qi
     void setup(AnyObject object, const std::string& propertyName);
     ~ProxyProperty();
     void onSubscribe(bool enable, GenericObject* object, const std::string& propertyName, SignalLink link);
-    AnyReference bounceEvent(const std::vector<AnyReference> args);
+    AnyReference bounceEvent(const AnyReferenceVector args);
     void triggerOverride(const GenericFunctionParameters& params, MetaCallType, GenericObject* object, const std::string& propertyName);
   private:
     T getter(GenericObject* object, const std::string& propertyName);
@@ -98,7 +98,7 @@ namespace qi
   }
 
   template<typename T>
-  AnyReference ProxyProperty<T>::bounceEvent(const std::vector<AnyReference> args)
+  AnyReference ProxyProperty<T>::bounceEvent(const AnyReferenceVector args)
   {
     // Receive notify from backend, trigger on our signal, bypassing our trigger overload
     SignalType::callSubscribers(args);

@@ -758,7 +758,7 @@ namespace qi
       td = static_cast<DynamicTypeInterface*>(te);
     if (!homogeneous && !td)
       throw std::runtime_error("Element type is not dynamic");
-    std::vector<AnyReference> elems;
+    AnyReferenceVector elems;
     AnyIterator it = begin();
     AnyIterator iend = end();
     while (it != iend)
@@ -963,13 +963,13 @@ namespace qi
       throw std::runtime_error("Value is not Int or Float");
   }
 
-  std::vector<AnyReference> AnyReferenceBase::asTupleValuePtr()
+  AnyReferenceVector AnyReferenceBase::asTupleValuePtr()
   {
     if (kind() == TypeKind_Tuple)
       return static_cast<StructTypeInterface*>(_type)->values(_value);
     else if (kind() == TypeKind_List || kind() == TypeKind_Map)
     {
-      std::vector<AnyReference> result;
+      AnyReferenceVector result;
       AnyIterator iend = end();
       AnyIterator it = begin();
       for(; it != iend; ++it)
@@ -1022,7 +1022,7 @@ namespace qi
     static_cast<StringTypeInterface*>(_type)->set(&_value, &v[0], v.size());
   }
 
-  void AnyReferenceBase::setTuple(const std::vector<AnyReference>& values) {
+  void AnyReferenceBase::setTuple(const AnyReferenceVector& values) {
     if (kind() != TypeKind_Tuple)
       throw std::runtime_error("Value is not a Tuple");
     StructTypeInterface* stype = static_cast<StructTypeInterface*>(_type);

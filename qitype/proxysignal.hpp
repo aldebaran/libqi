@@ -34,7 +34,7 @@ namespace qi
         object.asGenericObject(), signalName));
     }
     void onSubscribe(bool enable, GenericObject* object, std::string signalName, SignalLink link);
-    AnyReference bounceEvent(const std::vector<AnyReference> args);
+    AnyReference bounceEvent(const AnyReferenceVector args);
     void triggerOverride(const GenericFunctionParameters& params,
       MetaCallType callType, GenericObject* object, std::string signalName);
   };
@@ -82,7 +82,7 @@ namespace qi
   }
 
   template<typename T>
-  AnyReference ProxySignal<T>::bounceEvent(const std::vector<AnyReference> args)
+  AnyReference ProxySignal<T>::bounceEvent(const AnyReferenceVector args)
   {
     // Trigger on our signal, bypassing our trigger overload
     SignalType::callSubscribers(args);

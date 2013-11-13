@@ -299,7 +299,7 @@ namespace qi {
       result = qi::Signature::fromType(Signature::Type_Unknown);
     }
 
-    void visitTuple(const std::string &name, const std::vector<AnyReference>& vals, const std::vector<std::string>& annotations)
+    void visitTuple(const std::string &name, const AnyReferenceVector& vals, const std::vector<std::string>& annotations)
     {
       std::string res;
       res = qi::makeTupleSignature(vals, _resolveDynamic).toString();
@@ -812,7 +812,7 @@ namespace qi {
     typedef DefaultTypeImplMethods<std::vector<void*> > Methods;
   };
 
-  AnyReference makeGenericTuple(const std::vector<AnyReference>& values)
+  AnyReference makeGenericTuple(const AnyReferenceVector& values)
   {
     std::vector<TypeInterface*> types;
     types.reserve(values.size());

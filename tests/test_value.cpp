@@ -227,7 +227,7 @@ QI_TYPE_STRUCT(Point, x, y);
 TEST(Value, Tuple)
 {
   // Create a Dynamic tuple from vector
-  std::vector<AnyValue> v;
+  AnyValueVector v;
   AutoAnyReference gv(v);
   gv.append(AnyValue::from(12.0));
   gv.append(AnyValue::from("foo")); // cstring not std::string
@@ -296,7 +296,7 @@ TEST(Value, Tuple2)
   StructTypeInterface* t = static_cast<qi::StructTypeInterface*>(qi::typeOf<Point2>());
   ASSERT_EQ(6u, t->memberTypes().size());
   EXPECT_TRUE("(ddsddd)<Point2,x,y,str,z,a,b>" == t->signature());
-  std::vector<AnyValue> vd;
+  AnyValueVector vd;
   vd.push_back(AnyValue(AutoAnyReference(1.5)));
   vd.push_back(AnyValue(AutoAnyReference(2.5)));
   vd.push_back(AnyValue(AutoAnyReference("coin")));
@@ -308,7 +308,7 @@ TEST(Value, Tuple2)
   EXPECT_EQ(2.5, p.y);
   EXPECT_EQ("coin", p.s);
   EXPECT_EQ(3.5, p.b);
-  std::vector<AnyReference> pcomps = t->values(&p);
+  AnyReferenceVector pcomps = t->values(&p);
   EXPECT_EQ(1.5, pcomps[0].toDouble());
   EXPECT_EQ(2.5, pcomps[1].toDouble());
   EXPECT_EQ("coin", pcomps[2].toString());
@@ -397,7 +397,7 @@ TEST(Value, STL)
   // copy other-way-round requires cast from AnyReference to int
 
 
-  std::vector<AnyReference> vg;
+  AnyReferenceVector vg;
   for (unsigned i=0; i<v.size(); ++i)
     vg.push_back(AnyReference::from(v[i]));
   std::sort(vg.begin(), vg.end());

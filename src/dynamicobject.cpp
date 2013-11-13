@@ -354,7 +354,7 @@ namespace qi
         tid = context.asGenericObject()->_nextTraceId();
         qi::os::timeval tv;
         qi::os::gettimeofday(&tv);
-        std::vector<AnyValue> args;
+        AnyValueVector args;
         args.resize(params.size()-1);
         for (unsigned i=0; i<params.size()-1; ++i)
         {
@@ -456,8 +456,8 @@ namespace qi
       this->context = context;
       this->lock = lock;
       std::swap(this->func, func);
-      std::swap((std::vector<AnyReference>&) params,
-        (std::vector<AnyReference>&) this->params);
+      std::swap((AnyReferenceVector&) params,
+        (AnyReferenceVector&) this->params);
     }
     MFunctorCall(const MFunctorCall& b)
     {
@@ -466,8 +466,8 @@ namespace qi
     void operator = (const MFunctorCall& b)
     {
       // Implement move semantic on =
-      std::swap( (std::vector<AnyReference>&) params,
-        (std::vector<AnyReference>&) b.params);
+      std::swap( (AnyReferenceVector&) params,
+        (AnyReferenceVector&) b.params);
       std::swap(func, const_cast<MFunctorCall&>(b).func);
       context = b.context;
       methodId = b.methodId;

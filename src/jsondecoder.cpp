@@ -152,7 +152,7 @@ namespace qi {
     if (_it == _end || *_it != '[')
       return false;
     ++_it;
-    std::vector<AnyValue>   tmpArray;
+    AnyValueVector   tmpArray;
 
     while (true)
     {

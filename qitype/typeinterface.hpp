@@ -229,7 +229,7 @@ namespace qi{
   {
   public:
     /// Get all the fields of the structure
-    std::vector<AnyReference> values(void* storage);
+    AnyReferenceVector values(void* storage);
     /**
      * Get all the member types
      *

@@ -208,8 +208,8 @@ namespace qi {
      *  But the container itself is a copy.
      * @warning for better performances use the begin() and end() iterator API
      */
-    std::vector<AnyReference>            asTupleValuePtr();
-    std::vector<AnyReference>            asListValuePtr();
+    AnyReferenceVector            asTupleValuePtr();
+    AnyReferenceVector            asListValuePtr();
     std::map<AnyReference, AnyReference> asMapValuePtr();
     /// @}
 
@@ -243,7 +243,7 @@ namespace qi {
 
     /// set the values of the tuple. A copy will be made.
     /// @throw std::runtime_error when kind is not Tuple
-    void  setTuple(const std::vector<AnyReference>& values);
+    void  setTuple(const AnyReferenceVector& values);
 
     ///@{
     /// In-place container manipulation.
@@ -334,7 +334,7 @@ namespace qi {
 
 
   ///@return an allocated Tuple made from copies of \param values
-  QITYPE_API AnyReference makeGenericTuple(const std::vector<AnyReference>& values);
+  QITYPE_API AnyReference makeGenericTuple(const AnyReferenceVector& values);
 
   ///@return a Tuple pointing to \param values as its storage
   QITYPE_API AnyReference makeGenericTuplePtr(const std::vector<TypeInterface*>&types,

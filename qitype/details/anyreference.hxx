@@ -273,7 +273,7 @@ namespace qi {
   }
 
 
-  inline std::vector<AnyReference>
+  inline AnyReferenceVector
   AnyReferenceBase::asListValuePtr()
   {
     return asTupleValuePtr();
