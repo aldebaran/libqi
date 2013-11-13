@@ -91,7 +91,7 @@ namespace qi {
           v.visitAnyObject(*o);
         }
         else
-          v.visitDynamic(value.asDynamic());
+          v.visitDynamic(value.content());
         break;
       }
       case TypeKind_Raw:

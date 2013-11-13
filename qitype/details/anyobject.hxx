@@ -732,7 +732,7 @@ namespace qi {
       }
       else if (source.kind() == TypeKind_Dynamic)
       { // try to dereference dynamic type in case it contains an object
-        set(storage, source.asDynamic());
+        set(storage, source.content());
       }
       else if (source.kind() == TypeKind_Object)
       { // wrap object in objectptr: we do not keep it alive,

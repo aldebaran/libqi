@@ -198,7 +198,7 @@ namespace qi {
     /** @return contained AnyValue or throw if type is not dynamic.
      * @note Returned AnyReference might be empty.
      */
-    AnyReference asDynamic() const;
+    AnyReference content() const;
 
     /// @{
     /** Container partial unboxing.
@@ -286,7 +286,7 @@ namespace qi {
     AnyIterator end() const;
 
     /// Dereference pointer, iterator or dynamic
-    AnyReference operator*();
+    AnyReference operator*() const;
     ///@}
 
     ///@}

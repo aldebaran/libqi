@@ -589,7 +589,7 @@ namespace qi
 
     if (_type->kind() == TypeKind_Dynamic)
     {
-      AnyReference gv = asDynamic();
+      AnyReference gv = content();
       std::pair<AnyReference, bool> result = gv.convert(targetType);
       return result;
     }
@@ -767,7 +767,7 @@ namespace qi
       if (homogeneous)
         elems.push_back(e);
       else
-        elems.push_back(e.asDynamic());
+        elems.push_back(e.content());
       ++it;
     }
 
@@ -1055,15 +1055,7 @@ namespace qi
   }
 
 
-  AnyReference AnyReferenceBase::asDynamic() const
-  {
-    if (kind() != TypeKind_Dynamic)
-      throw std::runtime_error("Not of dynamic kind");
-    DynamicTypeInterface* d = static_cast<DynamicTypeInterface*>(_type);
-    return d->get(_value);
-  }
-
-  AnyReference AnyReferenceBase::operator*()
+  AnyReference AnyReferenceBase::content() const
   {
     if (kind() == TypeKind_Pointer)
       return static_cast<PointerTypeInterface*>(_type)->dereference(_value);
@@ -1072,7 +1064,12 @@ namespace qi
     else if (kind() == TypeKind_Dynamic)
       return static_cast<DynamicTypeInterface*>(_type)->get(_value);
     else
-      throw std::runtime_error("Expected pointer or iterator");
+      throw std::runtime_error("Expected pointer, dynamic or iterator");
+  }
+
+  AnyReference AnyReferenceBase::operator*() const
+  {
+    return content();
   }
 
   std::vector<TypeInterface*> AnyReferenceBase::membersType() const

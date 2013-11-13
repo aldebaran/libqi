@@ -258,9 +258,9 @@ TEST(TestJSONDecoder, Array) {
   // complex array
   qi::AnyValue val = qi::decodeJSON("[1, [2, 3]]");
   ASSERT_EQ(qi::TypeKind_List, val.kind());
-  ASSERT_EQ(qi::TypeKind_Int, val[0].asDynamic().kind());
-  ASSERT_EQ(qi::TypeKind_List, val[1].asDynamic().kind());
-  ASSERT_EQ(2U, qi::decodeJSON("[1, [2, 3]]")[1].asDynamic().size());
+  ASSERT_EQ(qi::TypeKind_Int, val[0].content().kind());
+  ASSERT_EQ(qi::TypeKind_List, val[1].content().kind());
+  ASSERT_EQ(2U, qi::decodeJSON("[1, [2, 3]]")[1].content().size());
 }
 
 TEST(TestJSONDecoder, Object) {
@@ -276,7 +276,7 @@ TEST(TestJSONDecoder, Object) {
 
   ASSERT_EQ(qi::TypeKind_Map, qi::decodeJSON("{}").kind());
   ASSERT_EQ(1U, qi::decodeJSON("{\"a\":42}").size());
-  ASSERT_EQ(qi::TypeKind_Int, qi::decodeJSON("{\"a\":42}")["a"].asDynamic().kind());
+  ASSERT_EQ(qi::TypeKind_Int, qi::decodeJSON("{\"a\":42}")["a"].content().kind());
 
 }
 
