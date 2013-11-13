@@ -139,27 +139,27 @@ TEST(log, filteringChange)
   #define NO  EXPECT_TRUE(!tag); tag = false // yes false
   bool tag = false;
   qi::log::SubscriberId id = qi::log::addLogHandler("set", boost::bind(&set, _3, boost::ref(tag)));
-  qiLogDebug("init.test2") << "DLoL2";
-  qiLogInfo("init.test2") << "ILoL2";
   qiLogVerbose("init.test2") << "VLoL2";
+  qiLogError("init.test2") << "ELoL2";
+  qiLogWarning("init.test2") << "WLoL2";
 
   qi::log::setCategory("init.*", qi::LogLevel_Silent, id);
-  qi::log::setCategory("ini*", qi::LogLevel_Debug, id);
-  qi::log::setCategory("init.*", qi::LogLevel_Verbose, id);
+  qi::log::setCategory("ini*", qi::LogLevel_Verbose, id);
+  qi::log::setCategory("init.*", qi::LogLevel_Warning, id);
 
   tag = false;
-  qiLogDebug("init.test") << "DLoL";
+  qiLogVerbose("init.test") << "VLoL";
+  YES;
+  qiLogError("init.test") << "ELoL";
   YES;
   qiLogWarning("init.test") << "WLoL";
   YES;
-  qiLogVerbose("init.test") << "VLoL";
-  YES;
 
-  qiLogDebug("init.test2") << "DLoL2";
+  qiLogVerbose("init.test2") << "VLoL2";
+  YES;
+  qiLogError("init.test2") << "ELoL2";
   YES;
   qiLogWarning("init.test2") << "WLoL2";
-  YES;
-  qiLogVerbose("init.test2") << "VLoL2";
   YES;
 }
 
