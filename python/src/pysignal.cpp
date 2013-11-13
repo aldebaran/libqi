@@ -104,7 +104,7 @@ namespace qi { namespace py {
       //the python wrapper add a __call__ method bound to this one. (see qi/__init__.py)
       void trig(boost::python::tuple args, boost::python::dict kwargs) {
         GILScopedUnlock _unlock;
-        _sig->trigger(qi::AnyReference::from(args).asDynamic().asTupleValuePtr());
+        _sig->trigger(qi::AnyReference::from(args).content().asTupleValuePtr());
       }
 
     public:
@@ -144,7 +144,7 @@ namespace qi { namespace py {
       //the python wrapper add a __call__ method bound to this one. (see qi/__init__.py)
       void trig(boost::python::tuple args, boost::python::dict kwargs) {
         GILScopedUnlock _unlock;
-        _obj.metaPost(_sigid, qi::AnyReference::from(args).asDynamic().asTupleValuePtr());
+        _obj.metaPost(_sigid, qi::AnyReference::from(args).content().asTupleValuePtr());
       }
 
     private:

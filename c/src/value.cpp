@@ -295,7 +295,7 @@ qi_value_t*  qi_value_dynamic_get(qi_value_t *container)
 {
   qi::AnyValue &gv = qi_value_cpp(container);
   try {
-    qi::AnyReference gvp = gv.asDynamic();
+    qi::AnyReference gvp = gv.content();
     qi_value_t *ret = qi_value_create("");
     qi::AnyValue &val = qi_value_cpp(ret);
     val = gvp.clone();

@@ -158,7 +158,7 @@ namespace qi {
 
           GenericFunctionParameters args;
           if (sig == "m")
-            args = value.asDynamic().asTupleValuePtr();
+            args = value.content().asTupleValuePtr();
           else
             args = value.asTupleValuePtr();
           qiLogDebug() << "Triggering local event listeners with args : " << args.size();
@@ -224,7 +224,7 @@ namespace qi {
       case qi::Message::Type_Error: {
         try {
           static std::string sigerr("m");
-          qi::AnyReference gvp = msg.value(sigerr, _socket).asDynamic();
+          qi::AnyReference gvp = msg.value(sigerr, _socket).content();
           std::string err = gvp.asString();
           qiLogVerbose() << "Received error message"  << msg.address() << ":" << err;
           promise.setError(err);
