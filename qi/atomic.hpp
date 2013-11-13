@@ -67,7 +67,7 @@ namespace qi
 
     inline T swap(T value);
 
-    inline T operator*()
+    inline T operator*() const
     {
       return _value;
     }
