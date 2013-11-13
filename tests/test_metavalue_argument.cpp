@@ -135,7 +135,7 @@ TEST_F(TestObject, meta)
   ASSERT_EQ(v.to<std::vector<double> >(), in);
   target.call<void>(function, in).wait();
   ASSERT_EQ(v.to<std::vector<double> >(), in);
-  std::vector<AnyValue> args;
+  AnyValueVector args;
   args.push_back(AnyValue::from(12));
   args.push_back(AnyValue::from("foo"));
   args.push_back(AnyValue::from(in));
@@ -189,7 +189,7 @@ TEST_F(TestObject, meta)
   ASSERT_EQ(v.to<std::vector<double> >(), in);
   target.call<void>(function, in).wait();
   ASSERT_EQ(v.to<std::vector<double> >(), in);
-  std::vector<AnyValue> args;
+  AnyValueVector args;
   args.push_back(AnyValue::from(12));
   args.push_back(AnyValue::from("foo"));
   args.push_back(AnyValue::from(in));
@@ -237,7 +237,7 @@ TEST_F(TestObject, meta)
   ASSERT_EQ(v.to<std::vector<double> >(), in);
   target.call<void>(function, in).wait();
   ASSERT_EQ(v.to<std::vector<double> >(), in);
-  std::vector<AnyValue> args;
+  AnyValueVector args;
   args.push_back(AnyValue::from(12));
   args.push_back(AnyValue::from("foo"));
   args.push_back(AnyValue::from(in));

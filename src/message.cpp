@@ -463,7 +463,7 @@ namespace qi {
     */
     if (expectedSignature.type() != Signature::Type_Tuple)
       throw std::runtime_error("Expected a tuple, got " + expectedSignature.toString());
-    std::vector<AnyReference> nargs(in);
+    AnyReferenceVector nargs(in);
     SignatureVector src = argsSig.children();
     SignatureVector dst = expectedSignature.children();
     if (src.size() != dst.size())
