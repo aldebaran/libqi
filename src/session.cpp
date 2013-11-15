@@ -109,7 +109,7 @@ namespace qi {
     _socketsCache.init();
     qi::Future<void> f = _sdClient.connect(serviceDirectoryURL);
     // go through hoops to get shared_ptr on this
-    f.connect(&SessionPrivate::addSdSocketToCache, _self->_p, _1, serviceDirectoryURL);
+    f.connect(&SessionPrivate::addSdSocketToCache, boost::weak_ptr<SessionPrivate>(_self->_p), _1, serviceDirectoryURL);
     return f;
   }
 
