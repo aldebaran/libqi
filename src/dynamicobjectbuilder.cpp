@@ -104,7 +104,6 @@ namespace qi
     unsigned int nextId = _p->_object->metaObject()._p->addMethod(builder);
 
     _p->_object->setMethod(nextId, func, threadingModel);
-    _p->_object->metaObject()._p->refreshCache();
     return nextId;
   }
 
@@ -123,7 +122,6 @@ namespace qi
     }
     // throw on error
     unsigned int nextId = _p->_object->metaObject()._p->addSignal(name, signature);
-    _p->_object->metaObject()._p->refreshCache();
     return nextId;
   }
 
@@ -153,7 +151,6 @@ namespace qi
       throw std::runtime_error(err.str());
     }
     unsigned int res = _p->_object->metaObject()._p->addProperty(name, sig, id);
-    _p->_object->metaObject()._p->refreshCache();
     return res;
   }
 
@@ -164,7 +161,6 @@ namespace qi
 
   AnyObject DynamicObjectBuilder::object(boost::function<void (GenericObject*)> onDelete)
   {
-    _p->_object->metaObject()._p->refreshCache();
     if (!_p->_objptr)
     {
       _p->_objptr = makeDynamicAnyObject(_p->_object, _p->_deleteOnDestroy, onDelete);
@@ -175,7 +171,6 @@ namespace qi
 
   DynamicObject* DynamicObjectBuilder::bareObject()
   {
-    _p->_object->metaObject()._p->refreshCache();
     return _p->_object;
   }
 

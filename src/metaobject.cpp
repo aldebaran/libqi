@@ -104,6 +104,9 @@ namespace qi {
 
   int MetaObjectPrivate::findMethod(const std::string& nameWithOptionalSignature, const GenericFunctionParameters& args, bool* canCache) const
   {
+    boost::recursive_mutex::scoped_lock sl(_methodsMutex);
+    if (_dirtyCache)
+      const_cast<MetaObjectPrivate*>(this)->refreshCache();
     MetaObject::MethodMap::const_iterator it;
     if (nameWithOptionalSignature.find(':') != nameWithOptionalSignature.npos)
     { // full name and signature was given, there can be only one match
@@ -256,7 +259,7 @@ namespace qi {
     builder.setUid(uid);
     _methods[uid] = builder.metaMethod();
     _methodsNameToIdx[method.toString()] = uid;
-
+    _dirtyCache = true;
     return uid;
   }
 
@@ -279,7 +282,7 @@ namespace qi {
     MetaSignal ms(uid, name, signature);
     _events[uid] = ms;
     _eventsNameToIdx[name] = uid;
-
+    _dirtyCache = true;
     return uid;
   }
 
@@ -297,6 +300,7 @@ namespace qi {
     if (id == -1)
       id = ++_index;
     _properties[id] = MetaProperty(id, name, sig);
+    _dirtyCache = true;
     return id;
   }
 
@@ -317,6 +321,7 @@ namespace qi {
       _methods[newUid] = qi::MetaMethod(newUid, it->second);
       _methodsNameToIdx[it->second.toString()] = newUid;
     }
+    _dirtyCache = true;
     //todo: update uid
     return true;
   }
@@ -336,6 +341,7 @@ namespace qi {
       _events[newUid] = qi::MetaSignal(newUid, it->second.name(), it->second.parametersSignature());
       _eventsNameToIdx[it->second.name()] = newUid;
     }
+    _dirtyCache = true;
     //todo: update uid
     return true;
   }
@@ -354,6 +360,7 @@ namespace qi {
       }
       _properties[newUid] = qi::MetaProperty(newUid, it->second.name(), it->second.signature());
     }
+    _dirtyCache = true;
     //todo: update uid
     return true;
   }
@@ -361,9 +368,11 @@ namespace qi {
 
   void MetaObjectPrivate::refreshCache()
   {
+    // Both change on property(=event) and method will invalidate the cache.
+    boost::recursive_mutex::scoped_lock ml(_methodsMutex);
+    boost::recursive_mutex::scoped_lock el(_eventsMutex);
     unsigned int idx = 0;
     {
-      boost::recursive_mutex::scoped_lock sl(_methodsMutex);
       _methodsNameToIdx.clear();
       _methodNameToOverload.clear();
       for (MetaObject::MethodMap::iterator i = _methods.begin();
@@ -385,7 +394,6 @@ namespace qi {
       }
     }
     {
-      boost::recursive_mutex::scoped_lock sl(_eventsMutex);
       _eventsNameToIdx.clear();
       for (MetaObject::SignalMap::iterator i = _events.begin();
         i != _events.end(); ++i)
@@ -396,6 +404,7 @@ namespace qi {
     }
     // never lower index
     _index = std::max(idx, *_index);
+    _dirtyCache = false;
   }
 
   void MetaObjectPrivate::setDescription(const std::string &desc) {
