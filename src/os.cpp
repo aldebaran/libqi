@@ -22,7 +22,7 @@ namespace qi {
   namespace os {
     /* Have the static variable we need inside the function so that we
      * give correct results at initialization time, but also force
-     * initialization so that timestamp 0 corresponds to pogram start time.
+     * initialization so that timestamp 0 corresponds to program start time.
      */
     static int64_t _unused_base = ustime();
 

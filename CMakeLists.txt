@@ -53,6 +53,8 @@ set(H
   qi/atomic.hpp
   qi/buffer.hpp
   qi/bufferreader.hpp
+  qi/clock.hpp
+  qi/clock.hxx
   qi/error.hpp
   qi/future.hpp
   qi/log/consoleloghandler.hpp
@@ -84,6 +86,7 @@ set(C
   src/buffer.cpp
   src/buffer_p.hpp
   src/bufferreader.cpp
+  src/clock.cpp
   src/sdklayout.hpp
   src/filesystem.hpp
   src/filesystem.cpp
@@ -168,7 +171,7 @@ if (WITH_QT_QTCORE)
   qi_use_lib(qi QT_QTCORE)
 endif()
 
-qi_use_lib(qi BOOST_FILESYSTEM BOOST_THREAD BOOST_PROGRAM_OPTIONS BOOST_REGEX)
+qi_use_lib(qi BOOST_CHRONO BOOST_THREAD BOOST_FILESYSTEM BOOST_THREAD BOOST_PROGRAM_OPTIONS BOOST_REGEX)
 
 if(WITH_BOOST_LOCALE)
   qi_use_lib(qi BOOST_LOCALE)

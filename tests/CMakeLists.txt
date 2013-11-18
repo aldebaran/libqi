@@ -25,6 +25,7 @@ set_target_properties(testlaunchloop PROPERTIES FOLDER tests)
 set_target_properties(check_env  PROPERTIES FOLDER tests)
 set_target_properties(test_application  PROPERTIES FOLDER tests)
 
+qi_create_gtest(test_qiclock             SRC test_qiclock.cpp     DEPENDS QI GTEST)
 qi_create_gtest(test_qipath      SRC test_qipath.cpp ../src/utils.cpp DEPENDS QI GTEST)
 qi_create_gtest(test_qipath_from_bin SRC test_qipath.cpp ../src/utils.cpp
   DEPENDS QI GTEST)
