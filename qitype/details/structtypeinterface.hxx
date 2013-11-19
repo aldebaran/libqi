@@ -319,6 +319,11 @@ namespace qi {
       bounceType()->set(&astorage, index, valStorage);
     }
 
+    virtual std::vector<std::string> elementsName()
+    {
+      return bounceType()->elementsName();
+    }
+
     _QI_BOUNCE_TYPE_METHODS(Methods);
   };
 
