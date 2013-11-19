@@ -221,6 +221,8 @@ namespace qi {
    * - If callType is set (not auto), honor it.
    * - Be synchronous.
    *
+   * @param callerId: thread id of caller, for tracing purposes
+   *
    * When the call is finally made, if ObjectThreadingModel
    * is SingleThread, acquire the object lock.
   */
@@ -230,7 +232,8 @@ namespace qi {
     MetaCallType callType,
     AnyObject manageable,
     unsigned int methodId,
-    AnyFunction func, const GenericFunctionParameters& params, bool noCloneFirst=false);
+    AnyFunction func, const GenericFunctionParameters& params, bool noCloneFirst=false,
+    unsigned int callerId = 0);
 
   namespace detail
   {

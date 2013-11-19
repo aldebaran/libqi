@@ -106,9 +106,12 @@ namespace qi {
     };
     EventTrace() {}
     EventTrace(unsigned int id, EventKind  kind, unsigned int slotId,
-      const AnyValue& arguments, const qi::os::timeval timestamp, qi::int64_t userUsTime=0, qi::int64_t systemUsTime=0)
+      const AnyValue& arguments, const qi::os::timeval timestamp,
+      qi::int64_t userUsTime=0, qi::int64_t systemUsTime=0,
+      unsigned int callerContext=0, unsigned int calleeContext=0)
     : _id(id), _kind(kind), _slotId(slotId), _arguments(arguments),
-      _timestamp(timestamp), _userUsTime(userUsTime), _systemUsTime(systemUsTime)
+      _timestamp(timestamp), _userUsTime(userUsTime), _systemUsTime(systemUsTime),
+      _callerContext(callerContext), _calleeContext(calleeContext)
     {}
 
     // trace id, used to match call and call result
@@ -121,6 +124,8 @@ namespace qi {
     const qi::os::timeval&  timestamp()       const { return _timestamp;}
     const qi::int64_t&      userUsTime()      const { return _userUsTime;}
     const qi::int64_t&      systemUsTime()    const { return _systemUsTime;}
+    const unsigned int&     callerContext()   const { return _callerContext;}
+    const unsigned int&     calleeContext()   const { return _callerContext;}
 
   private:
     unsigned int     _id; // trace id, used to match call and call result
@@ -130,6 +135,8 @@ namespace qi {
     qi::os::timeval  _timestamp;
     qi::int64_t      _userUsTime;
     qi::int64_t      _systemUsTime;
+    unsigned int     _callerContext; // context of caller function
+    unsigned int     _calleeContext; // context where method runs
   };
 
   typedef std::map<unsigned int, MethodStatistics> ObjectStatistics;

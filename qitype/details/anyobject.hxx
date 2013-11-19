@@ -900,6 +900,8 @@ QI_TYPE_STRUCT_AGREGATE_CONSTRUCTOR(qi::EventTrace,
   ("arguments",    arguments),
   ("timestamp",    timestamp),
   ("userUsTime",   userUsTime),
-  ("systemUsTime", systemUsTime));
+  ("systemUsTime", systemUsTime),
+  ("callerContext", callerContext),
+  ("calleeContext", calleeContext));
 QI_TYPE_STRUCT(qi::os::timeval, tv_sec, tv_usec);
 #endif  // _QITYPE_DETAILS_GENERICOBJECT_HXX_

@@ -342,7 +342,8 @@ namespace qi
                       bool lock,
                       const GenericFunctionParameters& params,
                       unsigned int methodId,
-                      AnyFunction& func
+                      AnyFunction& func,
+                      unsigned int callerContext
                       )
     {
       bool stats = context && context.isStatsEnabled();
@@ -379,7 +380,8 @@ namespace qi
           }
         }
         context.asGenericObject()->traceObject(EventTrace(
-          tid, EventTrace::Event_Call, methodId, AnyValue::from(args), tv));
+          tid, EventTrace::Event_Call, methodId, AnyValue::from(args), tv,
+          0,0, callerContext, qi::os::gettid()));
       }
 
       qi::int64_t time = stats?qi::os::ustime():0;
@@ -438,7 +440,7 @@ namespace qi
           val = AnyValue::from(out.future().error());
         context.asGenericObject()->traceObject(EventTrace(tid,
           success?EventTrace::Event_Result:EventTrace::Event_Error,
-          methodId, val, tv, cpuendtime.first, cpuendtime.second));
+          methodId, val, tv, cpuendtime.first, cpuendtime.second, callerContext, qi::os::gettid()));
       }
     }
   }
@@ -448,13 +450,14 @@ namespace qi
   public:
     MFunctorCall(AnyFunction& func, GenericFunctionParameters& params,
        qi::Promise<AnyReference>* out, bool noCloneFirst,
-       AnyObject context, unsigned int methodId, bool lock)
+       AnyObject context, unsigned int methodId, bool lock, unsigned int callerId)
     : noCloneFirst(noCloneFirst)
     {
       this->out = out;
       this->methodId = methodId;
       this->context = context;
       this->lock = lock;
+      this->callerId = callerId;
       std::swap(this->func, func);
       std::swap((AnyReferenceVector&) params,
         (AnyReferenceVector&) this->params);
@@ -474,10 +477,11 @@ namespace qi
       this->lock = b.lock;
       this->out = b.out;
       noCloneFirst = b.noCloneFirst;
+      callerId = b.callerId;
     }
     void operator()()
     {
-      call(*out, context, lock, params, methodId, func);
+      call(*out, context, lock, params, methodId, func, callerId);
       params.destroy(noCloneFirst);
       delete out;
     }
@@ -488,6 +492,7 @@ namespace qi
     AnyObject context;
     bool lock;
     unsigned int methodId;
+    unsigned int callerId;
   };
 
   qi::Future<AnyReference> metaCall(EventLoop* el,
@@ -496,7 +501,8 @@ namespace qi
     MetaCallType callType,
     AnyObject context,
     unsigned int methodId,
-    AnyFunction func, const GenericFunctionParameters& params, bool noCloneFirst)
+    AnyFunction func, const GenericFunctionParameters& params, bool noCloneFirst,
+    unsigned int callerId)
   {
     // Implement rules described in header
     bool sync = true;
@@ -516,7 +522,7 @@ namespace qi
     if (sync)
     {
       qi::Promise<AnyReference> out(FutureCallbackType_Sync);
-      call(out, context, doLock, params, methodId, func);
+      call(out, context, doLock, params, methodId, func, callerId?callerId:qi::os::gettid());
       return out.future();
     }
     else
@@ -527,7 +533,7 @@ namespace qi
         elForced?FutureCallbackType_Async:FutureCallbackType_Sync);
       GenericFunctionParameters pCopy = params.copy(noCloneFirst);
       qi::Future<AnyReference> result = out->future();
-      el->post(MFunctorCall(func, pCopy, out, noCloneFirst, context, methodId, doLock));
+      el->post(MFunctorCall(func, pCopy, out, noCloneFirst, context, methodId, doLock, callerId?callerId:qi::os::gettid()));
       return result;
     }
   }
