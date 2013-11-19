@@ -1,10 +1,13 @@
 /** Copyright (C) 2012 Aldebaran Robotics
 */
 
+#include <iostream>
+#include <iomanip>
 
 #include <boost/program_options.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/foreach.hpp>
+#include <boost/io/ios_state.hpp>
 
 #include <qi/log.hpp>
 #include <qi/os.hpp>
@@ -33,6 +36,20 @@ static bool full = false;
 static std::vector<std::string> objectNames;
 static unsigned int maxServiceLength = 0;
 qiLogCategory("qitrace");
+
+// helper to format thread id
+struct ThreadFormat
+{
+  ThreadFormat(unsigned int tid) : tid(tid)
+  {}
+  unsigned int tid;
+};
+
+std::ostream& operator << (std::ostream& o, const ThreadFormat& tf)
+{
+  boost::io::ios_flags_saver ifs(o);
+  return o << std::setfill('0') << std::setw(5) << tf.tid;
+}
 
 void onTrace(ObjectMap::value_type ov, const qi::EventTrace& trace)
 {
@@ -69,15 +86,21 @@ void onTrace(ObjectMap::value_type ov, const qi::EventTrace& trace)
     traceKind = 0;
   std::string spacing(maxLen + 2 - name.size(), ' ');
   std::string spacing2((full?maxServiceLength:17) + 2 - ov.first.size(), ' ');
-  if (trace.kind() == qi::EventTrace::Event_Result)
+  if (trace.kind() == qi::EventTrace::Event_Result || qi::EventTrace::Event_Error)
   {
-    std::cout << serviceName << spacing2 << trace.id() << ' ' << callType[traceKind] << ' ' << name
+    std::cout << serviceName << spacing2 << trace.id()
+      << ' ' << ThreadFormat(trace.callerContext())
+      << ' ' << ThreadFormat(trace.calleeContext())
+      << ' ' << callType[traceKind] << ' ' << name
       << spacing << (trace.timestamp().tv_sec - secStart) << '.' << trace.timestamp().tv_usec
       << ' ' << trace.userUsTime() << ' ' << trace.systemUsTime() << ' ' << qi::encodeJSON(trace.arguments()) << std::endl;
   }
   else
   {
-    std::cout << serviceName << spacing2 << trace.id() << ' ' << callType[traceKind] << ' ' << name
+    std::cout << serviceName << spacing2 << trace.id()
+      << ' ' << ThreadFormat(trace.callerContext())
+      << ' ' << ThreadFormat(trace.calleeContext())
+      << ' ' << callType[traceKind] << ' ' << name
       << spacing << (trace.timestamp().tv_sec - secStart) << '.' << trace.timestamp().tv_usec
       << ' ' << qi::encodeJSON(trace.arguments()) << std::endl;
   }
