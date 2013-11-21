@@ -385,7 +385,7 @@ def doxyxml_to_raw(doxy_dir):
         t = match.expand(r"\2")
         sig = "(" + cxx_type_to_signature(t) + ")"
         sig = signature_to_json(sig)
-        sig = sig[0][1] # unwrap toplevel array and method tuple
+        sig = sig[1]
         sig = map(json_to_signature, sig)
         signals.append((name, sig))
       match = re.match(r"(qi::)?Property<(.*)>", t)
@@ -1295,7 +1295,7 @@ def runtime_to_raw(class_name, sd_url):
     sig = m[3]
     # we must split the signature into its components
     sig = signature_to_json(sig)
-    sig = sig[0][1] # unwrap toplevel array and method tuple
+    sig = sig[1]
     sig = map(json_to_signature, sig)
     rettype = m[1]
     if method_name == 'metaObject': # HACK
