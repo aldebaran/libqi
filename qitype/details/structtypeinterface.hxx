@@ -28,7 +28,9 @@ namespace qi
      */
     template<typename A> TypeInterface* fieldType(A)
     {
-      return qi::typeOf<typename detail::Accessor<A>::value_type>();
+      static TypeInterface* res =
+        qi::typeOf<typename detail::Accessor<A>::value_type>();
+      return res;
     }
 
     template<typename C, typename A> void* fieldStorage(C* inst, A accessor)

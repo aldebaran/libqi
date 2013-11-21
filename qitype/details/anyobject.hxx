@@ -501,7 +501,7 @@ namespace qi {
       if (handleFuture(val, promise))
         return;
 
-      TypeInterface* targetType = typeOf<T>();
+      static TypeInterface* targetType = typeOf<T>();
       try
       {
         std::pair<AnyReference, bool> conv = val.convert(targetType);
