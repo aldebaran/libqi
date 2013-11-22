@@ -1023,14 +1023,14 @@ namespace qi
     {
       IntTypeInterface* type = static_cast<IntTypeInterface*>(this->_type);
       if (!type->isSigned() && v < 0)
-        throw std::runtime_error(_QI_LOG_FORMAT_HASARG_0("Converting negative value %s to unsigned type", v));
+        throw std::runtime_error(_QI_LOG_FORMAT("Converting negative value %s to unsigned type", v));
       // not signed gives us an extra bit, but signed can go down an extra value
       if (type->size() > 8)
-        throw std::runtime_error(_QI_LOG_FORMAT_HASARG_0("Overflow converting %s to %s bytes", v, type->size()));
+        throw std::runtime_error(_QI_LOG_FORMAT("Overflow converting %s to %s bytes", v, type->size()));
       if (type->size() == 0 && (v < 0 || v > 1))
-        throw std::runtime_error(_QI_LOG_FORMAT_HASARG_0("Expected 0 or 1 when converting to bool, got %s", v));
+        throw std::runtime_error(_QI_LOG_FORMAT("Expected 0 or 1 when converting to bool, got %s", v));
       if (type->size() > 0 && type->size() < 8 && (std::abs(v) >= (1LL << (8*type->size() - (type->isSigned()?1:0))) + ((v<0)?1:0)))
-        throw std::runtime_error(_QI_LOG_FORMAT_HASARG_0("Overflow converting %s to %s bytes", v, type->size()));
+        throw std::runtime_error(_QI_LOG_FORMAT("Overflow converting %s to %s bytes", v, type->size()));
       type->set(&_value, v);
     }
     else if (kind() == TypeKind_Float)
@@ -1058,11 +1058,11 @@ namespace qi
     {
       IntTypeInterface* type = static_cast<IntTypeInterface*>(this->_type);
       if (type->size() > 0 && type->size() < 8 && (v >= (1ULL << (8*type->size() - (type->isSigned()?1:0)))))
-        throw std::runtime_error(_QI_LOG_FORMAT_HASARG_0("Overflow converting %s to %s bytes", v, type->size()));
+        throw std::runtime_error(_QI_LOG_FORMAT("Overflow converting %s to %s bytes", v, type->size()));
       if (type->size() == 0 && (v > 1))
-        throw std::runtime_error(_QI_LOG_FORMAT_HASARG_0("Expected 0 or 1 when converting to bool, got %s", v));
+        throw std::runtime_error(_QI_LOG_FORMAT("Expected 0 or 1 when converting to bool, got %s", v));
       if (type->size() == 8 && type->isSigned() && v >= 0x8000000000000000ULL)
-        throw std::runtime_error(_QI_LOG_FORMAT_HASARG_0("Overflow converting %s to signed int64", v));
+        throw std::runtime_error(_QI_LOG_FORMAT("Overflow converting %s to signed int64", v));
       type->set(&_value, (int64_t)v);
     }
     else if (kind() == TypeKind_Float)
@@ -1080,16 +1080,16 @@ namespace qi
     {
       IntTypeInterface* type = static_cast<IntTypeInterface*>(this->_type);
       if (v < 0 && !type->isSigned())
-        throw std::runtime_error(_QI_LOG_FORMAT_HASARG_0("Converting negative value %s to unsigned type", v));
+        throw std::runtime_error(_QI_LOG_FORMAT("Converting negative value %s to unsigned type", v));
       if (type->size() == 0 && std::min(std::abs(v), std::abs(v-1)) > 0.01)
-        throw std::runtime_error(_QI_LOG_FORMAT_HASARG_0("Expected 0 or 1 when converting to bool, got %s", v));
+        throw std::runtime_error(_QI_LOG_FORMAT("Expected 0 or 1 when converting to bool, got %s", v));
       if (type->size() != 0 && type->size() < 8 && (std::abs(v) >= (1ULL << (8*type->size() - (type->isSigned()?1:0))) + ((v<0)?1:0)))
-        throw std::runtime_error(_QI_LOG_FORMAT_HASARG_0("Overflow converting %s to %s bytes", v, type->size()));
+        throw std::runtime_error(_QI_LOG_FORMAT("Overflow converting %s to %s bytes", v, type->size()));
       if (type->size() == 8
           && std::abs(v) > (type->isSigned()?
             (double)std::numeric_limits<int64_t>::max()
             :(double)std::numeric_limits<uint64_t>::max()))
-        throw std::runtime_error(_QI_LOG_FORMAT_HASARG_0("Overflow converting %s to %s bytes", v, type->size()));
+        throw std::runtime_error(_QI_LOG_FORMAT("Overflow converting %s to %s bytes", v, type->size()));
       type->set(&_value, static_cast<int64_t>(v));
     }
     else
