@@ -19,7 +19,7 @@ public:
 
 public:
   void info(const std::vector<std::string> &patternVec, bool verbose, bool showHidden, bool showDoc, bool showRaw, bool parseable);
-  void call(const std::string &pattern, const std::vector<std::string> &jsonArgList, bool hidden, bool json, bool cont);
+  void call(const std::string &pattern, const std::vector<std::string> &jsonArgList, bool hidden, bool json, bool cont, unsigned int callCount);
   void post(const std::string &pattern, const std::vector<std::string> &jsonArgList, bool hidden, bool json);
   void postOnAlmemory(const std::string &pattern, const std::string &arg, bool json);
   void get(const std::vector<std::string> &patternList, bool hidden, bool cont);

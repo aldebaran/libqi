@@ -41,9 +41,9 @@ void SessionHelper::info(const std::vector<std::string> &patternVec, bool verbos
         showServiceInfo(_servicesInfos[j], verbose, showHidden, showDoc, showRaw, parseable);
 }
 
-void SessionHelper::call(const std::string &pattern, const std::vector<std::string> &argList, bool hidden, bool json, bool cont)
+void SessionHelper::call(const std::string &pattern, const std::vector<std::string> &argList, bool hidden, bool json, bool cont, unsigned int callCount)
 {
-  forEachService(pattern, boost::bind(&ServiceHelper::call, _1, _2, decodeArgs(argList, json)),
+  forEachService(pattern, boost::bind(&ServiceHelper::call, _1, _2, decodeArgs(argList, json), callCount),
                   &ServiceHelper::getMatchingMethodsName, hidden, cont);
 }
 

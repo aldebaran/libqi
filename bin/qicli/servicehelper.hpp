@@ -12,7 +12,7 @@ public:
   ServiceHelper(const ServiceHelper &other);
   ~ServiceHelper();
 
-  bool                        call(const std::string &methodName, const qi::GenericFunctionParameters &gvArgList);
+  bool                        call(const std::string &methodName, const qi::GenericFunctionParameters &gvArgList, unsigned int callCount);
   bool                        post(const std::string &signalName, const qi::GenericFunctionParameters &gvArgList);
   bool                        showProperty(const std::string &propertyName);
   bool                        setProperty(const std::string &propertyName, const qi::AnyValue &gvArg);

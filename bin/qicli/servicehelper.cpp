@@ -164,17 +164,35 @@ bool ServiceHelper::post(const std::string &signalName, const qi::GenericFunctio
   return true;
 }
 
-bool ServiceHelper::call(const std::string &methodName, const qi::GenericFunctionParameters &gvArgList)
+bool ServiceHelper::call(const std::string &methodName, const qi::GenericFunctionParameters &gvArgList, unsigned int callCount)
 {
   printServiceMember(_name, methodName);
   std::cout.flush();
+  qi::int64_t t = qi::os::ustime();
+  if (callCount)
+  for (unsigned int i=0; i<callCount-1; ++i)
+  {
+    try
+    {
+      qi::AnyReference r = _service.metaCall(methodName, gvArgList);
+      r.destroy();
+    }
+    catch(...) {}
+  }
   qi::FutureSync<qi::AnyReference> result = _service.metaCall(methodName, gvArgList);
+  result.wait();
+  t = qi::os::ustime() - t;
   if (result.hasError())
   {
     printError(result.error());
+    if (callCount)
+      std::cout << ((double)t / callCount) << " us per call " << std::endl;
     return false;
   }
   std::cout << qi::encodeJSON(result.value()) << std::endl;
+  if (callCount)
+    std::cout << ((double)t / callCount) << " us per call " << std::endl;
+  const_cast<qi::AnyReference&>(result.value()).destroy();
   return true;
 }
 

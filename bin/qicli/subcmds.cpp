@@ -57,10 +57,12 @@ int subCmd_call(int argc, char **argv, qi::ApplicationSession& app)
   po::options_description     desc("Usage: qicli call <ServicePattern.MethodPattern> [<JsonParameter>...]");
   std::string                 fullName;
   std::vector<std::string>    argList;
+  unsigned int                callCount = 0;
 
   desc.add_options()
       ("method", po::value<std::string>(&fullName)->required(), "method's name")
       ("arg", po::value<std::vector<std::string> >(&argList), "method's args")
+      ("bench", po::value<unsigned int>(&callCount), "bench the call time using given iteration count")
       ("hidden", "call hidden methods if they match the given pattern")
       ("json", "method parameters' will be treaded as JSON strings")
       ("continue", "continue on error")
@@ -76,7 +78,7 @@ int subCmd_call(int argc, char **argv, qi::ApplicationSession& app)
     return 1;
   SessionHelper session(app);
 
-  session.call(fullName, argList, vm.count("hidden"), vm.count("json"), vm.count("continue"));
+  session.call(fullName, argList, vm.count("hidden"), vm.count("json"), vm.count("continue"), callCount);
   return 0;
 }
 
