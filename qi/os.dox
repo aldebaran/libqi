@@ -148,7 +148,7 @@
  * \fn qi::os::getenv(const char*)
  * \brief Get an environment variable.
  * \param var The environment variable to search for.
- * \return A pointer to the value in the environment, or an empty string if
+ * \return The value in the environment, or an empty string if
  *         there is no match.
  *
  * \verbatim
