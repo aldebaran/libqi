@@ -43,6 +43,30 @@ namespace qi {
     return AnyValue(makeGenericTuple(values), false, true);
   }
 
+  inline AnyValue
+  AnyValue::makeTupleFromValue(const AutoAnyReference& v0,
+                               const AutoAnyReference& v1,
+                               const AutoAnyReference& v2,
+                               const AutoAnyReference& v3,
+                               const AutoAnyReference& v4,
+                               const AutoAnyReference& v5,
+                               const AutoAnyReference& v6,
+                               const AutoAnyReference& v7,
+                               const AutoAnyReference& v8,
+                               const AutoAnyReference& v9)
+  {
+    const AnyReference* vect[10] = { &v0, &v1, &v2, &v3, &v4, &v5, &v6, &v7, &v8, &v9 };
+    AnyReferenceVector arv;
+
+    for (unsigned int i = 0; i < 10; ++i) {
+      if (!vect[i]->isValid())
+        break;
+      arv.push_back(*vect[i]);
+    }
+    return AnyValue(makeGenericTuple(arv), false, true);
+  }
+
+
   template<typename T>
   AnyValue AnyValue::makeList(const AnyReferenceVector& values)
   {
