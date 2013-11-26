@@ -47,10 +47,26 @@ namespace qi {
     class GILScopedUnlock : private boost::noncopyable
     {
     public:
-      GILScopedUnlock();
-      ~GILScopedUnlock();
+      GILScopedUnlock()
+      {
+        qiLogCategory("qi.py.gil");
+        qiLogDebug() << "ScopedUnlockEnter(Begin)";
+        _save = PyEval_SaveThread();
+        qiLogDebug() << "ScopedUnlockEnter(End)";
+      }
+      ~GILScopedUnlock()
+      {
+        qiLogCategory("qi.py.gil");
+        qiLogDebug() << "ScopedUnlockQuit(Begin)";
+        PyEval_RestoreThread(_save);
+        qiLogDebug() << "ScopedUnlockQuit(End)";
+      }
 
     private:
+      // It is not allowed to call PyEval_SaveThread if the GIL is not owned,
+      // so we ensure we have the gil before unlocking, this allows one to nest
+      // multiple ScopedUnlock
+      GILScopedLock _l;
       PyThreadState* _save;
     };
   }
