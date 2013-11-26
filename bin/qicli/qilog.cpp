@@ -1,0 +1,136 @@
+/**
+ * Copyright (C) 2013 Aldebaran Robotics
+ */
+
+#include <string>
+
+#include <boost/program_options.hpp>
+#include <boost/algorithm/string.hpp>
+#include <boost/foreach.hpp>
+
+#include <qi/log.hpp>
+
+#include <qimessaging/applicationsession.hpp>
+
+#include "qicli.hpp"
+
+#define foreach BOOST_FOREACH
+
+qiLogCategory("qicli.qilog");
+
+static void onMessage(const qi::AnyValue& msg)
+{
+  qi::AnyReference ref = msg.asReference();
+  std::stringstream ss;
+  ss << qi::log::logLevelToString(static_cast<qi::LogLevel>(ref[1].asInt32())) // level
+      << " " << ref[3].asString() // category
+      << " " << ref[0].asString() // source
+      << " " << ref[5].asString(); // message
+  std::cout << ss.str() << std::endl;
+}
+
+static void setFilter(const std::string& rules, qi::AnyObject listener)
+{
+  // See doc in header for format
+  size_t pos = 0;
+  while (true)
+  {
+    if (pos >= rules.length())
+      break;
+    size_t next = rules.find(':', pos);
+    std::string token;
+    if (next == rules.npos)
+      token = rules.substr(pos);
+    else
+      token = rules.substr(pos, next-pos);
+    if (token.empty())
+    {
+      pos = next + 1;
+      continue;
+    }
+    if (token[0] == '+')
+      token = token.substr(1);
+    size_t sep = token.find('=');
+    if (sep != token.npos)
+    {
+      std::string sLevel = token.substr(sep+1);
+      std::string cat = token.substr(0, sep);
+      int level = qi::log::stringToLogLevel(sLevel.c_str());
+      qiLogFatal() << cat << level;
+      listener.call<void>("setCategory", cat, level);
+    }
+    else
+    {
+      if (token[0] == '-')
+      {
+        qiLogFatal() << token.substr(1) << 0;
+        listener.call<void>("setCategory", token.substr(1), 0);
+      }
+      else
+      {
+        qiLogFatal() << token << 6;
+        listener.call<void>("setCategory", token, 6);
+      }
+    }
+    if (next == rules.npos)
+      break;
+    pos = next+1;
+  }
+}
+
+int subCmd_logView(int argc, char **argv, qi::ApplicationSession& app)
+{
+  po::options_description   desc("Usage: qicli log-view");
+
+  desc.add_options()
+      ("help,h", "Print this help message and exit")
+      ("verbose,v", "Set maximum logs verbosity shown to verbose.")
+      ("debug,d", "Set maximum logs verbosity shown to debug.")
+      ("level,l", po::value<int>()->default_value(4), "Change the log minimum level: [0-6] (default:4). This option accept the same arguments' format than --qi-log-level.")
+      ("filters,f", po::value<std::string>(), "Set log filtering options. This option accept the same arguments' format than --qi-log-filters.")
+      ;
+
+  po::variables_map vm;
+  if (!poDefault(po::command_line_parser(argc, argv).options(desc), vm, desc))
+    return 1;
+
+  qiLogVerbose() << "Connecting to service directory";
+  app.start();
+  qi::Session& s = app.session();
+
+  qiLogVerbose() << "Resolving services";
+
+  qi::AnyObject logger = s.service("LogManager");
+  qi::AnyObject listener = logger.call<qi::AnyObject>("getListener");
+
+  listener.call<void>("clearFilters");
+  if (vm.count("verbose"))
+    listener.call<void>("setCategory", "*", 5);
+
+  if (vm.count("debug"))
+    listener.call<void>("setCategory", "*", 6);
+
+  if (vm.count("level"))
+  {
+    int level = vm["level"].as<int>();
+
+    if (level > 6)
+      level =  6;
+    else if (level <= 0)
+      level = 0;
+
+    listener.call<void>("setCategory", "*", level);
+  }
+
+  if (vm.count("filters"))
+  {
+    std::string filters = vm["filters"].as<std::string>();
+    setFilter(filters, listener);
+  }
+
+  listener.connect("onLogMessage", &onMessage);
+
+  app.run();
+
+  return 0;
+}
