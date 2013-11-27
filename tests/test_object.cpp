@@ -120,11 +120,11 @@ std::vector<qi::AnyReference> convert(qi::AutoAnyReference v1 = qi::AutoAnyRefer
   qi::AutoAnyReference v5 = qi::AutoAnyReference())
 {
   std::vector<qi::AnyReference> res;
-  if (v1.value)
+  if (v1.rawValue())
     res.push_back(v1);
-  if (v2.value)
+  if (v2.rawValue())
     res.push_back(v2);
-  if (v3.value)
+  if (v3.rawValue())
     res.push_back(v3);
   return res;
 }
@@ -211,7 +211,7 @@ TEST(TestObject, Typing)
   qi::AnyFunction adderAdd = qi::AnyFunction::from(&Adder::add);
   Adder add1(1);
   std::vector<qi::AnyReference> argsAdd = convert(41);
-  res = adderAdd.call(qi::AnyReference(add1), argsAdd);
+  res = adderAdd.call(qi::AnyReference::from(add1), argsAdd);
   ASSERT_TRUE(checkValue(res, 42));
 }
 
@@ -330,40 +330,40 @@ TEST(TestObject, Simple) {
   qi::AnyObject obj(ob.object());
 
 
-  EXPECT_EQ(42, obj->call<int>("test", 21, 21));
-  EXPECT_EQ(42, obj->call<int>("testVal", 21, 21));
-  EXPECT_EQ(42, obj->call<int>("objtest", 21, 21));
-  EXPECT_EQ(42, obj->call<int>("testBind", 21));
-  EXPECT_EQ(42, obj->call<int>("testBind2", 21));
-  EXPECT_EQ(42, obj->call<int>("testBindVal", 21));
-  EXPECT_EQ(42, obj->call<int>("testBind2Val", 21));
-  EXPECT_EQ(42U, obj->call<unsigned int>("test", 21, 21));
-  EXPECT_EQ(42, obj->call<char>("test", 21, 21));
-  double d = obj->call<double>("test", 21, 21);
+  EXPECT_EQ(42, obj.call<int>("test", 21, 21));
+  EXPECT_EQ(42, obj.call<int>("testVal", 21, 21));
+  EXPECT_EQ(42, obj.call<int>("objtest", 21, 21));
+  EXPECT_EQ(42, obj.call<int>("testBind", 21));
+  EXPECT_EQ(42, obj.call<int>("testBind2", 21));
+  EXPECT_EQ(42, obj.call<int>("testBindVal", 21));
+  EXPECT_EQ(42, obj.call<int>("testBind2Val", 21));
+  EXPECT_EQ(42U,obj.call<unsigned int>("test", 21, 21));
+  EXPECT_EQ(42, obj.call<char>("test", 21, 21));
+  double d = obj.call<double>("test", 21, 21);
   EXPECT_EQ(42.0, d);
-  EXPECT_EQ(42, obj->call<long>("test", 21, 21));
-  EXPECT_EQ(42UL, obj->call<unsigned long>("test", 21, 21));
+  EXPECT_EQ(42, obj.call<long>("test", 21, 21));
+  EXPECT_EQ(42UL, obj.call<unsigned long>("test", 21, 21));
 
 #ifndef QI_REQUIRE_SIGNATURE_EXACT_MATCH
-  EXPECT_EQ(42, obj->call<int>("test", (char)21, 21));
-  EXPECT_EQ(42, obj->call<int>("test", (unsigned char)21, 21));
-  EXPECT_EQ(42, obj->call<int>("test", (short)21, 21));
-  EXPECT_EQ(42, obj->call<int>("test", (unsigned short)21, 21));
-  EXPECT_EQ(42, obj->call<int>("test", (float)21, 21));
-  EXPECT_EQ(42, obj->call<int>("test", (double)21, 21));
-  EXPECT_EQ(42, obj->call<int>("test", (long)21, 21));
+  EXPECT_EQ(42, obj.call<int>("test", (char)21, 21));
+  EXPECT_EQ(42, obj.call<int>("test", (unsigned char)21, 21));
+  EXPECT_EQ(42, obj.call<int>("test", (short)21, 21));
+  EXPECT_EQ(42, obj.call<int>("test", (unsigned short)21, 21));
+  EXPECT_EQ(42, obj.call<int>("test", (float)21, 21));
+  EXPECT_EQ(42, obj.call<int>("test", (double)21, 21));
+  EXPECT_EQ(42, obj.call<int>("test", (long)21, 21));
 #endif
 
   gGlobalResult = 0;
-  obj->call<void>("vtest", 21, 21).wait();
+  obj.call<void>("vtest", 21, 21).wait();
   EXPECT_EQ(42, gGlobalResult);
   gGlobalResult = 0;
-  obj->call<void>("objvtest", 21, 21).wait();
+  obj.call<void>("objvtest", 21, 21).wait();
   EXPECT_EQ(42, gGlobalResult);
 
   C f(42);
-  EXPECT_EQ(&f, obj->call<C*>("ptrtest", &f).value());
-  EXPECT_EQ(f, obj->call<C>("valuetest", f).value());
+  EXPECT_EQ(&f, obj.call<C*>("ptrtest", &f).value());
+  EXPECT_EQ(f, obj.call<C>("valuetest", f).value());
 }
 
 struct Point
@@ -405,7 +405,7 @@ TEST(TestObject, SerializeSimple)
   qi::AnyObject obj(ob.object());
   Point p;
   p.x = 1; p.y = 2;
-  Point res = obj->call<Point>("swapPoint", p);
+  Point res = obj.call<Point>("swapPoint", p);
   ASSERT_EQ(2, res.x);
   ASSERT_EQ(1, res.y);
 }
@@ -413,7 +413,7 @@ TEST(TestObject, SerializeSimple)
 TEST(TestObject, ConvertSimple)
 {
   Point p; p.x = 1; p.y = 2;
-  FPoint p2 = qi::AnyReference(p).to<FPoint>();
+  FPoint p2 = qi::AnyReference::from(p).to<FPoint>();
   ASSERT_EQ(p2.x, p.x);
   ASSERT_EQ(p2.y, p.y);
 }
@@ -472,8 +472,8 @@ TEST(TestObject, SerializeComplex)
   qi::DynamicObjectBuilder ob;
   unsigned id = ob.advertiseMethod("echo", &echoBack);
   qi::AnyObject obj(ob.object());
-  std::cerr << obj->metaObject().methodMap()[id].toString() << std::endl;
-  Complex res = obj->call<Complex>("echo", comp);
+  std::cerr << obj.metaObject().methodMap()[id].toString() << std::endl;
+  Complex res = obj.call<Complex>("echo", comp);
   ASSERT_EQ(res, comp);
 }
 
@@ -490,7 +490,7 @@ TEST(TestObject, convertComplex)
   comp.stuff.push_back(v);
   v.push_back(3);
   comp.stuff.push_back(v);
-  Complex2 comp2 = qi::AnyReference(comp).to<Complex2>();
+  Complex2 comp2 = qi::AnyReference::from(comp).to<Complex2>();
   ASSERT_EQ(comp2.foo, comp.foo);
   ASSERT_EQ(comp.points.size(), comp2.points.size());
   ASSERT_EQ(comp.points.front().x, comp2.points.front().x);
@@ -513,27 +513,27 @@ TEST(TestObject, ObjectTypeBuilder)
   builder.advertiseMethod("increment2", &Incrementer::increment);
   Adder a1(1);
   Adder a2(2);
-  qi::AnyObject oa1 = builder.object(&a1);
-  qi::AnyObject oa2 = builder.object(&a2);
-  ASSERT_TRUE(!oa1->eventLoop()); // no eventloop override
-  ASSERT_EQ(2, oa1->call<int>("add", 1));
-  ASSERT_EQ(3, oa2->call<int>("add", 1));
-  ASSERT_EQ(5, oa1->call<int>("addTwo", 3, 2));
-  ASSERT_EQ(3, oa1->call<int>("addAdderByPtr", &a2));
+  qi::AnyObject oa1 = builder.object(&a1, &qi::AnyObject::deleteGenericObjectOnly);
+  qi::AnyObject oa2 = builder.object(&a2, &qi::AnyObject::deleteGenericObjectOnly);
+  ASSERT_TRUE(!oa1.eventLoop()); // no eventloop override
+  ASSERT_EQ(2, oa1.call<int>("add", 1));
+  ASSERT_EQ(3, oa2.call<int>("add", 1));
+  ASSERT_EQ(5, oa1.call<int>("addTwo", 3, 2));
+  ASSERT_EQ(3, oa1.call<int>("addAdderByPtr", &a2));
   //GenericObject is T not T*
-  ASSERT_EQ(3, oa1->call<int>("addAdderByPtr", oa2));
+  ASSERT_EQ(3, oa1.call<int>("addAdderByPtr", oa2));
   qiLogDebug() << "NEXT";
-  ASSERT_EQ(3, oa1->call<int>("addAdderByRef", a2));
+  ASSERT_EQ(3, oa1.call<int>("addAdderByRef", a2));
   qiLogDebug() << "NEXT";
-  ASSERT_EQ(3, oa1->call<int>("addAdderByRef", oa2));
-  ASSERT_EQ(3, oa1->call<int>("addAdderByConstPtr", &a2));
+  ASSERT_EQ(3, oa1.call<int>("addAdderByRef", oa2));
+  ASSERT_EQ(3, oa1.call<int>("addAdderByConstPtr", &a2));
   // GenericObject is T not T*
-  ASSERT_EQ(3, oa1->call<int>("addAdderByConstPtr", oa2));
-  ASSERT_EQ(3, oa1->call<int>("addAdderByConstRef", a2));
-  ASSERT_EQ(3, oa1->call<int>("addAdderByConstRef", oa2));
+  ASSERT_EQ(3, oa1.call<int>("addAdderByConstPtr", oa2));
+  ASSERT_EQ(3, oa1.call<int>("addAdderByConstRef", a2));
+  ASSERT_EQ(3, oa1.call<int>("addAdderByConstRef", oa2));
 
-  ASSERT_EQ(4, oa1->call<int>("increment", 3));
-  ASSERT_EQ(4, oa1->call<int>("increment2", 3));
+  ASSERT_EQ(4, oa1.call<int>("increment", 3));
+  ASSERT_EQ(4, oa1.call<int>("increment2", 3));
 }
 
 class MAdder: public Adder, public qi::Manageable
@@ -558,29 +558,29 @@ TEST(TestObject, ObjectTypeBuilderAsync)
   builder.advertiseMethod("increment2", &Incrementer::increment, qi::MetaCallType_Queued);
   MAdder a1(1);
   MAdder a2(2);
-  qi::AnyObject oa1 = builder.object(&a1);
-  qi::AnyObject oa2 = builder.object(&a2);
-  ASSERT_EQ(2, oa1->call<int>("add", 1));
-  ASSERT_EQ(3, oa2->call<int>("add", 1));
-  ASSERT_EQ(5, oa1->call<int>("addTwo", 3, 2));
+  qi::AnyObject oa1 = builder.object(&a1, &qi::AnyObject::deleteGenericObjectOnly);
+  qi::AnyObject oa2 = builder.object(&a2, &qi::AnyObject::deleteGenericObjectOnly);
+  ASSERT_EQ(2, oa1.call<int>("add", 1));
+  ASSERT_EQ(3, oa2.call<int>("add", 1));
+  ASSERT_EQ(5, oa1.call<int>("addTwo", 3, 2));
 
   // ptr cast not supported, cast ourselve
-  ASSERT_EQ(3, oa1->call<int>("addAdderByPtr", (Adder*)&a2));
+  ASSERT_EQ(3, oa1.call<int>("addAdderByPtr", (Adder*)&a2));
   // Generic object is T not T*
   // ASSERT_EQ(3, oa1->call<int>("addAdderByPtr", oa2));
   // Copies a2
-  ASSERT_EQ(4, oa1->call<int>("addAdderByRef", a2));
+  ASSERT_EQ(4, oa1.call<int>("addAdderByRef", a2));
   // AnyObject: no copy
-  ASSERT_EQ(3, oa1->call<int>("addAdderByRef", oa2));
-  ASSERT_EQ(3, oa1->call<int>("addAdderByConstPtr", &a2));
+  ASSERT_EQ(3, oa1.call<int>("addAdderByRef", oa2));
+  ASSERT_EQ(3, oa1.call<int>("addAdderByConstPtr", &a2));
   // GenericObject is T not T*
   //ASSERT_EQ(3, oa1->call<int>("addAdderByConstPtr", oa2));
 
-  ASSERT_EQ(4, oa1->call<int>("addAdderByConstRef", a2));
-  ASSERT_EQ(3, oa1->call<int>("addAdderByConstRef", oa2));
+  ASSERT_EQ(4, oa1.call<int>("addAdderByConstRef", a2));
+  ASSERT_EQ(3, oa1.call<int>("addAdderByConstRef", oa2));
 
-  ASSERT_EQ(4, oa1->call<int>("increment", 3));
-  ASSERT_EQ(4, oa1->call<int>("increment2", 3));
+  ASSERT_EQ(4, oa1.call<int>("increment", 3));
+  ASSERT_EQ(4, oa1.call<int>("increment2", 3));
 }
 
 
@@ -588,10 +588,10 @@ TEST(TestObject, TypeType)
 {
   using namespace qi;
   int i = 12;
-  std::vector<AnyReference> vals = convert(i);
+  AnyReferenceVector vals = convert(i);
   AnyReference val = vals[0];
-  qiLogDebug() << "type ptr " << val.type->infoString() << " "
-  <<(void*)val.type;
+  qiLogDebug() << "type ptr " << val.type()->infoString() << " "
+  <<(void*)val.type();
   ASSERT_EQ(TypeKind_Int, val.kind());
   ASSERT_EQ(12, val.toInt());
   float onePointFive = 1.5f;
@@ -634,8 +634,8 @@ TEST(TestObject, CallBackRegistration)
   gob.advertiseSignal("testcb");
   qi::AnyObject obj = gob.object();
   CPPCB c;
-  obj->connect("testcb", boost::bind(&CPPCB::cb, &c));
-  obj->connect("testcb", &ccb);
+  obj.connect("testcb", boost::bind(&CPPCB::cb, &c));
+  obj.connect("testcb", &ccb);
  // obj->connect("testcb", boost::bind<void>(&ccb));
 }
 
@@ -669,11 +669,45 @@ TEST(TestObject, Future)
   qi::DynamicObjectBuilder gob;
   gob.advertiseMethod("delaySet", &delaySet);
   qi::AnyObject obj = gob.object();
-  qi::Future<int> f = obj->call<int>("delaySet", 500, 41);
+  qi::Future<int> f = obj.call<int>("delaySet", 500, 41);
   ASSERT_TRUE(!f.isFinished());
   f.wait();
   ASSERT_EQ(41, f.value());
-  f =  obj->call<int>("delaySet", 500, -1);
+  f =  obj.call<int>("delaySet", 500, -1);
+  ASSERT_TRUE(!f.isFinished());
+  f.wait();
+  ASSERT_TRUE(f.hasError());
+  std::cerr << "ERR " << f.error() << std::endl;
+}
+
+void forward(qi::Future<int> f, qi::Promise<void> p) {
+  if (f.hasError()) {
+    p.setError(f.error());
+    return;
+  }
+  p.setValue(0);
+}
+
+qi::Future<void> delaySetV(unsigned long msDelay, int value, qi::Promise<int>prom)
+{
+  qi::Promise<void> p;
+  prom.future().connect(boost::bind<void>(&forward, _1, p));
+  boost::thread(_delaySet, prom, msDelay, value);
+  return p.future();
+}
+
+TEST(TestObject, FutureVoid)
+{
+  qi::DynamicObjectBuilder gob;
+  qi::Promise<int> prom;
+  gob.advertiseMethod("delaySet", boost::bind(&delaySetV, _1, _2, prom));
+  qi::AnyObject obj = gob.object();
+  qi::Future<void> f = obj.call<void>("delaySet", 500, 41);
+  ASSERT_TRUE(!f.isFinished());
+  f.wait();
+  ASSERT_EQ(41, prom.future().value());
+  prom.reset();
+  f =  obj.call<void>("delaySet", 500, -1);
   ASSERT_TRUE(!f.isFinished());
   f.wait();
   ASSERT_TRUE(f.hasError());
@@ -685,11 +719,11 @@ TEST(TestObject, FutureSync)
   qi::DynamicObjectBuilder gob;
   gob.advertiseMethod("delaySetSync", &delaySetSync);
   qi::AnyObject obj = gob.object();
-  qi::Future<int> f = obj->call<int>("delaySetSync", 500, 41);
+  qi::Future<int> f = obj.call<int>("delaySetSync", 500, 41);
   ASSERT_TRUE(!f.isFinished());
   f.wait();
   ASSERT_EQ(41, f.value());
-  f =  obj->call<int>("delaySetSync", 500, -1);
+  f =  obj.call<int>("delaySetSync", 500, -1);
   ASSERT_TRUE(!f.isFinished());
   f.wait();
   ASSERT_TRUE(f.hasError());
@@ -701,12 +735,12 @@ TEST(TestObject, statisticsGeneric)
   qi::DynamicObjectBuilder gob;
   int mid = gob.advertiseMethod("sleep", &qi::os::msleep);
   qi::AnyObject obj = gob.object();
-  obj->call<void>("sleep", 10);
-  EXPECT_TRUE(obj->stats().empty());
-  obj->enableStats(true);
-  obj->call<void>("sleep", 10);
-  obj->call<void>("sleep", 100);
-  qi::ObjectStatistics stats = obj->stats();
+  obj.call<void>("sleep", 10);
+  EXPECT_TRUE(obj.stats().empty());
+  obj.enableStats(true);
+  obj.call<void>("sleep", 10);
+  obj.call<void>("sleep", 100);
+  qi::ObjectStatistics stats = obj.stats();
   EXPECT_EQ(1u, stats.size());
   qi::MethodStatistics& m = stats[mid];
   EXPECT_EQ(2u, m.count());
@@ -715,20 +749,20 @@ TEST(TestObject, statisticsGeneric)
   EXPECT_GT(0.03, std::abs(m.wall().maxValue() - 0.100));
   EXPECT_GT(0.01, m.system().maxValue());
   EXPECT_GT(0.01, m.user().maxValue());
-  obj->clearStats();
-  obj->call<void>("sleep", 0);
-  stats = obj->stats();
+  obj.clearStats();
+  obj.call<void>("sleep", 0);
+  stats = obj.stats();
   m = stats[mid];
   EXPECT_EQ(1u, m.count());
-  obj->clearStats();
-  obj->enableStats(false);
-  obj->call<void>("sleep", 0);
-  EXPECT_TRUE(obj->stats().empty());
+  obj.clearStats();
+  obj.enableStats(false);
+  obj.call<void>("sleep", 0);
+  EXPECT_TRUE(obj.stats().empty());
 
-  obj->clearStats();
-  obj->enableStats(true);
-  obj->call<void>("sleep", 0);
-  stats = obj->call<qi::ObjectStatistics>("stats");
+  obj.clearStats();
+  obj.enableStats(true);
+  obj.call<void>("sleep", 0);
+  stats = obj.call<qi::ObjectStatistics>("stats");
   m = stats[mid];
   EXPECT_EQ(1u, m.count());
 }
@@ -738,19 +772,19 @@ TEST(TestObject, statisticsType)
   qi::ObjectTypeBuilder<Adder> builder;
   int mid = builder.advertiseMethod("add", &Adder::add);
   Adder a1(1);
-  qi::AnyObject oa1 = builder.object(&a1);
+  qi::AnyObject oa1 = builder.object(&a1, &qi::AnyObject::deleteGenericObjectOnly);
 
-  EXPECT_EQ(3, oa1->call<int>("add", 2));
+  EXPECT_EQ(3, oa1.call<int>("add", 2));
 
   qi::ObjectStatistics stats;
 
-  oa1->enableStats(true);
-  oa1->call<int>("add", 2);
-  stats = oa1->stats();
+  oa1.enableStats(true);
+  oa1.call<int>("add", 2);
+  stats = oa1.stats();
   EXPECT_EQ(1u, stats[mid].count());
 
-  oa1->call<int>("add", 2);
-  stats = oa1->call<qi::ObjectStatistics>("stats");
+  oa1.call<int>("add", 2);
+  stats = oa1.call<qi::ObjectStatistics>("stats");
   EXPECT_EQ(2u, stats[mid].count());
 }
 
@@ -772,10 +806,10 @@ TEST(TestObject, traceGeneric)
   int mid2 = gob.advertiseMethod("boom", &throw_exception);
   qi::AnyObject obj = gob.object();
   std::vector<qi::EventTrace> traces;
-  qi::SignalLink id = obj->connect("traceObject",
+  qi::SignalLink id = obj.connect("traceObject",
     (boost::function<void(qi::EventTrace)>)
     boost::bind(&pushTrace, boost::ref(traces), _1));
-  obj->call<void>("sleep", 100);
+  obj.call<void>("sleep", 100);
   for (unsigned i=0; i<20 && traces.size()<2; ++i) qi::os::msleep(50);
   qi::os::msleep(50);
   ASSERT_EQ(2u, traces.size());
@@ -789,10 +823,10 @@ TEST(TestObject, traceGeneric)
     - traces[0].timestamp().tv_sec*1000
     - traces[0].timestamp().tv_usec/1000;
   EXPECT_LT(std::abs(delta - 100LL), 20LL); // be leniant
-  ASSERT_TRUE(obj->call<bool>("isTraceEnabled").value());
+  ASSERT_TRUE(obj.call<bool>("isTraceEnabled").value());
   qi::os::msleep(50);
   traces.clear();
-  obj->call<void>("boom", "o<").wait();
+  obj.call<void>("boom", "o<").wait();
   for (unsigned i=0; i<20 && traces.size()<2; ++i) qi::os::msleep(50);
   qi::os::msleep(50);
   ASSERT_EQ(2u, traces.size());
@@ -800,9 +834,9 @@ TEST(TestObject, traceGeneric)
   EXPECT_EQ(qi::EventTrace::Event_Error, traces[1].kind());
   EXPECT_EQ(mid2, traces[0].slotId());
   EXPECT_EQ(traces[0].id(), traces[1].id());
-  obj->disconnect(id);
+  obj.disconnect(id);
   qi::os::msleep(50);
-  ASSERT_TRUE(!obj->call<bool>("isTraceEnabled").value());
+  ASSERT_TRUE(!obj.call<bool>("isTraceEnabled").value());
 }
 
 TEST(TestObject, traceType)
@@ -810,26 +844,26 @@ TEST(TestObject, traceType)
   qi::ObjectTypeBuilder<Adder> builder;
   int mid = builder.advertiseMethod("add", &Adder::add);
   Adder a1(1);
-  qi::AnyObject oa1 = builder.object(&a1);
+  qi::AnyObject oa1 = builder.object(&a1, &qi::AnyObject::deleteGenericObjectOnly);
 
-  EXPECT_EQ(3, oa1->call<int>("add", 2));
+  EXPECT_EQ(3, oa1.call<int>("add", 2));
 
   std::vector<qi::EventTrace> traces;
-  qi::SignalLink id = oa1->connect("traceObject",
+  qi::SignalLink id = oa1.connect("traceObject",
     (boost::function<void(qi::EventTrace)>)
     boost::bind(&pushTrace, boost::ref(traces), _1));
 
-  EXPECT_EQ(3, oa1->call<int>("add", 2));
+  EXPECT_EQ(3, oa1.call<int>("add", 2));
   for (unsigned i=0; i<20 && traces.size()<2; ++i) qi::os::msleep(50);
   qi::os::msleep(50);
   ASSERT_EQ(2u, traces.size());
   EXPECT_EQ(qi::EventTrace::Event_Call, traces[0].kind());
   EXPECT_EQ(qi::EventTrace::Event_Result, traces[1].kind());
   EXPECT_EQ(mid, traces[0].slotId());
-  ASSERT_TRUE(oa1->call<bool>("isTraceEnabled").value());
-  oa1->disconnect(id);
+  ASSERT_TRUE(oa1.call<bool>("isTraceEnabled").value());
+  oa1.disconnect(id);
   qi::os::msleep(50);
-  ASSERT_TRUE(!oa1->call<bool>("isTraceEnabled").value());
+  ASSERT_TRUE(!oa1.call<bool>("isTraceEnabled").value());
 }
 
 static void bim(int i, qi::Promise<void> p, const std::string &name) {
@@ -856,11 +890,11 @@ TEST(TestObject, AdvertiseRealSignal)
   unsigned int id = gob.advertiseSignal("sig", &sig);
   ASSERT_LT(0, id);
   qi::AnyObject obj = gob.object();
-  obj->connect("sig", boost::bind<void>(&bim, _1, premote, "remote"));
+  obj.connect("sig", boost::bind<void>(&bim, _1, premote, "remote"));
 
   //test remote trigger
   qiLogInfo() << "remote trigger.";
-  obj->post("sig", 42);
+  obj.post("sig", 42);
   plocal.future().wait(1000);
   premote.future().wait(1000);
   ASSERT_TRUE(plocal.future().hasValue(0));
@@ -928,9 +962,9 @@ TEST(TestObject, AnyArguments)
 {
   boost::shared_ptr<ArgPack> ap(new ArgPack);
   qi::AnyObject o = qi::AnyValue::from(ap).to<qi::AnyObject>();
-  qi::details::printMetaObject(std::cerr, o->metaObject());
-  o->call<void>("callMe", 1, 2, 3);
-  qi::AnyValue args = o->property<qi::AnyValue>("onCall");
+  qi::details::printMetaObject(std::cerr, o.metaObject());
+  o.call<void>("callMe", 1, 2, 3);
+  qi::AnyValue args = o.property<qi::AnyValue>("onCall");
   std::vector<int> expect = boost::assign::list_of(1)(2)(3);
   EXPECT_EQ(expect, args.to<std::vector<int> >());
 }
@@ -976,7 +1010,7 @@ TEST(TestObject, async)
     EXPECT_EQ(100, f.value());
 
     qiLogDebug() << "converting to AnyObject";
-    qi::AnyObject o = qi::AnyReference(rfptr).toObject();
+    qi::AnyObject o = qi::AnyReference::from(rfptr).toObject();
     qiLogDebug() << "convesion done";
     f = qi::async<int>(o, "msleep", 100);
     EXPECT_EQ(qi::FutureState_Running, f.wait(0));
@@ -1003,9 +1037,9 @@ qi::GenericFunctionParameters args(
   qi::AutoAnyReference p3=qi::AutoAnyReference())
 {
   qi::GenericFunctionParameters res;
-  if (p1.type) res.push_back(p1); else return res;
-  if (p2.type) res.push_back(p2); else return res;
-  if (p3.type) res.push_back(p3); else return res;
+  if (p1.type()) res.push_back(p1); else return res;
+  if (p2.type()) res.push_back(p2); else return res;
+  if (p3.type()) res.push_back(p3); else return res;
   return res;
 }
 

@@ -31,10 +31,6 @@
 namespace qi  {
 
   namespace detail {
-#ifdef _WIN32
-    // Access a global mutex, for threadsafe static initialization. Cannot be called before main.
-    QITYPE_API boost::mutex& initializationMutex();
-#endif
 
     // Try to get a nice error message for QI_NO_TYPE
     class ForbiddenInTypeSystem: public TypeImpl<int>
@@ -96,7 +92,7 @@ namespace qi  {
     return detail::typeOfBackend<typename detail::TypeOfAdapter<T>::type>();
   }
 
-  inline TypeKind TypeInterface::kind() const
+  inline TypeKind TypeInterface::kind()
   {
     return TypeKind_Unknown;
   }

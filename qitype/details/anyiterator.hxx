@@ -14,14 +14,14 @@ namespace qi {
   inline AnyReference AnyIterator::operator*()
   {
     if (kind() == TypeKind_Iterator)
-      return static_cast<IteratorTypeInterface*>(type)->dereference(value);
+      return static_cast<IteratorTypeInterface*>(_type)->dereference(_value);
     else
       throw std::runtime_error("Expected iterator");
   }
 
   template<typename T>
   AnyIterator::AnyIterator(const T& ref)
-    : AnyValue(AnyReference(ref))
+    : AnyValue(AnyReference::from(ref))
   {}
 
   inline AnyIterator::AnyIterator()
@@ -39,7 +39,7 @@ namespace qi {
   {
     if (kind() != TypeKind_Iterator)
       throw std::runtime_error("Expected an iterator");
-    static_cast<IteratorTypeInterface*>(type)->next(&value);
+    static_cast<IteratorTypeInterface*>(_type)->next(&_value);
     return *this;
   }
 

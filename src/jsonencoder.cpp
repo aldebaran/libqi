@@ -98,8 +98,8 @@ namespace qi {
     }
     void visitUnknown(AnyReference v)
     {
-      qiLogError() << "JSON Error: Type " << v.type->infoString() <<" not serializable";
-      out << "\"Error: no serialization for unknown type:" << v.type->infoString() << "\"";
+      qiLogError() << "JSON Error: Type " << v.type()->infoString() <<" not serializable";
+      out << "\"Error: no serialization for unknown type:" << v.type()->infoString() << "\"";
     }
 
     void visitVoid()
@@ -202,7 +202,7 @@ namespace qi {
       out << "\"Error: no serialization for pointer\"";
     }
 
-    void visitTuple(const std::string &name, const std::vector<AnyReference> &vals, const std::vector<std::string> &annotations)
+    void visitTuple(const std::string &name, const AnyReferenceVector &vals, const std::vector<std::string> &annotations)
     {
       //is the tuple is annotated serialize as an object
       if (annotations.size()) {

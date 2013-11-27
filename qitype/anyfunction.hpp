@@ -68,17 +68,17 @@ namespace qi {
   {
   public:
     AnyArguments() {};
-    AnyArguments(const std::vector<AnyValue>& args)
+    AnyArguments(const AnyValueVector& args)
     : _args(args) {}
-    operator const std::vector<AnyValue>&() const { return _args;}
-    std::vector<AnyValue> &args()             { return _args; }
-    const std::vector<AnyValue> &args() const { return _args; }
+    operator const AnyValueVector&() const { return _args;}
+    AnyValueVector &args()             { return _args; }
+    const AnyValueVector &args() const { return _args; }
 
   private:
-    std::vector<AnyValue> _args;
+    AnyValueVector _args;
   };
 
-  typedef boost::function<AnyReference(const std::vector<AnyReference>&)> DynamicFunction;
+  typedef boost::function<AnyReference(const AnyReferenceVector&)> DynamicFunction;
 
   /** Represents a generic callable function.
    * This class has value semantic.
@@ -92,9 +92,9 @@ namespace qi {
     AnyFunction(const AnyFunction& b);
     AnyFunction(FunctionTypeInterface* type, void* value);
     AnyFunction& operator = (const AnyFunction& b);
-    AnyReference call(const std::vector<AnyReference>& args);
-    AnyReference call(AnyReference arg1, const std::vector<AnyReference>& args);
-    AnyReference operator()(const std::vector<AnyReference>& args);
+    AnyReference call(const AnyReferenceVector& args);
+    AnyReference call(AnyReference arg1, const AnyReferenceVector& args);
+    AnyReference operator()(const AnyReferenceVector& args);
 
     /// Change signature, drop the first argument passed to call.
     const AnyFunction& dropFirstArgument() const;
@@ -146,11 +146,11 @@ namespace qi {
    * If GenericFunctionParameters is obtained throug copy(), convert() or
    * fromBuffer(), it must be cleared by destroy()
    */
-  class QITYPE_API GenericFunctionParameters: public std::vector<AnyReference>
+  class QITYPE_API GenericFunctionParameters: public AnyReferenceVector
   {
   public:
     GenericFunctionParameters();
-    GenericFunctionParameters(const std::vector<AnyReference>&);
+    GenericFunctionParameters(const AnyReferenceVector&);
     /// Copy arguments. destroy() must be called on the result
     GenericFunctionParameters copy(bool notFirst=false) const;
     /// Convert the arguments to given signature. destroy() must be called on the result.

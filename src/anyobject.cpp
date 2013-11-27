@@ -5,6 +5,7 @@
 #include <iostream>
 
 #include <qitype/anyobject.hpp>
+#include <qitype/objecttypebuilder.hpp>
 #include "staticobjecttype.hpp"
 #include "anyobject_p.hpp"
 #include "metaobject_p.hpp" // for generateErrorString
@@ -186,8 +187,7 @@ namespace qi {
     int methodId = findMethod(nameWithOptionalSignature, args);
     if (methodId < 0) {
       std::string resolvedSig = args.signature(true).toString();
-      std::string fullSig = nameWithOptionalSignature + "::" + resolvedSig;
-      return makeFutureError<AnyReference>(MetaObjectPrivate::generateErrorString(fullSig, metaObject().findCompatibleMethod(nameWithOptionalSignature), false));
+      return makeFutureError<AnyReference>(MetaObjectPrivate::generateErrorString(nameWithOptionalSignature, metaObject().findCompatibleMethod(nameWithOptionalSignature), false));
     }
     return metaCall(methodId, args, callType);
   }
@@ -298,7 +298,7 @@ namespace qi {
     qi::AutoAnyReference* vals[8]= {&p1, &p2, &p3, &p4, &p5, &p6, &p7, &p8};
     std::vector<qi::AnyReference> params;
     for (unsigned i=0; i<8; ++i)
-      if (vals[i]->type)
+      if (vals[i]->type())
         params.push_back(*vals[i]);
     metaPost(nameWithOptionalSignature, GenericFunctionParameters(params));
   }

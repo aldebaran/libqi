@@ -2,6 +2,7 @@
 **  Copyright (C) 2012 Aldebaran Robotics
 **  See COPYING for the license
 */
+#include <boost/noncopyable.hpp>
 #include <qi/future.hpp>
 #include <qitype/signature.hpp>
 #include <qitype/anyfunction.hpp>
@@ -11,19 +12,9 @@ qiLogCategory("qitype.functiontype");
 
 namespace qi
 {
-#ifdef _WIN32
-  namespace detail
-  {
-    boost::mutex _initializationMutex;
-    QITYPE_API boost::mutex& initializationMutex()
-    {
-      return _initializationMutex;
-    }
-  }
-#endif
 
   //make destroy exception-safe for AnyFunction::call
-  class AnyReferenceArrayDestroyer {
+  class AnyReferenceArrayDestroyer : private boost::noncopyable {
   public:
     AnyReferenceArrayDestroyer(AnyReference *toDestroy, void **convertedArgs, bool shouldDelete)
       : toDestroy(toDestroy)
@@ -57,28 +48,27 @@ namespace qi
     void**        convertedArgs;
     unsigned int  toDestroyPos;
     bool          shouldDelete;
-
-  private:
-    QI_DISALLOW_COPY_AND_ASSIGN(AnyReferenceArrayDestroyer);
   };
 
-  AnyReference AnyFunction::call(AnyReference arg1, const std::vector<AnyReference>& remaining)
+
+
+  AnyReference AnyFunction::call(AnyReference arg1, const AnyReferenceVector& remaining)
   {
-    std::vector<AnyReference> args;
+    AnyReferenceVector args;
     args.reserve(remaining.size()+1);
     args.push_back(arg1);
     args.insert(args.end(), remaining.begin(), remaining.end());
     return call(args);
   }
 
-  AnyReference AnyFunction::call(const std::vector<AnyReference>& vargs)
+  AnyReference AnyFunction::call(const AnyReferenceVector& vargs)
   {
     if (type == dynamicFunctionTypeInterface())
     {
       DynamicFunction* f = (DynamicFunction*)value;
       if (!transform.dropFirst && !transform.prependValue)
         return (*f)(vargs);
-      std::vector<AnyReference> args;
+      AnyReferenceVector args;
       if (transform.dropFirst && !transform.prependValue)
       {
         // VCXX2008 does not accept insert here because GV(GVP) ctor is explicit
@@ -89,7 +79,7 @@ namespace qi
       else if (transform.dropFirst && transform.prependValue)
       {
         args = vargs;
-        args[0].value = transform.boundValue;
+        args[0] = AnyReference(args[0].type(), transform.boundValue);
       }
       else // prepend && ! drop
         throw std::runtime_error("Cannot prepend argument to dynamic function type");
@@ -133,47 +123,43 @@ namespace qi
       //qiLogDebug() << "argument " << i
       //   << " " << args[i].type->infoString() << ' ' << args[i].value
       //   << " to " << target[i]->infoString();
-      if (args[i].type == target[i+offset] || args[i].type->info() == target[i+offset]->info())
-        arad.convertedArgs[i+offset] = args[i].value;
+      if (args[i].type() == target[i+offset] || args[i].type()->info() == target[i+offset]->info())
+        arad.convertedArgs[i+offset] = args[i].rawValue();
       else
       {
         //qiLogDebug() << "needs conversion "
         //<< args[i].type->infoString() << " -> "
         //<< target[i]->infoString();
         std::pair<AnyReference,bool> v = args[i].convert(target[i+offset]);
-        if (!v.first.type)
+        if (!v.first.type())
         {
           // Try pointer dereference
           if (args[i].kind() == TypeKind_Pointer)
           {
             AnyReference deref = *const_cast<AnyReference&>(args[i]);
-            if (deref.type == target[i+offset] || deref.type->info() == target[i+offset]->info())
+            if (deref.type() == target[i+offset] || deref.type()->info() == target[i+offset]->info())
               v = std::make_pair(deref, false);
             else
               v = deref.convert(target[i+offset]);
           }
-          if (!v.first.type)
+          if (!v.first.type())
           {
             throw std::runtime_error(_QI_LOG_FORMAT("Call argument conversion failure from %s to %s (equals: %s)",
-              args[i].type->infoString(),
+              args[i].type()->infoString(),
               target[i]->infoString(),
-              args[i].type->infoString() == target[i]->infoString()));
+              args[i].type()->infoString() == target[i]->infoString()));
             return AnyReference();
           }
         }
         if (v.second)
           arad.toDestroy[arad.toDestroyPos++] = v.first;
-        arad.convertedArgs[i+offset] = v.first.value;
+        arad.convertedArgs[i+offset] = v.first.rawValue();
       }
     }
     void* res;
     res = type->call(value, arad.convertedArgs, sz+offset);
-    AnyReference result;
-    result.type = resultType();
-    result.value = res;
-
     arad.destroy();
-    return result;
+    return AnyReference(resultType(), res);
   }
 
   const AnyFunction& AnyFunction::dropFirstArgument() const
@@ -273,8 +259,8 @@ namespace qi
   {
   }
 
-  GenericFunctionParameters::GenericFunctionParameters(const std::vector<AnyReference>& args)
-  :std::vector<AnyReference>(args)
+  GenericFunctionParameters::GenericFunctionParameters(const AnyReferenceVector& args)
+  :AnyReferenceVector(args)
   {
   }
 
@@ -296,7 +282,7 @@ namespace qi
   GenericFunctionParameters::convert(const Signature& sig) const
   {
     GenericFunctionParameters dst;
-    const std::vector<AnyReference>& src = *this;
+    const AnyReferenceVector& src = *this;
     if (sig.children().size() != src.size())
     {
       qiLogError() << "convert: signature/params size mismatch"
@@ -312,7 +298,7 @@ namespace qi
       if (!compatible)
       {
         qiLogError() << "convert: unknown type " << (*it).toString();
-        compatible = src[idx].type;
+        compatible = src[idx].type();
       }
       dst.push_back(src[idx].convertCopy(compatible));
     }
@@ -321,7 +307,7 @@ namespace qi
 
   Signature GenericFunctionParameters::signature(bool dyn) const
   {
-    const std::vector<AnyReference>& params = *this;
+    const AnyReferenceVector& params = *this;
     return qi::makeTupleSignature(params, dyn);
   }
 

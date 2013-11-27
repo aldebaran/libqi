@@ -71,40 +71,56 @@ namespace qi{
   class QITYPE_API IntTypeInterface: public TypeInterface
   {
   public:
-    virtual int64_t get(void* value) const = 0;
-    virtual unsigned int size() const = 0; // size in bytes
-    virtual bool isSigned() const = 0; // return if type is signed
+    /// Get the integer value
+    virtual int64_t get(void* value) = 0;
+    /// Return the size in bytes
+    virtual unsigned int size() = 0;
+    /// Return true if the integer is signed
+    virtual bool isSigned() = 0;
+    /// Set the value of the integer
     virtual void set(void** storage, int64_t value) = 0;
-    virtual TypeKind kind() const { return TypeKind_Int;}
+    virtual TypeKind kind() { return TypeKind_Int;}
   };
 
   class QITYPE_API FloatTypeInterface: public TypeInterface
   {
   public:
-    virtual double get(void* value) const = 0;
-    virtual unsigned int size() const = 0; // size in bytes
+    /// Get the float value
+    virtual double get(void* value) = 0;
+    /// Return the size in bytes
+    virtual unsigned int size() = 0; // size in bytes
+    /// Set the value of the float
     virtual void set(void** storage, double value) = 0;
-    virtual TypeKind kind() const { return TypeKind_Float;}
+    virtual TypeKind kind() { return TypeKind_Float;}
   };
 
   class Buffer;
   class QITYPE_API StringTypeInterface: public TypeInterface
   {
   public:
-    std::string getString(void* storage) const;
-    virtual std::pair<char*, size_t> get(void* storage) const = 0;
+    /// Get a copy of the string value
+    std::string getString(void* storage);
+    /// Get the internal string representation. This is not a copy!
+    virtual std::pair<char*, size_t> get(void* storage) = 0;
+    /// Set the value of the string
     void set(void** storage, const std::string& value);
+    /// Set the value of the string
     virtual void set(void** storage, const char* ptr, size_t sz) = 0;
-    virtual TypeKind kind() const { return TypeKind_String; }
+    virtual TypeKind kind() { return TypeKind_String; }
 
   };
 
+  /**
+   * Interface for a buffer of data
+   */
   class QITYPE_API RawTypeInterface: public TypeInterface
   {
   public:
-    virtual std::pair<char*, size_t> get(void* storage) const = 0;
+    /// Get the buffer of data (not a copy)
+    virtual std::pair<char*, size_t> get(void* storage) = 0;
+    /// Set the buffer of data (buffer is copied)
     virtual void set(void** storage, const char* ptr, size_t sz) = 0;
-    virtual TypeKind kind() const { return TypeKind_Raw; }
+    virtual TypeKind kind() { return TypeKind_Raw; }
   };
 
   class QITYPE_API PointerTypeInterface: public TypeInterface
@@ -115,47 +131,96 @@ namespace qi{
       Raw,
       Shared,
     };
-    virtual PointerKind pointerKind() const = 0;
-    virtual TypeInterface* pointedType() const = 0;
-    virtual AnyReference dereference(void* storage) = 0; // must not be destroyed
-    // Set new pointee value. pointer must be a *pointer* to type pointedType()
+    /// Return whether the pointer has raw or shared semantics
+    virtual PointerKind pointerKind() = 0;
+    /// Get the type of the pointed element
+    virtual TypeInterface* pointedType() = 0;
+    /// Get the pointed element (must not be destroyed)
+    virtual AnyReference dereference(void* storage) = 0;
+    /// Set new pointee value. pointer must be a *pointer* to type pointedType()
     virtual void setPointee(void** storage, void* pointer) = 0;
-    virtual TypeKind kind() const { return TypeKind_Pointer; }
+    virtual TypeKind kind() { return TypeKind_Pointer; }
   };
 
+  /**
+   * Interface for an iterator (on a list or a map)
+   *
+   * Iterators become invalid if the parent container is destroyed and no
+   * method should be called in such a case.
+   */
   class QITYPE_API IteratorTypeInterface: public TypeInterface
   {
   public:
-    // Returned reference is expected to point to somewhere in the iterator, or the container
+    /**
+     * Get the value pointed by the iterator
+     *
+     * Returned reference is expected to point to somewhere in the iterator, or
+     * the container. It remains valid as long as the iterator is neither
+     * modified by next() nor destroyed, and the parent container is not
+     * destroyed.
+     */
     virtual AnyReference dereference(void* storage) = 0;
-    virtual void  next(void** storage) = 0;
+    /// Increment the iterator
+    virtual void next(void** storage) = 0;
+    /// Check for iterator equality
     virtual bool equals(void* s1, void* s2) = 0;
-    virtual TypeKind kind() const { return TypeKind_Iterator;}
+    virtual TypeKind kind() { return TypeKind_Iterator; }
   };
 
+  /**
+   * Interface for a list of elements (like std::vector)
+   *
+   * Elements must have the same types (may be dynamic)
+   */
   class QITYPE_API ListTypeInterface: public TypeInterface
   {
   public:
-    virtual TypeInterface* elementType() const = 0;
+    /// Get the type of the elements of the list
+    virtual TypeInterface* elementType() = 0;
+    /// Return the number of elements in the list
     virtual size_t size(void* storage) = 0;
+    /// Return an iterator pointing to the first element of the list
     virtual AnyIterator begin(void* storage) = 0;
+    /// Return an iterator pointing to one past the last element of the list
+    /// (do not dereference this iterator!)
     virtual AnyIterator end(void* storage) = 0;
+    /// Append an element to the end of the list
     virtual void pushBack(void** storage, void* valueStorage) = 0;
+    /// Get the element at index
     virtual void* element(void* storage, int index);
-    virtual TypeKind kind() const { return TypeKind_List;}
+    virtual TypeKind kind() { return TypeKind_List;}
   };
 
+  /**
+   * Interface for a map of elements (like std::map)
+   *
+   * Keys must have the same types and values must have the same types (both
+   * may be dynamic)
+   */
   class QITYPE_API MapTypeInterface: public TypeInterface
   {
   public:
-    virtual TypeInterface* elementType() const = 0;
-    virtual TypeInterface* keyType() const = 0;
+    /// Get the types of the values of the map
+    virtual TypeInterface* elementType() = 0;
+    /// Get the types of the keys of the map
+    virtual TypeInterface* keyType() = 0;
+    /// Return the number of elements in the map
     virtual size_t size(void* storage) = 0;
+    /// Return an iterator pointing to the first key-value pair of the map
     virtual AnyIterator begin(void* storage) = 0;
+    /// Return an iterator pointing to one past the last key-value pair of the
+    /// list (do not dereference this iterator!)
     virtual AnyIterator end(void* storage) = 0;
+    /// Set a key to a value and creates it if it does not exist
     virtual void insert(void** storage, void* keyStorage, void* valueStorage) = 0;
+    /**
+     * Get the value corresponding to the requested key
+     *
+     * If the key does not exist and autoInsert is true, it is created,
+     * otherwise an invalid reference is returned.
+     */
     virtual AnyReference element(void** storage, void* keyStorage, bool autoInsert) = 0;
-    virtual TypeKind kind() const { return TypeKind_Map; }
+    virtual TypeKind kind() { return TypeKind_Map; }
     // Since our typesystem has no erased operator < or operator ==,
     // MapTypeInterface does not provide a find()
   };
@@ -163,23 +228,44 @@ namespace qi{
   class QITYPE_API StructTypeInterface: public TypeInterface
   {
   public:
-    std::vector<AnyReference> values(void* storage);
+    /// Get all the fields of the structure
+    AnyReferenceVector values(void* storage);
+    /**
+     * Get all the member types
+     *
+     * Note that this function does not recieve a storage argument. There must
+     * be one instance of StructTypeInterface per type of struct. If you need
+     * dynamic structs, look at makeTupleType().
+     */
     virtual std::vector<TypeInterface*> memberTypes() = 0;
-    virtual std::vector<void*> get(void* storage); // must not be destroyed
-    virtual void* get(void* storage, unsigned int index) = 0; // must not be destroyed
-    virtual void set(void** storage, std::vector<void*>);
-    virtual void set(void** storage, unsigned int index, void* valStorage) = 0; // will copy
-    virtual TypeKind kind() const { return TypeKind_Tuple; }
+    /// Get all the fields storages of the struct (not a copy)
+    virtual std::vector<void*> get(void* storage);
+    /// Get the field storage at index (not a copy)
+    virtual void* get(void* storage, unsigned int index) = 0;
+    /// Set all the fields of the struct (copies the values given in the vector)
+    virtual void set(void** storage, const std::vector<void*>&);
+    /// Set the fields of the struct at index (copies the value given)
+    virtual void set(void** storage, unsigned int index, void* valStorage) = 0;
+    virtual TypeKind kind() { return TypeKind_Tuple; }
+    /// Get the names of the fields of the struct
     virtual std::vector<std::string> elementsName() { return std::vector<std::string>();}
+    /// Get the type name of the struct
     virtual std::string className() { return std::string(); }
   };
 
+  /**
+   * Type that contains a value of any type.
+   *
+   * The workings of a dynamic type is similar to that of a union.
+   */
   class QITYPE_API DynamicTypeInterface: public TypeInterface
   {
   public:
+    /// Get a reference to the underlying element
     virtual AnyReference get(void* storage) = 0;
+    /// Set the underlying element
     virtual void set(void** storage, AnyReference source) = 0;
-    virtual TypeKind kind() const { return TypeKind_Dynamic; }
+    virtual TypeKind kind() { return TypeKind_Dynamic; }
   };
 
   ///@return a Type of kind List that can contains elements of type elementType.

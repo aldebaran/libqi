@@ -190,7 +190,7 @@ namespace qi {
 
     void visitList(AnyIterator it, AnyIterator iend)
     {
-      qi::Signature esig = static_cast<ListTypeInterface*>(_value.type)->elementType()->signature();
+      qi::Signature esig = static_cast<ListTypeInterface*>(_value.type())->elementType()->signature();
       if (!_resolveDynamic) {
         result = qi::makeListSignature(esig);
         return;
@@ -227,7 +227,7 @@ namespace qi {
 
     void visitMap(AnyIterator it, AnyIterator iend)
     {
-      MapTypeInterface* type =  static_cast<MapTypeInterface*>(_value.type);
+      MapTypeInterface* type =  static_cast<MapTypeInterface*>(_value.type());
       if (!_resolveDynamic) {
         result = qi::makeMapSignature(type->keyType()->signature(), type->elementType()->signature());
         return;
@@ -299,7 +299,7 @@ namespace qi {
       result = qi::Signature::fromType(Signature::Type_Unknown);
     }
 
-    void visitTuple(const std::string &name, const std::vector<AnyReference>& vals, const std::vector<std::string>& annotations)
+    void visitTuple(const std::string &name, const AnyReferenceVector& vals, const std::vector<std::string>& annotations)
     {
       std::string res;
       res = qi::makeTupleSignature(vals, _resolveDynamic).toString();
@@ -337,9 +337,9 @@ namespace qi {
       visitUnknown(v);
     }
 
-    qi::Signature    result;
-    AnyReference _value;
-    bool            _resolveDynamic;
+    qi::Signature  result;
+    AnyReference  _value;
+    bool          _resolveDynamic;
   };
 
   Signature TypeInterface::signature(void* storage, bool resolveDynamic)
@@ -364,13 +364,13 @@ namespace qi {
         break;
       case TypeKind_Int:
       {
-        IntTypeInterface* tint = static_cast<IntTypeInterface*>(value.type);
+        IntTypeInterface* tint = static_cast<IntTypeInterface*>(value.type());
         v.visitInt(0, tint->isSigned(), tint->size());
         break;
       }
       case TypeKind_Float:
       {
-        FloatTypeInterface* tfloat = static_cast<FloatTypeInterface*>(value.type);
+        FloatTypeInterface* tfloat = static_cast<FloatTypeInterface*>(value.type());
         v.visitFloat(0, tfloat->size());
         break;
       }
@@ -388,7 +388,7 @@ namespace qi {
         break;
       case TypeKind_Pointer:
       {
-        PointerTypeInterface* type = static_cast<PointerTypeInterface*>(value.type);
+        PointerTypeInterface* type = static_cast<PointerTypeInterface*>(value.type());
         TypeKind pointedKind = type->pointedType()->kind();
         if (type->pointerKind() == PointerTypeInterface::Shared
           && (pointedKind == TypeKind_Object || pointedKind == TypeKind_Unknown))
@@ -414,7 +414,7 @@ namespace qi {
         break;
       }
       case TypeKind_Dynamic:
-        if (value.type->info() == typeOf<AnyObject>()->info())
+        if (value.type()->info() == typeOf<AnyObject>()->info())
           v.result = qi::Signature::fromType(Signature::Type_Object);
         else
           v.result = qi::Signature::fromType(Signature::Type_Dynamic);
@@ -569,12 +569,8 @@ namespace qi {
   public:
     AnyReference dereference(void* storage)
     {
-      std::vector<void*>::iterator& ptr = *(std::vector<void*>::iterator*)
-        ptrFromStorage(&storage);
-      AnyReference res;
-      res.type = _elementType;
-      res.value = *ptr;
-      return res;
+      std::vector<void*>::iterator& ptr = *(std::vector<void*>::iterator*)ptrFromStorage(&storage);
+      return AnyReference(_elementType, *ptr);
     }
     const TypeInfo& info()
     {
@@ -621,8 +617,7 @@ namespace qi {
     }
     friend TypeInterface* makeListType(TypeInterface* element);
   public:
-
-    TypeInterface* elementType() const
+    TypeInterface* elementType()
     {
       return _elementType;
     }
@@ -630,18 +625,18 @@ namespace qi {
     {
       std::vector<void*>& ptr = *(std::vector<void*>*)ptrFromStorage(&storage);
       std::vector<void*>::iterator it = ptr.begin();
-      AnyReference v = AnyReference(it);
+      AnyReference v = AnyReference::from(it);
       // Hugly type swap, works because we know backend storage matches
-      v.type = makeListIteratorType(_elementType);
+      v = AnyReference(makeListIteratorType(_elementType), v.rawValue());
       return AnyIterator(v);
     }
     AnyIterator end(void* storage)
     {
       std::vector<void*>& ptr = *(std::vector<void*>*)ptrFromStorage(&storage);
       std::vector<void*>::iterator it = ptr.end();
-      AnyReference v = AnyReference(it);
+      AnyReference v = AnyReference::from(it);
       // Hugly type swap, works because we know backend storage matches
-      v.type = makeListIteratorType(_elementType);
+      v = AnyReference(makeListIteratorType(_elementType), v.rawValue());
       return AnyIterator(v);
     }
     void* clone(void* storage)
@@ -688,12 +683,9 @@ namespace qi {
     // We want exactly one instance per element type
   TypeInterface* makeListType(TypeInterface* element)
   {
-#ifdef _WIN32
-    boost::mutex::scoped_lock lock(detail::initializationMutex());
-#else
-    static boost::mutex mutex;
-    boost::mutex::scoped_lock lock(mutex);
-#endif
+    static boost::mutex* mutex = 0;
+    QI_THREADSAFE_NEW(mutex);
+    boost::mutex::scoped_lock lock(*mutex);
     static std::map<TypeInfo, TypeInterface*>* map = 0;
     if (!map)
       map = new std::map<TypeInfo, TypeInterface*>();
@@ -820,21 +812,15 @@ namespace qi {
     typedef DefaultTypeImplMethods<std::vector<void*> > Methods;
   };
 
-  AnyReference makeGenericTuple(const std::vector<AnyReference>& values)
+  AnyReference makeGenericTuple(const AnyReferenceVector& values)
   {
     std::vector<TypeInterface*> types;
     types.reserve(values.size());
-    for (unsigned i=0; i<values.size(); ++i)
-      types.push_back(values[i].type);
-
-    StructTypeInterface* tupleType = static_cast<StructTypeInterface*>(makeTupleType(types));
-    AnyReference result;
-    result.type = tupleType;
-    result.value = tupleType->initializeStorage();
-    std::vector<void*> storages;
-    for (unsigned i=0; i<values.size(); ++i)
-      storages.push_back(values[i].value);
-    tupleType->set(&result.value, storages);
+    for (unsigned i=0; i<values.size(); ++i) {
+      types.push_back(values[i].type());
+    }
+    AnyReference result(makeTupleType(types));
+    result.setTuple(values);
     return result;
   }
 
@@ -910,12 +896,10 @@ namespace qi {
   static TypeInterface* makeMapIteratorType(TypeInterface* te)
   {
     typedef std::map<TypeInfo, TypeInterface*> Map;
-#ifdef _WIN32
-    boost::mutex::scoped_lock lock(detail::initializationMutex());
-#else
-    static boost::mutex mutex;
-    boost::mutex::scoped_lock lock(mutex);
-#endif
+    static boost::mutex* mutex = 0;
+    QI_THREADSAFE_NEW(mutex);
+    boost::mutex::scoped_lock lock(*mutex);
+
     static Map * map = 0;
     if (!map)
       map = new Map();
@@ -955,11 +939,11 @@ namespace qi {
     }
     friend TypeInterface* makeMapType(TypeInterface* kt, TypeInterface* et);
   public:
-    TypeInterface* elementType() const
+    TypeInterface* elementType()
     {
       return _elementType;
     }
-    TypeInterface* keyType () const
+    TypeInterface* keyType ()
     {
       return _keyType;
     }
@@ -967,18 +951,17 @@ namespace qi {
     {
       DefaultMapStorage& ptr = *(DefaultMapStorage*)ptrFromStorage(&storage);
       DefaultMapStorage::iterator it = ptr.begin();
-      AnyReference val = AnyReference(it);
-      val.type = makeMapIteratorType(_pairType);
+      AnyReference val = AnyReference::from(it);
+      val = AnyReference(makeMapIteratorType(_pairType), val.rawValue());
       return AnyIterator(val);
     }
     AnyIterator end(void* storage)
     {
       DefaultMapStorage& ptr = *(DefaultMapStorage*)ptrFromStorage(&storage);
       DefaultMapStorage::iterator it = ptr.end();
-      AnyReference val = AnyReference(it);
-      val.type = makeMapIteratorType(_pairType);
+      AnyReference val = AnyReference::from(it);
+      val = AnyReference(makeMapIteratorType(_pairType), val.rawValue());
       return AnyIterator(val);
-
     }
 
     // Unconditional insert, assumes key is not present, return value
@@ -996,8 +979,8 @@ namespace qi {
       void* pairPtr = DefaultTupleType::Methods::initializeStorage();
       std::vector<void*>&pair = *(std::vector<void*>*) pairPtr;
       pair.resize(2);
-      pair[0] = key.value;
-      pair[1] = value.value;
+      pair[0] = key.rawValue();
+      pair[1] = value.rawValue();
       ptr[key] = pairPtr;
       return value;
     }
@@ -1014,7 +997,7 @@ namespace qi {
         std::vector<void*>& elem = _pairType->backend(i->second);
         assert(elem.size() == 2);
         _elementType->destroy(elem[1]);
-        elem[1] = AnyReference(_elementType, valueStorage).clone().value;
+        elem[1] = AnyReference(_elementType, valueStorage).clone().rawValue();
       }
       else
       {
@@ -1061,7 +1044,7 @@ namespace qi {
       {
         // do not double-clone the key, which is in the pair also
         AnyReference clonedPair(_pairType, _pairType->clone(it->second));
-        dst[clonedPair[0]] = clonedPair.value;
+        dst[clonedPair[0]] = clonedPair.rawValue();
       }
       return result;
     }
@@ -1084,12 +1067,10 @@ namespace qi {
   // We want exactly one instance per element type
   TypeInterface* makeMapType(TypeInterface* kt, TypeInterface* et)
   {
-#ifdef _WIN32
-    boost::mutex::scoped_lock lock(detail::initializationMutex());
-#else
-    static boost::mutex mutex;
-    boost::mutex::scoped_lock lock(mutex);
-#endif
+    static boost::mutex* mutex = 0;
+    QI_THREADSAFE_NEW(mutex);
+    boost::mutex::scoped_lock lock(*mutex);
+
     typedef std::map<std::pair<TypeInfo, TypeInfo>, MapTypeInterface*> Map;
     static Map * map = 0;
     if (!map)
@@ -1192,7 +1173,7 @@ namespace qi {
     }
     if (p > index)
       throw std::runtime_error("Index out of range");
-    return (*it).value;
+    return (*it).rawValue();
   }
 
   namespace detail

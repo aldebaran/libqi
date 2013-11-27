@@ -15,6 +15,7 @@
 #include <qitype/fwd.hpp>
 #include <qitype/typeinterface.hpp>
 #include <qitype/dynamicobjectbuilder.hpp>
+#include <qitype/objecttypebuilder.hpp>
 
 namespace qi {
 

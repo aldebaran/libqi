@@ -214,15 +214,15 @@ namespace qi
       ss << "Can't find methodID: " << method;
       return qi::makeFutureError<AnyReference>(ss.str());
     }
-    Manageable* m = static_cast<Manageable*>(context.get());
+    Manageable* m = static_cast<Manageable*>(context.asGenericObject());
     GenericFunctionParameters p;
     p.reserve(params.size()+1);
     if (method >= Manageable::startId && method < Manageable::endId)
-      p.push_back(AnyReference(m));
+      p.push_back(AnyReference::from(m));
     else
-      p.push_back(AnyReference(this));
+      p.push_back(AnyReference::from(this));
     p.insert(p.end(), params.begin(), params.end());
-    return ::qi::metaCall(context->eventLoop(), _p->threadingModel,
+    return ::qi::metaCall(context.eventLoop(), _p->threadingModel,
       i->second.second, callType, context, method, i->second.first, p);
   }
 
@@ -230,7 +230,7 @@ namespace qi
   {
     try
     {
-      property(id)->setValue(val);
+      property(id)->setValue(val.asReference());
     }
     catch(const std::exception& e)
     {
@@ -253,7 +253,7 @@ namespace qi
     ref.destroy();
   }
 
-  void DynamicObject::metaPost(AnyObject   context, unsigned int event, const GenericFunctionParameters& params)
+  void DynamicObject::metaPost(AnyObject context, unsigned int event, const GenericFunctionParameters& params)
   {
     SignalBase * s = _p->createSignal(event);
     if (s)
@@ -342,26 +342,28 @@ namespace qi
                       bool lock,
                       const GenericFunctionParameters& params,
                       unsigned int methodId,
-                      AnyFunction& func
+                      AnyFunction& func,
+                      unsigned int callerContext
                       )
     {
-      bool stats = context && context->isStatsEnabled();
-      bool trace = context && context->isTraceEnabled();
+      bool stats = context && context.isStatsEnabled();
+      bool trace = context && context.isTraceEnabled();
+      qi::AnyReference retref;
       int tid = 0; // trace call id, reused for result sending
       if (trace)
       {
-        tid = context->_nextTraceId();
+        tid = context.asGenericObject()->_nextTraceId();
         qi::os::timeval tv;
         qi::os::gettimeofday(&tv);
-        std::vector<AnyValue> args;
+        AnyValueVector args;
         args.resize(params.size()-1);
         for (unsigned i=0; i<params.size()-1; ++i)
         {
-          if (!params[i+1].type)
+          if (!params[i+1].type())
             args[i] = AnyValue::from("<??" ">");
           else
           {
-            switch(params[i+1].type->kind())
+            switch(params[i+1].type()->kind())
             {
             case TypeKind_Int:
             case TypeKind_String:
@@ -377,8 +379,9 @@ namespace qi
             }
           }
         }
-        context->traceObject(EventTrace(
-          tid, EventTrace::Event_Call, methodId, AnyValue::from(args), tv));
+        context.asGenericObject()->traceObject(EventTrace(
+          tid, EventTrace::Event_Call, methodId, AnyValue::from(args), tv,
+          0,0, callerContext, qi::os::gettid()));
       }
 
       qi::int64_t time = stats?qi::os::ustime():0;
@@ -389,42 +392,55 @@ namespace qi
       bool success = false;
       try
       {
+        qi::AnyReference ret;
+        //the return value is destroyed by ServerResult in the future callback.
         if (lock)
-          out.setValue(locked_call(func, params, context->mutex()));
+          ret = locked_call(func, params, context.asGenericObject()->mutex());
         else
-          out.setValue(func.call(params));
+          ret = func.call(params);
+        //copy the value for tracing later. (we want the tracing to happend after setValue
+        if (trace)
+          retref = ret.clone();
+        //the reference, is dropped here... not cool man!
+        out.setValue(ret);
         success = true;
       }
       catch(const std::exception& e)
       {
+        success = false;
         out.setError(e.what());
       }
       catch(...)
       {
+        success = false;
         out.setError("Unknown exception caught.");
       }
+
       if (stats||trace)
       {
         cpuendtime = qi::os::cputime();
         cpuendtime.first -= cputime.first;
         cpuendtime.second -= cputime.second;
       }
+
       if (stats)
-        context->pushStats(methodId, (float)(qi::os::ustime() - time)/1e6f,
+        context.asGenericObject()->pushStats(methodId, (float)(qi::os::ustime() - time)/1e6f,
                            (float)cpuendtime.first / 1e6f,
                            (float)cpuendtime.second / 1e6f);
+
+
       if (trace)
       {
         qi::os::timeval tv;
         qi::os::gettimeofday(&tv);
         AnyValue val;
         if (success)
-          val = out.future().value();
+          val = AnyValue(retref, false, true);
         else
           val = AnyValue::from(out.future().error());
-        context->traceObject(EventTrace(tid,
+        context.asGenericObject()->traceObject(EventTrace(tid,
           success?EventTrace::Event_Result:EventTrace::Event_Error,
-          methodId, val, tv, cpuendtime.first, cpuendtime.second));
+          methodId, val, tv, cpuendtime.first, cpuendtime.second, callerContext, qi::os::gettid()));
       }
     }
   }
@@ -433,16 +449,18 @@ namespace qi
   {
   public:
     MFunctorCall(AnyFunction& func, GenericFunctionParameters& params,
-       qi::Promise<AnyReference>* out, bool noCloneFirst, AnyObject context, unsigned int methodId, bool lock)
+       qi::Promise<AnyReference>* out, bool noCloneFirst,
+       AnyObject context, unsigned int methodId, bool lock, unsigned int callerId)
     : noCloneFirst(noCloneFirst)
     {
       this->out = out;
       this->methodId = methodId;
       this->context = context;
       this->lock = lock;
+      this->callerId = callerId;
       std::swap(this->func, func);
-      std::swap((std::vector<AnyReference>&) params,
-        (std::vector<AnyReference>&) this->params);
+      std::swap((AnyReferenceVector&) params,
+        (AnyReferenceVector&) this->params);
     }
     MFunctorCall(const MFunctorCall& b)
     {
@@ -451,18 +469,19 @@ namespace qi
     void operator = (const MFunctorCall& b)
     {
       // Implement move semantic on =
-      std::swap( (std::vector<AnyReference>&) params,
-        (std::vector<AnyReference>&) b.params);
+      std::swap( (AnyReferenceVector&) params,
+        (AnyReferenceVector&) b.params);
       std::swap(func, const_cast<MFunctorCall&>(b).func);
       context = b.context;
       methodId = b.methodId;
       this->lock = b.lock;
       this->out = b.out;
       noCloneFirst = b.noCloneFirst;
+      callerId = b.callerId;
     }
     void operator()()
     {
-      call(*out, context, lock, params, methodId, func);
+      call(*out, context, lock, params, methodId, func, callerId);
       params.destroy(noCloneFirst);
       delete out;
     }
@@ -473,6 +492,7 @@ namespace qi
     AnyObject context;
     bool lock;
     unsigned int methodId;
+    unsigned int callerId;
   };
 
   qi::Future<AnyReference> metaCall(EventLoop* el,
@@ -481,7 +501,8 @@ namespace qi
     MetaCallType callType,
     AnyObject context,
     unsigned int methodId,
-    AnyFunction func, const GenericFunctionParameters& params, bool noCloneFirst)
+    AnyFunction func, const GenericFunctionParameters& params, bool noCloneFirst,
+    unsigned int callerId)
   {
     // Implement rules described in header
     bool sync = true;
@@ -501,7 +522,7 @@ namespace qi
     if (sync)
     {
       qi::Promise<AnyReference> out(FutureCallbackType_Sync);
-      call(out, context, doLock, params, methodId, func);
+      call(out, context, doLock, params, methodId, func, callerId?callerId:qi::os::gettid());
       return out.future();
     }
     else
@@ -512,7 +533,7 @@ namespace qi
         elForced?FutureCallbackType_Async:FutureCallbackType_Sync);
       GenericFunctionParameters pCopy = params.copy(noCloneFirst);
       qi::Future<AnyReference> result = out->future();
-      el->post(MFunctorCall(func, pCopy, out, noCloneFirst, context, methodId, doLock));
+      el->post(MFunctorCall(func, pCopy, out, noCloneFirst, context, methodId, doLock, callerId?callerId:qi::os::gettid()));
       return result;
     }
   }
@@ -575,25 +596,28 @@ namespace qi
     delete obj;
   }
 
-  AnyObject     makeDynamicAnyObject(DynamicObject *obj, bool destroyObject,
+  ObjectTypeInterface* getDynamicTypeInterface()
+  {
+    static DynamicObjectTypeInterface* type = 0;
+    QI_THREADSAFE_NEW(type);
+    return type;
+  }
+
+  AnyObject makeDynamicSharedAnyObjectImpl(DynamicObject* obj, boost::shared_ptr<Empty> other)
+  {
+    GenericObject* go = new GenericObject(getDynamicTypeInterface(), obj);
+    return AnyObject(go, other);
+  }
+
+  AnyObject makeDynamicAnyObject(DynamicObject *obj, bool destroyObject,
     boost::function<void (GenericObject*)> onDelete)
   {
-    AnyObject op;
-#ifndef WIN32
-    static DynamicObjectTypeInterface* type = new DynamicObjectTypeInterface();
-#else
-    // Multiple parallel calls is possible, but will have minimal consequences
-    static DynamicObjectTypeInterface* type = 0;
-    if (!type)
-      type = new DynamicObjectTypeInterface();
-#endif
-
+    ObjectTypeInterface* type = getDynamicTypeInterface();
     if (destroyObject || onDelete)
-      op = AnyObject(new GenericObject(type, obj),
+      return AnyObject(new GenericObject(type, obj),
         boost::bind(&cleanupDynamicObject, _1, destroyObject, onDelete));
     else
-      op = AnyObject(new GenericObject(type, obj));
-    return op;
+      return AnyObject(new GenericObject(type, obj), &AnyObject::deleteGenericObjectOnly);
   }
 
 }

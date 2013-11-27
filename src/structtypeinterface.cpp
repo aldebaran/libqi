@@ -17,11 +17,11 @@ namespace qi
     }
   }
 
-  std::vector<AnyReference> StructTypeInterface::values(void* storage)
+  AnyReferenceVector StructTypeInterface::values(void* storage)
   {
     std::vector<TypeInterface*> types = memberTypes();
     std::vector<void*> values = get(storage);
-    std::vector<AnyReference> result;
+    AnyReferenceVector result;
     for (unsigned i=0; i<types.size(); ++i)
       result.push_back(AnyReference(types[i], values[i]));
     return result;
@@ -36,7 +36,7 @@ namespace qi
     return result;
   }
 
-  void StructTypeInterface::set(void** storage, std::vector<void*> values)
+  void StructTypeInterface::set(void** storage, const std::vector<void*>& values)
   {
     for (unsigned i=0; i<values.size(); ++i)
       set(storage, i, values[i]);

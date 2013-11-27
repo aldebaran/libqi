@@ -37,20 +37,18 @@ StaticObjectTypeBase::metaCall(void* instance, AnyObject context, unsigned int m
     return qi::makeFutureError<AnyReference>("No such method");
   }
 
-  EventLoop* el = context->eventLoop();
+  EventLoop* el = context.eventLoop();
   MetaCallType methodThreadingModel = i->second.second;
 
   AnyFunction method = i->second.first;
   AnyReference self;
   if (methodId >= Manageable::startId  && methodId < Manageable::endId)
   {
-    self.type = qi::typeOf<Manageable>();
-    self.value = static_cast<Manageable*>(context.get());
+    self = AnyReference(qi::typeOf<Manageable>(), static_cast<Manageable*>(context.asGenericObject()));
   }
   else
   {
-    self.type = this;
-    self.value = instance;
+    self = AnyReference(this, instance);
   }
   GenericFunctionParameters p2;
   p2.reserve(params.size()+1);
@@ -128,7 +126,7 @@ qi::Future<SignalLink> StaticObjectTypeBase::connect(void* instance, AnyObject c
                                                        const SignalSubscriber& subscriber)
 {
   if (event >= Manageable::startId && event < Manageable::endId)
-    instance = static_cast<Manageable*>(context.get());
+    instance = static_cast<Manageable*>(context.asGenericObject());
   SignalBase* sb = getSignal(_data, instance, event);
   if (!sb) {
     return qi::makeFutureError<SignalLink>("Cant find signal");
@@ -149,7 +147,7 @@ qi::Future<void> StaticObjectTypeBase::disconnect(void* instance, AnyObject cont
   unsigned int event = linkId >> 32;
   unsigned int link = linkId & 0xFFFFFFFF;
   if (event >= Manageable::startId && event < Manageable::endId)
-    instance = static_cast<Manageable*>(context.get());
+    instance = static_cast<Manageable*>(context.asGenericObject());
   SignalBase* sb = getSignal(_data, instance, event);
   if (!sb)
     return qi::makeFutureError<void>("Cant find signal");
@@ -175,7 +173,7 @@ qi::Future<void> StaticObjectTypeBase::setProperty(void* instance, unsigned int 
   qiLogDebug() << "SetProperty " << id << " " << encodeJSON(value);
   try
   {
-    p->setValue(value);
+    p->setValue(value.asReference());
   }
   catch(const std::exception& e)
   {

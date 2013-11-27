@@ -11,7 +11,7 @@
 
 namespace qi
 {
-  inline std::string StringTypeInterface::getString(void* storage) const
+  inline std::string StringTypeInterface::getString(void* storage)
   {
     std::pair<char*, size_t> res = get(storage);
     return std::string(res.first, res.second);
@@ -28,7 +28,7 @@ namespace qi
     typedef DefaultTypeImplMethods<std::string,
     TypeByPointer<std::string>
     > Methods;
-    virtual std::pair<char*, size_t> get(void* storage) const
+    virtual std::pair<char*, size_t> get(void* storage)
     {
       std::string* ptr = (std::string*)Methods::ptrFromStorage(&storage);
       return std::make_pair((char*)ptr->c_str(), ptr->size());
@@ -49,7 +49,7 @@ namespace qi
   class QITYPE_API TypeCStringImpl: public StringTypeInterface
   {
   public:
-    virtual std::pair<char*, size_t> get(void* storage) const
+    virtual std::pair<char*, size_t> get(void* storage)
     {
       return std::make_pair((char*)storage, strlen((char*)storage));
     }
@@ -87,7 +87,7 @@ namespace qi
     {
       delete[]  (char*)ptr;
     }
-    virtual std::pair<char*, size_t> get(void* storage) const
+    virtual std::pair<char*, size_t> get(void* storage)
     {
       return std::make_pair((char*)storage, I-1);
     }
@@ -120,7 +120,7 @@ namespace qi
       T* inst = (T*)ptrFromStorage(storage);
       *inst = T(std::string(ptr, sz));
     }
-    virtual std::pair<char*, size_t> get(void* storage) const
+    virtual std::pair<char*, size_t> get(void* storage)
     {
       T* ptr = (T*)Impl::ptrFromStorage(&storage);
       void* str = detail::fieldStorage(ptr, _getter);

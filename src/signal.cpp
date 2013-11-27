@@ -19,8 +19,11 @@ qiLogCategory("qitype.signal");
 
 namespace qi {
 
-  SignalSubscriber::SignalSubscriber(qi::AnyObject target, unsigned int method)
-  : threadingModel(MetaCallType_Direct),  target(new qi::ObjectWeakPtr(target)), method(method), enabled(true)
+  SignalSubscriber::SignalSubscriber(const AnyObject& target, unsigned int method)
+  : threadingModel(MetaCallType_Direct)
+  , target(new AnyWeakObject(target))
+  , method(method)
+  , enabled(true)
   { // The slot has its own threading model: be synchronous
   }
 
@@ -48,7 +51,7 @@ namespace qi {
     linkId = b.linkId;
     handler = b.handler;
     threadingModel = b.threadingModel;
-    target = b.target?new ObjectWeakPtr(*b.target):0;
+    target = b.target?new AnyWeakObject(*b.target):0;
     method = b.method;
     enabled = b.enabled;
   }
@@ -77,7 +80,7 @@ namespace qi {
     qi::AutoAnyReference* vals[8]= {&p1, &p2, &p3, &p4, &p5, &p6, &p7, &p8};
     std::vector<qi::AnyReference> params;
     for (unsigned i = 0; i < 8; ++i)
-      if (vals[i]->value)
+      if (vals[i]->isValid())
         params.push_back(*vals[i]);
     qi::Signature signature = qi::makeTupleSignature(params);
 
@@ -267,7 +270,7 @@ namespace qi {
         source->disconnect(linkId);
       }
       else // no need to keep anything locked, whatever happens this is not used
-        lockedTarget->metaPost(method, args);
+        lockedTarget.metaPost(method, args);
     }
   }
 
@@ -323,7 +326,7 @@ namespace qi {
     }
   }
 
-  SignalSubscriber& SignalBase::connect(qi::AnyObject o, unsigned int slot)
+  SignalSubscriber& SignalBase::connect(AnyObject o, unsigned int slot)
   {
     return connect(SignalSubscriber(o, slot));
   }
@@ -331,7 +334,6 @@ namespace qi {
   SignalSubscriber& SignalBase::connect(const SignalSubscriber& src)
   {
     qiLogDebug() << (void*)this << " connecting new subscriber";
-    static SignalSubscriber invalid;
     if (!_p)
     {
       _p = boost::make_shared<SignalBasePrivate>();
@@ -355,11 +357,8 @@ namespace qi {
     {
       AnyObject locked = src.target->lock();
       if (!locked)
-      {
-        qiLogVerbose() << "connecting a dead slot (weak ptr out)";
-        return invalid;
-      }
-      const MetaMethod* ms = locked->metaObject().method(src.method);
+        throw std::runtime_error("Target object cannot be locked");
+      const MetaMethod* ms = locked.metaObject().method(src.method);
       if (!ms)
       {
         qiLogWarning() << "Method " << src.method <<" not found, proceeding anyway";
@@ -373,15 +372,17 @@ namespace qi {
     }
     if (sigArity != subArity)
     {
-      qiLogWarning() << "Subscriber has incorrect arity (expected "
+      std::stringstream s;
+      s << "Subscriber has incorrect arity (expected "
         << sigArity  << " , got " << subArity <<")";
-      return invalid;
+      throw std::runtime_error(s.str());
     }
     if (!signature().isConvertibleTo(subSignature))
     {
-      qiLogWarning() << "Subscriber is not compatible to signal : "
-       << signature().toString() << " vs " << subSignature.toString();
-      return invalid;
+      std::stringstream s;
+      s << "Subscriber is not compatible to signal : "
+        << signature().toString() << " vs " << subSignature.toString();
+      throw std::runtime_error(s.str());
     }
   proceed:
     boost::recursive_mutex::scoped_lock sl(_p->mutex);
@@ -536,7 +537,7 @@ namespace qi {
 
   SignalSubscriber& SignalBase::connect(AnyObject obj, const std::string& slot)
   {
-    const MetaObject& mo = obj->metaObject();
+    const MetaObject& mo = obj.metaObject();
     const MetaSignal* sig = mo.signal(slot);
     if (sig)
       return connect(SignalSubscriber(obj, sig->uid()));

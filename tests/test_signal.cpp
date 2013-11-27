@@ -10,6 +10,7 @@
 #include <qi/future.hpp>
 #include <qi/application.hpp>
 #include <qitype/anyobject.hpp>
+#include <qitype/objecttypebuilder.hpp>
 
 qiLogCategory("test");
 
@@ -127,9 +128,9 @@ TEST(TestSignal, BadArity)
   // Test runtime detection of arity errors
   qi::Signal<> s;
   // avoid using s.connect() which will catch the problem at compile-time
-  ASSERT_EQ(qi::SignalBase::invalidSignalLink, s.connect(qi::SignalSubscriber(qi::AnyFunction::from(&foo))));
-  ASSERT_EQ(qi::SignalBase::invalidSignalLink, s.connect(qi::SignalSubscriber(qi::AnyFunction::from(&foo2))));
-  ASSERT_EQ(qi::SignalBase::invalidSignalLink, s.connect(qi::AnyFunction::from(  (boost::function<void(int*, int)>)boost::bind(&Foo::func1, (Foo*)0, _1, _2))));
+  EXPECT_ANY_THROW(s.connect(qi::SignalSubscriber(qi::AnyFunction::from(&foo))));
+  EXPECT_ANY_THROW(s.connect(qi::SignalSubscriber(qi::AnyFunction::from(&foo2))));
+  EXPECT_ANY_THROW(s.connect(qi::AnyFunction::from(  (boost::function<void(int*, int)>)boost::bind(&Foo::func1, (Foo*)0, _1, _2))));
 }
 
 void lol(int v, int& target)
@@ -200,17 +201,17 @@ TEST(TestSignal, SignalNBind)
 {
   int res = 0;
   boost::shared_ptr<SigHolder> so(new SigHolder);
-  qi::AnyObject op = qi::AnyReference(so).to<qi::AnyObject>();
-  qi::details::printMetaObject(std::cerr, op->metaObject());
-  op->connect("s1", (boost::function<void(int)>)boost::bind<void>(&lol, _1, boost::ref(res)));
-  op->post("s1", 2);
+  qi::AnyObject op = qi::AnyReference::from(so).to<qi::AnyObject>();
+  qi::details::printMetaObject(std::cerr, op.metaObject());
+  op.connect("s1", (boost::function<void(int)>)boost::bind<void>(&lol, _1, boost::ref(res)));
+  op.post("s1", 2);
   for (unsigned i=0; i<30 && res!=2; ++i) qi::os::msleep(10);
   ASSERT_EQ(2, res);
   so->s1(3);
   for (unsigned i=0; i<30 && res!=3; ++i) qi::os::msleep(10);
   ASSERT_EQ(3, res);
   so->s0.connect( boost::bind<void>(&lol, 42, boost::ref(res)));
-  op->post("s0");
+  op.post("s0");
   for (unsigned i=0; i<30 && res!=42; ++i) qi::os::msleep(10);
   ASSERT_EQ(42, res);
 }
@@ -253,15 +254,15 @@ TEST(TestSignal, Dynamic)
   qi::GenericFunctionParameters params;
   s.trigger(params);
   EXPECT_EQ(49, trig);
-  params.push_back(qi::AnyReference(a));
+  params.push_back(qi::AnyReference::from(a));
   trig = 0;
   s.trigger(params);
   EXPECT_EQ(50, trig);
-  params.push_back(qi::AnyReference(b));
+  params.push_back(qi::AnyReference::from(b));
   trig = 0;
   s.trigger(params);
   EXPECT_EQ(52, trig);
-  params[1] = qi::AnyReference(c);
+  params[1] = qi::AnyReference::from(c);
   trig = 0;
   s.trigger(params);
   EXPECT_EQ(56, trig);

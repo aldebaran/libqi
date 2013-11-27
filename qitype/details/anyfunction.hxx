@@ -27,7 +27,7 @@ namespace qi
     return _argumentsType;
   }
 
-  inline AnyReference AnyFunction::operator()(const std::vector<AnyReference>& args)
+  inline AnyReference AnyFunction::operator()(const AnyReferenceVector& args)
   {
     return call(args);
   }

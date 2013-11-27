@@ -35,7 +35,7 @@ TEST(TestJSON, MapIntTableString) {
   mps[0] = vs;
   mps[2] = vs;
 
-  qi::AnyReference gv(mps);
+  qi::AnyReference gv = qi::AnyReference::from(mps);
 
   EXPECT_EQ("{ 0 : [ \"pif\", \"paf\", \"pof\" ], 2 : [ \"pif\", \"paf\", \"pof\" ] }", qi::encodeJSON(gv));
 }
@@ -51,19 +51,19 @@ TEST(TestJSON, MST) {
   mps["0"] = vs;
   mps["2"] = vs;
 
-  qi::AnyReference gv(mps);
+  qi::AnyReference gv = qi::AnyReference::from(mps);
 
   EXPECT_EQ("{ \"0\" : [ \"pif\", \"paf\", \"pof\" ], \"2\" : [ \"pif\", \"paf\", \"pof\" ] }", qi::encodeJSON(gv));
 
 }
 
 TEST(TestJSON, Simple) {
-  EXPECT_EQ("true", qi::encodeJSON(qi::AnyReference(bool(true))));
-  EXPECT_EQ("false", qi::encodeJSON(qi::AnyReference(bool(false))));
-  EXPECT_EQ("32", qi::encodeJSON(qi::AnyReference(32)));
-  EXPECT_EQ("\"ttc:42\"", qi::encodeJSON(qi::AnyReference("ttc:42")));
-  EXPECT_EQ("32.4", qi::encodeJSON(qi::AnyReference(32.4f)));
-  EXPECT_EQ("32.3", qi::encodeJSON(qi::AnyReference((double)32.3)));
+  EXPECT_EQ("true", qi::encodeJSON(bool(true)));
+  EXPECT_EQ("false", qi::encodeJSON(bool(false)));
+  EXPECT_EQ("32", qi::encodeJSON(32));
+  EXPECT_EQ("\"ttc:42\"", qi::encodeJSON("ttc:42"));
+  EXPECT_EQ("32.4", qi::encodeJSON(32.4f));
+  EXPECT_EQ("32.3", qi::encodeJSON((double)32.3));
 
   qi::AnyValue gv(qi::TypeInterface::fromSignature(qi::Signature("c")));
   gv.setInt(42);
@@ -80,11 +80,11 @@ TEST(TestJSON, SimpleAutoGV) {
 }
 
 TEST(TestJSON, String) {
-  EXPECT_EQ("\" \\\" \"", qi::encodeJSON(qi::AnyReference(" \" ")));
-  EXPECT_EQ("\" \\u0000 \"", qi::encodeJSON(qi::AnyReference(" \0 ")));
-  EXPECT_EQ("\" \\u00C3\\u00A9 \"", qi::encodeJSON(qi::AnyReference(" é ")));
+  EXPECT_EQ("\" \\\" \"", qi::encodeJSON(" \" "));
+  EXPECT_EQ("\" \\u0000 \"", qi::encodeJSON(" \0 "));
+  EXPECT_EQ("\" \\u00C3\\u00A9 \"", qi::encodeJSON(" é "));
 
-  EXPECT_EQ("\" \\\" \\u0000 \\u00C3\\u00A9 \"", qi::encodeJSON(qi::AnyReference(" \" \0 é ")));
+  EXPECT_EQ("\" \\\" \\u0000 \\u00C3\\u00A9 \"", qi::encodeJSON(" \" \0 é "));
 }
 
 TEST(TestJSON, CharTuple) {
@@ -100,7 +100,7 @@ TEST(TestJSON, EmptyValue) {
 TEST(TestJSON, Dynamics) {
   qi::AnyReference gv(qi::TypeInterface::fromSignature(qi::Signature("m")));
   qi::AnyValue gvr = qi::AnyValue::from("plouf");
-  gv.setDynamic(gvr);
+  gv.setDynamic(gvr.asReference());
   EXPECT_EQ("\"plouf\"", qi::encodeJSON(gv));
 }
 
@@ -258,9 +258,9 @@ TEST(TestJSONDecoder, Array) {
   // complex array
   qi::AnyValue val = qi::decodeJSON("[1, [2, 3]]");
   ASSERT_EQ(qi::TypeKind_List, val.kind());
-  ASSERT_EQ(qi::TypeKind_Int, val[0].asDynamic().kind());
-  ASSERT_EQ(qi::TypeKind_List, val[1].asDynamic().kind());
-  ASSERT_EQ(2U, qi::decodeJSON("[1, [2, 3]]")[1].asDynamic().size());
+  ASSERT_EQ(qi::TypeKind_Int, val[0].content().kind());
+  ASSERT_EQ(qi::TypeKind_List, val[1].content().kind());
+  ASSERT_EQ(2U, qi::decodeJSON("[1, [2, 3]]")[1].content().size());
 }
 
 TEST(TestJSONDecoder, Object) {
@@ -276,7 +276,7 @@ TEST(TestJSONDecoder, Object) {
 
   ASSERT_EQ(qi::TypeKind_Map, qi::decodeJSON("{}").kind());
   ASSERT_EQ(1U, qi::decodeJSON("{\"a\":42}").size());
-  ASSERT_EQ(qi::TypeKind_Int, qi::decodeJSON("{\"a\":42}")["a"].asDynamic().kind());
+  ASSERT_EQ(qi::TypeKind_Int, qi::decodeJSON("{\"a\":42}")["a"].content().kind());
 
 }
 
@@ -291,8 +291,8 @@ TEST(TestJSONDecoder, special) {
   ASSERT_EQ(qi::TypeKind_Int, qi::decodeJSON("false").kind());
   ASSERT_EQ(qi::TypeKind_Void, qi::decodeJSON("null").kind());
 
-  ASSERT_EQ(0U, static_cast<qi::IntTypeInterface*>(qi::decodeJSON("true").type)->size());
-  ASSERT_EQ(0U, static_cast<qi::IntTypeInterface*>(qi::decodeJSON("false").type)->size());
+  ASSERT_EQ(0U, static_cast<qi::IntTypeInterface*>(qi::decodeJSON("true").type())->size());
+  ASSERT_EQ(0U, static_cast<qi::IntTypeInterface*>(qi::decodeJSON("false").type())->size());
 
   ASSERT_EQ(1, qi::decodeJSON("true").toInt());
   ASSERT_EQ(0, qi::decodeJSON("false").toInt());

@@ -22,7 +22,7 @@ public:
                                > MethodsImpl;
   ListTypeInterfaceImpl();
   virtual size_t size(void* storage);
-  virtual TypeInterface* elementType() const;
+  virtual TypeInterface* elementType();
   virtual AnyIterator begin(void* storage);
   virtual AnyIterator end(void* storage);
   virtual void pushBack(void** storage, void* valueStorage);
@@ -38,7 +38,7 @@ public:
   virtual AnyReference dereference(void* storage)
   {
     T* ptr = (T*)ptrFromStorage(&storage);
-    return AnyReference(*(*ptr));
+    return AnyReference::from(*(*ptr));
   }
   virtual void next(void** storage)
   {
@@ -69,7 +69,7 @@ ListTypeInterfaceImpl<T>::ListTypeInterfaceImpl()
 }
 
 template<typename T> TypeInterface*
-ListTypeInterfaceImpl<T>::elementType() const
+ListTypeInterfaceImpl<T>::elementType()
 {
   static TypeInterface* result = 0;
   if (!result)

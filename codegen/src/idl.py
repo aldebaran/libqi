@@ -529,6 +529,8 @@ def raw_to_interface(class_name, data, include, namespaces):
 #include <qitype/signal.hpp>
 #include <qitype/property.hpp>
 #include <qitype/anyobject.hpp>
+#include <qitype/objecttypebuilder.hpp>
+
 @include@
 
 @OPEN_NAMESPACE@
@@ -962,7 +964,7 @@ QI_TYPE_PROXY(@namepaces@@proxyName@);
     method_impls += '  ' + out_ret + " " + method_name + "(" + typed_args + ") {\n    "
     if (cret != "void" or return_future):
       method_impls += "return "
-    method_impls += '_obj->call<' + cret + ' >' + call_begin + '"' + method_name + '"' + arg_names + ");\n  }\n"
+    method_impls += '_obj.call<' + cret + ' >' + call_begin + '"' + method_name + '"' + arg_names + ");\n  }\n"
   signal_decl = ''
   ctor = ''
   # Make  a Signal field for each signal, bridge it to backend in ctor

@@ -190,20 +190,6 @@ namespace qi {
     }
   }
 
-  void BinaryDecoder::read(AnyReference &value)
-  {
-    std::string signature;
-    read(signature);
-    TypeInterface* type = 0; // TypeInterface::getCompatibleTypeWithSignature(signature);
-    if (!type)
-      qiLogError() << "Could not find metatype for signature " << signature;
-    else
-    {
-      value.type = type;
-      value.value = 0; // value.type->deserialize(*this);
-    }
-  }
-
   // Output
   BinaryEncoder::BinaryEncoder(qi::Buffer &buffer)
     : _p(new BinaryEncoderPrivate(buffer))
@@ -274,13 +260,13 @@ namespace qi {
     beginDynamic(sig);
 
     if (sig.isValid()) {
-      assert(value.type);
+      assert(value.type());
       if (!recurse)
         details::serialize(value, *this);
       else
         recurse();
     } else {
-      assert(!value.type);
+      assert(!value.type());
     }
     endDynamic();
   }
@@ -383,14 +369,17 @@ namespace qi {
     class SerializeTypeVisitor
     {
     public:
-      SerializeTypeVisitor(BinaryEncoder& out, SerializeObjectCallback context, AnyReference value)
+      SerializeTypeVisitor(BinaryEncoder& out, SerializeObjectCallback serializeObjectCb, AnyReference value)
         : out(out)
-        , context(context)
+        , serializeObjectCb(serializeObjectCb)
         , value(value)
       {}
+
       void visitUnknown(AnyReference value)
       {
-        qiLogError() << "Type " << value.type->infoString() <<" not serializable";
+        std::stringstream ss;
+        ss << "Type " << value.type()->infoString() <<" not serializable";
+        throw std::runtime_error(ss.str());
       }
 
       void visitVoid()
@@ -411,8 +400,11 @@ namespace qi {
           case -4: out.write((uint32_t)value);break;
           case 8:  out.write((int64_t)value); break;
           case -8: out.write((uint64_t)value);break;
-          default:
-            qiLogError() << "Unknown integer type " << isSigned << " " << byteSize;
+          default: {
+            std::stringstream ss;
+            ss << "Unknown integer type " << isSigned << " " << byteSize;
+            throw std::runtime_error(ss.str());
+          }
         }
       }
 
@@ -422,8 +414,11 @@ namespace qi {
           out.write((float)value);
         else if (byteSize == 8)
           out.write((double)value);
-        else
-          qiLogError() << "serialize on unknown float type " << byteSize;
+        else {
+          std::stringstream ss;
+          ss << "serialize on unknown float type " << byteSize;
+          throw std::runtime_error(ss.str());
+        }
       }
 
       void visitString(char* data, size_t len)
@@ -433,21 +428,21 @@ namespace qi {
 
       void visitList(AnyIterator it, AnyIterator end)
       {
-        out.beginList(value.size(), static_cast<ListTypeInterface*>(value.type)->elementType()->signature());
+        out.beginList(value.size(), static_cast<ListTypeInterface*>(value.type())->elementType()->signature());
         for (; it != end; ++it)
-          serialize(*it, out, context);
+          serialize(*it, out, serializeObjectCb);
         out.endList();
       }
 
       void visitMap(AnyIterator it, AnyIterator end)
       {
-        MapTypeInterface* type = static_cast<MapTypeInterface*>(value.type);
+        MapTypeInterface* type = static_cast<MapTypeInterface*>(value.type());
         out.beginMap(value.size(), type->keyType()->signature(), type->elementType()->signature());
         for(; it != end; ++it)
         {
           AnyReference v = *it;
-          serialize(v[0], out, context);
-          serialize(v[1], out, context);
+          serialize(v[0], out, serializeObjectCb);
+          serialize(v[1], out, serializeObjectCb);
         }
         out.endMap();
       }
@@ -455,30 +450,32 @@ namespace qi {
       void visitObject(GenericObject value)
       {
         // No refcount, user called us with some kind of Object, not AnyObject
-        AnyObject o(new GenericObject(value));
-        visitAnyObject(o);
+        AnyObject ao(&value, &AnyObject::noDelete);
+        visitAnyObject(ao);
       }
 
       void visitPointer(AnyReference pointee)
       {
-        qiLogError() << "Pointer serialization not implemented";
+        std::stringstream ss;
+        ss << "Pointer serialization not implemented";
+        throw std::runtime_error(ss.str());
       }
 
       void visitAnyObject(AnyObject& ptr)
       {
-        if (!context)
+        if (!serializeObjectCb)
           throw std::runtime_error("Object serialization callback required but not provided");
-        ObjectSerializationInfo osi = context(ptr);
+        ObjectSerializationInfo osi = serializeObjectCb(ptr);
         out.write(osi.metaObject);
         out.write(osi.serviceId);
         out.write(osi.objectId);
       }
 
-      void visitTuple(const std::string &name, const std::vector<AnyReference>& vals, const std::vector<std::string>& annotations)
+      void visitTuple(const std::string &name, const AnyReferenceVector& vals, const std::vector<std::string>& annotations)
       {
         out.beginTuple(qi::makeTupleSignature(vals));
         for (unsigned i=0; i<vals.size(); ++i)
-          serialize(vals[i], out, context);
+          serialize(vals[i], out, serializeObjectCb);
         out.endTuple();
       }
 
@@ -486,7 +483,7 @@ namespace qi {
       {
         //Remaining types
         out.writeValue(pointee, boost::bind(&typeDispatch<SerializeTypeVisitor>,
-                                            SerializeTypeVisitor(out, context, pointee), pointee));
+                                            SerializeTypeVisitor(out, serializeObjectCb, pointee), pointee));
       }
 
       void visitRaw(AnyReference raw)
@@ -496,11 +493,13 @@ namespace qi {
 
       void visitIterator(AnyReference)
       {
-        qiLogError() << "Type " << value.type->infoString() <<" not serializable";
+        std::stringstream ss;
+        ss << "Type " << value.type()->infoString() <<" not serializable";
+        throw std::runtime_error(ss.str());
       }
 
       BinaryEncoder& out;
-      SerializeObjectCallback context;
+      SerializeObjectCallback serializeObjectCb;
       AnyReference value;
     };
 
@@ -517,13 +516,14 @@ namespace qi {
 
       void visitUnknown(AnyReference)
       {
-        qiLogError() << "Type " << result.type->infoString() <<" not deserializable";
+        std::stringstream ss;
+        ss << "Type " << result.type()->infoString() <<" not deserializable";
+        throw std::runtime_error(ss.str());
       }
 
       void visitVoid()
       {
-        result.type = typeOf<void>();
-        result.value = 0;
+        result = AnyReference(typeOf<void>(), 0);
       }
 
       void visitInt(int64_t value, bool isSigned, int byteSize)
@@ -557,8 +557,11 @@ namespace qi {
         case -8: {
           uint64_t b; in.read(b); result.setUInt(b);
         } break;
-        default:
-          qiLogError() << "Unknown integer type " << isSigned << " " << byteSize;
+        default: {
+          std::stringstream ss;
+          ss << "Unknown integer type " << isSigned << " " << byteSize;
+          throw std::runtime_error(ss.str());
+        }
         }
       }
 
@@ -572,9 +575,11 @@ namespace qi {
           double t;
           in.read(t);
           result.setDouble(t);
+        } else {
+          std::stringstream ss;
+          ss << "Unknown float type " << byteSize;
+          throw std::runtime_error(ss.str());
         }
-        else
-          qiLogError() << "Unknown float type " << byteSize;
       }
 
       void visitString(char*, size_t)
@@ -586,7 +591,7 @@ namespace qi {
         static TypeInterface* tstring = 0;
         if (!tstring)
           tstring = qi::typeOf<std::string>();
-        if ((result.type == tstring) || (result.type->info() == tstring->info())) {
+        if ((result.type() == tstring) || (result.type()->info() == tstring->info())) {
           std::swap(s, result.as<std::string>());
           return;
         }
@@ -596,7 +601,7 @@ namespace qi {
 
       void visitList(AnyIterator, AnyIterator)
       {
-        TypeInterface* elementType = static_cast<ListTypeInterface*>(result.type)->elementType();
+        TypeInterface* elementType = static_cast<ListTypeInterface*>(result.type())->elementType();
         qi::uint32_t sz = 0;
         in.read(sz);
         if (in.status() != BinaryDecoder::Status_Ok)
@@ -611,8 +616,8 @@ namespace qi {
 
       void visitMap(AnyIterator, AnyIterator)
       {
-        TypeInterface* keyType = static_cast<MapTypeInterface*>(result.type)->keyType();
-        TypeInterface* elementType = static_cast<MapTypeInterface*>(result.type)->elementType();
+        TypeInterface* keyType = static_cast<MapTypeInterface*>(result.type())->keyType();
+        TypeInterface* elementType = static_cast<MapTypeInterface*>(result.type())->elementType();
         qi::uint32_t sz = 0;
         in.read(sz);
         if (in.status() != BinaryDecoder::Status_Ok)
@@ -639,36 +644,35 @@ namespace qi {
 
       void visitObject(GenericObject value)
       {
-        qiLogError() << "No signature deserializes to object";
+        std::stringstream ss;
+        ss << "No signature deserializes to object";
+        throw std::runtime_error(ss.str());
       }
 
       void visitPointer(AnyReference pointee)
       {
-        qiLogError() << " Pointer serialization not implemented";
+        std::stringstream ss;
+        ss << "Pointer serialization not implemented";
+        throw std::runtime_error(ss.str());
       }
 
-      void visitTuple(const std::string &, const std::vector<AnyReference>&, const std::vector<std::string>&)
-
+      void visitTuple(const std::string &, const AnyReferenceVector&, const std::vector<std::string>&)
       {
-        StructTypeInterface* type = static_cast<StructTypeInterface*>(result.type);
-        std::vector<TypeInterface*> types = type->memberTypes();
-        // Be safe, do not assume deserialize will give us the type we asked.
-        std::vector<void*> vals;
-        std::vector<TypeInterface*> valstypes;
+        std::vector<TypeInterface*> types = result.membersType();
+        AnyReferenceVector   vals;
         vals.resize(types.size());
-        valstypes.resize(types.size());
         for (unsigned i = 0; i<types.size(); ++i)
         {
           AnyReference val = deserialize(types[i], in, context);
-          if (!val.type)
+          if (!val.isValid())
             throw std::runtime_error("Deserialization of tuple field failed");
-          vals[i] = val.value;
-          valstypes[i] = val.type;
+          vals[i] = val;
         }
-        type->set(&result.value, vals);
-        for (unsigned i = 0; i<types.size(); ++i)
+        //TODO: there is a copy here.
+        result.setTuple(vals);
+        for (unsigned i = 0; i<vals.size(); ++i)
         {
-          valstypes[i]->destroy(vals[i]);
+          vals[i].destroy();
         }
       }
 
@@ -683,39 +687,43 @@ namespace qi {
         TypeInterface* type = TypeInterface::fromSignature(qi::Signature(sig));
         if (!type)
         {
-          qiLogError() << "Cannot find a type to deserialize signature " << sig << " within a dynamic value.";
-          result.destroy();
-          return;
+          std::stringstream ss;
+          ss << "Cannot find a type to deserialize signature " << sig << " within a dynamic value.";
+          throw std::runtime_error(ss.str());
         }
 
         DeserializeTypeVisitor dtv(*this);
         dtv.result = AnyReference(type);
         typeDispatch<DeserializeTypeVisitor>(dtv, dtv.result);
-        static_cast<DynamicTypeInterface*>(result.type)->set(&result.value, dtv.result);
+        result.setDynamic(dtv.result);
         dtv.result.destroy();
       }
       void visitIterator(AnyReference)
       {
-        qiLogError() << "Type " << result.type->infoString() <<" not deserializable";
+        std::stringstream ss;
+        ss << "Type " << result.type()->infoString() <<" not deserializable";
+        throw std::runtime_error(ss.str());
       }
 
       void visitRaw(AnyReference)
       {
         Buffer b;
         in.read(b);
-        static_cast<RawTypeInterface*>(result.type)->set(&result.value, (char*)b.data(), b.size());
+        result.setRaw((char*)b.data(), b.size());
       }
       AnyReference result;
       BinaryDecoder& in;
       DeserializeObjectCallback context;
     }; //class
 
-     void serialize(AnyReference val, BinaryEncoder& out, SerializeObjectCallback context)
+    void serialize(AnyReference val, BinaryEncoder& out, SerializeObjectCallback context)
     {
       details::SerializeTypeVisitor stv(out, context, val);
       qi::typeDispatch(stv, val);
       if (out.status() != BinaryEncoder::Status_Ok) {
-        qiLogError() << "OSerialization error " << BinaryEncoder::statusToStr(out.status());
+        std::stringstream ss;
+        ss << "OSerialization error " << BinaryEncoder::statusToStr(out.status());
+        throw std::runtime_error(ss.str());
       }
     }
 
@@ -725,7 +733,9 @@ namespace qi {
       dtv.result = what;
       qi::typeDispatch(dtv, dtv.result);
       if (in.status() != BinaryDecoder::Status_Ok) {
-        qiLogError() << "ISerialization error " << BinaryDecoder::statusToStr(in.status());
+        std::stringstream ss;
+        ss << "ISerialization error " << BinaryDecoder::statusToStr(in.status());
+        throw std::runtime_error(ss.str());
       }
       what = dtv.result;
     }
@@ -733,7 +743,12 @@ namespace qi {
     AnyReference deserialize(qi::TypeInterface *type, BinaryDecoder& in, DeserializeObjectCallback context)
     {
       AnyReference res(type);
-      deserialize(res, in, context);
+      try {
+        deserialize(res, in, context);
+      } catch (const std::runtime_error&) {
+        res.destroy();
+        throw;
+      }
       return res;
     }
 

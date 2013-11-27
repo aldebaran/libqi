@@ -33,7 +33,7 @@ namespace qi
 
     DynamicObject* _object;
     bool           _deleteOnDestroy;
-    qi::AnyObject  _objptr;
+    AnyObject      _objptr;
   };
 
   DynamicObjectBuilder::DynamicObjectBuilder()
@@ -150,7 +150,8 @@ namespace qi
         err << "DynamicObjectBuilder: Called xAdvertiseProperty("<< name << "," << sig.toString() << ") with an invalid signature.";
       throw std::runtime_error(err.str());
     }
-    return _p->_object->metaObject()._p->addProperty(name, sig, id);
+    unsigned int res = _p->_object->metaObject()._p->addProperty(name, sig, id);
+    return res;
   }
 
 
@@ -163,9 +164,19 @@ namespace qi
     if (!_p->_objptr)
     {
       _p->_objptr = makeDynamicAnyObject(_p->_object, _p->_deleteOnDestroy, onDelete);
-      _p->_object->setManageable(_p->_objptr.get());
+      _p->_object->setManageable(_p->_objptr.asGenericObject());
     }
     return _p->_objptr;
+  }
+
+  DynamicObject* DynamicObjectBuilder::bareObject()
+  {
+    return _p->_object;
+  }
+
+  void DynamicObjectBuilder::setManageable(DynamicObject* obj, Manageable* m)
+  {
+    obj->setManageable(m);
   }
 
   void DynamicObjectBuilder::setThreadingModel(ObjectThreadingModel model)

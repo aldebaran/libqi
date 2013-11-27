@@ -1,1 +1,0 @@
-.. cpp:autoclass:: qi::MetaMethod

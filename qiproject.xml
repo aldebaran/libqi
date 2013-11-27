@@ -1,10 +1,7 @@
-<project name="libqitype">
-  <depends buildtime="true" runtime="true" names="boost libqi"/>
-  <depends buildtime="true" names="gtest pthread"/>
-
-  <!-- Documentation -->
-  <doxydoc name="libqitype-api" src="." dest="ref/libqitype" />
-  <sphinxdoc name="libqitype" src="doc">
-    <depends name="libqitype-api" />
-  </sphinxdoc>
+<project version="3" >
+  <qibuild name="libqitype" >
+    <depends buildtime="true" runtime="true" names="boost libqi"/>
+    <depends buildtime="true" names="gtest pthread"/>
+  </qibuild>
+  <qidoc name="libqitype-api" type="doxygen" />
 </project>

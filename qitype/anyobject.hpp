@@ -54,8 +54,6 @@ namespace qi {
   class SignalBase;
 
   class GenericObject;
-  typedef boost::shared_ptr<GenericObject> AnyObject;
-  typedef boost::weak_ptr<GenericObject>   ObjectWeakPtr;
 
   /* ObjectValue
   *  static version wrapping class C: Type<C>
@@ -183,7 +181,7 @@ namespace qi {
      * If target and this are proxies, the message will be routed through
      * the current process.
      */
-    qi::FutureSync<SignalLink> connect(unsigned int signal, qi::AnyObject target, unsigned int slot);
+    qi::FutureSync<SignalLink> connect(unsigned int signal, AnyObject target, unsigned int slot);
 
     /// Disconnect an event link. Returns if disconnection was successful.
     qi::FutureSync<void> disconnect(SignalLink linkId);
@@ -203,7 +201,83 @@ namespace qi {
     ObjectTypeInterface*  type;
     void*        value;
   };
-#ifdef DOXYGEN
+
+   // C4251
+  template <typename FUNCTION_TYPE>
+  qi::FutureSync<SignalLink> GenericObject::connect(const std::string& eventName,
+                                                      FUNCTION_TYPE callback,
+                                                      MetaCallType model)
+  {
+    return connect(eventName,
+      SignalSubscriber(AnyFunction::from(callback), model));
+  }
+
+
+  /** Make a call honoring ThreadingModel requirements
+   *
+   * Check the following rules in order:
+   * - If \p el is set, force call in it overriding all rules.
+   * - If method type is not auto, honor it, overriding callType
+   * - If callType is set (not auto), honor it.
+   * - Be synchronous.
+   *
+   * @param callerId: thread id of caller, for tracing purposes
+   *
+   * When the call is finally made, if ObjectThreadingModel
+   * is SingleThread, acquire the object lock.
+  */
+  QITYPE_API qi::Future<AnyReference> metaCall(EventLoop* el,
+    ObjectThreadingModel objectThreadingModel,
+    MetaCallType methodThreadingModel,
+    MetaCallType callType,
+    AnyObject manageable,
+    unsigned int methodId,
+    AnyFunction func, const GenericFunctionParameters& params, bool noCloneFirst=false,
+    unsigned int callerId = 0);
+
+  namespace detail
+  {
+    // Storage type used by Object<T>, and Proxy.
+    typedef boost::shared_ptr<GenericObject> ManagedObjectPtr;
+  }
+
+  class QITYPE_API Proxy;
+
+  class Empty {};
+
+  /** Reference-counted GenericObject holder.
+  */
+  template<typename T, bool b> class Object
+  : public GenericObject
+  {
+  public:
+    Object();
+    /// Takes ownership of ptr
+    Object(T* ptr);
+
+    /** Construct from an other Object will only work if conversion is
+    * from T to U is possible, or if T is a proxy type.
+    */
+    template<typename U>
+    Object(Object<U> ao);
+
+    AnyObject asObject();
+
+    /** Return a weak pointer to this object. Use it's lock() method to
+     * try to obtain an AnyObject from it.*/
+    AnyWeakObject asWeakObject();
+    operator bool() const;
+    template<typename U> bool operator == (const Object<U>& bb) const;
+    template<typename U> bool operator != (const Object<U>& bb) const;
+    template<typename U> bool operator < (const Object<U>& bb) const;
+    T* operator ->();
+    T& operator *();
+
+    T& asT();
+  };
+
+
+  #ifdef DOXYGEN
   /** Perform an asynchronous call on a method.
    * @param instance a pointer or shared-pointer to an instance of a class known to type system.
   */
@@ -228,117 +302,17 @@ namespace qi {
     template<typename R,typename T> qi::FutureSync<R> async(   \
       boost::shared_ptr<T> instance,                              \
       const std::string& methodName comma                         \
+      QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoAnyReference));          \
+    template<typename R,typename T> qi::FutureSync<R> async(   \
+          qi::Object<T> instance,                              \
+      const std::string& methodName comma                      \
       QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoAnyReference));
     QI_GEN(genCall)
     #undef genCall
 #endif
-   // C4251
-  template <typename FUNCTION_TYPE>
-  qi::FutureSync<SignalLink> GenericObject::connect(const std::string& eventName,
-                                                      FUNCTION_TYPE callback,
-                                                      MetaCallType model)
-  {
-    return connect(eventName,
-      SignalSubscriber(AnyFunction::from(callback), model));
-  }
 
 
-  /** Make a call honoring ThreadingModel requirements
-   *
-   * Check the following rules in order:
-   * - If \p el is set, force call in it overriding all rules.
-   * - If method type is not auto, honor it, overriding callType
-   * - If callType is set (not auto), honor it.
-   * - Be synchronous.
-   *
-   * When the call is finally made, if ObjectThreadingModel
-   * is SingleThread, acquire the object lock.
-  */
-  QITYPE_API qi::Future<AnyReference> metaCall(EventLoop* el,
-    ObjectThreadingModel objectThreadingModel,
-    MetaCallType methodThreadingModel,
-    MetaCallType callType,
-    AnyObject manageable,
-    unsigned int methodId,
-    AnyFunction func, const GenericFunctionParameters& params, bool noCloneFirst=false);
-
-  class QITYPE_API Proxy
-  {
-  public:
-    Proxy(qi::AnyObject obj) : _obj(obj) {}
-    qi::AnyObject asObject() { return _obj;}
-  protected:
-    qi::AnyObject _obj;
-  };
-
-  class Empty {};
-
-  template<typename T=Empty, bool b = boost::is_base_of<Proxy, T>::value> class Object
-  : public GenericObject
-  {
-  public:
-    Object();
-    /// Takes ownership of ptr
-    Object(T* ptr);
-    /// AnyObject must be of type T, or T must be a proxy type.
-    Object(AnyObject ao);
-
-    operator AnyObject();
-    operator bool() const;
-    T* operator ->();
-    T& operator *();
-
-    AnyObject asAnyObject();
-    T& asT();
-  };
-
-  class TypeProxy: public ObjectTypeInterface
-  {
-  public:
-    virtual const MetaObject& metaObject(void* instance)
-    {
-      Proxy* ptr = static_cast<Proxy*>(instance);
-      return ptr->asObject()->metaObject();
-    }
-    virtual qi::Future<AnyReference> metaCall(void* instance, AnyObject context, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto)
-    {
-      Proxy* ptr = static_cast<Proxy*>(instance);
-      return ptr->asObject()->metaCall(method, params, callType);
-    }
-    virtual void metaPost(void* instance, AnyObject context, unsigned int signal, const GenericFunctionParameters& params)
-    {
-      Proxy* ptr = static_cast<Proxy*>(instance);
-      ptr->asObject()->metaPost(signal, params);
-    }
-    virtual qi::Future<SignalLink> connect(void* instance, AnyObject context, unsigned int event, const SignalSubscriber& subscriber)
-    {
-      Proxy* ptr = static_cast<Proxy*>(instance);
-      return ptr->asObject()->connect(event, subscriber);
-    }
-    virtual qi::Future<void> disconnect(void* instance, AnyObject context, SignalLink linkId)
-    {
-       Proxy* ptr = static_cast<Proxy*>(instance);
-       return ptr->asObject()->disconnect(linkId);
-    }
-    virtual const std::vector<std::pair<TypeInterface*, int> >& parentTypes()
-    {
-      static std::vector<std::pair<TypeInterface*, int> > empty;
-      return empty;
-    }
-    virtual qi::Future<AnyValue> property(void* instance, unsigned int id)
-    {
-      Proxy* ptr = static_cast<Proxy*>(instance);
-      AnyObject obj = ptr->asObject();
-      return obj->type->property(obj->value, id);
-    }
-    virtual qi::Future<void> setProperty(void* instance, unsigned int id, AnyValue value)
-    {
-      Proxy* ptr = static_cast<Proxy*>(instance);
-      AnyObject obj = ptr->asObject();
-      return obj->type->setProperty(obj->value, id, value);
-    }
-
-  };
+/// Declare that type \p name is a proxy type.
 #define QI_TYPE_PROXY(name)                            \
   namespace qi {                                       \
     template<> class TypeImpl<name>                    \

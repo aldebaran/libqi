@@ -9,6 +9,7 @@
 
 #include <set>
 #include <qitype/details/hasless.hxx>
+#include <qi/traits.hpp>
 
 
 /* This file contains class to help implementing the Type interface.
@@ -260,7 +261,7 @@ namespace qi
     void* ptrFromStorage(void** ) { return 0;}
     void* clone(void*)                       { return 0;}
     void destroy(void* ptr)                  {}
-    TypeKind kind() const { return TypeKind_Void;}
+    TypeKind kind() { return TypeKind_Void;}
     bool less(void* a, void* b) { return false;}
   };
 

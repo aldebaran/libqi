@@ -57,13 +57,13 @@ namespace qi
     return connect((boost::function<T>)c);
   }
   template<typename T>
-  SignalSubscriber& SignalF<T>::connect(AnyObject obj, const std::string& slot)
+  SignalSubscriber& SignalF<T>::connect(const AnyObject& obj, const std::string& slot)
   {
     return SignalBase::connect(obj, slot);
   }
 
   template<typename T>
-  SignalSubscriber& SignalF<T>::connect(AnyObject obj, unsigned int slot)
+  SignalSubscriber& SignalF<T>::connect(const AnyObject& obj, unsigned int slot)
   {
     return connect(SignalSubscriber(obj, slot));
   }
@@ -88,7 +88,7 @@ namespace qi
   public:                      \
     BounceToSignalBase(SignalBase& signalBase) : signalBase(signalBase) {} \
     R operator()(argsdecl) {   \
-      std::vector<AnyReference> args; \
+      AnyReferenceVector args; \
       BOOST_PP_REPEAT(n, pushArg, _);    \
       signalBase.trigger(args);          \
     }                                    \

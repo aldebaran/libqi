@@ -23,7 +23,7 @@ namespace qi {
     virtual AnyReference get(void* storage)
     {
       AnyValue* ptr = (AnyValue*)ptrFromStorage(&storage);
-      return *ptr;
+      return ptr->asReference();
     }
 
     virtual void set(void** storage, AnyReference src)
@@ -38,13 +38,13 @@ namespace qi {
   };
 
   inline AnyValue
-  AnyValue::makeTuple(const std::vector<AnyReference>& values)
+  AnyValue::makeTuple(const AnyReferenceVector& values)
   {
     return AnyValue(makeGenericTuple(values), false, true);
   }
 
   template<typename T>
-  AnyValue AnyValue::makeList(const std::vector<AnyReference>& values)
+  AnyValue AnyValue::makeList(const AnyReferenceVector& values)
   {
     AnyValue res = make<std::vector<T> >();
     for (unsigned i=0; i<values.size(); ++i)
@@ -52,7 +52,7 @@ namespace qi {
     return res;
   }
   inline
-  AnyValue AnyValue::makeGenericList(const std::vector<AnyReference>& values)
+  AnyValue AnyValue::makeGenericList(const AnyReferenceVector& values)
   {
     return makeList<AnyValue>(values);
   }
@@ -84,7 +84,7 @@ namespace qi {
   }
 
   inline AnyValue::AnyValue(qi::TypeInterface *type)
-    : AnyReference(type)
+    : AnyReferenceBase(type)
     , _allocated(true)
   {
   }
@@ -109,7 +109,7 @@ namespace qi {
 
   inline void AnyValue::operator=(const AnyValue& b)
   {
-    reset(b, true, true);
+    reset(b.asReference(), true, true);
   }
 
   inline void AnyValue::operator=(const AnyReference& b)
@@ -125,26 +125,26 @@ namespace qi {
   inline void AnyValue::reset(const AnyReference& b, bool copy, bool free)
   {
     reset();
-    *(AnyReference*)this = b;
+    *(AnyReferenceBase*)this = b;
     _allocated = free;
     if (copy)
-      *(AnyReference*)this = clone();
+      *(AnyReferenceBase*)this = clone();
   }
 
   inline void AnyValue::reset()
   {
     if (_allocated)
-      destroy();
-    type = 0;
-    value = 0;
+      AnyReferenceBase::destroy();
+    _type = 0;
+    _value = 0;
   }
 
   inline void AnyValue::reset(qi::TypeInterface *ttype)
   {
     reset();
     _allocated = true;
-    type = ttype;
-    value = type->initializeStorage();
+    _type = ttype;
+    _value = _type->initializeStorage();
   }
 
   inline AnyValue::~AnyValue()
@@ -197,6 +197,16 @@ namespace qi {
       out = qi::AnyValue::make<void>();
     }
   };
+
+  inline AnyReferenceVector asAnyReferenceVector(const AnyValueVector& vect) {
+    AnyReferenceVector result;
+    result.resize(vect.size());
+    for (unsigned int i = 0; i < vect.size(); ++i) {
+      result[i] = vect[i].asReference();
+    }
+    return result;
+  }
+
 }
 
 namespace std

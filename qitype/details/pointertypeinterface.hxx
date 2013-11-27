@@ -14,19 +14,17 @@ namespace qi
   template<typename T> class PointerTypeInterfaceImpl: public PointerTypeInterface
   {
   public:
-    TypeInterface* pointedType() const
+    TypeInterface* pointedType()
     {
       // Caching the result here is dangerous if T uses runtime factory.
       return typeOf<T>();
     }
-    PointerKind pointerKind() const { return Raw;}
+    PointerKind pointerKind() { return Raw; }
     AnyReference dereference(void* storage)
     {
-      AnyReference result;
-      result.type = pointedType();
       // We are in DirectAccess mode, so storage is a T*.
-      result.value = result.type->initializeStorage(storage);
-      return result;
+      void* value = pointedType()->initializeStorage(storage);
+      return AnyReference(pointedType(), value);
     }
 
     void setPointee(void** storage, void* pointer)
@@ -45,18 +43,16 @@ namespace qi
   template<typename T> class TypeSharedPointerImpl: public PointerTypeInterface
   {
   public:
-    TypeInterface* pointedType() const
+    TypeInterface* pointedType()
     {
       return typeOf<typename T::element_type>();
     }
-    PointerKind pointerKind() const { return Shared;}
+    PointerKind pointerKind() { return Shared; }
     AnyReference dereference(void* storage)
     {
       T* ptr = (T*)ptrFromStorage(&storage);
-      AnyReference result;
-      result.type = pointedType();
-      result.value = result.type->initializeStorage(ptr->get());
-      return result;
+      void *value = pointedType()->initializeStorage(ptr->get());
+      return AnyReference(pointedType(), value);
     }
     void setPointee(void** storage, void* pointer)
     {

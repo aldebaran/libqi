@@ -18,8 +18,8 @@ public:
                                TypeByPointer<M>
                                > MethodsImpl;
   MapTypeInterfaceImpl();
-  virtual TypeInterface* elementType() const;
-  virtual TypeInterface* keyType() const;
+  virtual TypeInterface* elementType();
+  virtual TypeInterface* keyType();
   virtual size_t size(void* storage);
   virtual AnyIterator begin(void* storage);
   virtual AnyIterator end(void* storage);
@@ -38,14 +38,14 @@ MapTypeInterfaceImpl<M>::MapTypeInterfaceImpl()
 
 
 template<typename M> TypeInterface*
-MapTypeInterfaceImpl<M>::elementType() const
+MapTypeInterfaceImpl<M>::elementType()
 {
   static TypeInterface* result = typeOf<typename M::mapped_type>();
   return result;
 }
 
 template<typename M> TypeInterface*
-MapTypeInterfaceImpl<M>::keyType() const
+MapTypeInterfaceImpl<M>::keyType()
 {
   static TypeInterface* result = typeOf<typename M::key_type>();
   return result;
@@ -101,10 +101,10 @@ MapTypeInterfaceImpl<M>::element(void** storage, void* keyStorage, bool autoInse
     if (!autoInsert)
       return AnyReference();
     typename M::mapped_type& e = (*ptr)[*key];
-    return AnyReference(e);
+    return AnyReference::from(e);
   }
   else
-    return AnyReference(((typename M::mapped_type&)(it->second)));
+    return AnyReference::from(((typename M::mapped_type&)(it->second)));
 }
 
 

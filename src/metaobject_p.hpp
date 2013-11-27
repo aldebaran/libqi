@@ -22,6 +22,7 @@ namespace qi {
     //the first qiObjectSpecialMemberMaxUid id are reserved for bound object
     MetaObjectPrivate()
       : _index(qiObjectSpecialMemberMaxUid - 1)
+      , _dirtyCache(false)
     {
     };
 
@@ -105,6 +106,9 @@ namespace qi {
     qi::Atomic<unsigned int>            _index;
 
     std::string                         _description;
+
+    // true if cache must be refreshed
+    mutable bool                        _dirtyCache;
 
     // Global uid for event subscribers.
     static qi::Atomic<int> uid;

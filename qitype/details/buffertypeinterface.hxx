@@ -14,7 +14,7 @@ namespace qi
   class TypeBufferImpl: public RawTypeInterface
   {
   public:
-    virtual std::pair<char*, size_t> get(void *storage) const
+    virtual std::pair<char*, size_t> get(void *storage)
     {
       Buffer* b = (Buffer*)Methods::ptrFromStorage(&storage);
       return std::make_pair(const_cast<char*>((const char*)b->data()), b->size());

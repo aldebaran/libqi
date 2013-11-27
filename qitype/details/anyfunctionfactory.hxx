@@ -30,7 +30,7 @@
 #include <boost/bind.hpp>
 #include <boost/any.hpp>
 #include <boost/thread/mutex.hpp>
-
+#include <qi/atomic.hpp>
 #include <qitype/anyreference.hpp>
 
 namespace qi
@@ -236,7 +236,7 @@ namespace qi
   val(), f( \
   BOOST_PP_REPEAT(n, callArg, _) \
   ); \
-  return val.value; \
+  return val.rawValue(); \
   }
     QI_GEN(makeCall)
 #undef makeCall
@@ -263,7 +263,7 @@ namespace qi
   val(), f( \
   BOOST_PP_REPEAT(n, callArgBF, _) \
   ); \
-  return val.value; \
+  return val.rawValue(); \
   }
     QI_GEN(makeCall)
 #undef makeCall
@@ -277,7 +277,7 @@ namespace qi
   val(), ((*cptr).*f)( \
   BOOST_PP_REPEAT(n, callArg, _) \
   ); \
-  return val.value; \
+  return val.rawValue(); \
   }
     QI_GEN(makeCall)
 #undef makeCall
@@ -318,12 +318,6 @@ namespace qi
     }
     unsigned long _mask;
   };
-#ifdef _WIN32
-    namespace detail {
-    QITYPE_API boost::mutex& initializationMutex();
-    }
-#endif
-
 
   /* T is the *reducted* function type
   *  S is the storage type of the function
@@ -387,15 +381,11 @@ namespace qi
       std::vector<TypeInterface*> key(argsType);
       key.push_back(returnType);
       typedef std::map<InfosKeyMask,  FunctionTypeInterfaceEq<T, S>* > FTMap;
-#ifdef _WIN32
-      boost::mutex::scoped_lock lock(detail::initializationMutex());
-      static FTMap ftMap;
-#else
-      static FTMap ftMap;
-      static boost::mutex mutex;
-      boost::mutex::scoped_lock lock(mutex);
-#endif
-      FunctionTypeInterfaceEq<T, S>* & fptr = ftMap[InfosKeyMask(key, refMask)];
+      static FTMap* ftMap = 0;
+      static boost::mutex* mutex = 0;
+      QI_THREADSAFE_NEW(ftMap, mutex);
+      boost::mutex::scoped_lock lock(*mutex);
+      FunctionTypeInterfaceEq<T, S>* & fptr = (*ftMap)[InfosKeyMask(key, refMask)];
       if (!fptr)
       {
         fptr = new FunctionTypeInterfaceEq<T, S>(refMask);
@@ -488,7 +478,7 @@ namespace qi
     }
 
     template<typename C, typename R>
-    AnyReference bouncer(const std::vector<AnyReference>& vargs,
+    AnyReference bouncer(const AnyReferenceVector& vargs,
                          R (C::*fun)(const AnyArguments&)
                          )
     {
@@ -507,7 +497,7 @@ namespace qi
     }
 
     template<typename R>
-    AnyReference bouncerBF(const std::vector<AnyReference>& vargs,
+    AnyReference bouncerBF(const AnyReferenceVector& vargs,
                          boost::function<R (const AnyArguments&)> f
                          )
     {

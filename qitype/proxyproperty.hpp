@@ -36,7 +36,7 @@ namespace qi
     void setup(AnyObject object, const std::string& propertyName);
     ~ProxyProperty();
     void onSubscribe(bool enable, GenericObject* object, const std::string& propertyName, SignalLink link);
-    AnyReference bounceEvent(const std::vector<AnyReference> args);
+    AnyReference bounceEvent(const AnyReferenceVector args);
     void triggerOverride(const GenericFunctionParameters& params, MetaCallType, GenericObject* object, const std::string& propertyName);
   private:
     T getter(GenericObject* object, const std::string& propertyName);
@@ -66,13 +66,13 @@ namespace qi
   {
     // signal part
     SignalBase::setOnSubscribers(boost::bind(&ProxyProperty<T>::onSubscribe, this, _1,
-      object.get(), propertyName, SignalBase::invalidSignalLink));
+      object.asGenericObject(), propertyName, SignalBase::invalidSignalLink));
     SignalBase::setTriggerOverride(boost::bind(&ProxyProperty<T>::triggerOverride, this, _1, _2,
-      object.get(), propertyName));
+      object.asGenericObject(), propertyName));
 
     // property part
-    this->_getter = boost::bind(&ProxyProperty<T>::getter, this, object.get(), propertyName);
-    this->_setter = boost::bind(&ProxyProperty<T>::setter, this, _1, _2, object.get(), propertyName);
+    this->_getter = boost::bind(&ProxyProperty<T>::getter, this, object.asGenericObject(), propertyName);
+    this->_setter = boost::bind(&ProxyProperty<T>::setter, this, _1, _2, object.asGenericObject(), propertyName);
   }
 
   template<typename T>
@@ -98,7 +98,7 @@ namespace qi
   }
 
   template<typename T>
-  AnyReference ProxyProperty<T>::bounceEvent(const std::vector<AnyReference> args)
+  AnyReference ProxyProperty<T>::bounceEvent(const AnyReferenceVector args)
   {
     // Receive notify from backend, trigger on our signal, bypassing our trigger overload
     SignalType::callSubscribers(args);
