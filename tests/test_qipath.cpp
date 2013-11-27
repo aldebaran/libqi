@@ -563,7 +563,7 @@ TEST_F(qiPathData, findDataInSubfolder)
 
 TEST_F(qiPathData, listDataWithOptSdk)
 {
-  qi::SDKLayout* sdkl = new qi::SDKLayout();
+  boost::scoped_ptr<qi::SDKLayout> sdkl(new qi::SDKLayout());
   sdkl->addOptionalSdkPrefix(optSdkPrefix.string(qi::unicodeFacet()).c_str());
 
   std::vector<std::string> actual = sdkl->listData("foo", "*.dat");
@@ -652,6 +652,18 @@ TEST_F(qiPathData, listDataInSubFolderWithOptSdk)
   EXPECT_TRUE(isInVector(sdkShareFoo / "bar/baz.dat", actual));
   EXPECT_TRUE(isInVector(sdkShareFoo / "baz/baz.dat", actual));
   EXPECT_TRUE(isInVector(optSdkShareFoo / "bam/baz.dat", actual));
+}
+
+TEST_F(qiPathData, findDataDir)
+{
+  boost::scoped_ptr<qi::SDKLayout> sdkl(new qi::SDKLayout());
+  std::string expected = (sdkShareFoo / "bar").make_preferred().string(qi::unicodeFacet());
+
+  std::string barDir = sdkl->findData("foo", "bar");
+  EXPECT_EQ(barDir, expected);
+
+  std::vector<std::string> barDirMatches = sdkl->listData("foo", "bar");
+  EXPECT_TRUE(barDirMatches.empty()); // listData discards directories
 }
 
 int main(int argc, char* argv[])

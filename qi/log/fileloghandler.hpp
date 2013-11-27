@@ -8,6 +8,7 @@
 #ifndef _QI_LOG_FILELOGHANDLER_HPP_
 #define _QI_LOG_FILELOGHANDLER_HPP_
 
+# include <boost/noncopyable.hpp>
 # include <qi/log.hpp>
 
 namespace qi {
@@ -15,7 +16,7 @@ namespace qi {
     class PrivateFileLogHandler;
 
     /// Log messages to a file.
-    class QI_API FileLogHandler
+    class QI_API FileLogHandler : private boost::noncopyable
     {
     public:
       /// \brief Initialize the file handler on the file. File is opened
@@ -35,7 +36,6 @@ namespace qi {
                const int               line);
 
     private:
-      QI_DISALLOW_COPY_AND_ASSIGN(FileLogHandler);
       PrivateFileLogHandler* _p;
     }; // !FileLogHandler
 

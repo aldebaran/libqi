@@ -12,13 +12,17 @@
 # include <qi/api.hpp>
 # include <vector>
 # include <string>
+# include <boost/shared_ptr.hpp>
 
 namespace qi {
   namespace version {
 
-    struct QI_API Version
+    class VersionPrivate;
+    class QI_API Version
     {
-      std::string version;
+    public:
+      Version();
+      Version(const std::string &version);
 
       std::string& operator()();
       const std::string& operator()() const;
@@ -28,6 +32,9 @@ namespace qi {
       bool operator!=(const Version& pi) const;
       bool operator<=(const Version& pi) const;
       bool operator>=(const Version& pi) const;
+
+    private:
+      boost::shared_ptr<VersionPrivate> _p;
     };
 
     //convert a version's string into a vector<string> with each comparable part

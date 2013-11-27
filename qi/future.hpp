@@ -245,7 +245,7 @@ namespace qi {
     */
     void cancel()
     {
-      _p->cancel();
+      _p->cancel(*this);
     }
 
     /** return true if the future can be canceled. This does not mean that cancel will succeed.
@@ -411,7 +411,7 @@ namespace qi {
     explicit Promise(boost::function<void (qi::Promise<T>)> cancelCallback, FutureCallbackType async = FutureCallbackType_Async)
     {
       _f._p->reportStart();
-      _f._p->setOnCancel(boost::bind<void>(cancelCallback, *this));
+      _f._p->setOnCancel(cancelCallback);
       _f._p->_async = async;
     }
 
@@ -452,6 +452,8 @@ namespace qi {
     */
     void trigger() { _f._p->set(_f);}
   protected:
+    explicit Promise(Future<T>& f) : _f(f) {}
+    template<typename> friend class ::qi::detail::FutureBaseTyped;
     Future<T> _f;
   };
 

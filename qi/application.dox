@@ -19,6 +19,7 @@
  * \brief Application constructor. Must be the first thing called by main().
  * \param argc Argument counter of the program.
  * \param argv Arguments of the program (given to main).
+ * \throw std::logic_error When the constructor is called twice.
  */
 
 /**

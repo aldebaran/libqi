@@ -12,9 +12,7 @@
 #ifndef _QI_MACRO_HPP_
 #define _QI_MACRO_HPP_
 
-#ifdef __cplusplus
-#include <boost/utility.hpp>
-#endif
+
 
 #include <qi/preproc.hpp>
 
@@ -46,8 +44,6 @@
 #endif
 
 // For shared library
-
-
 
 
 /** @return the proper type specification for import/export
@@ -128,48 +124,23 @@ Please consult the changelog for details. " #x)
 #endif
 
 
-// A macro to disallow copy constructor and operator=
+#ifdef __cplusplus
+namespace qi {
+  template <typename T>
+  struct IsClonable;
+};
+#endif
+
+#define QI_DEPRECATE_MACRO(name)                \
+  QI_COMPILER_WARNING(name macro is deprecated.)
+
+// This macro is deprecated, use boost::noncopyable instead
 #define QI_DISALLOW_COPY_AND_ASSIGN(type)       \
+  QI_DEPRECATE_MACRO(QI_DISALLOW_COPY_AND_ASSIGN) \
   type(type const &);                           \
   void operator=(type const &);               \
   typedef int _qi_not_clonable;                 \
   template<typename U> friend struct ::qi::IsClonable
-
-#ifdef __cplusplus
-namespace boost
-{
-  // forward-declare the trait to avoid an include
-  template<typename T1, typename T2> struct is_base_of;
-}
-namespace qi
-{
-  /// Detect if a type is using boost::noncopyable or QI_DISALLOW_COPY_AND_ASSIGN
-  template<typename T> struct IsClonable
-  {
-    typedef char yes[1];
-    typedef char no[2];
-    template <typename C>
-    static no& test(typename C::_qi_not_clonable*);
-
-    template <typename>
-    static yes& test(...);
-
-    static const bool value = sizeof(test<T>(0)) == sizeof(yes)
-    && ! boost::is_base_of<boost::noncopyable, T>::value;
-  };
-
-  ///@return true if T inherits from boost::noncopyable or uses QI_DISALLOW_COPY_AND_ASSIGN
-  template<typename T> bool isClonable()
-  {
-    return IsClonable<T>::value;
-  }
-
-  template<typename T> bool isClonable(T*)
-  {
-    return IsClonable<T>::value;
-  }
-}
-#endif
 
 
 #if defined(__GNUC__)
@@ -185,5 +156,6 @@ namespace qi
 #define _QI_UNIQ_DEF_LEVEL2(A, B) A ## __uniq__ ## B
 #define _QI_UNIQ_DEF_LEVEL1(A, B) _QI_UNIQ_DEF_LEVEL2(A, B)
 #define QI_UNIQ_DEF(A) _QI_UNIQ_DEF_LEVEL1(A, __LINE__)
+
 
 #endif  // _QI_MACRO_HPP_

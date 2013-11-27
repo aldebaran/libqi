@@ -8,6 +8,7 @@
 #ifndef _QI_LOG_TAILFILELOGHANDLER_HPP_
 #define _QI_LOG_TAILFILELOGHANDLER_HPP_
 
+# include <boost/noncopyable.hpp>
 # include <qi/log.hpp>
 # include <string>
 
@@ -16,7 +17,7 @@ namespace qi {
     class PrivateTailFileLogHandler;
 
     /// Keeps at most 2 MiB of logs.
-    class QI_API TailFileLogHandler
+    class QI_API TailFileLogHandler : private boost::noncopyable
     {
     public:
       /// Initialize the tail file log handler. File is opened on construction.
@@ -34,7 +35,6 @@ namespace qi {
                const int               line);
 
     private:
-      QI_DISALLOW_COPY_AND_ASSIGN(TailFileLogHandler);
       PrivateTailFileLogHandler* _p;
     }; // !TailFileLogHandler
 

@@ -68,7 +68,7 @@ namespace qi {
 
   static void stop_io_service()
   {
-    qiLogInfo() << "Unregistering all signal handlers.";
+    qiLogVerbose() << "Unregistering all signal handlers.";
     //dont call ioservice->stop, just remove all events for the ioservice
     //deleting the object holding the run() method from quitting
     delete globalIoWork;
@@ -212,7 +212,7 @@ namespace qi {
   {
     readPathConf();
     if (globalInitialized)
-      qiLogError() << "Application was already initialized";
+      throw std::logic_error("Application was already initialized");
     globalInitialized = true;
     globalArgc = argc;
     globalArgv = argv;

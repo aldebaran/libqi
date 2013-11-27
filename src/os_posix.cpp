@@ -51,7 +51,6 @@
 #include <pthread.h>
 #include <qi/os.hpp>
 #include <qi/log.hpp>
-#include <qi/error.hpp>
 #include <qi/qi.hpp>
 #include "filesystem.hpp"
 #include "utils.hpp"
@@ -371,17 +370,32 @@ namespace qi {
      }
 #endif
 
-    void setCurrentThreadName(const std::string &name) {
-     #if defined (__linux__) && !defined(ANDROID)
-      prctl(PR_SET_NAME, name.c_str(), 0, 0, 0);
-     #elif defined (__APPLE__)
-      pthread_setname_np(name.c_str());
-     #elif defined (ANDROID)
+  void setCurrentThreadName(const std::string &name) {
+#if defined (__linux__) && !defined(ANDROID)
+    prctl(PR_SET_NAME, name.c_str(), 0, 0, 0);
+#elif defined (__APPLE__)
+    pthread_setname_np(name.c_str());
+#elif defined (ANDROID)
+    //no implementation under Android
+#else
+    //BSD, whatever...
+    pthread_set_name_np(pthread_self(), name.c_str());
+#endif
+  }
+
+    std::string currentThreadName() {
+      char buffer[16] = {0};
+#if defined(__linux__) && !defined(ANDROID)
+      prctl(PR_GET_NAME, buffer, 0, 0);
+#elif defined(__APPLE__)
+      pthread_getname_np(pthread_self(), buffer, 16);
+#elif defined (ANDROID)
       //no implementation under Android
-     #else
-      //BSD, whatever...
-      pthread_set_name_np(pthread_self(), name.c_str());
-     #endif
+#else
+      // BSD
+      pthread_get_name_np(pthread_self(), buffer);
+#endif
+      return std::string(buffer);
     }
 
     long numberOfCPUs()

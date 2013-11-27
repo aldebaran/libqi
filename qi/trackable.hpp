@@ -71,7 +71,15 @@ namespace qi
     bool                      _wasDestroyed;
   };
 
-  class QI_API PointerLockException: public std::exception {};
+  class QI_API PointerLockException: public std::exception
+  {
+  public:
+    virtual const char* what() const throw()
+    {
+      return "Pointer Lock failed";
+    }
+  };
+
 #ifdef DOXYGEN
   /** Bind a set of arguments or placeholders to a function.
   *

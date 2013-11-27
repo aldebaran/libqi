@@ -7,13 +7,14 @@
 #ifndef _QI_TRANSLATOR_HPP_
 #define _QI_TRANSLATOR_HPP_
 
+# include <boost/noncopyable.hpp>
 # include <string>
 # include <qi/api.hpp>
 
 namespace qi
 {
   class TranslatorPrivate;
-  class QI_API Translator
+  class QI_API Translator : private boost::noncopyable
   {
   public:
     Translator(const std::string &name);
@@ -26,9 +27,6 @@ namespace qi
     void setCurrentLocale(const std::string &locale);
     void setDefaultDomain(const std::string &domain);
     void addDomain(const std::string &domain);
-
-  private:
-    QI_DISALLOW_COPY_AND_ASSIGN(Translator);
 
   private:
     TranslatorPrivate *_p;

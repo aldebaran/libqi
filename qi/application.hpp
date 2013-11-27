@@ -64,26 +64,24 @@ static void QI_UNIQ_DEF(_qi_opt_func)() {                             \
     using namespace boost::program_options;                           \
     options.add_options() opts;                                       \
   }                                                                   \
-  options.add_options()                                               \
-    ("help,h", "Show command line options")                           \
-    ("__positional", po::value<std::vector<std::string> >(),          \
-      "Positional arguments");                                        \
-  po::positional_options_description pos;                             \
-  pos.add("__positional", -1);                                        \
   po::parsed_options res = p.options(options)                         \
     .allow_unregistered()                                             \
-    .positional(pos)                                                  \
     .run();                                                           \
   po::store(res, vm);                                                 \
   /* Invoke notify callbacks*/                                        \
   po::notify(vm);                                                     \
-  if (vm.count("help"))                                               \
-    std::cout << options << std::endl;                                \
+  {                                                                   \
+    po::options_description descTmp;                                  \
+    descTmp.add_options()                                             \
+    ("help,h", "");                                                   \
+    po::variables_map vmTmp;                                          \
+    po::store(po::command_line_parser(qi::Application::arguments())   \
+      .options(descTmp).allow_unregistered().run(), vmTmp);           \
+    if (vmTmp.count("help"))                                          \
+      std::cout << options << std::endl;                              \
+  }                                                                   \
   std::vector<std::string> args                                       \
     = po::collect_unrecognized(res.options, po::include_positional);  \
-  /* Keep --help for next option parser*/                             \
-  if (vm.count("help"))                                               \
-    args.push_back("--help");                                         \
   /* Set arguments to what was not used */                            \
   ::qi::Application::setArguments(args);                              \
 }                                                                     \

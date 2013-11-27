@@ -9,6 +9,7 @@
 #define _QI_IOCOLOR_HPP_
 
 #include <qi/api.hpp>
+#include <ostream>
 
 namespace qi {
 
