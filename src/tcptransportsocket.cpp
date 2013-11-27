@@ -1,5 +1,5 @@
 /*
-**  Copyright (C) 2012 Aldebaran Robotics
+**  Copyright (C) 2012, 2013 Aldebaran Robotics
 **  See COPYING for the license
 */
 
@@ -24,9 +24,9 @@
 #include "tcptransportsocket.hpp"
 
 #include <qi/log.hpp>
+#include <qi/os.hpp>
 
 qiLogCategory("qimessaging.transportsocket");
-
 
 /**
  * ###
@@ -123,29 +123,29 @@ namespace qi
       if (!_sslHandshake)
       {
         _socket->async_handshake(boost::asio::ssl::stream_base::server,
-          boost::bind(&TcpTransportSocket::handshake, shared_from_this(), _1));
+          boost::bind(&TcpTransportSocket::handshake, shared_from_this(), _1, _socket));
         return;
       }
 
       boost::asio::async_read(*_socket,
         boost::asio::buffer(_msg->_p->getHeader(), sizeof(MessagePrivate::MessageHeader)),
-        boost::bind(&TcpTransportSocket::onReadHeader, shared_from_this(), _1, _2));
+        boost::bind(&TcpTransportSocket::onReadHeader, shared_from_this(), _1, _2, _socket));
     }
     else
     {
       boost::asio::async_read(_socket->next_layer(),
         boost::asio::buffer(_msg->_p->getHeader(), sizeof(MessagePrivate::MessageHeader)),
-        boost::bind(&TcpTransportSocket::onReadHeader, shared_from_this(), _1, _2));
+        boost::bind(&TcpTransportSocket::onReadHeader, shared_from_this(), _1, _2, _socket));
     }
 #else
     boost::asio::async_read(*_socket,
       boost::asio::buffer(_msg->_p->getHeader(), sizeof(MessagePrivate::MessageHeader)),
-      boost::bind(&TcpTransportSocket::onReadHeader, shared_from_this(), _1, _2));
+      boost::bind(&TcpTransportSocket::onReadHeader, shared_from_this(), _1, _2, _socket));
 #endif
   }
 
   void TcpTransportSocket::onReadHeader(const boost::system::error_code& erc,
-    std::size_t len)
+    std::size_t len, SocketPtr)
   {
     if (erc)
     {
@@ -206,26 +206,26 @@ namespace qi
       {
         boost::asio::async_read(*_socket,
           boost::asio::buffer(ptr, payload),
-          boost::bind(&TcpTransportSocket::onReadData, shared_from_this(), _1, _2));
+          boost::bind(&TcpTransportSocket::onReadData, shared_from_this(), _1, _2, _socket));
       }
       else
       {
         boost::asio::async_read(_socket->next_layer(),
           boost::asio::buffer(ptr, payload),
-          boost::bind(&TcpTransportSocket::onReadData, shared_from_this(), _1, _2));
+          boost::bind(&TcpTransportSocket::onReadData, shared_from_this(), _1, _2, _socket));
       }
 #else
       boost::asio::async_read(*_socket,
         boost::asio::buffer(ptr, payload),
-        boost::bind(&TcpTransportSocket::onReadData, shared_from_this(), _1, _2));
+        boost::bind(&TcpTransportSocket::onReadData, shared_from_this(), _1, _2, _socket));
 #endif
     }
     else
-      onReadData(boost::system::error_code(), 0);
+      onReadData(boost::system::error_code(), 0, _socket);
   }
 
   void TcpTransportSocket::onReadData(const boost::system::error_code& erc,
-    std::size_t len)
+    std::size_t len, SocketPtr)
   {
     if (erc)
     {
@@ -316,32 +316,60 @@ namespace qi
     qiLogVerbose() << "Trying to connect to " << _url.host() << ":" << _url.port();
     using namespace boost::asio;
     // Resolve url
-    ip::tcp::resolver r(_socket->get_io_service());
+    _r = boost::shared_ptr<boost::asio::ip::tcp::resolver>(new boost::asio::ip::tcp::resolver(_socket->get_io_service()));
     ip::tcp::resolver::query q(_url.host(), boost::lexical_cast<std::string>(_url.port())
                            #ifndef ANDROID
                                , boost::asio::ip::tcp::resolver::query::all_matching
                            #endif
                                );
-    // Synchronous resolution
 
+    _r->async_resolve(q,
+                      boost::bind(&TcpTransportSocket::onResolved,
+                                  shared_from_this(),
+                                  boost::asio::placeholders::error,
+                                  boost::asio::placeholders::iterator));
+    return _connectPromise.future();
+  }
+
+  void TcpTransportSocket::onResolved(const boost::system::error_code& erc,
+                                      boost::asio::ip::tcp::resolver::iterator it)
+  {
     try
     {
-      ip::tcp::resolver::iterator it = r.resolve(q);
-      // asynchronous connect
-      _socket->lowest_layer().async_connect(*it,
-        boost::bind(&TcpTransportSocket::onConnected, shared_from_this(), _1));
-      return _connectPromise.future();
+      if (erc)
+      {
+        qiLogWarning() << "resolved: " << erc.message();
+        _status = qi::TransportSocket::Status_Disconnected;
+        pSetError(_connectPromise, erc.message());
+      }
+      else
+      {
+        static bool disableIPV6 = qi::os::getenv("QIMESSAGING_ENABLE_IPV6").empty();
+        if (disableIPV6)
+        {
+          while (it != boost::asio::ip::tcp::resolver::iterator() &&
+                 it->endpoint().address().is_v6())
+            ++it;
+        }
+        // asynchronous connect
+        _socket->lowest_layer().async_connect(*it,
+                                              boost::bind(&TcpTransportSocket::onConnected,
+                                                          shared_from_this(),
+                                                          boost::asio::placeholders::error,
+                                                          _socket));
+        _r.reset();
+      }
     }
     catch (const std::exception& e)
     {
       const char* s = e.what();
-      qiLogError() << s;
+      qiLogError() << s
+                   << " only IPv6 were resolved on " << url().str();
       pSetError(_connectPromise, s);
-      return _connectPromise.future();
     }
   }
 
-  void TcpTransportSocket::handshake(const boost::system::error_code& erc)
+  void TcpTransportSocket::handshake(const boost::system::error_code& erc, SocketPtr)
   {
     if (erc)
     {
@@ -373,12 +401,12 @@ namespace qi
     }
   }
 
-  void TcpTransportSocket::onConnected(const boost::system::error_code& erc)
+  void TcpTransportSocket::onConnected(const boost::system::error_code& erc, SocketPtr)
   {
     _connecting = false;
     if (erc)
     {
-      qiLogWarning("qimessaging.TransportSocketLibEvent") << "connect: " << erc.message();
+      qiLogWarning() << "connect: " << erc.message();
       _status = qi::TransportSocket::Status_Disconnected;
       pSetError(_connectPromise, erc.message());
       pSetValue(_disconnectPromise);
@@ -388,8 +416,11 @@ namespace qi
       if (_ssl)
       {
 #ifdef WITH_SSL
+        boost::recursive_mutex::scoped_lock l(_closingMutex);
+        if (_abort)
+          return;
         _socket->async_handshake(boost::asio::ssl::stream_base::client,
-          boost::bind(&TcpTransportSocket::handshake, shared_from_this(), _1));
+          boost::bind(&TcpTransportSocket::handshake, shared_from_this(), _1, _socket));
 #endif
       }
       else
@@ -561,23 +592,23 @@ namespace qi
     if (_ssl)
     {
       boost::asio::async_write(*_socket, b,
-        boost::bind(&TcpTransportSocket::sendCont, shared_from_this(), _1, msg));
+        boost::bind(&TcpTransportSocket::sendCont, shared_from_this(), _1, msg, _socket));
     }
     else
     {
       boost::asio::async_write(_socket->next_layer(), b,
-        boost::bind(&TcpTransportSocket::sendCont, shared_from_this(), _1, msg));
+        boost::bind(&TcpTransportSocket::sendCont, shared_from_this(), _1, msg, _socket));
     }
 #else
     boost::asio::async_write(*_socket, b,
-      boost::bind(&TcpTransportSocket::sendCont, shared_from_this(), _1, msg));
+      boost::bind(&TcpTransportSocket::sendCont, shared_from_this(), _1, msg, _socket));
 #endif
   }
 
   /*
    * warning: msg is given to the callback so as not to drop buffers refcount
    */
-  void TcpTransportSocket::sendCont(const boost::system::error_code& erc, qi::Message msg)
+  void TcpTransportSocket::sendCont(const boost::system::error_code& erc, qi::Message msg, SocketPtr)
   {
     // The class does not wait for us to terminate, but it will set abort to true.
     // So do not use this before checking abort.
@@ -601,4 +632,3 @@ namespace qi
   }
 
 }
-

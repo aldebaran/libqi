@@ -9,8 +9,8 @@
 #include "pyobject.hpp"
 #include "pysignal.hpp"
 #include "pyproperty.hpp"
-#include "pyservicedirectory.hpp"
 #include "pyobjectfactory.hpp"
+#include "pyasync.hpp"
 
 qiLogCategory("qi.py");
 
@@ -35,6 +35,7 @@ BOOST_PYTHON_MODULE(_qi)
   qi::py::export_pyobject();
   qi::py::export_pysignal();
   qi::py::export_pyproperty();
-  qi::py::export_pyservicedirectory();
   qi::py::export_pyobjectfactory();
+  qi::py::export_pyapplicationsession();
+  qi::py::export_pyasync();
 }

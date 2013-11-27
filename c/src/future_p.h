@@ -51,8 +51,9 @@ inline void qi_future_c_adapter(qi::Future<T> fut, qi_promise_t* prom) {
 template <typename T>
 inline qi_future_t* qi_future_wrap(qi::Future<T> fut) {
   qi_promise_t* prom = qi_promise_create(true);
+  qi_future_t* fufu = qi_promise_get_future(prom);
   fut.connect(boost::bind<void>(&qi_future_c_adapter<T>, _1, prom));
-  return qi_promise_get_future(prom);
+  return fufu;
 }
 
 template <typename T>

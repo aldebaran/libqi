@@ -1,15 +1,17 @@
 /** Copyright (C) 2012 Aldebaran Robotics
 */
 
+#include <iostream>
+#include <iomanip>
 
 #include <boost/program_options.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/foreach.hpp>
+#include <boost/io/ios_state.hpp>
 
 #include <qi/log.hpp>
 #include <qi/os.hpp>
-#include <qi/application.hpp>
-#include <qimessaging/session.hpp>
+#include <qimessaging/applicationsession.hpp>
 #include <qitype/jsoncodec.hpp>
 
 
@@ -35,6 +37,20 @@ static std::vector<std::string> objectNames;
 static unsigned int maxServiceLength = 0;
 qiLogCategory("qitrace");
 
+// helper to format thread id
+struct ThreadFormat
+{
+  ThreadFormat(unsigned int tid) : tid(tid)
+  {}
+  unsigned int tid;
+};
+
+std::ostream& operator << (std::ostream& o, const ThreadFormat& tf)
+{
+  boost::io::ios_flags_saver ifs(o);
+  return o << std::setfill('0') << std::setw(5) << tf.tid;
+}
+
 void onTrace(ObjectMap::value_type ov, const qi::EventTrace& trace)
 {
   static qi::int64_t secStart = 0;
@@ -44,7 +60,7 @@ void onTrace(ObjectMap::value_type ov, const qi::EventTrace& trace)
   std::string name = boost::lexical_cast<std::string>(trace.slotId());
   if (!numeric)
   {
-    qi::MetaObject mo = ov.second->metaObject();
+    qi::MetaObject mo = ov.second.metaObject();
     qi::MetaMethod* m = mo.method(trace.slotId());
     if (m)
       name = m->name();
@@ -70,21 +86,27 @@ void onTrace(ObjectMap::value_type ov, const qi::EventTrace& trace)
     traceKind = 0;
   std::string spacing(maxLen + 2 - name.size(), ' ');
   std::string spacing2((full?maxServiceLength:17) + 2 - ov.first.size(), ' ');
-  if (trace.kind() == qi::EventTrace::Event_Result)
+  if (trace.kind() == qi::EventTrace::Event_Result || qi::EventTrace::Event_Error)
   {
-    std::cout << serviceName << spacing2 << trace.id() << ' ' << callType[traceKind] << ' ' << name
+    std::cout << serviceName << spacing2 << trace.id()
+      << ' ' << ThreadFormat(trace.callerContext())
+      << ' ' << ThreadFormat(trace.calleeContext())
+      << ' ' << callType[traceKind] << ' ' << name
       << spacing << (trace.timestamp().tv_sec - secStart) << '.' << trace.timestamp().tv_usec
       << ' ' << trace.userUsTime() << ' ' << trace.systemUsTime() << ' ' << qi::encodeJSON(trace.arguments()) << std::endl;
   }
   else
   {
-    std::cout << serviceName << spacing2 << trace.id() << ' ' << callType[traceKind] << ' ' << name
+    std::cout << serviceName << spacing2 << trace.id()
+      << ' ' << ThreadFormat(trace.callerContext())
+      << ' ' << ThreadFormat(trace.calleeContext())
+      << ' ' << callType[traceKind] << ' ' << name
       << spacing << (trace.timestamp().tv_sec - secStart) << '.' << trace.timestamp().tv_usec
       << ' ' << qi::encodeJSON(trace.arguments()) << std::endl;
   }
 }
 
-int subCmd_trace(int argc, char **argv, const MainOptions &options)
+int subCmd_trace(int argc, char **argv, qi::ApplicationSession& app)
 {
   po::options_description     desc("Usage: qicli trace [<ServicePattern>..]");
   std::vector<std::string>    serviceList;
@@ -104,10 +126,10 @@ int subCmd_trace(int argc, char **argv, const MainOptions &options)
   if (!poDefault(po::command_line_parser(argc, argv).options(desc).positional(positionalOptions), vm, desc))
     return 1;
 
-  qi::Session s;
+  qiLogVerbose() << "Connecting to service directory";
+  app.start();
+  qi::Session& s = app.session();
 
-  qiLogVerbose() << "Connecting to sd";
-  s.connect(options.address);
   qiLogVerbose() << "Resolving services";
 
   std::vector<std::string> allServices;
@@ -143,13 +165,13 @@ int subCmd_trace(int argc, char **argv, const MainOptions &options)
     if (printMo)
     {
       std::cout << "\n\n" << services[i] << "\n";
-      qi::details::printMetaObject(std::cout, o->metaObject());
+      qi::details::printMetaObject(std::cout, o.metaObject());
     }
     if (disableTrace)
     {
       try
       {
-        o->call<void>("enableTrace", false);
+        o.call<void>("enableTrace", false);
       }
       catch(...)
       {}
@@ -158,7 +180,7 @@ int subCmd_trace(int argc, char **argv, const MainOptions &options)
     {
       try
       {
-        bool s = o->call<bool>("isTraceEnabled");
+        bool s = o.call<bool>("isTraceEnabled");
         std::cout << services[i] << ": " << s << std::endl;
       }
       catch(...)
@@ -173,7 +195,7 @@ int subCmd_trace(int argc, char **argv, const MainOptions &options)
   foreach(ObjectMap::value_type& ov, objectMap)
   {
     maxServiceLength = std::max(maxServiceLength, (unsigned int)ov.first.size());
-    ov.second->connect("traceObject", (boost::function<void(qi::EventTrace)>)
+    ov.second.connect("traceObject", (boost::function<void(qi::EventTrace)>)
       boost::bind(&onTrace, ov, _1)).async();
   }
   qi::Application::run();

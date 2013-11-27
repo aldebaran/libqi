@@ -2,7 +2,7 @@
 #include <qi/application.hpp>
 
 #include <qimessaging/session.hpp>
-#include <qimessaging/servicedirectory.hpp>
+#include <qitype/objecttypebuilder.hpp>
 
 #include <addtask_proxy.hpp>
 #include <adder_proxy.hpp>
@@ -43,17 +43,14 @@ void inc(int& v)
 }
 TEST(Test, One)
 {
-  qi::ServiceDirectory sd;
-  sd.listen("tcp://localhost:0");
   qi::Session server, client;
-  server.connect(sd.endpoints()[0]);
-  client.connect(sd.endpoints()[0]);
-  server.listen("tcp://localhost:0");
+  server.listenStandalone("tcp://localhost:0");
+  client.connect(server.endpoints()[0]);
   ASSERT_EQ(1u, server.loadService("adder_fromclient").size());
   // test building the proxy from a GenericObject ourselve
-  AdderProxy ap(client.service("AdderService").value()->call<qi::AnyObject>("create"));
+  AdderProxy ap(client.service("AdderService").value().call<qi::AnyObject>("create"));
   // Test getting it directly using typesystem conversion.
-  AdderProxyPtr ap2 = client.service("AdderService").value()->call<AdderProxyPtr>("create");
+  AdderProxyPtr ap2 = client.service("AdderService").value().call<AdderProxyPtr>("create");
   ASSERT_TRUE(!!ap2);
   ap.value.set(2);
   qiLogInfo() << "Creating adders";

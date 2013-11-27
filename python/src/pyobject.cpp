@@ -10,8 +10,11 @@
 #include "pyproperty.hpp"
 #include "gil.hpp"
 #include "error.hpp"
+#include "pythreadsafeobject.hpp"
 #include <qitype/dynamicobjectbuilder.hpp>
+#include <qitype/objecttypebuilder.hpp> //for TYPE_TEMPLATE(Future)
 #include <qitype/jsoncodec.hpp>
+
 
 qiLogCategory("qipy.object");
 
@@ -28,11 +31,6 @@ namespace qi { namespace py {
       return obj;
     }
 
-    static void cleanup(LeakBlock* block)
-    {
-      delete block;
-    }
-
     struct PyQiFunctor {
     public:
       PyQiFunctor(const std::string &funName, qi::AnyObject obj)
@@ -41,7 +39,6 @@ namespace qi { namespace py {
       {}
 
       boost::python::object operator()(boost::python::tuple pyargs, boost::python::dict pykwargs) {
-        qi::py::LeakBlock*  leakBlock = new LeakBlock();
         qi::AnyValue val = qi::AnyValue::from(pyargs);
         bool async = boost::python::extract<bool>(pykwargs.get("_async", false));
         std::string funN = boost::python::extract<std::string>(pykwargs.get("_overload", _funName));
@@ -54,12 +51,11 @@ namespace qi { namespace py {
         {
           //calling c++, so release the GIL.
           GILScopedUnlock _unlock;
-          qi::Future<qi::AnyReference> fmeta = _object->metaCall(funN, val.asDynamic().asTupleValuePtr());
+          qi::Future<qi::AnyReference> fmeta = _object.metaCall(funN, val.content().asTupleValuePtr());
           //because futureAdapter support AnyRef containing Future<T>  (that will be converted to a Future<T>
           // instead of Future<Future<T>>
           fmeta.connect(boost::bind<void>(&detail::futureAdapter<qi::AnyValue>, _1, res));
           fut = res.future();
-          fut.connect(&cleanup, leakBlock);
         }
         if (!async) {
           {
@@ -78,7 +74,7 @@ namespace qi { namespace py {
     };
 
     void populateMethods(boost::python::object pyobj, qi::AnyObject obj) {
-      qi::MetaObject::MethodMap           mm = obj->metaObject().methodMap();
+      qi::MetaObject::MethodMap           mm = obj.metaObject().methodMap();
       qi::MetaObject::MethodMap::iterator it;
       for (it = mm.begin(); it != mm.end(); ++it) {
         qi::MetaMethod &mem = it->second;
@@ -98,7 +94,7 @@ namespace qi { namespace py {
     }
 
     void populateSignals(boost::python::object pyobj, qi::AnyObject obj) {
-      qi::MetaObject::SignalMap           mm = obj->metaObject().signalMap();
+      qi::MetaObject::SignalMap           mm = obj.metaObject().signalMap();
       qi::MetaObject::SignalMap::iterator it;
       for (it = mm.begin(); it != mm.end(); ++it) {
         qi::MetaSignal &ms = it->second;
@@ -112,7 +108,7 @@ namespace qi { namespace py {
     }
 
     void populateProperties(boost::python::object pyobj, qi::AnyObject obj) {
-      qi::MetaObject::PropertyMap           mm = obj->metaObject().propertyMap();
+      qi::MetaObject::PropertyMap           mm = obj.metaObject().propertyMap();
       qi::MetaObject::PropertyMap::iterator it;
       for (it = mm.begin(); it != mm.end(); ++it) {
         qi::MetaProperty &mp = it->second;
@@ -140,7 +136,7 @@ namespace qi { namespace py {
       }
 
       boost::python::object metaObject() {
-        return qi::AnyReference(_object->metaObject()).to<boost::python::object>();
+        return qi::AnyReference::from(_object.metaObject()).to<boost::python::object>();
       }
 
       qi::AnyObject object() {
@@ -164,7 +160,6 @@ namespace qi { namespace py {
     static qi::AnyReference pyCallMethod(const std::vector<qi::AnyReference>& cargs, boost::python::object callable) {
       qi::AnyReference gvret;
       try {
-        qi::py::LeakBlock leakBlock;
         qi::py::GILScopedLock _lock;
         boost::python::list   args;
         boost::python::object ret;
@@ -192,11 +187,11 @@ namespace qi { namespace py {
           if (pfut) { //pfut == 0, can mean ret is None.
             qiLogDebug() << "Future detected";
             qi::Future<qi::AnyValue> fut = *pfut;
-            return qi::AnyReference(fut).clone();
+            return qi::AnyReference::from(fut).clone();
           }
         }
 
-        gvret = qi::AnyReference(ret).clone();
+        gvret = qi::AnyReference::from(ret).clone();
         qiLogDebug() << "method returned:" << qi::encodeJSON(gvret);
       } catch (const boost::python::error_already_set &e) {
         throw std::runtime_error("python failed");
@@ -205,7 +200,8 @@ namespace qi { namespace py {
     }
 
     //callback just needed to keep a ref on obj
-    static void doNothing(qi::GenericObject *go, boost::python::object obj)
+    //Use PyThreadSafeObject to be GILSafe
+    static void doNothing(qi::GenericObject *go, PyThreadSafeObject obj)
     {
       (void)go;
       (void)obj;
@@ -279,6 +275,18 @@ namespace qi { namespace py {
       gob.xAdvertiseMethod(mmb, qi::AnyFunction::fromDynamicFunction(boost::bind(pyCallMethod, _1, method)));
     }
 
+    ObjectThreadingModel getThreadingModel(boost::python::object &obj) {
+      boost::python::object pyqisig = boost::python::getattr(obj, "__qi_threading__", boost::python::object());
+      std::string qisig;
+      if (pyqisig)
+        qisig = boost::python::extract<std::string>(pyqisig);
+      if (qisig == "multi")
+        return ObjectThreadingModel_MultiThread;
+      else if (qisig == "single")
+        return ObjectThreadingModel_SingleThread;
+      return ObjectThreadingModel_SingleThread;
+    }
+
     qi::AnyObject makeQiAnyObject(boost::python::object obj)
     {
       //is that a qi::AnyObject?
@@ -290,8 +298,9 @@ namespace qi { namespace py {
       }
 
       qi::DynamicObjectBuilder gob;
+
       //let the GIL handle the thread-safety for us
-      gob.setThreadingModel(ObjectThreadingModel_MultiThread);
+      gob.setThreadingModel(getThreadingModel(obj));
       GILScopedLock _lock;
       boost::python::object attrs(boost::python::borrowed(PyObject_Dir(obj.ptr())));
 
@@ -303,14 +312,25 @@ namespace qi { namespace py {
         boost::python::object pyqisig = boost::python::getattr(m, "__qi_signature__", boost::python::object());
         std::string qisig;
 
-        if (pyqisig)
-          qisig = boost::python::extract<std::string>(pyqisig);
+        if (pyqisig) {
+          boost::python::extract<std::string> ex(pyqisig);
+
+          if (!ex.check())
+            qiLogWarning() << "__qi_signature__ for " << key << " is not of type string";
+          else
+            qisig = ex();
+        }
 
         if (qisig == "DONOTBIND")
           continue;
         //override name by the one provide by @bind
-        if (pyqiname)
-          key = boost::python::extract<std::string>(pyqiname);
+        if (pyqiname) {
+          boost::python::extract<std::string> ex(pyqiname);
+          if (!ex.check())
+            qiLogWarning() << "__qi_name__ for " << key << " is not of type string";
+          else
+            key = ex();
+        }
 
         if (PyMethod_Check(m.ptr())) {
           registerMethod(gob, key, m, qisig);
@@ -337,6 +357,7 @@ namespace qi { namespace py {
       }
       //this is a useless callback, needed to keep a ref on obj.
       //when the GO is destructed, the ref is released.
+      //doNothing use PyThreadSafeObject to lock the GIL as needed
       return gob.object(boost::bind<void>(&doNothing, _1, obj));
     }
 

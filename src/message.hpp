@@ -123,6 +123,7 @@ namespace qi {
       ServiceDirectoryAction_UpdateServiceInfo   = 105,
       ServiceDirectoryAction_ServiceAdded        = 106,
       ServiceDirectoryAction_ServiceRemoved      = 107,
+      ServiceDirectoryAction_MachineId           = 108,
     };
 
     enum Type
@@ -181,8 +182,9 @@ namespace qi {
 
     ///@return signature, set by setParameters() or setSignature()
 
+
     AnyReference value(const Signature &signature, const qi::TransportSocketPtr &socket) const;
-    void setValue(const qi::AnyReference &value, const Signature& signature, ObjectHost* context = 0);
+    void setValue(const AutoAnyReference& value, const Signature& signature, ObjectHost* context = 0);
     void setValues(const std::vector<qi::AnyReference>& values, ObjectHost* context = 0);
     /// Convert values to \p targetSignature and assign to payload.
     void setValues(const std::vector<qi::AnyReference>& values, const qi::Signature& targetSignature, ObjectHost* context = 0);

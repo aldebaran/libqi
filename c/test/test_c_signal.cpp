@@ -39,7 +39,7 @@ void signal_callback_1(qi_value_t* cont, void *)
 TEST(TestSignal, CreateAndDestroy)
 {
   qi_object_builder_t* qiob =  qi_object_builder_create();
-  qi_object_builder_register_event(qiob, "plouf::(s)");
+  qi_object_builder_advertise_signal(qiob, "plouf", "(s)");
   qi_object_builder_destroy(qiob);
 }
 
@@ -52,21 +52,50 @@ qi_value_t *create_tup(int v) {
   return cont;
 }
 
-TEST(TestSignal, SimpleSignalConnect)
+TEST(TestSignal, advertise_signal_without_tupple)
 {
   qi_object_builder_t* qiob =  qi_object_builder_create();
-  qi_object_builder_register_event(qiob, "plouf::(i)");
+  qi_object_builder_advertise_signal(qiob, "plouf","(i)");
   qi_object_t *object = qi_object_builder_get_object(qiob);
   qi_object_builder_destroy(qiob);
 
-  unsigned long long link = qi_future_get_int64_default(qi_object_event_connect(object, "plouf::(i)", signal_callback_0, 0), 0);
+  unsigned long long link = qi_future_get_int64_default(qi_object_signal_connect(object, "plouf::(i)", signal_callback_0, 0), 0);
   ASSERT_GE(link, 0u);
   int n = 42;
   qi_value_t *val = create_tup(n);
 
   pass0 = false;
   pass1 = false;
-  ASSERT_NE(-1, qi_object_event_emit(object, "plouf::(i)", val));
+  ASSERT_NE(-1, qi_object_post(object, "plouf::(i)", val));
+  qi_value_destroy(val);
+  int timeout = 1000;
+  while (timeout > 0)
+  {
+    qi::os::msleep(1);
+    if (pass0)
+      break;
+    timeout -= 1;
+  }
+
+  EXPECT_EQ(res0, n);
+  qi_object_destroy(object);
+}
+
+TEST(TestSignal, SimpleSignalConnect)
+{
+  qi_object_builder_t* qiob =  qi_object_builder_create();
+  qi_object_builder_advertise_signal(qiob, "plouf", "(i)");
+  qi_object_t *object = qi_object_builder_get_object(qiob);
+  qi_object_builder_destroy(qiob);
+
+  unsigned long long link = qi_future_get_int64_default(qi_object_signal_connect(object, "plouf::(i)", signal_callback_0, 0), 0);
+  ASSERT_GE(link, 0u);
+  int n = 42;
+  qi_value_t *val = create_tup(n);
+
+  pass0 = false;
+  pass1 = false;
+  ASSERT_NE(-1, qi_object_post(object, "plouf::(i)", val));
   qi_value_destroy(val);
   int timeout = 1000;
   while (timeout > 0)
@@ -84,19 +113,19 @@ TEST(TestSignal, SimpleSignalConnect)
 TEST(TestSignal, MultipleSignalConnect)
 {
   qi_object_builder_t* qiob =  qi_object_builder_create();
-  qi_object_builder_register_event(qiob, "plouf::(i)");
+  qi_object_builder_advertise_signal(qiob, "plouf", "(i)");
   qi_object_t *object = qi_object_builder_get_object(qiob);
   qi_object_builder_destroy(qiob);
 
-  qi_object_event_connect(object, "plouf::(i)", signal_callback_0, 0);
-  qi_object_event_connect(object, "plouf::(i)", signal_callback_1, 0);
+  qi_object_signal_connect(object, "plouf::(i)", signal_callback_0, 0);
+  qi_object_signal_connect(object, "plouf::(i)", signal_callback_1, 0);
 
   int n = 21;
   qi_value_t* val = create_tup(n);
   pass0 = false;
   pass1 = false;
 
-  ASSERT_NE(-1, qi_object_event_emit(object, "plouf::(i)", val));
+  ASSERT_NE(-1, qi_object_post(object, "plouf::(i)", val));
   qi_value_destroy(val);
   int timeout = 1000;
   while (timeout > 0)
@@ -115,13 +144,13 @@ TEST(TestSignal, MultipleSignalConnect)
 TEST(TestSignal, SignalDisconnect)
 {
   qi_object_builder_t* qiob =  qi_object_builder_create();
-  qi_object_builder_register_event(qiob, "plouf::(i)");
+  qi_object_builder_advertise_signal(qiob, "plouf", "(i)");
   qi_object_t *object = qi_object_builder_get_object(qiob);
   qi_object_builder_destroy(qiob);
 
-  qi_object_event_connect(object, "plouf::(i)", signal_callback_0, 0);
-  unsigned long long l = qi_future_get_uint64_default(qi_object_event_connect(object, "plouf::(i)", signal_callback_1, 0), 0);
-  qi_future_t* fut = qi_object_event_disconnect(object, l);
+  qi_object_signal_connect(object, "plouf::(i)", signal_callback_0, 0);
+  unsigned long long l = qi_future_get_uint64_default(qi_object_signal_connect(object, "plouf::(i)", signal_callback_1, 0), 0);
+  qi_future_t* fut = qi_object_signal_disconnect(object, l);
   if (qi_future_has_error(fut, QI_FUTURETIMEOUT_INFINITE)) {
     const char *errr = qi_future_get_error(fut);
     printf("future error: %s\n", errr);
@@ -134,7 +163,7 @@ TEST(TestSignal, SignalDisconnect)
   qi_value_t* val = create_tup(n);
   pass0 = false;
   pass1 = false;
-  ASSERT_NE(-1, qi_object_event_emit(object, "plouf::(i)", val));
+  ASSERT_NE(-1, qi_object_post(object, "plouf::(i)", val));
 
   int timeout = 1000;
   while (timeout > 0)

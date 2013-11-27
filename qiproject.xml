@@ -1,8 +1,12 @@
-<project name="libqimessaging">
-  <depends buildtime="true" runtime="true" names="libqi libqitype boost openssl" />
-  <depends buildtime="true" names="python gtest pthread libqiperf"             />
-  <doxydoc name="libqimessaging" dest="ref/libqimessaging">
+<project version="3">
+  <qibuild name="libqimessaging">
+    <depends buildtime="true" runtime="true" names="libqi libqitype boost openssl" />
+    <depends buildtime="true" names="python gtest pthread libqiperf"             />
+  </qibuild>
+
+  <qidoc name="libqimessaging" type="doxygen">
      <depends name="libqi" />
-  </doxydoc>
+  </qidoc>
+
   <project src="doc" />
 </project>

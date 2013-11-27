@@ -11,7 +11,7 @@
 #include <qimessaging/serviceinfo.hpp>
 #include <qi/future.hpp>
 #include <qitype/anyobject.hpp>
-
+#include <boost/shared_ptr.hpp>
 #include <vector>
 #include <string>
 
@@ -52,8 +52,11 @@ namespace qi {
     //close both client and server side
     qi::FutureSync<void>    close();
 
+    //this create a listen and create a service directory
+    qi::FutureSync<void> listenStandalone(const qi::Url &address);
+
     qi::FutureSync<unsigned int> registerService(const std::string &name, AnyObject object);
-    qi::FutureSync<void>         unregisterService(unsigned int idx);
+    qi::FutureSync<void>         unregisterService(unsigned int serviceId);
 
 
     /// Load a module and register an instance of each declared object as a service.
@@ -67,10 +70,9 @@ namespace qi {
     // C4251
     qi::Signal<std::string>               disconnected;
 
-  public:
-    SessionPrivate      *_p;
-  private:
-    QI_DISALLOW_COPY_AND_ASSIGN(Session);
+  protected:
+    friend class SessionPrivate;
+    boost::shared_ptr<SessionPrivate>    _p;
   };
 
 }

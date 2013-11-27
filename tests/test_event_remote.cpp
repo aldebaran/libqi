@@ -12,7 +12,6 @@
 #include <qitype/anyobject.hpp>
 #include <qitype/dynamicobjectbuilder.hpp>
 #include <qimessaging/session.hpp>
-#include <qimessaging/servicedirectory.hpp>
 #include <testsession/testsessionpair.hpp>
 
 qiLogCategory("test");
@@ -67,9 +66,9 @@ public:
 
 TEST_F(TestObject, Simple)
 {
-  qi::SignalLink linkId = oclient->connect("fire", &onFire);
+  qi::SignalLink linkId = oclient.connect("fire", &onFire);
   EXPECT_LT((unsigned) 0, linkId);
-  oserver->post("fire", 42);
+  oserver.post("fire", 42);
   ASSERT_TRUE(payload->future().hasValue(2000));
   EXPECT_EQ(42, payload->future().value());
 }
@@ -77,9 +76,9 @@ TEST_F(TestObject, Simple)
 
 TEST_F(TestObject, RemoteEmit)
 {
-  qi::SignalLink linkId = oclient->connect("fire", &onFire);
+  qi::SignalLink linkId = oclient.connect("fire", &onFire);
   EXPECT_LT((unsigned) 0, linkId);
-  oclient->post("fire", 43);
+  oclient.post("fire", 43);
   ASSERT_TRUE(payload->future().hasValue(2000));
   EXPECT_EQ(43, payload->future().value());
 }
@@ -92,25 +91,25 @@ TEST_F(TestObject, CoDeco)
   for (unsigned i=0; i<5; ++i)
   {
     payload->reset();
-    qi::SignalLink linkId = oclient->connect("fire", &onFire);
+    qi::SignalLink linkId = oclient.connect("fire", &onFire);
     qiLogDebug() << "connected with " << linkId;
     int exp;
     EXPECT_GE(linkId, (unsigned) 0);
-    oserver->post("fire", (int)(50 + i));
+    oserver.post("fire", (int)(50 + i));
     ASSERT_TRUE(payload->future().hasValue(2000));
     exp = 50 + i;
     EXPECT_EQ(exp, payload->future().value());
 
     payload->reset();
-    oserver->post("fire", (int)(51 + i));
+    oserver.post("fire", (int)(51 + i));
     ASSERT_TRUE(payload->future().hasValue(2000));
     exp = 51 + i;
     EXPECT_EQ(exp, payload->future().value());
 
-    oclient->disconnect(linkId).wait();
+    oclient.disconnect(linkId).wait();
 
     payload->reset();
-    oserver->post("fire", (int)(50 + i));
+    oserver.post("fire", (int)(50 + i));
     EXPECT_ANY_THROW(payload->future().hasValue(200));
   }
 }
@@ -134,13 +133,13 @@ TEST(TestSignal, TwoLongPost)
   TestSessionPair p;
   p.server()->registerService("MyService", op);
   qi::AnyObject clientOp = p.client()->service("MyService").value();
-  clientOp->connect("sig1", &cb);
+  clientOp.connect("sig1", &cb);
 
   qi::GenericFunctionParameters params;
   params.push_back(qi::AnyValue(42L).clone());
   params.push_back(qi::AnyValue(43L).clone());
 
-  clientOp->metaPost("sig1", params);
+  clientOp.metaPost("sig1", params);
   for(unsigned int i=0; i<100 && (verifA == 0 || verifB == 0); ++i)
     qi::os::msleep(10);
   ASSERT_EQ(42, verifA);

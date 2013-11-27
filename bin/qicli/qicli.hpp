@@ -1,15 +1,10 @@
 #ifndef QICLI_HPP_
 # define QICLI_HPP_
 
-# include <qimessaging/session.hpp>
+# include <qimessaging/applicationsession.hpp>
 # include <boost/program_options.hpp>
 
 # include "sessionhelper.hpp"
-
-struct MainOptions
-{
-  std::string   address;
-};
 
 struct WatchOptions
 {
@@ -20,21 +15,21 @@ struct WatchOptions
   {}
 };
 
-typedef int (*SubCmd)(int argc, char **argv, const MainOptions &options);
+typedef int (*SubCmd)(int argc, char **argv, qi::ApplicationSession& app);
 
 namespace po = boost::program_options;
 
 
 /* SUBCMDS */
-int subCmd_info(int argc, char **argv, const MainOptions &options);
-int subCmd_call(int argc, char **argv, const MainOptions &options);
-int subCmd_post(int argc, char **argv, const MainOptions &options);
-int subCmd_service(int argc, char **argv, const MainOptions &options);
-int subCmd_watch(int argc, char **argv, const MainOptions &options);
-int subCmd_get(int argc, char **argv, const MainOptions &options);
-int subCmd_set(int argc, char **argv, const MainOptions &options);
-int subCmd_trace(int argc, char **argv, const MainOptions &options);
-int subCmd_top(int argc, char **argv, const MainOptions &options);
+int subCmd_info(int argc, char **argv, qi::ApplicationSession& app);
+int subCmd_call(int argc, char **argv, qi::ApplicationSession& app);
+int subCmd_post(int argc, char **argv, qi::ApplicationSession& app);
+int subCmd_service(int argc, char **argv, qi::ApplicationSession& app);
+int subCmd_watch(int argc, char **argv, qi::ApplicationSession& app);
+int subCmd_get(int argc, char **argv, qi::ApplicationSession& app);
+int subCmd_set(int argc, char **argv, qi::ApplicationSession& app);
+int subCmd_trace(int argc, char **argv, qi::ApplicationSession& app);
+int subCmd_top(int argc, char **argv, qi::ApplicationSession& app);
 
 /* UTILS */
 int readNumericInput();

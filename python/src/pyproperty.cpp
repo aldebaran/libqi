@@ -10,7 +10,7 @@ namespace qi { namespace py {
 
     class PyProperty : public qi::GenericProperty {
     public:
-      PyProperty(const std::string &signature)
+      PyProperty(const std::string &signature = "m")
         : qi::GenericProperty(qi::TypeInterface::fromSignature(signature))
       {
       }
@@ -24,7 +24,7 @@ namespace qi { namespace py {
 
       //change the name to avoid warning "hidden overload in base class" : YES WE KNOW :)
       void setVal(boost::python::object obj) {
-        qi::GenericProperty::setValue(qi::AnyReference(obj));
+        qi::GenericProperty::setValue(obj);
       }
     };
 
@@ -37,12 +37,12 @@ namespace qi { namespace py {
 
       //TODO: support async
       boost::python::object value() const {
-        return _obj->property(_sigid).value().to<boost::python::object>();
+        return _obj.property(_sigid).value().to<boost::python::object>();
       }
 
       //TODO: support async
       void setValue(boost::python::object obj) {
-        _obj->setProperty(_sigid, qi::AnyValue::from(obj));
+        _obj.setProperty(_sigid, qi::AnyValue::from(obj));
       }
 
     private:
@@ -63,7 +63,8 @@ namespace qi { namespace py {
     }
 
     void export_pyproperty() {
-      boost::python::class_<PyProperty>("Property", boost::python::init<const std::string &>())
+      boost::python::class_<PyProperty>("Property", boost::python::init<>())
+          .def(boost::python::init<const std::string &>())
           .def("value", &PyProperty::val,
                "value() -> value\n"
                ":return: the value stored inside the property")

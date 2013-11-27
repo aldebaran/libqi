@@ -36,6 +36,7 @@ namespace qi {
     int components;
 
   private:
+    // Explodes the url in different part and fill the fields of the class.
     //@return a bitmask of UrlComponents with the elements that were found
     int split_me(const std::string& url);
   };

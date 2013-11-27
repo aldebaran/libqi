@@ -18,7 +18,7 @@ namespace qi {
     //
     //Use that before calling python (even from an unknown thread)
     //Can be nested
-    class GILScopedLock
+    class GILScopedLock : private boost::noncopyable
     {
     public:
       GILScopedLock() {
@@ -44,7 +44,7 @@ namespace qi {
     //
     //This can be called from a thread not previously managed by python.
     //Can be nested
-    class GILScopedUnlock
+    class GILScopedUnlock : private boost::noncopyable
     {
     public:
       GILScopedUnlock();

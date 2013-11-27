@@ -23,6 +23,7 @@ namespace qi {
     , _dying(false)
     , _sdClient(sdClient)
     , _session(session)
+    , _id(qi::os::generateUuid())
   {
     _server.endpointsChanged.connect(boost::bind(&ObjectRegistrar::updateServiceInfo, this));
   }
@@ -30,6 +31,7 @@ namespace qi {
   ObjectRegistrar::~ObjectRegistrar()
   {
     _dying = true;
+    qi::Trackable<Server>::destroy();
   }
 
   void serviceReady(qi::Future<void> fut, qi::Promise<unsigned int> result, unsigned int idx) {
@@ -46,7 +48,7 @@ namespace qi {
     si.setProcessId(qi::os::getpid());
     si.setMachineId(qi::os::getMachineId());
     si.setEndpoints(Server::endpoints());
-    si.setSessionId(_session->_p->_id);
+    si.setSessionId(_id);
 
     boost::mutex::scoped_lock sl(_servicesMutex);
     for (std::map<unsigned int, BoundService>::iterator it = _services.begin();
@@ -102,11 +104,6 @@ namespace qi {
       Server::addObject(idx, bs.object);
     }
 
-    // ack the Service directory to tell that we are ready
-    //TODO: async handle.
-    qi::Future<void> fut2 = _sdClient->serviceReady(idx);
-    fut2.connect(boost::bind(&serviceReady, _1, result, idx));
-
     {
       boost::mutex::scoped_lock sl(_serviceNameToIndexMutex);
       _serviceNameToIndex[si.name()] = idx;
@@ -116,6 +113,9 @@ namespace qi {
       _registerServiceRequest.erase(it);
     }
 
+    // ack the Service directory to tell that we are ready
+    qi::Future<void> fut2 = _sdClient->serviceReady(idx);
+    fut2.connect(boost::bind(&serviceReady, _1, result, idx));
   }
 
   qi::Future<unsigned int> ObjectRegistrar::registerService(const std::string &name, qi::AnyObject obj)
@@ -129,7 +129,7 @@ namespace qi {
     si.setProcessId(qi::os::getpid());
     si.setMachineId(qi::os::getMachineId());
     si.setEndpoints(Server::endpoints());
-    si.setSessionId(_session->_p->_id);
+    si.setSessionId(_id);
 
     long id = ++_registerServiceRequestIndex;
     {

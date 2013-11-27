@@ -13,7 +13,6 @@
 #include <qimessaging/session.hpp>
 #include <qitype/anyobject.hpp>
 #include <qitype/dynamicobjectbuilder.hpp>
-#include <qimessaging/servicedirectory.hpp>
 #include <qimessaging/gateway.hpp>
 #include <qi/os.hpp>
 #include <qi/application.hpp>
@@ -30,7 +29,7 @@ void myCall(qi::AnyObject myService)
 {
   try
   {
-    myService->call<std::string>("reply::s(s)", "ok");
+    myService.call<std::string>("reply::s(s)", "ok");
     qi::os::msleep(300);
   }
   catch(std::exception e)
@@ -42,8 +41,8 @@ void myCall(qi::AnyObject myService)
 //TEST(QiSession, Services)
 void test(void)
 {
-  qi::ServiceDirectory sd;
-  qi::Future<void> f = sd.listen("tcp://0.0.0.0:0");
+  qi::Session sd;
+  qi::Future<void> f = sd.listenStandalone("tcp://0.0.0.0:0");
   int timeToWait = 1;
 
   while(true)

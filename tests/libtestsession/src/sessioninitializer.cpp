@@ -48,8 +48,7 @@ bool SessionInitializer::tearDown(qi::Session *session, TestMode::Mode mode)
 
 bool SessionInitializer::setUpSD(qi::Session *session, const std::string &serviceDirectoryUrl)
 {
-  if(session->connect(serviceDirectoryUrl).wait(1000) != qi::FutureState_FinishedWithValue)
-    return false;
+  session->connect(serviceDirectoryUrl);
 
   if (_listen == true)
     session->listen("tcp://0.0.0.0:0");

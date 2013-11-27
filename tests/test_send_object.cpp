@@ -14,7 +14,7 @@ qiLogCategory("test");
 void test_service(const qi::AnyObject &o)
 {
   ASSERT_TRUE(o);
-  int res = o->call<int>("testMethod", 12);
+  int res = o.call<int>("testMethod", 12);
   ASSERT_EQ(13, res);
 }
 
@@ -31,7 +31,7 @@ TEST(Module, pass_obj)
   qiLogInfo() << "check first service" << std::endl;
   test_service(o);
 
-  qi::AnyObject o2 = o->call<qi::AnyObject>("make_other_object");
+  qi::AnyObject o2 = o.call<qi::AnyObject>("make_other_object");
 
   s->registerService("test_bis", o2);
 

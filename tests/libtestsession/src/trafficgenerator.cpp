@@ -86,7 +86,7 @@ void __chaosThread(void *data)
     // #2.1 Get proxy on service.
     qi::AnyObject proxy = session->service(service);
 
-    if (proxy.get() == 0)
+    if (proxy.asGenericObject() == 0)
     {
       qiLogError() << "[Nightmare] Cannot get proxy on " << service << ", aborting thread.";
       mutex->unlock();
@@ -101,7 +101,7 @@ void __chaosThread(void *data)
       nbCalls = rand() % 50 + 1;
 
       // #2.2.2 Call method.
-      std::string pong = proxy->call<std::string>(methodToCall);
+      std::string pong = proxy.call<std::string>(methodToCall);
 
       // #2.2.3 Sleep a random time between 0 and 9ms.
       qi::os::msleep(rand() % 10);

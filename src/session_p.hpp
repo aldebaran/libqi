@@ -13,6 +13,7 @@
 #include "sessionservice.hpp"
 #include "sessionservices.hpp"
 #include "transportsocketcache.hpp"
+#include "servicedirectory.hpp"
 
 namespace qi {
 
@@ -23,6 +24,7 @@ namespace qi {
     virtual ~SessionPrivate();
 
     qi::FutureSync<void> connect(const qi::Url &serviceDirectoryURL);
+    qi::FutureSync<void> listenStandalone(const qi::Url& listenUrl);
     qi::FutureSync<void> close();
     bool isConnected() const;
 
@@ -32,8 +34,12 @@ namespace qi {
     void onServiceRemoved(unsigned int idx, const std::string &name);
 
   public:
+    void listenStandaloneCont(qi::Promise<void> p, qi::Future<void> f);
+    // session is being destroyed, unlink from _self
+    void sessionDestroy();
+    // internal, add sd socket to socket cache
+    void addSdSocketToCache(Future<void>, const qi::Url& url);
     Session               *_self;
-    const std::string      _id;
 
     //ServiceDirectoryClient have a transportsocket not belonging to transportsocketcache
     ServiceDirectoryClient _sdClient;
@@ -45,6 +51,7 @@ namespace qi {
     ObjectRegistrar        _serverObject;
     Session_Service        _serviceHandler;
     Session_Services       _servicesHandler;
+    Session_SD             _sd;
     TransportSocketCache   _socketsCache;
   };
 }

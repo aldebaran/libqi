@@ -14,7 +14,6 @@
 #include <qimessaging/session.hpp>
 #include <qitype/anyobject.hpp>
 #include <qitype/dynamicobjectbuilder.hpp>
-#include <qimessaging/servicedirectory.hpp>
 #include <qimessaging/gateway.hpp>
 #include <qi/os.hpp>
 #include <qi/application.hpp>
@@ -91,7 +90,7 @@ TEST(QiSession, RegisterUnregisterTwoSession)
         std::cout << "Call error:" << fut.error() << std::endl;
         continue;
       }
-      std::string ret = fut.value()->call<std::string>("reply", "plif");
+      std::string ret = fut.value().call<std::string>("reply", "plif");
     }
     catch(const std::exception& e)
     {
@@ -119,8 +118,7 @@ TEST(QiSession, RegisterUnregisterSameSession)
         std::cout << "Call error:" << fut.error() << std::endl;
         continue;
       }
-      std::string ret = fut.value()->call<std::string>("reply", "plif");
-      std::cout << "ret:" << ret << std::endl;
+      fut.value().call<std::string>("reply", "plif");
     }
     catch(const std::exception& e)
     {
@@ -155,7 +153,7 @@ TEST(QiSession, RegisterUnregisterTwoSessionStruct)
       ms.i = 32;
       ms.j = 42;
       ms.titi = "tutu";
-      qi::Future<MyStruct> ret = fut.value()->call<MyStruct>("reply2", ms);
+      qi::Future<MyStruct> ret = fut.value().call<MyStruct>("reply2", ms);
       ret.wait();
       if (ret.hasError()) {
         std::cout << "returned an error:" << fut.error() << std::endl;
@@ -199,7 +197,7 @@ TEST(QiSession, RegisterUnregisterSameSessionStruct)
       ms.i = 32;
       ms.j = 42;
       ms.titi = "tutu";
-      qi::Future<MyStruct> ret = fut.value()->call<MyStruct>("reply2", ms);
+      qi::Future<MyStruct> ret = fut.value().call<MyStruct>("reply2", ms);
       ret.wait();
       if (ret.hasError()) {
         std::cout << "returned an error:" << fut.error() << std::endl;
@@ -236,7 +234,7 @@ TEST(QiSession, ConnectToMultipleConstellation)
   f.wait(3000);
   ASSERT_TRUE(!f.hasError());
   qi::AnyObject proxy = constellation1.server()->service("test1");
-  std::string res = proxy->call<std::string>("reply", "plaf");
+  std::string res = proxy.call<std::string>("reply", "plaf");
   ASSERT_TRUE(res.compare("plaf") == 0);
   traveler.close();
 
@@ -245,7 +243,7 @@ TEST(QiSession, ConnectToMultipleConstellation)
   ASSERT_TRUE(!f.hasError());
   proxy = constellation2.server()->service("test2");
   ASSERT_TRUE(!!proxy);
-  res = proxy->call<std::string>("reply", "plaf");
+  res = proxy.call<std::string>("reply", "plaf");
   ASSERT_TRUE(res.compare("plaf") == 0);
   traveler.close();
 
@@ -255,7 +253,7 @@ TEST(QiSession, ConnectToMultipleConstellation)
     qiLogError() << f.error();
   ASSERT_TRUE(!f.hasError());
   proxy = constellation3.server()->service("test3");
-  res = proxy->call<std::string>("reply", "plaf");
+  res = proxy.call<std::string>("reply", "plaf");
   ASSERT_TRUE(res.compare("plaf") == 0);
   traveler.close();
 }

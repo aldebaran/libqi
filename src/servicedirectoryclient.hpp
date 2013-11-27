@@ -23,11 +23,15 @@ namespace qi {
     ServiceDirectoryClient();
     ~ServiceDirectoryClient();
 
-    //Socket API
+    // Connect to a remove service directory service
     qi::FutureSync<void> connect(const qi::Url &serviceDirectoryURL);
+    // Setup with an existing object on the service directory
+    void setServiceDirectory(AnyObject serviceDirectoryService);
     qi::FutureSync<void> close();
     bool                 isConnected() const;
     qi::Url              url() const;
+
+    qi::AnyObject        object() { return _object; }
 
   public:
     //Bound Interface
@@ -37,12 +41,16 @@ namespace qi {
     qi::Future< void >                     unregisterService(const unsigned int &idx);
     qi::Future< void >                     serviceReady(const unsigned int &idx);
     qi::Future< void >                     updateServiceInfo(const ServiceInfo &svcinfo);
+    qi::Future< std::string >              machineId();
 
     qi::Signal<>                                  connected;
     qi::Signal<std::string>                       disconnected;
     qi::Signal<unsigned int, std::string>         serviceAdded;
     qi::Signal<unsigned int, std::string>         serviceRemoved;
 
+    TransportSocketPtr socket();
+    // True if ServiceDirectory is local
+    bool isLocal();
   private:
     //ServiceDirectory Interface
     void onServiceAdded(unsigned int idx, const std::string &name);
@@ -65,9 +73,10 @@ namespace qi {
     unsigned int           _sdSocketDisconnectedSignalLink;
     qi::RemoteObject       _remoteObject;
     qi::AnyObject          _object;
-    qi::SignalLink               _addSignalLink;
-    qi::SignalLink               _removeSignalLink;
+    qi::SignalLink         _addSignalLink;
+    qi::SignalLink         _removeSignalLink;
     boost::mutex           _mutex;
+    bool                   _localSd; // true if sd is local (no socket)
   };
 }
 

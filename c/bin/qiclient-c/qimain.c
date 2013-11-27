@@ -38,6 +38,7 @@ int make_call(qi_application_t *app, char *addr, int ev)
   fu = qi_session_connect(session, addr);
 
   qi_future_wait(fu, QI_FUTURETIMEOUT_INFINITE);
+  qi_future_destroy(fu);
 
   object = qi_future_get_object(qi_session_get_service(session, "serviceTest"));
 
@@ -48,7 +49,7 @@ int make_call(qi_application_t *app, char *addr, int ev)
   }
 
   if (ev) {
-    qi_object_event_connect(object, "testEvent::(s)", &evcb, 0);
+    qi_object_signal_connect(object, "testEvent::(s)", &evcb, 0);
     qi_application_run(app);
   }
 
@@ -59,7 +60,7 @@ int make_call(qi_application_t *app, char *addr, int ev)
 
   ss = qi_value_get_string(str);
   printf("str: %s\n", ss);
-
+  free((void *)ss);
 
   qi_value_tuple_set(message, 0, str);
 
@@ -84,7 +85,6 @@ int make_call(qi_application_t *app, char *addr, int ev)
   if (result)
     printf("Reply : %s\n", result);
 
-  qi_future_destroy(fu);
   qi_future_destroy(fut);
   qi_value_destroy(message);
   qi_value_destroy(str);

@@ -18,6 +18,12 @@ namespace qi {
     }
   }
 
+  TransportSocketCache::TransportSocketCache()
+  : _dying(false)
+  {
+
+  }
+
   TransportSocketCache::~TransportSocketCache() {
     close();
   }
@@ -165,6 +171,16 @@ namespace qi {
       }
       return prom.future();
     } // ! boost::mutex::scoped_lock
+  }
+
+  void TransportSocketCache::insert(const std::string& machineId, const Url& url, TransportSocketPtr socket)
+  {
+    boost::mutex::scoped_lock sl(_socketsMutex);
+    TransportSocketConnection tsc;
+    tsc.socket = socket;
+    tsc.url = url;
+    tsc.promise.setValue(socket);
+    _sockets[machineId][url.str()] = tsc;
   }
 
   void TransportSocketCache::onSocketDisconnected(std::string error, TransportSocketPtr socket, const qi::ServiceInfo& servInfo, const qi::Url& url) {

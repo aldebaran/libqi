@@ -156,3 +156,26 @@ TEST(TestFuture, IsCallbackCalled)
 {
   EXPECT_TRUE(isCallbackCalled);
 }
+
+TEST(TestFuture, clone)
+{
+  qi_promise_t* promise = qi_promise_cancelable_create(true, onCancel, 0);
+  qi_future_t*  future = qi_promise_get_future(promise);
+
+  qi_future_t* clone = qi_future_clone(future);
+  ASSERT_TRUE(qi_future_is_running(clone));
+  ASSERT_TRUE(qi_future_is_running(future));
+  qi_future_cancel(future);
+
+  ASSERT_FALSE(qi_future_is_running(future));
+  ASSERT_FALSE(qi_future_is_running(clone));
+
+  ASSERT_TRUE(qi_future_is_cancelable(clone));
+  ASSERT_FALSE(qi_future_has_error(clone, QI_FUTURETIMEOUT_INFINITE));
+  ASSERT_FALSE(qi_future_has_value(clone, QI_FUTURETIMEOUT_INFINITE));
+  ASSERT_TRUE(qi_future_is_finished(clone));
+  ASSERT_TRUE(qi_future_is_canceled(clone));
+
+  qi_future_destroy(future);
+  qi_promise_destroy(promise);
+}

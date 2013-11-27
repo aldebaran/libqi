@@ -44,12 +44,14 @@ namespace qi
     typedef boost::shared_ptr<boost::asio::ip::tcp::socket> SocketPtr;
 #endif
     void error(const boost::system::error_code& erc);
-    void onConnected(const boost::system::error_code& erc);
-    void handshake(const boost::system::error_code& erc);
-    void onReadHeader(const boost::system::error_code& erc, std::size_t);
-    void onReadData(const boost::system::error_code& erc, std::size_t);
+    void onConnected(const boost::system::error_code& erc, SocketPtr s);
+    void onResolved(const boost::system::error_code& erc,
+                    boost::asio::ip::tcp::resolver::iterator it);
+    void handshake(const boost::system::error_code& erc, SocketPtr s);
+    void onReadHeader(const boost::system::error_code& erc, std::size_t, SocketPtr s);
+    void onReadData(const boost::system::error_code& erc, std::size_t, SocketPtr s);
     void send_(qi::Message msg);
-    void sendCont(const boost::system::error_code& erc, qi::Message msg);
+    void sendCont(const boost::system::error_code& erc, qi::Message msg, SocketPtr s);
     void setSocketOptions();
     bool _ssl;
     bool _sslHandshake;
@@ -70,6 +72,7 @@ namespace qi
     std::deque<Message> _sendQueue;
     bool                _sending;
     boost::recursive_mutex        _closingMutex;
+    boost::shared_ptr<boost::asio::ip::tcp::resolver> _r;
   };
 
   typedef boost::shared_ptr<TcpTransportSocket> TcpTransportSocketPtr;

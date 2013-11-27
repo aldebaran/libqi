@@ -26,7 +26,6 @@ namespace po = boost::program_options;
 #include <qiperf/dataperfsuite.hpp>
 #include <qiperf/dataperf.hpp>
 
-#include <qimessaging/servicedirectory.hpp>
 #include <qimessaging/gateway.hpp>
 #include <qitype/anyobject.hpp>
 #include <qitype/dynamicobjectbuilder.hpp>
@@ -139,7 +138,7 @@ int run_client(qi::AnyObject obj)
         if (ops[j % pipeline].value().size() != buf.size())
           std::cout << "error content" << std::endl;
       }
-      qi::Future<qi::Buffer> result = obj->call<qi::Buffer>("replyBuf", buf);
+      qi::Future<qi::Buffer> result = obj.call<qi::Buffer>("replyBuf", buf);
       ops[j % pipeline] = result;
       qi::os::gettimeofday(&tstop);
       latencySum += (tstop.tv_sec - tstart.tv_sec)* 1000000LL
@@ -202,8 +201,8 @@ int main_gateway(const qi::Url& serverUrl)
 
 int main_server()
 {
-  qi::ServiceDirectory sd;
-  if (sd.listen(serverUrl).hasError()) {
+  qi::Session sd;
+  if (sd.listenStandalone(serverUrl).hasError()) {
     std::cerr << "Service directory can't listen on " << serverUrl.str() << "." << std::endl;
     return 1;
   }

@@ -10,8 +10,7 @@
 #include <cstring>
 #include <qi/log.hpp>
 #include <qi/application.hpp>
-
-#include <qimessaging/servicedirectory.hpp>
+#include <qimessaging/session.hpp>
 
 qiLogCategory("qimaster");
 
@@ -27,7 +26,7 @@ int main(int argc, char *argv[])
   }
 
   {
-    qi::ServiceDirectory sd;
+    qi::Session sd;
     std::vector<qi::Url> endpoints;
     if (argc == 1)
     {
@@ -52,7 +51,7 @@ int main(int argc, char *argv[])
          it != endpoints.end();
          it++)
     {
-      qi::Future<void> f = sd.listen(*it);
+      qi::Future<void> f = sd.listenStandalone(*it);
       f.wait(3000);
       if (f.hasError())
       {

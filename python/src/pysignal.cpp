@@ -10,6 +10,7 @@
 #include "gil.hpp"
 #include "error.hpp"
 #include "pyfuture.hpp"
+#include "pyobject.hpp"
 #include "pythreadsafeobject.hpp"
 
 qiLogCategory("py.signal");
@@ -26,7 +27,7 @@ namespace qi { namespace py {
         args.append(it->to<boost::python::object>());
       }
       PY_CATCH_ERROR(ret = callable.object()(*boost::python::tuple(args)));
-      return qi::AnyReference(ret).clone();
+      return qi::AnyReference::from(ret).clone();
     }
 
     class PySignal {
@@ -56,6 +57,9 @@ namespace qi { namespace py {
 
       boost::python::object connect(boost::python::object callable, bool _async = false) {
         PyThreadSafeObject obj(callable);
+
+        if (!PyCallable_Check(callable.ptr()))
+          throw std::runtime_error("Not a callable");
         qi::uint64_t r;
         {
           GILScopedUnlock _unlock;
@@ -100,7 +104,7 @@ namespace qi { namespace py {
       //the python wrapper add a __call__ method bound to this one. (see qi/__init__.py)
       void trig(boost::python::tuple args, boost::python::dict kwargs) {
         GILScopedUnlock _unlock;
-        _sig->trigger(qi::AnyReference(args).asDynamic().asTupleValuePtr());
+        _sig->trigger(qi::AnyReference::from(args).content().asTupleValuePtr());
       }
 
     public:
@@ -116,11 +120,13 @@ namespace qi { namespace py {
 
       boost::python::object connect(boost::python::object callable, bool _async = false) {
         PyThreadSafeObject obj(callable);
+        if (!PyCallable_Check(callable.ptr()))
+          throw std::runtime_error("Not a callable");
         qi::Future<SignalLink> f;
         {
           GILScopedUnlock _unlock;
           //no need to store a ptr on ourself. (this exist if the callback is triggered)
-          f = _obj->connect(_sigid, qi::AnyFunction::fromDynamicFunction(boost::bind(pysignalCb, _1, obj)));
+          f = _obj.connect(_sigid, qi::AnyFunction::fromDynamicFunction(boost::bind(pysignalCb, _1, obj)));
         }
         return toPyFutureAsync(f, _async);
       }
@@ -129,7 +135,7 @@ namespace qi { namespace py {
         qi::Future<void> f;
         {
           GILScopedUnlock _unlock;
-          f = _obj->disconnect(id);
+          f = _obj.disconnect(id);
         }
         return toPyFutureAsync(f, _async);
       }
@@ -138,7 +144,7 @@ namespace qi { namespace py {
       //the python wrapper add a __call__ method bound to this one. (see qi/__init__.py)
       void trig(boost::python::tuple args, boost::python::dict kwargs) {
         GILScopedUnlock _unlock;
-        _obj->metaPost(_sigid, qi::AnyReference(args).asDynamic().asTupleValuePtr());
+        _obj.metaPost(_sigid, qi::AnyReference::from(args).content().asTupleValuePtr());
       }
 
     private:

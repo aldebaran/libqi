@@ -3,24 +3,25 @@
 #include <qi/iocolor.hpp>
 #include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
+#include <qimessaging/applicationsession.hpp>
 
 #include "sessionhelper.hpp"
 #include "almemoryhelper.hpp"
 #include "qicli.hpp"
 
-SessionHelper::SessionHelper(const std::string &address)
+SessionHelper::SessionHelper(qi::ApplicationSession& app)
+  : _session(app.session())
 {
-  _session.connect(address);
+  app.start();
   _servicesInfos = _session.services();
 }
 
 SessionHelper::~SessionHelper()
 {
   _currentMatchMap.clear();
-  _session.close();
 }
 
-void SessionHelper::info(const std::vector<std::string> &patternVec, bool verbose, bool showHidden, bool showDoc, bool showRaw)
+void SessionHelper::info(const std::vector<std::string> &patternVec, bool verbose, bool showHidden, bool showDoc, bool showRaw, bool parseable)
 {
   std::set<std::string> matchServs;
 
@@ -37,7 +38,7 @@ void SessionHelper::info(const std::vector<std::string> &patternVec, bool verbos
   for (unsigned int j = 0; j < _servicesInfos.size(); ++j)
     BOOST_FOREACH(const std::string &it, matchServs)
       if (it == _servicesInfos[j].name())
-        showServiceInfo(_servicesInfos[j], verbose, showHidden, showDoc, showRaw);
+        showServiceInfo(_servicesInfos[j], verbose, showHidden, showDoc, showRaw, parseable);
 }
 
 void SessionHelper::call(const std::string &pattern, const std::vector<std::string> &argList, bool hidden, bool json, bool cont)
@@ -149,36 +150,46 @@ SessionHelper::MatchMap SessionHelper::getMatchMap(const std::vector<std::string
   return matchMap;
 }
 
-void SessionHelper::showServiceInfo(const qi::ServiceInfo &infos, bool verbose, bool showHidden, bool showDoc, bool showRaw)
+void SessionHelper::showServiceInfo(const qi::ServiceInfo &infos, bool verbose, bool showHidden, bool showDoc, bool showRaw, bool parseable)
 {
-  std::cout << qi::StreamColor_Fuchsia
-            << std::right << std::setw(3) << std::setfill('0')
-            << infos.serviceId() << qi::StreamColor_Reset
-            << std::left << std::setw(0) << std::setfill(' ')
-            << " [" << qi::StreamColor_Red << infos.name() << qi::StreamColor_Reset << "]" << std::endl;
+  if (parseable)
+    std::cout << infos.name();
+  else
+    std::cout << qi::StreamColor_Fuchsia
+              << std::right << std::setw(3) << std::setfill('0')
+              << infos.serviceId() << qi::StreamColor_Reset
+              << std::left << std::setw(0) << std::setfill(' ')
+              << " [" << qi::StreamColor_Red << infos.name() << qi::StreamColor_Reset << "]" << std::endl;
 
   if (!verbose)
+  {
+    if (parseable)
+      std::cout << std::endl;
     return;
+  }
 
-  std::string firstEp;
-  if (infos.endpoints().begin() != infos.endpoints().end())
-    firstEp = infos.endpoints().begin()->str();
-  std::cout << qi::StreamColor_Green << "  * " << qi::StreamColor_Fuchsia << "Info" << qi::StreamColor_Reset << ":"
-            << std::endl;
+  if (!parseable)
+  {
+    std::string firstEp;
+    if (infos.endpoints().begin() != infos.endpoints().end())
+      firstEp = infos.endpoints().begin()->str();
+    std::cout << qi::StreamColor_Green << "  * " << qi::StreamColor_Fuchsia << "Info" << qi::StreamColor_Reset << ":"
+              << std::endl;
 
-  std::cout << "   machine   " << infos.machineId() << std::endl
-            << "   process   " << infos.processId() << std::endl
-            << "   endpoints " << firstEp << std::endl;
+    std::cout << "   machine   " << infos.machineId() << std::endl
+              << "   process   " << infos.processId() << std::endl
+              << "   endpoints " << firstEp << std::endl;
 
-  for (qi::UrlVector::const_iterator it_urls = infos.endpoints().begin(); it_urls != infos.endpoints().end(); ++it_urls) {
-    if (it_urls != infos.endpoints().begin())
-      std::cout << "             " << it_urls->str() << std::endl;
+    for (qi::UrlVector::const_iterator it_urls = infos.endpoints().begin(); it_urls != infos.endpoints().end(); ++it_urls) {
+      if (it_urls != infos.endpoints().begin())
+        std::cout << "             " << it_urls->str() << std::endl;
+    }
   }
 
   try
   {
     ServiceHelper service = getServiceHelper(infos.name());
-    qi::details::printMetaObject(std::cout, service.objPtr()->metaObject(), true, showHidden, showDoc, showRaw);
+    qi::details::printMetaObject(std::cout, service.objPtr().metaObject(), true, showHidden, showDoc, showRaw, parseable);
   }
   catch (...)
   {

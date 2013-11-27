@@ -66,6 +66,8 @@ namespace qi {
 
     void PyFuture::addCallback(const boost::python::object &callable) {
       PyThreadSafeObject obj(callable);
+      if (!PyCallable_Check(callable.ptr()))
+        throw std::runtime_error("Not a callable");
       {
         GILScopedUnlock _unlock;
         connect(boost::bind<void>(&pyFutureCb, _1, obj));

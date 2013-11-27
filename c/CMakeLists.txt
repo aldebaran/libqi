@@ -10,7 +10,6 @@ qi_create_lib("qic" SHARED qic/api.h
                      qic/session.h
                      qic/object.h
                      qic/future.h
-                     qic/servicedirectory.h
                      qic/value.h
 
                      src/object_p.h
@@ -20,8 +19,7 @@ qi_create_lib("qic" SHARED qic/api.h
                      src/session.cpp
                      src/application.cpp
                      src/value_p.h
-                     src/value.cpp
-                     src/servicedirectory.cpp)
+                     src/value.cpp)
 
 qi_use_lib(qic qimessaging qitype qi)
 qi_stage_lib(qic)

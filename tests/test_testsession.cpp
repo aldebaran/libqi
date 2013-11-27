@@ -85,14 +85,14 @@ TEST(TestTestSession, TestForceMode)
 TEST(TestTestSession, TestTestSessionOnly)
 {
   int i = 0;
-  qi::ServiceDirectory sd;
-  std::stringstream    listenUrl;
+  qi::Session       sd;
+  std::stringstream listenUrl;
 
   // #1 Force test mode to service directory.
   TestMode::forceTestMode(TestMode::Mode_SD);
 
   // #2 Initialize service directory and test sessions.
-  qi::Future<void> f = sd.listen("tcp://0.0.0.0:0");
+  qi::Future<void> f = sd.listenStandalone("tcp://0.0.0.0:0");
   f.wait(3000);
   ASSERT_TRUE(!f.hasError());
   TestSession          client(sd.endpoints()[0].str(), false);
@@ -110,10 +110,10 @@ TEST(TestTestSession, TestTestSessionOnly)
 
   // #5 Get proxy on 'test' service.
   qi::AnyObject proxy = client.session()->service("test");
-  ASSERT_NE((void *) 0, proxy.get());
+  ASSERT_NE((void *) 0, proxy.asGenericObject());
 
   // #6 Make a call and assert result is 1.
-  i = proxy->call<int>("++", i);
+  i = proxy.call<int>("++", i);
   ASSERT_EQ(1, i);
 }
 
@@ -148,12 +148,12 @@ TEST(TestTestSession, TestTestSessionPair)
   qi::AnyObject proxyDirect = pDirect.client()->service("IncrDirect");
   qi::AnyObject proxySD = pSD.server()->service("IncrSD");
 
-  ASSERT_NE((void *) 0, proxyDirect.get());
-  ASSERT_NE((void *) 0, proxySD.get());
+  ASSERT_NE((void *) 0, proxyDirect.asGenericObject());
+  ASSERT_NE((void *) 0, proxySD.asGenericObject());
 
   // #4 Call ++ method from Incr service.
-  iSD = proxySD->call<int>(std::string("++"), iSD);
-  iDirect = proxyDirect->call<int>(std::string("++"), iDirect);
+  iSD = proxySD.call<int>(std::string("++"), iSD);
+  iDirect = proxyDirect.call<int>(std::string("++"), iDirect);
 
   ASSERT_EQ(1, iSD);
   ASSERT_EQ(1, iDirect);
@@ -180,10 +180,10 @@ TEST(TestTestSession, TestSameObject)
   ASSERT_EQ(p.client(), p.server());
 
   qi::AnyObject proxy = p.client()->service("Incr");
-  ASSERT_NE((void *) 0, proxy.get());
+  ASSERT_NE((void *) 0, proxy.asGenericObject());
 
   // #4 Call ++ method from Incr service.
-  i = proxy->call<int>(std::string("++"), i);
+  i = proxy.call<int>(std::string("++"), i);
   ASSERT_EQ(1, i);
 }
 
@@ -214,10 +214,10 @@ TEST(TestTestSession, TestThroughSD)
 
   // #3.3 Get proxy on Incr service
   qi::AnyObject proxy = p.client()->service("Incr");
-  ASSERT_NE((void *) 0, proxy.get());
+  ASSERT_NE((void *) 0, proxy.asGenericObject());
 
   // #4 Call ++ method from Incr service.
-  i = proxy->call<int>(std::string("++"), i);
+  i = proxy.call<int>(std::string("++"), i);
 
   // #5 No need for Cleanup !
   ASSERT_EQ(1, i);

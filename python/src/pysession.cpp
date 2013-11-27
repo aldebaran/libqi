@@ -3,8 +3,6 @@
 **  See COPYING for the license
 */
 #include "pysession.hpp"
-#include <qimessaging/session.hpp>
-#include <boost/python.hpp>
 #include <boost/python/stl_iterator.hpp>
 #include <qitype/dynamicobjectbuilder.hpp>
 #include "pyfuture.hpp"
@@ -24,8 +22,8 @@ qi::AnyReference triggerBouncer(qi::SignalBase *sig, const std::vector<qi::AnyRe
 
     class PySession {
     public:
-      PySession()
-        : _ses(new qi::Session)
+      PySession(boost::shared_ptr<qi::Session> session = boost::shared_ptr<qi::Session>(new qi::Session()))
+        : _ses(session)
         , nSigConnected(0)
         , nSigDisconnected(0)
         , connected(makePySignal())
@@ -47,7 +45,6 @@ qi::AnyReference triggerBouncer(qi::SignalBase *sig, const std::vector<qi::AnyRe
           _ses.reset();
         }
       }
-
 
       //return a future, or None (and throw in case of error)
       boost::python::object connect(const std::string &url, bool _async=false) {
@@ -78,6 +75,24 @@ qi::AnyReference triggerBouncer(qi::SignalBase *sig, const std::vector<qi::AnyRe
         return toPyFutureAsync(fut, _async);
       }
 
+      boost::python::object listen(const std::string &url, bool _async=false) {
+        qi::Future<void> fut;
+        {
+          GILScopedUnlock _unlock;
+          fut = _ses->listen(url);
+        }
+        return toPyFutureAsync(fut, _async);
+      }
+
+      boost::python::object listenStandalone(const std::string &url, bool _async=false) {
+        qi::Future<void> fut;
+        {
+          GILScopedUnlock _unlock;
+          fut = _ses->listenStandalone(url);
+        }
+        return toPyFutureAsync(fut, _async);
+      }
+
       boost::python::object services(bool _async=false) {
         qi::Future< std::vector<ServiceInfo> > fut;
         {
@@ -88,8 +103,7 @@ qi::AnyReference triggerBouncer(qi::SignalBase *sig, const std::vector<qi::AnyRe
       }
 
       boost::python::object registerService(const std::string &name, boost::python::object obj, bool _async=false) {
-        qi::py::LeakBlock block;
-        qi::AnyObject anyobj = qi::AnyReference(obj).toObject();
+        qi::AnyObject anyobj = qi::AnyReference::from(obj).toObject();
         qi::Future<unsigned int> fut;
         {
           GILScopedUnlock _unlock;
@@ -107,6 +121,15 @@ qi::AnyReference triggerBouncer(qi::SignalBase *sig, const std::vector<qi::AnyRe
         return toPyFutureAsync(fut, _async);
       }
 
+      boost::python::object endpoints() {
+        boost::python::list ret;
+        std::vector<qi::Url>  eps = _ses->endpoints();
+        for (unsigned int i = 0; i < eps.size(); ++i) {
+          ret.append(eps.at(i).str());
+        }
+        return ret;
+      }
+
     private:
       boost::shared_ptr<qi::Session> _ses;
       int nSigConnected;
@@ -118,7 +141,7 @@ qi::AnyReference triggerBouncer(qi::SignalBase *sig, const std::vector<qi::AnyRe
     };
 
     void export_pysession() {
-      boost::python::class_<PySession>("Session")
+      boost::python::class_<PySession, boost::shared_ptr<PySession> >("Session")
           .def("connect", &PySession::connect, (boost::python::arg("url"), boost::python::arg("_async") = false),
                "connect(url) -> None\n"
                "Connect the session to a ServiceDirectory")
@@ -127,8 +150,18 @@ qi::AnyReference triggerBouncer(qi::SignalBase *sig, const std::vector<qi::AnyRe
                "close() -> None\n"
                "Close the Session")
 
+          .def("listen", &PySession::listen, (boost::python::arg("url"), boost::python::arg("_async") = false),
+               "listen(url) -> None\n"
+               "Listen on that specific Url")
+
+          .def("listenStandalone", &PySession::listenStandalone, (boost::python::arg("url"), boost::python::arg("_async") = false),
+               "listenStandalone(url) -> None\n"
+               "Create a session with a standalone ServiceDirectory")
+
           //TODO: endpoints()
-          //TODO: listen(url)
+          .def("endpoints", &PySession::endpoints,
+               "endpoints() -> list\n"
+               "Return the current list of endpoints of the session")
 
           .def("service", &PySession::service, (boost::python::arg("service"), boost::python::arg("_async") = false),
                "service(name) -> Object\n"
@@ -155,6 +188,12 @@ qi::AnyReference triggerBouncer(qi::SignalBase *sig, const std::vector<qi::AnyRe
           //todo: serviceRegistered
           //todo: serviceUnregistered
           ;
+    }
+
+    boost::python::object makePySession(boost::shared_ptr<qi::Session> ses)
+    {
+      GILScopedLock _lock;
+      return boost::python::object(boost::shared_ptr<PySession>(new PySession(ses)));
     }
 
   }

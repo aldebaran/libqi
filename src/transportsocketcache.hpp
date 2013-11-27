@@ -19,8 +19,8 @@ namespace qi {
     qi::Url                             url;
     qi::TransportSocketPtr              socket;
     qi::Promise<qi::TransportSocketPtr> promise;
-    unsigned int                        connectSignalLink;
-    unsigned int                        disconnectSignalLink;
+    SignalLink                          connectSignalLink;
+    SignalLink                          disconnectSignalLink;
   };
 
   struct TransportSocketConnectionAttempt {
@@ -42,13 +42,14 @@ namespace qi {
    */
   class TransportSocketCache {
   public:
+    TransportSocketCache();
     ~TransportSocketCache();
 
     void init();
     void close();
 
     qi::Future<qi::TransportSocketPtr> socket(const ServiceInfo& servInfo, const std::string protocol);
-
+    void insert(const std::string& machineId, const Url& url, TransportSocketPtr socket);
   protected:
     //TransportSocket
     void onSocketConnected(TransportSocketPtr client, const ServiceInfo &servInfo, const Url &url);

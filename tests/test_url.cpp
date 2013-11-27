@@ -162,13 +162,13 @@ TEST(TestURL, TypeSystem)
   qi::AnyFunction fin = qi::AnyFunction::from(&urlIn);
   std::vector<qi::AnyReference> args;
   std::string s("tcp://canard:0");
-  EXPECT_EQ(s, qi::AnyReference(s).to<qi::Url>().str());
-  args.push_back(qi::AnyReference(s));
+  EXPECT_EQ(s, qi::AnyReference::from(s).to<qi::Url>().str());
+  args.push_back(qi::AnyReference::from(s));
   qi::Url u = fout.call(args).to<qi::Url>();
   EXPECT_EQ(s, u.str());
-  EXPECT_EQ(u, qi::Url(qi::AnyReference(u).to<std::string>()));
+  EXPECT_EQ(u, qi::Url(qi::AnyReference::from(u).to<std::string>()));
   args.clear();
-  args.push_back(qi::AnyReference(u));
+  args.push_back(qi::AnyReference::from(u));
   std::string res = fin.call(args).to<std::string>();
   EXPECT_EQ(res, u.str());
 }

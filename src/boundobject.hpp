@@ -74,6 +74,7 @@ namespace qi {
       return _currentSocket;
     }
 
+    inline AnyObject object() { return _object;}
   public:
     //BoundObject Interface
     virtual void onMessage(const qi::Message &msg, TransportSocketPtr socket);

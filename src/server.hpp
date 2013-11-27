@@ -8,7 +8,7 @@
 #define _SRC_SERVER_HPP_
 
 #include <boost/thread/recursive_mutex.hpp>
-#include <qimessaging/api.hpp>
+#include <boost/noncopyable.hpp>
 #include "boundobject.hpp"
 
 namespace qi {
@@ -21,9 +21,8 @@ namespace qi {
    * Threadsafety warning: do not call listen and addSocketObject at the same time
    *
    */
-  class Server: public qi::Trackable<Server> {
+  class Server: public qi::Trackable<Server>, private boost::noncopyable {
   public:
-    QI_DISALLOW_COPY_AND_ASSIGN(Server);
     Server();
     ~Server();
 

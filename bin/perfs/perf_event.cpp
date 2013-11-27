@@ -66,8 +66,8 @@ void connect_event(int iteration)//test event connection perf.
 
   for (int i = 1; i < iteration; i++)
   {
-    mySignalLinkId = myObjectPointer->connect(eventId, myObjectPointer, callbackID);
-    myObjectPointer->disconnect(mySignalLinkId);
+    mySignalLinkId = myObjectPointer.connect(eventId, myObjectPointer, callbackID);
+    myObjectPointer.disconnect(mySignalLinkId);
   }
 }
 
@@ -80,7 +80,7 @@ void emit_event_without_session(int iteration)//test emit-event perf without ses
 
   for (int i = 1; i < iteration; i++)
   {
-    myObjectPointer->post("ping");
+    myObjectPointer.post("ping");
   }
 }
 
@@ -110,7 +110,7 @@ void emit_event(int iteration, const T &param)//test int emit-event perf.
 
   for (int i = 1; i < iteration; i++)
   {
-    myObjectPointer->post("testEvent", param);
+    myObjectPointer.post("testEvent", param);
   }
 }
 
@@ -129,7 +129,7 @@ void emit_event(int iteration)//test emit empty events.
 
   for (int i = 1; i < iteration; i++)
   {
-    myObjectPointer->post("ping");
+    myObjectPointer.post("ping");
   }
 }
 
@@ -140,10 +140,10 @@ void test_callback()  //test callbacks performances without session
 
   qi::AnyObject myObjectPointer = qi::AnyObject(new qi::GenericObject(obt.type(), new Service));
 
-  myObjectPointer->connect("ping", &cb); //connecting event to callback
+  myObjectPointer.connect("ping", &cb); //connecting event to callback
   for (int i=0; i < iteration; i++) //Emitting Events
   {
-    myObjectPointer->post("ping");
+    myObjectPointer.post("ping");
   }
   while(*callbackValue < iteration)//waiting callbacks
   {
@@ -164,14 +164,14 @@ void test_callback_session(qi::DataPerfSuite &out ,std::string testname) //testi
   {
     throw std::runtime_error("Impossible to register Service");
   }
-  oserver->connect("ping", &cb);
+  oserver.connect("ping", &cb);
   oclient = p.client()->service("service"); //geting the proxy
 
   dp.start(testname, iteration);
 
   for (int i=0; i < iteration; i++) //Emitting Events
   {
-    oclient->post("ping");
+    oclient.post("ping");
   }
 
   while (*callbackValue < iteration) //waiting callbacks.

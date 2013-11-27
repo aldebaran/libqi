@@ -15,7 +15,6 @@
 #include <qitype/anyobject.hpp>
 #include <qitype/dynamicobjectbuilder.hpp>
 #include <qimessaging/session.hpp>
-#include <qimessaging/servicedirectory.hpp>
 
 qiLogCategory("test");
 
@@ -34,7 +33,7 @@ void value(qi::AnyValue mv)
 
 void valueList(std::vector<qi::AnyValue> mv)
 {
-  v = qi::AnyReference(mv).clone();
+  v = qi::AnyValue(mv);
 }
 
 class TestObject: public ::testing::Test
@@ -54,7 +53,7 @@ public:
 protected:
   void SetUp()
   {
-    qi::Future<void> f = sd.listen("tcp://127.0.0.1:0");
+    qi::Future<void> f = sd.listenStandalone("tcp://127.0.0.1:0");
     f.wait(3000);
     ASSERT_TRUE(!f.hasError());
     f = session.connect(sd.endpoints()[0]);
@@ -83,7 +82,7 @@ protected:
 
 public:
   qi::Promise<int>     prom;
-  qi::ServiceDirectory sd;
+  qi::Session          sd;
   qi::Session          session;
   qi::AnyObject        oserver;
   qi::Session          sclient;
@@ -104,43 +103,43 @@ TEST_F(TestObject, meta)
     * So call(AutoAnyReference(12)) will *not* call with the value
     * "a metavalue containing 12", it will call with "12".
     */
-  target->call<void>(function, 12).wait();
+  target.call<void>(function, 12).wait();
   ASSERT_EQ(v.toDouble(), 12);
   {
     int myint = 12;
-    qi::Future<void> fut = target->call<void>(function, myint);
+    qi::Future<void> fut = target.call<void>(function, myint);
     myint = 5;
     fut.wait();
     ASSERT_EQ(v.toDouble(), 12);
   }
   {
     int myint = 12;
-    qi::Future<void> fut = target->call<void>(function, AutoAnyReference(AnyValue::from(myint)));
+    qi::Future<void> fut = target.call<void>(function, AutoAnyReference(AnyValue::from(myint)));
     myint = 5;
     fut.wait();
     ASSERT_EQ(v.toDouble(), 12);
   }
-  target->call<void>(function, qi::AutoAnyReference(qi::AnyValue::from(12))).wait();
+  target.call<void>(function, qi::AutoAnyReference(qi::AnyValue::from(12))).wait();
   ASSERT_EQ(v.toDouble(), 12);
-  target->call<void>(function, qi::AutoAnyReference(qi::AnyValue::from(12.0))).wait();
+  target.call<void>(function, qi::AutoAnyReference(qi::AnyValue::from(12.0))).wait();
   ASSERT_EQ(v.toDouble(), 12);
-  target->call<void>(function, qi::AutoAnyReference(qi::AnyValue::from(12.0f))).wait();
+  target.call<void>(function, qi::AutoAnyReference(qi::AnyValue::from(12.0f))).wait();
   ASSERT_EQ(v.toDouble(), 12);
-  target->call<void>(function, qi::AutoAnyReference(qi::AnyValue::from("foo"))).wait();
+  target.call<void>(function, qi::AutoAnyReference(qi::AnyValue::from("foo"))).wait();
   ASSERT_EQ(v.toString(), "foo");
-  target->call<void>(function, "foo").wait();
+  target.call<void>(function, "foo").wait();
   ASSERT_EQ(v.toString(), "foo");
   std::vector<double> in;
   in.push_back(1); in.push_back(2);
-  target->call<void>(function, qi::AutoAnyReference(qi::AnyValue::from(in))).wait();
+  target.call<void>(function, qi::AutoAnyReference(qi::AnyValue::from(in))).wait();
   ASSERT_EQ(v.to<std::vector<double> >(), in);
-  target->call<void>(function, in).wait();
+  target.call<void>(function, in).wait();
   ASSERT_EQ(v.to<std::vector<double> >(), in);
-  std::vector<AnyValue> args;
+  AnyValueVector args;
   args.push_back(AnyValue::from(12));
   args.push_back(AnyValue::from("foo"));
   args.push_back(AnyValue::from(in));
-  target->call<void>(function, args).wait();
+  target.call<void>(function, args).wait();
   ASSERT_EQ(v.kind(), TypeKind_List);
   ASSERT_EQ(static_cast<size_t>(3), v.size());
 
@@ -156,45 +155,45 @@ TEST_F(TestObject, meta)
   target = oserver;
   function = "valueAsync";
   {
-  target->call<void>(function, 12).wait();
+  target.call<void>(function, 12).wait();
   ASSERT_EQ(v.toDouble(), 12);
   {
     int myint = 12;
-    qi::Future<void> fut = target->call<void>(function, myint);
+    qi::Future<void> fut = target.call<void>(function, myint);
     myint = 5;
     fut.wait();
     ASSERT_EQ(v.toDouble(), 12);
   }
   {
     int myint = 12;
-    qi::Future<void> fut = target->call<void>(function, AutoAnyReference(AnyValue::from(myint)));
+    qi::Future<void> fut = target.call<void>(function, AutoAnyReference(AnyValue::from(myint)));
     myint = 5;
     fut.wait();
     ASSERT_EQ(v.toDouble(), 12);
   }
-  target->call<void>(function, qi::AutoAnyReference(qi::AnyValue::from(12))).wait();
+  target.call<void>(function, qi::AutoAnyReference(qi::AnyValue::from(12))).wait();
   ASSERT_EQ(v.toDouble(), 12);
-  target->call<void>(function, qi::AutoAnyReference(qi::AnyValue::from(12.0))).wait();
+  target.call<void>(function, qi::AutoAnyReference(qi::AnyValue::from(12.0))).wait();
   ASSERT_EQ(v.toDouble(), 12);
-  target->call<void>(function, qi::AutoAnyReference(qi::AnyValue::from(12.0f))).wait();
+  target.call<void>(function, qi::AutoAnyReference(qi::AnyValue::from(12.0f))).wait();
   ASSERT_EQ(v.toDouble(), 12);
-  target->call<void>(function, qi::AutoAnyReference(qi::AnyValue::from("foo"))).wait();
+  target.call<void>(function, qi::AutoAnyReference(qi::AnyValue::from("foo"))).wait();
   ASSERT_EQ(v.toString(), "foo");
-  target->call<void>(function, "foo").wait();
+  target.call<void>(function, "foo").wait();
   ASSERT_EQ(v.toString(), "foo");
   std::vector<double> in;
   in.push_back(1); in.push_back(2);
-  target->call<void>(function, qi::AutoAnyReference(qi::AnyValue::from(in))).wait();
+  target.call<void>(function, qi::AutoAnyReference(qi::AnyValue::from(in))).wait();
   ASSERT_EQ(v.to<std::vector<double> >(), in);
-  target->call<void>(function, in).wait();
+  target.call<void>(function, in).wait();
   ASSERT_EQ(v.to<std::vector<double> >(), in);
-  target->call<void>(function, in).wait();
+  target.call<void>(function, in).wait();
   ASSERT_EQ(v.to<std::vector<double> >(), in);
-  std::vector<AnyValue> args;
+  AnyValueVector args;
   args.push_back(AnyValue::from(12));
   args.push_back(AnyValue::from("foo"));
   args.push_back(AnyValue::from(in));
-  target->call<void>(function, args).wait();
+  target.call<void>(function, args).wait();
   ASSERT_EQ(v.kind(), TypeKind_List);
   // iterate
   ASSERT_EQ(12, v[0].toDouble());
@@ -206,43 +205,43 @@ TEST_F(TestObject, meta)
   // plugin direct test
   function = "value";
   {
-  target->call<void>(function, 12).wait();
+  target.call<void>(function, 12).wait();
   ASSERT_EQ(v.toDouble(), 12);
   {
     int myint = 12;
-    qi::Future<void> fut = target->call<void>(function, myint);
+    qi::Future<void> fut = target.call<void>(function, myint);
     myint = 5;
     fut.wait();
     ASSERT_EQ(v.toDouble(), 12);
   }
   {
     int myint = 12;
-    qi::Future<void> fut = target->call<void>(function, AutoAnyReference(AnyValue::from(myint)));
+    qi::Future<void> fut = target.call<void>(function, AutoAnyReference(AnyValue::from(myint)));
     myint = 5;
     fut.wait();
     ASSERT_EQ(v.toDouble(), 12);
   }
-  target->call<void>(function, qi::AutoAnyReference(qi::AnyValue::from(12))).wait();
+  target.call<void>(function, qi::AutoAnyReference(qi::AnyValue::from(12))).wait();
   ASSERT_EQ(v.toDouble(), 12);
-  target->call<void>(function, qi::AutoAnyReference(qi::AnyValue::from(12.0))).wait();
+  target.call<void>(function, qi::AutoAnyReference(qi::AnyValue::from(12.0))).wait();
   ASSERT_EQ(v.toDouble(), 12);
-  target->call<void>(function, qi::AutoAnyReference(qi::AnyValue::from(12.0f))).wait();
+  target.call<void>(function, qi::AutoAnyReference(qi::AnyValue::from(12.0f))).wait();
   ASSERT_EQ(v.toDouble(), 12);
-  target->call<void>(function, qi::AutoAnyReference(qi::AnyValue::from("foo"))).wait();
+  target.call<void>(function, qi::AutoAnyReference(qi::AnyValue::from("foo"))).wait();
   ASSERT_EQ(v.toString(), "foo");
-  target->call<void>(function, "foo").wait();
+  target.call<void>(function, "foo").wait();
   ASSERT_EQ(v.toString(), "foo");
   std::vector<double> in;
   in.push_back(1); in.push_back(2);
-  target->call<void>(function, qi::AutoAnyReference(qi::AnyValue::from(in))).wait();
+  target.call<void>(function, qi::AutoAnyReference(qi::AnyValue::from(in))).wait();
   ASSERT_EQ(v.to<std::vector<double> >(), in);
-  target->call<void>(function, in).wait();
+  target.call<void>(function, in).wait();
   ASSERT_EQ(v.to<std::vector<double> >(), in);
-  std::vector<AnyValue> args;
+  AnyValueVector args;
   args.push_back(AnyValue::from(12));
   args.push_back(AnyValue::from("foo"));
   args.push_back(AnyValue::from(in));
-  target->call<void>(function, args).wait();
+  target.call<void>(function, args).wait();
   ASSERT_EQ(v.kind(), TypeKind_List);
   // iterate
   ASSERT_EQ(12, v[0].toDouble());

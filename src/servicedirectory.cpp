@@ -17,7 +17,7 @@
 #include <qitype/anyobject.hpp>
 #include "transportserver.hpp"
 #include "transportsocket.hpp"
-#include <qimessaging/servicedirectory.hpp>
+#include "servicedirectory.hpp"
 #include <qimessaging/session.hpp>
 #include <qimessaging/serviceinfo.hpp>
 #include <qitype/objecttypebuilder.hpp>
@@ -33,29 +33,14 @@ qiLogCategory("qimessaging.servicedirectory");
 
 namespace qi
 {
-  ServiceDirectoryPrivate::ServiceDirectoryPrivate()
-    : _sdbo(boost::make_shared<ServiceDirectoryBoundObject>())
-  {
-    _server.addObject(1, _sdbo);
-  }
 
-  ServiceDirectoryPrivate::~ServiceDirectoryPrivate()
-  {
-  }
-
-  void ServiceDirectoryPrivate::updateServiceInfo()
-  {
-    ServiceInfo si;
-    si.setName("ServiceDirectory");
-    si.setServiceId(qi::Message::Service_ServiceDirectory);
-    si.setMachineId(qi::os::getMachineId());
-    si.setEndpoints(_server.endpoints());
-    ServiceDirectoryBoundObject *sdbo = static_cast<ServiceDirectoryBoundObject*>(_sdbo.get());
-    sdbo->updateServiceInfo(si);
-  }
 
   qi::AnyObject createSDP(ServiceDirectoryBoundObject* self) {
     static qi::ObjectTypeBuilder<ServiceDirectoryBoundObject>* ob = 0;
+    static boost::mutex* mutex = 0;
+    QI_THREADSAFE_NEW(mutex);
+    boost::mutex::scoped_lock lock(*mutex);
+
     if (!ob)
     {
       ob = new qi::ObjectTypeBuilder<ServiceDirectoryBoundObject>();
@@ -76,8 +61,10 @@ namespace qi
       assert(id == qi::Message::ServiceDirectoryAction_ServiceAdded);
       id = ob->advertiseSignal("serviceRemoved", &ServiceDirectoryBoundObject::serviceRemoved);
       assert(id == qi::Message::ServiceDirectoryAction_ServiceRemoved);
+      id = ob->advertiseMethod("machineId", &ServiceDirectoryBoundObject::machineId);
+      assert(id == qi::Message::ServiceDirectoryAction_MachineId);
     }
-    return ob->object(self);
+    return ob->object(self, &AnyObject::deleteGenericObjectOnly);
   }
 
   ServiceDirectoryBoundObject::ServiceDirectoryBoundObject()
@@ -331,62 +318,68 @@ namespace qi
     serviceAdded(idx, serviceName);
   }
 
-  ServiceDirectory::ServiceDirectory()
-    : _p(new ServiceDirectoryPrivate())
+
+  Session_SD::Session_SD(ObjectRegistrar* server)
+    : _server(server)
+    , _sdbo(boost::make_shared<ServiceDirectoryBoundObject>())
+    , _init(false)
   {
   }
 
-  ServiceDirectory::~ServiceDirectory()
+  Session_SD::~Session_SD()
   {
-    delete _p;
   }
 
-  qi::Future<void> ServiceDirectory::listen(const qi::Url &address)
+  void Session_SD::updateServiceInfo()
   {
+    ServiceInfo si;
+    si.setName("ServiceDirectory");
+    si.setServiceId(qi::Message::Service_ServiceDirectory);
+    si.setMachineId(qi::os::getMachineId());
+    si.setEndpoints(_server->endpoints());
+    ServiceDirectoryBoundObject *sdbo = static_cast<ServiceDirectoryBoundObject*>(_sdbo.get());
+    sdbo->updateServiceInfo(si);
+  }
+
+  qi::Future<void> Session_SD::listenStandalone(const qi::Url &address)
+  {
+    if (_init)
+      throw std::runtime_error("Already initialised");
+    _init = true;
+    _server->addObject(1, _sdbo);
+
     qiLogInfo() << "ServiceDirectory listener created on " << address.str();
-    qi::Future<void> f = _p->_server.listen(address);
+    qi::Future<void> f = _server->listen(address);
 
-    ServiceDirectoryBoundObject *sdbo = static_cast<ServiceDirectoryBoundObject*>(_p->_sdbo.get());
+    ServiceDirectoryBoundObject *sdbo = static_cast<ServiceDirectoryBoundObject*>(_sdbo.get());
 
     std::map<unsigned int, ServiceInfo>::iterator it =
         sdbo->connectedServices.find(qi::Message::Service_ServiceDirectory);
     if (it != sdbo->connectedServices.end())
     {
-      it->second.setEndpoints(_p->_server.endpoints());
+      it->second.setEndpoints(_server->endpoints());
       return f;
     }
-
     ServiceInfo si;
     si.setName("ServiceDirectory");
     si.setServiceId(qi::Message::Service_ServiceDirectory);
     si.setMachineId(qi::os::getMachineId());
     si.setProcessId(qi::os::getpid());
     si.setSessionId("0");
-    si.setEndpoints(_p->_server.endpoints());
+    si.setEndpoints(_server->endpoints());
     unsigned int regid = sdbo->registerService(si);
     sdbo->serviceReady(qi::Message::Service_ServiceDirectory);
     //serviceDirectory must have id '1'
     assert(regid == qi::Message::Service_ServiceDirectory);
 
-    _p->_server._server.endpointsChanged.connect(
-          boost::bind(&ServiceDirectoryPrivate::updateServiceInfo, _p));
+    _server->_server.endpointsChanged.connect(boost::bind(&Session_SD::updateServiceInfo, this));
 
     return f;
   }
 
-  bool ServiceDirectory::setIdentity(const std::string& key,
-                                     const std::string& crt)
+  std::string ServiceDirectoryBoundObject::machineId()
   {
-    return _p->_server.setIdentity(key, crt);
-  }
-
-  qi::UrlVector ServiceDirectory::endpoints() const {
-    return _p->_server.endpoints();
-  }
-
-  void ServiceDirectory::close() {
-    qiLogInfo() << "Closing ServiceDirectory";
-    _p->_server.close();
+    return qi::os::getMachineId();
   }
 
 } // !qi

@@ -59,8 +59,9 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/c)
 set(PUBLIC_HEADERS
                    qimessaging/api.hpp
                    qimessaging/applicationsession.hpp
+                   qimessaging/autoservice.hpp
+                   qimessaging/details/autoservice.hxx
                    qimessaging/gateway.hpp
-                   qimessaging/servicedirectory.hpp
                    qimessaging/serviceinfo.hpp
                    qimessaging/session.hpp
                    qimessaging/url.hpp
@@ -69,7 +70,6 @@ set(PUBLIC_HEADERS
 qi_install_header(${PUBLIC_HEADERS} KEEP_RELATIVE_PATHS)
 set(SRCS ${CONFIG_H}
          ${PUBLIC_HEADERS}
-
          src/applicationsession.cpp
          src/boundobject.cpp
          src/boundobject.hpp
@@ -85,7 +85,7 @@ set(SRCS ${CONFIG_H}
          src/remoteobject.cpp
          src/remoteobject_p.hpp
          src/servicedirectory.cpp
-         src/servicedirectory_p.hpp
+         src/servicedirectory.hpp
          src/servicedirectoryclient.hpp
          src/servicedirectoryclient.cpp
          src/serviceinfo.cpp

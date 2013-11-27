@@ -7,10 +7,11 @@
 
 static const int qicli_call_cmd_style = po::command_line_style::unix_style ^ po::command_line_style::allow_short;
 
-int subCmd_info(int argc, char **argv, const MainOptions &options)
+int subCmd_info(int argc, char **argv, qi::ApplicationSession& app)
 {
   po::options_description     desc("Usage: qicli info [<ServicePattern>...]");
   std::vector<std::string>    serviceList;
+  bool zOpt = false;
 
   desc.add_options()
       ("service,s", po::value<std::vector<std::string> >(&serviceList), "service to display")
@@ -19,7 +20,8 @@ int subCmd_info(int argc, char **argv, const MainOptions &options)
       ("details,d", "print service info, methods, signals and properties")
       ("hidden", "show hidden services, methods, signals and properties")
       ("show-doc", "show documentation for methods, signals and properties")
-      ("raw-signature", "show the raw signature");
+      ("raw-signature", "show the raw signature")
+      (",z", po::bool_switch(&zOpt), "prints the result in a parseable format");
 
   po::positional_options_description positionalOptions;
   positionalOptions.add("service", -1);
@@ -45,12 +47,12 @@ int subCmd_info(int argc, char **argv, const MainOptions &options)
   if (serviceList.empty())
     serviceList.push_back("*");
 
-  SessionHelper session(options.address);
-  session.info(serviceList, details, vm.count("hidden"), vm.count("show-doc"), vm.count("raw-signature"));
+  SessionHelper session(app);
+  session.info(serviceList, details, vm.count("hidden"), vm.count("show-doc"), vm.count("raw-signature"), zOpt);
   return 0;
 }
 
-int subCmd_call(int argc, char **argv, const MainOptions &options)
+int subCmd_call(int argc, char **argv, qi::ApplicationSession& app)
 {
   po::options_description     desc("Usage: qicli call <ServicePattern.MethodPattern> [<JsonParameter>...]");
   std::string                 fullName;
@@ -72,13 +74,13 @@ int subCmd_call(int argc, char **argv, const MainOptions &options)
   if (!poDefault(po::command_line_parser(argc, argv).options(desc).positional(positionalOptions)
                  .style(qicli_call_cmd_style), vm, desc))
     return 1;
-  SessionHelper session(options.address);
+  SessionHelper session(app);
 
   session.call(fullName, argList, vm.count("hidden"), vm.count("json"), vm.count("continue"));
   return 0;
 }
 
-int subCmd_post(int argc, char **argv, const MainOptions &options)
+int subCmd_post(int argc, char **argv, qi::ApplicationSession& app)
 {
   po::options_description     desc("Usage: qicli post <ServicePattern.SignalPattern> [<JsonParameter>...]");
   std::string                 fullName;
@@ -101,7 +103,7 @@ int subCmd_post(int argc, char **argv, const MainOptions &options)
                  .style(qicli_call_cmd_style), vm, desc))
     return 1;
 
-  SessionHelper session(options.address);
+  SessionHelper session(app);
 
   if (vm.count("almemory"))
   {
@@ -114,7 +116,7 @@ int subCmd_post(int argc, char **argv, const MainOptions &options)
   return 0;
 }
 
-int subCmd_get(int argc, char **argv, const MainOptions &options)
+int subCmd_get(int argc, char **argv, qi::ApplicationSession& app)
 {
   po::options_description   desc("Usage: qicli get <ServicePattern.PropertyPattern>...");
   std::vector<std::string>  patternList;
@@ -132,7 +134,7 @@ int subCmd_get(int argc, char **argv, const MainOptions &options)
   if (!poDefault(po::command_line_parser(argc, argv).options(desc).positional(positionalOptions), vm, desc))
     return 1;
 
-  SessionHelper session(options.address);
+  SessionHelper session(app);
 
   if (patternList.empty())
       patternList.push_back("*.*");
@@ -140,7 +142,7 @@ int subCmd_get(int argc, char **argv, const MainOptions &options)
   return 0;
 }
 
-int subCmd_set(int argc, char **argv, const MainOptions &options)
+int subCmd_set(int argc, char **argv, qi::ApplicationSession& app)
 {
   po::options_description   desc("Usage: qicli set <ServicePattern.PropertyPattern>... <JsonParameter>");
   std::vector<std::string>  argList;
@@ -168,12 +170,12 @@ int subCmd_set(int argc, char **argv, const MainOptions &options)
   std::string jsonValue = argList.back();
   argList.pop_back();
 
-  SessionHelper session(options.address);
+  SessionHelper session(app);
   session.set(argList, jsonValue, vm.count("hidden"), vm.count("json"), vm.count("continue"));
   return 0;
 }
 
-int subCmd_watch(int argc, char **argv, const MainOptions &options)
+int subCmd_watch(int argc, char **argv, qi::ApplicationSession& app)
 {
   po::options_description   desc("Usage: qicli watch <ServicePattern.SignalPattern>...");
   std::vector<std::string>  patternList;
@@ -193,7 +195,7 @@ int subCmd_watch(int argc, char **argv, const MainOptions &options)
   if (!poDefault(po::command_line_parser(argc, argv).options(desc).positional(positionalOptions), vm, desc))
     return 1;
 
-  SessionHelper session(options.address);
+  SessionHelper session(app);
 
   if (patternList.empty())
   {

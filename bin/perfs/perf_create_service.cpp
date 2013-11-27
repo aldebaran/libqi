@@ -15,7 +15,6 @@
 #include <qimessaging/session.hpp>
 #include <qitype/anyobject.hpp>
 #include <qitype/dynamicobjectbuilder.hpp>
-#include <qimessaging/servicedirectory.hpp>
 #include <qimessaging/gateway.hpp>
 #include <qi/os.hpp>
 #include <qi/application.hpp>
@@ -40,12 +39,7 @@ qi::AnyObject genObject() {
 
 int main(int argc, char **argv) {
   qi::Session session;
-  qi::ServiceDirectory sd;
-  sd.listen("tcp://127.0.0.1:0");
-
-  std::string url = sd.endpoints()[0].str();
-  session.connect(url);
-  session.listen("tcp://0.0.0.0:0");
+  session.listenStandalone("tcp://0.0.0.0:0");
 
   std::string fname;
   if (argc > 2)

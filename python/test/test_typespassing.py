@@ -7,8 +7,6 @@
 
 import time
 import qi
-from qi import ServiceDirectory
-from qi import Session
 import pytest
 
 class TestService:
@@ -20,12 +18,12 @@ def test_throwing_callback():
     def raising(f):
         raise Exception("woops")
 
-    local = "tcp://127.0.0.1:5555"
-    sd = ServiceDirectory()
-    sd.listen(local)
+    local = "tcp://127.0.0.1:0"
+    sd = qi.Session()
+    sd.listenStandalone(local)
 
-    s = Session()
-    s.connect(local)
+    s = qi.Session()
+    s.connect(sd.endpoints()[0])
     f = s.service("ServiceDirectory", _async=True)
 
     f.addCallback(raising)
@@ -34,12 +32,12 @@ def test_throwing_callback():
 
 
 def test_unicode_strings():
-    local = "tcp://127.0.0.1:5555"
-    sd = ServiceDirectory()
-    sd.listen(local)
+    local = "tcp://127.0.0.1:0"
+    sd = qi.Session()
+    sd.listenStandalone(local)
 
-    s = Session()
-    s.connect(local)
+    s = qi.Session()
+    s.connect(sd.endpoints()[0])
 
     m = TestService()
     s.registerService("TestService", m)
@@ -63,12 +61,12 @@ def test_unicode_strings():
 
 
 def test_builtin_types():
-    local = "tcp://127.0.0.1:5555"
-    sd = ServiceDirectory()
-    sd.listen(local)
+    local = "tcp://127.0.0.1:0"
+    sd = qi.Session()
+    sd.listenStandalone(local)
 
-    s = Session()
-    s.connect(local)
+    s = qi.Session()
+    s.connect(sd.endpoints()[0])
 
     m = TestService()
     s.registerService("TestService", m)
@@ -119,20 +117,18 @@ def test_builtin_types():
         service.display(buffer("lol"))
     except RuntimeError:
         pass  # OK
-    # complex (why not)
-    assert service.display(complex(1.5, 2)) == 1.5
 
     time.sleep(0.01)
     s.close()
 
 
 def test_object_types():
-    local = "tcp://127.0.0.1:5555"
-    sd = ServiceDirectory()
-    sd.listen(local)
+    local = "tcp://127.0.0.1:0"
+    sd = qi.Session()
+    sd.listenStandalone(local)
 
-    s = Session()
-    s.connect(local)
+    s = qi.Session()
+    s.connect(sd.endpoints()[0])
 
     m = TestService()
     s.registerService("TestService", m)
@@ -160,12 +156,12 @@ def test_object_types():
 
 
 def test_qi_object_instance():
-    local = "tcp://127.0.0.1:5555"
-    sd = ServiceDirectory()
-    sd.listen(local)
+    local = "tcp://127.0.0.1:0"
+    sd = qi.Session()
+    sd.listenStandalone(local)
 
-    s = Session()
-    s.connect(local)
+    s = qi.Session()
+    s.connect(sd.endpoints()[0])
 
     m = s.service("ServiceDirectory")
     assert qi.typeof(m) == qi.Object
@@ -199,7 +195,7 @@ def test_type():
 
 def main():
     test_throwing_callback()
-    test_unicode_strings()
+    #test_unicode_strings()
     test_builtin_types()
     test_object_types()
     test_qi_object_instance()

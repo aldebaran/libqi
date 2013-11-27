@@ -10,6 +10,7 @@
 #include <boost/python.hpp>
 #include <qitype/typeinterface.hpp>
 #include <qitype/metasignal.hpp>
+#include <qitype/anyobject.hpp>
 
 namespace qi {
   class SignalBase;

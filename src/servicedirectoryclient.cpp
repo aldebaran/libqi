@@ -17,9 +17,11 @@ namespace qi {
     , _remoteObject(qi::Message::Service_ServiceDirectory)
     , _addSignalLink(0)
     , _removeSignalLink(0)
+    , _localSd(false)
   {
     _object = makeDynamicAnyObject(&_remoteObject, false);
   }
+
 
   ServiceDirectoryClient::~ServiceDirectoryClient()
   {
@@ -64,10 +66,10 @@ namespace qi {
     boost::function<void (unsigned int, std::string)> f;
 
     f = boost::bind<void>(&ServiceDirectoryClient::onServiceAdded, this, _1, _2);
-    qi::Future<SignalLink> fut1 = _object->connect("serviceAdded", f);
+    qi::Future<SignalLink> fut1 = _object.connect("serviceAdded", f);
 
     f = boost::bind<void>(&ServiceDirectoryClient::onServiceRemoved, this, _1, _2);
-    qi::Future<SignalLink> fut2 = _object->connect("serviceRemoved", f);
+    qi::Future<SignalLink> fut2 = _object.connect("serviceRemoved", f);
 
     fut1.connect(&ServiceDirectoryClient::onSDEventConnected, this, _1, promise, true);
     fut2.connect(&ServiceDirectoryClient::onSDEventConnected, this, _1, promise, false);
@@ -93,14 +95,29 @@ namespace qi {
     }
     _sdSocket = qi::makeTransportSocket(serviceDirectoryURL.protocol());
     if (!_sdSocket)
-      return qi::makeFutureError<void>("!sdSocket");
-    _sdSocketDisconnectedSignalLink = _sdSocket->disconnected.connect(boost::bind<void>(&ServiceDirectoryClient::onSocketDisconnected, this, _1));
+      return qi::makeFutureError<void>(std::string("unrecognized protocol '") + serviceDirectoryURL.protocol() + "' in url '" + serviceDirectoryURL.str() + "'");
+    _sdSocketDisconnectedSignalLink = _sdSocket->disconnected.connect(&ServiceDirectoryClient::onSocketDisconnected, this, _1);
     _remoteObject.setTransportSocket(_sdSocket);
 
     qi::Promise<void> promise(qi::FutureCallbackType_Sync);
     qi::Future<void> fut = _sdSocket->connect(serviceDirectoryURL);
     fut.connect(&ServiceDirectoryClient::onSocketConnected, this, _1, promise);
     return promise.future();
+  }
+
+  void ServiceDirectoryClient::setServiceDirectory(AnyObject serviceDirectoryService)
+  {
+    _object = serviceDirectoryService;
+    _localSd = true;
+    boost::function<void (unsigned int, std::string)> f;
+
+    f = boost::bind<void>(&ServiceDirectoryClient::onServiceAdded, this, _1, _2);
+    _addSignalLink  = _object.connect("serviceAdded", f);
+
+    f = boost::bind<void>(&ServiceDirectoryClient::onServiceRemoved, this, _1, _2);
+    _removeSignalLink = _object.connect("serviceRemoved", f);
+
+    connected();
   }
 
   static void sharedPtrHolder(TransportSocketPtr* ptr)
@@ -140,11 +157,17 @@ namespace qi {
   }
 
   bool                 ServiceDirectoryClient::isConnected() const {
+    if (_localSd)
+      return true;
     return _sdSocket == 0 ? false : _sdSocket->isConnected();
   }
 
   qi::Url              ServiceDirectoryClient::url() const {
-    return _sdSocket ? _sdSocket->url() : qi::Url();
+    if (_localSd)
+      throw std::runtime_error("Service directory is local, url() unknown.");
+    if (!_sdSocket)
+      throw std::runtime_error("Session disconnected");
+    return _sdSocket->url();
   }
 
   void ServiceDirectoryClient::onServiceRemoved(unsigned int idx, const std::string &name) {
@@ -169,7 +192,7 @@ namespace qi {
     try {
       if (add != 0)
       {
-        _object->disconnect(add);
+        _object.disconnect(add);
       }
     } catch (std::runtime_error &e) {
       qiLogDebug() << "Cannot disconnect SDC::serviceAdded: " << e.what();
@@ -177,35 +200,48 @@ namespace qi {
     try {
       if (remove != 0)
       {
-        _object->disconnect(remove);
+        _object.disconnect(remove);
       }
     } catch (std::runtime_error &e) {
         qiLogDebug() << "Cannot disconnect SDC::serviceRemoved: " << e.what();
     }
   }
 
+  TransportSocketPtr ServiceDirectoryClient::socket()
+  {
+    return _sdSocket;
+  }
+
+  bool ServiceDirectoryClient::isLocal()
+  {
+    return _localSd;
+  }
+
   qi::Future< std::vector<ServiceInfo> > ServiceDirectoryClient::services() {
-    return _object->call< std::vector<ServiceInfo> >("services");
+    return _object.call< std::vector<ServiceInfo> >("services");
   }
 
   qi::Future<ServiceInfo>              ServiceDirectoryClient::service(const std::string &name) {
-    return _object->call< ServiceInfo >("service", name);
+    return _object.call< ServiceInfo >("service", name);
   }
 
   qi::Future<unsigned int>             ServiceDirectoryClient::registerService(const ServiceInfo &svcinfo) {
-    return _object->call< unsigned int >("registerService", svcinfo);
+    return _object.call< unsigned int >("registerService", svcinfo);
   }
 
   qi::Future<void>                     ServiceDirectoryClient::unregisterService(const unsigned int &idx) {
-    return _object->call<void>("unregisterService", idx);
+    return _object.call<void>("unregisterService", idx);
   }
 
   qi::Future<void>                     ServiceDirectoryClient::serviceReady(const unsigned int &idx) {
-    return _object->call<void>("serviceReady", idx);
+    return _object.call<void>("serviceReady", idx);
   }
 
   qi::Future<void>                     ServiceDirectoryClient::updateServiceInfo(const ServiceInfo &svcinfo) {
-    return _object->call<void>("updateServiceInfo", svcinfo);
+    return _object.call<void>("updateServiceInfo", svcinfo);
   }
 
+  qi::Future<std::string>              ServiceDirectoryClient::machineId() {
+    return _object.call<std::string>("machineId");
+  }
 }

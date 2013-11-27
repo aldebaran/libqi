@@ -25,11 +25,11 @@ namespace qi {
 
   SessionPrivate::SessionPrivate(qi::Session *session)
     : _self(session)
-    , _id(qi::os::generateUuid())
     , _sdClient()
     , _serverObject(&_sdClient, session)
     , _serviceHandler(&_socketsCache, &_sdClient, &_serverObject)
     , _servicesHandler(&_sdClient, &_serverObject)
+    , _sd(&_serverObject)
   {
     _self->connected.setCallType(qi::MetaCallType_Queued);
     _self->disconnected.setCallType(qi::MetaCallType_Queued);
@@ -43,12 +43,7 @@ namespace qi {
   }
 
   SessionPrivate::~SessionPrivate() {
-    _sdClient.connected.disconnect(_sdClientConnectedSignalLink);
-    _sdClient.disconnected.disconnect(_sdClientDisconnectedSignalLink);
-    _sdClient.serviceAdded.disconnect(_sdClientServiceAddedSignalLink);
-    _sdClient.serviceRemoved.disconnect(_sdClientServiceRemovedSignalLink);
-    _self->disconnected.disconnectAll();
-    _self->connected.disconnectAll();
+    sessionDestroy();
     close();
   }
 
@@ -74,6 +69,32 @@ namespace qi {
     _self->serviceUnregistered(idx, name);
   }
 
+  void SessionPrivate::addSdSocketToCache(Future<void> f, const qi::Url& url)
+  {
+    if (f.hasError())
+    {
+      qiLogDebug() << "addSdSocketToCache: connect reported failure";
+      return;
+    }
+    /* Allow reusing the SD socket for communicating with services.
+     * To do this, we must add it to our socket cache, and for this we need
+     * to know the sd machineId
+     */
+     std::string mid;
+     try
+     {
+       mid = _sdClient.machineId();
+     }
+     catch (const std::exception& e)
+     { // Provide a nice message for backward compatibility
+       qiLogVerbose() << e.what();
+       qiLogWarning() << "Failed to obtain machineId, connection to service directory will not be reused for other services.";
+       return;
+     }
+     TransportSocketPtr s = _sdClient.socket();
+     _socketsCache.insert(mid, url, s);
+  }
+
   qi::FutureSync<void> SessionPrivate::connect(const qi::Url &serviceDirectoryURL)
   {
     if (isConnected()) {
@@ -81,8 +102,29 @@ namespace qi {
       qiLogInfo() << s;
       return qi::makeFutureError<void>(s);
     }
+    //add the servicedirectory object into the service cache (avoid having
+    // two remoteObject registered on the same transportSocket)
+    _serviceHandler.addService("ServiceDirectory", _sdClient.object());
+
     _socketsCache.init();
-    return _sdClient.connect(serviceDirectoryURL);
+    qi::Future<void> f = _sdClient.connect(serviceDirectoryURL);
+    // go through hoops to get shared_ptr on this
+    f.connect(&SessionPrivate::addSdSocketToCache, boost::weak_ptr<SessionPrivate>(_self->_p), _1, serviceDirectoryURL);
+    return f;
+  }
+
+  void SessionPrivate::sessionDestroy()
+  {
+    _sdClient.connected.disconnect(_sdClientConnectedSignalLink);
+    _sdClient.disconnected.disconnect(_sdClientDisconnectedSignalLink);
+    _sdClient.serviceAdded.disconnect(_sdClientServiceAddedSignalLink);
+    _sdClient.serviceRemoved.disconnect(_sdClientServiceRemovedSignalLink);
+    if (_self)
+    {
+      _self->disconnected.disconnectAll();
+      _self->connected.disconnectAll();
+      _self = 0;
+    }
   }
 
   qi::FutureSync<void> SessionPrivate::close()
@@ -107,7 +149,7 @@ namespace qi {
   Session::~Session()
   {
     close();
-    delete _p;
+    _p->sessionDestroy();
   }
 
 
@@ -126,7 +168,10 @@ namespace qi {
   }
 
   qi::Url Session::url() const {
-    return _p->_sdClient.url();
+    if (_p->_sdClient.isLocal())
+      return endpoints()[0];
+    else
+      return _p->_sdClient.url();
   }
 
   //3 cases:
@@ -155,6 +200,32 @@ namespace qi {
   {
     qiLogInfo() << "Session listener created on " << address.str();
     return _p->_serverObject.listen(address);
+  }
+
+  qi::FutureSync<void> Session::listenStandalone(const qi::Url &address)
+  {
+    return _p->listenStandalone(address);
+  }
+
+  qi::FutureSync<void> SessionPrivate::listenStandalone(const qi::Url& address)
+  {
+    qi::Promise<void> p;
+    //will listen and connect
+    qi::Future<void> f = _sd.listenStandalone(address);
+    f.connect(&SessionPrivate::listenStandaloneCont, _self->_p, p, _1);
+    return p.future();
+  }
+
+  void SessionPrivate::listenStandaloneCont(qi::Promise<void> p, qi::Future<void> f)
+  {
+    if (f.hasError())
+      p.setError(f.error());
+    else
+    {
+      _sdClient.setServiceDirectory(static_cast<ServiceBoundObject*>(_sd._sdbo.get())->object());
+      // _sdClient will trigger its connected, which will trigger our connected
+      p.setValue(0);
+    }
   }
 
   bool Session::setIdentity(const std::string& key, const std::string& crt)

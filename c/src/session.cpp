@@ -46,6 +46,20 @@ qi_future_t* qi_session_connect(qi_session_t *session, const char *address)
   return qi_future_wrap(s->connect(address));
 }
 
+char * qi_session_url(qi_session_t* session)
+{
+  qi::Session *s = reinterpret_cast<qi::Session*>(session);
+  return qi::os::strdup(s->url().str().c_str());
+
+}
+
+int qi_session_set_identity(qi_session_t *session, char *key, char *crt)
+{
+  qi::Session *s = reinterpret_cast<qi::Session*>(session);
+  return (int)s->setIdentity(key, crt);
+}
+
+
 qi_future_t* qi_session_close(qi_session_t *session)
 {
   qi::Session *s = reinterpret_cast<qi::Session*>(session);
@@ -71,6 +85,29 @@ qi_future_t* qi_session_listen(qi_session_t *session, const char *address)
 {
   qi::Session *s = reinterpret_cast<qi::Session*>(session);
   return qi_future_wrap(s->listen(address));
+}
+
+qi_future_t* qi_session_listen_standalone(qi_session_t *session, const char *address)
+{
+  qi::Session *s = reinterpret_cast<qi::Session*>(session);
+  return qi_future_wrap(s->listenStandalone(address));
+}
+
+qi_value_t*  qi_session_endpoints(qi_session_t *session)
+{
+  qi::Session *s = reinterpret_cast<qi::Session*>(session);
+
+  std::vector<qi::Url> eps = s->endpoints();
+  std::vector<std::string> epss;
+
+  std::vector<qi::Url>::iterator it;
+  for (it = eps.begin(); it != eps.end(); ++it) {
+    epss.push_back(it->str());
+  }
+  qi_value_t *val = qi_value_create("");
+  qi::AnyValue &gvp = qi_value_cpp(val);
+  gvp = qi::AnyValue::from(epss);
+  return val;
 }
 
 qi_future_t* qi_session_register_service(qi_session_t *session, const char *name, qi_object_t *object)

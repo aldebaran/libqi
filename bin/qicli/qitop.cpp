@@ -11,8 +11,7 @@
 
 #include <qi/log.hpp>
 #include <qi/os.hpp>
-#include <qi/application.hpp>
-#include <qimessaging/session.hpp>
+#include <qimessaging/applicationsession.hpp>
 
 #include "qicli.hpp"
 
@@ -77,7 +76,7 @@ void main_loop()
     unsigned int maxLen = 4;
     // Reset all counters
     foreach(ObjectMap::value_type& ov, objectMap)
-      ov.second->call<void>("clearStats");
+      ov.second.call<void>("clearStats");
 
     qi::os::msleep(interval * 1000);
 
@@ -85,7 +84,7 @@ void main_loop()
     // Fetch stats from monitored objects and fill stats
     foreach(ObjectMap::value_type& ov, objectMap)
     {
-      qi::ObjectStatistics os = ov.second->call<qi::ObjectStatistics>("stats");
+      qi::ObjectStatistics os = ov.second.call<qi::ObjectStatistics>("stats");
       const std::string& serviceName = ov.first;
       foreach(qi::ObjectStatistics::value_type& s, os)
       {
@@ -94,7 +93,7 @@ void main_loop()
         std::string name = boost::lexical_cast<std::string>(s.first);
         if (!numeric)
         {
-          qi::MetaObject mo = ov.second->metaObject();
+          qi::MetaObject mo = ov.second.metaObject();
           qi::MetaMethod* m = mo.method(s.first);
           if (m)
             name = m->name();
@@ -150,7 +149,7 @@ void main_loop()
   }
 }
 
-int subCmd_top(int argc, char **argv, const MainOptions &options)
+int subCmd_top(int argc, char **argv, qi::ApplicationSession& app)
 {
   po::options_description     desc("Usage: qicli top [-i interval] [<ServicePattern>..]");
   std::vector<std::string>    serviceList;
@@ -170,9 +169,9 @@ int subCmd_top(int argc, char **argv, const MainOptions &options)
     return 1;
 
 
-  qi::Session s;
-  qiLogVerbose() << "Connecting to sd";
-  s.connect(options.address);
+  qiLogVerbose() << "Connecting to service directory";
+  app.start();
+  qi::Session& s = app.session();
   qiLogVerbose() << "Resolving services";
   // resolve target service names
   std::vector<std::string> allServices;
@@ -215,7 +214,7 @@ int subCmd_top(int argc, char **argv, const MainOptions &options)
   foreach(ObjectMap::value_type& ov, objectMap)
   {
     maxServiceLength = std::max(maxServiceLength, (unsigned int)ov.first.size());
-    ov.second->call<void>("enableStats", true).async();
+    ov.second.call<void>("enableStats", true).async();
   }
   boost::thread t(&main_loop);
   qi::Application::atStop(boost::bind(&boost::thread::interrupt, boost::ref(t)));
@@ -225,7 +224,7 @@ int subCmd_top(int argc, char **argv, const MainOptions &options)
   std::vector<qi::Future<void> > futures;
   foreach(ObjectMap::value_type& ov, objectMap)
   {
-    futures.push_back(ov.second->call<void>("enableStats", false));
+    futures.push_back(ov.second.call<void>("enableStats", false));
   }
   qi::waitForAll(futures);
   return 0;

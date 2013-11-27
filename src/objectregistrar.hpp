@@ -65,7 +65,7 @@ namespace qi {
 
   private:
     typedef std::map<unsigned int, BoundService>                       BoundServiceMap;
-    typedef std::map<int, std::pair<qi::AnyObject, qi::ServiceInfo> > RegisterServiceMap;
+    typedef std::map<int, std::pair<qi::AnyObject, qi::ServiceInfo> >  RegisterServiceMap;
     typedef std::map<std::string, unsigned int>                        ServiceNameToIndexMap;
 
   public:
@@ -81,13 +81,12 @@ namespace qi {
     qi::Atomic<int>                    _registerServiceRequestIndex;
     boost::mutex                        _registerServiceRequestMutex;
 
-    //no lock needed
-//    std::set<TransportSocketPtr>        _clients;
-//    boost::recursive_mutex              _clientsMutex;
-
     bool                                _dying;
     ServiceDirectoryClient             *_sdClient;
     Session                            *_session;
+    const std::string                   _id;
+
+    friend class Session_SD;
   };
 
 }

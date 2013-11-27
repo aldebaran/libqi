@@ -10,10 +10,9 @@
 
 #include <boost/program_options.hpp>
 
-#include <qi/application.hpp>
+#include <qimessaging/applicationsession.hpp>
 #include <qi/os.hpp>
 #include <qi/log.hpp>
-#include <qimessaging/session.hpp>
 #include <qitype/anyobject.hpp>
 #include <qitype/dynamicobjectbuilder.hpp>
 #include <qitype/jsoncodec.hpp>
@@ -27,7 +26,7 @@ std::string reply(const std::string &msg) {
 
 qi::AnyValue reply(const qi::AnyValue &myval) {
   static int i = 0;
-  qi::AnyReference val(myval);
+  qi::AnyReference val = qi::AnyReference::from(myval);
   qiLogInfo() << i++ << " Message received with the signature: " << myval.signature(false).toString() << " = " << qi::encodeJSON(val) << std::endl;
   return myval;
 }
@@ -104,18 +103,11 @@ int main(int argc, char *argv[])
 {
   const std::string serviceName = "serviceTest";
 
-  qi::Application app(argc, argv);
+  qi::ApplicationSession app(argc, argv);
   // declare the program options
-  po::options_description desc("Usage:\n  qi-service masterAddress [options]\nOptions");
+  po::options_description desc("Usage:\n  qi-service --qi-url masterAddress [options]\nOptions");
   desc.add_options()
-      ("help", "Print this help.")
-      ("master-address",
-       po::value<std::string>()->default_value(std::string("tcp://127.0.0.1:9559")),
-       "The master address");
-
-  // allow master address to be specified as the first arg
-  po::positional_options_description pos;
-  pos.add("master-address", 1);
+      ("help", "Print this help.");
 
   // Test hostIPAddrs
   std::map<std::string, std::vector<std::string> > ifsMap = qi::os::hostIPAddrs();
@@ -141,7 +133,7 @@ int main(int argc, char *argv[])
   try
   {
     po::store(po::command_line_parser(argc, argv).
-              options(desc).positional(pos).run(), vm);
+              options(desc).run(), vm);
     po::notify(vm);
 
     if (vm.count("help"))
@@ -150,68 +142,59 @@ int main(int argc, char *argv[])
       return 0;
     }
 
-    if (vm.count("master-address") == 1)
-    {
-      std::string masterAddress = vm["master-address"].as<std::string>();
-      qi::Session       session;
-      qi::DynamicObjectBuilder ob;
-      ob.advertiseMethod<std::string (const std::string&)>("reply", &reply);
-      ob.advertiseMethod<void ()>("error", &error);
-      ob.advertiseMethod<std::string (const int&)>("reply", &reply);
-      ob.advertiseMethod<std::string (const std::string&, const double &)>("reply", &reply);
-      ob.advertiseMethod<std::string (const std::string&, const float &)>("reply", &reply);
-      ob.advertiseMethod("replyVector", &replyVector);
-      ob.advertiseMethod("replyMap", &replyMap);
-      ob.advertiseMethod("replyMap2", &replyMap2);
-      ob.advertiseMethod<qi::AnyValue (const qi::AnyValue&)>("reply", &reply);
-      ob.advertiseSignal<const std::string&>("testEvent");
-      ob.advertiseMethod<bool (unsigned int)>("slip", &slip);
-      qi::AnyObject obj(ob.object());
+    qi::Session&             session = app.session();
+    qi::DynamicObjectBuilder ob;
+    ob.advertiseMethod<std::string (const std::string&)>("reply", &reply);
+    ob.advertiseMethod<void ()>("error", &error);
+    ob.advertiseMethod<std::string (const int&)>("reply", &reply);
+    ob.advertiseMethod<std::string (const std::string&, const double &)>("reply", &reply);
+    ob.advertiseMethod<std::string (const std::string&, const float &)>("reply", &reply);
+    ob.advertiseMethod("replyVector", &replyVector);
+    ob.advertiseMethod("replyMap", &replyMap);
+    ob.advertiseMethod("replyMap2", &replyMap2);
+    ob.advertiseMethod<qi::AnyValue (const qi::AnyValue&)>("reply", &reply);
+    ob.advertiseSignal<const std::string&>("testEvent");
+    ob.advertiseMethod<bool (unsigned int)>("slip", &slip);
+    qi::AnyObject obj(ob.object());
 
-      session.connect(masterAddress);
+    app.start();
 
-      session.listen("tcp://0.0.0.0:0");
-      session.setIdentity("tests/server.key", "tests/server.crt");
-      try {
-        session.listen("tcps://0.0.0.0:0");
-      } catch (std::runtime_error &) {
-        qiLogWarning() << "SSL desactivated.";
-      }
+    app.session().listen("tcp://0.0.0.0:0");
+    session.setIdentity("tests/server.key", "tests/server.crt");
+    try {
+      app.session().listen("tcps://0.0.0.0:0");
+    } catch (std::runtime_error &) {
+      qiLogWarning() << "SSL desactivated.";
+    }
 
-      unsigned int id = session.registerService(serviceName, obj);
+    unsigned int id = session.registerService(serviceName, obj);
 
 #if 0
-      // test unregistration
-      session.unregisterService(id);
-      id = session.registerService("serviceTest", &obj);
+    // test unregistration
+    session.unregisterService(id);
+    id = session.registerService("serviceTest", &obj);
 #endif
 
-      if (id)
-      {
-        qiLogInfo() << "Registered \"" << serviceName << "\" as service (#" << id << ") with the master";
-      }
-      else
-      {
-        qiLogError() << "Registration with master failed, aborting...";
-        exit(1);
-      }
-      int i = 0;
-      while (true) {
-        std::stringstream ss;
-        ss << "miam" << i++;
-        obj->post("testEvent", ss.str());
-        qiLogInfo() << "Posting:" << ss.str();
-        ss.str(std::string());
-        qi::os::sleep(1);
-      }
-
-      session.unregisterService(id);
-      session.close();
+    if (id)
+    {
+      qiLogInfo() << "Registered \"" << serviceName << "\" as service (#" << id << ") with the master";
     }
     else
     {
-      qiLogInfo() << desc;
+      qiLogError() << "Registration with master failed, aborting...";
+      exit(1);
     }
+    int i = 0;
+    while (true) {
+      std::stringstream ss;
+      ss << "miam" << i++;
+      obj.post("testEvent", ss.str());
+      qiLogInfo() << "Posting:" << ss.str();
+      ss.str(std::string());
+      qi::os::sleep(1);
+    }
+
+    session.unregisterService(id);
   }
   catch (const boost::program_options::error&)
   {

@@ -21,9 +21,9 @@ qiLogCategory("qimessaging.object");
 
 
 static qi::AnyReference c_call(const std::string &complete_sig,
-                                          qi_object_method_t func,
-                                              void* data,
-                                  const qi::GenericFunctionParameters& params)
+                               qi_object_method_t func,
+                               void* data,
+                               const qi::GenericFunctionParameters& params)
 {
   //TODO: move to register
   std::vector<std::string> vs = qi::signatureSplit(std::string(complete_sig));
@@ -41,11 +41,8 @@ static qi::AnyReference c_call(const std::string &complete_sig,
   if (func)
     func(complete_sig.c_str(), value, ret, data);
 
-  qi::AnyReference &gvpr = qi_value_cpp(ret);
-  qi::AnyReference re = gvpr;
-  //just reset the gvp, we dont want destroy to destroy it...
-  gvpr.type = 0;
-  gvpr.value = 0;
+  qi::AnyValue &gvpr = qi_value_cpp(ret);
+  qi::AnyReference re(gvpr.release());
   qi_value_destroy(value);
   qi_value_destroy(ret);
   return re;
@@ -100,7 +97,7 @@ qi_future_t *qi_object_call(qi_object_t *object, const char *signature_c, qi_val
   qi::AnyObject             &obj = qi_object_cpp(object);
   qi::AnyValue           gv  = qi_value_cpp(params);
 
-  qi::Future<qi::AnyReference> res = obj->metaCall(signature_c, gv.asTupleValuePtr());
+  qi::Future<qi::AnyReference> res = obj.metaCall(signature_c, gv.asTupleValuePtr());
   qi::Promise<qi::AnyValue> prom(qi::FutureCallbackType_Sync);
   res.connect(boost::bind<void>(&qiFutureCAdapter, _1, prom));
   return qi_cpp_promise_get_future(prom);
@@ -123,37 +120,35 @@ void        qi_object_builder_destroy(qi_object_builder_t *object_builder)
 qi_value_t*          qi_object_get_metaobject(qi_object_t *object)
 {
   qi::AnyObject &obj = *(reinterpret_cast<qi::AnyObject *>(object));
-  const qi::MetaObject &mo = obj->metaObject();
+  const qi::MetaObject &mo = obj.metaObject();
   qi_value_t *ret = qi_value_create("");
 
   qi_value_cpp(ret) = qi::AnyValue::from(mo);
   return ret;
 }
 
-int                 qi_object_event_emit(qi_object_t* object, const char *signature, qi_value_t* params) {
-  qi::AnyObject       &obj = qi_object_cpp(object);
-  qi::AnyReference &val = qi_value_cpp(params);
+int                 qi_object_post(qi_object_t* object, const char *signature, qi_value_t* params) {
+  qi::AnyObject &obj = qi_object_cpp(object);
+  qi::AnyValue  &val = qi_value_cpp(params);
   if (qi_value_get_kind(params) != QI_VALUE_KIND_TUPLE)
     return -1;
-  obj->metaPost(signature, val.asTupleValuePtr());
+  obj.metaPost(signature, val.asTupleValuePtr());
   return 0;
 }
 
-
-
-qi_future_t*        qi_object_event_connect(qi_object_t* object, const char *signature, qi_object_signal_callback_t f, void* user_data) {
+qi_future_t*        qi_object_signal_connect(qi_object_t* object, const char *signature, qi_object_signal_callback_t f, void* user_data) {
   qi::AnyObject &obj = qi_object_cpp(object);
   std::vector<std::string> vs = qi::signatureSplit(std::string(signature));
   qi::DynamicFunction fn = boost::bind<qi::AnyReference>(&c_signal_callback, _1, vs[2], f, user_data);
-  return qi_future_wrap(obj->connect(signature, qi::AnyFunction::fromDynamicFunction(fn)));
+  return qi_future_wrap(obj.connect(signature, qi::AnyFunction::fromDynamicFunction(fn)));
 }
 
-qi_future_t*        qi_object_event_disconnect(qi_object_t* object, unsigned long long id) {
+qi_future_t*        qi_object_signal_disconnect(qi_object_t* object, unsigned long long id) {
   qi::AnyObject &obj = qi_object_cpp(object);
-  return qi_future_wrap(obj->disconnect(id));
+  return qi_future_wrap(obj.disconnect(id));
 }
 
-unsigned int        qi_object_builder_register_method(qi_object_builder_t *object_builder, const char *complete_signature, qi_object_method_t func, void *data)
+unsigned int          qi_object_builder_advertise_method(qi_object_builder_t *object_builder, const char *complete_signature, qi_object_method_t func, void *data)
 {
   qi::DynamicObjectBuilder  *ob = reinterpret_cast<qi::DynamicObjectBuilder *>(object_builder);
   std::string signature(complete_signature);
@@ -171,14 +166,12 @@ unsigned int        qi_object_builder_register_method(qi_object_builder_t *objec
   return 0;
 }
 
-unsigned int        qi_object_builder_register_event(qi_object_builder_t *object_builder, const char *complete_signature)
+unsigned int          qi_object_builder_advertise_signal(qi_object_builder_t *object_builder, const char *name, const char *signature)
 {
-  qi::DynamicObjectBuilder  *ob = reinterpret_cast<qi::DynamicObjectBuilder *>(object_builder);
-  std::vector<std::string>  sigInfo;
-  sigInfo = qi::signatureSplit(complete_signature);
+  qi::DynamicObjectBuilder *ob = reinterpret_cast<qi::DynamicObjectBuilder *>(object_builder);
   try
   {
-    return ob->xAdvertiseSignal(sigInfo[1], sigInfo[2]);
+    return ob->xAdvertiseSignal(name, signature);
   }
   catch (const std::runtime_error &e)
   {
@@ -187,14 +180,12 @@ unsigned int        qi_object_builder_register_event(qi_object_builder_t *object
   return 0;
 }
 
-unsigned int        qi_object_builder_register_property(qi_object_builder_t *object_builder, const char *complete_signature)
+unsigned int          qi_object_builder_advertise_property(qi_object_builder_t *object_builder, const char *name, const char *signature)
 {
-  qi::DynamicObjectBuilder  *ob = reinterpret_cast<qi::DynamicObjectBuilder *>(object_builder);
-  std::vector<std::string>  sigInfo;
-  sigInfo = qi::signatureSplit(complete_signature);
+  qi::DynamicObjectBuilder *ob = reinterpret_cast<qi::DynamicObjectBuilder *>(object_builder);
   try
   {
-    return ob->xAdvertiseProperty(sigInfo[1], sigInfo[2]);
+    return ob->xAdvertiseProperty(name, signature);
   }
   catch (const std::runtime_error &e)
   {
@@ -202,6 +193,8 @@ unsigned int        qi_object_builder_register_property(qi_object_builder_t *obj
   }
   return 0;
 }
+
+
 
 qi_object_t*         qi_object_builder_get_object(qi_object_builder_t *object_builder) {
   qi::DynamicObjectBuilder *ob = reinterpret_cast<qi::DynamicObjectBuilder *>(object_builder);
@@ -211,6 +204,38 @@ qi_object_t*         qi_object_builder_get_object(qi_object_builder_t *object_bu
   o = ob->object();
   return obj;
 }
+
+qi_future_t *qi_object_get_property(qi_object_t *object, const char* prop_name)
+{
+  if (object == NULL)
+    return qi_future_wrap(qi::makeFutureError<void>("Object Invalid, should not be null"));
+  if (prop_name == NULL)
+    return qi_future_wrap(qi::makeFutureError<void>("Property name invalid, should not be null"));
+  qi::AnyObject& obj = qi_object_cpp(object);
+  int prop_id = obj.metaObject().propertyId(prop_name);
+  if (prop_id < 0)
+    return qi_future_wrap(qi::makeFutureError<int>("Property not found"));
+  return qi_future_wrap(obj.property(prop_id));
+}
+
+qi_future_t *qi_object_set_property(qi_object_t *object, const char* prop_name, qi_value_t *value)
+{
+  if (object == NULL)
+    return qi_future_wrap(qi::makeFutureError<void>("Object Invalid, should not be null"));
+  if (prop_name == NULL)
+    return qi_future_wrap(qi::makeFutureError<void>("Property name invalid, should not be null"));
+  if (value == NULL)
+    return qi_future_wrap(qi::makeFutureError<void>("Property value invalid, should not be null"));
+
+  qi::AnyObject& obj = qi_object_cpp(object);
+
+  int prop_id = obj.metaObject().propertyId(prop_name);
+  if (prop_id < 0)
+    return qi_future_wrap(qi::makeFutureError<int>("Property not found"));
+  qi::AnyValue &gv = qi_value_cpp(value);
+  return qi_future_wrap(obj.setProperty(prop_id, gv));
+}
+
 
 #ifdef __cplusplus
 }

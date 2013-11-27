@@ -7,8 +7,8 @@
 #ifndef _SRC_TRANSPORTSOCKET_HPP_
 #define _SRC_TRANSPORTSOCKET_HPP_
 
+# include <boost/noncopyable.hpp>
 # include <qi/future.hpp>
-# include <qimessaging/api.hpp>
 # include "message.hpp"
 # include <qimessaging/url.hpp>
 # include <qi/eventloop.hpp>
@@ -19,10 +19,8 @@
 namespace qi
 {
   class Session;
-  class TransportSocket
+  class TransportSocket : private boost::noncopyable
   {
-    QI_DISALLOW_COPY_AND_ASSIGN(TransportSocket);
-
   public:
     virtual ~TransportSocket();
     enum Status {

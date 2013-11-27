@@ -7,8 +7,12 @@
 #ifndef _PYTHON_SRC_PYSESSION_HPP_
 #define _PYTHON_SRC_PYSESSION_HPP_
 
+#include <boost/python.hpp>
+#include <qimessaging/session.hpp>
+
 namespace qi {
   namespace py {
+    boost::python::object makePySession(boost::shared_ptr<qi::Session> ses);
     void export_pysession();
   }
 }
