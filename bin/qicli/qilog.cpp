@@ -134,3 +134,89 @@ int subCmd_logView(int argc, char **argv, qi::ApplicationSession& app)
 
   return 0;
 }
+
+int subCmd_logSend(int argc, char **argv, qi::ApplicationSession& app)
+{
+  po::options_description   desc("Usage: qicli log-send <message>");
+
+  desc.add_options()
+      ("help,h", "Print this help message and exit")
+      ("verbose,v", "Set message verbosity send to verbose.")
+      ("debug,d", "Set message verbosity send to debug.")
+      ("level,l", po::value<int>()->default_value(4), "Change the log minimum level: [0-6] (default:4). This option accept the same arguments' format than --qi-log-level.")
+      ("category,c", po::value<std::string>(), "Message's category (default: \"qicli.qilog.logsend\").")
+      ("message,m", po::value<std::string>(), "Message to send.")
+      ;
+
+  po::positional_options_description positionalOptions;
+  positionalOptions.add("message", -1);
+
+  po::variables_map vm;
+  if (!poDefault(po::command_line_parser(argc, argv)
+                 .options(desc).positional(positionalOptions), vm, desc))
+    return 1;
+
+  qiLogVerbose() << "Connecting to service directory";
+  app.start();
+  qi::Session& s = app.session();
+
+  qiLogVerbose() << "Resolving services";
+
+  qi::AnyObject logger = s.service("LogManager");
+
+  qi::os::timeval tv;
+  qi::os::gettimeofday(&tv);
+
+  std::string source(__FILE__);
+  source += ':';
+  source += __FUNCTION__;
+  source += ':';
+  source += boost::lexical_cast<std::string>(__LINE__);
+
+  int level = 4;
+  if (vm.count("verbose"))
+    level = 5;
+
+  if (vm.count("debug"))
+    level = 6;
+
+  if (vm.count("level"))
+  {
+    level = vm["level"].as<int>();
+
+    if (level > 6)
+      level =  6;
+    else if (level <= 0)
+      level = 0;
+  }
+
+  std::string category = "qicli.qilog.logsend";
+  if (vm.count("category"))
+    category = vm["category"].as<std::string>();
+
+  std::string location = qi::os::getMachineId() + ":" + boost::lexical_cast<std::string>(qi::os::getpid());;
+  std::string message = "";
+  if (vm.count("message"))
+    message = vm["message"].as<std::string>();
+
+  // timestamp
+  qi::AnyReferenceVector timeVectRef;
+  timeVectRef.push_back(qi::AnyReference::from(tv.tv_sec));
+  timeVectRef.push_back(qi::AnyReference::from(tv.tv_usec));
+  qi::AnyValue timeVal = qi::AnyValue::makeTuple(timeVectRef);
+
+  qi::AnyReferenceVector msgVectRef;
+  msgVectRef.push_back(qi::AnyReference::from(source));
+  msgVectRef.push_back(qi::AnyReference::from(level));
+  msgVectRef.push_back(timeVal.asReference()); //timestamp
+  msgVectRef.push_back(qi::AnyReference::from(category));
+  msgVectRef.push_back(qi::AnyReference::from(location));
+  msgVectRef.push_back(qi::AnyReference::from(message));
+
+  qi::AnyValue msg = qi::AnyValue::makeTuple(msgVectRef);
+
+  logger.call<void>("log", msg);
+  logger.reset();
+
+  return 0;
+}

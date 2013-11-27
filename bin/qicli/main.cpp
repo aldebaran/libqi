@@ -17,6 +17,7 @@ void init()
   subCmdMap["trace"] = &subCmd_trace;
   subCmdMap["top"] = &subCmd_top;
   subCmdMap["log-view"] = &subCmd_logView;
+  subCmdMap["log-send"] = &subCmd_logSend;
 }
 
 int                 main(int argc, char **argv)
