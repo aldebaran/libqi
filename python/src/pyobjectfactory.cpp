@@ -7,10 +7,10 @@
 
 #include <qitype/anyobject.hpp>
 #include <qitype/objectfactory.hpp>
+#include <qimessaging/python-gil.hpp>
 #include "pyobjectfactory.hpp"
 #include "pyobject.hpp"
 #include "error.hpp"
-#include "gil.hpp"
 
 qiLogCategory("qipy.factory");
 

@@ -25,7 +25,6 @@ add_library(_qi SHARED src/boostpymain.cpp
                    src/pyasync.hpp
                    src/pyobjectfactory.hpp
                    src/pyobjectfactory.cpp
-                   src/gil.hpp
                    src/error.hpp
 )
 

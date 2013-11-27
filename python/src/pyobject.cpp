@@ -8,12 +8,12 @@
 #include "pyfuture.hpp"
 #include "pysignal.hpp"
 #include "pyproperty.hpp"
-#include "gil.hpp"
 #include "error.hpp"
 #include "pythreadsafeobject.hpp"
 #include <qitype/dynamicobjectbuilder.hpp>
 #include <qitype/objecttypebuilder.hpp> //for TYPE_TEMPLATE(Future)
 #include <qitype/jsoncodec.hpp>
+#include <qimessaging/python-gil.hpp>
 
 
 qiLogCategory("qipy.object");

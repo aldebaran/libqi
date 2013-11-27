@@ -7,7 +7,7 @@
 #include <boost/python/raw_function.hpp>
 #include <qitype/signal.hpp>
 #include <qitype/anyobject.hpp>
-#include "gil.hpp"
+#include <qimessaging/python-gil.hpp>
 #include "error.hpp"
 #include "pyfuture.hpp"
 #include "pyobject.hpp"

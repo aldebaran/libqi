@@ -10,6 +10,7 @@
 #include <qitype/typeinterface.hpp>
 #include <qitype/metaobject.hpp>
 #include <qitype/metamethod.hpp>
+#include <qimessaging/python-gil.hpp>
 #include <boost/python.hpp>
 #include "pyobject.hpp"
 #include "pysignal.hpp"
@@ -17,7 +18,6 @@
 
 #include  <boost/python.hpp>
 #include <boost/python/raw_function.hpp>
-#include "gil.hpp"
 
 qiLogCategory("qipy.convert");
 

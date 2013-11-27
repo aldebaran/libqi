@@ -5,8 +5,8 @@
 #include "pysession.hpp"
 #include <boost/python/stl_iterator.hpp>
 #include <qitype/dynamicobjectbuilder.hpp>
+#include <qimessaging/python-gil.hpp>
 #include "pyfuture.hpp"
-#include "gil.hpp"
 #include "pysignal.hpp"
 #include "pyobject.hpp"
 

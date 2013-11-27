@@ -6,8 +6,8 @@
 #include <qi/os.hpp>
 #include <qi/log.hpp>
 #include <qimessaging/applicationsession.hpp>
+#include <qimessaging/python-gil.hpp>
 #include <boost/python.hpp>
-#include "gil.hpp"
 #include <boost/thread.hpp>
 #include <qi/atomic.hpp>
 #include "pysession.hpp"

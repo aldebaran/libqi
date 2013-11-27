@@ -10,7 +10,7 @@
 #include <boost/python.hpp>
 #include <qi/future.hpp>
 #include <qitype/anyvalue.hpp>
-#include "gil.hpp"
+#include <qimessaging/python-gil.hpp>
 #include <boost/smart_ptr/enable_shared_from_this.hpp>
 
 namespace qi {

@@ -4,8 +4,8 @@
 */
 #include "pyfuture.hpp"
 #include <qi/future.hpp>
+#include <qimessaging/python-gil.hpp>
 #include <boost/python.hpp>
-#include "gil.hpp"
 #include "error.hpp"
 #include "pythreadsafeobject.hpp"
 
