@@ -195,7 +195,7 @@ def test_type():
 
 def main():
     test_throwing_callback()
-    #test_unicode_strings()
+    test_unicode_strings()
     test_builtin_types()
     test_object_types()
     test_qi_object_instance()

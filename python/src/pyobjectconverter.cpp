@@ -332,19 +332,59 @@ class PyObjectStringTypeInterface: public PyObjectTypeInterface<qi::StringTypeIn
 {
 public:
   /// The returned buffer must not be modified
-  virtual std::pair<char*, size_t> get(void* storage);
+  virtual ManagedRawString get(void* storage);
   virtual void set(void** storage, const char* ptr, size_t sz);
   PYTYPE_GETTYPE(PyObjectStringTypeInterface)
 };
 
-std::pair<char*, size_t> PyObjectStringTypeInterface::get(void* storage)
+PyObjectStringTypeInterface::ManagedRawString
+  PyObjectStringTypeInterface::get(void* storage)
 {
   qi::py::GILScopedLock _lock;
   PyObject* p = (PyObject*)PyObjectTypeInterface::ptrFromStorage(&storage);
-  return std::pair<char*, size_t>(PyString_AsString(p), PyString_Size(p));
+  return ManagedRawString(RawString(PyString_AsString(p), PyString_Size(p)),
+      Deleter());
 }
 
 void PyObjectStringTypeInterface::set(void** storage, const char* ptr, size_t sz)
+{
+  throw std::runtime_error("cannot update python string");
+}
+
+/////////////////////////////////////////////////////////////////////////
+// Unicode
+/////////////////////////////////////////////////////////////////////////
+
+class PyObjectUnicodeStringTypeInterface: public PyObjectTypeInterface<qi::StringTypeInterface>
+{
+public:
+  /// The returned buffer must not be modified
+  virtual ManagedRawString get(void* storage);
+  virtual void set(void** storage, const char* ptr, size_t sz);
+  PYTYPE_GETTYPE(PyObjectUnicodeStringTypeInterface)
+};
+
+namespace
+{
+  void PyObjectDeleter(PyObject* obj)
+  {
+    Py_DECREF(obj);
+  }
+}
+
+PyObjectUnicodeStringTypeInterface::ManagedRawString
+  PyObjectUnicodeStringTypeInterface::get(void* storage)
+{
+  qi::py::GILScopedLock _lock;
+  PyObject* p = (PyObject*)PyObjectTypeInterface::ptrFromStorage(&storage);
+  PyObject* p2 = PyUnicode_AsUTF8String(p);
+  return ManagedRawString(
+      RawString(reinterpret_cast<char*>(PyString_AsString(p2)),
+        PyString_Size(p2)),
+      boost::bind(PyObjectDeleter, p2));
+}
+
+void PyObjectUnicodeStringTypeInterface::set(void** storage, const char* ptr, size_t sz)
 {
   throw std::runtime_error("cannot update python string");
 }
@@ -356,16 +396,18 @@ void PyObjectStringTypeInterface::set(void** storage, const char* ptr, size_t sz
 class PyObjectByteArrayTypeInterface: public PyObjectTypeInterface<qi::StringTypeInterface>
 {
 public:
-  virtual std::pair<char*, size_t> get(void* storage);
+  virtual ManagedRawString get(void* storage);
   virtual void set(void** storage, const char* ptr, size_t sz);
   PYTYPE_GETTYPE(PyObjectByteArrayTypeInterface)
 };
 
-std::pair<char*, size_t> PyObjectByteArrayTypeInterface::get(void* storage)
+PyObjectUnicodeStringTypeInterface::ManagedRawString
+  PyObjectByteArrayTypeInterface::get(void* storage)
 {
   qi::py::GILScopedLock _lock;
   PyObject* p = (PyObject*)PyObjectTypeInterface::ptrFromStorage(&storage);
-  return std::pair<char*, size_t>(PyByteArray_AsString(p), PyByteArray_Size(p));
+  return ManagedRawString(
+      RawString(PyByteArray_AsString(p), PyByteArray_Size(p)), Deleter());
 }
 
 void PyObjectByteArrayTypeInterface::set(void** storage, const char* ptr, size_t sz)
@@ -926,7 +968,7 @@ qi::AnyReference AnyReference_from_PyObject(PyObject* obj)
   }
   else if (PyUnicode_CheckExact(obj))
   {
-    throw std::runtime_error("Type not implemented");
+    return qi::AnyReference(PyObjectUnicodeStringTypeInterface::getType(), obj);
   }
   else if (obj == Py_Ellipsis)
   {
