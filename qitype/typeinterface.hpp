@@ -11,6 +11,7 @@
 #include <string>
 
 #include <boost/preprocessor.hpp>
+#include <boost/function.hpp>
 #include <boost/type_traits/is_function.hpp>
 #include <boost/mpl/if.hpp>
 
@@ -36,30 +37,29 @@
 
 namespace qi{
 
-
-    /// Declare that a type has no accessible default constructor.
-    /// \warning Be careful to put the declaration outside any namespaces.
+  /// Declare that a type has no accessible default constructor.
+  /// \warning Be careful to put the declaration outside any namespaces.
   #define QI_TYPE_NOT_CONSTRUCTIBLE(T) \
     namespace qi { namespace detail {  \
     template<> struct TypeManager<T>: public TypeManagerNonDefaultConstructible<T> {};}}
 
-    /// Declare that a type has no metatype and cannot be used in a Value
-    /// \warning Be careful to put the declaration outside any namespaces.
+  /// Declare that a type has no metatype and cannot be used in a Value
+  /// \warning Be careful to put the declaration outside any namespaces.
   #define QI_NO_TYPE(T) namespace qi {template<> class TypeImpl<T>: public detail::ForbiddenInTypeSystem {};}
 
-    /// Declare that a type has no accessible copy constructor
-    /// \warning Be careful to put the declaration outside any namespaces.
+  /// Declare that a type has no accessible copy constructor
+  /// \warning Be careful to put the declaration outside any namespaces.
   #define QI_TYPE_NOT_CLONABLE(T)     \
     namespace qi { namespace detail { \
     template<> struct TypeManager<T>: public TypeManagerNull<T> {};}}
 
-    /// Register TypeImpl<t> in runtime type factory for 't'. Must be called from a .cpp file
-    /// \warning Be careful to put the declaration outside any namespaces.
+  /// Register TypeImpl<t> in runtime type factory for 't'. Must be called from a .cpp file
+  /// \warning Be careful to put the declaration outside any namespaces.
   #define QI_TYPE_REGISTER(t) \
     QI_TYPE_REGISTER_CUSTOM(t, qi::TypeImpl<t>)
 
-    /// Register 'typeimpl' in runtime type factory for 'type'.
-    /// \warning Be careful to put the declaration outside any namespaces.
+  /// Register 'typeimpl' in runtime type factory for 'type'.
+  /// \warning Be careful to put the declaration outside any namespaces.
   #define QI_TYPE_REGISTER_CUSTOM(type, typeimpl) \
     static bool BOOST_PP_CAT(__qi_registration, __LINE__) = qi::registerType(typeid(type), new typeimpl)
 
@@ -94,14 +94,18 @@ namespace qi{
     virtual TypeKind kind() { return TypeKind_Float;}
   };
 
-  class Buffer;
   class QITYPE_API StringTypeInterface: public TypeInterface
   {
   public:
+    typedef std::pair<char*, size_t> RawString;
+    typedef boost::function<void(const RawString&)> Deleter;
+    typedef std::pair<RawString, Deleter> ManagedRawString;
+
     /// Get a copy of the string value
     std::string getString(void* storage);
-    /// Get the internal string representation. This is not a copy!
-    virtual std::pair<char*, size_t> get(void* storage) = 0;
+    /// Get the internal string representation as UTF-8. It may or may not be a
+    /// copy.
+    virtual ManagedRawString get(void* storage) = 0;
     /// Set the value of the string
     void set(void** storage, const std::string& value);
     /// Set the value of the string

@@ -172,9 +172,11 @@ namespace qi
         return std::make_pair(*this, false);
       result._type = targetType;
       result._value = targetType->initializeStorage();
-      std::pair<char*, size_t> v = static_cast<StringTypeInterface*>(_type)->get(_value);
-      static_cast<StringTypeInterface*>(targetType)->set(&result._value,
-                                                v.first, v.second);
+      StringTypeInterface::ManagedRawString v =
+        static_cast<StringTypeInterface*>(_type)->get(_value);
+      targetType->set(&result._value, v.first.first, v.first.second);
+      if (v.second)
+        v.second(v.first);
       return std::make_pair(result, true);
     }
     case TypeKind_Raw:
@@ -206,10 +208,12 @@ namespace qi
     }
     case TypeKind_String:
     {
-      std::pair<char*, size_t> data = static_cast<StringTypeInterface*>(_type)->get(_value);
+      StringTypeInterface::ManagedRawString data = static_cast<StringTypeInterface*>(_type)->get(_value);
       result._type = targetType;
       result._value = targetType->initializeStorage();
-      static_cast<RawTypeInterface*>(result._type)->set(&result._value, data.first, data.second);
+      static_cast<RawTypeInterface*>(result._type)->set(&result._value, data.first.first, data.first.second);
+      if (data.second)
+        data.second(data.first);
       return std::make_pair(result, true);
     }
     default:
@@ -668,12 +672,18 @@ namespace qi
       return GET(a, Float) < GET(b, Float);
     case TypeKind_String:
     {
-      std::pair<char*, size_t> ca, cb;
+      StringTypeInterface::ManagedRawString ca, cb;
       ca = GET(a, String);
       cb = GET(b, String);
-      bool res = ca.second == cb.second?
-                   (memcmp(ca.first, cb.first, ca.second) < 0) : (ca.second < cb.second);
-      qiLogDebug() << "Compare " << ca.first << ' ' << cb.first << ' ' << res;
+      bool res = ca.first.second == cb.first.second ?
+        (memcmp(ca.first.first, cb.first.first, ca.first.second) < 0) :
+        (ca.first.second < cb.first.second);
+      if (ca.second)
+        ca.second(ca.first);
+      if (cb.second)
+        cb.second(cb.first);
+      qiLogDebug() << "Compare " << ca.first.first << ' ' <<
+        cb.first.first << ' ' << res;
       return res;
     }
     case TypeKind_List:

@@ -13,8 +13,11 @@ namespace qi
 {
   inline std::string StringTypeInterface::getString(void* storage)
   {
-    std::pair<char*, size_t> res = get(storage);
-    return std::string(res.first, res.second);
+    ManagedRawString raw = get(storage);
+    std::string res(raw.first.first, raw.first.second);
+    if (raw.second)
+      raw.second(raw.first);
+    return res;
   }
 
   inline void StringTypeInterface::set(void** storage, const std::string& val)
@@ -26,12 +29,13 @@ namespace qi
   {
   public:
     typedef DefaultTypeImplMethods<std::string,
-    TypeByPointer<std::string>
-    > Methods;
-    virtual std::pair<char*, size_t> get(void* storage)
+            TypeByPointer<std::string>
+              > Methods;
+    virtual ManagedRawString get(void* storage)
     {
       std::string* ptr = (std::string*)Methods::ptrFromStorage(&storage);
-      return std::make_pair((char*)ptr->c_str(), ptr->size());
+      return ManagedRawString(RawString((char*)ptr->c_str(), ptr->size()),
+          Deleter());
     }
     virtual void set(void** storage, const char* value, size_t sz)
     {
@@ -49,9 +53,10 @@ namespace qi
   class QITYPE_API TypeCStringImpl: public StringTypeInterface
   {
   public:
-    virtual std::pair<char*, size_t> get(void* storage)
+    virtual ManagedRawString get(void* storage)
     {
-      return std::make_pair((char*)storage, strlen((char*)storage));
+      return ManagedRawString(RawString((char*)storage, strlen((char*)storage)),
+          Deleter());
     }
     virtual void set(void** storage, const char* ptr, size_t sz)
     {
@@ -87,9 +92,10 @@ namespace qi
     {
       delete[]  (char*)ptr;
     }
-    virtual std::pair<char*, size_t> get(void* storage)
+    virtual ManagedRawString get(void* storage)
     {
-      return std::make_pair((char*)storage, I-1);
+      return ManagedRawString(RawString((char*)storage, I-1),
+          Deleter());
     }
     virtual void set(void** storage, const char* ptr, size_t sz)
     {
@@ -120,12 +126,13 @@ namespace qi
       T* inst = (T*)ptrFromStorage(storage);
       *inst = T(std::string(ptr, sz));
     }
-    virtual std::pair<char*, size_t> get(void* storage)
+    virtual ManagedRawString get(void* storage)
     {
       T* ptr = (T*)Impl::ptrFromStorage(&storage);
       void* str = detail::fieldStorage(ptr, _getter);
       const std::string& s = detail::fieldValue(ptr, _getter, &str);
-      return std::make_pair((char*)s.c_str(), s.size());
+      return ManagedRawString(RawString((char*)s.c_str(), s.size()),
+          Deleter());
     }
     _QI_BOUNCE_TYPE_METHODS(Impl);
     F _getter;
