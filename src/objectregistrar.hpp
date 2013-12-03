@@ -38,6 +38,8 @@ namespace qi {
     ObjectRegistrar(ServiceDirectoryClient *sdClient, Session *session);
     virtual ~ObjectRegistrar();
 
+    void close();
+
     //register/unregister services
     qi::Future<unsigned int>     registerService(const std::string &name, qi::AnyObject obj);
     qi::Future<void>             unregisterService(unsigned int idx);
@@ -48,14 +50,11 @@ namespace qi {
     qi::ServiceInfo               registeredService(const std::string &service);
     qi::AnyObject                 registeredServiceObject(const std::string &service);
 
-    using Server::close;
     using Server::listen;
     using Server::setIdentity;
     using Server::endpoints;
 
   private:
-    //throw on error
-    qi::AnyObject  object(unsigned int serviceId);
     //0 on error
     unsigned int   objectId(const std::string &name);
 

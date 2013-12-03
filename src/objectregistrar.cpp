@@ -34,6 +34,20 @@ namespace qi {
     qi::Trackable<Server>::destroy();
   }
 
+  void ObjectRegistrar::close()
+  {
+    BoundServiceMap services;
+    {
+      boost::mutex::scoped_lock sl(_servicesMutex);
+      services = _services;
+    }
+    for (BoundServiceMap::iterator iter = services.begin();
+        iter != services.end();
+        ++iter)
+      unregisterService(iter->first);
+    Server::close();
+  }
+
   void serviceReady(qi::Future<void> fut, qi::Promise<unsigned int> result, unsigned int idx) {
     if (fut.hasError()) {
       result.setError(fut.error());
