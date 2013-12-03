@@ -89,6 +89,33 @@ TEST(QiSession, simpleConnectionToSd)
   EXPECT_TRUE(p.client()->isConnected());
 }
 
+TEST(QiSession, multipleConnectionToNonReachableSd)
+{
+  qi::Session session;
+  qi::Future<void> f = session.connect("tcp://127.0.0.1:1234");
+  f.wait();
+  EXPECT_TRUE(f.hasError());
+  f = session.connect("tcp://127.0.0.1:1234");
+  f.wait();
+  EXPECT_TRUE(f.hasError());
+  f = session.connect("tcp://127.0.0.1:1234");
+  f.wait();
+  EXPECT_TRUE(f.hasError());
+}
+
+TEST(QiSession, connectOnSecondAttempt)
+{
+  qi::Session session;
+  qi::Future<void> f = session.connect("tcp://127.0.0.1:1234");
+  f.wait();
+  EXPECT_TRUE(f.hasError());
+  qi::Session s2;
+  s2.listenStandalone("tcp://127.0.0.1:0");
+  f = session.connect(s2.url());
+  f.wait();
+  EXPECT_FALSE(f.hasError());
+}
+
 TEST(QiSession, simpleConnectionToNonReachableSd)
 {
   qi::Session session;
