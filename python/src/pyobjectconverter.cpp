@@ -972,30 +972,35 @@ qi::AnyReference AnyReference_from_PyObject(PyObject* obj)
   }
   else if (obj == Py_Ellipsis)
   {
-    throw std::runtime_error("Type not implemented");
+    throw std::runtime_error("Type Py_Ellipsis not implemented");
   }
   else if (PyComplex_CheckExact(obj))
   {
-    throw std::runtime_error("Type not implemented");
+    throw std::runtime_error("Type PyComplex not implemented");
   }
   else if (PyBuffer_Check(obj))
   {
-    throw std::runtime_error("Type not implemented");
+    throw std::runtime_error("Type PyBuffer not implemented");
   }
   else if (PyMemoryView_Check(obj))
   {
-    throw std::runtime_error("Type not implemented");
+    throw std::runtime_error("Type PyMemoryView not implemented");
   }
   else if (PyFile_Check(obj))
   {
-    throw std::runtime_error("Type not implemented");
+    throw std::runtime_error("Type PyFile not implemented");
   }
   else if (PySlice_Check(obj))
   {
-    throw std::runtime_error("Type not implemented");
+    throw std::runtime_error("Type PySlice not implemented");
   }
-  else if (PyModule_CheckExact(obj) || PyClass_Check(obj)) {
-    throw std::runtime_error("Unable to convert Python Module or Class to Anyobjue");
+  else if (PyModule_CheckExact(obj))
+  {
+    throw std::runtime_error("Type PyModule not implemented");
+  }
+  else if (PyClass_Check(obj))
+  {
+    throw std::runtime_error("Type PyClass not implemented");
   }
   else // if (PyInstance_Check(obj)) // instance are old style python class
   {
