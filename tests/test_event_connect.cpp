@@ -10,18 +10,19 @@
 #include <qitype/dynamicobjectbuilder.hpp>
 #include <qi/application.hpp>
 
-static int lastPayload = 0;
-static int lastPayload2 = 0;
-static int completed = 0;
+static qi::Atomic<int> lastPayload;
+static qi::Atomic<int> lastPayload2;
+static qi::Atomic<int> completed;
+
 
 void onFire(const int& pl, qi::Promise<void> p)
 {
-  lastPayload = pl;
+  ++lastPayload;
   p.setValue(0);
 }
 void onFire2(const int& pl, qi::Promise<void> p)
 {
-  lastPayload2 = pl;
+  ++lastPayload2;
   p.setValue(0);
 }
 
@@ -42,11 +43,13 @@ void testDelete(bool afirst, bool disconnectFirst)
   //EXPECT_EQ(static_cast<unsigned int>(2), subs.size());
   // Subs ordering is unspecified
   //EXPECT_EQ(subs[0].method + subs[1].method, onFireId + onFireId2);
+  lastPayload = 11;
+  lastPayload2 = 11;
   (*a).post("fire", 12);
   EXPECT_TRUE(p0.future().hasValue(1000));
   EXPECT_TRUE(p1.future().hasValue(1000));
-  EXPECT_EQ(12, lastPayload);
-  EXPECT_EQ(12, lastPayload2);
+  EXPECT_EQ(12, *lastPayload);
+  EXPECT_EQ(12, *lastPayload2);
   p0.reset();
   p1.reset();
   if (disconnectFirst)
@@ -54,8 +57,8 @@ void testDelete(bool afirst, bool disconnectFirst)
     (*a).disconnect(linkId);
     (*a).post("fire", 13);
     EXPECT_TRUE(p1.future().hasValue(1000));
-    EXPECT_EQ(12, lastPayload);
-    EXPECT_EQ(13, lastPayload2);
+    EXPECT_EQ(12, *lastPayload);
+    EXPECT_EQ(13, *lastPayload2);
     p0.reset();
     p1.reset();
   }
@@ -71,15 +74,18 @@ void testDelete(bool afirst, bool disconnectFirst)
     delete a;
   }
   ++completed;
+  int next = *completed;
+  if (next == 4)
+    return;
+  qi::getDefaultObjectEventLoop()->post(
+    boost::bind(&testDelete, !!((int)next/2), !!((int)next%2)));
 }
 
 TEST(TestObject, Destruction)
 {
-  // Run test from object thread as they are synchronous
-  for (int i=0; i<4; ++i)
-    qi::getDefaultObjectEventLoop()->post(
-      boost::bind(&testDelete, !!((int)i/2), !!((int)i%2)));
-  while (completed < 4)
+  qi::getDefaultObjectEventLoop()->post(
+    boost::bind(&testDelete, false, false));
+  while (*completed < 4)
     qi::os::msleep(100);
   /*
   testDelete(false, false);
