@@ -70,7 +70,7 @@ namespace qi {
     const qi::int64_t&      userUsTime()      const { return _userUsTime;}
     const qi::int64_t&      systemUsTime()    const { return _systemUsTime;}
     const unsigned int&     callerContext()   const { return _callerContext;}
-    const unsigned int&     calleeContext()   const { return _callerContext;}
+    const unsigned int&     calleeContext()   const { return _calleeContext;}
 
   private:
     unsigned int     _id; // trace id, used to match call and call result
