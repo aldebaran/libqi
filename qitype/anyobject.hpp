@@ -235,7 +235,8 @@ namespace qi {
     AnyObject manageable,
     unsigned int methodId,
     AnyFunction func, const GenericFunctionParameters& params, bool noCloneFirst=false,
-    unsigned int callerId = 0);
+    unsigned int callerId = 0,
+    qi::os::timeval postTimestamp = qi::os::timeval());
 
   namespace detail
   {
