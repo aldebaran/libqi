@@ -75,6 +75,7 @@ namespace qi {
     if (f.hasError())
     {
       qiLogDebug() << "addSdSocketToCache: connect reported failure";
+      _serviceHandler.removeService("ServiceDirectory");
       return;
     }
     /* Allow reusing the SD socket for communicating with services.
