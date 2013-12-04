@@ -81,6 +81,7 @@ set(PUBLIC_HEADERS
                    qitype/proxysignal.hpp
                    qitype/signal.hpp
                    qitype/signature.hpp
+                   qitype/traceanalyzer.hpp
                    qitype/typeinterface.hpp
                    qitype/typeobject.hpp
                    qitype/typedispatcher.hpp)
@@ -123,6 +124,7 @@ set(SOURCES ${PUBLIC_HEADERS}
             src/inttypeinterface.cpp
             src/structtypeinterface.cpp
             src/signature.cpp
+            src/traceanalyzer.cpp
             )
 
 list(APPEND SOURCES ${_confighpp})
