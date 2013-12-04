@@ -337,6 +337,30 @@ namespace qi
   }
   namespace {
 
+    static bool traceValidateSignature(const Signature& s)
+    {
+      // Refuse to trace unknown (not serializable), object (too expensive), raw (possibly big)
+      if (s.type() == Signature::Type_Unknown
+          || s.type() == Signature::Type_Object
+          || s.type() == Signature::Type_Raw
+          || s.type() == Signature::Type_Pointer)
+        return false;
+      const SignatureVector& c = s.children();
+      //return std::all_of(c.begin(), c.end(), traceValidateSignature);
+      for (unsigned i=0; i<c.size(); ++i)
+        if (!traceValidateSignature(c[i]))
+          return false;
+      return true;
+    }
+
+    // validate v for transmission to a trace signal
+    static const AnyValue& traceValidateValue(const AnyValue& v)
+    {
+      static AnyValue fallback = AnyValue(AnyReference::from("**UNSERIALIZABLE**"));
+      Signature s = v.signature(true);
+      return traceValidateSignature(s)? v:fallback;
+    }
+
     inline void call(qi::Promise<AnyReference>& out,
                       AnyObject context,
                       bool lock,
@@ -380,7 +404,7 @@ namespace qi
           }
         }
         context.asGenericObject()->traceObject(EventTrace(
-          tid, EventTrace::Event_Call, methodId, AnyValue::from(args), tv,
+          tid, EventTrace::Event_Call, methodId, traceValidateValue(AnyValue::from(args)), tv,
           0,0, callerContext, qi::os::gettid()));
       }
 
@@ -440,7 +464,7 @@ namespace qi
           val = AnyValue::from(out.future().error());
         context.asGenericObject()->traceObject(EventTrace(tid,
           success?EventTrace::Event_Result:EventTrace::Event_Error,
-          methodId, val, tv, cpuendtime.first, cpuendtime.second, callerContext, qi::os::gettid()));
+          methodId, traceValidateValue(val), tv, cpuendtime.first, cpuendtime.second, callerContext, qi::os::gettid()));
       }
     }
   }
