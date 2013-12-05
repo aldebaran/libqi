@@ -23,6 +23,7 @@ class QiMessagingHandler(tornadio2.conn.SocketConnection):
         self.info = info
         self.objs = dict()
         self.sid = sid
+        self.subs = dict()
         sid = sid + 1
         self.qim = qi.Session()
         self.qim.connect(URL)
@@ -46,10 +47,10 @@ class QiMessagingHandler(tornadio2.conn.SocketConnection):
         except (AttributeError, ValueError) as exc:
             self.reply(idm, "error", str(exc))
 
-    def do_callback(self, service, signal):
+    def do_callback(self, service, signal, idm):
         def cbk(*args):
             self.reply(None, "signal",
-                       { "obj": service, "signal": signal, "data": args })
+                       { "obj": service, "signal": signal, "data": args, "link": self.subs[idm] })
         return cbk
 
     def do_reply(self, idm):
@@ -57,6 +58,8 @@ class QiMessagingHandler(tornadio2.conn.SocketConnection):
             if fut.hasError():
                 self.reply(idm, "error", fut.error())
             else:
+                if idm >= 0:
+                    self.subs[idm] = fut.value()
                 self.reply(idm, "reply", fut.value())
         return rep
 
@@ -70,8 +73,9 @@ class QiMessagingHandler(tornadio2.conn.SocketConnection):
                 fut = self.qim.service(str(args[0]), _async = True)
             elif method == "registerEvent":
                 obj = self.objs[service]
+                self.subs[idm] = -1
                 evt = getattr(obj, args[0])
-                fut = evt.connect(self.do_callback(service, args[0]), _async = True)
+                fut = evt.connect(self.do_callback(service, args[0], idm), _async = True)
             elif method == "unregisterEvent":
                 obj = self.objs[service]
                 evt = getattr(obj, args[0])
