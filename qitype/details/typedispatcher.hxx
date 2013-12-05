@@ -39,8 +39,10 @@ namespace qi {
       case TypeKind_String:
       {
         StringTypeInterface* tstring = static_cast<StringTypeInterface*>(value.type());
-        std::pair<char*, size_t> content = tstring->get(value.rawValue());
-        v.visitString(content.first, content.second);
+        StringTypeInterface::ManagedRawString content = tstring->get(value.rawValue());
+        v.visitString(content.first.first, content.first.second);
+        if (content.second)
+          content.second(content.first);
         break;
       }
       case TypeKind_List:
