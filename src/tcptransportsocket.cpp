@@ -144,6 +144,14 @@ namespace qi
 #endif
   }
 
+  qi::Url TcpTransportSocket::remoteEndpoint() const
+  {
+    return qi::Url(
+      _socket->lowest_layer().remote_endpoint().address().to_string(),
+      "tcp",
+      _socket->lowest_layer().remote_endpoint().port());
+  }
+
   void TcpTransportSocket::onReadHeader(const boost::system::error_code& erc,
     std::size_t len, SocketPtr)
   {

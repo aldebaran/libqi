@@ -36,6 +36,7 @@ namespace qi
     virtual qi::FutureSync<void> disconnect();
     virtual bool send(const qi::Message &msg);
     virtual void startReading();
+    virtual qi::Url remoteEndpoint() const;
 
   private:
 #ifdef WITH_SSL

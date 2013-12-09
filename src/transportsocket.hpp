@@ -43,6 +43,8 @@ namespace qi
     /// Must be called once if the socket is obtained through TransportServer::newConnection()
     virtual void  startReading() = 0;
 
+    virtual qi::Url remoteEndpoint() const = 0;
+
     qi::Url url() const {
       return _url;
     }
