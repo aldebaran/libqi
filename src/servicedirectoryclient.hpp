@@ -42,6 +42,8 @@ namespace qi {
     qi::Future< void >                     serviceReady(const unsigned int &idx);
     qi::Future< void >                     updateServiceInfo(const ServiceInfo &svcinfo);
     qi::Future< std::string >              machineId();
+    /// if isLocal() only, return socket holding given service id
+    qi::Future<qi::TransportSocketPtr>     _socketOfService(unsigned int serviceId);
 
     qi::Signal<>                                  connected;
     qi::Signal<std::string>                       disconnected;

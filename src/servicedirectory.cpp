@@ -63,6 +63,8 @@ namespace qi
       assert(id == qi::Message::ServiceDirectoryAction_ServiceRemoved);
       id = ob->advertiseMethod("machineId", &ServiceDirectoryBoundObject::machineId);
       assert(id == qi::Message::ServiceDirectoryAction_MachineId);
+      ob->advertiseMethod("_socketOfService", &ServiceDirectoryBoundObject::_socketOfService);
+      // used locally only, we do not export its id
     }
     return ob->object(self, &AnyObject::deleteGenericObjectOnly);
   }
@@ -75,11 +77,22 @@ namespace qi
 
   ServiceDirectoryBoundObject::~ServiceDirectoryBoundObject()
   {
+    if (!connectedServices.empty())
+      qiLogWarning() << "Destroying while connected services remain";
   }
 
   void ServiceDirectoryBoundObject::onSocketDisconnected(TransportSocketPtr socket, std::string error)
   {
     boost::recursive_mutex::scoped_lock lock(mutex);
+    // clean from idxToSocket
+    for (std::map<unsigned int, TransportSocketPtr>::iterator it = idxToSocket.begin(), iend = idxToSocket.end(); it != iend;)
+    {
+      std::map<unsigned int, TransportSocketPtr>::iterator next = it;
+      ++next;
+      if (it->second == socket)
+        idxToSocket.erase(it);
+      it = next;
+    }
     // if services were connected behind the socket
     std::map<TransportSocketPtr, std::vector<unsigned int> >::iterator it;
     it = socketToIdx.find(socket);
@@ -167,7 +180,7 @@ namespace qi
     }
     pendingServices[idx] = svcinfo;
     pendingServices[idx].setServiceId(idx);
-
+    idxToSocket[idx] = currentSocket();
     std::stringstream ss;
     ss << "Registered Service \"" << svcinfo.name() << "\" (#" << idx << ")";
     if (! svcinfo.name().empty() && svcinfo.name()[0] == '_') {
@@ -380,6 +393,16 @@ namespace qi
   std::string ServiceDirectoryBoundObject::machineId()
   {
     return qi::os::getMachineId();
+  }
+
+  qi::TransportSocketPtr ServiceDirectoryBoundObject::_socketOfService(unsigned int id)
+  {
+    boost::recursive_mutex::scoped_lock lock(mutex);
+    std::map<unsigned int, TransportSocketPtr>::iterator it = idxToSocket.find(id);
+    if (it == idxToSocket.end())
+      return TransportSocketPtr();
+    else
+      return it->second;
   }
 
 } // !qi

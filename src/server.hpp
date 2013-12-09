@@ -40,13 +40,12 @@ namespace qi {
 
     std::vector<qi::Url> endpoints() const;
 
+    void onTransportServerNewConnection(TransportSocketPtr socket, bool startReading);
 
   private:
     void setSocketObjectEndpoints();
 
   private:
-    //TransportServer
-    void onTransportServerNewConnection(TransportSocketPtr socket);
 
     //TransportSocket
     void onSocketDisconnected(TransportSocketPtr socket, std::string error);

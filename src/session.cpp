@@ -80,6 +80,10 @@ namespace qi {
       p.setError(f.error());
       return;
     }
+
+    // Allow the SD process to use the existing socket to talk to our services
+    _serverObject.registerSocket(_sdClient.socket());
+
     /* Allow reusing the SD socket for communicating with services.
      * To do this, we must add it to our socket cache, and for this we need
      * to know the sd machineId
@@ -169,7 +173,8 @@ namespace qi {
   }
 
   qi::FutureSync<void> Session::close() {
-    return _p->close();
+    qi::Future<void> f = _p->close();
+    return f;
   }
 
   bool Session::isConnected() const {

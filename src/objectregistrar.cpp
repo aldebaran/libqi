@@ -249,6 +249,11 @@ namespace qi {
     return AnyObject();
   }
 
+  void ObjectRegistrar::registerSocket(TransportSocketPtr socket)
+  {
+    onTransportServerNewConnection(socket, false);
+  }
+
   void ObjectRegistrar::open()
   {
     Server::open();

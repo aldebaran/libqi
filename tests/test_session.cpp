@@ -459,6 +459,23 @@ TEST(QiSession, serviceRegistered)
   ASSERT_EQ(obj.asGenericObject()->value, ao.asGenericObject()->value);
 }
 
+TEST(QiSession, reuseSd)
+{
+  TestSessionPair pair;
+
+  qi::DynamicObjectBuilder ob;
+  ob.advertiseMethod("reply", &reply);
+  qi::AnyObject obj(ob.object());
+
+  pair.client()->registerService("serviceTest", obj);
+
+  qi::AnyObject object = pair.sd()->service("serviceTest");
+  EXPECT_TRUE(object);
+  EXPECT_EQ("foo", object.call<std::string>("reply", "foo").value());
+}
+
+
+
 int main(int argc, char **argv)
 {
   qi::Application app(argc, argv);

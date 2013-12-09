@@ -244,4 +244,8 @@ namespace qi {
   qi::Future<std::string>              ServiceDirectoryClient::machineId() {
     return _object.call<std::string>("machineId");
   }
+
+  qi::Future<qi::TransportSocketPtr>   ServiceDirectoryClient::_socketOfService(unsigned int id) {
+    return _object.call<TransportSocketPtr>("_socketOfService", id);
+  }
 }

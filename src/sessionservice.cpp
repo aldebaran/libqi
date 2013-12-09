@@ -199,6 +199,14 @@ namespace qi {
       }
       const qi::ServiceInfo &si = result.value();
       sr->serviceId = si.serviceId();
+      if (_sdClient->isLocal())
+      { // Wait! If sd is local, we necessarily have an open socket
+        // on which service was registered, whose lifetime is bound
+        // to the service
+        qiLogDebug() << "sd is local, going through socketOfService";
+        onTransportSocketResult(_sdClient->_socketOfService(sr->serviceId), requestId);
+        return;
+      }
       //empty serviceInfo
       if (!si.endpoints().size()) {
         std::stringstream ss;
