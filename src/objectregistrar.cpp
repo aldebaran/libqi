@@ -249,4 +249,9 @@ namespace qi {
     return AnyObject();
   }
 
+  void ObjectRegistrar::open()
+  {
+    Server::open();
+  }
+
 }

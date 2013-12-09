@@ -104,6 +104,7 @@ namespace qi {
       qiLogInfo() << s;
       return qi::makeFutureError<void>(s);
     }
+    _serverObject.open();
     //add the servicedirectory object into the service cache (avoid having
     // two remoteObject registered on the same transportSocket)
     _serviceHandler.addService("ServiceDirectory", _sdClient.object());
@@ -211,6 +212,7 @@ namespace qi {
 
   qi::FutureSync<void> SessionPrivate::listenStandalone(const qi::Url& address)
   {
+    _serverObject.open();
     qi::Promise<void> p;
     //will listen and connect
     qi::Future<void> f = _sd.listenStandalone(address);

@@ -213,5 +213,10 @@ namespace qi {
     return _server.endpoints();
   }
 
+  void Server::open()
+  {
+    _dying = false;
+  }
+
 
 }

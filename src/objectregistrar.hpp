@@ -39,6 +39,8 @@ namespace qi {
     virtual ~ObjectRegistrar();
 
     void close();
+    // Get ready to accept new objects/sockets after a close
+    void open();
 
     //register/unregister services
     qi::Future<unsigned int>     registerService(const std::string &name, qi::AnyObject obj);
