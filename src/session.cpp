@@ -71,6 +71,7 @@ namespace qi {
 
   void SessionPrivate::addSdSocketToCache(Future<void> f, const qi::Url& url)
   {
+    qiLogDebug() << "addSocketToCache processing";
     if (f.hasError())
     {
       qiLogDebug() << "addSdSocketToCache: connect reported failure";

@@ -109,6 +109,7 @@ namespace qi {
         TransportSocketConnectionMap& tscm = mcmIt->second;
         TransportSocketConnectionMap::iterator tscmIt;
         for (urlIt = endpoints.begin(); urlIt != endpoints.end(); ++urlIt) {
+          qiLogDebug() << "cache check with url " << urlIt->str();
           if ((tscmIt = tscm.find((*urlIt).str())) != tscm.end()) {
             TransportSocketConnection& tsc = tscmIt->second;
             try

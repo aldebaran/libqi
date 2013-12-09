@@ -335,11 +335,13 @@ TEST(QiService, RemoteServiceRegistrationAfterDisconnection)
 
   // Disconnect the provider, it should unregister any related services
   p.server()->close();
+  qiLogVerbose() << "close finished";
   qi::Future<void> fc = p.server()->connect(p.serviceDirectoryEndpoints()[0]);
   fc.wait(1000);
   if (fc.hasError())
     qiLogError() << fc.error();
   ASSERT_TRUE(fc.hasValue());
+  qiLogVerbose() << "Connect finished";
 
   // Register the object again with the provider, find it back from the client
   ASSERT_NO_THROW(p.server()->registerService("Bar", barAsObject));
