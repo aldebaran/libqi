@@ -63,6 +63,11 @@ qi::Session* TestSessionPair::server() const
   return _server->session();
 }
 
+qi::Session* TestSessionPair::sd() const
+{
+  return const_cast<qi::Session*>(&_sd);
+}
+
 std::vector<qi::Url> TestSessionPair::serviceDirectoryEndpoints() const
 {
   return _sd.endpoints();
