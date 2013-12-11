@@ -41,3 +41,79 @@ FLOAT_TYPE(float);
 FLOAT_TYPE(double);
 }
 
+
+#include <qi/clock.hpp>
+
+template<typename T>
+class DurationTypeInterface: public qi::IntTypeInterface
+{
+public:
+  typedef typename qi::detail::TypeImplMethodsBySize<T>::type ImplType;
+
+  virtual int64_t get(void* value)
+  {
+    return boost::chrono::duration_cast<qi::Duration>(*((T*)ImplType::Access::ptrFromStorage(&value))).count();
+  }
+
+  virtual void set(void** storage, int64_t value)
+  {
+    (*(T*)ImplType::Access::ptrFromStorage(storage)) = boost::chrono::duration_cast<T>(qi::Duration(value));
+  }
+
+  virtual unsigned int size()
+  {
+    return sizeof(qi::int64_t);
+  }
+
+  virtual bool isSigned()
+  {
+    return false;
+  }
+
+  _QI_BOUNCE_TYPE_METHODS(ImplType);
+};
+
+template <typename T>
+class TimePointTypeInterface: public qi::IntTypeInterface
+{
+public:
+  typedef typename qi::detail::TypeImplMethodsBySize<T>::type ImplType;
+
+  virtual int64_t get(void* value)
+  {
+    T* tp = (T*)ImplType::Access::ptrFromStorage(&value);
+    return tp->time_since_epoch().count();
+  }
+
+  virtual void set(void** storage, int64_t value)
+  {
+    T* tp = (T*)ImplType::Access::ptrFromStorage(storage);
+    *tp = T(qi::Duration(value));
+  }
+
+  virtual unsigned int size()
+  {
+    return sizeof(qi::int64_t);
+  }
+
+  virtual bool isSigned()
+  {
+    return false;
+  }
+
+  _QI_BOUNCE_TYPE_METHODS(ImplType);
+};
+
+
+
+QI_TYPE_REGISTER_CUSTOM(qi::Duration, DurationTypeInterface<qi::Duration>);
+QI_TYPE_REGISTER_CUSTOM(qi::NanoSeconds, DurationTypeInterface<qi::NanoSeconds>);
+QI_TYPE_REGISTER_CUSTOM(qi::MicroSeconds, DurationTypeInterface<qi::MicroSeconds>);
+QI_TYPE_REGISTER_CUSTOM(qi::MilliSeconds, DurationTypeInterface<qi::MilliSeconds>);
+QI_TYPE_REGISTER_CUSTOM(qi::Seconds, DurationTypeInterface<qi::Seconds>);
+QI_TYPE_REGISTER_CUSTOM(qi::Minutes, DurationTypeInterface<qi::Minutes>);
+QI_TYPE_REGISTER_CUSTOM(qi::Hours, DurationTypeInterface<qi::Hours>);
+
+
+QI_TYPE_REGISTER_CUSTOM(qi::WallClockTimePoint, TimePointTypeInterface<qi::WallClockTimePoint>);
+QI_TYPE_REGISTER_CUSTOM(qi::SteadyClockTimePoint, TimePointTypeInterface<qi::SteadyClockTimePoint>);
