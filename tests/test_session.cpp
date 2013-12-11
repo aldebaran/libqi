@@ -113,6 +113,8 @@ TEST(QiSession, connectOnSecondAttempt)
   s2.listenStandalone("tcp://127.0.0.1:0");
   f = session.connect(s2.url());
   f.wait();
+  if (f.hasError())
+    qiLogWarning() << f.error();
   EXPECT_FALSE(f.hasError());
 }
 
@@ -120,17 +122,32 @@ TEST(QiSession, multipleConnectSuccess)
 {
   qi::Session session, sd;
   sd.listenStandalone("tcp://127.0.0.1:0");
+  qiLogVerbose() <<"connect";
   qi::Future<void> f = session.connect(sd.url());
+  qiLogVerbose() <<"wait";
   f.wait();
+  if (f.hasError())
+    qiLogWarning() << f.error();
   EXPECT_FALSE(f.hasError());
+  qiLogVerbose() <<"close";
   session.close();
+  qiLogVerbose() <<"connect";
   f = session.connect(sd.url());
+  qiLogVerbose() <<"wait";
   f.wait();
+  if (f.hasError())
+    qiLogWarning() << f.error();
   EXPECT_FALSE(f.hasError());
+  qiLogVerbose() <<"close";
   session.close();
+  qiLogVerbose() <<"connect";
   f = session.connect(sd.url());
+  qiLogVerbose() <<"wait";
   f.wait();
+  if (f.hasError())
+    qiLogWarning() << f.error();
   EXPECT_FALSE(f.hasError());
+  qiLogVerbose() <<"close";
   session.close();
 }
 
