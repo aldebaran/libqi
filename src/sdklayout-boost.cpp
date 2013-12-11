@@ -102,7 +102,7 @@ namespace qi {
     void checkInit()
     {
       if (_mode == "error" || _sdkPrefixes.empty()) {
-        qiLogDebug() << "please call qi::init first before using qi::path";
+        qiLogDebug() << "please call qi::Application first before using qi::path";
       }
     }
 
