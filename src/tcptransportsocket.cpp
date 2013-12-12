@@ -483,12 +483,15 @@ namespace qi
     }
 #else
     int optval = 1;
-    int optlen = sizeof(optval);
+    unsigned int optlen = sizeof(optval);
     if(setsockopt(handle, SOL_SOCKET, SO_KEEPALIVE, &optval, optlen) < 0)
       qiLogWarning() << "Failed to set so_keepalive: " << strerror(errno);
     else
     {
 # if __linux__
+      // Keepalive mechanism is overriden by TCP data retransmission mechanism
+      // retransmission cannot be parameterized on a per-socket level
+
       /* SOL_TCP level options: unit is seconds for times
       TCP_KEEPCNT: overrides tcp_keepalive_probes 9
         mark dead when that many probes are lost
@@ -506,6 +509,16 @@ namespace qi
       optval = 10;
       if (setsockopt(handle, SOL_TCP, TCP_KEEPCNT  , &optval, optlen) < 0)
         qiLogWarning() << "Failed to set TCP_KEEPCNT  : " << strerror(errno);
+     qiLogDebug() << "enabling TCP_USER_TIMEOUT";
+     // this is messy: defined in linux/tcp.h only after kernel 2.6.37,
+     // which conflicts with netinet/tcp.h
+     // We do not want to rely on compile-time flag to enable/disable this,
+     // so just try it.
+     static const int QI_TCP_USER_TIMEOUT = 18;
+     // TCP_USER_TIMEOUT: maximum time in ms data can remain unaknowledged
+     optval = timeout * 1000;
+     if (setsockopt(handle, SOL_TCP, QI_TCP_USER_TIMEOUT, &optval, optlen) < 0)
+        qiLogWarning() << "(Expected on old kernels) Failed to set TCP_USER_TIMEOUT  : " << strerror(errno);
 # else
       // Macos only have TCP_KEEPALIVE wich is linux's TCP_KEEPIDLE
       // So best we can do is lower that, which will reduce delay from
