@@ -43,8 +43,10 @@ qimessaging_create_session_test(test_proxy           SRC test_proxy.cpp DEPENDS 
 
 # those are idl tests that currently only
 # work on linux, and when not cross-compiling
+option(DISABLE_CODEGEN "disable the code generation (broken)" ON)
+
 if(UNIX AND NOT APPLE)
-  if (NOT I_AM_A_ROBOT AND NOT ANDROID)
+  if (NOT I_AM_A_ROBOT AND NOT ANDROID AND NOT DISABLE_CODEGEN)
     add_subdirectory(passobject-fromservice)
     add_subdirectory(passobject-fromclient)
     add_subdirectory(codegen-interface)
