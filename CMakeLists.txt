@@ -130,7 +130,9 @@ list(APPEND SOURCES ${_confighpp})
 qi_create_lib(qitype ${SOURCES} SHARED DEPENDS QI BOOST BOOST_DATE_TIME BOOST_THREAD)
 qi_stage_lib(qitype)
 
-if(NOT ANDROID)
+option(DISABLE_CODEGEN "disable the code generation (broken)" ON)
+
+if(NOT ANDROID AND NOT DISABLE_CODEGEN)
   add_subdirectory("tests")
   add_subdirectory("codegen")
 endif()
