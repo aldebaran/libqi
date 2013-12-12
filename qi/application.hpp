@@ -54,6 +54,15 @@ static bool QI_UNIQ_DEF(_qi_atexit) = ::qi::Application::atExit(func);
 
 //THIS IS INTERNAL
 //API is not maintained for this function
+//The user need to include <boost/program_options.hpp> and <boost/bind.hpp>
+//Use like this:
+//namespace {
+//  _QI_COMMAND_LINE_OPTIONS(
+//    "Name of category",
+//    (option1)
+//    (option2)
+//  )
+//}
 #define _QI_COMMAND_LINE_OPTIONS(desc, opts)                          \
 static void QI_UNIQ_DEF(_qi_opt_func)() {                             \
   namespace po = boost::program_options;                              \

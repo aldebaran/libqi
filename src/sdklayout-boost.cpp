@@ -24,7 +24,7 @@
 #include "utils.hpp"
 #include <boost/system/error_code.hpp>
 
-qiLogCategory("qi.path");
+qiLogCategory("qi.path.sdklayout");
 
 namespace {
 
@@ -160,6 +160,7 @@ namespace qi {
           return std::string();
         }
       }
+      qiLogVerbose() << "Writable path is " << path.string(qi::unicodeFacet());
       return path.string(qi::unicodeFacet());
     }
   };
@@ -590,6 +591,7 @@ namespace qi {
 
   void SDKLayout::setWritablePath(const std::string &path)
   {
+    qiLogVerbose() << "writable path set to " << path;
     boost::filesystem::path p(path, qi::unicodeFacet());
     _p->_writablePath = p.string(qi::unicodeFacet());
   }

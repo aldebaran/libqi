@@ -13,7 +13,9 @@
 #include <qi/qi.hpp>
 #include <qi/log.hpp>
 
+#include <boost/bind.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/program_options.hpp>
 
 qiLogCategory("qi.path");
 
@@ -124,6 +126,7 @@ namespace qi
 
     void setWritablePath(const std::string &path)
     {
+      qiLogVerbose() << "Writable path set to " << path;
       getInstance()->setWritablePath(path);
     }
 
@@ -163,5 +166,12 @@ namespace qi
     }
 
     return gInstance;
+  }
+
+  namespace {
+    _QI_COMMAND_LINE_OPTIONS(
+      "Chrooting",
+      ("writable-path", value<std::string>()->notifier(&qi::path::setWritablePath), "Set the writable path.")
+      )
   }
 }
