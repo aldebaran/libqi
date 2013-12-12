@@ -4,17 +4,18 @@
 **  See COPYING for the license
 */
 
-#ifndef _PYTHON_SRC_PYSESSION_HPP_
-#define _PYTHON_SRC_PYSESSION_HPP_
+#ifndef _QIPYTHON_PYSESSION_HPP_
+#define _QIPYTHON_PYSESSION_HPP_
 
 #include <boost/python.hpp>
 #include <qimessaging/session.hpp>
+#include <qipython/api.hpp>
 
 namespace qi {
   namespace py {
-    boost::python::object makePySession(const SessionPtr& ses);
+    QIPYTHON_API boost::python::object makePySession(const SessionPtr& ses);
     void export_pysession();
   }
 }
 
-#endif  // _PYTHON_SRC_PYSESSION_HPP_
+#endif  // _QIPYTHON_PYSESSION_HPP_

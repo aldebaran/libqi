@@ -2,12 +2,12 @@
 **  Copyright (C) 2013 Aldebaran Robotics
 **  See COPYING for the license
 */
-#include "pyfuture.hpp"
+#include <qipython/pyfuture.hpp>
 #include <qi/future.hpp>
-#include <qimessaging/python-gil.hpp>
+#include <qipython/gil.hpp>
 #include <boost/python.hpp>
-#include "error.hpp"
-#include "pythreadsafeobject.hpp"
+#include <qipython/error.hpp>
+#include <qipython/pythreadsafeobject.hpp>
 
 namespace qi {
   namespace py {

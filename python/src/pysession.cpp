@@ -2,13 +2,13 @@
 **  Copyright (C) 2013 Aldebaran Robotics
 **  See COPYING for the license
 */
-#include "pysession.hpp"
+#include <qipython/pysession.hpp>
 #include <boost/python/stl_iterator.hpp>
 #include <qitype/dynamicobjectbuilder.hpp>
-#include <qimessaging/python-gil.hpp>
-#include "pyfuture.hpp"
-#include "pysignal.hpp"
-#include "pyobject.hpp"
+#include <qipython/gil.hpp>
+#include <qipython/pyfuture.hpp>
+#include <qipython/pysignal.hpp>
+#include <qipython/pyobject.hpp>
 
 qiLogCategory("qi.py");
 

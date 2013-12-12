@@ -1,39 +1,60 @@
-
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../)
 
+set(_headers
+  qipython/api.hpp
+  qipython/pyinit.hpp
+  qipython/pyexport.hpp
+  qipython/pyapplication.hpp
+  qipython/pysession.hpp
+  qipython/pyfuture.hpp
+  qipython/pyobject.hpp
+  qipython/pyproperty.hpp
+  qipython/pythreadsafeobject.hpp
+  qipython/pysignal.hpp
+  qipython/pyasync.hpp
+  qipython/pyobjectfactory.hpp
+  qipython/pylog.hpp
+  qipython/pypath.hpp
+  qipython/pytranslator.hpp
+  qipython/error.hpp
+  qipython/gil.hpp
+)
+
+set(_sources
+  src/pyinit.cpp
+  src/pyexport.cpp
+  src/pyapplication.cpp
+  src/pysession.cpp
+  src/pyfuture.cpp
+  src/pyobject.cpp
+  src/pyobjectconverter.cpp
+  src/pyproperty.cpp
+  src/pysignal.cpp
+  src/pyasync.cpp
+  src/pyobjectfactory.cpp
+  src/pylog.cpp
+  src/pypath.cpp
+  src/pytranslator.cpp
+)
+
+qi_create_lib(qipython SHARED
+  ${_headers}
+  ${_sources}
+)
+
+qi_use_lib(qipython BOOST_PYTHON QI QITYPE QIMESSAGING PYTHON)
+
+qi_install_header(${_headers} KEEP_RELATIVE_PATHS)
+
+qi_stage_lib(qipython)
 
 # do not use qi_create_lib: it does not all
 # the python-specific stuff we need.
 # FIXME: use qi_create_py_ext() from qibuild
 # when it is implemented
-add_library(_qi SHARED src/boostpymain.cpp
-                   src/pyapplication.cpp
-                   src/pyapplication.hpp
-                   src/pysession.cpp
-                   src/pysession.hpp
-                   src/pyfuture.cpp
-                   src/pyfuture.hpp
-                   src/pylog.cpp
-                   src/pylog.hpp
-                   src/pypath.cpp
-                   src/pypath.hpp
-                   src/pyobject.cpp
-                   src/pyobject.hpp
-                   src/pyobjectconverter.cpp
-                   src/pyproperty.cpp
-                   src/pyproperty.hpp
-                   src/pythreadsafeobject.hpp
-                   src/pysignal.cpp
-                   src/pysignal.hpp
-                   src/pytranslator.cpp
-                   src/pytranslator.hpp
-                   src/pyasync.cpp
-                   src/pyasync.hpp
-                   src/pyobjectfactory.hpp
-                   src/pyobjectfactory.cpp
-                   src/error.hpp
+add_library(_qi SHARED
+  src/boostpymain.cpp
 )
-
 
 # Fix the library name: no lib prefix, correct extension
 set_target_properties(_qi PROPERTIES PREFIX "")
@@ -61,7 +82,7 @@ if (WIN32)
   )
 endif()
 
-qi_use_lib(_qi BOOST_PYTHON QI QITYPE QIMESSAGING PYTHON)
+qi_use_lib(_qi QIPYTHON)
 
 # Install the library next to the .py files
 qi_install_python(TARGETS _qi)

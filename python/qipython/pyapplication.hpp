@@ -4,17 +4,14 @@
 **  See COPYING for the license
 */
 
-#ifndef _PYTHON_SRC_PYAPPLICATION_HPP_
-#define _PYTHON_SRC_PYAPPLICATION_HPP_
+#ifndef _QIPYTHON_PYAPPLICATION_HPP_
+#define _QIPYTHON_PYAPPLICATION_HPP_
 
 namespace qi {
   namespace py {
-
     void export_pyapplication();
     void export_pyapplicationsession();
-
   }
 }
 
-
-#endif  // _PYTHON_SRC_PYAPPLICATION_HPP_
+#endif  // _QIPYTHON_PYAPPLICATION_HPP_

@@ -2,6 +2,7 @@
 **  Copyright (C) 2013 Aldebaran Robotics
 **  See COPYING for the license
 */
+#include <boost/python.hpp>
 #include <utility>
 #include <qi/log.hpp>
 #include <qitype/signature.hpp>
@@ -10,13 +11,12 @@
 #include <qitype/typeinterface.hpp>
 #include <qitype/metaobject.hpp>
 #include <qitype/metamethod.hpp>
-#include <qimessaging/python-gil.hpp>
-#include <boost/python.hpp>
-#include "pyobject.hpp"
-#include "pysignal.hpp"
-#include "pyproperty.hpp"
+#include <qipython/gil.hpp>
+#include <qipython/pyobject.hpp>
+#include <qipython/pysignal.hpp>
+#include <qipython/pyproperty.hpp>
 
-#include  <boost/python.hpp>
+#include <boost/python.hpp>
 #include <boost/python/raw_function.hpp>
 
 qiLogCategory("qipy.convert");

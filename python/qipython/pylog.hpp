@@ -4,13 +4,13 @@
 **  See COPYING for the license
 */
 
-#ifndef _PYTHON_SRC_PYASYNC_HPP_
-#define _PYTHON_SRC_PYASYNC_HPP_
+#ifndef _QIPYTHON_PYLOG_HPP_
+# define _QIPYTHON_PYLOG_HPP_
 
 namespace qi {
   namespace py {
-    void export_pyasync();
+    void export_pylog();
   }
 }
 
-#endif  // _PYTHON_SRC_PYASYNC_HPP_
+#endif // !_QIPYTHON_PYLOG_HPP_

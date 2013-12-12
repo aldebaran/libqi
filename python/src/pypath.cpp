@@ -3,7 +3,7 @@
 **  See COPYING for the license
 */
 
-#include "pypath.hpp"
+#include <qipython/pypath.hpp>
 
 #include <boost/python.hpp>
 #include <qi/path.hpp>

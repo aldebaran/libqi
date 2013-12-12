@@ -2,17 +2,17 @@
 **  Copyright (C) 2013 Aldebaran Robotics
 **  See COPYING for the license
 */
-#include "pysignal.hpp"
+#include <qipython/pysignal.hpp>
 #include <boost/python.hpp>
 #include <boost/python/raw_function.hpp>
 #include <qitype/signal.hpp>
 #include <qitype/anyobject.hpp>
-#include <qimessaging/python-gil.hpp>
 #include <qi/periodictask.hpp>
-#include "error.hpp"
-#include "pyfuture.hpp"
-#include "pyobject.hpp"
-#include "pythreadsafeobject.hpp"
+#include <qipython/gil.hpp>
+#include <qipython/error.hpp>
+#include <qipython/pyfuture.hpp>
+#include <qipython/pyobject.hpp>
+#include <qipython/pythreadsafeobject.hpp>
 
 qiLogCategory("py.async");
 

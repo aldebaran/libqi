@@ -4,7 +4,7 @@
 */
 
 
-#include "pylog.hpp"
+#include <qipython/pylog.hpp>
 
 #include <boost/python.hpp>
 

@@ -4,8 +4,8 @@
 **  See COPYING for the license
 */
 
-#ifndef _PYTHON_SRC_PYTHREADSAFEOBJECT_HPP_
-#define _PYTHON_SRC_PYTHREADSAFEOBJECT_HPP_
+#ifndef _QIPYTHON_PYTHREADSAFEOBJECT_HPP_
+#define _QIPYTHON_PYTHREADSAFEOBJECT_HPP_
 
 #include <boost/python.hpp>
 
@@ -62,4 +62,4 @@ namespace qi {
 }
 
 
-#endif  // _PYTHON_SRC_PYTHREADSAFEOBJECT_HPP_
+#endif  // _QIPYTHON_PYTHREADSAFEOBJECT_HPP_
