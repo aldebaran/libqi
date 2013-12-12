@@ -57,10 +57,15 @@ int                 main(int argc, char **argv)
     return false;
   }
 
-  if (vm.count("help") || subCmdArgc == 0)
+  if (vm.count("help") || (subCmdArgc == 0 && argc > 1))
   {
     showHelp(desc);
     return 0;
+  }
+
+  if (subCmdArgc == 0)
+  {
+    subCmd = subCmdMap["info"];
   }
 
   int ret;
