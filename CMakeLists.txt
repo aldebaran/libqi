@@ -31,7 +31,7 @@ include(CMakeDependentOption)
 if(ANDROID)
   set(_lock_free_default FALSE)
 else()
-  set(_lock_free_default TRUE)
+  find_path(_lock_free_default "boost/lockfree/queue.hpp")
 endif()
 option(USE_BOOST_LOCK_FREE "Use boost/lockfree for asynchronous qi::log"
   ${_lock_free_default}
@@ -39,6 +39,8 @@ option(USE_BOOST_LOCK_FREE "Use boost/lockfree for asynchronous qi::log"
 
 if(USE_BOOST_LOCK_FREE)
   add_definitions("-D QI_USE_BOOST_LOCK_FREE")
+else()
+  qi_info("Disable lockfree support because you are using a boost version too ancient")
 endif()
 
 set(H
