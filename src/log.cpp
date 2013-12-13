@@ -865,7 +865,7 @@ namespace qi {
     }
 
     static const std::string contextLogOption = ""
-        "Show context logs, it's a bitfield (add the values below):\n"
+        "Show context logs, it's a bit field (add the values below):\n"
         " 1  : Verbosity\n"
         " 2  : ShortVerbosity\n"
         " 4  : Date\n"
