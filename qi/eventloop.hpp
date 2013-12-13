@@ -22,6 +22,11 @@
 #  pragma warning( disable: 4251 )
 #endif
 
+namespace boost {
+  namespace asio {
+    class io_service;
+}}
+
 namespace qi
 {
   template<typename T> class Future;
@@ -92,12 +97,18 @@ namespace qi
     EventLoopPrivate *_p;
   };
 
+  /// Return the global eventloop, created on demand on first call.
+  QI_API EventLoop* getEventLoop();
+
+  /// Return the io_service used by the global event loop
+  boost::asio::io_service& getIoService();
+
   /// Return a default event loop for network operations.
-  QI_API EventLoop* getDefaultNetworkEventLoop();
+  QI_API QI_API_DEPRECATED EventLoop* getDefaultNetworkEventLoop();
   /// Return a default context for other uses.
-  QI_API EventLoop* getDefaultObjectEventLoop();
+  QI_API QI_API_DEPRECATED EventLoop* getDefaultObjectEventLoop();
   /// Return a default thread pool context
-  QI_API EventLoop* getDefaultThreadPoolEventLoop();
+  QI_API QI_API_DEPRECATED EventLoop* getDefaultThreadPoolEventLoop();
 }
 
 #ifdef _MSC_VER

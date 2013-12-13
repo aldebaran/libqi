@@ -609,19 +609,29 @@ namespace qi {
 
   EventLoop* getDefaultNetworkEventLoop()
   {
-    return getDefaultThreadPoolEventLoop();
+    return getEventLoop();
 
   }
 
   EventLoop* getDefaultObjectEventLoop()
   {
-    return getDefaultThreadPoolEventLoop();
+    return getEventLoop();
   }
 
   EventLoop* getDefaultThreadPoolEventLoop()
   {
-    qi::Atomic<int> init(0);
-    return _get(_poolEventLoop, false, init, 0);
+    return getEventLoop();
+  }
+
+  EventLoop* getEventLoop()
+  {
+    static qi::AtomicBase<int> init = {0};
+    return _get(_poolEventLoop, false, static_cast<qi::Atomic<int>&>(init), 0);
+  }
+
+  boost::asio::io_service& getIoService()
+  {
+    return *(boost::asio::io_service*)getEventLoop()->nativeHandle();
   }
 
 }
