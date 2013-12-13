@@ -22,7 +22,7 @@
 #include <boost/program_options.hpp>
 #include <boost/unordered_map.hpp>
 
-#ifdef QI_USE_BOOST_LOCK_FREE
+#ifdef QI_HAS_BOOST_LOCK_FREE
 # include <boost/lockfree/queue.hpp>
 #else
 # include <queue>
@@ -174,7 +174,7 @@ namespace qi {
       boost::mutex               LogHandlerLock;
       boost::condition_variable  LogReadyCond;
 
-#ifdef QI_USE_BOOST_LOCK_FREE
+#ifdef QI_HAS_BOOST_LOCK_FREE
       boost::lockfree::queue<privateLog*>     logs;
 #else
       std::queue<privateLog*>     logs;
@@ -370,7 +370,7 @@ namespace qi {
     {
       privateLog* pl;
       boost::mutex::scoped_lock lock(LogHandlerLock);
-#ifdef QI_USE_BOOST_LOCK_FREE
+#ifdef QI_HAS_BOOST_LOCK_FREE
       while (logs.pop(pl))
       {
 #else
@@ -435,7 +435,7 @@ namespace qi {
     }
 
     inline Log::Log()
-#ifdef QI_USE_BOOST_LOCK_FREE
+#ifdef QI_HAS_BOOST_LOCK_FREE
     :logs(50)
 #endif
     {
@@ -583,7 +583,7 @@ namespace qi {
         my_strcpy(pl->_file, file, FILE_SIZE);
         my_strcpy(pl->_function, fct, FUNC_SIZE);
         my_strcpy(pl->_log, msg, LOG_SIZE);
-#ifdef QI_USE_BOOST_LOCK_FREE
+#ifdef QI_HAS_BOOST_LOCK_FREE
         LogInstance->logs.push(pl);
 #else
         LogInstance->logs.push(pl);

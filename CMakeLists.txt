@@ -38,7 +38,7 @@ option(USE_BOOST_LOCK_FREE "Use boost/lockfree for asynchronous qi::log"
 )
 
 if(USE_BOOST_LOCK_FREE)
-  add_definitions("-D QI_USE_BOOST_LOCK_FREE")
+  add_definitions("-D QI_HAS_BOOST_LOCK_FREE")
 else()
   qi_info("Disable lockfree support because you are using a boost version too ancient")
 endif()
