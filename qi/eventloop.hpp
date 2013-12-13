@@ -65,10 +65,17 @@ namespace qi
       boost::shared_ptr<AsyncCallHandlePrivate> _p;
     };
 
+    /// @{
     /** Call given function once after given delay in microseconds.
      * @return a canceleable future
      */
+
+    template<typename R>
+    Future<R> async(boost::function<R()> callback, uint64_t usDelay=0);
     Future<void> async(boost::function<void ()> callback, uint64_t usDelay=0);
+
+    /// @}
+
     /// Similar to asyncCall() but without cancelation or notification
     void post(const boost::function<void ()>& callback, uint64_t usDelay=0);
 
@@ -97,4 +104,5 @@ namespace qi
 #  pragma warning( pop )
 #endif
 
+#include <qi/details/eventloop.hxx>
 #endif  // _QI_EVENTLOOP_HPP_

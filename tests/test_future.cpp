@@ -949,6 +949,34 @@ TEST(TestAdaptFuture, PromiseCancelled) {
   ASSERT_FALSE(prom2.future().hasError());
 }
 
+int ping(int v)
+{
+  if (v>= 0)
+    return v;
+  else
+    throw std::runtime_error("Invalid argument ");
+}
+
+TEST(EventLoop, async)
+{
+  qi::EventLoop* el = qi::getDefaultThreadPoolEventLoop();
+  qi::Future<int> f = el->async<int>(boost::bind(ping, 42), 200000);
+  EXPECT_FALSE(f.isFinished());
+  f.wait();
+  EXPECT_FALSE(f.hasError());
+  EXPECT_EQ(f.value(), 42);
+
+  f = el->async<int>(boost::bind(ping, 42), 200000);
+  EXPECT_FALSE(f.isFinished());
+  EXPECT_NO_THROW(f.cancel());
+  EXPECT_EQ(f.wait(), qi::FutureState_Canceled);
+
+  f = el->async<int>(boost::bind(ping, -1), 200000);
+  EXPECT_FALSE(f.isFinished());
+  f.wait();
+  EXPECT_TRUE(f.hasError());
+}
+
 void empty() {}
 
 TEST(TestPeriodicTask, Exception)

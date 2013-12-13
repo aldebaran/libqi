@@ -42,6 +42,7 @@ if(USE_BOOST_LOCK_FREE)
 endif()
 
 set(H
+  qi/details/eventloop.hxx
   qi/details/future.hxx
   qi/details/log.hxx
   qi/details/trackable.hxx
