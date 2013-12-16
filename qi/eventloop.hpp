@@ -32,7 +32,6 @@ namespace qi
   template<typename T> class Future;
 
   class EventLoopPrivate;
-  class AsyncCallHandlePrivate;
   class QI_API EventLoop
   {
   public:
@@ -56,19 +55,6 @@ namespace qi
 
     // Internal function
     void *nativeHandle();
-
-    class QI_API AsyncCallHandle
-    {
-    public:
-      AsyncCallHandle();
-      ~AsyncCallHandle();
-      /// Cancel the call if it was not already processed
-      void cancel();
-
-    public:
-      // CS4251
-      boost::shared_ptr<AsyncCallHandlePrivate> _p;
-    };
 
     /// @{
     /** Call given function once after given delay in microseconds.

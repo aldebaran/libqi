@@ -370,21 +370,6 @@ namespace qi {
     return promise.future();
   }
 
-   // Basic pimpl bouncers.
-  EventLoop::AsyncCallHandle::AsyncCallHandle()
-  {
-    _p = boost::make_shared<AsyncCallHandlePrivate>();
-  }
-
-  EventLoop::AsyncCallHandle::~AsyncCallHandle()
-  {
-  }
-
-  void EventLoop::AsyncCallHandle::cancel()
-  {
-    _p->cancel();
-  }
-
   EventLoop::EventLoop()
   : _p(0)
   {
