@@ -510,25 +510,6 @@ void set_true(bool* b)
   *b = true;
 }
 
-TEST(TestEventLoop, MonitorEventLoop)
-{
-  TestSessionPair p;
-  bool loopStuck = false;
-  qi::Future<void> f = qi::getDefaultObjectEventLoop()->monitorEventLoop(qi::getDefaultNetworkEventLoop(), 50000);
-  f.connect(boost::bind(&set_true, &loopStuck));
-  qi::DynamicObjectBuilder ob;
-  ob.advertiseMethod("delay", &qi::os::msleep);
-  qi::AnyObject obj(ob.object());
-  obj.forceEventLoop(qi::getDefaultObjectEventLoop());
-  p.server()->registerService("delayer", obj);
-  qi::AnyObject proxy = p.client()->service("delayer");
-  ASSERT_TRUE(!loopStuck);
-  proxy.call<void>("delay", 500).wait();
-  ASSERT_TRUE(loopStuck);
-  qiLogDebug() << "Cancelling monitorEventLoop";
-  f.cancel(); // or eventloops will get stuck
-  qiLogDebug() << "Cancelling monitorEventLoop done";
-}
 int service_call(qi::Session* s, const std::string& obj,
   const std::string& method, int arg)
 {
