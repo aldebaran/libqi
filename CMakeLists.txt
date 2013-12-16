@@ -65,6 +65,7 @@ set(H
   qi/types.hpp
   qi/path.hpp
   qi/shared_ptr.hpp
+  qi/stats.hpp
   qi/qi.hpp
   qi/threadpool.hpp
   qi/traits.hpp
