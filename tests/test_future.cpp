@@ -757,7 +757,7 @@ TEST(TestFutureCancel, Canceled)
 {
   bool b = false;
   qi::Future<void> f = qi::getDefaultNetworkEventLoop()->async(
-    boost::bind(&setTrue, &b), 200);
+    boost::bind(&setTrue, &b), 200000);
   f.cancel();
   ASSERT_FALSE(f.isFinished());
   qi::os::msleep(400);
