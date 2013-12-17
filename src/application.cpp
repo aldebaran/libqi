@@ -246,7 +246,7 @@ namespace qi {
     void* handle = os::dlopen(moduleName.c_str(), flags);
     if (!handle)
     {
-      qiLogVerbose() << "dlopen failed with " << os::dlerror();
+      qiLogDebug() << "dlopen failed with " << os::dlerror();
     }
     else
     {
