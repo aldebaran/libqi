@@ -49,7 +49,7 @@ from _qi import FutureState, FutureTimeout, Future, \
 from _type import Void, Bool, Int8, UInt8, Int16, UInt16, Int32, UInt32, Int64, UInt64, Float, Double, String, List, Map, Struct, Object, Dynamic, Buffer, AnyArguments
 from _type import typeof, _isinstance
 from _binder import bind, nobind
-from _logging import logSilent, logFatal, logError, logWarning, logInfo, logVerbose, logDebug, PyLogger, setLevel, setContext, setFilters, getLogger
+from .logging import logSilent, logFatal, logError, logWarning, logInfo, logVerbose, logDebug, PyLogger, setLevel, setContext, setFilters, getLogger
 
 
 #rename isinstance here. (isinstance should not be used in this file)
