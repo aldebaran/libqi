@@ -67,7 +67,7 @@ namespace qi
 
     /// @}
 
-    /// Similar to asyncCall() but without cancelation or notification
+    /// Similar to async() but without cancelation or notification
     void post(const boost::function<void ()>& callback, uint64_t usDelay=0);
 
     /** Monitor event loop to detect deadlocks.

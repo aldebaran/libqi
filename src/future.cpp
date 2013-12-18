@@ -64,7 +64,7 @@ namespace qi {
 
     FutureState FutureBase::wait(int msecs) const {
       static bool detectEventLoopWait = !os::getenv("QI_DETECT_FUTURE_WAIT_FROM_NETWORK_EVENTLOOP").empty();
-      if (detectEventLoopWait && getDefaultNetworkEventLoop()->isInEventLoopThread())
+      if (detectEventLoopWait && getEventLoop()->isInEventLoopThread())
         qiLogWarning() << "Future wait in network thread.";
       boost::recursive_mutex::scoped_lock lock(_p->_mutex);
       if (_p->_state != FutureState_Running)

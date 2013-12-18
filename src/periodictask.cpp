@@ -221,7 +221,7 @@ namespace qi
   void PeriodicTask::_reschedule(qi::int64_t delay)
   {
     qiLogDebug() << _p->_name <<" rescheduling in " << delay;
-    _p->_task = getDefaultThreadPoolEventLoop()->async(boost::bind(&PeriodicTask::_wrap, this), delay);
+    _p->_task = getEventLoop()->async(boost::bind(&PeriodicTask::_wrap, this), delay);
     if (!_p->_state.setIfEquals(Task_Rescheduling, Task_Scheduled))
       qiLogError() << "PeriodicTask forbidden state change while rescheduling " << *_p->_state;
   }

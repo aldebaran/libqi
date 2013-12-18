@@ -501,7 +501,7 @@ void unlock(qi::Promise<int> prom, bool* tag)
 
 TEST(TestFutureSync, Basic)
 {
-  qi::EventLoop* eventLoop = qi::getDefaultNetworkEventLoop();
+  qi::EventLoop* eventLoop = qi::getEventLoop();
   ASSERT_FALSE(eventLoop->isInEventLoopThread());
 
   {
@@ -551,7 +551,7 @@ TEST(TestFutureSync, Basic)
 
 qi::FutureSync<int> getSync(bool* tag)
 {
-  qi::EventLoop* el = qi::getDefaultObjectEventLoop();
+  qi::EventLoop* el = qi::getEventLoop();
   qi::Promise<int> promise;
   el->async(boost::bind(unlock, promise, tag), 50000);
   return promise.future();
@@ -559,7 +559,7 @@ qi::FutureSync<int> getSync(bool* tag)
 
 qi::FutureSync<int> getSync2(bool* tag)
 {
-  qi::EventLoop* el = qi::getDefaultObjectEventLoop();
+  qi::EventLoop* el = qi::getEventLoop();
   qi::Promise<int> promise;
   el->async(boost::bind(unlock, promise, tag), 50000);
   return promise.future().sync();
@@ -681,7 +681,7 @@ static void setTrue(bool* b)
 TEST(TestFutureCancel, AsyncCallCanceleable)
 {
   bool b = false;
-  qi::Future<void> f = qi::getDefaultNetworkEventLoop()->async(
+  qi::Future<void> f = qi::getEventLoop()->async(
     boost::bind(&setTrue, &b), 200);
   f.cancel();
   // f is going to cancel asynchronously, so it can already be cancelled, or not
@@ -757,7 +757,7 @@ TEST(TestFutureCancel, Canceleable)
 TEST(TestFutureCancel, Canceled)
 {
   bool b = false;
-  qi::Future<void> f = qi::getDefaultNetworkEventLoop()->async(
+  qi::Future<void> f = qi::getEventLoop()->async(
     boost::bind(&setTrue, &b), 200000);
   f.cancel();
   ASSERT_FALSE(f.isFinished());
@@ -959,7 +959,7 @@ int ping(int v)
 
 TEST(EventLoop, async)
 {
-  qi::EventLoop* el = qi::getDefaultThreadPoolEventLoop();
+  qi::EventLoop* el = qi::getEventLoop();
   qi::Future<int> f = el->async<int>(boost::bind(ping, 42), 200000);
   EXPECT_FALSE(f.isFinished());
   f.wait();
