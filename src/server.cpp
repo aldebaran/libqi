@@ -124,7 +124,7 @@ namespace qi {
       obj            = it->second;
     }
     // We were called from the thread pool: synchronous call is ok
-    //qi::getDefaultThreadPoolEventLoop()->post(boost::bind<void>(&BoundObject::onMessage, obj, msg, socket));
+    //qi::getEventLoop()->post(boost::bind<void>(&BoundObject::onMessage, obj, msg, socket));
     obj->onMessage(msg, socket);
   }
 

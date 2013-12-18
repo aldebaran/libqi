@@ -29,7 +29,7 @@ namespace qi
   class TcpTransportSocket : public TransportSocket, public boost::enable_shared_from_this<TcpTransportSocket>
   {
   public:
-    explicit TcpTransportSocket(EventLoop* eventloop = getDefaultNetworkEventLoop(), bool ssl = false, void* s = 0);
+    explicit TcpTransportSocket(EventLoop* eventloop = getEventLoop(), bool ssl = false, void* s = 0);
     virtual ~TcpTransportSocket();
 
     virtual qi::FutureSync<void> connect(const qi::Url &url);

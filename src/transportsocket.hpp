@@ -30,7 +30,7 @@ namespace qi
       Status_Disconnecting = 3,
     };
 
-    explicit TransportSocket(qi::EventLoop* eventLoop = qi::getDefaultNetworkEventLoop())
+    explicit TransportSocket(qi::EventLoop* eventLoop = qi::getEventLoop())
     {
       // Set messageReady signal to async mode to protect our network thread
       messageReady.setCallType(MetaCallType_Queued);
@@ -92,7 +92,7 @@ namespace qi
 
   typedef boost::shared_ptr<TransportSocket> TransportSocketPtr;
 
-  TransportSocketPtr makeTransportSocket(const std::string &protocol, qi::EventLoop *eventLoop = getDefaultNetworkEventLoop());
+  TransportSocketPtr makeTransportSocket(const std::string &protocol, qi::EventLoop *eventLoop = getEventLoop());
 }
 
 #endif  // _SRC_TRANSPORTSOCKET_HPP_

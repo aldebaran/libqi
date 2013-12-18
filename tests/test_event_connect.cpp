@@ -77,13 +77,13 @@ void testDelete(bool afirst, bool disconnectFirst)
   int next = *completed;
   if (next == 4)
     return;
-  qi::getDefaultObjectEventLoop()->post(
+  qi::getEventLoop()->post(
     boost::bind(&testDelete, !!((int)next/2), !!((int)next%2)));
 }
 
 TEST(TestObject, Destruction)
 {
-  qi::getDefaultObjectEventLoop()->post(
+  qi::getEventLoop()->post(
     boost::bind(&testDelete, false, false));
   while (*completed < 4)
     qi::os::msleep(100);

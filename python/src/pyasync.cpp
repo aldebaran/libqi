@@ -53,7 +53,7 @@ namespace qi { namespace py {
 
       boost::function<void (void)> f = boost::bind<void>(&pyAsync, prom, PyThreadSafeObject(args));
 
-      qi::getDefaultThreadPoolEventLoop()->async(f, delay);
+      qi::getEventLoop()->async(f, delay);
       return boost::python::object(qi::py::toPyFuture(prom.future()));
     }
 

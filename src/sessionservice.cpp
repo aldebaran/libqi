@@ -115,7 +115,7 @@ namespace qi {
     //delete later as a workaround.
     //At this point the RemoteObject can be either in remote (RemoteObject*)
     //or in sr->promise (promise<AnyObject>), so async them both
-    qi::getDefaultNetworkEventLoop()->post(boost::bind(&deleteLater, remote, sr));
+    qi::getEventLoop()->post(boost::bind(&deleteLater, remote, sr));
   }
 
   void Session_Service::onTransportSocketResult(qi::Future<TransportSocketPtr> value, long requestId) {
