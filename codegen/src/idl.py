@@ -124,13 +124,13 @@ def signature_to_json(s):
   sig = json.loads(jsig)
   return sig
 
-def signature_to_cxxtype(s):
+def signature_to_cxxtype(s, tuple_default_cxx_type=None):
   """ Take a signature and return a C++ type that matches.
   """
   if not isinstance(s, basestring): #common pitfall, this works with unicode strings too
     raise Exception("Expected string, got " + str(s) + " which is " + str(type(s)))
   sig = signature_to_json(str(s)) # no unicode!
-  return signature_to_cxxtype_(sig)
+  return signature_to_cxxtype_(sig, tuple_default_cxx_type)
 
 def function_signature_to_cxxtypes(s):
   """ Take a function signature and return
@@ -143,7 +143,7 @@ def function_signature_to_cxxtypes(s):
   sig = json.loads(jsig)
   return map(signature_to_cxxtype_, sig)
 
-def signature_to_cxxtype_(s):
+def signature_to_cxxtype_(s, tuple_default_cxx_type=None):
   """ Return the C++ type to use for parsed signature s
   """
   (t, children, annotation) = s
@@ -152,16 +152,19 @@ def signature_to_cxxtype_(s):
     if sname in ANNOTATION_CXX_MAP:
       return ANNOTATION_CXX_MAP[sname]
     elif len(children) == 2:
-      return 'std::pair<' + signature_to_cxxtype_(children[0]) + ',' + signature_to_cxxtype_(children[1]) + ' >'
+      return 'std::pair<' + signature_to_cxxtype_(children[0], tuple_default_cxx_type) + ',' + signature_to_cxxtype_(children[1], tuple_default_cxx_type) + ' >'
     else:
       # Try a complete match in SIG_CXX_MAP
       sig_string = json_to_signature(s)
       if sig_string in SIG_CXX_MAP:
         return SIG_CXX_MAP[sig_string]
-      raise Exception("Unhandled tuple type " + str(s))
+      if tuple_default_cxx_type is None:
+        raise Exception("Unhandled tuple type " + str(s))
+      else:
+        return tuple_default_cxx_type
   elif t in '{[':
     res = SIG_CXX_MAP[t] + '<'
-    res += ','.join(map(signature_to_cxxtype_, children))
+    res += ','.join(map(lambda x: signature_to_cxxtype_(x, tuple_default_cxx_type), children))
     res += ' >'
     return res
   elif t == 'o':
@@ -477,13 +480,13 @@ def raw_to_text(dstruct):
       result += "    " + prop[0] + '(' + prop[1] + ')\n'
   return result
 
-def method_to_cxx(method):
+def method_to_cxx(method, tuple_default_cxx_type=None):
   """ Take a method from RAW representation, and return
       (declarationret, declarationargs, args), for example
       ("int", "int p1, std::string p2", "p1, p2")
   """
   iret = method[2]
-  cret = signature_to_cxxtype(iret)
+  cret = signature_to_cxxtype(iret, tuple_default_cxx_type)
   iargs = method[1]
   cargs = map(signature_to_cxxtype, iargs)
   typed_args = map(lambda x: cargs[x] + ' p' + str(x), range(len(cargs)))
@@ -763,7 +766,7 @@ namespace detail {
   for method in methods:
     if method[0][0] == '_':
       continue
-    (cret, typed_args, arg_names) = method_to_cxx(method)
+    (cret, typed_args, arg_names) = method_to_cxx(method, 'AL::ALValue')
     cargs = map(signature_to_cxxtype, method[1])
     #function_signature_to_cxxtypes(method[1])
     cargs = map(clean_extra_space, cargs)
