@@ -522,11 +522,16 @@ namespace qi
      // which conflicts with netinet/tcp.h
      // We do not want to rely on compile-time flag to enable/disable this,
      // so just try it.
+     static bool tcpUserTimeoutWarning = false;
      static const int QI_TCP_USER_TIMEOUT = 18;
      // TCP_USER_TIMEOUT: maximum time in ms data can remain unaknowledged
      optval = timeout * 1000;
-     if (setsockopt(handle, SOL_TCP, QI_TCP_USER_TIMEOUT, &optval, optlen) < 0)
+     if (setsockopt(handle, SOL_TCP, QI_TCP_USER_TIMEOUT, &optval, optlen) < 0
+       && !tcpUserTimeoutWarning)
+     {
         qiLogWarning() << "(Expected on old kernels) Failed to set TCP_USER_TIMEOUT  : " << strerror(errno);
+        tcpUserTimeoutWarning = true;
+     }
 # else
       // Macos only have TCP_KEEPALIVE wich is linux's TCP_KEEPIDLE
       // So best we can do is lower that, which will reduce delay from
