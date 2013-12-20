@@ -102,6 +102,7 @@ namespace qi
   };
 
 
+
   typedef SteadyClock::SteadyClockTimePoint SteadyClockTimePoint;
   typedef WallClock::WallClockTimePoint WallClockTimePoint;
 
@@ -137,6 +138,18 @@ namespace qi
   inline void sleepUntil(const boost::chrono::time_point<WallClock, Duration>& t);
 
 }
+
+#ifdef __APPLE__
+  //export template instanciation for RTTI issues across libraries. (mostly for OSX)
+  template class QI_API boost::chrono::duration<int64_t, boost::nano>;
+  template class QI_API boost::chrono::duration<int64_t, boost::micro>;
+  template class QI_API boost::chrono::duration<int64_t, boost::milli>;
+  template class QI_API boost::chrono::duration<int64_t>;
+  template class QI_API boost::chrono::duration<int64_t, boost::ratio<60> >;
+  template class QI_API boost::chrono::duration<int64_t, boost::ratio<3600> >;
+  template class QI_API boost::chrono::time_point<qi::SteadyClock>;
+  template class QI_API boost::chrono::time_point<qi::WallClock>;
+#endif
 
 #include <qi/clock.hxx>
 
