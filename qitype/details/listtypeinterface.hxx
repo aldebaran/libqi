@@ -90,7 +90,19 @@ ListTypeInterfaceImpl<T>::end(void* storage)
   T* ptr = (T*)ptrFromStorage(&storage);
   return TypeSimpleIteratorImpl<typename T::iterator>::make(ptr->end());
 }
-
+namespace detail
+{
+  template<typename T, typename E>
+  void pushBack(T& container, E* element)
+  {
+    container.push_back(*element);
+  }
+  template<typename CE, typename E>
+  void pushBack(std::set<CE>& container, E* element)
+  {
+    container.insert(*element);
+  }
+}
 template<typename T> void
 ListTypeInterfaceImpl<T>::pushBack(void** storage, void* valueStorage)
 {
@@ -98,7 +110,7 @@ ListTypeInterfaceImpl<T>::pushBack(void** storage, void* valueStorage)
   if (!elemType)
     elemType = typeOf<typename T::value_type>();
   T* ptr = (T*) ptrFromStorage(storage);
-  ptr->push_back(*(typename T::value_type*)elemType->ptrFromStorage(&valueStorage));
+  detail::pushBack(*ptr, (typename T::value_type*)elemType->ptrFromStorage(&valueStorage));
 }
 
 template<typename T> size_t
@@ -111,6 +123,7 @@ ListTypeInterfaceImpl<T>::size(void* storage)
 // There is no way to register a template container type :(
 template<typename T> struct TypeImpl<std::vector<T> >: public ListTypeInterfaceImpl<std::vector<T> > {};
 template<typename T> struct TypeImpl<std::list<T> >: public ListTypeInterfaceImpl<std::list<T> > {};
+template<typename T> struct TypeImpl<std::set<T> >: public ListTypeInterfaceImpl<std::set<T> > {};
 
 }
 

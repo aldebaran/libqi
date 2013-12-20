@@ -209,6 +209,26 @@ TEST(Value, list)
   EXPECT_EQ(v.as<std::vector<int> >().size(), v.size());
 }
 
+TEST(Value, set)
+{
+  std::vector<int> v, v2;
+  std::set<int> s;
+  v.push_back(1);
+  v.push_back(3);
+  v.push_back(2);
+  s = AnyReference::from(v).to<std::set<int> >();
+  v2.insert(v2.end(), s.begin(), s.end());
+  ASSERT_EQ(v2.size(), 3);
+  EXPECT_EQ(v2[0], 1);
+  EXPECT_EQ(v2[1], 2);
+  EXPECT_EQ(v2[2], 3);
+  v2 = AnyReference::from(s).to<std::vector<int> >();
+  ASSERT_EQ(v2.size(), 3);
+  EXPECT_EQ(v2[0], 1);
+  EXPECT_EQ(v2[1], 2);
+  EXPECT_EQ(v2[2], 3);
+}
+
 struct TStruct
 {
   double d;
