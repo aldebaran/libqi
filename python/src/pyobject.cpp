@@ -339,7 +339,7 @@ namespace qi { namespace py {
         }
 
         //store a pointer on PySignal class
-        static boost::python::object asignal = qi::py::makePySignal("(i)").attr("__class__");
+        boost::python::object asignal = qi::py::makePySignal("(i)").attr("__class__");
         if (PyObject_IsInstance(m.ptr(), asignal.ptr())) {
           qiLogDebug() << "Adding signal:" << key;
           gob.advertiseSignal(key, qi::py::getSignal(m));
@@ -347,7 +347,7 @@ namespace qi { namespace py {
         }
 
         //TODO: check for Property
-        static boost::python::object aproperty = qi::py::makePyProperty("(i)").attr("__class__");
+        boost::python::object aproperty = qi::py::makePyProperty("(i)").attr("__class__");
         if (PyObject_IsInstance(m.ptr(), aproperty.ptr())) {
           qiLogDebug() << "Adding property:" << key;
           gob.advertiseProperty(key, qi::py::getProperty(m));

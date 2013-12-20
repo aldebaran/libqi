@@ -138,8 +138,8 @@ struct ToPyObject
       return;
     }
 
-    static boost::python::object collections = boost::python::import("collections");
-    static boost::python::object namedtuple = collections.attr("namedtuple");
+    boost::python::object collections = boost::python::import("collections");
+    boost::python::object namedtuple = collections.attr("namedtuple");
     boost::python::object        mytuple;
     boost::python::list          fields;
     for (unsigned int i = 0; i < annotations.size(); ++i) {
@@ -240,9 +240,7 @@ public:
     // immutable (you can add elements to lists and dicts), so we need a copy
     // here and not an INCREF().
     qi::py::GILScopedLock _lock;
-    static boost::python::object copyModule;
-    if (copyModule.ptr() == Py_None)
-      copyModule = pyHandle(PyImport_ImportModule("copy"));
+    boost::python::object copyModule = boost::python::import("copy");
 
     PyObject* p = (PyObject*)ptrFromStorage(&storage);
     boost::python::object ret = copyModule.attr("deepcopy")(pyBorrow(p));
