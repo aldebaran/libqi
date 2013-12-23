@@ -612,7 +612,7 @@ namespace qi
       {
         // We return a Value that point to the same data as this.
         result._type = targetType;
-        result._value = (void*)((long)_value + inheritOffset);
+        result._value = (void*)((intptr_t)_value + inheritOffset);
         return std::make_pair(result, false);
       }
     }
