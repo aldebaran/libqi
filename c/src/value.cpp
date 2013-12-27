@@ -349,12 +349,28 @@ qi_value_t*  qi_value_map_get(qi_value_t *msg, qi_value_t *key)
   return 0;
 }
 
+qi_value_t* qi_value_map_keys(qi_value_t *msg)
+{
+  qi::AnyValue &container = qi_value_cpp(msg);
+
+  std::map<qi::AnyReference, qi::AnyReference>::iterator it;
+  std::map<qi::AnyReference, qi::AnyReference> m = container.asMapValuePtr();
+
+  qi::TypeInterface* listType = qi::makeListType(((qi::MapTypeInterface*)container.type())->keyType());
+  qi::AnyValue* ar = new qi::AnyValue(listType);
+  //construct a list<k>
+  for (it = m.begin(); it != m.end(); ++it) {
+    ar->_append(it->first);
+  }
+  return (qi_value_t*)(ar);
+}
+
 //# RAW
 int          qi_value_raw_set(qi_value_t* value, const char* data, int size){
   return 0;
 }
 
-extern "C" int          qi_value_raw_get(qi_value_t* value, const char**data, int *size) {
+int          qi_value_raw_get(qi_value_t* value, const char**data, int *size) {
   return 0;
 }
 
