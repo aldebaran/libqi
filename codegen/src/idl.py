@@ -17,7 +17,7 @@
     annotation: magic strings concatenation (fast, threadsafe, ...)
 
     Code parser:
-    - Invoke Doxygen and parse its XML output to produce an IDL file.
+    - Use qiclang based on libclang and parse its XML output to produce an IDL file.
 
     Code generators from RAW to C++:
     - interface: An interface that service must implement.
@@ -46,9 +46,59 @@ import shutil
 import re
 import ctypes
 
-qiclang_exe = "qiclang"
+class Raw:
+  """ Raw representation of IDL data
+  """
+  def __init__(self):
+    self.classes = dict()
+    self.structs = dict()
 
+class Class:
+  def __init__(self, methods = [], signals = (), properties = (), annotations = ""):
+    self.methods = list(methods)
+    self.signals = list(signals)
+    self.properties = list(properties)
+    self.annotations = annotations
+
+class Method:
+  def __init__(self, name, args, ret, annotations):
+    self.name = name
+    self.args = args # list of signatureStr
+    self.ret = ret # signatureStr
+    self.annotations = annotations
+
+class Signal:
+  def __init__(self, name, args, annotations):
+    self.name = name
+    self.args = args # list of signatureStr
+    self.annotations = annotations
+
+class Property:
+  def __init__(self, name, signature, annotations):
+    self.name = name
+    self.signature = signature
+    self.annotations = annotations
+
+class Struct:
+  def __init__(self):
+    self.fields = list() # ordered
+    self.signature = ""
+    self.annotations = ""
+    self.constructor = None # constructor to initialize all fields
+
+class StructField:
+  def __init__(self, name, signature, annotations):
+    self.name = name
+    self.signature = signature
+    self.annotations = annotations
+    self.getter = '' # c++: name of the getter
+
+# Full path to qiclang binary
+qiclang_exe = "qiclang"
+# Directory of current script
 medir = os.path.dirname(os.path.abspath(__file__))
+
+# Load qitype (used for its signature parser)
 sys.path.append(os.path.join(medir, '..', 'lib', 'python2.7', 'site-packages'))
 import shlib
 
@@ -64,9 +114,7 @@ qi_type.signature_to_json.restype = ctypes.c_char_p
 def signature_to_json(s):
   return handle.signature_to_json(s)
 
-METHODS = 0
-SIGNALS = 1
-PROPERTIES = 2
+
 
 # Full names of CXX enums found
 CXX_ENUMS = []
@@ -280,7 +328,7 @@ def qiclang_type_to_signature(node):
     CXX_UNKNOWN.append(fullname)
   return "X<" + fullname + ">"
 
-class StructField:
+class ClangStructField:
   def __init__(self, name):
     self.name = name
     self.getter = None
@@ -301,13 +349,13 @@ class StructField:
     else:
       return (self.getter, self.setter)
 
-class Struct:
+class ClangStruct:
   def __init__(self):
     self.fields = dict()
     self.constructors = []
   def field(self, name):
     if not name in self.fields:
-      self.fields[name] = StructField(name)
+      self.fields[name] = ClangStructField(name)
     return self.fields[name]
   def remove_unuseable(self):
     for k in self.fields:
@@ -340,9 +388,10 @@ class Struct:
 
 def qiclang_struct(node):
   """ Handle a struct XML node. Figure out the fields and how to read/write them
+      Returns a Struct (name, signature, ctor, accessor_map)
   """
   fullname = normalize_full_name(node.get("namespace"), node.get("name"))
-  s = Struct()
+  s = ClangStruct()
   index = 0
   # First scan accessible fields
   for f in node.findall("./fields/field"):
@@ -357,6 +406,7 @@ def qiclang_struct(node):
     field.type_name = tfullname
     field.signature = qiclang_type_to_signature(tnode)
     field.index = index
+    field.annotations = fdoc
     index = index + 1
   # Then scan methods to detect setters and getters
   index = 0
@@ -435,12 +485,20 @@ def qiclang_struct(node):
   raw_sig = '(' + ''.join(map(lambda x: x[1].signature, ordered_fields)) + ')'
   sig = raw_sig + '<' + ','.join([fullname] + ordered_fieldnames) + '>'
   access = map(lambda x: x[1].accessors(), ordered_fields)
-  return (fullname, sig, c, access)
+  res = Struct()
+  res.name = fullname
+  res.signature = sig
+  res.annotations = xml_extract_text(node.find("./comment/bare"))
+  res.constructor = c
+  for f in ordered_fields:
+    sf = StructField(f[0], f[1].signature, f[1].annotations)
+    res.fields.append(sf)
+  return res
 
 def qiclang_to_raw(input_path):
   """ Parse qiclang output XML to produce our raw representation
   """
-  res = dict()
+  res = Raw()
   index_tree = etree.parse(input_path)
 
   for enum in index_tree.findall("./enum"):
@@ -449,11 +507,14 @@ def qiclang_to_raw(input_path):
   for cls in index_tree.getroot().findall("./class"):
     fullname = normalize_full_name(cls.get("namespace"), cls.get("name"))
     cdoc = xml_extract_text(cls.find("./comment/bare"))
-    if cdoc.find("#struct") != -1:
+    #TODO: validation for struct/class here (all virtual methods, no fields)
+    #if cdoc.find("#struct") != -1:
+    if cls.find("./fields/field") is not None:
       s = qiclang_struct(cls)
-      SIG_CXX_MAP[s[1]] = s[0]
-      CXX_SIG_MAP[s[0]] = s[1]
-      CXX_STRUCTS[s[0]] = s
+      res.structs[fullname] = s
+      SIG_CXX_MAP[s.signature] = fullname
+      CXX_SIG_MAP[fullname] = s.signature
+      CXX_STRUCTS[fullname] = s
       continue
     methods = []
     #methods
@@ -464,7 +525,7 @@ def qiclang_to_raw(input_path):
       margs = []
       for a in m.findall("./arguments/type"):
         margs.append(qiclang_type_to_signature(a))
-      methods.append((mname, margs, mres, mdoc))
+      methods.append(Method(mname, margs, mres, mdoc))
     #signals and properties
     sigs = []
     props = []
@@ -478,11 +539,11 @@ def qiclang_to_raw(input_path):
       if tfullname == "qi::Signal":
         templ_nodes = tnode.findall("./templates/type")
         tsig = ''.join(map(qiclang_type_to_signature, templ_nodes))
-        sigs.append((fname,  tsig , fdoc))
+        sigs.append(Signal(fname,  tsig , fdoc))
       elif tfullname == "qi::Property":
         tsig = qiclang_type_to_signature(tnode.find("./templates/type"))
-        props.append((fname, tsig, fdoc))
-    res[fullname] = (methods, sigs, props, cdoc)
+        props.append(Property(fname, tsig, fdoc))
+    res.classes[fullname] = Class(methods, sigs, props, cdoc)
   return res
 
 
@@ -505,93 +566,106 @@ def rawtype_to_boxinterface_argtype(arg):
     return 2 #int
   else:
     return 0 #dynamic
-def raw_to_boxinterface(class_name, data):
+
+def raw_to_boxinterface(class_name, cls):
   """ Convert RAW to boxInterface choregraphe XML format
   """
-  root = etree.Element('BoxInterface', name=class_name, tooltip=data[3])
-  (methods, signals, properties, an) = data
-  for method in methods:
+  root = etree.Element('BoxInterface', name=class_name, tooltip=cls.annotations)
+  for method in cls.methods:
     #advertise only nullary or unary methods
     (method_name, args, ret, an) = method
-    if len(args) > 1:
+    if len(method.args) > 1:
       continue
     argtype = 1
-    if len(args) == 1:
-      argtype = rawtype_to_boxinterface_argtype(args[0])
-    e = etree.SubElement(root, 'Input', name=method_name, type=str(argtype),
+    if len(method.args) == 1:
+      argtype = rawtype_to_boxinterface_argtype(method.args[0])
+    e = etree.SubElement(root, 'Input', name=method.name, type=str(argtype),
       type_size="0", nature="1", inner="0", tooltype=an)
-  for signal in signals:
-    (name, args, an) = signal
-    if len(args) >1:
+  for signal in cls.signals:
+    if len(signal.args) >1:
       continue
     argtype = 1
-    if len(args) == 1:
-      argtype = rawtype_to_boxinterface_argtype(args[0])
-    e = etree.SubElement(root, 'Output', name=name, type=str(argtype),
-      type_size="0", nature="2", inner="0", tooltip=an)
-  for prop in properties:
+    if len(signal.args) == 1:
+      argtype = rawtype_to_boxinterface_argtype(signal.args[0])
+    e = etree.SubElement(root, 'Output', name=signal.name, type=str(argtype),
+      type_size="0", nature="2", inner="0", tooltip=signal.annotations)
+  for prop in cls.properties:
     # prop for now are in signals, so were registered as output.
     # Register them as input
-    e = etree.SubElement(root, 'Input', name=prop[0],
-      type=str(rawtype_to_boxinterface_argtype(prop[1])),
+    e = etree.SubElement(root, 'Input', name=prop.name[0],
+      type=str(rawtype_to_boxinterface_argtype(prop.signature)),
       type_size="0",
-      tooltip="")
+      tooltip=prop.annotations)
   return etree.tostring(root) + "\n"
 
-def raw_to_idl_class(dstruct, cls, root=None):
+def raw_to_idl_class(raw, class_name, root=None):
   """ Convert a single class from RAW to IDL XML
   """
   if root is None:
     root = etree.Element('IDL')
-  (methods, signals, properties, an) = dstruct[cls]
-  e = etree.SubElement(root, 'class', name=cls, annotations=an)
-  for method in methods:
-    (method_name, args, ret, an) = method
-    m = etree.SubElement(e, 'method', name=method_name, annotations=an)
-    etree.SubElement(m, 'return', type=ret)
-    for a in args:
+  cls = raw.classes[class_name]
+  e = etree.SubElement(root, 'class', name=class_name, annotations=cls.annotations)
+  for method in cls.methods:
+    m = etree.SubElement(e, 'method', name=method.name, annotations=method.annotations)
+    etree.SubElement(m, 'return', type=method.ret)
+    for a in method.args:
       etree.SubElement(m, 'argument', type=a)
-  for signal in signals:
-    s = etree.SubElement(e, 'signal', name=signal[0])
-    for a in signal[1]:
+  for signal in cls.signals:
+    s = etree.SubElement(e, 'signal', name=signal.name, annotations = signal.annotations)
+    for a in signal.args:
       etree.SubElement(s, 'argument', type=a)
-  for prop in properties:
-    s = etree.SubElement(e, 'property', name=prop[0], type=prop[1])
+  for prop in cls.properties:
+    s = etree.SubElement(e, 'property', name=prop.name, type=prop.signature, annotations = prop.annotations)
   return root
 
-def raw_to_idl(dstruct):
+def raw_to_idl_struct(raw, struct_name, root=None):
+  if root is None:
+    root = etree.Element('IDL')
+  s = raw.structs[struct_name]
+  e = etree.SubElement(root, 'struct', name=struct_name, signature = s.signature, annotations = s.annotations)
+  if s.constructor:
+    etree.SubElement(e, 'constructor', value=s.constructor)
+  index = 0
+  for f in s.fields:
+    etree.SubElement(e, 'field', name=f.name, index=str(index), signature=f.signature, annotations=f.annotations, getter=f.getter)
+    index=index+1
+  return root
+
+def raw_to_idl(raw):
   """ Convert RAW to IDL XML format
   """
   root = etree.Element('IDL')
-  for cls in dstruct:
-    raw_to_idl_class(dstruct, cls, root)
+  for cls in raw.classes:
+    raw_to_idl_class(raw, cls, root)
+  for s in raw.structs:
+    raw_to_idl_struct(raw, s, root)
   return root
 
-def raw_to_text(dstruct):
+def raw_to_text(raw):
   """ Convert RAW to human-readable text
   """
   result = ""
-  for cls in dstruct:
-    result += "class " + cls +"// " + dstruct[cls][3] + "\n  methods\n"
-    for method in dstruct[cls][METHODS]:
-      (method_name, args, ret, an) = method
-      result += "    " + ret + " " + method_name +"(" + ",".join(args) + ") // " + an +"\n"
+  for cname in raw.classes:
+    cls = raw.classes[cname]
+    result += "class " + cname +"// " + cls.annotations + "\n  methods\n"
+    for method in cls.methods:
+      result += "    " + method.ret + " " + method.name +"(" + ",".join(method.args) + ") // " + method.annotations +"\n"
     result += "  signals\n"
-    for signal in dstruct[cls][SIGNALS]:
-      result += "    " + signal[0] + '(' + ','.join(signal[1]) + ')\n'
+    for signal in cls.signals:
+      result += "    " + signal.name + '(' + ','.join(signal.args) + ')\n'
     result += "  properties\n"
-    for prop in dstruct[cls][PROPERTIES]:
-      result += "    " + prop[0] + '(' + prop[1] + ')\n'
+    for prop in cls.properties:
+      result += "    " + prop.name + '(' + prop.signature + ')\n'
   return result
 
 def method_to_cxx(method, tuple_default_cxx_type=None):
-  """ Take a method from RAW representation, and return
+  """ Take a Method from RAW representation, and return
       (declarationret, declarationargs, args), for example
       ("int", "int p1, std::string p2", "p1, p2")
   """
-  iret = method[2]
+  iret = method.ret
   cret = signature_to_cxxtype(iret, tuple_default_cxx_type)
-  iargs = method[1]
+  iargs = method.args
   cargs = map(signature_to_cxxtype, iargs)
   typed_args = map(lambda x: cargs[x] + ' p' + str(x), range(len(cargs)))
   typed_args = ','.join(typed_args)
@@ -602,27 +676,38 @@ def method_to_cxx(method, tuple_default_cxx_type=None):
 def idl_to_raw(root):
   """ Convert IDL XML to internal RAW representation
   """
-  result = dict()
+  result = Raw()
   for cls in root.findall("class"):
     methods = []
     for m in cls.findall("method"):
       r = m.find("return").get("type")
       args = [a.get("type") for a in m.findall("argument")]
-      methods.append((m.get('name'), args, r, (m.get('annotations') or '')))
+      methods.append(Method(m.get('name'), args, r, (m.get('annotations') or '')))
     signals = []
     for s in cls.findall("signal"):
       n = s.get('name')
       args = [a.get("type") for a in s.findall("argument")]
-      signals.append((n, args))
+      signals.append(Signal(n, args, s.get('annotations') or''))
     properties = []
     for p in cls.findall("property"):
       n = p.get('name')
       t = p.get('type')
-      properties.append([n, t])
-    result[cls.get("name")] =  (methods, signals, properties, (cls.get("annotations") or ''))
+      properties.append(Property(n, t, p.get('annotations') or ''))
+    result.classes[cls.get("name")] = Class(methods, signals, properties, (cls.get("annotations") or ''))
+  for snode in root.findall("struct"):
+    s = Struct()
+    sname = snode.get('name')
+    s.signature = snode.get('signature')
+    s.annotations = snode.get('annotations') or ''
+    c = snode.find('constructor')
+    if c:
+      s.constructor = c.get('value')
+    for f in snode.findall('field'):
+      s.fields.append(StructField(f.get('name'), f.get('signature'), f.get('annotations') or ''))
+    result.structs[s.name] = s
   return result
 
-def raw_to_interface(class_name, data, include, namespaces):
+def raw_to_interface(class_name, cls, include, namespaces):
   """ Generate service interface class from RAW representation
   """
   skeleton = """
@@ -666,26 +751,22 @@ QI_TYPE_NOT_CLONABLE(@NAMESPACES@@INAME@);
 
 #endif
 """
-  (methods, signals, properties) = (data[METHODS], data[SIGNALS], data[PROPERTIES])
   methods_decl = ''
   getters = ''
   fields = []
-  for method in methods:
+  for method in cls.methods:
     (cret, typed_args, arg_names) = method_to_cxx(method)
-    method_name = method[0]
-    methods_decl += '    virtual %s %s (%s) = 0;\n' % (cret, method_name, typed_args)
-    fields.append(method_name)
+    methods_decl += '    virtual %s %s (%s) = 0;\n' % (cret, method.name, typed_args)
+    fields.append(method.name)
   signals_decl = ''
-  for sig in signals:
-    name = sig[0]
-    signature = ','.join(map(signature_to_cxxtype, sig[1]))
-    signals_decl += '    qi::Signal<%s> %s;\n' % (signature, name)
-    fields.append(name)
+  for sig in cls.signals:
+    signature = ','.join(map(signature_to_cxxtype, sig.args))
+    signals_decl += '    qi::Signal<%s> %s;\n' % (signature, sig.name)
+    fields.append(sig.name)
   for prop in properties:
-    name = prop[0]
-    signature = signature_to_cxxtype(prop[1])
-    signals_decl += '    qi::Property<%s> %s;\n' % (signature, name)
-    fields.append(name)
+    signature = signature_to_cxxtype(prop.signature)
+    signals_decl += '    qi::Property<%s> %s;\n' % (signature, prop.name)
+    fields.append(prop.name)
   open_namespace = ""
   close_namespace = ""
   ns_full = ""
@@ -706,7 +787,10 @@ QI_TYPE_NOT_CLONABLE(@NAMESPACES@@INAME@);
    }
   for k in replace:
     skeleton = skeleton.replace(k, replace[k])
-  skeleton = "/*" + raw_to_text({class_name: data}) + "*/" + skeleton
+  # Add the raw struct in text form for debugging purposes
+  r = Raw()
+  r.classes[class_name] = cls
+  skeleton = "/*" + raw_to_text(r) + "*/" + skeleton
   return skeleton
 
 def clean_extra_space(name):
@@ -714,7 +798,7 @@ def clean_extra_space(name):
   """
   return re.sub(r"([^>])\s>", r"\1>", name)
 
-def raw_to_al_proxy(class_name, data):
+def raw_to_al_proxy(class_name, cls):
   """ Generate an ALProxy for the given class
   """
   skeleton_header = """// Generated for @NAME@ version @VERSION@
@@ -857,7 +941,7 @@ namespace detail {
 """
   taskIdDoc = '/// <returns> brokerTaskID : The ID of the task assigned to it by the broker.</returns>\n'
   methods = data[0]
-  summary = '/// <summary>' + '\n  ///'.join(data[3].split('\n')) + '</summary>'
+  summary = '/// <summary>' + '\n  ///'.join(cls.annotations.split('\n')) + '</summary>'
   decl = ''
   declvoid = ''
   impl = ''
@@ -866,16 +950,16 @@ namespace detail {
   SIG_CXX_MAP['m'] = 'AL::ALValue'
   SIG_CXX_MAP['i'] = 'int'
   # sort the methods
-  methods.sort(key=lambda m: m[0])
-  for method in methods:
-    if method[0][0] == '_':
+  cls.methods.sort(key=lambda m: m.name)
+  for method in cls.methods:
+    if method.name[0] == '_':
       continue
     (cret, typed_args, arg_names) = method_to_cxx(method, 'AL::ALValue')
-    cargs = map(signature_to_cxxtype, method[1])
+    cargs = map(signature_to_cxxtype, method.args)
     #function_signature_to_cxxtypes(method[1])
     cargs = map(clean_extra_space, cargs)
     cret = clean_extra_space(cret)
-    rawdoc = method[3].split('\n')
+    rawdoc = method.annotations.split('\n')
     arg_names = []
     #reformat doc and extract argument names
     retdoc = ''
@@ -918,20 +1002,20 @@ namespace detail {
     impl += '  %s %s::%s(%s)\n  {\n    %s_proxy->call%s("%s"%s);\n  }\n\n' % (
       cret,
       class_name + 'Proxy',
-      method[0],
+      method.name,
       argstring,
       'return '*(cret != 'void'),
       call_kind,
-      method[0],
+      method.name,
       ' ' * (len(argcall)!=0) + argcall)
 
     if cret == 'void':
-      declvoid += doc + taskIdDoc + 'int' + ' ' + method[0] +'(' + argstring +');\n\n'
+      declvoid += doc + taskIdDoc + 'int' + ' ' + method.name +'(' + argstring +');\n\n'
       postimpl += '  int %s::%s(%s)\n  {\n    return _proxy->pCall("%s"%s);\n  }\n\n' % (
         class_name + "ProxyPostHandler",
-        method[0],
+        method.name,
         argstring,
-        method[0],
+        method.name,
         argcall
     )
   decl4 = '\n'.join(map(lambda x: '    ' * (len(x)!=0) + x, decl.split('\n')))
@@ -953,7 +1037,7 @@ namespace detail {
     skeleton_source = skeleton_source.replace(k, replace[k])
   return [skeleton_header, skeleton_source, '']
 
-def raw_to_proxy(class_name, data, return_future, implement_interface, include, namespaces):
+def raw_to_proxy(class_name, cls, return_future, implement_interface, include, namespaces):
   """ Generate C++ proxy code from RAW
   @param return_future have the declared functions return a Future
   @param implement_interface make the proxy inherit from an interface, that
@@ -1022,7 +1106,6 @@ QI_TYPE_PROXY(@namepaces@@proxyName@);
 
   forward_decls = forward_decls.replace('@className@', class_name)
   #generate methods
-  (methods, signals, properties) = (data[METHODS], data[SIGNALS], data[PROPERTIES])
   method_impls = ""
   fwdecl = dict()
   if implement_interface:
@@ -1031,9 +1114,9 @@ QI_TYPE_PROXY(@namepaces@@proxyName@);
   else:
     call_begin = '(callType,'
     if_inherit = ''
-  for method in methods:
+  for method in cls.methods:
     (cret, typed_args, arg_names) = method_to_cxx(method)
-    method_name = method[0]
+    method_name = method.name
     if cret.find('Ptr') == len(cret)-3:
       tname = cret[0:-3]
       if tname.find('Proxy') == len(tname) - 5:
@@ -1054,7 +1137,7 @@ QI_TYPE_PROXY(@namepaces@@proxyName@);
     # AutoAnyReference.
     typed_args = ''
     argIdx = 0
-    for arg in method[1]:
+    for arg in method.args:
       cxx_arg = signature_to_cxxtype(arg)
       if cxx_arg.find("Ptr") != -1:
         typed_args += '::qi::AutoAnyReference p' + str(argIdx)
@@ -1075,14 +1158,14 @@ QI_TYPE_PROXY(@namepaces@@proxyName@);
   signal_decl = ''
   ctor = ''
   # Make  a Signal field for each signal, bridge it to backend in ctor
-  for sig in signals:
-    ctor += '    qi::makeProxySignal({0}, obj, "{0}");\n'.format(sig[0])
+  for sig in cls.signals:
+    ctor += '    qi::makeProxySignal({0}, obj, "{0}");\n'.format(sig.name)
     if not implement_interface:
-      signal_decl += '  qi::ProxySignal<void({1})> {0};\n'.format(sig[0], ','.join(map(signature_to_cxxtype, sig[1])))
-  for prop in properties:
-    ctor += '    qi::makeProxyProperty({0}, obj, "{0}");\n'.format(prop[0])
+      signal_decl += '  qi::ProxySignal<void({1})> {0};\n'.format(sig.name, ','.join(map(signature_to_cxxtype, sig.args)))
+  for prop in cls.properties:
+    ctor += '    qi::makeProxyProperty({0}, obj, "{0}");\n'.format(prop.name)
     if not implement_interface:
-      signal_decl += '  qi::ProxyProperty<{1}> {0};\n'.format(prop[0], signature_to_cxxtype(prop[1]))
+      signal_decl += '  qi::ProxyProperty<{1}> {0};\n'.format(prop.name, signature_to_cxxtype(prop.signature))
   result = skeleton
   open_namespace = ""
   close_namespace = ""
@@ -1117,7 +1200,7 @@ QI_TYPE_PROXY(@namepaces@@proxyName@);
     result = result.replace('@' + k + '@', replace[k])
   return ['', result, '']
 
-def raw_to_cxx_typebuild(class_name, data, use_interface, register_to_factory, include, namespaces):
+def raw_to_cxx_typebuild(class_name, cls, use_interface, register_to_factory, include, namespaces):
   """ Generate a c++ file that registers the class to type system.
   @param class_name name of the class to bind
   @param data raw IDL data
@@ -1153,26 +1236,25 @@ static int _init_@TYPE@ = @TYPE@init();
   else:
     include = ''
   advertise = ''
-  (methods, signals, properties, annotations) = (data[0], data[1], data[2], data[3])
 
-  if 'threadSafe' in annotations:
+  if 'threadSafe' in cls.annotations:
     advertise += '  builder.setThreadingModel(qi::ObjectThreadingModel_MultiThread);\n'
 
-  for method in methods:
-    method_name = method[0]
-    annotations = method[3]
+  for method in cls.methods:
+    method_name = method.name
+    annotations = method.annotations
     thread_mode = 'qi::MetaCallType_Auto'
     if 'fast' in annotations:
       thread_mode = 'qi::MetaCallType_Fast'
     if 'threadSafe' in annotations:
       thread_mode = 'qi::MetaCallType_ThreadSafe'
     advertise += '  builder.advertiseMethod("{0}", &{1}::{0}, {2});\n'.format(method_name, class_name, thread_mode)
-  for s in signals:
-    name = s[0]
+  for s in cls.signals:
+    name = s.name
     field = name
     advertise += '  builder.advertise("%s", &%s::%s);\n' % (name, class_name, field);
   for s in properties:
-    name = s[0]
+    name = s.name
     field = name
     advertise += '  builder.advertise("%s", &%s::%s);\n' % (name, class_name, field);
   register = ''
@@ -1190,7 +1272,7 @@ static int _init_@TYPE@ = @TYPE@init();
 
   return template.replace('@TYPE@', class_name).replace('@ADVERTISE@', advertise).replace('@REGISTER@', register).replace('@INCLUDE@', include).replace('@OPEN_NAMESPACE@', open_namespace).replace('@CLOSE_NAMESPACE@', close_namespace)
 
-def raw_to_cxx_service_skeleton(class_name, data, implement_interface, include):
+def raw_to_cxx_service_skeleton(class_name, cls, implement_interface, include):
   """ Produce skeleton of C++ implementation of the service.
   """
   result = "#include <qitype/signal.hpp>\n#include <qitype/property.hpp>\n"
@@ -1200,33 +1282,32 @@ def raw_to_cxx_service_skeleton(class_name, data, implement_interface, include):
   if implement_interface:
     inherits = ' : public I' + class_name
   result += "class %s %s \n{\npublic:\n" % (class_name, inherits)
-  (methods, signals) = (data[0], data[1])
-  for method in methods:
-    method_name = method[0]
-    args = ','.join(map(signature_to_cxxtype, method[1]))
+  for method in cls.methods:
+    method_name = method.name
+    args = ','.join(map(signature_to_cxxtype, method.args))
     result += '  %s %s(%s);\n' % (
-      signature_to_cxxtype(method[2]),
+      signature_to_cxxtype(method.ret),
       method_name,
       args
     )
   iface_ctor = []
-  for signal in signals:
-    iface_ctor.append('%s' % (signal[0]))
+  for signal in cls.signals:
+    iface_ctor.append('%s' % (signal.name))
     result += '  qi::Signal<%s> %s;\n' % (
-      ','.join(map(signature_to_cxxtype, signal[1])),
-      signal[0]
+      ','.join(map(signature_to_cxxtype, signal.args)),
+      signal.name
     )
   if implement_interface:
     result += '  %s() :%s(%s) {}\n' % (class_name, class_name, ','.join(iface_ctor))
   result += '};\n\n'
-  for method in methods:
-    method_name = method[0]
-    args = method[1]
+  for method in cls.methods:
+    method_name = method.name
+    args = method.args
     for i in range(len(args)):
       args[i] = signature_to_cxxtype(args[i]) + ' p' + str(i)
     args = ','.join(args)
     result += '%s %s::%s(%s)\n{\n  // Implementation of %s\n}\n' % (
-      signature_to_cxxtype(method[2]),
+      signature_to_cxxtype(method.ret),
       class_name,
       method_name,
       args,
@@ -1234,7 +1315,7 @@ def raw_to_cxx_service_skeleton(class_name, data, implement_interface, include):
     )
   return result
 
-def raw_to_cxx_service_bouncer(class_name, data, impl_name, include):
+def raw_to_cxx_service_bouncer(class_name, cls, impl_name, include):
   """ Produce implementation of \p class_name interface bouncing to class
       \p impl_name.
   """
@@ -1290,17 +1371,16 @@ inline void release_ptr(T ptr)
 I@name@Ptr interface_from_bound(@impl@ ptr);
 @name@ProxyPtr proxy_from_interface(I@name@Ptr ptr);
 """
-  (methods, signals, properties) = (data[METHODS], data[SIGNALS], data[PROPERTIES])
   signal_init = []
-  for s in signals:
-    signal_init.append('impl->' + s[0])
-  for p in properties:
-    signal_init.append('impl->' + p[0])
+  for s in cls.signals:
+    signal_init.append('impl->' + s.name)
+  for p in cls.properties:
+    signal_init.append('impl->' + p.name)
   method_bounce = ''
   emit_interface = dict()
-  for method in methods:
+  for method in cls.methods:
     (ret, typed_args, args) = method_to_cxx(method)
-    method_name = method[0]
+    method_name = method.name
     # UGLY HACK to detect if the method returns an other class for which we
     # have a bouncer.
     # We need a double bounce:
@@ -1310,14 +1390,14 @@ I@name@Ptr interface_from_bound(@impl@ ptr);
     # FooPtr foo;
     # IFooPtr ifoo = interface_from_bound(foo); // generated by binder(us)
     # FooProxyPtr foop = proxy_from_interface(ifoo); // generated by proxy
-    if method[2] in REV_MAP and method[2].find("Ptr") != -1: # FIXME make a more clever test
+    if method.ret in REV_MAP and method.ret.find("Ptr") != -1: # FIXME make a more clever test
       #forward-declare converter functions we use
       fwd = "I@name@Ptr interface_from_bound(@name@Ptr ptr);\n@name@ProxyPtr proxy_from_interface(I@name@Ptr ptr);\n"
-      fwd = fwd.replace('@name@', method[2].replace('Ptr', ''))
+      fwd = fwd.replace('@name@', method.ret.replace('Ptr', ''))
       converter_decl += fwd
-      emit_interface[method[2]] = 1
-      method_bounce += '   %s %s(%s) { return qi_to_interface_%s(_impl->%s(%s));}\n' % (ret, method_name, typed_args, method[2], method_name, args)
-    elif ret[0:11] == 'std::vector' and ret[12:-2] == 'I' + method[2][1:-1]:
+      emit_interface[method.ret] = 1
+      method_bounce += '   %s %s(%s) { return qi_to_interface_%s(_impl->%s(%s));}\n' % (ret, method_name, typed_args, method.ret, method_name, args)
+    elif ret[0:11] == 'std::vector' and ret[12:-2] == 'I' + method.ret[1:-1]:
       # Ugly vector detector case, not forgetting the inserted space
       method_bounce += '   %s %s(%s) { return qi_to_interface_v(_impl->%s(%s));}\n' % (ret, method_name, typed_args, method_name, args)
     else:
@@ -1413,8 +1493,10 @@ def runtime_to_raw(class_name, sd_url):
       doc += '\n' + 'param: ' + argdoc[0] + ' ' + argdoc[1]
     if len(m[6]):
       doc += '\nreturn: ' + m[6]
-    methods.append((method_name, sig, rettype, doc))
-  return {class_name : (methods, [], [], desc[3])}
+    methods.append(Method(method_name, sig, rettype, doc))
+  res = Raw()
+  res.classes[class_name] = Class(methods, [], [], desc[3])
+  return res
 
 def main(args):
   res = ''
@@ -1454,21 +1536,24 @@ def main(args):
       REV_MAP[c + 'Ptr'] = c + 'ProxyPtr'
   # Step one: get raw from either IDL, source files, or running service
   if len(pargs.input) == 1 and pargs.input[0][-3:] in ['idl', 'xml']:
+    # Source is XML IDL FILE
     xml = etree.ElementTree(file=pargs.input[0]).getroot()
     raw = idl_to_raw(xml)
   elif len(pargs.input) == 1 and pargs.input[0].find('://') != -1:
+    # Source is live service
     service = pargs.input[0].split('/')[-1]
     url = '/'.join(pargs.input[0].split('/')[0:-1])
     raw = runtime_to_raw(service, url)
   elif len(pargs.input) == 1 and pargs.input[0][-3:] in ['clg']:
-    # kind of debug mode that takes the qiclang output as input
+    # Source is qiclang output as input
     print("parsing clg")
     raw = qiclang_to_raw(pargs.input[0])
   else:
+    # Assume C++ files, run qiclang on them to a temporary file
     f = tempfile.mkstemp()
     run_qiclang(pargs.input, f[1])
     raw = qiclang_to_raw(f[1])
-    print(f)
+    print("qiclang temporary file:"  + f[1])
   if not len(pargs.include):
     pargs.include = []
   else:
@@ -1478,7 +1563,7 @@ def main(args):
   class_operation = dict()
   if pargs.classes != '*':
     classes = pargs.classes.split(',')
-    newraw = dict()
+    newraw = Raw()
     for c in classes:
       namespaces_class_split = c.rsplit("::", 1) #[("ns1::ns1")+, "class:op1:op2"]
       if len(namespaces_class_split) > 1:
@@ -1511,11 +1596,12 @@ def main(args):
         if class_op:
           class_operation[pargs.class_name] = class_op
       else:
-        newraw[c] = raw[c]
+        newraw.classes[c] = raw.classes[c]
         if class_op:
           class_operation[c] = class_op
     raw = newraw
 
+  # Check if user wants all output in one or multiple files
   split_output = (not pargs.output_file or pargs.output_file.find("%s") != -1)
   # Main switch on output mode
   if pargs.output_mode == "txt":
@@ -1526,7 +1612,7 @@ def main(args):
     else:
       # one file per class/struct
       # TODO: filter only the requested classes and dependencies
-      for cls in raw:
+      for cls in raw.classes:
         res = etree.tostring(raw_to_idl_class(raw, cls))
         comps = cls.split("::")
         comps[-1] += ".xml"
@@ -1534,9 +1620,17 @@ def main(args):
         out = open(os.path.join(*comps), "w")
         out.write(res)
         out.close()
+      for s in raw.structs:
+        res = etree.tostring(raw_to_idl_struct(raw, s))
+        comps = s.split("::")
+        comps[-1] += ".xml"
+        comps = [pargs.prefix] + comps
+        out = open(os.path.join(*comps), "w")
+        out.write(res)
+        out.close()
   else: # Need to apply per-class function
     res = ['','','']
-    for c in raw:
+    for c in raw.classes:
       op = pargs.output_mode
       namespaces_class_split = c.rsplit("::", 1) #[("ns1::ns1")+, "class:op1:op2"]
       if len(namespaces_class_split) > 1:
@@ -1599,7 +1693,7 @@ def main(args):
     #print("Executing %s functions on %s classes" % (len(functions), len(raw)))
 
       for i in range(len(functions)):
-        cargs = [name, raw[c]] + args[i]
+        cargs = [name, raw.classes[c]] + args[i]
         tres = functions[i](*cargs)
         if type(tres) == type([]):
           res[0] += tres[0]
