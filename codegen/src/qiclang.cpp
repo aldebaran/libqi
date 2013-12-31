@@ -16,7 +16,11 @@
 #include <boost/bind.hpp>
 #include <boost/lexical_cast.hpp>
 
+#include <qi/log.hpp>
+
 #include <clang-c/Index.h>
+
+qiLogCategory("qiclang");
 
 namespace qi {
   namespace clang {
@@ -297,24 +301,27 @@ CXChildVisitResult visitAll(CXCursor cursor, CXCursor parent, CXClientData d)
 
 int index_abort(CXClientData, void* r)
 {
+  qiLogVerbose() << "index_abort";
   return 0;
 }
 
 void index_diagnostic(CXClientData d,
                      CXDiagnosticSet diag, void *reserved)
 {
-  
+  qiLogVerbose() << "index_diagnostic";
 }
 
 CXIdxClientFile index_enteredMainFile(CXClientData client_data,
                                      CXFile mainFile, void *reserved)
 {
+  qiLogVerbose() << "index_enteredMainFile";
   return 0;
 }
 
 CXIdxClientASTFile index_ppIncludedFile(CXClientData client_data,
                                         const CXIdxIncludedFileInfo *)
 {
+  qiLogVerbose() << "index_ppIncludedFile";
   return 0;
 }
 
@@ -327,11 +334,13 @@ CXIdxClientASTFile index_importedASTFile(CXClientData d, const CXIdxImportedASTF
 CXIdxClientContainer index_startedTranslationUnit(CXClientData client_data,
                                                  void *reserved)
 {
+  qiLogVerbose() << "index_startedTU";
   return 0;
 }
 
 void index_indexDeclaration(CXClientData d, const CXIdxDeclInfo * decl)
 {
+  qiLogVerbose() << "index_indexDeclaration";
   TranslationUnit& tu = *(TranslationUnit*)d;
   const CXIdxEntityInfo* ent = decl->entityInfo;
 
@@ -434,7 +443,7 @@ void index_indexDeclaration(CXClientData d, const CXIdxDeclInfo * decl)
 
 void index_indexEntityReference(CXClientData d, const CXIdxEntityRefInfo *)
 {
- 
+  qiLogVerbose() << "index_indexEntityReference";
 }
 
 IndexerCallbacks index_callbacks = {
@@ -480,14 +489,21 @@ Diagnostic TranslationUnit::parse(int argc, char** argv)
   CXIndex cxindex = clang_createIndex(0, 0);
   CXIndexAction indexAction = clang_IndexAction_create(cxindex);
   CXTranslationUnit tu;
-  clang_indexSourceFile(indexAction, this,
+  qiLogVerbose() << "Indexing";
+  for (unsigned i=0; i<argc; ++i)
+    qiLogVerbose() << " " << argv[i];
+  int err = clang_indexSourceFile(indexAction, this,
     &index_callbacks, sizeof(index_callbacks),
     CXIndexOpt_None,
     argv[0],
     argv+1, argc-1,
     0, 0,
     &tu, 0); // CXTranslationUnit_None);
+  qiLogVerbose() << "indexer returned " << err;
+  if (err)
+    throw std::runtire_error("clang_indexSourceFile: fatal error");
   int n = clang_getNumDiagnostics(tu);
+  qiLogVerbose() << "got " << n << " diagnostics messages";
   Diagnostic res;
   Diagnostic::Message* lastMessage; // needed to attach notes
   for (unsigned i = 0; i != n; ++i)
@@ -496,6 +512,7 @@ Diagnostic TranslationUnit::parse(int argc, char** argv)
     clstring str(
       clang_formatDiagnostic(diag, clang_defaultDiagnosticDisplayOptions()));
     CXDiagnosticSeverity severity = clang_getDiagnosticSeverity(diag);
+    qiLogVerbose() << severity << " " << str;
     switch (severity)
     {
     case CXDiagnostic_Fatal:
