@@ -46,6 +46,8 @@ import shutil
 import re
 import ctypes
 
+qiclang_exe = "qiclang"
+
 medir = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.join(medir, '..', 'lib', 'python2.7', 'site-packages'))
 import shlib
@@ -322,7 +324,7 @@ def run_qiclang(files, output_path):
   """
   for i in range(len(files)):
     f = files[i]
-    args = ["qiclang", "--filter", f, "--output", output_path]
+    args = [qiclang_exe, "--filter", f, "--output", output_path]
     if not i == 0:
       args.append("--append")
     args.append("--")
@@ -1611,11 +1613,13 @@ def main(args):
   parser.add_argument("--classes", "-c", default="*", help="Comma-separated list of classes to select, optionally with per class ':operation'")
   parser.add_argument("--class-name", "-n", default="", help="C++ class name separated by include namespaces (ei: ns1::ns2::classname")
   parser.add_argument("--cxx-signature-mapping", default="", help="Extra C++->signature mapping(type=sig,type2=sig2)")
+  parser.add_argument("--qiclang", default="qiclang", help="Full path to qiclang binary")
   parser.add_argument("input", nargs='+', help="input file(s)")
 
   pargs = parser.parse_args(args)
   pargs.input = pargs.input[1:]
-
+  global qiclang_exe
+  qiclang_exe = pargs.qiclang
   # Fill SIG_CXX_MAP with static stuff
   SIG_CXX_MAP['({I(Isss[(ss)]s)}{I(Is)}s)'] = 'qi::MetaObject'
 
