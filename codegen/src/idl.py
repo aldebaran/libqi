@@ -328,7 +328,12 @@ def run_qiclang(files, output_path):
     if not i == 0:
       args.append("--append")
     args.append("--")
-    args.append(f)
+    args.append(f) #filename must be first
+    # include path for libqitype
+    args.append("-I")
+    args.append(os.path.join(medir, '..','..')) #buildir
+    args.append("-I")
+    args.append(os.path.join(medir, '..','include')) #install
     print(args)
     subprocess.call(args)
 
