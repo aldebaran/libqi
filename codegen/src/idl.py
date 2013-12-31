@@ -735,26 +735,33 @@ def raw_to_boxinterface(class_name, data):
       tooltip="")
   return etree.tostring(root) + "\n"
 
+def raw_to_idl_class(dstruct, cls, root=None):
+  """ Convert a single class from RAW to IDL XML
+  """
+  if root is None:
+    root = etree.Element('IDL')
+  (methods, signals, properties, an) = dstruct[cls]
+  e = etree.SubElement(root, 'class', name=cls, annotations=an)
+  for method in methods:
+    (method_name, args, ret, an) = method
+    m = etree.SubElement(e, 'method', name=method_name, annotations=an)
+    etree.SubElement(m, 'return', type=ret)
+    for a in args:
+      etree.SubElement(m, 'argument', type=a)
+  for signal in signals:
+    s = etree.SubElement(e, 'signal', name=signal[0])
+    for a in signal[1]:
+      etree.SubElement(s, 'argument', type=a)
+  for prop in properties:
+    s = etree.SubElement(e, 'property', name=prop[0], type=prop[1])
+  return root
+
 def raw_to_idl(dstruct):
   """ Convert RAW to IDL XML format
   """
   root = etree.Element('IDL')
   for cls in dstruct:
-
-    (methods, signals, properties, an) = dstruct[cls]
-    e = etree.SubElement(root, 'class', name=cls, annotations=an)
-    for method in methods:
-      (method_name, args, ret, an) = method
-      m = etree.SubElement(e, 'method', name=method_name, annotations=an)
-      etree.SubElement(m, 'return', type=ret)
-      for a in args:
-        etree.SubElement(m, 'argument', type=a)
-    for signal in signals:
-      s = etree.SubElement(e, 'signal', name=signal[0])
-      for a in signal[1]:
-        etree.SubElement(s, 'argument', type=a)
-    for prop in properties:
-      s = etree.SubElement(e, 'property', name=prop[0], type=prop[1])
+    raw_to_idl_class(dstruct, cls, root)
   return root
 
 def raw_to_text(dstruct):
@@ -1611,6 +1618,7 @@ def main(args):
   parser = argparse.ArgumentParser()
   parser.add_argument("--interface", "-i", help="Use interface mode", action='store_true')
   parser.add_argument("--output-file","-o", help="output file (stdout)")
+  parser.add_argument("--prefix","-p", default=".", help="output directory (.)")
   parser.add_argument("--output-mode","-m", default="txt", choices=["parse", "txt", "idl", "proxy", "proxyFuture", "cxxtype", "cxxtyperegisterfactory", "cxxtyperegisterservice", "cxxskel", "cxxservice", "cxxserviceregister", "cxxservicebouncer", "cxxservicebouncerregister", "interface", "boxinterface", "alproxy", "many"], help="output mode (stdout)")
   parser.add_argument("--include", "-I", default="", help="File to include in generated C++")
   parser.add_argument("--known-classes", "-k", default="", help="Comma-separated list of other handled classes")
@@ -1649,6 +1657,10 @@ def main(args):
     service = pargs.input[0].split('/')[-1]
     url = '/'.join(pargs.input[0].split('/')[0:-1])
     raw = runtime_to_raw(service, url)
+  elif len(pargs.input) == 1 and pargs.input[0][-3:] in ['clg']:
+    # kind of debug mode that takes the qiclang output as input
+    print("parsing clg")
+    raw = qiclang_to_raw(pargs.input[0])
   else:
     f = tempfile.mkstemp()
     run_qiclang(pargs.input, f[1])
@@ -1706,12 +1718,24 @@ def main(args):
           class_operation[c] = class_op
     raw = newraw
 
-  split_output = (pargs.output_file.find("%s") != -1)
+  split_output = (not pargs.output_file or pargs.output_file.find("%s") != -1)
   # Main switch on output mode
   if pargs.output_mode == "txt":
     res = raw_to_text(raw)
   elif pargs.output_mode == "idl":
-    res = etree.tostring(raw_to_idl(raw))
+    if not split_output:
+      res = etree.tostring(raw_to_idl(raw))
+    else:
+      # one file per class/struct
+      # TODO: filter only the requested classes and dependencies
+      for cls in raw:
+        res = etree.tostring(raw_to_idl_class(raw, cls))
+        comps = cls.split("::")
+        comps[-1] += ".xml"
+        comps = [pargs.prefix] + comps
+        out = open(os.path.join(*comps), "w")
+        out.write(res)
+        out.close()
   else: # Need to apply per-class function
     res = ['','','']
     for c in raw:
