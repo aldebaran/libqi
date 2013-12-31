@@ -23,25 +23,25 @@ TEST(TestLoadService, Load)
   ASSERT_EQ(std::string("SimpleService"), objs[0]);
   qi::AnyObject obj = qi::createObject("SimpleService");
   ASSERT_TRUE(obj);
-  ASSERT_EQ(2, obj->call<int>("addOne", 1).value());
+  ASSERT_EQ(2, obj.call<int>("addOne", 1).value());
   SimpleServiceProxy proxy(obj);
   //specialized call
   ASSERT_EQ(42, proxy.addOne(41));
   //specialized connect/disconnect
   qi::Promise<int> prom;
   qi::SignalLink link = proxy.sig.connect(boost::bind(&notify, _1, boost::ref(prom)));
-  obj->post("sig", 1);
+  obj.post("sig", 1);
   ASSERT_EQ(1, prom.future().value());
   proxy.sig.disconnect(link);
-  obj->post("sig", 2);
+  obj.post("sig", 2);
   qi::os::msleep(300);
   ASSERT_EQ(1, prom.future().value());
   //specialized emit
   prom.reset();
-  link = obj->connect("sig", boost::function<void(int)>(boost::bind(&notify, _1, boost::ref(prom))));
+  link = obj.connect("sig", boost::function<void(int)>(boost::bind(&notify, _1, boost::ref(prom))));
   proxy.sig(4);
   ASSERT_EQ(4, prom.future().value());
-  obj->disconnect(link);
+  obj.disconnect(link);
   proxy.sig(5);
   qi::os::msleep(300);
   ASSERT_EQ(4, prom.future().value());
