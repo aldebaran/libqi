@@ -204,104 +204,6 @@ def json_to_signature(js):
     res += '<' + annotation + '>'
   return res
 
-#mimou
-def parse_toplevel_comma(txt):
-  """ Split given string on top-level commas (not within <>)
-  """
-  components = []
-  level = 0
-  p = 0
-  while p < len(txt):
-    if txt[p] == '>':
-      level = level - 1
-    if txt[p] == '<':
-      level = level + 1
-    if txt[p] == ',' and level == 0:
-      components.append(txt[0: p])
-      txt = txt[p+1:]
-      p = 0
-    else:
-      p = p+1
-  components.append(txt)
-  return components
-
-def cxx_type_parse(txt):
-  """ Split a C++ type into basic components.
-  Extracts template parameters.
-  A type is extracted as a string, or (template-name, template-args, trailing-stuff)
-  args is a list containing strings or (template-name, template-args, trailing)
-  """
-  components = parse_toplevel_comma(txt)
-  results = []
-  for t in components:
-    substart = t.find('<')
-    if substart != -1:
-      #find matching
-      count=1
-      p = substart + 1
-      while p < len(t) and count:
-        if t[p] in '>}]':
-          count = count - 1
-        if t[p] in '<{[':
-          count = count + 1
-        p = p+1
-      if count:
-        print ("Parse error in " + t)
-      elem = t[substart+1:p-1]
-      subres = cxx_type_parse(elem)
-      after = t[p+1:]
-      results.append((t[0:substart], subres, after))
-    else:
-      results.append(t)
-  return results
-
-def cxx_parsed_to_sig(p):
-  """ Convert a C++ type parsed by cxx_type_parse into the corresponding
-      IDL signature.
-  """
-  if (type(p) == list):
-    res = map(cxx_parsed_to_sig, p)
-    return ''.join(res)
-  if (type(p) == tuple):
-    if re.search('vector$', p[0]):
-      return "[" + cxx_parsed_to_sig(p[1]) + "]"
-    elif re.search('map$', p[0]):
-      return "{" + cxx_parsed_to_sig(p[1]) + "}"
-    elif re.search('pair$', p[0]):
-      return "(" + cxx_parsed_to_sig(p[1]) + ")"
-    elif re.search('Future$', p[0]):
-      return cxx_parsed_to_sig(p[1])
-    else: # unknown template
-      return 'X' + '<' + ','.join(p) + '>'
-  elif p in CXX_SIG_MAP:
-    return CXX_SIG_MAP[p]
-  #still no match, try without namespace
-  pend = p.split('::')[-1]
-  if pend in CXX_SIG_MAP:
-    return CXX_SIG_MAP[pend]
-  if re.search('Ptr$', p):
-    p = p.replace('ProxyPtr', '').replace('Ptr', '')
-    return 'o<' + p + '>' #This is no duck
-  print("Unhandled type " + p)
-  return 'X<' + p + '>'
-
-
-def cxx_type_to_signature(t):
-  """ Convert the string representation of a C++ type into the corresponding
-  IDL signature
-  """
-  # Drop const and ref.
-  # Drop namespace std (assume any class named vector is...a vector)
-  t = t.replace('const ', '').replace("&", '').replace('std::', '')
-  # Drop all spaces that do not separate identifiers
-  t = re.sub(r"\s([^a-zA-Z])", r"\1", t)
-  t = re.sub(r"([^a-zA-Z])\s", r"\1", t)
-  t = t.strip()
-  parsed = cxx_type_parse(t)
-  sig = cxx_parsed_to_sig(parsed)
-  print(t + " => " + sig)
-  return sig
-
 ANNOTATIONS = ['fast', 'threadSafe']
 
 def normalize_full_name(namespace, name=0):
@@ -583,31 +485,6 @@ def qiclang_to_raw(input_path):
     res[fullname] = (methods, sigs, props, cdoc)
   return res
 
-def run_doxygen(files):
-  """ Invoke doxygen on given source files or directories
-  :param files: A list of file or directory to scan
-  :result: the temporary directory where doxygen output is
-  """
-  tmp_dir = tempfile.mkdtemp()
-  # Create Doxyfile in there
-  doxyfile_path = os.path.join(tmp_dir, "Doxyfile")
-  doxy = open(doxyfile_path, "w")
-  doxy.write("""
-GENERATE_XML=YES
-GENERATE_HTML=NO
-GENERATE_LATEX=NO
-QUIET=YES
-WARN_IF_UNDOCUMENTED   = NO
-""" +
-    "INPUT= " + " ".join(files) + "\n" +
-    "OUTPUT_DIRECTORY= " + tmp_dir + "\n"
-    )
-  for a in ANNOTATIONS:
-    doxy.write('ALIASES += %s=___%s___\n' % (a, a))
-  doxy.close()
-  # Invoke doxygen
-  subprocess.call(["doxygen", doxyfile_path])
-  return tmp_dir
 
 def xml_extract_text(node):
   """ Return all text content from node and its children
@@ -620,80 +497,6 @@ def xml_extract_text(node):
   if node.tail:  # can be none
     result += node.tail
   return result.replace("\n", "").strip()
-
-def doxyxml_to_raw(doxy_dir):
-  """ Convert doxygen output to internal RAW representation
-  """
-  # Parse the index to get all class names (and their functions)
-  index_tree = etree.parse(os.path.join(doxy_dir, "xml", "index.xml"))
-  class_index = dict()
-  result = dict()
-  for cls in index_tree.findall(".//compound[@kind='class']"):
-    class_index[cls.find("name").text] = (cls.get('refid'), [f.find("name").text for f in cls.findall("member[@kind='function']")])
-  for cls in class_index:
-    class_id = class_index[cls][0]
-    ctree = etree.parse(os.path.join(doxy_dir, "xml", class_id + ".xml"))
-    class_root = ctree.find(".//compounddef[@id='" + class_id + "']")
-    methods = []
-    # parse annotations
-    rawAn = etree.tostring(class_root.find("briefdescription"), 'us-ascii', 'text')
-    rawAn += etree.tostring(class_root.find("detaileddescription"), 'us-ascii', 'text')
-    class_annotations = []
-
-    for a in ANNOTATIONS:
-      if '___' + a + '___' in rawAn:
-        class_annotations.append(a)
-    # Parse methods
-    for m in class_root.findall("sectiondef[@kind='public-func']/memberdef[@kind='function']"):
-      method_name = m.find("name").text
-      rettype_raw = xml_extract_text(m.find("type"))
-      if not rettype_raw:
-        continue # constructor
-      rettype = cxx_type_to_signature(rettype_raw)
-      arg_nodes = m.findall("param")
-      argstype_raw = []
-      if arg_nodes is not None:
-        argstype_raw = [xml_extract_text(a.find('type')) for a in arg_nodes]
-      argstype = map(cxx_type_to_signature, argstype_raw)
-      # Look for annotation
-      raw_an = etree.tostring(m.find("briefdescription"), 'us-ascii', 'text')
-      raw_an += etree.tostring(m.find("detaileddescription"), 'us-ascii', 'text')
-
-      an = []
-      for a in ANNOTATIONS:
-        if '___' + a + '___' in raw_an:
-          an.append(a)
-      methods.append((method_name, argstype, rettype, ' '.join(an)))
-
-    signals = []
-    properties = []
-    # Parse signals and properties
-    for s in class_root.findall("sectiondef[@kind='public-attrib']/memberdef[@kind='variable']"):
-      name = s.find("name").text
-      t = xml_extract_text(s.find("type"))
-      # Normalize spacing to ease matching below
-      t = re.sub(r"\s([^a-zA-Z])", r"\1", t)
-      t = re.sub(r"([^a-zA-Z])\s", r"\1", t)
-      t = t.strip()
-      match = re.match(r"(qi::)?SignalF<[^(]+\((.*)\)>", t)
-      if not match:
-        match = re.match(r"(qi::)?Signal<(.*)>", t)
-      if match:
-        t = match.expand(r"\2")
-        sig = "(" + cxx_type_to_signature(t) + ")"
-        sig = signature_to_json(sig)
-        sig = sig[1]
-        sig = map(json_to_signature, sig)
-        signals.append((name, sig))
-      match = re.match(r"(qi::)?Property<(.*)>", t)
-      if match:
-        t = match.expand(r"\2")
-        sig = cxx_type_to_signature(t)
-        sig = parse_toplevel_comma(sig)[0]
-        properties.append((name, sig))
-
-    result[cls] = (methods, signals, properties, ' '.join(class_annotations))
-  return result
 
 def rawtype_to_boxinterface_argtype(arg):
   if arg=='string':
@@ -1666,11 +1469,6 @@ def main(args):
     run_qiclang(pargs.input, f[1])
     raw = qiclang_to_raw(f[1])
     print(f)
-    #shutil.rm(f)
-    #doxy_dir = run_doxygen(pargs.input)
-    #raw = doxyxml_to_raw(doxy_dir)
-    #print("DOXYDIR " + doxy_dir)
-    #shutil.rmtree(doxy_dir)
   if not len(pargs.include):
     pargs.include = []
   else:
