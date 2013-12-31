@@ -14,12 +14,32 @@ function(_qi_find_idl where)
   endif()
   find_program(IDLPY
     name idl.py
-    PATHS ${cdir}/../../bin ${cdir}/../bin
+    PATHS ${cdir} ${cdir}/../../bin ${cdir}/../bin
     )
   if (NOT IDLPY)
     qi_error("idl.py not found")
   endif()
   qi_persistent_set(${where} ${IDLPY})
+endfunction()
+
+#! Find IDL file for given class name, in filesystem or in targets
+function(qi_find_idl_for classname where)
+  string(REPLACE "::" "/" idlname ${classname})
+  set(genname "${CMAKE_CURRENT_BINARY_DIR}/share/idl/${idlname}.xml")
+  get_source_file_property(isgenerated ${genname} GENERATED)
+  if (TARGET ${genname} OR isgenerated)
+    qi_persistent_set(${where} ${genname})
+  else()
+    find_path(idlfile "${idlname}.xml"
+      PATHS ${CMAKE_CURRENT_BINARY_DIR} $ENV{IDL_PATH}
+    )
+    if(idlfile)
+      qi_persistent_set(${where} idlfile)
+    else()
+      qi_error("Could not find IDL file for ${classname}")
+    endif()
+  endif()
+
 endfunction()
 
 
@@ -71,6 +91,50 @@ function(qi_create_interface idl class_name output_dir _out)
       -c ${class_name}
       -o ${output_dir}/${_filename}
       -m interface)
+endfunction()
+
+#! Create client support library for given classes
+function(qi_create_client_lib libname)
+  cmake_parse_arguments(ARG "" "PREFIX" "CLASSES;INCLUDE" ${ARGN})
+  if (NOT ARG_PREFIX)
+    set(ARG_PREFIX ${CMAKE_CURRENT_BINARY_DIR})
+  endif()
+  set(sources "")
+  foreach(c ${ARG_CLASSES})
+    string(REPLACE "::" "-" class ${c})
+    string(REPLACE "::" "/" idlname ${c})
+    set(target "${ARG_PREFIX}/client-${class}.cc")
+    # we need to find the IDL file for proper dependency tracking
+    qi_find_idl_for(${c} idlfile)
+    qi_generate_src(${target}
+      SRC ${idlfile}
+      COMMAND  ${_python_executable} ${IDL}
+      -p ${ARG_PREFIX} # IDLS might be around here
+      -c ${c}
+      -o "${target}"
+      --cxx-signature-mapping "'${_type_map}'"
+      -m client)
+    list(APPEND sources "${target}")
+  endforeach()
+  qi_create_lib(${libname} MODULE SRC ${sources})
+endfunction()
+
+#! Create a skeleton implementation of given class
+function(qi_create_skeleton target)
+  cmake_parse_arguments(ARG "" "CLASS" "INCLUDE" ${ARGN})
+  # we need to find the IDL file for proper dependency tracking
+  string(REPLACE "::" "/" idlname ${ARG_CLASS})
+  find_path(idlfile ${idlname}
+    PATHS ${CMAKE_CURRENT_BINARY_DIR}
+  )
+  qi_generate_src(${target}
+    SRC ${idlfile}
+    COMMAND ${_python_executable} ${IDL}
+     -m cxxskel
+     -o ${target}
+     -c ${ARG_CLASS}
+     -i "'${ARG_INCLUDE}'"
+     )
 endfunction()
 
 #! Create type/factory registration file
@@ -134,12 +198,17 @@ function(qi_create_binder _out)
    )
 endfunction()
 
-#! Create an IDL file by parsing C++ header files.
+#! Create IDL files by parsing C++ header files.
 # \group:SRC C++ source/headers file to parse
-# \group:CLASSES name of the classes for which to generate idl
+#                those will also be used as buid dependencies, so
+#                you should list all relevant headers here
+# \group:CLASSES fully qualified name of the classes for which to generate idl
+#                IDL files will be generated for this classes and all their
+#                dependencies
 # \group:TYPE_MAP Extra c++ types to signature mapping (cxxtype=signature)
 # \param:PREFIX path where to generate IDL files
 # \param:files name of variable that is filled by generated file names
+#              note that other files might be also generated
 function(qi_create_idl files)
   cmake_parse_arguments(ARG
     ""
@@ -148,22 +217,30 @@ function(qi_create_idl files)
     ${ARGN})
   _qi_find_idl(IDL)
   set(names "")
+  # If we are building qiclang, pass it along
+  if (TARGET qiclang)
+    get_target_property(qiclangname qiclang OUTPUT_NAME)
+    if (NOT qiclangname)
+      set(qiclangname "qiclang")
+    endif()
+    get_target_property(qiclangdir qiclang RUNTIME_OUTPUT_DIRECTORY)
+    set(qiclangopt "--qiclang;${qiclangdir}/${qiclangname}")
+  endif()
   if (NOT ARG_PREFIX)
-    set(ARG_PREFIX ".")
+    set(ARG_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/share/idl)
   endif()
   string(REPLACE ";" "," _type_map "${ARG_TYPE_MAP}")
   foreach(c ${ARG_CLASSES})
-    string(REPLACE "::" ";" split_class ${c})
-    list(REVERSE split_class)
-    list(GET split_class 0 class)
+    string(REPLACE "::" "/" class ${c})
     set(target "${ARG_PREFIX}/${class}.xml")
     qi_generate_src(${target}
       SRC ${ARG_SRC}
       COMMAND  ${_python_executable} ${IDL}
       ${ARG_SRC}
       -c ${c}
-      -o ${target}
+      -p "${ARG_PREFIX}"
       --cxx-signature-mapping "'${_type_map}'"
+      ${qiclangopt}
       -m idl)
     list(APPEND names "${target}")
   endforeach(c)
