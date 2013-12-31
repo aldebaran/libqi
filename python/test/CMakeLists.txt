@@ -61,3 +61,6 @@ endif()
 qi_create_gtest(test_python_registerpythonclass SRC registerfactory.cpp
                 DEPENDS QI QITYPE QIMESSAGING GTEST BOOST_PYTHON
                 ARGUMENTS "${CMAKE_CURRENT_SOURCE_DIR}/test_registerfactory.py" "${CMAKE_CURRENT_SOURCE_DIR}/.." "${QI_SDK_DIR}/${QI_SDK_LIB}" "${PYTHONHOME}")
+qi_create_gtest(test_python_typepassing SRC test_python_typepassing.cpp
+                DEPENDS QI QITYPE QIPYTHON GTEST BOOST_PYTHON
+                ARGUMENTS "${PYTHONHOME}" "${QI_SDK_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/..")
