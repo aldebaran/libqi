@@ -60,7 +60,8 @@ namespace qi
       qiLogDebug() << "accept error " << erc.message();
       delete s;
       self->acceptError(erc.value());
-      delete &_acceptor;
+      delete _acceptor;
+      _acceptor = 0;
       return;
     }
     qi::TransportSocketPtr socket = qi::TcpTransportSocketPtr(new TcpTransportSocket(context, _ssl, s));
@@ -70,11 +71,11 @@ namespace qi
       qiLogError() << "bug: socket not stored by the newConnection handler (usecount:" << socket.use_count() << ")";
     }
 #ifdef WITH_SSL
-    _s = new boost::asio::ssl::stream<boost::asio::ip::tcp::socket>(_acceptor.get_io_service(), _sslContext);
+    _s = new boost::asio::ssl::stream<boost::asio::ip::tcp::socket>(_acceptor->get_io_service(), _sslContext);
 #else
-    _s = new boost::asio::ip::tcp::socket(_acceptor.get_io_service());
+    _s = new boost::asio::ip::tcp::socket(_acceptor->get_io_service());
 #endif
-    _acceptor.async_accept(_s->lowest_layer(),
+    _acceptor->async_accept(_s->lowest_layer(),
                            boost::bind(_onAccept, shared_from_this(), _1, _s));
   }
 
@@ -90,7 +91,7 @@ namespace qi
     }
 
     _live = false;
-    _acceptor.close();
+    _acceptor->close();
   }
 
   /*
@@ -171,7 +172,7 @@ namespace qi
     using namespace boost::asio;
 #ifndef ANDROID
     // resolve endpoint
-    ip::tcp::resolver r(_acceptor.get_io_service());
+    ip::tcp::resolver r(_acceptor->get_io_service());
     ip::tcp::resolver::query q(listenUrl.host(), boost::lexical_cast<std::string>(listenUrl.port()),
                                boost::asio::ip::tcp::resolver::query::all_matching);
     ip::tcp::resolver::iterator it = r.resolve(q);
@@ -187,23 +188,23 @@ namespace qi
 #endif // #ifndef ANDROID
 
     qiLogDebug() << "Will listen on " << ep.address().to_string() << ' ' << ep.port();
-    _acceptor.open(ep.protocol());
+    _acceptor->open(ep.protocol());
 #ifdef _WIN32
     boost::asio::socket_base::reuse_address option(false);
 #else
     boost::asio::socket_base::reuse_address option(true);
-    fcntl(_acceptor.native(), F_SETFD, FD_CLOEXEC);
+    fcntl(_acceptor->native(), F_SETFD, FD_CLOEXEC);
 #endif
-    _acceptor.set_option(option);
-    _acceptor.bind(ep);
+    _acceptor->set_option(option);
+    _acceptor->bind(ep);
     boost::system::error_code ec;
-    _acceptor.listen(socket_base::max_connections, ec);
+    _acceptor->listen(socket_base::max_connections, ec);
     if (ec)
     {
       qiLogError("qimessaging.server.listen") << ec.message();
       return qi::makeFutureError<void>(ec.message());
     }
-    _port = _acceptor.local_endpoint().port();// already in host byte orde
+    _port = _acceptor->local_endpoint().port();// already in host byte orde
     qiLogDebug() << "Effective port io_service" << _port;
     if (listenUrl.port() == 0)
     {
@@ -249,11 +250,11 @@ namespace qi
       _sslContext.use_private_key_file(self->_identityKey.c_str(), boost::asio::ssl::context::pem);
     }
 
-    _s = new boost::asio::ssl::stream<boost::asio::ip::tcp::socket>(_acceptor.get_io_service(), _sslContext);
+    _s = new boost::asio::ssl::stream<boost::asio::ip::tcp::socket>(_acceptor->get_io_service(), _sslContext);
 #else
-    _s = new boost::asio::ip::tcp::socket(_acceptor.get_io_service());
+    _s = new boost::asio::ip::tcp::socket(_acceptor->get_io_service());
 #endif
-    _acceptor.async_accept(_s->lowest_layer(),
+    _acceptor->async_accept(_s->lowest_layer(),
       boost::bind(_onAccept, shared_from_this(), _1, _s));
     _connectionPromise.setValue(0);
     return _connectionPromise.future();
@@ -263,7 +264,7 @@ namespace qi
                                                                  EventLoop* ctx)
     : TransportServerImpl(self, ctx)
     , _self(self)
-    , _acceptor(*new boost::asio::ip::tcp::acceptor(*(boost::asio::io_service*)ctx->nativeHandle()))
+    , _acceptor(new boost::asio::ip::tcp::acceptor(*(boost::asio::io_service*)ctx->nativeHandle()))
     , _live(true)
 #ifdef WITH_SSL
     , _sslContext(*(boost::asio::io_service*)ctx->nativeHandle(), boost::asio::ssl::context::sslv23)
@@ -274,5 +275,7 @@ namespace qi
 
   TransportServerAsioPrivate::~TransportServerAsioPrivate()
   {
+    delete _acceptor;
+    _acceptor = 0;
   }
 }
