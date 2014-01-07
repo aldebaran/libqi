@@ -6,7 +6,7 @@
 
 #ifdef _WIN32
 # include <winsock2.h>
-# include <process.h>  // for getpid
+# include <process.h>  // for _getpid
 # include <windows.h>
 #else
 # include <arpa/inet.h>
@@ -227,7 +227,12 @@ TEST(QiOs, env)
 
 TEST(QiOs, getpid)
 {
+// getpid is deprecated on windows, we should use _getpid instead
+#ifdef _WIN32
+  ASSERT_EQ(_getpid(), qi::os::getpid());
+#else
   ASSERT_EQ(getpid(), qi::os::getpid());
+#endif
 }
 
 TEST(QiOs, tmp)
