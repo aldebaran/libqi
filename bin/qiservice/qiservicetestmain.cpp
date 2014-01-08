@@ -16,12 +16,19 @@
 #include <qitype/anyobject.hpp>
 #include <qitype/dynamicobjectbuilder.hpp>
 #include <qitype/jsoncodec.hpp>
+#include <qitype/anyfunction.hpp>
+
 
 qiLogCategory("qiservice");
 
 std::string reply(const std::string &msg) {
   qiLogInfo() << "Message recv:" << msg;
   return msg + "bim";
+}
+
+qi::AnyValue anyArgs(const qi::AnyArguments& aa) {
+  (void)aa;
+  return qi::AnyValue::from(42);
 }
 
 qi::AnyValue reply(const qi::AnyValue &myval) {
@@ -155,6 +162,7 @@ int main(int argc, char *argv[])
     ob.advertiseMethod<qi::AnyValue (const qi::AnyValue&)>("reply", &reply);
     ob.advertiseSignal<const std::string&>("testEvent");
     ob.advertiseMethod<bool (unsigned int)>("slip", &slip);
+    ob.advertiseMethod("anyArgs", &anyArgs);
     qi::AnyObject obj(ob.object());
 
     app.start();
