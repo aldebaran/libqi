@@ -88,9 +88,22 @@ namespace qi {
     return b;
   }
 
+  template<typename T>
+  static T getEnvParam(const char* name, T defaultVal)
+  {
+    std::string sval = qi::os::getenv(name);
+    if (sval.empty())
+      return defaultVal;
+    else
+      return boost::lexical_cast<T>(sval);
+  }
+
   void EventLoopAsio::_pingThread()
   {
     qi::os::setCurrentThreadName("EvLoop.mon");
+    static int maxThreads = getEnvParam("QI_EVENTLOOP_MAX_THREADS", 200);
+    static int msTimeout = getEnvParam("QI_EVENTLOOP_PING_TIMEOUT", 500);
+    static int msGrace = getEnvParam("QI_EVENTLOOP_GRACE_PERIOD", 0);
     ++_nThreads;
     boost::mutex mutex;
     boost::condition_variable cond;
@@ -102,16 +115,24 @@ namespace qi {
       post(0, boost::bind(&ping_me, boost::ref(gotPong), boost::ref(cond)));
       boost::mutex::scoped_lock l(mutex);
       if (!cond.timed_wait(l,
-        boost::get_system_time()+ boost::posix_time::milliseconds(500),
+        boost::get_system_time()+ boost::posix_time::milliseconds(msTimeout),
         boost::bind(&bool_identity, boost::ref(gotPong))))
       {
-        qiLogInfo() << "Spawning more threads..";
-        boost::thread(&EventLoopAsio::_runPool, this);
+        if (maxThreads && *_nThreads == maxThreads + 1) // we count in nThreads
+        {
+          qiLogInfo() << "Thread limit reached";
+        }
+        else
+        {
+          qiLogInfo() << "Spawning more threads (" << *_nThreads << ')';
+          boost::thread(&EventLoopAsio::_runPool, this);
+        }
+        qi::os::msleep(msGrace);
       }
       else
       {
         qiLogDebug() << "Ping ok";
-        qi::os::msleep(500);
+        qi::os::msleep(msTimeout);
       }
     }
     if (!--_nThreads)
