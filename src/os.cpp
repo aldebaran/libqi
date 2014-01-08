@@ -128,7 +128,10 @@ namespace qi {
         idFile >> idString;
         idFile.close();
         initialized = true;
-        return idString;
+        if (!idString.empty()) {
+          return idString;
+        } //else machine id is empty...
+        qiLogWarning() << "machine_id is empty, generating a new one";
       }
 
       std::ofstream newIdFile(idFilePath.c_str());
