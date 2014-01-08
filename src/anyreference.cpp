@@ -480,20 +480,20 @@ namespace qi
 
   std::pair<AnyReference, bool> AnyReferenceBase::convert(TypeInterface* targetType) const
   {
-    qiLogDebug() << "convert "
-      << _type->infoString() << '(' << _type->kind() << ") "
-      << targetType->infoString() << '(' << targetType->kind() << ')' ;
     /* Can have false-negative (same effective type, different Type instances
      * but we do not care, correct check (by comparing info() result
      * is more expensive than the dummy conversion that will happen.
      */
-    if (_type == targetType)
-      return std::make_pair(*this, false);
-
     if (!targetType || !_type) {
       qiLogWarning() << "Conversion error: can't convert to/from a null type.";
       return std::make_pair(AnyReference(), false);
     }
+    qiLogDebug() << "convert "
+      << _type->infoString() << '(' << _type->kind() << ") "
+      << targetType->infoString() << '(' << targetType->kind() << ')' ;
+
+    if (_type == targetType)
+      return std::make_pair(*this, false);
 
     AnyReference result;
     TypeKind skind = _type->kind();
