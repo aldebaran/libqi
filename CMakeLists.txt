@@ -132,8 +132,7 @@ qi_stage_lib(qitype)
 
 option(DISABLE_CODEGEN "disable the code generation (broken)" ON)
 
+add_subdirectory("tests")
 if(NOT ANDROID AND NOT DISABLE_CODEGEN)
-  add_subdirectory("tests")
   add_subdirectory("codegen")
 endif()
-
