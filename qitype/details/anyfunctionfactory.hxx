@@ -487,7 +487,7 @@ namespace qi
       nargs.args().resize(vargs.size()-1);
       for (unsigned i=0; i<vargs.size()-1; ++i)
         nargs.args()[i] = vargs[i+1];
-      C* inst = (C*)vargs.front().to<C*>();
+      C* inst = (C*)vargs.front().rawValue();
       if (!inst)
         qiLogWarning("qitype.AnyArgumentsBouncer") << "Null instance";
       detail::AnyReferenceCopy output;
@@ -498,15 +498,15 @@ namespace qi
 
     template<typename R>
     AnyReference bouncerBF(const AnyReferenceVector& vargs,
-                         boost::function<R (const AnyArguments&)> f
-                         )
+                           boost::function<R (const AnyArguments&)> f
+                           )
     {
       AnyArguments nargs;
       if(!vargs.empty())
       {
-        nargs.args().resize(vargs.size()-1);
-        for (unsigned i=0; i<vargs.size()-1; ++i)
-          nargs.args()[i] = vargs[i+1];
+        nargs.args().resize(vargs.size());
+        for (unsigned i=0; i<vargs.size(); ++i)
+          nargs.args()[i] = vargs[i];
       }
       detail::AnyReferenceCopy output;
       output(), f(nargs);
@@ -523,9 +523,19 @@ namespace qi
       return res;
     }
 
+    template<typename R>
+    AnyFunction makeAnyFunctionBare(R (*fun)(const AnyArguments&))
+    {
+      boost::function<R (const AnyArguments&)> fu = fun;
+      AnyFunction res = AnyFunction::fromDynamicFunction(boost::bind(&bouncerBF<R>, _1, fun));
+      // The signature storage in GO will drop first argument, and bug if none is present
+      const_cast<std::vector<TypeInterface*> &>(res.functionType()->argumentsType()).push_back(typeOf<AnyValue>());
+      return res;
+    }
+
     template<typename R> AnyFunction makeAnyFunctionBare(boost::function<R (const AnyArguments&)> fun)
     {
-       AnyFunction res = AnyFunction::fromDynamicFunction(boost::bind(&bouncerBF<R>, _1, fun));
+      AnyFunction res = AnyFunction::fromDynamicFunction(boost::bind(&bouncerBF<R>, _1, fun));
       // The signature storage in GO will drop first argument, and bug if none is present
       const_cast<std::vector<TypeInterface*> &>(res.functionType()->argumentsType()).push_back(typeOf<AnyValue>());
       return res;

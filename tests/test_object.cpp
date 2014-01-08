@@ -954,7 +954,10 @@ public:
   {
     onCall.set(qi::AnyValue::from(pack.args()));
   }
+
 };
+
+
 
 QI_REGISTER_OBJECT(ArgPack, onCall, callMe);
 
@@ -963,10 +966,65 @@ TEST(TestObject, AnyArguments)
   boost::shared_ptr<ArgPack> ap(new ArgPack);
   qi::AnyObject o = qi::AnyValue::from(ap).to<qi::AnyObject>();
   qi::details::printMetaObject(std::cerr, o.metaObject());
+  std::string sig = o.metaObject().findMethod("callMe")[0].parametersSignature().toString();
+  EXPECT_EQ(sig, "m");
   o.call<void>("callMe", 1, 2, 3);
   qi::AnyValue args = o.property<qi::AnyValue>("onCall");
   std::vector<int> expect = boost::assign::list_of(1)(2)(3);
   EXPECT_EQ(expect, args.to<std::vector<int> >());
+}
+
+
+static qi::AnyValue gCallmee;
+
+void callMee(const qi::AnyArguments& pack) {
+  gCallmee = qi::AnyValue::from(pack.args());
+}
+
+void callMee2(int i, const qi::AnyArguments& pack) {
+  EXPECT_EQ(i, 42);
+  gCallmee = qi::AnyValue::from(pack.args());
+}
+
+TEST(TestObject, DynAnyArguments)
+{
+  qi::DynamicObjectBuilder gob;
+  boost::function <void (const qi::AnyArguments&)> bf = boost::bind(&callMee2, 42, _1);
+  gob.advertiseMethod("callMee", &callMee);
+  gob.advertiseMethod("callMee2", bf);
+
+  ArgPack ap;
+  gob.advertiseMethod("callMee3", &ap, &ArgPack::callMe);
+
+  qi::AnyObject o = gob.object();
+  qi::details::printMetaObject(std::cerr, o.metaObject());
+  std::string sig;
+  sig = o.metaObject().findMethod("callMee")[0].parametersSignature().toString();
+  EXPECT_EQ(sig, "m");
+  sig = o.metaObject().findMethod("callMee2")[0].parametersSignature().toString();
+  EXPECT_EQ(sig, "m");
+  sig = o.metaObject().findMethod("callMee3")[0].parametersSignature().toString();
+  EXPECT_EQ(sig, "m");
+
+  qi::AnyValue args;
+  std::vector<int> expect;
+
+  o.call<void>("callMee", 1, 2, 3);
+  args = gCallmee;
+  expect = boost::assign::list_of(1)(2)(3);
+  EXPECT_EQ(expect, args.to<std::vector<int> >());
+
+  gCallmee = qi::AnyValue();
+  o.call<void>("callMee2", 1, 2, 3);
+  args = gCallmee;
+  expect = boost::assign::list_of(1)(2)(3);
+  EXPECT_EQ(expect, args.to<std::vector<int> >());
+
+  o.call<void>("callMee3", 1, 2, 3);
+  args = ap.onCall.get();
+  expect = boost::assign::list_of(1)(2)(3);
+  EXPECT_EQ(expect, args.to<std::vector<int> >());
+
 }
 
 class Sleeper
