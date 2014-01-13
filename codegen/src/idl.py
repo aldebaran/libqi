@@ -180,6 +180,13 @@ CONTAINERS_SIG = '{[('
 ANNOTATION_CXX_MAP = {
 }
 
+def find_in_path(filename, path):
+  for p in path:
+    fp = os.path.join(p, filename)
+    if os.path.exists(fp):
+      return fp
+  return ''
+
 def signature_to_json(s):
   jsig = qi_type.signature_to_json(s)
   import json
@@ -498,6 +505,7 @@ def qiclang_struct(node):
 def qiclang_to_raw(input_path):
   """ Parse qiclang output XML to produce our raw representation
   """
+  print("INPUT: " + input_path)
   res = Raw()
   index_tree = etree.parse(input_path)
 
@@ -509,7 +517,7 @@ def qiclang_to_raw(input_path):
     cdoc = xml_extract_text(cls.find("./comment/bare"))
     #TODO: validation for struct/class here (all virtual methods, no fields)
     #if cdoc.find("#struct") != -1:
-    if cls.find("./fields/field") is not None:
+    if cls.find("./methods/method") is None:
       s = qiclang_struct(cls)
       res.structs[fullname] = s
       SIG_CXX_MAP[s.signature] = fullname
@@ -538,7 +546,9 @@ def qiclang_to_raw(input_path):
       tfullname = normalize_full_name(tnamespace, tname)
       if tfullname == "qi::Signal":
         templ_nodes = tnode.findall("./templates/type")
-        tsig = ''.join(map(qiclang_type_to_signature, templ_nodes))
+        # signal has extra 'void' template arguments at the end
+        tsig = map(qiclang_type_to_signature, templ_nodes)
+        tsig = filter(lambda x: x != "v", tsig)
         sigs.append(Signal(fname,  tsig , fdoc))
       elif tfullname == "qi::Property":
         tsig = qiclang_type_to_signature(tnode.find("./templates/type"))
@@ -656,6 +666,11 @@ def raw_to_text(raw):
     result += "  properties\n"
     for prop in cls.properties:
       result += "    " + prop.name + '(' + prop.signature + ')\n'
+  for sname in raw.structs:
+    s = raw.structs[sname]
+    result += "struct " + sname +"// " + s.annotations + "\n"
+    for f in s.fields:
+      result += "    " + f.name + ' ' + f.signature + "\n"
   return result
 
 def method_to_cxx(method, tuple_default_cxx_type=None):
@@ -1253,7 +1268,7 @@ static int _init_@TYPE@ = @TYPE@init();
     name = s.name
     field = name
     advertise += '  builder.advertise("%s", &%s::%s);\n' % (name, class_name, field);
-  for s in properties:
+  for s in cls.properties:
     name = s.name
     field = name
     advertise += '  builder.advertise("%s", &%s::%s);\n' % (name, class_name, field);
@@ -1500,11 +1515,12 @@ def runtime_to_raw(class_name, sd_url):
 
 def main(args):
   res = ''
+  print("##args: " + ' '.join(args))
   parser = argparse.ArgumentParser()
   parser.add_argument("--interface", "-i", help="Use interface mode", action='store_true')
   parser.add_argument("--output-file","-o", help="output file (stdout)")
   parser.add_argument("--prefix","-p", default=".", help="output directory (.)")
-  parser.add_argument("--output-mode","-m", default="txt", choices=["parse", "txt", "idl", "proxy", "proxyFuture", "cxxtype", "cxxtyperegisterfactory", "cxxtyperegisterservice", "cxxskel", "cxxservice", "cxxserviceregister", "cxxservicebouncer", "cxxservicebouncerregister", "interface", "boxinterface", "alproxy", "many"], help="output mode (stdout)")
+  parser.add_argument("--output-mode","-m", default="txt", choices=["parse", "txt", "idl", "proxy", "proxyFuture", "cxxtype", "cxxtyperegisterfactory", "cxxtyperegisterservice", "cxxskel", "cxxservice", "cxxserviceregister", "cxxservicebouncer", "cxxservicebouncerregister", "interface", "boxinterface", "alproxy", "client", "many"], help="output mode (stdout)")
   parser.add_argument("--include", "-I", default="", help="File to include in generated C++")
   parser.add_argument("--known-classes", "-k", default="", help="Comma-separated list of other handled classes")
   parser.add_argument("--known-cxx-structs", "-s", default="", help="Comma-separated list of C++ structures that can be used if found in annotations")
@@ -1548,12 +1564,45 @@ def main(args):
     # Source is qiclang output as input
     print("parsing clg")
     raw = qiclang_to_raw(pargs.input[0])
-  else:
+  elif len(pargs.input) >= 1:
     # Assume C++ files, run qiclang on them to a temporary file
     f = tempfile.mkstemp()
     run_qiclang(pargs.input, f[1])
     raw = qiclang_to_raw(f[1])
     print("qiclang temporary file:"  + f[1])
+  else:
+    # no input, expect idl and try to locate it from class
+    if not len(pargs.classes):
+      raise Exception("No input file nor classes given")
+    cname = pargs.classes.replace("::","/") + ".xml"
+    path = ['.', './share/idl'] + os.getenv("IDL_PATH", '').split(':') + pargs.prefix.split(':')
+    fp = find_in_path(cname, path)
+    if not len(fp):
+      raise Exception("Could not locate " + cname + " in " + ':'.join(path))
+    xml = etree.ElementTree(file=fp).getroot()
+    raw = idl_to_raw(xml)
+    if not len(pargs.include):
+      # try to guess where the header is
+      path = ['.'] + pargs.prefix.split(':')
+      sfxs = [".hpp", ".hxx", ".h"]
+      # fixme: try all possible sub-pathes
+      subdirs = ['.', '/'.join(pargs.classes.split("::")[0:-1])]
+      inc = ''
+      fname = pargs.classes.split("::")[-1].lower()
+      for subdir in subdirs:
+        if inc:
+          break
+        for sfx in sfxs:
+          if inc:
+            break
+          inc = find_in_path(os.path.join(subdir, fname + sfx), path)
+          if inc:
+            inc = os.path.join(subdir, fname + sfx) # keep relative part
+
+      if not len(inc):
+        print("##WARNING, no include specified or detected for " + pargs.classes)
+      pargs.include += inc
+
   if not len(pargs.include):
     pargs.include = []
   else:
@@ -1586,7 +1635,7 @@ def main(args):
       if namespaces:
         c = namespaces + "::"
       c += cls
-      if not c in raw:
+      if not c in raw.classes:
         raise Exception("Requested class %s not found in %s" % (c, ','.join(raw.keys())))
       CXX_SIG_MAP[cls + 'Ptr'] = 'o<' + cls + '>'
       CXX_SIG_MAP[cls + 'ProxyPtr'] = 'o<' + cls + '>'
@@ -1679,7 +1728,7 @@ def main(args):
         functions = [raw_to_cxx_service_skeleton]
         args = [[pargs.interface, pargs.include]]
       elif op == "cxxserviceregister":
-        functions = [raw_to_cxx_service_skeleton, raw_to_cxx_typebuild]
+        functions = [raw_to_cxx_service_skeleton, raw_to_cxraw_to_cxx_typebuildx_typebuild]
         args = [[pargs.interface, pargs.include], [pargs.interface, 'service', pargs.include, namespaces_list]]
       elif op == "cxxservice":
         functions = [raw_to_cxx_service_skeleton, raw_to_cxx_typebuild]
@@ -1690,7 +1739,9 @@ def main(args):
       elif op == "cxxservicebouncerregister":
         functions = [raw_to_cxx_service_bouncer, raw_to_cxx_typebuild]
         args = [['@Ptr', pargs.include], [pargs.interface, 'service', pargs.include, namespaces_list]]
-    #print("Executing %s functions on %s classes" % (len(functions), len(raw)))
+      elif op == "client":
+        functions = [raw_to_cxx_typebuild]
+        args = [[True, '', pargs.include, namespaces_list]]
 
       for i in range(len(functions)):
         cargs = [name, raw.classes[c]] + args[i]
