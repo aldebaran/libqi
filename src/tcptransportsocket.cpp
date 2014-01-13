@@ -240,13 +240,25 @@ namespace qi
       error(erc);
       return;
     }
-      qiLogDebug() << this << " Recv (" << _msg->type() << "):" << _msg->address();
+    qiLogDebug() << this << " Recv (" << _msg->type() << "):" << _msg->address();
     static int usWarnThreshold = os::getenv("QIMESSAGING_SOCKET_DISPATCH_TIME_WARN_THRESHOLD").empty()?0:strtol(os::getenv("QIMESSAGING_SOCKET_DISPATCH_TIME_WARN_THRESHOLD").c_str(),0,0);
     qi::int64_t start = 0;
     if (usWarnThreshold)
       start = os::ustime(); // call might be not that cheap
-    messageReady(*_msg);
-    _dispatcher.dispatch(*_msg);
+    if (_msg->type() == Message::Type_Capability)
+    {
+      // This one is for us
+      AnyReference cmRef = _msg->value(typeOf<CapabilityMap>()->signature(), shared_from_this());
+      CapabilityMap cm = cmRef.to<CapabilityMap>();
+      cmRef.destroy();
+      boost::mutex::scoped_lock lock(_capabilityMutex);
+      _capabilityMap.insert(cm.begin(), cm.end());
+    }
+    else
+    {
+      messageReady(*_msg);
+      _dispatcher.dispatch(*_msg);
+    }
     if (usWarnThreshold)
     {
       qi::int64_t duration = os::ustime() - start;
@@ -389,6 +401,7 @@ namespace qi
     else
     {
       _status = qi::TransportSocket::Status_Connected;
+      setCapabilities(defaultCapabilities());
       pSetValue(_connectPromise);
       connected();
       _sslHandshake = true;
@@ -434,6 +447,7 @@ namespace qi
       else
       {
         _status = qi::TransportSocket::Status_Connected;
+        setCapabilities(defaultCapabilities());
         pSetValue(_connectPromise);
         connected();
 
@@ -657,4 +671,21 @@ namespace qi
     send_(m);
   }
 
+  void TcpTransportSocket::setCapabilities(const CapabilityMap& cm)
+  {
+    Message msg;
+    msg.setType(Message::Type_Capability);
+    msg.setValue(cm, typeOf<CapabilityMap>()->signature());
+    send(msg);
+  }
+
+  boost::optional<AnyValue> TcpTransportSocket::capability(const std::string& key)
+  {
+    boost::mutex::scoped_lock loc(_capabilityMutex);
+    CapabilityMap::iterator it = _capabilityMap.find(key);
+    if (it != _capabilityMap.end())
+      return it->second;
+    else
+      return boost::optional<AnyValue>();
+  }
 }

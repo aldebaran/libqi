@@ -139,6 +139,8 @@ namespace qi {
       Type_Post  = 4,
       // Event Server->Client
       Type_Event = 5,
+      // Advertise capabilities, Server<->Client
+      Type_Capability = 6,
     };
 
     static const char* typeToString(Type t);

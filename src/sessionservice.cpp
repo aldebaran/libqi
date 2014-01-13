@@ -203,9 +203,19 @@ namespace qi {
       { // Wait! If sd is local, we necessarily have an open socket
         // on which service was registered, whose lifetime is bound
         // to the service
-        qiLogDebug() << "sd is local, going through socketOfService";
-        onTransportSocketResult(_sdClient->_socketOfService(sr->serviceId), requestId);
-        return;
+        TransportSocketPtr s = _sdClient->_socketOfService(sr->serviceId);
+        if (!s) // weird
+          qiLogVerbose() << "_socketOfService returned 0";
+        else
+        {
+          // check if the socket support that capability
+          if (s->capability("ClientServerSocket", false))
+          {
+            qiLogVerbose() << "sd is local and service is capable, going through socketOfService";
+            onTransportSocketResult(qi::Future<TransportSocketPtr>(s), requestId);
+            return;
+          }
+        }
       }
       //empty serviceInfo
       if (!si.endpoints().size()) {

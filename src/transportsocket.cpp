@@ -44,6 +44,26 @@ namespace qi
       return ret;
     }
   }
+
+  void TransportSocket::setCapability(const std::string& key, const AnyValue& value)
+  {
+    CapabilityMap cm;
+    cm[key] = value;
+    setCapabilities(cm);
+  }
+
+  static CapabilityMap* _defaultCapabilities;
+  static void initCapabilities()
+  {
+    _defaultCapabilities  = new CapabilityMap();
+    (*_defaultCapabilities)["ClientServerSocket"] = AnyValue::from(true);
+  }
+
+  const CapabilityMap& TransportSocket::defaultCapabilities()
+  {
+    QI_ONCE(initCapabilities());
+    return *_defaultCapabilities;
+  }
 }
 
 #ifdef _MSC_VER
