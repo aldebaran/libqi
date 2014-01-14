@@ -150,7 +150,7 @@ namespace qi {
     private:
       inline GenericObject* go() const
       {
-        GenericObject* g = reinterpret_cast<const O*>(this)->asGenericObject();
+        GenericObject* g = static_cast<const O*>(this)->asGenericObject();
         if (!g)
           throw std::runtime_error("This object is null");
         return g;
