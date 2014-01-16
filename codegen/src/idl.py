@@ -59,6 +59,16 @@ class Class:
     self.signals = list(signals)
     self.properties = list(properties)
     self.annotations = annotations
+  def visitTypes(self, f): # call f on all signal,method, prop types
+    for m in self.methods:
+      for a in m.args:
+        f(a)
+      f(m.ret)
+    for s in self.signals:
+      for a in s.args:
+        f(a)
+    for p in self.properties:
+      f(p.signature)
 
 class Method:
   def __init__(self, name, args, ret, annotations):
@@ -85,6 +95,9 @@ class Struct:
     self.signature = ""
     self.annotations = ""
     self.constructor = None # constructor to initialize all fields
+  def visitTypes(self, f): # call f on all member types
+    for field in self.fields:
+      f(field.signature)
 
 class StructField:
   def __init__(self, name, signature, annotations):
@@ -110,11 +123,6 @@ if qi_type is None:
   raise Exception("Could not load libqitype shared module")
 
 qi_type.signature_to_json.restype = ctypes.c_char_p
-
-def signature_to_json(s):
-  return handle.signature_to_json(s)
-
-
 
 # Full names of CXX enums found
 CXX_ENUMS = []
@@ -291,7 +299,7 @@ def run_qiclang(files, output_path):
     args.append(os.path.join(medir, '..','..')) #buildir
     args.append("-I")
     args.append(os.path.join(medir, '..','include')) #install
-    print(args)
+    print("QICLANG: " + ' '.join(args))
     subprocess.call(args)
 
 def qiclang_type_name(node):
@@ -324,7 +332,7 @@ def qiclang_type_to_signature(node):
   if name == "Pair":
     return "(" + ''.join(map(qiclang_type_to_signature,
       node.findall("./templates/type")[0:2])) + ")"
-  if fullname == "boost::shared_ptr":
+  if fullname == "boost::shared_ptr" or fullname == 'qi::Object':
     cnode = node.find("./templates/type")
     cname = normalize_full_name(cnode.get("namespace"), cnode.get("name"));
     return 'o<' + cname + '>'
@@ -687,6 +695,56 @@ def method_to_cxx(method, tuple_default_cxx_type=None):
   arg_names = map(lambda x: 'p' + str(x), range(len(cargs)))
   arg_names = ','.join(arg_names)
   return (cret, typed_args, arg_names)
+
+def get_dependencies(raw, cls):
+  """ return (classNameList, structNameList, extClassNameList, extStructNameList),
+  dependencies of 'cls'. ext ones are the one not present in raw, so the ones
+  for which we cannot recurse
+  """
+  structs = [list(), list()] # result, to-recurse-in
+  classes = [list(), list()] # idem
+  unknown = [list(), list()]
+  def append((res, rec), n):
+    if not n in res:
+      res.append(n)
+      rec.append(n)
+
+  def processType(s, j = None):
+    # accept struct-ified version directly for recursion
+    if j is None:
+      j = signature_to_json(str(s))
+    (t, children, annotations) = j
+    name = annotations.split(',')[0] # may be empty
+    if t == 'o':
+      append(classes, name)
+    elif t == '(':
+      if len(name):
+        append(structs, name)
+      for c in children:
+        processType('', c)
+
+  # initial state: requested class in to-recurse slot
+  classes[1].append(cls)
+  # while there are entries to process
+  while len(classes[1]) or len(structs[1]):
+    rec = (classes[1], structs[1])
+    # reset torecurse
+    classes[1] = list()
+    structs[1] = list()
+    for c in rec[0]:
+      if c in raw.classes:
+        raw.classes[c].visitTypes(processType)
+      else:
+        unknown[0].append(c)
+    for s in rec[1]:
+      if s in raw.structs:
+        raw.structs[s].visitTypes(processType)
+      else:
+        unknown[1].append(s)
+  # remove unknown from result
+  foundc = list(set(classes[0]) - set(unknown[0]))
+  founds = list(set(structs[0]) - set(unknown[1]))
+  return (foundc, founds, unknown[0], unknown[1])
 
 def idl_to_raw(root):
   """ Convert IDL XML to internal RAW representation
@@ -1608,46 +1666,57 @@ def main(args):
   else:
     pargs.include = filter(lambda x: len(x), pargs.include.split(','))
 
+  print("Raw content:")
+  print(','.join(raw.classes.keys()))
+  print(','.join(raw.structs.keys()))
+
   # Filter out classes present in raw, fill class_operation
   class_operation = dict()
   if pargs.classes != '*':
     classes = pargs.classes.split(',')
+    processed = set()
     newraw = Raw()
-    for c in classes:
-      namespaces_class_split = c.rsplit("::", 1) #[("ns1::ns1")+, "class:op1:op2"]
-      if len(namespaces_class_split) > 1:
-        namespaces = namespaces_class_split[0]
-        class_and_op = namespaces_class_split[1]
-      else:
-        namespaces = ""
-        class_and_op = namespaces_class_split[0]
+    while len(classes):
+      oldcls = classes
+      classes = list()
+      for c in oldcls:
+        (dc, ds, uc, us) = get_dependencies(raw, c)
+        classes = list(set(classes) | set(dc))
+        for s in ds:
+          newraw.structs[s] = raw.structs[s]
+        namespaces_class_split = c.rsplit("::", 1) #[("ns1::ns1")+, "class:op1:op2"]
+        if len(namespaces_class_split) > 1:
+          namespaces = namespaces_class_split[0]
+          class_and_op = namespaces_class_split[1]
+        else:
+          namespaces = ""
+          class_and_op = namespaces_class_split[0]
 
-      class_and_op_split = class_and_op.split(":", 1)
-      cls = class_and_op_split[0]
-      if len(class_and_op_split) > 1:
-        class_op = class_and_op_split[1]
-      else:
-        class_op = ""
+        class_and_op_split = class_and_op.split(":", 1)
+        cls = class_and_op_split[0]
+        if len(class_and_op_split) > 1:
+          class_op = class_and_op_split[1]
+        else:
+          class_op = ""
 
-      if not c.strip():
-        continue #be lenient on trailing ,
-      c = ""
-      if namespaces:
-        c = namespaces + "::"
-      c += cls
-      if not c in raw.classes:
-        raise Exception("Requested class %s not found in %s" % (c, ','.join(raw.keys())))
-      CXX_SIG_MAP[cls + 'Ptr'] = 'o<' + cls + '>'
-      CXX_SIG_MAP[cls + 'ProxyPtr'] = 'o<' + cls + '>'
-      ANNOTATION_CXX_MAP[cls] = cls + 'ProxyPtr'
-      if pargs.class_name:
-        newraw[pargs.class_name] = raw[c]
-        if class_op:
-          class_operation[pargs.class_name] = class_op
-      else:
-        newraw.classes[c] = raw.classes[c]
-        if class_op:
-          class_operation[c] = class_op
+        if not c.strip():
+          continue #be lenient on trailing ,
+        c = ""
+        if namespaces:
+          c = namespaces + "::"
+        c += cls
+        if not c in raw.classes:
+          raise Exception("Requested class %s not found in %s" % (c, ','.join(raw.keys())))
+        CXX_SIG_MAP['qi::Object<' + cls + '>'] = 'o<' + cls + '>'
+        ANNOTATION_CXX_MAP[cls] = 'qi::Object<' + cls + '>'
+        if pargs.class_name:
+          newraw.classes[pargs.class_name] = raw[c]
+          if class_op:
+            class_operation[pargs.class_name] = class_op
+        else:
+          newraw.classes[c] = raw.classes[c]
+          if class_op:
+            class_operation[c] = class_op
     raw = newraw
 
   # Check if user wants all output in one or multiple files
@@ -1662,6 +1731,7 @@ def main(args):
       # one file per class/struct
       # TODO: filter only the requested classes and dependencies
       for cls in raw.classes:
+        print("processing " + cls)
         res = etree.tostring(raw_to_idl_class(raw, cls))
         comps = cls.split("::")
         comps[-1] += ".xml"
@@ -1728,7 +1798,7 @@ def main(args):
         functions = [raw_to_cxx_service_skeleton]
         args = [[pargs.interface, pargs.include]]
       elif op == "cxxserviceregister":
-        functions = [raw_to_cxx_service_skeleton, raw_to_cxraw_to_cxx_typebuildx_typebuild]
+        functions = [raw_to_cxx_service_skeleton, raw_to_cxx_typebuild]
         args = [[pargs.interface, pargs.include], [pargs.interface, 'service', pargs.include, namespaces_list]]
       elif op == "cxxservice":
         functions = [raw_to_cxx_service_skeleton, raw_to_cxx_typebuild]
