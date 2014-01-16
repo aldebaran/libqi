@@ -49,37 +49,56 @@ TEST(TestVersion, TestVersionCompare) {
 
 }
 
+namespace std {
+std::ostream & operator<<(std::ostream &s, const qi::version::Version &v) {
+  s << (const std::string&)v;
+  return s;
+}
+}
+
 TEST(TestVersion, comparisonOperators)
 {
-  qi::version::Version p1, p2;
-  p1() = "1.0.0";
-  p2() = "2.0.0";
+  qi::version::Version p1("1.0.0"), p2("2.0.0");
 
-  ASSERT_FALSE(p1() > p2()) << p1() << " > " << p2();
-  ASSERT_TRUE(p1() < p2()) << p1() << " < " << p2();
-  ASSERT_FALSE(p1() == p2()) << p1() << " == " << p2();
-  ASSERT_TRUE(p1() != p2()) << p1() << " != " << p2();
-  ASSERT_FALSE(p1() >= p2()) << p1() << " >= " << p2();
-  ASSERT_TRUE(p1() <= p2()) << p1() << " <= " << p2();
+  ASSERT_FALSE(p1 > p2) << p1 << " > " << p2;
+  ASSERT_TRUE(p1 < p2) << p1 << " < " << p2;
+  ASSERT_FALSE(p1 == p2) << p1 << " == " << p2;
+  ASSERT_TRUE(p1 != p2) << p1 << " != " << p2;
+  ASSERT_FALSE(p1 >= p2) << p1 << " >= " << p2;
+  ASSERT_TRUE(p1 <= p2) << p1 << " <= " << p2;
 
-  p2() = "1.0.0";
+  p2 = "1.0.0";
 
-  ASSERT_FALSE(p1() > p2()) << p1() << " > " << p2();
-  ASSERT_FALSE(p1() < p2()) << p1() << " < " << p2();
-  ASSERT_TRUE(p1() == p2()) << p1() << " == " << p2();
-  ASSERT_FALSE(p1() != p2()) << p1() << " != " << p2();
-  ASSERT_TRUE(p1() >= p2()) << p1() << " >= " << p2();
-  ASSERT_TRUE(p1() <= p2()) << p1() << " <= " << p2();
+  ASSERT_FALSE(p1 > p2) << p1 << " > " << p2;
+  ASSERT_FALSE(p1 < p2) << p1 << " < " << p2;
+  ASSERT_TRUE(p1 == p2) << p1 << " == " << p2;
+  ASSERT_FALSE(p1 != p2) << p1 << " != " << p2;
+  ASSERT_TRUE(p1 >= p2) << p1 << " >= " << p2;
+  ASSERT_TRUE(p1 <= p2) << p1 << " <= " << p2;
 
-  p1() = "2.0.0";
+  p1 = "2.0.0";
 
-  ASSERT_TRUE(p1() > p2()) << p1() << " > " << p2();
-  ASSERT_FALSE(p1() < p2()) << p1() << " < " << p2();
-  ASSERT_FALSE(p1() == p2()) << p1() << " == " << p2();
-  ASSERT_TRUE(p1() != p2()) << p1() << " != " << p2();
-  ASSERT_TRUE(p1() >= p2()) << p1() << " >= " << p2();
-  ASSERT_FALSE(p1() <= p2()) << p1() << " <= " << p2();
+  ASSERT_TRUE(p1 > p2) << p1 << " > " << p2;
+  ASSERT_FALSE(p1 < p2) << p1 << " < " << p2;
+  ASSERT_FALSE(p1 == p2) << p1 << " == " << p2;
+  ASSERT_TRUE(p1 != p2) << p1 << " != " << p2;
+  ASSERT_TRUE(p1 >= p2) << p1 << " >= " << p2;
+  ASSERT_FALSE(p1 <= p2) << p1 << " <= " << p2;
 }
+
+TEST(TestVersion, copy)
+{
+  qi::version::Version p1;
+  p1 = "1.0.0";
+  qi::version::Version p2(p1), p3 = p1;
+  ASSERT_TRUE(p1 == p2) << p1 << " == " << p2;
+  ASSERT_TRUE(p1 == p3) << p1 << " == " << p3;
+  p2 = "2.0.0";
+  p3 = "2.0.0";
+  ASSERT_FALSE(p1 == p2) << p1 << " == " << p2;
+  ASSERT_FALSE(p1 == p3) << p1 << " == " << p3;
+}
+
 
 // It's important that the << operator is defined in the SAME
 // namespace that defines Foo.  C++'s look-up rules rely on that.

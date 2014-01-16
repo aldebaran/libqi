@@ -16,6 +16,9 @@ namespace qi {
 
     class VersionPrivate {
     public:
+      VersionPrivate() {}
+      VersionPrivate(const std::string &version) : _version(version) {}
+      VersionPrivate(const VersionPrivate &other) : _version(other._version) {}
       std::string _version;
     };
 
@@ -160,22 +163,29 @@ namespace qi {
 
     Version::Version()
       : _p(new VersionPrivate())
-    {
-    }
+    {}
+
+    Version::Version(const Version &other)
+      : _p(new VersionPrivate(other))
+    {}
 
     Version::Version(const std::string &version)
-      : _p(new VersionPrivate())
+      : _p(new VersionPrivate(version))
+    {}
+
+    Version::Version(const char *version)
+      : _p(new VersionPrivate(version))
+    {}
+
+    Version::~Version() {}
+
+    Version &Version::operator=(const Version& rhs)
     {
-      _p->_version = version;
+      _p->_version = rhs._p->_version;
+      return *this;
     }
 
-
-    std::string& Version::operator()()
-    {
-      return _p->_version;
-    }
-
-    const std::string& Version::operator()() const
+    Version::operator const std::string& () const
     {
       return _p->_version;
     }
