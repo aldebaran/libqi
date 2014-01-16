@@ -9,6 +9,7 @@
 #include <map>
 #include <string>
 #include <sstream>
+#include <stdexcept>
 
 #include <qiclang.hpp>
 
@@ -60,7 +61,7 @@ std::string Location::toString() const
   s << file <<":" << line <<":" << column;
   return s.str();
 }
-  
+
 std::string NSNamed::toString() const
 {
   std::string res;
@@ -180,10 +181,12 @@ void fillComment(CXCursor cursor, Comment& target)
 }
 
 
-Type CXType_to_Type(CXType t)
+Type CXType_to_Type(CXType t0)
 {
   Type res;
-  t = clang_getCanonicalType(t);
+  CXType t = clang_getCanonicalType(t0);
+  if (t.kind == CXType_Invalid)
+    t = t0;
   res.isRef = (t.kind == CXType_LValueReference || t.kind == CXType_RValueReference);
   if (res.isRef)
     t = clang_getPointeeType(t); // lucky for us, this works for references
@@ -212,7 +215,11 @@ Type CXType_to_Type(CXType t)
   for (int i=0; i<nt; ++i)
   {
     CXType targ = clang_Type_getTemplateArgument(t, i);
-    res.templateArguments.push_back(CXType_to_Type(targ));
+    // Seems we are hitting some magic internal stuff sometimes
+    if (targ.kind == CXType_Invalid)
+      qiLogWarning() << "Invalid template type at pos " << i;
+    else
+      res.templateArguments.push_back(CXType_to_Type(targ));
   }
   return res;
 }
@@ -252,6 +259,7 @@ void CXType_to_Method(CXType t, Method& m)
   {
     CXType arg = clang_getArgType(t, i);
     Type at = CXType_to_Type(arg);
+    qiLogVerbose() << "arg " << i << ' ' << at.toString();
     m.arguments.push_back(at);
   }
   CXType res = clang_getResultType(t);
@@ -268,7 +276,7 @@ CXChildVisitResult visitAll(CXCursor cursor, CXCursor parent, CXClientData d)
   clstring spelling(clang_getCursorSpelling(cursor));
   clstring kindSpelling(clang_getCursorKindSpelling(kind));
   std::cerr << indent << '*' << kindSpelling << ' ' << spelling << std::endl;
-  clang_bearDumpStuff(cursor);
+  //clang_bearDumpStuff(cursor);
   indent += "  ";
   clang_visitChildren(cursor, &visitAll, d);
   indent = indent.substr(2);
@@ -294,7 +302,7 @@ CXChildVisitResult visitAll(CXCursor cursor, CXCursor parent, CXClientData d)
     std::cerr << indent << "decl ";
     visitAll(declCursor, parent, d);
   }
-  
+
   return CXChildVisit_Continue;
 }
 
@@ -321,7 +329,7 @@ CXIdxClientFile index_enteredMainFile(CXClientData client_data,
 CXIdxClientASTFile index_ppIncludedFile(CXClientData client_data,
                                         const CXIdxIncludedFileInfo *)
 {
-  qiLogVerbose() << "index_ppIncludedFile";
+  qiLogDebug() << "index_ppIncludedFile";
   return 0;
 }
 
@@ -340,7 +348,7 @@ CXIdxClientContainer index_startedTranslationUnit(CXClientData client_data,
 
 void index_indexDeclaration(CXClientData d, const CXIdxDeclInfo * decl)
 {
-  qiLogVerbose() << "index_indexDeclaration";
+
   TranslationUnit& tu = *(TranslationUnit*)d;
   const CXIdxEntityInfo* ent = decl->entityInfo;
 
@@ -348,6 +356,7 @@ void index_indexDeclaration(CXClientData d, const CXIdxDeclInfo * decl)
   Location loc = CXSourceLocation_to_Location(cxloc);
   if (tu.filter && !tu.filter(loc))
     return;
+  qiLogVerbose() << "index_indexDeclaration " << ent->kind;
   Class* owner = 0;
 
   if (ent->templateKind == CXIdxEntity_Template)
@@ -365,15 +374,19 @@ void index_indexDeclaration(CXClientData d, const CXIdxDeclInfo * decl)
         Class c(usr);
         fillComment(ent->cursor, c);
         c.name = clstring(clang_getCursorSpelling(ent->cursor)).str();
+        qiLogVerbose() << "class " << c.name;
         c.ns = namespaces(ent->cursor);
         tu.addClass(c);
       }
+      else
+        qiLogVerbose() << "reclass " << usr;
     }
     break;
   case CXIdxEntity_Enum:
     {
       Enum e;
       e.name = clstring(clang_getCursorSpelling(ent->cursor)).str();
+      qiLogVerbose() << "enum " << e.name;
       e.ns =  namespaces(ent->cursor);
       tu.enums.push_back(e);
     }
@@ -382,6 +395,7 @@ void index_indexDeclaration(CXClientData d, const CXIdxDeclInfo * decl)
     break;
   case CXIdxEntity_CXXConstructor:
     {
+      qiLogVerbose() << "constructor";
       CX_CXXAccessSpecifier ac = clang_getCXXAccessSpecifier(ent->cursor);
       if (ac != CX_CXXPublic)
         break;
@@ -401,22 +415,28 @@ void index_indexDeclaration(CXClientData d, const CXIdxDeclInfo * decl)
   case CXIdxEntity_Field:
     owner = tu.classByUsr[semanticContextUsr(ent->cursor)];
     if (!owner)
+    {
+      qiLogVerbose() << "field without owner";
       break;
+    }
     {
       Field f;
       fillComment(ent->cursor, f);
       CXType t = clang_getCursorType(ent->cursor);
       f.type = CXType_to_Type(t);
       f.name = clstring(clang_getCursorSpelling(decl->cursor)).str();
+      qiLogVerbose() << "field " << f.type.toString() << ' ' << f.name;
       owner->fields.push_back(f);
     }
     break;
   //case CXIdxEntity_Variable:
   //case CXIdxEntity_CXXStaticVariable:
   case CXIdxEntity_CXXInstanceMethod:
+
     owner = tu.classByUsr[semanticContextUsr(ent->cursor)];
     if (!owner)
       break; // we are not interested in this class
+
   case CXIdxEntity_Function:
   case CXIdxEntity_CXXStaticMethod:
     {
@@ -429,6 +449,7 @@ void index_indexDeclaration(CXClientData d, const CXIdxDeclInfo * decl)
       CXCursor methodCursor = ent->cursor;
       // bare name
       m.name = clstring(clang_getCursorSpelling(methodCursor)).str();
+      qiLogVerbose() << "method " << m.name;
       m.ns = namespaces(methodCursor);
       CXType ftype = clang_getCursorType(methodCursor);
       CXType_to_Method(ftype, m);
@@ -438,12 +459,14 @@ void index_indexDeclaration(CXClientData d, const CXIdxDeclInfo * decl)
         tu.methods.push_back(m);
     }
     break;
+  default:
+    qiLogVerbose() << "unhandled " << ent->kind;
   }
 }
 
 void index_indexEntityReference(CXClientData d, const CXIdxEntityRefInfo *)
 {
-  qiLogVerbose() << "index_indexEntityReference";
+  //qiLogVerbose() << "index_indexEntityReference";
 }
 
 IndexerCallbacks index_callbacks = {
@@ -501,7 +524,7 @@ Diagnostic TranslationUnit::parse(int argc, char** argv)
     &tu, 0); // CXTranslationUnit_None);
   qiLogVerbose() << "indexer returned " << err;
   if (err)
-    throw std::runtire_error("clang_indexSourceFile: fatal error");
+    throw std::runtime_error("clang_indexSourceFile: fatal error");
   int n = clang_getNumDiagnostics(tu);
   qiLogVerbose() << "got " << n << " diagnostics messages";
   Diagnostic res;
