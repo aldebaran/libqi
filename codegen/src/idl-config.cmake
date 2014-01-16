@@ -133,7 +133,7 @@ function(qi_create_skeleton target)
      -m cxxskel
      -o ${target}
      -c ${ARG_CLASS}
-     -i "'${ARG_INCLUDE}'"
+     --include "'${ARG_INCLUDE}:${CMAKE_CURRENT_SOURCE_DIR}'"
      )
 endfunction()
 
