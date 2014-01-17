@@ -51,14 +51,15 @@ class QiMessagingHandler(tornadio2.conn.SocketConnection):
         def cbk(*args):
             self.reply(None, "signal",
                        { "obj": service, "signal": signal, "data": args, "link": self.subs[idm] })
+            del self.subs[idm]
         return cbk
 
-    def do_reply(self, idm):
+    def do_reply(self, idm, keepLink):
         def rep(fut):
             if fut.hasError():
                 self.reply(idm, "error", fut.error())
             else:
-                if idm >= 0:
+                if keepLink:
                     self.subs[idm] = fut.value()
                 self.reply(idm, "reply", fut.value())
         return rep
@@ -84,7 +85,7 @@ class QiMessagingHandler(tornadio2.conn.SocketConnection):
                 obj = self.objs[service]
                 met = getattr(obj, method)
                 fut = met(*args, _async = True)
-            fut.addCallback(self.do_reply(idm))
+            fut.addCallback(self.do_reply(idm, method == "registerEvent"))
         except (AttributeError, RuntimeError) as exc:
             self.reply(idm, 'error', str(exc))
 
