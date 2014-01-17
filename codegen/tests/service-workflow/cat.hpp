@@ -1,3 +1,5 @@
+#ifndef CAT_HPP
+#define CAT_HPP
 #include <qitype/anyobject.hpp>
 #include <qitype/property.hpp>
 
@@ -35,3 +37,4 @@ class Cat
 };
 
 }
+#endif
