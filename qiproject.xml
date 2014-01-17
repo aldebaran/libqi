@@ -9,4 +9,6 @@
   </qidoc>
 
   <project src="doc" />
+
+  <project src="bin/qicli/doc" />
 </project>
