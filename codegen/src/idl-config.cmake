@@ -100,6 +100,7 @@ function(qi_create_client_lib libname)
     set(ARG_PREFIX ${CMAKE_CURRENT_BINARY_DIR})
   endif()
   set(sources "")
+  set(search_path  "${ARG_PREFIX}:${CMAKE_CURRENT_SOURCE_DIR}")
   foreach(c ${ARG_CLASSES})
     string(REPLACE "::" "-" class ${c})
     string(REPLACE "::" "/" idlname ${c})
@@ -109,14 +110,15 @@ function(qi_create_client_lib libname)
     qi_generate_src(${target}
       SRC ${idlfile}
       COMMAND  ${_python_executable} ${IDL}
-      -p ${ARG_PREFIX} # IDLS might be around here
+      --prefix ${ARG_PREFIX} # IDLS might be around here
+      --search-path "${search_path}"
       -c ${c}
       -o "${target}"
       --cxx-signature-mapping "'${_type_map}'"
       -m client)
     list(APPEND sources "${target}")
   endforeach()
-  qi_create_lib(${libname} MODULE SRC ${sources})
+  qi_create_lib("${libname}" MODULE SRC ${sources})
 endfunction()
 
 #! Create a skeleton implementation of given class
@@ -133,7 +135,7 @@ function(qi_create_skeleton target)
      -m cxxskel
      -o ${target}
      -c ${ARG_CLASS}
-     --include "'${ARG_INCLUDE}:${CMAKE_CURRENT_SOURCE_DIR}'"
+     --include "'${ARG_INCLUDE}'"
      )
 endfunction()
 

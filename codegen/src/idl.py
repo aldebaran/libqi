@@ -59,6 +59,7 @@ class Class:
     self.signals = list(signals)
     self.properties = list(properties)
     self.annotations = annotations
+    self.dependencies = list()
   def visitTypes(self, f): # call f on all signal,method, prop types
     for m in self.methods:
       for a in m.args:
@@ -696,11 +697,30 @@ def method_to_cxx(method, tuple_default_cxx_type=None):
   arg_names = ','.join(arg_names)
   return (cret, typed_args, arg_names)
 
+def find_include(cname, prefix):
+  """ Try to find a C++ header for given class name
+      @arg cname name of the class with namespace
+      @arg prefix ':'-separated path list
+      @return path or None
+  """
+  print("Searching for " + cname + " on " + prefix)
+  path = ['.'] + prefix.split(':')
+  sfxs = [".hpp", ".hxx", ".h"]
+  subdirs = ['.', '/'.join(cname.split("::")[0:-1])]
+  fname = cname.split("::")[-1].lower()
+  for subdir in subdirs:
+    for sfx in sfxs:
+      inc = find_in_path(os.path.join(subdir, fname + sfx), path)
+      if inc:
+        return os.path.join(subdir, fname + sfx) # keep relative part
+  return None
+
 def get_dependencies(raw, cls):
   """ return (classNameList, structNameList, extClassNameList, extStructNameList),
   dependencies of 'cls'. ext ones are the one not present in raw, so the ones
   for which we cannot recurse
   """
+  print("get_dependencies " + cls)
   structs = [list(), list()] # result, to-recurse-in
   classes = [list(), list()] # idem
   unknown = [list(), list()]
@@ -741,15 +761,22 @@ def get_dependencies(raw, cls):
         raw.structs[s].visitTypes(processType)
       else:
         unknown[1].append(s)
+  print("end")
   # remove unknown from result
   foundc = list(set(classes[0]) - set(unknown[0]))
   founds = list(set(structs[0]) - set(unknown[1]))
+  # remove self, doh
+  unknown[0] = filter(lambda x: x != cls, unknown[0])
+  unknown[1] = filter(lambda x: x != cls, unknown[1])
+  print("ru1 : " + ','.join(unknown[0]))
+  print("ru2 : " + ','.join(unknown[1]))
   return (foundc, founds, unknown[0], unknown[1])
 
-def idl_to_raw(root):
+def idl_to_raw(root, result = None):
   """ Convert IDL XML to internal RAW representation
   """
-  result = Raw()
+  if result is None:
+    result = Raw()
   for cls in root.findall("class"):
     methods = []
     for m in cls.findall("method"):
@@ -777,7 +804,7 @@ def idl_to_raw(root):
       s.constructor = c.get('value')
     for f in snode.findall('field'):
       s.fields.append(StructField(f.get('name'), f.get('signature'), f.get('annotations') or ''))
-    result.structs[s.name] = s
+    result.structs[sname] = s
   return result
 
 def raw_to_interface(class_name, cls, include, namespaces):
@@ -1335,14 +1362,14 @@ static int _init_@TYPE@ = @TYPE@init();
     register = 'QI_REGISTER_OBJECT_FACTORY_CONSTRUCTOR(%s);\n' % (class_name)
   elif register_to_factory == 'factory':
     register = 'QI_REGISTER_OBJECT_FACTORY_BUILDER(%s);\n' % (class_name)
-
   open_namespace = ""
   close_namespace = ""
   if namespaces:
     for n in namespaces:
       open_namespace += "namespace " + n + "\n{\n"
       close_namespace = "} // !" + n + "\n" + close_namespace
-
+  if use_interface:
+    open_namespace = 'QI_TYPE_NOT_CLONABLE(%s::%s);\n' % (n, class_name) + open_namespace 
   return template.replace('@TYPE@', class_name).replace('@ADVERTISE@', advertise).replace('@REGISTER@', register).replace('@INCLUDE@', include).replace('@OPEN_NAMESPACE@', open_namespace).replace('@CLOSE_NAMESPACE@', close_namespace)
 
 def raw_to_cxx_service_skeleton(class_name, cls, implement_interface, include):
@@ -1580,6 +1607,7 @@ def main(args):
   parser.add_argument("--prefix","-p", default=".", help="output directory (.)")
   parser.add_argument("--output-mode","-m", default="txt", choices=["parse", "txt", "idl", "proxy", "proxyFuture", "cxxtype", "cxxtyperegisterfactory", "cxxtyperegisterservice", "cxxskel", "cxxservice", "cxxserviceregister", "cxxservicebouncer", "cxxservicebouncerregister", "interface", "boxinterface", "alproxy", "client", "many"], help="output mode (stdout)")
   parser.add_argument("--include", "-I", default="", help="File to include in generated C++")
+  parser.add_argument("--search-path", default="", help="colon-separated list of path to search IDL and headers in")
   parser.add_argument("--known-classes", "-k", default="", help="Comma-separated list of other handled classes")
   parser.add_argument("--known-cxx-structs", "-s", default="", help="Comma-separated list of C++ structures that can be used if found in annotations")
   parser.add_argument("--classes", "-c", default="*", help="Comma-separated list of classes to select, optionally with per class ':operation'")
@@ -1592,8 +1620,12 @@ def main(args):
   pargs.input = pargs.input[1:]
   global qiclang_exe
   qiclang_exe = pargs.qiclang
+
+  idl_search_path = ['.', './share/idl'] + os.getenv("IDL_PATH", '').split(':') + pargs.search_path.split(':')
+
   # Fill SIG_CXX_MAP with static stuff
   SIG_CXX_MAP['({I(Isss[(ss)]s)}{I(Is)}s)'] = 'qi::MetaObject'
+  input_mode = ''
 
   for m in pargs.known_cxx_structs.split(','):
     if len(m):
@@ -1611,6 +1643,9 @@ def main(args):
   # Step one: get raw from either IDL, source files, or running service
   if len(pargs.input) == 1 and pargs.input[0][-3:] in ['idl', 'xml']:
     # Source is XML IDL FILE
+    input_mode = 'idl'
+    if len(pargs.classes):
+      print("WARNING: Cannot specify both IDL and class name input " + pargs.classes)
     xml = etree.ElementTree(file=pargs.input[0]).getroot()
     raw = idl_to_raw(xml)
   elif len(pargs.input) == 1 and pargs.input[0].find('://') != -1:
@@ -1630,49 +1665,65 @@ def main(args):
     print("qiclang temporary file:"  + f[1])
   else:
     # no input, expect idl and try to locate it from class
+    input_mode = 'idl'
     if not len(pargs.classes):
       raise Exception("No input file nor classes given")
+    #Fixme bad cod, assumes classes has only one element
     cname = pargs.classes.replace("::","/") + ".xml"
-    path = ['.', './share/idl'] + os.getenv("IDL_PATH", '').split(':') + pargs.prefix.split(':')
-    fp = find_in_path(cname, path)
+    fp = find_in_path(cname, idl_search_path)
     if not len(fp):
       raise Exception("Could not locate " + cname + " in " + ':'.join(path))
     xml = etree.ElementTree(file=fp).getroot()
     raw = idl_to_raw(xml)
     if not len(pargs.include):
-      # try to guess where the header is
-      path = ['.'] + pargs.prefix.split(':')
-      sfxs = [".hpp", ".hxx", ".h"]
-      # fixme: try all possible sub-pathes
-      subdirs = ['.', '/'.join(pargs.classes.split("::")[0:-1])]
-      inc = ''
-      fname = pargs.classes.split("::")[-1].lower()
-      for subdir in subdirs:
-        if inc:
-          break
-        for sfx in sfxs:
-          if inc:
-            break
-          inc = find_in_path(os.path.join(subdir, fname + sfx), path)
-          if inc:
-            inc = os.path.join(subdir, fname + sfx) # keep relative part
-
-      if not len(inc):
-        print("##WARNING, no include specified or detected for " + pargs.classes)
-      pargs.include += inc
+      # try to guess where the headers are
+      for c in pargs.classes.split(','):
+        inc = find_include(c, pargs.search_path + ':' + pargs.prefix)
+        if inc is not None:
+          pargs.include += ':' + inc
+        else:
+          print("##WARNING, no include specified or detected for " + c)
 
   if not len(pargs.include):
     pargs.include = []
   else:
-    pargs.include = filter(lambda x: len(x), pargs.include.split(','))
+    pargs.include = filter(lambda x: len(x), pargs.include.split(':'))
 
   print("Raw content:")
   print(','.join(raw.classes.keys()))
   print(','.join(raw.structs.keys()))
 
+  if input_mode == 'idl':
+    # try to load dependencies, recursively
+    classes = set(raw.classes.keys())
+    while len(classes):
+      oc = classes
+      classes = set()
+      for c in oc:
+        (dc, ds, uc, us) = get_dependencies(raw, c)
+        # try to load deps
+        for nc in uc + us:
+          namepath = nc.replace("::","/") + ".xml"
+          fp = find_in_path(namepath, idl_search_path)
+          if not len(fp):
+            print("WARNING: could not find idl for dependant class " + nc)
+          else:
+            xml = etree.ElementTree(file=fp).getroot()
+            idl_to_raw(xml, raw)
+            print("scheduling " + nc + "from " + c)
+            classes.add(nc)
+
+  print("Raw content:")
+  print(','.join(raw.classes.keys()))
+  print(','.join(raw.structs.keys()))
+
+  # Register structs in SIG_CXX_MAP
+  for s in raw.structs:
+    SIG_CXX_MAP[raw.structs[s].signature] = s
   # Filter out classes present in raw, fill class_operation
   class_operation = dict()
   if pargs.classes != '*':
+    # User specified classes, but we must also consider dependencies
     classes = pargs.classes.split(',')
     processed = set()
     newraw = Raw()
@@ -1681,6 +1732,7 @@ def main(args):
       classes = list()
       for c in oldcls:
         (dc, ds, uc, us) = get_dependencies(raw, c)
+        raw.classes[c].dependencies = dc + ds + uc + us
         classes = list(set(classes) | set(dc))
         for s in ds:
           newraw.structs[s] = raw.structs[s]
@@ -1718,7 +1770,12 @@ def main(args):
           if class_op:
             class_operation[c] = class_op
     raw = newraw
-
+  else:
+    # Compute dependencies if needed
+    for c in raw.classes:
+      if not len(raw.classes[c].dependencies):
+        (cd, sd, cu, su) = get_dependencies(raw, c)
+        raw.classes[c].dependencies = cd+sd+cu+su
   # Check if user wants all output in one or multiple files
   split_output = (not pargs.output_file or pargs.output_file.find("%s") != -1)
   # Main switch on output mode
