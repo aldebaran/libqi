@@ -322,7 +322,9 @@ namespace qi {
 
   template<typename T> inline void Object<T, false>::init(detail::ManagedObjectPtr obj)
   {
-    if (!boost::is_same<T, Empty>::value && obj && obj->type->info() != typeOf<T>()->info())
+    if (!boost::is_same<T, Empty>::value && obj
+      && obj->type->info() != typeOf<T>()->info()
+      && obj->type->inherits(qi::typeOf<T>())==-1)
     {
       throw std::runtime_error(
         std::string("Object<T> constructed from a different AnyObject type ")
