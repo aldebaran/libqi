@@ -251,7 +251,7 @@ def signature_to_cxxtype_(s, tuple_default_cxx_type=None):
     return res
   elif t == 'o':
     if len(annotation):
-      return annotation + 'ProxyPtr'
+      return 'qi::Object<' + annotation + '>'
     return 'qi::AnyObject' #FIXME specialized proxy from annotation
   elif len(annotation): #FIXME some flag to select default or annotation?
     return annotation
@@ -1195,26 +1195,27 @@ QI_TYPE_PROXY(@namepaces@@proxyName@);
 #endif //@GARD@
 """
 
+  full_name = '::'.join(namespaces) + '::' + class_name
   if return_future and implement_interface:
     raise Exception("Cannot both return_future and implement_interface")
   if implement_interface:
     # In C++ "class foo;" and "typedef bar foo;" conflict, so use a preprocessor
     # define to inhibit standard fwdecl if the special interface version is used
-    forward_decls = "class I@className@; typedef I@className@ @className@Proxy;typedef boost::shared_ptr<@className@Proxy> @className@ProxyPtr;\n#define FWD_@className@\n"
+    forward_decls = '' # "class I@className@; typedef I@className@ @className@Proxy;typedef boost::shared_ptr<@className@Proxy> @className@ProxyPtr;\n#define FWD_@className@\n"
     proxy_name = class_name + "ProxyImpl"
-    qi_register_proxy = "QI_REGISTER_PROXY_INTERFACE(@proxyName@, I@className@);"
+    qi_register_proxy = "QI_REGISTER_PROXY_INTERFACE(@proxyName@, @fullName@);"
   else:
     proxy_name = class_name + "Proxy"
     forward_decls = "class @className@Proxy;\ntypedef boost::shared_ptr<@className@Proxy> @className@ProxyPtr;\n"
     qi_register_proxy = "QI_REGISTER_PROXY(@proxyName@);"
 
-  forward_decls = forward_decls.replace('@className@', class_name)
+  forward_decls = forward_decls.replace('@className@', class_name).replace('@fullName@', full_name)
   #generate methods
   method_impls = ""
   fwdecl = dict()
   if implement_interface:
     call_begin = '(::qi::MetaCallType_Auto,'
-    if_inherit = ', public I' + class_name
+    if_inherit = ', public ' + full_name
   else:
     call_begin = '(callType,'
     if_inherit = ''
@@ -1288,6 +1289,7 @@ QI_TYPE_PROXY(@namepaces@@proxyName@);
       'open_namespace': open_namespace,
       'close_namespace': close_namespace,
       'className': class_name,
+      'fullName' : full_name,
       'publicDecl': method_impls + signal_decl,
       'privateDecl': '',
       'constructor': ctor,
@@ -1376,15 +1378,18 @@ static int _init_@TYPE@ = @TYPE@init();
     open_namespace = 'QI_TYPE_NOT_CLONABLE(%s::%s);\n' % (n, class_name) + open_namespace 
   return template.replace('@TYPE@', class_name).replace('@ADVERTISE@', advertise).replace('@REGISTER@', register).replace('@INCLUDE@', include).replace('@OPEN_NAMESPACE@', open_namespace).replace('@CLOSE_NAMESPACE@', close_namespace)
 
-def raw_to_cxx_service_skeleton(class_name, cls, implement_interface, include):
+def raw_to_cxx_service_skeleton(class_name, cls, implement_interface, include, namespace, register_factory=False):
   """ Produce skeleton of C++ implementation of the service.
   """
-  result = "#include <qitype/signal.hpp>\n#include <qitype/property.hpp>\n"
+  result = "#include <qitype/signal.hpp>\n#include <qitype/property.hpp>\n#include <qitype/objecttypebuilder.hpp>\n"
+  if register_factory:
+    result += '#include <qitype/objectfactory.hpp>\n'
   result += ''.join(['#include <' + x + '>\n' for x in include])
   result += '\n'
+  full_name = '::'.join(namespace) + '::' + class_name
   inherits = ''
   if implement_interface:
-    inherits = ' : public I' + class_name
+    inherits = ' : public ' + full_name
   result += "class %s %s \n{\npublic:\n" % (class_name, inherits)
   for method in cls.methods:
     method_name = method.name
@@ -1395,15 +1400,16 @@ def raw_to_cxx_service_skeleton(class_name, cls, implement_interface, include):
       args
     )
   iface_ctor = []
-  for signal in cls.signals:
-    iface_ctor.append('%s' % (signal.name))
-    result += '  qi::Signal<%s> %s;\n' % (
-      ','.join(map(signature_to_cxxtype, signal.args)),
-      signal.name
-    )
   if implement_interface:
-    result += '  %s() :%s(%s) {}\n' % (class_name, class_name, ','.join(iface_ctor))
+    result += '  %s() :%s(%s) {}\n' % (class_name, full_name, ','.join(iface_ctor))
   result += '};\n\n'
+  if implement_interface:
+    result += 'QI_TYPE_NOT_CLONABLE(%s);\n' % (full_name)
+    result += 'QI_REGISTER_IMPLEMENTATION(%s,%s);\n' % (full_name, class_name)
+  if register_factory:
+    result += '// Register to runtime factory\n'
+    result += 'QI_REGISTER_OBJECT_FACTORY_CONSTRUCTOR_FOR(%s,%s);\n' % (full_name, class_name)
+    result += '\n'
   for method in cls.methods:
     method_name = method.name
     args = method.args
@@ -1681,6 +1687,7 @@ def main(args):
     xml = etree.ElementTree(file=fp).getroot()
     raw = idl_to_raw(xml)
     if not len(pargs.include):
+      print("Searching for includes...")
       # try to guess where the headers are
       for c in pargs.classes.split(','):
         inc = find_include(c, pargs.search_path + ':' + pargs.prefix)
@@ -1858,13 +1865,13 @@ def main(args):
         args = [[pargs.interface, 'service', pargs.include, namespaces_list]]
       elif op == "cxxskel":
         functions = [raw_to_cxx_service_skeleton]
-        args = [[pargs.interface, pargs.include]]
+        args = [[pargs.interface, pargs.include, namespaces_list]]
       elif op == "cxxserviceregister":
         functions = [raw_to_cxx_service_skeleton, raw_to_cxx_typebuild]
-        args = [[pargs.interface, pargs.include], [pargs.interface, 'service', pargs.include, namespaces_list]]
+        args = [[pargs.interface, pargs.include, namespaces_list], [pargs.interface, 'service', pargs.include, namespaces_list]]
       elif op == "cxxservice":
         functions = [raw_to_cxx_service_skeleton, raw_to_cxx_typebuild]
-        args = [[pargs.interface, pargs.include], [pargs.interface, '', pargs.include, namespaces_list]]
+        args = [[pargs.interface, pargs.include, namespaces_list], [pargs.interface, '', pargs.include, namespaces_list]]
       elif op == "cxxservicebouncer":
         functions = [raw_to_cxx_service_bouncer, raw_to_cxx_typebuild]
         args = [['@Ptr', pargs.include], [pargs.interface, '', pargs.include, namespaces_list]]
@@ -1872,8 +1879,8 @@ def main(args):
         functions = [raw_to_cxx_service_bouncer, raw_to_cxx_typebuild]
         args = [['@Ptr', pargs.include], [pargs.interface, 'service', pargs.include, namespaces_list]]
       elif op == "client":
-        functions = [raw_to_cxx_typebuild]
-        args = [[True, '', pargs.include, namespaces_list]]
+        functions = [raw_to_cxx_typebuild, raw_to_proxy]
+        args = [[True, '', pargs.include, namespaces_list], [False, True, pargs.include, namespaces_list]]
 
       for i in range(len(functions)):
         cargs = [name, raw.classes[c]] + args[i]

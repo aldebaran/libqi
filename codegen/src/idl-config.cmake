@@ -118,17 +118,21 @@ function(qi_create_client_lib libname)
       -m client)
     list(APPEND sources "${target}")
   endforeach()
-  qi_create_lib("${libname}" MODULE SRC ${sources})
+  qi_create_lib("${libname}" SHARED SRC ${sources})
 endfunction()
 
 #! Create a skeleton implementation of given class
 function(qi_create_skeleton target)
-  cmake_parse_arguments(ARG "" "CLASS" "INCLUDE" ${ARGN})
+  cmake_parse_arguments(ARG "NO_INTERFACE" "CLASS" "INCLUDE;SEARCHPATH" ${ARGN})
   # we need to find the IDL file for proper dependency tracking
   string(REPLACE "::" "/" idlname ${ARG_CLASS})
   find_path(idlfile ${idlname}
     PATHS ${CMAKE_CURRENT_BINARY_DIR}
   )
+  if(NOT ARG_NO_INTERFACE)
+    set(interface "--interface")
+  endif()
+  set(search_path  "${ARG_SEARCHPATH}:${CMAKE_CURRENT_SOURCE_DIR}")
   qi_generate_src(${target}
     SRC ${idlfile}
     COMMAND ${_python_executable} ${IDL}
@@ -136,6 +140,8 @@ function(qi_create_skeleton target)
      -o ${target}
      -c ${ARG_CLASS}
      --include "'${ARG_INCLUDE}'"
+     --search-path "${search_path}"
+     ${interface}
      )
 endfunction()
 
