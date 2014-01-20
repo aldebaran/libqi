@@ -202,13 +202,17 @@ def signature_to_json(s):
   sig = json.loads(jsig)
   return sig
 
-def signature_to_cxxtype(s, tuple_default_cxx_type=None):
+def signature_to_cxxtype(s, tuple_default_cxx_type=None, argument_type=False):
   """ Take a signature and return a C++ type that matches.
+      @param argument_type if true, apply const& modifier if appropriate
   """
   if not isinstance(s, basestring): #common pitfall, this works with unicode strings too
     raise Exception("Expected string, got " + str(s) + " which is " + str(type(s)))
   sig = signature_to_json(str(s)) # no unicode!
-  return signature_to_cxxtype_(sig, tuple_default_cxx_type)
+  result = signature_to_cxxtype_(sig, tuple_default_cxx_type)
+  if argument_type and s[0] not in "lLiIwWcCbfdo":
+    result = 'const ' + result + '&'
+  return result
 
 def function_signature_to_cxxtypes(s):
   """ Take a function signature and return
@@ -1238,7 +1242,7 @@ QI_TYPE_PROXY(@namepaces@@proxyName@);
     typed_args = ''
     argIdx = 0
     for arg in method.args:
-      cxx_arg = signature_to_cxxtype(arg)
+      cxx_arg = signature_to_cxxtype(arg, None, True)
       if cxx_arg.find("Ptr") != -1:
         typed_args += '::qi::AutoAnyReference p' + str(argIdx)
       else:
@@ -1384,7 +1388,7 @@ def raw_to_cxx_service_skeleton(class_name, cls, implement_interface, include):
   result += "class %s %s \n{\npublic:\n" % (class_name, inherits)
   for method in cls.methods:
     method_name = method.name
-    args = ','.join(map(signature_to_cxxtype, method.args))
+    args = ','.join(map(lambda x: signature_to_cxxtype(x, None, True), method.args))
     result += '  %s %s(%s);\n' % (
       signature_to_cxxtype(method.ret),
       method_name,
@@ -1404,7 +1408,8 @@ def raw_to_cxx_service_skeleton(class_name, cls, implement_interface, include):
     method_name = method.name
     args = method.args
     for i in range(len(args)):
-      args[i] = signature_to_cxxtype(args[i]) + ' p' + str(i)
+      carg = signature_to_cxxtype(args[i], None, True)
+      args[i] = carg + ' p' + str(i)
     args = ','.join(args)
     result += '%s %s::%s(%s)\n{\n  // Implementation of %s\n}\n' % (
       signature_to_cxxtype(method.ret),
