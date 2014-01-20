@@ -6,8 +6,9 @@
 find_package(idl REQUIRED)
 
 # first thing, check that the user interface file compiles
+# Not in a workflow, just for early-detection of problems
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
-qi_create_lib(cattest SRC cat-test-compiles.cpp DEPENDS QITYPE)
+qi_create_lib(cattestcompile SRC cat-test-compiles.cpp DEPENDS QITYPE)
 
 #user wrote cat.hpp interface, generate the idl files from it
 qi_create_idl(idl_files
@@ -18,10 +19,10 @@ message("Will generate IDL: ${idl_files}")
 
 
 #generate the client support files
-qi_create_client_lib(ANIMALS_CAT_LIB
+qi_create_client_lib(animals_cat
   CLASSES animals::Cat
 )
-qi_stage_lib(ANIMALS_CAT_LIB)
+qi_stage_lib(animals_cat)
 
 #generate an implementation skeleton
 qi_create_skeleton(${CMAKE_CURRENT_BINARY_DIR}/catimpl-skel.cpp
@@ -29,10 +30,18 @@ qi_create_skeleton(${CMAKE_CURRENT_BINARY_DIR}/catimpl-skel.cpp
 
 # fill it with stuff
 qi_generate_src(${CMAKE_CURRENT_BINARY_DIR}/catimpl.cpp
-  SRC ${CMAKE_CURRENT_BINARY_DIR}/catimpl-skel.cpp
-  COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/catimpl-skel.cpp ${CMAKE_CURRENT_BINARY_DIR}/catimpl.cpp)
+  SRC ${CMAKE_CURRENT_BINARY_DIR}/catimpl-skel.cpp ${CMAKE_CURRENT_SOURCE_DIR}/cat-patch.cmake
+  COMMAND ${CMAKE_COMMAND}
+    -Dinput=${CMAKE_CURRENT_BINARY_DIR}/catimpl-skel.cpp
+    -Doutput=${CMAKE_CURRENT_BINARY_DIR}/catimpl.cpp
+    -P ${CMAKE_CURRENT_SOURCE_DIR}/cat-patch.cmake)
 
 # compile the service
-qi_create_lib(ANIMALS_CAT_IMPL_LIB
+qi_create_lib(cat
   MODULE
-  SRC ${CMAKE_CURRENT_BINARY_DIR}/catimpl.cpp DEPENDS ANIMALS_CAT_LIB)
+  SRC ${CMAKE_CURRENT_BINARY_DIR}/catimpl.cpp DEPENDS animals_cat)
+
+# compile a test client
+qi_create_test(test_service_workflow
+  SRC cattest.cpp
+  DEPENDS animals_cat QITYPE GTEST)

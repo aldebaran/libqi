@@ -25,7 +25,7 @@ class Cat
 {
   public:
     virtual ~Cat() {}
-    virtual void meow(int volume) = 0;
+    virtual void meow(qi::int64_t volume) = 0;
     virtual bool setTarget(const Mosquito& m) = 0;
     virtual qi::Object<CatAction> selectTask() = 0;
     virtual bool canPerform(qi::Object<CatAction> task) = 0;
@@ -37,4 +37,5 @@ class Cat
 };
 
 }
+
 #endif
