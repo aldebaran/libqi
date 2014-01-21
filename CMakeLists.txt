@@ -33,8 +33,27 @@ if(ANDROID)
 else()
   find_path(_lock_free_default "boost/lockfree/queue.hpp")
 endif()
+
+# High-level CMake...
+# * find_path return the path of the file if found, or the path it
+#   looks for suffixed with -NOTFOUND otherwise;
+# * if statement interpretes as false a variables ending with -NOTFOUND;
+# * to be evaluate as a boolean, the varaible must not be in ${} in the
+#   if statement.
+#
+# for further details, see:
+#   http://www.cmake.org/cmake/help/v2.8.12/cmake.html#command:if
+#
+# So, here we explicitly use another variable to store the default value
+# for the option.
+if(_lock_free_default)
+  set(_use_lock_free_default ON)
+else()
+  set(_use_lock_free_default OFF)
+endif()
+
 option(USE_BOOST_LOCK_FREE "Use boost/lockfree for asynchronous qi::log"
-  ${_lock_free_default}
+  ${_use_lock_free_default}
 )
 
 if(USE_BOOST_LOCK_FREE)
