@@ -45,3 +45,9 @@ qi_create_lib(cat
 qi_create_test(test_service_workflow
   SRC cattest.cpp
   DEPENDS animals_cat QITYPE GTEST)
+#workaround for ubuntu/debian who decided it was a good idea to
+# break the default link semantic by passing as-needed.
+if(NOT WIN32)
+set_target_properties(test_service_workflow PROPERTIES
+  LINK_FLAGS "-Wl,-no-as-needed")
+endif()
