@@ -290,7 +290,13 @@ namespace qi {
       if (t)
         type = t->next();
       if (type->kind() != TypeKind_Object)
-        throw std::runtime_error("Object<T> can only be used on registered object types.");
+      {
+                std::stringstream err;
+        err << "Object<T> can only be used on registered object types. ("
+            << type->infoString() << ")(" << type->kind() << ')';
+
+        throw std::runtime_error(err.str());
+      }
     }
     ObjectTypeInterface* otype = static_cast<ObjectTypeInterface*>(type);
     _obj = detail::ManagedObjectPtr(new GenericObject(otype, ptr), &deleteObject);
@@ -305,7 +311,13 @@ namespace qi {
       if (t)
         type = t->next();
       if (type->kind() != TypeKind_Object)
-        throw std::runtime_error("Object<T> can only be used on registered object types.");
+      {
+        std::stringstream err;
+        err << "Object<T> can only be used on registered object types. ("
+            << type->infoString() << ")(" << type->kind() << ')';
+
+        throw std::runtime_error(err.str());
+      }
     }
     ObjectTypeInterface* otype = static_cast<ObjectTypeInterface*>(type);
     if (deleter)
@@ -337,6 +349,12 @@ namespace qi {
       if (it != map.end())
       {
         AnyReference ref = it->second(AnyObject(obj));
+        /* We need to access two interfaces from ref, of type
+         * shared_ptr<SomeProxyOfTImpl>:
+         * - qi::Proxy : accessed by TypeProxy methods
+         * - T : accessed by asT
+         *
+         */
         _obj = ref.to<detail::ManagedObjectPtr>();
         return;
       }
@@ -401,8 +419,9 @@ namespace qi {
   class QITYPE_API Proxy
   {
   public:
-    Proxy(AnyObject obj) : _obj(obj) {}
+    Proxy(AnyObject obj) : _obj(obj) {qiLogDebug("qitype.proxy") << "Initializing " << this << " on " << &obj.asT();}
     Proxy() {}
+    ~Proxy() { qiLogDebug("qitype.proxy") << "Finalizing on " << &_obj.asT();}
     Object<Empty> asObject() const;
   protected:
     Object<Empty> _obj;
@@ -515,7 +534,7 @@ namespace qi {
       TemplateTypeInterface* ft1 = QI_TEMPLATE_TYPE_GET(val.type(), Future);
       TemplateTypeInterface* ft2 = QI_TEMPLATE_TYPE_GET(val.type(), FutureSync);
       TemplateTypeInterface* futureType = ft1 ? ft1 : ft2;
-      qiLogDebug("qi.object") << "isFuture " << !!ft1 << ' ' << !!ft2;
+      qiLogDebug("qi.object") << "isFuture " << val.type()->infoString() << ' ' << !!ft1 << ' ' << !!ft2;
       if (!futureType)
         return false;
 
@@ -530,7 +549,7 @@ namespace qi {
       // and thus must be synchronous.
       qi::Future<void> waitResult = gfut.call<void>(MetaCallType_Direct, "_connect", cb);
       waitResult.wait();
-      qiLogDebug("qi.object") << "future connected " << !waitResult.hasError();
+      qiLogDebug("qi.adapter") << "future connected " << !waitResult.hasError();
       if (waitResult.hasError())
         qiLogWarning("qi.object") << waitResult.error();
       return true;
@@ -539,7 +558,7 @@ namespace qi {
     template <typename T>
     inline void futureAdapter(qi::Future<qi::AnyReference> metaFut, qi::Promise<T> promise)
     {
-      qiLogDebug("qi.object") << "futureAdapter";
+      qiLogDebug("qi.object") << "futureAdapter " << qi::typeOf<T>()->infoString()<< ' ' << metaFut.hasError();
       //error handling
       if (metaFut.hasError()) {
         promise.setError(metaFut.error());
@@ -812,32 +831,6 @@ namespace qi {
   {
   };
 
-  namespace detail
-  {
-    template<typename ProxyImpl>
-    AnyReference makeProxy(AnyObject ptr)
-    {
-      // The ProxyInterface code will blindy cast opaque storage to a qi::Proxy*
-      // So there must not be any offset involved.
-      // To ensure that, make the cast from ProxyImpl template to Proxy now.
-      boost::shared_ptr<Proxy> sp(new ProxyImpl(ptr));
-      return AnyReference::from(sp).clone();
-    }
-  }
-  template<typename Proxy, typename Interface>
-  bool registerProxyInterface()
-  {
-    detail::ProxyGeneratorMap& map = detail::proxyGeneratorMap();
-    map[typeOf<Interface>()->info()] = &detail::makeProxy<Proxy>;
-    return true;
-  }
-  template<typename Proxy>
-  bool registerProxy()
-  {
-    detail::ProxyGeneratorMap& map = detail::proxyGeneratorMap();
-    map[typeOf<Proxy>()->info()] = &detail::makeProxy<Proxy>;
-    return true;
-  }
 
   namespace detail
   {
@@ -852,38 +845,43 @@ namespace qi {
   }
 
 
-    /* A proxy instance can have members: signals and properties.
+  /* A proxy instance can have members: signals and properties, inherited from interface.
   * So it need a type of its own, we cannot pretend it's a AnyObject.
   */
   class TypeProxy: public ObjectTypeInterface
   {
   public:
-    TypeProxy()
+    /* We need a per-instance offset from effective type to Proxy.
+     * Avoid code explosion by putting it per-instance
+    */
+    typedef boost::function<Proxy*(void*)> ToProxy;
+    TypeProxy(ToProxy  toProxy)
+    : toProxy(toProxy)
     {
     }
     virtual const MetaObject& metaObject(void* instance)
     {
-      Proxy* ptr = static_cast<Proxy*>(instance);
+      Proxy* ptr = toProxy(instance);
       return ptr->asObject().metaObject();
     }
     virtual qi::Future<AnyReference> metaCall(void* instance, AnyObject context, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto)
     {
-      Proxy* ptr = static_cast<Proxy*>(instance);
+      Proxy* ptr = toProxy(instance);
       return ptr->asObject().metaCall(method, params, callType);
     }
     virtual void metaPost(void* instance, AnyObject context, unsigned int signal, const GenericFunctionParameters& params)
     {
-      Proxy* ptr = static_cast<Proxy*>(instance);
+      Proxy* ptr = toProxy(instance);
       ptr->asObject().metaPost(signal, params);
     }
     virtual qi::Future<SignalLink> connect(void* instance, AnyObject context, unsigned int event, const SignalSubscriber& subscriber)
     {
-      Proxy* ptr = static_cast<Proxy*>(instance);
+      Proxy* ptr = toProxy(instance);
       return ptr->asObject().connect(event, subscriber);
     }
     virtual qi::Future<void> disconnect(void* instance, AnyObject context, SignalLink linkId)
     {
-       Proxy* ptr = static_cast<Proxy*>(instance);
+       Proxy* ptr = toProxy(instance);
        return ptr->asObject().disconnect(linkId);
     }
     virtual const std::vector<std::pair<TypeInterface*, int> >& parentTypes()
@@ -893,18 +891,62 @@ namespace qi {
     }
     virtual qi::Future<AnyValue> property(void* instance, unsigned int id)
     {
-      Proxy* ptr = static_cast<Proxy*>(instance);
+      Proxy* ptr = toProxy(instance);
       GenericObject* obj = ptr->asObject().asGenericObject();
       return obj->type->property(obj->value, id);
     }
     virtual qi::Future<void> setProperty(void* instance, unsigned int id, AnyValue value)
     {
-      Proxy* ptr = static_cast<Proxy*>(instance);
+      Proxy* ptr = toProxy(instance);
       GenericObject* obj = ptr->asObject().asGenericObject();
       return obj->type->setProperty(obj->value, id, value);
     }
-
+    typedef DefaultTypeImplMethods<Proxy> Methods;
+    _QI_BOUNCE_TYPE_METHODS(Methods);
+    ToProxy toProxy;
   };
+
+    namespace detail
+  {
+    // FIXME: inline that in QI_REGISTER_PROXY_INTERFACE maybe
+    template<typename ProxyImpl> Proxy* static_proxy_cast(void* storage)
+    {
+      return static_cast<Proxy*>((ProxyImpl*)storage);
+    }
+    template<typename ProxyImpl>
+    TypeProxy* makeProxyInterface()
+    {
+      static TypeProxy * result = 0;
+      if (!result)
+        result = new TypeProxy(&static_proxy_cast<ProxyImpl>);
+      return result;
+    }
+
+    template<typename ProxyImpl>
+    AnyReference makeProxy(AnyObject ptr)
+    {
+      boost::shared_ptr<ProxyImpl> sp(new ProxyImpl(ptr));
+      return AnyReference::from(sp).clone();
+    }
+  }
+  template<typename Proxy, typename Interface>
+  bool registerProxyInterface()
+  {
+    qiLogVerbose("qitype.type") << "ProxyInterface registration " << typeOf<Interface>()->infoString();
+    // Runtime-register TypeInterface for Proxy, using ProxyInterface with
+    // proper static_cast (from Proxy template to qi::Proxy) helper.
+    registerType(typeid(Proxy), detail::makeProxyInterface<Proxy>());
+    detail::ProxyGeneratorMap& map = detail::proxyGeneratorMap();
+    map[typeOf<Interface>()->info()] = &detail::makeProxy<Proxy>;
+    return true;
+  }
+  template<typename Proxy>
+  bool registerProxy()
+  {
+    detail::ProxyGeneratorMap& map = detail::proxyGeneratorMap();
+    map[typeOf<Proxy>()->info()] = &detail::makeProxy<Proxy>;
+    return true;
+  }
 
   namespace detail
   {
@@ -928,6 +970,7 @@ namespace qi {
 
   inline AnyObject Proxy::asObject() const
   {
+    qiLogDebug("qitype.proxy") << "asObject " << this << ' ' << &_obj.asT();
     return AnyObject(_obj);
   }
 }
@@ -953,5 +996,5 @@ QI_TYPE_STRUCT_AGREGATE_CONSTRUCTOR(qi::EventTrace,
   ("callerContext", callerContext),
   ("calleeContext", calleeContext));
 QI_TYPE_STRUCT(qi::os::timeval, tv_sec, tv_usec);
-QI_TYPE_PROXY(qi::Proxy);
+
 #endif  // _QITYPE_DETAILS_GENERICOBJECT_HXX_

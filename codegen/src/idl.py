@@ -1190,7 +1190,7 @@ public:
 @QI_REGISTER_PROXY@
 @close_namespace@
 
-QI_TYPE_PROXY(@namepaces@@proxyName@);
+QI_TYPE_NOT_CLONABLE(@namepaces@@proxyName@);
 
 #endif //@GARD@
 """
@@ -1403,6 +1403,7 @@ def raw_to_cxx_service_skeleton(class_name, cls, implement_interface, include, n
   if implement_interface:
     result += '  %s() :%s(%s) {}\n' % (class_name, full_name, ','.join(iface_ctor))
   result += '};\n\n'
+
   if implement_interface:
     result += 'QI_TYPE_NOT_CLONABLE(%s);\n' % (full_name)
     result += 'QI_REGISTER_IMPLEMENTATION(%s,%s);\n' % (full_name, class_name)

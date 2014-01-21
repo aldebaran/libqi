@@ -312,7 +312,7 @@ namespace qi {
 #endif
 
 
-/// Declare that type \p name is a proxy type.
+/// Declare that type \p name is a proxy type, DEPRECATED
 #define QI_TYPE_PROXY(name)                            \
   namespace qi {                                       \
     template<> class TypeImpl<name>                    \
@@ -386,15 +386,21 @@ static bool _qiregister##name() {                                              \
  static bool BOOST_PP_CAT(__qi_registration, __LINE__) = _qiregister##name();
 
  /** Register object \p name as implementation of \p parent
+ * FIXME: support inheritance with offset
  */
-#define QI_REGISTER_IMPLEMENTATION(parent, name)                                             \
-static bool _qiregister##name() {                                              \
-   ::qi::ObjectTypeBuilder<name > b;    \
-   b.inherits<parent>();                \
-   b.registerType();                                                           \
-   return true;                                                                \
- }                                                                             \
+#define QI_REGISTER_IMPLEMENTATION(parent, name)                                                           \
+static bool _qiregister##name() {                                                                          \
+  qi::registerType(typeid(name), qi::typeOf<parent>());                                                    \
+  name* ptr = (name*)(void*)0x10000;                                                                       \
+  parent* pptr = ptr;                                                                                      \
+  int offset = (intptr_t)(void*)pptr - (intptr_t)(void*) ptr;                                              \
+  if (offset)                                                                                              \
+    qiLogError("qitype.register") << "non-zero offset for implementation "                                 \
+    << #name <<" of " << #parent << ", call will fail at runtime";                                           \
+   return true;                                                                                            \
+ }                                                                                                         \
  static bool BOOST_PP_CAT(__qi_registration, __LINE__) = _qiregister##name();
+
 
 
 /** Register name as a template object type
