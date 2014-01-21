@@ -40,8 +40,8 @@ namespace qi
 
   class Empty;
   class Proxy;
-  template<typename T=Empty, bool b = boost::is_base_of<Proxy, T>::value> class Object;
-  typedef Object<Empty, false> AnyObject;
+  template<typename T=Empty> class Object;
+  typedef Object<Empty> AnyObject;
 
   class GenericObject;
   class AnyWeakObject;

@@ -55,6 +55,8 @@ namespace qi {
 
   class GenericObject;
 
+  class Empty {};
+
   /* ObjectValue
   *  static version wrapping class C: Type<C>
   *  dynamic version: Type<DynamicObject>
@@ -243,40 +245,6 @@ namespace qi {
 
   class QITYPE_API Proxy;
 
-  class Empty {};
-
-  /** Reference-counted GenericObject holder.
-  */
-  template<typename T, bool b> class Object
-  : public GenericObject
-  {
-  public:
-    Object();
-    /// Takes ownership of ptr
-    Object(T* ptr);
-
-    /** Construct from an other Object will only work if conversion is
-    * from T to U is possible, or if T is a proxy type.
-    */
-    template<typename U>
-    Object(Object<U> ao);
-
-    AnyObject asObject();
-
-    /** Return a weak pointer to this object. Use it's lock() method to
-     * try to obtain an AnyObject from it.*/
-    AnyWeakObject asWeakObject();
-    operator bool() const;
-    template<typename U> bool operator == (const Object<U>& bb) const;
-    template<typename U> bool operator != (const Object<U>& bb) const;
-    template<typename U> bool operator < (const Object<U>& bb) const;
-    T* operator ->();
-    T& operator *();
-
-    T& asT();
-  };
-
-
   #ifdef DOXYGEN
   /** Perform an asynchronous call on a method.
    * @param instance a pointer or shared-pointer to an instance of a class known to type system.
@@ -311,21 +279,6 @@ namespace qi {
     #undef genCall
 #endif
 
-
-/// Declare that type \p name is a proxy type, DEPRECATED
-#define QI_TYPE_PROXY(name)                            \
-  namespace qi {                                       \
-    template<> class TypeImpl<name>                    \
-      : public TypeProxy {                             \
-        typedef DefaultTypeImplMethods<name> Methods;  \
-        _QI_BOUNCE_TYPE_METHODS(Methods);              \
-    };                                                 \
-    namespace detail {                                 \
-    template<> struct TypeManager<name>                \
-      : public TypeManagerNonDefaultConstructible<name> {}; \
-     }                                                 \
-  }
-
   /** Register \p Proxy as a proxy class.
    * Required for bound methods to accept a ProxyPtr as argument
    * Proxy must be constructible with an AnyObject as argument
@@ -335,7 +288,8 @@ namespace qi {
   bool registerProxy();
 
   /** Register \p Proxy as a proxy class for interface \p Interface.
-   * Required for bound methods to accept a InterfacePtr as argument
+   * Required to allow the typesystem to construct an
+   * Object<Interface> from an AnyObject.
    * Proxy must be constructible with an AnyObject as argument
    * @return unused value, present to ease registration at static initialisation
    */
@@ -372,21 +326,11 @@ static bool _qiregister##name() {                                              \
  }                                                                             \
  static bool BOOST_PP_CAT(__qi_registration, __LINE__) = _qiregister##name();
 
-/** Similar to QI_REGISTER_OBJECT() but also registering inheritance from an
- * other registered class
- */
-#define QI_REGISTER_CHILD_OBJECT(parent, name, ...)                                             \
-static bool _qiregister##name() {                                              \
-   ::qi::ObjectTypeBuilder<name > b;    \
-   b.inherits<parent>();                \
-   QI_VAARGS_APPLY(__QI_REGISTER_ELEMENT, name, __VA_ARGS__)                   \
-   b.registerType();                                                           \
-   return true;                                                                \
- }                                                                             \
- static bool BOOST_PP_CAT(__qi_registration, __LINE__) = _qiregister##name();
-
  /** Register object \p name as implementation of \p parent
- * FIXME: support inheritance with offset
+ * FIXME: support inheritance with offset.
+ * This implementation just bounces to parent's TypeInterfac.
+ * If that doesn't fit your need, you can always re-register
+ * everything from the interface on your class.
  */
 #define QI_REGISTER_IMPLEMENTATION(parent, name)                                                           \
 static bool _qiregister##name() {                                                                          \

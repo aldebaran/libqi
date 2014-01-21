@@ -161,15 +161,13 @@ namespace qi {
     };
   }
 
-  template<typename T> class Object<T, false>
-   : public detail::GenericObjectBounce<Object<T, false> >
+  template<typename T> class Object
+   : public detail::GenericObjectBounce<Object<T> >
   {
   public:
-    typedef typename boost::is_base_of<Proxy, T>::type isProxy;
     Object();
 
-    template<typename U> Object(const Object<U, true>& o);
-    template<typename U> Object(const Object<U, false>& o);
+    template<typename U> Object(const Object<U>& o);
 
     // Disable the ctor taking future if T is Empty, as it would conflict with
     // Future cast operator
@@ -226,7 +224,7 @@ namespace qi {
   private:
     friend class GenericObject;
     friend class AnyWeakObject;
-    template <typename, bool> friend class Object;
+    template <typename> friend class Object;
     Object(detail::ManagedObjectPtr obj)
     {
       init(obj);
@@ -254,33 +252,27 @@ namespace qi {
     AnyObject lock() { return AnyObject(boost::weak_ptr<GenericObject>::lock());}
   };
 
-  template<typename T> inline Object<T, false>::Object() {}
-  template<typename T> template<typename U>inline Object<T, false>::Object(const Object<U, false>& o)
+  template<typename T> inline Object<T>::Object() {}
+  template<typename T> template<typename U>inline Object<T>::Object(const Object<U>& o)
   {
     init(o._obj);
   }
-  template<typename T> template<typename U>inline Object<T, false>::Object(const Object<U, true>& o)
-  {
-    // Cannot use a cast to get o to an AnyObject or it could bounce to this
-    // very method
-    *this = Object<T>(o.asObject());
-  }
-  template<typename T> inline Object<T, false>::Object(GenericObject* go)
+  template<typename T> inline Object<T>::Object(GenericObject* go)
   {
     init(detail::ManagedObjectPtr(go, &deleteObject));
   }
-  template<typename T> inline Object<T, false>::Object(GenericObject* go, boost::function<void(GenericObject*)> deleter)
+  template<typename T> inline Object<T>::Object(GenericObject* go, boost::function<void(GenericObject*)> deleter)
   {
     init(detail::ManagedObjectPtr(go, deleter));
   }
-  template<typename T> template<typename U> Object<T, false>::Object(GenericObject* go, boost::shared_ptr<U> other)
+  template<typename T> template<typename U> Object<T>::Object(GenericObject* go, boost::shared_ptr<U> other)
   {
     init(detail::ManagedObjectPtr(other, go));
     // Notify the shared_from_this of GenericObject
     _obj->_internal_accept_owner(&other, go);
   }
 
-  template<typename T> inline Object<T, false>::Object(T* ptr)
+  template<typename T> inline Object<T>::Object(T* ptr)
   {
     TypeInterface* type = typeOf<T>();
     if (type->kind() != TypeKind_Object)
@@ -301,7 +293,7 @@ namespace qi {
     ObjectTypeInterface* otype = static_cast<ObjectTypeInterface*>(type);
     _obj = detail::ManagedObjectPtr(new GenericObject(otype, ptr), &deleteObject);
   }
-  template<typename T> inline Object<T, false>::Object(T* ptr, boost::function<void(T*)> deleter)
+  template<typename T> inline Object<T>::Object(T* ptr, boost::function<void(T*)> deleter)
   {
     TypeInterface* type = typeOf<T>();
     if (type->kind() != TypeKind_Object)
@@ -326,16 +318,16 @@ namespace qi {
     else
       _obj = detail::ManagedObjectPtr(new GenericObject(otype, ptr), &deleteObject);
   }
-  template<typename T> inline Object<T, false>::Object(const qi::Future<MaybeAnyObject>& fobj)
+  template<typename T> inline Object<T>::Object(const qi::Future<MaybeAnyObject>& fobj)
   {
     init(fobj.value()._obj);
   }
-  template<typename T> inline Object<T, false>::Object(const qi::FutureSync<MaybeAnyObject>& fobj)
+  template<typename T> inline Object<T>::Object(const qi::FutureSync<MaybeAnyObject>& fobj)
   {
     init(fobj.value()._obj);
   }
 
-  template<typename T> inline void Object<T, false>::init(detail::ManagedObjectPtr obj)
+  template<typename T> inline void Object<T>::init(detail::ManagedObjectPtr obj)
   {
     if (!boost::is_same<T, Empty>::value && obj
       && obj->type->info() != typeOf<T>()->info()
@@ -367,51 +359,51 @@ namespace qi {
     }
     _obj = obj;
   }
-  template<typename T> inline bool Object<T, false>::operator <(const Object& b) const { return _obj < b._obj;}
-  template<typename T> template<typename U> bool Object<T, false>::operator !=(const Object<U>& b) const
+  template<typename T> inline bool Object<T>::operator <(const Object& b) const { return _obj < b._obj;}
+  template<typename T> template<typename U> bool Object<T>::operator !=(const Object<U>& b) const
   {
     return !(*this ==b);
   }
-  template<typename T> template<typename U> bool Object<T, false>::operator ==(const Object<U>& b) const
+  template<typename T> template<typename U> bool Object<T>::operator ==(const Object<U>& b) const
   {
     return asGenericObject() == b.asGenericObject();
   }
-  template<typename T> Object<T, false>::operator bool() const   { return _obj && _obj->type;}
+  template<typename T> Object<T>::operator bool() const   { return _obj && _obj->type;}
 
-  template<typename T> Object<T, false>::operator Object<Empty>() const { return Object<Empty>(_obj);}
-  template<typename T> T& Object<T, false>::asT()
+  template<typename T> Object<T>::operator Object<Empty>() const { return Object<Empty>(_obj);}
+  template<typename T> T& Object<T>::asT()
   {
     return *reinterpret_cast<T*>(_obj->value);
   }
-  template<typename T> const T& Object<T, false>::asT() const
+  template<typename T> const T& Object<T>::asT() const
   {
     return *reinterpret_cast<const T*>(_obj->value);
   }
-  template<typename T> T* Object<T, false>::operator ->()
+  template<typename T> T* Object<T>::operator ->()
   {
       return &asT();
   }
-  template<typename T> const T* Object<T, false>::operator->() const
+  template<typename T> const T* Object<T>::operator->() const
   {
     return &asT();
   }
-  template<typename T> T& Object<T, false>::operator *()
+  template<typename T> T& Object<T>::operator *()
   {
     return asT();
   }
-  template<typename T> const T& Object<T, false>::operator *() const
+  template<typename T> const T& Object<T>::operator *() const
   {
     return asT();
   }
-  template<typename T> bool Object<T, false>::unique() const
+  template<typename T> bool Object<T>::unique() const
   {
     return _obj.unique();
   }
-  template<typename T> GenericObject* Object<T, false>::asGenericObject() const
+  template<typename T> GenericObject* Object<T>::asGenericObject() const
   {
     return _obj.get();
   }
-  template<typename T> void Object<T, false>::reset()
+  template<typename T> void Object<T>::reset()
   {
     _obj.reset();
   }
@@ -427,49 +419,7 @@ namespace qi {
     Object<Empty> _obj;
   };
 
-  template<typename T> class Object<T, true>
-  : public detail::GenericObjectBounce< Object<T, true> >
-  {
-  public:
-    Object() {}
-    Object(T* ptr)
-    : _proxy(*ptr)
-    {
-    }
-    Object(qi::Future<Object<Empty> > fobj)
-    : _proxy(fobj.value())
-    {
-    }
-    Object(qi::FutureSync<Object<Empty> > fobj)
-    : _proxy(fobj.value())
-    {
-    }
-    Object(detail::ManagedObjectPtr obj)
-    : _proxy(obj)
-    {
-    }
 
-    template<typename U>
-    Object(Object<U> obj)
-    : _proxy(obj._obj)
-    {
-    }
-    GenericObject* asGenericObject() const { return _proxy.asObject().asGenericObject();}
-    template<typename U>
-    bool operator <(const Object<U>& b) const { return asGenericObject() < b.asGenericObject();}
-    template<typename U>
-    bool operator ==(const Object<U>& b) const { return asGenericObject() == b.asGenericObject();}
-    template<typename U>
-    bool operator !=(const Object<U>& b) const { return asGenericObject() != b.asGenericObject();}
-
-    Object<Empty> asObject() const { return _proxy.asObject();}
-    operator Object<Empty>() const { return _proxy.asObject();}
-    T* operator ->() { return &_proxy;}
-    T& operator *()  { return _proxy;}
-    operator bool() const   { return _proxy.asObject();}
-  private:
-    T _proxy;
-  };
 
   namespace detail
   {
