@@ -17,6 +17,9 @@
 namespace qi {
 
   namespace detail {
+    typedef std::map<TypeInfo, boost::function<AnyReference(AnyObject)> > ProxyGeneratorMap;
+    QITYPE_API ProxyGeneratorMap& proxyGeneratorMap();
+
   // bounce to a genericobject obtained by (O*)this->asAnyObject()
     /* Everything need to be const:
     *  anyobj.call bounces to anyobj.asObject().call, and the
@@ -326,6 +329,17 @@ namespace qi {
       && obj->type->info() != typeOf<T>()->info()
       && obj->type->inherits(qi::typeOf<T>())==-1)
     {
+      // What is given to us does not implement T.
+      // So try if we can summon an intermediate bouncer object:
+      // that is a registered Proxy object for type T
+      detail::ProxyGeneratorMap& map = detail::proxyGeneratorMap();
+      detail::ProxyGeneratorMap::iterator it = map.find(typeOf<T>()->info());
+      if (it != map.end())
+      {
+        AnyReference ref = it->second(AnyObject(obj));
+        _obj = ref.to<detail::ManagedObjectPtr>();
+        return;
+      }
       throw std::runtime_error(
         std::string("Object<T> constructed from a different AnyObject type ")
         + obj->type->infoString()
@@ -800,13 +814,13 @@ namespace qi {
 
   namespace detail
   {
-    typedef std::map<TypeInfo, boost::function<AnyReference(AnyObject)> > ProxyGeneratorMap;
-    QITYPE_API ProxyGeneratorMap& proxyGeneratorMap();
-
-    template<typename Proxy>
+    template<typename ProxyImpl>
     AnyReference makeProxy(AnyObject ptr)
     {
-      boost::shared_ptr<Proxy> sp(new Proxy(ptr));
+      // The ProxyInterface code will blindy cast opaque storage to a qi::Proxy*
+      // So there must not be any offset involved.
+      // To ensure that, make the cast from ProxyImpl template to Proxy now.
+      boost::shared_ptr<Proxy> sp(new ProxyImpl(ptr));
       return AnyReference::from(sp).clone();
     }
   }
@@ -939,4 +953,5 @@ QI_TYPE_STRUCT_AGREGATE_CONSTRUCTOR(qi::EventTrace,
   ("callerContext", callerContext),
   ("calleeContext", calleeContext));
 QI_TYPE_STRUCT(qi::os::timeval, tv_sec, tv_usec);
+QI_TYPE_PROXY(qi::Proxy);
 #endif  // _QITYPE_DETAILS_GENERICOBJECT_HXX_
