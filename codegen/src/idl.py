@@ -6,34 +6,33 @@
 
     Representations used:
     - IDL: XML file describing the interface
-    - RAW: Internal representation of the IDL
-    raw: NAME -> (methods, signals, properties, annotations)
-    methods: [method]
-    signals: [signal]
-    properties: [property]
-    method: (name, [argtype], rettype, annotations)
-    signal: (name, [argtype], annotations)
-    property: [name, type, annotations]
-    annotation: magic strings concatenation (fast, threadsafe, ...)
+    - RAW: Instance of Raw class. Internal representation of the IDL. Contains classes and structs
+    - Signature: as a string, the qitype standard annotated signature
+    - JSON-signature: parsed signature, [typeIeFirstChar, [children], annotations]
 
     Code parser:
     - Use qiclang based on libclang and parse its XML output to produce an IDL file.
 
     Code generators from RAW to C++:
     - interface: An interface that service must implement.
-    - proxy: Specialized proxy: implement a modified version of interface with callType.
+    - proxy: Specialized proxy: implementation of interface bouncing to AnyObject
     - service skeleton
-    - service bouncer: Implementation of the interface that bounces to an
-      existing class
     - service and type registration: Code that fills an ObjectTypeBuilder and
       registers it.
 
-     All instances are handled through a shared ptr. Typedefs are
-     generated with 'Ptr' suffix.
-     Naming: for a user service Foo not inheriting from any interface
-     - IFoo : interface
-     - FooService: implementation of IFoo bouncing to Foo
-     - FooProxy: proxy
+    Other generators:
+    - IDL
+    - raw text for debug display
+
+    All instances are handled through our helper and refcounter template Object<>.
+
+    XML lookup: When not specified on command line, IDL will look for
+    xml IDL files, in environment IDL_PATH, in share/idl, and in provided
+    arguments to --search-path.
+    It will also look for IDL files of found dependent classes and structs.
+
+    Header lookup: When generating C++, the system will try to find the
+    interface headers (if not given to --include-file).
 """
 
 from xml.etree import ElementTree as etree
@@ -341,9 +340,6 @@ def qiclang_type_to_signature(node):
     cnode = node.find("./templates/type")
     cname = normalize_full_name(cnode.get("namespace"), cnode.get("name"));
     return 'o<' + cname + '>'
-  #if re.search('Ptr$', name):
-  #  p = name.replace('ProxyPtr', '').replace('Ptr', '')
-  #  return 'o<' + p + '>' #This is no duck
   if not fullname in CXX_UNKNOWN:
     CXX_UNKNOWN.append(fullname)
   return "X<" + fullname + ">"
@@ -410,6 +406,10 @@ def qiclang_struct(node):
   """ Handle a struct XML node. Figure out the fields and how to read/write them
       Returns a Struct (name, signature, ctor, accessor_map)
   """
+  # Complicated heuristics below, because we try to handle a lot of
+  # different ways to get and set the various struct fields.
+  # Specifically, field write can be suported through either a constructor
+  # that accepts all fields (in the right order), or a setter for each field.
   fullname = normalize_full_name(node.get("namespace"), node.get("name"))
   s = ClangStruct()
   index = 0
@@ -593,6 +593,7 @@ def rawtype_to_boxinterface_argtype(arg):
 def raw_to_boxinterface(class_name, cls):
   """ Convert RAW to boxInterface choregraphe XML format
   """
+  # EXPERIMENTAL
   root = etree.Element('BoxInterface', name=class_name, tooltip=cls.annotations)
   for method in cls.methods:
     #advertise only nullary or unary methods
@@ -642,6 +643,7 @@ def raw_to_idl_class(raw, class_name, root=None):
   return root
 
 def raw_to_idl_struct(raw, struct_name, root=None):
+  # Convert a signle struct from Raw to IDL XML
   if root is None:
     root = etree.Element('IDL')
   s = raw.structs[struct_name]
@@ -694,7 +696,7 @@ def method_to_cxx(method, tuple_default_cxx_type=None):
   iret = method.ret
   cret = signature_to_cxxtype(iret, tuple_default_cxx_type)
   iargs = method.args
-  cargs = map(signature_to_cxxtype, iargs)
+  cargs = map(lambda x: signature_to_cxxtype(x, None, True), iargs)
   typed_args = map(lambda x: cargs[x] + ' p' + str(x), range(len(cargs)))
   typed_args = ','.join(typed_args)
   arg_names = map(lambda x: 'p' + str(x), range(len(cargs)))
@@ -813,6 +815,11 @@ def idl_to_raw(root, result = None):
 
 def raw_to_interface(class_name, cls, include, namespaces):
   """ Generate service interface class from RAW representation
+
+      Generate a class with pure virtual methods, signals, and properties,
+      intended to serve as a header.
+
+      No typesystem registration is added (those go in client support library).
   """
   skeleton = """
 #ifndef @INAME@_INTERFACE_HPP
@@ -873,7 +880,7 @@ QI_TYPE_NOT_CLONABLE(@NAMESPACES@@INAME@);
       ns_full = n + "::"
 
   replace = {
-   '@INAME@': 'I' + class_name,
+   '@INAME@': class_name,
    '@DECLS@': methods_decl + signals_decl,
    '@FIELDS@': ','.join(fields),
    '@include@': ''.join(['#include <' + x + '>\n' for x in include]),
@@ -1189,53 +1196,26 @@ QI_TYPE_NOT_CLONABLE(@namepaces@@proxyName@);
   full_name = '::'.join(namespaces) + '::' + class_name
   # In C++ "class foo;" and "typedef bar foo;" conflict, so use a preprocessor
   # define to inhibit standard fwdecl if the special interface version is used
-  forward_decls = '' # "class I@className@; typedef I@className@ @className@Proxy;typedef boost::shared_ptr<@className@Proxy> @className@ProxyPtr;\n#define FWD_@className@\n"
-  proxy_name = class_name + "ProxyImpl"
+  forward_decls = ''
+  proxy_name = class_name + "Impl" # Arbitrary name, never seen by the user
   qi_register_proxy = "QI_REGISTER_PROXY_INTERFACE(@proxyName@, @fullName@);"
 
   forward_decls = forward_decls.replace('@className@', class_name).replace('@fullName@', full_name)
   #generate methods
   method_impls = ""
-  fwdecl = dict()
   call_begin = '(::qi::MetaCallType_Auto,'
   if_inherit = ', public ' + full_name
 
   for method in cls.methods:
-    (cret, typed_args, arg_names) = method_to_cxx(method)
+    (out_ret, typed_args, arg_names) = method_to_cxx(method)
     method_name = method.name
-    if cret.find('Ptr') == len(cret)-3:
-      tname = cret[0:-3]
-      if tname.find('Proxy') == len(tname) - 5:
-        tname = tname[0:-5]
-      if tname.split('::')[-1] != 'Object':
-        fwdecl[tname] = 1
-        cret = tname + 'ProxyPtr'
-    out_ret = cret
     if arg_names:
       arg_names = ', ' + arg_names # comma used in call
-    # Handle AnyObject in argument
-    # If a function takes a FooProxyPtr, it actually accepts AnyPtr with Any
-    # a compatible object.
-    # But we have no parent class to let C++ typecheck.
-    # We could make this method a template, but let's rather take a
-    # AutoAnyReference.
-    typed_args = ''
-    argIdx = 0
-    for arg in method.args:
-      cxx_arg = signature_to_cxxtype(arg, None, True)
-      if cxx_arg.find("Ptr") != -1:
-        typed_args += '::qi::AutoAnyReference p' + str(argIdx)
-      else:
-        typed_args += cxx_arg + ' p' + str(argIdx)
-      typed_args += ', '
-      argIdx = argIdx + 1
     # Add a final optional argument 'MetaCallType calltype=auto'
-    typed_args = typed_args[0:-2] #remove trailing comma
-    #NOTE: should we return the future?
     method_impls += '  ' + out_ret + " " + method_name + "(" + typed_args + ") {\n    "
-    if (cret != "void"):
+    if (out_ret != "void"):
       method_impls += "return "
-    method_impls += '_obj.call<' + cret + ' >' + call_begin + '"' + method_name + '"' + arg_names + ");\n  }\n"
+    method_impls += '_obj.call<' + out_ret + ' >' + call_begin + '"' + method_name + '"' + arg_names + ");\n  }\n"
   ctor = ''
   # Make  a Signal field for each signal, bridge it to backend in ctor
   for sig in cls.signals:
@@ -1252,8 +1232,6 @@ QI_TYPE_NOT_CLONABLE(@namepaces@@proxyName@);
       close_namespace = "} // !" + n + "\n" + close_namespace
       ns_full = n + "::"
 
-  for k in fwdecl.keys():
-    forward_decls += '#ifndef FWD_{1}\nclass {0}; typedef boost::shared_ptr<{0}> {0}Ptr;\n#endif\n'.format(k+'Proxy', k)
   replace = {
       'QI_REGISTER_PROXY': qi_register_proxy,
       'GARD': '_' + class_name.upper() + '_PROXY_HPP_',
@@ -1277,12 +1255,11 @@ QI_TYPE_NOT_CLONABLE(@namepaces@@proxyName@);
     result = result.replace('@' + k + '@', replace[k])
   return ['', result, '']
 
-def raw_to_cxx_typebuild(class_name, cls, use_interface, register_to_factory, include, namespaces):
+def raw_to_cxx_typebuild(class_name, cls, register_to_factory, include, namespaces):
   """ Generate a c++ file that registers the class to type system.
   Threading-model will be set according to annotations in comments.
   @param class_name name of the class to bind
   @param data raw IDL data
-  @param use_interface true if the class inherits from generated interface
   @param register_to_factory: '', 'service' or 'factory'
   """
   template = """
@@ -1346,11 +1323,11 @@ static int _init_@TYPE@ = @TYPE@init();
     for n in namespaces:
       open_namespace += "namespace " + n + "\n{\n"
       close_namespace = "} // !" + n + "\n" + close_namespace
-  if use_interface:
-    open_namespace = 'QI_TYPE_NOT_CLONABLE(%s::%s);\n' % (n, class_name) + open_namespace
+
+  open_namespace = 'QI_TYPE_NOT_CLONABLE(%s::%s);\n' % (n, class_name) + open_namespace
   return template.replace('@TYPE@', class_name).replace('@ADVERTISE@', advertise).replace('@REGISTER@', register).replace('@INCLUDE@', include).replace('@OPEN_NAMESPACE@', open_namespace).replace('@CLOSE_NAMESPACE@', close_namespace)
 
-def raw_to_cxx_service_skeleton(class_name, cls, implement_interface, include, namespace, register_factory=False):
+def raw_to_cxx_service_skeleton(class_name, cls, include, namespace, register_factory=False):
   """ Produce skeleton of C++ implementation of the service.
   """
   result = "#include <qitype/signal.hpp>\n#include <qitype/property.hpp>\n#include <qitype/objecttypebuilder.hpp>\n"
@@ -1359,9 +1336,7 @@ def raw_to_cxx_service_skeleton(class_name, cls, implement_interface, include, n
   result += ''.join(['#include <' + x + '>\n' for x in include])
   result += '\n'
   full_name = '::'.join(namespace) + '::' + class_name
-  inherits = ''
-  if implement_interface:
-    inherits = ' : public ' + full_name
+  inherits = ' : public ' + full_name
   result += "class %s %s \n{\npublic:\n" % (class_name, inherits)
   for method in cls.methods:
     method_name = method.name
@@ -1372,13 +1347,11 @@ def raw_to_cxx_service_skeleton(class_name, cls, implement_interface, include, n
       args
     )
   iface_ctor = []
-  if implement_interface:
-    result += '  %s() :%s(%s) {}\n' % (class_name, full_name, ','.join(iface_ctor))
+  result += '  %s() :%s(%s) {}\n' % (class_name, full_name, ','.join(iface_ctor))
   result += '};\n\n'
 
-  if implement_interface:
-    result += 'QI_TYPE_NOT_CLONABLE(%s);\n' % (full_name)
-    result += 'QI_REGISTER_IMPLEMENTATION(%s,%s);\n' % (full_name, class_name)
+  result += 'QI_TYPE_NOT_CLONABLE(%s);\n' % (full_name)
+  result += 'QI_REGISTER_IMPLEMENTATION(%s,%s);\n' % (full_name, class_name)
   if register_factory:
     result += '// Register to runtime factory\n'
     result += 'QI_REGISTER_OBJECT_FACTORY_CONSTRUCTOR_FOR(%s,%s);\n' % (full_name, class_name)
@@ -1476,11 +1449,10 @@ def main(args):
   res = ''
   print("##args: " + ' '.join(args))
   parser = argparse.ArgumentParser()
-  parser.add_argument("--interface", "-i", help="Use interface mode", action='store_true')
   parser.add_argument("--output-file","-o", help="output file (stdout)")
   parser.add_argument("--prefix","-p", default=".", help="output directory (.)")
   parser.add_argument("--output-mode","-m", default="txt", choices=["parse", "txt", "idl", "proxy", "cxxtype", "cxxtyperegisterfactory", "cxxtyperegisterservice", "cxxskel", "cxxservice", "cxxserviceregister", "interface", "boxinterface", "alproxy", "client", "many"], help="output mode (stdout)")
-  parser.add_argument("--include", "-I", default="", help="File to include in generated C++")
+  parser.add_argument("--include-file", default="", help="File to include in generated C++")
   parser.add_argument("--search-path", default="", help="colon-separated list of path to search IDL and headers in")
   parser.add_argument("--known-classes", "-k", default="", help="Comma-separated list of other handled classes")
   parser.add_argument("--known-cxx-structs", "-s", default="", help="Comma-separated list of C++ structures that can be used if found in annotations")
@@ -1549,20 +1521,20 @@ def main(args):
       raise Exception("Could not locate " + cname + " in " + ':'.join(path))
     xml = etree.ElementTree(file=fp).getroot()
     raw = idl_to_raw(xml)
-    if not len(pargs.include):
+    if not len(pargs.include_file):
       print("Searching for includes...")
       # try to guess where the headers are
       for c in pargs.classes.split(','):
         inc = find_include(c, pargs.search_path + ':' + pargs.prefix)
         if inc is not None:
-          pargs.include += ':' + inc
+          pargs.include_file += ':' + inc
         else:
           print("##WARNING, no include specified or detected for " + c)
 
-  if not len(pargs.include):
-    pargs.include = []
+  if not len(pargs.include_file):
+    pargs.include_file = []
   else:
-    pargs.include = filter(lambda x: len(x), pargs.include.split(':'))
+    pargs.include_file = filter(lambda x: len(x), pargs.include_file.split(':'))
 
   print("Raw content:")
   print(','.join(raw.classes.keys()))
@@ -1701,10 +1673,10 @@ def main(args):
         op = op[0]
       functions = []
       args = []
-
+      # Build list of functions to run from 'op'
       if op == "interface":
         functions = [raw_to_interface]
-        args = [[pargs.include, namespaces_list]]
+        args = [[pargs.include_file, namespaces_list]]
       elif op == "boxinterface":
         functions = [raw_to_boxinterface]
         args = [[]]
@@ -1713,28 +1685,28 @@ def main(args):
         args = [[]]
       elif op == "proxy":
         functions = [raw_to_proxy]
-        args = [[pargs.include, namespaces_list]]
+        args = [[pargs.include_file, namespaces_list]]
       elif op == "cxxtype":
         functions = [raw_to_cxx_typebuild]
-        args = [[pargs.interface, '', pargs.include, namespaces_list]]
+        args = [['', pargs.include_file, namespaces_list]]
       elif op == "cxxtyperegisterfactory":
         functions = [raw_to_cxx_typebuild]
-        args = [[pargs.interface, 'factory', pargs.include, namespaces_list]]
+        args = [['factory', pargs.include_file, namespaces_list]]
       elif op == "cxxtyperegisterservice":
         functions = [raw_to_cxx_typebuild]
-        args = [[pargs.interface, 'service', pargs.include, namespaces_list]]
+        args = [['service', pargs.include_file, namespaces_list]]
       elif op == "cxxskel":
         functions = [raw_to_cxx_service_skeleton]
-        args = [[pargs.interface, pargs.include, namespaces_list]]
+        args = [[pargs.include_file, namespaces_list]]
       elif op == "cxxserviceregister":
         functions = [raw_to_cxx_service_skeleton, raw_to_cxx_typebuild]
-        args = [[pargs.interface, pargs.include, namespaces_list], [pargs.interface, 'service', pargs.include, namespaces_list]]
+        args = [[pargs.include_file, namespaces_list], ['service', pargs.include_file, namespaces_list]]
       elif op == "cxxservice":
         functions = [raw_to_cxx_service_skeleton, raw_to_cxx_typebuild]
-        args = [[pargs.interface, pargs.include, namespaces_list], [pargs.interface, '', pargs.include, namespaces_list]]
+        args = [[pargs.include_file, namespaces_list], ['', pargs.include_file, namespaces_list]]
       elif op == "client":
         functions = [raw_to_cxx_typebuild, raw_to_proxy]
-        args = [[True, '', pargs.include, namespaces_list], [pargs.include, namespaces_list]]
+        args = [['', pargs.include_file, namespaces_list], [pargs.include_file, namespaces_list]]
 
       for i in range(len(functions)):
         cargs = [name, raw.classes[c]] + args[i]

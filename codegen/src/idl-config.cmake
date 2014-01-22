@@ -45,7 +45,7 @@ endfunction()
 
 function(qi_create_proxy idl class_name output_dir _out)
 cmake_parse_arguments(ARG
-    "INTERFACE;NO_FUTURE"
+    "NO_FUTURE"
     ""
     ""
     ${ARGN})
@@ -60,9 +60,6 @@ cmake_parse_arguments(ARG
     set(_mode proxy)
   else()
     set(_mode proxyFuture)
-  endif()
-  if(ARG_INTERFACE)
-    set(_interface "--interface")
   endif()
   qi_generate_src(${output_dir}/${_filename}
     SRC ${idl} ${IDL}
@@ -123,15 +120,12 @@ endfunction()
 
 #! Create a skeleton implementation of given class
 function(qi_create_skeleton target)
-  cmake_parse_arguments(ARG "NO_INTERFACE" "CLASS" "INCLUDE;SEARCHPATH" ${ARGN})
+  cmake_parse_arguments(ARG "" "CLASS" "INCLUDE;SEARCHPATH" ${ARGN})
   # we need to find the IDL file for proper dependency tracking
   string(REPLACE "::" "/" idlname ${ARG_CLASS})
   find_path(idlfile ${idlname}
     PATHS ${CMAKE_CURRENT_BINARY_DIR}
   )
-  if(NOT ARG_NO_INTERFACE)
-    set(interface "--interface")
-  endif()
   set(search_path  "${ARG_SEARCHPATH}:${CMAKE_CURRENT_SOURCE_DIR}")
   qi_generate_src(${target}
     SRC ${idlfile}
@@ -139,9 +133,8 @@ function(qi_create_skeleton target)
      -m cxxskel
      -o ${target}
      -c ${ARG_CLASS}
-     --include "'${ARG_INCLUDE}'"
+     --include-file "'${ARG_INCLUDE}'"
      --search-path "${search_path}"
-     ${interface}
      )
 endfunction()
 
@@ -157,7 +150,7 @@ endfunction()
 # \param:CPP create a source file (.cpp) instead of a header (.hpp)
 function(qi_create_binder _out)
   cmake_parse_arguments(ARG
-    "INTERFACE;FACTORY;SERVICE;CPP"
+    "FACTORY;SERVICE;CPP"
     "DIR;NAME;CLASS_NAME;IDL"
     "INCLUDE"
     ${ARGN})
@@ -176,9 +169,6 @@ function(qi_create_binder _out)
   list(GET split_class 0 class)
   string(TOLOWER ${class} _filename)
   set(target "${ARG_DIR}/${_filename}_bind${_ext}")
-  if(ARG_INTERFACE)
-    set(interface "--interface")
-  endif()
   if(ARG_FACTORY)
     set(mode "cxxtyperegisterfactory")
   elseif(ARG_SERVICE)
@@ -187,7 +177,7 @@ function(qi_create_binder _out)
     set(mode "cxxtype")
   endif()
   if(ARG_INCLUDE)
-    set(include "--include")
+    set(include "--include-file")
     FOREACH(i ${ARG_INCLUDE})
       set(includes "${includes},${i}")
     ENDFOREACH()
