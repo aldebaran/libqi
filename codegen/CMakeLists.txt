@@ -15,3 +15,7 @@ qi_install_program(src/idl.py)
 if (NOT ANDROID)
   qi_install_python(src/shlib.py)
 endif()
+if (NOT I_AM_A_ROBOT AND NOT ANDROID AND NOT DISABLE_CODEGEN)
+  add_subdirectory("tests")
+endif()
+
