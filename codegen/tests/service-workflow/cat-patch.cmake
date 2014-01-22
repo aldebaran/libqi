@@ -21,12 +21,13 @@ file(READ ${input} _fcontent)
 string(LENGTH "${_fcontent}" fclength)
 message("File read: ${fclength}")
 
+set(name "return \"<unknown>\";")
 set(setTarget "return true;")
 set(selectTask "return qi::Object<animals::CatAction>();")
 set(canPerform "return true;")
 set(expectedResult "return std::vector<float>();")
 
-set(ARG_KEYS "setTarget;selectTask;canPerform;expectedResult")
+set(ARG_KEYS "name;setTarget;selectTask;canPerform;expectedResult")
 set(ARG_DATA ${_fcontent})
 
 apply_replaces(outdata) #  KEYS "setTarget;selectTask;canPerform" DATA ${_fcontent})

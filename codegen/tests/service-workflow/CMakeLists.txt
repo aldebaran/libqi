@@ -41,6 +41,11 @@ qi_create_lib(cat
   MODULE
   SRC ${CMAKE_CURRENT_BINARY_DIR}/catimpl.cpp DEPENDS animals_cat)
 
+# compile a second hand-written service
+qi_create_lib(lynx
+  MODULE
+  SRC lynx.cpp DEPENDS animals_cat)
+
 # compile a test client
 qi_create_test(test_service_workflow
   SRC cattest.cpp
