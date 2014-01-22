@@ -1,1 +1,0 @@
-<IDL><class name="SimpleService"><method name="addOne"><return type="i" /><argument type="i" /></method><signal name="sig"><argument type="i" /></signal></class></IDL>
