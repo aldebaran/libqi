@@ -51,7 +51,6 @@ class QiMessagingHandler(tornadio2.conn.SocketConnection):
         def cbk(*args):
             self.reply(None, "signal",
                        { "obj": service, "signal": signal, "data": args, "link": self.subs[idm] })
-            del self.subs[idm]
         return cbk
 
     def do_reply(self, idm, keepLink):
