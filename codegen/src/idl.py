@@ -273,11 +273,11 @@ def json_to_signature(js):
 
 ANNOTATIONS = ['fast', 'threadSafe']
 
-def normalize_full_name(namespace, name=0):
+def normalize_full_name(namespace, name=None):
   """ Concatenate namespace and name in a consistent way
       Accepts two arguments, or one tuple
   """
-  if not name:
+  if name is None:
     name = namespace[1]
     namespace = namespace[0]
   res = namespace
@@ -285,6 +285,17 @@ def normalize_full_name(namespace, name=0):
     res += "::"
   res += name
   return res
+
+def open_close_namespace(namespaces):
+  """ generate C++ code to open and close a list of namespaces and return it
+      as (open_code, close_code, full_name)
+  """
+  open_namespace = ""
+  close_namespace = ""
+  for n in namespaces:
+    open_namespace += "namespace " + n + "\n{\n"
+    close_namespace = "} // !" + n + "\n" + close_namespace
+  return (open_namespace, close_namespace)
 
 def run_qiclang(files, output_path):
   """ Invoke qiclang on given source files
@@ -813,6 +824,48 @@ def idl_to_raw(root, result = None):
     result.structs[sname] = s
   return result
 
+def raw_to_cxx_struct(struct_name, struct, namespaces):
+  """ Generater a C++ structure definition for (namespaces, struct_name)
+      using struct data of type Struct.
+      The struct is generated bare without gards or instrumentation.
+  """
+  (open_namespace, close_namespace) = open_close_namespace(namespaces)
+  res = ''
+  skeleton = """
+@OPEN@
+struct @NAME@
+{
+  @CTOR@
+  @FIELDS@
+};
+@CLOSE@
+  """
+  fields = ''
+  ctordecl = list()
+  ctorinit = list()
+  for f in struct.fields:
+    fields += '  %s %s;\n' % (f.name, signature_to_cxxtype(f.signature))
+    argsig = signature_to_cxxtype(f.signature, None, True)
+    ctordecl.append('%s %s' % (argsig, f.name))
+    ctorinit.append('  %s(%s)\n' % (f.name, f.name))
+    signatures.append(f.signature)
+  ctor = '%s(%s) :\n%s \n {} \n' % (
+    struct_name,
+    ','.join(ctordecl),
+    ','.join(ctorinit))
+  # build constructor signature
+  cargs = map(lambda x: signature_to_cxxtype(x, None, True), signatures)
+  replace = {
+    '@FIELDS@' : fields,
+    '@PEN@' : open_namespace,
+    '@CLOSE@' : close_namespace,
+    '@CTOR@' : ctor
+  }
+  for k in replace:
+    skeleton = skeleton.replace(k, replace[k])
+  return skeleton
+
+
 def raw_to_interface(class_name, cls, include, namespaces):
   """ Generate service interface class from RAW representation
 
@@ -866,19 +919,12 @@ QI_TYPE_NOT_CLONABLE(@NAMESPACES@@INAME@);
     signature = ','.join(map(signature_to_cxxtype, sig.args))
     signals_decl += '    qi::Signal<%s> %s;\n' % (signature, sig.name)
     fields.append(sig.name)
-  for prop in properties:
+  for prop in cls.properties:
     signature = signature_to_cxxtype(prop.signature)
     signals_decl += '    qi::Property<%s> %s;\n' % (signature, prop.name)
     fields.append(prop.name)
-  open_namespace = ""
-  close_namespace = ""
-  ns_full = ""
-  if namespaces:
-    for n in namespaces:
-      open_namespace += "namespace " + n + "\n{\n"
-      close_namespace = "} // !" + n + "\n" + close_namespace
-      ns_full = n + "::"
-
+  (open_namespace, close_namespace) = open_close_namespace(namespaces)
+  ns_full = '::'.join(namespaces) + '::'
   replace = {
    '@INAME@': class_name,
    '@DECLS@': methods_decl + signals_decl,
@@ -891,9 +937,10 @@ QI_TYPE_NOT_CLONABLE(@NAMESPACES@@INAME@);
   for k in replace:
     skeleton = skeleton.replace(k, replace[k])
   # Add the raw struct in text form for debugging purposes
-  r = Raw()
-  r.classes[class_name] = cls
-  skeleton = "/*" + raw_to_text(r) + "*/" + skeleton
+  # DISABLED, breaks compile because of nested /**/
+  # r = Raw()
+  #r.classes[class_name] = cls
+  #skeleton = "/*" + raw_to_text(r) + "*/" + skeleton
   return skeleton
 
 def clean_extra_space(name):
@@ -1223,14 +1270,8 @@ QI_TYPE_NOT_CLONABLE(@namepaces@@proxyName@);
   for prop in cls.properties:
     ctor += '    qi::makeProxyProperty({0}, obj, "{0}");\n'.format(prop.name)
   result = skeleton
-  open_namespace = ""
-  close_namespace = ""
-  ns_full = ""
-  if namespaces:
-    for n in namespaces:
-      open_namespace += "namespace " + n + "\n{\n"
-      close_namespace = "} // !" + n + "\n" + close_namespace
-      ns_full = n + "::"
+  (open_namespace, close_namespace) = open_close_namespace(namespaces)
+  ns_full = '::'.join(namespaces) + '::'
 
   replace = {
       'QI_REGISTER_PROXY': qi_register_proxy,
