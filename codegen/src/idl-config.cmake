@@ -72,21 +72,36 @@ cmake_parse_arguments(ARG
       )
 endfunction()
 
-function(qi_create_interface idl class_name output_dir _out)
+#! Create interface header for given class
+#\group:SEARCH_PATH path where to search IDL files
+#\param:IDL name of IDL xml file (will be searched for if not specified)
+#\param:_out_filename variable that will be set with full path and name of generated file
+#\param:class_name Name of the class for which to generate interface
+#\param:OUTPUT_DIR Directory in which to put the result
+#\param:OUTPUT_FILE File name (default: <classname>.hpp)
+function(qi_create_interface _out_filename class_name)
+  cmake_parse_arguments(ARG "" "IDL;OUTPUT_DIR;OUTPUT_FILE" "SEARCH_PATH" ${ARGN})
   _qi_find_idl(IDL)
-  string(REPLACE "::" ";" split_class ${class_name})
-  list(REVERSE split_class)
-  list(GET split_class 0 class)
-  string(TOLOWER ${class} _filename)
-  set(_filename "${_filename}_interface.hpp")
-  message("tgt ${output_dir}/${_filename}")
-  set(${_out} ${output_dir}/${_filename} PARENT_SCOPE)
-  qi_generate_src(${output_dir}/${_filename}
-    SRC ${idl} ${IDL}
+  qi_find_idl_for(${class_name} idlfile "${ARG_SEARCH_PATH}")
+  # Get bare class name without namespaces
+  if (NOT ARG_OUTPUT_FILE)
+    string(REPLACE "::" ";" split_class ${class_name})
+    list(REVERSE split_class)
+    list(GET split_class 0 class)
+    string(TOLOWER ${class} _filename)
+    set(ARG_OUTPUT_FILE "${_filename}.hpp")
+  endif()
+  message("COIN ${ARG_OUTPUT_DIR}")
+  if (NOT ARG_OUTPUT_DIR)
+    set(ARG_OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR})
+  endif()
+  set(tgt "${ARG_OUTPUT_DIR}/${ARG_OUTPUT_FILE}")
+  set(${_out_filename} ${tgt} PARENT_SCOPE)
+  qi_generate_src(${tgt}
+    SRC ${idlfile} ${IDL}
     COMMAND ${_python_executable} ${IDL}
-      ${idl}
-      -c ${class_name}
-      -o ${output_dir}/${_filename}
+      ${idlfile}
+      -o ${tgt}
       -m interface)
 endfunction()
 
