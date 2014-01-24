@@ -8,6 +8,7 @@ find_package(idl REQUIRED)
 # first thing, check that the user interface file compiles
 # Not in a workflow, just for early-detection of problems
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
 qi_create_lib(cattestcompile SRC cat-test-compiles.cpp DEPENDS QITYPE)
 
 #user wrote cat.hpp interface, generate the idl files from it
@@ -56,3 +57,17 @@ if(NOT WIN32)
 set_target_properties(test_service_workflow PROPERTIES
   LINK_FLAGS "-Wl,-no-as-needed")
 endif()
+
+
+# test interface generation mode
+qi_create_interface(_gen animals::Cat
+  OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/generated"
+)
+
+message("WILL GENERATE ${_gen}")
+# recompile using that interface
+# cat-test-compiles2 forces a generated/cat include to ensure we get the new one
+qi_create_lib(cattestcompile2 SRC cat-test-compiles2.cpp
+  ${CMAKE_CURRENT_BINARY_DIR}/generated/cat.hpp
+  DEPENDS QITYPE)
+
