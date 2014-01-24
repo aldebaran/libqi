@@ -58,7 +58,6 @@ class Class:
     self.signals = list(signals)
     self.properties = list(properties)
     self.annotations = annotations
-    self.dependencies = list()
   def visitTypes(self, f): # call f on all signal,method, prop types
     for m in self.methods:
       for a in m.args:
@@ -734,7 +733,8 @@ def find_include(cname, prefix):
 
 def get_dependencies(raw, cls):
   """ return (classNameList, structNameList, extClassNameList, extStructNameList),
-  dependencies of 'cls'. ext ones are the one not present in raw, so the ones
+  dependencies of 'cls' which can be a class or struct name.
+  ext ones are the one not present in raw, so the ones
   for which we cannot recurse
   """
   print("get_dependencies " + cls)
@@ -761,7 +761,10 @@ def get_dependencies(raw, cls):
         processType('', c)
 
   # initial state: requested class in to-recurse slot
-  classes[1].append(cls)
+  if cls in raw.classes:
+    classes[1].append(cls)
+  else:
+    structs[1].append(cls)
   # while there are entries to process
   while len(classes[1]) or len(structs[1]):
     rec = (classes[1], structs[1])
@@ -824,11 +827,15 @@ def idl_to_raw(root, result = None):
     result.structs[sname] = s
   return result
 
-def raw_to_cxx_struct(struct_name, struct, namespaces):
-  """ Generater a C++ structure definition for (namespaces, struct_name)
+def raw_to_cxx_struct(struct_name, struct, namespaces = None):
+  """ Generater a C++ structure definition for struct_name (that can have namespaces)
       using struct data of type Struct.
       The struct is generated bare without gards or instrumentation.
   """
+  if namespaces is None:
+    ssplit = struct_name.split('::')
+    namespaces = ssplit[0: -1]
+    struct_name = ssplit[-1]
   (open_namespace, close_namespace) = open_close_namespace(namespaces)
   res = ''
   skeleton = """
@@ -843,21 +850,24 @@ struct @NAME@
   fields = ''
   ctordecl = list()
   ctorinit = list()
+  signatures = []
   for f in struct.fields:
-    fields += '  %s %s;\n' % (f.name, signature_to_cxxtype(f.signature))
+    fields += '  %s %s;\n' % (signature_to_cxxtype(f.signature), f.name)
     argsig = signature_to_cxxtype(f.signature, None, True)
     ctordecl.append('%s %s' % (argsig, f.name))
     ctorinit.append('  %s(%s)\n' % (f.name, f.name))
     signatures.append(f.signature)
-  ctor = '%s(%s) :\n%s \n {} \n' % (
+  ctor = '  %s() {}\n  %s(%s) :\n%s \n {} \n' % (
+    struct_name,
     struct_name,
     ','.join(ctordecl),
     ','.join(ctorinit))
   # build constructor signature
   cargs = map(lambda x: signature_to_cxxtype(x, None, True), signatures)
   replace = {
+    '@NAME@': struct_name,
     '@FIELDS@' : fields,
-    '@PEN@' : open_namespace,
+    '@OPEN@' : open_namespace,
     '@CLOSE@' : close_namespace,
     '@CTOR@' : ctor
   }
@@ -866,29 +876,17 @@ struct @NAME@
   return skeleton
 
 
-def raw_to_interface(class_name, cls, include, namespaces):
+def raw_to_cxx_interface(class_name, cls, include, namespaces, standalone):
   """ Generate service interface class from RAW representation
 
       Generate a class with pure virtual methods, signals, and properties,
       intended to serve as a header.
 
       No typesystem registration is added (those go in client support library).
+
+      @param standalone: If true, generate header guard and includes
   """
   skeleton = """
-#ifndef @INAME@_INTERFACE_HPP
-#define @INAME@_INTERFACE_HPP
-
-#include <vector>
-#include <string>
-#include <map>
-
-#include <qitype/signal.hpp>
-#include <qitype/property.hpp>
-#include <qitype/anyobject.hpp>
-#include <qitype/objecttypebuilder.hpp>
-
-@include@
-
 @OPEN_NAMESPACE@
 
 class @INAME@
@@ -905,8 +903,23 @@ inline @INAME@::~@INAME@()
 @CLOSE_NAMESPACE@
 QI_TYPE_NOT_CLONABLE(@NAMESPACES@@INAME@);
 
-#endif
 """
+  if standalone:
+    skeleton = """
+#ifndef @INAME@_INTERFACE_HPP
+#define @INAME@_INTERFACE_HPP
+
+#include <vector>
+#include <string>
+#include <map>
+
+#include <qitype/signal.hpp>
+#include <qitype/property.hpp>
+#include <qitype/anyobject.hpp>
+#include <qitype/objecttypebuilder.hpp>
+
+@include@
+""" + skeleton + "\n#endif\n"
   methods_decl = ''
   getters = ''
   fields = []
@@ -1187,20 +1200,27 @@ namespace detail {
     skeleton_source = skeleton_source.replace(k, replace[k])
   return [skeleton_header, skeleton_source, '']
 
-def raw_to_proxy(class_name, cls, include, namespaces):
+def raw_to_proxy(class_name, cls, include, namespaces, standalone):
   """ Generate C++ proxy code from RAW
   Generate and register a class that can be instanciated by the typesystem,
   and that implements interface 'cls' named 'class_name'.
   That class inherits from qi::Proxy, and is registered through
   QI_REGISTER_PROXY_INTERFACE.
   The implementation bounces to an AnyObject given to the constructor.
+
+  @param namespaces optionaly split namespaces from the class name
+  @param standalone only emit include directives if true
   """
 
+  if namespaces is None:
+    namespaces = class_name.split('::')[0:-1]
+    class_name = class_name.split('::')[-1]
   # Note: in interface mode, the generated class has no reason to ever be
   # used explicitly, so it is given a different name, and ClassProxy is set
   # to a typedef on IClass. That way other genertors can use to ClassProxyPtr
-
-  skeleton = """
+  skeleton = ''
+  if standalone:
+    skeleton = """
 
 #include <vector>
 #include <string>
@@ -1214,6 +1234,8 @@ def raw_to_proxy(class_name, cls, include, namespaces):
 #include <qitype/proxyproperty.hpp>
 
 @include@
+"""
+  skeleton += """
 
 @open_namespace@
 
@@ -1294,22 +1316,32 @@ QI_TYPE_NOT_CLONABLE(@namepaces@@proxyName@);
   replace['QI_REGISTER_PROXY'] = qi_register_proxy
   for k in replace:
     result = result.replace('@' + k + '@', replace[k])
-  return ['', result, '']
+  return result
 
-def raw_to_cxx_typebuild(class_name, cls, register_to_factory, include, namespaces):
+def raw_to_cxx_structbuild(class_name, struct):
+  """ Register struct to the typesystem
+  """
+  return 'QI_TYPE_STRUCT(%s, %s);\n' % (class_name, ','.join(map(lambda x: x.name, struct.fields)))
+
+def raw_to_cxx_typebuild(class_name, cls, include, namespaces, standalone):
   """ Generate a c++ file that registers the class to type system.
   Threading-model will be set according to annotations in comments.
   @param class_name name of the class to bind
   @param data raw IDL data
   @param register_to_factory: '', 'service' or 'factory'
   """
-  template = """
+  if namespaces is None:
+    namespaces = class_name.split('::')[0:-1]
+    class_name = class_name.split('::')[-1]
+  template = ''
+  if standalone:
+    template += """
 #include <qitype/anyobject.hpp>
 #include <qitype/objecttypebuilder.hpp>
-#include <qitype/objectfactory.hpp>
 
 @INCLUDE@
-
+"""
+  template += """
 @OPEN_NAMESPACE@
 
 static int @TYPE@init()
@@ -1320,7 +1352,7 @@ static int @TYPE@init()
   return 0;
 }
 static int _init_@TYPE@ = @TYPE@init();
-@REGISTER@
+
 @CLOSE_NAMESPACE@
 """
 
@@ -1353,11 +1385,6 @@ static int _init_@TYPE@ = @TYPE@init();
     name = s.name
     field = name
     advertise += '  builder.advertise("%s", &%s::%s);\n' % (name, class_name, field);
-  register = ''
-  if register_to_factory == 'service':
-    register = 'QI_REGISTER_OBJECT_FACTORY_CONSTRUCTOR(%s);\n' % (class_name)
-  elif register_to_factory == 'factory':
-    register = 'QI_REGISTER_OBJECT_FACTORY_BUILDER(%s);\n' % (class_name)
   open_namespace = ""
   close_namespace = ""
   if namespaces:
@@ -1366,16 +1393,21 @@ static int _init_@TYPE@ = @TYPE@init();
       close_namespace = "} // !" + n + "\n" + close_namespace
 
   open_namespace = 'QI_TYPE_NOT_CLONABLE(%s::%s);\n' % (n, class_name) + open_namespace
-  return template.replace('@TYPE@', class_name).replace('@ADVERTISE@', advertise).replace('@REGISTER@', register).replace('@INCLUDE@', include).replace('@OPEN_NAMESPACE@', open_namespace).replace('@CLOSE_NAMESPACE@', close_namespace)
+  return template.replace('@TYPE@', class_name).replace('@ADVERTISE@', advertise).replace('@INCLUDE@', include).replace('@OPEN_NAMESPACE@', open_namespace).replace('@CLOSE_NAMESPACE@', close_namespace)
 
-def raw_to_cxx_service_skeleton(class_name, cls, include, namespace, register_factory=False):
+def raw_to_cxx_service_skeleton(class_name, cls, include, namespace, standalone, register_factory=False):
   """ Produce skeleton of C++ implementation of the service.
   """
-  result = "#include <qitype/signal.hpp>\n#include <qitype/property.hpp>\n#include <qitype/objecttypebuilder.hpp>\n"
-  if register_factory:
-    result += '#include <qitype/objectfactory.hpp>\n'
-  result += ''.join(['#include <' + x + '>\n' for x in include])
-  result += '\n'
+  if namespace is None:
+    namespace = class_name.split('::')[0:-1]
+    class_name = class_name.split('::')[-1]
+  result = ''
+  if standalone:
+    result += "#include <qitype/signal.hpp>\n#include <qitype/property.hpp>\n#include <qitype/objecttypebuilder.hpp>\n"
+    if register_factory:
+      result += '#include <qitype/objectfactory.hpp>\n'
+    result += ''.join(['#include <' + x + '>\n' for x in include])
+    result += '\n'
   full_name = '::'.join(namespace) + '::' + class_name
   inherits = ' : public ' + full_name
   result += "class %s %s \n{\npublic:\n" % (class_name, inherits)
@@ -1486,19 +1518,124 @@ def runtime_to_raw(class_name, sd_url):
   res.classes[class_name] = Class(methods, [], [], desc[3])
   return res
 
+def output_split_idl(raw, output_prefix, output_pattern):
+  """ Output one IDL file per class and struct.
+     @param output_pattern : Pattern for output filename (expects %s in it)
+  """
+  # one file per class/struct
+  # TODO: filter only the requested classes and dependencies
+  for cls in raw.classes:
+    print("processing " + cls)
+    res = etree.tostring(raw_to_idl_class(raw, cls))
+    comps = cls.split("::")
+    comps[-1] += ".xml"
+    comps = [output_prefix] + comps
+    out = open(output_pattern.replace('%s', os.path.join(*comps)), "w")
+    out.write(res)
+    out.close()
+  for s in raw.structs:
+    res = etree.tostring(raw_to_idl_struct(raw, s))
+    comps = s.split("::")
+    comps[-1] += ".xml"
+    comps = [output_prefix] + comps
+    out = open(output_pattern.replace('%s', os.path.join(*comps)), "w")
+    out.write(res)
+    out.close()
+
+def output_cxx_interface(raw, guard_symbol):
+  """ Output c++ interface for the content of raw
+      @param guard_symbol what to use for CPP guard (can have ::)
+  """
+  # Merge the results of all raw_to_cxx_struct/raw_to_cxx_interface calls
+  res = ''
+  forwards = dict() # namespace -> (classlist, structlist)
+  for s in raw.structs:
+    ssplit = s.split('::')
+    namespaces = ssplit[0: -1]
+    struct_name = ssplit[-1]
+    res += raw_to_cxx_struct(struct_name, raw.structs[s], namespaces)
+    forwards.setdefault('::'.join(namespaces), [list(),list()])[1].append(struct_name)
+  for c in raw.classes:
+    ssplit = c.split('::')
+    namespaces = ssplit[0: -1]
+    struct_name = ssplit[-1]
+    res += raw_to_cxx_interface(struct_name, raw.classes[c], [], namespaces, False)
+    forwards.setdefault('::'.join(namespaces), [list(),list()])[0].append(struct_name)
+  # Generate guard
+  guard_name = guard_symbol.replace('::', '_').upper() +'_HPP'
+  header = '#ifndef %s\n#define %s\n' % (guard_name, guard_name)
+  header += """
+#include <qitype/anyobject.hpp>
+#include <qitype/property.hpp>
+"""
+  # Generate forward declaration for everything
+  for n in forwards:
+    (open_namespace, close_namespace) = open_close_namespace(n.split('::'))
+    header += open_namespace
+    for s in forwards[n][1]:
+      header += '  struct %s;\n' % (s)
+    for c in forwards[n][0]:
+      header += '  class %s;\n' % (c)
+    header += close_namespace
+  # merge
+  res = header + res + "\n#endif\n"
+  return res
+
+def output_client(raw, includes):
+  """ Output client support code: type registration and proxy
+  """
+  res = ''
+  for s in raw.structs:
+    res += raw_to_cxx_structbuild(s, raw.structs[s])
+  for c in raw.classes:
+    res += raw_to_cxx_typebuild(c, raw.classes[c], [], None, False)
+    res += raw_to_proxy(c, raw.classes[c], [], None, False)
+
+  res = """
+#include <vector>
+#include <string>
+#include <map>
+
+#include <qi/types.hpp>
+#include <qitype/signal.hpp>
+#include <qitype/property.hpp>
+#include <qitype/anyobject.hpp>
+#include <qitype/objecttypebuilder.hpp>
+#include <qitype/proxysignal.hpp>
+#include <qitype/proxyproperty.hpp>
+""" + ''.join(map(lambda x: '#include<' + x + '>\n', includes)) + res
+  return res
+
+def output_cxx_skeleton(raw, includes, primary_targets):
+  """ Output a C++ skeleton implementation of given classes
+
+      Note that we generate a skeleton for all dependant interfaces,
+      which does not necessarily make sense (maybe some of those
+      interfaces are expected to be implemented by the client
+  """
+  res = ''
+  for c in raw.classes:
+    res += raw_to_cxx_service_skeleton(c, raw.classes[c], [], None, False, c in primary_targets)
+  includes = """
+#include <qitype/signal.hpp>
+#include <qitype/property.hpp>
+#include <qitype/objectfactory.hpp>
+""" + ''.join(map(lambda x: '#include <' + x + '>\n', includes))
+
+  return includes + res
+
 def main(args):
   res = ''
   print("##args: " + ' '.join(args))
   parser = argparse.ArgumentParser()
   parser.add_argument("--output-file","-o", help="output file (stdout)")
   parser.add_argument("--prefix","-p", default=".", help="output directory (.)")
-  parser.add_argument("--output-mode","-m", default="txt", choices=["parse", "txt", "idl", "proxy", "cxxtype", "cxxtyperegisterfactory", "cxxtyperegisterservice", "cxxskel", "cxxservice", "cxxserviceregister", "interface", "boxinterface", "alproxy", "client", "many"], help="output mode (stdout)")
+  parser.add_argument("--output-mode","-m", default="txt", choices=["parse", "txt", "idl", "proxy", "cxxtype", "cxxtyperegisterfactory", "cxxtyperegisterservice", "cxxskel", "cxxservice", "cxxserviceregister", "interface", "boxinterface", "alproxy", "client", "many"], help="output mode")
   parser.add_argument("--include-file", default="", help="File to include in generated C++")
   parser.add_argument("--search-path", default="", help="colon-separated list of path to search IDL and headers in")
   parser.add_argument("--known-classes", "-k", default="", help="Comma-separated list of other handled classes")
   parser.add_argument("--known-cxx-structs", "-s", default="", help="Comma-separated list of C++ structures that can be used if found in annotations")
-  parser.add_argument("--classes", "-c", default="*", help="Comma-separated list of classes to select, optionally with per class ':operation'")
-  parser.add_argument("--class-name", "-n", default="", help="C++ class name separated by include namespaces (ei: ns1::ns2::classname")
+  parser.add_argument("--classes", "-c", default="*", help="Comma-separated list of classes to select")
   parser.add_argument("--cxx-signature-mapping", default="", help="Extra C++->signature mapping(type=sig,type2=sig2)")
   parser.add_argument("--qiclang", default="qiclang", help="Full path to qiclang binary")
   parser.add_argument("input", nargs='+', help="input file(s)")
@@ -1555,7 +1692,9 @@ def main(args):
     input_mode = 'idl'
     if not len(pargs.classes):
       raise Exception("No input file nor classes given")
-    #Fixme bad cod, assumes classes has only one element
+    if pargs.classes.find(',') != -1:
+      raise Exception("Only one class supported in IDL discovery mode")
+    #FIXME handle multiple classes here
     cname = pargs.classes.replace("::","/") + ".xml"
     fp = find_in_path(cname, idl_search_path)
     if not len(fp):
@@ -1601,183 +1740,69 @@ def main(args):
             print("scheduling " + nc + "from " + c)
             classes.add(nc)
 
-  print("Raw content:")
+  print("Raw content after dependent loading:")
   print(','.join(raw.classes.keys()))
   print(','.join(raw.structs.keys()))
 
   # Register structs in SIG_CXX_MAP
   for s in raw.structs:
     SIG_CXX_MAP[raw.structs[s].signature] = s
-  # Filter out classes present in raw, fill class_operation
-  class_operation = dict()
+
+  # Filter out classes present in raw that we do not want
+
+  primary_targets = [] #distinguish user-specified targets and dependencies
+
   if pargs.classes != '*':
-    # User specified classes, but we must also consider dependencies
     classes = pargs.classes.split(',')
-    processed = set()
-    newraw = Raw()
-    while len(classes):
-      oldcls = classes
-      classes = list()
-      for c in oldcls:
-        (dc, ds, uc, us) = get_dependencies(raw, c)
-        raw.classes[c].dependencies = dc + ds + uc + us
-        classes = list(set(classes) | set(dc))
-        for s in ds:
-          newraw.structs[s] = raw.structs[s]
-        namespaces_class_split = c.rsplit("::", 1) #[("ns1::ns1")+, "class:op1:op2"]
-        if len(namespaces_class_split) > 1:
-          namespaces = namespaces_class_split[0]
-          class_and_op = namespaces_class_split[1]
-        else:
-          namespaces = ""
-          class_and_op = namespaces_class_split[0]
-
-        class_and_op_split = class_and_op.split(":", 1)
-        cls = class_and_op_split[0]
-        if len(class_and_op_split) > 1:
-          class_op = class_and_op_split[1]
-        else:
-          class_op = ""
-
-        if not c.strip():
-          continue #be lenient on trailing ,
-        c = ""
-        if namespaces:
-          c = namespaces + "::"
-        c += cls
-        if not c in raw.classes:
-          raise Exception("Requested class %s not found in %s" % (c, ','.join(raw.keys())))
-        CXX_SIG_MAP['qi::Object<' + cls + '>'] = 'o<' + cls + '>'
-        ANNOTATION_CXX_MAP[cls] = 'qi::Object<' + cls + '>'
-        if pargs.class_name:
-          newraw.classes[pargs.class_name] = raw[c]
-          if class_op:
-            class_operation[pargs.class_name] = class_op
-        else:
-          newraw.classes[c] = raw.classes[c]
-          if class_op:
-            class_operation[c] = class_op
-    raw = newraw
+    primary_targets = classes
+    marked_classes = set(classes)
+    marked_structs = set()
+    for c in classes:
+      if not c in raw.classes:
+        raise Exception("Requested class %s not found in %s" % (c, ','.join(raw.keys())))
+      (dc, ds, uc, us) = get_dependencies(raw, c) #recurses
+      marked_classes = set(marked_classes) | set(dc)
+      marked_structs = set(marked_structs) | set(ds)
+    # Filter out raw
+    nr = Raw()
+    for k in marked_classes:
+      nr.classes[k] = raw.classes[k]
+    for k in marked_structs:
+      nr.structs[k] = raw.structs[k]
+    raw = nr
   else:
-    # Compute dependencies if needed
-    for c in raw.classes:
-      if not len(raw.classes[c].dependencies):
-        (cd, sd, cu, su) = get_dependencies(raw, c)
-        raw.classes[c].dependencies = cd+sd+cu+su
+    primary_targets = raw.classes.keys()
+
+
   # Check if user wants all output in one or multiple files
-  split_output = (not pargs.output_file or pargs.output_file.find("%s") != -1)
+  if not pargs.output_file:
+    pargs.output_file = '%s'
+  split_output = (pargs.output_file.find("%s") != -1)
+
   # Main switch on output mode
+  res = ''
+  # Mode will set res to None if it handled the write itself
+  # othewrise we'll do that at the end and output res
   if pargs.output_mode == "txt":
     res = raw_to_text(raw)
   elif pargs.output_mode == "idl":
     if not split_output:
       res = etree.tostring(raw_to_idl(raw))
     else:
-      # one file per class/struct
-      # TODO: filter only the requested classes and dependencies
-      for cls in raw.classes:
-        print("processing " + cls)
-        res = etree.tostring(raw_to_idl_class(raw, cls))
-        comps = cls.split("::")
-        comps[-1] += ".xml"
-        comps = [pargs.prefix] + comps
-        out = open(os.path.join(*comps), "w")
-        out.write(res)
-        out.close()
-      for s in raw.structs:
-        res = etree.tostring(raw_to_idl_struct(raw, s))
-        comps = s.split("::")
-        comps[-1] += ".xml"
-        comps = [pargs.prefix] + comps
-        out = open(os.path.join(*comps), "w")
-        out.write(res)
-        out.close()
-  else: # Need to apply per-class function
-    res = ['','','']
-    for c in raw.classes:
-      op = pargs.output_mode
-      namespaces_class_split = c.rsplit("::", 1) #[("ns1::ns1")+, "class:op1:op2"]
-      if len(namespaces_class_split) > 1:
-        namespaces = namespaces_class_split[0]
-        name = namespaces_class_split[1]
-      else:
-        namespaces = ""
-        name = namespaces_class_split[0]
+      output_split_idl(raw, pargs.prefix, pargs.output_file)
+      res = None
+  elif pargs.output_mode == "interface":
+    res = output_cxx_interface(raw, primary_targets[0])
+  elif pargs.output_mode == "client":
+    res = output_client(raw, pargs.include_file)
+  elif pargs.output_mode == "cxxskel":
+    res = output_cxx_skeleton(raw, pargs.include_file, primary_targets)
 
-      namespaces_list = list()
-      if namespaces:
-        namespaces_list = namespaces.split("::")
-      if c in class_operation:
-        op = class_operation[c].split(':')
-        if len(op) > 1:
-          name = op[1]
-        op = op[0]
-      functions = []
-      args = []
-      # Build list of functions to run from 'op'
-      if op == "interface":
-        functions = [raw_to_interface]
-        args = [[pargs.include_file, namespaces_list]]
-      elif op == "boxinterface":
-        functions = [raw_to_boxinterface]
-        args = [[]]
-      elif op == "alproxy":
-        functions = [raw_to_al_proxy]
-        args = [[]]
-      elif op == "proxy":
-        functions = [raw_to_proxy]
-        args = [[pargs.include_file, namespaces_list]]
-      elif op == "cxxtype":
-        functions = [raw_to_cxx_typebuild]
-        args = [['', pargs.include_file, namespaces_list]]
-      elif op == "cxxtyperegisterfactory":
-        functions = [raw_to_cxx_typebuild]
-        args = [['factory', pargs.include_file, namespaces_list]]
-      elif op == "cxxtyperegisterservice":
-        functions = [raw_to_cxx_typebuild]
-        args = [['service', pargs.include_file, namespaces_list]]
-      elif op == "cxxskel":
-        functions = [raw_to_cxx_service_skeleton]
-        args = [[pargs.include_file, namespaces_list]]
-      elif op == "cxxserviceregister":
-        functions = [raw_to_cxx_service_skeleton, raw_to_cxx_typebuild]
-        args = [[pargs.include_file, namespaces_list], ['service', pargs.include_file, namespaces_list]]
-      elif op == "cxxservice":
-        functions = [raw_to_cxx_service_skeleton, raw_to_cxx_typebuild]
-        args = [[pargs.include_file, namespaces_list], ['', pargs.include_file, namespaces_list]]
-      elif op == "client":
-        functions = [raw_to_cxx_typebuild, raw_to_proxy]
-        args = [['', pargs.include_file, namespaces_list], [pargs.include_file, namespaces_list]]
-
-      for i in range(len(functions)):
-        cargs = [name, raw.classes[c]] + args[i]
-        tres = functions[i](*cargs)
-        if type(tres) == type([]):
-          res[0] += tres[0]
-          res[1] += tres[1]
-          res[2] += tres[2]
-        else:
-          res[1] += tres
-
-      if split_output:
-        out_name = pargs.output_file.replace("%s", c)
-        out = open(out_name, "w")
-        out.write(res[0] + res[1] + res[2])
-        res = ["","",""]
-
-  if not split_output:
-    names = pargs.output_file.split(',')
-    if len(names) > 1:
-      for i in range(len(names)):
-        out = open(names[i], "w")
-        out.write(res[i])
-    else:
-      if type(res) == type([]):
-        res = ''.join(res)
-      # Set output stream to file or stdout
-      out = sys.stdout
-      if pargs.output_file and pargs.output_file != "-" :
-        out = open(pargs.output_file, "w")
-      out.write(res)
+  # Write result to file
+  if res is not None:
+    out = sys.stdout
+    if pargs.output_file and pargs.output_file != "-" :
+      out = open(pargs.output_file, "w")
+    out.write(res)
 
 main(sys.argv)

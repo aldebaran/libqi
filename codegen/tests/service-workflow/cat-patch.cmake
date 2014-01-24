@@ -31,8 +31,5 @@ set(ARG_KEYS "name;setTarget;selectTask;canPerform;expectedResult")
 set(ARG_DATA ${_fcontent})
 
 apply_replaces(outdata) #  KEYS "setTarget;selectTask;canPerform" DATA ${_fcontent})
-set(outdata ${outdata}
-  "\n#include<qitype/objectfactory.hpp>\n"
-  "QI_REGISTER_OBJECT_FACTORY_CONSTRUCTOR_FOR(animals::Cat, Cat);\n"
-  )
+
 file(WRITE ${output} "${outdata}")
