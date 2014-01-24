@@ -63,7 +63,8 @@ public:
     return asObject().call<int>("incr");
   }
 };
-QI_TYPE_PROXY(PongProxy)
+QI_REGISTER_PROXY_INTERFACE(PongProxy, Pong);
+
 
 TEST(QiAutoService, SimpleUsage)
 {

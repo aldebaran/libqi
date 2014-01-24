@@ -71,6 +71,7 @@ namespace qi {
 
   RemoteObject::~RemoteObject()
   {
+    qiLogDebug() << "~RemoteObject " << this;
     //close may already have been called. (by Session_Service.close)
     close();
     destroy();
@@ -111,9 +112,11 @@ namespace qi {
 
   void RemoteObject::onMetaObject(qi::Future<qi::MetaObject> fut, qi::Promise<void> prom) {
     if (fut.hasError()) {
+      qiLogVerbose() << "MetaObject error: " << fut.error();
       prom.setError(fut.error());
       return;
     }
+    qiLogVerbose() << "Fetched metaobject";
     setMetaObject(fut.value());
     prom.setValue(0);
   }
@@ -122,6 +125,7 @@ namespace qi {
 
   //retrieve the metaObject from the network
   qi::Future<void> RemoteObject::fetchMetaObject() {
+    qiLogVerbose() << "Requesting metaobject";
     qi::Promise<void> prom(qi::FutureCallbackType_Sync);
     qi::Future<qi::MetaObject> fut = _self.call<qi::MetaObject>("metaObject", 0U);
     fut.connect(boost::bind<void>(&RemoteObject::onMetaObject, this, _1, prom));

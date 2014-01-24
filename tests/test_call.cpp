@@ -1032,7 +1032,7 @@ public:
   qi::Future<int> ping(int v) { return asObject().call<int>("ping", v);}
 };
 
-QI_TYPE_PROXY(TestClassProxy);
+QI_REGISTER_PROXY_INTERFACE(TestClassProxy, TestClass);
 
 TEST(TestObjectT, Complete)
 {

@@ -10,16 +10,16 @@
 #include <qi/application.hpp>
 #include <qitype/anyobject.hpp>
 #include <qitype/dynamicobjectbuilder.hpp>
+#include <qitype/objectfactory.hpp>
 #include <qimessaging/session.hpp>
 #include <testsession/testsessionpair.hpp>
 #include <testsession/testsessionpair.hpp>
 #include "task_service.hpp"
-#include "task_bind.hpp"
-#include "taskgenerator_bind.hpp"
+
 
 qiLogCategory("Task");
 
-Task::Task(const std::string& name, TaskGenerator* handler)
+TaskImpl::TaskImpl(const std::string& name, TaskGenerator* handler)
   : _handler(handler)
   , _name(name)
   , _param("")
@@ -27,12 +27,12 @@ Task::Task(const std::string& name, TaskGenerator* handler)
 {
 }
 
-std::string Task::getName()
+std::string TaskImpl::getName()
 {
   return _name;
 }
 
-std::string Task::setParam(const std::string& p)
+std::string TaskImpl::setParam(const std::string& p)
 {
   std::string old = _param;
   _param = p;
@@ -40,7 +40,7 @@ std::string Task::setParam(const std::string& p)
   return old;
 }
 
-std::string Task::step(unsigned int arg)
+std::string TaskImpl::step(unsigned int arg)
 {
   qiLogDebug() << "Step " << this << ' ' << arg;
   std::stringstream result;
@@ -51,19 +51,19 @@ std::string Task::step(unsigned int arg)
   return v;
 }
 
-std::string Task::getLastResult()
+std::string TaskImpl::getLastResult()
 {
   return _lastResult;
 }
 
 
-TaskPtr TaskGenerator::newTask(const std::string& name)
+qi::Object<Task> TaskGeneratorImpl::newTask(const std::string& name)
 {
-  TaskPtr task = boost::make_shared<Task>(name, this);
-  _tasks.push_back(TaskWeakPtr(task));
+  qi::Object<Task> task = qi::Object<Task>(new TaskImpl(name, this));
+  _tasks.push_back(qi::WeakObject<Task>(task));
   return task;
 }
-unsigned long TaskGenerator::taskCount()
+qi::uint64_t TaskGeneratorImpl::taskCount()
 {
   unsigned res = 0;
   for (unsigned i=0; i<_tasks.size(); ++i)
@@ -72,11 +72,11 @@ unsigned long TaskGenerator::taskCount()
   return res;
 }
 
-void TaskGenerator::step(unsigned int arg)
+void TaskGeneratorImpl::step(unsigned int arg)
 {
   for (unsigned i=0; i<_tasks.size(); ++i)
   {
-    TaskPtr ptr = _tasks[i].lock();
+    qi::Object<Task> ptr = _tasks[i].lock();
     if (ptr)
       ptr->step(arg);
     else
@@ -88,16 +88,16 @@ void TaskGenerator::step(unsigned int arg)
   }
 }
 
-std::vector<TaskPtr> TaskGenerator::tasks()
+std::vector<qi::Object<Task> > TaskGeneratorImpl::tasks()
 {
-  std::vector<TaskPtr> result;
+  std::vector<qi::Object<Task> > result;
   for (unsigned i=0; i<_tasks.size(); ++i)
-    if (TaskPtr p = _tasks[i].lock())
+    if (qi::Object<Task> p = _tasks[i].lock())
       result.push_back(p);
   return result;
 }
 
-TaskGeneratorPtr make_TaskGeneratorPtr()
-{
-  return TaskGeneratorPtr(new TaskGenerator());
-}
+QI_REGISTER_IMPLEMENTATION(Task, TaskImpl); // declare object
+QI_REGISTER_IMPLEMENTATION(TaskGenerator, TaskGeneratorImpl); // declare object
+QI_REGISTER_OBJECT_FACTORY_CONSTRUCTOR_FOR(TaskGenerator, TaskGeneratorImpl); // add to .so factory
+
