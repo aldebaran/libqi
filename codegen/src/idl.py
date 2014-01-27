@@ -1333,6 +1333,7 @@ def raw_to_cxx_typebuild(class_name, cls, include, namespaces, standalone):
   if namespaces is None:
     namespaces = class_name.split('::')[0:-1]
     class_name = class_name.split('::')[-1]
+  full_name = '::'.join(namespaces) + '::' + class_name
   template = ''
   if standalone:
     template += """
@@ -1392,7 +1393,8 @@ static int _init_@TYPE@ = @TYPE@init();
       open_namespace += "namespace " + n + "\n{\n"
       close_namespace = "} // !" + n + "\n" + close_namespace
 
-  open_namespace = 'QI_TYPE_NOT_CLONABLE(%s::%s);\n' % (n, class_name) + open_namespace
+  # QI_TYPE_NOT_CLONABLE must be called exactly once, done in interface
+  #open_namespace = 'QI_TYPE_NOT_CLONABLE(%s);\n' % (full_name) + open_namespace
   return template.replace('@TYPE@', class_name).replace('@ADVERTISE@', advertise).replace('@INCLUDE@', include).replace('@OPEN_NAMESPACE@', open_namespace).replace('@CLOSE_NAMESPACE@', close_namespace)
 
 def raw_to_cxx_service_skeleton(class_name, cls, include, namespace, standalone, register_factory=False):
@@ -1570,7 +1572,10 @@ def output_cxx_interface(raw, guard_symbol):
 """
   # Generate forward declaration for everything
   for n in forwards:
-    (open_namespace, close_namespace) = open_close_namespace(n.split('::'))
+    if len(n):
+      (open_namespace, close_namespace) = open_close_namespace(n.split('::'))
+    else:
+       (open_namespace, close_namespace) = ('', '')
     header += open_namespace
     for s in forwards[n][1]:
       header += '  struct %s;\n' % (s)
@@ -1630,7 +1635,7 @@ def main(args):
   parser = argparse.ArgumentParser()
   parser.add_argument("--output-file","-o", help="output file (stdout)")
   parser.add_argument("--prefix","-p", default=".", help="output directory (.)")
-  parser.add_argument("--output-mode","-m", default="txt", choices=["parse", "txt", "idl", "proxy", "cxxtype", "cxxtyperegisterfactory", "cxxtyperegisterservice", "cxxskel", "cxxservice", "cxxserviceregister", "interface", "boxinterface", "alproxy", "client", "many"], help="output mode")
+  parser.add_argument("--output-mode","-m", default="txt", choices=["txt", "idl", "cxxskel", "interface", "boxinterface", "alproxy", "client"], help="output mode")
   parser.add_argument("--include-file", default="", help="File to include in generated C++")
   parser.add_argument("--search-path", default="", help="colon-separated list of path to search IDL and headers in")
   parser.add_argument("--known-classes", "-k", default="", help="Comma-separated list of other handled classes")
@@ -1698,7 +1703,7 @@ def main(args):
     cname = pargs.classes.replace("::","/") + ".xml"
     fp = find_in_path(cname, idl_search_path)
     if not len(fp):
-      raise Exception("Could not locate " + cname + " in " + ':'.join(path))
+      raise Exception("Could not locate " + cname + " in " + ':'.join(idl_search_path))
     xml = etree.ElementTree(file=fp).getroot()
     raw = idl_to_raw(xml)
     if not len(pargs.include_file):
@@ -1797,7 +1802,8 @@ def main(args):
     res = output_client(raw, pargs.include_file)
   elif pargs.output_mode == "cxxskel":
     res = output_cxx_skeleton(raw, pargs.include_file, primary_targets)
-
+  else:
+    raise Execption("Mode not implemented")
   # Write result to file
   if res is not None:
     out = sys.stdout

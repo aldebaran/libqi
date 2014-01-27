@@ -28,15 +28,20 @@ function(qi_find_idl_for classname where)
   set(genname "${CMAKE_CURRENT_BINARY_DIR}/share/idl/${idlname}.xml")
   get_source_file_property(isgenerated ${genname} GENERATED)
   if (TARGET ${genname} OR isgenerated)
-    qi_persistent_set(${where} ${genname})
+    set(${where} ${genname} PARENT_SCOPE)
   else()
-    find_path(idlfile "${idlname}.xml"
-      PATHS ${CMAKE_CURRENT_BINARY_DIR} $ENV{IDL_PATH}
+    # Proper reset since find_path writes to cache
+    set(_idlfile_find_path "_idlfile_find_path-NOTFOUND" CACHE FILEPATH   "Cleared." FORCE)
+    find_path(_idlfile_find_path "${idlname}.xml"
+      PATHS ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_BINARY_DIR}/share/idl
+      ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/share/idl
+      $ENV{IDL_PATH}
     )
-    if(idlfile)
-      qi_persistent_set(${where} idlfile)
+    if(_idlfile_find_path)
+      message("found ${idlname}.xml at ${idlfile} from ${CMAKE_CURRENT_BINARY_DIR}")
+      set(${where} "${_idlfile_find_path}/${idlname}.xml" PARENT_SCOPE)
     else()
-      qi_error("Could not find IDL file for ${classname}")
+      qi_error("Could not find IDL file ${idlname}.xml for ${classname} (searched ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR} $ENV{IDL_PATH} )")
     endif()
   endif()
 
@@ -61,23 +66,25 @@ function(qi_create_interface _out_filename class_name)
     string(TOLOWER ${class} _filename)
     set(ARG_OUTPUT_FILE "${_filename}.hpp")
   endif()
-  message("COIN ${ARG_OUTPUT_DIR}")
   if (NOT ARG_OUTPUT_DIR)
     set(ARG_OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR})
   endif()
   set(tgt "${ARG_OUTPUT_DIR}/${ARG_OUTPUT_FILE}")
   set(${_out_filename} ${tgt} PARENT_SCOPE)
+  message("-- Interface: ${class_name} ${tgt} from ${idlfile}")
   qi_generate_src(${tgt}
     SRC ${idlfile} ${IDL}
     COMMAND ${_python_executable} ${IDL}
       ${idlfile}
+      --search-path "${ARG_SEARCH_PATH}:${CMAKE_CURRENT_SOURCE_DIR}"
       -o ${tgt}
       -m interface)
 endfunction()
 
 #! Create client support library for given classes
 function(qi_create_client_lib libname)
-  cmake_parse_arguments(ARG "" "PREFIX" "CLASSES;INCLUDE" ${ARGN})
+  cmake_parse_arguments(ARG "" "PREFIX" "CLASSES;INCLUDE;SRC;DEPENDS" ${ARGN})
+  _qi_find_idl(IDL)
   if (NOT ARG_PREFIX)
     set(ARG_PREFIX ${CMAKE_CURRENT_BINARY_DIR})
   endif()
@@ -100,7 +107,7 @@ function(qi_create_client_lib libname)
       -m client)
     list(APPEND sources "${target}")
   endforeach()
-  qi_create_lib("${libname}" SHARED SRC ${sources})
+  qi_create_lib("${libname}" SHARED SRC ${sources} ${ARG_SRC} DEPENDS ${ARG_DEPENDS})
 endfunction()
 
 #! Create a skeleton implementation of given class
@@ -169,5 +176,5 @@ function(qi_create_idl files)
       -m idl)
     list(APPEND names "${target}")
   endforeach(c)
-  qi_persistent_set(${files} "${names}")
+  set(${files} "${names}" PARENT_SCOPE)
 endfunction()
