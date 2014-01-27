@@ -190,7 +190,7 @@ namespace qi {
 
     /// Shares ref counter with \p other, which much handle the destrutiong of \p go.
     template<typename U> Object(GenericObject* go, boost::shared_ptr<U> other);
-
+    template<typename U> Object(boost::shared_ptr<U> other);
     bool operator <(const Object& b) const;
     template<typename U> bool operator !=(const Object<U>& b) const;
     template<typename U> bool operator ==(const Object<U>& b) const;
@@ -208,7 +208,12 @@ namespace qi {
     GenericObject* asGenericObject() const;
     void reset();
     unsigned use_count() const { return _obj.use_count();}
+
+    ObjectTypeInterface* interface();
+
     // no-op deletor callback
+    template<typename U>
+    static void keepReference(boost::shared_ptr<U> ptr) {}
     static void noDeleteT(T*) {qiLogDebug("qi.object") << "AnyObject noop T deleter";}
     static void noDelete(GenericObject*) {qiLogDebug("qi.object") << "AnyObject noop deleter";}
     // deletor callback that deletes only the GenericObject and not the content
@@ -223,8 +228,8 @@ namespace qi {
     }
   private:
     friend class GenericObject;
-    friend class AnyWeakObject;
     template <typename> friend class Object;
+    template <typename> friend class WeakObject;
     Object(detail::ManagedObjectPtr obj)
     {
       init(obj);
@@ -242,15 +247,37 @@ namespace qi {
     detail::ManagedObjectPtr _obj;
   };
 
-  class AnyWeakObject: public boost::weak_ptr<GenericObject>
+  template<typename T> class WeakObject
   {
   public:
-    AnyWeakObject() {}
-    template<typename T>
-    AnyWeakObject(const Object<T>& o)
-    : boost::weak_ptr<GenericObject>(o._obj) {}
-    AnyObject lock() { return AnyObject(boost::weak_ptr<GenericObject>::lock());}
+    WeakObject() {}
+    template<typename U> WeakObject(const Object<U>& o)
+    : _ptr(o._obj) {}
+    Object<T> lock() { return Object<T>(_ptr.lock());}
+    boost::weak_ptr<GenericObject> _ptr;
   };
+  typedef WeakObject<Empty> AnyWeakObject;
+
+  template<typename T> inline ObjectTypeInterface* Object<T>::interface()
+  {
+    TypeInterface* type = typeOf<T>();
+    if (type->kind() != TypeKind_Object)
+    {
+      // Try template
+      TemplateTypeInterface* t = dynamic_cast<TemplateTypeInterface*>(type);
+      if (t)
+        type = t->next();
+      if (type->kind() != TypeKind_Object)
+      {
+        std::stringstream err;
+        err << "Object<T> can only be used on registered object types. ("
+        << type->infoString() << ")(" << type->kind() << ')';
+        throw std::runtime_error(err.str());
+      }
+    }
+    ObjectTypeInterface* otype = static_cast<ObjectTypeInterface*>(type);
+    return otype;
+  }
 
   template<typename T> inline Object<T>::Object() {}
   template<typename T> template<typename U>inline Object<T>::Object(const Object<U>& o)
@@ -271,47 +298,22 @@ namespace qi {
     // Notify the shared_from_this of GenericObject
     _obj->_internal_accept_owner(&other, go);
   }
+  template<typename T> template<typename U> Object<T>::Object(boost::shared_ptr<U> other)
+  {
+    ObjectTypeInterface* otype = interface();
+    T* ptr = static_cast<T*>(other.get());
+    _obj = detail::ManagedObjectPtr(new GenericObject(otype, ptr),
+      boost::bind(&keepReference<U>, other));
+  }
 
   template<typename T> inline Object<T>::Object(T* ptr)
   {
-    TypeInterface* type = typeOf<T>();
-    if (type->kind() != TypeKind_Object)
-    {
-      // Try template
-      TemplateTypeInterface* t = dynamic_cast<TemplateTypeInterface*>(type);
-      if (t)
-        type = t->next();
-      if (type->kind() != TypeKind_Object)
-      {
-                std::stringstream err;
-        err << "Object<T> can only be used on registered object types. ("
-            << type->infoString() << ")(" << type->kind() << ')';
-
-        throw std::runtime_error(err.str());
-      }
-    }
-    ObjectTypeInterface* otype = static_cast<ObjectTypeInterface*>(type);
+    ObjectTypeInterface* otype = interface();
     _obj = detail::ManagedObjectPtr(new GenericObject(otype, ptr), &deleteObject);
   }
   template<typename T> inline Object<T>::Object(T* ptr, boost::function<void(T*)> deleter)
   {
-    TypeInterface* type = typeOf<T>();
-    if (type->kind() != TypeKind_Object)
-    {
-      // Try template
-      TemplateTypeInterface* t = dynamic_cast<TemplateTypeInterface*>(type);
-      if (t)
-        type = t->next();
-      if (type->kind() != TypeKind_Object)
-      {
-        std::stringstream err;
-        err << "Object<T> can only be used on registered object types. ("
-            << type->infoString() << ")(" << type->kind() << ')';
-
-        throw std::runtime_error(err.str());
-      }
-    }
-    ObjectTypeInterface* otype = static_cast<ObjectTypeInterface*>(type);
+    ObjectTypeInterface* otype = interface();
     if (deleter)
       _obj = detail::ManagedObjectPtr(new GenericObject(otype, ptr),
         boost::bind(&Object::deleteCustomDeleter, _1, deleter));
@@ -408,6 +410,9 @@ namespace qi {
     _obj.reset();
   }
 
+  /** A Proxy is the base class used by bouncer implementations of all
+  * interfaces.
+  */
   class QITYPE_API Proxy
   {
   public:

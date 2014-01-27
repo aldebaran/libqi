@@ -42,9 +42,10 @@ namespace qi
   class Proxy;
   template<typename T=Empty> class Object;
   typedef Object<Empty> AnyObject;
+  template<typename T=Empty> class WeakObject;
+  typedef WeakObject<Empty> AnyWeakObject;
 
   class GenericObject;
-  class AnyWeakObject;
 
   class Signature;
 
