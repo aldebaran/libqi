@@ -251,17 +251,13 @@ public:
     typedef boost::uint16_t index_t;
 
     /** uninitialized constructor */
-    tagged_index(void) BOOST_NOEXCEPT //: index(0), tag(0)
+    tagged_index(void) //: index(0), tag(0)
     {}
 
     /** copy constructor */
-#ifdef BOOST_NO_CXX11_DEFAULTED_FUNCTIONS
     tagged_index(tagged_index const & rhs):
         index(rhs.index), tag(rhs.tag)
     {}
-#else
-    tagged_index(tagged_index const & rhs) = default;
-#endif
 
     explicit tagged_index(index_t i, tag_t t = 0):
         index(i), tag(t)

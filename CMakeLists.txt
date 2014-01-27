@@ -28,40 +28,6 @@ qi_add_optional_package(BOOST_LOCALE "Enable qi::translate")
 enable_testing()
 include(CMakeDependentOption)
 
-if(ANDROID)
-  set(_lock_free_default FALSE)
-else()
-  find_path(_lock_free_default "boost/lockfree/queue.hpp")
-endif()
-
-# High-level CMake...
-# * find_path return the path of the file if found, or the path it
-#   looks for suffixed with -NOTFOUND otherwise;
-# * if statement interpretes as false a variables ending with -NOTFOUND;
-# * to be evaluate as a boolean, the varaible must not be in ${} in the
-#   if statement.
-#
-# for further details, see:
-#   http://www.cmake.org/cmake/help/v2.8.12/cmake.html#command:if
-#
-# So, here we explicitly use another variable to store the default value
-# for the option.
-if(_lock_free_default)
-  set(_use_lock_free_default ON)
-else()
-  set(_use_lock_free_default OFF)
-endif()
-
-option(USE_BOOST_LOCK_FREE "Use boost/lockfree for asynchronous qi::log"
-  ${_use_lock_free_default}
-)
-
-if(USE_BOOST_LOCK_FREE)
-  add_definitions("-D QI_HAS_BOOST_LOCK_FREE")
-else()
-  qi_info("Disable lockfree support because you are using a boost version too ancient")
-endif()
-
 set(H
   qi/details/eventloop.hxx
   qi/details/future.hxx
@@ -182,9 +148,7 @@ qi_create_config_h(_out qi/config.hpp.in qi/config.hpp)
 list(APPEND C ${_out})
 
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}")
-if(USE_BOOST_LOCK_FREE)
-  include_directories("${CMAKE_CURRENT_SOURCE_DIR}/external")
-endif()
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/external")
 
 qi_create_lib(qi ${_libtype} ${H} ${C})
 

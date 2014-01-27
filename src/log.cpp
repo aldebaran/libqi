@@ -22,10 +22,8 @@
 #include <boost/program_options.hpp>
 #include <boost/unordered_map.hpp>
 
-#ifdef QI_HAS_BOOST_LOCK_FREE
+#ifndef ANDROID
 # include <boost/lockfree/queue.hpp>
-#else
-# include <queue>
 #endif
 #include <boost/function.hpp>
 
@@ -174,10 +172,8 @@ namespace qi {
       boost::mutex               LogHandlerLock;
       boost::condition_variable  LogReadyCond;
 
-#ifdef QI_HAS_BOOST_LOCK_FREE
+#ifndef ANDROID
       boost::lockfree::queue<privateLog*>     logs;
-#else
-      std::queue<privateLog*>     logs;
 #endif
 
       typedef std::map<std::string, Handler> LogHandlerMap;
@@ -368,16 +364,12 @@ namespace qi {
 
     void Log::printLog()
     {
-      privateLog* pl;
+// Logs are handled in qi::log in Android
+#ifndef ANDROID
+      privateLog* pl = 0;
       boost::mutex::scoped_lock lock(LogHandlerLock);
-#ifdef QI_HAS_BOOST_LOCK_FREE
       while (logs.pop(pl))
       {
-#else
-      while ((pl = logs.front()) != 0)
-      {
-        logs.pop();
-#endif
         dispatch(pl->_logLevel,
                  pl->_date,
                  pl->_category,
@@ -386,6 +378,7 @@ namespace qi {
                  pl->_function,
                  pl->_line);
       }
+#endif
     }
 
     void Log::dispatch(const qi::LogLevel level,
@@ -435,7 +428,7 @@ namespace qi {
     }
 
     inline Log::Log()
-#ifdef QI_HAS_BOOST_LOCK_FREE
+#ifndef ANDROID
     :logs(50)
 #endif
     {
@@ -462,12 +455,12 @@ namespace qi {
     static void my_strcpy(char *dst, const char *src, int len) {
       if (!src)
         src = "(null)";
-     #ifdef _MSV_VER
+#ifdef _MSV_VER
       strncpy_s(dst, len, src, _TRUNCATE);
-     #else
+#else
       strncpy(dst, src, len);
       dst[len - 1] = 0;
-     #endif
+#endif
     }
 
     void init(qi::LogLevel verb,
@@ -515,7 +508,7 @@ namespace qi {
              const char           *fct,
              const int             line)
     {
-      #ifndef ANDROID
+#ifndef ANDROID
       if (_glSyncLog)
       {
         if (!detail::isVisible(category, verb))
@@ -525,7 +518,7 @@ namespace qi {
         LogInstance->dispatch(verb, tv, *category, msg.c_str(), file, fct, line);
       }
       else
-      #endif
+#endif
       // FIXME suboptimal
       // log is also a qi namespace, this line confuses some compilers if
       // namespace is not explicit
@@ -541,21 +534,20 @@ namespace qi {
     {
       if (!isVisible(category, verb))
         return;
-      #ifdef ANDROID
-        std::map<LogLevel, android_LogPriority> _conv;
 
-        _conv[silent]  = ANDROID_LOG_SILENT;
-        _conv[fatal]   = ANDROID_LOG_FATAL;
-        _conv[error]   = ANDROID_LOG_ERROR;
-        _conv[warning] = ANDROID_LOG_WARN;
-        _conv[info]    = ANDROID_LOG_INFO;
-        _conv[verbose] = ANDROID_LOG_VERBOSE;
-        _conv[debug]   = ANDROID_LOG_DEBUG;
+#ifdef ANDROID
+      std::map<LogLevel, android_LogPriority> _conv;
 
-        __android_log_print(_conv[verb], category, msg);
-        return;
-      #endif
+      _conv[silent]  = ANDROID_LOG_SILENT;
+      _conv[fatal]   = ANDROID_LOG_FATAL;
+      _conv[error]   = ANDROID_LOG_ERROR;
+      _conv[warning] = ANDROID_LOG_WARN;
+      _conv[info]    = ANDROID_LOG_INFO;
+      _conv[verbose] = ANDROID_LOG_VERBOSE;
+      _conv[debug]   = ANDROID_LOG_DEBUG;
 
+      __android_log_print(_conv[verb], category, msg);
+#else
       if (!LogInstance)
         return;
       if (!LogInstance->LogInit)
@@ -583,13 +575,10 @@ namespace qi {
         my_strcpy(pl->_file, file, FILE_SIZE);
         my_strcpy(pl->_function, fct, FUNC_SIZE);
         my_strcpy(pl->_log, msg, LOG_SIZE);
-#ifdef QI_HAS_BOOST_LOCK_FREE
         LogInstance->logs.push(pl);
-#else
-        LogInstance->logs.push(pl);
-#endif
         LogInstance->LogReadyCond.notify_one();
       }
+#endif
     }
 
     Log::Handler* Log::logHandler(SubscriberId id)
