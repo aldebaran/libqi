@@ -16,6 +16,7 @@
 #include <qitype/typeinterface.hpp>
 #include <qitype/dynamicobjectbuilder.hpp>
 #include <qitype/objecttypebuilder.hpp>
+#include <qitype/anyobject.hpp>
 
 namespace qi {
 
@@ -58,5 +59,8 @@ namespace qi {
  */
 #define QI_REGISTER_OBJECT_FACTORY_BUILDER(name)                      \
   QI_REGISTER_OBJECT_FACTORY_METHOD(#name "Service", "create", ::qi::detail::constructObject<name>)
+
+#define QI_REGISTER_OBJECT_FACTORY_BUILDER_FOR(name, cls)                      \
+  QI_REGISTER_OBJECT_FACTORY_METHOD(#name "Service", "create", ::qi::detail::constructObject<cls>)
 
 #endif  // _QITYPE_OBJECTFACTORY_HPP_
