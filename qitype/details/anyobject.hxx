@@ -483,7 +483,7 @@ namespace qi {
       qiLogDebug("qi.adapter") << "futureAdapter: future has value";
       AnyValue v = gfut.call<AnyValue>(MetaCallType_Direct, "value", 0);
       // For a Future<void>, value() gave us a void*
-      if (futureType->templateArgument() == qi::typeOf<void>())
+      if (futureType->templateArgument()->kind() == TypeKind_Void)
         v = AnyValue(qi::typeOf<void>());
       qiLogDebug("qi.adapter") << v.type()->infoString();
       setPromise(promise, v);
