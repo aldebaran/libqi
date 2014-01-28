@@ -168,7 +168,10 @@ namespace qi {
     Object();
 
     template<typename U> Object(const Object<U>& o);
-
+    template<typename U> void operator=(const Object<U>& o);
+    // Templates above do not replace default ctor or copy operator
+    Object(const Object& o);
+    void operator=(const Object& o);
     // Disable the ctor taking future if T is Empty, as it would conflict with
     // Future cast operator
     typedef typename boost::mpl::if_<typename boost::is_same<T, Empty>::type, Empty, Object<Empty> >::type MaybeAnyObject;
@@ -210,7 +213,8 @@ namespace qi {
     unsigned use_count() const { return _obj.use_count();}
 
     ObjectTypeInterface* interface();
-
+    // Check or obtain T interface, or throw
+    void checkT();
     // no-op deletor callback
     template<typename U>
     static void keepReference(boost::shared_ptr<U> ptr) {}
@@ -282,6 +286,32 @@ namespace qi {
   template<typename T> inline Object<T>::Object() {}
   template<typename T> template<typename U>inline Object<T>::Object(const Object<U>& o)
   {
+    /* An Object<T> created by convert may be in fact an object that does
+    * not implement the T interface.
+    * Checking and converting on first access to T& is not enough:
+    *  Object<Iface> o = obj.call("fetchOne"); // this one might be incorrect
+    *  someVector.push_back(o); // pushes the incorrect one
+    *  o->someIfaceOperation(); // will upgrade o, but not the one in someVector
+    *
+    * So we check as early as we can, in all copy pathes, and back-propagate
+    * the upgrade to the source of the copy
+    */
+    const_cast<Object<U>&>(o).checkT();
+    init(o._obj);
+  }
+  template<typename T> template<typename U>inline void Object<T>::operator=(const Object<U>& o)
+  {
+    const_cast<Object<U>&>(o).checkT();
+    init(o._obj);
+  }
+  template<typename T> inline Object<T>::Object(const Object<T>& o)
+  {
+    const_cast<Object<T>&>(o).checkT();
+    init(o._obj);
+  }
+  template<typename T>inline void Object<T>::operator=(const Object<T>& o)
+  {
+    const_cast<Object<T>&>(o).checkT();
     init(o._obj);
   }
   template<typename T> inline Object<T>::Object(GenericObject* go)
@@ -331,36 +361,12 @@ namespace qi {
 
   template<typename T> inline void Object<T>::init(detail::ManagedObjectPtr obj)
   {
-    if (!boost::is_same<T, Empty>::value && obj
-      && obj->type->info() != typeOf<T>()->info()
-      && obj->type->inherits(qi::typeOf<T>())==-1)
-    {
-      // What is given to us does not implement T.
-      // So try if we can summon an intermediate bouncer object:
-      // that is a registered Proxy object for type T
-      detail::ProxyGeneratorMap& map = detail::proxyGeneratorMap();
-      detail::ProxyGeneratorMap::iterator it = map.find(typeOf<T>()->info());
-      if (it != map.end())
-      {
-        AnyReference ref = it->second(AnyObject(obj));
-        /* We need to access two interfaces from ref, of type
-         * shared_ptr<SomeProxyOfTImpl>:
-         * - qi::Proxy : accessed by TypeProxy methods
-         * - T : accessed by asT
-         *
-         */
-        _obj = ref.to<detail::ManagedObjectPtr>();
-        return;
-      }
-      throw std::runtime_error(
-        std::string("Object<T> constructed from a different AnyObject type ")
-        + obj->type->infoString()
-        + " "
-        + typeOf<T>()->infoString()
-        );
-    }
+    _obj = obj;
+    if (!boost::is_same<T, Empty>::value && obj)
+      checkT();
     _obj = obj;
   }
+
   template<typename T> inline bool Object<T>::operator <(const Object& b) const { return _obj < b._obj;}
   template<typename T> template<typename U> bool Object<T>::operator !=(const Object<U>& b) const
   {
@@ -373,12 +379,35 @@ namespace qi {
   template<typename T> Object<T>::operator bool() const   { return _obj && _obj->type;}
 
   template<typename T> Object<T>::operator Object<Empty>() const { return Object<Empty>(_obj);}
+  /// Check tha value actually has the T interface
+  template<typename T> void Object<T>::checkT()
+  {
+    if (boost::is_same<T, Empty>::value)
+      return;
+    if (_obj->type->info() != typeOf<T>()->info()
+      && _obj->type->inherits(typeOf<T>())==-1)
+    { // No T interface, try upgrading _obj
+      detail::ProxyGeneratorMap& map = detail::proxyGeneratorMap();
+      detail::ProxyGeneratorMap::iterator it = map.find(typeOf<T>()->info());
+      if (it != map.end())
+      {
+        qiLogDebug("qitype.anyobject") << "Upgrading Object to specialized proxy.";
+        AnyReference ref = it->second(AnyObject(_obj));
+        _obj = ref.to<detail::ManagedObjectPtr>();
+        ref.destroy();
+        return;
+      }
+      throw std::runtime_error(std::string() + "Object does not have interface " + typeOf<T>()->infoString());
+    }
+  }
   template<typename T> T& Object<T>::asT()
   {
+    checkT();
     return *reinterpret_cast<T*>(_obj->value);
   }
   template<typename T> const T& Object<T>::asT() const
   {
+    const_cast<Object<T>* >(this)->checkT();
     return *reinterpret_cast<const T*>(_obj->value);
   }
   template<typename T> T* Object<T>::operator ->()
@@ -416,9 +445,9 @@ namespace qi {
   class QITYPE_API Proxy
   {
   public:
-    Proxy(AnyObject obj) : _obj(obj) {qiLogDebug("qitype.proxy") << "Initializing " << this << " on " << &obj.asT();}
+    Proxy(AnyObject obj) : _obj(obj) {qiLogDebug("qitype.proxy") << "Initializing " << this;}
     Proxy() {}
-    ~Proxy() { qiLogDebug("qitype.proxy") << "Finalizing on " << &_obj.asT();}
+    ~Proxy() { qiLogDebug("qitype.proxy") << "Finalizing on " << this;}
     Object<Empty> asObject() const;
   protected:
     Object<Empty> _obj;
@@ -779,9 +808,12 @@ namespace qi {
     _QI_BOUNCE_TYPE_METHODS(Methods);
   };
 
-  // Pretend that Object<T> is exactly shared_ptr<GenericObject>
-  // Will be overriden for proxy objects below, for which this statement is false
-  // (because a proxy has members beside the shared_ptr: signals and events
+  /* Pretend that Object<T> is exactly shared_ptr<GenericObject>
+   * Which it is in terms of memory layout.
+   * But as a consequence, convert will happily create Object<T> for any T
+   * without checking it.
+   * Object<T> is handling this through the checkT() method.
+   */
   template<typename T> class QITYPE_API TypeImpl<Object<T> >: public TypeImpl<boost::shared_ptr<GenericObject> >
   {
   };
