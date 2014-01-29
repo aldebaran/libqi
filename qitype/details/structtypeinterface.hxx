@@ -62,7 +62,8 @@ namespace qi {                                                            \
     virtual void* get(void* storage, unsigned int index);                 \
     virtual void set(void** storage, unsigned int index, void* valStorage); \
     extra                                                                   \
-    _QI_BOUNCE_TYPE_METHODS(::qi::DefaultTypeImplMethods<name>);            \
+    typedef ::qi::DefaultTypeImplMethods<name, ::qi::TypeByPointerPOD<name> > Impl; \
+    _QI_BOUNCE_TYPE_METHODS(Impl);            \
  }; }
 
 
@@ -303,7 +304,7 @@ namespace qi {
 
     virtual void adaptStorage(void** storage, void** adapted) = 0;
 
-    typedef DefaultTypeImplMethods<T> Methods;
+    typedef DefaultTypeImplMethods<T, TypeByPointerPOD<T> > Methods;
     virtual std::vector<TypeInterface*> memberTypes()
     {
       return bounceType()->memberTypes();
@@ -335,7 +336,7 @@ namespace qi {
   class TypeImpl<std::pair<F, S> >: public StructTypeInterface
   {
   public:
-    typedef DefaultTypeImplMethods<std::pair<F, S> > Methods;
+    typedef DefaultTypeImplMethods<std::pair<F, S>, TypeByPointerPOD<std::pair<F,S> > > Methods;
     typedef typename std::pair<F, S> BackendType;
     TypeImpl()
     {
@@ -357,10 +358,15 @@ namespace qi {
     void set(void** storage, unsigned int index, void* valStorage)
     {
       BackendType* ptr = (BackendType*)ptrFromStorage(storage);
+      const std::vector<TypeInterface*>& types = _memberTypes;
+
+
+      // FIXME cheating, we do not go through TypeInterface of S and F for copy
+      // because typeerasure does not expose the interface
       if (!index)
-        detail::TypeManagerDefault<F>::copy(const_cast<void*>((void*)&ptr->first), _memberTypes[0]->ptrFromStorage(&valStorage));
+        detail::TypeTraitCopy<typename boost::remove_const<F>::type, true>::copy(const_cast<void*>((void*)&ptr->first), types[0]->ptrFromStorage(&valStorage));
       else
-        detail::TypeManagerDefault<S>::copy(const_cast<void*>((void*)&ptr->second), _memberTypes[1]->ptrFromStorage(&valStorage));
+        detail::TypeTraitCopy<typename boost::remove_const<S>::type, true>::copy(const_cast<void*>((void*)&ptr->second), types[1]->ptrFromStorage(&valStorage));
     }
     _QI_BOUNCE_TYPE_METHODS(Methods);
   };

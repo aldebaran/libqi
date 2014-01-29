@@ -41,17 +41,24 @@ namespace qi{
   /// \warning Be careful to put the declaration outside any namespaces.
   #define QI_TYPE_NOT_CONSTRUCTIBLE(T) \
     namespace qi { namespace detail {  \
-    template<> struct TypeManager<T>: public TypeManagerNonDefaultConstructible<T> {};}}
+    template<> struct TypeManager<T>: public TypeManagerNotConstructible<T> {};}}
 
   /// Declare that a type has no metatype and cannot be used in a Value
   /// \warning Be careful to put the declaration outside any namespaces.
   #define QI_NO_TYPE(T) namespace qi {template<> class TypeImpl<T>: public detail::ForbiddenInTypeSystem {};}
 
-  /// Declare that a type has no accessible copy constructor
+  /// Declare that a type has no accessible constructor
   /// \warning Be careful to put the declaration outside any namespaces.
-  #define QI_TYPE_NOT_CLONABLE(T)     \
+  #define QI_TYPE_INTERFACE(T)     \
     namespace qi { namespace detail { \
-    template<> struct TypeManager<T>: public TypeManagerNull<T> {};}}
+    template<> struct TypeManager<T>: public TypeManagerDefaultInterface<T> {};}}
+
+    /// Declare that a type can be constructed and copied
+  /// \warning Be careful to put the declaration outside any namespaces.
+  #define QI_TYPE_CONCRETE(T)     \
+    namespace qi { namespace detail { \
+    template<> struct TypeManager<T>: public TypeManagerDefaultStruct<T> {}; }}
+
 
   /// Register TypeImpl<t> in runtime type factory for 't'. Must be called from a .cpp file
   /// \warning Be careful to put the declaration outside any namespaces.

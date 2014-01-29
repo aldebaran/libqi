@@ -901,7 +901,6 @@ inline @INAME@::~@INAME@()
 }
 
 @CLOSE_NAMESPACE@
-QI_TYPE_NOT_CLONABLE(@NAMESPACES@@INAME@);
 
 """
   if standalone:
@@ -1258,7 +1257,7 @@ public:
 @QI_REGISTER_PROXY@
 @close_namespace@
 
-QI_TYPE_NOT_CLONABLE(@namepaces@@proxyName@);
+QI_TYPE_NOT_CONSTRUCTIBLE(@namepaces@@proxyName@);
 
 """
 
@@ -1393,8 +1392,7 @@ static int _init_@TYPE@ = @TYPE@init();
       open_namespace += "namespace " + n + "\n{\n"
       close_namespace = "} // !" + n + "\n" + close_namespace
 
-  # QI_TYPE_NOT_CLONABLE must be called exactly once, done in interface
-  #open_namespace = 'QI_TYPE_NOT_CLONABLE(%s);\n' % (full_name) + open_namespace
+  open_namespace = 'QI_TYPE_INTERFACE(%s);\n' % (full_name) + open_namespace
   return template.replace('@TYPE@', class_name).replace('@ADVERTISE@', advertise).replace('@INCLUDE@', include).replace('@OPEN_NAMESPACE@', open_namespace).replace('@CLOSE_NAMESPACE@', close_namespace)
 
 def raw_to_cxx_service_skeleton(class_name, cls, include, namespace, standalone, register_factory=False):
@@ -1425,7 +1423,7 @@ def raw_to_cxx_service_skeleton(class_name, cls, include, namespace, standalone,
   result += '  %s() :%s(%s) {}\n' % (class_name, full_name, ','.join(iface_ctor))
   result += '};\n\n'
 
-  result += 'QI_TYPE_NOT_CLONABLE(%s);\n' % (full_name)
+  # typebuild does that result += 'QI_TYPE_NOT_CONSTRUCTIBLE(%s);\n' % (full_name)
   result += 'QI_REGISTER_IMPLEMENTATION(%s,%s);\n' % (full_name, class_name)
   if register_factory:
     result += '// Register to runtime factory\n'

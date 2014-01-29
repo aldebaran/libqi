@@ -104,6 +104,11 @@ namespace qi {
       buildFor<T>(autoRegister);
     }
 
+    /** Declare that T inherits from U.
+     *
+     * @warning If type \p U has registered methods,signals, properties,
+     * then inherits() must be called before registering anything on type T.
+     */
     template<typename U> void inherits();
 
     template <typename FUNCTION_TYPE>
@@ -127,9 +132,13 @@ namespace qi {
 }
 
 #include <qitype/details/objecttypebuilder.hxx>
-
+// FIXME move this, objecttypebuilder might not be included
 QI_REGISTER_TEMPLATE_OBJECT(qi::Future    , _connect, isFinished, value, wait, isRunning, isCanceled, hasError, error);
 QI_REGISTER_TEMPLATE_OBJECT(qi::FutureSync, _connect, isFinished, value, wait, isRunning, isCanceled, hasError, error, async);
+namespace qi { namespace detail {
+  template<typename T> struct TypeManager<Future<T> >: public TypeManagerDefaultStruct<Future<T> > {};
+  template<typename T> struct TypeManager<FutureSync<T> >: public TypeManagerDefaultStruct<FutureSync<T> > {};
 
+}}
 
 #endif  // _QITYPE_OBJECTTYPEBUILDER_HPP_

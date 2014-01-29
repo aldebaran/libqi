@@ -49,8 +49,6 @@ public:
   qi::AnyObject _target;
 };
 
-QI_TYPE_NOT_CLONABLE(animals::Cat); // FIXME find a way to not need that
-
 static bool init()
 {
   static bool ready = false;
@@ -153,7 +151,6 @@ public:
   std::string _name;
 };
 
-QI_TYPE_NOT_CLONABLE(animals::CatAction);
 
 /* obtain a temp object and pass it back to a method
 * generate a temp object and pass it

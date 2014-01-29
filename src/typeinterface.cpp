@@ -671,7 +671,7 @@ namespace qi {
     {
       return _info;
     }
-    typedef DefaultTypeImplMethods<std::vector<void*> > Methods;
+    typedef DefaultTypeImplMethods<std::vector<void*>, TypeByPointerPOD<std::vector<void*> > > Methods;
     void* initializeStorage(void* ptr=0) { return Methods::initializeStorage(ptr);} \
     void* ptrFromStorage(void**s) { return Methods::ptrFromStorage(s);}
     TypeInterface* _elementType;
@@ -809,7 +809,7 @@ namespace qi {
     std::vector<std::string> _elementName;
     std::string              _name;
     TypeInfo                 _info;
-    typedef DefaultTypeImplMethods<std::vector<void*> > Methods;
+    typedef DefaultTypeImplMethods<std::vector<void*>, TypeByPointerPOD<std::vector<void*> > > Methods;
   };
 
   AnyReference makeGenericTuple(const AnyReferenceVector& values)
@@ -886,7 +886,8 @@ namespace qi {
     {
       return _info;
     }
-    _QI_BOUNCE_TYPE_METHODS_NOINFO(DefaultTypeImplMethods<DefaultMapStorage::iterator>);
+    typedef DefaultTypeImplMethods<DefaultMapStorage::iterator, TypeByPointerPOD<DefaultMapStorage::iterator> > Impl;
+    _QI_BOUNCE_TYPE_METHODS_NOINFO(Impl);
     TypeInterface* _elementType;
     std::string _name;
     TypeInfo _info;
@@ -1052,7 +1053,7 @@ namespace qi {
     {
       return _info;
     }
-    typedef DefaultTypeImplMethods<DefaultMapStorage> Methods;
+    typedef DefaultTypeImplMethods<DefaultMapStorage, TypeByPointerPOD<DefaultMapStorage> > Methods;
     void* initializeStorage(void* ptr=0) { return Methods::initializeStorage(ptr);}   \
     virtual void* ptrFromStorage(void**s) { return Methods::ptrFromStorage(s);}
     bool less(void* a, void* b) { return Methods::less(a, b);}

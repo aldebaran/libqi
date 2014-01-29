@@ -191,25 +191,6 @@ namespace qi {
     return typeOf<T>();
   }
 
-
-//MACROS
-
-  /// Declare that a type has no accessible default constructor.
-  /// \warning Be careful to put the declaration outside any namespaces.
-#define QI_TYPE_NOT_CONSTRUCTIBLE(T) \
-  namespace qi { namespace detail {  \
-  template<> struct TypeManager<T>: public TypeManagerNonDefaultConstructible<T> {};}}
-
-  /// Declare that a type has no metatype and cannot be used in a Value
-  /// \warning Be careful to put the declaration outside any namespaces.
-#define QI_NO_TYPE(T) namespace qi {template<> class TypeImpl<T>: public detail::ForbiddenInTypeSystem {};}
-
-  /// Declare that a type has no accessible copy constructor
-  /// \warning Be careful to put the declaration outside any namespaces.
-#define QI_TYPE_NOT_CLONABLE(T)     \
-  namespace qi { namespace detail { \
-  template<> struct TypeManager<T>: public TypeManagerNull<T> {};}}
-
 }
 
 

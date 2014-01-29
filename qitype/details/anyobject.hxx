@@ -242,7 +242,7 @@ namespace qi {
     static void deleteObject(GenericObject* obj)
     {
       qiLogCategory("qi.object");
-      qiLogDebug() << "deleteObject " << obj;
+      qiLogDebug() << "deleteObject " << obj << " " << obj->value << " " << obj->type->infoString();
       obj->type->destroy(obj->value);
       delete obj;
     }
@@ -382,7 +382,7 @@ namespace qi {
   /// Check tha value actually has the T interface
   template<typename T> void Object<T>::checkT()
   {
-    if (boost::is_same<T, Empty>::value)
+    if (boost::is_same<T, Empty>::value || !_obj)
       return;
     if (_obj->type->info() != typeOf<T>()->info()
       && _obj->type->inherits(typeOf<T>())==-1)
@@ -804,7 +804,7 @@ namespace qi {
         throw std::runtime_error((std::string)"Cannot assign non-object " + source.type()->infoString() + " to Object");
 
     }
-    typedef DefaultTypeImplMethods<detail::ManagedObjectPtr> Methods;
+    typedef DefaultTypeImplMethods<detail::ManagedObjectPtr, TypeByPointerPOD<detail::ManagedObjectPtr> > Methods;
     _QI_BOUNCE_TYPE_METHODS(Methods);
   };
 

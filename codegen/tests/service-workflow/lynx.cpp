@@ -23,7 +23,7 @@ public:
   }
   std::string _name;
 };
-QI_TYPE_NOT_CLONABLE(animals::CatAction);
+
 QI_REGISTER_IMPLEMENTATION(animals::CatAction,LynxAction);
 
 class Lynx: public animals::Cat
@@ -76,7 +76,6 @@ qi::Object<CatAction> Lynx::selectTask(qi::int64_t seed)
   }
   return new LynxAction("lynxYawn");
 }
-QI_TYPE_NOT_CLONABLE(animals::Cat);
 QI_REGISTER_IMPLEMENTATION(animals::Cat, Lynx);
 QI_REGISTER_OBJECT_FACTORY_CONSTRUCTOR_FOR(animals::Lynx, Lynx);
 

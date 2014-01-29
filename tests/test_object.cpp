@@ -108,7 +108,7 @@ public:
   C(int v) : baz(v) {}
   int baz;
 };
-
+QI_TYPE_CONCRETE(C);
 C* ptrfun(C* ptr) { return ptr;}
 C& reffun(const C& ref) { return const_cast<C&>(ref);}
 C valuefun(C val) { return val;}
@@ -186,7 +186,7 @@ public:
   #undef CHECK
   int v;
 };
-
+QI_TYPE_CONCRETE(Adder);
 template<typename T> bool checkValue(qi::AnyReference v, const T& val)
 {
   T actual = v.as<T>();
@@ -542,6 +542,7 @@ public:
   MAdder() {}
   MAdder(int i ) : Adder(i) {}
 };
+QI_TYPE_CONCRETE(MAdder);
 
 TEST(TestObject, ObjectTypeBuilderAsync)
 {

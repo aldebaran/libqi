@@ -29,7 +29,7 @@ namespace qi
   {
   public:
     typedef DefaultTypeImplMethods<std::string,
-            TypeByPointer<std::string>
+            TypeByPointerPOD<std::string>
               > Methods;
     virtual ManagedRawString get(void* storage)
     {
@@ -105,7 +105,7 @@ namespace qi
     }
 
     typedef  DefaultTypeImplMethods<char[I],
-      TypeByPointer<char[I]> > Methods;
+      TypeByPointerPOD<char[I]> > Methods;
       _QI_BOUNCE_TYPE_METHODS_NOCLONE(Methods);
   };
 
@@ -120,7 +120,7 @@ namespace qi
   {
   public:
     TypeEquivalentString(F f): _getter(f) {}
-    typedef DefaultTypeImplMethods<T> Impl;
+    typedef DefaultTypeImplMethods<T, TypeByPointerPOD<T> > Impl;
     virtual void set(void** storage, const char* ptr, size_t sz)
     {
       T* inst = (T*)ptrFromStorage(storage);

@@ -6,6 +6,7 @@
 #include <qitype/typeinterface.hpp>
 
 namespace qi {
+
 #define INTEGRAL_TYPE(t) \
 static bool BOOST_PP_CAT(unused_ , __LINE__) = registerType(typeid(t), new IntTypeInterfaceImpl<t>());
 
@@ -48,7 +49,7 @@ template<typename T>
 class DurationTypeInterface: public qi::IntTypeInterface
 {
 public:
-  typedef typename qi::detail::TypeImplMethodsBySize<T>::type ImplType;
+  typedef qi::DefaultTypeImplMethods<T, qi::TypeByPointerPOD<T> > ImplType;
 
   virtual int64_t get(void* value)
   {
@@ -77,8 +78,7 @@ template <typename T>
 class TimePointTypeInterface: public qi::IntTypeInterface
 {
 public:
-  typedef typename qi::detail::TypeImplMethodsBySize<T>::type ImplType;
-
+  typedef qi::DefaultTypeImplMethods<T, qi::TypeByPointerPOD<T> > ImplType;
   virtual int64_t get(void* value)
   {
     T* tp = (T*)ImplType::Access::ptrFromStorage(&value);
