@@ -200,6 +200,8 @@ namespace qi {
     operator bool() const;
     operator Object<Empty>() const;
 
+    boost::shared_ptr<T> asSharedPtr();
+
     T& asT();
     const T& asT() const;
     T* operator ->();
@@ -216,6 +218,7 @@ namespace qi {
     // Check or obtain T interface, or throw
     void checkT();
     // no-op deletor callback
+    static void keepManagedObjectPtr(detail::ManagedObjectPtr ptr) {}
     template<typename U>
     static void keepReference(GenericObject* obj, boost::shared_ptr<U> ptr) {qiLogDebug("qi.object") << "AnyObject ptr holder deleter"; delete obj;}
     static void noDeleteT(T*) {qiLogDebug("qi.object") << "AnyObject noop T deleter";}
@@ -357,6 +360,12 @@ namespace qi {
   template<typename T> inline Object<T>::Object(const qi::FutureSync<MaybeAnyObject>& fobj)
   {
     init(fobj.value()._obj);
+  }
+
+  template<typename T> inline boost::shared_ptr<T> Object<T>::asSharedPtr()
+  {
+    checkT();
+    return boost::shared_ptr<T>(&asT(), boost::bind(&keepManagedObjectPtr, _obj));
   }
 
   template<typename T> inline void Object<T>::init(detail::ManagedObjectPtr obj)
