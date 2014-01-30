@@ -1,0 +1,3 @@
+<project version="3">
+  <qidoc name="libqi-api" type="doxygen" />
+</project>

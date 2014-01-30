@@ -1,7 +1,8 @@
-<project name="libqi">
-  <depends buildtime="true" runtime="true" names="boost pthread" />
-  <depends testtime="true" buildtime="true" names="gtest" />
-  <doxydoc dest="ref/libqi" name="libqi" />
+<project version="3">
+  <qibuild name="libqi">
+    <depends buildtime="true" runtime="true" names="boost pthread" />
+    <depends testtime="true" buildtime="true" names="gtest" />
+  </qibuild>
+  <project src="dox" />
   <project src="examples" />
-  <project src="doc" />
 </project>

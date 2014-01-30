@@ -1,9 +1,7 @@
-INPUT       = qi/ doc_dox/
-EXAMPLE_PATH           = examples
+INPUT       = ../qi/ .
+EXAMPLE_PATH           = ../examples
 EXAMPLE_PATTERNS       = *.cpp
 EXAMPLE_RECURSIVE      = YES
-WARN_IF_DOC_ERROR = YES
-WARN_NO_PARAMDOC = YES
 EXTRACT_ALL= YES
 ENABLE_PREPROCESSING   = YES
 MACRO_EXPANSION        = YES

@@ -1,1 +1,0 @@
-.. cpp:autoheader:: buffer.hpp
