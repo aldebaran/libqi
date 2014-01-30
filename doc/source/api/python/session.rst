@@ -6,10 +6,10 @@ qi.Session API
 Introduction
 ============
 
-A session connect to a :py:class:`qi.ServiceDirectory`. Once connected the session can:
+A session connect to a standalone :py:class:`qi.Session`. Once connected the session can:
 
 - advertise new services using :py:meth:`qi.Session.registerService`
-- get proxy on services using :py:meth:`qi.Session.service`
+- get services using :py:meth:`qi.Session.service`
 
 Reference
 =========

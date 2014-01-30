@@ -9,3 +9,4 @@ User Guides
   cxx-client
   cxx-service
   py-client
+  py-service

@@ -6,8 +6,7 @@ qi.Signal API
 Introduction
 ============
 
-Signal allow communication between thread. One thread emit events, other threads register callback to the signal,
-and process the events appropriately.
+Signal allow communication between threads. One thread emit events, other threads register callback to the signal, and process the events appropriately.
 
 Reference
 =========

@@ -18,7 +18,7 @@ Creating a session
 ------------------
 
 The first step to interact with qimessaging services is to connect a
-:py:class:`qi.Session` to the _`Service Directory` of the robot.
+:py:class:`qi.Session` to the ServiceDirectory of the robot.
 Then to get a proxy on the service you are interested in.
 
 Let's assume we want to get the ALTextToSpeech service.
@@ -65,8 +65,8 @@ finishes using a _`qi.Future`::
 
   tts = session.service("ALTextToSpeech");
   motion = session.service("ALMotion");
-  sayOp = tts->async("say", "This is a very very very very long sentence.");
-  moveOp = motion->async("moveTo", 1, 0, 0);
+  sayOp = qi.async(tts.say, "This is a very very very very long sentence.");
+  moveOp = qi.async(motion.moveTo, 1, 0, 0);
   // Wait for both operations to terminate.
   sayOp.wait();
   moveOp.wait();
@@ -74,34 +74,17 @@ finishes using a _`qi.Future`::
 Look at the :py:class:`qi.Future` for more complete documentation, but here is what you
 most definitely need to know:
 
-- If the method throws an exception, it is stored in the *Future*, and can be
-  accessed using *error()*.
-- Use *wait()* to wait for the future to complete. It can accept a timeout duration
+- If the method throws an exception, it is stored in the :py:class:`qi.Future`, and can be
+  accessed using :py:class:`qi.Future.error()`.
+- Use :py:class:`qi.Future.wait()` to wait for the future to complete. It can accept a timeout duration
   as argument, and will return the state of the future.
-- Use *value()* and *error()* to get the stored value or error.
+- Use :py:class:`qi.Future.value()` and :py:class:`qi.Future.error()` to get the stored value or error.
 - You can regiter a callback to be notified when the future finishes with
-  *qi::Future::connect()*.
+  :py:class:`qi.Future.add_callback()`.
 
 
 Using signal
 ------------
 
 Using properties
----
-
-passing an object as argument
------------------------------
-
-
-Generic api
------------
-
-If you wish to use a service for which no interface is available, but for
-which you know the API, you can use the _`qi::AnyObject` generic API made
-available throug *qi::Object<Empty>*::
-
-  qi::Object<Empty> obj = session.service("ALTextToSpeech");
-  obj.call("say", "Hello once more.");
-
-Methods are also provided to emit and connect signals, read/write properties,
-and access the service API.
+----------------
