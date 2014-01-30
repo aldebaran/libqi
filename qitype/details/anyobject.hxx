@@ -217,7 +217,7 @@ namespace qi {
     void checkT();
     // no-op deletor callback
     template<typename U>
-    static void keepReference(boost::shared_ptr<U> ptr) {}
+    static void keepReference(GenericObject* obj, boost::shared_ptr<U> ptr) {qiLogDebug("qi.object") << "AnyObject ptr holder deleter"; delete obj;}
     static void noDeleteT(T*) {qiLogDebug("qi.object") << "AnyObject noop T deleter";}
     static void noDelete(GenericObject*) {qiLogDebug("qi.object") << "AnyObject noop deleter";}
     // deletor callback that deletes only the GenericObject and not the content
@@ -333,7 +333,7 @@ namespace qi {
     ObjectTypeInterface* otype = interface();
     T* ptr = static_cast<T*>(other.get());
     _obj = detail::ManagedObjectPtr(new GenericObject(otype, ptr),
-      boost::bind(&keepReference<U>, other));
+      boost::bind(&keepReference<U>, _1, other));
   }
 
   template<typename T> inline Object<T>::Object(T* ptr)
