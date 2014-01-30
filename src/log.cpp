@@ -463,6 +463,20 @@ namespace qi {
 #endif
     }
 
+    static void doInit() {
+      //if init has already been called, we are set here. (reallocating all globals
+      // will lead to racecond)
+      if (_glInit)
+        return;
+      _glConsoleLogHandler = new ConsoleLogHandler;
+      LogInstance          = new Log;
+      addLogHandler("consoleloghandler",
+                    boost::bind(&ConsoleLogHandler::log,
+                                _glConsoleLogHandler,
+                                _1, _2, _3, _4, _5, _6, _7));
+      _glInit = true;
+    }
+
     void init(qi::LogLevel verb,
               int ctx,
               bool synchronous)
@@ -471,16 +485,7 @@ namespace qi {
       setContext(ctx);
       setSynchronousLog(synchronous);
 
-      if (_glInit)
-        destroy();
-
-      _glConsoleLogHandler = new ConsoleLogHandler;
-      LogInstance          = new Log;
-      addLogHandler("consoleloghandler",
-                    boost::bind(&ConsoleLogHandler::log,
-                                _glConsoleLogHandler,
-                                _1, _2, _3, _4, _5, _6, _7));
-      _glInit = true;
+      QI_ONCE(doInit());
     }
 
     void destroy()
