@@ -3,5 +3,5 @@
     <depends buildtime="true" runtime="true" names="boost libqi"/>
     <depends buildtime="true" names="gtest pthread"/>
   </qibuild>
-  <qidoc name="libqitype-api" type="doxygen" />
+  <project src="dox" />
 </project>
