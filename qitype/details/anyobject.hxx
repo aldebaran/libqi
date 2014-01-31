@@ -233,6 +233,7 @@ namespace qi {
       deleter((T*)obj->value);
       delete obj;
     }
+    detail::ManagedObjectPtr managedObjectPtr() { return _obj;}
   private:
     friend class GenericObject;
     template <typename> friend class Object;
@@ -331,12 +332,24 @@ namespace qi {
     // Notify the shared_from_this of GenericObject
     _obj->_internal_accept_owner(&other, go);
   }
-  template<typename T> template<typename U> Object<T>::Object(boost::shared_ptr<U> other)
+  namespace detail
   {
-    ObjectTypeInterface* otype = interface();
-    T* ptr = static_cast<T*>(other.get());
-    _obj = detail::ManagedObjectPtr(new GenericObject(otype, ptr),
-      boost::bind(&keepReference<U>, _1, other));
+    template<typename T, typename U> ManagedObjectPtr fromSharedPtr(Object<T>& dst, boost::shared_ptr<U>& other, boost::false_type)
+    {
+      ObjectTypeInterface* otype = dst.interface();
+      T* ptr = static_cast<T*>(other.get());
+      return ManagedObjectPtr(new GenericObject(otype, ptr),
+        boost::bind(&Object<T>::template keepReference<U>, _1, other));
+    }
+    template<typename U> ManagedObjectPtr fromSharedPtr(AnyObject& dst, boost::shared_ptr<U>& other, boost::true_type)
+    {
+      return Object<U>(other).managedObjectPtr();
+    }
+  }
+
+  template<typename T> template<typename U> Object<T>::Object(boost::shared_ptr<U> other)
+  { // bounce depending on T==Empty
+    _obj = detail::fromSharedPtr(*this, other, typename boost::is_same<T, Empty>::type());
   }
 
   template<typename T> inline Object<T>::Object(T* ptr)
