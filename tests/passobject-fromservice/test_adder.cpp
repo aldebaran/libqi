@@ -9,6 +9,7 @@
 qiLogCategory("test.adder");
 
 using qi::Object;
+using qi::AnyObject;
 using qi::WeakObject;
 void inc(int& v)
 {
@@ -82,6 +83,46 @@ TEST(Test, SharedPtr)
   qi::os::msleep(100);
   ASSERT_EQ(1, ap->nTasks());
   atask.reset();
+  for (unsigned i=0; i<10 && ap->nTasks() !=0; ++i) qi::os::msleep(50);
+  ASSERT_EQ(0, ap->nTasks());
+}
+
+TEST(Test, AnyObject)
+{ // test the makeTask returning a AnyObject instead of Object<Task>
+  qi::Session server, client;
+  server.listenStandalone("tcp://localhost:0");
+  client.connect(server.endpoints()[0]);
+  server.listen("tcp://localhost:0");
+  init(server);
+  // test building the proxy from a GenericObject ourselve
+  Object<Adder> ap(client.service("AdderService").value().call<qi::AnyObject>("create"));
+  ASSERT_TRUE(!!ap);
+  ap->value.set(2);
+
+  AnyObject atask = ap->makeAnyTask(3);
+  ASSERT_EQ(1, ap->nTasks());
+  qi::os::msleep(100);
+  ASSERT_EQ(1, ap->nTasks());
+  ASSERT_EQ(5, atask.call<int>("add", 0).value());
+  atask.reset();
+  for (unsigned i=0; i<10 && ap->nTasks() !=0; ++i) qi::os::msleep(50);
+  ASSERT_EQ(0, ap->nTasks());
+
+  atask = ap.call<AnyObject>("makeAnyTask", 3);
+  ASSERT_EQ(1, ap->nTasks());
+  ASSERT_EQ(5, atask.call<int>("add", 0).value());
+  qi::os::msleep(100);
+  ASSERT_EQ(1, ap->nTasks());
+  atask.reset();
+  for (unsigned i=0; i<10 && ap->nTasks() !=0; ++i) qi::os::msleep(50);
+  ASSERT_EQ(0, ap->nTasks());
+
+  Object<AddTask> task = ap.call<AnyObject>("makeAnyTask", 3);
+  ASSERT_EQ(1, ap->nTasks());
+  ASSERT_EQ(5, task->add(0));
+  qi::os::msleep(100);
+  ASSERT_EQ(1, ap->nTasks());
+  task.reset();
   for (unsigned i=0; i<10 && ap->nTasks() !=0; ++i) qi::os::msleep(50);
   ASSERT_EQ(0, ap->nTasks());
 }

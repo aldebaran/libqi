@@ -8,12 +8,15 @@
 qiLogCategory("Adder");
 using qi::Object;
 using qi::WeakObject;
+using qi::AnyObject;
+
 class AdderImpl: public Adder
 {
   public:
   AdderImpl();
   ~AdderImpl() { qiLogVerbose() << "~Adder";}
   Object<AddTask> makeTask(int val);
+  AnyObject makeAnyTask(int val);
   int nTasks();
   typedef qi::Property<int> Value;
   private:
@@ -79,6 +82,13 @@ bool AdderImpl::onValue(int& storage, const int& newValue)
 
 
 Object<AddTask> AdderImpl::makeTask(int v)
+{
+  Object<AddTask> p(new AddTaskImpl(*this, v));
+  tasks.push_back(p);
+  return p;
+}
+
+AnyObject AdderImpl::makeAnyTask(int v)
 {
   Object<AddTask> p(new AddTaskImpl(*this, v));
   tasks.push_back(p);

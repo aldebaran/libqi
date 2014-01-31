@@ -7,7 +7,7 @@
 
 
 using qi::Object;
-
+using qi::AnyObject;
 qiLogCategory("Adder");
 
 class AdderImpl: public Adder
@@ -16,6 +16,7 @@ class AdderImpl: public Adder
   AdderImpl();
   ~AdderImpl() { qiLogVerbose() << "~Adder";}
   int registerTask(Object<AddTask> val);
+  int registerAnyTask(AnyObject v);
   void popTask();
   int addAll(int v); // sum add on all tasks
   typedef qi::Property<int> Value;
@@ -51,6 +52,14 @@ int AdderImpl::registerTask(Object<AddTask> v)
   static int uid = 1;
   tasks.push_back(v);
   v->uid.set(++uid);
+  return tasks.size();
+}
+
+int AdderImpl::registerAnyTask(AnyObject v)
+{
+  static int uid = 1;
+  tasks.push_back(v);
+  tasks.back()->uid.set(++uid);
   return tasks.size();
 }
 

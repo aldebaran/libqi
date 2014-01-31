@@ -146,7 +146,19 @@ TEST(Test, explicitSharedPtr)
   a1.reset();
   for (unsigned i=0; i<10 && nDead !=1; ++i) qi::os::msleep(50);
   ASSERT_EQ(1, nDead);
+
+  // test with registerAnyTask
+  a1 = boost::shared_ptr<Adder1>(new Adder1);
+  ap->registerAnyTask(a1);
+  qi::os::msleep(200);
+  ASSERT_EQ(2, ap->addAll(1));
+  ap->popTask();
+  qi::os::msleep(200);
+  a1.reset();
+  for (unsigned i=0; i<10 && nDead !=1; ++i) qi::os::msleep(50);
+  ASSERT_EQ(2, nDead);
 }
+
 TEST(Test, explicitSharedPtr3)
 {
   nDead = 0;
@@ -167,6 +179,17 @@ TEST(Test, explicitSharedPtr3)
   ap->popTask();
   for (unsigned i=0; i<10 && nDead !=1; ++i) qi::os::msleep(50);
   ASSERT_EQ(1, nDead);
+
+  // test with registerAnyTask
+  a1 = boost::shared_ptr<Adder1>(new Adder1);
+  ap.call<void>("registerAnyTask", a1);
+  qi::os::msleep(200);
+  ASSERT_EQ(2, ap->addAll(1));
+  ap->popTask();
+  qi::os::msleep(200);
+  a1.reset();
+  for (unsigned i=0; i<10 && nDead !=1; ++i) qi::os::msleep(50);
+  ASSERT_EQ(2, nDead);
 }
 
 int main(int argc, char **argv) {
