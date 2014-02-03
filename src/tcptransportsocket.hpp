@@ -76,8 +76,6 @@ namespace qi
     boost::recursive_mutex        _closingMutex;
     boost::shared_ptr<boost::asio::ip::tcp::resolver> _r;
 
-    boost::mutex  _capabilityMutex;
-    CapabilityMap _capabilityMap; // remote capabilities we received
   };
 
   typedef boost::shared_ptr<TcpTransportSocket> TcpTransportSocketPtr;

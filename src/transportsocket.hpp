@@ -21,7 +21,30 @@ namespace qi
   class Session;
   typedef std::map<std::string, AnyValue> CapabilityMap;
 
-  class TransportSocket : private boost::noncopyable
+  /// Store contextual data associated to one point-to-point point transport.
+  class TransportContext
+  {
+  public:
+    TransportContext();
+    virtual ~TransportContext();
+    /// Set or update a local capability, and immediately advertise to the other end
+    virtual void setCapability(const std::string& key, const AnyValue& value);
+    /// Set or update a set of capabilities.
+    virtual void setCapabilities(const CapabilityMap& map) = 0;
+
+    /// Fetch remote capability from local cache.
+    virtual boost::optional<AnyValue> capability(const std::string& key) = 0;
+    template<typename T> T capability(const std::string& key, const T& defaultValue);
+
+    /// Default capabilities injected on all transports upon connection
+    static const CapabilityMap& defaultCapabilities();
+  protected:
+    // Default storage mechanism
+    boost::mutex  _capabilityMutex;
+    CapabilityMap _capabilityMap; // remote capabilities we received
+  };
+
+  class TransportSocket : private boost::noncopyable, public TransportContext
   {
   public:
     virtual ~TransportSocket();
@@ -75,16 +98,6 @@ namespace qi
       return _dispatcher.messagePendingDisconnect(serviceId, objectId, linkId);
     }
 
-    /// Set or update a local capability, and immediately advertise to the other end
-    virtual void setCapability(const std::string& key, const AnyValue& value);
-    virtual void setCapabilities(const CapabilityMap& map) = 0;
-
-    /// Fetch remote capability from local cache.
-    virtual boost::optional<AnyValue> capability(const std::string& key) = 0;
-    template<typename T> T capability(const std::string& key, const T& defaultValue);
-
-    /// Default capabilities injected on all sockets upon connection
-    static const CapabilityMap& defaultCapabilities();
   protected:
     qi::EventLoop*          _eventLoop;
     qi::MessageDispatcher   _dispatcher;
@@ -106,7 +119,7 @@ namespace qi
 
   TransportSocketPtr makeTransportSocket(const std::string &protocol, qi::EventLoop *eventLoop = getEventLoop());
 
-  template<typename T> T TransportSocket::capability(const std::string& key, const T& defaultValue)
+  template<typename T> T TransportContext::capability(const std::string& key, const T& defaultValue)
   {
     boost::optional<AnyValue> v = capability(key);
     if (v)
