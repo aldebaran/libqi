@@ -18,6 +18,7 @@ set(_headers
   qipython/pytranslator.hpp
   qipython/error.hpp
   qipython/gil.hpp
+  qipython/trace.hpp
 )
 
 set(_sources
@@ -35,6 +36,7 @@ set(_sources
   src/pylog.cpp
   src/pypath.cpp
   src/pytranslator.cpp
+  src/trace.cpp
 )
 
 qi_create_lib(qipython SHARED
