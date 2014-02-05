@@ -63,19 +63,15 @@ class bind():
         f.__qi_return_signature__ = self._retsig
         return f
 
-class nobind():
-    def __init__(self, _):
-        pass
+def nobind(func):
+    """ Function generator.
+        Return the function with tag to prevent binding
 
-    def __call__(self, f):
-        """ Function generator.
-            Return the function with tag to prevent binding
-
-        .. args::
-           f : function to bind.
-        """
-        f.__qi_signature__ = "DONOTBIND"
-        return f
+    .. args::
+       func: function to bind.
+    """
+    func.__qi_signature__ = "DONOTBIND"
+    return func
 
 class singleThreaded():
     def __init(self, _):
