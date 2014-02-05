@@ -29,8 +29,8 @@ enum TaskState
  Rescheduling -> Scheduled [start(), _wrap()]
  Scheduled    -> Running   [start()]
  Running      -> Rescheduling [ _wrap() ]
- Stopping     -> Stopped   [_wrap()]
- Runnig       -> Stopping [stop()]
+ Stopping     -> Stopped   [stop(), _wrap()]
+ Running      -> Stopping [stop()]
  Scheduled    -> Stopping [stop()]
 
  - State Rescheduling is a lock on _state and on _task
