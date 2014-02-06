@@ -264,8 +264,11 @@ int          qi_value_list_size(qi_value_t *msg)
 qi_object_t* qi_value_get_object(qi_value_t* val)
 {
   qi::AnyValue &gv = qi_value_cpp(val);
-  qi::AnyObject obj = gv.as<qi::AnyObject>();
-  return qi_object_create_from(obj);
+  try {
+    qi::AnyObject obj = gv.as<qi::AnyObject>();
+    return qi_object_create_from(obj);
+  } catch(std::runtime_error) {}
+  return 0;
 }
 
 int          qi_value_set_object(qi_value_t* value, qi_object_t *o)

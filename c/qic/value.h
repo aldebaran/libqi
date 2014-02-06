@@ -4,7 +4,7 @@
 **  - Cedric GESTES <gestes@aldebaran-robotics.com>
 **  - Laurent LEC <llec@aldebaran-robotics.com>
 **
-** Copyright (C) 2010, 2011 Aldebaran Robotics
+** Copyright (C) 2010, 2011, 2013 Aldebaran Robotics
 */
 
 #ifndef _QIC_VALUE_H_
