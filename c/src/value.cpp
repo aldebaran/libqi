@@ -377,6 +377,12 @@ int          qi_value_raw_get(qi_value_t* value, const char**data, int *size) {
   return 0;
 }
 
+qi_type_t*   qi_value_get_type(qi_value_t* value) {
+  qi::AnyValue &val = qi_value_cpp(value);
+  return (qi_type_t*)val.type();
+}
+
+
 #ifdef __cplusplus
 }
 #endif

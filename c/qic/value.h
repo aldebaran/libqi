@@ -50,6 +50,7 @@ extern "C"
   //# TYPE
   QIC_API qi_value_kind_t qi_value_get_kind(qi_value_t* value);
   QIC_API const char*     qi_value_get_signature(qi_value_t* value, int resolveDynamics);
+  QIC_API qi_type_t*      qi_value_get_type(qi_value_t* value);
 
   //# INT/UINT
   QIC_API int                qi_value_set_uint64(qi_value_t *value, unsigned long long ul);
