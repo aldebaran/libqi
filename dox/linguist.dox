@@ -66,6 +66,9 @@ Everything is ready to generate and edit dictionaries.
 
 There are two commands to use:
     - qilinguist update: finds the translatable strings in the specified source, header and generates or updates .po (or .ts) translation files.
+    \warning: The jp_JP.po isn't correct. You need to replace \verbatim
+    "Content-Type: text/plain; charset=ASCII\n" \endverbatim by \verbatim
+    "Content-Type: text/plain; charset=UTF-8\n" \endverbatim
     - qilinguist release: produces MO files out of PO ones or QM files out of TS ones. The format of those files is a binary format that is used by the localized application.
 
 First of all you need to generate or update translatable files by using ``qilinguist update``. This will create files (into ``po`` folder) you can edit using Linguist from the Qt SDK or poedit for instance.
@@ -73,6 +76,17 @@ First of all you need to generate or update translatable files by using ``qiling
 Once you have translated those files, you need to compile them by using ``qilinguist release``.
 
 \section qiLocale How to internationalize C++ applications
+
+\subsection udpateCmake Update CMakeLists.txt
+
+You must add the qi_create_trad(projectname "po") into the CMakeLists.txt root file.
+
+\verbatim
+cmake_minimum_required(VERSION 2.8)
+project(yourProjectName)
+qi_create_trad(yourProjectName "po")
+\endverbatim
+
 
 \subsection localeConf Set and configure qi::Translator
 
