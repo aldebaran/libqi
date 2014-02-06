@@ -26,6 +26,8 @@ public:
   virtual void insert(void** storage, void* keyStorage, void* valueStorage);
   virtual AnyReference element(void** storage, void* keyStorage, bool autoInsert);
   _QI_BOUNCE_TYPE_METHODS(MethodsImpl);
+  TypeInterface* _keyType;
+  TypeInterface* _elementType;
 };
 
 }
@@ -34,21 +36,21 @@ namespace qi {
 template<typename M>
 MapTypeInterfaceImpl<M>::MapTypeInterfaceImpl()
 {
+  this->_keyType = typeOf<typename M::key_type>();
+  this->_elementType = typeOf<typename M::mapped_type>();
 }
 
 
 template<typename M> TypeInterface*
 MapTypeInterfaceImpl<M>::elementType()
 {
-  static TypeInterface* result = typeOf<typename M::mapped_type>();
-  return result;
+  return _elementType;
 }
 
 template<typename M> TypeInterface*
 MapTypeInterfaceImpl<M>::keyType()
 {
-  static TypeInterface* result = typeOf<typename M::key_type>();
-  return result;
+  return _keyType;
 }
 
 template<typename M> size_t
@@ -76,11 +78,9 @@ MapTypeInterfaceImpl<M>::end(void* storage)
 template<typename M> void
 MapTypeInterfaceImpl<M>::insert(void** storage, void* keyStorage, void* valueStorage)
 {
-  static TypeInterface* elemType = typeOf<typename M::mapped_type>();
-  static TypeInterface* keyType = typeOf<typename M::key_type>();
   M* ptr = (M*) ptrFromStorage(storage);
-  typename M::key_type& key = *(typename M::key_type*)keyType->ptrFromStorage(&keyStorage);
-  typename M::mapped_type& val = *(typename M::mapped_type*)elemType->ptrFromStorage(&valueStorage);
+  typename M::key_type& key = *(typename M::key_type*)_keyType->ptrFromStorage(&keyStorage);
+  typename M::mapped_type& val = *(typename M::mapped_type*)_elementType->ptrFromStorage(&valueStorage);
   typename M::iterator it = ptr->find(key);
   if (it == ptr->end())
     ptr->insert(std::make_pair(key, val));
@@ -92,9 +92,8 @@ template<typename M> AnyReference
 MapTypeInterfaceImpl<M>::element(void** storage, void* keyStorage, bool autoInsert)
 {
   //static TypeInterface* elemType = typeOf<typename M::mapped_type>();
-  static TypeInterface* keyType = typeOf<typename M::key_type>();
   M* ptr = (M*) ptrFromStorage(storage);
-  typename M::key_type* key = (typename M::key_type*)keyType->ptrFromStorage(&keyStorage);
+  typename M::key_type* key = (typename M::key_type*)_keyType->ptrFromStorage(&keyStorage);
   typename M::iterator it = ptr->find(*key);
   if (it == ptr->end())
   {
