@@ -768,6 +768,14 @@ namespace qi {
     _p->refreshCache();
   }
 
+  bool operator < (const MetaObject& a, const MetaObject& b)
+  {
+    /* Comparing metaobjects is too expensive.
+    * so compare pointers, since metaobjects are built per-class and not
+    * per instance
+    */
+    return a._p < b._p;
+  }
 }
 
 namespace {

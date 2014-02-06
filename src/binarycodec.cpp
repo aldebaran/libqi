@@ -3,6 +3,8 @@
 **  See COPYING for the license
 */
 
+#include <boost/algorithm/string.hpp>
+
 #include <qitype/binarycodec.hpp>
 #include <qitype/anyvalue.hpp>
 
@@ -18,11 +20,120 @@
 qiLogCategory("qitype.binarycoder");
 
 namespace qi {
+  StreamContext::StreamContext()
+  {
+  }
+
+  StreamContext::~StreamContext()
+  {
+  }
+
+  void StreamContext::advertiseCapability(const std::string& key, const AnyValue& value)
+  {
+    CapabilityMap cm;
+    cm[key] = value;
+    advertiseCapabilities(cm);
+  }
+
+  boost::optional<AnyValue> StreamContext::remoteCapability(const std::string& key)
+  {
+    boost::mutex::scoped_lock loc(_contextMutex);
+    CapabilityMap::iterator it = _remoteCapabilityMap.find(key);
+    if (it != _remoteCapabilityMap.end())
+      return it->second;
+    else
+      return boost::optional<AnyValue>();
+  }
+
+  boost::optional<AnyValue> StreamContext::localCapability(const std::string& key)
+  {
+    boost::mutex::scoped_lock loc(_contextMutex);
+    CapabilityMap::iterator it = _localCapabilityMap.find(key);
+    if (it != _localCapabilityMap.end())
+      return it->second;
+    else
+      return boost::optional<AnyValue>();
+  }
+
+  MetaObject StreamContext::receiveCacheGet(unsigned int uid)
+  {
+    // Return by value, as map is by value.
+    boost::mutex::scoped_lock lock(_contextMutex);
+    ReceiveMetaObjectCache::iterator it = _receiveMetaObjectCache.find(uid);
+    if (it == _receiveMetaObjectCache.end())
+      throw std::runtime_error("MetaObject not found in cache");
+    return it->second;
+  }
+
+  void StreamContext::receiveCacheSet(unsigned int uid, const MetaObject& mo)
+  {
+    boost::mutex::scoped_lock lock(_contextMutex);
+    _receiveMetaObjectCache[uid] = mo;
+  }
+
+  std::pair<unsigned int, bool> StreamContext::sendCacheSet(const MetaObject& mo)
+  {
+    boost::mutex::scoped_lock lock(_contextMutex);
+    SendMetaObjectCache::iterator it = _sendMetaObjectCache.find(mo);
+    if (it == _sendMetaObjectCache.end())
+    {
+      unsigned int v = ++_cacheNextId;
+      _sendMetaObjectCache[mo] = v;
+      return std::make_pair(v, true);
+    }
+    else
+      return std::make_pair(it->second, false);
+  }
+
+  static CapabilityMap* _defaultCapabilities = 0;
+  static void initCapabilities()
+  {
+    _defaultCapabilities  = new CapabilityMap();
+    /* ClientServerSocket : A client socket has the capability to accept and
+     * dispatch Type_Call messages (& friends).
+     * If set, stream used to register a service to the SD can be reused
+     * to communicate with said service, for instance.
+     */
+    (*_defaultCapabilities)["ClientServerSocket"] = AnyValue::from(true);
+    /* MetaObjectCache: Object serialization protocol supports the
+    * caching of MetaObjects (binary protocol change).
+    */
+    (*_defaultCapabilities)["MetaObjectCache"] = AnyValue::from(true);
+    // Process override from environment
+    std::string capstring = qi::os::getenv("QI_TRANSPORT_CAPABILITIES");
+    std::vector<std::string> caps;
+    boost::algorithm::split(caps, capstring, boost::algorithm::is_any_of(":"));
+    for (unsigned i=0; i<caps.size(); ++i)
+    {
+      const std::string& c = caps[i];
+      if (c.empty())
+        continue;
+      size_t p = c.find_first_of("=");
+      if (p == std::string::npos)
+      {
+        if (c[0] == '-')
+          _defaultCapabilities->erase(c.substr(1, c.npos));
+        else if (c[0] == '+')
+          (*_defaultCapabilities)[c.substr(1, c.npos)] = AnyValue::from(true);
+        else
+          (*_defaultCapabilities)[c] = AnyValue::from(true);
+      }
+      else
+        (*_defaultCapabilities)[c.substr(0, p)] = AnyValue::from(c.substr(p+1, c.npos));
+    }
+  }
+
+  const CapabilityMap& StreamContext::defaultCapabilities()
+  {
+    QI_ONCE(initCapabilities());
+    return *_defaultCapabilities;
+  }
+
   namespace details
   {
-    void serialize(AnyReference val, BinaryEncoder& out, SerializeObjectCallback context=SerializeObjectCallback());
-    void deserialize(AnyReference what, BinaryDecoder& in, DeserializeObjectCallback context=DeserializeObjectCallback());
-    AnyReference deserialize(qi::TypeInterface *type, BinaryDecoder& in, DeserializeObjectCallback context=DeserializeObjectCallback());
+    void serialize(AnyReference val, BinaryEncoder& out, SerializeObjectCallback context, StreamContext* ctx);
+    void deserialize(AnyReference what, BinaryDecoder& in, DeserializeObjectCallback context, StreamContext* ctx);
+    AnyReference deserialize(qi::TypeInterface *type, BinaryDecoder& in, DeserializeObjectCallback context, StreamContext* ctx);
   }
   class BinaryDecoder;
   class BinaryEncoder;
@@ -262,7 +373,7 @@ namespace qi {
     if (sig.isValid()) {
       assert(value.type());
       if (!recurse)
-        details::serialize(value, *this);
+        details::serialize(value, *this, SerializeObjectCallback(), 0);
       else
         recurse();
     } else {
@@ -369,10 +480,11 @@ namespace qi {
     class SerializeTypeVisitor
     {
     public:
-      SerializeTypeVisitor(BinaryEncoder& out, SerializeObjectCallback serializeObjectCb, AnyReference value)
+      SerializeTypeVisitor(BinaryEncoder& out, SerializeObjectCallback serializeObjectCb, AnyReference value, StreamContext* tc )
         : out(out)
         , serializeObjectCb(serializeObjectCb)
         , value(value)
+        , streamContext(tc)
       {}
 
       void visitUnknown(AnyReference value)
@@ -430,7 +542,7 @@ namespace qi {
       {
         out.beginList(value.size(), static_cast<ListTypeInterface*>(value.type())->elementType()->signature());
         for (; it != end; ++it)
-          serialize(*it, out, serializeObjectCb);
+          serialize(*it, out, serializeObjectCb, streamContext);
         out.endList();
       }
 
@@ -441,8 +553,8 @@ namespace qi {
         for(; it != end; ++it)
         {
           AnyReference v = *it;
-          serialize(v[0], out, serializeObjectCb);
-          serialize(v[1], out, serializeObjectCb);
+          serialize(v[0], out, serializeObjectCb, streamContext);
+          serialize(v[1], out, serializeObjectCb, streamContext);
         }
         out.endMap();
       }
@@ -463,10 +575,23 @@ namespace qi {
 
       void visitAnyObject(AnyObject& ptr)
       {
-        if (!serializeObjectCb)
-          throw std::runtime_error("Object serialization callback required but not provided");
+        if (!serializeObjectCb || !streamContext)
+          throw std::runtime_error("Object serialization callback and stream context required but not provided");
         ObjectSerializationInfo osi = serializeObjectCb(ptr);
-        out.write(osi.metaObject);
+        if (streamContext->sharedCapability<bool>("MetaObjectCache", false))
+        {
+          std::pair<unsigned int, bool> c = streamContext->sendCacheSet(osi.metaObject);
+          osi.metaObjectCachedId = c.first;
+          osi.transmitMetaObject = c.second;
+          out.write(osi.transmitMetaObject);
+          if (osi.transmitMetaObject)
+            out.write(osi.metaObject);
+          out.write(osi.metaObjectCachedId);
+        }
+        else
+        {
+          out.write(osi.metaObject);
+        }
         out.write(osi.serviceId);
         out.write(osi.objectId);
       }
@@ -475,7 +600,7 @@ namespace qi {
       {
         out.beginTuple(qi::makeTupleSignature(vals));
         for (unsigned i=0; i<vals.size(); ++i)
-          serialize(vals[i], out, serializeObjectCb);
+          serialize(vals[i], out, serializeObjectCb, streamContext);
         out.endTuple();
       }
 
@@ -483,7 +608,7 @@ namespace qi {
       {
         //Remaining types
         out.writeValue(pointee, boost::bind(&typeDispatch<SerializeTypeVisitor>,
-                                            SerializeTypeVisitor(out, serializeObjectCb, pointee), pointee));
+                                            SerializeTypeVisitor(out, serializeObjectCb, pointee, streamContext), pointee));
       }
 
       void visitRaw(AnyReference raw)
@@ -501,6 +626,7 @@ namespace qi {
       BinaryEncoder& out;
       SerializeObjectCallback serializeObjectCb;
       AnyReference value;
+      StreamContext* streamContext;
     };
 
     class DeserializeTypeVisitor
@@ -509,9 +635,10 @@ namespace qi {
       * result *must* be modified in place, not changed
       */
     public:
-      DeserializeTypeVisitor(BinaryDecoder& in, DeserializeObjectCallback context)
+      DeserializeTypeVisitor(BinaryDecoder& in, DeserializeObjectCallback context, StreamContext* tc)
         : in(in)
         , context(context)
+        , streamContext(tc)
       {}
 
       void visitUnknown(AnyReference)
@@ -607,7 +734,7 @@ namespace qi {
           return;
         for (unsigned i = 0; i < sz; ++i)
         {
-          AnyReference v = deserialize(elementType, in, context);
+          AnyReference v = deserialize(elementType, in, context, streamContext);
           result._append(v);
           v.destroy();
         }
@@ -623,8 +750,8 @@ namespace qi {
           return;
         for (unsigned i = 0; i < sz; ++i)
         {
-          AnyReference k = deserialize(keyType, in, context);
-          AnyReference v = deserialize(elementType, in, context);
+          AnyReference k = deserialize(keyType, in, context, streamContext);
+          AnyReference v = deserialize(elementType, in, context, streamContext);
           result._insert(k, v);
           k.destroy();
           v.destroy();
@@ -632,10 +759,26 @@ namespace qi {
       }
       void visitAnyObject(AnyObject& o)
       {
+        if (!streamContext)
+          throw std::runtime_error("Stream context required to deserialize object");
         ObjectSerializationInfo osi;
-        in.read(osi.metaObject);
+        if (streamContext->sharedCapability<bool>("MetaObjectCache", false))
+        {
+          in.read(osi.transmitMetaObject);
+          if (osi.transmitMetaObject)
+            in.read(osi.metaObject);
+          in.read(osi.metaObjectCachedId);
+        }
+        else
+        {
+          in.read(osi.metaObject);
+        }
         in.read(osi.serviceId);
         in.read(osi.objectId);
+        if (!osi.transmitMetaObject)
+          osi.metaObject = streamContext->receiveCacheGet(osi.metaObjectCachedId);
+        else if (osi.metaObjectCachedId != ObjectSerializationInfo::notCached)
+          streamContext->receiveCacheSet(osi.metaObjectCachedId, osi.metaObject);
         if (context)
           o = context(osi);
         // else leave result default-initilaized
@@ -662,7 +805,7 @@ namespace qi {
         vals.resize(types.size());
         for (unsigned i = 0; i<types.size(); ++i)
         {
-          AnyReference val = deserialize(types[i], in, context);
+          AnyReference val = deserialize(types[i], in, context, streamContext);
           if (!val.isValid())
             throw std::runtime_error("Deserialization of tuple field failed");
           vals[i] = val;
@@ -713,11 +856,12 @@ namespace qi {
       AnyReference result;
       BinaryDecoder& in;
       DeserializeObjectCallback context;
+      StreamContext* streamContext;
     }; //class
 
-    void serialize(AnyReference val, BinaryEncoder& out, SerializeObjectCallback context)
+    void serialize(AnyReference val, BinaryEncoder& out, SerializeObjectCallback context, StreamContext* sctx)
     {
-      details::SerializeTypeVisitor stv(out, context, val);
+      details::SerializeTypeVisitor stv(out, context, val, sctx);
       qi::typeDispatch(stv, val);
       if (out.status() != BinaryEncoder::Status_Ok) {
         std::stringstream ss;
@@ -726,9 +870,9 @@ namespace qi {
       }
     }
 
-    void deserialize(AnyReference what, BinaryDecoder& in, DeserializeObjectCallback context)
+    void deserialize(AnyReference what, BinaryDecoder& in, DeserializeObjectCallback context, StreamContext* sctx)
     {
-      details::DeserializeTypeVisitor dtv(in, context);
+      details::DeserializeTypeVisitor dtv(in, context, sctx);
       dtv.result = what;
       qi::typeDispatch(dtv, dtv.result);
       if (in.status() != BinaryDecoder::Status_Ok) {
@@ -739,11 +883,11 @@ namespace qi {
       what = dtv.result;
     }
 
-    AnyReference deserialize(qi::TypeInterface *type, BinaryDecoder& in, DeserializeObjectCallback context)
+    AnyReference deserialize(qi::TypeInterface *type, BinaryDecoder& in, DeserializeObjectCallback context, StreamContext* sctx)
     {
       AnyReference res(type);
       try {
-        deserialize(res, in, context);
+        deserialize(res, in, context, sctx);
       } catch (const std::runtime_error&) {
         res.destroy();
         throw;
@@ -753,9 +897,9 @@ namespace qi {
 
   } // namespace details
 
-  void encodeBinary(qi::Buffer *buf, const qi::AutoAnyReference &gvp, SerializeObjectCallback onObject) {
+  void encodeBinary(qi::Buffer *buf, const qi::AutoAnyReference &gvp, SerializeObjectCallback onObject, StreamContext* sctx) {
     BinaryEncoder be(*buf);
-    details::SerializeTypeVisitor stv(be, onObject, gvp);
+    details::SerializeTypeVisitor stv(be, onObject, gvp, sctx);
     qi::typeDispatch(stv, gvp);
     if (be.status() != BinaryEncoder::Status_Ok) {
       std::stringstream ss;
@@ -766,9 +910,9 @@ namespace qi {
   }
 
   void decodeBinary(qi::BufferReader *buf, qi::AnyReference gvp,
-    DeserializeObjectCallback onObject) {
+    DeserializeObjectCallback onObject, StreamContext* sctx) {
     BinaryDecoder in(buf);
-    details::DeserializeTypeVisitor dtv(in, onObject);
+    details::DeserializeTypeVisitor dtv(in, onObject, sctx);
     dtv.result = gvp;
     qi::typeDispatch(dtv, dtv.result);
     if (in.status() != BinaryDecoder::Status_Ok) {
