@@ -175,9 +175,9 @@ namespace qi {
           .def(boost::python::init<boost::python::list>())
           .def("run", &PyApplicationSession::run)
           .def("stop", &PyApplicationSession::stop)
-          .def("session", &PyApplicationSession::session)
           .def("start", &PyApplicationSession::start)
-          .def("url", &PyApplicationSession::url)
+          .add_property("url", &PyApplicationSession::url)
+          .add_property("session", &PyApplicationSession::session)
           ;
     }
   } // !py

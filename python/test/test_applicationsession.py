@@ -21,17 +21,17 @@ def test_applicationsession():
 
     sys.argv = sys.argv + ["--qi-url", sd.endpoints()[0]]
     app = qi.ApplicationSession(sys.argv)
-    assert app.url() == sd.endpoints()[0]
+    assert app.url == sd.endpoints()[0]
     assert isconnected is False
-    app.session().connected.connect(callback_conn)
-    app.session().disconnected.connect(callback_disconn)
+    app.session.connected.connect(callback_conn)
+    app.session.disconnected.connect(callback_disconn)
     app.start()
     time.sleep(0.01)
 
     assert isconnected is True
     assert isdisconnected is False
 
-    app.session().close()
+    app.session.close()
     time.sleep(0.01)
 
     assert isdisconnected is True
