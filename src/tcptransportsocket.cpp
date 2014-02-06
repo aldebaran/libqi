@@ -81,7 +81,6 @@ namespace qi
       _socket = SocketPtr((boost::asio::ip::tcp::socket*) s);
 #endif
       _status = qi::TransportSocket::Status_Connected;
-
       // Transmit each Message without delay
       setSocketOptions();
     }
@@ -104,10 +103,15 @@ namespace qi
 
   void TcpTransportSocket::startReading()
   {
+    _continueReading();
+    advertiseCapabilities(defaultCapabilities());
+  }
+
+  void TcpTransportSocket::_continueReading()
+  {
     qiLogDebug() << this;
 
     _msg = new qi::Message();
-
     boost::recursive_mutex::scoped_lock l(_closingMutex);
 
     if (_abort)
@@ -251,8 +255,8 @@ namespace qi
       AnyReference cmRef = _msg->value(typeOf<CapabilityMap>()->signature(), shared_from_this());
       CapabilityMap cm = cmRef.to<CapabilityMap>();
       cmRef.destroy();
-      boost::mutex::scoped_lock lock(_capabilityMutex);
-      _capabilityMap.insert(cm.begin(), cm.end());
+      boost::mutex::scoped_lock lock(_contextMutex);
+      _remoteCapabilityMap.insert(cm.begin(), cm.end());
     }
     else
     {
@@ -267,7 +271,7 @@ namespace qi
     }
     delete _msg;
     _msg = 0;
-    startReading();
+    _continueReading();
   }
 
   void TcpTransportSocket::error(const std::string& erc)
@@ -405,7 +409,6 @@ namespace qi
     else
     {
       _status = qi::TransportSocket::Status_Connected;
-      setCapabilities(defaultCapabilities());
       pSetValue(_connectPromise);
       connected();
       _sslHandshake = true;
@@ -452,7 +455,6 @@ namespace qi
       else
       {
         _status = qi::TransportSocket::Status_Connected;
-        setCapabilities(defaultCapabilities());
         pSetValue(_connectPromise);
         connected();
 
@@ -676,21 +678,14 @@ namespace qi
     send_(m);
   }
 
-  void TcpTransportSocket::setCapabilities(const CapabilityMap& cm)
+  void TcpTransportSocket::advertiseCapabilities(const CapabilityMap& cm)
   {
     Message msg;
     msg.setType(Message::Type_Capability);
     msg.setValue(cm, typeOf<CapabilityMap>()->signature());
     send(msg);
+    boost::mutex::scoped_lock lock(_contextMutex);
+    _localCapabilityMap.insert(cm.begin(), cm.end());
   }
 
-  boost::optional<AnyValue> TcpTransportSocket::capability(const std::string& key)
-  {
-    boost::mutex::scoped_lock loc(_capabilityMutex);
-    CapabilityMap::iterator it = _capabilityMap.find(key);
-    if (it != _capabilityMap.end())
-      return it->second;
-    else
-      return boost::optional<AnyValue>();
-  }
 }

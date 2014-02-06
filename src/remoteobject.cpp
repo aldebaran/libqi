@@ -280,7 +280,7 @@ namespace qi {
       _promises[msg.id()] = out;
     }
     qi::Signature funcSig = mm->parametersSignature();
-    msg.setValues(in, funcSig, this);
+    msg.setValues(in, funcSig, this, _socket.get());
     msg.setType(qi::Message::Type_Call);
     msg.setService(_service);
     msg.setObject(_object);
@@ -337,7 +337,7 @@ namespace qi {
       funcSig = ms->parametersSignature();
     }
 
-    msg.setValues(in, funcSig, this);
+    msg.setValues(in, funcSig, this, _socket.get());
     msg.setType(Message::Type_Post);
     msg.setService(_service);
     msg.setObject(_object);

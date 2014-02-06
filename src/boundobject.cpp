@@ -21,7 +21,7 @@ namespace qi {
                                    ObjectHost* context)
   {
     qi::Message msg;
-    msg.setValues(params, sig, context);
+    msg.setValues(params, sig, context, client.get());
     msg.setService(service);
     msg.setFunction(event);
     msg.setType(Message::Type_Event);

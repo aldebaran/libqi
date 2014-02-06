@@ -389,11 +389,11 @@ namespace qi {
     qi::BufferReader br(_p->buffer);
     //TODO: not exception safe
     AnyReference res(type);
-    decodeBinary(&br, res, boost::bind(deserializeObject, _1, socket));
+    decodeBinary(&br, res, boost::bind(deserializeObject, _1, socket), socket.get());
     return res;
   }
 
-  void Message::setValue(const AutoAnyReference &value, const Signature& sig, ObjectHost* context) {
+  void Message::setValue(const AutoAnyReference &value, const Signature& sig, ObjectHost* context, StreamContext* streamContext) {
     cow();
     Signature effective = value.type()->signature();
     if (effective != sig)
@@ -407,35 +407,35 @@ namespace qi {
         ss << "Setvalue(): failed to convert effective value "
            << value.type()->signature().toString()
            << " to expected type "
-           << sig.toString();
+           << sig.toString() << '(' << ti->infoString() << ')';
         qiLogWarning() << ss.str();
         setType(qi::Message::Type_Error);
         setError(ss.str());
       }
       else
-        encodeBinary(&_p->buffer, conv.first, boost::bind(serializeObject, _1, context));
+        encodeBinary(&_p->buffer, conv.first, boost::bind(serializeObject, _1, context), streamContext);
       if (conv.second)
         conv.first.destroy();
     }
     else if (value.type()->kind() != qi::TypeKind_Void)
     {
-      encodeBinary(&_p->buffer, value, boost::bind(serializeObject, _1, context));
+      encodeBinary(&_p->buffer, value, boost::bind(serializeObject, _1, context), streamContext);
     }
   }
 
-  void Message::setValues(const std::vector<qi::AnyReference>& values, ObjectHost* context)
+  void Message::setValues(const std::vector<qi::AnyReference>& values, ObjectHost* context, StreamContext* streamContext)
   {
     cow();
     SerializeObjectCallback scb = boost::bind(serializeObject, _1, context);
     for (unsigned i = 0; i < values.size(); ++i)
-      encodeBinary(&_p->buffer, values[i], scb);
+      encodeBinary(&_p->buffer, values[i], scb, streamContext);
   }
 
   //convert args then call setValues
-  void Message::setValues(const std::vector<qi::AnyReference>& in, const qi::Signature& expectedSignature, ObjectHost* context) {
+  void Message::setValues(const std::vector<qi::AnyReference>& in, const qi::Signature& expectedSignature, ObjectHost* context, StreamContext* streamContext) {
     qi::Signature argsSig = qi::makeTupleSignature(in, false);
     if (expectedSignature == argsSig) {
-      setValues(in, context);
+      setValues(in, context, streamContext);
       return;
     }
     if (expectedSignature == "m")
@@ -454,7 +454,7 @@ namespace qi {
       }
       AnyReference tuple = makeGenericTuplePtr(types, values);
       AnyValue val(tuple, false, false);
-      encodeBinary(&_p->buffer, AnyReference::from(val), boost::bind(serializeObject, _1, context));
+      encodeBinary(&_p->buffer, AnyReference::from(val), boost::bind(serializeObject, _1, context), streamContext);
       return;
     }
     /* This check does not makes sense for this transport layer who does not care,
@@ -487,7 +487,7 @@ namespace qi {
         allocated[i] = c.second;
       }
     }
-    setValues(nargs, context);
+    setValues(nargs, context, streamContext);
     for (unsigned i = 0; i< nargs.size(); ++i)
       if (allocated[i])
         nargs[i].destroy();

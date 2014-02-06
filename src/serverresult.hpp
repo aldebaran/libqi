@@ -8,6 +8,7 @@
 #define _SRC_SERVERRESULT_HPP_
 
 #include <qi/future.hpp>
+#include <qitype/objecttypebuilder.hpp>
 #include "message.hpp"
 #include "transportsocket.hpp"
 
@@ -45,7 +46,7 @@ namespace qi {
         else
         {
           AnyValue v = gfut.call<AnyValue>("value", 0);
-          ret.setValue(v, targetSignature, host);
+          ret.setValue(v, targetSignature, host, socket.get());
         }
       }
     } catch (const std::exception &e) {
@@ -84,7 +85,7 @@ namespace qi {
           gfut.call<void>("_connect", cb);
           return;
         }
-        ret.setValue(val, targetSignature, host);
+        ret.setValue(val, targetSignature, host, socket.get());
         //may leak if something throw inbetween.
         val.destroy();
       } catch (const std::exception &e) {

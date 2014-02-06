@@ -10,6 +10,7 @@
 #include <qimessaging/api.hpp>
 #include <qitype/anyvalue.hpp>
 #include <qi/buffer.hpp>
+#include <qitype/binarycodec.hpp>
 #include <qitype/anyfunction.hpp>
 #include <qi/types.hpp>
 
@@ -186,10 +187,10 @@ namespace qi {
 
 
     AnyReference value(const Signature &signature, const qi::TransportSocketPtr &socket) const;
-    void setValue(const AutoAnyReference& value, const Signature& signature, ObjectHost* context = 0);
-    void setValues(const std::vector<qi::AnyReference>& values, ObjectHost* context = 0);
+    void setValue(const AutoAnyReference& value, const Signature& signature, ObjectHost* context = 0, StreamContext* streamContext = 0);
+    void setValues(const std::vector<qi::AnyReference>& values, ObjectHost* context = 0, StreamContext* streamContext = 0);
     /// Convert values to \p targetSignature and assign to payload.
-    void setValues(const std::vector<qi::AnyReference>& values, const qi::Signature& targetSignature, ObjectHost* context = 0);
+    void setValues(const std::vector<qi::AnyReference>& values, const qi::Signature& targetSignature, ObjectHost* context = 0, StreamContext* streamContext = 0);
     MessageAddress address() const;
 
     bool         isValid();

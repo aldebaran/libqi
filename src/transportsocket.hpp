@@ -13,38 +13,15 @@
 # include <qimessaging/url.hpp>
 # include <qi/eventloop.hpp>
 # include <qitype/signal.hpp>
+# include <qitype/binarycodec.hpp>
 # include <string>
 # include "messagedispatcher.hpp"
 
 namespace qi
 {
   class Session;
-  typedef std::map<std::string, AnyValue> CapabilityMap;
 
-  /// Store contextual data associated to one point-to-point point transport.
-  class TransportContext
-  {
-  public:
-    TransportContext();
-    virtual ~TransportContext();
-    /// Set or update a local capability, and immediately advertise to the other end
-    virtual void setCapability(const std::string& key, const AnyValue& value);
-    /// Set or update a set of capabilities.
-    virtual void setCapabilities(const CapabilityMap& map) = 0;
-
-    /// Fetch remote capability from local cache.
-    virtual boost::optional<AnyValue> capability(const std::string& key) = 0;
-    template<typename T> T capability(const std::string& key, const T& defaultValue);
-
-    /// Default capabilities injected on all transports upon connection
-    static const CapabilityMap& defaultCapabilities();
-  protected:
-    // Default storage mechanism
-    boost::mutex  _capabilityMutex;
-    CapabilityMap _capabilityMap; // remote capabilities we received
-  };
-
-  class TransportSocket : private boost::noncopyable, public TransportContext
+  class TransportSocket : private boost::noncopyable, public StreamContext
   {
   public:
     virtual ~TransportSocket();
@@ -118,15 +95,6 @@ namespace qi
   typedef boost::shared_ptr<TransportSocket> TransportSocketPtr;
 
   TransportSocketPtr makeTransportSocket(const std::string &protocol, qi::EventLoop *eventLoop = getEventLoop());
-
-  template<typename T> T TransportContext::capability(const std::string& key, const T& defaultValue)
-  {
-    boost::optional<AnyValue> v = capability(key);
-    if (v)
-      return v->to<T>();
-    else
-      return defaultValue;
-  }
 
 }
 

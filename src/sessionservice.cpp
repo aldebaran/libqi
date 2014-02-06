@@ -209,7 +209,7 @@ namespace qi {
         else
         {
           // check if the socket support that capability
-          if (s->capability("ClientServerSocket", false))
+          if (s->remoteCapability("ClientServerSocket", false))
           {
             qiLogVerbose() << "sd is local and service is capable, going through socketOfService";
             onTransportSocketResult(qi::Future<TransportSocketPtr>(s), requestId);
