@@ -6,6 +6,25 @@ Your gdb need to be compile with python and version > 7.0
 import gdb
 import gdb.types
 
+class QiFuturePrinter:
+    def __init__(self, val):
+        self.val = val
+
+    def to_string(self):
+        fut = self.val['_p']['px'].dereference()
+        _fut = fut['_p']
+        state = str(_fut['_state'])
+        if state == "qi::FutureState_Running":
+            return "Running qi::Future<>"
+        elif state == "qi::FutureState_Canceled":
+            return "Cancelled qi::Future<>"
+        elif state == "qi::FutureState_FinishedWithError":
+            return "qi::Future<> finished with error %s" % _fut['_error']
+        elif state == "qi::FutureState_FinishedWithValue":
+            return "qi::Future<> finished with value %s" % fut['_value']
+        elif state == "qi::FutureState_None":
+            return "qi::Future<> not associated with a promise"
+
 class QiBufferPrinter:
     def __init__(self, val):
         self.val = val
@@ -18,6 +37,10 @@ def lookup_type(val):
     type = str(gdb.types.get_basic_type(val.type))
     if type == 'qi::Buffer':
         return QiBufferPrinter(val)
+    regex = re.compile("^qi::Future<.*>$")
+    m = regex.match(type)
+    if m:
+        return QiFuturePrinter(val)
     return None
 
 if __name__ == "__main__":
