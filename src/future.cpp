@@ -23,7 +23,7 @@ namespace qi {
       boost::condition_variable_any _cond;
       boost::recursive_mutex    _mutex;
       std::string               _error;
-      FutureState               _state;
+      qi::Atomic<int>           _state;
     };
 
     struct FutureBasePrivatePoolTag { };
@@ -42,9 +42,9 @@ namespace qi {
     FutureBasePrivate::FutureBasePrivate()
       : _cond(),
         _mutex(),
-        _error(),
-        _state(FutureState_None)
+        _error()
     {
+      _state = FutureState_None;
     }
 
     FutureBase::FutureBase()
@@ -59,7 +59,7 @@ namespace qi {
 
     FutureState FutureBase::state() const
     {
-      return _p->_state;
+      return FutureState(*_p->_state);
     }
 
     FutureState FutureBase::wait(int msecs) const {
@@ -67,14 +67,14 @@ namespace qi {
       if (detectEventLoopWait && getEventLoop()->isInEventLoopThread())
         qiLogWarning() << "Future wait in network thread.";
       boost::recursive_mutex::scoped_lock lock(_p->_mutex);
-      if (_p->_state != FutureState_Running)
-        return _p->_state;
+      if (*_p->_state != FutureState_Running)
+        return FutureState(*_p->_state);
       if (msecs == FutureTimeout_Infinite)
         _p->_cond.wait(lock);
       else if (msecs > 0)
         _p->_cond.timed_wait(lock, boost::posix_time::milliseconds(msecs));
       // msecs <= 0 : do nothing just return the state
-      return _p->_state;
+      return FutureState(*_p->_state);
     }
 
     void FutureBase::reportValue() {
@@ -106,33 +106,34 @@ namespace qi {
     }
 
     bool FutureBase::isFinished() const {
-      return _p->_state == FutureState_FinishedWithValue || _p->_state == FutureState_FinishedWithError || _p->_state == FutureState_Canceled;
+      FutureState v = FutureState(*_p->_state);
+      return v == FutureState_FinishedWithValue || v == FutureState_FinishedWithError || v == FutureState_Canceled;
     }
 
     bool FutureBase::isRunning() const {
-      return _p->_state == FutureState_Running;
+      return *_p->_state == FutureState_Running;
     }
 
     bool FutureBase::isCanceled() const {
-      return _p->_state == FutureState_Canceled;
+      return *_p->_state == FutureState_Canceled;
     }
 
     bool FutureBase::hasError(int msecs) const {
       if (wait(msecs) == FutureState_Running)
         throw FutureException(FutureException::ExceptionState_FutureTimeout);
-      return _p->_state == FutureState_FinishedWithError;
+      return *_p->_state == FutureState_FinishedWithError;
     }
 
     bool FutureBase::hasValue(int msecs) const {
       if (wait(msecs) == FutureState_Running)
         throw FutureException(FutureException::ExceptionState_FutureTimeout);
-      return _p->_state == FutureState_FinishedWithValue;
+      return *_p->_state == FutureState_FinishedWithValue;
     }
 
     const std::string &FutureBase::error(int msecs) const {
       if (wait(msecs) == FutureState_Running)
         throw FutureException(FutureException::ExceptionState_FutureTimeout);
-      if (_p->_state != FutureState_FinishedWithError)
+      if (*_p->_state != FutureState_FinishedWithError)
         throw FutureException(FutureException::ExceptionState_FutureHasNoError);
       return _p->_error;
     }
