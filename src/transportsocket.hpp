@@ -34,6 +34,8 @@ namespace qi
 
     explicit TransportSocket(qi::EventLoop* eventLoop = qi::getEventLoop())
     {
+      connected.setCallType(MetaCallType_Queued);
+      disconnected.setCallType(MetaCallType_Queued);
       // Set messageReady signal to async mode to protect our network thread
       messageReady.setCallType(MetaCallType_Queued);
     }
