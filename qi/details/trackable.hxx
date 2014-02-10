@@ -176,6 +176,12 @@ template<typename RF, typename AF, typename ARG0 comma ATYPEDECL>      \
   QI_GEN(genCall)
 #undef genCall
 #endif // DOXYGEN
+  template<typename F, typename ARG0>
+  boost::function<F> track(const boost::function<F>& f, const ARG0& arg0)
+  {
+    typedef typename detail::BindTransform<ARG0, boost::is_base_of<TrackableBase, typename boost::remove_pointer<ARG0>::type>::value> Transform;
+    return Transform::wrap(arg0, f, true);
+  }
 }
 
 #endif  // _QI_DETAILS_TRACKABLE_HXX_

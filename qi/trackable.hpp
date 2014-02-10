@@ -88,6 +88,15 @@ namespace qi
   */
   template<typename RF, typename AF> boost::function<RF> bind(const AF& fun, ...);
 #endif
+
+  /** Wrap given function \p f with a tracking check on \p arg0, which must
+  * be a weak pointer or a Trackable instance.
+  * @return a function that, when called:
+  *   - If lock can be acquired, calls \p f
+  *   - Else throws qi::PointerLockException
+  */
+  template<typename F, typename ARG0>
+  boost::function<F> track(const boost::function<F>& f, const ARG0& arg0);
 }
 
 #include <qi/details/trackable.hxx>
