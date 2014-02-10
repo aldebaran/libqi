@@ -515,7 +515,7 @@ namespace qi
 
     bool elForced = el;
     if (!sync && !el)
-      el = getDefaultThreadPoolEventLoop();
+      el = getEventLoop();
     qiLogDebug() << "metacall sync=" << sync << " el= " << el <<" ct= " << callType;
     bool doLock = (context && objectThreadingModel == ObjectThreadingModel_SingleThread
         && methodThreadingModel == MetaCallType_Auto);

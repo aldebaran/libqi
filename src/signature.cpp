@@ -177,7 +177,13 @@ namespace qi {
   static size_t _find_begin(const std::string &str, size_t start, char open, char close)
   {
     int count = 0; // start at 0
-    int i = str.size() - 1;
+
+    if (str.size() == 0) {
+      qiLogDebug() << "_find_begin error: given signature is empty.";
+      return std::string::npos;
+    }
+
+    size_t i = str.size() - 1;
 
     if (str[i] != close) {
       qiLogDebug() << "_find_begin error:" << str << "(" << i << ") is not " << close;
@@ -230,7 +236,7 @@ namespace qi {
     std::vector<Signature> _children;
   };
 
-  static size_t findNext(const std::string &signature, int index) {
+  static size_t findNext(const std::string &signature, size_t index) {
 
     if (index >= signature.size())
       return std::string::npos;
@@ -302,7 +308,7 @@ namespace qi {
     }
     //iterate over each subelement.
     while (true) {
-      int idxStop = findNext(signature, idxStart);
+      size_t idxStop = findNext(signature, idxStart);
       _children.push_back(qi::Signature(signature, idxStart, idxStop));
       ++i;
       //ouch too far..
@@ -382,7 +388,7 @@ namespace qi {
 
   //empty signature are invalid
   void SignaturePrivate::init(const std::string &signature, int begin, int end) {
-    int index = findNext(signature, begin);
+    size_t index = findNext(signature, begin);
     if (index != end) {
       throw std::runtime_error("Invalid signature");
     }

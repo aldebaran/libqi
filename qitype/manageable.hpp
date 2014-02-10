@@ -7,6 +7,8 @@
 #ifndef _QITYPE_MANAGEABLE_HPP_
 #define _QITYPE_MANAGEABLE_HPP_
 
+#include <qi/stats.hpp>
+
 #include <qitype/api.hpp>
 #include <qitype/anyfunction.hpp>
 #include <qitype/typeobject.hpp>
@@ -36,63 +38,6 @@ namespace qi {
     ObjectThreadingModel_Default = ObjectThreadingModel_SingleThread
   };
 
-  /// Stores min, max and sum of values fed to it
-  class MinMaxSum
-  {
-  public:
-    MinMaxSum() : _minValue(0), _maxValue(0), _cumulatedValue(0) {}
-    MinMaxSum(float minValue, float maxValue, float cumulatedValue)
-    : _minValue(minValue), _maxValue(maxValue), _cumulatedValue(cumulatedValue)
-    {}
-
-    const float& minValue()       const { return _minValue;}
-    const float& maxValue()       const { return _maxValue;}
-    const float& cumulatedValue() const { return _cumulatedValue;}
-    void push(float val, bool init = false)
-    {
-      if (init)
-        _minValue = _maxValue = _cumulatedValue = val;
-      else
-      {
-        _cumulatedValue += val;
-        _minValue = std::min(_minValue, val);
-        _maxValue = std::max(_maxValue, val);
-      }
-    }
-
-  private:
-    float _minValue;
-    float _maxValue;
-    float _cumulatedValue;
-  };
-
-  /// Store statistics about method calls.
-  class MethodStatistics
-  {
-  public:
-    MethodStatistics()
-    : _count(0) {}
-    MethodStatistics(unsigned count, MinMaxSum wall, MinMaxSum user, MinMaxSum system)
-    : _count(count), _wall(wall), _user(user), _system(system)
-    {}
-    void push(float wall, float user, float system)
-    {
-      _wall.push(wall, _count==0);
-      _user.push(user, _count==0);
-      _system.push(system, _count==0);
-      ++_count;
-    }
-    const MinMaxSum& wall() const     { return _wall;}
-    const MinMaxSum& user() const     { return _user;}
-    const MinMaxSum& system() const   { return _system;}
-    const unsigned int& count() const { return _count;}
-
-  private:
-    unsigned int _count;
-    MinMaxSum _wall;
-    MinMaxSum _user;
-    MinMaxSum _system;
-  };
 
   class EventTrace
   {

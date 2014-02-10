@@ -224,7 +224,7 @@ namespace qi {
         // explicitly track the asynccall
 
         // courtesy-check of el, but it should be kept alive longuer than us
-        qi::EventLoop* el = getDefaultThreadPoolEventLoop();
+        qi::EventLoop* el = getEventLoop();
         if (!el) // this is an assert basicaly, no sense trying to do something clever.
           throw std::runtime_error("Event loop was destroyed");
         el->post(FunctorCall(copy, new SignalSubscriberPtr(shared_from_this())));

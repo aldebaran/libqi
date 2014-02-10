@@ -28,7 +28,9 @@ namespace qi
      */
     template<typename A> TypeInterface* fieldType(A)
     {
-      return qi::typeOf<typename detail::Accessor<A>::value_type>();
+      static TypeInterface* res =
+        qi::typeOf<typename detail::Accessor<A>::value_type>();
+      return res;
     }
 
     template<typename C, typename A> void* fieldStorage(C* inst, A accessor)
@@ -232,8 +234,10 @@ friend class qi::TypeImpl<name>;
     __QI_TYPE_STRUCT_AGREGATE_CONSTRUCTOR_IMPLEMENT(name, inline, /**/, __VA_ARGS__)
 
 /** Similar to QI_TYPE_STRUCT, but using the runtime factory instead of the
- * compile-time template.
- *
+ * compile-time template. This macro will register the struct at static
+ * initialization time, and thus should only be called from one compilation
+ * unit. To ensure this, the simplest option is to use this macro from a .cpp
+ * source file. It should *not* be used in a header.
  */
 #define QI_TYPE_STRUCT_REGISTER(name, ...) \
 namespace _qi_ {                           \

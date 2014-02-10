@@ -150,7 +150,10 @@ namespace qi {
     private:
       inline GenericObject* go() const
       {
-          return reinterpret_cast<const O*>(this)->asGenericObject();
+        GenericObject* g = static_cast<const O*>(this)->asGenericObject();
+        if (!g)
+          throw std::runtime_error("This object is null");
+        return g;
       }
     };
   }
@@ -319,7 +322,7 @@ namespace qi {
 
   template<typename T> inline void Object<T, false>::init(detail::ManagedObjectPtr obj)
   {
-    if (obj && obj->type->info() != typeOf<T>()->info() && !boost::is_same<T, Empty>::value)
+    if (!boost::is_same<T, Empty>::value && obj && obj->type->info() != typeOf<T>()->info())
     {
       throw std::runtime_error(
         std::string("Object<T> constructed from a different AnyObject type ")
@@ -438,9 +441,30 @@ namespace qi {
 
     template<typename T> void hold(T data) {}
 
+    template<typename T> void setPromise(qi::Promise<T>& promise, AnyValue& v)
+    {
+      try
+      {
+        qiLogDebug("qi.adapter") << "converting value";
+        T val = v.to<T>();
+        qiLogDebug("qi.adapter") << "setting promise";
+        promise.setValue(val);
+        qiLogDebug("qi.adapter") << "done";
+      }
+      catch(const std::exception& e)
+      {
+        qiLogError("qi.adapter") << e.what();
+        promise.setError(e.what());
+      }
+    }
+    template<> inline void setPromise(qi::Promise<void>& promise, AnyValue&)
+    {
+      promise.setValue(0);
+    }
     template <typename T>
     void futureAdapterGeneric(AnyReference val, qi::Promise<T> promise)
     {
+      qiLogDebug("qi.adapter") << "futureAdapter trigger";
       TemplateTypeInterface* ft1 = QI_TEMPLATE_TYPE_GET(val.type(), Future);
       TemplateTypeInterface* ft2 = QI_TEMPLATE_TYPE_GET(val.type(), FutureSync);
       TemplateTypeInterface* futureType = ft1 ? ft1 : ft2;
@@ -450,11 +474,20 @@ namespace qi {
       boost::shared_ptr<GenericObject> ao(&gfut, hold<GenericObject*>);
       if (gfut.call<bool>(MetaCallType_Direct, "hasError", 0))
       {
-        promise.setError(gfut.call<std::string>("error", 0));
+        qiLogDebug("qi.adapter") << "futureAdapter: future in error";
+        std::string s = gfut.call<std::string>("error", 0);
+        qiLogDebug("qi.adapter") << "futureAdapter: got error: " << s;
+        promise.setError(s);
         return;
       }
+      qiLogDebug("qi.adapter") << "futureAdapter: future has value";
       AnyValue v = gfut.call<AnyValue>(MetaCallType_Direct, "value", 0);
-      promise.setValue(v.to<typename FutureType<T>::type>());
+      // For a Future<void>, value() gave us a void*
+      if (futureType->templateArgument()->kind() == TypeKind_Void)
+        v = AnyValue(qi::typeOf<void>());
+      qiLogDebug("qi.adapter") << v.type()->infoString();
+      setPromise(promise, v);
+      qiLogDebug("qi.adapter") << "Promise set";
       val.destroy();
     }
 
@@ -501,7 +534,7 @@ namespace qi {
       if (handleFuture(val, promise))
         return;
 
-      TypeInterface* targetType = typeOf<T>();
+      static TypeInterface* targetType = typeOf<T>();
       try
       {
         std::pair<AnyReference, bool> conv = val.convert(targetType);

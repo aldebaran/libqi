@@ -73,7 +73,7 @@ namespace qi {
     // Compute the offset between T and U
     T* ptr = (T*)(void*)0x10000;
     U* pptr = ptr;
-    int offset = (long)(void*)pptr - (long)(void*) ptr;
+    int offset = (intptr_t)(void*)pptr - (intptr_t)(void*) ptr;
     qiLogDebug() << "Offset check T(" << typeid(ptr).name() << ")= " << pptr << ", U(" << typeid(ptr).name() << ")= " << ptr << ", T-U= " << offset;
     return ObjectTypeBuilderBase::inherits<U>(offset);
   }

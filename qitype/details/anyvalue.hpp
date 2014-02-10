@@ -46,6 +46,17 @@ namespace qi {
      * AnyReference.
      */
     static AnyValue makeTuple(const AnyReferenceVector& values);
+    static AnyValue makeTupleFromValue(const AutoAnyReference& v0,
+                                       const AutoAnyReference& v1,
+                                       const AutoAnyReference& v2,
+                                       const AutoAnyReference& v3,
+                                       const AutoAnyReference& v4,
+                                       const AutoAnyReference& v5,
+                                       const AutoAnyReference& v6,
+                                       const AutoAnyReference& v7,
+                                       const AutoAnyReference& v8,
+                                       const AutoAnyReference& v9);
+
     template<typename T>
     static AnyValue makeList(const AnyReferenceVector& values);
     static AnyValue makeGenericList(const AnyReferenceVector& values);
