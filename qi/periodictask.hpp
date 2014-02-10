@@ -62,8 +62,8 @@ namespace qi
 
     /** Stop the periodic task. When this function returns, the callback will
     * not be called anymore.
+    * Can be called from within the callback function.
     * @warning concurrent calls to start() and stop() will result in undefined behavior.
-    * @warning stop() cannot be called from within the callback function
     */
     void stop();
 

@@ -1030,6 +1030,32 @@ TEST(TestPeriodicTask, Basic)
   EXPECT_GE(1, std::abs(*a - cur - 2));
 }
 
+TEST(TestPeriodicTask, Stop)
+{
+  qi::PeriodicTask pt;
+  pt.setCallback(boost::bind(&qi::os::msleep, 500));
+  pt.setUsPeriod(10000000);
+  pt.start();
+  qi::os::msleep(100); // wait for actual start
+  qi::int64_t now = qi::os::ustime();
+  pt.stop();
+  EXPECT_LE(300000, qi::os::ustime() - now);
+}
+
+
+TEST(TestPeriodicTask, StopFromTask)
+{
+  qi::PeriodicTask pt;
+  pt.setCallback(boost::bind(&qi::PeriodicTask::stop, boost::ref(pt)));
+  pt.setUsPeriod(10000000);
+  pt.start();
+  qi::int64_t now = qi::os::ustime();
+  pt.stop();
+  EXPECT_GE(100000, qi::os::ustime() - now);
+}
+
+
+
 TEST(TestPeriodicTask, DeadLock)
 {
   qi::Atomic<int> a;
