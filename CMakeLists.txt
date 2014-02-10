@@ -28,20 +28,8 @@ qi_add_optional_package(BOOST_LOCALE "Enable qi::translate")
 enable_testing()
 include(CMakeDependentOption)
 
-if(ANDROID)
-  set(_lock_free_default FALSE)
-else()
-  set(_lock_free_default TRUE)
-endif()
-option(USE_BOOST_LOCK_FREE "Use boost/lockfree for asynchronous qi::log"
-  ${_lock_free_default}
-)
-
-if(USE_BOOST_LOCK_FREE)
-  add_definitions("-D QI_USE_BOOST_LOCK_FREE")
-endif()
-
 set(H
+  qi/details/eventloop.hxx
   qi/details/future.hxx
   qi/details/log.hxx
   qi/details/trackable.hxx
@@ -52,6 +40,8 @@ set(H
   qi/atomic.hpp
   qi/buffer.hpp
   qi/bufferreader.hpp
+  qi/clock.hpp
+  qi/clock.hxx
   qi/error.hpp
   qi/future.hpp
   qi/log/consoleloghandler.hpp
@@ -64,7 +54,9 @@ set(H
   qi/preproc.hpp
   qi/types.hpp
   qi/path.hpp
+  qi/periodictask.hpp
   qi/shared_ptr.hpp
+  qi/stats.hpp
   qi/qi.hpp
   qi/threadpool.hpp
   qi/traits.hpp
@@ -81,6 +73,7 @@ set(C
   src/buffer.cpp
   src/buffer_p.hpp
   src/bufferreader.cpp
+  src/clock.cpp
   src/sdklayout.hpp
   src/filesystem.hpp
   src/filesystem.cpp
@@ -95,6 +88,7 @@ set(C
   src/os.cpp
   src/path_conf.cpp
   src/path_conf.hpp
+  src/periodictask.cpp
   src/utils.hpp
   src/utils.cpp
   src/threadpool.cpp
@@ -154,9 +148,7 @@ qi_create_config_h(_out qi/config.hpp.in qi/config.hpp)
 list(APPEND C ${_out})
 
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}")
-if(USE_BOOST_LOCK_FREE)
-  include_directories("${CMAKE_CURRENT_SOURCE_DIR}/external")
-endif()
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/external")
 
 qi_create_lib(qi ${_libtype} ${H} ${C})
 
@@ -164,7 +156,7 @@ if (WITH_QT_QTCORE)
   qi_use_lib(qi QT_QTCORE)
 endif()
 
-qi_use_lib(qi BOOST_FILESYSTEM BOOST_THREAD BOOST_PROGRAM_OPTIONS BOOST_REGEX)
+qi_use_lib(qi BOOST_CHRONO BOOST_THREAD BOOST_FILESYSTEM BOOST_THREAD BOOST_PROGRAM_OPTIONS BOOST_REGEX)
 
 if(WITH_BOOST_LOCALE)
   qi_use_lib(qi BOOST_LOCALE)

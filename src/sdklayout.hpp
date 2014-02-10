@@ -40,10 +40,10 @@ namespace qi
   {
   public:
 
-    /** \brief This constructor use argc/argv stored by qi::init(argc, argv)
+    /** \brief This constructor use argc/argv stored by qi::Application(argc, argv)
      *  to determine the sdk layout.
      *
-     *  If qi::init has not been called before creating this class,
+     *  If qi::Application has not been called before creating this class,
      *  call to methods of this class will throw an exception.
      */
     SDKLayout();

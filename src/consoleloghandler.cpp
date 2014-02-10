@@ -262,6 +262,9 @@ namespace qi {
         header(verb, false);
       }
 
+      if (context & qi::LogContextAttr_Date)
+        printf("%s ", qi::detail::dateToString(date).c_str());
+
       if (context & qi::LogContextAttr_Tid) {
         int tidColor = intToColor(qi::os::gettid());
         textColorBG(tidColor);
@@ -270,9 +273,6 @@ namespace qi {
         textColorAttr(reset);
         printf(" ");
       }
-
-      if (context & qi::LogContextAttr_Date)
-        printf("%s ", qi::detail::dateToString(date).c_str());
 
       if (context & qi::LogContextAttr_Category) {
         textColorFG(stringToColor(category));

@@ -25,6 +25,7 @@ set_target_properties(testlaunchloop PROPERTIES FOLDER tests)
 set_target_properties(check_env  PROPERTIES FOLDER tests)
 set_target_properties(test_application  PROPERTIES FOLDER tests)
 
+qi_create_gtest(test_qiclock             SRC test_qiclock.cpp     DEPENDS QI GTEST)
 qi_create_gtest(test_qipath      SRC test_qipath.cpp ../src/utils.cpp DEPENDS QI GTEST)
 qi_create_gtest(test_qipath_from_bin SRC test_qipath.cpp ../src/utils.cpp
   DEPENDS QI GTEST)
@@ -39,7 +40,7 @@ qi_create_gtest(test_threadpool_nightly  SRC test_threadpool_nightly.cpp NIGHTLY
 qi_create_gtest(test_qilaunch            SRC test_qilaunch.cpp    DEPENDS QI GTEST)
 qi_create_gtest(test_qilog_sync          SRC test_qilog_sync.cpp  DEPENDS QI GTEST)
 qi_create_gtest(test_qilog_async         SRC test_qilog_async.cpp DEPENDS QI GTEST)
-qi_create_gtest(test_future              SRC test_future.cpp      DEPENDS QI GTEST TIMEOUT 10)
+qi_create_gtest(test_future              SRC test_future.cpp      DEPENDS QI GTEST TIMEOUT 20)
 qi_create_gtest(test_buffer              SRC test_buffer.cpp      DEPENDS QI GTEST TIMEOUT 10)
 qi_create_gtest(test_bufferreader        SRC test_bufferreader.cpp      DEPENDS QI GTEST TIMEOUT 10)
 qi_create_gtest(test_version             SRC test_version.cpp     DEPENDS QI GTEST TIMEOUT 10)

@@ -14,6 +14,7 @@
 #include <qi/future.hpp>
 #include <qi/eventloop.hpp>
 #include <qi/trackable.hpp>
+#include <qi/periodictask.hpp>
 
 #include <boost/function.hpp>
 #include <boost/lambda/lambda.hpp>
@@ -500,7 +501,7 @@ void unlock(qi::Promise<int> prom, bool* tag)
 
 TEST(TestFutureSync, Basic)
 {
-  qi::EventLoop* eventLoop = qi::getDefaultNetworkEventLoop();
+  qi::EventLoop* eventLoop = qi::getEventLoop();
   ASSERT_FALSE(eventLoop->isInEventLoopThread());
 
   {
@@ -550,7 +551,7 @@ TEST(TestFutureSync, Basic)
 
 qi::FutureSync<int> getSync(bool* tag)
 {
-  qi::EventLoop* el = qi::getDefaultObjectEventLoop();
+  qi::EventLoop* el = qi::getEventLoop();
   qi::Promise<int> promise;
   el->async(boost::bind(unlock, promise, tag), 50000);
   return promise.future();
@@ -558,7 +559,7 @@ qi::FutureSync<int> getSync(bool* tag)
 
 qi::FutureSync<int> getSync2(bool* tag)
 {
-  qi::EventLoop* el = qi::getDefaultObjectEventLoop();
+  qi::EventLoop* el = qi::getEventLoop();
   qi::Promise<int> promise;
   el->async(boost::bind(unlock, promise, tag), 50000);
   return promise.future().sync();
@@ -680,7 +681,7 @@ static void setTrue(bool* b)
 TEST(TestFutureCancel, AsyncCallCanceleable)
 {
   bool b = false;
-  qi::Future<void> f = qi::getDefaultNetworkEventLoop()->async(
+  qi::Future<void> f = qi::getEventLoop()->async(
     boost::bind(&setTrue, &b), 200);
   f.cancel();
   // f is going to cancel asynchronously, so it can already be cancelled, or not
@@ -756,8 +757,8 @@ TEST(TestFutureCancel, Canceleable)
 TEST(TestFutureCancel, Canceled)
 {
   bool b = false;
-  qi::Future<void> f = qi::getDefaultNetworkEventLoop()->async(
-    boost::bind(&setTrue, &b), 200);
+  qi::Future<void> f = qi::getEventLoop()->async(
+    boost::bind(&setTrue, &b), 200000);
   f.cancel();
   ASSERT_FALSE(f.isFinished());
   qi::os::msleep(400);
@@ -946,6 +947,101 @@ TEST(TestAdaptFuture, PromiseCancelled) {
   ASSERT_TRUE(prom2.future().isCanceled());
   ASSERT_FALSE(prom2.future().hasValue());
   ASSERT_FALSE(prom2.future().hasError());
+}
+
+int ping(int v)
+{
+  if (v>= 0)
+    return v;
+  else
+    throw std::runtime_error("Invalid argument ");
+}
+
+TEST(EventLoop, async)
+{
+  qi::EventLoop* el = qi::getEventLoop();
+  qi::Future<int> f = el->async<int>(boost::bind(ping, 42), 200000);
+  EXPECT_FALSE(f.isFinished());
+  f.wait();
+  EXPECT_FALSE(f.hasError());
+  EXPECT_EQ(f.value(), 42);
+
+  f = el->async<int>(boost::bind(ping, 42), 200000);
+  EXPECT_FALSE(f.isFinished());
+  EXPECT_NO_THROW(f.cancel());
+  EXPECT_EQ(f.wait(), qi::FutureState_Canceled);
+
+  f = el->async<int>(boost::bind(ping, -1), 200000);
+  EXPECT_FALSE(f.isFinished());
+  f.wait();
+  EXPECT_TRUE(f.hasError());
+}
+
+void empty() {}
+
+TEST(TestPeriodicTask, Exception)
+{
+  {
+    qi::PeriodicTask pt;
+    EXPECT_ANY_THROW(pt.start());
+    EXPECT_ANY_THROW(pt.setUsPeriod(-123));
+    pt.setUsPeriod(1000);
+    EXPECT_ANY_THROW(pt.start());
+  }
+  {
+    qi::PeriodicTask pt;
+    pt.setCallback(&empty);
+    EXPECT_ANY_THROW(pt.start()); // interval not set
+  }
+}
+
+void inc(qi::Atomic<int>& tgt)
+{
+  ++tgt;
+}
+
+TEST(TestPeriodicTask, FutureFuck)
+{
+  for (unsigned i=0; i<500; ++i)
+  {
+    qi::Future<void> f;
+    qi::Promise<void> p;
+    f = p.future();
+    p.setValue(0);
+    f.wait();
+  }
+}
+
+TEST(TestPeriodicTask, Basic)
+{
+  qi::Atomic<int> a;
+  qi::PeriodicTask pt;
+  pt.setCallback(&inc, boost::ref(a));
+  pt.setUsPeriod(100000);
+  pt.start();
+  qi::os::msleep(450);
+  EXPECT_GE(2, std::abs(*a - 5)); // be leniant for our overloaded buildslaves
+  pt.stop();
+  int cur = *a;
+  qi::os::msleep(60);
+  EXPECT_EQ(cur, *a); // stop means stop
+  pt.start();
+  qi::os::msleep(150);
+  EXPECT_GE(1, std::abs(*a - cur - 2));
+}
+
+TEST(TestPeriodicTask, DeadLock)
+{
+  qi::Atomic<int> a;
+  for (unsigned i=0; i<500; ++i)
+  {
+    qi::PeriodicTask pt;
+    pt.setCallback(&inc, boost::ref(a));
+    pt.setUsPeriod(0);
+    pt.start();
+    qi::os::msleep(i%20);
+    pt.stop();
+  }
 }
 
 int main(int argc, char **argv) {

@@ -22,10 +22,8 @@
 #include <boost/program_options.hpp>
 #include <boost/unordered_map.hpp>
 
-#ifdef QI_USE_BOOST_LOCK_FREE
-# include <boost/lockfree/fifo.hpp>
-#else
-# include <queue>
+#ifndef ANDROID
+# include <boost/lockfree/queue.hpp>
 #endif
 #include <boost/function.hpp>
 
@@ -174,10 +172,8 @@ namespace qi {
       boost::mutex               LogHandlerLock;
       boost::condition_variable  LogReadyCond;
 
-#ifdef QI_USE_BOOST_LOCK_FREE
-      boost::lockfree::fifo<privateLog*>     logs;
-#else
-      std::queue<privateLog*>     logs;
+#ifndef ANDROID
+      boost::lockfree::queue<privateLog*>     logs;
 #endif
 
       typedef std::map<std::string, Handler> LogHandlerMap;
@@ -368,17 +364,12 @@ namespace qi {
 
     void Log::printLog()
     {
-      privateLog* pl;
+// Logs are handled in qi::log in Android
+#ifndef ANDROID
+      privateLog* pl = 0;
       boost::mutex::scoped_lock lock(LogHandlerLock);
-#ifdef QI_USE_BOOST_LOCK_FREE
-      while (logs.dequeue(&pl))
+      while (logs.pop(pl))
       {
-
-#else
-      while ((pl = logs.front()) != 0)
-      {
-        logs.pop();
-#endif
         dispatch(pl->_logLevel,
                  pl->_date,
                  pl->_category,
@@ -387,6 +378,7 @@ namespace qi {
                  pl->_function,
                  pl->_line);
       }
+#endif
     }
 
     void Log::dispatch(const qi::LogLevel level,
@@ -436,6 +428,9 @@ namespace qi {
     }
 
     inline Log::Log()
+#ifndef ANDROID
+    :logs(50)
+#endif
     {
       LogInit = true;
       if (!_glSyncLog)
@@ -460,12 +455,26 @@ namespace qi {
     static void my_strcpy(char *dst, const char *src, int len) {
       if (!src)
         src = "(null)";
-     #ifdef _MSV_VER
+#ifdef _MSV_VER
       strncpy_s(dst, len, src, _TRUNCATE);
-     #else
+#else
       strncpy(dst, src, len);
       dst[len - 1] = 0;
-     #endif
+#endif
+    }
+
+    static void doInit() {
+      //if init has already been called, we are set here. (reallocating all globals
+      // will lead to racecond)
+      if (_glInit)
+        return;
+      _glConsoleLogHandler = new ConsoleLogHandler;
+      LogInstance          = new Log;
+      addLogHandler("consoleloghandler",
+                    boost::bind(&ConsoleLogHandler::log,
+                                _glConsoleLogHandler,
+                                _1, _2, _3, _4, _5, _6, _7));
+      _glInit = true;
     }
 
     void init(qi::LogLevel verb,
@@ -476,16 +485,7 @@ namespace qi {
       setContext(ctx);
       setSynchronousLog(synchronous);
 
-      if (_glInit)
-        destroy();
-
-      _glConsoleLogHandler = new ConsoleLogHandler;
-      LogInstance          = new Log;
-      addLogHandler("consoleloghandler",
-                    boost::bind(&ConsoleLogHandler::log,
-                                _glConsoleLogHandler,
-                                _1, _2, _3, _4, _5, _6, _7));
-      _glInit = true;
+      QI_ONCE(doInit());
     }
 
     void destroy()
@@ -513,7 +513,7 @@ namespace qi {
              const char           *fct,
              const int             line)
     {
-      #ifndef ANDROID
+#ifndef ANDROID
       if (_glSyncLog)
       {
         if (!detail::isVisible(category, verb))
@@ -523,7 +523,7 @@ namespace qi {
         LogInstance->dispatch(verb, tv, *category, msg.c_str(), file, fct, line);
       }
       else
-      #endif
+#endif
       // FIXME suboptimal
       // log is also a qi namespace, this line confuses some compilers if
       // namespace is not explicit
@@ -539,21 +539,20 @@ namespace qi {
     {
       if (!isVisible(category, verb))
         return;
-      #ifdef ANDROID
-        std::map<LogLevel, android_LogPriority> _conv;
 
-        _conv[silent]  = ANDROID_LOG_SILENT;
-        _conv[fatal]   = ANDROID_LOG_FATAL;
-        _conv[error]   = ANDROID_LOG_ERROR;
-        _conv[warning] = ANDROID_LOG_WARN;
-        _conv[info]    = ANDROID_LOG_INFO;
-        _conv[verbose] = ANDROID_LOG_VERBOSE;
-        _conv[debug]   = ANDROID_LOG_DEBUG;
+#ifdef ANDROID
+      std::map<LogLevel, android_LogPriority> _conv;
 
-        __android_log_print(_conv[verb], category, msg);
-        return;
-      #endif
+      _conv[silent]  = ANDROID_LOG_SILENT;
+      _conv[fatal]   = ANDROID_LOG_FATAL;
+      _conv[error]   = ANDROID_LOG_ERROR;
+      _conv[warning] = ANDROID_LOG_WARN;
+      _conv[info]    = ANDROID_LOG_INFO;
+      _conv[verbose] = ANDROID_LOG_VERBOSE;
+      _conv[debug]   = ANDROID_LOG_DEBUG;
 
+      __android_log_print(_conv[verb], category, msg);
+#else
       if (!LogInstance)
         return;
       if (!LogInstance->LogInit)
@@ -581,13 +580,10 @@ namespace qi {
         my_strcpy(pl->_file, file, FILE_SIZE);
         my_strcpy(pl->_function, fct, FUNC_SIZE);
         my_strcpy(pl->_log, msg, LOG_SIZE);
-#ifdef QI_USE_BOOST_LOCK_FREE
-        LogInstance->logs.enqueue(pl);
-#else
         LogInstance->logs.push(pl);
-#endif
         LogInstance->LogReadyCond.notify_one();
       }
+#endif
     }
 
     Log::Handler* Log::logHandler(SubscriberId id)
@@ -865,7 +861,7 @@ namespace qi {
     }
 
     static const std::string contextLogOption = ""
-        "Show context logs, it's a bitfield (add the values below):\n"
+        "Show context logs, it's a bit field (add the values below):\n"
         " 1  : Verbosity\n"
         " 2  : ShortVerbosity\n"
         " 4  : Date\n"

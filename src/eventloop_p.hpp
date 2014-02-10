@@ -35,7 +35,7 @@ namespace qi {
   {
   public:
     virtual bool isInEventLoopThread()=0;
-    virtual void start()=0;
+    virtual void start(int nthreads)=0; // 0=auto
     virtual void join()=0;
     virtual void stop()=0;
     virtual qi::Future<void> asyncCall(uint64_t usDelay, boost::function<void ()> callback)=0;
@@ -52,7 +52,7 @@ namespace qi {
   public:
     EventLoopAsio();
     virtual bool isInEventLoopThread();
-    virtual void start();
+    virtual void start(int nthreads);
     virtual void run();
     virtual void join();
     virtual void stop();
@@ -63,13 +63,23 @@ namespace qi {
     virtual void destroy();
     virtual void* nativeHandle();
   private:
+    void _runPool();
+    void _pingThread();
     virtual ~EventLoopAsio();
+
+    enum Mode
+    {
+      Mode_Unset = 0,
+      Mode_Threaded = 1,
+      Mode_Pooled = 2
+    };
+    Mode _mode;
+    qi::Atomic<int> _nThreads;
     boost::asio::io_service _io;
     boost::asio::io_service::work* _work; // keep io.run() alive
     boost::thread      _thd;
     bool               _destroyMe;
     bool               _running;
-    bool               _threaded;
     boost::recursive_mutex _mutex;
     boost::thread::id  _id;
   };
@@ -80,7 +90,7 @@ namespace qi {
   public:
     EventLoopThreadPool(int minWorkers, int maxWorkers, int minIdleWorkers, int maxIdleWorkers);
     virtual bool isInEventLoopThread();
-    virtual void start();
+    virtual void start(int nthreads);
     virtual void run();
     virtual void join();
     virtual void stop();

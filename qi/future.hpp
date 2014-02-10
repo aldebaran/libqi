@@ -410,9 +410,7 @@ namespace qi {
      */
     explicit Promise(boost::function<void (qi::Promise<T>)> cancelCallback, FutureCallbackType async = FutureCallbackType_Async)
     {
-      _f._p->reportStart();
-      _f._p->setOnCancel(cancelCallback);
-      _f._p->_async = async;
+      setup(cancelCallback, async);
     }
 
     /** notify all future that a value has been set.
@@ -452,6 +450,12 @@ namespace qi {
     */
     void trigger() { _f._p->set(_f);}
   protected:
+    void setup(boost::function<void (qi::Promise<T>)> cancelCallback, FutureCallbackType async = FutureCallbackType_Async)
+    {
+      this->_f._p->reportStart();
+      this->_f._p->setOnCancel(cancelCallback);
+      this->_f._p->_async = async;
+    }
     explicit Promise(Future<T>& f) : _f(f) {}
     template<typename> friend class ::qi::detail::FutureBaseTyped;
     Future<T> _f;

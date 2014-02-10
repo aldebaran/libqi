@@ -1,15 +1,41 @@
+//  Copyright (C) 2011 Tim Blechmann
+//
+//  Distributed under the Boost Software License, Version 1.0. (See
+//  accompanying file LICENSE_1_0.txt or copy at
+//  http://www.boost.org/LICENSE_1_0.txt)
+
 #ifndef BOOST_LOCKFREE_DETAIL_ATOMIC_HPP
 #define BOOST_LOCKFREE_DETAIL_ATOMIC_HPP
 
-#ifdef __GNUC__
-# if __GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 6) || !defined(__GXX_EXPERIMENTAL_CXX0X__)
-#  define BOOST_NO_0X_HDR_ATOMIC
-# endif
-#else
-# define BOOST_NO_0X_HDR_ATOMIC
+#include <boost/config.hpp>
+
+// at this time, few compiles completely implement atomic<>
+#define BOOST_LOCKFREE_NO_HDR_ATOMIC
+
+// MSVC supports atomic<> from version 2012 onwards.
+#if defined(BOOST_MSVC) && (BOOST_MSVC >= 1700)
+#undef BOOST_LOCKFREE_NO_HDR_ATOMIC
 #endif
 
-#ifdef BOOST_NO_0X_HDR_ATOMIC
+// GCC supports atomic<> from version 4.8 onwards.
+#if defined(__GNUC__)
+# if defined(__GNUC_PATCHLEVEL__)
+#  define __GNUC_VERSION__ (__GNUC__ * 10000 \
+                            + __GNUC_MINOR__ * 100 \
+                            + __GNUC_PATCHLEVEL__)
+# else
+#  define __GNUC_VERSION__ (__GNUC__ * 10000 \
+                            + __GNUC_MINOR__ * 100)
+# endif
+#endif
+
+#if (__GNUC_VERSION__ >= 40800) && (__cplusplus >= 201103L)
+#undef BOOST_LOCKFREE_NO_HDR_ATOMIC
+#endif
+
+#undef __GNUC_VERSION__
+
+#if defined(BOOST_LOCKFREE_NO_HDR_ATOMIC)
 #include <boost/atomic.hpp>
 #else
 #include <atomic>
@@ -19,7 +45,7 @@ namespace boost {
 namespace lockfree {
 namespace detail {
 
-#ifdef BOOST_NO_0X_HDR_ATOMIC
+#if defined(BOOST_LOCKFREE_NO_HDR_ATOMIC)
 using boost::atomic;
 using boost::memory_order_acquire;
 using boost::memory_order_consume;

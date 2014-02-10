@@ -425,7 +425,7 @@ void makeCats(int uid, unsigned count, qi::Atomic<int>& finished)
 void addHandler(qi::Atomic<int>& pos, qi::Atomic<int>& count)
 {
   int p = ++pos;
-  qi::log::SubscriberId id = qi::log::addLogHandler("foo" + boost::lexical_cast<std::string>(p),
+  qi::log::addLogHandler("foo" + boost::lexical_cast<std::string>(p),
     nullHandler);
   ++count;
 }

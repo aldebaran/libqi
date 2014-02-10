@@ -22,7 +22,7 @@ namespace qi {
   namespace os {
     /* Have the static variable we need inside the function so that we
      * give correct results at initialization time, but also force
-     * initialization so that timestamp 0 corresponds to pogram start time.
+     * initialization so that timestamp 0 corresponds to program start time.
      */
     static int64_t _unused_base = ustime();
 
@@ -128,7 +128,10 @@ namespace qi {
         idFile >> idString;
         idFile.close();
         initialized = true;
-        return idString;
+        if (!idString.empty()) {
+          return idString;
+        } //else machine id is empty...
+        qiLogWarning() << "machine_id is empty, generating a new one";
       }
 
       std::ofstream newIdFile(idFilePath.c_str());

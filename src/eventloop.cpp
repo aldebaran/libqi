@@ -22,19 +22,39 @@ qiLogCategory("qi.eventloop");
 namespace qi {
 
   EventLoopAsio::EventLoopAsio()
-  : _destroyMe(false)
+  : _mode(Mode_Unset)
+  , _destroyMe(false)
   , _running(false)
-  , _threaded(false)
   {
   }
 
 
-  void EventLoopAsio::start()
+  void EventLoopAsio::start(int nthread)
   {
-    if (_running || _threaded)
+    if (_running || _mode != Mode_Unset)
       return;
-    _threaded = true;
-    _thd = boost::thread(&EventLoopPrivate::run, this);
+    if (nthread == 0)
+    {
+      nthread = boost::thread::hardware_concurrency();
+      if (nthread < 3)
+        nthread = 3;
+      const char* envNthread = getenv("QI_EVENTLOOP_THREAD_COUNT");
+      if (envNthread)
+        nthread = strtol(envNthread, 0, 0);
+    }
+    if (nthread == 1)
+    {
+      _mode = Mode_Threaded;
+      _thd = boost::thread(&EventLoopPrivate::run, this);
+    }
+    else
+    {
+      _mode = Mode_Pooled;
+      _work = new boost::asio::io_service::work(_io);
+      for (int i=0; i<nthread; ++i)
+        boost::thread(&EventLoopAsio::_runPool, this);
+      boost::thread(&EventLoopAsio::_pingThread, this);
+    }
     while (!_running)
       qi::os::msleep(0);
   }
@@ -55,6 +75,89 @@ namespace qi {
     {
       delete this;
     }
+  }
+
+  static void ping_me(bool & ping, boost::condition_variable& cond)
+  {
+    ping = true;
+    cond.notify_all();
+  }
+
+  static bool bool_identity(bool& b)
+  {
+    return b;
+  }
+
+  template<typename T>
+  static T getEnvParam(const char* name, T defaultVal)
+  {
+    std::string sval = qi::os::getenv(name);
+    if (sval.empty())
+      return defaultVal;
+    else
+      return boost::lexical_cast<T>(sval);
+  }
+
+  void EventLoopAsio::_pingThread()
+  {
+    qi::os::setCurrentThreadName("EvLoop.mon");
+    static int maxThreads = getEnvParam("QI_EVENTLOOP_MAX_THREADS", 200);
+    static int msTimeout = getEnvParam("QI_EVENTLOOP_PING_TIMEOUT", 500);
+    static int msGrace = getEnvParam("QI_EVENTLOOP_GRACE_PERIOD", 0);
+    ++_nThreads;
+    boost::mutex mutex;
+    boost::condition_variable cond;
+    bool gotPong = false;
+    while (_work)
+    {
+      qiLogDebug() << "Ping";
+      gotPong = false;
+      post(0, boost::bind(&ping_me, boost::ref(gotPong), boost::ref(cond)));
+      boost::mutex::scoped_lock l(mutex);
+      if (!cond.timed_wait(l,
+        boost::get_system_time()+ boost::posix_time::milliseconds(msTimeout),
+        boost::bind(&bool_identity, boost::ref(gotPong))))
+      {
+        if (maxThreads && *_nThreads == maxThreads + 1) // we count in nThreads
+        {
+          qiLogInfo() << "Thread limit reached";
+        }
+        else
+        {
+          qiLogInfo() << "Spawning more threads (" << *_nThreads << ')';
+          boost::thread(&EventLoopAsio::_runPool, this);
+        }
+        qi::os::msleep(msGrace);
+      }
+      else
+      {
+        qiLogDebug() << "Ping ok";
+        qi::os::msleep(msTimeout);
+      }
+    }
+    if (!--_nThreads)
+      _running = false;
+  }
+
+  void EventLoopAsio::_runPool()
+  {
+    qiLogDebug() << this << "run starting from pool";
+    qi::os::setCurrentThreadName("asioeventloop");
+    _running = true;
+    ++_nThreads;
+    try
+    {
+      _io.run();
+    }
+    catch(const std::exception& e)
+    {
+      qiLogVerbose() << "Pool thread exiting from exception " << e.what();
+    }
+    catch(...)
+    {}
+    if (!--_nThreads)
+      _running = false;
+
   }
 
   void EventLoopAsio::run()
@@ -102,22 +205,32 @@ namespace qi {
 
   void EventLoopAsio::join()
   {
-    if (boost::this_thread::get_id() == _id)
+    if (_mode == Mode_Threaded)
     {
-      qiLogError() << "Cannot join from within event loop thread";
-      return;
-    }
-    if (_threaded)
-      try {
-        _thd.join();
-      }
-      catch(const boost::thread_resource_error& e)
+      if (boost::this_thread::get_id() == _id)
       {
-        qiLogWarning() << "Join an already joined thread: " << e.what();
+        qiLogError() << "Cannot join from within event loop thread";
+        return;
       }
+      if (_thd.joinable())
+      {
+        try {
+          _thd.join();
+        }
+        catch(const boost::thread_resource_error& e)
+        {
+          qiLogWarning() << "Join an already joined thread: " << e.what();
+        }
+        return;
+      }
+    }
     else
+    {
+      qiLogDebug() << "Waiting for threads to terminate...";
       while (_running)
         qi::os::msleep(0);
+      qiLogDebug()  << "Waiting done";
+    }
   }
 
   void EventLoopAsio::post(uint64_t usDelay, const boost::function<void ()>& cb)
@@ -141,6 +254,9 @@ namespace qi {
 
   qi::Future<void> EventLoopAsio::asyncCall(uint64_t usDelay, boost::function<void ()> cb)
   {
+    if (!_work)
+      return qi::makeFutureError<void>("Schedule attempt on destroyed thread pool");
+
     boost::shared_ptr<boost::asio::deadline_timer> timer = boost::make_shared<boost::asio::deadline_timer>(boost::ref(_io));
     timer->expires_from_now(boost::posix_time::microseconds(usDelay));
     qi::Promise<void> prom(boost::bind(&boost::asio::deadline_timer::cancel, timer));
@@ -169,7 +285,7 @@ namespace qi {
     return false;
   }
 
-  void EventLoopThreadPool::start()
+  void EventLoopThreadPool::start(int /*nthreads*/)
   {
     qiLogDebug() << this << " EventLoopThreadPool start (and done)";
   }
@@ -275,21 +391,6 @@ namespace qi {
     return promise.future();
   }
 
-   // Basic pimpl bouncers.
-  EventLoop::AsyncCallHandle::AsyncCallHandle()
-  {
-    _p = boost::make_shared<AsyncCallHandlePrivate>();
-  }
-
-  EventLoop::AsyncCallHandle::~AsyncCallHandle()
-  {
-  }
-
-  void EventLoop::AsyncCallHandle::cancel()
-  {
-    _p->cancel();
-  }
-
   EventLoop::EventLoop()
   : _p(0)
   {
@@ -323,13 +424,13 @@ namespace qi {
     qiLogDebug() << this << " EventLoop join done";
   }
 
-  void EventLoop::start()
+  void EventLoop::start(int nthreads)
   {
     qiLogDebug() << this << " EventLoop start";
     if (_p)
       return;
     _p = new EventLoopAsio();
-    _p->start();
+    _p->start(nthreads);
     qiLogDebug() << this << " EventLoop start done";
   }
 
@@ -479,19 +580,12 @@ namespace qi {
     ctx = 0;
   }
 
-  static EventLoop*    _netEventLoop = 0;
-  static EventLoop*    _objEventLoop = 0;
   static EventLoop*    _poolEventLoop = 0;
-  static double        _monitorInterval = 0;
-
-  static void monitor_notify(const char* which)
-  {
-    qiLogError() << which << " event loop stuck?";
-  }
 
   //the initialisation is protected by a mutex,
   //we then use an atomic to prevent having a mutex on a fastpath.
-  static EventLoop* _get(EventLoop* &ctx, bool isPool, qi::Atomic<int> &init)
+  static EventLoop* _get(EventLoop* &ctx, bool isPool, qi::Atomic<int> &init,
+    int nthreads)
   {
     //same mutex for multiples eventloops, but that's ok, used only at init.
     static boost::mutex    eventLoopMutex;
@@ -509,18 +603,10 @@ namespace qi {
         }
         ctx = new EventLoop();
         if (isPool)
-          ctx->startThreadPool();
+          ctx->startThreadPool(nthreads);
         else
-          ctx->start();
+          ctx->start(nthreads);
         Application::atExit(boost::bind(&eventloop_stop, boost::ref(ctx)));
-        if (!isPool && _netEventLoop && _objEventLoop && _monitorInterval)
-        {
-          int64_t d = static_cast<qi::int64_t>(_monitorInterval * 1e6);
-          _netEventLoop->monitorEventLoop(_objEventLoop, d)
-              .connect(boost::bind(&monitor_notify, "network"));
-          _objEventLoop->monitorEventLoop(_netEventLoop, d)
-              .connect(boost::bind(&monitor_notify, "object"));
-        }
       }
     }
     ++init;
@@ -529,29 +615,29 @@ namespace qi {
 
   EventLoop* getDefaultNetworkEventLoop()
   {
-    static qi::Atomic<int> init;
-    return _get(_netEventLoop, false, init);
+    return getEventLoop();
+
   }
 
   EventLoop* getDefaultObjectEventLoop()
   {
-    static qi::Atomic<int> init;
-    return _get(_objEventLoop, false, init);
+    return getEventLoop();
   }
 
   EventLoop* getDefaultThreadPoolEventLoop()
   {
-    static qi::Atomic<int> init;
-    return _get(_poolEventLoop, true, init);
+    return getEventLoop();
   }
-  static void setMonitorInterval(double v)
+
+  EventLoop* getEventLoop()
   {
-    _monitorInterval = v;
+    static qi::AtomicBase<int> init = {0};
+    return _get(_poolEventLoop, false, static_cast<qi::Atomic<int>&>(init), 0);
   }
-  namespace {
-  _QI_COMMAND_LINE_OPTIONS(
-    "EventLoop monitoring",
-    ("loop-monitor-latency", value<double>()->notifier(&setMonitorInterval), "Warn if event loop is stuck more than given duration in seconds")
-    )
+
+  boost::asio::io_service& getIoService()
+  {
+    return *(boost::asio::io_service*)getEventLoop()->nativeHandle();
   }
+
 }

@@ -6,11 +6,10 @@
 //  accompanying file LICENSE_1_0.txt or copy at
 //  http://www.boost.org/LICENSE_1_0.txt)
 
-//  Disclaimer: Not a Boost library.
-
 #ifndef BOOST_LOCKFREE_TAGGED_PTR_HPP_INCLUDED
 #define BOOST_LOCKFREE_TAGGED_PTR_HPP_INCLUDED
 
+#include <boost/config.hpp>
 #include <boost/lockfree/detail/prefix.hpp>
 
 #ifndef BOOST_LOCKFREE_PTR_COMPRESSION
