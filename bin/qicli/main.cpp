@@ -16,6 +16,8 @@ void init()
   subCmdMap["set"] = &subCmd_set;
   subCmdMap["trace"] = &subCmd_trace;
   subCmdMap["top"] = &subCmd_top;
+  subCmdMap["log-view"] = &subCmd_logView;
+  subCmdMap["log-send"] = &subCmd_logSend;
 }
 
 int                 main(int argc, char **argv)
@@ -55,10 +57,15 @@ int                 main(int argc, char **argv)
     return false;
   }
 
-  if (vm.count("help") || subCmdArgc == 0)
+  if (vm.count("help") || (subCmdArgc == 0 && argc > 1))
   {
     showHelp(desc);
     return 0;
+  }
+
+  if (subCmdArgc == 0)
+  {
+    subCmd = subCmdMap["info"];
   }
 
   int ret;

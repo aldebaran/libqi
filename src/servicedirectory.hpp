@@ -35,6 +35,7 @@ namespace qi
     void                     serviceReady(const unsigned int &idx);
     void                     updateServiceInfo(const ServiceInfo &svcinfo);
     std::string              machineId();
+    qi::TransportSocketPtr   _socketOfService(unsigned int id);
 
     qi::Signal<unsigned int, std::string>  serviceAdded;
     qi::Signal<unsigned int, std::string>  serviceRemoved;
@@ -44,6 +45,7 @@ namespace qi
     std::map<unsigned int, ServiceInfo>                       connectedServices;
     std::map<std::string, unsigned int>                       nameToIdx;
     std::map<TransportSocketPtr, std::vector<unsigned int> >  socketToIdx;
+    std::map<unsigned int, TransportSocketPtr>                idxToSocket;
     unsigned int                                              servicesCount;
     /* Our methods can be invoked from remote, and from socket callbacks,
     * so thread-safeness is required.

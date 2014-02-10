@@ -19,6 +19,8 @@
 namespace qi
 {
   class Session;
+  typedef std::map<std::string, AnyValue> CapabilityMap;
+
   class TransportSocket : private boost::noncopyable
   {
   public:
@@ -30,7 +32,7 @@ namespace qi
       Status_Disconnecting = 3,
     };
 
-    explicit TransportSocket(qi::EventLoop* eventLoop = qi::getDefaultNetworkEventLoop())
+    explicit TransportSocket(qi::EventLoop* eventLoop = qi::getEventLoop())
     {
       // Set messageReady signal to async mode to protect our network thread
       messageReady.setCallType(MetaCallType_Queued);
@@ -42,6 +44,8 @@ namespace qi
     virtual bool send(const qi::Message &msg)                = 0;
     /// Must be called once if the socket is obtained through TransportServer::newConnection()
     virtual void  startReading() = 0;
+
+    virtual qi::Url remoteEndpoint() const = 0;
 
     qi::Url url() const {
       return _url;
@@ -71,6 +75,16 @@ namespace qi
       return _dispatcher.messagePendingDisconnect(serviceId, objectId, linkId);
     }
 
+    /// Set or update a local capability, and immediately advertise to the other end
+    virtual void setCapability(const std::string& key, const AnyValue& value);
+    virtual void setCapabilities(const CapabilityMap& map) = 0;
+
+    /// Fetch remote capability from local cache.
+    virtual boost::optional<AnyValue> capability(const std::string& key) = 0;
+    template<typename T> T capability(const std::string& key, const T& defaultValue);
+
+    /// Default capabilities injected on all sockets upon connection
+    static const CapabilityMap& defaultCapabilities();
   protected:
     qi::EventLoop*          _eventLoop;
     qi::MessageDispatcher   _dispatcher;
@@ -90,7 +104,17 @@ namespace qi
 
   typedef boost::shared_ptr<TransportSocket> TransportSocketPtr;
 
-  TransportSocketPtr makeTransportSocket(const std::string &protocol, qi::EventLoop *eventLoop = getDefaultNetworkEventLoop());
+  TransportSocketPtr makeTransportSocket(const std::string &protocol, qi::EventLoop *eventLoop = getEventLoop());
+
+  template<typename T> T TransportSocket::capability(const std::string& key, const T& defaultValue)
+  {
+    boost::optional<AnyValue> v = capability(key);
+    if (v)
+      return v->to<T>();
+    else
+      return defaultValue;
+  }
+
 }
 
 #endif  // _SRC_TRANSPORTSOCKET_HPP_

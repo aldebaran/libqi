@@ -38,8 +38,15 @@ namespace qi {
       }
       else
       {
-        AnyValue v = gfut.call<AnyValue>("value", 0);
-        ret.setValue(v, targetSignature, host);
+        // Future<void>::value() give a void* so we need a special handling to
+        // produce a real void
+        if (futureType->templateArgument()->kind() == TypeKind_Void)
+          ret.setValue(AnyValue(qi::typeOf<void>()), targetSignature, host);
+        else
+        {
+          AnyValue v = gfut.call<AnyValue>("value", 0);
+          ret.setValue(v, targetSignature, host);
+        }
       }
     } catch (const std::exception &e) {
       //be more than safe. we always want to nack the client in case of error

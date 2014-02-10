@@ -30,14 +30,16 @@ void showHelp(const po::options_description &desc)
 {
   std::cout << std::left << desc << std::endl;
   std::cout << "sub commands:" << std::endl;
-  std::cout << "  info    [<ServicePattern>...]" << std::endl;
-  std::cout << "  call    <ServicePattern.MethodPattern> [<JsonParameter>...]" << std::endl;
-  std::cout << "  post    <ServicePattern.SignalPattern> [<JsonParameter>...]" << std::endl;
-  std::cout << "  get     <ServicePattern.PropertyPattern>..." << std::endl;
-  std::cout << "  set     <ServicePattern.PropertyPattern>... <JsonParameter>" << std::endl;
-  std::cout << "  watch   <ServicePattern.SignalPattern>..." << std::endl;
-  std::cout << "  top     [-i interval] [<ServicePattern> ..]" << std::endl;
-  std::cout << "  trace   [<ServicePattern> ..]" << std::endl;
+  std::cout << "  info     [<ServicePattern>...]" << std::endl;
+  std::cout << "  call     <ServicePattern.MethodPattern> [<JsonParameter>...]" << std::endl;
+  std::cout << "  post     <ServicePattern.SignalPattern> [<JsonParameter>...]" << std::endl;
+  std::cout << "  get      <ServicePattern.PropertyPattern>..." << std::endl;
+  std::cout << "  set      <ServicePattern.PropertyPattern>... <JsonParameter>" << std::endl;
+  std::cout << "  watch    <ServicePattern.SignalPattern>..." << std::endl;
+  std::cout << "  top      [-i interval] [<ServicePattern> ..]" << std::endl;
+  std::cout << "  trace    [<ServicePattern> ..]" << std::endl;
+  std::cout << "  log-view" << std::endl;
+  std::cout << "  log-send <message>" << std::endl;
 }
 
 bool poDefault(const po::command_line_parser &clp, po::variables_map &vm, const po::options_description &desc)

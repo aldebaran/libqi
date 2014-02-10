@@ -80,6 +80,7 @@ public:
 public:
   qi::Session* client() const;
   qi::Session* server() const;
+  qi::Session* sd() const;
   std::vector<qi::Url> serviceDirectoryEndpoints() const;
 
 private:

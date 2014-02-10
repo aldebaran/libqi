@@ -29,14 +29,16 @@ namespace qi
   class TcpTransportSocket : public TransportSocket, public boost::enable_shared_from_this<TcpTransportSocket>
   {
   public:
-    explicit TcpTransportSocket(EventLoop* eventloop = getDefaultNetworkEventLoop(), bool ssl = false, void* s = 0);
+    explicit TcpTransportSocket(EventLoop* eventloop = getEventLoop(), bool ssl = false, void* s = 0);
     virtual ~TcpTransportSocket();
 
     virtual qi::FutureSync<void> connect(const qi::Url &url);
     virtual qi::FutureSync<void> disconnect();
     virtual bool send(const qi::Message &msg);
     virtual void startReading();
-
+    virtual qi::Url remoteEndpoint() const;
+    virtual void setCapabilities(const CapabilityMap& map);
+    virtual boost::optional<AnyValue> capability(const std::string& key);
   private:
 #ifdef WITH_SSL
     typedef boost::shared_ptr<boost::asio::ssl::stream<boost::asio::ip::tcp::socket> > SocketPtr;
@@ -73,6 +75,9 @@ namespace qi
     bool                _sending;
     boost::recursive_mutex        _closingMutex;
     boost::shared_ptr<boost::asio::ip::tcp::resolver> _r;
+
+    boost::mutex  _capabilityMutex;
+    CapabilityMap _capabilityMap; // remote capabilities we received
   };
 
   typedef boost::shared_ptr<TcpTransportSocket> TcpTransportSocketPtr;

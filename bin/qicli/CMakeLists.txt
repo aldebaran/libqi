@@ -20,6 +20,7 @@ set(SRCS
   utils.cpp
   qitrace.cpp
   qitop.cpp
+  qilog.cpp
 )
 
 qi_create_bin(qicli

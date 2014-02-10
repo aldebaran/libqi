@@ -29,7 +29,7 @@ inline std::string PyFormatError()
   boost::python::object formatted_list, formatted;
   PyErr_Fetch(&exc,&val,&tb);
   boost::python::handle<> hexc(exc),hval(boost::python::allow_null(val)),htb(boost::python::allow_null(tb));
-  static boost::python::object traceback(boost::python::import("traceback"));
+  boost::python::object traceback(boost::python::import("traceback"));
   //force exception only
   if (1 || !tb) {
     boost::python::object format_exception_only(traceback.attr("format_exception_only"));

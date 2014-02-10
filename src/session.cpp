@@ -69,13 +69,21 @@ namespace qi {
     _self->serviceUnregistered(idx, name);
   }
 
-  void SessionPrivate::addSdSocketToCache(Future<void> f, const qi::Url& url)
+  void SessionPrivate::addSdSocketToCache(Future<void> f, const qi::Url& url,
+                                          qi::Promise<void> p)
   {
+    qiLogDebug() << "addSocketToCache processing";
     if (f.hasError())
     {
       qiLogDebug() << "addSdSocketToCache: connect reported failure";
+      _serviceHandler.removeService("ServiceDirectory");
+      p.setError(f.error());
       return;
     }
+
+    // Allow the SD process to use the existing socket to talk to our services
+    _serverObject.registerSocket(_sdClient.socket());
+
     /* Allow reusing the SD socket for communicating with services.
      * To do this, we must add it to our socket cache, and for this we need
      * to know the sd machineId
@@ -89,10 +97,13 @@ namespace qi {
      { // Provide a nice message for backward compatibility
        qiLogVerbose() << e.what();
        qiLogWarning() << "Failed to obtain machineId, connection to service directory will not be reused for other services.";
+       p.setValue(0);
        return;
      }
      TransportSocketPtr s = _sdClient.socket();
-     _socketsCache.insert(mid, url, s);
+     qiLogVerbose() << "Inserting sd to cache for " << mid <<" " << url.str() << std::endl;
+     _socketsCache.insert(mid, s->remoteEndpoint(), s);
+     p.setValue(0);
   }
 
   qi::FutureSync<void> SessionPrivate::connect(const qi::Url &serviceDirectoryURL)
@@ -102,15 +113,17 @@ namespace qi {
       qiLogInfo() << s;
       return qi::makeFutureError<void>(s);
     }
+    _serverObject.open();
     //add the servicedirectory object into the service cache (avoid having
     // two remoteObject registered on the same transportSocket)
     _serviceHandler.addService("ServiceDirectory", _sdClient.object());
 
     _socketsCache.init();
     qi::Future<void> f = _sdClient.connect(serviceDirectoryURL);
+    qi::Promise<void> p;
     // go through hoops to get shared_ptr on this
-    f.connect(&SessionPrivate::addSdSocketToCache, boost::weak_ptr<SessionPrivate>(_self->_p), _1, serviceDirectoryURL);
-    return f;
+    f.connect(&SessionPrivate::addSdSocketToCache, boost::weak_ptr<SessionPrivate>(_self->_p), _1, serviceDirectoryURL, p);
+    return p.future();
   }
 
   void SessionPrivate::sessionDestroy()
@@ -160,7 +173,8 @@ namespace qi {
   }
 
   qi::FutureSync<void> Session::close() {
-    return _p->close();
+    qi::Future<void> f = _p->close();
+    return f;
   }
 
   bool Session::isConnected() const {
@@ -209,6 +223,7 @@ namespace qi {
 
   qi::FutureSync<void> SessionPrivate::listenStandalone(const qi::Url& address)
   {
+    _serverObject.open();
     qi::Promise<void> p;
     //will listen and connect
     qi::Future<void> f = _sd.listenStandalone(address);

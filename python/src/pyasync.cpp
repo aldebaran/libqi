@@ -7,7 +7,7 @@
 #include <boost/python/raw_function.hpp>
 #include <qitype/signal.hpp>
 #include <qitype/anyobject.hpp>
-#include "gil.hpp"
+#include <qimessaging/python-gil.hpp>
 #include "error.hpp"
 #include "pyfuture.hpp"
 #include "pyobject.hpp"
@@ -53,7 +53,7 @@ namespace qi { namespace py {
 
       boost::function<void (void)> f = boost::bind<void>(&pyAsync, prom, PyThreadSafeObject(args));
 
-      qi::getDefaultThreadPoolEventLoop()->async(f, delay);
+      qi::getEventLoop()->async(f, delay);
       return boost::python::object(qi::py::toPyFuture(prom.future()));
     }
 

@@ -13,6 +13,8 @@ add_library(_qi SHARED src/boostpymain.cpp
                    src/pysession.hpp
                    src/pyfuture.cpp
                    src/pyfuture.hpp
+                   src/pylog.cpp
+                   src/pylog.hpp
                    src/pyobject.cpp
                    src/pyobject.hpp
                    src/pyobjectconverter.cpp
@@ -25,8 +27,6 @@ add_library(_qi SHARED src/boostpymain.cpp
                    src/pyasync.hpp
                    src/pyobjectfactory.hpp
                    src/pyobjectfactory.cpp
-                   src/gil.hpp
-                   src/gil.cpp
                    src/error.hpp
 )
 

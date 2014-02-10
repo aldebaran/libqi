@@ -115,7 +115,7 @@ namespace qi {
     //delete later as a workaround.
     //At this point the RemoteObject can be either in remote (RemoteObject*)
     //or in sr->promise (promise<AnyObject>), so async them both
-    qi::getDefaultNetworkEventLoop()->post(boost::bind(&deleteLater, remote, sr));
+    qi::getEventLoop()->post(boost::bind(&deleteLater, remote, sr));
   }
 
   void Session_Service::onTransportSocketResult(qi::Future<TransportSocketPtr> value, long requestId) {
@@ -199,6 +199,24 @@ namespace qi {
       }
       const qi::ServiceInfo &si = result.value();
       sr->serviceId = si.serviceId();
+      if (_sdClient->isLocal())
+      { // Wait! If sd is local, we necessarily have an open socket
+        // on which service was registered, whose lifetime is bound
+        // to the service
+        TransportSocketPtr s = _sdClient->_socketOfService(sr->serviceId);
+        if (!s) // weird
+          qiLogVerbose() << "_socketOfService returned 0";
+        else
+        {
+          // check if the socket support that capability
+          if (s->capability("ClientServerSocket", false))
+          {
+            qiLogVerbose() << "sd is local and service is capable, going through socketOfService";
+            onTransportSocketResult(qi::Future<TransportSocketPtr>(s), requestId);
+            return;
+          }
+        }
+      }
       //empty serviceInfo
       if (!si.endpoints().size()) {
         std::stringstream ss;

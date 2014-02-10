@@ -1,0 +1,6 @@
+<project version="3">
+  <qidoc name="libqimessaging-api" type="doxygen">
+     <depends name="libqi-api" />
+     <depends name="libqitype-api" />
+  </qidoc>
+</project>

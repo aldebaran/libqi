@@ -10,6 +10,7 @@
 #include <qitype/typeinterface.hpp>
 #include <qitype/metaobject.hpp>
 #include <qitype/metamethod.hpp>
+#include <qimessaging/python-gil.hpp>
 #include <boost/python.hpp>
 #include "pyobject.hpp"
 #include "pysignal.hpp"
@@ -17,7 +18,6 @@
 
 #include  <boost/python.hpp>
 #include <boost/python/raw_function.hpp>
-#include "gil.hpp"
 
 qiLogCategory("qipy.convert");
 
@@ -138,8 +138,8 @@ struct ToPyObject
       return;
     }
 
-    static boost::python::object collections = boost::python::import("collections");
-    static boost::python::object namedtuple = collections.attr("namedtuple");
+    boost::python::object collections = boost::python::import("collections");
+    boost::python::object namedtuple = collections.attr("namedtuple");
     boost::python::object        mytuple;
     boost::python::list          fields;
     for (unsigned int i = 0; i < annotations.size(); ++i) {
@@ -240,9 +240,7 @@ public:
     // immutable (you can add elements to lists and dicts), so we need a copy
     // here and not an INCREF().
     qi::py::GILScopedLock _lock;
-    static boost::python::object copyModule;
-    if (copyModule.ptr() == Py_None)
-      copyModule = pyHandle(PyImport_ImportModule("copy"));
+    boost::python::object copyModule = boost::python::import("copy");
 
     PyObject* p = (PyObject*)ptrFromStorage(&storage);
     boost::python::object ret = copyModule.attr("deepcopy")(pyBorrow(p));
@@ -972,30 +970,35 @@ qi::AnyReference AnyReference_from_PyObject(PyObject* obj)
   }
   else if (obj == Py_Ellipsis)
   {
-    throw std::runtime_error("Type not implemented");
+    throw std::runtime_error("Type Py_Ellipsis not implemented");
   }
   else if (PyComplex_CheckExact(obj))
   {
-    throw std::runtime_error("Type not implemented");
+    throw std::runtime_error("Type PyComplex not implemented");
   }
   else if (PyBuffer_Check(obj))
   {
-    throw std::runtime_error("Type not implemented");
+    throw std::runtime_error("Type PyBuffer not implemented");
   }
   else if (PyMemoryView_Check(obj))
   {
-    throw std::runtime_error("Type not implemented");
+    throw std::runtime_error("Type PyMemoryView not implemented");
   }
   else if (PyFile_Check(obj))
   {
-    throw std::runtime_error("Type not implemented");
+    throw std::runtime_error("Type PyFile not implemented");
   }
   else if (PySlice_Check(obj))
   {
-    throw std::runtime_error("Type not implemented");
+    throw std::runtime_error("Type PySlice not implemented");
   }
-  else if (PyModule_CheckExact(obj) || PyClass_Check(obj)) {
-    throw std::runtime_error("Unable to convert Python Module or Class to Anyobjue");
+  else if (PyModule_CheckExact(obj))
+  {
+    throw std::runtime_error("Type PyModule not implemented");
+  }
+  else if (PyClass_Check(obj))
+  {
+    throw std::runtime_error("Type PyClass not implemented");
   }
   else // if (PyInstance_Check(obj)) // instance are old style python class
   {

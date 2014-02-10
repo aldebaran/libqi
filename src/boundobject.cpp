@@ -198,7 +198,7 @@ namespace qi {
       }
       else
       {
-        qiLogError() << "Unexpected message type " << msg.type();
+        qiLogError() << "Unexpected message type " << msg.type() << " on " << msg.address();
         return;
       }
 

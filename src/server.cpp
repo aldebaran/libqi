@@ -24,7 +24,7 @@ namespace qi {
     , _dying(false)
     , _defaultCallType(qi::MetaCallType_Queued)
   {
-    _server.newConnection.connect(&Server::onTransportServerNewConnection, this, _1);
+    _server.newConnection.connect(&Server::onTransportServerNewConnection, this, _1, true);
   }
 
   Server::~Server()
@@ -76,7 +76,7 @@ namespace qi {
     return true;
   }
 
-  void Server::onTransportServerNewConnection(TransportSocketPtr socket)
+  void Server::onTransportServerNewConnection(TransportSocketPtr socket, bool startReading)
   {
     boost::recursive_mutex::scoped_lock sl(_socketsMutex);
     if (!socket)
@@ -90,13 +90,13 @@ namespace qi {
     _sockets.push_back(socket);
     socket->disconnected.connect(&Server::onSocketDisconnected, this, socket, _1);
     socket->messageReady.connect(&Server::onMessageReady, this, _1, socket);
-    socket->startReading();
+    if (startReading)
+      socket->startReading();
   }
 
   void Server::onMessageReady(const qi::Message &msg, TransportSocketPtr socket) {
     qi::BoundAnyObject obj;
     // qiLogDebug() << "Server Recv (" << msg.type() << "):" << msg.address();
-
     {
       boost::mutex::scoped_lock sl(_boundObjectsMutex);
       BoundAnyObjectMap::iterator it;
@@ -104,18 +104,27 @@ namespace qi {
       it = _boundObjects.find(msg.service());
       if (it == _boundObjects.end())
       {
+        // The message could be addressed to a bound object, inside a
+        // remoteobject host, or to a remoteobject, using the same socket.
+        qiLogVerbose() << "No service for " << msg.address();
+        if (msg.object() > Message::GenericObject_Main
+          || msg.type() == Message::Type_Reply
+          || msg.type() == Message::Type_Event
+          || msg.type() == Message::Type_Error)
+          return;
+        // ... but only if the object id is >main
         qi::Message       retval(Message::Type_Error, msg.address());
         std::stringstream ss;
         ss << "can't find service, address: " << msg.address();
         retval.setError(ss.str());
         socket->send(retval);
-        qiLogError() << "Can't find service: " << msg.service();
+        qiLogError() << "Can't find service: " << msg.service() << " on " << msg.address();
         return;
       }
       obj            = it->second;
     }
     // We were called from the thread pool: synchronous call is ok
-    //qi::getDefaultThreadPoolEventLoop()->post(boost::bind<void>(&BoundObject::onMessage, obj, msg, socket));
+    //qi::getEventLoop()->post(boost::bind<void>(&BoundObject::onMessage, obj, msg, socket));
     obj->onMessage(msg, socket);
   }
 
@@ -211,6 +220,11 @@ namespace qi {
 
   qi::UrlVector Server::endpoints() const {
     return _server.endpoints();
+  }
+
+  void Server::open()
+  {
+    _dying = false;
   }
 
 

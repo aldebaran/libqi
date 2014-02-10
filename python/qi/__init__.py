@@ -13,7 +13,6 @@ Provided features are very close to C++, Python style.
 
 import os
 import sys
-
 def load_lib_qipyessaging():
     """ Load _qipyessaging.so and its dependencies.
 
@@ -50,6 +49,8 @@ from _qi import FutureState, FutureTimeout, Future, \
 from _type import Void, Bool, Int8, UInt8, Int16, UInt16, Int32, UInt32, Int64, UInt64, Float, Double, String, List, Map, Struct, Object, Dynamic, Buffer, AnyArguments
 from _type import typeof, _isinstance
 from _binder import bind, nobind
+from .logging import logSilent, logFatal, logError, logWarning, logInfo, logVerbose, logDebug, PyLogger, setLevel, setContext, setFilters, getLogger
+
 
 #rename isinstance here. (isinstance should not be used in this file)
 isinstance = _isinstance
@@ -107,7 +108,10 @@ __all__ = ["FutureState",
 
            "Void", "Bool", "Int8", "UInt8", "Int16", "UInt16", "Int32", "UInt32", "Int64", "UInt64",
            "Float", "Double", "String", "List", "Map", "Struct", "Object", "Dynamic", "Buffer", "AnyArguments",
-           "typeof", "isinstance"
-           "bind", "nobind"
+           "typeof", "isinstance",
+           "bind", "nobind",
+           "logSilent", "logFatal", "logError", "logWarning", "logInfo", "logVerbose", "logDebug",
+           "setLevel", "setContext", "setFilters", "getLogger"
+           "PyLogger"
 
 ]

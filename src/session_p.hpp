@@ -38,7 +38,7 @@ namespace qi {
     // session is being destroyed, unlink from _self
     void sessionDestroy();
     // internal, add sd socket to socket cache
-    void addSdSocketToCache(Future<void>, const qi::Url& url);
+    void addSdSocketToCache(Future<void>, const qi::Url& url, qi::Promise<void> p);
     Session               *_self;
 
     //ServiceDirectoryClient have a transportsocket not belonging to transportsocketcache

@@ -30,6 +30,8 @@ int subCmd_get(int argc, char **argv, qi::ApplicationSession& app);
 int subCmd_set(int argc, char **argv, qi::ApplicationSession& app);
 int subCmd_trace(int argc, char **argv, qi::ApplicationSession& app);
 int subCmd_top(int argc, char **argv, qi::ApplicationSession& app);
+int subCmd_logView(int argc, char **argv, qi::ApplicationSession& app);
+int subCmd_logSend(int argc, char **argv, qi::ApplicationSession& app);
 
 /* UTILS */
 int readNumericInput();

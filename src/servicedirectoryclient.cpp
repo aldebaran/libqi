@@ -99,7 +99,7 @@ namespace qi {
     _sdSocketDisconnectedSignalLink = _sdSocket->disconnected.connect(&ServiceDirectoryClient::onSocketDisconnected, this, _1);
     _remoteObject.setTransportSocket(_sdSocket);
 
-    qi::Promise<void> promise(qi::FutureCallbackType_Sync);
+    qi::Promise<void> promise;
     qi::Future<void> fut = _sdSocket->connect(serviceDirectoryURL);
     fut.connect(&ServiceDirectoryClient::onSocketConnected, this, _1, promise);
     return promise.future();
@@ -243,5 +243,9 @@ namespace qi {
 
   qi::Future<std::string>              ServiceDirectoryClient::machineId() {
     return _object.call<std::string>("machineId");
+  }
+
+  qi::Future<qi::TransportSocketPtr>   ServiceDirectoryClient::_socketOfService(unsigned int id) {
+    return _object.call<TransportSocketPtr>("_socketOfService", id);
   }
 }

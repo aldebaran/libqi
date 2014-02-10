@@ -7,7 +7,6 @@ Python qi API reference
   :maxdepth: 1
 
   session
-  servicedirectory
   future
   signal
   property

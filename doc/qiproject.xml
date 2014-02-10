@@ -1,6 +1,5 @@
 <project version="3">
-  <qidoc name="libqimessaging-api" type="sphinx">
-    <depends name="libqimessaging"  />
-    <depends name="libqimessaging-js" />
+  <qidoc name="qimessaging" type="sphinx">
+    <depends name="libqimessaging-api"  />
   </qidoc>
 </project>

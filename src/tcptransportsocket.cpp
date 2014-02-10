@@ -144,6 +144,14 @@ namespace qi
 #endif
   }
 
+  qi::Url TcpTransportSocket::remoteEndpoint() const
+  {
+    return qi::Url(
+      _socket->lowest_layer().remote_endpoint().address().to_string(),
+      "tcp",
+      _socket->lowest_layer().remote_endpoint().port());
+  }
+
   void TcpTransportSocket::onReadHeader(const boost::system::error_code& erc,
     std::size_t len, SocketPtr)
   {
@@ -232,13 +240,25 @@ namespace qi
       error(erc);
       return;
     }
-      qiLogDebug() << this << " Recv (" << _msg->type() << "):" << _msg->address();
+    qiLogDebug() << this << " Recv (" << _msg->type() << "):" << _msg->address();
     static int usWarnThreshold = os::getenv("QIMESSAGING_SOCKET_DISPATCH_TIME_WARN_THRESHOLD").empty()?0:strtol(os::getenv("QIMESSAGING_SOCKET_DISPATCH_TIME_WARN_THRESHOLD").c_str(),0,0);
     qi::int64_t start = 0;
     if (usWarnThreshold)
       start = os::ustime(); // call might be not that cheap
-    messageReady(*_msg);
-    _dispatcher.dispatch(*_msg);
+    if (_msg->type() == Message::Type_Capability)
+    {
+      // This one is for us
+      AnyReference cmRef = _msg->value(typeOf<CapabilityMap>()->signature(), shared_from_this());
+      CapabilityMap cm = cmRef.to<CapabilityMap>();
+      cmRef.destroy();
+      boost::mutex::scoped_lock lock(_capabilityMutex);
+      _capabilityMap.insert(cm.begin(), cm.end());
+    }
+    else
+    {
+      messageReady(*_msg);
+      _dispatcher.dispatch(*_msg);
+    }
     if (usWarnThreshold)
     {
       qi::int64_t duration = os::ustime() - start;
@@ -381,6 +401,7 @@ namespace qi
     else
     {
       _status = qi::TransportSocket::Status_Connected;
+      setCapabilities(defaultCapabilities());
       pSetValue(_connectPromise);
       connected();
       _sslHandshake = true;
@@ -426,6 +447,7 @@ namespace qi
       else
       {
         _status = qi::TransportSocket::Status_Connected;
+        setCapabilities(defaultCapabilities());
         pSetValue(_connectPromise);
         connected();
 
@@ -514,11 +536,16 @@ namespace qi
      // which conflicts with netinet/tcp.h
      // We do not want to rely on compile-time flag to enable/disable this,
      // so just try it.
+     static bool tcpUserTimeoutWarning = false;
      static const int QI_TCP_USER_TIMEOUT = 18;
      // TCP_USER_TIMEOUT: maximum time in ms data can remain unaknowledged
      optval = timeout * 1000;
-     if (setsockopt(handle, SOL_TCP, QI_TCP_USER_TIMEOUT, &optval, optlen) < 0)
+     if (setsockopt(handle, SOL_TCP, QI_TCP_USER_TIMEOUT, &optval, optlen) < 0
+       && !tcpUserTimeoutWarning)
+     {
         qiLogWarning() << "(Expected on old kernels) Failed to set TCP_USER_TIMEOUT  : " << strerror(errno);
+        tcpUserTimeoutWarning = true;
+     }
 # else
       // Macos only have TCP_KEEPALIVE wich is linux's TCP_KEEPIDLE
       // So best we can do is lower that, which will reduce delay from
@@ -644,4 +671,21 @@ namespace qi
     send_(m);
   }
 
+  void TcpTransportSocket::setCapabilities(const CapabilityMap& cm)
+  {
+    Message msg;
+    msg.setType(Message::Type_Capability);
+    msg.setValue(cm, typeOf<CapabilityMap>()->signature());
+    send(msg);
+  }
+
+  boost::optional<AnyValue> TcpTransportSocket::capability(const std::string& key)
+  {
+    boost::mutex::scoped_lock loc(_capabilityMutex);
+    CapabilityMap::iterator it = _capabilityMap.find(key);
+    if (it != _capabilityMap.end())
+      return it->second;
+    else
+      return boost::optional<AnyValue>();
+  }
 }

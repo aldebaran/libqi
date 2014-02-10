@@ -7,6 +7,7 @@
 
 #include <qitype/anyobject.hpp>
 #include <qitype/objectfactory.hpp>
+#include <qimessaging/python-gil.hpp>
 #include "pyobjectfactory.hpp"
 #include "pyobject.hpp"
 #include "error.hpp"
@@ -33,6 +34,7 @@ namespace qi {
 
     static boost::python::object pycreate_object(boost::python::str name)
     {
+      GILScopedLock lock;
       std::string objectName = boost::python::extract<std::string>(name);
       qi::AnyObject object = qi::createObject(objectName);
 
@@ -44,6 +46,7 @@ namespace qi {
 
     static qi::AnyObject pyconstruct_object(boost::python::object class_)
     {
+      GILScopedLock lock;
       qi::AnyObject obj;
       PY_CATCH_ERROR(obj = makeQiAnyObject(class_()));
       return obj;

@@ -1,0 +1,3 @@
+<project version="3">
+  <qidoc name="qicli" type="sphinx" />
+</project>

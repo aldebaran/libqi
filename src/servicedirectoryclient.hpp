@@ -42,6 +42,8 @@ namespace qi {
     qi::Future< void >                     serviceReady(const unsigned int &idx);
     qi::Future< void >                     updateServiceInfo(const ServiceInfo &svcinfo);
     qi::Future< std::string >              machineId();
+    /// if isLocal() only, return socket holding given service id
+    qi::Future<qi::TransportSocketPtr>     _socketOfService(unsigned int serviceId);
 
     qi::Signal<>                                  connected;
     qi::Signal<std::string>                       disconnected;
@@ -72,6 +74,7 @@ namespace qi {
     qi::TransportSocketPtr _sdSocket;
     unsigned int           _sdSocketDisconnectedSignalLink;
     qi::RemoteObject       _remoteObject;
+    // _object is a remote object of serviceDirectory
     qi::AnyObject          _object;
     qi::SignalLink         _addSignalLink;
     qi::SignalLink         _removeSignalLink;

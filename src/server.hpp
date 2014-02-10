@@ -29,6 +29,8 @@ namespace qi {
     //make the server listening
     qi::Future<void> listen(const qi::Url &address);
     void close();
+    // Notify the server that it's up again.
+    void open();
     bool setIdentity(const std::string& key, const std::string& crt);
 
     //Create a BoundObject
@@ -38,13 +40,12 @@ namespace qi {
 
     std::vector<qi::Url> endpoints() const;
 
+    void onTransportServerNewConnection(TransportSocketPtr socket, bool startReading);
 
   private:
     void setSocketObjectEndpoints();
 
   private:
-    //TransportServer
-    void onTransportServerNewConnection(TransportSocketPtr socket);
 
     //TransportSocket
     void onSocketDisconnected(TransportSocketPtr socket, std::string error);
