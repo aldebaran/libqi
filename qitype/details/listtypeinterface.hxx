@@ -7,6 +7,8 @@
 #ifndef _QITYPE_DETAILS_TYPELIST_HXX_
 #define _QITYPE_DETAILS_TYPELIST_HXX_
 
+#include <qi/atomic.hpp>
+
 #include <qitype/details/anyreference.hpp>
 #include <qitype/details/anyiterator.hpp>
 
@@ -27,6 +29,7 @@ public:
   virtual AnyIterator end(void* storage);
   virtual void pushBack(void** storage, void* valueStorage);
   _QI_BOUNCE_TYPE_METHODS(MethodsImpl);
+  TypeInterface* _elementType;
 };
 
 // Type impl for any class that behaves as a forward iterator (++, *, ==)
@@ -56,8 +59,7 @@ public:
   static AnyIterator make(const T& val)
   {
     static TypeSimpleIteratorImpl<T>* type = 0;
-    if (!type)
-      type = new TypeSimpleIteratorImpl<T>();
+    QI_THREADSAFE_NEW(type);
     return AnyValue(AnyReference(type, type->initializeStorage(const_cast<void*>((const void*)&val))));
   }
 };
@@ -66,15 +68,13 @@ public:
 template<typename T>
 ListTypeInterfaceImpl<T>::ListTypeInterfaceImpl()
 {
+  _elementType = typeOf<typename T::value_type>();
 }
 
 template<typename T> TypeInterface*
 ListTypeInterfaceImpl<T>::elementType()
 {
-  static TypeInterface* result = 0;
-  if (!result)
-    result = typeOf<typename T::value_type>();
-  return result;
+  return _elementType;
 }
 
 template<typename T> AnyIterator
@@ -106,11 +106,8 @@ namespace detail
 template<typename T> void
 ListTypeInterfaceImpl<T>::pushBack(void** storage, void* valueStorage)
 {
-  static TypeInterface* elemType = 0;
-  if (!elemType)
-    elemType = typeOf<typename T::value_type>();
   T* ptr = (T*) ptrFromStorage(storage);
-  detail::pushBack(*ptr, (typename T::value_type*)elemType->ptrFromStorage(&valueStorage));
+  detail::pushBack(*ptr, (typename T::value_type*)_elementType->ptrFromStorage(&valueStorage));
 }
 
 template<typename T> size_t

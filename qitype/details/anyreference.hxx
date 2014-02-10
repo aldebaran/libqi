@@ -12,6 +12,7 @@
 #include <boost/type_traits/remove_const.hpp>
 #include <boost/type_traits/is_floating_point.hpp>
 #include <boost/type_traits/is_arithmetic.hpp>
+#include <qi/atomic.hpp>
 #include <qitype/details/typeinterface.hpp>
 
 namespace qi {
@@ -90,8 +91,7 @@ namespace qi {
   {
     AnyReference ref;
     static TypeInterface* t = 0;
-    if (!t)
-      t = typeOf<typename boost::remove_const<T>::type>();
+    QI_ONCE( t = typeOf<typename boost::remove_const<T>::type>());
     return AnyReference(t, t->initializeStorage(const_cast<void*>((const void*)&ptr)));
   }
 
