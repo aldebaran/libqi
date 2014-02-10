@@ -24,14 +24,13 @@ namespace qi {
   EventLoopAsio::EventLoopAsio()
   : _mode(Mode_Unset)
   , _destroyMe(false)
-  , _running(false)
   {
   }
 
 
   void EventLoopAsio::start(int nthread)
   {
-    if (_running || _mode != Mode_Unset)
+    if (*_running || _mode != Mode_Unset)
       return;
     if (nthread == 0)
     {
@@ -55,13 +54,13 @@ namespace qi {
         boost::thread(&EventLoopAsio::_runPool, this);
       boost::thread(&EventLoopAsio::_pingThread, this);
     }
-    while (!_running)
+    while (!*_running)
       qi::os::msleep(0);
   }
 
   EventLoopAsio::~EventLoopAsio()
   {
-    if (_running && boost::this_thread::get_id() == _id)
+    if (*_running && boost::this_thread::get_id() == _id)
       qiLogError() << "Destroying EventLoopPrivate from itself while running";
     stop();
     join();
@@ -136,14 +135,14 @@ namespace qi {
       }
     }
     if (!--_nThreads)
-      _running = false;
+      --_running;
   }
 
   void EventLoopAsio::_runPool()
   {
     qiLogDebug() << this << "run starting from pool";
     qi::os::setCurrentThreadName("asioeventloop");
-    _running = true;
+    _running.setIfEquals(0, 1);
     ++_nThreads;
     try
     {
@@ -156,7 +155,7 @@ namespace qi {
     catch(...)
     {}
     if (!--_nThreads)
-      _running = false;
+      --_running;
 
   }
 
@@ -173,14 +172,14 @@ namespace qi {
       qiLogVerbose() << "AsioEventLoop: Cpu thread affinity not set because QI_EVENTLOOP_NO_CPU_AFFINITY is set.";
     }
     qi::os::setCurrentThreadName("asioeventloop");
-    _running = true;
+    _running.setIfEquals(0,1);
     _id = boost::this_thread::get_id();
     _work = new boost::asio::io_service::work(_io);
     _io.run();
     bool destroyMe;
     {
       boost::recursive_mutex::scoped_lock sl(_mutex);
-      _running = false;
+      --_running;
       destroyMe = _destroyMe;
     }
     if (destroyMe)
@@ -227,7 +226,7 @@ namespace qi {
     else
     {
       qiLogDebug() << "Waiting for threads to terminate...";
-      while (_running)
+      while (*_running)
         qi::os::msleep(0);
       qiLogDebug()  << "Waiting done";
     }
