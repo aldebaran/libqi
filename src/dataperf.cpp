@@ -80,4 +80,3 @@ namespace qi
     return -1;
   }
 }
-

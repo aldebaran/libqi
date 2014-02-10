@@ -24,11 +24,11 @@ namespace qi
     public:
 
       enum OutputData {
-        OutputData_None           = 0,
-        OutputData_Cpu            = 1,
-        OutputData_Period         = 2,
-        OutputData_MsgPerSecond   = 4,
-        OutputData_MsgMBPerSecond = 8,
+        OutputData_None = 0,
+        OutputData_Cpu = 1,
+        OutputData_Period = 2,
+        OutputData_MsgPerSecond = 3,
+        OutputData_MsgMBPerSecond = 4
       };
 
       /// Constructor

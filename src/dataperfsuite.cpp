@@ -32,10 +32,8 @@ namespace qi
                << executableName << "\">" << std::endl;
     }
 
-    {
-      std::cout << projectName << ": " << executableName << std::endl
-                << "Name: bytes, msg/s, MB/s, period (us), cpu/total" << std::endl;
-    }
+    std::cout << projectName << ": " << executableName << std::endl
+              << "Name: bytes, msg/s, MB/s, period (us), cpu/total" << std::endl;
   }
 
   DataPerfSuite::~DataPerfSuite()
@@ -47,28 +45,32 @@ namespace qi
 
   DataPerfSuite& DataPerfSuite::operator<<(const DataPerf& data) {
     if (_p->out.is_open()) {
-      std::string result_type;
-      float result_value;
-      if (_p->outputData & OutputData_Cpu) {
-        result_type = "Cpu";
-        result_value = data.getCpu();
-      }
-      if (_p->outputData & OutputData_Period) {
-        result_type = "Period";
-        result_value = data.getPeriod();
-      }
-      if (_p->outputData & OutputData_MsgPerSecond) {
-        result_type = "MsgPerSecond";
-        result_value = data.getMsgPerSecond();
-      }
-      if (_p->outputData & OutputData_MsgMBPerSecond) {
-        result_type = "MsgMBPerSecond";
-        result_value = data.getMegaBytePerSecond();
+      std::string resultType;
+      float resultValue;
+      switch (_p->outputData)
+      {
+      case OutputData_Cpu:
+        resultType = "Cpu";
+        resultValue = data.getCpu();
+        break;
+      case OutputData_Period:
+        resultType = "Period";
+        resultValue = data.getPeriod();
+        break;
+      case OutputData_MsgPerSecond:
+        resultType = "MsgPerSecond";
+        resultValue = data.getMsgPerSecond();
+        break;
+      case OutputData_MsgMBPerSecond:
+      default:
+        resultType = "MsgMBPerSecond";
+        resultValue = data.getMegaBytePerSecond();
+        break;
       }
       _p->out << "\t<perf_result "
-              << "benchmark=\"" << data.getBenchmarkName() << "_" << result_type << "\" "
-              << "result_value=\"" << std::fixed << std::setprecision(6) << result_value << "\" "
-              << "result_type=\"" << result_type << "\" "
+              << "benchmark=\"" << data.getBenchmarkName() << "_" << resultType << "\" "
+              << "result_value=\"" << std::fixed << std::setprecision(6) << resultValue << "\" "
+              << "result_type=\"" << resultType << "\" "
               << "test_name=\"" << data.getBenchmarkName() << "\" ";
       if (data.getVariable() != "")
         _p->out << "result_variable=\"" << data.getVariable() << "\" ";
@@ -77,23 +79,22 @@ namespace qi
       _p->out << "/>" << std::endl;
     }
 
-    {
-      std::cout << data.getBenchmarkName() << "-" << data.getVariable() << ": ";
-      if (data.getMsgSize() > 0) {
-        std::cout
+
+    std::cout << data.getBenchmarkName() << "-" << data.getVariable() << ": ";
+    if (data.getMsgSize() > 0) {
+      std::cout
           << std::fixed << std::setprecision(2) << data.getMsgSize() << " b, "
           << data.getMsgPerSecond() << " msg/s, "
           << std::setprecision(12) << data.getMegaBytePerSecond() << " MB/s, "
           << std::setprecision(0) << data.getPeriod() << " us, "
           << std::setprecision(1) << data.getCpu() << " %"
           << std::endl;
-      } else {
-        std::cout
+    } else {
+      std::cout
           << std::setprecision(12) << data.getMsgPerSecond() << " msg/s, "
           << data.getPeriod() << " us, "
           << data.getCpu() << " %"
           << std::endl;
-      }
     }
 
     return *this;
@@ -119,4 +120,3 @@ namespace qi
       _p->out.close();
   }
 }
-
