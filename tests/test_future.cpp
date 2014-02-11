@@ -1049,6 +1049,7 @@ TEST(TestPeriodicTask, StopFromTask)
   pt.setCallback(boost::bind(&qi::PeriodicTask::stop, boost::ref(pt)));
   pt.setUsPeriod(10000000);
   pt.start();
+  qi::os::msleep(100); // wait for actual start
   qi::int64_t now = qi::os::ustime();
   pt.stop();
   EXPECT_GE(100000, qi::os::ustime() - now);
