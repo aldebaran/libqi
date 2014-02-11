@@ -760,7 +760,7 @@ TEST(TestFutureCancel, Canceled)
   qi::Future<void> f = qi::getEventLoop()->async(
     boost::bind(&setTrue, &b), 200000);
   f.cancel();
-  ASSERT_FALSE(f.isFinished());
+  // Depending on multi-thread timing future can be finished or not at this point
   qi::os::msleep(400);
   ASSERT_TRUE(!b);
   ASSERT_TRUE(f.isFinished());
