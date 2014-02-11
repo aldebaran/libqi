@@ -446,34 +446,35 @@ namespace qi {
 
   bool SignalBasePrivate::disconnect(const SignalLink& l)
   {
-
     SignalSubscriberPtr s;
-    // Acquire signal mutex
-    boost::recursive_mutex::scoped_lock sigLock(mutex);
-    SignalSubscriberMap::iterator it = subscriberMap.find(l);
-    if (it == subscriberMap.end())
-      return false;
-    s = it->second;
-    // Remove from map (but SignalSubscriber object still good)
-    subscriberMap.erase(it);
-    // Acquire subscriber mutex before releasing mutex
-    boost::mutex::scoped_lock subLock(s->mutex);
-    // Release signal mutex
-    sigLock.release()->unlock();
-    // Ensure no call on subscriber occurrs once this function returns
-    s->enabled = false;
-    if (subscriberMap.empty() && onSubscribers)
-      onSubscribers(false);
-    if ( s->activeThreads.empty()
-         || (s->activeThreads.size() == 1
-             && *s->activeThreads.begin() == boost::this_thread::get_id()))
-    { // One active callback in this thread, means above us in call stack
-      // So we cannot trash s right now
-      return true;
+    {
+      // Acquire signal mutex
+      boost::recursive_mutex::scoped_lock sigLock(mutex);
+      SignalSubscriberMap::iterator it = subscriberMap.find(l);
+      if (it == subscriberMap.end())
+        return false;
+      s = it->second;
+      // Remove from map (but SignalSubscriber object still good)
+      subscriberMap.erase(it);
+      // Acquire subscriber mutex before releasing mutex
+      boost::mutex::scoped_lock subLock(s->mutex);
+      // Release signal mutex
+      sigLock.release()->unlock();
+      // Ensure no call on subscriber occurrs once this function returns
+      s->enabled = false;
+      if (subscriberMap.empty() && onSubscribers)
+        onSubscribers(false);
+      if ( s->activeThreads.empty()
+           || (s->activeThreads.size() == 1
+               && *s->activeThreads.begin() == boost::this_thread::get_id()))
+      { // One active callback in this thread, means above us in call stack
+        // So we cannot trash s right now
+        return true;
+      }
+      // More than one active callback, or one in a state that prevent us
+      // from knowing in which thread it will run
+      subLock.release()->unlock();
     }
-    // More than one active callback, or one in a state that prevent us
-    // from knowing in which thread it will run
-    subLock.release()->unlock();
     s->waitForInactive();
     return true;
   }
@@ -492,9 +493,9 @@ namespace qi {
     _p->onSubscribers = OnSubscribers();
     boost::shared_ptr<SignalBasePrivate> p(_p);
     _p.reset();
-    SignalSubscriberMap::iterator i;
     std::vector<SignalLink> links;
-    for (i = p->subscriberMap.begin(); i!= p->subscriberMap.end(); ++i)
+    for (SignalSubscriberMap::iterator i = p->subscriberMap.begin();
+        i != p->subscriberMap.end(); ++i)
     {
       links.push_back(i->first);
     }
@@ -524,13 +525,20 @@ namespace qi {
 
   bool SignalBasePrivate::reset() {
     bool ret = true;
-    boost::recursive_mutex::scoped_lock sl(mutex);
-    SignalSubscriberMap::iterator it = subscriberMap.begin();
-    while (it != subscriberMap.end()) {
-      bool b = disconnect(it->first);
+    SignalLink link;
+    while (true) {
+      {
+        boost::recursive_mutex::scoped_lock sl(mutex);
+        SignalSubscriberMap::iterator it = subscriberMap.begin();
+        if (it == subscriberMap.end())
+          break;
+        link = it->first;
+      }
+      // allow for multiple disconnects to occur at the same time, we must not
+      // keep the lock
+      bool b = disconnect(link);
       if (!b)
         ret = false;
-      it = subscriberMap.begin();
     }
     return ret;
   }
