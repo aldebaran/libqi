@@ -22,7 +22,7 @@ qi::AnyReference triggerBouncer(qi::SignalBase *sig, const std::vector<qi::AnyRe
 
     class PySession {
     public:
-      PySession(boost::shared_ptr<qi::Session> session = boost::shared_ptr<qi::Session>(new qi::Session()))
+      PySession(const qi::Session& session = qi::Session())
         : _ses(session)
         , nSigConnected(0)
         , nSigDisconnected(0)
@@ -33,16 +33,17 @@ qi::AnyReference triggerBouncer(qi::SignalBase *sig, const std::vector<qi::AnyRe
         qi::SignalBase *conn = getSignal(connected);
         qi::SignalBase *disconn = getSignal(disconnected);
         // Connect our PySignals with qi::Session signals, have to use a dynamic generic function to trigger
-        nSigConnected = _ses->connected.connect(qi::AnyFunction::fromDynamicFunction(boost::bind(&triggerBouncer, conn, _1)));
-        nSigDisconnected = _ses->disconnected.connect(qi::AnyFunction::fromDynamicFunction(boost::bind(&triggerBouncer, disconn, _1)));
+        nSigConnected = _ses.connected.connect(qi::AnyFunction::fromDynamicFunction(boost::bind(&triggerBouncer, conn, _1)));
+        nSigDisconnected = _ses.disconnected.connect(qi::AnyFunction::fromDynamicFunction(boost::bind(&triggerBouncer, disconn, _1)));
       }
 
       ~PySession() {
         {
           GILScopedUnlock _unlock;
-          _ses->connected.disconnect(nSigConnected);
-          _ses->disconnected.disconnect(nSigDisconnected);
-          _ses.reset();
+          _ses.connected.disconnect(nSigConnected);
+          _ses.disconnected.disconnect(nSigDisconnected);
+          //reset the session (the dtor can block)
+          _ses = qi::Session();
         }
       }
 
@@ -51,7 +52,7 @@ qi::AnyReference triggerBouncer(qi::SignalBase *sig, const std::vector<qi::AnyRe
         qi::Future<void> fut;
         {
           GILScopedUnlock _unlock;
-          fut = _ses->connect(url);
+          fut = _ses.connect(url);
         }
         return toPyFutureAsync(fut, _async);
       }
@@ -61,7 +62,7 @@ qi::AnyReference triggerBouncer(qi::SignalBase *sig, const std::vector<qi::AnyRe
         qi::Future<void> fut;
         {
           GILScopedUnlock _unlock;
-          fut = _ses->close();
+          fut = _ses.close();
         }
         return toPyFutureAsync(fut, _async);
       }
@@ -70,7 +71,7 @@ qi::AnyReference triggerBouncer(qi::SignalBase *sig, const std::vector<qi::AnyRe
         qi::Future<qi::AnyObject> fut;
         {
           GILScopedUnlock _unlock;
-          fut = _ses->service(name);
+          fut = _ses.service(name);
         }
         return toPyFutureAsync(fut, _async);
       }
@@ -79,7 +80,7 @@ qi::AnyReference triggerBouncer(qi::SignalBase *sig, const std::vector<qi::AnyRe
         qi::Future<void> fut;
         {
           GILScopedUnlock _unlock;
-          fut = _ses->listen(url);
+          fut = _ses.listen(url);
         }
         return toPyFutureAsync(fut, _async);
       }
@@ -88,7 +89,7 @@ qi::AnyReference triggerBouncer(qi::SignalBase *sig, const std::vector<qi::AnyRe
         qi::Future<void> fut;
         {
           GILScopedUnlock _unlock;
-          fut = _ses->listenStandalone(url);
+          fut = _ses.listenStandalone(url);
         }
         return toPyFutureAsync(fut, _async);
       }
@@ -97,7 +98,7 @@ qi::AnyReference triggerBouncer(qi::SignalBase *sig, const std::vector<qi::AnyRe
         qi::Future< std::vector<ServiceInfo> > fut;
         {
           GILScopedUnlock _unlock;
-          fut = _ses->services();
+          fut = _ses.services();
         }
         return toPyFutureAsync(fut, _async);
       }
@@ -107,7 +108,7 @@ qi::AnyReference triggerBouncer(qi::SignalBase *sig, const std::vector<qi::AnyRe
         qi::Future<unsigned int> fut;
         {
           GILScopedUnlock _unlock;
-          fut = _ses->registerService(name, anyobj);
+          fut = _ses.registerService(name, anyobj);
         }
         return toPyFutureAsync(fut, _async);
       }
@@ -116,14 +117,14 @@ qi::AnyReference triggerBouncer(qi::SignalBase *sig, const std::vector<qi::AnyRe
         qi::Future<void> fut;
         {
           GILScopedUnlock _unlock;
-          fut = _ses->unregisterService(id);
+          fut = _ses.unregisterService(id);
         }
         return toPyFutureAsync(fut, _async);
       }
 
       boost::python::object endpoints() {
         boost::python::list ret;
-        std::vector<qi::Url>  eps = _ses->endpoints();
+        std::vector<qi::Url>  eps = _ses.endpoints();
         for (unsigned int i = 0; i < eps.size(); ++i) {
           ret.append(eps.at(i).str());
         }
@@ -131,7 +132,7 @@ qi::AnyReference triggerBouncer(qi::SignalBase *sig, const std::vector<qi::AnyRe
       }
 
     private:
-      boost::shared_ptr<qi::Session> _ses;
+      qi::Session _ses;
       int nSigConnected;
       int nSigDisconnected;
 
@@ -190,7 +191,7 @@ qi::AnyReference triggerBouncer(qi::SignalBase *sig, const std::vector<qi::AnyRe
           ;
     }
 
-    boost::python::object makePySession(boost::shared_ptr<qi::Session> ses)
+    boost::python::object makePySession(const qi::Session& ses)
     {
       GILScopedLock _lock;
       return boost::python::object(boost::shared_ptr<PySession>(new PySession(ses)));

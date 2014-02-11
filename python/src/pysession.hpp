@@ -12,7 +12,7 @@
 
 namespace qi {
   namespace py {
-    boost::python::object makePySession(boost::shared_ptr<qi::Session> ses);
+    boost::python::object makePySession(const Session& ses);
     void export_pysession();
   }
 }

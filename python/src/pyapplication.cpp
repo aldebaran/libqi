@@ -133,8 +133,7 @@ namespace qi {
       }
 
       void initSes() {
-        _sesPtr = boost::shared_ptr<qi::Session>(&_app->session(), noDelete);
-        _ses = makePySession(_sesPtr);
+        _ses = makePySession(_app->session());
       }
 
       ~PyApplicationSession() {
@@ -167,7 +166,6 @@ namespace qi {
     private:
       boost::python::object                     _ses;
       boost::shared_ptr<qi::ApplicationSession> _app;
-      boost::shared_ptr<qi::Session>            _sesPtr;
     };
 
     void export_pyapplicationsession() {
