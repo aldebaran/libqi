@@ -23,6 +23,10 @@
 #include <sstream>
 #include <boost/scoped_ptr.hpp>
 
+#ifdef _WIN32
+  #include <windows.h>
+#endif
+
 namespace bfs = boost::filesystem;
 
 bfs::path absPath(const std::string& pPath)
@@ -427,7 +431,6 @@ TEST(qiPath, readingWritingFindData)
   delete sdkl;
 }
 
-
 void writeData(std::string path)
 {
   std::cout << "creating: " << path << std::endl;
@@ -696,3 +699,238 @@ TEST(qiPath, filesystemConcat)
   std::string s8 = fsconcat("toto", "tata", "tutu", "titi", "tete", "tyty");
   ASSERT_EQ(boost::filesystem::path("toto/tata/tutu/titi/tete/tyty").make_preferred().string(qi::unicodeFacet()), s8);
 }
+
+// a fixture which creates a file in unicode path and ensure it is
+// compatible to native API
+class qiPathDos: public ::testing::Test
+{
+protected:
+  static void createFile(const bfs::path& path, const std::string& content);
+
+protected:
+  static std::string _folderNameASCII;
+  static std::string _fileNameASCII;
+  static bfs::path _folderPathASCII;
+
+  static std::string _folderNameUnicode;
+  static std::string _fileNameUnicode;
+  static bfs::path _folderPathUnicode;
+
+  static std::string _testString;
+};
+
+void qiPathDos::createFile(const bfs::path& path, const std::string& content)
+{
+  FILE* f = qi::os::fopen(path.string(qi::unicodeFacet()).c_str(), "w+");
+  fprintf(f, "%s", content.c_str());
+  fflush(f);
+  fclose(f);
+}
+
+std::string qiPathDos::_folderNameASCII;
+std::string qiPathDos::_fileNameASCII;
+bfs::path qiPathDos::_folderPathASCII;
+
+std::string qiPathDos::_folderNameUnicode;
+std::string qiPathDos::_fileNameUnicode;
+bfs::path qiPathDos::_folderPathUnicode;
+
+std::string qiPathDos::_testString;
+
+class qiPathFrench: public qiPathDos
+{
+protected:
+  static void SetUpTestCase();
+  static void TearDownTestCase();
+};
+
+void qiPathFrench::SetUpTestCase()
+{
+#ifdef _WIN32
+  SetThreadLocale(0x000C); // fr-FR
+#else
+  setlocale(LC_ALL, "fr_FR");
+#endif
+
+  _folderNameASCII = "dossier";
+  _fileNameASCII = "fichier.txt";
+  _folderPathASCII = bfs::path(qi::os::tmp()) / bfs::path(_folderNameASCII);
+
+  _folderNameUnicode = "dôssïér";
+  _fileNameUnicode = "fîçhïèr.txt";
+  _folderPathUnicode = bfs::path(qi::os::tmp()) / bfs::path(_folderNameUnicode,
+                                                            qi::unicodeFacet());
+
+  _testString = std::string("toutvabien");
+
+  // create text files with string to read
+  bfs::path filePath = _folderPathASCII / bfs::path(_fileNameASCII);
+  bfs::create_directory(_folderPathASCII);
+  qiPathDos::createFile(filePath, _testString);
+
+  filePath = _folderPathUnicode / bfs::path(_fileNameUnicode,
+                                            qi::unicodeFacet());
+  bfs::create_directory(_folderPathUnicode);
+  qiPathDos::createFile(filePath, _testString);
+}
+
+void qiPathFrench::TearDownTestCase()
+{
+  std::cout << "removing: " << _folderPathASCII << std::endl;
+  bfs::remove_all(_folderPathASCII);
+
+  std::cout << "removing: " << _folderPathUnicode << std::endl;
+  bfs::remove_all(_folderPathUnicode);
+}
+
+TEST_F(qiPathFrench, convertFromASCII)
+{
+  bfs::path path = _folderPathASCII / bfs::path(_fileNameASCII);
+  std::string pathStr = qi::path::convertToDosPath(path.string());
+
+  std::cout << "path: " << pathStr.c_str() << std::endl;
+
+  std::ifstream ifs(pathStr.c_str());
+  ASSERT_TRUE(ifs.is_open());
+
+  std::string line;
+  ifs >> line;
+  ASSERT_EQ(_testString, line);
+}
+
+TEST_F(qiPathFrench, convertFromUnicode)
+{
+  bfs::path path = _folderPathUnicode / bfs::path(_fileNameUnicode,
+                                                  qi::unicodeFacet());
+
+  // try with default system conversion
+  std::string pathStr = path.string();
+  std::cout << "path: " << pathStr.c_str() << std::endl;
+  std::ifstream ifs(pathStr.c_str());
+  // All given chars have an equivalent in both CP-1252 and ISO 8859-1 so it works
+  EXPECT_TRUE(ifs.is_open());
+
+  // try with unicode conversion
+  pathStr = path.string(qi::unicodeFacet());
+  std::cout << "path: " << pathStr.c_str() << std::endl;
+  std::ifstream ifs2(pathStr.c_str());
+  // this is showing that even if try unicode charset to decode the path,
+  // results are differents between win32 and unix because some characters are represented using more than 1 byte
+#ifdef _WIN32
+  EXPECT_FALSE(ifs2.is_open());
+#else
+  EXPECT_TRUE(ifs2.is_open());
+#endif
+
+  // try with DOS conversion
+  pathStr = qi::path::convertToDosPath(path.string(qi::unicodeFacet()));
+  std::cout << "path: " << pathStr.c_str() << std::endl;
+  std::ifstream ifs3(pathStr.c_str());
+  ASSERT_TRUE(ifs3.is_open());
+
+  std::string line;
+  ifs3 >> line;
+  ASSERT_EQ(_testString, line);
+}
+
+class qiPathChinese: public qiPathDos
+{
+protected:
+  static void SetUpTestCase();
+  static void TearDownTestCase();
+};
+
+void qiPathChinese::SetUpTestCase()
+{
+#ifdef _WIN32
+  SetThreadLocale(0x0804); // zh-CN
+#else
+  setlocale(LC_ALL, "zh_CN");
+#endif
+
+  _folderNameASCII = "folder";
+  _fileNameASCII = "file.txt";
+  _folderPathASCII = bfs::path(qi::os::tmp()) / bfs::path(_folderNameASCII);
+
+  _folderNameUnicode = "夾"; // chinese translation for "folder"
+  _fileNameUnicode = "文件.txt"; // chinese translation for "file"
+  _folderPathUnicode = bfs::path(qi::os::tmp()) / bfs::path(_folderNameUnicode,
+                                                            qi::unicodeFacet());
+
+  _testString = std::string("一切都很好"); // chinese translation of "tout va bien"
+
+  // create text files with string to read
+  bfs::path filePath = _folderPathASCII / bfs::path(_fileNameASCII);
+  bfs::create_directory(_folderPathASCII);
+  createFile(filePath, _testString);
+
+  filePath = _folderPathUnicode / bfs::path(_fileNameUnicode,
+                                            qi::unicodeFacet());
+  bfs::create_directory(_folderPathUnicode);
+  createFile(filePath, _testString);
+}
+
+void qiPathChinese::TearDownTestCase()
+{
+  std::cout << "removing: " << _folderPathASCII << std::endl;
+  bfs::remove_all(_folderPathASCII);
+
+  std::cout << "removing: " << _folderPathUnicode << std::endl;
+  bfs::remove_all(_folderPathUnicode);
+}
+
+TEST_F(qiPathChinese, convertFromASCII)
+{
+  bfs::path path = _folderPathASCII / bfs::path(_fileNameASCII);
+  std::string pathStr = qi::path::convertToDosPath(path.string());
+
+  std::cout << "path: " << pathStr.c_str() << std::endl;
+
+  std::ifstream ifs(pathStr.c_str());
+  ASSERT_TRUE(ifs.is_open());
+
+  std::string line;
+  ifs >> line;
+  ASSERT_EQ(_testString, line);
+}
+
+TEST_F(qiPathChinese, convertFromUnicode)
+{
+  bfs::path path = _folderPathUnicode / bfs::path(_fileNameUnicode,
+                                                  qi::unicodeFacet());
+
+  // try with default system conversion
+  std::string pathStr = path.string();
+  std::cout << "path: " << pathStr.c_str() << std::endl;
+  std::ifstream ifs(pathStr.c_str());
+  // as unix doesn't care of characters but bytes, charset doesn't care, it will success anyway
+  // on Windows, as characters are not present un default charset, it fails anyway
+#ifdef _WIN32
+  EXPECT_FALSE(ifs.is_open());
+#else
+  EXPECT_TRUE(ifs.is_open());
+#endif
+
+  // try with unicode conversion
+  pathStr = path.string(qi::unicodeFacet());
+  std::cout << "path: " << pathStr.c_str() << std::endl;
+  std::ifstream ifs2(pathStr.c_str());
+  // this is showing that even if try unicode charset to decode the path,
+  // results are differents between win32 and unix because some characters are represented using more than 1 byte
+#ifdef _WIN32
+  EXPECT_FALSE(ifs2.is_open());
+#else
+  EXPECT_TRUE(ifs2.is_open());
+#endif
+
+  // try with DOS conversion
+  pathStr = qi::path::convertToDosPath( path.string(qi::unicodeFacet()));
+  std::cout << "path: " << pathStr.c_str() << std::endl;
+  std::ifstream ifs3(pathStr.c_str());
+  ASSERT_TRUE(ifs3.is_open());
+
+  std::string line;
+  ifs3 >> line;
+  ASSERT_EQ(_testString, line);
+}
+

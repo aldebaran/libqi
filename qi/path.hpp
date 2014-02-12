@@ -101,7 +101,15 @@ namespace qi
     QI_API std::string userWritableConfPath(const std::string& applicationName,
                                             const std::string& filename="");
 
-
+    /** Convert given path into DOS 8.3 path if it exists, else returns empty string (Windows only).
+     * To use some API that doesn't support unicode on Windows, it is
+     * possible to convert a unicode path to an existing file into a DOS
+     * path without any accentuated characters.
+     * (for ex. "C:\test àé\" becomes "C:\TEST~1\" if it already exists)
+     *
+     * On other platforms, simply return pathString.
+     */
+    QI_API std::string convertToDosPath(const std::string &pathString);
   }
 }
 

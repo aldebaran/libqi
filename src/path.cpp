@@ -17,6 +17,10 @@
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 
+#ifdef _WIN32
+  #include <windows.h>
+#endif
+
 qiLogCategory("qi.path");
 
 namespace qi
@@ -43,7 +47,6 @@ namespace qi
       return boost::filesystem::system_complete(path).make_preferred();
     }
 
-
     namespace detail {
 
       void addOptionalSdkPrefix(const char *prefix)
@@ -61,6 +64,44 @@ namespace qi
       {
         return getInstance()->getSdkPrefixes();
       }
+
+#ifdef _WIN32
+      std::string dosCompatiblePath(const std::string &pathString)
+      {
+        // Some libs of our toolchain does not support UTF-8 on Windows
+        // for Py_SetPythonHome for example, we need to clean path from UTF-8 chars
+        // to make it usable.
+        // The fix found is to convert path into short DOS 8.3 path
+        long length = 0;
+        wchar_t* buffer = NULL;
+        boost::filesystem::path path(pathString, qi::unicodeFacet());
+
+        // first, get size necessary for wchar_t* buffer
+        length = GetShortPathNameW(path.wstring(qi::unicodeFacet()).c_str(), NULL, 0);
+        if(length == 0)
+        {
+          qiLogError() << "Cannot retreive short path for "
+                       << pathString.c_str();
+          return std::string();
+        }
+
+        // now, get the path compatible DOS 8.3, ASCII compliant
+        buffer = new wchar_t[length];
+        length = GetShortPathNameW(path.wstring(qi::unicodeFacet()).c_str(), buffer, length);
+        if(length == 0)
+        {
+          qiLogError() << "Cannot retreive short path for "
+                       << pathString.c_str();
+          return std::string();
+        }
+
+        // whatever the buffer is wchar_t*, all characters inside are ASCII
+        boost::filesystem::path shortPath(std::wstring(buffer), qi::unicodeFacet());
+        delete [] buffer;
+
+        return shortPath.string(qi::unicodeFacet());
+      }
+#endif
     }
 
     std::string sdkPrefix()
@@ -141,7 +182,18 @@ namespace qi
     {
       return qi::getInstance()->userWritableConfPath(applicationName, filename);
     }
-  };
+
+    std::string convertToDosPath(const std::string &pathString)
+    {
+#ifdef _WIN32
+      // Windows doesn't natively support unicode path. Returns an ASCII one
+      return detail::dosCompatiblePath(pathString);
+#else
+      // just ignore
+      return pathString;
+#endif
+    }
+  }
 
   SDKLayout* getInstance()
   {
