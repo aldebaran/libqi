@@ -165,12 +165,16 @@ namespace qi {
                     const char* function,
                     int line);
       Handler* logHandler(SubscriberId id);
+
+      void setSynchronousLog(bool sync);
     public:
       bool                       LogInit;
       boost::thread              LogThread;
       boost::mutex               LogWriteLock;
       boost::mutex               LogHandlerLock;
       boost::condition_variable  LogReadyCond;
+      bool                       SyncLog;
+      bool                       AsyncLogInit;
 
 #ifndef ANDROID
       boost::lockfree::queue<privateLog*>     logs;
@@ -224,10 +228,9 @@ namespace qi {
     }
 
     static int                    _glContext = 0;
-    static bool                   _glSyncLog = false;
     static bool                   _glInit    = false;
     static ConsoleLogHandler     *_glConsoleLogHandler;
-    static LogColor              _glColorWhen = LogColor_Auto;
+    static LogColor               _glColorWhen = LogColor_Auto;
 
     static Log                   *LogInstance;
     static privateLog             LogBuffer[RTLOG_BUFFERS];
@@ -427,14 +430,24 @@ namespace qi {
       }
     }
 
-    inline Log::Log()
+    void Log::setSynchronousLog(bool sync)
+    {
+      SyncLog = sync;
+      if (!SyncLog && !AsyncLogInit)
+      {
+        AsyncLogInit = true;
+        LogThread = boost::thread(&Log::run, this);
+      }
+    };
+
+    inline Log::Log() :
+      SyncLog(true),
 #ifndef ANDROID
-    :logs(50)
+      logs(50),
 #endif
+      AsyncLogInit(false)
     {
       LogInit = true;
-      if (!_glSyncLog)
-        LogThread = boost::thread(&Log::run, this);
     };
 
     inline Log::~Log()
@@ -443,7 +456,7 @@ namespace qi {
         return;
       LogInit = false;
 
-      if (!_glSyncLog)
+      if (AsyncLogInit)
       {
         LogThread.interrupt();
         LogThread.join();
@@ -483,9 +496,10 @@ namespace qi {
     {
       setVerbosity(verb);
       setContext(ctx);
-      setSynchronousLog(synchronous);
 
       QI_ONCE(doInit());
+
+      setSynchronousLog(synchronous);
     }
 
     void destroy()
@@ -514,7 +528,7 @@ namespace qi {
              const int             line)
     {
 #ifndef ANDROID
-      if (_glSyncLog)
+      if (LogInstance->SyncLog)
       {
         if (!detail::isVisible(category, verb))
           return;
@@ -560,7 +574,7 @@ namespace qi {
 
       qi::os::timeval tv;
       qi::os::gettimeofday(&tv);
-      if (_glSyncLog)
+      if (LogInstance->SyncLog)
       {
         LogInstance->dispatch(verb, tv, category, msg, file, fct, line);
       }
@@ -699,7 +713,7 @@ namespace qi {
 
     void setSynchronousLog(bool sync)
     {
-      _glSyncLog = sync;
+      LogInstance->setSynchronousLog(sync);
     };
 
     CategoryType addCategory(const std::string& name)

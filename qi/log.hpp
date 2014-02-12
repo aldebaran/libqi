@@ -214,6 +214,11 @@ namespace qi {
 
     QI_API LogColor color();
 
+    /** Set logs synchronicity
+     *
+     * When setting to async, this function must be called after main has
+     * started.
+     */
     QI_API void setSynchronousLog(bool sync);
 
     QI_API SubscriberId addLogHandler(const std::string& name,
