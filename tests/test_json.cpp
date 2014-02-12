@@ -220,24 +220,24 @@ TEST(TestJSONDecoder, Float) {
   ASSERT_NO_THROW(qi::decodeJSON("42e-10"));
   ASSERT_NO_THROW(qi::decodeJSON("42e10"));
 
-  EXPECT_EQ(0.42, qi::decodeJSON("0.42").asDouble());
-  EXPECT_EQ(42.0, qi::decodeJSON("42.0").asDouble());
-  EXPECT_EQ(0.0000042, qi::decodeJSON("0.0000042").asDouble());
+  EXPECT_DOUBLE_EQ(0.42, qi::decodeJSON("0.42").asDouble());
+  EXPECT_DOUBLE_EQ(42.0, qi::decodeJSON("42.0").asDouble());
+  EXPECT_DOUBLE_EQ(0.0000042, qi::decodeJSON("0.0000042").asDouble());
 
   // positive value
-  EXPECT_EQ(42.43, qi::decodeJSON("42.43").asDouble());
+  EXPECT_DOUBLE_EQ(42.43, qi::decodeJSON("42.43").asDouble());
 
   // negative value
-  EXPECT_EQ(-42.43, qi::decodeJSON("-42.43").asDouble());
+  EXPECT_DOUBLE_EQ(-42.43, qi::decodeJSON("-42.43").asDouble());
 
   // with E
-  EXPECT_EQ(42e+10, qi::decodeJSON("42e+10"));
-  EXPECT_EQ(42e-10, qi::decodeJSON("42e-10"));
-  EXPECT_EQ(42e10, qi::decodeJSON("42e10"));
+  EXPECT_DOUBLE_EQ(42e+10, qi::decodeJSON("42e+10").asDouble());
+  EXPECT_DOUBLE_EQ(42e-10, qi::decodeJSON("42e-10").asDouble());
+  EXPECT_DOUBLE_EQ(42e10, qi::decodeJSON("42e10").asDouble());
 
   // max/min vals
-  EXPECT_EQ(DBL_MAX, qi::decodeJSON(cleanStr(STR(DBL_MAX))).asDouble());
-  EXPECT_EQ(DBL_MIN, qi::decodeJSON(cleanStr(STR(DBL_MIN))).asDouble());
+  EXPECT_DOUBLE_EQ(DBL_MAX, qi::decodeJSON(cleanStr(STR(DBL_MAX))).asDouble());
+  EXPECT_DOUBLE_EQ(DBL_MIN, qi::decodeJSON(cleanStr(STR(DBL_MIN))).asDouble());
 }
 
 TEST(TestJSONDecoder, Array) {
