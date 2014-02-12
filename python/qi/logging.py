@@ -24,7 +24,7 @@ ERROR   = 2
 WARNING = 3
 INFO    = 4
 VERBOSE = 5
-DEBUG   = 6
+DEBUG   = VERBOSE
 
 def setLevel(level):
     pysetlevel(level)
@@ -44,23 +44,26 @@ class PyLogger:
 
     def fatal(self, *args):
         info = logGetTraceInfo()
-        pylog(1, self.category, _printToString(*args), info.filename, info.function, info.lineno)
+        pylog(FATAL, self.category, _printToString(*args), info.filename, info.function, info.lineno)
 
     def error(self, *args):
         info = logGetTraceInfo()
-        pylog(2, self.category, _printToString(*args), info.filename, info.function, info.lineno)
+        pylog(ERROR, self.category, _printToString(*args), info.filename, info.function, info.lineno)
 
     def warning(self, *args):
         info = logGetTraceInfo()
-        pylog(3, self.category, _printToString(*args), info.filename, info.function, info.lineno)
+        pylog(WARNING, self.category, _printToString(*args), info.filename, info.function, info.lineno)
 
     def info(self, *args):
         info = logGetTraceInfo()
-        pylog(4, self.category, _printToString(*args), info.filename, info.function, info.lineno)
+        pylog(INFO, self.category, _printToString(*args), info.filename, info.function, info.lineno)
+
+    def verbose(self, *args):
+        info = logGetTraceInfo()
+        pylog(VERBOSE, self.category, _printToString(*args), info.filename, info.function, info.lineno)
 
     def debug(self, *args):
-        info = logGetTraceInfo()
-        pylog(5, self.category, _printToString(*args), info.filename, info.function, info.lineno)
+        self.verbose(*args)
 
 def getLogger( name):
     return PyLogger(name)
@@ -71,24 +74,23 @@ def logSilent(cat, *args):
 
 def logFatal(cat, *args):
     info = logGetTraceInfo()
-    pylog(1, cat, _printToString(*args), info.filename, info.function, info.lineno)
+    pylog(FATAL, cat, _printToString(*args), info.filename, info.function, info.lineno)
 
 def logError(cat, *args):
     info = logGetTraceInfo()
-    pylog(2, cat, _printToString(*args), info.filename, info.function, info.lineno)
+    pylog(ERROR, cat, _printToString(*args), info.filename, info.function, info.lineno)
 
 def logWarning(cat, *args):
     info = logGetTraceInfo()
-    pylog(3, cat, _printToString(*args), info.filename, info.function, info.lineno)
+    pylog(WARNING, cat, _printToString(*args), info.filename, info.function, info.lineno)
 
 def logInfo(cat, *args):
     info = logGetTraceInfo()
-    pylog(4, cat, _printToString(*args), info.filename, info.function, info.lineno)
+    pylog(INFO, cat, _printToString(*args), info.filename, info.function, info.lineno)
 
 def logVerbose(cat, *args):
     info = logGetTraceInfo()
-    pylog(5, cat, _printToString(*args), info.filename, info.function, info.lineno)
+    pylog(VERBOSE, cat, _printToString(*args), info.filename, info.function, info.lineno)
 
 def logDebug(cat, *args):
-    info = logGetTraceInfo()
-    pylog(6, cat, _printToString(*args), info.filename, info.function, info.lineno)
+    logVerbose(cat, *args)
