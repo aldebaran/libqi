@@ -288,6 +288,11 @@ namespace qi
     return std::make_pair(AnyReference(), false);
   }
 
+  static std::pair<AnyReference, bool> structConverter(const AnyReferenceBase* src, StructTypeInterface* tdst)
+  {
+    return std::make_pair(AnyReference(), false);
+  }
+
   std::pair<AnyReference, bool> AnyReferenceBase::convert(StructTypeInterface* targetType) const
   {
     AnyReference result;
@@ -303,31 +308,52 @@ namespace qi
       std::vector<TypeInterface*> dstTypes = tdst->memberTypes();
       if (dstTypes.size() != sourceData.size())
       {
-        qiLogWarning() << "Conversion failure: tuple size mismatch between " << tsrc->signature().toString() << " and " << tdst->signature().toString();
-        return std::make_pair(AnyReference(), false);
+        qiLogVerbose() << "Conversion glitch: tuple size mismatch between " << tsrc->signature().toString() << " and " << tdst->signature().toString();
+        return structConverter(this, targetType);
       }
-
+      // Note: start converting without further check.
+      // It means the case where a struct was modified but the
+      // field count is unchanged will be badly suboptimal.
+      // But further checks will degrade the nominal case.
       std::vector<void*> targetData;
       std::vector<bool> mustDestroy;
+      // Cleanup allocated stuff when exiting scope
+      struct CleanUp
+      {
+        CleanUp(std::vector<void*>& targetData,
+          std::vector<bool>& mustDestroy,
+          std::vector<TypeInterface*>& dstTypes)
+        : targetData(targetData)
+        , mustDestroy(mustDestroy)
+        , dstTypes(dstTypes) {}
+        ~CleanUp()
+        {
+          for (unsigned i=0; i<mustDestroy.size(); ++i)
+          {
+            if (mustDestroy[i])
+              dstTypes[i]->destroy(targetData[i]);
+          }
+        }
+        std::vector<void*>& targetData;
+        std::vector<bool>& mustDestroy;
+        std::vector<TypeInterface*>& dstTypes;
+      };
+      CleanUp scopeCleanup(targetData, mustDestroy, dstTypes);
       for (unsigned i=0; i<dstTypes.size(); ++i)
       {
         std::pair<AnyReference, bool> conv = AnyReference(srcTypes[i], sourceData[i]).convert(dstTypes[i]);
         if (!conv.first._type)
         {
-          qiLogWarning() << "Conversion failure in tuple member between "
+          qiLogVerbose() << "Conversion failure in tuple member between "
                          << srcTypes[i]->infoString() << " and " << dstTypes[i]->infoString();
-          return std::make_pair(AnyReference(), false);
+          return structConverter(this, targetType);
         }
         targetData.push_back(conv.first._value);
         mustDestroy.push_back(conv.second);
       }
       void* dst = tdst->initializeStorage();
       tdst->set(&dst, targetData);
-      for (unsigned i=0; i<mustDestroy.size(); ++i)
-      {
-        if (mustDestroy[i])
-          dstTypes[i]->destroy(targetData[i]);
-      }
+
       result._type = targetType;
       result._value = dst;
       return std::make_pair(result, true);
