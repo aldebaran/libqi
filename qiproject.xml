@@ -4,6 +4,5 @@
     <depends testtime="true" buildtime="true" names="gtest" />
   </qibuild>
   <project src="dox" />
-  <project src="doc" />
   <project src="examples" />
 </project>
