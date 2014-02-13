@@ -50,7 +50,11 @@ namespace qi
 
     /** Set the call interval in microseconds.
      *  This call will wait until next callback invocation to apply the change.
-     *  Use "task.stop().setUsPeriod().start()" to apply the change immediately.
+     *  Use:
+     *  task.stop();
+     *  task.setUsPeriod()
+     *  task.start()
+     *  to apply the change immediately.
      */
     void setUsPeriod(qi::int64_t usPeriod);
 
