@@ -12,3 +12,4 @@ Python qi API reference
   property
   types
   bind
+  async

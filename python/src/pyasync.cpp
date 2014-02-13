@@ -80,28 +80,70 @@ namespace qi { namespace py {
 
       async.attr("__doc__") = "async(callback [, delay=usec] [, arg1, ..., argn]) -> future\n"
                               ":param callback: the callback that will be called\n"
-                              ":param delay: a delay in microseconds\n"
+                              ":param delay: an optional delay in microseconds\n"
                               ":return: a future with the return value of the function\n"
                               "\n";
 
       boost::python::def("async", async);
 
       boost::python::class_<PyPeriodicTask, boost::shared_ptr<PyPeriodicTask>, boost::noncopyable >("PeriodicTask")
-          .def(boost::python::init<>())
-          .def("setCallback", &PyPeriodicTask::setCallback)
-          .def("setUsPeriod", &PyPeriodicTask::setUsPeriod)
-          .def("start", &PyPeriodicTask::start)
-          .def("stop", &PyPeriodicTask::stop)
-          .def("asyncStop", &PyPeriodicTask::asyncStop)
-          .def("compensateCallbackTime", &PyPeriodicTask::compensateCallbackTime)
-          .def("setName", &PyPeriodicTask::setName)
-          .def("isRunning", &PyPeriodicTask::isRunning)
-          .def("isStopping", &PyPeriodicTask::isStopping)
+        .def(boost::python::init<>())
+        .def("setCallback", &PyPeriodicTask::setCallback,
+             "setCallback(callable)\n"
+             ":param callable: a python callable, could be a method or a function\n"
+             "\n"
+             "set the callback used by the periodictask, this function can only be called once")
+        .def("setUsPeriod", &PyPeriodicTask::setUsPeriod,
+             "setUsPeriod(usPeriod)\n"
+             ":param usPeriod: the period in microseconds\n"
+             "\n"
+             "Set the call interval in microseconds.\n"
+             "This call will wait until next callback invocation to apply the change.\n"
+             "To apply the change immediately, use: \n"
+             "\n"
+             ".. code-block:: python\n"
+             "\n"
+             "   task.stop()\n"
+             "   task.setUsPeriod()\n"
+             "   task.start()\n"
+             "\n")
+        .def("start", &PyPeriodicTask::start,
+             "start(immediate)\n"
+             ":param immediate: immediate if true, first schedule of the task will happen with no delay.\n"
+             "\n"
+             "start the periodic task at specified period. No effect if already running\n"
+             "\n"
+             ".. warning::\n"
+             "   concurrent calls to start() and stop() will result in undefined behavior."
+             "\n")
+        .def("stop", &PyPeriodicTask::stop,
+             "stop()\n"
+             "Stop the periodic task. When this function returns, the callback will not be called anymore.\n"
+             "Can be called from within the callback function\n"
+             "\n"
+             ".. warning::\n"
+             "   concurrent calls to start() and stop() will result in undefined behavior."
+             "\n")
+        .def("asyncStop", &PyPeriodicTask::asyncStop,
+             "asyncStop()\n"
+             "Can be called from within the callback function"
+             "Request for periodic task to stop asynchronously")
+        .def("compensateCallbackTime", &PyPeriodicTask::compensateCallbackTime,
+             "compensateCallbackTime(compensate)\n"
+             ":param compensate: If true, call interval will take into account call duration to maintain the period.")
+        .def("setName", &PyPeriodicTask::setName,
+             "setName(name)\n"
+             "Set name for debugging and tracking purpose")
+        .def("isRunning", &PyPeriodicTask::isRunning,
+             "isRunning() -> bool\n"
+             ":return: true is task is running\n")
+        .def("isStopping", &PyPeriodicTask::isStopping,
+             "isStopping() -> bool\n"
+             ":return: whether state is stopping or stopped.\n"
+             "\n"
+             "Can be called from within the callback to know if stop() or asyncStop()  was called.")
           ;
-
-
     }
 
   }
 }
-
