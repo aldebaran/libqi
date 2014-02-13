@@ -9,6 +9,7 @@
 
 #include <boost/type_traits.hpp>
 #include <boost/utility/enable_if.hpp>
+#include <qitype/fwd.hpp>
 #include <qitype/details/accessor.hxx>
 #include <qi/preproc.hpp>
 
@@ -16,6 +17,89 @@ namespace qi
 {
   namespace detail {
 
+    template<typename T> struct StructVersioningDelegateDrop
+    {
+      static bool canDropFields(void*, const std::vector<std::string>&) { return false;}
+    };
+    template<typename T> struct StructVersioningDelegateFill
+    {
+      static bool fillMissingFields(StructTypeInterface* type, std::map<std::string, ::qi::AnyValue>& fields, const std::vector<std::string>& missing) { return false;}
+    };
+    bool QITYPE_API fillMissingFieldsWithDefaultValues(StructTypeInterface* type,
+      std::map<std::string, ::qi::AnyValue>& fields,
+      const std::vector<std::string>& missing,
+      const char** which=0, int whichLength=0);
+
+/** Allow filling given struct field names with the default value, if
+ *  converting from a previous struct version.
+ */
+#define QI_TYPE_STRUCT_EXTENSION_FILL_FIELDS(name, ...) \
+  namespace qi { namespace detail { template<> struct StructVersioningDelegateFill<name> { \
+    static bool fillMissingFields(StructTypeInterface* type, std::map<std::string, ::qi::AnyValue>& fields, const std::vector<std::string>& missing) \
+    { \
+      const char* which[] = {__VA_ARGS__ }; \
+      int count = sizeof(which) / sizeof(char*); \
+      return fillMissingFieldsWithDefaultValues(type, fields, missing, which, count); \
+    } \
+  };}}
+/// Allow filling any missing field with default value
+#define QI_TYPE_STRUCT_EXTENSION_FILL_ALL(name, ...) \
+  namespace qi { namespace detail { template<> struct StructVersioningDelegateFill<name> { \
+    static bool fillMissingFields(StructTypeInterface* type, std::map<std::string, ::qi::AnyValue>& fields, const std::vector<std::string>& missing) \
+    { \
+      return fillMissingFieldsWithDefaultValues(type, fields, missing); \
+    } \
+  };}}
+/// Declare struct as extension of previous versions, allowing all fields to be dropped
+#define QI_TYPE_STRUCT_EXTENSION_DROP_ALL(name) \
+  namespace qi { namespace detail { template<> struct StructVersioningDelegateDrop<name> { \
+    static bool canDropFields(void*, const std::vector<std::string>&) { return true;}         \
+  };}}
+
+/// Declare struct as extension of previous versions, allowing given fields to be dropped
+#define QI_TYPE_STRUCT_EXTENSION_DROP_FIELDS(name, ...) \
+  namespace qi { namespace detail { template<> struct StructVersioningDelegateDrop<name> { \
+    static bool canDropFields(void*, const std::vector<std::string>& fields) {  \
+      const char* okFields[] = {__VA_ARGS__ }; \
+      int count = sizeof(okFields) / sizeof(char*); \
+      for (unsigned i=0; i<fields.size(); ++i) \
+        if (std::find(okFields, okFields+count, fields[i]) == okFields+count) return false; \
+      return true; \
+    }         \
+  };}}
+
+/** Define callable \p f as drop handler for struct \p name
+ * will be invoked as f(name* nameInstance, const std::vector<std::string>& fields)
+ * and must return true to allow the drop, or false to deny the conversion.
+*/
+#define QI_TYPE_STRUCT_EXTENSION_DROP_HANDLER(name, f) \
+    namespace qi { namespace detail { template<> struct StructVersioningDelegateDrop<name> { \
+    static bool canDropFields(void* store, const std::vector<std::string>& fields) { \
+      return f((name*)store, fields);}         \
+  };}}
+
+/** Define callable \p f as handler when a default value is needed for some
+ * fields of \p name. Will be invoked as
+ *  f(std::map<string, AnyValue>& content, const vector<string>& missingFields)
+ * It must return false to indicate a failure, or fill content with a value
+ * for all the missing fields and return true.
+ */
+#define QI_TYPE_STRUCT_EXTENSION_FILL_HANDLER(name, f) \
+  namespace qi { namespace detail { template<> struct StructVersioningDelegateFill<name> { \
+    static bool fillMissingFields(StructTypeInterface* type, std::map<std::string, ::qi::AnyValue>& fields, const std::vector<std::string>& missing) \
+    { \
+      return f(fields, missing) ; \
+    }};}}
+
+#define QI_TYPE_STRUCT_EXTENSION_ALL(name) \
+   QI_TYPE_STRUCT_EXTENSION_DROP_ALL(name); \
+   QI_TYPE_STRUCT_EXTENSION_FILL_ALL(name)
+
+/// Declare a versionned struct that accepts dropping/filling-with-default given fields.
+#define QI_TYPE_STRUCT_EXTENSION_FIELDS(name, ...) \
+   QI_TYPE_STRUCT_EXTENSION_DROP_FIELDS(name, __VA_ARGS__); \
+   QI_TYPE_STRUCT_EXTENSION_FILL_FIELDS(name, __VA_ARGS__)
+  
     //keep only the class name. (remove :: and namespaces)
     QITYPE_API std::string normalizeClassName(const std::string &name);
 
@@ -61,7 +145,9 @@ namespace qi {                                                            \
     virtual std::string className();                                      \
     virtual void* get(void* storage, unsigned int index);                 \
     virtual void set(void** storage, unsigned int index, void* valStorage); \
-    extra                                                                   \
+    virtual bool canDropFields(void* storage, const std::vector<std::string>& fieldNames); \
+    virtual bool fillMissingFields(std::map<std::string, ::qi::AnyValue>& fields, const std::vector<std::string>& missing); \
+    extra \
     typedef ::qi::DefaultTypeImplMethods<name, ::qi::TypeByPointerPOD<name> > Impl; \
     _QI_BOUNCE_TYPE_METHODS(Impl);            \
  }; }
@@ -104,6 +190,8 @@ namespace qi {                                                                  
   {\
     return ::qi::detail::normalizeClassName(BOOST_PP_STRINGIZE(name));\
   }\
+  inl bool TypeImpl<name>::canDropFields(void* storage, const std::vector<std::string>& fieldNames) {return ::qi::detail::StructVersioningDelegateDrop<name>::canDropFields(storage, fieldNames);} \
+  inl bool TypeImpl<name>::fillMissingFields(std::map<std::string, ::qi::AnyValue>& fields, const std::vector<std::string>& missing) {return ::qi::detail::StructVersioningDelegateFill<name>::fillMissingFields(this, fields, missing);} \
 }
 
 
@@ -144,7 +232,7 @@ namespace qi {                                                                  
   {                                                                                   \
     std::vector< ::qi::TypeInterface*> res;                                                           \
     QI_VAARGS_APPLY(__QI_ATUPLE_TYPE, name, __VA_ARGS__);                                 \
-    return res;                                                                       \
+    return res;                                                                    \
   }                                                                                   \
   \
   inl void* TypeImpl<name>::get(void* storage, unsigned int index)                    \
@@ -177,7 +265,9 @@ namespace qi {                                                                  
   { \
     return ::qi::detail::normalizeClassName(BOOST_PP_STRINGIZE(name));\
   } \
-  }
+  inl bool TypeImpl<name>::canDropFields(void* storage, const std::vector<std::string>& fieldNames) {return ::qi::detail::StructVersioningDelegateDrop<name>::canDropFields(storage, fieldNames);} \
+ inl bool TypeImpl<name>::fillMissingFields(std::map<std::string, ::qi::AnyValue>& fields, const std::vector<std::string>& missing) {return ::qi::detail::StructVersioningDelegateFill<name>::fillMissingFields(this, fields, missing);} \
+ }
 
 
 /// Allow the QI_TYPE_STRUCT macro and variants to access private members

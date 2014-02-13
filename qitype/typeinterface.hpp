@@ -262,6 +262,32 @@ namespace qi{
     virtual std::vector<std::string> elementsName() { return std::vector<std::string>();}
     /// Get the type name of the struct
     virtual std::string className() { return std::string(); }
+
+    /** @{
+    *
+    *  Versioning support.
+    *
+    * Conversion between non-equivalent structs will be attempted if all
+    * fields are named: fields with matching names will be automatically mapped
+    * to each other.
+    * canDropFields() will be called on the source to ask
+    * if fields given as argument can be dropped (because they do not exist
+    * on the target).
+    *
+    * fillMissingFields(fields, missing) will be called on the target,
+    * with a map of
+    * fields that were converted, and the list of missing field names.
+    * The function must fill fields with a value for each of the missing fields,
+    * or return false (no storage is provided, because the struct cant be
+    * instanciated without a value for all fields being available.
+    */
+
+    /// Return whether struct accepts field-name-based conversion that drops \p fieldNames.
+    virtual bool canDropFields(void* storage, const std::vector<std::string>& fieldNames) { return false;}
+    /// Fill missing fields caused by conversion from a different struct. Return whether fill succeeded.
+    virtual bool fillMissingFields(std::map<std::string, AnyValue>& fields, const std::vector<std::string>& missing) { return false;}
+
+    /// @}
   };
 
   /**

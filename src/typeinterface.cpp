@@ -1193,5 +1193,27 @@ namespace qi {
       qiLogError() << "The following operation failed on data type "
       << typeName << " :" << operation;
     }
+
+    bool fillMissingFieldsWithDefaultValues(StructTypeInterface* type,
+      std::map<std::string, ::qi::AnyValue>& fields,
+      const std::vector<std::string>& missing,
+      const char** which, int whichLength)
+    {
+      // check we will get them all
+      if (which)
+      {
+        for (unsigned i=0; i<missing.size(); ++i)
+          if (std::find(which, which + whichLength, missing[i]) == which + whichLength)
+            return false; // field not in handled list
+      }
+      std::vector<TypeInterface*> memberTypes = type->memberTypes();
+      std::vector<std::string> memberNames = type->elementsName();
+      for (unsigned i=0; i<missing.size(); ++i)
+      { // we are being given the name, but type is known by index
+        int idx = std::find(memberNames.begin(), memberNames.end(), missing[i]) - memberNames.begin();
+        fields[missing[i]] = qi::AnyValue(memberTypes[idx]);
+      }
+      return true;
+    }
   }
 }
