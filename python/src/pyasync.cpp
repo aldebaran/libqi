@@ -8,14 +8,31 @@
 #include <qitype/signal.hpp>
 #include <qitype/anyobject.hpp>
 #include <qimessaging/python-gil.hpp>
+#include <qi/periodictask.hpp>
 #include "error.hpp"
 #include "pyfuture.hpp"
 #include "pyobject.hpp"
 #include "pythreadsafeobject.hpp"
 
+
 qiLogCategory("py.signal");
 
 namespace qi { namespace py {
+
+
+    static void pyPeriodicCb(const PyThreadSafeObject& callable) {
+      GILScopedLock _gil;
+      PY_CATCH_ERROR(callable.object()());
+    }
+
+    class PyPeriodicTask : public qi::PeriodicTask {
+    public:
+      void setCallback(boost::python::object callable) {
+        if (!PyCallable_Check(callable.ptr()))
+          throw std::runtime_error("Not a callable");
+        qi::PeriodicTask::setCallback(boost::bind<void>(pyPeriodicCb, PyThreadSafeObject(callable)));
+      }
+    };
 
     static void pyAsync(qi::Promise<boost::python::object> prom, PyThreadSafeObject safeargs) {
       GILScopedLock _gil;
@@ -68,6 +85,21 @@ namespace qi { namespace py {
                               "\n";
 
       boost::python::def("async", async);
+
+      boost::python::class_<PyPeriodicTask, boost::shared_ptr<PyPeriodicTask>, boost::noncopyable >("PeriodicTask")
+          .def(boost::python::init<>())
+          .def("setCallback", &PyPeriodicTask::setCallback)
+          .def("setUsPeriod", &PyPeriodicTask::setUsPeriod)
+          .def("start", &PyPeriodicTask::start)
+          .def("stop", &PyPeriodicTask::stop)
+          .def("asyncStop", &PyPeriodicTask::asyncStop)
+          .def("compensateCallbackTime", &PyPeriodicTask::compensateCallbackTime)
+          .def("setName", &PyPeriodicTask::setName)
+          .def("isRunning", &PyPeriodicTask::isRunning)
+          .def("isStopping", &PyPeriodicTask::isStopping)
+          ;
+
+
     }
 
   }
