@@ -5,6 +5,8 @@ import qi
 def add(a, b):
     return a + b
 
+def fail():
+    assert(False)
 
 def err():
     raise RuntimeError("sdsd")
@@ -61,12 +63,21 @@ def test_periodic_task():
     time.sleep(1)
     assert cur == result
 
+def test_async_cancel():
+    f = qi.async(fail, delay=1000000)
+    f.cancel()
+    f.wait()
+    assert(f.isFinished())
+    assert(not f.hasError())
+    assert(f.isCanceled())
+
 def main():
     test_async_fun()
     test_async_error()
     test_async_meth()
     test_async_delay()
-    test_periodictask()
+    test_periodic_task()
+    test_async_cancel()
 
 if __name__ == "__main__":
     main()

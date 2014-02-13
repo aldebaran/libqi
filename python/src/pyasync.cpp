@@ -14,11 +14,9 @@
 #include "pyobject.hpp"
 #include "pythreadsafeobject.hpp"
 
-
-qiLogCategory("py.signal");
+qiLogCategory("py.async");
 
 namespace qi { namespace py {
-
 
     static void pyPeriodicCb(const PyThreadSafeObject& callable) {
       GILScopedLock _gil;
@@ -34,26 +32,21 @@ namespace qi { namespace py {
       }
     };
 
-    static void pyAsync(qi::Promise<boost::python::object> prom, PyThreadSafeObject safeargs) {
+    static boost::python::object pyAsync(PyThreadSafeObject safeargs) {
       GILScopedLock _gil;
 
-      boost::python::object args = safeargs.object();
+      boost::python::list args(safeargs.object());
       boost::python::object callable = args[0];
 
-
-      boost::python::list largs;
-      for (int i = 1; i < boost::python::len(args); ++i)
-        largs.append(args[i]);
-
+      args.pop(0);
 
       try {
-        prom.setValue(callable(*boost::python::tuple(largs)));
+        return callable(*boost::python::tuple(args));
       } catch (const boost::python::error_already_set &) {
-        prom.setError(PyFormatError());
+        throw std::runtime_error(PyFormatError());
       }
     }
 
-    //the returned future is not canceable
     static boost::python::object pyasyncParamShrinker(boost::python::tuple args, boost::python::dict kwargs) {
       //arg0 always exists
       //check args[0] is a callable
@@ -66,12 +59,11 @@ namespace qi { namespace py {
       //Does not use PyThreadSafeObject, because, setValue will be done under the lock
       //and the the future will be a PyFuture, that will be destroyed and use in the python world
       //under the lock too.
-      qi::Promise<boost::python::object> prom;
+      boost::function<boost::python::object()> f = boost::bind(&pyAsync, PyThreadSafeObject(args));
 
-      boost::function<void (void)> f = boost::bind<void>(&pyAsync, prom, PyThreadSafeObject(args));
+      qi::Future<boost::python::object> fut = qi::getEventLoop()->async(f, delay);
 
-      qi::getEventLoop()->async(f, delay);
-      return boost::python::object(qi::py::toPyFuture(prom.future()));
+      return boost::python::object(qi::py::toPyFuture(fut));
     }
 
 
