@@ -493,6 +493,36 @@ TEST_F(TestFuture, TestStateNone)
   ASSERT_TRUE(f.wait(qi::FutureTimeout_None) == qi::FutureState_Running);
 }
 
+struct DelCheck {
+  void foo() {}
+};
+
+TEST_F(TestFuture, TestPromiseAdapter)
+{
+  boost::weak_ptr<DelCheck> wdc;
+  {
+    qi::Promise<int> p;
+    qi::Promise<int> p2;
+
+    // Prepare for test for leakage
+    {
+      boost::shared_ptr<DelCheck> dc = boost::make_shared<DelCheck>();
+      wdc = dc;
+      p.future().connect(&DelCheck::foo, dc);
+      p2.future().connect(&DelCheck::foo, dc);
+    }
+    EXPECT_FALSE(wdc.expired());
+
+    qi::adaptFuture(p.future(), p2);
+    p.setValue(42);
+    // wait for the result to be forwarded
+    qi::os::msleep(100);
+    EXPECT_EQ(42, p2.value());
+  }
+  // Test for leakage
+  EXPECT_TRUE(wdc.expired());
+}
+
 void unlock(qi::Promise<int> prom, bool* tag)
 {
   *tag = true;
