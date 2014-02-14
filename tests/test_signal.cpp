@@ -273,6 +273,23 @@ TEST(TestSignal, Dynamic)
   EXPECT_EQ(56, trig);
 }
 
+TEST(TestSignal, SharedPtrSemantic)
+{
+  qi::Signal<int>* s = new qi::Signal<int>();
+  qi::Signal<int>* s2 = new qi::Signal<int>();
+  s->setCallType(qi::MetaCallType_Direct);
+  boost::shared_ptr<int> i = boost::shared_ptr<int>(new int());
+  s->connect(boost::bind(&write42, i));
+  (*s)(0);
+  EXPECT_EQ(42, *i);
+  *s2 = *s;
+  delete s;
+  *i = 0;
+  EXPECT_EQ(0, *i);
+  (*s2)(0);
+  EXPECT_EQ(42, *i);
+}
+
 int main(int argc, char **argv) {
   qi::Application app(argc, argv);
   ::testing::InitGoogleTest(&argc, argv);

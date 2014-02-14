@@ -488,19 +488,19 @@ namespace qi {
 
   SignalBase::~SignalBase()
   {
-    if (!_p)
-      return;
-    _p->onSubscribers = OnSubscribers();
-    boost::shared_ptr<SignalBasePrivate> p(_p);
-    _p.reset();
+  }
+
+  SignalBasePrivate::~SignalBasePrivate()
+  {
+    onSubscribers = SignalBase::OnSubscribers();
     std::vector<SignalLink> links;
-    for (SignalSubscriberMap::iterator i = p->subscriberMap.begin();
-        i != p->subscriberMap.end(); ++i)
+    for (SignalSubscriberMap::iterator i = subscriberMap.begin();
+        i != subscriberMap.end(); ++i)
     {
       links.push_back(i->first);
     }
     for (unsigned i=0; i<links.size(); ++i)
-      p->disconnect(links[i]);
+      disconnect(links[i]);
   }
 
   std::vector<SignalSubscriber> SignalBase::subscribers()
