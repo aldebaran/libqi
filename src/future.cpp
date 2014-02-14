@@ -97,8 +97,7 @@ namespace qi {
     }
 
     void FutureBase::reportStart() {
-      boost::recursive_mutex::scoped_lock lock(_p->_mutex);
-      _p->_state = FutureState_Running;
+      _p->_state.setIfEquals(FutureState_None, FutureState_Running);
     }
 
     void FutureBase::notifyFinish() {

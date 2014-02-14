@@ -1120,6 +1120,19 @@ TEST(TestPeriodicTask, DeadLock)
   }
 }
 
+int get42() { return 42; }
+
+TEST(EventLoop, asyncFast)
+{
+  qi::EventLoop* el = qi::getEventLoop();
+  for (int i = 0; i < 10; ++i)
+  {
+    qi::Future<int> f = el->async<int>(get42);
+    f.wait();
+  }
+}
+
+
 int main(int argc, char **argv) {
   qi::Application app(argc, argv);
   ::testing::InitGoogleTest(&argc, argv);
