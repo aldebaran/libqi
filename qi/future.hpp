@@ -289,13 +289,13 @@ namespace qi {
     // Our companion library libqitype requires a connect with same signature for all instantiations
     inline void _connect(const boost::function<void()>& s) { connect(boost::bind(s));}
 
-  protected:
+    boost::shared_ptr<detail::FutureBaseTyped<T> > impl() { return _p;}
     Future(boost::shared_ptr<detail::FutureBaseTyped<T> > p) :
       _p(p)
     {
       assert(_p);
     }
-
+  protected:
     // C4251 needs to have dll-interface to be used by clients of class 'qi::Future<T>'
     boost::shared_ptr< detail::FutureBaseTyped<T> > _p;
     friend class Promise<T>;
