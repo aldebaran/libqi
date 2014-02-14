@@ -979,6 +979,25 @@ TEST(TestAdaptFuture, PromiseCancelled) {
   ASSERT_FALSE(prom2.future().hasError());
 }
 
+void handleCancel(qi::Promise<void> p)
+{
+  p.setCanceled();
+}
+
+TEST(TestAdaptFuture, PromiseCancel) {
+  qi::Promise<void> prom1(handleCancel);
+  qi::Promise<void> prom2;
+
+  qi::adaptFuture(prom1.future(), prom2);
+  ASSERT_TRUE(prom2.future().isCancelable());
+  prom2.future().cancel();
+  while(prom2.future().isRunning())
+    qi::os::msleep(5);
+  ASSERT_TRUE(prom2.future().isCanceled());
+  ASSERT_FALSE(prom2.future().hasValue());
+  ASSERT_FALSE(prom2.future().hasError());
+}
+
 int ping(int v)
 {
   if (v>= 0)
