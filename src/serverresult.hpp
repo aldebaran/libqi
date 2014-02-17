@@ -18,12 +18,35 @@ namespace qi {
   {
     static inline void _genericobject_noop(GenericObject*)
     {}
+    static inline void convertAndSetValue(Message& ret, AnyReference val,
+      const Signature& targetSignature, ObjectHost* host, TransportSocket* socket,
+      const Signature& forcedSignature)
+    {
+      /* We allow forced signature conversion to fail, in which case we
+       * go on with original expected signature.
+      */
+      if (forcedSignature.isValid() && socket->remoteCapability("MessageFlags", false))
+      {
+        std::pair<AnyReference, bool> conv = val.convert(TypeInterface::fromSignature(forcedSignature));
+        qiLogDebug("qimessaging.serverresult") << "Converting to forced signature " << forcedSignature.toString()
+          << ", data=" << val.type()->infoString() <<", advertised=" <<targetSignature.toString() << ", success=" << conv.second;
+        if (conv.first.type())
+        {
+          ret.setValue(conv.first, "m", host, socket);
+          ret.addFlags(Message::TypeFlag_DynamicPayload);
+          if (conv.second)
+            conv.first.destroy();
+          return;
+        }
+      }
+      ret.setValue(val, targetSignature, host, socket);
+    }
   }
   // second bounce when returned type is a future
   inline void serverResultAdapterNext(AnyReference val,// the future
     Signature targetSignature,
     ObjectHost* host,
-    TransportSocketPtr socket, const qi::MessageAddress &replyaddr)
+    TransportSocketPtr socket, const qi::MessageAddress &replyaddr, const Signature& forcedReturnSignature)
   {
     qi::Message ret(Message::Type_Reply, replyaddr);
     try {
@@ -41,13 +64,12 @@ namespace qi {
       {
         // Future<void>::value() give a void* so we need a special handling to
         // produce a real void
+        AnyValue val;
         if (futureType->templateArgument()->kind() == TypeKind_Void)
-          ret.setValue(AnyValue(qi::typeOf<void>()), targetSignature, host);
+          val = AnyValue(qi::typeOf<void>());
         else
-        {
-          AnyValue v = gfut.call<AnyValue>("value", 0);
-          ret.setValue(v, targetSignature, host, socket.get());
-        }
+          val = gfut.call<AnyValue>("value", 0);
+        detail::convertAndSetValue(ret, val.asReference(), targetSignature, host, socket.get(), forcedReturnSignature);
       }
     } catch (const std::exception &e) {
       //be more than safe. we always want to nack the client in case of error
@@ -64,7 +86,7 @@ namespace qi {
 
   inline void serverResultAdapter(qi::Future<AnyReference> future,
     const qi::Signature& targetSignature,
-    ObjectHost* host, TransportSocketPtr socket, const qi::MessageAddress &replyaddr) {
+    ObjectHost* host, TransportSocketPtr socket, const qi::MessageAddress &replyaddr, const Signature& forcedReturnSignature) {
     qi::Message ret(Message::Type_Reply, replyaddr);
 
     if (future.hasError()) {
@@ -81,11 +103,12 @@ namespace qi {
           GenericObject gfut(onext, val.rawValue());
           // Need a live sha@red_ptr for shared_from_this() to work.
           detail::ManagedObjectPtr ao(&gfut, &detail::_genericobject_noop);
-          boost::function<void()> cb = boost::bind(serverResultAdapterNext, val, targetSignature, host, socket, replyaddr);
+          boost::function<void()> cb = boost::bind(serverResultAdapterNext, val, targetSignature, host, socket, replyaddr, forcedReturnSignature);
           gfut.call<void>("_connect", cb);
           return;
         }
-        ret.setValue(val, targetSignature, host, socket.get());
+        detail::convertAndSetValue(ret, val, targetSignature, host, socket.get(), forcedReturnSignature);
+
         //may leak if something throw inbetween.
         val.destroy();
       } catch (const std::exception &e) {

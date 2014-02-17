@@ -27,12 +27,14 @@ namespace qi {
     mob.addMethod("L", "registerEvent", "(IIL)", qi::Message::BoundObjectFunction_RegisterEvent);
     mob.addMethod("v", "unregisterEvent", "(IIL)", qi::Message::BoundObjectFunction_UnregisterEvent);
     mob.addMethod(typeOf<MetaObject>()->signature(), "metaObject", "(I)", qi::Message::BoundObjectFunction_MetaObject);
-
+    mob.addMethod("L", "registerEventWithSignature", "(IILs)", qi::Message::BoundObjectFunction_RegisterEventWithSignature);
     *mo = mob.metaObject();
 
     assert(mo->methodId("registerEvent::(IIL)") == qi::Message::BoundObjectFunction_RegisterEvent);
     assert(mo->methodId("unregisterEvent::(IIL)") == qi::Message::BoundObjectFunction_UnregisterEvent);
     assert(mo->methodId("metaObject::(I)") == qi::Message::BoundObjectFunction_MetaObject);
+    assert(mo->methodId("registerEventWithSignature::(IILs)") == qi::Message::BoundObjectFunction_RegisterEventWithSignature);
+
     return mo;
   }
 
@@ -158,7 +160,7 @@ namespace qi {
           // Remove top-level tuple
           //sig = sig.substr(1, sig.length()-2);
           //TODO: Optimise
-          AnyReference value = msg.value(sig, _socket);
+          AnyReference value = msg.value((msg.flags()&Message::TypeFlag_DynamicPayload)? "m":sig, _socket);
 
           GenericFunctionParameters args;
           if (sig == "m")
@@ -182,7 +184,8 @@ namespace qi {
     }
 
 
-    if (msg.type() != qi::Message::Type_Reply && msg.type() != qi::Message::Type_Error) {
+    if (msg.type() != qi::Message::Type_Reply
+      && msg.type() != qi::Message::Type_Error) {
       qiLogError() << "Message " << msg.address() << " type not handled: " << msg.type();
       return;
     }
@@ -215,7 +218,9 @@ namespace qi {
            return;
         }
         try {
-          qi::AnyReference val = msg.value(mm->returnSignature(), _socket);
+          qi::AnyReference val = msg.value(
+            (msg.flags()&Message::TypeFlag_DynamicPayload)? "m":mm->returnSignature(),
+            _socket);
           promise.setValue(val);
         } catch (std::runtime_error &err) {
           promise.setError(err.what());
@@ -280,7 +285,23 @@ namespace qi {
       _promises[msg.id()] = out;
     }
     qi::Signature funcSig = mm->parametersSignature();
-    msg.setValues(in, funcSig, this, _socket.get());
+    try {
+      msg.setValues(in, funcSig, this, _socket.get());
+    }
+    catch(const std::exception& e)
+    {
+      qiLogVerbose() << "setValues exception: " << e.what();
+      if (!_socket->remoteCapability("MessageFlags"))
+        throw e;
+      // Delegate conversion to the remote end.
+      msg.addFlags(Message::TypeFlag_DynamicPayload);
+      msg.setValues(in, "m", this, _socket.get());
+    }
+    if (canConvert < 0.2)
+    {
+      msg.addFlags(Message::TypeFlag_ReturnType);
+      msg.setValue(returnSignature.toString(), Signature("s"));
+    }
     msg.setType(qi::Message::Type_Call);
     msg.setService(_service);
     msg.setObject(_object);
@@ -336,8 +357,18 @@ namespace qi {
         throw std::runtime_error("Post target id does not exist");
       funcSig = ms->parametersSignature();
     }
-
-    msg.setValues(in, funcSig, this, _socket.get());
+     try {
+      msg.setValues(in, funcSig, this, _socket.get());
+    }
+    catch(const std::exception& e)
+    {
+      qiLogVerbose() << "setValues exception: " << e.what();
+      if (!_socket->remoteCapability("MessageFlags"))
+        throw e;
+      // Delegate conversion to the remote end.
+      msg.addFlags(Message::TypeFlag_DynamicPayload);
+      msg.setValues(in, "m", this, _socket.get());
+    }
     msg.setType(Message::Type_Post);
     msg.setService(_service);
     msg.setObject(_object);
@@ -372,9 +403,33 @@ namespace qi {
     rsl.localSignalLink.push_back(uid);
 
     if (rsl.remoteSignalLink == qi::SignalBase::invalidSignalLink) {
+      /* Try to handle struct versionning.
+      * Hypothesis: Everything in this address space uses the same struct
+      * version. It makes sense since typesystem does not handle conflicting
+      * definitions for the same type name (due to global typeid->typeinterface factory).
+      *
+      * So we use the very first subscriber to try to detect a version mismatch
+      * between what the callback expects, and what the signal advertises.
+      * If so we inform the remote end to try to convert for us.
+      */
+      Signature subSignature = sub.signature();
+      float score = 1;
+      if (subSignature.isValid())
+      {
+        const MetaSignal* ms = metaObject().signal(event);
+        if (!ms)
+          return makeFutureError<SignalLink>("Signal not found");
+        score = ms->parametersSignature().isConvertibleTo(subSignature);
+        qiLogDebug() << "Conversion score " << score <<" " << ms->parametersSignature().toString() << " -> " << subSignature.toString();
+      }
+      if (!score)
+        return makeFutureError<SignalLink>("Subscriber not compatible to signal signature");
       rsl.remoteSignalLink = uid;
       qiLogDebug() <<"connect() to " << event <<" gave " << uid << "(new remote connection)";
-      rsl.future = _self.call<SignalLink>("registerEvent", _service, event, uid);
+      if (score >= 0.2)
+        rsl.future = _self.call<SignalLink>("registerEvent", _service, event, uid);
+      else // we might or might not be capable to convert, ask the remote end to try also
+        rsl.future = _self.call<SignalLink>("registerEventWithSignature", _service, event, uid, subSignature.toString());
     } else {
       qiLogDebug() <<"connect() to " << event << " gave " << uid << " (reusing remote connection)";
     }

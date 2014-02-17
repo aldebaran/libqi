@@ -238,6 +238,23 @@ namespace qi {
     return static_cast<Message::Type>(_p->header.type);
   }
 
+  void Message::setFlags(qi::uint8_t flags)
+  {
+    cow();
+    _p->header.flags = flags;
+  }
+
+  void Message::addFlags(qi::uint8_t flags)
+  {
+    cow();
+    _p->header.flags |= flags;
+  }
+
+  qi::uint8_t Message::flags() const
+  {
+    return _p->header.flags;
+  }
+
   void Message::setService(qi::uint32_t service)
   {
     cow();

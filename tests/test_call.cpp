@@ -1226,8 +1226,132 @@ TEST(TestObject, asyncCallAndDropPointerGeneric)
 }
 
 
+struct Color
+{
+  int r,g,b;
+};
+// No inheritance, we emulate Color and ColorA being the same struct in
+// two different CUs or SOs.
+struct ColorA
+{
+  ColorA():a(1) {}
+  int r,g,b,a;
+};
+
+// only allow drop of a if it equals 0 (the default-constructed value)
+bool colorVersionHandler(ColorA* instance, const std::vector<std::string>& fields)
+{
+  qiLogDebug() << "colorVersionHandler " << instance->a;
+  if (fields.size() != 1 || fields.front() != "a")
+    return false;
+  return instance->a == 0;
+}
+
+QI_TYPE_STRUCT_REGISTER(Color, r, g, b);
+QI_TYPE_STRUCT_EXTENSION_DROP_HANDLER(ColorA, colorVersionHandler);
+QI_TYPE_STRUCT_EXTENSION_FILL_FIELDS(ColorA, "a");
+QI_TYPE_STRUCT_REGISTER(ColorA, r, g, b, a);
+
+int getColor(Color& c) { return c.r+c.g+c.b;}
+int getColorA(ColorA& c) { return c.r+c.g+c.b + c.a;}
+Color setColor(int r, int g, int b) { Color res; res.r = r; res.g = g; res.b = b; return res;}
+ColorA setColorA(int r, int g, int b, int a) { ColorA res; res.r = r; res.g = g; res.b = b; res.a = a; return res;}
+
+
+TEST(TestObject, StructVersioning)
+{
+  TestSessionPair p;
+  qi::DynamicObjectBuilder builder;
+  builder.advertiseMethod("getColor", &getColor);
+  builder.advertiseMethod("getColorA", &getColorA);
+  builder.advertiseMethod("setColor", &setColor);
+  builder.advertiseMethod("setColorA", &setColorA);
+  AnyObject s = builder.object();
+  p.server()->registerService("color", s);
+  AnyObject o = p.client()->service("color");
+  Color c;
+  ColorA ca;
+  c = o.call<Color>("setColor", 0, 1, 2);
+  EXPECT_EQ(c.g, 1);
+  EXPECT_NO_THROW(ca = o.call<ColorA>("setColor", 0, 1, 2));
+  EXPECT_EQ(ca.g, 1);
+  EXPECT_EQ(ca.a, 0);
+  ca = o.call<ColorA>("setColorA", 0, 2, 5, 3);
+  EXPECT_EQ(ca.g, 2);
+  EXPECT_EQ(ca.a, 3);
+  EXPECT_NO_THROW(c = o.call<Color>("setColorA", 0, 2, 5, 0)); /*FAILS*/
+  EXPECT_EQ(c.g, 2);
+  EXPECT_ANY_THROW(o.call<Color>("setColorA", 0, 2, 5, 1));
+
+  c.r=0; c.g = 1; c.b = 2;
+  int res;
+#define EXPECT_EQ_NT(v, call) \
+  EXPECT_NO_THROW(res = call); \
+  EXPECT_EQ(v, res)
+  EXPECT_EQ_NT(3, o.call<int>("getColor", c));
+  EXPECT_EQ_NT(3, o.call<int>("getColorA", c));
+  ca.r=0; ca.g = 1; ca.b = 2;
+  ca.a = 0;
+  EXPECT_EQ_NT(3, o.call<int>("getColor", ca));
+  EXPECT_EQ_NT(3, o.call<int>("getColorA", ca));
+  ca.a = 2;
+  EXPECT_ANY_THROW(o.call<int>("getColor", ca).value());
+  EXPECT_EQ_NT(5, o.call<int>("getColorA", ca));
+}
+
+qi::Atomic<int> onCounter;
+void onColor(Color& c) { ++onCounter;}
+void onColorA(ColorA& c) { ++onCounter;}
+
+TEST(TestObject, StructVersioningEvent)
+{
+  /* Careful with testing, one client is expected to only have one version of the struct
+   *, so do not register multiple callbacks with different versions
+   * of one struct on the same client
+  */
+  /* WARNING
+  * This test cannot reproduce real-world conditions for two reasons:
+  * - We use two differently named structs for the two versions, instead
+  * of one same name in two address spaces. This is workarounded by
+  * environment variable QI_IGNORE_STRUCT_NAME.
+  * - We only have one address space, so synthetized types are never used
+  * due to the struct factory. In real-world conditions, when data for
+  * an unknown struct version is received, a synthetized TypeTuple is
+  * used to represent it, which denies all drop/fill conversion attempts.
+  * That is why the qimessaging code attempts conversion on both ends.
+  *
+  * Effective testing would require the sessions to be in different processes.
+  */
+  TestSessionPair p;
+  qi::DynamicObjectBuilder builder;
+  builder.advertiseSignal<Color>("onColor");
+  builder.advertiseSignal<ColorA>("onColorA");
+  qi::Session c2;
+  c2.connect(p.server()->url());
+  AnyObject s = builder.object();
+  p.server()->registerService("color", s);
+  AnyObject o = p.client()->service("color");
+  AnyObject o2 = c2.service("color");
+  o.connect("onColor", &onColor);
+  o.connect("onColorA", &onColor);
+  o2.connect("onColor", &onColorA);
+  o2.connect("onColorA", &onColorA);
+  s.connect("onColor", &onColorA);
+  s.connect("onColorA", &onColorA);
+  qiLogInfo() << "Connect done, signaling...";
+  Color c;
+  ColorA ca;
+  ca.r = ca.g = ca.b = ca.a = 0;
+  o.post("onColor", c);
+  o.post("onColorA", c);
+  o2.post("onColor", ca);
+  o2.post("onColorA", ca); /* FAILS, double-remote */
+  for (unsigned i=0; i<10 && *onCounter != 12; ++i) qi::os::msleep(100);
+  EXPECT_EQ(12, *onCounter);
+}
 
 int main(int argc, char **argv) {
+  qi::os::setenv("QI_IGNORE_STRUCT_NAME", "1");
   qi::Application app(argc, argv);
   TestMode::initTestMode(argc, argv);
   ::testing::InitGoogleTest(&argc, argv);

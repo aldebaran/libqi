@@ -18,10 +18,59 @@ namespace qi {
                                    unsigned int service, unsigned int object,
                                    unsigned int event, Signature sig,
                                    TransportSocketPtr client,
-                                   ObjectHost* context)
+                                   ObjectHost* context,
+                                   const std::string& signature)
   {
+    qiLogDebug() << "forwardEvent";
     qi::Message msg;
-    msg.setValues(params, sig, context, client.get());
+    // FIXME: would like to factor with serveresult.hpp convertAndSetValue()
+    // but we have a setValue/setValues issue
+    bool processed = false;
+    if (!signature.empty() && client->remoteCapability("MessageFlags", false))
+    {
+      qiLogDebug() << "forwardEvent attempting conversion to " << signature;
+      try
+      {
+        GenericFunctionParameters res = params.convert(signature);
+        // invalid conversion does not throw it seems
+        bool valid = true;
+        for (unsigned i=0; i<res.size(); ++i)
+        {
+          if (!res[i].type())
+          {
+            valid = false;
+            break;
+          }
+        }
+        if (valid)
+        {
+          qiLogDebug() << "forwardEvent success " << res[0].type()->infoString();
+          msg.setValues(res, "m", context, client.get());
+          msg.addFlags(Message::TypeFlag_DynamicPayload);
+          res.destroy();
+          processed = true;
+        }
+      }
+      catch(const std::exception& e)
+      {
+        qiLogDebug() << "forwardEvent failed to convert to forced type";
+      }
+    }
+    if (!processed)
+    {
+      try {
+        msg.setValues(params, sig, context, client.get());
+      }
+      catch (const std::exception& e)
+      {
+        qiLogVerbose() << "forwardEvent::setValues exception: " << e.what();
+        if (!client->remoteCapability("MessageFlags"))
+          throw e;
+        // Delegate conversion to the remote end.
+        msg.addFlags(Message::TypeFlag_DynamicPayload);
+        msg.setValues(params, "m", context, client.get());
+      }
+    }
     msg.setService(service);
     msg.setFunction(event);
     msg.setType(Message::Type_Event);
@@ -83,6 +132,8 @@ namespace qi {
       ob->advertiseMethod("property",       &ServiceBoundObject::property, MetaCallType_Auto, qi::Message::BoundObjectFunction_GetProperty);
       ob->advertiseMethod("setProperty",       &ServiceBoundObject::setProperty, MetaCallType_Auto, qi::Message::BoundObjectFunction_SetProperty);
       ob->advertiseMethod("properties",       &ServiceBoundObject::properties, MetaCallType_Auto, qi::Message::BoundObjectFunction_Properties);
+      ob->advertiseMethod("registerEventWithSignature"  , &ServiceBoundObject::registerEventWithSignature, MetaCallType_Auto, qi::Message::BoundObjectFunction_RegisterEventWithSignature);
+
       //global currentSocket: we are not multithread or async capable ob->setThreadingModel(ObjectThreadingModel_MultiThread);
     }
     AnyObject result = ob->object(self, &AnyObject::deleteGenericObjectOnly);
@@ -95,7 +146,18 @@ namespace qi {
     const MetaSignal* ms = _object.metaObject().signal(eventId);
     if (!ms)
       throw std::runtime_error("No such signal");
-    AnyFunction mc = AnyFunction::fromDynamicFunction(boost::bind(&forwardEvent, _1, _serviceId, _objectId, eventId, ms->parametersSignature(), _currentSocket, this));
+    AnyFunction mc = AnyFunction::fromDynamicFunction(boost::bind(&forwardEvent, _1, _serviceId, _objectId, eventId, ms->parametersSignature(), _currentSocket, this, ""));
+    SignalLink linkId = _object.connect(eventId, mc);
+    qiLogDebug() << "SBO rl " << remoteSignalLinkId <<" ll " << linkId;
+    _links[_currentSocket][remoteSignalLinkId] = RemoteSignalLink(linkId, eventId);
+    return linkId;
+  }
+  SignalLink ServiceBoundObject::registerEventWithSignature(unsigned int objectId, unsigned int eventId, SignalLink remoteSignalLinkId, const std::string& signature) {
+    // fetch signature
+    const MetaSignal* ms = _object.metaObject().signal(eventId);
+    if (!ms)
+      throw std::runtime_error("No such signal");
+    AnyFunction mc = AnyFunction::fromDynamicFunction(boost::bind(&forwardEvent, _1, _serviceId, _objectId, eventId, ms->parametersSignature(), _currentSocket, this, signature));
     SignalLink linkId = _object.connect(eventId, mc);
     qiLogDebug() << "SBO rl " << remoteSignalLinkId <<" ll " << linkId;
     _links[_currentSocket][remoteSignalLinkId] = RemoteSignalLink(linkId, eventId);
@@ -144,7 +206,7 @@ namespace qi {
         ss << "Cannot negotiate QiMessaging connection: "
            << "remote end doesn't support binary protocol v" << msg.version();
         serverResultAdapter(qi::makeFutureError<AnyReference>(ss.str()), Signature(),
-                            _owner ? _owner : this, socket, msg.address());
+                            _owner ? _owner : this, socket, msg.address(), Signature());
         return;
       }
 
@@ -171,6 +233,7 @@ namespace qi {
       qi::Signature sigparam;
       GenericFunctionParameters mfp;
 
+      // Validate call target
       if (msg.type() == qi::Message::Type_Call) {
         const qi::MetaMethod *mm = obj.metaObject().method(funcId);
         if (!mm) {
@@ -202,7 +265,26 @@ namespace qi {
         return;
       }
 
-      AnyReference value = msg.value(sigparam, socket);
+      AnyReference value;
+      if (msg.flags() & Message::TypeFlag_DynamicPayload)
+        sigparam = "m";
+      // ReturnType flag appends a signature to the payload
+      Signature originalSignature;
+      bool hasReturnType = (msg.flags() & Message::TypeFlag_ReturnType);
+      if (hasReturnType)
+      {
+        originalSignature = sigparam;
+        sigparam = "(" + sigparam.toString() + "s)";
+      }
+      value = msg.value(sigparam, socket);
+      std::string returnSignature;
+      if (hasReturnType)
+      {
+        returnSignature = value[1].to<std::string>();
+        value[1].destroy();
+        value = value[0];
+        sigparam = originalSignature;
+      }
       if (sigparam == "m")
       {
         // received dynamically typed argument pack, unwrap
@@ -233,13 +315,13 @@ namespace qi {
         boost::mutex::scoped_lock lock(_mutex);
         _currentSocket = socket;
         qi::Future<AnyReference>  fut = obj.metaCall(funcId, mfp,
-                                                         obj==_self ? MetaCallType_Direct: _callType);
+                                                         obj==_self ? MetaCallType_Direct: _callType, returnSignature.empty()?Signature(): Signature(returnSignature));
         Signature retSig;
         const MetaMethod* mm = obj.metaObject().method(funcId);
         if (mm)
           retSig = mm->returnSignature();
         _currentSocket.reset();
-        fut.connect(boost::bind<void>(&serverResultAdapter, _1, retSig, _owner?_owner:(ObjectHost*)this, socket, msg.address()));
+        fut.connect(boost::bind<void>(&serverResultAdapter, _1, retSig, _owner?_owner:(ObjectHost*)this, socket, msg.address(),  returnSignature.empty()?Signature(): Signature(returnSignature)));
       }
         break;
       case Message::Type_Post: {
@@ -258,13 +340,13 @@ namespace qi {
       if (msg.type() == Message::Type_Call) {
         qi::Promise<AnyReference> prom;
         prom.setError(e.what());
-        serverResultAdapter(prom.future(), Signature(), _owner?_owner:this, socket, msg.address());
+        serverResultAdapter(prom.future(), Signature(), _owner?_owner:this, socket, msg.address(), Signature());
       }
     } catch (...) {
       if (msg.type() == Message::Type_Call) {
         qi::Promise<AnyReference> prom;
         prom.setError("Unknown error catch");
-        serverResultAdapter(prom.future(), Signature(), _owner?_owner:this, socket, msg.address());
+        serverResultAdapter(prom.future(), Signature(), _owner?_owner:this, socket, msg.address(), Signature());
       }
     }
   }

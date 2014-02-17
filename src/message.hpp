@@ -26,7 +26,8 @@ namespace qi {
       qi::uint32_t id;
       qi::uint32_t size;
       qi::uint16_t version;
-      qi::uint16_t type;
+      qi::uint8_t  flags;
+      qi::uint8_t  type;
       qi::uint32_t service;
       qi::uint32_t object;
       qi::uint32_t action;
@@ -107,7 +108,8 @@ namespace qi {
       BoundObjectFunction_Terminate         = 3,
       BoundObjectFunction_GetProperty       = 5,
       BoundObjectFunction_SetProperty       = 6,
-      BoundObjectFunction_Properties        = 7
+      BoundObjectFunction_Properties        = 7,
+      BoundObjectFunction_RegisterEventWithSignature = 8,
     };
 
     enum ServerFunction
@@ -143,6 +145,15 @@ namespace qi {
       // Advertise capabilities, Server<->Client
       Type_Capability = 6,
     };
+    // If flag set, payload is of type m instead of expected type
+    static const unsigned int TypeFlag_DynamicPayload = 1;
+    /* If flag is set, message payload also contains a type into which
+     * the return value must be converted.
+     * In that case, Type_DynamicPayload will be set on return message,
+     * and signature will be repeated.
+     * NOT IMPLEMENTED
+     */
+    static const unsigned int TypeFlag_ReturnType = 2;
 
     static const char* typeToString(Type t);
     static const char* actionToString(unsigned int action, unsigned int service);
@@ -163,6 +174,10 @@ namespace qi {
 
     void         setType(Type type);
     Type         type() const;
+
+    void         setFlags(qi::uint8_t flags);
+    void         addFlags(qi::uint8_t flags);
+    qi::uint8_t  flags() const;
 
     void         setService(qi::uint32_t service);
     unsigned int service() const;
@@ -191,6 +206,8 @@ namespace qi {
     void setValues(const std::vector<qi::AnyReference>& values, ObjectHost* context = 0, StreamContext* streamContext = 0);
     /// Convert values to \p targetSignature and assign to payload.
     void setValues(const std::vector<qi::AnyReference>& values, const qi::Signature& targetSignature, ObjectHost* context = 0, StreamContext* streamContext = 0);
+    /// Append additional data to payload
+    void appendValue(const AutoAnyReference& value, ObjectHost* context = 0, StreamContext* streamContext = 0);
     MessageAddress address() const;
 
     bool         isValid();
