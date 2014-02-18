@@ -6,9 +6,7 @@
 ##
 
 from _qi import pylog
-from _qi import pysetlevel
-from _qi import pysetcontext
-from _qi import pysetfilters
+from _qi import setLevel, setContext, setFilters
 import inspect
 import uuid
 
@@ -25,15 +23,6 @@ WARNING = 3
 INFO    = 4
 VERBOSE = 5
 DEBUG   = VERBOSE
-
-def setLevel(level):
-    pysetlevel(level)
-
-def setContext(context):
-    pysetcontext(context)
-
-def setFilters(filters):
-    pysetfilters(filters)
 
 def _printToString(*args):
     return ' '.join(str(x) for x in args)
