@@ -143,7 +143,7 @@ namespace qi {
   }
 
   qi::Future<AnyReference>
-  GenericObject::metaCall(unsigned int method, const GenericFunctionParameters& params, MetaCallType callType)
+  GenericObject::metaCall(unsigned int method, const GenericFunctionParameters& params, MetaCallType callType, Signature returnSignature)
   {
     FutureCallbackType futureType = (callType == MetaCallType_Direct) ? FutureCallbackType_Sync: FutureCallbackType_Async;
     if (!type || !value) {
@@ -152,7 +152,7 @@ namespace qi {
       return qi::makeFutureError<AnyReference>(s, futureType);
     }
     try {
-      return type->metaCall(value, shared_from_this(), method, params, callType);
+      return type->metaCall(value, shared_from_this(), method, params, callType, returnSignature);
     } catch (const std::exception &e) {
       return qi::makeFutureError<AnyReference>(e.what(), futureType);
     }
@@ -177,7 +177,7 @@ namespace qi {
   }
 
   qi::Future<AnyReference>
-  GenericObject::metaCall(const std::string &nameWithOptionalSignature, const GenericFunctionParameters& args, MetaCallType callType)
+  GenericObject::metaCall(const std::string &nameWithOptionalSignature, const GenericFunctionParameters& args, MetaCallType callType, Signature returnSignature)
   {
     if (!type || !value) {
       const std::string s = "Invalid object";
@@ -189,7 +189,7 @@ namespace qi {
       std::string resolvedSig = args.signature(true).toString();
       return makeFutureError<AnyReference>(MetaObjectPrivate::generateErrorString(nameWithOptionalSignature, metaObject().findCompatibleMethod(nameWithOptionalSignature), false));
     }
-    return metaCall(methodId, args, callType);
+    return metaCall(methodId, args, callType, returnSignature);
   }
 
   /// Resolve signature and bounce

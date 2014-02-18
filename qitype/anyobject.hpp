@@ -138,7 +138,7 @@ namespace qi {
 
 #endif // DOXYGEN
 
-    qi::Future<AnyReference> metaCall(unsigned int method, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto);
+    qi::Future<AnyReference> metaCall(unsigned int method, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto, Signature returnSignature = Signature());
     /** Find method named \p named callable with arguments \p parameters
     */
     unsigned int findMethod(const std::string& name, const GenericFunctionParameters& parameters);
@@ -146,7 +146,7 @@ namespace qi {
     * @param signature method name or method signature 'name::(args)'
     *        if signature is given, an exact match is required
     */
-    qi::Future<AnyReference> metaCall(const std::string &nameWithOptionalSignature, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto);
+    qi::Future<AnyReference> metaCall(const std::string &nameWithOptionalSignature, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto, Signature returnSignature = Signature());
 
     void post(const std::string& eventName,
                    qi::AutoAnyReference p1 = qi::AutoAnyReference(),

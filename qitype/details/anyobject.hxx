@@ -29,17 +29,17 @@ namespace qi {
     {
     public:
       const MetaObject &metaObject() const { return go()->metaObject();}
-      inline qi::Future<AnyReference> metaCall(unsigned int method, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto) const
+      inline qi::Future<AnyReference> metaCall(unsigned int method, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto, Signature returnSignature=Signature()) const
       {
-        return go()->metaCall(method, params, callType);
+        return go()->metaCall(method, params, callType, returnSignature);
       }
       inline unsigned int findMethod(const std::string& name, const GenericFunctionParameters& parameters) const
       {
         return go()->findMethod(name, parameters);
       }
-      inline qi::Future<AnyReference> metaCall(const std::string &nameWithOptionalSignature, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto) const
+      inline qi::Future<AnyReference> metaCall(const std::string &nameWithOptionalSignature, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto, Signature returnSignature=Signature()) const
       {
-        return go()->metaCall(nameWithOptionalSignature, params, callType);
+        return go()->metaCall(nameWithOptionalSignature, params, callType, returnSignature);
       }
       inline void metaPost(unsigned int event, const GenericFunctionParameters& params) const
       {
@@ -658,7 +658,7 @@ namespace qi {
      BOOST_PP_REPEAT(n, pushi, _)                                          \
      std::string sigret;                                                   \
      qi::Promise<R> res(qi::FutureCallbackType_Sync);                      \
-     qi::Future<AnyReference> fmeta = metaCall(methodName, params);        \
+     qi::Future<AnyReference> fmeta = metaCall(methodName, params, MetaCallType_Auto, typeOf<R>()->signature());        \
      fmeta.connect(boost::bind<void>(&detail::futureAdapter<R>, _1, res)); \
      return res.future();                                                  \
   }
@@ -678,7 +678,7 @@ namespace qi {
      BOOST_PP_REPEAT(n, pushi, _)                                                          \
      std::string sigret;                                                                   \
      qi::Promise<R> res(qi::FutureCallbackType_Sync);                                      \
-     qi::Future<AnyReference> fmeta = metaCall(methodName, params, MetaCallType_Queued);   \
+     qi::Future<AnyReference> fmeta = metaCall(methodName, params, MetaCallType_Queued, typeOf<R>()->signature());   \
      fmeta.connect(boost::bind<void>(&detail::futureAdapter<R>, _1, res));                 \
      return res.future();                                                                  \
   }
@@ -699,7 +699,7 @@ namespace qi {
      BOOST_PP_REPEAT(n, pushi, _)                                          \
      std::string sigret;                                                   \
      qi::Promise<R> res(qi::FutureCallbackType_Sync);                       \
-     qi::Future<AnyReference> fmeta = metaCall(methodName, params, callType);   \
+     qi::Future<AnyReference> fmeta = metaCall(methodName, params, callType, typeOf<R>()->signature());   \
      fmeta.connect(boost::bind<void>(&detail::futureAdapter<R>, _1, res));  \
      return res.future();                                                  \
   }
@@ -873,10 +873,10 @@ namespace qi {
       Proxy* ptr = toProxy(instance);
       return ptr->asObject().metaObject();
     }
-    virtual qi::Future<AnyReference> metaCall(void* instance, AnyObject context, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto)
+    virtual qi::Future<AnyReference> metaCall(void* instance, AnyObject context, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType, Signature returnSignature)
     {
       Proxy* ptr = toProxy(instance);
-      return ptr->asObject().metaCall(method, params, callType);
+      return ptr->asObject().metaCall(method, params, callType, returnSignature);
     }
     virtual void metaPost(void* instance, AnyObject context, unsigned int signal, const GenericFunctionParameters& params)
     {

@@ -101,7 +101,7 @@ namespace qi
   public:
     DynamicObjectTypeInterface() {}
     virtual const MetaObject& metaObject(void* instance);
-    virtual qi::Future<AnyReference> metaCall(void* instance, AnyObject context, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto);
+    virtual qi::Future<AnyReference> metaCall(void* instance, AnyObject context, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType, Signature returnSignature);
     virtual void metaPost(void* instance, AnyObject context, unsigned int signal, const GenericFunctionParameters& params);
     virtual qi::Future<SignalLink> connect(void* instance, AnyObject context, unsigned int event, const SignalSubscriber& subscriber);
     /// Disconnect an event link. Returns if disconnection was successful.
@@ -205,7 +205,7 @@ namespace qi
       return i->second;
   }
 
-  qi::Future<AnyReference> DynamicObject::metaCall(AnyObject context, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType)
+  qi::Future<AnyReference> DynamicObject::metaCall(AnyObject context, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType, Signature returnSignature)
   {
     DynamicObjectPrivate::MethodMap::iterator i = _p->methodMap.find(method);
     if (i == _p->methodMap.end())
@@ -213,6 +213,17 @@ namespace qi
       std::stringstream ss;
       ss << "Can't find methodID: " << method;
       return qi::makeFutureError<AnyReference>(ss.str());
+    }
+    if (returnSignature.isValid())
+    {
+      MetaMethod *mm = metaObject().method(method);
+      if (!mm)
+        return makeFutureError<AnyReference>("Unexpected error: MetaMethod not found");
+      if (mm->returnSignature().isConvertibleTo(returnSignature) == 0)
+        return makeFutureError<AnyReference>(
+        "Call error: will not be able to convert return type from "
+        + mm->returnSignature().toString()
+        + " to " + returnSignature.toString());
     }
     Manageable* m = static_cast<Manageable*>(context.asGenericObject());
     GenericFunctionParameters p;
@@ -576,10 +587,10 @@ namespace qi
     return reinterpret_cast<DynamicObject*>(instance)->metaObject();
   }
 
-  qi::Future<AnyReference> DynamicObjectTypeInterface::metaCall(void* instance, AnyObject context, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType)
+  qi::Future<AnyReference> DynamicObjectTypeInterface::metaCall(void* instance, AnyObject context, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType, Signature returnSignature)
   {
     return reinterpret_cast<DynamicObject*>(instance)
-      ->metaCall(context, method, params, callType);
+      ->metaCall(context, method, params, callType, returnSignature);
   }
 
   void DynamicObjectTypeInterface::metaPost(void* instance, AnyObject context, unsigned int signal, const GenericFunctionParameters& params)

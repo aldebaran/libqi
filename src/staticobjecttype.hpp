@@ -64,7 +64,7 @@ public:
   void initialize(const MetaObject& mo, const ObjectTypeData& data);
   virtual const TypeInfo& info();
   virtual const MetaObject& metaObject(void* instance);
-  virtual qi::Future<AnyReference> metaCall(void* instance, AnyObject context, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto);
+  virtual qi::Future<AnyReference> metaCall(void* instance, AnyObject context, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType, Signature returnSignature);
   virtual void metaPost(void* instance, AnyObject context, unsigned int signal, const GenericFunctionParameters& params);
   virtual qi::Future<SignalLink> connect(void* instance, AnyObject context, unsigned int event, const SignalSubscriber& subscriber);
   /// Disconnect an event link. Returns if disconnection was successful.
