@@ -250,7 +250,7 @@ namespace qi {
   }
 
 
-  qi::Future<AnyReference> RemoteObject::metaCall(AnyObject, unsigned int method, const qi::GenericFunctionParameters &in, MetaCallType callType)
+  qi::Future<AnyReference> RemoteObject::metaCall(AnyObject, unsigned int method, const qi::GenericFunctionParameters &in, MetaCallType callType, Signature returnSignature)
   {
     MetaMethod *mm = metaObject().method(method);
     if (!mm) {
@@ -258,8 +258,26 @@ namespace qi {
       ss << "Method " << method << " not found on service " << _service;
       return makeFutureError<AnyReference>(ss.str());
     }
-
-
+    float canConvert = 1;
+    if (returnSignature.isValid())
+    {
+      canConvert = mm->returnSignature().isConvertibleTo(returnSignature);
+      qiLogDebug() << "return type conversion score: " << canConvert;
+      if (canConvert == 0)
+      {
+        // last chance for dynamics and adventurous users
+        canConvert = returnSignature.isConvertibleTo(mm->returnSignature());
+        if (canConvert == 0)
+          return makeFutureError<AnyReference>(
+            "Call error: will not be able to convert return type from "
+              + mm->returnSignature().toString()
+              + " to " + returnSignature.toString());
+        else
+          qiLogWarning() << "Return signature might be incorrect depending on the value, from "
+            + mm->returnSignature().toString()
+            + " to " + returnSignature.toString();
+      }
+    }
     /* The promise will be set:
      - From here in case of error
      - From a network callback, called asynchronously in thread pool

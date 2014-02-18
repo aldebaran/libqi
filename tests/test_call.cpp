@@ -1225,6 +1225,26 @@ TEST(TestObject, asyncCallAndDropPointerGeneric)
   EXPECT_EQ(currentDCount + 1, *TestClass::destructionCount);
 }
 
+bool incrementAtomic(qi::Atomic<int>& a)
+{
+  ++a;
+  return true;
+}
+TEST(TestObject, EarlyAbort)
+{
+  qi::Atomic<int> a;
+  qi::DynamicObjectBuilder builder;
+  builder.advertiseMethod("inc", boost::function<bool(void)>(boost::bind(&incrementAtomic, boost::ref(a))));
+  TestSessionPair p;
+  AnyObject s = builder.object();
+  p.server()->registerService("color", s);
+  AnyObject o = p.client()->service("color");
+  EXPECT_ANY_THROW(o.call<std::string>("inc"));
+  EXPECT_EQ(0, *a);
+  a = 0;
+  EXPECT_ANY_THROW(o.call<bool>("inc", 42));
+  EXPECT_EQ(0, *a);
+}
 
 struct Color
 {
@@ -1288,6 +1308,7 @@ TEST(TestObject, StructVersioning)
 #define EXPECT_EQ_NT(v, call) \
   EXPECT_NO_THROW(res = call); \
   EXPECT_EQ(v, res)
+
   EXPECT_EQ_NT(3, o.call<int>("getColor", c));
   EXPECT_EQ_NT(3, o.call<int>("getColorA", c));
   ca.r=0; ca.g = 1; ca.b = 2;
