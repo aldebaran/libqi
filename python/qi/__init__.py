@@ -51,6 +51,7 @@ from _type import Void, Bool, Int8, UInt8, Int16, UInt16, Int32, UInt32, Int64, 
 from _type import typeof, _isinstance
 from _binder import bind, nobind
 from .logging import logSilent, logFatal, logError, logWarning, logInfo, logVerbose, logDebug, PyLogger, setLevel, setContext, setFilters, getLogger
+from .translator import defaultTranslator, tr, Translator
 
 
 #rename isinstance here. (isinstance should not be used in this file)
@@ -113,6 +114,8 @@ __all__ = ["FutureState",
            "bind", "nobind",
            "logSilent", "logFatal", "logError", "logWarning", "logInfo", "logVerbose", "logDebug",
            "setLevel", "setContext", "setFilters", "getLogger"
-           "PyLogger"
+           "PyLogger",
+           "defaultTranslator", "tr", "Translator"
+
 
 ]

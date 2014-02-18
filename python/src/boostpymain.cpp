@@ -13,6 +13,7 @@
 #include "pyasync.hpp"
 #include "pylog.hpp"
 #include "pypath.hpp"
+#include "pytranslator.hpp"
 
 qiLogCategory("qi.py");
 
@@ -42,4 +43,5 @@ BOOST_PYTHON_MODULE(_qi)
   qi::py::export_pyasync();
   qi::py::export_pylog();
   qi::py::export_pypath();
+  qi::py::export_pytranslator();
 }
