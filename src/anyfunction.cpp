@@ -290,7 +290,7 @@ namespace qi
       return dst;
     }
     const SignatureVector &elts = sig.children();
-    SignatureVector::const_iterator it;
+    SignatureVector::const_iterator it = elts.begin();
     int idx = 0;
     for (;it != elts.end(); ++it,++idx)
     {
