@@ -130,7 +130,25 @@ namespace qi {
       if (d != s)
         return 0; // Must be same container
       if (children().size() != b.children().size())
+      {
+        if (s != Type_Tuple)
+          return 0;
+        // Special case for same-named tuples that might be compatible
+        std::string aSrc = annotation();
+        std::string aDst = b.annotation();
+        // This mode is recommended only for tests where it is more
+        // conveniant to have differently named structs
+        static bool requireSameName = qi::os::getenv("QI_IGNORE_STRUCT_NAME").empty();
+        if (!requireSameName)
+          return (aSrc.empty() || aDst.empty()) ? 0:0.1;
+
+        size_t pSrc = aSrc.find_first_of(",");
+        size_t pDst = aDst.find_first_of(",");
+        if (pSrc == pDst && pSrc != aSrc.npos && !memcmp(aSrc.data(), aDst.data(), pSrc))
+          return 0.1;
+
         return 0;
+      }
       SignatureVector::const_iterator its;
       SignatureVector::const_iterator itd;
       itd = b.children().begin();
