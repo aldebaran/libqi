@@ -93,6 +93,8 @@ namespace qi {
 
     Signature::Type s = type();
     Signature::Type d = b.type();
+    if (d == Type_Void)
+      return RET_CALC;
     if (d == Type_Unknown)
     {
       // We cannot anwser the question for unknown types. So let it pass
