@@ -236,6 +236,10 @@ template<
    {
      return linkId;
    }
+   /** Try to extract exact signature of this subscriber.
+   * @return the signature, or an invalid signature if extraction is impossible
+   */
+   Signature signature() const;
  public:
    // Source information
    SignalBase* source;

@@ -331,6 +331,33 @@ namespace qi {
     return connect(SignalSubscriber(o, slot));
   }
 
+  Signature SignalSubscriber::signature() const
+  {
+    if (handler)
+    {
+      if (handler.functionType() == dynamicFunctionTypeInterface())
+        return Signature(); // no arity checking is possible
+      else
+        return handler.parametersSignature();
+    }
+    else if (target)
+    {
+      AnyObject locked = target->lock();
+      if (!locked)
+        return Signature();
+      const MetaMethod* ms = locked.metaObject().method(method);
+      if (!ms)
+      {
+        qiLogWarning() << "Method " << method <<" not found.";
+        return Signature();
+      }
+      else
+        return ms->parametersSignature();
+    }
+    else
+      return Signature();
+  }
+
   SignalSubscriber& SignalBase::connect(const SignalSubscriber& src)
   {
     qiLogDebug() << (void*)this << " connecting new subscriber";
@@ -341,35 +368,13 @@ namespace qi {
     // Check arity. Does not require to acquire weakLock.
     int sigArity = signature().children().size();
     int subArity = -1;
-    Signature subSignature;
+    Signature subSignature = src.signature();
+    if (subSignature.isValid())
+      subArity = subSignature.children().size();
 
-    if (signature() == "m")
+    if (signature() == "m" || !subSignature.isValid())
       goto proceed; // no check possible
 
-    if (src.handler)
-    {
-      if (src.handler.functionType() == dynamicFunctionTypeInterface())
-        goto proceed; // no arity checking is possible
-      subArity = src.handler.argumentsType().size();
-      subSignature = src.handler.parametersSignature();
-    }
-    else if (src.target)
-    {
-      AnyObject locked = src.target->lock();
-      if (!locked)
-        throw std::runtime_error("Target object cannot be locked");
-      const MetaMethod* ms = locked.metaObject().method(src.method);
-      if (!ms)
-      {
-        qiLogWarning() << "Method " << src.method <<" not found, proceeding anyway";
-        goto proceed;
-      }
-      else
-      {
-        subSignature = ms->parametersSignature();
-        subArity = subSignature.children().size();
-      }
-    }
     if (sigArity != subArity)
     {
       std::stringstream s;
