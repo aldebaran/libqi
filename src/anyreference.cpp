@@ -1109,6 +1109,10 @@ namespace qi
         result.push_back(*it);
       return result;
     }
+    else if (kind() == TypeKind_Dynamic)
+    {
+      return (**this).asTupleValuePtr();
+    }
     else
       throw std::runtime_error("Expected tuple, list or map");
   }
