@@ -99,6 +99,9 @@ namespace qi {
     * caching of MetaObjects (binary protocol change).
     */
     (*_defaultCapabilities)["MetaObjectCache"] = AnyValue::from(true);
+    /* MessageFlags: remote ends support Message flags (flags in 'type' header field)
+    */
+    (*_defaultCapabilities)["MessageFlags"] = AnyValue::from(true);
     // Process override from environment
     std::string capstring = qi::os::getenv("QI_TRANSPORT_CAPABILITIES");
     std::vector<std::string> caps;
