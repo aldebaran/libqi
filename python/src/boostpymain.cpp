@@ -12,6 +12,7 @@
 #include "pyobjectfactory.hpp"
 #include "pyasync.hpp"
 #include "pylog.hpp"
+#include "pypath.hpp"
 
 qiLogCategory("qi.py");
 
@@ -40,4 +41,5 @@ BOOST_PYTHON_MODULE(_qi)
   qi::py::export_pyapplicationsession();
   qi::py::export_pyasync();
   qi::py::export_pylog();
+  qi::py::export_pypath();
 }

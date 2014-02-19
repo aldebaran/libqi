@@ -15,6 +15,8 @@ add_library(_qi SHARED src/boostpymain.cpp
                    src/pyfuture.hpp
                    src/pylog.cpp
                    src/pylog.hpp
+                   src/pypath.cpp
+                   src/pypath.hpp
                    src/pyobject.cpp
                    src/pyobject.hpp
                    src/pyobjectconverter.cpp

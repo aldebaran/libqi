@@ -9,5 +9,6 @@ C++ qi API Reference
   future
   signal
   periodictask
+  path
   ../../cpp-classindex
   ../../cpp-funcindex
