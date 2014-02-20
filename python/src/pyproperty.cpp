@@ -10,7 +10,12 @@ namespace qi { namespace py {
 
     class PyProperty : public qi::GenericProperty {
     public:
-      PyProperty(const std::string &signature = "m")
+      PyProperty()
+        : qi::GenericProperty(qi::TypeInterface::fromSignature("m"))
+      {
+      }
+
+      explicit PyProperty(const std::string &signature)
         : qi::GenericProperty(qi::TypeInterface::fromSignature(signature))
       {
       }
@@ -51,11 +56,14 @@ namespace qi { namespace py {
     };
 
     boost::python::object makePyProperty(const std::string &signature) {
-      return boost::python::object(PyProperty(signature));
+      return boost::python::object(boost::make_shared<PyProperty>(signature));
     }
 
     qi::PropertyBase *getProperty(boost::python::object obj) {
-      return boost::python::extract<PyProperty*>(obj);
+      boost::shared_ptr<PyProperty> p = boost::python::extract< boost::shared_ptr<PyProperty> >(obj);
+      if (!p)
+        return 0;
+      return p.get();
     }
 
     boost::python::object makePyProxyProperty(const qi::AnyObject &obj, const qi::MetaProperty &prop) {
@@ -63,7 +71,8 @@ namespace qi { namespace py {
     }
 
     void export_pyproperty() {
-      boost::python::class_<PyProperty>("Property", boost::python::init<>())
+      //use a shared_ptr because class Property is not copyable.
+      boost::python::class_<PyProperty, boost::shared_ptr<PyProperty>, boost::noncopyable >("Property", boost::python::init<>())
           .def(boost::python::init<const std::string &>())
           .def("value", &PyProperty::val,
                "value() -> value\n"

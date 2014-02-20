@@ -117,9 +117,6 @@ namespace qi {
           .def("stop", &PyApplication::stop);
     }
 
-    static void noDelete(qi::Session*) {
-    }
-
     class PyApplicationSession {
     public:
       PyApplicationSession() {
@@ -133,8 +130,7 @@ namespace qi {
       }
 
       void initSes() {
-        _sesPtr = boost::shared_ptr<qi::Session>(&_app->session(), noDelete);
-        _ses = makePySession(_sesPtr);
+        _ses = makePySession(_app->session());
       }
 
       ~PyApplicationSession() {
