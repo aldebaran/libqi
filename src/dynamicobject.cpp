@@ -220,10 +220,17 @@ namespace qi
       if (!mm)
         return makeFutureError<AnyReference>("Unexpected error: MetaMethod not found");
       if (mm->returnSignature().isConvertibleTo(returnSignature) == 0)
-        return makeFutureError<AnyReference>(
-        "Call error: will not be able to convert return type from "
-        + mm->returnSignature().toString()
-        + " to " + returnSignature.toString());
+      {
+        if (returnSignature.isConvertibleTo(mm->returnSignature())==0)
+          return makeFutureError<AnyReference>(
+            "Call error: will not be able to convert return type from "
+            + mm->returnSignature().toString()
+            + " to " + returnSignature.toString());
+        else
+         qiLogWarning() << "Return signature might be incorrect depending on the value, from "
+            + mm->returnSignature().toString()
+            + " to " + returnSignature.toString();
+      }
     }
     Manageable* m = static_cast<Manageable*>(context.asGenericObject());
     GenericFunctionParameters p;
