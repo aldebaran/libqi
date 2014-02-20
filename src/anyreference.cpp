@@ -343,12 +343,12 @@ namespace qi
         fieldMissing.push_back(dstNames[i]);
     }
     qiLogDebug() << "Field mapping:"
-      << " " << boost::algorithm::join(fieldDrop, ", ")
-      << " " << boost::algorithm::join(fieldMissing, ", ");
+      << " drop=" << boost::algorithm::join(fieldDrop, ", ")
+      << "  missing=" << boost::algorithm::join(fieldMissing, ", ");
     // Start by asking source if it is ok to drop
     if (!fieldDrop.empty() && !tsrc->canDropFields(src->rawValue(), fieldDrop))
     {
-      qiLogVerbose() << "Source refused to drop fields " << boost::algorithm::join(fieldDrop, ", ");
+      qiLogVerbose() << "Source " << tsrc->infoString() <<" refused to drop fields " << boost::algorithm::join(fieldDrop, ", ");
       return std::make_pair(AnyReference(), false);
     }
     // convert what we can (missing field check might need the data)
@@ -426,7 +426,7 @@ namespace qi
       std::vector<TypeInterface*> dstTypes = tdst->memberTypes();
       if (dstTypes.size() != sourceData.size())
       {
-        qiLogVerbose() << "Conversion glitch: tuple size mismatch between " << tsrc->signature().toString() << " and " << tdst->signature().toString();
+        qiLogVerbose() << "Conversion glitch: tuple size mismatch between " << tsrc->infoString() << " and " << tdst->infoString();
         return structConverter(this, targetType);
       }
       // Note: start converting without further check.
