@@ -11,7 +11,7 @@ struct WatchOptions;
 class ALMemoryHelper
 {
 public:
-  ALMemoryHelper(qi::Session &session);
+  ALMemoryHelper(qi::SessionPtr session);
   void post(const std::string &pattern, const std::string &arg, bool json);
   void watch(const std::vector<std::string> &patternList, bool showTime);
 

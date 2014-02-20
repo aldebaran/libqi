@@ -13,7 +13,7 @@ SessionHelper::SessionHelper(qi::ApplicationSession& app)
   : _session(app.session())
 {
   app.start();
-  _servicesInfos = _session.services();
+  _servicesInfos = _session->services();
 }
 
 SessionHelper::~SessionHelper()
@@ -96,7 +96,7 @@ bool SessionHelper::byPassService(const std::string &name, bool showHidden)
 
 ServiceHelper SessionHelper::getServiceHelper(const std::string &serviceName)
 {
-  qi::FutureSync<qi::AnyObject> future = _session.service(serviceName);
+  qi::FutureSync<qi::AnyObject> future = _session->service(serviceName);
 
   if (future.hasError())
     throw std::runtime_error(future.error());

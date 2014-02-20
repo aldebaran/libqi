@@ -96,11 +96,11 @@ int subCmd_logView(int argc, char **argv, qi::ApplicationSession& app)
 
   qiLogVerbose() << "Connecting to service directory";
   app.start();
-  qi::Session& s = app.session();
+  qi::SessionPtr s = app.session();
 
   qiLogVerbose() << "Resolving services";
 
-  qi::AnyObject logger = s.service("LogManager");
+  qi::AnyObject logger = s->service("LogManager");
   qi::AnyObject listener = logger.call<qi::AnyObject>("getListener");
 
   listener.call<void>("clearFilters");
@@ -158,11 +158,11 @@ int subCmd_logSend(int argc, char **argv, qi::ApplicationSession& app)
 
   qiLogVerbose() << "Connecting to service directory";
   app.start();
-  qi::Session& s = app.session();
+  qi::SessionPtr s = app.session();
 
   qiLogVerbose() << "Resolving services";
 
-  qi::AnyObject logger = s.service("LogManager");
+  qi::AnyObject logger = s->service("LogManager");
 
   qi::os::timeval tv;
   qi::os::gettimeofday(&tv);

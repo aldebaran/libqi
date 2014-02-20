@@ -54,7 +54,7 @@ namespace qi
     /**
      * @return The embedded session used by ApplicationSession.
      */
-    Session&   session();
+    SessionPtr session();
 
     /**
      *  @return The url used by ApplicationSession parsed on the command line by

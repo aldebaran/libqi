@@ -22,10 +22,10 @@ void onStop()
 
 TEST(QiApplicationSessionNoAutoExit, defaultConnect)
 {
-  ASSERT_FALSE(_app->session().isConnected());
+  ASSERT_FALSE(_app->session()->isConnected());
   _app->start();
-  ASSERT_TRUE(_app->session().isConnected());
-  ASSERT_EQ(_sd.endpoints()[0].str(), _app->session().url());
+  ASSERT_TRUE(_app->session()->isConnected());
+  ASSERT_EQ(_sd.endpoints()[0].str(), _app->session()->url());
 
   ASSERT_FALSE(_stopped);
   _sd.close();

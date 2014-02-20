@@ -24,50 +24,38 @@ namespace qi {
 
 
   SessionPrivate::SessionPrivate(qi::Session *session)
-    : _self(session)
-    , _sdClient()
+    : _sdClient()
     , _serverObject(&_sdClient, session)
     , _serviceHandler(&_socketsCache, &_sdClient, &_serverObject)
     , _servicesHandler(&_sdClient, &_serverObject)
     , _sd(&_serverObject)
   {
-    _self->connected.setCallType(qi::MetaCallType_Queued);
-    _self->disconnected.setCallType(qi::MetaCallType_Queued);
-    _self->serviceRegistered.setCallType(qi::MetaCallType_Queued);
-    _self->serviceUnregistered.setCallType(qi::MetaCallType_Queued);
+    session->connected.setCallType(qi::MetaCallType_Queued);
+    session->disconnected.setCallType(qi::MetaCallType_Queued);
+    session->serviceRegistered.setCallType(qi::MetaCallType_Queued);
+    session->serviceUnregistered.setCallType(qi::MetaCallType_Queued);
 
-    _sdClientConnectedSignalLink    = _sdClient.connected.connect(boost::bind<void>(&SessionPrivate::onConnected, this));
-    _sdClientDisconnectedSignalLink = _sdClient.disconnected.connect(boost::bind<void>(&SessionPrivate::onDisconnected, this, _1));
-    _sdClientServiceAddedSignalLink = _sdClient.serviceAdded.connect(boost::bind<void>(&SessionPrivate::onServiceAdded, this, _1, _2));
-    _sdClientServiceRemovedSignalLink = _sdClient.serviceRemoved.connect(boost::bind<void>(&SessionPrivate::onServiceRemoved, this, _1, _2));
+    _sdClient.connected.connect(session->connected);
+    //take a shared_ptr first, or the weak_ptr wont be correct.
+    _sdClient.disconnected.connect(&SessionPrivate::onDisconnected, boost::weak_ptr<SessionPrivate>(shared_from_raw(this)), _1);
+    _sdClient.disconnected.connect(session->disconnected);
+    _sdClient.serviceAdded.connect(session->serviceRegistered);
+    _sdClient.serviceRemoved.connect(session->serviceUnregistered);
   }
 
   SessionPrivate::~SessionPrivate() {
-    sessionDestroy();
     close();
   }
 
 
-  void SessionPrivate::onConnected() {
-    _self->connected();
-  }
-
   void SessionPrivate::onDisconnected(std::string error) {
-    _self->disconnected(error);
-
     /*
      * Remove all proxies to services if the SD is fallen.
      */
     _serviceHandler.close();
   }
 
-  void SessionPrivate::onServiceAdded(unsigned int idx, const std::string &name) {
-    _self->serviceRegistered(idx, name);
-  }
 
-  void SessionPrivate::onServiceRemoved(unsigned int idx, const std::string &name) {
-    _self->serviceUnregistered(idx, name);
-  }
 
   void SessionPrivate::addSdSocketToCache(Future<void> f, const qi::Url& url,
                                           qi::Promise<void> p)
@@ -121,24 +109,12 @@ namespace qi {
     _socketsCache.init();
     qi::Future<void> f = _sdClient.connect(serviceDirectoryURL);
     qi::Promise<void> p;
+
     // go through hoops to get shared_ptr on this
-    f.connect(&SessionPrivate::addSdSocketToCache, boost::weak_ptr<SessionPrivate>(_self->_p), _1, serviceDirectoryURL, p);
+    f.connect(&SessionPrivate::addSdSocketToCache, weak_from_raw(this), _1, serviceDirectoryURL, p);
     return p.future();
   }
 
-  void SessionPrivate::sessionDestroy()
-  {
-    _sdClient.connected.disconnect(_sdClientConnectedSignalLink);
-    _sdClient.disconnected.disconnect(_sdClientDisconnectedSignalLink);
-    _sdClient.serviceAdded.disconnect(_sdClientServiceAddedSignalLink);
-    _sdClient.serviceRemoved.disconnect(_sdClientServiceRemovedSignalLink);
-    if (_self)
-    {
-      _self->disconnected.disconnectAll();
-      _self->connected.disconnectAll();
-      _self = 0;
-    }
-  }
 
   qi::FutureSync<void> SessionPrivate::close()
   {
@@ -157,12 +133,13 @@ namespace qi {
   Session::Session()
     : _p(new SessionPrivate(this))
   {
+
   }
 
   Session::~Session()
   {
-    close();
-    _p->sessionDestroy();
+    //nothing to do here, the _p is shared between multiples sessions
+    //so we should not touch it.
   }
 
 
@@ -227,7 +204,7 @@ namespace qi {
     qi::Promise<void> p;
     //will listen and connect
     qi::Future<void> f = _sd.listenStandalone(address);
-    f.connect(&SessionPrivate::listenStandaloneCont, _self->_p, p, _1);
+    f.connect(&SessionPrivate::listenStandaloneCont, weak_from_raw(this), p, _1);
     return p.future();
   }
 

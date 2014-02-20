@@ -23,20 +23,20 @@ void onStop()
 
 TEST(QiApplicationSession, defaultConnect)
 {
-  ASSERT_FALSE(_app->session().isConnected());
+  ASSERT_FALSE(_app->session()->isConnected());
   _app->start();
-  ASSERT_TRUE(_app->session().isConnected());
+  ASSERT_TRUE(_app->session()->isConnected());
 
-  ASSERT_EQ(_url, _app->session().url());
+  ASSERT_EQ(_url, _app->session()->url());
 
   ASSERT_FALSE(_stopped);
   _sd.close();
   qi::os::msleep(100);
   ASSERT_TRUE(_stopped);
 
-  EXPECT_THROW(_app->session().connect("ftp://invalidurl:42"),
+  EXPECT_THROW(_app->session()->connect("ftp://invalidurl:42"),
                qi::FutureUserException);
-  ASSERT_FALSE(_app->session().isConnected());
+  ASSERT_FALSE(_app->session()->isConnected());
 }
 
 TEST(QiApplicationSession, checkArgs)

@@ -58,7 +58,7 @@ namespace qi
     void connect();
   public:
     Url          _url;
-    Session      _session;
+    SessionPtr   _session;
     bool         _init;
     boost::mutex _mutex;
   };
@@ -89,7 +89,7 @@ namespace qi
     _p = 0;
   }
 
-  Session& ApplicationSession::session()
+  SessionPtr ApplicationSession::session()
   {
     return _p->_session;
   }
@@ -128,11 +128,12 @@ namespace qi
 
   ApplicationSessionPrivate::ApplicationSessionPrivate(const Url& url, ApplicationSessionOptions opt)
     : Trackable<ApplicationSessionPrivate>(this)
+    , _session(new qi::Session)
     , _init(false)
   {
     if (!(opt & qi::ApplicationSession::Option_NoAutoExit))
     {
-      _session.disconnected.connect(&::onDisconnected);
+      _session->disconnected.connect(&::onDisconnected);
     }
 
     _url = _address.empty() ? url : Url(_address, "tcp", 9559);
@@ -145,12 +146,12 @@ namespace qi
 
   void ApplicationSessionPrivate::connect()
   {
-    _session.connect(_url);
+    _session->connect(_url);
 
     if (!_listenAddress.empty())
     {
       Url listenUrl(_listenAddress, "tcp", 0);
-      _session.listen(listenUrl);
+      _session->listen(listenUrl);
     }
   }
 }

@@ -38,7 +38,7 @@ private:
   bool                          splitName(const std::string &fullName, std::string &beforePoint, std::string &afterPoint, bool throwOnError);
 
 private:
-  qi::Session&                  _session;
+  qi::SessionPtr                _session;
   MatchMap                      _currentMatchMap;
   std::vector<qi::ServiceInfo>  _servicesInfos;
 };

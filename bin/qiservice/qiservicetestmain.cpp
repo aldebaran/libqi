@@ -149,7 +149,7 @@ int main(int argc, char *argv[])
       return 0;
     }
 
-    qi::Session&             session = app.session();
+    qi::SessionPtr           session = app.session();
     qi::DynamicObjectBuilder ob;
     ob.advertiseMethod<std::string (const std::string&)>("reply", &reply);
     ob.advertiseMethod<void ()>("error", &error);
@@ -167,20 +167,20 @@ int main(int argc, char *argv[])
 
     app.start();
 
-    app.session().listen("tcp://0.0.0.0:0");
-    session.setIdentity("tests/server.key", "tests/server.crt");
+    app.session()->listen("tcp://0.0.0.0:0");
+    session->setIdentity("tests/server.key", "tests/server.crt");
     try {
-      app.session().listen("tcps://0.0.0.0:0");
+      app.session()->listen("tcps://0.0.0.0:0");
     } catch (std::runtime_error &) {
       qiLogWarning() << "SSL desactivated.";
     }
 
-    unsigned int id = session.registerService(serviceName, obj);
+    unsigned int id = session->registerService(serviceName, obj);
 
 #if 0
     // test unregistration
-    session.unregisterService(id);
-    id = session.registerService("serviceTest", &obj);
+    session->unregisterService(id);
+    id = session->registerService("serviceTest", &obj);
 #endif
 
     if (id)
@@ -202,7 +202,7 @@ int main(int argc, char *argv[])
       qi::os::sleep(1);
     }
 
-    session.unregisterService(id);
+    session->unregisterService(id);
   }
   catch (const boost::program_options::error&)
   {
