@@ -121,10 +121,10 @@ set(SOURCES ${PUBLIC_HEADERS}
             src/signatureconvertor.hpp
             src/staticobjecttype.cpp
             src/typeinterface.cpp
-            src/inttypeinterface.cpp
             src/structtypeinterface.cpp
             src/signature.cpp
             src/traceanalyzer.cpp
+            src/registration.cpp
             )
 
 list(APPEND SOURCES ${_confighpp})

@@ -778,27 +778,4 @@ namespace qi {
   }
 }
 
-namespace {
-  static const qi::MetaObject::MethodMap& methodMap(qi::MetaObject* ptr)
-  {
-    return ptr->_p->_methods;
-  }
-  static const qi::MetaObject::SignalMap& signalMap(qi::MetaObject* ptr)
-  {
-    return ptr->_p->_events;
-  }
-  static const qi::MetaObject::PropertyMap& propertyMap(qi::MetaObject* ptr)
-  {
-    return ptr->_p->_properties;
-  }
-  static const std::string& description(qi::MetaObject* ptr)
-  {
-    return ptr->_p->_description;
-  }
-}
 
-QI_TYPE_STRUCT_AGREGATE_CONSTRUCTOR_REGISTER(::qi::MetaObject,
-  QI_STRUCT_HELPER("methods", methodMap),
-  QI_STRUCT_HELPER("signals", signalMap),
-  QI_STRUCT_HELPER("properties", propertyMap),
-  QI_STRUCT_HELPER("description", description));
