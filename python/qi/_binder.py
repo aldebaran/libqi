@@ -35,17 +35,17 @@ class bind():
     This decorator allow specifying types for bound methods.
 
     """
-    def __init__(self, retType, paramsType = None, methodName = None):
+    def __init__(self, returnType = None, paramsType = None, methodName = None):
         """ bind constructor
 
         .. args::
            sig : Signature to bind to the function.
         """
         #return value
-        if retType is None:
+        if returnType is None:
             self._retsig = None
         else:
-            self._retsig = str(retType)
+            self._retsig = str(returnType)
 
         #parameters
         if paramsType is None:
