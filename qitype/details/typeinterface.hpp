@@ -191,6 +191,11 @@ namespace qi {
     return typeOf<T>();
   }
 
+  /** Register type for signature -> TypeInterface factory.
+  */
+  QITYPE_API void registerStruct(TypeInterface* type);
+  /// @Return matchin TypeInterface registered by registerStruct() or 0.
+  QITYPE_API TypeInterface* getRegisteredStruct(const qi::Signature& s);
 }
 
 

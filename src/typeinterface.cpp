@@ -145,7 +145,7 @@ namespace qi {
   {
     qiLogCategory("qitype.type"); // method can be called at static init
     qiLogDebug() << "registerType "  << typeId.name() << " "
-     << type->kind() <<" " << (void*)type;
+     << type->kind() <<" " << (void*)type << " " << type->signature().toString();
     TypeFactory::iterator i = typeFactory().find(TypeInfo(typeId));
     if (i != typeFactory().end())
     {
@@ -521,6 +521,11 @@ namespace qi {
       }
     case Signature::Type_Tuple:
       {
+        // Look it up in dynamically generated oportunistic factory.
+        TypeInterface* res = getRegisteredStruct(sig);
+        if (res)
+          return res;
+        // Failure, synthetise a type.
         std::vector<TypeInterface*> types;
         const SignatureVector& c = sig.children();
         for (SignatureVector::const_iterator child = c.begin(); child != c.end(); child++)
@@ -537,7 +542,6 @@ namespace qi {
         std::vector<std::string> vannotations;
         std::string annotation = sig.annotation();
         boost::algorithm::split(vannotations, annotation, boost::algorithm::is_any_of(","));
-        TypeInterface* res;
         //first annotation is the name, then the name of each elements
         if (vannotations.size() >= 1)
           res = makeTupleType(types, vannotations[0], std::vector<std::string>(vannotations.begin()+1, vannotations.end()));
@@ -1234,4 +1238,39 @@ namespace qi {
       return true;
     }
   }
+  static boost::mutex& registerStructMutex()
+  {
+    static boost::mutex* m = 0;
+    QI_THREADSAFE_NEW(m);
+    return *m;
+  }
+  typedef std::map<std::string, TypeInterface*> RegisterStructMap;
+  static RegisterStructMap& registerStructMap()
+  {
+    // protected by lock above
+    static RegisterStructMap* res = 0;
+    if (!res)
+      res = new RegisterStructMap();
+    return *res;
+  }
+  void registerStruct(TypeInterface* type)
+  {
+    // leave this outside the lock!
+    std::string k = type->signature().toString();
+    qiLogDebug() << "Registering struct for " << k <<" " << type->infoString();
+    boost::mutex::scoped_lock lock(registerStructMutex());
+    registerStructMap()[k] = type;
+  }
+  /// @Return matchin TypeInterface registered by registerStruct() or 0.
+  TypeInterface* getRegisteredStruct(const qi::Signature& s)
+  {
+    boost::mutex::scoped_lock lock(registerStructMutex());
+    RegisterStructMap& map = registerStructMap();
+    RegisterStructMap::iterator it = map.find(s.toString());
+    if (it == map.end())
+      return 0;
+    qiLogDebug() << "Found registered struct for " << s.toString() << ": " << it->second->infoString();
+      return it->second;
+  }
+
 }

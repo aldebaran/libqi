@@ -32,6 +32,8 @@ namespace qi
 
 /** Allow filling given struct field names with the default value, if
  *  converting from a previous struct version.
+ *  @warning any value set by the default constructor will be overriden
+ *  with the default value for the field type (0 for int).
  */
 #define QI_TYPE_STRUCT_EXTENSION_FILL_FIELDS(name, ...) \
   namespace qi { namespace detail { template<> struct StructVersioningDelegateFill<name> { \
@@ -91,6 +93,12 @@ namespace qi
       return f(fields, missing) ; \
     }};}}
 
+/** Allow converting this struct to/from anything. Dropping unmatched fields,
+ * and filling non-present ones with the default value for the matching type.
+ * @warning This will allow conversion between completely unrelated types,
+ * use with caution.
+ *
+ */
 #define QI_TYPE_STRUCT_EXTENSION_ALL(name) \
    QI_TYPE_STRUCT_EXTENSION_DROP_ALL(name); \
    QI_TYPE_STRUCT_EXTENSION_FILL_ALL(name)
@@ -140,6 +148,7 @@ namespace qi {                                                            \
   {                                                                       \
   public:                                                                 \
     typedef name ClassType;                                               \
+    TypeImpl();                                                           \
     virtual std::vector< ::qi::TypeInterface*> memberTypes();                      \
     virtual std::vector<std::string> elementsName();                      \
     virtual std::string className();                                      \
@@ -159,6 +168,9 @@ namespace qi {                                                            \
 #define __QI_TUPLE_FIELD_NAME(_, what, field) res.push_back(BOOST_PP_STRINGIZE(QI_DELAY(field)));
 #define __QI_TYPE_STRUCT_IMPLEMENT(name, inl, onSet, ...)                                    \
 namespace qi {                                                                        \
+  inl TypeImpl<name>::TypeImpl() {                           \
+    ::qi::registerStruct(this);                              \
+  }                                                          \
   inl std::vector< ::qi::TypeInterface*> TypeImpl<name>::memberTypes()                                \
   {                                                                                   \
     name* ptr = 0;                                                                    \
@@ -228,6 +240,9 @@ namespace qi {                                                                  
 #define __QI_ATUPLE_FROMDATA(idx, what, field) ::qi::detail::fieldValue(ptr, __QI_STRUCT_ACCESS(field), const_cast<void**>(&data[idx]))
 #define __QI_TYPE_STRUCT_AGREGATE_CONSTRUCTOR_IMPLEMENT(name, inl, onSet, ...)\
   namespace qi {                                                                        \
+   inl TypeImpl<name>::TypeImpl() {                           \
+   ::qi::registerStruct(this);                              \
+ }                                                          \
   inl std::vector< ::qi::TypeInterface*> TypeImpl<name>::memberTypes()                                \
   {                                                                                   \
     std::vector< ::qi::TypeInterface*> res;                                                           \
