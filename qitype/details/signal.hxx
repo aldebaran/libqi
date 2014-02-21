@@ -7,6 +7,7 @@
 #ifndef _QITYPE_DETAILS_SIGNAL_HXX_
 #define _QITYPE_DETAILS_SIGNAL_HXX_
 
+#include <qi/trackable.hpp>
 #include <qitype/manageable.hpp>
 #include <boost/bind.hpp>
 #include <qitype/details/functionsignature.hxx>
@@ -29,7 +30,9 @@ namespace qi
   template<typename U>
   SignalSubscriber&  SignalF<T>::connect(SignalF<U>& signal)
   {
-    return connect((boost::function<U>&)signal);
+    return connect(qi::track(
+      (boost::function<U>&)signal,
+      boost::weak_ptr<SignalBasePrivate>(signal._p)));
   }
 
   template<typename T>
@@ -37,7 +40,9 @@ namespace qi
   SignalSubscriber&  SignalF<T>::connect(Signal<QI_SIGNAL_TEMPLATE>& signal)
   {
     typedef typename detail::VoidFunctionType<QI_SIGNAL_TEMPLATE>::type ftype;
-    return connect((boost::function<ftype>&)signal);
+    return connect(qi::track(
+      (boost::function<ftype>&)signal,
+      boost::weak_ptr<SignalBasePrivate>(signal._p)));
   }
 
   template<typename T>

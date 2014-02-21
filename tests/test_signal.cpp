@@ -140,11 +140,16 @@ void lol(int v, int& target)
 TEST(TestSignal, SignalSignal)
 {
   qi::SignalF<void (int)> sig1;
-  qi::SignalF<void (int)> sig2;
+  qi::SignalF<void (int)> *sig2 = new  qi::SignalF<void (int)>();
   int res = 0;
-  sig1.connect(sig2);
-  sig2.connect(boost::bind<void>(&lol, _1, boost::ref(res)));
+  sig1.connect(*sig2);
+  sig2->connect(boost::bind<void>(&lol, _1, boost::ref(res)));
   sig1(10);
+  qi::os::msleep(300);
+  ASSERT_EQ(10, res);
+  // Test autodisconnect
+  delete sig2;
+  sig1(20);
   qi::os::msleep(300);
   ASSERT_EQ(10, res);
 }

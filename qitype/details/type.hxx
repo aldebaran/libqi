@@ -7,6 +7,7 @@
 #ifndef _QITYPE_DETAILS_TYPE_HXX_
 #define _QITYPE_DETAILS_TYPE_HXX_
 
+#include <qi/atomic.hpp>
 #include <qi/types.hpp>
 #include <cstring>
 #include <map>
@@ -40,6 +41,12 @@ namespace qi  {
     };
 
     template<typename T>
+    inline void initializeType(TypeInterface* &tgt)
+    {
+      qiLogDebug("qitype.typeof") << "first typeOf request for unregistered type " << typeid(T).name();
+      tgt = new TypeImpl<T>();
+    }
+    template<typename T>
     inline TypeInterface* typeOfBackend()
     {
       TypeInterface* result = getType(typeid(T));
@@ -47,14 +54,7 @@ namespace qi  {
       {
 
         static TypeInterface* defaultResult = 0;
-        // Is this really a problem?
-        if (!defaultResult)
-        {
-          qiLogDebug("qitype.typeof") << "first typeOf request for unregistered type "
-          << typeid(T).name();
-        }
-        if (!defaultResult)
-          defaultResult = new TypeImpl<T>();
+        QI_ONCE(initializeType<T>(defaultResult));
         result = defaultResult;
       }
       return result;

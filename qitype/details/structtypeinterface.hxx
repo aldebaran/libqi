@@ -337,17 +337,14 @@ namespace qi {
   public:
     typedef DefaultTypeImplMethods<std::pair<F, S> > Methods;
     typedef typename std::pair<F, S> BackendType;
-    std::vector<TypeInterface*> memberTypes()
+    TypeImpl()
     {
-      static std::vector<TypeInterface*>* result=0;
-      if (!result)
-      {
-        result = new std::vector<TypeInterface*>();
-        result->push_back(typeOf<F>());
-        result->push_back(typeOf<S>());
-      }
-      return *result;
+      _memberTypes.push_back(typeOf<F>());
+      _memberTypes.push_back(typeOf<S>());
     }
+    std::vector<TypeInterface*> _memberTypes;
+
+    std::vector<TypeInterface*> memberTypes() { return _memberTypes;}
     void* get(void* storage, unsigned int index)
     {
       BackendType* ptr = (BackendType*)ptrFromStorage(&storage);
@@ -361,9 +358,9 @@ namespace qi {
     {
       BackendType* ptr = (BackendType*)ptrFromStorage(storage);
       if (!index)
-        detail::TypeManagerDefault<F>::copy(const_cast<void*>((void*)&ptr->first), typeOf<F>()->ptrFromStorage(&valStorage));
+        detail::TypeManagerDefault<F>::copy(const_cast<void*>((void*)&ptr->first), _memberTypes[0]->ptrFromStorage(&valStorage));
       else
-        detail::TypeManagerDefault<S>::copy(const_cast<void*>((void*)&ptr->second), typeOf<S>()->ptrFromStorage(&valStorage));
+        detail::TypeManagerDefault<S>::copy(const_cast<void*>((void*)&ptr->second), _memberTypes[1]->ptrFromStorage(&valStorage));
     }
     _QI_BOUNCE_TYPE_METHODS(Methods);
   };
