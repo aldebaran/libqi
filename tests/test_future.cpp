@@ -493,6 +493,36 @@ TEST_F(TestFuture, TestStateNone)
   ASSERT_TRUE(f.wait(qi::FutureTimeout_None) == qi::FutureState_Running);
 }
 
+struct DelCheck {
+  void foo() {}
+};
+
+TEST_F(TestFuture, TestPromiseAdapter)
+{
+  boost::weak_ptr<DelCheck> wdc;
+  {
+    qi::Promise<int> p;
+    qi::Promise<int> p2;
+
+    // Prepare for test for leakage
+    {
+      boost::shared_ptr<DelCheck> dc = boost::make_shared<DelCheck>();
+      wdc = dc;
+      p.future().connect(&DelCheck::foo, dc);
+      p2.future().connect(&DelCheck::foo, dc);
+    }
+    EXPECT_FALSE(wdc.expired());
+
+    qi::adaptFuture(p.future(), p2);
+    p.setValue(42);
+    // wait for the result to be forwarded
+    qi::os::msleep(100);
+    EXPECT_EQ(42, p2.value());
+  }
+  // Test for leakage
+  EXPECT_TRUE(wdc.expired());
+}
+
 void unlock(qi::Promise<int> prom, bool* tag)
 {
   *tag = true;
@@ -760,7 +790,7 @@ TEST(TestFutureCancel, Canceled)
   qi::Future<void> f = qi::getEventLoop()->async(
     boost::bind(&setTrue, &b), 200000);
   f.cancel();
-  ASSERT_FALSE(f.isFinished());
+  // Depending on multi-thread timing future can be finished or not at this point
   qi::os::msleep(400);
   ASSERT_TRUE(!b);
   ASSERT_TRUE(f.isFinished());
@@ -949,6 +979,25 @@ TEST(TestAdaptFuture, PromiseCancelled) {
   ASSERT_FALSE(prom2.future().hasError());
 }
 
+void handleCancel(qi::Promise<void> p)
+{
+  p.setCanceled();
+}
+
+TEST(TestAdaptFuture, PromiseCancel) {
+  qi::Promise<void> prom1(handleCancel);
+  qi::Promise<void> prom2;
+
+  qi::adaptFuture(prom1.future(), prom2);
+  ASSERT_TRUE(prom2.future().isCancelable());
+  prom2.future().cancel();
+  while(prom2.future().isRunning())
+    qi::os::msleep(5);
+  ASSERT_TRUE(prom2.future().isCanceled());
+  ASSERT_FALSE(prom2.future().hasValue());
+  ASSERT_FALSE(prom2.future().hasError());
+}
+
 int ping(int v)
 {
   if (v>= 0)
@@ -1030,6 +1079,33 @@ TEST(TestPeriodicTask, Basic)
   EXPECT_GE(1, std::abs(*a - cur - 2));
 }
 
+TEST(TestPeriodicTask, Stop)
+{
+  qi::PeriodicTask pt;
+  pt.setCallback(boost::bind(&qi::os::msleep, 500));
+  pt.setUsPeriod(10000000);
+  pt.start();
+  qi::os::msleep(100); // wait for actual start
+  qi::int64_t now = qi::os::ustime();
+  pt.stop();
+  EXPECT_LE(300000, qi::os::ustime() - now);
+}
+
+
+TEST(TestPeriodicTask, StopFromTask)
+{
+  qi::PeriodicTask pt;
+  pt.setCallback(boost::bind(&qi::PeriodicTask::stop, boost::ref(pt)));
+  pt.setUsPeriod(10000000);
+  pt.start();
+  qi::os::msleep(100); // wait for actual start
+  qi::int64_t now = qi::os::ustime();
+  pt.stop();
+  EXPECT_GE(100000, qi::os::ustime() - now);
+}
+
+
+
 TEST(TestPeriodicTask, DeadLock)
 {
   qi::Atomic<int> a;
@@ -1043,6 +1119,19 @@ TEST(TestPeriodicTask, DeadLock)
     pt.stop();
   }
 }
+
+int get42() { return 42; }
+
+TEST(EventLoop, asyncFast)
+{
+  qi::EventLoop* el = qi::getEventLoop();
+  for (int i = 0; i < 10; ++i)
+  {
+    qi::Future<int> f = el->async<int>(get42);
+    f.wait();
+  }
+}
+
 
 int main(int argc, char **argv) {
   qi::Application app(argc, argv);

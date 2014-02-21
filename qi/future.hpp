@@ -50,6 +50,10 @@ namespace qi {
 
   namespace detail {
     template <typename T> class FutureBaseTyped;
+
+    template<typename FT>
+    void futureCancelAdapter(
+        boost::weak_ptr<detail::FutureBaseTyped<FT> > wf);
   }
 
   /** State of the future.
@@ -285,11 +289,26 @@ namespace qi {
     // Our companion library libqitype requires a connect with same signature for all instantiations
     inline void _connect(const boost::function<void()>& s) { connect(boost::bind(s));}
 
+    boost::shared_ptr<detail::FutureBaseTyped<T> > impl() { return _p;}
+    Future(boost::shared_ptr<detail::FutureBaseTyped<T> > p) :
+      _p(p)
+    {
+      assert(_p);
+    }
   protected:
     // C4251 needs to have dll-interface to be used by clients of class 'qi::Future<T>'
     boost::shared_ptr< detail::FutureBaseTyped<T> > _p;
     friend class Promise<T>;
     friend class FutureSync<T>;
+
+    template<typename FT, typename PT>
+    friend void adaptFuture(const Future<FT>& f, Promise<PT>& p);
+    template<typename FT, typename PT, typename CONV>
+    friend void adaptFuture(const Future<FT>& f, Promise<PT>& p,
+        CONV converter);
+    template<typename FT>
+    friend void detail::futureCancelAdapter(
+        boost::weak_ptr<detail::FutureBaseTyped<FT> > wf);
   };
 
 
@@ -459,6 +478,12 @@ namespace qi {
     explicit Promise(Future<T>& f) : _f(f) {}
     template<typename> friend class ::qi::detail::FutureBaseTyped;
     Future<T> _f;
+
+    template<typename FT, typename PT>
+    friend void adaptFuture(const Future<FT>& f, Promise<PT>& p);
+    template<typename FT, typename PT, typename CONV>
+    friend void adaptFuture(const Future<FT>& f, Promise<PT>& p,
+        CONV converter);
   };
 
   template<typename T>

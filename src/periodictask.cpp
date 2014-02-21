@@ -29,8 +29,8 @@ enum TaskState
  Rescheduling -> Scheduled [start(), _wrap()]
  Scheduled    -> Running   [start()]
  Running      -> Rescheduling [ _wrap() ]
- Stopping     -> Stopped   [_wrap()]
- Runnig       -> Stopping [stop()]
+ Stopping     -> Stopped   [stop(), _wrap()]
+ Running      -> Stopping [stop()]
  Scheduled    -> Stopping [stop()]
 
  - State Rescheduling is a lock on _state and on _task
@@ -84,12 +84,14 @@ namespace qi
     qi::Future<void>        _task;
     std::string             _name;
     bool                    _compensateCallTime;
+    int                     _tid;
   };
-
+  static const int invalidThreadId = -1;
   PeriodicTask::PeriodicTask()
   {
     _p = new PeriodicTaskPrivate;
     _p->_usPeriod = -1;
+    _p->_tid = invalidThreadId;
     _p->_compensateCallTime =false;
     _p->_statsDisplayTime = qi::os::ustime();
     _p->_name = "PeriodicTask_" + boost::lexical_cast<std::string>(this);
@@ -165,7 +167,9 @@ namespace qi
     {
       wall = qi::os::ustime();
       std::pair<qi::int64_t, qi::int64_t> cpu = qi::os::cputime();
+      _p->_tid = os::gettid();
       _p->_callback();
+      _p->_tid = invalidThreadId;
       now = qi::os::ustime();
       wall = now - wall;
       std::pair<qi::int64_t, qi::int64_t> cpu2 = qi::os::cputime();
@@ -252,6 +256,8 @@ namespace qi
   void PeriodicTask::stop()
   {
     asyncStop();
+    if (os::gettid() == _p->_tid)
+      return;
     try
     {
       _p->_task.wait();

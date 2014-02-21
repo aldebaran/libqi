@@ -50,7 +50,11 @@ namespace qi
 
     /** Set the call interval in microseconds.
      *  This call will wait until next callback invocation to apply the change.
-     *  Use "task.stop().setUsPeriod().start()" to apply the change immediately.
+     *  Use:
+     *  task.stop();
+     *  task.setUsPeriod()
+     *  task.start()
+     *  to apply the change immediately.
      */
     void setUsPeriod(qi::int64_t usPeriod);
 
@@ -62,8 +66,8 @@ namespace qi
 
     /** Stop the periodic task. When this function returns, the callback will
     * not be called anymore.
+    * Can be called from within the callback function.
     * @warning concurrent calls to start() and stop() will result in undefined behavior.
-    * @warning stop() cannot be called from within the callback function
     */
     void stop();
 

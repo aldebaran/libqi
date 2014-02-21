@@ -277,6 +277,13 @@ namespace qi {
         p.trigger();
       }
     }
+
+    template<typename FT>
+    void futureCancelAdapter(boost::weak_ptr<FutureBaseTyped<FT> > wf)
+    {
+      if (boost::shared_ptr<FutureBaseTyped<FT> > f = wf.lock())
+        Future<FT>(f).cancel();
+    }
   }
 
   template <>
@@ -306,6 +313,9 @@ namespace qi {
   template<typename FT, typename PT>
   void adaptFuture(const Future<FT>& f, Promise<PT>& p)
   {
+    if (f.isCancelable())
+      p.setup(boost::bind(&detail::futureCancelAdapter<FT>,
+            boost::weak_ptr<detail::FutureBaseTyped<FT> >(f._p)));
     const_cast<Future<FT>&>(f).connect(boost::bind(detail::futureAdapter<FT, PT, FutureValueConverter<FT, PT> >, _1, p,
       FutureValueConverter<FT, PT>()));
   }
@@ -313,6 +323,9 @@ namespace qi {
   template<typename FT, typename PT, typename CONV>
   void adaptFuture(const Future<FT>& f, Promise<PT>& p, CONV converter)
   {
+    if (f.isCancelable())
+      p.setup(boost::bind(&detail::futureCancelAdapter<FT>,
+            boost::weak_ptr<detail::FutureBaseTyped<FT> >(f._p)));
     const_cast<Future<FT>&>(f).connect(boost::bind(detail::futureAdapter<FT, PT, CONV>, _1, p, converter));
   }
 }

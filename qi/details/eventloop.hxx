@@ -24,6 +24,7 @@ namespace qi
         Promise<T>::setup(cancelCallback, async);
       }
     };
+
     template<typename R> void call_and_set(qi::Promise<R> p, boost::function<R()> f)
     {
       try
@@ -46,15 +47,14 @@ namespace qi
       // Nothing to do for other states.
     }
   }
+  template<typename R> void nullConverter(void*, R&) {}
   template<typename R> Future<R> EventLoop::async(boost::function<R()> callback, uint64_t usDelay)
   {
     detail::DelayedPromise<R> promise;
     qi::Future<void> f = async((boost::function<void()>)boost::bind(detail::call_and_set<R>, promise, callback), usDelay);
-    // We also need to hook f to transmit the cancelled state
-    f.connect(boost::bind(&detail::check_canceled<R>, _1, promise));
-    // From that point on, promise can fire, but cannot be canceled, we haven't
-    // returned anything to the user yet
-    promise.setup(boost::bind(&qi::Future<void>::cancel, f), FutureCallbackType_Sync);
+    promise.setup(boost::bind(&detail::futureCancelAdapter<void>,
+            boost::weak_ptr<detail::FutureBaseTyped<void> >(f.impl())), FutureCallbackType_Sync);
+    f.connect(boost::bind(&detail::check_canceled<R>,_1, promise));
     return promise.future();
   }
 

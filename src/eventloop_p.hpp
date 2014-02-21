@@ -79,7 +79,7 @@ namespace qi {
     boost::asio::io_service::work* _work; // keep io.run() alive
     boost::thread      _thd;
     bool               _destroyMe;
-    bool               _running;
+    qi::Atomic<int>    _running;
     boost::recursive_mutex _mutex;
     boost::thread::id  _id;
   };
