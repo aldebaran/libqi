@@ -49,9 +49,9 @@ namespace qi {
     void export_pylog()
     {
       boost::python::def("pylog", &pylog);
-      boost::python::def("pysetfilters", &pysetfilters);
-      boost::python::def("pysetcontext", &pysetcontext);
-      boost::python::def("pysetlevel", &pysetlevel);
+      boost::python::def("setFilters", &pysetfilters);
+      boost::python::def("setContext", &pysetcontext);
+      boost::python::def("setLevel", &pysetlevel);
     }
   }
 }

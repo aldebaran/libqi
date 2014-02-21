@@ -15,6 +15,8 @@ add_library(_qi SHARED src/boostpymain.cpp
                    src/pyfuture.hpp
                    src/pylog.cpp
                    src/pylog.hpp
+                   src/pypath.cpp
+                   src/pypath.hpp
                    src/pyobject.cpp
                    src/pyobject.hpp
                    src/pyobjectconverter.cpp
@@ -23,6 +25,8 @@ add_library(_qi SHARED src/boostpymain.cpp
                    src/pythreadsafeobject.hpp
                    src/pysignal.cpp
                    src/pysignal.hpp
+                   src/pytranslator.cpp
+                   src/pytranslator.hpp
                    src/pyasync.cpp
                    src/pyasync.hpp
                    src/pyobjectfactory.hpp

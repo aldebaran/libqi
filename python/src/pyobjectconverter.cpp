@@ -138,19 +138,12 @@ struct ToPyObject
       return;
     }
 
-    boost::python::object collections = boost::python::import("collections");
-    boost::python::object namedtuple = collections.attr("namedtuple");
-    boost::python::object        mytuple;
-    boost::python::list          fields;
+    boost::python::dict dval;
     for (unsigned int i = 0; i < annotations.size(); ++i) {
-      fields.append(annotations.at(i));
+      boost::python::object k(annotations.at(i));
+      dval[k] = l[i];
     }
-    std::string tname = name;
-    if (tname.empty())
-      tname = "Tuple";
-    //verbose=false, rename=true: force invalid field to be renamed
-    mytuple = namedtuple(tname, fields, false, true);
-    result = mytuple(*boost::python::tuple(l));
+    result = dval;
   }
 
   void visitDynamic(qi::AnyReference pointee)
