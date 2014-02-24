@@ -276,7 +276,7 @@ namespace qi {
   }
 
   static void initSigIntSigTermCatcher() {
-    bool signalInit = false;
+    static bool signalInit = false;
 
     if (!signalInit) {
       qiLogVerbose() << "Registering SIGINT/SIGTERM handler within qi::Application";
@@ -297,7 +297,6 @@ namespace qi {
     boost::mutex m;
     boost::unique_lock<boost::mutex> l(m);
     globalCond.wait(l);
-    l.unlock();
   }
 
   void Application::stop()
