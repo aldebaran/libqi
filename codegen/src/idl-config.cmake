@@ -115,9 +115,7 @@ function(qi_create_skeleton target)
   cmake_parse_arguments(ARG "" "CLASS" "INCLUDE;SEARCHPATH" ${ARGN})
   # we need to find the IDL file for proper dependency tracking
   string(REPLACE "::" "/" idlname ${ARG_CLASS})
-  find_path(idlfile ${idlname}
-    PATHS ${CMAKE_CURRENT_BINARY_DIR}
-  )
+  qi_find_idl_for(${ARG_CLASS} idlfile)
   set(search_path  "${ARG_SEARCHPATH}:${CMAKE_CURRENT_SOURCE_DIR}")
   qi_generate_src(${target}
     SRC ${idlfile}
