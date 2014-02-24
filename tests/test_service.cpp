@@ -218,13 +218,13 @@ void inc (qi::Atomic<int>* daInt, int unused)
 
 TEST(QiService, ClassProperty)
 {
+  Foo f; // foo is registered as service, so must survive the session
   TestSessionPair p;
 
   qi::ObjectTypeBuilder<Foo> builder;
   builder.advertiseMethod("ping", &Foo::ping);
   ASSERT_TRUE(builder.advertiseProperty("offset", &Foo::prop) > 0);
 
-  Foo f;
   qi::AnyObject obj = builder.object(&f, &qi::AnyObject::deleteGenericObjectOnly);
 
   p.server()->registerService("foo", obj);
