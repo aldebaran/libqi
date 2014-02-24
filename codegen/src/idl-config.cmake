@@ -97,7 +97,7 @@ function(qi_create_client_lib libname)
     # we need to find the IDL file for proper dependency tracking
     qi_find_idl_for(${c} idlfile)
     qi_generate_src(${target}
-      SRC ${idlfile}
+      SRC ${idlfile} ${ARG_SRC}
       COMMAND  ${_python_executable} ${IDL}
       --prefix ${ARG_PREFIX} # IDLS might be around here
       --search-path "${search_path}"
