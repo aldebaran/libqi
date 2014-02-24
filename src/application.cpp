@@ -301,11 +301,11 @@ namespace qi {
 
   void Application::stop()
   {
-    globalCond.notify_all();
     FunctionList& fl = lazyGet(globalAtStop);
     qiLogDebug() << "Executing " << fl.size() << " atStop handlers";
     for (FunctionList::iterator i = fl.begin(); i!= fl.end(); ++i)
       (*i)();
+    globalCond.notify_all();
   }
 
   void Application::setName(const std::string &name)
