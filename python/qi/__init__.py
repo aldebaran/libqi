@@ -11,8 +11,6 @@
 Provided features are very close to C++, Python style.
 """
 
-import os
-import sys
 def load_lib_qipyessaging():
     """ Load _qipyessaging.so and its dependencies.
 
@@ -20,6 +18,7 @@ def load_lib_qipyessaging():
     SDK without having to set LD_LIBRARY_PATH
     """
     import ctypes
+    import os
     deps = [
             "libboost_python.so",
             "libboost_system.so",
@@ -42,10 +41,13 @@ def load_lib_qipyessaging():
         except Exception:
             pass
 
+def _on_import_module():
+    import sys
+    import atexit
+    if sys.platform.startswith("linux"):
+        load_lib_qipyessaging()
 
-if sys.platform.startswith("linux"):
-    load_lib_qipyessaging()
-
+    atexit.register(_stopApplication)
 
 #######
 
@@ -78,9 +80,6 @@ def _stopApplication():
         _app.stop()
         del _app
         _app = None
-
-import atexit
-atexit.register(_stopApplication)
 
 #application is a singleton, it should live till the end of the program
 #because it own eventloops
@@ -128,3 +127,5 @@ __all__ = ["FutureState",
 
 
 ]
+
+_on_import_module()
