@@ -337,7 +337,7 @@ TEST(QiService, RemoteServiceRegistrationAfterDisconnection)
   p.server()->close();
   qiLogVerbose() << "close finished";
   qi::Future<void> fc = p.server()->connect(p.serviceDirectoryEndpoints()[0]);
-  fc.wait(1000);
+  fc.wait(3000);
   if (fc.hasError())
     qiLogError() << fc.error();
   ASSERT_TRUE(fc.hasValue());
@@ -347,7 +347,7 @@ TEST(QiService, RemoteServiceRegistrationAfterDisconnection)
   ASSERT_NO_THROW(p.server()->registerService("Bar", barAsObject));
 
   qi::Future<qi::AnyObject> f = p.client()->service("Bar");
-  f.wait(1000);
+  f.wait(3000);
   ASSERT_TRUE(f.hasValue());
   barAsRemoteService = f.value();
 
