@@ -915,12 +915,37 @@ namespace qi {
     ToProxy toProxy;
   };
 
+  /* We limit usage of per-class type for generated proxies
+   *to non-interface mode
+   * where it is needed.
+   */
+  template<typename T> struct TypeProxyWrapper: public TypeProxy
+  {
+    typedef boost::function<Proxy*(void*)> ToProxy;
+    TypeProxyWrapper(ToProxy  toProxy)
+    : TypeProxy(toProxy)
+    {
+    }
+    typedef DefaultTypeImplMethods<T> Methods;
+    _QI_BOUNCE_TYPE_METHODS(Methods);
+  };
+  // Needed for legacy code
+  //template<> struct TypeImpl<Proxy>: public TypeProxy {};
+
     namespace detail
   {
     // FIXME: inline that in QI_REGISTER_PROXY_INTERFACE maybe
     template<typename ProxyImpl> Proxy* static_proxy_cast(void* storage)
     {
       return static_cast<Proxy*>((ProxyImpl*)storage);
+    }
+    template<typename ProxyImpl>
+    TypeProxy* makeProxyInterfaceWrapper()
+    {
+      static TypeProxy * result = 0;
+      if (!result)
+        result = new TypeProxyWrapper<ProxyImpl>(&static_proxy_cast<ProxyImpl>);
+      return result;
     }
     template<typename ProxyImpl>
     TypeProxy* makeProxyInterface()
@@ -949,11 +974,18 @@ namespace qi {
     map[typeOf<Interface>()->info()] = &detail::makeProxy<Proxy>;
     return true;
   }
-  template<typename Proxy>
+  template<typename ProxyType>
   bool registerProxy()
   {
+    /* In non-interface mode, we need one different registered type
+     * per Proxy class, otherwise they will all land in the same
+     * bucket of proxyGeneratorMap.
+     * In interface mode this problem is absent because the TypeInfo
+     * of the interface is used (not the one of the proxy).
+    */
+    registerType(typeid(ProxyType), detail::makeProxyInterfaceWrapper<ProxyType>());
     detail::ProxyGeneratorMap& map = detail::proxyGeneratorMap();
-    map[typeOf<Proxy>()->info()] = &detail::makeProxy<Proxy>;
+    map[typeOf<ProxyType>()->info()] = &detail::makeProxy<ProxyType>;
     return true;
   }
 
