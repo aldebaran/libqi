@@ -533,7 +533,7 @@ namespace qi {
           TypeInterface* t = fromSignature(*child);
           if (!t)
           {
-            qiLogError() << "Cannot get type from tuple of unknown element type";
+            qiLogError() << "Cannot get type from tuple of unknown element type " << child->toString();
             return 0;
           }
           // qiLogDebug() << "tuple element " << child.signature() << " " << t->infoString();
