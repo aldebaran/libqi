@@ -317,7 +317,11 @@ def run_qiclang(files, output_path, search_path):
       args.append("-I")
       args.append(p)
     print("QICLANG: " + ' '.join(args))
-    subprocess.call(args)
+    ret = subprocess.call(args)
+    if ret != 0:
+      print "Execution failed with code", ret
+      return False
+    return True
 
 def qiclang_type_name(node):
   name = node.get("name")
@@ -1692,7 +1696,9 @@ def main(args):
   elif len(pargs.input) >= 1:
     # Assume C++ files, run qiclang on them to a temporary file
     f = tempfile.mkstemp()
-    run_qiclang(pargs.input, f[1], pargs.search_path)
+    if not run_qiclang(pargs.input, f[1], pargs.search_path):
+        print "Abort!"
+        return
     raw = qiclang_to_raw(f[1])
     print("qiclang temporary file:"  + f[1])
   else:
