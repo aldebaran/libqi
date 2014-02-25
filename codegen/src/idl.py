@@ -296,7 +296,7 @@ def open_close_namespace(namespaces):
     close_namespace = "} // !" + n + "\n" + close_namespace
   return (open_namespace, close_namespace)
 
-def run_qiclang(files, output_path):
+def run_qiclang(files, output_path, search_path):
   """ Invoke qiclang on given source files
   :param files: A list of files to scan
   :param output: Path to output file with resulting XML
@@ -313,6 +313,9 @@ def run_qiclang(files, output_path):
     args.append(os.path.join(medir, '..','..')) #buildir
     args.append("-I")
     args.append(os.path.join(medir, '..','include')) #install
+    for p in search_path.split(':'):
+      args.append("-I")
+      args.append(p)
     print("QICLANG: " + ' '.join(args))
     subprocess.call(args)
 
@@ -728,6 +731,7 @@ def find_include(cname, prefix):
     for sfx in sfxs:
       inc = find_in_path(os.path.join(subdir, fname + sfx), path)
       if inc:
+        print("Found at " + os.path.join(subdir, fname + sfx))
         return os.path.join(subdir, fname + sfx) # keep relative part
   return None
 
@@ -1587,6 +1591,7 @@ def output_cxx_interface(raw, guard_symbol):
 def output_client(raw, includes):
   """ Output client support code: type registration and proxy
   """
+  print("Output client, includes=" + ','.join(includes));
   res = ''
   for s in raw.structs:
     res += raw_to_cxx_structbuild(s, raw.structs[s])
@@ -1687,7 +1692,7 @@ def main(args):
   elif len(pargs.input) >= 1:
     # Assume C++ files, run qiclang on them to a temporary file
     f = tempfile.mkstemp()
-    run_qiclang(pargs.input, f[1])
+    run_qiclang(pargs.input, f[1], pargs.search_path)
     raw = qiclang_to_raw(f[1])
     print("qiclang temporary file:"  + f[1])
   else:
