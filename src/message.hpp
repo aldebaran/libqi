@@ -26,8 +26,8 @@ namespace qi {
       qi::uint32_t id;
       qi::uint32_t size;
       qi::uint16_t version;
-      qi::uint8_t  flags;
       qi::uint8_t  type;
+      qi::uint8_t  flags;
       qi::uint32_t service;
       qi::uint32_t object;
       qi::uint32_t action;
