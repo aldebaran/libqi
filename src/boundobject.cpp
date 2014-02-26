@@ -64,7 +64,7 @@ namespace qi {
       catch (const std::exception& e)
       {
         qiLogVerbose() << "forwardEvent::setValues exception: " << e.what();
-        if (!client->remoteCapability("MessageFlags"))
+        if (!client->remoteCapability("MessageFlags", false))
           throw e;
         // Delegate conversion to the remote end.
         msg.addFlags(Message::TypeFlag_DynamicPayload);

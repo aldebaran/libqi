@@ -309,7 +309,7 @@ namespace qi {
     catch(const std::exception& e)
     {
       qiLogVerbose() << "setValues exception: " << e.what();
-      if (!_socket->remoteCapability("MessageFlags"))
+      if (!_socket->remoteCapability("MessageFlags", false))
         throw e;
       // Delegate conversion to the remote end.
       msg.addFlags(Message::TypeFlag_DynamicPayload);
@@ -381,7 +381,7 @@ namespace qi {
     catch(const std::exception& e)
     {
       qiLogVerbose() << "setValues exception: " << e.what();
-      if (!_socket->remoteCapability("MessageFlags"))
+      if (!_socket->remoteCapability("MessageFlags", false))
         throw e;
       // Delegate conversion to the remote end.
       msg.addFlags(Message::TypeFlag_DynamicPayload);
