@@ -15,3 +15,4 @@ Python qi API reference
   types
   bind
   async
+  translator
