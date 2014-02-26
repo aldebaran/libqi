@@ -22,64 +22,61 @@ ERROR   = 2
 WARNING = 3
 INFO    = 4
 VERBOSE = 5
-DEBUG   = VERBOSE
+DEBUG   = 6
 
 def _printToString(*args):
     return ' '.join(str(x) for x in args)
 
-class PyLogger:
+class Logger:
     def __init__(self, category):
         self.category = category
 
     def fatal(self, *args):
+        """ generate a fatal log message """
         info = logGetTraceInfo()
         pylog(FATAL, self.category, _printToString(*args), info.filename, info.function, info.lineno)
 
     def error(self, *args):
+        """ generate an error log message """
         info = logGetTraceInfo()
         pylog(ERROR, self.category, _printToString(*args), info.filename, info.function, info.lineno)
 
     def warning(self, *args):
+        """ generate a warning log message """
         info = logGetTraceInfo()
         pylog(WARNING, self.category, _printToString(*args), info.filename, info.function, info.lineno)
 
     def info(self, *args):
+        """ generate an info log message """
         info = logGetTraceInfo()
         pylog(INFO, self.category, _printToString(*args), info.filename, info.function, info.lineno)
 
     def verbose(self, *args):
+        """ generate a verbose log message """
         info = logGetTraceInfo()
         pylog(VERBOSE, self.category, _printToString(*args), info.filename, info.function, info.lineno)
 
-    def debug(self, *args):
-        self.verbose(*args)
-
-def getLogger( name):
-    return PyLogger(name)
-
-def logSilent(cat, *args):
-    info = logGetTraceInfo()
-    pylog(0, cat, _printToString(*args), info.filename, info.function, info.lineno)
-
-def logFatal(cat, *args):
+def fatal(cat, *args):
+    """ generate a fatal log message """
     info = logGetTraceInfo()
     pylog(FATAL, cat, _printToString(*args), info.filename, info.function, info.lineno)
 
-def logError(cat, *args):
+def error(cat, *args):
+    """ generate a error log message """
     info = logGetTraceInfo()
     pylog(ERROR, cat, _printToString(*args), info.filename, info.function, info.lineno)
 
-def logWarning(cat, *args):
+def warning(cat, *args):
+    """ generate a warning log message """
     info = logGetTraceInfo()
     pylog(WARNING, cat, _printToString(*args), info.filename, info.function, info.lineno)
 
-def logInfo(cat, *args):
+def info(cat, *args):
+    """ generate a info log message """
     info = logGetTraceInfo()
     pylog(INFO, cat, _printToString(*args), info.filename, info.function, info.lineno)
 
-def logVerbose(cat, *args):
+def verbose(cat, *args):
+    """ generate a verbose log message """
     info = logGetTraceInfo()
     pylog(VERBOSE, cat, _printToString(*args), info.filename, info.function, info.lineno)
-
-def logDebug(cat, *args):
-    logVerbose(cat, *args)
