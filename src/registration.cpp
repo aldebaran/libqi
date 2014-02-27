@@ -109,6 +109,7 @@ public:
 };
 
 
+QI_EQUIVALENT_STRING_REGISTER(qi::Signature, &qi::Signature::toString);
 
 QI_TYPE_REGISTER_CUSTOM(qi::Duration, DurationTypeInterface<qi::Duration>);
 QI_TYPE_REGISTER_CUSTOM(qi::NanoSeconds, DurationTypeInterface<qi::NanoSeconds>);

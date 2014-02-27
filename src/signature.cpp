@@ -552,4 +552,3 @@ char* signature_to_json(const char* sig)
   return resc;
 }
 
-QI_EQUIVALENT_STRING_REGISTER(qi::Signature, &qi::Signature::toString);
