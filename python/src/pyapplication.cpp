@@ -44,7 +44,7 @@ namespace qi {
         std::string s = boost::python::extract<std::string>(args[i]);
         /*TODO: leak*/
         argv[i] = qi::os::strdup(s.c_str());
-        qiLogInfo() << "args:" << argv[i];
+        qiLogVerbose() << "args:" << argv[i];
       }
       /* #2 Create c application */
       initApp(app, argc, argv);
