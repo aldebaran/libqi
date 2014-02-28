@@ -171,7 +171,8 @@ function(qi_create_idl files)
       -p "${ARG_PREFIX}"
       --cxx-signature-mapping "'${_type_map}'"
       ${qiclangopt}
-      -m idl)
+      -m idl
+      DEPENDS qitype)
     list(APPEND names "${target}")
   endforeach(c)
   set(${files} "${names}" PARENT_SCOPE)
