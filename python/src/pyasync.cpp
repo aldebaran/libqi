@@ -118,7 +118,7 @@ namespace qi { namespace py {
              "\n")
         .def("asyncStop", &PyPeriodicTask::asyncStop,
              "asyncStop()\n"
-             "Can be called from within the callback function"
+             "Can be called from within the callback function\n"
              "Request for periodic task to stop asynchronously")
         .def("compensateCallbackTime", &PyPeriodicTask::compensateCallbackTime,
              "compensateCallbackTime(compensate)\n"
