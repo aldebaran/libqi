@@ -21,7 +21,7 @@ public:
     if (tgt)
       setMetaObject(tgt.metaObject());
   }
-  virtual qi::Future<qi::AnyReference> metaCall(qi::AnyObject context, unsigned int method, const qi::GenericFunctionParameters& params, qi::MetaCallType callType = qi::MetaCallType_Auto)
+  virtual qi::Future<qi::AnyReference> metaCall(qi::AnyObject context, unsigned int method, const qi::GenericFunctionParameters& params, qi::MetaCallType callType, qi::Signature returnSignature)
   {
     return _target.metaCall(method, params, callType);
   }
