@@ -141,6 +141,7 @@
 /**
  * \fn qi::Application::atStop(boost::function<void()>)
  * \brief Register a function to be executed when stop() is called.
+ * The functions are executed sequentially before run() returns.
  * \param func Callback function called when stop() is called.
  * \return True if registering succeeded, false otherwise.
  */

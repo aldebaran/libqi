@@ -276,7 +276,7 @@ namespace qi {
   }
 
   static void initSigIntSigTermCatcher() {
-    bool signalInit = false;
+    static bool signalInit = false;
 
     if (!signalInit) {
       qiLogVerbose() << "Registering SIGINT/SIGTERM handler within qi::Application";
@@ -297,16 +297,15 @@ namespace qi {
     boost::mutex m;
     boost::unique_lock<boost::mutex> l(m);
     globalCond.wait(l);
-    l.unlock();
   }
 
   void Application::stop()
   {
-    globalCond.notify_all();
     FunctionList& fl = lazyGet(globalAtStop);
     qiLogDebug() << "Executing " << fl.size() << " atStop handlers";
     for (FunctionList::iterator i = fl.begin(); i!= fl.end(); ++i)
       (*i)();
+    globalCond.notify_all();
   }
 
   void Application::setName(const std::string &name)
