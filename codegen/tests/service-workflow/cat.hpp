@@ -15,6 +15,7 @@ struct Mosquito
 class CatAction
 {
 public:
+  virtual ~CatAction() {}
   /// Run the action
   virtual void run() = 0;
   virtual std::vector<float> expectedResult() = 0;
