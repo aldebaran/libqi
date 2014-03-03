@@ -45,10 +45,13 @@ namespace qi
     typedef boost::shared_ptr<boost::asio::ip::tcp::socket> SocketPtr;
 #endif
     void error(const std::string& erc);
-    void onConnected(const boost::system::error_code& erc, SocketPtr s);
     void onResolved(const boost::system::error_code& erc,
-                    boost::asio::ip::tcp::resolver::iterator it);
-    void handshake(const boost::system::error_code& erc, SocketPtr s);
+                    boost::asio::ip::tcp::resolver::iterator it,
+                    qi::Promise<void> connectPromise);
+    void onConnected(const boost::system::error_code& erc, SocketPtr s,
+                    qi::Promise<void> connectPromise);
+    void handshake(const boost::system::error_code& erc, SocketPtr s,
+                    qi::Promise<void> connectPromise);
     void onReadHeader(const boost::system::error_code& erc, std::size_t, SocketPtr s);
     void onReadData(const boost::system::error_code& erc, std::size_t, SocketPtr s);
     void send_(qi::Message msg);
@@ -63,8 +66,6 @@ namespace qi
    SocketPtr _socket;
 
     bool                _abort; // used to notify send callback sendCont that we are dead
-    qi::Promise<void>   _connectPromise;
-    qi::Promise<void>   _disconnectPromise;
 
     // data to rebuild message
     qi::Message        *_msg;

@@ -84,10 +84,6 @@ namespace qi
       // Transmit each Message without delay
       setSocketOptions();
     }
-    else
-    {
-      pSetValue(_disconnectPromise); // not connected, so we are finished disconnecting
-    }
   }
 
 
@@ -285,7 +281,6 @@ namespace qi
     if (_connecting)
     {
       _connecting = false;
-      pSetError(_connectPromise, std::string("Connection error: ") + erc);
     }
 
     {
@@ -299,9 +294,7 @@ namespace qi
       }
     }
     _socket.reset();
-    pSetValue(_disconnectPromise);
   }
-
 
   qi::FutureSync<void> TcpTransportSocket::connect(const qi::Url &url)
   {
@@ -323,19 +316,15 @@ namespace qi
     _socket = SocketPtr(new boost::asio::ip::tcp::socket(*(boost::asio::io_service*)_eventLoop->nativeHandle()));
 #endif
     _url = url;
-    _connectPromise.reset();
-    _disconnectPromise.reset();
     _status = qi::TransportSocket::Status_Connecting;
     _connecting = true;
     _err = 0;
     if (_url.port() == 0) {
       qiLogError() << "Error try to connect to a bad address: " << _url.str();
-      pSetError(_connectPromise, std::string("Bad address ") + _url.str());
 
       _status = qi::TransportSocket::Status_Disconnected;
       _connecting = false;
-      pSetValue(_disconnectPromise);
-      return _connectPromise.future();
+      return qi::makeFutureError<void>(std::string("Bad address ") + _url.str());
     }
     qiLogVerbose() << "Trying to connect to " << _url.host() << ":" << _url.port();
     using namespace boost::asio;
@@ -347,16 +336,19 @@ namespace qi
                            #endif
                                );
 
+    qi::Promise<void> connectPromise;
     _r->async_resolve(q,
                       boost::bind(&TcpTransportSocket::onResolved,
                                   shared_from_this(),
                                   boost::asio::placeholders::error,
-                                  boost::asio::placeholders::iterator));
-    return _connectPromise.future();
+                                  boost::asio::placeholders::iterator,
+                                  connectPromise));
+    return connectPromise.future();
   }
 
   void TcpTransportSocket::onResolved(const boost::system::error_code& erc,
-                                      boost::asio::ip::tcp::resolver::iterator it)
+                                      boost::asio::ip::tcp::resolver::iterator it,
+                                      qi::Promise<void> connectPromise)
   {
     try
     {
@@ -365,7 +357,7 @@ namespace qi
         qiLogWarning() << "resolved: " << erc.message();
         _status = qi::TransportSocket::Status_Disconnected;
         error(erc.message());
-        pSetError(_connectPromise, erc.message());
+        pSetError(connectPromise, erc.message());
       }
       else
       {
@@ -381,7 +373,8 @@ namespace qi
                                               boost::bind(&TcpTransportSocket::onConnected,
                                                           shared_from_this(),
                                                           boost::asio::placeholders::error,
-                                                          _socket));
+                                                          _socket,
+                                                          connectPromise));
         _r.reset();
       }
     }
@@ -392,24 +385,24 @@ namespace qi
                    << " only IPv6 were resolved on " << url().str();
       boost::system::error_code erc;
       error(erc.message());
-      pSetError(_connectPromise, s);
+      pSetError(connectPromise, s);
     }
   }
 
-  void TcpTransportSocket::handshake(const boost::system::error_code& erc, SocketPtr)
+  void TcpTransportSocket::handshake(const boost::system::error_code& erc,
+      SocketPtr, qi::Promise<void> connectPromise)
   {
     if (erc)
     {
       qiLogWarning() << "connect: " << erc.message();
       _status = qi::TransportSocket::Status_Disconnected;
       error(erc.message());
-      pSetError(_connectPromise, erc.message());
-      pSetValue(_disconnectPromise);
+      pSetError(connectPromise, erc.message());
     }
     else
     {
       _status = qi::TransportSocket::Status_Connected;
-      pSetValue(_connectPromise);
+      pSetValue(connectPromise);
       connected();
       _sslHandshake = true;
 
@@ -429,7 +422,8 @@ namespace qi
     }
   }
 
-  void TcpTransportSocket::onConnected(const boost::system::error_code& erc, SocketPtr)
+  void TcpTransportSocket::onConnected(const boost::system::error_code& erc,
+      SocketPtr, qi::Promise<void> connectPromise)
   {
     _connecting = false;
     if (erc)
@@ -437,8 +431,7 @@ namespace qi
       qiLogWarning() << "connect: " << erc.message();
       _status = qi::TransportSocket::Status_Disconnected;
       error(erc.message());
-      pSetError(_connectPromise, erc.message());
-      pSetValue(_disconnectPromise);
+      pSetError(connectPromise, erc.message());
     }
     else
     {
@@ -449,13 +442,14 @@ namespace qi
         if (_abort)
           return;
         _socket->async_handshake(boost::asio::ssl::stream_base::client,
-          boost::bind(&TcpTransportSocket::handshake, shared_from_this(), _1, _socket));
+            boost::bind(&TcpTransportSocket::handshake, shared_from_this(), _1,
+              _socket, connectPromise));
 #endif
       }
       else
       {
         _status = qi::TransportSocket::Status_Connected;
-        pSetValue(_connectPromise);
+        pSetValue(connectPromise);
         connected();
 
         {
@@ -567,11 +561,13 @@ namespace qi
 
   qi::FutureSync<void> TcpTransportSocket::disconnect()
   {
+    if (_status == qi::TransportSocket::Status_Disconnected)
+      return qi::Future<void>(0);
+
     boost::system::error_code erc;
-    _eventLoop->post(boost::bind(&TcpTransportSocket::error,
+    return _eventLoop->async(boost::bind(&TcpTransportSocket::error,
                                  boost::static_pointer_cast<TcpTransportSocket>(shared_from_this()),
                                  erc.message()));
-    return _disconnectPromise.future();
   }
 
   bool TcpTransportSocket::send(const qi::Message &msg)
