@@ -45,7 +45,7 @@ namespace qi
 #else
     typedef boost::shared_ptr<boost::asio::ip::tcp::socket> SocketPtr;
 #endif
-    void error(const boost::system::error_code& erc);
+    void error(const std::string& erc);
     void onConnected(const boost::system::error_code& erc, SocketPtr s);
     void onResolved(const boost::system::error_code& erc,
                     boost::asio::ip::tcp::resolver::iterator it);
