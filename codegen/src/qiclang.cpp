@@ -214,7 +214,7 @@ Type CXType_to_Type(CXType t0)
   int nt = clang_Type_getNumTemplateArguments(t);
   for (int i=0; i<nt; ++i)
   {
-    CXType targ = clang_Type_getTemplateArgument(t, i);
+    CXType targ = clang_Type_getTemplateArgumentAsType(t, i);
     // Seems we are hitting some magic internal stuff sometimes
     if (targ.kind == CXType_Invalid)
       qiLogWarning() << "Invalid template type at pos " << i;
