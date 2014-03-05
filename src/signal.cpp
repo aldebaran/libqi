@@ -372,24 +372,24 @@ namespace qi {
     if (subSignature.isValid())
       subArity = subSignature.children().size();
 
-    if (signature() == "m" || !subSignature.isValid())
-      goto proceed; // no check possible
+    if (signature() != "m" && subSignature.isValid())
+    {
+      if (sigArity != subArity)
+      {
+        std::stringstream s;
+        s << "Subscriber has incorrect arity (expected "
+          << sigArity << " , got " << subArity << ")";
+        throw std::runtime_error(s.str());
+      }
+      if (!signature().isConvertibleTo(subSignature))
+      {
+        std::stringstream s;
+        s << "Subscriber is not compatible to signal : "
+          << signature().toString() << " vs " << subSignature.toString();
+        throw std::runtime_error(s.str());
+      }
+    }
 
-    if (sigArity != subArity)
-    {
-      std::stringstream s;
-      s << "Subscriber has incorrect arity (expected "
-        << sigArity  << " , got " << subArity <<")";
-      throw std::runtime_error(s.str());
-    }
-    if (!signature().isConvertibleTo(subSignature))
-    {
-      std::stringstream s;
-      s << "Subscriber is not compatible to signal : "
-        << signature().toString() << " vs " << subSignature.toString();
-      throw std::runtime_error(s.str());
-    }
-  proceed:
     boost::recursive_mutex::scoped_lock sl(_p->mutex);
     SignalLink res = ++linkUid;
     SignalSubscriberPtr s = boost::make_shared<SignalSubscriber>(src);
@@ -400,6 +400,25 @@ namespace qi {
     if (first && _p->onSubscribers)
       _p->onSubscribers(true);
     return *s.get();
+  }
+
+  void SignalBase::createNewTrackLink(int& id, SignalLink*& pLink)
+  {
+    id = ++_p->trackId;
+    {
+      boost::recursive_mutex::scoped_lock l(_p->mutex);
+      pLink = &_p->trackMap[id];
+    }
+  }
+
+  void SignalBase::disconnectTrackLink(int id) {
+    boost::recursive_mutex::scoped_lock sl(_p->mutex);
+    TrackMap::iterator it = _p->trackMap.find(id);
+    if (it == _p->trackMap.end())
+      return;
+
+    _p->subscriberMap.erase(it->second);
+    _p->trackMap.erase(it);
   }
 
   bool SignalBase::disconnectAll() {

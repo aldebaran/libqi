@@ -88,6 +88,8 @@ namespace qi {
     void setTriggerOverride(Trigger trigger);
     void setOnSubscribers(OnSubscribers onSubscribers);
     void callOnSubscribe(bool v);
+    void createNewTrackLink(int& id, SignalLink*& trackLink);
+    void disconnectTrackLink(int id);
   public:
     void _setSignature(const Signature &s);
     // C4251
@@ -144,11 +146,8 @@ template<QI_SIGNAL_TEMPLATE_DECL> class Signal;
    template<QI_SIGNAL_TEMPLATE_DECL> SignalSubscriber&  connect(Signal<QI_SIGNAL_TEMPLATE>& signal);
 
    #define genConnect(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma) \
-   template<typename F, typename P comma ATYPEDECL>            \
-   SignalSubscriber& connect(F func, P p comma ADECL)         \
-   {                                                            \
-     return connect(::qi::bind<T>(func, p comma AUSE));         \
-   }
+     template<typename F, typename P comma ATYPEDECL>           \
+     SignalSubscriber& connect(F func, P p comma ADECL);
    QI_GEN(genConnect)
    #undef genConnect
 
