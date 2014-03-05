@@ -18,6 +18,16 @@ namespace qi {
     }
   }
 
+  template<typename T>
+  void multiSetValue(qi::Promise<T>& p, const T &val) {
+    try {
+      p.setValue(val);
+    } catch (const qi::FutureException& f) {
+      if (f.state() != qi::FutureException::ExceptionState_PromiseAlreadySet)
+        throw;
+    }
+  }
+
   TransportSocketCache::TransportSocketCache()
   : _dying(false)
   {
@@ -180,7 +190,17 @@ namespace qi {
     TransportSocketConnection tsc;
     tsc.socket = socket;
     tsc.url = url;
-    tsc.promise.setValue(socket);
+    //use multiset because insert and onSocketConnected could each be called for the same promise.
+    multiSetValue(tsc.promise, socket);
+
+    MachineAttemptsMap::iterator it;
+    it = _attempts.find(machineId);
+    if (it != _attempts.end()) {
+      it->second.successful = true;
+      //use multiset because insert and onSocketConnected could each be called for the same promise.
+      multiSetValue(it->second.promise, socket);
+    }
+
     _sockets[machineId][url.str()] = tsc;
   }
 
@@ -258,7 +278,9 @@ namespace qi {
         TransportSocketConnectionMap& tscm = mcmIt->second;
         TransportSocketConnectionMap::iterator tscmIt;
         if ((tscmIt = tscm.find(url.str())) != tscm.end()) {
-          tscmIt->second.promise.setValue(socket);
+          qi::Promise<qi::TransportSocketPtr> myp = tscmIt->second.promise;
+          //because the value can have been injected by insert before us.
+          multiSetValue(tscmIt->second.promise, socket);
           tsca.successful = true;
         }
       }
