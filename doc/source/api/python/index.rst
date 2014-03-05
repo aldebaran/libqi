@@ -7,6 +7,7 @@ Python qi API reference
   :maxdepth: 1
 
   logging
+  path
   session
   future
   signal
