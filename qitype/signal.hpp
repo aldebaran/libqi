@@ -64,7 +64,7 @@ namespace qi {
     *        Used in combination with each subscriber's MetaCallType to
     *        chose between synchronous and asynchronous call.
     *        The combination rule is to honor subscriber's override, then \p callType,
-    *        and default to asynchronous
+    *        then signal's callType and default to asynchronous
     */
     virtual void trigger(const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto);
     /// Set the MetaCallType used by operator()().
