@@ -85,31 +85,31 @@ namespace qi
     {
     public:
       typedef typename boost::function_types::result_type<F>::type Result;
-      LockAndCall(const WT& arg, boost::function<F> func, bool throwOnLockFailure)
+      LockAndCall(const WT& arg, boost::function<F> func, boost::function<void()> onFail)
       : _wptr(arg)
       , _f(func)
-      , _throwOnLockFailure(throwOnLockFailure)
+      , _onFail(onFail)
       {}
 
 #define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma) \
-     QI_GEN_MAYBE_TEMPLATE_OPEN(comma)                        \
-     ATYPEDECL                                             \
-     QI_GEN_MAYBE_TEMPLATE_CLOSE(comma)                        \
-     Result operator()(ADECL) {                        \
-       ST s = _wptr.lock();                                    \
-        if (s)                                     \
-          return _f(AUSE);                        \
-        else                                       \
-          if (_throwOnLockFailure)                 \
-            throw PointerLockException();            \
-          else                                      \
-            return Result();                        \
+     QI_GEN_MAYBE_TEMPLATE_OPEN(comma)                    \
+     ATYPEDECL                                            \
+     QI_GEN_MAYBE_TEMPLATE_CLOSE(comma)                   \
+     Result operator()(ADECL) {                           \
+       ST s = _wptr.lock();                               \
+       if (s)                                             \
+         return _f(AUSE);                                 \
+       else                                               \
+         if (_onFail)                                     \
+           _onFail();                                     \
+         else                                             \
+           return Result();                               \
       }
       QI_GEN(genCall)
 #undef genCall
       WT _wptr;
       boost::function<F> _f;
-      bool _throwOnLockFailure;
+      boost::function<void()> _onFail;
     };
 
     template<typename T, bool IS_TRACKABLE> struct BindTransform
@@ -120,7 +120,7 @@ namespace qi
         return arg;
       }
       template<typename F>
-      static boost::function<F> wrap(const T& arg, boost::function<F> func, bool throwOnLockFailure)
+      static boost::function<F> wrap(const T& arg, boost::function<F> func, boost::function<void()> onFail)
       {
         return func;
       }
@@ -136,9 +136,9 @@ namespace qi
         return arg.lock().get();
       }
       template<typename F>
-      static boost::function<F> wrap(const boost::weak_ptr<T>& arg, boost::function<F> func, bool throwOnLockFailure)
+      static boost::function<F> wrap(const boost::weak_ptr<T>& arg, boost::function<F> func, boost::function<void()> onFail)
       {
-        return LockAndCall<boost::weak_ptr<T>, boost::shared_ptr<T>, F>(arg, func, throwOnLockFailure);
+        return LockAndCall<boost::weak_ptr<T>, boost::shared_ptr<T>, F>(arg, func, onFail);
       }
     };
 
@@ -151,11 +151,16 @@ namespace qi
         return arg;
       }
       template<typename F>
-      static boost::function<F> wrap(T*const & arg, boost::function<F> func, bool throwOnLockFailure)
+      static boost::function<F> wrap(T*const & arg, boost::function<F> func, boost::function<void()> onFail)
       {
-        return LockAndCall<boost::weak_ptr<T>, boost::shared_ptr<T>, F>(arg->weakPtr(), func, throwOnLockFailure);
+        return LockAndCall<boost::weak_ptr<T>, boost::shared_ptr<T>, F>(arg->weakPtr(), func, onFail);
       }
     };
+
+    inline void throwPointerLockException()
+    {
+      throw PointerLockException();
+    }
   }
 
 #ifndef DOXYGEN
@@ -165,13 +170,21 @@ namespace qi
     return fun;
   }
 #define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma) \
-template<typename RF, typename AF, typename ARG0 comma ATYPEDECL>      \
+  template<typename RF, typename AF, typename ARG0 comma ATYPEDECL>      \
   boost::function<RF> bind(const AF& fun, const ARG0& arg0 comma ADECL)  \
   {                                                                      \
     typedef typename detail::BindTransform<ARG0, boost::is_base_of<TrackableBase, typename boost::remove_pointer<ARG0>::type>::value> Transform;     \
     typename Transform::type transformed = Transform::transform(arg0);   \
     boost::function<RF> f = boost::bind(fun, transformed comma AUSE);    \
-    return Transform::wrap(arg0, f, true);                               \
+    return Transform::wrap(arg0, f, detail::throwPointerLockException);  \
+  }                                                                      \
+  template<typename RF, typename AF, typename ARG0 comma ATYPEDECL>      \
+  boost::function<RF> bindWithFallback(const boost::function<void()> onFail, const AF& fun, const ARG0& arg0 comma ADECL)  \
+  {                                                                      \
+    typedef typename detail::BindTransform<ARG0, boost::is_base_of<TrackableBase, typename boost::remove_pointer<ARG0>::type>::value> Transform;     \
+    typename Transform::type transformed = Transform::transform(arg0);   \
+    boost::function<RF> f = boost::bind(fun, transformed comma AUSE);    \
+    return Transform::wrap(arg0, f, onFail);  \
   }
   QI_GEN(genCall)
 #undef genCall
@@ -180,7 +193,14 @@ template<typename RF, typename AF, typename ARG0 comma ATYPEDECL>      \
   boost::function<F> track(const boost::function<F>& f, const ARG0& arg0)
   {
     typedef typename detail::BindTransform<ARG0, boost::is_base_of<TrackableBase, typename boost::remove_pointer<ARG0>::type>::value> Transform;
-    return Transform::wrap(arg0, f, true);
+    return Transform::wrap(arg0, f, detail::throwPointerLockException);
+  }
+  template<typename F, typename ARG0>
+  boost::function<F> trackWithFallback(boost::function<void()> onFail,
+      const boost::function<F>& f, const ARG0& arg0)
+  {
+    typedef typename detail::BindTransform<ARG0, boost::is_base_of<TrackableBase, typename boost::remove_pointer<ARG0>::type>::value> Transform;
+    return Transform::wrap(arg0, f, onFail);
   }
 }
 
