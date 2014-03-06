@@ -21,6 +21,30 @@ def load_lib_qipyessaging():
     """
     import ctypes
     deps = [
+            "libboost_chrono.so.1.50.0",
+            "libboost_date_time.so.1.50.0",
+            "libboost_filesystem.so.1.50.0",
+            "libboost_graph.so.1.50.0",
+            "libboost_locale.so.1.50.0",
+            "libboost_math_c99f.so.1.50.0",
+            "libboost_math_c99l.so.1.50.0",
+            "libboost_math_c99.so.1.50.0",
+            "libboost_math_tr1f.so.1.50.0",
+            "libboost_math_tr1l.so.1.50.0",
+            "libboost_math_tr1.so.1.50.0",
+            "libboost_prg_exec_monitor.so.1.50.0",
+            "libboost_program_options.so.1.50.0",
+            "libboost_python.so.1.50.0",
+            "libboost_random.so.1.50.0",
+            "libboost_regex.so.1.50.0",
+            "libboost_serialization.so.1.50.0",
+            "libboost_signals.so.1.50.0",
+            "libboost_system.so.1.50.0",
+            "libboost_thread.so.1.50.0",
+            "libboost_timer.so.1.50.0",
+            "libboost_unit_test_framework.so.1.50.0",
+            "libboost_wave.so.1.50.0",
+            "libboost_wserialization.so.1.50.0",
             "libqi.so",
             "libqitype.so",
             "libqimessaging.so",
@@ -28,14 +52,14 @@ def load_lib_qipyessaging():
     this_dir = os.path.abspath(os.path.dirname(__file__))
     for dep in deps:
         full_path = os.path.join(this_dir, "..", dep)
-        ctypes.cdll.LoadLibrary(full_path)
+        try:
+            ctypes.cdll.LoadLibrary(full_path)
+        except Exception:
+            pass
 
 
 if sys.platform.startswith("linux"):
-    try:
-        load_lib_qipyessaging()
-    except Exception:
-        pass
+    load_lib_qipyessaging()
 
 
 #######
