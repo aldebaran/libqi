@@ -209,14 +209,8 @@ namespace qi {
     void visitList(AnyIterator it, AnyIterator iend)
     {
       qi::Signature esig = static_cast<ListTypeInterface*>(_value.type())->elementType()->signature();
-      if (!_resolveDynamic) {
+      if (!_resolveDynamic || it == iend) {
         result = qi::makeListSignature(esig);
-        return;
-      }
-
-      if (it == iend)
-      { // Empty list, TODO have a 'whatever signature entry
-        result = qi::makeListSignature(qi::Signature::fromType(Signature::Type_None));
         return;
       }
 
@@ -246,13 +240,8 @@ namespace qi {
     void visitMap(AnyIterator it, AnyIterator iend)
     {
       MapTypeInterface* type =  static_cast<MapTypeInterface*>(_value.type());
-      if (!_resolveDynamic) {
+      if (!_resolveDynamic || it == iend) {
         result = qi::makeMapSignature(type->keyType()->signature(), type->elementType()->signature());
-        return;
-      }
-
-      if (it == iend) {
-        result = qi::makeMapSignature(qi::Signature::fromType(Signature::Type_None), qi::Signature::fromType(Signature::Type_None));
         return;
       }
 
