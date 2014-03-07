@@ -35,15 +35,14 @@ namespace qi {
 
   typedef qi::uint64_t SignalLink;
 
-  class QITYPE_API SignalBase
+  //Signal are not copyable, they belong to a class.
+  class QITYPE_API SignalBase: boost::noncopyable
   {
   public:
     typedef boost::function<void(bool)> OnSubscribers;
     explicit SignalBase(const Signature &signature, OnSubscribers onSubscribers = OnSubscribers());
     SignalBase(OnSubscribers onSubscribers=OnSubscribers());
     virtual ~SignalBase();
-    SignalBase(const SignalBase& b);
-    SignalBase& operator = (const SignalBase& b);
     virtual qi::Signature signature() const;
     template<typename F>
     SignalSubscriber& connect(const boost::function<F>& func);
@@ -111,8 +110,6 @@ template<QI_SIGNAL_TEMPLATE_DECL> class Signal;
      * Will not be called when destructor is invoked and all subscribers are removed
     */
     SignalF(OnSubscribers onSubscribers = OnSubscribers());
-    SignalF(const SignalF<T>& b);
-    SignalF<T>& operator = (const SignalF<T>& b);
     typedef T FunctionType;
     virtual qi::Signature signature() const;
     using boost::function<T>::operator();

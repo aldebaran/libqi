@@ -30,9 +30,7 @@ namespace qi
   template<typename U>
   SignalSubscriber&  SignalF<T>::connect(SignalF<U>& signal)
   {
-    return connect(qi::track(
-      (boost::function<U>&)signal,
-      boost::weak_ptr<SignalBasePrivate>(signal._p)));
+    return connect(qi::track((boost::function<U>&)signal, boost::weak_ptr<SignalBasePrivate>(signal._p)));
   }
 
   template<typename T>
@@ -114,18 +112,6 @@ namespace qi
     _setSignature(detail::functionArgumentsSignature<T>());
   }
 
-  template<typename T>
-  SignalF<T>& SignalF<T>::operator = (const SignalF<T>& b)
-  { // Keep our boost::function as is.
-    *(SignalBase*)this = b;
-    return *this;
-  }
-
-  template<typename T>
-  SignalF<T>::SignalF(const SignalF<T>& b)
-  {
-    * (boost::function<T>*)this = detail::BounceToSignalBase<T>(*this);
-  }
 
   template<typename T>
   qi::Signature SignalF<T>::signature() const

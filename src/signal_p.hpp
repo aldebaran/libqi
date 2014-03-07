@@ -18,7 +18,10 @@ namespace qi {
   class SignalBasePrivate
   {
   public:
-    SignalBasePrivate(): defaultCallType(MetaCallType_Auto) {}
+    SignalBasePrivate()
+      : defaultCallType(MetaCallType_Auto)
+    {}
+
     ~SignalBasePrivate();
     bool disconnect(const SignalLink& l);
     bool reset();

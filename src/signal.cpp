@@ -424,20 +424,6 @@ namespace qi {
     _p->onSubscribers = onSubscribers;
   }
 
-  SignalBase::SignalBase(const SignalBase& b)
-  {
-    (*this) = b;
-  }
-
-  SignalBase& SignalBase::operator=(const SignalBase& b)
-  {
-    if (!b._p)
-    {
-      const_cast<SignalBase&>(b)._p = boost::make_shared<SignalBasePrivate>();
-    }
-    _p = b._p;
-    return *this;
-  }
 
   qi::Signature SignalBase::signature() const
   {

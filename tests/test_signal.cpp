@@ -85,29 +85,6 @@ void byRef(int& i, bool* done)
   *done = true;
 }
 
-TEST(TestSignal, Copy)
-{
-  // Check that reference argument type are copied when an async call is made
-  qi::Signal<int&, bool*> sig;
-  qiLogDebug() << "sync";
-  sig.connect(qi::AnyFunction::from(byRef)).setCallType(qi::MetaCallType_Direct);
-  bool done = false;
-  int i = 0;
-  qiLogDebug() << "iref is " << &i;
-  sig(i, &done);
-  ASSERT_TRUE(done); //synchronous
-  //ASSERT_EQ(0, i); // byref, but still copies for small types
-  qiLogDebug() << "async";
-  sig =  qi::Signal<int&, bool*>();
-  sig.connect(qi::AnyFunction::from(byRef)).setCallType(qi::MetaCallType_Queued);
-  i = 0;
-  done = false;
-  qiLogDebug() << "done is " << &done;
-  sig(i, &done);
-  for (unsigned c=0; !done && c<100;++c) qi::os::msleep(10);
-  ASSERT_TRUE(done);
-  ASSERT_EQ(0, i); // async: was copied
-}
 
 TEST(TestSignal, AutoDisconnect)
 {
@@ -273,22 +250,6 @@ TEST(TestSignal, Dynamic)
   EXPECT_EQ(56, trig);
 }
 
-TEST(TestSignal, SharedPtrSemantic)
-{
-  qi::Signal<int>* s = new qi::Signal<int>();
-  qi::Signal<int>* s2 = new qi::Signal<int>();
-  s->setCallType(qi::MetaCallType_Direct);
-  boost::shared_ptr<int> i = boost::shared_ptr<int>(new int());
-  s->connect(boost::bind(&write42, i));
-  (*s)(0);
-  EXPECT_EQ(42, *i);
-  *s2 = *s;
-  delete s;
-  *i = 0;
-  EXPECT_EQ(0, *i);
-  (*s2)(0);
-  EXPECT_EQ(42, *i);
-}
 
 int main(int argc, char **argv) {
   qi::Application app(argc, argv);
