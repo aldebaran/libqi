@@ -58,7 +58,7 @@ TEST(QiSession, create)
     qi::os::msleep(10);
 }
 
-static void session_close(qi::Session* s, qi::Atomic<int>* counter)
+static void session_close(qi::SessionPtr s, qi::Atomic<int>* counter)
 {
   s->close();
   ++(*counter);
@@ -327,8 +327,8 @@ TEST(QiSession, AlreadyRegistered)
 TEST(QiSession, Services)
 {
   TestSessionPair p;
-  qi::Session* s1 = p.client();
-  qi::Session* s2 = p.server();
+  qi::SessionPtr s1 = p.client();
+  qi::SessionPtr s2 = p.server();
 
   qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("reply", &reply);

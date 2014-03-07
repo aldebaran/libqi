@@ -46,7 +46,7 @@ namespace qi
      * @param name the name of the service to use
      * @param session a ref to the session that will be used to find the service.
      */
-    AutoService(const std::string& name, qi::Session& session);
+    AutoService(const std::string& name, qi::SessionPtr session);
 
     ~AutoService();
 
@@ -96,7 +96,7 @@ namespace qi
     void onServiceRemoved(const std::string& name);
 
     mutable boost::mutex _mutex;
-    Session&             _session;
+    SessionPtr           _session;
     qi::Object<T>        _object;
     std::string          _name;
     qi::Promise<void>    _promise;

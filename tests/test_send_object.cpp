@@ -23,7 +23,7 @@ TEST(Module, pass_obj)
   TestMode::forceTestMode(TestMode::Mode_SD);
   TestSessionPair p;
 
-  qi::Session* s = p.server();
+  qi::SessionPtr s = p.server();
 
   s->loadService("naoqi/testmodule");
   qi::AnyObject o = s->service("test");
@@ -48,7 +48,7 @@ TEST(Module, load_received_obj)
   TestMode::forceTestMode(TestMode::Mode_SD);
   TestSessionPair p;
 
-  qi::Session* s = p.server();
+  qi::SessionPtr s = p.server();
 
   s->loadService("naoqi/testmodule");
   qi::AnyObject o = s->service("test");

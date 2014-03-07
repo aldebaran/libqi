@@ -48,7 +48,7 @@ qi::AnyObject newObject() {
   return ob.object();
 }
 
-void alternateModule(qi::Session *session) {
+void alternateModule(qi::SessionPtr session) {
   while (!boost::this_thread::interruption_requested())
   {
     boost::this_thread::interruption_point();

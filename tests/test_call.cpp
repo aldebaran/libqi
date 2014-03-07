@@ -510,7 +510,7 @@ void set_true(bool* b)
   *b = true;
 }
 
-int service_call(qi::Session* s, const std::string& obj,
+int service_call(qi::SessionPtr s, const std::string& obj,
   const std::string& method, int arg)
 {
   qiLogDebug() << "TEST: servicecall";
@@ -518,7 +518,7 @@ int service_call(qi::Session* s, const std::string& obj,
   return o.call<int>(method, arg);
 }
 
-void servicecall_addone(qi::Promise<int>& prom, qi::Session* s)
+void servicecall_addone(qi::Promise<int>& prom, qi::SessionPtr s)
 {
   qiLogDebug() << "TEST: call servicecall";
   qi::AnyObject obj2Proxy = s->service("caller");
