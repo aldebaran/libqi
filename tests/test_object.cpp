@@ -1009,21 +1009,21 @@ TEST(TestObject, DynAnyArguments)
 
   qi::AnyValue args;
   std::vector<int> expect;
+  expect.push_back(1);
+  expect.push_back(2);
+  expect.push_back(3);
 
   o.call<void>("callMee", 1, 2, 3);
   args = gCallmee;
-  expect = boost::assign::list_of(1)(2)(3);
   EXPECT_EQ(expect, args.to<std::vector<int> >());
 
   gCallmee = qi::AnyValue();
   o.call<void>("callMee2", 1, 2, 3);
   args = gCallmee;
-  expect = boost::assign::list_of(1)(2)(3);
   EXPECT_EQ(expect, args.to<std::vector<int> >());
 
   o.call<void>("callMee3", 1, 2, 3);
   args = ap.onCall.get();
-  expect = boost::assign::list_of(1)(2)(3);
   EXPECT_EQ(expect, args.to<std::vector<int> >());
 
 }

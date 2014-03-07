@@ -173,7 +173,7 @@ TEST(Value, AnyObject)
 
     AnyReference v = AnyReference::from(ori);
     qi::detail::ManagedObjectPtr mo = v.to<qi::detail::ManagedObjectPtr>();
-    ASSERT_TRUE(mo);
+    ASSERT_TRUE(!!mo);
     ASSERT_EQ(mo.get(), &go);
     qi::AnyObject out = v.to<AnyObject>();
     ASSERT_TRUE(out);
