@@ -37,7 +37,6 @@ namespace qi {
     session->serviceUnregistered.setCallType(qi::MetaCallType_Queued);
 
     _sdClient.connected.connect(session->connected);
-    //take a shared_ptr first, or the weak_ptr wont be correct.
     _sdClient.disconnected.connect(&SessionPrivate::onDisconnected, this, _1);
     _sdClient.disconnected.connect(session->disconnected);
     _sdClient.serviceAdded.connect(session->serviceRegistered);
