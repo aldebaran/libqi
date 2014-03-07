@@ -27,6 +27,8 @@
   #include <windows.h>
 #endif
 
+std::string argpath;
+
 namespace bfs = boost::filesystem;
 
 bfs::path absPath(const std::string& pPath)
@@ -64,7 +66,7 @@ boost::filesystem::path getHomePath()
 
 TEST(qiPath, callingInit)
 {
-  bfs::path expected(normalizePath(absPath(std::string(::testing::internal::GetArgvs()[0])).string(qi::unicodeFacet())), qi::unicodeFacet());
+  bfs::path expected(normalizePath(absPath(argpath).string(qi::unicodeFacet())), qi::unicodeFacet());
   expected = expected.parent_path().parent_path();
 
   std::string actual = qi::path::sdkPrefix();
@@ -673,6 +675,7 @@ int main(int argc, char* argv[])
 {
   qi::Application app(argc, argv);
   ::testing::InitGoogleTest(&argc, argv);
+  argpath = argv[0];
   return RUN_ALL_TESTS();
 }
 
