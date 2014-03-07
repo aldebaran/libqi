@@ -449,6 +449,91 @@ namespace qi {
     }
   }
 
+  TypeInterface* makeFloatType(int bytelen)
+  {
+    static TypeInterface* tfloat = typeOf<float>();
+    static TypeInterface* tdouble = typeOf<double>();
+    if (bytelen == 4)
+      return tfloat;
+    else if (bytelen == 8)
+      return tdouble;
+    throw std::runtime_error("Invalid bytelen");
+  }
+
+  TypeInterface* makeIntType(bool issigned, int bytelen)
+  {
+    static TypeInterface* tb = typeOf<bool>();
+    static TypeInterface* t8 = typeOf<int8_t>();
+    static TypeInterface* t16 = typeOf<int16_t>();
+    static TypeInterface* t32 = typeOf<int32_t>();
+    static TypeInterface* t64 = typeOf<int64_t>();
+    static TypeInterface* tu8  = typeOf<uint8_t>();
+    static TypeInterface* tu16 = typeOf<uint16_t>();
+    static TypeInterface* tu32 = typeOf<uint32_t>();
+    static TypeInterface* tu64 = typeOf<uint64_t>();
+
+    if (issigned) {
+      switch (bytelen) {
+        case 0:
+          return tb;
+        case 1:
+          return t8;
+        case 2:
+          return t16;
+        case 4:
+          return t32;
+        case 8:
+          return t64;
+      }
+    } else {
+      switch (bytelen) {
+        case 0:
+          return tb;
+        case 1:
+          return tu8;
+        case 2:
+          return tu16;
+        case 4:
+          return tu32;
+        case 8:
+          return tu64;
+      }
+    }
+    throw std::runtime_error("Invalid bytelen");
+  }
+
+
+  TypeInterface* makeTypeOfKind(const qi::TypeKind& kind)
+  {
+    static TypeInterface* tv = typeOf<void>();
+    static TypeInterface* t64 = typeOf<int64_t>();
+    static TypeInterface* tdouble = typeOf<double>();
+    static TypeInterface* tstring = typeOf<std::string>();
+    static TypeInterface* tgv = typeOf<AnyValue>();
+    static TypeInterface* tbuffer = typeOf<Buffer>();
+    static TypeInterface* tobjectptr = typeOf<AnyObject>();
+
+    switch(kind)
+    {
+    case TypeKind_Void:
+      return tv;
+    case TypeKind_Int:
+      return t64;
+    case TypeKind_Float:
+      return tdouble;
+    case TypeKind_String:
+      return tstring;
+    case Signature::Type_Dynamic:
+      return tgv;
+    case Signature::Type_Raw:
+      return tbuffer;
+    case Signature::Type_Object:
+      return tobjectptr;
+    default:
+      qiLogWarning() << "Cannot get type from kind " << kind;
+      return 0;
+    }
+  }
 
   static TypeInterface* fromSignature(const qi::Signature& sig)
   {
@@ -561,6 +646,7 @@ namespace qi {
       return 0;
     }
   }
+
 
   TypeInterface* TypeInterface::fromSignature(const qi::Signature& sig)
   {

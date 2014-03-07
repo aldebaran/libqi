@@ -1,5 +1,5 @@
 ##
-## Copyright (C) 2009, 2010, 2011, 2012 Aldebaran Robotics
+## Copyright (C) 2009, 2010, 2011, 2012, 2013 Aldebaran Robotics
 ##
 
 cmake_minimum_required(VERSION 2.8.0)
@@ -59,6 +59,7 @@ set(PUBLIC_HEADERS
                    qitype/details/pointertypeinterface.hxx
                    qitype/details/stringtypeinterface.hxx
                    qitype/details/structtypeinterface.hxx
+                   qitype/details/type.hpp
                    qitype/api.hpp
                    qitype/anyfunction.hpp
                    qitype/anyobject.hpp
@@ -122,6 +123,7 @@ set(SOURCES ${PUBLIC_HEADERS}
             src/staticobjecttype.cpp
             src/typeinterface.cpp
             src/structtypeinterface.cpp
+            src/type.cpp
             src/signature.cpp
             src/traceanalyzer.cpp
             src/registration.cpp

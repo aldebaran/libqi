@@ -127,9 +127,9 @@ namespace qi{
   class QITYPE_API RawTypeInterface: public TypeInterface
   {
   public:
-    /// Get the buffer of data (not a copy)
+    /// Get the buffer of data (not a copy)
     virtual std::pair<char*, size_t> get(void* storage) = 0;
-    /// Set the buffer of data (buffer is copied)
+    /// Set the buffer of data (buffer is copied)
     virtual void set(void** storage, const char* ptr, size_t sz) = 0;
     virtual TypeKind kind() { return TypeKind_Raw; }
   };
@@ -304,6 +304,17 @@ namespace qi{
     virtual void set(void** storage, AnyReference source) = 0;
     virtual TypeKind kind() { return TypeKind_Dynamic; }
   };
+
+  ///@return a Type of the specified Kind. This do not work for list, map and tuple.
+  /// kind Int and Float will create the biggest possible type. use makeFloatType and makeIntType
+  /// to be more specific.
+  QITYPE_API TypeInterface* makeTypeOfKind(const qi::TypeKind& kind);
+
+  ///@return a Type of kind float, bytelen can be 4 or 8
+  QITYPE_API TypeInterface* makeFloatType(int bytelen);
+
+  ///@return a Type of kind int, bytelen can be 0,1,2,4,8
+  QITYPE_API TypeInterface* makeIntType(bool issigned, int bytelen);
 
   ///@return a Type of kind List that can contains elements of type elementType.
   QITYPE_API TypeInterface* makeListType(TypeInterface* elementType);
