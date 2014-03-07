@@ -24,7 +24,8 @@ namespace qi {
 
 
   SessionPrivate::SessionPrivate(qi::Session *session)
-    : _sdClient()
+    : qi::Trackable<SessionPrivate>(this)
+    , _sdClient()
     , _serverObject(&_sdClient, session)
     , _serviceHandler(&_socketsCache, &_sdClient, &_serverObject)
     , _servicesHandler(&_sdClient, &_serverObject)
@@ -37,13 +38,14 @@ namespace qi {
 
     _sdClient.connected.connect(session->connected);
     //take a shared_ptr first, or the weak_ptr wont be correct.
-    _sdClient.disconnected.connect(&SessionPrivate::onDisconnected, boost::weak_ptr<SessionPrivate>(shared_from_raw(this)), _1);
+    _sdClient.disconnected.connect(&SessionPrivate::onDisconnected, this, _1);
     _sdClient.disconnected.connect(session->disconnected);
     _sdClient.serviceAdded.connect(session->serviceRegistered);
     _sdClient.serviceRemoved.connect(session->serviceUnregistered);
   }
 
   SessionPrivate::~SessionPrivate() {
+    destroy();
     close();
   }
 
@@ -111,7 +113,7 @@ namespace qi {
     qi::Promise<void> p;
 
     // go through hoops to get shared_ptr on this
-    f.connect(&SessionPrivate::addSdSocketToCache, weak_from_raw(this), _1, serviceDirectoryURL, p);
+    f.connect(&SessionPrivate::addSdSocketToCache, this, _1, serviceDirectoryURL, p);
     return p.future();
   }
 
@@ -204,7 +206,7 @@ namespace qi {
     qi::Promise<void> p;
     //will listen and connect
     qi::Future<void> f = _sd.listenStandalone(address);
-    f.connect(&SessionPrivate::listenStandaloneCont, weak_from_raw(this), p, _1);
+    f.connect(&SessionPrivate::listenStandaloneCont, this, p, _1);
     return p.future();
   }
 

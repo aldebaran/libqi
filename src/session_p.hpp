@@ -14,11 +14,10 @@
 #include "sessionservices.hpp"
 #include "transportsocketcache.hpp"
 #include "servicedirectory.hpp"
-#include <boost/smart_ptr/enable_shared_from_raw.hpp>
 
 namespace qi {
 
-  class SessionPrivate : public boost::enable_shared_from_raw
+  class SessionPrivate : public qi::Trackable<SessionPrivate>
   {
   public:
     SessionPrivate(qi::Session *session);
