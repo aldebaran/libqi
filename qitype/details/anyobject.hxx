@@ -14,6 +14,11 @@
 #include <qitype/typeobject.hpp>
 #include <qitype/details/typeimpl.hxx>
 
+// Visual defines interface...
+#ifdef interface
+#undef interface
+#endif
+
 namespace qi {
 
   namespace detail {
