@@ -32,8 +32,8 @@ namespace {
 static std::string globToRegex(std::string glob)
 {
   boost::trim(glob);
-  const char expression[] = "(\\*)|(\\?)|(\\\\)|(\\.)";
-  const char format[] = "(?1[\\\\w\\\\.-]*)(?2[\\\\w]{1})(?3\\\\\\\\)(?4\\\\.)";
+  const char expression[] = "(\\*)|(\\?)|([\\.\\^\\$\\|\\(\\)\\[\\]\\+\\\\])";
+  const char format[] = "(?1[\\\\w\\\\.-]*)(?2[\\\\w]{1})(?3\\\\\\3)";
   std::stringstream final;
   std::ostream_iterator<char, char> oi(final);
   boost::regex re;
