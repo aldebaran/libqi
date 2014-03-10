@@ -13,6 +13,7 @@
 
 TestSessionPair::TestSessionPair(TestMode::Mode mode, const std::string sdUrl)
 {
+  _sd = qi::makeSession();
 
   // #1 Get active mode.
   _mode = mode == TestMode::Mode_Default ? TestMode::getTestMode() : mode;
@@ -35,6 +36,8 @@ TestSessionPair::TestSessionPair(TestMode::Mode mode, const std::string sdUrl)
 
 TestSessionPair::TestSessionPair(TestSessionPair &other)
 {
+  _sd = qi::makeSession();
+
   // #1 Get active mode.
   _mode = TestMode::getTestMode();
 
