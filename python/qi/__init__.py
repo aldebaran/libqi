@@ -23,7 +23,13 @@ def load_lib_qipyessaging():
     deps = [
             "libboost_python.so",
             "libboost_system.so",
+            "libboost_chrono.so",
+            "libboost_program_options.so",
             "libboost_thread.so",
+            "libboost_filesystem.so",
+            "libboost_regex.so",
+            "libboost_locale.so",
+            "libboost_signals.so",
             "libqi.so",
             "libqitype.so",
             "libqimessaging.so",
