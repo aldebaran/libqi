@@ -234,7 +234,7 @@ int main(int argc, char **argv) {
   std::string sdk_dir = argv[2];
   std::string src_dir = argv[3];
 
-  setenv("PYTHONHOME", argv[1], 1);
+  qi::os::setenv("PYTHONHOME", argv[1]);
 
   PyEval_InitThreads();
   Py_Initialize();
