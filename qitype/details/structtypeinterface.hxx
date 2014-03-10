@@ -107,7 +107,7 @@ namespace qi
 #define QI_TYPE_STRUCT_EXTENSION_FIELDS(name, ...) \
    QI_TYPE_STRUCT_EXTENSION_DROP_FIELDS(name, __VA_ARGS__); \
    QI_TYPE_STRUCT_EXTENSION_FILL_FIELDS(name, __VA_ARGS__)
-  
+
     //keep only the class name. (remove :: and namespaces)
     QITYPE_API std::string normalizeClassName(const std::string &name);
 
@@ -380,6 +380,10 @@ public:                                                                   \
     bounceTo * tptr = conversion(ptr);                                    \
     *adapted = bounceType()->initializeStorage(tptr);                     \
   }                                                                       \
+  std::string className()                                                 \
+  {                                                                       \
+    return ::qi::detail::normalizeClassName(BOOST_PP_STRINGIZE(name));    \
+  }                                                                       \
 };}
 
 /** Similar to QI_TYPE_STRUCT_BOUNCE, but using the runtime factory instead of the
@@ -394,7 +398,6 @@ QI_TYPE_REGISTER_CUSTOM(name, _qi_::qi::TypeImpl<name>)
 
 
 namespace qi {
-  //TODO
   template<typename T, typename TO>
   class StructTypeInterfaceBouncer: public StructTypeInterface
   {
@@ -420,6 +423,20 @@ namespace qi {
       void* astorage;
       adaptStorage(&storage, &astorage);
       return bounceType()->get(astorage, index);
+    }
+
+    virtual std::vector<void*> get(void* storage)
+    {
+      void* astorage;
+      adaptStorage(&storage, &astorage);
+      return bounceType()->get(astorage);
+    }
+
+    virtual void set(void** storage, const std::vector<void*>& vals)
+    {
+      void* astorage;
+      adaptStorage(storage, &astorage);
+      bounceType()->set(&astorage, vals);
     }
 
     virtual void set(void** storage, unsigned int index, void* valStorage)
