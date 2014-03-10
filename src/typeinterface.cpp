@@ -311,7 +311,7 @@ namespace qi {
       std::string res;
       res = qi::makeTupleSignature(vals, _resolveDynamic).toString();
 
-      if (!name.empty() || annotations.size() >= vals.size()) {
+      if (annotations.size() >= vals.size()) {
 
         res += '<';
         if (!name.empty())
