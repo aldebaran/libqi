@@ -53,12 +53,11 @@ namespace qi{
     namespace qi { namespace detail { \
     template<> struct TypeManager<T>: public TypeManagerDefaultInterface<T> {};}}
 
-    /// Declare that a type can be constructed and copied
+  /// Declare that a type can be constructed and copied
   /// \warning Be careful to put the declaration outside any namespaces.
   #define QI_TYPE_CONCRETE(T)     \
     namespace qi { namespace detail { \
     template<> struct TypeManager<T>: public TypeManagerDefaultStruct<T> {}; }}
-
 
   /// Register TypeImpl<t> in runtime type factory for 't'. Must be called from a .cpp file
   /// \warning Be careful to put the declaration outside any namespaces.
