@@ -6,18 +6,46 @@ qi.logging API
 Introduction
 ============
 
-This module provide logging capabilities integrated with the qi sdk.
+This module provides logging capabilities integrated with the qi sdk.
 
 .. warning::
 
   The debug log level is not available in python, because there is no debug build in python.
   Use verbose instead.
 
-Reference
-=========
+There are two ways to use this module:
+
+  - class :ref:`qi.Logger <api-py-logging-class>` with defined category
+  - :ref:`static methods <api-py-logging-static>` without defined category
+
+
+.. _api-py-logging-class:
+
+
+Class qi.Logger Reference
+=========================
 
 .. autoclass:: qi.Logger
    :members:
+
+Example
+=======
+
+With a defined category:
+
+.. code-block:: python
+
+  import qi
+
+  mylogger = qi.Logger("myfoo.bar")
+
+  mylogger.warning("my log message")
+
+
+.. _api-py-logging-static:
+
+Static Methods Reference
+========================
 
 .. autofunction:: qi.fatal
 
@@ -29,15 +57,9 @@ Reference
 
 .. autofunction:: qi.verbose
 
-.. autofunction:: qi.logging.setFilters
 
-.. autofunction:: qi.logging.setLevel
-
-.. autofunction:: qi.logging.setContext
-
-
-Examples
-========
+Example
+=======
 
 Simple example:
 
@@ -48,12 +70,13 @@ Simple example:
   qi.warning("myfoo.bar", "my log message")
 
 
-With a defined category:
+Reference
+=========
 
-.. code-block:: python
+Global methods
 
-  import qi
+.. autofunction:: qi.logging.setFilters
 
-  mylogger = qi.Logger("foo.bar")
+.. autofunction:: qi.logging.setLevel
 
-  mylogger.message("my log message")
+.. autofunction:: qi.logging.setContext
