@@ -583,11 +583,11 @@ namespace qi {
 
   //the initialisation is protected by a mutex,
   //we then use an atomic to prevent having a mutex on a fastpath.
-  static EventLoop* _get(EventLoop* &ctx, bool isPool, qi::Atomic<int> &init,
-    int nthreads)
+  static EventLoop* _get(EventLoop* &ctx, bool isPool, int nthreads)
   {
     //same mutex for multiples eventloops, but that's ok, used only at init.
     static boost::mutex    eventLoopMutex;
+    static qi::Atomic<int> init(0);
 
     if (*init)
       return ctx;
@@ -628,10 +628,14 @@ namespace qi {
     return getEventLoop();
   }
 
+  void startEventLoop(int nthread)
+  {
+    _get(_poolEventLoop, false, nthread);
+  }
+
   EventLoop* getEventLoop()
   {
-    static qi::AtomicBase<int> init = {0};
-    return _get(_poolEventLoop, false, static_cast<qi::Atomic<int>&>(init), 0);
+    return _get(_poolEventLoop, false, 0);
   }
 
   boost::asio::io_service& getIoService()
