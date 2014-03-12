@@ -74,7 +74,7 @@ namespace qi
     boost::mutex        _sendQueueMutex; // protects _sendQueue, _sending and closing
     std::deque<Message> _sendQueue;
     bool                _sending;
-    boost::recursive_mutex        _closingMutex;
+    mutable boost::recursive_mutex        _closingMutex;
     boost::shared_ptr<boost::asio::ip::tcp::resolver> _r;
 
   };
