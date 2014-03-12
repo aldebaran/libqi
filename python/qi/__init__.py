@@ -129,10 +129,8 @@ __all__ = ["FutureState",
            "Float", "Double", "String", "List", "Map", "Struct", "Object", "Dynamic", "Buffer", "AnyArguments",
            "typeof", "isinstance",
            "bind", "nobind",
-           "fatal", "error", "warning", "info", "verbose", "Logger"
+           "fatal", "error", "warning", "info", "verbose", "Logger",
            "defaultTranslator", "tr", "Translator"
-
-
 ]
 
 _on_import_module()

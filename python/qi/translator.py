@@ -26,3 +26,5 @@ def tr(msg, domain=None, locale=None):
     if locale is None:
         return globTranslator.translate(msg, domain)
     return globTranslator.translate(msg, domain, locale)
+
+__all__ = ( "defaultTranslator", "tr" )
