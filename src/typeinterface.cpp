@@ -1281,14 +1281,17 @@ namespace qi {
       /* Use an internal map and be untemplated to avoid generating zillions
       * of symbols
       */
+      std::ostringstream ss;
+      ss << "Cannot do '" << operation << "' on " << typeName;
       static std::set<std::string>* once = 0;
       if (!once)
         once = new std::set<std::string>();
-      if (once->find(typeName)!=once->end())
-        return;
-      once->insert(typeName);
-      qiLogError() << "The following operation failed on data type "
-      << typeName << " :" << operation;
+      if (once->find(typeName)==once->end())
+      {
+        once->insert(typeName);
+        qiLogError() << ss.str();
+      }
+      throw std::runtime_error(ss.str());
     }
 
     bool fillMissingFieldsWithDefaultValues(StructTypeInterface* type,
