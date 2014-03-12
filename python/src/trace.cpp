@@ -46,9 +46,14 @@ namespace qi {
             out << "  File " << pyTo<std::string>((*iter2)[1])
               << ", line " << pyTo<int>((*iter2)[2])
               << ", in " << pyTo<std::string>((*iter2)[3]);
-            bpy::dict args(inspect.attr("getargvalues")(
+            bpy::list args(inspect.attr("getargvalues")(
                 bpy::object((*iter2)[0])));
-            out << pyTo<std::string>(inspect.attr("formatargvalues")(**args));
+            out << pyTo<std::string>(
+                inspect.attr("formatargvalues")(
+                  bpy::object(args[0]),
+                  bpy::object(args[1]),
+                  bpy::object(args[2]),
+                  bpy::object(args[3])));
             out << '\n';
 
             if (!bpy::object((*iter2)[4]).is_none())
