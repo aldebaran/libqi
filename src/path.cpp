@@ -80,8 +80,8 @@ namespace qi
         length = GetShortPathNameW(path.wstring(qi::unicodeFacet()).c_str(), NULL, 0);
         if(length == 0)
         {
-          qiLogError() << "Cannot retreive short path for "
-                       << pathString.c_str();
+          qiLogVerbose() << "Cannot retrieve short path for "
+                         << pathString.c_str();
           return std::string();
         }
 
@@ -90,8 +90,8 @@ namespace qi
         length = GetShortPathNameW(path.wstring(qi::unicodeFacet()).c_str(), buffer, length);
         if(length == 0)
         {
-          qiLogError() << "Cannot retreive short path for "
-                       << pathString.c_str();
+          qiLogVerbose() << "Cannot retrieve short path for "
+                         << pathString.c_str();
           return std::string();
         }
 
