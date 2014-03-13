@@ -36,6 +36,13 @@ namespace qi { namespace py {
         //unlock because stop wait for the callback to finish.
         qi::PeriodicTask::stop();
       }
+
+      void start(bool immediate) {
+        qi::py::GILScopedUnlock _unlock;
+        //unlock because stop wait for the callback to finish.
+        qi::PeriodicTask::start(immediate);
+      }
+
     };
 
     static boost::python::object pyAsync(PyThreadSafeObject safeargs) {
