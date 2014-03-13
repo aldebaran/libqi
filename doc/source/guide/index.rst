@@ -11,3 +11,4 @@ User Guides
   cxx-log
   py-client
   py-service
+  py-tonaoqi2
