@@ -30,6 +30,12 @@ namespace qi { namespace py {
           throw std::runtime_error("Not a callable");
         qi::PeriodicTask::setCallback(boost::bind<void>(pyPeriodicCb, PyThreadSafeObject(callable)));
       }
+
+      void stop() {
+        qi::py::GILScopedUnlock _unlock;
+        //unlock because stop wait for the callback to finish.
+        qi::PeriodicTask::stop();
+      }
     };
 
     static boost::python::object pyAsync(PyThreadSafeObject safeargs) {
