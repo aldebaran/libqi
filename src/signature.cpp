@@ -76,7 +76,7 @@ namespace qi {
     return qi::Signature(res);
   }
 
-#define RET_CALC (1.0f - childErr - ((float)error) / 100.0f)
+#define RET_CALC (1.0f * childErr * ((float)(100 - error)) / 100.0f)
 
   float qi::Signature::isConvertibleTo(const qi::Signature& b) const
   {
@@ -85,7 +85,7 @@ namespace qi {
      * - Weaker error score for deeper (in containers) struct.
      */
     int error = 0;
-    float childErr = 0.0f;
+    float childErr = 1.0f;
     static const char numeric[] = "bcCwWiIlLfd";
     static const char integral[] = "bcCwWiIlL";
     static const char floating[] = "fd";
@@ -157,7 +157,7 @@ namespace qi {
         if (!childRes)
           return 0; // Just check subtype compatibility
         // the lower the error the better
-        childErr += 1.0f - childRes*1.01;
+        childErr *= childRes;
       }
       assert(its==children().end() && itd==b.children().end()); // we already exited on size mismatch
     }
