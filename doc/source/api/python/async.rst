@@ -94,14 +94,14 @@ Canceling a delayed operation before its execution.
 
   def dummyAction():
     # do your operations here
-    qi.logInfo("async example", "My dummy action is over")
+    qi.info("async example", "My dummy action is over")
 
   action = qi.async(dummyAction, delay=15000000)
   time.sleep(5)
   action.cancel()
   action.wait()
   if action.isCanceled():
-    qi.logInfo("async example", "dummyAction was canceled as expected")
+    qi.info("async example", "dummyAction was canceled as expected")
 
 
 
