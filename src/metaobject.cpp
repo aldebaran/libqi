@@ -723,8 +723,12 @@ namespace qi {
           continue;
         }
         printIdName(stream, color, offsetSigs, it3->second.uid(), it3->second.name());
-        stream << " " << FC(StreamColor_Yellow, color) << it3->second.parametersSignature().toPrettySignature() << FC(StreamColor_Reset, color)
-               << std::endl;
+        if (raw)
+          stream << " " << FC(StreamColor_Yellow, color) << it3->second.parametersSignature().toString() << FC(StreamColor_Reset, color)
+                 << std::endl;
+        else
+          stream << " " << FC(StreamColor_Yellow, color) << it3->second.parametersSignature().toPrettySignature() << FC(StreamColor_Reset, color)
+                 << std::endl;
       }
 
       if (parseable)
@@ -748,8 +752,12 @@ namespace qi {
           continue;
         }
         printIdName(stream, color, offsetProps, it->second.uid(), it->second.name());
-        stream << " " << FC(StreamColor_Yellow, color) << it->second.signature().toPrettySignature() << FC(StreamColor_Reset, color)
-               << std::endl;
+        if (raw)
+          stream << " " << FC(StreamColor_Yellow, color) << it->second.signature().toString() << FC(StreamColor_Reset, color)
+                 << std::endl;
+        else
+          stream << " " << FC(StreamColor_Yellow, color) << it->second.signature().toPrettySignature() << FC(StreamColor_Reset, color)
+                 << std::endl;
       }
       if (parseable)
         stream << std::endl;
