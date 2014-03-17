@@ -34,7 +34,7 @@ namespace qi {
             iter != bpy::stl_input_iterator<bpy::tuple>();
             ++iter)
         {
-          out << "\n# ThreadID: " << pyTo<uint64_t>((*iter)[0]) << "\n";
+          out << "\n# ThreadID: " << ((uint64_t)pyTo<int64_t>((*iter)[0])) << "\n";
 
           // for each frame in the stack which is a tuple
           // (frame, file, line, function, list(code))
