@@ -83,7 +83,8 @@ set(QI_H qi/detail/clock.hxx
          qi/trackable.hpp
          qi/eventloop.hpp
          qi/version.hpp
-         qi/iocolor.hpp)
+         qi/iocolor.hpp
+         qi/strand.hpp)
 
 set(QI_C src/dlfcn.cpp
          src/path.cpp
@@ -113,7 +114,8 @@ set(QI_C src/dlfcn.cpp
          src/eventloop_p.hpp
          src/sdklayout-boost.cpp
          src/version.cpp
-         src/iocolor.cpp)
+         src/iocolor.cpp
+         src/strand.cpp)
 
 set(QITYPE_H       qi/anyfunction.hpp
                    qi/anyobject.hpp
