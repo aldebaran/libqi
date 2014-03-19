@@ -713,6 +713,13 @@ TEST(Struct, FillHandler)
   EXPECT_EQ(1, f2.normal.z);
 }
 
+TEST(Struct, ComplexType)
+{
+  std::pair<std::vector<V3>, std::list<V3> > p;
+  AnyValue::from(p);
+  std::pair<std::vector<int>, std::list<std::map<int, V3> > > p2;
+  AnyValue::from(p2);
+}
 
 int main(int argc, char **argv) {
   qi::Application app(argc, argv);
