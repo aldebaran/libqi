@@ -52,6 +52,8 @@ namespace qi
     void stop();
     /// Run main loop in current thread.
     void run();
+    /// Set callback to be called in case of a deadlock detection
+    void setEmergencyCallback(boost::function<void()> cb);
 
     // Internal function
     void *nativeHandle();
@@ -78,7 +80,6 @@ namespace qi
             future's error will be set.
     */
     Future<void> monitorEventLoop(EventLoop* helper, uint64_t maxUsDelay);
-
 
     EventLoopPrivate *_p;
   };

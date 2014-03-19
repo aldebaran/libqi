@@ -43,6 +43,7 @@ namespace qi {
     virtual void destroy()=0;
     virtual void* nativeHandle()=0;
     virtual void run()=0;
+    boost::function<void()> _emergencyCallback;
   protected:
     virtual ~EventLoopPrivate() {}
   };

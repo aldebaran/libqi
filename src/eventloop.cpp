@@ -103,10 +103,12 @@ namespace qi {
     static int maxThreads = getEnvParam("QI_EVENTLOOP_MAX_THREADS", 150);
     static int msTimeout = getEnvParam("QI_EVENTLOOP_PING_TIMEOUT", 500);
     static int msGrace = getEnvParam("QI_EVENTLOOP_GRACE_PERIOD", 0);
+    static int maxTimeouts = getEnvParam("QI_EVENTLOOP_MAX_TIMEOUTS", 20);
     ++_nThreads;
     boost::mutex mutex;
     boost::condition_variable cond;
     bool gotPong = false;
+    unsigned int nbTimeout = 0;
     while (_work)
     {
       qiLogDebug() << "Ping";
@@ -119,7 +121,20 @@ namespace qi {
       {
         if (maxThreads && *_nThreads == maxThreads + 1) // we count in nThreads
         {
-          qiLogInfo() << "Thread limit reached";
+          ++nbTimeout;
+          qiLogInfo() << "Thread limit reached (" << nbTimeout << " timeouts)";
+          if (nbTimeout >= maxTimeouts)
+          {
+            qiLogInfo() <<
+              "System seems to be deadlocked, sending emergency signal";
+            if (_emergencyCallback)
+            {
+              try {
+                _emergencyCallback();
+              } catch (...) {
+              }
+            }
+          }
         }
         else
         {
@@ -130,6 +145,7 @@ namespace qi {
       }
       else
       {
+        nbTimeout = 0;
         qiLogDebug() << "Ping ok";
         qi::os::msleep(msTimeout);
       }
@@ -483,6 +499,11 @@ namespace qi {
   {
     CHECK_STARTED;
     return _p->asyncCall(usDelay, callback);
+  }
+
+  void EventLoop::setEmergencyCallback(boost::function<void()> cb)
+  {
+    _p->_emergencyCallback = cb;
   }
 
   struct MonitorContext
