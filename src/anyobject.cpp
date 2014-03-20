@@ -171,7 +171,7 @@ namespace qi {
     type->metaPost(value, shared_from_this(), event, args);
   }
 
-  unsigned int GenericObject::findMethod(const std::string& nameWithOptionalSignature, const GenericFunctionParameters& args)
+  int GenericObject::findMethod(const std::string& nameWithOptionalSignature, const GenericFunctionParameters& args)
   {
     return metaObject().findMethod(nameWithOptionalSignature, args);
   }
