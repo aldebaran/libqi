@@ -126,8 +126,8 @@ namespace qi {
 
     FILE* fopen(const char *filename, const char *mode) {
       try {
-        return ::_wfopen(boost::filesystem::path(filename, qi::unicodeFacet()).wstring(qi::unicodeFacet()).c_str(),
-                         boost::filesystem::path(mode, qi::unicodeFacet()).wstring(qi::unicodeFacet()).c_str());
+        return ::_wfopen(boost::filesystem::path(filename, qi::unicodeFacet()).c_str(),
+                         boost::filesystem::path(mode, qi::unicodeFacet()).c_str());
       }
       catch (boost::filesystem::filesystem_error &) {
         return 0;

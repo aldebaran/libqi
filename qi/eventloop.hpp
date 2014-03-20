@@ -86,6 +86,9 @@ namespace qi
   /// Return the global eventloop, created on demand on first call.
   QI_API EventLoop* getEventLoop();
 
+  /// Start the eventloop with nthread threads. No-op if already started.
+  QI_API void startEventLoop(int nthread);
+
   /// Return the io_service used by the global event loop
   QI_API boost::asio::io_service& getIoService();
 

@@ -10,7 +10,7 @@
 int main(int argc, char *argv[])
 {
   // Create string with one weird (ñ) char
-  char iso[] = {'L', 'a', ' ', 'P', 'e', 0xF1, 'a', 0};
+  char iso[] = "La Pe\361a";
 
   // Use latin1 to convert string to UTF8
   std::string utf8 = boost::locale::conv::to_utf<char>(iso, "Latin1");

@@ -442,10 +442,10 @@ namespace qi {
 
     inline Log::Log() :
       SyncLog(true),
-#ifndef ANDROID
-      logs(50),
-#endif
       AsyncLogInit(false)
+#ifndef ANDROID
+      , logs(50)
+#endif
     {
       LogInit = true;
     };

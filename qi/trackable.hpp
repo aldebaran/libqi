@@ -12,6 +12,7 @@
 #include <boost/thread/mutex.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/thread/condition_variable.hpp>
+#include <boost/function.hpp>
 
 #include <qi/log.hpp>
 
@@ -97,6 +98,9 @@ namespace qi
   */
   template<typename F, typename ARG0>
   boost::function<F> track(const boost::function<F>& f, const ARG0& arg0);
+  template<typename F, typename ARG0>
+  boost::function<F> trackWithFallback(boost::function<void()> onFail,
+      const boost::function<F>& f, const ARG0& arg0);
 }
 
 #include <qi/details/trackable.hxx>
