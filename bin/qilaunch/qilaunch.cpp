@@ -25,7 +25,7 @@ int main(int argc, char** argv)
   if (app.listenUrl().str().empty() && any)
   {
     qiLogInfo() << "Listening on tcp://0.0.0.0:0";
-    app.session().listen("tcp://0.0.0.0:0");
+    app.session()->listen("tcp://0.0.0.0:0");
   }
   for (int a = 1; a < argc; ++a)
   {
@@ -36,7 +36,7 @@ int main(int argc, char** argv)
   for (unsigned i=0; i<modules.size(); ++i)
   {
     qiLogInfo() << "loading " << modules[i];
-    app.session().loadService(modules[i]);
+    app.session()->loadService(modules[i]);
   }
   app.run();
 }

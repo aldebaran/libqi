@@ -29,7 +29,7 @@ SessionInitializer::~SessionInitializer()
 {
 }
 
-bool SessionInitializer::setUp(qi::Session *session, const std::string &serviceDirectoryUrl, TestMode::Mode mode, bool listen)
+bool SessionInitializer::setUp(qi::SessionPtr session, const std::string &serviceDirectoryUrl, TestMode::Mode mode, bool listen)
 {
   if (_setUps.find(mode) == _setUps.end())
     throw TestSessionError("[Internal] setUp mode not handled.");
@@ -38,7 +38,7 @@ bool SessionInitializer::setUp(qi::Session *session, const std::string &serviceD
   return (this->*_setUps[mode])(session, serviceDirectoryUrl);
 }
 
-bool SessionInitializer::tearDown(qi::Session *session, TestMode::Mode mode)
+bool SessionInitializer::tearDown(qi::SessionPtr session, TestMode::Mode mode)
 {
   if (_tearDowns.find(mode) == _tearDowns.end())
     throw TestSessionError("[Internal] tearDown mode not handled.");
@@ -46,7 +46,7 @@ bool SessionInitializer::tearDown(qi::Session *session, TestMode::Mode mode)
   return (this->*_tearDowns[mode])(session);
 }
 
-bool SessionInitializer::setUpSD(qi::Session *session, const std::string &serviceDirectoryUrl)
+bool SessionInitializer::setUpSD(qi::SessionPtr session, const std::string &serviceDirectoryUrl)
 {
   session->connect(serviceDirectoryUrl);
 
@@ -56,7 +56,7 @@ bool SessionInitializer::setUpSD(qi::Session *session, const std::string &servic
   return true;
 }
 
-bool SessionInitializer::setUpSSL(qi::Session *session, const std::string &serviceDirectoryUrl)
+bool SessionInitializer::setUpSSL(qi::SessionPtr session, const std::string &serviceDirectoryUrl)
 {
   if(session->connect(serviceDirectoryUrl).wait(1000) != qi::FutureState_FinishedWithValue)
     return false;
@@ -70,7 +70,7 @@ bool SessionInitializer::setUpSSL(qi::Session *session, const std::string &servi
   return true;
 }
 
-bool SessionInitializer::tearDownSD(qi::Session *session)
+bool SessionInitializer::tearDownSD(qi::SessionPtr session)
 {
   if (session->close().wait(1000) != qi::FutureState_FinishedWithValue)
     return false;
@@ -78,7 +78,7 @@ bool SessionInitializer::tearDownSD(qi::Session *session)
   return true;
 }
 
-bool SessionInitializer::setUpNightmare(qi::Session *session, const std::string &serviceDirectoryUrl)
+bool SessionInitializer::setUpNightmare(qi::SessionPtr session, const std::string &serviceDirectoryUrl)
 {
   std::string serviceName;
 
@@ -114,7 +114,7 @@ bool SessionInitializer::setUpNightmare(qi::Session *session, const std::string 
   return true;
 }
 
-bool SessionInitializer::tearDownNightmare(qi::Session *session)
+bool SessionInitializer::tearDownNightmare(qi::SessionPtr session)
 {
   if (_trafficGenerator)
     _trafficGenerator->stopTraffic();

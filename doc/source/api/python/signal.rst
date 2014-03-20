@@ -12,6 +12,8 @@ Signal allows communication between threads. One thread emits events, other thre
 
    In python services, signals must be created before register the service to be advertised.
 
+A type can be specified in the constructor of the signal, otherwise any value are supported.
+
 Reference
 =========
 

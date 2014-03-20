@@ -264,8 +264,11 @@ int          qi_value_list_size(qi_value_t *msg)
 qi_object_t* qi_value_get_object(qi_value_t* val)
 {
   qi::AnyValue &gv = qi_value_cpp(val);
-  qi::AnyObject obj = gv.as<qi::AnyObject>();
-  return qi_object_create_from(obj);
+  try {
+    qi::AnyObject obj = gv.as<qi::AnyObject>();
+    return qi_object_create_from(obj);
+  } catch(std::runtime_error) {}
+  return 0;
 }
 
 int          qi_value_set_object(qi_value_t* value, qi_object_t *o)
@@ -349,14 +352,36 @@ qi_value_t*  qi_value_map_get(qi_value_t *msg, qi_value_t *key)
   return 0;
 }
 
+qi_value_t* qi_value_map_keys(qi_value_t *msg)
+{
+  qi::AnyValue &container = qi_value_cpp(msg);
+
+  std::map<qi::AnyReference, qi::AnyReference>::iterator it;
+  std::map<qi::AnyReference, qi::AnyReference> m = container.asMapValuePtr();
+
+  qi::TypeInterface* listType = qi::makeListType(((qi::MapTypeInterface*)container.type())->keyType());
+  qi::AnyValue* ar = new qi::AnyValue(listType);
+  //construct a list<k>
+  for (it = m.begin(); it != m.end(); ++it) {
+    ar->_append(it->first);
+  }
+  return (qi_value_t*)(ar);
+}
+
 //# RAW
 int          qi_value_raw_set(qi_value_t* value, const char* data, int size){
   return 0;
 }
 
-extern "C" int          qi_value_raw_get(qi_value_t* value, const char**data, int *size) {
+int          qi_value_raw_get(qi_value_t* value, const char**data, int *size) {
   return 0;
 }
+
+qi_type_t*   qi_value_get_type(qi_value_t* value) {
+  qi::AnyValue &val = qi_value_cpp(value);
+  return (qi_type_t*)val.type();
+}
+
 
 #ifdef __cplusplus
 }

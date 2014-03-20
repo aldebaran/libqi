@@ -19,6 +19,7 @@ User Guides
  - :ref:`C++: Using logs<guide-cxx-log>`
  - :ref:`Python: Writing a client<guide-py-client>`
  - :ref:`Python: Writing a service<guide-py-service>`
+ - :ref:`Python: from NAOqi 1 to NAOqi 2<guide-py-tonaoqi2>`
 
 Design documents
 ================

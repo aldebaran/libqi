@@ -62,7 +62,6 @@ set(PUBLIC_HEADERS
                    qimessaging/autoservice.hpp
                    qimessaging/details/autoservice.hxx
                    qimessaging/gateway.hpp
-                   qimessaging/python-gil.hpp
                    qimessaging/serviceinfo.hpp
                    qimessaging/session.hpp
                    qimessaging/url.hpp

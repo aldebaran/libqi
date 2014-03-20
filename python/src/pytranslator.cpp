@@ -5,7 +5,7 @@
 
 #include <boost/python.hpp>
 
-#include "pytranslator.hpp"
+#include <qipython/pytranslator.hpp>
 
 namespace qi {
   namespace py {

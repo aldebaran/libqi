@@ -2,18 +2,18 @@
 **  Copyright (C) 2013 Aldebaran Robotics
 **  See COPYING for the license
 */
-#include "pyobject.hpp"
+#include <qipython/pyobject.hpp>
 #include <boost/python.hpp>
 #include <boost/python/raw_function.hpp>
-#include "pyfuture.hpp"
-#include "pysignal.hpp"
-#include "pyproperty.hpp"
-#include "error.hpp"
-#include "pythreadsafeobject.hpp"
+#include <qipython/pyfuture.hpp>
+#include <qipython/pysignal.hpp>
+#include <qipython/pyproperty.hpp>
+#include <qipython/error.hpp>
+#include <qipython/pythreadsafeobject.hpp>
 #include <qitype/dynamicobjectbuilder.hpp>
 #include <qitype/objecttypebuilder.hpp> //for TYPE_TEMPLATE(Future)
 #include <qitype/jsoncodec.hpp>
-#include <qimessaging/python-gil.hpp>
+#include <qipython/gil.hpp>
 
 
 qiLogCategory("qipy.object");

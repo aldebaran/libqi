@@ -128,12 +128,12 @@ int subCmd_trace(int argc, char **argv, qi::ApplicationSession& app)
 
   qiLogVerbose() << "Connecting to service directory";
   app.start();
-  qi::Session& s = app.session();
+  qi::SessionPtr s = app.session();
 
   qiLogVerbose() << "Resolving services";
 
   std::vector<std::string> allServices;
-  std::vector<qi::ServiceInfo> si = s.services();
+  std::vector<qi::ServiceInfo> si = s->services();
   for (unsigned i=0; i<si.size(); ++i)
     allServices.push_back(si[i].name());
   std::vector<std::string> services = parseServiceList(objectNames, allServices);
@@ -146,7 +146,7 @@ int subCmd_trace(int argc, char **argv, qi::ApplicationSession& app)
     qi::AnyObject o;
     try
     {
-      o = s.service(services[i]);
+      o = s->service(services[i]);
     }
     catch (const std::exception& e)
     {

@@ -1,19 +1,17 @@
 #ifndef TASK_SERVICE_HPP
 #define TASK_SERVICE_HPP
 
-class TaskGenerator;
+#include <taskgenerator.hpp>
 
-class Task
+class TaskImpl: public Task
 {
 public:
-  Task() {}
-  Task(const std::string& name, TaskGenerator* handler);
+  TaskImpl() {}
+  TaskImpl(const std::string& name, TaskGenerator* handler);
   std::string getName();
   std::string setParam(const std::string& p);
   std::string step(unsigned int arg);
   std::string getLastResult();
-  qi::Signal<std::string> onParamChanged;
-  qi::Signal<std::string> onStep;
 private:
   TaskGenerator* _handler;
   std::string    _name;
@@ -23,25 +21,18 @@ private:
 };
 
 
-typedef Task TaskImpl;
-
-typedef boost::shared_ptr<Task> TaskPtr;
-typedef boost::weak_ptr<Task> TaskWeakPtr;
-
-class TaskGenerator
+class TaskGeneratorImpl: public TaskGenerator
 {
 public:
-  TaskPtr newTask(const std::string& name);
+  qi::Object<Task> newTask(const std::string& name);
   void step(unsigned int arg);
-  unsigned long taskCount();
-  std::vector<TaskPtr> tasks();
+  qi::uint64_t taskCount();
+  std::vector<qi::Object<Task> > tasks();
 private:
-  std::vector<TaskWeakPtr> _tasks;
+  std::vector<qi::WeakObject<Task> > _tasks;
 };
 
 
 
-typedef TaskGenerator TaskGeneratorImpl;
-typedef boost::shared_ptr<TaskGenerator> TaskGeneratorPtr;
 
 #endif

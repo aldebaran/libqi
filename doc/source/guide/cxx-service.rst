@@ -31,6 +31,9 @@ and `qi::Property`. Here is an example exhibiting most of the features:
 
 .. code-block:: cpp
 
+  #ifndef CAT_HPP
+  # define CAT_HPP
+
   // Helper struct
   struct Mosquito
   {
@@ -48,7 +51,7 @@ and `qi::Property`. Here is an example exhibiting most of the features:
       qi::Property<float> cuteness;
       qi::Signal<Mosquito> onTargetDetected;
   };
-
+  #endif
 
 There are some restrictions on what you can do:
 
@@ -78,10 +81,10 @@ IDL
 Once your interface is ready, the next step is to generate an *IDL* file, that is
 a standardised *XML* representation of your interface::
 
-  idl --output-mode=idl path/to/myinterface.hpp -o myinterface.idl
+  idl --output-mode=idl path/to/cat.hpp -o cat.xml
 
 If you install your interface header in some distributed package, you should
-provide the idl file as well.
+install the idl file as well.
 
 Support library
 ~~~~~~~~~~~~~~~
@@ -89,19 +92,34 @@ Support library
 In order for :ref:`client code<guide_cxx-client>` to use an `Object<T>` on
 your interface, some support code needs to be generated::
 
-  idl --output-mode=proxy myinterface.idl -o myinterfaceproxy.cpp
+  idl --output-mode=client cat.idl -o cat_client_support.cpp
 
-You should then include *myinterfaceproxy* into source distributions, and
-a shared-library build of this source *myinterfaceproxy.so* (or *myinterfaceproxy.dll*
+You should then include *cat_client_support.cpp* into source distributions, and
+a shared-library build of this source *cat_client_support.so* (or *cat_client_support.dll*
 depending on your OS) into binary distributions.
-Note that this file includes the interface header *myinterface.hpp*.
+Note that this file includes the interface header *cat.hpp*.
 
 Client code will then need to link with that library, otherwise creation of an
-*qi::Object<MyInterface>* will fail at runtime.
+*qi::Object<Cat>* will fail at runtime.
 
+  .. warning::
+
+    Under some linux distributions (including Ubuntu)
+    the compiler is patched to pass the *-as-needed* option by default to the linker.
+    You need to pass *-Wl,-no-as-needed* when linking with the client support library.
+    If you are using CMake here is the way to do so::
+
+      if(NOT WIN32)
+        set_target_properties(my_target_name PROPERTIES
+          LINK_FLAGS "-Wl,-no-as-needed")
+      endif()
 
 Write your implementation
 -------------------------
+
+A service implementation is simply an implementation of the C++ interface
+you defined, plus a few macro calls to register it.
+
 
 Service skeleton
 ~~~~~~~~~~~~~~~~
@@ -109,7 +127,7 @@ Service skeleton
 If you start implementing an interface from scratch, *idl* can optionally help you by
 generating an implementation skeleton::
 
-  idl --output-mode=cxxserviceregister myinterface.idl -o myinterfaceimpl.cpp
+  idl --output-mode=cxxskel cat.idl -o catimpl.cpp
 
 Manual registration
 ~~~~~~~~~~~~~~~~~~~
@@ -119,11 +137,11 @@ a service, in the form of two macro calls in your source file:
 
 .. code-block:: cpp
 
-  // Tell the typesystem that class MyInterfaceImpl implements MyInterface
-  QI_IMPLEMENT_MYINTERFACE(MyInterfaceImpl)
-  // Registers MyIntefaceImpl to the factory, so that your service can be
-  // found when the containing shared library is loaded.
-  QI_REGISTER_OBJECT_FACTORY_CONSTRUCTOR(MyInterfaceImpl)
+  // Tell the typesystem that class CatImpl implements Cat
+  QI_REGISTER_IMPLEMENTATION(Cat, CatImpl);
+  // Registers CatImpl to the factory, so that your service (renamed CatService)
+  // can be found when the containing shared library is loaded.
+  QI_REGISTER_OBJECT_FACTORY_CONSTRUCTOR_FOR(CatService, CatImpl)
 
 Build your service implementation
 ---------------------------------
@@ -136,7 +154,7 @@ Starting your service manually
 The *qi-launch* utility can be used to instanciate your implementation, and
 register it to an existing *ServiceDirectory*::
 
-  qi-launch -s robotIp myinterfaceimpl.so
+  qi-launch -s robotIp catimpl.so
 
 Deploying your service
 ----------------------
@@ -158,8 +176,8 @@ Graphical view of the standard workflow
     SupportSo      [label="Support library\nfoo.so" color="blue"];
 
     Interface -> IDL      [label = "-m IDL" ];
-    IDL -> Support        [label = "-m proxy"];
-    IDL -> ImplSkel       [label = "-m cxxserviceregister"];
+    IDL -> Support        [label = "-m client"];
+    IDL -> ImplSkel       [label = "-m cxxskel"];
     ImplSkel -> ImplFull  [color=red];
     ImplFull -> ImplSo    [color=blue];
     Support -> SupportSo  [color=blue];
@@ -169,6 +187,26 @@ Graphical view of the standard workflow
     lc -> ld [color=red label="User-written"];
     le->lf [color=blue label="Compilation"];
     }
+
+CMake functions
+---------------
+
+If you use qibuild as your build system (which you should), some
+functions are provided to integrate the various code generation steps.
+
+- *qi_create_idl(sources... CLASSES classnames... PREFIX dir)*: Will parse
+  given sources, and output idl xml files for classes in *classnames* and their
+  dependencies.
+- *qi_create_client_lib(targetname CLASSES classnames... INCLUDE includes... SRC extrasrcs... PREFIX dir)*
+  create the client support library under name *targetname*, with support for
+  classes listed in *classnames* and their dependencies. Will try to find XML
+  files and headers automatically. *includes* if given is a list of header
+  files to include, and overrides autodetection. Extra sources to compile in
+  can be given in *extrasrcs*.
+- *qi_create_skeleton(output CLASS className INCLUDE includes)*
+  create a skeleton implementation for interface *className*.
+- *qi_create_interface(_out_filename className)* creates an interface header from
+  an idl file. Produced file name will be written in variable *_out_filename*.
 
 
 Binding an existing class without an interface

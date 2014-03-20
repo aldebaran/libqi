@@ -59,6 +59,7 @@ namespace qi {
   public:
     //PUBLIC BOUND METHODS
     SignalLink           registerEvent(unsigned int serviceId, unsigned int eventId, SignalLink linkId);
+    SignalLink           registerEventWithSignature(unsigned int serviceId, unsigned int eventId, SignalLink linkId, const std::string& signature);
     void           unregisterEvent(unsigned int serviceId, unsigned int eventId, SignalLink linkId);
     qi::MetaObject metaObject(unsigned int serviceId);
     void           terminate(unsigned int serviceId); //bound only in special cases

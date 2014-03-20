@@ -19,7 +19,7 @@ TestSession::~TestSession()
   delete _p;
 }
 
-qi::Session* TestSession::session()
+qi::SessionPtr TestSession::session()
 {
   return _p->session();
 }

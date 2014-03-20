@@ -11,8 +11,6 @@
 Provided features are very close to C++, Python style.
 """
 
-import os
-import sys
 def load_lib_qipyessaging():
     """ Load _qipyessaging.so and its dependencies.
 
@@ -20,6 +18,7 @@ def load_lib_qipyessaging():
     SDK without having to set LD_LIBRARY_PATH
     """
     import ctypes
+    import os
     deps = [
             "libboost_python.so",
             "libboost_system.so",
@@ -42,24 +41,36 @@ def load_lib_qipyessaging():
         except Exception:
             pass
 
+def _on_import_module():
+    import sys
+    import atexit
+    if sys.platform.startswith("linux"):
+        load_lib_qipyessaging()
 
-if sys.platform.startswith("linux"):
-    load_lib_qipyessaging()
-
+    atexit.register(_stopApplication)
 
 #######
 
 from _qi import Application as _Application
 from _qi import ApplicationSession as _ApplicationSession
-from _qi import FutureState, FutureTimeout, Future, \
-                Promise, Property, Session, Signal, \
-                createObject, registerObjectFactory, async, PeriodicTask
-import path
-
-from _type import Void, Bool, Int8, UInt8, Int16, UInt16, Int32, UInt32, Int64, UInt64, Float, Double, String, List, Map, Struct, Object, Dynamic, Buffer, AnyArguments
-from _type import typeof, _isinstance
-from _binder import bind, nobind
-from .logging import logSilent, logFatal, logError, logWarning, logInfo, logVerbose, logDebug, PyLogger, setLevel, setContext, setFilters, getLogger
+from _qi import ( FutureState, FutureTimeout, Future, Promise,
+                  Property, Session, Signal,
+                  createObject, registerObjectFactory,
+                  async, PeriodicTask)
+from . import path
+from ._type import ( Void, Bool,
+                     Int8, UInt8,
+                     Int16, UInt16,
+                     Int32, UInt32,
+                     Int64, UInt64,
+                     Float, Double,
+                     String, List,
+                     Map, Struct,
+                     Object, Dynamic,
+                     Buffer, AnyArguments,
+                     typeof, _isinstance)
+from ._binder import bind, nobind
+from .logging import fatal, error, warning, info, verbose, Logger
 from .translator import defaultTranslator, tr, Translator
 
 
@@ -78,9 +89,6 @@ def _stopApplication():
         _app.stop()
         del _app
         _app = None
-
-import atexit
-atexit.register(_stopApplication)
 
 #application is a singleton, it should live till the end of the program
 #because it own eventloops
@@ -121,10 +129,8 @@ __all__ = ["FutureState",
            "Float", "Double", "String", "List", "Map", "Struct", "Object", "Dynamic", "Buffer", "AnyArguments",
            "typeof", "isinstance",
            "bind", "nobind",
-           "logSilent", "logFatal", "logError", "logWarning", "logInfo", "logVerbose", "logDebug",
-           "setLevel", "setContext", "setFilters", "getLogger"
-           "PyLogger",
+           "fatal", "error", "warning", "info", "verbose", "Logger",
            "defaultTranslator", "tr", "Translator"
-
-
 ]
+
+_on_import_module()

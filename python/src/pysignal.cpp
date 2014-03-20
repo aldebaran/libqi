@@ -2,16 +2,16 @@
 **  Copyright (C) 2013 Aldebaran Robotics
 **  See COPYING for the license
 */
-#include "pysignal.hpp"
+#include <qipython/pysignal.hpp>
 #include <boost/python.hpp>
 #include <boost/python/raw_function.hpp>
 #include <qitype/signal.hpp>
 #include <qitype/anyobject.hpp>
-#include <qimessaging/python-gil.hpp>
-#include "error.hpp"
-#include "pyfuture.hpp"
-#include "pyobject.hpp"
-#include "pythreadsafeobject.hpp"
+#include <qipython/gil.hpp>
+#include <qipython/error.hpp>
+#include <qipython/pyfuture.hpp>
+#include <qipython/pyobject.hpp>
+#include <qipython/pythreadsafeobject.hpp>
 
 qiLogCategory("py.signal");
 
@@ -30,29 +30,24 @@ namespace qi { namespace py {
       return qi::AnyReference::from(ret).clone();
     }
 
-    class PySignal {
+    //use a shared_ptr to allow optional destruction of SignalBase (when not owned by us)
+    class PySignal : boost::noncopyable {
     public:
-      PySignal(const qi::Signature &signature = "m")
+      explicit PySignal(const qi::Signature &signature = "m")
         : _sig(new qi::SignalBase(signature))
       {
       }
 
-      PySignal(const PySignal& rhs)
-        : _sig(new qi::SignalBase(qi::Signature("m")))
+      explicit PySignal(boost::shared_ptr<qi::SignalBase> sigbase)
+        : _sig(sigbase)
       {
-
-        *_sig = *rhs._sig;
       }
 
-      PySignal &operator=(const PySignal& rhs) {
-        *_sig = *rhs._sig;
-        return *this;
-      }
 
       ~PySignal() {
         //the dtor can lock waiting for callback ends
         GILScopedUnlock _unlock;
-        delete _sig;
+        _sig.reset();
       }
 
       boost::python::object connect(boost::python::object callable, bool _async = false) {
@@ -108,7 +103,7 @@ namespace qi { namespace py {
       }
 
     public:
-      qi::SignalBase *_sig;
+      boost::shared_ptr<qi::SignalBase> _sig;
     };
 
     class PyProxySignal {
@@ -153,16 +148,22 @@ namespace qi { namespace py {
     };
 
     qi::SignalBase *getSignal(boost::python::object obj) {
-      PySignal* sig = boost::python::extract<PySignal*>(obj);
+      boost::shared_ptr<PySignal> sig = boost::python::extract< boost::shared_ptr<PySignal> >(obj);
       if (!sig)
         return 0;
-      return sig->_sig;
+      return sig->_sig.get();
     }
 
     boost::python::object makePySignal(const std::string &signature) {
       GILScopedLock _lock;
-      return boost::python::object(PySignal(signature));
+      return boost::python::object(boost::make_shared<PySignal>(signature));
     }
+
+    boost::python::object makePySignalFromBase(boost::shared_ptr<qi::SignalBase> sb) {
+      GILScopedLock _lock;
+      return boost::python::object(boost::make_shared<PySignal>(sb));
+    }
+
 
     boost::python::object makePyProxySignal(const qi::AnyObject &obj, const qi::MetaSignal &signal) {
       return boost::python::object(PyProxySignal(obj, signal));
@@ -179,7 +180,8 @@ namespace qi { namespace py {
     }
 
     void export_pysignal() {
-      boost::python::class_<PySignal>("Signal", boost::python::init<>())
+      //use a shared_ptr because class Signal is not copyable.
+      boost::python::class_<PySignal, boost::shared_ptr<PySignal>, boost::noncopyable >("Signal", boost::python::init<>())
           .def(boost::python::init<const std::string &>())
           .def("connect", &PySignal::connect, (boost::python::arg("callback"), boost::python::arg("_async") = false),
                "connect(callback) -> int\n"

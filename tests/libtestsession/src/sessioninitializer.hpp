@@ -30,19 +30,19 @@ public:
   ~SessionInitializer();
 
 public:
-  bool setUp(qi::Session *session, const std::string &serviceDirectoryUrl, TestMode::Mode mode, bool listen);
-  bool tearDown(qi::Session *session, TestMode::Mode mode);
+  bool setUp(qi::SessionPtr session, const std::string &serviceDirectoryUrl, TestMode::Mode mode, bool listen);
+  bool tearDown(qi::SessionPtr session, TestMode::Mode mode);
 
 private:
-  bool setUpSD(qi::Session *session, const std::string &serviceDirectoryUrl);
-  bool setUpSSL(qi::Session *session, const std::string &serviceDirectoryUrl);
-  bool setUpNightmare(qi::Session *session, const std::string &serviceDirectoryUrl);
-  bool tearDownSD(qi::Session *session);
-  bool tearDownNightmare(qi::Session *session);
+  bool setUpSD(qi::SessionPtr session, const std::string &serviceDirectoryUrl);
+  bool setUpSSL(qi::SessionPtr session, const std::string &serviceDirectoryUrl);
+  bool setUpNightmare(qi::SessionPtr session, const std::string &serviceDirectoryUrl);
+  bool tearDownSD(qi::SessionPtr session);
+  bool tearDownNightmare(qi::SessionPtr session);
 
 private:
-  typedef bool (SessionInitializer::*setUpFcnt)(qi::Session *session, const std::string &serviceDirectoryUrl);
-  typedef bool (SessionInitializer::*tearDownFcnt)(qi::Session *session);
+  typedef bool (SessionInitializer::*setUpFcnt)(qi::SessionPtr session, const std::string &serviceDirectoryUrl);
+  typedef bool (SessionInitializer::*tearDownFcnt)(qi::SessionPtr session);
 
   bool                                     _listen;
 

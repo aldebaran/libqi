@@ -3,63 +3,76 @@
 
 #include <boost/weak_ptr.hpp>
 
-class AddTask;
-typedef boost::shared_ptr<AddTask> AddTaskPtr;
-typedef boost::weak_ptr<AddTask> AddTaskWeakPtr;
+#include <adder.hpp>
 
 qiLogCategory("Adder");
+using qi::Object;
+using qi::WeakObject;
+using qi::AnyObject;
 
-class Adder
+class AdderImpl: public Adder
 {
   public:
-  Adder();
-  ~Adder() { qiLogVerbose() << "~Adder";}
-  AddTaskPtr makeTask(int val);
+  AdderImpl();
+  ~AdderImpl() { qiLogVerbose() << "~Adder";}
+  Object<AddTask> makeTask(int val);
+  AnyObject makeAnyTask(int val);
+  int nTasks();
   typedef qi::Property<int> Value;
-  qi::Property<int> value;
   private:
   bool onValue(int& storage, const int& newValue);
-  std::vector<AddTaskWeakPtr> tasks;
+  std::vector<WeakObject<AddTask> > tasks;
 
 };
 
-class AddTask
+class AddTaskImpl: public AddTask
 {
   public:
-  AddTask(Adder& adder, int val)
+  AddTaskImpl(Adder& adder, int val)
   : adder(adder)
   , val(val)
   {}
-  ~AddTask() { qiLogVerbose() << "~AddTask";}
+  ~AddTaskImpl() { qiLogVerbose() << "~AddTask";}
   int add(int v) {
     qiLogVerbose("add getting prop");
     int av = adder.value.get();
     qiLogVerbose() << "add " << v <<" " << val << " " << av;
     return v + val + av;
   }
-  qi::Signal<int> onChange;
   Adder& adder;
   int val;
 };
 
-QI_REGISTER_OBJECT(AddTask, add, onChange);
-QI_TYPE_NOT_CLONABLE(AddTask);
+//QI_TYPE_NOT_CLONABLE(AddTask);
+QI_REGISTER_IMPLEMENTATION(AddTask, AddTaskImpl);
 
-QI_REGISTER_OBJECT(Adder, makeTask, value);
-QI_REGISTER_OBJECT_FACTORY_BUILDER(Adder);
+//QI_TYPE_NOT_CLONABLE(Adder);
+QI_REGISTER_IMPLEMENTATION(Adder, AdderImpl)
+QI_REGISTER_OBJECT_FACTORY_BUILDER_FOR(Adder, AdderImpl);
 
-
-Adder::Adder()
-: value(Value::Getter(), boost::bind(&Adder::onValue, this, _1, _2))
-{}
-
-
-bool Adder::onValue(int& storage, const int& newValue)
+AdderImpl::AdderImpl()
 {
+  value = Value(Value::Getter(), boost::bind(&AdderImpl::onValue, this, _1, _2));
+  qiLogVerbose() << "Prop address: " << &value;
+}
+
+
+int AdderImpl::nTasks()
+{
+  int res = 0;
+  for (unsigned i=0; i<tasks.size(); ++i)
+    if (tasks[i].lock())
+      ++res;
+  return res;
+}
+
+bool AdderImpl::onValue(int& storage, const int& newValue)
+{
+  qiLogVerbose() << "onValue " << newValue << ", updating tasks: " << tasks.size();
   storage = newValue;
   for (unsigned i=0; i<tasks.size(); ++i)
   {
-    AddTaskPtr p = tasks[i].lock();
+    Object<AddTask> p = tasks[i].lock();
     if (p)
       p->onChange(newValue);
   }
@@ -68,9 +81,16 @@ bool Adder::onValue(int& storage, const int& newValue)
 
 
 
-AddTaskPtr Adder::makeTask(int v)
+Object<AddTask> AdderImpl::makeTask(int v)
 {
-  AddTaskPtr p(new AddTask(*this, v));
+  Object<AddTask> p(new AddTaskImpl(*this, v));
+  tasks.push_back(p);
+  return p;
+}
+
+AnyObject AdderImpl::makeAnyTask(int v)
+{
+  Object<AddTask> p(new AddTaskImpl(*this, v));
   tasks.push_back(p);
   return p;
 }

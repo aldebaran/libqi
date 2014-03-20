@@ -4,13 +4,14 @@
 **  See COPYING for the license
 */
 
-#ifndef _PYTHON_SRC_PYFUTURE_HPP_
-#define _PYTHON_SRC_PYFUTURE_HPP_
+#ifndef _QIPYTHON_PYFUTURE_HPP_
+#define _QIPYTHON_PYFUTURE_HPP_
 
 #include <boost/python.hpp>
 #include <qi/future.hpp>
 #include <qitype/anyvalue.hpp>
-#include <qimessaging/python-gil.hpp>
+#include <qipython/gil.hpp>
+#include <qipython/api.hpp>
 #include <boost/smart_ptr/enable_shared_from_this.hpp>
 
 namespace qi {
@@ -95,4 +96,4 @@ namespace qi {
 }
 
 
-#endif  // _PYTHON_SRC_PYFUTURE_HPP_
+#endif  // _QIPYTHON_PYFUTURE_HPP_

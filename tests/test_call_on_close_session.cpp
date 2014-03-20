@@ -52,8 +52,8 @@ void test(void)
       TestSessionPair p;
       std::cout << "time to wait is:" << timeToWait << std::endl;
 
-      qi::Session* s1 = p.server();
-      qi::Session* s2 = p.client();
+      qi::SessionPtr s1 = p.server();
+      qi::SessionPtr s2 = p.client();
 
       qi::DynamicObjectBuilder ob;
       ob.advertiseMethod("reply", &reply);

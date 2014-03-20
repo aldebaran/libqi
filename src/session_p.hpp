@@ -17,7 +17,7 @@
 
 namespace qi {
 
-  class SessionPrivate
+  class SessionPrivate : public qi::Trackable<SessionPrivate>
   {
   public:
     SessionPrivate(qi::Session *session);
@@ -28,25 +28,17 @@ namespace qi {
     qi::FutureSync<void> close();
     bool isConnected() const;
 
-    void onConnected();
     void onDisconnected(std::string error);
     void onServiceAdded(unsigned int idx, const std::string &name);
     void onServiceRemoved(unsigned int idx, const std::string &name);
 
   public:
     void listenStandaloneCont(qi::Promise<void> p, qi::Future<void> f);
-    // session is being destroyed, unlink from _self
-    void sessionDestroy();
     // internal, add sd socket to socket cache
     void addSdSocketToCache(Future<void>, const qi::Url& url, qi::Promise<void> p);
-    Session               *_self;
 
     //ServiceDirectoryClient have a transportsocket not belonging to transportsocketcache
     ServiceDirectoryClient _sdClient;
-    unsigned int           _sdClientConnectedSignalLink;
-    unsigned int           _sdClientDisconnectedSignalLink;
-    unsigned int           _sdClientServiceAddedSignalLink;
-    unsigned int           _sdClientServiceRemovedSignalLink;
 
     ObjectRegistrar        _serverObject;
     Session_Service        _serviceHandler;

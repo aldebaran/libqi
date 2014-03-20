@@ -18,9 +18,9 @@ namespace po = boost::program_options;
 
 qiLogCategory("qiclient");
 
-void call(int count, qi::Session& session)
+void call(int count, const qi::SessionPtr& session)
 {
-  qi::AnyObject obj = session.service("serviceTest");
+  qi::AnyObject obj = session->service("serviceTest");
 
   for (int i = 0; i < count; ++i) {
     std::string result = obj.call<std::string>("reply", "plaf");
@@ -33,7 +33,7 @@ void eventCb(const std::string &event) {
 }
 
 void recEvent(qi::ApplicationSession& app) {
-  qi::AnyObject obj = app.session().service("serviceTest");
+  qi::AnyObject obj = app.session()->service("serviceTest");
 
   obj.connect("testEvent", &eventCb);
 

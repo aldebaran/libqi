@@ -2,15 +2,15 @@
 **  Copyright (C) 2013 Aldebaran Robotics
 **  See COPYING for the license
 */
-#include "pyapplication.hpp"
+#include <boost/python.hpp>
+#include <qipython/pyapplication.hpp>
 #include <qi/os.hpp>
 #include <qi/log.hpp>
 #include <qimessaging/applicationsession.hpp>
-#include <qimessaging/python-gil.hpp>
-#include <boost/python.hpp>
+#include <qipython/gil.hpp>
 #include <boost/thread.hpp>
 #include <qi/atomic.hpp>
-#include "pysession.hpp"
+#include <qipython/pysession.hpp>
 
 qiLogCategory("qimpy");
 
@@ -44,7 +44,7 @@ namespace qi {
         std::string s = boost::python::extract<std::string>(args[i]);
         /*TODO: leak*/
         argv[i] = qi::os::strdup(s.c_str());
-        qiLogInfo() << "args:" << argv[i];
+        qiLogVerbose() << "args:" << argv[i];
       }
       /* #2 Create c application */
       initApp(app, argc, argv);
@@ -117,9 +117,6 @@ namespace qi {
           .def("stop", &PyApplication::stop);
     }
 
-    static void noDelete(qi::Session*) {
-    }
-
     class PyApplicationSession {
     public:
       PyApplicationSession() {
@@ -133,8 +130,7 @@ namespace qi {
       }
 
       void initSes() {
-        _sesPtr = boost::shared_ptr<qi::Session>(&_app->session(), noDelete);
-        _ses = makePySession(_sesPtr);
+        _ses = makePySession(_app->session());
       }
 
       ~PyApplicationSession() {

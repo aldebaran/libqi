@@ -4,8 +4,8 @@
 **  See COPYING for the license
 */
 
-#ifndef _PYTHON_SRC_PYOBJECTFACTORY_HPP_
-#define _PYTHON_SRC_PYOBJECTFACTORY_HPP_
+#ifndef _QIPYTHON_PYOBJECTFACTORY_HPP_
+#define _QIPYTHON_PYOBJECTFACTORY_HPP_
 
 namespace qi {
   namespace py {
@@ -13,4 +13,4 @@ namespace qi {
   }
 }
 
-#endif  // _PYTHON_SRC_PYOBJECTFACTORY_HPP_
+#endif  // _QIPYTHON_PYOBJECTFACTORY_HPP_

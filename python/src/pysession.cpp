@@ -2,47 +2,61 @@
 **  Copyright (C) 2013 Aldebaran Robotics
 **  See COPYING for the license
 */
-#include "pysession.hpp"
+#include <qipython/pysession.hpp>
 #include <boost/python/stl_iterator.hpp>
 #include <qitype/dynamicobjectbuilder.hpp>
-#include <qimessaging/python-gil.hpp>
-#include "pyfuture.hpp"
-#include "pysignal.hpp"
-#include "pyobject.hpp"
+#include <qipython/gil.hpp>
+#include <qipython/pyfuture.hpp>
+#include <qipython/pysignal.hpp>
+#include <qipython/pyobject.hpp>
 
 qiLogCategory("qi.py");
 
 namespace qi { namespace py {
 
 
-qi::AnyReference triggerBouncer(qi::SignalBase *sig, const std::vector<qi::AnyReference>& args) {
-  sig->trigger(args);
-  return qi::AnyReference();
-}
+    qi::AnyReference triggerBouncer(qi::SignalBase *sig, const std::vector<qi::AnyReference>& args) {
+      sig->trigger(args);
+      return qi::AnyReference();
+    }
+
+    static void doNothingSB(SignalBase*) {}
 
     class PySession {
     public:
-      PySession(boost::shared_ptr<qi::Session> session = boost::shared_ptr<qi::Session>(new qi::Session()))
-        : _ses(session)
-        , nSigConnected(0)
-        , nSigDisconnected(0)
-        , connected(makePySignal())
-        , disconnected(makePySignal())
+      PySession()
+        : _ses(new qi::Session())
       {
-        // Get SignalBase from our PySignals
-        qi::SignalBase *conn = getSignal(connected);
-        qi::SignalBase *disconn = getSignal(disconnected);
-        // Connect our PySignals with qi::Session signals, have to use a dynamic generic function to trigger
-        nSigConnected = _ses->connected.connect(qi::AnyFunction::fromDynamicFunction(boost::bind(&triggerBouncer, conn, _1)));
-        nSigDisconnected = _ses->disconnected.connect(qi::AnyFunction::fromDynamicFunction(boost::bind(&triggerBouncer, disconn, _1)));
+        setupSignal();
+      }
+
+      PySession(const qi::SessionPtr& session)
+        : _ses(session)
+      {
+        setupSignal();
+      }
+
+      void setupSignal() {
+        //we dont want to loose destroy the signal, they are owned by _ses
+        boost::shared_ptr<SignalBase> sbc(&_ses->connected, &doNothingSB);
+        boost::shared_ptr<SignalBase> sbd(&_ses->disconnected, &doNothingSB);
+        boost::shared_ptr<SignalBase> sbr(&_ses->serviceRegistered, &doNothingSB);
+        boost::shared_ptr<SignalBase> sbu(&_ses->serviceUnregistered, &doNothingSB);
+        connected = makePySignalFromBase(sbc);
+        disconnected = makePySignalFromBase(sbd);
+        serviceRegistered = makePySignalFromBase(sbr);
+        serviceUnregistered = makePySignalFromBase(sbu);
       }
 
       ~PySession() {
         {
           GILScopedUnlock _unlock;
-          _ses->connected.disconnect(nSigConnected);
-          _ses->disconnected.disconnect(nSigDisconnected);
-          _ses.reset();
+          //do not disconnect signal here, cause PySession is just a wrapper around a Session.
+          //if we own the session then destructing the session will unregister signal,
+          //otherwize they will be available until the real session is shutdown. (think about ApplicationSession)
+
+          //reset the session (the dtor can block)
+          _ses = qi::SessionPtr();
         }
       }
 
@@ -131,17 +145,17 @@ qi::AnyReference triggerBouncer(qi::SignalBase *sig, const std::vector<qi::AnyRe
       }
 
     private:
-      boost::shared_ptr<qi::Session> _ses;
-      int nSigConnected;
-      int nSigDisconnected;
+      qi::SessionPtr _ses;
 
     public:
       boost::python::object connected;
       boost::python::object disconnected;
+      boost::python::object serviceRegistered;
+      boost::python::object serviceUnregistered;
     };
 
     void export_pysession() {
-      boost::python::class_<PySession, boost::shared_ptr<PySession> >("Session")
+      boost::python::class_<PySession>("Session", boost::python::init<>())
           .def("connect", &PySession::connect, (boost::python::arg("url"), boost::python::arg("_async") = false),
                "connect(url) -> None\n"
                "Connect the session to a ServiceDirectory")
@@ -158,7 +172,6 @@ qi::AnyReference triggerBouncer(qi::SignalBase *sig, const std::vector<qi::AnyRe
                "listenStandalone(url) -> None\n"
                "Create a session with a standalone ServiceDirectory")
 
-          //TODO: endpoints()
           .def("endpoints", &PySession::endpoints,
                "endpoints() -> list\n"
                "Return the current list of endpoints of the session")
@@ -185,15 +198,16 @@ qi::AnyReference triggerBouncer(qi::SignalBase *sig, const std::vector<qi::AnyRe
 
           .def_readonly("disconnected", &PySession::disconnected)
 
-          //todo: serviceRegistered
-          //todo: serviceUnregistered
+          .def_readonly("serviceRegistered", &PySession::serviceRegistered)
+
+          .def_readonly("serviceUnregistered", &PySession::serviceUnregistered)
           ;
     }
 
-    boost::python::object makePySession(boost::shared_ptr<qi::Session> ses)
+    boost::python::object makePySession(const qi::SessionPtr& ses)
     {
       GILScopedLock _lock;
-      return boost::python::object(boost::shared_ptr<PySession>(new PySession(ses)));
+      return boost::python::object(PySession(ses));
     }
 
   }

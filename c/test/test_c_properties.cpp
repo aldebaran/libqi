@@ -94,7 +94,7 @@ int main(int argc, char **argv) {
   app = qi_application_create(&argc, argv);
   ::testing::InitGoogleTest(&argc, argv);
 
-  RUN_ALL_TESTS();
+  int ret = RUN_ALL_TESTS();
   qi_application_destroy(app);
-
+  return ret;
 }

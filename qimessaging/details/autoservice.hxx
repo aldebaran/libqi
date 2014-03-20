@@ -3,16 +3,16 @@
 namespace qi
 {
   template <typename T>
-  AutoService<T>::AutoService(const std::string& name, Session& session)
+  AutoService<T>::AutoService(const std::string& name, SessionPtr session)
     : qi::Trackable<AutoService<T> > (this)
     , _session(session)
     , _name(name)
   {
-    Future<qi::AnyObject> fut = session.service(name);
+    Future<qi::AnyObject> fut = session->service(name);
     fut.connect(&AutoService::onServiceModified, this, fut);
 
-    _session.serviceRegistered.connect(&AutoService::onServiceAdded, this, _2);
-    _session.serviceUnregistered.connect(&AutoService::onServiceRemoved, this, _2);
+    _session->serviceRegistered.connect(&AutoService::onServiceAdded, this, _2);
+    _session->serviceUnregistered.connect(&AutoService::onServiceRemoved, this, _2);
   }
 
   template <typename T>
@@ -65,7 +65,7 @@ namespace qi
     if (name == _name)
     {
       boost::mutex::scoped_lock scoped_lock(_mutex);
-      qi::Future<qi::AnyObject> future = _session.service(name);
+      qi::Future<qi::AnyObject> future = _session->service(name);
       future.connect(&AutoService::onServiceModified, this, future);
     }
   }

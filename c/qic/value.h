@@ -4,11 +4,11 @@
 **  - Cedric GESTES <gestes@aldebaran-robotics.com>
 **  - Laurent LEC <llec@aldebaran-robotics.com>
 **
-** Copyright (C) 2010, 2011 Aldebaran Robotics
+** Copyright (C) 2010, 2011, 2013 Aldebaran Robotics
 */
 
-#ifndef _QIMESSAGING_MESSAGE_H_
-#define _QIMESSAGING_MESSAGE_H_
+#ifndef _QIC_VALUE_H_
+#define _QIC_VALUE_H_
 
 #include <qic/api.h>
 
@@ -16,6 +16,7 @@
 extern "C"
 {
 #endif
+
 
 
   //this follow qi::TypeKind
@@ -40,6 +41,8 @@ extern "C"
   //# CTOR/DTOR/COPY
   QIC_API qi_value_t* qi_value_create(const char *sig);
   QIC_API void        qi_value_destroy(qi_value_t *v);
+
+
   QIC_API int         qi_value_reset(qi_value_t* value, const char *sig);
   QIC_API void        qi_value_swap(qi_value_t* dest, qi_value_t* src);
   QIC_API qi_value_t* qi_value_copy(qi_value_t* src);
@@ -47,6 +50,7 @@ extern "C"
   //# TYPE
   QIC_API qi_value_kind_t qi_value_get_kind(qi_value_t* value);
   QIC_API const char*     qi_value_get_signature(qi_value_t* value, int resolveDynamics);
+  QIC_API qi_type_t*      qi_value_get_type(qi_value_t* value);
 
   //# INT/UINT
   QIC_API int                qi_value_set_uint64(qi_value_t *value, unsigned long long ul);
@@ -81,6 +85,7 @@ extern "C"
   QIC_API unsigned int qi_value_map_size(qi_value_t *msg);
   QIC_API int          qi_value_map_set(qi_value_t *msg, qi_value_t *key, qi_value_t *value);
   QIC_API qi_value_t*  qi_value_map_get(qi_value_t *msg, qi_value_t *key);
+  QIC_API qi_value_t*  qi_value_map_keys(qi_value_t *msg);
 
   //# OBJECT
   QIC_API qi_object_t* qi_value_get_object(qi_value_t* value);

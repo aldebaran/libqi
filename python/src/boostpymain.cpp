@@ -3,23 +3,13 @@
 **  See COPYING for the license
 */
 #include <boost/python.hpp>
-#include "pyapplication.hpp"
-#include "pyfuture.hpp"
-#include "pysession.hpp"
-#include "pyobject.hpp"
-#include "pysignal.hpp"
-#include "pyproperty.hpp"
-#include "pyobjectfactory.hpp"
-#include "pyasync.hpp"
-#include "pylog.hpp"
-#include "pypath.hpp"
-#include "pytranslator.hpp"
+#include <qi/log.hpp>
+#include <qipython/pyexport.hpp>
 
 qiLogCategory("qi.py");
 
 BOOST_PYTHON_MODULE(_qi)
 {
-
   boost::python::docstring_options doc_options(true, false, false);
 
   // Initialize in case we use _qi without importing qi
@@ -32,16 +22,5 @@ BOOST_PYTHON_MODULE(_qi)
   // set the docstring of the current module scope
   boost::python::scope().attr("__doc__") = "qi bindings for python.";
 
-  qi::py::export_pyfuture();
-  qi::py::export_pyapplication();
-  qi::py::export_pysession();
-  qi::py::export_pyobject();
-  qi::py::export_pysignal();
-  qi::py::export_pyproperty();
-  qi::py::export_pyobjectfactory();
-  qi::py::export_pyapplicationsession();
-  qi::py::export_pyasync();
-  qi::py::export_pylog();
-  qi::py::export_pypath();
-  qi::py::export_pytranslator();
+  qi::py::export_all();
 }

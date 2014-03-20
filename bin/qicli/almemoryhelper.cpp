@@ -7,10 +7,10 @@
 #include "almemoryhelper.hpp"
 #include "qicli.hpp"
 
-ALMemoryHelper::ALMemoryHelper(qi::Session &session)
+ALMemoryHelper::ALMemoryHelper(qi::SessionPtr session)
 {
   try {
-    _alm = session.service("ALMemory");
+    _alm = session->service("ALMemory");
   } catch (const std::exception &e) {
     throw std::runtime_error(std::string("cannot fetch ALMemory: ") + e.what());
   }

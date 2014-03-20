@@ -63,7 +63,8 @@ public:
     return asObject().call<int>("incr");
   }
 };
-QI_TYPE_PROXY(PongProxy)
+QI_REGISTER_PROXY_INTERFACE(PongProxy, Pong);
+
 
 TEST(QiAutoService, SimpleUsage)
 {
@@ -74,7 +75,7 @@ TEST(QiAutoService, SimpleUsage)
   qi::Future<unsigned int> fut = pair.server()->registerService("Ping pong", pongAsObject);
   fut.wait();
 
-  qi::AutoService<PongProxy> as("Ping pong", *(pair.client()));
+  qi::AutoService<PongProxy> as("Ping pong", pair.client());
   as.waitForReady().wait();
 
   EXPECT_EQ(42, as->incr().value());
@@ -89,7 +90,7 @@ TEST(QiAutoService, MultiUsage)
   qi::Future<unsigned int> fut = pair.server()->registerService("Ping pong", pongAsObject);
   fut.wait();
 
-  qi::AutoService<PongProxy> as("Ping pong", *(pair.client()));
+  qi::AutoService<PongProxy> as("Ping pong", pair.client());
   as.waitForReady().wait();
 
   EXPECT_EQ(42, as->incr().value());
@@ -105,7 +106,7 @@ TEST(QiAutoService, AutoReConnect)
   qi::Future<unsigned int> fut = pair.server()->registerService("Ping pong", pongAsObject);
   fut.wait();
 
-  qi::AutoService<PongProxy> as("Ping pong", *(pair.client()));
+  qi::AutoService<PongProxy> as("Ping pong", pair.client());
   as.waitForReady().wait();
 
   EXPECT_EQ(42, as->incr());
@@ -148,7 +149,7 @@ void trollRegister()
 
 void testSpam()
 {
-  qi::AutoService<PongProxy> as("Ping pong", *(trash->client()));
+  qi::AutoService<PongProxy> as("Ping pong", trash->client());
   as.waitForReady().wait();
 
   for (unsigned long long int i = 0; i < 100 ; i++)
@@ -174,7 +175,7 @@ TEST(QiAutoService, CompilingOperatorStar)
   qi::Future<unsigned int> fut = pair.server()->registerService("Ping pong", pongAsObject);
   fut.wait();
 
-  qi::AutoService<PongProxy> as("Ping pong", *(pair.client()));
+  qi::AutoService<PongProxy> as("Ping pong", pair.client());
   as.waitForReady().wait();
 
   EXPECT_EQ(42, ((*as).incr().value()));
@@ -217,7 +218,7 @@ TEST(QiAutoService, Signals)
   qi::Future<unsigned int> fut = pair.server()->registerService("Ping pong", pongAsObject);
   fut.wait();
 
-  qi::AutoService<PongProxy> as("Ping pong", *(pair.client()));
+  qi::AutoService<PongProxy> as("Ping pong", pair.client());
   as.serviceRemoved.connect(boost::bind<void>(&setTo42, &n));
   pair.server()->unregisterService(fut.value()).wait();
 
@@ -235,7 +236,7 @@ TEST(QiAutoService, IsReadyMethod)
   qi::Future<unsigned int> fut = pair.server()->registerService("Ping pong", pongAsObject);
   fut.wait();
 
-  qi::AutoService<PongProxy> as("Ping pong", *(pair.client()));
+  qi::AutoService<PongProxy> as("Ping pong", pair.client());
   qi::Future<void> fut2 = as.waitForReady();
 
   fut2.connect(&setTo42, &n);

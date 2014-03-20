@@ -13,7 +13,7 @@ SessionHelper::SessionHelper(qi::ApplicationSession& app)
   : _session(app.session())
 {
   app.start();
-  _servicesInfos = _session.services();
+  _servicesInfos = _session->services();
 }
 
 SessionHelper::~SessionHelper()
@@ -41,9 +41,9 @@ void SessionHelper::info(const std::vector<std::string> &patternVec, bool verbos
         showServiceInfo(_servicesInfos[j], verbose, showHidden, showDoc, showRaw, parseable);
 }
 
-void SessionHelper::call(const std::string &pattern, const std::vector<std::string> &argList, bool hidden, bool json, bool cont)
+void SessionHelper::call(const std::string &pattern, const std::vector<std::string> &argList, bool hidden, bool json, bool cont, unsigned int callCount)
 {
-  forEachService(pattern, boost::bind(&ServiceHelper::call, _1, _2, decodeArgs(argList, json)),
+  forEachService(pattern, boost::bind(&ServiceHelper::call, _1, _2, decodeArgs(argList, json), callCount),
                   &ServiceHelper::getMatchingMethodsName, hidden, cont);
 }
 
@@ -96,7 +96,7 @@ bool SessionHelper::byPassService(const std::string &name, bool showHidden)
 
 ServiceHelper SessionHelper::getServiceHelper(const std::string &serviceName)
 {
-  qi::FutureSync<qi::AnyObject> future = _session.service(serviceName);
+  qi::FutureSync<qi::AnyObject> future = _session->service(serviceName);
 
   if (future.hasError())
     throw std::runtime_error(future.error());

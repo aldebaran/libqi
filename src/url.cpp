@@ -257,5 +257,3 @@ namespace qi {
   }
 }
 
-
-QI_EQUIVALENT_STRING_REGISTER(qi::Url, &qi::Url::str);

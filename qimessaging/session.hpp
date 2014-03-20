@@ -23,7 +23,7 @@
 namespace qi {
 
   class SessionPrivate;
-  class QIMESSAGING_API Session {
+  class QIMESSAGING_API Session : boost::noncopyable {
   public:
     Session();
     virtual ~Session();
@@ -75,6 +75,9 @@ namespace qi {
     boost::shared_ptr<SessionPrivate>    _p;
   };
 
+  typedef boost::shared_ptr<Session> SessionPtr;
+
+  inline SessionPtr makeSession() { return boost::make_shared<qi::Session>(); }
 }
 
 #ifdef _MSC_VER

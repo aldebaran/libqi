@@ -16,12 +16,19 @@
 #include <qitype/anyobject.hpp>
 #include <qitype/dynamicobjectbuilder.hpp>
 #include <qitype/jsoncodec.hpp>
+#include <qitype/anyfunction.hpp>
+
 
 qiLogCategory("qiservice");
 
 std::string reply(const std::string &msg) {
   qiLogInfo() << "Message recv:" << msg;
   return msg + "bim";
+}
+
+qi::AnyValue anyArgs(const qi::AnyArguments& aa) {
+  (void)aa;
+  return qi::AnyValue::from(42);
 }
 
 qi::AnyValue reply(const qi::AnyValue &myval) {
@@ -142,7 +149,7 @@ int main(int argc, char *argv[])
       return 0;
     }
 
-    qi::Session&             session = app.session();
+    qi::SessionPtr           session = app.session();
     qi::DynamicObjectBuilder ob;
     ob.advertiseMethod<std::string (const std::string&)>("reply", &reply);
     ob.advertiseMethod<void ()>("error", &error);
@@ -155,24 +162,25 @@ int main(int argc, char *argv[])
     ob.advertiseMethod<qi::AnyValue (const qi::AnyValue&)>("reply", &reply);
     ob.advertiseSignal<const std::string&>("testEvent");
     ob.advertiseMethod<bool (unsigned int)>("slip", &slip);
+    ob.advertiseMethod("anyArgs", &anyArgs);
     qi::AnyObject obj(ob.object());
 
     app.start();
 
-    app.session().listen("tcp://0.0.0.0:0");
-    session.setIdentity("tests/server.key", "tests/server.crt");
+    app.session()->listen("tcp://0.0.0.0:0");
+    session->setIdentity("tests/server.key", "tests/server.crt");
     try {
-      app.session().listen("tcps://0.0.0.0:0");
+      app.session()->listen("tcps://0.0.0.0:0");
     } catch (std::runtime_error &) {
       qiLogWarning() << "SSL desactivated.";
     }
 
-    unsigned int id = session.registerService(serviceName, obj);
+    unsigned int id = session->registerService(serviceName, obj);
 
 #if 0
     // test unregistration
-    session.unregisterService(id);
-    id = session.registerService("serviceTest", &obj);
+    session->unregisterService(id);
+    id = session->registerService("serviceTest", &obj);
 #endif
 
     if (id)
@@ -194,7 +202,7 @@ int main(int argc, char *argv[])
       qi::os::sleep(1);
     }
 
-    session.unregisterService(id);
+    session->unregisterService(id);
   }
   catch (const boost::program_options::error&)
   {

@@ -6,9 +6,10 @@ C++ qi API Reference
 .. toctree::
   :maxdepth: 1
 
+  applicationsession
   future
-  signal
-  periodictask
   path
+  periodictask
+  signal
   ../../cpp-classindex
   ../../cpp-funcindex

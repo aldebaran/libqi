@@ -2,12 +2,12 @@
 **  Copyright (C) 2013 Aldebaran Robotics
 **  See COPYING for the license
 */
-#include "pyfuture.hpp"
+#include <qipython/pyfuture.hpp>
 #include <qi/future.hpp>
-#include <qimessaging/python-gil.hpp>
+#include <qipython/gil.hpp>
 #include <boost/python.hpp>
-#include "error.hpp"
-#include "pythreadsafeobject.hpp"
+#include <qipython/error.hpp>
+#include <qipython/pythreadsafeobject.hpp>
 
 namespace qi {
   namespace py {
@@ -137,24 +137,39 @@ namespace qi {
       boost::python::class_<PyFuture>("Future", boost::python::no_init)
           .def("value", &PyFuture::value, (boost::python::args("timeout") = qi::FutureTimeout_Infinite),
                "value(timeout) -> value\n"
-               "return the value of the Future. Block until the future is ready. Raise an exception if the future has error. "
+               ":param timeout: a time in milliseconds.\n"
+               ":return: the value of the future.\n"
+               "\n"
+               "Block until the future is ready. Raise an exception if the future has error.\n"
                "If a timeout is specified in parameter, and the future is not ready past that time, the function raise an exception.")
 
           .def("error", &PyFuture::error, (boost::python::args("timeout") = qi::FutureTimeout_Infinite),
                "error(timeout) -> None\n"
-               "return the error of the Future. Block until the future is ready. "
+               ":param timeout: a time in milliseconds.\n"
+               ":return: the error of the future.\n"
+               "\n"
+               "Block until the future is ready.\n"
                "Raise an exception if the function timeout or the future has no error")
 
           .def("wait", &PyFuture::wait, (boost::python::args("timeout") = qi::FutureTimeout_Infinite),
                "wait(timeout) -> qi.FutureState\n"
-               "Wait for the future to be ready. Raise an exception on timeout. Return a :py:data:`qi.FutureState`." )
+               ":param timeout: a time in milliseconds.\n"
+               ":return: a :py:data:`qi.FutureState`.\n"
+               "\n"
+               "Wait for the future to be ready." )
 
           .def("hasError", &PyFuture::hasError, (boost::python::args("timeout") = qi::FutureTimeout_Infinite),
                "hasError(timeout) -> bool\n"
-               "Return true or false depending on the future having an error. Raise an exception on timeout")
+               ":param timeout: a time in milliseconds.\n"
+               ":return: true if the future has an error.\n"
+               "\n"
+               "Raise an exception on timeout")
 
           .def("hasValue", &PyFuture::hasValue, (boost::python::args("timeout") = qi::FutureTimeout_Infinite),
                "hasValue(timeout) -> bool\n"
+               ":param timeout: a time in milliseconds.\n"
+               ":return: true if the future has a value.\n"
+               "\n"
                "Return true or false depending on the future having a value. Raise an exception on timeout")
 
           .def("cancel", &PyFuture::cancel,
@@ -163,23 +178,26 @@ namespace qi {
 
           .def("isFinished", &PyFuture::isFinished,
                "isFinished() -> bool\n"
-               "Is the future not running anymore? (true if hasError or hasValue or isCanceled)")
+               ":return: true if the future is not running anymore (if hasError or hasValue or isCanceled)")
 
           .def("isRunning", &PyFuture::isRunning,
                "isRunning() -> bool\n"
-               "Is the future still running?")
+               ":return: true if the future is still running.\n")
 
           .def("isCanceled", &PyFuture::isCanceled,
                "isCanceled() -> bool\n"
-               "Is the future canceled?")
+               ":return: true if the future is canceled.\n")
 
           .def("isCancelable", &PyFuture::isCancelable,
                "isCancelable() -> bool\n"
-               "Is the future cancelable. (not all future are cancelable)")
+               ":return: true if the future is cancelable. (not all future are cancelable)\n")
 
           .def("addCallback", &PyFuture::addCallback,
                "addCallback(cb) -> None\n"
-               "Add a callback that will be called then the future become ready. The callback will be called even if the future is already ready."
+               ":param cb: a python callable, could be a method or a function.\n"
+               "\n"
+               "Add a callback that will be called when the future becomes ready.\n"
+               "The callback will be called even if the future is already ready.\n"
                "The first argument of the callback is the future itself.");
     }
   }

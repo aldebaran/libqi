@@ -37,8 +37,7 @@ namespace qi
     virtual bool send(const qi::Message &msg);
     virtual void startReading();
     virtual qi::Url remoteEndpoint() const;
-    virtual void setCapabilities(const CapabilityMap& map);
-    virtual boost::optional<AnyValue> capability(const std::string& key);
+    virtual void advertiseCapabilities(const CapabilityMap& map);
   private:
 #ifdef WITH_SSL
     typedef boost::shared_ptr<boost::asio::ssl::stream<boost::asio::ip::tcp::socket> > SocketPtr;
@@ -46,15 +45,19 @@ namespace qi
     typedef boost::shared_ptr<boost::asio::ip::tcp::socket> SocketPtr;
 #endif
     void error(const std::string& erc);
-    void onConnected(const boost::system::error_code& erc, SocketPtr s);
     void onResolved(const boost::system::error_code& erc,
-                    boost::asio::ip::tcp::resolver::iterator it);
-    void handshake(const boost::system::error_code& erc, SocketPtr s);
+                    boost::asio::ip::tcp::resolver::iterator it,
+                    qi::Promise<void> connectPromise);
+    void onConnected(const boost::system::error_code& erc, SocketPtr s,
+                    qi::Promise<void> connectPromise);
+    void handshake(const boost::system::error_code& erc, SocketPtr s,
+                    qi::Promise<void> connectPromise);
     void onReadHeader(const boost::system::error_code& erc, std::size_t, SocketPtr s);
     void onReadData(const boost::system::error_code& erc, std::size_t, SocketPtr s);
     void send_(qi::Message msg);
     void sendCont(const boost::system::error_code& erc, qi::Message msg, SocketPtr s);
     void setSocketOptions();
+    void _continueReading();
     bool _ssl;
     bool _sslHandshake;
 #ifdef WITH_SSL
@@ -63,8 +66,6 @@ namespace qi
    SocketPtr _socket;
 
     bool                _abort; // used to notify send callback sendCont that we are dead
-    qi::Promise<void>   _connectPromise;
-    qi::Promise<void>   _disconnectPromise;
 
     // data to rebuild message
     qi::Message        *_msg;
@@ -76,8 +77,6 @@ namespace qi
     boost::recursive_mutex        _closingMutex;
     boost::shared_ptr<boost::asio::ip::tcp::resolver> _r;
 
-    boost::mutex  _capabilityMutex;
-    CapabilityMap _capabilityMap; // remote capabilities we received
   };
 
   typedef boost::shared_ptr<TcpTransportSocket> TcpTransportSocketPtr;

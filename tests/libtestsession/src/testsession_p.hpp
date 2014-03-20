@@ -27,12 +27,12 @@ public:
   ~TestSessionPrivate();
 
 public:
-  qi::Session        *session();
+  qi::SessionPtr       session();
 
 private:
   TestMode::Mode      _mode;
   SessionInitializer *_manager;
-  qi::Session        *_session;
+  qi::SessionPtr      _session;
 };
 
 #endif // !_TESTS_LIBTESTSESSION_TESTSESSIONPRIVATE_HPP_

@@ -6,6 +6,8 @@ Python qi API reference
 .. toctree::
   :maxdepth: 1
 
+  logging
+  path
   session
   future
   signal
@@ -13,3 +15,4 @@ Python qi API reference
   types
   bind
   async
+  translator

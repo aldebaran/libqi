@@ -2,7 +2,7 @@
 ** Author(s):
 **  - Pierre Roullon <proullon@aldebaran-robotics.com>
 **
-** Copyright (C) 2010, 2011, 2012 Aldebararan Robotics
+** Copyright (C) 2010, 2011, 2012, 2013 Aldebararan Robotics
 */
 
 #ifndef _QIMESSAGING_FUTURE_H_

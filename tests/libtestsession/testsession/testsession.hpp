@@ -122,7 +122,7 @@ public:
   ~TestSession();
 
 public:
-  qi::Session* session();
+  qi::SessionPtr session();
 
 private:
   TestSessionPrivate *_p;

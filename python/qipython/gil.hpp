@@ -4,8 +4,8 @@
 **  See COPYING for the license
 */
 
-#ifndef _PYTHON_SRC_GIL_HPP_
-#define _PYTHON_SRC_GIL_HPP_
+#ifndef _QIPYTHON_GIL_HPP_
+#define _QIPYTHON_GIL_HPP_
 
 #include <qi/log.hpp>
 #include <boost/python.hpp>
@@ -73,4 +73,4 @@ namespace qi {
 }
 
 
-#endif  // _PYTHON_SRC_GIL_HPP_
+#endif  // _QIPYTHON_GIL_HPP_

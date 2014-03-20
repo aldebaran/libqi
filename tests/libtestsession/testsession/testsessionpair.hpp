@@ -78,13 +78,13 @@ public:
   ~TestSessionPair();
 
 public:
-  qi::Session* client() const;
-  qi::Session* server() const;
-  qi::Session* sd() const;
+  qi::SessionPtr client() const;
+  qi::SessionPtr server() const;
+  qi::SessionPtr sd() const;
   std::vector<qi::Url> serviceDirectoryEndpoints() const;
 
 private:
-  qi::Session          _sd;
+  qi::SessionPtr       _sd;
   TestMode::Mode       _mode;
   TestSession         *_client;
   TestSession         *_server;
