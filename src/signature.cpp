@@ -76,7 +76,7 @@ namespace qi {
     return qi::Signature(res);
   }
 
-#define RET_CALC (1.0f - childErr - ((float)error) / 100.0f)
+#define RET_CALC (1.0f * childErr * ((float)(100 - error)) / 100.0f)
 
   float qi::Signature::isConvertibleTo(const qi::Signature& b) const
   {
@@ -85,7 +85,7 @@ namespace qi {
      * - Weaker error score for deeper (in containers) struct.
      */
     int error = 0;
-    float childErr = 0.0f;
+    float childErr = 1.0f;
     static const char numeric[] = "bcCwWiIlLfd";
     static const char integral[] = "bcCwWiIlL";
     static const char floating[] = "fd";
@@ -93,6 +93,8 @@ namespace qi {
 
     Signature::Type s = type();
     Signature::Type d = b.type();
+    if (d == Type_Void)
+      return RET_CALC;
     if (d == Type_Unknown)
     {
       // We cannot anwser the question for unknown types. So let it pass
@@ -128,7 +130,25 @@ namespace qi {
       if (d != s)
         return 0; // Must be same container
       if (children().size() != b.children().size())
+      {
+        if (s != Type_Tuple)
+          return 0;
+        // Special case for same-named tuples that might be compatible
+        std::string aSrc = annotation();
+        std::string aDst = b.annotation();
+        // This mode is recommended only for tests where it is more
+        // conveniant to have differently named structs
+        static bool requireSameName = qi::os::getenv("QI_IGNORE_STRUCT_NAME").empty();
+        if (!requireSameName)
+          return (aSrc.empty() || aDst.empty()) ? 0:0.1;
+
+        size_t pSrc = aSrc.find_first_of(",");
+        size_t pDst = aDst.find_first_of(",");
+        if (pSrc == pDst && pSrc != aSrc.npos && !memcmp(aSrc.data(), aDst.data(), pSrc))
+          return 0.1;
+
         return 0;
+      }
       SignatureVector::const_iterator its;
       SignatureVector::const_iterator itd;
       itd = b.children().begin();
@@ -137,7 +157,7 @@ namespace qi {
         if (!childRes)
           return 0; // Just check subtype compatibility
         // the lower the error the better
-        childErr += 1.0f - childRes*1.01;
+        childErr *= childRes;
       }
       assert(its==children().end() && itd==b.children().end()); // we already exited on size mismatch
     }
@@ -440,6 +460,8 @@ namespace qi {
   std::string Signature::annotation()const {
     if (_p->_signature.empty())
       return std::string();
+    if (_p->_signature[_p->_signature.length()-1] != '>')
+      return std::string();
     size_t begin = _find_begin(_p->_signature, 0, '<', '>');
     if (begin != std::string::npos)
       return std::string(_p->_signature.substr(begin + 1, _p->_signature.size() - begin - 2));
@@ -530,4 +552,3 @@ char* signature_to_json(const char* sig)
   return resc;
 }
 
-QI_EQUIVALENT_STRING_REGISTER(qi::Signature, &qi::Signature::toString);

@@ -12,7 +12,8 @@
 namespace qi {
   namespace detail {
 
-
+    template<typename T>
+    struct HasLessGuard;
 
     // boost::has_less gives true for a vector<F> even if has_less<F> gives false
     template<typename T>
@@ -24,27 +25,27 @@ namespace qi {
     template<typename T>
     struct HasLess<std::vector<T> >
     {
-      static const bool value = boost::has_less<T, T>::value;
+      static const bool value = HasLessGuard<T>::value;
     };
 
     template<typename T>
     struct HasLess<std::list<T> >
     {
-      static const bool value = boost::has_less<T, T>::value;
+      static const bool value = HasLessGuard<T>::value;
     };
 
     template<typename K, typename V>
     struct HasLess<std::map<K, V> >
     {
-      static const bool value = boost::has_less<K, K>::value
-      && boost::has_less<V, V>::value;
+      static const bool value = HasLessGuard<K>::value
+        && HasLessGuard<V>::value;
     };
 
     template<typename A, typename B>
     struct HasLess<std::pair<A, B> >
     {
-      static const bool value = boost::has_less<A, A>::value
-      && boost::has_less<B, B>::value;
+      static const bool value = HasLessGuard<A>::value
+        && HasLessGuard<B>::value;
     };
 
     //boost::has_less fails for member function pointer, gard
@@ -64,7 +65,7 @@ namespace qi {
     };
 
     template<typename T>
-    struct HasLessGard
+    struct HasLessGuard
     {
       static const bool switchVal =
           boost::is_member_function_pointer<T>::value
@@ -93,7 +94,7 @@ namespace qi {
     };
 
     template<typename T>
-    struct Less: public LessHelper<T, HasLessGard<T>::value>
+    struct Less: public LessHelper<T, HasLessGuard<T>::value>
     {};
   }
 }

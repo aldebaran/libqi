@@ -1,3 +1,11 @@
+
+find_package(clang)
+
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
+
+qi_create_bin(qiclang SRC src/qiclang.cpp DEPENDS clang QI)
+qi_stage_bin(qiclang)
+
 qi_stage_cmake(src/idl-config.cmake)
 #qi_install_program forces current_build_dir as prefix
 
@@ -7,3 +15,7 @@ qi_install_program(src/idl.py)
 if (NOT ANDROID)
   qi_install_python(src/shlib.py)
 endif()
+if (NOT I_AM_A_ROBOT AND NOT ANDROID AND NOT DISABLE_CODEGEN)
+  add_subdirectory("tests")
+endif()
+

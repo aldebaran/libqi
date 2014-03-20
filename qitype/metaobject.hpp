@@ -143,6 +143,8 @@ namespace qi {
       const PropertyMap& propertyMap, const std::string& description);
   };
 
+  bool QITYPE_API operator < (const MetaObject& a, const MetaObject& b);
+
   class MetaObjectBuilderPrivate;
   class QITYPE_API MetaObjectBuilder {
   public:

@@ -14,9 +14,17 @@
 #include <qitype/typeobject.hpp>
 #include <qitype/details/typeimpl.hxx>
 
+// Visual defines interface...
+#ifdef interface
+#undef interface
+#endif
+
 namespace qi {
 
   namespace detail {
+    typedef std::map<TypeInfo, boost::function<AnyReference(AnyObject)> > ProxyGeneratorMap;
+    QITYPE_API ProxyGeneratorMap& proxyGeneratorMap();
+
   // bounce to a genericobject obtained by (O*)this->asAnyObject()
     /* Everything need to be const:
     *  anyobj.call bounces to anyobj.asObject().call, and the
@@ -26,17 +34,17 @@ namespace qi {
     {
     public:
       const MetaObject &metaObject() const { return go()->metaObject();}
-      inline qi::Future<AnyReference> metaCall(unsigned int method, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto) const
+      inline qi::Future<AnyReference> metaCall(unsigned int method, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto, Signature returnSignature=Signature()) const
       {
-        return go()->metaCall(method, params, callType);
+        return go()->metaCall(method, params, callType, returnSignature);
       }
       inline unsigned int findMethod(const std::string& name, const GenericFunctionParameters& parameters) const
       {
         return go()->findMethod(name, parameters);
       }
-      inline qi::Future<AnyReference> metaCall(const std::string &nameWithOptionalSignature, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto) const
+      inline qi::Future<AnyReference> metaCall(const std::string &nameWithOptionalSignature, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto, Signature returnSignature=Signature()) const
       {
-        return go()->metaCall(nameWithOptionalSignature, params, callType);
+        return go()->metaCall(nameWithOptionalSignature, params, callType, returnSignature);
       }
       inline void metaPost(unsigned int event, const GenericFunctionParameters& params) const
       {
@@ -158,16 +166,17 @@ namespace qi {
     };
   }
 
-  template<typename T> class Object<T, false>
-   : public detail::GenericObjectBounce<Object<T, false> >
+  template<typename T> class Object
+   : public detail::GenericObjectBounce<Object<T> >
   {
   public:
-    typedef typename boost::is_base_of<Proxy, T>::type isProxy;
     Object();
 
-    template<typename U> Object(const Object<U, true>& o);
-    template<typename U> Object(const Object<U, false>& o);
-
+    template<typename U> Object(const Object<U>& o);
+    template<typename U> void operator=(const Object<U>& o);
+    // Templates above do not replace default ctor or copy operator
+    Object(const Object& o);
+    void operator=(const Object& o);
     // Disable the ctor taking future if T is Empty, as it would conflict with
     // Future cast operator
     typedef typename boost::mpl::if_<typename boost::is_same<T, Empty>::type, Empty, Object<Empty> >::type MaybeAnyObject;
@@ -189,12 +198,14 @@ namespace qi {
 
     /// Shares ref counter with \p other, which much handle the destrutiong of \p go.
     template<typename U> Object(GenericObject* go, boost::shared_ptr<U> other);
-
+    template<typename U> Object(boost::shared_ptr<U> other);
     bool operator <(const Object& b) const;
     template<typename U> bool operator !=(const Object<U>& b) const;
     template<typename U> bool operator ==(const Object<U>& b) const;
     operator bool() const;
     operator Object<Empty>() const;
+
+    boost::shared_ptr<T> asSharedPtr();
 
     T& asT();
     const T& asT() const;
@@ -207,7 +218,14 @@ namespace qi {
     GenericObject* asGenericObject() const;
     void reset();
     unsigned use_count() const { return _obj.use_count();}
+
+    ObjectTypeInterface* interface();
+    // Check or obtain T interface, or throw
+    void checkT();
     // no-op deletor callback
+    static void keepManagedObjectPtr(detail::ManagedObjectPtr ptr) {}
+    template<typename U>
+    static void keepReference(GenericObject* obj, boost::shared_ptr<U> ptr) {qiLogDebug("qi.object") << "AnyObject ptr holder deleter"; delete obj;}
     static void noDeleteT(T*) {qiLogDebug("qi.object") << "AnyObject noop T deleter";}
     static void noDelete(GenericObject*) {qiLogDebug("qi.object") << "AnyObject noop deleter";}
     // deletor callback that deletes only the GenericObject and not the content
@@ -220,10 +238,11 @@ namespace qi {
       deleter((T*)obj->value);
       delete obj;
     }
+    detail::ManagedObjectPtr managedObjectPtr() { return _obj;}
   private:
     friend class GenericObject;
-    friend class AnyWeakObject;
-    template <typename, bool> friend class Object;
+    template <typename> friend class Object;
+    template <typename> friend class WeakObject;
     Object(detail::ManagedObjectPtr obj)
     {
       init(obj);
@@ -232,7 +251,7 @@ namespace qi {
     static void deleteObject(GenericObject* obj)
     {
       qiLogCategory("qi.object");
-      qiLogDebug() << "deleteObject " << obj;
+      qiLogDebug() << "deleteObject " << obj << " " << obj->value << " " << obj->type->infoString();
       obj->type->destroy(obj->value);
       delete obj;
     }
@@ -241,200 +260,227 @@ namespace qi {
     detail::ManagedObjectPtr _obj;
   };
 
-  class AnyWeakObject: public boost::weak_ptr<GenericObject>
+  template<typename T> class WeakObject
   {
   public:
-    AnyWeakObject() {}
-    template<typename T>
-    AnyWeakObject(const Object<T>& o)
-    : boost::weak_ptr<GenericObject>(o._obj) {}
-    AnyObject lock() { return AnyObject(boost::weak_ptr<GenericObject>::lock());}
+    WeakObject() {}
+    template<typename U> WeakObject(const Object<U>& o)
+    : _ptr(o._obj) {}
+    Object<T> lock() { return Object<T>(_ptr.lock());}
+    boost::weak_ptr<GenericObject> _ptr;
   };
+  typedef WeakObject<Empty> AnyWeakObject;
 
-  template<typename T> inline Object<T, false>::Object() {}
-  template<typename T> template<typename U>inline Object<T, false>::Object(const Object<U, false>& o)
+  template<typename T> inline ObjectTypeInterface* Object<T>::interface()
   {
+    TypeInterface* type = typeOf<T>();
+    if (type->kind() != TypeKind_Object)
+    {
+      // Try template
+      TemplateTypeInterface* t = dynamic_cast<TemplateTypeInterface*>(type);
+      if (t)
+        type = t->next();
+      if (type->kind() != TypeKind_Object)
+      {
+        std::stringstream err;
+        err << "Object<T> can only be used on registered object types. ("
+        << type->infoString() << ")(" << type->kind() << ')';
+        throw std::runtime_error(err.str());
+      }
+    }
+    ObjectTypeInterface* otype = static_cast<ObjectTypeInterface*>(type);
+    return otype;
+  }
+
+  template<typename T> inline Object<T>::Object() {}
+  template<typename T> template<typename U>inline Object<T>::Object(const Object<U>& o)
+  {
+    /* An Object<T> created by convert may be in fact an object that does
+    * not implement the T interface.
+    * Checking and converting on first access to T& is not enough:
+    *  Object<Iface> o = obj.call("fetchOne"); // this one might be incorrect
+    *  someVector.push_back(o); // pushes the incorrect one
+    *  o->someIfaceOperation(); // will upgrade o, but not the one in someVector
+    *
+    * So we check as early as we can, in all copy pathes, and back-propagate
+    * the upgrade to the source of the copy
+    */
+    const_cast<Object<U>&>(o).checkT();
     init(o._obj);
   }
-  template<typename T> template<typename U>inline Object<T, false>::Object(const Object<U, true>& o)
+  template<typename T> template<typename U>inline void Object<T>::operator=(const Object<U>& o)
   {
-    // Cannot use a cast to get o to an AnyObject or it could bounce to this
-    // very method
-    *this = Object<T>(o.asObject());
+    const_cast<Object<U>&>(o).checkT();
+    init(o._obj);
   }
-  template<typename T> inline Object<T, false>::Object(GenericObject* go)
+  template<typename T> inline Object<T>::Object(const Object<T>& o)
+  {
+    const_cast<Object<T>&>(o).checkT();
+    init(o._obj);
+  }
+  template<typename T>inline void Object<T>::operator=(const Object<T>& o)
+  {
+    const_cast<Object<T>&>(o).checkT();
+    init(o._obj);
+  }
+  template<typename T> inline Object<T>::Object(GenericObject* go)
   {
     init(detail::ManagedObjectPtr(go, &deleteObject));
   }
-  template<typename T> inline Object<T, false>::Object(GenericObject* go, boost::function<void(GenericObject*)> deleter)
+  template<typename T> inline Object<T>::Object(GenericObject* go, boost::function<void(GenericObject*)> deleter)
   {
     init(detail::ManagedObjectPtr(go, deleter));
   }
-  template<typename T> template<typename U> Object<T, false>::Object(GenericObject* go, boost::shared_ptr<U> other)
+  template<typename T> template<typename U> Object<T>::Object(GenericObject* go, boost::shared_ptr<U> other)
   {
     init(detail::ManagedObjectPtr(other, go));
     // Notify the shared_from_this of GenericObject
     _obj->_internal_accept_owner(&other, go);
   }
-
-  template<typename T> inline Object<T, false>::Object(T* ptr)
+  namespace detail
   {
-    TypeInterface* type = typeOf<T>();
-    if (type->kind() != TypeKind_Object)
+    template<typename T, typename U> ManagedObjectPtr fromSharedPtr(Object<T>& dst, boost::shared_ptr<U>& other, boost::false_type)
     {
-      // Try template
-      TemplateTypeInterface* t = dynamic_cast<TemplateTypeInterface*>(type);
-      if (t)
-        type = t->next();
-      if (type->kind() != TypeKind_Object)
-        throw std::runtime_error("Object<T> can only be used on registered object types.");
+      ObjectTypeInterface* otype = dst.interface();
+      T* ptr = static_cast<T*>(other.get());
+      return ManagedObjectPtr(new GenericObject(otype, ptr),
+        boost::bind(&Object<T>::template keepReference<U>, _1, other));
     }
-    ObjectTypeInterface* otype = static_cast<ObjectTypeInterface*>(type);
+    template<typename U> ManagedObjectPtr fromSharedPtr(AnyObject& dst, boost::shared_ptr<U>& other, boost::true_type)
+    {
+      return Object<U>(other).managedObjectPtr();
+    }
+  }
+
+  template<typename T> template<typename U> Object<T>::Object(boost::shared_ptr<U> other)
+  { // bounce depending on T==Empty
+    _obj = detail::fromSharedPtr(*this, other, typename boost::is_same<T, Empty>::type());
+  }
+
+  template<typename T> inline Object<T>::Object(T* ptr)
+  {
+    ObjectTypeInterface* otype = interface();
     _obj = detail::ManagedObjectPtr(new GenericObject(otype, ptr), &deleteObject);
   }
-  template<typename T> inline Object<T, false>::Object(T* ptr, boost::function<void(T*)> deleter)
+  template<typename T> inline Object<T>::Object(T* ptr, boost::function<void(T*)> deleter)
   {
-    TypeInterface* type = typeOf<T>();
-    if (type->kind() != TypeKind_Object)
-    {
-      // Try template
-      TemplateTypeInterface* t = dynamic_cast<TemplateTypeInterface*>(type);
-      if (t)
-        type = t->next();
-      if (type->kind() != TypeKind_Object)
-        throw std::runtime_error("Object<T> can only be used on registered object types.");
-    }
-    ObjectTypeInterface* otype = static_cast<ObjectTypeInterface*>(type);
+    ObjectTypeInterface* otype = interface();
     if (deleter)
       _obj = detail::ManagedObjectPtr(new GenericObject(otype, ptr),
         boost::bind(&Object::deleteCustomDeleter, _1, deleter));
     else
       _obj = detail::ManagedObjectPtr(new GenericObject(otype, ptr), &deleteObject);
   }
-  template<typename T> inline Object<T, false>::Object(const qi::Future<MaybeAnyObject>& fobj)
+  template<typename T> inline Object<T>::Object(const qi::Future<MaybeAnyObject>& fobj)
   {
     init(fobj.value()._obj);
   }
-  template<typename T> inline Object<T, false>::Object(const qi::FutureSync<MaybeAnyObject>& fobj)
+  template<typename T> inline Object<T>::Object(const qi::FutureSync<MaybeAnyObject>& fobj)
   {
     init(fobj.value()._obj);
   }
 
-  template<typename T> inline void Object<T, false>::init(detail::ManagedObjectPtr obj)
+  template<typename T> inline boost::shared_ptr<T> Object<T>::asSharedPtr()
   {
-    if (!boost::is_same<T, Empty>::value && obj && obj->type->info() != typeOf<T>()->info())
-    {
-      throw std::runtime_error(
-        std::string("Object<T> constructed from a different AnyObject type ")
-        + obj->type->infoString()
-        + " "
-        + typeOf<T>()->infoString()
-        );
-    }
+    checkT();
+    return boost::shared_ptr<T>(&asT(), boost::bind(&keepManagedObjectPtr, _obj));
+  }
+
+  template<typename T> inline void Object<T>::init(detail::ManagedObjectPtr obj)
+  {
+    _obj = obj;
+    if (!boost::is_same<T, Empty>::value && obj)
+      checkT();
     _obj = obj;
   }
-  template<typename T> inline bool Object<T, false>::operator <(const Object& b) const { return _obj < b._obj;}
-  template<typename T> template<typename U> bool Object<T, false>::operator !=(const Object<U>& b) const
+
+  template<typename T> inline bool Object<T>::operator <(const Object& b) const { return _obj < b._obj;}
+  template<typename T> template<typename U> bool Object<T>::operator !=(const Object<U>& b) const
   {
     return !(*this ==b);
   }
-  template<typename T> template<typename U> bool Object<T, false>::operator ==(const Object<U>& b) const
+  template<typename T> template<typename U> bool Object<T>::operator ==(const Object<U>& b) const
   {
     return asGenericObject() == b.asGenericObject();
   }
-  template<typename T> Object<T, false>::operator bool() const   { return _obj && _obj->type;}
+  template<typename T> Object<T>::operator bool() const   { return _obj && _obj->type;}
 
-  template<typename T> Object<T, false>::operator Object<Empty>() const { return Object<Empty>(_obj);}
-  template<typename T> T& Object<T, false>::asT()
+  template<typename T> Object<T>::operator Object<Empty>() const { return Object<Empty>(_obj);}
+  /// Check tha value actually has the T interface
+  template<typename T> void Object<T>::checkT()
   {
+    if (boost::is_same<T, Empty>::value || !_obj)
+      return;
+    if (_obj->type->info() != typeOf<T>()->info()
+      && _obj->type->inherits(typeOf<T>())==-1)
+    { // No T interface, try upgrading _obj
+      detail::ProxyGeneratorMap& map = detail::proxyGeneratorMap();
+      detail::ProxyGeneratorMap::iterator it = map.find(typeOf<T>()->info());
+      if (it != map.end())
+      {
+        qiLogDebug("qitype.anyobject") << "Upgrading Object to specialized proxy.";
+        AnyReference ref = it->second(AnyObject(_obj));
+        _obj = ref.to<detail::ManagedObjectPtr>();
+        ref.destroy();
+        return;
+      }
+      throw std::runtime_error(std::string() + "Object does not have interface " + typeOf<T>()->infoString());
+    }
+  }
+  template<typename T> T& Object<T>::asT()
+  {
+    checkT();
     return *reinterpret_cast<T*>(_obj->value);
   }
-  template<typename T> const T& Object<T, false>::asT() const
+  template<typename T> const T& Object<T>::asT() const
   {
+    const_cast<Object<T>* >(this)->checkT();
     return *reinterpret_cast<const T*>(_obj->value);
   }
-  template<typename T> T* Object<T, false>::operator ->()
+  template<typename T> T* Object<T>::operator ->()
   {
       return &asT();
   }
-  template<typename T> const T* Object<T, false>::operator->() const
+  template<typename T> const T* Object<T>::operator->() const
   {
     return &asT();
   }
-  template<typename T> T& Object<T, false>::operator *()
+  template<typename T> T& Object<T>::operator *()
   {
     return asT();
   }
-  template<typename T> const T& Object<T, false>::operator *() const
+  template<typename T> const T& Object<T>::operator *() const
   {
     return asT();
   }
-  template<typename T> bool Object<T, false>::unique() const
+  template<typename T> bool Object<T>::unique() const
   {
     return _obj.unique();
   }
-  template<typename T> GenericObject* Object<T, false>::asGenericObject() const
+  template<typename T> GenericObject* Object<T>::asGenericObject() const
   {
     return _obj.get();
   }
-  template<typename T> void Object<T, false>::reset()
+  template<typename T> void Object<T>::reset()
   {
     _obj.reset();
   }
 
+  /** A Proxy is the base class used by bouncer implementations of all
+  * interfaces.
+  */
   class QITYPE_API Proxy
   {
   public:
-    Proxy(AnyObject obj) : _obj(obj) {}
+    Proxy(AnyObject obj) : _obj(obj) {qiLogDebug("qitype.proxy") << "Initializing " << this;}
     Proxy() {}
+    ~Proxy() { qiLogDebug("qitype.proxy") << "Finalizing on " << this;}
     Object<Empty> asObject() const;
   protected:
     Object<Empty> _obj;
   };
 
-  template<typename T> class Object<T, true>
-  : public detail::GenericObjectBounce< Object<T, true> >
-  {
-  public:
-    Object() {}
-    Object(T* ptr)
-    : _proxy(*ptr)
-    {
-    }
-    Object(qi::Future<Object<Empty> > fobj)
-    : _proxy(fobj.value())
-    {
-    }
-    Object(qi::FutureSync<Object<Empty> > fobj)
-    : _proxy(fobj.value())
-    {
-    }
-    Object(detail::ManagedObjectPtr obj)
-    : _proxy(obj)
-    {
-    }
 
-    template<typename U>
-    Object(Object<U> obj)
-    : _proxy(obj._obj)
-    {
-    }
-    GenericObject* asGenericObject() const { return _proxy.asObject().asGenericObject();}
-    template<typename U>
-    bool operator <(const Object<U>& b) const { return asGenericObject() < b.asGenericObject();}
-    template<typename U>
-    bool operator ==(const Object<U>& b) const { return asGenericObject() == b.asGenericObject();}
-    template<typename U>
-    bool operator !=(const Object<U>& b) const { return asGenericObject() != b.asGenericObject();}
-
-    Object<Empty> asObject() const { return _proxy.asObject();}
-    operator Object<Empty>() const { return _proxy.asObject();}
-    T* operator ->() { return &_proxy;}
-    T& operator *()  { return _proxy;}
-    operator bool() const   { return _proxy.asObject();}
-  private:
-    T _proxy;
-  };
 
   namespace detail
   {
@@ -499,7 +545,7 @@ namespace qi {
       TemplateTypeInterface* ft1 = QI_TEMPLATE_TYPE_GET(val.type(), Future);
       TemplateTypeInterface* ft2 = QI_TEMPLATE_TYPE_GET(val.type(), FutureSync);
       TemplateTypeInterface* futureType = ft1 ? ft1 : ft2;
-      qiLogDebug("qi.object") << "isFuture " << !!ft1 << ' ' << !!ft2;
+      qiLogDebug("qi.object") << "isFuture " << val.type()->infoString() << ' ' << !!ft1 << ' ' << !!ft2;
       if (!futureType)
         return false;
 
@@ -514,7 +560,7 @@ namespace qi {
       // and thus must be synchronous.
       qi::Future<void> waitResult = gfut.call<void>(MetaCallType_Direct, "_connect", cb);
       waitResult.wait();
-      qiLogDebug("qi.object") << "future connected " << !waitResult.hasError();
+      qiLogDebug("qi.adapter") << "future connected " << !waitResult.hasError();
       if (waitResult.hasError())
         qiLogWarning("qi.object") << waitResult.error();
       return true;
@@ -523,7 +569,7 @@ namespace qi {
     template <typename T>
     inline void futureAdapter(qi::Future<qi::AnyReference> metaFut, qi::Promise<T> promise)
     {
-      qiLogDebug("qi.object") << "futureAdapter";
+      qiLogDebug("qi.object") << "futureAdapter " << qi::typeOf<T>()->infoString()<< ' ' << metaFut.hasError();
       //error handling
       if (metaFut.hasError()) {
         promise.setError(metaFut.error());
@@ -617,7 +663,7 @@ namespace qi {
      BOOST_PP_REPEAT(n, pushi, _)                                          \
      std::string sigret;                                                   \
      qi::Promise<R> res(qi::FutureCallbackType_Sync);                      \
-     qi::Future<AnyReference> fmeta = metaCall(methodName, params);        \
+     qi::Future<AnyReference> fmeta = metaCall(methodName, params, MetaCallType_Auto, typeOf<R>()->signature());        \
      fmeta.connect(boost::bind<void>(&detail::futureAdapter<R>, _1, res)); \
      return res.future();                                                  \
   }
@@ -637,7 +683,7 @@ namespace qi {
      BOOST_PP_REPEAT(n, pushi, _)                                                          \
      std::string sigret;                                                                   \
      qi::Promise<R> res(qi::FutureCallbackType_Sync);                                      \
-     qi::Future<AnyReference> fmeta = metaCall(methodName, params, MetaCallType_Queued);   \
+     qi::Future<AnyReference> fmeta = metaCall(methodName, params, MetaCallType_Queued, typeOf<R>()->signature());   \
      fmeta.connect(boost::bind<void>(&detail::futureAdapter<R>, _1, res));                 \
      return res.future();                                                                  \
   }
@@ -658,7 +704,7 @@ namespace qi {
      BOOST_PP_REPEAT(n, pushi, _)                                          \
      std::string sigret;                                                   \
      qi::Promise<R> res(qi::FutureCallbackType_Sync);                       \
-     qi::Future<AnyReference> fmeta = metaCall(methodName, params, callType);   \
+     qi::Future<AnyReference> fmeta = metaCall(methodName, params, callType, typeOf<R>()->signature());   \
      fmeta.connect(boost::bind<void>(&detail::futureAdapter<R>, _1, res));  \
      return res.future();                                                  \
   }
@@ -785,43 +831,20 @@ namespace qi {
         throw std::runtime_error((std::string)"Cannot assign non-object " + source.type()->infoString() + " to Object");
 
     }
-    typedef DefaultTypeImplMethods<detail::ManagedObjectPtr> Methods;
+    typedef DefaultTypeImplMethods<detail::ManagedObjectPtr, TypeByPointerPOD<detail::ManagedObjectPtr> > Methods;
     _QI_BOUNCE_TYPE_METHODS(Methods);
   };
 
-  // Pretend that Object<T> is exactly shared_ptr<GenericObject>
-  // Will be overriden for proxy objects below, for which this statement is false
-  // (because a proxy has members beside the shared_ptr: signals and events
+  /* Pretend that Object<T> is exactly shared_ptr<GenericObject>
+   * Which it is in terms of memory layout.
+   * But as a consequence, convert will happily create Object<T> for any T
+   * without checking it.
+   * Object<T> is handling this through the checkT() method.
+   */
   template<typename T> class QITYPE_API TypeImpl<Object<T> >: public TypeImpl<boost::shared_ptr<GenericObject> >
   {
   };
 
-  namespace detail
-  {
-    typedef std::map<TypeInfo, boost::function<AnyReference(AnyObject)> > ProxyGeneratorMap;
-    QITYPE_API ProxyGeneratorMap& proxyGeneratorMap();
-
-    template<typename Proxy>
-    AnyReference makeProxy(AnyObject ptr)
-    {
-      boost::shared_ptr<Proxy> sp(new Proxy(ptr));
-      return AnyReference::from(sp).clone();
-    }
-  }
-  template<typename Proxy, typename Interface>
-  bool registerProxyInterface()
-  {
-    detail::ProxyGeneratorMap& map = detail::proxyGeneratorMap();
-    map[typeOf<Interface>()->info()] = &detail::makeProxy<Proxy>;
-    return true;
-  }
-  template<typename Proxy>
-  bool registerProxy()
-  {
-    detail::ProxyGeneratorMap& map = detail::proxyGeneratorMap();
-    map[typeOf<Proxy>()->info()] = &detail::makeProxy<Proxy>;
-    return true;
-  }
 
   namespace detail
   {
@@ -836,38 +859,43 @@ namespace qi {
   }
 
 
-    /* A proxy instance can have members: signals and properties.
+  /* A proxy instance can have members: signals and properties, inherited from interface.
   * So it need a type of its own, we cannot pretend it's a AnyObject.
   */
   class TypeProxy: public ObjectTypeInterface
   {
   public:
-    TypeProxy()
+    /* We need a per-instance offset from effective type to Proxy.
+     * Avoid code explosion by putting it per-instance
+    */
+    typedef boost::function<Proxy*(void*)> ToProxy;
+    TypeProxy(ToProxy  toProxy)
+    : toProxy(toProxy)
     {
     }
     virtual const MetaObject& metaObject(void* instance)
     {
-      Proxy* ptr = static_cast<Proxy*>(instance);
+      Proxy* ptr = toProxy(instance);
       return ptr->asObject().metaObject();
     }
-    virtual qi::Future<AnyReference> metaCall(void* instance, AnyObject context, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto)
+    virtual qi::Future<AnyReference> metaCall(void* instance, AnyObject context, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType, Signature returnSignature)
     {
-      Proxy* ptr = static_cast<Proxy*>(instance);
-      return ptr->asObject().metaCall(method, params, callType);
+      Proxy* ptr = toProxy(instance);
+      return ptr->asObject().metaCall(method, params, callType, returnSignature);
     }
     virtual void metaPost(void* instance, AnyObject context, unsigned int signal, const GenericFunctionParameters& params)
     {
-      Proxy* ptr = static_cast<Proxy*>(instance);
+      Proxy* ptr = toProxy(instance);
       ptr->asObject().metaPost(signal, params);
     }
     virtual qi::Future<SignalLink> connect(void* instance, AnyObject context, unsigned int event, const SignalSubscriber& subscriber)
     {
-      Proxy* ptr = static_cast<Proxy*>(instance);
+      Proxy* ptr = toProxy(instance);
       return ptr->asObject().connect(event, subscriber);
     }
     virtual qi::Future<void> disconnect(void* instance, AnyObject context, SignalLink linkId)
     {
-       Proxy* ptr = static_cast<Proxy*>(instance);
+       Proxy* ptr = toProxy(instance);
        return ptr->asObject().disconnect(linkId);
     }
     virtual const std::vector<std::pair<TypeInterface*, int> >& parentTypes()
@@ -877,18 +905,94 @@ namespace qi {
     }
     virtual qi::Future<AnyValue> property(void* instance, unsigned int id)
     {
-      Proxy* ptr = static_cast<Proxy*>(instance);
+      Proxy* ptr = toProxy(instance);
       GenericObject* obj = ptr->asObject().asGenericObject();
       return obj->type->property(obj->value, id);
     }
     virtual qi::Future<void> setProperty(void* instance, unsigned int id, AnyValue value)
     {
-      Proxy* ptr = static_cast<Proxy*>(instance);
+      Proxy* ptr = toProxy(instance);
       GenericObject* obj = ptr->asObject().asGenericObject();
       return obj->type->setProperty(obj->value, id, value);
     }
-
+    typedef DefaultTypeImplMethods<Proxy> Methods;
+    _QI_BOUNCE_TYPE_METHODS(Methods);
+    ToProxy toProxy;
   };
+
+  /* We limit usage of per-class type for generated proxies
+   *to non-interface mode
+   * where it is needed.
+   */
+  template<typename T> struct TypeProxyWrapper: public TypeProxy
+  {
+    typedef boost::function<Proxy*(void*)> ToProxy;
+    TypeProxyWrapper(ToProxy  toProxy)
+    : TypeProxy(toProxy)
+    {
+    }
+    typedef DefaultTypeImplMethods<T> Methods;
+    _QI_BOUNCE_TYPE_METHODS(Methods);
+  };
+  // Needed for legacy code
+  //template<> struct TypeImpl<Proxy>: public TypeProxy {};
+
+    namespace detail
+  {
+    // FIXME: inline that in QI_REGISTER_PROXY_INTERFACE maybe
+    template<typename ProxyImpl> Proxy* static_proxy_cast(void* storage)
+    {
+      return static_cast<Proxy*>((ProxyImpl*)storage);
+    }
+    template<typename ProxyImpl>
+    TypeProxy* makeProxyInterfaceWrapper()
+    {
+      static TypeProxy * result = 0;
+      if (!result)
+        result = new TypeProxyWrapper<ProxyImpl>(&static_proxy_cast<ProxyImpl>);
+      return result;
+    }
+    template<typename ProxyImpl>
+    TypeProxy* makeProxyInterface()
+    {
+      static TypeProxy * result = 0;
+      if (!result)
+        result = new TypeProxy(&static_proxy_cast<ProxyImpl>);
+      return result;
+    }
+
+    template<typename ProxyImpl>
+    AnyReference makeProxy(AnyObject ptr)
+    {
+      boost::shared_ptr<ProxyImpl> sp(new ProxyImpl(ptr));
+      return AnyReference::from(sp).clone();
+    }
+  }
+  template<typename Proxy, typename Interface>
+  bool registerProxyInterface()
+  {
+    qiLogVerbose("qitype.type") << "ProxyInterface registration " << typeOf<Interface>()->infoString();
+    // Runtime-register TypeInterface for Proxy, using ProxyInterface with
+    // proper static_cast (from Proxy template to qi::Proxy) helper.
+    registerType(typeid(Proxy), detail::makeProxyInterface<Proxy>());
+    detail::ProxyGeneratorMap& map = detail::proxyGeneratorMap();
+    map[typeOf<Interface>()->info()] = &detail::makeProxy<Proxy>;
+    return true;
+  }
+  template<typename ProxyType>
+  bool registerProxy()
+  {
+    /* In non-interface mode, we need one different registered type
+     * per Proxy class, otherwise they will all land in the same
+     * bucket of proxyGeneratorMap.
+     * In interface mode this problem is absent because the TypeInfo
+     * of the interface is used (not the one of the proxy).
+    */
+    registerType(typeid(ProxyType), detail::makeProxyInterfaceWrapper<ProxyType>());
+    detail::ProxyGeneratorMap& map = detail::proxyGeneratorMap();
+    map[typeOf<ProxyType>()->info()] = &detail::makeProxy<ProxyType>;
+    return true;
+  }
 
   namespace detail
   {
@@ -912,6 +1016,7 @@ namespace qi {
 
   inline AnyObject Proxy::asObject() const
   {
+    qiLogDebug("qitype.proxy") << "asObject " << this << ' ' << &_obj.asT();
     return AnyObject(_obj);
   }
 }
@@ -937,4 +1042,5 @@ QI_TYPE_STRUCT_AGREGATE_CONSTRUCTOR(qi::EventTrace,
   ("callerContext", callerContext),
   ("calleeContext", calleeContext));
 QI_TYPE_STRUCT(qi::os::timeval, tv_sec, tv_usec);
+
 #endif  // _QITYPE_DETAILS_GENERICOBJECT_HXX_

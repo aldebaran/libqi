@@ -42,6 +42,7 @@ namespace qi
   template<typename T>
   void PropertyImpl<T>::set(const T& v)
   {
+    qiLogDebug("qitype.property") << "set " << this << " " << (!!_setter);
     if (_setter)
     {
       bool ok = _setter(_value, v);

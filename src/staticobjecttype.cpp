@@ -28,13 +28,32 @@ StaticObjectTypeBase::metaObject(void* )
 qi::Future<AnyReference>
 StaticObjectTypeBase::metaCall(void* instance, AnyObject context, unsigned int methodId,
                                const GenericFunctionParameters& params,
-                               MetaCallType callType)
+                               MetaCallType callType, Signature returnSignature)
 {
   ObjectTypeData::MethodMap::iterator i;
   i = _data.methodMap.find(methodId);
   if (i == _data.methodMap.end())
   {
     return qi::makeFutureError<AnyReference>("No such method");
+  }
+
+  if (returnSignature.isValid())
+  {
+    const MetaMethod *mm = metaObject(instance).method(methodId);
+    if (!mm)
+      return makeFutureError<AnyReference>("Unexpected error: MetaMethod not found");
+    if (mm->returnSignature().isConvertibleTo(returnSignature) == 0)
+    {
+      if (returnSignature.isConvertibleTo(mm->returnSignature())==0)
+        return makeFutureError<AnyReference>(
+          "Call error: will not be able to convert return type from "
+          + mm->returnSignature().toString()
+          + " to " + returnSignature.toString());
+      else
+       qiLogWarning() << "Return signature might be incorrect depending on the value, from "
+          + mm->returnSignature().toString()
+          + " to " + returnSignature.toString();
+    }
   }
 
   EventLoop* el = context.eventLoop();
@@ -117,7 +136,7 @@ void StaticObjectTypeBase::metaPost(void* instance, AnyObject context, unsigned 
   }
   else
   { // try method
-    qi::Future<AnyReference> fut = metaCall(instance, context, signal, params, MetaCallType_Queued);
+    qi::Future<AnyReference> fut = metaCall(instance, context, signal, params, MetaCallType_Queued, Signature());
     fut.connect(&reportError);
   }
 }

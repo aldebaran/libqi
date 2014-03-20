@@ -66,11 +66,6 @@ namespace qi
 
   DynamicObjectPrivate::~DynamicObjectPrivate()
   {
-    for (SignalMap::iterator it = signalMap.begin(); it!= signalMap.end(); ++it)
-    {
-      if (it->first >= Manageable::endId)
-        delete it->second;
-    }
     //properties are also in signals, do not delete
   }
 
@@ -101,7 +96,7 @@ namespace qi
   public:
     DynamicObjectTypeInterface() {}
     virtual const MetaObject& metaObject(void* instance);
-    virtual qi::Future<AnyReference> metaCall(void* instance, AnyObject context, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto);
+    virtual qi::Future<AnyReference> metaCall(void* instance, AnyObject context, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType, Signature returnSignature);
     virtual void metaPost(void* instance, AnyObject context, unsigned int signal, const GenericFunctionParameters& params);
     virtual qi::Future<SignalLink> connect(void* instance, AnyObject context, unsigned int event, const SignalSubscriber& subscriber);
     /// Disconnect an event link. Returns if disconnection was successful.
@@ -149,7 +144,7 @@ namespace qi
 
   void DynamicObject::setSignal(unsigned int id, SignalBase* signal)
   {
-    _p->signalMap[id] = new SignalBase(*signal);
+    _p->signalMap[id] = signal;
   }
 
 
@@ -205,7 +200,7 @@ namespace qi
       return i->second;
   }
 
-  qi::Future<AnyReference> DynamicObject::metaCall(AnyObject context, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType)
+  qi::Future<AnyReference> DynamicObject::metaCall(AnyObject context, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType, Signature returnSignature)
   {
     DynamicObjectPrivate::MethodMap::iterator i = _p->methodMap.find(method);
     if (i == _p->methodMap.end())
@@ -213,6 +208,24 @@ namespace qi
       std::stringstream ss;
       ss << "Can't find methodID: " << method;
       return qi::makeFutureError<AnyReference>(ss.str());
+    }
+    if (returnSignature.isValid())
+    {
+      MetaMethod *mm = metaObject().method(method);
+      if (!mm)
+        return makeFutureError<AnyReference>("Unexpected error: MetaMethod not found");
+      if (mm->returnSignature().isConvertibleTo(returnSignature) == 0)
+      {
+        if (returnSignature.isConvertibleTo(mm->returnSignature())==0)
+          return makeFutureError<AnyReference>(
+            "Call error: will not be able to convert return type from "
+            + mm->returnSignature().toString()
+            + " to " + returnSignature.toString());
+        else
+         qiLogWarning() << "Return signature might be incorrect depending on the value, from "
+            + mm->returnSignature().toString()
+            + " to " + returnSignature.toString();
+      }
     }
     Manageable* m = static_cast<Manageable*>(context.asGenericObject());
     GenericFunctionParameters p;
@@ -337,13 +350,38 @@ namespace qi
   }
   namespace {
 
+    static bool traceValidateSignature(const Signature& s)
+    {
+      // Refuse to trace unknown (not serializable), object (too expensive), raw (possibly big)
+      if (s.type() == Signature::Type_Unknown
+          || s.type() == Signature::Type_Object
+          || s.type() == Signature::Type_Raw
+          || s.type() == Signature::Type_Pointer)
+        return false;
+      const SignatureVector& c = s.children();
+      //return std::all_of(c.begin(), c.end(), traceValidateSignature);
+      for (unsigned i=0; i<c.size(); ++i)
+        if (!traceValidateSignature(c[i]))
+          return false;
+      return true;
+    }
+
+    // validate v for transmission to a trace signal
+    static const AnyValue& traceValidateValue(const AnyValue& v)
+    {
+      static AnyValue fallback = AnyValue(AnyReference::from("**UNSERIALIZABLE**"));
+      Signature s = v.signature(true);
+      return traceValidateSignature(s)? v:fallback;
+    }
+
     inline void call(qi::Promise<AnyReference>& out,
                       AnyObject context,
                       bool lock,
                       const GenericFunctionParameters& params,
                       unsigned int methodId,
                       AnyFunction& func,
-                      unsigned int callerContext
+                      unsigned int callerContext,
+                      qi::os::timeval postTimestamp
                       )
     {
       bool stats = context && context.isStatsEnabled();
@@ -380,8 +418,8 @@ namespace qi
           }
         }
         context.asGenericObject()->traceObject(EventTrace(
-          tid, EventTrace::Event_Call, methodId, AnyValue::from(args), tv,
-          0,0, callerContext, qi::os::gettid()));
+          tid, EventTrace::Event_Call, methodId, traceValidateValue(AnyValue::from(args)), tv,
+          0,0, callerContext, qi::os::gettid(), postTimestamp));
       }
 
       qi::int64_t time = stats?qi::os::ustime():0;
@@ -440,7 +478,7 @@ namespace qi
           val = AnyValue::from(out.future().error());
         context.asGenericObject()->traceObject(EventTrace(tid,
           success?EventTrace::Event_Result:EventTrace::Event_Error,
-          methodId, val, tv, cpuendtime.first, cpuendtime.second, callerContext, qi::os::gettid()));
+          methodId, traceValidateValue(val), tv, cpuendtime.first, cpuendtime.second, callerContext, qi::os::gettid(), postTimestamp));
       }
     }
   }
@@ -450,7 +488,7 @@ namespace qi
   public:
     MFunctorCall(AnyFunction& func, GenericFunctionParameters& params,
        qi::Promise<AnyReference>* out, bool noCloneFirst,
-       AnyObject context, unsigned int methodId, bool lock, unsigned int callerId)
+       AnyObject context, unsigned int methodId, bool lock, unsigned int callerId, qi::os::timeval postTimestamp)
     : noCloneFirst(noCloneFirst)
     {
       this->out = out;
@@ -461,6 +499,7 @@ namespace qi
       std::swap(this->func, func);
       std::swap((AnyReferenceVector&) params,
         (AnyReferenceVector&) this->params);
+      this->postTimestamp = postTimestamp;
     }
     MFunctorCall(const MFunctorCall& b)
     {
@@ -478,10 +517,11 @@ namespace qi
       this->out = b.out;
       noCloneFirst = b.noCloneFirst;
       callerId = b.callerId;
+      this->postTimestamp = b.postTimestamp;
     }
     void operator()()
     {
-      call(*out, context, lock, params, methodId, func, callerId);
+      call(*out, context, lock, params, methodId, func, callerId, postTimestamp);
       params.destroy(noCloneFirst);
       delete out;
     }
@@ -493,6 +533,7 @@ namespace qi
     bool lock;
     unsigned int methodId;
     unsigned int callerId;
+    qi::os::timeval postTimestamp;
   };
 
   qi::Future<AnyReference> metaCall(EventLoop* el,
@@ -502,7 +543,8 @@ namespace qi
     AnyObject context,
     unsigned int methodId,
     AnyFunction func, const GenericFunctionParameters& params, bool noCloneFirst,
-    unsigned int callerId)
+    unsigned int callerId,
+    qi::os::timeval postTimestamp)
   {
     // Implement rules described in header
     bool sync = true;
@@ -522,7 +564,7 @@ namespace qi
     if (sync)
     {
       qi::Promise<AnyReference> out(FutureCallbackType_Sync);
-      call(out, context, doLock, params, methodId, func, callerId?callerId:qi::os::gettid());
+      call(out, context, doLock, params, methodId, func, callerId?callerId:qi::os::gettid(), postTimestamp);
       return out.future();
     }
     else
@@ -533,7 +575,9 @@ namespace qi
         elForced?FutureCallbackType_Async:FutureCallbackType_Sync);
       GenericFunctionParameters pCopy = params.copy(noCloneFirst);
       qi::Future<AnyReference> result = out->future();
-      el->post(MFunctorCall(func, pCopy, out, noCloneFirst, context, methodId, doLock, callerId?callerId:qi::os::gettid()));
+      qi::os::timeval t;
+      qi::os::gettimeofday(&t);
+      el->post(MFunctorCall(func, pCopy, out, noCloneFirst, context, methodId, doLock, callerId?callerId:qi::os::gettid(), t));
       return result;
     }
   }
@@ -545,10 +589,10 @@ namespace qi
     return reinterpret_cast<DynamicObject*>(instance)->metaObject();
   }
 
-  qi::Future<AnyReference> DynamicObjectTypeInterface::metaCall(void* instance, AnyObject context, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType)
+  qi::Future<AnyReference> DynamicObjectTypeInterface::metaCall(void* instance, AnyObject context, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType, Signature returnSignature)
   {
     return reinterpret_cast<DynamicObject*>(instance)
-      ->metaCall(context, method, params, callType);
+      ->metaCall(context, method, params, callType, returnSignature);
   }
 
   void DynamicObjectTypeInterface::metaPost(void* instance, AnyObject context, unsigned int signal, const GenericFunctionParameters& params)

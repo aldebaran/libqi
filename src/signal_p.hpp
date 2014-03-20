@@ -14,17 +14,25 @@
 namespace qi {
 
   typedef std::map<SignalLink, SignalSubscriberPtr> SignalSubscriberMap;
+  typedef std::map<int, SignalLink> TrackMap;
 
   class SignalBasePrivate
   {
   public:
-    SignalBasePrivate(): defaultCallType(MetaCallType_Auto) {}
+    SignalBasePrivate()
+      : defaultCallType(MetaCallType_Auto)
+    {}
+
+    ~SignalBasePrivate();
     bool disconnect(const SignalLink& l);
+    bool disconnectTrackLink(const SignalLink& l);
     bool reset();
 
   public:
     SignalBase::OnSubscribers      onSubscribers;
     SignalSubscriberMap            subscriberMap;
+    TrackMap                       trackMap;
+    qi::Atomic<int>                trackId;
     qi::Signature                  signature;
     boost::recursive_mutex         mutex;
     MetaCallType                   defaultCallType;

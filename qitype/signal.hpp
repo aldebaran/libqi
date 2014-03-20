@@ -35,15 +35,14 @@ namespace qi {
 
   typedef qi::uint64_t SignalLink;
 
-  class QITYPE_API SignalBase
+  //Signal are not copyable, they belong to a class.
+  class QITYPE_API SignalBase: boost::noncopyable
   {
   public:
     typedef boost::function<void(bool)> OnSubscribers;
     explicit SignalBase(const Signature &signature, OnSubscribers onSubscribers = OnSubscribers());
     SignalBase(OnSubscribers onSubscribers=OnSubscribers());
     virtual ~SignalBase();
-    SignalBase(const SignalBase& b);
-    SignalBase& operator = (const SignalBase& b);
     virtual qi::Signature signature() const;
     template<typename F>
     SignalSubscriber& connect(const boost::function<F>& func);
@@ -64,7 +63,7 @@ namespace qi {
     *        Used in combination with each subscriber's MetaCallType to
     *        chose between synchronous and asynchronous call.
     *        The combination rule is to honor subscriber's override, then \p callType,
-    *        and default to asynchronous
+    *        then signal's callType and default to asynchronous
     */
     virtual void trigger(const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto);
     /// Set the MetaCallType used by operator()().
@@ -89,6 +88,8 @@ namespace qi {
     void setTriggerOverride(Trigger trigger);
     void setOnSubscribers(OnSubscribers onSubscribers);
     void callOnSubscribe(bool v);
+    void createNewTrackLink(int& id, SignalLink*& trackLink);
+    void disconnectTrackLink(int id);
   public:
     void _setSignature(const Signature &s);
     // C4251
@@ -111,8 +112,6 @@ template<QI_SIGNAL_TEMPLATE_DECL> class Signal;
      * Will not be called when destructor is invoked and all subscribers are removed
     */
     SignalF(OnSubscribers onSubscribers = OnSubscribers());
-    SignalF(const SignalF<T>& b);
-    SignalF<T>& operator = (const SignalF<T>& b);
     typedef T FunctionType;
     virtual qi::Signature signature() const;
     using boost::function<T>::operator();
@@ -147,11 +146,8 @@ template<QI_SIGNAL_TEMPLATE_DECL> class Signal;
    template<QI_SIGNAL_TEMPLATE_DECL> SignalSubscriber&  connect(Signal<QI_SIGNAL_TEMPLATE>& signal);
 
    #define genConnect(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma) \
-   template<typename F, typename P comma ATYPEDECL>            \
-   SignalSubscriber& connect(F func, P p comma ADECL)         \
-   {                                                            \
-     return connect(::qi::bind<T>(func, p comma AUSE));         \
-   }
+     template<typename F, typename P comma ATYPEDECL>           \
+     SignalSubscriber& connect(F func, P p comma ADECL);
    QI_GEN(genConnect)
    #undef genConnect
 
@@ -236,6 +232,10 @@ template<
    {
      return linkId;
    }
+   /** Try to extract exact signature of this subscriber.
+   * @return the signature, or an invalid signature if extraction is impossible
+   */
+   Signature signature() const;
  public:
    // Source information
    SignalBase* source;

@@ -59,7 +59,8 @@ namespace qi
       T* ptr = (T*)ptrFromStorage(storage);
       *ptr = T((typename T::element_type*)pointer);
     }
-     _QI_BOUNCE_TYPE_METHODS(DefaultTypeImplMethods<T>);
+    typedef DefaultTypeImplMethods<T, TypeByPointerPOD<T> > Impl;
+     _QI_BOUNCE_TYPE_METHODS(Impl);
   };
 
   template<typename T> class TypeImpl<boost::shared_ptr<T> >: public TypeSharedPointerImpl<boost::shared_ptr<T> >{};

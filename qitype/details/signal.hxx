@@ -14,7 +14,22 @@
 
 namespace qi
 {
-
+  #define genConnect(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)          \
+    template<typename T>                                                \
+    template<typename F, typename P comma ATYPEDECL>                    \
+    SignalSubscriber& SignalF<T>::connect(F func, P p comma ADECL)      \
+    {                                                                   \
+      int curId;                                                        \
+      SignalLink* trackLink;                                            \
+      createNewTrackLink(curId, trackLink);                             \
+      SignalSubscriber& s = connect(::qi::bindWithFallback<T>(          \
+            boost::bind(&SignalF<T>::disconnectTrackLink, this, curId), \
+            func, p comma AUSE));                                       \
+      *trackLink = s;                                                   \
+      return s;                                                         \
+    }
+  QI_GEN(genConnect)
+  #undef genConnect
 
   template<typename T>
   SignalSubscriber& SignalF<T>::connect(AnyFunction f)
@@ -30,9 +45,15 @@ namespace qi
   template<typename U>
   SignalSubscriber&  SignalF<T>::connect(SignalF<U>& signal)
   {
-    return connect(qi::track(
-      (boost::function<U>&)signal,
-      boost::weak_ptr<SignalBasePrivate>(signal._p)));
+    int curId;
+    SignalLink* trackLink;
+    createNewTrackLink(curId, trackLink);
+    SignalSubscriber& s = connect(qi::trackWithFallback(
+          boost::bind(&SignalF<T>::disconnectTrackLink, this, curId),
+          (boost::function<U>&)signal,
+          boost::weak_ptr<SignalBasePrivate>(signal._p)));
+    *trackLink = s;
+    return s;
   }
 
   template<typename T>
@@ -40,9 +61,15 @@ namespace qi
   SignalSubscriber&  SignalF<T>::connect(Signal<QI_SIGNAL_TEMPLATE>& signal)
   {
     typedef typename detail::VoidFunctionType<QI_SIGNAL_TEMPLATE>::type ftype;
-    return connect(qi::track(
-      (boost::function<ftype>&)signal,
-      boost::weak_ptr<SignalBasePrivate>(signal._p)));
+    int curId;
+    SignalLink* trackLink;
+    createNewTrackLink(curId, trackLink);
+    SignalSubscriber& s = connect(qi::trackWithFallback(
+          boost::bind(&SignalF<T>::disconnectTrackLink, this, curId),
+          (boost::function<ftype>&)signal,
+          boost::weak_ptr<SignalBasePrivate>(signal._p)));
+    *trackLink = s;
+    return s;
   }
 
   template<typename T>
@@ -114,18 +141,6 @@ namespace qi
     _setSignature(detail::functionArgumentsSignature<T>());
   }
 
-  template<typename T>
-  SignalF<T>& SignalF<T>::operator = (const SignalF<T>& b)
-  { // Keep our boost::function as is.
-    *(SignalBase*)this = b;
-    return *this;
-  }
-
-  template<typename T>
-  SignalF<T>::SignalF(const SignalF<T>& b)
-  {
-    * (boost::function<T>*)this = detail::BounceToSignalBase<T>(*this);
-  }
 
   template<typename T>
   qi::Signature SignalF<T>::signature() const

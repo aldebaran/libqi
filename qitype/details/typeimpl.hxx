@@ -20,63 +20,102 @@ namespace qi
     /// Report a type operation failure
     void QITYPE_API typeFail(const char* typeName, const char* operation);
 
-    /** Methods to construct, destroy, and copy values of a given type.
-  */
-    template<typename T>
-    struct TypeManagerDefault
+    /* Handle creation (create, createInPlace), copy (copy, clone, cloneInPlace), and
+    *  destruction(destroy) of a given type.
+    *  There is currently no portable way to detect if a given class has
+    *  accesible constructor, destructor and/or copy operators.
+    *  So we provide a reasonable default behavior (through our class/struct
+    *  registration macros) and rely on the user to call the appropriate
+    *  QI_TYPE_NOT_* macro to override.
+    */
+    template<typename T, bool b>
+    struct TypeTraitCreate
     {
       static void* create() { return new T();}
       static void createInPlace(void* ptr) { new(ptr)T();}
-      static void copy(void* dst, const void* src) { *(T*)dst = *(const T*)src;}
-      static void destroy(void* ptr) { delete (T*)ptr;}
-      static void* clone(void* src) { return new T(*(T*)src);}
-      static void cloneInPlace(void* ptr, void* src) { new (ptr)T(*(T*)src);}
     };
-
     template<typename T>
-    struct TypeManagerDefault<const T>: public TypeManagerDefault<T>
-    {};
-
-    template<typename T>
-    struct TypeManagerNonDefaultConstructible
+    struct TypeTraitCreate<T, false>
     {
       static void* create() { typeFail(typeid(T).name(), "default constructor"); return 0;}
       static void createInPlace(void* ptr) {typeFail(typeid( T).name(), "default constructor");}
+    };
+    template<typename T, bool b>
+    struct TypeTraitCopy
+    {
       static void copy(void* dst, const void* src) { *(T*)dst = *(const T*)src;}
-      static void destroy(void* ptr) { delete (T*)ptr;}
       static void* clone(void* src) { return new T(*(T*)src);}
       static void cloneInPlace(void* ptr, void* src) { new (ptr)T(*(T*)src);}
     };
-
     template<typename T>
-    struct TypeManagerNull
+    struct TypeTraitCopy<T, false>
     {
-      static void* create() { typeFail(typeid(T).name(), "default constructor"); return 0;}
-      static void createInPlace(void* ptr) {typeFail(typeid(T).name(), "default constructor"); }
       template<typename T1, typename T2>
       static void copy(const T1& d, const T2&s) {typeFail(typeid(T).name(), "copy operator");}
-      template<typename U>
-      static void destroy(const U& ptr) {typeFail(typeid(T).name(), "destructor");}
       static void* clone(void* src) { typeFail(typeid(T).name(), "clone"); return 0;}
       static void cloneInPlace(void* ptr, void* src) { typeFail(typeid(T).name(), "clone");}
     };
+    template<typename T, bool b>
+    struct TypeTraitDestroy
+    {
+      static void destroy(void* ptr) { delete (T*)ptr;}
+    };
+    template<typename T>
+    struct TypeTraitDestroy<T, false>
+    {
+      template<typename U>
+      static void destroy(const U& ptr) {typeFail(typeid(T).name(), "destructor");}
+    };
 
-    // TypeManager is accessed by this interface. By default, everything is
-    // constructible and copyable except functions or things detected by IsClonable
+    /* Use a two-stage override mechanism.
+     * That way if a user uses our macro that specializes
+     * TypeManager on one of the versions below, she can still
+     * specializes the appropriate TypeManagerDefault{Struct,Class}.
+     */
+    template<typename T>
+    struct TypeManagerDefaultStruct
+      : public TypeTraitCreate<T, true>
+      , public TypeTraitCopy<T, true>
+      , public TypeTraitDestroy<T, true>
+    {};
+    template<typename T>
+    struct TypeManagerDefaultInterface
+      : public TypeTraitCreate<T, false>
+      , public TypeTraitCopy<T, false>
+      , public TypeTraitDestroy<T, true>
+    {};
+    template<typename T>
+    struct TypeManagerNull
+    : public TypeTraitCreate<T, false>
+    , public TypeTraitCopy<T, false>
+    , public TypeTraitDestroy<T, false>
+    {};
+    template<typename T>
+    struct TypeManagerNotConstructible // not constructible but copyable
+    : public TypeTraitCreate<T, false>
+    , public TypeTraitCopy<T, true>
+    , public TypeTraitDestroy<T, true>
+    {};
+
+
+    // TypeManager is accessed by this interface.
+    // Only things for which we are sure are marked constructible and clonable
     template<typename T>
     struct TypeManager
         : public boost::mpl::if_c<
         boost::is_function<T>::value,
-        TypeManagerNull<T>,
-        typename boost::mpl::if_c< ::qi::IsClonable<T>::value,
-        TypeManagerDefault<T>,
-        TypeManagerNull<T> >::type>::type
-    {};
+          TypeManagerNull<T>,
+          typename boost::mpl::if_c< boost::is_pod<T>::value,
+                 TypeManagerDefaultStruct<T>,
+                 TypeManagerDefaultInterface<T> >
+          ::type>::type {};
 
     // Except for boost::function which matches is_function and is copyable
     template<typename T>
-    struct TypeManager<boost::function<T> >: public TypeManagerDefault<boost::function<T> >
+    struct TypeManager<boost::function<T> >: public TypeManagerDefaultStruct<boost::function<T> >
     {};
+    template<typename T>
+    struct TypeManager<const T>: public TypeManager<T>{};
 
   }
 
@@ -86,7 +125,7 @@ namespace qi
  * to generate the virtual bouncers.
  */
   /// Access API that stores a T* in storage
-  template <typename T>
+  template <typename T, typename Manager=detail::TypeManager<T> >
   class TypeByPointer
   {
   public:
@@ -103,19 +142,19 @@ namespace qi
       // If T is not clonable (no copy constructor or operator=)
       // add QI_TYPE_NOT_CLONABLE(T) next to the declaration of T
       // in your code.
-      void* res = detail::TypeManager<T>::create();
+      void* res = Manager::create();
       if (!res)
         qiLogError("qitype.bypointer") << "initializeStorage error on " << typeid(T).name();
       return res;
     }
     static void* clone(void* src)
     {
-      return detail::TypeManager<T>::clone(src);
+      return Manager::clone(src);
     }
     static void destroy(void* src)
     {
       T* ptr = (T*)ptrFromStorage(&src);
-      detail::TypeManager<type>::destroy(ptr);
+      Manager::destroy(ptr);
     }
   };
 
@@ -123,8 +162,13 @@ namespace qi
   template <typename T>
   class TypeByPointer<const T>: public TypeByPointer<T>
   {};
-
+  // Helper to mark POD-like
+  template <typename T>
+  class TypeByPointerPOD: public TypeByPointer<T, detail::TypeManagerDefaultStruct<T> >{};
   /// Access api that stores a T in storage
+  /* No longuer used since we have an in-place modification
+  * of AnyReference, as by-value storage would break reference semantic
+  */
   template <typename T>
   class TypeByValue
   {

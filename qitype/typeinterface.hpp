@@ -41,17 +41,23 @@ namespace qi{
   /// \warning Be careful to put the declaration outside any namespaces.
   #define QI_TYPE_NOT_CONSTRUCTIBLE(T) \
     namespace qi { namespace detail {  \
-    template<> struct TypeManager<T>: public TypeManagerNonDefaultConstructible<T> {};}}
+    template<> struct TypeManager<T>: public TypeManagerNotConstructible<T> {};}}
 
   /// Declare that a type has no metatype and cannot be used in a Value
   /// \warning Be careful to put the declaration outside any namespaces.
   #define QI_NO_TYPE(T) namespace qi {template<> class TypeImpl<T>: public detail::ForbiddenInTypeSystem {};}
 
-  /// Declare that a type has no accessible copy constructor
+  /// Declare that a type has no accessible constructor
   /// \warning Be careful to put the declaration outside any namespaces.
-  #define QI_TYPE_NOT_CLONABLE(T)     \
+  #define QI_TYPE_INTERFACE(T)     \
     namespace qi { namespace detail { \
-    template<> struct TypeManager<T>: public TypeManagerNull<T> {};}}
+    template<> struct TypeManager<T>: public TypeManagerDefaultInterface<T> {};}}
+
+  /// Declare that a type can be constructed and copied
+  /// \warning Be careful to put the declaration outside any namespaces.
+  #define QI_TYPE_CONCRETE(T)     \
+    namespace qi { namespace detail { \
+    template<> struct TypeManager<T>: public TypeManagerDefaultStruct<T> {}; }}
 
   /// Register TypeImpl<t> in runtime type factory for 't'. Must be called from a .cpp file
   /// \warning Be careful to put the declaration outside any namespaces.
@@ -120,9 +126,9 @@ namespace qi{
   class QITYPE_API RawTypeInterface: public TypeInterface
   {
   public:
-    /// Get the buffer of data (not a copy)
+    /// Get the buffer of data (not a copy)
     virtual std::pair<char*, size_t> get(void* storage) = 0;
-    /// Set the buffer of data (buffer is copied)
+    /// Set the buffer of data (buffer is copied)
     virtual void set(void** storage, const char* ptr, size_t sz) = 0;
     virtual TypeKind kind() { return TypeKind_Raw; }
   };
@@ -255,6 +261,32 @@ namespace qi{
     virtual std::vector<std::string> elementsName() { return std::vector<std::string>();}
     /// Get the type name of the struct
     virtual std::string className() { return std::string(); }
+
+    /** @{
+    *
+    *  Versioning support.
+    *
+    * Conversion between non-equivalent structs will be attempted if all
+    * fields are named: fields with matching names will be automatically mapped
+    * to each other.
+    * canDropFields() will be called on the source to ask
+    * if fields given as argument can be dropped (because they do not exist
+    * on the target).
+    *
+    * fillMissingFields(fields, missing) will be called on the target,
+    * with a map of
+    * fields that were converted, and the list of missing field names.
+    * The function must fill fields with a value for each of the missing fields,
+    * or return false (no storage is provided, because the struct cant be
+    * instanciated without a value for all fields being available.
+    */
+
+    /// Return whether struct accepts field-name-based conversion that drops \p fieldNames.
+    virtual bool canDropFields(void* storage, const std::vector<std::string>& fieldNames) { return false;}
+    /// Fill missing fields caused by conversion from a different struct. Return whether fill succeeded.
+    virtual bool fillMissingFields(std::map<std::string, AnyValue>& fields, const std::vector<std::string>& missing) { return false;}
+
+    /// @}
   };
 
   /**
@@ -271,6 +303,17 @@ namespace qi{
     virtual void set(void** storage, AnyReference source) = 0;
     virtual TypeKind kind() { return TypeKind_Dynamic; }
   };
+
+  ///@return a Type of the specified Kind. This do not work for list, map and tuple.
+  /// kind Int and Float will create the biggest possible type. use makeFloatType and makeIntType
+  /// to be more specific.
+  QITYPE_API TypeInterface* makeTypeOfKind(const qi::TypeKind& kind);
+
+  ///@return a Type of kind float, bytelen can be 4 or 8
+  QITYPE_API TypeInterface* makeFloatType(int bytelen);
+
+  ///@return a Type of kind int, bytelen can be 0,1,2,4,8
+  QITYPE_API TypeInterface* makeIntType(bool issigned, int bytelen);
 
   ///@return a Type of kind List that can contains elements of type elementType.
   QITYPE_API TypeInterface* makeListType(TypeInterface* elementType);

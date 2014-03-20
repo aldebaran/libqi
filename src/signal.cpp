@@ -331,6 +331,33 @@ namespace qi {
     return connect(SignalSubscriber(o, slot));
   }
 
+  Signature SignalSubscriber::signature() const
+  {
+    if (handler)
+    {
+      if (handler.functionType() == dynamicFunctionTypeInterface())
+        return Signature(); // no arity checking is possible
+      else
+        return handler.parametersSignature();
+    }
+    else if (target)
+    {
+      AnyObject locked = target->lock();
+      if (!locked)
+        return Signature();
+      const MetaMethod* ms = locked.metaObject().method(method);
+      if (!ms)
+      {
+        qiLogWarning() << "Method " << method <<" not found.";
+        return Signature();
+      }
+      else
+        return ms->parametersSignature();
+    }
+    else
+      return Signature();
+  }
+
   SignalSubscriber& SignalBase::connect(const SignalSubscriber& src)
   {
     qiLogDebug() << (void*)this << " connecting new subscriber";
@@ -341,50 +368,28 @@ namespace qi {
     // Check arity. Does not require to acquire weakLock.
     int sigArity = signature().children().size();
     int subArity = -1;
-    Signature subSignature;
+    Signature subSignature = src.signature();
+    if (subSignature.isValid())
+      subArity = subSignature.children().size();
 
-    if (signature() == "m")
-      goto proceed; // no check possible
-
-    if (src.handler)
+    if (signature() != "m" && subSignature.isValid())
     {
-      if (src.handler.functionType() == dynamicFunctionTypeInterface())
-        goto proceed; // no arity checking is possible
-      subArity = src.handler.argumentsType().size();
-      subSignature = src.handler.parametersSignature();
-    }
-    else if (src.target)
-    {
-      AnyObject locked = src.target->lock();
-      if (!locked)
-        throw std::runtime_error("Target object cannot be locked");
-      const MetaMethod* ms = locked.metaObject().method(src.method);
-      if (!ms)
+      if (sigArity != subArity)
       {
-        qiLogWarning() << "Method " << src.method <<" not found, proceeding anyway";
-        goto proceed;
+        std::stringstream s;
+        s << "Subscriber has incorrect arity (expected "
+          << sigArity << " , got " << subArity << ")";
+        throw std::runtime_error(s.str());
       }
-      else
+      if (!signature().isConvertibleTo(subSignature))
       {
-        subSignature = ms->parametersSignature();
-        subArity = subSignature.children().size();
+        std::stringstream s;
+        s << "Subscriber is not compatible to signal : "
+          << signature().toString() << " vs " << subSignature.toString();
+        throw std::runtime_error(s.str());
       }
     }
-    if (sigArity != subArity)
-    {
-      std::stringstream s;
-      s << "Subscriber has incorrect arity (expected "
-        << sigArity  << " , got " << subArity <<")";
-      throw std::runtime_error(s.str());
-    }
-    if (!signature().isConvertibleTo(subSignature))
-    {
-      std::stringstream s;
-      s << "Subscriber is not compatible to signal : "
-        << signature().toString() << " vs " << subSignature.toString();
-      throw std::runtime_error(s.str());
-    }
-  proceed:
+
     boost::recursive_mutex::scoped_lock sl(_p->mutex);
     SignalLink res = ++linkUid;
     SignalSubscriberPtr s = boost::make_shared<SignalSubscriber>(src);
@@ -395,6 +400,25 @@ namespace qi {
     if (first && _p->onSubscribers)
       _p->onSubscribers(true);
     return *s.get();
+  }
+
+  void SignalBase::createNewTrackLink(int& id, SignalLink*& pLink)
+  {
+    id = ++_p->trackId;
+    {
+      boost::recursive_mutex::scoped_lock l(_p->mutex);
+      pLink = &_p->trackMap[id];
+    }
+  }
+
+  void SignalBase::disconnectTrackLink(int id) {
+    boost::recursive_mutex::scoped_lock sl(_p->mutex);
+    TrackMap::iterator it = _p->trackMap.find(id);
+    if (it == _p->trackMap.end())
+      return;
+
+    _p->subscriberMap.erase(it->second);
+    _p->trackMap.erase(it);
   }
 
   bool SignalBase::disconnectAll() {
@@ -419,20 +443,6 @@ namespace qi {
     _p->onSubscribers = onSubscribers;
   }
 
-  SignalBase::SignalBase(const SignalBase& b)
-  {
-    (*this) = b;
-  }
-
-  SignalBase& SignalBase::operator=(const SignalBase& b)
-  {
-    if (!b._p)
-    {
-      const_cast<SignalBase&>(b)._p = boost::make_shared<SignalBasePrivate>();
-    }
-    _p = b._p;
-    return *this;
-  }
 
   qi::Signature SignalBase::signature() const
   {
@@ -488,19 +498,19 @@ namespace qi {
 
   SignalBase::~SignalBase()
   {
-    if (!_p)
-      return;
-    _p->onSubscribers = OnSubscribers();
-    boost::shared_ptr<SignalBasePrivate> p(_p);
-    _p.reset();
+  }
+
+  SignalBasePrivate::~SignalBasePrivate()
+  {
+    onSubscribers = SignalBase::OnSubscribers();
     std::vector<SignalLink> links;
-    for (SignalSubscriberMap::iterator i = p->subscriberMap.begin();
-        i != p->subscriberMap.end(); ++i)
+    for (SignalSubscriberMap::iterator i = subscriberMap.begin();
+        i != subscriberMap.end(); ++i)
     {
       links.push_back(i->first);
     }
     for (unsigned i=0; i<links.size(); ++i)
-      p->disconnect(links[i]);
+      disconnect(links[i]);
   }
 
   std::vector<SignalSubscriber> SignalBase::subscribers()

@@ -20,7 +20,7 @@ public ListTypeInterface
 {
 public:
   typedef DefaultTypeImplMethods<T,
-                               TypeByPointer<T>
+                               TypeByPointerPOD<T>
                                > MethodsImpl;
   ListTypeInterfaceImpl();
   virtual size_t size(void* storage);
@@ -54,7 +54,7 @@ public:
     T* p2 = (T*)ptrFromStorage(&s2);
     return *p1 == *p2;
   }
-  typedef DefaultTypeImplMethods<Storage> TypeImpl;
+  typedef DefaultTypeImplMethods<Storage, TypeByPointerPOD<T> > TypeImpl;
   _QI_BOUNCE_TYPE_METHODS(TypeImpl);
   static AnyIterator make(const T& val)
   {

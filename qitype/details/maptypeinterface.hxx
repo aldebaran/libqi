@@ -15,7 +15,7 @@ public MapTypeInterface
 {
 public:
   typedef DefaultTypeImplMethods<M,
-                               TypeByPointer<M>
+                               TypeByPointerPOD<M>
                                > MethodsImpl;
   MapTypeInterfaceImpl();
   virtual TypeInterface* elementType();

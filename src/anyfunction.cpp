@@ -144,13 +144,16 @@ namespace qi
           }
           if (!v.first.type())
           {
-            throw std::runtime_error(_QI_LOG_FORMAT("Call argument conversion failure from %s to %s (equals: %s)",
-              args[i].type()->infoString(),
-              target[i]->infoString(),
-              args[i].type()->infoString() == target[i]->infoString()));
+            throw std::runtime_error(_QI_LOG_FORMAT("Call argument number %d conversion failure from %s to %s. Function signature: %s.",
+                                                    i,
+                                                    args[i].type()->signature().toPrettySignature(),
+                                                    target[i]->signature().toPrettySignature(),
+                                                    this->parametersSignature(this->transform.dropFirst).toPrettySignature()));
+
             return AnyReference();
           }
         }
+
         if (v.second)
           arad.toDestroy[arad.toDestroyPos++] = v.first;
         arad.convertedArgs[i+offset] = v.first.rawValue();
@@ -290,7 +293,7 @@ namespace qi
       return dst;
     }
     const SignatureVector &elts = sig.children();
-    SignatureVector::const_iterator it;
+    SignatureVector::const_iterator it = elts.begin();
     int idx = 0;
     for (;it != elts.end(); ++it,++idx)
     {

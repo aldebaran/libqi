@@ -723,8 +723,12 @@ namespace qi {
           continue;
         }
         printIdName(stream, color, offsetSigs, it3->second.uid(), it3->second.name());
-        stream << " " << FC(StreamColor_Yellow, color) << it3->second.parametersSignature().toPrettySignature() << FC(StreamColor_Reset, color)
-               << std::endl;
+        if (raw)
+          stream << " " << FC(StreamColor_Yellow, color) << it3->second.parametersSignature().toString() << FC(StreamColor_Reset, color)
+                 << std::endl;
+        else
+          stream << " " << FC(StreamColor_Yellow, color) << it3->second.parametersSignature().toPrettySignature() << FC(StreamColor_Reset, color)
+                 << std::endl;
       }
 
       if (parseable)
@@ -748,8 +752,12 @@ namespace qi {
           continue;
         }
         printIdName(stream, color, offsetProps, it->second.uid(), it->second.name());
-        stream << " " << FC(StreamColor_Yellow, color) << it->second.signature().toPrettySignature() << FC(StreamColor_Reset, color)
-               << std::endl;
+        if (raw)
+          stream << " " << FC(StreamColor_Yellow, color) << it->second.signature().toString() << FC(StreamColor_Reset, color)
+                 << std::endl;
+        else
+          stream << " " << FC(StreamColor_Yellow, color) << it->second.signature().toPrettySignature() << FC(StreamColor_Reset, color)
+                 << std::endl;
       }
       if (parseable)
         stream << std::endl;
@@ -768,29 +776,14 @@ namespace qi {
     _p->refreshCache();
   }
 
-}
-
-namespace {
-  static const qi::MetaObject::MethodMap& methodMap(qi::MetaObject* ptr)
+  bool operator < (const MetaObject& a, const MetaObject& b)
   {
-    return ptr->_p->_methods;
-  }
-  static const qi::MetaObject::SignalMap& signalMap(qi::MetaObject* ptr)
-  {
-    return ptr->_p->_events;
-  }
-  static const qi::MetaObject::PropertyMap& propertyMap(qi::MetaObject* ptr)
-  {
-    return ptr->_p->_properties;
-  }
-  static const std::string& description(qi::MetaObject* ptr)
-  {
-    return ptr->_p->_description;
+    /* Comparing metaobjects is too expensive.
+    * so compare pointers, since metaobjects are built per-class and not
+    * per instance
+    */
+    return a._p < b._p;
   }
 }
 
-QI_TYPE_STRUCT_AGREGATE_CONSTRUCTOR_REGISTER(::qi::MetaObject,
-  QI_STRUCT_HELPER("methods", methodMap),
-  QI_STRUCT_HELPER("signals", signalMap),
-  QI_STRUCT_HELPER("properties", propertyMap),
-  QI_STRUCT_HELPER("description", description));
+

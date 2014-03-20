@@ -85,29 +85,6 @@ void byRef(int& i, bool* done)
   *done = true;
 }
 
-TEST(TestSignal, Copy)
-{
-  // Check that reference argument type are copied when an async call is made
-  qi::Signal<int&, bool*> sig;
-  qiLogDebug() << "sync";
-  sig.connect(qi::AnyFunction::from(byRef)).setCallType(qi::MetaCallType_Direct);
-  bool done = false;
-  int i = 0;
-  qiLogDebug() << "iref is " << &i;
-  sig(i, &done);
-  ASSERT_TRUE(done); //synchronous
-  //ASSERT_EQ(0, i); // byref, but still copies for small types
-  qiLogDebug() << "async";
-  sig =  qi::Signal<int&, bool*>();
-  sig.connect(qi::AnyFunction::from(byRef)).setCallType(qi::MetaCallType_Queued);
-  i = 0;
-  done = false;
-  qiLogDebug() << "done is " << &done;
-  sig(i, &done);
-  for (unsigned c=0; !done && c<100;++c) qi::os::msleep(10);
-  ASSERT_TRUE(done);
-  ASSERT_EQ(0, i); // async: was copied
-}
 
 TEST(TestSignal, AutoDisconnect)
 {
@@ -272,6 +249,7 @@ TEST(TestSignal, Dynamic)
   s.trigger(params);
   EXPECT_EQ(56, trig);
 }
+
 
 int main(int argc, char **argv) {
   qi::Application app(argc, argv);

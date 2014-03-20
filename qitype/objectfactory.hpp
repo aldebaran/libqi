@@ -16,6 +16,7 @@
 #include <qitype/typeinterface.hpp>
 #include <qitype/dynamicobjectbuilder.hpp>
 #include <qitype/objecttypebuilder.hpp>
+#include <qitype/anyobject.hpp>
 
 namespace qi {
 
@@ -38,6 +39,10 @@ namespace qi {
 #define QI_REGISTER_OBJECT_FACTORY_CONSTRUCTOR(name) \
   QI_REGISTER_OBJECT_FACTORY(#name, boost::bind(::qi::detail::constructObject<name>))
 
+/// register \p cls's default constructor as factory for \p name
+#define QI_REGISTER_OBJECT_FACTORY_CONSTRUCTOR_FOR(name, cls) \
+  QI_REGISTER_OBJECT_FACTORY(#name, boost::bind(::qi::detail::constructObject<cls>))
+
 /** Register a factory on \p name that creates an object with a single method
   * \p func named \p funcName
   */
@@ -54,5 +59,8 @@ namespace qi {
  */
 #define QI_REGISTER_OBJECT_FACTORY_BUILDER(name)                      \
   QI_REGISTER_OBJECT_FACTORY_METHOD(#name "Service", "create", ::qi::detail::constructObject<name>)
+
+#define QI_REGISTER_OBJECT_FACTORY_BUILDER_FOR(name, cls)                      \
+  QI_REGISTER_OBJECT_FACTORY_METHOD(#name "Service", "create", ::qi::detail::constructObject<cls>)
 
 #endif  // _QITYPE_OBJECTFACTORY_HPP_

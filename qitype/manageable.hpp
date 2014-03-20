@@ -53,9 +53,10 @@ namespace qi {
     EventTrace(unsigned int id, EventKind  kind, unsigned int slotId,
       const AnyValue& arguments, const qi::os::timeval timestamp,
       qi::int64_t userUsTime=0, qi::int64_t systemUsTime=0,
-      unsigned int callerContext=0, unsigned int calleeContext=0)
+      unsigned int callerContext=0, unsigned int calleeContext=0,
+      qi::os::timeval postTimestamp = qi::os::timeval())
     : _id(id), _kind(kind), _slotId(slotId), _arguments(arguments),
-      _timestamp(timestamp), _userUsTime(userUsTime), _systemUsTime(systemUsTime),
+      _timestamp(timestamp), _postTimestamp(postTimestamp), _userUsTime(userUsTime), _systemUsTime(systemUsTime),
       _callerContext(callerContext), _calleeContext(calleeContext)
     {}
 
@@ -67,10 +68,11 @@ namespace qi {
     // call or signal arguments
     const AnyValue&         arguments()       const { return _arguments;}
     const qi::os::timeval&  timestamp()       const { return _timestamp;}
+    const qi::os::timeval&  postTimestamp()   const { return _postTimestamp;}
     const qi::int64_t&      userUsTime()      const { return _userUsTime;}
     const qi::int64_t&      systemUsTime()    const { return _systemUsTime;}
     const unsigned int&     callerContext()   const { return _callerContext;}
-    const unsigned int&     calleeContext()   const { return _callerContext;}
+    const unsigned int&     calleeContext()   const { return _calleeContext;}
 
   private:
     unsigned int     _id; // trace id, used to match call and call result
@@ -78,6 +80,7 @@ namespace qi {
     unsigned int     _slotId; // method or signal id
     AnyValue         _arguments; // call or signal arguments
     qi::os::timeval  _timestamp;
+    qi::os::timeval  _postTimestamp; // timestamp of eventual post call
     qi::int64_t      _userUsTime;
     qi::int64_t      _systemUsTime;
     unsigned int     _callerContext; // context of caller function

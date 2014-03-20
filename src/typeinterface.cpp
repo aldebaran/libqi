@@ -112,15 +112,32 @@ namespace qi {
     return *res;
   }
 
+  typedef std::map<std::string, TypeInterface*> FallbackTypeFactory;
+  static FallbackTypeFactory& fallbackTypeFactory()
+  {
+    static FallbackTypeFactory* res = 0;
+    if (!res)
+      res = new FallbackTypeFactory;
+    return *res;
+  }
+
   QITYPE_API TypeInterface* getType(const std::type_info& type)
   {
+    static bool fallback = !qi::os::getenv("QI_TYPE_RTTI_FALLBACK").empty();
     static boost::mutex* mutex = 0;
     if (!mutex)
       mutex = new boost::mutex;
     boost::mutex::scoped_lock sl(*mutex);
+
     // We create-if-not-exist on purpose: to detect access that occur before
     // registration
-    return typeFactory()[TypeInfo(type)];
+    TypeInterface* result = typeFactory()[TypeInfo(type)];
+    if (result || !fallback)
+      return result;
+    result = fallbackTypeFactory()[type.name()];
+    if (result)
+      qiLogError("qitype.type") << "RTTI failure for " << type.name();
+    return result;
   }
 
   /// Type factory setter
@@ -128,7 +145,7 @@ namespace qi {
   {
     qiLogCategory("qitype.type"); // method can be called at static init
     qiLogDebug() << "registerType "  << typeId.name() << " "
-     << type->kind() <<" " << (void*)type;
+     << type->kind() <<" " << (void*)type << " " << type->signature().toString();
     TypeFactory::iterator i = typeFactory().find(TypeInfo(typeId));
     if (i != typeFactory().end())
     {
@@ -140,6 +157,7 @@ namespace qi {
           " registration detected for type " << typeId.name();
     }
     typeFactory()[TypeInfo(typeId)] = type;
+    fallbackTypeFactory()[typeId.name()] = type;
     return true;
   }
 
@@ -191,14 +209,8 @@ namespace qi {
     void visitList(AnyIterator it, AnyIterator iend)
     {
       qi::Signature esig = static_cast<ListTypeInterface*>(_value.type())->elementType()->signature();
-      if (!_resolveDynamic) {
+      if (!_resolveDynamic || it == iend) {
         result = qi::makeListSignature(esig);
-        return;
-      }
-
-      if (it == iend)
-      { // Empty list, TODO have a 'whatever signature entry
-        result = qi::makeListSignature(qi::Signature::fromType(Signature::Type_None));
         return;
       }
 
@@ -228,13 +240,8 @@ namespace qi {
     void visitMap(AnyIterator it, AnyIterator iend)
     {
       MapTypeInterface* type =  static_cast<MapTypeInterface*>(_value.type());
-      if (!_resolveDynamic) {
+      if (!_resolveDynamic || it == iend) {
         result = qi::makeMapSignature(type->keyType()->signature(), type->elementType()->signature());
-        return;
-      }
-
-      if (it == iend) {
-        result = qi::makeMapSignature(qi::Signature::fromType(Signature::Type_None), qi::Signature::fromType(Signature::Type_None));
         return;
       }
 
@@ -304,7 +311,7 @@ namespace qi {
       std::string res;
       res = qi::makeTupleSignature(vals, _resolveDynamic).toString();
 
-      if (!name.empty() || annotations.size() >= vals.size()) {
+      if (annotations.size() >= vals.size()) {
 
         res += '<';
         if (!name.empty())
@@ -431,6 +438,91 @@ namespace qi {
     }
   }
 
+  TypeInterface* makeFloatType(int bytelen)
+  {
+    static TypeInterface* tfloat = typeOf<float>();
+    static TypeInterface* tdouble = typeOf<double>();
+    if (bytelen == 4)
+      return tfloat;
+    else if (bytelen == 8)
+      return tdouble;
+    throw std::runtime_error("Invalid bytelen");
+  }
+
+  TypeInterface* makeIntType(bool issigned, int bytelen)
+  {
+    static TypeInterface* tb = typeOf<bool>();
+    static TypeInterface* t8 = typeOf<int8_t>();
+    static TypeInterface* t16 = typeOf<int16_t>();
+    static TypeInterface* t32 = typeOf<int32_t>();
+    static TypeInterface* t64 = typeOf<int64_t>();
+    static TypeInterface* tu8  = typeOf<uint8_t>();
+    static TypeInterface* tu16 = typeOf<uint16_t>();
+    static TypeInterface* tu32 = typeOf<uint32_t>();
+    static TypeInterface* tu64 = typeOf<uint64_t>();
+
+    if (issigned) {
+      switch (bytelen) {
+        case 0:
+          return tb;
+        case 1:
+          return t8;
+        case 2:
+          return t16;
+        case 4:
+          return t32;
+        case 8:
+          return t64;
+      }
+    } else {
+      switch (bytelen) {
+        case 0:
+          return tb;
+        case 1:
+          return tu8;
+        case 2:
+          return tu16;
+        case 4:
+          return tu32;
+        case 8:
+          return tu64;
+      }
+    }
+    throw std::runtime_error("Invalid bytelen");
+  }
+
+
+  TypeInterface* makeTypeOfKind(const qi::TypeKind& kind)
+  {
+    static TypeInterface* tv = typeOf<void>();
+    static TypeInterface* t64 = typeOf<int64_t>();
+    static TypeInterface* tdouble = typeOf<double>();
+    static TypeInterface* tstring = typeOf<std::string>();
+    static TypeInterface* tgv = typeOf<AnyValue>();
+    static TypeInterface* tbuffer = typeOf<Buffer>();
+    static TypeInterface* tobjectptr = typeOf<AnyObject>();
+
+    switch(kind)
+    {
+    case TypeKind_Void:
+      return tv;
+    case TypeKind_Int:
+      return t64;
+    case TypeKind_Float:
+      return tdouble;
+    case TypeKind_String:
+      return tstring;
+    case Signature::Type_Dynamic:
+      return tgv;
+    case Signature::Type_Raw:
+      return tbuffer;
+    case Signature::Type_Object:
+      return tobjectptr;
+    default:
+      qiLogWarning() << "Cannot get type from kind " << kind;
+      return 0;
+    }
+  }
 
   static TypeInterface* fromSignature(const qi::Signature& sig)
   {
@@ -503,6 +595,11 @@ namespace qi {
       }
     case Signature::Type_Tuple:
       {
+        // Look it up in dynamically generated oportunistic factory.
+        TypeInterface* res = getRegisteredStruct(sig);
+        if (res)
+          return res;
+        // Failure, synthetise a type.
         std::vector<TypeInterface*> types;
         const SignatureVector& c = sig.children();
         for (SignatureVector::const_iterator child = c.begin(); child != c.end(); child++)
@@ -510,7 +607,7 @@ namespace qi {
           TypeInterface* t = fromSignature(*child);
           if (!t)
           {
-            qiLogError() << "Cannot get type from tuple of unknown element type";
+            qiLogError() << "Cannot get type from tuple of unknown element type " << child->toString();
             return 0;
           }
           // qiLogDebug() << "tuple element " << child.signature() << " " << t->infoString();
@@ -519,7 +616,6 @@ namespace qi {
         std::vector<std::string> vannotations;
         std::string annotation = sig.annotation();
         boost::algorithm::split(vannotations, annotation, boost::algorithm::is_any_of(","));
-        TypeInterface* res;
         //first annotation is the name, then the name of each elements
         if (vannotations.size() >= 1)
           res = makeTupleType(types, vannotations[0], std::vector<std::string>(vannotations.begin()+1, vannotations.end()));
@@ -539,6 +635,7 @@ namespace qi {
       return 0;
     }
   }
+
 
   TypeInterface* TypeInterface::fromSignature(const qi::Signature& sig)
   {
@@ -671,7 +768,7 @@ namespace qi {
     {
       return _info;
     }
-    typedef DefaultTypeImplMethods<std::vector<void*> > Methods;
+    typedef DefaultTypeImplMethods<std::vector<void*>, TypeByPointerPOD<std::vector<void*> > > Methods;
     void* initializeStorage(void* ptr=0) { return Methods::initializeStorage(ptr);} \
     void* ptrFromStorage(void**s) { return Methods::ptrFromStorage(s);}
     TypeInterface* _elementType;
@@ -809,7 +906,7 @@ namespace qi {
     std::vector<std::string> _elementName;
     std::string              _name;
     TypeInfo                 _info;
-    typedef DefaultTypeImplMethods<std::vector<void*> > Methods;
+    typedef DefaultTypeImplMethods<std::vector<void*>, TypeByPointerPOD<std::vector<void*> > > Methods;
   };
 
   AnyReference makeGenericTuple(const AnyReferenceVector& values)
@@ -886,7 +983,8 @@ namespace qi {
     {
       return _info;
     }
-    _QI_BOUNCE_TYPE_METHODS_NOINFO(DefaultTypeImplMethods<DefaultMapStorage::iterator>);
+    typedef DefaultTypeImplMethods<DefaultMapStorage::iterator, TypeByPointerPOD<DefaultMapStorage::iterator> > Impl;
+    _QI_BOUNCE_TYPE_METHODS_NOINFO(Impl);
     TypeInterface* _elementType;
     std::string _name;
     TypeInfo _info;
@@ -1052,7 +1150,7 @@ namespace qi {
     {
       return _info;
     }
-    typedef DefaultTypeImplMethods<DefaultMapStorage> Methods;
+    typedef DefaultTypeImplMethods<DefaultMapStorage, TypeByPointerPOD<DefaultMapStorage> > Methods;
     void* initializeStorage(void* ptr=0) { return Methods::initializeStorage(ptr);}   \
     virtual void* ptrFromStorage(void**s) { return Methods::ptrFromStorage(s);}
     bool less(void* a, void* b) { return Methods::less(a, b);}
@@ -1183,14 +1281,74 @@ namespace qi {
       /* Use an internal map and be untemplated to avoid generating zillions
       * of symbols
       */
+      std::ostringstream ss;
+      ss << "Cannot do '" << operation << "' on " << typeName;
       static std::set<std::string>* once = 0;
       if (!once)
         once = new std::set<std::string>();
-      if (once->find(typeName)!=once->end())
-        return;
-      once->insert(typeName);
-      qiLogError() << "The following operation failed on data type "
-      << typeName << " :" << operation;
+      if (once->find(typeName)==once->end())
+      {
+        once->insert(typeName);
+        qiLogError() << ss.str();
+      }
+      throw std::runtime_error(ss.str());
+    }
+
+    bool fillMissingFieldsWithDefaultValues(StructTypeInterface* type,
+      std::map<std::string, ::qi::AnyValue>& fields,
+      const std::vector<std::string>& missing,
+      const char** which, int whichLength)
+    {
+      // check we will get them all
+      if (which)
+      {
+        for (unsigned i=0; i<missing.size(); ++i)
+          if (std::find(which, which + whichLength, missing[i]) == which + whichLength)
+            return false; // field not in handled list
+      }
+      std::vector<TypeInterface*> memberTypes = type->memberTypes();
+      std::vector<std::string> memberNames = type->elementsName();
+      for (unsigned i=0; i<missing.size(); ++i)
+      { // we are being given the name, but type is known by index
+        int idx = std::find(memberNames.begin(), memberNames.end(), missing[i]) - memberNames.begin();
+        fields[missing[i]] = qi::AnyValue(memberTypes[idx]);
+      }
+      return true;
     }
   }
+  static boost::mutex& registerStructMutex()
+  {
+    static boost::mutex* m = 0;
+    QI_THREADSAFE_NEW(m);
+    return *m;
+  }
+  typedef std::map<std::string, TypeInterface*> RegisterStructMap;
+  static RegisterStructMap& registerStructMap()
+  {
+    // protected by lock above
+    static RegisterStructMap* res = 0;
+    if (!res)
+      res = new RegisterStructMap();
+    return *res;
+  }
+  void registerStruct(TypeInterface* type)
+  {
+    // leave this outside the lock!
+    std::string k = type->signature().toString();
+    qiLogDebug() << "Registering struct for " << k <<" " << type->infoString();
+    boost::mutex::scoped_lock lock(registerStructMutex());
+    registerStructMap()[k] = type;
+  }
+  /// @Return matchin TypeInterface registered by registerStruct() or 0.
+  TypeInterface* getRegisteredStruct(const qi::Signature& s)
+  {
+    boost::mutex::scoped_lock lock(registerStructMutex());
+    RegisterStructMap& map = registerStructMap();
+    RegisterStructMap::iterator it = map.find(s.toString());
+    if (it == map.end())
+      return 0;
+    qiLogDebug() << "Found registered struct for " << s.toString() << ": " << it->second->infoString();
+      return it->second;
+  }
+
 }

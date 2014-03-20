@@ -26,7 +26,7 @@ namespace qi {
       qiLogVerbose("qitype.impl") << "set on boost::any not implemented";
     }
 
-    typedef DefaultTypeImplMethods<boost::any> Methods;
+    typedef DefaultTypeImplMethods<boost::any, TypeByPointerPOD<boost::any> > Methods;
     _QI_BOUNCE_TYPE_METHODS(Methods);
   };
 }

@@ -33,7 +33,7 @@ namespace qi {
     }
 
     // Default cloner will do just right since AnyValue is by-value.
-    typedef DefaultTypeImplMethods<AnyValue> Methods;
+    typedef DefaultTypeImplMethods<AnyValue, TypeByPointerPOD<AnyValue> > Methods;
     _QI_BOUNCE_TYPE_METHODS(Methods);
   };
 

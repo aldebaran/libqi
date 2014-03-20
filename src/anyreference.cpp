@@ -4,6 +4,7 @@
 */
 
 #include <boost/lexical_cast.hpp>
+#include <boost/algorithm/string.hpp>
 
 #include <qitype/anyreference.hpp>
 #include <qitype/anyobject.hpp>
@@ -287,6 +288,128 @@ namespace qi
     }
     return std::make_pair(AnyReference(), false);
   }
+  namespace {
+    // Cleanup allocated stuff when exiting scope
+    struct CleanUp
+    {
+      CleanUp(std::vector<void*>& targetData,
+        std::vector<bool>& mustDestroy,
+        std::vector<TypeInterface*>& dstTypes)
+      : targetData(targetData)
+      , mustDestroy(mustDestroy)
+      , dstTypes(dstTypes) {}
+      ~CleanUp()
+      {
+        for (unsigned i=0; i<mustDestroy.size(); ++i)
+        {
+          if (mustDestroy[i])
+            dstTypes[i]->destroy(targetData[i]);
+        }
+      }
+      std::vector<void*>& targetData;
+      std::vector<bool>& mustDestroy;
+      std::vector<TypeInterface*>& dstTypes;
+    };
+  }
+  static std::pair<AnyReference, bool> structConverter(const AnyReferenceBase* src, StructTypeInterface* tdst)
+  {
+    StructTypeInterface* tsrc = static_cast<StructTypeInterface*>(src->type());
+
+    std::vector<std::string> srcNames = tsrc->elementsName();
+    std::vector<std::string> dstNames = tdst->elementsName();
+    std::vector<TypeInterface*> srcTypes = tsrc->memberTypes();
+    std::vector<TypeInterface*> dstTypes = tdst->memberTypes();
+    if (srcTypes.size() != srcNames.size() || dstTypes.size() != dstNames.size())
+    {
+      qiLogVerbose() << "Cannot convert between not fully named mismatching tuples "
+        << tsrc->infoString() << " and " << tdst->infoString();
+      return std::make_pair(AnyReference(), false);
+    }
+    // Compute mapping between src and dst fields based on names
+    std::vector<int> fieldMap; //fieldMap[i] = index of src's field i in dst (-1 for not present)
+    std::vector<std::string> fieldDrop; // unused src fields
+    for (unsigned i=0; i<srcNames.size(); ++i)
+    {
+      std::vector<std::string>::iterator it = std::find(dstNames.begin(), dstNames.end(), srcNames[i]);
+      if (it == dstNames.end())
+        fieldDrop.push_back(srcNames[i]);
+      fieldMap.push_back(it == dstNames.end() ? -1 : it - dstNames.begin());
+    }
+    std::vector<std::string> fieldMissing; // unfilled dst fields
+    for (unsigned i=0; i<dstNames.size(); ++i)
+    {
+      std::vector<int>::iterator it = std::find(fieldMap.begin(), fieldMap.end(), i);
+      if (it == fieldMap.end())
+        fieldMissing.push_back(dstNames[i]);
+    }
+    qiLogDebug() << "Field mapping:"
+      << " drop=" << boost::algorithm::join(fieldDrop, ", ")
+      << "  missing=" << boost::algorithm::join(fieldMissing, ", ");
+    // Start by asking source if it is ok to drop
+    if (!fieldDrop.empty() && !tsrc->canDropFields(src->rawValue(), fieldDrop))
+    {
+      qiLogVerbose() << "Source " << tsrc->infoString() <<" refused to drop fields " << boost::algorithm::join(fieldDrop, ", ");
+      return std::make_pair(AnyReference(), false);
+    }
+    // convert what we can (missing field check might need the data)
+
+    std::vector<void*> targetData;
+    std::vector<bool> mustDestroy;
+    targetData.resize(dstTypes.size(), 0);
+    mustDestroy.resize(dstTypes.size(), false);
+
+    std::vector<void*> sourceData = tsrc->get(src->rawValue());
+
+    CleanUp scopeCleanup(targetData, mustDestroy, dstTypes);
+
+    for (unsigned i=0; i<srcTypes.size(); ++i)
+    {
+      int targetIndex = fieldMap[i];
+      if (targetIndex == -1)
+        continue; // dropped field, do not convert
+      std::pair<AnyReference, bool> conv = AnyReference(srcTypes[i], sourceData[i]).convert(dstTypes[targetIndex]);
+      if (!conv.first.type())
+      {
+        qiLogVerbose() << "Conversion failure in tuple member "
+          << srcNames[i] << " between "
+          << srcTypes[i]->infoString() << " and " << dstTypes[targetIndex]->infoString();
+        return std::make_pair(AnyReference(), false);
+      }
+      targetData[targetIndex] = conv.first.rawValue();
+      mustDestroy[targetIndex] = conv.second;
+    }
+    std::map<std::string, AnyValue> fields; // used only in if below but must survive longuer
+    // Then ask target to generate a value for missing fields
+    if (!fieldMissing.empty())
+    {
+      // Unfortunately we cannot instanciate target type, because of the
+      // missing fields (in case struct is in constructor mode), so present
+      // available fields as a map
+
+      // petty optimization until AnyValue has proper refcount behavior
+      // we transfer ownership to the map, so that fillMissing can replace
+      // existing values
+      // Preallocates all elements so that stuff dont move
+      for (unsigned i=0; i<dstNames.size(); ++i)
+        fields[dstNames[i]] = AnyValue();
+      // Fill elements we have, transfering ownership
+      for (unsigned i=0; i<dstNames.size(); ++i)
+        if (std::find(fieldMap.begin(), fieldMap.end(), i) != fieldMap.end())
+          fields[dstNames[i]].reset(AnyReference(dstTypes[i], targetData[i]), false, mustDestroy[i]);
+      mustDestroy.assign(false, mustDestroy.size());
+      if (!tdst->fillMissingFields(fields, fieldMissing))
+      {
+        qiLogVerbose() << "Target cannot fill missing fields " << boost::algorithm::join(fieldMissing, ", ");
+        return std::make_pair(AnyReference(), false);
+      }
+      // move stuff back to targetdata
+      for (unsigned i=0; i<dstNames.size(); ++i)
+        targetData[i] = fields[dstNames[i]].rawValue();
+    }
+    void* dst = tdst->initializeStorage();
+    tdst->set(&dst, targetData);
+    return std::make_pair(AnyReference(tdst, dst) , true);
+  }
 
   std::pair<AnyReference, bool> AnyReferenceBase::convert(StructTypeInterface* targetType) const
   {
@@ -303,31 +426,31 @@ namespace qi
       std::vector<TypeInterface*> dstTypes = tdst->memberTypes();
       if (dstTypes.size() != sourceData.size())
       {
-        qiLogWarning() << "Conversion failure: tuple size mismatch between " << tsrc->signature().toString() << " and " << tdst->signature().toString();
-        return std::make_pair(AnyReference(), false);
+        qiLogVerbose() << "Conversion glitch: tuple size mismatch between " << tsrc->infoString() << " and " << tdst->infoString();
+        return structConverter(this, targetType);
       }
-
+      // Note: start converting without further check.
+      // It means the case where a struct was modified but the
+      // field count is unchanged will be badly suboptimal.
+      // But further checks will degrade the nominal case.
       std::vector<void*> targetData;
       std::vector<bool> mustDestroy;
+      CleanUp scopeCleanup(targetData, mustDestroy, dstTypes);
       for (unsigned i=0; i<dstTypes.size(); ++i)
       {
         std::pair<AnyReference, bool> conv = AnyReference(srcTypes[i], sourceData[i]).convert(dstTypes[i]);
         if (!conv.first._type)
         {
-          qiLogWarning() << "Conversion failure in tuple member between "
+          qiLogVerbose() << "Conversion failure in tuple member between "
                          << srcTypes[i]->infoString() << " and " << dstTypes[i]->infoString();
-          return std::make_pair(AnyReference(), false);
+          return structConverter(this, targetType);
         }
         targetData.push_back(conv.first._value);
         mustDestroy.push_back(conv.second);
       }
       void* dst = tdst->initializeStorage();
       tdst->set(&dst, targetData);
-      for (unsigned i=0; i<mustDestroy.size(); ++i)
-      {
-        if (mustDestroy[i])
-          dstTypes[i]->destroy(targetData[i]);
-      }
+
       result._type = targetType;
       result._value = dst;
       return std::make_pair(result, true);
@@ -900,14 +1023,14 @@ namespace qi
     {
       IntTypeInterface* type = static_cast<IntTypeInterface*>(this->_type);
       if (!type->isSigned() && v < 0)
-        throw std::runtime_error(_QI_LOG_FORMAT_HASARG_0("Converting negative value %s to unsigned type", v));
+        throw std::runtime_error(_QI_LOG_FORMAT("Converting negative value %s to unsigned type", v));
       // not signed gives us an extra bit, but signed can go down an extra value
       if (type->size() > 8)
-        throw std::runtime_error(_QI_LOG_FORMAT_HASARG_0("Overflow converting %s to %s bytes", v, type->size()));
+        throw std::runtime_error(_QI_LOG_FORMAT("Overflow converting %s to %s bytes", v, type->size()));
       if (type->size() == 0 && (v < 0 || v > 1))
-        throw std::runtime_error(_QI_LOG_FORMAT_HASARG_0("Expected 0 or 1 when converting to bool, got %s", v));
+        throw std::runtime_error(_QI_LOG_FORMAT("Expected 0 or 1 when converting to bool, got %s", v));
       if (type->size() > 0 && type->size() < 8 && (std::abs(v) >= (1LL << (8*type->size() - (type->isSigned()?1:0))) + ((v<0)?1:0)))
-        throw std::runtime_error(_QI_LOG_FORMAT_HASARG_0("Overflow converting %s to %s bytes", v, type->size()));
+        throw std::runtime_error(_QI_LOG_FORMAT("Overflow converting %s to %s bytes", v, type->size()));
       type->set(&_value, v);
     }
     else if (kind() == TypeKind_Float)
@@ -935,11 +1058,11 @@ namespace qi
     {
       IntTypeInterface* type = static_cast<IntTypeInterface*>(this->_type);
       if (type->size() > 0 && type->size() < 8 && (v >= (1ULL << (8*type->size() - (type->isSigned()?1:0)))))
-        throw std::runtime_error(_QI_LOG_FORMAT_HASARG_0("Overflow converting %s to %s bytes", v, type->size()));
+        throw std::runtime_error(_QI_LOG_FORMAT("Overflow converting %s to %s bytes", v, type->size()));
       if (type->size() == 0 && (v > 1))
-        throw std::runtime_error(_QI_LOG_FORMAT_HASARG_0("Expected 0 or 1 when converting to bool, got %s", v));
+        throw std::runtime_error(_QI_LOG_FORMAT("Expected 0 or 1 when converting to bool, got %s", v));
       if (type->size() == 8 && type->isSigned() && v >= 0x8000000000000000ULL)
-        throw std::runtime_error(_QI_LOG_FORMAT_HASARG_0("Overflow converting %s to signed int64", v));
+        throw std::runtime_error(_QI_LOG_FORMAT("Overflow converting %s to signed int64", v));
       type->set(&_value, (int64_t)v);
     }
     else if (kind() == TypeKind_Float)
@@ -957,16 +1080,16 @@ namespace qi
     {
       IntTypeInterface* type = static_cast<IntTypeInterface*>(this->_type);
       if (v < 0 && !type->isSigned())
-        throw std::runtime_error(_QI_LOG_FORMAT_HASARG_0("Converting negative value %s to unsigned type", v));
+        throw std::runtime_error(_QI_LOG_FORMAT("Converting negative value %s to unsigned type", v));
       if (type->size() == 0 && std::min(std::abs(v), std::abs(v-1)) > 0.01)
-        throw std::runtime_error(_QI_LOG_FORMAT_HASARG_0("Expected 0 or 1 when converting to bool, got %s", v));
+        throw std::runtime_error(_QI_LOG_FORMAT("Expected 0 or 1 when converting to bool, got %s", v));
       if (type->size() != 0 && type->size() < 8 && (std::abs(v) >= (1ULL << (8*type->size() - (type->isSigned()?1:0))) + ((v<0)?1:0)))
-        throw std::runtime_error(_QI_LOG_FORMAT_HASARG_0("Overflow converting %s to %s bytes", v, type->size()));
+        throw std::runtime_error(_QI_LOG_FORMAT("Overflow converting %s to %s bytes", v, type->size()));
       if (type->size() == 8
           && std::abs(v) > (type->isSigned()?
             (double)std::numeric_limits<int64_t>::max()
             :(double)std::numeric_limits<uint64_t>::max()))
-        throw std::runtime_error(_QI_LOG_FORMAT_HASARG_0("Overflow converting %s to %s bytes", v, type->size()));
+        throw std::runtime_error(_QI_LOG_FORMAT("Overflow converting %s to %s bytes", v, type->size()));
       type->set(&_value, static_cast<int64_t>(v));
     }
     else
@@ -985,6 +1108,10 @@ namespace qi
       for(; it != iend; ++it)
         result.push_back(*it);
       return result;
+    }
+    else if (kind() == TypeKind_Dynamic)
+    {
+      return (**this).asTupleValuePtr();
     }
     else
       throw std::runtime_error("Expected tuple, list or map");
