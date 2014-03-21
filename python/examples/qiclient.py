@@ -16,30 +16,30 @@ def get_servicedirectory_address(argv):
     Print usage is service directory address is not set.
     """
     if len(argv) != 2:
-        print 'Usage : python2 qi-client.py directory-address'
-        print 'Assuming service directory address is tcp://127.0.0.1:9559'
+        print('Usage : python2 qi-client.py directory-address')
+        print('Assuming service directory address is tcp://127.0.0.1:9559')
         return "tcp://127.0.0.1:9559"
 
     return argv[1]
 
 def onReply(fut):
-    print "async repl:", fut.value()
+    print("async repl:", fut.value())
 
 def onServiceAvailable(fut):
-    print "onServiceAvailable"
+    print("onServiceAvailable")
 
 def onTestEvent(v):
-    print "Event:", v
+    print("Event:", v)
 
 def onTestEventGeneric(*args):
-    print "EventGeneric:", args
+    print("EventGeneric:", args)
 
 def  main():
     """ Entry point of qiservice
     """
     session = qi.Session()
     f = session.connect("tcp://127.0.0.1:9559", _async=True)
-    print "connected?", not f.hasError()
+    print("connected?", not f.hasError())
 
     #3 Get service serviceTest
     fut = session.service("serviceTest", _async=True)
@@ -50,13 +50,13 @@ def  main():
     #obj.testEvent.connect(onTestEvent)
     obj.testEventGeneric.connect(onTestEventGeneric)
 
-    print "repl:", obj.call("reply", "plouf")
+    print("repl:", obj.call("reply", "plouf"))
     f = obj.reply("plaf", _async=True)
     f.addCallback(onReply)
 
     i = 0
     while i < 2:
-        print "waiting..."
+        print("waiting...")
         time.sleep(1)
         i = i + 1
     session.close()

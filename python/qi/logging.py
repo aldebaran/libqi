@@ -5,8 +5,8 @@
 ## Copyright (C) 2013 Aldebaran Robotics
 ##
 
-from _qi import pylog
-from _qi import setLevel, setContext, setFilters
+from ._qiauto import pylog
+from ._qiauto import setLevel, setContext, setFilters
 import inspect
 import uuid
 

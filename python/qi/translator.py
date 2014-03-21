@@ -2,7 +2,7 @@
 ## Copyright (C) 2014 Aldebaran Robotics
 ##
 
-from _qi import Translator
+from ._qiauto import Translator
 import os
 from .logging import warning
 

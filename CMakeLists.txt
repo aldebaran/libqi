@@ -26,6 +26,7 @@ if (ANDROID)
 endif()
 
 qi_add_optional_package(QISSH)
+qi_add_optional_package(PYTHON3)
 
 add_definitions(" -DBOOST_FILESYSTEM_VERSION=3 ")
 
@@ -144,7 +145,7 @@ qi_stage_lib(qimessaging)
 
 qi_add_subdirectory(c)
 
-qi_add_subdirectory("python" WITH_PYTHON)
+qi_add_subdirectory("python")
 qi_add_subdirectory("dotnet" WITH_DOTNET)
 qi_add_subdirectory("js")
 qi_add_subdirectory("c/test")
@@ -156,5 +157,6 @@ message(STATUS "")
 message(STATUS "Build Options:")
 message(STATUS "WITH_EXAMPLES  : ${WITH_EXAMPLES}")
 message(STATUS "WITH_PYTHON    : ${WITH_PYTHON}")
+message(STATUS "WITH_PYTHON3   : ${WITH_PYTHON3}")
 message(STATUS "WITH_DOTNET    : ${WITH_DOTNET}")
 message(STATUS "WITH_SSL       : ${WITH_SSL}")

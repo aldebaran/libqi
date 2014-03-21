@@ -13,7 +13,7 @@ import threading
 
 def makeIt(p):
     time.sleep(1)
-    print "PAFFF"
+    print("PAFFF")
     p.setValue(42)
 
 class ServiceTest:
@@ -23,12 +23,12 @@ class ServiceTest:
         self.testEventGeneric = qi.Signal()
 
     def reply(self, plaf):
-        print "v:", plaf
+        print("v:", plaf)
         return plaf + "bim"
 
     def error(self):
         d= dict()
-        print "I Will throw"
+        print("I Will throw")
         r = d['pleaseraise']
 
     def fut(self):
@@ -39,20 +39,20 @@ class ServiceTest:
 
     @qi.nobind
     def nothing(self):
-        print "nothing"
+        print("nothing")
         pass
 
     @qi.bind(qi.String, (qi.String, qi.Int32), "plik")
     def plok(self, name, index):
-        print "ploK"
+        print("ploK")
         return name[index]
 
     @qi.bind(qi.Dynamic, qi.AnyArguments)
     def special(self, *args):
-        print "args:", args
+        print("args:", args)
 
     def special2(self, *args):
-        print "args2:", args
+        print("args2:", args)
 
 def get_servicedirectory_address():
     """ Parse command line arguments
@@ -60,8 +60,8 @@ def get_servicedirectory_address():
     Print usage is service directory address is not set.
     """
     if len(sys.argv) != 2:
-        print 'Usage : %s qi-service.py directory-address' % sys.argv[0]
-        print 'Assuming service directory address is tcp://127.0.0.1:9559'
+        print('Usage : %s qi-service.py directory-address' % sys.argv[0])
+        print('Assuming service directory address is tcp://127.0.0.1:9559')
         return "tcp://127.0.0.1:9559"
 
     return sys.argv[1]
@@ -81,7 +81,7 @@ def main():
     i = 0
     while True:
       mystr = "bim" + str(i)
-      print "posting:", mystr
+      print("posting:", mystr)
       myplouf = [ "bim", 42 ]
       m.testEvent(mystr)
       m.testEventGeneric(myplouf)

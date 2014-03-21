@@ -7,6 +7,7 @@
 
 import time
 import qi
+import sys
 import pytest
 
 class TestService:
@@ -43,18 +44,23 @@ def test_unicode_strings():
     s.registerService("TestService", m)
     service = s.service("TestService")
     # ASCII range
-    unicode_string = ''.join([unichr(i) for i in range(1, 128)])
+    unicode_string = ''.join([chr(i) for i in range(1, 128)])
     mystring = service.display(unicode_string)
+    print("mystr:", mystring)
+    print("uystr:", unicode_string)
     assert type(mystring) == str
-    assert mystring == unicode_string.encode("ascii")
+    assert mystring.encode("ascii") == unicode_string.encode("ascii")
 
     # Wide unicode
-    wide_string = "\U00010000" * 39 + "\uffff" * 4096
+    wide_string = "\\U00010000" * 39 + "\\uffff" * 4096
     mystring = service.display(wide_string)
     assert mystring == wide_string
 
     # String with many unicode chars
-    unicode_string = ''.join([unichr(i) for i in range(1, 50000)])
+    if sys.version_info[0] == 2:
+        unicode_string = ''.join([unichr(i) for i in range(1, 50000)])
+    else:
+        unicode_string = ''.join([chr(i) for i in range(1, 50000)])
     service.display(unicode_string)
     time.sleep(0.01)
     s.close()
@@ -76,11 +82,16 @@ def test_builtin_types():
     assert service.display(None) is None
     # bool
     t, f = service.display(True), service.display(False)
-    assert t == 1L  # is True ?
-    assert f == 0L  # is False ?
+    assert t == 1  # is True ?
+    assert f == 0  # is False ?
 
     # int
-    assert type(service.display(42)) == long
+    import sys
+    if sys.version < '3':
+        integer_types = (int, long,)
+    else:
+        integer_types = (int,)
+    assert isinstance(service.display(42), integer_types)
     assert service.display(42) == 42
 
     # float
@@ -97,8 +108,8 @@ def test_builtin_types():
     # sets
     assert service.display(set([1, 2])) == (1, 2)
     assert service.display(frozenset([1, 2])) == (1, 2)
-    assert service.display(frozenset([frozenset("a"), frozenset("b")])) \
-     == (("b",), ("a",))
+    ret = service.display(frozenset([frozenset("a"), frozenset("b")]))
+    assert ret == (("b",), ("a",)) or ret == (("a",), ("b",))
 
     # tuple
     assert service.display(()) == ()
@@ -110,11 +121,15 @@ def test_builtin_types():
     assert service.display({1: "bla", 3: []}) == {1: "bla", 3: []}
 
     # bytearray
-    assert service.display(bytearray("lol")) == "lol"
+    assert service.display(bytearray("lol", encoding="ascii")) == "lol"
 
     # buffer (not implemented)
     try:
-        service.display(buffer("lol"))
+        import sys
+        if sys.version >= '3':
+            service.display(memoryview("lol".encode()))
+        else:
+            service.display(buffer("lol"))
     except RuntimeError:
         pass  # OK
 

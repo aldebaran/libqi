@@ -24,7 +24,7 @@
 
 import types
 import inspect
-from _type import AnyArguments
+from ._type import AnyArguments
 
 class bind():
     """ bind(returnType, parametersType = None, methodName = None)
@@ -50,7 +50,7 @@ class bind():
         #parameters
         if paramsType is None:
             self._sig = None
-        elif isinstance(paramsType, types.TupleType) or isinstance(paramsType, types.ListType):
+        elif isinstance(paramsType, (list, tuple)):
             self._sig = "(%s)" % "".join([str(x) for x in paramsType])
         elif isinstance(paramsType, AnyArguments) or (inspect.isclass(paramsType) and issubclass(paramsType, AnyArguments)):
             self._sig = "m"

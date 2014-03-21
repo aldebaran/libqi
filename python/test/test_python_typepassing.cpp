@@ -70,6 +70,8 @@ TEST_F(TypePassing, Int)
   ASSERT_EQ(42, f.value());
 }
 
+//Long have been merged with Int
+#if PY_MAJOR_VERSION == 2
 TEST_F(TypePassing, Long)
 {
   {
@@ -84,6 +86,7 @@ TEST_F(TypePassing, Long)
   qi::FutureSync<int> f = getService().call<int>("func");
   ASSERT_EQ(42, f.value());
 }
+#endif
 
 TEST_F(TypePassing, Bool)
 {
@@ -137,7 +140,7 @@ TEST_F(TypePassing, ByteArray)
     PyRun_SimpleString(
         "class TestService:\n"
         "    def func(self):\n"
-        "        return bytearray('can i help you?')\n"
+        "        return bytearray('can i help you?', encoding='ascii')\n"
         );
   }
   registerService();
@@ -236,8 +239,8 @@ int main(int argc, char **argv) {
 
   qi::os::setenv("PYTHONHOME", argv[1]);
 
-  PyEval_InitThreads();
   Py_Initialize();
+  PyEval_InitThreads();
   mainstate = PyThreadState_Swap(NULL);
   PyEval_ReleaseLock();
 
@@ -269,8 +272,8 @@ int main(int argc, char **argv) {
 
   int ret = RUN_ALL_TESTS();
 
-  PyEval_AcquireLock();
   PyThreadState_Swap(mainstate);
+  PyEval_AcquireLock();
   Py_Finalize();
 
   return ret;

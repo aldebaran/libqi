@@ -20,6 +20,7 @@ def load_lib_qipyessaging():
     """
     import ctypes
     import os
+    import sys
     deps = [
             "libboost_python.so",
             "libboost_system.so",
@@ -35,6 +36,10 @@ def load_lib_qipyessaging():
             "libqimessaging.so",
             "libqipython.so",
     ]
+    if sys.version_info[0] == 2:
+        deps.append("libqipython.so")
+    else:
+        deps.append("libqipython3.so")
     this_dir = os.path.abspath(os.path.dirname(__file__))
     for dep in deps:
         full_path = os.path.join(this_dir, "..", dep)
@@ -53,9 +58,9 @@ def _on_import_module():
 #######
 _on_import_module()
 
-from _qi import Application as _Application
-from _qi import ApplicationSession as _ApplicationSession
-from _qi import ( FutureState, FutureTimeout, Future, Promise,
+from ._qiauto import Application as _Application
+from ._qiauto import ApplicationSession as _ApplicationSession
+from ._qiauto import ( FutureState, FutureTimeout, Future, Promise,
                   Property, Session, Signal,
                   createObject, registerObjectFactory,
                   async, PeriodicTask)

@@ -46,7 +46,7 @@ int main(int argc, char **argv) {
   if (argc > 4)
     qi::os::setenv("PYTHONHOME", argv[4]);
   Py_Initialize();
-  PySys_SetArgv(argc, argv);
+
   if(argc < 4) {
     std::cout << "argc : " << argc << std::endl;
     std::cerr << "Usage: test_registerfactory /path/to/python.py /path/to/qi/python/module /path/to/qimessaging/lib"
@@ -58,9 +58,8 @@ int main(int argc, char **argv) {
   std::string path = std::string(argv[2]);
   std::string path2 = std::string(argv[3]);
   PyObject* sysPath = PySys_GetObject((char*)"path");
-  PyList_Insert(sysPath, 0, PyString_FromString(path.c_str()));
-  PyList_Insert(sysPath, 0, PyString_FromString(path2.c_str()));
-
+  PyList_Insert(sysPath, 0, PyUnicode_FromString(path.c_str()));
+  PyList_Insert(sysPath, 0, PyUnicode_FromString(path2.c_str()));
 
   return RUN_ALL_TESTS();
 }

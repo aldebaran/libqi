@@ -12,24 +12,28 @@ import ctypes
 
 def main():
 
+    pyver = ""
+    if sys.version_info[0] >= 3:
+        pyver = "3"
+
     if len(sys.argv) < 3:
-        sys.exit('Usage: %s --sdk-dir path/to/sdk/' % sys.argv[0])
+        sys.exit('Usage: %s --sdk-dir path/to/sdk/' % (sys.argv[0]))
 
     if sys.platform.startswith("linux"):
-        full_path = "%s/lib/libtestregisterobject.so"% sys.argv[2]
+        full_path = "%s/lib/libtestregisterobject%s.so"% (sys.argv[2], pyver)
 
 
     if sys.platform.startswith("darwin"):
-       full_path = "%s/lib/libtestregisterobject.dylib"% sys.argv[2]
+       full_path = "%s/lib/libtestregisterobject%s.dylib"% (sys.argv[2], pyver)
 
 
     if sys.platform.startswith("win"):
-       full_path = "%s/lib/libtestregisterobject.dll"% sys.argv[2]
+       full_path = "%s/lib/libtestregisterobject%s.dll"% (sys.argv[2], pyver)
 
     try:
        ctypes.cdll.LoadLibrary(full_path)
     except Exception as e:
-       print e
+       print(e)
        sys.exit(1)
 
     try:

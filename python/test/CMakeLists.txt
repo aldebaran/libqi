@@ -6,14 +6,14 @@
 
 # Find python, but avoid using python from python package
 find_program(_python_executable
-  NAMES python2 python python.exe
+  NAMES python${pyver} python${pyver}.exe python python.exe
   NO_CMAKE_FIND_ROOT_PATH)
 if (NOT _python_executable)
   qi_error("python executable not found")
 endif()
 
 function(qi_add_python_qimessaging_test name)
-  set(_test_name test_python_${name})
+  set(_test_name test_python${pyver}_${name})
   qi_add_test(${_test_name}
     ${_python_executable}
       ARGUMENTS
@@ -46,8 +46,8 @@ qi_add_python_qimessaging_test(test_typespassing   TIMEOUT 5)
 qi_add_python_qimessaging_test(test_call TIMEOUT 10)
 qi_add_python_qimessaging_test(test_applicationsession TIMEOUT 3)
 
-qi_create_lib(testregisterobject SHARED SRC testregisterobject.cpp NO_INSTALL)
-qi_use_lib(testregisterobject QI QITYPE QIMESSAGING)
+qi_create_lib(testregisterobject${pyver} SHARED SRC testregisterobject.cpp NO_INSTALL)
+qi_use_lib(testregisterobject${pyver} QI QITYPE QIMESSAGING)
 qi_add_python_qimessaging_test(test_createobject)
 
 
@@ -58,9 +58,9 @@ if(UNIX AND NOT APPLE)
   set(PYTHONHOME "${PYTHON_INCLUDE_DIRS}/../..")
 endif()
 
-qi_create_gtest(test_python_registerpythonclass SRC registerfactory.cpp
-                DEPENDS QI QITYPE QIMESSAGING GTEST BOOST_PYTHON
+qi_create_gtest(test_python${pyver}_registerpythonclass SRC registerfactory.cpp
+                DEPENDS QIPYTHON${pyver} GTEST
                 ARGUMENTS "${CMAKE_CURRENT_SOURCE_DIR}/test_registerfactory.py" "${CMAKE_CURRENT_SOURCE_DIR}/.." "${QI_SDK_DIR}/${QI_SDK_LIB}" "${PYTHONHOME}")
-qi_create_gtest(test_python_typepassing SRC test_python_typepassing.cpp
-                DEPENDS QI QITYPE QIPYTHON GTEST BOOST_PYTHON
+qi_create_gtest(test_python${pyver}_typepassing SRC test_python_typepassing.cpp
+                DEPENDS QIPYTHON${pyver} GTEST
                 ARGUMENTS "${PYTHONHOME}" "${QI_SDK_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/..")
