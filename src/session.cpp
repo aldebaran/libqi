@@ -53,7 +53,7 @@ namespace qi {
     /*
      * Remove all proxies to services if the SD is fallen.
      */
-    _serviceHandler.close();
+    close();
   }
 
 
