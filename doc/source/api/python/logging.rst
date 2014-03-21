@@ -57,6 +57,45 @@ Static Methods Reference
 
 .. autofunction:: qi.verbose
 
+Deprecated Methods
+==================
+
+.. function:: qi.getLogger
+
+   .. deprecated:: 2.0.1
+
+      Please use :py:func:`qi.Logger` instead
+
+.. function:: qi.logFatal
+
+   .. deprecated:: 2.0.1
+
+      Please use :py:func:`qi.fatal` instead
+
+.. function:: qi.logError
+
+   .. deprecated:: 2.0.1
+
+      Please use :py:func:`qi.error` instead
+
+.. function:: qi.logWarning
+
+   .. deprecated:: 2.0.1
+
+      Please use :py:func:`qi.warning` instead
+
+.. function:: qi.logInfo
+
+   .. deprecated:: 2.0.1
+
+      Please use :py:func:`qi.info` instead
+
+.. function:: qi.logVerbose
+
+   .. deprecated:: 2.0.1
+
+      Please use :py:func:`qi.verbose` instead
+
 
 Example
 =======
@@ -68,6 +107,15 @@ Simple example:
   import qi
 
   qi.warning("myfoo.bar", "my log message")
+
+Simple example with a category:
+
+.. code-block:: python
+
+  import qi
+
+  log = qi.Logger("myfoo.bar")
+  log.warning("my log message")
 
 
 Reference

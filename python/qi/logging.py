@@ -12,8 +12,9 @@ import uuid
 
 __all__ = ("FATAL", "ERROR", "WARNING", "INFO", "VERBOSE", "DEBUG",
            "fatal", "error", "warning", "info", "verbose",
-           "Logger", "setLevel", "setContext", "setFilters")
-
+           "Logger", "setLevel", "setContext", "setFilters",
+           "getLogger", "logFatal", "logError", "logWarning", "logInfo", "logVerbose",  #deprecated
+           )
 
 # Log Level
 FATAL   = 1
@@ -120,3 +121,13 @@ def verbose(cat, *args):
     Logs a message with level VERBOSE."""
     info = _logGetTraceInfo()
     pylog(VERBOSE, cat, _printToString(*args), info.filename, info.function, info.lineno)
+
+
+
+#deprecated 2.0.1  (to remove in 2.1)
+logFatal   = fatal
+logError   = error
+logWarning = warning
+logInfo    = info
+logVerbose = verbose
+getLogger  = Logger

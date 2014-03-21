@@ -73,6 +73,7 @@ from ._type import ( Void, Bool,
                      typeof, _isinstance)
 from ._binder import bind, nobind
 from .logging import fatal, error, warning, info, verbose, Logger
+from .logging import getLogger, logFatal, logError, logWarning, logInfo, logVerbose  #deprecated
 from .translator import defaultTranslator, tr, Translator
 
 
@@ -116,6 +117,8 @@ def Application(args=None):
         raise Exception("Application was already initialized")
     return _app
 
+
+
 __all__ = ["FutureState",
            "FutureTimeout",
            "Future",
@@ -130,8 +133,9 @@ __all__ = ["FutureState",
            "Float", "Double", "String", "List", "Map", "Struct", "Object", "Dynamic", "Buffer", "AnyArguments",
            "typeof", "isinstance",
            "bind", "nobind",
-           "fatal", "error", "warning", "info", "verbose", "Logger",
-           "defaultTranslator", "tr", "Translator"
+           "fatal", "error", "warning", "info", "verbose",
+           "getLogger", "logFatal", "logError", "logWarning", "logInfo", "logVerbose",  #deprecated
+           "Logger", "defaultTranslator", "tr", "Translator"
 ]
 
 import atexit
