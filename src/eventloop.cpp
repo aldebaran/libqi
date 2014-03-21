@@ -100,7 +100,7 @@ namespace qi {
   void EventLoopAsio::_pingThread()
   {
     qi::os::setCurrentThreadName("EvLoop.mon");
-    static int maxThreads = getEnvParam("QI_EVENTLOOP_MAX_THREADS", 200);
+    static int maxThreads = getEnvParam("QI_EVENTLOOP_MAX_THREADS", 150);
     static int msTimeout = getEnvParam("QI_EVENTLOOP_PING_TIMEOUT", 500);
     static int msGrace = getEnvParam("QI_EVENTLOOP_GRACE_PERIOD", 0);
     ++_nThreads;
