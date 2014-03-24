@@ -6,6 +6,7 @@ Python qi API reference
 .. toctree::
   :maxdepth: 1
 
+  application
   logging
   path
   session

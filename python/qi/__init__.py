@@ -95,29 +95,22 @@ def _stopApplication():
 
 #application is a singleton, it should live till the end of the program
 #because it own eventloops
-def ApplicationSession(args=None):
+def Application(args=None, raw=False, autoExit=True, url=None):
     global _app
+    if args is None:
+        args = [ "" ]
+    if url is None:
+        url = "tcp://127.0.0.1:9559"
     if _app is None:
-        if args is None:
-            _app = _ApplicationSession()
-        else:
-            _app = _ApplicationSession(args)
-    else:
-        raise Exception("Application was already initialized")
-    return _app
-
-def Application(args=None):
-    global _app
-    if _app is None:
-        if args is None:
-            _app = _Application()
-        else:
+        if raw:
             _app = _Application(args)
+        else:
+            _app = _ApplicationSession(args, autoExit, url);
     else:
         raise Exception("Application was already initialized")
     return _app
 
-
+ApplicationSession = Application
 
 __all__ = ["FutureState",
            "FutureTimeout",

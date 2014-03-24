@@ -16,49 +16,53 @@ qiLogCategory("qimpy");
 
 namespace qi {
   namespace py {
-    static void initApp(boost::shared_ptr<qi::Application>& app, int& argc, char**& argv)
-    {
-      app = boost::shared_ptr<qi::Application>(new qi::Application(argc, argv));
-    }
 
-    static void initApp(boost::shared_ptr<qi::ApplicationSession>& app, int& argc, char**& argv)
-    {
-      app = boost::shared_ptr<qi::ApplicationSession>(new qi::ApplicationSession(argc, argv, qi::ApplicationSession::Option_NoAutoExit));
-    }
+    //convert a python list to an old C argc/argv pair.
+    //the dtor destroy argc/argv
+    class ArgumentConverter {
+    public:
+      ArgumentConverter() {
+        argc = 0;
+        argv = new char*[2];
+        argv[0] = 0;
+        argv[1] = 0;
 
-    template<typename T> void initNoArg(T& app)
-    {
-      int argc = 0;
-      static char *argvstorage[2] = { 0, 0 };
-      char **argv = argvstorage;
-      initApp(app, argc, argv);
-    }
+      }
 
-    template<typename T> void initWithArgs(T& app, boost::python::list& args)
-    {
-      int  argc, i;
-      char **argv;
-      argc = boost::python::len(args);
-      argv = new char*[argc + 1];
-      for (i = 0; i < argc; ++i) {
-        std::string s = boost::python::extract<std::string>(args[i]);
-        /*TODO: leak*/
-        argv[i] = qi::os::strdup(s.c_str());
-        qiLogVerbose() << "args:" << argv[i];
+      ArgumentConverter(boost::python::list& args)
+      {
+        argc = boost::python::len(args);
+        argv = new char*[argc + 1];
+        for (int i = 0; i < argc; ++i) {
+          std::string s = boost::python::extract<std::string>(args[i]);
+          argv[i] = qi::os::strdup(s.c_str());
+          qiLogVerbose() << "arg[:" << i << "]" << argv[i];
+        }
       }
-      /* #2 Create c application */
-      initApp(app, argc, argv);
-      /* Update the input list */
-      for (int i = boost::python::len(args); i > 0; --i) {
-        args.pop(i - 1);
+
+      void update(boost::python::list& args) {
+        /* Update the input list */
+        for (int i = boost::python::len(args); i > 0; --i) {
+          args.pop(i - 1);
+        }
+        for (int i = 0; i < argc; ++i) {
+          args.insert(i, std::string(argv[i]));
+        }
       }
-      for (int i = 0; i < app->argc(); ++i) {
-        args.insert(i, std::string(argv[i]));
+
+      ~ArgumentConverter() {
+        for (int i = 0; i < argc; ++i) {
+          /* Free C argument */
+          free(argv[i]);
+        }
+        delete[] argv;
+        argv = 0;
+        argc = 0;
       }
-      /* #3 Free C arguments */
-      i = 0;
-      delete[] argv;
-    }
+
+      int    argc;
+      char** argv;
+    };
 
     void destroylater(boost::shared_ptr<qi::Application>, qi::Atomic<int> *doClose)
     {
@@ -80,12 +84,11 @@ namespace qi {
 
     class PyApplication {
     public:
-      PyApplication() {
-        initNoArg(_app);
-      }
-
       PyApplication(boost::python::list args) {
-        initWithArgs(_app, args);
+        ArgumentConverter         ac(args);
+
+        _app = boost::shared_ptr<qi::Application>(new qi::Application(ac.argc, ac.argv));
+        ac.update(args);
       }
 
       //delay the destruction of _app to a thread, because the destruction can lock
@@ -111,25 +114,23 @@ namespace qi {
     };
 
     void export_pyapplication() {
-      boost::python::class_<PyApplication>("Application")
-          .def(boost::python::init<boost::python::list>())
+      boost::python::class_<PyApplication>("Application", boost::python::init<boost::python::list>())
           .def("run", &PyApplication::run)
           .def("stop", &PyApplication::stop);
     }
 
     class PyApplicationSession {
     public:
-      PyApplicationSession() {
-        initNoArg(_app);
-        initSes();
-      }
+      PyApplicationSession(boost::python::list args, bool autoExit, const std::string& url) {
+        ArgumentConverter         ac(args);
+        ApplicationSessionOptions aso = qi::ApplicationSession::Option_None;
 
-      PyApplicationSession(boost::python::list args) {
-        initWithArgs(_app, args);
-        initSes();
-      }
+        if (!autoExit)
+          aso = qi::ApplicationSession::Option_NoAutoExit;
 
-      void initSes() {
+        _app = boost::shared_ptr<qi::ApplicationSession>(new qi::ApplicationSession(ac.argc, ac.argv, aso, url));
+        //update args (some can have been removed by the AppSes ctor
+        ac.update(args);
         _ses = makePySession(_app->session());
       }
 
@@ -167,13 +168,22 @@ namespace qi {
     };
 
     void export_pyapplicationsession() {
-      boost::python::class_<PyApplicationSession>("ApplicationSession")
-          .def(boost::python::init<boost::python::list>())
-          .def("run", &PyApplicationSession::run)
-          .def("stop", &PyApplicationSession::stop)
-          .def("start", &PyApplicationSession::start)
-          .add_property("url", &PyApplicationSession::url)
-          .add_property("session", &PyApplicationSession::session)
+      boost::python::class_<PyApplicationSession>("ApplicationSession", boost::python::init<boost::python::list, bool, std::string>())
+          .def("run", &PyApplicationSession::run,
+               "run()\n"
+               "Block until the end of the program. (call :py:func:`qi.ApplicationSession.stop` to end the program)")
+          .def("stop", &PyApplicationSession::stop,
+               "stop()\n"
+               "Ask the application to stop, the run function will return.")
+          .def("start", &PyApplicationSession::start,
+               "start()\n"
+               "Start the connection of the session, once this function is called everything is fully initialized and working.")
+          .add_property("url", &PyApplicationSession::url,
+                        "url\n"
+                        "The url given to the Application. It's the url used to connect the session")
+          .add_property("session", &PyApplicationSession::session,
+                        "session\n"
+                        "The session associated to the application")
           ;
     }
   } // !py

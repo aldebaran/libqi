@@ -58,5 +58,7 @@ Example
 
 Know if a variable is a qi.Object:
 
-if isinstance(x, qi.Object):
-  print("Yes it is!")
+.. code-block:: python
+
+   if isinstance(x, qi.Object):
+        print("Yes it is!")
