@@ -1225,13 +1225,13 @@ namespace qi
       std::stringstream msg;
       msg << "Conversion from ";
       if (from) {
-        msg << from->infoString() << '(' << from->kind() << ')';
+        msg << from->signature().toString() << '(' << from->info().asDemangledString() << ')';
       } else {
         msg << "NULL Type";
       }
       msg << " to ";
       if (to) {
-        msg << to->infoString() << '(' << to->kind() << ")";
+        msg << to->signature().toString() << '(' << to->info().asDemangledString() << ')';
       } else {
         msg << "NULL Type";
       }
