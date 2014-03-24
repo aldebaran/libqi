@@ -96,6 +96,12 @@ Deprecated Methods
 
       Please use :py:func:`qi.verbose` instead
 
+.. function:: qi.logDebug
+
+   .. deprecated:: 2.0.1
+
+      Please use :py:func:`qi.verbose` instead
+
 
 Example
 =======

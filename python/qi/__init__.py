@@ -73,7 +73,7 @@ from ._type import ( Void, Bool,
                      typeof, _isinstance)
 from ._binder import bind, nobind
 from .logging import fatal, error, warning, info, verbose, Logger
-from .logging import getLogger, logFatal, logError, logWarning, logInfo, logVerbose  #deprecated
+from .logging import getLogger, logFatal, logError, logWarning, logInfo, logVerbose, logDebug  #deprecated
 from .translator import defaultTranslator, tr, Translator
 
 
@@ -134,7 +134,7 @@ __all__ = ["FutureState",
            "typeof", "isinstance",
            "bind", "nobind",
            "fatal", "error", "warning", "info", "verbose",
-           "getLogger", "logFatal", "logError", "logWarning", "logInfo", "logVerbose",  #deprecated
+           "getLogger", "logFatal", "logError", "logWarning", "logInfo", "logVerbose", "logDebug"  #deprecated
            "Logger", "defaultTranslator", "tr", "Translator"
 ]
 

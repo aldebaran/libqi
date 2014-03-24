@@ -13,7 +13,7 @@ import uuid
 __all__ = ("FATAL", "ERROR", "WARNING", "INFO", "VERBOSE", "DEBUG",
            "fatal", "error", "warning", "info", "verbose",
            "Logger", "setLevel", "setContext", "setFilters",
-           "getLogger", "logFatal", "logError", "logWarning", "logInfo", "logVerbose",  #deprecated
+           "getLogger", "logFatal", "logError", "logWarning", "logInfo", "logVerbose", "logDebug"  #deprecated
            )
 
 # Log Level
@@ -130,4 +130,5 @@ logError   = error
 logWarning = warning
 logInfo    = info
 logVerbose = verbose
+logDebug   = verbose
 getLogger  = Logger
