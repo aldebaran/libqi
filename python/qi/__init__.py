@@ -11,6 +11,7 @@
 Provided features are very close to C++, Python style.
 """
 
+
 def load_lib_qipyessaging():
     """ Load _qipyessaging.so and its dependencies.
 
@@ -32,6 +33,7 @@ def load_lib_qipyessaging():
             "libqi.so",
             "libqitype.so",
             "libqimessaging.so",
+            "libqipython.so",
     ]
     this_dir = os.path.abspath(os.path.dirname(__file__))
     for dep in deps:
@@ -41,15 +43,15 @@ def load_lib_qipyessaging():
         except Exception:
             pass
 
+
 def _on_import_module():
     import sys
-    import atexit
     if sys.platform.startswith("linux"):
         load_lib_qipyessaging()
 
-    atexit.register(_stopApplication)
 
 #######
+_on_import_module()
 
 from _qi import Application as _Application
 from _qi import ApplicationSession as _ApplicationSession
@@ -124,7 +126,6 @@ __all__ = ["FutureState",
            "createObject",
            "registerObjectFactory",
            "async",
-
            "Void", "Bool", "Int8", "UInt8", "Int16", "UInt16", "Int32", "UInt32", "Int64", "UInt64",
            "Float", "Double", "String", "List", "Map", "Struct", "Object", "Dynamic", "Buffer", "AnyArguments",
            "typeof", "isinstance",
@@ -133,4 +134,7 @@ __all__ = ["FutureState",
            "defaultTranslator", "tr", "Translator"
 ]
 
-_on_import_module()
+import atexit
+atexit.register(_stopApplication)
+# Do not pollute namespace
+del atexit
