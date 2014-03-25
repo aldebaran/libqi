@@ -43,6 +43,7 @@ namespace qi {
     virtual void destroy()=0;
     virtual void* nativeHandle()=0;
     virtual void run()=0;
+    virtual void setMaxThreads(unsigned int max)=0;
     boost::function<void()> _emergencyCallback;
   protected:
     virtual ~EventLoopPrivate() {}
@@ -63,6 +64,7 @@ namespace qi {
       const boost::function<void ()>& callback);
     virtual void destroy();
     virtual void* nativeHandle();
+    virtual void setMaxThreads(unsigned int max);
   private:
     void _runPool();
     void _pingThread();
@@ -83,6 +85,7 @@ namespace qi {
     qi::Atomic<int>    _running;
     boost::recursive_mutex _mutex;
     boost::thread::id  _id;
+    unsigned int _maxThreads;
   };
 
   class ThreadPool;
@@ -101,6 +104,7 @@ namespace qi {
       const boost::function<void ()>& callback);
     virtual void destroy();
     virtual void* nativeHandle();
+    virtual void setMaxThreads(unsigned int max);
   private:
     virtual ~EventLoopThreadPool();
     void _destroy();

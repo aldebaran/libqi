@@ -55,6 +55,9 @@ namespace qi
     /// Set callback to be called in case of a deadlock detection
     void setEmergencyCallback(boost::function<void()> cb);
 
+    /// Set the maximum number of threads in the pool
+    void setMaxThreads(unsigned int max);
+
     // Internal function
     void *nativeHandle();
 

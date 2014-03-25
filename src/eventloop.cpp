@@ -21,6 +21,16 @@ qiLogCategory("qi.eventloop");
 
 namespace qi {
 
+  template<typename T>
+  static T getEnvParam(const char* name, T defaultVal)
+  {
+    std::string sval = qi::os::getenv(name);
+    if (sval.empty())
+      return defaultVal;
+    else
+      return boost::lexical_cast<T>(sval);
+  }
+
   EventLoopAsio::EventLoopAsio()
   : _mode(Mode_Unset)
   , _destroyMe(false)
@@ -48,6 +58,7 @@ namespace qi {
     }
     else
     {
+      _maxThreads = getEnvParam("QI_EVENTLOOP_MAX_THREADS", 150);
       _mode = Mode_Pooled;
       _work = new boost::asio::io_service::work(_io);
       for (int i=0; i<nthread; ++i)
@@ -87,20 +98,9 @@ namespace qi {
     return b;
   }
 
-  template<typename T>
-  static T getEnvParam(const char* name, T defaultVal)
-  {
-    std::string sval = qi::os::getenv(name);
-    if (sval.empty())
-      return defaultVal;
-    else
-      return boost::lexical_cast<T>(sval);
-  }
-
   void EventLoopAsio::_pingThread()
   {
     qi::os::setCurrentThreadName("EvLoop.mon");
-    static int maxThreads = getEnvParam("QI_EVENTLOOP_MAX_THREADS", 150);
     static int msTimeout = getEnvParam("QI_EVENTLOOP_PING_TIMEOUT", 500);
     static int msGrace = getEnvParam("QI_EVENTLOOP_GRACE_PERIOD", 0);
     static int maxTimeouts = getEnvParam("QI_EVENTLOOP_MAX_TIMEOUTS", 20);
@@ -119,7 +119,7 @@ namespace qi {
         boost::get_system_time()+ boost::posix_time::milliseconds(msTimeout),
         boost::bind(&bool_identity, boost::ref(gotPong))))
       {
-        if (maxThreads && *_nThreads == maxThreads + 1) // we count in nThreads
+        if (_maxThreads && *_nThreads >= _maxThreads + 1) // we count in nThreads
         {
           ++nbTimeout;
           qiLogInfo() << "Thread limit reached (" << nbTimeout << " timeouts)";
@@ -279,6 +279,10 @@ namespace qi {
     return prom.future();
   }
 
+  void EventLoopAsio::setMaxThreads(unsigned int max)
+  {
+    _maxThreads = max;
+  }
 
   void* EventLoopAsio::nativeHandle()
   {
@@ -406,6 +410,10 @@ namespace qi {
     return promise.future();
   }
 
+  void EventLoopThreadPool::setMaxThreads(unsigned int max)
+  {
+  }
+
   EventLoop::EventLoop()
   : _p(0)
   {
@@ -504,6 +512,11 @@ namespace qi {
   void EventLoop::setEmergencyCallback(boost::function<void()> cb)
   {
     _p->_emergencyCallback = cb;
+  }
+
+  void EventLoop::setMaxThreads(unsigned int max)
+  {
+    _p->setMaxThreads(max);
   }
 
   struct MonitorContext
@@ -663,5 +676,4 @@ namespace qi {
   {
     return *(boost::asio::io_service*)getEventLoop()->nativeHandle();
   }
-
 }
