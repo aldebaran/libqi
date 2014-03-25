@@ -25,6 +25,12 @@ The qi.future returned can be used to interact with the operation. (cancel, get 
 
 .. autofunction:: qi.async
 
+.. warning::
+
+   Canceling the async operation is possible while it is delayed.
+
+   Once the callback is called, cancel will not stop it in the middle of its execution.
+
 qi.PeriodicTask
 ===============
 
