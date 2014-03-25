@@ -30,6 +30,9 @@ qi.PeriodicTask
 
 Execute an operation periodically and asynchronously.
 
+By default, we do not compensate the callback time.
+The period will be constant between the end of a call and the beginning of another.
+
 .. autoclass:: qi.PeriodicTask
    :members:
 
