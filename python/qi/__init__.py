@@ -127,7 +127,7 @@ __all__ = ["FutureState",
            "typeof", "isinstance",
            "bind", "nobind",
            "fatal", "error", "warning", "info", "verbose",
-           "getLogger", "logFatal", "logError", "logWarning", "logInfo", "logVerbose", "logDebug"  #deprecated
+           "getLogger", "logFatal", "logError", "logWarning", "logInfo", "logVerbose", "logDebug",  #deprecated
            "Logger", "defaultTranslator", "tr", "Translator"
 ]
 
