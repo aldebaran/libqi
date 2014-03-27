@@ -162,13 +162,16 @@ namespace qi {
           //TODO: Optimise
           AnyReference value = msg.value((msg.flags()&Message::TypeFlag_DynamicPayload)? "m":sig, _socket);
 
-          GenericFunctionParameters args;
-          if (sig == "m")
-            args = value.content().asTupleValuePtr();
-          else
-            args = value.asTupleValuePtr();
-          qiLogDebug() << "Triggering local event listeners with args : " << args.size();
-          sb->trigger(args);
+          {
+            GenericFunctionParameters args;
+            if (sig == "m")
+              args = value.content().asTupleValuePtr();
+            else
+              args = value.asTupleValuePtr();
+            qiLogDebug() << "Triggering local event listeners with args : " << args.size();
+            sb->trigger(args);
+          }
+          value.destroy();
         }
         catch (const std::exception& e)
         {

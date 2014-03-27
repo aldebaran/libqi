@@ -10,9 +10,9 @@ import time
 import threading
 import pytest
 
-def setValue(p):
+def setValue(p, v):
     time.sleep(0.2)
-    p.setValue(42)
+    p.setValue(v)
 
 class FooService:
     def __init__(self):
@@ -49,14 +49,20 @@ class FooService:
 
     def retfutint(self):
         p = qi.Promise()
-        t = threading.Thread(target=setValue, args=(p,))
+        t = threading.Thread(target=setValue, args=(p, 42, ))
         t.start()
         return p.future()
 
     @qi.bind(qi.Int32)
     def bind_retfutint(self):
         p = qi.Promise("(i)")
-        t = threading.Thread(target=setValue, args=(p,))
+        t = threading.Thread(target=setValue, args=(p, 42, ))
+        t.start()
+        return p.future()
+
+    def retfutmap(self):
+        p = qi.Promise()
+        t = threading.Thread(target=setValue, args=(p, { 'titi' : 'toto', "foo" : "bar" },))
         t.start()
         return p.future()
 
@@ -105,6 +111,24 @@ def docalls(sserver, sclient):
     assert s.retfutint() == 42
     print "test bound future"
     assert s.bind_retfutint() == 42
+
+    print("test future async")
+    assert s.retfutint(_async=True).value() == 42
+    print("test bound future async")
+    assert s.bind_retfutint(_async=True).value() == 42
+
+    print("test future async")
+    assert qi.async(s.retfutint).value() == 42
+    print("test bound future async")
+    assert qi.async(s.bind_retfutint).value() == 42
+
+    print("test future map")
+    assert s.retfutmap() == { 'titi' : 'toto', "foo" : "bar" }
+
+    print("test future map async")
+    fut = s.retfutmap(_async=True)
+    assert fut.hasValue() == True
+    assert fut.value() == { 'titi' : 'toto', "foo" : "bar" }
 
 
 

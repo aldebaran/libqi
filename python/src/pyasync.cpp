@@ -135,7 +135,14 @@ namespace qi { namespace py {
              "Request for periodic task to stop asynchronously")
         .def("compensateCallbackTime", &PyPeriodicTask::compensateCallbackTime,
              "compensateCallbackTime(compensate)\n"
-             ":param compensate: If true, call interval will take into account call duration to maintain the period.")
+             ":param compensate: boolean. True to activate the compensation.\n"
+             "\n"
+             "When compensation is activated, call interval will take into account call duration to maintain the period.\n"
+             "\n"
+             ".. warning::\n"
+             "  when the callback is longer than the period specified, compensation will result in\n"
+             "  the callback being called successively without pause"
+             "\n")
         .def("setName", &PyPeriodicTask::setName,
              "setName(name)\n"
              "Set name for debugging and tracking purpose")

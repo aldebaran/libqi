@@ -25,13 +25,53 @@ The qi.future returned can be used to interact with the operation. (cancel, get 
 
 .. autofunction:: qi.async
 
+.. warning::
+
+   Canceling the async operation is possible while it is delayed.
+
+   Once the callback is called, cancel will not stop it in the middle of its execution.
+
 qi.PeriodicTask
 ===============
 
 Execute an operation periodically and asynchronously.
 
+By default, we do not compensate the callback time.
+The period will be constant between the end of a call and the beginning of another.
+
 .. autoclass:: qi.PeriodicTask
    :members:
+
+
+PeriodicTask operations visualization
+=====================================
+
+No compensation, task 3s, period 5s
+
+::
+
+  v                                v
+  +-----------+                    +-----------
+  +  Task 3s  +      wait 5s       +  Task 3s  ...
+  +-----------+--------------------+-----------
+
+Compensation, task 3s, period 5s
+
+::
+
+  v                     v
+  +-----------+         +-----------
+  +  Task 3s  + wait 2s +  Task 3s  ...
+  +-----------+---------+-----------
+
+Compensation, task 7s, period 5s
+
+::
+
+  v                            v
+  +----------------------------+---------------------------+----
+  +         Task 7s            +         Task 7s           +  ...
+  +----------------------------+---------------------------+----
 
 
 Examples
@@ -102,7 +142,6 @@ Canceling a delayed operation before its execution.
   action.wait()
   if action.isCanceled():
     qi.info("async example", "dummyAction was canceled as expected")
-
 
 
 Tips

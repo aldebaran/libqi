@@ -27,10 +27,19 @@ Getting a service:
 
   import qi
 
+  s = qi.Session("tcp://127.0.0.1:9559")
+  foo = s.service("Foo")
+
+A more explicit example:
+
+.. code-block:: python
+
+  import qi
+
   s = qi.Session()
   s.connect("tcp://127.0.0.1:9559")
 
-  foo = s.service("Foo")
+  foo = s.service("foo")
 
 Registering a service:
 

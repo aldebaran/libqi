@@ -146,6 +146,9 @@ namespace qi
 
   qi::Url TcpTransportSocket::remoteEndpoint() const
   {
+    boost::recursive_mutex::scoped_lock lock(_closingMutex);
+    if (!_socket)
+      return qi::Url();
     return qi::Url(
       _socket->lowest_layer().remote_endpoint().address().to_string(),
       "tcp",

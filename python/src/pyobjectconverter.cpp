@@ -666,12 +666,17 @@ size_t PyObjectListTypeInterface::size(void* storage)
 
 qi::AnyIterator PyObjectListTypeInterface::begin(void* storage)
 {
-  return qi::AnyReference(PyObjectListIteratorTypeInterface::getType(), new PyObjectListIteratorTypeInterface::Iter(storage));
+  return qi::AnyValue(
+      qi::AnyReference(PyObjectListIteratorTypeInterface::getType(),
+        new PyObjectListIteratorTypeInterface::Iter(storage)), false, true);
 }
 
 qi::AnyIterator PyObjectListTypeInterface::end(void* storage)
 {
-  return qi::AnyReference(PyObjectListIteratorTypeInterface::getType(), new PyObjectListIteratorTypeInterface::Iter(storage, size(storage)));
+  return qi::AnyValue(
+      qi::AnyReference(PyObjectListIteratorTypeInterface::getType(),
+        new PyObjectListIteratorTypeInterface::Iter(storage, size(storage))),
+      false, true);
 }
 
 void PyObjectListTypeInterface::pushBack(void** storage, void* valueStorage)
@@ -760,14 +765,16 @@ qi::AnyIterator PyObjectDictTypeInterface::begin(void* storage)
   PyObjectDictIteratorTypeInterface* typeInterface = PyObjectDictIteratorTypeInterface::getType();
   void* iter = new PyObjectDictIteratorTypeInterface::Iter(p);
   typeInterface->next(&iter);
-  return qi::AnyReference(typeInterface, iter);
+  return qi::AnyValue(qi::AnyReference(typeInterface, iter), false, true);
 }
 
 qi::AnyIterator PyObjectDictTypeInterface::end(void* storage)
 {
   qi::py::GILScopedLock _lock;
   PyObject* p = (PyObject*)PyObjectTypeInterface::ptrFromStorage(&storage);
-  return qi::AnyReference(PyObjectDictIteratorTypeInterface::getType(), new PyObjectDictIteratorTypeInterface::Iter(p, true));
+  return qi::AnyValue(
+      qi::AnyReference(PyObjectDictIteratorTypeInterface::getType(),
+        new PyObjectDictIteratorTypeInterface::Iter(p, true)), false, true);
 }
 
 void PyObjectDictTypeInterface::insert(void** storage, void* keyStorage, void* valueStorage)

@@ -30,7 +30,14 @@ namespace qi { namespace py {
         setupSignal();
       }
 
-      PySession(const qi::SessionPtr& session)
+      explicit PySession(const std::string& url)
+        : _ses(new qi::Session())
+      {
+        setupSignal();
+        //throw on error
+        connect(url);
+      }
+      explicit PySession(const qi::SessionPtr& session)
         : _ses(session)
       {
         setupSignal();
@@ -156,6 +163,7 @@ namespace qi { namespace py {
 
     void export_pysession() {
       boost::python::class_<PySession>("Session", boost::python::init<>())
+          .def(boost::python::init<const std::string&>())
           .def("connect", &PySession::connect, (boost::python::arg("url"), boost::python::arg("_async") = false),
                "connect(url) -> None\n"
                "Connect the session to a ServiceDirectory")

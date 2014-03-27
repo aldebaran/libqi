@@ -73,6 +73,7 @@ from ._type import ( Void, Bool,
                      typeof, _isinstance)
 from ._binder import bind, nobind
 from .logging import fatal, error, warning, info, verbose, Logger
+from .logging import getLogger, logFatal, logError, logWarning, logInfo, logVerbose, logDebug  #deprecated
 from .translator import defaultTranslator, tr, Translator
 
 
@@ -94,27 +95,22 @@ def _stopApplication():
 
 #application is a singleton, it should live till the end of the program
 #because it own eventloops
-def ApplicationSession(args=None):
+def Application(args=None, raw=False, autoExit=True, url=None):
     global _app
+    if args is None:
+        args = [ "" ]
+    if url is None:
+        url = "tcp://127.0.0.1:9559"
     if _app is None:
-        if args is None:
-            _app = _ApplicationSession()
+        if raw:
+            _app = _Application(args)
         else:
-            _app = _ApplicationSession(args)
+            _app = _ApplicationSession(args, autoExit, url);
     else:
         raise Exception("Application was already initialized")
     return _app
 
-def Application(args=None):
-    global _app
-    if _app is None:
-        if args is None:
-            _app = _Application()
-        else:
-            _app = _Application(args)
-    else:
-        raise Exception("Application was already initialized")
-    return _app
+ApplicationSession = Application
 
 __all__ = ["FutureState",
            "FutureTimeout",
@@ -130,8 +126,9 @@ __all__ = ["FutureState",
            "Float", "Double", "String", "List", "Map", "Struct", "Object", "Dynamic", "Buffer", "AnyArguments",
            "typeof", "isinstance",
            "bind", "nobind",
-           "fatal", "error", "warning", "info", "verbose", "Logger",
-           "defaultTranslator", "tr", "Translator"
+           "fatal", "error", "warning", "info", "verbose",
+           "getLogger", "logFatal", "logError", "logWarning", "logInfo", "logVerbose", "logDebug",  #deprecated
+           "Logger", "defaultTranslator", "tr", "Translator"
 ]
 
 import atexit
