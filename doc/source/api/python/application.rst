@@ -35,7 +35,7 @@ Reference
       :param args: the list of arguments (usually sys.argv)
       :param autoExit: By default the Application quit on session disconnection, set to False to avoid this behavior (default to True)
       :param url: The default value to use for qi-url (default to tcp://127.0.0.1:9559)
-      :param raw: If set to True this do not include a Session into the Application. (advanced user only)
+      :param raw: If set to True this does not include a Session into the Application. (advanced user only)
 
       initialise the Application
 
@@ -68,12 +68,12 @@ Deprecated
 
    .. deprecated:: 2.0.1
 
-      Use qi.Application instead.
+Use qi.Application instead.
 
 Examples
 ========
 
-Simple example that list all ALMemory keys:
+Simple example that lists all ALMemory keys:
 
 .. code-block:: python
 
@@ -91,7 +91,7 @@ Simple example that list all ALMemory keys:
 
        pprint(almemory.getDataListName())
 
-       #no app.run() needed because we want to exit once getDataListName return
+       #no app.run() needed because we want to exit once getDataListName returns
 
 If you put the content of this script in a listmemory.py file, then you can:
 
@@ -104,7 +104,7 @@ If you put the content of this script in a listmemory.py file, then you can:
   $ python monscript.py --qi-url=tcp://192.168.0.42:9559
 
 
-Simple example that export a service.
+Simple example that exports a service.
 
 .. code-block:: python
 
@@ -124,4 +124,4 @@ Simple example that export a service.
 
        app.session.registerService("foo", Foo())
 
-       app.run()   # will exist when the connection is over
+       app.run()   # will exit when the connection is over
