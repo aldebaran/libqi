@@ -46,6 +46,7 @@ namespace qi  {
       qiLogDebug("qitype.typeof") << "first typeOf request for unregistered type " << typeid(T).name();
       tgt = new TypeImpl<T>();
     }
+
     template<typename T>
     inline TypeInterface* typeOfBackend()
     {

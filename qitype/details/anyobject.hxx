@@ -469,7 +469,7 @@ namespace qi {
   /** A Proxy is the base class used by bouncer implementations of all
   * interfaces.
   */
-  class QITYPE_API Proxy
+  class QITYPE_API Proxy : public boost::noncopyable
   {
   public:
     Proxy(AnyObject obj) : _obj(obj) {qiLogDebug("qitype.proxy") << "Initializing " << this;}
@@ -937,13 +937,14 @@ namespace qi {
   // Needed for legacy code
   //template<> struct TypeImpl<Proxy>: public TypeProxy {};
 
-    namespace detail
+  namespace detail
   {
     // FIXME: inline that in QI_REGISTER_PROXY_INTERFACE maybe
     template<typename ProxyImpl> Proxy* static_proxy_cast(void* storage)
     {
       return static_cast<Proxy*>((ProxyImpl*)storage);
     }
+
     template<typename ProxyImpl>
     TypeProxy* makeProxyInterfaceWrapper()
     {
@@ -952,6 +953,7 @@ namespace qi {
         result = new TypeProxyWrapper<ProxyImpl>(&static_proxy_cast<ProxyImpl>);
       return result;
     }
+
     template<typename ProxyImpl>
     TypeProxy* makeProxyInterface()
     {
@@ -968,6 +970,7 @@ namespace qi {
       return AnyReference::from(sp).clone();
     }
   }
+
   template<typename Proxy, typename Interface>
   bool registerProxyInterface()
   {
@@ -979,6 +982,7 @@ namespace qi {
     map[typeOf<Interface>()->info()] = &detail::makeProxy<Proxy>;
     return true;
   }
+
   template<typename ProxyType>
   bool registerProxy()
   {

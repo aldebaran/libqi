@@ -34,12 +34,14 @@ namespace qi
       static void* create() { return new T();}
       static void createInPlace(void* ptr) { new(ptr)T();}
     };
+
     template<typename T>
     struct TypeTraitCreate<T, false>
     {
       static void* create() { typeFail(typeid(T).name(), "default constructor"); return 0;}
       static void createInPlace(void* ptr) {typeFail(typeid( T).name(), "default constructor");}
     };
+
     template<typename T, bool b>
     struct TypeTraitCopy
     {
@@ -47,6 +49,7 @@ namespace qi
       static void* clone(void* src) { return new T(*(T*)src);}
       static void cloneInPlace(void* ptr, void* src) { new (ptr)T(*(T*)src);}
     };
+
     template<typename T>
     struct TypeTraitCopy<T, false>
     {
@@ -55,11 +58,13 @@ namespace qi
       static void* clone(void* src) { typeFail(typeid(T).name(), "clone"); return 0;}
       static void cloneInPlace(void* ptr, void* src) { typeFail(typeid(T).name(), "clone");}
     };
+
     template<typename T, bool b>
     struct TypeTraitDestroy
     {
       static void destroy(void* ptr) { delete (T*)ptr;}
     };
+
     template<typename T>
     struct TypeTraitDestroy<T, false>
     {
@@ -78,18 +83,21 @@ namespace qi
       , public TypeTraitCopy<T, true>
       , public TypeTraitDestroy<T, true>
     {};
+
     template<typename T>
     struct TypeManagerDefaultInterface
       : public TypeTraitCreate<T, false>
       , public TypeTraitCopy<T, false>
       , public TypeTraitDestroy<T, true>
     {};
+
     template<typename T>
     struct TypeManagerNull
     : public TypeTraitCreate<T, false>
     , public TypeTraitCopy<T, false>
     , public TypeTraitDestroy<T, false>
     {};
+
     template<typename T>
     struct TypeManagerNotConstructible // not constructible but copyable
     : public TypeTraitCreate<T, false>
@@ -130,10 +138,12 @@ namespace qi
   {
   public:
     typedef T type;
+
     static void* ptrFromStorage(void** storage)
     {
       return *storage;
     }
+
     static void* initializeStorage(void* ptr=0)
     {
       if (ptr)
@@ -147,10 +157,12 @@ namespace qi
         qiLogError("qitype.bypointer") << "initializeStorage error on " << typeid(T).name();
       return res;
     }
+
     static void* clone(void* src)
     {
       return Manager::clone(src);
     }
+
     static void destroy(void* src)
     {
       T* ptr = (T*)ptrFromStorage(&src);
