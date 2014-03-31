@@ -14,7 +14,7 @@ namespace qi {
         return;
 
       PyEval_InitThreads();
-      Py_Initialize();
+      Py_InitializeEx(0);
       _mainThread = PyThreadState_Swap(NULL);
       // Py_Initialize takes the GIL, so we release it. If one wants to call
       // Python API, they must take the lock by themselves.
