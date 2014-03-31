@@ -331,7 +331,7 @@ TEST(QiService, RemoteServiceRegistrationAfterDisconnection)
   // Register the object with the provider, find it back from the client
   p.server()->registerService("Bar", barAsObject);
   qi::AnyObject barAsRemoteService = p.client()->service("Bar");
-  ASSERT_TRUE(barAsRemoteService != NULL);
+  ASSERT_TRUE(barAsRemoteService);
 
   // Disconnect the provider, it should unregister any related services
   p.server()->close();
@@ -351,7 +351,7 @@ TEST(QiService, RemoteServiceRegistrationAfterDisconnection)
   ASSERT_TRUE(f.hasValue());
   barAsRemoteService = f.value();
 
-  ASSERT_TRUE(barAsRemoteService != NULL);
+  ASSERT_TRUE(barAsRemoteService);
 }
 
 int main(int argc, char **argv)
