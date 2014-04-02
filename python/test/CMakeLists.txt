@@ -40,7 +40,7 @@ function(qi_add_python_qimessaging_test name)
 endfunction()
 
 qi_add_python_qimessaging_test(test_async   TIMEOUT 5)
-qi_add_python_qimessaging_test(test_promise   TIMEOUT 5)
+qi_add_python_qimessaging_test(test_promise   TIMEOUT 20)
 qi_add_python_qimessaging_test(test_signal   TIMEOUT 5)
 qi_add_python_qimessaging_test(test_typespassing   TIMEOUT 5)
 qi_add_python_qimessaging_test(test_call TIMEOUT 10)
@@ -63,4 +63,4 @@ qi_create_gtest(test_python${pyver}_registerpythonclass SRC registerfactory.cpp
                 ARGUMENTS "${CMAKE_CURRENT_SOURCE_DIR}/test_registerfactory.py" "${CMAKE_CURRENT_SOURCE_DIR}/.." "${QI_SDK_DIR}/${QI_SDK_LIB}" "${PYTHONHOME}")
 qi_create_gtest(test_python${pyver}_typepassing SRC test_python_typepassing.cpp
                 DEPENDS QIPYTHON${pyver} GTEST
-                ARGUMENTS "${PYTHONHOME}" "${QI_SDK_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/..")
+                ARGUMENTS "${QI_SDK_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/.." "${PYTHONHOME}")

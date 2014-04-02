@@ -228,16 +228,17 @@ PyThreadState *mainstate;
 
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
-  if (argc != 4)
+  if (argc < 3)
   {
-    std::cerr << "Usage: " << argv[0] << " <pythonhome> <sdk path> <src path>" << std::endl;
+    std::cerr << "Usage: " << argv[0] << " <sdk path> <src path> [pythonhome]" << std::endl;
     return 1;
   }
 
-  std::string sdk_dir = argv[2];
-  std::string src_dir = argv[3];
+  std::string sdk_dir = argv[1];
+  std::string src_dir = argv[2];
 
-  qi::os::setenv("PYTHONHOME", argv[1]);
+  if (argc >= 4)
+	  qi::os::setenv("PYTHONHOME", argv[3]);
 
   Py_Initialize();
   PyEval_InitThreads();
