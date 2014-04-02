@@ -279,7 +279,7 @@ namespace qi
     boost::recursive_mutex::scoped_lock lock(_closingMutex);
     _abort = true;
     _status = qi::TransportSocket::Status_Disconnected;
-    disconnected(erc);
+    disconnected("System error: " + erc);
 
     if (_connecting)
     {
@@ -360,7 +360,7 @@ namespace qi
         qiLogWarning() << "resolved: " << erc.message();
         _status = qi::TransportSocket::Status_Disconnected;
         error(erc.message());
-        pSetError(connectPromise, erc.message());
+        pSetError(connectPromise, "System error: " + erc.message());
       }
       else
       {
@@ -386,8 +386,7 @@ namespace qi
       const char* s = e.what();
       qiLogError() << s
                    << " only IPv6 were resolved on " << url().str();
-      boost::system::error_code erc;
-      error(erc.message());
+      error(s);
       pSetError(connectPromise, s);
     }
   }
@@ -400,7 +399,7 @@ namespace qi
       qiLogWarning() << "connect: " << erc.message();
       _status = qi::TransportSocket::Status_Disconnected;
       error(erc.message());
-      pSetError(connectPromise, erc.message());
+      pSetError(connectPromise, "System error: " + erc.message());
     }
     else
     {
@@ -434,7 +433,7 @@ namespace qi
       qiLogWarning() << "connect: " << erc.message();
       _status = qi::TransportSocket::Status_Disconnected;
       error(erc.message());
-      pSetError(connectPromise, erc.message());
+      pSetError(connectPromise, "System error: " + erc.message());
     }
     else
     {
