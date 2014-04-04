@@ -41,7 +41,7 @@ namespace qi
     *  Returns true to invoke subscribers, false to 'abort' the update.
     */
     typedef boost::function<bool (T&, const T&)> Setter;
-    typedef boost::function<T()> Getter;
+    typedef boost::function<T(const T&)> Getter;
     typedef SignalF<void(const T&)> SignalType;
     typedef T PropertyType;
     /**
