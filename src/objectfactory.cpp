@@ -23,7 +23,7 @@ namespace qi {
   static LoadedServiceMap       *_f_loadedService;
 
 
-  typedef std::map<std::string, boost::function<qi::AnyObject (const std::string&)> > FactoryMap;
+  typedef std::map<std::string, AnyFunction> FactoryMap;
   static FactoryMap* _f_map = 0;
 
   static void _f_init()
@@ -38,7 +38,7 @@ namespace qi {
     }
   }
 
-  bool registerObjectFactory(const std::string& name, boost::function<qi::AnyObject (const std::string&)> factory)
+  bool registerObjectFactory(const std::string& name, AnyFunction factory)
   {
     qiLogDebug() << "registering " << name;
     _f_init();
@@ -52,14 +52,14 @@ namespace qi {
     return true;
   }
 
-  AnyObject createObject(const std::string& name)
+  AnyObject createObject(const std::string& name, const AnyReferenceVector& args)
   {
     _f_init();
     boost::recursive_mutex::scoped_lock sl(*_f_mutex_struct);
     FactoryMap::iterator i = _f_map->find(name);
     if (i == _f_map->end())
       return AnyObject();
-    return (i->second)(name);
+    return i->second.call(args).toObject();
   }
 
   std::vector<std::string> listObjectFactories()
