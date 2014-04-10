@@ -55,11 +55,11 @@ and `qi::Property`. Here is an example exhibiting most of the features:
 
 There are some restrictions on what you can do:
 
-- Do not use *class mebmer data*.
+- Do not use *class member data*.
 - Output parameters are not supported: you should not take pointers as arguments,
   or non-const references.
 - Do not use methods in transmitted *struct*, as they will not be available in
-  other languages: put the methodes in an associated *class*.
+  other languages: put the methods in an associated *class*.
 
 To understand those restrictions, keep in mind that qimessaging is a middleware
 that knows how to transport *data* (like primitive types, structs, and containers
@@ -99,19 +99,19 @@ a shared-library build of this source *cat_client_support.so* (or *cat_client_su
 depending on your OS) into binary distributions.
 Note that this file includes the interface header *cat.hpp*.
 
-Client code will then need to link with that library, otherwise creation of an
+Client code will then need to link with that library, otherwise creation of a
 *qi::Object<Cat>* will fail at runtime.
 
   .. warning::
 
     Under some linux distributions (including Ubuntu)
-    the compiler is patched to pass the *-as-needed* option by default to the linker.
-    You need to pass *-Wl,-no-as-needed* when linking with the client support library.
+    the compiler is patched to pass the *--as-needed* option by default to the linker.
+    You need to pass *-Wl,--no-as-needed* when linking with the client support library.
     If you are using CMake here is the way to do so::
 
       if(NOT WIN32)
         set_target_properties(my_target_name PROPERTIES
-          LINK_FLAGS "-Wl,-no-as-needed")
+          LINK_FLAGS "-Wl,--no-as-needed")
       endif()
 
 Write your implementation
