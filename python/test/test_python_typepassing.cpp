@@ -238,7 +238,7 @@ int main(int argc, char **argv) {
   std::string src_dir = argv[2];
 
   if (argc >= 4)
-	  qi::os::setenv("PYTHONHOME", argv[3]);
+    qi::os::setenv("PYTHONHOME", argv[3]);
 
   Py_Initialize();
   PyEval_InitThreads();
