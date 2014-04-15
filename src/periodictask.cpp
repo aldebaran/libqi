@@ -6,6 +6,7 @@
 
 #include <boost/lexical_cast.hpp>
 #include <boost/thread.hpp>
+#include <boost/enable_shared_from_this.hpp>
 
 #include <qi/log.hpp>
 #include <qi/periodictask.hpp>
@@ -74,7 +75,8 @@ inline void setState(qi::Atomic<int>& state, TaskState from, TaskState to, TaskS
 namespace qi
 {
 
-  struct PeriodicTaskPrivate
+  struct PeriodicTaskPrivate :
+    boost::enable_shared_from_this<PeriodicTaskPrivate>
   {
     MethodStatistics        _callStats;
     qi::int64_t             _statsDisplayTime;
@@ -85,11 +87,14 @@ namespace qi
     std::string             _name;
     bool                    _compensateCallTime;
     int                     _tid;
+
+    void _reschedule(qi::int64_t delay);
+    void _wrap();
   };
   static const int invalidThreadId = -1;
-  PeriodicTask::PeriodicTask()
+  PeriodicTask::PeriodicTask() :
+    _p(new PeriodicTaskPrivate)
   {
-    _p = new PeriodicTaskPrivate;
     _p->_usPeriod = -1;
     _p->_tid = invalidThreadId;
     _p->_compensateCallTime =false;
@@ -101,7 +106,6 @@ namespace qi
   PeriodicTask::~PeriodicTask()
   {
     stop();
-    delete _p;
   }
 
   void PeriodicTask::setName(const std::string& n)
@@ -135,41 +139,41 @@ namespace qi
       return; // Already running or being started.
     if (!_p->_state.setIfEquals(Task_Starting, Task_Rescheduling))
       qiLogError() << "Periodic task internal error while starting";
-    _reschedule(immediate?0:_p->_usPeriod);
+    _p->_reschedule(immediate?0:_p->_usPeriod);
   }
 
-  void PeriodicTask::_wrap()
+  void PeriodicTaskPrivate::_wrap()
   {
-    if (*_p->_state == Task_Stopped)
+    if (*_state == Task_Stopped)
       qiLogError()  << "PeriodicTask inconsistency: stopped from callback";
     /* To avoid being stuck because of unhandled transition, the rule is
     * that any other thread playing with our state can only do so
     * to stop us, and must eventualy reach the Stopping state
     */
-    if (_p->_state.setIfEquals(Task_Stopping, Task_Stopped))
+    if (_state.setIfEquals(Task_Stopping, Task_Stopped))
       return;
     /* reschedule() needs to call async() before reseting state from rescheduling
     *  to scheduled, to protect the _task object. So we might still be
     * in rescheduling state here.
     */
-    while (*_p->_state == Task_Rescheduling)
+    while (*_state == Task_Rescheduling)
       boost::this_thread::yield();
-    if (!_p->_state.setIfEquals(Task_Scheduled, Task_Running))
+    if (!_state.setIfEquals(Task_Scheduled, Task_Running))
     {
-      setState(_p->_state, Task_Stopping, Task_Stopped);
+      setState(_state, Task_Stopping, Task_Stopped);
       return;
     }
     bool shouldAbort = false;
     qi::int64_t wall = 0, now=0, delta=0;
     qi::int64_t usr, sys;
-    bool compensate = _p->_compensateCallTime; // we don't want that bool to change in the middle
+    bool compensate = _compensateCallTime; // we don't want that bool to change in the middle
     try
     {
       wall = qi::os::ustime();
       std::pair<qi::int64_t, qi::int64_t> cpu = qi::os::cputime();
-      _p->_tid = os::gettid();
-      _p->_callback();
-      _p->_tid = invalidThreadId;
+      _tid = os::gettid();
+      _callback();
+      _tid = invalidThreadId;
       now = qi::os::ustime();
       wall = now - wall;
       std::pair<qi::int64_t, qi::int64_t> cpu2 = qi::os::cputime();
@@ -190,46 +194,46 @@ namespace qi
     }
     if (shouldAbort)
     {
-      setState(_p->_state, Task_Stopping, Task_Stopped,
+      setState(_state, Task_Stopping, Task_Stopped,
                        Task_Running, Task_Stopped);
       return;
     }
     else
     {
-      _p->_callStats.push((float)wall / 1e6f, (float)usr / 1e6f, (float)sys / 1e6f);
+      _callStats.push((float)wall / 1e6f, (float)usr / 1e6f, (float)sys / 1e6f);
 
-      if (now - _p->_statsDisplayTime >= 20000000)
+      if (now - _statsDisplayTime >= 20000000)
       {
-        float secTime = float(now - _p->_statsDisplayTime) / 1e6f;
-        _p->_statsDisplayTime = now;
-        unsigned int count = _p->_callStats.count();
-        std::string catName = "stats." + _p->_name;
+        float secTime = float(now - _statsDisplayTime) / 1e6f;
+        _statsDisplayTime = now;
+        unsigned int count = _callStats.count();
+        std::string catName = "stats." + _name;
         qiLogVerbose(catName.c_str())
-          << (_p->_callStats.user().cumulatedValue() * 100.0 / secTime)
+          << (_callStats.user().cumulatedValue() * 100.0 / secTime)
           << "%  "
           << count
-          << "  " << _p->_callStats.wall().asString(count)
-          << "  " << _p->_callStats.user().asString(count)
-          << "  " << _p->_callStats.system().asString(count)
+          << "  " << _callStats.wall().asString(count)
+          << "  " << _callStats.user().asString(count)
+          << "  " << _callStats.system().asString(count)
           ;
-        _p->_callStats.reset();
+        _callStats.reset();
       }
 
-      if (!_p->_state.setIfEquals(Task_Running, Task_Rescheduling))
+      if (!_state.setIfEquals(Task_Running, Task_Rescheduling))
       { // If we are not in running state anymore, someone switched us
         // to stopping
-        setState(_p->_state, Task_Stopping, Task_Stopped);
+        setState(_state, Task_Stopping, Task_Stopped);
         return;
       }
-      _reschedule(std::max((qi::int64_t)0, _p->_usPeriod - delta));
+      _reschedule(std::max((qi::int64_t)0, _usPeriod - delta));
     }
   }
-  void PeriodicTask::_reschedule(qi::int64_t delay)
+  void PeriodicTaskPrivate::_reschedule(qi::int64_t delay)
   {
-    qiLogDebug() << _p->_name <<" rescheduling in " << delay;
-    _p->_task = getEventLoop()->async(boost::bind(&PeriodicTask::_wrap, this), delay);
-    if (!_p->_state.setIfEquals(Task_Rescheduling, Task_Scheduled))
-      qiLogError() << "PeriodicTask forbidden state change while rescheduling " << *_p->_state;
+    qiLogDebug() << _name <<" rescheduling in " << delay;
+    _task = getEventLoop()->async(boost::bind(&PeriodicTaskPrivate::_wrap, shared_from_this()), delay);
+    if (!_state.setIfEquals(Task_Rescheduling, Task_Scheduled))
+      qiLogError() << "PeriodicTask forbidden state change while rescheduling " << *_state;
   }
 
   void PeriodicTask::asyncStop()
