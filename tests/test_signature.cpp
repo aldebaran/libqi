@@ -293,6 +293,9 @@ TEST(TestSignature, IsCompatible) {
   qi::Signature s2("(s)");
   EXPECT_EQ(s2.isConvertibleTo("(si)"), 0.);
   EXPECT_GT(s2.isConvertibleTo("(m)"), 0.);
+
+  qi::Signature s3("([s])");
+  EXPECT_GT(s3.isConvertibleTo("([m])"), s3.isConvertibleTo("(m)"));
 }
 
 TEST(TestSignature, SignatureSplit) {

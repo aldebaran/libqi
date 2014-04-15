@@ -105,8 +105,8 @@ namespace qi {
       return RET_CALC;
     }
 
-    if (d == Type_Dynamic // Dynamic can convert to whatever
-        || s == Type_None) // None means parent is empty container
+    if (d == Type_Dynamic || // Dynamic can convert to whatever
+        s == Type_None) // None means parent is empty container
     {
       error += 5; // big malus for dynamic
       return RET_CALC;
@@ -156,8 +156,9 @@ namespace qi {
         float childRes = its->isConvertibleTo(*itd);
         if (!childRes)
           return 0; // Just check subtype compatibility
-        // the lower the error the better
-        childErr *= childRes;
+        // we got this far, if there is an error in child, make it lower
+        // [s] -> m should have a greater convertibility than [s] -> [m]
+        childErr *= 1 - (1 - childRes) * 0.95;
       }
       assert(its==children().end() && itd==b.children().end()); // we already exited on size mismatch
     }
