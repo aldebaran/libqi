@@ -29,7 +29,7 @@ from ._type import AnyArguments
 class bind():
     """ bind(returnType = None, paramsType = Node, methodName = None)
 
-    This decorator allows specifying types for bound methods. You can use methodName to rename the method.
+    This function decorator allows specifying types for bound methods. You can use methodName to rename the method.
     """
     def __init__(self, returnType = None, paramsType = None, methodName = None):
         """ bind constructor
@@ -62,7 +62,7 @@ class bind():
 def nobind(func):
     """ nobind()
 
-        This decorator will prevent the function from being bound. (exported)
+        This function decorator will prevent the function from being bound. (exported)
     """
     func.__qi_signature__ = "DONOTBIND"
     return func
@@ -70,9 +70,10 @@ def nobind(func):
 class singleThreaded():
     """ singleThreaded()
 
-        This decorator specifies that methods of this class will be run one at a time. That means
+        This class decorator specifies that methods of this class will be run one at a time. That means
         that two methods wont never run at the same time.
         So you dont have to care about thread safeness.
+        This is the default.
     """
     def __init(self, _):
         pass
@@ -90,7 +91,7 @@ class singleThreaded():
 class multiThreaded():
     """ multiThreaded()
 
-        This decorator specifies that all methods in the class can be run concurrently. (default case)
+        This class decorator specifies that all methods in the class can be run concurrently.
         You will have to protect your methods for threadsafety.
     """
     def __init(self, _):
