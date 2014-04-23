@@ -76,7 +76,7 @@ from ._type import ( Void, Bool,
                      Object, Dynamic,
                      Buffer, AnyArguments,
                      typeof, _isinstance)
-from ._binder import bind, nobind
+from ._binder import bind, nobind, singleThreaded, multiThreaded
 from .logging import fatal, error, warning, info, verbose, Logger
 from .logging import getLogger, logFatal, logError, logWarning, logInfo, logVerbose, logDebug  #deprecated
 from .translator import defaultTranslator, tr, Translator
@@ -130,7 +130,7 @@ __all__ = ["FutureState",
            "Void", "Bool", "Int8", "UInt8", "Int16", "UInt16", "Int32", "UInt32", "Int64", "UInt64",
            "Float", "Double", "String", "List", "Map", "Struct", "Object", "Dynamic", "Buffer", "AnyArguments",
            "typeof", "isinstance",
-           "bind", "nobind",
+           "bind", "nobind", "singleThreaded", "multiThreaded",
            "fatal", "error", "warning", "info", "verbose",
            "getLogger", "logFatal", "logError", "logWarning", "logInfo", "logVerbose", "logDebug",  #deprecated
            "Logger", "defaultTranslator", "tr", "Translator"

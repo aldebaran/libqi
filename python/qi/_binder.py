@@ -27,19 +27,12 @@ import inspect
 from ._type import AnyArguments
 
 class bind():
-    """ bind(returnType, parametersType = None, methodName = None)
-    :param retType: the return type
-    :param paramsType: optional list of parameter types
-    :methodName: optional new method name
+    """ bind(returnType = None, paramsType = Node, methodName = None)
 
-    This decorator allow specifying types for bound methods.
-
+    This decorator allows specifying types for bound methods. You can use methodName to rename the method.
     """
     def __init__(self, returnType = None, paramsType = None, methodName = None):
         """ bind constructor
-
-        .. args::
-           sig : Signature to bind to the function.
         """
         #return value
         if returnType is None:
@@ -60,11 +53,6 @@ class bind():
 
     def __call__(self, f):
         """ Function generator.
-            Associate a function with the signature given to the constructor.
-            Return the function binded
-
-        .. args::
-           f : function to bind.
         """
         f.__qi_name__ = self._name
         f.__qi_signature__ = self._sig
@@ -72,16 +60,20 @@ class bind():
         return f
 
 def nobind(func):
-    """ Function generator.
-        Return the function with tag to prevent binding
+    """ nobind()
 
-    .. args::
-       func: function to bind.
+        This decorator will prevent the function from being bound. (exported)
     """
     func.__qi_signature__ = "DONOTBIND"
     return func
 
 class singleThreaded():
+    """ singleThreaded()
+
+        This decorator specifies that methods of this class will be run one at a time. That means
+        that two methods wont never run at the same time.
+        So you dont have to care about thread safeness.
+    """
     def __init(self, _):
         pass
 
@@ -96,6 +88,11 @@ class singleThreaded():
         return f
 
 class multiThreaded():
+    """ multiThreaded()
+
+        This decorator specifies that all methods in the class can be run concurrently. (default case)
+        You will have to protect your methods for threadsafety.
+    """
     def __init(self, _):
         pass
 

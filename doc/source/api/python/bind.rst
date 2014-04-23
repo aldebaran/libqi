@@ -9,13 +9,21 @@ Introduction
 :py:class:`qi.bind` allow specifying types for bound methods.
 By default methods parameters are of type `AnyValue` and always return an AnyValue.
 
-With qi.bind you can specify which types the function really accept and return.
+With :py:class:`qi.bind` you can specify which types the function really accept and return.
+With :py:class:`qi.nobind` you can hide methods.
+
+
 
 Reference
 =========
 
-.. autoclass:: qi.bind
-  :members:
+.. autofunction:: qi.bind
+
+.. autofunction:: qi.nobind
+
+.. autofunction:: qi.singleThreaded
+
+.. autofunction:: qi.multiThreaded
 
 Examples
 ========
@@ -61,4 +69,19 @@ How to specify the arguments types of a method?
     #will be rejected even before calling the method.
     @qi.bind(paramsType=(qi.String, qi.Int32))
     def bar(self, arg1, arg2):
+      pass
+
+
+How to hide that secret internal function?
+------------------------------------------
+
+.. code-block:: python
+
+  class MyFoo:
+
+    def bar(self, arg1, arg2):
+      pass
+
+    @qi.nobind
+    def _privateOfHellBar(self, arg1, arg2):
       pass
