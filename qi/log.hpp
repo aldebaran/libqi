@@ -25,8 +25,8 @@
 #include <qi/os.hpp>
 
 
-#  define qiLogCategory(Cat)                                           \
-  static ::qi::log::CategoryType _QI_LOG_CATEGORY_GET() =              \
+#  define qiLogCategory(Cat)                                             \
+  static ::qi::log::CategoryType _QI_LOG_CATEGORY_GET() QI_ATTR_UNUSED = \
     ::qi::log::addCategory(Cat)
 
 
