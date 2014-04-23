@@ -8,13 +8,8 @@
 
 qiLogCategory("qi.py");
 
-#if PY_MAJOR_VERSION > 2
-# define modname _qi3
-#else
-#define modname _qi
-#endif
 
-BOOST_PYTHON_MODULE(modname)
+BOOST_PYTHON_MODULE(_qi)
 {
   boost::python::docstring_options doc_options(true, false, false);
 

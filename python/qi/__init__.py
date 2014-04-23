@@ -58,9 +58,9 @@ def _on_import_module():
 #######
 _on_import_module()
 
-from ._qiauto import Application as _Application
-from ._qiauto import ApplicationSession as _ApplicationSession
-from ._qiauto import ( FutureState, FutureTimeout, Future, Promise,
+from _qi import Application as _Application
+from _qi import ApplicationSession as _ApplicationSession
+from _qi import ( FutureState, FutureTimeout, Future, Promise,
                   Property, Session, Signal,
                   createObject, registerObjectFactory,
                   async, PeriodicTask)

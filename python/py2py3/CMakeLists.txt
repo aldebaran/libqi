@@ -51,7 +51,7 @@ qi_create_lib(qipython${pyver} SHARED
   ${_sources}
 )
 
-qi_use_lib(qipython${pyver} BOOST_PYTHON${pyver} QI QITYPE QIMESSAGING PYTHON${pyver})
+qi_use_lib(qipython${pyver} BOOST_PYTHON${pyver} PYTHON${pyver} QI QITYPE QIMESSAGING )
 
 qi_stage_lib(qipython${pyver})
 
@@ -61,6 +61,12 @@ qi_stage_lib(qipython${pyver})
 # FIXME: use qi_create_py_ext() from qibuild
 # when it is implemented
 add_library(_qi${pyver} SHARED ../src/boostpymain.cpp)
+
+#you may ask why? ... because we want PYTHONPATH to work both for python2 and python3
+#so if the two binary do not have the same name we can put then in the same folder.
+if("${pyver}" STREQUAL "3")
+  set_target_properties(_qi${pyver} PROPERTIES OUTPUT_NAME _qi.abi3)
+endif()
 
 # Fix the library name: no lib prefix, correct extension
 set_target_properties(_qi${pyver} PROPERTIES PREFIX "")
@@ -83,8 +89,8 @@ endif()
 if (WIN32)
   set_target_properties(_qi${pyver} PROPERTIES
     SUFFIX ".pyd"
-    RUNTIME_OUTPUT_DIRECTORY_DEBUG ${QI_SDK_DIR}/${QI_SDK_LIB}
-    RUNTIME_OUTPUT_DIRECTORY_RELEASE ${QI_SDK_DIR}/${QI_SDK_LIB}
+    RUNTIME_OUTPUT_DIRECTORY_DEBUG ${QI_SDK_DIR}/${QI_SDK_LIB}/
+    RUNTIME_OUTPUT_DIRECTORY_RELEASE ${QI_SDK_DIR}/${QI_SDK_LIB}/
   )
 endif()
 

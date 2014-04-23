@@ -19,14 +19,21 @@ qi_sanitize_compile_flags(HIDDEN_SYMBOLS)
 set(WITH_DOTNET OFF)
 option(WITH_PYTHON   "Python bindings"   ON)
 
+qi_add_optional_package(QISSH)
+qi_add_optional_package(PYTHON3)
+
 # Desactivate Python and .NET bindings for Android
 if (ANDROID)
    set(WITH_PYTHON OFF)
+   set(WITH_PYTHON3 OFF)
    set(WITH_DOTNET OFF)
 endif()
 
-qi_add_optional_package(QISSH)
-qi_add_optional_package(PYTHON3)
+
+if (I_AM_A_ROBOT)
+  set(WITH_PYTHON3 OFF)
+endif()
+
 
 add_definitions(" -DBOOST_FILESYSTEM_VERSION=3 ")
 

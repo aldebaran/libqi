@@ -5,7 +5,7 @@
 ## Copyright (C) 2010 - 2013 Aldebaran Robotics
 ##
 
-from . import _qiauto as _qi
+import _qi
 import types
 
 #allow print str(Void)

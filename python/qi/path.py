@@ -1,4 +1,4 @@
-from ._qiauto import findBin, findLib, findConf, findData, listData, confPaths, \
+from _qi import  findBin, findLib, findConf, findData, listData, confPaths, \
                      dataPaths, binPaths, libPaths, setWritablePath, \
                      userWritableDataPath, userWritableConfPath, sdkPrefix
 
