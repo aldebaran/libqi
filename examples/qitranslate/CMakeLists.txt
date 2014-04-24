@@ -6,7 +6,7 @@ cmake_minimum_required(VERSION 2.8)
 project(translate)
 find_package(qibuild)
 
-qi_create_bin(translate main.cpp)
-qi_use_lib(translate qi)
+qi_create_bin(test_translate main.cpp NO_INSTALL)
+qi_use_lib(test_translate qi)
 
-qi_create_trad(translate "po")
+qi_create_trad(test_translate "po")
