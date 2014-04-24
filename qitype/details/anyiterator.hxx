@@ -35,12 +35,21 @@ namespace qi {
     : AnyValue(v)
   {}
 
-  inline AnyIterator AnyIterator::operator++()
+  inline AnyIterator& AnyIterator::operator++()
   {
     if (kind() != TypeKind_Iterator)
       throw std::runtime_error("Expected an iterator");
     static_cast<IteratorTypeInterface*>(_type)->next(&_value);
     return *this;
+  }
+
+  inline AnyIterator AnyIterator::operator++(int)
+  {
+    if (kind() != TypeKind_Iterator)
+      throw std::runtime_error("Expected an iterator");
+    AnyIterator it2 = *this;
+    static_cast<IteratorTypeInterface*>(_type)->next(&_value);
+    return it2;
   }
 
   inline bool operator!=(const AnyIterator& a, const AnyIterator& b)

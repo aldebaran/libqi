@@ -30,8 +30,10 @@ namespace qi {
     template<typename T>
     AnyIterator(const T& ref);
 
-    /// Iterator increment
-    AnyIterator operator++();
+    /// Iterator pre-increment
+    AnyIterator& operator++();
+    /// Iterator post-increment
+    AnyIterator operator++(int);
     /// Dereference
     AnyReference operator*();
   };

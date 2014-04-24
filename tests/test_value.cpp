@@ -359,6 +359,18 @@ TEST(Value, DefaultMap)
   }
   ASSERT_EQ(23, sum);
 
+  AnyIterator b2 = val.begin();
+  AnyIterator end2 = val.end();
+  sum = 0;
+  while (b2 != end2)
+  {
+    AnyReference deref = *b2;
+    AnyIterator it = b2;
+    sum += deref[1].toInt();
+    ASSERT_EQ(b2++, it);
+  }
+  ASSERT_EQ(23, sum);
+
   AnyReference valCopy = val.clone();
   ASSERT_EQ(13, valCopy.element<int>("bar"));
   ASSERT_EQ(2u, valCopy.size());
