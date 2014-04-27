@@ -14,10 +14,42 @@
 
 # include <string>
 # include <vector>
+# include <boost/shared_ptr.hpp>
 # include <qi/api.hpp>
 
 namespace qi
 {
+
+  class PrivatePath;
+  class Path;
+  typedef std::vector<Path> PathVector;
+  class QI_API Path {
+  public:
+    Path(const std::string& unicodePath = std::string());
+
+    bool isEmpty() const;
+    bool isDir() const;
+    bool isRegularFile() const;
+
+    std::string filename() const;
+    std::string extension() const;
+
+    Path parent();
+    Path absolute();
+
+    PathVector files();
+    PathVector dirs();
+
+    operator std::string() const;
+
+    Path operator/(const qi::Path& rhs) const;
+    const Path& operator/=(const qi::Path& rhs) const;
+
+  private:
+    Path(const boost::shared_ptr<PrivatePath> &p);;
+    boost::shared_ptr<PrivatePath> _p;
+  };
+
   /// Set of tools to handle SDK layouts.
   namespace path
   {
