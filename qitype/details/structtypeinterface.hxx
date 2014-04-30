@@ -120,8 +120,8 @@ namespace qi
      */
     template<typename A> TypeInterface* fieldType(A)
     {
-      static TypeInterface* res =
-        qi::typeOf<typename detail::Accessor<A>::value_type>();
+      static TypeInterface* res = 0;
+      QI_ONCE(res = qi::typeOf<typename detail::Accessor<A>::value_type>());
       return res;
     }
 

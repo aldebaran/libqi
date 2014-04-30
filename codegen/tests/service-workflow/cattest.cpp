@@ -54,15 +54,15 @@ static bool init()
   static bool ready = false;
   if (ready)
     return true;
-  std::vector<std::string> res = qi::loadObject("cat");
-  if (!res.size())
-    return false;
-  if (res.front() != "animals::Cat")
-    return false;
-  res = qi::loadObject("lynx");
+  std::vector<std::string> res = qi::loadObject("lynx");
   if (!res.size())
     return false;
   if (res.front() != "animals::Lynx")
+    return false;
+  res = qi::loadObject("cat");
+  if (!res.size())
+    return false;
+  if (res.front() != "animals::Cat")
     return false;
   ready = true;
   return true;

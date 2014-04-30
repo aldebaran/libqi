@@ -35,7 +35,7 @@ namespace qi
   T PropertyImpl<T>::get() const
   {
     if (_getter)
-      return _getter();
+      return _getter(_value);
     else
       return _value;
   }

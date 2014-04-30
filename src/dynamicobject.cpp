@@ -32,16 +32,14 @@ namespace qi
     SignalBase* createSignal(unsigned int id);
     PropertyBase* property(unsigned int id);
     bool                                dying;
-    typedef std::map<unsigned int, SignalBase*> SignalMap;
-    typedef std::map<unsigned int,
-      std::pair<AnyFunction, MetaCallType>
-    > MethodMap;
+    typedef std::map<unsigned int, std::pair<SignalBase*, bool> > SignalMap;
+    typedef std::map<unsigned int, std::pair<AnyFunction, MetaCallType> > MethodMap;
     SignalMap           signalMap;
     MethodMap           methodMap;
     MetaObject          meta;
     ObjectThreadingModel threadingModel;
 
-    typedef std::map<unsigned int, PropertyBase*> PropertyMap;
+    typedef std::map<unsigned int, std::pair<PropertyBase*, bool> > PropertyMap;
     PropertyMap propertyMap;
   };
 
@@ -60,13 +58,25 @@ namespace qi
     for (Manageable::SignalMap::iterator it = smap.begin(); it != smap.end(); ++it)
     {
       SignalBase* sb = it->second(m);
-      _p->signalMap[it->first] = sb;
+      _p->signalMap[it->first] = std::make_pair(sb, false);
     }
   }
 
   DynamicObjectPrivate::~DynamicObjectPrivate()
   {
     //properties are also in signals, do not delete
+
+    //only delete property we created
+    for (PropertyMap::iterator it2 = propertyMap.begin(); it2 != propertyMap.end(); ++it2) {
+      if (it2->second.second)
+        delete it2->second.first;
+    }
+
+    //only delete signal we created
+    for (SignalMap::iterator it = signalMap.begin(); it != signalMap.end(); ++it) {
+      if (it->second.second)
+        delete it->second.first;
+    }
   }
 
   SignalBase* DynamicObjectPrivate::createSignal(unsigned int id)
@@ -74,18 +84,18 @@ namespace qi
 
     SignalMap::iterator i = signalMap.find(id);
     if (i != signalMap.end())
-      return i->second;
+      return i->second.first;
     if (meta.property(id))
     { // Replicate signal of prop in signalMap
       SignalBase* sb = property(id)->signal();
-      signalMap[id] = sb;
+      signalMap[id] = std::make_pair(sb, false);
       return sb;
     }
     MetaSignal* sig = meta.signal(id);
     if (sig)
     {
       SignalBase* sb = new SignalBase(sig->parametersSignature());
-      signalMap[id] = sb;
+      signalMap[id] = std::make_pair(sb, true);
       return sb;
     }
     return 0;
@@ -144,13 +154,13 @@ namespace qi
 
   void DynamicObject::setSignal(unsigned int id, SignalBase* signal)
   {
-    _p->signalMap[id] = signal;
+    _p->signalMap[id] = std::make_pair(signal, false);
   }
 
 
   void DynamicObject::setProperty(unsigned int id, PropertyBase* property)
   {
-    _p->propertyMap[id] = property;
+    _p->propertyMap[id] = std::make_pair(property, false);
   }
 
   const AnyFunction& DynamicObject::method(unsigned int id) const
@@ -171,7 +181,7 @@ namespace qi
     if (i == _p->signalMap.end())
       return 0;
     else
-      return i->second;
+      return i->second.first;
   }
 
   PropertyBase* DynamicObject::property(unsigned int id) const
@@ -193,11 +203,11 @@ namespace qi
       if (!type)
         throw std::runtime_error("Unable to construct a type from " + sig.toString());
       PropertyBase* res = new GenericProperty(type);
-      propertyMap[id] = res;
+      propertyMap[id] = std::make_pair(res, true);
       return res;
     }
     else
-      return i->second;
+      return i->second.first;
   }
 
   qi::Future<AnyReference> DynamicObject::metaCall(AnyObject context, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType, Signature returnSignature)
@@ -413,7 +423,7 @@ namespace qi
               args[i] = params[i+1];
               break;
             default:
-            args[i] = AnyValue::from("<??" ">");
+              args[i] = AnyValue::from("<??" ">");
             }
           }
         }

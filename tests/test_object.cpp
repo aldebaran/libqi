@@ -1084,10 +1084,81 @@ TEST(TestObject, async)
   // Factory leaks, so can't test no-leak of async...
   qiLogDebug() << "Factory";
   qi::AnyObject o = qi::createObject("Sleeper");
+  ASSERT_TRUE(o);
   qi::Future<int> f = qi::async<int>(o, "msleep", 100);
   EXPECT_EQ(qi::FutureState_Running, f.wait(0));
   EXPECT_EQ(qi::FutureState_FinishedWithValue, f.wait());
   EXPECT_EQ(100, f.value());
+}
+
+class Apple
+{
+  public:
+    Apple(std::string type) :
+      weight(42),
+      type(type)
+    {
+      qiLogDebug() << "new Apple default 42 " << type;
+    }
+
+    Apple(int weight, std::string type) :
+      weight(weight),
+      type(type)
+    {
+      qiLogDebug() << "new Apple " << weight << ' ' << type;
+    }
+
+    int getWeight() const
+    {
+      return weight;
+    }
+    std::string getType() const
+    {
+      return type;
+    }
+
+  private:
+    int weight;
+    std::string type;
+};
+
+QI_REGISTER_OBJECT(Apple, getWeight, getType);
+QI_REGISTER_OBJECT_FACTORY_CONSTRUCTOR(Apple, std::string);
+QI_REGISTER_OBJECT_FACTORY_CONSTRUCTOR_FOR(Fruit, Apple, int, std::string);
+QI_REGISTER_OBJECT_FACTORY_BUILDER(Apple, std::string);
+QI_REGISTER_OBJECT_FACTORY_BUILDER_FOR(Fruit, Apple, int, std::string);
+
+TEST(TestObject, Factory)
+{
+  ASSERT_ANY_THROW(qi::createObject("Apple"));
+  ASSERT_ANY_THROW(qi::createObject("Apple", 33.33));
+  ASSERT_ANY_THROW(qi::createObject("Fruit"));
+  ASSERT_ANY_THROW(qi::createObject("Fruit", "aaa"));
+  ASSERT_ANY_THROW(qi::createObject("Fruit", 18));
+
+  qi::AnyObject apple = qi::createObject("Apple", "red");
+  ASSERT_TRUE(apple);
+  EXPECT_EQ(42, apple.call<int>("getWeight"));
+  EXPECT_EQ("red", apple.call<std::string>("getType").value());
+
+  qi::AnyObject fruit = qi::createObject("Fruit", 188, "green");
+  ASSERT_TRUE(fruit);
+  EXPECT_EQ(188, fruit.call<int>("getWeight"));
+  EXPECT_EQ("green", fruit.call<std::string>("getType").value());
+
+  qi::AnyObject appleFactory = qi::createObject("AppleService");
+  ASSERT_TRUE(appleFactory);
+  apple = appleFactory.call<qi::AnyObject>("create", "red");
+  ASSERT_TRUE(apple);
+  EXPECT_EQ(42, apple.call<int>("getWeight"));
+  EXPECT_EQ("red", apple.call<std::string>("getType").value());
+
+  qi::AnyObject fruitFactory = qi::createObject("FruitService");
+  ASSERT_TRUE(fruitFactory);
+  fruit = fruitFactory.call<qi::AnyObject>("create", 99, "random");
+  ASSERT_TRUE(fruit);
+  EXPECT_EQ(99, fruit.call<int>("getWeight"));
+  EXPECT_EQ("random", fruit.call<std::string>("getType").value());
 }
 
 qi::GenericFunctionParameters args(

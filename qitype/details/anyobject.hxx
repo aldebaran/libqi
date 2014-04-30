@@ -469,7 +469,7 @@ namespace qi {
   /** A Proxy is the base class used by bouncer implementations of all
   * interfaces.
   */
-  class QITYPE_API Proxy
+  class QITYPE_API Proxy : public boost::noncopyable
   {
   public:
     Proxy(AnyObject obj) : _obj(obj) {qiLogDebug("qitype.proxy") << "Initializing " << this;}
@@ -852,10 +852,14 @@ namespace qi {
     */
 
     // create a T, wrap in a AnyObject
-    template<typename T> Object<T> constructObject()
-    {
-      return Object<T>(new T());
+    #define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma) \
+    template<typename T comma ATYPEDECL>                      \
+    Object<T> constructObject(ADECL)                          \
+    {                                                         \
+      return Object<T>(new T(AUSE));                          \
     }
+    QI_GEN(genCall)
+    #undef genCall
   }
 
 
@@ -937,13 +941,14 @@ namespace qi {
   // Needed for legacy code
   //template<> struct TypeImpl<Proxy>: public TypeProxy {};
 
-    namespace detail
+  namespace detail
   {
     // FIXME: inline that in QI_REGISTER_PROXY_INTERFACE maybe
     template<typename ProxyImpl> Proxy* static_proxy_cast(void* storage)
     {
       return static_cast<Proxy*>((ProxyImpl*)storage);
     }
+
     template<typename ProxyImpl>
     TypeProxy* makeProxyInterfaceWrapper()
     {
@@ -952,6 +957,7 @@ namespace qi {
         result = new TypeProxyWrapper<ProxyImpl>(&static_proxy_cast<ProxyImpl>);
       return result;
     }
+
     template<typename ProxyImpl>
     TypeProxy* makeProxyInterface()
     {
@@ -968,6 +974,7 @@ namespace qi {
       return AnyReference::from(sp).clone();
     }
   }
+
   template<typename Proxy, typename Interface>
   bool registerProxyInterface()
   {
@@ -979,6 +986,7 @@ namespace qi {
     map[typeOf<Interface>()->info()] = &detail::makeProxy<Proxy>;
     return true;
   }
+
   template<typename ProxyType>
   bool registerProxy()
   {
@@ -996,15 +1004,14 @@ namespace qi {
 
   namespace detail
   {
-    // in genericobjectbuilder.hxx
+    // in dynamicobjectbuilder.hxx
     template<typename T> AnyObject makeObject(const std::string& fname, T func);
 
     // Create a factory function for an object with one method functionName bouncing to func
-    template<typename T> boost::function<AnyObject(const std::string&)>
+    template<typename T> boost::function<AnyObject()>
     makeObjectFactory(const std::string functionName, T func)
     {
-      return ( boost::function<AnyObject(const std::string&)>)
-        boost::bind(&makeObject<T>, functionName, func);
+      return boost::bind(&makeObject<T>, functionName, func);
     }
 
     template<typename O>

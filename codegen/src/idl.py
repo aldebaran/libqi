@@ -58,6 +58,7 @@ class Class:
     self.signals = list(signals)
     self.properties = list(properties)
     self.annotations = annotations
+
   def visitTypes(self, f): # call f on all signal,method, prop types
     for m in self.methods:
       for a in m.args:
@@ -261,6 +262,7 @@ PAIR_CLOSING_MAP = {
   '{': '}',
   '(': ')'
 }
+
 def json_to_signature(js):
   """ Reconstruct signature from JSON representation
   """
@@ -371,11 +373,13 @@ class ClangStructField:
     self.signature = None
     self.index = None
     self.constructible = [] #array of (ctorId, argumentIndex)
+
   def valid(self):
     return (self.accessible
       or (self.getter and self.setter)
       or (self.getter and len(self.constructible))
       )
+
   def accessors(self): # return (getterFuncOrField, setterFuncOrField)
     if self.accessible:
       return (self.name, self.name)
@@ -386,14 +390,17 @@ class ClangStruct:
   def __init__(self):
     self.fields = dict()
     self.constructors = []
+
   def field(self, name):
     if not name in self.fields:
       self.fields[name] = ClangStructField(name)
     return self.fields[name]
+
   def remove_unuseable(self):
     for k in self.fields:
       if not self.fields[k].valid():
         del self.fields[k]
+
   def unambiguous_signature(self): # true if signature can be used as field uid
     sigs = []
     for k in self.fields:
@@ -401,11 +408,13 @@ class ClangStruct:
         return False
       sigs.append(self.fields[k].signature)
     return True
+
   def from_signature(self, sig):
     for k in self.fields:
       if self.fields[k].signature == sig:
         return (k, self.fields[k])
     return (None, None)
+
   def by_index(self): #[(name, field), (name, field), ...] sorted by index
     byidx = dict()
     for k in self.fields:
@@ -445,6 +454,7 @@ def qiclang_struct(node):
     field.index = index
     field.annotations = fdoc
     index = index + 1
+
   # Then scan methods to detect setters and getters
   index = 0
   for m in node.findall("./methods/method"):
@@ -478,6 +488,7 @@ def qiclang_struct(node):
       if f.type_name is None:
         f.type_name = qiclang_type_name(m.find("./arguments/type"))
         f.signature = margs[0]
+
   unamb = s.unambiguous_signature() # check if a sig can identify a unique field
   #Finally, scan constructors for a way to set our fields
   for m in node.findall("./constructors/method"):
@@ -599,6 +610,7 @@ def xml_extract_text(node):
     result += node.tail
   return result.replace("\n", "").strip()
 
+
 def rawtype_to_boxinterface_argtype(arg):
   if arg=='string':
     return 3 #string
@@ -606,6 +618,7 @@ def rawtype_to_boxinterface_argtype(arg):
     return 2 #int
   else:
     return 0 #dynamic
+
 
 def raw_to_boxinterface(class_name, cls):
   """ Convert RAW to boxInterface choregraphe XML format
@@ -673,6 +686,7 @@ def raw_to_idl_struct(raw, struct_name, root=None):
     index=index+1
   return root
 
+
 def raw_to_idl(raw):
   """ Convert RAW to IDL XML format
   """
@@ -682,6 +696,7 @@ def raw_to_idl(raw):
   for s in raw.structs:
     raw_to_idl_struct(raw, s, root)
   return root
+
 
 def raw_to_text(raw):
   """ Convert RAW to human-readable text
@@ -705,6 +720,7 @@ def raw_to_text(raw):
       result += "    " + f.name + ' ' + f.signature + "\n"
   return result
 
+
 def method_to_cxx(method, tuple_default_cxx_type=None):
   """ Take a Method from RAW representation, and return
       (declarationret, declarationargs, args), for example
@@ -719,6 +735,7 @@ def method_to_cxx(method, tuple_default_cxx_type=None):
   arg_names = map(lambda x: 'p' + str(x), range(len(cargs)))
   arg_names = ','.join(arg_names)
   return (cret, typed_args, arg_names)
+
 
 def find_include(cname, prefix):
   """ Try to find a C++ header for given class name
@@ -738,6 +755,7 @@ def find_include(cname, prefix):
         print("Found at " + os.path.join(subdir, fname + sfx))
         return os.path.join(subdir, fname + sfx) # keep relative part
   return None
+
 
 def get_dependencies(raw, cls):
   """ return (classNameList, structNameList, extClassNameList, extStructNameList),
@@ -800,6 +818,7 @@ def get_dependencies(raw, cls):
   print("ru2 : " + ','.join(unknown[1]))
   return (foundc, founds, unknown[0], unknown[1])
 
+
 def idl_to_raw(root, result = None):
   """ Convert IDL XML to internal RAW representation
   """
@@ -834,6 +853,7 @@ def idl_to_raw(root, result = None):
       s.fields.append(StructField(f.get('name'), f.get('signature'), f.get('annotations') or ''))
     result.structs[sname] = s
   return result
+
 
 def raw_to_cxx_struct(struct_name, struct, namespaces = None):
   """ Generater a C++ structure definition for struct_name (that can have namespaces)
@@ -1264,8 +1284,6 @@ public:
 
 @QI_REGISTER_PROXY@
 @close_namespace@
-
-QI_TYPE_NOT_CONSTRUCTIBLE(@namepaces@@proxyName@);
 
 """
 
