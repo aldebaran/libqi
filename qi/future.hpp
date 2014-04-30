@@ -392,6 +392,27 @@ namespace qi {
     void connect(const Connection& s)                                  { _sync = false; _future.connect(s);}
     void _connect(const boost::function<void()>& s)                    { _sync = false; _future._connect(s);}
 
+#ifdef DOXYGEN
+    /** Connect a callback with binding and tracking support.
+    *
+    * If the first argument is a weak_ptr or a pointer inheriting from
+    * qi::Trackable, the callback will not be called if tracked object was
+    * destroyed.
+    */
+    template<typename FUNCTYPE, typename ARG0>
+    void connect(FUNCTYPE fun, ARG0 tracked, ...);
+#else
+#define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)                \
+    template<typename AF, typename ARG0 comma ATYPEDECL>                 \
+    inline void connect(const AF& fun, const ARG0& arg0 comma ADECL)     \
+    {                                                                    \
+      _sync = false;                                                     \
+      connect(::qi::bind<void(FutureSync<T>)>(fun, arg0 comma AUSE));    \
+    }
+    QI_GEN(genCall)
+#undef genCall
+#endif
+
     Future<T> async()
     {
       _sync = false;

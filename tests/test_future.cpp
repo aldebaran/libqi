@@ -1104,7 +1104,19 @@ TEST(TestPeriodicTask, StopFromTask)
   EXPECT_GE(100000, qi::os::ustime() - now);
 }
 
+static void pdelete(qi::PeriodicTask* p)
+{
+  delete p;
+}
 
+TEST(TestPeriodicTask, DeleteFromTask)
+{
+  qi::PeriodicTask* pt = new qi::PeriodicTask();
+  pt->setCallback(boost::bind(pdelete, pt));
+  pt->setUsPeriod(10000000);
+  pt->start();
+  qi::os::msleep(200); // wait for actual start
+}
 
 TEST(TestPeriodicTask, DeadLock)
 {

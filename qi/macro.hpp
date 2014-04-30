@@ -149,6 +149,12 @@ namespace qi {
 # define QI_WARN_UNUSED_RESULT
 #endif
 
+#if defined(__GNUC__)
+# define QI_ATTR_UNUSED __attribute__((unused))
+#else
+# define QI_ATTR_UNUSED
+#endif
+
 #define QI_UNUSED(x)
 
 // A macro to append the line number of the parent macro usage, to define a

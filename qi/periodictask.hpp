@@ -93,9 +93,7 @@ namespace qi
     */
     bool isStopping() const;
   private:
-    void _wrap();
-    void _reschedule(qi::int64_t delay);
-    PeriodicTaskPrivate* _p;
+    boost::shared_ptr<PeriodicTaskPrivate> _p;
   };
 
 }
