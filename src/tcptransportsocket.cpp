@@ -91,8 +91,7 @@ namespace qi
   TcpTransportSocket::~TcpTransportSocket()
   {
     qiLogDebug() << this;
-    boost::system::error_code erc;
-    error(erc.message());
+    error("Destroying TcpTransportSocket");
     delete _msg;
     qiLogVerbose() << "deleted " << this;
   }
@@ -112,8 +111,7 @@ namespace qi
 
     if (_abort)
     {
-      boost::system::error_code erc;
-      error(erc.message());
+      error("Aborted");
       return;
     }
 
@@ -160,7 +158,7 @@ namespace qi
   {
     if (erc)
     {
-      error(erc.message());
+      error("System error: " + erc.message());
       return;
     }
     // check magic
@@ -171,7 +169,7 @@ namespace qi
         << ", disconnecting"
            " (expected " << MessagePrivate::magic
         << ", got " << _msg->_p->header.magic << ").";
-      error(erc.message());
+      error("Protocol error");
       return;
     }
 
@@ -196,8 +194,7 @@ namespace qi
         qiLogWarning() << "Receiving message of size " << payload
           << " above maximum configured payload " << maxPayload << ", closing link."
              " (configure with environment variable QI_MAX_MESSAGE_PAYLOAD)";
-        boost::system::error_code erc;
-        error(erc.message());
+        error("Message too big");
         return;
       }
 
@@ -207,8 +204,7 @@ namespace qi
 
       if (_abort)
       {
-        boost::system::error_code erc;
-        error(erc.message());
+        error("Aborted");
         return;
       }
 
@@ -240,7 +236,7 @@ namespace qi
   {
     if (erc)
     {
-      error(erc.message());
+      error("System error: " + erc.message());
       return;
     }
     qiLogDebug() << this << " Recv (" << _msg->type() << "):" << _msg->address();
@@ -275,7 +271,7 @@ namespace qi
 
   void TcpTransportSocket::error(const std::string& erc)
   {
-    qiLogDebug() << "socket error:" << erc;
+    qiLogVerbose() << "Socket error: " << erc;
     boost::recursive_mutex::scoped_lock lock(_closingMutex);
     _abort = true;
     _status = qi::TransportSocket::Status_Disconnected;
@@ -357,10 +353,10 @@ namespace qi
     {
       if (erc)
       {
-        qiLogWarning() << "resolved: " << erc.message();
+        qiLogWarning() << "resolve: " << erc.message();
         _status = qi::TransportSocket::Status_Disconnected;
-        error(erc.message());
-        pSetError(connectPromise, erc.message());
+        error("System error: " + erc.message());
+        pSetError(connectPromise, "System error: " + erc.message());
       }
       else
       {
@@ -386,8 +382,7 @@ namespace qi
       const char* s = e.what();
       qiLogError() << s
                    << " only IPv6 were resolved on " << url().str();
-      boost::system::error_code erc;
-      error(erc.message());
+      error(s);
       pSetError(connectPromise, s);
     }
   }
@@ -399,8 +394,8 @@ namespace qi
     {
       qiLogWarning() << "connect: " << erc.message();
       _status = qi::TransportSocket::Status_Disconnected;
-      error(erc.message());
-      pSetError(connectPromise, erc.message());
+      error("System error: " + erc.message());
+      pSetError(connectPromise, "System error: " + erc.message());
     }
     else
     {
@@ -433,8 +428,8 @@ namespace qi
     {
       qiLogWarning() << "connect: " << erc.message();
       _status = qi::TransportSocket::Status_Disconnected;
-      error(erc.message());
-      pSetError(connectPromise, erc.message());
+      error("System error: " + erc.message());
+      pSetError(connectPromise, "System error: " + erc.message());
     }
     else
     {
@@ -567,10 +562,9 @@ namespace qi
     if (_status == qi::TransportSocket::Status_Disconnected)
       return qi::Future<void>(0);
 
-    boost::system::error_code erc;
     return _eventLoop->async(boost::bind(&TcpTransportSocket::error,
                                  boost::static_pointer_cast<TcpTransportSocket>(shared_from_this()),
-                                 erc.message()));
+                                 "Disconnection requested"));
   }
 
   bool TcpTransportSocket::send(const qi::Message &msg)

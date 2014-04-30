@@ -166,40 +166,59 @@ namespace qi { namespace py {
           .def(boost::python::init<const std::string&>())
           .def("connect", &PySession::connect, (boost::python::arg("url"), boost::python::arg("_async") = false),
                "connect(url) -> None\n"
-               "Connect the session to a ServiceDirectory")
+               ":param url: string. Address of the ServiceDirectory of the form 'tcp://IP:PORT'.\n"
+               ":raise: a RuntimeError if the connection failed.\n"
+               "\n"
+               "Connect the session to a ServiceDirectory.")
 
           .def("close", &PySession::close, (boost::python::arg("_async") = false),
                "close() -> None\n"
-               "Close the Session")
+               "Close the Session.")
 
           .def("listen", &PySession::listen, (boost::python::arg("url"), boost::python::arg("_async") = false),
                "listen(url) -> None\n"
-               "Listen on that specific Url")
+               ":param url: string. Address of the form 'tcp://IP:PORT'.\n"
+               ":raise: a RuntimeError if the listening failed.\n"
+               "\n"
+               "Listen for connections on that specific Url.")
 
           .def("listenStandalone", &PySession::listenStandalone, (boost::python::arg("url"), boost::python::arg("_async") = false),
                "listenStandalone(url) -> None\n"
-               "Create a session with a standalone ServiceDirectory")
+               ":param url: string. Address of the form 'tcp://IP:PORT'.\n"
+               ":raise: a RuntimeError if the listening failed.\n"
+               "\n"
+               "Create a session with a standalone ServiceDirectory that will listen for connections on the specified Url.")
 
           .def("endpoints", &PySession::endpoints,
                "endpoints() -> list\n"
-               "Return the current list of endpoints of the session")
+               ":return: the current list of endpoints of the session.\n")
 
           .def("service", &PySession::service, (boost::python::arg("service"), boost::python::arg("_async") = false),
                "service(name) -> Object\n"
-               "return an Object representing a Service, the service could have been registered to the service directory "
-               "by this session or by another.")
+               ":param name: string. The human readable name of the service we want to get.\n"
+               ":return: an Object representing a Service. The service could have been registered to the ServiceDirectory by this session or by another.\n"
+               ":raise: a RuntimeError if the service is not found.\n"
+               "\n")
 
           .def("services", &PySession::services, (boost::python::arg("_async") = false),
                "services() -> list\n"
-               "return the list of all services registered on the ServiceDirectory")
+               ":return: the list of all services registered on the ServiceDirectory.\n")
 
           .def("registerService", &PySession::registerService, (boost::python::arg("name"), boost::python::arg("object"), boost::python::arg("_async") = false),
                "registerService(name, object) -> int\n"
-               "Register an Object as a service on the ServiceDirectory, the name should be unique on the servicedirectory."
-               "This function returns the id associated to the service in the ServiceDirectory, the id can be used to unregister the service.")
+               ":param name: string. A human readable name associated to the service.\n"
+               ":param object: a python Object.\n"
+               ":return: the id associated to the service in the ServiceDirectory. This id can be used to unregister the service.\n"
+               ":raise: a RuntimeError if the service is already registered.\n"
+               "\n"
+               "Register an Object as a service on the ServiceDirectory. The name should be unique on the ServiceDirectory."
+              )
 
           .def("unregisterService", &PySession::unregisterService, (boost::python::arg("id"), boost::python::arg("_async") = false),
                "unregisterService(id) -> None\n"
+               ":param id: int. The id associated to the service when it was registered.\n"
+               ":raise: a RuntimeError if the service is not found.\n"
+               "\n"
                "Unregister a service. The service should be owned by the current session. Use the Id returned by registerService.")
 
           .def_readonly("connected", &PySession::connected)

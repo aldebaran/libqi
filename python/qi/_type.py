@@ -12,25 +12,30 @@ import types
 class _MetaSignature(type):
     def __str__(self):
         return self.signature
+    def __unicode__(self):
+        return self.signature
 
     #support comparing class and instance (Int8 == Int8())
     def __eq__(self, other):
-        if isinstance(other, types.StringType):
+        if isinstance(other, str):
             return other == self.signature
         return other.signature == self.signature
     def __ne__(self, other):
-        if isinstance(other, types.StringType):
+        if isinstance(other, str):
             return other != self.signature
         return other.signature != self.signature
 
-#allow print str(Void())
-class _Signature(object):
-    __metaclass__ = _MetaSignature
+#this syntax works for defining metaclass in python2 and python3
+_ToInheritMetaSignature = _MetaSignature('_ToInheritMetaSignature', (object, ), {})
+
+class _Signature(_ToInheritMetaSignature):
     def __str__(self):
+        return self.signature
+    def __unicode__(self):
         return self.signature
 
     def __eq__(self, other):
-        if isinstance(other, types.StringType):
+        if isinstance(other, str):
             return other == self.signature()
         return other.signature == self.signature
     def __ne__(self, other):

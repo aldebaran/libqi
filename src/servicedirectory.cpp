@@ -237,7 +237,7 @@ namespace qi
 
 
     std::stringstream ss;
-    ss << "Unregistered Service  \""
+    ss << "Unregistered Service \""
           << serviceName
           << "\" (#" << idx << ")";
 

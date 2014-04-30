@@ -137,40 +137,42 @@ namespace qi {
       boost::python::class_<PyFuture>("Future", boost::python::no_init)
           .def("value", &PyFuture::value, (boost::python::args("timeout") = qi::FutureTimeout_Infinite),
                "value(timeout) -> value\n"
-               ":param timeout: a time in milliseconds.\n"
+               ":param timeout: a time in milliseconds. Optional.\n"
                ":return: the value of the future.\n"
+               ":raise: a RuntimeError if the timeout is reached or the future has error.\n"
                "\n"
-               "Block until the future is ready. Raise an exception if the future has error.\n"
-               "If a timeout is specified in parameter, and the future is not ready past that time, the function raise an exception.")
+               "Block until the future is ready.")
 
           .def("error", &PyFuture::error, (boost::python::args("timeout") = qi::FutureTimeout_Infinite),
                "error(timeout) -> None\n"
-               ":param timeout: a time in milliseconds.\n"
+               ":param timeout: a time in milliseconds. Optional.\n"
                ":return: the error of the future.\n"
+               ":raise: a RuntimeError if the timeout is reached or the future has no error.\n"
                "\n"
-               "Block until the future is ready.\n"
-               "Raise an exception if the function timeout or the future has no error")
+               "Block until the future is ready.")
 
           .def("wait", &PyFuture::wait, (boost::python::args("timeout") = qi::FutureTimeout_Infinite),
                "wait(timeout) -> qi.FutureState\n"
-               ":param timeout: a time in milliseconds.\n"
+               ":param timeout: a time in milliseconds. Optional.\n"
                ":return: a :py:data:`qi.FutureState`.\n"
                "\n"
                "Wait for the future to be ready." )
 
           .def("hasError", &PyFuture::hasError, (boost::python::args("timeout") = qi::FutureTimeout_Infinite),
                "hasError(timeout) -> bool\n"
-               ":param timeout: a time in milliseconds.\n"
+               ":param timeout: a time in milliseconds. Optional.\n"
                ":return: true if the future has an error.\n"
+               ":raise: a RuntimeError if the timeout is reached.\n"
                "\n"
-               "Raise an exception on timeout")
+               "Return true or false depending on the future having an error.")
 
           .def("hasValue", &PyFuture::hasValue, (boost::python::args("timeout") = qi::FutureTimeout_Infinite),
                "hasValue(timeout) -> bool\n"
-               ":param timeout: a time in milliseconds.\n"
+               ":param timeout: a time in milliseconds. Optional.\n"
                ":return: true if the future has a value.\n"
+               ":raise: a RuntimeError if the timeout is reached.\n"
                "\n"
-               "Return true or false depending on the future having a value. Raise an exception on timeout")
+               "Return true or false depending on the future having a value.")
 
           .def("cancel", &PyFuture::cancel,
                "cancel() -> None\n"
@@ -178,7 +180,7 @@ namespace qi {
 
           .def("isFinished", &PyFuture::isFinished,
                "isFinished() -> bool\n"
-               ":return: true if the future is not running anymore (if hasError or hasValue or isCanceled)")
+               ":return: true if the future is not running anymore (if hasError or hasValue or isCanceled).")
 
           .def("isRunning", &PyFuture::isRunning,
                "isRunning() -> bool\n"

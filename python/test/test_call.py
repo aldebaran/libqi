@@ -75,31 +75,31 @@ def docalls(sserver, sclient):
     sserver.registerService("FooService", m)
     s = sclient.service("FooService")
 
-    print "simple test"
+    print("simple test")
     assert s.simple() == 42
 
-    print "vargs"
+    print("vargs")
     assert s.vargs(42) == (42,)
     assert s.vargs("titi", "toto") == ("titi", "toto",)
 
-    print "vargs drop"
+    print("vargs drop")
     assert s.vargsdrop(4, 42) == (42,)
 
-    print "hidden"
+    print("hidden")
     try:
         s.hidden()
         assert False
     except:
         pass
 
-    print "bound methods"
+    print("bound methods")
     assert s.bind_vargs(42) == (42,)
     assert s.bind_vargs("titi", "toto") == ("titi", "toto",)
 
-    print "renamed"
+    print("renamed")
     assert s.renamed() == 42
 
-    print "test types restrictions"
+    print("test types restrictions")
     assert s.add(40, 2) == 42
     try:
         s.add("40", "2")
@@ -107,9 +107,9 @@ def docalls(sserver, sclient):
     except:
         pass
 
-    print "test future"
+    print("test future")
     assert s.retfutint() == 42
-    print "test bound future"
+    print("test bound future")
     assert s.bind_retfutint() == 42
 
     print("test future async")
@@ -136,7 +136,7 @@ def test_calldirect():
     ses = qi.Session()
     ses.listenStandalone("tcp://127.0.0.1:0")
     #MODE DIRECT
-    print "## DIRECT MODE"
+    print("## DIRECT MODE")
     try:
         docalls(ses, ses)
     finally:
@@ -149,7 +149,7 @@ def test_callsd():
         local = sd.endpoints()[0]
 
         #MODE NETWORK
-        print "## NETWORK MODE"
+        print("## NETWORK MODE")
         ses = qi.Session()
         ses2 = qi.Session()
         try:
@@ -174,7 +174,7 @@ def test_missingself():
         sd.listenStandalone("tcp://127.0.0.1:0")
         local = sd.endpoints()[0]
 
-        print "## TestInvalid (missing self)"
+        print("## TestInvalid (missing self)")
         ses = qi.Session()
         ses.connect(local)
         i = Invalid1()
@@ -195,7 +195,7 @@ def test_badbind():
         sd.listenStandalone("tcp://127.0.0.1:0")
         local = sd.endpoints()[0]
 
-        print "## TestInvalid (bind: bad return value)"
+        print("## TestInvalid (bind: bad return value)")
         ses = qi.Session()
         ses.connect(local)
         i = Invalid2()
@@ -216,7 +216,7 @@ def test_badbind2():
         sd.listenStandalone("tcp://127.0.0.1:0")
         local = sd.endpoints()[0]
 
-        print "## TestInvalid (bind: bad params value)"
+        print("## TestInvalid (bind: bad params value)")
         ses = qi.Session()
         ses.connect(local)
         i = Invalid3()

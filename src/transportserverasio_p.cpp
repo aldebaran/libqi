@@ -91,7 +91,8 @@ namespace qi
     }
 
     _live = false;
-    _acceptor->close();
+    if (_acceptor)
+      _acceptor->close();
   }
 
   /*

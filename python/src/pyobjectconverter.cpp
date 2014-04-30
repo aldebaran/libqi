@@ -21,6 +21,21 @@
 
 qiLogCategory("qipy.convert");
 
+#if PY_MAJOR_VERSION >= 3
+  #define PyString_CheckExact        PyUnicode_CheckExact
+  #define PyString_FromStringAndSize PyUnicode_FromStringAndSize
+  #define PyString_FromString        PyUnicode_FromString
+#endif
+
+namespace
+{
+  void PyObjectDeleter(PyObject* obj)
+  {
+    Py_DECREF(obj);
+  }
+}
+
+
 boost::python::object PyObject_from_AnyValue(qi::AnyReference val);
 void PyObject_from_AnyValue(qi::AnyReference val,
     boost::python::object *target);
@@ -283,7 +298,11 @@ public:
 class PyObjectIntTypeInterface: public PyObjectTypeInterface<qi::IntTypeInterface>
 {
 public:
+#if PY_MAJOR_VERSION >= 3
+  PYTYPE_GETSET(int64_t, Long, Long)
+#else
   PYTYPE_GETSET(int64_t, Long, Int)
+#endif
   virtual unsigned int size() { return sizeof(long); }
   virtual bool isSigned() { return true; }
   PYTYPE_GETTYPE(PyObjectIntTypeInterface)
@@ -309,7 +328,11 @@ public:
 class PyObjectBoolTypeInterface: public PyObjectTypeInterface<qi::IntTypeInterface>
 {
 public:
+#if PY_MAJOR_VERSION >= 3
+  PYTYPE_GETSET(int64_t, Long, Long)
+#else
   PYTYPE_GETSET(int64_t, Long, Int)
+#endif
   virtual unsigned int size() { return 0; }
   virtual bool isSigned() { return false; }
   PYTYPE_GETTYPE(PyObjectBoolTypeInterface)
@@ -333,8 +356,12 @@ PyObjectStringTypeInterface::ManagedRawString
 {
   qi::py::GILScopedLock _lock;
   PyObject* p = (PyObject*)PyObjectTypeInterface::ptrFromStorage(&storage);
-  return ManagedRawString(RawString(PyString_AsString(p), PyString_Size(p)),
-      Deleter());
+#if PY_MAJOR_VERSION >= 3
+  PyObject* p2 = PyUnicode_AsEncodedString(p, "utf-8", "");
+  return ManagedRawString(RawString(PyBytes_AsString(p2), PyBytes_Size(p2)), boost::bind(PyObjectDeleter, p2));
+#else
+  return ManagedRawString(RawString(PyString_AsString(p), PyString_Size(p)), Deleter());
+#endif
 }
 
 void PyObjectStringTypeInterface::set(void** storage, const char* ptr, size_t sz)
@@ -355,13 +382,6 @@ public:
   PYTYPE_GETTYPE(PyObjectUnicodeStringTypeInterface)
 };
 
-namespace
-{
-  void PyObjectDeleter(PyObject* obj)
-  {
-    Py_DECREF(obj);
-  }
-}
 
 PyObjectUnicodeStringTypeInterface::ManagedRawString
   PyObjectUnicodeStringTypeInterface::get(void* storage)
@@ -370,8 +390,7 @@ PyObjectUnicodeStringTypeInterface::ManagedRawString
   PyObject* p = (PyObject*)PyObjectTypeInterface::ptrFromStorage(&storage);
   PyObject* p2 = PyUnicode_AsUTF8String(p);
   return ManagedRawString(
-      RawString(reinterpret_cast<char*>(PyString_AsString(p2)),
-        PyString_Size(p2)),
+      RawString(reinterpret_cast<char*>(PyBytes_AsString(p2)), PyBytes_Size(p2)),
       boost::bind(PyObjectDeleter, p2));
 }
 
@@ -922,10 +941,13 @@ qi::AnyReference AnyReference_from_PyObject(PyObject* obj)
   {
     return qi::AnyReference(qi::typeOf<void>());
   }
+#if PY_MAJOR_VERSION < 3
+  //int are long in python3
   else if (PyInt_CheckExact(obj))
   {
     return qi::AnyReference(PyObjectIntTypeInterface::getType(), obj);
   }
+#endif
   else if (PyLong_CheckExact(obj))
   {
     return qi::AnyReference(PyObjectLongTypeInterface::getType(), obj);
@@ -976,17 +998,9 @@ qi::AnyReference AnyReference_from_PyObject(PyObject* obj)
   {
     throw std::runtime_error("Type PyComplex not implemented");
   }
-  else if (PyBuffer_Check(obj))
-  {
-    throw std::runtime_error("Type PyBuffer not implemented");
-  }
   else if (PyMemoryView_Check(obj))
   {
     throw std::runtime_error("Type PyMemoryView not implemented");
-  }
-  else if (PyFile_Check(obj))
-  {
-    throw std::runtime_error("Type PyFile not implemented");
   }
   else if (PySlice_Check(obj))
   {
@@ -996,10 +1010,20 @@ qi::AnyReference AnyReference_from_PyObject(PyObject* obj)
   {
     throw std::runtime_error("Type PyModule not implemented");
   }
+#if PY_MAJOR_VERSION < 3
+  else if (PyFile_Check(obj))
+  {
+    throw std::runtime_error("Type PyFile not implemented");
+  }
+  else if (PyBuffer_Check(obj))
+  {
+    throw std::runtime_error("Type PyBuffer not implemented");
+  }
   else if (PyClass_Check(obj))
   {
     throw std::runtime_error("Type PyClass not implemented");
   }
+#endif
   else // if (PyInstance_Check(obj)) // instance are old style python class
   {
     qi::AnyReference res = qi::AnyReference::from(qi::py::makeQiAnyObject(pyBorrow(obj))).clone();

@@ -82,7 +82,7 @@ namespace qi { namespace py {
         if (mem.uid() < qiObjectSpecialMemberMaxUid)
           continue;
         qiLogDebug() << "adding method:" << mem.toString();
-        boost::python::object fun = boost::python::raw_function(PyQiFunctor(mem.name().c_str(), obj));
+        boost::python::object fun = boost::python::raw_function(PyQiFunctor(mem.name(), obj));
         boost::python::api::setattr(pyobj, mem.name().c_str(), fun);
         // Fill __doc__ with Signature and description
         std::stringstream ssdocstring;

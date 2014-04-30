@@ -8,6 +8,7 @@
 
 qiLogCategory("qi.py");
 
+
 BOOST_PYTHON_MODULE(_qi)
 {
   boost::python::docstring_options doc_options(true, false, false);

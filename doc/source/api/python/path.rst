@@ -6,7 +6,7 @@ qi.path API
 Introduction
 ============
 
-Path handling functions.
+qi.path is a set of functions to find binaries, libraries, data and configuration files on the system.
 
 Reference
 =========

@@ -55,8 +55,8 @@ namespace qi {
     static void pyregister_object_factory(boost::python::str class_name, boost::python::object class_)
     {
       std::string name = boost::python::extract<std::string>(class_name);
-      boost::function<qi::AnyObject (const std::string&)> func = boost::bind(&qi::py::pyconstruct_object, class_);
-      qi::registerObjectFactory(name, func);
+      boost::function<qi::AnyObject()> func = boost::bind(&qi::py::pyconstruct_object, class_);
+      qi::registerObjectFactory(name, AnyFunction::from(func));
     }
 
     void export_pyobjectfactory()

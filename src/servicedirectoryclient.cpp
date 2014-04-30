@@ -20,6 +20,9 @@ namespace qi {
     , _localSd(false)
   {
     _object = makeDynamicAnyObject(&_remoteObject, false);
+
+    connected.setCallType(MetaCallType_Direct);
+    disconnected.setCallType(MetaCallType_Direct);
   }
 
 
@@ -29,38 +32,38 @@ namespace qi {
     close();
   }
 
- void ServiceDirectoryClient::onSDEventConnected(qi::Future<SignalLink> ret,
-   qi::Promise<void> fco, bool isAdd)
- {
-   if (fco.future().isFinished()) {
-     return;
-   }
-   if (ret.hasError())
-   {
-     fco.setError(ret.error());
-     onSocketDisconnected(ret.error());
-     return;
-   }
-   bool ready = false;
-   {
-     boost::mutex::scoped_lock lock(_mutex);
-     if (isAdd)
-       _addSignalLink = ret.value();
-     else
-       _removeSignalLink = ret.value();
-     ready = _addSignalLink && _removeSignalLink;
-   }
-   if (ready)
-   {
-     fco.setValue(0);
-     connected();
-   }
- }
+  void ServiceDirectoryClient::onSDEventConnected(qi::Future<SignalLink> future,
+    qi::Promise<void> promise, bool isAdd)
+  {
+    if (promise.future().isFinished()) {
+      return;
+    }
+    if (future.hasError())
+    {
+      qi::Future<void> fdc = onSocketDisconnected(future.error());
+      fdc.connect(&qi::Promise<void>::setError, promise, future.error());
+      return;
+    }
+    bool ready = false;
+    {
+      boost::mutex::scoped_lock lock(_mutex);
+      if (isAdd)
+        _addSignalLink = future.value();
+      else
+        _removeSignalLink = future.value();
+      ready = _addSignalLink && _removeSignalLink;
+    }
+    if (ready)
+    {
+      promise.setValue(0);
+      connected();
+    }
+  }
 
   void ServiceDirectoryClient::onMetaObjectFetched(qi::Future<void> future, qi::Promise<void> promise) {
     if (future.hasError()) {
-      promise.setError(future.error());
-      onSocketDisconnected(future.error());
+      qi::Future<void> fdc = onSocketDisconnected(future.error());
+      fdc.connect(&qi::Promise<void>::setError, promise, future.error());
       return;
     }
     boost::function<void (unsigned int, std::string)> f;
@@ -77,8 +80,8 @@ namespace qi {
 
   void ServiceDirectoryClient::onSocketConnected(qi::FutureSync<void> future, qi::Promise<void> promise) {
     if (future.hasError()) {
-      promise.setError(future.error());
-      onSocketDisconnected(future.error());
+      qi::Future<void> fdc = onSocketDisconnected(future.error());
+      fdc.connect(&qi::Promise<void>::setError, promise, future.error());
       return;
     }
     qi::Future<void> fut = _remoteObject.fetchMetaObject();
@@ -126,34 +129,7 @@ namespace qi {
   }
 
   qi::FutureSync<void> ServiceDirectoryClient::close() {
-    qi::TransportSocketPtr socket;
-    { // can't hold lock while disconnecting signals, so swap _sdSocket.
-      boost::mutex::scoped_lock lock(_mutex);
-      std::swap(socket, _sdSocket);
-    }
-
-    if (!socket)
-      return qi::Future<void>(0);
-    // We just manually triggered onSocketDisconnected, so unlink
-    // from socket signal before disconnecting it.
-    socket->disconnected.disconnect(_sdSocketDisconnectedSignalLink);
-    // Manually trigger close on our remoteobject or it will be called
-    // asynchronously from socket.disconnected signal, and we would need to
-    // wait fo it.
-    _remoteObject.close();
-    qi::Future<void> fut = socket->disconnect();
-
-    onSocketDisconnected("User closed the connection");
-
-    // Hold the socket shared ptr alive until the future returns.
-    // otherwise, the destructor will block us until disconnect terminates
-    // Nasty glitch: socket is reusing promises, so this future hook will stay
-    // So pass shared pointer by pointer: that way a single delete statement
-    // will end all copies.
-    fut.connect(&sharedPtrHolder, new TransportSocketPtr(socket));
-
-    socket.reset();
-    return fut;
+    return onSocketDisconnected("User closed the connection");
   }
 
   bool                 ServiceDirectoryClient::isConnected() const {
@@ -180,8 +156,34 @@ namespace qi {
     serviceAdded(idx, name);
   }
 
-  void ServiceDirectoryClient::onSocketDisconnected(std::string error) {
-    disconnected(error);
+  qi::FutureSync<void> ServiceDirectoryClient::onSocketDisconnected(std::string error) {
+    qi::Future<void> fut;
+    {
+      qi::TransportSocketPtr socket;
+      { // can't hold lock while disconnecting signals, so swap _sdSocket.
+        boost::mutex::scoped_lock lock(_mutex);
+        std::swap(socket, _sdSocket);
+      }
+
+      if (!socket)
+        return qi::Future<void>(0);
+      // We just manually triggered onSocketDisconnected, so unlink
+      // from socket signal before disconnecting it.
+      socket->disconnected.disconnect(_sdSocketDisconnectedSignalLink);
+      // Manually trigger close on our remoteobject or it will be called
+      // asynchronously from socket.disconnected signal, and we would need to
+      // wait fo it.
+      _remoteObject.close();
+      fut = socket->disconnect();
+
+      // Hold the socket shared ptr alive until the future returns.
+      // otherwise, the destructor will block us until disconnect terminates
+      // Nasty glitch: socket is reusing promises, so this future hook will stay
+      // So pass shared pointer by pointer: that way a single delete statement
+      // will end all copies.
+      fut.connect(&sharedPtrHolder, new TransportSocketPtr(socket));
+    }
+
     qi::SignalLink add=0, remove=0;
     qi::AnyObject object;
     {
@@ -205,6 +207,9 @@ namespace qi {
     } catch (std::runtime_error &e) {
         qiLogDebug() << "Cannot disconnect SDC::serviceRemoved: " << e.what();
     }
+    disconnected(error);
+
+    return fut;
   }
 
   TransportSocketPtr ServiceDirectoryClient::socket()

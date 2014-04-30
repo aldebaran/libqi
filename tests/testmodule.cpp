@@ -23,7 +23,7 @@ qi::AnyObject make_other_object()
   return ob.object();
 }
 
-qi::AnyObject setup(const std::string&)
+qi::AnyObject setup()
 {
   qiLogDebug() << "setup";
   qi::DynamicObjectBuilder ob;
@@ -32,4 +32,4 @@ qi::AnyObject setup(const std::string&)
   return ob.object();
 }
 
-QI_REGISTER_OBJECT_FACTORY("test", &setup);
+QI_REGISTER_OBJECT_FACTORY("test", qi::AnyFunction::from(&setup));

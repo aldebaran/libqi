@@ -17,16 +17,16 @@ class subscriber:
     self.done = False
 
   def callback(self):
-    print "callback"
+    print("callback")
     self.done = True
 
   def callback_42(self, nb):
-    print "callback_42:", nb
+    print("callback_42:", nb)
     if (nb == 42):
       self.done = True
 
   def callback_5args(self, a, b, c ,d, e):
-    print "callback_5args:", a, b, c, d ,e
+    print("callback_5args:", a, b, c, d ,e)
     self.done = True
 
   def wait(self):
@@ -34,12 +34,12 @@ class subscriber:
       time.sleep(0.1)
 
 def test_signal():
-  print "\nInit..."
+  print("\nInit...")
   sub1 = subscriber()
   sub2 = subscriber()
   mysignal = qi.Signal()
 
-  print "\nTest #1 : Multiple subscribers to signal"
+  print("\nTest #1 : Multiple subscribers to signal")
   callback = sub1.callback
   callback2 = sub2.callback
   mysignal.connect(callback)
@@ -49,7 +49,7 @@ def test_signal():
   sub2.wait()
   sub1.wait()
 
-  print "\nTest #2 : Disconnect only one"
+  print("\nTest #2 : Disconnect only one")
   mysignal.disconnect(signalid)
 
   sub1.done = False
@@ -57,7 +57,7 @@ def test_signal():
   mysignal()
   sub1.wait()
 
-  print "\nTest #3 : Disconnect All"
+  print("\nTest #3 : Disconnect All")
   mysignal.connect(callback2)
   assert mysignal.disconnectAll() == True
 
@@ -69,7 +69,7 @@ def test_signal():
   assert sub1.done == False
   assert sub2.done == False
 
-  print "\nTest #4 : Trigger with one parameter"
+  print("\nTest #4 : Trigger with one parameter")
   mysignal.connect(sub1.callback_42)
 
   sub1.done = False
@@ -81,7 +81,7 @@ def test_signal():
   assert sub2.done == False
 
   assert mysignal.disconnectAll() == True
-  print "\nTest #5 : Trigger with five parameters"
+  print("\nTest #5 : Trigger with five parameters")
   mysignal.connect(sub1.callback_5args)
 
   sub1.done = False

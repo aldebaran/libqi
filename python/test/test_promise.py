@@ -235,7 +235,7 @@ def test_future_many_callback(nbr_fut = 10000):
     def callback(f):
         pass
 
-    for _ in xrange(nbr_fut):
+    for _ in range(nbr_fut):
         p = Promise()
         f = p.future()
         f.addCallback(callback)
@@ -246,20 +246,20 @@ import threading
 def test_many_callback_threaded():
     nbr_threads = 100
     thr_list = list()
-    for i in xrange(nbr_threads):
+    for i in range(nbr_threads):
         thr = threading.Thread(target=test_future_many_callback, kwargs={"nbr_fut": 10})
         thr_list.append(thr)
 
-    for i in xrange(nbr_threads):
+    for i in range(nbr_threads):
         thr_list[i].start()
 
-    for i in xrange(nbr_threads):
+    for i in range(nbr_threads):
         thr_list[i].join()
 
-    for i in xrange(nbr_threads):
+    for i in range(nbr_threads):
         if thr_list[i].isAlive():
-            print "IT IS ALIIIIVE: " + str(i)
-    print "finish"
+            print("IT IS ALIIIIVE: " + str(i))
+    print("finish")
 
 
 def main():
