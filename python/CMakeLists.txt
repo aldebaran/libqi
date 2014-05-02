@@ -1,3 +1,9 @@
+cmake_minimum_required(VERSION 2.8)
+project(qipython)
+find_package(qibuild)
+
+qi_add_optional_package(PYTHON)
+qi_add_optional_package(PYTHON3)
 # Generate each version in a separated build folder.
 # (include_directories clash otherwise)
 

@@ -1,4 +1,3 @@
-
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/..)
 
@@ -57,49 +56,17 @@ qi_use_lib(qipython${pyver} BOOST_PYTHON${pyver} PYTHON${pyver} QI QITYPE QIMESS
 qi_stage_lib(qipython${pyver})
 
 
-# do not use qi_create_lib: it does not all
-# the python-specific stuff we need.
-# FIXME: use qi_create_py_ext() from qibuild
-# when it is implemented
-add_library(_qi${pyver} SHARED ../src/boostpymain.cpp)
-
-#you may ask why? ... because we want PYTHONPATH to work both for python2 and python3
-#so if the two binary do not have the same name we can put then in the same folder.
-if("${pyver}" STREQUAL "3")
-  set_target_properties(_qi${pyver} PROPERTIES OUTPUT_NAME _qi.abi3)
-endif()
-
-# Fix the library name: no lib prefix, correct extension
-set_target_properties(_qi${pyver} PROPERTIES PREFIX "")
-if(UNIX)
-  set_target_properties(_qi${pyver} PROPERTIES
-    SUFFIX ".so"
-    LIBRARY_OUTPUT_DIRECTORY ${QI_SDK_DIR}/${QI_SDK_LIB}
+if("${pyver}" STREQUAL "")
+  qi_create_python_ext(_qi SHARED ../src/boostpymain.cpp)
+  qi_use_lib(_qi qipython)
+else()
+  # Hack until qibuild fully supports python3
+  add_library(_qi3 SHARED ../src/boostpymain.cpp)
+  set_target_properties(_qi3
+      PROPERTIES PREFIX ""
+      OUTPUT_NAME "_qi"
+      LIBRARY_OUTPUT_DIRECTORY
+        "${QI_SDK_DIR}/${QI_SDK_LIB}/python3.4/site-packages"
   )
+  qi_use_lib(_qi3 qipython3)
 endif()
-
-#set rpath so that _qi can find its dependencies when loaded.
-if(UNIX AND NOT APPLE)
-  # Use a relative rpath at installation
-  set_target_properties(_qi${pyver}
-    PROPERTIES
-      INSTALL_RPATH "\$ORIGIN/../lib"
-  )
-endif()
-
-if (WIN32)
-  set_target_properties(_qi${pyver} PROPERTIES
-    SUFFIX ".pyd"
-    RUNTIME_OUTPUT_DIRECTORY_DEBUG ${QI_SDK_DIR}/${QI_SDK_LIB}/
-    RUNTIME_OUTPUT_DIRECTORY_RELEASE ${QI_SDK_DIR}/${QI_SDK_LIB}/
-  )
-endif()
-
-qi_use_lib(_qi${pyver} QIPYTHON${pyver})
-
-# Install the library next to the .py files
-qi_install_python(TARGETS _qi${pyver} VERSION ${pyver})
-qi_install_python(${CMAKE_CURRENT_SOURCE_DIR}/../qi VERSION ${pyver} KEEP_RELATIVE_PATHS)
-
-# Add automatic testing for Python bindings (for each versions)
-add_subdirectory(../test dstonpython${pyver})
