@@ -59,7 +59,10 @@ namespace qi {
     FactoryMap::iterator i = _f_map->find(name);
     if (i == _f_map->end())
       return AnyObject();
-    return i->second.call(args).toObject();
+    AnyReference ret = i->second.call(args);
+    AnyObject obj = ret.toObject();
+    ret.destroy();
+    return obj;
   }
 
   std::vector<std::string> listObjectFactories()
