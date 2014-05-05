@@ -10,13 +10,14 @@ from _qi import setLevel, setContext, setFilters
 import inspect
 import uuid
 
-__all__ = ("FATAL", "ERROR", "WARNING", "INFO", "VERBOSE", "DEBUG",
+__all__ = ("SILENT", "FATAL", "ERROR", "WARNING", "INFO", "VERBOSE", "DEBUG",
            "fatal", "error", "warning", "info", "verbose",
            "Logger", "setLevel", "setContext", "setFilters",
            "getLogger", "logFatal", "logError", "logWarning", "logInfo", "logVerbose", "logDebug",  #deprecated
            )
 
 # Log Level
+SILENT  = 0
 FATAL   = 1
 ERROR   = 2
 WARNING = 3
