@@ -59,14 +59,17 @@ namespace qi {
   void Session_Service::close() {
     //cleanup all RemoteObject
     //they are not valid anymore after this function
-    {
-      boost::recursive_mutex::scoped_lock sl(_remoteObjectsMutex);
-      RemoteObjectMap::iterator it = _remoteObjects.begin();
-      for (; it != _remoteObjects.end(); ++it) {
-        reinterpret_cast<RemoteObject*>(it->second.asGenericObject()->value)->close();
-      }
-      _remoteObjects.clear();
-    }
+    boost::recursive_mutex::scoped_lock sl(_remoteObjectsMutex);
+
+    // This function is recursive. Sometimes, calling close on the
+    // remoteobject triggers a onSocketDisconnect which calls this function
+    // again. We must not allow remoteobjects to be cleaned twice.
+    RemoteObjectMap objects;
+    std::swap(objects, _remoteObjects);
+
+    for (RemoteObjectMap::iterator it = objects.begin();
+        it != objects.end(); ++it)
+      static_cast<RemoteObject*>(it->second.asGenericObject()->value)->close();
   }
 
   ServiceRequest *Session_Service::serviceRequest(long requestId)
