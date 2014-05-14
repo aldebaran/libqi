@@ -38,6 +38,7 @@ set(_sources
   ../src/pylog.cpp
   ../src/pypath.cpp
   ../src/pytranslator.cpp
+  ../src/error.cpp
   ../src/trace.cpp
 )
 
