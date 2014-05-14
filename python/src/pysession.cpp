@@ -151,6 +151,10 @@ namespace qi { namespace py {
         return ret;
       }
 
+      boost::python::str url() {
+        return boost::python::str(_ses->url().str());
+      }
+
     private:
       qi::SessionPtr _ses;
 
@@ -220,6 +224,12 @@ namespace qi { namespace py {
                ":raise: a RuntimeError if the service is not found.\n"
                "\n"
                "Unregister a service. The service should be owned by the current session. Use the Id returned by registerService.")
+
+          .def("url", &PySession::url,
+               "url() -> str\n"
+               ":return: the url the session is connected to\n"
+               ":raise: a RuntimeError if the session is not connected\n"
+               )
 
           .def_readonly("connected", &PySession::connected)
 
