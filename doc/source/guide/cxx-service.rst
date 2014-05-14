@@ -6,6 +6,12 @@
 
 .. default-role:: cpp:guess
 
+.. warning::
+
+   WORK IN PROGRESS.
+
+   This is not usable right now.
+
 
 How to write a qimessaging service in C++
 =========================================
