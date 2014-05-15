@@ -27,6 +27,7 @@ qiLogCategory("qimessaging.transportserver");
 namespace qi
 {
   const int ifsMonitoringTimeout = 5 * 1000 * 1000; // in usec
+  const int64_t TransportServerAsioPrivate::AcceptDownRetryTimerUs = 60 * 1000 * 1000; // 60 seconds in usec
 
   void _onAccept(TransportServerImplPtr p,
                  const boost::system::error_code& erc,
@@ -39,6 +40,22 @@ namespace qi
   {
     boost::shared_ptr<TransportServerAsioPrivate> ts = boost::dynamic_pointer_cast<TransportServerAsioPrivate>(p);
     ts->onAccept(erc, s);
+  }
+
+  void TransportServerAsioPrivate::restartAcceptor()
+  {
+    qiLogDebug() << this << " Attempting to restart acceptor";
+
+    if (!_live)
+      return;
+
+    if (context)
+    {
+      _acceptor = new boost::asio::ip::tcp::acceptor(*(boost::asio::io_service*)context->nativeHandle());
+      listen(_listenUrl);
+    }
+    else
+      qiLogWarning() << this << " No context available, acceptor will stay down.";
   }
 
   void TransportServerAsioPrivate::onAccept(const boost::system::error_code& erc,
@@ -60,15 +77,24 @@ namespace qi
       qiLogDebug() << "accept error " << erc.message();
       delete s;
       self->acceptError(erc.value());
-      delete _acceptor;
-      _acceptor = 0;
-      return;
+      if (isFatalAcceptError(erc.value()))
+      {
+        delete _acceptor;
+        _acceptor = 0;
+        qiLogError() << "fatal accept error: " << erc.value();
+        qiLogDebug() << this << " Disabling acceptor for now, retrying in " << AcceptDownRetryTimerUs << "us";
+        context->async(boost::bind(&TransportServerAsioPrivate::restartAcceptor, this), AcceptDownRetryTimerUs);
+        return;
+      }
     }
-    qi::TransportSocketPtr socket = qi::TcpTransportSocketPtr(new TcpTransportSocket(context, _ssl, s));
-    self->newConnection(socket);
+    else
+    {
+        qi::TransportSocketPtr socket = qi::TcpTransportSocketPtr(new TcpTransportSocket(context, _ssl, s));
+        self->newConnection(socket);
 
-    if (socket.unique()) {
-      qiLogError() << "bug: socket not stored by the newConnection handler (usecount:" << socket.use_count() << ")";
+        if (socket.unique()) {
+            qiLogError() << "bug: socket not stored by the newConnection handler (usecount:" << socket.use_count() << ")";
+        }
     }
 #ifdef WITH_SSL
     _s = new boost::asio::ssl::stream<boost::asio::ip::tcp::socket>(_acceptor->get_io_service(), _sslContext);
@@ -168,13 +194,13 @@ namespace qi
 
   qi::Future<void> TransportServerAsioPrivate::listen(const qi::Url& url)
   {
-    qi::Url listenUrl = url;
-    _ssl = listenUrl.protocol() == "tcps";
+    _listenUrl = url;
+    _ssl = _listenUrl.protocol() == "tcps";
     using namespace boost::asio;
 #ifndef ANDROID
     // resolve endpoint
     ip::tcp::resolver r(_acceptor->get_io_service());
-    ip::tcp::resolver::query q(listenUrl.host(), boost::lexical_cast<std::string>(listenUrl.port()),
+    ip::tcp::resolver::query q(_listenUrl.host(), boost::lexical_cast<std::string>(_listenUrl.port()),
                                boost::asio::ip::tcp::resolver::query::all_matching);
     ip::tcp::resolver::iterator it = r.resolve(q);
     if (it == ip::tcp::resolver::iterator())
@@ -207,17 +233,17 @@ namespace qi
     }
     _port = _acceptor->local_endpoint().port();// already in host byte orde
     qiLogDebug() << "Effective port io_service" << _port;
-    if (listenUrl.port() == 0)
+    if (_listenUrl.port() == 0)
     {
-      listenUrl = Url(listenUrl.protocol() + "://" + listenUrl.host() + ":"
+      _listenUrl = Url(_listenUrl.protocol() + "://" + _listenUrl.host() + ":"
         + boost::lexical_cast<std::string>(_port));
     }
 
     /* Set endpoints */
-    if (listenUrl.host() != "0.0.0.0")
+    if (_listenUrl.host() != "0.0.0.0")
     {
       boost::mutex::scoped_lock l(_endpointsMutex);
-      _endpoints.push_back(listenUrl.str());
+      _endpoints.push_back(_listenUrl.str());
     }
     else
     {
@@ -259,6 +285,27 @@ namespace qi
       boost::bind(_onAccept, shared_from_this(), _1, _s));
     _connectionPromise.setValue(0);
     return _connectionPromise.future();
+  }
+
+  bool TransportServerAsioPrivate::isFatalAcceptError(int errorCode)
+  {
+    using namespace boost::system::errc;
+    static const errc_t fatalErrors[] =
+    {
+      bad_file_descriptor,
+      bad_address,
+      invalid_argument,
+      not_a_socket,
+      operation_not_supported,
+      protocol_error,
+      operation_not_permitted,
+      connection_reset,
+      network_down,
+    };
+    for (int i = 0; i < sizeof(fatalErrors) / sizeof(fatalErrors[0]); ++i)
+      if (errorCode == fatalErrors[i])
+        return true;
+    return false;
   }
 
   TransportServerAsioPrivate::TransportServerAsioPrivate(TransportServer* self,

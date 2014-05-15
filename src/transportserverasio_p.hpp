@@ -28,6 +28,7 @@ namespace qi
     virtual qi::Future<void> listen(const qi::Url& listenUrl);
     virtual void close();
     void updateEndpoints();
+    static bool isFatalAcceptError(int errorCode);
     TransportServer* _self;
     boost::asio::ip::tcp::acceptor* _acceptor;
     void onAccept(const boost::system::error_code& erc,
@@ -48,6 +49,12 @@ namespace qi
     bool _ssl;
     unsigned short _port;
     qi::Future<void> _asyncEndpoints;
+    Url _listenUrl;
+
+    static const int64_t AcceptDownRetryTimerUs;
+
+  private:
+    void restartAcceptor();
   };
 }
 
