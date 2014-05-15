@@ -9,6 +9,8 @@
 
   <!-- doxygen -->
   <project src="dox" />
-
   <project src="bin/qicli/doc" />
+
+  <!-- python -->
+  <project src="python" />
 </project>
