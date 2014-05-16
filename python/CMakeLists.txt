@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 2.8)
 project(qipython)
 find_package(qibuild)
 
+qi_sanitize_compile_flags(HIDDEN_SYMBOLS)
 qi_add_optional_package(PYTHON)
 qi_add_optional_package(PYTHON3)
 # Generate each version in a separated build folder.
