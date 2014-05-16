@@ -245,7 +245,7 @@ namespace qi {
         {
           std::stringstream ss;
           ss << "No " << protocol << " endpoint available for service:" << sr->name << " (id:" << sr->serviceId << ")";
-          qiLogVerbose("session.service") << ss.str();
+          qiLogVerbose() << ss.str();
           sr->promise.setError(ss.str());
         }
       }
