@@ -81,7 +81,7 @@ namespace qi {
       ret.setError("Unknown error caught while forwarding the answer");
     }
     if (!socket->send(ret))
-      qiLogError("qimessaging.serverresult") << "Can't generate an answer for address:" << replyaddr;
+      qiLogWarning("qimessaging.serverresult") << "Can't generate an answer for address:" << replyaddr;
   }
 
   inline void serverResultAdapter(qi::Future<AnyReference> future,
@@ -122,7 +122,7 @@ namespace qi {
       }
     }
     if (!socket->send(ret))
-      qiLogError("qimessaging.serverresult") << "Can't generate an answer for address:" << replyaddr;
+      qiLogWarning("qimessaging.serverresult") << "Can't generate an answer for address:" << replyaddr;
   }
 }
 
