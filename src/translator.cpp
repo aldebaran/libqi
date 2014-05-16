@@ -17,7 +17,7 @@
 
 #include "utils.hpp"
 
-qiLogCategory("Translator");
+qiLogCategory("qi.translator");
 
 namespace qi
 {
