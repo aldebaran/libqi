@@ -58,6 +58,7 @@ qi_stage_lib(qipython${pyver})
 
 if("${pyver}" STREQUAL "")
   qi_create_python_ext(_qi SHARED ../src/boostpymain.cpp)
+  qi_install_python(${CMAKE_CURRENT_SOURCE_DIR}/../qi KEEP_RELATIVE_PATHS)
   qi_use_lib(_qi qipython)
 else()
   # Hack until qibuild fully supports python3
