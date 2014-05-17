@@ -35,6 +35,8 @@ namespace qi {
     };
 
     //Client
+    qi::FutureSync<void> connect(const char* serviceDirectoryURL);
+    qi::FutureSync<void> connect(const std::string &serviceDirectoryURL);
     qi::FutureSync<void> connect(const qi::Url &serviceDirectoryURL);
     bool isConnected() const;
     qi::Url url() const;

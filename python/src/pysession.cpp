@@ -72,7 +72,7 @@ namespace qi { namespace py {
         qi::Future<void> fut;
         {
           GILScopedUnlock _unlock;
-          fut = _ses->connect(url);
+          fut = _ses->connect(qi::Url(url, "tcp", 9559));
         }
         return toPyFutureAsync(fut, _async);
       }

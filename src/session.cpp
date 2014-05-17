@@ -145,6 +145,14 @@ namespace qi {
 
 
   // ###### Client
+  qi::FutureSync<void> Session::connect(const char* serviceDirectoryURL)
+  {
+    return _p->connect(qi::Url(serviceDirectoryURL, "tcp", 9559));
+  }
+  qi::FutureSync<void> Session::connect(const std::string &serviceDirectoryURL)
+  {
+    return _p->connect(qi::Url(serviceDirectoryURL, "tcp", 9559));
+  }
   qi::FutureSync<void> Session::connect(const qi::Url &serviceDirectoryURL)
   {
     return _p->connect(serviceDirectoryURL);
