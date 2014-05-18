@@ -59,7 +59,7 @@ namespace qi
     else
     {
       const char* s = "Unrecognized protocol to create the TransportServer.";
-      qiLogError("TransportServer") << s;
+      qiLogError() << s;
       return qi::makeFutureError<void>(s);
     }
     TransportServerImplPtr implPtr(impl);
