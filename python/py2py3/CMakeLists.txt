@@ -63,6 +63,12 @@ if("${pyver}" STREQUAL "")
 else()
   # Hack until qibuild fully supports python3
   add_library(_qi3 SHARED ../src/boostpymain.cpp)
+  if(UNIX)
+    set_target_properties(_qi3
+      PROPERTIES
+      SUFFIX ".so"
+      )
+  endif()
   set_target_properties(_qi3
       PROPERTIES PREFIX ""
       OUTPUT_NAME "_qi"
