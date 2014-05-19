@@ -65,29 +65,67 @@ namespace qi {
     return _p->findMethod(nameWithOptionalSignature, args, canCache);
   }
 
-  std::string MetaObjectPrivate::generateErrorString(
-    const std::string& signature,
-    const std::vector<std::pair<MetaMethod, float> >& candidates,
-    bool logError)
-  {
-    std::stringstream                           ss;
-    std::vector<std::pair<MetaMethod, float> >::const_iterator it;
-
+  static void displayCandidates(std::stringstream& ss, const std::vector<std::pair<MetaMethod, float> >& candidates) {
     if (candidates.size() == 0) {
-      ss << "Can't find method: " << signature << std::endl;
-      return ss.str();
+      return;
     }
-
     if (candidates.size() == 1) {
-      ss << "Arguments types did not match for " << signature << ":" << std::endl
-         << "  Candidate:" << std::endl;
+      ss << "  Candidate:" << std::endl;
     } else {
-      ss << "Ambiguous overload for " << signature << ":" << std::endl
-         << "  Candidate(s):" << std::endl;
+      ss << "  Candidate(s):" << std::endl;
     }
+    std::vector<std::pair<MetaMethod, float> >::const_iterator it;
     for (it = candidates.begin(); it != candidates.end(); ++it) {
       const qi::MetaMethod       &mm = it->first;
       ss << "  " << mm.toString() << " (" << it->second << ')' << std::endl;
+    }
+  }
+
+  static void displayMeths(std::stringstream& ss, const std::vector<MetaMethod>& candidates) {
+    if (candidates.size() == 0) {
+      return;
+    }
+    if (candidates.size() == 1) {
+      ss << "  Candidate:" << std::endl;
+    } else {
+      ss << "  Candidate(s):" << std::endl;
+    }
+    std::vector<MetaMethod>::const_iterator it;
+    for (it = candidates.begin(); it != candidates.end(); ++it) {
+      const qi::MetaMethod       &mm = *it;
+      ss << "  " << mm.toString() << std::endl;
+    }
+  }
+
+
+
+  std::string MetaObjectPrivate::generateErrorString(const std::string& signature,
+                                                     const std::string& resolvedSignature,
+                                                     const std::vector<std::pair<MetaMethod, float> >& candidates,
+                                                     int error,
+                                                     bool logError) const
+  {
+    std::stringstream ss;
+
+    if (error == -1 and candidates.size() != 0)
+      qiLogError() << "Broken error handling in generateErrorString";
+    switch (error) {
+      case -1: {
+        ss << "Can't find method: " << signature << " (resolved to '" << resolvedSignature << "')" << std::endl;
+        std::vector<MetaMethod> mmv = findMethod(qi::signatureSplit(signature)[1]);
+        displayMeths(ss, mmv);
+        break;
+      }
+      case -2:
+        ss << "Arguments types did not match for " << signature  << " (resolved to '" << resolvedSignature << "')" << ":" << std::endl;
+        displayCandidates(ss, candidates);
+        break;
+      case -3:
+        ss << "Ambiguous overload for " << signature  << " (resolved to '" << resolvedSignature << "')" << ":" << std::endl;
+        displayCandidates(ss, candidates);
+        break;
+      default:
+        qiLogError() << "Invalid error id for generateErrorString";
     }
     if (logError)
       qiLogError() << ss.str();
@@ -102,6 +140,12 @@ namespace qi {
     }
   };
 
+  /*
+   * return a negative value on error
+   *  -1 : no method found
+   *  -2 : arguments do not matches
+   *  -3 : ambiguous matches
+   */
   int MetaObjectPrivate::findMethod(const std::string& nameWithOptionalSignature, const GenericFunctionParameters& args, bool* canCache) const
   {
     boost::recursive_mutex::scoped_lock sl(_methodsMutex);
@@ -154,7 +198,7 @@ namespace qi {
     if (!ambiguous)
       return firstMatch->uid();
     // resolve ambiguity by using arguments
-    for (unsigned dyn = 0; dyn<2; ++dyn)
+    for (unsigned dyn = 0; dyn < 2; ++dyn)
     {
       Signature sResolved = args.signature(dyn==1);
       std::string resolvedSig = sResolved.toString();
@@ -192,11 +236,11 @@ namespace qi {
       }
       assert(count);
       if (count > 1)
-        qiLogVerbose() << generateErrorString(fullSig, const_cast<MetaObjectPrivate*>(this)->findCompatibleMethod(nameWithOptionalSignature), false);
+        qiLogVerbose() << generateErrorString(nameWithOptionalSignature, fullSig, const_cast<MetaObjectPrivate*>(this)->findCompatibleMethod(nameWithOptionalSignature), -3, false);
       else
         return it->first->uid();
     }
-    return -1;
+    return -2;
   }
 
   std::vector<MetaObject::CompatibleMethod> MetaObjectPrivate::findCompatibleMethod(const std::string &nameOrSignature)

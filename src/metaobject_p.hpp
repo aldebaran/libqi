@@ -114,9 +114,9 @@ namespace qi {
     static qi::Atomic<int> uid;
 
     // Generate an error message for overload resolution failure
-    static std::string generateErrorString(const std::string &signature,
-                                           const std::vector<std::pair<MetaMethod, float> > &candidates,
-                                            bool logError = true);
+    std::string generateErrorString(const std::string &signature, const std::string &resolvedSignature,
+                                    const std::vector<std::pair<MetaMethod, float> > &candidates,
+                                    int error, bool logError = true) const;
     friend class TypeImpl<MetaObjectPrivate>;
     friend class TypeImpl<MetaObject>;
   };
