@@ -458,8 +458,8 @@ namespace qi {
     if (expectedSignature == "m")
     {
       /* We need to send a dynamic containing the value tuple to push the
-      * signature. This wraps correctly without copying the data.
-      */
+       * signature. This wraps correctly without copying the data.
+       */
       std::vector<qi::TypeInterface*> types;
       std::vector<void*> values;
       types.resize(in.size());
@@ -475,9 +475,9 @@ namespace qi {
       return;
     }
     /* This check does not makes sense for this transport layer who does not care,
-    * But it checks a general rule that is true for all the messages we use and
-    * it can help catch many mistakes.
-    */
+     * But it checks a general rule that is true for all the messages we use and
+     * it can help catch many mistakes.
+     */
     if (expectedSignature.type() != Signature::Type_Tuple)
       throw std::runtime_error("Expected a tuple, got " + expectedSignature.toString());
     AnyReferenceVector nargs(in);
