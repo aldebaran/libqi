@@ -542,7 +542,7 @@ namespace qi
      if (setsockopt(handle, SOL_TCP, QI_TCP_USER_TIMEOUT, &optval, optlen) < 0
        && !tcpUserTimeoutWarning)
      {
-        qiLogWarning() << "(Expected on old kernels) Failed to set TCP_USER_TIMEOUT  : " << strerror(errno);
+        qiLogVerbose() << "(Expected on old kernels) Failed to set TCP_USER_TIMEOUT  : " << strerror(errno);
         tcpUserTimeoutWarning = true;
      }
 # else
