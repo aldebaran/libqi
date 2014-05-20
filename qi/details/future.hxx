@@ -149,7 +149,9 @@ namespace qi {
       }
 
 
-      void connect(qi::Future<T> future, const boost::function<void (qi::Future<T>)> &s)
+      void connect(qi::Future<T> future,
+          const boost::function<void (qi::Future<T>)> &s,
+          FutureCallbackType type)
       {
         bool ready;
         {
@@ -158,11 +160,17 @@ namespace qi {
           ready = isFinished();
         }
         //result already ready, notify the callback
-        if (ready)
-          // always post, regardless of whether the promise is Sync or Async.
-          // connect() must not block, so that calling code can release locks
-          // and stuff and avoid deadlock.
-          getEventLoop()->post(boost::bind(s, future));
+        if (ready) {
+          if (type == FutureCallbackType_Async)
+            getEventLoop()->post(boost::bind(s, future));
+          else
+          {
+            try {
+              s(future);
+            } catch(const ::qi::PointerLockException&)
+            {/*do nothing*/}
+          }
+        }
       }
 
       const ValueType &value(int msecs) const {

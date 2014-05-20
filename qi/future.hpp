@@ -260,12 +260,19 @@ namespace qi {
     }
   public: //Signals
     typedef boost::function<void (Future<T>) > Connection;
-    /** Connect a callback function that will be called once
-    * when the Future finishes (that is, switches from running to an other
-    * state.
-    */
-    inline void connect(const Connection& s) { _p->connect(*this, s);}
 
+    /** Connect a callback function that will be called once when the Future
+     * finishes (that is, switches from running to an other state).
+     *
+     * If type is sync, connect may block and call the callback synchronously if
+     * the future is already set.
+    */
+    template<typename AF>
+    inline void connect(const AF& fun,
+        FutureCallbackType type = FutureCallbackType_Async)
+    {
+      _p->connect(*this, fun, type);
+    }
 #ifdef DOXYGEN
     /** Connect a callback with binding and tracking support.
     *
@@ -274,13 +281,16 @@ namespace qi {
     * destroyed.
     */
     template<typename FUNCTYPE, typename ARG0>
-    void connect(FUNCTYPE fun, ARG0 tracked, ...);
+    void connect(FUNCTYPE fun, ARG0 tracked, ...,
+        FutureCallbackType type = FutureCallbackType_Async);
 #else
-#define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma) \
-    template<typename AF, typename ARG0 comma ATYPEDECL>      \
-    inline void connect(const AF& fun, const ARG0& arg0 comma ADECL)  \
-    {                                                                    \
-      connect(::qi::bind<void(Future<T>)>(fun, arg0 comma AUSE));    \
+#define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)                   \
+    template<typename AF, typename ARG0 comma ATYPEDECL>                    \
+    inline void connect(const AF& fun, const ARG0& arg0 comma ADECL,        \
+        FutureCallbackType type = FutureCallbackType_Async)                 \
+    {                                                                       \
+      _p->connect(*this, ::qi::bind<void(Future<T>)>(fun, arg0 comma AUSE), \
+          type);                                                            \
     }
     QI_GEN(genCall)
 #undef genCall
