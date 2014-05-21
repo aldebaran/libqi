@@ -140,7 +140,7 @@ namespace qi {
     qiLogDebug() << this << "(" << _service << '/' << _object << ") msg " << msg.address() << " " << msg.buffer().size();
     if (msg.object() != _object)
     {
-      qiLogDebug() << "Passing message to host";
+      qiLogDebug() << "Passing message " << msg.address() << " to host " ;
       ObjectHost::onMessage(msg, _socket);
       return;
     }
@@ -229,7 +229,7 @@ namespace qi {
           promise.setError(err.what());
         }
 
-        qiLogDebug() << "Message passed to promise";
+        qiLogDebug() << "Message " << msg.address() << " passed to promise";
         return;
       }
 
