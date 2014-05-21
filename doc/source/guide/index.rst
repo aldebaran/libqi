@@ -13,3 +13,4 @@ User Guides
   py-client
   py-service
   py-tonaoqi2
+  py-log-client

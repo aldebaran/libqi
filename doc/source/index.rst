@@ -18,8 +18,10 @@ User Guides
  - :ref:`C++: Writing a service<guide-cxx-service>`
  - :ref:`C++: Registering types in the type system<guide-cxx-register-types>`
  - :ref:`C++: Using logs<guide-cxx-log>`
+ - :ref:`C++: Getting and publishing logs<guide-cxx-log-client>`
  - :ref:`Python: Writing a client<guide-py-client>`
  - :ref:`Python: Writing a service<guide-py-service>`
+ - :ref:`Python: Getting and publishing logs<guide-py-log-client>`
  - :ref:`Python: from NAOqi 1 to NAOqi 2<guide-py-tonaoqi2>`
 
 Design documents
