@@ -107,7 +107,7 @@ namespace qi {
   {
     std::stringstream ss;
 
-    if (error == -1 and candidates.size() != 0)
+    if (error == -1 && candidates.size() != 0)
       qiLogError() << "Broken error handling in generateErrorString";
     switch (error) {
       case -1: {
@@ -829,5 +829,3 @@ namespace qi {
     return a._p < b._p;
   }
 }
-
-
