@@ -495,16 +495,21 @@ public:
   {
     PyObject* container;
     Py_ssize_t ppos; // -1 means end iterator
-    std::pair<boost::python::object, boost::python::object> curPair;
+    std::pair<boost::python::object, boost::python::object>* curPair;
 
-    Iter() : container(0), ppos(0) {}
+    Iter() : container(0), ppos(0)
+    {
+      qi::py::GILScopedLock _lock;
+      curPair = new std::pair<boost::python::object, boost::python::object>();
+    }
     Iter(const Iter& o) :
       container(o.container),
-      ppos(o.ppos),
-      curPair(o.curPair)
+      ppos(o.ppos)
     {
       qi::py::GILScopedLock _lock;
       Py_XINCREF(container);
+      curPair =
+        new std::pair<boost::python::object, boost::python::object>(*o.curPair);
     }
     Iter(PyObject* cont, bool end = false) :
       container(cont),
@@ -512,11 +517,13 @@ public:
     {
       qi::py::GILScopedLock _lock;
       Py_XINCREF(container);
+      curPair = new std::pair<boost::python::object, boost::python::object>();
     }
     ~Iter()
     {
       qi::py::GILScopedLock _lock;
       Py_XDECREF(container);
+      delete curPair;
     }
     Iter& operator=(const Iter& o)
     {
@@ -527,7 +534,7 @@ public:
 
         container = o.container;
         ppos = o.ppos;
-        curPair = o.curPair;
+        *curPair = *o.curPair;
 
         Py_XINCREF(container);
       }
@@ -827,7 +834,8 @@ qi::AnyReference PyObjectDictIteratorTypeInterface::dereference(void* storage)
 {
   Iter* ptr = (Iter*)ptrFromStorage(&storage);
   assert(ptr->ppos != -1 && "attempting to dereference past-the-end iterator");
-  return qi::AnyReference::from(ptr->curPair);
+  qi::py::GILScopedLock _lock;
+  return qi::AnyReference::from(*ptr->curPair);
 }
 
 void PyObjectDictIteratorTypeInterface::next(void** storage)
@@ -843,7 +851,7 @@ void PyObjectDictIteratorTypeInterface::next(void** storage)
     // past the end
     ptr->ppos = -1;
   else
-    ptr->curPair = std::make_pair(pyBorrow(curKey), pyBorrow(curValue));
+    *ptr->curPair = std::make_pair(pyBorrow(curKey), pyBorrow(curValue));
 }
 
 bool PyObjectDictIteratorTypeInterface::equals(void* s1, void* s2)
