@@ -157,12 +157,13 @@ namespace qi { namespace py {
 
 
     //TODO: DO NOT DUPLICATE
-    static qi::AnyReference pyCallMethod(const std::vector<qi::AnyReference>& cargs, boost::python::object callable) {
+    static qi::AnyReference pyCallMethod(const std::vector<qi::AnyReference>& cargs, PyThreadSafeObject tscallable) {
       qi::AnyReference gvret;
       try {
         qi::py::GILScopedLock _lock;
         boost::python::list   args;
         boost::python::object ret;
+        boost::python::object callable = tscallable.object();
 
         std::vector<qi::AnyReference>::const_iterator it = cargs.begin();
         ++it; //drop the first arg which is DynamicObject*
@@ -272,7 +273,7 @@ namespace qi { namespace py {
         mmb.setReturnSignature("m");
 
       // Throw on error
-      gob.xAdvertiseMethod(mmb, qi::AnyFunction::fromDynamicFunction(boost::bind(pyCallMethod, _1, method)));
+      gob.xAdvertiseMethod(mmb, qi::AnyFunction::fromDynamicFunction(boost::bind(pyCallMethod, _1, PyThreadSafeObject(method))));
     }
 
     ObjectThreadingModel getThreadingModel(boost::python::object &obj) {
