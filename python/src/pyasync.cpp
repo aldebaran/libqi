@@ -45,7 +45,7 @@ namespace qi { namespace py {
 
     };
 
-    static AnyValue pyAsync(PyThreadSafeObject safeargs) {
+    static boost::python::object pyAsync(PyThreadSafeObject safeargs) {
       GILScopedLock _gil;
 
       boost::python::list args(safeargs.object());
@@ -54,8 +54,7 @@ namespace qi { namespace py {
       args.pop(0);
 
       try {
-        return AnyValue::from(boost::python::object(
-              callable(*boost::python::tuple(args))));
+        return callable(*boost::python::tuple(args));
       } catch (const boost::python::error_already_set &) {
         throw std::runtime_error(PyFormatError());
       }
@@ -70,13 +69,12 @@ namespace qi { namespace py {
 
       qi::uint64_t delay = boost::python::extract<qi::uint64_t>(kwargs.get("delay", 0));
 
-      // use AnyValue to ensure that GIL is acquired upon destruction. The
-      // PyFuture may *not* be the last destroyed pointer!
-      // We could use PyThreadSafeObject, but it is not bound to qitype so
-      // AnyValue is easier to use
-      boost::function<AnyValue()> f = boost::bind(&pyAsync, PyThreadSafeObject(args));
+      //Does not use PyThreadSafeObject, because, setValue will be done under the lock
+      //and the the future will be a PyFuture, that will be destroyed and use in the python world
+      //under the lock too.
+      boost::function<boost::python::object()> f = boost::bind(&pyAsync, PyThreadSafeObject(args));
 
-      qi::Future<AnyValue> fut = qi::getEventLoop()->async(f, delay);
+      qi::Future<boost::python::object> fut = qi::getEventLoop()->async(f, delay);
 
       return boost::python::object(qi::py::toPyFuture(fut));
     }
