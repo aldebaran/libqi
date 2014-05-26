@@ -57,19 +57,19 @@ static void setFilter(const std::string& rules, qi::AnyObject listener)
       std::string cat = token.substr(0, sep);
       int level = qi::log::stringToLogLevel(sLevel.c_str());
       qiLogFatal() << cat << level;
-      listener.call<void>("setCategory", cat, level);
+      listener.call<void>("addFilter", cat, level);
     }
     else
     {
       if (token[0] == '-')
       {
         qiLogFatal() << token.substr(1) << 0;
-        listener.call<void>("setCategory", token.substr(1), 0);
+        listener.call<void>("addFilter", token.substr(1), 0);
       }
       else
       {
         qiLogFatal() << token << 6;
-        listener.call<void>("setCategory", token, 6);
+        listener.call<void>("addFilter", token, 6);
       }
     }
     if (next == rules.npos)
@@ -104,11 +104,6 @@ int subCmd_logView(int argc, char **argv, qi::ApplicationSession& app)
   qi::AnyObject listener = logger.call<qi::AnyObject>("getListener");
 
   listener.call<void>("clearFilters");
-  if (vm.count("verbose"))
-    listener.call<void>("setCategory", "*", 5);
-
-  if (vm.count("debug"))
-    listener.call<void>("setCategory", "*", 6);
 
   if (vm.count("level"))
   {
@@ -119,8 +114,14 @@ int subCmd_logView(int argc, char **argv, qi::ApplicationSession& app)
     else if (level <= 0)
       level = 0;
 
-    listener.call<void>("setCategory", "*", level);
+    listener.call<void>("addFilter", "*", level);
   }
+
+  if (vm.count("verbose"))
+    listener.call<void>("addFilter", "*", 5);
+
+  if (vm.count("debug"))
+    listener.call<void>("addFilter", "*", 6);
 
   if (vm.count("filters"))
   {
@@ -174,12 +175,6 @@ int subCmd_logSend(int argc, char **argv, qi::ApplicationSession& app)
   source += boost::lexical_cast<std::string>(__LINE__);
 
   int level = 4;
-  if (vm.count("verbose"))
-    level = 5;
-
-  if (vm.count("debug"))
-    level = 6;
-
   if (vm.count("level"))
   {
     level = vm["level"].as<int>();
@@ -189,6 +184,11 @@ int subCmd_logSend(int argc, char **argv, qi::ApplicationSession& app)
     else if (level <= 0)
       level = 0;
   }
+  if (vm.count("verbose"))
+    level = 5;
+
+  if (vm.count("debug"))
+    level = 6;
 
   std::string category = "qicli.qilog.logsend";
   if (vm.count("category"))
@@ -212,10 +212,12 @@ int subCmd_logSend(int argc, char **argv, qi::ApplicationSession& app)
   msgVectRef.push_back(qi::AnyReference::from(category));
   msgVectRef.push_back(qi::AnyReference::from(location));
   msgVectRef.push_back(qi::AnyReference::from(message));
+  msgVectRef.push_back(qi::AnyReference::from(0));
 
-  qi::AnyValue msg = qi::AnyValue::makeTuple(msgVectRef);
+  std::vector<qi::AnyValue> msgs;
+  msgs.push_back(qi::AnyValue::makeTuple(msgVectRef));
+  logger.call<void>("log", qi::AnyValue::from(msgs));
 
-  logger.call<void>("log", msg);
   logger.reset();
 
   return 0;
