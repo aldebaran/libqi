@@ -24,6 +24,7 @@ namespace qi {
 
   static qi::Atomic<uint32_t> gTaskId = 0;
 
+
   template<typename T>
   static T getEnvParam(const char* name, T defaultVal)
   {
@@ -251,27 +252,42 @@ namespace qi {
     }
   }
 
-  static void measureMeBaby(const boost::function<void ()>& cb, qi::uint32_t id) {
-    tracepoint(qi_qi, eventloop_task_start, id);
-    cb();
-    tracepoint(qi_qi, eventloop_task_stop, id);
-  }
-
-  void EventLoopAsio::post(uint64_t usDelay, const boost::function<void ()>& cb)
-  {
-    if (!usDelay) {
-      uint32_t id = ++gTaskId;
-      tracepoint(qi_qi, eventloop_post, id);
-      _io.post(boost::bind<void>(&measureMeBaby, cb, id));
+  class ScopedIncDec {
+  public:
+    ScopedIncDec(qi::Atomic<qi::uint32_t>& atom)
+      : _atom(atom)
+    {
+      ++_atom;
     }
-    else
-      asyncCall(usDelay, cb);
-  }
 
-  static void invoke_maybe(boost::function<void()> f, qi::uint32_t id, qi::Promise<void> p, const boost::system::error_code& erc)
+    ~ScopedIncDec() {
+      --_atom;
+    }
+
+    qi::Atomic<qi::uint32_t>& _atom;
+  };
+
+  class ScopedExitDec {
+  public:
+    ScopedExitDec(qi::Atomic<qi::uint32_t>& atom)
+      : _atom(atom)
+    {
+    }
+
+    ~ScopedExitDec() {
+      --_atom;
+    }
+
+    qi::Atomic<qi::uint32_t>& _atom;
+  };
+
+
+  void EventLoopAsio::invoke_maybe(boost::function<void()> f, qi::uint32_t id, qi::Promise<void> p, const boost::system::error_code& erc)
   {
+    ScopedExitDec _(_totalTask);
     if (!erc)
     {
+      ScopedIncDec _(_activeTask);
       tracepoint(qi_qi, eventloop_task_start, id);
       f();
       tracepoint(qi_qi, eventloop_task_stop, id);
@@ -283,6 +299,25 @@ namespace qi {
     }
   }
 
+  void EventLoopAsio::post(uint64_t usDelay, const boost::function<void ()>& cb)
+  {
+    static boost::system::error_code erc;
+    qi::Promise<void> p;
+    if (!usDelay) {
+      uint32_t id = ++gTaskId;
+      tracepoint(qi_qi, eventloop_post, id);
+
+      ++_totalTask;
+
+      if (*_totalTask > 150)
+        qiLogWarning() << "Eventloop is with excessive queue " << *_totalTask << " / " << _maxThreads << " active: " << *_activeTask;
+
+      _io.post(boost::bind<void>(&EventLoopAsio::invoke_maybe, this, cb, id, p, erc));
+    }
+    else
+      asyncCall(usDelay, cb);
+  }
+
   qi::Future<void> EventLoopAsio::asyncCall(uint64_t usDelay, boost::function<void ()> cb)
   {
     if (!_work)
@@ -290,11 +325,16 @@ namespace qi {
 
     uint32_t id = ++gTaskId;
 
+    ++_totalTask;
+
+    if (*_totalTask > _maxThreads)
+      qiLogWarning() << "Eventloop is full " << *_totalTask << " / " << _maxThreads << " active: " << *_activeTask;
+
     tracepoint(qi_qi, eventloop_delay, id, usDelay);
     boost::shared_ptr<boost::asio::deadline_timer> timer = boost::make_shared<boost::asio::deadline_timer>(boost::ref(_io));
     timer->expires_from_now(boost::posix_time::microseconds(usDelay));
     qi::Promise<void> prom(boost::bind(&boost::asio::deadline_timer::cancel, timer));
-    timer->async_wait(boost::bind(&invoke_maybe, cb, id, prom, _1));
+    timer->async_wait(boost::bind(&EventLoopAsio::invoke_maybe, this, cb, id, prom, _1));
     return prom.future();
   }
 
@@ -690,6 +730,7 @@ namespace qi {
   {
     return _get(_poolEventLoop, false, 0);
   }
+
 
   boost::asio::io_service& getIoService()
   {
