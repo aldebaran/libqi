@@ -77,3 +77,12 @@ else()
   )
   qi_use_lib(_qi3 qipython3)
 endif()
+
+# Hack for embedded python interpreter to find the sources of
+# pure python 'qi' library. (It uses qi::path::librariesPath())
+add_custom_target(copy-python-qi ALL
+  COMMAND ${CMAKE_COMMAND}
+  -E copy_directory
+  "${CMAKE_SOURCE_DIR}/qi"
+  "${QI_SDK_DIR}/${QI_SDK_LIB}/qi"
+)
