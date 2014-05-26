@@ -58,6 +58,9 @@ namespace qi
     /// Set the maximum number of threads in the pool
     void setMaxThreads(unsigned int max);
 
+    /// Set the name of the eventloop
+    void setName(const std::string& name);
+
     // Internal function
     void *nativeHandle();
 

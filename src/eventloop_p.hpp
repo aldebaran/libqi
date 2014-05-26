@@ -45,6 +45,8 @@ namespace qi {
     virtual void run()=0;
     virtual void setMaxThreads(unsigned int max)=0;
     boost::function<void()> _emergencyCallback;
+    std::string             _name;
+
   protected:
     virtual ~EventLoopPrivate() {}
   };

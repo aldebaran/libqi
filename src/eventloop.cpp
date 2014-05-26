@@ -39,6 +39,7 @@ namespace qi {
   : _mode(Mode_Unset)
   , _destroyMe(false)
   {
+    _name = "asioeventloop";
   }
 
 
@@ -161,7 +162,7 @@ namespace qi {
   void EventLoopAsio::_runPool()
   {
     qiLogDebug() << this << "run starting from pool";
-    qi::os::setCurrentThreadName("asioeventloop");
+    qi::os::setCurrentThreadName(_name);
     _running.setIfEquals(0, 1);
     ++_nThreads;
     try
@@ -577,6 +578,11 @@ namespace qi {
   {
     _p->setMaxThreads(max);
   }
+
+  void EventLoop::setName(const std::string& name) {
+    _p->_name = name;
+  }
+
 
   struct MonitorContext
   {
