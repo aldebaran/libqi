@@ -169,7 +169,7 @@ namespace qi {
     }
     catch(const std::exception& e)
     {
-      qiLogVerbose() << "Pool thread exiting from exception " << e.what();
+      qiLogWarning() << "Error caught in eventloop.async: " << e.what();
     }
     catch(...)
     {}
