@@ -45,6 +45,8 @@ namespace qi {
     virtual void run()=0;
     virtual void setMaxThreads(unsigned int max)=0;
     boost::function<void()> _emergencyCallback;
+    std::string             _name;
+
   protected:
     virtual ~EventLoopPrivate() {}
   };
@@ -66,6 +68,7 @@ namespace qi {
     virtual void* nativeHandle();
     virtual void setMaxThreads(unsigned int max);
   private:
+    void invoke_maybe(boost::function<void()> f, qi::uint32_t id, qi::Promise<void> p, const boost::system::error_code& erc);
     void _runPool();
     void _pingThread();
     virtual ~EventLoopAsio();
@@ -86,6 +89,9 @@ namespace qi {
     boost::recursive_mutex _mutex;
     boost::thread::id  _id;
     unsigned int _maxThreads;
+
+    qi::Atomic<uint32_t> _totalTask;
+    qi::Atomic<uint32_t> _activeTask;
   };
 
   class ThreadPool;

@@ -24,6 +24,7 @@ namespace qi {
 
   static qi::Atomic<uint32_t> gTaskId = 0;
 
+
   template<typename T>
   static T getEnvParam(const char* name, T defaultVal)
   {
@@ -38,6 +39,7 @@ namespace qi {
   : _mode(Mode_Unset)
   , _destroyMe(false)
   {
+    _name = "asioeventloop";
   }
 
 
@@ -125,11 +127,12 @@ namespace qi {
         if (_maxThreads && *_nThreads >= _maxThreads + 1) // we count in nThreads
         {
           ++nbTimeout;
-          qiLogInfo() << "Thread limit reached (" << nbTimeout << " timeouts)";
+          qiLogInfo() << "Thread " << _name << " limit reached (" << nbTimeout << " timeouts)" << *_totalTask << " / " << _maxThreads << " active: " << *_activeTask;;
+
           if (nbTimeout >= maxTimeouts)
           {
-            qiLogInfo() <<
-              "System seems to be deadlocked, sending emergency signal";
+            qiLogInfo() << "threadpool: " << _name <<
+              ": System seems to be deadlocked, sending emergency signal";
             if (_emergencyCallback)
             {
               try {
@@ -141,7 +144,7 @@ namespace qi {
         }
         else
         {
-          qiLogInfo() << "Spawning more threads (" << *_nThreads << ')';
+          qiLogInfo() << _name << ": Spawning more threads (" << *_nThreads << ')';
           boost::thread(&EventLoopAsio::_runPool, this);
         }
         qi::os::msleep(msGrace);
@@ -160,7 +163,7 @@ namespace qi {
   void EventLoopAsio::_runPool()
   {
     qiLogDebug() << this << "run starting from pool";
-    qi::os::setCurrentThreadName("asioeventloop");
+    qi::os::setCurrentThreadName(_name);
     _running.setIfEquals(0, 1);
     ++_nThreads;
     try
@@ -169,13 +172,12 @@ namespace qi {
     }
     catch(const std::exception& e)
     {
-      qiLogWarning() << "Error caught in eventloop.async: " << e.what();
+      qiLogWarning() << "Error caught in eventloop(" << _name << ").async: " << e.what();
     }
     catch(...)
     {}
     if (!--_nThreads)
       --_running;
-
   }
 
   void EventLoopAsio::run()
@@ -251,27 +253,42 @@ namespace qi {
     }
   }
 
-  static void measureMeBaby(const boost::function<void ()>& cb, qi::uint32_t id) {
-    tracepoint(qi_qi, eventloop_task_start, id);
-    cb();
-    tracepoint(qi_qi, eventloop_task_stop, id);
-  }
-
-  void EventLoopAsio::post(uint64_t usDelay, const boost::function<void ()>& cb)
-  {
-    if (!usDelay) {
-      uint32_t id = ++gTaskId;
-      tracepoint(qi_qi, eventloop_post, id);
-      _io.post(boost::bind<void>(&measureMeBaby, cb, id));
+  class ScopedIncDec {
+  public:
+    ScopedIncDec(qi::Atomic<qi::uint32_t>& atom)
+      : _atom(atom)
+    {
+      ++_atom;
     }
-    else
-      asyncCall(usDelay, cb);
-  }
 
-  static void invoke_maybe(boost::function<void()> f, qi::uint32_t id, qi::Promise<void> p, const boost::system::error_code& erc)
+    ~ScopedIncDec() {
+      --_atom;
+    }
+
+    qi::Atomic<qi::uint32_t>& _atom;
+  };
+
+  class ScopedExitDec {
+  public:
+    ScopedExitDec(qi::Atomic<qi::uint32_t>& atom)
+      : _atom(atom)
+    {
+    }
+
+    ~ScopedExitDec() {
+      --_atom;
+    }
+
+    qi::Atomic<qi::uint32_t>& _atom;
+  };
+
+
+  void EventLoopAsio::invoke_maybe(boost::function<void()> f, qi::uint32_t id, qi::Promise<void> p, const boost::system::error_code& erc)
   {
+    ScopedExitDec _(_totalTask);
     if (!erc)
     {
+      ScopedIncDec _(_activeTask);
       tracepoint(qi_qi, eventloop_task_start, id);
       f();
       tracepoint(qi_qi, eventloop_task_stop, id);
@@ -283,6 +300,21 @@ namespace qi {
     }
   }
 
+  void EventLoopAsio::post(uint64_t usDelay, const boost::function<void ()>& cb)
+  {
+    static boost::system::error_code erc;
+    qi::Promise<void> p;
+    if (!usDelay) {
+      uint32_t id = ++gTaskId;
+      tracepoint(qi_qi, eventloop_post, id);
+
+      ++_totalTask;
+      _io.post(boost::bind<void>(&EventLoopAsio::invoke_maybe, this, cb, id, p, erc));
+    }
+    else
+      asyncCall(usDelay, cb);
+  }
+
   qi::Future<void> EventLoopAsio::asyncCall(uint64_t usDelay, boost::function<void ()> cb)
   {
     if (!_work)
@@ -290,11 +322,12 @@ namespace qi {
 
     uint32_t id = ++gTaskId;
 
+    ++_totalTask;
     tracepoint(qi_qi, eventloop_delay, id, usDelay);
     boost::shared_ptr<boost::asio::deadline_timer> timer = boost::make_shared<boost::asio::deadline_timer>(boost::ref(_io));
     timer->expires_from_now(boost::posix_time::microseconds(usDelay));
     qi::Promise<void> prom(boost::bind(&boost::asio::deadline_timer::cancel, timer));
-    timer->async_wait(boost::bind(&invoke_maybe, cb, id, prom, _1));
+    timer->async_wait(boost::bind(&EventLoopAsio::invoke_maybe, this, cb, id, prom, _1));
     return prom.future();
   }
 
@@ -433,8 +466,9 @@ namespace qi {
   {
   }
 
-  EventLoop::EventLoop()
+  EventLoop::EventLoop(const std::string& name)
   : _p(0)
+  , _name(name)
   {
   }
 
@@ -472,6 +506,7 @@ namespace qi {
     if (_p)
       return;
     _p = new EventLoopAsio();
+    _p->_name = _name;
     _p->start(nthreads);
     qiLogDebug() << this << " EventLoop start done";
   }
@@ -530,11 +565,15 @@ namespace qi {
 
   void EventLoop::setEmergencyCallback(boost::function<void()> cb)
   {
+    if (!_p)
+      throw std::runtime_error("call start before");
     _p->_emergencyCallback = cb;
   }
 
   void EventLoop::setMaxThreads(unsigned int max)
   {
+    if (!_p)
+      throw std::runtime_error("call start before");
     _p->setMaxThreads(max);
   }
 
@@ -690,6 +729,7 @@ namespace qi {
   {
     return _get(_poolEventLoop, false, 0);
   }
+
 
   boost::asio::io_service& getIoService()
   {
