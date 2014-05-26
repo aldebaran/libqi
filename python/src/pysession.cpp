@@ -233,6 +233,7 @@ namespace qi { namespace py {
 
     boost::python::object makePySession(const qi::SessionPtr& ses)
     {
+      GILScopedLock _lock;
       return boost::python::object(PySession(ses));
     }
 
