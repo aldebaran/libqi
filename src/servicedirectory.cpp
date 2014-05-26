@@ -28,6 +28,7 @@
 #include <qimessaging/url.hpp>
 #include "servicedirectory_p.hpp"
 #include "server.hpp"
+#include <boost/algorithm/string.hpp>
 
 qiLogCategory("qimessaging.servicedirectory");
 
@@ -270,7 +271,8 @@ namespace qi
         }
       }
     }
-    serviceRemoved(idx, serviceName);
+    if (!boost::algorithm::starts_with(serviceName, "_"))
+      serviceRemoved(idx, serviceName);
   }
 
   void ServiceDirectoryBoundObject::updateServiceInfo(const ServiceInfo &svcinfo)
@@ -328,7 +330,8 @@ namespace qi
     connectedServices[idx] = itService->second;
     pendingServices.erase(itService);
 
-    serviceAdded(idx, serviceName);
+    if (!boost::algorithm::starts_with(serviceName, "_"))
+      serviceAdded(idx, serviceName);
   }
 
 
