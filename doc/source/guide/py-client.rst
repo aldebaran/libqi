@@ -52,10 +52,10 @@ Making asynchronous calls using qi::async
 Most of the API are designed to block until the operation started by the call
 completes. For example with this code inside our main::
 
-  tts = session.service("ALTextToSpeech");
-  motion = session.service("ALMotion");
-  tts->say("This is a very very very very long sentence.");
-  motion->moveTo(1, 0, 0); // go forward one meter
+  tts = session.service("ALTextToSpeech")
+  motion = session.service("ALMotion")
+  tts.say("This is a very very very very long sentence.")
+  motion.moveTo(1, 0, 0); // go forward one meter
 
 The robot will only start moving when he finishes speaking.
 
@@ -63,13 +63,13 @@ To perform both actions simultaneously, the API provides :py:func:`qi.async` tha
 performs a call in an asynchronous manner, and notifies you when the call
 finishes using a _`qi.Future`::
 
-  tts = session.service("ALTextToSpeech");
-  motion = session.service("ALMotion");
-  sayOp = qi.async(tts.say, "This is a very very very very long sentence.");
-  moveOp = qi.async(motion.moveTo, 1, 0, 0);
-  // Wait for both operations to terminate.
-  sayOp.wait();
-  moveOp.wait();
+  tts = session.service("ALTextToSpeech")
+  motion = session.service("ALMotion")
+  sayOp = qi.async(tts.say, "This is a very very very very long sentence.")
+  moveOp = qi.async(motion.moveTo, 1, 0, 0)
+  # Wait for both operations to terminate.
+  sayOp.wait()
+  moveOp.wait()
 
 Look at the :py:class:`qi.Future` for more complete documentation, but here is what you
 most definitely need to know:
