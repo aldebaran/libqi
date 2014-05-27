@@ -136,8 +136,8 @@ namespace qi {
       {
         return go()->forceEventLoop(el);
       }
-      #define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)         \
-      template<typename R> qi::FutureSync<R> async(                     \
+      #define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)          \
+      template<typename R> qi::Future<R> async(                          \
         const std::string& methodName comma                              \
         QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoAnyReference)) const {        \
           return go()->template async<R>(methodName comma AUSE);         \
@@ -673,7 +673,7 @@ namespace qi {
   #undef genCall
 
   #define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)                \
-  template<typename R> qi::FutureSync<R> GenericObject::async(             \
+  template<typename R> qi::Future<R> GenericObject::async(                 \
       const std::string& methodName       comma                            \
       QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoAnyReference))                    \
   {                                                                        \
@@ -717,45 +717,48 @@ namespace qi {
   QI_GEN(genCall)
   #undef genCall
 
-  #define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)         \
-  template<typename R,typename T> qi::FutureSync<R> async(   \
-      T* instance,                                                 \
+  #define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)       \
+  template<typename R,typename T> qi::Future<R> async(            \
+      T* instance,                                                \
       const std::string& methodName comma                         \
-      QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoAnyReference)) \
-  {                                                              \
-    AnyObject obj = AnyReference::from(instance).toObject();       \
-    qi::Future<R> res = obj.template call<R>(MetaCallType_Queued, methodName comma AUSE);  \
-    res.connect(boost::bind(&detail::hold<AnyObject>, obj));   \
-    return res;                                                 \
+      QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoAnyReference))           \
+  {                                                               \
+    AnyObject obj = AnyReference::from(instance).toObject();      \
+    qi::Future<R> res = obj.template call<R>(MetaCallType_Queued, \
+        methodName comma AUSE);                                   \
+    res.connect(boost::bind(&detail::hold<AnyObject>, obj));      \
+    return res;                                                   \
   }
   QI_GEN(genCall)
   #undef genCall
 
-  #define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)         \
-  template<typename R,typename T> qi::FutureSync<R> async(   \
-      boost::shared_ptr<T> instance,                             \
-      const std::string& methodName comma                         \
-      QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoAnyReference)) \
-  {                                                              \
-    AnyObject obj = AnyReference::from(instance).toObject();        \
-    qi::Future<R> res = obj.call<R>(MetaCallType_Queued, methodName comma AUSE);  \
-    res.connect(boost::bind(&detail::hold<AnyObject>, obj));   \
-    return res;                                                 \
+  #define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)  \
+  template<typename R,typename T> qi::Future<R> async(       \
+      boost::shared_ptr<T> instance,                         \
+      const std::string& methodName comma                    \
+      QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoAnyReference))      \
+  {                                                          \
+    AnyObject obj = AnyReference::from(instance).toObject(); \
+    qi::Future<R> res = obj.call<R>(MetaCallType_Queued,     \
+        methodName comma AUSE);                              \
+    res.connect(boost::bind(&detail::hold<AnyObject>, obj)); \
+    return res;                                              \
   }
   QI_GEN(genCall)
   #undef genCall
   #undef pushi
 
-  #define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)         \
-  template<typename R,typename T> qi::FutureSync<R> async(   \
-      Object<T> instance,                             \
-      const std::string& methodName comma                         \
-      QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoAnyReference)) \
-  {                                                              \
-    AnyObject obj = instance;                                    \
-    qi::Future<R> res =  obj.call<R>(MetaCallType_Queued, methodName comma AUSE);  \
-    res.connect(boost::bind(&detail::hold<AnyObject>, obj));   \
-    return res;                                                 \
+  #define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)  \
+  template<typename R,typename T> qi::Future<R> async(       \
+      Object<T> instance,                                    \
+      const std::string& methodName comma                    \
+      QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoAnyReference))      \
+  {                                                          \
+    AnyObject obj = instance;                                \
+    qi::Future<R> res =  obj.call<R>(MetaCallType_Queued,    \
+        methodName comma AUSE);                              \
+    res.connect(boost::bind(&detail::hold<AnyObject>, obj)); \
+    return res;                                              \
   }
   QI_GEN(genCall)
   #undef genCall
