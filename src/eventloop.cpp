@@ -651,7 +651,7 @@ namespace qi {
       {
         if (!qi::Application::initialized())
         {
-          qiLogInfo() << "Creating event loop while no qi::Application() is running";
+          qiLogVerbose() << "Creating event loop while no qi::Application() is running";
         }
         ctx = new EventLoop();
         if (isPool)
