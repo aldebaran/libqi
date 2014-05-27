@@ -38,7 +38,7 @@ namespace qi
     /** Create a new eventLoop.
      * You must then call either start(), run() or startThreadPool() to start event processing.
     */
-    EventLoop();
+    EventLoop(const std::string& name = "eventloop");
     ~EventLoop();
     /// Return true if current thread is the event loop thread.
     bool isInEventLoopThread();
@@ -57,9 +57,6 @@ namespace qi
 
     /// Set the maximum number of threads in the pool
     void setMaxThreads(unsigned int max);
-
-    /// Set the name of the eventloop
-    void setName(const std::string& name);
 
     // Internal function
     void *nativeHandle();
@@ -88,6 +85,7 @@ namespace qi
     Future<void> monitorEventLoop(EventLoop* helper, uint64_t maxUsDelay);
 
     EventLoopPrivate *_p;
+    std::string       _name;
   };
 
   /// Return the global eventloop, created on demand on first call.

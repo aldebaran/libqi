@@ -466,8 +466,9 @@ namespace qi {
   {
   }
 
-  EventLoop::EventLoop()
+  EventLoop::EventLoop(const std::string& name)
   : _p(0)
+  , _name(name)
   {
   }
 
@@ -505,6 +506,7 @@ namespace qi {
     if (_p)
       return;
     _p = new EventLoopAsio();
+    _p->_name = _name;
     _p->start(nthreads);
     qiLogDebug() << this << " EventLoop start done";
   }
@@ -563,18 +565,17 @@ namespace qi {
 
   void EventLoop::setEmergencyCallback(boost::function<void()> cb)
   {
+    if (!_p)
+      throw std::runtime_error("call start before");
     _p->_emergencyCallback = cb;
   }
 
   void EventLoop::setMaxThreads(unsigned int max)
   {
+    if (!_p)
+      throw std::runtime_error("call start before");
     _p->setMaxThreads(max);
   }
-
-  void EventLoop::setName(const std::string& name) {
-    _p->_name = name;
-  }
-
 
   struct MonitorContext
   {
