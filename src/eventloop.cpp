@@ -127,11 +127,12 @@ namespace qi {
         if (_maxThreads && *_nThreads >= _maxThreads + 1) // we count in nThreads
         {
           ++nbTimeout;
-          qiLogInfo() << "Thread limit reached (" << nbTimeout << " timeouts)";
+          qiLogInfo() << "Thread " << _name << " limit reached (" << nbTimeout << " timeouts)" << *_totalTask << " / " << _maxThreads << " active: " << *_activeTask;;
+
           if (nbTimeout >= maxTimeouts)
           {
-            qiLogInfo() <<
-              "System seems to be deadlocked, sending emergency signal";
+            qiLogInfo() << "threadpool: " << _name <<
+              ": System seems to be deadlocked, sending emergency signal";
             if (_emergencyCallback)
             {
               try {
@@ -143,7 +144,7 @@ namespace qi {
         }
         else
         {
-          qiLogInfo() << "Spawning more threads (" << *_nThreads << ')';
+          qiLogInfo() << _name << ": Spawning more threads (" << *_nThreads << ')';
           boost::thread(&EventLoopAsio::_runPool, this);
         }
         qi::os::msleep(msGrace);
@@ -171,13 +172,12 @@ namespace qi {
     }
     catch(const std::exception& e)
     {
-      qiLogWarning() << "Error caught in eventloop.async: " << e.what();
+      qiLogWarning() << "Error caught in eventloop(" << _name << ").async: " << e.what();
     }
     catch(...)
     {}
     if (!--_nThreads)
       --_running;
-
   }
 
   void EventLoopAsio::run()
@@ -309,10 +309,6 @@ namespace qi {
       tracepoint(qi_qi, eventloop_post, id);
 
       ++_totalTask;
-
-      if (*_totalTask > 150)
-        qiLogWarning() << "Eventloop is with excessive queue " << *_totalTask << " / " << _maxThreads << " active: " << *_activeTask;
-
       _io.post(boost::bind<void>(&EventLoopAsio::invoke_maybe, this, cb, id, p, erc));
     }
     else
@@ -327,10 +323,6 @@ namespace qi {
     uint32_t id = ++gTaskId;
 
     ++_totalTask;
-
-    if (*_totalTask > _maxThreads)
-      qiLogWarning() << "Eventloop is full " << *_totalTask << " / " << _maxThreads << " active: " << *_activeTask;
-
     tracepoint(qi_qi, eventloop_delay, id, usDelay);
     boost::shared_ptr<boost::asio::deadline_timer> timer = boost::make_shared<boost::asio::deadline_timer>(boost::ref(_io));
     timer->expires_from_now(boost::posix_time::microseconds(usDelay));
