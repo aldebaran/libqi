@@ -306,7 +306,8 @@ namespace qi {
     qi::Promise<void> p;
     if (!usDelay) {
       uint32_t id = ++gTaskId;
-      tracepoint(qi_qi, eventloop_post, id);
+      tracepoint(qi_qi, eventloop_post, id, cb.target_type().name());
+
 
       ++_totalTask;
       _io.post(boost::bind<void>(&EventLoopAsio::invoke_maybe, this, cb, id, p, erc));
@@ -323,7 +324,7 @@ namespace qi {
     uint32_t id = ++gTaskId;
 
     ++_totalTask;
-    tracepoint(qi_qi, eventloop_delay, id, usDelay);
+    tracepoint(qi_qi, eventloop_delay, id, cb.target_type().name(), usDelay);
     boost::shared_ptr<boost::asio::deadline_timer> timer = boost::make_shared<boost::asio::deadline_timer>(boost::ref(_io));
     timer->expires_from_now(boost::posix_time::microseconds(usDelay));
     qi::Promise<void> prom(boost::bind(&boost::asio::deadline_timer::cancel, timer));
