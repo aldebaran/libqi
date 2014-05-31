@@ -157,7 +157,7 @@ namespace qi {
       }
 
       void start() {
-        qi::py::GILScopedUnlock _unlock;
+        qi::py::GILScopedLock _unlock;
         _app->start();
       }
 
