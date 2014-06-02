@@ -20,12 +20,12 @@ namespace qi {
     class PyCreateException : std::exception
     {
     public:
-      PyCreateException(const std::string &name) : _name(name) {}
+      PyCreateException(const std::string &name) : _msg(name + "not found") {}
       virtual ~PyCreateException() throw() {}
-      char const * what() const throw() { return std::string(_name + " not found").c_str(); }
+      char const * what() const throw() { return _msg.c_str(); }
 
     private:
-      std::string _name;
+      std::string _msg;
     };
 
     void translate_pycreateexception(PyCreateException const& e)
