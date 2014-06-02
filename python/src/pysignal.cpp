@@ -113,6 +113,11 @@ namespace qi { namespace py {
         , _sigid(signal.uid()){
       }
 
+      ~PyProxySignal() {
+        GILScopedUnlock _;
+        _obj.reset();
+      }
+
       boost::python::object connect(boost::python::object callable, bool _async = false) {
         PyThreadSafeObject obj(callable);
         if (!PyCallable_Check(callable.ptr()))
