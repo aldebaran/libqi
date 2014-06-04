@@ -7,9 +7,51 @@
 #ifndef _QITYPE_ANYFUNCTION_HPP_
 #define _QITYPE_ANYFUNCTION_HPP_
 
+#include <qitype/api.hpp>
 #include <boost/function.hpp>
+#include <vector>
+
+namespace qi {
+  class AnyValue;
+  class AutoAnyReference;
+
+  template <typename T = AnyValue>
+  class QITYPE_API VarArguments {
+  public:
+    VarArguments() {};
+    VarArguments(const T& t) { _args.push_back(t); }
+    VarArguments& operator()(const T& t) { _args.push_back(t);  return *this; }
+
+    typedef std::vector<T> VectorType;
+
+    VectorType &args()             { return _args; }
+    const VectorType &args() const { return _args; }
+
+  private:
+    VectorType _args;
+  };
+
+  template <>
+  class QITYPE_API VarArguments<AnyValue> {
+  public:
+    VarArguments() {};
+    VarArguments(const AutoAnyReference& t);
+    VarArguments& operator()(const AutoAnyReference& t);
+
+    typedef std::vector<AnyValue> VectorType;
+
+    VectorType &args()             { return _args; }
+    const VectorType &args() const { return _args; }
+
+  private:
+    VectorType _args;
+  };
+
+  typedef VarArguments<> AnyVarArguments;
+}
 
 #include <qitype/typeinterface.hpp>
+
 
 #ifdef _MSC_VER
 #  pragma warning( push )
@@ -17,6 +59,16 @@
 #endif
 
 namespace qi {
+
+  inline VarArguments<AnyValue>::VarArguments(const AutoAnyReference& t) {
+    _args.push_back(qi::AnyValue(t));
+  }
+
+  inline VarArguments<AnyValue>& VarArguments<AnyValue>::operator()(const AutoAnyReference& t) {
+    _args.push_back(qi::AnyValue(t));
+    return *this;
+  }
+
 
   /// Signature information for both callable types FunctionTypeInterface and MethodType
   class QITYPE_API CallableTypeInterface
@@ -63,7 +115,16 @@ namespace qi {
     void* boundValue;
   };
 
+  template <typename T = AnyValue>
+  class QITYPE_API KeywordArguments {
+  public:
+    KeywordArguments& operator()(const std::string& name, const T& t) { values[name] = t; return *this; }
+
+    std::map<std::string, T> values;
+  };
+
   /// A function with AnyArguments as its sole argument will behave as if AnyFunction::fromDynamicFunction was called.
+  // This is going to be deprecated in profit of VarArgument and AnyVarArgument
   class QITYPE_API AnyArguments
   {
   public:

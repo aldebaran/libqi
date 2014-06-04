@@ -40,6 +40,7 @@ namespace qi {
 
   QITYPE_API qi::Signature makeTupleSignature(const qi::Signature &element);
   QITYPE_API qi::Signature makeListSignature(const qi::Signature &element);
+  QITYPE_API qi::Signature makeVarArgsSignature(const qi::Signature &element);
   QITYPE_API qi::Signature makeMapSignature(const qi::Signature &key, const qi::Signature &value);
 
   /* Represent the serialisation signature of a Type.
@@ -117,7 +118,9 @@ namespace qi {
       Type_Pointer  = '*',
 
       Type_Object   = 'o',
-      Type_Unknown  = 'X'
+      Type_VarArgs  = '#',
+
+      Type_Unknown  = 'X',
     };
 
     Type type() const;

@@ -416,6 +416,7 @@ namespace qi
             case TypeKind_Int:
             case TypeKind_String:
             case TypeKind_Float:
+            case TypeKind_VarArgs:
             case TypeKind_List:
             case TypeKind_Map:
             case TypeKind_Tuple:

@@ -75,6 +75,10 @@ namespace qi {
       static std::string r("property");
       return r;
     }
+    case TypeKind_VarArgs:{
+      static std::string r("vargs");
+      return r;
+    }
     }
     return "unhandled";
   }
@@ -137,6 +141,7 @@ namespace qi {
   AnyTypeVector AnyType::elements() {
     AnyTypeVector ret;
     switch(kind()) {
+    case TypeKind_VarArgs :
     case TypeKind_List    :
       ret.push_back(AnyType(static_cast<ListTypeInterface*>(_type)->elementType()));
       return ret;
@@ -297,6 +302,7 @@ namespace qi {
   //List/Map/Pointer/Properties
   AnyType AnyType::element() {
     switch(kind()) {
+    case TypeKind_VarArgs :
     case TypeKind_List    :
       return AnyType(static_cast<ListTypeInterface*>(_type)->elementType());
     case TypeKind_Map     :

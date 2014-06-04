@@ -11,17 +11,16 @@
 
 #include <qitype/details/anyreference.hpp>
 #include <qitype/details/anyiterator.hpp>
+#include <qitype/anyfunction.hpp>
 
 namespace qi
 {
   // List container
-template<typename T> class ListTypeInterfaceImpl:
-public ListTypeInterface
+template<typename T, typename H = ListTypeInterface>
+class ListTypeInterfaceImpl: public H
 {
 public:
-  typedef DefaultTypeImplMethods<T,
-                               TypeByPointerPOD<T>
-                               > MethodsImpl;
+  typedef DefaultTypeImplMethods<T, TypeByPointerPOD<T> > MethodsImpl;
   ListTypeInterfaceImpl();
   virtual size_t size(void* storage);
   virtual TypeInterface* elementType();
@@ -65,27 +64,27 @@ public:
 };
 
 
-template<typename T>
-ListTypeInterfaceImpl<T>::ListTypeInterfaceImpl()
+template<typename T, typename H>
+ListTypeInterfaceImpl<T, H>::ListTypeInterfaceImpl()
 {
   _elementType = typeOf<typename T::value_type>();
 }
 
-template<typename T> TypeInterface*
-ListTypeInterfaceImpl<T>::elementType()
+template<typename T, typename H> TypeInterface*
+ListTypeInterfaceImpl<T, H>::elementType()
 {
   return _elementType;
 }
 
-template<typename T> AnyIterator
-ListTypeInterfaceImpl<T>::begin(void* storage)
+template<typename T, typename H>
+AnyIterator ListTypeInterfaceImpl<T, H>::begin(void* storage)
 {
   T* ptr = (T*)ptrFromStorage(&storage);
   return TypeSimpleIteratorImpl<typename T::iterator>::make(ptr->begin());
 }
 
-template<typename T> AnyIterator
-ListTypeInterfaceImpl<T>::end(void* storage)
+template<typename T, typename H>
+AnyIterator ListTypeInterfaceImpl<T, H>::end(void* storage)
 {
   T* ptr = (T*)ptrFromStorage(&storage);
   return TypeSimpleIteratorImpl<typename T::iterator>::make(ptr->end());
@@ -103,15 +102,15 @@ namespace detail
     container.insert(*element);
   }
 }
-template<typename T> void
-ListTypeInterfaceImpl<T>::pushBack(void** storage, void* valueStorage)
+template<typename T, typename H>
+void ListTypeInterfaceImpl<T, H>::pushBack(void **storage, void* valueStorage)
 {
   T* ptr = (T*) ptrFromStorage(storage);
   detail::pushBack(*ptr, (typename T::value_type*)_elementType->ptrFromStorage(&valueStorage));
 }
 
-template<typename T> size_t
-ListTypeInterfaceImpl<T>::size(void* storage)
+template<typename T, typename H>
+size_t ListTypeInterfaceImpl<T, H>::size(void* storage)
 {
   T* ptr = (T*) ptrFromStorage(&storage);
   return ptr->size();
@@ -121,6 +120,47 @@ ListTypeInterfaceImpl<T>::size(void* storage)
 template<typename T> struct TypeImpl<std::vector<T> >: public ListTypeInterfaceImpl<std::vector<T> > {};
 template<typename T> struct TypeImpl<std::list<T> >: public ListTypeInterfaceImpl<std::list<T> > {};
 template<typename T> struct TypeImpl<std::set<T> >: public ListTypeInterfaceImpl<std::set<T> > {};
+
+
+// varargs container
+template<typename T>
+class VarArgsTypeInterfaceImpl: public ListTypeInterfaceImpl<typename T::VectorType, VarArgsTypeInterface>
+{
+public:
+  typedef ListTypeInterfaceImpl<typename T::VectorType, VarArgsTypeInterface> BaseClass;
+
+  typedef DefaultTypeImplMethods<T, TypeByPointerPOD<T> > MethodsImpl;
+  VarArgsTypeInterfaceImpl() {}
+
+  _QI_BOUNCE_TYPE_METHODS(MethodsImpl);
+
+  void* adaptStorage(void** storage) {
+    T* ptr = (T*) ptrFromStorage(storage);
+    //return ptr
+    typename T::VectorType& v = ptr->args();
+    return &v;
+  }
+
+  virtual size_t size(void* storage) {
+    return BaseClass::size(adaptStorage(&storage));
+  }
+  virtual AnyIterator begin(void* storage) {
+    return BaseClass::begin(adaptStorage(&storage));
+  }
+  virtual AnyIterator end(void* storage) {
+    return BaseClass::end(adaptStorage(&storage));
+  }
+  virtual void pushBack(void** storage, void* valueStorage) {
+    void* vstor = adaptStorage(storage);
+    BaseClass::pushBack(&vstor, valueStorage);
+  }
+
+  //ListTypeInterface* _list;
+};
+
+
+template<typename T> struct TypeImpl<qi::VarArguments<T> >: public VarArgsTypeInterfaceImpl<qi::VarArguments<T> > {};
+
 
 }
 
