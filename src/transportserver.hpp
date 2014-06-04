@@ -24,6 +24,7 @@ namespace qi {
       : self(self)
       , context(ctx)
     {}
+    virtual ~TransportServerImpl() {}
 
     virtual qi::Future<void> listen(const qi::Url& listenUrl) = 0;
     virtual void close() = 0;
