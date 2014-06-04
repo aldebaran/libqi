@@ -35,6 +35,7 @@ typedef enum {
   QI_TYPE_KIND_FUNCTION = 14,
   QI_TYPE_KIND_SIGNAL   = 15,
   QI_TYPE_KIND_PROPERTY = 16,
+  QI_TYPE_KIND_VARARGS  = 17,
 } qi_type_kind_t;
 
 

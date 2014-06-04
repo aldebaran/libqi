@@ -216,7 +216,7 @@ int          qi_value_list_set(qi_value_t *msg, unsigned int idx, qi_value_t *va
   qi::AnyValue &container = qi_value_cpp(msg);
   qi::AnyValue &val = qi_value_cpp(value);
 
-  if (container.kind() != qi::TypeKind_List || idx >= container.size()) {
+  if ((container.kind() != qi::TypeKind_VarArgs && container.kind() != qi::TypeKind_List) || idx >= container.size()) {
     return 0;
   }
   try {
@@ -231,7 +231,7 @@ int          qi_value_list_set(qi_value_t *msg, unsigned int idx, qi_value_t *va
 qi_value_t*  qi_value_list_get(qi_value_t *msg, unsigned int idx)
 {
   qi::AnyValue &container = qi_value_cpp(msg);
-  if (container.kind() != qi::TypeKind_List || idx >= container.size()) {
+  if ((container.kind() != qi::TypeKind_VarArgs && container.kind() != qi::TypeKind_List) || idx >= container.size()) {
     return 0;
   }
   qi_value_t* ret = qi_value_create("");
@@ -244,7 +244,7 @@ int  qi_value_list_push_back(qi_value_t *msg, qi_value_t*val)
 {
   qi::AnyValue &container = qi_value_cpp(msg);
   qi::AnyValue &gval = qi_value_cpp(val);
-  if (container.kind() != qi::TypeKind_List) {
+  if (container.kind() != qi::TypeKind_List && container.kind() != qi::TypeKind_VarArgs) {
     return 0;
   }
   container.append(gval);
@@ -254,7 +254,7 @@ int  qi_value_list_push_back(qi_value_t *msg, qi_value_t*val)
 int          qi_value_list_size(qi_value_t *msg)
 {
   qi::AnyValue &container = qi_value_cpp(msg);
-  if (container.kind() != qi::TypeKind_List) {
+  if (container.kind() != qi::TypeKind_List && container.kind() != qi::TypeKind_VarArgs) {
     return -1;
   }
   return container.size();

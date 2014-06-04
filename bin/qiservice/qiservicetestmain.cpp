@@ -26,9 +26,25 @@ std::string reply(const std::string &msg) {
   return msg + "bim";
 }
 
-qi::AnyValue anyArgs(const qi::AnyArguments& aa) {
+qi::AnyValue anyArgs(const qi::AnyVarArguments& aa) {
   (void)aa;
   return qi::AnyValue::from(42);
+}
+
+void anyArgs2(const qi::AnyVarArguments& aa) {
+  (void)aa;
+}
+
+void anyArgs3(int i, const qi::AnyVarArguments& aa) {
+  (void)i;
+  (void)aa;
+}
+
+int anyArgs4(int i, const qi::VarArguments<int>& values) {
+  int acc = i;
+  for (unsigned i = 0; i < values.args().size(); ++i)
+    acc += values.args().at(i);
+  return acc;
 }
 
 qi::AnyValue reply(const qi::AnyValue &myval) {
@@ -153,16 +169,19 @@ int main(int argc, char *argv[])
     qi::DynamicObjectBuilder ob;
     ob.advertiseMethod<std::string (const std::string&)>("reply", &reply);
     ob.advertiseMethod<void ()>("error", &error);
-    ob.advertiseMethod<std::string (const int&)>("reply", &reply);
     ob.advertiseMethod<std::string (const std::string&, const double &)>("reply", &reply);
     ob.advertiseMethod<std::string (const std::string&, const float &)>("reply", &reply);
+    ob.advertiseMethod<qi::AnyValue (const qi::AnyValue&)>("reply", &reply);
+    ob.advertiseMethod<std::string (const int&)>("reply", &reply);
     ob.advertiseMethod("replyVector", &replyVector);
     ob.advertiseMethod("replyMap", &replyMap);
     ob.advertiseMethod("replyMap2", &replyMap2);
-    ob.advertiseMethod<qi::AnyValue (const qi::AnyValue&)>("reply", &reply);
     ob.advertiseSignal<const std::string&>("testEvent");
     ob.advertiseMethod<bool (unsigned int)>("slip", &slip);
     ob.advertiseMethod("anyArgs", &anyArgs);
+    ob.advertiseMethod("anyArgs2", &anyArgs2);
+    ob.advertiseMethod("anyArgs3", &anyArgs3);
+    ob.advertiseMethod("anyArgs4", &anyArgs4);
     qi::AnyObject obj(ob.object());
 
     app.start();

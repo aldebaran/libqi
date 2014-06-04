@@ -113,6 +113,11 @@ struct ToPyObject
     result = l;
   }
 
+  void visitVarArgs(qi::AnyIterator it, qi::AnyIterator end)
+  {
+    visitList(it, end);
+  }
+
   void visitMap(qi::AnyIterator it, qi::AnyIterator end)
   {
     boost::python::dict d;
