@@ -15,6 +15,7 @@
 
 #include <boost/thread/thread.hpp>
 #include <boost/thread/mutex.hpp>
+#include <boost/thread/condition.hpp>
 #include <boost/enable_shared_from_this.hpp>
 
 #ifdef _MSC_VER
@@ -260,6 +261,8 @@ template<
    // Number of calls in progress.
    // Each entry there is a subscriber call that can no longuer be aborted
    std::vector<boost::thread::id> activeThreads; // order not preserved
+
+   boost::condition               inactiveThread;
  };
  typedef boost::shared_ptr<SignalSubscriber> SignalSubscriberPtr;
 }
