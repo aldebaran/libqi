@@ -38,7 +38,7 @@ namespace qi {
       {
         return go()->metaCall(method, params, callType, returnSignature);
       }
-      inline unsigned int findMethod(const std::string& name, const GenericFunctionParameters& parameters) const
+      inline int findMethod(const std::string& name, const GenericFunctionParameters& parameters) const
       {
         return go()->findMethod(name, parameters);
       }

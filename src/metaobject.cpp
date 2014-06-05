@@ -107,8 +107,10 @@ namespace qi {
   {
     std::stringstream ss;
 
-    if (error == -1 && candidates.size() != 0)
+    if (error == -1 && candidates.size() != 0) {
       qiLogError() << "Broken error handling in generateErrorString";
+      logError = 1;
+    }
     switch (error) {
       case -1: {
         ss << "Can't find method: " << signature << " (resolved to '" << resolvedSignature << "')" << std::endl;
@@ -161,8 +163,14 @@ namespace qi {
         if (canCache)
           *canCache = true;
         NameToIdx::const_iterator itRev =  _methodsNameToIdx.find(nameWithOptionalSignature);
-        if (itRev == _methodsNameToIdx.end())
+        if (itRev == _methodsNameToIdx.end()) {
+          std::string funname = qi::signatureSplit(nameWithOptionalSignature)[1];
+          // check if it's no method found, or if it's arguments mismatch
+          if (_methodNameToOverload.find(funname) != _methodNameToOverload.end()) {
+            return -2;
+          }
           return -1;
+        }
         else
           return itRev->second;
       }
@@ -197,12 +205,18 @@ namespace qi {
       }
       if (canCache)
         *canCache = !ambiguous || !firstMatch;
-      if (!firstMatch)
-        return -1; // no match
-      if (!ambiguous)
+      if (!firstMatch) {
+        //TODO....
+        return -2; // no match for a correct overload (bad number of args)
+      }
+      if (!ambiguous) {
+
         return firstMatch->uid();
+      }
       firstOverload = overloadIt->second;
     }
+
+    int retval = -2;
     // resolve ambiguity by using arguments
     for (unsigned dyn = 0; dyn < 2; ++dyn)
     {
@@ -245,13 +259,14 @@ namespace qi {
             ++count;
         }
         assert(count);
-        if (count > 1)
+        if (count > 1) {
           qiLogVerbose() << generateErrorString(nameWithOptionalSignature, fullSig, const_cast<MetaObjectPrivate*>(this)->findCompatibleMethod(nameWithOptionalSignature), -3, false);
-        else
+          retval = -3;
+        } else
           return it->first->uid();
       }
     }
-    return -2;
+    return retval;
   }
 
   std::vector<MetaObject::CompatibleMethod> MetaObjectPrivate::findCompatibleMethod(const std::string &nameOrSignature)
