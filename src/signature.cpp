@@ -42,6 +42,13 @@ namespace qi {
     return qi::Signature(res);
   }
 
+  qi::Signature makeKwArgsSignature(const qi::Signature &element) {
+    std::string res;
+    res += (char)Signature::Type_KwArgs;
+    res += element.toString();
+    return qi::Signature(res);
+  }
+
   qi::Signature makeTupleSignature(const qi::Signature &element) {
     std::string res;
     res += (char)Signature::Type_Tuple;
@@ -304,6 +311,7 @@ namespace qi {
         index++;
         break;
       case qi::Signature::Type_VarArgs:
+      case qi::Signature::Type_KwArgs:
         index++;
         index = findNext(signature, index);
         if (index == std::string::npos)
@@ -407,6 +415,7 @@ namespace qi {
         eatChildren(signature, index + 1, index_should_stop, 1);
         break;
       }
+      case qi::Signature::Type_KwArgs:
       case qi::Signature::Type_VarArgs: {
         int index_should_stop = findNext(signature, index);
         eatChildren(signature, index + 1, index_should_stop, 1);
