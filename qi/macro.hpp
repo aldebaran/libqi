@@ -163,5 +163,18 @@ namespace qi {
 #define _QI_UNIQ_DEF_LEVEL1(A, B) _QI_UNIQ_DEF_LEVEL2(A, B)
 #define QI_UNIQ_DEF(A) _QI_UNIQ_DEF_LEVEL1(A, __LINE__)
 
+// GCC < 4.7 is not standard compliant about __cplusplus
+// clang 3.3 defines the same macros as GCC 4.2 but it is compliant
+#if (!defined(__GNUC__) || defined(__clang__) || \
+     (__GNUC__ >= 4 && __GNUC_MINOR__ >= 7)) && __cplusplus >= 201103L
+# define QI_CXX11_ENABLED 1
+#endif
+
+// Specify that a function may throw or not
+#ifdef QI_CXX11_ENABLED
+# define QI_NOEXCEPT(cond) noexcept(cond)
+#else
+# define QI_NOEXCEPT(cond)
+#endif
 
 #endif  // _QI_MACRO_HPP_

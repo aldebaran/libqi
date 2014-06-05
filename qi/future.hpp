@@ -372,7 +372,7 @@ namespace qi {
       return *this;
     }
 
-    ~FutureSync()
+    ~FutureSync() QI_NOEXCEPT(false)
     {
       if (_sync)
         _future.value();
