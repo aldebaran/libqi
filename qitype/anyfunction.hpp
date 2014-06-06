@@ -16,7 +16,7 @@ namespace qi {
   class AutoAnyReference;
 
   template <typename T = AnyValue>
-  class QITYPE_API VarArguments {
+  class VarArguments {
   public:
     VarArguments() {};
     VarArguments(const T& t) { _args.push_back(t); }
@@ -32,7 +32,7 @@ namespace qi {
   };
 
   template <>
-  class QITYPE_API VarArguments<AnyValue> {
+  class VarArguments<AnyValue> {
   public:
     VarArguments() {};
     VarArguments(const AutoAnyReference& t);
