@@ -30,9 +30,9 @@ enum TaskState
  Rescheduling -> Scheduled [start(), _wrap()]
  Scheduled    -> Running   [start()]
  Running      -> Rescheduling [ _wrap() ]
- Stopping     -> Stopped   [stop(), _wrap()]
+ Stopping     -> Stopped   [stop(), _wrap(), trigger()]
  Running      -> Stopping [stop()]
- Scheduled    -> Stopping [stop()]
+ Scheduled    -> Stopping [stop(), trigger()]
 
  - State Rescheduling is a lock on _state and on _task
 */
@@ -142,6 +142,29 @@ namespace qi
     _p->_reschedule(immediate?0:_p->_usPeriod);
   }
 
+  void PeriodicTask::trigger()
+  {
+    while (true)
+    {
+      if (_p->_state.setIfEquals(Task_Stopped, Task_Stopped) ||
+          _p->_state.setIfEquals(Task_Stopping, Task_Stopping) ||
+          _p->_state.setIfEquals(Task_Starting, Task_Starting) ||
+          _p->_state.setIfEquals(Task_Running, Task_Running) ||
+          _p->_state.setIfEquals(Task_Rescheduling, Task_Rescheduling))
+        return;
+      if (_p->_state.setIfEquals(Task_Scheduled, Task_Stopping))
+      {
+        _p->_task.cancel();
+        _p->_task.wait();
+        if (!_p->_state.setIfEquals(Task_Stopping, Task_Stopped) &&
+            !_p->_state.setIfEquals(Task_Stopped, Task_Stopped))
+          qiLogError() << "PeriodicTask inconsistency, expected Stopped, got " << *_p->_state;
+        start(true);
+        return;
+      }
+    }
+  }
+
   void PeriodicTaskPrivate::_wrap()
   {
     if (*_state == Task_Stopped)
@@ -184,7 +207,7 @@ namespace qi
     }
     catch (const std::exception& e)
     {
-      qiLogInfo() << "Exception in task callback: " << e.what();
+      qiLogInfo() << "Exception in task " << _name << ": " << e.what();
       shouldAbort = true;
     }
     catch(...)

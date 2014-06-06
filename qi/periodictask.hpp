@@ -64,6 +64,12 @@ namespace qi
      */
     void start(bool immediate = true);
 
+    /** Trigger a started periodic task to run right now.
+     * Does nothing if the periodic task just ran, is running, starting,
+     * stopping or stopped.
+     */
+    void trigger();
+
     /** Stop the periodic task. When this function returns, the callback will
     * not be called anymore.
     * Can be called from within the callback function.

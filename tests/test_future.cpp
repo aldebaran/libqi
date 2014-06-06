@@ -1132,6 +1132,29 @@ TEST(TestPeriodicTask, DeadLock)
   }
 }
 
+static void loopTrigger(qi::PeriodicTask& pt)
+{
+  for (int i = 0; i < 1000; ++i)
+  {
+    pt.trigger();
+    qi::os::msleep(1);
+  }
+}
+
+TEST(TestPeriodicTask, Trigger)
+{
+  // just test that there is no segfault or deadlock
+  qi::PeriodicTask pt;
+  qi::Atomic<int> a;
+  pt.setCallback(&inc, boost::ref(a));
+  pt.setUsPeriod(1000);
+  pt.start();
+  qi::Future<void> f =
+    qi::getEventLoop()->async(boost::bind(&loopTrigger, boost::ref(pt)));
+  f.wait();
+  pt.stop();
+}
+
 int get42() { return 42; }
 
 TEST(EventLoop, asyncFast)
