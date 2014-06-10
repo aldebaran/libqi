@@ -67,6 +67,7 @@ namespace qi
     /** Trigger a started periodic task to run right now.
      * Does nothing if the periodic task just ran, is running, starting,
      * stopping or stopped.
+     * This function is lockfree.
      */
     void trigger();
 

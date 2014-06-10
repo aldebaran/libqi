@@ -1149,10 +1149,39 @@ TEST(TestPeriodicTask, Trigger)
   pt.setCallback(&inc, boost::ref(a));
   pt.setUsPeriod(1000);
   pt.start();
-  qi::Future<void> f =
-    qi::getEventLoop()->async(boost::bind(&loopTrigger, boost::ref(pt)));
-  f.wait();
+  std::vector<qi::Future<void> > futures;
+  futures.push_back(qi::getEventLoop()->async(boost::bind(&loopTrigger, boost::ref(pt))));
+  futures.push_back(qi::getEventLoop()->async(boost::bind(&loopTrigger, boost::ref(pt))));
+  futures.push_back(qi::getEventLoop()->async(boost::bind(&loopTrigger, boost::ref(pt))));
+  futures.push_back(qi::getEventLoop()->async(boost::bind(&loopTrigger, boost::ref(pt))));
+  for (unsigned int i = 0; i < futures.size(); ++i)
+    futures[i].wait();
   pt.stop();
+}
+
+TEST(TestPeriodicTask, TriggerStartStop)
+{
+  // just test that there is no segfault or deadlock
+  qi::PeriodicTask pt;
+  qi::Atomic<int> a;
+  pt.setCallback(&inc, boost::ref(a));
+  pt.setUsPeriod(1000);
+  std::vector<qi::Future<void> > futures;
+  futures.push_back(qi::getEventLoop()->async(boost::bind(&loopTrigger, boost::ref(pt))));
+  futures.push_back(qi::getEventLoop()->async(boost::bind(&loopTrigger, boost::ref(pt))));
+  futures.push_back(qi::getEventLoop()->async(boost::bind(&loopTrigger, boost::ref(pt))));
+  futures.push_back(qi::getEventLoop()->async(boost::bind(&loopTrigger, boost::ref(pt))));
+  while (true)
+  {
+    bool stop = true;
+    for (unsigned int i = 0; i < futures.size(); ++i)
+      stop = stop && futures[i].wait(0) == qi::FutureState_FinishedWithValue;
+    if (stop)
+      break;
+    pt.start();
+    qi::os::msleep(10);
+    pt.stop();
+  }
 }
 
 int get42() { return 42; }

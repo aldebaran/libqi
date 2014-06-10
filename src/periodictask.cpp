@@ -14,6 +14,7 @@
 
 qiLogCategory("qi.PeriodicTask");
 
+// WARNING: if you add a state, review trigger() so that it stays lockfree
 enum TaskState
 {
   Task_Stopped = 0,
@@ -22,6 +23,7 @@ enum TaskState
   Task_Rescheduling = 3, //< being rescheduled (protects _task)
   Task_Starting = 4, //< being started
   Task_Stopping = 5, //< stop requested
+  Task_Triggering = 6, //< force trigger
 };
 
 /* Transition matrix:
@@ -32,7 +34,10 @@ enum TaskState
  Running      -> Rescheduling [ _wrap() ]
  Stopping     -> Stopped   [stop(), _wrap(), trigger()]
  Running      -> Stopping [stop()]
- Scheduled    -> Stopping [stop(), trigger()]
+ Scheduled    -> Stopping [stop()]
+ Scheduled    -> Triggering [trigger()]
+ Triggering   -> Running [_wrap()]
+ Triggering   -> Rescheduling [_trigger()]
 
  - State Rescheduling is a lock on _state and on _task
 */
@@ -90,6 +95,7 @@ namespace qi
 
     void _reschedule(qi::int64_t delay);
     void _wrap();
+    void _trigger(qi::Future<void> future);
   };
   static const int invalidThreadId = -1;
   PeriodicTask::PeriodicTask() :
@@ -150,19 +156,28 @@ namespace qi
           _p->_state.setIfEquals(Task_Stopping, Task_Stopping) ||
           _p->_state.setIfEquals(Task_Starting, Task_Starting) ||
           _p->_state.setIfEquals(Task_Running, Task_Running) ||
-          _p->_state.setIfEquals(Task_Rescheduling, Task_Rescheduling))
+          _p->_state.setIfEquals(Task_Rescheduling, Task_Rescheduling) ||
+          _p->_state.setIfEquals(Task_Triggering, Task_Triggering))
         return;
-      if (_p->_state.setIfEquals(Task_Scheduled, Task_Stopping))
+      if (_p->_state.setIfEquals(Task_Scheduled, Task_Triggering))
       {
         _p->_task.cancel();
-        _p->_task.wait();
-        if (!_p->_state.setIfEquals(Task_Stopping, Task_Stopped) &&
-            !_p->_state.setIfEquals(Task_Stopped, Task_Stopped))
-          qiLogError() << "PeriodicTask inconsistency, expected Stopped, got " << *_p->_state;
-        start(true);
+        _p->_task.connect(&PeriodicTaskPrivate::_trigger, _p, _1,
+            FutureCallbackType_Sync);
         return;
       }
     }
+  }
+
+  void PeriodicTaskPrivate::_trigger(qi::Future<void> future)
+  {
+    // if future was not canceled, the task already ran, don't retrigger
+    if (!future.isCanceled())
+      return;
+
+    // else, start the task now if we are still triggering
+    if (_state.setIfEquals(Task_Triggering, Task_Rescheduling))
+      _reschedule(0);
   }
 
   void PeriodicTaskPrivate::_wrap()
@@ -181,7 +196,10 @@ namespace qi
     */
     while (*_state == Task_Rescheduling)
       boost::this_thread::yield();
-    if (!_state.setIfEquals(Task_Scheduled, Task_Running))
+    // order matters! check triggering state first as the state cannot change
+    // from triggering to scheduled but can change in the other way
+    if (!_state.setIfEquals(Task_Triggering, Task_Running) &&
+        !_state.setIfEquals(Task_Scheduled, Task_Running))
     {
       setState(_state, Task_Stopping, Task_Stopped);
       return;
