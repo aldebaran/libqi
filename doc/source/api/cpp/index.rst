@@ -11,5 +11,6 @@ C++ qi API Reference
   path
   periodictask
   signal
+  property
   ../../cpp-classindex
   ../../cpp-funcindex
