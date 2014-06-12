@@ -4,7 +4,7 @@
 .. default-role:: cpp:guess
 
 qi::stats namespace
-****************
+*******************
 
 Overview
 ========

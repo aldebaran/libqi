@@ -3,7 +3,7 @@
 .. cpp:auto_template:: True
 .. default-role:: cpp:guess
 
-qi.os
-*****
+qi::os
+******
 
 .. cpp:autonamespace:: qi::os

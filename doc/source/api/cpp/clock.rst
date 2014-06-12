@@ -3,17 +3,17 @@
 .. cpp:auto_template:: True
 .. default-role:: cpp:guess
 
-qi.Clock
-********
+qi::Clock
+*********
 
-
-#.. cpp:autoclass:: Duration
-#.. cpp:autoclass:: NanoSeconds
-#.. cpp:autoclass:: MicroSeconds
-#.. cpp:autoclass:: MilliSeconds
-#.. cpp:autoclass:: Seconds
-#.. cpp:autoclass:: Minutes
-#.. cpp:autoclass:: Hours
+..
+   .. cpp:autoclass:: Duration
+   .. cpp:autoclass:: NanoSeconds
+   .. cpp:autoclass:: MicroSeconds
+   .. cpp:autoclass:: MilliSeconds
+   .. cpp:autoclass:: Seconds
+   .. cpp:autoclass:: Minutes
+   .. cpp:autoclass:: Hours
 
 class qi::SteadyClock
 =====================
@@ -30,5 +30,6 @@ Functions
 
 .. cpp:autofunction:: qi::steadyClockNow
 .. cpp:autofunction:: qi::wallClockNow
-.. cpp:autofunction:: qi::sleepFor
-.. cpp:autofunction:: qi::sleepUntil
+.. cpp:autofunction:: qi::sleepFor(const qi::Duration&)
+.. cpp:autofunction:: qi::sleepUntil(const SteadyClockTimePoint&)
+.. cpp:autofunction:: qi::sleepUntil(const WallClockTimePoint&)

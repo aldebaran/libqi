@@ -3,8 +3,8 @@
 .. cpp:auto_template:: True
 .. default-role:: cpp:guess
 
-qi.IOColor
-**********
+qi::IOColor
+***********
 
 Enum qi::StreamColor
 ====================
