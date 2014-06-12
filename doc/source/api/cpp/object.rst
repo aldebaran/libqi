@@ -24,7 +24,7 @@ there are no more references to it. You can also get a `qi::AnyObject` from a
 session, another service, etc.
 
 You can call a function with call or async if you want the call to be
-asynchronous.
+asynchronous. You can also connect signals and change properties.
 
 .. code-block:: c++
 
@@ -34,6 +34,12 @@ asynchronous.
     obj.async<bool>("draw", Graph::Point(10, 20), Graph::Green);
   // do stuff...
   future.wait();
+
+  obj.connect("drawDone", &mycallback);
+
+  obj.setProperty("origin", Graph::Point(0, 12));
+  Graph::Point p = obj.property<Graph::Point>("origin");
+  std::cout << p.y << std::endl; // 12
 
 qi::Object<T>
 =============
