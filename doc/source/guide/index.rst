@@ -8,6 +8,7 @@ User Guides
 
   cxx-client
   cxx-service
+  cxx-register-types
   cxx-log
   py-client
   py-service

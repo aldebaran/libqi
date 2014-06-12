@@ -16,6 +16,7 @@ User Guides
 ===========
  - :ref:`C++: Writing a client<guide-cxx-client>`
  - :ref:`C++: Writing a service<guide-cxx-service>`
+ - :ref:`C++: Registering types in the type system<guide-cxx-register-types>`
  - :ref:`C++: Using logs<guide-cxx-log>`
  - :ref:`Python: Writing a client<guide-py-client>`
  - :ref:`Python: Writing a service<guide-py-service>`
