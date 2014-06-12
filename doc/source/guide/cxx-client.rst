@@ -77,7 +77,7 @@ one that better suits your needs.
 The `qi::Object` template that wraps the ALTextToSpeech instance is used here to
 provide reference-counting: the tts object will get disposed of as soon as
 all references to it are removed. The *->* operator gives you access to
-the underlying interface, whereas `Object` itself exposes a :ref:` generic interface<guide-generic-interface>`
+the underlying interface, whereas `Object` itself exposes a :ref:`generic interface<guide-generic-interface>`
 
 Making asynchronous calls using qi::async
 -----------------------------------------
@@ -156,7 +156,7 @@ long as the logger service holds an *Object<LogListener>* on it.
 Generic api
 -----------
 
-.. _guide-generic-interface
+.. _guide-generic-interface:
 
 If you wish to use a service for which no interface is available, but for
 which you know the API, you can use the `qi::AnyObject` generic API made
@@ -171,6 +171,3 @@ Nota that this generic API is available on all `Object<T>`.
 
 Methods are also provided to emit and connect signals, read/write properties,
 and access the service API.
-  
-  
-
