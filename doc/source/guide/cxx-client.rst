@@ -27,7 +27,7 @@ Creating a session
 ------------------
 
 The first step to interact with qimessaging services is to connect a
-:cpp:class:`qi::Session` to the ::ref:`Service Directory<api-ServiceDirectory>` of the robot.
+:cpp:class:`qi::Session` to the :ref:`Service Directory<api-ServiceDirectory>` of the robot.
 The Service Directory address is represented by a standard URL.
 
 One simple way to achive this is to use the helper class _`ApplicationSession`,

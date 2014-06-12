@@ -82,7 +82,7 @@ Classes can only be registered in .cpp files:
       public:
         bool draw(const Point& p, Color color) {
           std::cout << "Drawing point" << std::endl;
-          draw(p);
+          drawDone(p);
           return true;
         }
 
