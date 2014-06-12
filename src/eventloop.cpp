@@ -16,10 +16,13 @@
 #include <qi/future.hpp>
 
 #include "eventloop_p.hpp"
+#include "tp_qi.h"
 
 qiLogCategory("qi.eventloop");
 
 namespace qi {
+
+  static qi::Atomic<uint32_t> gTaskId = 0;
 
   template<typename T>
   static T getEnvParam(const char* name, T defaultVal)
@@ -248,23 +251,36 @@ namespace qi {
     }
   }
 
+  static void measureMeBaby(const boost::function<void ()>& cb, qi::uint32_t id) {
+    tracepoint(qi_qi, eventloop_task_start, id);
+    cb();
+    tracepoint(qi_qi, eventloop_task_stop, id);
+  }
+
   void EventLoopAsio::post(uint64_t usDelay, const boost::function<void ()>& cb)
   {
-    if (!usDelay)
-      _io.post(cb);
+    if (!usDelay) {
+      uint32_t id = ++gTaskId;
+      tracepoint(qi_qi, eventloop_post, id);
+      _io.post(boost::bind<void>(&measureMeBaby, cb, id));
+    }
     else
       asyncCall(usDelay, cb);
   }
 
-  static void invoke_maybe(boost::function<void()> f, qi::Promise<void> p, const boost::system::error_code& erc)
+  static void invoke_maybe(boost::function<void()> f, qi::uint32_t id, qi::Promise<void> p, const boost::system::error_code& erc)
   {
     if (!erc)
     {
+      tracepoint(qi_qi, eventloop_task_start, id);
       f();
+      tracepoint(qi_qi, eventloop_task_stop, id);
       p.setValue(0);
     }
-    else
+    else {
+      tracepoint(qi_qi, eventloop_task_cancel, id);
       p.setCanceled();
+    }
   }
 
   qi::Future<void> EventLoopAsio::asyncCall(uint64_t usDelay, boost::function<void ()> cb)
@@ -272,10 +288,13 @@ namespace qi {
     if (!_work)
       return qi::makeFutureError<void>("Schedule attempt on destroyed thread pool");
 
+    uint32_t id = ++gTaskId;
+
+    tracepoint(qi_qi, eventloop_delay, id, usDelay);
     boost::shared_ptr<boost::asio::deadline_timer> timer = boost::make_shared<boost::asio::deadline_timer>(boost::ref(_io));
     timer->expires_from_now(boost::posix_time::microseconds(usDelay));
     qi::Promise<void> prom(boost::bind(&boost::asio::deadline_timer::cancel, timer));
-    timer->async_wait(boost::bind(&invoke_maybe, cb, prom, _1));
+    timer->async_wait(boost::bind(&invoke_maybe, cb, id, prom, _1));
     return prom.future();
   }
 

@@ -13,6 +13,7 @@
 #include <qi/qi.hpp>
 #include <qi/log.hpp>
 
+#include <boost/make_shared.hpp>
 #include <boost/bind.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
@@ -23,8 +24,108 @@
 
 qiLogCategory("qi.path");
 
+namespace fs = boost::filesystem;
+
 namespace qi
 {
+
+  class PrivatePath {
+  public:
+    PrivatePath(const std::string& unicodePath)
+      : path(unicodePath, qi::unicodeFacet())
+    {}
+
+    PrivatePath(const fs::path& path)
+      : path(path)
+    {}
+
+    fs::path path;
+  };
+
+  Path::Path(const boost::shared_ptr<PrivatePath>& p)
+    : _p(p)
+  {}
+
+  Path::Path(const std::string& unicodePath)
+    : _p(new PrivatePath(unicodePath))
+  {}
+
+  bool Path::isEmpty() const
+  {
+    return _p->path.empty();
+  }
+
+  bool Path::isDir() const
+  {
+    return fs::is_directory(_p->path);
+  }
+
+  bool Path::isRegularFile() const
+  {
+    return fs::is_regular_file(_p->path);
+  }
+
+  std::string Path::extension() const
+  {
+    return _p->path.extension().string(qi::unicodeFacet());
+  }
+
+  Path Path::parent()
+  {
+    return Path(boost::make_shared<PrivatePath>(_p->path.parent_path()));
+  }
+
+  std::string Path::filename() const
+  {
+    return _p->path.filename().string(qi::unicodeFacet());
+  }
+
+  Path Path::absolute()
+  {
+    return Path(boost::make_shared<PrivatePath>(fs::absolute(_p->path)));
+  }
+
+  PathVector Path::files()
+  {
+    PathVector ret;
+    fs::directory_iterator dit(_p->path);
+
+    for (; dit != fs::directory_iterator(); ++dit) {
+      if (fs::is_regular_file(*dit))
+        ret.push_back(Path(boost::make_shared<PrivatePath>(*dit)));
+    }
+    return ret;
+  }
+
+  PathVector Path::dirs()
+  {
+    PathVector ret;
+    fs::directory_iterator dit(_p->path);
+
+    for (; dit != fs::directory_iterator(); ++dit) {
+      if (fs::is_directory(*dit))
+        ret.push_back(Path(boost::make_shared<PrivatePath>(*dit)));
+    }
+    return ret;
+  }
+
+  Path Path::operator/(const Path &rhs) const
+  {
+    return Path(boost::make_shared<PrivatePath>(_p->path / rhs._p->path));
+  }
+
+  const Path& Path::operator/=(const Path &rhs) const
+  {
+    _p->path /= rhs._p->path;
+    return *this;
+  }
+
+  Path::operator std::string() const
+  {
+    return _p->path.string(qi::unicodeFacet());
+  }
+
+
   SDKLayout* gInstance = NULL;
   SDKLayout* getInstance();
 

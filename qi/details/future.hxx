@@ -149,7 +149,9 @@ namespace qi {
       }
 
 
-      void connect(qi::Future<T> future, const boost::function<void (qi::Future<T>)> &s)
+      void connect(qi::Future<T> future,
+          const boost::function<void (qi::Future<T>)> &s,
+          FutureCallbackType type)
       {
         bool ready;
         {
@@ -159,7 +161,7 @@ namespace qi {
         }
         //result already ready, notify the callback
         if (ready) {
-          if (_async == FutureCallbackType_Async)
+          if (type == FutureCallbackType_Async)
             getEventLoop()->post(boost::bind(s, future));
           else
           {

@@ -687,7 +687,7 @@ namespace qi {
     {
       CategoryType cat = addCategory("*");
       if (sub < cat->levels.size())
-        cat->levels[sub];
+        return cat->levels[sub];
       return LogLevel_Info;
     };
 

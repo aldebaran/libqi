@@ -1,6 +1,6 @@
 <project version="3">
   <qibuild name="libqi">
-    <depends buildtime="true" runtime="true" names="boost pthread" />
+    <depends buildtime="true" runtime="true" names="boost pthread qiprobes" />
     <depends testtime="true" buildtime="true" names="gtest" />
   </qibuild>
   <project src="dox" />

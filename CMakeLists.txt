@@ -28,6 +28,13 @@ qi_add_optional_package(BOOST_LOCALE "Enable qi::translate")
 enable_testing()
 include(CMakeDependentOption)
 
+find_package(qiprobes)
+qiprobes_create_probe(tp_qi
+  src/tp_qi.in.h
+  PROVIDER_NAME qi_qi)
+qiprobes_instrument_files(tp_qi
+  src/eventloop.cpp)
+
 set(H
   qi/details/eventloop.hxx
   qi/details/future.hxx
@@ -150,7 +157,7 @@ list(APPEND C ${_out})
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/external")
 
-qi_create_lib(qi ${_libtype} ${H} ${C})
+qi_create_lib(qi ${_libtype} ${H} ${C} SUBMODULE tp_qi)
 
 if (WITH_QT_QTCORE)
   qi_use_lib(qi QT_QTCORE)
