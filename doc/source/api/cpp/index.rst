@@ -26,6 +26,8 @@ C++ qi API Reference
   property
   applicationsession
 
+  anyvalue
+
   ../../cpp-classindex
   ../../cpp-funcindex
 
