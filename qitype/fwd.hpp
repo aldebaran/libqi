@@ -68,6 +68,7 @@ namespace qi
     TypeKind_Function = 14,
     TypeKind_Signal   = 15,
     TypeKind_Property = 16,
+    TypeKind_VarArgs  = 17,
   };
 
 }

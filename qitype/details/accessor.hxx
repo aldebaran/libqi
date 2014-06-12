@@ -17,7 +17,7 @@ namespace qi
   */
   namespace detail
   {
-    template<typename T> struct Accessor
+    template<typename T, typename Void = void> struct Accessor
     {
       typedef boost::false_type is_accessor;
     };
@@ -27,7 +27,9 @@ namespace qi
       typedef typename boost::remove_const<T>::type value_type;
       typedef C class_type;
     };
-    template<typename C, typename T> struct Accessor<T C::*>
+    // we must explicitely check for is_member_object_pointer because T C::*
+    // can match functions also even if it may not make sense
+    template<typename C, typename T> struct Accessor<T C::*, typename boost::enable_if<typename boost::is_member_object_pointer<T C::*> >::type >
     : public AccessorBase<C, T>
     {
       typedef T C::* type;

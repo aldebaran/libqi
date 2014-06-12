@@ -304,6 +304,17 @@ namespace qi{
     virtual TypeKind kind() { return TypeKind_Dynamic; }
   };
 
+  /**
+   * Type that contains variable arguments
+   */
+  class QITYPE_API VarArgsTypeInterface: public ListTypeInterface
+  {
+  public:
+    //virtual AnyReference get(void *storage) = 0;
+    //virtual TypeInterface* elementType() = 0;
+    virtual TypeKind kind() { return TypeKind_VarArgs; }
+  };
+
   ///@return a Type of the specified Kind. This do not work for list, map and tuple.
   /// kind Int and Float will create the biggest possible type. use makeFloatType and makeIntType
   /// to be more specific.
@@ -314,6 +325,9 @@ namespace qi{
 
   ///@return a Type of kind int, bytelen can be 0,1,2,4,8
   QITYPE_API TypeInterface* makeIntType(bool issigned, int bytelen);
+
+  ///@return a Type of kind VarArgs that can contains elements of type elementType.
+  QITYPE_API TypeInterface* makeVarArgsType(TypeInterface* elementType);
 
   ///@return a Type of kind List that can contains elements of type elementType.
   QITYPE_API TypeInterface* makeListType(TypeInterface* elementType);

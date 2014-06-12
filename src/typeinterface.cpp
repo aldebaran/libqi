@@ -12,6 +12,7 @@
 #include <qitype/anyvalue.hpp>
 #include <qitype/anyobject.hpp>
 #include <qitype/typedispatcher.hpp>
+#include <qitype/anyfunction.hpp>
 
 #ifdef __GNUC__
 #include <cxxabi.h>
@@ -237,6 +238,12 @@ namespace qi {
       result = qi::makeListSignature(sigFirst.isValid()?sigFirst:esig);
     }
 
+    void visitVarArgs(AnyIterator it, AnyIterator iend)
+    {
+      qi::Signature esig = static_cast<ListTypeInterface*>(_value.type())->elementType()->signature();
+      result = qi::makeVarArgsSignature(esig);
+    }
+
     void visitMap(AnyIterator it, AnyIterator iend)
     {
       MapTypeInterface* type =  static_cast<MapTypeInterface*>(_value.type());
@@ -431,9 +438,13 @@ namespace qi {
         break;
       case TypeKind_Unknown:
       case TypeKind_Iterator:
-         v.result = qi::Signature::fromType(Signature::Type_Unknown);
-         break;
+        v.result = qi::Signature::fromType(Signature::Type_Unknown);
+        break;
+      case TypeKind_VarArgs:
+        TypeInterface* elt = static_cast<VarArgsTypeInterface*>(this)->elementType();
+        v.result = qi::makeVarArgsSignature(elt->signature());
       }
+
       return v.result;
     }
   }
@@ -501,7 +512,6 @@ namespace qi {
     static TypeInterface* tgv = typeOf<AnyValue>();
     static TypeInterface* tbuffer = typeOf<Buffer>();
     static TypeInterface* tobjectptr = typeOf<AnyObject>();
-
     switch(kind)
     {
     case TypeKind_Void:
@@ -512,11 +522,11 @@ namespace qi {
       return tdouble;
     case TypeKind_String:
       return tstring;
-    case Signature::Type_Dynamic:
+    case TypeKind_Dynamic:
       return tgv;
-    case Signature::Type_Raw:
+    case TypeKind_Raw:
       return tbuffer;
-    case Signature::Type_Object:
+    case TypeKind_Object:
       return tobjectptr;
     default:
       qiLogWarning() << "Cannot get type from kind " << kind;
@@ -580,6 +590,16 @@ namespace qi {
           return 0;
         }
       return makeListType(el);
+      }
+    case Signature::Type_VarArgs:
+      {
+        TypeInterface* el = fromSignature(sig.children().at(0));
+        if (!el)
+        {
+          qiLogError() << "Cannot get type from varargs of unknown type.";
+          return 0;
+        }
+      return makeVarArgsType(el);
       }
     case Signature::Type_Map:
       {
@@ -700,19 +720,18 @@ namespace qi {
     return result;
   }
 
-  class DefaultListType: public ListTypeInterfaceImpl<std::vector<void*> >
+  template <typename T>
+  class DefaultListTypeBase: public T
   {
-  public:
-  private:
-    DefaultListType(TypeInterface* elementType)
+  protected:
+    DefaultListTypeBase(const std::string& name, TypeInterface* elementType)
     : _elementType(elementType)
     {
-       _name = "DefaultListType<"
+       _name = name + "<"
         + _elementType->info().asString()
         + ">(" + boost::lexical_cast<std::string>(this);
         _info = TypeInfo(_name);
     }
-    friend TypeInterface* makeListType(TypeInterface* element);
   public:
     TypeInterface* elementType()
     {
@@ -736,6 +755,7 @@ namespace qi {
       v = AnyReference(makeListIteratorType(_elementType), v.rawValue());
       return AnyIterator(v);
     }
+
     void* clone(void* storage)
     {
       std::vector<void*>& src = *(std::vector<void*>*)ptrFromStorage(&storage);
@@ -745,6 +765,7 @@ namespace qi {
         dst.push_back(_elementType->clone(src[i]));
       return result;
     }
+
     void destroy(void* storage)
     {
       std::vector<void*>& src = *(std::vector<void*>*)ptrFromStorage(&storage);
@@ -769,14 +790,55 @@ namespace qi {
       return _info;
     }
     typedef DefaultTypeImplMethods<std::vector<void*>, TypeByPointerPOD<std::vector<void*> > > Methods;
-    void* initializeStorage(void* ptr=0) { return Methods::initializeStorage(ptr);} \
-    void* ptrFromStorage(void**s) { return Methods::ptrFromStorage(s);}
-    TypeInterface* _elementType;
-    std::string _name;
-    TypeInfo _info;
+    void* initializeStorage(void* ptr=0) { return Methods::initializeStorage(ptr); }
+    void* ptrFromStorage(void**s)        { return Methods::ptrFromStorage(s); }
 
+    TypeInterface* _elementType;
+    std::string    _name;
+    TypeInfo       _info;
   };
 
+  class DefaultVarArgsType: public DefaultListTypeBase<VarArgsTypeInterfaceImpl< qi::VarArguments<void*> > >
+  {
+  private:
+    DefaultVarArgsType(TypeInterface* elementType)
+      : DefaultListTypeBase<VarArgsTypeInterfaceImpl< qi::VarArguments<void*> > >("DefaultVarArgsType", elementType)
+    {}
+  public:
+    friend TypeInterface* makeVarArgsType(TypeInterface* element);
+  };
+
+  class DefaultListType: public DefaultListTypeBase<ListTypeInterfaceImpl< std::vector<void*> > >
+  {
+  private:
+    DefaultListType(TypeInterface* elementType)
+      : DefaultListTypeBase<ListTypeInterfaceImpl< std::vector<void*> > >("DefaultListType", elementType)
+    {}
+  public:
+    friend TypeInterface* makeListType(TypeInterface* element);
+  };
+
+  TypeInterface* makeVarArgsType(TypeInterface* element)
+  {
+    static boost::mutex* mutex = 0;
+    QI_THREADSAFE_NEW(mutex);
+    boost::mutex::scoped_lock lock(*mutex);
+    static std::map<TypeInfo, TypeInterface*>* map = 0;
+    if (!map)
+      map = new std::map<TypeInfo, TypeInterface*>();
+    TypeInfo key(element->info());
+    std::map<TypeInfo, TypeInterface*>::iterator it;
+    TypeInterface* result;
+    it = map->find(key);
+    if (it == map->end())
+    {
+      result = new DefaultVarArgsType(element);
+      (*map)[key] = result;
+    }
+    else
+      result = it->second;
+    return result;
+  }
     // We want exactly one instance per element type
   TypeInterface* makeListType(TypeInterface* element)
   {

@@ -81,6 +81,7 @@ namespace qi
     return type;
   }
 
+
 } // namespace qi
 
 namespace std

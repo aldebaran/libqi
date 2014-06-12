@@ -44,6 +44,9 @@ namespace qi {
       case '(':
         visitTuple(sig);
         break;
+      case '#':
+        visitVarArgs(sig);
+        break;
       default:
         visitSimple(sig);
         break;
@@ -102,6 +105,12 @@ namespace qi {
 
   void SignatureConvertor::visitList(const Signature& sig) {
     _result += "List<";
+    visit(sig.children().at(0));
+    _result += ">";
+  }
+
+  void SignatureConvertor::visitVarArgs(const Signature& sig) {
+    _result += "VarArgs<";
     visit(sig.children().at(0));
     _result += ">";
   }

@@ -281,20 +281,18 @@ namespace qi {
     boost::thread::id tid = boost::this_thread::get_id();
     while (true)
     {
-      {
-        boost::mutex::scoped_lock sl(mutex);
-        if (activeThreads.empty())
-          return;
-        // There cannot be two activeThreads entry for the same tid
-        // because activeThreads is not set at the post() stage
-        if (activeThreads.size() == 1
-          && *activeThreads.begin() == tid)
-        { // One active callback in this thread, means above us in call stack
-          // So we cannot wait for it
-          return;
-        }
+      boost::mutex::scoped_lock sl(mutex);
+      if (activeThreads.empty())
+        return;
+      // There cannot be two activeThreads entry for the same tid
+      // because activeThreads is not set at the post() stage
+      if (activeThreads.size() == 1
+        && *activeThreads.begin() == tid)
+      { // One active callback in this thread, means above us in call stack
+        // So we cannot wait for it
+        return;
       }
-      os::msleep(1); // FIXME too long use a condition
+      inactiveThread.wait(sl);
     }
   }
 
@@ -324,6 +322,7 @@ namespace qi {
         activeThreads.pop_back();
       }
     }
+    inactiveThread.notify_all();
   }
 
   SignalSubscriber& SignalBase::connect(AnyObject o, unsigned int slot)

@@ -137,6 +137,19 @@ TEST(TestSignature, Strings) {
   EXPECT_EQ("s",    qi::signatureFromType<char const * const&>::value());
 }
 
+
+TEST(TestSignature, VArgs) {
+  EXPECT_EQ("#m",    qi::signatureFromType<qi::AnyVarArguments>::value());
+
+  //vargs
+  EXPECT_TRUE(qi::Signature("#b").isValid());
+  EXPECT_TRUE(qi::Signature("#b<titi,toto>").isValid());
+
+  //kwargs
+  EXPECT_TRUE(qi::Signature("~b").isValid());
+  EXPECT_TRUE(qi::Signature("~b<titi,toto>").isValid());
+}
+
 struct MPoint {
   MPoint(int x=0, int y=0)
     : x(x)

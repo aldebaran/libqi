@@ -122,6 +122,7 @@ namespace qi
 
     switch (_type->kind())
     {
+    case TypeKind_VarArgs:
     case TypeKind_List:
     {
       ListTypeInterface* targetListType = static_cast<ListTypeInterface*>(targetType);
@@ -455,6 +456,7 @@ namespace qi
       result._value = dst;
       return std::make_pair(result, true);
     }
+    case TypeKind_VarArgs:
     case TypeKind_List:
     {
       // No explicit type-check, convert will do it
@@ -558,6 +560,7 @@ namespace qi
       }
       return std::make_pair(result, true);
     }
+    case TypeKind_VarArgs:
     case TypeKind_List:
     {
       // Accept [(kv)] and convert to {kv}
@@ -634,6 +637,8 @@ namespace qi
         return convert(static_cast<IntTypeInterface*>(targetType));
       case TypeKind_String:
         return convert(static_cast<StringTypeInterface*>(targetType));
+      case TypeKind_VarArgs:
+        return convert(static_cast<ListTypeInterface*>(targetType));
       case TypeKind_List:
         return convert(static_cast<ListTypeInterface*>(targetType));
       case TypeKind_Map:
@@ -668,12 +673,30 @@ namespace qi
     // skind != dkind
     if (skind == TypeKind_List && dkind == TypeKind_Tuple)
       return convert(static_cast<StructTypeInterface*>(targetType));
+    else if (skind == TypeKind_Tuple && dkind == TypeKind_List)
+      return convert(static_cast<ListTypeInterface*>(targetType));
+
+    else if (skind == TypeKind_VarArgs && dkind == TypeKind_List)
+      return convert(static_cast<ListTypeInterface*>(targetType));
+    else if (skind == TypeKind_List && dkind == TypeKind_VarArgs)
+      return convert(static_cast<ListTypeInterface*>(targetType));
+
+    else if (skind == TypeKind_VarArgs && dkind == TypeKind_Tuple)
+      return convert(static_cast<StructTypeInterface*>(targetType));
+    else if (skind == TypeKind_Tuple && dkind == TypeKind_VarArgs)
+      return convert(static_cast<ListTypeInterface*>(targetType));
+
+
     else if (skind == TypeKind_List && dkind == TypeKind_Map)
       return convert(static_cast<MapTypeInterface*>(targetType));
+    else if (skind == TypeKind_Map && dkind == TypeKind_List)
+      return convert(static_cast<ListTypeInterface*>(targetType));
+
     else if (skind == TypeKind_Float && dkind == TypeKind_Int)
       return convert(static_cast<IntTypeInterface*>(targetType));
     else if (skind == TypeKind_Int && dkind == TypeKind_Float)
       return convert(static_cast<FloatTypeInterface*>(targetType));
+
     else if (skind == TypeKind_String && dkind == TypeKind_Raw)
       return convert(static_cast<RawTypeInterface*>(targetType));
     else if (skind == TypeKind_Raw && dkind == TypeKind_String)
@@ -809,6 +832,7 @@ namespace qi
         cb.first.first << ' ' << res;
       return res;
     }
+    case TypeKind_VarArgs:
     case TypeKind_List:
     case TypeKind_Map: // omg, same code!
     {
@@ -880,7 +904,7 @@ namespace qi
   {
     if (kind() == TypeKind_Tuple)
       return AnyValue(*this);
-    else if (kind() != TypeKind_List)
+    else if (kind() != TypeKind_List && kind() != TypeKind_VarArgs)
       throw std::runtime_error("Expected Tuple or List kind");
     // convert list to tuple
 
@@ -915,7 +939,7 @@ namespace qi
 
   AnyReference AnyReferenceBase::_element(const AnyReference& key, bool throwOnFailure)
   {
-    if (kind() == TypeKind_List)
+    if (kind() == TypeKind_List || kind() == TypeKind_VarArgs)
     {
       ListTypeInterface* t = static_cast<ListTypeInterface*>(_type);
       int ikey = (int)key.toInt();
@@ -962,7 +986,7 @@ namespace qi
 
   void AnyReferenceBase::_append(const AnyReference& elem)
   {
-    if (kind() != TypeKind_List)
+    if (kind() != TypeKind_List && kind() != TypeKind_VarArgs)
       throw std::runtime_error("Expected a list");
     ListTypeInterface* t = static_cast<ListTypeInterface*>(_type);
     std::pair<AnyReference, bool> c = elem.convert(t->elementType());
@@ -1100,7 +1124,7 @@ namespace qi
   {
     if (kind() == TypeKind_Tuple)
       return static_cast<StructTypeInterface*>(_type)->values(_value);
-    else if (kind() == TypeKind_List || kind() == TypeKind_Map)
+    else if (kind() == TypeKind_List || kind() == TypeKind_VarArgs || kind() == TypeKind_Map)
     {
       AnyReferenceVector result;
       AnyIterator iend = end();
@@ -1119,7 +1143,7 @@ namespace qi
 
   AnyIterator AnyReferenceBase::begin() const
   {
-    if (kind() == TypeKind_List)
+    if (kind() == TypeKind_List || kind() == TypeKind_VarArgs)
       return static_cast<ListTypeInterface*>(_type)->begin(_value);
     else if (kind() == TypeKind_Map)
       return static_cast<MapTypeInterface*>(_type)->begin(_value);
@@ -1129,7 +1153,7 @@ namespace qi
 
   AnyIterator AnyReferenceBase::end() const
   {
-    if (kind() == TypeKind_List)
+    if (kind() == TypeKind_List || kind() == TypeKind_VarArgs)
       return static_cast<ListTypeInterface*>(_type)->end(_value);
     else if (kind() == TypeKind_Map)
       return static_cast<MapTypeInterface*>(_type)->end(_value);
@@ -1181,7 +1205,7 @@ namespace qi
 
   size_t AnyReferenceBase::size() const
   {
-    if (kind() == TypeKind_List)
+    if (kind() == TypeKind_List || kind() == TypeKind_VarArgs)
       return static_cast<ListTypeInterface*>(_type)->size(_value);
     if (kind() == TypeKind_Map)
       return static_cast<MapTypeInterface*>(_type)->size(_value);

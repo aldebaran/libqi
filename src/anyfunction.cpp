@@ -97,8 +97,8 @@ namespace qi
 
     if (target.size() != sz + deltaCount)
     {
-      throw std::runtime_error(_QI_LOG_FORMAT("Argument count mismatch, expected %s, got %s (transform %s)",
-        target.size(), sz, deltaCount));
+      throw std::runtime_error(_QI_LOG_FORMAT("Argument count mismatch, expected %1%, got %2%",
+        target.size(), sz + deltaCount));
       return AnyReference();
     }
     if (transform.dropFirst)

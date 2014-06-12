@@ -268,6 +268,7 @@ namespace qi {
 
     size_t size() const;
 
+    //TODO: use AutoAnyReference
     template<typename T>
     void append(const T& element);
 

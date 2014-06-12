@@ -549,6 +549,11 @@ namespace qi {
         out.endList();
       }
 
+      void visitVarArgs(AnyIterator it, AnyIterator end)
+      {
+        visitList(it, end);
+      }
+
       void visitMap(AnyIterator it, AnyIterator end)
       {
         MapTypeInterface* type = static_cast<MapTypeInterface*>(value.type());
@@ -741,6 +746,11 @@ namespace qi {
           result._append(v);
           v.destroy();
         }
+      }
+
+      void visitVarArgs(AnyIterator b, AnyIterator e)
+      {
+        visitList(b, e);
       }
 
       void visitMap(AnyIterator, AnyIterator)

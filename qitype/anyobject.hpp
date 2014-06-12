@@ -102,40 +102,39 @@ namespace qi {
                          qi::AutoAnyReference p8 = qi::AutoAnyReference());
 
   template<typename R>
-  qi::FutureSync<R> async(
-                         const std::string& eventName,
-                         qi::AutoAnyReference p1 = qi::AutoAnyReference(),
-                         qi::AutoAnyReference p2 = qi::AutoAnyReference(),
-                         qi::AutoAnyReference p3 = qi::AutoAnyReference(),
-                         qi::AutoAnyReference p4 = qi::AutoAnyReference(),
-                         qi::AutoAnyReference p5 = qi::AutoAnyReference(),
-                         qi::AutoAnyReference p6 = qi::AutoAnyReference(),
-                         qi::AutoAnyReference p7 = qi::AutoAnyReference(),
-                         qi::AutoAnyReference p8 = qi::AutoAnyReference());
+  qi::Future<R> async(
+                      const std::string& eventName,
+                      qi::AutoAnyReference p1 = qi::AutoAnyReference(),
+                      qi::AutoAnyReference p2 = qi::AutoAnyReference(),
+                      qi::AutoAnyReference p3 = qi::AutoAnyReference(),
+                      qi::AutoAnyReference p4 = qi::AutoAnyReference(),
+                      qi::AutoAnyReference p5 = qi::AutoAnyReference(),
+                      qi::AutoAnyReference p6 = qi::AutoAnyReference(),
+                      qi::AutoAnyReference p7 = qi::AutoAnyReference(),
+                      qi::AutoAnyReference p8 = qi::AutoAnyReference());
 #else
     // Declare genCall, using overloads for all argument count instead of default values.
     #define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma) \
-    template<typename R> qi::FutureSync<R> call(       \
-      const std::string& methodName comma              \
+    template<typename R> qi::FutureSync<R> call(              \
+      const std::string& methodName comma                     \
       QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoAnyReference));
     QI_GEN(genCall)
     #undef genCall
 
     #define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma) \
-    template<typename R> qi::FutureSync<R> async(     \
-      const std::string& methodName comma              \
+    template<typename R> qi::Future<R> async(                 \
+      const std::string& methodName comma                     \
       QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoAnyReference));
     QI_GEN(genCall)
     #undef genCall
 
     #define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma) \
-    template<typename R> qi::FutureSync<R> call(     \
-      qi::MetaCallType callType,                         \
-      const std::string& methodName comma              \
+    template<typename R> qi::FutureSync<R> call(              \
+      qi::MetaCallType callType,                              \
+      const std::string& methodName comma                     \
       QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoAnyReference));
     QI_GEN(genCall)
     #undef genCall
-
 #endif // DOXYGEN
 
     qi::Future<AnyReference> metaCall(unsigned int method, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto, Signature returnSignature = Signature());
@@ -246,38 +245,37 @@ namespace qi {
 
   class QITYPE_API Proxy;
 
-  #ifdef DOXYGEN
+#ifdef DOXYGEN
   /** Perform an asynchronous call on a method.
    * @param instance a pointer or shared-pointer to an instance of a class known to type system.
   */
   template<typename R, typename T>
-  qi::FutureSync<R> async(
-                         T instancePointerOrSharedPointer,
-                         const std::string& methodName,
-                         qi::AutoAnyReference p1 = qi::AutoAnyReference(),
-                         qi::AutoAnyReference p2 = qi::AutoAnyReference(),
-                         qi::AutoAnyReference p3 = qi::AutoAnyReference(),
-                         qi::AutoAnyReference p4 = qi::AutoAnyReference(),
-                         qi::AutoAnyReference p5 = qi::AutoAnyReference(),
-                         qi::AutoAnyReference p6 = qi::AutoAnyReference(),
-                         qi::AutoAnyReference p7 = qi::AutoAnyReference(),
-                         qi::AutoAnyReference p8 = qi::AutoAnyReference());
+  qi::Future<R> async(T instancePointerOrSharedPointer,
+                      const std::string& methodName,
+                      qi::AutoAnyReference p1 = qi::AutoAnyReference(),
+                      qi::AutoAnyReference p2 = qi::AutoAnyReference(),
+                      qi::AutoAnyReference p3 = qi::AutoAnyReference(),
+                      qi::AutoAnyReference p4 = qi::AutoAnyReference(),
+                      qi::AutoAnyReference p5 = qi::AutoAnyReference(),
+                      qi::AutoAnyReference p6 = qi::AutoAnyReference(),
+                      qi::AutoAnyReference p7 = qi::AutoAnyReference(),
+                      qi::AutoAnyReference p8 = qi::AutoAnyReference());
 #else
-#define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)         \
-    template<typename R,typename T> qi::FutureSync<R> async(   \
-      T* instance,                                                 \
-      const std::string& methodName comma                         \
-      QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoAnyReference));       \
-    template<typename R,typename T> qi::FutureSync<R> async(   \
-      boost::shared_ptr<T> instance,                              \
-      const std::string& methodName comma                         \
-      QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoAnyReference));          \
-    template<typename R,typename T> qi::FutureSync<R> async(   \
-          qi::Object<T> instance,                              \
-      const std::string& methodName comma                      \
+#define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma) \
+    template<typename R,typename T> qi::Future<R> async(  \
+      T* instance,                                        \
+      const std::string& methodName comma                 \
+      QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoAnyReference));  \
+    template<typename R,typename T> qi::Future<R> async(  \
+      boost::shared_ptr<T> instance,                      \
+      const std::string& methodName comma                 \
+      QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoAnyReference));  \
+    template<typename R,typename T> qi::Future<R> async(  \
+      qi::Object<T> instance,                             \
+      const std::string& methodName comma                 \
       QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoAnyReference));
-    QI_GEN(genCall)
-    #undef genCall
+  QI_GEN(genCall)
+#undef genCall
 #endif
 
   /** Register \p Proxy as a proxy class.

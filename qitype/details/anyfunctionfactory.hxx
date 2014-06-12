@@ -199,19 +199,18 @@ namespace qi
       typename boost::mpl::begin<Components>::type, 0>::val;
     };
 
-    template<typename F> struct EqFunction:
+    template<typename F>
+    struct EqFunction:
         public boost::mpl::if_<typename boost::is_member_function_pointer<F>::type,
-        EqMemberFunction<F>,
-        EqFunctionBare<F> >::type
+                               EqMemberFunction<F>,
+                               EqFunctionBare<F> >::type
     {};
-    /* arg[i] is a pointer to an element of expected type DROPPING ref
-  * we will make the call by dereferencing all args, so we must add
-  * one layer of pointer to effective refs
-   *
-   */
-    inline
-    void transformRef(void** args, void** out, unsigned int sz,
-                      unsigned long refMask)
+    /* args[i] is a pointer to an element of expected type DROPPING ref
+     * we will make the call by dereferencing all args, so we must add
+     * one layer of pointer to effective refs
+     *
+     */
+    inline void transformRef(void** args, void** out, unsigned int sz, unsigned long refMask)
     {
       for (unsigned i=0; i<sz; ++i)
       {

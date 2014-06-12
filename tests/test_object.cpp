@@ -1209,6 +1209,45 @@ TEST(TestMetaObject, findMethod)
   EXPECT_TRUE(true);
 }
 
+static void calla() {
+};
+static void callb(bool) {
+};
+static void callbb(bool, bool) {
+};
+static void callc(int) {
+};
+
+
+//*  -1 : no method found
+//*  -2 : arguments do not matches
+//*  -3 : ambiguous matches
+TEST(TestObject, findMethodErr)
+{
+  qi::DynamicObjectBuilder gob;
+  gob.advertiseMethod("call", &calla);
+  gob.advertiseMethod("callb", &callb);
+  gob.advertiseMethod("callb", &callbb);
+  gob.advertiseMethod("callc", &callb);
+  gob.advertiseMethod("callc", &callc);
+
+
+  qi::AnyObject ao = gob.object();
+  qi::GenericFunctionParameters gfp;
+  EXPECT_EQ(-1, ao.findMethod("callNotFound", args(42)));
+
+  EXPECT_EQ(-2, ao.findMethod("call", args(42)));
+
+  //should fail but it expect the call to fail later
+  //EXPECT_EQ(-2, ao.findMethod("callb", args("titi")));
+
+  EXPECT_EQ(-2, ao.findMethod("callb", args(42, 42, 42)));
+
+  EXPECT_EQ(-2, ao.findMethod("callc", args(42, 42, 42)));
+  //should fail but it expect the call to fail later
+  //EXPECT_EQ(-3, ao.findMethod("callc", args(1)));
+}
+
 int main(int argc, char **argv)
 {
   qi::Application app(argc, argv);

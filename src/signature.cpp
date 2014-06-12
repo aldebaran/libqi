@@ -35,6 +35,20 @@ namespace qi {
     return qi::Signature(res);
   }
 
+  qi::Signature makeVarArgsSignature(const qi::Signature &element) {
+    std::string res;
+    res += (char)Signature::Type_VarArgs;
+    res += element.toString();
+    return qi::Signature(res);
+  }
+
+  qi::Signature makeKwArgsSignature(const qi::Signature &element) {
+    std::string res;
+    res += (char)Signature::Type_KwArgs;
+    res += element.toString();
+    return qi::Signature(res);
+  }
+
   qi::Signature makeTupleSignature(const qi::Signature &element) {
     std::string res;
     res += (char)Signature::Type_Tuple;
@@ -93,6 +107,11 @@ namespace qi {
 
     Signature::Type s = type();
     Signature::Type d = b.type();
+    //varargs are just vector, handle them that way
+    if (s == Type_VarArgs)
+      s = Type_List;
+    if (d == Type_VarArgs)
+      d = Type_List;
     if (d == Type_Void)
       return RET_CALC;
     if (d == Type_Unknown)
@@ -291,6 +310,13 @@ namespace qi {
           return std::string::npos;
         index++;
         break;
+      case qi::Signature::Type_VarArgs:
+      case qi::Signature::Type_KwArgs:
+        index++;
+        index = findNext(signature, index);
+        if (index == std::string::npos)
+          return std::string::npos;
+        break;
       case qi::Signature::Type_Map:
         index = _find_end(signature, index, '{', '}');
         if (index == std::string::npos)
@@ -305,7 +331,7 @@ namespace qi {
         break;
       default:
         qiLogDebug() << "Signature element is invalid: '" << signature << "'";
-        return false;
+        return std::string::npos;
     }
     // handle annotation
     if (index < signature.size() && signature[index] == '<')
@@ -386,6 +412,12 @@ namespace qi {
         break;
       case qi::Signature::Type_List: {
         int index_should_stop = _find_end(signature, index, '[', ']');
+        eatChildren(signature, index + 1, index_should_stop, 1);
+        break;
+      }
+      case qi::Signature::Type_KwArgs:
+      case qi::Signature::Type_VarArgs: {
+        int index_should_stop = findNext(signature, index);
         eatChildren(signature, index + 1, index_should_stop, 1);
         break;
       }

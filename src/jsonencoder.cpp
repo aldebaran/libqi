@@ -164,6 +164,11 @@ namespace qi {
       out << " ]";
     }
 
+    void visitVarArgs(AnyIterator begin, AnyIterator end)
+    {
+      visitList(begin, end);
+    }
+
     void visitMap(AnyIterator begin, AnyIterator end)
     {
       out << "{ ";
