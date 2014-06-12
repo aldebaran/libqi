@@ -9,11 +9,11 @@ qi::Object API
 qi::AnyObject
 =============
 
-`qi::AnyObject` is a specialization of qi::Object that provides type erasure on
-objects, similar to what `qi::AnyValue` does on values. It can only work on
-registered objects. We'll use `Graph::Drawer` from
-:ref:`the registering guide<guide-cxx-register-types>`. You can make an `qi::Object` from a
-`boost::shared_ptr`.
+`qi::AnyObject` is a specialization of `qi::Object<T>` that provides type
+erasure on objects, similar to what `qi::AnyValue` does on values. It can only
+work on registered objects. We'll use `Graph::Drawer` from :ref:`the
+registering guide<guide-cxx-register-types>`. You can make an `qi::Object` from
+a `boost::shared_ptr`.
 
 .. code-block:: c++
 
