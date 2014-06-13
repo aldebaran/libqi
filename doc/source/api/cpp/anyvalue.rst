@@ -35,7 +35,7 @@ Storing and retrieving a value is easy enough:
 .. warning::
 
   When you use `as()`, you must specify the exact same type that was passed to
-  the AnyValue, you can't store and `int` and retrieve an `unsigned int`.
+  the AnyValue, you can't store an `int` and retrieve an `unsigned int`.
 
 .. note::
 
