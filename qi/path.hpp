@@ -23,26 +23,51 @@ namespace qi
   class PrivatePath;
   class Path;
   typedef std::vector<Path> PathVector;
+
+  /**
+   * @class qi.Path
+   * @brief The Path class allow handling path in a cross-platform maner.
+   *
+   * The class assume that all string are encoded in UTF-8.
+   *
+   */
   class QI_API Path {
   public:
     Path(const std::string& unicodePath = std::string());
 
+    /// is the path empty?
     bool isEmpty() const;
+
+    /// is the path a directory?
     bool isDir() const;
+
+    /// is the path a regular file?
     bool isRegularFile() const;
 
+    /// get the name of the current file of folder
     std::string filename() const;
+
+    /// get the extension of the current file
     std::string extension() const;
 
+    /// return a Path to the parent
     Path parent();
+
+    /// return an absolute Path of the current path
     Path absolute();
 
+    /// return a vector of files contained in the current path
     PathVector files();
+
+    /// return a vector of dirs contained in the current path
     PathVector dirs();
 
     operator std::string() const;
 
+    /// concat two paths adding a directory separator between them
     Path operator/(const qi::Path& rhs) const;
+
+    /// concat two paths adding a directory separator between them
     const Path& operator/=(const qi::Path& rhs) const;
 
   private:
