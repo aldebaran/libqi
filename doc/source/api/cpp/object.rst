@@ -15,7 +15,7 @@ work on registered objects. We'll use `Graph::Drawer` from :ref:`the
 registering guide<guide-cxx-register-types>`. You can make an `qi::Object` from
 a `boost::shared_ptr`.
 
-.. code-block:: c++
+.. code-block:: cpp
 
   qi::AnyObject obj = boost::make_shared<Graph::Drawer>();
 
@@ -26,7 +26,7 @@ session, another service, etc.
 You can call a function with call or async if you want the call to be
 asynchronous. You can also connect signals and change properties.
 
-.. code-block:: c++
+.. code-block:: cpp
 
   obj.call<bool>("draw", Graph::Point(10, 20), Graph::Green);
 
@@ -46,7 +46,37 @@ qi::Object<T>
 
 `qi::Object` can be specialized with T if the object is T or inherits from T.
 
-.. code-block:: c++
+.. code-block:: cpp
 
   qi::Object<Graph::Drawer> obj = boost::make_shared<Graph::Drawer>();
   obj->draw(Graph::Point(11, 12), Graph::Green);
+
+`qi::Object<T>`'s specializations do not work with remote objects yet.
+
+Passing an object as argument
+=============================
+
+Some methods in the services you will use expect an object as argument, for
+instance *Logger::addListener(Object<LogListener> listener);*. To call this
+method, you must first implement the *LogListener* interface into your own
+class, and then wrap a pointer to an instance of this class into an
+*Object<LogListener>* or a *qi::AnyObject* that will take ownership of the
+pointer:
+
+.. code-block:: cpp
+
+  class MyLogListener: public LogListener
+  {
+    // Implement LogListener interface
+  };
+
+  void someFunction()
+  {
+    qi::AnyObject logger = session.service("Logger");
+    qi::AnyObject o(new MyLogListener());
+    logger.call("addListener", o);
+  }
+
+In the example above, your instance of *MyLogListener* will be kept alive as
+long as the logger service holds a *qi::AnyObject* on it. The same holds true
+when returning objects.
