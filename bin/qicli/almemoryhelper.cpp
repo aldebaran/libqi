@@ -21,9 +21,13 @@ void ALMemoryHelper::post(const std::string &pattern, const std::string &arg, bo
   std::vector<std::string> matchList = getMatchingEvents(pattern);
   for (unsigned int i = 0; i < matchList.size(); ++i)
   {
-    qi::Future<void> raiseResult = _alm.call<void>("raiseMicroEvent", matchList[i], decodeArg(arg, json));
-    if (raiseResult.hasError())
-      throw std::runtime_error("cannot raise event \"" + matchList[i] + "\": " + raiseResult.error());
+    try {
+      _alm.call<void>("raiseMicroEvent", matchList[i], decodeArg(arg, json));
+    }
+    catch (std::exception& e)
+    {
+      throw std::runtime_error("cannot raise event \"" + matchList[i] + "\": " + e.what());
+    }
   }
 }
 
@@ -100,9 +104,11 @@ std::vector<std::string> ALMemoryHelper::getMatchingEvents(const std::vector<std
 
 std::vector<std::string> ALMemoryHelper::getEventList()
 {
-  qi::Future<std::vector<std::string> > eventListFut = _alm.call<std::vector<std::string> >("getEventList");
-  if (eventListFut.hasError())
-    throw std::runtime_error("cannot get ALMemory event list: " + eventListFut.error());
-
-  return eventListFut.value();
+  try {
+    return _alm.call<std::vector<std::string> >("getEventList");
+  }
+  catch (std::exception& e) {
+    throw std::runtime_error(std::string("cannot get ALMemory event list: ")
+        + e.what());
+  }
 }

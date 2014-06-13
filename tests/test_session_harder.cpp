@@ -153,7 +153,7 @@ TEST(QiSession, RegisterUnregisterTwoSessionStruct)
       ms.i = 32;
       ms.j = 42;
       ms.titi = "tutu";
-      qi::Future<MyStruct> ret = fut.value().call<MyStruct>("reply2", ms);
+      qi::Future<MyStruct> ret = fut.value().async<MyStruct>("reply2", ms);
       ret.wait();
       if (ret.hasError()) {
         std::cout << "returned an error:" << fut.error() << std::endl;
@@ -197,7 +197,7 @@ TEST(QiSession, RegisterUnregisterSameSessionStruct)
       ms.i = 32;
       ms.j = 42;
       ms.titi = "tutu";
-      qi::Future<MyStruct> ret = fut.value().call<MyStruct>("reply2", ms);
+      qi::Future<MyStruct> ret = fut.value().async<MyStruct>("reply2", ms);
       ret.wait();
       if (ret.hasError()) {
         std::cout << "returned an error:" << fut.error() << std::endl;

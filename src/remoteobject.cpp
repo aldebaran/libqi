@@ -129,7 +129,8 @@ namespace qi {
   qi::Future<void> RemoteObject::fetchMetaObject() {
     qiLogVerbose() << "Requesting metaobject";
     qi::Promise<void> prom(qi::FutureCallbackType_Sync);
-    qi::Future<qi::MetaObject> fut = _self.call<qi::MetaObject>("metaObject", 0U);
+    qi::Future<qi::MetaObject> fut =
+      _self.async<qi::MetaObject>("metaObject", 0U);
     fut.connect(boost::bind<void>(&RemoteObject::onMetaObject, this, _1, prom));
     return prom.future();
   }
@@ -222,7 +223,8 @@ namespace qi {
         }
         try {
           qi::AnyReference val = msg.value(
-            (msg.flags()&Message::TypeFlag_DynamicPayload)? "m":mm->returnSignature(),
+            (msg.flags() & Message::TypeFlag_DynamicPayload) ?
+              "m" : mm->returnSignature(),
             _socket);
           promise.setValue(val);
         } catch (std::runtime_error &err) {
@@ -448,9 +450,9 @@ namespace qi {
       rsl.remoteSignalLink = uid;
       qiLogDebug() <<"connect() to " << event <<" gave " << uid << "(new remote connection)";
       if (score >= 0.2)
-        rsl.future = _self.call<SignalLink>("registerEvent", _service, event, uid);
+        rsl.future = _self.async<SignalLink>("registerEvent", _service, event, uid);
       else // we might or might not be capable to convert, ask the remote end to try also
-        rsl.future = _self.call<SignalLink>("registerEventWithSignature", _service, event, uid, subSignature.toString());
+        rsl.future = _self.async<SignalLink>("registerEventWithSignature", _service, event, uid, subSignature.toString());
     } else {
       qiLogDebug() <<"connect() to " << event << " gave " << uid << " (reusing remote connection)";
     }
@@ -500,7 +502,7 @@ namespace qi {
     if (toDisco != qi::SignalBase::invalidSignalLink) {
       TransportSocketPtr sock = _socket;
       if (sock && sock->isConnected())
-        return _self.call<void>("unregisterEvent", _service, event, toDisco);
+        return _self.async<void>("unregisterEvent", _service, event, toDisco);
     }
     return fut;
   }
@@ -544,13 +546,13 @@ namespace qi {
  {
    qiLogDebug() << "bouncing property";
    // FIXME: perform some validations on this end?
-   return _self.call<AnyValue>("property", id);
+   return _self.async<AnyValue>("property", id);
  }
 
  qi::Future<void> RemoteObject::metaSetProperty(unsigned int id, AnyValue val)
  {
    qiLogDebug() << "bouncing setProperty";
-   return _self.call<void>("setProperty", id, val);
+   return _self.async<void>("setProperty", id, val);
  }
 }
 

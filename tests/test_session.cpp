@@ -488,7 +488,7 @@ TEST(QiSession, reuseSd)
 
   qi::AnyObject object = pair.sd()->service("serviceTest");
   EXPECT_TRUE(object);
-  EXPECT_EQ("foo", object.call<std::string>("reply", "foo").value());
+  EXPECT_EQ("foo", object.call<std::string>("reply", "foo"));
 }
 
 

@@ -214,7 +214,7 @@ int subCmd_top(int argc, char **argv, qi::ApplicationSession& app)
   foreach(ObjectMap::value_type& ov, objectMap)
   {
     maxServiceLength = std::max(maxServiceLength, (unsigned int)ov.first.size());
-    ov.second.call<void>("enableStats", true).async();
+    ov.second.async<void>("enableStats", true);
   }
   boost::thread t(&main_loop);
   qi::Application::atStop(boost::bind(&boost::thread::interrupt, boost::ref(t)));
@@ -224,7 +224,7 @@ int subCmd_top(int argc, char **argv, qi::ApplicationSession& app)
   std::vector<qi::Future<void> > futures;
   foreach(ObjectMap::value_type& ov, objectMap)
   {
-    futures.push_back(ov.second.call<void>("enableStats", false));
+    futures.push_back(ov.second.async<void>("enableStats", false));
   }
   qi::waitForAll(futures);
   return 0;

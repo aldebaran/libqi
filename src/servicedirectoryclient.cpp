@@ -223,34 +223,34 @@ namespace qi {
   }
 
   qi::Future< std::vector<ServiceInfo> > ServiceDirectoryClient::services() {
-    return _object.call< std::vector<ServiceInfo> >("services");
+    return _object.async< std::vector<ServiceInfo> >("services");
   }
 
   qi::Future<ServiceInfo>              ServiceDirectoryClient::service(const std::string &name) {
-    return _object.call< ServiceInfo >("service", name);
+    return _object.async< ServiceInfo >("service", name);
   }
 
   qi::Future<unsigned int>             ServiceDirectoryClient::registerService(const ServiceInfo &svcinfo) {
-    return _object.call< unsigned int >("registerService", svcinfo);
+    return _object.async< unsigned int >("registerService", svcinfo);
   }
 
   qi::Future<void>                     ServiceDirectoryClient::unregisterService(const unsigned int &idx) {
-    return _object.call<void>("unregisterService", idx);
+    return _object.async<void>("unregisterService", idx);
   }
 
   qi::Future<void>                     ServiceDirectoryClient::serviceReady(const unsigned int &idx) {
-    return _object.call<void>("serviceReady", idx);
+    return _object.async<void>("serviceReady", idx);
   }
 
   qi::Future<void>                     ServiceDirectoryClient::updateServiceInfo(const ServiceInfo &svcinfo) {
-    return _object.call<void>("updateServiceInfo", svcinfo);
+    return _object.async<void>("updateServiceInfo", svcinfo);
   }
 
   qi::Future<std::string>              ServiceDirectoryClient::machineId() {
-    return _object.call<std::string>("machineId");
+    return _object.async<std::string>("machineId");
   }
 
   qi::Future<qi::TransportSocketPtr>   ServiceDirectoryClient::_socketOfService(unsigned int id) {
-    return _object.call<TransportSocketPtr>("_socketOfService", id);
+    return _object.async<TransportSocketPtr>("_socketOfService", id);
   }
 }

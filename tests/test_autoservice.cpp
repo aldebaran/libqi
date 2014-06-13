@@ -55,12 +55,12 @@ public:
 
   qi::FutureSync<void> ping()
   {
-    return asObject().call<void>("ping");
+    return asObject().async<void>("ping");
   }
 
   qi::FutureSync<int> incr()
   {
-    return asObject().call<int>("incr");
+    return asObject().async<int>("incr");
   }
 };
 QI_REGISTER_PROXY_INTERFACE(PongProxy, Pong);
