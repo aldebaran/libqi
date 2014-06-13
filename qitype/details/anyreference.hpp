@@ -83,7 +83,7 @@ namespace qi {
     /// Helper function that converts and always clone
     AnyReference convertCopy(TypeInterface* targetType) const;
 
-    // get item with key/ïndex 'key'. Return empty GVP or throw in case of failure
+    // get item with key/index 'key'. Return empty GVP or throw in case of failure
     AnyReference _element(const AnyReference& key, bool throwOnFailure);
     void _append(const AnyReference& element);
     void _insert(const AnyReference& key, const AnyReference& val);
@@ -103,14 +103,6 @@ namespace qi {
 
     template <typename T>
     static AnyReference fromPtr(const T* ptr);
-
-
-    /** Assignment operator.
-   *  Previous content is lost, and will leak if not deleted outside or
-   *  with destroy().
-   */
-    //TODO: DROP THAT FUNCTION. that is dangerous
-    //AnyReferenceBase& operator=(const AutoAnyReference& b);
 
     AnyReference clone() const;
     /// Deletes storage.
@@ -147,12 +139,12 @@ namespace qi {
     AnyObject  toObject() const;
 
     /** Convert the value to a tuple.
-   * If value is currently a tuple, it will be returned.
-   * If value is a list its elements will become the tuple components.
-   * @param homogeneous if true, all tuple elements will be of the type
-   * of the list element type. If false, the effective type of elements
-   * of kind dynamic will be used.
-   */
+     * If value is currently a tuple, it will be returned.
+     * If value is a list its elements will become the tuple components.
+     * @param homogeneous if true, all tuple elements will be of the type
+     * of the list element type. If false, the effective type of elements
+     * of kind dynamic will be used.
+     */
     AnyValue toTuple(bool homogeneous) const;
     ///@}
 

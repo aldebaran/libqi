@@ -187,84 +187,84 @@ template<
     typedef SignalF<FunctionType> ParentType;
     typedef typename ParentType::OnSubscribers OnSubscribers;
     Signal(OnSubscribers onSubscribers = OnSubscribers())
-    : ParentType(onSubscribers) {}
+      : ParentType(onSubscribers) {}
     using boost::function<FunctionType>::operator();
   };
 
 
- /** Event subscriber info.
-  *
-  * Only one of handler or target must be set.
-  */
- class QITYPE_API SignalSubscriber
- : public boost::enable_shared_from_this<SignalSubscriber>
- {
- public:
-   SignalSubscriber()
-     : source(0), linkId(SignalBase::invalidSignalLink), target(0), method(0), enabled(true)
-   {}
-
-
-   SignalSubscriber(AnyFunction func, MetaCallType callType = MetaCallType_Auto);
-   SignalSubscriber(const AnyObject& target, unsigned int method);
-
-   SignalSubscriber(const SignalSubscriber& b);
-
-   ~SignalSubscriber();
-
-   void operator = (const SignalSubscriber& b);
-
-   /* Perform the call.
-    * Threading rules in order:
-    * - Honor threadingModel if set (not auto)
-    * - Honor callTypoe if set (not auto)
-    * - Be asynchronous
-    */
-   void call(const GenericFunctionParameters& args, MetaCallType callType);
-
-   SignalSubscriber& setCallType(MetaCallType ct);
-
-   //wait till all threads are inactive except the current thread.
-   void waitForInactive();
-
-   void addActive(bool acquireLock, boost::thread::id tid = boost::this_thread::get_id());
-   void removeActive(bool acquireLock, boost::thread::id tid = boost::this_thread::get_id());
-   operator SignalLink() const
-   {
-     return linkId;
-   }
-   /** Try to extract exact signature of this subscriber.
-   * @return the signature, or an invalid signature if extraction is impossible
+  /** Event subscriber info.
+   *
+   * Only one of handler or target must be set.
    */
-   Signature signature() const;
- public:
-   // Source information
-   SignalBase* source;
-   /// Uid that can be passed to GenericObject::disconnect()
-   SignalLink  linkId;
+  class QITYPE_API SignalSubscriber
+  : public boost::enable_shared_from_this<SignalSubscriber>
+  {
+  public:
+    SignalSubscriber()
+      : source(0), linkId(SignalBase::invalidSignalLink), target(0), method(0), enabled(true)
+    {}
 
-   // Target information, kept here to be able to introspect a Subscriber
-   //   Mode 1: Direct functor call
-   AnyFunction       handler;
-   MetaCallType      threadingModel;
 
-   //  Mode 2: metaCall
-   AnyWeakObject*    target;
-   unsigned int      method;
+    SignalSubscriber(AnyFunction func, MetaCallType callType = MetaCallType_Auto);
+    SignalSubscriber(const AnyObject& target, unsigned int method);
 
-   boost::mutex      mutex;
-   // Fields below are protected by lock
+    SignalSubscriber(const SignalSubscriber& b);
 
-   // If enabled is set to false while lock is acquired,
-   // No more callback will trigger (activeThreads will se no push-back)
-   bool                         enabled;
-   // Number of calls in progress.
-   // Each entry there is a subscriber call that can no longuer be aborted
-   std::vector<boost::thread::id> activeThreads; // order not preserved
+    ~SignalSubscriber();
 
-   boost::condition               inactiveThread;
- };
- typedef boost::shared_ptr<SignalSubscriber> SignalSubscriberPtr;
+    void operator = (const SignalSubscriber& b);
+
+    /* Perform the call.
+     * Threading rules in order:
+     * - Honor threadingModel if set (not auto)
+     * - Honor callTypoe if set (not auto)
+     * - Be asynchronous
+     */
+    void call(const GenericFunctionParameters& args, MetaCallType callType);
+
+    SignalSubscriber& setCallType(MetaCallType ct);
+
+    //wait till all threads are inactive except the current thread.
+    void waitForInactive();
+
+    void addActive(bool acquireLock, boost::thread::id tid = boost::this_thread::get_id());
+    void removeActive(bool acquireLock, boost::thread::id tid = boost::this_thread::get_id());
+    operator SignalLink() const
+    {
+      return linkId;
+    }
+    /** Try to extract exact signature of this subscriber.
+    * @return the signature, or an invalid signature if extraction is impossible
+    */
+    Signature signature() const;
+  public:
+    // Source information
+    SignalBase* source;
+    /// Uid that can be passed to GenericObject::disconnect()
+    SignalLink  linkId;
+
+    // Target information, kept here to be able to introspect a Subscriber
+    //   Mode 1: Direct functor call
+    AnyFunction       handler;
+    MetaCallType      threadingModel;
+
+    //  Mode 2: metaCall
+    AnyWeakObject*    target;
+    unsigned int      method;
+
+    boost::mutex      mutex;
+    // Fields below are protected by lock
+
+    // If enabled is set to false while lock is acquired,
+    // No more callback will trigger (activeThreads will se no push-back)
+    bool                         enabled;
+    // Number of calls in progress.
+    // Each entry there is a subscriber call that can no longuer be aborted
+    std::vector<boost::thread::id> activeThreads; // order not preserved
+
+    boost::condition               inactiveThread;
+  };
+  typedef boost::shared_ptr<SignalSubscriber> SignalSubscriberPtr;
 }
 
 #ifdef _MSC_VER
