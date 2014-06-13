@@ -57,12 +57,14 @@ namespace qi
 
   bool Path::isDir() const
   {
-    return fs::is_directory(_p->path);
+    boost::system::error_code ec;
+    return fs::is_directory(_p->path, ec);
   }
 
   bool Path::isRegularFile() const
   {
-    return fs::is_regular_file(_p->path);
+    boost::system::error_code ec;
+    return fs::is_regular_file(_p->path, ec);
   }
 
   std::string Path::extension() const
