@@ -9,6 +9,7 @@ User Guides
   cxx-client
   cxx-service
   cxx-register-types
+  cxx-async
   cxx-log
   py-client
   py-service

@@ -34,7 +34,7 @@ corresponding .hpp file.
     };
   }
 
-  QI_TYPE_STRUCT(Graph::Point, x, y)
+  QI_TYPE_STRUCT(Graph::Point, x, y);
 
 Or you can do the register in the .cpp:
 
@@ -63,7 +63,7 @@ Enums are easy to register:
   }
 
   // call this outside of any namespace
-  QI_TYPE_ENUM_REGISTER(Graph::Color)
+  QI_TYPE_ENUM_REGISTER(Graph::Color);
 
 Classes
 =======

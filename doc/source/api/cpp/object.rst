@@ -73,7 +73,7 @@ pointer:
   void someFunction()
   {
     qi::AnyObject logger = session.service("Logger");
-    qi::AnyObject o(new MyLogListener());
+    qi::AnyObject o(boost::make_shared<LogListener>());
     logger.call("addListener", o);
   }
 

@@ -17,6 +17,7 @@ User Guides
  - :ref:`C++: Writing a client<guide-cxx-client>`
  - :ref:`C++: Writing a service<guide-cxx-service>`
  - :ref:`C++: Registering types in the type system<guide-cxx-register-types>`
+ - :ref:`C++: Asynchronous operations<guide-cxx-async>`
  - :ref:`C++: Using logs<guide-cxx-log>`
  - :ref:`C++: Getting and publishing logs<guide-cxx-log-client>`
  - :ref:`Python: Writing a client<guide-py-client>`
