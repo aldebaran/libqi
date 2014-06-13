@@ -355,15 +355,15 @@ TEST(TestObject, Simple) {
 #endif
 
   gGlobalResult = 0;
-  obj.call<void>("vtest", 21, 21).wait();
+  obj.async<void>("vtest", 21, 21).wait();
   EXPECT_EQ(42, gGlobalResult);
   gGlobalResult = 0;
-  obj.call<void>("objvtest", 21, 21).wait();
+  obj.async<void>("objvtest", 21, 21).wait();
   EXPECT_EQ(42, gGlobalResult);
 
   C f(42);
-  EXPECT_EQ(&f, obj.call<C*>("ptrtest", &f).value());
-  EXPECT_EQ(f, obj.call<C>("valuetest", f).value());
+  EXPECT_EQ(&f, obj.call<C*>("ptrtest", &f));
+  EXPECT_EQ(f, obj.call<C>("valuetest", f));
 }
 
 struct Point
@@ -670,11 +670,11 @@ TEST(TestObject, Future)
   qi::DynamicObjectBuilder gob;
   gob.advertiseMethod("delaySet", &delaySet);
   qi::AnyObject obj = gob.object();
-  qi::Future<int> f = obj.call<int>("delaySet", 500, 41);
+  qi::Future<int> f = obj.call<qi::Future<int> >("delaySet", 500, 41);
   ASSERT_TRUE(!f.isFinished());
   f.wait();
   ASSERT_EQ(41, f.value());
-  f =  obj.call<int>("delaySet", 500, -1);
+  f = obj.call<qi::Future<int> >("delaySet", 500, -1);
   ASSERT_TRUE(!f.isFinished());
   f.wait();
   ASSERT_TRUE(f.hasError());
@@ -703,12 +703,12 @@ TEST(TestObject, FutureVoid)
   qi::Promise<int> prom;
   gob.advertiseMethod("delaySet", boost::bind(&delaySetV, _1, _2, prom));
   qi::AnyObject obj = gob.object();
-  qi::Future<void> f = obj.call<void>("delaySet", 500, 41);
+  qi::Future<void> f = obj.call<qi::Future<void> >("delaySet", 500, 41);
   ASSERT_TRUE(!f.isFinished());
   f.wait();
   ASSERT_EQ(41, prom.future().value());
   prom.reset();
-  f =  obj.call<void>("delaySet", 500, -1);
+  f = obj.call<qi::Future<void> >("delaySet", 500, -1);
   ASSERT_TRUE(!f.isFinished());
   f.wait();
   ASSERT_TRUE(f.hasError());
@@ -720,11 +720,11 @@ TEST(TestObject, FutureSync)
   qi::DynamicObjectBuilder gob;
   gob.advertiseMethod("delaySetSync", &delaySetSync);
   qi::AnyObject obj = gob.object();
-  qi::Future<int> f = obj.call<int>("delaySetSync", 500, 41);
+  qi::Future<int> f = obj.call<qi::FutureSync<int> >("delaySetSync", 500, 41);
   ASSERT_TRUE(!f.isFinished());
   f.wait();
   ASSERT_EQ(41, f.value());
-  f =  obj.call<int>("delaySetSync", 500, -1);
+  f = obj.call<qi::FutureSync<int> >("delaySetSync", 500, -1);
   ASSERT_TRUE(!f.isFinished());
   f.wait();
   ASSERT_TRUE(f.hasError());
@@ -824,10 +824,10 @@ TEST(TestObject, traceGeneric)
     - traces[0].timestamp().tv_sec*1000
     - traces[0].timestamp().tv_usec/1000;
   EXPECT_LT(std::abs(delta - 100LL), 20LL); // be leniant
-  ASSERT_TRUE(obj.call<bool>("isTraceEnabled").value());
+  ASSERT_TRUE(obj.call<bool>("isTraceEnabled"));
   qi::os::msleep(50);
   traces.clear();
-  obj.call<void>("boom", "o<").wait();
+  obj.async<void>("boom", "o<").wait();
   for (unsigned i=0; i<20 && traces.size()<2; ++i) qi::os::msleep(50);
   qi::os::msleep(50);
   ASSERT_EQ(2u, traces.size());
@@ -837,7 +837,7 @@ TEST(TestObject, traceGeneric)
   EXPECT_EQ(traces[0].id(), traces[1].id());
   obj.disconnect(id);
   qi::os::msleep(50);
-  ASSERT_TRUE(!obj.call<bool>("isTraceEnabled").value());
+  ASSERT_TRUE(!obj.call<bool>("isTraceEnabled"));
 }
 
 TEST(TestObject, traceType)
@@ -861,10 +861,10 @@ TEST(TestObject, traceType)
   EXPECT_EQ(qi::EventTrace::Event_Call, traces[0].kind());
   EXPECT_EQ(qi::EventTrace::Event_Result, traces[1].kind());
   EXPECT_EQ(mid, traces[0].slotId());
-  ASSERT_TRUE(oa1.call<bool>("isTraceEnabled").value());
+  ASSERT_TRUE(oa1.call<bool>("isTraceEnabled"));
   oa1.disconnect(id);
   qi::os::msleep(50);
-  ASSERT_TRUE(!oa1.call<bool>("isTraceEnabled").value());
+  ASSERT_TRUE(!oa1.call<bool>("isTraceEnabled"));
 }
 
 static void bim(int i, qi::Promise<void> p, const std::string &name) {
@@ -1139,26 +1139,26 @@ TEST(TestObject, Factory)
   qi::AnyObject apple = qi::createObject("Apple", "red");
   ASSERT_TRUE(apple);
   EXPECT_EQ(42, apple.call<int>("getWeight"));
-  EXPECT_EQ("red", apple.call<std::string>("getType").value());
+  EXPECT_EQ("red", apple.call<std::string>("getType"));
 
   qi::AnyObject fruit = qi::createObject("Fruit", 188, "green");
   ASSERT_TRUE(fruit);
   EXPECT_EQ(188, fruit.call<int>("getWeight"));
-  EXPECT_EQ("green", fruit.call<std::string>("getType").value());
+  EXPECT_EQ("green", fruit.call<std::string>("getType"));
 
   qi::AnyObject appleFactory = qi::createObject("AppleService");
   ASSERT_TRUE(appleFactory);
   apple = appleFactory.call<qi::AnyObject>("create", "red");
   ASSERT_TRUE(apple);
   EXPECT_EQ(42, apple.call<int>("getWeight"));
-  EXPECT_EQ("red", apple.call<std::string>("getType").value());
+  EXPECT_EQ("red", apple.call<std::string>("getType"));
 
   qi::AnyObject fruitFactory = qi::createObject("FruitService");
   ASSERT_TRUE(fruitFactory);
   fruit = fruitFactory.call<qi::AnyObject>("create", 99, "random");
   ASSERT_TRUE(fruit);
   EXPECT_EQ(99, fruit.call<int>("getWeight"));
-  EXPECT_EQ("random", fruit.call<std::string>("getType").value());
+  EXPECT_EQ("random", fruit.call<std::string>("getType"));
 }
 
 qi::GenericFunctionParameters args(

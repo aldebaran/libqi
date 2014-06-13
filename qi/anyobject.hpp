@@ -78,19 +78,7 @@ namespace qi {
 #ifdef DOXYGEN
   // Help doxygen and the header reader a bit.
   template<typename R>
-  qi::FutureSync<R> call(
-                         const std::string& eventName,
-                         qi::AutoAnyReference p1 = qi::AutoAnyReference(),
-                         qi::AutoAnyReference p2 = qi::AutoAnyReference(),
-                         qi::AutoAnyReference p3 = qi::AutoAnyReference(),
-                         qi::AutoAnyReference p4 = qi::AutoAnyReference(),
-                         qi::AutoAnyReference p5 = qi::AutoAnyReference(),
-                         qi::AutoAnyReference p6 = qi::AutoAnyReference(),
-                         qi::AutoAnyReference p7 = qi::AutoAnyReference(),
-                         qi::AutoAnyReference p8 = qi::AutoAnyReference());
-  template<typename R>
-  qi::FutureSync<R> call(
-                         qi::MetaCallType callType,
+  R call(
                          const std::string& eventName,
                          qi::AutoAnyReference p1 = qi::AutoAnyReference(),
                          qi::AutoAnyReference p2 = qi::AutoAnyReference(),
@@ -115,7 +103,7 @@ namespace qi {
 #else
     // Declare genCall, using overloads for all argument count instead of default values.
     #define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma) \
-    template<typename R> qi::FutureSync<R> call(              \
+    template<typename R> R call(                              \
       const std::string& methodName comma                     \
       QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoAnyReference));
     QI_GEN(genCall)
@@ -123,14 +111,6 @@ namespace qi {
 
     #define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma) \
     template<typename R> qi::Future<R> async(                 \
-      const std::string& methodName comma                     \
-      QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoAnyReference));
-    QI_GEN(genCall)
-    #undef genCall
-
-    #define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma) \
-    template<typename R> qi::FutureSync<R> call(              \
-      qi::MetaCallType callType,                              \
       const std::string& methodName comma                     \
       QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoAnyReference));
     QI_GEN(genCall)

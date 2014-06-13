@@ -130,8 +130,8 @@ TEST(TestThreadModel, notThreadSafe)
   new TID(boost::this_thread::get_id());
   qi::AnyObject o1 = makeDynamicObjWithThreadModel(qi::ObjectThreadingModel_SingleThread);
   qi::int64_t start = qi::os::ustime();
-  qi::Future<void> f1 = o1.call<void>("delayms", 150);
-  o1.call<void>("delayms", 150).wait();
+  qi::Future<void> f1 = o1.async<void>("delayms", 150);
+  o1.async<void>("delayms", 150).wait();
   f1.wait();
   // we expect >300ms result, take 10% marging to take into acount
   // timer granularity and sleep duration inprecision.
@@ -143,8 +143,8 @@ TEST(TestThreadModel, ThreadSafe)
   new TID(boost::this_thread::get_id());
   qi::AnyObject o1 = makeDynamicObjWithThreadModel(qi::ObjectThreadingModel_MultiThread);
   qi::int64_t start = qi::os::ustime();
-  qi::Future<void> f1 = o1.call<void>("delaymsThreadSafe", 150);
-  o1.call<void>("delaymsThreadSafe", 150).wait();
+  qi::Future<void> f1 = o1.async<void>("delaymsThreadSafe", 150);
+  o1.async<void>("delaymsThreadSafe", 150).wait();
   f1.wait();
   ASSERT_LT(qi::os::ustime() - start, 270000);
 }
@@ -153,18 +153,18 @@ TEST(TestThreadModel, MethodModel)
 {
   qi::AnyObject o1 = makeDynamicObjWithThreadModel(qi::ObjectThreadingModel_SingleThread);
   qi::int64_t start = qi::os::ustime();
-  qi::Future<void> f1 = o1.call<void>("delaymsThreadSafe", 150);
+  qi::Future<void> f1 = o1.async<void>("delaymsThreadSafe", 150);
   ASSERT_LT(qi::os::ustime() - start, 100000);
   f1.wait();
   start = qi::os::ustime();
   // fast method->synchronous call
-  f1 = o1.call<void>("delaymsFast", 150);
+  f1 = o1.async<void>("delaymsFast", 150);
   ASSERT_GT(qi::os::ustime() - start, 100000);
   ASSERT_TRUE(f1.isFinished());
   // Thread-safe method: parallel call
   start = qi::os::ustime();
-  f1 = o1.call<void>("delaymsThreadSafe", 150);
-  o1.call<void>("delaymsThreadSafe", 150).wait();
+  f1 = o1.async<void>("delaymsThreadSafe", 150);
+  o1.async<void>("delaymsThreadSafe", 150).wait();
   f1.wait();
   ASSERT_LT(qi::os::ustime() - start, 270000);
 }
@@ -175,8 +175,8 @@ TEST(TestThreadModelStatic, notThreadSafeObjectStatic)
   EventObject e;
   qi::AnyObject o1 = makeStaticObjWithThreadModel(e, qi::ObjectThreadingModel_SingleThread);
   qi::int64_t start = qi::os::ustime();
-  qi::Future<void> f1 = o1.call<void>("delayms", 150);
-  o1.call<void>("delayms", 150).wait();
+  qi::Future<void> f1 = o1.async<void>("delayms", 150);
+  o1.async<void>("delayms", 150).wait();
   f1.wait();
   // we expect >300ms result, take 10% marging to take into acount
   // timer granularity and sleep duration inprecision.
@@ -189,8 +189,8 @@ TEST(TestThreadModelStatic, ThreadSafe)
   EventObject e;
   qi::AnyObject o1 = makeStaticObjWithThreadModel(e, qi::ObjectThreadingModel_MultiThread);
   qi::int64_t start = qi::os::ustime();
-  qi::Future<void> f1 = o1.call<void>("delaymsThreadSafe", 150);
-  o1.call<void>("delaymsThreadSafe", 150).wait();
+  qi::Future<void> f1 = o1.async<void>("delaymsThreadSafe", 150);
+  o1.async<void>("delaymsThreadSafe", 150).wait();
   f1.wait();
   ASSERT_LT(qi::os::ustime() - start, 270000);
 }
@@ -200,18 +200,18 @@ TEST(TestThreadModelStatic, MethodModel)
   EventObject e;
   qi::AnyObject o1 = makeStaticObjWithThreadModel(e, qi::ObjectThreadingModel_SingleThread);
   qi::int64_t start = qi::os::ustime();
-  qi::Future<void> f1 = o1.call<void>("delaymsThreadSafe", 150);
+  qi::Future<void> f1 = o1.async<void>("delaymsThreadSafe", 150);
   ASSERT_LT(qi::os::ustime() - start, 100000);
   f1.wait();
   start = qi::os::ustime();
   // fast method->synchronous call
-  f1 = o1.call<void>("delaymsFast", 150);
+  f1 = o1.async<void>("delaymsFast", 150);
   ASSERT_GT(qi::os::ustime() - start, 100000);
   ASSERT_TRUE(f1.isFinished());
   // Thread-safe method: parallel call
   start = qi::os::ustime();
-  f1 = o1.call<void>("delaymsThreadSafe", 150);
-  o1.call<void>("delaymsThreadSafe", 150).wait();
+  f1 = o1.async<void>("delaymsThreadSafe", 150);
+  o1.async<void>("delaymsThreadSafe", 150).wait();
   f1.wait();
   ASSERT_LT(qi::os::ustime() - start, 270000);
 }
