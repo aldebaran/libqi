@@ -30,7 +30,7 @@ namespace qi {
     ManageablePrivate();
     // SignalLinks that target us. Needed to be able to disconnect upon destruction
     std::vector<SignalSubscriber>       registrations;
-    mutable boost::mutex                        registrationsMutex;
+    mutable boost::mutex                registrationsMutex;
     Manageable::TimedMutexPtr           objectMutex; //returned by mutex()
     bool                                dying;
     // Event loop in which calls are made if set
