@@ -17,7 +17,7 @@
 
 #include <qi/signature.hpp>
 #include <qi/anyvalue.hpp>
-#include <qi/type/jsoncodec.hpp>
+#include <qi/jsoncodec.hpp>
 
 #include <vector>
 #include <map>

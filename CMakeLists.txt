@@ -96,11 +96,11 @@ set(PUBLIC_HEADERS
                    qi/type/details/traceanalyzer.hpp
 
                    qi/type/api.hpp
-                   qi/type/binarycodec.hpp
+                   qi/binarycodec.hpp
                    qi/type/dynamicobject.hpp
                    qi/type/dynamicobjectbuilder.hpp
                    qi/type/fwd.hpp
-                   qi/type/jsoncodec.hpp
+                   qi/jsoncodec.hpp
                    qi/type/metamethod.hpp
                    qi/type/metaobject.hpp
                    qi/type/metaproperty.hpp

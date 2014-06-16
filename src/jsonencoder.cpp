@@ -5,7 +5,7 @@
 
 #include <sstream>
 #include <iomanip>
-#include <qi/type/jsoncodec.hpp>
+#include <qi/jsoncodec.hpp>
 #include <qi/anyobject.hpp>
 #include <qi/type/typedispatcher.hpp>
 

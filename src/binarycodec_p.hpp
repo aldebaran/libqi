@@ -16,7 +16,7 @@
 #include <qi/anyvalue.hpp>
 #include <qi/anyobject.hpp>
 
-#include <qi/type/binarycodec.hpp>
+#include <qi/binarycodec.hpp>
 
 #include <boost/function.hpp>
 

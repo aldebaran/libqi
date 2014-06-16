@@ -8,10 +8,10 @@
 #ifndef  _QITYPE_JSONCODEC_HPP_
 # define _QITYPE_JSONCODEC_HPP_
 
-#include <qi/type/jsoncodec.hpp>
+#include <qi/jsoncodec.hpp>
 
 #include <qi/macro.hpp>
 
-QI_DEPRECATED_HEADER("Please use qi/type/jsoncodec.hpp instead");
+QI_DEPRECATED_HEADER("Please use qi/jsoncodec.hpp instead");
 
 #endif

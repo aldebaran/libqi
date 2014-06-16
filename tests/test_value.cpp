@@ -11,7 +11,7 @@
 #include <qi/application.hpp>
 #include <qi/anyobject.hpp>
 #include <qi/type/dynamicobjectbuilder.hpp>
-#include <qi/type/jsoncodec.hpp>
+#include <qi/jsoncodec.hpp>
 
 using namespace qi;
 qiLogCategory("test");

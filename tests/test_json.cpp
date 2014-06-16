@@ -10,7 +10,7 @@
 #include <qi/anyvalue.hpp>
 #include <qi/application.hpp>
 #include <qi/type/typeinterface.hpp>
-#include <qi/type/jsoncodec.hpp>
+#include <qi/jsoncodec.hpp>
 
 struct MPoint {
   MPoint(int x=0, int y=0)

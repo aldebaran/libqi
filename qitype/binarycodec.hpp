@@ -8,10 +8,10 @@
 #ifndef  _QITYPE_BINARYCODEC_HPP_
 # define _QITYPE_BINARYCODEC_HPP_
 
-#include <qi/type/binarycodec.hpp>
+#include <qi/binarycodec.hpp>
 
 #include <qi/macro.hpp>
 
-QI_DEPRECATED_HEADER("Please use qi/type/binarycodec.hpp instead");
+QI_DEPRECATED_HEADER("Please use qi/binarycodec.hpp instead");
 
 #endif

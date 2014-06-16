@@ -5,7 +5,7 @@
 
 #include <boost/algorithm/string.hpp>
 
-#include <qi/type/binarycodec.hpp>
+#include <qi/binarycodec.hpp>
 #include <qi/anyvalue.hpp>
 
 #include "binarycodec_p.hpp"
