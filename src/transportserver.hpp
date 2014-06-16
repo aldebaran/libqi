@@ -10,7 +10,7 @@
 # include <boost/noncopyable.hpp>
 # include <qimessaging/url.hpp>
 # include <qi/eventloop.hpp>
-# include <qitype/signal.hpp>
+# include <qi/signal.hpp>
 # include <vector>
 
 

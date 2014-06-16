@@ -7,7 +7,7 @@
 
 #include <boost/python.hpp>
 #include <qi/path.hpp>
-#include <qitype/anyvalue.hpp>
+#include <qi/anyvalue.hpp>
 
 namespace qi {
   namespace py {

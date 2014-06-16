@@ -1,6 +1,6 @@
 #include <qi/future.hpp>
 #include <qi/iocolor.hpp>
-#include <qitype/anyfunction.hpp>
+#include <qi/anyfunction.hpp>
 #include <qitype/jsoncodec.hpp>
 #include <boost/foreach.hpp>
 

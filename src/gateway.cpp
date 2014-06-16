@@ -2,7 +2,7 @@
 **  Copyright (C) 2012 Aldebaran Robotics
 **  See COPYING for the license
 */
-#include <qitype/anyobject.hpp>
+#include <qi/anyobject.hpp>
 #include <qimessaging/gateway.hpp>
 #include <qimessaging/session.hpp>
 #include "transportserver.hpp"

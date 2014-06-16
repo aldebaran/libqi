@@ -15,7 +15,7 @@
 #include <qi/qi.hpp>
 #include <qi/application.hpp>
 #include <qi/eventloop.hpp>
-#include <qitype/anyobject.hpp>
+#include <qi/anyobject.hpp>
 #include <qitype/dynamicobject.hpp>
 #include <qitype/dynamicobjectbuilder.hpp>
 #include <qitype/objecttypebuilder.hpp>

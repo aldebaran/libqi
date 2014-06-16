@@ -9,7 +9,7 @@
 
 #include <vector>
 #include <string>
-#include <qitype/signal.hpp>
+#include <qi/signal.hpp>
 #include <qi/trackable.hpp>
 #include <qimessaging/serviceinfo.hpp>
 #include <qimessaging/session.hpp>

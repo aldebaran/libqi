@@ -12,7 +12,7 @@
 #include <gtest/gtest.h>
 
 #include <qimessaging/session.hpp>
-#include <qitype/anyobject.hpp>
+#include <qi/anyobject.hpp>
 #include <qitype/dynamicobjectbuilder.hpp>
 #include <qimessaging/gateway.hpp>
 #include <qi/application.hpp>

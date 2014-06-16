@@ -6,7 +6,7 @@
 #include <qi/application.hpp>
 #include <qi/log.hpp>
 #include <boost/shared_ptr.hpp>
-#include <qitype/anyobject.hpp>
+#include <qi/anyobject.hpp>
 #include <qitype/dynamicobjectbuilder.hpp>
 #include <qitype/objecttypebuilder.hpp>
 #include <qiperf/dataperfsuite.hpp>

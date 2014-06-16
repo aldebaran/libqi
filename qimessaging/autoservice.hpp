@@ -13,7 +13,7 @@
 #include <stdexcept>
 #include <boost/thread/mutex.hpp>
 #include <qimessaging/session.hpp>
-#include <qitype/anyobject.hpp>
+#include <qi/anyobject.hpp>
 #include <qi/trackable.hpp>
 
 namespace qi

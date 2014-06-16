@@ -5,7 +5,7 @@
 #include <boost/python.hpp>
 #include <map>
 
-#include <qitype/anyobject.hpp>
+#include <qi/anyobject.hpp>
 #include <qitype/objectfactory.hpp>
 #include <qipython/gil.hpp>
 #include <qipython/pyobjectfactory.hpp>

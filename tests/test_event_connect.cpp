@@ -6,7 +6,7 @@
 
 #include <map>
 #include <gtest/gtest.h>
-#include <qitype/anyobject.hpp>
+#include <qi/anyobject.hpp>
 #include <qitype/dynamicobjectbuilder.hpp>
 #include <qi/application.hpp>
 

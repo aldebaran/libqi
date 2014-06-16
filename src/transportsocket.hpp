@@ -12,7 +12,7 @@
 # include "message.hpp"
 # include <qimessaging/url.hpp>
 # include <qi/eventloop.hpp>
-# include <qitype/signal.hpp>
+# include <qi/signal.hpp>
 # include <qitype/binarycodec.hpp>
 # include <string>
 # include "messagedispatcher.hpp"

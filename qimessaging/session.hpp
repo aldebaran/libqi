@@ -10,7 +10,7 @@
 #include <qimessaging/api.hpp>
 #include <qimessaging/serviceinfo.hpp>
 #include <qi/future.hpp>
-#include <qitype/anyobject.hpp>
+#include <qi/anyobject.hpp>
 #include <boost/shared_ptr.hpp>
 #include <vector>
 #include <string>

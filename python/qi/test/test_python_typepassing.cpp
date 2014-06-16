@@ -1,6 +1,6 @@
 #include <Python.h>
 #include <gtest/gtest.h>
-#include <qitype/anyobject.hpp>
+#include <qi/anyobject.hpp>
 #include <qimessaging/session.hpp>
 #include <qipython/gil.hpp>
 #include <qipython/error.hpp>

@@ -11,7 +11,7 @@ Simple usage
 
 .. code-block:: c++
 
-  #include <qitype/property.hpp>
+  #include <qi/property.hpp>
 
 A property is basically a simple variable that you can set and get.
 

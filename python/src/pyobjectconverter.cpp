@@ -5,8 +5,8 @@
 #include <boost/python.hpp>
 #include <utility>
 #include <qi/log.hpp>
-#include <qitype/signature.hpp>
-#include <qitype/anyobject.hpp>
+#include <qi/signature.hpp>
+#include <qi/anyobject.hpp>
 #include <qitype/typedispatcher.hpp>
 #include <qitype/typeinterface.hpp>
 #include <qitype/metaobject.hpp>

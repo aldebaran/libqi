@@ -5,8 +5,8 @@
 #include <qipython/pysignal.hpp>
 #include <boost/python.hpp>
 #include <boost/python/raw_function.hpp>
-#include <qitype/signal.hpp>
-#include <qitype/anyobject.hpp>
+#include <qi/signal.hpp>
+#include <qi/anyobject.hpp>
 #include <qi/periodictask.hpp>
 #include <qipython/gil.hpp>
 #include <qipython/error.hpp>

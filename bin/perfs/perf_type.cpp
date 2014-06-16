@@ -15,9 +15,9 @@
 #include <qi/application.hpp>
 
 #include <qitype/typeinterface.hpp>
-#include <qitype/anyvalue.hpp>
+#include <qi/anyvalue.hpp>
 #include <qitype/dynamicobjectbuilder.hpp>
-#include <qitype/signal.hpp>
+#include <qi/signal.hpp>
 
 unsigned int niter = 10000;
 unsigned int maxContainerSize = 1000;

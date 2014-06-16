@@ -10,7 +10,7 @@
 #include <gtest/gtest.h>
 
 #include <qitype/typeinterface.hpp>
-#include <qitype/anyfunction.hpp>
+#include <qi/anyfunction.hpp>
 #include <qimessaging/url.hpp>
 
 

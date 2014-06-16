@@ -13,7 +13,7 @@
 
 #include <qi/application.hpp>
 #include <qimessaging/session.hpp>
-#include <qitype/anyobject.hpp>
+#include <qi/anyobject.hpp>
 #include <qitype/dynamicobjectbuilder.hpp>
 
 int incr(int val)

@@ -13,10 +13,10 @@
 #include <qimessaging/applicationsession.hpp>
 #include <qi/os.hpp>
 #include <qi/log.hpp>
-#include <qitype/anyobject.hpp>
+#include <qi/anyobject.hpp>
 #include <qitype/dynamicobjectbuilder.hpp>
 #include <qitype/jsoncodec.hpp>
-#include <qitype/anyfunction.hpp>
+#include <qi/anyfunction.hpp>
 
 
 qiLogCategory("qiservice");

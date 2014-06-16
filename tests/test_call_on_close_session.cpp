@@ -11,7 +11,7 @@
 
 #include <boost/thread/thread.hpp>
 #include <qimessaging/session.hpp>
-#include <qitype/anyobject.hpp>
+#include <qi/anyobject.hpp>
 #include <qitype/dynamicobjectbuilder.hpp>
 #include <qimessaging/gateway.hpp>
 #include <qi/os.hpp>

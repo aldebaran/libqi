@@ -14,7 +14,7 @@ qi::Signal<T>
 
 .. code-block:: c++
 
-  #include <qitype/signal.hpp>
+  #include <qi/signal.hpp>
 
 
 Implementation of the *signal/event* paradigm, with some specificities:

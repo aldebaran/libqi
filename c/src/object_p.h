@@ -9,7 +9,7 @@
 #ifndef	_QIMESSAGING_OBJECT_C_P_H_
 # define _QIMESSAGING_OBJECT_C_P_H_
 
-#include <qitype/anyobject.hpp>
+#include <qi/anyobject.hpp>
 
 inline qi::AnyObject &qi_object_cpp(qi_object_t *value) {
   qi::AnyObject &o = *(reinterpret_cast<qi::AnyObject *>(value));

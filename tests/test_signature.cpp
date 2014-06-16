@@ -6,7 +6,7 @@
 #include "sig_generator.h"
 #include <qi/application.hpp>
 #include <boost/shared_ptr.hpp>
-#include <qitype/anyobject.hpp>
+#include <qi/anyobject.hpp>
 #include <qitype/dynamicobjectbuilder.hpp>
 #include <qimessaging/session.hpp>
 #include <testsession/testsessionpair.hpp>

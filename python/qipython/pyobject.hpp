@@ -8,7 +8,7 @@
 #define _QIPYTHON_PYOBJECT_HPP_
 
 #include <boost/python.hpp>
-#include <qitype/anyobject.hpp>
+#include <qi/anyobject.hpp>
 #include <qipython/api.hpp>
 
 namespace qi {

@@ -4,8 +4,8 @@
 */
 #include <qipython/pyproperty.hpp>
 #include <boost/python.hpp>
-#include <qitype/property.hpp>
-#include <qitype/anyobject.hpp>
+#include <qi/property.hpp>
+#include <qi/anyobject.hpp>
 
 namespace qi { namespace py {
 

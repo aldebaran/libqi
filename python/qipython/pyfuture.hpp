@@ -9,7 +9,7 @@
 
 #include <boost/python.hpp>
 #include <qi/future.hpp>
-#include <qitype/anyvalue.hpp>
+#include <qi/anyvalue.hpp>
 #include <qipython/gil.hpp>
 #include <qipython/api.hpp>
 #include <boost/smart_ptr/enable_shared_from_this.hpp>

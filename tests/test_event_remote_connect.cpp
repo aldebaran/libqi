@@ -9,7 +9,7 @@
 #include <gtest/gtest.h>
 #include <qi/qi.hpp>
 #include <qi/application.hpp>
-#include <qitype/anyobject.hpp>
+#include <qi/anyobject.hpp>
 #include <qitype/dynamicobjectbuilder.hpp>
 #include <qi/atomic.hpp>
 #include <qimessaging/session.hpp>

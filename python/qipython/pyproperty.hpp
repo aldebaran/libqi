@@ -9,7 +9,7 @@
 
 #include <boost/python.hpp>
 #include <qitype/metaproperty.hpp>
-#include <qitype/anyobject.hpp>
+#include <qi/anyobject.hpp>
 #include <qipython/api.hpp>
 
 namespace qi {
