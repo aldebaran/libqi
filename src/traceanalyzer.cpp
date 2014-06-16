@@ -7,7 +7,7 @@
 
 #include <qi/log.hpp>
 
-#include <qitype/traceanalyzer.hpp>
+#include <qi/type/details/traceanalyzer.hpp>
 
 qiLogCategory("qitype.traceanalyzer");
 
@@ -17,7 +17,7 @@ namespace qi
   {
     CallData(unsigned int obj, const EventTrace& et);
     ~CallData();
-    
+
     void complete(const EventTrace& et);
     unsigned int uid;
     unsigned int obj;
@@ -124,7 +124,7 @@ namespace qi
   TraceAnalyzer::~TraceAnalyzer()
   {}
 
-  
+
   CallData::CallData(unsigned int obj, const EventTrace& et)
     : uid(et.id())
     , obj(obj)
@@ -137,7 +137,7 @@ namespace qi
     , parent(0)
     , asyncParent(0)
     {}
-    
+
   void CallData::complete(const EventTrace& et)
   {
     tEnd = fromTV(et.timestamp());
@@ -230,7 +230,7 @@ namespace qi
     return true;
   }
 
-  
+
   // handle a new EventTrace
   void TraceAnalyzer::addTrace(const qi::EventTrace& trace, unsigned int obj)
   {
@@ -238,7 +238,7 @@ namespace qi
     /* a trace-end event without the start available goes in
      * traceBuffer and that's it.
      * trace-end event with start available completes the entry
-     * trace-start event gets inserted in the graph, and in the 
+     * trace-start event gets inserted in the graph, and in the
      * per-uid perId map, so that future trace-end message can find it quickly
     */
     CallData* d = 0;
@@ -292,7 +292,7 @@ namespace qi
       qiLogInfo() << "Message not where it should be";
       return;
     }
-    
+
     // now that we know when we stopped, eat-up children
     // well, that sentence did not came out as I expected
     CallList::iterator inext = it;
@@ -423,7 +423,7 @@ namespace qi
       qi::dumpTraces(o, it->second, 0);
       o << std::endl;
     }
-    
+
   }
   std::string TraceAnalyzer::dumpTraces()
   {

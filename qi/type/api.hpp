@@ -8,7 +8,7 @@
 #define _QITYPE_API_HPP_
 
 #include <qi/macro.hpp>
-#include <qitype/config.hpp>
+#include <qi/type/config.hpp>
 
 #define QITYPE_API QI_LIB_API(qitype)
 

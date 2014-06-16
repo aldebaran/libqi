@@ -13,7 +13,7 @@
 #include <boost/type_traits/is_floating_point.hpp>
 #include <boost/type_traits/is_arithmetic.hpp>
 #include <qi/atomic.hpp>
-#include <qitype/details/typeinterface.hpp>
+#include <qi/type/details/typeinterface.hpp>
 
 namespace qi {
 

@@ -6,7 +6,7 @@
 
 #include <iostream>
 #include <string>
-#include <qitype/api.hpp>
+#include <qi/type/api.hpp>
 #include <qitype/metasignal.hpp>
 #include <qi/signature.hpp>
 #include <qi/future.hpp>

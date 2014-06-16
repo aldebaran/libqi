@@ -9,8 +9,8 @@
 
 #include <qi/atomic.hpp>
 
-#include <qitype/details/anyreference.hpp>
-#include <qitype/details/anyiterator.hpp>
+#include <qi/type/details/anyreference.hpp>
+#include <qi/type/details/anyiterator.hpp>
 #include <qi/anyfunction.hpp>
 
 namespace qi

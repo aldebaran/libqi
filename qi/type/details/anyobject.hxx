@@ -12,7 +12,7 @@
 #include <qi/future.hpp>
 #include <qitype/typeinterface.hpp>
 #include <qitype/typeobject.hpp>
-#include <qitype/details/typeimpl.hxx>
+#include <qi/type/details/typeimpl.hxx>
 
 // Visual defines interface...
 #ifdef interface

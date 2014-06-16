@@ -9,10 +9,10 @@
 
 //AnyReference/AnyIterator are declared in their own files to avoid
 //include dependencies cycles...
-#include <qitype/details/anyreference.hpp>
+#include <qi/type/details/anyreference.hpp>
 //when using AnyReference you need type. so include it!
 #include <qitype/typeinterface.hpp>
-#include <qitype/details/anyiterator.hpp>
+#include <qi/type/details/anyiterator.hpp>
 
 /* Since AnyReference does not handle its memory, it cannot be used
 * inside a AnyReference. use AnyValue instead.

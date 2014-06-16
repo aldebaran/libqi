@@ -7,8 +7,8 @@
 #ifndef _QITYPE_DETAILS_ANYITERATOR_HPP_
 #define _QITYPE_DETAILS_ANYITERATOR_HPP_
 
-#include <qitype/api.hpp>
-#include <qitype/details/anyvalue.hpp>
+#include <qi/type/api.hpp>
+#include <qi/type/details/anyvalue.hpp>
 
 namespace qi {
 
@@ -42,7 +42,7 @@ namespace qi {
   QITYPE_API bool operator!=(const AnyIterator& a, const AnyIterator& b);
 }
 
-#include <qitype/details/anyiterator.hxx>
+#include <qi/type/details/anyiterator.hxx>
 
 #endif  // _QITYPE_DETAILS_ANYITERATOR_HPP_
 

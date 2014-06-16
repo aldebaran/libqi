@@ -271,7 +271,7 @@ template<
 #  pragma warning( pop )
 #endif
 
-#include <qitype/details/signal.hxx>
+#include <qi/type/details/signal.hxx>
 
 QI_NO_TYPE(qi::SignalBase)
 

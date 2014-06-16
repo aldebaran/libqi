@@ -13,7 +13,7 @@
 
 #include <qi/atomic.hpp>
 
-#include <qitype/api.hpp>
+#include <qi/type/api.hpp>
 #include <qi/signature.hpp>
 #include <qi/future.hpp>
 #include <qi/anyobject.hpp>

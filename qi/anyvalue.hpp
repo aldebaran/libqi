@@ -9,7 +9,7 @@
 
 //AnyValue are declared in their own files to avoid
 //include dependencies cycles...
-#include <qitype/details/anyvalue.hpp>
+#include <qi/type/details/anyvalue.hpp>
 //when using AnyReference you need type. so include it!
 #include <qitype/typeinterface.hpp>
 

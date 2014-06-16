@@ -3,7 +3,7 @@
 **  See COPYING for the license
 */
 
-#include <qitype/details/type.hpp>
+#include <qi/type/details/type.hpp>
 #include <qitype/typeinterface.hpp>
 
 namespace qi {

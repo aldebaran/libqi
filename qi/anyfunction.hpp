@@ -7,7 +7,7 @@
 #ifndef _QI_ANYFUNCTION_HPP_
 #define _QI_ANYFUNCTION_HPP_
 
-#include <qitype/api.hpp>
+#include <qi/type/api.hpp>
 #include <boost/function.hpp>
 #include <vector>
 
@@ -224,8 +224,8 @@ namespace qi {
   QITYPE_API FunctionTypeInterface* dynamicFunctionTypeInterface();
 }
 
-#include <qitype/details/anyfunction.hxx>
-#include <qitype/details/anyfunctionfactory.hxx>
+#include <qi/type/details/anyfunction.hxx>
+#include <qi/type/details/anyfunctionfactory.hxx>
 
 #ifdef _MSC_VER
 #  pragma warning( pop )

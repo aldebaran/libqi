@@ -13,8 +13,8 @@
 #include <boost/smart_ptr/enable_shared_from_this.hpp>
 
 #include <qi/atomic.hpp>
-#include <qitype/api.hpp>
-#include <qitype/manageable.hpp>
+#include <qi/type/api.hpp>
+#include <qi/type/details/manageable.hpp>
 #include <qi/future.hpp>
 #include <qitype/metasignal.hpp>
 #include <qitype/metamethod.hpp>
@@ -383,7 +383,7 @@ static bool _qiregister##name() {                                               
 
 
 
-#include <qitype/details/anyobject.hxx>
+#include <qi/type/details/anyobject.hxx>
 
 #ifdef _MSC_VER
 #  pragma warning( pop )

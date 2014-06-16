@@ -7,7 +7,7 @@
 #ifndef _QITYPE_DETAILS_TYPESTRING_HXX_
 #define _QITYPE_DETAILS_TYPESTRING_HXX_
 #include <qi/os.hpp>
-#include <qitype/details/structtypeinterface.hxx>
+#include <qi/type/details/structtypeinterface.hxx>
 
 namespace qi
 {

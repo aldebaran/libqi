@@ -9,7 +9,7 @@
 
 #include <boost/utility.hpp>
 
-#include <qitype/manageable.hpp>
+#include <qi/type/details/manageable.hpp>
 
 
 namespace qi

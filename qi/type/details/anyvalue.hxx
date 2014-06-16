@@ -11,8 +11,8 @@
 
 #include <boost/type_traits/remove_const.hpp>
 #include <boost/type_traits/is_floating_point.hpp>
-#include <qitype/details/anyiterator.hpp>
-#include <qitype/details/anyreference.hpp>
+#include <qi/type/details/anyiterator.hpp>
+#include <qi/type/details/anyreference.hpp>
 
 namespace qi {
 

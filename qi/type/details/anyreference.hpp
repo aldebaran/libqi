@@ -7,8 +7,8 @@
 #ifndef _QITYPE_DETAILS_ANYREFERENCE_HPP_
 #define _QITYPE_DETAILS_ANYREFERENCE_HPP_
 
-#include <qitype/api.hpp>
-#include <qitype/fwd.hpp>
+#include <qi/type/api.hpp>
+#include <qi/type/fwd.hpp>
 #include <vector>
 #include <map>
 #include <qi/types.hpp>
@@ -362,6 +362,6 @@ namespace qi {
 
 }
 
-#include <qitype/details/anyreference.hxx>
+#include <qi/type/details/anyreference.hxx>
 
 #endif  // _QITYPE_DETAILS_ANYREFERENCE_HPP_

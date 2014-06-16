@@ -116,7 +116,7 @@ namespace qi
 
 }
 
-#include <qitype/details/property.hxx>
+#include <qi/type/details/property.hxx>
 
 #ifdef _MSC_VER
 #  pragma warning( pop )

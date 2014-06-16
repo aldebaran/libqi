@@ -7,9 +7,9 @@
 #ifndef _QITYPE_DETAILS_ANYVALUE_HPP_
 #define _QITYPE_DETAILS_ANYVALUE_HPP_
 
-#include <qitype/api.hpp>
-#include <qitype/fwd.hpp>
-#include <qitype/details/anyreference.hpp>
+#include <qi/type/api.hpp>
+#include <qi/type/fwd.hpp>
+#include <qi/type/details/anyreference.hpp>
 
 namespace qi {
 
@@ -114,6 +114,6 @@ namespace qi {
 
 }
 
-#include <qitype/details/anyvalue.hxx>
+#include <qi/type/details/anyvalue.hxx>
 
 #endif  // _QITYPE_DETAILS_ANYVALUE_HPP_

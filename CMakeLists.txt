@@ -38,37 +38,7 @@ set(PUBLIC_HEADERS
                    qi/signal.hpp
                    qi/anyvalue.hpp
 
-                   qitype/details/signal.hxx
-                   qitype/details/property.hxx
-                   qitype/details/accessor.hxx
-                   qitype/details/anyreference.hpp
-                   qitype/details/anyreference.hxx
-                   qitype/details/anyvalue.hpp
-                   qitype/details/anyvalue.hxx
-                   qitype/details/anyfunction.hxx
-                   qitype/details/anyfunctionfactory.hxx
-                   qitype/details/anyiterator.hpp
-                   qitype/details/anyiterator.hxx
-                   qitype/details/bindtype.hxx
-                   qitype/details/functionsignature.hxx
-                   qitype/details/dynamicobjectbuilder.hxx
-                   qitype/details/anyobject.hxx
-                   qitype/details/hasless.hxx
-                   qitype/details/objecttypebuilder.hxx
-                   qitype/details/type.hxx
-                   qitype/details/buffertypeinterface.hxx
-                   qitype/details/typedispatcher.hxx
-                   qitype/details/dynamictypeinterface.hxx
-                   qitype/details/typeimpl.hxx
-                   qitype/details/typeinterface.hpp
-                   qitype/details/inttypeinterface.hxx
-                   qitype/details/listtypeinterface.hxx
-                   qitype/details/maptypeinterface.hxx
-                   qitype/details/pointertypeinterface.hxx
-                   qitype/details/stringtypeinterface.hxx
-                   qitype/details/structtypeinterface.hxx
-                   qitype/details/type.hpp
-                   qitype/api.hpp
+                   qitype/fwd.hpp
                    qitype/anyfunction.hpp
                    qitype/anyobject.hpp
                    qitype/anyreference.hpp
@@ -76,9 +46,7 @@ set(PUBLIC_HEADERS
                    qitype/binarycodec.hpp
                    qitype/dynamicobject.hpp
                    qitype/dynamicobjectbuilder.hpp
-                   qitype/fwd.hpp
                    qitype/jsoncodec.hpp
-                   qitype/manageable.hpp
                    qitype/metamethod.hpp
                    qitype/metaobject.hpp
                    qitype/metaproperty.hpp
@@ -90,15 +58,65 @@ set(PUBLIC_HEADERS
                    qitype/proxysignal.hpp
                    qitype/signal.hpp
                    qitype/signature.hpp
-                   qitype/traceanalyzer.hpp
                    qitype/typeinterface.hpp
                    qitype/typeobject.hpp
-                   qitype/typedispatcher.hpp)
+                   qitype/typedispatcher.hpp
+
+                   qi/type/details/signal.hxx
+                   qi/type/details/property.hxx
+                   qi/type/details/accessor.hxx
+                   qi/type/details/anyreference.hpp
+                   qi/type/details/anyreference.hxx
+                   qi/type/details/anyvalue.hpp
+                   qi/type/details/anyvalue.hxx
+                   qi/type/details/anyfunction.hxx
+                   qi/type/details/anyfunctionfactory.hxx
+                   qi/type/details/anyiterator.hpp
+                   qi/type/details/anyiterator.hxx
+                   qi/type/details/bindtype.hxx
+                   qi/type/details/functionsignature.hxx
+                   qi/type/details/dynamicobjectbuilder.hxx
+                   qi/type/details/anyobject.hxx
+                   qi/type/details/hasless.hxx
+                   qi/type/details/objecttypebuilder.hxx
+                   qi/type/details/type.hxx
+                   qi/type/details/buffertypeinterface.hxx
+                   qi/type/details/typedispatcher.hxx
+                   qi/type/details/dynamictypeinterface.hxx
+                   qi/type/details/typeimpl.hxx
+                   qi/type/details/typeinterface.hpp
+                   qi/type/details/inttypeinterface.hxx
+                   qi/type/details/listtypeinterface.hxx
+                   qi/type/details/maptypeinterface.hxx
+                   qi/type/details/pointertypeinterface.hxx
+                   qi/type/details/stringtypeinterface.hxx
+                   qi/type/details/structtypeinterface.hxx
+                   qi/type/details/type.hpp
+                   qi/type/details/manageable.hpp
+                   qi/type/details/traceanalyzer.hpp
+
+                   qi/type/api.hpp
+                   qi/type/binarycodec.hpp
+                   qi/type/dynamicobject.hpp
+                   qi/type/dynamicobjectbuilder.hpp
+                   qi/type/fwd.hpp
+                   qi/type/jsoncodec.hpp
+                   qi/type/metamethod.hpp
+                   qi/type/metaobject.hpp
+                   qi/type/metaproperty.hpp
+                   qi/type/metasignal.hpp
+                   qi/type/objectfactory.hpp
+                   qi/type/objecttypebuilder.hpp
+                   qi/type/proxyproperty.hpp
+                   qi/type/proxysignal.hpp
+                   qi/type/typeinterface.hpp
+                   qi/type/typeobject.hpp
+                   qi/type/typedispatcher.hpp)
 
 
 set(qitype_STATIC_BUILD OFF)
 
-qi_create_config_h(_confighpp qitype/config.hpp.in qitype/config.hpp)
+qi_create_config_h(_confighpp qi/type/config.hpp.in qi/type/config.hpp)
 
 qi_install_header(${PUBLIC_HEADERS} KEEP_RELATIVE_PATHS)
 
