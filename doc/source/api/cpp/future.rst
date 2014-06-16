@@ -95,14 +95,13 @@ one of *Canceled*, *FinishedWithError* or *FinishedWithValue*):
     switch(s) {...}
   }
 
-  <...>
-   qi::Future<int> f = someOperation();
-   f.connect(&myCallback);
+  // ...
+  qi::Future<int> f = someOperation();
+  f.connect(&myCallback);
 
-
-The thread in which the callback invocation is made is up to the Promise,
-so you should not make any assumption about it, or about whether the callback
-is invoked synchronously to the Future end.
+The callback is always invoked asynchronously (in the promise thread or in any
+thread, depending on the promise type) unless specified otherwise in the
+connect.
 
 .. _future-connect:
 
@@ -116,7 +115,7 @@ if the Trackable was destroyed:
 
   class Foo
   {
-    public:
+  public:
     void onOpFinished(qi::Future<int> op, int opNumber);
   };
   void safe_async_op(boost::shared_ptr<Foo> foo, int opNumber)
@@ -131,7 +130,7 @@ if the Trackable was destroyed:
 Future cancellation
 -------------------
 
-An async operations that returns a Future can support cancellation.
+An async operation that returns a Future can support cancellation.
 To check if a future you have can be canceled, use
 `Future<T>::isCancelable`.
 
@@ -140,7 +139,6 @@ If *isCancelable* returns true, you can try to abort the operation by calling
 the timing of your call, your cancel request might be ignored (for example,
 if it is received too late and a value is already available). But you can
 expect the Future to hastily leave the *Running* state one way or an other.
-
 
 qi::Promise
 ===========
@@ -162,14 +160,14 @@ same object). The next example illustrates it's basic use case:
 
   void someAsynchronousOp(qi::Promise<int> promise)
   {
-     try {
-       int result = performSomeTask();
-       promise.setValue(result);
-     }
-     catch(const std::exception& e)
-     {
-       promise.setError(e.what());
-     }
+    try {
+      int result = performSomeTask();
+      promise.setValue(result);
+    }
+    catch(const std::exception& e)
+    {
+      promise.setError(e.what());
+    }
   }
 
 
@@ -188,10 +186,9 @@ with signature *void(qi::Promise<T>)* to the *Promise* constructor.
 
 This callback will then be called if a cancellation request is received by a
 connected *Future*. This callback is expected to ensure that the connected *Future*
-hastily leave the *Running* state, by calling one of `Promise::setValue`,
+hastily leaves the *Running* state, by calling one of `Promise::setValue`,
 `Promise::setError` and `Promise::setCanceled`.
 However this call does not have to be made synchronously.
-
 
 Controlling callback execution
 ------------------------------
@@ -220,7 +217,7 @@ Returning a FutureSync
 ----------------------
 
 You can simply change the returned type from *Future* to *FutureSync* in the
-::ref:`basic example <api-promise>`: The returned *Future* will transparently
+::ref:`basic example<api-promise>`: The returned *Future* will transparently
 convert to a *FutureSync*.
 
 Calling a function returning a FutureSync
@@ -232,6 +229,9 @@ Calling a function returning a FutureSync
 - It is copied into another *Future* or *FutureSync*
 - `FutureSync::async` or any of the Future function is called (*wait*, *connect*, ...)
 
+*FutureSync* also has a cast operator that allows you to use the returned value
+transparently.
+
 .. code-block:: cpp
 
   qi::FutureSync<int> someFunction();
@@ -240,18 +240,128 @@ Calling a function returning a FutureSync
     someFunction(); // will wait
     qi::FutureSync<int> f = someFunction(); // will wait at end of scope
     someFunction().async();                 // will not wait
-    qi::Future<int> f = someFunction();     // will not wait
+    qi::Future<int> f2 = someFunction();    // will not wait
     someFunction().value();                 // will wait, because of value()
+    int val = someFunction();               // will wait, does the same as
+                                            // value(), may throw on error
   }
 
+Implementing an asynchronous function
+=====================================
+
+Simple implementation
+---------------------
+
+Here is an example of an asynchronous function implementation that supports
+cancellation.
+
+Let's implement this class and make ``calculate()`` asynchronous.
+
+.. code-block:: cpp
+
+  class Worker {
+    public:
+      int calculate();
+  };
+
+First, ``calculate`` must return a future and we must create a function to do
+the actual work.
+
+.. code-block:: cpp
+
+  class Worker {
+    public:
+      qi::Future<int> calculate();
+
+    private:
+      void doWork(qi::Promise<int> promise);
+  };
+
+For the sake of this example, we'll use a simple function to simulate work:
+
+.. code-block:: cpp
+
+  void Worker::doWork(qi::Promise<int> promise)
+  {
+    int acc = 0;
+    for (int i = 0; i < 100; ++i)
+    {
+      qi::os::msleep(10); // working...
+      acc += 1;
+    }
+    promise.setValue(acc);
+  }
+
+And then, we must call this function asynchronously and return the
+corresponding future:
+
+.. code-block:: cpp
+
+  qi::Future<int> Worker::calculate() {
+    qi::Promise<int> promise;
+    qi::getEventLoop()->async(boost::bind(&Worker::doWork, this, promise));
+    return promise.future();
+  }
+
+Now, ``calculate`` is asynchronous! But this isn't useful at all, our code is
+more complex and this could have been done just by calling
+`qi::EventLoop::async` or other async methods in qimessaging. What we can do
+now is implement cancellation so that one can call `cancel()` on the returned
+future to abort the action.
+
+Cancellation support
+--------------------
+
+Let's change ``doWork()`` to receive a bool pointer that will change state when
+a cancellation has been requested. At each iteration, it will check if the bool
+is still false, if it is true it will cancel the task.
+
+.. code-block:: cpp
+
+  void Worker::doWork(qi::Promise<int> promise,
+      boost::shared_ptr<bool> cancelRequested) {
+    int acc = 0;
+    for (int i = 0; i < 100; ++i)
+    {
+      if (*cancelRequested)
+      {
+        std::cout << "cancel requested" << std::endl;
+        promise.setCanceled();
+        return;
+      }
+      qi::os::msleep(10); // working...
+      acc += 1;
+    }
+    promise.setValue(acc);
+  }
+
+Now we must provide a cancellation callback to the promise and make it update
+the variable:
+
+.. code-block:: cpp
+
+  static void doCancel(boost::shared_ptr<bool> b) {
+    *b = true;
+  }
+
+  qi::Future<int> Worker::calculate() {
+    boost::shared_ptr<bool> cancel = boost::make_shared<bool>(false);
+    qi::Promise<int> promise(boost::bind(&doCancel, cancel));
+
+    qi::getEventLoop()->async(boost::bind(&Worker::doWork, this,
+          promise, cancel));
+
+    return promise.future();
+  }
+
+When we call `cancel()` on the returned future, ``doCancel`` will be called
+which will set the boolean to false and ``doWork`` will break from its loop and
+set the promise to a cancelled state.
 
 .. cpp:autoenum:: FutureState
 
 .. cpp:autoclass:: qi::Future
 
-
-
 .. cpp:autoclass:: qi::Promise
-
 
 .. cpp:autoclass:: qi::FutureSync
