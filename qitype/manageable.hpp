@@ -10,9 +10,9 @@
 #include <qi/stats.hpp>
 
 #include <qitype/api.hpp>
-#include <qitype/anyfunction.hpp>
+#include <qi/anyfunction.hpp>
 #include <qitype/typeobject.hpp>
-#include <qitype/signal.hpp>
+#include <qi/signal.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/function.hpp>
 #include <algorithm>

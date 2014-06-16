@@ -8,7 +8,7 @@
 #define _SRC_SIGNATURECONVERTOR_HPP_
 
 # include <string>
-# include <qitype/signature.hpp>
+# include <qi/signature.hpp>
 
 namespace qi {
 

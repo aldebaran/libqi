@@ -18,7 +18,7 @@
 #include <qi/log.hpp>
 #include <qitype/api.hpp>
 #include <qitype/fwd.hpp>
-#include <qitype/signature.hpp>
+#include <qi/signature.hpp>
 #include <qitype/details/typeinterface.hpp>
 
 #ifdef _MSC_VER

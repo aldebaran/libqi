@@ -5,7 +5,7 @@
 
 #include <qitype/typeinterface.hpp>
 #include <qitype/metaobject.hpp>
-#include <qitype/signature.hpp>
+#include <qi/signature.hpp>
 #include "metaobject_p.hpp"
 #include "metamethod_p.hpp"
 #include <boost/algorithm/string/predicate.hpp>

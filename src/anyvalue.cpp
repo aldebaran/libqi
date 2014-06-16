@@ -5,5 +5,5 @@
 
 #include <boost/lexical_cast.hpp>
 
-#include <qitype/anyvalue.hpp>
-#include <qitype/anyobject.hpp>
+#include <qi/anyvalue.hpp>
+#include <qi/anyobject.hpp>

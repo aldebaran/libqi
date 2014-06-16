@@ -10,7 +10,7 @@
 #include <typeinfo>
 #include <string>
 #include <qitype/api.hpp>
-#include <qitype/signature.hpp>
+#include <qi/signature.hpp>
 
 /* A lot of class are found in this headers... to kill circular dependencies.
    Futhermore we need that all "default template" types are registered (included)

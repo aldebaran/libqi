@@ -7,7 +7,7 @@
 
 #include <gtest/gtest.h>
 #include <qi/clock.hpp>
-#include <qitype/anyvalue.hpp>
+#include <qi/anyvalue.hpp>
 #include <limits>
 
 TEST(TestClockType, ClockType)

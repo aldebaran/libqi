@@ -8,7 +8,7 @@
 #define _QI_PROPERTY_HPP_
 
 #include <boost/function.hpp>
-#include <qitype/signal.hpp>
+#include <qi/signal.hpp>
 
 #ifdef _MSC_VER
 #  pragma warning( push )

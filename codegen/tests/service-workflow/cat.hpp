@@ -1,7 +1,7 @@
 #ifndef CAT_HPP
 #define CAT_HPP
-#include <qitype/anyobject.hpp>
-#include <qitype/property.hpp>
+#include <qi/anyobject.hpp>
+#include <qi/property.hpp>
 
 namespace animals
 {

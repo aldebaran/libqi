@@ -6,10 +6,10 @@
 */
 
 #include <gtest/gtest.h>
-#include <qitype/signal.hpp>
+#include <qi/signal.hpp>
 #include <qi/future.hpp>
 #include <qi/application.hpp>
-#include <qitype/anyobject.hpp>
+#include <qi/anyobject.hpp>
 #include <qitype/objecttypebuilder.hpp>
 
 qiLogCategory("test");

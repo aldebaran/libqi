@@ -11,7 +11,7 @@
 
 #include <qitype/details/anyreference.hpp>
 #include <qitype/details/anyiterator.hpp>
-#include <qitype/anyfunction.hpp>
+#include <qi/anyfunction.hpp>
 
 namespace qi
 {

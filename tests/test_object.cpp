@@ -12,7 +12,7 @@
 #include <qi/log.hpp>
 #include <qi/application.hpp>
 #include <gtest/gtest.h>
-#include <qitype/anyobject.hpp>
+#include <qi/anyobject.hpp>
 #include <qitype/dynamicobjectbuilder.hpp>
 #include <qitype/objecttypebuilder.hpp>
 #include <qitype/objectfactory.hpp>

@@ -11,12 +11,12 @@
 #include <string>
 
 #include <boost/function.hpp>
-#include <qitype/signature.hpp>
+#include <qi/signature.hpp>
 #include <sstream>
 #include <qitype/typeinterface.hpp>
 #include <qitype/details/accessor.hxx>
-#include <qitype/anyobject.hpp>
-#include <qitype/property.hpp>
+#include <qi/anyobject.hpp>
+#include <qi/property.hpp>
 
 
 namespace qi {

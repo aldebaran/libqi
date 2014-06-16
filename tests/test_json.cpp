@@ -7,7 +7,7 @@
 #include <cmath>
 #include <gtest/gtest.h>
 #include <map>
-#include <qitype/anyvalue.hpp>
+#include <qi/anyvalue.hpp>
 #include <qi/application.hpp>
 #include <qitype/typeinterface.hpp>
 #include <qitype/jsoncodec.hpp>

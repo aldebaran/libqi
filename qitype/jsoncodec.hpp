@@ -8,7 +8,7 @@
 #define _QITYPE_JSONCODEC_HPP_
 
 #include <qitype/api.hpp>
-#include <qitype/anyvalue.hpp>
+#include <qi/anyvalue.hpp>
 
 namespace qi {
 

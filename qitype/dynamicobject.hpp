@@ -7,8 +7,8 @@
 #ifndef _QITYPE_DYNAMICOBJECT_HPP_
 #define _QITYPE_DYNAMICOBJECT_HPP_
 
-#include <qitype/anyobject.hpp>
-#include <qitype/property.hpp>
+#include <qi/anyobject.hpp>
+#include <qi/property.hpp>
 
 #ifdef _MSC_VER
 #  pragma warning( push )

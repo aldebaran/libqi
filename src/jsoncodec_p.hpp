@@ -8,7 +8,7 @@
 # define _JSONPARSER_P_HPP_
 
 # include <string>
-# include <qitype/anyvalue.hpp>
+# include <qi/anyvalue.hpp>
 
 namespace qi {
 

@@ -8,7 +8,7 @@
 #include <boost/thread.hpp>
 
 #include <gtest/gtest.h>
-#include <qitype/anyobject.hpp>
+#include <qi/anyobject.hpp>
 #include <qitype/dynamicobjectbuilder.hpp>
 #include <qitype/objecttypebuilder.hpp>
 #include <qi/application.hpp>

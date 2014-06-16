@@ -941,8 +941,8 @@ inline @INAME@::~@INAME@()
 #include <map>
 
 #include <qitype/signal.hpp>
-#include <qitype/property.hpp>
-#include <qitype/anyobject.hpp>
+#include <qi/property.hpp>
+#include <qi/anyobject.hpp>
 #include <qitype/objecttypebuilder.hpp>
 
 @include@
@@ -1002,7 +1002,7 @@ def raw_to_al_proxy(class_name, cls):
 #include <boost/shared_ptr.hpp>
 
 #include <qi/types.hpp>
-#include <qitype/anyobject.hpp>
+#include <qi/anyobject.hpp>
 
 #include <alvalue/alvalue.h>
 #include <alproxies/api.h>
@@ -1255,8 +1255,8 @@ def raw_to_proxy(class_name, cls, include, namespaces, standalone):
 
 #include <qi/types.hpp>
 #include <qitype/signal.hpp>
-#include <qitype/property.hpp>
-#include <qitype/anyobject.hpp>
+#include <qi/property.hpp>
+#include <qi/anyobject.hpp>
 #include <qitype/proxysignal.hpp>
 #include <qitype/proxyproperty.hpp>
 
@@ -1362,7 +1362,7 @@ def raw_to_cxx_typebuild(class_name, cls, include, namespaces, standalone):
   template = ''
   if standalone:
     template += """
-#include <qitype/anyobject.hpp>
+#include <qi/anyobject.hpp>
 #include <qitype/objecttypebuilder.hpp>
 
 @INCLUDE@
@@ -1429,7 +1429,7 @@ def raw_to_cxx_service_skeleton(class_name, cls, include, namespace, standalone,
     class_name = class_name.split('::')[-1]
   result = ''
   if standalone:
-    result += "#include <qitype/signal.hpp>\n#include <qitype/property.hpp>\n#include <qitype/objecttypebuilder.hpp>\n"
+    result += "#include <qitype/signal.hpp>\n#include <qi/property.hpp>\n#include <qitype/objecttypebuilder.hpp>\n"
     if register_factory:
       result += '#include <qitype/objectfactory.hpp>\n'
     result += ''.join(['#include <' + x + '>\n' for x in include])
@@ -1591,8 +1591,8 @@ def output_cxx_interface(raw, guard_symbol):
   guard_name = guard_symbol.replace('::', '_').upper() +'_HPP'
   header = '#ifndef %s\n#define %s\n' % (guard_name, guard_name)
   header += """
-#include <qitype/anyobject.hpp>
-#include <qitype/property.hpp>
+#include <qi/anyobject.hpp>
+#include <qi/property.hpp>
 """
   # Generate forward declaration for everything
   for n in forwards:
@@ -1628,8 +1628,8 @@ def output_client(raw, includes):
 
 #include <qi/types.hpp>
 #include <qitype/signal.hpp>
-#include <qitype/property.hpp>
-#include <qitype/anyobject.hpp>
+#include <qi/property.hpp>
+#include <qi/anyobject.hpp>
 #include <qitype/objecttypebuilder.hpp>
 #include <qitype/proxysignal.hpp>
 #include <qitype/proxyproperty.hpp>
@@ -1648,7 +1648,7 @@ def output_cxx_skeleton(raw, includes, primary_targets):
     res += raw_to_cxx_service_skeleton(c, raw.classes[c], [], None, False, c in primary_targets)
   includes = """
 #include <qitype/signal.hpp>
-#include <qitype/property.hpp>
+#include <qi/property.hpp>
 #include <qitype/objectfactory.hpp>
 """ + ''.join(map(lambda x: '#include <' + x + '>\n', includes))
 

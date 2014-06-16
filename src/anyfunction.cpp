@@ -4,9 +4,9 @@
 */
 #include <boost/noncopyable.hpp>
 #include <qi/future.hpp>
-#include <qitype/signature.hpp>
-#include <qitype/anyfunction.hpp>
-#include <qitype/anyobject.hpp>
+#include <qi/signature.hpp>
+#include <qi/anyfunction.hpp>
+#include <qi/anyobject.hpp>
 
 qiLogCategory("qitype.functiontype");
 

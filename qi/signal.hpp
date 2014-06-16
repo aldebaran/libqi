@@ -10,7 +10,7 @@
 #include <qi/atomic.hpp>
 #include <qi/eventloop.hpp>
 
-#include <qitype/anyfunction.hpp>
+#include <qi/anyfunction.hpp>
 #include <qitype/typeobject.hpp>
 
 #include <boost/thread/thread.hpp>

@@ -7,7 +7,7 @@
 #ifndef _SRC_SIGNAL_P_HPP_
 #define _SRC_SIGNAL_P_HPP_
 
-#include <qitype/signal.hpp>
+#include <qi/signal.hpp>
 #include <boost/thread/thread.hpp>
 #include <boost/thread/recursive_mutex.hpp>
 

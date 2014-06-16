@@ -4,7 +4,7 @@
 */
 #include <iostream>
 
-#include <qitype/anyobject.hpp>
+#include <qi/anyobject.hpp>
 #include <qitype/objecttypebuilder.hpp>
 #include "staticobjecttype.hpp"
 #include "anyobject_p.hpp"

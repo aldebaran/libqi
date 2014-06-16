@@ -8,7 +8,7 @@
 #include <string>
 #include <qitype/api.hpp>
 #include <qitype/metasignal.hpp>
-#include <qitype/signature.hpp>
+#include <qi/signature.hpp>
 #include <qi/future.hpp>
 
 

@@ -3,7 +3,7 @@
 **  See COPYING for the license
 */
 #include "staticobjecttype.hpp"
-#include <qitype/signal.hpp>
+#include <qi/signal.hpp>
 #include <qitype/jsoncodec.hpp>
 
 qiLogCategory("qitype.object");

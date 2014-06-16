@@ -8,9 +8,9 @@
 #include <boost/thread/recursive_mutex.hpp>
 #include <boost/make_shared.hpp>
 
-#include <qitype/signal.hpp>
-#include <qitype/anyvalue.hpp>
-#include <qitype/anyobject.hpp>
+#include <qi/signal.hpp>
+#include <qi/anyvalue.hpp>
+#include <qi/anyobject.hpp>
 
 #include "anyobject_p.hpp"
 #include "signal_p.hpp"

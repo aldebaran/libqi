@@ -3,8 +3,8 @@
 **  See COPYING for the license
 */
 
-#include <qitype/anyfunction.hpp>
-#include <qitype/anyobject.hpp>
+#include <qi/anyfunction.hpp>
+#include <qi/anyobject.hpp>
 
 #include "metamethod_p.hpp"
 

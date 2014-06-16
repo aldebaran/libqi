@@ -8,11 +8,11 @@
 #define _SRC_STATICOBJECTTYPE_HPP_
 
 #include <qitype/api.hpp>
-#include <qitype/property.hpp>
-#include <qitype/anyvalue.hpp>
+#include <qi/property.hpp>
+#include <qi/anyvalue.hpp>
 #include <qitype/typeinterface.hpp>
 #include <qitype/metaobject.hpp>
-#include <qitype/anyobject.hpp>
+#include <qi/anyobject.hpp>
 
 namespace qi
 {

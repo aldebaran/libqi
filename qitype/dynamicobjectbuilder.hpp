@@ -8,8 +8,8 @@
 #define _QITYPE_DYNAMICOBJECTBUILDER_HPP_
 
 #include <boost/noncopyable.hpp>
-#include <qitype/anyobject.hpp>
-#include <qitype/property.hpp>
+#include <qi/anyobject.hpp>
+#include <qi/property.hpp>
 
 namespace qi {
 

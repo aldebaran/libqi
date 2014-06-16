@@ -4,7 +4,7 @@
 */
 #include "metasignal_p.hpp"
 #include <qitype/metasignal.hpp>
-#include <qitype/anyobject.hpp>
+#include <qi/anyobject.hpp>
 
 namespace qi {
 

@@ -8,11 +8,11 @@
 #include <boost/algorithm/string.hpp>
 
 #include <qitype/typeinterface.hpp>
-#include <qitype/signature.hpp>
-#include <qitype/anyvalue.hpp>
-#include <qitype/anyobject.hpp>
+#include <qi/signature.hpp>
+#include <qi/anyvalue.hpp>
+#include <qi/anyobject.hpp>
 #include <qitype/typedispatcher.hpp>
-#include <qitype/anyfunction.hpp>
+#include <qi/anyfunction.hpp>
 
 #ifdef __GNUC__
 #include <cxxabi.h>

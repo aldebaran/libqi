@@ -7,13 +7,13 @@
 #include <boost/make_shared.hpp>
 
 #include <qitype/api.hpp>
-#include <qitype/anyvalue.hpp>
+#include <qi/anyvalue.hpp>
 #include <qitype/typeinterface.hpp>
-#include <qitype/anyvalue.hpp>
-#include <qitype/anyobject.hpp>
-#include <qitype/anyfunction.hpp>
+#include <qi/anyvalue.hpp>
+#include <qi/anyobject.hpp>
+#include <qi/anyfunction.hpp>
 #include <qitype/metaobject.hpp>
-#include <qitype/signal.hpp>
+#include <qi/signal.hpp>
 #include <qitype/dynamicobject.hpp>
 
 

@@ -13,7 +13,7 @@
 #include <boost/function.hpp>
 #include <qi/buffer.hpp>
 #include <qi/bufferreader.hpp>
-#include <qitype/anyvalue.hpp>
+#include <qi/anyvalue.hpp>
 #include <qitype/metaobject.hpp>
 
 namespace qi {

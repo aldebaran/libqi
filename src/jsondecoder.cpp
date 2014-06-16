@@ -4,7 +4,7 @@
 */
 
 #include <qitype/jsoncodec.hpp>
-#include <qitype/anyvalue.hpp>
+#include <qi/anyvalue.hpp>
 #include <boost/lexical_cast.hpp>
 #include "jsoncodec_p.hpp"
 

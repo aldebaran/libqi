@@ -31,7 +31,7 @@
 #include <boost/any.hpp>
 #include <boost/thread/mutex.hpp>
 #include <qi/atomic.hpp>
-#include <qitype/anyreference.hpp>
+#include <qi/anyreference.hpp>
 
 namespace qi
 {

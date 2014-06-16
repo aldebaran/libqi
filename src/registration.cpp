@@ -4,7 +4,7 @@
 */
 #include <boost/type_traits/is_signed.hpp>
 #include <qitype/typeinterface.hpp>
-#include <qitype/anyobject.hpp>
+#include <qi/anyobject.hpp>
 
 #include "metaobject_p.hpp"
 #include "metamethod_p.hpp"

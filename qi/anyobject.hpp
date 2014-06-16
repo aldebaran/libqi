@@ -19,7 +19,7 @@
 #include <qitype/metasignal.hpp>
 #include <qitype/metamethod.hpp>
 #include <qitype/metaobject.hpp>
-#include <qitype/signal.hpp>
+#include <qi/signal.hpp>
 #include <qi/eventloop.hpp>
 #include <qitype/typeobject.hpp>
 

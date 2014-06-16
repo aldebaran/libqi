@@ -14,12 +14,12 @@
 #include <qi/atomic.hpp>
 
 #include <qitype/api.hpp>
-#include <qitype/signature.hpp>
+#include <qi/signature.hpp>
 #include <qi/future.hpp>
-#include <qitype/anyobject.hpp>
+#include <qi/anyobject.hpp>
 #include <qitype/metasignal.hpp>
 #include <qitype/metamethod.hpp>
-#include <qitype/signal.hpp>
+#include <qi/signal.hpp>
 
 namespace qi {
 

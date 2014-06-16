@@ -13,8 +13,8 @@
 #include <qi/bufferreader.hpp>
 
 #include <qitype/typeinterface.hpp>
-#include <qitype/anyvalue.hpp>
-#include <qitype/anyobject.hpp>
+#include <qi/anyvalue.hpp>
+#include <qi/anyobject.hpp>
 
 #include <qitype/binarycodec.hpp>
 

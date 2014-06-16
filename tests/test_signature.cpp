@@ -15,8 +15,8 @@
 #include <gtest/gtest.h>
 #define __QI_SIGNATURE_UNKNOWN_INSTEAD_OF_ASSERT
 
-#include <qitype/signature.hpp>
-#include <qitype/anyvalue.hpp>
+#include <qi/signature.hpp>
+#include <qi/anyvalue.hpp>
 #include <qitype/jsoncodec.hpp>
 
 #include <vector>

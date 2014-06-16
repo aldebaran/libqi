@@ -6,12 +6,12 @@
 #include <boost/algorithm/string.hpp>
 
 #include <qitype/binarycodec.hpp>
-#include <qitype/anyvalue.hpp>
+#include <qi/anyvalue.hpp>
 
 #include "binarycodec_p.hpp"
 
 #include <qi/log.hpp>
-#include <qitype/anyobject.hpp>
+#include <qi/anyobject.hpp>
 #include <qitype/typedispatcher.hpp>
 #include <qi/types.hpp>
 #include <vector>

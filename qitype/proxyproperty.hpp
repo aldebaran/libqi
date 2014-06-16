@@ -8,8 +8,8 @@
 #define _QITYPE_PROXYPROPERTY_HPP_
 
 #include <qi/log.hpp>
-#include <qitype/property.hpp>
-#include <qitype/anyfunction.hpp>
+#include <qi/property.hpp>
+#include <qi/anyfunction.hpp>
 
 
 namespace qi

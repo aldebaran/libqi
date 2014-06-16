@@ -7,8 +7,8 @@
 #ifndef _QITYPE_PROXYSIGNAL_HPP_
 #define _QITYPE_PROXYSIGNAL_HPP_
 
-#include <qitype/signal.hpp>
-#include <qitype/anyfunction.hpp>
+#include <qi/signal.hpp>
+#include <qi/anyfunction.hpp>
 
 namespace qi
 {
