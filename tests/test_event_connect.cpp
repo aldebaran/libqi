@@ -7,7 +7,7 @@
 #include <map>
 #include <gtest/gtest.h>
 #include <qi/anyobject.hpp>
-#include <qitype/dynamicobjectbuilder.hpp>
+#include <qi/type/dynamicobjectbuilder.hpp>
 #include <qi/application.hpp>
 
 static qi::Atomic<int> lastPayload;

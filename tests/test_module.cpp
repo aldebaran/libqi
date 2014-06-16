@@ -9,7 +9,7 @@
 
 #include <qi/anyobject.hpp>
 #include <qimessaging/session.hpp>
-#include <qitype/objectfactory.hpp>
+#include <qi/type/objectfactory.hpp>
 
 qi::Session* session;
 TEST(Module, Load)

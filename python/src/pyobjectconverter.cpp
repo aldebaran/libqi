@@ -7,10 +7,10 @@
 #include <qi/log.hpp>
 #include <qi/signature.hpp>
 #include <qi/anyobject.hpp>
-#include <qitype/typedispatcher.hpp>
-#include <qitype/typeinterface.hpp>
-#include <qitype/metaobject.hpp>
-#include <qitype/metamethod.hpp>
+#include <qi/type/typedispatcher.hpp>
+#include <qi/type/typeinterface.hpp>
+#include <qi/type/metaobject.hpp>
+#include <qi/type/metamethod.hpp>
 #include <qipython/gil.hpp>
 #include <qipython/pyobject.hpp>
 #include <qipython/pysignal.hpp>

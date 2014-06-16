@@ -10,9 +10,9 @@
 #include <qipython/pyproperty.hpp>
 #include <qipython/error.hpp>
 #include <qipython/pythreadsafeobject.hpp>
-#include <qitype/dynamicobjectbuilder.hpp>
-#include <qitype/objecttypebuilder.hpp> //for TYPE_TEMPLATE(Future)
-#include <qitype/jsoncodec.hpp>
+#include <qi/type/dynamicobjectbuilder.hpp>
+#include <qi/type/objecttypebuilder.hpp> //for TYPE_TEMPLATE(Future)
+#include <qi/jsoncodec.hpp>
 #include <qipython/gil.hpp>
 
 

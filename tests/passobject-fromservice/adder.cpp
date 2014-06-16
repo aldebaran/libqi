@@ -1,5 +1,5 @@
 #include <qi/anyobject.hpp>
-#include <qitype/objectfactory.hpp>
+#include <qi/type/objectfactory.hpp>
 
 #include <boost/weak_ptr.hpp>
 

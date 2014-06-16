@@ -4,7 +4,7 @@
 */
 #include <qipython/pysession.hpp>
 #include <boost/python/stl_iterator.hpp>
-#include <qitype/dynamicobjectbuilder.hpp>
+#include <qi/type/dynamicobjectbuilder.hpp>
 #include <qipython/gil.hpp>
 #include <qipython/pyfuture.hpp>
 #include <qipython/pysignal.hpp>

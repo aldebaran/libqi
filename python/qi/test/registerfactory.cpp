@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
 #include <qi/qi.hpp>
-#include <qitype/objectfactory.hpp>
+#include <qi/type/objectfactory.hpp>
 #include <qi/application.hpp>
 #include <boost/python.hpp>
 

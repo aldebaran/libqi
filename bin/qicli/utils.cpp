@@ -6,7 +6,7 @@
 #include <boost/date_time.hpp>
 #include <boost/algorithm/string.hpp>
 #include <qi/iocolor.hpp>
-#include <qitype/jsoncodec.hpp>
+#include <qi/jsoncodec.hpp>
 
 #include "qicli.hpp"
 

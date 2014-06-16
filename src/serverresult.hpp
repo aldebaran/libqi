@@ -8,7 +8,7 @@
 #define _SRC_SERVERRESULT_HPP_
 
 #include <qi/future.hpp>
-#include <qitype/objecttypebuilder.hpp>
+#include <qi/type/objecttypebuilder.hpp>
 #include "message.hpp"
 #include "transportsocket.hpp"
 

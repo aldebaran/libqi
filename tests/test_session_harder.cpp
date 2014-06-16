@@ -13,11 +13,11 @@
 
 #include <qimessaging/session.hpp>
 #include <qi/anyobject.hpp>
-#include <qitype/dynamicobjectbuilder.hpp>
+#include <qi/type/dynamicobjectbuilder.hpp>
 #include <qimessaging/gateway.hpp>
 #include <qi/os.hpp>
 #include <qi/application.hpp>
-#include <qitype/typeinterface.hpp>
+#include <qi/type/typeinterface.hpp>
 #include <boost/thread.hpp>
 #include <testsession/testsessionpair.hpp>
 

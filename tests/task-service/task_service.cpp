@@ -9,8 +9,8 @@
 #include <qi/log.hpp>
 #include <qi/application.hpp>
 #include <qi/anyobject.hpp>
-#include <qitype/dynamicobjectbuilder.hpp>
-#include <qitype/objectfactory.hpp>
+#include <qi/type/dynamicobjectbuilder.hpp>
+#include <qi/type/objectfactory.hpp>
 #include <qimessaging/session.hpp>
 #include <testsession/testsessionpair.hpp>
 #include <testsession/testsessionpair.hpp>

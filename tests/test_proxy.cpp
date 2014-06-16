@@ -13,9 +13,9 @@
 #include <qi/application.hpp>
 #include <qi/eventloop.hpp>
 #include <qi/anyobject.hpp>
-#include <qitype/objecttypebuilder.hpp>
-#include <qitype/proxysignal.hpp>
-#include <qitype/proxyproperty.hpp>
+#include <qi/type/objecttypebuilder.hpp>
+#include <qi/type/proxysignal.hpp>
+#include <qi/type/proxyproperty.hpp>
 #include <qimessaging/session.hpp>
 #include <testsession/testsessionpair.hpp>
 

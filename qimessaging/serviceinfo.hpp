@@ -12,7 +12,7 @@
 
 #include <qimessaging/api.hpp>
 #include <qimessaging/url.hpp>
-#include <qitype/typeinterface.hpp>
+#include <qi/type/typeinterface.hpp>
 
 namespace qi
 {

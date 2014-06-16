@@ -13,7 +13,7 @@
 
 #include <qi/atomic.hpp>
 
-#include <qitype/fwd.hpp>
+#include <qi/type/fwd.hpp>
 
 #include "transportsocket.hpp"
 

@@ -14,7 +14,7 @@
 #include "transportsocket.hpp"
 #include <qi/anyobject.hpp>
 #include <qimessaging/serviceinfo.hpp>
-#include <qitype/objectfactory.hpp>
+#include <qi/type/objectfactory.hpp>
 #include "remoteobject_p.hpp"
 #include "session_p.hpp"
 

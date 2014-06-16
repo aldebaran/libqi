@@ -6,7 +6,7 @@
 
 #include <qi/log.hpp>
 #include <qic/type.h>
-#include <qitype/details/type.hpp>
+#include <qi/type/details/type.hpp>
 #include "value_p.h"
 #include "object_p.h"
 

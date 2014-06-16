@@ -20,7 +20,7 @@
 #include "servicedirectory.hpp"
 #include <qimessaging/session.hpp>
 #include <qimessaging/serviceinfo.hpp>
-#include <qitype/objecttypebuilder.hpp>
+#include <qi/type/objecttypebuilder.hpp>
 #include "serverresult.hpp"
 #include "session_p.hpp"
 #include <qi/os.hpp>

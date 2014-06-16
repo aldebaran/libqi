@@ -14,9 +14,9 @@
 
 #include <qi/application.hpp>
 
-#include <qitype/typeinterface.hpp>
+#include <qi/type/typeinterface.hpp>
 #include <qi/anyvalue.hpp>
-#include <qitype/dynamicobjectbuilder.hpp>
+#include <qi/type/dynamicobjectbuilder.hpp>
 #include <qi/signal.hpp>
 
 unsigned int niter = 10000;

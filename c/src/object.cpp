@@ -13,7 +13,7 @@
 
 #include <qi/anyobject.hpp>
 #include <qi/anyvalue.hpp>
-#include <qitype/dynamicobjectbuilder.hpp>
+#include <qi/type/dynamicobjectbuilder.hpp>
 
 
 

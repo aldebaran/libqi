@@ -3,7 +3,7 @@
 **  See COPYING for the license
 */
 #include "servicedirectoryclient.hpp"
-#include <qitype/objecttypebuilder.hpp>
+#include <qi/type/objecttypebuilder.hpp>
 #include "servicedirectory_p.hpp"
 #include "transportsocket.hpp"
 

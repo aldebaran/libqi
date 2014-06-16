@@ -7,8 +7,8 @@
 #include <qi/log.hpp>
 #include <boost/shared_ptr.hpp>
 #include <qi/anyobject.hpp>
-#include <qitype/dynamicobjectbuilder.hpp>
-#include <qitype/objecttypebuilder.hpp>
+#include <qi/type/dynamicobjectbuilder.hpp>
+#include <qi/type/objecttypebuilder.hpp>
 #include <qiperf/dataperfsuite.hpp>
 #include <testsession/testsessionpair.hpp>
 

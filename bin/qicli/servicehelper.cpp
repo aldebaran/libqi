@@ -4,7 +4,7 @@
 #include <qi/future.hpp>
 #include <qi/iocolor.hpp>
 #include <qi/anyfunction.hpp>
-#include <qitype/jsoncodec.hpp>
+#include <qi/jsoncodec.hpp>
 #include <boost/foreach.hpp>
 
 #include "servicehelper.hpp"

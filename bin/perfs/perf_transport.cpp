@@ -28,7 +28,7 @@ namespace po = boost::program_options;
 
 #include <qimessaging/gateway.hpp>
 #include <qi/anyobject.hpp>
-#include <qitype/dynamicobjectbuilder.hpp>
+#include <qi/type/dynamicobjectbuilder.hpp>
 
 qiLogCategory("perf_transport");
 

@@ -8,7 +8,7 @@
 #define _QIPYTHON_PYPROPERTY_HPP_
 
 #include <boost/python.hpp>
-#include <qitype/metaproperty.hpp>
+#include <qi/type/metaproperty.hpp>
 #include <qi/anyobject.hpp>
 #include <qipython/api.hpp>
 

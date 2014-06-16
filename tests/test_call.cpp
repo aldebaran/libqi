@@ -16,9 +16,9 @@
 #include <qi/application.hpp>
 #include <qi/eventloop.hpp>
 #include <qi/anyobject.hpp>
-#include <qitype/dynamicobject.hpp>
-#include <qitype/dynamicobjectbuilder.hpp>
-#include <qitype/objecttypebuilder.hpp>
+#include <qi/type/dynamicobject.hpp>
+#include <qi/type/dynamicobjectbuilder.hpp>
+#include <qi/type/objecttypebuilder.hpp>
 #include <qimessaging/session.hpp>
 #include <testsession/testsessionpair.hpp>
 #include "src/message.hpp"

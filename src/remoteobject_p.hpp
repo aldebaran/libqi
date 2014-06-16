@@ -9,7 +9,7 @@
 
 #include "transportsocket.hpp"
 #include <qi/anyobject.hpp>
-#include <qitype/dynamicobject.hpp>
+#include <qi/type/dynamicobject.hpp>
 #include <qi/signal.hpp>
 
 #include "messagedispatcher.hpp"

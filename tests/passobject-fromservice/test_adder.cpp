@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 #include <qi/application.hpp>
-#include <qitype/objectfactory.hpp>
+#include <qi/type/objectfactory.hpp>
 
 #include <qimessaging/session.hpp>
 

@@ -8,8 +8,8 @@
 #define _QIPYTHON_PYSIGNAL_HPP_
 
 #include <boost/python.hpp>
-#include <qitype/typeinterface.hpp>
-#include <qitype/metasignal.hpp>
+#include <qi/type/typeinterface.hpp>
+#include <qi/type/metasignal.hpp>
 #include <qi/anyobject.hpp>
 #include <qipython/api.hpp>
 

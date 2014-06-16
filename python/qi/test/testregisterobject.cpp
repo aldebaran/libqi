@@ -1,5 +1,5 @@
-#include <qitype/objectfactory.hpp>
-#include <qitype/objecttypebuilder.hpp>
+#include <qi/type/objectfactory.hpp>
+#include <qi/type/objecttypebuilder.hpp>
 
 class TestObject
 {

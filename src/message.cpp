@@ -18,7 +18,7 @@
 #include <qi/types.hpp>
 #include <qi/buffer.hpp>
 
-#include <qitype/binarycodec.hpp>
+#include <qi/binarycodec.hpp>
 
 #include "boundobject.hpp"
 #include "remoteobject_p.hpp"

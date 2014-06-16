@@ -6,7 +6,7 @@
 #include <boost/make_shared.hpp>
 
 #include <qi/anyobject.hpp>
-#include <qitype/objecttypebuilder.hpp>
+#include <qi/type/objecttypebuilder.hpp>
 #include "boundobject.hpp"
 #include "serverresult.hpp"
 

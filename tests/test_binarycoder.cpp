@@ -9,7 +9,7 @@
 #include <map>
 #include <qi/buffer.hpp>
 #include <qi/bufferreader.hpp>
-#include <qitype/binarycodec.hpp>
+#include <qi/binarycodec.hpp>
 #include <qimessaging/session.hpp>
 #include <limits.h>
 

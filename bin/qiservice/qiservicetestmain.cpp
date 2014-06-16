@@ -14,8 +14,8 @@
 #include <qi/os.hpp>
 #include <qi/log.hpp>
 #include <qi/anyobject.hpp>
-#include <qitype/dynamicobjectbuilder.hpp>
-#include <qitype/jsoncodec.hpp>
+#include <qi/type/dynamicobjectbuilder.hpp>
+#include <qi/jsoncodec.hpp>
 #include <qi/anyfunction.hpp>
 
 

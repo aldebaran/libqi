@@ -12,7 +12,7 @@
 #include <qi/log.hpp>
 #include <qi/os.hpp>
 #include <qimessaging/applicationsession.hpp>
-#include <qitype/jsoncodec.hpp>
+#include <qi/jsoncodec.hpp>
 
 
 #include "qicli.hpp"

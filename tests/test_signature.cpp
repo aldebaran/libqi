@@ -7,11 +7,11 @@
 #include <qi/application.hpp>
 #include <boost/shared_ptr.hpp>
 #include <qi/anyobject.hpp>
-#include <qitype/dynamicobjectbuilder.hpp>
+#include <qi/type/dynamicobjectbuilder.hpp>
 #include <qimessaging/session.hpp>
 #include <testsession/testsessionpair.hpp>
 #include <qi/log.hpp>
-#include <qitype/jsoncodec.hpp>
+#include <qi/jsoncodec.hpp>
 
 qi::AnyValue reply(const qi::AnyValue &myval) {
 

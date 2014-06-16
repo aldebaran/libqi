@@ -6,7 +6,7 @@
 #include <map>
 
 #include <qi/anyobject.hpp>
-#include <qitype/objectfactory.hpp>
+#include <qi/type/objectfactory.hpp>
 #include <qipython/gil.hpp>
 #include <qipython/pyobjectfactory.hpp>
 #include <qipython/pyobject.hpp>

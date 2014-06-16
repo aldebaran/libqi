@@ -2,8 +2,8 @@
 #include <qi/application.hpp>
 
 #include <qimessaging/session.hpp>
-#include <qitype/objecttypebuilder.hpp>
-#include <qitype/objectfactory.hpp>
+#include <qi/type/objecttypebuilder.hpp>
+#include <qi/type/objectfactory.hpp>
 
 #include "adder.hpp"
 
