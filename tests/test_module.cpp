@@ -8,7 +8,7 @@
 #include <qi/application.hpp>
 
 #include <qi/anyobject.hpp>
-#include <qimessaging/session.hpp>
+#include <qi/session.hpp>
 #include <qi/type/objectfactory.hpp>
 
 qi::Session* session;

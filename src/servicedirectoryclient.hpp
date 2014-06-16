@@ -11,8 +11,8 @@
 #include <string>
 #include <qi/signal.hpp>
 #include <qi/trackable.hpp>
-#include <qimessaging/serviceinfo.hpp>
-#include <qimessaging/session.hpp>
+#include <qi/messaging/serviceinfo.hpp>
+#include <qi/session.hpp>
 #include "remoteobject_p.hpp"
 
 namespace qi {

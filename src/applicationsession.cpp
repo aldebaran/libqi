@@ -6,7 +6,7 @@
 
 #include <boost/program_options.hpp>
 #include <qi/trackable.hpp>
-#include <qimessaging/applicationsession.hpp>
+#include <qi/applicationsession.hpp>
 
 static void onDisconnected(const std::string& /*errorMessage*/)
 {

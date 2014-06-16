@@ -3,4 +3,4 @@ NOTE : On windows qimessaging MUST be compiled in release mode (qibuild --releas
 1 - _qi.so is generated with boost.python in build/sdk/lib
 
 2 - For easy testing, use :
-PYTHONPATH=/home/foo/worktree/lib/qimessaging/python/:/home/foo/worktree/lib/qimessaging/build/sdk/lib/ python2 $@
+PYTHONPATH=/home/foo/worktree/lib/qi/messaging/python/:/home/foo/worktree/lib/qi/messaging/build/sdk/lib/ python2 $@

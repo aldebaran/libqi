@@ -49,7 +49,7 @@ int main(int argc, char **argv) {
 
   if(argc < 4) {
     std::cout << "argc : " << argc << std::endl;
-    std::cerr << "Usage: test_registerfactory /path/to/python.py /path/to/qi/python/module /path/to/qimessaging/lib"
+    std::cerr << "Usage: test_registerfactory /path/to/python.py /path/to/qi/python/module /path/to/qi/messaging/lib"
               << std::endl;
     return 1;
   }

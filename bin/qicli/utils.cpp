@@ -2,7 +2,7 @@
 #include <string>
 #include <iomanip>
 
-#include <qimessaging/session.hpp>
+#include <qi/session.hpp>
 #include <boost/date_time.hpp>
 #include <boost/algorithm/string.hpp>
 #include <qi/iocolor.hpp>

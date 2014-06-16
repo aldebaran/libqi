@@ -73,7 +73,7 @@
 #define _TESTS_LIBTESTSESSION_TESTSESSION_HPP_
 
 #include <stdexcept>
-#include <qimessaging/session.hpp>
+#include <qi/session.hpp>
 
 #define ENVIRON_VARIABLE "TESTMODE"
 

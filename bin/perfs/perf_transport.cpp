@@ -21,12 +21,12 @@ namespace po = boost::program_options;
 
 #include <qi/os.hpp>
 #include <qi/application.hpp>
-#include <qimessaging/url.hpp>
-#include <qimessaging/session.hpp>
+#include <qi/url.hpp>
+#include <qi/session.hpp>
 #include <qiperf/dataperfsuite.hpp>
 #include <qiperf/dataperf.hpp>
 
-#include <qimessaging/gateway.hpp>
+#include <qi/messaging/gateway.hpp>
 #include <qi/anyobject.hpp>
 #include <qi/type/dynamicobjectbuilder.hpp>
 

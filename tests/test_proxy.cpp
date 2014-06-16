@@ -16,7 +16,7 @@
 #include <qi/type/objecttypebuilder.hpp>
 #include <qi/type/proxysignal.hpp>
 #include <qi/type/proxyproperty.hpp>
-#include <qimessaging/session.hpp>
+#include <qi/session.hpp>
 #include <testsession/testsessionpair.hpp>
 
 #define PERSIST_CHECK(code, cond, what, msdelay)  \

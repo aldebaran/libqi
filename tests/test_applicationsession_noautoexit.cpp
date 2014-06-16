@@ -7,7 +7,7 @@
 
 #include <gtest/gtest.h>
 
-#include <qimessaging/applicationsession.hpp>
+#include <qi/applicationsession.hpp>
 
 static bool _stopped = false;
 static qi::ApplicationSession* _app;

@@ -4,7 +4,7 @@
 */
 #include <qi/anyobject.hpp>
 #include "transportserver.hpp"
-#include <qimessaging/serviceinfo.hpp>
+#include <qi/messaging/serviceinfo.hpp>
 #include <qi/type/objecttypebuilder.hpp>
 #include "server.hpp"
 #include "objectregistrar.hpp"

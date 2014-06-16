@@ -9,8 +9,8 @@
 #include <qi/application.hpp>
 #include <qi/anyobject.hpp>
 #include <qi/type/dynamicobjectbuilder.hpp>
-#include <qimessaging/session.hpp>
-#include <qimessaging/servicedirectory.hpp>
+#include <qi/session.hpp>
+#include <qi/messaging/servicedirectory.hpp>
 
 int    _argc;
 char** _argv;

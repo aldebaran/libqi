@@ -10,8 +10,8 @@
 #include <string>
 #include <boost/thread/mutex.hpp>
 #include <boost/signals2.hpp>
-#include <qimessaging/api.hpp>
-#include <qimessaging/session.hpp>
+#include <qi/messaging/api.hpp>
+#include <qi/session.hpp>
 #include "transportserver.hpp"
 #include <qi/atomic.hpp>
 

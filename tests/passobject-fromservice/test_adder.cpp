@@ -2,7 +2,7 @@
 #include <qi/application.hpp>
 #include <qi/type/objectfactory.hpp>
 
-#include <qimessaging/session.hpp>
+#include <qi/session.hpp>
 
 #include <adder.hpp>
 

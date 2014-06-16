@@ -8,7 +8,7 @@
 #include <boost/shared_ptr.hpp>
 #include <qi/anyobject.hpp>
 #include <qi/type/dynamicobjectbuilder.hpp>
-#include <qimessaging/session.hpp>
+#include <qi/session.hpp>
 #include <testsession/testsessionpair.hpp>
 #include <qi/log.hpp>
 #include <qi/jsoncodec.hpp>

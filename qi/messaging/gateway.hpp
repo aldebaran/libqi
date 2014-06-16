@@ -7,7 +7,7 @@
 #ifndef _QIMESSAGING_GATEWAY_HPP_
 #define _QIMESSAGING_GATEWAY_HPP_
 
-# include <qimessaging/url.hpp>
+# include <qi/url.hpp>
 
 namespace qi
 {

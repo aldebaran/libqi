@@ -6,7 +6,7 @@
 #include <gtest/gtest.h>
 #include <qi/application.hpp>
 #include <qi/log.hpp>
-#include <qimessaging/session.hpp>
+#include <qi/session.hpp>
 
 TEST(Module, pass_obj)
 {

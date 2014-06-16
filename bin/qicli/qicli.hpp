@@ -1,7 +1,7 @@
 #ifndef QICLI_HPP_
 # define QICLI_HPP_
 
-# include <qimessaging/applicationsession.hpp>
+# include <qi/applicationsession.hpp>
 # include <boost/program_options.hpp>
 
 # include "sessionhelper.hpp"

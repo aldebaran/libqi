@@ -2,7 +2,7 @@
 **  Copyright (C) 2012 Aldebaran Robotics
 **  See COPYING for the license
 */
-#include <qimessaging/url.hpp>
+#include <qi/url.hpp>
 #include <sstream>
 #include <qi/type/typeinterface.hpp>
 

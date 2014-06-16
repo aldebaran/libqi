@@ -1,7 +1,7 @@
 #ifndef QICLI_SERVICEHELPER_HPP_
 # define QICLI_SERVICEHELPER_HPP_
 
-#include <qimessaging/session.hpp>
+#include <qi/session.hpp>
 
 struct WatchOptions;
 

@@ -36,7 +36,7 @@
 #define _TESTS_LIBTESTSESSION_POPULATIONGENERATOR_HPP_
 
 #include <vector>
-#include <qimessaging/session.hpp>
+#include <qi/session.hpp>
 
 class PopulationGenerator
 {

@@ -11,7 +11,7 @@
 
 #include <qi/type/typeinterface.hpp>
 #include <qi/anyfunction.hpp>
-#include <qimessaging/url.hpp>
+#include <qi/url.hpp>
 
 
 TEST(TestURL, EmptyUrl)

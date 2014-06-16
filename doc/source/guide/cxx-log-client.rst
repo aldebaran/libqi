@@ -38,7 +38,7 @@ The first step is to get a LogManager service using a :py:class:`qi.Session`
 
   #include <iostream>
 
-  #include <qimessaging/applicationsession.hpp>
+  #include <qi/applicationsession.hpp>
 
   #include <qicore/logmessage.hpp>
   #include <qicore/logmanager.hpp>
@@ -65,7 +65,7 @@ You can change some settings of your local Listener
 
   #include <iostream>
 
-  #include <qimessaging/applicationsession.hpp>
+  #include <qi/applicationsession.hpp>
 
   #include <qicore/logmessage.hpp>
   #include <qicore/logmanager.hpp>
@@ -142,7 +142,7 @@ Example
   #include <qi/log.hpp>
   #include <qi/os.hpp>
 
-  #include <qimessaging/applicationsession.hpp>
+  #include <qi/applicationsession.hpp>
 
   #include <qicore/logmessage.hpp>
   #include <qicore/logmanager.hpp>

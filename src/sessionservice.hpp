@@ -11,7 +11,7 @@
 #include <qi/trackable.hpp>
 #include <string>
 #include <boost/thread/mutex.hpp>
-#include <qimessaging/session.hpp>
+#include <qi/session.hpp>
 #include <qi/atomic.hpp>
 #include "remoteobject_p.hpp"
 #include "transportsocketcache.hpp"

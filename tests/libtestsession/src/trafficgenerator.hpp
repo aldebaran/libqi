@@ -15,7 +15,7 @@
 #include <boost/thread.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/thread.hpp>
-#include <qimessaging/session.hpp>
+#include <qi/session.hpp>
 
 void __chaosThread(void *data);
 

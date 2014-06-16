@@ -4,7 +4,7 @@
 # include <string>
 
 # include <qi/anyobject.hpp>
-# include <qimessaging/session.hpp>
+# include <qi/session.hpp>
 
 struct WatchOptions;
 

@@ -6,8 +6,8 @@
 #include <string>
 
 #include <qi/type/typeinterface.hpp>
-#include <qimessaging/serviceinfo.hpp>
-#include <qimessaging/url.hpp>
+#include <qi/messaging/serviceinfo.hpp>
+#include <qi/url.hpp>
 
 namespace qi
 {

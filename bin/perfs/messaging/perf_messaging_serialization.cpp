@@ -2,12 +2,12 @@
 #include <gtest/gtest.h>
 #include <string>
 #include <qi/messaging.hpp>
-#include <qimessaging/perf/dataperftimer.hpp>
+#include <qi/messaging/perf/dataperftimer.hpp>
 
-#include <qimessaging/serialization.hpp>
-#include <qimessaging/serialization/serializable.hpp>
-#include <qimessaging/serialization/serializer.hpp>
-#include <qimessaging/serialization/boost/boost_serializers.hpp>
+#include <qi/messaging/serialization.hpp>
+#include <qi/messaging/serialization/serializable.hpp>
+#include <qi/messaging/serialization/serializer.hpp>
+#include <qi/messaging/serialization/boost/boost_serializers.hpp>
 #include <math.h>
 
 using namespace qi;

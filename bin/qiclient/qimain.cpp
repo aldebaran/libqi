@@ -10,7 +10,7 @@
 #include <map>
 
 #include <qi/os.hpp>
-#include <qimessaging/applicationsession.hpp>
+#include <qi/applicationsession.hpp>
 
 #include <boost/program_options.hpp>
 

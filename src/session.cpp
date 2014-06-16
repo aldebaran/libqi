@@ -9,11 +9,11 @@
 # pragma warning(disable: 4355)
 #endif
 
-#include <qimessaging/session.hpp>
+#include <qi/session.hpp>
 #include "message.hpp"
 #include "transportsocket.hpp"
 #include <qi/anyobject.hpp>
-#include <qimessaging/serviceinfo.hpp>
+#include <qi/messaging/serviceinfo.hpp>
 #include <qi/type/objectfactory.hpp>
 #include "remoteobject_p.hpp"
 #include "session_p.hpp"

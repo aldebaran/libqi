@@ -10,7 +10,7 @@
 #include <qi/buffer.hpp>
 #include <qi/bufferreader.hpp>
 #include <qi/binarycodec.hpp>
-#include <qimessaging/session.hpp>
+#include <qi/session.hpp>
 #include <limits.h>
 
 TEST(TestBind, serializeInt)

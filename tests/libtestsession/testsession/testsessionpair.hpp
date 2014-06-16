@@ -66,7 +66,7 @@
 #ifndef _TESTS_LIBTESTSESSION_TESTSESSIONPAIR_HPP_
 #define _TESTS_LIBTESTSESSION_TESTSESSIONPAIR_HPP_
 
-#include <qimessaging/session.hpp>
+#include <qi/session.hpp>
 #include <testsession/testsession.hpp>
 
 class TestSessionPair

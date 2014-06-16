@@ -10,7 +10,7 @@
 
 #include <boost/program_options.hpp>
 
-#include <qimessaging/applicationsession.hpp>
+#include <qi/applicationsession.hpp>
 #include <qi/os.hpp>
 #include <qi/log.hpp>
 #include <qi/anyobject.hpp>

@@ -1,7 +1,7 @@
 #ifndef QICLI_SESSIONHELPER_HPP_
 # define QICLI_SESSIONHELPER_HPP_
 
-# include <qimessaging/session.hpp>
+# include <qi/session.hpp>
 
 # include "servicehelper.hpp"
 

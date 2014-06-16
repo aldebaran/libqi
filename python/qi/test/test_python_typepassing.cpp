@@ -1,7 +1,7 @@
 #include <Python.h>
 #include <gtest/gtest.h>
 #include <qi/anyobject.hpp>
-#include <qimessaging/session.hpp>
+#include <qi/session.hpp>
 #include <qipython/gil.hpp>
 #include <qipython/error.hpp>
 #include <boost/thread.hpp>

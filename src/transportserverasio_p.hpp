@@ -12,8 +12,8 @@
 # include <boost/asio/ssl.hpp>
 # endif
 
-# include <qimessaging/api.hpp>
-# include <qimessaging/url.hpp>
+# include <qi/messaging/api.hpp>
+# include <qi/url.hpp>
 # include "transportserver.hpp"
 
 namespace qi

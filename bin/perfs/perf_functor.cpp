@@ -10,7 +10,7 @@
 #include <qi/functors/functor.hpp>
 #include <qi/functors/makefunctor.hpp>
 #include <qi/functors/callfunctor.hpp>
-#include <qimessaging/perf/dataperftimer.hpp>
+#include <qi/messaging/perf/dataperftimer.hpp>
 #include <cmath>
 
 

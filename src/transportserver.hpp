@@ -8,7 +8,7 @@
 #define _SRC_TRANSPORTSERVER_HPP_
 
 # include <boost/noncopyable.hpp>
-# include <qimessaging/url.hpp>
+# include <qi/url.hpp>
 # include <qi/eventloop.hpp>
 # include <qi/signal.hpp>
 # include <vector>

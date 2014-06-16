@@ -10,7 +10,7 @@
 #include <cstring>
 #include <qi/log.hpp>
 #include <qi/application.hpp>
-#include <qimessaging/session.hpp>
+#include <qi/session.hpp>
 
 qiLogCategory("qimaster");
 

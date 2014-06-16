@@ -10,7 +10,7 @@
 #include <qi/future.hpp>
 #include <vector>
 #include <boost/thread/mutex.hpp>
-#include <qimessaging/session.hpp>
+#include <qi/session.hpp>
 #include <qi/atomic.hpp>
 
 namespace qi {

@@ -12,8 +12,8 @@
 #include "future_p.h"
 
 #include <string.h>
-#include <qimessaging/session.hpp>
-#include <qimessaging/serviceinfo.hpp>
+#include <qi/session.hpp>
+#include <qi/messaging/serviceinfo.hpp>
 
 #ifdef __cplusplus
 extern "C"

@@ -19,7 +19,7 @@
 #include <qi/type/dynamicobject.hpp>
 #include <qi/type/dynamicobjectbuilder.hpp>
 #include <qi/type/objecttypebuilder.hpp>
-#include <qimessaging/session.hpp>
+#include <qi/session.hpp>
 #include <testsession/testsessionpair.hpp>
 #include "src/message.hpp"
 

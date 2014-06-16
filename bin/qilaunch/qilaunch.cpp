@@ -1,6 +1,6 @@
 #include <boost/program_options.hpp>
 
-#include <qimessaging/applicationsession.hpp>
+#include <qi/applicationsession.hpp>
 
 qiLogCategory("qilaunch");
 

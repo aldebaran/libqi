@@ -8,7 +8,7 @@
 #define _QIPYTHON_PYSESSION_HPP_
 
 #include <boost/python.hpp>
-#include <qimessaging/session.hpp>
+#include <qi/session.hpp>
 #include <qipython/api.hpp>
 
 namespace qi {

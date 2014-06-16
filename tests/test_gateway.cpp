@@ -9,9 +9,9 @@
 
 #include <gtest/gtest.h>
 
-#include <qimessaging/session.hpp>
-#include <qimessaging/servicedirectory.hpp>
-#include <qimessaging/gateway.hpp>
+#include <qi/session.hpp>
+#include <qi/messaging/servicedirectory.hpp>
+#include <qi/messaging/gateway.hpp>
 
 TEST(QiGateway, testConnection)
 {

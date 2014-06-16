@@ -12,7 +12,7 @@
 #include <qi/anyobject.hpp>
 #include <qi/type/dynamicobjectbuilder.hpp>
 #include <qi/atomic.hpp>
-#include <qimessaging/session.hpp>
+#include <qi/session.hpp>
 
 #include <testsession/testsessionpair.hpp>
 

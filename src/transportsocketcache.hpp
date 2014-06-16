@@ -9,7 +9,7 @@
 
 #include <boost/thread/mutex.hpp>
 #include <qi/future.hpp>
-#include <qimessaging/serviceinfo.hpp>
+#include <qi/messaging/serviceinfo.hpp>
 #include "transportsocket.hpp"
 #include <string>
 

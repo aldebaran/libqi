@@ -37,7 +37,7 @@ or use a default value of *localhost*:
 .. code-block:: cpp
 
   #include <iostream>
-  #include <qimessaging/applicationsession.hpp>
+  #include <qi/applicationsession.hpp>
 
   int main(int argc, char** argv)
   {
@@ -58,7 +58,7 @@ from the session, and call its say function. The complete code becomes:
 
 .. code-block:: cpp
 
-  #include <qimessaging/applicationsession.hpp>
+  #include <qi/applicationsession.hpp>
   #include <qicore/altexttospeech.hpp>
 
   int main(int argc, char** argv)

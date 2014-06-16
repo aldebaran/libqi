@@ -3,8 +3,8 @@
 **  See COPYING for the license
 */
 #include <qi/anyobject.hpp>
-#include <qimessaging/gateway.hpp>
-#include <qimessaging/session.hpp>
+#include <qi/messaging/gateway.hpp>
+#include <qi/session.hpp>
 #include "transportserver.hpp"
 
 #include <boost/bind.hpp>

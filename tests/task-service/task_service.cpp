@@ -11,7 +11,7 @@
 #include <qi/anyobject.hpp>
 #include <qi/type/dynamicobjectbuilder.hpp>
 #include <qi/type/objectfactory.hpp>
-#include <qimessaging/session.hpp>
+#include <qi/session.hpp>
 #include <testsession/testsessionpair.hpp>
 #include <testsession/testsessionpair.hpp>
 #include "task_service.hpp"

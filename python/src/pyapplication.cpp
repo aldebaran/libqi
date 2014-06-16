@@ -6,7 +6,7 @@
 #include <qipython/pyapplication.hpp>
 #include <qi/os.hpp>
 #include <qi/log.hpp>
-#include <qimessaging/applicationsession.hpp>
+#include <qi/applicationsession.hpp>
 #include <qipython/gil.hpp>
 #include <boost/thread.hpp>
 #include <qi/atomic.hpp>

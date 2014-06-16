@@ -7,7 +7,7 @@
 #ifndef _QIMESSAGING_SERVICEDIRECTORY_HPP_
 #define _QIMESSAGING_SERVICEDIRECTORY_HPP_
 
-# include <qimessaging/url.hpp>
+# include <qi/url.hpp>
 # include <qi/future.hpp>
 # include "transportsocket.hpp"
 # include <boost/thread/recursive_mutex.hpp>

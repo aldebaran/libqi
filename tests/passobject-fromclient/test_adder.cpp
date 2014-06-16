@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include <qi/application.hpp>
 
-#include <qimessaging/session.hpp>
+#include <qi/session.hpp>
 #include <qi/type/objecttypebuilder.hpp>
 #include <qi/type/objectfactory.hpp>
 

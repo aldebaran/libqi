@@ -14,7 +14,7 @@
 #include <qi/type/typeinterface.hpp>
 #include <qi/anyobject.hpp>
 #include <qi/type/dynamicobjectbuilder.hpp>
-#include <qimessaging/session.hpp>
+#include <qi/session.hpp>
 
 qiLogCategory("test");
 

@@ -3,7 +3,7 @@
 #include <qi/iocolor.hpp>
 #include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
-#include <qimessaging/applicationsession.hpp>
+#include <qi/applicationsession.hpp>
 
 #include "sessionhelper.hpp"
 #include "almemoryhelper.hpp"

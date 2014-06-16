@@ -7,7 +7,7 @@
 #ifndef _SRC_SESSION_P_HPP_
 #define _SRC_SESSION_P_HPP_
 
-#include <qimessaging/session.hpp>
+#include <qi/session.hpp>
 #include "servicedirectoryclient.hpp"
 #include "objectregistrar.hpp"
 #include "sessionservice.hpp"

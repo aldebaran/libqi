@@ -18,14 +18,14 @@
 #include "transportserver.hpp"
 #include "transportsocket.hpp"
 #include "servicedirectory.hpp"
-#include <qimessaging/session.hpp>
-#include <qimessaging/serviceinfo.hpp>
+#include <qi/session.hpp>
+#include <qi/messaging/serviceinfo.hpp>
 #include <qi/type/objecttypebuilder.hpp>
 #include "serverresult.hpp"
 #include "session_p.hpp"
 #include <qi/os.hpp>
 #include <qi/log.hpp>
-#include <qimessaging/url.hpp>
+#include <qi/url.hpp>
 #include "servicedirectory_p.hpp"
 #include "server.hpp"
 #include <boost/algorithm/string.hpp>

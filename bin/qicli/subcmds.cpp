@@ -1,7 +1,7 @@
 #include <iomanip>
 
 #include <boost/program_options.hpp>
-#include <qimessaging/session.hpp>
+#include <qi/session.hpp>
 
 #include "qicli.hpp"
 

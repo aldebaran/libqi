@@ -16,14 +16,14 @@
 #include "transportserver.hpp"
 #include "transportsocket.hpp"
 
-#include <qimessaging/session.hpp>
+#include <qi/session.hpp>
 #include "dataperftimer.hpp"
 
-#include <qimessaging/servicedirectory.hpp>
-#include <qimessaging/gateway.hpp>
+#include <qi/messaging/servicedirectory.hpp>
+#include <qi/messaging/gateway.hpp>
 
 #include "transportserver.hpp"
-#include <qimessaging/url.hpp>
+#include <qi/url.hpp>
 #include <qi/type/dynamicobjectbuilder.hpp>
 #include "../src/session_p.hpp"
 

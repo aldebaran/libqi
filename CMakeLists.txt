@@ -56,11 +56,17 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/c)
 
 set(PUBLIC_HEADERS
-                   qimessaging/api.hpp
+                   qi/messaging/api.hpp
+                   qi/messaging/autoservice.hpp
+                   qi/messaging/details/autoservice.hxx
+                   qi/messaging/gateway.hpp
+                   qi/messaging/serviceinfo.hpp
+                   qi/applicationsession.hpp
+                   qi/session.hpp
+                   qi/url.hpp
+
                    qimessaging/applicationsession.hpp
                    qimessaging/autoservice.hpp
-                   qimessaging/details/autoservice.hxx
-                   qimessaging/gateway.hpp
                    qimessaging/serviceinfo.hpp
                    qimessaging/session.hpp
                    qimessaging/url.hpp

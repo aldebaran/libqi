@@ -11,10 +11,10 @@
 
 #include <gtest/gtest.h>
 
-#include <qimessaging/session.hpp>
+#include <qi/session.hpp>
 #include <qi/anyobject.hpp>
 #include <qi/type/dynamicobjectbuilder.hpp>
-#include <qimessaging/gateway.hpp>
+#include <qi/messaging/gateway.hpp>
 #include <qi/application.hpp>
 #include <qi/os.hpp>
 #include <qi/binarycodec.hpp>
