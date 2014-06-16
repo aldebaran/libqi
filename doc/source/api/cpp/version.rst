@@ -9,4 +9,6 @@ qi::Version
 Overview
 ========
 
+.. cpp:autoclass:: qi::version::Version
+
 .. cpp:autonamespace:: qi::version
