@@ -13,7 +13,7 @@ Introduction
 ------------
 
 libqi provides a threadpool for doing small asynchronous operations. Note that
-blocking in these threads impact the whole system as a non-working thread will
+blocking in these threads impacts the whole system as a non-working thread will
 prevent other work from being scheduled.
 
 With C++ functions
@@ -72,10 +72,22 @@ method and the `qi::async()` function.
   qi::AnyObject tts = session.service("ALTextToSpeech");
   qi::AnyObject motion = session.service("ALMotion");
   qi::Future<void> sayOp = qi::async(tts, "say", "This is a very very very very long sentence.");
-  qi::Future<void> moveOp = motion->async("moveTo", 1, 0, 0);
+  qi::Future<void> moveOp = motion.async("moveTo", 1, 0, 0);
   // Wait for both operations to terminate.
   sayOp.wait();
   moveOp.wait();
+
+There is another way of doing async with AnyObjects:
+
+.. code-block:: cpp
+
+  motion.post("say", "Yes!");
+
+`post()` does not return a future, it just posts a call and discards the return
+value. This is close to calling `async()` but is a bit faster (and spare a
+message when using remote sessions) because no future is created and the return
+value is discarded very early. Use it whenever you can when you don't need the
+future from `async`.
 
 Using the returned future
 -------------------------

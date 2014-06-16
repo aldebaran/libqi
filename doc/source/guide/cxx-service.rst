@@ -11,7 +11,7 @@ How to write a qimessaging service in C++
 
 This document will teach you how to write your very own qimessaging service,
 so that your new shiny object can be used by other qimessaging services and
-client, locally or remotely, and from many different programming languages.
+clients, locally or remotely, and from many different programming languages.
 
 Limitations
 -----------
