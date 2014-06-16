@@ -23,7 +23,7 @@ Structures
 To register a structure, you need to call the macro `QI_TYPE_STRUCT()` in the
 corresponding .hpp file.
 
-.. code-block:: c++
+.. code-block:: cpp
 
   // point.hpp
 
@@ -38,19 +38,100 @@ corresponding .hpp file.
 
 Or you can do the register in the .cpp:
 
-.. code-block:: c++
+.. code-block:: cpp
 
   // point.cpp
 
   // call this outside of any namespace
   QI_TYPE_STRUCT_REGISTER(Graph::Point, x, y);
 
+Using PIMPL in structures
+-------------------------
+
+Sometime, you have a structure of data, but you don't want the user to access
+it directly because you want to constrain values or to updates multiple values
+at the same time so that the structure stays coherent.
+
+.. code-block:: cpp
+
+  class Vector {
+    public:
+      void setValues(int x, int y)
+      {
+        _x = x;
+        _y = y;
+        _length = std::sqrt(x*x + y*y);
+      }
+      float length() { return _length; }
+      // ...
+
+    private:
+      int _x;
+      int _y;
+      float _length;
+  };
+
+  // How can I register this??
+
+You can't register this struct because _x, _y and _length are private and you
+don't want to make them public because the user could change _x and _y without
+changing _length.
+
+To register that to the type system, you need to use pimpl:
+
+.. code-block:: cpp
+
+  // vector.hpp
+
+  class Vector {
+    public:
+      Vector();
+      // you need a copy constructor because qitype makes copies
+      Vector(const Vector& other);
+      void setValues(int x, int y) { /* ... */ }
+      float length() { /* ... */ }
+
+    private:
+      boost::scoped_ptr<struct VectorPrivate> _p;
+
+      // you need this for later
+      friend struct VectorPrivate* vectorPrivateAccess(Vector*);
+  };
+
+  // vector.cpp
+
+  struct VectorPrivate {
+    int _x;
+    int _y;
+    float _length;
+  };
+
+  Vector::Vector() : _p(new VectorPrivate) {}
+  Vector::Vector(const Vector& other) : _p(new VectorPrivate(*other._p)) {}
+
+Then you can register the private part of the struct and tell qitype how to
+access it:
+
+.. code-block:: cpp
+
+  VectorPrivate* vectorPrivateAccess(Vector* vector) {
+    return vector->_p;
+  }
+
+  // call these outside of any namespace
+  QI_TYPE_STRUCT_REGISTER(VectorPrivate, _x, _y, _length);
+
+  QI_TYPE_STRUCT_BOUNCE_REGISTER(Vector, VectorPrivate, vectorPrivateAccess);
+
+Everytime you transfer a Vector, qimessaging will also transfer its private
+part and no one can access it without using the accessors.
+
 Enums
 =====
 
 Enums are easy to register:
 
-.. code-block:: c++
+.. code-block:: cpp
 
   // color.hpp
 
@@ -73,7 +154,7 @@ Using registration helper
 
 Classes can only be registered in .cpp files:
 
-.. code-block:: c++
+.. code-block:: cpp
 
   // drawer.hpp
 
@@ -104,7 +185,7 @@ single threaded in the above example. When doing multiple calls of its
 methods in parallel, they will be sequenced. If you need your object to support
 multithreaded calls, use the MT macro:
 
-.. code-block:: c++
+.. code-block:: cpp
 
   // drawer.cpp
 
@@ -120,7 +201,7 @@ The helper won't always allow you to register a class, for example when you
 have method overloading in your class. In these cases, you need to register
 your type manually so that you can specify the signature of the function.
 
-.. code-block:: c++
+.. code-block:: cpp
 
   // drawer.hpp
 
@@ -164,7 +245,7 @@ Registering classes is not enough to instantiate them through the
 type system. For that, you need to register factories in the .cpp file. To
 register a factory which will just call the default constructor, use:
 
-.. code-block:: c++
+.. code-block:: cpp
 
   // drawer.cpp
 
@@ -174,7 +255,7 @@ register a factory which will just call the default constructor, use:
 This will create a factory named `"Graph::Drawer"`. If you want a different
 name, you can use:
 
-.. code-block:: c++
+.. code-block:: cpp
 
   QI_REGISTER_OBJECT_FACTORY_CONSTRUCTOR_FOR("MyDrawer", Graph::Drawer);
 
@@ -185,7 +266,7 @@ name, you can use:
 If you want to pass arguments to the constructor, you need to specify the
 signature to the macro:
 
-.. code-block:: c++
+.. code-block:: cpp
 
   // drawer.hpp
 
