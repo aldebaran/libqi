@@ -7,7 +7,7 @@
 #ifndef _QITYPE_DETAILS_ANYITERATOR_HXX_
 #define _QITYPE_DETAILS_ANYITERATOR_HXX_
 
-#include <qitype/typeinterface.hpp>
+#include <qi/type/typeinterface.hpp>
 
 namespace qi {
 

@@ -7,7 +7,7 @@
 #ifndef _QI_TYPE_METAPROPERTY_HPP_
 #define _QI_TYPE_METAPROPERTY_HPP_
 
-#include <qitype/typeinterface.hpp>
+#include <qi/type/typeinterface.hpp>
 
 #ifdef _MSC_VER
 #  pragma warning( push )

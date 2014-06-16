@@ -1,4 +1,4 @@
-#include <qitype/metaproperty.hpp>
+#include <qi/type/metaproperty.hpp>
 #include <qi/anyobject.hpp>
 
 namespace qi

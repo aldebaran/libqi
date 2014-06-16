@@ -11,7 +11,7 @@
 #include <gtest/gtest.h>
 #include <qi/application.hpp>
 #include <qi/anyobject.hpp>
-#include <qitype/dynamicobjectbuilder.hpp>
+#include <qi/type/dynamicobjectbuilder.hpp>
 #include <qi/type/details/traceanalyzer.hpp>
 
 qiLogCategory("test");

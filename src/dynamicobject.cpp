@@ -8,13 +8,13 @@
 
 #include <qi/type/api.hpp>
 #include <qi/anyvalue.hpp>
-#include <qitype/typeinterface.hpp>
+#include <qi/type/typeinterface.hpp>
 #include <qi/anyvalue.hpp>
 #include <qi/anyobject.hpp>
 #include <qi/anyfunction.hpp>
-#include <qitype/metaobject.hpp>
+#include <qi/type/metaobject.hpp>
 #include <qi/signal.hpp>
-#include <qitype/dynamicobject.hpp>
+#include <qi/type/dynamicobject.hpp>
 
 
 qiLogCategory("qitype.dynamicobject");

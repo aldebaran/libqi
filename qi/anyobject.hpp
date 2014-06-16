@@ -16,12 +16,12 @@
 #include <qi/type/api.hpp>
 #include <qi/type/details/manageable.hpp>
 #include <qi/future.hpp>
-#include <qitype/metasignal.hpp>
-#include <qitype/metamethod.hpp>
-#include <qitype/metaobject.hpp>
+#include <qi/type/metasignal.hpp>
+#include <qi/type/metamethod.hpp>
+#include <qi/type/metaobject.hpp>
 #include <qi/signal.hpp>
 #include <qi/eventloop.hpp>
-#include <qitype/typeobject.hpp>
+#include <qi/type/typeobject.hpp>
 
 #ifdef _MSC_VER
 #  pragma warning( push )
@@ -32,7 +32,7 @@
 namespace qi {
 
   //all methods ID lesser than this constant are considered special.
-  //they are reserved for internal use by qitype/qimessaging.
+  //they are reserved for internal use by qi/type/qimessaging.
   //(see boundobject.cpp for details)
   static const unsigned int qiObjectSpecialMemberMaxUid = 100;
 

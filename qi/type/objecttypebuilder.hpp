@@ -13,7 +13,7 @@
 #include <boost/function.hpp>
 #include <qi/signature.hpp>
 #include <sstream>
-#include <qitype/typeinterface.hpp>
+#include <qi/type/typeinterface.hpp>
 #include <qi/type/details/accessor.hxx>
 #include <qi/anyobject.hpp>
 #include <qi/property.hpp>

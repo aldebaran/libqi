@@ -10,8 +10,8 @@
 #include <boost/lambda/bind.hpp>
 #include <qi/application.hpp>
 #include <qi/anyobject.hpp>
-#include <qitype/dynamicobjectbuilder.hpp>
-#include <qitype/jsoncodec.hpp>
+#include <qi/type/dynamicobjectbuilder.hpp>
+#include <qi/type/jsoncodec.hpp>
 
 using namespace qi;
 qiLogCategory("test");

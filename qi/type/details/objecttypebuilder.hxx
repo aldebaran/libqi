@@ -9,8 +9,8 @@
 
 #include <boost/function_types/is_member_function_pointer.hpp>
 #include <boost/mpl/front.hpp>
-#include <qitype/objecttypebuilder.hpp>
-#include <qitype/metamethod.hpp>
+#include <qi/type/objecttypebuilder.hpp>
+#include <qi/type/metamethod.hpp>
 
 namespace qi {
 

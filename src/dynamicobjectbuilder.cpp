@@ -4,9 +4,9 @@
 */
 
 #include <qi/future.hpp>
-#include <qitype/typeinterface.hpp>
-#include <qitype/dynamicobjectbuilder.hpp>
-#include <qitype/dynamicobject.hpp>
+#include <qi/type/typeinterface.hpp>
+#include <qi/type/dynamicobjectbuilder.hpp>
+#include <qi/type/dynamicobject.hpp>
 #include "metaobject_p.hpp"
 
 qiLogCategory("qitype.objectbuilder");

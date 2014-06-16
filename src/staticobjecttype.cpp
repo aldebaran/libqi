@@ -4,7 +4,7 @@
 */
 #include "staticobjecttype.hpp"
 #include <qi/signal.hpp>
-#include <qitype/jsoncodec.hpp>
+#include <qi/type/jsoncodec.hpp>
 
 qiLogCategory("qitype.object");
 

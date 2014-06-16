@@ -3,7 +3,7 @@
 **  See COPYING for the license
 */
 #include <boost/type_traits/is_signed.hpp>
-#include <qitype/typeinterface.hpp>
+#include <qi/type/typeinterface.hpp>
 #include <qi/anyobject.hpp>
 
 #include "metaobject_p.hpp"

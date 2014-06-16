@@ -26,9 +26,9 @@
 #include <iostream>
 
 #include <qi/signature.hpp>
-#include <qitype/datastream.hpp>
-#include <qitype/serialization/message_visitor.hpp>
-#include <qitype/serialization/message_copy_visitor.hpp>
+#include <qi/type/datastream.hpp>
+#include <qi/type/serialization/message_visitor.hpp>
+#include <qi/type/serialization/message_copy_visitor.hpp>
 #include <gtest/gtest.h>
 
 typedef std::vector<std::string>          StringVect;

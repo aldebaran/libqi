@@ -9,8 +9,8 @@
 #include <map>
 #include <qi/anyvalue.hpp>
 #include <qi/application.hpp>
-#include <qitype/typeinterface.hpp>
-#include <qitype/jsoncodec.hpp>
+#include <qi/type/typeinterface.hpp>
+#include <qi/type/jsoncodec.hpp>
 
 struct MPoint {
   MPoint(int x=0, int y=0)

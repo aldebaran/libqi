@@ -5,14 +5,14 @@
 
 #include <boost/algorithm/string.hpp>
 
-#include <qitype/binarycodec.hpp>
+#include <qi/type/binarycodec.hpp>
 #include <qi/anyvalue.hpp>
 
 #include "binarycodec_p.hpp"
 
 #include <qi/log.hpp>
 #include <qi/anyobject.hpp>
-#include <qitype/typedispatcher.hpp>
+#include <qi/type/typedispatcher.hpp>
 #include <qi/types.hpp>
 #include <vector>
 #include <cstring>

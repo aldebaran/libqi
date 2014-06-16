@@ -11,6 +11,6 @@
 //include dependencies cycles...
 #include <qi/type/details/anyvalue.hpp>
 //when using AnyReference you need type. so include it!
-#include <qitype/typeinterface.hpp>
+#include <qi/type/typeinterface.hpp>
 
 #endif  // _QITYPE_ANYVALUE_HPP_

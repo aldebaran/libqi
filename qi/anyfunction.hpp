@@ -50,7 +50,7 @@ namespace qi {
   typedef VarArguments<> AnyVarArguments;
 }
 
-#include <qitype/typeinterface.hpp>
+#include <qi/type/typeinterface.hpp>
 
 
 #ifdef _MSC_VER

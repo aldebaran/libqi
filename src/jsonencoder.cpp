@@ -5,9 +5,9 @@
 
 #include <sstream>
 #include <iomanip>
-#include <qitype/jsoncodec.hpp>
+#include <qi/type/jsoncodec.hpp>
 #include <qi/anyobject.hpp>
-#include <qitype/typedispatcher.hpp>
+#include <qi/type/typedispatcher.hpp>
 
 qiLogCategory("qitype.jsonencoder");
 

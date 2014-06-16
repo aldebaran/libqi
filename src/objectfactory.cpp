@@ -3,7 +3,7 @@
 **  See COPYING for the license
 */
 #include <qi/log.hpp>
-#include <qitype/objectfactory.hpp>
+#include <qi/type/objectfactory.hpp>
 #include <boost/thread/recursive_mutex.hpp>
 #include <qi/application.hpp>
 

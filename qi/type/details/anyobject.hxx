@@ -10,8 +10,8 @@
 #include <boost/mpl/if.hpp>
 
 #include <qi/future.hpp>
-#include <qitype/typeinterface.hpp>
-#include <qitype/typeobject.hpp>
+#include <qi/type/typeinterface.hpp>
+#include <qi/type/typeobject.hpp>
 #include <qi/type/details/typeimpl.hxx>
 
 // Visual defines interface...

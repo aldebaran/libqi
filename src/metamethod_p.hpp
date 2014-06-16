@@ -10,7 +10,7 @@
 # include <map>
 # include <string>
 
-# include <qitype/metamethod.hpp>
+# include <qi/type/metamethod.hpp>
 
 namespace qi {
   class MetaMethodParameterPrivate {

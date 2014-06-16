@@ -11,7 +11,7 @@
 //include dependencies cycles...
 #include <qi/type/details/anyreference.hpp>
 //when using AnyReference you need type. so include it!
-#include <qitype/typeinterface.hpp>
+#include <qi/type/typeinterface.hpp>
 #include <qi/type/details/anyiterator.hpp>
 
 /* Since AnyReference does not handle its memory, it cannot be used

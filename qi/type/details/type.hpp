@@ -11,7 +11,7 @@
 
 #include <string>
 #include <vector>
-#include <qitype/typeinterface.hpp>
+#include <qi/type/typeinterface.hpp>
 
 
 // THIS INTERFACE IS NOT STABLE. (that's why it belongs to details)

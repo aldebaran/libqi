@@ -1,6 +1,6 @@
 #include <cat.hpp>
-#include <qitype/objectfactory.hpp>
-#include <qitype/dynamicobject.hpp>
+#include <qi/type/objectfactory.hpp>
+#include <qi/type/dynamicobject.hpp>
 #include <qi/application.hpp>
 #include <gtest/gtest.h>
 

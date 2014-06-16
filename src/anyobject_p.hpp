@@ -17,8 +17,8 @@
 #include <qi/signature.hpp>
 #include <qi/future.hpp>
 #include <qi/anyobject.hpp>
-#include <qitype/metasignal.hpp>
-#include <qitype/metamethod.hpp>
+#include <qi/type/metasignal.hpp>
+#include <qi/type/metamethod.hpp>
 #include <qi/signal.hpp>
 
 namespace qi {

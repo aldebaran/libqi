@@ -8,9 +8,9 @@
 #define _SRC_METAOBJECT_P_HPP_
 
 #include <qi/atomic.hpp>
-#include <qitype/metasignal.hpp>
-#include <qitype/metaobject.hpp>
-#include <qitype/metamethod.hpp>
+#include <qi/type/metasignal.hpp>
+#include <qi/type/metaobject.hpp>
+#include <qi/type/metamethod.hpp>
 #include <qi/anyobject.hpp>
 #include <boost/thread/recursive_mutex.hpp>
 

@@ -11,7 +11,7 @@
 # include <map>
 
 # include <qi/type/api.hpp>
-# include <qitype/typeinterface.hpp>
+# include <qi/type/typeinterface.hpp>
 
 # ifdef _MSC_VER
 #  pragma warning( push )

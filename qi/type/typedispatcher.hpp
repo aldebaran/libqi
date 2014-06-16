@@ -7,7 +7,7 @@
 #ifndef _QI_TYPE_TYPEDISPATCHER_HPP_
 #define _QI_TYPE_TYPEDISPATCHER_HPP_
 
-#include <qitype/typeinterface.hpp>
+#include <qi/type/typeinterface.hpp>
 
 namespace qi {
 

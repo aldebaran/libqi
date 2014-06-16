@@ -11,7 +11,7 @@
 #include <qi/eventloop.hpp>
 
 #include <qi/anyfunction.hpp>
-#include <qitype/typeobject.hpp>
+#include <qi/type/typeobject.hpp>
 
 #include <boost/thread/thread.hpp>
 #include <boost/thread/mutex.hpp>

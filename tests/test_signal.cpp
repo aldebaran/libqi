@@ -10,7 +10,7 @@
 #include <qi/future.hpp>
 #include <qi/application.hpp>
 #include <qi/anyobject.hpp>
-#include <qitype/objecttypebuilder.hpp>
+#include <qi/type/objecttypebuilder.hpp>
 
 qiLogCategory("test");
 

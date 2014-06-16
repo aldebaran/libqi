@@ -7,7 +7,7 @@
 #ifndef _QI_TYPE_TYPEOBJECT_HPP_
 #define _QI_TYPE_TYPEOBJECT_HPP_
 
-#include <qitype/metaobject.hpp>
+#include <qi/type/metaobject.hpp>
 #include <qi/future.hpp>
 #include <qi/anyfunction.hpp>
 

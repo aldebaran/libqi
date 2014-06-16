@@ -9,8 +9,8 @@
 
 #include <gtest/gtest.h>
 #include <qi/anyobject.hpp>
-#include <qitype/dynamicobjectbuilder.hpp>
-#include <qitype/objecttypebuilder.hpp>
+#include <qi/type/dynamicobjectbuilder.hpp>
+#include <qi/type/objecttypebuilder.hpp>
 #include <qi/application.hpp>
 
 

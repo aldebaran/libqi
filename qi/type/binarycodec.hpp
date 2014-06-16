@@ -14,7 +14,7 @@
 #include <qi/buffer.hpp>
 #include <qi/bufferreader.hpp>
 #include <qi/anyvalue.hpp>
-#include <qitype/metaobject.hpp>
+#include <qi/type/metaobject.hpp>
 
 namespace qi {
 

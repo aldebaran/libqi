@@ -13,9 +13,9 @@
 
 #include <qi/type/api.hpp>
 #include <qi/type/fwd.hpp>
-#include <qitype/typeinterface.hpp>
-#include <qitype/dynamicobjectbuilder.hpp>
-#include <qitype/objecttypebuilder.hpp>
+#include <qi/type/typeinterface.hpp>
+#include <qi/type/dynamicobjectbuilder.hpp>
+#include <qi/type/objecttypebuilder.hpp>
 #include <qi/anyobject.hpp>
 
 namespace qi {

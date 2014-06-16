@@ -1,6 +1,6 @@
 #include "cat.hpp"
 #include <qi/anyobject.hpp>
-#include <qitype/objectfactory.hpp>
+#include <qi/type/objectfactory.hpp>
 // Home-brewed cat implementation.
 
 using animals::CatAction;

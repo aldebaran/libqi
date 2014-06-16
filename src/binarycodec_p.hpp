@@ -12,11 +12,11 @@
 #include <qi/buffer.hpp>
 #include <qi/bufferreader.hpp>
 
-#include <qitype/typeinterface.hpp>
+#include <qi/type/typeinterface.hpp>
 #include <qi/anyvalue.hpp>
 #include <qi/anyobject.hpp>
 
-#include <qitype/binarycodec.hpp>
+#include <qi/type/binarycodec.hpp>
 
 #include <boost/function.hpp>
 

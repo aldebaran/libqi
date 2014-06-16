@@ -4,7 +4,7 @@
 **  See COPYING for the license
 */
 
-#include <qitype/typeobject.hpp>
+#include <qi/type/typeobject.hpp>
 #include <qi/anyobject.hpp>
 
 namespace qi {

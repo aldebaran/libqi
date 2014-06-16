@@ -4,7 +4,7 @@
 */
 
 #include <qi/type/details/type.hpp>
-#include <qitype/typeinterface.hpp>
+#include <qi/type/typeinterface.hpp>
 
 namespace qi {
 

@@ -7,9 +7,9 @@
 #ifndef _QI_TYPE_METAOBJECT_HPP_
 #define _QI_TYPE_METAOBJECT_HPP_
 
-#include <qitype/metamethod.hpp>
-#include <qitype/metasignal.hpp>
-#include <qitype/metaproperty.hpp>
+#include <qi/type/metamethod.hpp>
+#include <qi/type/metasignal.hpp>
+#include <qi/type/metaproperty.hpp>
 
 #ifdef _MSC_VER
 #  pragma warning( push )
