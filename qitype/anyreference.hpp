@@ -1,22 +1,17 @@
-#pragma once
 /*
-**  Copyright (C) 2013 Aldebaran Robotics
-**  See COPYING for the license
+** Author(s):
+**  - Cedric GESTES <gestes@aldebaran-robotics.com>
+**
+** Copyright (C) 2014 Aldebaran
 */
 
-#ifndef _QITYPE_ANYREFERENCE_HPP_
-#define _QITYPE_ANYREFERENCE_HPP_
+#ifndef  _QITYPE_ANYREFERENCE_HPP_
+# define _QITYPE_ANYREFERENCE_HPP_
 
-//AnyReference/AnyIterator are declared in their own files to avoid
-//include dependencies cycles...
-#include <qitype/details/anyreference.hpp>
-//when using AnyReference you need type. so include it!
-#include <qitype/typeinterface.hpp>
-#include <qitype/details/anyiterator.hpp>
+#include <qi/anyreference.hpp>
 
-/* Since AnyReference does not handle its memory, it cannot be used
-* inside a AnyReference. use AnyValue instead.
-*/
-QI_NO_TYPE(qi::AnyReference);
+#include <qi/macro.hpp>
 
-#endif  // _QITYPE_ANYREFERENCE_HPP_
+QI_DEPRECATED_HEADER("Please use qi/anyreference.hpp instead");
+
+#endif

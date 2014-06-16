@@ -1,16 +1,17 @@
-#pragma once
 /*
-**  Copyright (C) 2013 Aldebaran Robotics
-**  See COPYING for the license
+** Author(s):
+**  - Cedric GESTES <gestes@aldebaran-robotics.com>
+**
+** Copyright (C) 2014 Aldebaran
 */
 
-#ifndef _QITYPE_ANYVALUE_HPP_
-#define _QITYPE_ANYVALUE_HPP_
+#ifndef  _QITYPE_ANYVALUE_HPP_
+# define _QITYPE_ANYVALUE_HPP_
 
-//AnyValue are declared in their own files to avoid
-//include dependencies cycles...
-#include <qitype/details/anyvalue.hpp>
-//when using AnyReference you need type. so include it!
-#include <qitype/typeinterface.hpp>
+#include <qi/anyvalue.hpp>
 
-#endif  // _QITYPE_ANYVALUE_HPP_
+#include <qi/macro.hpp>
+
+QI_DEPRECATED_HEADER("Please use qi/anyvalue.hpp instead");
+
+#endif

@@ -30,6 +30,16 @@ endif()
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 set(PUBLIC_HEADERS
+                   qi/anyfunction.hpp
+                   qi/anyobject.hpp
+                   qi/signature.hpp
+                   qi/property.hpp
+                   qi/anyreference.hpp
+                   qi/signal.hpp
+                   qi/anyvalue.hpp
+
+                   qitype/details/signal.hxx
+                   qitype/details/property.hxx
                    qitype/details/accessor.hxx
                    qitype/details/anyreference.hpp
                    qitype/details/anyreference.hxx
@@ -45,8 +55,6 @@ set(PUBLIC_HEADERS
                    qitype/details/anyobject.hxx
                    qitype/details/hasless.hxx
                    qitype/details/objecttypebuilder.hxx
-                   qitype/details/property.hxx
-                   qitype/details/signal.hxx
                    qitype/details/type.hxx
                    qitype/details/buffertypeinterface.hxx
                    qitype/details/typedispatcher.hxx
