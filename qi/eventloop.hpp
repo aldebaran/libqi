@@ -90,6 +90,13 @@ namespace qi
   /// Return the global eventloop, created on demand on first call.
   QI_API EventLoop* getEventLoop();
 
+  /// Same as qi::getEventLoop()->async()
+  template<typename R>
+  Future<R> async(boost::function<R()> callback, uint64_t usDelay=0)
+  {
+    return qi::getEventLoop()->async(callback, usDelay);
+  }
+
   /// Start the eventloop with nthread threads. No-op if already started.
   QI_API void startEventLoop(int nthread);
 
