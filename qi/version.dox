@@ -6,10 +6,19 @@
  */
 
 /**
+ * \class qi::version::Version
+ * \brief Compare version strings
+ *
+ * Simple class that allow comparing two version number.
+ */
+
+/**
  * \fn qi::version::explode(const std::string&)
  * \brief Explode a version string to an array of strings.
  * \param version The string to explode.
  * \return An array of strings (including ".").
+ *
+ * for example "1.2.3" become { "1", "2", "3" }
  */
 
 /**
@@ -17,8 +26,7 @@
  * \brief Compare version numbers.
  * \param versionA Version number.
  * \param versionB Version number.
- * \return 1 if \a versionA is more recent than \a versionB, 0 otherwise,
-           and -1 if error.
+ * \return like strcmp, 0 if equal, -1 if a < b, 1 if a > b
  */
 
 /**
@@ -26,16 +34,4 @@
  * \brief Extract version number from string.
  * \param version The string containing the version number.
  * \return The version number, if any.
- */
-
-/**
- * \struct qi::version::Version
- * \brief Struct representing a version number
- * \var qi::Version::version string for the version
- */
-
-/**
- * \fn qi::version::operator()
- * \brief Return the version
- * \return The version number
  */

@@ -24,6 +24,7 @@ namespace qi {
   namespace version {
 
     class VersionPrivate;
+
     class QI_API Version
     {
     public:
@@ -49,10 +50,8 @@ namespace qi {
       boost::scoped_ptr<VersionPrivate> _p;
     };
 
-    //convert a version's string into a vector<string> with each comparable part
     QI_API std::vector<std::string> explode(const std::string &version);
 
-    //compare two version's strings. a < b return -1
     QI_API int                      compare(const std::string &versionA,
                                             const std::string &versionB);
 
