@@ -20,6 +20,32 @@
 
 namespace qi {
 
+  namespace detail
+  {
+    /* Factory helper functions
+    */
+
+    // create a T, wrap in a AnyObject
+    #define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma) \
+      template<typename T comma ATYPEDECL>                    \
+      Object<T> constructObject(ADECL)                        \
+      {                                                       \
+        return Object<T>(new T(AUSE));                        \
+      }
+    QI_GEN(genCall)
+    #undef genCall
+
+    // in dynamicobjectbuilder.hxx
+    template<typename T> AnyObject makeObject(const std::string& fname, T func);
+
+    // Create a factory function for an object with one method functionName bouncing to func
+    template<typename T> boost::function<AnyObject()>
+    makeObjectFactory(const std::string functionName, T func)
+    {
+      return boost::bind(&makeObject<T>, functionName, func);
+    }
+  }
+
   QITYPE_API bool registerObjectFactory(const std::string& name, AnyFunction factory);
 
   QITYPE_API qi::AnyObject createObject(const std::string& name, const AnyReferenceVector& args);
