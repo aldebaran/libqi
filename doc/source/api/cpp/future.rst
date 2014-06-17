@@ -299,15 +299,14 @@ corresponding future:
 
   qi::Future<int> Worker::calculate() {
     qi::Promise<int> promise;
-    qi::getEventLoop()->async(boost::bind(&Worker::doWork, this, promise));
+    qi::async(boost::bind(&Worker::doWork, this, promise));
     return promise.future();
   }
 
 Now, ``calculate`` is asynchronous! But this isn't useful at all, our code is
-more complex and this could have been done just by calling
-`qi::EventLoop::async` or other async methods in qimessaging. What we can do
-now is implement cancellation so that one can call `cancel()` on the returned
-future to abort the action.
+more complex and this could have been done just by calling `qi::async`. What we
+can do now is implement cancellation so that one can call `cancel()` on the
+returned future to abort the action.
 
 Cancellation support
 --------------------

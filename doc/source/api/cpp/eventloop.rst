@@ -12,3 +12,4 @@ qi.EventLoop
 #.. cpp:autofunction:: qi::getEventLoop
 #.. cpp:autofunction:: qi::startEventLoop
 #.. cpp:autofunction:: qi::getIoService
+#.. cpp:autofunction:: qi::async

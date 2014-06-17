@@ -35,11 +35,9 @@ It is also possible to specify a delay for the task.
     qi::Application app(argc, argv);
 
     // run as soon as possible
-    qi::Future<void> future =
-      qi::getEventLoop()->async(boost::bind(doSomething, 42));
+    qi::Future<void> fut = qi::async(boost::bind(doSomething, 42));
     // run in 2 seconds
-    qi::Future<void> future2 =
-      qi::getEventLoop()->async(boost::bind(doSomething, 42), 2000000);
+    qi::Future<void> fut2 = qi::async(boost::bind(doSomething, 42), 2000000);
 
     // do stuff...
 
@@ -55,8 +53,7 @@ It is also possible to cancel the execution of a task if it hasn't started yet:
 
 .. code-block:: cpp
 
-  qi::Future<void> future =
-    qi::getEventLoop()->async(boost::bind(doSomething, 42), 2000000);
+  qi::Future<void> future = qi::async(boost::bind(doSomething, 42), 2000000);
 
   future.cancel();
 
