@@ -16,7 +16,7 @@
  * \fn qi::Translator::translate(const std::string &, const std::string &, const std::string &)
  * \brief Translate a message.
  *
- * \param message Message
+ * \param msg    Message to translate
  * \param domain Domain name
  * \param locale Locale name
  * \return The translated message
