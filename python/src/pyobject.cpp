@@ -211,7 +211,7 @@ namespace qi { namespace py {
     //get the signature for the function
     //if vargs => return m
     //else: return (m...m) with the good number of m
-    std::string generateDefaultParamSignature(const std::string &key, boost::python::object& argspec)
+    std::string generateDefaultParamSignature(const std::string &key, boost::python::object& argspec, bool isMeth)
     {
       //argspec[0] = args
       int argsz = boost::python::len(argspec[0]);
@@ -223,14 +223,15 @@ namespace qi { namespace py {
         return "m";
       }
 
-      if (argsz == 0) {
+      if (argsz == 0 && isMeth) {
         std::stringstream serr;
         serr << "Method " << key << " is missing the self argument.";
         throw std::runtime_error(serr.str());
       }
 
-      //drop self.
-      argsz = argsz - 1;
+      //drop self on method
+      if (isMeth)
+        argsz = argsz - 1;
 
       std::stringstream ss;
 
@@ -250,11 +251,16 @@ namespace qi { namespace py {
       if (desc)
         mmb.setDescription(boost::python::extract<std::string>(desc));
       boost::python::object inspect = importInspect();
-      //returns: (args, varargs, keywords, defaults)
-      boost::python::object tu = inspect.attr("getargspec")(method);
+      boost::python::object tu;
+      try {
+        //returns: (args, varargs, keywords, defaults)
+        tu = inspect.attr("getargspec")(method);
+      } catch(const boost::python::error_already_set& e) {
+        qiLogError() << "error while register function '" << key << "': " << PyFormatError();
+        return;
+      }
 
-
-      std::string defparamsig = generateDefaultParamSignature(key, tu);
+      std::string defparamsig = generateDefaultParamSignature(key, tu, PyMethod_Check(method.ptr()));
 
       qiLogDebug() << "Adding method: " << defparamsig;
       if (!qisig.empty())
@@ -305,6 +311,9 @@ namespace qi { namespace py {
       GILScopedLock _lock;
       boost::python::object attrs(boost::python::borrowed(PyObject_Dir(obj.ptr())));
 
+      boost::python::object asignal = qi::py::makePySignal("(i)").attr("__class__");
+      boost::python::object aproperty = qi::py::makePyProperty("(i)").attr("__class__");
+
       for (int i = 0; i < boost::python::len(attrs); ++i) {
         std::string key = boost::python::extract<std::string>(attrs[i]);
         boost::python::object m = obj.attr(attrs[i]);
@@ -333,27 +342,27 @@ namespace qi { namespace py {
             key = ex();
         }
 
-        if (PyMethod_Check(m.ptr())) {
-          registerMethod(gob, key, m, qisig);
-
-          continue;
-        }
-
-        //store a pointer on PySignal class
-        boost::python::object asignal = qi::py::makePySignal("(i)").attr("__class__");
+        //Handle Signal
         if (PyObject_IsInstance(m.ptr(), asignal.ptr())) {
           qiLogDebug() << "Adding signal:" << key;
           gob.advertiseSignal(key, qi::py::getSignal(m));
           continue;
         }
 
-        //TODO: check for Property
-        boost::python::object aproperty = qi::py::makePyProperty("(i)").attr("__class__");
+        //Handle Property
         if (PyObject_IsInstance(m.ptr(), aproperty.ptr())) {
           qiLogDebug() << "Adding property:" << key;
           gob.advertiseProperty(key, qi::py::getProperty(m));
           continue;
         }
+
+        //Handle Methods, Functions, ... everything that is callable.
+        if (PyCallable_Check(m.ptr())) {
+          registerMethod(gob, key, m, qisig);
+
+          continue;
+        }
+
 
       }
       //this is a useless callback, needed to keep a ref on obj.

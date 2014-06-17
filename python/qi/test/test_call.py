@@ -70,6 +70,13 @@ class FooService:
     def retc(self, name, index):
         return name[index]
 
+    @staticmethod
+    def fooStat(i):
+        return i * 3
+
+
+FooService.fooLambda = lambda self, x: x * 2
+
 def docalls(sserver, sclient):
     m = FooService()
     sserver.registerService("FooService", m)
@@ -130,6 +137,11 @@ def docalls(sserver, sclient):
     assert fut.hasValue() == True
     assert fut.value() == { 'titi' : 'toto', "foo" : "bar" }
 
+    print("test lambda")
+    assert s.fooLambda(42) == 42 * 2
+
+    print("test staticmethod")
+    assert s.fooStat(4) == 4 * 3
 
 
 def test_calldirect():
