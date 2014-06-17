@@ -92,7 +92,7 @@ namespace qi {
       boost::python::def("findData", &qi::path::findData,
                          "findData(application, file) -> string\n"
                          ":param application: string. The name of the application.\n"
-                         ":param file: string. The name of the file to loof for."
+                         ":param file: string. The name of the file to look for."
                          " You can specify subdirectories using a '/' as a separator.\n"
                          ":return: the complete, native path to the file found. An empty string otherwise.\n"
                          "\n"

@@ -76,6 +76,19 @@ Compensation, task 7s, period 5s
 
 Examples
 ========
+In the following examples, we assume we have a connected session.
+If you already have an application, use:
+
+.. code-block:: python
+
+  application.session.service("ALTextToSpeech")
+
+If you don't, then use that:
+
+.. code-block:: python
+
+  session = qi.Session()
+  session.connect("tcp://127.0.0.1:9559")
 
 Doing something in 2 seconds and getting the result.
 
@@ -83,20 +96,21 @@ Doing something in 2 seconds and getting the result.
 
   import qi
 
-  def getAnswerToLifeAndUniverse(a, b)
+  def getAnswerToLifeAndUniverse(a, b):
     return a + b
 
   fut = qi.async(getAnswerToLifeAndUniverse, 40, 2, delay=2000000)
   #do work while the result is being processed
   print("Result:", fut.value())
 
-Calling tts.say in 42 seconds.
+Calling tts.say after 42 seconds.
 
 .. code-block:: python
 
   import qi
 
   #assume we have a connected session
+
   tts = session.service("ALTextToSpeech")
 
   fut = qi.async(tts.say, "42 seconds elapsed", delay=42000000)

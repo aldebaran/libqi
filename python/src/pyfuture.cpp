@@ -144,7 +144,7 @@ namespace qi {
                "Block until the future is ready.")
 
           .def("error", &PyFuture::error, (boost::python::args("timeout") = qi::FutureTimeout_Infinite),
-               "error(timeout) -> None\n"
+               "error(timeout) -> string\n"
                ":param timeout: a time in milliseconds. Optional.\n"
                ":return: the error of the future.\n"
                ":raise: a RuntimeError if the timeout is reached or the future has no error.\n"

@@ -150,7 +150,7 @@ namespace qi { namespace py {
              "Set name for debugging and tracking purpose")
         .def("isRunning", &PyPeriodicTask::isRunning,
              "isRunning() -> bool\n"
-             ":return: true is task is running\n")
+             ":return: true if task is running\n")
         .def("isStopping", &PyPeriodicTask::isStopping,
              "isStopping() -> bool\n"
              ":return: whether state is stopping or stopped.\n"

@@ -27,8 +27,8 @@ Reference
   qi.FutureState.None                 The future is not bound.
   qi.FutureState.Running              The future is attached to a Promise.
   qi.FutureState.Canceled             The future has been canceled
-  qi.FutureState.FinishedWithError    The future has finished and a value is available
-  qi.FutureState.FinishedWithValue    The future has finished and an error is available
+  qi.FutureState.FinishedWithError    The future has finished and an error is available
+  qi.FutureState.FinishedWithValue    The future has finished and a value is available
   ================================    ====================================================
 
 
@@ -56,6 +56,7 @@ Simple example:
 
   import qi
   import time
+  import threading
 
   def doSomeWork(p):
     #do your work here instead of sleeping
@@ -73,6 +74,7 @@ With callback:
 
   import qi
   import time
+  import threading
 
   def doSomeWork(p):
     #do your work here instead of sleeping

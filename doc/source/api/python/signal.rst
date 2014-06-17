@@ -27,7 +27,7 @@ Reference
 
       .. code-block:: python
 
-        s = Signal()
+        s = qi.Signal()
         s(42)
         s(42, 43)
 
