@@ -156,10 +156,3 @@ Canceling a delayed operation before its execution.
   action.wait()
   if action.isCanceled():
     qi.info("async example", "dummyAction was canceled as expected")
-
-
-Tips
-====
-
-Standard choregraphe boxes "Wait" and "Timer" will show you possible usages
-of qi.async and qi.PeriodicTask in choregraphe.
