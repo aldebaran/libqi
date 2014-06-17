@@ -46,11 +46,11 @@ Reference
 
    .. method:: stop()
 
-      stop the Application. (ask run to quit)
+      stop the Application. (unblock an application previously launched with *run*)
 
    .. method:: run()
 
-      block until stop is called. This calls start if it was not already called.
+      block until *stop* is called. This calls *start* if it was not already called.
 
    .. attribute:: session
 
