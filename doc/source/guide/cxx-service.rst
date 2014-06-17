@@ -37,6 +37,8 @@ Your service can be a simple class which is registered in the type system (see
 
 .. code-block:: cpp
 
+  #include <qi/anyobject.hpp>
+
   struct Mosquito
   {
     double yaw,theta,distance;
@@ -77,6 +79,9 @@ already shown in the :ref:`client session guide<guide-cxx-client>`, we will do
 the listener example here.
 
 .. code-block:: cpp
+
+  #include <qi/application.hpp>
+  #include <qi/session.hpp>
 
   int main(int argc, char** argv)
   {

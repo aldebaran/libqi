@@ -24,7 +24,8 @@ It is also possible to specify a delay for the task.
 
 .. code-block:: cpp
 
-  #include <libqi/eventloop.hpp>
+  #include <qi/application.hpp>
+  #include <qi/eventloop.hpp>
 
   void doSomething(int value) {
     std::cout << "value is " << value << std::endl;

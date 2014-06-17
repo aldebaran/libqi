@@ -15,7 +15,9 @@ Storing and retrieving a value
 
 Storing and retrieving a value is easy enough:
 
-.. code-block:: c++
+.. code-block:: cpp
+
+  #include <qi/anyvalue.hpp>
 
   struct MyStruct {
     int canard;
@@ -45,7 +47,7 @@ Storing and retrieving a value is easy enough:
 If you don't know the exact type stored, you can still use `to()` which
 supports standard conversions:
 
-.. code-block:: c++
+.. code-block:: cpp
 
   // type can be changed
   value = qi::AnyValue::from(42.3);
@@ -58,7 +60,7 @@ You can use a value without extracting its contents when it's built from
 standard types like built-in types, vectors, maps. It also supports common
 operators.
 
-.. code-block:: c++
+.. code-block:: cpp
 
   std::vector<int> v;
   v.push_back(12);
@@ -74,7 +76,7 @@ Using the value with registered types
 
 The same thing can be achieved with registered types.
 
-.. code-block:: c++
+.. code-block:: cpp
 
   Graph::Point p(12, 42);
   qi::AnyValue value = qi::AnyValue::from(p);

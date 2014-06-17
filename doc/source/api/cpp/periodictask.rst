@@ -18,6 +18,8 @@ Using a periodic task
 
 .. code-block:: cpp
 
+  #include <qi/periodictask.hpp>
+
   void printDate();
 
   qi::PeriodicTask task;

@@ -11,11 +11,17 @@ Introduction
 
 For types to be available in the type system and allow them to be type-erased,
 sent over the network or through signals, each one of them needs to be
-registered in the typesystem.
+registered in the type system.
 
 Most of these registration can be done through macros. It is very important
 that you call macros made to be used in .cpp only in .cpp files, these macros
 should be processed in a single translation unit.
+
+All registration classes and macros are in:
+
+.. code-block:: cpp
+
+  #include <qi/anyobject.hpp>
 
 Structures
 ==========

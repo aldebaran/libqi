@@ -9,7 +9,7 @@ qi::Trackable
 Rationale
 =========
 
-.. code-block:: c++
+.. code-block:: cpp
 
   class MyClass {
     void callback();
@@ -39,7 +39,9 @@ callbacks are finished before you start destructing your object. Then you must
 use qi::bind instead of boost::bind which will do nothing if its first argument
 is not valid anymore.
 
-.. code-block:: c++
+.. code-block:: cpp
+
+  #include <qi/trackable.hpp>
 
   class MyClass : qi::Trackable<MyClass> {
     MyClass() : qi::Trackable<MyClass>(this)
