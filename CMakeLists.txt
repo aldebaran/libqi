@@ -76,7 +76,10 @@ set(PUBLIC_HEADERS
                    qi/type/details/bindtype.hxx
                    qi/type/details/functionsignature.hxx
                    qi/type/details/dynamicobjectbuilder.hxx
-                   qi/type/details/anyobject.hxx
+                   qi/type/details/genericobject.hpp
+                   qi/type/details/object.hxx
+                   qi/type/details/async.hxx
+                   qi/type/details/proxyregister.hpp
                    qi/type/details/hasless.hxx
                    qi/type/details/objecttypebuilder.hxx
                    qi/type/details/type.hxx
