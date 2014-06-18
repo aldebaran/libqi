@@ -7,10 +7,10 @@
 #ifndef _QI_ANYVALUE_HPP_
 #define _QI_ANYVALUE_HPP_
 
-//AnyValue are declared in their own files to avoid
-//include dependencies cycles...
+#include <qi/type/details/anyreference.hpp>
+
 #include <qi/type/details/anyvalue.hpp>
-//when using AnyReference you need type. so include it!
-#include <qi/type/typeinterface.hpp>
+
+#include <qi/type/details/anyiterator.hpp>
 
 #endif  // _QITYPE_ANYVALUE_HPP_

@@ -8,7 +8,7 @@
 #ifndef  _QITYPE_ANYREFERENCE_HPP_
 # define _QITYPE_ANYREFERENCE_HPP_
 
-#include <qi/anyreference.hpp>
+#include <qi/anyvalue.hpp>
 
 #include <qi/macro.hpp>
 

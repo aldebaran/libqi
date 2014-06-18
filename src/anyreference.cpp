@@ -6,7 +6,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>
 
-#include <qi/anyreference.hpp>
+#include <qi/type/details/anyreference.hpp>
 #include <qi/anyobject.hpp>
 
 #if defined(_MSC_VER) && _MSC_VER <= 1500
@@ -28,15 +28,17 @@ qiLogCategory("qitype.genericvalue");
 namespace qi
 {
 
-  namespace
+namespace
+{
+  static void dropIt(GenericObject* ptr, const AnyValue& v)
   {
-    static void dropIt(GenericObject* ptr, const AnyValue& v)
-    {
-      qiLogDebug() << "dropIt";
-      delete ptr;
-    }
+    qiLogDebug() << "dropIt";
+    delete ptr;
   }
+}
 
+namespace detail
+{
 
   std::pair<AnyReference, bool> AnyReferenceBase::convert(DynamicTypeInterface* targetType) const
   {
@@ -778,127 +780,117 @@ namespace qi
       return res.first.clone();
   }
 
-  bool operator< (const AnyReference& a, const AnyReference& b)
-  {
-    //qiLogDebug() << "Compare " << a._type << ' ' << b._type;
+}
+
+bool operator<(const AnyReference& a, const AnyReference& b)
+{
+  //qiLogDebug() << "Compare " << a._type << ' ' << b._type;
 #define GET(v, t) static_cast< t ## TypeInterface *>(v.type())->get(v.rawValue())
-    if (!a.type())
-      return b.type() != 0;
-    if (!b.type())
-      return false;
-    /* < operator for char* does not do what we want, so force
-    * usage of get() below for string types.
-    */
-    if ((a.type() == b.type() || a.type()->info() == b.type()->info())
-        && a.type()->kind() != TypeKind_String)
+  if (!a.type())
+    return b.type() != 0;
+  if (!b.type())
+    return false;
+  /* < operator for char* does not do what we want, so force
+  * usage of get() below for string types.
+  */
+  if ((a.type() == b.type() || a.type()->info() == b.type()->info())
+      && a.type()->kind() != TypeKind_String)
+  {
+    //qiLogDebug() << "Compare sametype " << a._type->infoString();
+    return a.type()->less(a.rawValue(), b.rawValue());
+  }
+  // Comparing values of different types
+  TypeKind ka = a.type()->kind();
+  TypeKind kb = b.type()->kind();
+  //qiLogDebug() << "Compare " << ka << ' ' << kb;
+  if (ka != kb)
+  {
+    if (ka == TypeKind_Int && kb == TypeKind_Float)
+      return GET(a, Int) < GET(b, Float);
+    else if (ka == TypeKind_Float && kb == TypeKind_Int)
+      return GET(a, Float) < GET(b, Int);
+    else
+      return ka < kb; // Safer than comparing pointers
+  }
+  else switch(ka)
+  {
+  case TypeKind_Void:
+    return false;
+  case TypeKind_Int:
+    return GET(a, Int) < GET(b, Int);
+  case TypeKind_Float:
+    return GET(a, Float) < GET(b, Float);
+  case TypeKind_String:
+  {
+    StringTypeInterface::ManagedRawString ca, cb;
+    ca = GET(a, String);
+    cb = GET(b, String);
+    bool res = ca.first.second == cb.first.second ?
+      (memcmp(ca.first.first, cb.first.first, ca.first.second) < 0) :
+      (ca.first.second < cb.first.second);
+    if (ca.second)
+      ca.second(ca.first);
+    if (cb.second)
+      cb.second(cb.first);
+    qiLogDebug() << "Compare " << ca.first.first << ' ' <<
+      cb.first.first << ' ' << res;
+    return res;
+  }
+  case TypeKind_VarArgs:
+  case TypeKind_List:
+  case TypeKind_Map: // omg, same code!
+  {
+    size_t la = a.size();
+    size_t lb = b.size();
+    if (la != lb)
+      return la < lb;
+    AnyIterator ita   = a.begin();
+    AnyIterator enda = a.end();
+    AnyIterator itb   = b.begin();
+    AnyIterator endb = b.end();
+    while (ita != enda)
     {
-      //qiLogDebug() << "Compare sametype " << a._type->infoString();
-      return a.type()->less(a.rawValue(), b.rawValue());
+      assert (! (itb == endb));
+      AnyReference ea = *ita;
+      AnyReference eb = *itb;
+      if (ea < eb)
+        return true;
+      else if (eb < ea)
+        return false;
+      ++ita;
+      ++itb;
     }
-    // Comparing values of different types
-    TypeKind ka = a.type()->kind();
-    TypeKind kb = b.type()->kind();
-    //qiLogDebug() << "Compare " << ka << ' ' << kb;
-    if (ka != kb)
-    {
-      if (ka == TypeKind_Int && kb == TypeKind_Float)
-        return GET(a, Int) < GET(b, Float);
-      else if (ka == TypeKind_Float && kb == TypeKind_Int)
-        return GET(a, Float) < GET(b, Int);
-      else
-        return ka < kb; // Safer than comparing pointers
-    }
-    else switch(ka)
-    {
-    case TypeKind_Void:
-      return false;
-    case TypeKind_Int:
-      return GET(a, Int) < GET(b, Int);
-    case TypeKind_Float:
-      return GET(a, Float) < GET(b, Float);
-    case TypeKind_String:
-    {
-      StringTypeInterface::ManagedRawString ca, cb;
-      ca = GET(a, String);
-      cb = GET(b, String);
-      bool res = ca.first.second == cb.first.second ?
-        (memcmp(ca.first.first, cb.first.first, ca.first.second) < 0) :
-        (ca.first.second < cb.first.second);
-      if (ca.second)
-        ca.second(ca.first);
-      if (cb.second)
-        cb.second(cb.first);
-      qiLogDebug() << "Compare " << ca.first.first << ' ' <<
-        cb.first.first << ' ' << res;
-      return res;
-    }
-    case TypeKind_VarArgs:
-    case TypeKind_List:
-    case TypeKind_Map: // omg, same code!
-    {
-      size_t la = a.size();
-      size_t lb = b.size();
-      if (la != lb)
-        return la < lb;
-      AnyIterator ita   = a.begin();
-      AnyIterator enda = a.end();
-      AnyIterator itb   = b.begin();
-      AnyIterator endb = b.end();
-      while (ita != enda)
-      {
-        assert (! (itb == endb));
-        AnyReference ea = *ita;
-        AnyReference eb = *itb;
-        if (ea < eb)
-          return true;
-        else if (eb < ea)
-          return false;
-        ++ita;
-        ++itb;
-      }
-      return false; // list are equals
-    }
-    case TypeKind_Object:
-    case TypeKind_Pointer:
-    case TypeKind_Tuple:
-    case TypeKind_Dynamic:
-    case TypeKind_Raw:
-    case TypeKind_Unknown:
-    case TypeKind_Iterator:
-    case TypeKind_Function:
-    case TypeKind_Signal:
-    case TypeKind_Property:
-      return a.rawValue() < b.rawValue();
-    }
-#undef GET
+    return false; // list are equals
+  }
+  case TypeKind_Object:
+  case TypeKind_Pointer:
+  case TypeKind_Tuple:
+  case TypeKind_Dynamic:
+  case TypeKind_Raw:
+  case TypeKind_Unknown:
+  case TypeKind_Iterator:
+  case TypeKind_Function:
+  case TypeKind_Signal:
+  case TypeKind_Property:
     return a.rawValue() < b.rawValue();
   }
+#undef GET
+  return a.rawValue() < b.rawValue();
+}
 
-  bool operator< (const AnyValue& a, const AnyValue& b)
+bool operator==(const AnyReference& a, const AnyReference& b)
+{
+  if (a.kind() == TypeKind_Iterator && b.kind() == TypeKind_Iterator
+      && a.type()->info() == b.type()->info())
   {
-    return a.asReference() < b.asReference();
+    return static_cast<IteratorTypeInterface*>(a.type())->equals(a.rawValue(), b.rawValue());
   }
+  else
+    return ! (a < b) && !(b < a);
+}
 
-  bool operator==(const AnyReference& a, const AnyReference& b)
-  {
-    if (a.kind() == TypeKind_Iterator && b.kind() == TypeKind_Iterator
-        && a.type()->info() == b.type()->info())
-    {
-      return static_cast<IteratorTypeInterface*>(a.type())->equals(a.rawValue(), b.rawValue());
-    }
-    else
-      return ! (a < b) && !(b < a);
-  }
-
-  bool operator==(const AnyValue& a, const AnyValue& b)
-  {
-    return a.asReference() == b.asReference();
-  }
-
-  bool operator==(const AnyIterator& a, const AnyIterator& b)
-  {
-    return a.asReference() == b.asReference();
-  }
+namespace detail
+{
 
   AnyValue AnyReferenceBase::toTuple(bool homogeneous) const
   {
@@ -1242,27 +1234,26 @@ namespace qi
   }
 
 
-  namespace detail
+  QI_NORETURN void throwConversionFailure(TypeInterface* from, TypeInterface* to)
   {
-    QI_NORETURN void throwConversionFailure(TypeInterface* from, TypeInterface* to)
-    {
-      std::stringstream msg;
-      msg << "Conversion from ";
-      if (from) {
-        msg << from->signature().toString() << '(' << from->info().asDemangledString() << ')';
-      } else {
-        msg << "NULL Type";
-      }
-      msg << " to ";
-      if (to) {
-        msg << to->signature().toString() << '(' << to->info().asDemangledString() << ')';
-      } else {
-        msg << "NULL Type";
-      }
-      msg << " failed";
-      qiLogWarning() << msg.str();
-      throw std::runtime_error(msg.str());
+    std::stringstream msg;
+    msg << "Conversion from ";
+    if (from) {
+      msg << from->signature().toString() << '(' << from->info().asDemangledString() << ')';
+    } else {
+      msg << "NULL Type";
     }
+    msg << " to ";
+    if (to) {
+      msg << to->signature().toString() << '(' << to->info().asDemangledString() << ')';
+    } else {
+      msg << "NULL Type";
+    }
+    msg << " failed";
+    qiLogWarning() << msg.str();
+    throw std::runtime_error(msg.str());
   }
-}
 
+} // namespace detail
+
+} // namespace qi

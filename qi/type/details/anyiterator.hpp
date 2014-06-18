@@ -4,10 +4,9 @@
 **  See COPYING for the license
 */
 
-#ifndef _QITYPE_DETAILS_ANYITERATOR_HPP_
-#define _QITYPE_DETAILS_ANYITERATOR_HPP_
+#ifndef _QI_TYPE_DETAIL_ANYITERATOR_HPP_
+#define _QI_TYPE_DETAIL_ANYITERATOR_HPP_
 
-#include <qi/type/api.hpp>
 #include <qi/type/details/anyvalue.hpp>
 
 namespace qi {
@@ -44,5 +43,4 @@ namespace qi {
 
 #include <qi/type/details/anyiterator.hxx>
 
-#endif  // _QITYPE_DETAILS_ANYITERATOR_HPP_
-
+#endif  // _QI_TYPE_DETAIL_ANYITERATOR_HPP_

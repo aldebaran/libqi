@@ -11,51 +11,56 @@
 
 namespace qi {
 
-  inline AnyReference AnyIterator::operator*()
-  {
-    if (kind() == TypeKind_Iterator)
-      return static_cast<IteratorTypeInterface*>(_type)->dereference(_value);
-    else
-      throw std::runtime_error("Expected iterator");
-  }
+inline AnyReference AnyIterator::operator*()
+{
+  if (kind() == TypeKind_Iterator)
+    return static_cast<IteratorTypeInterface*>(_type)->dereference(_value);
+  else
+    throw std::runtime_error("Expected iterator");
+}
 
-  template<typename T>
-  AnyIterator::AnyIterator(const T& ref)
-    : AnyValue(AnyReference::from(ref))
-  {}
+template<typename T>
+AnyIterator::AnyIterator(const T& ref)
+  : AnyValue(AnyReference::from(ref))
+{}
 
-  inline AnyIterator::AnyIterator()
-  {}
+inline AnyIterator::AnyIterator()
+{}
 
-  inline AnyIterator::AnyIterator(const AnyReference& p)
-    : AnyValue(p)
-  {}
+inline AnyIterator::AnyIterator(const AnyReference& p)
+  : AnyValue(p)
+{}
 
-  inline AnyIterator::AnyIterator(const AnyValue& v)
-    : AnyValue(v)
-  {}
+inline AnyIterator::AnyIterator(const AnyValue& v)
+  : AnyValue(v)
+{}
 
-  inline AnyIterator& AnyIterator::operator++()
-  {
-    if (kind() != TypeKind_Iterator)
-      throw std::runtime_error("Expected an iterator");
-    static_cast<IteratorTypeInterface*>(_type)->next(&_value);
-    return *this;
-  }
+inline AnyIterator& AnyIterator::operator++()
+{
+  if (kind() != TypeKind_Iterator)
+    throw std::runtime_error("Expected an iterator");
+  static_cast<IteratorTypeInterface*>(_type)->next(&_value);
+  return *this;
+}
 
-  inline AnyIterator AnyIterator::operator++(int)
-  {
-    if (kind() != TypeKind_Iterator)
-      throw std::runtime_error("Expected an iterator");
-    AnyIterator it2 = *this;
-    static_cast<IteratorTypeInterface*>(_type)->next(&_value);
-    return it2;
-  }
+inline AnyIterator AnyIterator::operator++(int)
+{
+  if (kind() != TypeKind_Iterator)
+    throw std::runtime_error("Expected an iterator");
+  AnyIterator it2 = *this;
+  static_cast<IteratorTypeInterface*>(_type)->next(&_value);
+  return it2;
+}
 
-  inline bool operator!=(const AnyIterator& a, const AnyIterator& b)
-  {
-    return !(a==b);
-  }
+inline bool operator==(const AnyIterator& a, const AnyIterator& b)
+{
+  return a.asReference() == b.asReference();
+}
+
+inline bool operator!=(const AnyIterator& a, const AnyIterator& b)
+{
+  return !(a==b);
+}
 
 }
 

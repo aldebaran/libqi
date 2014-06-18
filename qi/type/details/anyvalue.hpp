@@ -7,19 +7,14 @@
 #ifndef _QITYPE_DETAILS_ANYVALUE_HPP_
 #define _QITYPE_DETAILS_ANYVALUE_HPP_
 
-#include <qi/type/api.hpp>
-#include <qi/type/fwd.hpp>
-#include <qi/type/details/anyreference.hpp>
-
 namespace qi {
-
 
   /** Represent any value supported by the typesystem.
    *  when constructed or set the value is copied.
    *  as a pointer to the real value.
    *  to convert the value if needed and copy to the required type.
    */
-  class QITYPE_API AnyValue: public AnyReferenceBase
+  class QITYPE_API AnyValue: public detail::AnyReferenceBase
   {
   public:
 
@@ -73,7 +68,7 @@ namespace qi {
     void reset(qi::TypeInterface *type);
 
     template <typename T>
-    void set(const T& t) { AnyReferenceBase::set<T>(t); }
+    void set(const T& t) { detail::AnyReferenceBase::set<T>(t); }
 
     void reset(const AnyReference& src);
     void reset(const AnyReference& src, bool copy, bool free);
@@ -82,7 +77,8 @@ namespace qi {
 
     AnyReference asReference() const {
       //AnyRef == AnyRefBase
-      return *reinterpret_cast<const AnyReference*>(static_cast<const AnyReferenceBase*>(this));
+      return *reinterpret_cast<const AnyReference*>(
+          static_cast<const detail::AnyReferenceBase*>(this));
     }
 
     template<typename T>
@@ -94,7 +90,7 @@ namespace qi {
   private:
     //hide AnyReference::destroy
     //simply assign an empty AnyValue.
-    void destroy() { return AnyReferenceBase::destroy(); }
+    void destroy() { return detail::AnyReferenceBase::destroy(); }
 
     //we dont accept GVP here.  (block set<T> with T=GVP)
     void set(const AnyReference& t);

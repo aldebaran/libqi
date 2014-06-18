@@ -22,8 +22,6 @@
 #include <vector>
 #include <map>
 
-static const int gLoopCount = 1000000;
-
 namespace qi
 {
   // OLD API compat layer for this test.

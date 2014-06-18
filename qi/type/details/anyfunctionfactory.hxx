@@ -31,7 +31,7 @@
 #include <boost/any.hpp>
 #include <boost/thread/mutex.hpp>
 #include <qi/atomic.hpp>
-#include <qi/anyreference.hpp>
+#include <qi/anyvalue.hpp>
 
 namespace qi
 {
@@ -220,6 +220,28 @@ namespace qi
           out[i] = args[i];
       }
     }
+
+    /** This class can be used to convert the return value of an arbitrary
+     * function into a AnyReference. It handles functions returning void.
+     *
+     * Usage:
+     *   ValueCopy val;
+     *   val(), functionCall(arg);
+     *
+     * in val(), parenthesis are useful to avoid compiler warning "val not used"
+     * when handling void.
+     */
+    class AnyReferenceCopy: public AnyReference
+    {
+    public:
+      AnyReferenceCopy &operator()() { return *this; }
+    };
+
+    template<typename T> void operator,(AnyReferenceCopy& g, const T& any)
+    {
+      *(AnyReference*)&g = AnyReference::from(any).clone();
+    }
+
     // makeCall function family
     // accepts a bare function, boost function, member function
     // we handled byval/byref in refMask/transformRef, so bypass
