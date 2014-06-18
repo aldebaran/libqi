@@ -56,7 +56,7 @@ Writing logs
 There is a log function for each level except **silent**. Those functions are
 basic streams.
 
-.. code-block:: c++
+.. code-block:: cpp
 
   std::string msg = "Message to print with number: ";
   qiLogFatal("ca.te.go.ry")   << msg << 1;
@@ -72,14 +72,14 @@ basic streams.
   each message.
 
 To avoid typing category each time (and so make mistakes), there is a scope
-function to set it globally: :cpp:`qiLogCategory(const char* category);`
+function to set it globally: :cpp:`qiLogCategory(const char*);`
 
 .. note::
 
   It is always allowed to set a specific category for a message even if a global
   category is set.
 
-.. code-block:: c++
+.. code-block:: cpp
 
   qiLogCategory("ca.te.go.ry")
 
@@ -94,6 +94,47 @@ function to set it globally: :cpp:`qiLogCategory(const char* category);`
 
   If log category is set globally in an include file, all files including this
   file will have this category as global category.
+
+(A)synchronous logging
+======================
+
+Log are asynchronous, we dont want to waste time in log, furthermore log can do
+networking. The handling of the log output is in a separated thread.
+
+There is a way to disable asynchronous. Start naoqi with --synchronous-log command line
+option. Be careful, it will slow down naoqi if you have lots of handlers.
+
+Logs may be asynchronous, but they are actually being displayed in their request order.
+
+
+Add/Remove Log Handlers
+=======================
+
+The default handler log to console. The color is enable on tty.
+The handler can be added or deleted. You just need to give a delegate to a log function with the following prototype:
+
+.. code-block:: cpp
+
+  void logfct(const qi::LogLevel verb,
+              const char         *category,
+              const char         *msg,
+              const char         *file = "",
+              const char         *fct = "",
+              const int          line = 0);
+
+Then you can add the handler with :cpp:`addLogHandler(name, fctLog)`
+
+.. code-block:: cpp
+
+  :cpp:`addLogHandler("nameofloghandler", logfct);`
+
+and remove it with removeLogHandler(name).
+
+.. code-block:: cpp
+
+  removeLogHandler("nameofloghandler");
+
+
 
 Filtering logs output
 =====================
