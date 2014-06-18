@@ -1,4 +1,4 @@
-#include <qi/type/details/manageable.hpp>
+#include <qi/type/detail/manageable.hpp>
 #include <qi/type/objecttypebuilder.hpp>
 
 #include "staticobjecttype.hpp"

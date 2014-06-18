@@ -34,7 +34,6 @@ set(PUBLIC_HEADERS
                    qi/anyobject.hpp
                    qi/signature.hpp
                    qi/property.hpp
-                   qi/anyreference.hpp
                    qi/signal.hpp
                    qi/anyvalue.hpp
 
@@ -62,41 +61,41 @@ set(PUBLIC_HEADERS
                    qitype/typeobject.hpp
                    qitype/typedispatcher.hpp
 
-                   qi/type/details/signal.hxx
-                   qi/type/details/property.hxx
-                   qi/type/details/accessor.hxx
-                   qi/type/details/anyreference.hpp
-                   qi/type/details/anyreference.hxx
-                   qi/type/details/anyvalue.hpp
-                   qi/type/details/anyvalue.hxx
-                   qi/type/details/anyfunction.hxx
-                   qi/type/details/anyfunctionfactory.hxx
-                   qi/type/details/anyiterator.hpp
-                   qi/type/details/anyiterator.hxx
-                   qi/type/details/bindtype.hxx
-                   qi/type/details/functionsignature.hxx
-                   qi/type/details/dynamicobjectbuilder.hxx
-                   qi/type/details/genericobject.hpp
-                   qi/type/details/object.hxx
-                   qi/type/details/async.hxx
-                   qi/type/details/proxyregister.hpp
-                   qi/type/details/hasless.hxx
-                   qi/type/details/objecttypebuilder.hxx
-                   qi/type/details/type.hxx
-                   qi/type/details/buffertypeinterface.hxx
-                   qi/type/details/typedispatcher.hxx
-                   qi/type/details/dynamictypeinterface.hxx
-                   qi/type/details/typeimpl.hxx
-                   qi/type/details/typeinterface.hpp
-                   qi/type/details/inttypeinterface.hxx
-                   qi/type/details/listtypeinterface.hxx
-                   qi/type/details/maptypeinterface.hxx
-                   qi/type/details/pointertypeinterface.hxx
-                   qi/type/details/stringtypeinterface.hxx
-                   qi/type/details/structtypeinterface.hxx
-                   qi/type/details/type.hpp
-                   qi/type/details/manageable.hpp
-                   qi/type/details/traceanalyzer.hpp
+                   qi/type/detail/signal.hxx
+                   qi/type/detail/property.hxx
+                   qi/type/detail/accessor.hxx
+                   qi/type/detail/anyreference.hpp
+                   qi/type/detail/anyreference.hxx
+                   qi/type/detail/anyvalue.hpp
+                   qi/type/detail/anyvalue.hxx
+                   qi/type/detail/anyfunction.hxx
+                   qi/type/detail/anyfunctionfactory.hxx
+                   qi/type/detail/anyiterator.hpp
+                   qi/type/detail/anyiterator.hxx
+                   qi/type/detail/bindtype.hxx
+                   qi/type/detail/functionsignature.hxx
+                   qi/type/detail/dynamicobjectbuilder.hxx
+                   qi/type/detail/genericobject.hpp
+                   qi/type/detail/object.hxx
+                   qi/type/detail/async.hxx
+                   qi/type/detail/proxyregister.hpp
+                   qi/type/detail/hasless.hxx
+                   qi/type/detail/objecttypebuilder.hxx
+                   qi/type/detail/type.hxx
+                   qi/type/detail/buffertypeinterface.hxx
+                   qi/type/detail/typedispatcher.hxx
+                   qi/type/detail/dynamictypeinterface.hxx
+                   qi/type/detail/typeimpl.hxx
+                   qi/type/detail/typeinterface.hpp
+                   qi/type/detail/inttypeinterface.hxx
+                   qi/type/detail/listtypeinterface.hxx
+                   qi/type/detail/maptypeinterface.hxx
+                   qi/type/detail/pointertypeinterface.hxx
+                   qi/type/detail/stringtypeinterface.hxx
+                   qi/type/detail/structtypeinterface.hxx
+                   qi/type/detail/type.hpp
+                   qi/type/detail/manageable.hpp
+                   qi/type/detail/traceanalyzer.hpp
 
                    qi/type/api.hpp
                    qi/binarycodec.hpp

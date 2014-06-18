@@ -7,7 +7,7 @@
 
 #include <qi/log.hpp>
 
-#include <qi/type/details/traceanalyzer.hpp>
+#include <qi/type/detail/traceanalyzer.hpp>
 
 qiLogCategory("qitype.traceanalyzer");
 

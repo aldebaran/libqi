@@ -15,7 +15,7 @@
 #include <qi/types.hpp>
 #include <qi/type/api.hpp>
 #include <qi/type/fwd.hpp>
-#include <qi/type/details/typeinterface.hpp>
+#include <qi/type/detail/typeinterface.hpp>
 #include <boost/type_traits/remove_const.hpp>
 
 namespace qi {
@@ -370,7 +370,7 @@ public:
 
 } // namespace qi
 
-#include <qi/type/details/anyreference.hxx>
+#include <qi/type/detail/anyreference.hxx>
 
 #include <qi/type/typeinterface.hpp>
 

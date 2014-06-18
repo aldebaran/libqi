@@ -224,8 +224,8 @@ namespace qi {
   QITYPE_API FunctionTypeInterface* dynamicFunctionTypeInterface();
 }
 
-#include <qi/type/details/anyfunction.hxx>
-#include <qi/type/details/anyfunctionfactory.hxx>
+#include <qi/type/detail/anyfunction.hxx>
+#include <qi/type/detail/anyfunctionfactory.hxx>
 
 #ifdef _MSC_VER
 #  pragma warning( pop )

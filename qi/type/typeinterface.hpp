@@ -19,7 +19,7 @@
 #include <qi/type/api.hpp>
 #include <qi/type/fwd.hpp>
 #include <qi/signature.hpp>
-#include <qi/type/details/typeinterface.hpp>
+#include <qi/type/detail/typeinterface.hpp>
 
 #ifdef _MSC_VER
 #  pragma warning( push )
@@ -368,16 +368,16 @@ namespace qi{
 }
 
 
-#include <qi/type/details/typeimpl.hxx>
-#include <qi/type/details/type.hxx>
-#include <qi/type/details/inttypeinterface.hxx>
-#include <qi/type/details/listtypeinterface.hxx>
-#include <qi/type/details/maptypeinterface.hxx>
-#include <qi/type/details/stringtypeinterface.hxx>
-#include <qi/type/details/pointertypeinterface.hxx>
-#include <qi/type/details/structtypeinterface.hxx>
-#include <qi/type/details/buffertypeinterface.hxx>
-#include <qi/type/details/dynamictypeinterface.hxx>
+#include <qi/type/detail/typeimpl.hxx>
+#include <qi/type/detail/type.hxx>
+#include <qi/type/detail/inttypeinterface.hxx>
+#include <qi/type/detail/listtypeinterface.hxx>
+#include <qi/type/detail/maptypeinterface.hxx>
+#include <qi/type/detail/stringtypeinterface.hxx>
+#include <qi/type/detail/pointertypeinterface.hxx>
+#include <qi/type/detail/structtypeinterface.hxx>
+#include <qi/type/detail/buffertypeinterface.hxx>
+#include <qi/type/detail/dynamictypeinterface.hxx>
 
 QI_NO_TYPE(qi::TypeInterface)
 QI_NO_TYPE(qi::TypeInterface*)

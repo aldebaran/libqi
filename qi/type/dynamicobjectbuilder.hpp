@@ -97,6 +97,6 @@ namespace qi {
   };
 }
 
-#include <qi/type/details/dynamicobjectbuilder.hxx>
+#include <qi/type/detail/dynamicobjectbuilder.hxx>
 
 #endif  // _QITYPE_DYNAMICOBJECTBUILDER_HPP_

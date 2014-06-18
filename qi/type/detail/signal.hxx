@@ -8,9 +8,9 @@
 #define _QITYPE_DETAILS_SIGNAL_HXX_
 
 #include <qi/trackable.hpp>
-#include <qi/type/details/manageable.hpp>
+#include <qi/type/detail/manageable.hpp>
 #include <boost/bind.hpp>
-#include <qi/type/details/functionsignature.hxx>
+#include <qi/type/detail/functionsignature.hxx>
 
 namespace qi
 {

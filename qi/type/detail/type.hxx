@@ -13,7 +13,7 @@
 #include <map>
 #include <vector>
 #include <list>
-#include <qi/type/details/bindtype.hxx>
+#include <qi/type/detail/bindtype.hxx>
 #include <boost/thread/mutex.hpp>
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/transform_view.hpp>

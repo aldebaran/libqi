@@ -12,7 +12,7 @@
 #include <qi/application.hpp>
 #include <qi/anyobject.hpp>
 #include <qi/type/dynamicobjectbuilder.hpp>
-#include <qi/type/details/traceanalyzer.hpp>
+#include <qi/type/detail/traceanalyzer.hpp>
 
 qiLogCategory("test");
 

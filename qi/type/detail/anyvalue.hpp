@@ -110,6 +110,6 @@ namespace qi {
 
 }
 
-#include <qi/type/details/anyvalue.hxx>
+#include <qi/type/detail/anyvalue.hxx>
 
 #endif  // _QITYPE_DETAILS_ANYVALUE_HPP_

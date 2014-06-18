@@ -14,7 +14,7 @@
 #include <qi/signature.hpp>
 #include <sstream>
 #include <qi/type/typeinterface.hpp>
-#include <qi/type/details/accessor.hxx>
+#include <qi/type/detail/accessor.hxx>
 #include <qi/anyobject.hpp>
 #include <qi/property.hpp>
 
@@ -130,7 +130,7 @@ namespace qi {
   };
 }
 
-#include <qi/type/details/objecttypebuilder.hxx>
+#include <qi/type/detail/objecttypebuilder.hxx>
 
 #define __QI_REGISTER_ELEMENT(_, name, field) \
   b.advertise(BOOST_PP_STRINGIZE(field), & name::field); // do not remove the space

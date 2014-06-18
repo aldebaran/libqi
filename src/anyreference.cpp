@@ -6,7 +6,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>
 
-#include <qi/type/details/anyreference.hpp>
+#include <qi/type/detail/anyreference.hpp>
 #include <qi/anyobject.hpp>
 
 #if defined(_MSC_VER) && _MSC_VER <= 1500

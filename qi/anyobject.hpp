@@ -60,13 +60,13 @@ QITYPE_API qi::Future<AnyReference> metaCall(EventLoop* el,
 
 }
 
-#include <qi/type/details/genericobject.hpp>
+#include <qi/type/detail/genericobject.hpp>
 
-#include <qi/type/details/object.hxx>
+#include <qi/type/detail/object.hxx>
 
-#include <qi/type/details/async.hxx>
+#include <qi/type/detail/async.hxx>
 
-#include <qi/type/details/proxyregister.hpp>
+#include <qi/type/detail/proxyregister.hpp>
 
 #include <qi/type/objecttypebuilder.hpp>
 

@@ -8,7 +8,7 @@
 #define _QITYPE_DETAILS_TYPEIMPL_HXX_
 
 #include <set>
-#include <qi/type/details/hasless.hxx>
+#include <qi/type/detail/hasless.hxx>
 #include <qi/traits.hpp>
 
 

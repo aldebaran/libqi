@@ -7,8 +7,8 @@
 #ifndef _QITYPE_DETAILS_ANYFUNCTION_HXX_
 #define _QITYPE_DETAILS_ANYFUNCTION_HXX_
 
-#include <qi/type/details/anyvalue.hpp>
-#include <qi/type/details/bindtype.hxx>
+#include <qi/type/detail/anyvalue.hpp>
+#include <qi/type/detail/bindtype.hxx>
 
 namespace qi
 {

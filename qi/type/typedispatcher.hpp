@@ -39,6 +39,6 @@ namespace qi {
 
 }
 
-#include <qi/type/details/typedispatcher.hxx>
+#include <qi/type/detail/typedispatcher.hxx>
 
 #endif  // _QITYPE_TYPEDISPATCHER_HPP_

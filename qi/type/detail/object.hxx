@@ -12,7 +12,7 @@
 #include <qi/future.hpp>
 #include <qi/type/typeinterface.hpp>
 #include <qi/type/typeobject.hpp>
-#include <qi/type/details/typeimpl.hxx>
+#include <qi/type/detail/typeimpl.hxx>
 #include <qi/type/metasignal.hpp>
 #include <qi/type/metamethod.hpp>
 #include <qi/type/metaobject.hpp>
