@@ -1,5 +1,5 @@
 .. _api-anyvalue:
-.. cpp:namespace:: qi
+.. cpp:namespace:: qi::AnyValue
 .. cpp:auto_template:: True
 .. default-role:: cpp:guess
 

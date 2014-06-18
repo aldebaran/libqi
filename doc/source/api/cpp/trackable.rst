@@ -1,5 +1,5 @@
 .. _api-trackable:
-.. cpp:namespace:: qi
+.. cpp:namespace:: qi::Trackable
 .. cpp:auto_template:: True
 .. default-role:: cpp:guess
 
@@ -33,7 +33,7 @@ In this case, you need to use `qi::Trackable` with `qi::bind` so that the
 callback won't be called when your object dies.
 
 MyClass should inherit from `qi::Trackable<MyClass>` and the constructor must
-call `qi::Trackable`'s constructor with `this`. Then, you *must* call
+call `qi::Trackable`'s constructor with ``this``. Then, you *must* call
 `destroy()` at the *beginning* of your destructor. `destroy()` ensures that all
 callbacks are finished before you start destructing your object. Then you must
 use qi::bind instead of boost::bind which will do nothing if its first argument
@@ -62,3 +62,5 @@ is not valid anymore.
   signal(); // callback won't be called, no crash
 
 .. cpp:autoclass:: qi::Trackable
+
+.. cpp:autofunction:: qi::bind

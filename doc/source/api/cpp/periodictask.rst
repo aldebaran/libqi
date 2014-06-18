@@ -1,5 +1,5 @@
 .. _api-periodictask:
-.. cpp:namespace:: qi
+.. cpp:namespace:: qi::PeriodicTask
 .. cpp:auto_template:: True
 .. default-role:: cpp:guess
 
@@ -40,7 +40,7 @@ In all cases, `PeriodicTask` never gives hard time guaranties (like realtime).
 If there is a lot of work in the event loop, your task may be called later than
 expected.
 
-However, `PeriodictTask` guaranties you that it will *never* call your callback
+However, `PeriodicTask` guaranties you that it will *never* call your callback
 twice at the same time, even if it missed it's deadline. Also, when you call
 stop, it will block until the callback is finished if it's currently running.
 
