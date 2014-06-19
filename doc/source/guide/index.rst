@@ -12,6 +12,7 @@ User Guides
   cxx-async
   cxx-log
   cxx-linguist
+  cxx-path
   py-client
   py-service
   py-tonaoqi2

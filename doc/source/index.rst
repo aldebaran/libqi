@@ -21,6 +21,7 @@ User Guides
  - :ref:`C++: Using logs<guide-cxx-log>`
  - :ref:`C++: Getting and publishing logs<guide-cxx-log-client>`
  - :ref:`C++: Internationalization Guide<guide-cxx-linguist>`
+ - :ref:`C++: Handling Paths Guide<guide-cxx-path>`
  - :ref:`Python: Writing a client<guide-py-client>`
  - :ref:`Python: Writing a service<guide-py-service>`
  - :ref:`Python: Getting and publishing logs<guide-py-log-client>`
