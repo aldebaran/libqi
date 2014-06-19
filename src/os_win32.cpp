@@ -271,10 +271,6 @@ namespace qi {
       return  dest.make_preferred().string(qi::unicodeFacet());
     }
 
-    std::string tmpdir(const char *prefix) {
-      return mktmpdir(prefix);
-    }
-
     std::string gethostname()
     {
       DWORD dwBufferSize = MAX_COMPUTERNAME_LENGTH + 1;

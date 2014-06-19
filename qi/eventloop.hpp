@@ -143,14 +143,6 @@ namespace qi
    * \return io_service used by the global event loop.
    */
   QI_API boost::asio::io_service& getIoService();
-
-  /// Compat
-  /// Return a default event loop for network operations.
-  QI_API QI_API_DEPRECATED EventLoop* getDefaultNetworkEventLoop();
-  /// Return a default context for other uses.
-  QI_API QI_API_DEPRECATED EventLoop* getDefaultObjectEventLoop();
-  /// Return a default thread pool context
-  QI_API QI_API_DEPRECATED EventLoop* getDefaultThreadPoolEventLoop();
 }
 
 # ifdef _MSC_VER

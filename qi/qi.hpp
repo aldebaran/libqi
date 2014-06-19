@@ -15,7 +15,6 @@
  * \brief Tools to handle utf8 charset.
  * \includename{qi/qi.hpp}
  */
-
 namespace qi {
   /**
    * \brief Standard std::codecvt type accepted by STL and boost.

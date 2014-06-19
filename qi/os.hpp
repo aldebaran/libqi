@@ -525,9 +525,6 @@ namespace qi {
      * Otherwise returns a value of 0, meaning that it was impossible to get the memory usage.
      */
     QI_API size_t memoryUsage(unsigned int pid);
-
-    //since 1.12.1
-    QI_API_DEPRECATED QI_API std::string tmpdir(const char *prefix = "");
   }
 }
 

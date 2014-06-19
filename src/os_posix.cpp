@@ -174,11 +174,6 @@ namespace qi {
       return ret;
     }
 
-    std::string tmpdir(const char *prefix)
-    {
-      return mktmpdir(prefix);
-    }
-
 #ifdef ANDROID
     std::string gethostname()
     {

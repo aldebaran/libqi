@@ -705,22 +705,6 @@ namespace qi {
     return ctx;
   }
 
-  EventLoop* getDefaultNetworkEventLoop()
-  {
-    return getEventLoop();
-
-  }
-
-  EventLoop* getDefaultObjectEventLoop()
-  {
-    return getEventLoop();
-  }
-
-  EventLoop* getDefaultThreadPoolEventLoop()
-  {
-    return getEventLoop();
-  }
-
   void startEventLoop(int nthread)
   {
     _get(_poolEventLoop, false, nthread);

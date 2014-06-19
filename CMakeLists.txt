@@ -49,7 +49,6 @@ set(H
   qi/bufferreader.hpp
   qi/clock.hpp
   qi/clock.hxx
-  qi/error.hpp
   qi/future.hpp
   qi/log/consoleloghandler.hpp
   qi/log/fileloghandler.hpp
