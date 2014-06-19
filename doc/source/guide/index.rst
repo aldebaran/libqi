@@ -11,6 +11,7 @@ User Guides
   cxx-register-types
   cxx-async
   cxx-log
+  cxx-linguist
   py-client
   py-service
   py-tonaoqi2
