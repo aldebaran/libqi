@@ -171,3 +171,27 @@ Let's look at a client example:
    fut = qi.async(foo.betterBar)
 
    delay = fut.value()
+
+Single-threaded / Multi-threaded mode for services
+--------------------------------------------------
+
+By default, python services are in single-threaded mode.
+This means their methods cannot be called in parallel.
+You might encounter this kind of message if you call several methods of such a module at the same time.
+
+.. code-block:: console
+
+  [W] 1394221129.982971 4079 qitype.dynamicobject: Time-out acquiring object lock when calling method. Deadlock?
+  [E] 1394221129.988775 4052 python: RuntimeError: Time-out acquiring lock. Deadlock?
+  [W] 1394221137.850762 3859 qitype.dynamicobject: Time-out acquiring object lock when calling method. Deadlock?
+
+If you need to call methods of your module in parallel, you will need to protect them yourself,
+and specify that your module is in multithread mode by using the qi.multiThreaded decorator.
+
+.. code-block:: python
+
+   @qi.multiThreaded()
+   class Foo:
+     #
+     # Define your service
+     #
