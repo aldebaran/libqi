@@ -166,7 +166,6 @@ bool ServiceHelper::post(const std::string &signalName, const qi::GenericFunctio
 
 bool ServiceHelper::call(const std::string &methodName, const qi::GenericFunctionParameters &gvArgList, unsigned int callCount)
 {
-  printServiceMember(_name, methodName);
   std::cout.flush();
   qi::int64_t t = qi::os::ustime();
   if (callCount)
