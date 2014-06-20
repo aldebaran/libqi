@@ -115,6 +115,11 @@ namespace qi
        */
       QI_API void clearOptionalSdkPrefix();
 
+      /**
+       * \brief Set the writable files path for users.
+       * \param path Path to the new writable data path
+       */
+      QI_API void setWritablePath(const std::string &path);
     }
 
     /**
@@ -353,8 +358,12 @@ namespace qi
      */
     QI_API std::string convertToDosPath(const std::string &pathString);
 
-    /// Set the writable files path for users.
-    QI_API void setWritablePath(const std::string &path);
+    /**
+     * \brief Set the writable files path for users.
+     * \param path Path to the new writable data path
+     * \deprecated since 2.2
+     */
+    QI_API QI_API_DEPRECATED void setWritablePath(const std::string &path);
   }
 }
 

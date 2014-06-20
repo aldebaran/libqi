@@ -168,6 +168,12 @@ namespace qi
         return getInstance()->getSdkPrefixes();
       }
 
+      void setWritablePath(const std::string &path)
+      {
+        qiLogVerbose() << "Writable path set to " << path;
+        getInstance()->setWritablePath(path);
+      }
+
 #ifdef _WIN32
       std::string dosCompatiblePath(const std::string &pathString)
       {
@@ -270,8 +276,7 @@ namespace qi
 
     void setWritablePath(const std::string &path)
     {
-      qiLogVerbose() << "Writable path set to " << path;
-      getInstance()->setWritablePath(path);
+      qi::path::detail::setWritablePath(path);
     }
 
     std::string userWritableDataPath(const std::string &applicationName,
@@ -331,7 +336,7 @@ namespace qi
   namespace {
     _QI_COMMAND_LINE_OPTIONS(
       "Chrooting",
-      ("writable-path", value<std::string>()->notifier(&qi::path::setWritablePath), "Set the writable path.")
+      ("writable-path", value<std::string>()->notifier(&qi::path::detail::setWritablePath), "Set the writable path.")
       )
   }
 }
