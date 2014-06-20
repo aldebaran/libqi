@@ -34,3 +34,22 @@ For example, **opencv_objdetect** .
 
 Example
 =======
+
+.. code-block:: python
+
+   import qi
+   #where should I write the files for my application "myapp"?
+
+   dataPath = qi.path.userWritableDataPath("myapp", "mydatafile")
+   # datapath => /home/nao/.local/share/myapp/mydatafile
+   confPath = qi.path.userWritableConfPath("myapp", "myconffile")
+   # confPath => /home/nao/.config/myapp/myconffile
+
+
+   # I want to save all my data and configuration files in a personal folder
+   qi.path.setWritablePath("/home/nao/my_path")
+
+   dataPath = qi.path.userWritableDataPath("myapp", "mydatafile")
+   # datapath => /home/nao/my_path/data/myapp/mydatafile
+   confPath = qi.path.userWritableConfPath("myapp", "myconffile")
+   # confPath => /home/nao/my_path/config/myapp/myconffile

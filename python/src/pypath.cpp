@@ -163,7 +163,8 @@ namespace qi {
                          "setWritablePath(path) -> None\n"
                          ":param path: string. A path on the system.\n"
                          "\n"
-                         "Set the writable files path for users.");
+                         "Set the writable files path for users. "
+                         "Use an empty path to reset it to its initial value.");
 
       boost::python::def("userWritableDataPath", &qi::path::userWritableDataPath,
                          "userWritableDataPath(application, file) -> string\n"
