@@ -17,24 +17,27 @@ qi::Signal<T>
   #include <qi/signal.hpp>
 
 
-Implementation of the *signal/event* paradigm, with some specificities:
+This is an implementation of the *signal/event* paradigm, with some
+specificities:
 
 - Thread-safe.
 - Synchronous or asynchronous subscriber invocation.
 - Subscriber disconnection garantees that subscriber is not/will not be called
   anymore when it returns.
-- Automatic subscriber disconnection when *weak_ptr* or *Trackable* is used.
+- Automatic subscriber disconnection when ``weak_ptr`` or `qi::Trackable` is
+  used.
 
-`qi::Signal` has pointer semantics: copies of a `Signal` share the same state.
+`qi::Signal` is non-copiable.
 
 
 Template argument
 -----------------
 
-`Signal` is templated by the argument types that must be passed when triggering,
-and that will be transmitted to subscribers. For instance *Signal<int, int>*
-is the type of a *Signal* with two ints as payload type: `Signal::operator()`
-will expect two ints, and subscribers will be expected to have signature *void(int, int)*.
+`Signal` is templated by the argument types that must be passed when
+triggering, and that will be transmitted to subscribers. For instance,
+``Signal<int, int>`` is the type of a `Signal` with two ints as payload type:
+`Signal::operator()` will expect two ints, and subscribers will be expected to
+have signature ``void(int, int)``.
 
 Subscribing to the signal
 -------------------------
@@ -54,12 +57,13 @@ Arguments to *connect* can take multiple forms:
   bound to the function (more about that below).
 - An other compatible `Signal`.
 
-The variadic form of *connect* works in a similar manner to *boost::bind()*:
-values passed to *connect* will be passed to the function, in order, and
-*placeholders* *_1*, *_2* ... will be replaced by the signal payloads.
+The variadic form of `Signal::connect` works in a similar manner to
+``boost::bind()``: values passed to *connect* will be passed to the function,
+in order, and placeholders ``_1``, ``_2``... will be replaced by the signal
+payloads.
 
-This form will also recognise if the first argument is a *boost::weak_ptr*, or
-if it as pointer to a class inheriting `qi::Trackable`. In both cases, the
+This form will also recognise if the first argument is a ``boost::weak_ptr``,
+or if it as pointer to a class inheriting `qi::Trackable`. In both cases, the
 subscriber will be automatically disconnected if the pointer cannot be locked.
 See :ref:`this example<future-connect>` for a demonstration of that very same
 mechanism in `qi::Future`.
@@ -69,11 +73,12 @@ Return value
 
 .. _signal-setCallType:
 
-`Signal::connect` returns a *SignalSubscriber&*, that you can use to:
+`Signal::connect` returns a ``SignalSubscriber&``, that you can use to:
 
 - Override the default call type for this subscriber to synchronous or asynchronous
   by calling `SignalSubscriber::setCallType`.
-- Obtain a subscriber identifier of type `qi::SignalLink` by casting the `SignalSubscriber`:
+- Obtain a subscriber identifier of type `qi::SignalLink` by casting the
+  `SignalSubscriber`:
 
 .. code-block:: c++
 
@@ -89,8 +94,8 @@ Unregistering a subscriber
 Unregistering a subscriber is done by invoking `Signal::disconnect` with a
 `SignalLink` as its sole argument. The call will block until all currently
 running invocations of the subscriber have finished. This gives you the strong
-garantee than once *disconnect* has returned, your callback function is not being
-called, and will never be called again.
+garantee than once ``disconnect`` has returned, your callback function is not
+being called, and will never be called again.
 
 
 Triggering the signal
@@ -98,7 +103,7 @@ Triggering the signal
 
 .. cpp:function:: void Signal::operator()(T)
 
-Trigger the signal is achieved by using the `Signal::operator()`, with
+Triggering the signal is achieved by using the `Signal::operator()`, with
 arguments matching the `Signal` type:
 
 .. code-block:: c++
@@ -127,7 +132,7 @@ Monitoring the presence of subscribers
 
 Sometimes, mainly for performance reasons, it is useful to only enable some
 code if a `Signal` has at least one subscriber. This can be achieved by
-passing a callback to the *Signal* constructor, of signature *void(bool)*.
+passing a callback to the `Signal` constructor, of signature ``void(bool)``.
 This function will be called each time the number of subscribers switches
 between 0 and 1.
 
@@ -137,19 +142,19 @@ Overriding the default Signal behavior
 .. cpp:function: Signal::setTriggerOverride(Trigger trigger)
 .. cpp:function: Signal::callSubscribers(const GenericFunctionParameters args, MetaCallType callType)
 
-Sometimes, mainly when bridging `Signal` with an other signal implementation, one
-needs to override the action performed when the signal is triggered (which is
-by default to invoke all subscribers).
+Sometimes, mainly when bridging `Signal` with an other signal implementation,
+one needs to override the action performed when the signal is triggered (which
+is by default to invoke all subscribers).
 
-This can be achieved by inheriting from `Signal`, and then either overriding the
-`Signal::trigger` virtual function, or calling `Signal::setTriggerOverride` with
-a functor that will replace the original trigger. You can then call
-`Signal::callSubscribers` to invoke the subscribers, which *trigger* would do
-by default.
+This can be achieved by inheriting from `Signal`, and then either overriding
+the `Signal::trigger` virtual function, or by calling
+`Signal::setTriggerOverride` with a functor that will replace the original
+trigger. You can then call `Signal::callSubscribers` to invoke the subscribers,
+which ``trigger`` would do by default.
 
 .. cpp:class:: qi::SignalSubscriber
 
 .. cpp:function: SignalSubscriber::setCallType(MetaCallType)
 
 Set the call type used for this subscriber. If set to `MetaCallType_Auto`,
-the call type set for the signal (by `Signal::setCallType` will be used.
+the call type set for the signal (by `Signal::setCallType` will be used).
