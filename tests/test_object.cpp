@@ -418,6 +418,56 @@ TEST(TestObject, ConvertSimple)
   ASSERT_EQ(p2.y, p.y);
 }
 
+TEST(TestObject, ConvertMapStruct)
+{
+  typedef std::map<std::string, int> MyMap;
+  MyMap m;
+
+  m["x"] = 41;
+  m["y"] = 42;
+
+  qi::AnyReference r = qi::AnyReference::from(m);
+
+  Point p = r.to<Point>();
+  qiLogInfo() << "converted map to point";
+
+  ASSERT_EQ(41, p.x);
+  ASSERT_EQ(42, p.y);
+
+//  qi::AnyReference r2 = qi::AnyReference::from(p);
+//  MyMap m2;
+
+//  m2 = r2.to<MyMap>();
+
+//  ASSERT_EQ(41, m2["x"]);
+//  ASSERT_EQ(42, m2["y"]);
+}
+
+TEST(TestObject, ConvertGenericMapStruct)
+{
+  typedef std::map<qi::AnyValue, qi::AnyValue> MyMap;
+  MyMap m;
+
+  m[qi::AnyValue::from("x")] = qi::AnyValue::from(41);
+  m[qi::AnyValue::from("y")] = qi::AnyValue::from(42);
+
+  qi::AnyReference r = qi::AnyReference::from(m);
+
+  Point p = r.to<Point>();
+
+  ASSERT_EQ(41, p.x);
+  ASSERT_EQ(42, p.y);
+
+//  qi::AnyReference r2 = qi::AnyReference::from(p);
+//  MyMap m2;
+
+//  m2 = r2.to<MyMap>();
+
+//  ASSERT_EQ(41, m2[qi::AnyValue::from("x")]);
+//  ASSERT_EQ(42, m2[qi::AnyValue::from("y")]);
+}
+
+
 struct Complex
 {
   bool operator == (const Complex& b) const {

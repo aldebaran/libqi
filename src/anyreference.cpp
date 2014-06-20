@@ -458,6 +458,62 @@ namespace detail
       result._value = dst;
       return std::make_pair(result, true);
     }
+    case TypeKind_Map: {
+        MapTypeInterface* tsrc = static_cast<MapTypeInterface*>(_type);
+
+        //key must be string
+        if (tsrc->keyType()->kind() != TypeKind_String && tsrc->keyType()->kind() != TypeKind_Dynamic) {
+          qiLogWarning() << "convert from map to struct, the key should be a string. (was " << tsrc->keyType()->kind() << ")";
+          return std::make_pair(AnyReference(), false);
+        }
+        const std::vector<std::string>& elems = targetType->elementsName();
+        std::vector<TypeInterface*> dstTypes = targetType->memberTypes();
+
+        if (elems.size() != dstTypes.size()) {
+          qiLogWarning() << "convert from map to struct, cant convert to tuple";
+          return std::make_pair(AnyReference(), false);
+        }
+        std::vector<void*> targetData;
+        targetData.reserve(dstTypes.size());
+        std::vector<bool> mustDestroy;
+        mustDestroy.reserve(dstTypes.size());
+        for (unsigned i = 0; i < elems.size(); ++i) {
+          AnyReference rname(tsrc->keyType());
+
+          if (tsrc->keyType()->kind() == TypeKind_String)
+            rname.setString(elems.at(i));
+          else
+            rname.setDynamic(qi::AnyReference::from(elems.at(i)));
+
+          AnyReference ref = tsrc->element(const_cast<void**>(&_value), rname._value, false);
+          if (!ref.isValid()) {
+            qiLogWarning() << "convert from map to struct, element '" << elems.at(i) << "' do not exists";
+            return std::make_pair(AnyReference(), false);
+          }
+
+          std::pair<AnyReference, bool> conv = ref.convert(dstTypes[i]);
+          if (!conv.first.isValid())
+          {
+            for (unsigned u = 0; u < targetData.size(); ++u)
+              if (mustDestroy[u])
+                dstTypes[u]->destroy(targetData[u]);
+            qiLogWarning() << "convert from map to struct, cant convert to the good type for '" << elems.at(i) << "'";
+            return std::make_pair(AnyReference(), false);
+          }
+          targetData.push_back(conv.first._value);
+          mustDestroy.push_back(conv.second);
+        }
+        void* dst = tdst->initializeStorage();
+        tdst->set(&dst, targetData);
+        for (unsigned i = 0; i < mustDestroy.size(); ++i)
+        {
+          if (mustDestroy[i])
+            dstTypes[i]->destroy(targetData[i]);
+        }
+        result._type = targetType;
+        result._value = dst;
+        return std::make_pair(result, true);
+    }
     case TypeKind_VarArgs:
     case TypeKind_List:
     {
@@ -486,7 +542,7 @@ namespace detail
       while (srcBegin != srcEnd)
       {
         std::pair<AnyReference, bool> conv = (*srcBegin).convert(dstTypes[i]);
-        if (!conv.first._type)
+        if (!conv.first.isValid())
         {
           for (unsigned u = 0; u < targetData.size(); ++u)
             if (mustDestroy[u])
@@ -693,6 +749,9 @@ namespace detail
       return convert(static_cast<MapTypeInterface*>(targetType));
     else if (skind == TypeKind_Map && dkind == TypeKind_List)
       return convert(static_cast<ListTypeInterface*>(targetType));
+    else if (skind == TypeKind_Map && dkind == TypeKind_Tuple)
+      return convert(static_cast<StructTypeInterface*>(targetType));
+
 
     else if (skind == TypeKind_Float && dkind == TypeKind_Int)
       return convert(static_cast<IntTypeInterface*>(targetType));
