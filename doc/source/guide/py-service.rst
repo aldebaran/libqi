@@ -43,20 +43,22 @@ Creating a session
 
 To make the service available to others we need a :py:class:`qi.Session`.
 
-Let's create a :py:class:`qi.Session` and connect it to a ServiceDirectory, then let's register our MyFooService created just above under the name 'foo'.
+We will use the session of the :py:class:`qi.Application` that is already connected to a ServiceDirectory,
+and register our MyFooService created just above under the name 'foo'.
 
 .. code-block:: python
 
   import qi
+  import sys
 
   #create an application
-  app = qi.Application()
+  app = qi.Application(sys.argv)
+  app.start()
 
   #create an instance of MyFooService
   myfoo = MyFooService()
 
-  s = qi.Session()
-  s.connect("tcp://127.0.0.1:9559")
+  s = app.session
   #let's register our service with the name "foo"
   id = s.registerService("foo", myfoo)
 
@@ -72,13 +74,16 @@ We are going to create a simple client to call the service and react to it.
 .. code-block:: python
 
   import qi
+  import sys
 
   def onBangCb(i):
     print "bang:", i
 
-  s = qi.Session()
-  s.connect("tcp://127.0.0.1:9559")
+  app = qi.Application(sys.argv)
+  app.start()
+  s = app.session
   foo = s.service("foo")
+
   #register a callback on 'onBang'
   foo.onBang.connect(onBangCb)
   #call bang
