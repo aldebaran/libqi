@@ -36,11 +36,12 @@ namespace qi {
     #undef genCall
 
     // in dynamicobjectbuilder.hxx
-    template<typename T> AnyObject makeObject(const std::string& fname, T func);
+    template<typename T>
+    AnyObject makeObject(const std::string& fname, T func);
 
     // Create a factory function for an object with one method functionName bouncing to func
-    template<typename T> boost::function<AnyObject()>
-    makeObjectFactory(const std::string functionName, T func)
+    template<typename T>
+    boost::function<AnyObject()> makeObjectFactory(const std::string functionName, T func)
     {
       return boost::bind(&makeObject<T>, functionName, func);
     }
