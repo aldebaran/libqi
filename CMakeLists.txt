@@ -37,30 +37,6 @@ set(PUBLIC_HEADERS
                    qi/signal.hpp
                    qi/anyvalue.hpp
 
-                   qitype/fwd.hpp
-                   qitype/anyfunction.hpp
-                   qitype/anyobject.hpp
-                   qitype/anyreference.hpp
-                   qitype/anyvalue.hpp
-                   qitype/binarycodec.hpp
-                   qitype/dynamicobject.hpp
-                   qitype/dynamicobjectbuilder.hpp
-                   qitype/jsoncodec.hpp
-                   qitype/metamethod.hpp
-                   qitype/metaobject.hpp
-                   qitype/metaproperty.hpp
-                   qitype/metasignal.hpp
-                   qitype/objectfactory.hpp
-                   qitype/objecttypebuilder.hpp
-                   qitype/property.hpp
-                   qitype/proxyproperty.hpp
-                   qitype/proxysignal.hpp
-                   qitype/signal.hpp
-                   qitype/signature.hpp
-                   qitype/typeinterface.hpp
-                   qitype/typeobject.hpp
-                   qitype/typedispatcher.hpp
-
                    qi/type/detail/signal.hxx
                    qi/type/detail/property.hxx
                    qi/type/detail/accessor.hxx
@@ -162,10 +138,11 @@ set(SOURCES ${PUBLIC_HEADERS}
 list(APPEND SOURCES ${_confighpp})
 
 qi_create_lib(qitype ${SOURCES} SHARED DEPENDS QI BOOST BOOST_DATE_TIME BOOST_THREAD BOOST_LOCALE)
-qi_stage_lib(qitype)
+qi_stage_lib(qitype INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/compat")
 
 option(DISABLE_CODEGEN "disable the code generation (broken)" ON)
 
+add_subdirectory("compat")
 add_subdirectory("tests")
 if(NOT ANDROID AND NOT DISABLE_CODEGEN)
   add_subdirectory("codegen")

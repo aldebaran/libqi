@@ -291,6 +291,7 @@ namespace detail
     }
     return std::make_pair(AnyReference(), false);
   }
+
   namespace {
     // Cleanup allocated stuff when exiting scope
     struct CleanUp
@@ -314,6 +315,7 @@ namespace detail
       std::vector<TypeInterface*>& dstTypes;
     };
   }
+
   static std::pair<AnyReference, bool> structConverter(const AnyReferenceBase* src, StructTypeInterface* tdst)
   {
     StructTypeInterface* tsrc = static_cast<StructTypeInterface*>(src->type());
