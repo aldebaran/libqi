@@ -58,8 +58,9 @@ remote). This method will return a `qi::AnyObject`.
   int main(int argc, char** argv)
   {
     qi::ApplicationSession app(argc, argv);
+    app.start();
     qi::SessionPtr session = app.session();
-    qi::AnyObject tts = session.service("ALTextToSpeech");
+    qi::AnyObject tts = session->service("ALTextToSpeech");
     tts.call<void>("say", "Hello world!");
   }
 

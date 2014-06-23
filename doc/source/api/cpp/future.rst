@@ -305,24 +305,34 @@ corresponding future:
 
 Now, ``calculate`` is asynchronous! But this isn't useful at all, our code is
 more complex and this could have been done just by calling `qi::async`. What we
-can do now is implement cancellation so that one can call `cancel()` on the
+can do now is to support cancellation so that one can call `cancel()` on the
 returned future to abort the action.
 
 Cancellation support
 --------------------
 
-Let's change ``doWork()`` to receive a bool pointer that will change state when
-a cancellation has been requested. At each iteration, it will check if the bool
-is still false, if it is true it will cancel the task.
+Promises are cancellable when they are given a cancellation callback at
+construction. You usually don't need this callback so you can just pass the
+no-operation callback.
 
 .. code-block:: cpp
 
-  void Worker::doWork(qi::Promise<int> promise,
-      boost::shared_ptr<bool> cancelRequested) {
+  qi::Future<int> Worker::calculate() {
+    qi::Promise<int> promise(qi::PromiseNoop<int>);
+    qi::async(boost::bind(&Worker::doWork, this, promise));
+    return promise.future();
+  }
+
+``doWork()`` can now check if the future has been cancelled.
+
+.. code-block:: cpp
+
+  void Worker::doWork(qi::Promise<int> promise)
+  {
     int acc = 0;
     for (int i = 0; i < 100; ++i)
     {
-      if (*cancelRequested)
+      if (promise.isCancelRequested())
       {
         std::cout << "cancel requested" << std::endl;
         promise.setCanceled();
@@ -333,29 +343,6 @@ is still false, if it is true it will cancel the task.
     }
     promise.setValue(acc);
   }
-
-Now we must provide a cancellation callback to the promise and make it update
-the variable:
-
-.. code-block:: cpp
-
-  static void doCancel(boost::shared_ptr<bool> b) {
-    *b = true;
-  }
-
-  qi::Future<int> Worker::calculate() {
-    boost::shared_ptr<bool> cancel = boost::make_shared<bool>(false);
-    qi::Promise<int> promise(boost::bind(&doCancel, cancel));
-
-    qi::getEventLoop()->async(boost::bind(&Worker::doWork, this,
-          promise, cancel));
-
-    return promise.future();
-  }
-
-When we call `cancel()` on the returned future, ``doCancel`` will be called
-which will set the boolean to false and ``doWork`` will break from its loop and
-set the promise to a cancelled state.
 
 .. cpp:autoenum:: FutureState
 
