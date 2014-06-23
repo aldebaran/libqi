@@ -9,7 +9,6 @@
 
 #include <set>
 #include <qi/type/detail/hasless.hxx>
-#include <qi/traits.hpp>
 
 
 /* This file contains class to help implementing the Type interface.
