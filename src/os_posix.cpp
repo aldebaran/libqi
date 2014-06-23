@@ -468,10 +468,10 @@ namespace qi {
 #else
       thread_basic_info threadInfo;
       unsigned int count = THREAD_BASIC_INFO_COUNT;
-      int error = thread_info(mach_thread_self(), THREAD_BASIC_INFO, (thread_info_t)&threadInfo, &count);
+      thread_info(mach_thread_self(), THREAD_BASIC_INFO, (thread_info_t)&threadInfo, &count);
 
       return std::make_pair(
-	threadInfo.user_time.seconds * seq_to_usec + threadInfo.user_time.microseconds,
+        threadInfo.user_time.seconds * seq_to_usec + threadInfo.user_time.microseconds,
         threadInfo.system_time.seconds * seq_to_usec + threadInfo.system_time.microseconds
      );
 #endif
