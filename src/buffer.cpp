@@ -221,7 +221,7 @@ namespace qi
     return copy;
   }
 
-  namespace details {
+  namespace detail {
     void printBuffer(std::ostream& stream, const Buffer& buffer)
     {
       if (buffer.size() == 0) {

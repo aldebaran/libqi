@@ -36,13 +36,13 @@ qiprobes_instrument_files(tp_qi
   src/eventloop.cpp)
 
 set(H
-  qi/details/clock.hxx
-  qi/details/eventloop.hxx
-  qi/details/future.hxx
-  qi/details/log.hxx
-  qi/details/trackable.hxx
-  qi/details/warn_push_ignore_deprecated.hpp
-  qi/details/warn_pop_ignore_deprecated.hpp
+  qi/detail/clock.hxx
+  qi/detail/eventloop.hxx
+  qi/detail/future.hxx
+  qi/detail/log.hxx
+  qi/detail/trackable.hxx
+  qi/detail/warn_push_ignore_deprecated.hpp
+  qi/detail/warn_pop_ignore_deprecated.hpp
   qi/api.hpp
   qi/application.hpp
   qi/atomic.hpp

@@ -470,17 +470,17 @@ namespace qi {
     QI_API void flush();
 
 
-    #include <qi/details/warn_push_ignore_deprecated.hpp>
+    #include <qi/detail/warn_push_ignore_deprecated.hpp>
     /// \deprecated 1.22
     QI_API_DEPRECATED inline void setVerbosity(SubscriberId sub, const qi::log::LogLevel lv) { setVerbosity((qi::LogLevel)lv, sub); }
     /// \deprecated 1.22
     QI_API_DEPRECATED inline void setCategory(SubscriberId sub, const std::string& cat, qi::log::LogLevel level) { setCategory(cat, (qi::LogLevel)level, sub); }
-    #include <qi/details/warn_pop_ignore_deprecated.hpp>
+    #include <qi/detail/warn_pop_ignore_deprecated.hpp>
 
   }
 }
 
-# include <qi/details/log.hxx>
+# include <qi/detail/log.hxx>
 
 
 #endif  // _QI_LOG_HPP_

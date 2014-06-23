@@ -112,5 +112,5 @@ namespace qi
       const boost::function<F>& f, const ARG0& arg0);
 }
 
-# include <qi/details/trackable.hxx>
+# include <qi/detail/trackable.hxx>
 #endif  // _QI_TRACKABLE_HPP_

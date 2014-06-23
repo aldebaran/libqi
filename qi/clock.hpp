@@ -209,6 +209,6 @@ namespace qi
   template class QI_API boost::chrono::time_point<qi::WallClock>;
 # endif
 
-# include <qi/details/clock.hxx>
+# include <qi/detail/clock.hxx>
 
 #endif  // _QI_OS_HPP_

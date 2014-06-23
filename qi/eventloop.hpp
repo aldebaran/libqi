@@ -149,5 +149,5 @@ namespace qi
 #  pragma warning( pop )
 # endif
 
-# include <qi/details/eventloop.hxx>
+# include <qi/detail/eventloop.hxx>
 #endif  // _QI_EVENTLOOP_HPP_

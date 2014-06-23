@@ -200,7 +200,7 @@ namespace qi
     boost::shared_ptr<BufferPrivate> _p;
   };
 
-  namespace details {
+  namespace detail {
     QI_API void printBuffer(std::ostream& stream, const Buffer& buffer);
   }
 }

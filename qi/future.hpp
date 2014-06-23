@@ -758,6 +758,6 @@ namespace qi {
 #  pragma warning( pop )
 #endif
 
-#include <qi/details/future.hxx>
+#include <qi/detail/future.hxx>
 
 #endif  // _QI_FUTURE_HPP_
