@@ -200,7 +200,7 @@ namespace qi {
 
     os << "," << std::endl
        << "  data=" << std::endl;
-    qi::details::printBuffer(os, msg._p->buffer);
+    qi::detail::printBuffer(os, msg._p->buffer);
     os << std::endl << "}";
     return os;
   }
@@ -558,4 +558,3 @@ namespace qi {
   }
 
 }
-

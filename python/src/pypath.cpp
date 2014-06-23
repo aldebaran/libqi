@@ -159,7 +159,7 @@ namespace qi {
                          " nor that they are writable."
                          "\n");
 
-      boost::python::def("setWritablePath", &qi::path::setWritablePath,
+      boost::python::def("setWritablePath", &qi::path::detail::setWritablePath,
                          "setWritablePath(path) -> None\n"
                          ":param path: string. A path on the system.\n"
                          "\n"
