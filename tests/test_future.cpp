@@ -727,6 +727,26 @@ static void doError(qi::Promise<int> promise)   { promise.setError("paf");}
 static void doValue(qi::Promise<int> promise)   { promise.setValue(42); }
 static void doNothing(qi::Promise<int> promise) { ; }
 
+TEST(TestFutureCancel, CancelRequest)
+{
+  qi::Promise<int> promise(qi::PromiseNoop<int>);
+
+  ASSERT_FALSE(promise.isCancelRequested());
+
+  qi::Future<int> future = promise.future();
+
+  ASSERT_TRUE(future.isRunning());
+  ASSERT_TRUE(future.isCancelable());
+
+  ASSERT_NO_THROW(future.cancel());
+
+  ASSERT_TRUE(promise.isCancelRequested());
+
+  promise.setCanceled();
+
+  ASSERT_TRUE(future.isCanceled());
+}
+
 TEST(TestFutureCancel, Canceleable)
 {
   qi::Promise<int> p(&doCancel);

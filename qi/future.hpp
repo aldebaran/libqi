@@ -484,6 +484,13 @@ namespace qi {
       _f._p->setCanceled(_f);
     }
 
+    /** return true if cancel has been called on the promise (even if the
+     * cancel callback did not run yet).
+     */
+    bool isCancelRequested() {
+      return _f._p->isCancelRequested();
+    }
+
     /* reset the promise and the future */
     void reset() {
       _f._p->reset();
@@ -731,6 +738,12 @@ namespace qi {
    */
   template <typename T>
   qi::FutureSync< qi::Future<T> > waitForFirst(std::vector< Future<T> >& vect);
+
+  /// Helper function that does nothing on future cancellation
+  template <typename T>
+  void PromiseNoop(const qi::Promise<T>&)
+  {
+  }
 
   /// Specialize this struct to provide conversion between future values
   template<typename FT, typename PT>

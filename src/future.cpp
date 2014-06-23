@@ -24,6 +24,7 @@ namespace qi {
       boost::recursive_mutex    _mutex;
       std::string               _error;
       qi::Atomic<int>           _state;
+      qi::Atomic<int>           _cancelRequested;
     };
 
     struct FutureBasePrivatePoolTag { };
@@ -45,6 +46,7 @@ namespace qi {
         _error()
     {
       _state = FutureState_None;
+      _cancelRequested = false;
     }
 
     FutureBase::FutureBase()
@@ -83,6 +85,10 @@ namespace qi {
       _p->_state = FutureState_FinishedWithValue;
     }
 
+    void FutureBase::requestCancel() {
+      _p->_cancelRequested = true;
+    }
+
     void FutureBase::reportCanceled() {
       //always set by setCanceled
       //boost::recursive_mutex::scoped_lock lock(_p->_mutex);
@@ -117,6 +123,10 @@ namespace qi {
       return *_p->_state == FutureState_Canceled;
     }
 
+    bool FutureBase::isCancelRequested() const {
+      return *_p->_cancelRequested;
+    }
+
     bool FutureBase::hasError(int msecs) const {
       if (wait(msecs) == FutureState_Running)
         throw FutureException(FutureException::ExceptionState_FutureTimeout);
@@ -142,6 +152,7 @@ namespace qi {
       //reset is called by the promise. So set the state to running.
       _p->_state = FutureState_Running;
       _p->_error = std::string();
+      _p->_cancelRequested = false;
     }
 
     boost::recursive_mutex& FutureBase::mutex()

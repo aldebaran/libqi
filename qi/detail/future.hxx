@@ -29,6 +29,7 @@ namespace qi {
       bool isRunning() const;
       bool isFinished() const;
       bool isCanceled() const;
+      bool isCancelRequested() const;
       bool hasError(int msecs) const;
       bool hasValue(int msecs) const;
       const std::string &error(int msecs) const;
@@ -38,6 +39,7 @@ namespace qi {
     protected:
       void reportValue();
       void reportError(const std::string &message);
+      void requestCancel();
       void reportCanceled();
       boost::recursive_mutex& mutex();
       void notifyFinish();
@@ -69,6 +71,7 @@ namespace qi {
           return;
         if (!_onCancel)
           throw FutureException(FutureException::ExceptionState_FutureNotCancelable);
+        requestCancel();
         _onCancel(Promise<T>(future));
       }
 
