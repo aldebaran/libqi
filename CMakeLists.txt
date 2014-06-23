@@ -52,9 +52,6 @@ else()
  set(_ssldeps "")
 endif()
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR})
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/c)
-
 set(PUBLIC_HEADERS
                    qi/messaging/api.hpp
                    qi/messaging/autoservice.hpp
@@ -64,12 +61,6 @@ set(PUBLIC_HEADERS
                    qi/applicationsession.hpp
                    qi/session.hpp
                    qi/url.hpp
-
-                   qimessaging/applicationsession.hpp
-                   qimessaging/autoservice.hpp
-                   qimessaging/serviceinfo.hpp
-                   qimessaging/session.hpp
-                   qimessaging/url.hpp
 )
 
 qi_install_header(${PUBLIC_HEADERS} KEEP_RELATIVE_PATHS)
@@ -141,7 +132,10 @@ if(WIN32)
   qi_use_lib(qimessaging WSA)
 endif(WIN32)
 
-qi_stage_lib(qimessaging)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/c)
+
+qi_stage_lib(qimessaging INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/c" "${CMAKE_CURRENT_SOURCE_DIR}/compat")
 
 #qi_gen_doc(DOXYFILES "Doxyfile")
 
@@ -155,6 +149,8 @@ qi_add_subdirectory("c/test")
 qi_add_subdirectory("c/bin")
 qi_add_subdirectory("tests")
 qi_add_subdirectory("bin")
+
+add_subdirectory("compat")
 
 message(STATUS "")
 message(STATUS "Build Options:")
