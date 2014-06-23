@@ -161,7 +161,7 @@ set(SOURCES ${PUBLIC_HEADERS}
 
 list(APPEND SOURCES ${_confighpp})
 
-qi_create_lib(qitype ${SOURCES} SHARED DEPENDS QI BOOST BOOST_DATE_TIME BOOST_THREAD)
+qi_create_lib(qitype ${SOURCES} SHARED DEPENDS QI BOOST BOOST_DATE_TIME BOOST_THREAD BOOST_LOCALE)
 qi_stage_lib(qitype)
 
 option(DISABLE_CODEGEN "disable the code generation (broken)" ON)

@@ -6,6 +6,7 @@
 #include <qi/jsoncodec.hpp>
 #include <qi/anyvalue.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/locale.hpp>
 #include "jsoncodec_p.hpp"
 
 namespace qi {
@@ -215,19 +216,37 @@ namespace qi {
         }
         switch (*(_it + 1))
         {
-        case '"' :tmpString += '"'; break;
-        case '\\':tmpString += '\\';break;
-        case '/' :tmpString += '/'; break;
-        case 'b' :tmpString += '\b';break;
-        case 'f' :tmpString += '\f';break;
-        case 'n' :tmpString += '\n';break;
-        case 'r' :tmpString += '\r';break;
-        case 't' :tmpString += '\t';break;
+        case '"' : tmpString += '"' ; _it += 2; break;
+        case '\\': tmpString += '\\'; _it += 2; break;
+        case '/' : tmpString += '/' ; _it += 2; break;
+        case 'b' : tmpString += '\b'; _it += 2; break;
+        case 'f' : tmpString += '\f'; _it += 2; break;
+        case 'n' : tmpString += '\n'; _it += 2; break;
+        case 'r' : tmpString += '\r'; _it += 2; break;
+        case 't' : tmpString += '\t'; _it += 2; break;
+        case 'u' :
+        {
+          if (_it+6 >= _end)
+          {
+            _it = save;
+            return false;
+          }
+          std::istringstream ss(std::string(_it+2, _it+6));
+          int val;
+          ss >> std::hex >> val;
+          if (!ss.eof())
+          {
+            _it = save;
+            return false;
+          }
+          tmpString += boost::locale::conv::utf_to_utf<char>(&val, &val + 1);
+          _it += 6;
+          break;
+        }
         default:
           _it = save;
           return false;
         }
-        _it += 2;
       }
       else
       {

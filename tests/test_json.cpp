@@ -312,6 +312,28 @@ TEST(TestJSONDecoder, itOverload) {
 
 }
 
+TEST(TestJSONDecoder, Strings)
+{
+  static const std::string s1 = "{ \"content\" : \"pone\" }";
+  static const std::string s2 = "{ \"content\" : \"poné\" }";
+  static const std::string s3 = "{ \"content\" : \"pon\\u00e9\" }";
+  static const std::string s4 = "{ \"content\" : \"pon\\u00ex\" }";
+  static const std::string s5 = "{ \"content\" : \"pon\\u\"}";
+
+  qi::AnyValue v;
+  v = qi::decodeJSON(s1);
+  EXPECT_EQ("pone", v["content"].to<std::string>());
+
+  v = qi::decodeJSON(s2);
+  EXPECT_EQ("poné", v["content"].to<std::string>());
+
+  ASSERT_NO_THROW(v = qi::decodeJSON(s3));
+  EXPECT_EQ("pon\xc3\xa9", v["content"].to<std::string>());
+
+  ASSERT_ANY_THROW(qi::decodeJSON(s4));
+  ASSERT_ANY_THROW(qi::decodeJSON(s5));
+}
+
 int main(int argc, char **argv)
 {
   qi::Application app(argc, argv);
