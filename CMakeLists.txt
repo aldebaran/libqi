@@ -36,6 +36,7 @@ qiprobes_instrument_files(tp_qi
   src/eventloop.cpp)
 
 set(H
+  qi/details/clock.hxx
   qi/details/eventloop.hxx
   qi/details/future.hxx
   qi/details/log.hxx
@@ -48,7 +49,6 @@ set(H
   qi/buffer.hpp
   qi/bufferreader.hpp
   qi/clock.hpp
-  qi/clock.hxx
   qi/future.hpp
   qi/log/consoleloghandler.hpp
   qi/log/fileloghandler.hpp
