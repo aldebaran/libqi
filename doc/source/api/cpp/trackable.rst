@@ -18,7 +18,7 @@ Rationale
   qi::Signal<void> signal;
 
   MyClass* my = new MyClass();
-  signal.connect(boost::bind(&MyClass::callback, my));
+  signal.connect(&MyClass::callback, my);
   delete my;
 
   signal(); // CRASH
@@ -30,14 +30,15 @@ Usage
 =====
 
 In this case, you need to use `qi::Trackable` with `qi::bind` so that the
-callback won't be called when your object dies.
+callback won't be called when your object dies. Note that you usually don't
+need to call `qi::bind` explicitely, `qi::Future::connect` and
+`qi::Signal::connect` do it for you.
 
 MyClass should inherit from `qi::Trackable<MyClass>` and the constructor must
 call `qi::Trackable`'s constructor with ``this``. Then, you *must* call
 `destroy()` at the *beginning* of your destructor. `destroy()` ensures that all
-callbacks are finished before you start destructing your object. Then you must
-use qi::bind instead of boost::bind which will do nothing if its first argument
-is not valid anymore.
+callbacks are finished before you start destructing your object. You must *not*
+use ``boost::bind`` if you want your object to be tracked!
 
 .. code-block:: cpp
 
@@ -56,7 +57,7 @@ is not valid anymore.
   qi::Signal<void> signal;
 
   MyClass* my = new MyClass();
-  signal.connect(qi::bind(&MyClass::callback, my));
+  signal.connect(&MyClass::callback, my);
   delete my;
 
   signal(); // callback won't be called, no crash
