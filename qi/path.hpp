@@ -5,12 +5,8 @@
  * found in the COPYING file.
  */
 
-/** @file
- *  @brief find bin/lib/data/conf for the current application
- */
-
 #ifndef _QI_PATH_HPP_
-#define _QI_PATH_HPP_
+# define _QI_PATH_HPP_
 
 # include <string>
 # include <vector>
@@ -25,14 +21,14 @@ namespace qi
   typedef std::vector<Path> PathVector;
 
   /**
-   * @class qi.Path
-   * @brief The Path class allow handling path in a cross-platform maner.
-   *
+   * \brief The Path class allow handling path in a cross-platform maner.
+   * \includename{qi/path.hpp}
    * The class assume that all string are encoded in UTF-8.
-   *
    */
   class QI_API Path {
   public:
+    /// default constructor
+    /// \param unicodePath Path
     Path(const std::string& unicodePath = std::string());
 
     /// is the path empty?
@@ -62,6 +58,7 @@ namespace qi
     /// return a vector of dirs contained in the current path
     PathVector dirs();
 
+    /// return the path as a string
     operator std::string() const;
 
     /// concat two paths adding a directory separator between them
@@ -79,10 +76,16 @@ namespace qi
   namespace path
   {
 
-    /// Return the default SDK prefix path.
+    /**
+     * \brief Return the default SDK prefix path.
+     * \return The SDK prefix path.
+     * It's always a complete, native path.
+     */
     QI_API std::string sdkPrefix();
 
-    // not thread-safe, must be kept internal
+    /// \brief Implementation details
+    ///
+    /// not thread-safe, must be kept internal
     namespace detail {
 
       /**
@@ -91,7 +94,8 @@ namespace qi
        */
       QI_API std::vector<std::string> getSdkPrefixes();
 
-      /** \brief Add a new SDK prefix to the list of searchable prefixes.
+      /**
+       * \brief Add a new SDK prefix to the list of searchable prefixes.
        *
        * A default SDK prefix is computed using argc, argv when calling
        * qi::init().
@@ -102,7 +106,8 @@ namespace qi
        */
       QI_API void addOptionalSdkPrefix(const char* prefix);
 
-      /** \brief Reset the list of additional SDK prefixes.
+      /**
+       * \brief Reset the list of additional SDK prefixes.
        *
        * Reset all the SDK added with qi::path::addOptionalSdkPrefix.
        * The list of SDK prefixes will only contain the default SDK
@@ -112,53 +117,233 @@ namespace qi
 
     }
 
-    /// Look for a binary.
+    /**
+     * \brief Look for a binary.
+     * \param name The full name of the binary, or just the name.
+     * \return The complete, native path to the file found,
+     * an empty string otherwise.
+     *
+     * \verbatim
+     * This will search in all SDK prefixes for a file named 'name'.
+     * It will then add '.exe' suffix if needed.
+     * (without '.exe') (in UTF-8).
+     * \endverbatim
+     */
     QI_API std::string findBin(const std::string& name);
 
-    /// Look for a library.
+    /**
+     * \brief Look for a library.
+     * \param name The full name of the library, or just the name.
+     * \return The complete, native path to the file found,
+     * an empty string otherwise.
+     *
+     * \verbatim
+     * This will search in all SDK prefixes for a file named 'name'.
+     * It will then add 'lib' prefix, and appropriated suffixes
+     * ('.dll' on windows, '.so' on linux, '.dylib' on mac).
+     * (without '.dll', '.so') (in UTF-8).
+     *
+     * You can specify subdirectories using "/" as directory separator
+     * (in UTF-8).
+     * \endverbatim
+     */
     QI_API std::string findLib(const std::string& name);
 
-    /// Look for a configuration file.
+
+    /**
+     * \brief Look for a configuration file.
+     * \param applicationName Name of the application.
+     * \param filename Name of the file to look for.
+     * You can specify subdirectories using "/" as directory separator.
+     * \return The complete, native path of the file if it was found,
+     * an empty string otherwise.
+     *
+     * \verbatim
+     * The file is searched in a list of possible directories,
+     * the first match is returned.
+     *
+     * The list of paths is constructed like this:
+     *
+     * - first, a standard path in the home directory (like
+     *   ~/.config/<applicationName>/<filename>)
+     * - then: <sdk_prefix>/etc/<applicationName>/<filename> for each known SDK
+     *   prefix.
+     * - then a standard path in the system. (like
+     *   /etc/<applicationName>/<filename>)
+     * \endverbatim
+     */
     QI_API std::string findConf(const std::string& applicationName,
                                 const std::string& filename);
 
-    /// Look for a file in all dataPaths(applicationName) directories,
-    /// return the first match.
+    /**
+     * \brief Look for a file in all dataPaths(applicationName) directories,
+     * return the first match.
+     * \param applicationName Name of the application.
+     * \param filename Name of the file to look for.
+     * You can specify subdirectories using "/" as directory separator.
+     * \return The complete, native path of the file if it was found,
+     * an empty string otherwise.
+     *
+     * \verbatim
+     * The file is searched in a list of possible directories, provided by the
+     * :cpp:func:`qi::path::dataPaths(const std::string&)`.
+     * The first match is returned.
+     *
+     * For instance if you have the following files on a unix system
+     *
+     * - ~/.local/share/foo/models/nao.xml
+     * - /usr/share/foo/models/nao.xml
+     *
+     * then listData("foo", "models/nao.xml") will return
+     *
+     * - ~/.local/share/foo/models/nao.xml
+     * \endverbatim
+     */
     QI_API std::string findData(const std::string& applicationName,
                                 const std::string& filename);
 
-    /// List data files matching the given pattern in all
-    /// dataPaths(applicationName) directories. For each match, return the
-    ///  occurence from the first dataPaths prefix.
-    /// Directories are discarded.
+
+    /**
+     * \brief List data files matching the given pattern in all dataPaths(applicationName)
+     * directories. For each match, return the occurence from the first dataPaths prefix.
+     * Directories are discarded.
+     * \param applicationName Name of the application.
+     * \param pattern wilcard pattern of the files to look for.
+     * You can specify subdirectories using "/" as directory separator.
+     * \return An std::vector of the complete, native paths of the files that matched.
+     *
+     * \verbatim
+     * Matches are searched in a list of possible directories, provided by the
+     * :cpp:func:`qi::path::dataPaths(const std::string&)`.
+     * When several matches collide, the first one is
+     * returned.
+     *
+     * For instance if you have the following files on a unix system
+     *
+     * - ~/.local/share/foo/models/nao.xml
+     * - ~/.local/share/foo/models/romeo_with_laser_head.xml
+     * - /usr/share/foo/models/nao.xml
+     * - /usr/share/foo/models/romeo.xml
+     *
+     * then listData("foo", "models/.*.xml") will return
+     *
+     * - ~/.local/share/foo/models/nao.xml
+     * - ~/.local/share/foo/models/romeo_with_laser_head.xml
+     * - /usr/share/foo/models/romeo.xml
+     * \endverbatim
+     */
     QI_API std::vector<std::string> listData(const std::string& applicationName,
                                              const std::string& pattern="*");
 
-    /// Get the list of directories used when searching for configuration files for the given application name.
+    /**
+     * \brief Get the list of directories used when searching for configuration files for the given application name.
+     * \param applicationName Name of the application.
+     * \return List of configuration directories.
+     *
+     * \verbatim
+     * This is used by the :cpp:func:`qi::path::findConf(const std::string&, const std::string&)`.
+     *
+     * .. warning:: You should not assume those directories exist, nor
+     *    that they are writeable.
+     * \endverbatim
+     */
     QI_API std::vector<std::string> confPaths(const std::string& applicationName="");
 
-    /// Get the list of directories used when searching for data files for the given application name.
+    /**
+     * \brief Get the list of directories used when searching for data files for the given application name.
+     * \param applicationName Name of the application.
+     * \return A list of directories.
+     *
+     * \verbatim
+     * This is used by the :cpp:func:`qi::path::findData(const std::string&, const std::string&)`
+     * and the :cpp:func:`qi::path::listData(const std::string&, const std::string&)`.
+     *
+     * The list of paths is constructed like this:
+     *
+     * - first, a standard path in the home directory (like
+     *   ~/.local/share/<applicationName>/<filename>)
+     * - then <sdk_prefix>/share/<applicationName>/<filename> for each known SDK
+     *   prefix.
+     *
+     * .. warning:: You should not assume those directories exist,
+     *    nor that they are writeable.
+     * \endverbatim
+     */
     QI_API std::vector<std::string> dataPaths(const std::string& applicationName="");
 
-    /// Get the list of directories used when searching for binaries.
+    /**
+     * \brief Get the list of directories used when searching for binaries.
+     * \return A list of directories.
+     *
+     * \verbatim
+     * This is used by the :cpp:func:`qi::path::findBin(const std::string&)`.
+     *
+     * .. warning:: You should not assume those directories exist, nor that they are
+     *    writeable.
+     * \endverbatim
+     */
     QI_API std::vector<std::string> binPaths();
 
-    /// Get the list of directories used when searching for libraries.
+    /**
+     * \brief Get the list of directories used when searching for libraries.
+     * \return A list of directories.
+     *
+     * \verbatim
+     * This is used by the :cpp:func:`qi::path::findLib(const std::string&)`.
+     *
+     * .. warning:: You should not assume those directories exist, nor that they are
+     *    writeable.
+     * \endverbatim
+     */
     QI_API std::vector<std::string> libPaths();
 
-
-    /// Set the writable files path for users.
-    QI_API void setWritablePath(const std::string &path);
-
-    /// Get the writable data files path for users.
+    /**
+     * \brief Get the writable data files path for users.
+     * \param applicationName The name of the application.
+     * \param filename The filename.
+     * \return The directory or the file.
+     *
+     * \verbatim
+     * If filename is empty, return the directory in which to write.
+     * Otherwise the path is constructed like this:
+     *
+     * Linux
+     *    <home>/.local/share/<applicationName>/<filename>
+     *
+     * Windows
+     *    %AppData%\<applicatioName>\<filename>
+     *
+     * You can specify subdirectories using "/" as directory separator.
+     * \endverbatim
+     */
     QI_API std::string userWritableDataPath(const std::string& applicationName,
                                             const std::string& filename);
 
-    /// Get the writable configuration files path for users.
+    /**
+     * \brief Get the writable configuration files path for users.
+     * \param applicationName The name of the application.
+     * \param filename The filename.
+     * \return The directory or the file.
+     *
+     * \verbatim
+     * If filename is empty, return the directory
+     * in which to write. Otherwise the path is constructed like this:
+     *
+     * Linux
+     *    <home>/.config/<applicatioName>/<filename>
+     *
+     * Windows
+     *    %AppData%\<applicatioName>\<filename>
+     *
+     * You can specify subdirectories using "/" as directory separator.
+     * \endverbatim
+     */
     QI_API std::string userWritableConfPath(const std::string& applicationName,
                                             const std::string& filename="");
 
-    /** Convert given path into DOS 8.3 path if it exists, else returns empty string (Windows only).
+    /**
+     * \brief Convert given path into DOS 8.3 path if it exists, else returns empty string (Windows only).
+     *
      * To use some API that doesn't support unicode on Windows, it is
      * possible to convert a unicode path to an existing file into a DOS
      * path without any accentuated characters.
@@ -167,6 +352,9 @@ namespace qi
      * On other platforms, simply return pathString.
      */
     QI_API std::string convertToDosPath(const std::string &pathString);
+
+    /// Set the writable files path for users.
+    QI_API void setWritablePath(const std::string &path);
   }
 }
 

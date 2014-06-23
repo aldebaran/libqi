@@ -5,13 +5,15 @@
  * found in the COPYING file.
  */
 
-/** @file qi/log.hpp
- *  @brief Convenient log macro
+/**
+ * \file
+ * \includename{qi/log.hpp}
+ * \brief Convenient log macro
  */
 
 
 #ifndef _QI_LOG_HPP_
-#define _QI_LOG_HPP_
+# define _QI_LOG_HPP_
 
 # include <string>
 # include <iostream>
@@ -19,18 +21,47 @@
 # include <cstdarg>
 # include <cstdio>
 
-#include <boost/format.hpp>
-#include <boost/function/function_fwd.hpp>
+# include <boost/format.hpp>
+# include <boost/function/function_fwd.hpp>
 
-#include <qi/os.hpp>
+# include <qi/os.hpp>
 
 
-#  define qiLogCategory(Cat)                                             \
+/**
+ * \verbatim
+ * Add default category for the current scope.
+ * Each log has a category defined by the call to qiLogCategory()
+ * found in scope. So you must call qiLogCategory() at least once, for
+ * instance at the beginning of your source file or function.
+ *
+ * .. code-block:: cpp
+ *
+ *     {
+ *       qiLogCategory(my.category);
+ *       qiLogInfoF("1 + 1 is %s", 1+1);
+ *       qiLogInfo() << "1 + 1 is " << 1+1;
+ *     }
+ * \endverbatim
+ */
+#define qiLogCategory(Cat)                                               \
   static ::qi::log::CategoryType _QI_LOG_CATEGORY_GET() QI_ATTR_UNUSED = \
     ::qi::log::addCategory(Cat)
 
 
-
+/**
+ * \verbatim
+ * Log in debug mode. Not compiled on release and not shown by default.
+ * Use as follow:
+ *
+ * .. code-block:: cpp
+ *
+ *     qiLogDebug("foo.bar", "my foo is %d bar", 42);
+ *     // or
+ *     qiLogDebug("foo.bar") << "my foo is " << 42 << "bar";
+ *
+ * If you don't want to see any log, use silent log level.
+ * \endverbatim
+ */
 #if defined(NO_QI_DEBUG) || defined(NDEBUG)
 # define qiLogDebug(...) ::qi::log::detail::qiFalse() && false < qi::log::detail::NullStream().self()
 # define qiLogDebugF(Msg, ...)
@@ -39,6 +70,9 @@
 # define qiLogDebugF(Msg, ...)   _QI_LOG_MESSAGE(LogLevel_Debug,   _QI_LOG_FORMAT(Msg, __VA_ARGS__))
 #endif
 
+/**
+ * \brief Log in verbose mode. This level is not shown by default.
+ */
 #if defined(NO_QI_VERBOSE)
 # define qiLogVerbose(...) ::qi::log::detail::qiFalse() && false < qi::log::detail::NullStream().self()
 # define qiLogVerboseF(Msg, ...)
@@ -47,6 +81,9 @@
 # define qiLogVerboseF(Msg, ...)   _QI_LOG_MESSAGE(LogLevel_Verbose,   _QI_LOG_FORMAT(Msg, __VA_ARGS__))
 #endif
 
+/**
+ * \brief Log in info mode.
+ */
 #if defined(NO_QI_INFO)
 # define qiLogInfo(...) ::qi::log::detail::qiFalse() && false < qi::log::detail::NullStream().self()
 # define qiLogInfoF(Msg, ...)
@@ -55,6 +92,9 @@
 # define qiLogInfoF(Msg, ...)   _QI_LOG_MESSAGE(LogLevel_Info,   _QI_LOG_FORMAT(Msg, __VA_ARGS__))
 #endif
 
+/**
+ * \brief Log in warning mode.
+ */
 #if defined(NO_QI_WARNING)
 # define qiLogWarning(...) ::qi::log::detail::qiFalse() && false < qi::log::detail::NullStream().self()
 # define qiLogWarningF(Msg, ...)
@@ -63,6 +103,9 @@
 # define qiLogWarningF(Msg, ...)   _QI_LOG_MESSAGE(LogLevel_Warning,   _QI_LOG_FORMAT(Msg, __VA_ARGS__))
 #endif
 
+/**
+ * \brief Log in error mode.
+ */
 #if defined(NO_QI_ERROR)
 # define qiLogError(...)   ::qi::log::detail::qiFalse() && false < qi::log::detail::NullStream().self()
 # define qiLogErrorF(Msg, ...)
@@ -71,6 +114,9 @@
 # define qiLogErrorF(Msg, ...)   _QI_LOG_MESSAGE(LogLevel_Error,   _QI_LOG_FORMAT(Msg, __VA_ARGS__))
 #endif
 
+/**
+ * \brief Log in fatal mode.
+ */
 #if defined(NO_QI_FATAL)
 # define qiLogFatal(...)  ::qi::log::detail::qiFalse() && false < qi::log::detail::NullStream().self()
 # define qiLogFatalF(Msg, ...)
@@ -79,50 +125,71 @@
 # define qiLogFatalF(Msg, ...)   _QI_LOG_MESSAGE(LogLevel_Fatal,   _QI_LOG_FORMAT(Msg, __VA_ARGS__))
 #endif
 
+
 namespace qi {
-
+  /**
+   * \brief Log level verbosity.
+   */
   enum LogLevel {
-    LogLevel_Silent = 0,
-    LogLevel_Fatal,
-    LogLevel_Error,
-    LogLevel_Warning,
-    LogLevel_Info,
-    LogLevel_Verbose,
-    LogLevel_Debug
+    LogLevel_Silent = 0, ///< silent log level
+    LogLevel_Fatal,      ///< fatal log level
+    LogLevel_Error,      ///< error log level
+    LogLevel_Warning,    ///< warning log level
+    LogLevel_Info,       ///< info log level
+    LogLevel_Verbose,    ///< verbose log level
+    LogLevel_Debug       ///< debug log level
   };
 
+  /**
+   * \brief Logs color mode.
+   */
   enum LogColor {
-    LogColor_Never,
-    LogColor_Auto,
-    LogColor_Always,
+    LogColor_Never, ///< Never show color
+    LogColor_Auto,  ///< Auto color
+    LogColor_Always ///< Always show color
   };
 
+  /**
+   * \brief Logs context attribute.
+   */
   enum LogContextAttr {
-    LogContextAttr_None           = 0,
-    LogContextAttr_Verbosity      = 1 << 0,
-    LogContextAttr_ShortVerbosity = 1 << 1,
-    LogContextAttr_Date           = 1 << 2,
-    LogContextAttr_Tid            = 1 << 3,
-    LogContextAttr_Category       = 1 << 4,
-    LogContextAttr_File           = 1 << 5,
-    LogContextAttr_Function       = 1 << 6,
-    LogContextAttr_Return         = 1 << 7
+    LogContextAttr_None           = 0,      ///< No context
+    LogContextAttr_Verbosity      = 1 << 0, ///< Show logs level
+    LogContextAttr_ShortVerbosity = 1 << 1, ///< Show short logs level
+    LogContextAttr_Date           = 1 << 2, ///< Show dates
+    LogContextAttr_Tid            = 1 << 3, ///< Show threads id
+    LogContextAttr_Category       = 1 << 4, ///< Show categories
+    LogContextAttr_File           = 1 << 5, ///< Show logs files
+    LogContextAttr_Function       = 1 << 6, ///< Show functions name
+    LogContextAttr_Return         = 1 << 7  ///< Print an end line between contexts and logs
   };
 
+  /**
+   * \brief Logs context attribute value.
+   */
   typedef int LogContext;
 
+  /**
+   * \brief Log functions with different levels of verbosity.
+   */
   namespace log {
 
-    //deprecated 1.22
+    /// \deprecated 1.22
     QI_API_DEPRECATED static const qi::LogLevel silent = LogLevel_Silent;
+    /// \deprecated 1.22
     QI_API_DEPRECATED static const qi::LogLevel fatal = LogLevel_Fatal;
+    /// \deprecated 1.22
     QI_API_DEPRECATED static const qi::LogLevel error = LogLevel_Error;
+    /// \deprecated 1.22
     QI_API_DEPRECATED static const qi::LogLevel warning = LogLevel_Warning;
+    /// \deprecated 1.22
     QI_API_DEPRECATED static const qi::LogLevel info = LogLevel_Info;
+    /// \deprecated 1.22
     QI_API_DEPRECATED static const qi::LogLevel verbose = LogLevel_Verbose;
+    /// \deprecated 1.22
     QI_API_DEPRECATED static const qi::LogLevel debug = LogLevel_Debug;
 
-    //deprecated 1.22
+    /// \deprecated 1.22
     QI_API_DEPRECATED typedef qi::LogLevel LogLevel;
   }
 }
@@ -133,12 +200,17 @@ namespace qi {
       struct Category;
     }
 
-    typedef unsigned int      SubscriberId;
-    typedef detail::Category* CategoryType;
+    typedef unsigned int      SubscriberId; ///< Subscriber Identifier.
+    typedef detail::Category* CategoryType; ///< Catergory Informations.
 
-    //Deprecated 1.22
+    /// \deprecated 1.22
     QI_API_DEPRECATED typedef unsigned int Subscriber;
 
+
+    /**
+     * \brief Boost delegate to log function (verbosity lv, date of log,
+     *        category, message, file, function, line).
+     */
     typedef boost::function7<void,
                              const qi::LogLevel,
                              const qi::os::timeval,
@@ -148,12 +220,43 @@ namespace qi {
                              const char*,
                              int> logFuncHandler;
 
+    /**
+     * \brief Initialization of the logging system (could be avoided)
+     * \param verb Log verbosity
+     * \param context Display Context
+     * \param synchronous Synchronous log
+     */
     QI_API void init(qi::LogLevel   verb = qi::LogLevel_Info,
                      qi::LogContext context = qi::LogContextAttr_ShortVerbosity | qi::LogContextAttr_Tid | qi::LogContextAttr_Category,
                      bool           synchronous = true);
 
+
+    /**
+     * \brief Stop and flush the logging system.
+     *
+     * \verbatim
+     * Should be called in the main of program using atexit. For example:
+     *
+     * .. code-block:: cpp
+     *
+     *     atexit(qi::log::destroy)
+     *
+     * This is useful only for asynchronous log.
+     * \endverbatim
+     */
     QI_API void destroy();
 
+
+    /**
+     * \brief Log function. You should call qiLog* macros instead.
+     *
+     * \param verb The verbosity of the message.
+     * \param category Log category (for filtering in the future).
+     * \param msg Log message.
+     * \param file Filename from which this function was called (ex: __FILE__).
+     * \param fct Function name from which this function was called (ex: __FUNCTION__).
+     * \param line Line from which this function was called (ex: __LINE__).
+     */
     QI_API void log(const qi::LogLevel verb,
                     const char*        category,
                     const char*        msg,
@@ -161,6 +264,9 @@ namespace qi {
                     const char*        fct = "",
                     const int          line = 0);
 
+    /**
+     * \copydoc log()
+     */
     QI_API void log(const qi::LogLevel verb,
                     CategoryType       category,
                     const std::string& msg,
@@ -169,78 +275,212 @@ namespace qi {
                     const int          line = 0);
 
 
+    /**
+     * \brief Convert log verbosity to a readable string.
+     * \param verb Verbosity value.
+     * \param verbose Enable verbose conversion.
+     * \return Returns a string matching the log level verbosity.
+     */
     QI_API const char* logLevelToString(const qi::LogLevel verb, bool verbose = true);
 
+    /**
+     * \brief Convert string to log verbosity.
+     * \param verb debug, verbose, info, warning, error, fatal, silent
+     * \return Log level verbosity
+     */
     QI_API qi::LogLevel stringToLogLevel(const char* verb);
 
+    /**
+     * \brief Get log verbosity.
+     * \param sub Log subscriber id.
+     * \return Maximal verbosity displayed.
+     */
     QI_API qi::LogLevel verbosity(SubscriberId sub = 0);
 
-    /// @return the list of existing categories
+    /**
+     * \brief Get the list of all categories.
+     * \return The list of existing categories
+     */
     QI_API std::vector<std::string> categories();
 
-    /** Parse and execute a set of verbosity rules
-    *  Colon separated of rules.
-    *  Each rule can be:
-    *    - (+)?CAT    : enable category CAT
-    *    - -CAT       : disable category CAT
-    *    - CAT=level  : set category CAT to level
-    *
-    * Each category can include a '*' for globbing.
-    */
+    /**
+     * \brief Parse and execute a set of verbosity rules.
+     * \param rules Colon separated of rules.
+     *  Each rule can be:
+     *    - (+)?CAT    : enable category CAT
+     *    - -CAT       : disable category CAT
+     *    - CAT=level  : set category CAT to level
+     *
+     * Each category can include a '*' for globbing.
+     * Can be set with env var QI_LOG_FILTERS
+     * \example  'qi.*=debug:-qi.foo:+qi.foo.bar' (all qi.* logs in info, remove all qi.foo logs except qi.foo.bar)
+     * \param sub Log subscriber id.
+     */
     QI_API void setVerbosity(const std::string& rules, SubscriberId sub = 0);
+
+    /**
+     * \brief Set log verbosity.
+     * \param lv Default verbosity level shown in the logs.
+     * \param sub Log subscriber id.
+     *
+     * Levels set by this function is a default value, overriden by
+     * all setCategory() calls.
+     *
+     * Change the log minimum level: [0-6] (default:4):
+     *   - 0: silent
+     *   - 1: fatal
+     *   - 2: error
+     *   - 3: warning
+     *   - 4: info
+     *   - 5: verbose
+     *   - 6: debug
+     *
+     * Can be set with env var QI_LOG_LEVEL.
+     *
+     * If you don't want any log use silent mode.
+     */
     QI_API void setVerbosity(const qi::LogLevel lv, SubscriberId sub = 0);
 
 
-    /// Add/get a category
+    /**
+     * \brief Add/get a category.
+     * \param name Category to add/get.
+     * \return CategoryType structure.
+     */
     QI_API CategoryType addCategory(const std::string& name);
-    /// Set \param cat to current verbosity level. Globbing is supported.
+    /**
+     * \brief Set category to current verbosity level. Globbing is supported.
+     * \param cat Category to set to current verbosity level.
+     * \param sub Log subscriber id.
+     */
     QI_API void enableCategory(const std::string& cat, SubscriberId sub = 0);
-    /// Set \param cat to silent log level. Globbing is supported.
+    /**
+     * \brief Set category to silent log level. Globbing is supported.
+     * \param cat Category to set to silence level.
+     * \param sub Log subscriber id.
+     */
     QI_API void disableCategory(const std::string& cat, SubscriberId sub = 0);
-    /// Set per-subscriber \param cat to level \param level. Globbing is supported.
+    /**
+     * \brief Set per-subscriber category to level. Globbing is supported.
+     * \param cat Category to set.
+     * \param level Level to set to the category.
+     * \param sub Log subscriber id.
+     *
+     * \verbatim
+     * .. code-block:: cpp
+     *
+     *   setCategory("internal.*", silent);
+     *
+     * One can also set a filtering rule in QI_LOG_FILTERS environment variable.
+     * syntax is colon-separated list of rules of the form (+|-)CAT or CAT=level.
+     * For example, -internal.*:file=verbose
+     *
+     * \endverbatim
+     */
     QI_API void setCategory(const std::string& cat, qi::LogLevel level, SubscriberId sub = 0);
 
 
-    /// \return true if given combination of category and level is enabled.
+    /**
+     * \brief Check if the given combination of category and level is enable
+     * \param category Category to check.
+     * \param level Level associate to category.
+     * \return true if given combination of category and level is enabled.
+     */
     QI_API bool isVisible(CategoryType category, qi::LogLevel level);
-    /// \return true if given combination of category and level is enabled.
+
+    /**
+     * \copydoc isVisible()
+     */
     QI_API bool isVisible(const std::string& category, qi::LogLevel level);
 
+    /**
+     * \brief Set log context verbosity.
+     *
+     * Show context logs, it's a bit field (add the values below).
+     *
+     * \param ctx Value to set context.
+     *
+     * Context values possible:
+     *   - 1  : Verbosity
+     *   - 2  : ShortVerbosity
+     *   - 4  : Date
+     *   - 8  : ThreadId
+     *   - 16 : Category
+     *   - 32 : File
+     *   - 64 : Function
+     *   - 128: EndOfLine
+     *  some useful values for context are:
+     *   - 26 : (verb+threadId+cat)
+     *   - 30 : (verb+threadId+date+cat)
+     *   - 126: (verb+threadId+date+cat+file+fun)
+     *   - 254: (verb+threadId+date+cat+file+fun+eol)
+     *
+     * Can be set with env var QI_LOG_CONTEXT
+     */
     QI_API void setContext(int ctx);
 
+    /**
+     * \brief Get log context.
+     * \return Returns the level of context verbosity.
+     */
     QI_API int context();
 
+    /**
+     * \brief Set log color.
+     * \param color Log color value.
+     */
     QI_API void setColor(LogColor color);
 
+    /**
+     * \brief Get log color.
+     * \return Returns LogColor enum.
+     */
     QI_API LogColor color();
 
-    /** Set logs synchronicity
+    /**
+     * \brief Enables or disables synchronous logs.
+     * \param sync Value to set or unset synchronous.
      *
      * When setting to async, this function must be called after main has
      * started.
      */
     QI_API void setSynchronousLog(bool sync);
 
+    /**
+     * \brief Add a log handler.
+     * \param name Name of the handler, useful to remove handler (prefer lowercase).
+     * \param fct Boost delegate to log handler function.
+     * \param defaultLevel default log verbosity.
+     * \return New log subscriber id added.
+     */
     QI_API SubscriberId addLogHandler(const std::string& name,
-                                    qi::log::logFuncHandler fct,
-                                    qi::LogLevel defaultLevel = LogLevel_Info);
+                                      qi::log::logFuncHandler fct,
+                                      qi::LogLevel defaultLevel = LogLevel_Info);
 
+    /**
+     * \brief Remove a log handler.
+     * \param name Name of the handler.
+     */
     QI_API void removeLogHandler(const std::string& name);
 
+
+    /**
+     * \brief Flush asynchronous logs.
+     */
     QI_API void flush();
 
 
-   #include <qi/details/warn_push_ignore_deprecated.hpp>
-    // Deprecated 1.22
+    #include <qi/details/warn_push_ignore_deprecated.hpp>
+    /// \deprecated 1.22
     QI_API_DEPRECATED inline void setVerbosity(SubscriberId sub, const qi::log::LogLevel lv) { setVerbosity((qi::LogLevel)lv, sub); }
-    // Deprecated 1.22
+    /// \deprecated 1.22
     QI_API_DEPRECATED inline void setCategory(SubscriberId sub, const std::string& cat, qi::log::LogLevel level) { setCategory(cat, (qi::LogLevel)level, sub); }
-   #include <qi/details/warn_pop_ignore_deprecated.hpp>
+    #include <qi/details/warn_pop_ignore_deprecated.hpp>
 
   }
 }
 
-#include <qi/details/log.hxx>
+# include <qi/details/log.hxx>
 
 
 #endif  // _QI_LOG_HPP_

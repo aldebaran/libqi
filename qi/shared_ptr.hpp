@@ -7,27 +7,36 @@
 
 
 #ifndef _QI_SHARED_PTR_HPP_
-#define _QI_SHARED_PTR_HPP_
+# define _QI_SHARED_PTR_HPP_
 
-#include <qi/atomic.hpp>
-#include <qi/log.hpp>
+# include <qi/atomic.hpp>
+# include <qi/log.hpp>
 
 namespace qi
 {
-  /// Lightweight implementation of shared pointers.
+
+  /**
+   * \brief Lightweight implementation of shared pointers.
+   * \includename{qi/shared_ptr.hpp}
+   */
   template <typename T>
   class SharedPtr
   {
   public:
-    /// Initialization of the SharedPtr with the pointer it will manage.
+    /**
+     * \brief Initialization of the SharedPtr with the pointer it will manage.
+     * \param ptr pointer to the managed data.
+     */
     SharedPtr(T *ptr)
       : _ptr(ptr)
       , _refcount(new qi::Atomic<int>(1))
     {
     }
 
-    /// \brief Destruct the shared pointer and the pointer if current SharedPtr
-    ///        is the last one to hold the pointer.
+    /**
+     * \brief Destruct the shared pointer and the pointer if current
+     *        is the last one to hold the pointer.
+     */
     ~SharedPtr()
     {
       if (--(*_refcount) == 0)
@@ -37,7 +46,10 @@ namespace qi
       }
     }
 
-    /// Copy shared pointer.
+    /**
+     * \brief Copy shared pointer.
+     * \param sp shared pointer also holding the pointer.
+     */
     SharedPtr(const SharedPtr<T> &sp)
     {
       /*
@@ -56,13 +68,17 @@ namespace qi
         _ptr = 0;
         _refcount = 0;
         qiLogDebug("qi.log.shared_ptr")
-                  << "tried to copy a shared pointer targeted for deletion"
-                  << std::endl;
+          << "tried to copy a shared pointer targeted for deletion"
+          << std::endl;
       }
     }
 
-    /// \brief Link current SharedPtr to a new pointer. If old pointer was
-    ///        only held by the current SharedPtr, it is freed.
+
+    /**
+     * \brief Link current SharedPtr to a new pointer. If old pointer was
+     * only held by the current SharedPtr, it is freed.
+     * \param sp shared pointer also holding the pointer.
+     */
     SharedPtr& operator=(SharedPtr<T> &sp)
     {
       // release the current pointer
@@ -79,26 +95,30 @@ namespace qi
       else
       {
         qiLogDebug("qi.log.shared_ptr")
-                  << "tried to copy a shared pointer targeted for deletion"
-                  << std::endl;
+          << "tried to copy a shared pointer targeted for deletion"
+          << std::endl;
       }
       return *this;
     }
 
-    /// Value accessor.
+
+    /**
+     * \brief Value accessor.
+     * \param ptr pointer to the managed data.
+     */
     T &operator*() const
     {
       return *_ptr;
     }
 
-    /// Pointer accessor.
+    /// \brief Pointer accessor.
     T *operator->() const
     {
       return _ptr;
     }
 
   private:
-    T                *_ptr;
+    T               *_ptr;
     qi::Atomic<int> *_refcount;
   };
 }

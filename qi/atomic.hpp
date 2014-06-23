@@ -7,24 +7,24 @@
 
 
 #ifndef _QI_ATOMIC_HPP_
-#define _QI_ATOMIC_HPP_
+# define _QI_ATOMIC_HPP_
 
-#ifdef _MSC_VER
-# include <windows.h>
-# include <intrin.h>
+# ifdef _MSC_VER
+#  include <windows.h>
+#  include <intrin.h>
 
 extern "C" long __cdecl _InterlockedIncrement(long volatile *);
 extern "C" long __cdecl _InterlockedDecrement(long volatile *);
 
-# pragma intrinsic(_InterlockedIncrement)
-# pragma intrinsic(_InterlockedDecrement)
+#  pragma intrinsic(_InterlockedIncrement)
+#  pragma intrinsic(_InterlockedDecrement)
 
-#endif
+# endif
 
-#include <boost/static_assert.hpp>
+# include <boost/static_assert.hpp>
 
-#include <qi/config.hpp>
-#include <qi/macro.hpp>
+# include <qi/config.hpp>
+# include <qi/macro.hpp>
 
 namespace qi
 {

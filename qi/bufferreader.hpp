@@ -5,35 +5,76 @@
 */
 
 #ifndef _QI_BUFFERREADER_HPP_
-#define _QI_BUFFERREADER_HPP_
+# define _QI_BUFFERREADER_HPP_
 
-#include <qi/buffer.hpp>
+# include <qi/buffer.hpp>
 
 namespace qi {
 
-  /// Class to read const buffer.
+  /**
+   * \brief Class to read const buffer.
+   * \includename{qi/bufferreader.hpp}
+   * This class is intendeed to read buffer.
+   * It store an internal data cursor and an internal sub-buffer index.
+   * All offset are relative to the current position.
+   */
   class QI_API BufferReader
   {
   public:
-    /// Constructor.
+    /**
+     * \brief Constructor.
+     * \param buf The buffer to copy.
+     */
     explicit BufferReader(const Buffer& buf);
-    /// Default destructor.
+    /// \brief Default destructor.
     ~BufferReader();
-    /// read and store data from the buffer.
+
+    /**
+     * \brief read and store data from the buffer.
+     * \param data A pre-allocated pointer to store read data.
+     * \param length Size of the object pointed by \a data or size to read.
+     * \return size of really read and stored data.
+     */
     size_t read(void *data, size_t length);
 
-    /// read data from buffer.
+
+    /**
+     * \brief read data from buffer.
+     * \param offset Number of bytes to read.
+     * \return a pointer to data at the given
+     */
     void  *read(size_t offset);
-    /// Move forward the buffer cursor by the given offset.
+    /**
+     * \brief Move forward the buffer cursor by the given offset.
+     * \param offset Value for move forward the cursor.
+     * \ return Return true if succeed, false otherwise.
+     */
     bool   seek(size_t offset);
-    /// Check if we can read from the actual position toward \a offset bytes.
+    /**
+     * \brief Check if we can read from the actual position toward \a offset bytes.
+     * \warning This function doesn't move the internal pointer.
+     * \param offset The relative offset.
+     * \return The pointer if it succeed. If actual position +
+     * \a offset exceed size of buffer return 0.
+     */
     void  *peek(size_t offset) const;
 
-    /// Check if there is sub-buffer at the actual position.
+
+    /**
+     * \brief Check if there is sub-buffer at the actual position.
+     * \return true if there is sub-buffer, false otherwise.
+     */
     bool hasSubBuffer() const;
-    /// return the sub-buffer at the actual position.
+    /**
+     * \brief return the sub-buffer at the actual position.
+     * If there is no sub-buffer at actual position throw a std::runtime-error.
+     * \return Return the sub-buffer if any.
+     */
     const Buffer& subBuffer();
-    /// return the actual position in the buffer.
+    /**
+     * \brief return the actual position in the buffer.
+     * \return The current offset.
+     */
     size_t position() const;
 
   private:

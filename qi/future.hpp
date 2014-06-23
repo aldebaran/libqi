@@ -5,25 +5,25 @@
 */
 
 #ifndef _QI_FUTURE_HPP_
-#define _QI_FUTURE_HPP_
+# define _QI_FUTURE_HPP_
 
-#include <qi/api.hpp>
-#include <vector>
-#include <qi/atomic.hpp>
-#include <qi/config.hpp>
-#include <qi/trackable.hpp>
+# include <qi/api.hpp>
+# include <vector>
+# include <qi/atomic.hpp>
+# include <qi/config.hpp>
+# include <qi/trackable.hpp>
 
-#include <boost/shared_ptr.hpp>
-#include <boost/make_shared.hpp>
-#include <boost/function.hpp>
-#include <boost/bind.hpp>
-#include <boost/thread/recursive_mutex.hpp>
+# include <boost/shared_ptr.hpp>
+# include <boost/make_shared.hpp>
+# include <boost/function.hpp>
+# include <boost/bind.hpp>
+# include <boost/thread/recursive_mutex.hpp>
 
-#ifdef _MSC_VER
-#  pragma warning( push )
-#  pragma warning( disable: 4251 )
-#  pragma warning( disable: 4275 ) //std::runtime_error: no dll interface
-#endif
+# ifdef _MSC_VER
+#   pragma warning( push )
+#   pragma warning( disable: 4251 )
+#   pragma warning( disable: 4275 ) //std::runtime_error: no dll interface
+# endif
 
 namespace qi {
 
@@ -53,7 +53,7 @@ namespace qi {
 
     template<typename FT>
     void futureCancelAdapter(
-        boost::weak_ptr<detail::FutureBaseTyped<FT> > wf);
+                             boost::weak_ptr<detail::FutureBaseTyped<FT> > wf);
   }
 
   /** State of the future.
@@ -138,7 +138,7 @@ namespace qi {
     }
 
     Future(const Future<T>& b)
-    : _p(b._p)
+      : _p(b._p)
     {}
 
     bool operator==(const Future<T> &other)
@@ -182,9 +182,9 @@ namespace qi {
     inline operator const ValueTypeCast&() const { return _p->value(FutureTimeout_Infinite); }
 
     /** Wait for future to contain a value or an error
-     @param msecs: Maximum time to wait in milliseconds, 0 means return immediately.
-     @return a FutureState corresponding to the state of the future.
-     */
+        @param msecs: Maximum time to wait in milliseconds, 0 means return immediately.
+        @return a FutureState corresponding to the state of the future.
+    */
     inline FutureState wait(int msecs = FutureTimeout_Infinite) const          { return _p->wait(msecs); }
 
     /**
@@ -242,11 +242,11 @@ namespace qi {
     };
 
     /** cancel() the asynchronous operation if possible
-    * Exact effect is controlled by the cancel implementation, but it is
-    * expected to set a value or an error to the Future as fast as possible.
-    * Note that cancelation may be asynchronous.
-    * @throw ExceptionState_FutureNotCancelable if isCancelable() is false.
-    */
+     * Exact effect is controlled by the cancel implementation, but it is
+     * expected to set a value or an error to the Future as fast as possible.
+     * Note that cancelation may be asynchronous.
+     * @throw ExceptionState_FutureNotCancelable if isCancelable() is false.
+     */
     void cancel()
     {
       _p->cancel(*this);
@@ -266,34 +266,34 @@ namespace qi {
      *
      * If type is sync, connect may block and call the callback synchronously if
      * the future is already set.
-    */
+     */
     template<typename AF>
     inline void connect(const AF& fun,
-        FutureCallbackType type = FutureCallbackType_Async)
+                        FutureCallbackType type = FutureCallbackType_Async)
     {
       _p->connect(*this, fun, type);
     }
 #ifdef DOXYGEN
     /** Connect a callback with binding and tracking support.
-    *
-    * If the first argument is a weak_ptr or a pointer inheriting from
-    * qi::Trackable, the callback will not be called if tracked object was
-    * destroyed.
-    */
+     *
+     * If the first argument is a weak_ptr or a pointer inheriting from
+     * qi::Trackable, the callback will not be called if tracked object was
+     * destroyed.
+     */
     template<typename FUNCTYPE, typename ARG0>
     void connect(FUNCTYPE fun, ARG0 tracked, ...,
-        FutureCallbackType type = FutureCallbackType_Async);
+                 FutureCallbackType type = FutureCallbackType_Async);
 #else
-#define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)                   \
-    template<typename AF, typename ARG0 comma ATYPEDECL>                    \
-    inline void connect(const AF& fun, const ARG0& arg0 comma ADECL,        \
-        FutureCallbackType type = FutureCallbackType_Async)                 \
-    {                                                                       \
-      _p->connect(*this, ::qi::bind<void(Future<T>)>(fun, arg0 comma AUSE), \
-          type);                                                            \
-    }
-    QI_GEN(genCall)
-#undef genCall
+# define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)                   \
+     template<typename AF, typename ARG0 comma ATYPEDECL>                    \
+     inline void connect(const AF& fun, const ARG0& arg0 comma ADECL,        \
+                         FutureCallbackType type = FutureCallbackType_Async) \
+     {                                                                       \
+       _p->connect(*this, ::qi::bind<void(Future<T>)>(fun, arg0 comma AUSE), \
+                   type);                                                    \
+     }
+     QI_GEN(genCall)
+# undef genCall
 #endif
 
     // Our companion library libqitype requires a connect with same signature for all instantiations
@@ -315,10 +315,10 @@ namespace qi {
     friend void adaptFuture(const Future<FT>& f, Promise<PT>& p);
     template<typename FT, typename PT, typename CONV>
     friend void adaptFuture(const Future<FT>& f, Promise<PT>& p,
-        CONV converter);
+                            CONV converter);
     template<typename FT>
     friend void detail::futureCancelAdapter(
-        boost::weak_ptr<detail::FutureBaseTyped<FT> > wf);
+                                            boost::weak_ptr<detail::FutureBaseTyped<FT> > wf);
   };
 
 
@@ -337,13 +337,13 @@ namespace qi {
     FutureSync() : _sync(false) {}
 
     FutureSync(const Future<T>& b)
-    : _sync(true)
+      : _sync(true)
     {
       _future = b;
     }
 
     FutureSync(const FutureSync<T>& b)
-    : _sync(true)
+      : _sync(true)
     {
       _future = b._future;
       b._sync = false;
@@ -404,20 +404,20 @@ namespace qi {
 
 #ifdef DOXYGEN
     /** Connect a callback with binding and tracking support.
-    *
-    * If the first argument is a weak_ptr or a pointer inheriting from
-    * qi::Trackable, the callback will not be called if tracked object was
-    * destroyed.
-    */
+     *
+     * If the first argument is a weak_ptr or a pointer inheriting from
+     * qi::Trackable, the callback will not be called if tracked object was
+     * destroyed.
+     */
     template<typename FUNCTYPE, typename ARG0>
     void connect(FUNCTYPE fun, ARG0 tracked, ...);
 #else
-#define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)                \
-    template<typename AF, typename ARG0 comma ATYPEDECL>                 \
-    inline void connect(const AF& fun, const ARG0& arg0 comma ADECL)     \
-    {                                                                    \
-      _sync = false;                                                     \
-      connect(::qi::bind<void(FutureSync<T>)>(fun, arg0 comma AUSE));    \
+#define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)               \
+    template<typename AF, typename ARG0 comma ATYPEDECL>                \
+    inline void connect(const AF& fun, const ARG0& arg0 comma ADECL)    \
+    {                                                                   \
+      _sync = false;                                                    \
+      connect(::qi::bind<void(FutureSync<T>)>(fun, arg0 comma AUSE));   \
     }
     QI_GEN(genCall)
 #undef genCall
@@ -437,7 +437,7 @@ namespace qi {
 
 
   /** A Promise is used to create and satisfy a Future.
-  */
+   */
   template <typename T>
   class Promise {
   public:
@@ -494,10 +494,10 @@ namespace qi {
 
     /** Gives access to the underlying value for in-place modification.
      *  trigger() must be called after the value is written to trigger the promise.
-    */
+     */
     ValueType& value() { return _f._p->_value;}
     /** Trigger the promise with the current value.
-    */
+     */
     void trigger() { _f._p->set(_f);}
   protected:
     void setup(boost::function<void (qi::Promise<T>)> cancelCallback, FutureCallbackType async = FutureCallbackType_Async)
@@ -514,9 +514,118 @@ namespace qi {
     friend void adaptFuture(const Future<FT>& f, Promise<PT>& p);
     template<typename FT, typename PT, typename CONV>
     friend void adaptFuture(const Future<FT>& f, Promise<PT>& p,
-        CONV converter);
+                            CONV converter);
   };
 
+  /**
+   * \class qi::FutureBarrier
+   * \includename{qi/future.hpp}
+   * \brief This class helps waiting on multiple futures at the same point.
+   *
+   * \verbatim
+   * This class helps waiting on multiple futures at the same point. If you want
+   * to make several calls in a function and wait for all results at some point.
+   * (:cpp:func:`qi::waitForAll(std::vector<Future<T>>&)` and
+   * :cpp:func:`qi::waitForFirst(std::vector<Future<T>>&)` may help you
+   * for simple cases).
+   *
+   * :cpp:class:`qi::FutureBarrier` is used like a builder. You must give it the
+   * futures with :cpp:func:`qi::FutureBarrier<T>::addFuture(qi::Future<T>)`. On
+   * first call to :cpp:func:`qi::FutureBarrier<T>::future()`, barrier will be closed
+   * and won't except any more future. :cpp:func:`qi::FutureBarrier<T>::future()`
+   * returns the vector of all the futures given to the barrier.
+   *
+   * With this code, you can easily write asynchronous map code.
+   *
+   * Simple example: waitForAll
+   * **************************
+   *
+   * .. code-block:: cpp
+   *
+   *     void waitForAll(std::vector< Future<int> >& vect) {
+   *         qi::FutureBarrier<int> barrier;
+   *         std::vector< Future<int> >::iterator it;
+   *
+   *         for (it = vect.begin(); it != vect.end(); ++it) {
+   *             barrier.addFuture(*it);
+   *         }
+   *         barrier.future().wait();
+   *
+   *         // [1]: Do something here with all the results.
+   *     }
+   *
+   * This function is the simplest one you can write with FutureBarrier. Lets say
+   * you have a vector of calls and you eant to wait on all of them before
+   * executing something, this is typically the kind of code you would write.
+   *
+   * .. note::
+   *
+   *     This function is already provided with the API in ``qi`` namespace,
+   *     as a templated implementation. Don't recode it.
+   *
+   * Complete example
+   * ****************
+   *
+   * .. code-block:: cpp
+   *
+   *     qi::Future<int> returnAsynchronouslyNumber(int number);
+   *     void mult42(qi::Promise<int> prom, qi::Future<int> number);
+   *     void sumList(qi::Promise<int> prom,
+   *                  qi::Future< std::vector< qi::Future<int> > > fut);
+   *
+   *     qi::Future<int> sum42ProductTable() {
+   *         qi::FutureBarrier barrier;
+   *
+   *         // [1]:
+   *         for (int it = 0; it < 10; ++it) {
+   *             // [1.1]:
+   *             qi::Future<int> fut = returnAsynchronouslyNumber(it);
+   *
+   *             qi::Promise<int> prom;
+   *             fut.connect(boost::bind(&mult42, prom, _1));
+   *             barrier.addFuture(prom.future());
+   *
+   *             // [1.2]
+   *         }
+   *
+   *         // The following line would hang until the results are ready:
+   *         // std::vector< qi::Future<int> > values = barrier.future();
+   *         // Vector would then contain promises results, when they are all
+   *         // ready, so [0, 42, 84, 126, 168, 210, 252, 294, 336, 378]
+   *
+   *         // [2]:
+   *         qi::Promise<int> res;
+   *         barrier.future().connect(boost::bind(&sumList, res, _1));
+   *         return res.future();
+   *     }
+   *
+   * This is a complete example of how to do a map. This is the standart usage
+   * of futures but within a loop. If you look at *[1.1]* part, you have an
+   * asynchronous call to returnAsynchronouslyNumber function, a treatment of this
+   * result with function *mult42* to which we give a promise and we use the future
+   * of the promise. Instead of returning it, we give it to the FutureBarrier.
+   *
+   * This is due to the fact that *[2]* needs *[1]* to be completely executed
+   * before executing, including the callback *mult42*. FutureBarrier makes sure of
+   * this synchronisation.
+   *
+   * Since it is returning a :cpp:class:`qi::Future`. You can connect to it using
+   * the standard pattern again and execute a callback (*sunList*) when all the
+   * results has been acquired. This what *[2]* does.
+   *
+   * To summaries, this function will: use an asynchronous call to the function
+   * identity (just to have an asynchronous call), multiply all the results with
+   * the number 42, and the sum the complete vector, to return it.
+   *
+   * .. note::
+   *
+   *     If you add any callback to the future after the call to
+   *     :cpp:func:`qi::FutureBarrier<T>::addFuture(qi::Future<T>)`,
+   *     replacing *[1.2]*, the callback on barrier's future will be executed
+   *     asynchronously with it. If you are not sure, always call
+   *     :cpp:func:`qi::FutureBarrier<T>::addFuture(qi::Future<T>)` in last.
+   * \endverbatim
+   */
   template<typename T>
   class FutureBarrier {
   public:
@@ -528,7 +637,18 @@ namespace qi {
       , _promise(async)
     {}
 
-    /// Adds the future to the barrier.
+    /**
+     * \brief Adds the future to the barrier.
+     * \return Whether the future could be added.
+     *
+     * \verbatim
+     * This adds the future to the barrier. It means barrier's future won't return
+     * until this one returns. It will also be added to the resulting vector.
+     *
+     * When :cpp:func:`qi::FutureBarrier::future()` has been called, this function
+     * will have no effect and return false.
+     * \endverbatim
+     */
     bool addFuture(qi::Future<T> fut) {
       // Can't add future from closed qi::FutureBarrier.
       if (this->_closed)
@@ -540,7 +660,18 @@ namespace qi {
       return true;
     }
 
-    /// Gets the future result for the barrier.
+
+    /**
+     * \brief Gets the future result for the barrier.
+     *
+     * \verbatim
+     * Returns a future containing the vector of all the futures given to the barrier.
+     *
+     * .. warning::
+     *
+     *     Once called, you will not be able to add a new future to the barrier.
+     * \endverbatim
+     */
     Future< std::vector< Future<T> > > future() {
       this->close();
       return this->_promise.future();
@@ -567,14 +698,37 @@ namespace qi {
     }
   };
 
+  /**
+   * \brief Helper function to return a future with the error set.
+   * \param error the error message.
+   * \param async whether callbacks should be asynchronously called
+   */
   template <typename T>
   qi::Future<T> makeFutureError(const std::string &value, FutureCallbackType async = FutureCallbackType_Async);
 
-  /// Helper function to wait on a vector of futures.
+  /**
+   * \brief Helper function to wait on a vector of futures.
+   * \param vect The vector of futures to wait on.
+   *
+   * \verbatim
+   * This function will wait on all the futures of the given vector and return
+   * when they have all been set, either with an error or a valid value.
+   * \endverbatim
+   */
   template <typename T>
   void waitForAll(std::vector< Future<T> >& vect);
 
-  /// Helper function to wait for the first valid future.
+  /**
+   * \brief Helper function to wait for the first valid future.
+   * \param vect The vector of futures to wait on.
+   * \return The first valid future, or an error.
+   *
+   * \verbatim
+   * This function will wait on all the futures of the vector. It returns the
+   * first valid future that returns. If no future is valid, a future set with
+   * an error is returned.
+   * \endverbatim
+   */
   template <typename T>
   qi::FutureSync< qi::Future<T> > waitForFirst(std::vector< Future<T> >& vect);
 
@@ -585,7 +739,9 @@ namespace qi {
     void operator()(const FT& vIn, PT& vOut) { vOut = vIn;}
   };
 
-  /** Feed a promise from a future of possibly different type.
+  /**
+   * \brief Feed a promise from a future of possibly different type.
+   *
    * Will monitor \p f, and bounce its state to \p p.
    * Error and canceled state are bounced as is.
    * Valued state is bounced through FutureValueConverter<FT, PT>::convert()
