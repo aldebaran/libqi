@@ -195,9 +195,17 @@ namespace qi
   }
 #endif
 
+
+  namespace detail
+  {
+    template<typename T> void newAndAssign(T** ptr)
+    {
+      *ptr = new T();
+    }
+  }
 }
 
-#define _QI_INSTANCIATE(_, a, elem) ::qi::details::newAndAssign(&elem);
+#define _QI_INSTANCIATE(_, a, elem) ::qi::detail::newAndAssign(&elem);
 
 /* The code below relies on the fact that initialisation of the qi::Atomic
 * can happen at static initialization time, and that proper memory barriers

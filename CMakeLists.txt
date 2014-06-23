@@ -66,7 +66,6 @@ set(H
   qi/stats.hpp
   qi/qi.hpp
   qi/threadpool.hpp
-  qi/traits.hpp
   qi/trackable.hpp
   qi/eventloop.hpp
   qi/version.hpp

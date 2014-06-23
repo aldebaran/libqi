@@ -13,8 +13,6 @@
 #include <qi/atomic.hpp>
 #include <qi/os.hpp>
 #include <qi/preproc.hpp>
-#include <qi/traits.hpp>
-
 
 class CloneOk
 {
@@ -39,17 +37,6 @@ class CloneKo3: public boost::noncopyable
   int i;
 };
 
-TEST(Macro, clonable)
-{
-  EXPECT_TRUE(qi::isClonable<CloneOk>());
-  EXPECT_TRUE(qi::isClonable((CloneOk*)0));
-  EXPECT_TRUE(!qi::isClonable<CloneKo>());
-  EXPECT_TRUE(!qi::isClonable((CloneKo*)0));
-  EXPECT_TRUE(!qi::isClonable<CloneKo2>());
-  EXPECT_TRUE(!qi::isClonable((CloneKo2*)0));
-  EXPECT_TRUE(!qi::isClonable<CloneKo3>());
-  EXPECT_TRUE(!qi::isClonable((CloneKo3*)0));
-}
 
 qi::Atomic<int> counter;
 
