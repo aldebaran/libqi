@@ -10,7 +10,7 @@
 #include <string>
 #include <vector>
 
-#include <qi/messaging/api.hpp>
+#include <qi/api.hpp>
 #include <qi/url.hpp>
 #include <qi/type/typeinterface.hpp>
 

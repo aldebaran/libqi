@@ -7,7 +7,7 @@
 #ifndef _QI_ANYFUNCTION_HPP_
 #define _QI_ANYFUNCTION_HPP_
 
-#include <qi/type/api.hpp>
+#include <qi/api.hpp>
 #include <boost/function.hpp>
 #include <vector>
 

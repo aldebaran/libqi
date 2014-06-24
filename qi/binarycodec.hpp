@@ -9,7 +9,7 @@
 
 #include <qi/atomic.hpp>
 
-#include <qi/type/api.hpp>
+#include <qi/api.hpp>
 #include <boost/function.hpp>
 #include <qi/buffer.hpp>
 #include <qi/bufferreader.hpp>

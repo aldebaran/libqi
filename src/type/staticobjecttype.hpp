@@ -7,7 +7,7 @@
 #ifndef _SRC_STATICOBJECTTYPE_HPP_
 #define _SRC_STATICOBJECTTYPE_HPP_
 
-#include <qi/type/api.hpp>
+#include <qi/api.hpp>
 #include <qi/property.hpp>
 #include <qi/anyvalue.hpp>
 #include <qi/type/typeinterface.hpp>

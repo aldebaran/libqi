@@ -9,7 +9,7 @@
 
 #include <qi/stats.hpp>
 
-#include <qi/type/api.hpp>
+#include <qi/api.hpp>
 #include <qi/anyfunction.hpp>
 #include <qi/type/typeobject.hpp>
 #include <qi/signal.hpp>

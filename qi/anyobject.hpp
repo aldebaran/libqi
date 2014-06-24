@@ -11,7 +11,7 @@
 #include <string>
 
 #include <qi/atomic.hpp>
-#include <qi/type/api.hpp>
+#include <qi/api.hpp>
 #include <qi/signal.hpp>
 #include <qi/eventloop.hpp>
 #include <qi/type/typeobject.hpp>

@@ -12,7 +12,7 @@
 
 #include <boost/smart_ptr/enable_shared_from_this.hpp>
 
-#include <qi/type/api.hpp>
+#include <qi/api.hpp>
 #include <qi/type/detail/manageable.hpp>
 #include <qi/future.hpp>
 #include <qi/signal.hpp>

@@ -10,7 +10,7 @@
 #include <string>
 #include <vector>
 
-#include <qi/messaging/api.hpp>
+#include <qi/api.hpp>
 
 namespace qi {
   class UrlPrivate;

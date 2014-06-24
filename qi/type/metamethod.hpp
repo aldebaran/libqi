@@ -10,7 +10,7 @@
 # include <string>
 # include <map>
 
-# include <qi/type/api.hpp>
+# include <qi/api.hpp>
 # include <qi/type/typeinterface.hpp>
 
 # ifdef _MSC_VER

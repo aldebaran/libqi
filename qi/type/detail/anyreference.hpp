@@ -13,7 +13,7 @@
 #include <cmath>
 #include <qi/atomic.hpp>
 #include <qi/types.hpp>
-#include <qi/type/api.hpp>
+#include <qi/api.hpp>
 #include <qi/type/fwd.hpp>
 #include <qi/type/detail/typeinterface.hpp>
 #include <boost/type_traits/remove_const.hpp>

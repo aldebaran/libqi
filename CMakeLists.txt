@@ -164,7 +164,7 @@ set(QITYPE_H       qi/anyfunction.hpp
                    qi/type/detail/manageable.hpp
                    qi/type/detail/traceanalyzer.hpp
 
-                   qi/type/api.hpp
+                   qi/api.hpp
                    qi/binarycodec.hpp
                    qi/type/dynamicobject.hpp
                    qi/type/dynamicobjectbuilder.hpp
@@ -221,7 +221,7 @@ set(QITYPE_C src/type/binarycodec.cpp
              )
 
 
-set(QIM_H qi/messaging/api.hpp
+set(QIM_H qi/api.hpp
           qi/messaging/autoservice.hpp
           qi/messaging/details/autoservice.hxx
           qi/messaging/gateway.hpp

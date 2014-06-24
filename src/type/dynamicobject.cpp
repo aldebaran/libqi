@@ -6,7 +6,7 @@
 
 #include <boost/make_shared.hpp>
 
-#include <qi/type/api.hpp>
+#include <qi/api.hpp>
 #include <qi/anyvalue.hpp>
 #include <qi/type/typeinterface.hpp>
 #include <qi/anyvalue.hpp>

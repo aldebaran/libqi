@@ -7,7 +7,7 @@
 #ifndef _QI_MESSAGING_SESSION_HPP_
 #define _QI_MESSAGING_SESSION_HPP_
 
-#include <qi/messaging/api.hpp>
+#include <qi/api.hpp>
 #include <qi/messaging/serviceinfo.hpp>
 #include <qi/future.hpp>
 #include <qi/anyobject.hpp>

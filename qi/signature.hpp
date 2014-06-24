@@ -7,7 +7,7 @@
 #ifndef _QI_SIGNATURE_HPP_
 #define _QI_SIGNATURE_HPP_
 
-#include <qi/type/api.hpp>
+#include <qi/api.hpp>
 #include <string>
 #include <vector>
 #include <list>

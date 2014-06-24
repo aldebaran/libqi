@@ -11,7 +11,7 @@
 
 #include <boost/function.hpp>
 
-#include <qi/type/api.hpp>
+#include <qi/api.hpp>
 #include <qi/type/fwd.hpp>
 #include <qi/type/typeinterface.hpp>
 #include <qi/type/dynamicobjectbuilder.hpp>

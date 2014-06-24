@@ -16,7 +16,7 @@
 #include <boost/mpl/if.hpp>
 
 #include <qi/log.hpp>
-#include <qi/type/api.hpp>
+#include <qi/api.hpp>
 #include <qi/type/fwd.hpp>
 #include <qi/signature.hpp>
 #include <qi/type/detail/typeinterface.hpp>

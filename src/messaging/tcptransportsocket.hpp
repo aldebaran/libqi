@@ -15,7 +15,7 @@
 # ifdef WITH_SSL
 # include <boost/asio/ssl.hpp>
 # endif
-# include <qi/messaging/api.hpp>
+# include <qi/api.hpp>
 # include "message.hpp"
 # include <qi/url.hpp>
 # include "transportsocket.hpp"

@@ -12,7 +12,7 @@
 # include <boost/asio/ssl.hpp>
 # endif
 
-# include <qi/messaging/api.hpp>
+# include <qi/api.hpp>
 # include <qi/url.hpp>
 # include "transportserver.hpp"
 

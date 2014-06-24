@@ -7,7 +7,7 @@
 #ifndef _SRC_MESSAGE_HPP_
 #define _SRC_MESSAGE_HPP_
 
-#include <qi/messaging/api.hpp>
+#include <qi/api.hpp>
 #include <qi/anyvalue.hpp>
 #include <qi/buffer.hpp>
 #include <qi/binarycodec.hpp>

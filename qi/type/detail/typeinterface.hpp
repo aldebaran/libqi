@@ -9,7 +9,7 @@
 
 #include <typeinfo>
 #include <string>
-#include <qi/type/api.hpp>
+#include <qi/api.hpp>
 #include <qi/signature.hpp>
 
 /* A lot of class are found in this headers... to kill circular dependencies.

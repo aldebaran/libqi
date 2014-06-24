@@ -10,7 +10,7 @@
 #include <string>
 #include <set>
 #include <boost/thread/recursive_mutex.hpp>
-#include <qi/messaging/api.hpp>
+#include <qi/api.hpp>
 #include <qi/session.hpp>
 #include <qi/atomic.hpp>
 #include "server.hpp"
