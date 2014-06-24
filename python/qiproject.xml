@@ -1,6 +1,0 @@
-<project version="3">
-  <qibuild name="qipython">
-    <depends runtime="true" buildtime="true" names="libqimessaging" />
-  </qibuild>
-  <qipython name="qi" />
-</project>
