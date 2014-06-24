@@ -189,7 +189,6 @@ namespace qi {
 }
 
 /**
- * \def QI_AT_ENTER(func)
  * \brief calls qi::Application::atEnter(func) at static initialization time.
  * \param func The handler that must be called at enter.
  */

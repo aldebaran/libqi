@@ -174,22 +174,22 @@ namespace qi {
    */
   namespace log {
 
-    /// \deprecated 1.22
+    /// \deprecated 1.22 Use qi::LogLevel_Silent
     QI_API_DEPRECATED static const qi::LogLevel silent = LogLevel_Silent;
-    /// \deprecated 1.22
+    /// \deprecated 1.22 Use qi::LogLevel_Fatal
     QI_API_DEPRECATED static const qi::LogLevel fatal = LogLevel_Fatal;
-    /// \deprecated 1.22
+    /// \deprecated 1.22 Use qi::LogLevel_Error
     QI_API_DEPRECATED static const qi::LogLevel error = LogLevel_Error;
-    /// \deprecated 1.22
+    /// \deprecated 1.22 Use qi::LogLevel_Warning
     QI_API_DEPRECATED static const qi::LogLevel warning = LogLevel_Warning;
-    /// \deprecated 1.22
+    /// \deprecated 1.22 Use qi::LogLevel_Info
     QI_API_DEPRECATED static const qi::LogLevel info = LogLevel_Info;
-    /// \deprecated 1.22
+    /// \deprecated 1.22 Use qi::LogLevel_Verbose
     QI_API_DEPRECATED static const qi::LogLevel verbose = LogLevel_Verbose;
-    /// \deprecated 1.22
+    /// \deprecated 1.22 Use qi::LogLevel_Debug
     QI_API_DEPRECATED static const qi::LogLevel debug = LogLevel_Debug;
 
-    /// \deprecated 1.22
+    /// \deprecated 1.22 Use qi::LogLevel
     QI_API_DEPRECATED typedef qi::LogLevel LogLevel;
   }
 }
@@ -203,7 +203,7 @@ namespace qi {
     typedef unsigned int      SubscriberId; ///< Subscriber Identifier.
     typedef detail::Category* CategoryType; ///< Catergory Informations.
 
-    /// \deprecated 1.22
+    /// \deprecated 1.22 Use qi::log::SubscriberId
     QI_API_DEPRECATED typedef unsigned int Subscriber;
 
 
@@ -471,9 +471,9 @@ namespace qi {
 
 
     #include <qi/detail/warn_push_ignore_deprecated.hpp>
-    /// \deprecated 1.22
+    /// \deprecated since 1.22. Use qi::log::setVerbosity(const qi::LogLevel, SubscriberId)
     QI_API_DEPRECATED inline void setVerbosity(SubscriberId sub, const qi::log::LogLevel lv) { setVerbosity((qi::LogLevel)lv, sub); }
-    /// \deprecated 1.22
+    /// \deprecated since 1.22. Use qi::log::setCategory(const std::string&, qi::LogLevel, SubscriberId)
     QI_API_DEPRECATED inline void setCategory(SubscriberId sub, const std::string& cat, qi::log::LogLevel level) { setCategory(cat, (qi::LogLevel)level, sub); }
     #include <qi/detail/warn_pop_ignore_deprecated.hpp>
 

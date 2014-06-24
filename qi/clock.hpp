@@ -128,7 +128,8 @@ namespace qi
      * time_points by comparing their respective durations.
      */
     typedef boost::chrono::time_point<WallClock> time_point;
-    /// true if t1 <= t2 is always true, else false. \note A Wallclock is never steady.
+    /// true if t1 <= t2 is always true, else false.
+    /// \note A Wallclock is never steady.
     BOOST_STATIC_CONSTEXPR bool is_steady = false;
 
   public:

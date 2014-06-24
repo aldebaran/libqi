@@ -102,10 +102,7 @@ namespace qi
     }
 
 
-    /**
-     * \brief Value accessor.
-     * \param ptr pointer to the managed data.
-     */
+    /// \brief Value accessor.
     T &operator*() const
     {
       return *_ptr;

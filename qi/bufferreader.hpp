@@ -47,7 +47,7 @@ namespace qi {
     /**
      * \brief Move forward the buffer cursor by the given offset.
      * \param offset Value for move forward the cursor.
-     * \ return Return true if succeed, false otherwise.
+     * \return Return true if succeed, false otherwise.
      */
     bool   seek(size_t offset);
     /**
@@ -72,7 +72,7 @@ namespace qi {
      */
     const Buffer& subBuffer();
     /**
-     * \brief return the actual position in the buffer.
+     * \brief Return the actual position in the buffer.
      * \return The current offset.
      */
     size_t position() const;

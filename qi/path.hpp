@@ -361,7 +361,7 @@ namespace qi
     /**
      * \brief Set the writable files path for users.
      * \param path Path to the new writable data path
-     * \deprecated since 2.2
+     * \deprecated since 2.2 Use qi::log::detail::setWritablePath instead
      */
     QI_API QI_API_DEPRECATED void setWritablePath(const std::string &path);
   }

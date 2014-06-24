@@ -189,7 +189,8 @@ namespace qi {
   QI_COMPILER_WARNING(name macro is deprecated.)
 
 /**
- * \deprecated Use boost::noncopyable instead
+ * \deprecated Use boost::noncopyable instead.
+ *
  * \verbatim
  * Example:
  *
@@ -198,6 +199,7 @@ namespace qi {
  *     class Foo : private boost::nonpyable
  *     {};
  * \endverbatim
+ *
  * \brief A macro to disallow copy constructor and operator=
  * \param type The class name of which we want to forbid copy.
  *
@@ -255,7 +257,7 @@ namespace qi {
  *
  *     int zero(int QI_UNUSED(x))
  *     {
- *         return 0;
+ *       return 0;
  *     }
  * \endverbatim
  */
@@ -270,13 +272,13 @@ namespace qi {
 #define _QI_UNIQ_DEF_LEVEL1(A, B) _QI_UNIQ_DEF_LEVEL2(A, B)
 #define QI_UNIQ_DEF(A) _QI_UNIQ_DEF_LEVEL1(A, __LINE__)
 
+#if (!defined(__GNUC__) || defined(__clang__) ||                        \
+     (__GNUC__ >= 4 && __GNUC_MINOR__ >= 7)) && __cplusplus >= 201103L
 /**
  * \def QI_CXX11_ENABLED
  * \brief GCC < 4.7 is not standard compliant about __cplusplus
  *        clang 3.3 defines the same macros as GCC 4.2 but it is compliant
  */
-#if (!defined(__GNUC__) || defined(__clang__) ||                        \
-     (__GNUC__ >= 4 && __GNUC_MINOR__ >= 7)) && __cplusplus >= 201103L
 # define QI_CXX11_ENABLED 1
 #endif
 
