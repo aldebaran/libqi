@@ -16,7 +16,7 @@
 
 namespace qi
 {
-  class QITYPE_API MetaProperty
+  class QI_API MetaProperty
   {
   public:
     MetaProperty(unsigned int uid, const std::string& name, const qi::Signature& sig);

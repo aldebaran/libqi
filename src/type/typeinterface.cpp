@@ -122,7 +122,7 @@ namespace qi {
     return *res;
   }
 
-  QITYPE_API TypeInterface* getType(const std::type_info& type)
+  QI_API TypeInterface* getType(const std::type_info& type)
   {
     static bool fallback = !qi::os::getenv("QI_TYPE_RTTI_FALLBACK").empty();
     static boost::mutex* mutex = 0;
@@ -142,7 +142,7 @@ namespace qi {
   }
 
   /// Type factory setter
-  QITYPE_API bool registerType(const std::type_info& typeId, TypeInterface* type)
+  QI_API bool registerType(const std::type_info& typeId, TypeInterface* type)
   {
     qiLogCategory("qitype.type"); // method can be called at static init
     qiLogDebug() << "registerType "  << typeId.name() << " "

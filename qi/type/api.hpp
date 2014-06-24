@@ -4,13 +4,13 @@
 **  See COPYING for the license
 */
 
-#ifndef _QITYPE_API_HPP_
-#define _QITYPE_API_HPP_
+#ifndef _QI_API_HPP_
+#define _QI_API_HPP_
 
 #include <qi/macro.hpp>
 #include <qi/type/config.hpp>
 
-#define QITYPE_API QI_LIB_API(qitype)
+#define QI_API QI_LIB_API(qitype)
 
 /* dynamic_casting template partial specializations
  * between shared objects poses problems with
@@ -19,9 +19,9 @@
  * for now.
  */
 #ifdef __clang__
-# define QITYPE_TEMPLATE_API QITYPE_API
+# define QITYPE_TEMPLATE_API QI_API
 #else
 # define QITYPE_TEMPLATE_API
 #endif
 
-#endif  // _QITYPE_API_HPP_
+#endif  // _QI_API_HPP_

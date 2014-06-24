@@ -90,7 +90,7 @@ namespace qi {
   typedef std::map<unsigned int, MethodStatistics> ObjectStatistics;
 /** Per-instance context.
   */
-  class QITYPE_API Manageable
+  class QI_API Manageable
   {
   public:
     Manageable();

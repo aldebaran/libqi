@@ -21,7 +21,7 @@
 namespace qi {
   class MetaMethodParameterPrivate;
   class AnyFunction;
-  class QITYPE_API MetaMethodParameter {
+  class QI_API MetaMethodParameter {
   public:
     MetaMethodParameter();
     MetaMethodParameter(const MetaMethodParameter& other);
@@ -39,7 +39,7 @@ namespace qi {
 
   class MetaMethodPrivate;
   /// Representation of a method in an GenericObject.
-  class QITYPE_API MetaMethod {
+  class QI_API MetaMethod {
   public:
     MetaMethod();
     MetaMethod(unsigned int newUid, const MetaMethod& other);
@@ -66,7 +66,7 @@ namespace qi {
   };
 
   class MetaMethodBuilderPrivate;
-  class QITYPE_API MetaMethodBuilder {
+  class QI_API MetaMethodBuilder {
   public:
     MetaMethodBuilder();
     MetaMethodBuilder(const Signature &sigreturn, const std::string& name, const Signature &signature, const std::string& doc = "");

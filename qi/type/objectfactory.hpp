@@ -47,9 +47,9 @@ namespace qi {
     }
   }
 
-  QITYPE_API bool registerObjectFactory(const std::string& name, AnyFunction factory);
+  QI_API bool registerObjectFactory(const std::string& name, AnyFunction factory);
 
-  QITYPE_API qi::AnyObject createObject(const std::string& name, const AnyReferenceVector& args);
+  QI_API qi::AnyObject createObject(const std::string& name, const AnyReferenceVector& args);
 
   // we need this to be inline to avoid the multiple definition problem for
   // createObject(std::string) (no custom argument), we need variadic
@@ -70,10 +70,10 @@ namespace qi {
   #undef pushi
 
   /// Get all factory names. Order is guaranteed to be the registration order
-  QITYPE_API std::vector<std::string> listObjectFactories();
+  QI_API std::vector<std::string> listObjectFactories();
 
   /// Load a shared library and return the list of new available factory names.
-  QITYPE_API std::vector<std::string> loadObject(const std::string& name, int flags = -1);
+  QI_API std::vector<std::string> loadObject(const std::string& name, int flags = -1);
 }
 
 /// register \p func as factory for object named \p name

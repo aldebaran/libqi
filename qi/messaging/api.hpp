@@ -4,13 +4,13 @@
 **  See COPYING for the license
 */
 
-#ifndef _QIMESSAGING_API_HPP_
-#define _QIMESSAGING_API_HPP_
+#ifndef _QI_API_HPP_
+#define _QI_API_HPP_
 
 #include <qi/macro.hpp>
 
-#define QIMESSAGING_API QI_LIB_API(qimessaging)
+#define QI_API QI_LIB_API(qimessaging)
 
 
-#endif  // _QIMESSAGING_API_HPP_
+#endif  // _QI_API_HPP_
 

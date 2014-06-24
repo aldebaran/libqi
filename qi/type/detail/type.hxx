@@ -125,7 +125,7 @@ namespace qi  {
   }
 
   // Provide a base class for all templated type impls
-  class QITYPE_API TemplateTypeInterface: public TypeInterface
+  class QI_API TemplateTypeInterface: public TypeInterface
   {
   public:
     // Return erased template argument type

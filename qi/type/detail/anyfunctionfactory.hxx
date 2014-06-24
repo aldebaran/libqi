@@ -316,8 +316,8 @@ namespace qi
 
 #ifdef QITYPE_TRACK_FUNCTIONTYPE_INSTANCES
     // debug-tool to monitor function type usage
-    void QITYPE_API functionTypeTrack(const std::string& functionName);
-    void QITYPE_API functionTypeDump();
+    void QI_API functionTypeTrack(const std::string& functionName);
+    void QI_API functionTypeDump();
 #endif
   }
 

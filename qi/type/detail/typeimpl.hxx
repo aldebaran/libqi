@@ -17,7 +17,7 @@ namespace qi
 {
   namespace detail {
     /// Report a type operation failure
-    void QITYPE_API typeFail(const char* typeName, const char* operation);
+    void QI_API typeFail(const char* typeName, const char* operation);
 
     /* Handle creation (create, createInPlace), copy (copy, clone, cloneInPlace), and
     *  destruction(destroy) of a given type.

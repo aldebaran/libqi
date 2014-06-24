@@ -18,7 +18,7 @@ namespace qi {
   Dispatcher& typeDispatch(const Dispatcher& dispatcher, AnyReference value);
 
 
-  // class QITYPE_API TypeDispatcher
+  // class QI_API TypeDispatcher
   // {
   // public:
   //   void visitUnknown(qi::AnyReference value);

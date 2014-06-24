@@ -14,14 +14,14 @@ namespace qi {
 
   /** @return the value encoded in JSON.
    */
-  QITYPE_API std::string encodeJSON(const qi::AutoAnyReference &val);
+  QI_API std::string encodeJSON(const qi::AutoAnyReference &val);
 
   /**
     * creates a GV representing a JSON string or throw on parse error.
     * @param JSON string to decode.
     * @return a GV representing the JSON string
     */
-  QITYPE_API qi::AnyValue decodeJSON(const std::string &in);
+  QI_API qi::AnyValue decodeJSON(const std::string &in);
 
   /**
     * set the input GV to represent the JSON sequence between two string iterators or throw on parse error.
@@ -30,7 +30,7 @@ namespace qi {
     * @param GV to set. Not modified if an error occured.
     * @return an iterator to the last read char + 1
     */
-  QITYPE_API std::string::const_iterator decodeJSON(const std::string::const_iterator &begin,
+  QI_API std::string::const_iterator decodeJSON(const std::string::const_iterator &begin,
                                          const std::string::const_iterator &end,
                                          AnyValue &target);
 

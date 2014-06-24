@@ -32,7 +32,7 @@ namespace detail {
  * Use qi::AnyValue which has value semantics instead.
  *
  */
-class QITYPE_API AnyReferenceBase
+class QI_API AnyReferenceBase
 {
 protected:
   AnyReferenceBase();
@@ -294,7 +294,7 @@ protected:
 
 } // namespace detail
 
-class QITYPE_API AnyReference : public detail::AnyReferenceBase {
+class QI_API AnyReference : public detail::AnyReferenceBase {
 public:
   AnyReference()
     : AnyReferenceBase()
@@ -323,15 +323,15 @@ private:
 };
 
 typedef std::vector<AnyReference> AnyReferenceVector;
-QITYPE_API bool operator< (const AnyReference& a, const AnyReference& b);
-QITYPE_API bool operator==(const AnyReference& a, const AnyReference& b);
-QITYPE_API bool operator!=(const AnyReference& a, const AnyReference& b);
+QI_API bool operator< (const AnyReference& a, const AnyReference& b);
+QI_API bool operator==(const AnyReference& a, const AnyReference& b);
+QI_API bool operator!=(const AnyReference& a, const AnyReference& b);
 
 ///@return an allocated Tuple made from copies of \param values
-QITYPE_API AnyReference makeGenericTuple(const AnyReferenceVector& values);
+QI_API AnyReference makeGenericTuple(const AnyReferenceVector& values);
 
 ///@return a Tuple pointing to \param values as its storage
-QITYPE_API AnyReference makeGenericTuplePtr(
+QI_API AnyReference makeGenericTuplePtr(
     const std::vector<TypeInterface*>& types,
     const std::vector<void*>&values);
 
@@ -343,7 +343,7 @@ QITYPE_API AnyReference makeGenericTuplePtr(
  *  can be called with any argument type:
  *    metaCall("foo", 12);
  */
-class QITYPE_API AutoAnyReference: public AnyReference
+class QI_API AutoAnyReference: public AnyReference
 {
 public:
   AutoAnyReference () {}

@@ -31,7 +31,7 @@ namespace qi
   * The default implementation holds a method list that the user must populate
   * with setMethod()
   */
-  class QITYPE_API DynamicObject {
+  class QI_API DynamicObject {
   public:
     DynamicObject();
 
@@ -69,10 +69,10 @@ namespace qi
   };
 
   //Make an AnyObject of DynamicObject kind from a DynamicObject
-  QITYPE_API AnyObject     makeDynamicAnyObject(DynamicObject *obj, bool destroyObject = true,
+  QI_API AnyObject     makeDynamicAnyObject(DynamicObject *obj, bool destroyObject = true,
     boost::function<void (GenericObject*)> onDelete = boost::function<void (GenericObject*)>());
 
-  QITYPE_API AnyObject makeDynamicSharedAnyObjectImpl(DynamicObject* obj, boost::shared_ptr<Empty> other);
+  QI_API AnyObject makeDynamicSharedAnyObjectImpl(DynamicObject* obj, boost::shared_ptr<Empty> other);
 
   /** Make an AnyObject that shares its ref counter with \p other
   * Note that \p obj will not be destroyed when the shared counter reaches 0.
@@ -84,7 +84,7 @@ namespace qi
   }
 
 
-  QITYPE_API ObjectTypeInterface* getDynamicTypeInterface();
+  QI_API ObjectTypeInterface* getDynamicTypeInterface();
 }
 
 #ifdef _MSC_VER

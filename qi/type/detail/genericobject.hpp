@@ -36,7 +36,7 @@ namespace qi
  * This class has pointer semantic. Do not use directly, use AnyObject,
  * obtained through Session, DynamicObjectBuilder or ObjectTypeBuilder.
  */
-class QITYPE_API GenericObject
+class QI_API GenericObject
   : public Manageable
   , public boost::enable_shared_from_this<GenericObject>
 {
@@ -457,7 +457,7 @@ qi::FutureSync<void> GenericObject::setProperty(const std::string& name, const T
  * Override backend shared_ptr<GenericObject>
 */
 template<>
-class QITYPE_API TypeImpl<boost::shared_ptr<GenericObject> > :
+class QI_API TypeImpl<boost::shared_ptr<GenericObject> > :
   public DynamicTypeInterface
 {
 public:

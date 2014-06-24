@@ -25,7 +25,7 @@ namespace qi
    *  Be careful with the scope of the object, once the destructor is called,
    *  the session is destroyed as well.
    */
-  class QIMESSAGING_API ApplicationSession : public Application, private boost::noncopyable
+  class QI_API ApplicationSession : public Application, private boost::noncopyable
   {
   public:
     /** By default, ApplicationSession will automatically call qi::Application::stop()

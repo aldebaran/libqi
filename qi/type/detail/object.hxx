@@ -487,7 +487,7 @@ namespace detail
  * Object<T> is handling this through the checkT() method.
  */
 template<typename T>
-class QITYPE_API TypeImpl<Object<T> > :
+class QI_API TypeImpl<Object<T> > :
   public TypeImpl<boost::shared_ptr<GenericObject> >
 {
 };

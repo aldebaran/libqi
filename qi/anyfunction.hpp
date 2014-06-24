@@ -71,7 +71,7 @@ namespace qi {
 
 
   /// Signature information for both callable types FunctionTypeInterface and MethodType
-  class QITYPE_API CallableTypeInterface
+  class QI_API CallableTypeInterface
   {
   public:
     CallableTypeInterface();
@@ -85,7 +85,7 @@ namespace qi {
     std::vector<TypeInterface*> _argumentsType;
   };
 
-  class QITYPE_API FunctionTypeInterface: public TypeInterface, public CallableTypeInterface
+  class QI_API FunctionTypeInterface: public TypeInterface, public CallableTypeInterface
   {
   public:
     /** Call the function func with argument args that must be of the correct type.
@@ -116,7 +116,7 @@ namespace qi {
   };
 
   template <typename T = AnyValue>
-  class QITYPE_API KeywordArguments {
+  class QI_API KeywordArguments {
   public:
     KeywordArguments& operator()(const std::string& name, const T& t) { values[name] = t; return *this; }
 
@@ -125,7 +125,7 @@ namespace qi {
 
   /// A function with AnyArguments as its sole argument will behave as if AnyFunction::fromDynamicFunction was called.
   // This is going to be deprecated in profit of VarArgument and AnyVarArgument
-  class QITYPE_API AnyArguments
+  class QI_API AnyArguments
   {
   public:
     AnyArguments() {};
@@ -145,7 +145,7 @@ namespace qi {
    * This class has value semantic.
    *
    */
-  class QITYPE_API AnyFunction
+  class QI_API AnyFunction
   {
   public:
     AnyFunction();
@@ -207,7 +207,7 @@ namespace qi {
    * If GenericFunctionParameters is obtained throug copy(), convert() or
    * fromBuffer(), it must be cleared by destroy()
    */
-  class QITYPE_API GenericFunctionParameters: public AnyReferenceVector
+  class QI_API GenericFunctionParameters: public AnyReferenceVector
   {
   public:
     GenericFunctionParameters();
@@ -221,7 +221,7 @@ namespace qi {
   };
 
   /// @return the type used by dynamic functions
-  QITYPE_API FunctionTypeInterface* dynamicFunctionTypeInterface();
+  QI_API FunctionTypeInterface* dynamicFunctionTypeInterface();
 }
 
 #include <qi/type/detail/anyfunction.hxx>

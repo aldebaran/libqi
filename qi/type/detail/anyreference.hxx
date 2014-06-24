@@ -120,7 +120,7 @@ inline T AnyReferenceBase::to(const T&) const
   return to<T>();
 }
 
-QI_NORETURN QITYPE_API void throwConversionFailure(
+QI_NORETURN QI_API void throwConversionFailure(
     TypeInterface* from, TypeInterface* to);
 
 template<typename T>

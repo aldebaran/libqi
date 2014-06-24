@@ -37,7 +37,7 @@ namespace qi {
   typedef qi::uint64_t SignalLink;
 
   //Signal are not copyable, they belong to a class.
-  class QITYPE_API SignalBase : boost::noncopyable
+  class QI_API SignalBase : boost::noncopyable
   {
   public:
     typedef boost::function<void(bool)> OnSubscribers;
@@ -196,7 +196,7 @@ template<
    *
    * Only one of handler or target must be set.
    */
-  class QITYPE_API SignalSubscriber
+  class QI_API SignalSubscriber
   : public boost::enable_shared_from_this<SignalSubscriber>
   {
   public:

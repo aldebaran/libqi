@@ -17,7 +17,7 @@
 namespace qi
 {
   class ServiceInfoPrivate;
-  class QIMESSAGING_API ServiceInfo {
+  class QI_API ServiceInfo {
   public:
     ServiceInfo();
     ServiceInfo(const ServiceInfo& svcinfo);

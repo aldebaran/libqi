@@ -14,7 +14,7 @@ namespace qi {
    *  as a pointer to the real value.
    *  to convert the value if needed and copy to the required type.
    */
-  class QITYPE_API AnyValue: public detail::AnyReferenceBase
+  class QI_API AnyValue: public detail::AnyReferenceBase
   {
   public:
 
@@ -98,11 +98,11 @@ namespace qi {
   };
 
   /// Less than operator. Will compare the values within the AnyValue.
-  QITYPE_API bool operator<(const AnyValue& a, const AnyValue& b);
+  QI_API bool operator<(const AnyValue& a, const AnyValue& b);
 
   /// Value equality operator. Will compare the values within.
-  QITYPE_API bool operator==(const AnyValue& a, const AnyValue& b);
-  QITYPE_API bool operator!=(const AnyValue& a, const AnyValue& b);
+  QI_API bool operator==(const AnyValue& a, const AnyValue& b);
+  QI_API bool operator!=(const AnyValue& a, const AnyValue& b);
 
   typedef std::vector<AnyValue> AnyValueVector;
 

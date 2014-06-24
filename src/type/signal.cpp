@@ -566,6 +566,6 @@ namespace qi {
     return connect(SignalSubscriber(obj, method.front().uid()));
   }
 
-  QITYPE_API const SignalLink SignalBase::invalidSignalLink = ((unsigned int)-1);
+  QI_API const SignalLink SignalBase::invalidSignalLink = ((unsigned int)-1);
 
 }

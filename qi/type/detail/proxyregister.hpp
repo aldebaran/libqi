@@ -13,7 +13,7 @@ namespace qi
 /** A Proxy is the base class used by bouncer implementations of all
 * interfaces.
 */
-class QITYPE_API Proxy : public boost::noncopyable
+class QI_API Proxy : public boost::noncopyable
 {
 public:
   Proxy(AnyObject obj) : _obj(obj) {qiLogDebug("qitype.proxy") << "Initializing " << this;}

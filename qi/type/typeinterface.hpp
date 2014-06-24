@@ -74,7 +74,7 @@ namespace qi{
   class StructTypeInterface;
 
   // Interfaces for specialized types
-  class QITYPE_API IntTypeInterface: public TypeInterface
+  class QI_API IntTypeInterface: public TypeInterface
   {
   public:
     /// Get the integer value
@@ -88,7 +88,7 @@ namespace qi{
     virtual TypeKind kind() { return TypeKind_Int;}
   };
 
-  class QITYPE_API FloatTypeInterface: public TypeInterface
+  class QI_API FloatTypeInterface: public TypeInterface
   {
   public:
     /// Get the float value
@@ -100,7 +100,7 @@ namespace qi{
     virtual TypeKind kind() { return TypeKind_Float;}
   };
 
-  class QITYPE_API StringTypeInterface: public TypeInterface
+  class QI_API StringTypeInterface: public TypeInterface
   {
   public:
     typedef std::pair<char*, size_t> RawString;
@@ -123,7 +123,7 @@ namespace qi{
   /**
    * Interface for a buffer of data
    */
-  class QITYPE_API RawTypeInterface: public TypeInterface
+  class QI_API RawTypeInterface: public TypeInterface
   {
   public:
     /// Get the buffer of data (not a copy)
@@ -133,7 +133,7 @@ namespace qi{
     virtual TypeKind kind() { return TypeKind_Raw; }
   };
 
-  class QITYPE_API PointerTypeInterface: public TypeInterface
+  class QI_API PointerTypeInterface: public TypeInterface
   {
   public:
     enum PointerKind
@@ -158,7 +158,7 @@ namespace qi{
    * Iterators become invalid if the parent container is destroyed and no
    * method should be called in such a case.
    */
-  class QITYPE_API IteratorTypeInterface: public TypeInterface
+  class QI_API IteratorTypeInterface: public TypeInterface
   {
   public:
     /**
@@ -182,7 +182,7 @@ namespace qi{
    *
    * Elements must have the same types (may be dynamic)
    */
-  class QITYPE_API ListTypeInterface: public TypeInterface
+  class QI_API ListTypeInterface: public TypeInterface
   {
   public:
     /// Get the type of the elements of the list
@@ -207,7 +207,7 @@ namespace qi{
    * Keys must have the same types and values must have the same types (both
    * may be dynamic)
    */
-  class QITYPE_API MapTypeInterface: public TypeInterface
+  class QI_API MapTypeInterface: public TypeInterface
   {
   public:
     /// Get the types of the values of the map
@@ -235,7 +235,7 @@ namespace qi{
     // MapTypeInterface does not provide a find()
   };
 
-  class QITYPE_API StructTypeInterface: public TypeInterface
+  class QI_API StructTypeInterface: public TypeInterface
   {
   public:
     /// Get all the fields of the structure
@@ -294,7 +294,7 @@ namespace qi{
    *
    * The workings of a dynamic type is similar to that of a union.
    */
-  class QITYPE_API DynamicTypeInterface: public TypeInterface
+  class QI_API DynamicTypeInterface: public TypeInterface
   {
   public:
     /// Get a reference to the underlying element
@@ -307,7 +307,7 @@ namespace qi{
   /**
    * Type that contains variable arguments
    */
-  class QITYPE_API VarArgsTypeInterface: public ListTypeInterface
+  class QI_API VarArgsTypeInterface: public ListTypeInterface
   {
   public:
     //virtual AnyReference get(void *storage) = 0;
@@ -318,25 +318,25 @@ namespace qi{
   ///@return a Type of the specified Kind. This do not work for list, map and tuple.
   /// kind Int and Float will create the biggest possible type. use makeFloatType and makeIntType
   /// to be more specific.
-  QITYPE_API TypeInterface* makeTypeOfKind(const qi::TypeKind& kind);
+  QI_API TypeInterface* makeTypeOfKind(const qi::TypeKind& kind);
 
   ///@return a Type of kind float, bytelen can be 4 or 8
-  QITYPE_API TypeInterface* makeFloatType(int bytelen);
+  QI_API TypeInterface* makeFloatType(int bytelen);
 
   ///@return a Type of kind int, bytelen can be 0,1,2,4,8
-  QITYPE_API TypeInterface* makeIntType(bool issigned, int bytelen);
+  QI_API TypeInterface* makeIntType(bool issigned, int bytelen);
 
   ///@return a Type of kind VarArgs that can contains elements of type elementType.
-  QITYPE_API TypeInterface* makeVarArgsType(TypeInterface* elementType);
+  QI_API TypeInterface* makeVarArgsType(TypeInterface* elementType);
 
   ///@return a Type of kind List that can contains elements of type elementType.
-  QITYPE_API TypeInterface* makeListType(TypeInterface* elementType);
+  QI_API TypeInterface* makeListType(TypeInterface* elementType);
 
   ///@return a Type of kind Map with given key and element types
-  QITYPE_API TypeInterface* makeMapType(TypeInterface* keyType, TypeInterface* ElementType);
+  QI_API TypeInterface* makeMapType(TypeInterface* keyType, TypeInterface* ElementType);
 
   ///@return a Type of kind Tuple with givent memberTypes
-  QITYPE_API TypeInterface* makeTupleType(const std::vector<TypeInterface*>& memberTypes, const std::string &name = std::string(), const std::vector<std::string>& elementNames = std::vector<std::string>());
+  QI_API TypeInterface* makeTupleType(const std::vector<TypeInterface*>& memberTypes, const std::string &name = std::string(), const std::vector<std::string>& elementNames = std::vector<std::string>());
 
 
 

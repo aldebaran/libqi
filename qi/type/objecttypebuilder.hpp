@@ -28,7 +28,7 @@ namespace qi {
   template<typename T> class SignalF;
   class ObjectTypeBuilderPrivate;
   struct ObjectTypeData;
-  class QITYPE_API ObjectTypeBuilderBase
+  class QI_API ObjectTypeBuilderBase
   {
   public:
     ObjectTypeBuilderBase();

@@ -10,6 +10,7 @@
 #include <locale>
 
 #include <qi/application.hpp>
+#include <qi/qi.hpp>
 
 #ifdef _MSC_VER
 # pragma warning( push )

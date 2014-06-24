@@ -36,12 +36,12 @@ namespace qi {
   class AnyType;
   typedef std::vector<AnyType> AnyTypeVector;
 
-  QITYPE_API AnyType makeTypeOf(TypeKind kind);
-  QITYPE_API AnyType makeTypeList(const AnyType& element);
-  QITYPE_API AnyType makeTypeMap(const AnyType& key, const AnyType& element);
-  QITYPE_API AnyType makeTypeTuple(const AnyTypeVector& elements);
+  QI_API AnyType makeTypeOf(TypeKind kind);
+  QI_API AnyType makeTypeList(const AnyType& element);
+  QI_API AnyType makeTypeMap(const AnyType& key, const AnyType& element);
+  QI_API AnyType makeTypeTuple(const AnyTypeVector& elements);
 
-  class QITYPE_API AnyType {
+  class QI_API AnyType {
   public:
     AnyType();
     AnyType(TypeInterface *typeInterface);

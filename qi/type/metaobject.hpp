@@ -22,7 +22,7 @@ namespace qi {
   class GenericFunctionParameters;
 
   /// Description of the signals and methods accessible on an ObjectTypeInterface
-  class QITYPE_API MetaObject  {
+  class QI_API MetaObject  {
   public:
     MetaObject();
     MetaObject(const MetaObject &other);
@@ -143,10 +143,10 @@ namespace qi {
       const PropertyMap& propertyMap, const std::string& description);
   };
 
-  bool QITYPE_API operator < (const MetaObject& a, const MetaObject& b);
+  bool QI_API operator < (const MetaObject& a, const MetaObject& b);
 
   class MetaObjectBuilderPrivate;
-  class QITYPE_API MetaObjectBuilder {
+  class QI_API MetaObjectBuilder {
   public:
     MetaObjectBuilder();
 
@@ -166,7 +166,7 @@ namespace qi {
   };
 
   namespace details {
-    QITYPE_API void printMetaObject(std::ostream &stream, const qi::MetaObject &metaObject, bool color=true, bool showHidden=false, bool showDoc=false, bool raw=false, bool parseable=false);
+    QI_API void printMetaObject(std::ostream &stream, const qi::MetaObject &metaObject, bool color=true, bool showHidden=false, bool showDoc=false, bool raw=false, bool parseable=false);
   }
 
 }

@@ -25,7 +25,7 @@ namespace qi
     {
       static bool fillMissingFields(StructTypeInterface* type, std::map<std::string, ::qi::AnyValue>& fields, const std::vector<std::string>& missing) { return false;}
     };
-    bool QITYPE_API fillMissingFieldsWithDefaultValues(StructTypeInterface* type,
+    bool QI_API fillMissingFieldsWithDefaultValues(StructTypeInterface* type,
       std::map<std::string, ::qi::AnyValue>& fields,
       const std::vector<std::string>& missing,
       const char** which=0, int whichLength=0);
@@ -109,7 +109,7 @@ namespace qi
    QI_TYPE_STRUCT_EXTENSION_FILL_FIELDS(name, __VA_ARGS__)
 
     //keep only the class name. (remove :: and namespaces)
-    QITYPE_API std::string normalizeClassName(const std::string &name);
+    QI_API std::string normalizeClassName(const std::string &name);
 
     template<typename T> void setFromStorage(T& ref, void* storage)
     {

@@ -25,7 +25,7 @@ namespace qi
     set(storage, val.c_str(), val.size());
   }
 
-  class QITYPE_API StringTypeInterfaceImpl: public StringTypeInterface
+  class QI_API StringTypeInterfaceImpl: public StringTypeInterface
   {
   public:
     typedef DefaultTypeImplMethods<std::string,
@@ -50,7 +50,7 @@ namespace qi
   class TypeImpl<std::string>: public StringTypeInterfaceImpl
   {};
 
-  class QITYPE_API TypeCStringImpl: public StringTypeInterface
+  class QI_API TypeCStringImpl: public StringTypeInterface
   {
   public:
     virtual ManagedRawString get(void* storage)

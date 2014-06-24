@@ -55,7 +55,7 @@ namespace qi
 
 
   class ObjectRegistrar;
-  class QIMESSAGING_API Session_SD
+  class QI_API Session_SD
   {
   public:
     Session_SD(ObjectRegistrar* server);

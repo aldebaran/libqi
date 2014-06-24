@@ -30,7 +30,7 @@ namespace qi {
    *
    *  @note This class is copyable.
    */
-  class QIMESSAGING_API Url
+  class QI_API Url
   {
   public:
     /** Creates an empty url.

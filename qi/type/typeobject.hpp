@@ -40,7 +40,7 @@ namespace qi {
    *  ->RemoteObject, ALBridge will have to adapt
    *
    */
-  class QITYPE_API ObjectTypeInterface: public TypeInterface
+  class QI_API ObjectTypeInterface: public TypeInterface
   {
   public:
     virtual const MetaObject& metaObject(void* instance) = 0;

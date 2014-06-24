@@ -13,7 +13,7 @@ namespace qi
 {
   class GatewayPrivate;
 
-  class QIMESSAGING_API Gateway
+  class QI_API Gateway
   {
   public:
     Gateway();
@@ -27,7 +27,7 @@ namespace qi
     GatewayPrivate *_p;
   };
 
-  class QIMESSAGING_API RemoteGateway
+  class QI_API RemoteGateway
   {
   public:
     RemoteGateway();
@@ -40,7 +40,7 @@ namespace qi
     GatewayPrivate *_p;
   };
 
-  class QIMESSAGING_API ReverseGateway
+  class QI_API ReverseGateway
   {
   public:
     ReverseGateway();

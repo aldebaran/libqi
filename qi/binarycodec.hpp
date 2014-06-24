@@ -40,7 +40,7 @@ namespace qi {
   * - A MetaObject cache so that any given MetaObject is sent in full only once
   *   for each transport stream.
   */
-  class QITYPE_API StreamContext
+  class QI_API StreamContext
   {
   public:
     StreamContext();
@@ -106,7 +106,7 @@ namespace qi {
   * @param onObject callback invoked each time an object is encountered.
   * @throw std::runtime_error when the encoding fail
   */
-  QITYPE_API void encodeBinary(qi::Buffer *buf, const AutoAnyReference &gvp, SerializeObjectCallback onObject=SerializeObjectCallback(), StreamContext* ctx=0);
+  QI_API void encodeBinary(qi::Buffer *buf, const AutoAnyReference &gvp, SerializeObjectCallback onObject=SerializeObjectCallback(), StreamContext* ctx=0);
 
 
   /** Decode content of \p buf into \p gvp.
@@ -116,7 +116,7 @@ namespace qi {
   *
   * @throw std::runtime_error when the decoding fail
   */
-  QITYPE_API void decodeBinary(qi::BufferReader *buf, AnyReference gvp, DeserializeObjectCallback onObject=DeserializeObjectCallback(), StreamContext* ctx = 0);
+  QI_API void decodeBinary(qi::BufferReader *buf, AnyReference gvp, DeserializeObjectCallback onObject=DeserializeObjectCallback(), StreamContext* ctx = 0);
 
   template <typename T>
   void decodeBinary(qi::BufferReader *buf, T* value, DeserializeObjectCallback onObject, StreamContext* ctx) {

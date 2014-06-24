@@ -17,7 +17,7 @@
 namespace qi {
 
   /// Representation of a Signal in an GenericObject.
-  class QITYPE_API MetaSignal {
+  class QI_API MetaSignal {
   public:
     MetaSignal(unsigned int uid, const std::string &name, const qi::Signature &sig);
     MetaSignal();

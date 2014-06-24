@@ -23,7 +23,7 @@ namespace qi
 
   /** Type-erased virtual interface implemented by all Property classes.
   */
-  class QITYPE_API PropertyBase
+  class QI_API PropertyBase
   {
   public:
     virtual ~PropertyBase() {}
@@ -78,7 +78,7 @@ namespace qi
   };
 
   template<>
-  class QITYPE_API Property<AnyValue>: public PropertyImpl<AnyValue>
+  class QI_API Property<AnyValue>: public PropertyImpl<AnyValue>
   {
   public:
 
@@ -93,7 +93,7 @@ namespace qi
   };
 
   /// Type-erased property, simulating a typed property but using AnyValue.
-  class QITYPE_API GenericProperty: public Property<AnyValue>
+  class QI_API GenericProperty: public Property<AnyValue>
   {
   public:
     GenericProperty(TypeInterface* type, Getter getter = Getter(), Setter setter = Setter())

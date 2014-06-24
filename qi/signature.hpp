@@ -22,7 +22,7 @@
 
 namespace qi {
 
-  QITYPE_API std::vector<std::string> signatureSplit(const std::string &fullSignature);
+  QI_API std::vector<std::string> signatureSplit(const std::string &fullSignature);
 
   class SignaturePrivate;
 
@@ -30,19 +30,19 @@ namespace qi {
   class AnyValue;
   class TypeInterface;
   class Signature;
-  QITYPE_API qi::Signature makeTupleSignature(const std::vector<qi::AnyReference>& vgv,
+  QI_API qi::Signature makeTupleSignature(const std::vector<qi::AnyReference>& vgv,
                                               bool resolveDynamic = false,
                                               const std::string &name = std::string(),
                                               const std::vector<std::string>& names = std::vector<std::string>());
-  QITYPE_API qi::Signature makeTupleSignature(const std::vector<TypeInterface*>& vgv,
+  QI_API qi::Signature makeTupleSignature(const std::vector<TypeInterface*>& vgv,
                                               const std::string &name = std::string(),
                                               const std::vector<std::string>& names = std::vector<std::string>());
 
-  QITYPE_API qi::Signature makeTupleSignature(const qi::Signature &element);
-  QITYPE_API qi::Signature makeListSignature(const qi::Signature &element);
-  QITYPE_API qi::Signature makeVarArgsSignature(const qi::Signature &element);
-  QITYPE_API qi::Signature makeKwArgsSignature(const qi::Signature &element);
-  QITYPE_API qi::Signature makeMapSignature(const qi::Signature &key, const qi::Signature &value);
+  QI_API qi::Signature makeTupleSignature(const qi::Signature &element);
+  QI_API qi::Signature makeListSignature(const qi::Signature &element);
+  QI_API qi::Signature makeVarArgsSignature(const qi::Signature &element);
+  QI_API qi::Signature makeKwArgsSignature(const qi::Signature &element);
+  QI_API qi::Signature makeMapSignature(const qi::Signature &key, const qi::Signature &value);
 
   /* Represent the serialisation signature of a Type.
   * pseudo-grammar:
@@ -62,7 +62,7 @@ namespace qi {
   class Signature;
   typedef std::vector<Signature> SignatureVector;
 
-  class QITYPE_API Signature {
+  class QI_API Signature {
   protected:
     Signature(const std::string &signature, size_t begin, size_t end);
     friend class SignaturePrivate;
@@ -155,7 +155,7 @@ namespace qi {
 
 }
 
-extern "C" QITYPE_API char* signature_to_json(const char* sig);
+extern "C" QI_API char* signature_to_json(const char* sig);
 
 #ifdef _MSC_VER
 #  pragma warning( pop )

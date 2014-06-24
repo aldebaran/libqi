@@ -32,7 +32,7 @@ namespace qi {
    *
    *
    */
-  class QITYPE_API BinaryDecoder {
+  class QI_API BinaryDecoder {
   public:
 
     //explicit BinaryDecoder(const qi::Buffer &buffer);
@@ -93,7 +93,7 @@ namespace qi {
    *
    *
    */
-  class QITYPE_API BinaryEncoder : private boost::noncopyable {
+  class QI_API BinaryEncoder : private boost::noncopyable {
   public:
     enum Status {
       Status_Ok                     = 0,

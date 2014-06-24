@@ -22,7 +22,7 @@ namespace detail
 {
   typedef std::map<TypeInfo, boost::function<AnyReference(AnyObject)> >
     ProxyGeneratorMap;
-  QITYPE_API ProxyGeneratorMap& proxyGeneratorMap();
+  QI_API ProxyGeneratorMap& proxyGeneratorMap();
 
   // Storage type used by Object<T>, and Proxy.
   typedef boost::shared_ptr<class GenericObject> ManagedObjectPtr;
@@ -46,7 +46,7 @@ static const unsigned int qiObjectSpecialMemberMaxUid = 100;
  * When the call is finally made, if ObjectThreadingModel
  * is SingleThread, acquire the object lock.
  */
-QITYPE_API qi::Future<AnyReference> metaCall(EventLoop* el,
+QI_API qi::Future<AnyReference> metaCall(EventLoop* el,
     ObjectThreadingModel objectThreadingModel,
     MetaCallType methodThreadingModel,
     MetaCallType callType,

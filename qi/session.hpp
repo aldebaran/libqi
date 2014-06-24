@@ -23,7 +23,7 @@
 namespace qi {
 
   class SessionPrivate;
-  class QIMESSAGING_API Session : boost::noncopyable {
+  class QI_API Session : boost::noncopyable {
   public:
     Session();
     virtual ~Session();

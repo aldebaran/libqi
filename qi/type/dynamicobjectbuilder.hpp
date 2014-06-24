@@ -15,7 +15,7 @@ namespace qi {
 
   class DynamicObject;
   class DynamicObjectBuilderPrivate;
-  class QITYPE_API DynamicObjectBuilder : private boost::noncopyable
+  class QI_API DynamicObjectBuilder : private boost::noncopyable
   {
   public:
     DynamicObjectBuilder();

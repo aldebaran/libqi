@@ -13,7 +13,7 @@ namespace qi {
 
   /** AnyValue with Iterator kind, behaving as a STL-compatible iterator
    */
-  class QITYPE_API AnyIterator: public AnyValue
+  class QI_API AnyIterator: public AnyValue
   {
   public:
     typedef AnyReference              value_type;
@@ -37,8 +37,8 @@ namespace qi {
     AnyReference operator*();
   };
 
-  QITYPE_API bool operator==(const AnyIterator& a, const AnyIterator& b);
-  QITYPE_API bool operator!=(const AnyIterator& a, const AnyIterator& b);
+  QI_API bool operator==(const AnyIterator& a, const AnyIterator& b);
+  QI_API bool operator!=(const AnyIterator& a, const AnyIterator& b);
 }
 
 #include <qi/type/detail/anyiterator.hxx>

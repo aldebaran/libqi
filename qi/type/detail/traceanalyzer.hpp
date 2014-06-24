@@ -16,7 +16,7 @@ namespace qi
 {
   class TraceAnalyzerImpl;
 
-  class QITYPE_API TraceAnalyzer: public boost::noncopyable
+  class QI_API TraceAnalyzer: public boost::noncopyable
   {
   public:
     TraceAnalyzer();

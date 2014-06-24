@@ -29,7 +29,7 @@ namespace qi {
   /** This class is used to uniquely identify a type.
    *
    */
-  class QITYPE_API TypeInfo
+  class QI_API TypeInfo
   {
   public:
     TypeInfo();
@@ -113,7 +113,7 @@ namespace qi {
    *  - asynchronous call/thread change: Values are copied.
    *  - process change: Values are serialized.
    */
-  class QITYPE_API TypeInterface
+  class QI_API TypeInterface
   {
   public:
     /// Get the TypeInfo corresponding to this type.
@@ -176,10 +176,10 @@ namespace qi {
   };
 
   /// Runtime Type factory getter. Used by typeOf<T>()
-  QITYPE_API TypeInterface*  getType(const std::type_info& type);
+  QI_API TypeInterface*  getType(const std::type_info& type);
 
   /// Runtime Type factory setter.
-  QITYPE_API bool registerType(const std::type_info& typeId, TypeInterface* type);
+  QI_API bool registerType(const std::type_info& typeId, TypeInterface* type);
 
   /** Get type from a type. Will return a static TypeImpl<T> if T is not registered
    */
@@ -193,9 +193,9 @@ namespace qi {
 
   /** Register type for signature -> TypeInterface factory.
   */
-  QITYPE_API void registerStruct(TypeInterface* type);
+  QI_API void registerStruct(TypeInterface* type);
   /// @Return matchin TypeInterface registered by registerStruct() or 0.
-  QITYPE_API TypeInterface* getRegisteredStruct(const qi::Signature& s);
+  QI_API TypeInterface* getRegisteredStruct(const qi::Signature& s);
 }
 
 
