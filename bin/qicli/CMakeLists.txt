@@ -25,6 +25,6 @@ set(SRCS
 
 qi_create_bin(qicli
   ${SRCS}
-  DEPENDS QI QIMESSAGING BOOST_PROGRAM_OPTIONS)
+  DEPENDS QI BOOST_PROGRAM_OPTIONS)
 
 include_directories(./)

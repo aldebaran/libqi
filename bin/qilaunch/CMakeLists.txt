@@ -4,5 +4,5 @@ project(QiLaunch)
 
 qi_create_bin(qi-launch
   qilaunch.cpp
-  DEPENDS QI QIMESSAGING BOOST_PROGRAM_OPTIONS
+  DEPENDS QI BOOST_PROGRAM_OPTIONS
   )

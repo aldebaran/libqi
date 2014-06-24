@@ -10,5 +10,4 @@ project (QiMaster)
 
 qi_create_bin(qi-master
   qimastermain.cpp
-  DEPENDS QI QIMESSAGING)
-
+  DEPENDS QI)

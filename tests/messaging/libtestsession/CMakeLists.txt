@@ -39,7 +39,7 @@ qi_create_lib(testsession STATIC NO_INSTALL
               src/sessioninitializer.cpp
               src/defaultservice.hpp
               src/defaultservice.cpp
-              DEPENDS QI QIMESSAGING
+              DEPENDS QI
 )
 
 qi_stage_lib(testsession)

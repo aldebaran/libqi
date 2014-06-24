@@ -12,6 +12,5 @@ qi_create_bin(qi-gateway
   qigatewaymain.cpp
   DEPENDS
   QI
-  QIMESSAGING
   BOOST_PROGRAM_OPTIONS
   )

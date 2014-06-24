@@ -21,7 +21,7 @@
 #include <qi/type/objecttypebuilder.hpp>
 #include <qi/session.hpp>
 #include <testsession/testsessionpair.hpp>
-#include "src/message.hpp"
+#include "src/messaging/message.hpp"
 
 qiLogCategory("test");
 

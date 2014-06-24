@@ -10,5 +10,4 @@ project (QiClient)
 
 qi_create_bin(qi-client
   qimain.cpp
-  DEPENDS QI QIMESSAGING BOOST_PROGRAM_OPTIONS)
-
+  DEPENDS QI BOOST_PROGRAM_OPTIONS)
