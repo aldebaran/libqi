@@ -4,4 +4,7 @@
     <depends testtime="true" buildtime="true" names="gtest" />
   </qibuild>
   <project src="dox" />
+
+  <project src="compat/cqit"/>
+  <project src="compat/cqim"/>
 </project>
