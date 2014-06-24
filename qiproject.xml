@@ -4,9 +4,6 @@
     <depends buildtime="true" names="python gtest pthread libqiperf"             />
   </qibuild>
 
-  <!-- sphinx -->
-  <project src="doc" />
-
   <!-- doxygen -->
   <project src="dox" />
   <project src="bin/qicli/doc" />
