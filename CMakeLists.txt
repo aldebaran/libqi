@@ -11,9 +11,6 @@ enable_testing()
 
 qi_sanitize_compile_flags(HIDDEN_SYMBOLS)
 
-
-qi_add_optional_package(PYTHON)
-set(WITH_PYTHON ON)
 option(WITH_EXAMPLES "Examples"          ON)
 option(WITH_PERF     "Performances test" ON)
 
@@ -140,10 +137,5 @@ list(APPEND SOURCES ${_confighpp})
 qi_create_lib(qitype ${SOURCES} SHARED DEPENDS QI BOOST BOOST_DATE_TIME BOOST_THREAD BOOST_LOCALE)
 qi_stage_lib(qitype INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/compat")
 
-option(DISABLE_CODEGEN "disable the code generation (broken)" ON)
-
 add_subdirectory("compat")
 add_subdirectory("tests")
-if(NOT ANDROID AND NOT DISABLE_CODEGEN)
-  add_subdirectory("codegen")
-endif()
