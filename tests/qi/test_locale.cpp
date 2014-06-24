@@ -9,7 +9,7 @@
 #include <boost/filesystem.hpp>
 #include <locale>
 
-#include <qi/qi.hpp>
+#include <qi/application.hpp>
 
 #ifdef _MSC_VER
 # pragma warning( push )
@@ -120,7 +120,7 @@ TEST(qiPathTests, conversionFromUTF16)
 
 int main(int argc, char* argv[])
 {
-  qi::init(argc, argv);
+  qi::Application app(argc, argv);
   std::locale loc(std::locale(), &qi::unicodeFacet());
   std::locale::global(loc);
 

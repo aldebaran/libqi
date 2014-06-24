@@ -98,7 +98,7 @@ namespace qi
        * \brief Add a new SDK prefix to the list of searchable prefixes.
        *
        * A default SDK prefix is computed using argc, argv when calling
-       * qi::init().
+       * qi::Application app(argc, argv).
        *
        * After calling this function, the new SDK prefix will be taken
        * into account by the other methods.
