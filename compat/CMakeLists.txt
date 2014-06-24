@@ -1,5 +1,6 @@
 
 
+
 qi_install_header(qitype/fwd.hpp
                   qitype/anyfunction.hpp
                   qitype/anyobject.hpp
@@ -24,3 +25,9 @@ qi_install_header(qitype/fwd.hpp
                   qitype/typeobject.hpp
                   qitype/typedispatcher.hpp
                   KEEP_RELATIVE_PATHS)
+
+qi_install_header(qimessaging/applicationsession.hpp
+                  qimessaging/autoservice.hpp
+                  qimessaging/serviceinfo.hpp
+                  qimessaging/session.hpp
+                  qimessaging/url.hpp)

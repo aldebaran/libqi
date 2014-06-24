@@ -30,6 +30,13 @@ if (UNIX)
 endif()
 
 
+if (WITH_SSL)
+ add_definitions(" -DWITH_SSL ")
+ set(_ssldeps "OPENSSL")
+else()
+ set(_ssldeps "")
+endif()
+
 # Remove this line to use QT if usable
 set(WITH_QT_QTCORE OFF)
 
@@ -48,44 +55,73 @@ qiprobes_create_probe(tp_qi
 qiprobes_instrument_files(tp_qi
   src/eventloop.cpp)
 
-set(QI_H
-  qi/detail/clock.hxx
-  qi/detail/eventloop.hxx
-  qi/detail/future.hxx
-  qi/detail/log.hxx
-  qi/detail/trackable.hxx
-  qi/detail/warn_push_ignore_deprecated.hpp
-  qi/detail/warn_pop_ignore_deprecated.hpp
-  qi/api.hpp
-  qi/application.hpp
-  qi/atomic.hpp
-  qi/buffer.hpp
-  qi/bufferreader.hpp
-  qi/clock.hpp
-  qi/future.hpp
-  qi/log/consoleloghandler.hpp
-  qi/log/fileloghandler.hpp
-  qi/log/headfileloghandler.hpp
-  qi/log/tailfileloghandler.hpp
-  qi/log.hpp
-  qi/macro.hpp
-  qi/os.hpp
-  qi/preproc.hpp
-  qi/types.hpp
-  qi/path.hpp
-  qi/periodictask.hpp
-  qi/shared_ptr.hpp
-  qi/stats.hpp
-  qi/qi.hpp
-  qi/threadpool.hpp
-  qi/trackable.hpp
-  qi/eventloop.hpp
-  qi/version.hpp
-  qi/iocolor.hpp
-  )
+set(QI_H qi/detail/clock.hxx
+         qi/detail/eventloop.hxx
+         qi/detail/future.hxx
+         qi/detail/log.hxx
+         qi/detail/trackable.hxx
+         qi/detail/warn_push_ignore_deprecated.hpp
+         qi/detail/warn_pop_ignore_deprecated.hpp
+         qi/api.hpp
+         qi/application.hpp
+         qi/atomic.hpp
+         qi/buffer.hpp
+         qi/bufferreader.hpp
+         qi/clock.hpp
+         qi/future.hpp
+         qi/log/consoleloghandler.hpp
+         qi/log/fileloghandler.hpp
+         qi/log/headfileloghandler.hpp
+         qi/log/tailfileloghandler.hpp
+         qi/log.hpp
+         qi/macro.hpp
+         qi/os.hpp
+         qi/preproc.hpp
+         qi/types.hpp
+         qi/path.hpp
+         qi/periodictask.hpp
+         qi/shared_ptr.hpp
+         qi/stats.hpp
+         qi/qi.hpp
+         qi/threadpool.hpp
+         qi/trackable.hpp
+         qi/eventloop.hpp
+         qi/version.hpp
+         qi/iocolor.hpp)
 
-set(QITYPE_H
-                   qi/anyfunction.hpp
+set(QI_C src/dlfcn.cpp
+         src/path.cpp
+         src/application.cpp
+         src/buffer.cpp
+         src/buffer_p.hpp
+         src/bufferreader.cpp
+         src/clock.cpp
+         src/sdklayout.hpp
+         src/filesystem.hpp
+         src/filesystem.cpp
+         src/future.cpp
+         src/log.cpp
+         src/log_p.hpp
+         src/consoleloghandler.cpp
+         src/fileloghandler.cpp
+         src/headfileloghandler.cpp
+         src/tailfileloghandler.cpp
+         src/locale-light.cpp
+         src/os.cpp
+         src/path_conf.cpp
+         src/path_conf.hpp
+         src/periodictask.cpp
+         src/utils.hpp
+         src/utils.cpp
+         src/threadpool.cpp
+         src/threadpool_p.hpp
+         src/eventloop.cpp
+         src/eventloop_p.hpp
+         src/sdklayout-boost.cpp
+         src/version.cpp
+         src/iocolor.cpp)
+
+set(QITYPE_H       qi/anyfunction.hpp
                    qi/anyobject.hpp
                    qi/signature.hpp
                    qi/property.hpp
@@ -147,39 +183,6 @@ set(QITYPE_H
                    qi/type/typedispatcher.hpp)
 
 
-set(QI_C
-  src/dlfcn.cpp
-  src/path.cpp
-  src/application.cpp
-  src/buffer.cpp
-  src/buffer_p.hpp
-  src/bufferreader.cpp
-  src/clock.cpp
-  src/sdklayout.hpp
-  src/filesystem.hpp
-  src/filesystem.cpp
-  src/future.cpp
-  src/log.cpp
-  src/log_p.hpp
-  src/consoleloghandler.cpp
-  src/fileloghandler.cpp
-  src/headfileloghandler.cpp
-  src/tailfileloghandler.cpp
-  src/locale-light.cpp
-  src/os.cpp
-  src/path_conf.cpp
-  src/path_conf.hpp
-  src/periodictask.cpp
-  src/utils.hpp
-  src/utils.cpp
-  src/threadpool.cpp
-  src/threadpool_p.hpp
-  src/eventloop.cpp
-  src/eventloop_p.hpp
-  src/sdklayout-boost.cpp
-  src/version.cpp
-  src/iocolor.cpp
-  )
 
 set(QITYPE_C src/type/binarycodec.cpp
              src/type/binarycodec_p.hpp
@@ -217,13 +220,66 @@ set(QITYPE_C src/type/binarycodec.cpp
              src/type/registration.cpp
              )
 
+
+set(QIM_H qi/messaging/api.hpp
+          qi/messaging/autoservice.hpp
+          qi/messaging/details/autoservice.hxx
+          qi/messaging/gateway.hpp
+          qi/messaging/serviceinfo.hpp
+          qi/applicationsession.hpp
+          qi/session.hpp
+          qi/url.hpp
+)
+
+set(QIM_C src/messaging/applicationsession.cpp
+          src/messaging/boundobject.cpp
+          src/messaging/boundobject.hpp
+          src/messaging/gateway.cpp
+          src/messaging/message.hpp
+          src/messaging/message.cpp
+          src/messaging/messagedispatcher.hpp
+          src/messaging/messagedispatcher.cpp
+          src/messaging/objecthost.hpp
+          src/messaging/objecthost.cpp
+          src/messaging/objectregistrar.hpp
+          src/messaging/objectregistrar.cpp
+          src/messaging/remoteobject.cpp
+          src/messaging/remoteobject_p.hpp
+          src/messaging/servicedirectory.cpp
+          src/messaging/servicedirectory.hpp
+          src/messaging/servicedirectoryclient.hpp
+          src/messaging/servicedirectoryclient.cpp
+          src/messaging/serviceinfo.cpp
+          src/messaging/session.cpp
+          src/messaging/session_p.hpp
+          src/messaging/sessionservice.hpp
+          src/messaging/sessionservice.cpp
+          src/messaging/sessionservices.hpp
+          src/messaging/sessionservices.cpp
+          src/messaging/server.hpp
+          src/messaging/server.cpp
+          src/messaging/transportserver.hpp
+          src/messaging/transportserver.cpp
+          src/messaging/transportserverasio_p.cpp
+          src/messaging/transportserverasio_p.hpp
+          src/messaging/transportsocket.hpp
+          src/messaging/transportsocket.cpp
+          src/messaging/transportsocketcache.cpp
+          src/messaging/transportsocketcache.hpp
+          src/messaging/tcptransportsocket.cpp
+          src/messaging/tcptransportsocket.hpp
+          src/messaging/url.cpp
+          src/messaging/serverresult.hpp
+          )
+
+
 qi_create_config_h(_confighpp qi/type/config.hpp.in qi/type/config.hpp)
 list(APPEND QITYPE_C ${_confighpp})
 
 qi_create_config_h(_out qi/config.hpp.in qi/config.hpp)
 list(APPEND QI_C ${_out})
 
-qi_install_header(${QI_H} ${QITYPE_H} KEEP_RELATIVE_PATHS)
+qi_install_header(${QI_H} ${QITYPE_H} ${QIM_H} KEEP_RELATIVE_PATHS)
 
 if(WITH_BOOST_LOCALE)
   list(APPEND QI_H qi/translator.hpp)
@@ -271,9 +327,11 @@ endif()
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/external")
 
-qi_create_lib(qi ${QI_H}     ${QI_C}
+qi_create_lib(qi SHARED
+                 ${QI_H}     ${QI_C}
                  ${QITYPE_H} ${QITYPE_C}
-              SHARED DEPENDS BOOST BOOST_DATE_TIME BOOST_THREAD BOOST_CHRONO BOOST_FILESYSTEM BOOST_LOCALE BOOST_REGEX BOOST_PROGRAM_OPTIONS
+                 ${QIM_H}    ${QIM_C}
+              DEPENDS BOOST BOOST_DATE_TIME BOOST_THREAD BOOST_CHRONO BOOST_FILESYSTEM BOOST_LOCALE BOOST_REGEX BOOST_PROGRAM_OPTIONS ${_ssldeps}
               SUBMODULE tp_qi)
 
 if (WITH_QT_QTCORE)
@@ -292,11 +350,12 @@ if(UNIX AND NOT APPLE AND NOT ANDROID)
 endif()
 
 if(WIN32)
-  qi_use_lib(qi WSOCK IPHLPAPI PSAPI)
+  qi_use_lib(qi WSOCK IPHLPAPI PSAPI WSA) #Really?
 endif()
 
 qi_stage_lib(qi INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/compat")
 
+add_subdirectory("bin")
 add_subdirectory("compat")
 add_subdirectory("examples")
 add_subdirectory("tests")
