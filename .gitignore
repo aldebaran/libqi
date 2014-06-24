@@ -5,3 +5,4 @@ footer.html
 header.html
 doxygen.css
 CMakeLists.txt.user
+*.pyc

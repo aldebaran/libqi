@@ -7,6 +7,7 @@ project(LibQi)
 find_package(qibuild)
 qi_sanitize_compile_flags(HIDDEN_SYMBOLS)
 
+
 include(CheckSymbolExists)
 check_symbol_exists(_SC_HOST_NAME_MAX "unistd.h" HAVE_SC_HOST_NAME_MAX)
 set_source_files_properties(src/os_posix.cpp
@@ -15,15 +16,27 @@ set_source_files_properties(src/os_posix.cpp
 
 # We always want boost filesystem v3
 add_definitions("-DBOOST_FILESYSTEM_VERSION=3")
+
 if(MSVC)
   add_definitions(" -DWIN32_LEAN_AND_MEAN ")
 endif()
+
+if (WIN32)
+  add_definitions(" -D_SCL_SECURE_NO_WARNINGS -D_CRT_SECURE_NO_WARNINGS -DWIN32_LEAN_AND_MEAN")
+endif()
+
+if (UNIX)
+ add_definitions(" -fno-strict-aliasing ")
+endif()
+
 
 # Remove this line to use QT if usable
 set(WITH_QT_QTCORE OFF)
 
 qi_add_optional_package(QT_QTCORE "Enable QT")
 qi_add_optional_package(BOOST_LOCALE "Enable qi::translate")
+option(WITH_EXAMPLES "Examples"          ON)
+option(WITH_PERF     "Performances test" ON)
 
 enable_testing()
 include(CMakeDependentOption)
@@ -35,7 +48,7 @@ qiprobes_create_probe(tp_qi
 qiprobes_instrument_files(tp_qi
   src/eventloop.cpp)
 
-set(H
+set(QI_H
   qi/detail/clock.hxx
   qi/detail/eventloop.hxx
   qi/detail/future.hxx
@@ -71,7 +84,70 @@ set(H
   qi/iocolor.hpp
   )
 
-set(C
+set(QITYPE_H
+                   qi/anyfunction.hpp
+                   qi/anyobject.hpp
+                   qi/signature.hpp
+                   qi/property.hpp
+                   qi/signal.hpp
+                   qi/anyvalue.hpp
+
+                   qi/type/detail/signal.hxx
+                   qi/type/detail/property.hxx
+                   qi/type/detail/accessor.hxx
+                   qi/type/detail/anyreference.hpp
+                   qi/type/detail/anyreference.hxx
+                   qi/type/detail/anyvalue.hpp
+                   qi/type/detail/anyvalue.hxx
+                   qi/type/detail/anyfunction.hxx
+                   qi/type/detail/anyfunctionfactory.hxx
+                   qi/type/detail/anyiterator.hpp
+                   qi/type/detail/anyiterator.hxx
+                   qi/type/detail/bindtype.hxx
+                   qi/type/detail/functionsignature.hxx
+                   qi/type/detail/dynamicobjectbuilder.hxx
+                   qi/type/detail/genericobject.hpp
+                   qi/type/detail/object.hxx
+                   qi/type/detail/async.hxx
+                   qi/type/detail/proxyregister.hpp
+                   qi/type/detail/hasless.hxx
+                   qi/type/detail/objecttypebuilder.hxx
+                   qi/type/detail/type.hxx
+                   qi/type/detail/buffertypeinterface.hxx
+                   qi/type/detail/typedispatcher.hxx
+                   qi/type/detail/dynamictypeinterface.hxx
+                   qi/type/detail/typeimpl.hxx
+                   qi/type/detail/typeinterface.hpp
+                   qi/type/detail/inttypeinterface.hxx
+                   qi/type/detail/listtypeinterface.hxx
+                   qi/type/detail/maptypeinterface.hxx
+                   qi/type/detail/pointertypeinterface.hxx
+                   qi/type/detail/stringtypeinterface.hxx
+                   qi/type/detail/structtypeinterface.hxx
+                   qi/type/detail/type.hpp
+                   qi/type/detail/manageable.hpp
+                   qi/type/detail/traceanalyzer.hpp
+
+                   qi/type/api.hpp
+                   qi/binarycodec.hpp
+                   qi/type/dynamicobject.hpp
+                   qi/type/dynamicobjectbuilder.hpp
+                   qi/type/fwd.hpp
+                   qi/jsoncodec.hpp
+                   qi/type/metamethod.hpp
+                   qi/type/metaobject.hpp
+                   qi/type/metaproperty.hpp
+                   qi/type/metasignal.hpp
+                   qi/type/objectfactory.hpp
+                   qi/type/objecttypebuilder.hpp
+                   qi/type/proxyproperty.hpp
+                   qi/type/proxysignal.hpp
+                   qi/type/typeinterface.hpp
+                   qi/type/typeobject.hpp
+                   qi/type/typedispatcher.hpp)
+
+
+set(QI_C
   src/dlfcn.cpp
   src/path.cpp
   src/application.cpp
@@ -105,26 +181,70 @@ set(C
   src/iocolor.cpp
   )
 
+set(QITYPE_C src/type/binarycodec.cpp
+             src/type/binarycodec_p.hpp
+             src/type/dynamicobject.cpp
+             src/type/dynamicobjectbuilder.cpp
+             src/type/anyfunction.cpp
+             src/type/anyreference.cpp
+             src/type/anyvalue.cpp
+             src/type/anyobject_p.hpp
+             src/type/anyobject.cpp
+             src/type/genericobject.cpp
+             src/type/jsoncodec_p.hpp
+             src/type/jsondecoder.cpp
+             src/type/jsonencoder.cpp
+             src/type/manageable.cpp
+             src/type/metamethod.cpp
+             src/type/metaproperty.cpp
+             src/type/metasignal.cpp
+             src/type/metasignal_p.cpp
+             src/type/metasignal_p.hpp
+             src/type/metaobject.cpp
+             src/type/metaobject_p.hpp
+             src/type/objectfactory.cpp
+             src/type/objecttypebuilder.cpp
+             src/type/signal.cpp
+             src/type/signal_p.hpp
+             src/type/signatureconvertor.cpp
+             src/type/signatureconvertor.hpp
+             src/type/staticobjecttype.cpp
+             src/type/typeinterface.cpp
+             src/type/structtypeinterface.cpp
+             src/type/type.cpp
+             src/type/signature.cpp
+             src/type/traceanalyzer.cpp
+             src/type/registration.cpp
+             )
+
+qi_create_config_h(_confighpp qi/type/config.hpp.in qi/type/config.hpp)
+list(APPEND QITYPE_C ${_confighpp})
+
+qi_create_config_h(_out qi/config.hpp.in qi/config.hpp)
+list(APPEND QI_C ${_out})
+
+qi_install_header(${QI_H} ${QITYPE_H} KEEP_RELATIVE_PATHS)
+
 if(WITH_BOOST_LOCALE)
-  list(APPEND H qi/translator.hpp)
-  list(APPEND C src/translator.cpp)
+  list(APPEND QI_H qi/translator.hpp)
+  list(APPEND QI_C src/translator.cpp)
 endif()
 
 if (WIN32)
-  list(APPEND C
+  list(APPEND QI_C
     src/os_launch_win32.cpp
     src/os_win32.cpp
     src/os_debugger_win32.cpp
   )
 else()
-  list(APPEND C
+  list(APPEND QI_C
     src/os_posix.cpp
     src/os_debugger_posix.cpp
   )
   if(ANDROID)
-    list(APPEND C src/os_launch_android.cpp)
+    list(APPEND QI_C src/os_launch_android.cpp)
   else()
-    list(APPEND C src/os_launch_posix.cpp)
+    list(APPEND QI_C src/os_launch_posix.cpp)
   endif()
 endif()
 
@@ -140,41 +260,31 @@ if (NOT BUILD_SHARED_LIBS) #lol
 endif()
 
 # Convert ON/OFF to SHARED/STATIC for create_lib argument
-set(_libtype)
+set(_qilibtype)
 if (BUILD_SHARED_LIBS OR ANDROID)
-  set(_libtype SHARED)
+  set(_qilibtype SHARED)
 else()
-  set(_libtype STATIC)
+  set(_qilibtype STATIC)
 endif()
 
-qi_create_config_h(_out qi/config.hpp.in qi/config.hpp)
-
-# Help IDEs see the generated config.hpp
-list(APPEND C ${_out})
 
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/external")
 
-qi_create_lib(qi ${_libtype} ${H} ${C} SUBMODULE tp_qi)
+qi_create_lib(qitype ${QI_H} ${QI_C}
+                     ${QITYPE_H} ${QITYPE_C}
+              SHARED DEPENDS QI BOOST BOOST_DATE_TIME BOOST_THREAD BOOST_CHRONO BOOST_FILESYSTEM BOOST_LOCALE BOOST_REGEX BOOST_PROGRAM_OPTIONS
+              SUBMODULE tp_qi)
 
 if (WITH_QT_QTCORE)
   qi_use_lib(qi QT_QTCORE)
 endif()
-
-qi_use_lib(qi BOOST_CHRONO BOOST_THREAD BOOST_FILESYSTEM BOOST_THREAD BOOST_PROGRAM_OPTIONS BOOST_REGEX)
-
 if(WITH_BOOST_LOCALE)
   qi_use_lib(qi BOOST_LOCALE)
 endif()
 
 if (UNIX)
   qi_use_lib(qi PTHREAD)
-endif()
-
-if(MSVC)
-  # Temporary ugly hack: we can't find out
-  # where the boost_date_time dependency comes from:
-  qi_use_lib(qi BOOST_DATE_TIME)
 endif()
 
 if(UNIX AND NOT APPLE AND NOT ANDROID)
@@ -185,8 +295,8 @@ if(WIN32)
   qi_use_lib(qi WSOCK IPHLPAPI PSAPI)
 endif()
 
-qi_install_header(${H} KEEP_RELATIVE_PATHS)
-qi_stage_lib(qi QI)
+qi_stage_lib(qi INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/compat")
 
-add_subdirectory(examples)
-add_subdirectory(tests)
+add_subdirectory("compat")
+add_subdirectory("examples")
+add_subdirectory("tests")
