@@ -19,7 +19,6 @@ qi_sanitize_compile_flags(HIDDEN_SYMBOLS)
 set(WITH_DOTNET OFF)
 
 qi_add_optional_package(QISSH)
-qi_add_optional_package(PYTHON3)
 
 # Desactivate Python and .NET bindings for Android
 if (ANDROID)
@@ -133,20 +132,11 @@ if(WIN32)
 endif(WIN32)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/c)
 
-qi_stage_lib(qimessaging INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/c" "${CMAKE_CURRENT_SOURCE_DIR}/compat")
-
-#qi_gen_doc(DOXYFILES "Doxyfile")
-
-#target_link_libraries(qimessaging "-Wl,--no-undefined")
-
-qi_add_subdirectory(c)
+qi_stage_lib(qimessaging INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/compat")
 
 qi_add_subdirectory("dotnet" WITH_DOTNET)
 qi_add_subdirectory("js")
-qi_add_subdirectory("c/test")
-qi_add_subdirectory("c/bin")
 qi_add_subdirectory("tests")
 qi_add_subdirectory("bin")
 
