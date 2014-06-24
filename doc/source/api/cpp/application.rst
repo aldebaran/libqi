@@ -3,8 +3,8 @@
 .. cpp:auto_template:: True
 .. default-role:: cpp:guess
 
-qi::Application class
-*********************
+qi::Application
+***************
 
 Overview
 ========
@@ -12,3 +12,6 @@ Overview
 `qi::Application` handle application initialisation.
 
 .. cpp:autoclass:: qi::Application
+
+.. cpp:automacro:: QI_AT_ENTER
+.. cpp:automacro:: QI_AT_EXIT

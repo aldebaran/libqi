@@ -34,7 +34,7 @@ Namespace
 Enum
 ----
 
-.. .. cpp:autoenum:: qi::LogLevel
+.. cpp:autoenum:: qi::LogLevel
 .. cpp:autoenum:: qi::LogColor
 .. cpp:autoenum:: qi::LogContextAttr
 
@@ -65,3 +65,10 @@ Functions
 .. cpp:autofunction:: qi::log::setVerbosity(const qi::LogLevel, SubscriberId)
 .. cpp:autofunction:: qi::log::stringToLogLevel(const char*)
 .. cpp:autofunction:: qi::log::verbosity(SubscriberId)
+
+
+Deprecated
+----------
+
+.. cpp:autofunction:: qi::log::setVerbosity(SubscriberId, const qi::log::LogLevel)
+.. cpp:autofunction:: qi::log::setCategory(SubscriberId, const std::string&, qi::log::LogLevel)

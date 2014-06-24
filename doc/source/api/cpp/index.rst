@@ -14,12 +14,17 @@ C++ qi API Reference
   future
   iocolor
   log
+  macro
   os
   path
   periodictask
+  qi
+  shared_ptr
   stats
+  threadpool
   trackable
   translator
+  types
   version
 
   signal
@@ -34,10 +39,4 @@ C++ qi API Reference
 
 
 Libqi missing:
-  #types
-  #traits
-  #macro
   #preproc
-  #qi
-  #threadpool
-  #error

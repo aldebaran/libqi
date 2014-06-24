@@ -10,3 +10,8 @@ Enum qi::StreamColor
 ====================
 
 .. cpp:autoenum:: qi::StreamColor
+
+Function
+========
+
+.. cpp:autofunction:: std::operator<<(std::ostream&, qi::StreamColor)

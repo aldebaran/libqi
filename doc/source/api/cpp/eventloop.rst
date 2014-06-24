@@ -10,7 +10,7 @@ qi::EventLoop
 
 Functions
 =========
-.. cpp:autofunction:: qi::getEventLoop
-.. cpp:autofunction:: qi::startEventLoop
-.. cpp:autofunction:: qi::getIoService
-.. cpp:autofunction:: qi::async
+.. cpp:autofunction:: qi::getEventLoop()
+.. cpp:autofunction:: qi::startEventLoop(int)
+.. cpp:autofunction:: qi::getIoService()
+.. cpp:autofunction:: qi::async(boost::function<R()>, uint64_t)

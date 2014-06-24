@@ -28,8 +28,8 @@ class qi::WallClock
 Functions
 =========
 
-.. cpp:autofunction:: qi::steadyClockNow
-.. cpp:autofunction:: qi::wallClockNow
+.. cpp:autofunction:: qi::steadyClockNow()
+.. cpp:autofunction:: qi::wallClockNow()
 .. cpp:autofunction:: qi::sleepFor(const qi::Duration&)
 .. cpp:autofunction:: qi::sleepUntil(const SteadyClockTimePoint&)
 .. cpp:autofunction:: qi::sleepUntil(const WallClockTimePoint&)
