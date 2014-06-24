@@ -16,7 +16,11 @@ namespace qi
   class ApplicationSessionPrivate;
   typedef qi::uint32_t ApplicationSessionOptions;
 
-  /** ApplicationSession is an application with an embedded session.
+
+  /**
+   * \class qi::ApplicationSession
+   * \includename{qi/applicationsession.hpp}
+   *  ApplicationSession is an application with an embedded session.
    *  The constructor has to be the first method called of the class to initialize the class.
    *  Be careful with the scope of the object, once the destructor is called,
    *  the session is destroyed as well.
