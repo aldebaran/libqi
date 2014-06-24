@@ -136,7 +136,6 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 qi_stage_lib(qimessaging INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/compat")
 
 qi_add_subdirectory("dotnet" WITH_DOTNET)
-qi_add_subdirectory("js")
 qi_add_subdirectory("tests")
 qi_add_subdirectory("bin")
 
