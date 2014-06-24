@@ -26,11 +26,11 @@ set_target_properties(check_env  PROPERTIES FOLDER tests)
 set_target_properties(test_application  PROPERTIES FOLDER tests)
 
 qi_create_gtest(test_qiclock             SRC test_qiclock.cpp     DEPENDS QI GTEST)
-qi_create_gtest(test_qipath      SRC test_qipath.cpp ../src/utils.cpp DEPENDS QI GTEST)
-qi_create_gtest(test_qipath_from_bin SRC test_qipath.cpp ../src/utils.cpp
+qi_create_gtest(test_qipath      SRC test_qipath.cpp ../../src/utils.cpp DEPENDS QI GTEST)
+qi_create_gtest(test_qipath_from_bin SRC test_qipath.cpp ../../src/utils.cpp
   DEPENDS QI GTEST)
 qi_create_gtest(test_qilocal             SRC test_locale.cpp      DEPENDS QI GTEST)
-qi_create_gtest(test_path_conf           SRC test_path_conf.cpp ../src/path_conf.cpp DEPENDS QI GTEST)
+qi_create_gtest(test_path_conf           SRC test_path_conf.cpp ../../src/path_conf.cpp DEPENDS QI GTEST)
 qi_create_gtest(test_qios                SRC test_qios.cpp        DEPENDS QI GTEST)
 qi_create_gtest(test_qiatomic            SRC test_qiatomic.cpp    DEPENDS QI GTEST)
 qi_create_gtest(test_shared_ptr          SRC test_shared_ptr.cpp  DEPENDS QI GTEST)
