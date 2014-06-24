@@ -1,6 +1,6 @@
 #pragma once
 /*
-**  Copyright (C) 2013 Aldebaran Robotics
+**  Copyright (C) 2013, 2014 Aldebaran Robotics
 **  See COPYING for the license
 */
 
@@ -28,11 +28,13 @@ namespace qi
       class ignore{};
 
       // Just store an int and a type
-      template<int I, typename P> struct MappingItem {};
+      template<int I, typename P>
+      struct MappingItem {};
 
       // IntFromMappingItem: Extract int from MappingItem or something else
 
-      template<typename T> struct IntFromMappingItem
+      template<typename T>
+      struct IntFromMappingItem
       {
         static const long value = 0;
       };
@@ -72,7 +74,8 @@ namespace qi
 
       // ArgLess: Index comparison between MappingItems
 
-      template<typename A, typename B> struct ArgLess
+      template<typename A, typename B>
+      struct ArgLess
       {
         typedef boost::true_type type;
       };
@@ -124,6 +127,7 @@ namespace qi
            >::type
            >::type>::type type;
       };
+
       template<typename Map>
       struct ReorderMapping<1, Map>
       {
@@ -133,6 +137,7 @@ namespace qi
              MapItemIndexIs<boost::mpl::_1, boost::mpl::long_<1> >
              >::type>::type> type;
       };
+
       template<typename Map>
       struct ReorderMapping<0, Map>
       {
@@ -147,6 +152,7 @@ namespace qi
       {
         typedef boost::any type;
       };
+
       template<typename T, int I>
       struct MappingToType<MappingItem<I, T> >
       {
@@ -184,26 +190,31 @@ namespace qi
       {
         typedef boost::mpl::vector<> type;
       };
+
       template<typename P1>
       struct BilistToSeq<boost::_bi::list1<P1> >
       {
         typedef typename boost::mpl::vector<P1> type;
       };
+
       template<typename P1, typename P2>
       struct BilistToSeq<boost::_bi::list2<P1, P2> >
       {
         typedef typename boost::mpl::vector<P1, P2> type;
       };
+
       template<typename P1, typename P2, typename P3>
       struct BilistToSeq<boost::_bi::list3<P1, P2, P3> >
       {
         typedef typename boost::mpl::vector<P1, P2, P3> type;
       };
+
       template<typename P1, typename P2, typename P3, typename P4>
       struct BilistToSeq<boost::_bi::list4<P1, P2, P3, P4> >
       {
         typedef typename boost::mpl::vector<P1, P2, P3, P4> type;
       };
+
       template<typename P1, typename P2, typename P3, typename P4, typename P5>
       struct BilistToSeq<boost::_bi::list5<P1, P2, P3, P4, P5> >
       {

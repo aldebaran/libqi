@@ -90,8 +90,11 @@ namespace qi {
     //name::sig() -> Index
     NameToIdx                           _methodsNameToIdx;
     MetaObject::MethodMap               _methods;
+
+  private:
     mutable boost::recursive_mutex      _methodsMutex;
 
+  public:
     typedef std::map<std::string, MetaMethod*> OverloadMap;
     OverloadMap                         _methodNameToOverload;
 
