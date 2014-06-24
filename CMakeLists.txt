@@ -273,9 +273,6 @@ set(QIM_C src/messaging/applicationsession.cpp
           )
 
 
-qi_create_config_h(_confighpp qi/type/config.hpp.in qi/type/config.hpp)
-list(APPEND QITYPE_C ${_confighpp})
-
 qi_create_config_h(_out qi/config.hpp.in qi/config.hpp)
 list(APPEND QI_C ${_out})
 
