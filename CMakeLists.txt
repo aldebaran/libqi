@@ -15,15 +15,7 @@ enable_testing()
 
 qi_sanitize_compile_flags(HIDDEN_SYMBOLS)
 
-
-set(WITH_DOTNET OFF)
-
 qi_add_optional_package(QISSH)
-
-# Desactivate Python and .NET bindings for Android
-if (ANDROID)
-   set(WITH_DOTNET OFF)
-endif()
 
 add_definitions(" -DBOOST_FILESYSTEM_VERSION=3 ")
 
@@ -135,7 +127,6 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 qi_stage_lib(qimessaging INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/compat")
 
-qi_add_subdirectory("dotnet" WITH_DOTNET)
 qi_add_subdirectory("tests")
 qi_add_subdirectory("bin")
 
