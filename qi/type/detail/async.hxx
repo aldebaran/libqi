@@ -15,8 +15,9 @@ namespace qi {
 
 #ifdef DOXYGEN
   /** Perform an asynchronous call on a method.
-   * @param instance a pointer or shared-pointer to an instance of a class known to type system.
-  */
+   * The argument may be a pointer or shared-pointer to an instance of a class
+   * known to type system.
+   */
   template<typename R, typename T>
   qi::Future<R> async(T instancePointerOrSharedPointer,
                       const std::string& methodName,

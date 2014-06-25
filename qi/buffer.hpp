@@ -86,14 +86,14 @@ namespace qi
      * As data are store as a shared pointer, the different copy
      * of the same buffer all handle the same data.
      */
-    Buffer(const Buffer& b);
+    Buffer(const Buffer& buffer);
     /**
      * \brief Assignment operator.
      * As data are store as a shared pointer, the different copy
      * of the same buffer all handle the same data.
      * \param buffer The buffer to copy.
      */
-    Buffer& operator = (const Buffer& b);
+    Buffer& operator = (const Buffer& buffer);
 
     /**
      * \brief Write data in the buffer.

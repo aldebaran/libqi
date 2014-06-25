@@ -20,8 +20,15 @@
  * qi_EXPORTS controls which symbols are exported when libqi
  * is compiled as a SHARED lib.
  *
+ * \verbatim
+ *
  * To set your own QI_API macro, adapt the following line:
- * #define MYLIB_API QI_LIB_API(mylib)
+ *
+ * .. code-block:: cpp
+ *
+ *   #define MYLIB_API QI_LIB_API(mylib)
+ *
+ * \endverbatim
  */
 
 # define QI_API QI_LIB_API(qi)

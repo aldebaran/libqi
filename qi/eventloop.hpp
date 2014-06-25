@@ -134,7 +134,7 @@ namespace qi
 
   /**
    * \brief Start the eventloop with nthread threads. No-op if already started.
-   * \param Set the minimum number of worker threads in the pool.
+   * \param nthread Set the minimum number of worker threads in the pool.
    */
   QI_API void startEventLoop(int nthread);
 
