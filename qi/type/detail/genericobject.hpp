@@ -89,13 +89,16 @@ public:
 
   qi::Future<AnyReference> metaCall(unsigned int method, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto, Signature returnSignature = Signature());
 
-  /** Find method named \p named callable with arguments \p parameters
+  /** Find method named name callable with arguments parameters
    */
   int findMethod(const std::string& name, const GenericFunctionParameters& parameters);
 
   /** Resolve the method Id and bounces to metaCall
-   * @param signature method name or method signature 'name::(args)'
-   *        if signature is given, an exact match is required
+   * @param nameWithOptionalSignature method name or method signature
+   * 'name::(args)' if signature is given, an exact match is required
+   * @param params arguments to the call
+   * @param callType type of the call
+   * @param returnSignature force the method to return a type
    */
   qi::Future<AnyReference> metaCall(const std::string &nameWithOptionalSignature, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto, Signature returnSignature = Signature());
 

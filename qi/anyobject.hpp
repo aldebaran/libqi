@@ -36,15 +36,26 @@ static const unsigned int qiObjectSpecialMemberMaxUid = 100;
 /** Make a call honoring ThreadingModel requirements
  *
  * Check the following rules in order:
- * - If \p el is set, force call in it overriding all rules.
- * - If method type is not auto, honor it, overriding callType
+ * - If el is set, force call in it overriding all rules.
+ * - If methodThreadingModel is not auto, honor it, overriding callType
  * - If callType is set (not auto), honor it.
  * - Be synchronous.
  *
- * @param callerId: thread id of caller, for tracing purposes
+ * When the call is finally made, if objectThreadingModel is SingleThread,
+ * acquire the object lock.
  *
- * When the call is finally made, if ObjectThreadingModel
- * is SingleThread, acquire the object lock.
+ * @param el the eventloop where to schedule the call (if async)
+ * @param objectThreadingModel the threading model of the called object
+ * @param methodThreadingModel the threading model of the specific method
+ * @param callType the requested threading model
+ * @param manageable the object on which to make the call
+ * @param methodId the method id of the object to call
+ * @param func the function to call
+ * @param params the arguments of the call
+ * @param noCloneFirst whether the first argument of the call should be cloned
+ * or not
+ * @param callerId thread id of caller, for tracing purposes
+ * @param postTimestamp the time when the call was requested
  */
 QI_API qi::Future<AnyReference> metaCall(EventLoop* el,
     ObjectThreadingModel objectThreadingModel,

@@ -82,11 +82,11 @@ namespace qi {
 
 /** register \p name's constructor as factory for \p name
  *
- * @param name class name
- * @param args... constructor arguments
+ * @param ... class name followed by constructor arguments
  *
- * @example
+ * @code{.cpp}
  * QI_REGISTER_OBJECT_FACTORY_CONSTRUCTOR(MyClass, std::string, int, int);
+ * @endcode
  */
 #define QI_REGISTER_OBJECT_FACTORY_CONSTRUCTOR(...) \
   QI_REGISTER_OBJECT_FACTORY(BOOST_PP_STRINGIZE(QI_LIST_HEAD(QI_LIST(__VA_ARGS__,))), qi::AnyFunction::from(&::qi::detail::constructObject<__VA_ARGS__>))
@@ -94,11 +94,11 @@ namespace qi {
 /** register \p cls's default constructor as factory for \p name
  *
  * @param name factory name
- * @param cls class name
- * @param args... constructor arguments
+ * @param ... class name followed by constructor arguments
  *
- * @example
- * QI_REGISTER_OBJECT_FACTORY_CONSTRUCTOR(ObjectFactory, MyClass, std::string, int, int);
+ * @code{.cpp}
+ * QI_REGISTER_OBJECT_FACTORY_CONSTRUCTOR_FOR(ObjectFactory, MyClass, std::string, int, int);
+ * @endcode
  */
 #define QI_REGISTER_OBJECT_FACTORY_CONSTRUCTOR_FOR(name, ...) \
   QI_REGISTER_OBJECT_FACTORY(#name, ::qi::AnyFunction::from(&::qi::detail::constructObject<__VA_ARGS__>))
@@ -112,8 +112,7 @@ namespace qi {
 
 /** Register an object as a factory for another object
  *
- * @param name target class name
- * @param args... constructor arguments
+ * @param ... target class name followed by constructor arguments
  *
  * Will crate a factory for generated object 'name + "Service"', with a
  * create() method * that returns a newly created instance of \p name.
@@ -124,8 +123,7 @@ namespace qi {
 /** Register an object as a factory for another object with a custom name
  *
  * @param name factory name
- * @param cls target class name
- * @param args... constructor arguments
+ * @param ... the class name and the constructor arguments
  *
  * Will crate a factory for generated object 'name + "Service"', with a
  * create() method * that returns a newly created instance of \p name.

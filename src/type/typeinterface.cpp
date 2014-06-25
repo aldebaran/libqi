@@ -367,7 +367,8 @@ namespace qi {
     }
     else
     { // We might be called without a valid storage in that mode, which
-      // is not supported by typeDispatch()
+      // is not supported by typeDispatch(), so we copy pasted a safer version
+      // of typeDispatch()
       // Still reuse methods from SignatureTypeVisitor to avoid duplication
       AnyReference value(this, storage);
       SignatureTypeVisitor v(value, resolveDynamic);

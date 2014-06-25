@@ -330,10 +330,10 @@ QI_API bool operator!=(const AnyReference& a, const AnyReference& b);
 ///@return an allocated Tuple made from copies of \param values
 QI_API AnyReference makeGenericTuple(const AnyReferenceVector& values);
 
-///@return a Tuple pointing to \param values as its storage
+///@return a Tuple pointing to values as its storage
 QI_API AnyReference makeGenericTuplePtr(
     const std::vector<TypeInterface*>& types,
-    const std::vector<void*>&values);
+    const std::vector<void*>& values);
 
 /** Generates AnyReference from everything transparently.
  * To be used as type of meta-function call argument

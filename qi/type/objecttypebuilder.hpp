@@ -137,7 +137,7 @@ namespace qi {
 
 /** Register an object to the typesystem
  * @param name the class name, without any namespace
- * @param ARGS the names of the methods, signals and properties of the class
+ * @param ... the names of the methods, signals and properties of the class
  *
  * @warning must be called from an unique compilation unit (not a header), from
  * within the namespace of the class

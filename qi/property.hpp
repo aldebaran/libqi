@@ -46,8 +46,10 @@ namespace qi
     /**
      * @param getter value getter, default to reading _value
      * @param setter value setter, what it returns will be written to
-     *        _value. If it throws AbortUpdate, update operation will
+     *        _value. If it returns false, update operation will
      *        be silently aborted (subscribers will not be called)
+     * @param onsubscribe callback to call when subscribers connect or
+     *        disconnect from the property
     */
     PropertyImpl(Getter getter = Getter(), Setter setter = Setter(),
       SignalBase::OnSubscribers onsubscribe = SignalBase::OnSubscribers());

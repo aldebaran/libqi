@@ -18,16 +18,16 @@ namespace qi {
 
   /**
     * creates a GV representing a JSON string or throw on parse error.
-    * @param JSON string to decode.
+    * @param in JSON string to decode.
     * @return a GV representing the JSON string
     */
   QI_API qi::AnyValue decodeJSON(const std::string &in);
 
   /**
     * set the input GV to represent the JSON sequence between two string iterators or throw on parse error.
-    * @param iterator to the beginning of the sequence to decode.
-    * @param iterator to the end of the sequence to decode.
-    * @param GV to set. Not modified if an error occured.
+    * @param begin iterator to the beginning of the sequence to decode.
+    * @param end iterator to the end of the sequence to decode.
+    * @param target GV to set. Not modified if an error occured.
     * @return an iterator to the last read char + 1
     */
   QI_API std::string::const_iterator decodeJSON(const std::string::const_iterator &begin,

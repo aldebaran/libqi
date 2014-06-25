@@ -102,8 +102,11 @@ namespace qi {
                     StreamContext* streamContext = 0
                     );
 
-    /** Encode content of \p gvp into \p buf.
+   /** Encode content of \p gvp into \p buf.
+  * @param buf buffer that will be filled with serialized data
+  * @param gvp AnyReference to serialize
   * @param onObject callback invoked each time an object is encountered.
+  * @param ctx connection context
   * @throw std::runtime_error when the encoding fail
   */
   QI_API void encodeBinary(qi::Buffer *buf, const AutoAnyReference &gvp, SerializeObjectCallback onObject=SerializeObjectCallback(), StreamContext* ctx=0);
@@ -113,6 +116,7 @@ namespace qi {
   * @param buf buffer with serialized data
   * @param gvp initialized AnyReference of correct type. Will be filled in.
   * @param onObject callback invoked each time an object is encountered.
+  * @param ctx connection context
   *
   * @throw std::runtime_error when the decoding fail
   */

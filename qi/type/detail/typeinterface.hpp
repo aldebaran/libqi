@@ -164,7 +164,9 @@ namespace qi {
 
     /** @return the serialization signature corresponding to what the type
      * would emit
-     * @param resolveDynamic: if true, resolve dynamic types as deep as possible
+     * @param storage the storage of the value (used only when resolveDynamic
+     * is true)
+     * @param resolveDynamic if true, resolve dynamic types as deep as possible
      * for example a list<AnyReference> that happens to only contain int32
      * will return [i]
      * @warning if resolveDynamic is true, a valid storage must be given
@@ -194,7 +196,7 @@ namespace qi {
   /** Register type for signature -> TypeInterface factory.
   */
   QI_API void registerStruct(TypeInterface* type);
-  /// @Return matchin TypeInterface registered by registerStruct() or 0.
+  /// @return matching TypeInterface registered by registerStruct() or 0.
   QI_API TypeInterface* getRegisteredStruct(const qi::Signature& s);
 }
 

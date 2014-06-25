@@ -90,8 +90,8 @@ namespace qi {
     MetaProperty*       property(unsigned int id);
     const MetaProperty* property(unsigned int id) const;
 
-    /** Find a method matching @param nameWithOptionalSignature that can be
-    *   called with arguments @param args.
+    /** Find a method matching nameWithOptionalSignature that can be
+    *   called with arguments args.
     *   @return The mathing method id, or -1 if none or an ambiguous set was found.
     *   @warning This method optimises for speed at the expense of possible false positive:
     *            It returns a match as soon as there is only one possible candidate
@@ -110,7 +110,7 @@ namespace qi {
     */
     std::vector<MetaMethod> findMethod(const std::string &name) const;
     typedef std::pair<MetaMethod, float> CompatibleMethod;
-    /** Find all the methods compatible with @param nameOrSignature. If no
+    /** Find all the methods compatible with nameOrSignature. If no
     *   signature is specified, the method relies on findMethod.
     *   @param nameOrSignature Either the name or the signature of the method.
     *   @return A vector containing all the compatible method and their
