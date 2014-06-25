@@ -166,16 +166,21 @@ namespace qi {
     qi::os::setCurrentThreadName(_name);
     _running.setIfEquals(0, 1);
     ++_nThreads;
-    try
-    {
-      _io.run();
+
+    while (true) {
+      try
+      {
+        _io.run();
+        //the handler finished by himself. just quit.
+        break;
+      } catch(const detail::TerminateThread& e) {
+        break;
+      } catch(const std::exception& e) {
+        qiLogWarning() << "Error caught in eventloop(" << _name << ").async: " << e.what();
+      } catch(...) {
+        qiLogWarning() << "Uncaught exception in eventloop(" << _name << ")";
+      }
     }
-    catch(const std::exception& e)
-    {
-      qiLogWarning() << "Error caught in eventloop(" << _name << ").async: " << e.what();
-    }
-    catch(...)
-    {}
     if (!--_nThreads)
       --_running;
   }

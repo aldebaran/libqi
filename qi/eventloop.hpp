@@ -143,6 +143,13 @@ namespace qi
    * \return io_service used by the global event loop.
    */
   QI_API boost::asio::io_service& getIoService();
+
+  namespace detail {
+    /* when throw this thread will stop a thread of the eventloop
+     */
+    class TerminateThread {
+    };
+  };
 }
 
 # ifdef _MSC_VER
