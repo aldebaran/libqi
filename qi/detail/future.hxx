@@ -231,8 +231,8 @@ namespace qi {
   } // namespace detail
 
   template <typename T>
-  qi::Future<T> makeFutureError(const std::string &error, FutureCallbackType async) {
-    qi::Promise<T> prom(async);
+  qi::Future<T> makeFutureError(const std::string &error) {
+    qi::Promise<T> prom;
     prom.setError(error);
     return prom.future();
   }

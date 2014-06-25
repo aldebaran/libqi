@@ -708,10 +708,9 @@ namespace qi {
   /**
    * \brief Helper function to return a future with the error set.
    * \param error the error message.
-   * \param async whether callbacks should be asynchronously called
    */
   template <typename T>
-  qi::Future<T> makeFutureError(const std::string &value, FutureCallbackType async = FutureCallbackType_Async);
+  qi::Future<T> makeFutureError(const std::string& error);
 
   /**
    * \brief Helper function to wait on a vector of futures.

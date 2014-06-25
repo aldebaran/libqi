@@ -30,20 +30,19 @@ const MetaObject &GenericObject::metaObject() {
 qi::Future<AnyReference>
 GenericObject::metaCall(unsigned int method, const GenericFunctionParameters& params, MetaCallType callType, Signature returnSignature)
 {
-  FutureCallbackType futureType = (callType == MetaCallType_Direct) ? FutureCallbackType_Sync: FutureCallbackType_Async;
   if (!type || !value) {
     const std::string s = "Operating on invalid GenericObject..";
     qiLogWarning() << s;
-    return qi::makeFutureError<AnyReference>(s, futureType);
+    return qi::makeFutureError<AnyReference>(s);
   }
   try {
     return type->metaCall(value, shared_from_this(), method, params, callType, returnSignature);
   } catch (const std::exception &e) {
-    return qi::makeFutureError<AnyReference>(e.what(), futureType);
+    return qi::makeFutureError<AnyReference>(e.what());
   }
   catch (...)
   {
-    return qi::makeFutureError<AnyReference>("Unknown exception caught", futureType);
+    return qi::makeFutureError<AnyReference>("Unknown exception caught");
   }
 }
 
