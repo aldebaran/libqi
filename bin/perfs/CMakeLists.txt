@@ -8,7 +8,7 @@
 
 qi_create_perf_test(perf_transport perf_transport.cpp
   DEPENDS
-    QI QIMESSAGING QIPERF BOOST_PROGRAM_OPTIONS)
+    QI BOOST_PROGRAM_OPTIONS)
 
   #qi_create_perf_test(perf_transport_thd perf_transport_thd.cpp
   #  DEPENDS
@@ -32,19 +32,19 @@ qi_create_perf_test(perf_transport perf_transport.cpp
 
 qi_create_perf_test(perf_boost_signal perf_boost_signal.cpp
   DEPENDS
-    QI QIPERF QITYPE BOOST_PROGRAM_OPTIONS BOOST_SIGNALS)
+    QI BOOST_PROGRAM_OPTIONS BOOST_SIGNALS)
 
 qi_create_perf_test(perf_boost_function perf_boost_function.cpp
   DEPENDS
-    QI QIPERF QITYPE BOOST_PROGRAM_OPTIONS)
+    QI BOOST_PROGRAM_OPTIONS)
 
 qi_create_perf_test(perf_function perf_function.cpp
   DEPENDS
-    QI QIPERF QITYPE BOOST_PROGRAM_OPTIONS)
+    QI BOOST_PROGRAM_OPTIONS)
 
 qi_create_perf_test(perf_create_service perf_create_service.cpp
   DEPENDS
-    QI QIPERF QITYPE QIMESSAGING BOOST_PROGRAM_OPTIONS)
+    QI BOOST_PROGRAM_OPTIONS)
 qi_create_perf_test(perf_event perf_event.cpp
   DEPENDS
-    QI QIPERF QIMESSAGING BOOST_THREAD TESTSESSION)
+    QI BOOST_THREAD TESTSESSION)

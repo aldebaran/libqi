@@ -275,7 +275,6 @@ set(QIPERF_H
   qi/perf/details/dataperfsuite.hxx
   qi/perf/dataperf.hpp
   qi/perf/measure.hpp
-  qi/perf/api.hpp
 )
 
 set(QIPERF_C

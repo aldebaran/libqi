@@ -117,8 +117,6 @@ int run_client(qi::AnyObject obj)
   qi::DataPerf dp;
 
   unsigned int numBytes = 1;
-  std::vector<qi::Future<qi::Buffer> > ops;
-  ops.resize(pipeline);
   for (int i = rstart; i < rend; i+=2)
   {
     std::ostringstream oss(std::ostringstream::out);
@@ -132,21 +130,12 @@ int run_client(qi::AnyObject obj)
     {
       qi::os::timeval tstart, tstop;
       qi::os::gettimeofday(&tstart);
-      if (j >= pipeline)
-      {
-        ops[j % pipeline].wait();
-        if (ops[j % pipeline].value().size() != buf.size())
-          std::cout << "error content" << std::endl;
-      }
-      qi::Future<qi::Buffer> result = obj.call<qi::Buffer>("replyBuf", buf);
-      ops[j % pipeline] = result;
+      obj.call<qi::Buffer>("replyBuf", buf);
       qi::os::gettimeofday(&tstop);
       latencySum += (tstop.tv_sec - tstart.tv_sec)* 1000000LL
         + (tstop.tv_usec - tstart.tv_usec);
 
     }
-    for (int j=0; j<pipeline; ++j)
-      ops[j].wait();
 
     dp.stop();
     *out << dp;
