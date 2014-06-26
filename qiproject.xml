@@ -1,5 +1,0 @@
-<project name="libqiperf">
-  <depends buildtime="true" names="libqi" runtime="true" />
-  <doxydoc dest="ref/libqiperf" name="qiperf" src="doc" />
-  <maintainer email="ncornu@aldebaran-robotics.com">Nicolas Cornu</maintainer>
-</project>

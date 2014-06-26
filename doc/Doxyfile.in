@@ -1,2 +1,0 @@
-INPUT = ../qiperf .
-QUIET = YES
