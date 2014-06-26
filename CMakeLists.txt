@@ -66,7 +66,6 @@ set(QI_H qi/detail/clock.hxx
          qi/application.hpp
          qi/atomic.hpp
          qi/buffer.hpp
-         qi/bufferreader.hpp
          qi/clock.hpp
          qi/future.hpp
          qi/log/consoleloghandler.hpp

@@ -8,7 +8,6 @@
 #include <gtest/gtest.h>
 #include <qi/qi.hpp>
 #include <qi/buffer.hpp>
-#include <qi/bufferreader.hpp>
 #include <stdexcept>
 
 TEST(TestBufferReader, TestSubBuffer)

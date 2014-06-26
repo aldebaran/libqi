@@ -10,7 +10,6 @@
 #include <boost/noncopyable.hpp>
 
 #include <qi/buffer.hpp>
-#include <qi/bufferreader.hpp>
 
 #include <qi/type/typeinterface.hpp>
 #include <qi/anyvalue.hpp>

@@ -5,7 +5,7 @@
 #include <cstring>
 #include <stdexcept>
 
-#include <qi/bufferreader.hpp>
+#include <qi/buffer.hpp>
 #include "buffer_p.hpp"
 namespace qi {
 

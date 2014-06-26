@@ -12,7 +12,6 @@
 #include <qi/api.hpp>
 #include <boost/function.hpp>
 #include <qi/buffer.hpp>
-#include <qi/bufferreader.hpp>
 #include <qi/anyvalue.hpp>
 #include <qi/type/metaobject.hpp>
 
@@ -127,7 +126,8 @@ namespace qi {
     decodeBinary(buf, AnyReference::fromPtr(value), onObject, ctx);
   }
 
-  template<typename T> T StreamContext::remoteCapability(const std::string& key, const T& defaultValue)
+  template<typename T>
+  T StreamContext::remoteCapability(const std::string& key, const T& defaultValue)
   {
     boost::optional<AnyValue> v = remoteCapability(key);
     if (v)
@@ -136,7 +136,8 @@ namespace qi {
       return defaultValue;
   }
 
-  template<typename T> T StreamContext::localCapability(const std::string& key, const T& defaultValue)
+  template<typename T>
+  T StreamContext::localCapability(const std::string& key, const T& defaultValue)
   {
     boost::optional<AnyValue> v = localCapability(key);
     if (v)
@@ -146,7 +147,8 @@ namespace qi {
   }
 
 
-  template<typename T> T StreamContext::sharedCapability(const std::string& key, const T& defaultValue)
+  template<typename T>
+  T StreamContext::sharedCapability(const std::string& key, const T& defaultValue)
   {
     try
     {

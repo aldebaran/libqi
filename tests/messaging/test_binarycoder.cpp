@@ -8,7 +8,6 @@
 #include <gtest/gtest.h>
 #include <map>
 #include <qi/buffer.hpp>
-#include <qi/bufferreader.hpp>
 #include <qi/binarycodec.hpp>
 #include <qi/session.hpp>
 #include <limits.h>
