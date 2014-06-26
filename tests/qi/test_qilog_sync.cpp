@@ -143,9 +143,9 @@ TEST(log, filteringChange)
   qiLogError("init.test2") << "ELoL2";
   qiLogWarning("init.test2") << "WLoL2";
 
-  qi::log::setCategory("init.*", qi::LogLevel_Silent, id);
-  qi::log::setCategory("ini*", qi::LogLevel_Verbose, id);
-  qi::log::setCategory("init.*", qi::LogLevel_Warning, id);
+  qi::log::addFilter("init.*", qi::LogLevel_Silent, id);
+  qi::log::addFilter("ini*", qi::LogLevel_Verbose, id);
+  qi::log::addFilter("init.*", qi::LogLevel_Warning, id);
 
   tag = false;
   qiLogVerbose("init.test") << "VLoL";
@@ -177,10 +177,10 @@ TEST(log, filtering)
   YES;
   qiLogError("initglob.yes") << "coin";
   YES;
-  qi::log::setCategory("init.yes", qi::LogLevel_Info, id);
-  qi::log::setCategory("init.no", qi::LogLevel_Info, id);
-  qi::log::setCategory("initglob.*", qi::LogLevel_Info, id);
-  qi::log::setVerbosity(qi::LogLevel_Silent, id);
+  qi::log::addFilter("init.yes", qi::LogLevel_Info, id);
+  qi::log::addFilter("init.no", qi::LogLevel_Info, id);
+  qi::log::addFilter("initglob.*", qi::LogLevel_Info, id);
+  qi::log::setLogLevel(qi::LogLevel_Silent, id);
   // Test that global level is applied, but is overriden by all setCategory
   qiLogError("qi.test") << "coin";
   NO;
@@ -197,7 +197,7 @@ TEST(log, filtering)
     qiLogErrorF("coin");
     NO;
   }
-  qi::log::setVerbosity(qi::LogLevel_Error, id);
+  qi::log::setLogLevel(qi::LogLevel_Error, id);
   qiLogError("qi.test") << "coin";
   YES;
   qiLogError("init.yes") << "coin";
@@ -215,7 +215,7 @@ TEST(log, filtering)
     qiLogErrorF("coin");
     YES;
   }
-  qi::log::setVerbosity(qi::LogLevel_Silent, id);
+  qi::log::setLogLevel(qi::LogLevel_Silent, id);
   // Test that global level is applied, but is overriden by all setCategory
   qiLogError("qi.test") << "coin";
   YES; //enableCategory overrides setVerbosity
@@ -252,25 +252,25 @@ TEST(log, filteringPerHandler)
   qiLogError("qi.test") << "coin";
   YESYES;
   NONO;
-  qi::log::setVerbosity(qi::LogLevel_Silent, id1);
+  qi::log::setLogLevel(qi::LogLevel_Silent, id1);
   qiLogError("qi.test") << "coin";
   NOYES;
-  qi::log::setVerbosity(qi::LogLevel_Silent, id2);
+  qi::log::setLogLevel(qi::LogLevel_Silent, id2);
   qiLogError("qi.test") << "coin";
   NONO;
-  qi::log::setVerbosity(qi::LogLevel_Debug, id1);
+  qi::log::setLogLevel(qi::LogLevel_Debug, id1);
   qiLogError("qi.test") << "coin";
   YESNO;
-  qi::log::setCategory("qi.test", qi::LogLevel_Silent, id1);
+  qi::log::addFilter("qi.test", qi::LogLevel_Silent, id1);
   qiLogError("qi.test") << "coin";
   NONO;
-  qi::log::setVerbosity(qi::LogLevel_Debug, id2);
+  qi::log::setLogLevel(qi::LogLevel_Debug, id2);
   qiLogError("qi.test") << "coin";
   NOYES;
-  qi::log::setVerbosity(qi::LogLevel_Debug, id1);
+  qi::log::setLogLevel(qi::LogLevel_Debug, id1);
   qiLogError("qi.test") << "coin";
   NOYES; // setCategory overrides setVerbosity for id1
-  qi::log::setCategory("qi.test", qi::LogLevel_Debug, id1);
+  qi::log::addFilter("qi.test", qi::LogLevel_Debug, id1);
   qiLogError("qi.test") << "coin";
   YESYES;
   qi::log::removeLogHandler("set1");
@@ -286,11 +286,11 @@ TEST(log, globbing)
   qiLogError("qi.test") << "coin";
   YES;
   NO; // ensure reset works
-  qi::log::setCategory("qi.*", qi::LogLevel_Silent, id);
+  qi::log::addFilter("qi.*", qi::LogLevel_Silent, id);
   qiLogError("qi.test") << "coin";
   NO;
   // No priority or stacking between globbing or exact, they just apply
-  qi::log::setCategory("qi.test", qi::LogLevel_Verbose, id);
+  qi::log::addFilter("qi.test", qi::LogLevel_Verbose, id);
   qiLogError("qi.test") << "coin";
   YES;
   // Check globbing applies to new category
@@ -310,7 +310,7 @@ TEST(log, perf)
   // Compare perf of (disabled, enabled) x (QI_LOG, qiLog)
   qi::log::addLogHandler("nothing", boost::bind(&nothing));
   qi::log::removeLogHandler("consoleloghandler");
-  qi::log::setVerbosity(qi::LogLevel_Info);
+  qi::log::setLogLevel(qi::LogLevel_Info);
   qi::int64_t t;
   qiLogCategory("qi.test");
   long count = 1000;

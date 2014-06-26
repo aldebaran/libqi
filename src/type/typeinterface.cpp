@@ -444,6 +444,7 @@ namespace qi {
       case TypeKind_VarArgs:
         TypeInterface* elt = static_cast<VarArgsTypeInterface*>(this)->elementType();
         v.result = qi::makeVarArgsSignature(elt->signature());
+        break;
       }
 
       return v.result;

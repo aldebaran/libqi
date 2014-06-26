@@ -291,35 +291,7 @@ namespace qi {
     QI_API qi::LogLevel stringToLogLevel(const char* verb);
 
     /**
-     * \brief Get log verbosity.
-     * \param sub Log subscriber id.
-     * \return Maximal verbosity displayed.
-     */
-    QI_API qi::LogLevel verbosity(SubscriberId sub = 0);
-
-    /**
-     * \brief Get the list of all categories.
-     * \return The list of existing categories
-     */
-    QI_API std::vector<std::string> categories();
-
-    /**
-     * \brief Parse and execute a set of verbosity rules.
-     * \param rules Colon separated of rules.
-     *  Each rule can be:
-     *    - (+)?CAT    : enable category CAT
-     *    - -CAT       : disable category CAT
-     *    - CAT=level  : set category CAT to level
-     *
-     * Each category can include a '*' for globbing.
-     * Can be set with env var QI_LOG_FILTERS
-     * \example  'qi.*=debug:-qi.foo:+qi.foo.bar' (all qi.* logs in info, remove all qi.foo logs except qi.foo.bar)
-     * \param sub Log subscriber id.
-     */
-    QI_API void setVerbosity(const std::string& rules, SubscriberId sub = 0);
-
-    /**
-     * \brief Set log verbosity.
+     * \brief Set log Level.
      * \param lv Default verbosity level shown in the logs.
      * \param sub Log subscriber id.
      *
@@ -339,8 +311,20 @@ namespace qi {
      *
      * If you don't want any log use silent mode.
      */
-    QI_API void setVerbosity(const qi::LogLevel lv, SubscriberId sub = 0);
+    QI_API void setLogLevel(const qi::LogLevel lv, SubscriberId sub = 0);
 
+    /**
+     * \brief Get log verbosity.
+     * \param sub Log subscriber id.
+     * \return Maximal verbosity displayed.
+     */
+    QI_API qi::LogLevel logLevel(SubscriberId sub = 0);
+
+    /**
+     * \brief Get the list of all categories.
+     * \return The list of existing categories
+     */
+    QI_API std::vector<std::string> categories();
 
     /**
      * \brief Add/get a category.
@@ -360,6 +344,35 @@ namespace qi {
      * \param sub Log subscriber id.
      */
     QI_API void disableCategory(const std::string& cat, SubscriberId sub = 0);
+
+    /**
+     * \brief Check if the given combination of category and level is enable
+     * \param category Category to check.
+     * \param level Level associate to category.
+     * \return true if given combination of category and level is enabled.
+     */
+    QI_API bool isVisible(CategoryType category, qi::LogLevel level);
+
+    /**
+     * \copydoc isVisible()
+     */
+    QI_API bool isVisible(const std::string& category, qi::LogLevel level);
+
+    /**
+     * \brief Parse and execute a set of verbosity rules.
+     * \param rules Colon separated of rules.
+     *  Each rule can be:
+     *    - (+)?CAT    : enable category CAT
+     *    - -CAT       : disable category CAT
+     *    - CAT=level  : set category CAT to level
+     *
+     * Each category can include a '*' for globbing.
+     * Can be set with env var QI_LOG_FILTERS
+     * \example  'qi.*=debug:-qi.foo:+qi.foo.bar' (all qi.* logs in info, remove all qi.foo logs except qi.foo.bar)
+     * \param sub Log subscriber id.
+     */
+    QI_API void addFilters(const std::string& rules, SubscriberId sub = 0);
+
     /**
      * \brief Set per-subscriber category to level. Globbing is supported.
      * \param cat Category to set.
@@ -377,21 +390,7 @@ namespace qi {
      *
      * \endverbatim
      */
-    QI_API void setCategory(const std::string& cat, qi::LogLevel level, SubscriberId sub = 0);
-
-
-    /**
-     * \brief Check if the given combination of category and level is enable
-     * \param category Category to check.
-     * \param level Level associate to category.
-     * \return true if given combination of category and level is enabled.
-     */
-    QI_API bool isVisible(CategoryType category, qi::LogLevel level);
-
-    /**
-     * \copydoc isVisible()
-     */
-    QI_API bool isVisible(const std::string& category, qi::LogLevel level);
+    QI_API void addFilter(const std::string& cat, qi::LogLevel level, SubscriberId sub = 0);
 
     /**
      * \brief Set log context verbosity.
@@ -471,11 +470,35 @@ namespace qi {
 
 
     #include <qi/detail/warn_push_ignore_deprecated.hpp>
-    /// \deprecated since 1.22. Use qi::log::setVerbosity(const qi::LogLevel, SubscriberId)
-    QI_API_DEPRECATED inline void setVerbosity(SubscriberId sub, const qi::log::LogLevel lv) { setVerbosity((qi::LogLevel)lv, sub); }
-    /// \deprecated since 1.22. Use qi::log::setCategory(const std::string&, qi::LogLevel, SubscriberId)
-    QI_API_DEPRECATED inline void setCategory(SubscriberId sub, const std::string& cat, qi::log::LogLevel level) { setCategory(cat, (qi::LogLevel)level, sub); }
+    /// \deprecated since 1.22. Use qi::log::setLogLevel(const qi::LogLevel, SubscriberId)
+    QI_API_DEPRECATED inline void setVerbosity(SubscriberId sub, const qi::log::LogLevel lv) { setLogLevel((qi::LogLevel)lv, sub); }
+    /// \deprecated since 1.22. Use qi::log::addFilter(const std::string&, qi::LogLevel, SubscriberId)
+    QI_API_DEPRECATED inline void setCategory(SubscriberId sub, const std::string& cat, qi::log::LogLevel level) { addFilter(cat, (qi::LogLevel)level, sub); }
     #include <qi/detail/warn_pop_ignore_deprecated.hpp>
+
+    /**
+     * \copydoc qi::log::level
+     * \deprecated since 2.2. Use qi::log::logLevel instead.
+     */
+    QI_API QI_API_DEPRECATED qi::LogLevel verbosity(SubscriberId sub = 0);
+
+    /**
+     * \copydoc qi::log::addFilters()
+     * \deprecated since 2.2 Use qi::log::addFilters instead.
+     */
+    QI_API QI_API_DEPRECATED void setVerbosity(const std::string& rules, SubscriberId sub = 0);
+
+    /**
+     * \copydoc qi::log::setLogLevel()
+     * \deprecated since 2.2 Use qi::log::setLogLevel instead.
+     */
+    QI_API QI_API_DEPRECATED void setVerbosity(const qi::LogLevel lv, SubscriberId sub = 0);
+
+    /**
+     * \copydoc qi::log::setFilter
+     * \deprecated since 2.2 Use qi::log::addFilter instead.
+     */
+    QI_API QI_API_DEPRECATED void setCategory(const std::string& catName, qi::LogLevel level, SubscriberId sub = 0);
 
   }
 }

@@ -494,7 +494,7 @@ namespace qi {
               int ctx,
               bool synchronous)
     {
-      setVerbosity(verb);
+      setLogLevel(verb);
       setContext(ctx);
 
       QI_ONCE(doInit());
@@ -624,7 +624,7 @@ namespace qi {
       h.index = id;
       h.func = fct;
       LogInstance->logHandlers[name] = h;
-      setVerbosity(defaultLevel, id);
+      setLogLevel(defaultLevel, id);
       return id;
     }
 
@@ -683,13 +683,13 @@ namespace qi {
       return sverb[level];
     }
 
-    qi::LogLevel verbosity(SubscriberId sub)
+    qi::LogLevel logLevel(SubscriberId sub)
     {
       CategoryType cat = addCategory("*");
       if (sub < cat->levels.size())
         return cat->levels[sub];
       return LogLevel_Info;
-    };
+    }
 
     void setContext(int ctx)
     {
@@ -746,15 +746,15 @@ namespace qi {
 
     void enableCategory(const std::string& cat, SubscriberId sub)
     {
-      setCategory(cat, verbosity(sub), sub);
+      addFilter(cat, logLevel(sub), sub);
     }
 
     void disableCategory(const std::string& cat, SubscriberId sub)
     {
-      setCategory(cat, LogLevel_Silent, sub);
+      addFilter(cat, LogLevel_Silent, sub);
     }
 
-    void setCategory(const std::string& catName, qi::LogLevel level, SubscriberId sub)
+    void addFilter(const std::string& catName, qi::LogLevel level, SubscriberId sub)
     {
       qiLogVerbose() << "setCategory(cat=" << catName << ", level=" << (int)level << ", sub=" << (int)sub << ")";
       if (catName.find('*') != catName.npos)
@@ -782,7 +782,7 @@ namespace qi {
       return res;
     }
 
-    void setVerbosity(qi::LogLevel level, SubscriberId sub)
+    void setLogLevel(qi::LogLevel level, SubscriberId sub)
     {
       boost::recursive_mutex::scoped_lock lock(_mutex());
       // Check if there is already a '*' rule, replace it if so
@@ -814,7 +814,7 @@ namespace qi {
         checkGlobs(it->second);
     }
 
-    void setVerbosity(const std::string& rules, SubscriberId sub)
+    void addFilters(const std::string& rules, SubscriberId sub)
     {
       // See doc in header for format
       size_t pos = 0;
@@ -841,14 +841,14 @@ namespace qi {
           std::string sLevel = token.substr(sep+1);
           std::string cat = token.substr(0, sep);
           qi::LogLevel level = stringToLogLevel(sLevel.c_str());
-          setCategory(cat, level, sub);
+          addFilter(cat, level, sub);
         }
         else
         {
           if (token[0] == '-')
-            setCategory(token.substr(1), LogLevel_Silent, sub);
+            addFilter(token.substr(1), LogLevel_Silent, sub);
           else
-            setCategory(token, LogLevel_Debug, sub);
+            addFilter(token, LogLevel_Debug, sub);
         }
         if (next == rules.npos)
           break;
@@ -856,9 +856,9 @@ namespace qi {
       }
     }
 
-    static void _setVerbosity(const std::string &verbosity)
+    static void _setLogLevel(const std::string &level)
     {
-      setVerbosity(stringToLogLevel(verbosity.c_str()));
+      setLogLevel(stringToLogLevel(level.c_str()));
     }
 
     static void _setColor(const std::string &color)
@@ -873,7 +873,7 @@ namespace qi {
 
     static void _setFilters(const std::string &filters)
     {
-      setVerbosity(filters);
+      addFilters(filters);
     }
 
     static const std::string contextLogOption = ""
@@ -920,7 +920,7 @@ namespace qi {
       "Logging options",
       ("qi-log-context",     value<int>()->notifier(&setContext), contextLogOption.c_str())
       ("qi-log-synchronous", bool_switch()->notifier(boost::bind(&setSynchronousLog, true)),  "Activate synchronous logs.")
-      ("qi-log-level",       value<std::string>()->notifier(&_setVerbosity), levelLogOption.c_str())
+      ("qi-log-level",       value<std::string>()->notifier(&_setLogLevel), levelLogOption.c_str())
       ("qi-log-color",       value<std::string>()->notifier(&_setColor), "Tell if we should put color or not in log (auto, always, never).")
       ("qi-log-filters",     value<std::string>()->notifier(&_setFilters), filterLogOption.c_str())
     )
@@ -929,16 +929,42 @@ namespace qi {
     {
       const char* verbose = std::getenv("QI_LOG_LEVEL");
       if (verbose)
-        setVerbosity(stringToLogLevel(verbose));
+        setLogLevel(stringToLogLevel(verbose));
       const char *context = std::getenv("QI_LOG_CONTEXT");
       if (context)
         _glContext = (atoi(context));
       const char* rules = std::getenv("QI_LOG_FILTERS");
       if (rules)
-        setVerbosity(rules);
+        addFilters(rules);
       return 0;
     }
     static int _init = process_env();
+
+
+    // deprecated
+    qi::LogLevel verbosity(SubscriberId sub)
+    {
+      return logLevel(sub);
+    }
+
+    // deprecated
+    void setVerbosity(qi::LogLevel level, SubscriberId sub)
+    {
+      setLogLevel(level, sub);
+    }
+
+    // deprecated
+    void setVerbosity(const std::string& rules, SubscriberId sub)
+    {
+      addFilters(rules, sub);
+    }
+
+    // deprecated
+    void setCategory(const std::string& catName, qi::LogLevel level, SubscriberId sub)
+    {
+      addFilter(catName, level, sub);
+    }
+
   } // namespace log
 } // namespace qi
 

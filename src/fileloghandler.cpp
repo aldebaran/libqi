@@ -69,7 +69,7 @@ namespace qi {
                              const char              *fct,
                              const int               line)
     {
-      if (verb > qi::log::verbosity() || _p->_file == NULL)
+      if (verb > qi::log::logLevel() || _p->_file == NULL)
       {
         return;
       }
