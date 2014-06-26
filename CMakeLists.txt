@@ -80,7 +80,6 @@ set(QI_H qi/detail/clock.hxx
          qi/types.hpp
          qi/path.hpp
          qi/periodictask.hpp
-         qi/shared_ptr.hpp
          qi/stats.hpp
          qi/qi.hpp
          qi/threadpool.hpp
