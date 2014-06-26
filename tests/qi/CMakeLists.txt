@@ -34,8 +34,6 @@ qi_create_gtest(test_path_conf           SRC test_path_conf.cpp ../../src/path_c
 qi_create_gtest(test_qios                SRC test_qios.cpp        DEPENDS QI GTEST)
 qi_create_gtest(test_qiatomic            SRC test_qiatomic.cpp    DEPENDS QI GTEST)
 qi_create_gtest(test_thread              SRC test_thread.cpp      DEPENDS QI BOOST_THREAD)
-qi_create_gtest(test_threadpool          SRC test_threadpool.cpp  DEPENDS QI BOOST_THREAD GTEST TIMEOUT 200)
-qi_create_gtest(test_threadpool_nightly  SRC test_threadpool_nightly.cpp NIGHTLY DEPENDS QI BOOST_THREAD GTEST TIMEOUT 500)
 qi_create_gtest(test_qilaunch            SRC test_qilaunch.cpp    DEPENDS QI GTEST)
 qi_create_gtest(test_qilog_sync          SRC test_qilog_sync.cpp  DEPENDS QI GTEST)
 qi_create_gtest(test_qilog_async         SRC test_qilog_async.cpp DEPENDS QI GTEST)

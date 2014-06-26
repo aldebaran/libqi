@@ -10,7 +10,6 @@
 #include <qi/preproc.hpp>
 #include <qi/log.hpp>
 #include <qi/application.hpp>
-#include <qi/threadpool.hpp>
 
 #include <qi/eventloop.hpp>
 #include <qi/future.hpp>
@@ -349,67 +348,6 @@ namespace qi {
     return static_cast<void*>(&_io);
   }
 
-  EventLoopThreadPool::EventLoopThreadPool(int minWorkers, int maxWorkers, int minIdleWorkers, int maxIdleWorkers)
-  {
-    qiLogDebug() << this << " EventLoopThreadPool CTOR";
-    _stopping = false;
-    _pool = new ThreadPool(minWorkers, maxWorkers, minIdleWorkers, maxIdleWorkers);
-    qiLogDebug() << this << " EventLoopThreadPool CTOR done";
-  }
-
-  bool EventLoopThreadPool::isInEventLoopThread()
-  {
-    // The point is to know if a call will be synchronous. It never is
-    // with thread pool
-    return false;
-  }
-
-  void EventLoopThreadPool::start(int /*nthreads*/)
-  {
-    qiLogDebug() << this << " EventLoopThreadPool start (and done)";
-  }
-
-  void EventLoopThreadPool::run()
-  {
-  }
-
-  void EventLoopThreadPool::join()
-  {
-    qiLogDebug() << this << " EventLoopThreadPool join";
-    _pool->waitForAll();
-    qiLogDebug() << this << " EventLoopThreadPool join done";
-  }
-
-  void EventLoopThreadPool::stop()
-  {
-    qiLogDebug() << this << " EventLoopThreadPool stop (and done)";
-    _stopping = true;
-    _pool->stop();
-  }
-
-  void* EventLoopThreadPool::nativeHandle()
-  {
-    return 0;
-  }
-
-  void EventLoopThreadPool::destroy()
-  {
-    _stopping = true;
-    // Ensure delete is not called from one of the threads of the event loop
-    boost::thread(&EventLoopThreadPool::_destroy, this);
-  }
-  void EventLoopThreadPool::_destroy()
-  {
-    delete this;
-  }
-
-  EventLoopThreadPool::~EventLoopThreadPool()
-  {
-    stop();
-    join();
-    delete _pool;
-  }
-
   static void delay_call(uint64_t usDelay, boost::function<void()>* callback)
   {
     if (usDelay)
@@ -447,31 +385,6 @@ namespace qi {
     {
       promise.setError("Unknown exception caught in async call");
     }
-  }
-
-  void EventLoopThreadPool::post(uint64_t usDelay,
-      const boost::function<void ()>& callback)
-  {
-    if (_stopping)
-    {
-      qiLogWarning() << "ThreadPool post() while stopping";
-      return;
-    }
-    _pool->schedule(boost::bind(&delay_call, usDelay, new boost::function<void ()>(callback)));
-  }
-
-  qi::Future<void>  EventLoopThreadPool::asyncCall(uint64_t usDelay,
-      boost::function<void ()> callback)
-  {
-    if (_stopping)
-      return qi::makeFutureError<void>("Schedule attempt on destroyed thread pool");
-    qi::Promise<void> promise;
-    _pool->schedule(boost::bind(&delay_call_notify, usDelay, callback, promise));
-    return promise.future();
-  }
-
-  void EventLoopThreadPool::setMaxThreads(unsigned int max)
-  {
   }
 
   EventLoop::EventLoop(const std::string& name)
@@ -518,18 +431,6 @@ namespace qi {
     _p->start(nthreads);
     qiLogDebug() << this << " EventLoop start done";
   }
-
-  void EventLoop::startThreadPool(int minWorkers, int maxWorkers, int minIdleWorkers, int maxIdleWorkers)
-  {
-    qiLogDebug() << this << " EventLoop startThreadPool";
-    #define OR(name, val) (name==-1?val:name)
-    if (_p)
-      return;
-    _p = new EventLoopThreadPool(OR(minWorkers, 2), OR(maxWorkers, 100), OR(minIdleWorkers,1), OR(maxIdleWorkers, 0));
-    #undef OR
-    qiLogDebug() << this << " EventLoop startThreadPool done";
-  }
-
 
   void EventLoop::stop()
   {
@@ -683,7 +584,7 @@ namespace qi {
 
   //the initialisation is protected by a mutex,
   //we then use an atomic to prevent having a mutex on a fastpath.
-  static EventLoop* _get(EventLoop* &ctx, bool isPool, int nthreads)
+  static EventLoop* _get(EventLoop* &ctx, int nthreads)
   {
     //same mutex for multiples eventloops, but that's ok, used only at init.
     static boost::mutex    eventLoopMutex;
@@ -701,10 +602,7 @@ namespace qi {
           qiLogVerbose() << "Creating event loop while no qi::Application() is running";
         }
         ctx = new EventLoop();
-        if (isPool)
-          ctx->startThreadPool(nthreads);
-        else
-          ctx->start(nthreads);
+        ctx->start(nthreads);
         Application::atExit(boost::bind(&eventloop_stop, boost::ref(ctx)));
       }
     }
@@ -714,12 +612,12 @@ namespace qi {
 
   void startEventLoop(int nthread)
   {
-    _get(_poolEventLoop, false, nthread);
+    _get(_poolEventLoop, nthread);
   }
 
   EventLoop* getEventLoop()
   {
-    return _get(_poolEventLoop, false, 0);
+    return _get(_poolEventLoop, 0);
   }
 
 

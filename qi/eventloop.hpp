@@ -59,15 +59,7 @@ namespace qi
      * \param nthreads Numbers of threads.
      */
     void start(int nthreads = 0);
-    /**
-     * \brief Start in thread-pool mode: each asyncCall() will be run in parallel.
-     * \param minWorkers Minimum number of workers in the pool at any time.
-     * \param maxWorkers Maximum number of workers allowed in the pool.
-     * \param minIdleWorkers Minimum number of inactive workers and ready to execute
-     *                       a task immediately.
-     * \param maxIdleWorkers Maximum number of workers inactive.
-     */
-    void startThreadPool(int minWorkers=-1, int maxWorkers=-1, int minIdleWorkers=-1, int maxIdleWorkers=-1);
+
     /// \brief Wait for run thread to terminate.
     void join();
     /// \brief Ask main loop to terminate.

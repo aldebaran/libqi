@@ -81,7 +81,6 @@ set(QI_H qi/detail/clock.hxx
          qi/periodictask.hpp
          qi/stats.hpp
          qi/qi.hpp
-         qi/threadpool.hpp
          qi/trackable.hpp
          qi/eventloop.hpp
          qi/version.hpp
@@ -111,8 +110,6 @@ set(QI_C src/dlfcn.cpp
          src/periodictask.cpp
          src/utils.hpp
          src/utils.cpp
-         src/threadpool.cpp
-         src/threadpool_p.hpp
          src/eventloop.cpp
          src/eventloop_p.hpp
          src/sdklayout-boost.cpp
