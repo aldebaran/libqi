@@ -20,9 +20,13 @@ namespace qi {
   /// Informations passed when serializing an object
   struct ObjectSerializationInfo
   {
-    ObjectSerializationInfo() : transmitMetaObject(true), metaObjectCachedId(notCached) {}
-    MetaObject metaObject;
-    bool transmitMetaObject;
+    ObjectSerializationInfo()
+      : transmitMetaObject(true),
+        metaObjectCachedId(notCached)
+    {}
+
+    MetaObject   metaObject;
+    bool         transmitMetaObject;
     qi::uint32_t metaObjectCachedId;
     qi::uint32_t serviceId;
     qi::uint32_t objectId;
@@ -32,33 +36,39 @@ namespace qi {
   typedef std::map<std::string, AnyValue> CapabilityMap;
 
   /** Store contextual data associated to one point-to-point point transport.
-  *
-  * Currently handles:
-  * - A map of local and remote capabilities. Overload advertiseCapabilities() to
-  *   perform the actual sending of local capabilities to the remote endpoint.
-  * - A MetaObject cache so that any given MetaObject is sent in full only once
-  *   for each transport stream.
-  */
+   *
+   * Currently handles:
+   * - A map of local and remote capabilities. Overload advertiseCapabilities() to
+   *   perform the actual sending of local capabilities to the remote endpoint.
+   * - A MetaObject cache so that any given MetaObject is sent in full only once
+   *   for each transport stream.
+   */
   class QI_API StreamContext
   {
   public:
     StreamContext();
     virtual ~StreamContext();
+
     /// Set or update a local capability, and immediately advertise to the other end
     virtual void advertiseCapability(const std::string& key, const AnyValue& value);
+
     /** Set or update and advertise a set of local capabilities.
-    * Implementer must either update _localCapabilityMap or overload localCapability().
-    *
-    */
+     * Implementer must either update _localCapabilityMap or overload localCapability().
+     *
+     */
     virtual void advertiseCapabilities(const CapabilityMap& map) = 0;
 
     /// Fetch remote capability (default: from local cache).
     virtual boost::optional<AnyValue> remoteCapability(const std::string& key);
-    template<typename T> T remoteCapability(const std::string& key, const T& defaultValue);
+
+    template<typename T>
+    T remoteCapability(const std::string& key, const T& defaultValue);
 
     /// Fetch back what we advertised to the other end (default: local cache)
     virtual boost::optional<AnyValue> localCapability(const std::string& key);
-    template<typename T> T localCapability(const std::string& key, const T& defaultValue);
+
+    template<typename T>
+    T localCapability(const std::string& key, const T& defaultValue);
 
     /** Return a value based on shared capability.
     * If not present on one side, returns void.
@@ -66,15 +76,22 @@ namespace qi {
     * Otherwise, throws.
     */
     boost::optional<AnyValue> sharedCapability(const std::string& key);
+
     /// Similar to above, but replace error conditions by default value.
-    template<typename T> T sharedCapability(const std::string& key, const T& defaultValue);
+    template<typename T>
+    T sharedCapability(const std::string& key, const T& defaultValue);
 
     /// Return (cacheUid, wasInserted)
     std::pair<unsigned int, bool> sendCacheSet(const MetaObject& mo);
+
     void receiveCacheSet(unsigned int uid, const MetaObject& mo);
+
     MetaObject receiveCacheGet(unsigned int uid);
+
     /// Default capabilities injected on all transports upon connection
     static const CapabilityMap& defaultCapabilities();
+
+
   protected:
     qi::Atomic<int> _cacheNextId;
     // Protects all storage
@@ -102,23 +119,23 @@ namespace qi {
                     );
 
    /** Encode content of \p gvp into \p buf.
-  * @param buf buffer that will be filled with serialized data
-  * @param gvp AnyReference to serialize
-  * @param onObject callback invoked each time an object is encountered.
-  * @param ctx connection context
-  * @throw std::runtime_error when the encoding fail
-  */
+    * @param buf buffer that will be filled with serialized data
+    * @param gvp AnyReference to serialize
+    * @param onObject callback invoked each time an object is encountered.
+    * @param ctx connection context
+    * @throw std::runtime_error when the encoding fail
+    */
   QI_API void encodeBinary(qi::Buffer *buf, const AutoAnyReference &gvp, SerializeObjectCallback onObject=SerializeObjectCallback(), StreamContext* ctx=0);
 
 
   /** Decode content of \p buf into \p gvp.
-  * @param buf buffer with serialized data
-  * @param gvp initialized AnyReference of correct type. Will be filled in.
-  * @param onObject callback invoked each time an object is encountered.
-  * @param ctx connection context
-  *
-  * @throw std::runtime_error when the decoding fail
-  */
+   * @param buf buffer with serialized data
+   * @param gvp initialized AnyReference of correct type. Will be filled in.
+   * @param onObject callback invoked each time an object is encountered.
+   * @param ctx connection context
+   *
+   * @throw std::runtime_error when the decoding fail
+   */
   QI_API void decodeBinary(qi::BufferReader *buf, AnyReference gvp, DeserializeObjectCallback onObject=DeserializeObjectCallback(), StreamContext* ctx = 0);
 
   template <typename T>
