@@ -271,11 +271,26 @@ set(QIM_C src/messaging/applicationsession.cpp
           src/messaging/serverresult.hpp
           )
 
+set(QIPERF_H
+  qi/perf/dataperfsuite.hpp
+  qi/perf/details/dataperfsuite.hxx
+  qi/perf/dataperf.hpp
+  qi/perf/measure.hpp
+  qi/perf/api.hpp
+)
+
+set(QIPERF_C
+  src/perf/dataperfsuite_p.hpp
+  src/perf/dataperf_p.hpp
+  src/perf/dataperfsuite.cpp
+  src/perf/dataperf.cpp
+  src/perf/measure.cpp
+)
 
 qi_create_config_h(_out qi/config.hpp.in qi/config.hpp)
 list(APPEND QI_C ${_out})
 
-qi_install_header(${QI_H} ${QITYPE_H} ${QIM_H} KEEP_RELATIVE_PATHS)
+qi_install_header(${QI_H} ${QITYPE_H} ${QIM_H} ${QIPERF_H} KEEP_RELATIVE_PATHS)
 
 if(WITH_BOOST_LOCALE)
   list(APPEND QI_H qi/translator.hpp)
@@ -327,6 +342,7 @@ qi_create_lib(qi SHARED
                  ${QI_H}     ${QI_C}
                  ${QITYPE_H} ${QITYPE_C}
                  ${QIM_H}    ${QIM_C}
+                 ${QIPERF_H} ${QIPERF_C}
               DEPENDS BOOST BOOST_DATE_TIME BOOST_THREAD BOOST_CHRONO BOOST_FILESYSTEM BOOST_LOCALE BOOST_REGEX BOOST_PROGRAM_OPTIONS ${_ssldeps}
               SUBMODULE tp_qi)
 

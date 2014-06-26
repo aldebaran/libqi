@@ -1,9 +1,4 @@
-build*
-Doxyfile.qidoc
-footer.html
-header.html
-doxygen.css
-CMakeLists.txt.user
+build-*/
 *.pyc
 *.[oa]
 *~
