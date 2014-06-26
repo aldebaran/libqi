@@ -9,7 +9,7 @@
 
 #include <gtest/gtest.h>
 
-#include <qiperf/dataperf.hpp>
+#include <qi/perf/dataperf.hpp>
 
 TEST(TestMsgSize, TestDataPerf)
 {

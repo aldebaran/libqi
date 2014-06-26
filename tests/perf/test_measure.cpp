@@ -7,7 +7,7 @@
 
 #include <gtest/gtest.h>
 
-#include <qiperf/measure.hpp>
+#include <qi/perf/measure.hpp>
 #include <qi/os.hpp>
 TEST(TestMeasure, TestNumFD)
 {

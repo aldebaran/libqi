@@ -20,7 +20,7 @@ namespace po = boost::program_options;
 
 #include "transportsocket.hpp"
 #include <qi/session.hpp>
-#include <qiperf/dataperfsuite.hpp>
+#include <qi/perf/dataperfsuite.hpp>
 
 #include <qi/application.hpp>
 #include <qi/messaging/servicedirectory.hpp>

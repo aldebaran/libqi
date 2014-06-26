@@ -14,7 +14,7 @@ namespace po = boost::program_options;
 #include <qi/application.hpp>
 #include <qi/atomic.hpp>
 #include <qi/signal.hpp>
-#include <qiperf/dataperfsuite.hpp>
+#include <qi/perf/dataperfsuite.hpp>
 
 qi::Atomic<int> glob(0);
 

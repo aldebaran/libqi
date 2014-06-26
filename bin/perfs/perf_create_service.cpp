@@ -18,7 +18,7 @@
 #include <qi/messaging/gateway.hpp>
 #include <qi/os.hpp>
 #include <qi/application.hpp>
-#include <qiperf/dataperfsuite.hpp>
+#include <qi/perf/dataperfsuite.hpp>
 
 static std::string reply(const std::string &msg)
 {

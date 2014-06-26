@@ -9,7 +9,7 @@
 #include <qi/anyobject.hpp>
 #include <qi/type/dynamicobjectbuilder.hpp>
 #include <qi/type/objecttypebuilder.hpp>
-#include <qiperf/dataperfsuite.hpp>
+#include <qi/perf/dataperfsuite.hpp>
 #include <testsession/testsessionpair.hpp>
 
 int iteration = 100000;

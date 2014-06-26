@@ -9,7 +9,7 @@
  */
 
 #include <iostream>
-#include <qiperf/dataperfsuite.hpp>
+#include <qi/perf/dataperfsuite.hpp>
 #include <qi/os.hpp>
 #include <boost/program_options.hpp>
 

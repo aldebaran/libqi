@@ -1,7 +1,7 @@
 #include <QObject>
 #include <QAtomicInt>
 #include <string>
-#include <qiperf/dataperfsuite.hpp>
+#include <qi/perf/dataperfsuite.hpp>
 
 class Foo : public QObject
 {
