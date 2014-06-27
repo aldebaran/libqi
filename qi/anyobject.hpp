@@ -18,6 +18,7 @@
 
 namespace qi {
 
+typedef Object<Empty> AnyObject;
 namespace detail
 {
   typedef std::map<TypeInfo, boost::function<AnyReference(AnyObject)> >
