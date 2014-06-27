@@ -281,6 +281,49 @@ namespace qi {
     else
       registerService(rename, p.call<AnyObject>(factory));
   }
+
+  void SessionPrivate::onTrackedServiceAdded(const std::string& actual,
+      const std::string& expected,
+      qi::Promise<void> promise,
+      boost::shared_ptr<qi::Atomic<int> > link)
+  {
+    if (actual != expected)
+      return;
+
+    // only do it once in case of multiple calls
+    SignalLink link2 = link->swap(0);
+
+    if (link2 == 0)
+      return;
+
+    _sdClient.serviceAdded.disconnect(link2);
+
+    promise.setValue(0);
+  }
+
+  qi::FutureSync<void> Session::waitForService(const std::string& servicename)
+  {
+    qi::Promise<void> promise;
+
+    boost::shared_ptr<qi::Atomic<int> > link =
+      boost::make_shared<qi::Atomic<int> >(0);
+    *link = (int)_p->_sdClient.serviceAdded.connect(boost::bind(
+          &SessionPrivate::onTrackedServiceAdded,
+          _p,
+          _2,
+          servicename,
+          promise,
+          link));
+
+    qi::Future<qi::AnyObject> s = service(servicename);
+    if (!s.hasError())
+      // service is already available, trigger manually (it's ok if it's
+      // triggered multiple time)
+      _p->onTrackedServiceAdded(servicename, servicename, promise, link);
+
+    return promise.future();
+  }
+
 }
 
 

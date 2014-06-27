@@ -491,6 +491,24 @@ TEST(QiSession, reuseSd)
   EXPECT_EQ("foo", object.call<std::string>("reply", "foo"));
 }
 
+TEST(QiSession, NotifyRegister)
+{
+  TestSessionPair pair;
+
+  qi::DynamicObjectBuilder ob;
+  ob.advertiseMethod("reply", &reply);
+  qi::AnyObject obj(ob.object());
+
+  unsigned int sid = pair.sd()->registerService("serviceTest", obj);
+  qi::Future<void> future = pair.client()->waitForService("serviceTest");
+  EXPECT_TRUE(future.hasValue());
+  pair.sd()->unregisterService(sid);
+
+  future = pair.client()->waitForService("serviceTest");
+  sid = pair.sd()->registerService("serviceTest", obj);
+  EXPECT_TRUE(future.hasValue());
+}
+
 
 
 int main(int argc, char **argv)

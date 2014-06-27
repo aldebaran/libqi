@@ -64,6 +64,11 @@ namespace qi {
     /// Load a module and register the specified object on the session
     void loadService(const std::string& moduleName, const std::string &renameModule = std::string());
 
+    /** Waits for a service to become available. The future is set immediately
+     * if the service is already available.
+     */
+    qi::FutureSync<void> waitForService(const std::string& service);
+
   public:
     qi::Signal<unsigned int, std::string> serviceRegistered;
     qi::Signal<unsigned int, std::string> serviceUnregistered;
