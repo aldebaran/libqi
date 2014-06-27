@@ -5,3 +5,4 @@ build-*/
 *.pyc
 *.suo
 *.orig
+CMakeLists.txt.user
