@@ -442,13 +442,12 @@ namespace qi {
     return std::string();
   }
 
-  std::vector<std::string> SDKLayout::listData(const std::string &applicationName,
-                                               const std::string &pattern) const
+  static std::vector<std::string> listFiles(std::vector<std::string> filePaths,
+                                            const std::string &pattern)
   {
-
     std::set<std::string> matchedPaths;
     std::vector<std::string> fullPaths;
-    std::vector<std::string> paths = dataPaths(applicationName);
+    std::vector<std::string> paths = filePaths;
     for (std::vector<std::string>::const_iterator it = paths.begin();
          it != paths.end();
          ++it)
@@ -510,6 +509,20 @@ namespace qi {
     return fullPaths;
   }
 
+  std::vector<std::string> SDKLayout::listLib(const std::string &subfolder,
+                                              const std::string &pattern) const
+  {
+    return listFiles(libPaths(subfolder), pattern);
+  }
+
+
+  std::vector<std::string> SDKLayout::listData(const std::string &applicationName,
+                                               const std::string &pattern) const
+  {
+    return listFiles(dataPaths(applicationName), pattern);
+  }
+
+
   std::vector<std::string> SDKLayout::confPaths(const std::string &applicationName) const
   {
     std::vector<std::string> res;
@@ -559,7 +572,7 @@ namespace qi {
   }
 
 
-  std::vector<std::string> SDKLayout::binPaths() const
+  std::vector<std::string> SDKLayout::binPaths(const std::string &subfolder) const
   {
     std::vector<std::string> binPaths;
 
@@ -568,13 +581,13 @@ namespace qi {
          it != _p->_sdkPrefixes.end();
          ++it)
     {
-      binPaths.push_back(fsconcat(*it, "bin"));
+      binPaths.push_back(fsconcat(*it, "bin", subfolder));
     }
 
     return binPaths;
   }
 
-  std::vector<std::string> SDKLayout::libPaths() const
+  std::vector<std::string> SDKLayout::libPaths(const std::string& subfolder) const
   {
     std::vector<std::string> libPaths;
 
@@ -583,9 +596,9 @@ namespace qi {
          it != _p->_sdkPrefixes.end();
          ++it)
     {
-      libPaths.push_back(fsconcat(*it, "lib"));
+      libPaths.push_back(fsconcat(*it, "lib", subfolder));
+      qiLogInfo() << "lib:" << libPaths.back();
     }
-
     return libPaths;
   }
 

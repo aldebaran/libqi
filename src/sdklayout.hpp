@@ -93,6 +93,9 @@ namespace qi
     std::vector<std::string> listData(const std::string &applicationName,
                                       const std::string &pattern="*") const;
 
+    /** @copydoc qi::path::listLib */
+    std::vector<std::string> listLib(const std::string &applicationName,
+                                     const std::string &pattern) const;
 
     /** @copydoc qi::path::getConfigurationPaths */
     std::vector<std::string> confPaths(const std::string &applicationName="") const;
@@ -101,10 +104,10 @@ namespace qi
     std::vector<std::string> dataPaths(const std::string &applicationName="") const;
 
     /** @copydoc qi::path::getBinaryPaths */
-    std::vector<std::string> binPaths() const;
+    std::vector<std::string> binPaths(const std::string &subfolder="") const;
 
     /** @copydoc qi::path::getLibraryPaths */
-    std::vector<std::string> libPaths() const;
+    std::vector<std::string> libPaths(const std::string &subfolder="") const;
 
 
     /** @copydoc qi::path::detail::setWritablePath */

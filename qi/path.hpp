@@ -240,6 +240,11 @@ namespace qi
     QI_API std::vector<std::string> listData(const std::string& applicationName,
                                              const std::string& pattern="*");
 
+    /** same as listData but for libraries
+     */
+    QI_API std::vector<std::string> listLib(const std::string& subfolder,
+                                            const std::string& pattern="*");
+
     /**
      * \brief Get the list of directories used when searching for configuration files for the given application name.
      * \param applicationName Name of the application.

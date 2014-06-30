@@ -248,6 +248,12 @@ namespace qi
       return getInstance()->findData(applicationName, filename);
     }
 
+    std::vector<std::string> listLib(const std::string &subfolder,
+                                      const std::string &pattern)
+    {
+      return getInstance()->listLib(subfolder, pattern);
+    }
+
     std::vector<std::string> listData(const std::string &applicationName,
                                       const std::string &pattern)
     {
