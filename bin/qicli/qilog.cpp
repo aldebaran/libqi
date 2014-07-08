@@ -86,8 +86,8 @@ int subCmd_logView(int argc, char **argv, qi::ApplicationSession& app)
       ("help,h", "Print this help message and exit")
       ("verbose,v", "Set maximum logs verbosity shown to verbose.")
       ("debug,d", "Set maximum logs verbosity shown to debug.")
-      ("level,l", po::value<int>()->default_value(4), "Change the log minimum level: [0-6] (default:4). This option accept the same arguments' format than --qi-log-level.")
-      ("filters,f", po::value<std::string>(), "Set log filtering options. This option accept the same arguments' format than --qi-log-filters.")
+      ("level,l", po::value<int>()->default_value(4), "Change the log minimum level: [0-6] (default:4). This option accepts the same arguments' format than --qi-log-level.")
+      ("filters,f", po::value<std::string>(), "Set log filtering options. This option accepts the same arguments' format than --qi-log-filters.")
       ;
 
   po::variables_map vm;
@@ -142,9 +142,9 @@ int subCmd_logSend(int argc, char **argv, qi::ApplicationSession& app)
 
   desc.add_options()
       ("help,h", "Print this help message and exit")
-      ("verbose,v", "Set message verbosity send to verbose.")
-      ("debug,d", "Set message verbosity send to debug.")
-      ("level,l", po::value<int>()->default_value(4), "Change the log minimum level: [0-6] (default:4). This option accept the same arguments' format than --qi-log-level.")
+      ("verbose,v", "Set sent message verbosity to verbose.")
+      ("debug,d", "Set sent message verbosity to debug.")
+      ("level,l", po::value<int>()->default_value(4), "Change the log minimum level: [0-6] (default:4). This option accepts the same arguments' format than --qi-log-level.")
       ("category,c", po::value<std::string>(), "Message's category (default: \"qicli.qilog.logsend\").")
       ("message,m", po::value<std::string>(), "Message to send.")
       ;
