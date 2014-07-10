@@ -153,7 +153,7 @@ public:
   qi::FutureSync<void> setProperty(unsigned int id, const AnyValue &val);
 
 
-  //bool isValid() { return type && value;}
+  bool isValid() { return type && value;}
   ObjectTypeInterface*  type;
   void*        value;
 };
