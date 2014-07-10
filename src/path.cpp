@@ -127,6 +127,11 @@ namespace qi
     return _p->path.string(qi::unicodeFacet());
   }
 
+  std::string Path::str() const
+  {
+    return _p->path.string(qi::unicodeFacet());
+  }
+
 
   SDKLayout* gInstance = NULL;
   SDKLayout* getInstance();

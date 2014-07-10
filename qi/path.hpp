@@ -1,6 +1,6 @@
 #pragma once
 /*
- * Copyright (c) 2012 Aldebaran Robotics. All rights reserved.
+ * Copyright (c) 2012, 2014 Aldebaran Robotics. All rights reserved.
  * Use of this source code is governed by a BSD-style license that can be
  * found in the COPYING file.
  */
@@ -60,6 +60,9 @@ namespace qi
 
     /// return the path as a string
     operator std::string() const;
+
+    /// return the path as a string
+    std::string str() const;
 
     /// concat two paths adding a directory separator between them
     Path operator/(const qi::Path& rhs) const;
@@ -225,16 +228,18 @@ namespace qi
      *
      * For instance if you have the following files on a unix system
      *
-     * - ~/.local/share/foo/models/nao.xml
-     * - ~/.local/share/foo/models/romeo_with_laser_head.xml
-     * - /usr/share/foo/models/nao.xml
-     * - /usr/share/foo/models/romeo.xml
+     * - ~/.local/share/foo/models/mynao.xml
+     * - ~/.local/share/foo/models/myromeo_with_laser_head.xml
+     * - /usr/share/foo/models/mynao.xml
+     * - /usr/share/foo/models/myromeo.xml
      *
-     * then listData("foo", "models/.*.xml") will return
+     * then listData("foo", "models/my*.xml") will return
      *
-     * - ~/.local/share/foo/models/nao.xml
-     * - ~/.local/share/foo/models/romeo_with_laser_head.xml
-     * - /usr/share/foo/models/romeo.xml
+     * - ~/.local/share/foo/models/mynao.xml
+     * - ~/.local/share/foo/models/myromeo_with_laser_head.xml
+     * - /usr/share/foo/models/myromeo.xml
+     *
+     * note that /usr/share/foo/models/mynao.xml is not returned because a nao.xml file is already matched.
      * \endverbatim
      */
     QI_API std::vector<std::string> listData(const std::string& applicationName,
