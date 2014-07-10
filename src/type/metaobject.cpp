@@ -685,12 +685,25 @@ namespace qi {
     }
 
     template <typename T>
-    static int calcOffset(const T &mmaps, bool showHidden) {
+    static void filterHiddenInPlace(T &mmaps, bool showHidden) {
+      typename T::iterator it = mmaps.begin();
+      typename T::iterator ittmp;
+      while (it != mmaps.end()) {
+        if (bypass(it->second.name(), it->second.uid(), showHidden)) {
+          ittmp = it;
+          ++ittmp;
+          mmaps.erase(it);
+          it = ittmp;
+        } else
+          ++it;
+      }
+    }
+
+    template <typename T>
+    static int calcOffset(const T &mmaps) {
       typename T::const_iterator it;
       int max = 0;
       for (it = mmaps.begin(); it != mmaps.end(); ++it) {
-        if (bypass(it->second.name(), it->second.uid(), showHidden))
-          continue;
         int cur = it->second.name().size();
         if (cur > max)
           max = cur;
@@ -722,10 +735,15 @@ namespace qi {
       qi::MetaObject::SignalMap   events = mobj.signalMap();
       qi::MetaObject::PropertyMap props = mobj.propertyMap();
 
-      int offsetProps = std::min(calcOffset(props, showHidden), 30);
-      int offsetSigs  = std::min(calcOffset(events, showHidden), 30);
-      int offsetMeth  = std::min(calcOffset(methods, showHidden), 30);
+      filterHiddenInPlace(methods, showHidden);
+      filterHiddenInPlace(events, showHidden);
+      filterHiddenInPlace(props, showHidden);
 
+      int offsetProps = std::min(calcOffset(props), 30);
+      int offsetSigs  = std::min(calcOffset(events), 30);
+      int offsetMeth  = std::min(calcOffset(methods), 30);
+
+      //##### Methods
       if (parseable)
       {
         stream << ":";
@@ -738,8 +756,6 @@ namespace qi {
       qi::MetaMethodParameterVector::const_iterator itMMPV;
       std::string comma = "";
       for (itMM = methods.begin(); itMM != methods.end(); ++itMM) {
-        if (bypass(itMM->second.name(), itMM->second.uid(), showHidden))
-          continue;
         if (parseable)
         {
           stream << comma << itMM->second.name();
@@ -784,8 +800,6 @@ namespace qi {
       qi::MetaObject::SignalMap::const_iterator it3;
       for (it3 = events.begin(); it3 != events.end(); ++it3)
       {
-        if (bypass(it3->second.name(), it3->second.uid(), showHidden))
-          continue;
         if (parseable)
         {
           stream << comma << it3->second.name();
@@ -813,8 +827,6 @@ namespace qi {
       for (qi::MetaObject::PropertyMap::const_iterator it = props.begin();
         it != props.end(); ++it)
       {
-        if (bypass(it->second.name(), it->second.uid(), showHidden))
-          continue;
         if (parseable)
         {
           stream << comma << it->second.name();
