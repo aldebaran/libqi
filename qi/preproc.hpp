@@ -8,9 +8,12 @@
 #ifndef _QI_PREPROC_HPP_
 #define _QI_PREPROC_HPP_
 
-# include <boost/preprocessor/seq/for_each.hpp>
-# include <boost/preprocessor/seq/remove.hpp>
-# include <boost/preprocessor/seq/transform.hpp>
+#include <stdexcept>
+#include <boost/preprocessor/seq/for_each.hpp>
+#include <boost/preprocessor/seq/remove.hpp>
+#include <boost/preprocessor/seq/transform.hpp>
+#include <boost/preprocessor/seq/enum.hpp>
+#include <boost/preprocessor/stringize.hpp>
 
 # define QI_MAP_HELPER(R, Macro, Elt) (Macro(Elt))
 /// Return \a Seq, with \a Macro applied on every element.
@@ -602,6 +605,29 @@ for i in range(0, 10):
 
 #endif
 
+#define __QI_CONVERT_ENUM_ELEMENT_TOSTRING_CASE(type, data, element) \
+  case element: \
+  return BOOST_PP_STRINGIZE(element);
+
+#define QI_CREATE_ENUM_WITH_STRING_CONVERSION(funcName, type, values) \
+    enum type \
+    { \
+      BOOST_PP_SEQ_ENUM(values) \
+    }; \
+    inline const char* funcName(type val) \
+    { \
+      switch (val) \
+      { \
+        BOOST_PP_SEQ_FOR_EACH( \
+              __QI_CONVERT_ENUM_ELEMENT_TOSTRING_CASE, \
+              type, \
+              values \
+              ) \
+      } \
+      throw std::invalid_argument( \
+                "Unknown enum: " BOOST_PP_STRINGIZE(type) " value: " << val); \
+    }
+#undef __QI_CONVERT_ENUM_ELEMENT_TOSTRING_CASE
 
 
 #endif  // _QI_PREPROC_HPP_
