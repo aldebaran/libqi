@@ -72,6 +72,20 @@ QI_API qi::Future<AnyReference> metaCall(EventLoop* el,
 
 }
 
+namespace qi {
+  /** create a T, wrap in a AnyObject
+   *  All template parameters are given to the T constructor except the first one
+   */
+  #define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma) \
+  template<typename T comma ATYPEDECL>                      \
+  Object<T> constructObject(ADECL)                          \
+  {                                                         \
+    return Object<T>(new T(AUSE));                          \
+  }
+  QI_GEN(genCall)
+  #undef genCall
+}
+
 #include <qi/type/detail/genericobject.hpp>
 
 #include <qi/type/detail/object.hxx>
