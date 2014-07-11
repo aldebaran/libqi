@@ -937,3 +937,16 @@ TEST_F(qiPathChinese, convertFromUnicode)
   ASSERT_EQ(_testString, line);
 }
 
+TEST(qiPathClass, testPimpl)
+{
+  qi::Path a("a");
+  qi::Path aa(a);
+  qi::Path aaa = aa;
+  qi::Path b("b");
+  EXPECT_EQ("a", a.str());
+  EXPECT_EQ("a", aa.str());
+  a /= b;
+  EXPECT_NE("a", a.str());  //value are different on windows/linux so... just testing it's not "a"
+  EXPECT_EQ("a",   aa.str());
+  EXPECT_EQ("a",   aaa.str());
+}

@@ -31,6 +31,9 @@ namespace qi
     /// \param unicodePath Path
     Path(const std::string& unicodePath = std::string());
 
+    /// Copy Constructor
+    Path(const Path& path);
+
     /// is the path empty?
     bool isEmpty() const;
 
@@ -70,8 +73,11 @@ namespace qi
     /// concat two paths adding a directory separator between them
     const Path& operator/=(const qi::Path& rhs) const;
 
+    /// copy operator
+    const Path& operator=(const qi::Path& rhs) const;
+
   private:
-    Path(const boost::shared_ptr<PrivatePath> &p);;
+    Path(const boost::shared_ptr<PrivatePath> &p);
     boost::shared_ptr<PrivatePath> _p;
   };
 

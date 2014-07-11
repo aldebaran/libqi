@@ -50,6 +50,10 @@ namespace qi
     : _p(new PrivatePath(unicodePath))
   {}
 
+  Path::Path(const Path& path)
+    : _p(new PrivatePath(path._p->path))
+  {}
+
   bool Path::isEmpty() const
   {
     return _p->path.empty();
@@ -119,6 +123,12 @@ namespace qi
   const Path& Path::operator/=(const Path &rhs) const
   {
     _p->path /= rhs._p->path;
+    return *this;
+  }
+
+  const Path& Path::operator=(const Path &rhs) const
+  {
+    _p->path = rhs._p->path;
     return *this;
   }
 
