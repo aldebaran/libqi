@@ -597,7 +597,6 @@ namespace qi {
          ++it)
     {
       libPaths.push_back(fsconcat(*it, "lib", subfolder));
-      qiLogInfo() << "lib:" << libPaths.back();
     }
     return libPaths;
   }
