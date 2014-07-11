@@ -159,11 +159,11 @@ namespace qi {
     {
       std::string temp = ::qi::os::getenv("TMPDIR");
       if (temp.empty())
-        temp = "/tmp/";
+        temp = "/tmp";
 
       boost::filesystem::path p = boost::filesystem::path(temp, qi::unicodeFacet());
 
-      return p.string(qi::unicodeFacet());
+      return p.make_preferred().string(qi::unicodeFacet());
     }
 
     int gettimeofday(qi::os::timeval *tp) {
