@@ -10,7 +10,7 @@
 
 # include <string>
 # include <vector>
-# include <boost/shared_ptr.hpp>
+# include <boost/scoped_ptr.hpp>
 # include <qi/api.hpp>
 
 namespace qi
@@ -27,12 +27,15 @@ namespace qi
    */
   class QI_API Path {
   public:
-    /// default constructor
+    /// Default Constructor
     /// \param unicodePath Path
     Path(const std::string& unicodePath = std::string());
 
     /// Copy Constructor
     Path(const Path& path);
+
+    /// Default destructor
+    ~Path();
 
     /// is the path empty?
     bool isEmpty() const;
@@ -77,8 +80,8 @@ namespace qi
     const Path& operator=(const qi::Path& rhs) const;
 
   private:
-    Path(const boost::shared_ptr<PrivatePath> &p);
-    boost::shared_ptr<PrivatePath> _p;
+    Path(PrivatePath* p);
+    boost::scoped_ptr<PrivatePath> _p;
   };
 
   /// Set of tools to handle SDK layouts.
