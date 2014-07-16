@@ -115,6 +115,7 @@ namespace qi {
     enum ServerFunction
     {
       ServerFunction_Connect           = 4,
+      ServerFunction_Authenticate      = 8,
     };
 
     enum ServiceDirectoryAction {

@@ -16,6 +16,8 @@
 #include "remoteobject_p.hpp"
 #include "transportsocketcache.hpp"
 
+#include "clientauthenticator_p.hpp"
+
 namespace qi {
 
   class GenericObject;
@@ -42,7 +44,7 @@ namespace qi {
   class Session_Service: public qi::Trackable<Session_Service>
   {
   public:
-    Session_Service(TransportSocketCache *socketCache, ServiceDirectoryClient *sdClient, ObjectRegistrar *server);
+    Session_Service(TransportSocketCache* socketCache, ServiceDirectoryClient* sdClient, ObjectRegistrar* server, bool enforceAuth = false);
     ~Session_Service();
 
     void close();
@@ -53,6 +55,8 @@ namespace qi {
     void addService(const std::string& name, const qi::AnyObject &obj);
     void removeService(const std::string &service);
 
+    void setClientAuthenticatorFactory(ClientAuthenticatorFactoryPtr factory);
+
   private:
     //FutureInterface
     void onServiceInfoResult(qi::Future<qi::ServiceInfo> value, long requestId, std::string protocol);
@@ -61,6 +65,8 @@ namespace qi {
 
     //ServiceDirectoryClient
     void onServiceRemoved(const unsigned int &index, const std::string &service);
+
+    void onAuthentication(const Message& msg, long requestId, TransportSocketPtr socket, ClientAuthenticatorPtr auth, SignalSubscriberPtr old);
 
     ServiceRequest *serviceRequest(long requestId);
     void            removeRequest(long requestId);
@@ -82,6 +88,8 @@ namespace qi {
     ObjectRegistrar        *_server;    //not owned by us
     boost::shared_ptr<Session_Service> _self;
     Promise<void>                      _destructionBarrier;
+    ClientAuthenticatorFactoryPtr      _authFactory;
+    bool _enforceAuth;
     friend inline void sessionServiceWaitBarrier(Session_Service* ptr);
     friend inline void onServiceInfoResultIfExists(Session_Service* s, qi::Future<qi::ServiceInfo> f,
     long requestId, std::string protocol, boost::weak_ptr<Session_Service> self);

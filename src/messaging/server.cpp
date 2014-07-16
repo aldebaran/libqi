@@ -10,17 +10,18 @@
 #include "serverresult.hpp"
 #include <qi/os.hpp>
 #include <boost/thread/mutex.hpp>
+#include <exception>
 #include "servicedirectoryclient.hpp"
+#include "authprovider_p.hpp"
 
 qiLogCategory("qimessaging.server");
 
 namespace qi {
 
   //Server
-  Server::Server()
+  Server::Server(bool enforceAuth)
     : qi::Trackable<Server>(this)
-    ,_boundObjectsMutex()
-    , _server()
+    , _enforceAuth(enforceAuth)
     , _dying(false)
     , _defaultCallType(qi::MetaCallType_Queued)
   {
@@ -76,6 +77,11 @@ namespace qi {
     return true;
   }
 
+  void Server::setAuthProviderFactory(AuthProviderFactoryPtr factory)
+  {
+    _authProviderFactory = factory;
+  }
+
   void Server::onTransportServerNewConnection(TransportSocketPtr socket, bool startReading)
   {
     boost::recursive_mutex::scoped_lock sl(_socketsMutex);
@@ -83,15 +89,110 @@ namespace qi {
       return;
     if (_dying)
     {
-      qiLogDebug() << "Incoming connectiong while closing, dropping...";
+      qiLogDebug() << "Incoming connection while closing, dropping...";
       socket->disconnect().async();
       return;
     }
     _sockets.push_back(socket);
     socket->disconnected.connect(&Server::onSocketDisconnected, this, socket, _1);
-    socket->messageReady.connect(&Server::onMessageReady, this, _1, socket);
+
+    // If false : the socket is only being registered, and has already been authenticated. The connection
+    // was made elsewhere.
+    // If true, it's an actual connection to this server.
     if (startReading)
+    {
+      SignalSubscriberPtr sub(new SignalSubscriber);
+      boost::shared_ptr<bool> first = boost::make_shared<bool>(true);
+      // We are reading on the socket for the first time : the first message has to be the capabilities
+      *sub = socket->messageReady.connect(&Server::onMessageReadyNotAuthenticated, this, _1, socket, _authProviderFactory->newProvider(), first, sub);
       socket->startReading();
+    }
+    else
+      socket->messageReady.connect(&Server::onMessageReady, this, _1, socket);
+  }
+
+  void Server::onMessageReadyNotAuthenticated(const Message &msg, TransportSocketPtr socket, AuthProviderPtr auth,
+                                              boost::shared_ptr<bool> first, SignalSubscriberPtr oldSignal)
+  {
+    qiLogInfo() << "Starting auth message";
+    int id = msg.id();
+    int service = msg.service();
+    int function = msg.action();
+    int type = msg.type();
+    Message reply;
+
+    reply.setId(id);
+    reply.setService(service);
+    if (service != Message::Service_Server
+        || type != Message::Type_Call
+        || function != Message::ServerFunction_Authenticate)
+    {
+      socket->messageReady.disconnect(*oldSignal);
+      if (_enforceAuth)
+      {
+        std::stringstream err;
+
+        err << "Expected authentication (service #" << Message::Service_Server <<
+               ", type #" << Message::Type_Call <<
+               ", action #" << Message::ServerFunction_Authenticate <<
+               "), received service #" << service << ", type #" << type << ", action #" << function;
+        reply.setType(Message::Type_Error);
+        reply.setError(err.str());
+        socket->send(reply);
+        socket->disconnect();
+        qiLogInfo() << err.str();
+      }
+      else
+      {
+        qiLogInfo() << "Authentication is not enforced. Skipping...";
+        socket->messageReady.connect(&Server::onMessageReady, this, _1, socket);
+        onMessageReady(msg, socket);
+      }
+      return;
+    }
+    // the socket now contains the remote capabilities in socket->remoteCapabilities()
+    qiLogInfo() << "Authenticating client " << socket->remoteEndpoint().str() << "...";
+
+    AnyReference cmref = msg.value(typeOf<CapabilityMap>()->signature(), socket);
+    CapabilityMap authData = cmref.to<CapabilityMap>();
+    cmref.destroy();
+    CapabilityMap authResult = auth->processAuth(authData);
+    unsigned int state = authResult[AuthProvider::State_Key].to<unsigned int>();
+    std::string cmsig = typeOf<CapabilityMap>()->signature().toString();
+    reply.setFunction(function);
+    switch (state)
+    {
+    case AuthProvider::State_Done:
+      qiLogInfo() << "Client " << socket->remoteEndpoint().str() << " successfully authenticated.";
+      socket->messageReady.disconnect(*oldSignal);
+      socket->messageReady.connect(&Server::onMessageReady, this, _1, socket);
+    case AuthProvider::State_Cont:
+      if (*first)
+      {
+        authResult.insert(socket->localCapabilities().begin(), socket->localCapabilities().end());
+        *first = false;
+      }
+      reply.setValue(authResult, cmsig);
+      reply.setType(Message::Type_Reply);
+      socket->send(reply);
+      break;
+    case AuthProvider::State_Error:
+    default:{
+      std::stringstream builder;
+      builder << "Authentication failed";
+      if (authResult.find(AuthProvider::Error_Reason_Key) != authResult.end())
+      {
+        builder << ": " << authResult[AuthProvider::Error_Reason_Key].to<std::string>();
+        builder << " [" << _authProviderFactory->authVersionMajor() << "." << _authProviderFactory->authVersionMinor() << "]";
+      }
+      reply.setType(Message::Type_Error);
+      reply.setError(builder.str());
+      qiLogInfo() << builder.str();
+      socket->send(reply);
+      socket->disconnect();
+      }
+    }
+    qiLogInfo() << "Auth ends";
   }
 
   void Server::onMessageReady(const qi::Message &msg, TransportSocketPtr socket) {

@@ -231,7 +231,11 @@ set(QITYPE_C src/type/binarycodec.cpp
 
 
 set(QIM_H qi/api.hpp
+          qi/messaging/authprovider.hpp
+          qi/messaging/authproviderfactory.hpp
           qi/messaging/autoservice.hpp
+          qi/messaging/clientauthenticator.hpp
+          qi/messaging/clientauthenticatorfactory.hpp
           qi/messaging/details/autoservice.hxx
           qi/messaging/gateway.hpp
           qi/messaging/serviceinfo.hpp
@@ -241,8 +245,12 @@ set(QIM_H qi/api.hpp
 )
 
 set(QIM_C src/messaging/applicationsession.cpp
+          src/messaging/authprovider_p.hpp
+          src/messaging/authprovider.cpp
           src/messaging/boundobject.cpp
           src/messaging/boundobject.hpp
+          src/messaging/clientauthenticator_p.hpp
+          src/messaging/clientauthenticator.cpp
           src/messaging/gateway.cpp
           src/messaging/message.hpp
           src/messaging/message.cpp
@@ -267,6 +275,8 @@ set(QIM_C src/messaging/applicationsession.cpp
           src/messaging/sessionservices.cpp
           src/messaging/server.hpp
           src/messaging/server.cpp
+          src/messaging/streamcontext.hpp
+          src/messaging/streamcontext.cpp
           src/messaging/transportserver.hpp
           src/messaging/transportserver.cpp
           src/messaging/transportserverasio_p.cpp

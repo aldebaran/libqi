@@ -18,16 +18,18 @@
 #include "session_p.hpp"
 #include <qi/anymodule.hpp>
 
+#include "authprovider_p.hpp"
+#include "clientauthenticator_p.hpp"
+
 qiLogCategory("qimessaging.session");
 
 namespace qi {
 
-
-  SessionPrivate::SessionPrivate(qi::Session *session)
+  SessionPrivate::SessionPrivate(qi::Session* session, bool enforceAuth)
     : qi::Trackable<SessionPrivate>(this)
-    , _sdClient()
-    , _serverObject(&_sdClient, session)
-    , _serviceHandler(&_socketsCache, &_sdClient, &_serverObject)
+    , _sdClient(enforceAuth)
+    , _serverObject(&_sdClient, enforceAuth)
+    , _serviceHandler(&_socketsCache, &_sdClient, &_serverObject, enforceAuth)
     , _servicesHandler(&_sdClient, &_serverObject)
     , _sd(&_serverObject)
   {
@@ -41,13 +43,14 @@ namespace qi {
     _sdClient.disconnected.connect(session->disconnected);
     _sdClient.serviceAdded.connect(session->serviceRegistered);
     _sdClient.serviceRemoved.connect(session->serviceUnregistered);
+    setAuthProviderFactory(AuthProviderFactoryPtr(new NullAuthProviderFactory));
+    setClientAuthenticatorFactory(ClientAuthenticatorFactoryPtr(new NullClientAuthenticatorFactory));
   }
 
   SessionPrivate::~SessionPrivate() {
     destroy();
     close();
   }
-
 
   void SessionPrivate::onServiceDirectoryClientDisconnected(std::string error) {
     /*
@@ -61,7 +64,16 @@ namespace qi {
     _socketsCache.close();
   }
 
+  void SessionPrivate::setAuthProviderFactory(AuthProviderFactoryPtr factory)
+  {
+    _serverObject.setAuthProviderFactory(factory);
+  }
 
+  void SessionPrivate::setClientAuthenticatorFactory(ClientAuthenticatorFactoryPtr factory)
+  {
+    _sdClient.setClientAuthenticatorFactory(factory);
+    _serviceHandler.setClientAuthenticatorFactory(factory);
+  }
 
   void SessionPrivate::addSdSocketToCache(Future<void> f, const qi::Url& url,
                                           qi::Promise<void> p)
@@ -111,8 +123,8 @@ namespace qi {
     //add the servicedirectory object into the service cache (avoid having
     // two remoteObject registered on the same transportSocket)
     _serviceHandler.addService("ServiceDirectory", _sdClient.object());
-
     _socketsCache.init();
+
     qi::Future<void> f = _sdClient.connect(serviceDirectoryURL);
     qi::Promise<void> p;
 
@@ -136,8 +148,8 @@ namespace qi {
 
 
   // ###### Session
-  Session::Session()
-    : _p(new SessionPrivate(this))
+  Session::Session(bool enforceAuthentication)
+    : _p(new SessionPrivate(this, enforceAuthentication))
   {
 
   }
@@ -177,6 +189,16 @@ namespace qi {
       return endpoints()[0];
     else
       return _p->_sdClient.url();
+  }
+
+  void Session::setAuthProviderFactory(AuthProviderFactoryPtr factory)
+  {
+    _p->setAuthProviderFactory(factory);
+  }
+
+  void Session::setClientAuthenticatorFactory(ClientAuthenticatorFactoryPtr factory)
+  {
+    _p->setClientAuthenticatorFactory(factory);
   }
 
   //3 cases:
@@ -230,6 +252,7 @@ namespace qi {
     {
       _sdClient.setServiceDirectory(boost::static_pointer_cast<ServiceBoundObject>(_sd._serviceBoundObject)->object());
       // _sdClient will trigger its connected, which will trigger our connected
+
       p.setValue(0);
     }
   }

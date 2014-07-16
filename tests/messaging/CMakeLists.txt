@@ -43,6 +43,7 @@ qi_create_gtest(test_testsession          SRC test_testsession.cpp          DEPE
 #qi_create_gtest(test_gateway              SRC test_gateway.cpp              DEPENDS QI  GTEST TIMEOUT 10)
 qi_create_gtest(test_applicationsession SRC test_applicationsession.cpp DEPENDS QI  GTEST TIMEOUT 3)
 qi_create_gtest(test_applicationsessionnoautoexit SRC test_applicationsession_noautoexit.cpp DEPENDS QI  GTEST TIMEOUT 3)
+qi_create_gtest(test_authentication SRC test_authentication.cpp DEPENDS QI GTEST TIMEOUT 10)
 
 qi_create_bin(test_call_on_close_session SRC test_call_on_close_session.cpp NO_INSTALL DEPENDS QI  TESTSESSION BOOST BOOST_THREAD)
 qi_create_bin(test_signaturegen SRC sig_generator.cpp sig_generator.h test_signature.cpp NO_INSTALL DEPENDS TESTSESSION QI  BOOST)

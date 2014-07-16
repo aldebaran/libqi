@@ -304,6 +304,7 @@ TEST_F(TestObject, disconnectDeadlock)
 TEST_F(TestObject, multipleConnect)
 {
   int additional_timeout = 5;//time to wait after having received the correct number of callbacks
+  i = 0;
   qi::SignalLink link1 = oclient2.connect(se2, oserver1, callbackId).value(2000);
   qi::SignalLink link2 = oclient2.connect(se2, oserver1, callbackId).value(2000);
   qi::SignalLink link3 = oclient2.connect(se2, oserver1, callbackId).value(2000);

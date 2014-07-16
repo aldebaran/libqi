@@ -21,15 +21,19 @@ namespace qi {
   inline void sessionServiceWaitBarrier(Session_Service* ptr) {
     ptr->_destructionBarrier.setValue(0);
   }
-  Session_Service::Session_Service(TransportSocketCache *socketCache, ServiceDirectoryClient *sdClient, ObjectRegistrar *server)
+
+  Session_Service::Session_Service(TransportSocketCache* socketCache,
+                                   ServiceDirectoryClient* sdClient, ObjectRegistrar* server, bool enforceAuth)
     : qi::Trackable<Session_Service>(this)
     , _socketCache(socketCache)
     , _sdClient(sdClient)
     , _server(server)
     , _self(this, sessionServiceWaitBarrier) // create a shared_ptr so that shared_from_this works
+    , _enforceAuth(enforceAuth)
   {
     _linkServiceRemoved = _sdClient->serviceRemoved.connect(&Session_Service::onServiceRemoved, this, _1, _2);
   }
+
 
   Session_Service::~Session_Service()
   {
@@ -55,6 +59,11 @@ namespace qi {
         _remoteObjects.erase(it);
       }
     }
+  }
+
+  void Session_Service::setClientAuthenticatorFactory(ClientAuthenticatorFactoryPtr factory)
+  {
+    _authFactory = factory;
   }
 
   void Session_Service::close() {
@@ -122,9 +131,81 @@ namespace qi {
     qi::getEventLoop()->post(boost::bind(&deleteLater, remote, sr));
   }
 
+  void Session_Service::onAuthentication(const Message &msg, long requestId, TransportSocketPtr socket, ClientAuthenticatorPtr auth, SignalSubscriberPtr old)
+  {
+    static const std::string cmsig = typeOf<CapabilityMap>()->signature().toString();
+    boost::recursive_mutex::scoped_lock sl(_requestsMutex);
+    int function = msg.function();
+    ServiceRequest *sr = serviceRequest(requestId);
+    if (!sr)
+      return;
+    bool failure = msg.type() == Message::Type_Error
+        || msg.service() != Message::Service_Server
+        || function != Message::ServerFunction_Authenticate;
+
+    if (failure)
+    {
+      if (old)
+        socket->messageReady.disconnect(*old);
+      if (_enforceAuth)
+      {
+        std::stringstream error;
+        if (msg.type() == Message::Type_Error)
+          error << "Error while authenticating: " << msg.value("s", socket).to<std::string>();
+        else
+          error << "Expected a message for function #" << Message::ServerFunction_Authenticate << " (authentication), received a message for function " << function;
+        sr->promise.setError(error.str());
+        removeRequest(requestId);
+      }
+      else
+      {
+        qi::Future<void> metaObjFut;
+        sr->remoteObject = new qi::RemoteObject(sr->serviceId, socket);
+        metaObjFut = sr->remoteObject->fetchMetaObject();
+        metaObjFut.connect(&Session_Service::onRemoteObjectComplete, this, _1, requestId);
+      }
+      return;
+    }
+
+    AnyReference cmref = msg.value(typeOf<CapabilityMap>()->signature(), socket);
+    CapabilityMap authData = cmref.to<CapabilityMap>();
+    CapabilityMap::iterator authStateIt = authData.find(AuthProvider::State_Key);
+    cmref.destroy();
+
+    if (authStateIt == authData.end() || authStateIt->second.to<unsigned int>() < AuthProvider::State_Error
+        || authStateIt->second.to<unsigned int>() > AuthProvider::State_Done)
+    {
+      if (old)
+        socket->messageReady.disconnect(*old);
+      std::string error = "Invalid authentication state token.";
+      sr->promise.setError(error);
+      removeRequest(requestId);
+      qiLogInfo() << error;
+      return;
+    }
+    if (authData[AuthProvider::State_Key].to<unsigned int>() == AuthProvider::State_Done)
+    {
+      qi::Future<void> metaObjFut;
+      if (old)
+        socket->messageReady.disconnect(*old);
+      sr->remoteObject = new qi::RemoteObject(sr->serviceId, socket);
+      //ask the remoteObject to fetch the metaObject
+      metaObjFut = sr->remoteObject->fetchMetaObject();
+      metaObjFut.connect(&Session_Service::onRemoteObjectComplete, this, _1, requestId);
+      return;
+    }
+
+    CapabilityMap nextData = auth->processAuth(authData);
+    Message authMsg;
+    authMsg.setService(Message::Service_Server);
+    authMsg.setType(Message::Type_Call);
+    authMsg.setValue(nextData, cmsig);
+    authMsg.setFunction(Message::ServerFunction_Authenticate);
+    socket->send(authMsg);
+  }
+
   void Session_Service::onTransportSocketResult(qi::Future<TransportSocketPtr> value, long requestId) {
     qiLogDebug() << "Got transport socket for service";
-    qi::Future<void> fut;
     {
       boost::recursive_mutex::scoped_lock sl(_requestsMutex);
       ServiceRequest *sr = serviceRequest(requestId);
@@ -136,13 +217,49 @@ namespace qi {
         removeRequest(requestId);
         return;
       }
-
-      sr->remoteObject = new qi::RemoteObject(sr->serviceId, value.value());
-
-      //ask the remoteObject to fetch the metaObject
-      fut = sr->remoteObject->fetchMetaObject();
     }
-    fut.connect(&Session_Service::onRemoteObjectComplete, this, _1, requestId);
+    TransportSocketPtr socket = value.value();
+
+    // If true, this socket came from the socket cache and has already been identified.
+    // This typically happens when two services are behind the same endpoint.
+    // We forge a message that just shows we've authenticated successfully.
+    if (socket->hasReceivedRemoteCapabilities())
+    {
+      Message dummy;
+      CapabilityMap cm;
+      cm[AuthProvider::State_Key] = AnyValue::from(AuthProvider::State_Done);
+      dummy.setType(Message::Type_Reply);
+      dummy.setFunction(qi::Message::ServerFunction_Authenticate);
+      dummy.setValue(AnyValue::from(cm), typeOf<CapabilityMap>()->signature());
+      onAuthentication(dummy, requestId, socket, ClientAuthenticatorPtr(new NullClientAuthenticator), SignalSubscriberPtr());
+      return;
+    }
+    ClientAuthenticatorPtr authenticator = _authFactory->newAuthenticator();
+    CapabilityMap authCaps;
+    {
+      CapabilityMap tmp = authenticator->initialAuthData();
+      for (CapabilityMap::iterator it = tmp.begin(), end = tmp.end(); it != end; ++it)
+        authCaps[AuthProvider::UserAuthPrefix + it->first] = it->second;
+    }
+    SignalSubscriberPtr protSubscriber(new SignalSubscriber);
+    *protSubscriber = socket->messageReady.connect(&Session_Service::onAuthentication, this, _1, requestId, socket, authenticator, protSubscriber);
+
+
+    Message msgCapabilities;
+    msgCapabilities.setFunction(Message::ServerFunction_Authenticate);
+    msgCapabilities.setService(Message::Service_Server);
+    msgCapabilities.setType(Message::Type_Call);
+
+    TransportSocketPtr sdSocket = _sdClient->socket();
+    CapabilityMap socketCaps;
+    if (sdSocket)
+    {
+      socketCaps = sdSocket->localCapabilities();
+      socket->advertiseCapabilities(socketCaps);
+    }
+    socketCaps.insert(authCaps.begin(), authCaps.end());
+    msgCapabilities.setValue(socketCaps, typeOf<CapabilityMap>()->signature());
+    socket->send(msgCapabilities);
   }
 
   void Session_Service::onRemoteObjectComplete(qi::Future<void> future, long requestId) {

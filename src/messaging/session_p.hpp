@@ -14,13 +14,15 @@
 #include "sessionservices.hpp"
 #include "transportsocketcache.hpp"
 #include "servicedirectory.hpp"
+#include "authprovider_p.hpp"
+#include "clientauthenticator_p.hpp"
 
 namespace qi {
 
   class SessionPrivate : public qi::Trackable<SessionPrivate>
   {
   public:
-    SessionPrivate(qi::Session *session);
+    SessionPrivate(Session* session, bool enforceAuth = false);
     virtual ~SessionPrivate();
 
     qi::FutureSync<void> connect(const qi::Url &serviceDirectoryURL);
@@ -31,6 +33,9 @@ namespace qi {
     void onServiceDirectoryClientDisconnected(std::string error);
     void onServiceAdded(unsigned int idx, const std::string &name);
     void onServiceRemoved(unsigned int idx, const std::string &name);
+
+    void setAuthProviderFactory(AuthProviderFactoryPtr factory);
+    void setClientAuthenticatorFactory(ClientAuthenticatorFactoryPtr factory);
 
   public:
     void listenStandaloneCont(qi::Promise<void> p, qi::Future<void> f);

@@ -18,14 +18,14 @@ qiLogCategory("qimessaging.objectregistrar");
 
 namespace qi {
 
-  ObjectRegistrar::ObjectRegistrar(ServiceDirectoryClient *sdClient, Session *session)
-    : Server()
+  ObjectRegistrar::ObjectRegistrar(ServiceDirectoryClient *sdClient, bool enforceAuth)
+    : Server(enforceAuth)
     , _sdClient(sdClient)
-    , _session(session)
     , _id(qi::os::generateUuid())
   {
     _server.endpointsChanged.connect(boost::bind(&ObjectRegistrar::updateServiceInfo, this));
   }
+
 
   ObjectRegistrar::~ObjectRegistrar()
   {

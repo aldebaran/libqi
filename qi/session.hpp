@@ -9,6 +9,8 @@
 
 #include <qi/api.hpp>
 #include <qi/messaging/serviceinfo.hpp>
+#include <qi/messaging/authproviderfactory.hpp>
+#include <qi/messaging/clientauthenticatorfactory.hpp>
 #include <qi/future.hpp>
 #include <qi/anyobject.hpp>
 #include <boost/shared_ptr.hpp>
@@ -23,6 +25,9 @@
 namespace qi {
 
   class SessionPrivate;
+  class AuthProvider;
+  typedef boost::shared_ptr<AuthProvider> AuthProviderPtr;
+  typedef std::map<std::string, AnyValue> CapabilityMap;
 
   /** A Session allows you to interconnect services on the same machine or over
    * the network.
@@ -31,7 +36,7 @@ namespace qi {
    */
   class QI_API Session : boost::noncopyable, public ::boost::enable_shared_from_this<Session> {
   public:
-    Session();
+    Session(bool enforceAuthentication = false);
     virtual ~Session();
 
     enum ServiceLocality {
@@ -66,6 +71,9 @@ namespace qi {
     qi::FutureSync<unsigned int> registerService(const std::string &name, AnyObject object);
     qi::FutureSync<void>         unregisterService(unsigned int serviceId);
 
+
+    void setAuthProviderFactory(AuthProviderFactoryPtr);
+    void setClientAuthenticatorFactory(ClientAuthenticatorFactoryPtr);
 
     /** Load a module and register the specified object on the session
      *
