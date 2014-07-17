@@ -551,9 +551,9 @@ namespace qi {
     return &i->second;
   }
 
-  int MetaObject::methodId(const std::string &name) const
+  int MetaObject::methodId(const std::string &nameWithSignature) const
   {
-    return _p->methodId(name);
+    return _p->methodId(nameWithSignature);
   }
 
   int MetaObject::signalId(const std::string &name) const

@@ -30,10 +30,10 @@ namespace qi {
     ~MetaObject();
 
     /**
-    *   @param name The method's name.
+    *   @param nameWithSignature The complete full signature (name::signature) for example myMethod::(s).
     *   @return The method's id or -1 if the method wasn't found.
     */
-    int methodId(const std::string &name) const;
+    int methodId(const std::string &nameWithSignature) const;
     /**
     *   @param name The name of the signal or its full signature.
     *   @return The signal's id or -1 if the signal wasn't found.
