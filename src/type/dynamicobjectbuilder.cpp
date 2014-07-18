@@ -135,7 +135,8 @@ namespace qi
   unsigned int DynamicObjectBuilder::advertiseProperty(const std::string &name, qi::PropertyBase *prop)
   {
     //todo: prop.signature()
-    unsigned int nextId = xAdvertiseProperty(name, prop->signal()->signature());
+    unsigned int nextId = xAdvertiseSignal(name, prop->signal()->signature());
+    xAdvertiseProperty(name, prop->signal()->signature(), nextId);
     _p->_object->setProperty(nextId, prop);
     return nextId;
   }
