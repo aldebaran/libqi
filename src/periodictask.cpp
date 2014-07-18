@@ -196,10 +196,10 @@ namespace qi
     */
     while (*_state == Task_Rescheduling)
       boost::this_thread::yield();
-    // order matters! check triggering state first as the state cannot change
+    // order matters! check scheduled state first as the state cannot change
     // from triggering to scheduled but can change in the other way
-    if (!_state.setIfEquals(Task_Triggering, Task_Running) &&
-        !_state.setIfEquals(Task_Scheduled, Task_Running))
+    if (!_state.setIfEquals(Task_Scheduled, Task_Running) &&
+        !_state.setIfEquals(Task_Triggering, Task_Running))
     {
       setState(_state, Task_Stopping, Task_Stopped);
       return;
