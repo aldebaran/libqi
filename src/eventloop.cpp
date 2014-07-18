@@ -38,6 +38,8 @@ namespace qi {
   EventLoopAsio::EventLoopAsio()
   : _mode(Mode_Unset)
   , _destroyMe(false)
+  , _maxThreads(0)
+  , _work(NULL)
   {
     _name = "asioeventloop";
   }

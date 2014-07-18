@@ -30,15 +30,18 @@ class SetValue: private boost::noncopyable
 {
 public:
   SetValue(int& tgt)
-  :target(tgt)
+    : target(tgt)
+    , state(0)
   {
   }
+
   int exchange(int v)
   {
     int old = target;
     target = v;
     return old;
   }
+
   int delayExchange(int msDelay, int value)
   {
     qiLogDebug() << "delayexchange enter";
@@ -48,6 +51,7 @@ public:
     qiLogDebug() << "delayexchange leave";
     return exchange(value);
   }
+
   int& target;
   int state;
 private:

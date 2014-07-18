@@ -17,7 +17,11 @@ namespace qi {
   class AsyncCallHandlePrivate
   {
   public:
-    AsyncCallHandlePrivate() { }
+    AsyncCallHandlePrivate()
+      : sd(NULL)
+      , canceled(false)
+    { }
+
     void cancel() { canceled = true;}
     bool canceled;
     // Callback used with notifyFd.
