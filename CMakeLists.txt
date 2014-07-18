@@ -1,4 +1,4 @@
-## Copyright (c) 2012, 2013 Aldebaran Robotics. All rights reserved.
+## Copyright (c) 2012, 2013, 2014 Aldebaran Robotics. All rights reserved.
 ## Use of this source code is governed by a BSD-style license that can be
 ## found in the COPYING file.
 
@@ -125,6 +125,7 @@ set(QITYPE_H       qi/anyfunction.hpp
                    qi/property.hpp
                    qi/signal.hpp
                    qi/anyvalue.hpp
+                   qi/anymodule.hpp
 
                    qi/type/detail/signal.hxx
                    qi/type/detail/property.hxx
@@ -172,7 +173,6 @@ set(QITYPE_H       qi/anyfunction.hpp
                    qi/type/metaobject.hpp
                    qi/type/metaproperty.hpp
                    qi/type/metasignal.hpp
-                   qi/type/objectfactory.hpp
                    qi/type/objecttypebuilder.hpp
                    qi/type/proxyproperty.hpp
                    qi/type/proxysignal.hpp
@@ -203,7 +203,7 @@ set(QITYPE_C src/type/binarycodec.cpp
              src/type/metasignal_p.hpp
              src/type/metaobject.cpp
              src/type/metaobject_p.hpp
-             src/type/objectfactory.cpp
+             src/type/anymodule.cpp
              src/type/objecttypebuilder.cpp
              src/type/signal.cpp
              src/type/signal_p.hpp
@@ -335,6 +335,9 @@ endif()
 
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/external")
+
+qi_stage_cmake(qimodule-config.cmake)
+include(qimodule-config.cmake)
 
 qi_create_lib(qi SHARED
                  ${QI_H}     ${QI_C}

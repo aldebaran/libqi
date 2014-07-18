@@ -15,7 +15,7 @@
 #include <qi/anyobject.hpp>
 #include <qi/type/dynamicobjectbuilder.hpp>
 #include <qi/type/objecttypebuilder.hpp>
-#include <qi/type/objectfactory.hpp>
+#include <qi/anymodule.hpp>
 
 #if defined(_MSC_VER) && _MSC_VER <= 1500
 // vs2008 32 bits does not have std::abs() on int64
@@ -1101,10 +1101,12 @@ public:
 qi::Atomic<int> Sleeper::dtorCount;
 
 QI_REGISTER_OBJECT(Sleeper, msleep);
-QI_REGISTER_OBJECT_FACTORY_CONSTRUCTOR(Sleeper);
+
+
 
 TEST(TestObject, async)
 {
+
   {
     Sleeper rf;
     qi::Future<int> f = qi::async<int>(&rf, "msleep", 100);
@@ -1133,7 +1135,7 @@ TEST(TestObject, async)
 
   // Factory leaks, so can't test no-leak of async...
   qiLogDebug() << "Factory";
-  qi::AnyObject o = qi::createObject("Sleeper");
+  qi::AnyObject o = qi::import("testpkg").call<qi::AnyObject>("Sleeper");
   ASSERT_TRUE(o);
   qi::Future<int> f = qi::async<int>(o, "msleep", 100);
   EXPECT_EQ(qi::FutureState_Running, f.wait(0));
@@ -1173,42 +1175,34 @@ class Apple
 };
 
 QI_REGISTER_OBJECT(Apple, getWeight, getType);
-QI_REGISTER_OBJECT_FACTORY_CONSTRUCTOR(Apple, std::string);
-QI_REGISTER_OBJECT_FACTORY_CONSTRUCTOR_FOR(Fruit, Apple, int, std::string);
-QI_REGISTER_OBJECT_FACTORY_BUILDER(Apple, std::string);
-QI_REGISTER_OBJECT_FACTORY_BUILDER_FOR(Fruit, Apple, int, std::string);
+
+bool init_testpkg_module(qi::ModuleBuilder* mb) {
+  mb->advertiseFactory<Sleeper>("Sleeper");
+  mb->advertiseFactory<Apple, std::string>("Apple");
+  mb->advertiseFactory<Apple, int, std::string>("Fruit");
+  return true;
+}
+QI_REGISTER_MODULE_EMBEDDED("testpkg", &init_testpkg_module);
 
 TEST(TestObject, Factory)
 {
-  ASSERT_ANY_THROW(qi::createObject("Apple"));
-  ASSERT_ANY_THROW(qi::createObject("Apple", 33.33));
-  ASSERT_ANY_THROW(qi::createObject("Fruit"));
-  ASSERT_ANY_THROW(qi::createObject("Fruit", "aaa"));
-  ASSERT_ANY_THROW(qi::createObject("Fruit", 18));
+  qi::AnyModule p = qi::import("testpkg");
+  ASSERT_ANY_THROW(p.call<qi::AnyObject>("Apple"));
+  ASSERT_ANY_THROW(p.call<qi::AnyObject>("Apple", 33.33));
+  ASSERT_ANY_THROW(p.call<qi::AnyObject>("Fruit"));
+  ASSERT_ANY_THROW(p.call<qi::AnyObject>("Fruit", "aaa"));
+  ASSERT_ANY_THROW(p.call<qi::AnyObject>("Fruit", 18));
 
-  qi::AnyObject apple = qi::createObject("Apple", "red");
+  qi::AnyObject apple = p.call<qi::AnyObject>("Apple", "red");
   ASSERT_TRUE(apple);
   EXPECT_EQ(42, apple.call<int>("getWeight"));
   EXPECT_EQ("red", apple.call<std::string>("getType"));
 
-  qi::AnyObject fruit = qi::createObject("Fruit", 188, "green");
+  qi::AnyObject fruit = p.call<qi::AnyObject>("Fruit", 188, "green");
   ASSERT_TRUE(fruit);
   EXPECT_EQ(188, fruit.call<int>("getWeight"));
   EXPECT_EQ("green", fruit.call<std::string>("getType"));
 
-  qi::AnyObject appleFactory = qi::createObject("AppleService");
-  ASSERT_TRUE(appleFactory);
-  apple = appleFactory.call<qi::AnyObject>("create", "red");
-  ASSERT_TRUE(apple);
-  EXPECT_EQ(42, apple.call<int>("getWeight"));
-  EXPECT_EQ("red", apple.call<std::string>("getType"));
-
-  qi::AnyObject fruitFactory = qi::createObject("FruitService");
-  ASSERT_TRUE(fruitFactory);
-  fruit = fruitFactory.call<qi::AnyObject>("create", 99, "random");
-  ASSERT_TRUE(fruit);
-  EXPECT_EQ(99, fruit.call<int>("getWeight"));
-  EXPECT_EQ("random", fruit.call<std::string>("getType"));
 }
 
 qi::GenericFunctionParameters args(
