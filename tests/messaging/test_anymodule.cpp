@@ -14,7 +14,7 @@
 qi::SessionPtr session;
 TEST(Module, Load)
 {
-  session->loadService("naoqi.testmodule.test");
+  session->loadService("naoqi.testanymodule.test");
 
   qi::AnyObject o = session->service("test");
   ASSERT_TRUE(o);
@@ -24,7 +24,7 @@ TEST(Module, Load)
 
 TEST(Module, LoadByHandWithSession)
 {
-  qi::AnyModule foomod = qi::import("naoqi.testmodulesession");
+  qi::AnyModule foomod = qi::import("naoqi.testanymodulesession");
   qi::AnyObject ao = foomod.call<qi::AnyObject>("Foo", session);
   session->registerService("Foo", ao);
   int res = ao.call<int>("bar");
@@ -35,7 +35,7 @@ TEST(Module, LoadByHandWithSession)
 TEST(Module, LoadWithSessionAndRename)
 {
   //## register the Foo object as a service
-  session->loadService("naoqi.testmodulesession.Foo", "Bar");
+  session->loadService("naoqi.testanymodulesession.Foo", "Bar");
 
   qi::AnyObject o = session->service("Bar");
   ASSERT_TRUE(o);

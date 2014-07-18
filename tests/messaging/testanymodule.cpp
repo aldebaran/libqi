@@ -9,7 +9,7 @@
 #include <qi/session.hpp>
 #include <qi/anymodule.hpp>
 
-qiLogCategory("testmodule");
+qiLogCategory("testanymodule");
 
 int testMethod(const int& v)
 {
@@ -36,4 +36,4 @@ void init_naoqitestmodule_module(qi::ModuleBuilder* mb) {
   mb->advertiseMethod("test", &setup);
 }
 
-QI_REGISTER_MODULE("naoqi.testmodule", &init_naoqitestmodule_module);
+QI_REGISTER_MODULE("naoqi.testanymodule", &init_naoqitestmodule_module);

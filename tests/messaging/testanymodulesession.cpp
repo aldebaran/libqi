@@ -34,4 +34,4 @@ void register_foo_module(ModuleBuilder* mb)
   mb->advertiseMethod("egg", &eggFun);
   mb->advertiseFactory<Foo, const SessionPtr&>("Foo");
 }
-QI_REGISTER_MODULE("naoqi.testmodulesession", &register_foo_module);
+QI_REGISTER_MODULE("naoqi.testanymodulesession", &register_foo_module);

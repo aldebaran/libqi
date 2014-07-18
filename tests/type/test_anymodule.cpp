@@ -17,7 +17,7 @@
 
 TEST(TestPackage, TestFreeFunctions)
 {
-    qi::AnyModule pkg = ::qi::import("qi_test_module");
+    qi::AnyModule pkg = ::qi::import("qi_test_anymodule");
     ASSERT_NE(pkg, NULL);
 
     int r;
@@ -34,7 +34,7 @@ TEST(TestPackage, TestFreeFunctions)
 
 TEST(TestPackage, FactoryCreatesFunctionalObject)
 {
-    qi::AnyModule pkg = ::qi::import("qi_test_module");
+    qi::AnyModule pkg = ::qi::import("qi_test_anymodule");
 
     ASSERT_NE(pkg, NULL);
 

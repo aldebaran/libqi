@@ -26,7 +26,7 @@ TEST(Module, pass_obj)
 
   qi::SessionPtr s = p.server();
 
-  s->loadService("naoqi.testmodule.test");
+  s->loadService("naoqi.testanymodule.test");
   qi::AnyObject o = s->service("test");
 
   qiLogInfo() << "check first service" << std::endl;
@@ -51,7 +51,7 @@ TEST(Module, load_received_obj)
 
   qi::SessionPtr s = p.server();
 
-  s->loadService("naoqi.testmodule.test");
+  s->loadService("naoqi.testanymodule.test");
   qi::AnyObject o = s->service("test");
   test_service(o);
 

@@ -28,4 +28,4 @@ void register_qi_test_module(qi::ModuleBuilder* mb) {
   mb->advertiseMethod("my_cat_returner", &my_cat_returner);
 }
 
-QI_REGISTER_MODULE("qi_test_module", &register_qi_test_module);
+QI_REGISTER_MODULE("qi_test_anymodule", &register_qi_test_module);
