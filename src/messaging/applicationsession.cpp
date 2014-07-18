@@ -16,6 +16,8 @@ static void onDisconnected(const std::string& /*errorMessage*/)
 
 static std::string _address;
 static std::string _listenAddress;
+static bool        _standAlone = false;
+
 static void parseAddress()
 {
   namespace po = boost::program_options;
@@ -23,13 +25,15 @@ static void parseAddress()
 
   desc.add_options()
       ("qi-url", po::value<std::string>(&_address), "The address of the service directory")
-      ("qi-listen-url", po::value<std::string>(&_listenAddress), "The url to listen to");
+      ("qi-listen-url", po::value<std::string>(&_listenAddress), "The url to listen to")
+      ("qi-standalone", "create a standalone session (this will use qi-listen-url if provided")
+      ;
   po::variables_map vm;
   po::parsed_options parsed = po::command_line_parser(qi::Application::arguments()).options(desc).allow_unregistered().run();
   po::store(parsed, vm);
   po::notify(vm);
   qi::Application::setArguments(po::collect_unrecognized(parsed.options, po::include_positional));
-
+  _standAlone = vm.count("qi-standalone");
   {
     po::options_description descTmp;
     descTmp.add_options()
@@ -147,11 +151,19 @@ namespace qi
 
   void ApplicationSessionPrivate::connect()
   {
-    _session->connect(_url);
+    Url listenUrl("tcp://0.0.0.0:9559");
 
-    if (!_listenAddress.empty())
-    {
-      Url listenUrl(_listenAddress, "tcp", 0);
+    if (!_listenAddress.empty()) {
+      listenUrl = Url(_listenAddress, "tcp", 0);
+    }
+
+    if (_standAlone) {
+      _session->listenStandalone(listenUrl);
+      return;
+    }
+
+    _session->connect(_url);
+    if (!_listenAddress.empty()) {
       _session->listen(listenUrl);
     }
   }
