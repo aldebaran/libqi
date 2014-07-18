@@ -218,9 +218,66 @@ namespace qi {
   }                                                                      \
   QI_TEMPLATE_TYPE_DECLARE(name)
 
-// FIXME move this, objecttypebuilder might not be included
-QI_REGISTER_TEMPLATE_OBJECT(qi::Future    , _connect, isFinished, value, wait, isRunning, isCanceled, hasError, error);
-QI_REGISTER_TEMPLATE_OBJECT(qi::FutureSync, _connect, isFinished, value, wait, isRunning, isCanceled, hasError, error, async);
+namespace qi {
+  template<typename T> class TypeOfTemplateImpl<qi::Future, T> :
+      public TypeOfTemplateDefaultImpl<qi::Future, T>
+  {
+  public:
+    TypeOfTemplateImpl(): _next(0) {}
+    virtual TypeInterface* next()
+    {
+      if (!_next)
+      {
+         ObjectTypeBuilder<qi::Future<T> > b(false);
+         b.advertise("_connect", &qi::Future<T>::_connect);
+         b.advertise("isFinished", &qi::Future<T>::isFinished);
+         b.advertise("value", &qi::Future<T>::value);
+         b.advertise("wait", static_cast<qi::FutureState (qi::Future<T>::*)(int) const>(&qi::Future<T>::wait));
+         b.advertise("wait", static_cast<qi::FutureState (qi::Future<T>::*)(qi::Duration) const>(&qi::Future<T>::wait));
+         b.advertise("wait", static_cast<qi::FutureState (qi::Future<T>::*)(qi::SteadyClock::time_point) const>(&qi::Future<T>::wait));
+         b.advertise("isRunning", &qi::Future<T>::isRunning);
+         b.advertise("isCanceled", &qi::Future<T>::isCanceled);
+         b.advertise("hasError", &qi::Future<T>::hasError);
+         b.advertise("error", &qi::Future<T>::error);
+         _next = b.type();
+      }
+      return _next;
+    }
+    TypeInterface* _next;
+  };
+}
+QI_TEMPLATE_TYPE_DECLARE(qi::Future);
+namespace qi {
+  template<typename T> class TypeOfTemplateImpl<qi::FutureSync, T> :
+      public TypeOfTemplateDefaultImpl<qi::FutureSync, T>
+  {
+  public:
+    TypeOfTemplateImpl(): _next(0) {}
+    virtual TypeInterface* next()
+    {
+      if (!_next)
+      {
+         ObjectTypeBuilder<qi::FutureSync<T> > b(false);
+         b.advertise("_connect", &qi::FutureSync<T>::_connect);
+         b.advertise("isFinished", &qi::FutureSync<T>::isFinished);
+         b.advertise("value", &qi::FutureSync<T>::value);
+         b.advertise("wait", static_cast<qi::FutureState (qi::FutureSync<T>::*)(int) const>(&qi::FutureSync<T>::wait));
+         b.advertise("wait", static_cast<qi::FutureState (qi::FutureSync<T>::*)(qi::Duration) const>(&qi::FutureSync<T>::wait));
+         b.advertise("wait", static_cast<qi::FutureState (qi::FutureSync<T>::*)(qi::SteadyClock::time_point) const>(&qi::FutureSync<T>::wait));
+         b.advertise("isRunning", &qi::FutureSync<T>::isRunning);
+         b.advertise("isCanceled", &qi::FutureSync<T>::isCanceled);
+         b.advertise("hasError", &qi::FutureSync<T>::hasError);
+         b.advertise("error", &qi::FutureSync<T>::error);
+         b.advertise("async", &qi::FutureSync<T>::async);
+         _next = b.type();
+      }
+      return _next;
+    }
+    TypeInterface* _next;
+  };
+}
+QI_TEMPLATE_TYPE_DECLARE(qi::FutureSync);
+
 QI_REGISTER_TEMPLATE_OBJECT(qi::Promise, setValue, setError, setCanceled, reset, future, value, trigger);
 namespace qi { namespace detail {
   template<typename T> struct TypeManager<Future<T> >: public TypeManagerDefaultStruct<Future<T> > {};

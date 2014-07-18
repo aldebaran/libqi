@@ -12,6 +12,7 @@
 # include <qi/atomic.hpp>
 # include <qi/config.hpp>
 # include <qi/trackable.hpp>
+# include <qi/clock.hpp>
 
 # include <boost/shared_ptr.hpp>
 # include <boost/make_shared.hpp>
@@ -183,11 +184,25 @@ namespace qi {
     { return _p->value(FutureTimeout_Infinite); }
 
     /** Wait for future to contain a value or an error
-        @param msecs: Maximum time to wait in milliseconds, 0 means return immediately.
+        @param msecs Maximum time to wait in milliseconds, 0 means return immediately.
         @return a FutureState corresponding to the state of the future.
     */
     inline FutureState wait(int msecs = FutureTimeout_Infinite) const
     { return _p->wait(msecs); }
+
+    /** Wait for future to contain a value or an error
+        @param duration Maximum time to wait
+        @return a FutureState corresponding to the state of the future.
+    */
+    inline FutureState wait(qi::Duration duration) const
+    { return _p->wait(duration); }
+
+    /** Wait for future to contain a value or an error
+        @param timepoint Time until which we can wait
+        @return a FutureState corresponding to the state of the future.
+    */
+    inline FutureState wait(qi::SteadyClock::time_point timepoint) const
+    { return _p->wait(timepoint); }
 
     /**
      * @return true if the future is finished
@@ -412,6 +427,8 @@ namespace qi {
     const ValueType &value(int msecs = FutureTimeout_Infinite) const   { _sync = false; return _future.value(msecs); }
     operator const typename Future<T>::ValueTypeCast&() const          { _sync = false; return _future.value(); }
     FutureState wait(int msecs = FutureTimeout_Infinite) const         { _sync = false; return _future.wait(msecs); }
+    FutureState wait(qi::Duration duration) const                      { _sync = false; return _future.wait(duration); }
+    FutureState wait(qi::SteadyClock::time_point timepoint) const      { _sync = false; return _future.wait(timepoint); }
     bool isRunning() const                                             { _sync = false; return _future.isRunning(); }
     bool isFinished() const                                            { _sync = false; return _future.isFinished(); }
     bool isCanceled() const                                            { _sync = false; return _future.isCanceled(); }

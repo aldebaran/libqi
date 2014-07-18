@@ -25,6 +25,8 @@ namespace qi {
       ~FutureBase();
 
       FutureState wait(int msecs) const;
+      FutureState wait(qi::Duration duration) const;
+      FutureState wait(qi::SteadyClock::time_point timepoint) const;
       FutureState state() const;
       bool isRunning() const;
       bool isFinished() const;

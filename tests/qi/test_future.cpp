@@ -452,8 +452,27 @@ TEST_F(TestFuture, TestTimeout) {
   qi::Promise<int> pro;
   qi::Future<int>  fut = pro.future();
 
-  EXPECT_TRUE(fut.wait(100) == qi::FutureState_Running);
+  qi::SteadyClock::time_point start = qi::SteadyClock::now();
+  EXPECT_EQ(qi::FutureState_Running, fut.wait(100));
   EXPECT_FALSE(fut.isFinished());
+  EXPECT_GT(qi::SteadyClock::now(), start + qi::MilliSeconds(100));
+
+  start = qi::SteadyClock::now();
+  EXPECT_EQ(qi::FutureState_Running, fut.wait(qi::MicroSeconds(50000)));
+  EXPECT_FALSE(fut.isFinished());
+  EXPECT_GT(qi::SteadyClock::now(), start + qi::MilliSeconds(50));
+
+  start = qi::SteadyClock::now();
+  EXPECT_EQ(qi::FutureState_Running, fut.wait(qi::SteadyClock::now() + qi::MilliSeconds(10)));
+  EXPECT_FALSE(fut.isFinished());
+  EXPECT_GT(qi::SteadyClock::now(), start + qi::MilliSeconds(10));
+
+  start = qi::SteadyClock::now();
+  qi::async(boost::function<void()>(boost::bind(&qi::Promise<int>::setValue, pro, 42)), 10000);
+  EXPECT_EQ(qi::FutureState_FinishedWithValue, fut.wait(qi::SteadyClock::now() + qi::MilliSeconds(20)));
+  EXPECT_TRUE(fut.isFinished());
+  EXPECT_GT(qi::SteadyClock::now(), start + qi::MilliSeconds(10));
+  EXPECT_LT(qi::SteadyClock::now(), start + qi::MilliSeconds(20));
 }
 
 TEST_F(TestFuture, TestError) {
