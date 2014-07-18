@@ -50,5 +50,7 @@ int main(int argc, char **argv) {
   session = qi::makeSession();
 
   session->listenStandalone("tcp://127.0.0.1:0");
-  return RUN_ALL_TESTS();
+  int res = RUN_ALL_TESTS();
+  session->close();
+  return res;
 }
