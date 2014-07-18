@@ -23,7 +23,7 @@
 namespace qi {
 
   class SessionPrivate;
-  class QI_API Session : boost::noncopyable {
+  class QI_API Session : boost::noncopyable, public ::boost::enable_shared_from_this<Session> {
   public:
     Session();
     virtual ~Session();
@@ -61,8 +61,8 @@ namespace qi {
     qi::FutureSync<void>         unregisterService(unsigned int serviceId);
 
 
-    /// Load a module and register an instance of each declared object as a service.
-    std::vector<std::string>      loadService(const std::string& name, int flags = -1);
+    /// Load a module and register the specified object on the session
+    void loadService(const std::string& moduleName, const std::string &renameModule = std::string());
 
   public:
     qi::Signal<unsigned int, std::string> serviceRegistered;

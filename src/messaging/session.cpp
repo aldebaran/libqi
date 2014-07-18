@@ -14,9 +14,9 @@
 #include "transportsocket.hpp"
 #include <qi/anyobject.hpp>
 #include <qi/messaging/serviceinfo.hpp>
-#include <qi/type/objectfactory.hpp>
 #include "remoteobject_p.hpp"
 #include "session_p.hpp"
+#include <qi/anymodule.hpp>
 
 qiLogCategory("qimessaging.session");
 
@@ -265,15 +265,22 @@ namespace qi {
     return _p->_serverObject.endpoints();
   }
 
-  std::vector<std::string> Session::loadService(const std::string& name, int flags)
+  void Session::loadService(const std::string &moduleName, const std::string& renameModule)
   {
-    //TODO: what happens if the session is not connected?
-    std::vector<std::string> names = ::qi::loadObject(name, flags);
-    for (unsigned int i = 0; i < names.size(); ++i)
-      registerService(names[i], createObject(names[i]));
-    return names;
-  }
+    size_t separatorPos = moduleName.find_last_of(".");
+    std::string package = moduleName.substr(0, separatorPos);
+    std::string factory = moduleName.substr(separatorPos + 1);
 
+    std::string rename = renameModule;
+    if (rename.empty())
+      rename = factory;
+    qi::AnyModule p = qi::import(package);
+    int id = p.metaObject().methodId(factory + "::(o)");
+    if (id > 0)
+      registerService(rename, p.call<AnyObject>(factory, shared_from_this()));
+    else
+      registerService(rename, p.call<AnyObject>(factory));
+  }
 }
 
 
