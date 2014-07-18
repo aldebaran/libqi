@@ -40,6 +40,7 @@ void showHelp(const po::options_description &desc)
   std::cout << "  trace    [<ServicePattern> ..]" << std::endl;
   std::cout << "  log-view" << std::endl;
   std::cout << "  log-send <message>" << std::endl;
+  std::cout << "  mod      <module>" << std::endl;
 }
 
 bool poDefault(const po::command_line_parser &clp, po::variables_map &vm, const po::options_description &desc)
