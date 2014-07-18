@@ -7,9 +7,10 @@
 #add_subdirectory(test_endpoint_context)
 add_subdirectory(libtestsession)
 
-qi_create_lib(testmodule  SRC testmodule.cpp SHARED DEPENDS QI  SUBFOLDER naoqi NO_INSTALL)
+qi_create_module(naoqi.testanymodule        SRC testanymodule.cpp        SHARED DEPENDS QI NO_INSTALL)
+qi_create_module(naoqi.testanymodulesession SRC testanymodulesession.cpp SHARED DEPENDS QI NO_INSTALL)
 
-qi_create_gtest(test_module               SRC test_module.cpp               DEPENDS QI  GTEST TIMEOUT 10)
+qi_create_gtest(test_anymodule_service    SRC test_anymodule.cpp               DEPENDS QI  GTEST TIMEOUT 10)
 qi_create_gtest(test_url                  SRC test_url.cpp                  DEPENDS QI  GTEST TIMEOUT 10)
 #qi_create_gtest(test_message_visitor     SRC test_message_visitor.cpp      DEPENDS QI  GTEST TIMEOUT 120)
 #Not working yet

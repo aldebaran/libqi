@@ -7,6 +7,7 @@
 #include <qi/application.hpp>
 #include <qi/anyobject.hpp>
 #include <qi/session.hpp>
+#include <qi/anymodule.hpp>
 #include <testsession/testsessionpair.hpp>
 
 qiLogCategory("test");
@@ -25,7 +26,7 @@ TEST(Module, pass_obj)
 
   qi::SessionPtr s = p.server();
 
-  s->loadService("naoqi/testmodule");
+  s->loadService("naoqi.testmodule.test");
   qi::AnyObject o = s->service("test");
 
   qiLogInfo() << "check first service" << std::endl;
@@ -50,7 +51,7 @@ TEST(Module, load_received_obj)
 
   qi::SessionPtr s = p.server();
 
-  s->loadService("naoqi/testmodule");
+  s->loadService("naoqi.testmodule.test");
   qi::AnyObject o = s->service("test");
   test_service(o);
 

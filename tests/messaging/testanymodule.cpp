@@ -6,8 +6,8 @@
 #include <qi/application.hpp>
 #include <qi/anyobject.hpp>
 #include <qi/type/dynamicobjectbuilder.hpp>
-#include <qi/type/objectfactory.hpp>
 #include <qi/session.hpp>
+#include <qi/anymodule.hpp>
 
 qiLogCategory("testmodule");
 
@@ -32,4 +32,8 @@ qi::AnyObject setup()
   return ob.object();
 }
 
-QI_REGISTER_OBJECT_FACTORY("test", qi::AnyFunction::from(&setup));
+void init_naoqitestmodule_module(qi::ModuleBuilder* mb) {
+  mb->advertiseMethod("test", &setup);
+}
+
+QI_REGISTER_MODULE("naoqi.testmodule", &init_naoqitestmodule_module);
