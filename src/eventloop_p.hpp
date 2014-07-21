@@ -18,8 +18,8 @@ namespace qi {
   {
   public:
     AsyncCallHandlePrivate()
-      : sd(NULL)
-      , canceled(false)
+      : canceled(false)
+      , sd(NULL)
     { }
 
     void cancel() { canceled = true;}
@@ -42,8 +42,10 @@ namespace qi {
     virtual void start(int nthreads)=0; // 0=auto
     virtual void join()=0;
     virtual void stop()=0;
-    virtual qi::Future<void> asyncCall(uint64_t usDelay, boost::function<void ()> callback)=0;
-    virtual void post(uint64_t usDelay, const boost::function<void ()>& callback)=0;
+    virtual qi::Future<void> asyncCall(qi::Duration delay, boost::function<void ()> callback)=0;
+    virtual void post(qi::Duration delay, const boost::function<void ()>& callback)=0;
+    virtual qi::Future<void> asyncCall(qi::SteadyClockTimePoint timepoint, boost::function<void ()> callback)=0;
+    virtual void post(qi::SteadyClockTimePoint timepoint, const boost::function<void ()>& callback)=0;
     virtual void destroy()=0;
     virtual void* nativeHandle()=0;
     virtual void run()=0;
@@ -64,10 +66,14 @@ namespace qi {
     virtual void run();
     virtual void join();
     virtual void stop();
-    virtual qi::Future<void>   asyncCall(uint64_t usDelay,
+    virtual qi::Future<void> asyncCall(qi::Duration delay,
       boost::function<void ()> callback);
-    virtual void post(uint64_t usDelay,
+    virtual void post(qi::Duration delay,
       const boost::function<void ()>& callback);
+    virtual qi::Future<void> asyncCall(qi::SteadyClockTimePoint timepoint,
+        boost::function<void ()> callback);
+    virtual void post(qi::SteadyClockTimePoint timepoint,
+        const boost::function<void ()>& callback);
     virtual void destroy();
     virtual void* nativeHandle();
     virtual void setMaxThreads(unsigned int max);
@@ -97,7 +103,6 @@ namespace qi {
     qi::Atomic<uint32_t> _totalTask;
     qi::Atomic<uint32_t> _activeTask;
   };
-
 }
 
 #endif  // _SRC_EVENTLOOP_P_HPP_

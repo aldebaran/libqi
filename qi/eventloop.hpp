@@ -16,6 +16,7 @@
 
 # include <qi/types.hpp>
 # include <qi/api.hpp>
+# include <qi/clock.hpp>
 
 # ifdef _MSC_VER
 #  pragma warning( push )
@@ -91,6 +92,12 @@ namespace qi
     template<typename R>
     Future<R> async(boost::function<R()> callback, uint64_t usDelay=0);
     Future<void> async(boost::function<void ()> callback, uint64_t usDelay=0);
+    template<typename R>
+    Future<R> async(boost::function<R()> callback, qi::Duration delay);
+    Future<void> async(boost::function<void ()> callback, qi::Duration delay);
+    template<typename R>
+    Future<R> async(boost::function<R()> callback, qi::SteadyClockTimePoint timepoint);
+    Future<void> async(boost::function<void ()> callback, qi::SteadyClockTimePoint timepoint);
     /// @}
 
     /**
@@ -99,6 +106,8 @@ namespace qi
      * \param usDelay Delay before call the callback in microsecond.
      */
     void post(const boost::function<void ()>& callback, uint64_t usDelay=0);
+    void post(const boost::function<void ()>& callback, qi::Duration delay);
+    void post(const boost::function<void ()>& callback, qi::SteadyClockTimePoint timepoint);
 
     /**
      * \brief Monitor event loop to detect deadlocks.
@@ -122,6 +131,16 @@ namespace qi
   Future<R> async(boost::function<R()> callback, uint64_t usDelay=0)
   {
     return qi::getEventLoop()->async(callback, usDelay);
+  }
+  template<typename R>
+  Future<R> async(boost::function<R()> callback, qi::Duration delay)
+  {
+    return qi::getEventLoop()->async(callback, delay);
+  }
+  template<typename R>
+  Future<R> async(boost::function<R()> callback, qi::SteadyClockTimePoint timepoint)
+  {
+    return qi::getEventLoop()->async(callback, timepoint);
   }
 
   /**
