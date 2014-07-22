@@ -1069,11 +1069,11 @@ TEST(EventLoop, async)
   EXPECT_TRUE(f.hasError());
 
   f = el->async<int>(boost::bind(ping, 42), qi::MilliSeconds(20));
-  qi::os::msleep(20);
+  qi::os::msleep(25);
   EXPECT_TRUE(f.isFinished());
 
   f = el->async<int>(boost::bind(ping, 42), qi::SteadyClock::now() + qi::MilliSeconds(10));
-  qi::os::msleep(10);
+  qi::os::msleep(15);
   EXPECT_TRUE(f.isFinished());
 }
 
