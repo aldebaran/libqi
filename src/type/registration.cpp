@@ -86,13 +86,13 @@ public:
   virtual int64_t get(void* value)
   {
     T* tp = (T*)ImplType::Access::ptrFromStorage(&value);
-    return tp->time_since_epoch().count();
+    return boost::chrono::duration_cast<qi::Duration>(tp->time_since_epoch()).count();
   }
 
   virtual void set(void** storage, int64_t value)
   {
     T* tp = (T*)ImplType::Access::ptrFromStorage(storage);
-    *tp = T(qi::Duration(value));
+    *tp = T(boost::chrono::duration_cast<boost::chrono::system_clock::duration>(qi::Duration(value)));
   }
 
   virtual unsigned int size()
