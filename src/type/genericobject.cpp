@@ -1,7 +1,6 @@
 #include <qi/anyobject.hpp>
 #include <qi/log.hpp>
 
-#include "anyobject_p.hpp"
 #include "metaobject_p.hpp"
 
 qiLogCategory("qitype.genericobject");

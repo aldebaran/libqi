@@ -24,7 +24,7 @@ namespace qi {
       : _index(qiObjectSpecialMemberMaxUid - 1)
       , _dirtyCache(false)
     {
-    };
+    }
 
     MetaObjectPrivate(const MetaObjectPrivate &rhs);
     MetaObjectPrivate&  operator=(const MetaObjectPrivate &rhs);

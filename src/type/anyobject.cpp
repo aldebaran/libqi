@@ -5,7 +5,6 @@
 #include <iostream>
 
 #include <qi/anyobject.hpp>
-#include "anyobject_p.hpp"
 
 #ifdef _MSC_VER
 #  pragma warning( push )

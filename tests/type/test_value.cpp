@@ -279,7 +279,13 @@ TEST(Value, Tuple)
 
 struct Point2
 {
-  Point2() {}
+  Point2()
+    : x(0)
+    , y(0)
+    , z(0)
+    , a(0)
+    , b(0)
+  {}
   const double& getY() { return y;}
   double& getZ() { return z;}
   const double& getA() const { return a;}

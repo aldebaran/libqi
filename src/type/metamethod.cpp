@@ -61,7 +61,9 @@ namespace qi {
 
   // ***** MetaMethodPrivate Implementation *****
   MetaMethodPrivate::MetaMethodPrivate()
-    : uid(0), parameters (0)
+    : uid(0)
+    , parameters(0)
+    , next(NULL)
   {}
 
   void MetaMethodPrivate::appendParameter(const MetaMethodParameter& mm) {

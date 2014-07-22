@@ -49,7 +49,7 @@ namespace qi
   // Helpers for std algorithm on struct fields
   struct CompUid
   {
-    CompUid() {};
+    CompUid() : v(0) {};
     CompUid(unsigned int v) : v(v) {}
     bool operator()(CallData* d)
     {

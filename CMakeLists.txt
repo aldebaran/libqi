@@ -186,7 +186,6 @@ set(QITYPE_C src/type/binarycodec.cpp
              src/type/anyfunction.cpp
              src/type/anyreference.cpp
              src/type/anyvalue.cpp
-             src/type/anyobject_p.hpp
              src/type/anyobject.cpp
              src/type/genericobject.cpp
              src/type/jsoncodec_p.hpp

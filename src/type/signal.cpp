@@ -12,7 +12,6 @@
 #include <qi/anyvalue.hpp>
 #include <qi/anyobject.hpp>
 
-#include "anyobject_p.hpp"
 #include "signal_p.hpp"
 
 qiLogCategory("qitype.signal");

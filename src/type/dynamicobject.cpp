@@ -31,7 +31,6 @@ namespace qi
     // get or create signal, or 0 if id is not an event
     SignalBase* createSignal(unsigned int id);
     PropertyBase* property(unsigned int id);
-    bool                                dying;
     typedef std::map<unsigned int, std::pair<SignalBase*, bool> > SignalMap;
     typedef std::map<unsigned int, std::pair<AnyFunction, MetaCallType> > MethodMap;
     SignalMap           signalMap;
@@ -44,7 +43,7 @@ namespace qi
   };
 
   DynamicObjectPrivate::DynamicObjectPrivate()
-  : threadingModel(ObjectThreadingModel_Default)
+    : threadingModel(ObjectThreadingModel_Default)
   {
   }
 
@@ -497,20 +496,20 @@ namespace qi
   class MFunctorCall
   {
   public:
-    MFunctorCall(AnyFunction& func, GenericFunctionParameters& params,
-       qi::Promise<AnyReference>* out, bool noCloneFirst,
-       AnyObject context, unsigned int methodId, bool lock, unsigned int callerId, qi::os::timeval postTimestamp)
-    : noCloneFirst(noCloneFirst)
+    MFunctorCall(AnyFunction& func_, GenericFunctionParameters& params_,
+       qi::Promise<AnyReference>* out_, bool noCloneFirst_,
+       AnyObject context_, unsigned int methodId_, bool lock_, unsigned int callerId_, qi::os::timeval postTimestamp_)
+      : noCloneFirst(noCloneFirst_)
+      , out(out_)
+      , methodId(methodId_)
+      , context(context_)
+      , lock(lock_)
+      , callerId(callerId_)
+      , postTimestamp(postTimestamp_)
     {
-      this->out = out;
-      this->methodId = methodId;
-      this->context = context;
-      this->lock = lock;
-      this->callerId = callerId;
-      std::swap(this->func, func);
-      std::swap((AnyReferenceVector&) params,
+      std::swap(this->func, func_);
+      std::swap((AnyReferenceVector&) params_,
         (AnyReferenceVector&) this->params);
-      this->postTimestamp = postTimestamp;
     }
     MFunctorCall(const MFunctorCall& b)
     {

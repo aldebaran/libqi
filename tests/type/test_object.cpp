@@ -69,9 +69,14 @@ struct Parent
 // Insert padding to be able to check that class pointers are correctly
 // converted when calling member functions
 struct Foo: public Padding, public Parent, public Padding2 {
-  Foo() : f(3) {}
+  Foo()
+    : f(3)
+    , r(0)
+  {}
   Foo(const Foo& b)
-  : f(b.f+1) {}
+    : f(b.f+1)
+    , r(0)
+  {}
   virtual ~Foo() {}
   void operator = (const Foo& b)
   {
