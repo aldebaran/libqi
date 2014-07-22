@@ -206,8 +206,8 @@ namespace qi
   template class QI_API boost::chrono::duration<int64_t>;
   template class QI_API boost::chrono::duration<int64_t, boost::ratio<60> >;
   template class QI_API boost::chrono::duration<int64_t, boost::ratio<3600> >;
-  template class QI_API boost::chrono::time_point<qi::SteadyClock>;
-  template class QI_API boost::chrono::time_point<qi::WallClock>;
+  template class QI_API boost::chrono::time_point<boost::chrono::steady_clock>;
+  template class QI_API boost::chrono::time_point<boost::chrono::system_clock>;
 # endif
 
 # include <qi/detail/clock.hxx>
