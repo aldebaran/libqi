@@ -99,6 +99,15 @@ namespace qi {
 #endif // !_WIN32
 
     const char *dlerror(void) {
+#ifdef _WIN32
+      /* GetLastError() must be called at the closest time after a system call it must retrieve error from
+         From MSDN doc ( http://msdn.microsoft.com/en-us/library/windows/desktop/ms679360(v=vs.85).aspx ).
+
+         g_LastError.get() modifies the result of GetLastError() so we make sure that
+         GetLastError() is called first.
+       */
+      DWORD lastError = GetLastError();
+#endif
       if (g_LastError.get())
       {
         const char* ret = g_LastError.get();
@@ -106,7 +115,7 @@ namespace qi {
         return ret;
       }
 #ifdef _WIN32
-      DWORD lastError = GetLastError();
+
       // Unix dlerror() return null if error code is 0
       if (lastError == 0)
         return NULL;
