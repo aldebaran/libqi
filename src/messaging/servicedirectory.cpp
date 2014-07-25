@@ -384,6 +384,7 @@ namespace qi
     si.setSessionId("0");
     si.setEndpoints(_server->endpoints());
     unsigned int regid = sdbo->registerService(si);
+    (void)regid;
     sdbo->serviceReady(qi::Message::Service_ServiceDirectory);
     //serviceDirectory must have id '1'
     assert(regid == qi::Message::Service_ServiceDirectory);
