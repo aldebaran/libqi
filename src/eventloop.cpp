@@ -22,6 +22,8 @@ qiLogCategory("qi.eventloop");
 
 namespace qi {
 
+  typedef boost::asio::basic_waitable_timer<SteadyClock> SteadyTimer;
+
   static qi::Atomic<uint32_t> gTaskId = 0;
 
 
@@ -359,9 +361,9 @@ namespace qi {
 
     ++_totalTask;
     //tracepoint(qi_qi, eventloop_delay, id, cb.target_type().name(), qi::MicroSeconds(delay).count());
-    boost::shared_ptr<boost::asio::steady_timer> timer = boost::make_shared<boost::asio::steady_timer>(boost::ref(_io));
+    boost::shared_ptr<SteadyTimer> timer = boost::make_shared<SteadyTimer>(boost::ref(_io));
     timer->expires_at(timepoint);
-    qi::Promise<void> prom(boost::bind(&boost::asio::steady_timer::cancel, timer));
+    qi::Promise<void> prom(boost::bind(&SteadyTimer::cancel, timer));
     timer->async_wait(boost::bind(&EventLoopAsio::invoke_maybe, this, cb, id, prom, _1));
     return prom.future();
   }

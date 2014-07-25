@@ -43,7 +43,7 @@ namespace qi {
   {
     // ms: a duration type with ms precision, but no overflow problem
     typedef chrono::milliseconds ms;
-    typedef chrono::time_point<chrono::steady_clock, ms> time_point_ms;
+    typedef chrono::time_point<SteadyClock, ms> time_point_ms;
     // overflow period
     static const ms period(ms(uint32ms::max()) - ms(uint32ms::min()) + ms(uint32ms(1)));
     uint32ms guess_ms = chrono::duration_cast<uint32ms>(guess.time_since_epoch());

@@ -42,7 +42,7 @@ namespace qi
      * to share a time_point definition if it is valid to compare their
      * time_points by comparing their respective durations.
      */
-    typedef boost::chrono::time_point<boost::chrono::steady_clock> time_point;
+    typedef boost::chrono::time_point<SteadyClock> time_point;
     /**
      * true if t1 <= t2 is always true, else false.
      * \note A clock that can be adjusted backwards is not steady.
@@ -51,7 +51,7 @@ namespace qi
 
   public:
     /// Returns a time_point representing a point in time.
-    typedef boost::chrono::time_point<boost::chrono::steady_clock> SteadyClockTimePoint;
+    typedef boost::chrono::time_point<SteadyClock> SteadyClockTimePoint;
 
      /// \brief Enum expected argument
     enum Expect {
@@ -127,14 +127,14 @@ namespace qi
      * to share a time_point definition if it is valid to compare their
      * time_points by comparing their respective durations.
      */
-    typedef boost::chrono::time_point<boost::chrono::system_clock> time_point;
+    typedef boost::chrono::time_point<WallClock> time_point;
     /// true if t1 <= t2 is always true, else false.
     /// \note A Wallclock is never steady.
     BOOST_STATIC_CONSTEXPR bool is_steady = false;
 
   public:
     /// Returns a time_point representing a point in time.
-    typedef boost::chrono::time_point<boost::chrono::system_clock> WallClockTimePoint;
+    typedef boost::chrono::time_point<WallClock> WallClockTimePoint;
 
     /// Returns a time_point representing the current value of the clock.
     static WallClockTimePoint now();
@@ -183,7 +183,7 @@ namespace qi
   /// This is equivalent to sleep_for(SteadyClockTimePoint::now())
   QI_API void sleepUntil(const SteadyClockTimePoint &t);
   template <class Duration>
-  inline void sleepUntil(const boost::chrono::time_point<boost::chrono::steady_clock, Duration>& t);
+  inline void sleepUntil(const boost::chrono::time_point<SteadyClock, Duration>& t);
   /// @}
 
   /// @{
@@ -194,7 +194,7 @@ namespace qi
   /// or more than t - WallClock::now()
   QI_API void sleepUntil(const WallClockTimePoint& t);
   template <class Duration>
-  inline void sleepUntil(const boost::chrono::time_point<boost::chrono::system_clock, Duration>& t);
+  inline void sleepUntil(const boost::chrono::time_point<WallClock, Duration>& t);
   /// @}
 }
 
@@ -206,8 +206,8 @@ namespace qi
   template class QI_API boost::chrono::duration<int64_t>;
   template class QI_API boost::chrono::duration<int64_t, boost::ratio<60> >;
   template class QI_API boost::chrono::duration<int64_t, boost::ratio<3600> >;
-  template class QI_API boost::chrono::time_point<boost::chrono::steady_clock>;
-  template class QI_API boost::chrono::time_point<boost::chrono::system_clock>;
+  template class QI_API boost::chrono::time_point<qi::SteadyClock>;
+  template class QI_API boost::chrono::time_point<qi::WallClock>;
 # endif
 
 # include <qi/detail/clock.hxx>
