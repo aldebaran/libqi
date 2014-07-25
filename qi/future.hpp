@@ -681,7 +681,7 @@ namespace qi {
   public:
     /// FutureBarrier constructor taking no argument.
     FutureBarrier(FutureCallbackType async = FutureCallbackType_Async)
-      : _closed(false)
+      : _closed(0)
       , _count(0)
       , _futures()
       , _promise(async)
@@ -701,7 +701,7 @@ namespace qi {
      */
     bool addFuture(qi::Future<T> fut) {
       // Can't add future from closed qi::FutureBarrier.
-      if (this->_closed)
+      if (*this->_closed)
         return false;
 
       ++(this->_count);
@@ -728,14 +728,14 @@ namespace qi {
     }
 
   protected:
-    bool _closed;
+    Atomic<int> _closed;
     Atomic<int> _count;
     std::vector< Future<T> > _futures;
     Promise< std::vector< Future<T> > > _promise;
 
   private:
     void onFutureFinish() {
-      if (--(this->_count) == 0 && this->_closed) {
+      if (--(this->_count) == 0 && *this->_closed) {
         this->_promise.setValue(this->_futures);
       }
     }

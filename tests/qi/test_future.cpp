@@ -884,6 +884,7 @@ TEST(TestPromiseBarrier, SimpleBarrier)
 
   // We wait for all futures of the for loop.
   barrier.future().wait();
+  qi::os::msleep(10);
   ASSERT_EQ(it, *a);
 }
 
