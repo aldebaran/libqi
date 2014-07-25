@@ -51,7 +51,7 @@ namespace qi
 
   public:
     /// Returns a time_point representing a point in time.
-    typedef boost::chrono::time_point<SteadyClock> SteadyClockTimePoint;
+    typedef time_point SteadyClockTimePoint;
 
      /// \brief Enum expected argument
     enum Expect {
@@ -134,7 +134,7 @@ namespace qi
 
   public:
     /// Returns a time_point representing a point in time.
-    typedef boost::chrono::time_point<WallClock> WallClockTimePoint;
+    typedef time_point WallClockTimePoint;
 
     /// Returns a time_point representing the current value of the clock.
     static WallClockTimePoint now();

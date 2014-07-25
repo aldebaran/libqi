@@ -15,8 +15,9 @@ qi::AnyObject my_cat_returner()
   return ob;
 }
 
-static const unsigned int MyStaticConstInt = 0xDEADBEEF;
-static const std::string MyStaticConstStr("DEADBEEF");
+//TODO
+//static const unsigned int MyStaticConstInt = 0xDEADBEEF;
+//static const std::string MyStaticConstStr("DEADBEEF");
 
 QI_REGISTER_OBJECT(Cat, meow, meowVolume);
 

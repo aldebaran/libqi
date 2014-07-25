@@ -499,11 +499,11 @@ namespace qi
     MFunctorCall(AnyFunction& func_, GenericFunctionParameters& params_,
        qi::Promise<AnyReference>* out_, bool noCloneFirst_,
        AnyObject context_, unsigned int methodId_, bool lock_, unsigned int callerId_, qi::os::timeval postTimestamp_)
-      : noCloneFirst(noCloneFirst_)
-      , out(out_)
-      , methodId(methodId_)
+      : out(out_)
+      , noCloneFirst(noCloneFirst_)
       , context(context_)
       , lock(lock_)
+      , methodId(methodId_)
       , callerId(callerId_)
       , postTimestamp(postTimestamp_)
     {

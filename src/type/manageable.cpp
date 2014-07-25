@@ -26,10 +26,10 @@ namespace qi
 
   ManageablePrivate::ManageablePrivate()
     : objectMutex(new boost::recursive_timed_mutex)
-    , statsEnabled(false)
-    , traceEnabled(false)
     , dying(false)
     , eventLoop(NULL)
+    , statsEnabled(false)
+    , traceEnabled(false)
   {
   }
 
