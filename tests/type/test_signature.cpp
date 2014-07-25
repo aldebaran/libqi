@@ -148,19 +148,6 @@ TEST(TestSignature, VArgs) {
   EXPECT_TRUE(qi::Signature("~b<titi,toto>").isValid());
 }
 
-TEST(TestSignature, CompatVargs) {
-  qi::Signature dest1("(#m)");
-  qi::Signature src1("(i)");
-
-  EXPECT_GT(0, src1.isConvertibleTo(dest1));
-
-  qi::Signature dest2("(i)");
-  qi::Signature src2("(#m)");
-
-  EXPECT_GT(0, src2.isConvertibleTo(dest2));
-
-}
-
 struct MPoint {
   MPoint(int x=0, int y=0)
     : x(x)
