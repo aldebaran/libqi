@@ -168,6 +168,10 @@ namespace detail {
 template<typename T> class Object :
   public detail::GenericObjectBounce<Object<T> >
 {
+  // see qi::Future constructors below
+  struct None {
+    detail::ManagedObjectPtr _obj;
+  };
 public:
   Object();
 
@@ -177,8 +181,10 @@ public:
   Object(const Object& o);
   void operator=(const Object& o);
   // Disable the ctor taking future if T is Empty, as it would conflict with
+  // We use None to disable it. The method must be instantiable because when we
+  // export the class under windows, all functions are instanciated
   // Future cast operator
-  typedef typename boost::mpl::if_<typename boost::is_same<T, Empty>::type, Empty, Object<Empty> >::type MaybeAnyObject;
+  typedef typename boost::mpl::if_<typename boost::is_same<T, Empty>::type, None, Object<Empty> >::type MaybeAnyObject;
   Object(const qi::Future<MaybeAnyObject>& fobj);
   Object(const qi::FutureSync<MaybeAnyObject>& fobj);
 
@@ -491,6 +497,12 @@ class QI_API TypeImpl<Object<T> > :
   public TypeImpl<boost::shared_ptr<GenericObject> >
 {
 };
+
+/* Because we use types marked with QI_API and inheriting from Object<Empty>
+ * (through AnyObject), then Object<Empty> functions must be explicitly
+ * exported/imported to avoid link issues with MSVC.
+ */
+template class QI_API Object<Empty>;
 
 }
 
