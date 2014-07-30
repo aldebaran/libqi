@@ -1297,6 +1297,21 @@ TEST(TestObject, findMethodErr)
   //EXPECT_EQ(-3, ao.findMethod("callc", args(1)));
 }
 
+TEST(TestObject, WeakObject)
+{
+  qi::AnyObject obj;
+
+  {
+    qi::DynamicObjectBuilder b;
+    b.advertiseMethod("f", &calla);
+    obj = b.object();
+  }
+
+  qi::AnyWeakObject wobj = obj;
+  obj = qi::AnyObject();
+  ASSERT_FALSE(wobj.lock());
+}
+
 int main(int argc, char **argv)
 {
   qi::Application app(argc, argv);
