@@ -81,11 +81,6 @@ namespace qi {
   {
   }
 
-  bool Url::operator==(const Url& url)
-  {
-    return this->str() == url.str();
-  }
-
   Url& Url::operator= (const Url &rhs) {
     *_p = *rhs._p;
     return *this;
@@ -255,5 +250,10 @@ namespace qi {
     protocol = _scheme;
     return components;
   }
-}
 
+  bool operator==(const Url& lhs, const Url& rhs)
+  {
+    return lhs.str() == rhs.str();
+  }
+
+}

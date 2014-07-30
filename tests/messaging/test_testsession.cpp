@@ -126,10 +126,10 @@ TEST(TestTestSession, TestTestSessionPair)
   int iSD = 0, iDirect = 0;
 
   // #1 Assert that sessions are allocated.
-  ASSERT_NE((qi::Session *) 0, pSD.client());
-  ASSERT_NE((qi::Session *) 0, pSD.server());
-  ASSERT_NE((qi::Session *) 0, pDirect.client());
-  ASSERT_NE((qi::Session *) 0, pDirect.server());
+  ASSERT_TRUE(pSD.client());
+  ASSERT_TRUE(pSD.server());
+  ASSERT_TRUE(pDirect.client());
+  ASSERT_TRUE(pDirect.server());
   ASSERT_NE(pSD.client(), pSD.server());
   ASSERT_EQ(pDirect.client(), pDirect.server());
 
@@ -200,21 +200,21 @@ TEST(TestTestSession, TestThroughSD)
   qi::AnyObject obj(ob.object());
 
   // #2.1 Get server session from TestSession.
-  ASSERT_NE((qi::Session *) 0, p.server());
+  ASSERT_TRUE(p.server());
 
   // #2.2 Bind object to session.
   unsigned int id = p.server()->registerService("Incr", obj);
   ASSERT_NE((unsigned int) 0, id);
 
   // #3.1 Get client session from TestSession.
-  ASSERT_NE((qi::Session *) 0, p.client());
+  ASSERT_TRUE(p.client());
 
   // #3.2 Assert server and client are different objects.
   ASSERT_NE(p.server(), p.client());
 
   // #3.3 Get proxy on Incr service
   qi::AnyObject proxy = p.client()->service("Incr");
-  ASSERT_NE((void *) 0, proxy.asGenericObject());
+  ASSERT_TRUE(proxy.asGenericObject());
 
   // #4 Call ++ method from Incr service.
   i = proxy.call<int>(std::string("++"), i);

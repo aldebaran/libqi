@@ -27,7 +27,7 @@ namespace qi {
     AnyIterator(const AnyValue& v);
 
     template<typename T>
-    AnyIterator(const T& ref);
+    explicit AnyIterator(const T& ref);
 
     /// Iterator pre-increment
     AnyIterator& operator++();
