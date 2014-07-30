@@ -17,7 +17,11 @@ namespace qi {
   class AsyncCallHandlePrivate
   {
   public:
-    AsyncCallHandlePrivate() { }
+    AsyncCallHandlePrivate()
+      : canceled(false)
+      , sd(NULL)
+    { }
+
     void cancel() { canceled = true;}
     bool canceled;
     // Callback used with notifyFd.
@@ -38,13 +42,17 @@ namespace qi {
     virtual void start(int nthreads)=0; // 0=auto
     virtual void join()=0;
     virtual void stop()=0;
-    virtual qi::Future<void> asyncCall(uint64_t usDelay, boost::function<void ()> callback)=0;
-    virtual void post(uint64_t usDelay, const boost::function<void ()>& callback)=0;
+    virtual qi::Future<void> asyncCall(qi::Duration delay, boost::function<void ()> callback)=0;
+    virtual void post(qi::Duration delay, const boost::function<void ()>& callback)=0;
+    virtual qi::Future<void> asyncCall(qi::SteadyClockTimePoint timepoint, boost::function<void ()> callback)=0;
+    virtual void post(qi::SteadyClockTimePoint timepoint, const boost::function<void ()>& callback)=0;
     virtual void destroy()=0;
     virtual void* nativeHandle()=0;
     virtual void run()=0;
     virtual void setMaxThreads(unsigned int max)=0;
     boost::function<void()> _emergencyCallback;
+    std::string             _name;
+
   protected:
     virtual ~EventLoopPrivate() {}
   };
@@ -58,14 +66,19 @@ namespace qi {
     virtual void run();
     virtual void join();
     virtual void stop();
-    virtual qi::Future<void>   asyncCall(uint64_t usDelay,
+    virtual qi::Future<void> asyncCall(qi::Duration delay,
       boost::function<void ()> callback);
-    virtual void post(uint64_t usDelay,
+    virtual void post(qi::Duration delay,
       const boost::function<void ()>& callback);
+    virtual qi::Future<void> asyncCall(qi::SteadyClockTimePoint timepoint,
+        boost::function<void ()> callback);
+    virtual void post(qi::SteadyClockTimePoint timepoint,
+        const boost::function<void ()>& callback);
     virtual void destroy();
     virtual void* nativeHandle();
     virtual void setMaxThreads(unsigned int max);
   private:
+    void invoke_maybe(boost::function<void()> f, qi::uint32_t id, qi::Promise<void> p, const boost::system::error_code& erc);
     void _runPool();
     void _pingThread();
     virtual ~EventLoopAsio();
@@ -86,30 +99,9 @@ namespace qi {
     boost::recursive_mutex _mutex;
     boost::thread::id  _id;
     unsigned int _maxThreads;
-  };
 
-  class ThreadPool;
-  class EventLoopThreadPool: public EventLoopPrivate
-  {
-  public:
-    EventLoopThreadPool(int minWorkers, int maxWorkers, int minIdleWorkers, int maxIdleWorkers);
-    virtual bool isInEventLoopThread();
-    virtual void start(int nthreads);
-    virtual void run();
-    virtual void join();
-    virtual void stop();
-    virtual qi::Future<void>   asyncCall(uint64_t usDelay,
-      boost::function<void ()> callback);
-    virtual void post(uint64_t usDelay,
-      const boost::function<void ()>& callback);
-    virtual void destroy();
-    virtual void* nativeHandle();
-    virtual void setMaxThreads(unsigned int max);
-  private:
-    virtual ~EventLoopThreadPool();
-    void _destroy();
-    ThreadPool* _pool;
-    bool _stopping;
+    qi::Atomic<uint32_t> _totalTask;
+    qi::Atomic<uint32_t> _activeTask;
   };
 }
 

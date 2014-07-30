@@ -1,0 +1,8 @@
+<IDL>
+<class name="AddTask">
+  <method name="add"><return type="i" /><argument type="i" /></method>
+  <signal name="onChange"><argument type="i" /></signal>
+  <property name="uid" type="i" />
+</class>
+</IDL>
+

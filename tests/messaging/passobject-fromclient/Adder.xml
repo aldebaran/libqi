@@ -1,0 +1,9 @@
+<IDL>
+<class name="Adder">
+<method name="registerTask"><return type="i" /><argument type="o&lt;AddTask>" /></method>
+<method name="registerAnyTask"><return type="i" /><argument type="o" /></method>
+<method name="popTask"><return type="v" /></method>
+<method name="addAll"><return type="i" /><argument type="i" /></method>
+<property name="value" type="i" />
+</class>
+</IDL>

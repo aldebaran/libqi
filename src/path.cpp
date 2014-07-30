@@ -13,7 +13,6 @@
 #include <qi/qi.hpp>
 #include <qi/log.hpp>
 
-#include <boost/make_shared.hpp>
 #include <boost/bind.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
@@ -42,13 +41,21 @@ namespace qi
     fs::path path;
   };
 
-  Path::Path(const boost::shared_ptr<PrivatePath>& p)
+  Path::Path(PrivatePath* p)
     : _p(p)
   {}
 
   Path::Path(const std::string& unicodePath)
     : _p(new PrivatePath(unicodePath))
   {}
+
+  Path::Path(const Path& path)
+    : _p(new PrivatePath(path._p->path))
+  {}
+
+  Path::~Path()
+  {
+  }
 
   bool Path::isEmpty() const
   {
@@ -57,12 +64,14 @@ namespace qi
 
   bool Path::isDir() const
   {
-    return fs::is_directory(_p->path);
+    boost::system::error_code ec;
+    return fs::is_directory(_p->path, ec);
   }
 
   bool Path::isRegularFile() const
   {
-    return fs::is_regular_file(_p->path);
+    boost::system::error_code ec;
+    return fs::is_regular_file(_p->path, ec);
   }
 
   std::string Path::extension() const
@@ -72,7 +81,7 @@ namespace qi
 
   Path Path::parent()
   {
-    return Path(boost::make_shared<PrivatePath>(_p->path.parent_path()));
+    return Path(new PrivatePath(_p->path.parent_path()));
   }
 
   std::string Path::filename() const
@@ -82,7 +91,7 @@ namespace qi
 
   Path Path::absolute()
   {
-    return Path(boost::make_shared<PrivatePath>(fs::absolute(_p->path)));
+    return Path(new PrivatePath(fs::absolute(_p->path)));
   }
 
   PathVector Path::files()
@@ -92,7 +101,7 @@ namespace qi
 
     for (; dit != fs::directory_iterator(); ++dit) {
       if (fs::is_regular_file(*dit))
-        ret.push_back(Path(boost::make_shared<PrivatePath>(*dit)));
+        ret.push_back(Path(new PrivatePath(*dit)));
     }
     return ret;
   }
@@ -104,14 +113,14 @@ namespace qi
 
     for (; dit != fs::directory_iterator(); ++dit) {
       if (fs::is_directory(*dit))
-        ret.push_back(Path(boost::make_shared<PrivatePath>(*dit)));
+        ret.push_back(Path(new PrivatePath(*dit)));
     }
     return ret;
   }
 
   Path Path::operator/(const Path &rhs) const
   {
-    return Path(boost::make_shared<PrivatePath>(_p->path / rhs._p->path));
+    return Path(new PrivatePath(_p->path / rhs._p->path));
   }
 
   const Path& Path::operator/=(const Path &rhs) const
@@ -120,7 +129,18 @@ namespace qi
     return *this;
   }
 
+  const Path& Path::operator=(const Path &rhs) const
+  {
+    _p->path = rhs._p->path;
+    return *this;
+  }
+
   Path::operator std::string() const
+  {
+    return _p->path.string(qi::unicodeFacet());
+  }
+
+  std::string Path::str() const
   {
     return _p->path.string(qi::unicodeFacet());
   }
@@ -164,6 +184,12 @@ namespace qi
       std::vector<std::string> getSdkPrefixes()
       {
         return getInstance()->getSdkPrefixes();
+      }
+
+      void setWritablePath(const std::string &path)
+      {
+        qiLogVerbose() << "Writable path set to " << path;
+        getInstance()->setWritablePath(path);
       }
 
 #ifdef _WIN32
@@ -240,6 +266,12 @@ namespace qi
       return getInstance()->findData(applicationName, filename);
     }
 
+    std::vector<std::string> listLib(const std::string &subfolder,
+                                      const std::string &pattern)
+    {
+      return getInstance()->listLib(subfolder, pattern);
+    }
+
     std::vector<std::string> listData(const std::string &applicationName,
                                       const std::string &pattern)
     {
@@ -268,8 +300,7 @@ namespace qi
 
     void setWritablePath(const std::string &path)
     {
-      qiLogVerbose() << "Writable path set to " << path;
-      getInstance()->setWritablePath(path);
+      qi::path::detail::setWritablePath(path);
     }
 
     std::string userWritableDataPath(const std::string &applicationName,
@@ -329,7 +360,7 @@ namespace qi
   namespace {
     _QI_COMMAND_LINE_OPTIONS(
       "Chrooting",
-      ("writable-path", value<std::string>()->notifier(&qi::path::setWritablePath), "Set the writable path.")
+      ("writable-path", value<std::string>()->notifier(&qi::path::detail::setWritablePath), "Set the writable path.")
       )
   }
 }

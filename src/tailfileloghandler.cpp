@@ -78,7 +78,7 @@ namespace qi {
     {
       boost::mutex::scoped_lock scopedLock(_p->mutex_);
 
-      if (verb > qi::log::verbosity() || _p->_file == NULL)
+      if (verb > qi::log::logLevel() || _p->_file == NULL)
       {
         return;
       }

@@ -6,7 +6,7 @@
  */
 
 #ifndef _QI_LOG_FILELOGHANDLER_HPP_
-#define _QI_LOG_FILELOGHANDLER_HPP_
+# define _QI_LOG_FILELOGHANDLER_HPP_
 
 # include <boost/noncopyable.hpp>
 # include <qi/log.hpp>
@@ -15,25 +15,52 @@ namespace qi {
   namespace log {
     class PrivateFileLogHandler;
 
-    /// Log messages to a file.
+    /**
+     * \includename{qi/log/fileloghandler.hpp}
+     *
+     * This class writes all logs to a file.
+     */
     class QI_API FileLogHandler : private boost::noncopyable
     {
     public:
-      /// \brief Initialize the file handler on the file. File is opened
-      ///        directly on construction.
+      /**
+       * \brief Initialize the file handler on the file. File is opened directly on construction.
+       * \param filePath the path to the file where log messages will be written.
+       *
+       * \verbatim
+       * .. warning::
+       *
+       *      If the file could not be opened, it logs a warning and every log call
+       *      will silently fail.
+       * \endverbatim
+       */
       explicit FileLogHandler(const std::string& filePath);
 
-      /// Closes the file.
+      /**
+       * \brief Closes the file.
+       */
       virtual ~FileLogHandler();
 
-      /// Writes a log message to the file.
-      void log(const qi::LogLevel verb,
-               const qi::os::timeval   date,
-               const char              *category,
-               const char              *msg,
-               const char              *file,
-               const char              *fct,
-               const int               line);
+      /**
+       * \brief Write logs messages on a file.
+       * \param verb verbosity of the log message.
+       * \param date date at which the log message was issued.
+       * \param category will be used in future for filtering
+       * \param msg actual message to log.
+       * \param file filename from which this log message was issued.
+       * \param fct function name from which this log message was issued.
+       * \param line line number in the issuer file.
+       *
+       * If the file could not be opened, this function will silently fail, otherwise
+       * it will directly write the log message to the file and flush its output.
+       */
+      void log(const qi::LogLevel    verb,
+               const qi::os::timeval date,
+               const char            *category,
+               const char            *msg,
+               const char            *file,
+               const char            *fct,
+               const int             line);
 
     private:
       PrivateFileLogHandler* _p;

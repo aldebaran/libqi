@@ -86,7 +86,7 @@ namespace qi {
 
       if (_p->_count < _p->_max)
       {
-        if (verb > qi::log::verbosity() || _p->_file == NULL)
+        if (verb > qi::log::logLevel() || _p->_file == NULL)
         {
           return;
         }

@@ -24,6 +24,7 @@ namespace qi {
       boost::recursive_mutex    _mutex;
       std::string               _error;
       qi::Atomic<int>           _state;
+      qi::Atomic<int>           _cancelRequested;
     };
 
     struct FutureBasePrivatePoolTag { };
@@ -45,6 +46,7 @@ namespace qi {
         _error()
     {
       _state = FutureState_None;
+      _cancelRequested = false;
     }
 
     FutureBase::FutureBase()
@@ -62,18 +64,33 @@ namespace qi {
       return FutureState(*_p->_state);
     }
 
+    static bool waitFinished(FutureBasePrivate* p)
+    {
+      return *p->_state != FutureState_Running;
+    }
+
     FutureState FutureBase::wait(int msecs) const {
-      static bool detectEventLoopWait = !os::getenv("QI_DETECT_FUTURE_WAIT_FROM_NETWORK_EVENTLOOP").empty();
-      if (detectEventLoopWait && getEventLoop()->isInEventLoopThread())
-        qiLogWarning() << "Future wait in network thread.";
+      boost::recursive_mutex::scoped_lock lock(_p->_mutex);
+      if (msecs == FutureTimeout_Infinite)
+        _p->_cond.wait(lock, boost::bind(&waitFinished, _p));
+      else if (msecs > 0)
+        _p->_cond.wait_for(lock, qi::MilliSeconds(msecs),
+            boost::bind(&waitFinished, _p));
+      // msecs <= 0 : do nothing just return the state
+      return FutureState(*_p->_state);
+    }
+
+    FutureState FutureBase::wait(qi::Duration duration) const {
+      boost::recursive_mutex::scoped_lock lock(_p->_mutex);
+      _p->_cond.wait_for(lock, duration, boost::bind(&waitFinished, _p));
+      return FutureState(*_p->_state);
+    }
+
+    FutureState FutureBase::wait(qi::SteadyClock::time_point timepoint) const {
       boost::recursive_mutex::scoped_lock lock(_p->_mutex);
       if (*_p->_state != FutureState_Running)
         return FutureState(*_p->_state);
-      if (msecs == FutureTimeout_Infinite)
-        _p->_cond.wait(lock);
-      else if (msecs > 0)
-        _p->_cond.timed_wait(lock, boost::posix_time::milliseconds(msecs));
-      // msecs <= 0 : do nothing just return the state
+      _p->_cond.wait_until(lock, timepoint, boost::bind(&waitFinished, _p));
       return FutureState(*_p->_state);
     }
 
@@ -81,6 +98,10 @@ namespace qi {
       //always set by setValue
       //boost::recursive_mutex::scoped_lock lock(_p->_mutex);
       _p->_state = FutureState_FinishedWithValue;
+    }
+
+    void FutureBase::requestCancel() {
+      _p->_cancelRequested = true;
     }
 
     void FutureBase::reportCanceled() {
@@ -117,6 +138,10 @@ namespace qi {
       return *_p->_state == FutureState_Canceled;
     }
 
+    bool FutureBase::isCancelRequested() const {
+      return *_p->_cancelRequested;
+    }
+
     bool FutureBase::hasError(int msecs) const {
       if (wait(msecs) == FutureState_Running)
         throw FutureException(FutureException::ExceptionState_FutureTimeout);
@@ -142,6 +167,7 @@ namespace qi {
       //reset is called by the promise. So set the state to running.
       _p->_state = FutureState_Running;
       _p->_error = std::string();
+      _p->_cancelRequested = false;
     }
 
     boost::recursive_mutex& FutureBase::mutex()

@@ -1,13 +1,56 @@
 #pragma once
 /*
-** Author(s):
-**  - Cuche Herve <hcuche@aldebaran-robotics.com>
-**
-** Copyright (C) 2012 Aldebaran Robotics
+**  Copyright (C) 2012 Aldebaran Robotics
+**  See COPYING for the license
 */
 
+
 #ifndef _QI_TYPES_HPP_
-#define _QI_TYPES_HPP_
+# define _QI_TYPES_HPP_
+
+/**
+ * \includename{qi/types.hpp}
+ */
+
+/**
+ * \typedef qi::int8_t
+ * \brief Cross-platform signed integer of length 8 bits (1 byte).
+ */
+
+/**
+ * \typedef qi::int16_t
+ * \brief Cross-platform signed integer of length 16 bits (2 bytes).
+ */
+
+/**
+ * \typedef qi::int32_t
+ * \brief Cross-platform signed integer of length 32 bits (4 bytes).
+ */
+
+/**
+ * \typedef qi::int64_t
+ * \brief Cross-platform signed integer of length 64 bits (8 bytes).
+ */
+
+/**
+ * \typedef qi::uint8_t
+ * \brief Cross-platform unsigned integer of length 8 bits (1 byte).
+ */
+
+/**
+ * \typedef qi::uint16_t
+ * \brief Cross-platform unsigned integer of length 16 bits (2 bytes).
+ */
+
+/**
+ * \typedef qi::uint32_t
+ * \brief Cross-platform unsigned integer of length 32 bits (4 bytes).
+ */
+
+/**
+ * \typedef qi::uint64_t
+ * \brief Cross-platform unsigned integer of length 64 bits (8 bytes).
+ */
 
 // visual studio 2008 and lower version
 # if defined(_MSC_VER) && (_MSC_VER <= 1500)

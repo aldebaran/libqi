@@ -1,0 +1,15 @@
+How to use this dissector?
+==========================
+
+Add the end of /usr/share/wireshark/init.lua,
+add the following line:
+
+  dofile("<path/to/qimessaging>/tools/wireshark/qim.lua")
+
+Simply enter `qim' in the search bar and it will only display
+qimessaging packets.
+
+Todo
+====
+
+- Replace enum values by strings.

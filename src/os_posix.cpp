@@ -163,7 +163,7 @@ namespace qi {
 
       boost::filesystem::path p = boost::filesystem::path(temp, qi::unicodeFacet());
 
-      return p.string(qi::unicodeFacet());
+      return p.make_preferred().string(qi::unicodeFacet());
     }
 
     int gettimeofday(qi::os::timeval *tp) {
@@ -172,11 +172,6 @@ namespace qi {
       tp->tv_sec = tv.tv_sec;
       tp->tv_usec = tv.tv_usec;
       return ret;
-    }
-
-    std::string tmpdir(const char *prefix)
-    {
-      return mktmpdir(prefix);
     }
 
 #ifdef ANDROID
@@ -473,10 +468,10 @@ namespace qi {
 #else
       thread_basic_info threadInfo;
       unsigned int count = THREAD_BASIC_INFO_COUNT;
-      int error = thread_info(mach_thread_self(), THREAD_BASIC_INFO, (thread_info_t)&threadInfo, &count);
+      thread_info(mach_thread_self(), THREAD_BASIC_INFO, (thread_info_t)&threadInfo, &count);
 
       return std::make_pair(
-	threadInfo.user_time.seconds * seq_to_usec + threadInfo.user_time.microseconds,
+        threadInfo.user_time.seconds * seq_to_usec + threadInfo.user_time.microseconds,
         threadInfo.system_time.seconds * seq_to_usec + threadInfo.system_time.microseconds
      );
 #endif

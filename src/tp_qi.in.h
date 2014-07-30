@@ -1,15 +1,20 @@
 
 //Eventloop->post  (with delay = 0)
 TRACEPOINT_EVENT(qi_qi, eventloop_post,
-        TP_ARGS(unsigned int, taskId),
-        TP_FIELDS(ctf_integer(int, taskId, taskId))
+        TP_ARGS(unsigned int, taskId,
+                const char*, typeName),
+        TP_FIELDS(ctf_integer(int, taskId, taskId)
+                  ctf_string(typeName, typeName)
+                  )
 )
 
 //Eventloop->async && post with delay
 TRACEPOINT_EVENT(qi_qi, eventloop_delay,
         TP_ARGS(unsigned int, taskId,
+                const char*, typeName,
                 unsigned int, usDelay),
         TP_FIELDS(ctf_integer(int, taskId, taskId)
+                  ctf_string(typeName, typeName)
                   ctf_integer(int, usDelay, usDelay))
 )
 

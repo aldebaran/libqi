@@ -6,11 +6,11 @@
 #include <boost/thread.hpp>
 #include <boost/program_options.hpp>
 #include <boost/make_shared.hpp>
+#include <boost/asio/steady_timer.hpp>
 
 #include <qi/preproc.hpp>
 #include <qi/log.hpp>
 #include <qi/application.hpp>
-#include <qi/threadpool.hpp>
 
 #include <qi/eventloop.hpp>
 #include <qi/future.hpp>
@@ -22,7 +22,10 @@ qiLogCategory("qi.eventloop");
 
 namespace qi {
 
+  typedef boost::asio::basic_waitable_timer<SteadyClock> SteadyTimer;
+
   static qi::Atomic<uint32_t> gTaskId = 0;
+
 
   template<typename T>
   static T getEnvParam(const char* name, T defaultVal)
@@ -36,8 +39,11 @@ namespace qi {
 
   EventLoopAsio::EventLoopAsio()
   : _mode(Mode_Unset)
+  , _work(NULL)
   , _destroyMe(false)
+  , _maxThreads(0)
   {
+    _name = "asioeventloop";
   }
 
 
@@ -116,7 +122,7 @@ namespace qi {
     {
       qiLogDebug() << "Ping";
       gotPong = false;
-      post(0, boost::bind(&ping_me, boost::ref(gotPong), boost::ref(cond)));
+      post(qi::Seconds(0), boost::bind(&ping_me, boost::ref(gotPong), boost::ref(cond)));
       boost::mutex::scoped_lock l(mutex);
       if (!cond.timed_wait(l,
         boost::get_system_time()+ boost::posix_time::milliseconds(msTimeout),
@@ -125,11 +131,12 @@ namespace qi {
         if (_maxThreads && *_nThreads >= _maxThreads + 1) // we count in nThreads
         {
           ++nbTimeout;
-          qiLogInfo() << "Thread limit reached (" << nbTimeout << " timeouts)";
+          qiLogInfo() << "Thread " << _name << " limit reached (" << nbTimeout << " timeouts)" << *_totalTask << " / " << _maxThreads << " active: " << *_activeTask;;
+
           if (nbTimeout >= maxTimeouts)
           {
-            qiLogInfo() <<
-              "System seems to be deadlocked, sending emergency signal";
+            qiLogInfo() << "threadpool: " << _name <<
+              ": System seems to be deadlocked, sending emergency signal";
             if (_emergencyCallback)
             {
               try {
@@ -141,7 +148,7 @@ namespace qi {
         }
         else
         {
-          qiLogInfo() << "Spawning more threads (" << *_nThreads << ')';
+          qiLogInfo() << _name << ": Spawning more threads (" << *_nThreads << ')';
           boost::thread(&EventLoopAsio::_runPool, this);
         }
         qi::os::msleep(msGrace);
@@ -160,22 +167,26 @@ namespace qi {
   void EventLoopAsio::_runPool()
   {
     qiLogDebug() << this << "run starting from pool";
-    qi::os::setCurrentThreadName("asioeventloop");
+    qi::os::setCurrentThreadName(_name);
     _running.setIfEquals(0, 1);
     ++_nThreads;
-    try
-    {
-      _io.run();
+
+    while (true) {
+      try
+      {
+        _io.run();
+        //the handler finished by himself. just quit.
+        break;
+      } catch(const detail::TerminateThread& e) {
+        break;
+      } catch(const std::exception& e) {
+        qiLogWarning() << "Error caught in eventloop(" << _name << ").async: " << e.what();
+      } catch(...) {
+        qiLogWarning() << "Uncaught exception in eventloop(" << _name << ")";
+      }
     }
-    catch(const std::exception& e)
-    {
-      qiLogVerbose() << "Pool thread exiting from exception " << e.what();
-    }
-    catch(...)
-    {}
     if (!--_nThreads)
       --_running;
-
   }
 
   void EventLoopAsio::run()
@@ -251,27 +262,42 @@ namespace qi {
     }
   }
 
-  static void measureMeBaby(const boost::function<void ()>& cb, qi::uint32_t id) {
-    tracepoint(qi_qi, eventloop_task_start, id);
-    cb();
-    tracepoint(qi_qi, eventloop_task_stop, id);
-  }
-
-  void EventLoopAsio::post(uint64_t usDelay, const boost::function<void ()>& cb)
-  {
-    if (!usDelay) {
-      uint32_t id = ++gTaskId;
-      tracepoint(qi_qi, eventloop_post, id);
-      _io.post(boost::bind<void>(&measureMeBaby, cb, id));
+  class ScopedIncDec {
+  public:
+    ScopedIncDec(qi::Atomic<qi::uint32_t>& atom)
+      : _atom(atom)
+    {
+      ++_atom;
     }
-    else
-      asyncCall(usDelay, cb);
-  }
 
-  static void invoke_maybe(boost::function<void()> f, qi::uint32_t id, qi::Promise<void> p, const boost::system::error_code& erc)
+    ~ScopedIncDec() {
+      --_atom;
+    }
+
+    qi::Atomic<qi::uint32_t>& _atom;
+  };
+
+  class ScopedExitDec {
+  public:
+    ScopedExitDec(qi::Atomic<qi::uint32_t>& atom)
+      : _atom(atom)
+    {
+    }
+
+    ~ScopedExitDec() {
+      --_atom;
+    }
+
+    qi::Atomic<qi::uint32_t>& _atom;
+  };
+
+
+  void EventLoopAsio::invoke_maybe(boost::function<void()> f, qi::uint32_t id, qi::Promise<void> p, const boost::system::error_code& erc)
   {
+    ScopedExitDec _(_totalTask);
     if (!erc)
     {
+      ScopedIncDec _(_activeTask);
       tracepoint(qi_qi, eventloop_task_start, id);
       f();
       tracepoint(qi_qi, eventloop_task_stop, id);
@@ -283,18 +309,62 @@ namespace qi {
     }
   }
 
-  qi::Future<void> EventLoopAsio::asyncCall(uint64_t usDelay, boost::function<void ()> cb)
+  void EventLoopAsio::post(qi::Duration delay,
+      const boost::function<void ()>& cb)
+  {
+    static boost::system::error_code erc;
+    qi::Promise<void> p;
+    if (delay == qi::Duration(0)) {
+      uint32_t id = ++gTaskId;
+      tracepoint(qi_qi, eventloop_post, id, cb.target_type().name());
+
+
+      ++_totalTask;
+      _io.post(boost::bind<void>(&EventLoopAsio::invoke_maybe, this, cb, id, p, erc));
+    }
+    else
+      asyncCall(delay, cb);
+  }
+
+  qi::Future<void> EventLoopAsio::asyncCall(qi::Duration delay,
+      boost::function<void ()> cb)
   {
     if (!_work)
       return qi::makeFutureError<void>("Schedule attempt on destroyed thread pool");
 
     uint32_t id = ++gTaskId;
 
-    tracepoint(qi_qi, eventloop_delay, id, usDelay);
-    boost::shared_ptr<boost::asio::deadline_timer> timer = boost::make_shared<boost::asio::deadline_timer>(boost::ref(_io));
-    timer->expires_from_now(boost::posix_time::microseconds(usDelay));
-    qi::Promise<void> prom(boost::bind(&boost::asio::deadline_timer::cancel, timer));
-    timer->async_wait(boost::bind(&invoke_maybe, cb, id, prom, _1));
+    ++_totalTask;
+    tracepoint(qi_qi, eventloop_delay, id, cb.target_type().name(), qi::MicroSeconds(delay).count());
+    boost::shared_ptr<boost::asio::steady_timer> timer = boost::make_shared<boost::asio::steady_timer>(boost::ref(_io));
+    timer->expires_from_now(delay);
+    qi::Promise<void> prom(boost::bind(&boost::asio::steady_timer::cancel, timer));
+    timer->async_wait(boost::bind(&EventLoopAsio::invoke_maybe, this, cb, id, prom, _1));
+    return prom.future();
+  }
+
+  void EventLoopAsio::post(qi::SteadyClockTimePoint timepoint,
+      const boost::function<void ()>& cb)
+  {
+    static boost::system::error_code erc;
+    qi::Promise<void> p;
+    asyncCall(timepoint, cb);
+  }
+
+  qi::Future<void> EventLoopAsio::asyncCall(qi::SteadyClockTimePoint timepoint,
+      boost::function<void ()> cb)
+  {
+    if (!_work)
+      return qi::makeFutureError<void>("Schedule attempt on destroyed thread pool");
+
+    uint32_t id = ++gTaskId;
+
+    ++_totalTask;
+    //tracepoint(qi_qi, eventloop_delay, id, cb.target_type().name(), qi::MicroSeconds(delay).count());
+    boost::shared_ptr<SteadyTimer> timer = boost::make_shared<SteadyTimer>(boost::ref(_io));
+    timer->expires_at(timepoint);
+    qi::Promise<void> prom(boost::bind(&SteadyTimer::cancel, timer));
+    timer->async_wait(boost::bind(&EventLoopAsio::invoke_maybe, this, cb, id, prom, _1));
     return prom.future();
   }
 
@@ -308,133 +378,9 @@ namespace qi {
     return static_cast<void*>(&_io);
   }
 
-  EventLoopThreadPool::EventLoopThreadPool(int minWorkers, int maxWorkers, int minIdleWorkers, int maxIdleWorkers)
-  {
-    qiLogDebug() << this << " EventLoopThreadPool CTOR";
-    _stopping = false;
-    _pool = new ThreadPool(minWorkers, maxWorkers, minIdleWorkers, maxIdleWorkers);
-    qiLogDebug() << this << " EventLoopThreadPool CTOR done";
-  }
-
-  bool EventLoopThreadPool::isInEventLoopThread()
-  {
-    // The point is to know if a call will be synchronous. It never is
-    // with thread pool
-    return false;
-  }
-
-  void EventLoopThreadPool::start(int /*nthreads*/)
-  {
-    qiLogDebug() << this << " EventLoopThreadPool start (and done)";
-  }
-
-  void EventLoopThreadPool::run()
-  {
-  }
-
-  void EventLoopThreadPool::join()
-  {
-    qiLogDebug() << this << " EventLoopThreadPool join";
-    _pool->waitForAll();
-    qiLogDebug() << this << " EventLoopThreadPool join done";
-  }
-
-  void EventLoopThreadPool::stop()
-  {
-    qiLogDebug() << this << " EventLoopThreadPool stop (and done)";
-    _stopping = true;
-    _pool->stop();
-  }
-
-  void* EventLoopThreadPool::nativeHandle()
-  {
-    return 0;
-  }
-
-  void EventLoopThreadPool::destroy()
-  {
-    _stopping = true;
-    // Ensure delete is not called from one of the threads of the event loop
-    boost::thread(&EventLoopThreadPool::_destroy, this);
-  }
-  void EventLoopThreadPool::_destroy()
-  {
-    delete this;
-  }
-
-  EventLoopThreadPool::~EventLoopThreadPool()
-  {
-    stop();
-    join();
-    delete _pool;
-  }
-
-  static void delay_call(uint64_t usDelay, boost::function<void()>* callback)
-  {
-    if (usDelay)
-      qi::os::msleep(static_cast<unsigned int>(usDelay/1000));
-    try
-    {
-      (*callback)();
-    }
-    catch(const std::exception& e)
-    {
-      qiLogError() << "Exception caught in async call: " << e.what();
-    }
-    catch(...)
-    {
-      qiLogError() << "Unknown exception caught in async call";
-    }
-    delete callback;
-  }
-
-  static void delay_call_notify(uint64_t usDelay, boost::function<void()> callback,
-    qi::Promise<void> promise)
-  {
-    if (usDelay)
-      qi::os::msleep(static_cast<unsigned int>(usDelay/1000));
-    try
-    {
-      callback();
-      promise.setValue(0);
-    }
-    catch(const std::exception& e)
-    {
-      promise.setError(std::string("Exception caught in async call: ")  + e.what());
-    }
-    catch(...)
-    {
-      promise.setError("Unknown exception caught in async call");
-    }
-  }
-
-  void EventLoopThreadPool::post(uint64_t usDelay,
-      const boost::function<void ()>& callback)
-  {
-    if (_stopping)
-    {
-      qiLogWarning() << "ThreadPool post() while stopping";
-      return;
-    }
-    _pool->schedule(boost::bind(&delay_call, usDelay, new boost::function<void ()>(callback)));
-  }
-
-  qi::Future<void>  EventLoopThreadPool::asyncCall(uint64_t usDelay,
-      boost::function<void ()> callback)
-  {
-    if (_stopping)
-      return qi::makeFutureError<void>("Schedule attempt on destroyed thread pool");
-    qi::Promise<void> promise;
-    _pool->schedule(boost::bind(&delay_call_notify, usDelay, callback, promise));
-    return promise.future();
-  }
-
-  void EventLoopThreadPool::setMaxThreads(unsigned int max)
-  {
-  }
-
-  EventLoop::EventLoop()
+  EventLoop::EventLoop(const std::string& name)
   : _p(0)
+  , _name(name)
   {
   }
 
@@ -472,21 +418,10 @@ namespace qi {
     if (_p)
       return;
     _p = new EventLoopAsio();
+    _p->_name = _name;
     _p->start(nthreads);
     qiLogDebug() << this << " EventLoop start done";
   }
-
-  void EventLoop::startThreadPool(int minWorkers, int maxWorkers, int minIdleWorkers, int maxIdleWorkers)
-  {
-    qiLogDebug() << this << " EventLoop startThreadPool";
-    #define OR(name, val) (name==-1?val:name)
-    if (_p)
-      return;
-    _p = new EventLoopThreadPool(OR(minWorkers, 2), OR(maxWorkers, 100), OR(minIdleWorkers,1), OR(maxIdleWorkers, 0));
-    #undef OR
-    qiLogDebug() << this << " EventLoop startThreadPool done";
-  }
-
 
   void EventLoop::stop()
   {
@@ -511,11 +446,27 @@ namespace qi {
     return _p->nativeHandle();
   }
 
-  void EventLoop::post(const boost::function<void ()>& callback,uint64_t usDelay)
+  void EventLoop::post(const boost::function<void ()>& callback,
+      uint64_t usDelay)
+  {
+    post(callback, qi::MicroSeconds(usDelay));
+  }
+
+  void EventLoop::post(const boost::function<void ()>& callback,
+      qi::Duration delay)
   {
     qiLogDebug() << this << " EventLoop post " << &callback;
     CHECK_STARTED;
-    _p->post(usDelay, callback);
+    _p->post(delay, callback);
+    qiLogDebug() << this << " EventLoop post done " << &callback;
+  }
+
+  void EventLoop::post(const boost::function<void ()>& callback,
+      qi::SteadyClockTimePoint timepoint)
+  {
+    qiLogDebug() << this << " EventLoop post " << &callback;
+    CHECK_STARTED;
+    _p->post(timepoint, callback);
     qiLogDebug() << this << " EventLoop post done " << &callback;
   }
 
@@ -524,17 +475,38 @@ namespace qi {
     boost::function<void ()> callback,
     uint64_t usDelay)
   {
+    return async(callback, qi::MicroSeconds(usDelay));
+  }
+
+  qi::Future<void>
+  EventLoop::async(
+    boost::function<void ()> callback,
+    qi::Duration delay)
+  {
     CHECK_STARTED;
-    return _p->asyncCall(usDelay, callback);
+    return _p->asyncCall(delay, callback);
+  }
+
+  qi::Future<void>
+  EventLoop::async(
+    boost::function<void ()> callback,
+    qi::SteadyClockTimePoint timepoint)
+  {
+    CHECK_STARTED;
+    return _p->asyncCall(timepoint, callback);
   }
 
   void EventLoop::setEmergencyCallback(boost::function<void()> cb)
   {
+    if (!_p)
+      throw std::runtime_error("call start before");
     _p->_emergencyCallback = cb;
   }
 
   void EventLoop::setMaxThreads(unsigned int max)
   {
+    if (!_p)
+      throw std::runtime_error("call start before");
     _p->setMaxThreads(max);
   }
 
@@ -636,7 +608,7 @@ namespace qi {
 
   //the initialisation is protected by a mutex,
   //we then use an atomic to prevent having a mutex on a fastpath.
-  static EventLoop* _get(EventLoop* &ctx, bool isPool, int nthreads)
+  static EventLoop* _get(EventLoop* &ctx, int nthreads)
   {
     //same mutex for multiples eventloops, but that's ok, used only at init.
     static boost::mutex    eventLoopMutex;
@@ -651,13 +623,10 @@ namespace qi {
       {
         if (!qi::Application::initialized())
         {
-          qiLogInfo() << "Creating event loop while no qi::Application() is running";
+          qiLogVerbose() << "Creating event loop while no qi::Application() is running";
         }
         ctx = new EventLoop();
-        if (isPool)
-          ctx->startThreadPool(nthreads);
-        else
-          ctx->start(nthreads);
+        ctx->start(nthreads);
         Application::atExit(boost::bind(&eventloop_stop, boost::ref(ctx)));
       }
     }
@@ -665,31 +634,16 @@ namespace qi {
     return ctx;
   }
 
-  EventLoop* getDefaultNetworkEventLoop()
-  {
-    return getEventLoop();
-
-  }
-
-  EventLoop* getDefaultObjectEventLoop()
-  {
-    return getEventLoop();
-  }
-
-  EventLoop* getDefaultThreadPoolEventLoop()
-  {
-    return getEventLoop();
-  }
-
   void startEventLoop(int nthread)
   {
-    _get(_poolEventLoop, false, nthread);
+    _get(_poolEventLoop, nthread);
   }
 
   EventLoop* getEventLoop()
   {
-    return _get(_poolEventLoop, false, 0);
+    return _get(_poolEventLoop, 0);
   }
+
 
   boost::asio::io_service& getIoService()
   {

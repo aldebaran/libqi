@@ -1,0 +1,5 @@
+<project version="3">
+  <qibuild name="libqitype">
+    <depends buildtime="true" runtime="true" names="libqi" />
+  </qibuild>
+</project>

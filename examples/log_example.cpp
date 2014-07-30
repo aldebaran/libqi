@@ -54,11 +54,11 @@ int main(int argc, char **argv)
   if (vm.count("log-level"))
   {
     if (globalVerbosity > 0 && globalVerbosity <= 6)
-      qi::log::setVerbosity((qi::LogLevel)globalVerbosity);
+      qi::log::setLogLevel((qi::LogLevel)globalVerbosity);
     if (globalVerbosity > 6)
-      qi::log::setVerbosity(qi::LogLevel_Debug);
+      qi::log::setLogLevel(qi::LogLevel_Debug);
     if (globalVerbosity <= 0)
-      qi::log::setVerbosity(qi::LogLevel_Silent);
+      qi::log::setLogLevel(qi::LogLevel_Silent);
   }
 
   // Remove consoleloghandler (default log handler)
@@ -66,10 +66,10 @@ int main(int argc, char **argv)
     qi::log::removeLogHandler("consoleloghandler");
 
   if (vm.count("debug"))
-    qi::log::setVerbosity(qi::LogLevel_Debug);
+    qi::log::setLogLevel(qi::LogLevel_Debug);
 
   if (vm.count("verbose"))
-    qi::log::setVerbosity(qi::LogLevel_Verbose);
+    qi::log::setLogLevel(qi::LogLevel_Verbose);
 
   if (vm.count("context"))
   {

@@ -20,25 +20,6 @@ namespace chrono = boost::chrono;
 
 namespace qi {
 
-//  void sleepFor(const qi::Duration& d)
-//  {
-//    sleep_for(boost::chrono::ceil<SteadyClock::duration>(d));
-//  }
-
-//  void sleepUntil(const SteadyClock::TimePoint& t)
-//  {
-//    sleep_for(t - SteadyClock::now());
-//  }
-
-  //QI_API void sleep_until(const WallClock::TimePoint &t);
-
-//  template <class Duration>
-//  void sleep_until(const boost::chrono::time_point<system_clock, Duration> &t)
-//  {
-//    sleep_for(t - system_clock::now());
-//  }
-
-
   SteadyClockTimePoint SteadyClock::now()
   {
     return SteadyClockTimePoint(chrono::steady_clock::now().time_since_epoch());
@@ -157,6 +138,4 @@ namespace qi {
   {
     sleepFor(t - SteadyClock::now());
   }
-
-
 }

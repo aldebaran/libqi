@@ -7,24 +7,24 @@
 
 
 #ifndef _QI_ATOMIC_HPP_
-#define _QI_ATOMIC_HPP_
+# define _QI_ATOMIC_HPP_
 
-#ifdef _MSC_VER
-# include <windows.h>
-# include <intrin.h>
+# ifdef _MSC_VER
+#  include <windows.h>
+#  include <intrin.h>
 
 extern "C" long __cdecl _InterlockedIncrement(long volatile *);
 extern "C" long __cdecl _InterlockedDecrement(long volatile *);
 
-# pragma intrinsic(_InterlockedIncrement)
-# pragma intrinsic(_InterlockedDecrement)
+#  pragma intrinsic(_InterlockedIncrement)
+#  pragma intrinsic(_InterlockedDecrement)
 
-#endif
+# endif
 
-#include <boost/static_assert.hpp>
+# include <boost/static_assert.hpp>
 
-#include <qi/config.hpp>
-#include <qi/macro.hpp>
+# include <qi/config.hpp>
+# include <qi/macro.hpp>
 
 namespace qi
 {
@@ -195,9 +195,17 @@ namespace qi
   }
 #endif
 
+
+  namespace detail
+  {
+    template<typename T> void newAndAssign(T** ptr)
+    {
+      *ptr = new T();
+    }
+  }
 }
 
-#define _QI_INSTANCIATE(_, a, elem) ::qi::details::newAndAssign(&elem);
+#define _QI_INSTANCIATE(_, a, elem) ::qi::detail::newAndAssign(&elem);
 
 /* The code below relies on the fact that initialisation of the qi::Atomic
 * can happen at static initialization time, and that proper memory barriers

@@ -41,14 +41,14 @@ namespace qi {
         int ppid = getppid();
 
         /* Child */
-        if (ptrace(MY_PTRACE_ATTACH, ppid, NULL, NULL) == 0)
+        if (ptrace(MY_PTRACE_ATTACH, ppid, NULL, 0) == 0)
         {
           /* Wait for the parent to stop and continue it */
           ::waitpid(ppid, NULL, 0);
-          ptrace(MY_PTRACE_CONT, NULL, NULL, NULL);
+          ptrace(MY_PTRACE_CONT, 0, NULL, 0);
 
           /* Detach */
-          ptrace(MY_PTRACE_DETACH, getppid(), NULL, NULL);
+          ptrace(MY_PTRACE_DETACH, getppid(), NULL, 0);
 
           /* We were the tracers, so gdb is not present */
           res = 0;

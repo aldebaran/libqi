@@ -7,7 +7,7 @@
 
 
 #ifndef _QI_LOG_CONSOLELOGHANDLER_HPP_
-#define _QI_LOG_CONSOLELOGHANDLER_HPP_
+# define _QI_LOG_CONSOLELOGHANDLER_HPP_
 
 # include <boost/noncopyable.hpp>
 # include <qi/log.hpp>
@@ -17,7 +17,12 @@ namespace qi {
 
     class PrivateConsoleLogHandler;
 
-    /// Print colored logs to the console.
+    /**
+     * \includename{qi/log/consoleloghandler.hpp}
+     * \brief Print colored logs to the console.
+     *
+     * Colors will only be enabled if the output is a tty.
+     */
     class QI_API ConsoleLogHandler : private boost::noncopyable
     {
     public:
@@ -29,17 +34,28 @@ namespace qi {
       /// virtual.
       ~ConsoleLogHandler();
 
-      /// Prints a log message on the console.
-      void log(const qi::LogLevel verb,
-               const qi::os::timeval   date,
-               const char              *category,
-               const char              *msg,
-               const char              *file,
-               const char              *fct,
-               const int               line);
+      /**
+       * \brief Prints a log message on the console.
+       * \param verb verbosity of the log message.
+       * \param date date at which the log message was issued.
+       * \param category will be used in future for filtering
+       * \param msg actual message to log.
+       * \param file filename from which this log message was issued.
+       * \param fct function name from which this log message was issued.
+       * \param line line number in the issuer file.
+       */
+      void log(const qi::LogLevel    verb,
+               const qi::os::timeval date,
+               const char            *category,
+               const char            *msg,
+               const char            *file,
+               const char            *fct,
+               const int             line);
 
+      /**
+       * \brief Update color status (Never, Always, Auto)
+       */
       void updateColor();
-
 
     protected:
       PrivateConsoleLogHandler* _p;

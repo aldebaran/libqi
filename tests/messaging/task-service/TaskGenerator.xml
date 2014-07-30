@@ -1,0 +1,36 @@
+<IDL>
+<class name="Task">
+  <method name="getName">
+    <return type="s" />
+  </method>
+  <method name="setParam">
+    <return type="s" />
+    <argument type="s" />
+  </method>
+  <method name="step">
+    <return type="s" />
+    <argument type="I" />
+  </method>
+  <method name="getLastResult">
+    <return type="s" />
+  </method>
+  <signal name="onParamChanged"><argument type="s" /></signal>
+  <signal name="onStep"><argument type="s" /></signal>
+</class>
+<class name="TaskGenerator">
+  <method name="newTask">
+    <return type="o&lt;Task>" />
+    <argument type="s" />
+  </method>
+  <method name="step">
+    <return type="v" />
+    <argument type="I" />
+  </method>
+  <method name="taskCount">
+    <return type="L" />
+  </method>
+  <method name="tasks">
+    <return type="[o&lt;Task>]" />
+  </method>
+</class>
+</IDL>

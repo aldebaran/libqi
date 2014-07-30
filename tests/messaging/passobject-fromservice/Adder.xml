@@ -1,0 +1,8 @@
+<IDL>
+<class name="Adder">
+  <method name="makeTask"><return type="o&lt;AddTask>" /><argument type="i" /></method>
+  <method name="makeAnyTask"><return type="o" /><argument type="i" /></method>
+  <method name="nTasks"><return type="i" /> </method>
+  <property name="value" type="i" />
+</class>
+</IDL>
