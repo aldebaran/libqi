@@ -8,6 +8,7 @@
 #include <gtest/gtest.h>
 
 #include <qi/applicationsession.hpp>
+#include <qi/future.hpp>
 
 static bool _stopped = false;
 static qi::Session _sd;
@@ -15,10 +16,12 @@ static qi::ApplicationSession* _app;
 static char **_argv = 0;
 static int _argc = 5;
 static std::string _url;
+static qi::Promise<void> _sync;
 
 void onStop()
 {
   _stopped = true;
+  _sync.setValue(0);
 }
 
 TEST(QiApplicationSession, defaultConnect)
@@ -31,7 +34,7 @@ TEST(QiApplicationSession, defaultConnect)
 
   ASSERT_FALSE(_stopped);
   _sd.close();
-  qi::os::msleep(100);
+  _sync.future().wait();
   ASSERT_TRUE(_stopped);
 
   EXPECT_THROW(_app->session()->connect("ftp://invalidurl:42"),
