@@ -335,7 +335,7 @@ namespace qi {
     uint32_t id = ++gTaskId;
 
     ++_totalTask;
-    tracepoint(qi_qi, eventloop_delay, id, cb.target_type().name(), qi::MicroSeconds(delay).count());
+    tracepoint(qi_qi, eventloop_delay, id, cb.target_type().name(), boost::chrono::duration_cast<qi::MicroSeconds>(delay).count());
     boost::shared_ptr<boost::asio::steady_timer> timer = boost::make_shared<boost::asio::steady_timer>(boost::ref(_io));
     timer->expires_from_now(delay);
     qi::Promise<void> prom(boost::bind(&boost::asio::steady_timer::cancel, timer));
