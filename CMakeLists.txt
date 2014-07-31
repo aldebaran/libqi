@@ -363,6 +363,6 @@ endif()
 
 qi_stage_lib(qi INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/compat")
 
-add_subdirectory("bin")
 add_subdirectory("examples")
 add_subdirectory("tests")
+add_subdirectory("bin")
