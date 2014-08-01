@@ -17,10 +17,10 @@
 
 namespace qi
 {
-  class ServiceDirectoryBoundObject : public ServiceBoundObject {
+  class ServiceDirectory {
   public:
-    ServiceDirectoryBoundObject();
-    virtual ~ServiceDirectoryBoundObject();
+    ServiceDirectory();
+    virtual ~ServiceDirectory();
 
     //TransportSocket
     virtual void onSocketDisconnected(TransportSocketPtr socket, std::string error);
@@ -36,6 +36,7 @@ namespace qi
     void                     updateServiceInfo(const ServiceInfo &svcinfo);
     std::string              machineId();
     qi::TransportSocketPtr   _socketOfService(unsigned int id);
+    void                     _setServiceBoundObject(boost::shared_ptr<ServiceBoundObject> sbo);
 
     qi::Signal<unsigned int, std::string>  serviceAdded;
     qi::Signal<unsigned int, std::string>  serviceRemoved;
@@ -47,6 +48,7 @@ namespace qi
     std::map<TransportSocketPtr, std::vector<unsigned int> >  socketToIdx;
     std::map<unsigned int, TransportSocketPtr>                idxToSocket;
     unsigned int                                              servicesCount;
+    boost::weak_ptr<ServiceBoundObject>                       serviceBoundObject;
     /* Our methods can be invoked from remote, and from socket callbacks,
     * so thread-safeness is required.
     */
@@ -67,7 +69,8 @@ namespace qi
   private:
     friend class SessionPrivate;
     ObjectRegistrar*             _server;
-    BoundAnyObject               _sdbo;
+    BoundAnyObject               _serviceBoundObject;
+    ServiceDirectory*            _sdObject;
     bool                         _init;
   }; // !ServiceDirectory
 } // !qi

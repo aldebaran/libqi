@@ -354,6 +354,8 @@ namespace qi {
   void ServiceBoundObject::onSocketDisconnected(TransportSocketPtr client, std::string error)
   {
     // Disconnect event links set for this client.
+    if (_onSocketDisconnectedCallback)
+      _onSocketDisconnectedCallback(client, error);
     BySocketServiceSignalLinks::iterator it = _links.find(client);
     if (it != _links.end())
     {

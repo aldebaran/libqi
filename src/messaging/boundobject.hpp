@@ -21,6 +21,7 @@ namespace qi {
 
   class GenericObject;
   class ServiceDirectoryClient;
+  class ServiceDirectory;
 
   // (service, linkId)
   struct RemoteSignalLink
@@ -102,7 +103,9 @@ namespace qi {
     qi::MetaCallType       _callType;
     qi::ObjectHost*        _owner;
     boost::mutex           _mutex; // prevent parallel onMessage on self execution
+    boost::function<void (TransportSocketPtr, std::string)> _onSocketDisconnectedCallback;
     friend class ::qi::ObjectHost;
+    friend class ::qi::ServiceDirectory;
   };
 
 
