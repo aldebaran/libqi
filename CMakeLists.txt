@@ -330,7 +330,6 @@ endif()
 
 
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}")
-include_directories("${CMAKE_CURRENT_SOURCE_DIR}/external")
 
 qi_stage_cmake(qimodule-config.cmake)
 include(qimodule-config.cmake)
@@ -340,7 +339,7 @@ qi_create_lib(qi SHARED
                  ${QITYPE_H} ${QITYPE_C}
                  ${QIM_H}    ${QIM_C}
                  ${QIPERF_H} ${QIPERF_C}
-              DEPENDS BOOST BOOST_DATE_TIME BOOST_THREAD BOOST_CHRONO BOOST_FILESYSTEM BOOST_LOCALE BOOST_REGEX BOOST_PROGRAM_OPTIONS ${_ssldeps}
+              DEPENDS BOOST BOOST_ATOMIC BOOST_DATE_TIME BOOST_THREAD BOOST_CHRONO BOOST_FILESYSTEM BOOST_LOCALE BOOST_REGEX BOOST_PROGRAM_OPTIONS ${_ssldeps}
               SUBMODULE tp_qi)
 
 if (WITH_QT_QTCORE)
