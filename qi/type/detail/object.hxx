@@ -498,11 +498,13 @@ class QI_API TypeImpl<Object<T> > :
 {
 };
 
+#ifdef _MSC_VER
 /* Because we use types marked with QI_API and inheriting from Object<Empty>
  * (through AnyObject), then Object<Empty> functions must be explicitly
  * exported/imported to avoid link issues with MSVC.
  */
 template class QI_API Object<Empty>;
+#endif
 
 }
 
