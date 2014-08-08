@@ -316,6 +316,27 @@ TEST(TestObject, ABI)
   EXPECT_EQ("bar", f.call(convert(&foo, "bar")).toString());
 }
 
+int summ(int p1, short p2, char p3, const char* s)
+{
+  return p1 + p2 + p3 + strlen(s);
+}
+
+qi::AnyObject getobj()
+{
+  qi::DynamicObjectBuilder b;
+  b.advertiseMethod("summ", &summ);
+  return b.object();
+}
+
+TEST(TestAnyFunction, Call)
+{
+  qi::AnyFunction f = qi::AnyFunction::from(&summ);
+  ASSERT_EQ(10, f.call<int>(1, 2, 3, "lola"));
+  f = qi::AnyFunction::from(&getobj);
+  qi::AnyWeakObject obj = f.call<qi::AnyObject>();
+  ASSERT_FALSE(obj.lock());
+}
+
 TEST(TestObject, Simple) {
   Foo                   foo;
   qi::DynamicObjectBuilder ob;

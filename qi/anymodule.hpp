@@ -32,6 +32,8 @@ namespace qi
   };
 
   /** A qi Module. basically an Object and a ModuleInfo
+   *
+   * \includename{qi/anymodule.hpp}
    */
   class QI_API AnyModule : public AnyObject
   {

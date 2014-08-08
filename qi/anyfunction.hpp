@@ -144,6 +144,7 @@ namespace qi {
   /** Represents a generic callable function.
    * This class has value semantic.
    *
+   * \includename{qi/anyfunction.hpp}
    */
   class QI_API AnyFunction
   {
@@ -153,9 +154,60 @@ namespace qi {
     AnyFunction(const AnyFunction& b);
     AnyFunction(FunctionTypeInterface* type, void* value);
     AnyFunction& operator = (const AnyFunction& b);
+    /// Call the function, reference must be destroy()ed
     AnyReference call(const AnyReferenceVector& args);
+    /// Call the function, reference must be destroy()ed
     AnyReference call(AnyReference arg1, const AnyReferenceVector& args);
+    /// Call the function, reference must be destroy()ed
     AnyReference operator()(const AnyReferenceVector& args);
+
+#ifdef DOXYGEN
+  /// Call the function
+  template <typename R>
+  R call(
+         qi::AutoAnyReference p1 = qi::AutoAnyReference(),
+         qi::AutoAnyReference p2 = qi::AutoAnyReference(),
+         qi::AutoAnyReference p3 = qi::AutoAnyReference(),
+         qi::AutoAnyReference p4 = qi::AutoAnyReference(),
+         qi::AutoAnyReference p5 = qi::AutoAnyReference(),
+         qi::AutoAnyReference p6 = qi::AutoAnyReference(),
+         qi::AutoAnyReference p7 = qi::AutoAnyReference(),
+         qi::AutoAnyReference p8 = qi::AutoAnyReference());
+
+  /// Call the function, reference must be destroy()ed
+  template<typename R>
+  AnyReference operator()(
+                          qi::AutoAnyReference p1 = qi::AutoAnyReference(),
+                          qi::AutoAnyReference p2 = qi::AutoAnyReference(),
+                          qi::AutoAnyReference p3 = qi::AutoAnyReference(),
+                          qi::AutoAnyReference p4 = qi::AutoAnyReference(),
+                          qi::AutoAnyReference p5 = qi::AutoAnyReference(),
+                          qi::AutoAnyReference p6 = qi::AutoAnyReference(),
+                          qi::AutoAnyReference p7 = qi::AutoAnyReference(),
+                          qi::AutoAnyReference p8 = qi::AutoAnyReference());
+#else
+#define pushi(z, n,_) params.push_back(p ## n);
+#define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma) \
+  template <typename R> R call(                           \
+      QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoAnyReference))   \
+  {                                                       \
+    AnyReference ret = this->operator()(AUSE);            \
+    R ret2 = ret.to<R>();                                 \
+    ret.destroy();                                        \
+    return ret2;                                          \
+  }                                                       \
+  AnyReference operator()(                                \
+      QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoAnyReference))   \
+  {                                                       \
+    std::vector<qi::AnyReference> params;                 \
+    params.reserve(n);                                    \
+    BOOST_PP_REPEAT(n, pushi, _)                          \
+    return call(params);                                  \
+  }
+QI_GEN(genCall)
+#undef genCall
+#undef pushi
+#endif
 
     /// Change signature, drop the first argument passed to call.
     const AnyFunction& dropFirstArgument() const;
@@ -186,16 +238,18 @@ namespace qi {
     */
     template<typename F>
     static AnyFunction from(F func);
-    /// @return a AnyFunction binding \p instance to member function \p func
+    /// @return a AnyFunction binding instance to member function func
     template<typename F, typename C>
     static AnyFunction from(F func, C instance);
 
 
-    /// @return a AnyFunction that takes arguments as a list of unconverted AnyReference.
+    /** @return a AnyFunction that takes arguments as a list of unconverted
+     * AnyReference.
+     */
     static AnyFunction fromDynamicFunction(DynamicFunction f);
 
   private:
-    FunctionTypeInterface*  type;
+    FunctionTypeInterface* type;
     void* value; //type-dependant storage
     mutable ArgumentTransformation transform;
   };
