@@ -74,6 +74,12 @@ namespace qi
     return fs::is_regular_file(_p->path, ec);
   }
 
+  bool Path::isSymlink() const
+  {
+    boost::system::error_code ec;
+    return fs::is_symlink(_p->path, ec);
+  }
+
   std::string Path::extension() const
   {
     return _p->path.extension().string(qi::unicodeFacet());

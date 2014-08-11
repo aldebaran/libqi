@@ -46,6 +46,9 @@ namespace qi
     /// is the path a regular file?
     bool isRegularFile() const;
 
+    /// is the path a symlink?
+    bool isSymlink() const;
+
     /// get the name of the current file of folder
     std::string filename() const;
 

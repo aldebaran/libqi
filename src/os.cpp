@@ -10,13 +10,15 @@
 #include <boost/uuid/uuid_generators.hpp>
 #include <boost/uuid/uuid_io.hpp>
 #include <boost/thread/mutex.hpp>
+#include <boost/filesystem.hpp>
 
 #include <qi/os.hpp>
 #include <qi/log.hpp>
 #include <qi/types.hpp>
-#include <qi/path.hpp>
 
 qiLogCategory("qi.os");
+
+namespace bfs = boost::filesystem;
 
 namespace qi {
   namespace os {
@@ -155,6 +157,11 @@ namespace qi {
     {
       boost::uuids::uuid u = boost::uuids::random_generator()();
       return to_string(u);
+    }
+
+    void symlink(const qi::Path& source, const qi::Path& destination)
+    {
+      bfs::create_symlink(bfs::path(source), bfs::path(destination));
     }
   }
 }

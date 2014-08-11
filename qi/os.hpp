@@ -14,6 +14,7 @@
 # include <vector>
 # include <qi/api.hpp>
 # include <qi/types.hpp>
+# include <qi/path.hpp>
 
 struct stat;
 
@@ -101,6 +102,10 @@ namespace qi {
      * the temporary files it creates.
      */
     QI_API std::string tmp();
+    /**
+     * \brief Create a symlink from source to destination.
+     */
+    QI_API void symlink(const qi::Path& source, const qi::Path& destination);
     /**
      * \brief Get the system's hostname.
      * \return The system's hostname. An empty string is returned on failure.
