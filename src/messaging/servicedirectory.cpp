@@ -35,7 +35,6 @@ qiLogCategory("qimessaging.servicedirectory");
 namespace qi
 {
 
-
   qi::AnyObject createSDP(ServiceDirectory* self) {
     static qi::ObjectTypeBuilder<ServiceDirectory>* ob = 0;
     static boost::mutex* mutex = 0;
@@ -67,7 +66,7 @@ namespace qi
       ob->advertiseMethod("_socketOfService", &ServiceDirectory::_socketOfService);
       // used locally only, we do not export its id
     }
-    return ob->object(self, &AnyObject::deleteGenericObjectOnly);
+    return ob->object(self);
   }
 
   ServiceDirectory::ServiceDirectory()
