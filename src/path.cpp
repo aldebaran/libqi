@@ -358,6 +358,11 @@ namespace qi
       std::string prefix;
       std::string mode;
       const char *program = qi::Application::program();
+      if (program[0] == '\0')
+      {
+        qiLogWarning() << "No Application was created, trying to deduce paths";
+        program = qi::Application::realProgram();
+      }
 
       if (!program) {
         mode = "error";

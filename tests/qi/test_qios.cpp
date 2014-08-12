@@ -433,6 +433,7 @@ TEST(QiOs, getMachineId)
 {
   int status = 0;
   std::string bin = qi::path::findBin("check_machineid");
+  ASSERT_FALSE(bin.empty());
   int childPid = qi::os::spawnlp(bin.c_str(), NULL);
   ASSERT_NE(-1, childPid);
 

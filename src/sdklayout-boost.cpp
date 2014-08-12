@@ -82,6 +82,11 @@ namespace qi {
     void initSDKlayout()
     {
       const char *program = qi::Application::program();
+      if (program[0] == '\0')
+      {
+        qiLogWarning() << "No Application was created, trying to deduce paths";
+        program = qi::Application::realProgram();
+      }
 
       if (!boost::filesystem::exists(program)) {
         _mode = "error";
