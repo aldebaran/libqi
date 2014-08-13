@@ -23,7 +23,7 @@
 
 qiLogCategory("qi.path");
 
-namespace fs = boost::filesystem;
+namespace bfs = boost::filesystem;
 
 namespace qi
 {
@@ -34,11 +34,11 @@ namespace qi
       : path(unicodePath, qi::unicodeFacet())
     {}
 
-    PrivatePath(const fs::path& path)
+    PrivatePath(const bfs::path& path)
       : path(path)
     {}
 
-    fs::path path;
+    bfs::path path;
   };
 
   Path::Path(PrivatePath* p)
@@ -65,19 +65,19 @@ namespace qi
   bool Path::isDir() const
   {
     boost::system::error_code ec;
-    return fs::is_directory(_p->path, ec);
+    return bfs::is_directory(_p->path, ec);
   }
 
   bool Path::isRegularFile() const
   {
     boost::system::error_code ec;
-    return fs::is_regular_file(_p->path, ec);
+    return bfs::is_regular_file(_p->path, ec);
   }
 
   bool Path::isSymlink() const
   {
     boost::system::error_code ec;
-    return fs::is_symlink(_p->path, ec);
+    return bfs::is_symlink(_p->path, ec);
   }
 
   std::string Path::extension() const
@@ -97,16 +97,16 @@ namespace qi
 
   Path Path::absolute()
   {
-    return Path(new PrivatePath(fs::absolute(_p->path)));
+    return Path(new PrivatePath(bfs::absolute(_p->path)));
   }
 
   PathVector Path::files()
   {
     PathVector ret;
-    fs::directory_iterator dit(_p->path);
+    bfs::directory_iterator dit(_p->path);
 
-    for (; dit != fs::directory_iterator(); ++dit) {
-      if (fs::is_regular_file(*dit))
+    for (; dit != bfs::directory_iterator(); ++dit) {
+      if (bfs::is_regular_file(*dit))
         ret.push_back(Path(new PrivatePath(*dit)));
     }
     return ret;
@@ -115,10 +115,10 @@ namespace qi
   PathVector Path::dirs()
   {
     PathVector ret;
-    fs::directory_iterator dit(_p->path);
+    bfs::directory_iterator dit(_p->path);
 
-    for (; dit != fs::directory_iterator(); ++dit) {
-      if (fs::is_directory(*dit))
+    for (; dit != bfs::directory_iterator(); ++dit) {
+      if (bfs::is_directory(*dit))
         ret.push_back(Path(new PrivatePath(*dit)));
     }
     return ret;
