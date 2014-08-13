@@ -113,8 +113,7 @@ namespace qi {
   static TypeFactory& typeFactory()
   {
     static TypeFactory* res = 0;
-    if (!res)
-      res = new TypeFactory;
+    QI_THREADSAFE_NEW(res);
     return *res;
   }
 
@@ -122,8 +121,7 @@ namespace qi {
   static FallbackTypeFactory& fallbackTypeFactory()
   {
     static FallbackTypeFactory* res = 0;
-    if (!res)
-      res = new FallbackTypeFactory;
+    QI_THREADSAFE_NEW(res);
     return *res;
   }
 
@@ -131,8 +129,7 @@ namespace qi {
   {
     static bool fallback = !qi::os::getenv("QI_TYPE_RTTI_FALLBACK").empty();
     static boost::mutex* mutex = 0;
-    if (!mutex)
-      mutex = new boost::mutex;
+    QI_THREADSAFE_NEW(mutex);
     boost::mutex::scoped_lock sl(*mutex);
 
     // We create-if-not-exist on purpose: to detect access that occur before
@@ -469,15 +466,26 @@ namespace qi {
 
   TypeInterface* makeIntType(bool issigned, int bytelen)
   {
-    static TypeInterface* tb = typeOf<bool>();
-    static TypeInterface* t8 = typeOf<int8_t>();
-    static TypeInterface* t16 = typeOf<int16_t>();
-    static TypeInterface* t32 = typeOf<int32_t>();
-    static TypeInterface* t64 = typeOf<int64_t>();
-    static TypeInterface* tu8  = typeOf<uint8_t>();
-    static TypeInterface* tu16 = typeOf<uint16_t>();
-    static TypeInterface* tu32 = typeOf<uint32_t>();
-    static TypeInterface* tu64 = typeOf<uint64_t>();
+    static TypeInterface* tb;
+    static TypeInterface* t8;
+    static TypeInterface* t16;
+    static TypeInterface* t32;
+    static TypeInterface* t64;
+    static TypeInterface* tu8;
+    static TypeInterface* tu16;
+    static TypeInterface* tu32;
+    static TypeInterface* tu64;
+    QI_ONCE(
+      tb = typeOf<bool>();
+      t8 = typeOf<int8_t>();
+      t16 = typeOf<int16_t>();
+      t32 = typeOf<int32_t>();
+      t64 = typeOf<int64_t>();
+      tu8  = typeOf<uint8_t>();
+      tu16 = typeOf<uint16_t>();
+      tu32 = typeOf<uint32_t>();
+      tu64 = typeOf<uint64_t>();
+      );
 
     if (issigned) {
       switch (bytelen) {
@@ -512,13 +520,23 @@ namespace qi {
 
   TypeInterface* makeTypeOfKind(const qi::TypeKind& kind)
   {
-    static TypeInterface* tv = typeOf<void>();
-    static TypeInterface* t64 = typeOf<int64_t>();
-    static TypeInterface* tdouble = typeOf<double>();
-    static TypeInterface* tstring = typeOf<std::string>();
-    static TypeInterface* tgv = typeOf<AnyValue>();
-    static TypeInterface* tbuffer = typeOf<Buffer>();
-    static TypeInterface* tobjectptr = typeOf<AnyObject>();
+    static TypeInterface* tv;
+    static TypeInterface* t64;
+    static TypeInterface* tdouble;
+    static TypeInterface* tstring;
+    static TypeInterface* tgv;
+    static TypeInterface* tbuffer;
+    static TypeInterface* tobjectptr;
+    QI_ONCE(
+      tv = typeOf<void>();
+      t64 = typeOf<int64_t>();
+      tdouble = typeOf<double>();
+      tstring = typeOf<std::string>();
+      tgv = typeOf<AnyValue>();
+      tbuffer = typeOf<Buffer>();
+      tobjectptr = typeOf<AnyObject>();
+      );
+
     switch(kind)
     {
     case TypeKind_Void:
@@ -726,8 +744,9 @@ namespace qi {
   // We want exactly one instance per element type
   static TypeInterface* makeListIteratorType(TypeInterface* element)
   {
-    static boost::mutex mutex;
-    boost::mutex::scoped_lock lock(mutex);
+    static boost::mutex* mutex;
+    QI_THREADSAFE_NEW(mutex);
+    boost::mutex::scoped_lock lock(*mutex);
     static std::map<TypeInfo, TypeInterface*>* map = 0;
     if (!map)
       map = new std::map<TypeInfo, TypeInterface*>();
@@ -1323,8 +1342,9 @@ namespace qi {
   TypeInterface* makeTupleType(const std::vector<TypeInterface*>& types, const std::string &name, const std::vector<std::string>& elementNames)
   {
     typedef std::map<InfosKey, StructTypeInterface*> Map;
-    static boost::mutex mutex;
-    boost::mutex::scoped_lock lock(mutex);
+    static boost::mutex* mutex;
+    QI_THREADSAFE_NEW(mutex);
+    boost::mutex::scoped_lock lock(*mutex);
     static Map* map = 0;
     if (!map)
       map = new Map;
@@ -1371,8 +1391,7 @@ namespace qi {
       std::ostringstream ss;
       ss << "Cannot do '" << operation << "' on " << typeName;
       static std::set<std::string>* once = 0;
-      if (!once)
-        once = new std::set<std::string>();
+      QI_THREADSAFE_NEW(once);
       if (once->find(typeName)==once->end())
       {
         once->insert(typeName);
@@ -1414,8 +1433,7 @@ namespace qi {
   {
     // protected by lock above
     static RegisterStructMap* res = 0;
-    if (!res)
-      res = new RegisterStructMap();
+    QI_THREADSAFE_NEW(res);
     return *res;
   }
   void registerStruct(TypeInterface* type)
