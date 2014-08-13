@@ -63,6 +63,8 @@ namespace qi
     T      _value;
   };
 
+  /** \includename{qi/property.hpp}
+   */
   template<typename T>
   class Property: public PropertyImpl<T>
   {

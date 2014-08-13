@@ -28,7 +28,7 @@ namespace qi {
     qi::FutureSync<void> close();
     bool isConnected() const;
 
-    void onDisconnected(std::string error);
+    void onServiceDirectoryClientDisconnected(std::string error);
     void onServiceAdded(unsigned int idx, const std::string &name);
     void onServiceRemoved(unsigned int idx, const std::string &name);
 

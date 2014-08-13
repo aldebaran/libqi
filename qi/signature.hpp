@@ -128,9 +128,6 @@ namespace qi {
     Type type() const;
     std::string annotation() const;
 
-    inline bool operator!=(const Signature &rhs) const { return !(*this == rhs); }
-    bool operator==(const Signature &rhs) const;
-
     /** Encode the signature in a plain struct,
     * suitable for further serialization.
     * [typeString, childrenList, annotationString ]
@@ -150,8 +147,13 @@ namespace qi {
     // C4251
     boost::shared_ptr<SignaturePrivate> _p;
 
+    friend QI_API bool operator==(const Signature &lhs, const Signature &rhs);
   };
 
+
+  QI_API inline bool operator!=(const Signature &lhs, const Signature &rhs)
+  { return !(lhs == rhs); }
+  QI_API bool operator==(const Signature &lhs, const Signature &rhs);
 
 }
 

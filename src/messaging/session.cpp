@@ -37,7 +37,7 @@ namespace qi {
     session->serviceUnregistered.setCallType(qi::MetaCallType_Queued);
 
     _sdClient.connected.connect(session->connected);
-    _sdClient.disconnected.connect(&SessionPrivate::onDisconnected, this, _1);
+    _sdClient.disconnected.connect(&SessionPrivate::onServiceDirectoryClientDisconnected, this, _1);
     _sdClient.disconnected.connect(session->disconnected);
     _sdClient.serviceAdded.connect(session->serviceRegistered);
     _sdClient.serviceRemoved.connect(session->serviceUnregistered);
@@ -49,11 +49,16 @@ namespace qi {
   }
 
 
-  void SessionPrivate::onDisconnected(std::string error) {
+  void SessionPrivate::onServiceDirectoryClientDisconnected(std::string error) {
     /*
      * Remove all proxies to services if the SD is fallen.
      */
-    close();
+    // This callback is called only when the SD is disconnected.
+    // We don't close the service directory client from here:
+    // it has it's own callback to take care of it.
+    _serviceHandler.close();
+    _serverObject.close();
+    _socketsCache.close();
   }
 
 
@@ -223,7 +228,7 @@ namespace qi {
       p.setError(f.error());
     else
     {
-      _sdClient.setServiceDirectory(static_cast<ServiceBoundObject*>(_sd._sdbo.get())->object());
+      _sdClient.setServiceDirectory(boost::static_pointer_cast<ServiceBoundObject>(_sd._serviceBoundObject)->object());
       // _sdClient will trigger its connected, which will trigger our connected
       p.setValue(0);
     }

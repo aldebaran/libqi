@@ -192,27 +192,6 @@ namespace qi {
     return Signature(res);
   }
 
-  //compare signature without taking annotation into account
-  bool Signature::operator==(const Signature &rhs) const {
-    if (type() != rhs.type())
-      return false;
-    if (children().size() != rhs.children().size())
-      return false;
-    SignatureVector::const_iterator it;
-    SignatureVector::const_iterator it2;
-    it2 = children().begin();
-    for (it = rhs.children().begin(); it != rhs.children().end(); ++it) {
-      if (it2 == children().end()) //not the same number of elements
-        return false;
-      if (it->type() != it2->type()) //different types
-        return false;
-      if (*it != *it2) //different children
-        return false;
-      ++it2;
-    }
-    return true;
-  }
-
   //find a open char, starting from end, finishing at start
   static size_t _find_begin(const std::string &str, size_t start, char open, char close)
   {
@@ -572,6 +551,29 @@ namespace qi {
     res.push_back(AnyValue::from(annotation()));
     return AnyValue::from(res);
   }
+
+  //compare signature without taking annotation into account
+  bool operator==(const Signature& lhs, const Signature& rhs)
+  {
+    if (lhs.type() != rhs.type())
+      return false;
+    if (lhs.children().size() != rhs.children().size())
+      return false;
+    SignatureVector::const_iterator it;
+    SignatureVector::const_iterator it2;
+    it2 = lhs.children().begin();
+    for (it = rhs.children().begin(); it != rhs.children().end(); ++it) {
+      if (it2 == lhs.children().end()) //not the same number of elements
+        return false;
+      if (it->type() != it2->type()) //different types
+        return false;
+      if (*it != *it2) //different children
+        return false;
+      ++it2;
+    }
+    return true;
+  }
+
 }
 
 char* signature_to_json(const char* sig)

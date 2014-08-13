@@ -18,21 +18,21 @@ class Foo
 {
 public:
   void func(int)               { }
-  void func1(int *r, int)
+  void func1(qi::Atomic<int>* r, int)
   {
     // hackish sleep so that asynchronous trigger detection is safer
-    qi::os::msleep(1); *r += 1;
+    qi::os::msleep(1); ++*r;
   }
-  void func2(int *r, int, int) { *r += 1; }
+  void func2(qi::Atomic<int>* r, int, int) { ++*r; }
 };
-void foo(int *r, int, int)     { *r += 1; }
-void foo2(int *r, char, char)  { *r += 1; }
-void foo3(int *r, Foo *)       { *r += 1; }
-void foolast(int, qi::Promise<void> prom, int* r) { prom.setValue(0); *r += 1;}
+void foo(qi::Atomic<int>* r, int, int)     { ++*r; }
+void foo2(qi::Atomic<int>* r, char, char)  { ++*r; }
+void foo3(qi::Atomic<int>* r, Foo *)       { ++*r; }
+void foolast(int, qi::Promise<void> prom, qi::Atomic<int>* r) { prom.setValue(0); ++*r; }
 
 TEST(TestSignal, TestCompilation)
 {
-  int                    res = 0;
+  qi::Atomic<int>        res = 0;
   qi::Signal<int> s;
   Foo*                   f = (Foo*)1;
   qi::Promise<void>      prom;
@@ -49,14 +49,11 @@ TEST(TestSignal, TestCompilation)
   s.connect(boost::bind(&foolast, _1, prom, &res));
 
   s(42);
-  int timeout = 100;
-  while (timeout > 0) {
+
+  while (*res != 6)
     qi::os::msleep(10);
-    if (res == 6)
-      break;
-    timeout -= 1;
-  }
-  ASSERT_EQ(6, res);
+
+  ASSERT_EQ(6, *res);
   ASSERT_TRUE(prom.future().isFinished());
   ASSERT_FALSE(prom.future().hasError());
 }
@@ -89,15 +86,15 @@ void byRef(int& i, bool* done)
 TEST(TestSignal, AutoDisconnect)
 {
   // Test automatic disconnection when passing shared_ptrs
-  int r = 0;
+  qi::Atomic<int> r = 0;
   boost::shared_ptr<Foo> foo(new Foo());
-  qi::Signal<int*, int> sig;
+  qi::Signal<qi::Atomic<int>*, int> sig;
   sig.connect(&Foo::func1, boost::weak_ptr<Foo>(foo), _1, _2).setCallType(qi::MetaCallType_Direct);
   sig(&r, 0);
-  ASSERT_EQ(1, r);
+  ASSERT_EQ(1, *r);
   foo.reset();
   sig(&r, 0);
-  ASSERT_EQ(1, r);
+  ASSERT_EQ(1, *r);
 }
 
 TEST(TestSignal, BadArity)
@@ -107,7 +104,7 @@ TEST(TestSignal, BadArity)
   // avoid using s.connect() which will catch the problem at compile-time
   EXPECT_ANY_THROW(s.connect(qi::SignalSubscriber(qi::AnyFunction::from(&foo))));
   EXPECT_ANY_THROW(s.connect(qi::SignalSubscriber(qi::AnyFunction::from(&foo2))));
-  EXPECT_ANY_THROW(s.connect(qi::AnyFunction::from(  (boost::function<void(int*, int)>)boost::bind(&Foo::func1, (Foo*)0, _1, _2))));
+  EXPECT_ANY_THROW(s.connect(qi::AnyFunction::from((boost::function<void(qi::Atomic<int>*, int)>)boost::bind(&Foo::func1, (Foo*)0, _1, _2))));
 }
 
 void lol(int v, int& target)
@@ -153,7 +150,6 @@ TEST(TestSignal, SignalSignal2)
   for (unsigned i=0; i<50 && st.payload != 4242; ++i)
     qi::os::msleep(20);
   EXPECT_EQ(st.payload, 4242);
-  qi::os::sleep(4);
 }
 
 TEST(TestSignal, SignalN)

@@ -74,7 +74,13 @@ namespace qi
     Path operator/(const qi::Path& rhs) const;
 
     /// concat two paths adding a directory separator between them
+    Path operator/(const std::string& rhs) const;
+
+    /// concat two paths adding a directory separator between them
     const Path& operator/=(const qi::Path& rhs) const;
+
+    /// concat two paths adding a directory separator between them
+    const Path& operator/=(const std::string& rhs) const;
 
     /// copy operator
     const Path& operator=(const qi::Path& rhs) const;

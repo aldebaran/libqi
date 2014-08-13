@@ -77,10 +77,6 @@ namespace qi {
      * @endcond
      */
 
-    /** Compares the url strings.
-     */
-    bool operator ==(const Url& url);
-
     virtual ~Url();
 
     /**
@@ -126,7 +122,16 @@ namespace qi {
     UrlPrivate* _p;
   };
 
+  /** Compares the url strings.
+   */
+  QI_API bool operator==(const Url& lhs, const Url& rhs);
+  /** Compares the url strings.
+   */
+  QI_API inline bool operator!=(const Url& lhs, const Url& rhs)
+  { return !(lhs == rhs); }
+
   typedef std::vector<Url> UrlVector;
+
 }
 
 #endif  // _QIMESSAGING_URL_HPP_

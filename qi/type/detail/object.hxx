@@ -201,7 +201,7 @@ public:
   Object(T* ptr, boost::function<void(T*)> deleter);
   /// @}
 
-  /// Shares ref counter with \p other, which much handle the destrutiong of \p go.
+  /// Shares ref counter with other, which must handle the destruction of go.
   template<typename U> Object(GenericObject* go, boost::shared_ptr<U> other);
   template<typename U> Object(boost::shared_ptr<U> other);
   bool operator <(const Object& b) const;

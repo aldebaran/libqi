@@ -543,22 +543,40 @@ namespace qi {
 
   static TypeInterface* fromSignature(const qi::Signature& sig)
   {
-    static TypeInterface* tv = typeOf<void>();
-    static TypeInterface* tb = typeOf<bool>();
-    static TypeInterface* t8 = typeOf<int8_t>();
-    static TypeInterface* t16 = typeOf<int16_t>();
-    static TypeInterface* t32 = typeOf<int32_t>();
-    static TypeInterface* t64 = typeOf<int64_t>();
-    static TypeInterface* tu8  = typeOf<uint8_t>();
-    static TypeInterface* tu16 = typeOf<uint16_t>();
-    static TypeInterface* tu32 = typeOf<uint32_t>();
-    static TypeInterface* tu64 = typeOf<uint64_t>();
-    static TypeInterface* tfloat = typeOf<float>();
-    static TypeInterface* tdouble = typeOf<double>();
-    static TypeInterface* tstring = typeOf<std::string>();
-    static TypeInterface* tgv = typeOf<AnyValue>();
-    static TypeInterface* tbuffer = typeOf<Buffer>();
-    static TypeInterface* tobjectptr = typeOf<AnyObject>();
+    static TypeInterface* tv;
+    static TypeInterface* tb;
+    static TypeInterface* t8;
+    static TypeInterface* t16;
+    static TypeInterface* t32;
+    static TypeInterface* t64;
+    static TypeInterface* tu8 ;
+    static TypeInterface* tu16;
+    static TypeInterface* tu32;
+    static TypeInterface* tu64;
+    static TypeInterface* tfloat;
+    static TypeInterface* tdouble;
+    static TypeInterface* tstring;
+    static TypeInterface* tgv;
+    static TypeInterface* tbuffer;
+    static TypeInterface* tobjectptr;
+    QI_ONCE(
+      tv = typeOf<void>();
+      tb = typeOf<bool>();
+      t8 = typeOf<int8_t>();
+      t16 = typeOf<int16_t>();
+      t32 = typeOf<int32_t>();
+      t64 = typeOf<int64_t>();
+      tu8  = typeOf<uint8_t>();
+      tu16 = typeOf<uint16_t>();
+      tu32 = typeOf<uint32_t>();
+      tu64 = typeOf<uint64_t>();
+      tfloat = typeOf<float>();
+      tdouble = typeOf<double>();
+      tstring = typeOf<std::string>();
+      tgv = typeOf<AnyValue>();
+      tbuffer = typeOf<Buffer>();
+      tobjectptr = typeOf<AnyObject>();
+      )
     switch(sig.type())
     {
     case Signature::Type_None:
