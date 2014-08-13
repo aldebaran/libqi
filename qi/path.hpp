@@ -43,6 +43,9 @@ namespace qi
     /// is the path empty?
     bool isEmpty() const;
 
+    /// does this file exist?
+    bool exists() const;
+
     /// is the path a directory?
     bool isDir() const;
 

@@ -66,6 +66,11 @@ namespace qi
     return _p->path.empty();
   }
 
+  bool Path::exists() const
+  {
+    return bfs::exists(_p->path);
+  }
+
   bool Path::isDir() const
   {
     boost::system::error_code ec;
