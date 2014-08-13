@@ -165,6 +165,16 @@ namespace detail {
 
 }
 
+/** Type erased object that has a known interface T.
+ *
+ * In case T is unknown, you can use qi::AnyObject which aliases to
+ * Object<qi::Empty>.
+ *
+ * You can then use the object with type-erasure or call the object directly
+ * using the operator ->.
+ *
+ * \includename{qi/anyobject.hpp}
+ */
 template<typename T> class Object :
   public detail::GenericObjectBounce<Object<T> >
 {

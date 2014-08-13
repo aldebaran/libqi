@@ -33,6 +33,9 @@ namespace qi {
      * \brief Application constructor. Must be the first thing called by main().
      * \param argc Argument counter of the program.
      * \param argv Arguments of the program (given to main).
+     * \param name The name of the program. It will be returned by name().
+     * \param path The full path to the program if you wish to override it. It
+     * will be returned by program() but not realProgram().
      * \throw std::logic_error When the constructor is called twice.
      */
     Application(int& argc, char** &argv, const std::string& name = "", const std::string& path = "");
@@ -143,7 +146,7 @@ namespace qi {
      * \brief Return the current program full path according to argv[0]
      * \return full path to the current running program, symbolic links are not
      * resolved.
-     * \seealso realProgram
+     * \see realProgram
      */
     static const char* program();
 

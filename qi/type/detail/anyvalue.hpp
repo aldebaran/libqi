@@ -13,6 +13,8 @@ namespace qi {
    *  when constructed or set the value is copied.
    *  as a pointer to the real value.
    *  to convert the value if needed and copy to the required type.
+   *
+   *  \includename{qi/anyvalue.hpp}
    */
   class QI_API AnyValue: public detail::AnyReferenceBase
   {

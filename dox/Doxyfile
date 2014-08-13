@@ -1,2 +1,3 @@
-INPUT       = ../qi/ ../qi/log/ .
+INPUT       = ../qi/ ../qi/log/
 PREDEFINED= QI_API= BOOST_STATIC_CONSTEXPR= DOXYGEN=1
+MACRO_EXPANSION=YES
