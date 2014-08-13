@@ -49,6 +49,10 @@ namespace qi
     : _p(new PrivatePath(unicodePath))
   {}
 
+  Path::Path(const char* unicodePath)
+    : _p(new PrivatePath(std::string(unicodePath)))
+  {}
+
   Path::Path(const Path& path)
     : _p(new PrivatePath(path._p->path))
   {}

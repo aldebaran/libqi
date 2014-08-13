@@ -31,6 +31,9 @@ namespace qi
     /// \param unicodePath Path
     Path(const std::string& unicodePath = std::string());
 
+    /// \param unicodePath Path
+    Path(const char* unicodePath);
+
     /// Copy Constructor
     Path(const Path& path);
 
