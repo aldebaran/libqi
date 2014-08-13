@@ -12,6 +12,7 @@
 #include <boost/thread/mutex.hpp>
 #include <boost/filesystem.hpp>
 
+#include <qi/qi.hpp>
 #include <qi/os.hpp>
 #include <qi/log.hpp>
 #include <qi/types.hpp>
@@ -161,7 +162,7 @@ namespace qi {
 
     void symlink(const qi::Path& source, const qi::Path& destination)
     {
-      bfs::create_symlink(bfs::path(source), bfs::path(destination));
+      bfs::create_symlink(bfs::path(source.str(), qi::unicodeFacet()), bfs::path(destination.str(), qi::unicodeFacet()));
     }
   }
 }
