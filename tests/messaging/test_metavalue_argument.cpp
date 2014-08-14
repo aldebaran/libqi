@@ -1,15 +1,11 @@
 /*
-**
 ** Copyright (C) 2012 Aldebaran Robotics
 */
-
-
 
 #include <map>
 #include <boost/lexical_cast.hpp>
 
 #include <gtest/gtest.h>
-#include <qi/qi.hpp>
 #include <qi/application.hpp>
 #include <qi/type/typeinterface.hpp>
 #include <qi/anyobject.hpp>

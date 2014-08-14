@@ -12,7 +12,6 @@
 
 #include <boost/assign/list_of.hpp>
 
-#include <qi/qi.hpp>
 #include <qi/application.hpp>
 #include <qi/eventloop.hpp>
 #include <qi/anyobject.hpp>

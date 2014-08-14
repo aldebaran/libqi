@@ -8,7 +8,6 @@
 #include <cstdlib>
 
 #include <qi/application.hpp>
-#include <qi/qi.hpp>
 #include <qi/os.hpp>
 #include <qi/log.hpp>
 #include <qi/path.hpp>

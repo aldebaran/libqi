@@ -11,7 +11,6 @@
 #include <qi/application.hpp>
 #include <qi/path.hpp>
 #include <qi/os.hpp>
-#include <qi/qi.hpp>
 #include <qi/log.hpp>
 
 #include <boost/algorithm/string/trim.hpp>

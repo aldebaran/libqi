@@ -1,4 +1,3 @@
-#include <qi/qi.hpp>
 #include <qi/anyobject.hpp>
 #include <qi/anymodule.hpp>
 #include <qi/property.hpp>

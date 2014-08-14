@@ -2,10 +2,8 @@
  *  Copyright (c) 2012 Aldebaran Robotics. All rights reserved.
  */
 
-
 #include <boost/make_shared.hpp>
 
-#include <qi/qi.hpp>
 #include <qi/log.hpp>
 #include <qi/application.hpp>
 #include <qi/anyobject.hpp>
@@ -15,7 +13,6 @@
 #include <testsession/testsessionpair.hpp>
 #include <testsession/testsessionpair.hpp>
 #include "task_service.hpp"
-
 
 qiLogCategory("Task");
 

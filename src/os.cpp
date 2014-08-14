@@ -12,7 +12,7 @@
 #include <boost/thread/mutex.hpp>
 #include <boost/filesystem.hpp>
 
-#include <qi/qi.hpp>
+#include <qi/path.hpp>
 #include <qi/os.hpp>
 #include <qi/log.hpp>
 #include <qi/types.hpp>

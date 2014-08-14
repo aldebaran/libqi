@@ -24,7 +24,6 @@
 
 #include <qi/path.hpp>
 #include <qi/os.hpp>
-#include <qi/qi.hpp>
 
 #ifdef _MSC_VER
 # pragma warning( push )

@@ -10,7 +10,6 @@
 
 #include <gtest/gtest.h>
 
-#include <qi/qi.hpp>
 #include <qi/buffer.hpp>
 
 

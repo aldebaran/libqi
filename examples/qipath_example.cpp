@@ -10,7 +10,6 @@
 #include <qi/os.hpp>
 #include <qi/path.hpp>
 #include <qi/application.hpp>
-#include <qi/qi.hpp>
 
 int main(int argc, char *argv[])
 {

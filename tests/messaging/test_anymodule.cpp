@@ -1,5 +1,4 @@
 /*
-**
 ** Copyright (C) 2012 Aldebaran Robotics
 */
 

@@ -4,7 +4,7 @@
  * found in the COPYING file.
  */
 #include <qi/macro.hpp>
-#include <qi/qi.hpp>
+#include <qi/path.hpp>
 
 #define BOOST_UTF8_BEGIN_NAMESPACE  namespace qi { namespace detail {
 #define BOOST_UTF8_END_NAMESPACE    }}

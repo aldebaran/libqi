@@ -15,7 +15,6 @@
 
 #include "../src/sdklayout.hpp"
 #include <qi/application.hpp>
-#include <qi/qi.hpp>
 #include <qi/os.hpp>
 #include <qi/path.hpp>
 #include "../src/utils.hpp"

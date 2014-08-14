@@ -27,7 +27,7 @@
 
 #include <qi/log.hpp>
 #include <qi/os.hpp>
-#include <qi/qi.hpp>
+#include <qi/path.hpp>
 #include "filesystem.hpp"
 
 #include "utils.hpp"

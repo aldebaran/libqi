@@ -12,7 +12,6 @@
 
 #include <qi/translator.hpp>
 #include <qi/path.hpp>
-#include <qi/qi.hpp>
 #include <qi/log.hpp>
 
 #include "utils.hpp"
