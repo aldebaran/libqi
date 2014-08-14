@@ -71,7 +71,7 @@ namespace detail {
     }
     template <typename FUNCTOR_TYPE>
     inline qi::FutureSync<SignalLink> connect(const std::string& eventName, FUNCTOR_TYPE callback,
-      MetaCallType threadingModel = MetaCallType_Direct) const
+      MetaCallType threadingModel = MetaCallType_Auto) const
     {
       return go()->connect(eventName, callback, threadingModel);
     }
