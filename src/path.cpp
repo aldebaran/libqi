@@ -137,20 +137,10 @@ namespace qi
     return Path(new PrivatePath(_p->path / rhs._p->path));
   }
 
-  Path Path::operator/(const std::string &rhs) const
-  {
-    return this->operator/(qi::Path(rhs));
-  }
-
   const Path& Path::operator/=(const Path &rhs) const
   {
     _p->path /= rhs._p->path;
     return *this;
-  }
-
-  const Path& Path::operator/=(const std::string &rhs) const
-  {
-    return this->operator/=(qi::Path(rhs));
   }
 
   const Path& Path::operator=(const Path &rhs) const
