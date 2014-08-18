@@ -39,6 +39,8 @@ inline long testAndSet(long* cond)
 #endif
 }
 
+namespace detail
+{
 /* /!\ WARNING
  * The 'volatile' is needed even though we use atomic compiler builtins.
  * Without the volatile, a thread doing
@@ -57,9 +59,6 @@ public:
   inline int operator++();
   inline int operator--();
   inline StaticAtomicInt& operator=(int value);
-  /** If value is \p testValue, replace it with \p setValue.
-   * \return true if swap was performed
-   */
   inline bool setIfEquals(int testValue, int setValue);
 
   inline int swap(int value);
@@ -124,6 +123,7 @@ inline bool StaticAtomicInt::setIfEquals(int testValue, int setValue)
   return _InterlockedCompareExchange(&_value, setValue, testValue) == testValue;
 }
 #endif
+}
 
 template <typename T>
 struct Atomic
@@ -161,9 +161,13 @@ public:
   bool setIfEquals(T testValue, T setValue)
   { return _value.compare_exchange_strong(testValue, setValue); }
 
+  /** Swap the atomic value with value.
+   * \return the previously held value
+   */
   T swap(T value)
   { return _value.exchange(value); }
 
+  /// Return the contained value
   T operator*() const
   { return _value.load(); }
 };
@@ -193,17 +197,17 @@ template<typename T> void newAndAssign(T** ptr)
   QI_ONCE(QI_VAARGS_APPLY(_QI_INSTANCIATE, _, __VA_ARGS__);)
 
 /// Execute code once, parallel calls are blocked until code finishes.
-#define QI_ONCE(code)                                           \
-  static qi::StaticAtomicInt QI_UNIQ_DEF(atomic_guard_a) = {0}; \
-  static qi::StaticAtomicInt QI_UNIQ_DEF(atomic_guard_b) = {0}; \
-  while (!QI_UNIQ_DEF(atomic_guard_a).setIfEquals(1, 1))        \
-  {                                                             \
-    bool tok = QI_UNIQ_DEF(atomic_guard_b).setIfEquals(0, 1);   \
-    if (tok)                                                    \
-    {                                                           \
-      code;                                                     \
-      ++QI_UNIQ_DEF(atomic_guard_a);                            \
-    }                                                           \
+#define QI_ONCE(code)                                                   \
+  static qi::detail::StaticAtomicInt QI_UNIQ_DEF(atomic_guard_a) = {0}; \
+  static qi::detail::StaticAtomicInt QI_UNIQ_DEF(atomic_guard_b) = {0}; \
+  while (!QI_UNIQ_DEF(atomic_guard_a).setIfEquals(1, 1))                \
+  {                                                                     \
+    bool tok = QI_UNIQ_DEF(atomic_guard_b).setIfEquals(0, 1);           \
+    if (tok)                                                            \
+    {                                                                   \
+      code;                                                             \
+      ++QI_UNIQ_DEF(atomic_guard_a);                                    \
+    }                                                                   \
   }
 
 #endif // QI_ATOMIC_HPP_
