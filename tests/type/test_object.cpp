@@ -916,6 +916,11 @@ TEST(TestObject, traceGeneric)
   ASSERT_TRUE(!obj.call<bool>("isTraceEnabled"));
 }
 
+static bool comparator(qi::EventTrace e1, qi::EventTrace e2)
+{
+  return static_cast<int>(e1.kind()) < static_cast<int>(e2.kind());
+}
+
 TEST(TestObject, traceType)
 {
   qi::ObjectTypeBuilder<Adder> builder;
@@ -934,6 +939,7 @@ TEST(TestObject, traceType)
   for (unsigned i=0; i<20 && traces.size()<2; ++i) qi::os::msleep(50);
   qi::os::msleep(50);
   ASSERT_EQ(2u, traces.size());
+  std::sort(traces.begin(), traces.end(), comparator); // events may not be in order
   EXPECT_EQ(qi::EventTrace::Event_Call, traces[0].kind());
   EXPECT_EQ(qi::EventTrace::Event_Result, traces[1].kind());
   EXPECT_EQ(mid, traces[0].slotId());
