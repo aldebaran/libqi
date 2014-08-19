@@ -28,6 +28,10 @@ extern "C" long __cdecl _InterlockedDecrement(long volatile *);
 namespace qi
 {
 
+/** Cross-platform implementation of atomic Test-And-Set.
+ * \param cond pointer to the value to test and set.
+ * \return true (1) if cond is 0, false (0) otherwise.
+ */
 inline long testAndSet(long* cond)
 {
 #if defined __GNUC__
@@ -125,15 +129,27 @@ inline bool StaticAtomicInt::setIfEquals(int testValue, int setValue)
 #endif
 }
 
+/** Atomic operations on integrals.
+ *
+ * This class allows to do operations on an integral value from multiple threads,
+ * with the guarantee that each operation will not lead to a data race.
+ *
+ * \includename{qi/atomic.hpp}
+ */
 template <typename T>
 struct Atomic
 {
 public:
   boost::atomic<T> _value;
 
+  /* Default atomic constructor, setting value to 0.
+   */
   Atomic()
     : _value(0)
   {}
+  /** Atomic constructor setting value to its parameter.
+   * \param value The default value of the atomic.
+   */
   Atomic(T value)
     : _value(value)
   {}
@@ -144,9 +160,10 @@ public:
     : _value(*other)
   {}
 
-  /* prefix operators */
+  /// Atomic increment of the value.
   T operator++()
   { return ++_value; }
+  /// Atomic decement of the value.
   T operator--()
   { return --_value; }
 
@@ -167,7 +184,8 @@ public:
   T swap(T value)
   { return _value.exchange(value); }
 
-  /// Return the contained value
+  /** Return the contained value
+   */
   T operator*() const
   { return _value.load(); }
 };
