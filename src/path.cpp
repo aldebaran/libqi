@@ -281,7 +281,7 @@ namespace qi
     }
 
     std::vector<std::string> listLib(const std::string &subfolder,
-                                      const std::string &pattern)
+                                     const std::string &pattern)
     {
       return getInstance()->listLib(subfolder, pattern);
     }

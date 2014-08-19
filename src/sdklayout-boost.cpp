@@ -516,7 +516,25 @@ namespace qi {
   std::vector<std::string> SDKLayout::listLib(const std::string &subfolder,
                                               const std::string &pattern) const
   {
-    return listFiles(libPaths(subfolder), pattern);
+    std::vector<std::string> files = listFiles(libPaths(subfolder), pattern);
+    std::vector<std::string> libs;
+    for (unsigned i = 0; i < files.size(); ++i)
+    {
+      std::string file = files.at(i);
+#ifndef _WIN32
+      if (file.substr(file.size() - 3) == ".so")
+        libs.push_back(file);
+#endif
+#ifdef __APPLE__
+      if (file.substr(file.size() - 6) == ".dylib")
+        libs.push_back(file);
+#endif
+#ifdef _WIN32
+      if (file.substr(file.size() - 4) == ".dll")
+        libs.push_back(file);
+#endif
+    }
+    return libs;
   }
 
 
