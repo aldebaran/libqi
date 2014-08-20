@@ -5,6 +5,7 @@ Your gdb need to be compile with python and version > 7.0
 
 import gdb
 import gdb.types
+import re
 
 class QiFuturePrinter:
     def __init__(self, val):
@@ -13,7 +14,7 @@ class QiFuturePrinter:
     def to_string(self):
         fut = self.val['_p']['px'].dereference()
         _fut = fut['_p']
-        state = str(_fut['_state'])
+        state = str(_fut['_state'].cast(gdb.lookup_type("qi::FutureState")))
         if state == "qi::FutureState_Running":
             return "Running qi::Future<>"
         elif state == "qi::FutureState_Canceled":
