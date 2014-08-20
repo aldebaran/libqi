@@ -378,7 +378,6 @@ namespace qi {
       {
       case TypeKind_Void:
         return qi::Signature::fromType(Signature::Type_Void);
-        break;
       case TypeKind_Int:
       {
         IntTypeInterface* tint = static_cast<IntTypeInterface*>(value.type());
@@ -440,13 +439,18 @@ namespace qi {
         v.result = qi::Signature::fromType(Signature::Type_Raw);
         break;
       case TypeKind_Unknown:
-      case TypeKind_Iterator:
         v.result = qi::Signature::fromType(Signature::Type_Unknown);
         break;
-      case TypeKind_VarArgs:
+      case TypeKind_VarArgs: {
         TypeInterface* elt = static_cast<VarArgsTypeInterface*>(this)->elementType();
         v.result = qi::makeVarArgsSignature(elt->signature());
         break;
+      }
+      case TypeKind_Iterator:
+      case TypeKind_Function:
+      case TypeKind_Signal:
+      case TypeKind_Property:
+        throw std::runtime_error("Cannot get signature of iterator, function, signal or property");
       }
 
       return v.result;
