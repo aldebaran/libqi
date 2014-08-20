@@ -107,8 +107,8 @@ namespace qi
 
     template<> struct EqType<bool>
     {
-      typedef void* type;
-      typedef void* rType;
+      typedef bool type;
+      typedef bool rType;
       typedef boost::false_type isReference;
     };
 
