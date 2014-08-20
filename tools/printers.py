@@ -15,16 +15,17 @@ class QiFuturePrinter:
         fut = self.val['_p']['px'].dereference()
         _fut = fut['_p']
         state = str(_fut['_state'].cast(gdb.lookup_type("qi::FutureState")))
+        type = fut.type.template_argument(0).name
         if state == "qi::FutureState_Running":
-            return "Running qi::Future<>"
+            return "Running qi::Future of %s" % type
         elif state == "qi::FutureState_Canceled":
-            return "Cancelled qi::Future<>"
+            return "Cancelled qi::Future of %s" % type
         elif state == "qi::FutureState_FinishedWithError":
-            return "qi::Future<> finished with error %s" % _fut['_error']
+            return "qi::Future of %s finished with error %s" % (type, _fut['_error'])
         elif state == "qi::FutureState_FinishedWithValue":
-            return "qi::Future<> finished with value %s" % fut['_value']
+            return "qi::Future of %s finished with value %s" % (type, fut['_value'])
         elif state == "qi::FutureState_None":
-            return "qi::Future<> not associated with a promise"
+            return "qi::Future of %s not associated with a promise" % type
 
 class QiBufferPrinter:
     def __init__(self, val):
