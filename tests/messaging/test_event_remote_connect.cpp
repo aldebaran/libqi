@@ -315,7 +315,7 @@ TEST_F(TestObject, multipleConnect)
   oclient2.post("fire2", 42);//post signal twice
   oclient2.post("fire2", 42);
 
-  while((*i) != 10 && waiting_time < 10000)//waiting 10 seconds max
+  while((*i) != 18 && waiting_time < 10000)//waiting 10 seconds max
   {
     qi::os::msleep(additional_timeout); //additional timeout to wait for unwanted callback
     waiting_time += additional_timeout;
