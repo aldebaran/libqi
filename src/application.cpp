@@ -230,6 +230,8 @@ namespace qi {
       qiLogVerbose() << "Program path guessed as " << globalProgram;
     }
 
+    globalProgram = detail::normalizePath(globalProgram);
+
     readPathConf();
     if (globalInitialized)
       throw std::logic_error("Application was already initialized");
