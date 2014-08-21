@@ -228,8 +228,6 @@ void GatewayPrivate::handleMsgFromService(TransportSocketPtr service, const Mess
       ServiceInfo    result;
       //yes it works!
       result = msg->value(qi::typeOf<ServiceInfo>()->signature(), qi::TransportSocketPtr()).as<ServiceInfo>();
-      //qi::BinaryDecoder ds(msg->buffer());
-      //ds.read(result);
 
       if (result.name() == "")
       {
@@ -275,13 +273,6 @@ void GatewayPrivate::handleMsgFromService(TransportSocketPtr service, const Mess
         // Connect to the service
         TransportSocketPtr service = qi::makeTransportSocket(url.protocol());
         service->connect(url);
-
-//        for (std::list<TransportSocketInterface*>::iterator it = _transportSocketCallbacks.begin();
-//             it != _transportSocketCallbacks.end();
-//             ++it)
-//        {
-//          service->addCallbacks(*it);
-//        }
 
         _services[serviceId] = service;
       }
@@ -470,12 +461,6 @@ bool GatewayPrivate::attachToServiceDirectory(const Url &address)
 
   TransportSocketPtr sdSocket = qi::makeTransportSocket(address.protocol());
   _services[qi::Message::Service_ServiceDirectory] = sdSocket;
-//  for (std::list<TransportSocketInterface*>::iterator it = _transportSocketCallbacks.begin();
-//       it != _transportSocketCallbacks.end();
-//       ++it)
-//  {
-//    sdSocket->addCallbacks(*it);
-//  }
 
   sdSocket->connect(address);
 
@@ -502,12 +487,7 @@ bool GatewayPrivate::connect(const qi::Url &connectURL)
   qiLogInfo() << "Connecting to remote gateway: " << connectURL.str();
 
   qi::TransportSocketPtr socket = qi::makeTransportSocket(connectURL.protocol());
-//  for (std::list<TransportSocketInterface*>::iterator it = _transportSocketCallbacks.begin();
-//       it != _transportSocketCallbacks.end();
-//       ++it)
-//  {
-//    ts->addCallbacks(*it);
-//  }
+
   socket->connect(connectURL);
   _remoteGateways.push_back(socket);
 
