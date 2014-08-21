@@ -124,7 +124,6 @@ public:
   SetValue2(int& target)
   :SetValue(target)
   , qi::Trackable<SetValue2>(this)
-  , state(0)
   {}
   ~SetValue2()
   {
@@ -144,7 +143,6 @@ public:
     boost::thread(&SetValue2::delayExchangeP, this, msDelay, value, promise);
     return promise.future();
   }
-  int state;
 };
 
 // wrap a call, waiting before, and notifying state

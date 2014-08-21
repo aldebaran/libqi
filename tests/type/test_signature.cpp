@@ -194,8 +194,8 @@ TEST(TestSignature, ComplexTypeSignature) {
 }
 
 TEST(TestSignature, FromObject) {
-  int myint;
-  EXPECT_EQ("i"     , qi::signatureFromObject::value(myint));
+  int myint = 42;
+  EXPECT_EQ("i", qi::signatureFromObject::value(myint));
 }
 
 TEST(TestSignature, ComplexConstRefPtr) {

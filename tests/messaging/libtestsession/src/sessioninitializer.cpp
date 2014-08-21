@@ -12,7 +12,8 @@
 
 SessionInitializer::SessionInitializer() :
   _populationGenerator(0),
-  _trafficGenerator(0)
+  _trafficGenerator(0),
+  _listen(false)
 {
   _setUps[TestMode::Mode_SD] = &SessionInitializer::setUpSD;
   _setUps[TestMode::Mode_SSL] = &SessionInitializer::setUpSSL;

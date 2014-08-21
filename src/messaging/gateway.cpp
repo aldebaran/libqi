@@ -70,6 +70,7 @@ public:
 
 GatewayPrivate::GatewayPrivate()
 : _transportServer(0)
+, _type(Type_LocalGateway)
 {
 }
 
@@ -499,7 +500,6 @@ bool GatewayPrivate::connect(const qi::Url &connectURL)
 Gateway::Gateway()
   : _p(new GatewayPrivate())
 {
-  _p->_type = GatewayPrivate::Type_LocalGateway;
 }
 
 Gateway::~Gateway()

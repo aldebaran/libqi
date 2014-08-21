@@ -1247,13 +1247,14 @@ TEST(TestObject, EarlyAbort)
 
 struct Color
 {
+  Color():r(0),g(0),b(0) {}
   int r,g,b;
 };
 // No inheritance, we emulate Color and ColorA being the same struct in
 // two different CUs or SOs.
 struct ColorA
 {
-  ColorA():a(1) {}
+  ColorA():a(1),r(0),g(0),b(0) {}
   int r,g,b,a;
 };
 

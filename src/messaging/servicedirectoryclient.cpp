@@ -18,6 +18,7 @@ namespace qi {
     , _addSignalLink(0)
     , _removeSignalLink(0)
     , _localSd(false)
+    , _sdSocketDisconnectedSignalLink(0)
   {
     _object = makeDynamicAnyObject(&_remoteObject, false);
 

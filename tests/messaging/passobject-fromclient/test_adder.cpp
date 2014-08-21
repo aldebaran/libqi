@@ -33,7 +33,9 @@ QI_REGISTER_IMPLEMENTATION(AddTask, Adder1);
 class Adder2: public AddTask
 {
 public:
-  Adder2() { qiLogDebug() << "Adder2 " << this;}
+  Adder2()
+    : v(0)
+  { qiLogDebug() << "Adder2 " << this;}
   ~Adder2() { ++nDead;}
   int val() { return v;}
   int add(int v2) { return v + v2;}

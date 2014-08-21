@@ -81,6 +81,7 @@ struct Foo: public Padding, public Parent, public Padding2 {
   void operator = (const Foo& b)
   {
     f = b.f + 1;
+    r = b.r;
   }
   int fun(const int &p0,const int &p1)   { return p0 + p1; }
   void vfun(const int &p0,const int &p1) { gGlobalResult = p0 + p1; }
