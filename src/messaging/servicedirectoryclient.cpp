@@ -66,13 +66,15 @@ namespace qi {
       fdc.connect(&qi::Promise<void>::setError, promise, future.error());
       return;
     }
-    boost::function<void (unsigned int, std::string)> f;
 
-    f = boost::bind<void>(&ServiceDirectoryClient::onServiceAdded, this, _1, _2);
-    qi::Future<SignalLink> fut1 = _object.connect("serviceAdded", f);
-
-    f = boost::bind<void>(&ServiceDirectoryClient::onServiceRemoved, this, _1, _2);
-    qi::Future<SignalLink> fut2 = _object.connect("serviceRemoved", f);
+    qi::Future<SignalLink> fut1 = _object.connect(
+        "serviceAdded",
+        qi::bind<void(unsigned int, std::string)>(
+            &ServiceDirectoryClient::onServiceAdded, this, _1, _2));
+    qi::Future<SignalLink> fut2 = _object.connect(
+        "serviceRemoved",
+        qi::bind<void(unsigned int, std::string)>(
+            &ServiceDirectoryClient::onServiceRemoved, this, _1, _2));
 
     fut1.connect(&ServiceDirectoryClient::onSDEventConnected, this, _1, promise, true);
     fut2.connect(&ServiceDirectoryClient::onSDEventConnected, this, _1, promise, false);
@@ -112,13 +114,15 @@ namespace qi {
   {
     _object = serviceDirectoryService;
     _localSd = true;
-    boost::function<void (unsigned int, std::string)> f;
 
-    f = boost::bind<void>(&ServiceDirectoryClient::onServiceAdded, this, _1, _2);
-    _addSignalLink  = _object.connect("serviceAdded", f);
-
-    f = boost::bind<void>(&ServiceDirectoryClient::onServiceRemoved, this, _1, _2);
-    _removeSignalLink = _object.connect("serviceRemoved", f);
+    _addSignalLink = _object.connect(
+        "serviceAdded",
+        qi::bind<void(unsigned int, std::string)>(
+            &ServiceDirectoryClient::onServiceAdded, this, _1, _2));
+    _removeSignalLink = _object.connect(
+        "serviceRemoved",
+        qi::bind<void(unsigned int, std::string)>(
+            &ServiceDirectoryClient::onServiceRemoved, this, _1, _2));
 
     connected();
   }
