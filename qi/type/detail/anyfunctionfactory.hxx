@@ -248,16 +248,14 @@ namespace qi
     // entirely ptrFromStorage.
 
 #define callArg(z, n, _) \
-  BOOST_PP_COMMA_IF(n) *(typename boost::remove_reference<P ## n>::type  *)args[n]
-#define makeCall(n, argstypedecl, argstype, argsdecl, argsues, comma)     \
-  template<typename R comma argstypedecl> \
-  void* makeCall(R(*f)(argstype), void** args)  \
-    { \
-  detail::AnyReferenceCopy val; \
-  val(), f( \
-  BOOST_PP_REPEAT(n, callArg, _) \
-  ); \
-  return val.rawValue(); \
+  BOOST_PP_COMMA_IF(n) * (typename boost::remove_reference<P##n>::type*)args[n]
+#define makeCall(n, argstypedecl, argstype, argsdecl, argsues, comma) \
+  template <typename R comma argstypedecl>                            \
+  void* makeCall(R (*f)(argstype), void** args)                       \
+  {                                                                   \
+    detail::AnyReferenceCopy val;                                     \
+    val(), f(BOOST_PP_REPEAT(n, callArg, _));                         \
+    return val.rawValue();                                            \
   }
     QI_GEN(makeCall)
 #undef makeCall
@@ -268,46 +266,43 @@ namespace qi
 #define STATIC_IF_SAFE static
 #endif
 
-    // hacks are disabled for boost::function (refMask forced to 0)
-    // so use ptrFromStorage.
-#define declType(z, n, _) \
-  STATIC_IF_SAFE TypeInterface* type_ ## n  = typeOf<typename boost::remove_reference<P ## n>::type>();
-#define callArgBF(z, n, _) \
-  BOOST_PP_COMMA_IF(n) *(typename boost::remove_reference<P ## n>::type  *)type_##n -> ptrFromStorage(&args[n])
+// hacks are disabled for boost::function (refMask forced to 0)
+// so use ptrFromStorage.
+#define declType(z, n, _)                  \
+  STATIC_IF_SAFE TypeInterface* type_##n = \
+      typeOf<typename boost::remove_reference<P##n>::type>();
+#define callArgBF(z, n, _)                                               \
+  BOOST_PP_COMMA_IF(n) * (typename boost::remove_reference<P##n>::type*) \
+      type_##n->ptrFromStorage(&args[n])
 
-#define makeCall(n, argstypedecl, argstype, argsdecl, argsues, comma)     \
-  template<typename R comma argstypedecl> \
-  void* makeCall(boost::function<R(argstype)> f, void** args)  \
-    { \
-  BOOST_PP_REPEAT(n, declType, _) \
-  detail::AnyReferenceCopy val; \
-  val(), f( \
-  BOOST_PP_REPEAT(n, callArgBF, _) \
-  ); \
-  return val.rawValue(); \
+#define makeCall(n, argstypedecl, argstype, argsdecl, argsues, comma) \
+  template <typename R comma argstypedecl>                            \
+  void* makeCall(boost::function<R(argstype)> f, void** args)         \
+  {                                                                   \
+    BOOST_PP_REPEAT(n, declType, _) detail::AnyReferenceCopy val;     \
+    val(), f(BOOST_PP_REPEAT(n, callArgBF, _));                       \
+    return val.rawValue();                                            \
   }
     QI_GEN(makeCall)
 #undef makeCall
 
-#define makeCall(n, argstypedecl, argstype, argsdecl, argsues, comma)     \
-  template<typename R comma argstypedecl> \
-  void* makeCall(R(Class::*f)(argstype), void* instance, void** args)  \
-    { \
-  detail::AnyReferenceCopy val; \
-  Class* cptr = *(Class**)instance; \
-  val(), ((*cptr).*f)( \
-  BOOST_PP_REPEAT(n, callArg, _) \
-  ); \
-  return val.rawValue(); \
+#define makeCall(n, argstypedecl, argstype, argsdecl, argsues, comma)  \
+  template <typename R comma argstypedecl>                             \
+  void* makeCall(R (Class::*f)(argstype), void* instance, void** args) \
+  {                                                                    \
+    detail::AnyReferenceCopy val;                                      \
+    Class* cptr = *(Class**)instance;                                  \
+    val(), ((*cptr).*f)(BOOST_PP_REPEAT(n, callArg, _));               \
+    return val.rawValue();                                             \
   }
     QI_GEN(makeCall)
 #undef makeCall
 
-#define makeCall_(n, argstypedecl, argstype, argsdecl, argsues, comma)     \
-  template<typename R comma argstypedecl> \
-  void* makeCall(R(Class::*f)(argstype), void** args)  \
-    { \
-  return makeCall(f, args[0], args + 1); \
+#define makeCall_(n, argstypedecl, argstype, argsdecl, argsues, comma) \
+  template <typename R comma argstypedecl>                             \
+  void* makeCall(R (Class::*f)(argstype), void** args)                 \
+  {                                                                    \
+    return makeCall(f, args[0], args + 1);                             \
   }
 
     QI_GEN(makeCall_)
