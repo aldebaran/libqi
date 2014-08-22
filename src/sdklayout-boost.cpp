@@ -78,29 +78,42 @@ namespace qi {
     {
     }
 
-    void initSDKlayout()
+    void initSDKlayout(bool real = false)
     {
-      const char *program = qi::Application::program();
-      if (program[0] == '\0')
+      const char *program;
+      if (!real)
       {
-        qiLogWarning() << "No Application was created, trying to deduce paths";
-        program = qi::Application::realProgram();
+        program = qi::Application::program();
+        if (program[0] == '\0')
+        {
+          qiLogWarning() << "No Application was created, trying to deduce paths";
+          return initSDKlayout(true);
+        }
       }
+      else
+        program = qi::Application::realProgram();
 
-      if (!boost::filesystem::exists(program)) {
+      if (!program) {
         _mode = "error";
         return;
       }
 
-      // We may use argc, argv to elaborate command line parsing, but,
-      // right now only argv[0] is used.
       boost::filesystem::path execPath(program, qi::unicodeFacet());
+      if(!boost::filesystem::exists(execPath)) {
+        _mode = "error";
+        return;
+      }
+
       execPath = boost::filesystem::system_complete(execPath).make_preferred();
-      _sdkPrefixes.push_back(execPath.parent_path().parent_path().string(qi::unicodeFacet()));
-      if (execPath.parent_path().filename().string(qi::unicodeFacet()) != "bin")
-        _mode = execPath.parent_path().filename().string(qi::unicodeFacet());
+      if (execPath.parent_path().filename().string(qi::unicodeFacet()) != "bin") {
+        if (!real)
+          return initSDKlayout(true);
+        _sdkPrefixes.push_back(execPath.parent_path().filename().string(qi::unicodeFacet()));
+      }
       else
         _mode = "";
+
+      _sdkPrefixes.push_back(execPath.parent_path().parent_path().string(qi::unicodeFacet()));
     }
 
     void checkInit()

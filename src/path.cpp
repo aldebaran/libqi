@@ -344,33 +344,7 @@ namespace qi
   SDKLayout* getInstance()
   {
     if (gInstance == NULL) {
-      std::string prefix;
-      std::string mode;
-      const char *program = qi::Application::program();
-      if (program[0] == '\0')
-      {
-        qiLogWarning() << "No Application was created, trying to deduce paths";
-        program = qi::Application::realProgram();
-      }
-
-      if (!program) {
-        mode = "error";
-      }
-      else {
-        boost::filesystem::path execPath(program, qi::unicodeFacet());
-        if(!boost::filesystem::exists(execPath)) {
-          mode = "error";
-        }
-        else {
-          execPath = boost::filesystem::system_complete(execPath).make_preferred();
-          prefix = execPath.parent_path().parent_path().string(qi::unicodeFacet());
-          if (execPath.parent_path().filename().string(qi::unicodeFacet()) != "bin")
-            mode = execPath.parent_path().filename().string(qi::unicodeFacet());
-          else
-            mode = "";
-        }
-      }
-      gInstance = new SDKLayout(prefix, mode);
+      gInstance = new SDKLayout();
     }
 
     return gInstance;
