@@ -272,7 +272,8 @@ namespace detail
     AnyReference val =  metaFut.value();
     AutoRefDestroy destroy(val);
 
-    static TypeInterface* targetType = typeOf<T>();
+    static TypeInterface* targetType;
+    QI_ONCE(targetType = typeOf<T>());
     try
     {
       std::pair<AnyReference, bool> conv = val.convert(targetType);
@@ -317,7 +318,8 @@ namespace detail
     if (handleFuture(val, promise))
       return;
 
-    static TypeInterface* targetType = typeOf<T>();
+    static TypeInterface* targetType;
+    QI_ONCE(targetType = typeOf<T>());
     try
     {
       std::pair<AnyReference, bool> conv = val.convert(targetType);

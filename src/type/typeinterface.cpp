@@ -127,10 +127,10 @@ namespace qi {
 
   QI_API TypeInterface* getType(const std::type_info& type)
   {
-    static bool fallback = !qi::os::getenv("QI_TYPE_RTTI_FALLBACK").empty();
     static boost::mutex* mutex = 0;
     QI_THREADSAFE_NEW(mutex);
     boost::mutex::scoped_lock sl(*mutex);
+    static bool fallback = !qi::os::getenv("QI_TYPE_RTTI_FALLBACK").empty();
 
     // We create-if-not-exist on purpose: to detect access that occur before
     // registration
