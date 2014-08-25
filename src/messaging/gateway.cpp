@@ -69,8 +69,8 @@ public:
 };
 
 GatewayPrivate::GatewayPrivate()
-: _transportServer(0)
-, _type(Type_LocalGateway)
+: _type(Type_LocalGateway)
+, _transportServer(0)
 {
 }
 

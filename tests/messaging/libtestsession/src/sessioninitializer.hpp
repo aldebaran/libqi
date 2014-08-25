@@ -50,7 +50,7 @@ private:
   std::map<TestMode::Mode, tearDownFcnt>   _tearDowns;
 
   PopulationGenerator                     *_populationGenerator;
-  TrafficGenerator                         *_trafficGenerator;
+  TrafficGenerator                        *_trafficGenerator;
 };
 
 #endif // !_TESTS_LIBTESTSESSION_SESSIONINITIALIZER_HPP_

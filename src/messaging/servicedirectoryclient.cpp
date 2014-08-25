@@ -14,11 +14,11 @@ namespace qi {
 
   ServiceDirectoryClient::ServiceDirectoryClient()
     : Trackable<ServiceDirectoryClient>(this)
+    , _sdSocketDisconnectedSignalLink(0)
     , _remoteObject(qi::Message::Service_ServiceDirectory)
     , _addSignalLink(0)
     , _removeSignalLink(0)
     , _localSd(false)
-    , _sdSocketDisconnectedSignalLink(0)
   {
     _object = makeDynamicAnyObject(&_remoteObject, false);
 

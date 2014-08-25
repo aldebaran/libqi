@@ -56,11 +56,11 @@ class TestObject: public ::testing::Test
 {
 public:
   TestObject()
-    : p2(p1)
-    , oe1(0)
+    : oe1(0)
     , oe2(0)
     , om1(0)
     , om2(0)
+    , p2(p1)
   {
     qi::DynamicObjectBuilder obs1, obs2;
     se1 = obs1.advertiseSignal<const int&>("fire1");

@@ -11,9 +11,9 @@
 #include "sessioninitializer.hpp"
 
 SessionInitializer::SessionInitializer() :
+  _listen(false),
   _populationGenerator(0),
-  _trafficGenerator(0),
-  _listen(false)
+  _trafficGenerator(0)
 {
   _setUps[TestMode::Mode_SD] = &SessionInitializer::setUpSD;
   _setUps[TestMode::Mode_SSL] = &SessionInitializer::setUpSSL;
