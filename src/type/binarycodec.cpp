@@ -893,7 +893,6 @@ namespace qi {
         ss << "ISerialization error " << BinaryDecoder::statusToStr(in.status());
         throw std::runtime_error(ss.str());
       }
-      what = dtv.result;
     }
 
     AnyReference deserialize(qi::TypeInterface *type, BinaryDecoder& in, DeserializeObjectCallback context, StreamContext* sctx)

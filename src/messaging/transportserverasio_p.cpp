@@ -316,9 +316,8 @@ namespace qi
     , _live(true)
 #ifdef WITH_SSL
     , _sslContext(*(boost::asio::io_service*)ctx->nativeHandle(), boost::asio::ssl::context::sslv23)
-#else
-    , _s(NULL)
 #endif
+    , _s(NULL)
     , _ssl(false)
     , _port(0)
   {
