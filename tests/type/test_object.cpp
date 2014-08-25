@@ -869,12 +869,19 @@ TEST(TestObject, statisticsType)
 void pushTrace(std::vector<qi::EventTrace>& target,
   const qi::EventTrace& trace)
 {
+  boost::atomic_thread_fence(boost::memory_order_seq_cst);
   target.push_back(trace);
+  boost::atomic_thread_fence(boost::memory_order_seq_cst);
 }
 
 int throw_exception(const std::string& content)
 {
   throw std::runtime_error(content);
+}
+
+static bool comparator(qi::EventTrace e1, qi::EventTrace e2)
+{
+  return static_cast<int>(e1.kind()) < static_cast<int>(e2.kind());
 }
 
 TEST(TestObject, traceGeneric)
@@ -888,9 +895,14 @@ TEST(TestObject, traceGeneric)
     (boost::function<void(qi::EventTrace)>)
     boost::bind(&pushTrace, boost::ref(traces), _1));
   obj.call<void>("sleep", 100);
-  for (unsigned i=0; i<20 && traces.size()<2; ++i) qi::os::msleep(50);
+  for (unsigned i=0; i<20 && traces.size()<2; ++i) {
+    qi::os::msleep(50);
+    boost::atomic_thread_fence(boost::memory_order_seq_cst);
+  }
   qi::os::msleep(50);
+  boost::atomic_thread_fence(boost::memory_order_seq_cst);
   ASSERT_EQ(2u, traces.size());
+  std::sort(traces.begin(), traces.end(), comparator); // events may not be in order
   EXPECT_EQ(qi::EventTrace::Event_Call, traces[0].kind());
   EXPECT_EQ(qi::EventTrace::Event_Result, traces[1].kind());
   EXPECT_EQ(mid, traces[0].slotId());
@@ -905,9 +917,14 @@ TEST(TestObject, traceGeneric)
   qi::os::msleep(50);
   traces.clear();
   obj.async<void>("boom", "o<").wait();
-  for (unsigned i=0; i<20 && traces.size()<2; ++i) qi::os::msleep(50);
+  for (unsigned i=0; i<20 && traces.size()<2; ++i) {
+    qi::os::msleep(50);
+    boost::atomic_thread_fence(boost::memory_order_seq_cst);
+  }
   qi::os::msleep(50);
+  boost::atomic_thread_fence(boost::memory_order_seq_cst);
   ASSERT_EQ(2u, traces.size());
+  std::sort(traces.begin(), traces.end(), comparator); // events may not be in order
   EXPECT_EQ(qi::EventTrace::Event_Call, traces[0].kind());
   EXPECT_EQ(qi::EventTrace::Event_Error, traces[1].kind());
   EXPECT_EQ(mid2, traces[0].slotId());
@@ -915,11 +932,6 @@ TEST(TestObject, traceGeneric)
   obj.disconnect(id);
   qi::os::msleep(50);
   ASSERT_TRUE(!obj.call<bool>("isTraceEnabled"));
-}
-
-static bool comparator(qi::EventTrace e1, qi::EventTrace e2)
-{
-  return static_cast<int>(e1.kind()) < static_cast<int>(e2.kind());
 }
 
 TEST(TestObject, traceType)
@@ -937,8 +949,12 @@ TEST(TestObject, traceType)
     boost::bind(&pushTrace, boost::ref(traces), _1));
 
   EXPECT_EQ(3, oa1.call<int>("add", 2));
-  for (unsigned i=0; i<20 && traces.size()<2; ++i) qi::os::msleep(50);
+  for (unsigned i=0; i<20 && traces.size()<2; ++i) {
+    qi::os::msleep(50);
+    boost::atomic_thread_fence(boost::memory_order_seq_cst);
+  }
   qi::os::msleep(50);
+  boost::atomic_thread_fence(boost::memory_order_seq_cst);
   ASSERT_EQ(2u, traces.size());
   std::sort(traces.begin(), traces.end(), comparator); // events may not be in order
   EXPECT_EQ(qi::EventTrace::Event_Call, traces[0].kind());
