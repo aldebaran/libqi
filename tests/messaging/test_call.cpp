@@ -1254,7 +1254,7 @@ struct Color
 // two different CUs or SOs.
 struct ColorA
 {
-  ColorA():a(1),r(0),g(0),b(0) {}
+  ColorA():r(0),g(0),b(0),a(1) {}
   int r,g,b,a;
 };
 
