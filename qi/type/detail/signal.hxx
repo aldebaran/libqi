@@ -14,22 +14,24 @@
 
 namespace qi
 {
-  #define genConnect(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)          \
-    template<typename T>                                                \
-    template<typename F, typename P comma ATYPEDECL>                    \
-    SignalSubscriber& SignalF<T>::connect(F func, P p comma ADECL)      \
-    {                                                                   \
-      int curId;                                                        \
-      SignalLink* trackLink;                                            \
-      createNewTrackLink(curId, trackLink);                             \
-      SignalSubscriber& s = connect(::qi::bindWithFallback<T>(          \
-            boost::bind(&SignalF<T>::disconnectTrackLink, this, curId), \
-            func, p comma AUSE));                                       \
-      *trackLink = s;                                                   \
-      return s;                                                         \
-    }
+#define genConnect(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)           \
+  template <typename T>                                                \
+  template <typename F, typename P comma ATYPEDECL>                    \
+  SignalSubscriber& SignalF<T>::connect(F func, P p comma ADECL)       \
+  {                                                                    \
+    int curId;                                                         \
+    SignalLink* trackLink;                                             \
+    createNewTrackLink(curId, trackLink);                              \
+    SignalSubscriber& s = connect(::qi::bindWithFallback<T>(           \
+        qi::track(boost::function<void()>(boost::bind(                 \
+                      &SignalF<T>::disconnectTrackLink, this, curId)), \
+                  boost::weak_ptr<SignalBasePrivate>(_p)),             \
+        func, p comma AUSE));                                          \
+    *trackLink = s;                                                    \
+    return s;                                                          \
+  }
   QI_GEN(genConnect)
-  #undef genConnect
+#undef genConnect
 
   template<typename T>
   SignalSubscriber& SignalF<T>::connect(AnyFunction f)
