@@ -23,6 +23,12 @@
 namespace qi {
 
   class SessionPrivate;
+
+  /** A Session allows you to interconnect services on the same machine or over
+   * the network.
+   *
+   * \includename{qi/session.hpp}
+   */
   class QI_API Session : boost::noncopyable, public ::boost::enable_shared_from_this<Session> {
   public:
     Session();
