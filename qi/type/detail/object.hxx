@@ -28,6 +28,21 @@ class Empty {};
 
 namespace detail {
 
+  /* On ubuntu (and maybe other platforms), the linking is done by default with
+   * --as-needed.
+   * Proxy libraries constist only of static initialization functions which add
+   * the proxy factories to the global maps, thus there is no direct dependency
+   * between the program and the library (no function call whatsoever) and the
+   * dependency gets dropped by the linker.
+   * This class is specialized when including interfaces which have proxies
+   * and the function is defined in the .so to force a dependency.
+   */
+  template <typename T>
+  struct ForceProxyInclusion
+  {
+    bool dummyCall() { return true; }
+  };
+
   // bounce to a genericobject obtained by (O*)this->asAnyObject()
   /* Everything need to be const:
    * anyobj.call bounces to anyobj.asObject().call, and the
@@ -314,8 +329,14 @@ template<typename T> inline ObjectTypeInterface* Object<T>::interface()
 }
 
 template<typename T> inline Object<T>::Object() {}
-template<typename T> template<typename U>inline Object<T>::Object(const Object<U>& o)
+
+template<typename T>
+template<typename U>
+inline Object<T>::Object(const Object<U>& o)
 {
+  static bool unused = qi::detail::ForceProxyInclusion<T>().dummyCall();
+  (void)unused;
+
   /* An Object<T> created by convert may be in fact an object that does
   * not implement the T interface.
   * Checking and converting on first access to T& is not enough:
@@ -329,8 +350,13 @@ template<typename T> template<typename U>inline Object<T>::Object(const Object<U
   const_cast<Object<U>&>(o).checkT();
   init(o._obj);
 }
-template<typename T> template<typename U>inline void Object<T>::operator=(const Object<U>& o)
+template<typename T>
+template<typename U>
+inline void Object<T>::operator=(const Object<U>& o)
 {
+  static bool unused = qi::detail::ForceProxyInclusion<T>().dummyCall();
+  (void)unused;
+
   const_cast<Object<U>&>(o).checkT();
   init(o._obj);
 }
