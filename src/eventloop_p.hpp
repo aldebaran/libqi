@@ -48,7 +48,6 @@ namespace qi {
     virtual void post(qi::SteadyClockTimePoint timepoint, const boost::function<void ()>& callback)=0;
     virtual void destroy()=0;
     virtual void* nativeHandle()=0;
-    virtual void run()=0;
     virtual void setMaxThreads(unsigned int max)=0;
     boost::function<void()> _emergencyCallback;
     std::string             _name;
@@ -63,7 +62,6 @@ namespace qi {
     EventLoopAsio();
     virtual bool isInEventLoopThread();
     virtual void start(int nthreads);
-    virtual void run();
     virtual void join();
     virtual void stop();
     virtual qi::Future<void> asyncCall(qi::Duration delay,
@@ -94,7 +92,6 @@ namespace qi {
     boost::asio::io_service _io;
     boost::asio::io_service::work* _work; // keep io.run() alive
     boost::thread      _thd;
-    bool               _destroyMe;
     qi::Atomic<int>    _running;
     boost::recursive_mutex _mutex;
     boost::thread::id  _id;

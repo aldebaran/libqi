@@ -65,8 +65,6 @@ namespace qi
     void join();
     /// \brief Ask main loop to terminate.
     void stop();
-    /// \brief Run main loop in current thread.
-    void run();
     /**
      * \brief Set callback to be called in case of a deadlock detection.
      * \param cb Callback to be called.
