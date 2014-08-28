@@ -481,6 +481,10 @@ namespace qi {
     /**
      * \brief Set the current thread name to the string in parameter.
      * \param name The new name of the current thread.
+     *
+     * Prefer using ScopedThreadName that will restore the thread name on exit.
+     *
+     * \warning this feature can be considered as slow and should only used when the task is long
      */
     QI_API void setCurrentThreadName(const std::string &name);
     /**
@@ -489,6 +493,27 @@ namespace qi {
      * \warning Not implemented on Windows, always returns an empty string
      */
     QI_API std::string currentThreadName();
+
+
+    /**
+     * \brief Set the current thread name and restore it after use.
+     *
+     * \warning this feature can be considered as slow and should only used when the task is long
+     */
+    class QI_API ScopedThreadName {
+    public:
+      ScopedThreadName(const std::string& newName) {
+        _oldName = currentThreadName();
+        setCurrentThreadName(newName);
+      };
+      ~ScopedThreadName() {
+        setCurrentThreadName(_oldName);
+      }
+    private:
+      std::string _oldName;
+    };
+
+
     /**
      *  \brief Set the CPU affinity for the current thread.
      *  \param cpus a vector of CPU core ids
