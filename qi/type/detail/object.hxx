@@ -420,10 +420,16 @@ template<typename T> inline Object<T>::Object(T* ptr, boost::function<void(T*)> 
 }
 template<typename T> inline Object<T>::Object(const qi::Future<MaybeAnyObject>& fobj)
 {
+  static bool unused = qi::detail::ForceProxyInclusion<T>().dummyCall();
+  (void)unused;
+
   init(fobj.value()._obj);
 }
 template<typename T> inline Object<T>::Object(const qi::FutureSync<MaybeAnyObject>& fobj)
 {
+  static bool unused = qi::detail::ForceProxyInclusion<T>().dummyCall();
+  (void)unused;
+
   init(fobj.value()._obj);
 }
 
