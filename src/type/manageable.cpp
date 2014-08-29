@@ -8,8 +8,9 @@ namespace qi
 
   class ManageablePrivate
   {
-    public:
+  public:
     ManageablePrivate();
+    ~ManageablePrivate();
     // SignalLinks that target us. Needed to be able to disconnect upon destruction
     std::vector<SignalSubscriber>       registrations;
     mutable boost::mutex                registrationsMutex;
@@ -33,40 +34,42 @@ namespace qi
   {
   }
 
-  Manageable::Manageable()
-    : traceObject(boost::bind(&Manageable::enableTrace, this, _1))
+  ManageablePrivate::~ManageablePrivate()
   {
-    _p = new ManageablePrivate();
-    _p->executionContext = 0;
-  }
-
-  Manageable::Manageable(const Manageable& b)
-    : traceObject(boost::bind(&Manageable::enableTrace, this, _1))
-  {
-    _p = new ManageablePrivate();
-    _p->executionContext = b._p->executionContext;
-  }
-
-  void Manageable::operator=(const Manageable& b)
-  {
-    this->~Manageable();
-    _p = new ManageablePrivate();
-    _p->executionContext = b._p->executionContext;
-  }
-
-  Manageable::~Manageable()
-  {
-    _p->dying = true;
+    dying = true;
     std::vector<SignalSubscriber> copy;
     {
-      boost::mutex::scoped_lock sl(_p->registrationsMutex);
-      copy = _p->registrations;
+      boost::mutex::scoped_lock sl(registrationsMutex);
+      copy = registrations;
     }
     for (unsigned i = 0; i < copy.size(); ++i)
     {
       copy[i].source->disconnect(copy[i].linkId);
     }
-    delete _p;
+  }
+
+  Manageable::Manageable()
+    : traceObject(boost::bind(&Manageable::enableTrace, this, _1))
+    , _p(new ManageablePrivate())
+  {
+    _p->executionContext = 0;
+  }
+
+  Manageable::Manageable(const Manageable& b)
+    : traceObject(boost::bind(&Manageable::enableTrace, this, _1))
+    , _p(new ManageablePrivate())
+  {
+    _p->executionContext = b._p->executionContext;
+  }
+
+  void Manageable::operator=(const Manageable& b)
+  {
+    _p.reset(new ManageablePrivate());
+    _p->executionContext = b._p->executionContext;
+  }
+
+  Manageable::~Manageable()
+  {
   }
 
   void Manageable::forceExecutionContext(ExecutionContext* ec)

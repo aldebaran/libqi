@@ -158,7 +158,7 @@ namespace qi {
     static MetaObject&      manageableMetaObject();
     static void             _build();
     int                     _nextTraceId();
-    ManageablePrivate* _p;
+    boost::scoped_ptr<ManageablePrivate> _p;
   };
 }
 
