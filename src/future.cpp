@@ -5,7 +5,6 @@
 #include <qi/future.hpp>
 #include <qi/log.hpp>
 #include <qi/os.hpp>
-#include <qi/eventloop.hpp>
 
 #include <boost/thread.hpp>
 #include <boost/pool/singleton_pool.hpp>

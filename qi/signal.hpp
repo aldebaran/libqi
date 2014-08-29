@@ -8,7 +8,6 @@
 #define _QI_SIGNAL_HPP_
 
 #include <qi/atomic.hpp>
-#include <qi/eventloop.hpp>
 
 #include <qi/anyfunction.hpp>
 #include <qi/type/typeobject.hpp>
@@ -30,7 +29,6 @@ namespace qi {
 
   class ManageablePrivate;
   class SignalSubscriber;
-  class EventLoop;
 
   class SignalBasePrivate;
 

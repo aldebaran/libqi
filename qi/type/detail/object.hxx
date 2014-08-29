@@ -122,9 +122,9 @@ namespace detail {
     {
       return go()->setProperty(id, val);
     }
-    inline EventLoop* eventLoop() const
+    inline ExecutionContext* executionContext() const
     {
-      return go()->eventLoop();
+      return go()->executionContext();
     }
     inline bool isStatsEnabled() const
     {

@@ -56,7 +56,7 @@ StaticObjectTypeBase::metaCall(void* instance, AnyObject context, unsigned int m
     }
   }
 
-  EventLoop* el = context.eventLoop();
+  ExecutionContext* ec = context.executionContext();
   MetaCallType methodThreadingModel = i->second.second;
 
   AnyFunction method = i->second.first;
@@ -74,7 +74,7 @@ StaticObjectTypeBase::metaCall(void* instance, AnyObject context, unsigned int m
   p2.push_back(self);
   p2.insert(p2.end(), params.begin(), params.end());
 
-  return ::qi::metaCall(el, _data.threadingModel, methodThreadingModel, callType, context, methodId, method, p2, true);
+  return ::qi::metaCall(ec, _data.threadingModel, methodThreadingModel, callType, context, methodId, method, p2, true);
 }
 
 

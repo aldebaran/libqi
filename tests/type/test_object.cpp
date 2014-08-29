@@ -592,7 +592,7 @@ TEST(TestObject, ObjectTypeBuilder)
   Adder a2(2);
   qi::AnyObject oa1 = builder.object(&a1, &qi::AnyObject::deleteGenericObjectOnly);
   qi::AnyObject oa2 = builder.object(&a2, &qi::AnyObject::deleteGenericObjectOnly);
-  ASSERT_TRUE(!oa1.eventLoop()); // no eventloop override
+  ASSERT_TRUE(!oa1.executionContext()); // no eventloop override
   ASSERT_EQ(2, oa1.call<int>("add", 1));
   ASSERT_EQ(3, oa2.call<int>("add", 1));
   ASSERT_EQ(5, oa1.call<int>("addTwo", 3, 2));

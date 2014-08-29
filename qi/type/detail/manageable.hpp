@@ -25,7 +25,7 @@
 namespace qi {
 
   class ManageablePrivate;
-  class EventLoop;
+  class ExecutionContext;
 
   /// Possible thread models for an object
   enum ObjectThreadingModel
@@ -100,9 +100,9 @@ namespace qi {
 
 
     /// Override all ThreadingModel and force dispatch to given event loop.
-    void forceEventLoop(EventLoop* eventLoop);
+    void forceExecutionContext(ExecutionContext* eventLoop);
     ///@return forced event loop or 0 if not set
-    EventLoop* eventLoop() const;
+    ExecutionContext* executionContext() const;
 
     typedef boost::shared_ptr<boost::recursive_timed_mutex> TimedMutexPtr;
     ///@return the mutex associated with managed object.

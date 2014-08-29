@@ -244,7 +244,7 @@ namespace qi
     else
       p.push_back(AnyReference::from(this));
     p.insert(p.end(), params.begin(), params.end());
-    return ::qi::metaCall(context.eventLoop(), _p->threadingModel,
+    return ::qi::metaCall(context.executionContext(), _p->threadingModel,
       i->second.second, callType, context, method, i->second.first, p);
   }
 

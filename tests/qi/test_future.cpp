@@ -553,7 +553,7 @@ void unlock(qi::Promise<int> prom, bool* tag)
 TEST(TestFutureSync, Basic)
 {
   qi::EventLoop* eventLoop = qi::getEventLoop();
-  ASSERT_FALSE(eventLoop->isInEventLoopThread());
+  ASSERT_FALSE(eventLoop->isInThisContext());
 
   {
     qi::FutureSync<int> fs;

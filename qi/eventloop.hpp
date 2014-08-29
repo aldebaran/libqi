@@ -17,6 +17,7 @@
 # include <qi/types.hpp>
 # include <qi/api.hpp>
 # include <qi/clock.hpp>
+# include <qi/detail/executioncontext.hpp>
 
 # ifdef _MSC_VER
 #  pragma warning( push )
@@ -37,7 +38,7 @@ namespace qi
    * \brief Class to handle eventloop.
    * \includename{qi/eventloop.hpp}
    */
-  class QI_API EventLoop
+  class QI_API EventLoop : public ExecutionContext
   {
   public:
     /**
@@ -54,7 +55,7 @@ namespace qi
      * \brief Check if current thread is the event loop thread.
      * \return true if current thread is the event loop thread.
      */
-    bool isInEventLoopThread();
+    bool isInThisContext();
     /**
      * \brief Start the eventloop in threaded mode.
      * \param nthreads Numbers of threads.
@@ -103,9 +104,13 @@ namespace qi
      * \param callback Callback to be called.
      * \param usDelay Delay before call the callback in microsecond.
      */
-    void post(const boost::function<void ()>& callback, uint64_t usDelay=0);
+    void post(const boost::function<void ()>& callback, uint64_t usDelay);
     void post(const boost::function<void ()>& callback, qi::Duration delay);
     void post(const boost::function<void ()>& callback, qi::SteadyClockTimePoint timepoint);
+    void post(const boost::function<void ()>& callback)
+    {
+      return post(callback, 0);
+    }
 
     /**
      * \brief Monitor event loop to detect deadlocks.

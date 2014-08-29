@@ -68,7 +68,7 @@ namespace qi {
 
   void EventLoopAsio::destroy()
   {
-    if (isInEventLoopThread())
+    if (isInThisContext())
       boost::thread(&EventLoopAsio::destroy, this);
     else
     {
@@ -169,7 +169,7 @@ namespace qi {
       --_running;
   }
 
-  bool EventLoopAsio::isInEventLoopThread()
+  bool EventLoopAsio::isInThisContext()
   {
     return boost::this_thread::get_id() == _id;
   }
@@ -351,10 +351,10 @@ namespace qi {
   } while(0)
 
 
-  bool EventLoop::isInEventLoopThread()
+  bool EventLoop::isInThisContext()
   {
     CHECK_STARTED;
-    return _p->isInEventLoopThread();
+    return _p->isInThisContext();
   }
 
   void EventLoop::join()

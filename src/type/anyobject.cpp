@@ -283,7 +283,7 @@ public:
 
 }
 
-qi::Future<AnyReference> metaCall(EventLoop* el,
+qi::Future<AnyReference> metaCall(ExecutionContext* el,
   ObjectThreadingModel objectThreadingModel,
   MetaCallType methodThreadingModel,
   MetaCallType callType,
@@ -294,13 +294,13 @@ qi::Future<AnyReference> metaCall(EventLoop* el,
   qi::os::timeval postTimestamp)
 {
   // Implement rules described in header
-  bool sync = true;
-  if (el)
-    sync = el->isInEventLoopThread();
-  else if (methodThreadingModel != MetaCallType_Auto)
+  bool sync = false;
+  if (methodThreadingModel != MetaCallType_Auto)
     sync = (methodThreadingModel == MetaCallType_Direct);
-  else // callType default is synchronous
-    sync = (callType != MetaCallType_Queued);
+  else if (callType != MetaCallType_Auto)
+    sync = (callType == MetaCallType_Direct);
+  else if (el)
+    sync = el->isInThisContext();
 
   bool elForced = el;
   if (!sync && !el)
