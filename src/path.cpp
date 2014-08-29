@@ -120,6 +120,18 @@ namespace qi
     return ret;
   }
 
+  PathVector Path::recursiveFiles()
+  {
+    PathVector ret;
+    bfs::recursive_directory_iterator dit(_p->path);
+
+    for (; dit != bfs::recursive_directory_iterator(); ++dit) {
+      if (bfs::is_regular_file(*dit))
+        ret.push_back(Path(new PrivatePath(*dit)));
+    }
+    return ret;
+  }
+
   PathVector Path::dirs()
   {
     PathVector ret;

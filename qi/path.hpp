@@ -71,6 +71,9 @@ namespace qi
     /// return a vector of files contained in the current path
     PathVector files();
 
+    /// return a vector of absolute path to files contained recursively in the current path
+    PathVector recursiveFiles();
+
     /// return a vector of dirs contained in the current path
     PathVector dirs();
 
