@@ -100,9 +100,9 @@ namespace qi {
 
 
     /// Override all ThreadingModel and force dispatch to given event loop.
-    void forceExecutionContext(ExecutionContext* eventLoop);
+    void forceExecutionContext(boost::shared_ptr<ExecutionContext> eventLoop);
     ///@return forced event loop or 0 if not set
-    ExecutionContext* executionContext() const;
+    boost::shared_ptr<ExecutionContext> executionContext() const;
 
     typedef boost::shared_ptr<boost::recursive_timed_mutex> TimedMutexPtr;
     ///@return the mutex associated with managed object.

@@ -124,7 +124,7 @@ namespace detail {
     }
     inline ExecutionContext* executionContext() const
     {
-      return go()->executionContext();
+      return go()->executionContext().get();
     }
     inline bool isStatsEnabled() const
     {

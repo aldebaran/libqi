@@ -17,7 +17,7 @@ namespace qi
     Manageable::TimedMutexPtr           objectMutex; //returned by mutex()
     bool                                dying;
     // Event loop in which calls are made if set
-    ExecutionContext                   *executionContext;
+    boost::shared_ptr<ExecutionContext> executionContext;
 
     bool statsEnabled;
     bool traceEnabled;
@@ -28,7 +28,6 @@ namespace qi
   ManageablePrivate::ManageablePrivate()
     : objectMutex(new boost::recursive_timed_mutex)
     , dying(false)
-    , executionContext(NULL)
     , statsEnabled(false)
     , traceEnabled(false)
   {
@@ -52,7 +51,6 @@ namespace qi
     : traceObject(boost::bind(&Manageable::enableTrace, this, _1))
     , _p(new ManageablePrivate())
   {
-    _p->executionContext = 0;
   }
 
   Manageable::Manageable(const Manageable& b)
@@ -72,12 +70,13 @@ namespace qi
   {
   }
 
-  void Manageable::forceExecutionContext(ExecutionContext* ec)
+  void Manageable::forceExecutionContext(
+      boost::shared_ptr<ExecutionContext> ec)
   {
     _p->executionContext = ec;
   }
 
-  ExecutionContext* Manageable::executionContext() const
+  boost::shared_ptr<ExecutionContext> Manageable::executionContext() const
   {
     return _p->executionContext;
   }
