@@ -61,40 +61,6 @@ namespace detail
 
 namespace {
 
-static AnyReference locked_call(AnyFunction& function,
-                                   const GenericFunctionParameters& params,
-                                   Manageable::TimedMutexPtr lock)
-{
-  static long msWait = -1;
-  if (msWait == -1)
-  { // thread-safeness: worst case we set it twice
-    std::string s = os::getenv("QI_DEADLOCK_TIMEOUT");
-    if (s.empty())
-      msWait = 30000; // default wait of 30 seconds
-    else
-      msWait = strtol(s.c_str(), 0, 0);
-  }
-  if (!msWait)
-  {
-     boost::recursive_timed_mutex::scoped_lock l(*lock);
-     return function.call(params);
-  }
-  else
-  {
-    boost::system_time timeout = boost::get_system_time() + boost::posix_time::milliseconds(msWait);
-    qiLogDebug() << "Aquiering module lock...";
-    boost::recursive_timed_mutex::scoped_lock l(*lock, timeout);
-    qiLogDebug() << "Checking lock acquisition...";
-    if (!l.owns_lock())
-    {
-      qiLogWarning() << "Time-out acquiring object lock when calling method. Deadlock?";
-      throw std::runtime_error("Time-out acquiring lock. Deadlock?");
-    }
-    qiLogDebug() << "Calling function";
-    return function.call(params);
-  }
-}
-
 static bool traceValidateSignature(const Signature& s)
 {
   // Refuse to trace unknown (not serializable), object (too expensive), raw (possibly big)
@@ -120,14 +86,13 @@ static const AnyValue& traceValidateValue(const AnyValue& v)
 }
 
 inline void call(qi::Promise<AnyReference>& out,
-                  AnyObject context,
-                  bool lock,
-                  const GenericFunctionParameters& params,
-                  unsigned int methodId,
-                  AnyFunction& func,
-                  unsigned int callerContext,
-                  qi::os::timeval postTimestamp
-                  )
+                 AnyObject context,
+                 const GenericFunctionParameters& params,
+                 unsigned int methodId,
+                 AnyFunction& func,
+                 unsigned int callerContext,
+                 qi::os::timeval postTimestamp
+                 )
 {
   bool stats = context && context.isStatsEnabled();
   bool trace = context && context.isTraceEnabled();
@@ -178,10 +143,7 @@ inline void call(qi::Promise<AnyReference>& out,
   {
     qi::AnyReference ret;
     //the return value is destroyed by ServerResult in the future callback.
-    if (lock)
-      ret = locked_call(func, params, context.asGenericObject()->mutex());
-    else
-      ret = func.call(params);
+    ret = func.call(params);
     //copy the value for tracing later. (we want the tracing to happend after setValue
     if (trace)
       retref = ret.clone();
@@ -233,11 +195,10 @@ class MFunctorCall
 public:
   MFunctorCall(AnyFunction& func_, GenericFunctionParameters& params_,
      qi::Promise<AnyReference>* out_, bool noCloneFirst_,
-     AnyObject context_, unsigned int methodId_, bool lock_, unsigned int callerId_, qi::os::timeval postTimestamp_)
+     AnyObject context_, unsigned int methodId_, unsigned int callerId_, qi::os::timeval postTimestamp_)
     : out(out_)
     , noCloneFirst(noCloneFirst_)
     , context(context_)
-    , lock(lock_)
     , methodId(methodId_)
     , callerId(callerId_)
     , postTimestamp(postTimestamp_)
@@ -258,7 +219,6 @@ public:
     std::swap(func, const_cast<MFunctorCall&>(b).func);
     context = b.context;
     methodId = b.methodId;
-    this->lock = b.lock;
     this->out = b.out;
     noCloneFirst = b.noCloneFirst;
     callerId = b.callerId;
@@ -266,7 +226,7 @@ public:
   }
   void operator()()
   {
-    call(*out, context, lock, params, methodId, func, callerId, postTimestamp);
+    call(*out, context, params, methodId, func, callerId, postTimestamp);
     params.destroy(noCloneFirst);
     delete out;
   }
@@ -275,7 +235,6 @@ public:
   AnyFunction func;
   bool noCloneFirst;
   AnyObject context;
-  bool lock;
   unsigned int methodId;
   unsigned int callerId;
   qi::os::timeval postTimestamp;
@@ -302,29 +261,30 @@ qi::Future<AnyReference> metaCall(ExecutionContext* el,
   else if (el)
     sync = el->isInThisContext();
 
-  bool elForced = el;
   if (!sync && !el)
     el = getEventLoop();
-  qiLogDebug() << "metacall sync=" << sync << " el= " << el <<" ct= " << callType;
-  bool doLock = (context && objectThreadingModel == ObjectThreadingModel_SingleThread
-      && methodThreadingModel == MetaCallType_Auto);
+
+  qiLogDebug() << "metacall sync=" << sync << " el=" << el
+               << " ct=" << callType;
+
   if (sync)
   {
     qi::Promise<AnyReference> out(FutureCallbackType_Sync);
-    call(out, context, doLock, params, methodId, func, callerId?callerId:qi::os::gettid(), postTimestamp);
+    call(out, context, params, methodId, func,
+         callerId ? callerId : qi::os::gettid(), postTimestamp);
     return out.future();
   }
   else
   {
     // If call is handled by our thread pool, we can safely switch the promise
     // to synchronous mode.
-    qi::Promise<AnyReference>* out = new qi::Promise<AnyReference>(
-      elForced?FutureCallbackType_Async:FutureCallbackType_Sync);
+    qi::Promise<AnyReference>* out = new qi::Promise<AnyReference>();
     GenericFunctionParameters pCopy = params.copy(noCloneFirst);
     qi::Future<AnyReference> result = out->future();
     qi::os::timeval t;
     qi::os::gettimeofday(&t);
-    el->post(MFunctorCall(func, pCopy, out, noCloneFirst, context, methodId, doLock, callerId?callerId:qi::os::gettid(), t));
+    el->post(MFunctorCall(func, pCopy, out, noCloneFirst, context, methodId,
+                          callerId ? callerId : qi::os::gettid(), t));
     return result;
   }
 }

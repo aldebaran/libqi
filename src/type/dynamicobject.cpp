@@ -15,7 +15,7 @@
 #include <qi/type/metaobject.hpp>
 #include <qi/signal.hpp>
 #include <qi/type/dynamicobject.hpp>
-
+#include <qi/strand.hpp>
 
 qiLogCategory("qitype.dynamicobject");
 
@@ -236,7 +236,25 @@ namespace qi
             + " to " + returnSignature.toString();
       }
     }
-    Manageable* m = static_cast<Manageable*>(context.asGenericObject());
+    boost::shared_ptr<Manageable> m = context.managedObjectPtr();
+
+    ExecutionContext* ec = context.executionContext();
+    if (_p->threadingModel == ObjectThreadingModel_SingleThread)
+    {
+      // execute queued methods on global eventloop if they are of queued type
+      if (i->second.second == MetaCallType_Queued)
+        ec = 0;
+      else if (!ec)
+      {
+        boost::shared_ptr<Manageable> manageable = context.managedObjectPtr();
+        boost::mutex::scoped_lock l(manageable->initMutex());
+        if (!manageable->executionContext())
+          manageable->forceExecutionContext(boost::shared_ptr<qi::Strand>(
+                new qi::Strand(*::qi::getEventLoop())));
+        ec = context.executionContext();
+      }
+    }
+
     GenericFunctionParameters p;
     p.reserve(params.size()+1);
     if (method >= Manageable::startId && method < Manageable::endId)
@@ -244,7 +262,7 @@ namespace qi
     else
       p.push_back(AnyReference::from(this));
     p.insert(p.end(), params.begin(), params.end());
-    return ::qi::metaCall(context.executionContext(), _p->threadingModel,
+    return ::qi::metaCall(ec, _p->threadingModel,
       i->second.second, callType, context, method, i->second.first, p);
   }
 

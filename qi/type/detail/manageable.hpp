@@ -13,7 +13,6 @@
 #include <qi/anyfunction.hpp>
 #include <qi/type/typeobject.hpp>
 #include <qi/signal.hpp>
-#include <boost/thread/mutex.hpp>
 #include <boost/function.hpp>
 #include <algorithm>
 
@@ -98,15 +97,12 @@ namespace qi {
     Manageable(const Manageable& b);
     void operator = (const Manageable& b);
 
+    boost::mutex& initMutex();
 
     /// Override all ThreadingModel and force dispatch to given event loop.
     void forceExecutionContext(boost::shared_ptr<ExecutionContext> eventLoop);
     ///@return forced event loop or 0 if not set
     boost::shared_ptr<ExecutionContext> executionContext() const;
-
-    typedef boost::shared_ptr<boost::recursive_timed_mutex> TimedMutexPtr;
-    ///@return the mutex associated with managed object.
-    TimedMutexPtr mutex(); // non-recursive of course!
 
     /// @{
     /** Statistics gathering/retreiving API

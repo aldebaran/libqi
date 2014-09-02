@@ -14,10 +14,10 @@ namespace qi
     // SignalLinks that target us. Needed to be able to disconnect upon destruction
     std::vector<SignalSubscriber>       registrations;
     mutable boost::mutex                registrationsMutex;
-    Manageable::TimedMutexPtr           objectMutex; //returned by mutex()
     bool                                dying;
     // Event loop in which calls are made if set
     boost::shared_ptr<ExecutionContext> executionContext;
+    boost::mutex                        initMutex;
 
     bool statsEnabled;
     bool traceEnabled;
@@ -26,8 +26,7 @@ namespace qi
   };
 
   ManageablePrivate::ManageablePrivate()
-    : objectMutex(new boost::recursive_timed_mutex)
-    , dying(false)
+    : dying(false)
     , statsEnabled(false)
     , traceEnabled(false)
   {
@@ -70,6 +69,11 @@ namespace qi
   {
   }
 
+  boost::mutex& Manageable::initMutex()
+  {
+    return _p->initMutex;
+  }
+
   void Manageable::forceExecutionContext(
       boost::shared_ptr<ExecutionContext> ec)
   {
@@ -79,11 +83,6 @@ namespace qi
   boost::shared_ptr<ExecutionContext> Manageable::executionContext() const
   {
     return _p->executionContext;
-  }
-
-  Manageable::TimedMutexPtr Manageable::mutex()
-  {
-    return _p->objectMutex;
   }
 
   bool Manageable::isStatsEnabled() const

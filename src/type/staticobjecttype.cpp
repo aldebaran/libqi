@@ -5,6 +5,7 @@
 #include "staticobjecttype.hpp"
 #include <qi/signal.hpp>
 #include <qi/jsoncodec.hpp>
+#include <qi/strand.hpp>
 
 qiLogCategory("qitype.object");
 
@@ -56,8 +57,24 @@ StaticObjectTypeBase::metaCall(void* instance, AnyObject context, unsigned int m
     }
   }
 
-  ExecutionContext* ec = context.executionContext();
   MetaCallType methodThreadingModel = i->second.second;
+
+  ExecutionContext* ec = context.executionContext();
+  if (_data.threadingModel == ObjectThreadingModel_SingleThread)
+  {
+    // execute queued methods on global eventloop if they are of queued type
+    if (methodThreadingModel == MetaCallType_Queued)
+      ec = 0;
+    else if (!ec)
+    {
+      boost::shared_ptr<Manageable> manageable = context.managedObjectPtr();
+      boost::mutex::scoped_lock l(manageable->initMutex());
+      if (!manageable->executionContext())
+        manageable->forceExecutionContext(boost::shared_ptr<qi::Strand>(
+              new qi::Strand(*::qi::getEventLoop())));
+      ec = context.executionContext();
+    }
+  }
 
   AnyFunction method = i->second.first;
   AnyReference self;
