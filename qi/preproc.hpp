@@ -8,7 +8,9 @@
 #ifndef _QI_PREPROC_HPP_
 #define _QI_PREPROC_HPP_
 
-#include <stdexcept>
+#ifdef __cplusplus
+# include <stdexcept>
+#endif
 #include <boost/preprocessor/seq/for_each.hpp>
 #include <boost/preprocessor/seq/remove.hpp>
 #include <boost/preprocessor/seq/transform.hpp>
