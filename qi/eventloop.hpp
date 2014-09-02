@@ -89,14 +89,14 @@ namespace qi
      * \return A canceleable future.
      */
     template<typename R>
-    Future<R> async(boost::function<R()> callback, uint64_t usDelay=0);
-    Future<void> async(boost::function<void ()> callback, uint64_t usDelay=0);
+    Future<R> async(const boost::function<R()>& callback, uint64_t usDelay=0);
+    Future<void> async(const boost::function<void ()>& callback, uint64_t usDelay=0);
     template<typename R>
-    Future<R> async(boost::function<R()> callback, qi::Duration delay);
-    Future<void> async(boost::function<void ()> callback, qi::Duration delay);
+    Future<R> async(const boost::function<R()>& callback, qi::Duration delay);
+    Future<void> async(const boost::function<void ()>& callback, qi::Duration delay);
     template<typename R>
-    Future<R> async(boost::function<R()> callback, qi::SteadyClockTimePoint timepoint);
-    Future<void> async(boost::function<void ()> callback, qi::SteadyClockTimePoint timepoint);
+    Future<R> async(const boost::function<R()>& callback, qi::SteadyClockTimePoint timepoint);
+    Future<void> async(const boost::function<void ()>& callback, qi::SteadyClockTimePoint timepoint);
     /// @}
 
     /**

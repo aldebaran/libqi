@@ -34,7 +34,7 @@ public:
 
   typedef std::deque<boost::shared_ptr<Callback> > Queue;
 
-  qi::EventLoop& _eventLoop;
+  qi::ExecutionContext& _eventLoop;
   boost::atomic<unsigned int> _curId;
   boost::atomic<unsigned int> _aliveCount;
   bool _processing; // protected by mutex, no need for atomic
@@ -43,10 +43,11 @@ public:
   boost::condition_variable _processFinished;
   Queue _queue;
 
-  StrandPrivate(qi::EventLoop& eventLoop);
+  StrandPrivate(qi::ExecutionContext& eventLoop);
   ~StrandPrivate();
 
-  Future<void> async(boost::function<void()> cb, uint64_t usDelay);
+  Future<void> async(boost::function<void()> cb, qi::SteadyClockTimePoint tp);
+  Future<void> async(boost::function<void()> cb, qi::Duration delay);
 
   boost::shared_ptr<Callback> createCallback(
       boost::function<void()> cb);
@@ -56,7 +57,7 @@ public:
   void cancel(boost::shared_ptr<Callback> cbStruct);
 };
 
-StrandPrivate::StrandPrivate(qi::EventLoop& eventLoop)
+StrandPrivate::StrandPrivate(qi::ExecutionContext& eventLoop)
   : _eventLoop(eventLoop)
   , _curId(0)
   , _aliveCount(0)
@@ -80,17 +81,32 @@ boost::shared_ptr<StrandPrivate::Callback> StrandPrivate::createCallback(
   return cbStruct;
 }
 
-Future<void> StrandPrivate::async(boost::function<void()> cb, uint64_t usDelay)
+Future<void> StrandPrivate::async(boost::function<void()> cb,
+    qi::SteadyClockTimePoint tp)
 {
   boost::shared_ptr<Callback> cbStruct = createCallback(cb);
   cbStruct->promise =
     qi::Promise<void>(boost::bind(&StrandPrivate::cancel, this, cbStruct));
   qiLogDebug() << "Scheduling job id " << cbStruct->id
-    << " in " << usDelay << "us";
-  if (usDelay)
+    << " at " << tp;
+  cbStruct->asyncFuture = _eventLoop.async(boost::bind(
+        &StrandPrivate::enqueue, this, cbStruct),
+      tp);
+  return cbStruct->promise.future();
+}
+
+Future<void> StrandPrivate::async(boost::function<void()> cb,
+    qi::Duration delay)
+{
+  boost::shared_ptr<Callback> cbStruct = createCallback(cb);
+  cbStruct->promise =
+    qi::Promise<void>(boost::bind(&StrandPrivate::cancel, this, cbStruct));
+  qiLogDebug() << "Scheduling job id " << cbStruct->id
+    << " in " << delay;
+  if (delay.count())
     cbStruct->asyncFuture = _eventLoop.async(boost::bind(
           &StrandPrivate::enqueue, this, cbStruct),
-        usDelay);
+        delay);
   else
     enqueue(cbStruct);
   return cbStruct->promise.future();
@@ -113,7 +129,8 @@ void StrandPrivate::enqueue(boost::shared_ptr<Callback> cbStruct)
   {
     qiLogDebug() << "StrandPrivate::process was not scheduled, doing it";
     _processing = true;
-    _eventLoop.async(boost::bind(&StrandPrivate::process, shared_from_this()));
+    _eventLoop.async(boost::bind(&StrandPrivate::process, shared_from_this()),
+        qi::Duration(0));
   }
 }
 
@@ -205,7 +222,7 @@ void StrandPrivate::cancel(boost::shared_ptr<Callback> cbStruct)
   }
 }
 
-Strand::Strand(qi::EventLoop& eventloop) :
+Strand::Strand(qi::ExecutionContext& eventloop) :
   _p(new StrandPrivate(eventloop))
 {
 }
@@ -229,9 +246,16 @@ Strand::~Strand()
   }
 }
 
-Future<void> Strand::async(boost::function<void()> cb, uint64_t usDelay)
+Future<void> Strand::async(const boost::function<void()>& cb,
+    qi::SteadyClockTimePoint tp)
 {
-  return _p->async(cb, usDelay);
+  return _p->async(cb, tp);
+}
+
+Future<void> Strand::async(const boost::function<void()>& cb,
+    qi::Duration delay)
+{
+  return _p->async(cb, delay);
 }
 
 void Strand::post(const boost::function<void()>& callback)

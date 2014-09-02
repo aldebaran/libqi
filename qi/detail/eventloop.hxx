@@ -48,12 +48,12 @@ namespace qi
     }
   }
   template<typename R> void nullConverter(void*, R&) {}
-  template<typename R> Future<R> EventLoop::async(boost::function<R()> callback, uint64_t usDelay)
+  template<typename R> Future<R> EventLoop::async(const boost::function<R()>& callback, uint64_t usDelay)
   {
     return async(callback, qi::MicroSeconds(usDelay));
   }
 
-  template<typename R> Future<R> EventLoop::async(boost::function<R()> callback, qi::Duration delay)
+  template<typename R> Future<R> EventLoop::async(const boost::function<R()>& callback, qi::Duration delay)
   {
     detail::DelayedPromise<R> promise;
     qi::Future<void> f = async(boost::function<void()>(boost::bind(detail::call_and_set<R>, promise, callback)), delay);
@@ -63,7 +63,7 @@ namespace qi
     return promise.future();
   }
 
-  template<typename R> Future<R> EventLoop::async(boost::function<R()> callback, qi::SteadyClockTimePoint timepoint)
+  template<typename R> Future<R> EventLoop::async(const boost::function<R()>& callback, qi::SteadyClockTimePoint timepoint)
   {
     detail::DelayedPromise<R> promise;
     qi::Future<void> f = async(boost::function<void()>(boost::bind(detail::call_and_set<R>, promise, callback)), timepoint);

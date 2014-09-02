@@ -415,7 +415,7 @@ namespace qi {
 
   qi::Future<void>
   EventLoop::async(
-    boost::function<void ()> callback,
+    const boost::function<void ()>& callback,
     uint64_t usDelay)
   {
     return async(callback, qi::MicroSeconds(usDelay));
@@ -423,7 +423,7 @@ namespace qi {
 
   qi::Future<void>
   EventLoop::async(
-    boost::function<void ()> callback,
+    const boost::function<void ()>& callback,
     qi::Duration delay)
   {
     CHECK_STARTED;
@@ -432,7 +432,7 @@ namespace qi {
 
   qi::Future<void>
   EventLoop::async(
-    boost::function<void ()> callback,
+    const boost::function<void ()>& callback,
     qi::SteadyClockTimePoint timepoint)
   {
     CHECK_STARTED;
