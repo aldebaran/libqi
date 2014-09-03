@@ -842,7 +842,7 @@ TEST(TestFutureCancel, Canceled)
 
 void setValueWait(boost::mutex& mutex, int waittime, int& i, int v)
 {
-  boost::unique_lock<boost::mutex> lock(mutex);
+  boost::unique_lock<boost::mutex> lock(mutex, boost::try_to_lock);
   // we should never be called in parallel
   ASSERT_TRUE(lock.owns_lock());
   if (waittime)
@@ -857,12 +857,12 @@ TEST(TestStrand, StrandSimple)
   qi::Strand strand(*qi::getEventLoop());
   int i = 0;
   qi::Future<void> f1 = strand.async(boost::bind<void>(&setValueWait,
-        boost::ref(mutex), 300, boost::ref(i), 1));
+        boost::ref(mutex), 100, boost::ref(i), 1));
   qi::os::msleep(5);
   EXPECT_FALSE(f1.isFinished());
   qi::Future<void> f2 = strand.async(boost::bind<void>(&setValueWait,
         boost::ref(mutex), 0, boost::ref(i), 2));
-  qi::os::msleep(500);
+  qi::os::msleep(200);
   EXPECT_EQ(i, 2);
 }
 
@@ -979,6 +979,53 @@ TEST(TestStrand, StrandDestructionBeforeEnd)
   f.value();
 }
 
+boost::atomic<int> callcount;
+
+struct MyActor : qi::Actor
+{
+  boost::atomic<bool> calling;
+  void f()
+  {
+    ASSERT_FALSE(calling);
+    calling = true;
+    qi::os::msleep(10);
+    ASSERT_TRUE(calling);
+    calling = false;
+    ++callcount;
+  }
+};
+
+TEST(TestStrand, Future)
+{
+  callcount = 0;
+  {
+    MyActor obj;
+    qi::Promise<void> prom;
+    for (int i = 0; i < 10; ++i)
+      prom.future().connect(&MyActor::f, &obj);
+    prom.setValue(0);
+  }
+  ASSERT_EQ(10, callcount);
+}
+
+struct MyActorTrackable : MyActor, qi::Trackable<MyActorTrackable>
+{
+  MyActorTrackable() : Trackable(this) {}
+  ~MyActorTrackable() { destroy(); }
+};
+
+TEST(TestStrand, FutureWithTrackable)
+{
+  callcount = 0;
+  qi::Promise<void> prom;
+  {
+    MyActorTrackable obj;
+    for (int i = 0; i < 10; ++i)
+      prom.future().connect(&MyActorTrackable::f, &obj);
+  }
+  prom.setValue(0);
+  ASSERT_EQ(0, callcount);
+}
 
 // ===== FutureBarrier =========================================================
 #define BARRIER_N 10

@@ -13,6 +13,8 @@
 # include <qi/config.hpp>
 # include <qi/trackable.hpp>
 # include <qi/clock.hpp>
+# include <qi/actor.hpp>
+# include <qi/detail/mpl.hpp>
 
 # include <boost/shared_ptr.hpp>
 # include <boost/make_shared.hpp>
@@ -316,16 +318,16 @@ namespace qi {
     void connect(FUNCTYPE fun, ARG0 tracked, ...,
                  FutureCallbackType type = FutureCallbackType_Async);
 #else
-# define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)                   \
-     template<typename AF, typename ARG0 comma ATYPEDECL>                    \
-     inline void connect(const AF& fun, const ARG0& arg0 comma ADECL,        \
-                         FutureCallbackType type = FutureCallbackType_Async) \
-     {                                                                       \
-       _p->connect(*this, ::qi::bind<void(Future<T>)>(fun, arg0 comma AUSE), \
-                   type);                                                    \
-     }
-     QI_GEN(genCall)
-# undef genCall
+#define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)                 \
+  template <typename AF, typename ARG0 comma ATYPEDECL>                   \
+  inline void connect(const AF& fun, const ARG0& arg0 comma ADECL,        \
+                      FutureCallbackType type = FutureCallbackType_Async) \
+  {                                                                       \
+    connectMaybeActor<ARG0, 0>(                                           \
+        arg0, ::qi::bind<void(Future<T>)>(fun, arg0 comma AUSE), type);   \
+  }
+    QI_GEN(genCall)
+#undef genCall
 #endif
 
     // Our companion library libqitype requires a connect with same signature for all instantiations
@@ -355,6 +357,50 @@ namespace qi {
     template<typename FT>
     friend void detail::futureCancelAdapter(
         boost::weak_ptr<detail::FutureBaseTyped<FT> > wf);
+
+  private:
+    static void binder(
+        const boost::function<void(const boost::function<void()>&)>& poster,
+        const boost::function<void(Future<T>)>& callback, Future<T> fut)
+    {
+      return poster(boost::bind(callback, fut));
+    }
+
+    template <
+        typename ARG0,
+        typename boost::enable_if<
+            boost::is_base_of<Actor, typename detail::Unwrap<ARG0>::type>,
+            int>::type>
+    inline void connectMaybeActor(const ARG0& arg0,
+                                  const boost::function<void(Future<T>)>& cb,
+                                  FutureCallbackType type)
+    {
+      _p->connect(
+          *this,
+          qi::trackWithFallback(
+            boost::function<void()>(),
+            boost::function<void(const Future<T>&)>(
+              boost::bind(
+                  &Future<T>::binder,
+                  boost::function<void(const boost::function<void()>&)>(
+                      boost::bind(
+                          &qi::Strand::post,
+                          &detail::Unwrap<ARG0>::unwrap(arg0)->strand(), _1)),
+                  cb, _1)),
+              arg0),
+          FutureCallbackType_Sync);
+    }
+    template <
+        typename ARG0,
+        typename boost::disable_if<
+            boost::is_base_of<Actor, typename detail::Unwrap<ARG0>::type>,
+            int>::type>
+    inline void connectMaybeActor(const ARG0& arg0,
+                                  const boost::function<void(Future<T>)>& cb,
+                                  FutureCallbackType type)
+    {
+      _p->connect(*this, cb, type);
+    }
   };
 
   /** This class allow throwing on error and being synchronous
