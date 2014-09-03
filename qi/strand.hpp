@@ -8,8 +8,7 @@
 #define _QI_STRAND_HPP_
 
 #include <qi/detail/executioncontext.hpp>
-#include <qi/future.hpp>
-#include <boost/scoped_ptr.hpp>
+#include <boost/shared_ptr.hpp>
 #include <boost/function.hpp>
 
 namespace qi
@@ -28,8 +27,10 @@ class StrandPrivate;
 class QI_API Strand : public ExecutionContext
 {
 public:
-  /// Construct a strand that will schedule work on \p eventLoop
-  Strand(qi::ExecutionContext& eventLoop);
+  /// Construct a strand that will schedule work on the default event loop
+  Strand();
+  /// Construct a strand that will schedule work on executionContext
+  Strand(qi::ExecutionContext& executionContext);
   /** Destroys the strand
    *
    * This will wait for all scheduled tasks to finish

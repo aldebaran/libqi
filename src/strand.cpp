@@ -4,6 +4,7 @@
 */
 #include <qi/strand.hpp>
 #include <qi/log.hpp>
+#include <qi/future.hpp>
 #include <deque>
 #include <boost/enable_shared_from_this.hpp>
 
@@ -222,8 +223,13 @@ void StrandPrivate::cancel(boost::shared_ptr<Callback> cbStruct)
   }
 }
 
-Strand::Strand(qi::ExecutionContext& eventloop) :
-  _p(new StrandPrivate(eventloop))
+Strand::Strand()
+  : _p(new StrandPrivate(*qi::getEventLoop()))
+{
+}
+
+Strand::Strand(qi::ExecutionContext& eventloop)
+  : _p(new StrandPrivate(eventloop))
 {
 }
 
