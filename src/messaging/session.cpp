@@ -314,12 +314,28 @@ namespace qi {
     promise.setValue(0);
   }
 
+  void SessionPrivate::onServiceTrackingCancelled(qi::Promise<void> promise,
+      boost::shared_ptr<qi::Atomic<int> > link)
+  {
+    SignalLink link2 = link->swap(0);
+
+    if (link2 == 0)
+      return;
+
+    _sdClient.serviceAdded.disconnect(link2);
+    promise.setCanceled();
+  }
+
   qi::FutureSync<void> Session::waitForService(const std::string& servicename)
   {
-    qi::Promise<void> promise;
-
     boost::shared_ptr<qi::Atomic<int> > link =
       boost::make_shared<qi::Atomic<int> >(0);
+
+    qi::Promise<void> promise(boost::bind(
+          &SessionPrivate::onServiceTrackingCancelled,
+          _p,
+          _1,
+          link));
     *link = (int)_p->_sdClient.serviceAdded.connect(boost::bind(
           &SessionPrivate::onTrackedServiceAdded,
           _p,

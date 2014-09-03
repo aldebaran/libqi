@@ -491,7 +491,7 @@ TEST(QiSession, reuseSd)
   EXPECT_EQ("foo", object.call<std::string>("reply", "foo"));
 }
 
-TEST(QiSession, NotifyRegister)
+TEST(QiSession, WaitForService)
 {
   TestSessionPair pair;
 
@@ -507,6 +507,15 @@ TEST(QiSession, NotifyRegister)
   future = pair.client()->waitForService("serviceTest");
   sid = pair.sd()->registerService("serviceTest", obj);
   EXPECT_TRUE(future.hasValue());
+}
+
+TEST(QiSession, WaitForServiceCancelled)
+{
+  TestSessionPair pair;
+
+  qi::Future<void> future = pair.client()->waitForService("serviceTest");
+  future.cancel();
+  EXPECT_TRUE(future.isCanceled());
 }
 
 
