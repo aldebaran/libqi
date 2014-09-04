@@ -46,8 +46,8 @@ namespace qi
       else
       {
         _cumulatedValue += val;
-        _minValue = std::min(_minValue, val);
-        _maxValue = std::max(_maxValue, val);
+        _minValue = (std::min)(_minValue, val);
+        _maxValue = (std::max)(_maxValue, val);
       }
     }
     /// Reset all three values to 0
