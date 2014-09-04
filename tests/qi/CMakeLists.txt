@@ -38,6 +38,7 @@ qi_create_gtest(test_qilaunch            SRC test_qilaunch.cpp    DEPENDS QI GTE
 qi_create_gtest(test_qilog_sync          SRC test_qilog_sync.cpp  DEPENDS QI GTEST)
 qi_create_gtest(test_qilog_async         SRC test_qilog_async.cpp DEPENDS QI GTEST)
 qi_create_gtest(test_future              SRC test_future.cpp      DEPENDS QI GTEST TIMEOUT 20)
+qi_create_gtest(test_strand              SRC test_strand.cpp      DEPENDS QI GTEST)
 qi_create_gtest(test_buffer              SRC test_buffer.cpp      DEPENDS QI GTEST TIMEOUT 10)
 qi_create_gtest(test_bufferreader        SRC test_bufferreader.cpp      DEPENDS QI GTEST TIMEOUT 10)
 qi_create_gtest(test_version             SRC test_version.cpp     DEPENDS QI GTEST TIMEOUT 10)

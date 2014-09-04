@@ -10,6 +10,7 @@
 #include <qi/detail/executioncontext.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/function.hpp>
+#include <boost/noncopyable.hpp>
 
 namespace qi
 {
@@ -24,7 +25,7 @@ class StrandPrivate;
  * Methods are thread-safe except for destructor which must never be called
  * concurrently.
  */
-class QI_API Strand : public ExecutionContext
+class QI_API Strand : public ExecutionContext, private boost::noncopyable
 {
 public:
   /// Construct a strand that will schedule work on the default event loop

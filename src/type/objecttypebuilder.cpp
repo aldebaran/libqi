@@ -77,10 +77,12 @@ namespace qi {
     return res;
   }
 
-  void ObjectTypeBuilderBase::xBuildFor(TypeInterface* type, bool autoRegister)
+  void ObjectTypeBuilderBase::xBuildFor(TypeInterface* type, bool autoRegister,
+      qi::AnyFunction strandAccessor)
   {
     _p->data.classType = type;
     _p->autoRegister = autoRegister;
+    _p->data.strandAccessor = strandAccessor;
   }
 
   void ObjectTypeBuilderBase::setThreadingModel(ObjectThreadingModel model)

@@ -11,9 +11,30 @@
 #include <boost/mpl/front.hpp>
 #include <qi/type/objecttypebuilder.hpp>
 #include <qi/type/metamethod.hpp>
+#include <qi/actor.hpp>
 
 namespace qi {
 
+  namespace detail {
+    template <typename T>
+    qi::Strand* callWithVoid(qi::Strand* (T::*member)() const, void* instance)
+    {
+      return (static_cast<T*>(instance)->*member)();
+    }
+
+    template <typename T,
+             typename boost::enable_if<boost::is_base_of<Actor, T>, int>::type>
+    AnyFunction getStrandAccessor()
+    {
+      return AnyFunction::from(boost::function<qi::Strand*(void*)>(boost::bind(&callWithVoid<T>, &T::strand, _1)));
+    }
+    template <typename T,
+             typename boost::disable_if<boost::is_base_of<Actor, T>, int>::type>
+    AnyFunction getStrandAccessor()
+    {
+      return AnyFunction();
+    }
+  }
 
   template<typename T> void ObjectTypeBuilderBase::buildFor(bool autoRegister)
   {
@@ -23,7 +44,7 @@ namespace qi {
     // - serializer, ...
     // => wee need all TypeInterface* methods, but we do not want another TypeInterface*
     // to anwser to typeOf<T>
-    xBuildFor(new DefaultTypeImpl<T>(), autoRegister);
+    xBuildFor(new DefaultTypeImpl<T>(), autoRegister, detail::getStrandAccessor<T, 0>());
   }
 
   template <typename FUNCTION_TYPE>

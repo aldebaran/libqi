@@ -25,6 +25,11 @@ StaticObjectTypeBase::metaObject(void* )
   return _metaObject;
 }
 
+namespace {
+  template <typename T>
+  void noopDeleter(T* obj)
+  {}
+}
 
 qi::Future<AnyReference>
 StaticObjectTypeBase::metaCall(void* instance, AnyObject context, unsigned int methodId,
@@ -70,8 +75,13 @@ StaticObjectTypeBase::metaCall(void* instance, AnyObject context, unsigned int m
       boost::shared_ptr<Manageable> manageable = context.managedObjectPtr();
       boost::mutex::scoped_lock l(manageable->initMutex());
       if (!manageable->executionContext())
-        manageable->forceExecutionContext(boost::shared_ptr<qi::Strand>(
-              new qi::Strand(*::qi::getEventLoop())));
+      {
+        if (_data.strandAccessor)
+          manageable->forceExecutionContext(boost::shared_ptr<qi::Strand>(_data.strandAccessor.call<qi::Strand*>(instance), &noopDeleter<qi::Strand>));
+        else
+          manageable->forceExecutionContext(boost::shared_ptr<qi::Strand>(
+                new qi::Strand(*::qi::getEventLoop())));
+      }
       ec = context.executionContext();
     }
   }

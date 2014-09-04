@@ -385,7 +385,7 @@ namespace qi {
                   boost::function<void(const boost::function<void()>&)>(
                       boost::bind(
                           &qi::Strand::post,
-                          &detail::Unwrap<ARG0>::unwrap(arg0)->strand(), _1)),
+                          detail::Unwrap<ARG0>::unwrap(arg0)->strand(), _1)),
                   cb, _1)),
               arg0),
           FutureCallbackType_Sync);

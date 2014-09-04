@@ -14,7 +14,7 @@
 namespace qi
 {
 
-class Actor
+class QI_API Actor
 {
 public:
   Actor() :
@@ -24,9 +24,9 @@ public:
     _strand(ec)
   {}
 
-  qi::Strand& strand() const
+  qi::Strand* strand() const
   {
-    return _strand;
+    return &_strand;
   }
 
 private:
