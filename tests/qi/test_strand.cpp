@@ -191,7 +191,7 @@ struct MyActor : qi::Actor
 };
 QI_REGISTER_OBJECT(MyActor, f);
 
-TEST(TestStrand, Future)
+TEST(TestStrand, FutureSignal)
 {
   callcount = 0;
   {
@@ -200,12 +200,16 @@ TEST(TestStrand, Future)
 
     qi::Promise<void> finished;
     qi::Promise<void> prom;
-    for (int i = 0; i < 100; ++i)
+    qi::Signal<void> signal;
+    for (int i = 0; i < 50; ++i)
       prom.future().connect(&MyActor::f, obj.get(), 200, finished);
+    for (int i = 0; i < 50; ++i)
+      signal.connect(&MyActor::f, obj.get(), 200, finished);
 
     for (int i = 0; i < 50; ++i)
       aobj.async<void>("f", 200, finished);
     prom.setValue(0);
+    QI_EMIT signal();
     for (int i = 0; i < 50; ++i)
       aobj.async<void>("f", 200, finished);
     finished.future().wait();
@@ -231,5 +235,19 @@ TEST(TestStrand, FutureWithTrackable)
       prom.future().connect(&MyActorTrackable::f, &obj, 0, stub);
   }
   prom.setValue(0);
+  ASSERT_EQ(0, callcount);
+}
+
+TEST(TestStrand, SignalWithTrackable)
+{
+  callcount = 0;
+  qi::Signal<void> signal;
+  {
+    qi::Promise<void> stub;
+    MyActorTrackable obj;
+    for (int i = 0; i < 10; ++i)
+      signal.connect(&MyActorTrackable::f, &obj, 0, stub);
+  }
+  signal();
   ASSERT_EQ(0, callcount);
 }

@@ -136,23 +136,42 @@ namespace qi {
     */
     SignalSubscriber& connect(...);
 #else
+    template <typename CALLABLE>
+    SignalSubscriber& connect(CALLABLE c);
+    SignalSubscriber& connect(AnyFunction func);
+    SignalSubscriber& connect(const SignalSubscriber& sub);
+    SignalSubscriber& connect(const boost::function<T>& func);
+    template <typename U>
+    SignalSubscriber& connect(SignalF<U>& signal);
+    template <QI_SIGNAL_TEMPLATE_DECL>
+    SignalSubscriber& connect(Signal<QI_SIGNAL_TEMPLATE>& signal);
 
-   template<typename CALLABLE> SignalSubscriber& connect(CALLABLE c);
-   SignalSubscriber& connect(AnyFunction func);
-   SignalSubscriber& connect(const SignalSubscriber& sub);
-   SignalSubscriber& connect(const boost::function<T>& func);
-   template<typename U> SignalSubscriber&  connect(SignalF<U>& signal);
-   template<QI_SIGNAL_TEMPLATE_DECL> SignalSubscriber&  connect(Signal<QI_SIGNAL_TEMPLATE>& signal);
+#define genConnect(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma) \
+  template <typename F, typename P comma ATYPEDECL>          \
+  SignalSubscriber& connect(F func, P p comma ADECL);
+    QI_GEN(genConnect)
+#undef genConnect
 
-   #define genConnect(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma) \
-     template<typename F, typename P comma ATYPEDECL>           \
-     SignalSubscriber& connect(F func, P p comma ADECL);
-   QI_GEN(genConnect)
-   #undef genConnect
-
-   SignalSubscriber& connect(const AnyObject &obj, unsigned int slot);
-   SignalSubscriber& connect(const AnyObject &obj, const std::string& slot);
+    SignalSubscriber& connect(const AnyObject& obj, unsigned int slot);
+    SignalSubscriber& connect(const AnyObject& obj, const std::string& slot);
 #endif
+
+    template <
+        typename ARG0,
+        typename boost::enable_if<
+            boost::is_base_of<Actor, typename detail::Unwrap<ARG0>::type>,
+            int>::type>
+    inline SignalSubscriber& connectMaybeActor(
+        const ARG0& arg0, const boost::function<T>& cb,
+        const boost::function<void()>& fallbackCb);
+    template <
+        typename ARG0,
+        typename boost::disable_if<
+            boost::is_base_of<Actor, typename detail::Unwrap<ARG0>::type>,
+            int>::type>
+    inline SignalSubscriber& connectMaybeActor(
+        const ARG0& arg0, const boost::function<T>& cb,
+        const boost::function<void()>& fallbackCb);
   };
 
   namespace detail
