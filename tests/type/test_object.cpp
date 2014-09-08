@@ -867,11 +867,11 @@ TEST(TestObject, statisticsType)
 }
 
 void pushTrace(std::vector<qi::EventTrace>& target,
-  const qi::EventTrace& trace)
+    boost::mutex& mutex,
+    const qi::EventTrace& trace)
 {
-  boost::atomic_thread_fence(boost::memory_order_seq_cst);
+  boost::mutex::scoped_lock l(mutex);
   target.push_back(trace);
-  boost::atomic_thread_fence(boost::memory_order_seq_cst);
 }
 
 int throw_exception(const std::string& content)
@@ -890,17 +890,21 @@ TEST(TestObject, traceGeneric)
   int mid = gob.advertiseMethod("sleep", &qi::os::msleep);
   int mid2 = gob.advertiseMethod("boom", &throw_exception);
   qi::AnyObject obj = gob.object();
+  boost::mutex mutex;
   std::vector<qi::EventTrace> traces;
   qi::SignalLink id = obj.connect("traceObject",
     (boost::function<void(qi::EventTrace)>)
-    boost::bind(&pushTrace, boost::ref(traces), _1));
+    boost::bind(&pushTrace, boost::ref(traces), boost::ref(mutex), _1));
   obj.call<void>("sleep", 100);
-  for (unsigned i=0; i<20 && traces.size()<2; ++i) {
+  for (unsigned i=0; i<20; ++i) {
+    {
+      boost::mutex::scoped_lock l(mutex);
+      if (traces.size() >= 2)
+        break;
+    }
     qi::os::msleep(50);
-    boost::atomic_thread_fence(boost::memory_order_seq_cst);
   }
   qi::os::msleep(50);
-  boost::atomic_thread_fence(boost::memory_order_seq_cst);
   ASSERT_EQ(2u, traces.size());
   std::sort(traces.begin(), traces.end(), comparator); // events may not be in order
   EXPECT_EQ(qi::EventTrace::Event_Call, traces[0].kind());
@@ -917,12 +921,15 @@ TEST(TestObject, traceGeneric)
   qi::os::msleep(50);
   traces.clear();
   obj.async<void>("boom", "o<").wait();
-  for (unsigned i=0; i<20 && traces.size()<2; ++i) {
+  for (unsigned i=0; i<20; ++i) {
+    {
+      boost::mutex::scoped_lock l(mutex);
+      if (traces.size() >= 2)
+        break;
+    }
     qi::os::msleep(50);
-    boost::atomic_thread_fence(boost::memory_order_seq_cst);
   }
   qi::os::msleep(50);
-  boost::atomic_thread_fence(boost::memory_order_seq_cst);
   ASSERT_EQ(2u, traces.size());
   std::sort(traces.begin(), traces.end(), comparator); // events may not be in order
   EXPECT_EQ(qi::EventTrace::Event_Call, traces[0].kind());
@@ -943,18 +950,20 @@ TEST(TestObject, traceType)
 
   EXPECT_EQ(3, oa1.call<int>("add", 2));
 
+  boost::mutex mutex;
   std::vector<qi::EventTrace> traces;
   qi::SignalLink id = oa1.connect("traceObject",
     (boost::function<void(qi::EventTrace)>)
-    boost::bind(&pushTrace, boost::ref(traces), _1));
+    boost::bind(&pushTrace, boost::ref(traces), boost::ref(mutex), _1));
 
   EXPECT_EQ(3, oa1.call<int>("add", 2));
-  for (unsigned i=0; i<20 && traces.size()<2; ++i) {
+  for (unsigned i=0; i<20; ++i) {
+    boost::mutex::scoped_lock l(mutex);
+    if (traces.size() >= 2)
+      break;
     qi::os::msleep(50);
-    boost::atomic_thread_fence(boost::memory_order_seq_cst);
   }
   qi::os::msleep(50);
-  boost::atomic_thread_fence(boost::memory_order_seq_cst);
   ASSERT_EQ(2u, traces.size());
   std::sort(traces.begin(), traces.end(), comparator); // events may not be in order
   EXPECT_EQ(qi::EventTrace::Event_Call, traces[0].kind());
