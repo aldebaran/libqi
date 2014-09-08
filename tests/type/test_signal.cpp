@@ -246,6 +246,26 @@ TEST(TestSignal, Dynamic)
   EXPECT_EQ(56, trig);
 }
 
+void onSubs(boost::atomic<bool>& var, bool subs)
+{
+  var = subs;
+}
+
+void callback(int i)
+{}
+
+TEST(TestSignal, OnSubscriber)
+{
+  boost::atomic<bool> subscribers(false);
+
+  qi::Signal<int> sig(boost::bind(onSubs, boost::ref(subscribers), _1));
+  ASSERT_FALSE(subscribers);
+  qi::SignalLink l = sig.connect(&callback);
+  ASSERT_TRUE(subscribers);
+  ASSERT_TRUE(sig.disconnect(l));
+  ASSERT_FALSE(subscribers);
+}
+
 
 int main(int argc, char **argv) {
   qi::Application app(argc, argv);
