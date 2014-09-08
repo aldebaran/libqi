@@ -14,6 +14,8 @@
 # include <qi/future.hpp>
 # include <qi/stats.hpp>
 # include <qi/trackable.hpp>
+# include <qi/actor.hpp>
+# include <qi/clock.hpp>
 
 namespace qi
 {
@@ -27,6 +29,9 @@ namespace qi
   public:
     /// \brief Callback is a boost::function.
     typedef boost::function<void()> Callback;
+    // internal
+    typedef boost::function<qi::Future<void>(
+        const Callback&, qi::Duration delay)> ScheduleCallback;
 
     /// \brief Default constructor.
     PeriodicTask();
@@ -44,12 +49,13 @@ namespace qi
 #ifdef DOXYGEN
     template<typename T, typename ARG0> PeriodicTask& setCallback(const T& callable, ARG0 tracked, ...);
 #else
-    #define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma) \
-    template<typename AF, typename ARG0 comma ATYPEDECL>      \
-    inline void setCallback(const AF& fun, const ARG0& arg0 comma ADECL)  \
-    {                                                                    \
-      setCallback(::qi::bind<void()>(fun, arg0 comma AUSE));             \
-    }
+#define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)              \
+  template <typename AF, typename ARG0 comma ATYPEDECL>                \
+  inline void setCallback(const AF& fun, const ARG0& arg0 comma ADECL) \
+  {                                                                    \
+    setCallback(boost::bind(fun, arg0 comma AUSE));                    \
+    _connectMaybeActor<ARG0, 0>(arg0);                                 \
+  }
     QI_GEN(genCall)
 #undef genCall
 #endif
@@ -120,8 +126,36 @@ namespace qi
      * was called.
      */
     bool isStopping() const;
+
   private:
     boost::shared_ptr<PeriodicTaskPrivate> _p;
+
+    void _setScheduleCallback(const ScheduleCallback& cb);
+
+    template <
+        typename ARG0,
+        typename boost::enable_if<
+            boost::is_base_of<Actor, typename detail::Unwrap<ARG0>::type>,
+            int>::type>
+    inline void _connectMaybeActor(const ARG0& arg0)
+    {
+      _setScheduleCallback(qi::track(
+          ScheduleCallback(boost::bind<qi::Future<void> >(
+              static_cast<qi::Future<void>(qi::Strand::*)(const Callback&,
+                                                          qi::Duration)>(
+                  &qi::Strand::async),
+              detail::Unwrap<ARG0>::unwrap(arg0)->strand(), _1, _2)),
+          arg0));
+    }
+    template <
+        typename ARG0,
+        typename boost::disable_if<
+            boost::is_base_of<Actor, typename detail::Unwrap<ARG0>::type>,
+            int>::type>
+    inline void _connectMaybeActor(const ARG0& arg0)
+    {
+      _setScheduleCallback(ScheduleCallback());
+    }
   };
 
 }

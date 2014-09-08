@@ -24,6 +24,8 @@ class StrandPrivate;
  *
  * Methods are thread-safe except for destructor which must never be called
  * concurrently.
+ *
+ * \includename{qi/strand.hpp}
  */
 class QI_API Strand : public ExecutionContext, private boost::noncopyable
 {

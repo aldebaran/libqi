@@ -371,9 +371,9 @@ namespace qi {
         typename boost::enable_if<
             boost::is_base_of<Actor, typename detail::Unwrap<ARG0>::type>,
             int>::type>
-    inline void connectMaybeActor(const ARG0& arg0,
-                                  const boost::function<void(Future<T>)>& cb,
-                                  FutureCallbackType type)
+    inline void connectMaybeActor(
+        const ARG0& arg0, const boost::function<void(const Future<T>&)>& cb,
+        FutureCallbackType type)
     {
       _p->connect(
           *this,
@@ -395,9 +395,9 @@ namespace qi {
         typename boost::disable_if<
             boost::is_base_of<Actor, typename detail::Unwrap<ARG0>::type>,
             int>::type>
-    inline void connectMaybeActor(const ARG0& arg0,
-                                  const boost::function<void(Future<T>)>& cb,
-                                  FutureCallbackType type)
+    inline void connectMaybeActor(
+        const ARG0& arg0, const boost::function<void(const Future<T>&)>& cb,
+        FutureCallbackType type)
     {
       _p->connect(*this, cb, type);
     }

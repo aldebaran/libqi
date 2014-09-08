@@ -86,6 +86,7 @@ namespace qi
     MethodStatistics        _callStats;
     qi::int64_t             _statsDisplayTime;
     PeriodicTask::Callback  _callback;
+    PeriodicTask::ScheduleCallback _scheduleCallback;
     qi::int64_t             _usPeriod;
     qi::Atomic<int>         _state;
     qi::Future<void>        _task;
@@ -272,7 +273,10 @@ namespace qi
   void PeriodicTaskPrivate::_reschedule(qi::int64_t delay)
   {
     qiLogDebug() << _name <<" rescheduling in " << delay;
-    _task = getEventLoop()->async(boost::bind(&PeriodicTaskPrivate::_wrap, shared_from_this()), delay);
+    if (_scheduleCallback)
+      _task = _scheduleCallback(boost::bind(&PeriodicTaskPrivate::_wrap, shared_from_this()), qi::MicroSeconds(delay));
+    else
+      _task = getEventLoop()->async(boost::bind(&PeriodicTaskPrivate::_wrap, shared_from_this()), delay);
     if (!_state.setIfEquals(Task_Rescheduling, Task_Scheduled))
       qiLogError() << "PeriodicTask forbidden state change while rescheduling " << *_state;
   }
@@ -331,5 +335,10 @@ namespace qi
   {
     int s = *_p->_state;
     return s == Task_Stopped || s == Task_Stopping;
+  }
+
+  void PeriodicTask::_setScheduleCallback(const ScheduleCallback& cb)
+  {
+    _p->_scheduleCallback = cb;
   }
 }

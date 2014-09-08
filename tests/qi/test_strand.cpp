@@ -6,6 +6,7 @@
 #include <boost/foreach.hpp>
 #include <qi/os.hpp>
 #include <qi/strand.hpp>
+#include <qi/periodictask.hpp>
 #include <qi/actor.hpp>
 #include <qi/log.hpp>
 #include <qi/anyobject.hpp>
@@ -185,13 +186,13 @@ struct MyActor : qi::Actor
     qi::os::msleep(5);
     ASSERT_TRUE(calling);
     calling = false;
-    if (++callcount == end)
+    if (++callcount == end + 1)
       finished.setValue(0);
   }
 };
 QI_REGISTER_OBJECT(MyActor, f);
 
-TEST(TestStrand, FutureSignal)
+TEST(TestStrand, FutureSignalPeriodicTask)
 {
   callcount = 0;
   {
@@ -199,6 +200,11 @@ TEST(TestStrand, FutureSignal)
     qi::AnyObject aobj(obj);
 
     qi::Promise<void> finished;
+
+    qi::PeriodicTask per;
+    per.setUsPeriod(30);
+    per.setCallback(&MyActor::f, obj.get(), 200, finished);
+
     qi::Promise<void> prom;
     qi::Signal<void> signal;
     for (int i = 0; i < 50; ++i)
@@ -206,6 +212,7 @@ TEST(TestStrand, FutureSignal)
     for (int i = 0; i < 50; ++i)
       signal.connect(&MyActor::f, obj.get(), 200, finished);
 
+    per.start();
     for (int i = 0; i < 50; ++i)
       aobj.async<void>("f", 200, finished);
     prom.setValue(0);
@@ -214,8 +221,7 @@ TEST(TestStrand, FutureSignal)
       aobj.async<void>("f", 200, finished);
     finished.future().wait();
   }
-  qi::os::msleep(10);
-  ASSERT_EQ(200, callcount);
+  ASSERT_LT(200, callcount);
 }
 
 struct MyActorTrackable : MyActor, qi::Trackable<MyActorTrackable>

@@ -14,6 +14,15 @@
 namespace qi
 {
 
+/** Class that represents an actor.
+ *
+ * Inherit from this class if you want your class to be an actor (as in the
+ * actor model). This means that your class will receive "messages" and not be
+ * called. In other words, there will never be to calls to your object in
+ * parallel, they will be queued.
+ *
+ * \includename{qi/actor.hpp}
+ */
 class QI_API Actor
 {
 public:
