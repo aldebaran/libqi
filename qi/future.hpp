@@ -330,6 +330,15 @@ namespace qi {
 #undef genCall
 #endif
 
+    inline void connectWithStrand(qi::Strand* strand,
+        const boost::function<void(const Future<T>&)>& cb)
+    {
+      _p->connect(
+          *this,
+          transformStrandedCallback(strand, cb),
+          FutureCallbackType_Sync);
+    }
+
     // Our companion library libqitype requires a connect with same signature for all instantiations
     inline void _connect(const boost::function<void()>& s)
     {
@@ -359,11 +368,24 @@ namespace qi {
         boost::weak_ptr<detail::FutureBaseTyped<FT> > wf);
 
   private:
-    static void binder(
+    static inline void binder(
         const boost::function<void(const boost::function<void()>&)>& poster,
         const boost::function<void(Future<T>)>& callback, Future<T> fut)
     {
       return poster(boost::bind(callback, fut));
+    }
+
+    inline boost::function<void(const Future<T>&)> transformStrandedCallback(
+        qi::Strand* strand,
+        const boost::function<void(const Future<T>&)>& cb)
+    {
+      return boost::bind(
+          &Future<T>::binder,
+          boost::function<void(const boost::function<void()>&)>(
+            boost::bind(
+              &qi::Strand::post,
+              strand, _1)),
+          cb, _1);
     }
 
     template <
@@ -379,15 +401,9 @@ namespace qi {
           *this,
           qi::trackWithFallback(
             boost::function<void()>(),
-            boost::function<void(const Future<T>&)>(
-              boost::bind(
-                  &Future<T>::binder,
-                  boost::function<void(const boost::function<void()>&)>(
-                      boost::bind(
-                          &qi::Strand::post,
-                          detail::Unwrap<ARG0>::unwrap(arg0)->strand(), _1)),
-                  cb, _1)),
-              arg0),
+            transformStrandedCallback(
+              detail::Unwrap<ARG0>::unwrap(arg0)->strand(), cb),
+            arg0),
           FutureCallbackType_Sync);
     }
     template <
