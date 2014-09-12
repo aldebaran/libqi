@@ -233,6 +233,7 @@ namespace qi {
     {}
 
     SignalSubscriber(AnyFunction func, MetaCallType callType = MetaCallType_Auto);
+    SignalSubscriber(AnyFunction func, ExecutionContext* ec);
     SignalSubscriber(const AnyObject& target, unsigned int method);
 
     SignalSubscriber(const SignalSubscriber& b);
@@ -291,6 +292,9 @@ namespace qi {
     std::vector<boost::thread::id> activeThreads; // order not preserved
 
     boost::condition               inactiveThread;
+
+    // ExecutionContext on which to schedule the call
+    ExecutionContext* executionContext;
   };
   typedef boost::shared_ptr<SignalSubscriber> SignalSubscriberPtr;
 }
