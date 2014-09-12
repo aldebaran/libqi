@@ -91,12 +91,24 @@ namespace qi
     template<typename R>
     Future<R> async(const boost::function<R()>& callback, uint64_t usDelay=0);
     Future<void> async(const boost::function<void ()>& callback, uint64_t usDelay=0);
-    template<typename R>
-    Future<R> async(const boost::function<R()>& callback, qi::Duration delay);
     Future<void> async(const boost::function<void ()>& callback, qi::Duration delay);
-    template<typename R>
-    Future<R> async(const boost::function<R()>& callback, qi::SteadyClockTimePoint timepoint);
     Future<void> async(const boost::function<void ()>& callback, qi::SteadyClockTimePoint timepoint);
+
+    template <typename R>
+    typename boost::enable_if_c<!boost::is_same<R, void>::value,
+                                qi::Future<R> >::type
+        async(const boost::function<R()>& callback, qi::Duration delay)
+    {
+      return ExecutionContext::async<R>(callback, delay);
+    }
+    template <typename R>
+    typename boost::enable_if_c<!boost::is_same<R, void>::value,
+                                qi::Future<R> >::type
+        async(const boost::function<R()>& callback,
+              qi::SteadyClockTimePoint tp)
+    {
+      return ExecutionContext::async<R>(callback, tp);
+    }
     /// @}
 
     /**

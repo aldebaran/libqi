@@ -26,11 +26,11 @@ namespace qi
 class QI_API Actor
 {
 public:
-  Actor() :
-    _strand()
+  Actor()
+    : _strand()
   {}
-  Actor(qi::ExecutionContext& ec) :
-    _strand(ec)
+  Actor(qi::ExecutionContext& ec)
+    : _strand(ec)
   {}
 
   qi::Strand* strand() const

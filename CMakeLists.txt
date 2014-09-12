@@ -58,6 +58,8 @@ qiprobes_instrument_files(tp_qi
 set(QI_H qi/detail/clock.hxx
          qi/detail/eventloop.hxx
          qi/detail/future.hxx
+         qi/detail/future_fwd.hpp
+         qi/detail/executioncontext.hpp
          qi/detail/log.hxx
          qi/detail/trackable.hxx
          qi/detail/warn_push_ignore_deprecated.hpp
