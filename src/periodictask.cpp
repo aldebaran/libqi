@@ -127,6 +127,18 @@ namespace qi
     _p->_callback = cb;
   }
 
+  void PeriodicTask::setStrand(qi::Strand* strand)
+  {
+    if (strand)
+      _p->_scheduleCallback = boost::bind<qi::Future<void> >(
+              static_cast<qi::Future<void>(qi::Strand::*)(const Callback&,
+                qi::Duration)>(
+                  &qi::Strand::async),
+              strand, _1, _2);
+    else
+      _p->_scheduleCallback = ScheduleCallback();
+  }
+
   void PeriodicTask::setUsPeriod(qi::int64_t usp)
   {
     if (usp<0)
@@ -335,10 +347,5 @@ namespace qi
   {
     int s = *_p->_state;
     return s == Task_Stopped || s == Task_Stopping;
-  }
-
-  void PeriodicTask::_setScheduleCallback(const ScheduleCallback& cb)
-  {
-    _p->_scheduleCallback = cb;
   }
 }

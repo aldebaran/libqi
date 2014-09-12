@@ -61,6 +61,14 @@ namespace qi
 #endif
 
     /**
+     * Set the strand on which to schedule the calls
+     *
+     * \warning This must be called *after* the call to setCallback or it will
+     * have no effect.
+     */
+    void setStrand(qi::Strand* strand);
+
+    /**
      * \brief Set the call interval in microseconds.
      * \param usPeriod Period in microsecond.
      * \verbatim
@@ -130,8 +138,6 @@ namespace qi
   private:
     boost::shared_ptr<PeriodicTaskPrivate> _p;
 
-    void _setScheduleCallback(const ScheduleCallback& cb);
-
     template <
         typename ARG0,
         typename boost::enable_if<
@@ -139,13 +145,7 @@ namespace qi
             int>::type>
     inline void _connectMaybeActor(const ARG0& arg0)
     {
-      _setScheduleCallback(qi::track(
-          ScheduleCallback(boost::bind<qi::Future<void> >(
-              static_cast<qi::Future<void>(qi::Strand::*)(const Callback&,
-                                                          qi::Duration)>(
-                  &qi::Strand::async),
-              detail::Unwrap<ARG0>::unwrap(arg0)->strand(), _1, _2)),
-          arg0));
+      setStrand(detail::Unwrap<ARG0>::unwrap(arg0)->strand());
     }
     template <
         typename ARG0,
@@ -154,7 +154,7 @@ namespace qi
             int>::type>
     inline void _connectMaybeActor(const ARG0& arg0)
     {
-      _setScheduleCallback(ScheduleCallback());
+      setStrand(0);
     }
   };
 
