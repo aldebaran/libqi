@@ -192,7 +192,7 @@ struct MyActor : qi::Actor
 };
 QI_REGISTER_OBJECT(MyActor, f);
 
-TEST(TestStrand, FutureSignalPeriodicTask)
+TEST(TestStrand, AllFutureSignalPeriodicTaskAsync)
 {
   callcount = 0;
   {
@@ -213,12 +213,16 @@ TEST(TestStrand, FutureSignalPeriodicTask)
       signal.connect(&MyActor::f, obj.get(), 200, finished);
 
     per.start();
-    for (int i = 0; i < 50; ++i)
+    for (int i = 0; i < 25; ++i)
       aobj.async<void>("f", 200, finished);
+    for (int i = 0; i < 25; ++i)
+      qi::async<void>(&MyActor::f, obj, 200, finished);
     prom.setValue(0);
     QI_EMIT signal();
-    for (int i = 0; i < 50; ++i)
+    for (int i = 0; i < 25; ++i)
       aobj.async<void>("f", 200, finished);
+    for (int i = 0; i < 25; ++i)
+      qi::async<void>(&MyActor::f, obj, 200, finished);
     finished.future().wait();
   }
   ASSERT_LT(200, callcount);

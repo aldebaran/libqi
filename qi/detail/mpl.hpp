@@ -39,7 +39,7 @@ struct Unwrap<boost::shared_ptr<T> >
   typedef T type;
   static T* unwrap(boost::shared_ptr<T> v)
   {
-    return *v.get();
+    return v.get();
   }
 };
 template <typename T>
