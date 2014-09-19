@@ -282,7 +282,8 @@ namespace qi {
     qi::AnyModule p = qi::import(package);
 
     AnyReferenceVector fullargs;
-    fullargs.push_back(AnyReference::from(shared_from_this()));
+    SessionPtr thisptr = shared_from_this();
+    fullargs.push_back(AnyReference::from(thisptr));
     fullargs.insert(fullargs.end(), args.begin(), args.end());
 
     int id = p.metaObject().findMethod(factory, fullargs);

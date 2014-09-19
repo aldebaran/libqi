@@ -12,10 +12,13 @@ class Foo {
 public:
   Foo(const SessionPtr& session)
     : _session(session)
-  {}
+  {
+    _session->service("ServiceDirectory"); // SEGV?
+  }
 
   int bar()
   {
+    _session->service("ServiceDirectory"); // SEGV?
     return 42;
   }
 
