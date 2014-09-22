@@ -253,7 +253,7 @@ namespace qi {
         }
         ++iPort;
       }
-      while (static_cast<unsigned int>(iPort + 1) > USHRT_MAX);
+      while (static_cast<unsigned int>(iPort + 1) < USHRT_MAX);
 
       if (unavailable)
       {
