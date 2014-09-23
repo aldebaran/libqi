@@ -9,6 +9,7 @@ SigGenerator::SigGenerator(int min_deep, int max_deep, int max_tuple_size)
   : min_deep(min_deep)
   , max_deep(max_deep)
   , max_tuple_size(max_tuple_size)
+  , current_deep(0)
 {
   qiLogInfo("core.longtermTest") << "signature generator engaged" << std::endl;
 }

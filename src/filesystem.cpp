@@ -4,10 +4,9 @@
  * found in the COPYING file.
  */
 
-#include <iostream>
 #include <numeric>
 #include <boost/filesystem.hpp>
-#include <qi/qi.hpp>
+#include <qi/path.hpp>
 #include "filesystem.hpp"
 
 namespace qi
@@ -32,8 +31,6 @@ namespace qi
       p = std::accumulate(p.begin(), p.end(), boost::filesystem::path(), normalize);
       return p.make_preferred().string(qi::unicodeFacet());
     }
-
-
 
   }
 } // namesapce qi::detail

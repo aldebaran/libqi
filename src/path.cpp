@@ -10,7 +10,6 @@
 #include <qi/application.hpp>
 #include <qi/path.hpp>
 #include <qi/os.hpp>
-#include <qi/qi.hpp>
 #include <qi/log.hpp>
 
 #include <boost/bind.hpp>
@@ -23,7 +22,7 @@
 
 qiLogCategory("qi.path");
 
-namespace fs = boost::filesystem;
+namespace bfs = boost::filesystem;
 
 namespace qi
 {
@@ -34,11 +33,11 @@ namespace qi
       : path(unicodePath, qi::unicodeFacet())
     {}
 
-    PrivatePath(const fs::path& path)
+    PrivatePath(const bfs::path& path)
       : path(path)
     {}
 
-    fs::path path;
+    bfs::path path;
   };
 
   Path::Path(PrivatePath* p)
@@ -47,6 +46,10 @@ namespace qi
 
   Path::Path(const std::string& unicodePath)
     : _p(new PrivatePath(unicodePath))
+  {}
+
+  Path::Path(const char* unicodePath)
+    : _p(new PrivatePath(std::string(unicodePath)))
   {}
 
   Path::Path(const Path& path)
@@ -62,16 +65,27 @@ namespace qi
     return _p->path.empty();
   }
 
+  bool Path::exists() const
+  {
+    return bfs::exists(_p->path);
+  }
+
   bool Path::isDir() const
   {
     boost::system::error_code ec;
-    return fs::is_directory(_p->path, ec);
+    return bfs::is_directory(_p->path, ec);
   }
 
   bool Path::isRegularFile() const
   {
     boost::system::error_code ec;
-    return fs::is_regular_file(_p->path, ec);
+    return bfs::is_regular_file(_p->path, ec);
+  }
+
+  bool Path::isSymlink() const
+  {
+    boost::system::error_code ec;
+    return bfs::is_symlink(_p->path, ec);
   }
 
   std::string Path::extension() const
@@ -91,16 +105,28 @@ namespace qi
 
   Path Path::absolute()
   {
-    return Path(new PrivatePath(fs::absolute(_p->path)));
+    return Path(new PrivatePath(bfs::absolute(_p->path)));
   }
 
   PathVector Path::files()
   {
     PathVector ret;
-    fs::directory_iterator dit(_p->path);
+    bfs::directory_iterator dit(_p->path);
 
-    for (; dit != fs::directory_iterator(); ++dit) {
-      if (fs::is_regular_file(*dit))
+    for (; dit != bfs::directory_iterator(); ++dit) {
+      if (bfs::is_regular_file(*dit))
+        ret.push_back(Path(new PrivatePath(*dit)));
+    }
+    return ret;
+  }
+
+  PathVector Path::recursiveFiles()
+  {
+    PathVector ret;
+    bfs::recursive_directory_iterator dit(_p->path);
+
+    for (; dit != bfs::recursive_directory_iterator(); ++dit) {
+      if (bfs::is_regular_file(*dit))
         ret.push_back(Path(new PrivatePath(*dit)));
     }
     return ret;
@@ -109,10 +135,10 @@ namespace qi
   PathVector Path::dirs()
   {
     PathVector ret;
-    fs::directory_iterator dit(_p->path);
+    bfs::directory_iterator dit(_p->path);
 
-    for (; dit != fs::directory_iterator(); ++dit) {
-      if (fs::is_directory(*dit))
+    for (; dit != bfs::directory_iterator(); ++dit) {
+      if (bfs::is_directory(*dit))
         ret.push_back(Path(new PrivatePath(*dit)));
     }
     return ret;
@@ -123,20 +149,10 @@ namespace qi
     return Path(new PrivatePath(_p->path / rhs._p->path));
   }
 
-  Path Path::operator/(const std::string &rhs) const
-  {
-    return this->operator/(qi::Path(rhs));
-  }
-
   const Path& Path::operator/=(const Path &rhs) const
   {
     _p->path /= rhs._p->path;
     return *this;
-  }
-
-  const Path& Path::operator/=(const std::string &rhs) const
-  {
-    return this->operator/=(qi::Path(rhs));
   }
 
   const Path& Path::operator=(const Path &rhs) const
@@ -277,7 +293,7 @@ namespace qi
     }
 
     std::vector<std::string> listLib(const std::string &subfolder,
-                                      const std::string &pattern)
+                                     const std::string &pattern)
     {
       return getInstance()->listLib(subfolder, pattern);
     }
@@ -340,28 +356,7 @@ namespace qi
   SDKLayout* getInstance()
   {
     if (gInstance == NULL) {
-      std::string prefix;
-      std::string mode;
-      const char *program = qi::Application::program();
-
-      if (!program) {
-        mode = "error";
-      }
-      else {
-        boost::filesystem::path execPath(program, qi::unicodeFacet());
-        if(!boost::filesystem::exists(execPath)) {
-          mode = "error";
-        }
-        else {
-          execPath = boost::filesystem::system_complete(execPath).make_preferred();
-          prefix = execPath.parent_path().parent_path().string(qi::unicodeFacet());
-          if (execPath.parent_path().filename().string(qi::unicodeFacet()) != "bin")
-            mode = execPath.parent_path().filename().string(qi::unicodeFacet());
-          else
-            mode = "";
-        }
-      }
-      gInstance = new SDKLayout(prefix, mode);
+      gInstance = new SDKLayout();
     }
 
     return gInstance;

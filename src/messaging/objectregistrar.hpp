@@ -85,7 +85,6 @@ namespace qi {
     qi::Atomic<int>                    _registerServiceRequestIndex;
     boost::mutex                        _registerServiceRequestMutex;
 
-    bool                                _dying;
     ServiceDirectoryClient             *_sdClient;
     Session                            *_session;
     const std::string                   _id;

@@ -2,7 +2,6 @@
 
 #include <gtest/gtest.h>
 
-#include <qi/qi.hpp>
 #include <qi/application.hpp>
 #include <qi/anyobject.hpp>
 #include <qi/type/dynamicobjectbuilder.hpp>

@@ -33,6 +33,9 @@ namespace qi
     };
 
     explicit TransportSocket(qi::EventLoop* eventLoop = qi::getEventLoop())
+      : _eventLoop(NULL)
+      , _err(0)
+      , _status(Status_Disconnected)
     {
       connected.setCallType(MetaCallType_Queued);
       disconnected.setCallType(MetaCallType_Queued);

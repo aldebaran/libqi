@@ -186,15 +186,13 @@ namespace qi {
                           qi::AutoAnyReference p7 = qi::AutoAnyReference(),
                           qi::AutoAnyReference p8 = qi::AutoAnyReference());
 #else
-#define pushi(z, n,_) params.push_back(p ## n);
+#define pushi(z, n, _) params.push_back(p ## n);
 #define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma) \
   template <typename R> R call(                           \
       QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoAnyReference))   \
   {                                                       \
-    AnyReference ret = this->operator()(AUSE);            \
-    R ret2 = ret.to<R>();                                 \
-    ret.destroy();                                        \
-    return ret2;                                          \
+    AnyValue ret(this->operator()(AUSE), false, true);    \
+    return ret.to<R>();                                   \
   }                                                       \
   AnyReference operator()(                                \
       QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoAnyReference))   \

@@ -270,7 +270,7 @@ namespace qi {
     return _p->_serverObject.endpoints();
   }
 
-  void Session::loadService(const std::string &moduleName, const std::string& renameModule)
+  void Session::loadService(const std::string &moduleName, const std::string& renameModule, const AnyReferenceVector& args)
   {
     size_t separatorPos = moduleName.find_last_of(".");
     std::string package = moduleName.substr(0, separatorPos);
@@ -280,11 +280,20 @@ namespace qi {
     if (rename.empty())
       rename = factory;
     qi::AnyModule p = qi::import(package);
-    int id = p.metaObject().methodId(factory + "::(o)");
+
+    AnyReferenceVector fullargs;
+    SessionPtr thisptr = shared_from_this();
+    fullargs.push_back(AnyReference::from(thisptr));
+    fullargs.insert(fullargs.end(), args.begin(), args.end());
+
+    int id = p.metaObject().findMethod(factory, fullargs);
+    qi::Future<AnyReference> ret;
     if (id > 0)
-      registerService(rename, p.call<AnyObject>(factory, shared_from_this()));
+      ret = p.metaCall(factory, fullargs);
     else
-      registerService(rename, p.call<AnyObject>(factory));
+      ret = p.metaCall(factory, args);
+    qi::AnyValue retval(ret.value(), false, true);
+    registerService(rename, retval.to<qi::AnyObject>());
   }
 
   void SessionPrivate::onTrackedServiceAdded(const std::string& actual,
@@ -306,12 +315,28 @@ namespace qi {
     promise.setValue(0);
   }
 
+  void SessionPrivate::onServiceTrackingCancelled(qi::Promise<void> promise,
+      boost::shared_ptr<qi::Atomic<int> > link)
+  {
+    SignalLink link2 = link->swap(0);
+
+    if (link2 == 0)
+      return;
+
+    _sdClient.serviceAdded.disconnect(link2);
+    promise.setCanceled();
+  }
+
   qi::FutureSync<void> Session::waitForService(const std::string& servicename)
   {
-    qi::Promise<void> promise;
-
     boost::shared_ptr<qi::Atomic<int> > link =
       boost::make_shared<qi::Atomic<int> >(0);
+
+    qi::Promise<void> promise(boost::bind(
+          &SessionPrivate::onServiceTrackingCancelled,
+          _p,
+          _1,
+          link));
     *link = (int)_p->_sdClient.serviceAdded.connect(boost::bind(
           &SessionPrivate::onTrackedServiceAdded,
           _p,

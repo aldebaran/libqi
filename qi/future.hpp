@@ -122,6 +122,10 @@ namespace qi {
     {}
   };
 
+  /** Class that represents a value that will be set later in time.
+   *
+   * \includename{qi/future.hpp}
+   */
   template <typename T>
   class Future {
   public:
@@ -358,6 +362,8 @@ namespace qi {
    *
    *  This class should only be used as return type. If you want to store it,
    *  use qi::Future.
+   *
+   *  \includename{qi/future.hpp}
    */
   template<typename T>
   class FutureSync
@@ -475,6 +481,8 @@ namespace qi {
 
 
   /** A Promise is used to create and satisfy a Future.
+   *
+   * \includename{qi/future.hpp}
    */
   template <typename T>
   class Promise {

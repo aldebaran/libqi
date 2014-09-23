@@ -1,13 +1,9 @@
 /*
-**
 ** Copyright (C) 2012 Aldebaran Robotics
 */
 
-
-
 #include <map>
 #include <gtest/gtest.h>
-#include <qi/qi.hpp>
 #include <qi/application.hpp>
 #include <qi/anyobject.hpp>
 #include <qi/type/dynamicobjectbuilder.hpp>
@@ -59,7 +55,12 @@ void callbackCounterBis(const int& value, std::string secondValue)
 class TestObject: public ::testing::Test
 {
 public:
-  TestObject() : p2(p1)
+  TestObject()
+    : oe1(0)
+    , oe2(0)
+    , om1(0)
+    , om2(0)
+    , p2(p1)
   {
     qi::DynamicObjectBuilder obs1, obs2;
     se1 = obs1.advertiseSignal<const int&>("fire1");
@@ -319,7 +320,7 @@ TEST_F(TestObject, multipleConnect)
   oclient2.post("fire2", 42);//post signal twice
   oclient2.post("fire2", 42);
 
-  while((*i) != 10 && waiting_time < 10000)//waiting 10 seconds max
+  while((*i) != 18 && waiting_time < 10000)//waiting 10 seconds max
   {
     qi::os::msleep(additional_timeout); //additional timeout to wait for unwanted callback
     waiting_time += additional_timeout;

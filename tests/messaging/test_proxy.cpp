@@ -3,13 +3,11 @@
 **  See COPYING for the license
 */
 
-
 #include <list>
 #include <iostream>
 
 #include <gtest/gtest.h>
 
-#include <qi/qi.hpp>
 #include <qi/application.hpp>
 #include <qi/eventloop.hpp>
 #include <qi/anyobject.hpp>

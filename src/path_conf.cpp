@@ -8,7 +8,7 @@
 #include <fstream>
 #include <boost/filesystem.hpp>
 
-#include <qi/qi.hpp>
+#include <qi/path.hpp>
 
 namespace qi {
   namespace path {

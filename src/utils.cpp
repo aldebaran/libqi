@@ -12,9 +12,7 @@
 #include <iterator>
 #include <ctime>
 #include <qi/os.hpp>
-#include <qi/qi.hpp>
-
-
+#include <qi/path.hpp>
 
 static char rand_alnum()
 {

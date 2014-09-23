@@ -10,6 +10,7 @@
 
 # include <string>
 # include <vector>
+# include <locale>
 # include <boost/scoped_ptr.hpp>
 # include <qi/api.hpp>
 
@@ -31,6 +32,9 @@ namespace qi
     /// \param unicodePath Path
     Path(const std::string& unicodePath = std::string());
 
+    /// \param unicodePath Path
+    Path(const char* unicodePath);
+
     /// Copy Constructor
     Path(const Path& path);
 
@@ -40,11 +44,17 @@ namespace qi
     /// is the path empty?
     bool isEmpty() const;
 
+    /// does this file exist?
+    bool exists() const;
+
     /// is the path a directory?
     bool isDir() const;
 
     /// is the path a regular file?
     bool isRegularFile() const;
+
+    /// is the path a symlink?
+    bool isSymlink() const;
 
     /// get the name of the current file of folder
     std::string filename() const;
@@ -61,6 +71,9 @@ namespace qi
     /// return a vector of files contained in the current path
     PathVector files();
 
+    /// return a vector of absolute path to files contained recursively in the current path
+    PathVector recursiveFiles();
+
     /// return a vector of dirs contained in the current path
     PathVector dirs();
 
@@ -74,13 +87,7 @@ namespace qi
     Path operator/(const qi::Path& rhs) const;
 
     /// concat two paths adding a directory separator between them
-    Path operator/(const std::string& rhs) const;
-
-    /// concat two paths adding a directory separator between them
     const Path& operator/=(const qi::Path& rhs) const;
-
-    /// concat two paths adding a directory separator between them
-    const Path& operator/=(const std::string& rhs) const;
 
     /// copy operator
     const Path& operator=(const qi::Path& rhs) const;
@@ -390,6 +397,25 @@ namespace qi
      */
     QI_API QI_API_DEPRECATED void setWritablePath(const std::string &path);
   }
+
+  /**
+   * \brief Standard std::codecvt type accepted by STL and boost.
+   *
+   * Typedef for std::codecvt<wchar_t, char, std::mbstate_t> that can be used
+   * with boost::filesystem::path and std::locale.
+   */
+  typedef std::codecvt<wchar_t, char, std::mbstate_t> codecvt_type;
+
+  /**
+   * \brief UTF-8 facet object getter.
+   * \return UTF-8 implementation for std::codecvt<wchar_t, char, std::mbstate_t>
+   *
+   * Return a facet object that can be used by stl (iostream, locale, ...)
+   * and std::locale compliant library like boost::filesystem.
+   *
+   * This class allow conversion between UTF-8 (char) and UTF-16/UTF-32 (wchar).
+   */
+  QI_API const codecvt_type &unicodeFacet();
 }
 
 #endif  // _QI_PATH_HPP_

@@ -2,7 +2,6 @@
 #include <qi/application.hpp>
 #include <qi/os.hpp>
 #include <qi/path.hpp>
-#include <qi/qi.hpp>
 
 #include <errno.h>
 

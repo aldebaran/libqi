@@ -12,7 +12,6 @@
 
 #include <boost/assign/list_of.hpp>
 
-#include <qi/qi.hpp>
 #include <qi/application.hpp>
 #include <qi/eventloop.hpp>
 #include <qi/anyobject.hpp>
@@ -1248,13 +1247,14 @@ TEST(TestObject, EarlyAbort)
 
 struct Color
 {
+  Color():r(0),g(0),b(0) {}
   int r,g,b;
 };
 // No inheritance, we emulate Color and ColorA being the same struct in
 // two different CUs or SOs.
 struct ColorA
 {
-  ColorA():a(1) {}
+  ColorA():r(0),g(0),b(0),a(1) {}
   int r,g,b,a;
 };
 

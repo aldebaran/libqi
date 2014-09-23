@@ -11,6 +11,7 @@
 #include "sessioninitializer.hpp"
 
 SessionInitializer::SessionInitializer() :
+  _listen(false),
   _populationGenerator(0),
   _trafficGenerator(0)
 {

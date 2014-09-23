@@ -82,7 +82,7 @@ namespace qi
                                          char**&                   argv,
                                          ApplicationSessionOptions opt,
                                          const Url&                url)
-    : Application(name, ::addParseOptions(argc), argv)
+    : Application(::addParseOptions(argc), argv, name)
   {
     _p = new ApplicationSessionPrivate(url, opt);
   }

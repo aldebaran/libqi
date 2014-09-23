@@ -11,7 +11,6 @@
 #include <qi/application.hpp>
 #include <qi/path.hpp>
 #include <qi/os.hpp>
-#include <qi/qi.hpp>
 #include <qi/log.hpp>
 
 #include <boost/algorithm/string/trim.hpp>
@@ -79,24 +78,42 @@ namespace qi {
     {
     }
 
-    void initSDKlayout()
+    void initSDKlayout(bool real = false)
     {
-      const char *program = qi::Application::program();
+      const char *program;
+      if (!real)
+      {
+        program = qi::Application::program();
+        if (program[0] == '\0')
+        {
+          qiLogWarning() << "No Application was created, trying to deduce paths";
+          return initSDKlayout(true);
+        }
+      }
+      else
+        program = qi::Application::realProgram();
 
-      if (!boost::filesystem::exists(program)) {
+      if (!program) {
         _mode = "error";
         return;
       }
 
-      // We may use argc, argv to elaborate command line parsing, but,
-      // right now only argv[0] is used.
       boost::filesystem::path execPath(program, qi::unicodeFacet());
+      if(!boost::filesystem::exists(execPath)) {
+        _mode = "error";
+        return;
+      }
+
       execPath = boost::filesystem::system_complete(execPath).make_preferred();
-      _sdkPrefixes.push_back(execPath.parent_path().parent_path().string(qi::unicodeFacet()));
-      if (execPath.parent_path().filename().string(qi::unicodeFacet()) != "bin")
-        _mode = execPath.parent_path().filename().string(qi::unicodeFacet());
+      if (execPath.parent_path().filename().string(qi::unicodeFacet()) != "bin") {
+        if (!real)
+          return initSDKlayout(true);
+        _sdkPrefixes.push_back(execPath.parent_path().filename().string(qi::unicodeFacet()));
+      }
       else
         _mode = "";
+
+      _sdkPrefixes.push_back(execPath.parent_path().parent_path().string(qi::unicodeFacet()));
     }
 
     void checkInit()
@@ -366,16 +383,6 @@ namespace qi {
         // If it's not in lib/, it's in bin/
         p = boost::filesystem::path(fsconcat(*it, "bin", prefix.string(qi::unicodeFacet())), qi::unicodeFacet());
 
-        res = existsLib(p, libName + ".dll");
-        if (res != std::string())
-          return res;
-        res = existsLib(p, "lib" + libName + ".dll");
-        if (res != std::string())
-          return res;
-        res = existsLib(p, "lib" + libName);
-        if (res != std::string())
-          return res;
-
 #ifndef NDEBUG
         res = existsLib(p, libName + "_d.dll");
         if (res != std::string())
@@ -387,6 +394,16 @@ namespace qi {
         if (res != std::string())
           return res;
 #endif
+
+        res = existsLib(p, libName + ".dll");
+        if (res != std::string())
+          return res;
+        res = existsLib(p, "lib" + libName + ".dll");
+        if (res != std::string())
+          return res;
+        res = existsLib(p, "lib" + libName);
+        if (res != std::string())
+          return res;
 #endif
       }
     }
@@ -512,7 +529,25 @@ namespace qi {
   std::vector<std::string> SDKLayout::listLib(const std::string &subfolder,
                                               const std::string &pattern) const
   {
-    return listFiles(libPaths(subfolder), pattern);
+    std::vector<std::string> files = listFiles(libPaths(subfolder), pattern);
+    std::vector<std::string> libs;
+    for (unsigned i = 0; i < files.size(); ++i)
+    {
+      std::string file = files.at(i);
+#ifndef _WIN32
+      if (file.substr(file.size() - 3) == ".so")
+        libs.push_back(file);
+#endif
+#ifdef __APPLE__
+      if (file.substr(file.size() - 6) == ".dylib")
+        libs.push_back(file);
+#endif
+#ifdef _WIN32
+      if (file.substr(file.size() - 4) == ".dll")
+        libs.push_back(file);
+#endif
+    }
+    return libs;
   }
 
 

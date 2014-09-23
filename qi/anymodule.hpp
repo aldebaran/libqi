@@ -106,7 +106,7 @@ namespace qi
 
   /** find a module and import it, this is cross language, that's the main module entry point
    *
-   *  this function dispatch to <lang> module factory, if the module is not already registered
+   *  this function dispatch to \<lang\> module factory, if the module is not already registered
    */
   QI_API AnyModule import(const std::string& name);
   QI_API AnyModule import(const ModuleInfo& name);

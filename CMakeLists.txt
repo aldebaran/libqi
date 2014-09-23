@@ -80,7 +80,6 @@ set(QI_H qi/detail/clock.hxx
          qi/path.hpp
          qi/periodictask.hpp
          qi/stats.hpp
-         qi/qi.hpp
          qi/trackable.hpp
          qi/eventloop.hpp
          qi/version.hpp

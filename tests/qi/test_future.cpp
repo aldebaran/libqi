@@ -124,7 +124,6 @@ public:
   SetValue2(int& target)
   :SetValue(target)
   , qi::Trackable<SetValue2>(this)
-  , state(0)
   {}
   ~SetValue2()
   {
@@ -144,7 +143,6 @@ public:
     boost::thread(&SetValue2::delayExchangeP, this, msDelay, value, promise);
     return promise.future();
   }
-  int state;
 };
 
 // wrap a call, waiting before, and notifying state
@@ -468,11 +466,11 @@ TEST_F(TestFuture, TestTimeout) {
   EXPECT_GT(qi::SteadyClock::now(), start + qi::MilliSeconds(10));
 
   start = qi::SteadyClock::now();
-  qi::async(boost::function<void()>(boost::bind(&qi::Promise<int>::setValue, pro, 42)), 10000);
-  EXPECT_EQ(qi::FutureState_FinishedWithValue, fut.wait(qi::SteadyClock::now() + qi::MilliSeconds(20)));
+  qi::async(boost::function<void()>(boost::bind(&qi::Promise<int>::setValue, pro, 42)), 20000);
+  EXPECT_EQ(qi::FutureState_FinishedWithValue, fut.wait(qi::SteadyClock::now() + qi::MilliSeconds(40)));
   EXPECT_TRUE(fut.isFinished());
-  EXPECT_GT(qi::SteadyClock::now(), start + qi::MilliSeconds(10));
-  EXPECT_LT(qi::SteadyClock::now(), start + qi::MilliSeconds(20));
+  EXPECT_GT(qi::SteadyClock::now(), start + qi::MilliSeconds(20));
+  EXPECT_LT(qi::SteadyClock::now(), start + qi::MilliSeconds(40));
 }
 
 TEST_F(TestFuture, TestError) {

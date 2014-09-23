@@ -15,7 +15,6 @@
 
 #include "../src/sdklayout.hpp"
 #include <qi/application.hpp>
-#include <qi/qi.hpp>
 #include <qi/os.hpp>
 #include <qi/path.hpp>
 #include "../src/utils.hpp"
@@ -949,4 +948,73 @@ TEST(qiPathClass, testPimpl)
   EXPECT_NE("a", a.str());  //value are different on windows/linux so... just testing it's not "a"
   EXPECT_EQ("a",   aa.str());
   EXPECT_EQ("a",   aaa.str());
+}
+
+class qiPathLib : public ::testing::Test
+{
+protected:
+  static void SetUpTestCase();
+  static void TearDownTestCase();
+  static bfs::path sdkLibPath;
+};
+
+bfs::path qiPathLib::sdkLibPath;
+
+void qiPathLib::SetUpTestCase()
+{
+  boost::scoped_ptr<qi::SDKLayout> sdkl(new qi::SDKLayout());
+
+  // the sdk dir of the program that is currently running
+  bfs::path prefix(sdkl->sdkPrefix(), qi::unicodeFacet());
+  qiPathLib::sdkLibPath = prefix / "lib";
+  std::string listing = "test.so\n"
+                        "test.dll\n"
+                        "test.a\n"
+                        "test.dylib\n"
+                        "bar/baz.dat\n";
+  createData(sdkLibPath, listing);
+}
+
+void qiPathLib::TearDownTestCase()
+{
+  boost::scoped_ptr<qi::SDKLayout> sdkl(new qi::SDKLayout());
+
+  // the sdk dir of the program that is currently running
+  bfs::path prefix(sdkl->sdkPrefix(), qi::unicodeFacet());
+  qiPathLib::sdkLibPath = prefix / "lib";
+
+  std::vector<std::string> files;
+  files.push_back((sdkLibPath / "test.so").make_preferred().string(qi::unicodeFacet()));
+  files.push_back((sdkLibPath / "test.dll").make_preferred().string(qi::unicodeFacet()));
+  files.push_back((sdkLibPath / "test.a").make_preferred().string(qi::unicodeFacet()));
+  files.push_back((sdkLibPath / "test.dylib").make_preferred().string(qi::unicodeFacet()));
+  files.push_back((sdkLibPath / "bar/baz.dat").make_preferred().string(qi::unicodeFacet()));
+
+  for (unsigned i = 0; i < files.size(); ++i)
+  {
+    std::string file = files.at(i);
+    std::cout << "removing: " << file << std::endl;
+    bfs::remove_all(file);
+  }
+}
+
+TEST_F(qiPathLib, listLib)
+{
+  boost::scoped_ptr<qi::SDKLayout> sdkl(new qi::SDKLayout());
+  bfs::path prefix(sdkl->sdkPrefix(), qi::unicodeFacet());
+
+  std::vector<std::string> expected;
+
+#ifdef __APPLE__
+  expected.push_back((prefix / "lib" / "test.dylib").make_preferred().string(qi::unicodeFacet()));
+#endif
+#ifndef _WIN32
+  expected.push_back((prefix / "lib" / "test.so").make_preferred().string(qi::unicodeFacet()));
+#endif
+#ifdef _WIN32
+  expected.push_back((prefix / "lib" / "test.dll").make_preferred().string(qi::unicodeFacet()));
+#endif
+
+  std::vector<std::string> actual = sdkl->listLib("", "test.*");
+  ASSERT_EQ(expected, actual);
 }

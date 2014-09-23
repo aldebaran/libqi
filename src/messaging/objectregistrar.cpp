@@ -20,7 +20,6 @@ namespace qi {
 
   ObjectRegistrar::ObjectRegistrar(ServiceDirectoryClient *sdClient, Session *session)
     : Server()
-    , _dying(false)
     , _sdClient(sdClient)
     , _session(session)
     , _id(qi::os::generateUuid())

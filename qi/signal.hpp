@@ -101,7 +101,7 @@ namespace qi {
 #define QI_SIGNAL_TEMPLATE_DECL typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename P6, typename P7
 #define QI_SIGNAL_TEMPLATE P0,P1,P2,P3,P4,P5,P6,P7
 
-template<QI_SIGNAL_TEMPLATE_DECL> class Signal;
+  template<QI_SIGNAL_TEMPLATE_DECL> class Signal;
 
   template<typename T>
   class SignalF: public SignalBase, public boost::function<T>
@@ -157,29 +157,34 @@ template<QI_SIGNAL_TEMPLATE_DECL> class Signal;
 #endif
   };
 
-namespace detail
-{
-  template<typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename P6, typename P7> struct VoidFunctionType                                           { typedef void(type)(P0, P1, P2, P3, P4, P5, P6, P7); };
-  template<typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename P6> struct VoidFunctionType<P0, P1, P2, P3, P4, P5, P6, void>                     { typedef void(type)(P0, P1, P2, P3, P4, P5, P6); };
-  template<typename P0, typename P1, typename P2, typename P3, typename P4, typename P5             > struct VoidFunctionType<P0, P1, P2, P3, P4, P5, void, void>             { typedef void(type)(P0, P1, P2, P3, P4, P5); };
-  template<typename P0, typename P1, typename P2, typename P3, typename P4                          > struct VoidFunctionType<P0, P1, P2, P3, P4, void, void, void>           { typedef void(type)(P0, P1, P2, P3, P4); };
-  template<typename P0, typename P1, typename P2, typename P3                                       > struct VoidFunctionType<P0, P1, P2, P3, void, void, void, void>         { typedef void(type)(P0, P1, P2, P3); };
-  template<typename P0, typename P1, typename P2                                                    > struct VoidFunctionType<P0, P1, P2, void, void, void, void, void>       { typedef void(type)(P0, P1, P2); };
-  template<typename P0, typename P1                                                                 > struct VoidFunctionType<P0, P1, void, void, void, void, void, void>     { typedef void(type)(P0, P1); };
-  template<typename P0                                                                              > struct VoidFunctionType<P0, void, void, void, void, void, void, void>   { typedef void(type)(P0); };
-  template<                                                                                         > struct VoidFunctionType<void, void, void, void, void, void, void, void> { typedef void(type)(); };
+  namespace detail
+  {
+    template<typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename P6, typename P7> struct VoidFunctionType                                           { typedef void(type)(P0, P1, P2, P3, P4, P5, P6, P7); };
+    template<typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename P6> struct VoidFunctionType<P0, P1, P2, P3, P4, P5, P6, void>                     { typedef void(type)(P0, P1, P2, P3, P4, P5, P6); };
+    template<typename P0, typename P1, typename P2, typename P3, typename P4, typename P5             > struct VoidFunctionType<P0, P1, P2, P3, P4, P5, void, void>             { typedef void(type)(P0, P1, P2, P3, P4, P5); };
+    template<typename P0, typename P1, typename P2, typename P3, typename P4                          > struct VoidFunctionType<P0, P1, P2, P3, P4, void, void, void>           { typedef void(type)(P0, P1, P2, P3, P4); };
+    template<typename P0, typename P1, typename P2, typename P3                                       > struct VoidFunctionType<P0, P1, P2, P3, void, void, void, void>         { typedef void(type)(P0, P1, P2, P3); };
+    template<typename P0, typename P1, typename P2                                                    > struct VoidFunctionType<P0, P1, P2, void, void, void, void, void>       { typedef void(type)(P0, P1, P2); };
+    template<typename P0, typename P1                                                                 > struct VoidFunctionType<P0, P1, void, void, void, void, void, void>     { typedef void(type)(P0, P1); };
+    template<typename P0                                                                              > struct VoidFunctionType<P0, void, void, void, void, void, void, void>   { typedef void(type)(P0); };
+    template<                                                                                         > struct VoidFunctionType<void, void, void, void, void, void, void, void> { typedef void(type)(); };
 
-}
-template<
-  typename P0 = void,
-  typename P1 = void,
-  typename P2 = void,
-  typename P3 = void,
-  typename P4 = void,
-  typename P5 = void,
-  typename P6 = void,
-  typename P7 = void
-  >
+  }
+
+  /** Class that represent an event to which function can subscribe.
+   *
+   * \includename{qi/signal.hpp}
+   */
+  template<
+    typename P0 = void,
+    typename P1 = void,
+    typename P2 = void,
+    typename P3 = void,
+    typename P4 = void,
+    typename P5 = void,
+    typename P6 = void,
+    typename P7 = void
+    >
   class Signal: public SignalF<typename detail::VoidFunctionType<P0, P1, P2, P3, P4, P5, P6, P7>::type>
   {
   public:
@@ -195,15 +200,20 @@ template<
   /** Event subscriber info.
    *
    * Only one of handler or target must be set.
+   *
+   * \includename{qi/signal.hpp}
    */
   class QI_API SignalSubscriber
   : public boost::enable_shared_from_this<SignalSubscriber>
   {
   public:
     SignalSubscriber()
-      : source(0), linkId(SignalBase::invalidSignalLink), target(0), method(0), enabled(true)
+      : source(0)
+      , linkId(SignalBase::invalidSignalLink)
+      , target(0)
+      , method(0)
+      , enabled(true)
     {}
-
 
     SignalSubscriber(AnyFunction func, MetaCallType callType = MetaCallType_Auto);
     SignalSubscriber(const AnyObject& target, unsigned int method);
@@ -214,7 +224,8 @@ template<
 
     void operator = (const SignalSubscriber& b);
 
-    /* Perform the call.
+    /** Perform the call.
+     *
      * Threading rules in order:
      * - Honor threadingModel if set (not auto)
      * - Honor callTypoe if set (not auto)
@@ -224,7 +235,7 @@ template<
 
     SignalSubscriber& setCallType(MetaCallType ct);
 
-    //wait till all threads are inactive except the current thread.
+    /// Wait until all threads are inactive except the current thread.
     void waitForInactive();
 
     void addActive(bool acquireLock, boost::thread::id tid = boost::this_thread::get_id());
@@ -248,7 +259,7 @@ template<
     AnyFunction       handler;
     MetaCallType      threadingModel;
 
-    //  Mode 2: metaCall
+    //   Mode 2: metaCall
     AnyWeakObject*    target;
     unsigned int      method;
 

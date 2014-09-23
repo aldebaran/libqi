@@ -23,6 +23,12 @@
 namespace qi {
 
   class SessionPrivate;
+
+  /** A Session allows you to interconnect services on the same machine or over
+   * the network.
+   *
+   * \includename{qi/session.hpp}
+   */
   class QI_API Session : boost::noncopyable, public ::boost::enable_shared_from_this<Session> {
   public:
     Session();
@@ -61,8 +67,29 @@ namespace qi {
     qi::FutureSync<void>         unregisterService(unsigned int serviceId);
 
 
-    /// Load a module and register the specified object on the session
-    void loadService(const std::string& moduleName, const std::string &renameModule = std::string());
+    /** Load a module and register the specified object on the session
+     *
+     * Tries to call the factory with (this, args...) if possible, otherwise it
+     * calls it with (args...) only.
+     */
+    void loadService(const std::string& moduleName, const std::string &renameModule = "", const AnyReferenceVector& args = AnyReferenceVector());
+
+#define pushi(z, n, _) params.push_back(p ## n);
+#define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)             \
+  void loadService(                                                   \
+      const std::string& moduleName, const std::string& renameModule, \
+      qi::AutoAnyReference pp0 comma                                  \
+      QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoAnyReference))               \
+  {                                                                   \
+    std::vector<qi::AnyReference> params;                             \
+    params.reserve(n+1);                                              \
+    params.push_back(pp0);                                            \
+    BOOST_PP_REPEAT(n, pushi, _)                                      \
+    loadService(moduleName, renameModule, params);                    \
+  }
+QI_GEN(genCall)
+#undef genCall
+#undef pushi
 
     /** Waits for a service to become available. The future is set immediately
      * if the service is already available.

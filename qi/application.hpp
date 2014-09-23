@@ -33,17 +33,22 @@ namespace qi {
      * \brief Application constructor. Must be the first thing called by main().
      * \param argc Argument counter of the program.
      * \param argv Arguments of the program (given to main).
+     * \param name The name of the program. It will be returned by name().
+     * \param path The full path to the program if you wish to override it. It
+     * will be returned by program() but not realProgram().
      * \throw std::logic_error When the constructor is called twice.
      */
-    Application(int& argc, char** &argv);
+    Application(int& argc, char** &argv, const std::string& name = "", const std::string& path = "");
     /**
      * \brief Application constructor. Must be the first thing called by main().
      * \param name Name of the application.
      * \param argc Argument counter of the program.
      * \param argv Arguments of the program (given to main).
      * \throw std::logic_error When the constructor is called twice.
+     * \deprecated Use Application(int&, char**&, const std::string&, const
+     * std::string&)
      */
-    Application(const std::string &name, int& argc, char** &argv);
+    QI_API_DEPRECATED Application(const std::string &name, int& argc, char** &argv);
     /**
      * \brief Application destructor. It executes atExit() callbacks.
      * \see qi:Application::atExit
@@ -138,8 +143,23 @@ namespace qi {
     static bool initialized();
 
     /**
+     * \brief Return the current program full path according to argv[0]
+     * \return full path to the current running program, symbolic links are not
+     * resolved.
+     * \see realProgram
+     */
+    static const char* program();
+
+    /**
      * \brief Return the current program full path.
-     * \return full path to the current running program
+     * \return full path to the current running program, symbolic links are
+     * resolved.
+     *
+     * When using this function from a Python application for example on
+     * gentoo, it will return something like /usr/bin/python2.7 (because python
+     * is a symlink to python-wrapper which will exec() /usr/bin/python2.7). On
+     * the other hand, program() will return the full path to the script run by
+     * the Python interpreter.
      *
      * \verbatim
      * Computed using specific OS API:
@@ -153,7 +173,7 @@ namespace qi {
      * have been called in your main().
      * \endverbatim
      */
-    static const char* program();
+    static const char* realProgram();
 
     /**
      * \brief Register a function to be executed at Application creation.

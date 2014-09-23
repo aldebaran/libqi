@@ -14,6 +14,7 @@
 # include <vector>
 # include <qi/api.hpp>
 # include <qi/types.hpp>
+# include <qi/path.hpp>
 
 struct stat;
 
@@ -101,6 +102,10 @@ namespace qi {
      * the temporary files it creates.
      */
     QI_API std::string tmp();
+    /**
+     * \brief Create a symlink from source to destination.
+     */
+    QI_API void symlink(const qi::Path& source, const qi::Path& destination);
     /**
      * \brief Get the system's hostname.
      * \return The system's hostname. An empty string is returned on failure.
@@ -287,7 +292,7 @@ namespace qi {
      * No flag is supported on windows platform. Otherwise, see ``man 0p dlfcn.h``
      * for more information on flags available. If not given, ``RTLD_NOW`` is used.
      *
-     * .. seealso:: :cpp:func:`qi::os::dlerror(void)` for more details on the error.
+     * .. seealso:: :cpp:func:`qi::os::dlerror()` for more details on the error.
      *
      * .. versionadded:: 1.12
      * \endverbatim
@@ -306,7 +311,7 @@ namespace qi {
      * If there is an error you can look which one with dlerror function provided in
      * this same module.
      *
-     * .. seealso:: :cpp:func:`qi::os::dlerror(void)` for more details on the error.
+     * .. seealso:: :cpp:func:`qi::os::dlerror()` for more details on the error.
      *
      * .. versionadded:: 1.12
      * \endverbatim
@@ -323,7 +328,7 @@ namespace qi {
      * that were automatically loaded by :cpp:func:`qi::os::dlopen()` when that
      * library was loaded, :cpp:func:`qi::os::dlsym()` returns 0.
      *
-     * .. seealso:: :cpp:func:`qi::os::dlerror(void)` for more details on the error.
+     * .. seealso:: :cpp:func:`qi::os::dlerror()` for more details on the error.
      *
      * .. versionadded:: 1.12
      * \endverbatim
@@ -476,6 +481,10 @@ namespace qi {
     /**
      * \brief Set the current thread name to the string in parameter.
      * \param name The new name of the current thread.
+     *
+     * Prefer using ScopedThreadName that will restore the thread name on exit.
+     *
+     * \warning this feature can be considered as slow and should only used when the task is long
      */
     QI_API void setCurrentThreadName(const std::string &name);
     /**
@@ -484,6 +493,27 @@ namespace qi {
      * \warning Not implemented on Windows, always returns an empty string
      */
     QI_API std::string currentThreadName();
+
+
+    /**
+     * \brief Set the current thread name and restore it after use.
+     *
+     * \warning this feature can be considered as slow and should only used when the task is long
+     */
+    class QI_API ScopedThreadName {
+    public:
+      ScopedThreadName(const std::string& newName) {
+        _oldName = currentThreadName();
+        setCurrentThreadName(newName);
+      };
+      ~ScopedThreadName() {
+        setCurrentThreadName(_oldName);
+      }
+    private:
+      std::string _oldName;
+    };
+
+
     /**
      *  \brief Set the CPU affinity for the current thread.
      *  \param cpus a vector of CPU core ids

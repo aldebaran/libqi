@@ -63,7 +63,7 @@ namespace qi
     qi::detail::Keeper<T> operator->();
     qi::detail::Keeper<T> operator->() const;
     /**
-     * Provides an access to the <T> var stored in the AutoService
+     * Provides an access to the \<T\> var stored in the AutoService
      *
      * @throws If the connection to the Service is unavailable, throws a runtime_exception
      */

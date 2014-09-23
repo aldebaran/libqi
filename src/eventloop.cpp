@@ -40,7 +40,6 @@ namespace qi {
   EventLoopAsio::EventLoopAsio()
   : _mode(Mode_Unset)
   , _work(NULL)
-  , _destroyMe(false)
   , _maxThreads(0)
   {
     _name = "asioeventloop";
@@ -60,20 +59,12 @@ namespace qi {
       if (envNthread)
         nthread = strtol(envNthread, 0, 0);
     }
-    if (nthread == 1)
-    {
-      _mode = Mode_Threaded;
-      _thd = boost::thread(&EventLoopPrivate::run, this);
-    }
-    else
-    {
-      _maxThreads = getEnvParam("QI_EVENTLOOP_MAX_THREADS", 150);
-      _mode = Mode_Pooled;
-      _work = new boost::asio::io_service::work(_io);
-      for (int i=0; i<nthread; ++i)
-        boost::thread(&EventLoopAsio::_runPool, this);
-      boost::thread(&EventLoopAsio::_pingThread, this);
-    }
+    _maxThreads = getEnvParam("QI_EVENTLOOP_MAX_THREADS", 150);
+    _mode = Mode_Pooled;
+    _work = new boost::asio::io_service::work(_io);
+    for (int i=0; i<nthread; ++i)
+      boost::thread(&EventLoopAsio::_runPool, this);
+    boost::thread(&EventLoopAsio::_pingThread, this);
     while (!*_running)
       qi::os::msleep(0);
   }
@@ -187,33 +178,6 @@ namespace qi {
     }
     if (!--_nThreads)
       --_running;
-  }
-
-  void EventLoopAsio::run()
-  {
-    qiLogDebug() << this << "run starting";
-    std::string dontusecpuaffinity = qi::os::getenv("QI_EVENTLOOP_NO_CPU_AFFINITY");
-    if (dontusecpuaffinity.empty()) {
-      std::vector<int> cpus;
-      cpus.push_back(0);
-      bool ret = qi::os::setCurrentThreadCPUAffinity(cpus);
-      qiLogVerbose() << "AsioEventLoop: Set cpu thread affinity to " << 1 << " (" << ret <<")";
-    } else {
-      qiLogVerbose() << "AsioEventLoop: Cpu thread affinity not set because QI_EVENTLOOP_NO_CPU_AFFINITY is set.";
-    }
-    qi::os::setCurrentThreadName("asioeventloop");
-    _running.setIfEquals(0,1);
-    _id = boost::this_thread::get_id();
-    _work = new boost::asio::io_service::work(_io);
-    _io.run();
-    bool destroyMe;
-    {
-      boost::recursive_mutex::scoped_lock sl(_mutex);
-      --_running;
-      destroyMe = _destroyMe;
-    }
-    if (destroyMe)
-      delete this;
   }
 
   bool EventLoopAsio::isInEventLoopThread()
@@ -429,16 +393,6 @@ namespace qi {
     CHECK_STARTED;
     _p->stop();
     qiLogDebug() << this << " EventLoop stop done";
-  }
-
-  void EventLoop::run()
-  {
-    qiLogDebug() << this << " EventLoop run";
-    if (_p)
-      return;
-    _p = new EventLoopAsio();
-    _p->run();
-    qiLogDebug() << this << " EventLoop run done";
   }
 
   void *EventLoop::nativeHandle() {
