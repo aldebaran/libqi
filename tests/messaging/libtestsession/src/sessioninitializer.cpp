@@ -19,11 +19,13 @@ SessionInitializer::SessionInitializer() :
   _setUps[TestMode::Mode_SSL] = &SessionInitializer::setUpSSL;
   _setUps[TestMode::Mode_Direct] = &SessionInitializer::setUpSD;
   _setUps[TestMode::Mode_Nightmare] = &SessionInitializer::setUpNightmare;
+  _setUps[TestMode::Mode_Gateway] = &SessionInitializer::setUpSD;
 
   _tearDowns[TestMode::Mode_SD] = &SessionInitializer::tearDownSD;
   _tearDowns[TestMode::Mode_SSL] = &SessionInitializer::tearDownSD;
   _tearDowns[TestMode::Mode_Direct] = &SessionInitializer::tearDownSD;
   _tearDowns[TestMode::Mode_Nightmare] = &SessionInitializer::tearDownNightmare;
+  _tearDowns[TestMode::Mode_Gateway] = &SessionInitializer::tearDownSD;
 }
 
 SessionInitializer::~SessionInitializer()

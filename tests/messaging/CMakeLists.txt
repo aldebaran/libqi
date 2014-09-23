@@ -37,7 +37,7 @@ qimessaging_create_session_test(test_call                 SRC test_call.cpp     
 #broken
 #qimessaging_create_session_test(test_autoservice  SRC test_autoservice.cpp                   DEPENDS QI GTEST TESTSESSION TIMEOUT 30)
 #qi_create_gtest(test_application                  SRC test_application.cpp                   DEPENDS QI GTEST TIMEOUT 2)
-#qi_create_gtest(test_gateway                      SRC test_gateway.cpp                       DEPENDS QI GTEST TIMEOUT 10)
+qi_create_gtest(test_gateway              SRC test_gateway.cpp              DEPENDS QI  GTEST TIMEOUT 10)
 qi_create_gtest(test_testsession                  SRC test_testsession.cpp                   DEPENDS QI GTEST TESTSESSION TIMEOUT 30)
 qi_create_gtest(test_metavalue_argument           SRC test_metavalue_argument.cpp            DEPENDS QI GTEST TIMEOUT 30)
 qi_create_gtest(test_applicationsession           SRC test_applicationsession.cpp            DEPENDS QI GTEST TIMEOUT 30)

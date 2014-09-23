@@ -264,7 +264,12 @@ set(QIM_C src/messaging/applicationsession.cpp
           src/messaging/boundobject.hpp
           src/messaging/clientauthenticator_p.hpp
           src/messaging/clientauthenticator.cpp
+          src/messaging/gateway_p.hpp
           src/messaging/gateway.cpp
+          src/messaging/gwsdclient.hpp
+          src/messaging/gwsdclient.cpp
+          src/messaging/gwobjecthost.hpp
+          src/messaging/gwobjecthost.cpp
           src/messaging/message.hpp
           src/messaging/message.cpp
           src/messaging/messagedispatcher.hpp

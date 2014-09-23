@@ -121,7 +121,7 @@ namespace qi {
   void Server::onMessageReadyNotAuthenticated(const Message &msg, TransportSocketPtr socket, AuthProviderPtr auth,
                                               boost::shared_ptr<bool> first, SignalSubscriberPtr oldSignal)
   {
-    qiLogVerbose() << "Starting auth message";
+    qiLogVerbose() << "Starting auth message" << msg.address();
     int id = msg.id();
     int service = msg.service();
     int function = msg.action();

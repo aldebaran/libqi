@@ -1,58 +1,48 @@
 #pragma once
 /*
-**  Copyright (C) 2012 Aldebaran Robotics
+**  Copyright (C) 2014 Aldebaran Robotics
 **  See COPYING for the license
 */
 
 #ifndef _QIMESSAGING_GATEWAY_HPP_
 #define _QIMESSAGING_GATEWAY_HPP_
 
-# include <qi/url.hpp>
+#include <boost/shared_ptr.hpp>
+
+#include <qi/api.hpp>
+#include <qi/property.hpp>
+#include <qi/future.hpp>
+#include <qi/url.hpp>
+#include <qi/anyvalue.hpp>
+#include <qi/signal.hpp>
 
 namespace qi
 {
-  class GatewayPrivate;
+class AuthProviderFactory;
+typedef boost::shared_ptr<AuthProviderFactory> AuthProviderFactoryPtr;
+class ClientAuthenticatorFactory;
+typedef boost::shared_ptr<ClientAuthenticatorFactory> ClientAuthenticatorFactoryPtr;
+class GatewayPrivate;
+typedef boost::shared_ptr<GatewayPrivate> GatewayPrivatePtr;
 
-  class QI_API Gateway
-  {
-  public:
-    Gateway();
-    ~Gateway();
+class QI_API Gateway
+{
+public:
+  Gateway();
 
-    bool attachToServiceDirectory(const qi::Url &address);
-    bool listen(const qi::Url &address);
-    std::vector<qi::Url> endpoints() const;
+  Property<bool> connected;
 
-  private:
-    GatewayPrivate *_p;
-  };
+  void setAuthProviderFactory(AuthProviderFactoryPtr provider);
+  void setLocalClientAuthProviderFactory(AuthProviderFactoryPtr provider);
+  void setClientAuthenticatorFactory(ClientAuthenticatorFactoryPtr authenticator);
+  UrlVector endpoints() const;
+  bool listen(const Url& url);
+  qi::Future<void> attachToServiceDirectory(const Url& serviceDirectoryUrl);
+  void close();
 
-  class QI_API RemoteGateway
-  {
-  public:
-    RemoteGateway();
-    ~RemoteGateway();
-
-    bool listen(const qi::Url &address);
-    void join();
-
-  private:
-    GatewayPrivate *_p;
-  };
-
-  class QI_API ReverseGateway
-  {
-  public:
-    ReverseGateway();
-    ~ReverseGateway();
-
-    bool attachToServiceDirectory(const qi::Url &address);
-    bool connect(const qi::Url &address);
-    void join();
-
-  private:
-    GatewayPrivate *_p;
-  };
+private:
+  GatewayPrivatePtr _p;
+};
 }
 
-#endif  // _QIMESSAGING_GATEWAY_HPP_
+#endif // _QIMESSAGING_GATEWAY_HPP_
