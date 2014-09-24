@@ -159,7 +159,7 @@ namespace qi
      * (without '.exe') (in UTF-8).
      * \endverbatim
      */
-    QI_API std::string findBin(const std::string& name);
+    QI_API std::string findBin(const std::string& name, bool searchInPath=false);
 
     /**
      * \brief Look for a library.

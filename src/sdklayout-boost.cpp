@@ -14,6 +14,7 @@
 #include <qi/log.hpp>
 
 #include <boost/algorithm/string/trim.hpp>
+#include <boost/algorithm/string/split.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/regex.hpp>
 #include <locale>
@@ -251,7 +252,7 @@ namespace qi {
     return _p->_sdkPrefixes;
   }
 
-  std::string SDKLayout::findBin(const std::string &name) const
+  std::string SDKLayout::findBin(const std::string &name, bool searchInPath) const
   {
     boost::filesystem::path bin(name, qi::unicodeFacet());
     try
@@ -285,6 +286,31 @@ namespace qi {
     {
       qiLogDebug() << e.what();
     }
+
+    if(searchInPath) {
+      // Look in $PATH now
+      std::vector<std::string> paths;
+      std::vector<std::string> pathExts;
+      std::string foo = qi::os::getenv("PATH");
+      boost::split(paths, foo, boost::is_any_of(qi::os::pathsep()));
+      std::string bar = qi::os::getenv("PATHEXT");
+      boost::split(pathExts, bar, boost::is_any_of(qi::os::pathsep()));
+      for (std::vector<std::string>::const_iterator it = paths.begin();
+           it != paths.end(); ++it) {
+        qi::Path path = *it;
+        path /= name;
+        if (path.exists())
+          return path.str();
+        // Try with all extensions
+        for (std::vector<std::string>::const_iterator ext = pathExts.begin();
+             ext != pathExts.end(); ++ext) {
+          std::string pathExt = path.str() + "." + *ext;
+          if (qi::Path(pathExt).exists())
+            return pathExt;
+        }
+      }
+    }
+
     return std::string();
   }
 

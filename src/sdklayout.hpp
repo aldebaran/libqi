@@ -76,7 +76,7 @@ namespace qi
 
 
     /** @copydoc qi::path::findBinary */
-    std::string findBin(const std::string &name) const;
+    std::string findBin(const std::string &name, bool searchInPath = false) const;
 
     /** @copydoc qi::path::findLibrary */
     std::string findLib(const std::string &name) const;

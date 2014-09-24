@@ -186,6 +186,10 @@ namespace qi {
      #endif
     }
 
+    std::string pathsep() {
+      return ";";
+    }
+
     int setenv(const char *var, const char *value) {
       return _wputenv_s(boost::filesystem::path(var, qi::unicodeFacet()).wstring(qi::unicodeFacet()).c_str(),
                         boost::filesystem::path(value, qi::unicodeFacet()).wstring(qi::unicodeFacet()).c_str());

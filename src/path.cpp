@@ -262,9 +262,9 @@ namespace qi
       return getInstance()->sdkPrefix();
     }
 
-    std::string findBin(const std::string &name)
+    std::string findBin(const std::string &name, bool searchInPath)
     {
-      return getInstance()->findBin(name);
+      return getInstance()->findBin(name, searchInPath);
     }
 
     std::string findLib(const std::string &name)
