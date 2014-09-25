@@ -26,17 +26,6 @@ namespace qi {
 
   static qi::Atomic<uint32_t> gTaskId = 0;
 
-
-  template<typename T>
-  static T getEnvParam(const char* name, T defaultVal)
-  {
-    std::string sval = qi::os::getenv(name);
-    if (sval.empty())
-      return defaultVal;
-    else
-      return boost::lexical_cast<T>(sval);
-  }
-
   EventLoopAsio::EventLoopAsio()
   : _mode(Mode_Unset)
   , _work(NULL)
@@ -59,7 +48,7 @@ namespace qi {
       if (envNthread)
         nthread = strtol(envNthread, 0, 0);
     }
-    _maxThreads = getEnvParam("QI_EVENTLOOP_MAX_THREADS", 150);
+    _maxThreads = qi::os::getEnvDefault("QI_EVENTLOOP_MAX_THREADS", 150);
     _mode = Mode_Pooled;
     _work = new boost::asio::io_service::work(_io);
     for (int i=0; i<nthread; ++i)
@@ -101,9 +90,9 @@ namespace qi {
   void EventLoopAsio::_pingThread()
   {
     qi::os::setCurrentThreadName("EvLoop.mon");
-    static int msTimeout = getEnvParam("QI_EVENTLOOP_PING_TIMEOUT", 500);
-    static int msGrace = getEnvParam("QI_EVENTLOOP_GRACE_PERIOD", 0);
-    static int maxTimeouts = getEnvParam("QI_EVENTLOOP_MAX_TIMEOUTS", 20);
+    static int msTimeout = qi::os::getEnvDefault("QI_EVENTLOOP_PING_TIMEOUT", 500);
+    static int msGrace = qi::os::getEnvDefault("QI_EVENTLOOP_GRACE_PERIOD", 0);
+    static int maxTimeouts = qi::os::getEnvDefault("QI_EVENTLOOP_MAX_TIMEOUTS", 20);
     ++_nThreads;
     boost::mutex mutex;
     boost::condition_variable cond;
