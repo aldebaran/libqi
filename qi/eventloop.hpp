@@ -144,42 +144,30 @@ namespace qi
 
   namespace detail
   {
-    template <
-        typename R,
-        typename ARG0,
-        typename boost::enable_if<
-            boost::is_base_of<Actor, typename detail::Unwrap<ARG0>::type>,
-            int>::type>
-    Future<R> asyncMaybeActor(
-        const ARG0& arg0, const boost::function<R()>& cb,
-        qi::Duration delay);
-    template <
-        typename R,
-        typename ARG0,
-        typename boost::disable_if<
-            boost::is_base_of<Actor, typename detail::Unwrap<ARG0>::type>,
-            int>::type>
-    Future<R> asyncMaybeActor(
-        const ARG0& arg0, const boost::function<R()>& cb,
-        qi::Duration delay);
-    template <
-        typename R,
-        typename ARG0,
-        typename boost::enable_if<
-            boost::is_base_of<Actor, typename detail::Unwrap<ARG0>::type>,
-            int>::type>
-    Future<R> asyncMaybeActor(
-        const ARG0& arg0, const boost::function<R()>& cb,
-        qi::SteadyClockTimePoint timepoint);
-    template <
-        typename R,
-        typename ARG0,
-        typename boost::disable_if<
-            boost::is_base_of<Actor, typename detail::Unwrap<ARG0>::type>,
-            int>::type>
-    Future<R> asyncMaybeActor(
-        const ARG0& arg0, const boost::function<R()>& cb,
-        qi::SteadyClockTimePoint timepoint);
+    template <typename R, typename ARG0>
+    typename boost::enable_if<
+        boost::is_base_of<Actor, typename detail::Unwrap<ARG0>::type>,
+        Future<R> >::type
+        asyncMaybeActor(const ARG0& arg0, const boost::function<R()>& cb,
+                        qi::Duration delay);
+    template <typename R, typename ARG0>
+    typename boost::disable_if<
+        boost::is_base_of<Actor, typename detail::Unwrap<ARG0>::type>,
+        Future<R> >::type
+        asyncMaybeActor(const ARG0& arg0, const boost::function<R()>& cb,
+                        qi::Duration delay);
+    template <typename R, typename ARG0>
+    typename boost::enable_if<
+        boost::is_base_of<Actor, typename detail::Unwrap<ARG0>::type>,
+        Future<R> >::type
+        asyncMaybeActor(const ARG0& arg0, const boost::function<R()>& cb,
+                        qi::SteadyClockTimePoint timepoint);
+    template <typename R, typename ARG0>
+    typename boost::disable_if<
+        boost::is_base_of<Actor, typename detail::Unwrap<ARG0>::type>,
+        Future<R> >::type
+        asyncMaybeActor(const ARG0& arg0, const boost::function<R()>& cb,
+                        qi::SteadyClockTimePoint timepoint);
   }
 
   /// \copydoc qi::EventLoop::async().
@@ -213,14 +201,14 @@ namespace qi
       Future<R> >::type async(const AF& fun, const ARG0& arg0 comma ADECL, \
                               qi::Duration delay = qi::Duration(0))        \
   {                                                                        \
-    return detail::asyncMaybeActor<R, ARG0, 0>(                            \
+    return detail::asyncMaybeActor<R, ARG0>(                               \
         arg0, qi::bind<R()>(fun, arg0 comma AUSE), delay);                 \
   }                                                                        \
   template<typename R, typename AF, typename ARG0 comma ATYPEDECL>         \
   inline Future<R> async(const AF& fun, const ARG0& arg0 comma ADECL,      \
                          qi::SteadyClockTimePoint timepoint)               \
   {                                                                        \
-    return detail::asyncMaybeActor<R, ARG0, 0>(                            \
+    return detail::asyncMaybeActor<R, ARG0>(                               \
         arg0, qi::bind<R()>(fun, arg0 comma AUSE), timepoint);             \
   }
   QI_GEN(genCall)

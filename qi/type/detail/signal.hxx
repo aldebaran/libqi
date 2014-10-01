@@ -15,13 +15,13 @@
 namespace qi
 {
   template <typename T>
-  template <typename ARG0,
-            typename boost::enable_if<
-                boost::is_base_of<Actor, typename detail::Unwrap<ARG0>::type>,
-                int>::type>
-  inline SignalSubscriber& SignalF<T>::connectMaybeActor(
-      const ARG0& arg0, const boost::function<T>& cb,
-      const boost::function<void()>& fallbackCb)
+  template <typename ARG0>
+  inline typename boost::enable_if<
+      boost::is_base_of<Actor, typename detail::Unwrap<ARG0>::type>,
+      SignalSubscriber&>::type
+      SignalF<T>::_connectMaybeActor(const ARG0& arg0,
+                                     const boost::function<T>& cb,
+                                     const boost::function<void()>& fallbackCb)
   {
     SignalSubscriber& s = connect(qi::trackWithFallback(
         fallbackCb, boost::function<void()>(boost::bind(
@@ -34,13 +34,13 @@ namespace qi
     return s;
   }
   template <typename T>
-  template <typename ARG0,
-            typename boost::disable_if<
-                boost::is_base_of<Actor, typename detail::Unwrap<ARG0>::type>,
-                int>::type>
-  inline SignalSubscriber& SignalF<T>::connectMaybeActor(
-      const ARG0& arg0, const boost::function<T>& cb,
-      const boost::function<void()>& fallbackCb)
+  template <typename ARG0>
+  inline typename boost::disable_if<
+      boost::is_base_of<Actor, typename detail::Unwrap<ARG0>::type>,
+      SignalSubscriber&>::type
+      SignalF<T>::_connectMaybeActor(const ARG0& arg0,
+                                     const boost::function<T>& cb,
+                                     const boost::function<void()>& fallbackCb)
   {
     return connect(qi::trackWithFallback(fallbackCb, cb, arg0));
   }
@@ -53,7 +53,7 @@ namespace qi
     int curId;                                                         \
     SignalLink* trackLink;                                             \
     createNewTrackLink(curId, trackLink);                              \
-    SignalSubscriber& s = connectMaybeActor<P, 0>(                     \
+    SignalSubscriber& s = _connectMaybeActor<P>(                       \
         p, qi::bind<T>(func, p comma AUSE),                            \
         qi::track(boost::function<void()>(boost::bind(                 \
                       &SignalF<T>::disconnectTrackLink, this, curId)), \

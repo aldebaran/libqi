@@ -150,9 +150,9 @@ namespace detail {
     {
       return go()->enableTrace(enable);
     }
-    inline void forceEventLoop(qi::EventLoop* el)
+    inline void forceExecutionContext(boost::shared_ptr<qi::ExecutionContext> ec)
     {
-      return go()->forceEventLoop(el);
+      return go()->forceExecutionContext(ec);
     }
     #define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)       \
       template<typename R> qi::Future<R> async(                     \

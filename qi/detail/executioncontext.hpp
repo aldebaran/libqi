@@ -32,12 +32,12 @@ public:
       qi::Duration delay) = 0;
   /// call a callback asynchronously to be executed in delay
   template <typename R>
-  typename boost::enable_if_c<!boost::is_same<R, void>::value,
+  typename boost::disable_if<boost::is_same<R, void>,
                               qi::Future<R> >::type
       async(const boost::function<R()>& callback, qi::Duration delay);
   /// call a callback asynchronously to be executed on tp
   template <typename R>
-  typename boost::enable_if_c<!boost::is_same<R, void>::value,
+  typename boost::disable_if<boost::is_same<R, void>,
                               qi::Future<R> >::type
       async(const boost::function<R()>& callback, qi::SteadyClockTimePoint tp);
 
@@ -91,7 +91,7 @@ template<typename R> void check_canceled(qi::Future<void> f, qi::Promise<R> p)
 }
 
 template <typename R>
-typename boost::enable_if_c<!boost::is_same<R, void>::value,
+typename boost::disable_if<boost::is_same<R, void>,
                             qi::Future<R> >::type
     ExecutionContext::async(const boost::function<R()>& callback,
                             qi::Duration delay)
@@ -109,7 +109,7 @@ typename boost::enable_if_c<!boost::is_same<R, void>::value,
 }
 
 template <typename R>
-typename boost::enable_if_c<!boost::is_same<R, void>::value,
+typename boost::disable_if<boost::is_same<R, void>,
                             qi::Future<R> >::type
     ExecutionContext::async(const boost::function<R()>& callback,
                             qi::SteadyClockTimePoint tp)

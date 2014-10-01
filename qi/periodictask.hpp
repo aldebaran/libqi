@@ -47,14 +47,14 @@ namespace qi
      */
     void setCallback(const Callback& cb);
 #ifdef DOXYGEN
-    template<typename T, typename ARG0> PeriodicTask& setCallback(const T& callable, ARG0 tracked, ...);
+    template <typename T, typename ARG0> PeriodicTask& setCallback(const T& callable, ARG0 tracked, ...);
 #else
 #define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)              \
   template <typename AF, typename ARG0 comma ATYPEDECL>                \
   inline void setCallback(const AF& fun, const ARG0& arg0 comma ADECL) \
   {                                                                    \
     setCallback(boost::bind(fun, arg0 comma AUSE));                    \
-    _connectMaybeActor<ARG0, 0>(arg0);                                 \
+    _connectMaybeActor<ARG0>(arg0);                                    \
   }
     QI_GEN(genCall)
 #undef genCall
@@ -138,21 +138,19 @@ namespace qi
   private:
     boost::shared_ptr<PeriodicTaskPrivate> _p;
 
-    template <
-        typename ARG0,
-        typename boost::enable_if<
-            boost::is_base_of<Actor, typename detail::Unwrap<ARG0>::type>,
-            int>::type>
-    inline void _connectMaybeActor(const ARG0& arg0)
+    template <typename ARG0>
+    inline typename boost::enable_if<
+        boost::is_base_of<Actor, typename detail::Unwrap<ARG0>::type>,
+        void>::type
+        _connectMaybeActor(const ARG0& arg0)
     {
       setStrand(detail::Unwrap<ARG0>::unwrap(arg0)->strand());
     }
-    template <
-        typename ARG0,
-        typename boost::disable_if<
-            boost::is_base_of<Actor, typename detail::Unwrap<ARG0>::type>,
-            int>::type>
-    inline void _connectMaybeActor(const ARG0& arg0)
+    template <typename ARG0>
+    inline typename boost::disable_if<
+        boost::is_base_of<Actor, typename detail::Unwrap<ARG0>::type>,
+        void>::type
+        _connectMaybeActor(const ARG0& arg0)
     {
       setStrand(0);
     }

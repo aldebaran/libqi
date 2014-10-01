@@ -325,7 +325,7 @@ namespace qi {
   inline void connect(const AF& fun, const ARG0& arg0 comma ADECL,        \
                       FutureCallbackType type = FutureCallbackType_Async) \
   {                                                                       \
-    connectMaybeActor<ARG0, 0>(                                           \
+    _connectMaybeActor<ARG0>(                                             \
         arg0, ::qi::bind<void(Future<T>)>(fun, arg0 comma AUSE), type);   \
   }
     QI_GEN(genCall)
@@ -378,22 +378,20 @@ namespace qi {
         qi::Strand* strand,
         const boost::function<void(const Future<T>&)>& cb);
 
-    template <
-        typename ARG0,
-        typename boost::enable_if<
-            boost::is_base_of<Actor, typename detail::Unwrap<ARG0>::type>,
-            int>::type>
-    void connectMaybeActor(
-        const ARG0& arg0, const boost::function<void(const Future<T>&)>& cb,
-        FutureCallbackType type);
-    template <
-        typename ARG0,
-        typename boost::disable_if<
-            boost::is_base_of<Actor, typename detail::Unwrap<ARG0>::type>,
-            int>::type>
-    void connectMaybeActor(
-        const ARG0& arg0, const boost::function<void(const Future<T>&)>& cb,
-        FutureCallbackType type);
+    template <typename ARG0>
+    typename boost::enable_if<
+        boost::is_base_of<Actor, typename detail::Unwrap<ARG0>::type>,
+        void>::type
+        _connectMaybeActor(const ARG0& arg0,
+                           const boost::function<void(const Future<T>&)>& cb,
+                           FutureCallbackType type);
+    template <typename ARG0>
+    typename boost::disable_if<
+        boost::is_base_of<Actor, typename detail::Unwrap<ARG0>::type>,
+        void>::type
+        _connectMaybeActor(const ARG0& arg0,
+                           const boost::function<void(const Future<T>&)>& cb,
+                           FutureCallbackType type);
   };
 
   /** This class allow throwing on error and being synchronous

@@ -22,15 +22,16 @@ namespace qi {
       return (static_cast<T*>(instance)->*member)();
     }
 
-    template <typename T,
-             typename boost::enable_if<boost::is_base_of<Actor, T>, int>::type>
-    AnyFunction getStrandAccessor()
+    template <typename T>
+    typename boost::enable_if<boost::is_base_of<Actor, T>, AnyFunction>::type
+        getStrandAccessor()
     {
-      return AnyFunction::from(boost::function<qi::Strand*(void*)>(boost::bind(&callWithVoid<T>, &T::strand, _1)));
+      return AnyFunction::from(boost::function<qi::Strand*(void*)>(
+          boost::bind(&callWithVoid<T>, &T::strand, _1)));
     }
-    template <typename T,
-             typename boost::disable_if<boost::is_base_of<Actor, T>, int>::type>
-    AnyFunction getStrandAccessor()
+    template <typename T>
+    typename boost::disable_if<boost::is_base_of<Actor, T>, AnyFunction>::type
+        getStrandAccessor()
     {
       return AnyFunction();
     }
@@ -44,7 +45,7 @@ namespace qi {
     // - serializer, ...
     // => wee need all TypeInterface* methods, but we do not want another TypeInterface*
     // to anwser to typeOf<T>
-    xBuildFor(new DefaultTypeImpl<T>(), autoRegister, detail::getStrandAccessor<T, 0>());
+    xBuildFor(new DefaultTypeImpl<T>(), autoRegister, detail::getStrandAccessor<T>());
   }
 
   template <typename FUNCTION_TYPE>

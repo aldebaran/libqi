@@ -42,33 +42,30 @@ namespace qi {
   }
 
   template <typename T>
-  template <
-      typename ARG0,
-      typename boost::enable_if<
-          boost::is_base_of<Actor, typename detail::Unwrap<ARG0>::type>,
-          int>::type>
-  inline void Future<T>::connectMaybeActor(
-      const ARG0& arg0, const boost::function<void(const Future<T>&)>& cb,
-      FutureCallbackType type)
+  template <typename ARG0>
+  inline typename boost::enable_if<
+      boost::is_base_of<Actor, typename detail::Unwrap<ARG0>::type>,
+      void>::type
+      Future<T>::_connectMaybeActor(
+          const ARG0& arg0, const boost::function<void(const Future<T>&)>& cb,
+          FutureCallbackType type)
   {
-    _p->connect(
-        *this,
-        qi::trackWithFallback(
-          boost::function<void()>(),
-          transformStrandedCallback(
-            detail::Unwrap<ARG0>::unwrap(arg0)->strand(), cb),
-          arg0),
-        FutureCallbackType_Sync);
+    _p->connect(*this,
+                qi::trackWithFallback(
+                    boost::function<void()>(),
+                    transformStrandedCallback(
+                        detail::Unwrap<ARG0>::unwrap(arg0)->strand(), cb),
+                    arg0),
+                FutureCallbackType_Sync);
   }
   template <typename T>
-  template <
-      typename ARG0,
-      typename boost::disable_if<
-          boost::is_base_of<Actor, typename detail::Unwrap<ARG0>::type>,
-          int>::type>
-  inline void Future<T>::connectMaybeActor(
-      const ARG0& arg0, const boost::function<void(const Future<T>&)>& cb,
-      FutureCallbackType type)
+  template <typename ARG0>
+  inline typename boost::disable_if<
+      boost::is_base_of<Actor, typename detail::Unwrap<ARG0>::type>,
+      void>::type
+      Future<T>::_connectMaybeActor(
+          const ARG0& arg0, const boost::function<void(const Future<T>&)>& cb,
+          FutureCallbackType type)
   {
     _p->connect(*this, cb, type);
   }

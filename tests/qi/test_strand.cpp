@@ -179,8 +179,6 @@ struct MyActor : qi::Actor
   MyActor() : calling(0) {}
   void f(int end, qi::Promise<void> finished)
   {
-    if (calling)
-      asm("int3");
     ASSERT_FALSE(calling);
     calling = true;
     qi::os::msleep(5);
