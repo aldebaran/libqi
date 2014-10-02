@@ -111,11 +111,11 @@ namespace qi {
         if (_maxThreads && *_nThreads >= _maxThreads + 1) // we count in nThreads
         {
           ++nbTimeout;
-          qiLogInfo() << "Thread " << _name << " limit reached (" << nbTimeout << " timeouts)" << *_totalTask << " / " << _maxThreads << " active: " << *_activeTask;;
+          qiLogInfo() << "Threadpool " << _name << " limit reached (" << nbTimeout << " timeouts, number of tasks: " << *_totalTask << ", number of active tasks: " << *_activeTask <<  ", number of threads: " << _maxThreads << ")";
 
           if (nbTimeout >= maxTimeouts)
           {
-            qiLogInfo() << "threadpool: " << _name <<
+            qiLogError() << "Threadpool " << _name <<
               ": System seems to be deadlocked, sending emergency signal";
             if (_emergencyCallback)
             {
