@@ -85,7 +85,8 @@ namespace qi
     /**
      * \brief Start the periodic task at specified period.
      *
-     * No effect if already running.
+     * No effect if already running. No effect if called from within the
+     * callback.
      * \param immediate if true, first schedule of the task will happen with no delay.
      * \warning concurrent calls to start() and stop() will result in undefined behavior.
      */

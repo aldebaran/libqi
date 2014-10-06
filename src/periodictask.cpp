@@ -152,6 +152,9 @@ namespace qi
       throw std::runtime_error("Periodic task cannot start without a setCallback() call first");
     if (_p->_usPeriod < 0)
       throw std::runtime_error("Periodic task cannot start without a setUsPeriod() call first");
+    // we are called from the callback
+    if (os::gettid() == _p->_tid)
+      return;
     //Stopping is not handled by start, stop will handle it for us.
     stop();
     if (!_p->_state.setIfEquals(Task_Stopped, Task_Starting))
