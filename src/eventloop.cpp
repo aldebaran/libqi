@@ -15,6 +15,8 @@
 #include <qi/eventloop.hpp>
 #include <qi/future.hpp>
 
+#include <qi/getenv.hpp>
+
 #include "eventloop_p.hpp"
 #include "tp_qi.h"
 

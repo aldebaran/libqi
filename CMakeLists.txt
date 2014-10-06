@@ -77,6 +77,7 @@ set(QI_H qi/detail/clock.hxx
          qi/log.hpp
          qi/macro.hpp
          qi/os.hpp
+         qi/getenv.hpp
          qi/preproc.hpp
          qi/types.hpp
          qi/path.hpp

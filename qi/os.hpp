@@ -15,7 +15,6 @@
 # include <qi/api.hpp>
 # include <qi/types.hpp>
 # include <qi/path.hpp>
-# include <boost/lexical_cast.hpp>
 
 struct stat;
 
@@ -567,16 +566,6 @@ namespace qi {
      * Otherwise returns a value of 0, meaning that it was impossible to get the memory usage.
      */
     QI_API size_t memoryUsage(unsigned int pid);
-
-    template<typename T>
-    T getEnvDefault(const char* name, T defaultVal)
-    {
-      std::string sval = qi::os::getenv(name);
-      if (sval.empty())
-        return defaultVal;
-      else
-        return boost::lexical_cast<T>(sval);
-    }
 
   }
 }
