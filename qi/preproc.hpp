@@ -627,9 +627,8 @@ for i in range(0, 10):
               ) \
       } \
       throw std::invalid_argument( \
-                "Unknown enum: " BOOST_PP_STRINGIZE(type) " value: " << val); \
+                "Unknown enum: " BOOST_PP_STRINGIZE(type) \
+                " value: " BOOST_PP_STRINGIZE(val)); \
     }
-#undef __QI_CONVERT_ENUM_ELEMENT_TOSTRING_CASE
-
 
 #endif  // _QI_PREPROC_HPP_
