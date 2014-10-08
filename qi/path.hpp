@@ -11,6 +11,7 @@
 # include <string>
 # include <vector>
 # include <locale>
+# include <iosfwd>
 # include <boost/scoped_ptr.hpp>
 # include <qi/api.hpp>
 
@@ -92,10 +93,18 @@ namespace qi
     /// copy operator
     const Path& operator=(const qi::Path& rhs) const;
 
+    /// Standard output stream operator for logging.
+    friend std::ostream& operator<<(std::ostream& output, const qi::Path& path)
+    {
+      output << path.str();
+      return output;
+    }
+
   private:
     Path(PrivatePath* p);
     boost::scoped_ptr<PrivatePath> _p;
   };
+
 
   /// Set of tools to handle SDK layouts.
   namespace path
