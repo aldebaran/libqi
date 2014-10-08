@@ -1,6 +1,7 @@
 /*
 ** Copyright (C) 2014 Aldebaran
 */
+#include <qi/application.hpp>
 #include <qi/future.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/foreach.hpp>
@@ -264,4 +265,13 @@ TEST(TestStrand, SignalWithTrackable)
   }
   signal();
   ASSERT_EQ(0, callcount);
+}
+
+int main(int argc, char* argv[])
+{
+  qi::Application app(argc, argv);
+  ::testing::InitGoogleTest(&argc, argv);
+  // better for these tests, since a task is 5ms long
+  qi::os::setenv("QI_STRAND_QUANTUM_US", "50000");
+  return RUN_ALL_TESTS();
 }

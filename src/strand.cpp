@@ -5,6 +5,7 @@
 #include <qi/strand.hpp>
 #include <qi/log.hpp>
 #include <qi/future.hpp>
+#include <qi/getenv.hpp>
 #include <deque>
 #include <boost/enable_shared_from_this.hpp>
 
@@ -137,11 +138,18 @@ void StrandPrivate::enqueue(boost::shared_ptr<Callback> cbStruct)
 
 void StrandPrivate::process()
 {
+  static const unsigned int QI_STRAND_QUANTUM_US =
+    qi::os::getEnvDefault<unsigned int>("QI_STRAND_QUANTUM_US", 5000);
+
   qiLogDebug() << "StrandPrivate::process started";
 
   _processingThread = qi::os::gettid();
 
-  while (true)
+  qi::SteadyClockTimePoint start = qi::steadyClockNow();
+
+  bool finished = false;
+
+  do
   {
     boost::shared_ptr<Callback> cbStruct;
     {
@@ -152,7 +160,8 @@ void StrandPrivate::process()
         qiLogDebug() << "Queue empty, stopping";
         _processing = false;
         _processFinished.notify_all();
-        return;
+        finished = true;
+        break;
       }
       cbStruct = _queue.front();
       _queue.pop_front();
@@ -181,6 +190,16 @@ void StrandPrivate::process()
       cbStruct->promise.setError("callback has thrown in strand");
     }
     qiLogDebug() << "Finished job id " << cbStruct->id;
+  } while (qi::steadyClockNow() - start < qi::MicroSeconds(QI_STRAND_QUANTUM_US));
+
+  // if we still have work
+  if (!finished)
+  {
+    assert(_processing);
+
+    qiLogDebug() << "Strand quantum expired, rescheduling";
+    _eventLoop.async(boost::bind(&StrandPrivate::process, shared_from_this()),
+        qi::Duration(0));
   }
 
   _processingThread = 0;
