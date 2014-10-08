@@ -93,7 +93,7 @@ namespace qi
     return _p->path.extension().string(qi::unicodeFacet());
   }
 
-  Path Path::parent()
+  Path Path::parent() const
   {
     return Path(new PrivatePath(_p->path.parent_path()));
   }
@@ -103,12 +103,12 @@ namespace qi
     return _p->path.filename().string(qi::unicodeFacet());
   }
 
-  Path Path::absolute()
+  Path Path::absolute() const
   {
     return Path(new PrivatePath(bfs::absolute(_p->path)));
   }
 
-  PathVector Path::files()
+  PathVector Path::files() const
   {
     PathVector ret;
     bfs::directory_iterator dit(_p->path);
@@ -120,7 +120,7 @@ namespace qi
     return ret;
   }
 
-  PathVector Path::recursiveFiles()
+  PathVector Path::recursiveFiles() const
   {
     PathVector ret;
     bfs::recursive_directory_iterator dit(_p->path);
@@ -132,7 +132,7 @@ namespace qi
     return ret;
   }
 
-  PathVector Path::dirs()
+  PathVector Path::dirs() const
   {
     PathVector ret;
     bfs::directory_iterator dit(_p->path);

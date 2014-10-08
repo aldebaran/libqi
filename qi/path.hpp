@@ -63,19 +63,19 @@ namespace qi
     std::string extension() const;
 
     /// return a Path to the parent
-    Path parent();
+    Path parent() const;
 
     /// return an absolute Path of the current path
-    Path absolute();
+    Path absolute() const;
 
     /// return a vector of files contained in the current path
-    PathVector files();
+    PathVector files() const;
 
     /// return a vector of absolute path to files contained recursively in the current path
-    PathVector recursiveFiles();
+    PathVector recursiveFiles() const;
 
     /// return a vector of dirs contained in the current path
-    PathVector dirs();
+    PathVector dirs() const;
 
     /// return the path as a string
     operator std::string() const;
