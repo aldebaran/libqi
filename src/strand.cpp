@@ -117,20 +117,29 @@ Future<void> StrandPrivate::async(boost::function<void()> cb,
 void StrandPrivate::enqueue(boost::shared_ptr<Callback> cbStruct)
 {
   qiLogDebug() << "Enqueueing job id " << cbStruct->id;
-  boost::mutex::scoped_lock lock(_mutex);
-  // the callback may have been canceled
-  if (cbStruct->state == State_None)
+  bool shouldschedule = false;
+
   {
-    _queue.push_back(cbStruct);
-    cbStruct->state = State_Scheduled;
+    boost::mutex::scoped_lock lock(_mutex);
+    // the callback may have been canceled
+    if (cbStruct->state == State_None)
+    {
+      _queue.push_back(cbStruct);
+      cbStruct->state = State_Scheduled;
+    }
+    else
+      qiLogDebug() << "Job is not schedulable, state " << (int)cbStruct->state;
+    // if process was not scheduled yet, do it, there is work to do
+    if (!_processing)
+    {
+      _processing = true;
+      shouldschedule = true;
+    }
   }
-  else
-    qiLogDebug() << "Job is not schedulable, state " << (int)cbStruct->state;
-  // if process was not scheduled yet, do it, there is work to do
-  if (!_processing)
+
+  if (shouldschedule)
   {
     qiLogDebug() << "StrandPrivate::process was not scheduled, doing it";
-    _processing = true;
     _eventLoop.async(boost::bind(&StrandPrivate::process, shared_from_this()),
         qi::Duration(0));
   }
