@@ -148,7 +148,7 @@ namespace qi {
 
 #define genConnect(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma) \
   template <typename F, typename P comma ATYPEDECL>          \
-  SignalSubscriber& connect(F func, P p comma ADECL);
+  SignalSubscriber& connect(const F& func, const P& p comma ADECL);
     QI_GEN(genConnect)
 #undef genConnect
 

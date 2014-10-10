@@ -45,21 +45,22 @@ namespace qi
     return connect(qi::trackWithFallback(fallbackCb, cb, arg0));
   }
 
-#define genConnect(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)           \
-  template <typename T>                                                \
-  template <typename F, typename P comma ATYPEDECL>                    \
-  SignalSubscriber& SignalF<T>::connect(F func, P p comma ADECL)       \
-  {                                                                    \
-    int curId;                                                         \
-    SignalLink* trackLink;                                             \
-    createNewTrackLink(curId, trackLink);                              \
-    SignalSubscriber& s = _connectMaybeActor<P>(                       \
-        p, qi::bind<T>(func, p comma AUSE),                            \
-        qi::track(boost::function<void()>(boost::bind(                 \
-                      &SignalF<T>::disconnectTrackLink, this, curId)), \
-                  boost::weak_ptr<SignalBasePrivate>(_p)));            \
-    *trackLink = s;                                                    \
-    return s;                                                          \
+#define genConnect(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)            \
+  template <typename T>                                                 \
+  template <typename F, typename P comma ATYPEDECL>                     \
+  SignalSubscriber& SignalF<T>::connect(const F& func,                  \
+      const P& p comma ADECL)                                           \
+  {                                                                     \
+    int curId;                                                          \
+    SignalLink* trackLink;                                              \
+    createNewTrackLink(curId, trackLink);                               \
+    SignalSubscriber& s = _connectMaybeActor<P>(                        \
+        p, qi::bind<T>(func, p comma AUSE),                             \
+        qi::track(boost::function<void()>(boost::bind(                  \
+                      &SignalF<T>::disconnectTrackLink, this, curId)),  \
+                  boost::weak_ptr<SignalBasePrivate>(_p)));             \
+    *trackLink = s;                                                     \
+    return s;                                                           \
   }
   QI_GEN(genConnect)
 #undef genConnect

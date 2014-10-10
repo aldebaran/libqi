@@ -11,6 +11,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/function.hpp>
 #include <boost/noncopyable.hpp>
+#include <boost/type_traits/function_traits.hpp>
 
 namespace qi
 {
@@ -49,8 +50,54 @@ public:
 
   bool isInThisContext();
 
+#define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)                    \
+  template <typename T, typename F, typename ARG0 comma ATYPEDECL>           \
+  boost::function<T> schedulerFor(                                           \
+      const F& func, const ARG0& arg0 comma ADECL,                           \
+      const boost::function<void()>& fallbackCb = boost::function<void()>()) \
+  {                                                                          \
+    boost::function<T> funcbind = qi::bind<T>(func, arg0 comma AUSE);        \
+    return qi::trackWithFallback(                                            \
+        fallbackCb,                                                          \
+        SchedulerHelper<boost::function_traits<T>::arity, T>::_scheduler(    \
+            funcbind, this),                                                 \
+        arg0);                                                               \
+  }
+  QI_GEN(genCall)
+#undef genCall
+
 private:
   boost::shared_ptr<StrandPrivate> _p;
+
+  template <int N, typename T>
+  struct SchedulerHelper;
+#define typedefi(z, n, _)                                   \
+  typedef typename boost::function_traits<T>::BOOST_PP_CAT( \
+      BOOST_PP_CAT(arg, BOOST_PP_INC(n)), _type) BOOST_PP_CAT(P, n);
+#define placeholders(z, n, __) , BOOST_PP_CAT(_, BOOST_PP_INC(n))
+#define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)                   \
+  template <typename T>                                                     \
+  struct SchedulerHelper<n, T>                                              \
+  {                                                                         \
+    BOOST_PP_REPEAT(n, typedefi, _);                                        \
+    static boost::function<T> _scheduler(const boost::function<T>& f,       \
+                                         Strand* strand)                    \
+    {                                                                       \
+      return qi::bind<T>(&_asyncCall, strand,                               \
+                         f BOOST_PP_REPEAT(n, placeholders, _));            \
+    }                                                                       \
+    static qi::Future<void> _asyncCall(Strand* strand,                      \
+                                       const boost::function<T>& func comma \
+                                           ADECL)                           \
+    {                                                                       \
+      /* use qi::bind again since first arg may be a Trackable */           \
+      return strand->async(qi::bind<void()>(func comma AUSE));              \
+    }                                                                       \
+  };
+  QI_GEN(genCall)
+#undef genCall
+#undef placeholders
+#undef typedefi
 };
 
 }

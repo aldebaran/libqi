@@ -187,11 +187,14 @@ struct MyActor : qi::Actor
     if (++callcount == end + 1)
       finished.setValue(0);
   }
+  qi::Signal<int> sig;
 };
-QI_REGISTER_OBJECT(MyActor, f);
+QI_REGISTER_OBJECT(MyActor, f, sig);
 
-TEST(TestStrand, AllFutureSignalPeriodicTaskAsync)
+TEST(TestStrand, AllFutureSignalPeriodicTaskAsyncTypeErased)
 {
+  static const int TOTAL = 250;
+
   callcount = 0;
   {
     boost::shared_ptr<MyActor> obj(new MyActor);
@@ -201,29 +204,32 @@ TEST(TestStrand, AllFutureSignalPeriodicTaskAsync)
 
     qi::PeriodicTask per;
     per.setUsPeriod(30);
-    per.setCallback(&MyActor::f, obj.get(), 200, finished);
+    per.setCallback(&MyActor::f, obj.get(), TOTAL, finished);
 
     qi::Promise<void> prom;
     qi::Signal<void> signal;
     for (int i = 0; i < 50; ++i)
-      prom.future().connect(&MyActor::f, obj.get(), 200, finished);
+      prom.future().connect(&MyActor::f, obj.get(), TOTAL, finished);
     for (int i = 0; i < 50; ++i)
-      signal.connect(&MyActor::f, obj.get(), 200, finished);
+      signal.connect(&MyActor::f, obj.get(), TOTAL, finished);
+    for (int i = 0; i < 50; ++i)
+      aobj.connect("sig", obj->strand()->schedulerFor<void(int)>(&MyActor::f, obj, _1, finished));
 
     per.start();
     for (int i = 0; i < 25; ++i)
-      aobj.async<void>("f", 200, finished);
+      aobj.async<void>("f", TOTAL, finished);
     for (int i = 0; i < 25; ++i)
-      qi::async<void>(&MyActor::f, obj, 200, finished);
+      qi::async<void>(&MyActor::f, obj, TOTAL, finished);
     prom.setValue(0);
     QI_EMIT signal();
+    QI_EMIT obj->sig(TOTAL);
     for (int i = 0; i < 25; ++i)
-      aobj.async<void>("f", 200, finished);
+      aobj.async<void>("f", TOTAL, finished);
     for (int i = 0; i < 25; ++i)
-      qi::async<void>(&MyActor::f, obj, 200, finished);
+      qi::async<void>(&MyActor::f, obj, TOTAL, finished);
     finished.future().wait();
   }
-  ASSERT_LT(200, callcount);
+  ASSERT_LT(TOTAL, callcount);
 }
 
 struct MyActorTrackable : MyActor, qi::Trackable<MyActorTrackable>
