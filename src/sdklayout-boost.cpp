@@ -79,7 +79,15 @@ namespace qi {
     {
     }
 
-    void initSDKlayout(bool real = false)
+    void initSDKlayout()
+    {
+      std::string prefix = qi::Application::suggestedSdkPath();
+      if (!prefix.empty())
+        _sdkPrefixes.push_back(prefix);
+      initSDKlayoutFromExec();
+    }
+
+    void initSDKlayoutFromExec(bool real = false)
     {
       const char *program;
       if (!real)
@@ -88,7 +96,7 @@ namespace qi {
         if (program[0] == '\0')
         {
           qiLogWarning() << "No Application was created, trying to deduce paths";
-          return initSDKlayout(true);
+          return initSDKlayoutFromExec(true);
         }
       }
       else
@@ -108,7 +116,7 @@ namespace qi {
       execPath = boost::filesystem::system_complete(execPath).make_preferred();
       if (execPath.parent_path().filename().string(qi::unicodeFacet()) != "bin") {
         if (!real)
-          return initSDKlayout(true);
+          return initSDKlayoutFromExec(true);
         _sdkPrefixes.push_back(execPath.parent_path().filename().string(qi::unicodeFacet()));
       }
       else

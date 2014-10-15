@@ -13,6 +13,7 @@
 #include <qi/path.hpp>
 #include <src/sdklayout.hpp>
 #include <numeric>
+#include <boost/program_options.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/thread.hpp>
 #include <boost/asio.hpp>
@@ -31,6 +32,23 @@
 qiLogCategory("qi.Application");
 
 namespace bfs = boost::filesystem;
+
+static std::string _sdkPath;
+
+static void parseArguments(int argc, char* argv[])
+{
+  namespace po = boost::program_options;
+  po::options_description desc("Application options");
+
+  desc.add_options()
+      ("qi-sdk-prefix", po::value<std::string>(&_sdkPath), "The path of the SDK to use")
+      ;
+  po::variables_map vm;
+  po::parsed_options parsed = po::command_line_parser(argc, argv).options(desc).allow_unregistered().run();
+  po::store(parsed, vm);
+  po::notify(vm);
+  qi::Application::setArguments(po::collect_unrecognized(parsed.options, po::include_positional));
+}
 
 namespace qi {
   static int         globalArgc = -1;
@@ -229,8 +247,12 @@ namespace qi {
       globalProgram = guess_app_from_path(argv[0]);
       qiLogVerbose() << "Program path guessed as " << globalProgram;
     }
-
     globalProgram = detail::normalizePath(globalProgram);
+
+    parseArguments(argc, argv);
+
+    if (_sdkPath.empty())
+      _sdkPath = qi::os::getenv("QI_SDK_PREFIX");
 
     readPathConf();
     if (globalInitialized)
@@ -492,5 +514,10 @@ namespace qi {
     {
       return NULL;
     }
+  }
+
+  const char* Application::suggestedSdkPath()
+  {
+    return _sdkPath.c_str();
   }
 }
