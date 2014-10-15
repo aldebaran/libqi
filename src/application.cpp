@@ -103,7 +103,9 @@ namespace qi {
     globalIoService->run();
   }
 
-  static void stop_handler(int signal_number) {
+  static void stop_handler(int signal_number)
+  {
+    qiLogVerbose() << "Signal " << signal_number << " received!";
     static int  count_int = 0;
     static int count_term = 0;
     int sigcount = 0;
