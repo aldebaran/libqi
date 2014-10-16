@@ -174,14 +174,13 @@ namespace qi
 
     unsigned int idx = ++servicesCount;
     nameToIdx[svcinfo.name()] = idx;
+    TransportSocketPtr socket = sbo->currentSocket();
     // Do not add serviceDirectory on the map (socket() == null)
     if (idx != qi::Message::Service_ServiceDirectory)
-    {
-      socketToIdx[sbo->currentSocket()].push_back(idx);
-    }
+      socketToIdx[socket].push_back(idx);
     pendingServices[idx] = svcinfo;
     pendingServices[idx].setServiceId(idx);
-    idxToSocket[idx] = sbo->currentSocket();
+    idxToSocket[idx] = socket;
 
     std::stringstream ss;
     ss << "Registered Service \"" << svcinfo.name() << "\" (#" << idx << ")";

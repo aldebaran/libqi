@@ -68,11 +68,20 @@ namespace qi {
     void           setProperty(const AnyValue& name, AnyValue value);
     std::vector<std::string> properties();
   public:
+    /*
+    * Returns the last socket that sent a message to this object.
+    * Considering the volatility of this operation, Users of currentSocket()
+    * must set _callType to Direct, otherwise behavior is undefined. Calling
+    * currentSocket multiple times in a row in the same context should be
+    * avoided: call it once and use the return value, unless you know what
+    * you're doing.
+    */
     inline qi::TransportSocketPtr currentSocket() const {
 #ifndef NDEBUG
       if (_callType != MetaCallType_Direct)
         qiLogWarning("qimessaging.boundobject") << " currentSocket() used but callType is not direct";
 #endif
+      boost::recursive_mutex::scoped_lock lock(_mutex);
       return _currentSocket;
     }
 
@@ -102,7 +111,8 @@ namespace qi {
     qi::AnyObject          _self;
     qi::MetaCallType       _callType;
     qi::ObjectHost*        _owner;
-    boost::mutex           _mutex; // prevent parallel onMessage on self execution
+    // prevents parallel onMessage on self execution and protects the current socket
+    mutable boost::recursive_mutex           _mutex;
     boost::function<void (TransportSocketPtr, std::string)> _onSocketDisconnectedCallback;
     friend class ::qi::ObjectHost;
     friend class ::qi::ServiceDirectory;

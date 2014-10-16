@@ -298,30 +298,32 @@ namespace qi {
       }
       mfp = value.asTupleValuePtr();
       /* Because of 'global' _currentSocket, we cannot support parallel
-    * executions at this point.
-    * Both on self, and on obj which can use currentSocket() too.
-    *
-    * So put a lock, and rely on metaCall we invoke being asynchronous for// execution
-    * This is decided by _callType, set from BoundObject ctor argument, passed by Server, which
-    * uses its internal _defaultCallType, passed to its constructor, default
-    * to queued. When Server is instanciated by ObjectHost, it uses the default
-    * value.
-    *
-    * As a consequence, users of currentSocket() must set _callType to Direct.
-    */
+      * executions at this point.
+      * Both on self, and on obj which can use currentSocket() too.
+      *
+      * So put a lock, and rely on metaCall we invoke being asynchronous for// execution
+      * This is decided by _callType, set from BoundObject ctor argument, passed by Server, which
+      * uses its internal _defaultCallType, passed to its constructor, default
+      * to queued. When Server is instanciated by ObjectHost, it uses the default
+      * value.
+      *
+      * As a consequence, users of currentSocket() must set _callType to Direct.
+      * Calling currentSocket multiple times in a row should be avoided.
+      */
       switch (msg.type())
       {
       case Message::Type_Call: {
-        boost::mutex::scoped_lock lock(_mutex);
+        boost::recursive_mutex::scoped_lock lock(_mutex);
         _currentSocket = socket;
-        qi::Future<AnyReference>  fut = obj.metaCall(funcId, mfp,
-                                                         obj==_self ? MetaCallType_Direct: _callType, returnSignature.empty()?Signature(): Signature(returnSignature));
+        qi::MetaCallType mType = obj == _self ? MetaCallType_Direct : _callType;
+        qi::Signature sig = returnSignature.empty() ? Signature() : Signature(returnSignature);
+        qi::Future<AnyReference>  fut = obj.metaCall(funcId, mfp, mType, sig);
         Signature retSig;
         const MetaMethod* mm = obj.metaObject().method(funcId);
         if (mm)
           retSig = mm->returnSignature();
         _currentSocket.reset();
-        fut.connect(boost::bind<void>(&serverResultAdapter, _1, retSig, _owner?_owner:(ObjectHost*)this, socket, msg.address(),  returnSignature.empty()?Signature(): Signature(returnSignature)));
+        fut.connect(boost::bind<void>(&serverResultAdapter, _1, retSig, _owner?_owner:(ObjectHost*)this, socket, msg.address(), sig));
       }
         break;
       case Message::Type_Post: {
