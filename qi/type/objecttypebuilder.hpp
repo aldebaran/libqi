@@ -144,6 +144,28 @@ namespace qi {
 
 #include <qi/type/detail/objecttypebuilder.hxx>
 
+/**
+ * Advertise a member on a builder.
+ * \param builder The builder on which to advertise
+ * \param cls The class to register
+ * \param name The name of the member
+ */
+#define QI_OBJECT_BUILDER_ADVERTISE(builder, cls, name) \
+  builder.advertise(BOOST_PP_STRINGIZE(name), &cls::name)
+/**
+ * Advertise an overloaded function on a builder.
+ * \param builder The builder on which to advertise
+ * \param cls The class to register
+ * \param name The name of the function
+ * \param ret The return type
+ * \param args The arguments as a tuple (ex: (const std::string&))
+ *
+ * You must use this macro with the exact types of your method with references,
+ * pointers, cv-qualifiers (to the arguments and the method).
+ */
+#define QI_OBJECT_BUILDER_ADVERTISE_OVERLOAD(builder, cls, name, ret, args) \
+  builder.advertiseMethod(BOOST_PP_STRINGIZE(name), static_cast<ret (cls::*)args>(&cls::name))
+
 #define __QI_REGISTER_ELEMENT(_, name, field) \
   b.advertise(BOOST_PP_STRINGIZE(field), & name::field); // do not remove the space
 
