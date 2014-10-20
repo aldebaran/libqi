@@ -54,8 +54,13 @@ namespace qi {
 
     qi::FutureSync< std::vector<ServiceInfo> > services(ServiceLocality locality = ServiceLocality_All);
 
+    qi::FutureSync< qi::AnyObject > service(const std::string &aservice)
+    {
+      return service(aservice, "");
+    }
+
     qi::FutureSync< qi::AnyObject > service(const std::string &service,
-                                            const std::string &protocol = "");
+                                            const std::string &protocol);
 
     //Server
     qi::FutureSync<void> listen(const qi::Url &address);
@@ -121,6 +126,8 @@ QI_GEN(genCall)
 
   inline SessionPtr makeSession() { return boost::make_shared<qi::Session>(); }
 }
+
+QI_TYPE_ENUM_REGISTER(qi::Session::ServiceLocality);
 
 #ifdef _MSC_VER
 #  pragma warning( pop )

@@ -5,9 +5,11 @@
 #include <boost/type_traits/is_signed.hpp>
 #include <qi/type/typeinterface.hpp>
 #include <qi/anyobject.hpp>
+#include <qi/session.hpp>
 
-#include "metaobject_p.hpp"
-#include "metamethod_p.hpp"
+#include "type/metaobject_p.hpp"
+#include "type/metamethod_p.hpp"
+#include "messaging/serviceinfo_p.hpp"
 
 namespace qi {
 
@@ -174,3 +176,37 @@ QI_TYPE_STRUCT_AGREGATE_CONSTRUCTOR_REGISTER(::qi::MetaObject,
   QI_STRUCT_HELPER("signals", signalMap),
   QI_STRUCT_HELPER("properties", propertyMap),
   QI_STRUCT_HELPER("description", description));
+
+static qi::ServiceInfoPrivate* serviceInfoPrivate(qi::ServiceInfo* svcinfo) {
+    return svcinfo->_p;
+}
+QI_EQUIVALENT_STRING_REGISTER(qi::Url, &qi::Url::str);
+QI_TYPE_STRUCT(qi::ServiceInfoPrivate, name, serviceId, machineId, processId, endpoints, sessionId);
+QI_TYPE_REGISTER(::qi::ServiceInfoPrivate);
+
+QI_TYPE_STRUCT_BOUNCE_REGISTER(::qi::ServiceInfo, ::qi::ServiceInfoPrivate, serviceInfoPrivate);
+
+static bool _qiregisterSession() {
+  ::qi::ObjectTypeBuilder<qi::Session> builder;
+  QI_OBJECT_BUILDER_ADVERTISE_OVERLOAD(builder, qi::Session, connect, qi::FutureSync<void>, (const std::string&));
+  QI_OBJECT_BUILDER_ADVERTISE(builder, qi::Session, isConnected);
+  QI_OBJECT_BUILDER_ADVERTISE(builder, qi::Session, url);
+  QI_OBJECT_BUILDER_ADVERTISE(builder, qi::Session, services);
+  QI_OBJECT_BUILDER_ADVERTISE_OVERLOAD(builder, qi::Session, service, qi::FutureSync<qi::AnyObject>, (const std::string&, const std::string&));
+  QI_OBJECT_BUILDER_ADVERTISE_OVERLOAD(builder, qi::Session, service, qi::FutureSync<qi::AnyObject>, (const std::string&));
+  QI_OBJECT_BUILDER_ADVERTISE(builder, qi::Session, listen);
+  QI_OBJECT_BUILDER_ADVERTISE(builder, qi::Session, endpoints);
+  QI_OBJECT_BUILDER_ADVERTISE(builder, qi::Session, close);
+  QI_OBJECT_BUILDER_ADVERTISE(builder, qi::Session, listenStandalone);
+  QI_OBJECT_BUILDER_ADVERTISE(builder, qi::Session, registerService);
+  QI_OBJECT_BUILDER_ADVERTISE(builder, qi::Session, unregisterService);
+  //QI_OBJECT_BUILDER_ADVERTISE_OVERLOAD(builder, qi::Session, loadService, void, (const std::string&, const std::string&, const AnyReferenceVector&));
+  QI_OBJECT_BUILDER_ADVERTISE(builder, qi::Session, waitForService);
+  QI_OBJECT_BUILDER_ADVERTISE(builder, qi::Session, serviceRegistered);
+  QI_OBJECT_BUILDER_ADVERTISE(builder, qi::Session, serviceUnregistered);
+  QI_OBJECT_BUILDER_ADVERTISE(builder, qi::Session, connected);
+  QI_OBJECT_BUILDER_ADVERTISE(builder, qi::Session, disconnected);
+  builder.registerType();
+  return true;
+}
+static bool __qi_registrationSession = _qiregisterSession();

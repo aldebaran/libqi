@@ -2,7 +2,6 @@
 **  Copyright (C) 2012, 2013 Aldebaran Robotics
 **  See COPYING for the license
 */
-
 #include <boost/thread.hpp>
 #include <boost/program_options.hpp>
 #include <boost/make_shared.hpp>

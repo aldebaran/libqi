@@ -226,7 +226,6 @@ set(QITYPE_C src/type/binarycodec.cpp
              src/type/type.cpp
              src/type/signature.cpp
              src/type/traceanalyzer.cpp
-             src/type/registration.cpp
              )
 
 
@@ -289,6 +288,7 @@ set(QIM_C src/messaging/applicationsession.cpp
           src/messaging/tcptransportsocket.hpp
           src/messaging/url.cpp
           src/messaging/serverresult.hpp
+          src/registration.cpp
           )
 
 set(QIPERF_H
