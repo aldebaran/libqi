@@ -546,6 +546,17 @@ TEST_F(TestFuture, TestPromiseAdapter)
   EXPECT_TRUE(wdc.expired());
 }
 
+void justThrow()
+{
+  throw std::runtime_error("Expected error.");
+}
+
+TEST(AsyncAndFuture, errorOnTaskThrow)
+{
+  qi::Future<void> f = qi::async<void>(&justThrow);
+  EXPECT_TRUE(f.hasError());
+}
+
 void unlock(qi::Promise<int> prom, bool* tag)
 {
   *tag = true;

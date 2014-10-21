@@ -250,19 +250,41 @@ namespace qi {
   void EventLoopAsio::invoke_maybe(boost::function<void()> f, qi::uint32_t id, qi::Promise<void> p, const boost::system::error_code& erc)
   {
     ScopedExitDec _(_totalTask);
+
     if (!erc)
     {
       ScopedIncDec _(_activeTask);
       tracepoint(qi_qi, eventloop_task_start, id);
-      f();
+
+      try
+      {
+        f();
+      }
+      catch (const detail::TerminateThread& e)
+      {
+        throw;
+      }
+      catch (const std::exception& ex)
+      {
+        tracepoint(qi_qi, eventloop_task_error, id);
+        p.setError(ex.what());
+      }
+      catch (...)
+      {
+        tracepoint(qi_qi, eventloop_task_error, id);
+        p.setError("unknown error");
+      }
+
       tracepoint(qi_qi, eventloop_task_stop, id);
       p.setValue(0);
     }
-    else {
+    else
+    {
       tracepoint(qi_qi, eventloop_task_cancel, id);
       p.setCanceled();
     }
   }
+
 
   void EventLoopAsio::post(qi::Duration delay,
       const boost::function<void ()>& cb)
@@ -302,7 +324,6 @@ namespace qi {
       const boost::function<void ()>& cb)
   {
     static boost::system::error_code erc;
-    qi::Promise<void> p;
     asyncCall(timepoint, cb);
   }
 
