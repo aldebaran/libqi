@@ -66,7 +66,7 @@ std::string getTime()
 {
   std::ostringstream msg;
   const boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
-  const boost::posix_time::time_facet *f = new boost::posix_time::time_facet("%H:%M:%S");
+  boost::posix_time::time_facet *f = new boost::posix_time::time_facet("%H:%M:%S");
   msg.imbue(std::locale(msg.getloc(),f));
   msg << now;
   return msg.str();

@@ -16,8 +16,6 @@
 #ifdef __APPLE__
 // See man 3 environ (PROGRAMMING)
 # include <crt_externs.h> // for _NSGetEnviron
-# define _XOPEN_SOURCE
-# define _POSIX_C_SOURCE
 # include <pthread.h>
 #endif
 
