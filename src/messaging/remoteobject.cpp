@@ -463,7 +463,6 @@ namespace qi {
 
   qi::Future<void> RemoteObject::metaDisconnect(SignalLink linkId)
   {
-    boost::recursive_mutex::scoped_lock _lock(_localToRemoteSignalLinkMutex);
     unsigned int event = linkId >> 32;
     //disconnect locally
     qi::Future<void> fut = DynamicObject::metaDisconnect(linkId);
@@ -475,6 +474,7 @@ namespace qi {
       return qi::makeFutureError<void>(ss.str());
     }
 
+    boost::recursive_mutex::scoped_lock _lock(_localToRemoteSignalLinkMutex);
     LocalToRemoteSignalLinkMap::iterator it;
     it = _localToRemoteSignalLink.find(event);
     if (it == _localToRemoteSignalLink.end()) {

@@ -271,6 +271,36 @@ TEST_F(TestObject, Connect17)
   EXPECT_EQ(12, payload2->future().value());
 }
 
+void slowDisconnect(qi::Promise<void> ready, qi::Promise<void> done, qi::Future<void> wait, qi::AnyObject obj, boost::shared_ptr<qi::SignalLink> link)
+{
+  ready.setValue(0);
+  wait.wait();
+  try {
+    obj.disconnect(*link);
+  }
+  catch (...) {}
+  done.setValue(0);
+}
+
+// disconnect multiple times in parallel
+TEST_F(TestObject, disconnectDeadlock)
+{
+  qi::Promise<void> doDisc, ready, discDone;
+  boost::shared_ptr<qi::SignalLink> link = boost::make_shared<qi::SignalLink>();
+  *link = oclient1.connect("fire1", boost::function<void(int)>(boost::bind(slowDisconnect, ready, discDone, doDisc.future(), oclient1, link)));
+  oserver1.post("fire1", 24);
+  ready.future().wait();
+  // a callback is running, trigger other disconnect
+  qi::Future<void> discDone2 = qi::async<void>(&qi::AnyObject::disconnect, oclient1, *link);
+  // wait and disconnect inside the callback
+  qi::os::msleep(10);
+  doDisc.setValue(0);
+
+  // don't timeout
+  discDone.future().wait();
+  discDone2.wait();
+}
+
 TEST_F(TestObject, multipleConnect)
 {
   int additional_timeout = 5;//time to wait after having received the correct number of callbacks
