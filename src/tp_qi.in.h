@@ -36,3 +36,8 @@ TRACEPOINT_EVENT(qi_qi, eventloop_task_cancel,
         TP_FIELDS(ctf_integer(int, taskId, taskId))
 )
 
+//task has been set on error
+TRACEPOINT_EVENT(qi_qi, eventloop_task_error,
+        TP_ARGS(unsigned int, taskId),
+        TP_FIELDS(ctf_integer(int, taskId, taskId))
+)
