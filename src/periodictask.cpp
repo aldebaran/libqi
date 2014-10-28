@@ -86,6 +86,7 @@ namespace qi
     MethodStatistics        _callStats;
     qi::int64_t             _statsDisplayTime;
     PeriodicTask::Callback  _callback;
+    PeriodicTask::ScheduleCallback _scheduleCallback;
     qi::int64_t             _usPeriod;
     qi::Atomic<int>         _state;
     qi::Future<void>        _task;
@@ -126,6 +127,18 @@ namespace qi
     _p->_callback = cb;
   }
 
+  void PeriodicTask::setStrand(qi::Strand* strand)
+  {
+    if (strand)
+      _p->_scheduleCallback = boost::bind<qi::Future<void> >(
+              static_cast<qi::Future<void>(qi::Strand::*)(const Callback&,
+                qi::Duration)>(
+                  &qi::Strand::async),
+              strand, _1, _2);
+    else
+      _p->_scheduleCallback = ScheduleCallback();
+  }
+
   void PeriodicTask::setUsPeriod(qi::int64_t usp)
   {
     if (usp<0)
@@ -139,6 +152,9 @@ namespace qi
       throw std::runtime_error("Periodic task cannot start without a setCallback() call first");
     if (_p->_usPeriod < 0)
       throw std::runtime_error("Periodic task cannot start without a setUsPeriod() call first");
+    // we are called from the callback
+    if (os::gettid() == _p->_tid)
+      return;
     //Stopping is not handled by start, stop will handle it for us.
     stop();
     if (!_p->_state.setIfEquals(Task_Stopped, Task_Starting))
@@ -272,7 +288,10 @@ namespace qi
   void PeriodicTaskPrivate::_reschedule(qi::int64_t delay)
   {
     qiLogDebug() << _name <<" rescheduling in " << delay;
-    _task = getEventLoop()->async(boost::bind(&PeriodicTaskPrivate::_wrap, shared_from_this()), delay);
+    if (_scheduleCallback)
+      _task = _scheduleCallback(boost::bind(&PeriodicTaskPrivate::_wrap, shared_from_this()), qi::MicroSeconds(delay));
+    else
+      _task = getEventLoop()->async(boost::bind(&PeriodicTaskPrivate::_wrap, shared_from_this()), delay);
     if (!_state.setIfEquals(Task_Rescheduling, Task_Scheduled))
       qiLogError() << "PeriodicTask forbidden state change while rescheduling " << *_state;
   }

@@ -7,71 +7,64 @@
 #ifndef _QI_DETAILS_EVENTLOOP_HXX_
 #define _QI_DETAILS_EVENTLOOP_HXX_
 
-#include <qi/future.hpp>
+#include <qi/detail/future_fwd.hpp>
+#include <qi/actor.hpp>
 
 namespace qi
 {
 
-  namespace detail
-  {
-    template <typename T>
-    class DelayedPromise: public Promise<T>
-    {
-    public:
-      DelayedPromise() {}
-      void setup(boost::function<void (qi::Promise<T>)> cancelCallback, FutureCallbackType async = FutureCallbackType_Async)
-      {
-        Promise<T>::setup(cancelCallback, async);
-      }
-    };
+template <typename R>
+void nullConverter(void*, R&)
+{}
 
-    template<typename R> void call_and_set(qi::Promise<R> p, boost::function<R()> f)
-    {
-      try
-      {
-        p.setValue(f());
-      }
-      catch (const std::exception& e)
-      {
-        p.setError(e.what());
-      }
-      catch(...)
-      {
-        p.setError("unknown exception");
-      }
-    }
-    template<typename R> void check_canceled(qi::Future<void> f, qi::Promise<R> p)
-    {
-      if (f.wait() == FutureState_Canceled)
-        p.setCanceled();
-      // Nothing to do for other states.
-    }
-  }
-  template<typename R> void nullConverter(void*, R&) {}
-  template<typename R> Future<R> EventLoop::async(boost::function<R()> callback, uint64_t usDelay)
-  {
-    return async(callback, qi::MicroSeconds(usDelay));
-  }
+template <typename R>
+inline Future<R> EventLoop::async(const boost::function<R()>& callback,
+                                  uint64_t usDelay)
+{
+  return async(callback, qi::MicroSeconds(usDelay));
+}
 
-  template<typename R> Future<R> EventLoop::async(boost::function<R()> callback, qi::Duration delay)
-  {
-    detail::DelayedPromise<R> promise;
-    qi::Future<void> f = async(boost::function<void()>(boost::bind(detail::call_and_set<R>, promise, callback)), delay);
-    promise.setup(boost::bind(&detail::futureCancelAdapter<void>,
-            boost::weak_ptr<detail::FutureBaseTyped<void> >(f.impl())), FutureCallbackType_Sync);
-    f.connect(boost::bind(&detail::check_canceled<R>,_1, promise));
-    return promise.future();
-  }
+namespace detail
+{
 
-  template<typename R> Future<R> EventLoop::async(boost::function<R()> callback, qi::SteadyClockTimePoint timepoint)
-  {
-    detail::DelayedPromise<R> promise;
-    qi::Future<void> f = async(boost::function<void()>(boost::bind(detail::call_and_set<R>, promise, callback)), timepoint);
-    promise.setup(boost::bind(&detail::futureCancelAdapter<void>,
-            boost::weak_ptr<detail::FutureBaseTyped<void> >(f.impl())), FutureCallbackType_Sync);
-    f.connect(boost::bind(&detail::check_canceled<R>,_1, promise));
-    return promise.future();
-  }
+template <typename R, typename ARG0>
+inline typename boost::enable_if<
+    boost::is_base_of<Actor, typename detail::Unwrap<ARG0>::type>,
+    Future<R> >::type
+    asyncMaybeActor(const ARG0& arg0, const boost::function<R()>& cb,
+                    qi::Duration delay)
+{
+  return detail::Unwrap<ARG0>::unwrap(arg0)->strand()->async(cb, delay);
+}
+template <typename R, typename ARG0>
+inline typename boost::disable_if<
+    boost::is_base_of<Actor, typename detail::Unwrap<ARG0>::type>,
+    Future<R> >::type
+    asyncMaybeActor(const ARG0& arg0, const boost::function<R()>& cb,
+                    qi::Duration delay)
+{
+  return qi::getEventLoop()->async(cb, delay);
+}
+template <typename R, typename ARG0>
+inline typename boost::enable_if<
+    boost::is_base_of<Actor, typename detail::Unwrap<ARG0>::type>,
+    Future<R> >::type
+    asyncMaybeActor(const ARG0& arg0, const boost::function<R()>& cb,
+                    qi::SteadyClockTimePoint timepoint)
+{
+  return detail::Unwrap<ARG0>::unwrap(arg0)->strand()->async(cb, timepoint);
+}
+template <typename R, typename ARG0>
+inline typename boost::disable_if<
+    boost::is_base_of<Actor, typename detail::Unwrap<ARG0>::type>,
+    Future<R> >::type
+    asyncMaybeActor(const ARG0& arg0, const boost::function<R()>& cb,
+                    qi::SteadyClockTimePoint timepoint)
+{
+  return qi::getEventLoop()->async(cb, timepoint);
+}
+
+}
 
 }
 

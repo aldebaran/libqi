@@ -48,6 +48,7 @@ struct ObjectTypeData
   TypeInterface* classType;
   std::vector<std::pair<TypeInterface*, int> > parentTypes;
   ObjectThreadingModel threadingModel;
+  qi::AnyFunction strandAccessor;
 };
 
 

@@ -38,7 +38,7 @@ namespace qi {
   class EventLoopPrivate
   {
   public:
-    virtual bool isInEventLoopThread()=0;
+    virtual bool isInThisContext()=0;
     virtual void start(int nthreads)=0; // 0=auto
     virtual void join()=0;
     virtual void stop()=0;
@@ -60,7 +60,7 @@ namespace qi {
   {
   public:
     EventLoopAsio();
-    virtual bool isInEventLoopThread();
+    virtual bool isInThisContext();
     virtual void start(int nthreads);
     virtual void join();
     virtual void stop();

@@ -156,6 +156,17 @@ namespace qi {
      * \endverbatim
      */
     QI_API std::string getenv(const char *var);
+
+    /**
+     * \brief Get the path separator.
+     * \return The separator of paths.
+     *
+     * \verbatim
+     * It is the separator we can found in PATH env for example.
+     * \endverbatim
+     */
+    QI_API std::string pathsep();
+
     /**
      * \brief Change or add an environment variable.
      * \param var The variable name.
@@ -555,8 +566,8 @@ namespace qi {
      * Otherwise returns a value of 0, meaning that it was impossible to get the memory usage.
      */
     QI_API size_t memoryUsage(unsigned int pid);
+
   }
 }
-
 
 #endif  // _QI_OS_HPP_

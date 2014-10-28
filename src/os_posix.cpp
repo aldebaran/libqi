@@ -77,6 +77,10 @@ namespace qi {
       return std::string(res);
     }
 
+    std::string pathsep() {
+      return ":";
+    }
+
     int setenv(const char *var, const char *value) {
       return ::setenv(boost::filesystem::path(var, qi::unicodeFacet()).string(qi::unicodeFacet()).c_str(),
                       boost::filesystem::path(value, qi::unicodeFacet()).string(qi::unicodeFacet()).c_str(), 1);
@@ -248,7 +252,7 @@ namespace qi {
         }
         ++iPort;
       }
-      while (static_cast<unsigned int>(iPort + 1) > USHRT_MAX);
+      while (static_cast<unsigned int>(iPort + 1) < USHRT_MAX);
 
       if (unavailable)
       {

@@ -8,7 +8,6 @@
 #define _QI_SIGNAL_HPP_
 
 #include <qi/atomic.hpp>
-#include <qi/eventloop.hpp>
 
 #include <qi/anyfunction.hpp>
 #include <qi/type/typeobject.hpp>
@@ -30,7 +29,6 @@ namespace qi {
 
   class ManageablePrivate;
   class SignalSubscriber;
-  class EventLoop;
 
   class SignalBasePrivate;
 
@@ -138,23 +136,39 @@ namespace qi {
     */
     SignalSubscriber& connect(...);
 #else
+    template <typename CALLABLE>
+    SignalSubscriber& connect(CALLABLE c);
+    SignalSubscriber& connect(AnyFunction func);
+    SignalSubscriber& connect(const SignalSubscriber& sub);
+    SignalSubscriber& connect(const boost::function<T>& func);
+    template <typename U>
+    SignalSubscriber& connect(SignalF<U>& signal);
+    template <QI_SIGNAL_TEMPLATE_DECL>
+    SignalSubscriber& connect(Signal<QI_SIGNAL_TEMPLATE>& signal);
 
-   template<typename CALLABLE> SignalSubscriber& connect(CALLABLE c);
-   SignalSubscriber& connect(AnyFunction func);
-   SignalSubscriber& connect(const SignalSubscriber& sub);
-   SignalSubscriber& connect(const boost::function<T>& func);
-   template<typename U> SignalSubscriber&  connect(SignalF<U>& signal);
-   template<QI_SIGNAL_TEMPLATE_DECL> SignalSubscriber&  connect(Signal<QI_SIGNAL_TEMPLATE>& signal);
+#define genConnect(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma) \
+  template <typename F, typename P comma ATYPEDECL>          \
+  SignalSubscriber& connect(const F& func, const P& p comma ADECL);
+    QI_GEN(genConnect)
+#undef genConnect
 
-   #define genConnect(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma) \
-     template<typename F, typename P comma ATYPEDECL>           \
-     SignalSubscriber& connect(F func, P p comma ADECL);
-   QI_GEN(genConnect)
-   #undef genConnect
-
-   SignalSubscriber& connect(const AnyObject &obj, unsigned int slot);
-   SignalSubscriber& connect(const AnyObject &obj, const std::string& slot);
+    SignalSubscriber& connect(const AnyObject& obj, unsigned int slot);
+    SignalSubscriber& connect(const AnyObject& obj, const std::string& slot);
 #endif
+
+  private:
+    template <typename ARG0>
+    inline typename boost::enable_if<
+        boost::is_base_of<Actor, typename detail::Unwrap<ARG0>::type>,
+        SignalSubscriber&>::type
+        _connectMaybeActor(const ARG0& arg0, const boost::function<T>& cb,
+                           const boost::function<void()>& fallbackCb);
+    template <typename ARG0>
+    inline typename boost::disable_if<
+        boost::is_base_of<Actor, typename detail::Unwrap<ARG0>::type>,
+        SignalSubscriber&>::type
+        _connectMaybeActor(const ARG0& arg0, const boost::function<T>& cb,
+                           const boost::function<void()>& fallbackCb);
   };
 
   namespace detail
@@ -216,6 +230,7 @@ namespace qi {
     {}
 
     SignalSubscriber(AnyFunction func, MetaCallType callType = MetaCallType_Auto);
+    SignalSubscriber(AnyFunction func, ExecutionContext* ec);
     SignalSubscriber(const AnyObject& target, unsigned int method);
 
     SignalSubscriber(const SignalSubscriber& b);
@@ -274,6 +289,9 @@ namespace qi {
     std::vector<boost::thread::id> activeThreads; // order not preserved
 
     boost::condition               inactiveThread;
+
+    // ExecutionContext on which to schedule the call
+    ExecutionContext* executionContext;
   };
   typedef boost::shared_ptr<SignalSubscriber> SignalSubscriberPtr;
 }

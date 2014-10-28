@@ -220,3 +220,16 @@ TEST(Macro, ThreadSafeNew)
   DOOM(8, 80, -10);
 }
 
+QI_CREATE_ENUM_WITH_STRING_CONVERSION(toStr, Color, (Blue)(Green)(Red)(Yellow));
+TEST(Macro, CreateEnumTostring)
+{
+  Color color = Red;
+  EXPECT_STREQ("Red", toStr(color));
+  color = Blue;
+  EXPECT_STREQ("Blue", toStr(color));
+  color = Green;
+  EXPECT_STREQ("Green", toStr(color));
+  color = Yellow;
+  EXPECT_STREQ("Yellow", toStr(color));
+}
+

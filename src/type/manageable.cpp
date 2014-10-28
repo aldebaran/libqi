@@ -8,15 +8,16 @@ namespace qi
 
   class ManageablePrivate
   {
-    public:
+  public:
     ManageablePrivate();
+    ~ManageablePrivate();
     // SignalLinks that target us. Needed to be able to disconnect upon destruction
     std::vector<SignalSubscriber>       registrations;
     mutable boost::mutex                registrationsMutex;
-    Manageable::TimedMutexPtr           objectMutex; //returned by mutex()
     bool                                dying;
     // Event loop in which calls are made if set
-    EventLoop                          *eventLoop;
+    boost::shared_ptr<ExecutionContext> executionContext;
+    boost::mutex                        initMutex;
 
     bool statsEnabled;
     bool traceEnabled;
@@ -25,63 +26,63 @@ namespace qi
   };
 
   ManageablePrivate::ManageablePrivate()
-    : objectMutex(new boost::recursive_timed_mutex)
-    , dying(false)
-    , eventLoop(NULL)
+    : dying(false)
     , statsEnabled(false)
     , traceEnabled(false)
   {
   }
 
-  Manageable::Manageable()
-    : traceObject(boost::bind(&Manageable::enableTrace, this, _1))
+  ManageablePrivate::~ManageablePrivate()
   {
-    _p = new ManageablePrivate();
-    _p->eventLoop = 0;
-  }
-
-  Manageable::Manageable(const Manageable& b)
-    : traceObject(boost::bind(&Manageable::enableTrace, this, _1))
-  {
-    _p = new ManageablePrivate();
-    _p->eventLoop = b._p->eventLoop;
-  }
-
-  void Manageable::operator=(const Manageable& b)
-  {
-    this->~Manageable();
-    _p = new ManageablePrivate();
-    _p->eventLoop = b._p->eventLoop;
-  }
-
-  Manageable::~Manageable()
-  {
-    _p->dying = true;
+    dying = true;
     std::vector<SignalSubscriber> copy;
     {
-      boost::mutex::scoped_lock sl(_p->registrationsMutex);
-      copy = _p->registrations;
+      boost::mutex::scoped_lock sl(registrationsMutex);
+      copy = registrations;
     }
     for (unsigned i = 0; i < copy.size(); ++i)
     {
       copy[i].source->disconnect(copy[i].linkId);
     }
-    delete _p;
   }
 
-  void Manageable::forceEventLoop(EventLoop* el)
+  Manageable::Manageable()
+    : traceObject(boost::bind(&Manageable::enableTrace, this, _1))
+    , _p(new ManageablePrivate())
   {
-    _p->eventLoop = el;
   }
 
-  EventLoop* Manageable::eventLoop() const
+  Manageable::Manageable(const Manageable& b)
+    : traceObject(boost::bind(&Manageable::enableTrace, this, _1))
+    , _p(new ManageablePrivate())
   {
-    return _p->eventLoop;
+    _p->executionContext = b._p->executionContext;
   }
 
-  Manageable::TimedMutexPtr Manageable::mutex()
+  void Manageable::operator=(const Manageable& b)
   {
-    return _p->objectMutex;
+    _p.reset(new ManageablePrivate());
+    _p->executionContext = b._p->executionContext;
+  }
+
+  Manageable::~Manageable()
+  {
+  }
+
+  boost::mutex& Manageable::initMutex()
+  {
+    return _p->initMutex;
+  }
+
+  void Manageable::forceExecutionContext(
+      boost::shared_ptr<ExecutionContext> ec)
+  {
+    _p->executionContext = ec;
+  }
+
+  boost::shared_ptr<ExecutionContext> Manageable::executionContext() const
+  {
+    return _p->executionContext;
   }
 
   bool Manageable::isStatsEnabled() const

@@ -15,7 +15,9 @@
 #include <qi/eventloop.hpp>
 #include <qi/trackable.hpp>
 #include <qi/periodictask.hpp>
+#include <qi/strand.hpp>
 
+#include <boost/foreach.hpp>
 #include <boost/function.hpp>
 #include <boost/lambda/lambda.hpp>
 #include <boost/lambda/bind.hpp>
@@ -544,6 +546,17 @@ TEST_F(TestFuture, TestPromiseAdapter)
   EXPECT_TRUE(wdc.expired());
 }
 
+void justThrow()
+{
+  throw std::runtime_error("Expected error.");
+}
+
+TEST(AsyncAndFuture, errorOnTaskThrow)
+{
+  qi::Future<void> f = qi::async<void>(&justThrow);
+  EXPECT_TRUE(f.hasError());
+}
+
 void unlock(qi::Promise<int> prom, bool* tag)
 {
   *tag = true;
@@ -553,7 +566,7 @@ void unlock(qi::Promise<int> prom, bool* tag)
 TEST(TestFutureSync, Basic)
 {
   qi::EventLoop* eventLoop = qi::getEventLoop();
-  ASSERT_FALSE(eventLoop->isInEventLoopThread());
+  ASSERT_FALSE(eventLoop->isInThisContext());
 
   {
     qi::FutureSync<int> fs;
@@ -824,7 +837,6 @@ TEST(TestFutureCancel, Canceleable)
   EXPECT_THROW(f.hasValue(qi::FutureTimeout_None), qi::FutureException);
 }
 
-
 TEST(TestFutureCancel, Canceled)
 {
   bool b = false;
@@ -838,7 +850,6 @@ TEST(TestFutureCancel, Canceled)
   ASSERT_FALSE(f.hasError());
   ASSERT_TRUE(f.isCanceled());
 }
-
 
 // ===== FutureBarrier =========================================================
 #define BARRIER_N 10
@@ -1008,7 +1019,7 @@ TEST(TestAdaptFuture, WithIntVoid) {
   ASSERT_EQ(NULL, prom2.future().value());
 }
 
-TEST(TestAdaptFuture, PromiseCancelled) {
+TEST(TestAdaptFuture, PromiseCanceled) {
   qi::Promise<void> prom1;
   qi::Promise<void> prom2;
   prom1.setCanceled();
@@ -1245,7 +1256,6 @@ TEST(EventLoop, asyncFast)
     f.wait();
   }
 }
-
 
 int main(int argc, char **argv) {
   qi::Application app(argc, argv);

@@ -13,7 +13,6 @@
 #include <qi/anyfunction.hpp>
 #include <qi/type/typeobject.hpp>
 #include <qi/signal.hpp>
-#include <boost/thread/mutex.hpp>
 #include <boost/function.hpp>
 #include <algorithm>
 
@@ -25,7 +24,7 @@
 namespace qi {
 
   class ManageablePrivate;
-  class EventLoop;
+  class ExecutionContext;
 
   /// Possible thread models for an object
   enum ObjectThreadingModel
@@ -98,15 +97,12 @@ namespace qi {
     Manageable(const Manageable& b);
     void operator = (const Manageable& b);
 
+    boost::mutex& initMutex();
 
     /// Override all ThreadingModel and force dispatch to given event loop.
-    void forceEventLoop(EventLoop* eventLoop);
+    void forceExecutionContext(boost::shared_ptr<ExecutionContext> eventLoop);
     ///@return forced event loop or 0 if not set
-    EventLoop* eventLoop() const;
-
-    typedef boost::shared_ptr<boost::recursive_timed_mutex> TimedMutexPtr;
-    ///@return the mutex associated with managed object.
-    TimedMutexPtr mutex(); // non-recursive of course!
+    boost::shared_ptr<ExecutionContext> executionContext() const;
 
     /// @{
     /** Statistics gathering/retreiving API
@@ -158,7 +154,7 @@ namespace qi {
     static MetaObject&      manageableMetaObject();
     static void             _build();
     int                     _nextTraceId();
-    ManageablePrivate* _p;
+    boost::scoped_ptr<ManageablePrivate> _p;
   };
 }
 

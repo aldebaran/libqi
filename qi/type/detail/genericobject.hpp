@@ -16,7 +16,6 @@
 #include <qi/type/detail/manageable.hpp>
 #include <qi/future.hpp>
 #include <qi/signal.hpp>
-#include <qi/eventloop.hpp>
 #include <qi/type/typeobject.hpp>
 
 #ifdef _MSC_VER

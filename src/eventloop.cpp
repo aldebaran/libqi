@@ -15,6 +15,8 @@
 #include <qi/eventloop.hpp>
 #include <qi/future.hpp>
 
+#include <qi/getenv.hpp>
+
 #include "eventloop_p.hpp"
 #include "tp_qi.h"
 
@@ -25,17 +27,6 @@ namespace qi {
   typedef boost::asio::basic_waitable_timer<SteadyClock> SteadyTimer;
 
   static qi::Atomic<uint32_t> gTaskId = 0;
-
-
-  template<typename T>
-  static T getEnvParam(const char* name, T defaultVal)
-  {
-    std::string sval = qi::os::getenv(name);
-    if (sval.empty())
-      return defaultVal;
-    else
-      return boost::lexical_cast<T>(sval);
-  }
 
   EventLoopAsio::EventLoopAsio()
   : _mode(Mode_Unset)
@@ -59,7 +50,7 @@ namespace qi {
       if (envNthread)
         nthread = strtol(envNthread, 0, 0);
     }
-    _maxThreads = getEnvParam("QI_EVENTLOOP_MAX_THREADS", 150);
+    _maxThreads = qi::os::getEnvDefault("QI_EVENTLOOP_MAX_THREADS", 150);
     _mode = Mode_Pooled;
     _work = new boost::asio::io_service::work(_io);
     for (int i=0; i<nthread; ++i)
@@ -79,7 +70,7 @@ namespace qi {
 
   void EventLoopAsio::destroy()
   {
-    if (isInEventLoopThread())
+    if (isInThisContext())
       boost::thread(&EventLoopAsio::destroy, this);
     else
     {
@@ -101,9 +92,9 @@ namespace qi {
   void EventLoopAsio::_pingThread()
   {
     qi::os::setCurrentThreadName("EvLoop.mon");
-    static int msTimeout = getEnvParam("QI_EVENTLOOP_PING_TIMEOUT", 500);
-    static int msGrace = getEnvParam("QI_EVENTLOOP_GRACE_PERIOD", 0);
-    static int maxTimeouts = getEnvParam("QI_EVENTLOOP_MAX_TIMEOUTS", 20);
+    static int msTimeout = qi::os::getEnvDefault("QI_EVENTLOOP_PING_TIMEOUT", 500);
+    static int msGrace = qi::os::getEnvDefault("QI_EVENTLOOP_GRACE_PERIOD", 0);
+    static int maxTimeouts = qi::os::getEnvDefault("QI_EVENTLOOP_MAX_TIMEOUTS", 20);
     ++_nThreads;
     boost::mutex mutex;
     boost::condition_variable cond;
@@ -122,11 +113,11 @@ namespace qi {
         if (_maxThreads && *_nThreads >= _maxThreads + 1) // we count in nThreads
         {
           ++nbTimeout;
-          qiLogInfo() << "Thread " << _name << " limit reached (" << nbTimeout << " timeouts)" << *_totalTask << " / " << _maxThreads << " active: " << *_activeTask;;
+          qiLogInfo() << "Threadpool " << _name << " limit reached (" << nbTimeout << " timeouts, number of tasks: " << *_totalTask << ", number of active tasks: " << *_activeTask <<  ", number of threads: " << _maxThreads << ")";
 
           if (nbTimeout >= maxTimeouts)
           {
-            qiLogInfo() << "threadpool: " << _name <<
+            qiLogError() << "Threadpool " << _name <<
               ": System seems to be deadlocked, sending emergency signal";
             if (_emergencyCallback)
             {
@@ -180,7 +171,7 @@ namespace qi {
       --_running;
   }
 
-  bool EventLoopAsio::isInEventLoopThread()
+  bool EventLoopAsio::isInThisContext()
   {
     return boost::this_thread::get_id() == _id;
   }
@@ -259,19 +250,41 @@ namespace qi {
   void EventLoopAsio::invoke_maybe(boost::function<void()> f, qi::uint32_t id, qi::Promise<void> p, const boost::system::error_code& erc)
   {
     ScopedExitDec _(_totalTask);
+
     if (!erc)
     {
       ScopedIncDec _(_activeTask);
       tracepoint(qi_qi, eventloop_task_start, id);
-      f();
+
+      try
+      {
+        f();
+      }
+      catch (const detail::TerminateThread& e)
+      {
+        throw;
+      }
+      catch (const std::exception& ex)
+      {
+        tracepoint(qi_qi, eventloop_task_error, id);
+        p.setError(ex.what());
+      }
+      catch (...)
+      {
+        tracepoint(qi_qi, eventloop_task_error, id);
+        p.setError("unknown error");
+      }
+
       tracepoint(qi_qi, eventloop_task_stop, id);
       p.setValue(0);
     }
-    else {
+    else
+    {
       tracepoint(qi_qi, eventloop_task_cancel, id);
       p.setCanceled();
     }
   }
+
 
   void EventLoopAsio::post(qi::Duration delay,
       const boost::function<void ()>& cb)
@@ -311,7 +324,6 @@ namespace qi {
       const boost::function<void ()>& cb)
   {
     static boost::system::error_code erc;
-    qi::Promise<void> p;
     asyncCall(timepoint, cb);
   }
 
@@ -362,10 +374,10 @@ namespace qi {
   } while(0)
 
 
-  bool EventLoop::isInEventLoopThread()
+  bool EventLoop::isInThisContext()
   {
     CHECK_STARTED;
-    return _p->isInEventLoopThread();
+    return _p->isInThisContext();
   }
 
   void EventLoop::join()
@@ -426,7 +438,7 @@ namespace qi {
 
   qi::Future<void>
   EventLoop::async(
-    boost::function<void ()> callback,
+    const boost::function<void ()>& callback,
     uint64_t usDelay)
   {
     return async(callback, qi::MicroSeconds(usDelay));
@@ -434,7 +446,7 @@ namespace qi {
 
   qi::Future<void>
   EventLoop::async(
-    boost::function<void ()> callback,
+    const boost::function<void ()>& callback,
     qi::Duration delay)
   {
     CHECK_STARTED;
@@ -443,7 +455,7 @@ namespace qi {
 
   qi::Future<void>
   EventLoop::async(
-    boost::function<void ()> callback,
+    const boost::function<void ()>& callback,
     qi::SteadyClockTimePoint timepoint)
   {
     CHECK_STARTED;

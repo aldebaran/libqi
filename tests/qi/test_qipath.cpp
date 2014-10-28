@@ -17,6 +17,7 @@
 #include <qi/application.hpp>
 #include <qi/os.hpp>
 #include <qi/path.hpp>
+#include <qi/log.hpp>
 #include "../src/utils.hpp"
 #include <iostream>
 #include <sstream>
@@ -25,6 +26,9 @@
 #ifdef _WIN32
   #include <windows.h>
 #endif
+
+
+qiLogCategory("test.qi.path");
 
 std::string argpath;
 
@@ -948,6 +952,15 @@ TEST(qiPathClass, testPimpl)
   EXPECT_NE("a", a.str());  //value are different on windows/linux so... just testing it's not "a"
   EXPECT_EQ("a",   aa.str());
   EXPECT_EQ("a",   aaa.str());
+}
+
+TEST(qiPathClass, canBeLogged)
+{
+  const qi::Path path("kikoo.lol");
+  std::cout << "Logging path: " << path << std::endl;
+  qiLogInfo() << "Logging path: " << path;
+  std::cout << "Logging absolute path: " << path.absolute() << std::endl;
+  qiLogInfo() << "Logging absolute path: " << path.absolute();
 }
 
 class qiPathLib : public ::testing::Test

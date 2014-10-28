@@ -176,6 +176,13 @@ namespace qi {
     static const char* realProgram();
 
     /**
+     * \brief Return the SDK path given through --qi-sdk-prefix or QI_SDK_PREFIX
+     *
+     * Used internally, you should not need this.
+     */
+    static const char* suggestedSdkPath();
+
+    /**
      * \brief Register a function to be executed at Application creation.
      * \param func Callback function at Application creation.
      * \return True if registering succeeded, false otherwise.

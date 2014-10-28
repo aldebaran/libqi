@@ -58,6 +58,8 @@ qiprobes_instrument_files(tp_qi
 set(QI_H qi/detail/clock.hxx
          qi/detail/eventloop.hxx
          qi/detail/future.hxx
+         qi/detail/future_fwd.hpp
+         qi/detail/executioncontext.hpp
          qi/detail/log.hxx
          qi/detail/trackable.hxx
          qi/detail/warn_push_ignore_deprecated.hpp
@@ -75,6 +77,7 @@ set(QI_H qi/detail/clock.hxx
          qi/log.hpp
          qi/macro.hpp
          qi/os.hpp
+         qi/getenv.hpp
          qi/preproc.hpp
          qi/types.hpp
          qi/path.hpp
@@ -83,7 +86,8 @@ set(QI_H qi/detail/clock.hxx
          qi/trackable.hpp
          qi/eventloop.hpp
          qi/version.hpp
-         qi/iocolor.hpp)
+         qi/iocolor.hpp
+         qi/strand.hpp)
 
 set(QI_C src/dlfcn.cpp
          src/path.cpp
@@ -113,7 +117,8 @@ set(QI_C src/dlfcn.cpp
          src/eventloop_p.hpp
          src/sdklayout-boost.cpp
          src/version.cpp
-         src/iocolor.cpp)
+         src/iocolor.cpp
+         src/strand.cpp)
 
 set(QITYPE_H       qi/anyfunction.hpp
                    qi/anyobject.hpp

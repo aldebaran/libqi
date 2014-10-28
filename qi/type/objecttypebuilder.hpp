@@ -86,7 +86,7 @@ namespace qi {
     unsigned int xAdvertiseMethod(MetaMethodBuilder& builder, AnyFunction func, MetaCallType threadingModel = MetaCallType_Auto, int id = -1);
     unsigned int xAdvertiseSignal(const std::string &name, const qi::Signature& signature, SignalMemberGetter getter, int id = -1);
     unsigned int xAdvertiseProperty(const std::string& name, const qi::Signature& signature, PropertyMemberGetter getter, int id = -1);
-    void xBuildFor(TypeInterface* type, bool autoRegister = true);
+    void xBuildFor(TypeInterface* type, bool autoRegister, qi::AnyFunction strandAccessor);
     void inherits(TypeInterface* parentType, int offset);
 
     // Configuration

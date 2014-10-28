@@ -11,6 +11,7 @@
 # include <string>
 # include <vector>
 # include <locale>
+# include <iosfwd>
 # include <boost/scoped_ptr.hpp>
 # include <qi/api.hpp>
 
@@ -63,19 +64,19 @@ namespace qi
     std::string extension() const;
 
     /// return a Path to the parent
-    Path parent();
+    Path parent() const;
 
     /// return an absolute Path of the current path
-    Path absolute();
+    Path absolute() const;
 
     /// return a vector of files contained in the current path
-    PathVector files();
+    PathVector files() const;
 
     /// return a vector of absolute path to files contained recursively in the current path
-    PathVector recursiveFiles();
+    PathVector recursiveFiles() const;
 
     /// return a vector of dirs contained in the current path
-    PathVector dirs();
+    PathVector dirs() const;
 
     /// return the path as a string
     operator std::string() const;
@@ -92,10 +93,18 @@ namespace qi
     /// copy operator
     const Path& operator=(const qi::Path& rhs) const;
 
+    /// Standard output stream operator for logging.
+    friend std::ostream& operator<<(std::ostream& output, const qi::Path& path)
+    {
+      output << path.str();
+      return output;
+    }
+
   private:
     Path(PrivatePath* p);
     boost::scoped_ptr<PrivatePath> _p;
   };
+
 
   /// Set of tools to handle SDK layouts.
   namespace path
@@ -159,7 +168,7 @@ namespace qi
      * (without '.exe') (in UTF-8).
      * \endverbatim
      */
-    QI_API std::string findBin(const std::string& name);
+    QI_API std::string findBin(const std::string& name, bool searchInPath=false);
 
     /**
      * \brief Look for a library.

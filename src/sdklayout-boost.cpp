@@ -14,6 +14,7 @@
 #include <qi/log.hpp>
 
 #include <boost/algorithm/string/trim.hpp>
+#include <boost/algorithm/string/split.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/regex.hpp>
 #include <locale>
@@ -78,7 +79,15 @@ namespace qi {
     {
     }
 
-    void initSDKlayout(bool real = false)
+    void initSDKlayout()
+    {
+      std::string prefix = qi::Application::suggestedSdkPath();
+      if (!prefix.empty())
+        _sdkPrefixes.push_back(prefix);
+      initSDKlayoutFromExec();
+    }
+
+    void initSDKlayoutFromExec(bool real = false)
     {
       const char *program;
       if (!real)
@@ -87,7 +96,7 @@ namespace qi {
         if (program[0] == '\0')
         {
           qiLogWarning() << "No Application was created, trying to deduce paths";
-          return initSDKlayout(true);
+          return initSDKlayoutFromExec(true);
         }
       }
       else
@@ -107,7 +116,7 @@ namespace qi {
       execPath = boost::filesystem::system_complete(execPath).make_preferred();
       if (execPath.parent_path().filename().string(qi::unicodeFacet()) != "bin") {
         if (!real)
-          return initSDKlayout(true);
+          return initSDKlayoutFromExec(true);
         _sdkPrefixes.push_back(execPath.parent_path().filename().string(qi::unicodeFacet()));
       }
       else
@@ -251,7 +260,7 @@ namespace qi {
     return _p->_sdkPrefixes;
   }
 
-  std::string SDKLayout::findBin(const std::string &name) const
+  std::string SDKLayout::findBin(const std::string &name, bool searchInPath) const
   {
     boost::filesystem::path bin(name, qi::unicodeFacet());
     try
@@ -285,6 +294,31 @@ namespace qi {
     {
       qiLogDebug() << e.what();
     }
+
+    if(searchInPath) {
+      // Look in $PATH now
+      std::vector<std::string> paths;
+      std::vector<std::string> pathExts;
+      std::string foo = qi::os::getenv("PATH");
+      boost::split(paths, foo, boost::is_any_of(qi::os::pathsep()));
+      std::string bar = qi::os::getenv("PATHEXT");
+      boost::split(pathExts, bar, boost::is_any_of(qi::os::pathsep()));
+      for (std::vector<std::string>::const_iterator it = paths.begin();
+           it != paths.end(); ++it) {
+        qi::Path path = *it;
+        path /= name;
+        if (path.exists())
+          return path.str();
+        // Try with all extensions
+        for (std::vector<std::string>::const_iterator ext = pathExts.begin();
+             ext != pathExts.end(); ++ext) {
+          std::string pathExt = path.str() + "." + *ext;
+          if (qi::Path(pathExt).exists())
+            return pathExt;
+        }
+      }
+    }
+
     return std::string();
   }
 

@@ -174,7 +174,6 @@ namespace qi {
 
   void Server::onSocketDisconnected(TransportSocketPtr socket, std::string error)
   {
-    TransportSocketPtr match;
     {
       boost::mutex::scoped_lock l(_stateMutex);
       if (_dying)
@@ -203,18 +202,9 @@ namespace qi {
           boost::recursive_mutex::scoped_lock sl(_socketsMutex);
           std::list<TransportSocketPtr>::iterator it = std::find(_sockets.begin(), _sockets.end(), socket);
           if (it != _sockets.end())
-          {
-            match = *it;
             _sockets.erase(it);
-          }
         }
       }
-    }
-    if (match)
-    {
-      match->connected.disconnectAll();
-      match->disconnected.disconnectAll();
-      match->messageReady.disconnectAll();
     }
   }
 

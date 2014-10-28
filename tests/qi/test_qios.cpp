@@ -365,6 +365,7 @@ TEST(QiOs, free_port)
 {
   int sock;
   unsigned short port = qi::os::findAvailablePort(9559);
+  ASSERT_GT(port, 0);
   int success = freeportbind(port, sock);
 
   if (success == -1)
@@ -379,17 +380,38 @@ TEST(QiOs, free_port)
   EXPECT_TRUE(true);
 }
 
+TEST(QiOs, free_port2)
+{
+  int sock;
+  unsigned short port = qi::os::findAvailablePort(54010);
+  ASSERT_GT(port, 0);
+  int success = freeportbind(port, sock);
+
+  if (success == -1)
+    EXPECT_TRUE(false);
+  else
+#ifndef _WIN32
+    ::close(sock);
+#else
+    ::closesocket(sock);
+#endif
+
+  EXPECT_TRUE(true);
+}
 
 TEST(QiOs, free_port_multiple_connection)
 {
   int sock1;
   unsigned short port1 = qi::os::findAvailablePort(9559);
+  ASSERT_GT(port1, 0);
   int success1 = freeportbind(port1, sock1);
   int sock2;
   unsigned short port2 = qi::os::findAvailablePort(9559);
+  ASSERT_GT(port2, 0);
   int success2 = freeportbind(port2, sock2);
   int sock3;
   unsigned short port3 = qi::os::findAvailablePort(9559);
+  ASSERT_GT(port3, 0);
   int success3 = freeportbind(port3, sock3);
 
   if (success1 == -1)

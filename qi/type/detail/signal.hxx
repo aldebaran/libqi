@@ -14,21 +14,53 @@
 
 namespace qi
 {
-#define genConnect(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)           \
-  template <typename T>                                                \
-  template <typename F, typename P comma ATYPEDECL>                    \
-  SignalSubscriber& SignalF<T>::connect(F func, P p comma ADECL)       \
-  {                                                                    \
-    int curId;                                                         \
-    SignalLink* trackLink;                                             \
-    createNewTrackLink(curId, trackLink);                              \
-    SignalSubscriber& s = connect(::qi::bindWithFallback<T>(           \
-        qi::track(boost::function<void()>(boost::bind(                 \
-                      &SignalF<T>::disconnectTrackLink, this, curId)), \
-                  boost::weak_ptr<SignalBasePrivate>(_p)),             \
-        func, p comma AUSE));                                          \
-    *trackLink = s;                                                    \
-    return s;                                                          \
+  template <typename T>
+  template <typename ARG0>
+  inline typename boost::enable_if<
+      boost::is_base_of<Actor, typename detail::Unwrap<ARG0>::type>,
+      SignalSubscriber&>::type
+      SignalF<T>::_connectMaybeActor(const ARG0& arg0,
+                                     const boost::function<T>& cb,
+                                     const boost::function<void()>& fallbackCb)
+  {
+    SignalSubscriber& s = connect(qi::trackWithFallback(
+        fallbackCb, boost::function<void()>(boost::bind(
+                        &qi::Strand::post,
+                        detail::Unwrap<ARG0>::unwrap(arg0)->strand(), cb)),
+        arg0));
+    // skip a bounce because we schedule on a strand, call will be async
+    // anyway
+    s.setCallType(MetaCallType_Direct);
+    return s;
+  }
+  template <typename T>
+  template <typename ARG0>
+  inline typename boost::disable_if<
+      boost::is_base_of<Actor, typename detail::Unwrap<ARG0>::type>,
+      SignalSubscriber&>::type
+      SignalF<T>::_connectMaybeActor(const ARG0& arg0,
+                                     const boost::function<T>& cb,
+                                     const boost::function<void()>& fallbackCb)
+  {
+    return connect(qi::trackWithFallback(fallbackCb, cb, arg0));
+  }
+
+#define genConnect(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)            \
+  template <typename T>                                                 \
+  template <typename F, typename P comma ATYPEDECL>                     \
+  SignalSubscriber& SignalF<T>::connect(const F& func,                  \
+      const P& p comma ADECL)                                           \
+  {                                                                     \
+    int curId;                                                          \
+    SignalLink* trackLink;                                              \
+    createNewTrackLink(curId, trackLink);                               \
+    SignalSubscriber& s = _connectMaybeActor<P>(                        \
+        p, qi::bind<T>(func, p comma AUSE),                             \
+        qi::track(boost::function<void()>(boost::bind(                  \
+                      &SignalF<T>::disconnectTrackLink, this, curId)),  \
+                  boost::weak_ptr<SignalBasePrivate>(_p)));             \
+    *trackLink = s;                                                     \
+    return s;                                                           \
   }
   QI_GEN(genConnect)
 #undef genConnect

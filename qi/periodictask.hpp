@@ -14,6 +14,8 @@
 # include <qi/future.hpp>
 # include <qi/stats.hpp>
 # include <qi/trackable.hpp>
+# include <qi/actor.hpp>
+# include <qi/clock.hpp>
 
 namespace qi
 {
@@ -27,6 +29,9 @@ namespace qi
   public:
     /// \brief Callback is a boost::function.
     typedef boost::function<void()> Callback;
+    // internal
+    typedef boost::function<qi::Future<void>(
+        const Callback&, qi::Duration delay)> ScheduleCallback;
 
     /// \brief Default constructor.
     PeriodicTask();
@@ -42,17 +47,26 @@ namespace qi
      */
     void setCallback(const Callback& cb);
 #ifdef DOXYGEN
-    template<typename T, typename ARG0> PeriodicTask& setCallback(const T& callable, ARG0 tracked, ...);
+    template <typename T, typename ARG0> PeriodicTask& setCallback(const T& callable, ARG0 tracked, ...);
 #else
-    #define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma) \
-    template<typename AF, typename ARG0 comma ATYPEDECL>      \
-    inline void setCallback(const AF& fun, const ARG0& arg0 comma ADECL)  \
-    {                                                                    \
-      setCallback(::qi::bind<void()>(fun, arg0 comma AUSE));             \
-    }
+#define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)              \
+  template <typename AF, typename ARG0 comma ATYPEDECL>                \
+  inline void setCallback(const AF& fun, const ARG0& arg0 comma ADECL) \
+  {                                                                    \
+    setCallback(boost::bind(fun, arg0 comma AUSE));                    \
+    _connectMaybeActor<ARG0>(arg0);                                    \
+  }
     QI_GEN(genCall)
 #undef genCall
 #endif
+
+    /**
+     * Set the strand on which to schedule the calls
+     *
+     * \warning This must be called *after* the call to setCallback or it will
+     * have no effect.
+     */
+    void setStrand(qi::Strand* strand);
 
     /**
      * \brief Set the call interval in microseconds.
@@ -71,7 +85,8 @@ namespace qi
     /**
      * \brief Start the periodic task at specified period.
      *
-     * No effect if already running.
+     * No effect if already running. No effect if called from within the
+     * callback.
      * \param immediate if true, first schedule of the task will happen with no delay.
      * \warning concurrent calls to start() and stop() will result in undefined behavior.
      */
@@ -120,8 +135,26 @@ namespace qi
      * was called.
      */
     bool isStopping() const;
+
   private:
     boost::shared_ptr<PeriodicTaskPrivate> _p;
+
+    template <typename ARG0>
+    inline typename boost::enable_if<
+        boost::is_base_of<Actor, typename detail::Unwrap<ARG0>::type>,
+        void>::type
+        _connectMaybeActor(const ARG0& arg0)
+    {
+      setStrand(detail::Unwrap<ARG0>::unwrap(arg0)->strand());
+    }
+    template <typename ARG0>
+    inline typename boost::disable_if<
+        boost::is_base_of<Actor, typename detail::Unwrap<ARG0>::type>,
+        void>::type
+        _connectMaybeActor(const ARG0& arg0)
+    {
+      setStrand(0);
+    }
   };
 
 }

@@ -13,7 +13,7 @@
 #include <qi/atomic.hpp>
 #include <qi/api.hpp>
 #include <qi/signal.hpp>
-#include <qi/eventloop.hpp>
+#include <qi/detail/executioncontext.hpp>
 #include <qi/type/typeobject.hpp>
 
 namespace qi {
@@ -37,15 +37,15 @@ static const unsigned int qiObjectSpecialMemberMaxUid = 100;
 /** Make a call honoring ThreadingModel requirements
  *
  * Check the following rules in order:
- * - If el is set, force call in it overriding all rules.
  * - If methodThreadingModel is not auto, honor it, overriding callType
  * - If callType is set (not auto), honor it.
+ * - If el is set, force call in it (synchronously if we are in it).
  * - Be synchronous.
  *
  * When the call is finally made, if objectThreadingModel is SingleThread,
  * acquire the object lock.
  *
- * @param el the eventloop where to schedule the call (if async)
+ * @param ec context into which the call will be scheduled
  * @param objectThreadingModel the threading model of the called object
  * @param methodThreadingModel the threading model of the specific method
  * @param callType the requested threading model
@@ -58,7 +58,7 @@ static const unsigned int qiObjectSpecialMemberMaxUid = 100;
  * @param callerId thread id of caller, for tracing purposes
  * @param postTimestamp the time when the call was requested
  */
-QI_API qi::Future<AnyReference> metaCall(EventLoop* el,
+QI_API qi::Future<AnyReference> metaCall(ExecutionContext* ec,
     ObjectThreadingModel objectThreadingModel,
     MetaCallType methodThreadingModel,
     MetaCallType callType,

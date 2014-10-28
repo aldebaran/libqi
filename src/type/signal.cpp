@@ -23,15 +23,19 @@ namespace qi {
   , target(new AnyWeakObject(target))
   , method(method)
   , enabled(true)
+  , executionContext(0)
   { // The slot has its own threading model: be synchronous
   }
 
-
-
   SignalSubscriber::SignalSubscriber(AnyFunction func, MetaCallType model)
-     : handler(func), threadingModel(model), target(0), method(0), enabled(true)
-   {
-   }
+     : handler(func), threadingModel(model), target(0), method(0), enabled(true), executionContext(0)
+  {
+  }
+
+  SignalSubscriber::SignalSubscriber(AnyFunction func, ExecutionContext* ec)
+     : handler(func), threadingModel(MetaCallType_Direct), target(0), method(0), enabled(true), executionContext(ec)
+  {
+  }
 
   SignalSubscriber::~SignalSubscriber()
   {
@@ -53,6 +57,7 @@ namespace qi {
     target = b.target?new AnyWeakObject(*b.target):0;
     method = b.method;
     enabled = b.enabled;
+    executionContext = b.executionContext;
   }
 
   static qi::Atomic<int> linkUid = 1;
@@ -215,7 +220,7 @@ namespace qi {
         async = (callType == MetaCallType_Queued);
 
       qiLogDebug() << "subscriber call async=" << async <<" ct " << callType <<" tm " << threadingModel;
-      if (async)
+      if (executionContext || async)
       {
         GenericFunctionParameters* copy = new GenericFunctionParameters(args.copy());
         // We will check enabled when we will be scheduled in the target
@@ -223,10 +228,14 @@ namespace qi {
         // explicitly track the asynccall
 
         // courtesy-check of el, but it should be kept alive longuer than us
-        qi::EventLoop* el = getEventLoop();
-        if (!el) // this is an assert basicaly, no sense trying to do something clever.
-          throw std::runtime_error("Event loop was destroyed");
-        el->post(FunctorCall(copy, new SignalSubscriberPtr(shared_from_this())));
+        qi::ExecutionContext* ec = executionContext;
+        if (!ec)
+        {
+          ec = getEventLoop();
+          if (!ec) // this is an assert basicaly, no sense trying to do something clever.
+            throw std::runtime_error("Event loop was destroyed");
+        }
+        ec->post(FunctorCall(copy, new SignalSubscriberPtr(shared_from_this())));
       }
       else
       {
