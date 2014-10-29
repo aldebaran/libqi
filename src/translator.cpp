@@ -36,7 +36,8 @@ namespace qi
 
   std::string tr(const std::string &msg,
                  const std::string &domain,
-                 const std::string &locale)
+                 const std::string &locale,
+                 const std::string &context)
   {
     if (globTranslator == 0)
     {
@@ -44,7 +45,19 @@ namespace qi
       return msg;
     }
 
-    return globTranslator->translate(msg, domain, locale);
+    return globTranslator->translate(msg, domain, locale, context);
+  }
+
+  std::string trContext(const std::string &msg,
+                        const std::string &context)
+  {
+    if (globTranslator == 0)
+    {
+      qiLogWarning() << "You must init your translator first!";
+      return msg;
+    }
+
+    return globTranslator->translate(msg, "", "", context);
   }
 
   namespace detail
@@ -188,7 +201,8 @@ namespace qi
 
   std::string Translator::translate(const std::string &msg,
                                     const std::string &domain,
-                                    const std::string &locale)
+                                    const std::string &locale,
+                                    const std::string &context)
   {
     boost::mutex::scoped_lock l(_p->mutex);
     if (_p->currentDomain.empty() && domain.empty())
@@ -238,10 +252,16 @@ namespace qi
       loc += ".UTF-8";
 
     if (domain.empty())
-      return boost::locale::translate(msg).str(_p->generator(loc));
+      return boost::locale::translate(context, msg).str(_p->generator(loc));
     else
-      return boost::locale::translate(msg).str(_p->generator(loc),
+      return boost::locale::translate(context, msg).str(_p->generator(loc),
                                                dom);
+  }
+
+  std::string Translator::translateContext(const std::string &msg,
+                                           const std::string &context)
+  {
+    return translate(msg, "", "", context);
   }
 
   void Translator::setCurrentLocale(const std::string &locale)
