@@ -18,6 +18,8 @@
 
 qiLogCategory("qi.translator");
 
+namespace bfs = boost::filesystem;
+
 namespace qi
 {
   static qi::Translator *globTranslator = 0;
@@ -52,7 +54,7 @@ namespace qi
     {
       std::string confPath = qi::path::userWritableDataPath("naoqi", ".domain_path");
       boost::mutex::scoped_lock l(gFileMutex);
-      std::ifstream fd(confPath.c_str());
+      std::ifstream fd(bfs::path(confPath, qi::unicodeFacet()).string().c_str());
       std::set<std::string> paths;
 
       if (!fd.good())
@@ -76,7 +78,7 @@ namespace qi
 
       std::string confPath = qi::path::userWritableDataPath("naoqi", ".domain_path");
       boost::mutex::scoped_lock l(gFileMutex);
-      std::ofstream fd(confPath.c_str(), std::ios::app | std::ios::out);
+      std::ofstream fd(bfs::path(confPath, qi::unicodeFacet()).string().c_str(), std::ios::app | std::ios::out);
 
       if (!fd.good())
         return;
@@ -90,7 +92,7 @@ namespace qi
       std::string confPath = qi::path::userWritableDataPath("naoqi", ".domain_path");
       std::set<std::string> dPaths = domainPaths();
       boost::mutex::scoped_lock l(gFileMutex);
-      std::ofstream fd(confPath.c_str(), std::ios::trunc | std::ios::out);
+      std::ofstream fd(bfs::path(confPath, qi::unicodeFacet()).string().c_str(), std::ios::trunc | std::ios::out);
 
       if (!fd.good())
         return;
