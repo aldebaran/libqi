@@ -16,6 +16,12 @@
 # include <qi/types.hpp>
 # include <qi/path.hpp>
 
+#ifdef WIN32
+#ifndef SIGKILL
+#define SIGKILL 9
+#endif
+#endif
+
 struct stat;
 
 namespace qi {

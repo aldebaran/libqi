@@ -23,10 +23,6 @@
 #include <qi/path.hpp>
 #include "filesystem.hpp"
 
-#ifndef SIGKILL
-# define SIGKILL 9
-#endif //!SIGKILL
-
 namespace qi
 {
   namespace os
