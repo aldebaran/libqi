@@ -288,12 +288,12 @@ set(QIPERF_C
 qi_create_config_h(_out qi/config.hpp.in qi/config.hpp)
 list(APPEND QI_C ${_out})
 
-qi_install_header(${QI_H} ${QITYPE_H} ${QIM_H} ${QIPERF_H} KEEP_RELATIVE_PATHS)
-
 if(WITH_BOOST_LOCALE)
   list(APPEND QI_H qi/translator.hpp)
   list(APPEND QI_C src/translator.cpp)
 endif()
+
+qi_install_header(${QI_H} ${QITYPE_H} ${QIM_H} ${QIPERF_H} KEEP_RELATIVE_PATHS)
 
 if (WIN32)
   list(APPEND QI_C
