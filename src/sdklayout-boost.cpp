@@ -186,7 +186,6 @@ namespace qi {
           return std::string();
         }
       }
-      qiLogVerbose() << "Writable path is " << path.string(qi::unicodeFacet());
       return path.string(qi::unicodeFacet());
     }
   };
