@@ -316,7 +316,7 @@ namespace qi
     if (ec)
       return ec->async<AnyValue>(boost::bind(&PropertyBase::value, prop));
     else
-      return qi::Future<AnyValue>(prop->value());
+      return prop->value();
   }
 
   static void reportError(qi::Future<AnyReference> fut) {

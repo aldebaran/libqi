@@ -7,19 +7,22 @@
 #ifndef _QITYPE_DETAILS_PROPERTY_HXX_
 #define _QITYPE_DETAILS_PROPERTY_HXX_
 
+#include <boost/thread/locks.hpp>
+#include <qi/future.hpp>
 
 namespace qi
 {
-
-  inline void GenericProperty::set(const AnyValue& v)
+  inline FutureSync<void> GenericProperty::set(const AnyValue& v)
   {
     std::pair<AnyReference, bool> conv = v.convert(_type);
     if (!conv.first.type())
       throw std::runtime_error(std::string("Failed converting ") + v.type()->infoString() + " to " + _type->infoString());
 
-    Property<AnyValue>::set(AnyValue(conv.first, false, false));
+    this->setImpl(AnyValue(conv.first, false, false));
     if (conv.second)
       conv.first.destroy();
+
+    return FutureSync<void>(0);
   }
 
   template<typename T>
@@ -32,7 +35,7 @@ namespace qi
   }
 
   template<typename T>
-  T PropertyImpl<T>::get() const
+  T PropertyImpl<T>::getImpl() const
   {
     if (_getter)
       return _getter(_value);
@@ -40,7 +43,7 @@ namespace qi
       return _value;
   }
   template<typename T>
-  void PropertyImpl<T>::set(const T& v)
+  void PropertyImpl<T>::setImpl(const T& v)
   {
     qiLogDebug("qitype.property") << "set " << this << " " << (!!_setter);
     if (_setter)
@@ -54,6 +57,50 @@ namespace qi
       _value = v;
       (*this)(_value);
     }
+  }
+
+  template<typename T>
+  FutureSync<T> Property<T>::get() const
+  {
+    boost::mutex::scoped_lock lock(_mutex);
+    return FutureSync<T>(this->getImpl());
+  }
+
+  template<typename T>
+  FutureSync<void> Property<T>::set(const T& v)
+  {
+    boost::mutex::scoped_lock lock(_mutex);
+    this->setImpl(v);
+    return FutureSync<void>(0);
+  }
+
+  template<typename T>
+  FutureSync<AnyValue> Property<T>::value() const
+  {
+    boost::mutex::scoped_lock lock(_mutex);
+    return FutureSync<AnyValue>(AnyValue::from(this->getImpl()));
+  }
+
+  template<typename T>
+  FutureSync<void> Property<T>::setValue(AutoAnyReference value)
+  {
+    boost::mutex::scoped_lock lock(_mutex);
+    this->setImpl(value.to<T>());
+    return FutureSync<void>(0);
+  }
+
+  template<class T>
+  typename Property<T>::ScopedLockReadWrite
+    Property<T>::getLockedReadWrite()
+  {
+    return ScopedLockReadWrite(*this);
+  }
+
+  template<class T>
+  typename Property<T>::ScopedLockReadOnly
+    Property<T>::getLockedReadOnly() const
+  {
+    return ScopedLockReadOnly(*this);
   }
 }
 
