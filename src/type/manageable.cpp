@@ -97,20 +97,20 @@ namespace qi
 
   void Manageable::pushStats(int slotId, float wallTime, float userTime, float systemTime)
   {
-    boost::mutex::scoped_lock(_p->registrationsMutex);
+    boost::mutex::scoped_lock l(_p->registrationsMutex);
     MethodStatistics& ms = _p->stats[slotId];
     ms.push(wallTime, userTime, systemTime);
   }
 
   ObjectStatistics Manageable::stats() const
   {
-    boost::mutex::scoped_lock(_p->registrationsMutex);
+    boost::mutex::scoped_lock l(_p->registrationsMutex);
     return _p->stats;
   }
 
   void Manageable::clearStats()
   {
-    boost::mutex::scoped_lock(_p->registrationsMutex);
+    boost::mutex::scoped_lock l(_p->registrationsMutex);
     _p->stats.clear();
   }
 
