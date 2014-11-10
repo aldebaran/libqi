@@ -18,8 +18,6 @@
 # include <qi/url.hpp>
 # include "transportsocket.hpp"
 # include <qi/eventloop.hpp>
-# include "transportsocket.hpp"
-# include <qi/eventloop.hpp>
 # include "messagedispatcher.hpp"
 
 namespace qi

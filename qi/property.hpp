@@ -8,7 +8,9 @@
 #define _QI_PROPERTY_HPP_
 
 #include <boost/function.hpp>
+#include <boost/thread/mutex.hpp>
 #include <qi/signal.hpp>
+#include <qi/future.hpp>
 
 #ifdef _MSC_VER
 #  pragma warning( push )
@@ -20,7 +22,6 @@
 
 namespace qi
 {
-
   /** Type-erased virtual interface implemented by all Property classes.
   */
   class QI_API PropertyBase
@@ -28,8 +29,8 @@ namespace qi
   public:
     virtual ~PropertyBase() {}
     virtual SignalBase* signal() = 0;
-    virtual void setValue(AutoAnyReference value) = 0;
-    virtual AnyValue value() const = 0;
+    virtual FutureSync<void> setValue(AutoAnyReference value) = 0;
+    virtual FutureSync<AnyValue> value() const = 0;
   };
 
   template<typename T>
@@ -43,6 +44,7 @@ namespace qi
     using Getter = boost::function<T(const T&)>;
     using SignalType = SignalF<void(const T&)>;
     using PropertyType = T;
+
     /**
      * @param getter value getter, default to reading _value
      * @param setter value setter, what it returns will be written to
@@ -53,17 +55,24 @@ namespace qi
     */
     PropertyImpl(Getter getter = Getter(), Setter setter = Setter(),
       SignalBase::OnSubscribers onsubscribe = SignalBase::OnSubscribers());
-    virtual ~PropertyImpl() {}
-    T get() const;
-    void set(const T& v);
-    void operator=(const T& v) { set(v); }
+
+    virtual FutureSync<T> get() const = 0;
+    virtual FutureSync<void> set(const T& v) = 0;
+
+    PropertyImpl<T>& operator=(const T& v) { this->set(v); return *this; }
+
   protected:
     Getter _getter;
     Setter _setter;
     T      _value;
+
+    T getImpl() const;
+    void setImpl(const T& v);
   };
 
-  /** \includename{qi/property.hpp}
+  /** Povide access to a stored value and signal to connected callbacks when the value changed.
+      @see qi::Signal which implement a similar pattern but without storing the value.
+      \includename{qi/property.hpp}
    */
   template<typename T>
   class Property: public PropertyImpl<T>
@@ -72,6 +81,9 @@ namespace qi
     using ImplType = PropertyImpl<T>;
     using Getter = typename ImplType::Getter;
     using Setter = typename ImplType::Setter;
+    class ScopedLockReadWrite;
+    class ScopedLockReadOnly;
+
     Property(Getter getter = Getter(), Setter setter = Setter(),
       SignalBase::OnSubscribers onsubscribe = SignalBase::OnSubscribers())
     : PropertyImpl<T>(getter, setter, onsubscribe)
@@ -79,29 +91,84 @@ namespace qi
     Property(AutoAnyReference defaultValue, Getter getter = Getter(), Setter setter = Setter(),
       SignalBase::OnSubscribers onsubscribe = SignalBase::OnSubscribers())
     : PropertyImpl<T>(getter, setter, onsubscribe)
-    { PropertyImpl<T>::set(defaultValue.to<T>()); }
+    {
+      PropertyImpl<T>::setImpl(defaultValue.to<T>()); }
+
+    Property<T>& operator=(const T& v) { this->set(v); return *this; }
+
+    virtual FutureSync<T> get() const;
+    virtual FutureSync<void> set(const T& v);
+
     virtual SignalBase* signal() { return this; }
-    virtual void setValue(AutoAnyReference value) { PropertyImpl<T>::set(value.to<T>()); }
-    virtual AnyValue value() const { return AnyValue::from(PropertyImpl<T>::get()); }
+    virtual FutureSync<void> setValue(AutoAnyReference value);
+    virtual FutureSync<AnyValue> value() const;
+
+    /** @return Acquire write-enabled scoped thread-safe access to the value stored in this object. */
+    ScopedLockReadWrite getLockedReadWrite();
+    /** @return Acquire read-only scoped thread-safe access to the value stored in this object. */
+    ScopedLockReadOnly getLockedReadOnly() const;
+  private:
+    mutable boost::mutex _mutex;
   };
 
-  template<>
-  class QI_API Property<AnyValue>: public PropertyImpl<AnyValue>
+  /** Provides (locking) exclusive write-enabled access to the value of a property.
+      Locks the internal mutex of the property on construction, releases it on destruction.
+      Behaves like a pointer to the property value.
+   */
+  template<class T>
+  class Property<T>::ScopedLockReadWrite
+    : boost::noncopyable
   {
   public:
-
-    Property(Getter getter = Getter(), Setter setter = Setter(),
-      SignalBase::OnSubscribers onsubscribe = SignalBase::OnSubscribers())
-    : PropertyImpl<AnyValue>(getter, setter, onsubscribe)
+    ScopedLockReadWrite(Property<T>& property)
+      : _property(property)
+      , _lock(property._mutex)
     {
     }
-    virtual SignalBase* signal() { return this; }
-    virtual void setValue(AutoAnyReference value) { set(AnyValue(value, false, false)); }
-    virtual AnyValue value() const { return get(); }
+
+    ~ScopedLockReadWrite()
+    {
+      _property(_property._value); // Trigger update of the observer callbacks with the new value.
+    }
+
+    T& operator*() { return _property._value; }
+    T* operator->() { return &_property._value; }
+
+    const T& operator*() const { return _property._value; }
+    const T* operator->() const { return &_property._value; }
+
+  private:
+    Property<T>& _property;
+    boost::mutex::scoped_lock _lock;
   };
 
+  /** Provides (locking) exclusive read-only access to the value of a property.
+      Locks the internal mutex of the property on construction, releases it on destruction.
+      Behaves like a pointer to the property value.
+   */
+  template<class T>
+  class Property<T>::ScopedLockReadOnly
+    : boost::noncopyable
+  {
+  public:
+    ScopedLockReadOnly(const Property<T>& property)
+      : _property(property)
+      , _lock(property._mutex)
+    {
+    }
+
+    const T& get() const { return _property._value; }
+    const T& operator*() const { return get(); }
+    const T* operator->() const { return &get(); }
+
+  private:
+    const Property<T>& _property;
+    boost::mutex::scoped_lock _lock;
+  };
+
+
   /// Type-erased property, simulating a typed property but using AnyValue.
-  class QI_API GenericProperty: public Property<AnyValue>
+  class QI_API GenericProperty : public Property<AnyValue>
   {
   public:
     GenericProperty(TypeInterface* type, Getter getter = Getter(), Setter setter = Setter())
@@ -112,16 +179,17 @@ namespace qi
       std::vector<TypeInterface*> types(&_type, &_type + 1);
       _setSignature(makeTupleSignature(types));
     }
-    virtual void setValue(AutoAnyReference value) { set(AnyValue(value, false, false));}
-    void set(const AnyValue& v);
+
+    GenericProperty& operator=(const AnyValue& v) { this->set(v); return *this; }
+
+    virtual FutureSync<void> setValue(AutoAnyReference value) { return set(AnyValue(value, false, false));}
+    virtual FutureSync<void> set(const AnyValue& v);
     virtual qi::Signature signature() const {
       return makeTupleSignature(std::vector<TypeInterface*>(&_type, &_type + 1));
     }
   private:
     TypeInterface* _type;
   };
-
-
 }
 
 #include <qi/type/detail/property.hxx>

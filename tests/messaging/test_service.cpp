@@ -258,7 +258,7 @@ TEST(QiService, ClassProperty)
 
 int prop_ping(qi::PropertyBase* &p, int v)
 {
-  return p->value().toInt() + v;
+  return p->value().value().toInt() + v;
 }
 
 TEST(QiService, GenericProperty)
@@ -278,7 +278,7 @@ TEST(QiService, GenericProperty)
   qi::AnyObject client = p.client()->service("foo");
 
   client.setProperty("offset", 1);
-  ASSERT_EQ(1, prop->value().toInt());
+  ASSERT_EQ(1, prop->value().value().toInt());
   ASSERT_EQ(2, client.call<int>("ping", 1));
   prop->setValue(2);
   ASSERT_EQ(3, client.call<int>("ping", 1));
@@ -302,7 +302,7 @@ TEST(QiService, GenericProperty)
   if (client != obj)
   {
     client.call<void>("setProperty", "offset", 3);
-    EXPECT_EQ(3, prop->value().toInt());
+    EXPECT_EQ(3, prop->value().value().toInt());
   }
 
   // test error handling

@@ -235,7 +235,7 @@ qi::Future<AnyValue> StaticObjectTypeBase::property(void* instance, AnyObject co
           return p->value();
         });
   else
-    return qi::Future<AnyValue>(p->value());
+    return p->value();
 }
 
 static void setPropertyValue(PropertyBase* property, AnyValue value)
