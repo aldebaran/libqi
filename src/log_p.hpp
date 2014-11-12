@@ -28,6 +28,15 @@ namespace qi
                         const qi::LogLevel     verb
                         );
 
+    std::string csvline(const qi::os::timeval  date,
+                        const char            *category,
+                        const char            *msg,
+                        const char            *file,
+                        const char            *fct,
+                        const int              line,
+                        const qi::LogLevel     verb);
+    std::string csvheader();
+
 
     const std::string dateToString(const qi::os::timeval date);
     const std::string usTimeToString(const qi::os::timeval date);

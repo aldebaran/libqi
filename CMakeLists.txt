@@ -75,6 +75,7 @@ set(QI_H qi/detail/clock.hxx
          qi/clock.hpp
          qi/future.hpp
          qi/log/consoleloghandler.hpp
+         qi/log/csvloghandler.hpp
          qi/log/fileloghandler.hpp
          qi/log/headfileloghandler.hpp
          qi/log/tailfileloghandler.hpp
@@ -110,6 +111,7 @@ set(QI_C src/dlfcn.cpp
          src/log_p.hpp
          src/consoleloghandler.cpp
          src/fileloghandler.cpp
+         src/csvloghandler.cpp
          src/headfileloghandler.cpp
          src/tailfileloghandler.cpp
          src/locale-light.cpp
