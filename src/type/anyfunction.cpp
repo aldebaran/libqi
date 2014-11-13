@@ -120,34 +120,35 @@ namespace qi
       arad.convertedArgs[0] = transform.boundValue;
     for (unsigned i=0; i<sz; ++i)
     {
+      const unsigned ti = i + offset;
       //qiLogDebug() << "argument " << i
       //   << " " << args[i].type->infoString() << ' ' << args[i].value
-      //   << " to " << target[i]->infoString();
-      if (args[i].type() == target[i+offset] || args[i].type()->info() == target[i+offset]->info())
-        arad.convertedArgs[i+offset] = args[i].rawValue();
+      //   << " to " << target[ti]->infoString();
+      if (args[i].type() == target[ti] || args[i].type()->info() == target[ti]->info())
+        arad.convertedArgs[ti] = args[i].rawValue();
       else
       {
         //qiLogDebug() << "needs conversion "
         //<< args[i].type->infoString() << " -> "
-        //<< target[i]->infoString();
-        std::pair<AnyReference,bool> v = args[i].convert(target[i+offset]);
+        //<< target[ti]->infoString();
+        std::pair<AnyReference,bool> v = args[i].convert(target[ti]);
         if (!v.first.type())
         {
           // Try pointer dereference
           if (args[i].kind() == TypeKind_Pointer)
           {
             AnyReference deref = *const_cast<AnyReference&>(args[i]);
-            if (deref.type() == target[i+offset] || deref.type()->info() == target[i+offset]->info())
+            if (deref.type() == target[ti] || deref.type()->info() == target[ti]->info())
               v = std::make_pair(deref, false);
             else
-              v = deref.convert(target[i+offset]);
+              v = deref.convert(target[ti]);
           }
           if (!v.first.type())
           {
             throw std::runtime_error(_QI_LOG_FORMAT("Call argument number %d conversion failure from %s to %s. Function signature: %s.",
                                                     i,
                                                     args[i].type()->signature().toPrettySignature(),
-                                                    target[i]->signature().toPrettySignature(),
+                                                    target[ti]->signature().toPrettySignature(),
                                                     this->parametersSignature(this->transform.dropFirst).toPrettySignature()));
 
             return AnyReference();
@@ -156,7 +157,7 @@ namespace qi
 
         if (v.second)
           arad.toDestroy[arad.toDestroyPos++] = v.first;
-        arad.convertedArgs[i+offset] = v.first.rawValue();
+        arad.convertedArgs[ti] = v.first.rawValue();
       }
     }
     void* res;
