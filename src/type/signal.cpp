@@ -419,7 +419,8 @@ namespace qi {
     }
   }
 
-  void SignalBase::disconnectTrackLink(int id) {
+  void SignalBase::disconnectTrackLink(int id)
+  {
     boost::recursive_mutex::scoped_lock sl(_p->mutex);
     TrackMap::iterator it = _p->trackMap.find(id);
     if (it == _p->trackMap.end())
@@ -429,13 +430,15 @@ namespace qi {
     _p->trackMap.erase(it);
   }
 
-  bool SignalBase::disconnectAll() {
+  bool SignalBase::disconnectAll()
+  {
     if (_p)
       return _p->disconnectAll(true);
     return false;
   }
 
-  bool SignalBase::asyncDisconnectAll() {
+  bool SignalBase::asyncDisconnectAll()
+  {
     if (_p)
       return _p->disconnectAll(false);
     return false;
@@ -552,7 +555,8 @@ namespace qi {
   {
     bool ret = true;
     SignalLink link;
-    while (true) {
+    while (true)
+    {
       {
         boost::recursive_mutex::scoped_lock sl(mutex);
         SignalSubscriberMap::iterator it = subscriberMap.begin();
