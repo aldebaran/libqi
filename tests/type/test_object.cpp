@@ -909,7 +909,7 @@ TEST(TestObject, traceGeneric)
   std::sort(traces.begin(), traces.end(), comparator); // events may not be in order
   EXPECT_EQ(qi::EventTrace::Event_Call, traces[0].kind());
   EXPECT_EQ(qi::EventTrace::Event_Result, traces[1].kind());
-  EXPECT_EQ(mid, traces[0].slotId());
+  EXPECT_EQ(mid, (int)traces[0].slotId());
   EXPECT_EQ(traces[0].id(), traces[1].id());
   qi::int64_t delta =
     traces[1].timestamp().tv_sec*1000
@@ -934,7 +934,7 @@ TEST(TestObject, traceGeneric)
   std::sort(traces.begin(), traces.end(), comparator); // events may not be in order
   EXPECT_EQ(qi::EventTrace::Event_Call, traces[0].kind());
   EXPECT_EQ(qi::EventTrace::Event_Error, traces[1].kind());
-  EXPECT_EQ(mid2, traces[0].slotId());
+  EXPECT_EQ(mid2, (int)traces[0].slotId());
   EXPECT_EQ(traces[0].id(), traces[1].id());
   obj.disconnect(id);
   qi::os::msleep(50);
@@ -968,7 +968,7 @@ TEST(TestObject, traceType)
   std::sort(traces.begin(), traces.end(), comparator); // events may not be in order
   EXPECT_EQ(qi::EventTrace::Event_Call, traces[0].kind());
   EXPECT_EQ(qi::EventTrace::Event_Result, traces[1].kind());
-  EXPECT_EQ(mid, traces[0].slotId());
+  EXPECT_EQ(mid, (int)traces[0].slotId());
   ASSERT_TRUE(oa1.call<bool>("isTraceEnabled"));
   oa1.disconnect(id);
   qi::os::msleep(50);
@@ -997,7 +997,7 @@ TEST(TestObject, AdvertiseRealSignal)
   sig.connect(boost::bind<void>(&bim, _1, plocal, "local"));
   qi::DynamicObjectBuilder gob;
   unsigned int id = gob.advertiseSignal("sig", &sig);
-  ASSERT_LT(0, id);
+  ASSERT_LT(0u, id);
   qi::AnyObject obj = gob.object();
   obj.connect("sig", boost::bind<void>(&bim, _1, premote, "remote"));
 
@@ -1289,21 +1289,21 @@ TEST(TestMetaObject, findMethod)
   bool canCache;
   int mid;
   mid = mo.findMethod("f", args(1), &canCache);
-  EXPECT_EQ(mid, f); EXPECT_TRUE(canCache);
+  EXPECT_EQ(mid, (int)f); EXPECT_TRUE(canCache);
   mid = mo.findMethod("g", args(1), &canCache);
-  EXPECT_EQ(mid, g1); EXPECT_TRUE(canCache);
+  EXPECT_EQ(mid, (int)g1); EXPECT_TRUE(canCache);
   mid = mo.findMethod("g", args(1, 1), &canCache);
-  EXPECT_EQ(mid, g2); EXPECT_TRUE(canCache);
+  EXPECT_EQ(mid, (int)g2); EXPECT_TRUE(canCache);
   // no garantee is made on result of findmethod(g, "foo"), so not tested
   mid = mo.findMethod("h", args(1), &canCache);
-  EXPECT_EQ(mid, h1i); EXPECT_FALSE(canCache);
+  EXPECT_EQ(mid, (int)h1i); EXPECT_FALSE(canCache);
   mid = mo.findMethod("h", args("foo"), &canCache);
-  EXPECT_EQ(mid, h1s); EXPECT_FALSE(canCache);
+  EXPECT_EQ(mid, (int)h1s); EXPECT_FALSE(canCache);
   mid = mo.findMethod("h", args(1, 1), &canCache);
-  EXPECT_EQ(mid, h2); EXPECT_TRUE(canCache);
+  EXPECT_EQ(mid, (int)h2); EXPECT_TRUE(canCache);
 
   mid = mo.findMethod("h::(i)", args(1), &canCache);
-  EXPECT_EQ(mid, h1i); EXPECT_TRUE(canCache);
+  EXPECT_EQ(mid, (int)h1i); EXPECT_TRUE(canCache);
 
   // check null canCache
   mo.findMethod("h::(i)", args(1), 0);

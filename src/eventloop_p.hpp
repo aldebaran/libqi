@@ -88,7 +88,7 @@ namespace qi {
       Mode_Pooled = 2
     };
     Mode _mode;
-    qi::Atomic<int> _nThreads;
+    qi::Atomic<unsigned int> _nThreads;
     boost::asio::io_service _io;
     boost::asio::io_service::work* _work; // keep io.run() alive
     boost::thread      _thd;

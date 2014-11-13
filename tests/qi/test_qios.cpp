@@ -103,7 +103,7 @@ TEST(QiOs, currentThreadName)
 TEST(QiOs, MemoryUsage)
 {
   ASSERT_TRUE(qi::os::memoryUsage(qi::os::getpid()) > 0);
-  ASSERT_EQ(0, qi::os::memoryUsage(0));
+  ASSERT_EQ(0u, qi::os::memoryUsage(0));
 }
 
 TEST(QiOs, timeValOperator)

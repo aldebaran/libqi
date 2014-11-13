@@ -27,11 +27,11 @@ TEST(TestClockType, ClockType)
   qi::uint64_t uh  = qi::AnyValue::from(h).to<qi::uint64_t>();
 
   EXPECT_EQ(uns, std::numeric_limits<qi::uint64_t>::max());
-  EXPECT_EQ(uus, 1000LL);
-  EXPECT_EQ(ums, 2000000LL);
-  EXPECT_EQ(uls, 3000000000LL);
-  EXPECT_EQ(umm, 4LL * 60LL * 1000000000LL);
-  EXPECT_EQ(uh,  5LL * 60LL * 60LL * 1000000000LL);
+  EXPECT_EQ(uus, 1000ULL);
+  EXPECT_EQ(ums, 2000000ULL);
+  EXPECT_EQ(uls, 3000000000ULL);
+  EXPECT_EQ(umm, 4ULL * 60ULL * 1000000000ULL);
+  EXPECT_EQ(uh,  5ULL * 60ULL * 60ULL * 1000000000ULL);
 
 
   qi::NanoSeconds  ns2;
@@ -66,7 +66,7 @@ TEST(TestClockType, TimePoint)
 
   qi::uint64_t tp = qi::AnyValue::from(wctp).to<qi::uint64_t>();
 
-  EXPECT_EQ(tp, 42);
+  EXPECT_EQ(42u, tp);
 
   qi::WallClockTimePoint wctp2 = qi::AnyValue::from(42).to<qi::WallClockTimePoint>();
   EXPECT_EQ(wctp, wctp2);

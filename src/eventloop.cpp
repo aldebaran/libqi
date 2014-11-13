@@ -92,9 +92,9 @@ namespace qi {
   void EventLoopAsio::_pingThread()
   {
     qi::os::setCurrentThreadName("EvLoop.mon");
-    static int msTimeout = qi::os::getEnvDefault("QI_EVENTLOOP_PING_TIMEOUT", 500);
-    static int msGrace = qi::os::getEnvDefault("QI_EVENTLOOP_GRACE_PERIOD", 0);
-    static int maxTimeouts = qi::os::getEnvDefault("QI_EVENTLOOP_MAX_TIMEOUTS", 20);
+    static unsigned int msTimeout = qi::os::getEnvDefault("QI_EVENTLOOP_PING_TIMEOUT", 500u);
+    static unsigned int msGrace = qi::os::getEnvDefault("QI_EVENTLOOP_GRACE_PERIOD", 0u);
+    static unsigned int maxTimeouts = qi::os::getEnvDefault("QI_EVENTLOOP_MAX_TIMEOUTS", 20u);
     ++_nThreads;
     boost::mutex mutex;
     boost::condition_variable cond;

@@ -67,7 +67,7 @@ TEST(TestStrand, StrandCancelScheduled)
   ASSERT_EQ(qi::FutureState_Canceled, f2.wait());
 }
 
-static void increment(boost::mutex& mutex, int waittime, boost::atomic<int>& i)
+static void increment(boost::mutex& mutex, int waittime, boost::atomic<unsigned int>& i)
 {
   boost::unique_lock<boost::mutex> lock(mutex, boost::try_to_lock);
   // we should never be called in parallel
@@ -77,7 +77,7 @@ static void increment(boost::mutex& mutex, int waittime, boost::atomic<int>& i)
   ++i;
 }
 
-static const int STRAND_NB_TRIES = 100;
+static const unsigned int STRAND_NB_TRIES = 100;
 
 TEST(TestStrand, AggressiveCancel)
 {
@@ -85,8 +85,8 @@ TEST(TestStrand, AggressiveCancel)
   std::vector<qi::Future<void> > futures;
 
   qi::Strand strand(*qi::getEventLoop());
-  boost::atomic<int> i(0);
-  for (int j = 0; j < STRAND_NB_TRIES; ++j)
+  boost::atomic<unsigned int> i(0);
+  for (unsigned int j = 0; j < STRAND_NB_TRIES; ++j)
   {
     qi::Future<void> f1 = strand.async(boost::bind<void>(&increment,
           boost::ref(mutex), 1, boost::ref(i)));
@@ -98,7 +98,7 @@ TEST(TestStrand, AggressiveCancel)
   BOOST_FOREACH(qi::Future<void>& future, futures)
     future.cancel();
 
-  int successCount = 0;
+  unsigned int successCount = 0;
   BOOST_FOREACH(qi::Future<void>& future, futures)
   {
     if (future.wait() != qi::FutureState_Canceled)
@@ -113,11 +113,11 @@ TEST(TestStrand, AggressiveCancel)
 TEST(TestStrand, StrandDestruction)
 {
   boost::mutex mutex;
-  boost::atomic<int> i(0);
+  boost::atomic<unsigned int> i(0);
 
   {
     qi::Strand strand(*qi::getEventLoop());
-    for (int j = 0; j < STRAND_NB_TRIES; ++j)
+    for (unsigned int j = 0; j < STRAND_NB_TRIES; ++j)
     {
       qi::Future<void> f1 = strand.async(boost::bind<void>(&increment,
             boost::ref(mutex), 1, boost::ref(i)));
@@ -131,11 +131,11 @@ TEST(TestStrand, StrandDestructionWithCancel)
 {
   boost::mutex mutex;
   std::vector<qi::Future<void> > futures;
-  boost::atomic<int> i(0);
+  boost::atomic<unsigned int> i(0);
 
   {
     qi::Strand strand(*qi::getEventLoop());
-    for (int j = 0; j < STRAND_NB_TRIES; ++j)
+    for (unsigned int j = 0; j < STRAND_NB_TRIES; ++j)
     {
       qi::Future<void> f1 = strand.async(boost::bind<void>(&increment,
             boost::ref(mutex), 1, boost::ref(i)));
@@ -148,7 +148,7 @@ TEST(TestStrand, StrandDestructionWithCancel)
       future.cancel();
   }
 
-  int successCount = 0;
+  unsigned int successCount = 0;
   BOOST_FOREACH(qi::Future<void>& future, futures)
   {
     if (future.wait() != qi::FutureState_Canceled)

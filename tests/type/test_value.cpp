@@ -218,15 +218,15 @@ TEST(Value, set)
   v.push_back(2);
   s = AnyReference::from(v).to<std::set<int> >();
   v2.insert(v2.end(), s.begin(), s.end());
-  ASSERT_EQ(v2.size(), 3);
-  EXPECT_EQ(v2[0], 1);
-  EXPECT_EQ(v2[1], 2);
-  EXPECT_EQ(v2[2], 3);
+  ASSERT_EQ(3u, v2.size());
+  EXPECT_EQ(1, v2[0]);
+  EXPECT_EQ(2, v2[1]);
+  EXPECT_EQ(3, v2[2]);
   v2 = AnyReference::from(s).to<std::vector<int> >();
-  ASSERT_EQ(v2.size(), 3);
-  EXPECT_EQ(v2[0], 1);
-  EXPECT_EQ(v2[1], 2);
-  EXPECT_EQ(v2[2], 3);
+  ASSERT_EQ(3u, v2.size());
+  EXPECT_EQ(1, v2[0]);
+  EXPECT_EQ(2, v2[1]);
+  EXPECT_EQ(3, v2[2]);
 }
 
 struct TStruct
@@ -427,7 +427,7 @@ TEST(Value, STL)
   v2.push_back(1);
   v2.push_back(100);
   // v has correct size
-  for (int i = 0; i < v2.size(); ++i) {
+  for (unsigned int i = 0; i < v2.size(); ++i) {
     gv[i].update(v2[i]);
   }
   //std::copy(v2.begin(), v2.end(), gv.begin());

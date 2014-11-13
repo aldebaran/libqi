@@ -74,14 +74,14 @@ TEST(TestSignature, BasicTypeSignature) {
 
 TEST(TestSignature, SignatureSize) {
   qi::Signature s("(iiii)");
-  EXPECT_EQ(4, s.children().size());
-  EXPECT_EQ(0, s.children().at(0).children().size());
+  EXPECT_EQ(4u, s.children().size());
+  EXPECT_EQ(0u, s.children().at(0).children().size());
 
   s = qi::Signature("[i]");
-  EXPECT_EQ(1, s.children().size());
+  EXPECT_EQ(1u, s.children().size());
 
   s = qi::Signature("{ii}");
-  EXPECT_EQ(2, s.children().size());
+  EXPECT_EQ(2u, s.children().size());
 }
 
 TEST(TestSignature, TypeConstRefPointerMix) {
