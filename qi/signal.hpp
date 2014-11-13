@@ -48,13 +48,33 @@ namespace qi {
     SignalSubscriber& connect(const SignalSubscriber& s);
     SignalSubscriber& connect(AnyObject object, const unsigned int slot);
     SignalSubscriber& connect(AnyObject object, const std::string& slot);
-    bool disconnectAll();
 
-    /** Disconnect a SignalHandler. The associated callback will not be called
-     * anymore as soon as this function returns, but might be called in an
-     * other thread while this function runs.
+    /** Disconnect all callbacks from signal.
+     *
+     * This function will block until all callbacks are finished.
+     */
+    bool disconnectAll();
+    /** Disconnect all callbacks from signal without waiting for them.
+     *
+     * This function does not block.
+     */
+    bool asyncDisconnectAll();
+
+    /** Disconnect a SignalHandler.
+     *
+     * The associated callback will not be called anymore as soon as this
+     * function returns.
+     *
+     * This method blocks until all the already running callbacks are
+     * finished.
      */
     bool disconnect(const SignalLink& link);
+
+    /** Disconnect a SignalHandler without waiting for it.
+     *
+     * Same as disconnect, but this method does not block.
+     */
+    bool asyncDisconnect(const SignalLink& link);
 
     /** Trigger the signal with given type-erased parameters.
     * @param params the signal arguments

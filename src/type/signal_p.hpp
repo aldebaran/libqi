@@ -24,9 +24,9 @@ namespace qi {
     {}
 
     ~SignalBasePrivate();
-    bool disconnect(const SignalLink& l);
+    bool disconnectAll(bool wait = true);
+    bool disconnect(const SignalLink& l, bool wait = true);
     bool disconnectTrackLink(const SignalLink& l);
-    bool reset();
 
   public:
     SignalBase::OnSubscribers      onSubscribers;
