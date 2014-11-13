@@ -38,7 +38,7 @@ namespace qi
     /** Create a new eventLoop.
      * You must then call either start(), run() or startThreadPool() to start event processing.
     */
-    EventLoop();
+    EventLoop(const std::string& name = "eventloop");
     ~EventLoop();
     /// Return true if current thread is the event loop thread.
     bool isInEventLoopThread();
@@ -85,6 +85,7 @@ namespace qi
     Future<void> monitorEventLoop(EventLoop* helper, uint64_t maxUsDelay);
 
     EventLoopPrivate *_p;
+    std::string       _name;
   };
 
   /// Return the global eventloop, created on demand on first call.
@@ -103,6 +104,13 @@ namespace qi
   QI_API QI_API_DEPRECATED EventLoop* getDefaultObjectEventLoop();
   /// Return a default thread pool context
   QI_API QI_API_DEPRECATED EventLoop* getDefaultThreadPoolEventLoop();
+
+  namespace detail {
+    /* when throw this thread will stop a thread of the eventloop
+     */
+    class TerminateThread {
+    };
+  };
 }
 
 #ifdef _MSC_VER
