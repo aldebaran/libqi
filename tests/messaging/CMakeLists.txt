@@ -14,6 +14,12 @@ install(TARGETS naoqi.testanymodulesession DESTINATION lib/naoqi COMPONENT test)
 
 qi_create_gtest(test_anymodule_service    SRC test_anymodule.cpp               DEPENDS QI  GTEST TIMEOUT 10)
 qi_create_gtest(test_url                  SRC test_url.cpp                  DEPENDS QI  GTEST TIMEOUT 10)
+qi_create_gtest(test_transportsocketcache SRC test_transportsocketcache.cpp
+  ../../src/messaging/messagedispatcher.cpp ../../src/messaging/transportserverasio_p.cpp
+  ../../src/messaging/remoteobject.cpp ../../src/messaging/objecthost.cpp
+  ../../src/messaging/boundobject.cpp ../../src/messaging/transportsocketcache.cpp
+  ../../src/messaging/message.cpp ../../src/messaging/transportserver.cpp
+  ../../src/messaging/tcptransportsocket.cpp ../../src/messaging/transportsocket.cpp DEPENDS QI TIMEOUT 5)
 #qi_create_gtest(test_message_visitor     SRC test_message_visitor.cpp      DEPENDS QI  GTEST TIMEOUT 120)
 #Not working yet
 #qi_create_gtest(test_value               SRC test_value.cpp                DEPENDS QI  GTEST TIMEOUT 120)

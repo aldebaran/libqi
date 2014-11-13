@@ -217,8 +217,8 @@ namespace qi {
     void         cow();
   };
 
-  QI_API std::ostream& operator<<(std::ostream& os, const qi::MessageAddress &address);
-  QI_API std::ostream& operator<<(std::ostream& os, const qi::Message& msg);
+  std::ostream& operator<<(std::ostream& os, const qi::MessageAddress &address);
+  std::ostream& operator<<(std::ostream& os, const qi::Message& msg);
 }
 
 QI_TYPE_CONCRETE(qi::Message);
