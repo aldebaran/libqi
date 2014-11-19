@@ -90,6 +90,12 @@ namespace qi
     /// return the path as a string
     std::string str() const;
 
+    /// return the path as a wide string
+    operator std::wstring() const;
+
+    /// return the path as a wide string
+    std::wstring wstr() const;
+
     /// concat two paths adding a directory separator between them
     Path operator/(const qi::Path& rhs) const;
 
