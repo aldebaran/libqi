@@ -56,6 +56,12 @@ namespace qi
     : _p(new PrivatePath(path._p->path))
   {}
 
+  Path::Path(const bfs::path& path)
+    : _p(new PrivatePath(path))
+  {
+
+  }
+
   Path::~Path()
   {
   }

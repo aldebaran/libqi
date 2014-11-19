@@ -15,6 +15,10 @@
 # include <boost/scoped_ptr.hpp>
 # include <qi/api.hpp>
 
+namespace boost { namespace filesystem {
+  class path;
+}}
+
 namespace qi
 {
 
@@ -38,6 +42,8 @@ namespace qi
 
     /// Copy Constructor
     Path(const Path& path);
+
+    Path(const boost::filesystem::path& path);
 
     /// Default destructor
     ~Path();
