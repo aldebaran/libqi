@@ -72,12 +72,29 @@ namespace qi {
     }
   }
 
+  static bool localhost_first(const Url& lh, const Url&)
+  {
+    return lh.host().compare(0,4,"127.") == 0 || lh.host().compare(0, 9, "localhost") == 0;
+  }
+
+  static bool localhost_last(const Url& lh, const Url& rh)
+  {
+    return !localhost_first(lh, rh);
+  }
+
   qi::Future<qi::TransportSocketPtr> TransportSocketCache::socket(const ServiceInfo& servInfo,
                                                                   const std::string protocol) {
+    qi::UrlVector sortedEndpoints = servInfo.endpoints();
     qi::UrlVector endpoints;
     qi::UrlVector::const_iterator urlIt;
 
     bool local = servInfo.machineId() == qi::os::getMachineId();
+
+    if (local)
+      std::sort(sortedEndpoints.begin(), sortedEndpoints.end(), &localhost_first);
+    else
+      std::sort(sortedEndpoints.begin(), sortedEndpoints.end(), &localhost_last);
+
     qiLogDebug() << "local check " << servInfo.machineId() << " " <<  qi::os::getMachineId() << " " << local;
     // RFC 3330 - http://tools.ietf.org/html/rfc3330
     //   -> 127.0.0.0/8 is assigned to loopback address.
@@ -85,24 +102,24 @@ namespace qi {
     // This filters endpoints. If we are on the same machine, we just try to
     // connect on the loopback address, else we will try on all endpoints we
     // have that are not loopback.
-    for (urlIt = servInfo.endpoints().begin(); urlIt != servInfo.endpoints().end(); ++urlIt) {
+    for (urlIt = sortedEndpoints.begin(); urlIt != sortedEndpoints.end(); ++urlIt) {
       qi::Url url = *urlIt;
       qiLogDebug() << "testing url " << url.str();
       if (!url.isValid())
         continue;
       if (url.host().substr(0, 4) == "127." || url.host() == "localhost") {
-        if (local && (protocol == "" || url.protocol() == protocol)) {
+        if (protocol == "" || url.protocol() == protocol) {
           endpoints.push_back(url);
           break;
         }
-      } else if (!local) {
+      } else {
         endpoints.push_back(url);
       }
     }
     if (endpoints.empty() && local && !servInfo.endpoints().empty())
     { // We are local, but localhost is not listed in endpoints.
       // Just take any entry, it has to be one of our public IP addresses
-      endpoints.push_back(servInfo.endpoints().front());
+      endpoints.push_back(sortedEndpoints.front());
     }
     if (endpoints.empty())
       qiLogWarning() << "No more endpoints available after filtering.";
