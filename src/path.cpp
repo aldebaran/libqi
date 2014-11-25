@@ -33,10 +33,6 @@ namespace qi
       : path(unicodePath, qi::unicodeFacet())
     {}
 
-    PrivatePath(const std::wstring& unicodePath)
-      : path(unicodePath, qi::unicodeFacet())
-    {}
-
     PrivatePath(const bfs::path& path)
       : path(path)
     {}
@@ -52,18 +48,9 @@ namespace qi
     : _p(new PrivatePath(unicodePath))
   {}
 
-  Path::Path(const std::wstring& unicodePath)
-    : _p(new PrivatePath(unicodePath))
-  {}
-
   Path::Path(const char* unicodePath)
     : _p(new PrivatePath(std::string(unicodePath)))
   {}
-
-  Path::Path(const wchar_t* unicodePath)
-    : _p(new PrivatePath(std::wstring(unicodePath)))
-  {
-  }
 
   Path::Path(const Path& path)
     : _p(new PrivatePath(path._p->path))
@@ -190,14 +177,9 @@ namespace qi
     return _p->path.string(qi::unicodeFacet());
   }
 
-  Path::operator std::wstring() const
+  const boost::filesystem::path& Path::bfsPath() const
   {
-    return _p->path.wstring(qi::unicodeFacet());
-  }
-
-  std::wstring Path::wstr() const
-  {
-    return _p->path.wstring(qi::unicodeFacet());
+    return _p->path;
   }
 
 

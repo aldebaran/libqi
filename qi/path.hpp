@@ -38,17 +38,12 @@ namespace qi
     Path(const std::string& unicodePath = std::string());
 
     /// \param unicodePath Path
-    Path(const std::wstring& unicodePath);
-
-    /// \param unicodePath Path
     Path(const char* unicodePath);
-
-    /// \param unicodePath Path
-    Path(const wchar_t* unicodePath);
 
     /// Copy Constructor
     Path(const Path& path);
 
+    /// Copy Constructor from boost filesystem.
     Path(const boost::filesystem::path& path);
 
     /// Default destructor
@@ -96,11 +91,8 @@ namespace qi
     /// return the path as a string
     std::string str() const;
 
-    /// return the path as a wide string
-    operator std::wstring() const;
-
-    /// return the path as a wide string
-    std::wstring wstr() const;
+    /// return the path as a boost path representation
+    const boost::filesystem::path& bfsPath() const;
 
     /// concat two paths adding a directory separator between them
     Path operator/(const qi::Path& rhs) const;
