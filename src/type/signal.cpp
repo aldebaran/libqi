@@ -43,7 +43,8 @@ namespace qi {
   }
 
   SignalSubscriber::SignalSubscriber(const SignalSubscriber& b)
-  : target(0)
+  : enable_shared_from_this()
+  , target(0)
   {
     *this = b;
   }

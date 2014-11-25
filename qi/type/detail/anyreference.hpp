@@ -348,6 +348,7 @@ class QI_API AutoAnyReference: public AnyReference
 public:
   AutoAnyReference () {}
   AutoAnyReference(const AutoAnyReference& b)
+    : AnyReference()
   {
     _value = b._value;
     _type = b._type;
