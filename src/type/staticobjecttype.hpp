@@ -70,8 +70,8 @@ public:
   virtual qi::Future<SignalLink> connect(void* instance, AnyObject context, unsigned int event, const SignalSubscriber& subscriber);
   /// Disconnect an event link. Returns if disconnection was successful.
   virtual qi::Future<void> disconnect(void* instance, AnyObject context, SignalLink linkId);
-  virtual qi::Future<AnyValue> property(void* instance, unsigned int id);
-  virtual qi::Future<void> setProperty(void* instance, unsigned int id, AnyValue value);
+  virtual qi::Future<AnyValue> property(void* instance, AnyObject context, unsigned int id);
+  virtual qi::Future<void> setProperty(void* instance, AnyObject context, unsigned int id, AnyValue value);
 
   virtual const std::vector<std::pair<TypeInterface*, int> >& parentTypes();
   virtual void* initializeStorage(void*);
@@ -82,6 +82,8 @@ public:
 private:
   MetaObject     _metaObject;
   ObjectTypeData _data;
+
+  ExecutionContext* getExecutionContext(void* instance, qi::AnyObject context, MetaCallType methodThreadingModel = MetaCallType_Auto);
 };
 
 }

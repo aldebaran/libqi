@@ -542,14 +542,14 @@ namespace qi {
     //          cant be reconnected
   }
 
- qi::Future<AnyValue> RemoteObject::metaProperty(unsigned int id)
+ qi::Future<AnyValue> RemoteObject::metaProperty(qi::AnyObject context, unsigned int id)
  {
    qiLogDebug() << "bouncing property";
    // FIXME: perform some validations on this end?
    return _self.async<AnyValue>("property", id);
  }
 
- qi::Future<void> RemoteObject::metaSetProperty(unsigned int id, AnyValue val)
+ qi::Future<void> RemoteObject::metaSetProperty(qi::AnyObject context, unsigned int id, AnyValue val)
  {
    qiLogDebug() << "bouncing setProperty";
    return _self.async<void>("setProperty", id, val);

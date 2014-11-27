@@ -29,12 +29,13 @@ public:
       qi::SteadyClockTimePoint tp) = 0;
   /// call a callback asynchronously to be executed in delay
   virtual qi::Future<void> async(const boost::function<void()>& callback,
-      qi::Duration delay) = 0;
+      qi::Duration delay = qi::Duration(0)) = 0;
   /// call a callback asynchronously to be executed in delay
   template <typename R>
   typename boost::disable_if<boost::is_same<R, void>,
                               qi::Future<R> >::type
-      async(const boost::function<R()>& callback, qi::Duration delay);
+      async(const boost::function<R()>& callback,
+          qi::Duration delay = qi::Duration(0));
   /// call a callback asynchronously to be executed on tp
   template <typename R>
   typename boost::disable_if<boost::is_same<R, void>,

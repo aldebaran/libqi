@@ -440,7 +440,7 @@ qi::FutureSync<T> GenericObject::property(const std::string& name)
   int pid = metaObject().propertyId(name);
   if (pid < 0)
     return makeFutureError<T>("Property not found");
-  qi::Future<AnyValue> f = type->property(value, pid);
+  qi::Future<AnyValue> f = property(pid);
   qi::Promise<T> p;
   f.connect(boost::bind(&detail::futureAdapterVal<T>,_1, p),
       FutureCallbackType_Sync);
@@ -453,7 +453,7 @@ qi::FutureSync<void> GenericObject::setProperty(const std::string& name, const T
   int pid = metaObject().propertyId(name);
   if (pid < 0)
     return makeFutureError<void>("Property not found");
-  return type->setProperty(value, pid, AnyValue::from(val));
+  return setProperty(pid, AnyValue::from(val));
 }
 
 /* An AnyObject is actually of a Dynamic type: The underlying TypeInterface*

@@ -51,8 +51,8 @@ namespace qi {
     virtual qi::Future<void> disconnect(void* instance, AnyObject context, SignalLink linkId)=0;
     /// @return parent types with associated poniter offset
     virtual const std::vector<std::pair<TypeInterface*, int> >& parentTypes() = 0;
-    virtual qi::Future<AnyValue> property(void* instance, unsigned int id) = 0;
-    virtual qi::Future<void> setProperty(void* instance, unsigned int id, AnyValue value) = 0;
+    virtual qi::Future<AnyValue> property(void* instance, AnyObject context, unsigned int id) = 0;
+    virtual qi::Future<void> setProperty(void* instance, AnyObject context, unsigned int id, AnyValue value) = 0;
     virtual TypeKind kind() { return TypeKind_Object;}
     /// @return -1 if there is no inheritance, or the pointer offset
     int inherits(TypeInterface* other);

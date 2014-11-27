@@ -388,7 +388,7 @@ namespace qi {
     else if (prop.kind() == TypeKind_Int)
     { // missing accessor, go to bacend
       GenericObject* go = _object.asGenericObject();
-      return go->type->property(go->value, prop.toUInt());
+      return go->type->property(go->value, _object, prop.toUInt());
     }
     else
       throw std::runtime_error("Expected int or string for property index");
@@ -402,7 +402,7 @@ namespace qi {
     else if (prop.kind() == TypeKind_Int)
     {
       GenericObject* go = _object.asGenericObject();
-      result = go->type->setProperty(go->value, prop.toUInt(), val);
+      result = go->type->setProperty(go->value, _object, prop.toUInt(), val);
     }
     else
       throw std::runtime_error("Expected int or string for property index");

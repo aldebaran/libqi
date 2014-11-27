@@ -74,17 +74,17 @@ public:
     static std::vector<std::pair<TypeInterface*, int> > empty;
     return empty;
   }
-  virtual qi::Future<AnyValue> property(void* instance, unsigned int id)
+  virtual qi::Future<AnyValue> property(void* instance, AnyObject context, unsigned int id)
   {
     Proxy* ptr = toProxy(instance);
     GenericObject* obj = ptr->asObject().asGenericObject();
-    return obj->type->property(obj->value, id);
+    return obj->type->property(obj->value, context, id);
   }
-  virtual qi::Future<void> setProperty(void* instance, unsigned int id, AnyValue value)
+  virtual qi::Future<void> setProperty(void* instance, AnyObject context, unsigned int id, AnyValue value)
   {
     Proxy* ptr = toProxy(instance);
     GenericObject* obj = ptr->asObject().asGenericObject();
-    return obj->type->setProperty(obj->value, id, value);
+    return obj->type->setProperty(obj->value, context, id, value);
   }
   typedef DefaultTypeImplMethods<Proxy> Methods;
   _QI_BOUNCE_TYPE_METHODS(Methods);

@@ -11,6 +11,7 @@
 #include <qi/actor.hpp>
 #include <qi/log.hpp>
 #include <qi/anyobject.hpp>
+#include <qi/type/dynamicobjectbuilder.hpp>
 #include <gtest/gtest.h>
 
 qiLogCategory("test");
@@ -180,21 +181,59 @@ struct MyActor : qi::Actor
   MyActor() : calling(0) {}
   void f(int end, qi::Promise<void> finished)
   {
+    int startval = prop.get();
     ASSERT_FALSE(calling);
     calling = true;
     qi::os::msleep(5);
     ASSERT_TRUE(calling);
     calling = false;
+    ASSERT_EQ(startval, prop.get());
     if (++callcount == end + 1)
       finished.setValue(0);
   }
   qi::Signal<int> sig;
+  qi::Property<int> prop;
 };
-QI_REGISTER_OBJECT(MyActor, f, sig);
+QI_REGISTER_OBJECT(MyActor, f, sig, prop);
 
-TEST(TestStrand, AllFutureSignalPeriodicTaskAsyncTypeErased)
+TEST(TestStrand, AllFutureSignalPropertyPeriodicTaskAsyncTypeErasedDynamic)
+{
+  static const int TOTAL = 50;
+  srand(1828);
+
+  callcount = 0;
+  {
+    boost::shared_ptr<MyActor> obj(new MyActor);
+
+    qi::DynamicObjectBuilder builder;
+    builder.setThreadingModel(qi::ObjectThreadingModel_SingleThread);
+    builder.advertiseMethod("f",
+        boost::function<void(int, qi::Promise<void>)>(boost::bind(&MyActor::f, obj, _1, _2)));
+    builder.advertiseSignal("sig", &obj->sig);
+    builder.advertiseProperty("prop", &obj->prop);
+
+    qi::AnyObject aobj(builder.object());
+
+    qi::Promise<void> finished;
+
+    for (int i = 0; i < 25; ++i)
+      aobj.async<void>("f", TOTAL, finished);
+    for (int i = 0; i < 50; ++i)
+      aobj.setProperty("prop", rand());
+    QI_EMIT obj->sig(TOTAL);
+    // we need one more call (the second test expects a periodic task to run at
+    // least once)
+    for (int i = 0; i < 26; ++i)
+      aobj.async<void>("f", TOTAL, finished);
+    finished.future().wait();
+  }
+  ASSERT_EQ(TOTAL + 1, callcount);
+}
+
+TEST(TestStrand, AllFutureSignalPropertyPeriodicTaskAsyncTypeErased)
 {
   static const int TOTAL = 250;
+  srand(1828);
 
   callcount = 0;
   {
@@ -221,6 +260,8 @@ TEST(TestStrand, AllFutureSignalPeriodicTaskAsyncTypeErased)
       aobj.async<void>("f", TOTAL, finished);
     for (int i = 0; i < 25; ++i)
       qi::async<void>(&MyActor::f, obj, TOTAL, finished);
+    for (int i = 0; i < 50; ++i)
+      aobj.setProperty("prop", rand());
     prom.setValue(0);
     QI_EMIT signal();
     QI_EMIT obj->sig(TOTAL);

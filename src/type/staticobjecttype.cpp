@@ -64,27 +64,7 @@ StaticObjectTypeBase::metaCall(void* instance, AnyObject context, unsigned int m
 
   MetaCallType methodThreadingModel = i->second.second;
 
-  ExecutionContext* ec = context.executionContext();
-  if (_data.threadingModel == ObjectThreadingModel_SingleThread)
-  {
-    // execute queued methods on global eventloop if they are of queued type
-    if (methodThreadingModel == MetaCallType_Queued)
-      ec = 0;
-    else if (!ec)
-    {
-      boost::shared_ptr<Manageable> manageable = context.managedObjectPtr();
-      boost::mutex::scoped_lock l(manageable->initMutex());
-      if (!manageable->executionContext())
-      {
-        if (_data.strandAccessor)
-          manageable->forceExecutionContext(boost::shared_ptr<qi::Strand>(_data.strandAccessor.call<qi::Strand*>(instance), &noopDeleter<qi::Strand>));
-        else
-          manageable->forceExecutionContext(boost::shared_ptr<qi::Strand>(
-                new qi::Strand(*::qi::getEventLoop())));
-      }
-      ec = context.executionContext();
-    }
-  }
+  ExecutionContext* ec = getExecutionContext(instance, context, methodThreadingModel);
 
   AnyFunction method = i->second.first;
   AnyReference self;
@@ -104,6 +84,34 @@ StaticObjectTypeBase::metaCall(void* instance, AnyObject context, unsigned int m
   return ::qi::metaCall(ec, _data.threadingModel, methodThreadingModel, callType, context, methodId, method, p2, true);
 }
 
+ExecutionContext* StaticObjectTypeBase::getExecutionContext(
+    void* instance, qi::AnyObject context, MetaCallType methodThreadingModel)
+{
+  ExecutionContext* ec = context.executionContext();
+  if (_data.threadingModel == ObjectThreadingModel_SingleThread)
+  {
+    // execute queued methods on global eventloop if they are of queued type
+    if (methodThreadingModel == MetaCallType_Queued)
+      ec = 0;
+    else if (!ec)
+    {
+      boost::shared_ptr<Manageable> manageable = context.managedObjectPtr();
+      boost::mutex::scoped_lock l(manageable->initMutex());
+      if (!manageable->executionContext())
+      {
+        if (_data.strandAccessor)
+          manageable->forceExecutionContext(boost::shared_ptr<qi::Strand>(
+                _data.strandAccessor.call<qi::Strand*>(instance),
+                &noopDeleter<qi::Strand>));
+        else
+          manageable->forceExecutionContext(boost::shared_ptr<qi::Strand>(
+                new qi::Strand(*::qi::getEventLoop())));
+      }
+      ec = context.executionContext();
+    }
+  }
+  return ec;
+}
 
 static PropertyBase* property(ObjectTypeData& data, void* instance, unsigned int signal)
 {
@@ -203,32 +211,45 @@ qi::Future<void> StaticObjectTypeBase::disconnect(void* instance, AnyObject cont
   return qi::Future<void>(0);
 }
 
-qi::Future<AnyValue> StaticObjectTypeBase::property(void* instance, unsigned int id)
+qi::Future<AnyValue> StaticObjectTypeBase::property(void* instance, AnyObject context, unsigned int id)
 {
   PropertyBase* p = ::qi::property(_data, instance, id);
   if (!p)
-    return qi::makeFutureError<AnyValue>("Cant find event");
-  return qi::Future<AnyValue>(p->value());
+    return qi::makeFutureError<AnyValue>("Cant find property");
+  ExecutionContext* ec = getExecutionContext(instance, context);
+  if (ec)
+    return ec->async<AnyValue>(boost::bind(&PropertyBase::value, p));
+  else
+    return qi::Future<AnyValue>(p->value());
 }
 
-qi::Future<void> StaticObjectTypeBase::setProperty(void* instance, unsigned int id, AnyValue value)
+static void setPropertyValue(PropertyBase* property, AnyValue value)
+{
+  property->setValue(value.asReference());
+}
+
+qi::Future<void> StaticObjectTypeBase::setProperty(void* instance, AnyObject context, unsigned int id, AnyValue value)
 {
   PropertyBase* p = ::qi::property(_data, instance, id);
   if (!p)
-    return qi::makeFutureError<void>("Cant find event");
+    return qi::makeFutureError<void>("Cant find property");
   qiLogDebug() << "SetProperty " << id << " " << encodeJSON(value);
-  try
+  ExecutionContext* ec = getExecutionContext(instance, context);
+  if (ec)
+    return ec->async(boost::bind(&setPropertyValue, p, value));
+  else
   {
-    p->setValue(value.asReference());
+    try
+    {
+      p->setValue(value.asReference());
+    }
+    catch(const std::exception& e)
+    {
+      return qi::makeFutureError<void>(std::string("setProperty: ") + e.what());
+    }
+    return qi::Future<void>(0);
   }
-  catch(const std::exception& e)
-  {
-    return qi::makeFutureError<void>(std::string("setProperty: ") + e.what());
-  }
-  return qi::Future<void>(0);
 }
-
-
 
 const std::vector<std::pair<TypeInterface*, int> >& StaticObjectTypeBase::parentTypes()
 {
