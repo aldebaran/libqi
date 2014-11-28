@@ -15,12 +15,12 @@ namespace qi {
   ServiceDirectoryClient::ServiceDirectoryClient()
     : Trackable<ServiceDirectoryClient>(this)
     , _sdSocketDisconnectedSignalLink(0)
-    , _remoteObject(qi::Message::Service_ServiceDirectory)
+    , _remoteObject(new RemoteObject(qi::Message::Service_ServiceDirectory))
     , _addSignalLink(0)
     , _removeSignalLink(0)
     , _localSd(false)
   {
-    _object = makeDynamicAnyObject(&_remoteObject, false);
+    _object = makeDynamicAnyObject(_remoteObject, true);
 
     connected.setCallType(MetaCallType_Direct);
     disconnected.setCallType(MetaCallType_Direct);
@@ -87,7 +87,7 @@ namespace qi {
       fdc.connect(&qi::Promise<void>::setError, promise, future.error());
       return;
     }
-    qi::Future<void> fut = _remoteObject.fetchMetaObject();
+    qi::Future<void> fut = _remoteObject->fetchMetaObject();
     fut.connect(&ServiceDirectoryClient::onMetaObjectFetched, this, _1, promise);
   }
 
@@ -103,7 +103,7 @@ namespace qi {
     if (!_sdSocket)
       return qi::makeFutureError<void>(std::string("unrecognized protocol '") + serviceDirectoryURL.protocol() + "' in url '" + serviceDirectoryURL.str() + "'");
     _sdSocketDisconnectedSignalLink = _sdSocket->disconnected.connect(&ServiceDirectoryClient::onSocketDisconnected, this, _1);
-    _remoteObject.setTransportSocket(_sdSocket);
+    _remoteObject->setTransportSocket(_sdSocket);
 
     qi::Promise<void> promise;
     qi::Future<void> fut = _sdSocket->connect(serviceDirectoryURL);
@@ -178,7 +178,7 @@ namespace qi {
       // Manually trigger close on our remoteobject or it will be called
       // asynchronously from socket.disconnected signal, and we would need to
       // wait fo it.
-      _remoteObject.close();
+      _remoteObject->close();
       fut = socket->disconnect();
 
       // Hold the socket shared ptr alive until the future returns.
