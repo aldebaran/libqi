@@ -259,6 +259,8 @@ namespace qi {
       try
       {
         f();
+        tracepoint(qi_qi, eventloop_task_stop, id);
+        p.setValue(0);
       }
       catch (const detail::TerminateThread& e)
       {
@@ -274,9 +276,6 @@ namespace qi {
         tracepoint(qi_qi, eventloop_task_error, id);
         p.setError("unknown error");
       }
-
-      tracepoint(qi_qi, eventloop_task_stop, id);
-      p.setValue(0);
     }
     else
     {
