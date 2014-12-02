@@ -60,11 +60,13 @@ set(QI_H qi/detail/clock.hxx
          qi/detail/future.hxx
          qi/detail/future_fwd.hpp
          qi/detail/executioncontext.hpp
+         qi/detail/mpl.hpp
          qi/detail/log.hxx
          qi/detail/trackable.hxx
          qi/detail/warn_push_ignore_deprecated.hpp
          qi/detail/warn_pop_ignore_deprecated.hpp
          qi/api.hpp
+         qi/actor.hpp
          qi/application.hpp
          qi/atomic.hpp
          qi/buffer.hpp
@@ -82,6 +84,7 @@ set(QI_H qi/detail/clock.hxx
          qi/types.hpp
          qi/path.hpp
          qi/periodictask.hpp
+         qi/qi.hpp
          qi/stats.hpp
          qi/trackable.hpp
          qi/eventloop.hpp
