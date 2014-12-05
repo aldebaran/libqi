@@ -434,7 +434,7 @@ namespace qi
    *
    * This class allow conversion between UTF-8 (char) and UTF-16/UTF-32 (wchar).
    */
-  QI_API const codecvt_type &unicodeFacet();
+  QI_API codecvt_type &unicodeFacet();
 }
 
 #endif  // _QI_PATH_HPP_
