@@ -114,7 +114,7 @@ namespace qi {
   void Server::onMessageReadyNotAuthenticated(const Message &msg, TransportSocketPtr socket, AuthProviderPtr auth,
                                               boost::shared_ptr<bool> first, SignalSubscriberPtr oldSignal)
   {
-    qiLogInfo() << "Starting auth message";
+    qiLogVerbose() << "Starting auth message";
     int id = msg.id();
     int service = msg.service();
     int function = msg.action();
@@ -140,18 +140,18 @@ namespace qi {
         reply.setError(err.str());
         socket->send(reply);
         socket->disconnect();
-        qiLogInfo() << err.str();
+        qiLogVerbose() << err.str();
       }
       else
       {
-        qiLogInfo() << "Authentication is not enforced. Skipping...";
+        qiLogVerbose() << "Authentication is not enforced. Skipping...";
         socket->messageReady.connect(&Server::onMessageReady, this, _1, socket);
         onMessageReady(msg, socket);
       }
       return;
     }
     // the socket now contains the remote capabilities in socket->remoteCapabilities()
-    qiLogInfo() << "Authenticating client " << socket->remoteEndpoint().str() << "...";
+    qiLogVerbose() << "Authenticating client " << socket->remoteEndpoint().str() << "...";
 
     AnyReference cmref = msg.value(typeOf<CapabilityMap>()->signature(), socket);
     CapabilityMap authData = cmref.to<CapabilityMap>();
@@ -163,7 +163,7 @@ namespace qi {
     switch (state)
     {
     case AuthProvider::State_Done:
-      qiLogInfo() << "Client " << socket->remoteEndpoint().str() << " successfully authenticated.";
+      qiLogVerbose() << "Client " << socket->remoteEndpoint().str() << " successfully authenticated.";
       socket->messageReady.disconnect(*oldSignal);
       socket->messageReady.connect(&Server::onMessageReady, this, _1, socket);
     case AuthProvider::State_Cont:
@@ -187,12 +187,12 @@ namespace qi {
       }
       reply.setType(Message::Type_Error);
       reply.setError(builder.str());
-      qiLogInfo() << builder.str();
+      qiLogVerbose() << builder.str();
       socket->send(reply);
       socket->disconnect();
       }
     }
-    qiLogInfo() << "Auth ends";
+    qiLogVerbose() << "Auth ends";
   }
 
   void Server::onMessageReady(const qi::Message &msg, TransportSocketPtr socket) {
