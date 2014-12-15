@@ -17,23 +17,108 @@
 
 namespace qi {
 
+namespace detail {
+
+  template <typename T, typename R>
+  struct Continuate
+  {
+    inline static void _continuate(const Future<T>& future,
+        const boost::function<R(const Future<T>&)>& func,
+        Promise<R>& promise)
+    {
+      R r;
+      try
+      {
+        r = func(future);
+      }
+      catch (std::exception& e)
+      {
+        promise.setError(e.what());
+        return;
+      }
+      catch (...)
+      {
+        promise.setError("unknown exception");
+        return;
+      }
+
+      // TODO c++11 move
+      promise.setValue(r);
+    }
+  };
+
   template <typename T>
+  struct Continuate<T, void>
+  {
+    inline static void _continuate(const Future<T>& future,
+        const boost::function<void(const Future<T>&)>& func,
+        Promise<void>& promise)
+    {
+      try
+      {
+        func(future);
+      }
+      catch (std::exception& e)
+      {
+        promise.setError(e.what());
+        return;
+      }
+      catch (...)
+      {
+        promise.setError("unknown exception");
+        return;
+      }
+
+      promise.setValue(0);
+    }
+  };
+
+  template <typename T>
+  inline void forwardCancel(
+      const boost::weak_ptr<FutureBaseTyped<T> >& wfutureb)
+  {
+    boost::shared_ptr<FutureBaseTyped<T> > futureb = wfutureb.lock();
+    if (!futureb)
+      return;
+    Future<T>(futureb).cancel();
+  }
+
+} // namespace detail
+
+  template <typename T>
+  template <typename R>
+  inline Future<R> Future<T>::thenR(
+      FutureCallbackType type,
+      const boost::function<R(const Future<T>&)>& func)
+  {
+    qi::Promise<R> promise(
+        this->isCancelable()
+        ? boost::bind(&detail::forwardCancel<T>,
+            boost::weak_ptr<detail::FutureBaseTyped<T> >(_p))
+        : boost::function<void(qi::Promise<R>)>());
+    _p->connect(*this, boost::bind(&detail::Continuate<T, R>::_continuate, _1,
+          func, promise), type);
+    return promise.future();
+  }
+
+  template <typename T>
+  template <typename Arg>
   inline void Future<T>::binder(
       const boost::function<void(const boost::function<void()>&)>& poster,
-      const boost::function<void(Future<T>)>& callback, Future<T> fut)
+      const boost::function<void(const Arg&)>& callback, const Arg& fut)
   {
     return poster(boost::bind(callback, fut));
   }
 
-
   template <typename T>
-  inline boost::function<void(const Future<T>&)>
+  template <typename Arg>
+  inline boost::function<void(const Arg&)>
       Future<T>::transformStrandedCallback(
           qi::Strand* strand,
-          const boost::function<void(const Future<T>&)>& cb)
+          const boost::function<void(const Arg&)>& cb)
   {
     return boost::bind(
-        &Future<T>::binder,
+        &Future<T>::binder<Arg>,
         boost::function<void(const boost::function<void()>&)>(
           boost::bind(
             &qi::Strand::post,
@@ -53,7 +138,7 @@ namespace qi {
     _p->connect(*this,
                 qi::trackWithFallback(
                     boost::function<void()>(),
-                    transformStrandedCallback(
+                    transformStrandedCallback<qi::Future<T> >(
                         detail::Unwrap<ARG0>::unwrap(arg0)->strand(), cb),
                     arg0),
                 FutureCallbackType_Sync);
@@ -68,6 +153,33 @@ namespace qi {
           FutureCallbackType type)
   {
     _p->connect(*this, cb, type);
+  }
+
+  template <typename T>
+  template <typename R, typename ARG0, typename AF>
+  typename boost::enable_if<
+      boost::is_base_of<Actor, typename detail::Unwrap<ARG0>::type>,
+      qi::Future<R> >::type
+      Future<T>::_thenMaybeActor(const ARG0& arg0,
+                         const AF& cb,
+                         FutureCallbackType type)
+  {
+    return thenR(FutureCallbackType_Sync, qi::trackWithFallback(
+          boost::function<void()>(),
+          transformStrandedCallback<typename qi::Future<T>::ValueType>(
+            detail::Unwrap<ARG0>::unwrap(arg0)->strand(), cb),
+          arg0));
+  }
+  template <typename T>
+  template <typename R, typename ARG0, typename AF>
+  typename boost::disable_if<
+      boost::is_base_of<Actor, typename detail::Unwrap<ARG0>::type>,
+      qi::Future<R> >::type
+      Future<T>::_thenMaybeActor(const ARG0& arg0,
+                         const AF& cb,
+                         FutureCallbackType type)
+  {
+    return thenR(type, cb);
   }
 
   namespace detail {

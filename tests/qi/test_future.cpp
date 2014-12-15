@@ -851,6 +851,24 @@ TEST(TestFutureCancel, Canceled)
   ASSERT_TRUE(f.isCanceled());
 }
 
+int get42() { return 42; }
+int assinc(const qi::Future<int>& f, int exp)
+{
+  int val = 0;
+  EXPECT_NO_THROW(val = f.value());
+  EXPECT_EQ(exp, val);
+  return val+1;
+}
+
+TEST_F(TestFuture, ThenR)
+{
+  qi::Future<int> f = qi::async<int>(&get42);
+  qi::Future<int> ff = f.thenR<int>(&assinc, _1, 42);
+  qi::Future<int> fff = ff.thenR<int>(&assinc, _1, 43);
+
+  ASSERT_EQ(44, fff.value());
+}
+
 // ===== FutureBarrier =========================================================
 #define BARRIER_N 10
 
@@ -1244,8 +1262,6 @@ TEST(TestPeriodicTask, TriggerStartStop)
     pt.stop();
   }
 }
-
-int get42() { return 42; }
 
 TEST(EventLoop, asyncFast)
 {

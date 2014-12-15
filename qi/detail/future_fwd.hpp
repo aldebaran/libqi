@@ -291,6 +291,36 @@ namespace qi {
       return _p->isCancelable();
     }
 
+    template <typename R>
+    Future<R> thenR(
+        FutureCallbackType type,
+        const boost::function<R(const Future<T>&)>& func);
+
+    template <typename R>
+    Future<R> thenR(
+        const boost::function<R(const Future<T>&)>& func)
+    {
+      return this->thenR(FutureCallbackType_Async, func);
+    }
+
+#define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)                \
+  template <typename R, typename AF, typename ARG0 comma ATYPEDECL>                   \
+  Future<R> thenR(const AF& func,       \
+                 const ARG0& arg0 comma ADECL)                           \
+  {                                                                      \
+    return this->thenR<R>(FutureCallbackType_Async, func, arg0 comma AUSE); \
+  }                                                                      \
+  template <typename R, typename AF, typename ARG0 comma ATYPEDECL>                   \
+  Future<R> thenR(FutureCallbackType type,                               \
+                 const AF& func,        \
+                 const ARG0& arg0 comma ADECL)                           \
+  {                                                                      \
+    return _thenMaybeActor<R, ARG0>(                                     \
+        arg0, ::qi::bind<R(const Future<T>&)>(func, arg0 comma AUSE), type); \
+  }
+    QI_GEN(genCall)
+#undef genCall
+
   public: //Signals
     typedef boost::function<void (Future<T>) > Connection;
 
@@ -370,13 +400,15 @@ namespace qi {
         boost::weak_ptr<detail::FutureBaseTyped<FT> > wf);
 
   private:
+    template <typename Arg>
     static void binder(
         const boost::function<void(const boost::function<void()>&)>& poster,
-        const boost::function<void(Future<T>)>& callback, Future<T> fut);
+        const boost::function<void(const Arg&)>& callback, const Arg& fut);
 
-    boost::function<void(const Future<T>&)> transformStrandedCallback(
+    template <typename Arg>
+    boost::function<void(const Arg&)> transformStrandedCallback(
         qi::Strand* strand,
-        const boost::function<void(const Future<T>&)>& cb);
+        const boost::function<void(const Arg&)>& cb);
 
     template <typename ARG0>
     typename boost::enable_if<
@@ -392,6 +424,26 @@ namespace qi {
         _connectMaybeActor(const ARG0& arg0,
                            const boost::function<void(const Future<T>&)>& cb,
                            FutureCallbackType type);
+
+    template <typename R>
+    static void _continuate(const Future<T>& future,
+        const boost::function<R(const Future<T>&)>& func,
+        Promise<R>& promise);
+
+    template <typename R, typename ARG0, typename AF>
+    typename boost::enable_if<
+        boost::is_base_of<Actor, typename detail::Unwrap<ARG0>::type>,
+        qi::Future<R> >::type
+        _thenMaybeActor(const ARG0& arg0,
+            const AF& cb,
+            FutureCallbackType type);
+    template <typename R, typename ARG0, typename AF>
+    typename boost::disable_if<
+        boost::is_base_of<Actor, typename detail::Unwrap<ARG0>::type>,
+        qi::Future<R> >::type
+        _thenMaybeActor(const ARG0& arg0,
+            const AF& cb,
+            FutureCallbackType type);
   };
 
   /** This class allow throwing on error and being synchronous
