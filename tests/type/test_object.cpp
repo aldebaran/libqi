@@ -581,7 +581,7 @@ TEST(TestObject, ObjectTypeBuilder)
 {
   qi::ObjectTypeBuilder<Adder> builder;
   builder.advertiseMethod("add", &Adder::add);
-  builder.advertiseMethod("addTwo", &Adder::addTwo);
+  builder.advertiseMethod("addTwo", boost::function<int(Adder*, int, int)>(boost::bind(&Adder::addTwo, _2, _3)));
   builder.advertiseMethod("addAdderByRef", &Adder::addAdderByRef);
   builder.advertiseMethod("addAdderByConstRef", &Adder::addAdderByConstRef);
   builder.advertiseMethod("addAdderByPtr", &Adder::addAdderByPtr);
@@ -627,7 +627,7 @@ TEST(TestObject, ObjectTypeBuilderAsync)
   qi::ObjectTypeBuilder<MAdder> builder;
   builder.inherits<Adder>();
   builder.advertiseMethod("add", &Adder::add, qi::MetaCallType_Queued);
-  builder.advertiseMethod("addTwo", &Adder::addTwo, qi::MetaCallType_Queued);
+  builder.advertiseMethod("addTwo", boost::function<int(Adder*, int, int)>(boost::bind(&Adder::addTwo, _2, _3)));
   builder.advertiseMethod("addAdderByRef", &Adder::addAdderByRef, qi::MetaCallType_Queued);
   builder.advertiseMethod("addAdderByConstRef", &Adder::addAdderByConstRef, qi::MetaCallType_Queued);
   builder.advertiseMethod("addAdderByPtr", &Adder::addAdderByPtr, qi::MetaCallType_Queued);
