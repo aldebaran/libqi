@@ -186,6 +186,18 @@ QI_TYPE_REGISTER(::qi::ServiceInfoPrivate);
 
 QI_TYPE_STRUCT_BOUNCE_REGISTER(::qi::ServiceInfo, ::qi::ServiceInfoPrivate, serviceInfoPrivate);
 
+static qi::AnyReference sessionLoadService(qi::AnyReferenceVector args)
+{
+  if (args.size() < 3)
+    throw std::runtime_error("Not enough arguments");
+  qi::Session& session = args[0].as<qi::Session>();
+  std::string module = args[1].toString();
+  std::string rename = args[2].toString();
+  args.erase(args.begin(), args.begin()+3);
+  session.loadService(module, rename, args);
+  return qi::AnyReference(qi::typeOf<void>());
+}
+
 static bool _qiregisterSession() {
   ::qi::ObjectTypeBuilder<qi::Session> builder;
   QI_OBJECT_BUILDER_ADVERTISE_OVERLOAD(builder, qi::Session, connect, qi::FutureSync<void>, (const std::string&));
@@ -200,7 +212,7 @@ static bool _qiregisterSession() {
   QI_OBJECT_BUILDER_ADVERTISE(builder, qi::Session, listenStandalone);
   QI_OBJECT_BUILDER_ADVERTISE(builder, qi::Session, registerService);
   QI_OBJECT_BUILDER_ADVERTISE(builder, qi::Session, unregisterService);
-  //QI_OBJECT_BUILDER_ADVERTISE_OVERLOAD(builder, qi::Session, loadService, void, (const std::string&, const std::string&, const AnyReferenceVector&));
+  builder.advertiseMethod("loadService", qi::AnyFunction::fromDynamicFunction(&sessionLoadService));
   QI_OBJECT_BUILDER_ADVERTISE(builder, qi::Session, waitForService);
   QI_OBJECT_BUILDER_ADVERTISE(builder, qi::Session, serviceRegistered);
   QI_OBJECT_BUILDER_ADVERTISE(builder, qi::Session, serviceUnregistered);
