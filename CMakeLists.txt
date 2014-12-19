@@ -16,6 +16,7 @@ set_source_files_properties(src/os_posix.cpp
 
 # We always want boost filesystem v3
 add_definitions("-DBOOST_FILESYSTEM_VERSION=3")
+add_definitions("-DBOOST_ASIO_DISABLE_STD_CHRONO")
 
 if(MSVC)
   add_definitions(" -DWIN32_LEAN_AND_MEAN ")
