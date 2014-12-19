@@ -9,6 +9,7 @@
 # define _QI_STATS_HPP_
 
 # include <sstream>
+# include <algorithm>
 
 namespace qi
 {
