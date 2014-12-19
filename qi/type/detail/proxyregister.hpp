@@ -156,7 +156,7 @@ bool registerProxyInterface()
   // proper static_cast (from Proxy template to qi::Proxy) helper.
   registerType(typeid(Proxy), detail::makeProxyInterface<Proxy>());
   detail::ProxyGeneratorMap& map = detail::proxyGeneratorMap();
-  map[typeOf<Interface>()->info()] = &detail::makeProxy<Proxy>;
+  map[typeOf<Interface>()->info()] = boost::function<AnyReference(AnyObject)>(&detail::makeProxy<Proxy>);
   return true;
 }
 
@@ -176,7 +176,7 @@ bool registerProxy()
   */
   registerType(typeid(ProxyType), detail::makeProxyInterfaceWrapper<ProxyType>());
   detail::ProxyGeneratorMap& map = detail::proxyGeneratorMap();
-  map[typeOf<ProxyType>()->info()] = &detail::makeProxy<ProxyType>;
+  map[typeOf<ProxyType>()->info()] = boost::function<AnyReference(AnyObject)>(&detail::makeProxy<ProxyType>);
   return true;
 }
 
