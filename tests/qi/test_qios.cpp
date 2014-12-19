@@ -468,7 +468,7 @@ TEST(QiOs, getMachineId)
   std::string uuid2FileName = (qi::os::tmp()).append("machine_id_test_42");
   std::ifstream uuid2file(uuid2FileName.c_str());
 
-  ASSERT_TRUE(uuid2file != NULL);
+  ASSERT_TRUE(uuid2file);
 
   uuid2file >> uuid2;
   uuid2file.close();
