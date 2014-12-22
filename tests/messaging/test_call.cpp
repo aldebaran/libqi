@@ -1371,6 +1371,40 @@ TEST(TestObject, StructVersioningEvent)
   EXPECT_EQ(12, *onCounter);
 }
 
+void doCancel(qi::Promise<void>& p)
+{
+  p.setCanceled();
+}
+
+qi::Future<void> getCancellableFuture()
+{
+  qi::Promise<void> promise(&doCancel);
+  EXPECT_TRUE(promise.future().isCancelable());
+  qiLogInfo() << "returning future";
+  return promise.future();
+}
+
+TEST(TestCall, TestAsyncFutureIsCancellable)
+{
+  TestSessionPair p;
+
+  // TODO make remote case work
+  if (p.client() != p.server())
+    return;
+
+  qi::DynamicObjectBuilder ob;
+  ob.advertiseMethod("getCancellableFuture",
+                     boost::function<qi::Future<void>()>(
+                       &getCancellableFuture));
+  p.server()->registerService("test", ob.object());
+  qi::AnyObject proxy = p.client()->service("test");
+  qi::Future<void> future = proxy.async<void>("getCancellableFuture");
+  ASSERT_TRUE(future.isCancelable());
+  future.cancel();
+  future.wait();
+  ASSERT_TRUE(future.isCanceled());
+}
+
 int main(int argc, char **argv) {
   qi::os::setenv("QI_IGNORE_STRUCT_NAME", "1");
   qi::Application app(argc, argv);

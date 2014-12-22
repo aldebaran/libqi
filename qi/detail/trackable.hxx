@@ -179,7 +179,7 @@ namespace qi
     return Transform::wrap(arg0, f, detail::throwPointerLockException);  \
   }                                                                      \
   template<typename RF, typename AF, typename ARG0 comma ATYPEDECL>      \
-  boost::function<RF> bindWithFallback(const boost::function<void()> onFail, const AF& fun, const ARG0& arg0 comma ADECL)  \
+  boost::function<RF> bindWithFallback(const boost::function<void()>& onFail, const AF& fun, const ARG0& arg0 comma ADECL)  \
   {                                                                      \
     typedef typename detail::BindTransform<ARG0, boost::is_base_of<TrackableBase, typename boost::remove_pointer<ARG0>::type>::value> Transform;     \
     typename Transform::type transformed = Transform::transform(arg0);   \

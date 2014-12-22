@@ -647,11 +647,24 @@ namespace qi {
      */
     void trigger() { _f._p->set(_f);}
 
+    /** Set a cancel callback. If the cancel is requested, calls this callback
+     * immediately.
+     * \throws std::exception if the promise was not created as a cancellable
+     * promise.
+     */
+    void setOnCancel(boost::function<void (qi::Promise<T>)> cancelCallback)
+    {
+      if (!this->_f._p->isCancelable())
+        throw std::runtime_error("Promise was not created as a cancellable one");
+      qi::Future<T> fut = this->future();
+      this->_f._p->setOnCancel(*this, cancelCallback);
+    }
+
   protected:
     void setup(boost::function<void (qi::Promise<T>)> cancelCallback, FutureCallbackType async = FutureCallbackType_Async)
     {
       this->_f._p->reportStart();
-      this->_f._p->setOnCancel(cancelCallback);
+      this->_f._p->setOnCancel(*this, cancelCallback);
       this->_f._p->_async = async;
     }
     explicit Promise(Future<T>& f) : _f(f) {}

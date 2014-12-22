@@ -212,6 +212,12 @@ namespace detail
       promise.setError(s);
       return;
     }
+    if (gfut.call<bool>("isCanceled"))
+    {
+      qiLogDebug("qi.adapter") << "futureAdapter: future cancelled";
+      promise.setCanceled();
+      return;
+    }
     qiLogDebug("qi.adapter") << "futureAdapter: future has value";
     AnyValue v = gfut.call<AnyValue>("value", 0);
     // For a Future<void>, value() gave us a void*
@@ -247,10 +253,11 @@ namespace detail
     try
     {
       gfut.call<void>("_connect", cb);
+      promise.setOnCancel(qi::bindWithFallback<void(const qi::Promise<T>&)>(boost::function<void()>(), static_cast<void(GenericObject::*)(const std::string&)>(&GenericObject::call<void>), boost::weak_ptr<GenericObject>(gfut.shared_from_this()), "cancel"));
     }
     catch (std::exception& e)
     {
-      qiLogWarning("qi.object") << "future connect error " << e.what();
+      qiLogError("qi.object") << "future connect error " << e.what();
     }
     return true;
   }
@@ -342,6 +349,7 @@ namespace detail
   template <>
   inline void futureAdapter<void>(qi::Future<qi::AnyReference> metaFut, qi::Promise<void> promise)
   {
+    qiLogDebug("qi.object") << "futureAdapter void " << metaFut.hasError();
     //error handling
     if (metaFut.hasError()) {
       promise.setError(metaFut.error());
@@ -422,7 +430,7 @@ QI_GEN(genCall)
     std::vector<qi::AnyReference> params;                                \
     params.reserve(n);                                                   \
     BOOST_PP_REPEAT(n, pushi, _)                                         \
-    qi::Promise<R> res;                                                  \
+    qi::Promise<R> res(&qi::PromiseNoop<R>);                             \
     qi::Future<AnyReference> fmeta = metaCall(methodName, params,        \
         MetaCallType_Queued, typeOf<R>()->signature());                  \
     fmeta.connect(boost::bind<void>(&detail::futureAdapter<R>, _1, res), \

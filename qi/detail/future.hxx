@@ -235,6 +235,7 @@ namespace detail {
 
       void cancel(qi::Future<T>& future)
       {
+        boost::recursive_mutex::scoped_lock lock(mutex());
         if (isFinished())
           return;
         if (!_onCancel)
@@ -243,11 +244,15 @@ namespace detail {
         _onCancel(Promise<T>(future));
       }
 
-      void setOnCancel(boost::function<void (Promise<T>)> onCancel)
+      void setOnCancel(qi::Promise<T>& promise,
+          boost::function<void (Promise<T>)> onCancel)
       {
+        boost::recursive_mutex::scoped_lock lock(mutex());
         _onCancel = onCancel;
+        qi::Future<T> fut = promise.future();
+        if (isCancelRequested())
+          cancel(fut);
       }
-
 
       void callCbNotify(qi::Future<T>& future)
       {
