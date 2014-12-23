@@ -255,12 +255,13 @@ namespace qi {
          b.advertise("isFinished", &qi::Future<T>::isFinished);
          b.advertise("value", &qi::Future<T>::value);
          b.advertise("wait", static_cast<qi::FutureState (qi::Future<T>::*)(int) const>(&qi::Future<T>::wait));
-         b.advertise("wait", static_cast<qi::FutureState (qi::Future<T>::*)(qi::Duration) const>(&qi::Future<T>::wait));
-         b.advertise("wait", static_cast<qi::FutureState (qi::Future<T>::*)(qi::SteadyClock::time_point) const>(&qi::Future<T>::wait));
+         b.advertise("waitFor", static_cast<qi::FutureState (qi::Future<T>::*)(qi::Duration) const>(&qi::Future<T>::wait));
+         b.advertise("waitUntil", static_cast<qi::FutureState (qi::Future<T>::*)(qi::SteadyClock::time_point) const>(&qi::Future<T>::wait));
          b.advertise("isRunning", &qi::Future<T>::isRunning);
          b.advertise("isCanceled", &qi::Future<T>::isCanceled);
          b.advertise("hasError", &qi::Future<T>::hasError);
          b.advertise("error", &qi::Future<T>::error);
+         b.advertise("cancel", &qi::Future<T>::cancel);
          _next = b.type();
       }
       return _next;
@@ -284,13 +285,14 @@ namespace qi {
          b.advertise("isFinished", &qi::FutureSync<T>::isFinished);
          b.advertise("value", &qi::FutureSync<T>::value);
          b.advertise("wait", static_cast<qi::FutureState (qi::FutureSync<T>::*)(int) const>(&qi::FutureSync<T>::wait));
-         b.advertise("wait", static_cast<qi::FutureState (qi::FutureSync<T>::*)(qi::Duration) const>(&qi::FutureSync<T>::wait));
-         b.advertise("wait", static_cast<qi::FutureState (qi::FutureSync<T>::*)(qi::SteadyClock::time_point) const>(&qi::FutureSync<T>::wait));
+         b.advertise("waitFor", static_cast<qi::FutureState (qi::FutureSync<T>::*)(qi::Duration) const>(&qi::FutureSync<T>::wait));
+         b.advertise("waitUntil", static_cast<qi::FutureState (qi::FutureSync<T>::*)(qi::SteadyClock::time_point) const>(&qi::FutureSync<T>::wait));
          b.advertise("isRunning", &qi::FutureSync<T>::isRunning);
          b.advertise("isCanceled", &qi::FutureSync<T>::isCanceled);
          b.advertise("hasError", &qi::FutureSync<T>::hasError);
          b.advertise("error", &qi::FutureSync<T>::error);
          b.advertise("async", &qi::FutureSync<T>::async);
+         b.advertise("cancel", &qi::FutureSync<T>::cancel);
          _next = b.type();
       }
       return _next;
