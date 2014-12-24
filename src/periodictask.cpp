@@ -24,6 +24,7 @@ enum TaskState
   Task_Starting = 4, //< being started
   Task_Stopping = 5, //< stop requested
   Task_Triggering = 6, //< force trigger
+  Task_TriggerReady = 7, //< force trigger (step 2)
 };
 
 /* Transition matrix:
@@ -155,10 +156,15 @@ namespace qi
     // we are called from the callback
     if (os::gettid() == _p->_tid)
       return;
+
+    qiLogDebug() << *_p->_state << " start";
     //Stopping is not handled by start, stop will handle it for us.
     stop();
     if (!_p->_state.setIfEquals(Task_Stopped, Task_Starting))
+    {
+      qiLogDebug() << *_p->_state << " task was not stopped";
       return; // Already running or being started.
+    }
     if (!_p->_state.setIfEquals(Task_Starting, Task_Rescheduling))
       qiLogError() << "Periodic task internal error while starting";
     _p->_reschedule(immediate?0:_p->_usPeriod);
@@ -166,6 +172,7 @@ namespace qi
 
   void PeriodicTask::trigger()
   {
+    qiLogDebug() << *_p->_state << " trigger";
     while (true)
     {
       if (_p->_state.setIfEquals(Task_Stopped, Task_Stopped) ||
@@ -173,13 +180,22 @@ namespace qi
           _p->_state.setIfEquals(Task_Starting, Task_Starting) ||
           _p->_state.setIfEquals(Task_Running, Task_Running) ||
           _p->_state.setIfEquals(Task_Rescheduling, Task_Rescheduling) ||
-          _p->_state.setIfEquals(Task_Triggering, Task_Triggering))
+          _p->_state.setIfEquals(Task_Triggering, Task_Triggering) ||
+          _p->_state.setIfEquals(Task_TriggerReady, Task_TriggerReady))
+      {
+        qiLogDebug() << *_p->_state << " nothing to do";
         return;
+      }
       if (_p->_state.setIfEquals(Task_Scheduled, Task_Triggering))
       {
+        qiLogDebug() << *_p->_state << " scheduled to triggerring";
         _p->_task.cancel();
+        qiLogDebug() << *_p->_state << " cancel done";
         _p->_task.connect(&PeriodicTaskPrivate::_trigger, _p, _1,
             FutureCallbackType_Sync);
+        qiLogDebug() << *_p->_state << " connected callback";
+        _p->_state.setIfEquals(Task_Triggering, Task_TriggerReady);
+        qiLogDebug() << *_p->_state << " ready";
         return;
       }
     }
@@ -187,17 +203,28 @@ namespace qi
 
   void PeriodicTaskPrivate::_trigger(qi::Future<void> future)
   {
+    qiLogDebug() << *_state << " future finished";
     // if future was not canceled, the task already ran, don't retrigger
     if (!future.isCanceled())
+    {
+      qiLogDebug() << *_state << " task successfully ran";
       return;
+    }
 
     // else, start the task now if we are still triggering
-    if (_state.setIfEquals(Task_Triggering, Task_Rescheduling))
+    if (_state.setIfEquals(Task_Triggering, Task_Rescheduling) ||
+        _state.setIfEquals(Task_TriggerReady, Task_Rescheduling))
+    {
+      qiLogDebug() << *_state << " rescheduling";
       _reschedule(0);
+    }
+    else
+      qiLogDebug() << *_state << " not rescheduling anymore";
   }
 
   void PeriodicTaskPrivate::_wrap()
   {
+    qiLogDebug() << *_state << " callback start";
     if (*_state == Task_Stopped)
       qiLogError()  << "PeriodicTask inconsistency: stopped from callback";
     /* To avoid being stuck because of unhandled transition, the rule is
@@ -205,7 +232,10 @@ namespace qi
     * to stop us, and must eventualy reach the Stopping state
     */
     if (_state.setIfEquals(Task_Stopping, Task_Stopped))
+    {
+      qiLogDebug() << *_state << " stopped before callback";
       return;
+    }
     /* reschedule() needs to call async() before reseting state from rescheduling
     *  to scheduled, to protect the _task object. So we might still be
     * in rescheduling state here.
@@ -215,8 +245,10 @@ namespace qi
     // order matters! check scheduled state first as the state cannot change
     // from triggering to scheduled but can change in the other way
     if (!_state.setIfEquals(Task_Scheduled, Task_Running) &&
-        !_state.setIfEquals(Task_Triggering, Task_Running))
+        !_state.setIfEquals(Task_Triggering, Task_Triggering) &&
+        !_state.setIfEquals(Task_TriggerReady, Task_TriggerReady))
     {
+      qiLogDebug() << *_state << " not scheduled nor triggering, waiting for stop";
       setState(_state, Task_Stopping, Task_Stopped);
       return;
     }
@@ -251,6 +283,7 @@ namespace qi
     }
     if (shouldAbort)
     {
+      qiLogDebug() << *_state << " should abort, bye";
       setState(_state, Task_Stopping, Task_Stopped,
                        Task_Running, Task_Stopped);
       return;
@@ -276,9 +309,14 @@ namespace qi
         _callStats.reset();
       }
 
-      if (!_state.setIfEquals(Task_Running, Task_Rescheduling))
+      while (*_state == Task_Triggering)
+        boost::this_thread::yield();
+
+      if (!_state.setIfEquals(Task_Running, Task_Rescheduling) &&
+          !_state.setIfEquals(Task_TriggerReady, Task_Rescheduling))
       { // If we are not in running state anymore, someone switched us
         // to stopping
+        qiLogDebug() << *_state << " not running anymore, waiting for stop";
         setState(_state, Task_Stopping, Task_Stopped);
         return;
       }
@@ -287,7 +325,7 @@ namespace qi
   }
   void PeriodicTaskPrivate::_reschedule(qi::int64_t delay)
   {
-    qiLogDebug() << _name <<" rescheduling in " << delay;
+    qiLogDebug() << *_state << " rescheduling in " << delay;
     if (_scheduleCallback)
       _task = _scheduleCallback(boost::bind(&PeriodicTaskPrivate::_wrap, shared_from_this()), qi::MicroSeconds(delay));
     else
@@ -298,6 +336,7 @@ namespace qi
 
   void PeriodicTask::asyncStop()
   {
+    qiLogDebug() << *_p->_state << " async stop";
     if (_p->_state.setIfEquals(Task_Stopped, Task_Stopped))
       return;
     // we are allowed to go from Scheduled and Running to Stopping
@@ -311,6 +350,7 @@ namespace qi
     // the callback (_wrap)  is not allowed to touch _task, we can just cancel/wait it
     try
     {
+      qiLogDebug() << *_p->_state << " canceling";
       _p->_task.cancel();
     }
     catch(...)
@@ -319,17 +359,20 @@ namespace qi
 
   void PeriodicTask::stop()
   {
+    qiLogDebug() << *_p->_state << " stop";
     asyncStop();
     if (os::gettid() == _p->_tid)
       return;
     try
     {
+      qiLogDebug() << *_p->_state << " waiting";
       _p->_task.wait();
     }
     catch (...) {}
 
     // So here state can be stopping (callback was aborted) or stopped
     // We set to stopped either way to be ready for restart.
+    qiLogDebug() << *_p->_state << " going to stopped state";
     if (!_p->_state.setIfEquals(Task_Stopping , Task_Stopped) &&
         !_p->_state.setIfEquals(Task_Stopped, Task_Stopped))
       qiLogError() << "PeriodicTask inconsistency, expected Stopped, got " << *_p->_state;
