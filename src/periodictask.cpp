@@ -85,17 +85,17 @@ namespace qi
     boost::enable_shared_from_this<PeriodicTaskPrivate>
   {
     MethodStatistics        _callStats;
-    qi::int64_t             _statsDisplayTime;
+    qi::SteadyClockTimePoint _statsDisplayTime;
     PeriodicTask::Callback  _callback;
     PeriodicTask::ScheduleCallback _scheduleCallback;
-    qi::int64_t             _usPeriod;
+    qi::Duration            _period;
     qi::Atomic<int>         _state;
     qi::Future<void>        _task;
     std::string             _name;
     bool                    _compensateCallTime;
     int                     _tid;
 
-    void _reschedule(qi::int64_t delay);
+    void _reschedule(qi::Duration delay = qi::Duration(0));
     void _wrap();
     void _trigger(qi::Future<void> future);
   };
@@ -103,10 +103,10 @@ namespace qi
   PeriodicTask::PeriodicTask() :
     _p(new PeriodicTaskPrivate)
   {
-    _p->_usPeriod = -1;
+    _p->_period = qi::Duration(-1);
     _p->_tid = invalidThreadId;
     _p->_compensateCallTime =false;
-    _p->_statsDisplayTime = qi::os::ustime();
+    _p->_statsDisplayTime = qi::steadyClockNow();
     _p->_name = "PeriodicTask_" + boost::lexical_cast<std::string>(this);
   }
 
@@ -144,15 +144,22 @@ namespace qi
   {
     if (usp<0)
       throw std::runtime_error("Period cannot be negative");
-    _p->_usPeriod = usp;
+    _p->_period = qi::MicroSeconds(usp);
+  }
+
+  void PeriodicTask::setPeriod(qi::Duration period)
+  {
+    if (period < qi::Duration(0))
+      throw std::runtime_error("Period cannot be negative");
+    _p->_period = period;
   }
 
   void PeriodicTask::start(bool immediate)
   {
     if (!_p->_callback)
       throw std::runtime_error("Periodic task cannot start without a setCallback() call first");
-    if (_p->_usPeriod < 0)
-      throw std::runtime_error("Periodic task cannot start without a setUsPeriod() call first");
+    if (_p->_period < qi::Duration(0))
+      throw std::runtime_error("Periodic task cannot start without a setPeriod() call first");
     // we are called from the callback
     if (os::gettid() == _p->_tid)
       return;
@@ -167,7 +174,7 @@ namespace qi
     }
     if (!_p->_state.setIfEquals(Task_Starting, Task_Rescheduling))
       qiLogError() << "Periodic task internal error while starting";
-    _p->_reschedule(immediate?0:_p->_usPeriod);
+    _p->_reschedule(immediate ? qi::Duration(0) : _p->_period);
   }
 
   void PeriodicTask::trigger()
@@ -216,7 +223,7 @@ namespace qi
         _state.setIfEquals(Task_TriggerReady, Task_Rescheduling))
     {
       qiLogDebug() << *_state << " rescheduling";
-      _reschedule(0);
+      _reschedule();
     }
     else
       qiLogDebug() << *_state << " not rescheduling anymore";
@@ -253,23 +260,22 @@ namespace qi
       return;
     }
     bool shouldAbort = false;
-    qi::int64_t wall = 0, now=0, delta=0;
+    qi::SteadyClockTimePoint now;
+    qi::Duration delta;
     qi::int64_t usr, sys;
     bool compensate = _compensateCallTime; // we don't want that bool to change in the middle
     try
     {
-      wall = qi::os::ustime();
+      qi::SteadyClockTimePoint start = qi::steadyClockNow();
       std::pair<qi::int64_t, qi::int64_t> cpu = qi::os::cputime();
       _tid = os::gettid();
       _callback();
       _tid = invalidThreadId;
-      now = qi::os::ustime();
-      wall = now - wall;
+      now = qi::steadyClockNow();
+      delta = now - start;
       std::pair<qi::int64_t, qi::int64_t> cpu2 = qi::os::cputime();
       usr = cpu2.first - cpu.first;
       sys = cpu2.second - cpu.second;
-      if (compensate)
-        delta = wall;
     }
     catch (const std::exception& e)
     {
@@ -290,11 +296,14 @@ namespace qi
     }
     else
     {
-      _callStats.push((float)wall / 1e6f, (float)usr / 1e6f, (float)sys / 1e6f);
+      _callStats.push(
+          (float)boost::chrono::duration_cast<qi::MicroSeconds>(delta).count() / 1e6f,
+          (float)usr / 1e6f,
+          (float)sys / 1e6f);
 
-      if (now - _statsDisplayTime >= 20000000)
+      if (now - _statsDisplayTime >= qi::Seconds(20))
       {
-        float secTime = float(now - _statsDisplayTime) / 1e6f;
+        float secTime = float(boost::chrono::duration_cast<qi::MicroSeconds>(now - _statsDisplayTime).count()) / 1e6f;
         _statsDisplayTime = now;
         unsigned int count = _callStats.count();
         std::string catName = "stats." + _name;
@@ -320,14 +329,15 @@ namespace qi
         setState(_state, Task_Stopping, Task_Stopped);
         return;
       }
-      _reschedule(std::max((qi::int64_t)0, _usPeriod - delta));
+      _reschedule(std::max(qi::Duration(0), _period - (compensate ? delta : qi::Duration(0))));
     }
   }
-  void PeriodicTaskPrivate::_reschedule(qi::int64_t delay)
+
+  void PeriodicTaskPrivate::_reschedule(qi::Duration delay)
   {
     qiLogDebug() << *_state << " rescheduling in " << delay;
     if (_scheduleCallback)
-      _task = _scheduleCallback(boost::bind(&PeriodicTaskPrivate::_wrap, shared_from_this()), qi::MicroSeconds(delay));
+      _task = _scheduleCallback(boost::bind(&PeriodicTaskPrivate::_wrap, shared_from_this()), delay);
     else
       _task = getEventLoop()->async(boost::bind(&PeriodicTaskPrivate::_wrap, shared_from_this()), delay);
     if (!_state.setIfEquals(Task_Rescheduling, Task_Scheduled))
