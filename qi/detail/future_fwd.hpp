@@ -46,6 +46,10 @@ namespace qi {
       typedef void* type;
       typedef FutureHasNoValue typecast;
     };
+
+    template <typename T>
+    class AddUnwrap
+    {};
   }
 
   class Actor;
@@ -131,7 +135,7 @@ namespace qi {
    * \includename{qi/future.hpp}
    */
   template <typename T>
-  class Future {
+  class Future : public detail::AddUnwrap<T> {
   public:
     typedef typename detail::FutureType<T>::type     ValueType;
     typedef typename detail::FutureType<T>::typecast ValueTypeCast;
@@ -303,19 +307,17 @@ namespace qi {
       return this->thenR(FutureCallbackType_Async, func);
     }
 
-#define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)                \
-  template <typename R, typename AF, typename ARG0 comma ATYPEDECL>                   \
-  Future<R> thenR(const AF& func,       \
-                 const ARG0& arg0 comma ADECL)                           \
-  {                                                                      \
-    return this->thenR<R>(FutureCallbackType_Async, func, arg0 comma AUSE); \
-  }                                                                      \
-  template <typename R, typename AF, typename ARG0 comma ATYPEDECL>                   \
-  Future<R> thenR(FutureCallbackType type,                               \
-                 const AF& func,        \
-                 const ARG0& arg0 comma ADECL)                           \
-  {                                                                      \
-    return _thenMaybeActor<R, ARG0>(                                     \
+#define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)                    \
+  template <typename R, typename AF, typename ARG0 comma ATYPEDECL>          \
+  Future<R> thenR(const AF& func, const ARG0& arg0 comma ADECL)              \
+  {                                                                          \
+    return this->thenR<R>(FutureCallbackType_Async, func, arg0 comma AUSE);  \
+  }                                                                          \
+  template <typename R, typename AF, typename ARG0 comma ATYPEDECL>          \
+  Future<R> thenR(FutureCallbackType type, const AF& func,                   \
+                  const ARG0& arg0 comma ADECL)                              \
+  {                                                                          \
+    return _thenMaybeActor<R, ARG0>(                                         \
         arg0, ::qi::bind<R(const Future<T>&)>(func, arg0 comma AUSE), type); \
   }
     QI_GEN(genCall)
@@ -398,6 +400,7 @@ namespace qi {
     template<typename FT>
     friend void detail::futureCancelAdapter(
         boost::weak_ptr<detail::FutureBaseTyped<FT> > wf);
+    friend class detail::AddUnwrap<T>;
 
   private:
     template <typename Arg>
@@ -429,6 +432,9 @@ namespace qi {
     static void _continuate(const Future<T>& future,
         const boost::function<R(const Future<T>&)>& func,
         Promise<R>& promise);
+
+    static void _cancelContinuation(const Future<T>& future,
+        Promise<T>& promise);
 
     template <typename R, typename ARG0, typename AF>
     typename boost::enable_if<

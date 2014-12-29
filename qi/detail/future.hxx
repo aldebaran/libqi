@@ -401,6 +401,50 @@ namespace detail {
         delete count;
       }
     }
+
+    template <typename T>
+    class AddUnwrap<Future<T> >
+    {
+    public:
+      Future<T> unwrap()
+      {
+        Future<Future<T> >* self = static_cast<Future<Future<T> >*>(this);
+
+        Promise<T> promise(boost::bind(&AddUnwrap<Future<T> >::_cancel, _1,
+              boost::weak_ptr<FutureBaseTyped<Future<T> > >(self->_p)));
+
+        self->connect(
+            boost::bind(&AddUnwrap<Future<T> >::_forward, _1, promise),
+            FutureCallbackType_Sync);
+
+        return promise.future();
+      }
+
+    private:
+      static void _forward(const Future<Future<T> >& future,
+          Promise<T>& promise)
+      {
+        if (future.isCanceled())
+          promise.setCanceled();
+        else if (future.hasError())
+          promise.setError(future.error());
+        else
+          adaptFuture(future.value(), promise);
+      }
+
+      static void _cancel(Promise<T>& promise,
+          const boost::weak_ptr<FutureBaseTyped<Future<T> > >& wfuture)
+      {
+        if (boost::shared_ptr<FutureBaseTyped<Future<T> > > fbt =
+            wfuture.lock())
+        {
+          Future<Future<T> > future(fbt);
+          if (future.isCancelable())
+            future.cancel();
+        }
+      }
+    };
+
   } // namespace detail
 
   template <typename T>
@@ -495,7 +539,7 @@ namespace detail {
       p.setup(boost::bind(&detail::futureCancelAdapter<FT>,
             boost::weak_ptr<detail::FutureBaseTyped<FT> >(f._p)));
     const_cast<Future<FT>&>(f).connect(boost::bind(detail::futureAdapter<FT, PT, FutureValueConverter<FT, PT> >, _1, p,
-      FutureValueConverter<FT, PT>()));
+      FutureValueConverter<FT, PT>()), FutureCallbackType_Sync);
   }
 
   template<typename FT, typename PT, typename CONV>
@@ -504,7 +548,7 @@ namespace detail {
     if (f.isCancelable())
       p.setup(boost::bind(&detail::futureCancelAdapter<FT>,
             boost::weak_ptr<detail::FutureBaseTyped<FT> >(f._p)));
-    const_cast<Future<FT>&>(f).connect(boost::bind(detail::futureAdapter<FT, PT, CONV>, _1, p, converter));
+    const_cast<Future<FT>&>(f).connect(boost::bind(detail::futureAdapter<FT, PT, CONV>, _1, p, converter), FutureCallbackType_Sync);
   }
 }
 

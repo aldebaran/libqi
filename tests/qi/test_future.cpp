@@ -860,13 +860,132 @@ int assinc(const qi::Future<int>& f, int exp)
   return val+1;
 }
 
-TEST_F(TestFuture, ThenR)
+TEST(TestFutureThen, ThenR)
 {
   qi::Future<int> f = qi::async<int>(&get42);
   qi::Future<int> ff = f.thenR<int>(&assinc, _1, 42);
   qi::Future<int> fff = ff.thenR<int>(&assinc, _1, 43);
 
   ASSERT_EQ(44, fff.value());
+}
+
+TEST(TestFutureUnwrap, Unwrap)
+{
+  qi::Promise<qi::Future<int> > prom;
+  qi::Promise<int> prom2;
+  qi::Future<int> future = prom.future().unwrap();
+
+  ASSERT_TRUE(future.isRunning());
+
+  prom.setValue(prom2.future());
+
+  ASSERT_TRUE(future.isRunning());
+
+  prom2.setValue(42);
+
+  // TODO remove this when we have synchronous callbacks
+  qi::os::msleep(50);
+
+  ASSERT_TRUE(future.isFinished());
+  ASSERT_EQ(42, future.value());
+}
+
+TEST(TestFutureUnwrap, UnwrapError)
+{
+  qi::Promise<qi::Future<int> > prom;
+  qi::Promise<int> prom2;
+  qi::Future<int> future = prom.future().unwrap();
+
+  ASSERT_TRUE(future.isRunning());
+
+  prom.setError("fail");
+
+  // TODO remove this when we have synchronous callbacks
+  qi::os::msleep(50);
+
+  ASSERT_TRUE(future.hasError());
+  ASSERT_EQ("fail", future.error());
+}
+
+TEST(TestFutureUnwrap, UnwrapError2)
+{
+  qi::Promise<qi::Future<int> > prom;
+  qi::Promise<int> prom2;
+  qi::Future<int> future = prom.future().unwrap();
+
+  ASSERT_TRUE(future.isRunning());
+
+  prom.setValue(prom2.future());
+
+  ASSERT_TRUE(future.isRunning());
+
+  prom2.setError("fail");
+
+  // TODO remove this when we have synchronous callbacks
+  qi::os::msleep(50);
+
+  ASSERT_TRUE(future.hasError());
+  ASSERT_EQ("fail", future.error());
+}
+
+template <typename T>
+void setTrue(qi::Promise<T>& p, bool& b)
+{
+  ASSERT_FALSE(b);
+  b = true;
+
+  p.setCanceled();
+}
+
+TEST(TestFutureUnwrap, UnwrapCancel)
+{
+  bool cancelled = false;
+
+  qi::Promise<qi::Future<int> > prom(boost::bind(setTrue<qi::Future<int> >, _1, boost::ref(cancelled)));
+  qi::Promise<int> prom2;
+  qi::Future<int> future = prom.future().unwrap();
+
+  ASSERT_TRUE(future.isRunning());
+  ASSERT_FALSE(cancelled);
+
+  future.cancel();
+
+  // TODO remove this when we have synchronous callbacks
+  qi::os::msleep(50);
+
+  EXPECT_TRUE(prom.isCancelRequested());
+  EXPECT_TRUE(future.isCanceled());
+  EXPECT_TRUE(cancelled);
+}
+
+TEST(TestFutureUnwrap, UnwrapCancel2)
+{
+  bool cancelled = false;
+  bool cancelled2 = false;
+
+  qi::Promise<qi::Future<int> > prom(boost::bind(setTrue<qi::Future<int> >, _1, boost::ref(cancelled)));
+  qi::Promise<int> prom2(boost::bind(setTrue<int>, _1, boost::ref(cancelled2)));
+  qi::Future<int> future = prom.future().unwrap();
+
+  ASSERT_TRUE(future.isRunning());
+  ASSERT_FALSE(cancelled);
+
+  prom.setValue(prom2.future());
+
+  ASSERT_TRUE(future.isRunning());
+  ASSERT_FALSE(cancelled);
+  ASSERT_FALSE(cancelled2);
+
+  future.cancel();
+
+  // TODO remove this when we have synchronous callbacks
+  qi::os::msleep(50);
+
+  EXPECT_FALSE(prom.isCancelRequested());
+  EXPECT_TRUE(prom2.isCancelRequested());
+  EXPECT_TRUE(future.isCanceled());
+  EXPECT_FALSE(cancelled);
+  EXPECT_TRUE(cancelled2);
 }
 
 // ===== FutureBarrier =========================================================
