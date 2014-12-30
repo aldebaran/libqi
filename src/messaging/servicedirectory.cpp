@@ -158,6 +158,7 @@ namespace qi
     if (!sbo)
       throw std::runtime_error("ServiceBoundObject has expired.");
 
+    TransportSocketPtr socket = sbo->currentSocket();
     boost::recursive_mutex::scoped_lock lock(mutex);
     std::map<std::string, unsigned int>::iterator it;
     it = nameToIdx.find(svcinfo.name());
@@ -174,7 +175,6 @@ namespace qi
 
     unsigned int idx = ++servicesCount;
     nameToIdx[svcinfo.name()] = idx;
-    TransportSocketPtr socket = sbo->currentSocket();
     // Do not add serviceDirectory on the map (socket() == null)
     if (idx != qi::Message::Service_ServiceDirectory)
       socketToIdx[socket].push_back(idx);
