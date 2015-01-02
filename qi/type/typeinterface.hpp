@@ -340,18 +340,23 @@ namespace qi{
 
 
 
-  /** Declare a templated-type taking one type argument.
-  * Required to be able to use QI_TEMPLATE_TYPE_GET
-  */
-  #define QI_TEMPLATE_TYPE_DECLARE(n) \
-  namespace qi {              \
-    template<typename T> class QITYPE_TEMPLATE_API TypeImpl<n<T> >: public TypeOfTemplateImpl<n, T> {}; \
+/** Declare a templated-type taking one type argument. Required to be able to
+ * use QI_TEMPLATE_TYPE_GET
+ */
+#define QI_TEMPLATE_TYPE_DECLARE(n)                                           \
+  namespace qi                                                                \
+  {                                                                           \
+  template <typename T>                                                       \
+  class QITYPE_TEMPLATE_API TypeImpl<n<T> > : public TypeOfTemplateImpl<n, T> \
+  {                                                                           \
+  };                                                                          \
   }
-  /** Return a TemplateTypeInterface pointer if \p typeInst represents an instanciation
-   * of template type templateName, 0 otherwise
-   */
-  #define QI_TEMPLATE_TYPE_GET(typeInst, templateName) \
-   dynamic_cast< ::qi::TypeOfTemplate<templateName>*>(typeInst)
+
+/** Return a TypeOfTemplate<templateName> pointer if \p typeInst represents an
+ * instanciation of template type templateName, 0 otherwise
+ */
+#define QI_TEMPLATE_TYPE_GET(typeInst, templateName) \
+  dynamic_cast< ::qi::TypeOfTemplate<templateName>*>(typeInst)
 
 
   /**

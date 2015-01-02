@@ -4,22 +4,24 @@
 **  See COPYING for the license
 */
 
-#ifndef _SRC_STATICOBJECTTYPE_HPP_
-#define _SRC_STATICOBJECTTYPE_HPP_
+#ifndef _QI_TYPE_DETAIL_STATICOBJECTTYPE_HPP_
+#define _QI_TYPE_DETAIL_STATICOBJECTTYPE_HPP_
 
 #include <qi/api.hpp>
 #include <qi/property.hpp>
 #include <qi/anyvalue.hpp>
 #include <qi/type/typeinterface.hpp>
 #include <qi/type/metaobject.hpp>
-#include <qi/anyobject.hpp>
 
 namespace qi
 {
 
-  class SignalBase;
+class SignalBase;
+
+namespace detail {
+
 //type-erased methods and signals accessors for a given type
-struct ObjectTypeData
+struct QI_API ObjectTypeData
 {
   ObjectTypeData()
   : classType(0)
@@ -59,7 +61,7 @@ struct ObjectTypeData
  * - Manageable accessor
  * - typeinfo
  */
-class StaticObjectTypeBase: public ObjectTypeInterface
+class QI_API StaticObjectTypeBase: public ObjectTypeInterface
 {
 public:
   void initialize(const MetaObject& mo, const ObjectTypeData& data);
@@ -87,4 +89,7 @@ private:
 };
 
 }
-#endif  // _SRC_STATICOBJECTTYPE_HPP_
+
+}
+
+#endif

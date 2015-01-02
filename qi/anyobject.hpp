@@ -19,15 +19,6 @@
 namespace qi {
 
 typedef Object<Empty> AnyObject;
-namespace detail
-{
-  typedef std::map<TypeInfo, boost::function<AnyReference(AnyObject)> >
-    ProxyGeneratorMap;
-  QI_API ProxyGeneratorMap& proxyGeneratorMap();
-
-  // Storage type used by Object<T>, and Proxy.
-  typedef boost::shared_ptr<class GenericObject> ManagedObjectPtr;
-}
 
 //all methods ID lesser than this constant are considered special.
 //they are reserved for internal use by qi/qitype/qimessaging.
@@ -72,19 +63,7 @@ QI_API qi::Future<AnyReference> metaCall(ExecutionContext* ec,
 
 }
 
-namespace qi {
-  /** create a T, wrap in a AnyObject
-   *  All template parameters are given to the T constructor except the first one
-   */
-  #define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma) \
-  template<typename T comma ATYPEDECL>                      \
-  Object<T> constructObject(ADECL)                          \
-  {                                                         \
-    return Object<T>(new T(AUSE));                          \
-  }
-  QI_GEN(genCall)
-  #undef genCall
-}
+#include <qi/type/detail/futureadapter.hpp>
 
 #include <qi/type/detail/genericobject.hpp>
 
@@ -96,28 +75,6 @@ namespace qi {
 
 #include <qi/type/objecttypebuilder.hpp>
 
-QI_TYPE_STRUCT_AGREGATE_CONSTRUCTOR(qi::MinMaxSum,
-  ("minValue",       minValue),
-  ("maxValue",       maxValue),
-  ("cumulatedValue", cumulatedValue));
-
-QI_TYPE_STRUCT_AGREGATE_CONSTRUCTOR(qi::MethodStatistics,
-  ("count",  count),
-  ("wall",   wall),
-  ("user",   user),
-  ("system", system));
-
-QI_TYPE_STRUCT_AGREGATE_CONSTRUCTOR(qi::EventTrace,
-  ("id",            id),
-  ("kind",          kind),
-  ("slotId",        slotId),
-  ("arguments",     arguments),
-  ("timestamp",     timestamp),
-  ("userUsTime",    userUsTime),
-  ("systemUsTime",  systemUsTime),
-  ("callerContext", callerContext),
-  ("calleeContext", calleeContext));
-
-QI_TYPE_STRUCT(qi::os::timeval, tv_sec, tv_usec);
+#include <qi/type/detail/futureadapter.hxx>
 
 #endif  // _QITYPE_ANYOBJECT_HPP_

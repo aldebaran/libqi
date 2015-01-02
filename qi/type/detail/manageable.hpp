@@ -86,6 +86,34 @@ namespace qi {
     unsigned int     _calleeContext; // context where method runs
   };
 
+}
+
+QI_TYPE_STRUCT_AGREGATE_CONSTRUCTOR(qi::MinMaxSum,
+  ("minValue",       minValue),
+  ("maxValue",       maxValue),
+  ("cumulatedValue", cumulatedValue));
+
+QI_TYPE_STRUCT_AGREGATE_CONSTRUCTOR(qi::MethodStatistics,
+  ("count",  count),
+  ("wall",   wall),
+  ("user",   user),
+  ("system", system));
+
+QI_TYPE_STRUCT_AGREGATE_CONSTRUCTOR(qi::EventTrace,
+  ("id",            id),
+  ("kind",          kind),
+  ("slotId",        slotId),
+  ("arguments",     arguments),
+  ("timestamp",     timestamp),
+  ("userUsTime",    userUsTime),
+  ("systemUsTime",  systemUsTime),
+  ("callerContext", callerContext),
+  ("calleeContext", calleeContext));
+
+QI_TYPE_STRUCT(qi::os::timeval, tv_sec, tv_usec);
+
+namespace qi {
+
   typedef std::map<unsigned int, MethodStatistics> ObjectStatistics;
 /** Per-instance context.
   */

@@ -2,14 +2,19 @@
 **  Copyright (C) 2012, 2013 Aldebaran Robotics
 **  See COPYING for the license
 */
-#include "staticobjecttype.hpp"
+#include <qi/type/detail/staticobjecttype.hpp>
+#include <qi/anyobject.hpp>
 #include <qi/signal.hpp>
+#include <qi/property.hpp>
 #include <qi/jsoncodec.hpp>
 #include <qi/strand.hpp>
 
 qiLogCategory("qitype.object");
 
 namespace qi
+{
+
+namespace detail
 {
 
 void StaticObjectTypeBase::initialize(const MetaObject& mo, const ObjectTypeData& data)
@@ -213,7 +218,7 @@ qi::Future<void> StaticObjectTypeBase::disconnect(void* instance, AnyObject cont
 
 qi::Future<AnyValue> StaticObjectTypeBase::property(void* instance, AnyObject context, unsigned int id)
 {
-  PropertyBase* p = ::qi::property(_data, instance, id);
+  PropertyBase* p = ::qi::detail::property(_data, instance, id);
   if (!p)
     return qi::makeFutureError<AnyValue>("Cant find property");
   ExecutionContext* ec = getExecutionContext(instance, context);
@@ -230,7 +235,7 @@ static void setPropertyValue(PropertyBase* property, AnyValue value)
 
 qi::Future<void> StaticObjectTypeBase::setProperty(void* instance, AnyObject context, unsigned int id, AnyValue value)
 {
-  PropertyBase* p = ::qi::property(_data, instance, id);
+  PropertyBase* p = ::qi::detail::property(_data, instance, id);
   if (!p)
     return qi::makeFutureError<void>("Cant find property");
   qiLogDebug() << "SetProperty " << id << " " << encodeJSON(value);
@@ -284,6 +289,8 @@ void StaticObjectTypeBase::destroy(void* inst)
 bool StaticObjectTypeBase::less(void* a, void* b)
 {
   return a<b;
+}
+
 }
 
 }

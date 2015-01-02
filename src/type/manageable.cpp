@@ -1,8 +1,6 @@
 #include <qi/type/detail/manageable.hpp>
 #include <qi/type/objecttypebuilder.hpp>
 
-#include "staticobjecttype.hpp"
-
 namespace qi
 {
 
@@ -152,7 +150,7 @@ namespace qi
     builder.advertiseMethod("enableTrace", &Manageable::enableTrace,       MetaCallType_Auto, id++);
     builder.advertiseSignal("traceObject", &Manageable::traceObject, id++);
     assert(id <= endId);
-    const ObjectTypeData& typeData = builder.typeData();
+    const detail::ObjectTypeData& typeData = builder.typeData();
     *manageable::methodMap = typeData.methodMap;
     *manageable::signalMap = typeData.signalGetterMap;
     *manageable::metaObject = builder.metaObject();
