@@ -209,12 +209,18 @@ namespace qi {
     inline FutureState wait(qi::Duration duration) const
     { return _p->wait(duration); }
 
+    inline FutureState waitFor(qi::Duration duration) const
+    { return this->wait(duration); }
+
     /** Wait for future to contain a value or an error
         @param timepoint Time until which we can wait
         @return a FutureState corresponding to the state of the future.
     */
     inline FutureState wait(qi::SteadyClock::time_point timepoint) const
     { return _p->wait(timepoint); }
+
+    inline FutureState waitUntil(qi::SteadyClock::time_point timepoint) const
+    { return this->wait(timepoint); }
 
     /**
      * @return true if the future is finished
@@ -529,7 +535,9 @@ namespace qi {
     operator const typename Future<T>::ValueTypeCast&() const          { _sync = false; return _future.value(); }
     FutureState wait(int msecs = FutureTimeout_Infinite) const         { _sync = false; return _future.wait(msecs); }
     FutureState wait(qi::Duration duration) const                      { _sync = false; return _future.wait(duration); }
+    FutureState waitFor(qi::Duration duration) const                   { _sync = false; return _future.waitFor(duration); }
     FutureState wait(qi::SteadyClock::time_point timepoint) const      { _sync = false; return _future.wait(timepoint); }
+    FutureState waitUntil(qi::SteadyClock::time_point timepoint) const { _sync = false; return _future.waitUntil(timepoint); }
     bool isRunning() const                                             { _sync = false; return _future.isRunning(); }
     bool isFinished() const                                            { _sync = false; return _future.isFinished(); }
     bool isCanceled() const                                            { _sync = false; return _future.isCanceled(); }
