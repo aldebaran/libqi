@@ -392,6 +392,17 @@ namespace detail
   }
 }
 
+namespace detail
+{
+
+template <typename T>
+struct isFuture : boost::false_type {};
+template <typename T>
+struct isFuture<qi::Future<T> > : boost::true_type {};
+template <typename T>
+struct isFuture<qi::FutureSync<T> > : boost::true_type {};
+
+}
 
 /* Generate R GenericObject::call(methodname, args...)
  * for all argument counts
@@ -401,41 +412,44 @@ namespace detail
 
 #define pushi(z, n,_) params.push_back(p ## n);
 
-#define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)         \
-  template<typename R> R GenericObject::call(                     \
-      const std::string& methodName       comma                   \
-      QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoAnyReference))           \
-  {                                                               \
-    if (!value || !type) {                                        \
-      throw std::runtime_error("Invalid GenericObject");          \
-    }                                                             \
-    std::vector<qi::AnyReference> params;                         \
-    params.reserve(n);                                            \
-    BOOST_PP_REPEAT(n, pushi, _)                                  \
-    qi::Future<AnyReference> fmeta = metaCall(methodName, params, \
-        MetaCallType_Direct, typeOf<R>()->signature());           \
-    return detail::extractFuture<R>(fmeta);                       \
-  }
-QI_GEN(genCall)
-#undef genCall
-
-#define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)                \
-  template<typename R> qi::Future<R> GenericObject::async(               \
-      const std::string& methodName       comma                          \
-      QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoAnyReference))                  \
-  {                                                                      \
-    if (!value || !type) {                                               \
-      return makeFutureError<R>("Invalid GenericObject");                \
-    }                                                                    \
-    std::vector<qi::AnyReference> params;                                \
-    params.reserve(n);                                                   \
-    BOOST_PP_REPEAT(n, pushi, _)                                         \
-    qi::Promise<R> res(&qi::PromiseNoop<R>);                             \
-    qi::Future<AnyReference> fmeta = metaCall(methodName, params,        \
-        MetaCallType_Queued, typeOf<R>()->signature());                  \
-    fmeta.connect(boost::bind<void>(&detail::futureAdapter<R>, _1, res), \
-        FutureCallbackType_Sync);                                        \
-    return res.future();                                                 \
+#define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)                     \
+  template <typename R>                                                       \
+  R GenericObject::call(const std::string& methodName comma                   \
+                            QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoAnyReference)) \
+  {                                                                           \
+    BOOST_STATIC_ASSERT_MSG(!detail::isFuture<R>::value,                      \
+                            "return type of call must not be a Future");      \
+    if (!value || !type)                                                      \
+    {                                                                         \
+      throw std::runtime_error("Invalid GenericObject");                      \
+    }                                                                         \
+    std::vector<qi::AnyReference> params;                                     \
+    params.reserve(n);                                                        \
+    BOOST_PP_REPEAT(n, pushi, _)                                              \
+    qi::Future<AnyReference> fmeta = metaCall(                                \
+        methodName, params, MetaCallType_Direct, typeOf<R>()->signature());   \
+    return detail::extractFuture<R>(fmeta);                                   \
+  }                                                                           \
+  template <typename R>                                                       \
+  qi::Future<R> GenericObject::async(                                         \
+      const std::string& methodName comma                                     \
+          QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoAnyReference))                   \
+  {                                                                           \
+    BOOST_STATIC_ASSERT_MSG(!detail::isFuture<R>::value,                      \
+                            "return type of async must not be a Future");     \
+    if (!value || !type)                                                      \
+    {                                                                         \
+      return makeFutureError<R>("Invalid GenericObject");                     \
+    }                                                                         \
+    std::vector<qi::AnyReference> params;                                     \
+    params.reserve(n);                                                        \
+    BOOST_PP_REPEAT(n, pushi, _)                                              \
+    qi::Promise<R> res(&qi::PromiseNoop<R>);                                  \
+    qi::Future<AnyReference> fmeta = metaCall(                                \
+        methodName, params, MetaCallType_Queued, typeOf<R>()->signature());   \
+    fmeta.connect(boost::bind<void>(&detail::futureAdapter<R>, _1, res),      \
+                  FutureCallbackType_Sync);                                   \
+    return res.future();                                                      \
   }
 QI_GEN(genCall)
 #undef genCall
