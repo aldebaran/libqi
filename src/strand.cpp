@@ -254,6 +254,7 @@ void StrandPrivate::cancel(boost::shared_ptr<Callback> cbStruct)
 Strand::Strand()
   : _p(new StrandPrivate(*qi::getEventLoop()))
 {
+  qiLogDebug() << this << " new strand";
 }
 
 Strand::Strand(qi::ExecutionContext& eventloop)

@@ -219,11 +219,7 @@ namespace detail {
   }                                                                          \
   static bool BOOST_PP_CAT(__qi_registration, __LINE__) = _qiregister##name();
 
-/** Register name as a template object type
- * Remaining arguments are the methods, signals and properties of the object.
- * Use QI_TEMPLATE_TYPE_GET() to access the TypeOfTemplate<T> from a Type.
- */
-#define QI_REGISTER_TEMPLATE_OBJECT(name, ...)                            \
+#define _QI_REGISTER_TEMPLATE_OBJECT(name, model, ...)                    \
   namespace qi                                                            \
   {                                                                       \
   template <>                                                             \
@@ -241,6 +237,7 @@ namespace detail {
       /* early self registering to avoid recursive init */                \
       ::qi::registerType(typeid(name<T>), this);                          \
       ObjectTypeBuilder<name<T> > b(false);                               \
+      b.setThreadingModel(model);                                         \
       QI_VAARGS_APPLY(__QI_REGISTER_ELEMENT, name<T>, __VA_ARGS__)        \
       this->initialize(b.metaObject(), b.typeData());                     \
     }                                                                     \
@@ -251,9 +248,29 @@ namespace detail {
   }                                                                       \
   QI_TEMPLATE_TYPE_DECLARE(name)
 
-QI_REGISTER_TEMPLATE_OBJECT(qi::Future, _connect, isFinished, value, waitFor, waitUntil, isRunning, isCanceled, hasError, error, cancel);
-QI_REGISTER_TEMPLATE_OBJECT(qi::FutureSync, _connect, isFinished, value, waitFor, waitUntil, isRunning, isCanceled, hasError, error, async, cancel);
-QI_REGISTER_TEMPLATE_OBJECT(qi::Promise, setValue, setError, setCanceled, reset, future, value, trigger);
+/** Register name as a template object type
+ * Remaining arguments are the methods, signals and properties of the object.
+ * Use QI_TEMPLATE_TYPE_GET() to access the TypeOfTemplate<T> from a Type.
+ */
+#define QI_TEMPLATE_OBJECT(name, ...)                                   \
+  _QI_REGISTER_TEMPLATE_OBJECT(name, ObjectThreadingModel_SingleThread, \
+                               __VA_ARGS__)
+
+/** \deprecated since 2.3, use QI_TEMPLATE_OBJECT
+ */
+#define QI_REGISTER_TEMPLATE_OBJECT(name, ...)                           \
+  QI_TEMPLATE_OBJECT(name, __VA_ARGS__)
+
+/** Same as QI_TEMPLATE_OBJECT for multithread objects
+ */
+#define QI_MT_TEMPLATE_OBJECT(name, ...)                               \
+  _QI_REGISTER_TEMPLATE_OBJECT(name, ObjectThreadingModel_MultiThread, \
+                               __VA_ARGS__)
+
+QI_MT_TEMPLATE_OBJECT(qi::Future, _connect, isFinished, value, waitFor, waitUntil, isRunning, isCanceled, hasError, error, cancel);
+QI_MT_TEMPLATE_OBJECT(qi::FutureSync, _connect, isFinished, value, waitFor, waitUntil, isRunning, isCanceled, hasError, error, async, cancel);
+QI_MT_TEMPLATE_OBJECT(qi::Promise, setValue, setError, setCanceled, reset, future, value, trigger);
+
 namespace qi { namespace detail {
   template<typename T> struct TypeManager<Future<T> >: public TypeManagerDefaultStruct<Future<T> > {};
   template<typename T> struct TypeManager<FutureSync<T> >: public TypeManagerDefaultStruct<FutureSync<T> > {};

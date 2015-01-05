@@ -200,6 +200,7 @@ static qi::AnyReference sessionLoadService(qi::AnyReferenceVector args)
 
 static bool _qiregisterSession() {
   ::qi::ObjectTypeBuilder<qi::Session> builder;
+  builder.setThreadingModel(qi::ObjectThreadingModel_MultiThread);
   QI_OBJECT_BUILDER_ADVERTISE_OVERLOAD(builder, qi::Session, connect, qi::FutureSync<void>, (const std::string&));
   QI_OBJECT_BUILDER_ADVERTISE(builder, qi::Session, isConnected);
   QI_OBJECT_BUILDER_ADVERTISE(builder, qi::Session, url);
