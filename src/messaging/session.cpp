@@ -355,18 +355,19 @@ namespace qi {
     boost::shared_ptr<qi::Atomic<int> > link =
       boost::make_shared<qi::Atomic<int> >(0);
 
-    qi::Promise<void> promise(boost::bind(
+    qi::Promise<void> promise(qi::bindWithFallback<void(qi::Promise<void>)>(
+          boost::function<void()>(),
           &SessionPrivate::onServiceTrackingCancelled,
-          _p,
+          boost::weak_ptr<SessionPrivate>(_p),
           _1,
           link));
-    *link = (int)_p->_sdClient.serviceAdded.connect(boost::bind(
+    *link = (int)_p->_sdClient.serviceAdded.connect(
           &SessionPrivate::onTrackedServiceAdded,
-          _p,
+          boost::weak_ptr<SessionPrivate>(_p),
           _2,
           servicename,
           promise,
-          link));
+          link);
 
     qi::Future<qi::AnyObject> s = service(servicename);
     if (!s.hasError())
