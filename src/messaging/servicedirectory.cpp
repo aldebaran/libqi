@@ -44,6 +44,7 @@ namespace qi
     if (!ob)
     {
       ob = new qi::ObjectTypeBuilder<ServiceDirectory>();
+      ob->setThreadingModel(ObjectThreadingModel_MultiThread);
       unsigned int id = 0;
       id = ob->advertiseMethod("service", &ServiceDirectory::service);
       assert(id == qi::Message::ServiceDirectoryAction_Service);
