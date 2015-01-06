@@ -44,7 +44,7 @@ void futureAdapterGeneric(AnyReference val, qi::Promise<T> promise)
   TypeOfTemplate<FutureSync>* ft2 = QI_TEMPLATE_TYPE_GET(val.type(), FutureSync);
   ObjectTypeInterface* onext = NULL;
   qiLogDebug("qi.object") << "isFuture " << val.type()->infoString() << ' ' << !!ft1 << ' ' << !!ft2;
-  bool isvoid;
+  bool isvoid = false;
   if (ft1)
   {
     onext = ft1;
