@@ -207,14 +207,94 @@ template<typename T> void newAndAssign(T** ptr)
  * are setup by its ++, swap and get operations.
  */
 
-/** Accept a list of pointers (expected to be static function variables)
+/**
+ * \def QI_THREADSAFE_NEW
+ * \brief Safe static initialization of variables.
+ * \verbatim
+ * Accept a list of pointers (expected to be static function variables)
  * and new them once in a thread-safe manner.
  * Implementation aims for minimal overhead when initialization is done.
+ *
+ * `QI_THREADSAFE_NEW` is there to provide a safe static initialization of
+ * variables in C++03. Its most common use case is the following:
+ *
+ * .. code-block:: cpp
+ *
+ *   static std::vector<int> vec;
+ *
+ *   void threadSafeFunction()
+ *   {
+ *     static boost::mutex* mutex; // = 0 is optional
+ *     QI_THREADSAFE_NEW(mutex);
+ *     boost::mutex::scoped_lock l(*mutex);
+ *     vec.push_back(0);
+ *   }
+ *
+ * Using a simple `static boost::mutex` does not guarantee safe initialization in
+ * a multithreaded environment in C++03 (even though GCC's implementation is
+ * safe), that's why `QI_THREADSAFE_NEW` is needed.
+ *
+ * In C++11, the following is safe:
+ *
+ * .. code-block:: cpp
+ *
+ *   static std::vector<int> vec;
+ *
+ *   void threadSafeFunction()
+ *   {
+ *     static boost::mutex mutex;
+ *     boost::mutex::scoped_lock l(mutex);
+ *     vec.push_back(0);
+ *   }
+ * \endverbatim
  */
+
 #define QI_THREADSAFE_NEW(...)  \
   QI_ONCE(QI_VAARGS_APPLY(_QI_INSTANCIATE, _, __VA_ARGS__);)
 
-/// Execute code once, parallel calls are blocked until code finishes.
+/**
+ * \def QI_ONCE
+ * \brief Execute code once, parallel calls are blocked until code finishes.
+ *
+ * \verbatim
+ * .. code-block:: cpp
+ *
+ *   void myFunction()
+ *   {
+ *     QI_ONCE(std::cout << "first initialization" << std::endl);
+ *     std::cout << "doing stuff" << std::endl;
+ *   }
+ *
+ * In this code, you have two guarantees:
+ * - "first initialization" will be written only once
+ * - "doing stuff" will never appear before "first initialization"
+ *
+ * `QI_ONCE` is optimized so that further calls after initialization have the less
+ * overhead possible.
+ *
+ * You can also put multiple instructions in a `QI_ONCE`.
+ *
+ * .. code-block:: cpp
+ *
+ *   QI_ONCE(
+ *       doStuff();
+ *       doMoreStuff();
+ *       );
+ *
+ * This macro is only useful in C++03 and the function above may be written in
+ * C++11:
+ *
+ * .. code-block:: cpp
+ *
+ *   void myFunction()
+ *   {
+ *     static std::once_flag flag;
+ *     std::call_once(flag,
+ *         [](){std::cout << "first initialization" << std::endl;});
+ *     std::cout << "doing stuff" << std::endl;
+ *   }
+ * \endverbatim
+ */
 #define QI_ONCE(code)                                                   \
   static qi::detail::StaticAtomicInt QI_UNIQ_DEF(atomic_guard_a) = {0}; \
   static qi::detail::StaticAtomicInt QI_UNIQ_DEF(atomic_guard_b) = {0}; \
