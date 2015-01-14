@@ -82,6 +82,15 @@ namespace qi {
     _authProviderFactory = factory;
   }
 
+  static void sendCapabilities(TransportSocketPtr sock)
+  {
+    Message msg;
+    msg.setType(Message::Type_Capability);
+    msg.setService(Message::Service_Server);
+    msg.setValue(sock->localCapabilities(), typeOf<CapabilityMap>()->signature());
+    sock->send(msg);
+  }
+
   void Server::onTransportServerNewConnection(TransportSocketPtr socket, bool startReading)
   {
     boost::recursive_mutex::scoped_lock sl(_socketsMutex);
@@ -106,6 +115,7 @@ namespace qi {
       // We are reading on the socket for the first time : the first message has to be the capabilities
       *sub = socket->messageReady.connect(&Server::onMessageReadyNotAuthenticated, this, _1, socket, _authProviderFactory->newProvider(), first, sub);
       socket->startReading();
+      sendCapabilities(socket);
     }
     else
       socket->messageReady.connect(&Server::onMessageReady, this, _1, socket);

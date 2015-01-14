@@ -170,7 +170,7 @@ namespace qi {
     if (sz) {
       char *data = static_cast<char *>(readRaw(sz));
       if (!data) {
-        qiLogError();
+        qiLogError() << "Read past end";
         setStatus(Status_ReadPastEnd);
         return;
       }
