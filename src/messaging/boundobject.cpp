@@ -105,6 +105,11 @@ namespace qi {
       _owner->removeObject(_objectId);
     onDestroy(this);
     qiLogDebug() << "~ServiceBoundObject() reseting object " << _object.use_count();
+    // if we own the object, destroy it asynchronously because it may hold the
+    // last reference to Session which leads to a deadlock (Session can't be
+    // destroyed because it is calling us)
+    if (_object.unique())
+      qi::async<void>(boost::bind(&qi::detail::hold<qi::AnyObject>, _object));
     _object.reset();
     qiLogDebug() << "~ServiceBoundObject() finishing";
   }

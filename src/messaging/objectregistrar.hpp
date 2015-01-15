@@ -22,6 +22,8 @@ namespace qi {
 
   //hold all information about a service
   struct BoundService {
+    ~BoundService();
+
     std::string   name;
     qi::AnyObject object;
     unsigned int  id;
