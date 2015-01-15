@@ -46,7 +46,7 @@ namespace qi {
 
     void setTransportSocket(qi::TransportSocketPtr socket);
     // Set fromSignal if close is invoked from disconnect signal callback
-    void close(bool fromSignal = false);
+    void close(const std::string& reason, bool fromSignal = false);
     unsigned int service() const { return _service;}
 
   protected:

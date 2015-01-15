@@ -55,7 +55,7 @@ namespace qi {
       RemoteObjectMap::iterator it = _remoteObjects.find(service);
       if (it != _remoteObjects.end()) {
         qiLogVerbose() << "Session: Removing cached RemoteObject " << service;
-        static_cast<RemoteObject*>(it->second.asGenericObject()->value)->close();
+        static_cast<RemoteObject*>(it->second.asGenericObject()->value)->close("Service removed");
         _remoteObjects.erase(it);
       }
     }
@@ -79,7 +79,7 @@ namespace qi {
 
     for (RemoteObjectMap::iterator it = objects.begin();
         it != objects.end(); ++it)
-      static_cast<RemoteObject*>(it->second.asGenericObject()->value)->close();
+      static_cast<RemoteObject*>(it->second.asGenericObject()->value)->close("Session closed");
   }
 
   ServiceRequest *Session_Service::serviceRequest(long requestId)

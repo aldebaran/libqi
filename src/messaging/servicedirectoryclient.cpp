@@ -273,7 +273,7 @@ namespace qi {
       // Manually trigger close on our remoteobject or it will be called
       // asynchronously from socket.disconnected signal, and we would need to
       // wait fo it.
-      _remoteObject->close();
+      _remoteObject->close("Socket disconnected");
       fut = socket->disconnect();
 
       // Hold the socket shared ptr alive until the future returns.
