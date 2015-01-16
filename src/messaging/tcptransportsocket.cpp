@@ -366,12 +366,19 @@ namespace qi
   {
     try
     {
-      if (erc)
+      boost::recursive_mutex::scoped_lock l(_closingMutex);
+      if (!_socket)
       {
-        qiLogWarning() << "resolve: " << erc.message();
+        // Disconnection was requested, so error() was already called.
+        pSetError(connectPromise, "Disconnection requested");
+      }
+      else if (erc)
+      {
+        std::string message = "System error: " + erc.message();
+        qiLogWarning() << "resolve: " << message;
         _status = qi::TransportSocket::Status_Disconnected;
-        error("System error: " + erc.message());
-        pSetError(connectPromise, "System error: " + erc.message());
+        error(message);
+        pSetError(connectPromise, message);
       }
       else
       {
