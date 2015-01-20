@@ -153,6 +153,8 @@ set(QITYPE_H       qi/anyfunction.hpp
                    qi/type/detail/anyiterator.hxx
                    qi/type/detail/bindtype.hxx
                    qi/type/detail/functionsignature.hxx
+                   qi/type/detail/futureadapter.hxx
+                   qi/type/detail/futureadapter.hpp
                    qi/type/detail/dynamicobjectbuilder.hxx
                    qi/type/detail/genericobject.hpp
                    qi/type/detail/object.hxx
