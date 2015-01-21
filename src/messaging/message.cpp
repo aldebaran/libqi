@@ -49,6 +49,8 @@ namespace qi {
       return "Post";
     case Type_Event:
       return "Event";
+    case Type_Capability:
+      return "Capability";
     default:
       return "Unknown";
     }

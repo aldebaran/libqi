@@ -243,9 +243,10 @@ namespace qi
     qi::int64_t start = 0;
     if (usWarnThreshold)
       start = os::ustime(); // call might be not that cheap
-    if (!hasReceivedRemoteCapabilities() && ((_msg->service() == Message::Service_Server &&
-         _msg->function() == Message::ServerFunction_Authenticate)
-        || _msg->type() == Message::Type_Capability))
+    if ((!hasReceivedRemoteCapabilities() &&
+          _msg->service() == Message::Service_Server &&
+          _msg->function() == Message::ServerFunction_Authenticate)
+        || _msg->type() == Message::Type_Capability)
     {
       // This one is for us
       if (_msg->type() != Message::Type_Error)
