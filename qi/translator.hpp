@@ -34,14 +34,26 @@ namespace qi
     /**
      * \brief Translate a message.
      *
-     * \param msg    Message to translate
-     * \param domain Domain name
-     * \param locale Locale name
+     * \param msg     Message to translate
+     * \param domain  Domain name
+     * \param locale  Locale name
+     * \param context Context of the msg
      * \return The translated message
      */
     std::string translate(const std::string &msg,
                           const std::string &domain = "",
-                          const std::string &locale = "");
+                          const std::string &locale = "",
+                          const std::string &context = "");
+
+    /**
+     * \brief Translate a message with a specific context.
+     *
+     * \param msg     Message to translate
+     * \param context Context of the msg
+     * \return The translated message
+     */
+    std::string translateContext(const std::string &msg,
+                                 const std::string &context);
 
     /**
      * \brief Change the locale at runtime.
@@ -79,8 +91,14 @@ namespace qi
    */
   QI_API std::string tr(const std::string &msg,
                         const std::string &domain = "",
-                        const std::string &locale = "");
+                        const std::string &locale = "",
+                        const std::string &context = "");
 
+  /**
+   * \copydoc qi::Translator::translateContext
+   */
+  QI_API std::string trContext(const std::string &msg,
+                               const std::string &context);
   namespace detail
   {
     QI_API void addDomainPath(const std::string &path);

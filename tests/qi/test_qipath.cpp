@@ -575,7 +575,7 @@ TEST_F(qiPathData, listDataWithOptSdk)
   sdkl->addOptionalSdkPrefix(optSdkPrefix.string(qi::unicodeFacet()).c_str());
 
   std::vector<std::string> actual = sdkl->listData("foo", "*.dat");
-  EXPECT_EQ(6, actual.size());
+  EXPECT_EQ(6u, actual.size());
 
   // user.dat is only available in user.
   EXPECT_TRUE(isInVector(userShareFooUserDat, actual));
@@ -596,7 +596,7 @@ TEST_F(qiPathData, listDataWithOptSdk)
   EXPECT_TRUE(isInVector(optSdkShareFoo / "opt.dat", actual));
 
   actual = sdkl->listData("fuu", "*.dat");
-  EXPECT_EQ(1, actual.size());
+  EXPECT_EQ(1u, actual.size());
 
   // fuu.dat is only available in sdk
   EXPECT_TRUE(isInVector(optSdkShareFuu / "fuu.dat", actual));
@@ -609,28 +609,28 @@ TEST_F(qiPathData, listDataInSubFolder)
   std::vector<std::string> actual;
 
   actual = sdkl->listData("foo", "bar/baz.dat");
-  ASSERT_EQ(1, actual.size());
+  ASSERT_EQ(1u, actual.size());
   EXPECT_EQ(actual[0], expected);
 
 #ifdef _WIN32
   actual = sdkl->listData("foo", "bar\\baz.dat");
-  ASSERT_EQ(1, actual.size());
+  ASSERT_EQ(1u, actual.size());
   EXPECT_EQ(actual[0], expected);
 #endif
 
   actual = sdkl->listData("foo", "*bar/baz.dat");
-  ASSERT_EQ(1, actual.size());
+  ASSERT_EQ(1u, actual.size());
   EXPECT_EQ(actual[0], expected);
 
   actual = sdkl->listData("foo", "/bar/baz.dat");
-  ASSERT_EQ(1, actual.size());
+  ASSERT_EQ(1u, actual.size());
   EXPECT_EQ(actual[0], expected);
 
   // Application names ending with "/" are not really supported.
   // However, that would work with findData, so let support it with listData
   // too.
   actual = sdkl->listData("foo/", "bar/baz.dat");
-  ASSERT_EQ(1, actual.size());
+  ASSERT_EQ(1u, actual.size());
   EXPECT_EQ(actual[0], expected);
 
   // Well, in the following case, findData would work but listData does not
@@ -642,11 +642,11 @@ TEST_F(qiPathData, listDataInSubFolder)
   //EXPECT_EQ(actual[0], expected);
 
   actual = sdkl->listData("foo", "/*bar/baz.dat");
-  ASSERT_EQ(1, actual.size());
+  ASSERT_EQ(1u, actual.size());
   EXPECT_EQ(actual[0], expected);
 
   actual = sdkl->listData("foo", "*/bar/baz.dat");
-  EXPECT_EQ(0, actual.size());
+  EXPECT_EQ(0u, actual.size());
 }
 
 TEST_F(qiPathData, listDataInSubFolderWithOptSdk)
@@ -655,7 +655,7 @@ TEST_F(qiPathData, listDataInSubFolderWithOptSdk)
   sdkl->addOptionalSdkPrefix(optSdkPrefix.string(qi::unicodeFacet()).c_str());
 
   std::vector<std::string> actual = sdkl->listData("foo", "ba?/*.dat");
-  EXPECT_EQ(3, actual.size());
+  EXPECT_EQ(3u, actual.size());
 
   EXPECT_TRUE(isInVector(sdkShareFoo / "bar/baz.dat", actual));
   EXPECT_TRUE(isInVector(sdkShareFoo / "baz/baz.dat", actual));

@@ -2,7 +2,6 @@
 **  Copyright (C) 2012, 2013 Aldebaran Robotics
 **  See COPYING for the license
 */
-
 #include <boost/thread.hpp>
 #include <boost/program_options.hpp>
 #include <boost/make_shared.hpp>
@@ -92,9 +91,9 @@ namespace qi {
   void EventLoopAsio::_pingThread()
   {
     qi::os::setCurrentThreadName("EvLoop.mon");
-    static int msTimeout = qi::os::getEnvDefault("QI_EVENTLOOP_PING_TIMEOUT", 500);
-    static int msGrace = qi::os::getEnvDefault("QI_EVENTLOOP_GRACE_PERIOD", 0);
-    static int maxTimeouts = qi::os::getEnvDefault("QI_EVENTLOOP_MAX_TIMEOUTS", 20);
+    static unsigned int msTimeout = qi::os::getEnvDefault("QI_EVENTLOOP_PING_TIMEOUT", 500u);
+    static unsigned int msGrace = qi::os::getEnvDefault("QI_EVENTLOOP_GRACE_PERIOD", 0u);
+    static unsigned int maxTimeouts = qi::os::getEnvDefault("QI_EVENTLOOP_MAX_TIMEOUTS", 20u);
     ++_nThreads;
     boost::mutex mutex;
     boost::condition_variable cond;
@@ -259,6 +258,8 @@ namespace qi {
       try
       {
         f();
+        tracepoint(qi_qi, eventloop_task_stop, id);
+        p.setValue(0);
       }
       catch (const detail::TerminateThread& e)
       {
@@ -274,9 +275,6 @@ namespace qi {
         tracepoint(qi_qi, eventloop_task_error, id);
         p.setError("unknown error");
       }
-
-      tracepoint(qi_qi, eventloop_task_stop, id);
-      p.setValue(0);
     }
     else
     {
@@ -314,7 +312,7 @@ namespace qi {
     ++_totalTask;
     tracepoint(qi_qi, eventloop_delay, id, cb.target_type().name(), boost::chrono::duration_cast<qi::MicroSeconds>(delay).count());
     boost::shared_ptr<boost::asio::steady_timer> timer = boost::make_shared<boost::asio::steady_timer>(boost::ref(_io));
-    timer->expires_from_now(delay);
+    timer->expires_from_now(boost::chrono::duration_cast<boost::asio::steady_timer::duration>(delay));
     qi::Promise<void> prom(boost::bind(&boost::asio::steady_timer::cancel, timer));
     timer->async_wait(boost::bind(&EventLoopAsio::invoke_maybe, this, cb, id, prom, _1));
     return prom.future();

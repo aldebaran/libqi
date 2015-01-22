@@ -347,7 +347,7 @@ friend class qi::TypeImpl<name>;
  */
 #define QI_TYPE_STRUCT_REGISTER(name, ...) \
 namespace _qi_ {                           \
-    QI_TYPE_STRUCT(name, __VA_ARGS__);     \
+    QI_TYPE_STRUCT(name, __VA_ARGS__)      \
 }                                          \
 QI_TYPE_REGISTER_CUSTOM(name, _qi_::qi::TypeImpl<name>)
 

@@ -16,6 +16,7 @@ set_source_files_properties(src/os_posix.cpp
 
 # We always want boost filesystem v3
 add_definitions("-DBOOST_FILESYSTEM_VERSION=3")
+add_definitions("-DBOOST_ASIO_DISABLE_STD_CHRONO")
 
 if(MSVC)
   add_definitions(" -DWIN32_LEAN_AND_MEAN ")
@@ -29,6 +30,9 @@ if (UNIX)
  add_definitions(" -fno-strict-aliasing ")
 endif()
 
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
+endif()
 
 if (WITH_SSL)
  add_definitions(" -DWITH_SSL ")
@@ -62,17 +66,20 @@ set(QI_H qi/detail/clock.hxx
          qi/detail/executioncontext.hpp
          qi/detail/mpl.hpp
          qi/detail/log.hxx
+         qi/detail/mpl.hpp
          qi/detail/trackable.hxx
          qi/detail/warn_push_ignore_deprecated.hpp
          qi/detail/warn_pop_ignore_deprecated.hpp
          qi/api.hpp
          qi/actor.hpp
          qi/application.hpp
+         qi/actor.hpp
          qi/atomic.hpp
          qi/buffer.hpp
          qi/clock.hpp
          qi/future.hpp
          qi/log/consoleloghandler.hpp
+         qi/log/csvloghandler.hpp
          qi/log/fileloghandler.hpp
          qi/log/headfileloghandler.hpp
          qi/log/tailfileloghandler.hpp
@@ -81,6 +88,7 @@ set(QI_H qi/detail/clock.hxx
          qi/os.hpp
          qi/getenv.hpp
          qi/preproc.hpp
+         qi/qi.hpp
          qi/types.hpp
          qi/path.hpp
          qi/periodictask.hpp
@@ -107,6 +115,7 @@ set(QI_C src/dlfcn.cpp
          src/log_p.hpp
          src/consoleloghandler.cpp
          src/fileloghandler.cpp
+         src/csvloghandler.cpp
          src/headfileloghandler.cpp
          src/tailfileloghandler.cpp
          src/locale-light.cpp
@@ -218,12 +227,15 @@ set(QITYPE_C src/type/binarycodec.cpp
              src/type/type.cpp
              src/type/signature.cpp
              src/type/traceanalyzer.cpp
-             src/type/registration.cpp
              )
 
 
 set(QIM_H qi/api.hpp
+          qi/messaging/authprovider.hpp
+          qi/messaging/authproviderfactory.hpp
           qi/messaging/autoservice.hpp
+          qi/messaging/clientauthenticator.hpp
+          qi/messaging/clientauthenticatorfactory.hpp
           qi/messaging/details/autoservice.hxx
           qi/messaging/gateway.hpp
           qi/messaging/serviceinfo.hpp
@@ -233,8 +245,12 @@ set(QIM_H qi/api.hpp
 )
 
 set(QIM_C src/messaging/applicationsession.cpp
+          src/messaging/authprovider_p.hpp
+          src/messaging/authprovider.cpp
           src/messaging/boundobject.cpp
           src/messaging/boundobject.hpp
+          src/messaging/clientauthenticator_p.hpp
+          src/messaging/clientauthenticator.cpp
           src/messaging/gateway.cpp
           src/messaging/message.hpp
           src/messaging/message.cpp
@@ -259,6 +275,8 @@ set(QIM_C src/messaging/applicationsession.cpp
           src/messaging/sessionservices.cpp
           src/messaging/server.hpp
           src/messaging/server.cpp
+          src/messaging/streamcontext.hpp
+          src/messaging/streamcontext.cpp
           src/messaging/transportserver.hpp
           src/messaging/transportserver.cpp
           src/messaging/transportserverasio_p.cpp
@@ -271,6 +289,7 @@ set(QIM_C src/messaging/applicationsession.cpp
           src/messaging/tcptransportsocket.hpp
           src/messaging/url.cpp
           src/messaging/serverresult.hpp
+          src/registration.cpp
           )
 
 set(QIPERF_H

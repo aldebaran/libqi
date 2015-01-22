@@ -1,8 +1,6 @@
 #include <qi/type/detail/manageable.hpp>
 #include <qi/type/objecttypebuilder.hpp>
 
-#include "staticobjecttype.hpp"
-
 namespace qi
 {
 
@@ -97,20 +95,20 @@ namespace qi
 
   void Manageable::pushStats(int slotId, float wallTime, float userTime, float systemTime)
   {
-    boost::mutex::scoped_lock(_p->registrationsMutex);
+    boost::mutex::scoped_lock l(_p->registrationsMutex);
     MethodStatistics& ms = _p->stats[slotId];
     ms.push(wallTime, userTime, systemTime);
   }
 
   ObjectStatistics Manageable::stats() const
   {
-    boost::mutex::scoped_lock(_p->registrationsMutex);
+    boost::mutex::scoped_lock l(_p->registrationsMutex);
     return _p->stats;
   }
 
   void Manageable::clearStats()
   {
-    boost::mutex::scoped_lock(_p->registrationsMutex);
+    boost::mutex::scoped_lock l(_p->registrationsMutex);
     _p->stats.clear();
   }
 
@@ -152,7 +150,7 @@ namespace qi
     builder.advertiseMethod("enableTrace", &Manageable::enableTrace,       MetaCallType_Auto, id++);
     builder.advertiseSignal("traceObject", &Manageable::traceObject, id++);
     assert(id <= endId);
-    const ObjectTypeData& typeData = builder.typeData();
+    const detail::ObjectTypeData& typeData = builder.typeData();
     *manageable::methodMap = typeData.methodMap;
     *manageable::signalMap = typeData.signalGetterMap;
     *manageable::metaObject = builder.metaObject();

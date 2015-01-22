@@ -64,8 +64,8 @@ namespace qi {
     virtual qi::Future<SignalLink> metaConnect(unsigned int event, const SignalSubscriber& sub);
     virtual qi::Future<void> metaDisconnect(SignalLink linkId);
 
-    virtual qi::Future<AnyValue> metaProperty(unsigned int id);
-    virtual qi::Future<void> metaSetProperty(unsigned int id, AnyValue val);
+    virtual qi::Future<AnyValue> metaProperty(qi::AnyObject context, unsigned int id);
+    virtual qi::Future<void> metaSetProperty(qi::AnyObject context, unsigned int id, AnyValue val);
 
   protected:
     typedef std::map<qi::uint64_t, RemoteSignalLinks>  LocalToRemoteSignalLinkMap;

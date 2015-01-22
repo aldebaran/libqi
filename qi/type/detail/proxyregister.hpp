@@ -74,17 +74,17 @@ public:
     static std::vector<std::pair<TypeInterface*, int> > empty;
     return empty;
   }
-  virtual qi::Future<AnyValue> property(void* instance, unsigned int id)
+  virtual qi::Future<AnyValue> property(void* instance, AnyObject context, unsigned int id)
   {
     Proxy* ptr = toProxy(instance);
     GenericObject* obj = ptr->asObject().asGenericObject();
-    return obj->type->property(obj->value, id);
+    return obj->type->property(obj->value, context, id);
   }
-  virtual qi::Future<void> setProperty(void* instance, unsigned int id, AnyValue value)
+  virtual qi::Future<void> setProperty(void* instance, AnyObject context, unsigned int id, AnyValue value)
   {
     Proxy* ptr = toProxy(instance);
     GenericObject* obj = ptr->asObject().asGenericObject();
-    return obj->type->setProperty(obj->value, id, value);
+    return obj->type->setProperty(obj->value, context, id, value);
   }
   typedef DefaultTypeImplMethods<Proxy> Methods;
   _QI_BOUNCE_TYPE_METHODS(Methods);
@@ -156,7 +156,7 @@ bool registerProxyInterface()
   // proper static_cast (from Proxy template to qi::Proxy) helper.
   registerType(typeid(Proxy), detail::makeProxyInterface<Proxy>());
   detail::ProxyGeneratorMap& map = detail::proxyGeneratorMap();
-  map[typeOf<Interface>()->info()] = &detail::makeProxy<Proxy>;
+  map[typeOf<Interface>()->info()] = boost::function<AnyReference(AnyObject)>(&detail::makeProxy<Proxy>);
   return true;
 }
 
@@ -176,7 +176,7 @@ bool registerProxy()
   */
   registerType(typeid(ProxyType), detail::makeProxyInterfaceWrapper<ProxyType>());
   detail::ProxyGeneratorMap& map = detail::proxyGeneratorMap();
-  map[typeOf<ProxyType>()->info()] = &detail::makeProxy<ProxyType>;
+  map[typeOf<ProxyType>()->info()] = boost::function<AnyReference(AnyObject)>(&detail::makeProxy<ProxyType>);
   return true;
 }
 

@@ -6,7 +6,7 @@
 #include <boost/thread.hpp>
 #include <qi/anyobject.hpp>
 #include <qi/type/objecttypebuilder.hpp>
-#include "staticobjecttype.hpp"
+#include <qi/type/detail/staticobjecttype.hpp>
 #include "metaobject_p.hpp"
 
 qiLogCategory("qitype.objectbuilder");
@@ -20,7 +20,7 @@ namespace qi {
     : type(0)
     , autoRegister(true)
     {}
-    ObjectTypeData data;
+    detail::ObjectTypeData data;
     ObjectTypeInterface*    type;
     MetaObject     metaObject;
     bool                 autoRegister;
@@ -105,7 +105,7 @@ namespace qi {
     return ret;
   }
 
-  const ObjectTypeData& ObjectTypeBuilderBase::typeData()
+  const detail::ObjectTypeData& ObjectTypeBuilderBase::typeData()
   {
     return _p->data;
   }
@@ -114,7 +114,7 @@ namespace qi {
   {
     if (!_p->type)
     {
-      StaticObjectTypeBase* t = new StaticObjectTypeBase();
+      detail::StaticObjectTypeBase* t = new detail::StaticObjectTypeBase();
       t->initialize(metaObject(), _p->data);
       _p->type = t;
       if (_p->autoRegister)

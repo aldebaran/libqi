@@ -103,7 +103,7 @@ TEST(QiOs, currentThreadName)
 TEST(QiOs, MemoryUsage)
 {
   ASSERT_TRUE(qi::os::memoryUsage(qi::os::getpid()) > 0);
-  ASSERT_EQ(0, qi::os::memoryUsage(0));
+  ASSERT_EQ(0u, qi::os::memoryUsage(0));
 }
 
 TEST(QiOs, timeValOperator)
@@ -468,7 +468,7 @@ TEST(QiOs, getMachineId)
   std::string uuid2FileName = (qi::os::tmp()).append("machine_id_test_42");
   std::ifstream uuid2file(uuid2FileName.c_str());
 
-  ASSERT_TRUE(uuid2file != NULL);
+  ASSERT_TRUE(uuid2file);
 
   uuid2file >> uuid2;
   uuid2file.close();

@@ -18,6 +18,8 @@
 
 qiLogCategory("qi.translator");
 
+namespace bfs = boost::filesystem;
+
 namespace qi
 {
   static qi::Translator *globTranslator = 0;
@@ -34,7 +36,8 @@ namespace qi
 
   std::string tr(const std::string &msg,
                  const std::string &domain,
-                 const std::string &locale)
+                 const std::string &locale,
+                 const std::string &context)
   {
     if (globTranslator == 0)
     {
@@ -42,7 +45,19 @@ namespace qi
       return msg;
     }
 
-    return globTranslator->translate(msg, domain, locale);
+    return globTranslator->translate(msg, domain, locale, context);
+  }
+
+  std::string trContext(const std::string &msg,
+                        const std::string &context)
+  {
+    if (globTranslator == 0)
+    {
+      qiLogWarning() << "You must init your translator first!";
+      return msg;
+    }
+
+    return globTranslator->translate(msg, "", "", context);
   }
 
   namespace detail
@@ -52,7 +67,7 @@ namespace qi
     {
       std::string confPath = qi::path::userWritableDataPath("naoqi", ".domain_path");
       boost::mutex::scoped_lock l(gFileMutex);
-      std::ifstream fd(confPath.c_str());
+      std::ifstream fd(bfs::path(confPath, qi::unicodeFacet()).string().c_str());
       std::set<std::string> paths;
 
       if (!fd.good())
@@ -76,7 +91,7 @@ namespace qi
 
       std::string confPath = qi::path::userWritableDataPath("naoqi", ".domain_path");
       boost::mutex::scoped_lock l(gFileMutex);
-      std::ofstream fd(confPath.c_str(), std::ios::app | std::ios::out);
+      std::ofstream fd(bfs::path(confPath, qi::unicodeFacet()).string().c_str(), std::ios::app | std::ios::out);
 
       if (!fd.good())
         return;
@@ -90,7 +105,7 @@ namespace qi
       std::string confPath = qi::path::userWritableDataPath("naoqi", ".domain_path");
       std::set<std::string> dPaths = domainPaths();
       boost::mutex::scoped_lock l(gFileMutex);
-      std::ofstream fd(confPath.c_str(), std::ios::trunc | std::ios::out);
+      std::ofstream fd(bfs::path(confPath, qi::unicodeFacet()).string().c_str(), std::ios::trunc | std::ios::out);
 
       if (!fd.good())
         return;
@@ -186,7 +201,8 @@ namespace qi
 
   std::string Translator::translate(const std::string &msg,
                                     const std::string &domain,
-                                    const std::string &locale)
+                                    const std::string &locale,
+                                    const std::string &context)
   {
     boost::mutex::scoped_lock l(_p->mutex);
     if (_p->currentDomain.empty() && domain.empty())
@@ -236,10 +252,16 @@ namespace qi
       loc += ".UTF-8";
 
     if (domain.empty())
-      return boost::locale::translate(msg).str(_p->generator(loc));
+      return boost::locale::translate(context, msg).str(_p->generator(loc));
     else
-      return boost::locale::translate(msg).str(_p->generator(loc),
+      return boost::locale::translate(context, msg).str(_p->generator(loc),
                                                dom);
+  }
+
+  std::string Translator::translateContext(const std::string &msg,
+                                           const std::string &context)
+  {
+    return translate(msg, "", "", context);
   }
 
   void Translator::setCurrentLocale(const std::string &locale)

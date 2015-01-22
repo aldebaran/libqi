@@ -13,6 +13,7 @@
 #include <qi/type/typeinterface.hpp>
 #include <qi/type/typeobject.hpp>
 #include <qi/type/detail/typeimpl.hxx>
+#include <qi/type/detail/genericobject.hpp>
 #include <qi/type/metasignal.hpp>
 #include <qi/type/metamethod.hpp>
 #include <qi/type/metaobject.hpp>
@@ -26,7 +27,23 @@ namespace qi {
 
 class Empty {};
 
+/** create a T, wrap in a AnyObject
+ *  All template parameters are given to the T constructor except the first one
+ */
+#define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma) \
+template<typename T comma ATYPEDECL>                      \
+Object<T> constructObject(ADECL)                          \
+{                                                         \
+  return Object<T>(new T(AUSE));                          \
+}
+QI_GEN(genCall)
+#undef genCall
+
 namespace detail {
+
+  typedef std::map<TypeInfo, boost::function<AnyReference(AnyObject)> >
+    ProxyGeneratorMap;
+  QI_API ProxyGeneratorMap& proxyGeneratorMap();
 
   /* On ubuntu (and maybe other platforms), the linking is done by default with
    * --as-needed.
@@ -312,17 +329,10 @@ template<typename T> inline ObjectTypeInterface* Object<T>::interface()
   TypeInterface* type = typeOf<T>();
   if (type->kind() != TypeKind_Object)
   {
-    // Try template
-    TemplateTypeInterface* t = dynamic_cast<TemplateTypeInterface*>(type);
-    if (t)
-      type = t->next();
-    if (type->kind() != TypeKind_Object)
-    {
-      std::stringstream err;
-      err << "Object<T> can only be used on registered object types. ("
-      << type->infoString() << ")(" << type->kind() << ')';
-      throw std::runtime_error(err.str());
-    }
+    std::stringstream err;
+    err << "Object<T> can only be used on registered object types. ("
+    << type->infoString() << ")(" << type->kind() << ')';
+    throw std::runtime_error(err.str());
   }
   ObjectTypeInterface* otype = static_cast<ObjectTypeInterface*>(type);
   return otype;

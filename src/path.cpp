@@ -56,6 +56,12 @@ namespace qi
     : _p(new PrivatePath(path._p->path))
   {}
 
+  Path::Path(const bfs::path& path)
+    : _p(new PrivatePath(path))
+  {
+
+  }
+
   Path::~Path()
   {
   }
@@ -169,6 +175,11 @@ namespace qi
   std::string Path::str() const
   {
     return _p->path.string(qi::unicodeFacet());
+  }
+
+  const boost::filesystem::path& Path::bfsPath() const
+  {
+    return _p->path;
   }
 
 

@@ -24,6 +24,7 @@ enum TaskState
   Task_Starting = 4, //< being started
   Task_Stopping = 5, //< stop requested
   Task_Triggering = 6, //< force trigger
+  Task_TriggerReady = 7, //< force trigger (step 2)
 };
 
 /* Transition matrix:
@@ -84,17 +85,17 @@ namespace qi
     boost::enable_shared_from_this<PeriodicTaskPrivate>
   {
     MethodStatistics        _callStats;
-    qi::int64_t             _statsDisplayTime;
+    qi::SteadyClockTimePoint _statsDisplayTime;
     PeriodicTask::Callback  _callback;
     PeriodicTask::ScheduleCallback _scheduleCallback;
-    qi::int64_t             _usPeriod;
+    qi::Duration            _period;
     qi::Atomic<int>         _state;
     qi::Future<void>        _task;
     std::string             _name;
     bool                    _compensateCallTime;
     int                     _tid;
 
-    void _reschedule(qi::int64_t delay);
+    void _reschedule(qi::Duration delay = qi::Duration(0));
     void _wrap();
     void _trigger(qi::Future<void> future);
   };
@@ -102,10 +103,10 @@ namespace qi
   PeriodicTask::PeriodicTask() :
     _p(new PeriodicTaskPrivate)
   {
-    _p->_usPeriod = -1;
+    _p->_period = qi::Duration(-1);
     _p->_tid = invalidThreadId;
     _p->_compensateCallTime =false;
-    _p->_statsDisplayTime = qi::os::ustime();
+    _p->_statsDisplayTime = qi::steadyClockNow();
     _p->_name = "PeriodicTask_" + boost::lexical_cast<std::string>(this);
   }
 
@@ -143,29 +144,42 @@ namespace qi
   {
     if (usp<0)
       throw std::runtime_error("Period cannot be negative");
-    _p->_usPeriod = usp;
+    _p->_period = qi::MicroSeconds(usp);
+  }
+
+  void PeriodicTask::setPeriod(qi::Duration period)
+  {
+    if (period < qi::Duration(0))
+      throw std::runtime_error("Period cannot be negative");
+    _p->_period = period;
   }
 
   void PeriodicTask::start(bool immediate)
   {
     if (!_p->_callback)
       throw std::runtime_error("Periodic task cannot start without a setCallback() call first");
-    if (_p->_usPeriod < 0)
-      throw std::runtime_error("Periodic task cannot start without a setUsPeriod() call first");
+    if (_p->_period < qi::Duration(0))
+      throw std::runtime_error("Periodic task cannot start without a setPeriod() call first");
     // we are called from the callback
     if (os::gettid() == _p->_tid)
       return;
+
+    qiLogDebug() << *_p->_state << " start";
     //Stopping is not handled by start, stop will handle it for us.
     stop();
     if (!_p->_state.setIfEquals(Task_Stopped, Task_Starting))
+    {
+      qiLogDebug() << *_p->_state << " task was not stopped";
       return; // Already running or being started.
+    }
     if (!_p->_state.setIfEquals(Task_Starting, Task_Rescheduling))
       qiLogError() << "Periodic task internal error while starting";
-    _p->_reschedule(immediate?0:_p->_usPeriod);
+    _p->_reschedule(immediate ? qi::Duration(0) : _p->_period);
   }
 
   void PeriodicTask::trigger()
   {
+    qiLogDebug() << *_p->_state << " trigger";
     while (true)
     {
       if (_p->_state.setIfEquals(Task_Stopped, Task_Stopped) ||
@@ -173,13 +187,22 @@ namespace qi
           _p->_state.setIfEquals(Task_Starting, Task_Starting) ||
           _p->_state.setIfEquals(Task_Running, Task_Running) ||
           _p->_state.setIfEquals(Task_Rescheduling, Task_Rescheduling) ||
-          _p->_state.setIfEquals(Task_Triggering, Task_Triggering))
+          _p->_state.setIfEquals(Task_Triggering, Task_Triggering) ||
+          _p->_state.setIfEquals(Task_TriggerReady, Task_TriggerReady))
+      {
+        qiLogDebug() << *_p->_state << " nothing to do";
         return;
+      }
       if (_p->_state.setIfEquals(Task_Scheduled, Task_Triggering))
       {
+        qiLogDebug() << *_p->_state << " scheduled to triggerring";
         _p->_task.cancel();
+        qiLogDebug() << *_p->_state << " cancel done";
         _p->_task.connect(&PeriodicTaskPrivate::_trigger, _p, _1,
             FutureCallbackType_Sync);
+        qiLogDebug() << *_p->_state << " connected callback";
+        _p->_state.setIfEquals(Task_Triggering, Task_TriggerReady);
+        qiLogDebug() << *_p->_state << " ready";
         return;
       }
     }
@@ -187,17 +210,28 @@ namespace qi
 
   void PeriodicTaskPrivate::_trigger(qi::Future<void> future)
   {
+    qiLogDebug() << *_state << " future finished";
     // if future was not canceled, the task already ran, don't retrigger
     if (!future.isCanceled())
+    {
+      qiLogDebug() << *_state << " task successfully ran";
       return;
+    }
 
     // else, start the task now if we are still triggering
-    if (_state.setIfEquals(Task_Triggering, Task_Rescheduling))
-      _reschedule(0);
+    if (_state.setIfEquals(Task_Triggering, Task_Rescheduling) ||
+        _state.setIfEquals(Task_TriggerReady, Task_Rescheduling))
+    {
+      qiLogDebug() << *_state << " rescheduling";
+      _reschedule();
+    }
+    else
+      qiLogDebug() << *_state << " not rescheduling anymore";
   }
 
   void PeriodicTaskPrivate::_wrap()
   {
+    qiLogDebug() << *_state << " callback start";
     if (*_state == Task_Stopped)
       qiLogError()  << "PeriodicTask inconsistency: stopped from callback";
     /* To avoid being stuck because of unhandled transition, the rule is
@@ -205,7 +239,10 @@ namespace qi
     * to stop us, and must eventualy reach the Stopping state
     */
     if (_state.setIfEquals(Task_Stopping, Task_Stopped))
+    {
+      qiLogDebug() << *_state << " stopped before callback";
       return;
+    }
     /* reschedule() needs to call async() before reseting state from rescheduling
     *  to scheduled, to protect the _task object. So we might still be
     * in rescheduling state here.
@@ -215,29 +252,30 @@ namespace qi
     // order matters! check scheduled state first as the state cannot change
     // from triggering to scheduled but can change in the other way
     if (!_state.setIfEquals(Task_Scheduled, Task_Running) &&
-        !_state.setIfEquals(Task_Triggering, Task_Running))
+        !_state.setIfEquals(Task_Triggering, Task_Triggering) &&
+        !_state.setIfEquals(Task_TriggerReady, Task_TriggerReady))
     {
+      qiLogDebug() << *_state << " not scheduled nor triggering, waiting for stop";
       setState(_state, Task_Stopping, Task_Stopped);
       return;
     }
     bool shouldAbort = false;
-    qi::int64_t wall = 0, now=0, delta=0;
+    qi::SteadyClockTimePoint now;
+    qi::Duration delta;
     qi::int64_t usr, sys;
     bool compensate = _compensateCallTime; // we don't want that bool to change in the middle
     try
     {
-      wall = qi::os::ustime();
+      qi::SteadyClockTimePoint start = qi::steadyClockNow();
       std::pair<qi::int64_t, qi::int64_t> cpu = qi::os::cputime();
       _tid = os::gettid();
       _callback();
       _tid = invalidThreadId;
-      now = qi::os::ustime();
-      wall = now - wall;
+      now = qi::steadyClockNow();
+      delta = now - start;
       std::pair<qi::int64_t, qi::int64_t> cpu2 = qi::os::cputime();
       usr = cpu2.first - cpu.first;
       sys = cpu2.second - cpu.second;
-      if (compensate)
-        delta = wall;
     }
     catch (const std::exception& e)
     {
@@ -251,17 +289,21 @@ namespace qi
     }
     if (shouldAbort)
     {
+      qiLogDebug() << *_state << " should abort, bye";
       setState(_state, Task_Stopping, Task_Stopped,
                        Task_Running, Task_Stopped);
       return;
     }
     else
     {
-      _callStats.push((float)wall / 1e6f, (float)usr / 1e6f, (float)sys / 1e6f);
+      _callStats.push(
+          (float)boost::chrono::duration_cast<qi::MicroSeconds>(delta).count() / 1e6f,
+          (float)usr / 1e6f,
+          (float)sys / 1e6f);
 
-      if (now - _statsDisplayTime >= 20000000)
+      if (now - _statsDisplayTime >= qi::Seconds(20))
       {
-        float secTime = float(now - _statsDisplayTime) / 1e6f;
+        float secTime = float(boost::chrono::duration_cast<qi::MicroSeconds>(now - _statsDisplayTime).count()) / 1e6f;
         _statsDisplayTime = now;
         unsigned int count = _callStats.count();
         std::string catName = "stats." + _name;
@@ -276,20 +318,26 @@ namespace qi
         _callStats.reset();
       }
 
-      if (!_state.setIfEquals(Task_Running, Task_Rescheduling))
+      while (*_state == Task_Triggering)
+        boost::this_thread::yield();
+
+      if (!_state.setIfEquals(Task_Running, Task_Rescheduling) &&
+          !_state.setIfEquals(Task_TriggerReady, Task_Rescheduling))
       { // If we are not in running state anymore, someone switched us
         // to stopping
+        qiLogDebug() << *_state << " not running anymore, waiting for stop";
         setState(_state, Task_Stopping, Task_Stopped);
         return;
       }
-      _reschedule(std::max((qi::int64_t)0, _usPeriod - delta));
+      _reschedule(std::max(qi::Duration(0), _period - (compensate ? delta : qi::Duration(0))));
     }
   }
-  void PeriodicTaskPrivate::_reschedule(qi::int64_t delay)
+
+  void PeriodicTaskPrivate::_reschedule(qi::Duration delay)
   {
-    qiLogDebug() << _name <<" rescheduling in " << delay;
+    qiLogDebug() << *_state << " rescheduling in " << delay;
     if (_scheduleCallback)
-      _task = _scheduleCallback(boost::bind(&PeriodicTaskPrivate::_wrap, shared_from_this()), qi::MicroSeconds(delay));
+      _task = _scheduleCallback(boost::bind(&PeriodicTaskPrivate::_wrap, shared_from_this()), delay);
     else
       _task = getEventLoop()->async(boost::bind(&PeriodicTaskPrivate::_wrap, shared_from_this()), delay);
     if (!_state.setIfEquals(Task_Rescheduling, Task_Scheduled))
@@ -298,6 +346,7 @@ namespace qi
 
   void PeriodicTask::asyncStop()
   {
+    qiLogDebug() << *_p->_state << " async stop";
     if (_p->_state.setIfEquals(Task_Stopped, Task_Stopped))
       return;
     // we are allowed to go from Scheduled and Running to Stopping
@@ -311,6 +360,7 @@ namespace qi
     // the callback (_wrap)  is not allowed to touch _task, we can just cancel/wait it
     try
     {
+      qiLogDebug() << *_p->_state << " canceling";
       _p->_task.cancel();
     }
     catch(...)
@@ -319,17 +369,20 @@ namespace qi
 
   void PeriodicTask::stop()
   {
+    qiLogDebug() << *_p->_state << " stop";
     asyncStop();
     if (os::gettid() == _p->_tid)
       return;
     try
     {
+      qiLogDebug() << *_p->_state << " waiting";
       _p->_task.wait();
     }
     catch (...) {}
 
     // So here state can be stopping (callback was aborted) or stopped
     // We set to stopped either way to be ready for restart.
+    qiLogDebug() << *_p->_state << " going to stopped state";
     if (!_p->_state.setIfEquals(Task_Stopping , Task_Stopped) &&
         !_p->_state.setIfEquals(Task_Stopped, Task_Stopped))
       qiLogError() << "PeriodicTask inconsistency, expected Stopped, got " << *_p->_state;

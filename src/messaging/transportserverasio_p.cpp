@@ -302,7 +302,7 @@ namespace qi
       connection_reset,
       network_down,
     };
-    for (int i = 0; i < sizeof(fatalErrors) / sizeof(fatalErrors[0]); ++i)
+    for (size_t i = 0; i < sizeof(fatalErrors) / sizeof(fatalErrors[0]); ++i)
       if (errorCode == fatalErrors[i])
         return true;
     return false;

@@ -40,6 +40,9 @@ namespace qi
 
     typedef std::map<unsigned int, std::pair<PropertyBase*, bool> > PropertyMap;
     PropertyMap propertyMap;
+
+    ExecutionContext* getExecutionContext(
+        qi::AnyObject context, MetaCallType methodThreadingModel);
   };
 
   DynamicObjectPrivate::DynamicObjectPrivate()
@@ -111,8 +114,8 @@ namespace qi
     /// Disconnect an event link. Returns if disconnection was successful.
     virtual qi::Future<void> disconnect(void* instance, AnyObject context, SignalLink linkId);
     virtual const std::vector<std::pair<TypeInterface*, int> >& parentTypes();
-    virtual qi::Future<AnyValue> property(void* instance, unsigned int id);
-    virtual qi::Future<void> setProperty(void* instance, unsigned int id, AnyValue val);
+    virtual qi::Future<AnyValue> property(void* instance, AnyObject context, unsigned int id);
+    virtual qi::Future<void> setProperty(void* instance, AnyObject context, unsigned int id, AnyValue val);
     _QI_BOUNCE_TYPE_METHODS(DefaultTypeImplMethods<DynamicObject>);
   };
 
@@ -209,6 +212,28 @@ namespace qi
       return i->second.first;
   }
 
+  ExecutionContext* DynamicObjectPrivate::getExecutionContext(
+      qi::AnyObject context, MetaCallType methodThreadingModel)
+  {
+    ExecutionContext* ec = context.executionContext();
+    if (threadingModel == ObjectThreadingModel_SingleThread)
+    {
+      // execute queued methods on global eventloop if they are of queued type
+      if (methodThreadingModel == MetaCallType_Queued)
+        ec = 0;
+      else if (!ec)
+      {
+        boost::shared_ptr<Manageable> manageable = context.managedObjectPtr();
+        boost::mutex::scoped_lock l(manageable->initMutex());
+        if (!manageable->executionContext())
+          manageable->forceExecutionContext(boost::shared_ptr<qi::Strand>(
+                new qi::Strand(*::qi::getEventLoop())));
+        ec = context.executionContext();
+      }
+    }
+    return ec;
+  }
+
   qi::Future<AnyReference> DynamicObject::metaCall(AnyObject context, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType, Signature returnSignature)
   {
     DynamicObjectPrivate::MethodMap::iterator i = _p->methodMap.find(method);
@@ -238,22 +263,7 @@ namespace qi
     }
     boost::shared_ptr<Manageable> m = context.managedObjectPtr();
 
-    ExecutionContext* ec = context.executionContext();
-    if (_p->threadingModel == ObjectThreadingModel_SingleThread)
-    {
-      // execute queued methods on global eventloop if they are of queued type
-      if (i->second.second == MetaCallType_Queued)
-        ec = 0;
-      else if (!ec)
-      {
-        boost::shared_ptr<Manageable> manageable = context.managedObjectPtr();
-        boost::mutex::scoped_lock l(manageable->initMutex());
-        if (!manageable->executionContext())
-          manageable->forceExecutionContext(boost::shared_ptr<qi::Strand>(
-                new qi::Strand(*::qi::getEventLoop())));
-        ec = context.executionContext();
-      }
-    }
+    ExecutionContext* ec = _p->getExecutionContext(context, i->second.second);
 
     GenericFunctionParameters p;
     p.reserve(params.size()+1);
@@ -266,22 +276,47 @@ namespace qi
       i->second.second, callType, context, method, i->second.first, p);
   }
 
-  qi::Future<void> DynamicObject::metaSetProperty(unsigned int id, AnyValue val)
+  static void setPropertyValue(PropertyBase* property, AnyValue value)
   {
-    try
-    {
-      property(id)->setValue(val.asReference());
-    }
-    catch(const std::exception& e)
-    {
-      return qi::makeFutureError<void>(std::string("setProperty: ") + e.what());
-    }
-    return qi::Future<void>(0);
+    property->setValue(value.asReference());
   }
 
-  qi::Future<AnyValue> DynamicObject::metaProperty(unsigned int id)
+  qi::Future<void> DynamicObject::metaSetProperty(AnyObject context, unsigned int id, AnyValue val)
   {
-    return qi::Future<AnyValue>(property(id)->value());
+    ExecutionContext* ec = _p->getExecutionContext(context, MetaCallType_Auto);
+    if (ec)
+      return ec->async(boost::bind(&setPropertyValue, property(id), val));
+    else
+    {
+      try
+      {
+        property(id)->setValue(val.asReference());
+      }
+      catch(const std::exception& e)
+      {
+        return qi::makeFutureError<void>(std::string("setProperty: ") + e.what());
+      }
+      return qi::Future<void>(0);
+    }
+  }
+
+  qi::Future<AnyValue> DynamicObject::metaProperty(AnyObject context, unsigned int id)
+  {
+    PropertyBase* prop;
+    try
+    {
+      prop = property(id);
+    }
+    catch (std::exception& e)
+    {
+      return qi::makeFutureError<AnyValue>(std::string("property: ") + e.what());
+    }
+
+    ExecutionContext* ec = _p->getExecutionContext(context, MetaCallType_Auto);
+    if (ec)
+      return ec->async<AnyValue>(boost::bind(&PropertyBase::value, prop));
+    else
+      return qi::Future<AnyValue>(prop->value());
   }
 
   static void reportError(qi::Future<AnyReference> fut) {
@@ -376,16 +411,16 @@ namespace qi
     return empty;
   }
 
-  qi::Future<AnyValue> DynamicObjectTypeInterface::property(void* instance, unsigned int id)
+  qi::Future<AnyValue> DynamicObjectTypeInterface::property(void* instance, AnyObject context, unsigned int id)
   {
     return reinterpret_cast<DynamicObject*>(instance)
-      ->metaProperty(id);
+      ->metaProperty(context, id);
   }
 
-  qi::Future<void> DynamicObjectTypeInterface::setProperty(void* instance, unsigned int id, AnyValue value)
+  qi::Future<void> DynamicObjectTypeInterface::setProperty(void* instance, AnyObject context, unsigned int id, AnyValue value)
   {
     return reinterpret_cast<DynamicObject*>(instance)
-      ->metaSetProperty(id, value);
+      ->metaSetProperty(context, id, value);
   }
 
   static void cleanupDynamicObject(GenericObject *obj, bool destroyObject,

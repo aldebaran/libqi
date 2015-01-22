@@ -35,7 +35,7 @@ namespace qi {
   class ObjectRegistrar : private Server {
 
   public:
-    ObjectRegistrar(ServiceDirectoryClient *sdClient, Session *session);
+    ObjectRegistrar(ServiceDirectoryClient *sdClient, bool enforceAuth = false);
     virtual ~ObjectRegistrar();
 
     void close();
@@ -55,6 +55,7 @@ namespace qi {
     // Add an existing running socket to the list
     void registerSocket(TransportSocketPtr socket);
 
+    using Server::setAuthProviderFactory;
     using Server::listen;
     using Server::setIdentity;
     using Server::endpoints;
@@ -86,7 +87,6 @@ namespace qi {
     boost::mutex                        _registerServiceRequestMutex;
 
     ServiceDirectoryClient             *_sdClient;
-    Session                            *_session;
     const std::string                   _id;
 
     friend class Session_SD;

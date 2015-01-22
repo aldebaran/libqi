@@ -99,7 +99,6 @@ namespace qi
   void TcpTransportSocket::startReading()
   {
     _continueReading();
-    advertiseCapabilities(defaultCapabilities());
   }
 
   void TcpTransportSocket::_continueReading()
@@ -244,14 +243,30 @@ namespace qi
     qi::int64_t start = 0;
     if (usWarnThreshold)
       start = os::ustime(); // call might be not that cheap
-    if (_msg->type() == Message::Type_Capability)
+    if (!hasReceivedRemoteCapabilities() && ((_msg->service() == Message::Service_Server &&
+         _msg->function() == Message::ServerFunction_Authenticate)
+        || _msg->type() == Message::Type_Capability))
     {
       // This one is for us
-      AnyReference cmRef = _msg->value(typeOf<CapabilityMap>()->signature(), shared_from_this());
-      CapabilityMap cm = cmRef.to<CapabilityMap>();
-      cmRef.destroy();
-      boost::mutex::scoped_lock lock(_contextMutex);
-      _remoteCapabilityMap.insert(cm.begin(), cm.end());
+      if (_msg->type() != Message::Type_Error)
+      {
+        AnyReference cmRef = _msg->value(typeOf<CapabilityMap>()->signature(), shared_from_this());
+        try
+        {
+          CapabilityMap cm = cmRef.to<CapabilityMap>();
+          cmRef.destroy();
+          boost::mutex::scoped_lock lock(_contextMutex);
+          _remoteCapabilityMap.insert(cm.begin(), cm.end());
+        }
+        catch (const std::runtime_error& e)
+        {
+          cmRef.destroy();
+          qiLogError() << "Ill-formed capabilities message: " << e.what();
+          return error("Ill-formed capabilities message.");
+        }
+      }
+      if (_msg->type() != Message::Type_Capability)
+        messageReady(*_msg);
     }
     else
     {
@@ -669,16 +684,6 @@ namespace qi
     }
 
     send_(m);
-  }
-
-  void TcpTransportSocket::advertiseCapabilities(const CapabilityMap& cm)
-  {
-    Message msg;
-    msg.setType(Message::Type_Capability);
-    msg.setValue(cm, typeOf<CapabilityMap>()->signature());
-    send(msg);
-    boost::mutex::scoped_lock lock(_contextMutex);
-    _localCapabilityMap.insert(cm.begin(), cm.end());
   }
 
 }

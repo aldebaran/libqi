@@ -57,8 +57,8 @@ namespace qi
     virtual qi::Future<SignalLink> metaConnect(unsigned int event, const SignalSubscriber& subscriber);
     /// Disconnect an event link. Returns if disconnection was successful.
     virtual qi::Future<void> metaDisconnect(SignalLink linkId);
-    virtual qi::Future<AnyValue> metaProperty(unsigned int id);
-    virtual qi::Future<void> metaSetProperty(unsigned int id, AnyValue val);
+    virtual qi::Future<AnyValue> metaProperty(AnyObject context, unsigned int id);
+    virtual qi::Future<void> metaSetProperty(AnyObject context, unsigned int id, AnyValue val);
 
     void setThreadingModel(ObjectThreadingModel model);
     ObjectThreadingModel threadingModel() const;

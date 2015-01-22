@@ -21,6 +21,7 @@
 #include <boost/thread/recursive_mutex.hpp>
 #include <boost/program_options.hpp>
 #include <boost/unordered_map.hpp>
+#include <boost/algorithm/string.hpp>
 
 #ifndef ANDROID
 # include <boost/lockfree/queue.hpp>
@@ -86,6 +87,66 @@ namespace qi {
       logline << std::endl;
 
       return logline.str();
+    }
+
+    std::string csvheader()
+    {
+      std::ostringstream cvsheader;
+      cvsheader << "VERBOSITYID,";
+      cvsheader << "VERBOSITY,";
+      cvsheader << "SVERBOSITY,";
+      cvsheader << "DATE,";
+      cvsheader << "THREAD_ID,";
+      cvsheader << "CATEGORY,";
+      cvsheader << "FILE,";
+      cvsheader << "LINE,";
+      cvsheader << "FUNCTION,";
+      cvsheader << "MSG" << std::endl;
+
+      return cvsheader.str();
+    }
+
+    std::string csvline(const              os::timeval date,
+                        const char        *category,
+                        const char        *msg,
+                        const char        *file,
+                        const char        *fct,
+                        const int          line,
+                        const qi::LogLevel verb)
+    {
+      std::ostringstream csvline;
+      csvline << verb << ",";
+      csvline << qi::log::logLevelToString(verb) << ",";
+      csvline << qi::log::logLevelToString(verb, false) << ",";
+      csvline << qi::detail::dateToString(date) << ",";
+      csvline << qi::detail::tidToString() << ",";
+
+      csvline << "\"";
+      csvline << category;
+      csvline << "\"";
+      csvline << ",";
+
+      csvline << "\"";
+      csvline << file;
+      csvline << "\"";
+      csvline << ",";
+
+      if (line != 0)
+        csvline << line;
+      csvline << ",";
+
+      csvline << "\"";
+      csvline << fct << "()";
+      csvline << "\"";
+      csvline << ",";
+
+      csvline << "\"";
+      std::string escapedMsg(msg);
+      boost::algorithm::replace_all(escapedMsg, "\"", "\"\"");
+      csvline.write(escapedMsg.c_str(), qi::detail::rtrim(escapedMsg.c_str()));
+      csvline << "\"" << std::endl;
+
+      return csvline.str();
     }
 
     const std::string dateToString(const qi::os::timeval date)

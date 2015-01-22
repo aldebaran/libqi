@@ -581,7 +581,7 @@ TEST(TestObject, ObjectTypeBuilder)
 {
   qi::ObjectTypeBuilder<Adder> builder;
   builder.advertiseMethod("add", &Adder::add);
-  builder.advertiseMethod("addTwo", &Adder::addTwo);
+  builder.advertiseMethod("addTwo", boost::function<int(Adder*, int, int)>(boost::bind(&Adder::addTwo, _2, _3)));
   builder.advertiseMethod("addAdderByRef", &Adder::addAdderByRef);
   builder.advertiseMethod("addAdderByConstRef", &Adder::addAdderByConstRef);
   builder.advertiseMethod("addAdderByPtr", &Adder::addAdderByPtr);
@@ -627,7 +627,7 @@ TEST(TestObject, ObjectTypeBuilderAsync)
   qi::ObjectTypeBuilder<MAdder> builder;
   builder.inherits<Adder>();
   builder.advertiseMethod("add", &Adder::add, qi::MetaCallType_Queued);
-  builder.advertiseMethod("addTwo", &Adder::addTwo, qi::MetaCallType_Queued);
+  builder.advertiseMethod("addTwo", boost::function<int(Adder*, int, int)>(boost::bind(&Adder::addTwo, _2, _3)));
   builder.advertiseMethod("addAdderByRef", &Adder::addAdderByRef, qi::MetaCallType_Queued);
   builder.advertiseMethod("addAdderByConstRef", &Adder::addAdderByConstRef, qi::MetaCallType_Queued);
   builder.advertiseMethod("addAdderByPtr", &Adder::addAdderByPtr, qi::MetaCallType_Queued);
@@ -747,11 +747,11 @@ TEST(TestObject, Future)
   qi::DynamicObjectBuilder gob;
   gob.advertiseMethod("delaySet", &delaySet);
   qi::AnyObject obj = gob.object();
-  qi::Future<int> f = obj.call<qi::Future<int> >("delaySet", 500, 41);
+  qi::Future<int> f = obj.async<int>("delaySet", 500, 41);
   ASSERT_TRUE(!f.isFinished());
   f.wait();
   ASSERT_EQ(41, f.value());
-  f = obj.call<qi::Future<int> >("delaySet", 500, -1);
+  f = obj.async<int>("delaySet", 500, -1);
   ASSERT_TRUE(!f.isFinished());
   f.wait();
   ASSERT_TRUE(f.hasError());
@@ -780,12 +780,12 @@ TEST(TestObject, FutureVoid)
   qi::Promise<int> prom;
   gob.advertiseMethod("delaySet", boost::bind(&delaySetV, _1, _2, prom));
   qi::AnyObject obj = gob.object();
-  qi::Future<void> f = obj.call<qi::Future<void> >("delaySet", 500, 41);
+  qi::Future<void> f = obj.async<void>("delaySet", 500, 41);
   ASSERT_TRUE(!f.isFinished());
   f.wait();
   ASSERT_EQ(41, prom.future().value());
   prom.reset();
-  f = obj.call<qi::Future<void> >("delaySet", 500, -1);
+  f = obj.async<void>("delaySet", 500, -1);
   ASSERT_TRUE(!f.isFinished());
   f.wait();
   ASSERT_TRUE(f.hasError());
@@ -797,11 +797,11 @@ TEST(TestObject, FutureSync)
   qi::DynamicObjectBuilder gob;
   gob.advertiseMethod("delaySetSync", &delaySetSync);
   qi::AnyObject obj = gob.object();
-  qi::Future<int> f = obj.call<qi::FutureSync<int> >("delaySetSync", 500, 41);
+  qi::Future<int> f = obj.async<int>("delaySetSync", 500, 41);
   ASSERT_TRUE(!f.isFinished());
   f.wait();
   ASSERT_EQ(41, f.value());
-  f = obj.call<qi::FutureSync<int> >("delaySetSync", 500, -1);
+  f = obj.async<int>("delaySetSync", 500, -1);
   ASSERT_TRUE(!f.isFinished());
   f.wait();
   ASSERT_TRUE(f.hasError());
@@ -909,7 +909,7 @@ TEST(TestObject, traceGeneric)
   std::sort(traces.begin(), traces.end(), comparator); // events may not be in order
   EXPECT_EQ(qi::EventTrace::Event_Call, traces[0].kind());
   EXPECT_EQ(qi::EventTrace::Event_Result, traces[1].kind());
-  EXPECT_EQ(mid, traces[0].slotId());
+  EXPECT_EQ(mid, (int)traces[0].slotId());
   EXPECT_EQ(traces[0].id(), traces[1].id());
   qi::int64_t delta =
     traces[1].timestamp().tv_sec*1000
@@ -934,7 +934,7 @@ TEST(TestObject, traceGeneric)
   std::sort(traces.begin(), traces.end(), comparator); // events may not be in order
   EXPECT_EQ(qi::EventTrace::Event_Call, traces[0].kind());
   EXPECT_EQ(qi::EventTrace::Event_Error, traces[1].kind());
-  EXPECT_EQ(mid2, traces[0].slotId());
+  EXPECT_EQ(mid2, (int)traces[0].slotId());
   EXPECT_EQ(traces[0].id(), traces[1].id());
   obj.disconnect(id);
   qi::os::msleep(50);
@@ -968,7 +968,7 @@ TEST(TestObject, traceType)
   std::sort(traces.begin(), traces.end(), comparator); // events may not be in order
   EXPECT_EQ(qi::EventTrace::Event_Call, traces[0].kind());
   EXPECT_EQ(qi::EventTrace::Event_Result, traces[1].kind());
-  EXPECT_EQ(mid, traces[0].slotId());
+  EXPECT_EQ(mid, (int)traces[0].slotId());
   ASSERT_TRUE(oa1.call<bool>("isTraceEnabled"));
   oa1.disconnect(id);
   qi::os::msleep(50);
@@ -997,7 +997,7 @@ TEST(TestObject, AdvertiseRealSignal)
   sig.connect(boost::bind<void>(&bim, _1, plocal, "local"));
   qi::DynamicObjectBuilder gob;
   unsigned int id = gob.advertiseSignal("sig", &sig);
-  ASSERT_LT(0, id);
+  ASSERT_LT(0u, id);
   qi::AnyObject obj = gob.object();
   obj.connect("sig", boost::bind<void>(&bim, _1, premote, "remote"));
 
@@ -1289,21 +1289,21 @@ TEST(TestMetaObject, findMethod)
   bool canCache;
   int mid;
   mid = mo.findMethod("f", args(1), &canCache);
-  EXPECT_EQ(mid, f); EXPECT_TRUE(canCache);
+  EXPECT_EQ(mid, (int)f); EXPECT_TRUE(canCache);
   mid = mo.findMethod("g", args(1), &canCache);
-  EXPECT_EQ(mid, g1); EXPECT_TRUE(canCache);
+  EXPECT_EQ(mid, (int)g1); EXPECT_TRUE(canCache);
   mid = mo.findMethod("g", args(1, 1), &canCache);
-  EXPECT_EQ(mid, g2); EXPECT_TRUE(canCache);
+  EXPECT_EQ(mid, (int)g2); EXPECT_TRUE(canCache);
   // no garantee is made on result of findmethod(g, "foo"), so not tested
   mid = mo.findMethod("h", args(1), &canCache);
-  EXPECT_EQ(mid, h1i); EXPECT_FALSE(canCache);
+  EXPECT_EQ(mid, (int)h1i); EXPECT_FALSE(canCache);
   mid = mo.findMethod("h", args("foo"), &canCache);
-  EXPECT_EQ(mid, h1s); EXPECT_FALSE(canCache);
+  EXPECT_EQ(mid, (int)h1s); EXPECT_FALSE(canCache);
   mid = mo.findMethod("h", args(1, 1), &canCache);
-  EXPECT_EQ(mid, h2); EXPECT_TRUE(canCache);
+  EXPECT_EQ(mid, (int)h2); EXPECT_TRUE(canCache);
 
   mid = mo.findMethod("h::(i)", args(1), &canCache);
-  EXPECT_EQ(mid, h1i); EXPECT_TRUE(canCache);
+  EXPECT_EQ(mid, (int)h1i); EXPECT_TRUE(canCache);
 
   // check null canCache
   mo.findMethod("h::(i)", args(1), 0);

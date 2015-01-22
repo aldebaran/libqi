@@ -37,7 +37,6 @@ namespace qi
     virtual bool send(const qi::Message &msg);
     virtual void startReading();
     virtual qi::Url remoteEndpoint() const;
-    virtual void advertiseCapabilities(const CapabilityMap& map);
   private:
 #ifdef WITH_SSL
     typedef boost::shared_ptr<boost::asio::ssl::stream<boost::asio::ip::tcp::socket> > SocketPtr;

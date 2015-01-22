@@ -13,6 +13,7 @@
 #include <boost/smart_ptr/enable_shared_from_this.hpp>
 
 #include <qi/api.hpp>
+#include <qi/type/detail/futureadapter.hpp>
 #include <qi/type/detail/manageable.hpp>
 #include <qi/future.hpp>
 #include <qi/signal.hpp>
@@ -157,6 +158,14 @@ public:
   void*        value;
 };
 
+namespace detail
+{
+
+// Storage type used by Object<T>, and Proxy.
+typedef boost::shared_ptr<class GenericObject> ManagedObjectPtr;
+
+}
+
 // C4251
 template <typename FUNCTION_TYPE>
 qi::FutureSync<SignalLink> GenericObject::connect(const std::string& eventName,
@@ -169,221 +178,15 @@ qi::FutureSync<SignalLink> GenericObject::connect(const std::string& eventName,
 
 namespace detail
 {
-  template<typename T> void hold(T data) {}
 
-  template<typename T> void setPromise(qi::Promise<T>& promise, AnyValue& v)
-  {
-    try
-    {
-      qiLogDebug("qi.adapter") << "converting value";
-      T val = v.to<T>();
-      qiLogDebug("qi.adapter") << "setting promise";
-      promise.setValue(val);
-      qiLogDebug("qi.adapter") << "done";
-    }
-    catch(const std::exception& e)
-    {
-      qiLogError("qi.adapter") << e.what();
-      promise.setError(e.what());
-    }
-  }
+template <typename T>
+struct isFuture : boost::false_type {};
+template <typename T>
+struct isFuture<qi::Future<T> > : boost::true_type {};
+template <typename T>
+struct isFuture<qi::FutureSync<T> > : boost::true_type {};
 
-  template<> inline void setPromise(qi::Promise<void>& promise, AnyValue&)
-  {
-    promise.setValue(0);
-  }
-
-  template <typename T>
-  void futureAdapterGeneric(AnyReference val, qi::Promise<T> promise)
-  {
-    qiLogDebug("qi.adapter") << "futureAdapter trigger";
-    TemplateTypeInterface* ft1 = QI_TEMPLATE_TYPE_GET(val.type(), Future);
-    TemplateTypeInterface* ft2 = QI_TEMPLATE_TYPE_GET(val.type(), FutureSync);
-    TemplateTypeInterface* futureType = ft1 ? ft1 : ft2;
-    ObjectTypeInterface* onext = dynamic_cast<ObjectTypeInterface*>(futureType->next());
-    GenericObject gfut(onext, val.rawValue());
-    // Need a live shared_ptr for shared_from_this() to work.
-    boost::shared_ptr<GenericObject> ao(&gfut, hold<GenericObject*>);
-    if (gfut.call<bool>("hasError", 0))
-    {
-      qiLogDebug("qi.adapter") << "futureAdapter: future in error";
-      std::string s = gfut.call<std::string>("error", 0);
-      qiLogDebug("qi.adapter") << "futureAdapter: got error: " << s;
-      promise.setError(s);
-      return;
-    }
-    qiLogDebug("qi.adapter") << "futureAdapter: future has value";
-    AnyValue v = gfut.call<AnyValue>("value", 0);
-    // For a Future<void>, value() gave us a void*
-    if (futureType->templateArgument()->kind() == TypeKind_Void)
-      v = AnyValue(qi::typeOf<void>());
-    qiLogDebug("qi.adapter") << v.type()->infoString();
-    setPromise(promise, v);
-    qiLogDebug("qi.adapter") << "Promise set";
-    val.destroy();
-  }
-
-  // futureAdapter helper that detects and handles value of kind future
-  // return true if value was a future and was handled
-  template <typename T>
-  inline bool handleFuture(AnyReference val, Promise<T> promise)
-  {
-    TemplateTypeInterface* ft1 = QI_TEMPLATE_TYPE_GET(val.type(), Future);
-    TemplateTypeInterface* ft2 = QI_TEMPLATE_TYPE_GET(val.type(), FutureSync);
-    TemplateTypeInterface* futureType = ft1 ? ft1 : ft2;
-    qiLogDebug("qi.object") << "isFuture " << val.type()->infoString() << ' ' << !!ft1 << ' ' << !!ft2;
-    if (!futureType)
-      return false;
-
-    TypeInterface* next = futureType->next();
-    ObjectTypeInterface* onext = dynamic_cast<ObjectTypeInterface*>(next);
-    GenericObject gfut(onext, val.rawValue());
-    // Need a live shared_ptr for shared_from_this() to work.
-    boost::shared_ptr<GenericObject> ao(&gfut, &hold<GenericObject*>);
-    boost::function<void()> cb = boost::bind(futureAdapterGeneric<T>, val, promise);
-    // Careful, gfut will die at the end of this block, but it is
-    // stored in call data. So call must finish before we exit this block,
-    // and thus must be synchronous.
-    try
-    {
-      gfut.call<void>("_connect", cb);
-    }
-    catch (std::exception& e)
-    {
-      qiLogWarning("qi.object") << "future connect error " << e.what();
-    }
-    return true;
-  }
-
-  struct AutoRefDestroy
-  {
-    AnyReference val;
-    AutoRefDestroy(AnyReference ref) : val(ref) {}
-    ~AutoRefDestroy()
-    {
-      val.destroy();
-    }
-  };
-
-  template <typename T>
-  inline T extractFuture(qi::Future<qi::AnyReference> metaFut)
-  {
-    AnyReference val =  metaFut.value();
-    AutoRefDestroy destroy(val);
-
-    static TypeInterface* targetType;
-    QI_ONCE(targetType = typeOf<T>());
-    try
-    {
-      std::pair<AnyReference, bool> conv = val.convert(targetType);
-      if (!conv.first.type())
-        throw std::runtime_error(std::string("Unable to convert call result to target type: from ")
-          + val.signature(true).toPrettySignature() + " to " + targetType->signature().toPrettySignature());
-      else
-      {
-        if (conv.second)
-        {
-          AutoRefDestroy destroy(conv.first);
-          return *conv.first.ptr<T>(false);
-        }
-        else
-          return *conv.first.ptr<T>(false);
-      }
-    }
-    catch(const std::exception& e)
-    {
-      throw std::runtime_error(std::string("Return argument conversion error: ") + e.what());
-    }
-  }
-
-  template <>
-  inline void extractFuture<void>(qi::Future<qi::AnyReference> metaFut)
-  {
-    AnyReference val = metaFut.value();
-    val.destroy();
-  }
-
-  template <typename T>
-  inline void futureAdapter(qi::Future<qi::AnyReference> metaFut, qi::Promise<T> promise)
-  {
-    qiLogDebug("qi.object") << "futureAdapter " << qi::typeOf<T>()->infoString()<< ' ' << metaFut.hasError();
-    //error handling
-    if (metaFut.hasError()) {
-      promise.setError(metaFut.error());
-      return;
-    }
-
-    AnyReference val =  metaFut.value();
-    if (handleFuture(val, promise))
-      return;
-
-    static TypeInterface* targetType;
-    QI_ONCE(targetType = typeOf<T>());
-    try
-    {
-      std::pair<AnyReference, bool> conv = val.convert(targetType);
-      if (!conv.first.type())
-        promise.setError(std::string("Unable to convert call result to target type: from ")
-          + val.signature(true).toPrettySignature() + " to " + targetType->signature().toPrettySignature() );
-      else
-      {
-        promise.setValue(*conv.first.ptr<T>(false));
-      }
-      if (conv.second)
-        conv.first.destroy();
-    }
-    catch(const std::exception& e)
-    {
-      promise.setError(std::string("Return argument conversion error: ") + e.what());
-    }
-    val.destroy();
-  }
-
-  template <>
-  inline void futureAdapter<void>(qi::Future<qi::AnyReference> metaFut, qi::Promise<void> promise)
-  {
-    //error handling
-    if (metaFut.hasError()) {
-      promise.setError(metaFut.error());
-      return;
-    }
-    AnyReference val =  metaFut.value();
-    if (handleFuture(val, promise))
-      return;
-
-    promise.setValue(0);
-    val.destroy();
-  }
-
-  template <typename T>
-  inline void futureAdapterVal(qi::Future<qi::AnyValue> metaFut, qi::Promise<T> promise)
-  {
-    //error handling
-    if (metaFut.hasError()) {
-      promise.setError(metaFut.error());
-      return;
-    }
-    const AnyValue& val =  metaFut.value();
-    try
-    {
-      promise.setValue(val.to<T>());
-    }
-    catch (const std::exception& e)
-    {
-      promise.setError(std::string("Return argument conversion error: ") + e.what());
-    }
-  }
-
-  template<>
-  inline void futureAdapterVal(qi::Future<qi::AnyValue> metaFut, qi::Promise<AnyValue> promise)
-  {
-    if (metaFut.hasError())
-      promise.setError(metaFut.error());
-    else
-      promise.setValue(metaFut.value());
-  }
 }
-
 
 /* Generate R GenericObject::call(methodname, args...)
  * for all argument counts
@@ -393,41 +196,44 @@ namespace detail
 
 #define pushi(z, n,_) params.push_back(p ## n);
 
-#define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)         \
-  template<typename R> R GenericObject::call(                     \
-      const std::string& methodName       comma                   \
-      QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoAnyReference))           \
-  {                                                               \
-    if (!value || !type) {                                        \
-      throw std::runtime_error("Invalid GenericObject");          \
-    }                                                             \
-    std::vector<qi::AnyReference> params;                         \
-    params.reserve(n);                                            \
-    BOOST_PP_REPEAT(n, pushi, _)                                  \
-    qi::Future<AnyReference> fmeta = metaCall(methodName, params, \
-        MetaCallType_Direct, typeOf<R>()->signature());           \
-    return detail::extractFuture<R>(fmeta);                       \
-  }
-QI_GEN(genCall)
-#undef genCall
-
-#define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)                \
-  template<typename R> qi::Future<R> GenericObject::async(               \
-      const std::string& methodName       comma                          \
-      QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoAnyReference))                  \
-  {                                                                      \
-    if (!value || !type) {                                               \
-      return makeFutureError<R>("Invalid GenericObject");                \
-    }                                                                    \
-    std::vector<qi::AnyReference> params;                                \
-    params.reserve(n);                                                   \
-    BOOST_PP_REPEAT(n, pushi, _)                                         \
-    qi::Promise<R> res;                                                  \
-    qi::Future<AnyReference> fmeta = metaCall(methodName, params,        \
-        MetaCallType_Queued, typeOf<R>()->signature());                  \
-    fmeta.connect(boost::bind<void>(&detail::futureAdapter<R>, _1, res), \
-        FutureCallbackType_Sync);                                        \
-    return res.future();                                                 \
+#define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)                     \
+  template <typename R>                                                       \
+  R GenericObject::call(const std::string& methodName comma                   \
+                            QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoAnyReference)) \
+  {                                                                           \
+    BOOST_STATIC_ASSERT_MSG(!detail::isFuture<R>::value,                      \
+                            "return type of call must not be a Future");      \
+    if (!value || !type)                                                      \
+    {                                                                         \
+      throw std::runtime_error("Invalid GenericObject");                      \
+    }                                                                         \
+    std::vector<qi::AnyReference> params;                                     \
+    params.reserve(n);                                                        \
+    BOOST_PP_REPEAT(n, pushi, _)                                              \
+    qi::Future<AnyReference> fmeta = metaCall(                                \
+        methodName, params, MetaCallType_Direct, typeOf<R>()->signature());   \
+    return detail::extractFuture<R>(fmeta);                                   \
+  }                                                                           \
+  template <typename R>                                                       \
+  qi::Future<R> GenericObject::async(                                         \
+      const std::string& methodName comma                                     \
+          QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoAnyReference))                   \
+  {                                                                           \
+    BOOST_STATIC_ASSERT_MSG(!detail::isFuture<R>::value,                      \
+                            "return type of async must not be a Future");     \
+    if (!value || !type)                                                      \
+    {                                                                         \
+      return makeFutureError<R>("Invalid GenericObject");                     \
+    }                                                                         \
+    std::vector<qi::AnyReference> params;                                     \
+    params.reserve(n);                                                        \
+    BOOST_PP_REPEAT(n, pushi, _)                                              \
+    qi::Promise<R> res(&qi::PromiseNoop<R>);                                  \
+    qi::Future<AnyReference> fmeta = metaCall(                                \
+        methodName, params, MetaCallType_Queued, typeOf<R>()->signature());   \
+    fmeta.connect(boost::bind<void>(&detail::futureAdapter<R>, _1, res),      \
+                  FutureCallbackType_Sync);                                   \
+    return res.future();                                                      \
   }
 QI_GEN(genCall)
 #undef genCall
@@ -440,7 +246,7 @@ qi::FutureSync<T> GenericObject::property(const std::string& name)
   int pid = metaObject().propertyId(name);
   if (pid < 0)
     return makeFutureError<T>("Property not found");
-  qi::Future<AnyValue> f = type->property(value, pid);
+  qi::Future<AnyValue> f = property(pid);
   qi::Promise<T> p;
   f.connect(boost::bind(&detail::futureAdapterVal<T>,_1, p),
       FutureCallbackType_Sync);
@@ -453,7 +259,7 @@ qi::FutureSync<void> GenericObject::setProperty(const std::string& name, const T
   int pid = metaObject().propertyId(name);
   if (pid < 0)
     return makeFutureError<void>("Property not found");
-  return type->setProperty(value, pid, AnyValue::from(val));
+  return setProperty(pid, AnyValue::from(val));
 }
 
 /* An AnyObject is actually of a Dynamic type: The underlying TypeInterface*
@@ -480,9 +286,6 @@ public:
   {
     qiLogCategory("qitype.object");
     detail::ManagedObjectPtr* val = (detail::ManagedObjectPtr*)ptrFromStorage(storage);
-    TemplateTypeInterface* templ = dynamic_cast<TemplateTypeInterface*>(source.type());
-    if (templ)
-      source = AnyReference(templ->next(), source.rawValue());
     if (source.type()->info() == info())
     { // source is objectptr
       detail::ManagedObjectPtr* src = source.ptr<detail::ManagedObjectPtr>(false);

@@ -9,6 +9,8 @@
 
 #include <qi/api.hpp>
 #include <qi/messaging/serviceinfo.hpp>
+#include <qi/messaging/authproviderfactory.hpp>
+#include <qi/messaging/clientauthenticatorfactory.hpp>
 #include <qi/future.hpp>
 #include <qi/anyobject.hpp>
 #include <boost/shared_ptr.hpp>
@@ -23,6 +25,9 @@
 namespace qi {
 
   class SessionPrivate;
+  class AuthProvider;
+  typedef boost::shared_ptr<AuthProvider> AuthProviderPtr;
+  typedef std::map<std::string, AnyValue> CapabilityMap;
 
   /** A Session allows you to interconnect services on the same machine or over
    * the network.
@@ -31,7 +36,7 @@ namespace qi {
    */
   class QI_API Session : boost::noncopyable, public ::boost::enable_shared_from_this<Session> {
   public:
-    Session();
+    Session(bool enforceAuthentication = false);
     virtual ~Session();
 
     enum ServiceLocality {
@@ -49,8 +54,13 @@ namespace qi {
 
     qi::FutureSync< std::vector<ServiceInfo> > services(ServiceLocality locality = ServiceLocality_All);
 
+    qi::FutureSync< qi::AnyObject > service(const std::string &aservice)
+    {
+      return service(aservice, "");
+    }
+
     qi::FutureSync< qi::AnyObject > service(const std::string &service,
-                                            const std::string &protocol = "");
+                                            const std::string &protocol);
 
     //Server
     qi::FutureSync<void> listen(const qi::Url &address);
@@ -66,6 +76,9 @@ namespace qi {
     qi::FutureSync<unsigned int> registerService(const std::string &name, AnyObject object);
     qi::FutureSync<void>         unregisterService(unsigned int serviceId);
 
+
+    void setAuthProviderFactory(AuthProviderFactoryPtr);
+    void setClientAuthenticatorFactory(ClientAuthenticatorFactoryPtr);
 
     /** Load a module and register the specified object on the session
      *
@@ -113,6 +126,8 @@ QI_GEN(genCall)
 
   inline SessionPtr makeSession() { return boost::make_shared<qi::Session>(); }
 }
+
+QI_TYPE_ENUM_REGISTER(qi::Session::ServiceLocality);
 
 #ifdef _MSC_VER
 #  pragma warning( pop )

@@ -11,6 +11,7 @@
 #include <qi/actor.hpp>
 #include <qi/log.hpp>
 #include <qi/anyobject.hpp>
+#include <qi/type/dynamicobjectbuilder.hpp>
 #include <gtest/gtest.h>
 
 qiLogCategory("test");
@@ -67,7 +68,7 @@ TEST(TestStrand, StrandCancelScheduled)
   ASSERT_EQ(qi::FutureState_Canceled, f2.wait());
 }
 
-static void increment(boost::mutex& mutex, int waittime, boost::atomic<int>& i)
+static void increment(boost::mutex& mutex, int waittime, boost::atomic<unsigned int>& i)
 {
   boost::unique_lock<boost::mutex> lock(mutex, boost::try_to_lock);
   // we should never be called in parallel
@@ -77,7 +78,7 @@ static void increment(boost::mutex& mutex, int waittime, boost::atomic<int>& i)
   ++i;
 }
 
-static const int STRAND_NB_TRIES = 100;
+static const unsigned int STRAND_NB_TRIES = 100;
 
 TEST(TestStrand, AggressiveCancel)
 {
@@ -85,8 +86,8 @@ TEST(TestStrand, AggressiveCancel)
   std::vector<qi::Future<void> > futures;
 
   qi::Strand strand(*qi::getEventLoop());
-  boost::atomic<int> i(0);
-  for (int j = 0; j < STRAND_NB_TRIES; ++j)
+  boost::atomic<unsigned int> i(0);
+  for (unsigned int j = 0; j < STRAND_NB_TRIES; ++j)
   {
     qi::Future<void> f1 = strand.async(boost::bind<void>(&increment,
           boost::ref(mutex), 1, boost::ref(i)));
@@ -98,7 +99,7 @@ TEST(TestStrand, AggressiveCancel)
   BOOST_FOREACH(qi::Future<void>& future, futures)
     future.cancel();
 
-  int successCount = 0;
+  unsigned int successCount = 0;
   BOOST_FOREACH(qi::Future<void>& future, futures)
   {
     if (future.wait() != qi::FutureState_Canceled)
@@ -113,11 +114,11 @@ TEST(TestStrand, AggressiveCancel)
 TEST(TestStrand, StrandDestruction)
 {
   boost::mutex mutex;
-  boost::atomic<int> i(0);
+  boost::atomic<unsigned int> i(0);
 
   {
     qi::Strand strand(*qi::getEventLoop());
-    for (int j = 0; j < STRAND_NB_TRIES; ++j)
+    for (unsigned int j = 0; j < STRAND_NB_TRIES; ++j)
     {
       qi::Future<void> f1 = strand.async(boost::bind<void>(&increment,
             boost::ref(mutex), 1, boost::ref(i)));
@@ -131,11 +132,11 @@ TEST(TestStrand, StrandDestructionWithCancel)
 {
   boost::mutex mutex;
   std::vector<qi::Future<void> > futures;
-  boost::atomic<int> i(0);
+  boost::atomic<unsigned int> i(0);
 
   {
     qi::Strand strand(*qi::getEventLoop());
-    for (int j = 0; j < STRAND_NB_TRIES; ++j)
+    for (unsigned int j = 0; j < STRAND_NB_TRIES; ++j)
     {
       qi::Future<void> f1 = strand.async(boost::bind<void>(&increment,
             boost::ref(mutex), 1, boost::ref(i)));
@@ -148,7 +149,7 @@ TEST(TestStrand, StrandDestructionWithCancel)
       future.cancel();
   }
 
-  int successCount = 0;
+  unsigned int successCount = 0;
   BOOST_FOREACH(qi::Future<void>& future, futures)
   {
     if (future.wait() != qi::FutureState_Canceled)
@@ -180,21 +181,59 @@ struct MyActor : qi::Actor
   MyActor() : calling(0) {}
   void f(int end, qi::Promise<void> finished)
   {
+    int startval = prop.get();
     ASSERT_FALSE(calling);
     calling = true;
     qi::os::msleep(5);
     ASSERT_TRUE(calling);
     calling = false;
+    ASSERT_EQ(startval, prop.get());
     if (++callcount == end + 1)
       finished.setValue(0);
   }
   qi::Signal<int> sig;
+  qi::Property<int> prop;
 };
-QI_REGISTER_OBJECT(MyActor, f, sig);
+QI_REGISTER_OBJECT(MyActor, f, sig, prop);
 
-TEST(TestStrand, AllFutureSignalPeriodicTaskAsyncTypeErased)
+TEST(TestStrand, AllFutureSignalPropertyPeriodicTaskAsyncTypeErasedDynamic)
+{
+  static const int TOTAL = 50;
+  srand(1828);
+
+  callcount = 0;
+  {
+    boost::shared_ptr<MyActor> obj(new MyActor);
+
+    qi::DynamicObjectBuilder builder;
+    builder.setThreadingModel(qi::ObjectThreadingModel_SingleThread);
+    builder.advertiseMethod("f",
+        boost::function<void(int, qi::Promise<void>)>(boost::bind(&MyActor::f, obj, _1, _2)));
+    builder.advertiseSignal("sig", &obj->sig);
+    builder.advertiseProperty("prop", &obj->prop);
+
+    qi::AnyObject aobj(builder.object());
+
+    qi::Promise<void> finished;
+
+    for (int i = 0; i < 25; ++i)
+      aobj.async<void>("f", TOTAL, finished);
+    for (int i = 0; i < 50; ++i)
+      aobj.setProperty("prop", rand());
+    QI_EMIT obj->sig(TOTAL);
+    // we need one more call (the second test expects a periodic task to run at
+    // least once)
+    for (int i = 0; i < 26; ++i)
+      aobj.async<void>("f", TOTAL, finished);
+    finished.future().wait();
+  }
+  ASSERT_EQ(TOTAL + 1, callcount);
+}
+
+TEST(TestStrand, AllFutureSignalPropertyPeriodicTaskAsyncTypeErased)
 {
   static const int TOTAL = 250;
+  srand(1828);
 
   callcount = 0;
   {
@@ -221,6 +260,8 @@ TEST(TestStrand, AllFutureSignalPeriodicTaskAsyncTypeErased)
       aobj.async<void>("f", TOTAL, finished);
     for (int i = 0; i < 25; ++i)
       qi::async<void>(&MyActor::f, obj, TOTAL, finished);
+    for (int i = 0; i < 50; ++i)
+      aobj.setProperty("prop", rand());
     prom.setValue(0);
     QI_EMIT signal();
     QI_EMIT obj->sig(TOTAL);

@@ -14,11 +14,16 @@
 #include <qi/signature.hpp>
 #include <sstream>
 #include <qi/type/typeinterface.hpp>
+#include <qi/type/detail/staticobjecttype.hpp>
 #include <qi/type/detail/accessor.hxx>
-#include <qi/anyobject.hpp>
+#include <qi/type/detail/object.hxx>
 #include <qi/property.hpp>
 
 namespace qi {
+
+namespace detail {
+  struct ObjectTypeData;
+}
 
   class MetaObject;
 
@@ -27,7 +32,7 @@ namespace qi {
   class TypeInterface;
   template<typename T> class SignalF;
   class ObjectTypeBuilderPrivate;
-  struct ObjectTypeData;
+
   class QI_API ObjectTypeBuilderBase
   {
   public:
@@ -101,7 +106,7 @@ namespace qi {
     /// Register type to typeof. Called by type()
     inline virtual void registerType() {};
 
-    const ObjectTypeData& typeData();
+    const detail::ObjectTypeData& typeData();
   private:
     ObjectTypeBuilderPrivate* _p;
   };
@@ -143,6 +148,28 @@ namespace qi {
 }
 
 #include <qi/type/detail/objecttypebuilder.hxx>
+
+/**
+ * Advertise a member on a builder.
+ * \param builder The builder on which to advertise
+ * \param cls The class to register
+ * \param name The name of the member
+ */
+#define QI_OBJECT_BUILDER_ADVERTISE(builder, cls, name) \
+  builder.advertise(BOOST_PP_STRINGIZE(name), &cls::name)
+/**
+ * Advertise an overloaded function on a builder.
+ * \param builder The builder on which to advertise
+ * \param cls The class to register
+ * \param name The name of the function
+ * \param ret The return type
+ * \param args The arguments as a tuple (ex: (const std::string&))
+ *
+ * You must use this macro with the exact types of your method with references,
+ * pointers, cv-qualifiers (to the arguments and the method).
+ */
+#define QI_OBJECT_BUILDER_ADVERTISE_OVERLOAD(builder, cls, name, ret, args) \
+  builder.advertiseMethod(BOOST_PP_STRINGIZE(name), static_cast<ret (cls::*)args>(&cls::name))
 
 #define __QI_REGISTER_ELEMENT(_, name, field) \
   b.advertise(BOOST_PP_STRINGIZE(field), & name::field); // do not remove the space
@@ -192,93 +219,58 @@ namespace qi {
   }                                                                          \
   static bool BOOST_PP_CAT(__qi_registration, __LINE__) = _qiregister##name();
 
-/** Register name as a template object type
- * Remaining arguments are the methods, signals and properties of the object.
- * Use QI_TEMPLATE_TYPE_GET() to access the TemplateTypeInterface from a Type.
- */
-#define QI_REGISTER_TEMPLATE_OBJECT(name, ...)                           \
-  namespace qi {                                                         \
-    template<typename T> class TypeOfTemplateImpl<name, T> :             \
-        public TypeOfTemplateDefaultImpl<name, T>                        \
-    {                                                                    \
-    public:                                                              \
-      TypeOfTemplateImpl(): _next(0) {}                                  \
-      virtual TypeInterface* next()                                      \
-      {                                                                  \
-        if (!_next)                                                      \
-        {                                                                \
-           ObjectTypeBuilder<name<T> > b(false);                         \
-           QI_VAARGS_APPLY(__QI_REGISTER_ELEMENT, name<T> , __VA_ARGS__) \
-           _next = b.type();                                             \
-        }                                                                \
-        return _next;                                                    \
-      }                                                                  \
-      TypeInterface* _next;                                              \
-    };                                                                   \
-  }                                                                      \
+#define _QI_REGISTER_TEMPLATE_OBJECT(name, model, ...)                    \
+  namespace qi                                                            \
+  {                                                                       \
+  template <>                                                             \
+  class QI_API TypeOfTemplate<name> : public detail::StaticObjectTypeBase \
+  {                                                                       \
+  public:                                                                 \
+    virtual TypeInterface* templateArgument() = 0;                        \
+  };                                                                      \
+  template <typename T>                                                   \
+  class TypeOfTemplateImpl<name, T> : public TypeOfTemplate<name>         \
+  {                                                                       \
+  public:                                                                 \
+    TypeOfTemplateImpl()                                                  \
+    {                                                                     \
+      /* early self registering to avoid recursive init */                \
+      ::qi::registerType(typeid(name<T>), this);                          \
+      ObjectTypeBuilder<name<T> > b(false);                               \
+      b.setThreadingModel(model);                                         \
+      QI_VAARGS_APPLY(__QI_REGISTER_ELEMENT, name<T>, __VA_ARGS__)        \
+      this->initialize(b.metaObject(), b.typeData());                     \
+    }                                                                     \
+    virtual TypeInterface* templateArgument() { return typeOf<T>(); }     \
+    typedef DefaultTypeImplMethods<name<T> > Methods;                     \
+    _QI_BOUNCE_TYPE_METHODS(Methods);                                     \
+  };                                                                      \
+  }                                                                       \
   QI_TEMPLATE_TYPE_DECLARE(name)
 
-namespace qi {
-  template<typename T> class TypeOfTemplateImpl<qi::Future, T> :
-      public TypeOfTemplateDefaultImpl<qi::Future, T>
-  {
-  public:
-    TypeOfTemplateImpl(): _next(0) {}
-    virtual TypeInterface* next()
-    {
-      if (!_next)
-      {
-         ObjectTypeBuilder<qi::Future<T> > b(false);
-         b.advertise("_connect", &qi::Future<T>::_connect);
-         b.advertise("isFinished", &qi::Future<T>::isFinished);
-         b.advertise("value", &qi::Future<T>::value);
-         b.advertise("wait", static_cast<qi::FutureState (qi::Future<T>::*)(int) const>(&qi::Future<T>::wait));
-         b.advertise("wait", static_cast<qi::FutureState (qi::Future<T>::*)(qi::Duration) const>(&qi::Future<T>::wait));
-         b.advertise("wait", static_cast<qi::FutureState (qi::Future<T>::*)(qi::SteadyClock::time_point) const>(&qi::Future<T>::wait));
-         b.advertise("isRunning", &qi::Future<T>::isRunning);
-         b.advertise("isCanceled", &qi::Future<T>::isCanceled);
-         b.advertise("hasError", &qi::Future<T>::hasError);
-         b.advertise("error", &qi::Future<T>::error);
-         _next = b.type();
-      }
-      return _next;
-    }
-    TypeInterface* _next;
-  };
-}
-QI_TEMPLATE_TYPE_DECLARE(qi::Future);
-namespace qi {
-  template<typename T> class TypeOfTemplateImpl<qi::FutureSync, T> :
-      public TypeOfTemplateDefaultImpl<qi::FutureSync, T>
-  {
-  public:
-    TypeOfTemplateImpl(): _next(0) {}
-    virtual TypeInterface* next()
-    {
-      if (!_next)
-      {
-         ObjectTypeBuilder<qi::FutureSync<T> > b(false);
-         b.advertise("_connect", &qi::FutureSync<T>::_connect);
-         b.advertise("isFinished", &qi::FutureSync<T>::isFinished);
-         b.advertise("value", &qi::FutureSync<T>::value);
-         b.advertise("wait", static_cast<qi::FutureState (qi::FutureSync<T>::*)(int) const>(&qi::FutureSync<T>::wait));
-         b.advertise("wait", static_cast<qi::FutureState (qi::FutureSync<T>::*)(qi::Duration) const>(&qi::FutureSync<T>::wait));
-         b.advertise("wait", static_cast<qi::FutureState (qi::FutureSync<T>::*)(qi::SteadyClock::time_point) const>(&qi::FutureSync<T>::wait));
-         b.advertise("isRunning", &qi::FutureSync<T>::isRunning);
-         b.advertise("isCanceled", &qi::FutureSync<T>::isCanceled);
-         b.advertise("hasError", &qi::FutureSync<T>::hasError);
-         b.advertise("error", &qi::FutureSync<T>::error);
-         b.advertise("async", &qi::FutureSync<T>::async);
-         _next = b.type();
-      }
-      return _next;
-    }
-    TypeInterface* _next;
-  };
-}
-QI_TEMPLATE_TYPE_DECLARE(qi::FutureSync);
+/** Register name as a template object type
+ * Remaining arguments are the methods, signals and properties of the object.
+ * Use QI_TEMPLATE_TYPE_GET() to access the TypeOfTemplate<T> from a Type.
+ */
+#define QI_TEMPLATE_OBJECT(name, ...)                                   \
+  _QI_REGISTER_TEMPLATE_OBJECT(name, ObjectThreadingModel_SingleThread, \
+                               __VA_ARGS__)
 
-QI_REGISTER_TEMPLATE_OBJECT(qi::Promise, setValue, setError, setCanceled, reset, future, value, trigger);
+/** \deprecated since 2.3, use QI_TEMPLATE_OBJECT
+ */
+#define QI_REGISTER_TEMPLATE_OBJECT(name, ...)                           \
+  QI_TEMPLATE_OBJECT(name, __VA_ARGS__)
+
+/** Same as QI_TEMPLATE_OBJECT for multithread objects
+ */
+#define QI_MT_TEMPLATE_OBJECT(name, ...)                               \
+  _QI_REGISTER_TEMPLATE_OBJECT(name, ObjectThreadingModel_MultiThread, \
+                               __VA_ARGS__)
+
+QI_MT_TEMPLATE_OBJECT(qi::Future, _connect, isFinished, value, waitFor, waitUntil, isRunning, isCanceled, hasError, error, cancel);
+QI_MT_TEMPLATE_OBJECT(qi::FutureSync, _connect, isFinished, value, waitFor, waitUntil, isRunning, isCanceled, hasError, error, async, cancel);
+QI_MT_TEMPLATE_OBJECT(qi::Promise, setValue, setError, setCanceled, reset, future, value, trigger);
+
 namespace qi { namespace detail {
   template<typename T> struct TypeManager<Future<T> >: public TypeManagerDefaultStruct<Future<T> > {};
   template<typename T> struct TypeManager<FutureSync<T> >: public TypeManagerDefaultStruct<FutureSync<T> > {};

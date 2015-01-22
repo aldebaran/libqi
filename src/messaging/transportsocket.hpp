@@ -16,6 +16,7 @@
 # include <qi/binarycodec.hpp>
 # include <string>
 # include "messagedispatcher.hpp"
+# include "streamcontext.hpp"
 
 namespace qi
 {

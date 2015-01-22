@@ -248,8 +248,8 @@ namespace qi {
   class SignaturePrivate {
   public:
     void parseChildren(const std::string &signature, size_t index);
-    void eatChildren(const std::string &signature, int idxStart, int expectedEnd, int elementCount);
-    void init(const std::string &signature, int begin, int end);
+    void eatChildren(const std::string &signature, size_t idxStart, size_t expectedEnd, int elementCount);
+    void init(const std::string &signature, size_t begin, size_t end);
 
     std::string            _signature;
     std::vector<Signature> _children;
@@ -324,7 +324,7 @@ namespace qi {
   }
 
 
-  void SignaturePrivate::eatChildren(const std::string &signature, int idxStart, int expectedEnd, int elementCount = -1) {
+  void SignaturePrivate::eatChildren(const std::string &signature, size_t idxStart, size_t expectedEnd, int elementCount = -1) {
     int i = 0;
 
     //empty tuple, move on!
@@ -419,7 +419,7 @@ namespace qi {
   }
 
   //empty signature are invalid
-  void SignaturePrivate::init(const std::string &signature, int begin, int end) {
+  void SignaturePrivate::init(const std::string &signature, size_t begin, size_t end) {
     size_t index = findNext(signature, begin);
     if (index != end) {
       throw std::runtime_error("Invalid signature");

@@ -14,16 +14,17 @@
 #include <qi/messaging/serviceinfo.hpp>
 #include <qi/session.hpp>
 #include "remoteobject_p.hpp"
+#include "clientauthenticator_p.hpp"
 
 namespace qi {
 
   class TransportSocket;
   class ServiceDirectoryClient: public qi::Trackable<ServiceDirectoryClient> {
   public:
-    ServiceDirectoryClient();
+    ServiceDirectoryClient(bool enforceAuth = false);
     ~ServiceDirectoryClient();
 
-    // Connect to a remove service directory service
+    // Connect to a remote service directory service
     qi::FutureSync<void> connect(const qi::Url &serviceDirectoryURL);
     // Setup with an existing object on the service directory
     void setServiceDirectory(AnyObject serviceDirectoryService);
@@ -32,6 +33,7 @@ namespace qi {
     qi::Url              url() const;
 
     qi::AnyObject        object() { return _object; }
+    void                 setClientAuthenticatorFactory(ClientAuthenticatorFactoryPtr);
 
   public:
     //Bound Interface
@@ -65,6 +67,8 @@ namespace qi {
     //RemoteObject Interface
     void onMetaObjectFetched(qi::Future<void> fut, qi::Promise<void> prom);
 
+    void onAuthentication(const Message& msg, qi::Promise<void> prom, ClientAuthenticatorPtr authenticator, SignalSubscriberPtr old);
+
     //wait for serviceAdded/serviceRemoved are connected
     void onSDEventConnected(qi::Future<SignalLink> ret,
                             qi::Promise<void> fco,
@@ -73,13 +77,16 @@ namespace qi {
   private:
     qi::TransportSocketPtr _sdSocket;
     unsigned int           _sdSocketDisconnectedSignalLink;
-    qi::RemoteObject       _remoteObject;
+    // _remoteObject is owned by _object
+    qi::RemoteObject*      _remoteObject;
     // _object is a remote object of serviceDirectory
     qi::AnyObject          _object;
     qi::SignalLink         _addSignalLink;
     qi::SignalLink         _removeSignalLink;
+    ClientAuthenticatorFactoryPtr _authFactory;
     boost::mutex           _mutex;
     bool                   _localSd; // true if sd is local (no socket)
+    bool                   _enforceAuth;
   };
 }
 

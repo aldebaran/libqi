@@ -103,9 +103,9 @@ namespace std {
 
   std::ostream& operator<<(std::ostream& os, qi::StreamColor col)
   {
-    if (os == std::cout && !qi::os::isatty(1))
+    if (&os == &(std::cout) && !qi::os::isatty(1))
       return os;
-    if (os == std::cerr && !qi::os::isatty(2))
+    if (&os == &(std::cerr) && !qi::os::isatty(2))
       return os;
 #if defined(__APPLE__) or defined(__linux__)
     posix_print(os, col);

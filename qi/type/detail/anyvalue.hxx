@@ -102,7 +102,8 @@ inline AnyValue::AnyValue()
 
 
 inline AnyValue::AnyValue(const AnyValue& b)
-: _allocated(false)
+: AnyReferenceBase()
+, _allocated(false)
 {
   *this = b;
 }

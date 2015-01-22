@@ -9,21 +9,10 @@
 #include <qi/messaging/serviceinfo.hpp>
 #include <qi/url.hpp>
 
+#include "serviceinfo_p.hpp"
+
 namespace qi
 {
-  class ServiceInfoPrivate
-  {
-  public:
-    ServiceInfoPrivate();
-
-    std::string name;
-    unsigned int serviceId;
-    std::string machineId;
-    unsigned int processId;
-    qi::UrlVector endpoints;
-    std::string sessionId;
-  };
-
   ServiceInfo::ServiceInfo()
     : _p(new ServiceInfoPrivate())
   {
@@ -104,12 +93,3 @@ namespace qi
     , endpoints()
   {}
 } // !qi
-
-static qi::ServiceInfoPrivate* serviceInfoPrivate(qi::ServiceInfo* svcinfo) {
-    return svcinfo->_p;
-}
-QI_EQUIVALENT_STRING_REGISTER(qi::Url, &qi::Url::str);
-QI_TYPE_STRUCT(qi::ServiceInfoPrivate, name, serviceId, machineId, processId, endpoints, sessionId);
-QI_TYPE_REGISTER(::qi::ServiceInfoPrivate);
-
-QI_TYPE_STRUCT_BOUNCE_REGISTER(::qi::ServiceInfo, ::qi::ServiceInfoPrivate, serviceInfoPrivate);

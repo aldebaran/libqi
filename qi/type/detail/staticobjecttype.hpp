@@ -4,22 +4,24 @@
 **  See COPYING for the license
 */
 
-#ifndef _SRC_STATICOBJECTTYPE_HPP_
-#define _SRC_STATICOBJECTTYPE_HPP_
+#ifndef _QI_TYPE_DETAIL_STATICOBJECTTYPE_HPP_
+#define _QI_TYPE_DETAIL_STATICOBJECTTYPE_HPP_
 
 #include <qi/api.hpp>
 #include <qi/property.hpp>
 #include <qi/anyvalue.hpp>
 #include <qi/type/typeinterface.hpp>
 #include <qi/type/metaobject.hpp>
-#include <qi/anyobject.hpp>
 
 namespace qi
 {
 
-  class SignalBase;
+class SignalBase;
+
+namespace detail {
+
 //type-erased methods and signals accessors for a given type
-struct ObjectTypeData
+struct QI_API ObjectTypeData
 {
   ObjectTypeData()
   : classType(0)
@@ -59,7 +61,7 @@ struct ObjectTypeData
  * - Manageable accessor
  * - typeinfo
  */
-class StaticObjectTypeBase: public ObjectTypeInterface
+class QI_API StaticObjectTypeBase: public ObjectTypeInterface
 {
 public:
   void initialize(const MetaObject& mo, const ObjectTypeData& data);
@@ -70,8 +72,8 @@ public:
   virtual qi::Future<SignalLink> connect(void* instance, AnyObject context, unsigned int event, const SignalSubscriber& subscriber);
   /// Disconnect an event link. Returns if disconnection was successful.
   virtual qi::Future<void> disconnect(void* instance, AnyObject context, SignalLink linkId);
-  virtual qi::Future<AnyValue> property(void* instance, unsigned int id);
-  virtual qi::Future<void> setProperty(void* instance, unsigned int id, AnyValue value);
+  virtual qi::Future<AnyValue> property(void* instance, AnyObject context, unsigned int id);
+  virtual qi::Future<void> setProperty(void* instance, AnyObject context, unsigned int id, AnyValue value);
 
   virtual const std::vector<std::pair<TypeInterface*, int> >& parentTypes();
   virtual void* initializeStorage(void*);
@@ -82,7 +84,12 @@ public:
 private:
   MetaObject     _metaObject;
   ObjectTypeData _data;
+
+  ExecutionContext* getExecutionContext(void* instance, qi::AnyObject context, MetaCallType methodThreadingModel = MetaCallType_Auto);
 };
 
 }
-#endif  // _SRC_STATICOBJECTTYPE_HPP_
+
+}
+
+#endif

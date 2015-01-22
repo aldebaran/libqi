@@ -15,6 +15,10 @@
 # include <boost/scoped_ptr.hpp>
 # include <qi/api.hpp>
 
+namespace boost { namespace filesystem {
+  class path;
+}}
+
 namespace qi
 {
 
@@ -38,6 +42,9 @@ namespace qi
 
     /// Copy Constructor
     Path(const Path& path);
+
+    /// Copy Constructor from boost filesystem.
+    Path(const boost::filesystem::path& path);
 
     /// Default destructor
     ~Path();
@@ -83,6 +90,9 @@ namespace qi
 
     /// return the path as a string
     std::string str() const;
+
+    /// return the path as a boost path representation
+    const boost::filesystem::path& bfsPath() const;
 
     /// concat two paths adding a directory separator between them
     Path operator/(const qi::Path& rhs) const;
@@ -402,7 +412,7 @@ namespace qi
     /**
      * \brief Set the writable files path for users.
      * \param path Path to the new writable data path
-     * \deprecated since 2.2 Use qi::log::detail::setWritablePath instead
+     * \deprecated since 2.2 Use qi::path::detail::setWritablePath instead
      */
     QI_API QI_API_DEPRECATED void setWritablePath(const std::string &path);
   }
@@ -424,7 +434,7 @@ namespace qi
    *
    * This class allow conversion between UTF-8 (char) and UTF-16/UTF-32 (wchar).
    */
-  QI_API const codecvt_type &unicodeFacet();
+  QI_API codecvt_type &unicodeFacet();
 }
 
 #endif  // _QI_PATH_HPP_

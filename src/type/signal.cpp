@@ -43,7 +43,8 @@ namespace qi {
   }
 
   SignalSubscriber::SignalSubscriber(const SignalSubscriber& b)
-  : target(0)
+  : enable_shared_from_this()
+  , target(0)
   {
     *this = b;
   }
@@ -418,7 +419,8 @@ namespace qi {
     }
   }
 
-  void SignalBase::disconnectTrackLink(int id) {
+  void SignalBase::disconnectTrackLink(int id)
+  {
     boost::recursive_mutex::scoped_lock sl(_p->mutex);
     TrackMap::iterator it = _p->trackMap.find(id);
     if (it == _p->trackMap.end())
@@ -428,9 +430,17 @@ namespace qi {
     _p->trackMap.erase(it);
   }
 
-  bool SignalBase::disconnectAll() {
+  bool SignalBase::disconnectAll()
+  {
     if (_p)
-      return _p->reset();
+      return _p->disconnectAll(true);
+    return false;
+  }
+
+  bool SignalBase::asyncDisconnectAll()
+  {
+    if (_p)
+      return _p->disconnectAll(false);
     return false;
   }
 
@@ -461,7 +471,7 @@ namespace qi {
     _p->signature = s;
   }
 
-  bool SignalBasePrivate::disconnect(const SignalLink& l)
+  bool SignalBasePrivate::disconnect(const SignalLink& l, bool wait)
   {
     SignalSubscriberPtr s;
     {
@@ -492,7 +502,8 @@ namespace qi {
       // from knowing in which thread it will run
       subLock.release()->unlock();
     }
-    s->waitForInactive();
+    if (wait)
+      s->waitForInactive();
     return true;
   }
 
@@ -500,7 +511,14 @@ namespace qi {
     if (!_p)
       return false;
     else
-      return _p->disconnect(link);
+      return _p->disconnect(link, true);
+  }
+
+  bool SignalBase::asyncDisconnect(const SignalLink &link) {
+    if (!_p)
+      return false;
+    else
+      return _p->disconnect(link, false);
   }
 
   SignalBase::~SignalBase()
@@ -510,14 +528,7 @@ namespace qi {
   SignalBasePrivate::~SignalBasePrivate()
   {
     onSubscribers = SignalBase::OnSubscribers();
-    std::vector<SignalLink> links;
-    for (SignalSubscriberMap::iterator i = subscriberMap.begin();
-        i != subscriberMap.end(); ++i)
-    {
-      links.push_back(i->first);
-    }
-    for (unsigned i=0; i<links.size(); ++i)
-      disconnect(links[i]);
+    disconnectAll();
   }
 
   std::vector<SignalSubscriber> SignalBase::subscribers()
@@ -540,10 +551,12 @@ namespace qi {
     return !_p->subscriberMap.empty();
   }
 
-  bool SignalBasePrivate::reset() {
+  bool SignalBasePrivate::disconnectAll(bool wait)
+  {
     bool ret = true;
     SignalLink link;
-    while (true) {
+    while (true)
+    {
       {
         boost::recursive_mutex::scoped_lock sl(mutex);
         SignalSubscriberMap::iterator it = subscriberMap.begin();
@@ -553,7 +566,7 @@ namespace qi {
       }
       // allow for multiple disconnects to occur at the same time, we must not
       // keep the lock
-      bool b = disconnect(link);
+      bool b = disconnect(link, wait);
       if (!b)
         ret = false;
     }

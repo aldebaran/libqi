@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <iomanip>
+#include <signal.h>
 
 #include <boost/program_options.hpp>
 #include <boost/algorithm/string.hpp>
@@ -23,15 +24,20 @@
 static const char* callType[] = {
   "?", "C", "R", "E", "S"
 };
-typedef std::map<std::string, qi::AnyObject> ObjectMap;
+typedef std::map<std::string, qi::AnyObject>  ObjectMap;
+typedef std::map<std::string, qi::SignalLink> ObjectSignalLinkMap;
 static ObjectMap objectMap;
+static ObjectSignalLinkMap objectSignalLinkMap;
+static boost::mutex cbMutex;
 
 static bool numeric = false;
 static bool printMo = false;
 static bool disableTrace = false;
 static bool traceState = false;
-static bool cleaned = false;
 static bool full = false;
+static bool first = true;
+static bool jsonOutput = false;
+
 
 static std::vector<std::string> objectNames;
 static unsigned int maxServiceLength = 0;
@@ -53,6 +59,7 @@ std::ostream& operator << (std::ostream& o, const ThreadFormat& tf)
 
 void onTrace(ObjectMap::value_type ov, const qi::EventTrace& trace)
 {
+  boost::mutex::scoped_lock sl(cbMutex);
   static qi::int64_t secStart = 0;
   if (!secStart && !full)
     secStart = trace.timestamp().tv_sec;
@@ -86,34 +93,84 @@ void onTrace(ObjectMap::value_type ov, const qi::EventTrace& trace)
     traceKind = 0;
   std::string spacing(maxLen + 2 - name.size(), ' ');
   std::string spacing2((full?maxServiceLength:17) + 2 - ov.first.size(), ' ');
-  if (trace.kind() == qi::EventTrace::Event_Result || qi::EventTrace::Event_Error)
+  if (jsonOutput)
   {
-    std::cout << serviceName << spacing2 << trace.id()
-      << ' ' << ThreadFormat(trace.callerContext())
-      << ' ' << ThreadFormat(trace.calleeContext())
-      << ' ' << callType[traceKind] << ' ' << name
-      << spacing << (trace.timestamp().tv_sec - secStart) << '.' << trace.timestamp().tv_usec
-      << ' ' << trace.userUsTime() << ' ' << trace.systemUsTime() << ' ' << qi::encodeJSON(trace.arguments()) << std::endl;
+    if (first)
+      std::cout << "[";
+    else
+      std::cout << "," << std::endl;
+    first = false;
+
+    if (trace.kind() == qi::EventTrace::Event_Result || qi::EventTrace::Event_Error)
+    {
+      std::cout << "{ \"ServiceName\": \"" << serviceName << "\", "
+        << "\"TraceID\": " << trace.id() << ", "
+        << "\"CallerContext\": \"" << ThreadFormat(trace.callerContext()) << "\", "
+        << "\"CalleeContext\": \"" << ThreadFormat(trace.calleeContext()) << "\", "
+        << "\"CallType\": \"" << callType[traceKind] << "\", "
+        << "\"CallName\": \"" << name << "\", "
+        << "\"Timestamp\": " << (trace.timestamp().tv_sec - secStart) << '.' << trace.timestamp().tv_usec<< ", "
+        << "\"UserTime\": " << trace.userUsTime() << ", "
+        << "\"SystemTime\": " << trace.systemUsTime() << ", "
+        << "\"Args\": " << qi::encodeJSON(trace.arguments()) << "}";
+    }
+    else
+    {
+      std::cout << "{ \"ServiceName\": \"" << serviceName << "\", "
+        << "\"TraceID\": " << trace.id() << ", "
+        << "\"CallerContext\": \"" << ThreadFormat(trace.callerContext()) << "\", "
+        << "\"CalleeContext\": \"" << ThreadFormat(trace.calleeContext()) << "\", "
+        << "\"CallType\": \"" << callType[traceKind] << "\", "
+        << "\"CallName\": \"" << name << "\", "
+        << "\"Timestamp\": " << (trace.timestamp().tv_sec - secStart) << '.' << trace.timestamp().tv_usec<< ", "
+        << "\"Args\": " << qi::encodeJSON(trace.arguments()) << "}";
+    }
   }
   else
   {
-    std::cout << serviceName << spacing2 << trace.id()
-      << ' ' << ThreadFormat(trace.callerContext())
-      << ' ' << ThreadFormat(trace.calleeContext())
-      << ' ' << callType[traceKind] << ' ' << name
-      << spacing << (trace.timestamp().tv_sec - secStart) << '.' << trace.timestamp().tv_usec
-      << ' ' << qi::encodeJSON(trace.arguments()) << std::endl;
+    if (trace.kind() == qi::EventTrace::Event_Result || qi::EventTrace::Event_Error)
+    {
+      std::cout << serviceName << spacing2 << trace.id()
+        << ' ' << ThreadFormat(trace.callerContext())
+        << ' ' << ThreadFormat(trace.calleeContext())
+        << ' ' << callType[traceKind] << ' ' << name
+        << spacing << (trace.timestamp().tv_sec - secStart) << '.' << trace.timestamp().tv_usec
+        << ' ' << trace.userUsTime() << ' ' << trace.systemUsTime() << ' ' << qi::encodeJSON(trace.arguments()) << std::endl;
+    }
+    else
+    {
+      std::cout << serviceName << spacing2 << trace.id()
+        << ' ' << ThreadFormat(trace.callerContext())
+        << ' ' << ThreadFormat(trace.calleeContext())
+        << ' ' << callType[traceKind] << ' ' << name
+        << spacing << (trace.timestamp().tv_sec - secStart) << '.' << trace.timestamp().tv_usec
+        << ' ' << qi::encodeJSON(trace.arguments()) << std::endl;
+    }
   }
+}
+
+void signalHandler(int)
+{
+  foreach(ObjectMap::value_type& ov, objectMap)
+  {
+    ov.second.disconnect(objectSignalLinkMap.find(ov.first)->second);
+  }
+  if (jsonOutput)
+    std::cout << "]" << std::endl;
 }
 
 int subCmd_trace(int argc, char **argv, qi::ApplicationSession& app)
 {
+  qi::Application::atSignal(&signalHandler, SIGTERM);
+  qi::Application::atSignal(&signalHandler, SIGINT);
+
   po::options_description     desc("Usage: qicli trace [<ServicePattern>..]");
   std::vector<std::string>    serviceList;
 
   desc.add_options()
   ("numeric,n", po::bool_switch(&numeric), "Do not resolve slot Ids to names")
   ("full,f", po::bool_switch(&full), "Do not abreviate anything")
+  ("json,j", po::bool_switch(&jsonOutput), "Print trace output in JSON")
   ("service,s", po::value<std::vector<std::string> >(&objectNames), "Object(s) to monitor, specify multiple times, comma-separate, use '*' for all, use '-globPattern' to remove from list")
   ("print,p", po::bool_switch(&printMo), "Print out the Metaobject and exit")
   ("disable,d", po::bool_switch(&disableTrace), "Disable trace on objects and exit")
@@ -195,11 +252,10 @@ int subCmd_trace(int argc, char **argv, qi::ApplicationSession& app)
   foreach(ObjectMap::value_type& ov, objectMap)
   {
     maxServiceLength = std::max(maxServiceLength, (unsigned int)ov.first.size());
-    ov.second.connect("traceObject", (boost::function<void(qi::EventTrace)>)
+    objectSignalLinkMap[ov.first] = ov.second.connect("traceObject", (boost::function<void(qi::EventTrace)>)
       boost::bind(&onTrace, ov, _1)).async();
   }
   qi::Application::run();
-  while (!cleaned)
-    qi::os::msleep(20);
+
   return 0;
 }

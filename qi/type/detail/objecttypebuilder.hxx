@@ -56,8 +56,6 @@ namespace qi {
   {
     MetaMethodBuilder builder;
     AnyFunction f = AnyFunction::from(function);
-    if (! boost::is_member_function_pointer<FUNCTION_TYPE>::value)
-      f.dropFirstArgument();
     builder.setName(name);
     builder.setSignature(f);
 
@@ -72,8 +70,6 @@ namespace qi {
                                                       int id)
   {
     AnyFunction f = AnyFunction::from(function);
-    if (! boost::is_member_function_pointer<FUNCTION_TYPE>::value)
-      f.dropFirstArgument();
     builder.setSignature(f);
 
     // throw on error

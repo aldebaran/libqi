@@ -68,8 +68,13 @@ namespace qi
      */
     void setStrand(qi::Strand* strand);
 
+    /** \brief Set the call interval in microseconds.
+     * \deprecated since 2.3. Use setPeriod.
+     */
+    void setUsPeriod(qi::int64_t usPeriod);
+
     /**
-     * \brief Set the call interval in microseconds.
+     * \brief Set the call interval.
      * \param usPeriod Period in microsecond.
      * \verbatim
      *  This call will wait until next callback invocation to apply the change.
@@ -80,7 +85,7 @@ namespace qi
      *  to apply the change immediately.
      * \endverbatim
      */
-    void setUsPeriod(qi::int64_t usPeriod);
+    void setPeriod(qi::Duration period);
 
     /**
      * \brief Start the periodic task at specified period.

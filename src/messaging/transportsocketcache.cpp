@@ -72,14 +72,16 @@ namespace qi {
     }
   }
 
-  static bool localhost_first(const Url& lh, const Url&)
+  static bool localhost_first(const Url& url)
   {
-    return lh.host().compare(0,4,"127.") == 0 || lh.host().compare(0, 9, "localhost") == 0;
+    const std::string& host = url.host();
+
+    return host.compare(0,4,"127.") == 0 || host.compare(0, 9, "localhost") == 0;
   }
 
-  static bool localhost_last(const Url& lh, const Url& rh)
+  static bool localhost_last(const Url& url)
   {
-    return !localhost_first(lh, rh);
+    return !localhost_first(url);
   }
 
   qi::Future<qi::TransportSocketPtr> TransportSocketCache::socket(const ServiceInfo& servInfo,
@@ -91,9 +93,9 @@ namespace qi {
     bool local = servInfo.machineId() == qi::os::getMachineId();
 
     if (local)
-      std::sort(sortedEndpoints.begin(), sortedEndpoints.end(), &localhost_first);
+      std::partition(sortedEndpoints.begin(), sortedEndpoints.end(), &localhost_first);
     else
-      std::sort(sortedEndpoints.begin(), sortedEndpoints.end(), &localhost_last);
+      std::partition(sortedEndpoints.begin(), sortedEndpoints.end(), &localhost_last);
 
     qiLogDebug() << "local check " << servInfo.machineId() << " " <<  qi::os::getMachineId() << " " << local;
     // RFC 3330 - http://tools.ietf.org/html/rfc3330

@@ -29,6 +29,8 @@ public:
   Actor()
     : _strand()
   {}
+  Actor(const Actor&)
+  {}
   Actor(qi::ExecutionContext& ec)
     : _strand(ec)
   {}

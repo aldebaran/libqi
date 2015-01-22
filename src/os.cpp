@@ -124,7 +124,7 @@ namespace qi {
       if (initialized)
         return idString;
       std::string idFilePath(qi::path::userWritableConfPath("qimessaging", "machine_id"));
-      std::ifstream idFile(idFilePath.c_str());
+      std::ifstream idFile(bfs::path(idFilePath, qi::unicodeFacet()).string().c_str());
 
       if (idFile)
       {
