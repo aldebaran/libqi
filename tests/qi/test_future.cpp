@@ -1330,6 +1330,19 @@ TEST(TestPeriodicTask, DeadLock)
   }
 }
 
+TEST(TestPeriodicTask, ParallelStart)
+{
+  qi::Atomic<int> a;
+  qi::PeriodicTask pt;
+  pt.setCallback(&inc, boost::ref(a));
+  pt.setUsPeriod(1000);
+  std::vector<qi::Future<void> > futs;
+  for (unsigned i=0; i<20; ++i)
+    futs.push_back(qi::async(boost::function<void()>(boost::bind(&qi::PeriodicTask::start, &pt, true))));
+  for (unsigned i=0; i<20; ++i)
+    futs[i].wait();
+}
+
 static void loopTrigger(qi::PeriodicTask& pt)
 {
   for (int i = 0; i < 1000; ++i)
