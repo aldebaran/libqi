@@ -131,14 +131,24 @@ namespace qi {
     qi::getEventLoop()->post(boost::bind(&deleteLater, remote, sr));
   }
 
-  void Session_Service::onAuthentication(const Message &msg, long requestId, TransportSocketPtr socket, ClientAuthenticatorPtr auth, SignalSubscriberPtr old)
+  void Session_Service::onAuthentication(const TransportSocket::SocketEventData& data, long requestId, TransportSocketPtr socket, ClientAuthenticatorPtr auth, SignalSubscriberPtr old)
   {
     static const std::string cmsig = typeOf<CapabilityMap>()->signature().toString();
     boost::recursive_mutex::scoped_lock sl(_requestsMutex);
-    int function = msg.function();
     ServiceRequest *sr = serviceRequest(requestId);
     if (!sr)
       return;
+    if (data.which() == TransportSocket::Event_Error)
+    {
+      if (old)
+        socket->socketEvent.disconnect(*old);
+      sr->promise.setError(boost::get<std::string>(data));
+      removeRequest(requestId);
+      return;
+    }
+
+    const Message& msg = boost::get<const Message&>(data);
+    int function = msg.function();
     bool failure = msg.type() == Message::Type_Error
         || msg.service() != Message::Service_Server
         || function != Message::ServerFunction_Authenticate;
@@ -146,7 +156,7 @@ namespace qi {
     if (failure)
     {
       if (old)
-        socket->messageReady.disconnect(*old);
+        socket->socketEvent.disconnect(*old);
       if (_enforceAuth)
       {
         std::stringstream error;
@@ -176,7 +186,7 @@ namespace qi {
         || authStateIt->second.to<unsigned int>() > AuthProvider::State_Done)
     {
       if (old)
-        socket->messageReady.disconnect(*old);
+        socket->socketEvent.disconnect(*old);
       std::string error = "Invalid authentication state token.";
       sr->promise.setError(error);
       removeRequest(requestId);
@@ -187,7 +197,7 @@ namespace qi {
     {
       qi::Future<void> metaObjFut;
       if (old)
-        socket->messageReady.disconnect(*old);
+        socket->socketEvent.disconnect(*old);
       sr->remoteObject = new qi::RemoteObject(sr->serviceId, socket);
       //ask the remoteObject to fetch the metaObject
       metaObjFut = sr->remoteObject->fetchMetaObject();
@@ -231,7 +241,7 @@ namespace qi {
       dummy.setType(Message::Type_Reply);
       dummy.setFunction(qi::Message::ServerFunction_Authenticate);
       dummy.setValue(AnyValue::from(cm), typeOf<CapabilityMap>()->signature());
-      onAuthentication(dummy, requestId, socket, ClientAuthenticatorPtr(new NullClientAuthenticator), SignalSubscriberPtr());
+      onAuthentication(TransportSocket::SocketEventData(dummy), requestId, socket, ClientAuthenticatorPtr(new NullClientAuthenticator), SignalSubscriberPtr());
       return;
     }
     ClientAuthenticatorPtr authenticator = _authFactory->newAuthenticator();
@@ -242,7 +252,7 @@ namespace qi {
         authCaps[AuthProvider::UserAuthPrefix + it->first] = it->second;
     }
     SignalSubscriberPtr protSubscriber(new SignalSubscriber);
-    *protSubscriber = socket->messageReady.connect(&Session_Service::onAuthentication, this, _1, requestId, socket, authenticator, protSubscriber);
+    *protSubscriber = socket->socketEvent.connect(&Session_Service::onAuthentication, this, _1, requestId, socket, authenticator, protSubscriber);
 
 
     Message msgCapabilities;

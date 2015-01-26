@@ -15,6 +15,7 @@
 #include <qi/session.hpp>
 #include "remoteobject_p.hpp"
 #include "clientauthenticator_p.hpp"
+#include "transportsocket.hpp"
 
 namespace qi {
 
@@ -67,7 +68,7 @@ namespace qi {
     //RemoteObject Interface
     void onMetaObjectFetched(qi::Future<void> fut, qi::Promise<void> prom);
 
-    void onAuthentication(const Message& msg, qi::Promise<void> prom, ClientAuthenticatorPtr authenticator, SignalSubscriberPtr old);
+    void onAuthentication(const TransportSocket::SocketEventData& data, qi::Promise<void> prom, ClientAuthenticatorPtr authenticator, SignalSubscriberPtr old);
 
     //wait for serviceAdded/serviceRemoved are connected
     void onSDEventConnected(qi::Future<SignalLink> ret,

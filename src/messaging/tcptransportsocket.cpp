@@ -267,11 +267,15 @@ namespace qi
         }
       }
       if (_msg->type() != Message::Type_Capability)
+      {
         messageReady(*_msg);
+        socketEvent(SocketEventData(*_msg));
+      }
     }
     else
     {
       messageReady(*_msg);
+      socketEvent(SocketEventData(*_msg));
       _dispatcher.dispatch(*_msg);
     }
     if (usWarnThreshold)
@@ -292,6 +296,7 @@ namespace qi
     _abort = true;
     _status = qi::TransportSocket::Status_Disconnected;
     disconnected(erc);
+    socketEvent(SocketEventData(erc));
 
     if (_connecting)
     {
