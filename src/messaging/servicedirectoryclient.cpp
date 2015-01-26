@@ -84,6 +84,15 @@ namespace qi {
     fut2.connect(&ServiceDirectoryClient::onSDEventConnected, this, _1, promise, false);
   }
 
+  static void sendCapabilities(TransportSocketPtr sock)
+  {
+    Message msg;
+    msg.setType(Message::Type_Capability);
+    msg.setService(Message::Service_Server);
+    msg.setValue(sock->localCapabilities(), typeOf<CapabilityMap>()->signature());
+    sock->send(msg);
+  }
+
   void ServiceDirectoryClient::onAuthentication(const TransportSocket::SocketEventData& data, qi::Promise<void> prom, ClientAuthenticatorPtr authenticator, SignalSubscriberPtr old)
   {
     static const std::string cmsig = typeOf<CapabilityMap>()->signature().toString();
@@ -120,6 +129,7 @@ namespace qi {
       }
       else
       {
+        sendCapabilities(sdSocket);
         qi::Future<void> future = _remoteObject->fetchMetaObject();
         future.connect(&ServiceDirectoryClient::onMetaObjectFetched, this, _1, prom);
       }
