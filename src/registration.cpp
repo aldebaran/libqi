@@ -198,6 +198,11 @@ static qi::AnyReference sessionLoadService(qi::AnyReferenceVector args)
   return qi::AnyReference(qi::typeOf<void>());
 }
 
+static qi::Future<std::vector<qi::ServiceInfo> > servicesBouncer(qi::Session& session)
+{
+  return session.services();
+}
+
 static bool _qiregisterSession() {
   ::qi::ObjectTypeBuilder<qi::Session> builder;
   builder.setThreadingModel(qi::ObjectThreadingModel_MultiThread);
@@ -205,6 +210,7 @@ static bool _qiregisterSession() {
   QI_OBJECT_BUILDER_ADVERTISE(builder, qi::Session, isConnected);
   QI_OBJECT_BUILDER_ADVERTISE(builder, qi::Session, url);
   QI_OBJECT_BUILDER_ADVERTISE(builder, qi::Session, services);
+  builder.advertiseMethod("services", &servicesBouncer);
   QI_OBJECT_BUILDER_ADVERTISE_OVERLOAD(builder, qi::Session, service, qi::FutureSync<qi::AnyObject>, (const std::string&, const std::string&));
   QI_OBJECT_BUILDER_ADVERTISE_OVERLOAD(builder, qi::Session, service, qi::FutureSync<qi::AnyObject>, (const std::string&));
   QI_OBJECT_BUILDER_ADVERTISE(builder, qi::Session, listen);
