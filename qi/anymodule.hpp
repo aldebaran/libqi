@@ -64,7 +64,9 @@ namespace qi
   public:
     ModuleBuilder(const ModuleInfo& mi)
       : _moduleInfo(mi)
-    {}
+    {
+      this->setThreadingModel(ObjectThreadingModel_MultiThread);
+    }
 
     void setModuleInfo(const ModuleInfo& mi) {
       _moduleInfo = mi;

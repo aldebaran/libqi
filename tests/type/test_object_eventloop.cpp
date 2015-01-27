@@ -67,6 +67,7 @@ void fireSameThreadIn(qi::AnyObject obj, qi::EventLoop* el, void* tid)
 qi::AnyObject makeDynamicObj()
 {
   qi::DynamicObjectBuilder ob;
+  ob.setThreadingModel(qi::ObjectThreadingModel_MultiThread);
   ob.advertiseMethod("sameThread", &sameThread);
   ob.advertiseSignal<unsigned long>("fire");
   qi::AnyObject res = ob.object();
