@@ -145,6 +145,10 @@ namespace qi {
       Type_Event = 5,
       // Advertise capabilities, Server<->Client
       Type_Capability = 6,
+      // Cancel request for ongoing call
+      Type_Cancel = 7,
+      // Method call was cancelled
+      Type_Canceled = 8,
     };
     // If flag set, payload is of type m instead of expected type
     static const unsigned int TypeFlag_DynamicPayload = 1;

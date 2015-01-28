@@ -112,6 +112,9 @@ static void initCapabilities()
   /* MessageFlags: remote ends support Message flags (flags in 'type' header field)
   */
   (*_defaultCapabilities)["MessageFlags"] = AnyValue::from(true);
+  /* RemoteCancelableCalls: remote end supports call cancelations.
+   */
+  (*_defaultCapabilities)["RemoteCancelableCalls"] = AnyValue::from(true);
   // Process override from environment
   std::string capstring = qi::os::getenv("QI_TRANSPORT_CAPABILITIES");
   std::vector<std::string> caps;

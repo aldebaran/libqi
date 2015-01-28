@@ -301,7 +301,6 @@ set(QIM_C src/messaging/applicationsession.cpp
           src/messaging/tcptransportsocket.cpp
           src/messaging/tcptransportsocket.hpp
           src/messaging/url.cpp
-          src/messaging/serverresult.hpp
           src/registration.cpp
           )
 

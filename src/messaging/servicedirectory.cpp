@@ -21,7 +21,6 @@
 #include <qi/session.hpp>
 #include <qi/messaging/serviceinfo.hpp>
 #include <qi/type/objecttypebuilder.hpp>
-#include "serverresult.hpp"
 #include "session_p.hpp"
 #include <qi/os.hpp>
 #include <qi/log.hpp>

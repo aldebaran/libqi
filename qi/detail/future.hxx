@@ -12,8 +12,8 @@
 #include <boost/bind.hpp>
 #include <qi/eventloop.hpp>
 #include <qi/actor.hpp>
+#include <qi/anyvalue.hpp>
 #include <qi/type/detail/futureadapter.hpp>
-
 #include <qi/log.hpp>
 
 namespace qi {
@@ -262,6 +262,12 @@ namespace detail {
       {
       }
 
+      ~FutureBaseTyped()
+      {
+        if (_onDestroyed && hasValue(0))
+          _onDestroyed(_value);
+      }
+
       bool isCancelable() const
       {
         return static_cast<bool>(_onCancel);
@@ -376,6 +382,10 @@ namespace detail {
         callCbNotify(future);
       }
 
+      void setOnDestroyed(boost::function<void (ValueType)> f)
+      {
+        _onDestroyed = f;
+      }
 
       void connect(qi::Future<T> future,
           const boost::function<void (qi::Future<T>)> &s,
@@ -423,6 +433,7 @@ namespace detail {
       Callbacks                _onResult;
       ValueType                _value;
       CancelCallback           _onCancel;
+      boost::function<void (ValueType)> _onDestroyed;
       FutureCallbackType       _async;
       qi::Atomic<unsigned int> _promiseCount;
 
@@ -586,7 +597,6 @@ namespace detail {
           boost::bind(&detail::futureAdapter<R>, _1, p)),
         FutureCallbackType_Sync);
   }
-
 
   template<typename FT, typename PT>
   void adaptFuture(const Future<FT>& f, Promise<PT>& p)

@@ -7,7 +7,6 @@
 #include <qi/messaging/serviceinfo.hpp>
 #include <qi/type/objecttypebuilder.hpp>
 #include "objectregistrar.hpp"
-#include "serverresult.hpp"
 #include <qi/os.hpp>
 #include <boost/thread/mutex.hpp>
 #include <exception>

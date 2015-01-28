@@ -14,6 +14,7 @@
 # include <qi/trackable.hpp>
 # include <qi/clock.hpp>
 # include <qi/detail/mpl.hpp>
+# include <qi/anyvalue.hpp>
 
 # include <boost/shared_ptr.hpp>
 # include <boost/make_shared.hpp>
@@ -425,12 +426,23 @@ namespace qi {
     template<typename FT, typename PT, typename CONV>
     friend void adaptFuture(const Future<FT>& f, Promise<PT>& p,
                             CONV converter);
+    template<typename R>
+    friend void adaptFuture(Future<AnyReference>& f, Promise<R>& p);
+
     template<typename FT>
     friend void detail::futureCancelAdapter(
         boost::weak_ptr<detail::FutureBaseTyped<FT> > wf);
     friend class detail::AddUnwrap<T>;
 
   private:
+    friend class ServiceBoundObject;
+
+    // Nuke this when C++03 ends
+    void setOnDestroyed(boost::function<void(ValueType)> cb)
+    {
+      _p->setOnDestroyed(cb);
+    }
+
     template <typename Arg>
     static void binder(
         const boost::function<void(const boost::function<void()>&)>& poster,
@@ -736,6 +748,8 @@ namespace qi {
     template<typename FT, typename PT, typename CONV>
     friend void adaptFuture(const Future<FT>& f, Promise<PT>& p,
                             CONV converter);
+    template<typename R>
+    friend void adaptFuture(Future<AnyReference>& f, Promise<R>& p);
 
   private:
     void decRefcnt()
@@ -784,6 +798,9 @@ namespace qi {
    */
   template<typename FT, typename PT>
   void adaptFuture(const Future<FT>& f, Promise<PT>& p);
+
+  template<typename R>
+  void adaptFuture(Future<AnyReference>& f, Promise<R>& p);
 
   /// Similar to adaptFuture(f, p) but with a custom converter
   template<typename FT, typename PT, typename CONV>

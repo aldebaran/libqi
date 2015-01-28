@@ -51,6 +51,10 @@ namespace qi {
       return "Event";
     case Type_Capability:
       return "Capability";
+    case Type_Cancel:
+      return "Cancel";
+    case Type_Canceled:
+      return "Canceled";
     default:
       return "Unknown";
     }

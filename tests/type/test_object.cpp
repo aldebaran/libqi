@@ -1162,8 +1162,6 @@ qi::Atomic<int> Sleeper::dtorCount;
 
 QI_REGISTER_OBJECT(Sleeper, msleep);
 
-
-
 TEST(TestObject, async)
 {
 

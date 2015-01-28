@@ -57,6 +57,7 @@ namespace qi {
 
     virtual void metaPost(AnyObject context, unsigned int event, const GenericFunctionParameters& args);
     virtual qi::Future<AnyReference> metaCall(AnyObject context, unsigned int method, const GenericFunctionParameters& args, qi::MetaCallType callType, Signature returnSignature);
+    void onFutureCancelled(unsigned int originalMessageId);
 
     //metaObject received
     void onMetaObject(qi::Future<qi::MetaObject> fut, qi::Promise<void> prom);
