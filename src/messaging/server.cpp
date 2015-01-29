@@ -115,7 +115,6 @@ namespace qi {
       // We are reading on the socket for the first time : the first message has to be the capabilities
       *sub = socket->messageReady.connect(&Server::onMessageReadyNotAuthenticated, this, _1, socket, _authProviderFactory->newProvider(), first, sub);
       socket->startReading();
-      sendCapabilities(socket);
     }
     else
       socket->messageReady.connect(&Server::onMessageReady, this, _1, socket);
@@ -154,6 +153,7 @@ namespace qi {
       }
       else
       {
+        sendCapabilities(socket);
         qiLogVerbose() << "Authentication is not enforced. Skipping...";
         socket->messageReady.connect(&Server::onMessageReady, this, _1, socket);
         onMessageReady(msg, socket);
