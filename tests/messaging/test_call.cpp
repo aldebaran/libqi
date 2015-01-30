@@ -1373,6 +1373,7 @@ TEST(TestObject, StructVersioningEvent)
 
 void doCancel(qi::Promise<void>& p)
 {
+  qiLogDebug() << "canceling !";
   p.setCanceled();
 }
 
@@ -1380,7 +1381,7 @@ qi::Future<void> getCancellableFuture()
 {
   qi::Promise<void> promise(&doCancel);
   EXPECT_TRUE(promise.future().isCancelable());
-  qiLogInfo() << "returning future";
+  qiLogDebug() << "returning future";
   return promise.future();
 }
 

@@ -7,6 +7,8 @@
 #ifndef QI_TYPE_DETAIL_FUTURE_ADAPTER_HXX_
 #define QI_TYPE_DETAIL_FUTURE_ADAPTER_HXX_
 
+#include <boost/scope_exit.hpp>
+
 #include <qi/type/detail/futureadapter.hpp>
 
 namespace qi
@@ -37,28 +39,24 @@ template<> inline void setPromise(qi::Promise<void>& promise, AnyValue&)
 }
 
 template <typename T>
-void futureAdapterGeneric(AnyReference val, qi::Promise<T> promise)
+void futureAdapterGeneric(AnyReference val, qi::Promise<T> promise,
+    boost::shared_ptr<GenericObject>& ao)
 {
+  assert(ao);
   qiLogDebug("qi.adapter") << "futureAdapter trigger";
   TypeOfTemplate<Future>* ft1 = QI_TEMPLATE_TYPE_GET(val.type(), Future);
   TypeOfTemplate<FutureSync>* ft2 = QI_TEMPLATE_TYPE_GET(val.type(), FutureSync);
-  ObjectTypeInterface* onext = NULL;
   qiLogDebug("qi.object") << "isFuture " << val.type()->infoString() << ' ' << !!ft1 << ' ' << !!ft2;
   bool isvoid = false;
   if (ft1)
-  {
-    onext = ft1;
     isvoid = ft1->templateArgument()->kind() == TypeKind_Void;
-  }
   else if (ft2)
-  {
-    onext = ft2;
     isvoid = ft2->templateArgument()->kind() == TypeKind_Void;
-  }
-  assert(onext);
-  GenericObject gfut(onext, val.rawValue());
-  // Need a live shared_ptr for shared_from_this() to work.
-  boost::shared_ptr<GenericObject> ao(&gfut, hold<GenericObject*>);
+  GenericObject& gfut = *ao;
+  // reset the shared_ptr to break the cycle
+  BOOST_SCOPE_EXIT_TPL(&ao) {
+    ao.reset();
+  } BOOST_SCOPE_EXIT_END
   if (gfut.call<bool>("hasError", 0))
   {
     qiLogDebug("qi.adapter") << "futureAdapter: future in error";
@@ -100,17 +98,24 @@ inline bool handleFuture(AnyReference val, Promise<T> promise)
   if (!onext)
     return false;
 
-  GenericObject gfut(onext, val.rawValue());
   // Need a live shared_ptr for shared_from_this() to work.
-  boost::shared_ptr<GenericObject> ao(&gfut, &hold<GenericObject*>);
-  boost::function<void()> cb = boost::bind(futureAdapterGeneric<T>, val, promise);
+  boost::shared_ptr<GenericObject> ao =
+    boost::make_shared<GenericObject>(onext, val.rawValue());
+  boost::function<void()> cb =
+    boost::bind(futureAdapterGeneric<T>, val, promise, ao);
   // Careful, gfut will die at the end of this block, but it is
   // stored in call data. So call must finish before we exit this block,
   // and thus must be synchronous.
   try
   {
-    gfut.call<void>("_connect", cb);
-    promise.setOnCancel(qi::bindWithFallback<void(const qi::Promise<T>&)>(boost::function<void()>(), static_cast<void(GenericObject::*)(const std::string&)>(&GenericObject::call<void>), boost::weak_ptr<GenericObject>(gfut.shared_from_this()), "cancel"));
+    ao->call<void>("_connect", cb);
+    promise.setOnCancel(
+        qi::bindWithFallback<void(const qi::Promise<T>&)>(
+          boost::function<void()>(),
+          static_cast<void(GenericObject::*)(const std::string&)>(
+            &GenericObject::call<void>),
+          boost::weak_ptr<GenericObject>(ao),
+          "cancel"));
   }
   catch (std::exception& e)
   {
