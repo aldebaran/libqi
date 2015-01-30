@@ -5,6 +5,7 @@
 
 #include <qi/jsoncodec.hpp>
 #include <qi/anyvalue.hpp>
+#include <iterator>
 #include <boost/lexical_cast.hpp>
 #include <boost/locale.hpp>
 #include "jsoncodec_p.hpp"
@@ -226,7 +227,7 @@ namespace qi {
         case 't' : tmpString += '\t'; _it += 2; break;
         case 'u' :
         {
-          if (_it+6 >= _end)
+          if (std::distance(_it, _end) <= 6)
           {
             _it = save;
             return false;
