@@ -191,8 +191,6 @@ namespace qi
       throw std::runtime_error("Bad module type '" + moduleInfo.type + "' for module '" + moduleInfo.name);
     std::string pkgPath = pkgToPath(moduleInfo.name);
     void *mod = Application::loadModule(pkgPath);
-    if (!mod)
-      throw std::runtime_error("Module not found: " + moduleInfo.name + " (path: " + moduleInfo.path + ")");
 
     moduleInitFn fn = (moduleInitFn)qi::os::dlsym(mod, "qi_module_init");
     if (!fn)
