@@ -580,6 +580,8 @@ TEST(TestObject, convertComplex)
 TEST(TestObject, ObjectTypeBuilder)
 {
   qi::ObjectTypeBuilder<Adder> builder;
+  // otherwise some arguments are copied
+  builder.setThreadingModel(qi::ObjectThreadingModel_MultiThread);
   builder.advertiseMethod("add", &Adder::add);
   builder.advertiseMethod("addTwo", boost::function<int(Adder*, int, int)>(boost::bind(&Adder::addTwo, _2, _3)));
   builder.advertiseMethod("addAdderByRef", &Adder::addAdderByRef);

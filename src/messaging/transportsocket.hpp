@@ -8,6 +8,7 @@
 #define _SRC_TRANSPORTSOCKET_HPP_
 
 # include <boost/noncopyable.hpp>
+# include <boost/variant.hpp>
 # include <qi/future.hpp>
 # include "message.hpp"
 # include <qi/url.hpp>
@@ -17,6 +18,17 @@
 # include <string>
 # include "messagedispatcher.hpp"
 # include "streamcontext.hpp"
+
+namespace qi {
+  namespace detail {
+    template<>
+    struct HasLess<boost::variant<std::string, qi::Message> >{
+      static const bool value = false;
+    };
+  }
+}
+
+QI_TYPE_CONCRETE(boost::variant<std::string QI_COMMA qi::Message>);
 
 namespace qi
 {
@@ -32,6 +44,10 @@ namespace qi
       Status_Connected     = 2,
       Status_Disconnecting = 3,
     };
+    enum Event {
+      Event_Error = 0,
+      Event_Message = 1,
+    };
 
     explicit TransportSocket(qi::EventLoop* eventLoop = qi::getEventLoop())
       : _eventLoop(NULL)
@@ -42,6 +58,7 @@ namespace qi
       disconnected.setCallType(MetaCallType_Queued);
       // Set messageReady signal to async mode to protect our network thread
       messageReady.setCallType(MetaCallType_Queued);
+      socketEvent.setCallType(MetaCallType_Queued);
     }
 
     virtual qi::FutureSync<void> connect(const qi::Url &url) = 0;
@@ -96,6 +113,9 @@ namespace qi
     qi::Signal<std::string>        disconnected;
     // C4251
     qi::Signal<const qi::Message&> messageReady;
+    typedef boost::variant<std::string, qi::Message> SocketEventData;
+    // C4251
+    qi::Signal<SocketEventData>  socketEvent;
   };
 
   typedef boost::shared_ptr<TransportSocket> TransportSocketPtr;

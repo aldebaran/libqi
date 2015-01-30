@@ -16,32 +16,44 @@
 
 qiLogCategory("test");
 
-static int lastPayload = 0;
-static qi::Promise<int> pPayload;
-void onFire(const int& pl)
+class TestObject : public ::testing::Test
 {
-  pPayload.setValue(pl);
+public:
+  virtual void SetUp()
+  {
+    lastPayload = 0;
+  }
+
+  void onFire(int pl);
+
+  int lastPayload;
+  qi::Promise<int> pPayload;
+};
+
+void TestObject::onFire(int pl)
+{
   lastPayload = pl;
+  pPayload.setValue(pl);
 }
 
-TEST(TestObject, Simple)
+TEST_F(TestObject, Simple)
 {
   qi::DynamicObjectBuilder ob;
   ob.advertiseSignal<int>("fire");
   qi::AnyObject obj(ob.object());
   EXPECT_LE(1U, obj.metaObject().signalMap().size());
-  qi::SignalLink linkId = obj.connect("fire", &onFire);
+  qi::SignalLink linkId = obj.connect("fire", qi::bind<void(int)>(&TestObject::onFire, this, _1));
   obj.post("fire", 42);
-  EXPECT_TRUE(pPayload.future().wait(2000) != qi::FutureState_Running);
+  EXPECT_TRUE(pPayload.future().wait() != qi::FutureState_Running);
   EXPECT_EQ(42, lastPayload);
   pPayload.reset();
   obj.post("fire", 51);
-  EXPECT_TRUE(pPayload.future().wait(2000) != qi::FutureState_Running);
+  EXPECT_TRUE(pPayload.future().wait() != qi::FutureState_Running);
   EXPECT_EQ(51, lastPayload);
   pPayload.reset();
   obj.disconnect(linkId);
   obj.post("fire", 42);
-  EXPECT_FALSE(pPayload.future().wait(200) != qi::FutureState_Running);
+  EXPECT_FALSE(pPayload.future().wait(0) != qi::FutureState_Running);
   EXPECT_EQ(51, lastPayload);
 }
 
@@ -49,43 +61,43 @@ void readString(const std::string&)
 {
 }
 
-TEST(TestObject, ConnectBind)
+TEST_F(TestObject, ConnectBind)
 {
   qi::DynamicObjectBuilder ob;
   ob.advertiseSignal<int>("fire");
   ob.advertiseSignal<int, int>("fire2");
   qi::AnyObject obj(ob.object());
-  qi::SignalLink link = obj.connect("fire", boost::bind<void>(&onFire, _1));
+  qi::SignalLink link = obj.connect("fire", qi::bind<void(int)>(&TestObject::onFire, this, _1));
   obj.post("fire", 42);
-  EXPECT_TRUE(pPayload.future().wait(2000) != qi::FutureState_Running);
+  EXPECT_TRUE(pPayload.future().wait() != qi::FutureState_Running);
   EXPECT_EQ(42, lastPayload);
   obj.disconnect(link);
   // The boost bind without _1 gives us a void (void) signature that does not match fire
   EXPECT_ANY_THROW(
-    obj.connect("fire", boost::bind<void>(&onFire, 51)).value()
+    obj.connect("fire", boost::bind<void>(&TestObject::onFire, this, 51)).value()
   );
   // Argument type mismatch
   EXPECT_ANY_THROW(
     obj.connect("fire", boost::bind<void>(&readString, _1)).value()
   );
-  link = obj.connect("fire2", boost::bind(&onFire, _2));
+  link = obj.connect("fire2", qi::bind<void(int, int)>(&TestObject::onFire, this, _2));
   EXPECT_TRUE(link != 0);
   pPayload.reset();
   obj.post("fire2", 40, 41);
-  EXPECT_TRUE(pPayload.future().wait(2000) != qi::FutureState_Running);
+  EXPECT_TRUE(pPayload.future().wait() != qi::FutureState_Running);
   EXPECT_EQ(41, lastPayload);
   obj.disconnect(link);
 }
 
-TEST(TestObject, EmitMethod)
+TEST_F(TestObject, EmitMethod)
 {
   lastPayload = 0;
   qi::DynamicObjectBuilder ob;
-  ob.advertiseMethod("fire", &onFire);
+  ob.advertiseMethod("fire", qi::bind<void(int)>(&TestObject::onFire, this, _1));
   qi::AnyObject obj(ob.object());
   pPayload.reset();
   obj.post("fire", 23);
-  EXPECT_TRUE(pPayload.future().wait(2000) != qi::FutureState_Running);
+  EXPECT_TRUE(pPayload.future().wait() != qi::FutureState_Running);
   EXPECT_EQ(23, pPayload.future().value());
 }
 

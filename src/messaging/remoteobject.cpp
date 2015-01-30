@@ -75,7 +75,7 @@ namespace qi {
   {
     qiLogDebug() << "~RemoteObject " << this;
     //close may already have been called. (by Session_Service.close)
-    close();
+    close("RemoteObject destroyed");
     destroy();
   }
 
@@ -85,7 +85,7 @@ namespace qi {
     if (socket == _socket)
       return;
     if (_socket) {
-      close();
+      close("Socket invalidated");
     }
 
      boost::mutex::scoped_lock lock(_socketMutex);
@@ -108,7 +108,7 @@ namespace qi {
   //should be done in the object thread
   void RemoteObject::onSocketDisconnected(std::string error)
   {
-    close(true);
+    close("Socket Disconnected", true);
     throw PointerLockException();
   }
 
@@ -507,7 +507,7 @@ namespace qi {
     return fut;
   }
 
-  void RemoteObject::close(bool fromSignal)
+  void RemoteObject::close(const std::string& reason, bool fromSignal)
   {
     qiLogDebug() << "Socket disconnection";
     TransportSocketPtr socket;
@@ -533,8 +533,8 @@ namespace qi {
     std::map<int, qi::Promise<AnyReference> >::iterator it;
     for (it = promises.begin(); it != promises.end(); ++it)
     {
-      qiLogVerbose() << "Reporting error for request " << it->first << "(socket disconnected)";
-      it->second.setError("Socket disconnected");
+      qiLogVerbose() << "Reporting error for request " << it->first << "(" << reason << ")";
+      it->second.setError(reason);
     }
 
     //@warning: remove connection are not removed

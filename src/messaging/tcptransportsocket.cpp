@@ -243,9 +243,10 @@ namespace qi
     qi::int64_t start = 0;
     if (usWarnThreshold)
       start = os::ustime(); // call might be not that cheap
-    if (!hasReceivedRemoteCapabilities() && ((_msg->service() == Message::Service_Server &&
-         _msg->function() == Message::ServerFunction_Authenticate)
-        || _msg->type() == Message::Type_Capability))
+    if ((!hasReceivedRemoteCapabilities() &&
+          _msg->service() == Message::Service_Server &&
+          _msg->function() == Message::ServerFunction_Authenticate)
+        || _msg->type() == Message::Type_Capability)
     {
       // This one is for us
       if (_msg->type() != Message::Type_Error)
@@ -266,11 +267,15 @@ namespace qi
         }
       }
       if (_msg->type() != Message::Type_Capability)
+      {
         messageReady(*_msg);
+        socketEvent(SocketEventData(*_msg));
+      }
     }
     else
     {
       messageReady(*_msg);
+      socketEvent(SocketEventData(*_msg));
       _dispatcher.dispatch(*_msg);
     }
     if (usWarnThreshold)
@@ -291,6 +296,7 @@ namespace qi
     _abort = true;
     _status = qi::TransportSocket::Status_Disconnected;
     disconnected(erc);
+    socketEvent(SocketEventData(erc));
 
     if (_connecting)
     {
@@ -366,12 +372,19 @@ namespace qi
   {
     try
     {
-      if (erc)
+      boost::recursive_mutex::scoped_lock l(_closingMutex);
+      if (!_socket)
       {
-        qiLogWarning() << "resolve: " << erc.message();
+        // Disconnection was requested, so error() was already called.
+        pSetError(connectPromise, "Disconnection requested");
+      }
+      else if (erc)
+      {
+        std::string message = "System error: " + erc.message();
+        qiLogWarning() << "resolve: " << message;
         _status = qi::TransportSocket::Status_Disconnected;
-        error("System error: " + erc.message());
-        pSetError(connectPromise, "System error: " + erc.message());
+        error(message);
+        pSetError(connectPromise, message);
       }
       else
       {

@@ -179,17 +179,18 @@ struct MyActor : qi::Actor
 {
   boost::atomic<bool> calling;
   MyActor() : calling(0) {}
-  void f(int end, qi::Promise<void> finished)
+  int f(int end, qi::Promise<void> finished)
   {
     int startval = prop.get();
-    ASSERT_FALSE(calling);
+    EXPECT_FALSE(calling);
     calling = true;
     qi::os::msleep(5);
-    ASSERT_TRUE(calling);
+    EXPECT_TRUE(calling);
     calling = false;
-    ASSERT_EQ(startval, prop.get());
+    EXPECT_EQ(startval, prop.get());
     if (++callcount == end + 1)
       finished.setValue(0);
+    return 42;
   }
   qi::Signal<int> sig;
   qi::Property<int> prop;
@@ -230,9 +231,15 @@ TEST(TestStrand, AllFutureSignalPropertyPeriodicTaskAsyncTypeErasedDynamic)
   ASSERT_EQ(TOTAL + 1, callcount);
 }
 
-TEST(TestStrand, AllFutureSignalPropertyPeriodicTaskAsyncTypeErased)
+void chaincall(qi::AnyObject aobj, qi::Promise<void> finished, int TOTAL)
 {
-  static const int TOTAL = 250;
+  for (int i = 0; i < 50; ++i)
+    EXPECT_EQ(42, aobj.call<int>("f", TOTAL, finished));
+}
+
+TEST(TestStrand, AllFutureSignalPropertyPeriodicTaskAsyncCallTypeErased)
+{
+  static const int TOTAL = 300;
   srand(1828);
 
   callcount = 0;
@@ -262,6 +269,7 @@ TEST(TestStrand, AllFutureSignalPropertyPeriodicTaskAsyncTypeErased)
       qi::async<void>(&MyActor::f, obj, TOTAL, finished);
     for (int i = 0; i < 50; ++i)
       aobj.setProperty("prop", rand());
+    qi::Future<void> f = qi::async<void>(boost::bind(chaincall, aobj, finished, TOTAL));
     prom.setValue(0);
     QI_EMIT signal();
     QI_EMIT obj->sig(TOTAL);
@@ -269,6 +277,7 @@ TEST(TestStrand, AllFutureSignalPropertyPeriodicTaskAsyncTypeErased)
       aobj.async<void>("f", TOTAL, finished);
     for (int i = 0; i < 25; ++i)
       qi::async<void>(&MyActor::f, obj, TOTAL, finished);
+    f.wait();
     finished.future().wait();
   }
   ASSERT_LT(TOTAL, callcount);

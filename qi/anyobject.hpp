@@ -29,8 +29,8 @@ static const unsigned int qiObjectSpecialMemberMaxUid = 100;
  *
  * Check the following rules in order:
  * - If methodThreadingModel is not auto, honor it, overriding callType
- * - If callType is set (not auto), honor it.
  * - If el is set, force call in it (synchronously if we are in it).
+ * - If callType is set (not auto), honor it.
  * - Be synchronous.
  *
  * When the call is finally made, if objectThreadingModel is SingleThread,

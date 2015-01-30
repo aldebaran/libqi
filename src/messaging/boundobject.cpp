@@ -105,6 +105,11 @@ namespace qi {
       _owner->removeObject(_objectId);
     onDestroy(this);
     qiLogDebug() << "~ServiceBoundObject() reseting object " << _object.use_count();
+    // if we own the object, destroy it asynchronously because it may hold the
+    // last reference to Session which leads to a deadlock (Session can't be
+    // destroyed because it is calling us)
+    if (_object.unique())
+      qi::async<void>(boost::bind(&qi::detail::hold<qi::AnyObject>, _object));
     _object.reset();
     qiLogDebug() << "~ServiceBoundObject() finishing";
   }
@@ -118,23 +123,24 @@ namespace qi {
     if (!ob)
     {
       ob = new qi::ObjectTypeBuilder<ServiceBoundObject>();
+      // these are called synchronously by onMessage (and this is needed for
+      // _currentSocket), no need for threadsafety here
+      ob->setThreadingModel(ObjectThreadingModel_MultiThread);
       /* Network-related stuff.
       */
-      ob->advertiseMethod("registerEvent"  , &ServiceBoundObject::registerEvent, MetaCallType_Auto, qi::Message::BoundObjectFunction_RegisterEvent);
-      ob->advertiseMethod("unregisterEvent", &ServiceBoundObject::unregisterEvent, MetaCallType_Auto, qi::Message::BoundObjectFunction_UnregisterEvent);
-      ob->advertiseMethod("terminate",       &ServiceBoundObject::terminate, MetaCallType_Auto, qi::Message::BoundObjectFunction_Terminate);
+      ob->advertiseMethod("registerEvent"  , &ServiceBoundObject::registerEvent, MetaCallType_Direct, qi::Message::BoundObjectFunction_RegisterEvent);
+      ob->advertiseMethod("unregisterEvent", &ServiceBoundObject::unregisterEvent, MetaCallType_Direct, qi::Message::BoundObjectFunction_UnregisterEvent);
+      ob->advertiseMethod("terminate",       &ServiceBoundObject::terminate, MetaCallType_Direct, qi::Message::BoundObjectFunction_Terminate);
       /* GenericObject-related stuff.
       * Those methods could be advertised and implemented by GenericObject itself.
       * But since we already have a wrapper system in place in BoundObject, us it.
       * There is no use-case that requires the methods below without a BoundObject present.
       */
-      ob->advertiseMethod("metaObject"     , &ServiceBoundObject::metaObject, MetaCallType_Auto, qi::Message::BoundObjectFunction_MetaObject);
-      ob->advertiseMethod("property",       &ServiceBoundObject::property, MetaCallType_Auto, qi::Message::BoundObjectFunction_GetProperty);
-      ob->advertiseMethod("setProperty",       &ServiceBoundObject::setProperty, MetaCallType_Auto, qi::Message::BoundObjectFunction_SetProperty);
-      ob->advertiseMethod("properties",       &ServiceBoundObject::properties, MetaCallType_Auto, qi::Message::BoundObjectFunction_Properties);
-      ob->advertiseMethod("registerEventWithSignature"  , &ServiceBoundObject::registerEventWithSignature, MetaCallType_Auto, qi::Message::BoundObjectFunction_RegisterEventWithSignature);
-
-      //global currentSocket: we are not multithread or async capable ob->setThreadingModel(ObjectThreadingModel_MultiThread);
+      ob->advertiseMethod("metaObject"     , &ServiceBoundObject::metaObject, MetaCallType_Direct, qi::Message::BoundObjectFunction_MetaObject);
+      ob->advertiseMethod("property",       &ServiceBoundObject::property, MetaCallType_Direct, qi::Message::BoundObjectFunction_GetProperty);
+      ob->advertiseMethod("setProperty",       &ServiceBoundObject::setProperty, MetaCallType_Direct, qi::Message::BoundObjectFunction_SetProperty);
+      ob->advertiseMethod("properties",       &ServiceBoundObject::properties, MetaCallType_Direct, qi::Message::BoundObjectFunction_Properties);
+      ob->advertiseMethod("registerEventWithSignature"  , &ServiceBoundObject::registerEventWithSignature, MetaCallType_Direct, qi::Message::BoundObjectFunction_RegisterEventWithSignature);
     }
     AnyObject result = ob->object(self, &AnyObject::deleteGenericObjectOnly);
     return result;
@@ -146,6 +152,7 @@ namespace qi {
     const MetaSignal* ms = _object.metaObject().signal(eventId);
     if (!ms)
       throw std::runtime_error("No such signal");
+    assert(_currentSocket);
     AnyFunction mc = AnyFunction::fromDynamicFunction(boost::bind(&forwardEvent, _1, _serviceId, _objectId, eventId, ms->parametersSignature(), _currentSocket, this, ""));
     SignalLink linkId = _object.connect(eventId, mc);
     qiLogDebug() << "SBO rl " << remoteSignalLinkId <<" ll " << linkId;
@@ -157,6 +164,7 @@ namespace qi {
     const MetaSignal* ms = _object.metaObject().signal(eventId);
     if (!ms)
       throw std::runtime_error("No such signal");
+    assert(_currentSocket);
     AnyFunction mc = AnyFunction::fromDynamicFunction(boost::bind(&forwardEvent, _1, _serviceId, _objectId, eventId, ms->parametersSignature(), _currentSocket, this, signature));
     SignalLink linkId = _object.connect(eventId, mc);
     qiLogDebug() << "SBO rl " << remoteSignalLinkId <<" ll " << linkId;

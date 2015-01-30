@@ -256,10 +256,10 @@ qi::Future<AnyReference> metaCall(ExecutionContext* el,
   bool sync = false;
   if (methodThreadingModel != MetaCallType_Auto)
     sync = (methodThreadingModel == MetaCallType_Direct);
-  else if (callType != MetaCallType_Auto)
-    sync = (callType == MetaCallType_Direct);
   else if (el)
     sync = el->isInThisContext();
+  else if (callType != MetaCallType_Auto)
+    sync = (callType == MetaCallType_Direct);
 
   if (!sync && !el)
     el = getEventLoop();

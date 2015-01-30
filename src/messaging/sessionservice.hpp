@@ -15,7 +15,7 @@
 #include <qi/atomic.hpp>
 #include "remoteobject_p.hpp"
 #include "transportsocketcache.hpp"
-
+#include "transportsocket.hpp"
 #include "clientauthenticator_p.hpp"
 
 namespace qi {
@@ -66,7 +66,7 @@ namespace qi {
     //ServiceDirectoryClient
     void onServiceRemoved(const unsigned int &index, const std::string &service);
 
-    void onAuthentication(const Message& msg, long requestId, TransportSocketPtr socket, ClientAuthenticatorPtr auth, SignalSubscriberPtr old);
+    void onAuthentication(const TransportSocket::SocketEventData& data, long requestId, TransportSocketPtr socket, ClientAuthenticatorPtr auth, SignalSubscriberPtr old);
 
     ServiceRequest *serviceRequest(long requestId);
     void            removeRequest(long requestId);

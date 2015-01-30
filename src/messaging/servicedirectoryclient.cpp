@@ -84,10 +84,30 @@ namespace qi {
     fut2.connect(&ServiceDirectoryClient::onSDEventConnected, this, _1, promise, false);
   }
 
-  void ServiceDirectoryClient::onAuthentication(const Message &msg, qi::Promise<void> prom, ClientAuthenticatorPtr authenticator, SignalSubscriberPtr old)
+  static void sendCapabilities(TransportSocketPtr sock)
+  {
+    Message msg;
+    msg.setType(Message::Type_Capability);
+    msg.setService(Message::Service_Server);
+    msg.setValue(sock->localCapabilities(), typeOf<CapabilityMap>()->signature());
+    sock->send(msg);
+  }
+
+  void ServiceDirectoryClient::onAuthentication(const TransportSocket::SocketEventData& data, qi::Promise<void> prom, ClientAuthenticatorPtr authenticator, SignalSubscriberPtr old)
   {
     static const std::string cmsig = typeOf<CapabilityMap>()->signature().toString();
     TransportSocketPtr sdSocket = _sdSocket;
+    if (data.which() == TransportSocket::Event_Error)
+    {
+      if (sdSocket)
+        sdSocket->socketEvent.disconnect(*old);
+      const std::string& err = boost::get<std::string>(data);
+      qi::Future<void> fdc = onSocketDisconnected(err);
+      fdc.connect(&qi::Promise<void>::setError, prom, err);
+      return;
+    }
+
+    const Message& msg = boost::get<const Message&>(data);
     unsigned int function = msg.function();
     bool failure = msg.type() == Message::Type_Error
         || msg.service() != Message::Service_Server
@@ -96,7 +116,7 @@ namespace qi {
     if (failure)
     {
       if (sdSocket)
-        sdSocket->messageReady.disconnect(*old);
+        sdSocket->socketEvent.disconnect(*old);
       if (_enforceAuth)
       {
         std::stringstream error;
@@ -109,6 +129,7 @@ namespace qi {
       }
       else
       {
+        sendCapabilities(sdSocket);
         qi::Future<void> future = _remoteObject->fetchMetaObject();
         future.connect(&ServiceDirectoryClient::onMetaObjectFetched, this, _1, prom);
       }
@@ -124,7 +145,7 @@ namespace qi {
         || authStateIt->second.to<unsigned int>() > AuthProvider::State_Done)
     {
       if (sdSocket)
-        sdSocket->messageReady.disconnect(*old);
+        sdSocket->socketEvent.disconnect(*old);
       std::string error = "Invalid authentication state token.";
       qi::Future<void> fdc = onSocketDisconnected(error);
       fdc.connect(&qi::Promise<void>::setError, prom, error);
@@ -134,7 +155,7 @@ namespace qi {
     if (authData[AuthProvider::State_Key].to<unsigned int>() == AuthProvider::State_Done)
     {
       if (sdSocket)
-        sdSocket->messageReady.disconnect(*old);
+        sdSocket->socketEvent.disconnect(*old);
       qi::Future<void> future = _remoteObject->fetchMetaObject();
       future.connect(&ServiceDirectoryClient::onMetaObjectFetched, this, _1, prom);
       return;
@@ -168,7 +189,7 @@ namespace qi {
         authCaps[AuthProvider::UserAuthPrefix + it->first] = it->second;
     }
     SignalSubscriberPtr protocolSubscriber(new SignalSubscriber);
-    *protocolSubscriber = sdSocket->messageReady.connect(&ServiceDirectoryClient::onAuthentication, this, _1, promise, authenticator, protocolSubscriber);
+    *protocolSubscriber = sdSocket->socketEvent.connect(&ServiceDirectoryClient::onAuthentication, this, _1, promise, authenticator, protocolSubscriber);
 
     CapabilityMap socketCaps = sdSocket->localCapabilities();
     socketCaps.insert(authCaps.begin(), authCaps.end());
@@ -273,7 +294,7 @@ namespace qi {
       // Manually trigger close on our remoteobject or it will be called
       // asynchronously from socket.disconnected signal, and we would need to
       // wait fo it.
-      _remoteObject->close();
+      _remoteObject->close("Socket disconnected");
       fut = socket->disconnect();
 
       // Hold the socket shared ptr alive until the future returns.

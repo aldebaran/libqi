@@ -786,7 +786,7 @@ public:
 
 qi::Atomic<int> TestClass::destructionCount;
 
-QI_REGISTER_OBJECT(TestClass, ping, unregisterService);
+QI_REGISTER_MT_OBJECT(TestClass, ping, unregisterService);
 
 TEST(TestCall, TestConcreteObjectPassingReturn)
 {
