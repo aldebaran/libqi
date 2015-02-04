@@ -508,8 +508,8 @@ namespace qi {
       return totalPss;
 #elif defined(__APPLE__)
       struct proc_taskinfo taskInfo;
-      int ret = proc_pidinfo(pid, PROC_PIDTASKINFO, 0, &taskInfo, sizeof(taskInfo));
-      if (ret <= 0)
+      unsigned long ret = proc_pidinfo(pid, PROC_PIDTASKINFO, 0, &taskInfo, sizeof(taskInfo));
+      if (ret <= 0L)
       {
         qiLogWarning() << "cannot get memory usage for PID " << pid << ": " << strerror(errno);
         return 0;
