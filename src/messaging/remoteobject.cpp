@@ -257,6 +257,10 @@ namespace qi {
 
   qi::Future<AnyReference> RemoteObject::metaCall(AnyObject, unsigned int method, const qi::GenericFunctionParameters &in, MetaCallType callType, Signature returnSignature)
   {
+    // The remote object can be concurrently closed / other operation that modifies _socket
+    // (even set it to null). We store the current socket locally so that the behavior
+    // of metacall stays consistent throughout the function's execution.
+    TransportSocketPtr sock = _socket;
     MetaMethod *mm = metaObject().method(method);
     if (!mm) {
       std::stringstream ss;
@@ -290,12 +294,12 @@ namespace qi {
      */
     qi::Promise<AnyReference> out(FutureCallbackType_Sync);
     qi::Message msg;
-   // qiLogDebug() << this << " metacall " << msg.service() << " " << msg.function() <<" " << msg.id();
+    // qiLogDebug() << this << " metacall " << msg.service() << " " << msg.function() <<" " << msg.id();
     {
       boost::mutex::scoped_lock lock(_promisesMutex);
       // Check socket while holding the lock to avoid a race with close()
       // where we would add a promise to the map after said map got cleared
-      if (!_socket || !_socket->isConnected())
+      if (!sock || !sock->isConnected())
       {
         return makeFutureError<AnyReference>("Socket is not connected");
       }
@@ -309,16 +313,16 @@ namespace qi {
     }
     qi::Signature funcSig = mm->parametersSignature();
     try {
-      msg.setValues(in, funcSig, this, _socket.get());
+      msg.setValues(in, funcSig, this, sock.get());
     }
     catch(const std::exception& e)
     {
       qiLogVerbose() << "setValues exception: " << e.what();
-      if (!_socket->remoteCapability("MessageFlags", false))
+      if (!sock->remoteCapability("MessageFlags", false))
         throw e;
       // Delegate conversion to the remote end.
       msg.addFlags(Message::TypeFlag_DynamicPayload);
-      msg.setValues(in, "m", this, _socket.get());
+      msg.setValues(in, "m", this, sock.get());
     }
     if (canConvert < 0.2)
     {
@@ -330,7 +334,6 @@ namespace qi {
     msg.setObject(_object);
     msg.setFunction(method);
 
-    TransportSocketPtr sock = _socket;
     //error will come back as a error message
     if (!sock || !sock->isConnected() || !sock->send(msg)) {
       qi::MetaMethod*   meth = metaObject().method(method);
