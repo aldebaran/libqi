@@ -37,8 +37,8 @@ protected:
   }
   ~TestTransportSocketCache()
   {
-    server_.close();
     cache_.close();
+    server_.close();
   }
 
   qi::TransportSocketCache cache_;
@@ -47,7 +47,43 @@ protected:
 
 }
 
+TEST_F(TestTransportSocketCache, DisconnectReconnect)
+{
+  qi::Promise<void> prom;
 
+  server_.listen("tcp://0.0.0.0:0").wait();
+  server_.listen("tcp://0.0.0.0:0").wait();
+
+  std::vector<qi::Url> endpoints = server_.endpoints();
+  //endpoints.push_back(server_.endpoints()[0]);
+  qi::ServiceInfo servInfo;
+  servInfo.setMachineId("tle;l");
+  servInfo.setEndpoints(endpoints);
+  qi::Future<qi::TransportSocketPtr> sockfut = cache_.socket(servInfo, endpoints[0].protocol());
+  qi::TransportSocketPtr sock = sockfut.value();
+  ASSERT_TRUE(sock->isConnected());
+  sock->disconnect();
+  ASSERT_FALSE(sock->isConnected());
+  sockfut = cache_.socket(servInfo, endpoints[0].protocol());
+  sock = sockfut.value();
+  ASSERT_TRUE(sock->isConnected());
+}
+
+TEST_F(TestTransportSocketCache, FirstUrlWillFail)
+{
+  server_.listen("tcp://127.0.0.1:5555").wait();
+  qi::UrlVector endpoints;
+  endpoints.push_back("tcp://127.0.0.1:4444");
+  endpoints.push_back(server_.endpoints()[0]);
+
+  qi::ServiceInfo servInfo;
+  servInfo.setMachineId(qi::os::getMachineId());
+  servInfo.setEndpoints(endpoints);
+  qi::Future<qi::TransportSocketPtr> sockFut = cache_.socket(servInfo, endpoints[0].protocol());
+  qi::TransportSocketPtr sock = sockFut.value();
+
+  ASSERT_TRUE(sock->isConnected());
+}
 
 TEST_F(TestTransportSocketCache, DifferentMachineIdLocalConnection)
 {
@@ -60,7 +96,7 @@ TEST_F(TestTransportSocketCache, DifferentMachineIdLocalConnection)
 
   ASSERT_NE(fakeMachineId, qi::os::getMachineId());
 
-  server_.listen("tcp://127.0.0.1:0");
+  server_.listen("tcp://127.0.0.1:0").wait();
   qi::Url endpoint = server_.endpoints()[0];
   socket->connect(endpoint);
   cache_.insert(fakeMachineId, endpoint, socket);
@@ -84,15 +120,15 @@ TEST_F(TestTransportSocketCache, DifferentMachineIdLocalConnection)
 static bool publicIp(const qi::Url& url)
 {
   const std::string& host = url.host();
-  qiLogInfo() << url.str();
-  return host.compare(0,4,"127.") != 0 && host.compare(0, 9, "localhost") != 0;
+  bool ispublic= host.find("127.") == std::string::npos && host.find("localhost") == std::string::npos;
+  return ispublic;
 }
 
 TEST_F(TestTransportSocketCache, SameMachinePublicIp)
 {
   qi::TransportSocketPtr client = boost::make_shared<qi::TcpTransportSocket>();
 
-  server_.listen("tcp://0.0.0.0:0");
+  server_.listen("tcp://0.0.0.0:0").wait();
   qi::UrlVector endpoints = server_.endpoints();
   // Find public IP
   qi::UrlVector::iterator urlIt = std::find_if(endpoints.begin(), endpoints.end(), &publicIp);
@@ -113,27 +149,6 @@ TEST_F(TestTransportSocketCache, SameMachinePublicIp)
   ASSERT_FALSE(tentativeSocketFuture.hasError());
   ASSERT_EQ(tentativeSocketFuture.value(), client);
   client->disconnect();
-}
-
-TEST_F(TestTransportSocketCache, LocalIpsUsedOnLocalConnections)
-{
-  // generate plenty of endpoints
-  qi::Future<void> listenFut = server_.listen("tcp://0.0.0.0:0");
-  listenFut = server_.listen("tcp://0.0.0.0:0");
-  listenFut = server_.listen("tcp://0.0.0.0:0");
-
-  qi::UrlVector serverEndpoints = server_.endpoints();
-  qi::ServiceInfo info;
-  info.setMachineId(qi::os::getMachineId());
-  info.setEndpoints(serverEndpoints);
-
-  qi::Future<qi::TransportSocketPtr> tentativeSocketFuture = cache_.socket(info, "");
-  tentativeSocketFuture.wait();
-  if (tentativeSocketFuture.hasError())
-    qiLogError() << tentativeSocketFuture.error();
-  ASSERT_FALSE(tentativeSocketFuture.hasError());
-  ASSERT_TRUE(tentativeSocketFuture.value()->isConnected());
-  ASSERT_FALSE(publicIp(tentativeSocketFuture.value()->remoteEndpoint()));
 }
 
 TEST(TestCall, IPV6Accepted)
