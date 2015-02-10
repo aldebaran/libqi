@@ -7,7 +7,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/thread.hpp>
 #include <boost/enable_shared_from_this.hpp>
-
+#include <boost/chrono/chrono_io.hpp>
 #include <qi/log.hpp>
 #include <qi/periodictask.hpp>
 

@@ -10,7 +10,7 @@
 
 # include <qi/api.hpp>
 # include <qi/types.hpp>
-# include <boost/chrono.hpp>
+# include <boost/chrono/chrono.hpp>
 
 namespace qi
 {
