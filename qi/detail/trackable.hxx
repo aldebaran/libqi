@@ -169,22 +169,33 @@ namespace qi
   {
     return fun;
   }
-#define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma) \
-  template<typename RF, typename AF, typename ARG0 comma ATYPEDECL>      \
-  boost::function<RF> bind(const AF& fun, const ARG0& arg0 comma ADECL)  \
-  {                                                                      \
-    typedef typename detail::BindTransform<ARG0, boost::is_base_of<TrackableBase, typename boost::remove_pointer<ARG0>::type>::value> Transform;     \
-    typename Transform::type transformed = Transform::transform(arg0);   \
-    boost::function<RF> f = boost::bind(fun, transformed comma AUSE);    \
-    return Transform::wrap(arg0, f, detail::throwPointerLockException);  \
-  }                                                                      \
-  template<typename RF, typename AF, typename ARG0 comma ATYPEDECL>      \
-  boost::function<RF> bindWithFallback(const boost::function<void()>& onFail, const AF& fun, const ARG0& arg0 comma ADECL)  \
-  {                                                                      \
-    typedef typename detail::BindTransform<ARG0, boost::is_base_of<TrackableBase, typename boost::remove_pointer<ARG0>::type>::value> Transform;     \
-    typename Transform::type transformed = Transform::transform(arg0);   \
-    boost::function<RF> f = boost::bind(fun, transformed comma AUSE);    \
-    return Transform::wrap(arg0, f, onFail);  \
+#define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)                                                \
+  template <typename RF, typename AF, typename ARG0 comma ATYPEDECL>                                     \
+  boost::function<RF> bind(const AF& fun, const ARG0& arg0 comma ADECL)                                  \
+  {                                                                                                      \
+    typedef typename detail::BindTransform<                                                              \
+        ARG0,                                                                                            \
+        boost::is_base_of<TrackableBase, typename boost::remove_pointer<ARG0>::type>::value> Transform;  \
+    typename Transform::type transformed = Transform::transform(arg0);                                   \
+    boost::function<RF> f = boost::bind(fun, transformed comma AUSE);                                    \
+    return Transform::wrap(arg0, f, detail::throwPointerLockException);                                  \
+  }                                                                                                      \
+  template <typename RF, typename AF, typename ARG0 comma ATYPEDECL>                                     \
+  boost::function<RF> bindWithFallback(const boost::function<void()>& onFail,                            \
+                                       const AF& fun,                                                    \
+                                       const ARG0& arg0 comma ADECL)                                     \
+  {                                                                                                      \
+    typedef typename detail::BindTransform<                                                              \
+        ARG0,                                                                                            \
+        boost::is_base_of<TrackableBase, typename boost::remove_pointer<ARG0>::type>::value> Transform;  \
+    typename Transform::type transformed = Transform::transform(arg0);                                   \
+    boost::function<RF> f = boost::bind(fun, transformed comma AUSE);                                    \
+    return Transform::wrap(arg0, f, onFail);                                                             \
+  }                                                                                                      \
+  template <typename RF, typename AF, typename ARG0 comma ATYPEDECL>                                     \
+  boost::function<RF> bindSilent(const AF& fun, const ARG0& arg0 comma ADECL)                            \
+  {                                                                                                      \
+    return bindWithFallback<RF, AF, ARG0 comma ATYPES>(boost::function<void()>(), fun, arg0 comma AUSE); \
   }
   QI_GEN(genCall)
 #undef genCall
@@ -201,6 +212,11 @@ namespace qi
   {
     typedef typename detail::BindTransform<ARG0, boost::is_base_of<TrackableBase, typename boost::remove_pointer<ARG0>::type>::value> Transform;
     return Transform::wrap(arg0, f, onFail);
+  }
+  template<typename F, typename ARG0>
+  boost::function<F> trackSilent(const boost::function<F>& f, const ARG0& arg0)
+  {
+    return trackWithFallback<F, ARG0>(boost::function<void()>(), f, arg0);
   }
 }
 
