@@ -13,12 +13,12 @@
 #include <boost/filesystem.hpp>
 #include <locale>
 
-#include "../src/sdklayout.hpp"
+#include "../../src/sdklayout.hpp"
 #include <qi/application.hpp>
 #include <qi/os.hpp>
 #include <qi/path.hpp>
 #include <qi/log.hpp>
-#include "../src/utils.hpp"
+#include "../../src/utils.hpp"
 #include <iostream>
 #include <sstream>
 #include <boost/scoped_ptr.hpp>
