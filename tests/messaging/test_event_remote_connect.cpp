@@ -380,7 +380,7 @@ TEST_F(TestObject, serviceDirectoryEvent)
   SignalMap s_map;
   s_map = sd.metaObject().signalMap();
 
-  unsigned int signal_id;
+  unsigned int signal_id = 0;
   for (SignalMap::iterator it = s_map.begin(); it!= s_map.end(); ++it)
   {
     if (it->second.name() == "serviceAdded")
@@ -388,6 +388,7 @@ TEST_F(TestObject, serviceDirectoryEvent)
       signal_id = it->second.uid();
     }
   }
+  ASSERT_NE(signal_id, 0);
   sd.connect(signal_id, oserver1, secondCallbackId);
   sd.connect(signal_id, oserver1, secondCallbackId);
   sd.connect(signal_id, oserver1, secondCallbackId);
