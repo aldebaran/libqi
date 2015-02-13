@@ -419,13 +419,14 @@ namespace qi {
     SignalLink uid = DynamicObject::metaConnect(event, sub);
 
     boost::recursive_mutex::scoped_lock _lock(_localToRemoteSignalLinkMutex);
-    //maintain a map of localsignal -> remotesignal
+    // maintain a map of localsignal -> remotesignal
     //(we only use one remotesignal, for many locals)
     LocalToRemoteSignalLinkMap::iterator it;
-    RemoteSignalLinks &rsl = _localToRemoteSignalLink[event];
+    RemoteSignalLinks& rsl = _localToRemoteSignalLink[event];
     rsl.localSignalLink.push_back(uid);
 
-    if (rsl.remoteSignalLink == qi::SignalBase::invalidSignalLink) {
+    if (rsl.remoteSignalLink == qi::SignalBase::invalidSignalLink)
+    {
       /* Try to handle struct versionning.
       * Hypothesis: Everything in this address space uses the same struct
       * version. It makes sense since typesystem does not handle conflicting
@@ -443,18 +444,27 @@ namespace qi {
         if (!ms)
           return makeFutureError<SignalLink>("Signal not found");
         score = ms->parametersSignature().isConvertibleTo(subSignature);
-        qiLogDebug() << "Conversion score " << score <<" " << ms->parametersSignature().toString() << " -> " << subSignature.toString();
+        qiLogDebug() << "Conversion score " << score << " " << ms->parametersSignature().toString() << " -> "
+                     << subSignature.toString();
+        if (!score)
+        {
+          std::ostringstream ss;
+          ss << "Subscriber not compatible to signal signature: cannot convert " << ms->parametersSignature().toString()
+             << " to " << subSignature.toString();
+          return makeFutureError<SignalLink>(ss.str());
+        }
       }
-      if (!score)
-        return makeFutureError<SignalLink>("Subscriber not compatible to signal signature");
       rsl.remoteSignalLink = uid;
-      qiLogDebug() <<"connect() to " << event <<" gave " << uid << "(new remote connection)";
+      qiLogDebug() << "connect() to " << event << " gave " << uid << " (new remote connection)";
       if (score >= 0.2)
         rsl.future = _self.async<SignalLink>("registerEvent", _service, event, uid);
       else // we might or might not be capable to convert, ask the remote end to try also
-        rsl.future = _self.async<SignalLink>("registerEventWithSignature", _service, event, uid, subSignature.toString());
-    } else {
-      qiLogDebug() <<"connect() to " << event << " gave " << uid << " (reusing remote connection)";
+        rsl.future =
+            _self.async<SignalLink>("registerEventWithSignature", _service, event, uid, subSignature.toString());
+    }
+    else
+    {
+      qiLogDebug() << "connect() to " << event << " gave " << uid << " (reusing remote connection)";
     }
 
     rsl.future.connect(boost::bind<void>(&onEventConnected, this, _1, prom, uid));
