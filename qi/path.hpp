@@ -119,6 +119,52 @@ namespace qi
   /// Set of tools to handle SDK layouts.
   namespace path
   {
+    /// Create a temporary directory that will be removed
+    /// once you quit the scope
+    class QI_API ScopedDir
+    {
+    public:
+      /// Give a path to the constructor to specifed
+      /// where you want the directory to be created
+      /// Otherwise qi::os::mktmpdir will be used to
+      /// create the directory
+      ScopedDir(qi::Path path = qi::Path());
+      /// Remove the directory
+      ~ScopedDir();
+
+      /// Get the full path to the directory created
+      const qi::Path& path() const;
+
+    private:
+      /// Remove current scoped directory
+      /// retry is the number of try before quiting if the directory
+      /// cannot be removed.
+      void removeAll(int retry);
+
+      qi::Path _path;
+    };
+
+    /// Create a temporary path to a file that will be removed
+    /// once you quit the scope.
+    /// Becareful it's only a path it's your call to open it to create it
+    class QI_API ScopedFile
+    {
+    public:
+      /// Give a path to the constructor to specifed
+      /// where you want the file to be created.
+      /// Otherwise the path to the file is construct with
+      /// qi::os::mktmpdir / "tmpfile"
+      /// If it already exists it will be remove.
+      ScopedFile(qi::Path filePath = qi::Path());
+      ~ScopedFile();
+
+      /// Get the full path to the directory created
+      const qi::Path& path() const;
+
+    private:
+      qi::path::ScopedDir _dir;
+      qi::Path _path;
+    };
 
     /**
      * \brief Return the default SDK prefix path.

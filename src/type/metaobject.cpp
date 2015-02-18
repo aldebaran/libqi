@@ -232,7 +232,6 @@ namespace qi {
         NameToIdx::const_iterator itRev =  _methodsNameToIdx.find(nameWithOptionalSignature);
         if (itRev != _methodsNameToIdx.end())
           return itRev->second;
-        typedef std::vector<std::pair<MetaMethod, float> > Methods;
 
         typedef std::vector<std::pair<const MetaMethod*, float> > MethodsPtr;
         MethodsPtr mml;

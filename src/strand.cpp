@@ -8,6 +8,7 @@
 #include <qi/getenv.hpp>
 #include <deque>
 #include <boost/enable_shared_from_this.hpp>
+#include <boost/chrono/chrono_io.hpp>
 
 qiLogCategory("qi.strand");
 

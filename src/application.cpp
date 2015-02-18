@@ -294,7 +294,7 @@ namespace qi {
     void* handle = os::dlopen(moduleName.c_str(), flags);
     if (!handle)
     {
-      qiLogVerbose() << "dlopen failed with " << os::dlerror();
+      throw std::runtime_error("Module \'" + moduleName + "\' not load: error was " + qi::os::dlerror());
     }
     else
     {

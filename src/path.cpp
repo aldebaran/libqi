@@ -199,6 +199,71 @@ namespace qi
   namespace path
   {
 
+    // ScopedDir
+    ScopedDir::ScopedDir(qi::Path path)
+      : _path(path)
+    {
+      if (_path.isEmpty())
+        _path = qi::Path(qi::os::mktmpdir());
+    }
+
+    ScopedDir::~ScopedDir()
+    {
+      removeAll(10);
+    }
+
+    const Path& ScopedDir::path() const
+    {
+      return _path;
+    }
+
+
+    void ScopedDir::removeAll(int retry)
+    {
+      bool success = false;
+      std::string err;
+      while (!success && retry != 0)
+      {
+        bfs::path p(_path.str(), qi::unicodeFacet());
+        try
+        {
+          bfs::remove_all(p);
+          success = true;
+        }
+        catch (const bfs::filesystem_error &e)
+        {
+          err = e.what();
+          retry--;
+        }
+      }
+      if (!success)
+      {
+        qiLogError() << "Could not remove " << _path.str()
+                     << ":" << err;
+      }
+    }
+
+    // ScopedFile
+    ScopedFile::ScopedFile(qi::Path path)
+      : _path(path)
+    {
+      if (_path.isEmpty())
+        _path = _dir.path() / "tmpfile";
+    }
+
+    // if path is !empty the directory created by ScopedDir will be
+    // delete when existing the scope.
+    ScopedFile::~ScopedFile()
+    {
+      bfs::path p(_path.str(), qi::unicodeFacet());
+      bfs::remove(p);
+    }
+
+    const Path& ScopedFile::path() const
+    {
+      return _path;
+    }
+
     boost::filesystem::path absPath(const std::string &pathString)
     {
       boost::filesystem::path path(pathString, qi::unicodeFacet());

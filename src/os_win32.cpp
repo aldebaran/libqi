@@ -81,53 +81,10 @@ namespace qi {
       gTimeStorage->systemStartTime.tv_usec = 1000*timebuffer.millitm;
     }
 
-    /**
-     * Special Hack for windows using performance counter
-     * to give accurate timing, otherwise the accuracy is only +/- 16ms
-     * @return Always zero
-     */
-    int gettimeofday(qi::os::timeval *t)
-    {
-      if (!gTimeStorage)
-        init_timer();
-      if (gTimeStorage->usePerformanceCounter) {
-        LARGE_INTEGER lCurrentSystemTicks;
-
-        // gets the elapsed ticks since system startup (test using CPU affinity)
-        DWORD_PTR oldmask = SetThreadAffinityMask(GetCurrentThread(), 0);
-        QueryPerformanceCounter(&lCurrentSystemTicks);
-        SetThreadAffinityMask(GetCurrentThread(), oldmask);
-
-        // remove the initial offset
-        lCurrentSystemTicks.QuadPart -= gTimeStorage->systemStartTicks.QuadPart;
-
-        // convert to a double number of seconds, using the ticksPerSecond
-        double secondsElapsedDouble = ((double)lCurrentSystemTicks.QuadPart) /
-          ((double)gTimeStorage->systemTicksPerSecond.QuadPart);
-
-        // convert to the parts needed for the timeval
-        long seconds = long(secondsElapsedDouble);
-        long microseconds = long((secondsElapsedDouble - seconds) * 1000000);
-
-        // add this offset to system startup time
-        t->tv_sec  = gTimeStorage->systemStartTime.tv_sec  + seconds;
-        t->tv_usec = gTimeStorage->systemStartTime.tv_usec + microseconds;
-      } else {
-        // no good performance counter, so revert to old behaviour
-        struct _timeb timebuffer;
-        _ftime64_s( &timebuffer );
-
-        // store this in a timeval struct
-        t->tv_sec=(long)timebuffer.time;
-        t->tv_usec=1000*timebuffer.millitm;
-      }
-      return 0;
-    }
-
     FILE* fopen(const char *filename, const char *mode) {
       try {
-        return ::_wfopen(boost::filesystem::path(filename, qi::unicodeFacet()).c_str(),
-                         boost::filesystem::path(mode, qi::unicodeFacet()).c_str());
+        return ::_wfopen(boost::filesystem::path(filename, qi::unicodeFacet()).wstring().c_str(),
+                         boost::filesystem::path(mode, qi::unicodeFacet()).wstring().c_str());
       }
       catch (boost::filesystem::filesystem_error &) {
         return 0;
@@ -137,7 +94,7 @@ namespace qi {
     int stat(const char *pFilename, struct ::stat* pStat) {
       try {
         struct _stat buffer;
-        int result = ::_wstat(boost::filesystem::path(pFilename, qi::unicodeFacet()).wstring(qi::unicodeFacet()).c_str(), &buffer);
+        int result = ::_wstat(boost::filesystem::path(pFilename, qi::unicodeFacet()).wstring().c_str(), &buffer);
         pStat->st_gid   = buffer.st_gid;
         pStat->st_atime = buffer.st_atime;
         pStat->st_ctime = buffer.st_ctime;
@@ -158,7 +115,7 @@ namespace qi {
 
     std::string getenv(const char *var) {
       size_t       bufSize;
-      std::wstring wvar = boost::filesystem::path(var, qi::unicodeFacet()).wstring(qi::unicodeFacet());
+      std::wstring wvar = boost::filesystem::path(var, qi::unicodeFacet()).wstring();
 
      #ifdef _MSC_VER
       wchar_t     *envDir = NULL;
@@ -191,8 +148,8 @@ namespace qi {
     }
 
     int setenv(const char *var, const char *value) {
-      return _wputenv_s(boost::filesystem::path(var, qi::unicodeFacet()).wstring(qi::unicodeFacet()).c_str(),
-                        boost::filesystem::path(value, qi::unicodeFacet()).wstring(qi::unicodeFacet()).c_str());
+      return _wputenv_s(boost::filesystem::path(var, qi::unicodeFacet()).wstring().c_str(),
+                        boost::filesystem::path(value, qi::unicodeFacet()).wstring().c_str());
     }
 
     void sleep(unsigned int seconds) {
@@ -244,7 +201,7 @@ namespace qi {
       boost::filesystem::path pp;
       do
       {
-        tmpdir = boost::filesystem::path(sprefix, qi::unicodeFacet()).wstring(qi::unicodeFacet());
+        tmpdir = boost::filesystem::path(sprefix, qi::unicodeFacet()).wstring();
         tmpdir += wrandomstr(7);
         pp = boost::filesystem::path(qi::os::tmp(), qi::unicodeFacet());
         pp.append(tmpdir, qi::unicodeFacet());

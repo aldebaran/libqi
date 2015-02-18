@@ -10,6 +10,7 @@
 
 #include <qi/clock.hpp>
 #include <qi/os.hpp>
+#include <boost/chrono/chrono_io.hpp>
 
 namespace chrono = boost::chrono;
 

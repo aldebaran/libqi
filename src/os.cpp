@@ -11,6 +11,7 @@
 #include <boost/uuid/uuid_io.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/chrono.hpp>
 
 #include <qi/path.hpp>
 #include <qi/os.hpp>
@@ -163,6 +164,20 @@ namespace qi {
     void symlink(const qi::Path& source, const qi::Path& destination)
     {
       bfs::create_symlink(bfs::path(source.str(), qi::unicodeFacet()), bfs::path(destination.str(), qi::unicodeFacet()));
+    }
+
+    int gettimeofday(qi::os::timeval *t)
+    {
+      namespace bc = boost::chrono;
+
+      const bc::system_clock::duration timeSinceEpoch = bc::system_clock::now().time_since_epoch();
+      const bc::microseconds usSinceEpoch = bc::duration_cast<bc::microseconds>(timeSinceEpoch);
+      const bc::seconds secsSinceEpoch = bc::duration_cast<bc::seconds>(timeSinceEpoch);
+
+      t->tv_sec = secsSinceEpoch.count();
+      t->tv_usec = (usSinceEpoch - secsSinceEpoch).count();
+
+      return 0;
     }
   }
 }
