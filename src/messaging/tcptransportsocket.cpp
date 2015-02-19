@@ -251,9 +251,10 @@ namespace qi
       // This one is for us
       if (_msg->type() != Message::Type_Error)
       {
-        AnyReference cmRef = _msg->value(typeOf<CapabilityMap>()->signature(), shared_from_this());
+        AnyReference cmRef;
         try
         {
+          cmRef = _msg->value(typeOf<CapabilityMap>()->signature(), shared_from_this());
           CapabilityMap cm = cmRef.to<CapabilityMap>();
           cmRef.destroy();
           boost::mutex::scoped_lock lock(_contextMutex);

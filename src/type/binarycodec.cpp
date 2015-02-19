@@ -191,7 +191,15 @@ namespace qi {
       qiLogDebug() << "Extracting buffer of size " << sz <<" at " << reader.position();
       meta.clear();
       void* ptr = meta.reserve(sz);
-      memcpy(ptr, readRaw(sz), sz);
+      void* src = readRaw(sz);
+      if (!src)
+      {
+        setStatus(Status_ReadPastEnd);
+        std::stringstream err;
+        err << "Read of size " << sz << " is past end.";
+        throw std::runtime_error(err.str());
+      }
+      memcpy(ptr, src, sz);
     }
   }
 
