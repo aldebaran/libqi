@@ -235,22 +235,30 @@ namespace detail {
 
       void cancel(qi::Future<T>& future)
       {
-        boost::recursive_mutex::scoped_lock lock(mutex());
-        if (isFinished())
-          return;
-        if (!_onCancel)
-          throw FutureException(FutureException::ExceptionState_FutureNotCancelable);
-        requestCancel();
-        _onCancel(Promise<T>(future));
+        boost::function<void (Promise<T>)> onCancel;
+        {
+          boost::recursive_mutex::scoped_lock lock(mutex());
+          if (isFinished())
+            return;
+          if (!_onCancel)
+            throw FutureException(FutureException::ExceptionState_FutureNotCancelable);
+          requestCancel();
+          onCancel = _onCancel;
+        }
+        onCancel(Promise<T>(future));
       }
 
       void setOnCancel(qi::Promise<T>& promise,
           boost::function<void (Promise<T>)> onCancel)
       {
-        boost::recursive_mutex::scoped_lock lock(mutex());
-        _onCancel = onCancel;
+        bool doCancel = false;
+        {
+          boost::recursive_mutex::scoped_lock lock(mutex());
+          _onCancel = onCancel;
+          doCancel = isCancelRequested();
+        }
         qi::Future<T> fut = promise.future();
-        if (isCancelRequested())
+        if (doCancel)
           cancel(fut);
       }
 
