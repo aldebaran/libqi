@@ -321,7 +321,7 @@ namespace qi
 
   static void reportError(qi::Future<AnyReference> fut) {
     if (fut.hasError()) {
-      qiLogError() << fut.error();
+      qiLogWarning() << "post on method failed: " << fut.error();
       return;
     }
     qi::AnyReference ref = fut.value();
