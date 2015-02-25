@@ -382,6 +382,7 @@ namespace qi {
       }
       _links.erase(it);
     }
+    removeRemoteReferences(client);
   }
 
   qi::BoundAnyObject makeServiceBoundAnyObject(unsigned int serviceId, qi::AnyObject object, qi::MetaCallType mct) {

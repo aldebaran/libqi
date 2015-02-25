@@ -341,15 +341,16 @@ namespace qi {
   namespace {
     ObjectSerializationInfo serializeObject(
       AnyObject object,
-      ObjectHost* context)
+      ObjectHost* context,
+      StreamContext* strCtxt)
     {
-      if (!context)
-        throw std::runtime_error("Unable to serialize object without a valid ObajectHost");
+      if (!context || !strCtxt)
+        throw std::runtime_error("Unable to serialize object without a valid ObjectHost and StreamContext");
       unsigned int sid = context->service();
       unsigned int oid = context->nextId();
       ServiceBoundObject* sbo = new ServiceBoundObject(sid, oid, object, MetaCallType_Queued, true, context);
       boost::shared_ptr<BoundObject> bo(sbo);
-      context->addObject(bo, oid);
+      context->addObject(bo, strCtxt, oid);
       qiLogDebug() << "Hooking " << oid <<" on " << context;
       qiLogDebug() << "sbo " << sbo << "obj " << object.asGenericObject();
       // Transmit the metaObject augmented by ServiceBoundObject.
@@ -432,20 +433,20 @@ namespace qi {
         setError(ss.str());
       }
       else
-        encodeBinary(&_p->buffer, conv.first, boost::bind(serializeObject, _1, context), streamContext);
+        encodeBinary(&_p->buffer, conv.first, boost::bind(serializeObject, _1, context, streamContext), streamContext);
       if (conv.second)
         conv.first.destroy();
     }
     else if (value.type()->kind() != qi::TypeKind_Void)
     {
-      encodeBinary(&_p->buffer, value, boost::bind(serializeObject, _1, context), streamContext);
+      encodeBinary(&_p->buffer, value, boost::bind(serializeObject, _1, context, streamContext), streamContext);
     }
   }
 
   void Message::setValues(const std::vector<qi::AnyReference>& values, ObjectHost* context, StreamContext* streamContext)
   {
     cow();
-    SerializeObjectCallback scb = boost::bind(serializeObject, _1, context);
+    SerializeObjectCallback scb = boost::bind(serializeObject, _1, context, streamContext);
     for (unsigned i = 0; i < values.size(); ++i)
       encodeBinary(&_p->buffer, values[i], scb, streamContext);
   }
@@ -473,7 +474,7 @@ namespace qi {
       }
       AnyReference tuple = makeGenericTuplePtr(types, values);
       AnyValue val(tuple, false, false);
-      encodeBinary(&_p->buffer, AnyReference::from(val), boost::bind(serializeObject, _1, context), streamContext);
+      encodeBinary(&_p->buffer, AnyReference::from(val), boost::bind(serializeObject, _1, context, streamContext), streamContext);
       return;
     }
     /* This check does not makes sense for this transport layer who does not care,

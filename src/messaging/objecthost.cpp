@@ -44,13 +44,28 @@ void ObjectHost::onMessage(const qi::Message &msg, TransportSocketPtr socket)
   obj->onMessage(msg, socket);
 }
 
-unsigned int ObjectHost::addObject(BoundAnyObject obj, unsigned int id)
+unsigned int ObjectHost::addObject(BoundAnyObject obj, StreamContext* remoteRef, unsigned int id)
 {
   boost::recursive_mutex::scoped_lock lock(_mutex);
   if (!id)
     id = ++_nextId;
   _objectMap[id] = obj;
+  _remoteReferences[remoteRef].push_back(id);
   return id;
+}
+
+void ObjectHost::removeRemoteReferences(TransportSocketPtr socket)
+{
+  boost::recursive_mutex::scoped_lock lock(_mutex);
+
+  RemoteReferencesMap::iterator it = _remoteReferences.find(socket.get());
+  if (it == _remoteReferences.end())
+    return;
+  for (std::vector<unsigned int>::iterator vit = it->second.begin(), end = it->second.end();
+       vit != end;
+       ++vit)
+    removeObject(*vit);
+  _remoteReferences.erase(it);
 }
 
 void ObjectHost::removeObject(unsigned int id)
