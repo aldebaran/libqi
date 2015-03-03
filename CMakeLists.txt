@@ -71,7 +71,6 @@ set(QI_H qi/detail/clock.hxx
          qi/detail/warn_push_ignore_deprecated.hpp
          qi/detail/warn_pop_ignore_deprecated.hpp
          qi/api.hpp
-         qi/actor.hpp
          qi/application.hpp
          qi/actor.hpp
          qi/atomic.hpp
@@ -95,6 +94,7 @@ set(QI_H qi/detail/clock.hxx
          qi/qi.hpp
          qi/stats.hpp
          qi/trackable.hpp
+         qi/translator.hpp
          qi/eventloop.hpp
          qi/version.hpp
          qi/iocolor.hpp
@@ -172,6 +172,7 @@ set(QITYPE_H       qi/anyfunction.hpp
                    qi/type/detail/listtypeinterface.hxx
                    qi/type/detail/maptypeinterface.hxx
                    qi/type/detail/pointertypeinterface.hxx
+                   qi/type/detail/staticobjecttype.hpp
                    qi/type/detail/stringtypeinterface.hxx
                    qi/type/detail/structtypeinterface.hxx
                    qi/type/detail/type.hpp
