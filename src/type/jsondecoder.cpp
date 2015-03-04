@@ -35,7 +35,7 @@ namespace qi {
 
   void JsonDecoderPrivate::skipWhiteSpaces()
   {
-    while (_it != _end && *_it == ' ')
+    while (_it != _end && (*_it == ' ' || *_it == '\n'))
       ++_it;
   }
 

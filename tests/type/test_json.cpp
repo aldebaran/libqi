@@ -334,6 +334,17 @@ TEST(TestJSONDecoder, Strings)
   ASSERT_ANY_THROW(qi::decodeJSON(s5));
 }
 
+TEST(TestJSONDecoder, ignoringWhiteSpace)
+{
+  static const std::string ohMinceAlors =
+      "{\n"
+      "  \"petit\" : \"poney\"\n"
+      "}\n";
+  std::map<std::string, std::string> ahBahZut = qi::decodeJSON(ohMinceAlors)
+      .toMap<std::string, std::string>();
+  ASSERT_EQ(std::string("poney"), ahBahZut["petit"]);
+}
+
 int main(int argc, char **argv)
 {
   qi::Application app(argc, argv);
