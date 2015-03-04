@@ -137,6 +137,7 @@ set(QITYPE_H       qi/anyfunction.hpp
                    qi/signature.hpp
                    qi/property.hpp
                    qi/signal.hpp
+                   qi/signalspy.hpp
                    qi/anyvalue.hpp
                    qi/anymodule.hpp
 
