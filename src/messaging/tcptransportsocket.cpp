@@ -449,7 +449,12 @@ namespace qi
         }
         // Transmit each Message without delay
         const boost::asio::ip::tcp::no_delay option( true );
-        _socket->lowest_layer().set_option(option);
+        try {
+          _socket->lowest_layer().set_option(option);
+        } catch (std::exception& e)
+        {
+          qiLogWarning() << "can't set no_delay option: " << e.what();
+        }
       }
 
       startReading();
@@ -505,7 +510,12 @@ namespace qi
   {
     // Transmit each Message without delay
     const boost::asio::ip::tcp::no_delay option( true );
-    _socket->lowest_layer().set_option(option);
+    try {
+      _socket->lowest_layer().set_option(option);
+    } catch (std::exception& e)
+    {
+      qiLogWarning() << "can't set no_delay option: " << e.what();
+    }
 
     // Enable TCP keepalive for faster timeout detection.
     static const char* envTimeout = getenv("QI_TCP_PING_TIMEOUT");
