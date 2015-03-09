@@ -84,10 +84,11 @@ TEST(TestJSON, SimpleAutoGV) {
 
 TEST(TestJSON, String) {
   EXPECT_EQ("\" \\\" \"", qi::encodeJSON(" \" "));
+  EXPECT_EQ("\" ' \"", qi::encodeJSON(" ' "));
   EXPECT_EQ("\" \\u0000 \"", qi::encodeJSON(" \0 "));
-  EXPECT_EQ("\" \\u00C3\\u00A9 \"", qi::encodeJSON(" é "));
+  EXPECT_EQ("\" \\u00E9 \"", qi::encodeJSON(" é "));
 
-  EXPECT_EQ("\" \\\" \\u0000 \\u00C3\\u00A9 \"", qi::encodeJSON(" \" \0 é "));
+  EXPECT_EQ("\" \\\" \\u0000 \\u00E9 \"", qi::encodeJSON(" \" \0 é "));
 }
 
 TEST(TestJSON, CharTuple) {
