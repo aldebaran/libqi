@@ -26,7 +26,12 @@ public:
     , counter(0)
   {
     object.connect(signalName,
-                   qi::AnyFunction::fromDynamicFunction(boost::bind(&SignalSpy::counterCallback, this)));
+                   qi::AnyFunction::fromDynamicFunction(qi::bind<qi::AnyReference(const qi::AnyReferenceVector&)>(&SignalSpy::counterCallback, this)));
+  }
+
+  ~SignalSpy()
+  {
+    destroy();
   }
 
   int getCounter() const
