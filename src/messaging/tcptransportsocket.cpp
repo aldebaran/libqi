@@ -293,6 +293,13 @@ namespace qi
   {
     qiLogVerbose() << "Socket error: " << erc;
     boost::recursive_mutex::scoped_lock lock(_closingMutex);
+    if (_abort)
+    {
+      // Return straight away if error has already been called.
+      // Otherwise, `disconnected` callbacks could be called
+      // multiple times.
+      return;
+    }
     _abort = true;
     _status = qi::TransportSocket::Status_Disconnected;
     disconnected(erc);
