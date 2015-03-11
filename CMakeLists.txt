@@ -82,6 +82,7 @@ set(QI_H qi/detail/clock.hxx
          qi/buffer.hpp
          qi/clock.hpp
          qi/future.hpp
+         qi/futuregroup.hpp
          qi/log/consoleloghandler.hpp
          qi/log/csvloghandler.hpp
          qi/log/fileloghandler.hpp

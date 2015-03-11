@@ -88,6 +88,8 @@ namespace qi {
     FutureTimeout_None     = 0,
   };
 
+  typedef void* FutureUniqueId;
+
   /** base exception raised for all future error.
    */
   class QI_API FutureException : public std::runtime_error {
@@ -166,6 +168,11 @@ namespace qi {
     bool operator < (const Future<T>& b) const
     {
       return _p.get() < b._p.get();
+    }
+
+    FutureUniqueId uniqueId() const
+    {
+      return _p.get();
     }
 
     /** Construct a Future that already contains a value.
@@ -282,7 +289,6 @@ namespace qi {
      */
     inline const std::string &error(int msecs = FutureTimeout_Infinite) const
     { return _p->error(msecs); }
-
 
     /** Make the future sync
      * Should not be useful, use wait().
@@ -541,6 +547,11 @@ namespace qi {
       return _future._p.get() < b._future._p.get();
     }
 
+    FutureUniqueId uniqueId() const
+    {
+      return _future.uniqueId();
+    }
+
     const ValueType &value(int msecs = FutureTimeout_Infinite) const   { _sync = false; return _future.value(msecs); }
     operator const typename Future<T>::ValueTypeCast&() const          { _sync = false; return _future.value(); }
     FutureState wait(int msecs = FutureTimeout_Infinite) const         { _sync = false; return _future.wait(msecs); }
@@ -591,7 +602,6 @@ namespace qi {
     Future<T> _future;
     friend class Future<T>;
   };
-
 
   /** A Promise is used to create and satisfy a Future.
    *
@@ -880,7 +890,6 @@ namespace qi {
       this->_futures.push_back(fut);
       return true;
     }
-
 
     /**
      * \brief Gets the future result for the barrier.
