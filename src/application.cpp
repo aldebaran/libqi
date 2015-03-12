@@ -9,6 +9,7 @@
 
 #include <qi/application.hpp>
 #include <qi/os.hpp>
+#include <qi/atomic.hpp>
 #include <qi/log.hpp>
 #include <qi/path.hpp>
 #include <src/sdklayout.hpp>
@@ -270,7 +271,17 @@ namespace qi {
     FunctionList& fl = lazyGet(globalAtEnter);
     qiLogDebug() << "Executing " << fl.size() << " atEnter handlers";
     for (FunctionList::iterator i = fl.begin(); i!= fl.end(); ++i)
-      (*i)();
+    {
+      try
+      {
+        (*i)();
+      }
+      catch (std::exception& e)
+      {
+        qiLogError() << "Application atEnter callback throw the following error: " << e.what();
+      }
+    }
+
     fl.clear();
     argc = Application::argc();
     argv = globalArgv;
@@ -318,7 +329,17 @@ namespace qi {
   {
     FunctionList& fl = lazyGet(globalAtExit);
     for (FunctionList::iterator i = fl.begin(); i!= fl.end(); ++i)
-      (*i)();
+    {
+      try
+      {
+        (*i)();
+      }
+      catch (std::exception& e)
+      {
+        qiLogError() << "Application atExit callback throw the following error: " << e.what();
+      }
+    }
+
     globalCond.notify_all();
     globalTerminated = true;
   }
@@ -349,11 +370,25 @@ namespace qi {
 
   void Application::stop()
   {
-    FunctionList& fl = lazyGet(globalAtStop);
-    qiLogDebug() << "Executing " << fl.size() << " atStop handlers";
-    for (FunctionList::iterator i = fl.begin(); i!= fl.end(); ++i)
-      (*i)();
-    globalCond.notify_all();
+
+    static qi::Atomic<bool> atStopHandlerCall = false;
+    if (atStopHandlerCall.setIfEquals(false, true))
+    {
+      FunctionList& fl = lazyGet(globalAtStop);
+      qiLogDebug() << "Executing " << fl.size() << " atStop handlers";
+      for (FunctionList::iterator i = fl.begin(); i!= fl.end(); ++i)
+      {
+        try
+        {
+          (*i)();
+        }
+        catch (std::exception& e)
+        {
+          qiLogError() << "Application atStop callback throw the following error: " << e.what();
+        }
+      }
+      globalCond.notify_all();
+    }
   }
 
   void Application::setName(const std::string &name)
