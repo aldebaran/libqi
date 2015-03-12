@@ -308,6 +308,9 @@ namespace qi
      * You can specify subdirectories using "/" as directory separator.
      * \return The complete, native path of the file if it was found,
      * an empty string otherwise.
+     * \remark For automatic tests, you can modify the user data path
+     * to find data in (e.g. ~/.local/share/ on Unix systems)
+     * with :cpp:func:`qi::path::detail::setWritablePath`
      *
      * \verbatim
      * The file is searched in a list of possible directories, provided by the
@@ -389,6 +392,8 @@ namespace qi
      * \param applicationName Name of the application.
      * \param excludeUserWritablePath If true, dataPaths() won't include userWritableDataPath.
      * \return A list of directories.
+     * \remark For automatic tests, you can modify the user data path
+     * (e.g ~/.local/share/ on Unix systems) with :cpp:func:`qi::path::detail::setWritablePath`
      *
      * \verbatim
      * This is used by the :cpp:func:`qi::path::findData(const std::string&, const std::string&)`
