@@ -208,6 +208,7 @@ namespace qi
       /**
        * \brief Set the writable files path for users.
        * \param path Path to the new writable data path
+       * \warning This method is only meant to be used in tests.
        */
       QI_API void setWritablePath(const std::string &path);
     }
@@ -459,6 +460,7 @@ namespace qi
      * \brief Set the writable files path for users.
      * \param path Path to the new writable data path
      * \deprecated since 2.2 Use qi::path::detail::setWritablePath instead
+     * \warning This method is only meant to be used in tests.
      */
     QI_API QI_API_DEPRECATED void setWritablePath(const std::string &path);
   }
