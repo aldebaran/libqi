@@ -147,6 +147,8 @@ namespace qi
   ApplicationSessionPrivate::~ApplicationSessionPrivate()
   {
     destroy();
+    qi::Application::stop();
+    _session->close();
   }
 
   void ApplicationSessionPrivate::connect()
