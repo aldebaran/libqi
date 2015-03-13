@@ -1377,10 +1377,8 @@ void doCancel(qi::Promise<void>& p)
   p.setCanceled();
 }
 
-qi::Future<void> getCancellableFuture()
+qi::Future<void> getCancellableFuture(qi::Promise<void> promise)
 {
-  qi::Promise<void> promise(&doCancel);
-  EXPECT_TRUE(promise.future().isCancelable());
   qiLogDebug() << "returning future";
   return promise.future();
 }
@@ -1395,11 +1393,15 @@ TEST(TestCall, TestAsyncFutureIsCancellable)
 
   qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("getCancellableFuture",
-                     boost::function<qi::Future<void>()>(
+                     boost::function<qi::Future<void>(qi::Promise<void>)>(
                        &getCancellableFuture));
   p.server()->registerService("test", ob.object());
   qi::AnyObject proxy = p.client()->service("test");
-  qi::Future<void> future = proxy.async<void>("getCancellableFuture");
+
+  qi::Promise<void> promise(&doCancel);
+  ASSERT_TRUE(promise.future().isCancelable());
+
+  qi::Future<void> future = proxy.async<void>("getCancellableFuture", promise);
   ASSERT_TRUE(future.isCancelable());
   future.cancel();
   future.wait();

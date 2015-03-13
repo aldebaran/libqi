@@ -75,6 +75,7 @@ namespace qi {
     FutureState_Canceled,           ///< The future has been canceled
     FutureState_FinishedWithError,  ///< The operation is finished with an error
     FutureState_FinishedWithValue,  ///< The operation is finished with a value
+    FutureState_Broken,             ///< The promise has been broken
   };
 
   enum FutureCallbackType {
@@ -98,6 +99,7 @@ namespace qi {
       ExceptionState_FutureHasNoError,    ///< asked for error, but there is no error
       ExceptionState_FutureUserError,     ///< real future error
       ExceptionState_PromiseAlreadySet,   ///< when the promise is already set.
+      ExceptionState_PromiseBroken,       ///< when the promise has been broken
     };
 
     explicit FutureException(const ExceptionState &es, const std::string &str = std::string())
@@ -244,6 +246,14 @@ namespace qi {
      */
     inline bool isCanceled() const
     { return _p->isCanceled(); }
+
+    /**
+     * @return true if the promise associated to the future is broken
+     * This means that all shared promises have been destroyed without setting a finished state.
+     * do not throw
+     */
+    inline bool isBroken() const
+    { return _p->isBroken(); }
 
     /**
      * @param msecs timeout
@@ -600,6 +610,7 @@ namespace qi {
     explicit Promise(FutureCallbackType async = FutureCallbackType_Async) {
       _f._p->reportStart();
       _f._p->_async = async;
+      ++_f._p->_promiseCount;
     }
 
     /** Create a canceleable promise. If Future<T>::cancel is invoked,
@@ -611,6 +622,17 @@ namespace qi {
         FutureCallbackType async = FutureCallbackType_Async)
     {
       setup(cancelCallback, async);
+      ++_f._p->_promiseCount;
+    }
+
+    Promise(const qi::Promise<T>& rhs)
+    {
+      _f = rhs._f;
+      ++_f._p->_promiseCount;
+    }
+
+    ~Promise() {
+      decRefcnt();
     }
 
     /** notify all future that a value has been set.
@@ -674,6 +696,17 @@ namespace qi {
       this->_f._p->setOnCancel(*this, cancelCallback);
     }
 
+    Promise<T>& operator=(const Promise<T>& rhs)
+    {
+      if (_f._p == rhs._f._p)
+        return *this;
+
+      decRefcnt();
+      _f = rhs._f;
+      ++_f._p->_promiseCount;
+      return *this;
+    }
+
   protected:
     void setup(boost::function<void (qi::Promise<T>)> cancelCallback, FutureCallbackType async = FutureCallbackType_Async)
     {
@@ -681,7 +714,9 @@ namespace qi {
       this->_f._p->setOnCancel(*this, cancelCallback);
       this->_f._p->_async = async;
     }
-    explicit Promise(Future<T>& f) : _f(f) {}
+    explicit Promise(Future<T>& f) : _f(f) {
+      ++_f._p->_promiseCount;
+    }
     template<typename> friend class ::qi::detail::FutureBaseTyped;
     Future<T> _f;
 
@@ -690,6 +725,17 @@ namespace qi {
     template<typename FT, typename PT, typename CONV>
     friend void adaptFuture(const Future<FT>& f, Promise<PT>& p,
                             CONV converter);
+
+  private:
+    void decRefcnt()
+    {
+      assert(*_f._p->_promiseCount > 0);
+      // this is race-free because if we reach 0 it means that this is the last Promise pointing to a state and since it
+      // is the last, no one could be trying to make a copy from it while destroying it. Also no one could be changing
+      // the promise state (from running to finished or whatever) while destroying it.
+      if (--_f._p->_promiseCount == 0 && _f.isRunning())
+        _f._p->setBroken(_f);
+    }
   };
 
   /**

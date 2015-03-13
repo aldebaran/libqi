@@ -516,6 +516,21 @@ TEST_F(TestFuture, TestStateNone)
   ASSERT_TRUE(f.wait(qi::FutureTimeout_None) == qi::FutureState_Running);
 }
 
+TEST(TestFuture2, TestBroken)
+{
+  qi::Future<int> f;
+  {
+    qi::Promise<int> p;
+    f = p.future();
+  }
+  EXPECT_TRUE(f.isFinished());
+  EXPECT_TRUE(f.isBroken());
+  EXPECT_FALSE(f.isCanceled());
+  EXPECT_FALSE(f.hasError());
+  EXPECT_EQ(qi::FutureState_Broken, f.wait());
+  EXPECT_THROW(f.value(), qi::FutureException);
+}
+
 struct DelCheck {
   void foo() {}
 };

@@ -116,6 +116,12 @@ namespace qi {
       _p->_error = message;
     }
 
+    void FutureBase::reportBroken() {
+      //always set by ~Promise
+      //boost::recursive_mutex::scoped_lock lock(_p->_mutex);
+      _p->_state = FutureState_Broken;
+    }
+
     void FutureBase::reportStart() {
       _p->_state.setIfEquals(FutureState_None, FutureState_Running);
     }
@@ -126,7 +132,8 @@ namespace qi {
 
     bool FutureBase::isFinished() const {
       FutureState v = FutureState(*_p->_state);
-      return v == FutureState_FinishedWithValue || v == FutureState_FinishedWithError || v == FutureState_Canceled;
+      return v == FutureState_FinishedWithValue || v == FutureState_FinishedWithError || v == FutureState_Canceled
+        || v == FutureState_Broken;
     }
 
     bool FutureBase::isRunning() const {
@@ -135,6 +142,10 @@ namespace qi {
 
     bool FutureBase::isCanceled() const {
       return *_p->_state == FutureState_Canceled;
+    }
+
+    bool FutureBase::isBroken() const {
+      return *_p->_state == FutureState_Broken;
     }
 
     bool FutureBase::isCancelRequested() const {
@@ -190,6 +201,8 @@ namespace qi {
       return "";
     case ExceptionState_PromiseAlreadySet:
       return "Future has already been set.";
+    case ExceptionState_PromiseBroken:
+      return "Associated promise is broken";
     }
     return "";
   }
