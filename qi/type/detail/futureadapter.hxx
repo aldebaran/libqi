@@ -46,7 +46,7 @@ void futureAdapterGeneric(AnyReference val, qi::Promise<T> promise,
   qiLogDebug("qi.adapter") << "futureAdapter trigger";
   TypeOfTemplate<Future>* ft1 = QI_TEMPLATE_TYPE_GET(val.type(), Future);
   TypeOfTemplate<FutureSync>* ft2 = QI_TEMPLATE_TYPE_GET(val.type(), FutureSync);
-  qiLogDebug("qi.object") << "isFuture " << val.type()->infoString() << ' ' << !!ft1 << ' ' << !!ft2;
+  qiLogDebug("qi.adapter") << "isFuture " << val.type()->infoString() << ' ' << !!ft1 << ' ' << !!ft2;
   bool isvoid = false;
   if (ft1)
     isvoid = ft1->templateArgument()->kind() == TypeKind_Void;
@@ -90,7 +90,7 @@ inline bool handleFuture(AnyReference val, Promise<T> promise)
   TypeOfTemplate<Future>* ft1 = QI_TEMPLATE_TYPE_GET(val.type(), Future);
   TypeOfTemplate<FutureSync>* ft2 = QI_TEMPLATE_TYPE_GET(val.type(), FutureSync);
   ObjectTypeInterface* onext = NULL;
-  qiLogDebug("qi.object") << "isFuture " << val.type()->infoString() << ' ' << !!ft1 << ' ' << !!ft2;
+  qiLogDebug("qi.adapter") << "isFuture " << val.type()->infoString() << ' ' << !!ft1 << ' ' << !!ft2;
   if (ft1)
     onext = ft1;
   else if (ft2)
@@ -181,6 +181,10 @@ inline void futureAdapter(qi::Future<qi::AnyReference> metaFut, qi::Promise<T> p
     promise.setError(metaFut.error());
     return;
   }
+  if (metaFut.isCanceled()) {
+    promise.setCanceled();
+    return;
+  }
 
   AnyReference val =  metaFut.value();
   if (handleFuture(val, promise))
@@ -217,6 +221,10 @@ inline void futureAdapter<void>(qi::Future<qi::AnyReference> metaFut, qi::Promis
     promise.setError(metaFut.error());
     return;
   }
+  if (metaFut.isCanceled()) {
+    promise.setCanceled();
+    return;
+  }
   AnyReference val =  metaFut.value();
   if (handleFuture(val, promise))
     return;
@@ -231,6 +239,10 @@ inline void futureAdapterVal(qi::Future<qi::AnyValue> metaFut, qi::Promise<T> pr
   //error handling
   if (metaFut.hasError()) {
     promise.setError(metaFut.error());
+    return;
+  }
+  if (metaFut.isCanceled()) {
+    promise.setCanceled();
     return;
   }
   const AnyValue& val =  metaFut.value();
@@ -249,6 +261,8 @@ inline void futureAdapterVal(qi::Future<qi::AnyValue> metaFut, qi::Promise<AnyVa
 {
   if (metaFut.hasError())
     promise.setError(metaFut.error());
+  else if (metaFut.isCanceled())
+    promise.setCanceled();
   else
     promise.setValue(metaFut.value());
 }
