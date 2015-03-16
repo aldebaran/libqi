@@ -35,12 +35,16 @@ namespace qi
     std::vector<std::string> vs = qi::path::listLib("qi/plugins", "*qimodule_*_plugin*");
     for (unsigned i = 0; i < vs.size(); ++i) {
       qiLogVerbose() << "found module factory: '" << vs.at(i) << "'";
-      void *titi = qi::Application::loadModule(vs.at(i));
-      if (!titi) {
-        qiLogWarning() << "Can't load module: " << vs.at(i);
+      void* lib;
+      try {
+        lib = qi::Application::loadModule(vs.at(i));
+      }
+      catch (std::exception& e)
+      {
+        qiLogWarning() << "Can't load module: " << vs.at(i) << ", error: " << e.what();
         continue;
       }
-      moduleFactoryPluginFn fn = (moduleFactoryPluginFn)qi::os::dlsym(titi, "module_factory_plugin");
+      moduleFactoryPluginFn fn = (moduleFactoryPluginFn)qi::os::dlsym(lib, "module_factory_plugin");
       if (!fn) {
         qiLogWarning() << "Can't load module (no module_factory_plugin found): " << vs.at(i);
         continue;
