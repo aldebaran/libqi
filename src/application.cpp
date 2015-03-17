@@ -56,6 +56,7 @@ namespace qi {
   static char**      globalArgv = 0;
   static bool        globalInitialized = false;
   static bool        globalTerminated = false;
+  static bool        globalIsStop = false;
 
   static std::string globalName;
   static std::vector<std::string>* globalArguments;
@@ -356,6 +357,11 @@ namespace qi {
     }
   }
 
+  static bool isStop()
+  {
+    return globalIsStop;
+  }
+
   void Application::run()
   {
     //run is called, so we catch sigint/sigterm, the default implementation call Application::stop that
@@ -365,7 +371,7 @@ namespace qi {
     // We just need a barrier, so no need to share the mutex
     boost::mutex m;
     boost::unique_lock<boost::mutex> l(m);
-    globalCond.wait(l);
+    globalCond.wait(l, &isStop);
   }
 
   void Application::stop()
@@ -387,6 +393,7 @@ namespace qi {
           qiLogError() << "Application atStop callback throw the following error: " << e.what();
         }
       }
+      globalIsStop = true;
       globalCond.notify_all();
     }
   }
