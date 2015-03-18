@@ -401,6 +401,9 @@ endif()
 
 qi_stage_lib(qi INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/compat")
 
-add_subdirectory("examples")
+option(BUILD_EXAMPLES "build examples")
+if (BUILD_EXAMPLES)
+  add_subdirectory("examples")
+endif()
 add_subdirectory("tests")
 add_subdirectory("bin")
