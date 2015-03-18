@@ -212,6 +212,11 @@ namespace qi
       removeAll(10);
     }
 
+    ScopedDir::operator qi::Path() const
+    {
+      return _path;
+    }
+
     const Path& ScopedDir::path() const
     {
       return _path;

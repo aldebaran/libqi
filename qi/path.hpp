@@ -132,6 +132,9 @@ namespace qi
       /// Remove the directory
       ~ScopedDir();
 
+      /// Implicit conversion operator to qi::Path
+      operator qi::Path() const;
+
       /// Get the full path to the directory created
       const qi::Path& path() const;
 
