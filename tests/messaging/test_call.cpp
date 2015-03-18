@@ -917,6 +917,19 @@ TEST(TestCall, Future)
   ASSERT_TRUE(f2.hasError());
 }
 
+TEST(TestCall, CallOnFutureReturn)
+{
+  TestSessionPair p;
+  qi::DynamicObjectBuilder gob;
+  gob.setThreadingModel(qi::ObjectThreadingModel_MultiThread);
+  gob.advertiseMethod("delaySet", &delaySet);
+  qi::AnyObject sobj = gob.object();
+  p.server()->registerService("delayer", sobj);
+  qi::AnyObject obj = p.client()->service("delayer");
+  int f = obj.call<int>("delaySet", 500, 41);
+  ASSERT_EQ(41, f);
+}
+
 void arrrg(int v) {
 }
 

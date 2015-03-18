@@ -82,10 +82,9 @@ void futureAdapterGeneric(AnyReference val, qi::Promise<T> promise,
   val.destroy();
 }
 
-// futureAdapter helper that detects and handles value of kind future
-// return true if value was a future and was handled
-template <typename T>
-inline bool handleFuture(AnyReference val, Promise<T> promise)
+// return a generic object pointing to the future referenced by val or null if val is not a future
+// remember that you need a shared_ptr pointing on the genericobject so that it can work (shared_from_this)
+inline boost::shared_ptr<GenericObject> getGenericFuture(AnyReference val)
 {
   TypeOfTemplate<Future>* ft1 = QI_TEMPLATE_TYPE_GET(val.type(), Future);
   TypeOfTemplate<FutureSync>* ft2 = QI_TEMPLATE_TYPE_GET(val.type(), FutureSync);
@@ -96,11 +95,19 @@ inline bool handleFuture(AnyReference val, Promise<T> promise)
   else if (ft2)
     onext = ft2;
   if (!onext)
+    return boost::shared_ptr<GenericObject>();
+  return boost::make_shared<GenericObject>(onext, val.rawValue());
+}
+
+// futureAdapter helper that detects and handles value of kind future
+// return true if value was a future and was handled
+template <typename T>
+inline bool handleFuture(AnyReference val, Promise<T> promise)
+{
+  boost::shared_ptr<GenericObject> ao = getGenericFuture(val);
+  if (!ao)
     return false;
 
-  // Need a live shared_ptr for shared_from_this() to work.
-  boost::shared_ptr<GenericObject> ao =
-    boost::make_shared<GenericObject>(onext, val.rawValue());
   boost::function<void()> cb =
     boost::bind(futureAdapterGeneric<T>, val, promise, ao);
   // Careful, gfut will die at the end of this block, but it is
@@ -139,6 +146,14 @@ inline T extractFuture(qi::Future<qi::AnyReference> metaFut)
 {
   AnyReference val =  metaFut.value();
   AutoRefDestroy destroy(val);
+
+  boost::shared_ptr<GenericObject> ao = getGenericFuture(val);
+  AnyValue hold;
+  if (ao)
+  {
+    hold = ao->call<qi::AnyValue>("value", (int)FutureTimeout_Infinite);
+    val = hold.asReference();
+  }
 
   static TypeInterface* targetType;
   QI_ONCE(targetType = typeOf<T>());
