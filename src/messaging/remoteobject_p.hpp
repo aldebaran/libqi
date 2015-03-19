@@ -79,7 +79,6 @@ namespace qi {
     qi::SignalLink                                  _linkMessageDispatcher;
     qi::SignalLink                                  _linkDisconnected;
     qi::AnyObject                                   _self;
-
     boost::recursive_mutex                          _localToRemoteSignalLinkMutex;
     LocalToRemoteSignalLinkMap                      _localToRemoteSignalLink;
   };
