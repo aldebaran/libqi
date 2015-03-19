@@ -79,8 +79,8 @@ namespace qi {
   static void readPathConf()
   {
     std::string prefix = ::qi::path::sdkPrefix();
-    std::set<std::string> toAdd =  ::qi::path::detail::parseQiPathConf(prefix);
-    std::set<std::string>::const_iterator it;
+    std::vector<std::string> toAdd =  ::qi::path::detail::parseQiPathConf(prefix);
+    std::vector<std::string>::const_iterator it;
     for (it = toAdd.begin(); it != toAdd.end(); ++it) {
       ::qi::path::detail::addOptionalSdkPrefix(it->c_str());
     }

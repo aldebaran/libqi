@@ -35,9 +35,9 @@ TEST_F(PathConfTest, SimpleTest)
       << foo_sdk.string()
       << std::endl;
   ofs.close();
-  std::set<std::string> actual = qi::path::detail::parseQiPathConf(foo_sdk.string());
-  std::set<std::string> expected;
-  expected.insert(foo_sdk.string());
+  std::vector<std::string> actual = qi::path::detail::parseQiPathConf(foo_sdk.string());
+  std::vector<std::string> expected;
+  expected.push_back(foo_sdk.string());
   ASSERT_EQ(actual, expected);
 }
 
@@ -66,10 +66,10 @@ TEST_F(PathConfTest, RecursiveTest)
       << "" << std::endl
       << foo_sdk.string() << std::endl;
   ofs.close();
-  std::set<std::string> actual = qi::path::detail::parseQiPathConf(bar_sdk.string());
-  std::set<std::string> expected;
-  expected.insert(foo_sdk.string());
-  expected.insert(foo_src.string());
+  std::vector<std::string> actual = qi::path::detail::parseQiPathConf(bar_sdk.string());
+  std::vector<std::string> expected;
+  expected.push_back(foo_sdk.string());
+  expected.push_back(foo_src.string());
   ASSERT_EQ(actual, expected);
 }
 
@@ -94,9 +94,29 @@ TEST_F(PathConfTest, CircularTest)
       << "" << std::endl
       << foo_sdk.string() << std::endl;
   ofs.close();
-  std::set<std::string> actual = qi::path::detail::parseQiPathConf(bar_sdk.string());
-  std::set<std::string> expected;
-  expected.insert(foo_sdk.string());
-  expected.insert(bar_sdk.string());
+  std::vector<std::string> actual = qi::path::detail::parseQiPathConf(bar_sdk.string());
+  std::vector<std::string> expected;
+  expected.push_back(foo_sdk.string());
+  expected.push_back(bar_sdk.string());
+  ASSERT_EQ(actual, expected);
+}
+
+TEST_F(PathConfTest, KeepOrderTest)
+{
+  boost::filesystem::path fooPath = _tmp / "foo";
+  boost::filesystem::path pathConf = fooPath / "share/qi/";
+  boost::filesystem::create_directories(pathConf);
+  pathConf /= "path.conf";
+  boost::filesystem::path aPath = _tmp / "a";
+  boost::filesystem::path bPath = _tmp / "b";
+  boost::filesystem::create_directories(aPath);
+  boost::filesystem::create_directories(bPath);
+  std::ofstream ofs(pathConf.string().c_str());
+  ofs << bPath.string() << std::endl
+      << aPath.string() << std::endl;
+  std::vector<std::string> expected;
+  expected.push_back(bPath.string());
+  expected.push_back(aPath.string());
+  std::vector<std::string> actual = qi::path::detail::parseQiPathConf(fooPath.string());
   ASSERT_EQ(actual, expected);
 }

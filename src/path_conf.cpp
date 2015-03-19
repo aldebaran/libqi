@@ -15,19 +15,19 @@ namespace qi {
     namespace detail {
 
 // recursive helper for parseQiPathConf();
-static void recParseQiPathConf(const std::string &pathConf, std::set<std::string>& res,
+static void recParseQiPathConf(const std::string &pathConf, std::vector<std::string> &res,
                               std::set<std::string>& filesSeen);
 
-std::set<std::string> parseQiPathConf(const std::string &pathConf)
+std::vector<std::string> parseQiPathConf(const std::string &pathConf)
 {
-  std::set<std::string> res;
+  std::vector<std::string> res;
   std::set<std::string> filesSeen;
   recParseQiPathConf(pathConf, res, filesSeen);
   return res;
 }
 
 
-static void recParseQiPathConf(const std::string &prefix, std::set<std::string>& res,
+static void recParseQiPathConf(const std::string &prefix, std::vector<std::string>& res,
                               std::set<std::string>& filesSeen)
 {
   boost::filesystem::path bpathConf(prefix, qi::unicodeFacet());
@@ -52,11 +52,11 @@ static void recParseQiPathConf(const std::string &prefix, std::set<std::string>&
       continue;
     }
     std::string newPrefix = bpath.string(qi::unicodeFacet());
-    std::set<std::string>::iterator it = res.find(newPrefix);
+    std::vector<std::string>::iterator it = std::find(res.begin(), res.end(), newPrefix);
     if (it != res.end()) {
       continue;
     }
-    res.insert(path);
+    res.push_back(path);
     recParseQiPathConf(newPrefix, res, filesSeen);
   }
   is.close();
