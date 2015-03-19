@@ -209,6 +209,17 @@ namespace qi
       qiLogError() << s;
       return qi::makeFutureError<void>(s);
     }
+    else
+    {
+      static bool disableIPV6 = qi::os::getenv("QIMESSAGING_ENABLE_IPV6").empty();
+      if (disableIPV6)
+      {
+        while (it != boost::asio::ip::tcp::resolver::iterator() &&
+               it->endpoint().address().is_v6())
+          ++it;
+      }
+    }
+
     ip::tcp::endpoint ep = *it;
 #else
     ip::tcp::endpoint ep(boost::asio::ip::address::from_string(url.host()), url.port());
