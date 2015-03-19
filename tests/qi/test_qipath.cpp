@@ -1031,3 +1031,14 @@ TEST_F(qiPathLib, listLib)
   std::vector<std::string> actual = sdkl->listLib("", "test.*");
   ASSERT_EQ(expected, actual);
 }
+
+TEST(qipath, ScopedDir)
+{
+  qi::Path tmpPath;
+  {
+    qi::path::ScopedDir tmpdir;
+    tmpPath = tmpdir.path();
+    ASSERT_TRUE(tmpPath.exists());
+  }
+  ASSERT_FALSE(tmpPath.exists());
+}
