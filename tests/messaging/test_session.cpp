@@ -509,7 +509,7 @@ TEST(QiSession, WaitForService)
   EXPECT_TRUE(future.hasValue());
 }
 
-TEST(QiSession, WaitForServiceCancelled)
+TEST(QiSession, WaitForServiceCanceled)
 {
   TestSessionPair pair;
 

@@ -67,7 +67,7 @@ void futureAdapterGeneric(AnyReference val, qi::Promise<T> promise,
   }
   if (gfut.call<bool>("isCanceled"))
   {
-    qiLogDebug("qi.adapter") << "futureAdapter: future cancelled";
+    qiLogDebug("qi.adapter") << "futureAdapter: future canceled";
     promise.setCanceled();
     return;
   }

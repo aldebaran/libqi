@@ -763,7 +763,7 @@ TEST(TestFutureCancel, AsyncCallCanceleable)
   qi::Future<void> f = qi::getEventLoop()->async(
     boost::bind(&setTrue, &b), 200);
   f.cancel();
-  // f is going to cancel asynchronously, so it can already be cancelled, or not
+  // f is going to cancel asynchronously, so it can already be canceled, or not
   qi::os::msleep(400);
   ASSERT_TRUE(!b);
   ASSERT_TRUE(f.isFinished());
@@ -954,14 +954,14 @@ void setTrue(qi::Promise<T>& p, bool& b)
 
 TEST(TestFutureUnwrap, UnwrapCancel)
 {
-  bool cancelled = false;
+  bool canceled = false;
 
-  qi::Promise<qi::Future<int> > prom(boost::bind(setTrue<qi::Future<int> >, _1, boost::ref(cancelled)));
+  qi::Promise<qi::Future<int> > prom(boost::bind(setTrue<qi::Future<int> >, _1, boost::ref(canceled)));
   qi::Promise<int> prom2;
   qi::Future<int> future = prom.future().unwrap();
 
   ASSERT_TRUE(future.isRunning());
-  ASSERT_FALSE(cancelled);
+  ASSERT_FALSE(canceled);
 
   future.cancel();
 
@@ -970,26 +970,26 @@ TEST(TestFutureUnwrap, UnwrapCancel)
 
   EXPECT_TRUE(prom.isCancelRequested());
   EXPECT_TRUE(future.isCanceled());
-  EXPECT_TRUE(cancelled);
+  EXPECT_TRUE(canceled);
 }
 
 TEST(TestFutureUnwrap, UnwrapCancel2)
 {
-  bool cancelled = false;
-  bool cancelled2 = false;
+  bool canceled = false;
+  bool canceled2 = false;
 
-  qi::Promise<qi::Future<int> > prom(boost::bind(setTrue<qi::Future<int> >, _1, boost::ref(cancelled)));
-  qi::Promise<int> prom2(boost::bind(setTrue<int>, _1, boost::ref(cancelled2)));
+  qi::Promise<qi::Future<int> > prom(boost::bind(setTrue<qi::Future<int> >, _1, boost::ref(canceled)));
+  qi::Promise<int> prom2(boost::bind(setTrue<int>, _1, boost::ref(canceled2)));
   qi::Future<int> future = prom.future().unwrap();
 
   ASSERT_TRUE(future.isRunning());
-  ASSERT_FALSE(cancelled);
+  ASSERT_FALSE(canceled);
 
   prom.setValue(prom2.future());
 
   ASSERT_TRUE(future.isRunning());
-  ASSERT_FALSE(cancelled);
-  ASSERT_FALSE(cancelled2);
+  ASSERT_FALSE(canceled);
+  ASSERT_FALSE(canceled2);
 
   future.cancel();
 
@@ -999,8 +999,8 @@ TEST(TestFutureUnwrap, UnwrapCancel2)
   EXPECT_FALSE(prom.isCancelRequested());
   EXPECT_TRUE(prom2.isCancelRequested());
   EXPECT_TRUE(future.isCanceled());
-  EXPECT_FALSE(cancelled);
-  EXPECT_TRUE(cancelled2);
+  EXPECT_FALSE(canceled);
+  EXPECT_TRUE(canceled2);
 }
 
 // ===== FutureBarrier =========================================================

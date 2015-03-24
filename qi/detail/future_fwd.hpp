@@ -695,13 +695,13 @@ namespace qi {
 
     /** Set a cancel callback. If the cancel is requested, calls this callback
      * immediately.
-     * \throws std::exception if the promise was not created as a cancellable
+     * \throws std::exception if the promise was not created as a cancelable
      * promise.
      */
     void setOnCancel(boost::function<void (qi::Promise<T>)> cancelCallback)
     {
       if (!this->_f._p->isCancelable())
-        throw std::runtime_error("Promise was not created as a cancellable one");
+        throw std::runtime_error("Promise was not created as a cancelable one");
       qi::Future<T> fut = this->future();
       this->_f._p->setOnCancel(*this, cancelCallback);
     }
@@ -961,7 +961,7 @@ namespace qi {
   template <typename T>
   qi::FutureSync< qi::Future<T> > waitForFirst(std::vector< Future<T> >& vect);
 
-  /// Helper function that does nothing on future cancellation
+  /// Helper function that does nothing on future cancelation
   template <typename T>
   void PromiseNoop(const qi::Promise<T>&)
   {

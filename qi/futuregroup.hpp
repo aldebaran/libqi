@@ -35,7 +35,7 @@ namespace qi
 
     /** Register a future to be canceled if not finished when this object is destroyed,
      *  or if cancelAll() is called.
-     *  Futures finishing before cancellation will be automatically unregistered.
+     *  Futures finishing before cancelation will be automatically unregistered.
      *  Non-cancelable futures will be ignored.
      *  @param future Future to register.
      */
