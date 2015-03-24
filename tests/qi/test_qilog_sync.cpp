@@ -18,7 +18,7 @@
 #include <qi/log.hpp>
 #include <qi/atomic.hpp>
 
-#include "../src/log_p.hpp"
+#include "../../src/log_p.hpp"
 
 
 TEST(log, logsync)
