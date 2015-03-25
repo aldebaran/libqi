@@ -279,6 +279,7 @@ namespace qi
      * return the first match.
      * \param applicationName Name of the application.
      * \param filename Name of the file to look for.
+     * \param excludeUserWritablePath If true, findData() won't search into userWritableDataPath.
      * You can specify subdirectories using "/" as directory separator.
      * \return The complete, native path of the file if it was found,
      * an empty string otherwise.
@@ -299,7 +300,8 @@ namespace qi
      * \endverbatim
      */
     QI_API std::string findData(const std::string& applicationName,
-                                const std::string& filename);
+                                const std::string& filename,
+                                bool excludeUserWritablePath = false);
 
 
     /**
@@ -308,6 +310,7 @@ namespace qi
      * Directories are discarded.
      * \param applicationName Name of the application.
      * \param pattern wilcard pattern of the files to look for.
+     * \param excludeUserWritablePath If true, listData() won't search into userWritableDataPath.
      * You can specify subdirectories using "/" as directory separator.
      * \return An std::vector of the complete, native paths of the files that matched.
      *
@@ -334,7 +337,8 @@ namespace qi
      * \endverbatim
      */
     QI_API std::vector<std::string> listData(const std::string& applicationName,
-                                             const std::string& pattern="*");
+                                             const std::string& pattern="*",
+                                             bool excludeUserWritablePath = false);
 
     /** same as listData but for libraries
      */
@@ -358,6 +362,7 @@ namespace qi
     /**
      * \brief Get the list of directories used when searching for data files for the given application name.
      * \param applicationName Name of the application.
+     * \param excludeUserWritablePath If true, dataPaths() won't include userWritableDataPath.
      * \return A list of directories.
      *
      * \verbatim
@@ -375,7 +380,8 @@ namespace qi
      *    nor that they are writeable.
      * \endverbatim
      */
-    QI_API std::vector<std::string> dataPaths(const std::string& applicationName="");
+    QI_API std::vector<std::string> dataPaths(const std::string& applicationName="",
+                                              bool excludeUserWritablePath = false);
 
     /**
      * \brief Get the list of directories used when searching for binaries.

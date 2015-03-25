@@ -83,15 +83,17 @@ namespace qi
 
     /** @copydoc qi::path::findConfiguration */
     std::string findConf(const std::string &applicationName,
-                                  const std::string &filename) const;
+                         const std::string &filename) const;
 
     /** @copydoc qi::path::findData */
     std::string findData(const std::string &applicationName,
-                         const std::string &filename) const;
+                         const std::string &filename,
+                         bool excludeUserWritablePath = false) const;
 
     /** @copydoc qi::path::listData */
     std::vector<std::string> listData(const std::string &applicationName,
-                                      const std::string &pattern="*") const;
+                                      const std::string &pattern="*",
+                                      bool excludeUserWritablePath = false) const;
 
     /** @copydoc qi::path::listLib */
     std::vector<std::string> listLib(const std::string &applicationName,
@@ -101,7 +103,8 @@ namespace qi
     std::vector<std::string> confPaths(const std::string &applicationName="") const;
 
     /** @copydoc qi::path::getDataPaths */
-    std::vector<std::string> dataPaths(const std::string &applicationName="") const;
+    std::vector<std::string> dataPaths(const std::string &applicationName="",
+                                       bool excludeUserWritablePath = false) const;
 
     /** @copydoc qi::path::getBinaryPaths */
     std::vector<std::string> binPaths(const std::string &subfolder="") const;

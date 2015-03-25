@@ -182,7 +182,7 @@ namespace qi {
         }
         catch (const boost::filesystem::filesystem_error &e)
         {
-          qiLogDebug() << e.what();
+          qiLogError() << "Cannot create directory '" << dest << "' error was: " << e.what();
           return std::string();
         }
       }
@@ -471,9 +471,10 @@ namespace qi {
   }
 
   std::string SDKLayout::findData(const std::string &applicationName,
-                                  const std::string &filename) const
+                                  const std::string &filename,
+                                  bool excludeUserWritablePath) const
   {
-    std::vector<std::string> paths = dataPaths(applicationName);
+    std::vector<std::string> paths = dataPaths(applicationName, excludeUserWritablePath);
     try
     {
       std::vector<std::string>::const_iterator it;
@@ -585,9 +586,10 @@ namespace qi {
 
 
   std::vector<std::string> SDKLayout::listData(const std::string &applicationName,
-                                               const std::string &pattern) const
+                                               const std::string &pattern,
+                                               bool excludeUserWritablePath) const
   {
-    return listFiles(dataPaths(applicationName), pattern);
+    return listFiles(dataPaths(applicationName, excludeUserWritablePath), pattern);
   }
 
 
@@ -623,20 +625,24 @@ namespace qi {
   }
 
   // FIXME: Auto-test needed
-  std::vector<std::string> SDKLayout::dataPaths(const std::string &applicationName) const
+  std::vector<std::string> SDKLayout::dataPaths(const std::string &applicationName, bool excludeUserWritablePath) const
   {
-    std::vector<std::string> res;
-    // Pass an empty string to get the directory:
-    res.push_back(userWritableDataPath(applicationName, ""));
+    std::vector<std::string> paths;
+    if (!excludeUserWritablePath)
+    {
+      // Pass an empty string to get the directory:
+      paths.push_back(userWritableDataPath(applicationName, ""));
+    }
 
     std::vector<std::string>::const_iterator it;
     for (it = _p->_sdkPrefixes.begin();
          it != _p->_sdkPrefixes.end();
          ++it)
     {
-      res.push_back(fsconcat(*it, "share", applicationName));
+      paths.push_back(fsconcat(*it, "share", applicationName));
     }
-    return res;
+
+    return paths;
   }
 
 

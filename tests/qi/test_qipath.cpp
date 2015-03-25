@@ -662,6 +662,15 @@ TEST_F(qiPathData, listDataInSubFolderWithOptSdk)
   EXPECT_TRUE(isInVector(optSdkShareFoo / "bam/baz.dat", actual));
 }
 
+TEST_F(qiPathData, findDataExcludingUserDataPath)
+{
+  boost::scoped_ptr<qi::SDKLayout> sdkl(new qi::SDKLayout());
+  std::string actual = sdkl->findData("foo", "baz.dat", true);
+  std::string expected = (sdkShareFoo / "baz.dat").make_preferred().string(qi::unicodeFacet());
+  ASSERT_EQ(expected, actual);
+}
+
+
 TEST_F(qiPathData, findDataDir)
 {
   boost::scoped_ptr<qi::SDKLayout> sdkl(new qi::SDKLayout());
