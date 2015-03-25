@@ -417,13 +417,19 @@ namespace qi {
       DefaultLogInit()
       {
         _glInit = false;
-        qi::log::init();
+        const std::string logLevel = qi::os::getEnvParam<std::string>("QI_LOG_LEVEL", "info");
+        const int context = qi::os::getEnvParam<int>("QI_LOG_CONTEXT", 26);
+        _glContext = context;
+        const std::string rules = qi::os::getEnvParam<std::string>("QI_LOG_FILTERS", std::string());
+        if (!rules.empty())
+          addFilters(rules);
+        qi::log::init(stringToLogLevel(logLevel.c_str()), context);
       }
 
       ~DefaultLogInit()
       {
         qi::log::destroy();
-      };
+      }
     } synchLog;
 
     void Log::printLog()
@@ -537,7 +543,7 @@ namespace qi {
 #endif
     }
 
-    static void doInit() {
+    static void doInit(qi::LogLevel verb) {
       //if init has already been called, we are set here. (reallocating all globals
       // will lead to racecond)
       if (_glInit)
@@ -547,7 +553,8 @@ namespace qi {
       addLogHandler("consoleloghandler",
                     boost::bind(&ConsoleLogHandler::log,
                                 _glConsoleLogHandler,
-                                _1, _2, _3, _4, _5, _6, _7));
+                                _1, _2, _3, _4, _5, _6, _7),
+                    verb);
       _glInit = true;
     }
 
@@ -555,10 +562,10 @@ namespace qi {
               int ctx,
               bool synchronous)
     {
+      QI_ONCE(doInit(verb));
+
       setLogLevel(verb);
       setContext(ctx);
-
-      QI_ONCE(doInit());
 
       setSynchronousLog(synchronous);
     }
@@ -756,18 +763,18 @@ namespace qi {
     {
       _glContext = ctx;
       qiLogVerbose() << "Context set to " << _glContext;
-    };
+    }
 
     int context()
     {
       return _glContext;
-    };
+    }
 
     void setColor(LogColor color)
     {
       _glColorWhen = color;
       _glConsoleLogHandler->updateColor();
-    };
+    }
 
     LogColor color()
     {
@@ -777,7 +784,7 @@ namespace qi {
     void setSynchronousLog(bool sync)
     {
       LogInstance->setSynchronousLog(sync);
-    };
+    }
 
     CategoryType addCategory(const std::string& name)
     {
@@ -985,22 +992,6 @@ namespace qi {
       ("qi-log-color",       value<std::string>()->notifier(&_setColor), "Tell if we should put color or not in log (auto, always, never).")
       ("qi-log-filters",     value<std::string>()->notifier(&_setFilters), filterLogOption.c_str())
     )
-
-    int process_env()
-    {
-      const char* verbose = std::getenv("QI_LOG_LEVEL");
-      if (verbose)
-        setLogLevel(stringToLogLevel(verbose));
-      const char *context = std::getenv("QI_LOG_CONTEXT");
-      if (context)
-        _glContext = (atoi(context));
-      const char* rules = std::getenv("QI_LOG_FILTERS");
-      if (rules)
-        addFilters(rules);
-      return 0;
-    }
-    static int _init = process_env();
-
 
     // deprecated
     qi::LogLevel verbosity(SubscriberId sub)
