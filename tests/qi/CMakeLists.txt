@@ -2,19 +2,10 @@
 ## Use of this source code is governed by a BSD-style license that can be
 ## found in the COPYING file.
 qi_create_test_helper(testlaunch         testlaunch.cpp)
-qi_create_test_helper(testlaunchloop     testlaunchloop.cpp)
-qi_create_test_helper(check_env          check_env.cpp)
-qi_create_test_helper(check_machineid    check_machineid.cpp)
-qi_create_test_helper(test_application   test_application.cpp)
-qi_use_lib(testlaunchloop QI)
-qi_use_lib(check_env QI)
-qi_use_lib(check_machineid QI)
-qi_use_lib(test_application QI)
-
-set_target_properties(testlaunch       PROPERTIES FOLDER tests)
-set_target_properties(testlaunchloop   PROPERTIES FOLDER tests)
-set_target_properties(check_env        PROPERTIES FOLDER tests)
-set_target_properties(test_application PROPERTIES FOLDER tests)
+qi_create_test_helper(testlaunchloop     testlaunchloop.cpp   DEPENDS QI)
+qi_create_test_helper(check_env          check_env.cpp        DEPENDS QI)
+qi_create_test_helper(check_machineid    check_machineid.cpp  DEPENDS QI)
+qi_create_test_helper(test_application   test_application.cpp DEPENDS QI)
 
 qi_create_gtest(test_path_conf    SRC test_path_conf.cpp ../../src/path_conf.cpp DEPENDS QI GTEST)
 qi_create_gtest(test_qipath       SRC test_qipath.cpp    ../../src/utils.cpp     DEPENDS QI GTEST)
