@@ -304,6 +304,8 @@ namespace qi {
   qi::Future<void> EventLoopAsio::asyncCall(qi::Duration delay,
       boost::function<void ()> cb)
   {
+    static boost::system::error_code erc;
+
     if (!_work)
       return qi::makeFutureError<void>("Schedule attempt on destroyed thread pool");
 
@@ -311,10 +313,16 @@ namespace qi {
 
     ++_totalTask;
     tracepoint(qi_qi, eventloop_delay, id, cb.target_type().name(), boost::chrono::duration_cast<qi::MicroSeconds>(delay).count());
-    boost::shared_ptr<boost::asio::steady_timer> timer = boost::make_shared<boost::asio::steady_timer>(boost::ref(_io));
-    timer->expires_from_now(boost::chrono::duration_cast<boost::asio::steady_timer::duration>(delay));
-    qi::Promise<void> prom(boost::bind(&boost::asio::steady_timer::cancel, timer));
-    timer->async_wait(boost::bind(&EventLoopAsio::invoke_maybe, this, cb, id, prom, _1));
+    if (delay > Duration::zero())
+    {
+      boost::shared_ptr<boost::asio::steady_timer> timer = boost::make_shared<boost::asio::steady_timer>(boost::ref(_io));
+      timer->expires_from_now(boost::chrono::duration_cast<boost::asio::steady_timer::duration>(delay));
+      qi::Promise<void> prom(boost::bind(&boost::asio::steady_timer::cancel, timer));
+      timer->async_wait(boost::bind(&EventLoopAsio::invoke_maybe, this, cb, id, prom, _1));
+      return prom.future();
+    }
+    Promise<void> prom(PromiseNoop<void>);
+    _io.post(boost::bind<void>(&EventLoopAsio::invoke_maybe, this, cb, id, prom,erc));
     return prom.future();
   }
 
