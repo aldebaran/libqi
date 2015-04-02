@@ -16,6 +16,8 @@
 # include <qi/types.hpp>
 # include <qi/path.hpp>
 
+# include <boost/lexical_cast.hpp>
+
 #ifdef WIN32
 #ifndef SIGKILL
 #define SIGKILL 9
@@ -572,6 +574,25 @@ namespace qi {
      * Otherwise returns a value of 0, meaning that it was impossible to get the memory usage.
      */
     QI_API size_t memoryUsage(unsigned int pid);
+
+
+    /**
+     * \brief Returns the value of the environment variableif set, the defaultVal otherwise.
+     * \param name Name of the environment variable
+     * \param defaultVal DefaultVal to return if the environment variable isn't set.
+     * \return Function obtains the current value of the environment variable, name if set.
+     * Return defaultVal otherwise.
+     * .. versionadded:: 2.4
+     */
+    template <typename T>
+    inline T getEnvParam(const char* name, T defaultVal)
+    {
+      std::string sval = qi::os::getenv(name);
+      if (sval.empty())
+        return defaultVal;
+      else
+        return boost::lexical_cast<T>(sval);
+    }
 
   }
 }
