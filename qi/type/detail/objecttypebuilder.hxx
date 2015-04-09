@@ -89,9 +89,9 @@ namespace qi {
   {
     qiLogCategory("qitype.objectbuilder");
     // Compute the offset between T and U
-    T* ptr = (T*)(void*)0x10000;
+    T* ptr = reinterpret_cast<T*>(0x10000);
     U* pptr = ptr;
-    int offset = (intptr_t)(void*)pptr - (intptr_t)(void*) ptr;
+    intptr_t offset = reinterpret_cast<intptr_t>(pptr) - reinterpret_cast<intptr_t>(ptr);
     qiLogDebug() << "Offset check T(" << typeid(ptr).name() << ")= " << pptr << ", U(" << typeid(ptr).name() << ")= " << ptr << ", T-U= " << offset;
     return ObjectTypeBuilderBase::inherits<U>(offset);
   }
