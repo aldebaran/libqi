@@ -82,7 +82,11 @@ https://groups.google.com/a/aldebaran-robotics.com/group/qibuild-dev/topics
 Documentation:
 http://doc.aldebaran.com/libqi/
 
+IRC Channel:
+#qi on freenode.
+
 Maintainers:
 
+- Herve Cuche <hcuche@aldebaran.com>
+- Joel Lamotte <jlamotte@aldebaran.com>
 - Philippe DAOUADI <pdaouadi@aldebaran.com>
-- Cedric GESTES <gestes@aldebaran.com>
