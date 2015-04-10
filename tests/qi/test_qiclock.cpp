@@ -25,9 +25,9 @@ namespace chrono = boost::chrono;
 //  qi::sleepUntil(qi::SteadyClock::now());
 //  qi::sleepUntil(qi::SteadyClock::now() - chrono::seconds(1));
 
-//  qi::sleepUntil(qi::WallClock::now() + chrono::seconds(1));
-//  qi::sleepUntil(qi::WallClock::now());
-//  qi::sleepUntil(qi::WallClock::now() - chrono::seconds(1));
+//  qi::sleepUntil(qi::SystemClock::now() + chrono::seconds(1));
+//  qi::sleepUntil(qi::SystemClock::now());
+//  qi::sleepUntil(qi::SystemClock::now() - chrono::seconds(1));
 //}
 
 TEST(QiClock, clock_sleep_our)
@@ -38,9 +38,9 @@ TEST(QiClock, clock_sleep_our)
   qi::sleepUntil(qi::SteadyClock::now());
   qi::sleepUntil(qi::SteadyClock::now() - qi::Seconds(1));
 
-  qi::sleepUntil(qi::WallClock::now() + qi::Seconds(1));
-  qi::sleepUntil(qi::WallClock::now());
-  qi::sleepUntil(qi::WallClock::now() - qi::Seconds(1));
+  qi::sleepUntil(qi::SystemClock::now() + qi::Seconds(1));
+  qi::sleepUntil(qi::SystemClock::now());
+  qi::sleepUntil(qi::SystemClock::now() - qi::Seconds(1));
 }
 
 
@@ -58,7 +58,7 @@ void clock_output_()
 TEST(QiClock, clock_output)
 {
   clock_output_<qi::SteadyClock>();
-  clock_output_<qi::WallClock>();
+  clock_output_<qi::SystemClock>();
 }
 
 typedef chrono::duration<uint32_t, boost::milli > uint32ms;

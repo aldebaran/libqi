@@ -62,12 +62,12 @@ TEST(TestClockType, ClockType)
 
 TEST(TestClockType, TimePoint)
 {
-  qi::WallClockTimePoint wctp(qi::NanoSeconds(42));
+  qi::SystemClockTimePoint wctp(qi::NanoSeconds(42));
 
   qi::uint64_t tp = qi::AnyValue::from(wctp).to<qi::uint64_t>();
 
   EXPECT_EQ(42u, tp);
 
-  qi::WallClockTimePoint wctp2 = qi::AnyValue::from(42).to<qi::WallClockTimePoint>();
+  qi::SystemClockTimePoint wctp2 = qi::AnyValue::from(42).to<qi::SystemClockTimePoint>();
   EXPECT_EQ(wctp, wctp2);
 }

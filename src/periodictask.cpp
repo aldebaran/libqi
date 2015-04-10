@@ -71,7 +71,7 @@ namespace qi
     _p->_period = qi::Duration(-1);
     _p->_tid = invalidThreadId;
     _p->_compensateCallTime =false;
-    _p->_statsDisplayTime = qi::steadyClockNow();
+    _p->_statsDisplayTime = qi::SteadyClock::now();
     _p->_name = "PeriodicTask_" + boost::lexical_cast<std::string>(this);
     _p->_state = Task_Stopped;
   }
@@ -255,12 +255,12 @@ namespace qi
     bool compensate = _compensateCallTime; // we don't want that bool to change in the middle
     try
     {
-      qi::SteadyClockTimePoint start = qi::steadyClockNow();
+      qi::SteadyClockTimePoint start = qi::SteadyClock::now();
       std::pair<qi::int64_t, qi::int64_t> cpu = qi::os::cputime();
       _tid = os::gettid();
       _callback();
       _tid = invalidThreadId;
-      now = qi::steadyClockNow();
+      now = qi::SteadyClock::now();
       delta = now - start;
       std::pair<qi::int64_t, qi::int64_t> cpu2 = qi::os::cputime();
       usr = cpu2.first - cpu.first;

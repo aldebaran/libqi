@@ -155,7 +155,7 @@ void StrandPrivate::process()
 
   _processingThread = qi::os::gettid();
 
-  qi::SteadyClockTimePoint start = qi::steadyClockNow();
+  qi::SteadyClockTimePoint start = qi::SteadyClock::now();
 
   bool finished = false;
 
@@ -200,7 +200,7 @@ void StrandPrivate::process()
       cbStruct->promise.setError("callback has thrown in strand");
     }
     qiLogDebug() << "Finished job id " << cbStruct->id;
-  } while (qi::steadyClockNow() - start < qi::MicroSeconds(QI_STRAND_QUANTUM_US));
+  } while (qi::SteadyClock::now() - start < qi::MicroSeconds(QI_STRAND_QUANTUM_US));
 
   // if we still have work
   if (!finished)

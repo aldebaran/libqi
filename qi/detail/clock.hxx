@@ -25,9 +25,9 @@ namespace qi {
   }
 
   template <class Duration>
-  void sleepUntil(const boost::chrono::time_point<WallClock, Duration>& t)
+  void sleepUntil(const boost::chrono::time_point<SystemClock, Duration>& t)
   {
-    sleepFor(t - WallClock::now());
+    sleepFor(t - SystemClock::now());
   }
 
 }
@@ -46,7 +46,7 @@ namespace boost
     };
 
     template <class CharT>
-    struct clock_string<qi::WallClock, CharT>
+    struct clock_string<qi::SystemClock, CharT>
     {
       static std::basic_string<CharT> name() {return "qi::system_clock";}
       static std::basic_string<CharT> since() {
