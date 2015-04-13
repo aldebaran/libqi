@@ -637,6 +637,55 @@ namespace detail {
             boost::weak_ptr<detail::FutureBaseTyped<FT> >(f._p)));
     const_cast<Future<FT>&>(f).connect(boost::bind(detail::futureAdapter<FT, PT, CONV>, _1, p, converter), FutureCallbackType_Sync);
   }
+
+  namespace detail
+  {
+
+    template <typename T>
+    struct FutureWrapper
+    {
+      void operator,(const T& val)
+      {
+        future = Future<T>(val);
+      }
+
+      void operator,(const Future<T>& val)
+      {
+        future = val;
+      }
+
+      FutureWrapper<T>& operator()()
+      {
+        return *this;
+      }
+
+      qi::Future<T> future;
+    };
+
+    template <>
+    struct FutureWrapper<void>
+    {
+      // initialize the future as operator, wont be called if the function returns void
+      // if it returns a future, then this value will be overwritten anyway, so no problem
+      FutureWrapper()
+        : future(0)
+      {}
+
+      void operator,(const Future<void>& val)
+      {
+        future = val;
+      }
+
+      FutureWrapper<void>& operator()()
+      {
+        return *this;
+      }
+
+      qi::Future<void> future;
+    };
+
+  }
+
 }
 
 #include <qi/detail/futurebarrier.hpp>
