@@ -1405,16 +1405,16 @@ TEST(TestCall, TestAsyncFutureIsCancelable)
     return;
 
   qi::DynamicObjectBuilder ob;
+  qi::Promise<void> promise(&doCancel);
   ob.advertiseMethod("getCancelableFuture",
-                     boost::function<qi::Future<void>(qi::Promise<void>)>(
-                       &getCancelableFuture));
+                     boost::function<qi::Future<void>()>(
+                       boost::bind(&getCancelableFuture, promise)));
   p.server()->registerService("test", ob.object());
   qi::AnyObject proxy = p.client()->service("test");
 
-  qi::Promise<void> promise(&doCancel);
   ASSERT_TRUE(promise.future().isCancelable());
 
-  qi::Future<void> future = proxy.async<void>("getCancelableFuture", promise);
+  qi::Future<void> future = proxy.async<void>("getCancelableFuture");
   ASSERT_TRUE(future.isCancelable());
   future.cancel();
   future.wait();
