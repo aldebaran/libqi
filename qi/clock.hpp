@@ -205,6 +205,17 @@ namespace qi
   template <class Duration>
   inline void sleepUntil(const boost::chrono::time_point<SystemClock, Duration>& t);
   /// @}
+
+  /// @{
+  /// \brief Return the date and time as a string in ISO 8601 format.
+  /// The time is given up to millisecond precision, in UTC.
+  /// The format does not include colon characters, to be suitable for
+  /// inclusion in filenames on any filesystem.
+  ///
+  /// For instance the string for a quarter past nine PM on April 3rd, 2001 is
+  /// "2001-04-03T211500.000Z"
+  QI_API std::string toISO8601String(const SystemClockTimePoint &t);
+  /// }@
 }
 
 # ifdef __APPLE__

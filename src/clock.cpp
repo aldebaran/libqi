@@ -138,4 +138,22 @@ namespace qi {
   {
     sleepFor(t - SteadyClock::now());
   }
+
+  std::string toISO8601String(const SystemClockTimePoint &t)
+  {
+    std::time_t tt = SystemClock::to_time_t(t);
+    char buff[18];
+    std::strftime(buff, sizeof(buff), "%Y-%m-%dT%H%M%S", std::gmtime(&tt));
+    // deal with milliseconds and timezone
+    qi::MilliSeconds subseconds =
+        boost::chrono::time_point_cast<qi::MilliSeconds>(t) -
+        boost::chrono::time_point_cast<qi::Seconds>(t);
+    std::ostringstream ss;
+    ss << buff << ".";
+    ss.width(3);
+    ss.fill('0');
+    ss << std::right << subseconds.count() << 'Z';
+    return ss.str();
+  }
+
 }

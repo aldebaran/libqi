@@ -132,3 +132,13 @@ TEST(QiClock, clock_convert_two_int)
                               + chrono::microseconds(microseconds));
   EXPECT_TRUE(t - t_back < chrono::microseconds(1));
 }
+
+TEST(QiClock, toIso8601String)
+{
+  qi::SystemClockTimePoint t0(qi::Duration(0));
+  EXPECT_EQ("1970-01-01T000000.000Z", qi::toISO8601String(t0));
+  // we do not round, we ceil:
+  EXPECT_EQ("1970-01-01T000000.000Z", qi::toISO8601String(t0 + qi::MicroSeconds(999)));
+  EXPECT_EQ("1970-01-01T000001.042Z", qi::toISO8601String(t0 + qi::MilliSeconds(1042)));
+  EXPECT_EQ("1970-02-01T010203.000Z", qi::toISO8601String(t0 + qi::Hours(24*31+1)+qi::Minutes(2)+qi::Seconds(3)));
+}
