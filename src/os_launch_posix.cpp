@@ -144,7 +144,7 @@ namespace qi
                          (char* const*)argv,
                          child_env);
 
-      if (err != 0 | errno)
+      if ((err != 0) | errno)
       {
         return -1;
       }
@@ -154,7 +154,7 @@ namespace qi
 
     int spawnlp(const char* argv, ...)
     {
-      const char* cmd[64];
+      char* cmd[64];
 
       va_list ap;
       const char* arg;
@@ -162,7 +162,7 @@ namespace qi
       int i = 0;
       va_start(ap, argv);
       for (arg = argv; arg != NULL; arg = va_arg(ap, const char*), ++i)
-        cmd[i] = arg;
+        cmd[i] = const_cast<char*>(arg);
 
       va_end(ap);
       cmd[i] = NULL;
