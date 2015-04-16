@@ -111,27 +111,6 @@ TEST(QiClock, tofromUint32ms)
   }
 }
 
-TEST(QiClock, clock_convert_two_int)
-{
-  // convert a time point to two ints, alvalue-like
-  qi::SteadyClock::time_point t(chrono::seconds(123456789)
-                                 + chrono::microseconds(123456)
-                                 + chrono::nanoseconds(789));
-  int seconds = static_cast<int>(t.time_since_epoch().count()/1000000000LL);
-  int microseconds = static_cast<int>(
-      (t.time_since_epoch().count()/1000LL) % 1000000LL);
-  if (microseconds < 0) {
-    microseconds += 1000000;
-    --seconds;
-  }
-  EXPECT_EQ(123456789, seconds);
-  EXPECT_EQ(123456, microseconds);
-
-  // let do the contrary
-  qi::SteadyClock::time_point t_back(chrono::seconds(seconds)
-                              + chrono::microseconds(microseconds));
-  EXPECT_TRUE(t - t_back < chrono::microseconds(1));
-}
 
 TEST(QiClock, toIso8601String)
 {
