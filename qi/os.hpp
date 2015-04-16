@@ -252,13 +252,14 @@ namespace qi {
      * \brief The gettimeofday() function shall obtain the current time.
      * \param tp The timeval structure used to return the current time.
      * \return 0 on success
+     * \deprecated since 2.4. Use qi::SystemClock::now() instead.
      *
      * The gettimeofday() function shall obtain the current time, expressed as
      * seconds and microseconds since the Epoch, and store it in the timeval
      * structure pointed to by tp. The resolution of the system clock is
      * unspecified. This clock is subject to NTP adjustments.
      */
-    QI_API int gettimeofday(qi::os::timeval *tp);
+    QI_API QI_API_DEPRECATED int gettimeofday(qi::os::timeval *tp);
     /**
      * \brief Elapsed time since program started in microseconds.
      * \return Return qi::int64_t in microseconds.
