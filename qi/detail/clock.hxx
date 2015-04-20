@@ -39,7 +39,7 @@ namespace boost
     template <class CharT>
     struct clock_string<qi::SteadyClock, CharT>
     {
-      static std::basic_string<CharT> name() {return "qi::steady_clock";}
+      static std::basic_string<CharT> name() {return "qi::SteadyClock";}
       static std::basic_string<CharT> since() {
         return clock_string<boost::chrono::steady_clock, CharT>::since();
       }
@@ -48,7 +48,7 @@ namespace boost
     template <class CharT>
     struct clock_string<qi::SystemClock, CharT>
     {
-      static std::basic_string<CharT> name() {return "qi::system_clock";}
+      static std::basic_string<CharT> name() {return "qi::SystemClock";}
       static std::basic_string<CharT> since() {
         return clock_string<boost::chrono::system_clock, CharT>::since();
       }

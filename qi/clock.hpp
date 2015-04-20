@@ -189,7 +189,7 @@ namespace qi
   /// @{
   /// \brief Blocks the execution of the current thread until \p t has been reached.
   ///
-  /// This is equivalent to sleep_for(SteadyClockTimePoint::now())
+  /// This is equivalent to sleepFor(t - SteadyClockTimePoint::now())
   QI_API void sleepUntil(const SteadyClockTimePoint &t);
   template <class Duration>
   inline void sleepUntil(const boost::chrono::time_point<SteadyClock, Duration>& t);
