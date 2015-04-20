@@ -20,10 +20,22 @@ namespace chrono = boost::chrono;
 
 namespace qi {
 
+  /* Have the static variable we need inside the function so that we
+   * give correct results at initialization time, but also force
+   * initialization so that timestamp 0 corresponds to program start time.
+   */
+  static SteadyClock::time_point _unused_base = SteadyClock::now();
 
   SteadyClock::time_point SteadyClock::now()
   {
-    return time_point(chrono::steady_clock::now().time_since_epoch());
+    static bool initialized = false;
+    static qi::Duration base;
+    if (!initialized)
+    {
+      base = chrono::steady_clock::now().time_since_epoch();
+      initialized = true;
+    }
+    return time_point(chrono::steady_clock::now().time_since_epoch() - base);
   }
 
   Clock::time_point Clock::now()

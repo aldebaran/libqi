@@ -24,24 +24,11 @@ namespace bfs = boost::filesystem;
 
 namespace qi {
   namespace os {
-    /* Have the static variable we need inside the function so that we
-     * give correct results at initialization time, but also force
-     * initialization so that timestamp 0 corresponds to program start time.
-     */
-    static int64_t _unused_base = ustime();
 
     int64_t ustime()
     {
-      static bool initialized = false;
-      static int64_t base;
-      timeval tv;
-      gettimeofday(&tv);
-      if (!initialized)
-      {
-        base = tv.tv_sec*1000000LL + tv.tv_usec;
-        initialized = true;
-      }
-      return tv.tv_sec*1000000LL + tv.tv_usec - base;
+      return boost::chrono::duration_cast<qi::MicroSeconds>(
+          SteadyClock::now().time_since_epoch()).count();
     }
 
 
