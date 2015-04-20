@@ -20,34 +20,40 @@ namespace chrono = boost::chrono;
 
 namespace qi {
 
+
   SteadyClock::time_point SteadyClock::now()
   {
     return time_point(chrono::steady_clock::now().time_since_epoch());
   }
 
+  Clock::time_point Clock::now()
+  {
+    return time_point(chrono::system_clock::now().time_since_epoch());
+  }
+
   typedef chrono::duration<uint32_t, boost::milli > uint32ms;
 
-  uint32_t SteadyClock::toUint32ms(const time_point &t) throw()
+  uint32_t Clock::toUint32ms(const time_point &t) throw()
   {
     return chrono::duration_cast<uint32ms>(t.time_since_epoch()).count();
   }
 
-  int32_t SteadyClock::toInt32ms(const time_point &t) throw()
+  int32_t Clock::toInt32ms(const time_point &t) throw()
   {
     return static_cast<int32_t>(toUint32ms(t));
   }
 
-  SteadyClock::time_point SteadyClock::fromUint32ms(uint32_t t_ms,
-                                                    SteadyClock::time_point guess,
-                                                    Expect expect) throw()
+  Clock::time_point Clock::fromUint32ms(uint32_t t_ms,
+                                        Clock::time_point guess,
+                                        Expect expect) throw()
   {
     // ms: a duration type with ms precision, but no overflow problem
     typedef chrono::milliseconds ms;
-    typedef chrono::time_point<SteadyClock, ms> time_point_ms;
+    typedef chrono::time_point<Clock, ms> time_point_ms;
     // overflow period
     static const ms period(ms(uint32ms::max()) - ms(uint32ms::min()) + ms(uint32ms(1)));
     uint32ms guess_ms = chrono::duration_cast<uint32ms>(guess.time_since_epoch());
-    // convert to ms intead of using SteadyClock::duration to avoid sub-ms noise
+    // convert to ms intead of using Clock::duration to avoid sub-ms noise
     time_point_ms origin(chrono::time_point_cast<ms>(guess)
                          - chrono::duration_cast<ms>(guess_ms));
 
@@ -74,11 +80,11 @@ namespace qi {
     return origin + uint32ms(t_ms);
   }
 
-  SteadyClock::time_point SteadyClock::fromInt32ms(int32_t t_ms,
-                                                   SteadyClock::time_point guess,
-                                                   Expect expect) throw()
+  Clock::time_point Clock::fromInt32ms(int32_t t_ms,
+                                       Clock::time_point guess,
+                                       Expect expect) throw()
   {
-    return SteadyClock::fromUint32ms(static_cast<uint32_t>(t_ms), guess, expect);
+    return Clock::fromUint32ms(static_cast<uint32_t>(t_ms), guess, expect);
   }
 
   SystemClock::time_point SystemClock::now()
@@ -116,6 +122,16 @@ namespace qi {
 #endif
   }
 
+  void sleepUntil(const SteadyClockTimePoint& t)
+  {
+    sleepFor(t - SteadyClock::now());
+  }
+
+  void sleepUntil(const ClockTimePoint& t)
+  {
+    sleepFor(t - Clock::now());
+  }
+
   void sleepUntil(const SystemClockTimePoint &t)
   {
 #ifdef BOOST_THREAD_USES_CHRONO
@@ -132,11 +148,6 @@ namespace qi {
         chrono::ceil<us>(t.time_since_epoch()).count())));
 # endif
 #endif
-  }
-
-  void sleepUntil(const SteadyClockTimePoint& t)
-  {
-    sleepFor(t - SteadyClock::now());
   }
 
   std::string toISO8601String(const SystemClockTimePoint &t)

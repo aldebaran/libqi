@@ -123,6 +123,7 @@ QI_TYPE_REGISTER_CUSTOM(qi::Hours, DurationTypeInterface<qi::Hours>);
 
 
 QI_TYPE_REGISTER_CUSTOM(qi::SystemClockTimePoint, TimePointTypeInterface<qi::SystemClockTimePoint>);
+QI_TYPE_REGISTER_CUSTOM(qi::ClockTimePoint, TimePointTypeInterface<qi::ClockTimePoint>);
 QI_TYPE_REGISTER_CUSTOM(qi::SteadyClockTimePoint, TimePointTypeInterface<qi::SteadyClockTimePoint>);
 
 #define PBOUNCE(cls, field, type) \

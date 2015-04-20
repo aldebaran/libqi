@@ -14,6 +14,31 @@
 
 namespace chrono = boost::chrono;
 
+
+TEST(QiClock, initialization)
+{
+  qi::Duration d0;
+  EXPECT_EQ(0, d0.count());
+
+  qi::Duration d1 = qi::Duration::zero();
+  EXPECT_EQ(0, d1.count());
+
+  qi::Duration d2 = qi::Duration();
+  EXPECT_EQ(0, d2.count());
+
+  qi::Duration d3(0);
+  EXPECT_EQ(0, d3.count());
+
+  qi::Clock::time_point t0;
+  EXPECT_EQ(0, t0.time_since_epoch().count());
+
+  qi::Clock::time_point t1(qi::Duration::zero());
+  EXPECT_EQ(0, t1.time_since_epoch().count());
+
+  qi::Clock::time_point t2 = qi::Clock::time_point();
+  EXPECT_EQ(0, t2.time_since_epoch().count());
+}
+
 //TEST(QiClock, clock_sleep)
 //{
 //  typedef chrono::duration<int64_t, boost::pico> picoseconds;
@@ -38,6 +63,10 @@ TEST(QiClock, clock_sleep_our)
   qi::sleepUntil(qi::SteadyClock::now());
   qi::sleepUntil(qi::SteadyClock::now() - qi::Seconds(1));
 
+  qi::sleepUntil(qi::Clock::now() + qi::Seconds(1));
+  qi::sleepUntil(qi::Clock::now());
+  qi::sleepUntil(qi::Clock::now() - qi::Seconds(1));
+
   qi::sleepUntil(qi::SystemClock::now() + qi::Seconds(1));
   qi::sleepUntil(qi::SystemClock::now());
   qi::sleepUntil(qi::SystemClock::now() - qi::Seconds(1));
@@ -52,12 +81,13 @@ void clock_output_()
   typename Clock::duration d = d_ms;
   typename Clock::time_point t = Clock::now();
   std::cout << boost::chrono::clock_string<Clock, char>::name() << "\n"
-             << d_ms << "\n" << d << "\n" << t << "\n" << t+d << "\n";
+             << d_ms << "\n" << d << "\n" << t << "\n" << t+d << "\n\n";
 }
 
 TEST(QiClock, clock_output)
 {
   clock_output_<qi::SteadyClock>();
+  clock_output_<qi::Clock>();
   clock_output_<qi::SystemClock>();
 }
 
@@ -67,47 +97,46 @@ TEST(QiClock, tofromUint32ms)
 {
   // a test to show how we can convert from 32-bits guess-what-my-epoch-is
   // time stamps to qi::SteadyClock::time_point
-  qi::SteadyClock::duration period =
-      qi::SteadyClock::duration(uint32ms::max())
-      + qi::SteadyClock::duration(uint32ms(1));
-  qi::SteadyClock::duration eps = chrono::milliseconds(4);
+  qi::Clock::duration period =
+      qi::Clock::duration(uint32ms::max()) + qi::Clock::duration(uint32ms(1));
+  qi::Clock::duration eps = chrono::milliseconds(4);
 
   // check sum-ms "noise" is removed
-  qi::SteadyClock::duration noise = chrono::nanoseconds(654321);
-  qi::SteadyClock::time_point t(period/4);
+  qi::Clock::duration noise = chrono::nanoseconds(654321);
+  qi::Clock::time_point t(period/4);
   uint32_t input_ms = chrono::duration_cast<uint32ms>(t.time_since_epoch()).count();
-  EXPECT_TRUE(t == qi::SteadyClock::fromUint32ms(input_ms, t+noise, qi::SteadyClock::Expect_SoonerOrLater));
-  EXPECT_TRUE(t == qi::SteadyClock::fromUint32ms(input_ms, t-noise, qi::SteadyClock::Expect_SoonerOrLater));
+  EXPECT_TRUE(t == qi::Clock::fromUint32ms(input_ms, t+noise, qi::Clock::Expect_SoonerOrLater));
+  EXPECT_TRUE(t == qi::Clock::fromUint32ms(input_ms, t-noise, qi::Clock::Expect_SoonerOrLater));
 
   // check we get the expected values
   for (int i = 0; i<8; ++i) {
-    t = qi::SteadyClock::time_point((i*period)/4);
+    t = qi::Clock::time_point((i*period)/4);
     input_ms = chrono::duration_cast<uint32ms>(t.time_since_epoch()).count();
 
-    EXPECT_EQ(input_ms, qi::SteadyClock::toUint32ms(t));
+    EXPECT_EQ(input_ms, qi::Clock::toUint32ms(t));
 
-    EXPECT_TRUE(t == qi::SteadyClock::fromUint32ms(input_ms, t, qi::SteadyClock::Expect_SoonerOrLater));
-    EXPECT_TRUE(t == qi::SteadyClock::fromUint32ms(input_ms, t + eps, qi::SteadyClock::Expect_SoonerOrLater));
-    EXPECT_FALSE(t == qi::SteadyClock::fromUint32ms(input_ms, t + period/2, qi::SteadyClock::Expect_SoonerOrLater));
-    EXPECT_FALSE(t == qi::SteadyClock::fromUint32ms(input_ms, t + period/2 + eps, qi::SteadyClock::Expect_SoonerOrLater));
-    EXPECT_TRUE(t == qi::SteadyClock::fromUint32ms(input_ms, t - eps, qi::SteadyClock::Expect_SoonerOrLater));
-    EXPECT_TRUE(t == qi::SteadyClock::fromUint32ms(input_ms, t - period/2 + eps, qi::SteadyClock::Expect_SoonerOrLater));
-    EXPECT_TRUE(t == qi::SteadyClock::fromUint32ms(input_ms, t - period/2, qi::SteadyClock::Expect_SoonerOrLater));
-    EXPECT_FALSE(t == qi::SteadyClock::fromUint32ms(input_ms, t - period/2 - eps, qi::SteadyClock::Expect_SoonerOrLater));
+    EXPECT_TRUE(t == qi::Clock::fromUint32ms(input_ms, t, qi::Clock::Expect_SoonerOrLater));
+    EXPECT_TRUE(t == qi::Clock::fromUint32ms(input_ms, t + eps, qi::Clock::Expect_SoonerOrLater));
+    EXPECT_FALSE(t == qi::Clock::fromUint32ms(input_ms, t + period/2, qi::Clock::Expect_SoonerOrLater));
+    EXPECT_FALSE(t == qi::Clock::fromUint32ms(input_ms, t + period/2 + eps, qi::Clock::Expect_SoonerOrLater));
+    EXPECT_TRUE(t == qi::Clock::fromUint32ms(input_ms, t - eps, qi::Clock::Expect_SoonerOrLater));
+    EXPECT_TRUE(t == qi::Clock::fromUint32ms(input_ms, t - period/2 + eps, qi::Clock::Expect_SoonerOrLater));
+    EXPECT_TRUE(t == qi::Clock::fromUint32ms(input_ms, t - period/2, qi::Clock::Expect_SoonerOrLater));
+    EXPECT_FALSE(t == qi::Clock::fromUint32ms(input_ms, t - period/2 - eps, qi::Clock::Expect_SoonerOrLater));
 
-    EXPECT_FALSE(t == qi::SteadyClock::fromUint32ms(input_ms, t - eps, qi::SteadyClock::Expect_Sooner));
-    EXPECT_TRUE(t == qi::SteadyClock::fromUint32ms(input_ms, t, qi::SteadyClock::Expect_Sooner));
-    EXPECT_TRUE(t == qi::SteadyClock::fromUint32ms(input_ms, t + eps, qi::SteadyClock::Expect_Sooner));
-    EXPECT_TRUE(t == qi::SteadyClock::fromUint32ms(input_ms, t + period - eps, qi::SteadyClock::Expect_Sooner));
-    EXPECT_FALSE(t == qi::SteadyClock::fromUint32ms(input_ms, t + period, qi::SteadyClock::Expect_Sooner));
-    EXPECT_FALSE(t == qi::SteadyClock::fromUint32ms(input_ms, t + period + eps, qi::SteadyClock::Expect_Sooner));
+    EXPECT_FALSE(t == qi::Clock::fromUint32ms(input_ms, t - eps, qi::Clock::Expect_Sooner));
+    EXPECT_TRUE(t == qi::Clock::fromUint32ms(input_ms, t, qi::Clock::Expect_Sooner));
+    EXPECT_TRUE(t == qi::Clock::fromUint32ms(input_ms, t + eps, qi::Clock::Expect_Sooner));
+    EXPECT_TRUE(t == qi::Clock::fromUint32ms(input_ms, t + period - eps, qi::Clock::Expect_Sooner));
+    EXPECT_FALSE(t == qi::Clock::fromUint32ms(input_ms, t + period, qi::Clock::Expect_Sooner));
+    EXPECT_FALSE(t == qi::Clock::fromUint32ms(input_ms, t + period + eps, qi::Clock::Expect_Sooner));
 
-    EXPECT_FALSE(t == qi::SteadyClock::fromUint32ms(input_ms, t - period - eps, qi::SteadyClock::Expect_Later));
-    EXPECT_FALSE(t == qi::SteadyClock::fromUint32ms(input_ms, t - period, qi::SteadyClock::Expect_Later));
-    EXPECT_TRUE(t == qi::SteadyClock::fromUint32ms(input_ms, t - period + eps, qi::SteadyClock::Expect_Later));
-    EXPECT_TRUE(t == qi::SteadyClock::fromUint32ms(input_ms, t - eps, qi::SteadyClock::Expect_Later));
-    EXPECT_TRUE(t == qi::SteadyClock::fromUint32ms(input_ms, t, qi::SteadyClock::Expect_Later));
-    EXPECT_FALSE(t == qi::SteadyClock::fromUint32ms(input_ms, t + eps, qi::SteadyClock::Expect_Later));
+    EXPECT_FALSE(t == qi::Clock::fromUint32ms(input_ms, t - period - eps, qi::Clock::Expect_Later));
+    EXPECT_FALSE(t == qi::Clock::fromUint32ms(input_ms, t - period, qi::Clock::Expect_Later));
+    EXPECT_TRUE(t == qi::Clock::fromUint32ms(input_ms, t - period + eps, qi::Clock::Expect_Later));
+    EXPECT_TRUE(t == qi::Clock::fromUint32ms(input_ms, t - eps, qi::Clock::Expect_Later));
+    EXPECT_TRUE(t == qi::Clock::fromUint32ms(input_ms, t, qi::Clock::Expect_Later));
+    EXPECT_FALSE(t == qi::Clock::fromUint32ms(input_ms, t + eps, qi::Clock::Expect_Later));
   }
 }
 

@@ -63,6 +63,45 @@ namespace qi
 
     /// Returns a time_point representing the current value of the clock.
     static time_point now();
+  };
+
+
+  /**
+   * \brief The Clock class represents a system-wide clock, best suitable for
+   * timestamping events.
+   *
+   * \includename{qi/clock.hpp}
+   *
+   */
+  class QI_API Clock
+  {
+  public:
+    typedef int64_t rep; ///< The representation type of the duration and time_point.
+    typedef boost::nano period; ///< The tick period of the clock in nanoseconds.
+    typedef boost::chrono::duration<rep, period> duration; ///< The duration type of the clock.
+    /**
+     * The time_point type of the clock. Different clocks are permitted
+     * to share a time_point definition if it is valid to compare their
+     * time_points by comparing their respective durations.
+     */
+    typedef boost::chrono::time_point<Clock> time_point;
+
+    /**
+     * true if t1 <= t2 is always true, else false.
+     * \note A clock that can be adjusted backwards is not steady.
+     */
+    BOOST_STATIC_CONSTEXPR bool is_steady = boost::chrono::steady_clock::is_steady;
+
+  public:
+     /// \brief Enum expected argument
+    enum Expect {
+      Expect_SoonerOrLater, ///< Pick the nearest result to user-provided reference.
+      Expect_Later,         ///< Result is expected to be later than user-provided reference.
+      Expect_Sooner         ///< Result is expected to be sooner than user-provided reference.
+    };
+
+    /// Returns a time_point representing the current value of the clock.
+    static time_point now();
 
     /**
      * \brief Convert the time point to a number of milliseconds on 32 bits.
@@ -104,11 +143,10 @@ namespace qi
      */
     static time_point fromUint32ms(uint32_t t_ms, time_point guess,
                                    Expect expect=Expect_SoonerOrLater) throw();
-    /// \copydoc SteadyClock::fromUint32ms
+    /// \copydoc Clock::fromUint32ms
     static time_point fromInt32ms(int32_t t_ms, time_point guess,
                                   Expect expect=Expect_SoonerOrLater) throw();
   };
-
 
   /**
    * \brief The SystemClock class represents the system-wide real time wall clock.
@@ -163,6 +201,7 @@ namespace qi
 
 
   typedef SteadyClock::time_point SteadyClockTimePoint; ///< Steady clock time point.
+  typedef Clock::time_point ClockTimePoint; ///< qi::Clock time point.
   typedef SystemClock::time_point SystemClockTimePoint; ///< System clock time point.
   QI_API_DEPRECATED
   typedef SystemClockTimePoint WallClockTimePoint; ///< System clock time point.
@@ -193,6 +232,13 @@ namespace qi
   QI_API void sleepUntil(const SteadyClockTimePoint &t);
   template <class Duration>
   inline void sleepUntil(const boost::chrono::time_point<SteadyClock, Duration>& t);
+  /// @}
+
+  /// @{
+  /// \brief Blocks the execution of the current thread until \p t has been reached.
+  QI_API void sleepUntil(const ClockTimePoint &t);
+  template <class Duration>
+  inline void sleepUntil(const boost::chrono::time_point<Clock, Duration>& t);
   /// @}
 
   /// @{
