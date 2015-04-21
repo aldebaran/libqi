@@ -595,8 +595,8 @@ void bindObjectEvent(qi::AnyObject ptr, const std::string& eventName,
   qi::Promise<int>& eventValue)
 {
   // Keep ptr alive
-  ptr.connect(eventName, boost::bind(&onEvent, _1, eventValue,
-    new qi::AnyObject(ptr)));
+  ptr.connect(eventName, boost::function<void(int)>(boost::bind(&onEvent, _1, boost::ref(eventValue),
+    new qi::AnyObject(ptr))));
 }
 
 int makeObjectCall(qi::AnyObject ptr, const std::string& fname, int arg)
@@ -628,7 +628,7 @@ TEST(TestCall, TestObjectPassing)
 
   qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("makeObjectCall", &makeObjectCall);
-  ob.advertiseMethod("bindObjectEvent", boost::bind(&bindObjectEvent, _1, _2, eventValue));
+  ob.advertiseMethod("bindObjectEvent", boost::function<void(qi::AnyObject, const std::string&)>(boost::bind(&bindObjectEvent, _1, _2, boost::ref(eventValue))));
   qi::AnyObject obj(ob.object());
   p.server()->registerService("s", obj);
   qi::AnyObject proxy = p.client()->service("s");
@@ -650,7 +650,7 @@ TEST(TestCall, TestObjectPassing)
   eventValue.future().wait(); //fixme wait(2s)
   ASSERT_TRUE(eventValue.future().isFinished());
   ASSERT_EQ(42, eventValue.future().value());
-  eventValue.reset();
+  eventValue = qi::Promise<int>();
 
   // Check that object is locked by remote end
   qi::AnyWeakObject unregisteredWeakObj = unregisteredObj;
@@ -664,7 +664,7 @@ TEST(TestCall, TestObjectPassing)
   eventValue.future().wait();
   ASSERT_TRUE(eventValue.future().isFinished());
   ASSERT_EQ(0, eventValue.future().value());
-  eventValue.reset();
+  eventValue = qi::Promise<int>();
   ASSERT_TRUE(!eventValue.future().isFinished());
   unregisteredObj.post("fire", 1);
   eventValue.future().wait(2000);
