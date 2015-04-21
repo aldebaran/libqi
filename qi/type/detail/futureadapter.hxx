@@ -38,6 +38,11 @@ template<> inline void setPromise(qi::Promise<void>& promise, AnyValue&)
   promise.setValue(0);
 }
 
+template<> inline void setPromise(qi::Promise<AnyValue>& promise, AnyValue& val)
+{
+  promise.setValue(val);
+}
+
 template <typename T>
 void futureAdapterGeneric(AnyReference val, qi::Promise<T> promise,
     boost::shared_ptr<GenericObject>& ao)
@@ -54,8 +59,9 @@ void futureAdapterGeneric(AnyReference val, qi::Promise<T> promise,
     isvoid = ft2->templateArgument()->kind() == TypeKind_Void;
   GenericObject& gfut = *ao;
   // reset the shared_ptr to break the cycle
-  BOOST_SCOPE_EXIT_TPL(&ao) {
+  BOOST_SCOPE_EXIT_TPL(&ao, &val) {
     ao.reset();
+    val.destroy();
   } BOOST_SCOPE_EXIT_END
   if (gfut.call<bool>("hasError", 0))
   {
@@ -79,7 +85,6 @@ void futureAdapterGeneric(AnyReference val, qi::Promise<T> promise,
   qiLogDebug("qi.adapter") << v.type()->infoString();
   setPromise(promise, v);
   qiLogDebug("qi.adapter") << "Promise set";
-  val.destroy();
 }
 
 // return a generic object pointing to the future referenced by val or null if val is not a future
