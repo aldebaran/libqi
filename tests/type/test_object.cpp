@@ -768,7 +768,7 @@ void forward(qi::Future<int> f, qi::Promise<void> p) {
   p.setValue(0);
 }
 
-qi::Future<void> delaySetV(unsigned long msDelay, int value, qi::Promise<int>prom)
+qi::Future<void> delaySetV(unsigned long msDelay, int value, qi::Promise<int>& prom)
 {
   qi::Promise<void> p;
   prom.future().connect(boost::bind<void>(&forward, _1, p));
@@ -780,13 +780,13 @@ TEST(TestObject, FutureVoid)
 {
   qi::DynamicObjectBuilder gob;
   qi::Promise<int> prom;
-  gob.advertiseMethod("delaySet", boost::bind(&delaySetV, _1, _2, prom));
+  gob.advertiseMethod("delaySet", boost::function<qi::Future<void>(unsigned long, int)>(boost::bind(&delaySetV, _1, _2, boost::ref(prom))));
   qi::AnyObject obj = gob.object();
   qi::Future<void> f = obj.async<void>("delaySet", 500, 41);
   ASSERT_TRUE(!f.isFinished());
   f.wait();
   ASSERT_EQ(41, prom.future().value());
-  prom.reset();
+  prom = qi::Promise<int>();
   f = obj.async<void>("delaySet", 500, -1);
   ASSERT_TRUE(!f.isFinished());
   f.wait();
@@ -977,7 +977,7 @@ TEST(TestObject, traceType)
   ASSERT_TRUE(!oa1.call<bool>("isTraceEnabled"));
 }
 
-static void bim(int i, qi::Promise<void> p, const std::string &name) {
+static void bim(int i, qi::Promise<void>& p, const std::string &name) {
   qiLogInfo() << "Bim le callback:" << name << " ,i:" << i;
   if (i == 42)
     p.setValue(0);
@@ -996,12 +996,12 @@ TEST(TestObject, AdvertiseRealSignal)
   EXPECT_ANY_THROW(premote.future().hasValue(0));
 
   qi::Signal<int> sig;
-  sig.connect(boost::bind<void>(&bim, _1, plocal, "local"));
+  sig.connect(boost::bind<void>(&bim, _1, boost::ref(plocal), "local"));
   qi::DynamicObjectBuilder gob;
   unsigned int id = gob.advertiseSignal("sig", &sig);
   ASSERT_LT(0u, id);
   qi::AnyObject obj = gob.object();
-  obj.connect("sig", boost::bind<void>(&bim, _1, premote, "remote"));
+  obj.connect("sig", boost::function<void(int)>(boost::bind<void>(&bim, _1, boost::ref(premote), "remote")));
 
   //test remote trigger
   qiLogInfo() << "remote trigger.";
@@ -1011,8 +1011,8 @@ TEST(TestObject, AdvertiseRealSignal)
   ASSERT_TRUE(plocal.future().hasValue(0));
   ASSERT_TRUE(premote.future().hasValue(0));
 
-  plocal.reset();
-  premote.reset();
+  plocal = qi::Promise<void>();
+  premote = qi::Promise<void>();
 
   //test local trigger
   qiLogInfo() << "local trigger.";
