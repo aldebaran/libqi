@@ -14,12 +14,12 @@ static qi::Atomic<int> lastPayload;
 static qi::Atomic<int> lastPayload2;
 static qi::Atomic<int> completed;
 
-void onFire(const int& pl, qi::Promise<void> p)
+void onFire(const int& pl, qi::Promise<void>& p)
 {
   ++lastPayload;
   p.setValue(0);
 }
-void onFire2(const int& pl, qi::Promise<void> p)
+void onFire2(const int& pl, qi::Promise<void>& p)
 {
   ++lastPayload2;
   p.setValue(0);
@@ -35,8 +35,8 @@ void testDelete(bool afirst, bool disconnectFirst, qi::Promise<void> end)
   {
     qi::DynamicObjectBuilder oba, obb;
     fireId = oba.advertiseSignal<int>("fire");
-    onFireId = obb.advertiseMethod("onFire", boost::bind<void>(&onFire, _1, p0));
-    onFireId2 = obb.advertiseMethod("onFire2", boost::bind<void>(&onFire2, _1, p1));
+    onFireId = obb.advertiseMethod("onFire", boost::function<void(int)>(boost::bind<void>(&onFire, _1, boost::ref(p0))));
+    onFireId2 = obb.advertiseMethod("onFire2", boost::function<void(int)>(boost::bind<void>(&onFire2, _1, boost::ref(p1))));
     a = new qi::AnyObject(oba.object());
     b = new qi::AnyObject(obb.object());
   }
@@ -53,8 +53,8 @@ void testDelete(bool afirst, bool disconnectFirst, qi::Promise<void> end)
   EXPECT_TRUE(p1.future().hasValue(1000));
   EXPECT_EQ(12, *lastPayload);
   EXPECT_EQ(12, *lastPayload2);
-  p0.reset();
-  p1.reset();
+  p0 = qi::Promise<void>();
+  p1 = qi::Promise<void>();
   if (disconnectFirst)
   {
     (*a).disconnect(linkId);
@@ -62,8 +62,8 @@ void testDelete(bool afirst, bool disconnectFirst, qi::Promise<void> end)
     EXPECT_TRUE(p1.future().hasValue(1000));
     EXPECT_EQ(12, *lastPayload);
     EXPECT_EQ(13, *lastPayload2);
-    p0.reset();
-    p1.reset();
+    p0 = qi::Promise<void>();
+    p1 = qi::Promise<void>();
   }
   if (afirst)
   {
