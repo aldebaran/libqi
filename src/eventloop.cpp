@@ -510,7 +510,7 @@ namespace qi {
      * monitoring unstopable.
      * So reset the value.
     */
-    ctx->promise.reset();
+    ctx->promise = Promise<void>();
   }
 
   static void monitor_cancel(qi::Promise<void>, boost::shared_ptr<MonitorContext> ctx)

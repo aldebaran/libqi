@@ -269,7 +269,7 @@ namespace detail {
 
 QI_MT_TEMPLATE_OBJECT(qi::Future, _connect, isFinished, value, waitFor, waitUntil, isRunning, isCanceled, hasError, error, cancel);
 QI_MT_TEMPLATE_OBJECT(qi::FutureSync, _connect, isFinished, value, waitFor, waitUntil, isRunning, isCanceled, hasError, error, async, cancel);
-QI_MT_TEMPLATE_OBJECT(qi::Promise, setValue, setError, setCanceled, reset, future, value, trigger);
+QI_MT_TEMPLATE_OBJECT(qi::Promise, setValue, setError, setCanceled, future, value, trigger);
 
 namespace qi { namespace detail {
   template<typename T> struct TypeManager<Future<T> >: public TypeManagerDefaultStruct<Future<T> > {};

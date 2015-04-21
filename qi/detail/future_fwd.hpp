@@ -674,13 +674,6 @@ namespace qi {
       return _f._p->isCancelRequested();
     }
 
-    /** reset the promise and the future
-     * @deprecated reseting a promise removes connect() guaranties
-     */
-    void reset() {
-      _f._p->reset();
-    }
-
     /// Get a future linked to this promise. Can be called multiple times.
     Future<T> future() const { return _f; }
 

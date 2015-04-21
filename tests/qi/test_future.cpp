@@ -729,9 +729,9 @@ TEST(TestFutureError, MultipleSetValue)
   qi::Promise<int> p;
   qi::Future<int> f = p.future();
   p.setValue(0);
-  p.reset();
+  p = qi::Promise<int>();
   p.setError("");
-  p.reset();
+  p = qi::Promise<int>();
   p.setValue(1);
   EXPECT_ANY_THROW({ p.setValue(0);});
 }
