@@ -106,6 +106,18 @@ TEST(QiOs, MemoryUsage)
   ASSERT_EQ(0u, qi::os::memoryUsage(0));
 }
 
+TEST(QiOs, timeValCtor)
+{
+  qi::os::timeval t0 = qi::os::timeval();
+  // t0 members are initialized to 0
+  EXPECT_EQ(0, t0.tv_sec);
+  EXPECT_EQ(0, t0.tv_usec);
+  qi::os::timeval t1;
+  // t1 members are not initialized
+  std::cout << "t0.tv_sec: " << t0.tv_sec << " t0.tv_usec: " << t0.tv_sec << std::endl;
+  std::cout << "t1.tv_sec: " << t1.tv_sec << " t1.tv_usec: " << t1.tv_sec << std::endl;
+}
+
 TEST(QiOs, timeValOperator)
 {
   qi::os::timeval t0;
