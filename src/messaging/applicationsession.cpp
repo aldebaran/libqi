@@ -73,8 +73,19 @@ public:
       _session->disconnected.connect(&::onDisconnected);
     }
 
+    if (_standAlone && !_address.empty())
+      throw std::runtime_error("You cannot be standAlone if you specified --qi-url to connect");
+
     _standAlone = _standAlone ? _standAlone : config.defaultStandAlone();
-    _url = _address.empty() ? config.defaultUrl() : Url(_address, "tcp", 9559);
+    if (!_address.empty())
+    {
+      _url = Url(_address, "tcp", 9559);
+      _standAlone = false;
+    }
+    else
+    {
+      _url = config.defaultUrl();
+    }
     _listenUrl = _listenAddress.empty() ? config.defaultListenUrl() : Url(_listenAddress, "tcp", 9559);
   }
 
