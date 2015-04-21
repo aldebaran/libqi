@@ -283,6 +283,7 @@ namespace detail {
           }
         }
         notifyFinish();
+        clearCallbacks();
       }
 
       void setValue(qi::Future<T>& future, const ValueType &value)
@@ -351,13 +352,18 @@ namespace detail {
         bool ready;
         {
           boost::recursive_mutex::scoped_lock lock(mutex());
-          _onResult.push_back(s);
           ready = isFinished();
+          if (!ready)
+          {
+            _onResult.push_back(s);
+          }
         }
         //result already ready, notify the callback
         if (ready) {
           if (type == FutureCallbackType_Async)
+          {
             getEventLoop()->post(boost::bind(s, future));
+          }
           else
           {
             try {
@@ -389,6 +395,15 @@ namespace detail {
       boost::function<void (Promise<T>)> _onCancel;
       FutureCallbackType       _async;
       qi::Atomic<unsigned int> _promiseCount;
+
+      void clearCallbacks()
+      {
+        _onResult.clear();
+        if (_onCancel)
+        {
+          _onCancel = PromiseNoop<T>;
+        }
+      }
     };
 
     template <typename T>
