@@ -125,20 +125,20 @@ TEST(TestTraceAnalyzer, Basic)
 {
   qi::TraceAnalyzer ta;
   qi::AnyValue noargs;
-  EXPECT_EQ(ta.dumpTraces(), "");
+  EXPECT_EQ("", ta.dumpTraces());
   ta.addTrace(qi::EventTrace(10, EventTrace::Event_Call,   100, noargs, ts(10), 0, 0, 50, 50), 1);
   ta.addTrace(qi::EventTrace(10, EventTrace::Event_Result, 100, noargs, ts(11), 0, 0, 50, 50), 1);
-  EXPECT_EQ(ta.dumpTraces(), "50 10:1.100\n");
+  EXPECT_EQ("50 10:1.100\n", ta.dumpTraces());
   ta.clear();
   ta.addTrace(qi::EventTrace(10, EventTrace::Event_Result, 100, noargs, ts(11), 0, 0, 50, 50), 1);
   ta.addTrace(qi::EventTrace(10, EventTrace::Event_Call,   100, noargs, ts(10), 0, 0, 50, 50), 1);
-  EXPECT_EQ(ta.dumpTraces(), "50 10:1.100\n");
+  EXPECT_EQ("50 10:1.100\n", ta.dumpTraces());
   ta.addTrace(qi::EventTrace(11, EventTrace::Event_Result, 100, noargs, ts(13), 0, 0, 50, 50), 1);
   ta.addTrace(qi::EventTrace(11, EventTrace::Event_Call,   100, noargs, ts(12), 0, 0, 50, 50), 1);
-  EXPECT_EQ(ta.dumpTraces(), "50 10:1.100 11:1.100\n");
+  EXPECT_EQ("50 10:1.100 11:1.100\n", ta.dumpTraces());
   ta.addTrace(qi::EventTrace(12, EventTrace::Event_Result, 100, noargs, ts(11), 0, 0, 51, 51), 1);
   ta.addTrace(qi::EventTrace(12, EventTrace::Event_Call,   100, noargs, ts(10), 0, 0, 51, 51), 1);
-  EXPECT_EQ(ta.dumpTraces(), "51 12:1.100\n50 10:1.100 11:1.100\n");
+  EXPECT_EQ("51 12:1.100\n50 10:1.100 11:1.100\n", ta.dumpTraces());
   ta.clear();
 }
 
