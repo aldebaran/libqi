@@ -75,7 +75,6 @@ namespace qi {
     FutureState_Canceled,           ///< The future has been canceled
     FutureState_FinishedWithError,  ///< The operation is finished with an error
     FutureState_FinishedWithValue,  ///< The operation is finished with a value
-    FutureState_Broken,             ///< The promise has been broken
   };
 
   enum FutureCallbackType {
@@ -101,7 +100,6 @@ namespace qi {
       ExceptionState_FutureHasNoError,    ///< asked for error, but there is no error
       ExceptionState_FutureUserError,     ///< real future error
       ExceptionState_PromiseAlreadySet,   ///< when the promise is already set.
-      ExceptionState_PromiseBroken,       ///< when the promise has been broken
     };
 
     explicit FutureException(const ExceptionState &es, const std::string &str = std::string())
@@ -253,14 +251,6 @@ namespace qi {
      */
     inline bool isCanceled() const
     { return _p->isCanceled(); }
-
-    /**
-     * @return true if the promise associated to the future is broken
-     * This means that all shared promises have been destroyed without setting a finished state.
-     * do not throw
-     */
-    inline bool isBroken() const
-    { return _p->isBroken(); }
 
     /**
      * @param msecs timeout

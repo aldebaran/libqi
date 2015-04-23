@@ -197,7 +197,6 @@ namespace detail {
       bool isRunning() const;
       bool isFinished() const;
       bool isCanceled() const;
-      bool isBroken() const;
       bool isCancelRequested() const;
       bool hasError(int msecs) const;
       bool hasValue(int msecs) const;
@@ -210,7 +209,6 @@ namespace detail {
       void reportError(const std::string &message);
       void requestCancel();
       void reportCanceled();
-      void reportBroken();
       boost::recursive_mutex& mutex();
       void notifyFinish();
 
@@ -331,7 +329,7 @@ namespace detail {
         boost::recursive_mutex::scoped_lock lock(mutex());
         assert(isRunning());
 
-        reportBroken();
+        reportError("Promise broken (all promises are destroyed)");
         callCbNotify(future);
       }
 
@@ -380,8 +378,6 @@ namespace detail {
           throw FutureException(FutureException::ExceptionState_FutureTimeout);
         if (state == FutureState_Canceled)
           throw FutureException(FutureException::ExceptionState_FutureCanceled);
-        if (state == FutureState_Broken)
-          throw FutureException(FutureException::ExceptionState_PromiseBroken);
         if (state == FutureState_FinishedWithError)
           throw FutureUserException(error(FutureTimeout_None));
         return _value;

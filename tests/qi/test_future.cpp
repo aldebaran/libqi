@@ -524,10 +524,8 @@ TEST(TestFuture2, TestBroken)
     f = p.future();
   }
   EXPECT_TRUE(f.isFinished());
-  EXPECT_TRUE(f.isBroken());
+  EXPECT_TRUE(f.hasError());
   EXPECT_FALSE(f.isCanceled());
-  EXPECT_FALSE(f.hasError());
-  EXPECT_EQ(qi::FutureState_Broken, f.wait());
   EXPECT_THROW(f.value(), qi::FutureException);
 }
 
