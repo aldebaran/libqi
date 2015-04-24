@@ -144,7 +144,7 @@ namespace qi
                          (char* const*)argv,
                          child_env);
 
-      if ((err != 0) | errno)
+      if ((err != 0) || errno)
       {
         return -1;
       }
