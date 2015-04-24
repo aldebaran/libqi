@@ -12,6 +12,7 @@
 #include <boost/bind.hpp>
 #include <qi/eventloop.hpp>
 #include <qi/actor.hpp>
+#include <qi/type/detail/futureadapter.hpp>
 
 #include <qi/log.hpp>
 
@@ -564,6 +565,18 @@ namespace detail {
     {
     }
   };
+
+  template<typename R>
+  void adaptFutureUnwrap(Future<AnyReference>& f, Promise<R>& p)
+  {
+    if (f.isCancelable())
+      p.setup(boost::bind(&detail::futureCancelAdapter<AnyReference>,
+            boost::weak_ptr<detail::FutureBaseTyped<AnyReference> >(f._p)));
+    f.connect(boost::function<void(qi::Future<AnyReference>&)>(
+          boost::bind(&detail::futureAdapter<R>, _1, p)),
+        FutureCallbackType_Sync);
+  }
+
 
   template<typename FT, typename PT>
   void adaptFuture(const Future<FT>& f, Promise<PT>& p)

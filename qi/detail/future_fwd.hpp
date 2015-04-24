@@ -29,6 +29,8 @@
 
 namespace qi {
 
+  class AnyReference;
+
   namespace detail
   {
     template<typename T>
@@ -404,6 +406,8 @@ namespace qi {
     friend class Promise<T>;
     friend class FutureSync<T>;
 
+    template<typename R>
+    friend void adaptFutureUnwrap(Future<AnyReference>& f, Promise<R>& p);
     template<typename FT, typename PT>
     friend void adaptFuture(const Future<FT>& f, Promise<PT>& p);
     template<typename FT, typename PT, typename CONV>
@@ -713,6 +717,8 @@ namespace qi {
     template<typename> friend class ::qi::detail::FutureBaseTyped;
     Future<T> _f;
 
+    template<typename R>
+    friend void adaptFutureUnwrap(Future<AnyReference>& f, Promise<R>& p);
     template<typename FT, typename PT>
     friend void adaptFuture(const Future<FT>& f, Promise<PT>& p);
     template<typename FT, typename PT, typename CONV>
@@ -956,6 +962,12 @@ namespace qi {
   {
     void operator()(const FT& vIn, PT& vOut) { vOut = vIn;}
   };
+
+  /**
+   * \brief Feed a promise from a generic future which may be unwrapped if it contains itself a future.
+   */
+  template<typename R>
+  void adaptFutureUnwrap(Future<AnyReference>& f, Promise<R>& p);
 
   /**
    * \brief Feed a promise from a future of possibly different type.
