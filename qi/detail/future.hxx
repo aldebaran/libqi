@@ -222,6 +222,7 @@ namespace detail {
     template <typename T>
     class FutureBaseTyped : public FutureBase {
     public:
+      typedef boost::function<void(Promise<T>)> CancelCallback;
       typedef typename FutureType<T>::type ValueType;
       FutureBaseTyped()
         : _value()
@@ -231,12 +232,12 @@ namespace detail {
 
       bool isCancelable() const
       {
-        return _onCancel;
+        return static_cast<bool>(_onCancel);
       }
 
       void cancel(qi::Future<T>& future)
       {
-        boost::function<void (Promise<T>)> onCancel;
+        CancelCallback onCancel;
         {
           boost::recursive_mutex::scoped_lock lock(mutex());
           if (isFinished())
@@ -250,7 +251,7 @@ namespace detail {
       }
 
       void setOnCancel(qi::Promise<T>& promise,
-          boost::function<void (Promise<T>)> onCancel)
+        CancelCallback onCancel)
       {
         bool doCancel = false;
         {
@@ -389,7 +390,7 @@ namespace detail {
       typedef std::vector<boost::function<void (qi::Future<T>)> > Callbacks;
       Callbacks                _onResult;
       ValueType                _value;
-      boost::function<void (Promise<T>)> _onCancel;
+      CancelCallback           _onCancel;
       FutureCallbackType       _async;
       qi::Atomic<unsigned int> _promiseCount;
 
@@ -398,7 +399,7 @@ namespace detail {
         _onResult.clear();
         if (_onCancel)
         {
-          _onCancel = PromiseNoop<T>;
+          _onCancel = CancelCallback(PromiseNoop<T>);
         }
       }
     };
