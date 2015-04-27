@@ -80,18 +80,20 @@ private:
   struct SchedulerHelper<n, T>                                              \
   {                                                                         \
     BOOST_PP_REPEAT(n, typedefi, _);                                        \
+    typedef typename boost::function_traits<T>::result_type R;              \
     static boost::function<T> _scheduler(const boost::function<T>& f,       \
                                          Strand* strand)                    \
     {                                                                       \
       return qi::bind<T>(&_asyncCall, strand,                               \
                          f BOOST_PP_REPEAT(n, placeholders, _));            \
     }                                                                       \
-    static qi::Future<void> _asyncCall(Strand* strand,                      \
-                                       const boost::function<T>& func comma \
+    static qi::Future<R> _asyncCall(Strand* strand,                         \
+                                    const boost::function<T>& func comma    \
                                            ADECL)                           \
     {                                                                       \
       /* use qi::bind again since first arg may be a Trackable */           \
-      return strand->async(qi::bind<void()>(func comma AUSE));              \
+      return ((qi::ExecutionContext*)strand)                                \
+                  ->async(qi::bind<R()>(func comma AUSE));                  \
     }                                                                       \
   };
   QI_GEN(genCall)
