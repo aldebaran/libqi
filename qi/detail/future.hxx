@@ -489,29 +489,6 @@ namespace detail {
     return prom.future();
   }
 
-  template <typename T>
-  void waitForAll(std::vector<Future<T> >& vect) {
-    typename std::vector< Future<T> >::iterator it;
-    qi::FutureBarrier<T> barrier;
-
-    for (it = vect.begin(); it != vect.end(); ++it) {
-      barrier.addFuture(*it);
-    }
-    barrier.future().wait();
-  }
-
-  template <typename T>
-  qi::FutureSync< qi::Future<T> > waitForFirst(std::vector< Future<T> >& vect) {
-    typename std::vector< Future<T> >::iterator it;
-    qi::Promise< qi::Future<T> > prom;
-    qi::Atomic<int>* count = new qi::Atomic<int>();
-    count->swap((int)vect.size());
-    for (it = vect.begin(); it != vect.end(); ++it) {
-      it->connect(boost::bind<void>(&detail::waitForFirstHelper<T>, prom, *it, count));
-    }
-    return prom.future();
-  }
-
   namespace detail
   {
     template<typename FT, typename PT, typename CONV>
@@ -598,5 +575,7 @@ namespace detail {
     const_cast<Future<FT>&>(f).connect(boost::bind(detail::futureAdapter<FT, PT, CONV>, _1, p, converter), FutureCallbackType_Sync);
   }
 }
+
+#include <qi/detail/futurebarrier.hpp>
 
 #endif  // _QI_DETAILS_FUTURE_HXX_

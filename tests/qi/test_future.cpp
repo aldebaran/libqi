@@ -1047,6 +1047,23 @@ TEST(TestPromiseBarrier, SimpleBarrier)
   ASSERT_EQ(it, *a);
 }
 
+TEST(TestPromiseBarrier, Cancel)
+{
+  qi::FutureBarrier<int> barrier;
+  std::vector<qi::Promise<int> > promises;
+
+  // Loading the barrier.
+  for (int it = 0; it < BARRIER_N; ++it) {
+    qi::Promise<int> prom(doCancel);
+    promises.push_back(prom);
+    barrier.addFuture(prom.future());
+  }
+
+  barrier.future().cancel();
+  // We wait for all futures of the for loop.
+  barrier.future().value();
+}
+
 TEST(TestPromiseBarrier, ClosedBarrier)
 {
   qi::FutureBarrier<void> barrier;
