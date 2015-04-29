@@ -51,6 +51,14 @@ TEST(QiApplicationSession, checkArgs)
   EXPECT_EQ(std::string("foo"), _argv[0]);
 }
 
+TEST(QiApplicationSession, defineConfig)
+{
+  qi::ApplicationSession::Config config;
+  config.setDefaultStandAlone(true);
+  config.setDefaultListenUrl("tcp://localhost:0");
+  config.setName("AppSessionTest");
+}
+
 int main(int argc, char** argv)
 {
   ::testing::InitGoogleTest(&argc, argv);

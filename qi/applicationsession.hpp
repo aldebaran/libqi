@@ -41,7 +41,7 @@ public:
   /**
    * This class is used to set configuration of the ApplicationSession
    */
-  class Config
+  class QI_API Config
   {
   public:
     Config();
