@@ -338,7 +338,7 @@ namespace qi {
     promise.setValue(0);
   }
 
-  void SessionPrivate::onServiceTrackingCancelled(qi::Promise<void> promise,
+  void SessionPrivate::onServiceTrackingCanceled(qi::Promise<void> promise,
       boost::shared_ptr<qi::Atomic<int> > link)
   {
     SignalLink link2 = link->swap(0);
@@ -357,7 +357,7 @@ namespace qi {
 
     qi::Promise<void> promise(qi::bindWithFallback<void(qi::Promise<void>)>(
           boost::function<void()>(),
-          &SessionPrivate::onServiceTrackingCancelled,
+          &SessionPrivate::onServiceTrackingCanceled,
           boost::weak_ptr<SessionPrivate>(_p),
           _1,
           link));

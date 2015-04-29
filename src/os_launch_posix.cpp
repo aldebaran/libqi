@@ -144,15 +144,7 @@ namespace qi
                          (char* const*)argv,
                          child_env);
 
-      if (err == EINVAL || err == ENOENT)
-      {
-        return -1;
-      }
-      if (err != 0)
-      {
-        return -1;
-      }
-      if (errno)
+      if ((err != 0) || errno)
       {
         return -1;
       }
@@ -162,7 +154,7 @@ namespace qi
 
     int spawnlp(const char* argv, ...)
     {
-      const char* cmd[64];
+      char* cmd[64];
 
       va_list ap;
       const char* arg;
@@ -170,68 +162,12 @@ namespace qi
       int i = 0;
       va_start(ap, argv);
       for (arg = argv; arg != NULL; arg = va_arg(ap, const char*), ++i)
-        cmd[i] = arg;
+        cmd[i] = const_cast<char*>(arg);
 
       va_end(ap);
       cmd[i] = NULL;
 
-      pid_t pID = -1;
-      int err;
-
-#ifdef __linux__
-      // Set all parent FD to close them when exec
-      setCloexecFlag(getpid());
-#endif
-
-
-      posix_spawnattr_t* pSpawnattr = NULL;
-
-#ifdef __linux__
-      posix_spawnattr_t spawnattr;
-      spawnattr.__flags = POSIX_SPAWN_USEVFORK;
-      pSpawnattr = &spawnattr;
-#endif
-
-      // Err != 0 means vfork failed.
-      // If exec() fails, then err = 0 and we have to get the status of the child
-      // process to know what happened.
-      // Note: child process environment will be the same as parent process.
-      // TODO: maybe we should have a way of setting child process env?
-#ifdef __linux__
-      char** child_env = environ;
-#else
-      char*** environ_ptr = _NSGetEnviron();
-      char** child_env = *environ_ptr;
-#endif
-      /* Upon successful completion, posix_spawn() and posix_spawnp() shall return the process ID of the child process to the parent process,
-       * in the variable pointed to by a non-NULL pid argument, and shall return zero as the function return value.
-       * Otherwise, no child process shall be created, the value stored into the variable pointed to by a non-NULL pid is unspecified,
-       * and an error number shall be returned as the function return value to indicate the error */
-      /*
-       * WARNING : Today, 17/07/2012, posix_spawnp always returns 0 on linux
-       */
-      errno = 0;
-      err = posix_spawnp(&pID,
-                         cmd[0],
-                         NULL,
-                         pSpawnattr,
-                         (char* const*)cmd,
-                         child_env);
-
-      if (err == EINVAL || err == ENOENT)
-      {
-        return -1;
-      }
-      if (err != 0)
-      {
-        return -1;
-      }
-      if (errno)
-      {
-        return -1;
-      }
-
-      return pID;
+      return spawnvp(cmd);
     }
 
     int system(const char *command)

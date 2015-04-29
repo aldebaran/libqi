@@ -76,6 +76,10 @@ namespace qi
       SignalBase::OnSubscribers onsubscribe = SignalBase::OnSubscribers())
     : PropertyImpl<T>(getter, setter, onsubscribe)
     {}
+    Property(AutoAnyReference defaultValue, Getter getter = Getter(), Setter setter = Setter(),
+      SignalBase::OnSubscribers onsubscribe = SignalBase::OnSubscribers())
+    : PropertyImpl<T>(getter, setter, onsubscribe)
+    { PropertyImpl<T>::set(defaultValue.to<T>()); }
     virtual SignalBase* signal() { return this; }
     virtual void setValue(AutoAnyReference value) { PropertyImpl<T>::set(value.to<T>()); }
     virtual AnyValue value() const { return AnyValue::from(PropertyImpl<T>::get()); }

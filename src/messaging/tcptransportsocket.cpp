@@ -251,9 +251,10 @@ namespace qi
       // This one is for us
       if (_msg->type() != Message::Type_Error)
       {
-        AnyReference cmRef = _msg->value(typeOf<CapabilityMap>()->signature(), shared_from_this());
+        AnyReference cmRef;
         try
         {
+          cmRef = _msg->value(typeOf<CapabilityMap>()->signature(), shared_from_this());
           CapabilityMap cm = cmRef.to<CapabilityMap>();
           cmRef.destroy();
           boost::mutex::scoped_lock lock(_contextMutex);
@@ -293,6 +294,13 @@ namespace qi
   {
     qiLogVerbose() << "Socket error: " << erc;
     boost::recursive_mutex::scoped_lock lock(_closingMutex);
+    if (_abort)
+    {
+      // Return straight away if error has already been called.
+      // Otherwise, `disconnected` callbacks could be called
+      // multiple times.
+      return;
+    }
     _abort = true;
     _status = qi::TransportSocket::Status_Disconnected;
     disconnected(erc);
@@ -441,7 +449,12 @@ namespace qi
         }
         // Transmit each Message without delay
         const boost::asio::ip::tcp::no_delay option( true );
-        _socket->lowest_layer().set_option(option);
+        try {
+          _socket->lowest_layer().set_option(option);
+        } catch (std::exception& e)
+        {
+          qiLogWarning() << "can't set no_delay option: " << e.what();
+        }
       }
 
       startReading();
@@ -497,7 +510,12 @@ namespace qi
   {
     // Transmit each Message without delay
     const boost::asio::ip::tcp::no_delay option( true );
-    _socket->lowest_layer().set_option(option);
+    try {
+      _socket->lowest_layer().set_option(option);
+    } catch (std::exception& e)
+    {
+      qiLogWarning() << "can't set no_delay option: " << e.what();
+    }
 
     // Enable TCP keepalive for faster timeout detection.
     static const char* envTimeout = getenv("QI_TCP_PING_TIMEOUT");

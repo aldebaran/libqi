@@ -29,7 +29,7 @@ namespace qi
       {
         boost::mutex::scoped_lock scoped_lock(_mutex);
         _object = qi::Object<T>();
-        _promise.reset();
+        _promise = qi::Promise<void>();
       }
       serviceRemoved();
     }
@@ -53,7 +53,7 @@ namespace qi
       {
         boost::mutex::scoped_lock scoped_lock(_mutex);
         _object = qi::Object<T>();
-        _promise.reset();
+        _promise = qi::Promise<void>();
       }
       serviceRemoved();
     }

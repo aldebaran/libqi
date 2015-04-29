@@ -231,8 +231,7 @@ struct isFuture<qi::FutureSync<T> > : boost::true_type {};
     qi::Promise<R> res(&qi::PromiseNoop<R>);                                  \
     qi::Future<AnyReference> fmeta = metaCall(                                \
         methodName, params, MetaCallType_Queued, typeOf<R>()->signature());   \
-    fmeta.connect(boost::bind<void>(&detail::futureAdapter<R>, _1, res),      \
-                  FutureCallbackType_Sync);                                   \
+    qi::adaptFutureUnwrap(fmeta, res);                                        \
     return res.future();                                                      \
   }
 QI_GEN(genCall)

@@ -86,7 +86,7 @@ TEST_F(TestObject, CoDeco)
 {
   for (unsigned i=0; i<5; ++i)
   {
-    payload->reset();
+    *payload = qi::Promise<int>();
     qi::SignalLink linkId = oclient.connect("fire", &onFire);
     qiLogDebug() << "connected with " << linkId;
     int exp;
@@ -96,7 +96,7 @@ TEST_F(TestObject, CoDeco)
     exp = 50 + i;
     EXPECT_EQ(exp, payload->future().value());
 
-    payload->reset();
+    *payload = qi::Promise<int>();
     oserver.post("fire", (int)(51 + i));
     ASSERT_TRUE(payload->future().hasValue(2000));
     exp = 51 + i;
@@ -104,7 +104,7 @@ TEST_F(TestObject, CoDeco)
 
     oclient.disconnect(linkId).wait();
 
-    payload->reset();
+    *payload = qi::Promise<int>();
     oserver.post("fire", (int)(50 + i));
     EXPECT_ANY_THROW(payload->future().hasValue(200));
   }

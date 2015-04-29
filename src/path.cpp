@@ -212,6 +212,11 @@ namespace qi
       removeAll(10);
     }
 
+    ScopedDir::operator qi::Path() const
+    {
+      return _path;
+    }
+
     const Path& ScopedDir::path() const
     {
       return _path;
@@ -359,13 +364,15 @@ namespace qi
     }
 
     std::string findData(const std::string &applicationName,
-                         const std::string &filename)
+                         const std::string &filename,
+                         bool excludeUserWritablePath)
     {
-      if(filename == "") {
+      if (filename == "") {
         qiLogError() << "Filename cannot be empty!";
         return std::string();
       }
-      return getInstance()->findData(applicationName, filename);
+
+      return getInstance()->findData(applicationName, filename, excludeUserWritablePath);
     }
 
     std::vector<std::string> listLib(const std::string &subfolder,
@@ -375,9 +382,10 @@ namespace qi
     }
 
     std::vector<std::string> listData(const std::string &applicationName,
-                                      const std::string &pattern)
+                                      const std::string &pattern,
+                                      bool excludeUserWritablePath)
     {
-      return getInstance()->listData(applicationName, pattern);
+      return getInstance()->listData(applicationName, pattern, excludeUserWritablePath);
     }
 
     std::vector<std::string> confPaths(const std::string &applicationName)
@@ -385,9 +393,10 @@ namespace qi
       return getInstance()->confPaths(applicationName);
     }
 
-    std::vector<std::string> dataPaths(const std::string &applicationName)
+    std::vector<std::string> dataPaths(const std::string &applicationName,
+                                       bool excludeUserWritablePath)
     {
-      return getInstance()->dataPaths(applicationName);
+      return getInstance()->dataPaths(applicationName, excludeUserWritablePath);
     }
 
     std::vector<std::string> binPaths()

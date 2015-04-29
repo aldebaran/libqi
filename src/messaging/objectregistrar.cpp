@@ -73,15 +73,12 @@ namespace qi {
     si.setSessionId(_id);
 
     boost::mutex::scoped_lock sl(_servicesMutex);
-    for (std::map<unsigned int, BoundService>::iterator it = _services.begin();
-         it != _services.end();
-         it++)
-    {
+    std::map<unsigned, BoundService>::iterator it = _services.begin();
+    if (it != _services.end()) {
       BoundService& bs = it->second;
       si.setServiceId(bs.id);
       si.setName(bs.name);
       _sdClient->updateServiceInfo(si);
-      return;
     }
   }
 

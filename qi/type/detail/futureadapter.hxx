@@ -7,6 +7,8 @@
 #ifndef QI_TYPE_DETAIL_FUTURE_ADAPTER_HXX_
 #define QI_TYPE_DETAIL_FUTURE_ADAPTER_HXX_
 
+#include <boost/scope_exit.hpp>
+
 #include <qi/type/detail/futureadapter.hpp>
 
 namespace qi
@@ -36,29 +38,31 @@ template<> inline void setPromise(qi::Promise<void>& promise, AnyValue&)
   promise.setValue(0);
 }
 
-template <typename T>
-void futureAdapterGeneric(AnyReference val, qi::Promise<T> promise)
+template<> inline void setPromise(qi::Promise<AnyValue>& promise, AnyValue& val)
 {
+  promise.setValue(val);
+}
+
+template <typename T>
+void futureAdapterGeneric(AnyReference val, qi::Promise<T> promise,
+    boost::shared_ptr<GenericObject>& ao)
+{
+  assert(ao);
   qiLogDebug("qi.adapter") << "futureAdapter trigger";
   TypeOfTemplate<Future>* ft1 = QI_TEMPLATE_TYPE_GET(val.type(), Future);
   TypeOfTemplate<FutureSync>* ft2 = QI_TEMPLATE_TYPE_GET(val.type(), FutureSync);
-  ObjectTypeInterface* onext = NULL;
-  qiLogDebug("qi.object") << "isFuture " << val.type()->infoString() << ' ' << !!ft1 << ' ' << !!ft2;
+  qiLogDebug("qi.adapter") << "isFuture " << val.type()->infoString() << ' ' << !!ft1 << ' ' << !!ft2;
   bool isvoid = false;
   if (ft1)
-  {
-    onext = ft1;
     isvoid = ft1->templateArgument()->kind() == TypeKind_Void;
-  }
   else if (ft2)
-  {
-    onext = ft2;
     isvoid = ft2->templateArgument()->kind() == TypeKind_Void;
-  }
-  assert(onext);
-  GenericObject gfut(onext, val.rawValue());
-  // Need a live shared_ptr for shared_from_this() to work.
-  boost::shared_ptr<GenericObject> ao(&gfut, hold<GenericObject*>);
+  GenericObject& gfut = *ao;
+  // reset the shared_ptr to break the cycle
+  BOOST_SCOPE_EXIT_TPL(&ao, &val) {
+    ao.reset();
+    val.destroy();
+  } BOOST_SCOPE_EXIT_END
   if (gfut.call<bool>("hasError", 0))
   {
     qiLogDebug("qi.adapter") << "futureAdapter: future in error";
@@ -69,7 +73,7 @@ void futureAdapterGeneric(AnyReference val, qi::Promise<T> promise)
   }
   if (gfut.call<bool>("isCanceled"))
   {
-    qiLogDebug("qi.adapter") << "futureAdapter: future cancelled";
+    qiLogDebug("qi.adapter") << "futureAdapter: future canceled";
     promise.setCanceled();
     return;
   }
@@ -81,7 +85,23 @@ void futureAdapterGeneric(AnyReference val, qi::Promise<T> promise)
   qiLogDebug("qi.adapter") << v.type()->infoString();
   setPromise(promise, v);
   qiLogDebug("qi.adapter") << "Promise set";
-  val.destroy();
+}
+
+// return a generic object pointing to the future referenced by val or null if val is not a future
+// remember that you need a shared_ptr pointing on the genericobject so that it can work (shared_from_this)
+inline boost::shared_ptr<GenericObject> getGenericFuture(AnyReference val)
+{
+  TypeOfTemplate<Future>* ft1 = QI_TEMPLATE_TYPE_GET(val.type(), Future);
+  TypeOfTemplate<FutureSync>* ft2 = QI_TEMPLATE_TYPE_GET(val.type(), FutureSync);
+  ObjectTypeInterface* onext = NULL;
+  qiLogDebug("qi.adapter") << "isFuture " << val.type()->infoString() << ' ' << !!ft1 << ' ' << !!ft2;
+  if (ft1)
+    onext = ft1;
+  else if (ft2)
+    onext = ft2;
+  if (!onext)
+    return boost::shared_ptr<GenericObject>();
+  return boost::make_shared<GenericObject>(onext, val.rawValue());
 }
 
 // futureAdapter helper that detects and handles value of kind future
@@ -89,28 +109,25 @@ void futureAdapterGeneric(AnyReference val, qi::Promise<T> promise)
 template <typename T>
 inline bool handleFuture(AnyReference val, Promise<T> promise)
 {
-  TypeOfTemplate<Future>* ft1 = QI_TEMPLATE_TYPE_GET(val.type(), Future);
-  TypeOfTemplate<FutureSync>* ft2 = QI_TEMPLATE_TYPE_GET(val.type(), FutureSync);
-  ObjectTypeInterface* onext = NULL;
-  qiLogDebug("qi.object") << "isFuture " << val.type()->infoString() << ' ' << !!ft1 << ' ' << !!ft2;
-  if (ft1)
-    onext = ft1;
-  else if (ft2)
-    onext = ft2;
-  if (!onext)
+  boost::shared_ptr<GenericObject> ao = getGenericFuture(val);
+  if (!ao)
     return false;
 
-  GenericObject gfut(onext, val.rawValue());
-  // Need a live shared_ptr for shared_from_this() to work.
-  boost::shared_ptr<GenericObject> ao(&gfut, &hold<GenericObject*>);
-  boost::function<void()> cb = boost::bind(futureAdapterGeneric<T>, val, promise);
+  boost::function<void()> cb =
+    boost::bind(futureAdapterGeneric<T>, val, promise, ao);
   // Careful, gfut will die at the end of this block, but it is
   // stored in call data. So call must finish before we exit this block,
   // and thus must be synchronous.
   try
   {
-    gfut.call<void>("_connect", cb);
-    promise.setOnCancel(qi::bindWithFallback<void(const qi::Promise<T>&)>(boost::function<void()>(), static_cast<void(GenericObject::*)(const std::string&)>(&GenericObject::call<void>), boost::weak_ptr<GenericObject>(gfut.shared_from_this()), "cancel"));
+    ao->call<void>("_connect", cb);
+    promise.setOnCancel(
+        qi::bindWithFallback<void(const qi::Promise<T>&)>(
+          boost::function<void()>(),
+          static_cast<void(GenericObject::*)(const std::string&)>(
+            &GenericObject::call<void>),
+          boost::weak_ptr<GenericObject>(ao),
+          "cancel"));
   }
   catch (std::exception& e)
   {
@@ -134,6 +151,14 @@ inline T extractFuture(qi::Future<qi::AnyReference> metaFut)
 {
   AnyReference val =  metaFut.value();
   AutoRefDestroy destroy(val);
+
+  boost::shared_ptr<GenericObject> ao = getGenericFuture(val);
+  AnyValue hold;
+  if (ao)
+  {
+    hold = ao->call<qi::AnyValue>("value", (int)FutureTimeout_Infinite);
+    val = hold.asReference();
+  }
 
   static TypeInterface* targetType;
   QI_ONCE(targetType = typeOf<T>());
@@ -176,6 +201,10 @@ inline void futureAdapter(qi::Future<qi::AnyReference> metaFut, qi::Promise<T> p
     promise.setError(metaFut.error());
     return;
   }
+  if (metaFut.isCanceled()) {
+    promise.setCanceled();
+    return;
+  }
 
   AnyReference val =  metaFut.value();
   if (handleFuture(val, promise))
@@ -212,6 +241,10 @@ inline void futureAdapter<void>(qi::Future<qi::AnyReference> metaFut, qi::Promis
     promise.setError(metaFut.error());
     return;
   }
+  if (metaFut.isCanceled()) {
+    promise.setCanceled();
+    return;
+  }
   AnyReference val =  metaFut.value();
   if (handleFuture(val, promise))
     return;
@@ -226,6 +259,10 @@ inline void futureAdapterVal(qi::Future<qi::AnyValue> metaFut, qi::Promise<T> pr
   //error handling
   if (metaFut.hasError()) {
     promise.setError(metaFut.error());
+    return;
+  }
+  if (metaFut.isCanceled()) {
+    promise.setCanceled();
     return;
   }
   const AnyValue& val =  metaFut.value();
@@ -244,6 +281,8 @@ inline void futureAdapterVal(qi::Future<qi::AnyValue> metaFut, qi::Promise<AnyVa
 {
   if (metaFut.hasError())
     promise.setError(metaFut.error());
+  else if (metaFut.isCanceled())
+    promise.setCanceled();
   else
     promise.setValue(metaFut.value());
 }

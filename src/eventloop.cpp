@@ -17,7 +17,11 @@
 #include <qi/getenv.hpp>
 
 #include "eventloop_p.hpp"
-#include "tp_qi.h"
+#ifdef WITH_PROBES
+# include "tp_qi.h"
+#else
+# define tracepoint(...)
+#endif
 
 qiLogCategory("qi.eventloop");
 
@@ -506,7 +510,7 @@ namespace qi {
      * monitoring unstopable.
      * So reset the value.
     */
-    ctx->promise.reset();
+    ctx->promise = Promise<void>();
   }
 
   static void monitor_cancel(qi::Promise<void>, boost::shared_ptr<MonitorContext> ctx)

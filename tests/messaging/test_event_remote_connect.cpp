@@ -388,7 +388,7 @@ TEST_F(TestObject, serviceDirectoryEvent)
       signal_id = it->second.uid();
     }
   }
-  ASSERT_NE(signal_id, 0);
+  ASSERT_NE(signal_id, 0U);
   sd.connect(signal_id, oserver1, secondCallbackId);
   sd.connect(signal_id, oserver1, secondCallbackId);
   sd.connect(signal_id, oserver1, secondCallbackId);

@@ -587,8 +587,7 @@ char* signature_to_json(const char* sig)
     qiLogInfo() << e.what();
     return 0;
   }
-  if (resc)
-    free(resc);
+  free(resc);
   resc = strdup(res.c_str());
   return resc;
 }

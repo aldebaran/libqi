@@ -224,6 +224,15 @@ TEST(QiOs, env)
   EXPECT_EQ("TUTU", qi::os::getenv("TITI"));
 }
 
+TEST(QiOs, envParam)
+{
+  int ret = qi::os::setenv("TITI", "45");
+  ASSERT_FALSE(ret);
+  EXPECT_EQ(45, qi::os::getEnvParam<int>("TITI", -1));
+  EXPECT_EQ('z', qi::os::getEnvParam<char>("TOTO", 'z'));
+}
+
+
 TEST(QiOs, getpid)
 {
 // getpid is deprecated on windows, we should use _getpid instead

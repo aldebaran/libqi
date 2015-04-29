@@ -19,7 +19,7 @@ class QiFuturePrinter:
         if state == "qi::FutureState_Running":
             return "Running qi::Future of %s" % type
         elif state == "qi::FutureState_Canceled":
-            return "Cancelled qi::Future of %s" % type
+            return "Canceled qi::Future of %s" % type
         elif state == "qi::FutureState_FinishedWithError":
             return "qi::Future of %s finished with error %s" % (type, _fut['_error'])
         elif state == "qi::FutureState_FinishedWithValue":

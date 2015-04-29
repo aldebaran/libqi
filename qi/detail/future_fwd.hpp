@@ -29,6 +29,8 @@
 
 namespace qi {
 
+  class AnyReference;
+
   namespace detail
   {
     template<typename T>
@@ -86,6 +88,8 @@ namespace qi {
     FutureTimeout_Infinite = ((int) 0x7fffffff),
     FutureTimeout_None     = 0,
   };
+
+  typedef void* FutureUniqueId;
 
   /** base exception raised for all future error.
    */
@@ -164,6 +168,11 @@ namespace qi {
     bool operator < (const Future<T>& b) const
     {
       return _p.get() < b._p.get();
+    }
+
+    FutureUniqueId uniqueId() const
+    {
+      return _p.get();
     }
 
     /** Construct a Future that already contains a value.
@@ -272,7 +281,6 @@ namespace qi {
      */
     inline const std::string &error(int msecs = FutureTimeout_Infinite) const
     { return _p->error(msecs); }
-
 
     /** Make the future sync
      * Should not be useful, use wait().
@@ -398,6 +406,8 @@ namespace qi {
     friend class Promise<T>;
     friend class FutureSync<T>;
 
+    template<typename R>
+    friend void adaptFutureUnwrap(Future<AnyReference>& f, Promise<R>& p);
     template<typename FT, typename PT>
     friend void adaptFuture(const Future<FT>& f, Promise<PT>& p);
     template<typename FT, typename PT, typename CONV>
@@ -531,6 +541,11 @@ namespace qi {
       return _future._p.get() < b._future._p.get();
     }
 
+    FutureUniqueId uniqueId() const
+    {
+      return _future.uniqueId();
+    }
+
     const ValueType &value(int msecs = FutureTimeout_Infinite) const   { _sync = false; return _future.value(msecs); }
     operator const typename Future<T>::ValueTypeCast&() const          { _sync = false; return _future.value(); }
     FutureState wait(int msecs = FutureTimeout_Infinite) const         { _sync = false; return _future.wait(msecs); }
@@ -582,7 +597,6 @@ namespace qi {
     friend class Future<T>;
   };
 
-
   /** A Promise is used to create and satisfy a Future.
    *
    * \includename{qi/future.hpp}
@@ -600,6 +614,7 @@ namespace qi {
     explicit Promise(FutureCallbackType async = FutureCallbackType_Async) {
       _f._p->reportStart();
       _f._p->_async = async;
+      ++_f._p->_promiseCount;
     }
 
     /** Create a canceleable promise. If Future<T>::cancel is invoked,
@@ -611,6 +626,17 @@ namespace qi {
         FutureCallbackType async = FutureCallbackType_Async)
     {
       setup(cancelCallback, async);
+      ++_f._p->_promiseCount;
+    }
+
+    Promise(const qi::Promise<T>& rhs)
+    {
+      _f = rhs._f;
+      ++_f._p->_promiseCount;
+    }
+
+    ~Promise() {
+      decRefcnt();
     }
 
     /** notify all future that a value has been set.
@@ -642,13 +668,6 @@ namespace qi {
       return _f._p->isCancelRequested();
     }
 
-    /** reset the promise and the future
-     * @deprecated reseting a promise removes connect() guaranties
-     */
-    void reset() {
-      _f._p->reset();
-    }
-
     /// Get a future linked to this promise. Can be called multiple times.
     Future<T> future() const { return _f; }
 
@@ -663,15 +682,26 @@ namespace qi {
 
     /** Set a cancel callback. If the cancel is requested, calls this callback
      * immediately.
-     * \throws std::exception if the promise was not created as a cancellable
+     * \throws std::exception if the promise was not created as a cancelable
      * promise.
      */
     void setOnCancel(boost::function<void (qi::Promise<T>)> cancelCallback)
     {
       if (!this->_f._p->isCancelable())
-        throw std::runtime_error("Promise was not created as a cancellable one");
+        throw std::runtime_error("Promise was not created as a cancelable one");
       qi::Future<T> fut = this->future();
       this->_f._p->setOnCancel(*this, cancelCallback);
+    }
+
+    Promise<T>& operator=(const Promise<T>& rhs)
+    {
+      if (_f._p == rhs._f._p)
+        return *this;
+
+      decRefcnt();
+      _f = rhs._f;
+      ++_f._p->_promiseCount;
+      return *this;
     }
 
   protected:
@@ -681,15 +711,30 @@ namespace qi {
       this->_f._p->setOnCancel(*this, cancelCallback);
       this->_f._p->_async = async;
     }
-    explicit Promise(Future<T>& f) : _f(f) {}
+    explicit Promise(Future<T>& f) : _f(f) {
+      ++_f._p->_promiseCount;
+    }
     template<typename> friend class ::qi::detail::FutureBaseTyped;
     Future<T> _f;
 
+    template<typename R>
+    friend void adaptFutureUnwrap(Future<AnyReference>& f, Promise<R>& p);
     template<typename FT, typename PT>
     friend void adaptFuture(const Future<FT>& f, Promise<PT>& p);
     template<typename FT, typename PT, typename CONV>
     friend void adaptFuture(const Future<FT>& f, Promise<PT>& p,
                             CONV converter);
+
+  private:
+    void decRefcnt()
+    {
+      assert(*_f._p->_promiseCount > 0);
+      // this is race-free because if we reach 0 it means that this is the last Promise pointing to a state and since it
+      // is the last, no one could be trying to make a copy from it while destroying it. Also no one could be changing
+      // the promise state (from running to finished or whatever) while destroying it.
+      if (--_f._p->_promiseCount == 0 && _f.isRunning())
+        _f._p->setBroken(_f);
+    }
   };
 
   /**
@@ -835,7 +880,6 @@ namespace qi {
       return true;
     }
 
-
     /**
      * \brief Gets the future result for the barrier.
      *
@@ -906,7 +950,7 @@ namespace qi {
   template <typename T>
   qi::FutureSync< qi::Future<T> > waitForFirst(std::vector< Future<T> >& vect);
 
-  /// Helper function that does nothing on future cancellation
+  /// Helper function that does nothing on future cancelation
   template <typename T>
   void PromiseNoop(const qi::Promise<T>&)
   {
@@ -918,6 +962,12 @@ namespace qi {
   {
     void operator()(const FT& vIn, PT& vOut) { vOut = vIn;}
   };
+
+  /**
+   * \brief Feed a promise from a generic future which may be unwrapped if it contains itself a future.
+   */
+  template<typename R>
+  void adaptFutureUnwrap(Future<AnyReference>& f, Promise<R>& p);
 
   /**
    * \brief Feed a promise from a future of possibly different type.

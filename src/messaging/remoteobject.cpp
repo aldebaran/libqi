@@ -88,7 +88,7 @@ namespace qi {
       close("Socket invalidated");
     }
 
-     boost::mutex::scoped_lock lock(_socketMutex);
+    boost::mutex::scoped_lock lock(_socketMutex);
     _socket = socket;
     //do not set the socket on the remote object
     if (socket) {
@@ -257,10 +257,6 @@ namespace qi {
 
   qi::Future<AnyReference> RemoteObject::metaCall(AnyObject, unsigned int method, const qi::GenericFunctionParameters &in, MetaCallType callType, Signature returnSignature)
   {
-    // The remote object can be concurrently closed / other operation that modifies _socket
-    // (even set it to null). We store the current socket locally so that the behavior
-    // of metacall stays consistent throughout the function's execution.
-    TransportSocketPtr sock = _socket;
     MetaMethod *mm = metaObject().method(method);
     if (!mm) {
       std::stringstream ss;
@@ -294,15 +290,21 @@ namespace qi {
      */
     qi::Promise<AnyReference> out(FutureCallbackType_Sync);
     qi::Message msg;
+    TransportSocketPtr sock;
     // qiLogDebug() << this << " metacall " << msg.service() << " " << msg.function() <<" " << msg.id();
     {
-      boost::mutex::scoped_lock lock(_promisesMutex);
+      boost::mutex::scoped_lock lock(_socketMutex);
+      boost::mutex::scoped_lock lock2(_promisesMutex);
       // Check socket while holding the lock to avoid a race with close()
       // where we would add a promise to the map after said map got cleared
-      if (!sock || !sock->isConnected())
+      if (!_socket || !_socket->isConnected())
       {
         return makeFutureError<AnyReference>("Socket is not connected");
       }
+      // The remote object can be concurrently closed / other operation that modifies _socket
+      // (even set it to null). We store the current socket locally so that the behavior
+      // of metacall stays consistent throughout the function's execution.
+      sock = _socket;
       if (_promises.find(msg.id()) != _promises.end())
       {
         qiLogError() << "There is already a pending promise with id "
@@ -335,17 +337,17 @@ namespace qi {
     msg.setFunction(method);
 
     //error will come back as a error message
-    if (!sock || !sock->isConnected() || !sock->send(msg)) {
+    if (!sock->isConnected() || !sock->send(msg)) {
       qi::MetaMethod*   meth = metaObject().method(method);
       std::stringstream ss;
       if (meth) {
         ss << "Network error while sending data to method: '";
-        ss << meth->toString();;
+        ss << meth->toString();
         ss << "'.";
       } else {
         ss << "Network error while sending data an unknown method (id=" << method << ").";
       }
-      if (!sock || !sock->isConnected()) {
+      if (!sock->isConnected()) {
         ss << " Socket is not connected.";
         qiLogVerbose() << ss.str();
       } else {

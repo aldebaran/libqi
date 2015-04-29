@@ -472,14 +472,14 @@ namespace detail
         std::vector<TypeInterface*> dstTypes = targetType->memberTypes();
 
         if (elems.size() != dstTypes.size()) {
-          qiLogWarning() << "convert from map to struct, cant convert to tuple";
+          qiLogWarning() << "convert from map to struct, can't convert to tuple";
           return std::make_pair(AnyReference(), false);
         }
 
         std::vector<void*> targetData;
-        targetData.reserve(dstTypes.size());
+        targetData.resize(dstTypes.size());
         std::vector<bool> mustDestroy;
-        mustDestroy.reserve(dstTypes.size());
+        mustDestroy.resize(dstTypes.size());
         size_t count = 0;
         for (AnyIterator iter = tsrc->begin(_value), end = tsrc->end(_value);
             iter != end;
@@ -513,26 +513,30 @@ namespace detail
             qiLogWarning() << "convert from map to struct, cant convert to the right type for '" << *riter << "' from " << ref.type()->infoString() << " to " << dstTypes[rpos]->infoString();
             return std::make_pair(AnyReference(), false);
           }
-          targetData.push_back(conv.first._value);
-          mustDestroy.push_back(conv.second);
+          targetData[rpos] = conv.first._value;
+          mustDestroy[rpos] = conv.second;
           ++count;
         }
 
-        if (count != elems.size()) {
+        bool bresult = true;
+        if (count != elems.size())
+        {
           qiLogWarning() << "convert from map to struct failed, some elements do not exist";
-          return std::make_pair(AnyReference(), false);
+          bresult = false;
         }
-
-        void* dst = tdst->initializeStorage();
-        tdst->set(&dst, targetData);
+        else
+        {
+          void* dst = tdst->initializeStorage();
+          tdst->set(&dst, targetData);
+          result._type = targetType;
+          result._value = dst;
+        }
         for (unsigned i = 0; i < mustDestroy.size(); ++i)
         {
           if (mustDestroy[i])
             dstTypes[i]->destroy(targetData[i]);
         }
-        result._type = targetType;
-        result._value = dst;
-        return std::make_pair(result, true);
+        return std::make_pair(result, bresult);
     }
     case TypeKind_VarArgs:
     case TypeKind_List:

@@ -8,9 +8,11 @@
 #include <gtest/gtest.h>
 #include <qi/signal.hpp>
 #include <qi/future.hpp>
-#include <qi/application.hpp>
+#include <qi/signalspy.hpp>
 #include <qi/anyobject.hpp>
+#include <qi/application.hpp>
 #include <qi/type/objecttypebuilder.hpp>
+#include <qi/type/dynamicobjectbuilder.hpp>
 
 qiLogCategory("test");
 
@@ -266,6 +268,24 @@ TEST(TestSignal, OnSubscriber)
   ASSERT_FALSE(subscribers);
 }
 
+TEST(TestSignalSpy, Counter)
+{
+  qi::Signal<int> sig;
+  qi::SignalSpy sp(sig);
+  QI_EMIT sig(1);
+  QI_EMIT sig(1);
+  qi::os::sleep(1);
+  ASSERT_EQ(sp.getCounter(), 2);
+
+  qi::DynamicObjectBuilder ob;
+  ob.advertiseSignal("signal", &sig);
+  qi::AnyObject obj(ob.object());
+  qi::SignalSpy sp2(obj, "signal");
+  QI_EMIT sig(1);
+  QI_EMIT sig(1);
+  qi::os::sleep(1);
+  ASSERT_EQ(sp2.getCounter(), 2);
+}
 
 int main(int argc, char **argv) {
   qi::Application app(argc, argv);

@@ -30,7 +30,7 @@ TRACEPOINT_EVENT(qi_qi, eventloop_task_stop,
         TP_FIELDS(ctf_integer(int, taskId, taskId))
 )
 
-//task has been cancelled before running
+//task has been canceled before running
 TRACEPOINT_EVENT(qi_qi, eventloop_task_cancel,
         TP_ARGS(unsigned int, taskId),
         TP_FIELDS(ctf_integer(int, taskId, taskId))

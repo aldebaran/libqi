@@ -11,6 +11,9 @@
 #include <qi/application.hpp>
 #include <qi/type/typeinterface.hpp>
 #include <qi/jsoncodec.hpp>
+#include <qi/log.hpp>
+
+qiLogCategory("qi.test_json");
 
 struct MPoint {
   MPoint(int x=0, int y=0)
@@ -81,10 +84,11 @@ TEST(TestJSON, SimpleAutoGV) {
 
 TEST(TestJSON, String) {
   EXPECT_EQ("\" \\\" \"", qi::encodeJSON(" \" "));
+  EXPECT_EQ("\" ' \"", qi::encodeJSON(" ' "));
   EXPECT_EQ("\" \\u0000 \"", qi::encodeJSON(" \0 "));
-  EXPECT_EQ("\" \\u00C3\\u00A9 \"", qi::encodeJSON(" é "));
+  EXPECT_EQ("\" \\u00E9 \"", qi::encodeJSON(" é "));
 
-  EXPECT_EQ("\" \\\" \\u0000 \\u00C3\\u00A9 \"", qi::encodeJSON(" \" \0 é "));
+  EXPECT_EQ("\" \\\" \\u0000 \\u00E9 \"", qi::encodeJSON(" \" \0 é "));
 }
 
 TEST(TestJSON, CharTuple) {
@@ -343,6 +347,38 @@ TEST(TestJSONDecoder, ignoringWhiteSpace)
   std::map<std::string, std::string> ahBahZut = qi::decodeJSON(ohMinceAlors)
       .toMap<std::string, std::string>();
   ASSERT_EQ(std::string("poney"), ahBahZut["petit"]);
+}
+
+struct Qiqi
+{
+  float ffloat;
+  double fdouble;
+  int fint;
+  bool operator==(const Qiqi &other) const
+  {
+      return (ffloat == other.ffloat) &&
+             (fdouble == other.fdouble) &&
+             (fint == other.fint);
+  }
+};
+QI_TYPE_STRUCT_REGISTER(Qiqi, ffloat, fdouble, fint);
+
+TEST(TestJSONDecoder, StructWithDifferentSizedFields)
+{
+  Qiqi val;
+  val.ffloat = 3.14f;
+  val.fdouble = 5.5555;
+  val.fint = 44;
+
+  std::cout << qi::AnyValue(val).signature().toString() << std::endl;
+
+  std::string json = qi::encodeJSON(val);
+  qiLogDebug() << json << std::endl;
+  qi::AnyValue res_any = qi::decodeJSON(json);
+  qiLogDebug() << res_any.signature().toString() << std::endl;
+  Qiqi res = res_any.to<Qiqi>();
+  EXPECT_EQ(val,
+            res) << qi::encodeJSON(val) << "\n" << qi::encodeJSON(res);
 }
 
 int main(int argc, char **argv)

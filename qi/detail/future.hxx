@@ -12,6 +12,7 @@
 #include <boost/bind.hpp>
 #include <qi/eventloop.hpp>
 #include <qi/actor.hpp>
+#include <qi/type/detail/futureadapter.hpp>
 
 #include <qi/log.hpp>
 
@@ -281,6 +282,7 @@ namespace detail {
           }
         }
         notifyFinish();
+        clearCallbacks();
       }
 
       void setValue(qi::Future<T>& future, const ValueType &value)
@@ -323,6 +325,15 @@ namespace detail {
         callCbNotify(future);
       }
 
+      void setBroken(qi::Future<T>& future)
+      {
+        boost::recursive_mutex::scoped_lock lock(mutex());
+        assert(isRunning());
+
+        reportError("Promise broken (all promises are destroyed)");
+        callCbNotify(future);
+      }
+
       void setCanceled(qi::Future<T>& future) {
         boost::recursive_mutex::scoped_lock lock(mutex());
         if (!isRunning())
@@ -340,13 +351,18 @@ namespace detail {
         bool ready;
         {
           boost::recursive_mutex::scoped_lock lock(mutex());
-          _onResult.push_back(s);
           ready = isFinished();
+          if (!ready)
+          {
+            _onResult.push_back(s);
+          }
         }
         //result already ready, notify the callback
         if (ready) {
           if (type == FutureCallbackType_Async)
+          {
             getEventLoop()->post(boost::bind(s, future));
+          }
           else
           {
             try {
@@ -375,6 +391,16 @@ namespace detail {
       ValueType                _value;
       boost::function<void (Promise<T>)> _onCancel;
       FutureCallbackType       _async;
+      qi::Atomic<unsigned int> _promiseCount;
+
+      void clearCallbacks()
+      {
+        _onResult.clear();
+        if (_onCancel)
+        {
+          _onCancel = PromiseNoop<T>;
+        }
+      }
     };
 
     template <typename T>
@@ -539,6 +565,18 @@ namespace detail {
     {
     }
   };
+
+  template<typename R>
+  void adaptFutureUnwrap(Future<AnyReference>& f, Promise<R>& p)
+  {
+    if (f.isCancelable())
+      p.setup(boost::bind(&detail::futureCancelAdapter<AnyReference>,
+            boost::weak_ptr<detail::FutureBaseTyped<AnyReference> >(f._p)));
+    f.connect(boost::function<void(qi::Future<AnyReference>&)>(
+          boost::bind(&detail::futureAdapter<R>, _1, p)),
+        FutureCallbackType_Sync);
+  }
+
 
   template<typename FT, typename PT>
   void adaptFuture(const Future<FT>& f, Promise<PT>& p)

@@ -27,4 +27,4 @@ if (UNIX AND WITH_BOOST_LOCALE)
   add_subdirectory(qitranslate)
 endif()
 
-
+add_subdirectory(foo)

@@ -31,7 +31,7 @@ void onFire2(const int& pl)
 
 TEST(Test, Recurse)
 {
-  payload.reset();
+  payload = qi::Promise<bool>();
   TestSessionPair       p1;
   TestSessionPair       p2(p1);
   qi::DynamicObjectBuilder     ob1, ob2;

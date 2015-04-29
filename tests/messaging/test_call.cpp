@@ -595,8 +595,8 @@ void bindObjectEvent(qi::AnyObject ptr, const std::string& eventName,
   qi::Promise<int>& eventValue)
 {
   // Keep ptr alive
-  ptr.connect(eventName, boost::bind(&onEvent, _1, eventValue,
-    new qi::AnyObject(ptr)));
+  ptr.connect(eventName, boost::function<void(int)>(boost::bind(&onEvent, _1, boost::ref(eventValue),
+    new qi::AnyObject(ptr))));
 }
 
 int makeObjectCall(qi::AnyObject ptr, const std::string& fname, int arg)
@@ -628,7 +628,7 @@ TEST(TestCall, TestObjectPassing)
 
   qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("makeObjectCall", &makeObjectCall);
-  ob.advertiseMethod("bindObjectEvent", boost::bind(&bindObjectEvent, _1, _2, eventValue));
+  ob.advertiseMethod("bindObjectEvent", boost::function<void(qi::AnyObject, const std::string&)>(boost::bind(&bindObjectEvent, _1, _2, boost::ref(eventValue))));
   qi::AnyObject obj(ob.object());
   p.server()->registerService("s", obj);
   qi::AnyObject proxy = p.client()->service("s");
@@ -650,7 +650,7 @@ TEST(TestCall, TestObjectPassing)
   eventValue.future().wait(); //fixme wait(2s)
   ASSERT_TRUE(eventValue.future().isFinished());
   ASSERT_EQ(42, eventValue.future().value());
-  eventValue.reset();
+  eventValue = qi::Promise<int>();
 
   // Check that object is locked by remote end
   qi::AnyWeakObject unregisteredWeakObj = unregisteredObj;
@@ -664,7 +664,7 @@ TEST(TestCall, TestObjectPassing)
   eventValue.future().wait();
   ASSERT_TRUE(eventValue.future().isFinished());
   ASSERT_EQ(0, eventValue.future().value());
-  eventValue.reset();
+  eventValue = qi::Promise<int>();
   ASSERT_TRUE(!eventValue.future().isFinished());
   unregisteredObj.post("fire", 1);
   eventValue.future().wait(2000);
@@ -915,6 +915,19 @@ TEST(TestCall, Future)
   ASSERT_EQ(41, f.value());
   f2.wait();
   ASSERT_TRUE(f2.hasError());
+}
+
+TEST(TestCall, CallOnFutureReturn)
+{
+  TestSessionPair p;
+  qi::DynamicObjectBuilder gob;
+  gob.setThreadingModel(qi::ObjectThreadingModel_MultiThread);
+  gob.advertiseMethod("delaySet", &delaySet);
+  qi::AnyObject sobj = gob.object();
+  p.server()->registerService("delayer", sobj);
+  qi::AnyObject obj = p.client()->service("delayer");
+  int f = obj.call<int>("delaySet", 500, 41);
+  ASSERT_EQ(41, f);
 }
 
 void arrrg(int v) {
@@ -1373,18 +1386,17 @@ TEST(TestObject, StructVersioningEvent)
 
 void doCancel(qi::Promise<void>& p)
 {
+  qiLogDebug() << "canceling !";
   p.setCanceled();
 }
 
-qi::Future<void> getCancellableFuture()
+qi::Future<void> getCancelableFuture(qi::Promise<void> promise)
 {
-  qi::Promise<void> promise(&doCancel);
-  EXPECT_TRUE(promise.future().isCancelable());
-  qiLogInfo() << "returning future";
+  qiLogDebug() << "returning future";
   return promise.future();
 }
 
-TEST(TestCall, TestAsyncFutureIsCancellable)
+TEST(TestCall, TestAsyncFutureIsCancelable)
 {
   TestSessionPair p;
 
@@ -1393,12 +1405,16 @@ TEST(TestCall, TestAsyncFutureIsCancellable)
     return;
 
   qi::DynamicObjectBuilder ob;
-  ob.advertiseMethod("getCancellableFuture",
+  qi::Promise<void> promise(&doCancel);
+  ob.advertiseMethod("getCancelableFuture",
                      boost::function<qi::Future<void>()>(
-                       &getCancellableFuture));
+                       boost::bind(&getCancelableFuture, promise)));
   p.server()->registerService("test", ob.object());
   qi::AnyObject proxy = p.client()->service("test");
-  qi::Future<void> future = proxy.async<void>("getCancellableFuture");
+
+  ASSERT_TRUE(promise.future().isCancelable());
+
+  qi::Future<void> future = proxy.async<void>("getCancelableFuture");
   ASSERT_TRUE(future.isCancelable());
   future.cancel();
   future.wait();

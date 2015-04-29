@@ -5,6 +5,7 @@
 
 #include <sstream>
 #include <iomanip>
+#include <boost/locale.hpp>
 #include <qi/jsoncodec.hpp>
 #include <qi/anyobject.hpp>
 #include <qi/type/typedispatcher.hpp>
@@ -57,10 +58,10 @@ namespace qi {
   }
 
   //Taken from boost::json
-  std::string add_esc_chars(const std::string& s)
+  std::string add_esc_chars(const std::wstring& s)
   {
-    typedef std::string::const_iterator Iter_type;
-    typedef std::string::value_type     Char_type;
+    typedef std::wstring::const_iterator Iter_type;
+    typedef std::wstring::value_type     Char_type;
 
     std::string result;
     const Iter_type end( s.end() );
@@ -146,7 +147,7 @@ namespace qi {
 
     void visitString(const char* data, size_t size)
     {
-      out << "\"" << add_esc_chars(std::string(data, size)) << "\"";
+      out << "\"" << add_esc_chars(boost::locale::conv::to_utf<wchar_t>(std::string(data, size), "UTF-8")) << "\"";
     }
 
     void visitList(AnyIterator begin, AnyIterator end)
