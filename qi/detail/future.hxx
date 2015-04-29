@@ -21,58 +21,44 @@ namespace qi {
 namespace detail {
 
   template <typename T, typename R>
-  struct Continuate
+  struct Caller
   {
-    inline static void _continuate(const Future<T>& future,
-        const boost::function<R(const Future<T>&)>& func,
-        Promise<R>& promise)
+    inline static R _callfunc(const Future<T>& future,
+        const boost::function<R(const Future<T>&)>& func)
     {
-      R r;
-      try
-      {
-        r = func(future);
-      }
-      catch (std::exception& e)
-      {
-        promise.setError(e.what());
-        return;
-      }
-      catch (...)
-      {
-        promise.setError("unknown exception");
-        return;
-      }
-
-      // TODO c++11 move
-      promise.setValue(r);
+      return func(future);
     }
   };
 
   template <typename T>
-  struct Continuate<T, void>
+  struct Caller<T, void>
   {
-    inline static void _continuate(const Future<T>& future,
-        const boost::function<void(const Future<T>&)>& func,
-        Promise<void>& promise)
+    inline static void* _callfunc(const Future<T>& future,
+        const boost::function<void(const Future<T>&)>& func)
     {
-      try
-      {
-        func(future);
-      }
-      catch (std::exception& e)
-      {
-        promise.setError(e.what());
-        return;
-      }
-      catch (...)
-      {
-        promise.setError("unknown exception");
-        return;
-      }
-
-      promise.setValue(0);
+      func(future);
+      return 0;
     }
   };
+
+  template <typename T, typename R>
+  void continuateThen(const Future<T>& future,
+      const boost::function<R(const Future<T>&)>& func,
+      qi::Promise<R>& promise)
+  {
+    try
+    {
+      promise.setValue(Caller<T, R>::_callfunc(future, func));
+    }
+    catch (std::exception& e)
+    {
+      promise.setError(e.what());
+    }
+    catch (...)
+    {
+      promise.setError("unknown exception");
+    }
+  }
 
   template <typename T>
   inline void forwardCancel(
@@ -97,7 +83,7 @@ namespace detail {
         ? boost::bind(&detail::forwardCancel<T>,
             boost::weak_ptr<detail::FutureBaseTyped<T> >(_p))
         : boost::function<void(qi::Promise<R>)>());
-    _p->connect(*this, boost::bind(&detail::Continuate<T, R>::_continuate, _1,
+    _p->connect(*this, boost::bind(&detail::continuateThen<T, R>, _1,
           func, promise), type);
     return promise.future();
   }
