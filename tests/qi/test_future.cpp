@@ -882,6 +882,54 @@ TEST(TestFutureThen, ThenR)
   ASSERT_EQ(44, fff.value());
 }
 
+int fail(int f)
+{
+  throw std::runtime_error("fail");
+}
+
+int call(bool& b)
+{
+  b = true;
+  return 42;
+}
+
+TEST(TestFutureThen, AndThenR)
+{
+  bool called = false;
+  qi::Future<int> f = qi::async<int>(&get42);
+  qi::Future<int> ff = f.andThenR<int>(boost::bind(&fail, _1));
+  qi::Future<int> fff = ff.andThenR<int>(boost::bind(&call, boost::ref(called)));
+
+  fff.wait();
+
+  EXPECT_FALSE(called);
+  ASSERT_TRUE(fff.hasError());
+  EXPECT_EQ(fff.error(), "fail");
+}
+
+int block(int i, qi::Future<void> f)
+{
+  f.wait();
+  return 99;
+}
+
+TEST(TestFutureThen, AndThenRCancel)
+{
+  qi::Promise<void> blockProm;
+
+  bool called = false;
+  qi::Future<int> f = qi::Future<int>(42);
+  qi::Future<int> ff = f.andThenR<int>(boost::bind(&block, _1, blockProm.future()));
+  qi::Future<int> fff = ff.andThenR<int>(boost::bind(&call, boost::ref(called)));
+
+  fff.cancel();
+  blockProm.setValue(0);
+  fff.wait();
+
+  EXPECT_FALSE(called);
+  EXPECT_TRUE(fff.isCanceled());
+}
+
 TEST(TestFutureUnwrap, Unwrap)
 {
   qi::Promise<qi::Future<int> > prom;

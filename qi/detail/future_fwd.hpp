@@ -321,6 +321,18 @@ namespace qi {
       return this->thenR(FutureCallbackType_Async, func);
     }
 
+    template <typename R>
+    Future<R> andThenR(
+        FutureCallbackType type,
+        const boost::function<R(const typename Future<T>::ValueType&)>& func);
+
+    template <typename R>
+    Future<R> andThenR(
+        const boost::function<R(const typename Future<T>::ValueType&)>& func)
+    {
+      return this->andThenR(FutureCallbackType_Async, func);
+    }
+
 #define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)                    \
   template <typename R, typename AF, typename ARG0 comma ATYPEDECL>          \
   Future<R> thenR(const AF& func, const ARG0& arg0 comma ADECL)              \
@@ -746,7 +758,7 @@ namespace qi {
 
   /// Helper function that does nothing on future cancelation
   template <typename T>
-  void PromiseNoop(const qi::Promise<T>&)
+  void PromiseNoop(qi::Promise<T>&)
   {
   }
 

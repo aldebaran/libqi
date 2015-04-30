@@ -23,18 +23,18 @@ namespace detail {
   template <typename T, typename R>
   struct Caller
   {
-    inline static R _callfunc(const Future<T>& future,
-        const boost::function<R(const Future<T>&)>& func)
+    inline static R _callfunc(const T& arg,
+        const boost::function<R(const T&)>& func)
     {
-      return func(future);
+      return func(arg);
     }
   };
 
   template <typename T>
   struct Caller<T, void>
   {
-    inline static void* _callfunc(const Future<T>& future,
-        const boost::function<void(const Future<T>&)>& func)
+    inline static void* _callfunc(const T& future,
+        const boost::function<void(const T&)>& func)
     {
       func(future);
       return 0;
@@ -48,7 +48,7 @@ namespace detail {
   {
     try
     {
-      promise.setValue(Caller<T, R>::_callfunc(future, func));
+      promise.setValue(Caller<Future<T>, R>::_callfunc(future, func));
     }
     catch (std::exception& e)
     {
@@ -57,6 +57,34 @@ namespace detail {
     catch (...)
     {
       promise.setError("unknown exception");
+    }
+  }
+
+  template <typename T, typename R>
+  void continuateAndThen(const Future<T>& future,
+      const boost::function<R(const typename Future<T>::ValueType&)>& func,
+      qi::Promise<R>& promise)
+  {
+    if (future.isCanceled())
+      promise.setCanceled();
+    else if (future.hasError())
+      promise.setError(future.error());
+    else if (promise.isCancelRequested())
+      promise.setCanceled();
+    else
+    {
+      try
+      {
+        promise.setValue(Caller<T, R>::_callfunc(future.value(), func));
+      }
+      catch (std::exception& e)
+      {
+        promise.setError(e.what());
+      }
+      catch (...)
+      {
+        promise.setError("unknown exception");
+      }
     }
   }
 
@@ -84,6 +112,24 @@ namespace detail {
             boost::weak_ptr<detail::FutureBaseTyped<T> >(_p))
         : boost::function<void(qi::Promise<R>)>());
     _p->connect(*this, boost::bind(&detail::continuateThen<T, R>, _1,
+          func, promise), type);
+    return promise.future();
+  }
+
+  template <typename T>
+  template <typename R>
+  inline Future<R> Future<T>::andThenR(
+      FutureCallbackType type,
+      const boost::function<R(const typename Future<T>::ValueType&)>& func)
+  {
+    qi::Promise<R> promise(
+        this->isCancelable()
+        ? boost::bind(&detail::forwardCancel<T>,
+            boost::weak_ptr<detail::FutureBaseTyped<T> >(_p))
+        // if the future is not cancelable, now it becomes cancelable because
+        // continuateAndThen will abort if cancel is requested
+        : boost::function<void(qi::Promise<T>&)>(&qi::PromiseNoop<R>));
+    _p->connect(*this, boost::bind(&detail::continuateAndThen<T, R>, _1,
           func, promise), type);
     return promise.future();
   }
