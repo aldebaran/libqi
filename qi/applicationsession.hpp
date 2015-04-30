@@ -95,11 +95,11 @@ public:
    *  @param url The default url used if no --qi-url was found in the options.
    *  @param listenUrl The default url used if no --qi-listen-url was found in the options.
    */
-  ApplicationSession(int& argc, char**& argv, Option opt = Option_None, const Url& url = "tcp://127.0.0.1:9559");
+  ApplicationSession(int& argc, char**& argv, int opt = 0, const Url& url = "tcp://127.0.0.1:9559");
   ApplicationSession(const std::string& name,
                      int& argc,
                      char**& argv,
-                     Option opt = Option_None,
+                     int opt = 0,
                      const Url& url = "tcp://127.0.0.1:9559");
   ApplicationSession(int& argc, char**& argv, const Config& defaultConfig);
   virtual ~ApplicationSession();

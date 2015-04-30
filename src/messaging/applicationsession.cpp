@@ -196,26 +196,26 @@ const std::string& ApplicationSession::Config::name() const
   return _name;
 }
 
-ApplicationSession::ApplicationSession(int& argc, char**& argv, ApplicationSession::Option opt, const Url& url)
+ApplicationSession::ApplicationSession(int& argc, char**& argv, int opt, const Url& url)
   : Application(::addParseOptions(argc), argv)
 {
   Config config;
   config.setDefaultUrl(url);
-  config.setOption(opt);
+  config.setOption((Option)opt);
 
   _p = new ApplicationSessionPrivate(config);
 }
 ApplicationSession::ApplicationSession(const std::string& name,
                                        int& argc,
                                        char**& argv,
-                                       ApplicationSession::Option opt,
+                                       int opt,
                                        const Url& url)
   : Application(::addParseOptions(argc), argv, name)
 {
   Config config;
   config.setName(name);
   config.setDefaultUrl(url);
-  config.setOption(opt);
+  config.setOption((Option)opt);
 
   _p = new ApplicationSessionPrivate(config);
 }
