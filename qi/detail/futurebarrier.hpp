@@ -7,8 +7,6 @@
 #ifndef QI_DETAILS_FUTURE_BARRIER_HXX_
 #define QI_DETAILS_FUTURE_BARRIER_HXX_
 
-#include <boost/foreach.hpp>
-
 namespace qi
 {
 
@@ -185,8 +183,10 @@ private:
   }
 
   void cancelAll() {
-    BOOST_FOREACH(qi::Future<T>& fut, this->_futures)
-      fut.cancel();
+    for (typename std::vector< Future<T> >::iterator it = this->_futures.begin();
+         it != this->_futures.end();
+         ++it)
+      it->cancel();
   }
 
   void close() {
