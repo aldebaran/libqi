@@ -68,7 +68,7 @@
 #  define _QI_LOG_MESSAGE(Type, Message)                        \
   do                                                            \
   {                                                             \
-    if (::qi::log::detail::isVisible(_QI_LOG_CATEGORY_GET(), ::qi::Type))  \
+    if (::qi::log::isVisible(_QI_LOG_CATEGORY_GET(), ::qi::Type))  \
       ::qi::log::log(::qi::Type,                                \
                          _QI_LOG_CATEGORY_GET(),                \
                          Message,                               \
@@ -79,7 +79,7 @@
 #  define _QI_LOG_MESSAGE(Type, Message)                        \
   do                                                            \
   {                                                             \
-    if (::qi::log::detail::isVisible(_QI_LOG_CATEGORY_GET(), ::qi::Type))  \
+    if (::qi::log::isVisible(_QI_LOG_CATEGORY_GET(), ::qi::Type))  \
       ::qi::log::log(::qi::Type,                                \
                          _QI_LOG_CATEGORY_GET(),                \
                          Message,                               \
@@ -97,7 +97,7 @@
 
 // no extra argument
 #define _QI_LOG_MESSAGE_STREAM_HASCAT_1(Type, TypeCased, ...) \
-  ::qi::log::detail::isVisible(_QI_LOG_CATEGORY_GET(), ::qi::Type) \
+  ::qi::log::isVisible(_QI_LOG_CATEGORY_GET(), ::qi::Type) \
   && BOOST_PP_CAT(_qiLog, TypeCased)(_QI_LOG_CATEGORY_GET())
 
 // Visual bouncer for macro evalution order glitch.
@@ -199,12 +199,12 @@ namespace qi {
       };
 
       QI_API boost::format getFormat(const std::string& s);
+    }
 
-      //inlined for perf
-      inline bool isVisible(Category* category, qi::LogLevel level)
-      {
-        return category && level <= category->maxLevel;
-      }
+    //inlined for perf
+    inline bool isVisible(CategoryType category, qi::LogLevel level)
+    {
+      return category && level <= category->maxLevel;
     }
 
     typedef detail::Category* CategoryType;

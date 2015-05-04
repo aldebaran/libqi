@@ -351,7 +351,7 @@ namespace qi {
      * \param level Level associate to category.
      * \return true if given combination of category and level is enabled.
      */
-    QI_API bool isVisible(CategoryType category, qi::LogLevel level);
+    inline bool isVisible(CategoryType category, qi::LogLevel level);
 
     /**
      * \copydoc isVisible()
