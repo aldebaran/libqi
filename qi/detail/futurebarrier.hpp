@@ -170,7 +170,8 @@ public:
   }
 
 protected:
-  Atomic<int> _closed;
+  Atomic<bool> _closed;
+  Atomic<bool> _set;
   Atomic<int> _count;
   std::vector< Future<T> > _futures;
   Promise< std::vector< Future<T> > > _promise;
@@ -178,11 +179,13 @@ protected:
 private:
   void onFutureFinish() {
     if (--(this->_count) == 0 && *this->_closed) {
-      this->_promise.setValue(this->_futures);
+      if (!_set.swap(true))
+        this->_promise.setValue(this->_futures);
     }
   }
 
   void cancelAll() {
+    assert(*_closed);
     for (typename std::vector< Future<T> >::iterator it = this->_futures.begin();
          it != this->_futures.end();
          ++it)
@@ -192,7 +195,8 @@ private:
   void close() {
     this->_closed = true;
     if (*(this->_count) == 0) {
-      this->_promise.setValue(this->_futures);
+      if (!_set.swap(true))
+        this->_promise.setValue(this->_futures);
     }
   }
 };
