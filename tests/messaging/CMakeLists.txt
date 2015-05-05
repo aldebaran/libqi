@@ -44,8 +44,8 @@ qi_create_gtest(test_applicationsession           SRC test_applicationsession.cp
 qi_create_gtest(test_applicationsessionnoautoexit SRC test_applicationsession_noautoexit.cpp DEPENDS QI GTEST TIMEOUT 30)
 qi_create_gtest(test_authentication               SRC test_authentication.cpp                DEPENDS QI GTEST TIMEOUT 30)
 
-qi_create_bin(test_call_on_close_session SRC test_call_on_close_session.cpp              NO_INSTALL DEPENDS TESTSESSION QI BOOST BOOST_THREAD)
-qi_create_bin(test_signaturegen SRC sig_generator.cpp sig_generator.h test_signature.cpp NO_INSTALL DEPENDS TESTSESSION QI BOOST)
+qi_create_gtest(test_call_on_close_session SRC test_call_on_close_session.cpp              DEPENDS TESTSESSION QI BOOST BOOST_THREAD)
+qi_create_gtest(test_signaturegen SRC sig_generator.cpp sig_generator.h test_signature.cpp DEPENDS TESTSESSION QI BOOST)
 
 qimessaging_create_session_test(test_service     SRC test_service.cpp     DEPENDS QI GTEST TESTSESSION TIMEOUT 30)
 qimessaging_create_session_test(test_send_object SRC test_send_object.cpp DEPENDS QI GTEST TESTSESSION TIMEOUT 30)
