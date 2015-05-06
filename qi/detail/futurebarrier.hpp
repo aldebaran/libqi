@@ -157,6 +157,8 @@ public:
  *     asynchronously with it. If you are not sure, always call
  *     :cpp:func:`qi::FutureBarrier<T>::addFuture(qi::Future<T>)` in last.
  * \endverbatim
+ *
+ * \deprecated since 2.4, use waitForAll
  */
 template<typename T>
 class FutureBarrier : boost::noncopyable {
@@ -231,7 +233,15 @@ private:
  * \endverbatim
  */
 template <typename T>
-void waitForAll(std::vector< Future<T> >& vect);
+qi::FutureSync<std::vector<Future<T> > > waitForAll(std::vector<Future<T> >& vect) {
+  typename std::vector< Future<T> >::iterator it;
+  qi::FutureBarrier<T> barrier;
+
+  for (it = vect.begin(); it != vect.end(); ++it) {
+    barrier.addFuture(*it);
+  }
+  return barrier.future();
+}
 
 /**
  * \brief Helper function to wait for the first valid future.
@@ -244,20 +254,6 @@ void waitForAll(std::vector< Future<T> >& vect);
  * an error is returned.
  * \endverbatim
  */
-template <typename T>
-qi::FutureSync< qi::Future<T> > waitForFirst(std::vector< Future<T> >& vect);
-
-template <typename T>
-void waitForAll(std::vector<Future<T> >& vect) {
-  typename std::vector< Future<T> >::iterator it;
-  qi::FutureBarrier<T> barrier;
-
-  for (it = vect.begin(); it != vect.end(); ++it) {
-    barrier.addFuture(*it);
-  }
-  barrier.future().wait();
-}
-
 template <typename T>
 qi::FutureSync< qi::Future<T> > waitForFirst(std::vector< Future<T> >& vect) {
   typename std::vector< Future<T> >::iterator it;
