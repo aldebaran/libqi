@@ -10,6 +10,45 @@
 namespace qi
 {
 
+namespace detail
+{
+
+template<typename T>
+class FutureBarrierPrivate {
+public:
+  /// FutureBarrier constructor taking no argument.
+  FutureBarrierPrivate(FutureCallbackType async = FutureCallbackType_Async)
+    : _closed(0)
+    , _count(0)
+    , _futures()
+    , _promise(&qi::PromiseNoop<std::vector<Future<T> > >, async)
+  {}
+
+  void onFutureFinish() {
+    if (--(this->_count) == 0 && *this->_closed) {
+      if (!_set.swap(true))
+        this->_promise.setValue(this->_futures);
+    }
+  }
+
+  void cancelAll() {
+    assert(*_closed);
+    for (typename std::vector< Future<T> >::iterator it = this->_futures.begin();
+         it != this->_futures.end();
+         ++it)
+      it->cancel();
+  }
+
+  Atomic<bool> _closed;
+  Atomic<bool> _set;
+  Atomic<int> _count;
+  std::vector< Future<T> > _futures;
+  Promise< std::vector< Future<T> > > _promise;
+
+};
+
+}
+
 /**
  * \class qi::FutureBarrier
  * \includename{qi/future.hpp}
@@ -120,15 +159,16 @@ namespace qi
  * \endverbatim
  */
 template<typename T>
-class FutureBarrier {
+class FutureBarrier : boost::noncopyable {
 public:
   /// FutureBarrier constructor taking no argument.
   FutureBarrier(FutureCallbackType async = FutureCallbackType_Async)
-    : _closed(0)
-    , _count(0)
-    , _futures()
-    , _promise(boost::bind(&FutureBarrier::cancelAll, this), async)
-  {}
+    : _p(boost::make_shared<detail::FutureBarrierPrivate<T> >(async))
+  {
+    _p->_promise.setOnCancel(qi::bind<void(qi::Promise<std::vector<qi::Future<T> > >&)>(
+          &detail::FutureBarrierPrivate<T>::cancelAll,
+          boost::weak_ptr<detail::FutureBarrierPrivate<T> >(_p)));
+  }
 
   /**
    * \brief Adds the future to the barrier.
@@ -139,18 +179,17 @@ public:
    * until this one returns. It will also be added to the resulting vector.
    *
    * When :cpp:func:`qi::FutureBarrier::future()` has been called, this function
-   * will have no effect and return false.
+   * will throw.
    * \endverbatim
    */
-  bool addFuture(qi::Future<T> fut) {
+  void addFuture(qi::Future<T> fut) {
     // Can't add future from closed qi::FutureBarrier.
-    if (*this->_closed)
-      return false;
+    if (*_p->_closed)
+      throw std::runtime_error("Adding future to closed barrier");
 
-    ++(this->_count);
-    fut.connect(boost::bind<void>(&FutureBarrier::onFutureFinish, this));
-    this->_futures.push_back(fut);
-    return true;
+    ++(_p->_count);
+    fut.connect(boost::bind<void>(&detail::FutureBarrierPrivate<T>::onFutureFinish, _p));
+    _p->_futures.push_back(fut);
   }
 
   /**
@@ -166,37 +205,18 @@ public:
    */
   Future< std::vector< Future<T> > > future() {
     this->close();
-    return this->_promise.future();
+    return _p->_promise.future();
   }
 
 protected:
-  Atomic<bool> _closed;
-  Atomic<bool> _set;
-  Atomic<int> _count;
-  std::vector< Future<T> > _futures;
-  Promise< std::vector< Future<T> > > _promise;
+  boost::shared_ptr<detail::FutureBarrierPrivate<T> > _p;
 
 private:
-  void onFutureFinish() {
-    if (--(this->_count) == 0 && *this->_closed) {
-      if (!_set.swap(true))
-        this->_promise.setValue(this->_futures);
-    }
-  }
-
-  void cancelAll() {
-    assert(*_closed);
-    for (typename std::vector< Future<T> >::iterator it = this->_futures.begin();
-         it != this->_futures.end();
-         ++it)
-      it->cancel();
-  }
-
   void close() {
-    this->_closed = true;
-    if (*(this->_count) == 0) {
-      if (!_set.swap(true))
-        this->_promise.setValue(this->_futures);
+    _p->_closed = true;
+    if (*(_p->_count) == 0) {
+      if (!_p->_set.swap(true))
+        _p->_promise.setValue(_p->_futures);
     }
   }
 };

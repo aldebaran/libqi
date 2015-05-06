@@ -1097,19 +1097,24 @@ TEST(TestPromiseBarrier, SimpleBarrier)
 
 TEST(TestPromiseBarrier, Cancel)
 {
-  qi::FutureBarrier<int> barrier;
-  std::vector<qi::Promise<int> > promises;
+  qi::Future<std::vector<qi::Future<int> > > fut;
+  {
+    qi::FutureBarrier<int> barrier;
+    std::vector<qi::Promise<int> > promises;
 
-  // Loading the barrier.
-  for (int it = 0; it < BARRIER_N; ++it) {
-    qi::Promise<int> prom(doCancel);
-    promises.push_back(prom);
-    barrier.addFuture(prom.future());
+    // Loading the barrier.
+    for (int it = 0; it < BARRIER_N; ++it) {
+      qi::Promise<int> prom(doCancel);
+      promises.push_back(prom);
+      barrier.addFuture(prom.future());
+    }
+
+    fut = barrier.future();
   }
 
-  barrier.future().cancel();
+  fut.cancel();
   // We wait for all futures of the for loop.
-  barrier.future().value();
+  fut.value();
 }
 
 TEST(TestPromiseBarrier, ClosedBarrier)
@@ -1118,32 +1123,35 @@ TEST(TestPromiseBarrier, ClosedBarrier)
 
   // Can add a future to the barrier because is not yet closed.
   qi::Promise<void> prom;
-  ASSERT_TRUE(barrier.addFuture(prom.future()));
+  ASSERT_NO_THROW(barrier.addFuture(prom.future()));
   prom.setValue(0);
 
   barrier.future().wait();
 
   // Invalid promise, because FutureBarrier is closed.
   qi::Promise<void> prom2;
-  ASSERT_FALSE(barrier.addFuture(prom2.future()));
+  ASSERT_ANY_THROW(barrier.addFuture(prom2.future()));
 }
 
 TEST(TestPromiseBarrier, CompleteExample)
 {
-  qi::Promise<void> call;
-  qi::FutureBarrier<int> barrier;
-
-  // Load data in the barrier.
-  for (int it = 0; it < BARRIER_N; ++it) {
-    qi::Promise<int> prom;
-    call.future().connect(boost::bind<void>(&mult42, prom, it));
-    barrier.addFuture(prom.future());
-  }
-  call.setValue(0);
-
-  // Bind something to do after everything is computed.
   qi::Promise<void> end;
-  barrier.future().connect(boost::bind(&checkBarrier, end, _1));
+
+  {
+    qi::Promise<void> call;
+    qi::FutureBarrier<int> barrier;
+
+    // Load data in the barrier.
+    for (int it = 0; it < BARRIER_N; ++it) {
+      qi::Promise<int> prom;
+      call.future().connect(boost::bind<void>(&mult42, prom, it));
+      barrier.addFuture(prom.future());
+    }
+    call.setValue(0);
+
+    // Bind something to do after everything is computed.
+    barrier.future().connect(boost::bind(&checkBarrier, end, _1));
+  }
 
   // Wait for the end of the check.
   end.future().wait();
