@@ -63,7 +63,7 @@ int main(int argc, char **argv)
 
   // Remove consoleloghandler (default log handler)
   if (vm.count("quiet"))
-    qi::log::removeLogHandler("consoleloghandler");
+    qi::log::removeHandler("consoleloghandler");
 
   if (vm.count("debug"))
     qi::log::setLogLevel(qi::LogLevel_Debug);
@@ -78,10 +78,6 @@ int main(int argc, char **argv)
     if (globalContext < 0)
     {
       qi::log::setContext(0);
-    }
-    else if (globalContext > 7)
-    {
-      qi::log::setContext(7);
     }
     else
     {

@@ -67,14 +67,15 @@ namespace qi {
         fclose(_p->_file);
       delete _p;
     }
+    void TailFileLogHandler::log(const qi::LogLevel                 verb,
+                                 const qi::Clock::time_point        date,
+                                 const qi::SystemClock::time_point  systemDate,
+                                 const char                        *category,
+                                 const char                        *msg,
+                                 const char                        *file,
+                                 const char                        *fct,
+                                 const int                          line)
 
-    void TailFileLogHandler::log(const qi::LogLevel verb,
-                                 const qi::os::timeval   date,
-                                 const char              *category,
-                                 const char              *msg,
-                                 const char              *file,
-                                 const char              *fct,
-                                 const int               line)
     {
       boost::mutex::scoped_lock scopedLock(_p->mutex_);
 
@@ -86,7 +87,7 @@ namespace qi {
       {
         fseek(_p->_file, 0, SEEK_END);
 
-        std::string logline = qi::detail::logline(qi::log::context(), date, category, msg, file, fct, line, verb);
+        std::string logline = qi::detail::logline(qi::log::context(), date, systemDate, category, msg, file, fct, line, verb);
         _p->_writeSize += fprintf(_p->_file, "%s", logline.c_str());
         fflush(_p->_file);
       }

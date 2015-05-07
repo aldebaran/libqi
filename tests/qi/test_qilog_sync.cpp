@@ -94,8 +94,8 @@ TEST(log, formatting)
 {
   qiLogCategory("qi.test");
   std::string lastMessage;
-  qi::log::removeLogHandler("consoleloghandler");
-  qi::log::addLogHandler("copy", boost::bind(&copy, boost::ref(lastMessage), _4));
+  qi::log::removeHandler("consoleloghandler");
+  qi::log::addHandler("copy", boost::bind(&copy, boost::ref(lastMessage), _5));
   qiLogError("qi.test") << "coin";
   EXPECT_EQ("coin", lastMessage);
   qiLogError("qi.test") << "coin " << 42;
@@ -122,7 +122,7 @@ TEST(log, formatting)
   EXPECT_EQ("coin 42", lastMessage);
   qiLogErrorF("coin %s%s", 42);
   EXPECT_EQ("coin 42", lastMessage);
-  qi::log::removeLogHandler("copy");
+  qi::log::removeHandler("copy");
 }
 
 void set (const char* cat, bool& b)
@@ -138,7 +138,7 @@ TEST(log, filteringChange)
   #define YES EXPECT_TRUE(tag); tag = false
   #define NO  EXPECT_TRUE(!tag); tag = false // yes false
   bool tag = false;
-  qi::log::SubscriberId id = qi::log::addLogHandler("set", boost::bind(&set, _3, boost::ref(tag)));
+  qi::log::SubscriberId id = qi::log::addHandler("set", boost::bind(&set, _4, boost::ref(tag)));
   qiLogVerbose("init.test2") << "VLoL2";
   qiLogError("init.test2") << "ELoL2";
   qiLogWarning("init.test2") << "WLoL2";
@@ -168,7 +168,7 @@ TEST(log, filtering)
   #define YES EXPECT_TRUE(tag); tag = false
   #define NO  EXPECT_TRUE(!tag); tag = false // yes false
   bool tag = false;
-  qi::log::SubscriberId id = qi::log::addLogHandler("set", boost::bind(&set, _3, boost::ref(tag)));
+  qi::log::SubscriberId id = qi::log::addHandler("set", boost::bind(&set, _4, boost::ref(tag)));
   qiLogError("qi.test") << "coin";
   YES;
   NO; // ensure reset works
@@ -229,7 +229,7 @@ TEST(log, filtering)
   YES;
   qiLogError("initglob.no") << "coin";
   YES;
-  qi::log::removeLogHandler("set");
+  qi::log::removeHandler("set");
 }
 
 TEST(log, filteringPerHandler)
@@ -244,8 +244,8 @@ TEST(log, filteringPerHandler)
   #define NONO NO1; NO2
   bool tag1 = false;
   bool tag2 = false;
-  unsigned int id1 = qi::log::addLogHandler("set1", boost::bind(&set, _3, boost::ref(tag1)));
-  unsigned int id2 = qi::log::addLogHandler("set2", boost::bind(&set, _3, boost::ref(tag2)));
+  unsigned int id1 = qi::log::addHandler("set1", boost::bind(&set, _4, boost::ref(tag1)));
+  unsigned int id2 = qi::log::addHandler("set2", boost::bind(&set, _4, boost::ref(tag2)));
   tag1 = tag2 = false;
 
   NONO;
@@ -273,8 +273,8 @@ TEST(log, filteringPerHandler)
   qi::log::addFilter("qi.test", qi::LogLevel_Debug, id1);
   qiLogError("qi.test") << "coin";
   YESYES;
-  qi::log::removeLogHandler("set1");
-  qi::log::removeLogHandler("set2");
+  qi::log::removeHandler("set1");
+  qi::log::removeHandler("set2");
 }
 
 TEST(log, globbing)
@@ -282,7 +282,7 @@ TEST(log, globbing)
   #define YES EXPECT_TRUE(tag); tag = false
   #define NO  EXPECT_TRUE(!tag); tag = false // yes false
   bool tag = false;
-  qi::log::SubscriberId id = qi::log::addLogHandler("set", boost::bind(&set, _3, boost::ref(tag)));
+  qi::log::SubscriberId id = qi::log::addHandler("set", boost::bind(&set, _4, boost::ref(tag)));
   qiLogError("qi.test") << "coin";
   YES;
   NO; // ensure reset works
@@ -298,7 +298,7 @@ TEST(log, globbing)
   NO;
   qiLogError("qo.foo") << "coin";
   YES;
-  qi::log::removeLogHandler("set");
+  qi::log::removeHandler("set");
 }
 
 void nothing()
@@ -308,8 +308,8 @@ void nothing()
 TEST(log, perf)
 {
   // Compare perf of (disabled, enabled) x (QI_LOG, qiLog)
-  qi::log::addLogHandler("nothing", boost::bind(&nothing));
-  qi::log::removeLogHandler("consoleloghandler");
+  qi::log::addHandler("nothing", boost::bind(&nothing));
+  qi::log::removeHandler("consoleloghandler");
   qi::log::setLogLevel(qi::LogLevel_Info);
   qi::int64_t t;
   qiLogCategory("qi.test");
@@ -405,12 +405,13 @@ TEST(log, emptyLog)
 }
 
 void nullHandler(const qi::LogLevel,
-                             const qi::os::timeval,
-                             const char*,
-                             const char*,
-                             const char*,
-                             const char*,
-                             int) {}
+                 const qi::Clock::time_point,
+                 const qi::SystemClock::time_point,
+                 const char*,
+                 const char*,
+                 const char*,
+                 const char*,
+                 int) {}
 void makeCats(int uid, unsigned count, qi::Atomic<int>& finished)
 {
   for (unsigned i=0; i<count; ++i)
@@ -425,7 +426,7 @@ void makeCats(int uid, unsigned count, qi::Atomic<int>& finished)
 void addHandler(qi::Atomic<int>& pos, qi::Atomic<int>& count)
 {
   int p = ++pos;
-  qi::log::addLogHandler("foo" + boost::lexical_cast<std::string>(p),
+  qi::log::addHandler("foo" + boost::lexical_cast<std::string>(p),
     nullHandler);
   ++count;
 }

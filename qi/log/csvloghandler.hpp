@@ -55,13 +55,14 @@ namespace qi {
        * If the file could not be opened, this function will silently fail, otherwise
        * it will directly write the log message to the file and flush its output.
        */
-      void log(const qi::LogLevel    verb,
-               const qi::os::timeval date,
-               const char            *category,
-               const char            *msg,
-               const char            *file,
-               const char            *fct,
-               const int             line);
+      void log(const qi::LogLevel                 verb,
+               const qi::Clock::time_point        date,
+               const qi::SystemClock::time_point  systemDate,
+               const char                        *category,
+               const char                        *msg,
+               const char                        *file,
+               const char                        *fct,
+               const int                          line);
 
     private:
       boost::scoped_ptr<PrivateCsvLogHandler> _p;
