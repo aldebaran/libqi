@@ -24,24 +24,11 @@ namespace bfs = boost::filesystem;
 
 namespace qi {
   namespace os {
-    /* Have the static variable we need inside the function so that we
-     * give correct results at initialization time, but also force
-     * initialization so that timestamp 0 corresponds to program start time.
-     */
-    static int64_t _unused_base = ustime();
 
     int64_t ustime()
     {
-      static bool initialized = false;
-      static int64_t base;
-      timeval tv;
-      gettimeofday(&tv);
-      if (!initialized)
-      {
-        base = tv.tv_sec*1000000LL + tv.tv_usec;
-        initialized = true;
-      }
-      return tv.tv_sec*1000000LL + tv.tv_usec - base;
+      return boost::chrono::duration_cast<qi::MicroSeconds>(
+          SteadyClock::now().time_since_epoch()).count();
     }
 
 
@@ -54,6 +41,25 @@ namespace qi {
         t->tv_usec += usecPerSec;
         --t->tv_sec;
       }
+    }
+
+    qi::os::timeval::timeval(qi::int64_t usec) : tv_sec(0), tv_usec(usec)
+    {
+      normalize_tv(this);
+    }
+
+    qi::os::timeval::timeval(const qi::Duration &d) :
+      tv_sec(0),
+      tv_usec(boost::chrono::duration_cast<qi::MicroSeconds>(d).count())
+    {
+      normalize_tv(this);
+    }
+
+    qi::os::timeval::timeval(const qi::SystemClockTimePoint &t) :
+      tv_sec(0),
+      tv_usec(boost::chrono::duration_cast<qi::MicroSeconds>(t.time_since_epoch()).count())
+    {
+      normalize_tv(this);
     }
 
     qi::os::timeval operator+(const qi::os::timeval &lhs,
@@ -168,15 +174,7 @@ namespace qi {
 
     int gettimeofday(qi::os::timeval *t)
     {
-      namespace bc = boost::chrono;
-
-      const bc::system_clock::duration timeSinceEpoch = bc::system_clock::now().time_since_epoch();
-      const bc::microseconds usSinceEpoch = bc::duration_cast<bc::microseconds>(timeSinceEpoch);
-      const bc::seconds secsSinceEpoch = bc::duration_cast<bc::seconds>(timeSinceEpoch);
-
-      t->tv_sec = secsSinceEpoch.count();
-      t->tv_usec = (usSinceEpoch - secsSinceEpoch).count();
-
+      *t = qi::os::timeval(qi::SystemClock::now());
       return 0;
     }
   }

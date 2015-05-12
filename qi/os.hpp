@@ -15,6 +15,7 @@
 # include <qi/api.hpp>
 # include <qi/types.hpp>
 # include <qi/path.hpp>
+# include <qi/clock.hpp>
 
 # include <boost/lexical_cast.hpp>
 
@@ -239,6 +240,12 @@ namespace qi {
     struct QI_API timeval {
       qi::int64_t tv_sec;  ///< seconds
       qi::int64_t tv_usec; ///< microseconds
+
+      timeval() : tv_sec(0), tv_usec(0) {}
+      timeval(int64_t sec, int64_t usec) : tv_sec(sec), tv_usec(usec) {}
+      explicit timeval(int64_t usec);
+      explicit timeval(const qi::Duration &);
+      explicit timeval(const qi::SystemClockTimePoint &);
     };
 
     /**

@@ -106,6 +106,64 @@ TEST(QiOs, MemoryUsage)
   ASSERT_EQ(0u, qi::os::memoryUsage(0));
 }
 
+TEST(QiOs, timeValCtor)
+{
+  qi::os::timeval t0 = qi::os::timeval();
+  // t0 members are initialized to 0
+  EXPECT_EQ(0, t0.tv_sec);
+  EXPECT_EQ(0, t0.tv_usec);
+  qi::os::timeval t1;
+  // t1 members are initialized to 0
+  EXPECT_EQ(0, t1.tv_sec);
+  EXPECT_EQ(0, t1.tv_usec);
+
+  // t2 members are not normalized
+  qi::os::timeval t2(-1, -2);
+  EXPECT_EQ(-1, t2.tv_sec);
+  EXPECT_EQ(-2, t2.tv_usec);
+
+  qi::Seconds s(123456789);
+  qi::MicroSeconds us(123456);
+  qi::NanoSeconds ns(789);
+  qi::Duration d_us(s + us);
+  qi::Duration d_ns(d_us + ns);
+  qi::int64_t normalized_s = s.count();
+  qi::int64_t normalized_us = us.count();
+
+  // positive
+  {
+    qi::os::timeval tv0(d_us);
+    EXPECT_EQ(normalized_s, tv0.tv_sec);
+    EXPECT_EQ(normalized_us, tv0.tv_usec);
+
+    qi::Duration d_back = qi::Seconds(tv0.tv_sec) +
+                          qi::MicroSeconds(tv0.tv_usec);
+    EXPECT_TRUE(d_us - d_back < qi::MicroSeconds(1));
+    qi::os::timeval tv1(d_us);
+    EXPECT_EQ(normalized_s, tv1.tv_sec);
+    EXPECT_EQ(normalized_us, tv1.tv_usec);
+  }
+  // negative
+  d_us = -d_us;
+  d_ns = -d_ns;
+  normalized_s = -s.count() - 1;
+  normalized_us = -us.count() + 1000000;
+  {
+    qi::os::timeval tv0(d_us);
+    EXPECT_EQ(normalized_s, tv0.tv_sec);
+    EXPECT_EQ(normalized_us, tv0.tv_usec);
+
+    qi::Duration d_back = qi::Seconds(tv0.tv_sec) +
+                          qi::MicroSeconds(tv0.tv_usec);
+    EXPECT_TRUE(d_us - d_back < qi::MicroSeconds(1));
+    qi::os::timeval tv1(d_us);
+    EXPECT_EQ(normalized_s, tv1.tv_sec);
+    EXPECT_EQ(normalized_us, tv1.tv_usec);
+  }
+}
+
+
+
 TEST(QiOs, timeValOperator)
 {
   qi::os::timeval t0;

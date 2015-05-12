@@ -43,6 +43,7 @@ namespace qi
      * time_points by comparing their respective durations.
      */
     typedef boost::chrono::time_point<SteadyClock> time_point;
+
     /**
      * true if t1 <= t2 is always true, else false.
      * \note A clock that can be adjusted backwards is not steady.
@@ -50,7 +51,7 @@ namespace qi
     BOOST_STATIC_CONSTEXPR bool is_steady = boost::chrono::steady_clock::is_steady;
 
   public:
-    /// Returns a time_point representing a point in time.
+    QI_API_DEPRECATED
     typedef time_point SteadyClockTimePoint;
 
      /// \brief Enum expected argument
@@ -61,7 +62,46 @@ namespace qi
     };
 
     /// Returns a time_point representing the current value of the clock.
-    static SteadyClockTimePoint now();
+    static time_point now();
+  };
+
+
+  /**
+   * \brief The Clock class represents a system-wide clock, best suitable for
+   * timestamping events.
+   *
+   * \includename{qi/clock.hpp}
+   *
+   */
+  class QI_API Clock
+  {
+  public:
+    typedef int64_t rep; ///< The representation type of the duration and time_point.
+    typedef boost::nano period; ///< The tick period of the clock in nanoseconds.
+    typedef boost::chrono::duration<rep, period> duration; ///< The duration type of the clock.
+    /**
+     * The time_point type of the clock. Different clocks are permitted
+     * to share a time_point definition if it is valid to compare their
+     * time_points by comparing their respective durations.
+     */
+    typedef boost::chrono::time_point<Clock> time_point;
+
+    /**
+     * true if t1 <= t2 is always true, else false.
+     * \note A clock that can be adjusted backwards is not steady.
+     */
+    BOOST_STATIC_CONSTEXPR bool is_steady = boost::chrono::steady_clock::is_steady;
+
+  public:
+     /// \brief Enum expected argument
+    enum Expect {
+      Expect_SoonerOrLater, ///< Pick the nearest result to user-provided reference.
+      Expect_Later,         ///< Result is expected to be later than user-provided reference.
+      Expect_Sooner         ///< Result is expected to be sooner than user-provided reference.
+    };
+
+    /// Returns a time_point representing the current value of the clock.
+    static time_point now();
 
     /**
      * \brief Convert the time point to a number of milliseconds on 32 bits.
@@ -71,7 +111,7 @@ namespace qi
      * \param t The time point to convert.
      * \return Unsigned int representing the time.
      */
-    static uint32_t toUint32ms(const SteadyClockTimePoint &t) throw();
+    static uint32_t toUint32ms(const time_point &t) throw();
     /**
      * \brief Convert the time point to a number of milliseconds on 32 bits.
      *
@@ -80,7 +120,7 @@ namespace qi
      * \param t The time point to convert.
      * \return Integer (int) representing the time.
      */
-    static int32_t toInt32ms(const SteadyClockTimePoint &t) throw();
+    static int32_t toInt32ms(const time_point &t) throw();
 
     /**
      * \brief Get a time point from a number of milliseconds on 32 bits.
@@ -101,22 +141,21 @@ namespace qi
      *
      * where period == 2^32 ms ~ 50 days
      */
-    static time_point fromUint32ms(uint32_t t_ms, SteadyClockTimePoint guess,
+    static time_point fromUint32ms(uint32_t t_ms, time_point guess,
                                    Expect expect=Expect_SoonerOrLater) throw();
-    /// \copydoc SteadyClock::fromUint32ms
-    static time_point fromInt32ms(int32_t t_ms, SteadyClockTimePoint guess,
+    /// \copydoc Clock::fromUint32ms
+    static time_point fromInt32ms(int32_t t_ms, time_point guess,
                                   Expect expect=Expect_SoonerOrLater) throw();
   };
 
-
   /**
-   * \brief The WallClock class represents the system-wide real time wall clock.
+   * \brief The SystemClock class represents the system-wide real time wall clock.
    *        It may not be monotonic: on most systems, the system time can be adjusted
    *        at any moment.
    *
    * \includename{qi/clock.hpp}
    */
-  class QI_API WallClock
+  class QI_API SystemClock
   {
   public:
     typedef int64_t rep; ///< The representation type of the duration and time_point.
@@ -127,47 +166,56 @@ namespace qi
      * to share a time_point definition if it is valid to compare their
      * time_points by comparing their respective durations.
      */
-    typedef boost::chrono::time_point<WallClock> time_point;
+    typedef boost::chrono::time_point<SystemClock> time_point;
+
     /// true if t1 <= t2 is always true, else false.
-    /// \note A Wallclock is never steady.
+    /// \note A SystemClock is never steady.
     BOOST_STATIC_CONSTEXPR bool is_steady = false;
 
   public:
-    /// Returns a time_point representing a point in time.
+
+    QI_API_DEPRECATED
     typedef time_point WallClockTimePoint;
 
     /// Returns a time_point representing the current value of the clock.
-    static WallClockTimePoint now();
+    static time_point now();
 
     /**
      * \brief Converts a system clock time point to std::time_t
      * \param t Time point to convert.
      * \return A std::time_t representing \p t.
      */
-    static std::time_t to_time_t(const WallClockTimePoint& t) throw();
+    static std::time_t to_time_t(const time_point& t) throw();
 
     // Converts std::time_t to a system clock time point
     /**
      * \brief Converts std::time_t to a system clock time point
      * \param t std::time to convert.
-     * \return A WallClockTimePoint representing \p t.
+     * \return A time point representing \p t.
      */
-    static WallClockTimePoint from_time_t(const std::time_t &t) throw();
+    static time_point from_time_t(const std::time_t &t) throw();
   };
 
+  QI_API_DEPRECATED
+  typedef SystemClock WallClock;
 
 
-  typedef SteadyClock::SteadyClockTimePoint SteadyClockTimePoint; ///< Steady clock time point.
-  typedef WallClock::WallClockTimePoint WallClockTimePoint;       ///< Wall clock time point.
+  typedef SteadyClock::time_point SteadyClockTimePoint; ///< Steady clock time point.
+  typedef Clock::time_point ClockTimePoint; ///< qi::Clock time point.
+  typedef SystemClock::time_point SystemClockTimePoint; ///< System clock time point.
+  QI_API_DEPRECATED
+  typedef SystemClockTimePoint WallClockTimePoint; ///< System clock time point.
 
   /// \copydoc SteadyClock::now()
+  QI_API_DEPRECATED
   inline QI_API SteadyClockTimePoint steadyClockNow() {
     return SteadyClock::now();
   }
 
-  /// \copydoc WallClock::now()
-  inline QI_API WallClockTimePoint wallClockNow() {
-    return WallClock::now();
+  /// \copydoc SystemClock::now()
+  QI_API_DEPRECATED
+  inline QI_API SystemClockTimePoint wallClockNow() {
+    return SystemClock::now();
   }
 
   /// @{
@@ -180,7 +228,7 @@ namespace qi
   /// @{
   /// \brief Blocks the execution of the current thread until \p t has been reached.
   ///
-  /// This is equivalent to sleep_for(SteadyClockTimePoint::now())
+  /// This is equivalent to sleepFor(t - SteadyClockTimePoint::now())
   QI_API void sleepUntil(const SteadyClockTimePoint &t);
   template <class Duration>
   inline void sleepUntil(const boost::chrono::time_point<SteadyClock, Duration>& t);
@@ -188,14 +236,32 @@ namespace qi
 
   /// @{
   /// \brief Blocks the execution of the current thread until \p t has been reached.
+  QI_API void sleepUntil(const ClockTimePoint &t);
+  template <class Duration>
+  inline void sleepUntil(const boost::chrono::time_point<Clock, Duration>& t);
+  /// @}
+
+  /// @{
+  /// \brief Blocks the execution of the current thread until \p t has been reached.
   ///
   /// Adjustments of the clock are taken into account.
   /// Thus the duration of the block might, but might not, be less
-  /// or more than t - WallClock::now()
-  QI_API void sleepUntil(const WallClockTimePoint& t);
+  /// or more than t - SystemClock::now()
+  QI_API void sleepUntil(const SystemClockTimePoint& t);
   template <class Duration>
-  inline void sleepUntil(const boost::chrono::time_point<WallClock, Duration>& t);
+  inline void sleepUntil(const boost::chrono::time_point<SystemClock, Duration>& t);
   /// @}
+
+  /// @{
+  /// \brief Return the date and time as a string in ISO 8601 format.
+  /// The time is given up to millisecond precision, in UTC.
+  /// The format does not include colon characters, to be suitable for
+  /// inclusion in filenames on any filesystem.
+  ///
+  /// For instance the string for a quarter past nine PM on April 3rd, 2001 is
+  /// "2001-04-03T211500.000Z"
+  QI_API std::string toISO8601String(const SystemClockTimePoint &t);
+  /// }@
 }
 
 # ifdef __APPLE__
@@ -207,7 +273,7 @@ namespace qi
   template class QI_API boost::chrono::duration<int64_t, boost::ratio<60> >;
   template class QI_API boost::chrono::duration<int64_t, boost::ratio<3600> >;
   template class QI_API boost::chrono::time_point<qi::SteadyClock>;
-  template class QI_API boost::chrono::time_point<qi::WallClock>;
+  template class QI_API boost::chrono::time_point<qi::SystemClock>;
 # endif
 
 # include <qi/detail/clock.hxx>
