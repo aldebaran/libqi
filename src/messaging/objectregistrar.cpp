@@ -48,8 +48,8 @@ namespace qi {
       boost::mutex::scoped_lock sl(_servicesMutex);
       services = _services;
     }
-    for (BoundServiceMap::iterator iter = services.begin();
-        iter != services.end();
+    for (BoundServiceMap::reverse_iterator iter = services.rbegin();
+        iter != services.rend();
         ++iter)
       unregisterService(iter->first);
     Server::close();
