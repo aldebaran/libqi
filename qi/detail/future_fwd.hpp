@@ -688,7 +688,7 @@ namespace qi {
     /** return true if cancel has been called on the promise (even if the
      * cancel callback did not run yet).
      */
-    bool isCancelRequested() {
+    bool isCancelRequested() const {
       return _f._p->isCancelRequested();
     }
 
