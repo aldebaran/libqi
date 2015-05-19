@@ -262,6 +262,12 @@ namespace qi
   /// "2001-04-03T211500.000Z"
   QI_API std::string toISO8601String(const SystemClockTimePoint &t);
   /// }@
+
+  /// @{
+  /// \brief Returns the duration elapsed since \p t.
+  template <class duration_to, class clock_from>
+  inline duration_to durationSince(const boost::chrono::time_point<clock_from>& t);
+  /// @}
 }
 
 # ifdef __APPLE__

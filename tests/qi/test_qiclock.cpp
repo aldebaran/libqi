@@ -150,3 +150,20 @@ TEST(QiClock, toIso8601String)
   EXPECT_EQ("1970-01-01T000001.042Z", qi::toISO8601String(t0 + qi::MilliSeconds(1042)));
   EXPECT_EQ("1970-02-01T010203.000Z", qi::toISO8601String(t0 + qi::Hours(24*31+1)+qi::Minutes(2)+qi::Seconds(3)));
 }
+
+
+TEST(QiClock, durationSince)
+{
+  qi::SteadyClock::time_point tp = qi::SteadyClock::now();
+
+  qi::Duration sleepDuration = qi::MilliSeconds(500);
+  qi::Duration maxError = qi::MilliSeconds(100);
+  qi::sleepFor(sleepDuration);
+  qi::MilliSeconds durMs = qi::durationSince<qi::MilliSeconds>(tp);
+  qi::MicroSeconds durUs = qi::durationSince<qi::MicroSeconds>(tp);
+  EXPECT_TRUE(durMs >= sleepDuration);
+  EXPECT_TRUE(durMs < sleepDuration + maxError);
+  EXPECT_TRUE(durUs >= sleepDuration);
+  EXPECT_TRUE(durUs < sleepDuration + maxError);
+  EXPECT_TRUE(durUs >= durMs);
+}
