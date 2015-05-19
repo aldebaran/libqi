@@ -265,8 +265,8 @@ namespace qi
 
   /// @{
   /// \brief Returns the duration elapsed since \p t.
-  template <class duration_to, class clock_from>
-  inline duration_to durationSince(const boost::chrono::time_point<clock_from>& t);
+  template <class DurationTo, class TimePointFrom>
+  inline DurationTo durationSince(const TimePointFrom& t);
   /// @}
 }
 

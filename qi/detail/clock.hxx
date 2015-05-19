@@ -36,10 +36,11 @@ namespace qi {
     sleepFor(t - SystemClock::now());
   }
 
-  template <class duration_to, class clock_from>
-  duration_to durationSince(const boost::chrono::time_point<clock_from>& t)
+  template <class DurationTo, class TimePointFrom>
+  DurationTo durationSince(const TimePointFrom& t)
   {
-    return boost::chrono::duration_cast<duration_to>(clock_from::now() - t);
+    typedef typename TimePointFrom::clock ClockFrom;
+    return boost::chrono::duration_cast<DurationTo>(ClockFrom::now() - t);
   }
 }
 

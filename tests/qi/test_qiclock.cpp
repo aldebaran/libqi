@@ -156,14 +156,14 @@ TEST(QiClock, durationSince)
 {
   qi::SteadyClock::time_point tp = qi::SteadyClock::now();
 
-  qi::Duration sleepDuration = qi::MilliSeconds(500);
-  qi::Duration maxError = qi::MilliSeconds(100);
+  const qi::Duration sleepDuration = qi::MilliSeconds(500);
+  const qi::MilliSeconds sleepDurationMs = boost::chrono::duration_cast<qi::MilliSeconds>(sleepDuration);
+  const qi::MicroSeconds sleepDurationUs = boost::chrono::duration_cast<qi::MicroSeconds>(sleepDuration);
+
   qi::sleepFor(sleepDuration);
-  qi::MilliSeconds durMs = qi::durationSince<qi::MilliSeconds>(tp);
-  qi::MicroSeconds durUs = qi::durationSince<qi::MicroSeconds>(tp);
-  EXPECT_TRUE(durMs >= sleepDuration);
-  EXPECT_TRUE(durMs < sleepDuration + maxError);
-  EXPECT_TRUE(durUs >= sleepDuration);
-  EXPECT_TRUE(durUs < sleepDuration + maxError);
-  EXPECT_TRUE(durUs >= durMs);
+  const qi::MilliSeconds durMs = qi::durationSince<qi::MilliSeconds>(tp);
+  const qi::MicroSeconds durUs = qi::durationSince<qi::MicroSeconds>(tp);
+  const qi::Duration tol = qi::MilliSeconds(1); // only needed on Windows
+  EXPECT_GE(durMs + tol, sleepDurationMs);
+  EXPECT_GE(durUs + tol, sleepDurationUs);
 }
