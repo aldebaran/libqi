@@ -167,7 +167,8 @@ public:
   FutureBarrier(FutureCallbackType async = FutureCallbackType_Async)
     : _p(boost::make_shared<detail::FutureBarrierPrivate<T> >(async))
   {
-    _p->_promise.setOnCancel(qi::bind<void(qi::Promise<std::vector<qi::Future<T> > >&)>(
+    _p->_promise.setOnCancel(qi::bindWithFallback<void(qi::Promise<std::vector<qi::Future<T> > >&)>(
+          boost::function<void()>(),
           &detail::FutureBarrierPrivate<T>::cancelAll,
           boost::weak_ptr<detail::FutureBarrierPrivate<T> >(_p)));
   }
