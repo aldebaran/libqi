@@ -7,6 +7,7 @@
 #include <qi/clock.hpp>
 #include <qi/log.hpp>
 #include <qi/os.hpp>
+#include <qi/atomic.hpp>
 #include <boost/thread.hpp>
 #include <boost/chrono/ceil.hpp>
 #ifndef BOOST_THREAD_USES_CHRONO

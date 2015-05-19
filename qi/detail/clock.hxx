@@ -51,25 +51,35 @@ namespace boost
     template <class CharT>
     struct clock_string<qi::SteadyClock, CharT>
     {
-      static std::basic_string<CharT> name() {return "qi::SteadyClock";}
+      static std::basic_string<CharT> name() {
+        static const CharT a[] = {'q', 'i', ':', ':', 'S', 't', 'e', 'a', 'd', 'y', 'C', 'l', 'o', 'c', 'k'};
+        return std::basic_string<CharT>(a, a + sizeof(a)/sizeof(a[0]));
+      }
       static std::basic_string<CharT> since() {
-        return " program start";
+        static const CharT a[] = {' ', 's', 'i', 'n', 'c', 'e', ' ', 'p', 'r', 'o', 'g', 'r', 'a', 'm', ' ', 's', 't', 'a', 'r', 't'};
+        return std::basic_string<CharT>(a, a + sizeof(a)/sizeof(a[0]));
       }
     };
 
     template <class CharT>
     struct clock_string<qi::Clock, CharT>
     {
-      static std::basic_string<CharT> name() {return "qi::Clock";}
+      static std::basic_string<CharT> name() {
+        static const CharT a[] = {'q', 'i', ':', ':', 'C', 'l', 'o', 'c', 'k'};
+        return std::basic_string<CharT>(a, a + sizeof(a)/sizeof(a[0]));
+      }
       static std::basic_string<CharT> since() {
-        return clock_string<boost::chrono::steady_clock, CharT>::since();
+        return clock_string<boost::chrono::system_clock, CharT>::since();
       }
     };
 
     template <class CharT>
     struct clock_string<qi::SystemClock, CharT>
     {
-      static std::basic_string<CharT> name() {return "qi::SystemClock";}
+      static std::basic_string<CharT> name() {
+        static const CharT a[] = {'q', 'i', ':', ':', 'S', 'y', 's', 't', 'e', 'm', 'C', 'l', 'o', 'c', 'k'};
+        return std::basic_string<CharT>(a, a + sizeof(a)/sizeof(a[0]));
+      }
       static std::basic_string<CharT> since() {
         return clock_string<boost::chrono::system_clock, CharT>::since();
       }
