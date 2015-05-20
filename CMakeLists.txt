@@ -45,7 +45,10 @@ endif()
 set(WITH_QT_QTCORE OFF)
 
 qi_add_optional_package(QT_QTCORE "Enable QT")
-qi_add_optional_package(BOOST_LOCALE "Enable qi::translate")
+qi_add_optional_package(BOOST_LOCALE "Enable usage of boost::locale")
+if(WITH_BOOST_LOCALE)
+  add_definitions(" -DWITH_BOOST_LOCALE ")
+endif()
 option(WITH_EXAMPLES "Examples"          ON)
 option(WITH_PERF     "Performances test" ON)
 

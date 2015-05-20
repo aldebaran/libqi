@@ -7,7 +7,9 @@
 #include <qi/anyvalue.hpp>
 #include <iterator>
 #include <boost/lexical_cast.hpp>
-#include <boost/locale.hpp>
+#ifdef WITH_BOOST_LOCALE
+#  include <boost/locale.hpp>
+#endif
 #include "jsoncodec_p.hpp"
 
 namespace qi {
@@ -225,6 +227,7 @@ namespace qi {
         case 'n' : tmpString += '\n'; _it += 2; break;
         case 'r' : tmpString += '\r'; _it += 2; break;
         case 't' : tmpString += '\t'; _it += 2; break;
+#ifdef WITH_BOOST_LOCALE
         case 'u' :
         {
           if (std::distance(_it, _end) <= 6)
@@ -244,6 +247,7 @@ namespace qi {
           _it += 6;
           break;
         }
+#endif
         default:
           _it = save;
           return false;

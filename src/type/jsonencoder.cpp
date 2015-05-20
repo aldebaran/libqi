@@ -5,7 +5,9 @@
 
 #include <sstream>
 #include <iomanip>
-#include <boost/locale.hpp>
+#ifdef WITH_BOOST_LOCALE
+#  include <boost/locale.hpp>
+#endif
 #include <qi/jsoncodec.hpp>
 #include <qi/anyobject.hpp>
 #include <qi/type/typedispatcher.hpp>
@@ -147,7 +149,11 @@ namespace qi {
 
     void visitString(const char* data, size_t size)
     {
+#ifdef WITH_BOOST_LOCALE
       out << "\"" << add_esc_chars(boost::locale::conv::to_utf<wchar_t>(std::string(data, size), "UTF-8")) << "\"";
+#else
+      out << "\"" << add_esc_chars(std::wstring(data, data+size)) << "\"";
+#endif
     }
 
     void visitList(AnyIterator begin, AnyIterator end)
