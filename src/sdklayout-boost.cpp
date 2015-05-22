@@ -464,6 +464,7 @@ namespace qi {
       std::vector<std::string>::const_iterator it;
       for (it = paths.begin(); it != paths.end(); ++it)
       {
+        qiLogVerbose() << "Looking conf in " << *it;
         boost::filesystem::path p(fsconcat(*it, filename), qi::unicodeFacet());
 
         if (boost::filesystem::exists(p))
