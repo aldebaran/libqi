@@ -109,8 +109,15 @@ namespace qi {
 
       boost::filesystem::path execPath(program, qi::unicodeFacet());
       if(!boost::filesystem::exists(execPath)) {
-        _mode = "error";
-        return;
+        if (!real)
+        {
+          return initSDKlayoutFromExec(true);
+        }
+        else
+        {
+          _mode = "error";
+          return;
+        }
       }
 
       execPath = boost::filesystem::system_complete(execPath).make_preferred();
