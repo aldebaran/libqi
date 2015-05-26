@@ -268,6 +268,24 @@ TEST(TestSignal, OnSubscriber)
   ASSERT_FALSE(subscribers);
 }
 
+void store2(qi::Promise<int> variable1, qi::Promise<int> variable2, int value1, int value2)
+{
+  variable1.setValue(value1);
+  variable2.setValue(value2);
+}
+
+TEST(TestSignal, SignalToSignalWithExtraArgument)
+{
+  qi::Promise<int> target1, target2;
+  qi::Signal<int> signal1;
+  qi::Signal<int, int> signal2;
+  signal1.connect(boost::bind(boost::ref(signal2), _1, 42));
+  signal2.connect(store2, target1, target2, _1, _2);
+  signal1(12);
+  EXPECT_EQ(12, target1.future().value());
+  EXPECT_EQ(42, target2.future().value());
+}
+
 TEST(TestSignalSpy, Counter)
 {
   qi::Signal<int> sig;
