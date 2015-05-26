@@ -175,7 +175,7 @@ public:
   void fire2(int i, int j) { s2(i, j);}
 };
 
-QI_REGISTER_OBJECT(SigHolder, s0, s1, s2, fire0, fire1, fire2);
+QI_REGISTER_OBJECT(SigHolder, s0, s1, s2, fire0, fire1, fire2)
 
 TEST(TestSignal, SignalNBind)
 {
