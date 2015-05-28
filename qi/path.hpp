@@ -103,6 +103,9 @@ namespace qi
     /// copy operator
     const Path& operator=(const qi::Path& rhs) const;
 
+    bool operator==(const qi::Path& rhs) const;
+    bool operator!=(const qi::Path& rhs) const;
+
     /// Standard output stream operator for logging.
     friend std::ostream& operator<<(std::ostream& output, const qi::Path& path)
     {
