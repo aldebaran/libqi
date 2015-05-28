@@ -14,29 +14,35 @@
 
 namespace qi
 {
-  typedef std::map<std::string, AnyValue> CapabilityMap;
+typedef std::map<std::string, AnyValue> CapabilityMap;
 
-  class QI_API ClientAuthenticator
+class QI_API ClientAuthenticator
+{
+public:
+  virtual ~ClientAuthenticator()
   {
-  public:
-    virtual ~ClientAuthenticator() {}
+  }
 
-    virtual CapabilityMap initialAuthData();
-    CapabilityMap processAuth(const CapabilityMap& authData);
+  virtual CapabilityMap initialAuthData();
+  CapabilityMap processAuth(const CapabilityMap& authData);
 
-  protected:
-    /**
-     * @brief processAuth Processes an authentication message client side.
-     * This can be used to process a challenge sent by the server, for example.
-     * @param authData authentication data sent by the remote server.
-     * @return A map of data that the server will use in the authentication process.
-     * For example, a resolved challenge.
-     */
-    virtual CapabilityMap _processAuth(const CapabilityMap& authData) = 0;
-  };
+protected:
+  /**
+   * @brief processAuth Processes an authentication message client side.
+   * This can be used to process a challenge sent by the server, for example.
+   * If the authentication is meant to be done in a single step (with `InitialAuthData`)
+   * then it's not necessary to override this function.
+   * @param authData authentication data sent by the remote server.
+   * @return A map of data that the server will use in the authentication process.
+   * For example, a resolved challenge.
+   */
+  virtual CapabilityMap _processAuth(const CapabilityMap& authData)
+  {
+    return CapabilityMap();
+  }
+};
 
-  typedef boost::shared_ptr<ClientAuthenticator> ClientAuthenticatorPtr;
-
+typedef boost::shared_ptr<ClientAuthenticator> ClientAuthenticatorPtr;
 }
 
 #endif
