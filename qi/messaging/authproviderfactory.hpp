@@ -9,22 +9,31 @@
 
 #include <boost/shared_ptr.hpp>
 
-namespace qi {
+#include <qi/api.hpp>
 
-  class AuthProvider;
-  typedef boost::shared_ptr<AuthProvider> AuthProviderPtr;
+namespace qi
+{
+class AuthProvider;
+typedef boost::shared_ptr<AuthProvider> AuthProviderPtr;
 
-  class QI_API AuthProviderFactory
+class QI_API AuthProviderFactory
+{
+public:
+  virtual ~AuthProviderFactory()
   {
-  public:
-    virtual ~AuthProviderFactory() {}
-    virtual AuthProviderPtr newProvider() = 0;
-    virtual unsigned int authVersionMajor() { return 1; }
-    virtual unsigned int authVersionMinor() { return 0; }
-  };
+  }
+  virtual AuthProviderPtr newProvider() = 0;
+  virtual unsigned int authVersionMajor()
+  {
+    return 1;
+  }
+  virtual unsigned int authVersionMinor()
+  {
+    return 0;
+  }
+};
 
-  typedef boost::shared_ptr<AuthProviderFactory> AuthProviderFactoryPtr;
-
+typedef boost::shared_ptr<AuthProviderFactory> AuthProviderFactoryPtr;
 }
 
 #endif
