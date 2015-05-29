@@ -165,8 +165,7 @@ int subCmd_logSend(int argc, char **argv, qi::ApplicationSession& app)
 
   qi::AnyObject logger = s->service("LogManager");
 
-  qi::os::timeval tv;
-  qi::os::gettimeofday(&tv);
+  qi::os::timeval tv(qi::SystemClock::now());
 
   std::string source(__FILE__);
   source += ':';
