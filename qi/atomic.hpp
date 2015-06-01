@@ -303,7 +303,15 @@ template<typename T> void newAndAssign(T** ptr)
     bool tok = QI_UNIQ_DEF(atomic_guard_b).setIfEquals(0, 1);           \
     if (tok)                                                            \
     {                                                                   \
-      code;                                                             \
+      try                                                               \
+      {                                                                 \
+        code;                                                           \
+      }                                                                 \
+      catch (...)                                                       \
+      {                                                                 \
+        QI_UNIQ_DEF(atomic_guard_b) = 0;                                \
+        throw;                                                          \
+      }                                                                 \
       ++QI_UNIQ_DEF(atomic_guard_a);                                    \
     }                                                                   \
   }
