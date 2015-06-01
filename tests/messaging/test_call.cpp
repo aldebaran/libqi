@@ -1356,6 +1356,7 @@ TEST(TestObject, StructVersioningEvent)
   *
   * Effective testing would require the sessions to be in different processes.
   */
+  onCounter = 0;
   TestSessionPair p;
   qi::DynamicObjectBuilder builder;
   builder.advertiseSignal<Color>("onColor");
@@ -1400,15 +1401,12 @@ TEST(TestCall, TestAsyncFutureIsCancelable)
 {
   TestSessionPair p;
 
-  // TODO make remote case work
-  if (p.client() != p.server())
-    return;
-
   qi::DynamicObjectBuilder ob;
   qi::Promise<void> promise(&doCancel);
   ob.advertiseMethod("getCancelableFuture",
                      boost::function<qi::Future<void>()>(
                        boost::bind(&getCancelableFuture, promise)));
+  ob.setThreadingModel(qi::ObjectThreadingModel_MultiThread);
   p.server()->registerService("test", ob.object());
   qi::AnyObject proxy = p.client()->service("test");
 

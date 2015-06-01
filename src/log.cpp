@@ -299,6 +299,14 @@ namespace qi {
 
     namespace detail {
 
+      void log(const qi::LogLevel    verb,
+               CategoryType          category,
+               const char           *categoryStr,
+               const char           *msg,
+               const char           *file,
+               const char           *fct,
+               const int             line);
+
       // This pattern allows to continue logging at static destruction time
       // even if the static FormatMap is destroyed
       class FormatMap: public boost::unordered_map<std::string, boost::format>
@@ -595,33 +603,33 @@ namespace qi {
              const char           *fct,
              const int             line)
     {
-#ifndef ANDROID
-      if (LogInstance->SyncLog)
-      {
-        if (!detail::isVisible(category, verb))
-          return;
-        qi::os::timeval tv;
-        qi::os::gettimeofday(&tv);
-        LogInstance->dispatch(verb, tv, *category, msg.c_str(), file, fct, line);
-      }
-      else
-#endif
-      // FIXME suboptimal
-      // log is also a qi namespace, this line confuses some compilers if
-      // namespace is not explicit
-      ::qi::log::log(verb, category->name.c_str(), msg.c_str(), file, fct, line);
+      if (!isVisible(category, verb))
+        return;
+
+      ::qi::log::detail::log(verb, category, category->name.c_str(), msg.c_str(), file, fct, line);
     }
 
     void log(const qi::LogLevel    verb,
-             const char           *category,
+             const char           *categoryStr,
              const char           *msg,
              const char           *file,
              const char           *fct,
              const int             line)
     {
-      if (!isVisible(category, verb))
+      if (!isVisible(categoryStr, verb))
         return;
 
+      ::qi::log::detail::log(verb, NULL, categoryStr, msg, file, fct, line);
+    }
+
+    void detail::log(const qi::LogLevel    verb,
+                     CategoryType          category,
+                     const char           *categoryStr,
+                     const char           *msg,
+                     const char           *file,
+                     const char           *fct,
+                     const int             line)
+    {
 #ifdef ANDROID
       std::map<LogLevel, android_LogPriority> _conv;
 
@@ -633,7 +641,7 @@ namespace qi {
       _conv[verbose] = ANDROID_LOG_VERBOSE;
       _conv[debug]   = ANDROID_LOG_DEBUG;
 
-      __android_log_print(_conv[verb], category, msg);
+      __android_log_print(_conv[verb], categoryStr, msg);
 #else
       if (!LogInstance)
         return;
@@ -644,21 +652,22 @@ namespace qi {
       qi::os::gettimeofday(&tv);
       if (LogInstance->SyncLog)
       {
-        LogInstance->dispatch(verb, tv, category, msg, file, fct, line);
+        if (category)
+          LogInstance->dispatch(verb, tv, *category, msg, file, fct, line);
+        else
+          LogInstance->dispatch(verb, tv, categoryStr, msg, file, fct, line);
       }
       else
       {
         int tmpRtLogPush = ++LogPush % RTLOG_BUFFERS;
         privateLog* pl = &(LogBuffer[tmpRtLogPush]);
 
-
-
         pl->_logLevel = verb;
         pl->_line = line;
         pl->_date.tv_sec = tv.tv_sec;
         pl->_date.tv_usec = tv.tv_usec;
 
-        my_strcpy(pl->_category, category, CAT_SIZE);
+        my_strcpy(pl->_category, categoryStr, CAT_SIZE);
         my_strcpy(pl->_file, file, FILE_SIZE);
         my_strcpy(pl->_function, fct, FUNC_SIZE);
         my_strcpy(pl->_log, msg, LOG_SIZE);
@@ -805,11 +814,6 @@ namespace qi {
     bool isVisible(const std::string& category, qi::LogLevel level)
     {
       return log::isVisible(addCategory(category), level);
-    }
-
-    bool isVisible(CategoryType category, qi::LogLevel level)
-    {
-      return detail::isVisible(category, level);
     }
 
     void enableCategory(const std::string& cat, SubscriberId sub)

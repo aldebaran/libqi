@@ -882,6 +882,54 @@ TEST(TestFutureThen, ThenR)
   ASSERT_EQ(44, fff.value());
 }
 
+int fail(int f)
+{
+  throw std::runtime_error("fail");
+}
+
+int call(bool& b)
+{
+  b = true;
+  return 42;
+}
+
+TEST(TestFutureThen, AndThenR)
+{
+  bool called = false;
+  qi::Future<int> f = qi::async<int>(&get42);
+  qi::Future<int> ff = f.andThenR<int>(boost::bind(&fail, _1));
+  qi::Future<int> fff = ff.andThenR<int>(boost::bind(&call, boost::ref(called)));
+
+  fff.wait();
+
+  EXPECT_FALSE(called);
+  ASSERT_TRUE(fff.hasError());
+  EXPECT_EQ(fff.error(), "fail");
+}
+
+int block(int i, qi::Future<void> f)
+{
+  f.wait();
+  return 99;
+}
+
+TEST(TestFutureThen, AndThenRCancel)
+{
+  qi::Promise<void> blockProm;
+
+  bool called = false;
+  qi::Future<int> f = qi::Future<int>(42);
+  qi::Future<int> ff = f.andThenR<int>(boost::bind(&block, _1, blockProm.future()));
+  qi::Future<int> fff = ff.andThenR<int>(boost::bind(&call, boost::ref(called)));
+
+  fff.cancel();
+  blockProm.setValue(0);
+  fff.wait();
+
+  EXPECT_FALSE(called);
+  EXPECT_TRUE(fff.isCanceled());
+}
+
 TEST(TestFutureUnwrap, Unwrap)
 {
   qi::Promise<qi::Future<int> > prom;
@@ -1047,38 +1095,63 @@ TEST(TestPromiseBarrier, SimpleBarrier)
   ASSERT_EQ(it, *a);
 }
 
+TEST(TestPromiseBarrier, Cancel)
+{
+  qi::Future<std::vector<qi::Future<int> > > fut;
+  {
+    qi::FutureBarrier<int> barrier;
+    std::vector<qi::Promise<int> > promises;
+
+    // Loading the barrier.
+    for (int it = 0; it < BARRIER_N; ++it) {
+      qi::Promise<int> prom(doCancel);
+      promises.push_back(prom);
+      barrier.addFuture(prom.future());
+    }
+
+    fut = barrier.future();
+  }
+
+  fut.cancel();
+  // We wait for all futures of the for loop.
+  fut.value();
+}
+
 TEST(TestPromiseBarrier, ClosedBarrier)
 {
   qi::FutureBarrier<void> barrier;
 
   // Can add a future to the barrier because is not yet closed.
   qi::Promise<void> prom;
-  ASSERT_TRUE(barrier.addFuture(prom.future()));
+  ASSERT_NO_THROW(barrier.addFuture(prom.future()));
   prom.setValue(0);
 
   barrier.future().wait();
 
   // Invalid promise, because FutureBarrier is closed.
   qi::Promise<void> prom2;
-  ASSERT_FALSE(barrier.addFuture(prom2.future()));
+  ASSERT_ANY_THROW(barrier.addFuture(prom2.future()));
 }
 
 TEST(TestPromiseBarrier, CompleteExample)
 {
-  qi::Promise<void> call;
-  qi::FutureBarrier<int> barrier;
-
-  // Load data in the barrier.
-  for (int it = 0; it < BARRIER_N; ++it) {
-    qi::Promise<int> prom;
-    call.future().connect(boost::bind<void>(&mult42, prom, it));
-    barrier.addFuture(prom.future());
-  }
-  call.setValue(0);
-
-  // Bind something to do after everything is computed.
   qi::Promise<void> end;
-  barrier.future().connect(boost::bind(&checkBarrier, end, _1));
+
+  {
+    qi::Promise<void> call;
+    qi::FutureBarrier<int> barrier;
+
+    // Load data in the barrier.
+    for (int it = 0; it < BARRIER_N; ++it) {
+      qi::Promise<int> prom;
+      call.future().connect(boost::bind<void>(&mult42, prom, it));
+      barrier.addFuture(prom.future());
+    }
+    call.setValue(0);
+
+    // Bind something to do after everything is computed.
+    barrier.future().connect(boost::bind(&checkBarrier, end, _1));
+  }
 
   // Wait for the end of the check.
   end.future().wait();

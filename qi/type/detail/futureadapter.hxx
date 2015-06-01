@@ -89,16 +89,24 @@ void futureAdapterGeneric(AnyReference val, qi::Promise<T> promise,
 
 // return a generic object pointing to the future referenced by val or null if val is not a future
 // remember that you need a shared_ptr pointing on the genericobject so that it can work (shared_from_this)
-inline boost::shared_ptr<GenericObject> getGenericFuture(AnyReference val)
+inline boost::shared_ptr<GenericObject> getGenericFuture(AnyReference val, TypeKind* kind = 0)
 {
   TypeOfTemplate<Future>* ft1 = QI_TEMPLATE_TYPE_GET(val.type(), Future);
   TypeOfTemplate<FutureSync>* ft2 = QI_TEMPLATE_TYPE_GET(val.type(), FutureSync);
   ObjectTypeInterface* onext = NULL;
   qiLogDebug("qi.adapter") << "isFuture " << val.type()->infoString() << ' ' << !!ft1 << ' ' << !!ft2;
   if (ft1)
+  {
+    if (kind)
+      *kind = ft1->templateArgument()->kind();
     onext = ft1;
+  }
   else if (ft2)
+  {
+    if (kind)
+      *kind = ft2->templateArgument()->kind();
     onext = ft2;
+  }
   if (!onext)
     return boost::shared_ptr<GenericObject>();
   return boost::make_shared<GenericObject>(onext, val.rawValue());

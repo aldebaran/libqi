@@ -84,8 +84,7 @@ namespace qi {
     boost::shared_ptr<OnMessageSignal> &sig = _signalMap[Target(serviceId, objectId)];
     if (!sig)
       sig.reset(new OnMessageSignal());
-    // Ensure calls will be asynchronous
-    sig->setCallType(MetaCallType_Queued);
+    sig->setCallType(MetaCallType_Direct);
     return sig->connect(fun);
   }
 

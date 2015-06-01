@@ -189,7 +189,8 @@ namespace qi {
 
 
     if (msg.type() != qi::Message::Type_Reply
-      && msg.type() != qi::Message::Type_Error) {
+      && msg.type() != qi::Message::Type_Error
+      && msg.type() != qi::Message::Type_Canceled) {
       qiLogError() << "Message " << msg.address() << " type not handled: " << msg.type();
       return;
     }
@@ -211,6 +212,11 @@ namespace qi {
     }
 
     switch (msg.type()) {
+      case qi::Message::Type_Canceled: {
+        qiLogDebug() << "Message " << msg.address() << " has been cancelled.";
+        promise.setCanceled();
+        return;
+      }
       case qi::Message::Type_Reply: {
         // Get call signature
         MetaMethod* mm =  metaObject().method(msg.function());
@@ -288,7 +294,7 @@ namespace qi {
      - From a network callback, called asynchronously in thread pool
      So it is safe to use a sync promise.
      */
-    qi::Promise<AnyReference> out(FutureCallbackType_Sync);
+    qi::Promise<AnyReference> out(&PromiseNoop<AnyReference>, FutureCallbackType_Sync);
     qi::Message msg;
     TransportSocketPtr sock;
     // qiLogDebug() << this << " metacall " << msg.service() << " " << msg.function() <<" " << msg.id();
@@ -361,7 +367,37 @@ namespace qi {
         _promises.erase(msg.id());
       }
     }
+    else
+      out.setOnCancel(qi::bind<void(Promise<AnyReference>)>(&RemoteObject::onFutureCancelled, this, msg.id()));
     return out.future();
+  }
+
+  void RemoteObject::onFutureCancelled(unsigned int originalMessageId)
+  {
+    qiLogDebug() << "Cancel request for message " << originalMessageId;
+    TransportSocketPtr sock;
+    {
+      boost::mutex::scoped_lock lock(_socketMutex);
+      sock = _socket;
+    }
+    Message cancelMessage;
+
+    if (!sock)
+    {
+      qiLogWarning() << "Tried to cancel a call, but the socket to service "
+                   << _service << " is disconnected.";
+      return;
+    }
+    if (!sock->sharedCapability<bool>("RemoteCancelableCalls", false))
+    {
+      qiLogWarning() << "Remote end does not support cancelable calls.";
+      return;
+    }
+    cancelMessage.setService(_service);
+    cancelMessage.setType(Message::Type_Cancel);
+    cancelMessage.setValue(AnyReference::from(originalMessageId), "I");
+    cancelMessage.setObject(_object);
+    sock->send(cancelMessage);
   }
 
   void RemoteObject::metaPost(AnyObject, unsigned int event, const qi::GenericFunctionParameters &in)

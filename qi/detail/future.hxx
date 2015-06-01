@@ -12,8 +12,8 @@
 #include <boost/bind.hpp>
 #include <qi/eventloop.hpp>
 #include <qi/actor.hpp>
+#include <qi/anyvalue.hpp>
 #include <qi/type/detail/futureadapter.hpp>
-
 #include <qi/log.hpp>
 
 namespace qi {
@@ -21,58 +21,72 @@ namespace qi {
 namespace detail {
 
   template <typename T, typename R>
-  struct Continuate
+  struct Caller
   {
-    inline static void _continuate(const Future<T>& future,
-        const boost::function<R(const Future<T>&)>& func,
-        Promise<R>& promise)
+    inline static R _callfunc(const T& arg,
+        const boost::function<R(const T&)>& func)
     {
-      R r;
-      try
-      {
-        r = func(future);
-      }
-      catch (std::exception& e)
-      {
-        promise.setError(e.what());
-        return;
-      }
-      catch (...)
-      {
-        promise.setError("unknown exception");
-        return;
-      }
-
-      // TODO c++11 move
-      promise.setValue(r);
+      return func(arg);
     }
   };
 
   template <typename T>
-  struct Continuate<T, void>
+  struct Caller<T, void>
   {
-    inline static void _continuate(const Future<T>& future,
-        const boost::function<void(const Future<T>&)>& func,
-        Promise<void>& promise)
+    inline static void* _callfunc(const T& future,
+        const boost::function<void(const T&)>& func)
+    {
+      func(future);
+      return 0;
+    }
+  };
+
+  template <typename T, typename R>
+  void continuateThen(const Future<T>& future,
+      const boost::function<R(const Future<T>&)>& func,
+      qi::Promise<R>& promise)
+  {
+    try
+    {
+      promise.setValue(Caller<Future<T>, R>::_callfunc(future, func));
+    }
+    catch (std::exception& e)
+    {
+      promise.setError(e.what());
+    }
+    catch (...)
+    {
+      promise.setError("unknown exception");
+    }
+  }
+
+  template <typename T, typename R>
+  void continuateAndThen(const Future<T>& future,
+      const boost::function<R(const typename Future<T>::ValueType&)>& func,
+      qi::Promise<R>& promise)
+  {
+    if (future.isCanceled())
+      promise.setCanceled();
+    else if (future.hasError())
+      promise.setError(future.error());
+    else if (promise.isCancelRequested())
+      promise.setCanceled();
+    else
     {
       try
       {
-        func(future);
+        promise.setValue(Caller<T, R>::_callfunc(future.value(), func));
       }
       catch (std::exception& e)
       {
         promise.setError(e.what());
-        return;
       }
       catch (...)
       {
         promise.setError("unknown exception");
-        return;
       }
-
-      promise.setValue(0);
     }
-  };
+  }
 
   template <typename T>
   inline void forwardCancel(
@@ -97,7 +111,25 @@ namespace detail {
         ? boost::bind(&detail::forwardCancel<T>,
             boost::weak_ptr<detail::FutureBaseTyped<T> >(_p))
         : boost::function<void(qi::Promise<R>)>());
-    _p->connect(*this, boost::bind(&detail::Continuate<T, R>::_continuate, _1,
+    _p->connect(*this, boost::bind(&detail::continuateThen<T, R>, _1,
+          func, promise), type);
+    return promise.future();
+  }
+
+  template <typename T>
+  template <typename R>
+  inline Future<R> Future<T>::andThenR(
+      FutureCallbackType type,
+      const boost::function<R(const typename Future<T>::ValueType&)>& func)
+  {
+    qi::Promise<R> promise(
+        this->isCancelable()
+        ? boost::bind(&detail::forwardCancel<T>,
+            boost::weak_ptr<detail::FutureBaseTyped<T> >(_p))
+        // if the future is not cancelable, now it becomes cancelable because
+        // continuateAndThen will abort if cancel is requested
+        : boost::function<void(qi::Promise<T>&)>(&qi::PromiseNoop<R>));
+    _p->connect(*this, boost::bind(&detail::continuateAndThen<T, R>, _1,
           func, promise), type);
     return promise.future();
   }
@@ -222,6 +254,7 @@ namespace detail {
     template <typename T>
     class FutureBaseTyped : public FutureBase {
     public:
+      typedef boost::function<void(Promise<T>)> CancelCallback;
       typedef typename FutureType<T>::type ValueType;
       FutureBaseTyped()
         : _value()
@@ -229,14 +262,20 @@ namespace detail {
       {
       }
 
+      ~FutureBaseTyped()
+      {
+        if (_onDestroyed && hasValue(0))
+          _onDestroyed(_value);
+      }
+
       bool isCancelable() const
       {
-        return _onCancel;
+        return static_cast<bool>(_onCancel);
       }
 
       void cancel(qi::Future<T>& future)
       {
-        boost::function<void (Promise<T>)> onCancel;
+        CancelCallback onCancel;
         {
           boost::recursive_mutex::scoped_lock lock(mutex());
           if (isFinished())
@@ -250,7 +289,7 @@ namespace detail {
       }
 
       void setOnCancel(qi::Promise<T>& promise,
-          boost::function<void (Promise<T>)> onCancel)
+        CancelCallback onCancel)
       {
         bool doCancel = false;
         {
@@ -343,6 +382,10 @@ namespace detail {
         callCbNotify(future);
       }
 
+      void setOnDestroyed(boost::function<void (ValueType)> f)
+      {
+        _onDestroyed = f;
+      }
 
       void connect(qi::Future<T> future,
           const boost::function<void (qi::Future<T>)> &s,
@@ -389,7 +432,8 @@ namespace detail {
       typedef std::vector<boost::function<void (qi::Future<T>)> > Callbacks;
       Callbacks                _onResult;
       ValueType                _value;
-      boost::function<void (Promise<T>)> _onCancel;
+      CancelCallback           _onCancel;
+      boost::function<void (ValueType)> _onDestroyed;
       FutureCallbackType       _async;
       qi::Atomic<unsigned int> _promiseCount;
 
@@ -398,7 +442,7 @@ namespace detail {
         _onResult.clear();
         if (_onCancel)
         {
-          _onCancel = PromiseNoop<T>;
+          _onCancel = CancelCallback(PromiseNoop<T>);
         }
       }
     };
@@ -488,29 +532,6 @@ namespace detail {
     return prom.future();
   }
 
-  template <typename T>
-  void waitForAll(std::vector<Future<T> >& vect) {
-    typename std::vector< Future<T> >::iterator it;
-    qi::FutureBarrier<T> barrier;
-
-    for (it = vect.begin(); it != vect.end(); ++it) {
-      barrier.addFuture(*it);
-    }
-    barrier.future().wait();
-  }
-
-  template <typename T>
-  qi::FutureSync< qi::Future<T> > waitForFirst(std::vector< Future<T> >& vect) {
-    typename std::vector< Future<T> >::iterator it;
-    qi::Promise< qi::Future<T> > prom;
-    qi::Atomic<int>* count = new qi::Atomic<int>();
-    count->swap((int)vect.size());
-    for (it = vect.begin(); it != vect.end(); ++it) {
-      it->connect(boost::bind<void>(&detail::waitForFirstHelper<T>, prom, *it, count));
-    }
-    return prom.future();
-  }
-
   namespace detail
   {
     template<typename FT, typename PT, typename CONV>
@@ -577,7 +598,6 @@ namespace detail {
         FutureCallbackType_Sync);
   }
 
-
   template<typename FT, typename PT>
   void adaptFuture(const Future<FT>& f, Promise<PT>& p)
   {
@@ -597,5 +617,7 @@ namespace detail {
     const_cast<Future<FT>&>(f).connect(boost::bind(detail::futureAdapter<FT, PT, CONV>, _1, p, converter), FutureCallbackType_Sync);
   }
 }
+
+#include <qi/detail/futurebarrier.hpp>
 
 #endif  // _QI_DETAILS_FUTURE_HXX_

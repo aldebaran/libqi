@@ -73,9 +73,9 @@ void ObjectHost::removeObject(unsigned int id)
   /* Ensure we are not in the middle of iteration when
   *  removing our ref on BoundAnyObject.
   */
-  boost::recursive_mutex::scoped_lock lock(_mutex);
   BoundAnyObject obj;
   {
+    boost::recursive_mutex::scoped_lock lock(_mutex);
     ObjectMap::iterator it = _objectMap.find(id);
     if (it == _objectMap.end())
     {
@@ -85,8 +85,9 @@ void ObjectHost::removeObject(unsigned int id)
     obj = it->second;
     _objectMap.erase(it);
     qiLogDebug() << this << " count " << obj.use_count();
+    qi::async<void>(boost::bind(&qi::detail::hold<BoundAnyObject>, obj));
   }
-  qiLogDebug() << this << " Object removed";
+  qiLogDebug() << this << " Object " << id << " removed.";
 }
 
 void ObjectHost::clear()
