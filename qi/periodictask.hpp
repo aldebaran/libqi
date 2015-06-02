@@ -75,12 +75,13 @@ namespace qi
 
     /**
      * \brief Set the call interval.
-     * \param usPeriod Period in microsecond.
+     * \param period the PeriodicTask period
+     *
      * \verbatim
      *  This call will wait until next callback invocation to apply the change.
      *  Use:
      *  task.stop();
-     *  task.setUsPeriod()
+     *  task.setPeriod(qi::MilliSeconds(10))
      *  task.start()
      *  to apply the change immediately.
      * \endverbatim
