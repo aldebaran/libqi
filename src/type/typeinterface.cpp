@@ -103,7 +103,12 @@ namespace qi {
     else
     {
       if (stdInfo)
+#ifdef __APPLE__
+        // on osx, non-exported typeinfos do not compare equal between libraries
+        return strcmp(stdInfo->name(), b.stdInfo->name()) < 0;
+#else
         return (*stdInfo).before(*b.stdInfo) != 0;
+#endif
       else
         return customInfo < b.customInfo;
     }
