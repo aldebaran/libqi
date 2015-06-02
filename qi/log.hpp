@@ -311,7 +311,7 @@ namespace qi {
      * \param sub Log subscriber id.
      *
      * Levels set by this function is a default value, overriden by
-     * all setCategory() calls.
+     * all addFilter() and addFilters() calls.
      *
      * Change the log minimum level: [0-6] (default:4):
      *   - 0: silent
@@ -398,7 +398,7 @@ namespace qi {
      * \verbatim
      * .. code-block:: cpp
      *
-     *   setCategory("internal.*", silent);
+     *   addFilter("internal.*", silent);
      *
      * One can also set a filtering rule in QI_LOG_FILTERS environment variable.
      * syntax is colon-separated list of rules of the form (+|-)CAT or CAT=level.
