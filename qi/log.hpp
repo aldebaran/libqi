@@ -382,8 +382,9 @@ namespace qi {
      *    - CAT=level  : set category CAT to level
      *
      * Each category can include a '*' for globbing.
-     * Can be set with env var QI_LOG_FILTERS
-     * \example  'qi.*=debug:-qi.foo:+qi.foo.bar' (all qi.* logs in info, remove all qi.foo logs except qi.foo.bar)
+     * Can be set with env var QI_LOG_FILTERS. For instance
+     * 'qi.*=debug:-qi.foo:+qi.foo.bar' stands for
+     * "all qi.* logs in debug, remove all qi.foo logs except qi.foo.bar".
      * \param sub Log subscriber id.
      */
     QI_API void addFilters(const std::string& rules, SubscriberId sub = 0);
