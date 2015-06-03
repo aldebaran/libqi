@@ -79,6 +79,6 @@ int main(int argc, char **argv)
   TestMode::forceTestMode(TestMode::Mode_SD);
 
   test();
-  return 1;
+  return EXIT_SUCCESS;
 
 }
