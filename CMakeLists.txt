@@ -71,6 +71,7 @@ set(QI_H qi/detail/clock.hxx
          qi/detail/eventloop.hxx
          qi/detail/future.hxx
          qi/detail/future_fwd.hpp
+         qi/detail/futurebarrier.hpp
          qi/detail/executioncontext.hpp
          qi/detail/mpl.hpp
          qi/detail/log.hxx
