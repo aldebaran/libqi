@@ -19,6 +19,16 @@ qiLogCategory("qi.clock");
 
 namespace chrono = boost::chrono;
 
+namespace {
+
+  static bool useBoostSteadyClock() {
+    static bool _useSteady;
+    QI_ONCE(
+      _useSteady = !qi::os::getenv("QI_CLOCK_USE_BOOST_STEADY_CLOCK").empty();
+    );
+    return _useSteady;
+  }
+}
 namespace qi {
 
   /* Have the static variable we need inside the function so that we
@@ -39,8 +49,30 @@ namespace qi {
     return time_point(chrono::steady_clock::now().time_since_epoch() - base);
   }
 
+
+
+  namespace detail {
+    template <typename CharT>
+    std::basic_string<CharT> _clockStringSince()
+    {
+      if (::useBoostSteadyClock())
+        return chrono::clock_string<boost::chrono::steady_clock, CharT>::since();
+      return chrono::clock_string<boost::chrono::system_clock, CharT>::since();
+    }
+    template <> std::basic_string<char> clockStringSince<char>()
+    {
+      return _clockStringSince<char>();
+    }
+    template <> std::basic_string<wchar_t> clockStringSince<wchar_t>()
+    {
+      return _clockStringSince<wchar_t>();
+    }
+  }
+
   Clock::time_point Clock::now()
   {
+    if (::useBoostSteadyClock())
+      return time_point(chrono::steady_clock::now().time_since_epoch());
     return time_point(chrono::system_clock::now().time_since_epoch());
   }
 
