@@ -42,14 +42,6 @@ namespace qi {
     typedef typename TimePointFrom::clock ClockFrom;
     return boost::chrono::duration_cast<DurationTo>(ClockFrom::now() - t);
   }
-
-  namespace detail {
-    // undefined template declaration
-    template <typename CharT> std::basic_string<CharT> clockStringSince();
-    // defined template specializations
-    template <> QI_API std::basic_string<char> clockStringSince<char>();
-    template <> QI_API std::basic_string<wchar_t> clockStringSince<wchar_t>();
-  }
 }
 
 namespace boost
@@ -77,7 +69,7 @@ namespace boost
         return std::basic_string<CharT>(a, a + sizeof(a)/sizeof(a[0]));
       }
       static std::basic_string<CharT> since() {
-        return qi::detail::clockStringSince<CharT>();
+        return clock_string<boost::chrono::steady_clock, CharT>::since();
       }
     };
 
