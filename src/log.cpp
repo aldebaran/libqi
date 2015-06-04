@@ -52,14 +52,15 @@ qiLogCategory("qi.log");
 namespace qi {
   namespace detail {
 
-    std::string logline(LogContext         context,
-                        const              os::timeval date,
-                        const char        *category,
-                        const char        *msg,
-                        const char        *file,
-                        const char        *fct,
-                        const int          line,
-                        const qi::LogLevel verb)
+    std::string logline(LogContext                         context,
+                        const qi::Clock::time_point        date,
+                        const qi::SystemClock::time_point  systemDate,
+                        const char                        *category,
+                        const char                        *msg,
+                        const char                        *file,
+                        const char                        *fct,
+                        const int                          line,
+                        const qi::LogLevel                 verb)
     {
       std::stringstream logline;
 
@@ -69,6 +70,8 @@ namespace qi {
         logline << qi::log::logLevelToString(verb, false) << " ";
       if (context & qi::LogContextAttr_Date)
         logline << qi::detail::dateToString(date) << " ";
+      if (context & qi::LogContextAttr_SystemDate)
+        logline << qi::detail::dateToString(systemDate) << " ";
       if (context & qi::LogContextAttr_Tid)
         logline << qi::detail::tidToString() << " ";
       if (context & qi::LogContextAttr_Category)
@@ -89,6 +92,22 @@ namespace qi {
       return logline.str();
     }
 
+    std::string logline(LogContext             context,
+                        const qi::os::timeval  systemDate,
+                        const char            *category,
+                        const char            *msg,
+                        const char            *file,
+                        const char            *fct,
+                        const int              line,
+                        const qi::LogLevel     verb)
+    {
+      return logline(context & ~qi::LogContextAttr_Date, // hide date
+                     qi::ClockTimePoint(), // date, not printed
+                     qi::SystemClockTimePoint(qi::Seconds(systemDate.tv_sec) +
+                                              qi::MicroSeconds(systemDate.tv_usec)),
+                     category, msg, file, fct, line, verb);
+    }
+
     std::string csvheader()
     {
       std::ostringstream cvsheader;
@@ -96,6 +115,7 @@ namespace qi {
       cvsheader << "VERBOSITY,";
       cvsheader << "SVERBOSITY,";
       cvsheader << "DATE,";
+      cvsheader << "SYSTEM_DATE,";
       cvsheader << "THREAD_ID,";
       cvsheader << "CATEGORY,";
       cvsheader << "FILE,";
@@ -106,7 +126,8 @@ namespace qi {
       return cvsheader.str();
     }
 
-    std::string csvline(const              os::timeval date,
+    std::string csvline(const qi::Clock::time_point date,
+                        const qi::SystemClock::time_point systemDate,
                         const char        *category,
                         const char        *msg,
                         const char        *file,
@@ -119,6 +140,7 @@ namespace qi {
       csvline << qi::log::logLevelToString(verb) << ",";
       csvline << qi::log::logLevelToString(verb, false) << ",";
       csvline << qi::detail::dateToString(date) << ",";
+      csvline << qi::detail::dateToString(systemDate) << ",";
       csvline << qi::detail::tidToString() << ",";
 
       csvline << "\"";
@@ -187,13 +209,14 @@ namespace qi {
 
     typedef struct sPrivateLog
     {
-      qi::LogLevel    _logLevel;
-      char            _category[CAT_SIZE];
-      char            _file[FILE_SIZE];
-      char            _function[FUNC_SIZE];
-      int             _line;
-      char            _log[LOG_SIZE];
-      qi::os::timeval _date;
+      qi::LogLevel               _logLevel;
+      char                       _category[CAT_SIZE];
+      char                       _file[FILE_SIZE];
+      char                       _function[FUNC_SIZE];
+      int                        _line;
+      char                       _log[LOG_SIZE];
+      qi::Clock::time_point       _date;
+      qi::SystemClock::time_point _systemDate;
     } privateLog;
 
     class Log
@@ -204,22 +227,24 @@ namespace qi {
 
       struct Handler
       {
-        logFuncHandler func;
-        unsigned int   index; // index of this handler in category levels
+        qi::log::Handler func;
+        unsigned int index; // index of this handler in category levels
       };
 
       void run();
       void printLog();
       // Invoke handlers who enabled given level/category
       void dispatch(const qi::LogLevel,
-                    const qi::os::timeval,
+                    const qi::Clock::time_point date,
+                    const qi::SystemClock::time_point systemDate,
                     const char*,
                     const char*,
                     const char*,
                     const char*,
                     int);
       void dispatch(const qi::LogLevel level,
-                    const qi::os::timeval date,
+                    const qi::Clock::time_point date,
+                    const qi::SystemClock::time_point systemDate,
                     detail::Category& category,
                     const char* log,
                     const char* file,
@@ -450,6 +475,7 @@ namespace qi {
       {
         dispatch(pl->_logLevel,
                  pl->_date,
+                 pl->_systemDate,
                  pl->_category,
                  pl->_log,
                  pl->_file,
@@ -460,18 +486,20 @@ namespace qi {
     }
 
     void Log::dispatch(const qi::LogLevel level,
-                       const qi::os::timeval date,
+                       const qi::Clock::time_point date,
+                       const qi::SystemClock::time_point systemDate,
                        const char*  category,
                        const char* log,
                        const char* file,
                        const char* function,
                        int line)
     {
-      dispatch(level, date, *addCategory(category), log, file, function, line);
+      dispatch(level, date, systemDate, *addCategory(category), log, file, function, line);
     }
 
     void Log::dispatch(const qi::LogLevel level,
-                       const qi::os::timeval date,
+                       const qi::Clock::time_point date,
+                       const qi::SystemClock::time_point systemDate,
                        detail::Category& category,
                        const char* log,
                        const char* file,
@@ -487,7 +515,7 @@ namespace qi {
           Handler& h = it->second;
           unsigned int index = h.index;
           if (category.levels.size() <= index || category.levels[index] >= level)
-            h.func(level, date, category.name.c_str(), log, file, function, line);
+            h.func(level, date, systemDate, category.name.c_str(), log, file, function, line);
         }
       }
     }
@@ -558,11 +586,11 @@ namespace qi {
         return;
       _glConsoleLogHandler = new ConsoleLogHandler;
       LogInstance          = new Log;
-      addLogHandler("consoleloghandler",
-                    boost::bind(&ConsoleLogHandler::log,
-                                _glConsoleLogHandler,
-                                _1, _2, _3, _4, _5, _6, _7),
-                    verb);
+      addHandler("consoleloghandler",
+                 boost::bind(&ConsoleLogHandler::log,
+                             _glConsoleLogHandler,
+                             _1, _2, _3, _4, _5, _6, _7, _8),
+                 verb);
       _glInit = true;
     }
 
@@ -648,14 +676,14 @@ namespace qi {
       if (!LogInstance->LogInit)
         return;
 
-      qi::os::timeval tv;
-      qi::os::gettimeofday(&tv);
+      qi::Clock::time_point date = qi::Clock::now();
+      qi::SystemClock::time_point systemDate = qi::SystemClock::now();
       if (LogInstance->SyncLog)
       {
         if (category)
-          LogInstance->dispatch(verb, tv, *category, msg, file, fct, line);
+          LogInstance->dispatch(verb, date, systemDate, *category, msg, file, fct, line);
         else
-          LogInstance->dispatch(verb, tv, categoryStr, msg, file, fct, line);
+          LogInstance->dispatch(verb, date, systemDate, categoryStr, msg, file, fct, line);
       }
       else
       {
@@ -664,8 +692,8 @@ namespace qi {
 
         pl->_logLevel = verb;
         pl->_line = line;
-        pl->_date.tv_sec = tv.tv_sec;
-        pl->_date.tv_usec = tv.tv_usec;
+        pl->_date = date;
+        pl->_systemDate = systemDate;
 
         my_strcpy(pl->_category, categoryStr, CAT_SIZE);
         my_strcpy(pl->_file, file, FILE_SIZE);
@@ -689,8 +717,23 @@ namespace qi {
        return 0;
     }
 
-    SubscriberId addLogHandler(const std::string& name, logFuncHandler fct,
-                               qi::LogLevel defaultLevel)
+    void adaptLogFuncHandler(
+        logFuncHandler handler,
+        const qi::LogLevel verb,
+        const qi::Clock::time_point,
+        const qi::SystemClock::time_point systemDate,
+        const char *category,
+        const char *msg,
+        const char *file,
+        const char *fct,
+        const int line)
+    {
+      handler(verb, qi::os::timeval(systemDate.time_since_epoch()), category,
+              msg, file, fct, line);
+    }
+
+    SubscriberId addHandler(const std::string& name, Handler fct,
+                            qi::LogLevel defaultLevel)
     {
       if (!LogInstance)
         return -1;
@@ -705,12 +748,26 @@ namespace qi {
       return id;
     }
 
-    void removeLogHandler(const std::string& name)
+    SubscriberId addLogHandler(const std::string& name, logFuncHandler fct,
+                               qi::LogLevel defaultLevel)
+    {
+      return addHandler(name,
+          boost::bind(adaptLogFuncHandler,
+                      fct, _1, _2, _3, _4, _5, _6, _7, _8),
+                      defaultLevel);
+    }
+
+    void removeHandler(const std::string& name)
     {
       if (!LogInstance)
         return;
       boost::mutex::scoped_lock l(LogInstance->LogHandlerLock);
       LogInstance->logHandlers.erase(name);
+    }
+
+    void removeLogHandler(const std::string& name)
+    {
+      removeHandler(name);
     }
 
     qi::LogLevel stringToLogLevel(const char* verb)
@@ -952,12 +1009,13 @@ namespace qi {
         "Show context logs, it's a bit field (add the values below):\n"
         " 1  : Verbosity\n"
         " 2  : ShortVerbosity\n"
-        " 4  : Date\n"
+        " 4  : SystemDate\n"
         " 8  : ThreadId\n"
         " 16 : Category\n"
         " 32 : File\n"
         " 64 : Function\n"
         " 128: EndOfLine\n"
+        " 256: Date\n"
         "some useful values for context are:\n"
         " 26 : (verb+threadId+cat)\n"
         " 30 : (verb+threadId+date+cat)\n"

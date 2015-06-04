@@ -72,16 +72,18 @@ TEST(QiClock, clock_sleep_our)
   qi::sleepUntil(qi::SystemClock::now() - qi::Seconds(1));
 }
 
-
 template<class Clock>
 void clock_output_()
 {
-  std::string s;
-  chrono::milliseconds d_ms(500);
-  typename Clock::duration d = d_ms;
+  typename Clock::duration d(1);
   typename Clock::time_point t = Clock::now();
-  std::cout << boost::chrono::clock_string<Clock, char>::name() << "\n"
-             << d_ms << "\n" << d << "\n" << t << "\n" << t+d << "\n\n";
+  std::cout << "name: " << boost::chrono::clock_string<Clock, char>::name() << ",\t"
+            << "tick: " << d << ",\t"
+            << "now: " << t << "\n";
+  // same, using wide chars
+  std::wcout << "name: " << boost::chrono::clock_string<Clock, wchar_t>::name() << ",\t"
+             << "tick: " << d << ",\t"
+             << "now: " << t << "\n";
 }
 
 TEST(QiClock, clock_output)

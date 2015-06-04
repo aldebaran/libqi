@@ -84,7 +84,9 @@ namespace qi {
       void textColorAttr(char attr) const;
       void header(const qi::LogLevel verb, bool verbose = true) const;
       PrivateConsoleLogHandler::ConsoleColor colorForHeader(const qi::LogLevel verb) const;
-      void coloredLog(const qi::LogLevel verb, const qi::os::timeval date,
+      void coloredLog(const qi::LogLevel verb,
+                      const qi::Clock::time_point date,
+                      const qi::SystemClock::time_point systemDate,
                       const char *category,
                       const char *msg,
                       const char *file,
@@ -242,12 +244,13 @@ namespace qi {
     }
 
     void PrivateConsoleLogHandler::coloredLog(const qi::LogLevel verb,
-                    const qi::os::timeval date,
-                    const char *category,
-                    const char *msg,
-                    const char *file,
-                    const char *fct,
-                    const int   line)
+                    const qi::Clock::time_point        date,
+                    const qi::SystemClock::time_point  systemDate,
+                    const char                        *category,
+                    const char                        *msg,
+                    const char                        *file,
+                    const char                        *fct,
+                    const int                          line)
     {
       int context = qi::log::context();
 
@@ -262,8 +265,12 @@ namespace qi {
         header(verb, false);
       }
 
-      if (context & qi::LogContextAttr_Date)
+      if (context & qi::LogContextAttr_Date) {
         printf("%s ", qi::detail::dateToString(date).c_str());
+      }
+      if (context & qi::LogContextAttr_SystemDate) {
+        printf("%s ", qi::detail::dateToString(systemDate).c_str());
+      }
 
       if (context & qi::LogContextAttr_Tid) {
         int tidColor = intToColor(qi::os::gettid());
@@ -294,24 +301,25 @@ namespace qi {
       printf("%s\n", ss.c_str());
     }
 
-    void ConsoleLogHandler::log(const qi::LogLevel    verb,
-                                const qi::os::timeval date,
-                                const char            *category,
-                                const char            *msg,
-                                const char            *file,
-                                const char            *fct,
-                                const int             line)
+    void ConsoleLogHandler::log(const qi::LogLevel                 verb,
+                                const qi::Clock::time_point        date,
+                                const qi::SystemClock::time_point  systemDate,
+                                const char                        *category,
+                                const char                        *msg,
+                                const char                        *file,
+                                const char                        *fct,
+                                const int                          line)
     {
 #ifndef _WIN32
       _p->textColorAttr(_p->reset);
       _p->textColorFG(_p->white);
 #endif
       if (_p->_color) {
-        _p->coloredLog(verb, date, category, msg, file, fct, line);
+        _p->coloredLog(verb, date, systemDate, category, msg, file, fct, line);
         return;
       }
 
-      std::string logline = qi::detail::logline(qi::log::context(), date, category, msg, file, fct, line, verb);
+      std::string logline = qi::detail::logline(qi::log::context(), date, systemDate, category, msg, file, fct, line, verb);
       printf("%s", logline.c_str());
       fflush(stdout);
     }

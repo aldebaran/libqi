@@ -19,12 +19,13 @@ public:
   qi::Promise<void> start;
   qi::Promise<void> finished;
   void log(const qi::LogLevel,
-           const qi::os::timeval,
-                   const char*,
-                   const char*,
-                   const char*,
-                   const char*,
-                   int) {
+           const qi::Clock::time_point,
+           const qi::SystemClock::time_point,
+           const char*,
+           const char*,
+           const char*,
+           const char*,
+           int) {
     start.future().wait();
     if (++count == MAX)
       finished.setValue(0);
@@ -39,9 +40,9 @@ TEST(log, logasync)
   atexit(qi::log::destroy);
 
   BlockyHandler bh;
-  qi::log::addLogHandler("BlockyHandler",
+  qi::log::addHandler("BlockyHandler",
       boost::bind(&BlockyHandler::log, &bh,
-                  _1, _2, _3, _4, _5, _6, _7));
+                  _1, _2, _3, _4, _5, _6, _7, _8));
 
   for (int i = 0; i < MAX; i++)
     qiLogFatal() << i;
@@ -50,7 +51,7 @@ TEST(log, logasync)
 
   bh.finished.future().wait();
 
-  qi::log::removeLogHandler("BlockyHandler");
+  qi::log::removeHandler("BlockyHandler");
 }
 
 

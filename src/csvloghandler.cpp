@@ -64,7 +64,8 @@ namespace qi {
     }
 
     void CsvLogHandler::log(const qi::LogLevel verb,
-                            const qi::os::timeval   date,
+                            const qi::Clock::time_point        date,
+                            const qi::SystemClock::time_point  systemDate,
                             const char              *category,
                             const char              *msg,
                             const char              *file,
@@ -77,7 +78,7 @@ namespace qi {
       }
       else
       {
-        _p->_file << qi::detail::csvline(date, category, msg, file, fct, line, verb) << std::flush;
+        _p->_file << qi::detail::csvline(date, systemDate, category, msg, file, fct, line, verb) << std::flush;
       }
     }
   }

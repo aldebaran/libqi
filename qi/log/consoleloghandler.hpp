@@ -37,20 +37,22 @@ namespace qi {
       /**
        * \brief Prints a log message on the console.
        * \param verb verbosity of the log message.
-       * \param date date at which the log message was issued.
+       * \param date qi::Clock date at which the log message was issued.
+       * \param date qi::SystemClock date at which the log message was issued.
        * \param category will be used in future for filtering
        * \param msg actual message to log.
        * \param file filename from which this log message was issued.
        * \param fct function name from which this log message was issued.
        * \param line line number in the issuer file.
        */
-      void log(const qi::LogLevel    verb,
-               const qi::os::timeval date,
-               const char            *category,
-               const char            *msg,
-               const char            *file,
-               const char            *fct,
-               const int             line);
+       void log(const qi::LogLevel                 verb,
+                const qi::Clock::time_point        date,
+                const qi::SystemClock::time_point  systemDate,
+                const char                        *category,
+                const char                        *msg,
+                const char                        *file,
+                const char                        *fct,
+                const int                          line);
 
       /**
        * \brief Update color status (Never, Always, Auto)

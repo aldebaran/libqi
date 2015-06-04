@@ -7,6 +7,7 @@
 #include <qi/clock.hpp>
 #include <qi/log.hpp>
 #include <qi/os.hpp>
+#include <qi/atomic.hpp>
 #include <boost/thread.hpp>
 #include <boost/chrono/ceil.hpp>
 #ifndef BOOST_THREAD_USES_CHRONO
@@ -40,7 +41,7 @@ namespace qi {
 
   Clock::time_point Clock::now()
   {
-    return time_point(chrono::system_clock::now().time_since_epoch());
+    return time_point(chrono::steady_clock::now().time_since_epoch());
   }
 
   typedef chrono::duration<uint32_t, boost::milli > uint32ms;
