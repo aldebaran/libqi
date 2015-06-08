@@ -15,8 +15,7 @@ namespace qi {
 
 
   ServiceDirectoryClient::ServiceDirectoryClient(bool enforceAuth)
-    : Trackable<ServiceDirectoryClient>(this)
-    , _sdSocketDisconnectedSignalLink(0)
+    : _sdSocketDisconnectedSignalLink(0)
     , _remoteObject(new RemoteObject(qi::Message::Service_ServiceDirectory))
     , _addSignalLink(0)
     , _removeSignalLink(0)

@@ -285,7 +285,6 @@ TEST(TestStrand, AllFutureSignalPropertyPeriodicTaskAsyncCallTypeErased)
 
 struct MyActorTrackable : MyActor, qi::Trackable<MyActorTrackable>
 {
-  MyActorTrackable() : Trackable(this) {}
   ~MyActorTrackable() { destroy(); }
 };
 

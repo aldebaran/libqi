@@ -21,10 +21,6 @@ namespace qi
     , public qi::Trackable<ScopedFutureGroup>
   {
   public:
-    ScopedFutureGroup()
-      : Trackable<ScopedFutureGroup>(this)
-    {}
-
     /** Destructor, cancel all unfinished futures registered.
      */
     ~ScopedFutureGroup()

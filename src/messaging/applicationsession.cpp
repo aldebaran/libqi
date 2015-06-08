@@ -64,8 +64,7 @@ class ApplicationSessionPrivate : public Trackable<ApplicationSessionPrivate>
 {
 public:
   ApplicationSessionPrivate(const ApplicationSession::Config& config)
-    : Trackable<ApplicationSessionPrivate>(this)
-    , _session(new qi::Session)
+    : _session(new qi::Session)
     , _init(false)
   {
     if (!(config.option() & qi::ApplicationSession::Option_NoAutoExit))

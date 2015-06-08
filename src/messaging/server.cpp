@@ -19,8 +19,7 @@ namespace qi {
 
   //Server
   Server::Server(bool enforceAuth)
-    : qi::Trackable<Server>(this)
-    , _enforceAuth(enforceAuth)
+    : _enforceAuth(enforceAuth)
     , _dying(false)
     , _defaultCallType(qi::MetaCallType_Queued)
   {
