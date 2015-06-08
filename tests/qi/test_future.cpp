@@ -125,7 +125,6 @@ class SetValue2: public SetValue, public qi::Trackable<SetValue2>
 public:
   SetValue2(int& target)
   :SetValue(target)
-  , qi::Trackable<SetValue2>(this)
   {}
   ~SetValue2()
   {

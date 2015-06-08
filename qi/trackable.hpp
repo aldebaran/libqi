@@ -14,6 +14,7 @@
 # include <boost/thread/condition_variable.hpp>
 # include <boost/function.hpp>
 
+# include <qi/macro.hpp>
 # include <qi/log.hpp>
 
 namespace qi
@@ -43,8 +44,9 @@ namespace qi
   {
   public:
     /// Default constructor
-    Trackable(T* ptr);
-    /// Default destructor
+    Trackable();
+    /// @deprecated Not required anymore, use the default constructor instead.
+    QI_API_DEPRECATED Trackable(T* ptr);
     ~Trackable();
 
     /**
