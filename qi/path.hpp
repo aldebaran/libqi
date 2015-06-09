@@ -219,6 +219,8 @@ namespace qi
     /**
      * \brief Look for a binary.
      * \param name The full name of the binary, or just the name.
+     * \param searchInPath if true, also search for the binary in the $PATH
+     * directories.
      * \return The complete, native path to the file found,
      * an empty string otherwise.
      *

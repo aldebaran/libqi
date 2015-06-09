@@ -27,12 +27,7 @@ qi::AnyObject DefaultService::getDefaultService()
 bool DefaultService::generateUniqueServiceName(std::string &name)
 {
   std::stringstream ss;
-  qi::os::timeval   p;
-
-  if (qi::os::gettimeofday(&p) < 0)
-    return false;
-
-  ss << "__default" << p.tv_sec << p.tv_usec;
+  ss << "__default" << qi::SystemClock::now().time_since_epoch().count()/1000;
   name = ss.str();
   return true;
 }

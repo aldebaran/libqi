@@ -27,7 +27,7 @@ namespace qi
     //! Used for measuring cpu time
     boost::timer    cpuTime;
     //! Used for store the stare time
-    qi::os::timeval fStartTime;
+    qi::SteadyClock::time_point fStartTime;
 
     //! Total time taken for the benchmark
     double          wallClockElapsed;

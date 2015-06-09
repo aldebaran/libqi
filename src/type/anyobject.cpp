@@ -101,8 +101,7 @@ inline void call(qi::Promise<AnyReference>& out,
   if (trace)
   {
     tid = context.asGenericObject()->_nextTraceId();
-    qi::os::timeval tv;
-    qi::os::gettimeofday(&tv);
+    qi::os::timeval tv(qi::SystemClock::now().time_since_epoch());
     AnyValueVector args;
     args.resize(params.size()-1);
     for (unsigned i=0; i<params.size()-1; ++i)
@@ -177,8 +176,7 @@ inline void call(qi::Promise<AnyReference>& out,
 
   if (trace)
   {
-    qi::os::timeval tv;
-    qi::os::gettimeofday(&tv);
+    qi::os::timeval tv(qi::SystemClock::now().time_since_epoch());
     AnyValue val;
     if (success)
       val = AnyValue(retref, false, true);
@@ -281,8 +279,7 @@ qi::Future<AnyReference> metaCall(ExecutionContext* el,
     qi::Promise<AnyReference>* out = new qi::Promise<AnyReference>(&PromiseNoop<AnyReference>);
     GenericFunctionParameters pCopy = params.copy(noCloneFirst);
     qi::Future<AnyReference> result = out->future();
-    qi::os::timeval t;
-    qi::os::gettimeofday(&t);
+    qi::os::timeval t(qi::SystemClock::now().time_since_epoch());
     el->post(MFunctorCall(func, pCopy, out, noCloneFirst, context, methodId,
                           callerId ? callerId : qi::os::gettid(), t));
     return result;

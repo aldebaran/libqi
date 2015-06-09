@@ -45,9 +45,9 @@ void test(void)
   qi::Future<void> f = sd.listenStandalone("tcp://0.0.0.0:0");
   int timeToWait = 1;
 
-  while(true)
+  for(int j = 0; j < 10 ; j ++)
   {
-    for (int i = 0; i < 1000; i++)
+    for (int i = 0; i < 20; i++)
     {
       TestSessionPair p;
       std::cout << "time to wait is:" << timeToWait << std::endl;
@@ -79,6 +79,6 @@ int main(int argc, char **argv)
   TestMode::forceTestMode(TestMode::Mode_SD);
 
   test();
-  return 1;
+  return EXIT_SUCCESS;
 
 }

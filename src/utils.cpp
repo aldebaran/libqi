@@ -32,9 +32,8 @@ std::string randomstr(std::string::size_type sz) {
   std::string s;
   s.reserve(sz);
   //need to have different seeds to avoid DDOS attack
-  qi::os::timeval tv;
-  qi::os::gettimeofday(&tv);
-  unsigned int seed = static_cast<unsigned int>(tv.tv_sec + tv.tv_usec);
+  unsigned int seed = static_cast<unsigned int>(
+      qi::SystemClock::now().time_since_epoch().count()/1000);
   srand(seed);
   generate_n(std::back_inserter(s), sz, rand_alnum);
   return s;
@@ -44,9 +43,8 @@ std::wstring wrandomstr(std::wstring::size_type sz) {
   std::wstring s;
   s.reserve(sz);
   //need to have different seeds to avoid DDOS attack
-  qi::os::timeval tv;
-  qi::os::gettimeofday(&tv);
-  unsigned int seed = static_cast<unsigned int>(tv.tv_sec + tv.tv_usec);
+  unsigned int seed = static_cast<unsigned int>(
+      qi::SystemClock::now().time_since_epoch().count()/1000);
   srand(seed);
   generate_n(std::back_inserter(s), sz, rand_alnum);
   return s;

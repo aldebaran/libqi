@@ -29,17 +29,13 @@ namespace qi
     _p->fMsgSize = msgSize;
     _p->variable = variable;
     _p->cpuTime.restart();
-    qi::os::gettimeofday(&(_p->fStartTime));
+    _p->fStartTime = qi::SteadyClock::now();
   }
 
   void DataPerf::stop() {
-    qi::os::timeval tv;
-
-    qi::os::gettimeofday(&tv);
     _p->cpuElapsed = _p->cpuTime.elapsed();
-
-    _p->wallClockElapsed  = (double)(tv.tv_sec - _p->fStartTime.tv_sec);
-    _p->wallClockElapsed += (double)(tv.tv_usec - _p->fStartTime.tv_usec) / 1000 / 1000;
+    typedef boost::chrono::duration<double, boost::ratio<1,1> > second;
+    _p->wallClockElapsed = qi::durationSince<second>(_p->fStartTime).count();
   }
 
   std::string DataPerf::getBenchmarkName() const

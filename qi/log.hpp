@@ -311,7 +311,7 @@ namespace qi {
      * \param sub Log subscriber id.
      *
      * Levels set by this function is a default value, overriden by
-     * all setCategory() calls.
+     * all addFilter() and addFilters() calls.
      *
      * Change the log minimum level: [0-6] (default:4):
      *   - 0: silent
@@ -382,8 +382,9 @@ namespace qi {
      *    - CAT=level  : set category CAT to level
      *
      * Each category can include a '*' for globbing.
-     * Can be set with env var QI_LOG_FILTERS
-     * \example  'qi.*=debug:-qi.foo:+qi.foo.bar' (all qi.* logs in info, remove all qi.foo logs except qi.foo.bar)
+     * Can be set with env var QI_LOG_FILTERS. For instance
+     * 'qi.*=debug:-qi.foo:+qi.foo.bar' stands for
+     * "all qi.* logs in debug, remove all qi.foo logs except qi.foo.bar".
      * \param sub Log subscriber id.
      */
     QI_API void addFilters(const std::string& rules, SubscriberId sub = 0);
@@ -397,7 +398,7 @@ namespace qi {
      * \verbatim
      * .. code-block:: cpp
      *
-     *   setCategory("internal.*", silent);
+     *   addFilter("internal.*", silent);
      *
      * One can also set a filtering rule in QI_LOG_FILTERS environment variable.
      * syntax is colon-separated list of rules of the form (+|-)CAT or CAT=level.

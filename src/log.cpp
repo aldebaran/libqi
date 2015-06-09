@@ -885,7 +885,7 @@ namespace qi {
 
     void addFilter(const std::string& catName, qi::LogLevel level, SubscriberId sub)
     {
-      qiLogVerbose() << "setCategory(cat=" << catName << ", level=" << (int)level << ", sub=" << (int)sub << ")";
+      qiLogVerbose() << "addFilter(cat=" << catName << ", level=" << (int)level << ", sub=" << (int)sub << ")";
       if (catName.find('*') != catName.npos)
       {
         GlobRule rule(catName, sub, level);
