@@ -203,22 +203,21 @@ namespace qi
     ip::tcp::resolver::query q(_listenUrl.host(), boost::lexical_cast<std::string>(_listenUrl.port()),
                                boost::asio::ip::tcp::resolver::query::all_matching);
     ip::tcp::resolver::iterator it = r.resolve(q);
+
+    static bool disableIPV6 = qi::os::getenv("QIMESSAGING_ENABLE_IPV6").empty();
+    if (disableIPV6)
+    {
+      while (it != boost::asio::ip::tcp::resolver::iterator() &&
+             it->endpoint().address().is_v6())
+        ++it;
+    }
     if (it == ip::tcp::resolver::iterator())
     {
-      const char* s = "Listen error: no endpoint.";
+      const char* s = "Listen error: no valid endpoint.";
       qiLogError() << s;
       return qi::makeFutureError<void>(s);
     }
-    else
-    {
-      static bool disableIPV6 = qi::os::getenv("QIMESSAGING_ENABLE_IPV6").empty();
-      if (disableIPV6)
-      {
-        while (it != boost::asio::ip::tcp::resolver::iterator() &&
-               it->endpoint().address().is_v6())
-          ++it;
-      }
-    }
+
 
     ip::tcp::endpoint ep = *it;
 #else
