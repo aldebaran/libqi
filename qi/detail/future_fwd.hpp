@@ -310,6 +310,34 @@ namespace qi {
       return _p->isCancelable();
     }
 
+#ifdef DOXYGEN
+    /**
+     * @brief Execute a callback when the future is finished.
+     *
+     * The callback will receive this future as argument and all other arguments passed to this function.
+     *
+     * If the first argument bound to this function is a weak_ptr it will be locked. If it is a Trackable, the callback
+     * won't be called after the object's destruction. If it is an Actor, the call will be stranded.
+     *
+     * @tparam R the return type of your callback as it is hard to deduce without C++11.
+     *
+     * @return a future that will receive the value returned by the callback or an error if the callback threw.
+     */
+    template <typename R>
+    Future<R> thenR(
+        FutureCallbackType type,
+        const boost::function<R(const Future<T>&)>& func, ...);
+
+    /**
+     * @brief Same as thenR(), but with type defaulted to FutureCallbackType_Async.
+     */
+    template <typename R>
+    Future<R> thenR(
+        const boost::function<R(const Future<T>&)>& func, ...)
+    {
+      return this->thenR(FutureCallbackType_Async, func);
+    }
+#else
     template <typename R>
     Future<R> thenR(
         FutureCallbackType type,
@@ -320,18 +348,6 @@ namespace qi {
         const boost::function<R(const Future<T>&)>& func)
     {
       return this->thenR(FutureCallbackType_Async, func);
-    }
-
-    template <typename R>
-    Future<R> andThenR(
-        FutureCallbackType type,
-        const boost::function<R(const typename Future<T>::ValueType&)>& func);
-
-    template <typename R>
-    Future<R> andThenR(
-        const boost::function<R(const typename Future<T>::ValueType&)>& func)
-    {
-      return this->andThenR(FutureCallbackType_Async, func);
     }
 
 #define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)                    \
@@ -349,6 +365,23 @@ namespace qi {
   }
     QI_GEN(genCall)
 #undef genCall
+#endif
+
+    /**
+     * @brief Same as thenR(), but the callback is called only if this future finishes with a value.
+     *
+     * The callback will receive the value of this future, as opposed to this future itself.
+     *
+     * If this future finishes with an error or a cancel, the callback will not be called and the returned future will
+     * finish in the same state.
+     *
+     * @remark Variadic variants of this function have not been implemented yet, waiting for C++11.
+     */
+    // TODO do variadic ones when we are C++11 TT_TT
+    template <typename R>
+    Future<R> andThenR(
+        FutureCallbackType type,
+        const boost::function<R(const typename Future<T>::ValueType&)>& func);
 
     /**
      * \brief Get a functor that will cancel the future.
@@ -359,6 +392,16 @@ namespace qi {
      * \note This function should only be useful for bindings, you probably don't need it.
      */
     boost::function<void()> makeCanceler();
+
+    /**
+     * @brief Same as andThenR(), but with type defaulted to FutureCallbackType_Async.
+     */
+    template <typename R>
+    Future<R> andThenR(
+        const boost::function<R(const typename Future<T>::ValueType&)>& func)
+    {
+      return this->andThenR(FutureCallbackType_Async, func);
+    }
 
   public:
     typedef boost::function<void (Future<T>) > Connection;
