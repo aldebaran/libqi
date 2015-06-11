@@ -14,7 +14,8 @@ namespace qi
    *  Guarantees that the registered set of futures will be canceled
    *  whatever the reason of the destruction of the group.
    *  @remark All public member functions are thread-safe unless specified.
-   *  \includename{qi/futuregroup.hpp}
+   *
+   *  @includename{qi/futuregroup.hpp}
    */
   class ScopedFutureGroup
     : boost::noncopyable
