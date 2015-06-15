@@ -207,7 +207,7 @@ namespace detail {
  * everything from the interface on your class.
  */
 #define QI_REGISTER_IMPLEMENTATION(parent, name)                                                           \
-  static bool _qiregister##name()                                                                          \
+  static bool BOOST_PP_CAT(__qi_registration_func, __LINE__)()                                             \
   {                                                                                                        \
     qi::detail::ForceProxyInclusion<parent>().dummyCall();                                                 \
     qi::registerType(typeid(name), qi::typeOf<parent>());                                                  \
@@ -222,7 +222,7 @@ namespace detail {
     }                                                                                                      \
     return true;                                                                                           \
   }                                                                                                        \
-  static bool BOOST_PP_CAT(__qi_registration, __LINE__) = _qiregister##name();
+  static bool BOOST_PP_CAT(__qi_registration, __LINE__) = BOOST_PP_CAT(__qi_registration_func, __LINE__)();
 
 #define _QI_REGISTER_TEMPLATE_OBJECT(name, model, ...)                    \
   namespace qi                                                            \
