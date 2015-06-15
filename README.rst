@@ -80,7 +80,7 @@ Mailing list:
 https://groups.google.com/a/aldebaran-robotics.com/group/qibuild-dev/topics
 
 Documentation:
-https://community.aldebaran-robotics.com/doc/libqi/
+http://doc.aldebaran.com/libqi/
 
 Maintainers:
 
