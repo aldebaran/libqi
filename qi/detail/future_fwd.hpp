@@ -176,6 +176,12 @@ namespace qi {
       return _p.get();
     }
 
+    /// @returns true if this future is associated to a promise, false otherwise.
+    bool isValid() const
+    {
+      return _p->state() != FutureState_None;
+    }
+
     /** Construct a Future that already contains a value.
      */
     explicit Future<T>(const ValueType& v, FutureCallbackType async = FutureCallbackType_Async)
