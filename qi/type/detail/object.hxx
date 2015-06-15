@@ -27,18 +27,6 @@ namespace qi {
 
 class Empty {};
 
-/** create a T, wrap in a AnyObject
- *  All template parameters are given to the T constructor except the first one
- */
-#define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma) \
-template<typename T comma ATYPEDECL>                      \
-Object<T> constructObject(ADECL)                          \
-{                                                         \
-  return Object<T>(new T(AUSE));                          \
-}
-QI_GEN(genCall)
-#undef genCall
-
 namespace detail {
 
   typedef std::map<TypeInfo, boost::function<AnyReference(AnyObject)> >
@@ -195,7 +183,44 @@ namespace detail {
     }
   };
 
+  template <typename T>
+  struct InterfaceImplTraits
+  {
+    typedef boost::false_type Defined;
+  };
 }
+
+#define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)                                                   \
+  template <typename T comma ATYPEDECL>                                                                     \
+  typename boost::enable_if<typename detail::InterfaceImplTraits<T>::Defined, qi::Object<T> >::type  \
+      constructObject(ADECL)                                                                                \
+  {                                                                                                         \
+    return boost::make_shared<typename detail::InterfaceImplTraits<T>::SyncType>(AUSE);                     \
+  }                                                                                                         \
+  template <typename T comma ATYPEDECL>                                                                     \
+  typename boost::disable_if<typename detail::InterfaceImplTraits<T>::Defined, qi::Object<T> >::type \
+      constructObject(ADECL)                                                                                \
+  {                                                                                                         \
+    return Object<T>(new T(AUSE));                                                                          \
+  }
+QI_GEN(genCall)
+#undef genCall
+
+#define QI_REGISTER_IMPLEMENTATION_H(interface, impl)     \
+  namespace qi                                            \
+  {                                                       \
+    namespace detail                                      \
+    {                                                     \
+      template <>                                         \
+      struct InterfaceImplTraits<interface>               \
+      {                                                   \
+        typedef boost::true_type Defined;                 \
+        typedef impl ImplType;                            \
+        typedef interface##Local<ImplType> LocalType;     \
+        typedef interface##LocalSync<LocalType> SyncType; \
+      };                                                  \
+    }                                                     \
+  }
 
 /** Type erased object that has a known interface T.
  *
