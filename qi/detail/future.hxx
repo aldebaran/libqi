@@ -75,7 +75,7 @@ namespace detail {
     {
       try
       {
-        promise.setValue(Caller<T, R>::_callfunc(future.value(), func));
+        promise.setValue(Caller<typename Future<T>::ValueType, R>::_callfunc(future.value(), func));
       }
       catch (std::exception& e)
       {
@@ -128,7 +128,7 @@ namespace detail {
             boost::weak_ptr<detail::FutureBaseTyped<T> >(_p))
         // if the future is not cancelable, now it becomes cancelable because
         // continuateAndThen will abort if cancel is requested
-        : boost::function<void(qi::Promise<T>&)>(&qi::PromiseNoop<R>));
+        : boost::function<void(qi::Promise<R>&)>(&qi::PromiseNoop<R>));
     _p->connect(*this, boost::bind(&detail::continuateAndThen<T, R>, _1,
           func, promise), type);
     return promise.future();

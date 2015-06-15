@@ -906,6 +906,19 @@ TEST(TestFutureThen, AndThenR)
   EXPECT_EQ(fff.error(), "fail");
 }
 
+TEST(TestFutureThen, AndThenRVoid)
+{
+  bool called = false;
+  qi::Promise<void> p;
+  qi::Future<void> ff = p.future().andThenR<void>(boost::bind(&call, boost::ref(called)));
+  p.setValue(0);
+
+  ff.wait();
+
+  EXPECT_TRUE(called);
+  ASSERT_TRUE(ff.hasValue());
+}
+
 int block(int i, qi::Future<void> f)
 {
   f.wait();
