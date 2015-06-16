@@ -1416,17 +1416,21 @@ TEST(TestPeriodicTask, DeadLock)
   }
 }
 
-TEST(TestPeriodicTask, ParallelStart)
+TEST(TestPeriodicTask, StartIsNoop)
 {
-  qi::Atomic<int> a;
+  qi::Promise<void> prom;
   qi::PeriodicTask pt;
-  pt.setCallback(&inc, boost::ref(a));
-  pt.setUsPeriod(1000);
+  pt.setCallback(&block, 99, prom.future());
+  pt.setUsPeriod(100);
   std::vector<qi::Future<void> > futs;
+  // multiple start is no-op, this should not deadlock
   for (unsigned i=0; i<20; ++i)
     futs.push_back(qi::async(boost::function<void()>(boost::bind(&qi::PeriodicTask::start, &pt, true))));
   for (unsigned i=0; i<20; ++i)
     futs[i].wait();
+
+  prom.setValue(0);
+  pt.stop();
 }
 
 static void loopTrigger(qi::PeriodicTask& pt)
