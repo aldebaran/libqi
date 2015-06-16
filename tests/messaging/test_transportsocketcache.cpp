@@ -136,6 +136,56 @@ TEST_F(TestTransportSocketCache, LocalIpsUsedOnLocalConnections)
   ASSERT_FALSE(publicIp(tentativeSocketFuture.value()->remoteEndpoint()));
 }
 
+TEST(TestCall, IPV6Accepted)
+{
+  // todo: enable whenever qi::Url properly supports ipv6
+  return;
+  std::string initialEnvValue = qi::os::getenv("QIMESSAGING_ENABLE_IPV6");
+  qi::os::setenv("QIMESSAGING_ENABLE_IPV6", "1");
+
+  qi::Url ipv6Url("tcp://[::1]:0");
+  ASSERT_TRUE(ipv6Url.isValid());
+
+  qi::TransportServer server;
+  qi::Future<void> fut = server.listen(ipv6Url);
+
+  ASSERT_FALSE(fut.hasError());
+
+
+  qi::TransportSocketPtr socket = qi::makeTransportSocket("tcp");
+  fut = socket->connect(ipv6Url);
+
+  ASSERT_FALSE(fut.hasError());
+
+  qi::os::setenv("QIMESSAGING_ENABLE_IPV6", initialEnvValue.c_str());
+}
+
+TEST(TestCall, IPV6Rejected)
+{
+  // todo: enable whenever qi::Url properly supports ipv6
+  return;
+
+  std::string initialEnvValue = qi::os::getenv("QIMESSAGING_ENABLE_IPV6");
+  qi::os::setenv("QIMESSAGING_ENABLE_IPV6", "");
+
+  qi::Url ipv6Url("tcp://[::1]:4444");
+  ASSERT_TRUE(ipv6Url.isValid());
+
+  qi::TransportSocketPtr socket = qi::makeTransportSocket("tcp");
+  qi::Future<void> fut = socket->connect(ipv6Url);
+
+  ASSERT_TRUE(fut.hasError());
+
+  qi::TransportServer server;
+  fut = server.listen(ipv6Url);
+
+  ASSERT_TRUE(fut.hasError());
+
+  qi::os::setenv("QIMESSAGING_ENABLE_IPV6", initialEnvValue.c_str());
+}
+
+
+
 int main(int ac, char **av)
 {
   qi::Application app(ac, av);

@@ -378,49 +378,49 @@ namespace qi
                                       boost::asio::ip::tcp::resolver::iterator it,
                                       qi::Promise<void> connectPromise)
   {
-    try
+    boost::recursive_mutex::scoped_lock l(_closingMutex);
+    if (!_socket)
     {
-      boost::recursive_mutex::scoped_lock l(_closingMutex);
-      if (!_socket)
-      {
-        // Disconnection was requested, so error() was already called.
-        pSetError(connectPromise, "Disconnection requested");
-      }
-      else if (erc)
-      {
-        std::string message = "System error: " + erc.message();
-        qiLogWarning() << "resolve: " << message;
-        _status = qi::TransportSocket::Status_Disconnected;
-        error(message);
-        pSetError(connectPromise, message);
-      }
-      else
-      {
-        static bool disableIPV6 = qi::os::getenv("QIMESSAGING_ENABLE_IPV6").empty();
-        if (disableIPV6)
-        {
-          while (it != boost::asio::ip::tcp::resolver::iterator() &&
-                 it->endpoint().address().is_v6())
-            ++it;
-        }
-        // asynchronous connect
-        _socket->lowest_layer().async_connect(*it,
-                                              boost::bind(&TcpTransportSocket::onConnected,
-                                                          shared_from_this(),
-                                                          boost::asio::placeholders::error,
-                                                          _socket,
-                                                          connectPromise));
-        _r.reset();
-      }
+      // Disconnection was requested, so error() was already called.
+      pSetError(connectPromise, "Disconnection requested");
+      return;
     }
-    catch (const std::exception& e)
+    else if (erc)
     {
-      const char* s = e.what();
-      qiLogError() << s
-                   << " only IPv6 were resolved on " << url().str();
-      error(s);
-      pSetError(connectPromise, s);
+      std::string message = "System error: " + erc.message();
+      qiLogWarning() << "resolve: " << message;
+      _status = qi::TransportSocket::Status_Disconnected;
+      error(message);
+      pSetError(connectPromise, message);
+      return;
     }
+
+    static bool disableIPV6 = qi::os::getenv("QIMESSAGING_ENABLE_IPV6").empty();
+    if (disableIPV6)
+    {
+      while (it != boost::asio::ip::tcp::resolver::iterator() &&
+             it->endpoint().address().is_v6())
+        ++it;
+    }
+    if (it == boost::asio::ip::tcp::resolver::iterator())
+    {
+      std::stringstream s;
+      s << "Only IPv6 were resolved on " << url().str();
+      qiLogError() << s.str();
+      error(s.str());
+      pSetError(connectPromise, s.str());
+      return;
+    }
+
+
+    // asynchronous connect
+    _socket->lowest_layer().async_connect(*it,
+                                          boost::bind(&TcpTransportSocket::onConnected,
+                                                      shared_from_this(),
+                                                      boost::asio::placeholders::error,
+                                                      _socket,
+                                                      connectPromise));
+    _r.reset();
   }
 
   void TcpTransportSocket::handshake(const boost::system::error_code& erc,
