@@ -130,8 +130,6 @@ namespace qi
     if (os::gettid() == _p->_tid)
       return;
 
-    //Stopping is not handled by start, stop will handle it for us.
-    stop();
     boost::mutex::scoped_lock l(_p->_mutex);
     if (_p->_state != Task_Stopped)
     {
