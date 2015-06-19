@@ -197,9 +197,9 @@ namespace detail {
                          const AF& cb,
                          FutureCallbackType type)
   {
-    return thenR(FutureCallbackType_Sync, qi::trackWithFallback(
+    return thenR<R>(FutureCallbackType_Sync, qi::trackWithFallback(
           boost::function<void()>(),
-          transformStrandedCallback<typename qi::Future<T>::ValueType>(
+          transformStrandedCallback<qi::Future<T> >(
             detail::Unwrap<ARG0>::unwrap(arg0)->strand(), cb),
           arg0));
   }
@@ -212,7 +212,7 @@ namespace detail {
                          const AF& cb,
                          FutureCallbackType type)
   {
-    return thenR(type, cb);
+    return thenR<R>(type, cb);
   }
 
   template <typename T>
