@@ -258,7 +258,7 @@ TEST(TestStrand, AllFutureSignalPropertyPeriodicTaskAsyncCallTypeErased)
     for (int i = 0; i < 25; ++i)
       prom.future().connect(&MyActor::f, obj.get(), TOTAL, finished);
     for (int i = 0; i < 25; ++i)
-      prom.future().thenR<void>(&MyActor::f, obj.get(), TOTAL, finished);
+      prom.future().thenR<int>(&MyActor::f, obj.get(), TOTAL, finished);
     for (int i = 0; i < 50; ++i)
       signal.connect(&MyActor::f, obj.get(), TOTAL, finished);
     for (int i = 0; i < 50; ++i)

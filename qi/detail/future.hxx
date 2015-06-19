@@ -135,27 +135,29 @@ namespace detail {
   }
 
   template <typename T>
-  template <typename Arg>
-  inline void Future<T>::binder(
-      const boost::function<void(const boost::function<void()>&)>& poster,
-      const boost::function<void(const Arg&)>& callback, const Arg& fut)
+  template <typename Arg, typename R>
+  inline qi::Future<R> Future<T>::binder(
+      const boost::function<qi::Future<void>(const boost::function<void()>&)>& poster,
+      const boost::function<R(const Arg&)>& callback, const Arg& fut)
   {
-    return poster(boost::bind(callback, fut));
+    qi::Promise<R> prom;
+    poster(boost::bind(detail::continuateThen<T, R>, fut, callback, prom));
+    return prom.future();
   }
 
   template <typename T>
-  template <typename Arg>
-  inline boost::function<void(const Arg&)>
+  template <typename Arg, typename R>
+  inline boost::function<qi::Future<R>(const Arg&)>
       Future<T>::transformStrandedCallback(
           qi::Strand* strand,
-          const boost::function<void(const Arg&)>& cb)
+          const boost::function<R(const Arg&)>& cb)
   {
     return boost::bind(
-        &Future<T>::binder<Arg>,
-        boost::function<void(const boost::function<void()>&)>(
+        &Future<T>::binder<Arg, R>,
+        boost::function<qi::Future<void>(const boost::function<void()>&)>(
           boost::bind(
-            &qi::Strand::post,
-            strand, _1)),
+            static_cast<qi::Future<void>(Strand::*)(const boost::function<void()>&, qi::Duration delay)>(&qi::Strand::async),
+            strand, _1, qi::Duration(0))),
         cb, _1);
   }
 
@@ -197,11 +199,11 @@ namespace detail {
                          const AF& cb,
                          FutureCallbackType type)
   {
-    return thenR<R>(FutureCallbackType_Sync, qi::trackWithFallback(
+    return thenR<qi::Future<R> >(FutureCallbackType_Sync, qi::trackWithFallback(
           boost::function<void()>(),
-          transformStrandedCallback<qi::Future<T> >(
+          transformStrandedCallback<qi::Future<T>, R>(
             detail::Unwrap<ARG0>::unwrap(arg0)->strand(), cb),
-          arg0));
+          arg0)).unwrap();
   }
   template <typename T>
   template <typename R, typename ARG0, typename AF>

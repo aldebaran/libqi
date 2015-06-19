@@ -502,15 +502,15 @@ namespace qi {
       _p->setOnDestroyed(cb);
     }
 
-    template <typename Arg>
-    static void binder(
-        const boost::function<void(const boost::function<void()>&)>& poster,
-        const boost::function<void(const Arg&)>& callback, const Arg& fut);
+    template <typename Arg, typename R>
+    static qi::Future<R> binder(
+        const boost::function<qi::Future<void>(const boost::function<void()>&)>& poster,
+        const boost::function<R(const Arg&)>& callback, const Arg& fut);
 
-    template <typename Arg>
-    boost::function<void(const Arg&)> transformStrandedCallback(
+    template <typename Arg, typename R>
+    boost::function<qi::Future<R>(const Arg&)> transformStrandedCallback(
         qi::Strand* strand,
-        const boost::function<void(const Arg&)>& cb);
+        const boost::function<R(const Arg&)>& cb);
 
     template <typename ARG0>
     typename boost::enable_if<
