@@ -2,6 +2,7 @@
 **  Copyright (C) 2012 Aldebaran Robotics
 **  See COPYING for the license
 */
+#include <boost/algorithm/string.hpp>
 #include "transportsocketcache.hpp"
 
 qiLogCategory("qimessaging.socketcache");
@@ -72,30 +73,38 @@ namespace qi {
     }
   }
 
-  static bool localhost_first(const Url& url)
-  {
-    const std::string& host = url.host();
 
-    return host.compare(0,4,"127.") == 0 || host.compare(0, 9, "localhost") == 0;
-  }
-
-  static bool localhost_last(const Url& url)
+  UrlVector localhost_only(const UrlVector& input)
   {
-    return !localhost_first(url);
+    UrlVector result;
+
+    result.reserve(input.size());
+    for (UrlVector::const_iterator it = input.begin(), end = input.end(); it != end; ++it)
+    {
+      const std::string& host = it->host();
+
+      if (boost::algorithm::starts_with(host, "127.") || boost::algorithm::starts_with(host, "localhost"))
+        result.push_back(*it);
+    }
+    return result;
   }
 
   qi::Future<qi::TransportSocketPtr> TransportSocketCache::socket(const ServiceInfo& servInfo,
                                                                   const std::string protocol) {
-    qi::UrlVector sortedEndpoints = servInfo.endpoints();
+    qi::UrlVector sortedEndpoints;
     qi::UrlVector endpoints;
     qi::UrlVector::const_iterator urlIt;
 
     bool local = servInfo.machineId() == qi::os::getMachineId();
 
+    // If the connection is local, we're mainly interested in localhost endpoint
     if (local)
-      std::partition(sortedEndpoints.begin(), sortedEndpoints.end(), &localhost_first);
-    else
-      std::partition(sortedEndpoints.begin(), sortedEndpoints.end(), &localhost_last);
+      sortedEndpoints = localhost_only(servInfo.endpoints());
+
+    // If the connection isn't local OR if there's no localhost endpoint in a local
+    // connection, just try with everything available.
+    if (sortedEndpoints.size() == 0)
+      sortedEndpoints = servInfo.endpoints();
 
     qiLogDebug() << "local check " << servInfo.machineId() << " " <<  qi::os::getMachineId() << " " << local;
     // RFC 3330 - http://tools.ietf.org/html/rfc3330
