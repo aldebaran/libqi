@@ -73,8 +73,19 @@ namespace qi {
     }
   }
 
+  static bool is_localhost(const Url& url)
+  {
+    const std::string& host = url.host();
 
-  UrlVector localhost_only(const UrlVector& input)
+    return host.compare(0,4,"127.") == 0 || host.compare(0, 9, "localhost") == 0;
+  }
+
+  static bool is_not_localhost(const Url& url)
+  {
+    return !is_localhost(url);
+  }
+
+  static UrlVector localhost_only(const UrlVector& input)
   {
     UrlVector result;
 
@@ -83,7 +94,7 @@ namespace qi {
     {
       const std::string& host = it->host();
 
-      if (boost::algorithm::starts_with(host, "127.") || boost::algorithm::starts_with(host, "localhost"))
+      if (boost::algorithm::starts_with(host, "127.") || host == "localhost")
         result.push_back(*it);
     }
     return result;
@@ -91,7 +102,7 @@ namespace qi {
 
   qi::Future<qi::TransportSocketPtr> TransportSocketCache::socket(const ServiceInfo& servInfo,
                                                                   const std::string protocol) {
-    qi::UrlVector sortedEndpoints;
+    qi::UrlVector sortedEndpoints = servInfo.endpoints();
     qi::UrlVector endpoints;
     qi::UrlVector::const_iterator urlIt;
 
@@ -99,12 +110,15 @@ namespace qi {
 
     // If the connection is local, we're mainly interested in localhost endpoint
     if (local)
-      sortedEndpoints = localhost_only(servInfo.endpoints());
-
-    // If the connection isn't local OR if there's no localhost endpoint in a local
-    // connection, just try with everything available.
-    if (sortedEndpoints.size() == 0)
-      sortedEndpoints = servInfo.endpoints();
+    {
+      sortedEndpoints = localhost_only(sortedEndpoints);
+      // if there's no localhost endpoint in a local
+      // connection, just try with everything available.
+      if (sortedEndpoints.size() == 0)
+        sortedEndpoints = servInfo.endpoints();
+    }
+    else
+      std::partition(sortedEndpoints.begin(), sortedEndpoints.end(), &is_not_localhost);
 
     qiLogDebug() << "local check " << servInfo.machineId() << " " <<  qi::os::getMachineId() << " " << local;
     // RFC 3330 - http://tools.ietf.org/html/rfc3330
