@@ -215,6 +215,25 @@ namespace detail {
     return thenR(type, cb);
   }
 
+  template <typename T>
+  void Future<T>::_weakCancelCb(const boost::weak_ptr<detail::FutureBaseTyped<T> >& wfuture)
+  {
+    if (boost::shared_ptr<detail::FutureBaseTyped<T> > fbt = wfuture.lock())
+    {
+      Future<T> future(fbt);
+      assert(future.isCancelable());
+      future.cancel();
+    }
+  }
+
+  template <typename T>
+  boost::function<void()> Future<T>::makeCanceler()
+  {
+    if (!isCancelable())
+      throw std::runtime_error("future is not cancelable");
+    return boost::bind(&Future<T>::_weakCancelCb, boost::weak_ptr<detail::FutureBaseTyped<T> >(_p));
+  }
+
   namespace detail {
 
     class FutureBasePrivate;

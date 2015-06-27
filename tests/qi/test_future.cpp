@@ -1049,6 +1049,26 @@ TEST(TestFutureUnwrap, UnwrapCancel2)
   EXPECT_TRUE(canceled2);
 }
 
+TEST(TestFutureWeakCanceler, Cancel)
+{
+  qi::Promise<void> prom(qi::PromiseNoop<void>);
+  prom.future().makeCanceler()();
+  ASSERT_TRUE(prom.isCancelRequested());
+}
+
+TEST(TestFutureWeakCanceler, IsWeak)
+{
+  boost::weak_ptr<int> wptr;
+  boost::function<void()> canceler;
+  {
+    qi::Promise<boost::shared_ptr<int> > prom(qi::PromiseNoop<boost::shared_ptr<int> >);
+    canceler = prom.future().makeCanceler();
+    prom.setValue(boost::make_shared<int>(42));
+    wptr = prom.future().value();
+  }
+  ASSERT_FALSE(wptr.lock());
+}
+
 // ===== FutureBarrier =========================================================
 #define BARRIER_N 10
 

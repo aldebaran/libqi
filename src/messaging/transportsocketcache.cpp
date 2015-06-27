@@ -2,6 +2,7 @@
 **  Copyright (C) 2012 Aldebaran Robotics
 **  See COPYING for the license
 */
+#include <boost/algorithm/string.hpp>
 #include "transportsocketcache.hpp"
 
 qiLogCategory("qimessaging.socketcache");
@@ -72,16 +73,31 @@ namespace qi {
     }
   }
 
-  static bool localhost_first(const Url& url)
+  static bool is_localhost(const Url& url)
   {
     const std::string& host = url.host();
 
     return host.compare(0,4,"127.") == 0 || host.compare(0, 9, "localhost") == 0;
   }
 
-  static bool localhost_last(const Url& url)
+  static bool is_not_localhost(const Url& url)
   {
-    return !localhost_first(url);
+    return !is_localhost(url);
+  }
+
+  static UrlVector localhost_only(const UrlVector& input)
+  {
+    UrlVector result;
+
+    result.reserve(input.size());
+    for (UrlVector::const_iterator it = input.begin(), end = input.end(); it != end; ++it)
+    {
+      const std::string& host = it->host();
+
+      if (boost::algorithm::starts_with(host, "127.") || host == "localhost")
+        result.push_back(*it);
+    }
+    return result;
   }
 
   qi::Future<qi::TransportSocketPtr> TransportSocketCache::socket(const ServiceInfo& servInfo,
@@ -92,10 +108,17 @@ namespace qi {
 
     bool local = servInfo.machineId() == qi::os::getMachineId();
 
+    // If the connection is local, we're mainly interested in localhost endpoint
     if (local)
-      std::partition(sortedEndpoints.begin(), sortedEndpoints.end(), &localhost_first);
+    {
+      sortedEndpoints = localhost_only(sortedEndpoints);
+      // if there's no localhost endpoint in a local
+      // connection, just try with everything available.
+      if (sortedEndpoints.size() == 0)
+        sortedEndpoints = servInfo.endpoints();
+    }
     else
-      std::partition(sortedEndpoints.begin(), sortedEndpoints.end(), &localhost_last);
+      std::partition(sortedEndpoints.begin(), sortedEndpoints.end(), &is_not_localhost);
 
     qiLogDebug() << "local check " << servInfo.machineId() << " " <<  qi::os::getMachineId() << " " << local;
     // RFC 3330 - http://tools.ietf.org/html/rfc3330

@@ -350,7 +350,17 @@ namespace qi {
     QI_GEN(genCall)
 #undef genCall
 
-  public: //Signals
+    /**
+     * \brief Get a functor that will cancel the future.
+     *
+     * This functor will not keep the future alive, which is useful to avoid reference cycles. If the future does not
+     * exist anymore, this is a no-op.
+     *
+     * \note This function should only be useful for bindings, you probably don't need it.
+     */
+    boost::function<void()> makeCanceler();
+
+  public:
     typedef boost::function<void (Future<T>) > Connection;
 
     /** Connect a callback function that will be called once when the Future
@@ -490,6 +500,8 @@ namespace qi {
         _thenMaybeActor(const ARG0& arg0,
             const AF& cb,
             FutureCallbackType type);
+
+    static void _weakCancelCb(const boost::weak_ptr<detail::FutureBaseTyped<T> >& wfuture);
   };
 
   /** This class allow throwing on error and being synchronous
@@ -805,6 +817,13 @@ namespace qi {
   /// Similar to adaptFuture(f, p) but with a custom converter
   template<typename FT, typename PT, typename CONV>
   void adaptFuture(const Future<FT>& f, Promise<PT>& p, CONV converter);
+
+  /// \copydoc qi::Future<T>::makeCanceler
+  template <typename T>
+  inline boost::function<void()> makeCanceler(Future<T>& future)
+  {
+    return future.makeCanceler();
+  }
 }
 
 #ifdef _MSC_VER
