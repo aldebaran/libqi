@@ -160,9 +160,8 @@ inline T extractFuture(qi::Future<qi::AnyReference> metaFut)
   AnyReference val =  metaFut.value();
   AutoRefDestroy destroy(val);
 
-  boost::shared_ptr<GenericObject> ao = getGenericFuture(val);
   AnyValue hold;
-  if (ao)
+  if (boost::shared_ptr<GenericObject> ao = getGenericFuture(val))
   {
     hold = ao->call<qi::AnyValue>("value", (int)FutureTimeout_Infinite);
     val = hold.asReference();
@@ -197,7 +196,10 @@ template <>
 inline void extractFuture<void>(qi::Future<qi::AnyReference> metaFut)
 {
   AnyReference val = metaFut.value();
-  val.destroy();
+  AutoRefDestroy destroy(val);
+
+  if (boost::shared_ptr<GenericObject> ao = getGenericFuture(val))
+    ao->call<qi::AnyValue>("value", (int)FutureTimeout_Infinite);
 }
 
 template <typename T>
