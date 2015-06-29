@@ -202,6 +202,8 @@ void StrandPrivate::process()
     qiLogDebug() << "Finished job id " << cbStruct->id;
   } while (qi::SteadyClock::now() - start < qi::MicroSeconds(QI_STRAND_QUANTUM_US));
 
+  _processingThread = 0;
+
   // if we still have work
   if (!finished)
   {
@@ -211,8 +213,6 @@ void StrandPrivate::process()
     _eventLoop.async(boost::bind(&StrandPrivate::process, shared_from_this()),
         qi::Duration(0));
   }
-
-  _processingThread = 0;
 }
 
 void StrandPrivate::cancel(boost::shared_ptr<Callback> cbStruct)
