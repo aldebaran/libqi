@@ -271,6 +271,7 @@ namespace qi
       {
         messageReady(*_msg);
         socketEvent(SocketEventData(*_msg));
+        _dispatcher.dispatch(*_msg);
       }
     }
     else
