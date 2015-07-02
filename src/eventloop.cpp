@@ -27,6 +27,88 @@ qiLogCategory("qi.eventloop");
 
 namespace qi {
 
+  class WorkerThread // TODO C++11: replace this whole class by: using WorkerThread = boost::thread;
+  {
+  public:
+    WorkerThread()
+    {}
+
+    template<class Func>
+    WorkerThread(Func func)
+      : _thread(boost::make_shared<boost::thread>(func))
+    {}
+
+    template<class Func, class OwnerType>
+    WorkerThread(Func func, OwnerType* owner)
+      : _thread(boost::make_shared<boost::thread>(func, owner))
+    {}
+
+    WorkerThread(const WorkerThread& other)
+      : _thread(other._thread)
+    {}
+
+    WorkerThread& operator=(const WorkerThread& other)
+    {
+      _thread = other._thread;
+      return *this;
+    }
+
+    void join() { _thread->join(); }
+    void detach() { _thread->detach(); }
+    bool joinable() const { return _thread && _thread->joinable(); }
+    operator bool() { return joinable(); }
+
+  private:
+    boost::shared_ptr<boost::thread> _thread;
+  };
+
+  class EventLoopAsio::WorkerThreadPool
+  {
+  public:
+    ~WorkerThreadPool() { joinAll(); }
+
+    template<class Func>
+    void launch(Func func)
+    {
+      boost::mutex::scoped_lock locked(_mutex);
+      _workers.push_back(WorkerThread(func));
+    }
+
+    template<class Func, class OwnerType>
+    void launch(Func func, OwnerType* owner)
+    {
+      boost::mutex::scoped_lock locked(_mutex);
+      _workers.push_back(WorkerThread(func, owner));
+    }
+
+    void joinAll()
+    {
+      while (WorkerThread workerThread = pop())
+      {
+        workerThread.join();
+      }
+    }
+
+  private:
+    std::vector<WorkerThread> _workers;
+    boost::mutex _mutex;
+
+    WorkerThread pop()
+    {
+      boost::mutex::scoped_lock locked(_mutex);
+      if (_workers.empty())
+      {
+        return WorkerThread();
+      }
+      else
+      {
+        WorkerThread workerThread = _workers.back();
+        _workers.pop_back();
+        return workerThread;
+      }
+    }
+  };
+
   typedef boost::asio::basic_waitable_timer<SteadyClock> SteadyTimer;
 
   static qi::Atomic<uint32_t> gTaskId = 0;
@@ -35,6 +117,7 @@ namespace qi {
   : _mode(Mode_Unset)
   , _work(NULL)
   , _maxThreads(0)
+  , _workerThreads(new WorkerThreadPool())
   {
     _name = "asioeventloop";
   }
@@ -57,8 +140,8 @@ namespace qi {
     _mode = Mode_Pooled;
     _work = new boost::asio::io_service::work(_io);
     for (int i=0; i<nthread; ++i)
-      boost::thread(&EventLoopAsio::_runPool, this);
-    boost::thread(&EventLoopAsio::_pingThread, this);
+      _workerThreads->launch(&EventLoopAsio::_runPool, this);
+    _workerThreads->launch(&EventLoopAsio::_pingThread, this);
     while (!*_running)
       qi::os::msleep(0);
   }
@@ -74,7 +157,7 @@ namespace qi {
   void EventLoopAsio::destroy()
   {
     if (isInThisContext())
-      boost::thread(&EventLoopAsio::destroy, this);
+      _workerThreads->launch(&EventLoopAsio::destroy, this);
     else
     {
       delete this;
@@ -134,7 +217,7 @@ namespace qi {
         else
         {
           qiLogInfo() << _name << ": Spawning more threads (" << *_nThreads << ')';
-          boost::thread(&EventLoopAsio::_runPool, this);
+          _workerThreads->launch(&EventLoopAsio::_runPool, this);
         }
         qi::os::msleep(msGrace);
       }
@@ -214,8 +297,8 @@ namespace qi {
     else
     {
       qiLogDebug() << "Waiting for threads to terminate...";
-      while (*_running)
-        qi::os::msleep(0);
+      _workerThreads->joinAll();
+      assert(*_running == 0);
       qiLogDebug()  << "Waiting done";
     }
   }

@@ -97,6 +97,9 @@ namespace qi {
     boost::thread::id  _id;
     unsigned int _maxThreads;
 
+    class WorkerThreadPool;
+    boost::scoped_ptr<WorkerThreadPool> _workerThreads;
+
     qi::Atomic<uint32_t> _totalTask;
     qi::Atomic<uint32_t> _activeTask;
   };
