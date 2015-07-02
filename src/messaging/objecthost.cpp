@@ -26,6 +26,12 @@ ObjectHost::ObjectHost(unsigned int service)
    map.clear();
  }
 
+static void async_destroy_attempt(BoundAnyObject obj, Future<void> fut)
+{
+  fut.wait();
+  obj.reset();
+}
+
 void ObjectHost::onMessage(const qi::Message &msg, TransportSocketPtr socket)
 {
   BoundAnyObject obj;
@@ -42,6 +48,11 @@ void ObjectHost::onMessage(const qi::Message &msg, TransportSocketPtr socket)
     obj = it->second;
   }
   obj->onMessage(msg, socket);
+
+  qi::Promise<void> destructPromise;
+  qi::async<void>(boost::bind(&async_destroy_attempt, obj, destructPromise.future()));
+  obj.reset();
+  destructPromise.setValue(0);
 }
 
 unsigned int ObjectHost::addObject(BoundAnyObject obj, StreamContext* remoteRef, unsigned int id)
