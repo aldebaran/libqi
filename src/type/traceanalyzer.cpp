@@ -287,7 +287,7 @@ namespace qi
     // look for the list that should contain us
     CallList& container = d->parent?d->parent->children:lc;
     CallList::iterator it = std::find_if(container.begin(), container.end(), CompUid(trace.id()));
-    if (it == lc.end())
+    if (it == container.end())
     {
       qiLogInfo() << "Message not where it should be";
       return;
