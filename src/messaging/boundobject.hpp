@@ -70,7 +70,7 @@ namespace qi {
     qi::MetaObject metaObject(unsigned int serviceId);
     void           terminate(unsigned int serviceId); //bound only in special cases
     qi::AnyValue   property(const AnyValue& name);
-    void           setProperty(const AnyValue& name, AnyValue value);
+    Future<void>   setProperty(const AnyValue& name, AnyValue value);
     std::vector<std::string> properties();
   public:
     /*

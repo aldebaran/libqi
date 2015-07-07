@@ -781,12 +781,13 @@ public:
     return !(**checker);
   }
   int v;
+  qi::Property<int> prop;
   static qi::Atomic<int> destructionCount;
 };
 
 qi::Atomic<int> TestClass::destructionCount;
 
-QI_REGISTER_MT_OBJECT(TestClass, ping, unregisterService);
+QI_REGISTER_MT_OBJECT(TestClass, ping, unregisterService, prop);
 
 TEST(TestCall, TestConcreteObjectPassingReturn)
 {
@@ -1091,9 +1092,11 @@ public:
   AnyObject pingat(Object<TestClassProxy> o) { return o;}
   Object<TestClassProxy> pingta(AnyObject o) {return o;}
   Object<TestClassProxy> pingtt(Object<TestClassProxy> o) { return o;}
+
+  qi::Property<int> val;
 };
 
-QI_REGISTER_OBJECT(PassObject, pingaa, pingat, pingta, pingtt);
+QI_REGISTER_OBJECT(PassObject, pingaa, pingat, pingta, pingtt, val);
 
 TEST(TestObjectT, Passing)
 {
@@ -1112,6 +1115,7 @@ TEST(TestObjectT, Passing)
   tcprox = pinger.call<Object<TestClassProxy> >("pingtt", tc);
   EXPECT_EQ(42, tcprox->ping(42));
 }
+
 TEST(TestObjectT, Doom)
 {
   TestSessionPair p;
@@ -1122,8 +1126,11 @@ TEST(TestObjectT, Doom)
   Object<TestClassProxy> tp = tc;
   // MUHAHAHAHAHA
   for (unsigned i=0; i<10; ++i)
+  {
     tp = pinger.call<Object<TestClassProxy> >("pingaa", tp);
-  EXPECT_EQ(42, tp->ping(42));
+    ASSERT_NO_THROW(tp.setProperty("prop", 42));
+  }
+  ASSERT_EQ(42, tp->ping(42));
 }
 
 TEST(TestObjectT, weak)

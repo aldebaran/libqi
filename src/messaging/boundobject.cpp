@@ -502,7 +502,7 @@ namespace qi {
       throw std::runtime_error("Expected int or string for property index");
   }
 
-  void ServiceBoundObject::setProperty(const AnyValue& prop, AnyValue val)
+  Future<void> ServiceBoundObject::setProperty(const AnyValue& prop, AnyValue val)
   {
     qi::Future<void> result;
     if (prop.kind() == TypeKind_String)
@@ -514,10 +514,8 @@ namespace qi {
     }
     else
       throw std::runtime_error("Expected int or string for property index");
-    if (!result.isFinished())
-      qiLogWarning() << "Assertion failed, setProperty() call not finished";
-    // Throw the future error
-    result.value();
+
+    return result;
   }
 
   std::vector<std::string> ServiceBoundObject::properties()
