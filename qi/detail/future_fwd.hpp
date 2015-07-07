@@ -103,6 +103,7 @@ namespace qi {
       ExceptionState_FutureHasNoError,    ///< asked for error, but there is no error
       ExceptionState_FutureUserError,     ///< real future error
       ExceptionState_PromiseAlreadySet,   ///< when the promise is already set.
+      ExceptionState_FutureInvalid,       ///< the future is not associated to a promise
     };
 
     explicit FutureException(const ExceptionState &es, const std::string &str = std::string())

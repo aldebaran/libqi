@@ -401,6 +401,23 @@ TEST_F(TestFuture, Validity) {
   EXPECT_FALSE(a.isValid());
 }
 
+static void donothingcb()
+{}
+
+TEST_F(TestFuture, Invalid) {
+  qi::Future<void> a;
+  EXPECT_EQ(a.wait(), qi::FutureState_None);
+  EXPECT_THROW(a.connect(boost::bind(donothingcb)), qi::FutureException);
+  EXPECT_THROW(a.value(), qi::FutureException);
+  EXPECT_THROW(a.error(), qi::FutureException);
+  EXPECT_FALSE(a.isValid());
+  EXPECT_FALSE(a.hasValue());
+  EXPECT_FALSE(a.hasError());
+  EXPECT_FALSE(a.isCanceled());
+  EXPECT_FALSE(a.isFinished());
+  EXPECT_FALSE(a.isRunning());
+}
+
 TEST_F(TestFuture, SimpleType) {
   TestFutureI tf(gGlobalI, gGlobalE);
 
