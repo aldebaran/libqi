@@ -256,7 +256,6 @@ namespace detail {
       bool hasValue(int msecs) const;
       const std::string &error(int msecs) const;
       void reportStart();
-      void reset();
 
     protected:
       void reportValue();
@@ -412,6 +411,9 @@ namespace detail {
           const boost::function<void (qi::Future<T>)> &s,
           FutureCallbackType type)
       {
+        if (state() == FutureState_None)
+          throw FutureException(FutureException::ExceptionState_FutureInvalid);
+
         bool ready;
         {
           boost::recursive_mutex::scoped_lock lock(mutex());
@@ -439,6 +441,8 @@ namespace detail {
 
       const ValueType &value(int msecs) const {
         FutureState state = wait(msecs);
+        if (state == FutureState_None)
+          throw FutureException(FutureException::ExceptionState_FutureInvalid);
         if (state == FutureState_Running)
           throw FutureException(FutureException::ExceptionState_FutureTimeout);
         if (state == FutureState_Canceled)
