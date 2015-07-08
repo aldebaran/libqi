@@ -241,6 +241,9 @@ void StrandPrivate::cancel(boost::shared_ptr<Callback> cbStruct)
           }
         // state was scheduled, so the callback must be there
         assert(erased);
+        // Silence compile warning unused erased
+        (void)erased;
+
       }
       --_aliveCount;
       cbStruct->promise.setCanceled();

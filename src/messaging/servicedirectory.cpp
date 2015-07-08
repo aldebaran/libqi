@@ -65,6 +65,8 @@ namespace qi
       assert(id == qi::Message::ServiceDirectoryAction_MachineId);
       ob->advertiseMethod("_socketOfService", &ServiceDirectory::_socketOfService);
       // used locally only, we do not export its id
+      // Silence compile warning unused id
+      (void)id;
     }
     return ob->object(self);
   }
