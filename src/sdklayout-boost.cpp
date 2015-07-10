@@ -209,17 +209,6 @@ namespace qi {
     _p->checkInit();
   }
 
-  SDKLayout::SDKLayout(const SDKLayout &rhs)
-    : _p(new PrivateSDKLayout)
-  {
-    *_p = *rhs._p;
-  }
-
-  SDKLayout & SDKLayout::operator=(const SDKLayout &rhs) {
-    *_p = *rhs._p;
-    return *this;
-  }
-
   // FIXME: Add exception if prefix == ""
   SDKLayout::SDKLayout(const std::string &prefix, const std::string &mode)
     : _p(new PrivateSDKLayout)
