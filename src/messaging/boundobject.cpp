@@ -586,7 +586,7 @@ namespace qi {
     qi::Message ret(Message::Type_Reply, replyaddr);
     _removeCachedFuture(kit, socket, replyaddr.messageId);
     try {
-      TypeKind kind;
+      TypeKind kind = TypeKind_Unknown;
       boost::shared_ptr<GenericObject> ao = qi::detail::getGenericFuture(val, &kind);
       if (ao->call<bool>("hasError", 0))
       {
