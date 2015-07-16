@@ -85,7 +85,22 @@ namespace qi {
      * Tries to call the factory with (this, args...) if possible, otherwise it
      * calls it with (args...) only.
      */
-    void loadService(const std::string& moduleName, const std::string &renameModule = "", const AnyReferenceVector& args = AnyReferenceVector());
+    void loadService(const std::string& moduleName, const std::string &renameModule = "",
+        const AnyReferenceVector& args = AnyReferenceVector());
+
+    /** Load a module and call the specified function asynchronously
+     *
+     * Tries to call the function with (this, args...) if possible, otherwise it
+     * calls it with (args...) only.
+     */
+    template <typename T>
+    qi::Future<T> callModule(const std::string& moduleName, const AnyReferenceVector& args = AnyReferenceVector())
+    {
+      qi::Promise<T> promise(qi::PromiseNoop<T>);
+      qi::Future<qi::AnyValue> future = _callModule(moduleName, args, qi::MetaCallType_Queued);
+      qi::detail::futureAdapterVal(future, promise);
+      return promise.future();
+    }
 
 #define pushi(z, n, _) params.push_back(p ## n);
 #define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)             \
@@ -99,6 +114,18 @@ namespace qi {
     params.push_back(pp0);                                            \
     BOOST_PP_REPEAT(n, pushi, _)                                      \
     loadService(moduleName, renameModule, params);                    \
+  }                                                                   \
+  template <typename T>                                               \
+  qi::Future<T> callModule(                                           \
+      const std::string& moduleName,                                  \
+      qi::AutoAnyReference pp0 comma                                  \
+      QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoAnyReference))               \
+  {                                                                   \
+    std::vector<qi::AnyReference> params;                             \
+    params.reserve(n+1);                                              \
+    params.push_back(pp0);                                            \
+    BOOST_PP_REPEAT(n, pushi, _)                                      \
+    return callModule<T>(moduleName, params);                         \
   }
 QI_GEN(genCall)
 #undef genCall
@@ -120,6 +147,11 @@ QI_GEN(genCall)
   protected:
     friend class SessionPrivate;
     boost::shared_ptr<SessionPrivate>    _p;
+
+  private:
+    qi::Future<AnyValue> _callModule(const std::string& moduleName,
+        const AnyReferenceVector& args,
+        qi::MetaCallType metacallType);
   };
 
   typedef boost::shared_ptr<Session> SessionPtr;

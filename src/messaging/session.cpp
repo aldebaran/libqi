@@ -295,12 +295,24 @@ namespace qi {
   void Session::loadService(const std::string &moduleName, const std::string& renameModule, const AnyReferenceVector& args)
   {
     size_t separatorPos = moduleName.find_last_of(".");
-    std::string package = moduleName.substr(0, separatorPos);
-    std::string factory = moduleName.substr(separatorPos + 1);
+    std::string function = moduleName.substr(separatorPos + 1);
 
     std::string rename = renameModule;
     if (rename.empty())
-      rename = factory;
+      rename = function;
+
+    qi::AnyValue retval = _callModule(moduleName, args, qi::MetaCallType_Direct).value();
+    registerService(rename, retval.to<qi::AnyObject>());
+  }
+
+  qi::Future<AnyValue> Session::_callModule(const std::string &moduleName,
+      const AnyReferenceVector& args,
+      qi::MetaCallType metacallType)
+  {
+    size_t separatorPos = moduleName.find_last_of(".");
+    std::string package = moduleName.substr(0, separatorPos);
+    std::string function = moduleName.substr(separatorPos + 1);
+
     qi::AnyModule p = qi::import(package);
 
     AnyReferenceVector fullargs;
@@ -308,14 +320,16 @@ namespace qi {
     fullargs.push_back(AnyReference::from(thisptr));
     fullargs.insert(fullargs.end(), args.begin(), args.end());
 
-    int id = p.metaObject().findMethod(factory, fullargs);
+    int id = p.metaObject().findMethod(function, fullargs);
     qi::Future<AnyReference> ret;
     if (id > 0)
-      ret = p.metaCall(factory, fullargs);
+      ret = p.metaCall(function, fullargs, metacallType);
     else
-      ret = p.metaCall(factory, args);
-    qi::AnyValue retval(ret.value(), false, true);
-    registerService(rename, retval.to<qi::AnyObject>());
+      ret = p.metaCall(function, args, metacallType);
+
+    qi::Promise<AnyValue> promise(qi::PromiseNoop<AnyValue>);
+    qi::detail::futureAdapter(ret, promise);
+    return promise.future();
   }
 
   void SessionPrivate::onTrackedServiceAdded(const std::string& actual,
