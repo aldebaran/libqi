@@ -70,6 +70,7 @@ namespace qi {
   static FunctionList* globalAtStop = 0;
 
 
+  static boost::mutex globalMutex;
   static boost::condition_variable globalCond;
 
   static boost::asio::io_service*             globalIoService = 0;
@@ -368,9 +369,7 @@ namespace qi {
     //will make this loop exit.
     initSigIntSigTermCatcher();
 
-    // We just need a barrier, so no need to share the mutex
-    boost::mutex m;
-    boost::unique_lock<boost::mutex> l(m);
+    boost::unique_lock<boost::mutex> l(globalMutex);
     globalCond.wait(l, &isStop);
   }
 
@@ -393,6 +392,7 @@ namespace qi {
           qiLogError() << "Application atStop callback throw the following error: " << e.what();
         }
       }
+      boost::unique_lock<boost::mutex> l(globalMutex);
       globalIsStop = true;
       globalCond.notify_all();
     }
