@@ -82,7 +82,8 @@ namespace qi {
 
   enum FutureCallbackType {
     FutureCallbackType_Sync  = 0,
-    FutureCallbackType_Async = 1
+    FutureCallbackType_Async = 1,
+    FutureCallbackType_Auto  = 2
   };
 
   enum FutureTimeout {
@@ -185,7 +186,7 @@ namespace qi {
 
     /** Construct a Future that already contains a value.
      */
-    explicit Future<T>(const ValueType& v, FutureCallbackType async = FutureCallbackType_Async)
+    explicit Future<T>(const ValueType& v, FutureCallbackType async = FutureCallbackType_Auto)
     {
       Promise<T> promise(async);
       promise.setValue(v);
@@ -336,13 +337,13 @@ namespace qi {
         const boost::function<R(const Future<T>&)>& func, ...);
 
     /**
-     * @brief Same as thenR(), but with type defaulted to FutureCallbackType_Async.
+     * @brief Same as thenR(), but with type defaulted to FutureCallbackType_Auto.
      */
     template <typename R>
     Future<R> thenR(
         const boost::function<R(const Future<T>&)>& func, ...)
     {
-      return this->thenR(FutureCallbackType_Async, func);
+      return this->thenR(FutureCallbackType_Auto, func);
     }
 #else
     template <typename R>
@@ -354,14 +355,14 @@ namespace qi {
     Future<R> thenR(
         const boost::function<R(const Future<T>&)>& func)
     {
-      return this->thenR(FutureCallbackType_Async, func);
+      return this->thenR(FutureCallbackType_Auto, func);
     }
 
 #define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)                    \
   template <typename R, typename AF, typename ARG0 comma ATYPEDECL>          \
   Future<R> thenR(const AF& func, const ARG0& arg0 comma ADECL)              \
   {                                                                          \
-    return this->thenR<R>(FutureCallbackType_Async, func, arg0 comma AUSE);  \
+    return this->thenR<R>(FutureCallbackType_Auto, func, arg0 comma AUSE);  \
   }                                                                          \
   template <typename R, typename AF, typename ARG0 comma ATYPEDECL>          \
   Future<R> thenR(FutureCallbackType type, const AF& func,                   \
@@ -401,13 +402,13 @@ namespace qi {
     boost::function<void()> makeCanceler();
 
     /**
-     * @brief Same as andThenR(), but with type defaulted to FutureCallbackType_Async.
+     * @brief Same as andThenR(), but with type defaulted to FutureCallbackType_Auto.
      */
     template <typename R>
     Future<R> andThenR(
         const boost::function<R(const typename Future<T>::ValueType&)>& func)
     {
-      return this->andThenR(FutureCallbackType_Async, func);
+      return this->andThenR(FutureCallbackType_Auto, func);
     }
 
   public:
@@ -424,7 +425,7 @@ namespace qi {
      */
     template<typename AF>
     inline void connect(const AF& fun,
-                        FutureCallbackType type = FutureCallbackType_Async)
+                        FutureCallbackType type = FutureCallbackType_Auto)
     {
       _p->connect(*this, fun, type);
     }
@@ -437,12 +438,12 @@ namespace qi {
      */
     template<typename FUNCTYPE, typename ARG0>
     void connect(FUNCTYPE fun, ARG0 tracked, ...,
-                 FutureCallbackType type = FutureCallbackType_Async);
+                 FutureCallbackType type = FutureCallbackType_Auto);
 #else
 #define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)                 \
   template <typename AF, typename ARG0 comma ATYPEDECL>                   \
   inline void connect(const AF& fun, const ARG0& arg0 comma ADECL,        \
-                      FutureCallbackType type = FutureCallbackType_Async) \
+                      FutureCallbackType type = FutureCallbackType_Auto) \
   {                                                                       \
     _connectMaybeActor<ARG0>(                                             \
         arg0, ::qi::bind<void(Future<T>)>(fun, arg0 comma AUSE), type);   \
@@ -697,7 +698,7 @@ namespace qi {
      *         are called: synchronously from the Promise setter, or
      *         asynchronously from a thread pool.
      */
-    explicit Promise(FutureCallbackType async = FutureCallbackType_Async) {
+    explicit Promise(FutureCallbackType async = FutureCallbackType_Auto) {
       _f._p->reportStart();
       _f._p->_async = async;
       ++_f._p->_promiseCount;
@@ -709,7 +710,7 @@ namespace qi {
      * in an asynchronous way.
      */
     explicit Promise(boost::function<void (qi::Promise<T>)> cancelCallback,
-        FutureCallbackType async = FutureCallbackType_Async)
+        FutureCallbackType async = FutureCallbackType_Auto)
     {
       setup(cancelCallback, async);
       ++_f._p->_promiseCount;
@@ -791,7 +792,7 @@ namespace qi {
     }
 
   protected:
-    void setup(boost::function<void (qi::Promise<T>)> cancelCallback, FutureCallbackType async = FutureCallbackType_Async)
+    void setup(boost::function<void (qi::Promise<T>)> cancelCallback, FutureCallbackType async = FutureCallbackType_Auto)
     {
       this->_f._p->reportStart();
       this->_f._p->setOnCancel(*this, cancelCallback);
