@@ -145,6 +145,9 @@ namespace qi {
 
   Message& Message::operator=(const Message& msg)
   {
+    if (this == &msg)
+      return *this;
+
     _p->buffer = msg._p->buffer;
     memcpy(&(_p->header), &(msg._p->header), sizeof(MessagePrivate::MessageHeader));
     return *this;

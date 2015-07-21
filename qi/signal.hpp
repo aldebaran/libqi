@@ -254,13 +254,7 @@ namespace qi {
   : public boost::enable_shared_from_this<SignalSubscriber>
   {
   public:
-    SignalSubscriber()
-      : source(0)
-      , linkId(SignalBase::invalidSignalLink)
-      , target(0)
-      , method(0)
-      , enabled(true)
-    {}
+    SignalSubscriber();
 
     SignalSubscriber(AnyFunction func, MetaCallType callType = MetaCallType_Auto);
     SignalSubscriber(AnyFunction func, ExecutionContext* ec);
@@ -308,7 +302,7 @@ namespace qi {
     MetaCallType      threadingModel;
 
     //   Mode 2: metaCall
-    AnyWeakObject*    target;
+    boost::scoped_ptr<AnyWeakObject> target;
     unsigned int      method;
 
     boost::mutex      mutex;

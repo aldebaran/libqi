@@ -63,8 +63,8 @@ namespace qi {
     /// @}
 
     ~AnyValue();
-    void operator=(const AnyReference& b);
-    void operator=(const AnyValue& b);
+    AnyValue& operator=(const AnyReference& b);
+    AnyValue& operator=(const AnyValue& b);
 
     void reset();
     void reset(qi::TypeInterface *type);
