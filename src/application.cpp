@@ -18,6 +18,8 @@
 #include <boost/filesystem.hpp>
 #include <boost/thread.hpp>
 #include <boost/asio.hpp>
+#include <boost/algorithm/string/classification.hpp>
+#include <boost/algorithm/string/split.hpp>
 
 #include "filesystem.hpp"
 #include "utils.hpp"
@@ -30,11 +32,18 @@
 #include <windows.h>
 #endif
 
+#ifndef _WIN32
+static const char SEPARATOR = ':';
+#else
+static const char SEPARATOR = ';';
+#endif
+
 qiLogCategory("qi.Application");
 
 namespace bfs = boost::filesystem;
 
 static std::string _sdkPath;
+static std::vector<std::string> _sdkPaths;
 
 static void parseArguments(int argc, char* argv[])
 {
@@ -206,11 +215,6 @@ namespace qi {
     {
       std::string envPath = qi::os::getenv("PATH");
       size_t begin = 0;
-#ifndef _WIN32
-      static const char SEPARATOR = ':';
-#else
-      static const char SEPARATOR = ';';
-#endif
       for (size_t end = envPath.find(SEPARATOR, begin);
           end != std::string::npos;
           begin = end + 1, end = envPath.find(SEPARATOR, begin))
@@ -258,6 +262,13 @@ namespace qi {
 
     if (_sdkPath.empty())
       _sdkPath = qi::os::getenv("QI_SDK_PREFIX");
+
+    if (_sdkPaths.empty())
+    {
+      std::string prefixes = qi::os::getenv("QI_ADDITIONAL_SDK_PREFIXES");
+      if (!prefixes.empty())
+        boost::algorithm::split(_sdkPaths, prefixes, boost::algorithm::is_from_range(SEPARATOR, SEPARATOR));
+    }
 
     readPathConf();
     if (globalInitialized)
@@ -563,5 +574,10 @@ namespace qi {
   const char* Application::_suggestedSdkPath()
   {
     return _sdkPath.c_str();
+  }
+
+  const std::vector<std::string>& Application::_suggestedSdkPaths()
+  {
+    return _sdkPaths;
   }
 }

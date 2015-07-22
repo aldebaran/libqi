@@ -17,6 +17,7 @@
 #include <boost/algorithm/string/split.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/regex.hpp>
+#include <boost/foreach.hpp>
 #include <locale>
 #include <set>
 #include "sdklayout.hpp"
@@ -85,6 +86,11 @@ namespace qi {
       if (!prefix.empty())
         _sdkPrefixes.push_back(prefix);
       initSDKlayoutFromExec();
+      const std::vector<std::string>& prefixes = qi::Application::_suggestedSdkPaths();
+      _sdkPrefixes.insert(_sdkPrefixes.end(), prefixes.begin(), prefixes.end());
+
+      BOOST_FOREACH(const std::string& prefix, _sdkPrefixes)
+        qiLogVerbose() << "Prefix: " << prefix;
     }
 
     void initSDKlayoutFromExec(bool real = false)
