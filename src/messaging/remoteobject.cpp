@@ -282,7 +282,7 @@ namespace qi {
               + mm->returnSignature().toString()
               + " to " + returnSignature.toString());
         else
-          qiLogWarning() << "Return signature might be incorrect depending on the value, from "
+          qiLogVerbose() << "Return signature might be incorrect depending on the value, from "
             + mm->returnSignature().toString()
             + " to " + returnSignature.toString();
       }
