@@ -271,8 +271,8 @@ namespace qi
         }
       }
     }
-    if (!boost::algorithm::starts_with(serviceName, "_"))
-      serviceRemoved(idx, serviceName);
+
+    serviceRemoved(idx, serviceName);
   }
 
   void ServiceDirectory::updateServiceInfo(const ServiceInfo &svcinfo)
@@ -330,8 +330,7 @@ namespace qi
     connectedServices[idx] = itService->second;
     pendingServices.erase(itService);
 
-    if (!boost::algorithm::starts_with(serviceName, "_"))
-      serviceAdded(idx, serviceName);
+    serviceAdded(idx, serviceName);
   }
 
 
