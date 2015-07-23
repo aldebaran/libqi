@@ -293,7 +293,7 @@ TEST(TestSignalSpy, Counter)
   QI_EMIT sig(1);
   QI_EMIT sig(1);
   qi::os::sleep(1);
-  ASSERT_EQ(sp.getCounter(), 2);
+  ASSERT_EQ(sp.getCounter(), 2u);
 
   qi::DynamicObjectBuilder ob;
   ob.advertiseSignal("signal", &sig);
@@ -302,7 +302,17 @@ TEST(TestSignalSpy, Counter)
   QI_EMIT sig(1);
   QI_EMIT sig(1);
   qi::os::sleep(1);
-  ASSERT_EQ(sp2.getCounter(), 2);
+  ASSERT_EQ(sp2.getCounter(), 2u);
+}
+
+TEST(TestSignalSpy, Async)
+{
+  qi::Signal<int> sig;
+  qi::SignalSpy sp(sig);
+  qi::async<void>(boost::bind(boost::ref(sig), 1));
+  qi::async<void>(boost::bind(boost::ref(sig), 1));
+  ASSERT_TRUE(sp.waitUntil(2, qi::Seconds(1)));
+  ASSERT_EQ(sp.getCounter(), 2u);
 }
 
 int main(int argc, char **argv) {
