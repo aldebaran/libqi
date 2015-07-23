@@ -560,7 +560,7 @@ namespace qi {
     }
   }
 
-  const char* Application::suggestedSdkPath()
+  const char* Application::_suggestedSdkPath()
   {
     return _sdkPath.c_str();
   }

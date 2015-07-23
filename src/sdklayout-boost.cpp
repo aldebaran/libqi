@@ -81,7 +81,7 @@ namespace qi {
 
     void initSDKlayout()
     {
-      std::string prefix = qi::Application::suggestedSdkPath();
+      std::string prefix = qi::Application::_suggestedSdkPath();
       if (!prefix.empty())
         _sdkPrefixes.push_back(prefix);
       initSDKlayoutFromExec();

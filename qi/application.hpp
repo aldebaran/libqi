@@ -180,7 +180,7 @@ namespace qi {
      *
      * Used internally, you should not need this.
      */
-    static const char* suggestedSdkPath();
+    static const char* _suggestedSdkPath();
 
     /**
      * \brief Register a function to be executed at Application creation.
