@@ -14,6 +14,39 @@
 
 namespace qi
 {
+#define doUnderscore(z, n, data) , BOOST_PP_CAT(_, n)
+#define genConnect(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma) \
+  template <typename T> \
+  QI_GEN_MAYBE_TEMPLATE_OPEN(comma) ATYPEDECL QI_GEN_MAYBE_TEMPLATE_CLOSE(comma) \
+  inline void SignalF<T>::binder( \
+      const boost::function<void(const boost::function<void()>&)>& poster, \
+      const boost::function<void(ATYPES)>& callback comma ADECL) \
+  { \
+    poster(boost::bind(callback comma AUSE)); \
+  } \
+  template <typename T> \
+  QI_GEN_MAYBE_TEMPLATE_OPEN(comma) ATYPEDECL QI_GEN_MAYBE_TEMPLATE_CLOSE(comma) \
+  inline boost::function<void(ATYPES)> \
+      SignalF<T>::transformStrandedCallback( \
+          qi::Strand* strand, \
+          const boost::function<void(ATYPES)>& cb) \
+  { \
+    return boost::bind<void>( \
+        static_cast<void(*)( \
+          const boost::function<void(const boost::function<void()>&)>& poster, \
+          const boost::function<void(ATYPES)>& callback comma ATYPES \
+          )>(&SignalF<T>::binder QI_GEN_MAYBE_ANGLE_OPEN(comma) ATYPES QI_GEN_MAYBE_ANGLE_CLOSE(comma)), \
+        boost::function<void(const boost::function<void()>&)>( \
+          boost::bind( \
+            static_cast<void(Strand::*)(const boost::function<void()>&)>(&qi::Strand::post), \
+            strand, _1)), \
+        cb \
+        BOOST_PP_REPEAT_FROM_TO(1, BOOST_PP_INC(n), doUnderscore, data)); \
+  }
+  QI_GEN(genConnect)
+#undef genConnect
+#undef doUnderscore
+
   template <typename T>
   template <typename ARG0>
   inline typename boost::enable_if<
@@ -24,9 +57,8 @@ namespace qi
                                      const boost::function<void()>& fallbackCb)
   {
     SignalSubscriber& s = connect(qi::trackWithFallback(
-        fallbackCb, boost::function<void()>(boost::bind(
-                        &qi::Strand::post,
-                        detail::Unwrap<ARG0>::unwrap(arg0)->strand(), cb)),
+        fallbackCb, transformStrandedCallback(
+          detail::Unwrap<ARG0>::unwrap(arg0)->strand(), cb),
         arg0));
     // skip a bounce because we schedule on a strand, call will be async
     // anyway

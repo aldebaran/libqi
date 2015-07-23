@@ -177,6 +177,19 @@ namespace qi {
 #endif
 
   private:
+#define genConnect(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma) \
+    QI_GEN_MAYBE_TEMPLATE_OPEN(comma) ATYPEDECL QI_GEN_MAYBE_TEMPLATE_CLOSE(comma) \
+    inline static void binder( \
+        const boost::function<void(const boost::function<void()>&)>& poster, \
+        const boost::function<void(ATYPES)>& callback comma ADECL); \
+    QI_GEN_MAYBE_TEMPLATE_OPEN(comma) ATYPEDECL QI_GEN_MAYBE_TEMPLATE_CLOSE(comma) \
+    inline static boost::function<void(ATYPES)> \
+        transformStrandedCallback( \
+            qi::Strand* strand, \
+            const boost::function<void(ATYPES)>& cb);
+    QI_GEN(genConnect)
+#undef genConnect
+
     template <typename ARG0>
     inline typename boost::enable_if<
         boost::is_base_of<Actor, typename detail::Unwrap<ARG0>::type>,
