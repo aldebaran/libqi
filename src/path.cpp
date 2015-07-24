@@ -167,6 +167,16 @@ namespace qi
     return *this;
   }
 
+  bool Path::operator==(const qi::Path& rhs) const
+  {
+    return _p->path == rhs._p->path;
+  }
+
+  bool Path::operator!=(const qi::Path& rhs) const
+  {
+    return _p->path != rhs._p->path;
+  }
+
   Path::operator std::string() const
   {
     return _p->path.string(qi::unicodeFacet());

@@ -1,9 +1,12 @@
 <project version="3">
+  <maintainer email="pdaouadi@aldebaran.com">Philippe Daouadi</maintainer>
+  <maintainer email="hcuche@aldebaran.com">Hervé Cuche</maintainer>
   <qibuild name="libqi">
     <depends buildtime="true" runtime="true" names="dl boost pthread qiprobes" />
     <depends testtime="true" buildtime="true" names="gtest" />
   </qibuild>
   <project src="dox" />
+  <project src="bin"/>
 
   <project src="compat/cqit"/>
   <project src="compat/cqim"/>

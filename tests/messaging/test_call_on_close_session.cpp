@@ -8,6 +8,7 @@
 #include <vector>
 #include <iostream>
 #include <string>
+#include <gtest/gtest.h>
 
 #include <boost/thread/thread.hpp>
 #include <qi/session.hpp>
@@ -17,6 +18,8 @@
 #include <qi/os.hpp>
 #include <qi/application.hpp>
 #include <testsession/testsessionpair.hpp>
+
+qiLogCategory("QiSession.Test");
 
 static std::string reply(const std::string &msg)
 {
@@ -38,8 +41,7 @@ void myCall(qi::AnyObject myService)
   }
 }
 
-//TEST(QiSession, Services)
-void test(void)
+TEST(QiSession, CallOnCloseSession)
 {
   qi::Session sd;
   qi::Future<void> f = sd.listenStandalone("tcp://0.0.0.0:0");
@@ -73,12 +75,46 @@ void test(void)
     timeToWait = timeToWait +1;
   }
 }
+
+TEST(QiSession, GettingServiceWhileDisconnecting)
+{
+  qi::SessionPtr server = qi::makeSession();
+  server->listenStandalone("tcp://0.0.0.0:0");
+
+  qi::DynamicObjectBuilder builder;
+  qi::AnyObject object(builder.object());
+
+  std::string serviceName = "sarace";
+  server->registerService(serviceName, object);
+
+  qi::SessionPtr client = qi::makeSession();
+
+  for(int i = 0; i < 1000; ++i)
+  {
+    client->connect(server->endpoints()[0]);
+    qi::Future<void> closing = client->close().async();
+    try
+    {
+      qi::AnyObject remoteObject = client->service(serviceName);
+      bool remoteObjectWasFound = remoteObject;
+      ASSERT_TRUE(remoteObjectWasFound);
+    }
+    catch(const qi::FutureException& e)
+    {
+      qiLogDebug() << "Got expected error: " << e.what();
+    }
+    catch(const std::exception& e)
+    {
+      qiLogDebug() << "Got standard error: " << e.what();
+    }
+    closing.wait();
+  }
+}
+
 int main(int argc, char **argv)
 {
+  ::testing::InitGoogleTest(&argc, argv);
   qi::Application app(argc, argv);
   TestMode::forceTestMode(TestMode::Mode_SD);
-
-  test();
-  return EXIT_SUCCESS;
-
+  return RUN_ALL_TESTS();
 }

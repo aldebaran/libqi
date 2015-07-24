@@ -75,7 +75,7 @@ namespace detail {
     {
       try
       {
-        promise.setValue(Caller<T, R>::_callfunc(future.value(), func));
+        promise.setValue(Caller<typename Future<T>::ValueType, R>::_callfunc(future.value(), func));
       }
       catch (std::exception& e)
       {
@@ -128,34 +128,36 @@ namespace detail {
             boost::weak_ptr<detail::FutureBaseTyped<T> >(_p))
         // if the future is not cancelable, now it becomes cancelable because
         // continuateAndThen will abort if cancel is requested
-        : boost::function<void(qi::Promise<T>&)>(&qi::PromiseNoop<R>));
+        : boost::function<void(qi::Promise<R>&)>(&qi::PromiseNoop<R>));
     _p->connect(*this, boost::bind(&detail::continuateAndThen<T, R>, _1,
           func, promise), type);
     return promise.future();
   }
 
   template <typename T>
-  template <typename Arg>
-  inline void Future<T>::binder(
-      const boost::function<void(const boost::function<void()>&)>& poster,
-      const boost::function<void(const Arg&)>& callback, const Arg& fut)
+  template <typename Arg, typename R>
+  inline qi::Future<R> Future<T>::binder(
+      const boost::function<qi::Future<void>(const boost::function<void()>&)>& poster,
+      const boost::function<R(const Arg&)>& callback, const Arg& fut)
   {
-    return poster(boost::bind(callback, fut));
+    qi::Promise<R> prom;
+    poster(boost::bind(detail::continuateThen<T, R>, fut, callback, prom));
+    return prom.future();
   }
 
   template <typename T>
-  template <typename Arg>
-  inline boost::function<void(const Arg&)>
+  template <typename Arg, typename R>
+  inline boost::function<qi::Future<R>(const Arg&)>
       Future<T>::transformStrandedCallback(
           qi::Strand* strand,
-          const boost::function<void(const Arg&)>& cb)
+          const boost::function<R(const Arg&)>& cb)
   {
     return boost::bind(
-        &Future<T>::binder<Arg>,
-        boost::function<void(const boost::function<void()>&)>(
+        &Future<T>::binder<Arg, R>,
+        boost::function<qi::Future<void>(const boost::function<void()>&)>(
           boost::bind(
-            &qi::Strand::post,
-            strand, _1)),
+            static_cast<qi::Future<void>(Strand::*)(const boost::function<void()>&, qi::Duration delay)>(&qi::Strand::async),
+            strand, _1, qi::Duration(0))),
         cb, _1);
   }
 
@@ -197,11 +199,11 @@ namespace detail {
                          const AF& cb,
                          FutureCallbackType type)
   {
-    return thenR(FutureCallbackType_Sync, qi::trackWithFallback(
+    return thenR<qi::Future<R> >(FutureCallbackType_Sync, qi::trackWithFallback(
           boost::function<void()>(),
-          transformStrandedCallback<typename qi::Future<T>::ValueType>(
+          transformStrandedCallback<qi::Future<T>, R>(
             detail::Unwrap<ARG0>::unwrap(arg0)->strand(), cb),
-          arg0));
+          arg0)).unwrap();
   }
   template <typename T>
   template <typename R, typename ARG0, typename AF>
@@ -212,7 +214,7 @@ namespace detail {
                          const AF& cb,
                          FutureCallbackType type)
   {
-    return thenR(type, cb);
+    return thenR<R>(type, cb);
   }
 
   template <typename T>
@@ -635,6 +637,55 @@ namespace detail {
             boost::weak_ptr<detail::FutureBaseTyped<FT> >(f._p)));
     const_cast<Future<FT>&>(f).connect(boost::bind(detail::futureAdapter<FT, PT, CONV>, _1, p, converter), FutureCallbackType_Sync);
   }
+
+  namespace detail
+  {
+
+    template <typename T>
+    struct FutureWrapper
+    {
+      void operator,(const T& val)
+      {
+        future = Future<T>(val);
+      }
+
+      void operator,(const Future<T>& val)
+      {
+        future = val;
+      }
+
+      FutureWrapper<T>& operator()()
+      {
+        return *this;
+      }
+
+      qi::Future<T> future;
+    };
+
+    template <>
+    struct FutureWrapper<void>
+    {
+      // initialize the future as operator, wont be called if the function returns void
+      // if it returns a future, then this value will be overwritten anyway, so no problem
+      FutureWrapper()
+        : future(0)
+      {}
+
+      void operator,(const Future<void>& val)
+      {
+        future = val;
+      }
+
+      FutureWrapper<void>& operator()()
+      {
+        return *this;
+      }
+
+      qi::Future<void> future;
+    };
+
+  }
+
 }
 
 #include <qi/detail/futurebarrier.hpp>

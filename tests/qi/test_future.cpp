@@ -125,7 +125,6 @@ class SetValue2: public SetValue, public qi::Trackable<SetValue2>
 public:
   SetValue2(int& target)
   :SetValue(target)
-  , qi::Trackable<SetValue2>(this)
   {}
   ~SetValue2()
   {
@@ -384,6 +383,23 @@ public:
   std::string &gGlobalS;
   std::string &gGlobalE;
 };
+
+TEST_F(TestFuture, Validity) {
+  qi::Future<void> a;
+  EXPECT_FALSE(a.isValid());
+
+  qi::Promise<void> p;
+  EXPECT_TRUE(p.future().isValid());
+
+  qi::Future<void> b = p.future();
+  EXPECT_TRUE(b.isValid());
+
+  a = b;
+  EXPECT_TRUE(a.isValid());
+
+  a = qi::Future<void>();
+  EXPECT_FALSE(a.isValid());
+}
 
 TEST_F(TestFuture, SimpleType) {
   TestFutureI tf(gGlobalI, gGlobalE);
@@ -905,6 +921,19 @@ TEST(TestFutureThen, AndThenR)
   EXPECT_FALSE(called);
   ASSERT_TRUE(fff.hasError());
   EXPECT_EQ(fff.error(), "fail");
+}
+
+TEST(TestFutureThen, AndThenRVoid)
+{
+  bool called = false;
+  qi::Promise<void> p;
+  qi::Future<void> ff = p.future().andThenR<void>(boost::bind(&call, boost::ref(called)));
+  p.setValue(0);
+
+  ff.wait();
+
+  EXPECT_TRUE(called);
+  ASSERT_TRUE(ff.hasValue());
 }
 
 int block(int i, qi::Future<void> f)

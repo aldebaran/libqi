@@ -24,8 +24,7 @@ namespace qi {
 
   Session_Service::Session_Service(TransportSocketCache* socketCache,
                                    ServiceDirectoryClient* sdClient, ObjectRegistrar* server, bool enforceAuth)
-    : qi::Trackable<Session_Service>(this)
-    , _socketCache(socketCache)
+    : _socketCache(socketCache)
     , _sdClient(sdClient)
     , _server(server)
     , _self(this, sessionServiceWaitBarrier) // create a shared_ptr so that shared_from_this works

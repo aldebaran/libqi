@@ -26,8 +26,7 @@ qiLogCategory("qimessaging.session");
 namespace qi {
 
   SessionPrivate::SessionPrivate(qi::Session* session, bool enforceAuth)
-    : qi::Trackable<SessionPrivate>(this)
-    , _sdClient(enforceAuth)
+    : _sdClient(enforceAuth)
     , _serverObject(&_sdClient, enforceAuth)
     , _serviceHandler(&_socketsCache, &_sdClient, &_serverObject, enforceAuth)
     , _servicesHandler(&_sdClient, &_serverObject)

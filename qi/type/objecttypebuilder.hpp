@@ -209,6 +209,7 @@ namespace detail {
 #define QI_REGISTER_IMPLEMENTATION(parent, name)                                                           \
   static bool _qiregister##name()                                                                          \
   {                                                                                                        \
+    qi::detail::ForceProxyInclusion<parent>().dummyCall();                                                 \
     qi::registerType(typeid(name), qi::typeOf<parent>());                                                  \
     name* ptr = static_cast<name*>(reinterpret_cast<void*>(0x10000));                                      \
     parent* pptr = ptr;                                                                                    \

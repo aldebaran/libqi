@@ -40,7 +40,6 @@ namespace qi {
 
   RemoteObject::RemoteObject(unsigned int service, qi::TransportSocketPtr socket)
     : ObjectHost(service)
-    , Trackable<RemoteObject>(this)
     , _socket()
     , _service(service)
     , _object(1)
@@ -60,7 +59,6 @@ namespace qi {
 
   RemoteObject::RemoteObject(unsigned int service, unsigned int object, qi::MetaObject metaObject, TransportSocketPtr socket)
     : ObjectHost(service)
-    , Trackable<RemoteObject>(this)
     , _socket()
     , _service(service)
     , _object(object)
