@@ -72,12 +72,6 @@ namespace qi
   }
 
   template<typename T>
-  inline boost::shared_ptr<T> Trackable<T>::lock()
-  {
-    return _ptr;
-  }
-
-  template<typename T>
   inline boost::weak_ptr<T> Trackable<T>::weakPtr()
   {
     return boost::weak_ptr<T>(_ptr);
