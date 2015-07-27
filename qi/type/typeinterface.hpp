@@ -148,6 +148,8 @@ namespace qi{
     /// Get the pointed element (must not be destroyed)
     virtual AnyReference dereference(void* storage) = 0;
     /// Set new pointee value. pointer must be a *pointer* to type pointedType()
+    virtual void set(void** storage, AnyReference pointer) = 0;
+    /// Set new pointee value. pointer must be a *pointer* to type pointedType()
     virtual void setPointee(void** storage, void* pointer) = 0;
     virtual TypeKind kind() { return TypeKind_Pointer; }
   };

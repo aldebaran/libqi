@@ -307,17 +307,19 @@ namespace qi
   class TypeImpl<void>: public TypeInterface
   {
   public:
-   const TypeInfo& info()
+    const TypeInfo& info()
     {
       static TypeInfo result = TypeInfo(typeid(void));
       return result;
     }
-    void* initializeStorage(void*) { return 0;}
-    void* ptrFromStorage(void** ) { return 0;}
-    void* clone(void*)                       { return 0;}
-    void destroy(void* ptr)                  {}
-    TypeKind kind() { return TypeKind_Void;}
-    bool less(void* a, void* b) { return false;}
+    // do not return 0 everywhere and provide a correct impl
+    // this may be used as void*, that's why we need to keep storage
+    void* initializeStorage(void* ptr) { return ptr; }
+    void* ptrFromStorage(void** storage) { return (void*)storage; }
+    void* clone(void* storage) { return storage; }
+    void destroy(void* ptr) {}
+    TypeKind kind() { return TypeKind_Void; }
+    bool less(void* a, void* b) { return false; }
   };
 
   //reference

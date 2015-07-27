@@ -96,7 +96,16 @@ namespace detail
       AnyReference pointedDst = pointedDstPair.first;
       void* ptr = pointedDst._type->ptrFromStorage(&pointedDst._value);
       result = AnyReference((TypeInterface*)targetType);
-      targetType->setPointee(&result._value, ptr);
+      try
+      {
+        targetType->setPointee(&result._value, ptr);
+      }
+      catch (std::exception& e)
+      {
+        qiLogVerbose() << "setPointee: " << e.what();
+        result.destroy();
+        return std::make_pair(AnyReference(), false);
+      }
       return std::make_pair(result, false);
     }
     case TypeKind_Object:
@@ -104,12 +113,20 @@ namespace detail
       std::pair<AnyReference, bool> gv = convert(
                                               static_cast<PointerTypeInterface*>(targetType)->pointedType());
       if (!gv.first._type)
-        return gv;
+        return std::make_pair(AnyReference(), false);
       // Re-pointerise it
       void* ptr = gv.first._type->ptrFromStorage(&gv.first._value);
-      AnyReference result;
-      result._type = targetType;
-      result._value = targetType->initializeStorage(&ptr);
+      AnyReference result(targetType);
+      try
+      {
+        targetType->setPointee(&result._value, ptr);
+      }
+      catch (std::exception& e)
+      {
+        qiLogVerbose() << "setPointee: " << e.what();
+        result.destroy();
+        return std::make_pair(AnyReference(), false);
+      }
       return std::make_pair(result, false);
     }
     default:
@@ -803,7 +820,18 @@ namespace detail
 
     if (_type->info() == typeOf<AnyObject>()->info()
         && targetType->kind() == TypeKind_Pointer)
-    { // Attempt specialized proxy conversion
+    {
+      // if pointer is the exact pointer, use it
+      PointerTypeInterface* pT = static_cast<PointerTypeInterface*>(targetType);
+      AnyObject* self = static_cast<AnyObject*>(_value);
+      if (self->asGenericObject()->type->info() == pT->pointedType()->info())
+      {
+        AnyReference res(pT);
+        pT->set(&res._value, qi::AnyReference::from(boost::static_pointer_cast<void>(self->asSharedPtr())));
+        return std::make_pair(res, true);
+      }
+
+      // Attempt specialized proxy conversion
       qiLogDebug() << "Attempting specialized proxy conversion";
       detail::ProxyGeneratorMap& map = detail::proxyGeneratorMap();
       detail::ProxyGeneratorMap::iterator it = map.find(
