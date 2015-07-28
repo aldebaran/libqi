@@ -367,9 +367,6 @@ inline Object<T>& Object<T>::operator=(const Object<U>& o)
   static bool unused = qi::detail::ForceProxyInclusion<T>().dummyCall();
   (void)unused;
 
-  if (this == &o)
-    return *this;
-
   const_cast<Object<U>&>(o).checkT();
   init(o._obj);
 
