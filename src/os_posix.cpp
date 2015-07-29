@@ -52,7 +52,6 @@
 #include <qi/os.hpp>
 #include <qi/log.hpp>
 #include <qi/path.hpp>
-#include "filesystem.hpp"
 #include "utils.hpp"
 
 qiLogCategory("qi.os");

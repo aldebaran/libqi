@@ -21,7 +21,6 @@
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
 
-#include "filesystem.hpp"
 #include "utils.hpp"
 #include "path_conf.hpp"
 
@@ -256,7 +255,7 @@ namespace qi {
       globalProgram = guess_app_from_path(argv[0]);
       qiLogVerbose() << "Program path guessed as " << globalProgram;
     }
-    globalProgram = detail::normalizePath(globalProgram);
+    globalProgram = path::detail::normalize(globalProgram);
 
     parseArguments(argc, argv);
 
@@ -530,7 +529,7 @@ namespace qi {
         if (ret == 0)
         {
           globalRealProgram = fname;
-          globalRealProgram = detail::normalizePath(globalRealProgram);
+          globalRealProgram = path::detail::normalize(globalRealProgram);
         }
         else
         {
