@@ -117,8 +117,6 @@ set(QI_C src/dlfcn.cpp
          src/bufferreader.cpp
          src/clock.cpp
          src/sdklayout.hpp
-         src/filesystem.hpp
-         src/filesystem.cpp
          src/future.cpp
          src/log.cpp
          src/log_p.hpp

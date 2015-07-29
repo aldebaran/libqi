@@ -5,7 +5,8 @@
  */
 
 #include "sdklayout.hpp"
-#include "filesystem.hpp"
+
+#include <numeric>
 
 #include <qi/application.hpp>
 #include <qi/path.hpp>
@@ -351,6 +352,25 @@ namespace qi
         return shortPath.string(qi::unicodeFacet());
       }
 #endif
+      namespace {
+        static boost::filesystem::path normalizeCombined(boost::filesystem::path path1,
+                                                        boost::filesystem::path path2)
+        {
+          if (*path2.begin() == ".")
+            return path1;
+          if (*path2.begin() == "..")
+            return path1.parent_path();
+          else
+            return path1 /= path2;
+        }
+      }
+      Path normalize(const Path& path)
+      {
+        boost::filesystem::path p = std::accumulate(path.bfsPath().begin(), path.bfsPath().end(),
+                                                    boost::filesystem::path(), normalizeCombined);
+        return p.make_preferred();
+      }
+
     }
 
     std::string sdkPrefix()

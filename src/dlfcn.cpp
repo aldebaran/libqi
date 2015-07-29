@@ -21,8 +21,6 @@
 
 #include <qi/path.hpp>
 
-#include "filesystem.hpp"
-
 qiLogCategory("qi.dlfcn");
 
 namespace qi {

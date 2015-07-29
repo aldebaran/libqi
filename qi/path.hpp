@@ -220,6 +220,12 @@ namespace qi
        * \warning This method is only meant to be used in tests.
        */
       QI_API void setWritablePath(const std::string &path);
+
+      /** Normalize a path by deducing ".." and '.' and replacing '\\' by '/'.
+          @param path Path to normalize.
+          @return A normalized copy of the path passed in arguments.
+      */
+      QI_API Path normalize(const Path& path);
     }
 
     /**
