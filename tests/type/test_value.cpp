@@ -607,6 +607,30 @@ TEST(Struct, ExtendFill)
   EXPECT_TRUE(f2.s.empty());
 }
 
+struct FooExPub
+{
+  FooEx2 fooex2;
+};
+
+static FooEx2* get_priv(FooExPub* pub)
+{
+  return &pub->fooex2;
+}
+
+QI_TYPE_STRUCT_BOUNCE_REGISTER(FooExPub, FooEx2, get_priv);
+
+TEST(Struct, ExtendFillBounce)
+{
+  FooBase f; f.x = 1; f.y = 2;
+  FooExPub f2 = qi::AnyReference::from(f).to<FooExPub>();
+  EXPECT_EQ(0, f2.fooex2.z);
+  EXPECT_TRUE(f2.fooex2.s.empty());
+  FooEx f1; f1.x = 1; f1.y = 2; f1.z = 3;
+  f2 = qi::AnyReference::from(f1).to<FooExPub>();
+  EXPECT_EQ(3, f2.fooex2.z);
+  EXPECT_TRUE(f2.fooex2.s.empty());
+}
+
 // A good demo of why all mode is overkill
 struct Velo
 {
