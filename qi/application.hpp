@@ -180,7 +180,14 @@ namespace qi {
      *
      * Used internally, you should not need this.
      */
-    static const char* suggestedSdkPath();
+    static const char* _suggestedSdkPath();
+
+    /**
+     * \brief Return the SDK path given through QI_ADDITIONAL_SDK_PREFIXES
+     *
+     * Used internally, you should not need this.
+     */
+    static const std::vector<std::string>& _suggestedSdkPaths();
 
     /**
      * \brief Register a function to be executed at Application creation.

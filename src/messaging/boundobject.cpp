@@ -502,7 +502,7 @@ namespace qi {
       throw std::runtime_error("Expected int or string for property index");
   }
 
-  void ServiceBoundObject::setProperty(const AnyValue& prop, AnyValue val)
+  Future<void> ServiceBoundObject::setProperty(const AnyValue& prop, AnyValue val)
   {
     qi::Future<void> result;
     if (prop.kind() == TypeKind_String)
@@ -514,10 +514,8 @@ namespace qi {
     }
     else
       throw std::runtime_error("Expected int or string for property index");
-    if (!result.isFinished())
-      qiLogWarning() << "Assertion failed, setProperty() call not finished";
-    // Throw the future error
-    result.value();
+
+    return result;
   }
 
   std::vector<std::string> ServiceBoundObject::properties()
@@ -586,7 +584,7 @@ namespace qi {
     qi::Message ret(Message::Type_Reply, replyaddr);
     _removeCachedFuture(kit, socket, replyaddr.messageId);
     try {
-      TypeKind kind;
+      TypeKind kind = TypeKind_Unknown;
       boost::shared_ptr<GenericObject> ao = qi::detail::getGenericFuture(val, &kind);
       if (ao->call<bool>("hasError", 0))
       {

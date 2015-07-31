@@ -18,12 +18,21 @@ qiLogCategory("qitype.signal");
 
 namespace qi {
 
+  SignalSubscriber::SignalSubscriber()
+    : source(0)
+    , linkId(SignalBase::invalidSignalLink)
+    , target(0)
+    , method(0)
+    , enabled(true)
+  {
+  }
+
   SignalSubscriber::SignalSubscriber(const AnyObject& target, unsigned int method)
-  : threadingModel(MetaCallType_Direct)
-  , target(new AnyWeakObject(target))
-  , method(method)
-  , enabled(true)
-  , executionContext(0)
+    : threadingModel(MetaCallType_Direct)
+    , target(new AnyWeakObject(target))
+    , method(method)
+    , enabled(true)
+    , executionContext(0)
   { // The slot has its own threading model: be synchronous
   }
 
@@ -39,7 +48,6 @@ namespace qi {
 
   SignalSubscriber::~SignalSubscriber()
   {
-    delete target;
   }
 
   SignalSubscriber::SignalSubscriber(const SignalSubscriber& b)
@@ -51,11 +59,14 @@ namespace qi {
 
   void SignalSubscriber::operator=(const SignalSubscriber& b)
   {
+    if (this == &b)
+      return;
+
     source = b.source;
     linkId = b.linkId;
     handler = b.handler;
     threadingModel = b.threadingModel;
-    target = b.target?new AnyWeakObject(*b.target):0;
+    target.reset(b.target ? new AnyWeakObject(*b.target) : 0);
     method = b.method;
     enabled = b.enabled;
     executionContext = b.executionContext;

@@ -8,6 +8,7 @@
 #ifndef _QI_DETAILS_LOG_HXX_
 #define _QI_DETAILS_LOG_HXX_
 
+#include <boost/noncopyable.hpp>
 
 #if defined(NO_QI_LOG_DETAILED_CONTEXT) || defined(NDEBUG)
 #   define _qiLogDebug(...)      qi::log::LogStream(qi::LogLevel_Debug, "", __FUNCTION__, 0, __VA_ARGS__).self()
@@ -208,7 +209,7 @@ namespace qi {
     }
 
     typedef detail::Category* CategoryType;
-    class LogStream: public std::stringstream
+    class LogStream: public std::stringstream, boost::noncopyable
     {
     public:
       LogStream(const qi::LogLevel level,
@@ -272,10 +273,6 @@ namespace qi {
       const char   *_file;
       const char   *_function;
       int           _line;
-
-      //avoid copy
-      LogStream(const LogStream &rhs);
-      LogStream &operator=(const LogStream &rhs);
     };
   }
 }

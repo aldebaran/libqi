@@ -132,14 +132,19 @@ AnyValue AnyValue::make()
   return AnyValue(AnyReference(typeOf<T>()), false, true);
 }
 
-inline void AnyValue::operator=(const AnyValue& b)
+inline AnyValue& AnyValue::operator=(const AnyValue& b)
 {
+  if (&b == this)
+    return *this;
+
   reset(b.asReference(), true, true);
+  return *this;
 }
 
-inline void AnyValue::operator=(const AnyReference& b)
+inline AnyValue& AnyValue::operator=(const AnyReference& b)
 {
   reset(b, true, true);
+  return *this;
 }
 
 inline void AnyValue::reset(const AnyReference& b)

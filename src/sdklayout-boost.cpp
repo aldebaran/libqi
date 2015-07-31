@@ -17,6 +17,7 @@
 #include <boost/algorithm/string/split.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/regex.hpp>
+#include <boost/foreach.hpp>
 #include <locale>
 #include <set>
 #include "sdklayout.hpp"
@@ -81,10 +82,15 @@ namespace qi {
 
     void initSDKlayout()
     {
-      std::string prefix = qi::Application::suggestedSdkPath();
+      std::string prefix = qi::Application::_suggestedSdkPath();
       if (!prefix.empty())
         _sdkPrefixes.push_back(prefix);
       initSDKlayoutFromExec();
+      const std::vector<std::string>& prefixes = qi::Application::_suggestedSdkPaths();
+      _sdkPrefixes.insert(_sdkPrefixes.end(), prefixes.begin(), prefixes.end());
+
+      BOOST_FOREACH(const std::string& prefix, _sdkPrefixes)
+        qiLogVerbose() << "Prefix: " << prefix;
     }
 
     void initSDKlayoutFromExec(bool real = false)
@@ -207,17 +213,6 @@ namespace qi {
   {
     _p->initSDKlayout();
     _p->checkInit();
-  }
-
-  SDKLayout::SDKLayout(const SDKLayout &rhs)
-    : _p(new PrivateSDKLayout)
-  {
-    *_p = *rhs._p;
-  }
-
-  SDKLayout & SDKLayout::operator=(const SDKLayout &rhs) {
-    *_p = *rhs._p;
-    return *this;
   }
 
   // FIXME: Add exception if prefix == ""

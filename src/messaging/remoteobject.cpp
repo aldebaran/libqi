@@ -99,7 +99,7 @@ namespace qi {
         TransportSocket::ALL_OBJECTS,
         boost::bind<void>(&RemoteObject::onMessagePending, this, _1));
       _linkDisconnected      = _socket->disconnected.connect (
-         &RemoteObject::onSocketDisconnected, weakPtr(), _1);
+         &RemoteObject::onSocketDisconnected, this, _1);
     }
   }
 
@@ -282,7 +282,7 @@ namespace qi {
               + mm->returnSignature().toString()
               + " to " + returnSignature.toString());
         else
-          qiLogWarning() << "Return signature might be incorrect depending on the value, from "
+          qiLogVerbose() << "Return signature might be incorrect depending on the value, from "
             + mm->returnSignature().toString()
             + " to " + returnSignature.toString();
       }

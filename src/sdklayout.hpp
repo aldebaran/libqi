@@ -14,6 +14,7 @@
 
 # include <vector>
 # include <string>
+# include <boost/noncopyable.hpp>
 # include <qi/api.hpp>
 
 /**
@@ -36,7 +37,7 @@ namespace qi
    *   - library and binary path
    *   - static readonly configuration and data files
    */
-  class QI_API SDKLayout //: boost::noncopyable
+  class QI_API SDKLayout : boost::noncopyable
   {
   public:
 
@@ -53,9 +54,6 @@ namespace qi
      *  \param mode "" by default, use to check sdk initialization.
      */
     explicit SDKLayout(const std::string &prefix, const std::string &mode = "");
-
-    SDKLayout(const SDKLayout &rhs);
-    SDKLayout &operator=(const SDKLayout &rhs);
 
     virtual ~SDKLayout();
 

@@ -25,6 +25,9 @@ namespace qi {
 
   MetaObjectPrivate&  MetaObjectPrivate::operator=(const MetaObjectPrivate &rhs)
   {
+    if (this == &rhs)
+      return *this;
+
     {
       boost::recursive_mutex::scoped_lock sl(rhs._methodsMutex);
       _methodsNameToIdx = rhs._methodsNameToIdx;

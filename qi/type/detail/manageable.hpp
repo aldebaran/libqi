@@ -123,7 +123,7 @@ namespace qi {
     Manageable();
     ~Manageable();
     Manageable(const Manageable& b);
-    void operator = (const Manageable& b);
+    Manageable& operator=(const Manageable& b);
 
     boost::mutex& initMutex();
 

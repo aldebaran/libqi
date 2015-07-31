@@ -177,6 +177,19 @@ namespace qi {
 #endif
 
   private:
+#define genConnect(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma) \
+    QI_GEN_MAYBE_TEMPLATE_OPEN(comma) ATYPEDECL QI_GEN_MAYBE_TEMPLATE_CLOSE(comma) \
+    inline static void binder( \
+        const boost::function<void(const boost::function<void()>&)>& poster, \
+        const boost::function<void(ATYPES)>& callback comma ADECL); \
+    QI_GEN_MAYBE_TEMPLATE_OPEN(comma) ATYPEDECL QI_GEN_MAYBE_TEMPLATE_CLOSE(comma) \
+    inline static boost::function<void(ATYPES)> \
+        transformStrandedCallback( \
+            qi::Strand* strand, \
+            const boost::function<void(ATYPES)>& cb);
+    QI_GEN(genConnect)
+#undef genConnect
+
     template <typename ARG0>
     inline typename boost::enable_if<
         boost::is_base_of<Actor, typename detail::Unwrap<ARG0>::type>,
@@ -241,13 +254,7 @@ namespace qi {
   : public boost::enable_shared_from_this<SignalSubscriber>
   {
   public:
-    SignalSubscriber()
-      : source(0)
-      , linkId(SignalBase::invalidSignalLink)
-      , target(0)
-      , method(0)
-      , enabled(true)
-    {}
+    SignalSubscriber();
 
     SignalSubscriber(AnyFunction func, MetaCallType callType = MetaCallType_Auto);
     SignalSubscriber(AnyFunction func, ExecutionContext* ec);
@@ -295,7 +302,7 @@ namespace qi {
     MetaCallType      threadingModel;
 
     //   Mode 2: metaCall
-    AnyWeakObject*    target;
+    boost::scoped_ptr<AnyWeakObject> target;
     unsigned int      method;
 
     boost::mutex      mutex;

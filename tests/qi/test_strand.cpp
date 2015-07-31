@@ -254,13 +254,13 @@ TEST(TestStrand, AllFutureSignalPropertyPeriodicTaskAsyncCallTypeErased)
     per.setCallback(&MyActor::f, obj.get(), TOTAL, finished);
 
     qi::Promise<void> prom;
-    qi::Signal<void> signal;
+    qi::Signal<int> signal;
     for (int i = 0; i < 25; ++i)
       prom.future().connect(&MyActor::f, obj.get(), TOTAL, finished);
     for (int i = 0; i < 25; ++i)
       prom.future().thenR<int>(&MyActor::f, obj.get(), TOTAL, finished);
     for (int i = 0; i < 50; ++i)
-      signal.connect(&MyActor::f, obj.get(), TOTAL, finished);
+      signal.connect(&MyActor::f, obj.get(), _1, finished);
     for (int i = 0; i < 50; ++i)
       aobj.connect("sig", obj->strand()->schedulerFor<void(int)>(&MyActor::f, obj, _1, finished));
 
@@ -273,7 +273,7 @@ TEST(TestStrand, AllFutureSignalPropertyPeriodicTaskAsyncCallTypeErased)
       aobj.setProperty("prop", rand());
     qi::Future<void> f = qi::async<void>(boost::bind(chaincall, aobj, finished, TOTAL));
     prom.setValue(0);
-    QI_EMIT signal();
+    QI_EMIT signal(TOTAL);
     QI_EMIT obj->sig(TOTAL);
     for (int i = 0; i < 25; ++i)
       aobj.async<void>("f", TOTAL, finished);

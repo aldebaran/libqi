@@ -51,6 +51,9 @@ namespace qi
 
   inline AnyFunction& AnyFunction::operator=(const AnyFunction& b)
   {
+    if (this == &b)
+      return *this;
+
     this->~AnyFunction();
     type = b.type;
     value = type?type->clone(b.value):0;

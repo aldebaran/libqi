@@ -218,10 +218,10 @@ public:
   Object();
 
   template<typename U> Object(const Object<U>& o);
-  template<typename U> void operator=(const Object<U>& o);
+  template<typename U> Object<T>& operator=(const Object<U>& o);
   // Templates above do not replace default ctor or copy operator
   Object(const Object& o);
-  void operator=(const Object& o);
+  Object<T>& operator=(const Object& o);
   // Disable the ctor taking future if T is Empty, as it would conflict with
   // We use None to disable it. The method must be instantiable because when we
   // export the class under windows, all functions are instanciated
@@ -362,23 +362,30 @@ inline Object<T>::Object(const Object<U>& o)
 }
 template<typename T>
 template<typename U>
-inline void Object<T>::operator=(const Object<U>& o)
+inline Object<T>& Object<T>::operator=(const Object<U>& o)
 {
   static bool unused = qi::detail::ForceProxyInclusion<T>().dummyCall();
   (void)unused;
 
   const_cast<Object<U>&>(o).checkT();
   init(o._obj);
+
+  return *this;
 }
 template<typename T> inline Object<T>::Object(const Object<T>& o)
 {
   const_cast<Object<T>&>(o).checkT();
   init(o._obj);
 }
-template<typename T>inline void Object<T>::operator=(const Object<T>& o)
+template<typename T> inline Object<T>& Object<T>::operator=(const Object<T>& o)
 {
+  if (this == &o)
+    return *this;
+
   const_cast<Object<T>&>(o).checkT();
   init(o._obj);
+
+  return *this;
 }
 template<typename T> inline Object<T>::Object(GenericObject* go)
 {
