@@ -62,6 +62,8 @@ namespace qi {
                        ObjectHost* owner = 0);
     virtual ~ServiceBoundObject();
 
+    unsigned int nextId() { return ++_nextId; }
+
   public:
     //PUBLIC BOUND METHODS
     SignalLink           registerEvent(unsigned int serviceId, unsigned int eventId, SignalLink linkId);
@@ -141,6 +143,9 @@ namespace qi {
     // prevents parallel onMessage on self execution and protects the current socket
     mutable boost::recursive_mutex           _mutex;
     boost::function<void (TransportSocketPtr, std::string)> _onSocketDisconnectedCallback;
+
+    static qi::Atomic<unsigned int> _nextId;
+
     friend class ::qi::ObjectHost;
     friend class ::qi::ServiceDirectory;
   };

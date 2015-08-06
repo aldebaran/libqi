@@ -35,7 +35,7 @@ namespace qi
     void removeObject(unsigned int);
     void removeRemoteReferences(TransportSocketPtr socket);
     unsigned int service() { return _service;}
-    unsigned int nextId() { return ++_nextId;}
+    virtual unsigned int nextId() = 0;
     qi::Signal<> onDestroy;
   protected:
     void clear();
@@ -46,9 +46,6 @@ namespace qi
     unsigned int    _service;
     ObjectMap       _objectMap;
     RemoteReferencesMap _remoteReferences;
-    /* Be static for better readability
-    */
-    static qi::Atomic<int> _nextId;
   };
 }
 

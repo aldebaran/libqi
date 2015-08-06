@@ -603,6 +603,11 @@ namespace qi {
    qiLogDebug() << "bouncing setProperty";
    return _self.async<void>("setProperty", id, val);
  }
+
+// we use different ranges for ids from RemoteObject and BoundObject to avoid collisions
+// RemoteObject takes the upper part of the unsigned int
+Atomic<unsigned int> RemoteObject::_nextId(std::numeric_limits<unsigned int>::max() / 2);
+
 }
 
 #ifdef _MSC_VER

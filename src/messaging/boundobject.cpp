@@ -689,4 +689,7 @@ namespace qi {
       qiLogWarning("qimessaging.serverresult") << "Can't generate an answer for address:" << replyaddr;
   }
 
+// id 1 is for the service itself, we must not use it for sub-objects
+qi::Atomic<unsigned int> ServiceBoundObject::_nextId(2);
+
 }
