@@ -4,11 +4,10 @@
  * found in the COPYING file.
  */
 
-#include <fstream>
+#include <boost/filesystem/fstream.hpp>
 #include <numeric>
 
 #include <gtest/gtest.h>
-#define BOOST_FILESYSTEM_VERSION 3
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 #include <locale>
@@ -19,7 +18,6 @@
 #include <qi/path.hpp>
 #include <qi/log.hpp>
 #include "../../src/utils.hpp"
-#include <iostream>
 #include <sstream>
 #include <boost/scoped_ptr.hpp>
 
@@ -30,34 +28,13 @@
 
 qiLogCategory("test.qi.path");
 
-std::string argpath;
+qi::Path argpath;
 
 namespace bfs = boost::filesystem;
 
-bfs::path absPath(const std::string& pPath)
+bfs::path absPath(const bfs::path& pPath)
 {
   return bfs::absolute(bfs::system_complete(pPath)).make_preferred();
-}
-
-boost::filesystem::path normalize(boost::filesystem::path path1,
-                                  boost::filesystem::path path2)
-{
-  if (*path2.begin() == ".")
-    return path1;
-  if (*path2.begin() == "..")
-    return path1.parent_path();
-  else
-    return path1 /= path2;
-}
-
-
-std::string normalizePath(const std::string& path)
-{
-  boost::filesystem::path p(path, qi::unicodeFacet());
-
-  p = std::accumulate(p.begin(), p.end(), boost::filesystem::path(), normalize);
-
-  return p.make_preferred().string(qi::unicodeFacet());
 }
 
 boost::filesystem::path getHomePath()
@@ -69,11 +46,10 @@ boost::filesystem::path getHomePath()
 
 TEST(qiPath, callingInit)
 {
-  bfs::path expected(normalizePath(absPath(argpath).string(qi::unicodeFacet())), qi::unicodeFacet());
-  expected = expected.parent_path().parent_path();
-
+  const qi::Path expected = qi::path::detail::normalize(absPath(argpath)).parent().parent();
+  
   std::string actual = qi::path::sdkPrefix();
-  std::string expect = expected.string(qi::unicodeFacet());
+  std::string expect = expected.str();
   boost::to_lower(expect);
   boost::to_lower(actual);
 
@@ -375,14 +351,14 @@ TEST(qiPath, readingWritingfindConfigs)
   bfs::path writeablePath(bfs::absolute(userAppData) / "foo" / "foo.cfg");
  #endif
 
-  std::string fooCfg = sdkl.userWritableConfPath("foo", "foo.cfg");
-  std::ofstream ofs;
-  ofs.open(fooCfg.c_str(), std::fstream::out | std::fstream::trunc);
-  ASSERT_FALSE (ofs.bad()) << "could not open" << fooCfg;
+  qi::Path fooCfgPath = sdkl.userWritableConfPath("foo", "foo.cfg");
+  bfs::ofstream ofs;
+  ofs.open(fooCfgPath, std::fstream::out | std::fstream::trunc);
+  ASSERT_FALSE(ofs.bad()) << "could not open" << fooCfgPath;
   ofs << "Hi, this is foo" << std::endl;
   ofs.close();
 
-  fooCfg = sdkl.findConf("foo", "foo.cfg");
+  std::string fooCfg = sdkl.findConf("foo", "foo.cfg");
   std::string expect = writeablePath.string(qi::unicodeFacet());
   boost::to_lower(expect);
   boost::to_lower(fooCfg);
@@ -409,7 +385,7 @@ TEST(qiPath, readingWritingFindData)
  #endif
 
   std::string fooDat = sdkl.userWritableDataPath("foo", "foo.dat");
-  std::ofstream ofs;
+  bfs::ofstream ofs;
   ofs.open(fooDat.c_str(), std::fstream::out | std::fstream::trunc);
   ASSERT_FALSE (ofs.bad()) << "could not open" << fooDat;
   ofs << "Hi, this is foo" << std::endl;
@@ -428,11 +404,11 @@ TEST(qiPath, readingWritingFindData)
   ASSERT_EQ(std::string(), noDataExisting);
 }
 
-void writeData(std::string path)
+void writeData(const qi::Path& path)
 {
   std::cout << "creating: " << path << std::endl;
-  std::ofstream ofs;
-  ofs.open(path.c_str(), std::fstream::out | std::fstream::trunc);
+  bfs::ofstream ofs;
+  ofs.open(path, std::fstream::out | std::fstream::trunc);
   ofs << path;
   ofs.close();
 }
@@ -446,7 +422,7 @@ void createData(std::string root, std::string listing)
   while(std::getline(stream, line))
   {
     std::string file_string(fsconcat(root, line));
-    bfs::path file_path(file_string, qi::unicodeFacet());
+    const bfs::path file_path(file_string, qi::unicodeFacet());
     bfs::create_directories(file_path.parent_path());
     writeData(file_string);
   }
@@ -675,14 +651,6 @@ TEST_F(qiPathData, findDataDir)
   EXPECT_TRUE(barDirMatches.empty()); // listData discards directories
 }
 
-int main(int argc, char* argv[])
-{
-  qi::Application app(argc, argv);
-  ::testing::InitGoogleTest(&argc, argv);
-  argpath = argv[0];
-  return RUN_ALL_TESTS();
-}
-
 TEST(qiPath, filesystemConcat)
 {
   std::string s0 = fsconcat("/toto", "tata");
@@ -793,11 +761,11 @@ void qiPathFrench::TearDownTestCase()
 TEST_F(qiPathFrench, convertFromASCII)
 {
   bfs::path path = _folderPathASCII / bfs::path(_fileNameASCII);
-  std::string pathStr = qi::path::convertToDosPath(path.string());
+  const qi::Path pathStr = qi::path::convertToDosPath(path.string());
 
-  std::cout << "path: " << pathStr.c_str() << std::endl;
+  std::cout << "path: " << pathStr << std::endl;
 
-  std::ifstream ifs(pathStr.c_str());
+  bfs::ifstream ifs(pathStr);
   ASSERT_TRUE(ifs.is_open());
 
   std::string line;
@@ -1042,4 +1010,21 @@ TEST(qipath, ScopedDir)
     ASSERT_TRUE(tmpPath.exists());
   }
   ASSERT_FALSE(tmpPath.exists());
+}
+
+int main(int argc, char* argv[])
+{
+  qi::Application app(argc, argv);
+  ::testing::InitGoogleTest(&argc, argv);
+#ifdef WIN32
+  {
+    std::vector<WCHAR> filename(2048, 0);
+    GetModuleFileNameW(NULL, filename.data(), filename.size());
+    argpath = bfs::path(filename);
+  }
+#else
+  argpath = bfs::path(argv[0]);
+#endif
+
+  return RUN_ALL_TESTS();
 }

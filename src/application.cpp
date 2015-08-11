@@ -4,7 +4,6 @@
  * found in the COPYING file.
  */
 
-#include <fstream>
 #include <cstdlib>
 
 #include <qi/application.hpp>

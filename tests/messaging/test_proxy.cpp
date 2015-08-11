@@ -4,7 +4,6 @@
 */
 
 #include <list>
-#include <iostream>
 
 #include <gtest/gtest.h>
 

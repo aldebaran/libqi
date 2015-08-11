@@ -7,6 +7,7 @@
 
 #include "dataperfsuite_p.hpp"
 
+#include <iostream>
 #include <iomanip>
 
 namespace qi

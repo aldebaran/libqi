@@ -1,6 +1,4 @@
 #include "sig_generator.h"
-#include <iostream>
-#include <fstream>
 #include <qi/application.hpp>
 #include <qi/log.hpp>
 #include <boost/shared_ptr.hpp>

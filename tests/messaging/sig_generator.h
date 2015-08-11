@@ -1,8 +1,6 @@
 #ifndef SIG_GENERATOR_H
 #define SIG_GENERATOR_H
 
-#include <iostream>
-#include <fstream>
 #include <qi/application.hpp>
 #include <boost/shared_ptr.hpp>
 

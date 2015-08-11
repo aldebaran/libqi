@@ -2,7 +2,6 @@
  * Copyright (c) 2012 Aldebaran Robotics. All rights reserved.
 */
 
-#include <iostream>
 #include "sig_generator.h"
 #include <qi/application.hpp>
 #include <boost/shared_ptr.hpp>
