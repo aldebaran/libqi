@@ -183,6 +183,11 @@ namespace qi
     return _p->path.string(qi::unicodeFacet());
   }
 
+  Path::operator boost::filesystem::path() const
+  {
+    return _p->path;
+  }
+
   std::string Path::str() const
   {
     return _p->path.string(qi::unicodeFacet());
