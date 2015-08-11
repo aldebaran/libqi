@@ -4,8 +4,6 @@
  * found in the COPYING file.
  */
 
-#include <iostream>
-
 #include <errno.h>
 #include <fcntl.h>
 

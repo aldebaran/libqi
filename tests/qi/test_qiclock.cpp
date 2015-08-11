@@ -4,8 +4,6 @@
  * found in the COPYING file.
  */
 
-#include <iostream>
-
 #include <gtest/gtest.h>
 
 #include <qi/clock.hpp>

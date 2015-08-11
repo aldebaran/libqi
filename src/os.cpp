@@ -4,7 +4,7 @@
  * found in the COPYING file.
  */
 
-#include <fstream>
+#include <boost/filesystem/fstream.hpp>
 
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_generators.hpp>
@@ -130,8 +130,8 @@ namespace qi {
       boost::mutex::scoped_lock lock(mutex);
       if (initialized)
         return idString;
-      std::string idFilePath(qi::path::userWritableConfPath("qimessaging", "machine_id"));
-      std::ifstream idFile(bfs::path(idFilePath, qi::unicodeFacet()).string().c_str());
+      const qi::Path idFilePath(qi::path::userWritableConfPath("qimessaging", "machine_id"));
+      boost::filesystem::ifstream idFile(idFilePath);
 
       if (idFile)
       {
@@ -144,7 +144,7 @@ namespace qi {
         qiLogWarning() << "machine_id is empty, generating a new one";
       }
 
-      std::ofstream newIdFile(idFilePath.c_str());
+      boost::filesystem::ofstream newIdFile(idFilePath);
 
       idString = generateUuid();
       if (newIdFile)

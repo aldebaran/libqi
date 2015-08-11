@@ -4,7 +4,6 @@
  * found in the COPYING file.
  */
 
-#include <iostream>
 #include <sstream>
 #include <numeric>
 

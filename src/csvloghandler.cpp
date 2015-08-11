@@ -12,7 +12,7 @@
 #include <boost/bind.hpp>
 
 #include <sstream>
-#include <fstream>
+#include <boost/filesystem/fstream.hpp>
 #include <iomanip>
 #include <string>
 #include <qi/log.hpp>
@@ -26,7 +26,7 @@ namespace qi {
     class PrivateCsvLogHandler
     {
     public:
-      std::ofstream _file;
+      boost::filesystem::ofstream _file;
     };
 
 
@@ -47,7 +47,7 @@ namespace qi {
       }
 
       // Open the file.
-      _p->_file.open(fPath.make_preferred().string().c_str(), std::ios_base::app | std::ios_base::out | std::ios_base::binary);
+      _p->_file.open(fPath.make_preferred(), std::ios_base::app | std::ios_base::out | std::ios_base::binary);
 
       if (_p->_file.is_open())
       {
@@ -59,8 +59,6 @@ namespace qi {
 
     CsvLogHandler::~CsvLogHandler()
     {
-      if (_p->_file.is_open())
-        _p->_file.close();
     }
 
     void CsvLogHandler::log(const qi::LogLevel verb,

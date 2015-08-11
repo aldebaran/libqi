@@ -16,7 +16,6 @@
 
 #include "buffer_p.hpp"
 
-#include <iostream>
 
 qiLogCategory("qi.Buffer");
 

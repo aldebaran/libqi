@@ -16,7 +16,7 @@
 # include <sys/socket.h>
 #endif
 #include <limits>
-#include <fstream>
+#include <boost/filesystem/fstream.hpp>
 #include <cstdio>
 
 #include <gtest/gtest.h>
@@ -532,8 +532,8 @@ TEST(QiOs, getMachineId)
   std::string uuid1 = qi::os::getMachineId();
   std::string uuid2;
 
-  std::string uuid2FileName = (qi::os::tmp()).append("machine_id_test_42");
-  std::ifstream uuid2file(uuid2FileName.c_str());
+  const qi::Path uuid2FileName = (qi::os::tmp()).append("machine_id_test_42");
+  boost::filesystem::ifstream uuid2file(uuid2FileName);
 
   ASSERT_TRUE(uuid2file);
 

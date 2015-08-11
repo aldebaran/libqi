@@ -4,17 +4,16 @@
  * found in the COPYING file.
  */
 
-#include <iostream>
-#include <fstream>
+#include <boost/filesystem/fstream.hpp>
 #include <string>
 #include <qi/os.hpp>
 
 
 int main()
 {
-  std::string saveUuidFileName = (qi::os::tmp()).append("machine_id_test_42");
-  std::ofstream saveUuidFile(saveUuidFileName.c_str());
-  std::string uuid = qi::os::getMachineId();
+  const qi::Path saveUuidFileName = (qi::os::tmp()).append("machine_id_test_42");
+  boost::filesystem::ofstream saveUuidFile(saveUuidFileName);
+  const std::string uuid = qi::os::getMachineId();
 
   if (!saveUuidFile)
     return 1;
