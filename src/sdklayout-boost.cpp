@@ -262,32 +262,30 @@ namespace qi {
 
   std::string SDKLayout::findBin(const std::string &name, bool searchInPath) const
   {
-    boost::filesystem::path bin(name, qi::unicodeFacet());
+    qi::Path bin = name;
     try
     {
       // try if the name is a full path
-      bin = boost::filesystem::system_complete(bin);
-      if (boost::filesystem::exists(bin)
-          && !boost::filesystem::is_directory(bin))
-        return bin.string(qi::unicodeFacet());
+      bin = qi::Path(boost::filesystem::system_complete(bin.bfsPath()));
+      if (bin.exists() && !bin.isDir())
+        return bin.str();
 
       std::vector<std::string>::const_iterator it;
       for (it = _p->_sdkPrefixes.begin();
            it != _p->_sdkPrefixes.end();
            ++it)
       {
-        boost::filesystem::path p;
-        p = boost::filesystem::path(fsconcat(*it, "bin", name), qi::unicodeFacet());
+        qi::Path p = *it;
+        p = p / "bin" / name;
 
-        if (boost::filesystem::exists(p)
-            && !boost::filesystem::is_directory(p))
-          return p.string(qi::unicodeFacet());
+        if (p.exists() && !p.isDir())
+          return p.str();
 #ifndef NDEBUG
-        if (boost::filesystem::exists(boost::filesystem::path(p.string(qi::unicodeFacet()) + "_d.exe", qi::unicodeFacet())))
-          return (p.string(qi::unicodeFacet()) + "_d.exe");
+        if (qi::Path(p.str() + "_d.exe").exists())
+          return p.str() + "_d.exe";
 #endif
-        if (boost::filesystem::exists(boost::filesystem::path(p.string(qi::unicodeFacet()) + ".exe", qi::unicodeFacet())))
-          return (p.string(qi::unicodeFacet()) + ".exe");
+        if (qi::Path(p.str() + ".exe").exists())
+          return p.str() + ".exe";
       }
     }
     catch (const boost::filesystem::filesystem_error &e)
