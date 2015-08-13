@@ -99,6 +99,39 @@ TEST(TestSignal, AutoDisconnect)
   ASSERT_EQ(1, *r);
 }
 
+void waitFuture(qi::Atomic<int>& cnt, qi::Promise<void> start, qi::Future<void> f)
+{
+  if (++cnt == 2)
+    start.setValue(0);
+  f.wait();
+
+  // force disconnection, may trigger a segfault
+  throw qi::PointerLockException();
+}
+
+TEST(TestSignal, NonBlockingDestroy)
+{
+  // disconnect is blocking, but signal destruction should not be
+
+  qi::Promise<void> start;
+  qi::Promise<void> finish;
+  qi::Atomic<int> cnt = 0;
+
+  {
+    qi::Signal<void> sig;
+    sig.connect(boost::bind(waitFuture, boost::ref(cnt), start, finish.future()));
+
+    sig();
+    sig();
+
+    start.future().wait();
+    // now that the callback is running, destroy the signal
+  }
+
+  // all went well, unblock the callback
+  finish.setValue(0);
+}
+
 TEST(TestSignal, BadArity)
 {
   // Test runtime detection of arity errors
