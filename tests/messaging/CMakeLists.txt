@@ -51,7 +51,7 @@ qi_create_gtest(
   TIMEOUT 60
 )
 
-qi_create_gtest(test_appsession_opts                                    SRC test_applicationsession_opts.cpp DEPENDS QI NO_ADD_TEST)
+qi_create_test_helper(test_appsession_opts                                    SRC test_applicationsession_opts.cpp DEPENDS QI GTEST GTEST_MAIN)
 qi_add_test(test_appsession_options_low test_appsession_opts            ARGUMENTS low    TIMEOUT 30)
 qi_add_test(test_appsession_options_med test_appsession_opts            ARGUMENTS medium TIMEOUT 30)
 qi_add_test(test_appsession_options_high test_appsession_opts           ARGUMENTS high   TIMEOUT 30)
