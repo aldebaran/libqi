@@ -37,7 +37,7 @@ int main(int argc, char *argv[])
 #if defined(WITH_BREAKPAD) && defined(GATEWAY_BUILD_TAG)
   BreakpadExceptionHandler eh(BREAKPAD_DUMP_DIR);
   eh.setBuildTag(GATEWAY_BUILD_TAG);
-  qiLogInfo() << "Build tag: " GATEWAY_BUILD_TAG
+  qiLogInfo() << "Build tag: " GATEWAY_BUILD_TAG;
 #endif
 
 
