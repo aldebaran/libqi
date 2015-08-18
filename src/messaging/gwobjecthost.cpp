@@ -142,7 +142,7 @@ void GwObjectHost::harvestServiceOriginatingObjects(Message& msg, TransportSocke
   Signature signature;
   {
     boost::upgrade_lock<boost::shared_mutex> lock(_mutex);
-    MetaObject* metaObject;
+    MetaObject* metaObject = NULL;
     const Signature& (MetaMethod::*signatureGetter)() const = NULL;
     if (msg.type() == Message::Type_Reply || msg.type() == Message::Type_Error)
     {
