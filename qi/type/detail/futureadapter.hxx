@@ -286,7 +286,7 @@ inline void futureAdapterVal(qi::Future<qi::AnyValue> metaFut, qi::Promise<T> pr
   }
 }
 
-template<>
+template <>
 inline void futureAdapterVal(qi::Future<qi::AnyValue> metaFut, qi::Promise<AnyValue> promise)
 {
   if (metaFut.hasError())
@@ -295,6 +295,17 @@ inline void futureAdapterVal(qi::Future<qi::AnyValue> metaFut, qi::Promise<AnyVa
     promise.setCanceled();
   else
     promise.setValue(metaFut.value());
+}
+
+template <>
+inline void futureAdapterVal(qi::Future<qi::AnyValue> metaFut, qi::Promise<void> promise)
+{
+  if (metaFut.hasError())
+    promise.setError(metaFut.error());
+  else if (metaFut.isCanceled())
+    promise.setCanceled();
+  else
+    promise.setValue(0);
 }
 
 }

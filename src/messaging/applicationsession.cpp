@@ -195,10 +195,22 @@ const std::string& ApplicationSession::Config::name() const
   return _name;
 }
 
+static void envConfigInit(qi::ApplicationSession::Config& conf)
+{
+  std::string listenUrl = qi::os::getenv("QI_LISTEN_URL");
+  std::string sdUrl = qi::os::getenv("QI_URL");
+
+  if (listenUrl.length())
+    conf.setDefaultListenUrl(Url(listenUrl));
+  if (sdUrl.length())
+    conf.setDefaultUrl(sdUrl);
+}
+
 ApplicationSession::ApplicationSession(int& argc, char**& argv, int opt, const Url& url)
   : Application(::addParseOptions(argc), argv)
 {
   Config config;
+  envConfigInit(config);
   config.setDefaultUrl(url);
   config.setOption((Option)opt);
 
@@ -212,6 +224,7 @@ ApplicationSession::ApplicationSession(const std::string& name,
   : Application(::addParseOptions(argc), argv, name)
 {
   Config config;
+  envConfigInit(config);
   config.setName(name);
   config.setDefaultUrl(url);
   config.setOption((Option)opt);
@@ -222,7 +235,9 @@ ApplicationSession::ApplicationSession(const std::string& name,
 ApplicationSession::ApplicationSession(int& argc, char**& argv, const Config& defaultConfig)
   : Application(::addParseOptions(argc), argv, defaultConfig.name())
 {
-  _p = new ApplicationSessionPrivate(defaultConfig);
+  Config config(defaultConfig);
+  envConfigInit(config);
+  _p = new ApplicationSessionPrivate(config);
 }
 
 ApplicationSession::~ApplicationSession()

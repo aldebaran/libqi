@@ -13,6 +13,7 @@
 
 TestSessionPair::TestSessionPair(TestMode::Mode mode, const std::string sdUrl)
 {
+  qi::UrlVector endpoints;
   _sd = qi::makeSession();
 
   // #1 Get active mode.
@@ -26,12 +27,23 @@ TestSessionPair::TestSessionPair(TestMode::Mode mode, const std::string sdUrl)
   }
   else
   {
-    _sd->listenStandalone(sdUrl);
+    if (_mode == TestMode::Mode_Gateway)
+    {
+      _sd->listenStandalone("tcp://0.0.0.0:0");
+      _gw.attachToServiceDirectory(_sd->url());
+      _gw.listen(sdUrl);
+      endpoints = _sd->endpoints();
+    }
+    else
+    {
+      _sd->listenStandalone(sdUrl);
+      endpoints = _sd->endpoints();
+    }
   }
 
   // #3 Get client and server sessions.
-  _client = new TestSession(_sd->endpoints()[0].str(), false, _mode);
-  _server = new TestSession(_sd->endpoints()[0].str(), true, _mode);
+  _client = new TestSession(endpoints[0].str(), false, _mode);
+  _server = new TestSession(endpoints[0].str(), true, _mode);
 }
 
 TestSessionPair::TestSessionPair(TestSessionPair &other)

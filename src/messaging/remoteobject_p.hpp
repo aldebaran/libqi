@@ -41,13 +41,16 @@ namespace qi {
     RemoteObject(unsigned int service, unsigned int object, qi::MetaObject metaObject, qi::TransportSocketPtr socket = qi::TransportSocketPtr());
     ~RemoteObject();
 
+    unsigned int nextId() { return ++_nextId; }
+
     //must be called to make the object valid.
     qi::Future<void> fetchMetaObject();
 
     void setTransportSocket(qi::TransportSocketPtr socket);
     // Set fromSignal if close is invoked from disconnect signal callback
     void close(const std::string& reason, bool fromSignal = false);
-    unsigned int service() const { return _service;}
+    unsigned int service() const { return _service; }
+    unsigned int object() const { return _object; }
 
   protected:
     //TransportSocket.messagePending
@@ -82,6 +85,9 @@ namespace qi {
     qi::AnyObject                                   _self;
     boost::recursive_mutex                          _localToRemoteSignalLinkMutex;
     LocalToRemoteSignalLinkMap                      _localToRemoteSignalLink;
+
+  private:
+    static qi::Atomic<unsigned int> _nextId;
   };
 
 }

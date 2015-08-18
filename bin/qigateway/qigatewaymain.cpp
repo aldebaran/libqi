@@ -8,25 +8,48 @@
 #include <iostream>
 #include <string>
 
+#ifdef WITH_BREAKPAD
+# include <breakpad/breakpad.h>
+#endif
+
 #include <boost/program_options.hpp>
+#include <qi/os.hpp>
 #include <qi/application.hpp>
 #include <qi/log.hpp>
 #include <qi/messaging/gateway.hpp>
+#include <qi/url.hpp>
 
 namespace po = boost::program_options;
+
+qiLogCategory("qi.gateway.main");
+
+static bool attachToServiceDirectory(qi::Gateway& gw, const qi::Url& url)
+{
+  qi::Future<void> fut = gw.attachToServiceDirectory(url);
+
+  return !fut.hasError();
+}
 
 int main(int argc, char *argv[])
 {
   qi::Application app(argc, argv);
+
+#if defined(WITH_BREAKPAD) && defined(GATEWAY_BUILD_TAG)
+  BreakpadExceptionHandler eh(BREAKPAD_DUMP_DIR);
+  eh.setBuildTag(GATEWAY_BUILD_TAG);
+  qiLogInfo() << "Build tag: " GATEWAY_BUILD_TAG;
+#endif
+
+
   // declare the program options
   po::options_description desc("Usage:\n  qi-service masterAddress [options]\nOptions");
   desc.add_options()
       ("help", "Print this help.")
-      ("master-address",
+      ("qi-url",
        po::value<std::string>()->default_value(std::string("tcp://127.0.0.1:9559")),
        "The master address")
-      ("gateway-address",
-       po::value<std::string>()->default_value(std::string("tcp://127.0.0.1:12345")),
+      ("qi-listen-url",
+       po::value<std::string>()->default_value(std::string("tcp://0.0.0.0:9559")),
        "The gateway address")
       ("gateway-type",
        po::value<std::string>()->default_value(std::string("local")),
@@ -47,61 +70,45 @@ int main(int argc, char *argv[])
     if (vm.count("help"))
     {
       std::cout << desc << "\n";
-      return 0;
+      return EXIT_SUCCESS;
     }
 
-    std::string gatewayAddress = vm["gateway-address"].as<std::string>();
-    std::string masterAddress = vm["master-address"].as<std::string>();
-    std::string gatewayType = vm["gateway-type"].as<std::string>();
+    const std::string gatewayAddress = vm["qi-listen-url"].as<std::string>();
+    const std::string masterAddress = vm["qi-url"].as<std::string>();
+    const std::string gatewayType = vm["gateway-type"].as<std::string>();
 
     if (gatewayType == "local")
     {
       qi::Gateway gateway;
-      if (!gateway.attachToServiceDirectory(masterAddress) ||
+      if (!attachToServiceDirectory(gateway, qi::Url(masterAddress)) ||
           !gateway.listen(gatewayAddress))
       {
-        return 1;
+        qiLogError() << "Failed to launch gateway.";
+        return EXIT_FAILURE;
       }
-      std::cout << "Local gateway ready: " << gatewayAddress << std::endl;
+      qiLogInfo() << "Local gateway ready: " << gatewayAddress << std::endl;
       app.run();
     }
     else if (gatewayType == "remote")
     {
-      qi::RemoteGateway gateway;
-      if (!gateway.listen(gatewayAddress))
-      {
-        return 1;
-      }
-      std::cout << "Remote gateway ready: " << gatewayAddress << std::endl;
-      app.run();
+      qiLogError() << "Not implemented";
+      return EXIT_FAILURE;
     }
     else if (gatewayType == "reverse")
     {
-      qi::ReverseGateway gateway;
-      if (!gateway.attachToServiceDirectory(masterAddress))
-      {
-        return 1;
-      }
-
-      std::cout << "Reverse gateway ready" << std::endl;
-      std::string line;
-      while (std::getline(std::cin, line))
-      {
-        qi::Url url(line);
-        gateway.connect(url);
-      }
-      app.run();
+      qiLogError() << "Not implemented";
+      return EXIT_FAILURE;
     }
     else
     {
-      std::cerr << "unknown type: " << gatewayType << std::endl;
-      return 1;
+      qiLogError() << "unknown type: " << gatewayType;
+      return EXIT_FAILURE;
     }
   }
   catch (const boost::program_options::error&)
   {
-    std::cout << desc << "\n";
+    qiLogError() << desc;
   }
 
-  return 0;
+  return EXIT_SUCCESS;
 }

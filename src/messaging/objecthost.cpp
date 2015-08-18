@@ -40,10 +40,8 @@ void ObjectHost::onMessage(const qi::Message &msg, TransportSocketPtr socket)
     ObjectMap::iterator it = _objectMap.find(msg.object());
     if (it == _objectMap.end())
     {
-      qiLogDebug() << "Object id not found " << msg.object();
       return;
     }
-    qiLogDebug() << "ObjectHost forwarding " << msg.address();
     // Keep ptr alive while message is being processed, even if removeObject is called
     obj = it->second;
   }
@@ -59,7 +57,8 @@ unsigned int ObjectHost::addObject(BoundAnyObject obj, StreamContext* remoteRef,
 {
   boost::recursive_mutex::scoped_lock lock(_mutex);
   if (!id)
-    id = ++_nextId;
+    id = nextId();
+  assert(_objectMap.find(id) == _objectMap.end());
   _objectMap[id] = obj;
   _remoteReferences[remoteRef].push_back(id);
   return id;
@@ -113,5 +112,4 @@ void ObjectHost::clear()
   _objectMap.clear();
 }
 
-Atomic<int> ObjectHost::_nextId(2);
 }

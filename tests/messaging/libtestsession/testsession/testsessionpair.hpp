@@ -68,6 +68,7 @@
 
 #include <qi/session.hpp>
 #include <testsession/testsession.hpp>
+#include <qi/messaging/gateway.hpp>
 
 class TestSessionPair
 {
@@ -85,6 +86,7 @@ public:
 
 private:
   qi::SessionPtr       _sd;
+  qi::Gateway          _gw;
   TestMode::Mode       _mode;
   TestSession         *_client;
   TestSession         *_server;

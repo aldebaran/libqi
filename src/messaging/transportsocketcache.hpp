@@ -1,46 +1,41 @@
 #pragma once
 /*
-**  Copyright (C) 2012 Aldebaran Robotics
+**  Copyright (C) 2015 Aldebaran Robotics
 **  See COPYING for the license
 */
 
-#ifndef _SRC_TRANSPORTSOCKETCACHE_HPP_
-#define _SRC_TRANSPORTSOCKETCACHE_HPP_
+#ifndef _SRC_TRANSPORTSOCKETCACHE2_HPP_
+#define _SRC_TRANSPORTSOCKETCACHE2_HPP_
+
+#include <string>
+#include <queue>
 
 #include <boost/thread/mutex.hpp>
+
 #include <qi/future.hpp>
 #include <qi/messaging/serviceinfo.hpp>
+
+#include <qi/trackable.hpp>
+
 #include "transportsocket.hpp"
-#include <string>
 
-namespace qi {
-
-  struct TransportSocketConnection {
-    qi::Url                             url;
-    qi::TransportSocketPtr              socket;
-    qi::Promise<qi::TransportSocketPtr> promise;
-    SignalLink                          connectSignalLink;
-    SignalLink                          disconnectSignalLink;
-  };
-
-  struct TransportSocketConnectionAttempt {
-    qi::Promise<qi::TransportSocketPtr> promise;
-    unsigned int socket_count;
-    bool successful;
-  };
+namespace qi
+{
 
   /**
-   * @brief The TransportCache class maintain a cache of TransportSocket
-   * @internal
-   *
-   * getSocket will return a connected endpoint for the associated endpoint.
-   *
-   * -> if the endpoint is already connected return it.
-   * -> if the connection is pending wait for the result
-   * -> if the socket do not exist, create it, and try to connect it
-   * -> if the socket is disconnected try to reconnect it
-   */
-  class TransportSocketCache {
+  * @brief The TransportCache class maintain a cache of TransportSocket
+  * @internal
+  *
+  * `socket` will return a connected endpoint for the associated endpoint.
+  *
+  * -> if the endpoint is already connected return it.
+  * -> if the connection is pending wait for the result
+  * -> if the socket do not exist, create it, and try to connect it
+  * -> if the socket is disconnected try to reconnect it
+  */
+
+  class TransportSocketCache : public Trackable<TransportSocketCache>
+  {
   public:
     TransportSocketCache();
     ~TransportSocketCache();
@@ -48,25 +43,42 @@ namespace qi {
     void init();
     void close();
 
-    qi::Future<qi::TransportSocketPtr> socket(const ServiceInfo& servInfo, const std::string protocol);
+    Future<TransportSocketPtr> socket(const ServiceInfo& servInfo, const std::string& protocol = "");
     void insert(const std::string& machineId, const Url& url, TransportSocketPtr socket);
-  protected:
-    //TransportSocket
-    void onSocketConnected(TransportSocketPtr client, const ServiceInfo &servInfo, const Url &url);
-    void onSocketDisconnected(std::string error, TransportSocketPtr client, const ServiceInfo &servInfo, const Url& url);
 
   private:
-    //maintain a cache of remote connections
-    typedef std::map< std::string, TransportSocketConnection > TransportSocketConnectionMap;
-    typedef std::map< std::string, TransportSocketConnectionMap > MachineConnectionMap;
-    typedef std::map< std::string, TransportSocketConnectionAttempt > MachineAttemptsMap;
 
+    enum State
+    {
+      State_Pending,
+      State_Connected,
+      State_Error
+    };
+
+    typedef boost::shared_ptr<UrlVector> UrlVectorPtr;
+    void onSocketConnectionAttempt(Future<void> fut, Promise<TransportSocketPtr> prom, TransportSocketPtr socket, const ServiceInfo& info, uint32_t currentUrlIdx, UrlVectorPtr urls);
+    void onSocketParallelConnectionAttempt(Future<void> fut, TransportSocketPtr socket, Url url, const ServiceInfo& info);
+    void onSocketDisconnected(TransportSocketPtr client, Url url, const std::string& reason, const ServiceInfo& info);
+
+
+    boost::mutex _socketMutex;
+    struct ConnectionAttempt {
+      Promise<TransportSocketPtr> promise;
+      TransportSocketPtr endpoint;
+      UrlVector relatedUrls;
+      int attemptCount;
+      State state;
+    };
+    typedef boost::shared_ptr<ConnectionAttempt> ConnectionAttemptPtr;
+
+    void checkClear(ConnectionAttemptPtr, const std::string& machineId);
+
+    typedef std::string MachineId;
+    typedef std::map<MachineId, std::map<Url, ConnectionAttemptPtr> > ConnectionMap;
+    ConnectionMap _connections;
+    std::list<TransportSocketPtr> _allPendingConnections;
     bool _dying;
-    boost::mutex _socketsMutex;
-
-    MachineAttemptsMap _attempts;
-    MachineConnectionMap _sockets;
   };
 }
 
-#endif  // _SRC_TRANSPORTSOCKETCACHE_HPP_
+#endif

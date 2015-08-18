@@ -21,6 +21,11 @@ TEST(Module, Load)
   ASSERT_EQ(13, res);
 }
 
+TEST(Module, Call)
+{
+  ASSERT_EQ(84, session->callModule<int>("naoqi.testanymodule.func", 42).value());
+}
+
 TEST(Module, LoadByHandWithSession)
 {
   qi::AnyModule foomod = qi::import("naoqi.testanymodulesession");

@@ -35,20 +35,18 @@ namespace qi
     void removeObject(unsigned int);
     void removeRemoteReferences(TransportSocketPtr socket);
     unsigned int service() { return _service;}
-    unsigned int nextId() { return ++_nextId;}
+    virtual unsigned int nextId() = 0;
+    typedef std::map<unsigned int, BoundAnyObject > ObjectMap;
+    const ObjectMap& objects() const { return _objectMap; }
     qi::Signal<> onDestroy;
   protected:
     void clear();
   private:
-    typedef std::map<unsigned int, BoundAnyObject > ObjectMap;
     typedef std::map<StreamContext*, std::vector<unsigned int> > RemoteReferencesMap;
     boost::recursive_mutex    _mutex;
     unsigned int    _service;
     ObjectMap       _objectMap;
     RemoteReferencesMap _remoteReferences;
-    /* Be static for better readability
-    */
-    static qi::Atomic<int> _nextId;
   };
 }
 

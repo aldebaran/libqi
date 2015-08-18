@@ -204,7 +204,7 @@ namespace qi {
         qiLogDebug() << "Handling promise id:" << msg.id();
       } else  {
         qiLogError() << "no promise found for req id:" << msg.id()
-                     << "  obj: " << msg.service() << "  func: " << msg.function() << " type: " << msg.type();
+                     << "  obj: " << msg.service() << "  func: " << msg.function() << " type: " << Message::typeToString(msg.type());
         return;
       }
     }
@@ -603,6 +603,11 @@ namespace qi {
    qiLogDebug() << "bouncing setProperty";
    return _self.async<void>("setProperty", id, val);
  }
+
+// we use different ranges for ids from RemoteObject and BoundObject to avoid collisions
+// RemoteObject takes the upper part of the unsigned int
+Atomic<unsigned int> RemoteObject::_nextId(std::numeric_limits<unsigned int>::max() / 2);
+
 }
 
 #ifdef _MSC_VER

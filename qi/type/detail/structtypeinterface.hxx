@@ -281,7 +281,7 @@ namespace qi {                                                                  
     return ::qi::detail::normalizeClassName(BOOST_PP_STRINGIZE(name));\
   } \
   inl bool TypeImpl<name>::canDropFields(void* storage, const std::vector<std::string>& fieldNames) {return ::qi::detail::StructVersioningDelegateDrop<name>::canDropFields(storage, fieldNames);} \
- inl bool TypeImpl<name>::fillMissingFields(std::map<std::string, ::qi::AnyValue>& fields, const std::vector<std::string>& missing) {return ::qi::detail::StructVersioningDelegateFill<name>::fillMissingFields(this, fields, missing);} \
+  inl bool TypeImpl<name>::fillMissingFields(std::map<std::string, ::qi::AnyValue>& fields, const std::vector<std::string>& missing) {return ::qi::detail::StructVersioningDelegateFill<name>::fillMissingFields(this, fields, missing);} \
  }
 
 
@@ -449,6 +449,10 @@ namespace qi {
     virtual std::vector<std::string> elementsName()
     {
       return bounceType()->elementsName();
+    }
+
+    virtual bool fillMissingFields(std::map<std::string, ::qi::AnyValue>& fields, const std::vector<std::string>& missing) {
+      return bounceType()->fillMissingFields(fields, missing);
     }
 
     _QI_BOUNCE_TYPE_METHODS(Methods);

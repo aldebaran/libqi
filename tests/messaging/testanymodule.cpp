@@ -32,8 +32,15 @@ qi::AnyObject setup()
   return ob.object();
 }
 
+int func(qi::SessionPtr session, int val)
+{
+  session->services(); // segfault?
+  return val*2;
+}
+
 void init_naoqitestmodule_module(qi::ModuleBuilder* mb) {
   mb->advertiseMethod("test", &setup);
+  mb->advertiseMethod("func", &func);
 }
 
 QI_REGISTER_MODULE("naoqi.testanymodule", &init_naoqitestmodule_module);
