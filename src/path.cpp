@@ -41,10 +41,6 @@ namespace qi
     bfs::path path;
   };
 
-  Path::Path(PrivatePath* p)
-    : _p(p)
-  {}
-
   Path::Path(const std::string& unicodePath)
     : _p(new PrivatePath(unicodePath))
   {}
@@ -102,7 +98,7 @@ namespace qi
 
   Path Path::parent() const
   {
-    return Path(new PrivatePath(_p->path.parent_path()));
+    return _p->path.parent_path();
   }
 
   std::string Path::filename() const
@@ -112,7 +108,7 @@ namespace qi
 
   Path Path::absolute() const
   {
-    return Path(new PrivatePath(bfs::absolute(_p->path)));
+    return bfs::absolute(_p->path);
   }
 
   PathVector Path::files() const
@@ -122,7 +118,7 @@ namespace qi
 
     for (; dit != bfs::directory_iterator(); ++dit) {
       if (bfs::is_regular_file(*dit))
-        ret.push_back(Path(new PrivatePath(*dit)));
+        ret.push_back(Path(*dit));
     }
     return ret;
   }
@@ -134,7 +130,7 @@ namespace qi
 
     for (; dit != bfs::recursive_directory_iterator(); ++dit) {
       if (bfs::is_regular_file(*dit))
-        ret.push_back(Path(new PrivatePath(*dit)));
+        ret.push_back(Path(*dit));
     }
     return ret;
   }
@@ -146,14 +142,14 @@ namespace qi
 
     for (; dit != bfs::directory_iterator(); ++dit) {
       if (bfs::is_directory(*dit))
-        ret.push_back(Path(new PrivatePath(*dit)));
+        ret.push_back(Path(*dit));
     }
     return ret;
   }
 
   Path Path::operator/(const Path &rhs) const
   {
-    return Path(new PrivatePath(_p->path / rhs._p->path));
+    return _p->path / rhs._p->path;
   }
 
   const Path& Path::operator/=(const Path &rhs) const

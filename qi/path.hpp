@@ -129,7 +129,6 @@ namespace qi
     }
 
   private:
-    Path(PrivatePath* p);
     boost::scoped_ptr<PrivatePath> _p;
   };
 
