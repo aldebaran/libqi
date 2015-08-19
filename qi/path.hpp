@@ -29,15 +29,15 @@ namespace qi
   /**
    * \brief The Path class allow handling path in a cross-platform maner.
    * \includename{qi/path.hpp}
-   * The class assume that all string are encoded in UTF-8.
+   * The class assume that all string are encoded in UTF-8 if not specified otherwise.
    */
   class QI_API Path {
   public:
     /// Default Constructor
-    /// \param unicodePath Path
+    /// \param unicodePath Path value as UTF-8 string.
     Path(const std::string& unicodePath = std::string());
 
-    /// \param unicodePath Path
+    /// \param unicodePath Path value as UTF-8 string.
     Path(const char* unicodePath);
 
     /// Copy Constructor
@@ -64,38 +64,50 @@ namespace qi
     /// is the path a symlink?
     bool isSymlink() const;
 
-    /// get the name of the current file of folder
+    /// @return the name of the current file of folder as an UTF-8 string
     std::string filename() const;
 
-    /// get the extension of the current file
+    /// @return the extension of the current file as an UTF-8 string
     std::string extension() const;
 
-    /// return a Path to the parent
+    /// @return a Path to the parent
     Path parent() const;
 
-    /// return an absolute Path of the current path
+    /// @return an absolute Path of the current path
     Path absolute() const;
 
-    /// return a vector of files contained in the current path
+    /// @return a vector of files contained in the current path
     PathVector files() const;
 
-    /// return a vector of absolute path to files contained recursively in the current path
+    /// @return a vector of absolute path to files contained recursively in the current path
     PathVector recursiveFiles() const;
 
-    /// return a vector of dirs contained in the current path
+    /// @return a vector of dirs contained in the current path
     PathVector dirs() const;
 
-    /// return the path as a string
+    /// @return the path as an UTF-8 string
     operator std::string() const;
 
-    /// return the path as a string
+    /// @return the path as an UTF-8 string
     std::string str() const;
 
-    /// return the path as a boost path representation
+    /// @return the path as a boost path representation
     operator boost::filesystem::path() const;
 
-    /// return the path as a boost path representation
+    /// @return the path as a boost path representation
     const boost::filesystem::path& bfsPath() const;
+
+    /// @return A unicode-safe path from a string containing a native encoding path instead of UTF-8.
+    static Path fromNative(const char* nativeCharsPath);
+
+    /// @return A unicode-safe path from a string containing a native encoding path instead of UTF-8.
+    static Path fromNative(const wchar_t* nativeCharsPath);
+
+    /// @return A unicode-safe path from a string containing a native encoding path instead of UTF-8.
+    static Path fromNative(const std::string& nativeCharsPath);
+
+    /// @return A unicode-safe path from a string containing a native encoding path instead of UTF-8.
+    static Path fromNative(const std::wstring& nativeCharsPath);
 
     /// concat two paths adding a directory separator between them
     Path operator/(const qi::Path& rhs) const;
