@@ -198,6 +198,27 @@ namespace qi
     return _p->path;
   }
 
+  Path Path::fromNative(const char* nativeCharsPath)
+  {
+    return bfs::path(nativeCharsPath);
+  }
+
+  Path Path::fromNative(const wchar_t* nativeCharsPath)
+  {
+    return bfs::path(nativeCharsPath);
+  }
+
+  Path Path::fromNative(const std::string& nativeCharsPath)
+  {
+    return bfs::path(nativeCharsPath);
+  }
+
+  Path Path::fromNative(const std::wstring& nativeCharsPath)
+  {
+    return bfs::path(nativeCharsPath);
+  }
+
+
 
   SDKLayout* gInstance = NULL;
   SDKLayout* getInstance();
