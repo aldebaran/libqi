@@ -4,8 +4,8 @@
 **  See COPYING for the license
 */
 
-#ifndef _QITYPE_DETAILS_TYPEIMPL_HXX_
-#define _QITYPE_DETAILS_TYPEIMPL_HXX_
+#ifndef _QITYPE_DETAIL_TYPEIMPL_HXX_
+#define _QITYPE_DETAIL_TYPEIMPL_HXX_
 
 #include <set>
 #include <qi/type/detail/hasless.hxx>
@@ -342,4 +342,4 @@ namespace _qi_
   }
 }
 
-#endif  // _QITYPE_DETAILS_TYPEIMPL_HXX_
+#endif  // _QITYPE_DETAIL_TYPEIMPL_HXX_

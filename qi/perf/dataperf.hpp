@@ -52,4 +52,4 @@ namespace qi
 }
 
 
-#endif  // _QIPERF_DETAILS_DATAPERF_HPP_
+#endif  // _QI_PERF_DATAPERF_HPP_

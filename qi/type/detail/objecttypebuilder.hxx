@@ -4,8 +4,8 @@
 **  See COPYING for the license
 */
 
-#ifndef _QITYPE_DETAILS_OBJECTTYPEBUILDER_HXX_
-#define _QITYPE_DETAILS_OBJECTTYPEBUILDER_HXX_
+#ifndef _QITYPE_DETAIL_OBJECTTYPEBUILDER_HXX_
+#define _QITYPE_DETAIL_OBJECTTYPEBUILDER_HXX_
 
 #include <boost/function_types/is_member_function_pointer.hpp>
 #include <boost/mpl/front.hpp>
@@ -277,4 +277,4 @@ namespace qi {
 }
 
 
-#endif  // _QITYPE_DETAILS_OBJECTTYPEBUILDER_HXX_
+#endif  // _QITYPE_DETAIL_OBJECTTYPEBUILDER_HXX_

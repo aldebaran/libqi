@@ -567,4 +567,4 @@ template class QI_API Object<Empty>;
 
 }
 
-#endif  // _QITYPE_DETAILS_OBJECT_HXX_
+#endif  // _QITYPE_DETAIL_OBJECT_HXX_

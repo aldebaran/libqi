@@ -4,8 +4,8 @@
 **  See COPYING for the license
 */
 
-#ifndef _QITYPE_DETAILS_SIGNAL_HXX_
-#define _QITYPE_DETAILS_SIGNAL_HXX_
+#ifndef _QITYPE_DETAIL_SIGNAL_HXX_
+#define _QITYPE_DETAIL_SIGNAL_HXX_
 
 #include <qi/trackable.hpp>
 #include <qi/type/detail/manageable.hpp>
@@ -221,4 +221,4 @@ namespace qi
     return *this;
   }
 } // qi
-#endif  // _QITYPE_DETAILS_SIGNAL_HXX_
+#endif  // _QITYPE_DETAIL_SIGNAL_HXX_

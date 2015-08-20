@@ -1076,7 +1076,7 @@ TEST(TestObject, AnyArguments)
 {
   boost::shared_ptr<ArgPack> ap(new ArgPack);
   qi::AnyObject o = qi::AnyValue::from(ap).to<qi::AnyObject>();
-  qi::details::printMetaObject(std::cerr, o.metaObject());
+  qi::detail::printMetaObject(std::cerr, o.metaObject());
   std::string sig = o.metaObject().findMethod("callMe")[0].parametersSignature().toString();
   EXPECT_EQ(sig, "m");
   o.call<void>("callMe", 1, 2, 3);
@@ -1108,7 +1108,7 @@ TEST(TestObject, DynAnyArguments)
   gob.advertiseMethod("callMee3", &ap, &ArgPack::callMe);
 
   qi::AnyObject o = gob.object();
-  qi::details::printMetaObject(std::cerr, o.metaObject());
+  qi::detail::printMetaObject(std::cerr, o.metaObject());
   std::string sig;
   sig = o.metaObject().findMethod("callMee")[0].parametersSignature().toString();
   EXPECT_EQ(sig, "m");

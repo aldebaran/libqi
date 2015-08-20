@@ -247,7 +247,7 @@ set(QIM_H qi/api.hpp
           qi/messaging/autoservice.hpp
           qi/messaging/clientauthenticator.hpp
           qi/messaging/clientauthenticatorfactory.hpp
-          qi/messaging/details/autoservice.hxx
+          qi/messaging/detail/autoservice.hxx
           qi/messaging/gateway.hpp
           qi/messaging/serviceinfo.hpp
           qi/applicationsession.hpp
@@ -309,7 +309,7 @@ set(QIM_C src/messaging/applicationsession.cpp
 
 set(QIPERF_H
   qi/perf/dataperfsuite.hpp
-  qi/perf/details/dataperfsuite.hxx
+  qi/perf/detail/dataperfsuite.hxx
   qi/perf/dataperf.hpp
   qi/perf/measure.hpp
 )

@@ -4,8 +4,8 @@
 **  See COPYING for the license
 */
 
-#ifndef _QITYPE_DETAILS_ANYVALUE_HPP_
-#define _QITYPE_DETAILS_ANYVALUE_HPP_
+#ifndef _QITYPE_DETAIL_ANYVALUE_HPP_
+#define _QITYPE_DETAIL_ANYVALUE_HPP_
 
 namespace qi {
 
@@ -114,4 +114,4 @@ namespace qi {
 
 #include <qi/type/detail/anyvalue.hxx>
 
-#endif  // _QITYPE_DETAILS_ANYVALUE_HPP_
+#endif  // _QITYPE_DETAIL_ANYVALUE_HPP_

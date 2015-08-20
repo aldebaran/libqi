@@ -4,8 +4,8 @@
 **  See COPYING for the license
 */
 
-#ifndef _QITYPE_DETAILS_TYPELIST_HXX_
-#define _QITYPE_DETAILS_TYPELIST_HXX_
+#ifndef _QITYPE_DETAIL_TYPELIST_HXX_
+#define _QITYPE_DETAIL_TYPELIST_HXX_
 
 #include <boost/static_assert.hpp>
 
@@ -167,4 +167,4 @@ public:
 template<typename T> struct TypeImpl<qi::VarArguments<T> >: public VarArgsTypeInterfaceImpl<qi::VarArguments<T> > {};
 }
 
-#endif  // _QITYPE_DETAILS_TYPELIST_HXX_
+#endif  // _QITYPE_DETAIL_TYPELIST_HXX_

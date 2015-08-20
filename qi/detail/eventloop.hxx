@@ -4,8 +4,8 @@
 **  See COPYING for the license
 */
 
-#ifndef _QI_DETAILS_EVENTLOOP_HXX_
-#define _QI_DETAILS_EVENTLOOP_HXX_
+#ifndef _QI_DETAIL_EVENTLOOP_HXX_
+#define _QI_DETAIL_EVENTLOOP_HXX_
 
 #include <qi/detail/future_fwd.hpp>
 #include <qi/actor.hpp>

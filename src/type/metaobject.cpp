@@ -676,7 +676,7 @@ namespace qi {
 }
 
 namespace qi {
-  namespace details {
+  namespace detail {
 
     static bool bypass(const std::string &name, unsigned int uid, bool showHidden) {
       if (showHidden)

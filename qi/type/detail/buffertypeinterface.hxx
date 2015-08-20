@@ -4,8 +4,8 @@
 **  See COPYING for the license
 */
 
-#ifndef _QITYPE_DETAILS_TYPEBUFFER_HXX_
-#define _QITYPE_DETAILS_TYPEBUFFER_HXX_
+#ifndef _QITYPE_DETAIL_TYPEBUFFER_HXX_
+#define _QITYPE_DETAIL_TYPEBUFFER_HXX_
 
 #include <qi/buffer.hpp>
 
@@ -32,4 +32,4 @@ namespace qi
 template<> class TypeImpl<Buffer>: public TypeBufferImpl {};
 }
 
-#endif  // _QITYPE_DETAILS_TYPEBUFFER_HXX_
+#endif  // _QITYPE_DETAIL_TYPEBUFFER_HXX_
