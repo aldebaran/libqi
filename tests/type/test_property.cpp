@@ -21,7 +21,7 @@ TEST(TestProperty, SignalOfProperty)
   prop.setValue(2);
   qi::os::sleep(1);
   ASSERT_EQ(2, prop.value().value().to<int>());
-  ASSERT_EQ(1, spy.getCounter());
+  ASSERT_EQ(1u, spy.getCounter());
 }
 
 TEST(TestProperty, keepValue)
@@ -151,8 +151,8 @@ struct Matcher
   qi::Promise<bool> running;
   int targetValue;
   Matcher(int targetValue, qi::Promise<bool> running)
-    : targetValue(targetValue)
-    , running(running)
+    : running(running)
+    , targetValue(targetValue)
   {}
   void operator()(int newValue)
   {
