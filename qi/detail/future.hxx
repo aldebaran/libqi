@@ -4,8 +4,8 @@
 **  See COPYING for the license
 */
 
-#ifndef _QI_DETAILS_FUTURE_HXX_
-#define _QI_DETAILS_FUTURE_HXX_
+#ifndef _QI_DETAIL_FUTURE_HXX_
+#define _QI_DETAIL_FUTURE_HXX_
 
 #include <vector>
 #include <utility> // pair
@@ -708,4 +708,4 @@ namespace detail {
 
 #include <qi/detail/futurebarrier.hpp>
 
-#endif  // _QI_DETAILS_FUTURE_HXX_
+#endif  // _QI_DETAIL_FUTURE_HXX_

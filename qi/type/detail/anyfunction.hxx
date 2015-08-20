@@ -4,8 +4,8 @@
 **  See COPYING for the license
 */
 
-#ifndef _QITYPE_DETAILS_ANYFUNCTION_HXX_
-#define _QITYPE_DETAILS_ANYFUNCTION_HXX_
+#ifndef _QITYPE_DETAIL_ANYFUNCTION_HXX_
+#define _QITYPE_DETAIL_ANYFUNCTION_HXX_
 
 #include <qi/type/detail/anyvalue.hpp>
 #include <qi/type/detail/bindtype.hxx>
@@ -95,4 +95,4 @@ namespace std
   }
 }
 
-#endif  // _QITYPE_DETAILS_ANYFUNCTION_HXX_
+#endif  // _QITYPE_DETAIL_ANYFUNCTION_HXX_

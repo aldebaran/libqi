@@ -193,7 +193,7 @@ namespace qi
      */
     QI_API std::string sdkPrefix();
 
-    /// \brief Implementation details
+    /// \brief Implementation detail
     ///
     /// not thread-safe, must be kept internal
     namespace detail {

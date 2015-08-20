@@ -4,8 +4,8 @@
 **  See COPYING for the license
 */
 
-#ifndef _QITYPE_DETAILS_TYPEINTERFACE_HPP_
-#define _QITYPE_DETAILS_TYPEINTERFACE_HPP_
+#ifndef _QITYPE_DETAIL_TYPEINTERFACE_HPP_
+#define _QITYPE_DETAIL_TYPEINTERFACE_HPP_
 
 #include <typeinfo>
 #include <string>
@@ -205,4 +205,4 @@ namespace qi {
 #  pragma warning( pop )
 #endif
 
-#endif  // _QITYPE_DETAILS_TYPEINTERFACE_HPP_
+#endif  // _QITYPE_DETAIL_TYPEINTERFACE_HPP_

@@ -1001,7 +1001,7 @@ TEST(TestCall, Dynamic)
   qi::AnyObject os = qi::AnyReference::from(ap).to<qi::AnyObject>();
   p.server()->registerService("packer", os);
   qi::AnyObject o = p.client()->service("packer");
-  qi::details::printMetaObject(std::cerr, o.metaObject());
+  qi::detail::printMetaObject(std::cerr, o.metaObject());
   EXPECT_EQ(3, o.call<int>("callMe", 1, 2, 3));
   qi::AnyValue args = o.property<qi::AnyValue>("onCall");
   std::vector<int> expect = boost::assign::list_of(1)(2)(3);

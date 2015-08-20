@@ -4,8 +4,8 @@
 **  See COPYING for the license
 */
 
-#ifndef _QITYPE_DETAILS_ACCESSOR_HXX_
-#define _QITYPE_DETAILS_ACCESSOR_HXX_
+#ifndef _QITYPE_DETAIL_ACCESSOR_HXX_
+#define _QITYPE_DETAIL_ACCESSOR_HXX_
 
 #include <boost/type_traits.hpp>
 #include <boost/utility/enable_if.hpp>
@@ -68,6 +68,6 @@ namespace qi
   }
 }
 
-#endif  // _QITYPE_DETAILS_ACCESSOR_HXX_
+#endif  // _QITYPE_DETAIL_ACCESSOR_HXX_
 
 

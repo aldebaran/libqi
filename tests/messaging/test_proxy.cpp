@@ -85,7 +85,7 @@ TEST(Proxy, Signal)
   boost::shared_ptr<Foo> foo(new Foo);
   qi::AnyObject gfoo = qi::AnyReference::from(foo).toObject();
   ASSERT_TRUE(!!gfoo);
-  qi::details::printMetaObject(std::cerr, gfoo.metaObject());
+  qi::detail::printMetaObject(std::cerr, gfoo.metaObject());
   // The session must die before foo.
   TestSessionPair p;
   p.server()->registerService("foo", gfoo);

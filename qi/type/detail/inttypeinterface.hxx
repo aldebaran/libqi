@@ -4,8 +4,8 @@
 **  See COPYING for the license
 */
 
-#ifndef _QITYPE_DETAILS_TYPEINT_HXX_
-#define _QITYPE_DETAILS_TYPEINT_HXX_
+#ifndef _QITYPE_DETAIL_TYPEINT_HXX_
+#define _QITYPE_DETAIL_TYPEINT_HXX_
 #include <boost/type_traits/is_signed.hpp>
 
 #include <qi/type/typeinterface.hpp>
@@ -103,4 +103,4 @@ namespace qi {
 
 
 
-#endif  // _QITYPE_DETAILS_TYPEINT_HXX_
+#endif  // _QITYPE_DETAIL_TYPEINT_HXX_

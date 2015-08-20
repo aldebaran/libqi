@@ -23,7 +23,7 @@ qiLogCategory("qitype.binarycoder");
 namespace qi {
 
 
-  namespace details
+  namespace detail
   {
     void serialize(AnyReference val, BinaryEncoder& out, SerializeObjectCallback context, StreamContext* ctx);
     void deserialize(AnyReference what, BinaryDecoder& in, DeserializeObjectCallback context, StreamContext* ctx);
@@ -275,7 +275,7 @@ namespace qi {
     if (sig.isValid()) {
       assert(value.type());
       if (!recurse)
-        details::serialize(value, *this, SerializeObjectCallback(), 0);
+        detail::serialize(value, *this, SerializeObjectCallback(), 0);
       else
         recurse();
     } else {
@@ -377,7 +377,7 @@ namespace qi {
   {
   }
 
-  namespace details {
+  namespace detail {
 
     class SerializeTypeVisitor
     {
@@ -773,7 +773,7 @@ namespace qi {
 
     void serialize(AnyReference val, BinaryEncoder& out, SerializeObjectCallback context, StreamContext* sctx)
     {
-      details::SerializeTypeVisitor stv(out, context, val, sctx);
+      detail::SerializeTypeVisitor stv(out, context, val, sctx);
       qi::typeDispatch(stv, val);
       if (out.status() != BinaryEncoder::Status_Ok) {
         std::stringstream ss;
@@ -784,7 +784,7 @@ namespace qi {
 
     void deserialize(AnyReference what, BinaryDecoder& in, DeserializeObjectCallback context, StreamContext* sctx)
     {
-      details::DeserializeTypeVisitor dtv(in, context, sctx);
+      detail::DeserializeTypeVisitor dtv(in, context, sctx);
       dtv.result = what;
       qi::typeDispatch(dtv, dtv.result);
       if (in.status() != BinaryDecoder::Status_Ok) {
@@ -806,11 +806,11 @@ namespace qi {
       return res;
     }
 
-  } // namespace details
+  } // namespace detail
 
   void encodeBinary(qi::Buffer *buf, const qi::AutoAnyReference &gvp, SerializeObjectCallback onObject, StreamContext* sctx) {
     BinaryEncoder be(*buf);
-    details::SerializeTypeVisitor stv(be, onObject, gvp, sctx);
+    detail::SerializeTypeVisitor stv(be, onObject, gvp, sctx);
     qi::typeDispatch(stv, gvp);
     if (be.status() != BinaryEncoder::Status_Ok) {
       std::stringstream ss;
@@ -823,7 +823,7 @@ namespace qi {
   void decodeBinary(qi::BufferReader *buf, qi::AnyReference gvp,
     DeserializeObjectCallback onObject, StreamContext* sctx) {
     BinaryDecoder in(buf);
-    details::DeserializeTypeVisitor dtv(in, onObject, sctx);
+    detail::DeserializeTypeVisitor dtv(in, onObject, sctx);
     dtv.result = gvp;
     qi::typeDispatch(dtv, dtv.result);
     if (in.status() != BinaryDecoder::Status_Ok) {

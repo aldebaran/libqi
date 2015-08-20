@@ -215,7 +215,7 @@ TEST(TestSignal, SignalNBind)
   int res = 0;
   boost::shared_ptr<SigHolder> so(new SigHolder);
   qi::AnyObject op = qi::AnyReference::from(so).to<qi::AnyObject>();
-  qi::details::printMetaObject(std::cerr, op.metaObject());
+  qi::detail::printMetaObject(std::cerr, op.metaObject());
   op.connect("s1", (boost::function<void(int)>)boost::bind<void>(&lol, _1, boost::ref(res)));
   op.post("s1", 2);
   for (unsigned i=0; i<30 && res!=2; ++i) qi::os::msleep(10);

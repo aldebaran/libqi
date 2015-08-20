@@ -4,8 +4,8 @@
 **  See COPYING for the license
 */
 
-#ifndef _QITYPE_DETAILS_ANYFUNCTIONFACTORY_HXX_
-#define _QITYPE_DETAILS_ANYFUNCTIONFACTORY_HXX_
+#ifndef _QITYPE_DETAIL_ANYFUNCTIONFACTORY_HXX_
+#define _QITYPE_DETAIL_ANYFUNCTIONFACTORY_HXX_
 
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/transform_view.hpp>
@@ -671,4 +671,4 @@ namespace qi
   }
 
 }
-#endif  // _QITYPE_DETAILS_ANYFUNCTIONFACTORY_HXX_
+#endif  // _QITYPE_DETAIL_ANYFUNCTIONFACTORY_HXX_

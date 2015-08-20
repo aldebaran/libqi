@@ -4,8 +4,8 @@
 **  See COPYING for the license
 */
 
-#ifndef QI_DETAILS_FUTURE_BARRIER_HXX_
-#define QI_DETAILS_FUTURE_BARRIER_HXX_
+#ifndef QI_DETAIL_FUTURE_BARRIER_HXX_
+#define QI_DETAIL_FUTURE_BARRIER_HXX_
 
 namespace qi
 {
