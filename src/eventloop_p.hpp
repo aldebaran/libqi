@@ -81,11 +81,11 @@ namespace qi {
     void _pingThread();
     virtual ~EventLoopAsio();
 
-    enum Mode
+    enum class Mode
     {
-      Mode_Unset = 0,
-      Mode_Threaded = 1,
-      Mode_Pooled = 2
+      Unset = 0,
+      Threaded = 1,
+      Pooled = 2
     };
     Mode _mode;
     qi::Atomic<unsigned int> _nThreads;

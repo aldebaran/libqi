@@ -58,7 +58,7 @@ namespace qi {
     T2 res;
     int ret = ds->readRaw((void *)&res, sizeof(res));
     if (ret != sizeof(res))
-      ds->setStatus(ds->Status_ReadPastEnd);
+      ds->setStatus(ds->Status::ReadPastEnd);
     b = static_cast<T>(res);
     return *ds;
   }
@@ -73,7 +73,7 @@ namespace qi {
       ds->signature() += S;
     }
     if (ret == -1)
-      ds->setStatus(ds->Status_WriteError);
+      ds->setStatus(ds->Status::WriteError);
     return *ds;
   }
 
@@ -144,7 +144,7 @@ namespace qi {
       "Status Read Error",
       "Status Read Past End"
     };
-    return StatusStr[status];
+    return StatusStr[static_cast<int>(status)];
   }
 
   BufferReader& BinaryDecoder::bufferReader()
@@ -153,7 +153,7 @@ namespace qi {
   }
 
   BinaryDecoderPrivate::BinaryDecoderPrivate(qi::BufferReader *buffer)
-    : _status(BinaryDecoder::Status_Ok), _reader(buffer)
+    : _status(BinaryDecoder::Status::Ok), _reader(buffer)
   {
   }
 
@@ -171,7 +171,7 @@ namespace qi {
       char *data = static_cast<char *>(readRaw(sz));
       if (!data) {
         qiLogError() << "Read past end";
-        setStatus(Status_ReadPastEnd);
+        setStatus(Status::ReadPastEnd);
         return;
       }
       s.append(data, sz);
@@ -194,7 +194,7 @@ namespace qi {
       void* src = readRaw(sz);
       if (!src)
       {
-        setStatus(Status_ReadPastEnd);
+        setStatus(Status::ReadPastEnd);
         std::stringstream err;
         err << "Read of size " << sz << " is past end.";
         throw std::runtime_error(err.str());
@@ -223,7 +223,7 @@ namespace qi {
       }
       if (_p->_buffer.write(str, len) == false)
       {
-        setStatus(Status_WriteError);
+        setStatus(Status::WriteError);
       }
     }
     return len;
@@ -240,7 +240,7 @@ namespace qi {
     }
     if (len) {
       if (_p->_buffer.write(str, len) == false)
-        setStatus(Status_WriteError);
+        setStatus(Status::WriteError);
     }
   }
 
@@ -353,7 +353,7 @@ namespace qi {
       "Status OK",
       "Status Write Error"
     };
-    return StatusStr[status];
+    return StatusStr[static_cast<int>(status)];
   }
 
   Buffer& BinaryEncoder::buffer()
@@ -367,7 +367,7 @@ namespace qi {
   }
 
   BinaryEncoderPrivate::BinaryEncoderPrivate(qi::Buffer &buffer)
-    : _status(BinaryEncoder::Status_Ok)
+    : _status(BinaryEncoder::Status::Ok)
     , _buffer(buffer)
     , _innerSerialization(0)
   {
@@ -637,7 +637,7 @@ namespace qi {
         TypeInterface* elementType = static_cast<ListTypeInterface*>(result.type())->elementType();
         qi::uint32_t sz = 0;
         in.read(sz);
-        if (in.status() != BinaryDecoder::Status_Ok)
+        if (in.status() != BinaryDecoder::Status::Ok)
           return;
         for (unsigned i = 0; i < sz; ++i)
         {
@@ -658,7 +658,7 @@ namespace qi {
         TypeInterface* elementType = static_cast<MapTypeInterface*>(result.type())->elementType();
         qi::uint32_t sz = 0;
         in.read(sz);
-        if (in.status() != BinaryDecoder::Status_Ok)
+        if (in.status() != BinaryDecoder::Status::Ok)
           return;
         for (unsigned i = 0; i < sz; ++i)
         {
@@ -775,7 +775,7 @@ namespace qi {
     {
       detail::SerializeTypeVisitor stv(out, context, val, sctx);
       qi::typeDispatch(stv, val);
-      if (out.status() != BinaryEncoder::Status_Ok) {
+      if (out.status() != BinaryEncoder::Status::Ok) {
         std::stringstream ss;
         ss << "OSerialization error " << BinaryEncoder::statusToStr(out.status());
         throw std::runtime_error(ss.str());
@@ -787,7 +787,7 @@ namespace qi {
       detail::DeserializeTypeVisitor dtv(in, context, sctx);
       dtv.result = what;
       qi::typeDispatch(dtv, dtv.result);
-      if (in.status() != BinaryDecoder::Status_Ok) {
+      if (in.status() != BinaryDecoder::Status::Ok) {
         std::stringstream ss;
         ss << "ISerialization error " << BinaryDecoder::statusToStr(in.status());
         throw std::runtime_error(ss.str());
@@ -812,9 +812,9 @@ namespace qi {
     BinaryEncoder be(*buf);
     detail::SerializeTypeVisitor stv(be, onObject, gvp, sctx);
     qi::typeDispatch(stv, gvp);
-    if (be.status() != BinaryEncoder::Status_Ok) {
+    if (be.status() != BinaryEncoder::Status::Ok) {
       std::stringstream ss;
-      ss << "OSerialization error " << be.status();
+      ss << "OSerialization error " << static_cast<int>(be.status());
       qiLogError() << ss.str();
       throw std::runtime_error(ss.str());
     }
@@ -826,9 +826,9 @@ namespace qi {
     detail::DeserializeTypeVisitor dtv(in, onObject, sctx);
     dtv.result = gvp;
     qi::typeDispatch(dtv, dtv.result);
-    if (in.status() != BinaryDecoder::Status_Ok) {
+    if (in.status() != BinaryDecoder::Status::Ok) {
       std::stringstream ss;
-      ss << "ISerialization error " << in.status();
+      ss << "ISerialization error " << static_cast<int>(in.status());
       qiLogError() << ss.str();
       throw std::runtime_error(ss.str());
     }
