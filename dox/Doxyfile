@@ -1,8 +1,7 @@
 INPUT       = ../qi/ ../qi/log/
 PREDEFINED= QI_API= \
             BOOST_STATIC_CONSTEXPR= \
-            DOXYGEN=1 \
-            BOOST_STATIC_ASSERT_MSG(a, b)=
+            DOXYGEN=1
 MACRO_EXPANSION=YES
 EXCLUDE_SYMBOLS = \
   qi::detail::Accessor \
