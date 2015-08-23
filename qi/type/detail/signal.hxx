@@ -172,7 +172,7 @@ namespace qi
   template<typename T> class BounceToSignalBase
   {
     // This default should not be instanciated
-    BOOST_STATIC_ASSERT(sizeof(T) < 0);
+    static_assert(sizeof(T) < 0, "You can't instanciate BounceToSignalBase");
     public:
     BounceToSignalBase(SignalBase& sb)
     {
