@@ -1018,7 +1018,7 @@ int main(int argc, char* argv[])
   qi::os::setenv("QI_ADDITIONAL_SDK_PREFIXES", "");
   qi::Application app(argc, argv);
   ::testing::InitGoogleTest(&argc, argv);
-#ifdef WIN32
+#ifdef _WIN32
   {
     std::vector<WCHAR> filename(2048, 0);
     GetModuleFileNameW(NULL, filename.data(), filename.size());

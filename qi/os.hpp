@@ -19,7 +19,7 @@
 
 # include <boost/lexical_cast.hpp>
 
-#ifdef WIN32
+#ifdef _WIN32
 #ifndef SIGKILL
 #define SIGKILL 9
 #endif
