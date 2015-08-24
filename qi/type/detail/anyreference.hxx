@@ -7,6 +7,8 @@
 #ifndef _QI_TYPE_DETAIL_ANYREFERENCE_HXX_
 #define _QI_TYPE_DETAIL_ANYREFERENCE_HXX_
 
+#include <type_traits>
+
 namespace qi
 {
 
@@ -53,7 +55,7 @@ AnyReference AnyReferenceBase::fromPtr(const T* ptr)
 {
   static TypeInterface* t = 0;
   if (!t)
-    t = typeOf<typename boost::remove_const<T>::type>();
+    t = typeOf<typename std::remove_const<T>::type>();
   void *value = t->initializeStorage(const_cast<void*>((const void*)ptr));
   return AnyReference(t, value);
 }
@@ -63,7 +65,7 @@ AnyReference AnyReferenceBase::from(const T& ptr)
 {
   AnyReference ref;
   static TypeInterface* t = 0;
-  QI_ONCE( t = typeOf<typename boost::remove_const<T>::type>());
+  QI_ONCE( t = typeOf<typename std::remove_const<T>::type>());
   return AnyReference(t, t->initializeStorage(const_cast<void*>((const void*)&ptr)));
 }
 

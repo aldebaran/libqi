@@ -9,6 +9,7 @@
 
 #include <qi/atomic.hpp>
 #include <qi/types.hpp>
+#include <type_traits>
 #include <cstring>
 #include <map>
 #include <vector>
@@ -17,12 +18,9 @@
 #include <boost/thread/mutex.hpp>
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/transform_view.hpp>
-#include <boost/type_traits/remove_reference.hpp>
-#include <boost/type_traits/add_pointer.hpp>
 #include <boost/function_types/parameter_types.hpp>
 #include <boost/function_types/result_type.hpp>
 #include <boost/function_types/function_type.hpp>
-#include <boost/function_types/is_member_pointer.hpp>
 
 /* This file contains the default-provided Type specialisations
  *
@@ -82,7 +80,7 @@ namespace qi  {
     template<typename T>
     struct TypeOfAdapter<T*>
     {
-      typedef typename boost::add_pointer<typename boost::remove_const<typename TypeOfAdapter<T>::type>::type>::type type;
+      typedef typename std::add_pointer<typename std::remove_const<typename TypeOfAdapter<T>::type>::type>::type type;
     };
 
   }
