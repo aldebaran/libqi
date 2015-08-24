@@ -47,11 +47,11 @@ namespace qi {
       boost::filesystem::path fname(fullName, qi::unicodeFacet());
       qiLogDebug() << "opening " << fname;
 #ifdef _WIN32
-      handle = LoadLibraryW(fname.wstring(qi::unicodeFacet()).c_str());
+      handle = LoadLibraryW(fname.wstring().c_str());
 #else
       if (flag == -1)
         flag = RTLD_NOW;
-      handle = ::dlopen(fname.string(qi::unicodeFacet()).c_str(), flag);
+      handle = ::dlopen(fname.string().c_str(), flag);
 #endif
       return handle;
     }
