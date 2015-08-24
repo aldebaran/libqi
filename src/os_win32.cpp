@@ -14,7 +14,6 @@
 #include <sys/stat.h>
 #include <sys/timeb.h>
 
-#include <iostream>
 #include <io.h>       //_wopen _isatty
 #include <windows.h>  //Sleep, *CPU*
 #include <winsock2.h>
@@ -28,7 +27,6 @@
 #include <qi/log.hpp>
 #include <qi/os.hpp>
 #include <qi/path.hpp>
-#include "filesystem.hpp"
 
 #include "utils.hpp"
 

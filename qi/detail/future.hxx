@@ -4,8 +4,8 @@
 **  See COPYING for the license
 */
 
-#ifndef _QI_DETAILS_FUTURE_HXX_
-#define _QI_DETAILS_FUTURE_HXX_
+#ifndef _QI_DETAIL_FUTURE_HXX_
+#define _QI_DETAIL_FUTURE_HXX_
 
 #include <vector>
 #include <utility> // pair
@@ -256,7 +256,6 @@ namespace detail {
       bool hasValue(int msecs) const;
       const std::string &error(int msecs) const;
       void reportStart();
-      void reset();
 
     protected:
       void reportValue();
@@ -279,7 +278,7 @@ namespace detail {
       typedef typename FutureType<T>::type ValueType;
       FutureBaseTyped()
         : _value()
-        , _async(FutureCallbackType_Async)
+        , _async(FutureCallbackType_Auto)
       {
       }
 
@@ -325,21 +324,25 @@ namespace detail {
 
       void callCbNotify(qi::Future<T>& future)
       {
-        for(unsigned i = 0; i<_onResult.size(); ++i)
+        for(unsigned i = 0; i < _onResult.size(); ++i)
         {
-          try {
-            if (_async == FutureCallbackType_Async)
-              getEventLoop()->post(boost::bind(_onResult[i], future));
-            else
-              _onResult[i](future);
-          } catch(const qi::PointerLockException&) { // do nothing
-          } catch(const std::exception& e) {
-            qiLogError("qi.future") << "Exception caught in future callback "
-                                    << e.what();
-          } catch (...) {
-            qiLogError("qi.future")
-                << "Unknown exception caught in future callback";
-          }
+          bool async = _async != FutureCallbackType_Sync;
+          if (_onResult[i].callType != FutureCallbackType_Auto)
+            async = _onResult[i].callType == FutureCallbackType_Async;
+
+          if (async)
+            getEventLoop()->post(boost::bind(_onResult[i].callback, future));
+          else
+            try {
+              _onResult[i].callback(future);
+            } catch(const qi::PointerLockException&) { // do nothing
+            } catch(const std::exception& e) {
+              qiLogError("qi.future") << "Exception caught in future callback "
+                                      << e.what();
+            } catch (...) {
+              qiLogError("qi.future")
+                  << "Unknown exception caught in future callback";
+            }
         }
         notifyFinish();
         clearCallbacks();
@@ -412,21 +415,23 @@ namespace detail {
           const boost::function<void (qi::Future<T>)> &s,
           FutureCallbackType type)
       {
+        if (state() == FutureState_None)
+          throw FutureException(FutureException::ExceptionState_FutureInvalid);
+
         bool ready;
         {
           boost::recursive_mutex::scoped_lock lock(mutex());
           ready = isFinished();
           if (!ready)
-          {
-            _onResult.push_back(s);
-          }
+            _onResult.push_back(Callback(s, type));
         }
         //result already ready, notify the callback
         if (ready) {
-          if (type == FutureCallbackType_Async)
-          {
+          bool async = _async != FutureCallbackType_Sync;
+          if (type != FutureCallbackType_Auto)
+            async = type;
+          if (async)
             getEventLoop()->post(boost::bind(s, future));
-          }
           else
           {
             try {
@@ -439,6 +444,8 @@ namespace detail {
 
       const ValueType &value(int msecs) const {
         FutureState state = wait(msecs);
+        if (state == FutureState_None)
+          throw FutureException(FutureException::ExceptionState_FutureInvalid);
         if (state == FutureState_Running)
           throw FutureException(FutureException::ExceptionState_FutureTimeout);
         if (state == FutureState_Canceled)
@@ -450,7 +457,18 @@ namespace detail {
 
     private:
       friend class Promise<T>;
-      typedef std::vector<boost::function<void (qi::Future<T>)> > Callbacks;
+      typedef boost::function<void(qi::Future<T>)> CallbackType;
+      struct Callback
+      {
+        CallbackType callback;
+        FutureCallbackType callType;
+
+        Callback(CallbackType callback, FutureCallbackType callType)
+          : callback(callback)
+          , callType(callType)
+        {}
+      };
+      typedef std::vector<Callback> Callbacks;
       Callbacks                _onResult;
       ValueType                _value;
       CancelCallback           _onCancel;
@@ -690,4 +708,4 @@ namespace detail {
 
 #include <qi/detail/futurebarrier.hpp>
 
-#endif  // _QI_DETAILS_FUTURE_HXX_
+#endif  // _QI_DETAIL_FUTURE_HXX_

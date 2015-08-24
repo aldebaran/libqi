@@ -1,0 +1,5 @@
+<project version="3">
+  <qibuild name="libqipamauth">
+    <depends buildtime="true" runtime="true" names="libqi pam" />
+  </qibuild>
+</project>

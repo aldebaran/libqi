@@ -9,7 +9,6 @@
 # pragma warning(disable: 4355)
 #endif
 
-#include <iostream>
 #include <string>
 #include <cstring>
 #include <cstdlib>

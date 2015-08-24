@@ -4,8 +4,6 @@
  * found in the COPYING file.
  */
 
-#include <iostream>
-
 #include <errno.h>
 #include <fcntl.h>
 
@@ -21,7 +19,6 @@
 
 #include <qi/os.hpp>
 #include <qi/path.hpp>
-#include "filesystem.hpp"
 
 namespace qi
 {

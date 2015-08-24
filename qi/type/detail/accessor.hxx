@@ -4,11 +4,10 @@
 **  See COPYING for the license
 */
 
-#ifndef _QITYPE_DETAILS_ACCESSOR_HXX_
-#define _QITYPE_DETAILS_ACCESSOR_HXX_
+#ifndef _QITYPE_DETAIL_ACCESSOR_HXX_
+#define _QITYPE_DETAIL_ACCESSOR_HXX_
 
-#include <boost/type_traits.hpp>
-#include <boost/utility/enable_if.hpp>
+#include <type_traits>
 
 namespace qi
 {
@@ -19,17 +18,17 @@ namespace qi
   {
     template<typename T, typename Void = void> struct Accessor
     {
-      typedef boost::false_type is_accessor;
+      typedef std::false_type is_accessor;
     };
     template<typename C, typename T> struct AccessorBase
     {
-      typedef boost::true_type is_accessor;
-      typedef typename boost::remove_const<T>::type value_type;
+      typedef std::true_type is_accessor;
+      typedef typename std::remove_const<T>::type value_type;
       typedef C class_type;
     };
     // we must explicitely check for is_member_object_pointer because T C::*
     // can match functions also even if it may not make sense
-    template<typename C, typename T> struct Accessor<T C::*, typename boost::enable_if<typename boost::is_member_object_pointer<T C::*> >::type >
+    template<typename C, typename T> struct Accessor<T C::*, typename std::enable_if<std::is_member_object_pointer<T C::*>::value>::type>
     : public AccessorBase<C, T>
     {
       typedef T C::* type;
@@ -68,6 +67,6 @@ namespace qi
   }
 }
 
-#endif  // _QITYPE_DETAILS_ACCESSOR_HXX_
+#endif  // _QITYPE_DETAIL_ACCESSOR_HXX_
 
 

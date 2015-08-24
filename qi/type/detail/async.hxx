@@ -4,8 +4,8 @@
 **  See COPYING for the license
 */
 
-#ifndef _QI_TYPE_DETAILS_ASYNC_HXX_
-#define _QI_TYPE_DETAILS_ASYNC_HXX_
+#ifndef _QI_TYPE_DETAIL_ASYNC_HXX_
+#define _QI_TYPE_DETAIL_ASYNC_HXX_
 
 #include <boost/mpl/if.hpp>
 
@@ -78,4 +78,4 @@ QI_GEN(genCall)
 
 }
 
-#endif  // _QITYPE_DETAILS_ASYNC_HXX_
+#endif  // _QITYPE_DETAIL_ASYNC_HXX_

@@ -2,7 +2,6 @@
 **  Copyright (C) 2012 Aldebaran Robotics
 **  See COPYING for the license
 */
-#include <iostream>
 #include <cstring>
 #include <qi/log.hpp>
 #include "signatureconvertor.hpp"

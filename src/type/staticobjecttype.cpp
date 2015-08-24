@@ -232,7 +232,7 @@ qi::Future<AnyValue> StaticObjectTypeBase::property(void* instance, AnyObject co
   if (ec)
     return ec->async<AnyValue>(boost::bind(&PropertyBase::value, p));
   else
-    return qi::Future<AnyValue>(p->value());
+    return p->value();
 }
 
 static void setPropertyValue(PropertyBase* property, AnyValue value)

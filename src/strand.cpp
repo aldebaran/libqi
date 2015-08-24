@@ -17,12 +17,12 @@ namespace qi {
 class StrandPrivate : public boost::enable_shared_from_this<StrandPrivate>
 {
 public:
-  enum State
+  enum class State
   {
-    State_None,
-    State_Scheduled,
-    State_Running,
-    State_Canceled
+    None,
+    Scheduled,
+    Running,
+    Canceled
     // we don't care about finished state
   };
 
@@ -79,7 +79,7 @@ boost::shared_ptr<StrandPrivate::Callback> StrandPrivate::createCallback(
   ++_aliveCount;
   boost::shared_ptr<Callback> cbStruct = boost::make_shared<Callback>();
   cbStruct->id = ++_curId;
-  cbStruct->state = State_None;
+  cbStruct->state = State::None;
   cbStruct->callback = cb;
   return cbStruct;
 }
@@ -123,13 +123,13 @@ void StrandPrivate::enqueue(boost::shared_ptr<Callback> cbStruct)
   {
     boost::mutex::scoped_lock lock(_mutex);
     // the callback may have been canceled
-    if (cbStruct->state == State_None)
+    if (cbStruct->state == State::None)
     {
       _queue.push_back(cbStruct);
-      cbStruct->state = State_Scheduled;
+      cbStruct->state = State::Scheduled;
     }
     else
-      qiLogDebug() << "Job is not schedulable, state " << (int)cbStruct->state;
+      qiLogDebug() << "Job is not schedulable, state " << static_cast<int>(cbStruct->state);
     // if process was not scheduled yet, do it, there is work to do
     if (!_processing)
     {
@@ -175,16 +175,16 @@ void StrandPrivate::process()
       }
       cbStruct = _queue.front();
       _queue.pop_front();
-      if (cbStruct->state == State_Scheduled)
+      if (cbStruct->state == State::Scheduled)
       {
         --_aliveCount;
-        cbStruct->state = State_Running;
+        cbStruct->state = State::Running;
       }
       else
       {
         // Job was canceled, cancel() already has done --_aliveCount
         qiLogDebug() << "Abandoning job id " << cbStruct->id
-          << ", state: " << cbStruct->state;
+          << ", state: " << static_cast<int>(cbStruct->state);
         continue;
       }
     }
@@ -221,14 +221,14 @@ void StrandPrivate::cancel(boost::shared_ptr<Callback> cbStruct)
 
   switch (cbStruct->state)
   {
-    case State_None:
+    case State::None:
       qiLogDebug() << "Not scheduled yet, canceling future";
       cbStruct->asyncFuture.cancel();
-      cbStruct->state = State_Canceled;
+      cbStruct->state = State::Canceled;
       --_aliveCount;
       cbStruct->promise.setCanceled();
       break;
-    case State_Scheduled:
+    case State::Scheduled:
       qiLogDebug() << "Was scheduled, removing it from queue";
       {
         bool erased = false;
@@ -249,7 +249,7 @@ void StrandPrivate::cancel(boost::shared_ptr<Callback> cbStruct)
       cbStruct->promise.setCanceled();
       break;
     default:
-      qiLogDebug() << "State is " << cbStruct->state
+      qiLogDebug() << "State is " << static_cast<int>(cbStruct->state)
         << ", too late for canceling";
       break;
   }

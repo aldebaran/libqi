@@ -10,7 +10,6 @@
 #include <boost/filesystem.hpp>
 #include <boost/thread/tss.hpp>
 
-#include <iostream>
 #include <cstring>
 
 # ifdef _WIN32
@@ -20,8 +19,6 @@
 # endif
 
 #include <qi/path.hpp>
-
-#include "filesystem.hpp"
 
 qiLogCategory("qi.dlfcn");
 

@@ -5,8 +5,8 @@
  * found in the COPYING file.
  */
 
-#ifndef _QI_DETAILS_LOG_HXX_
-#define _QI_DETAILS_LOG_HXX_
+#ifndef _QI_DETAIL_LOG_HXX_
+#define _QI_DETAIL_LOG_HXX_
 
 #include <boost/noncopyable.hpp>
 
@@ -277,4 +277,4 @@ namespace qi {
   }
 }
 
-#endif  // _QI_DETAILS_LOG_HXX_
+#endif  // _QI_DETAIL_LOG_HXX_

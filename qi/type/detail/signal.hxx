@@ -4,8 +4,8 @@
 **  See COPYING for the license
 */
 
-#ifndef _QITYPE_DETAILS_SIGNAL_HXX_
-#define _QITYPE_DETAILS_SIGNAL_HXX_
+#ifndef _QITYPE_DETAIL_SIGNAL_HXX_
+#define _QITYPE_DETAIL_SIGNAL_HXX_
 
 #include <qi/trackable.hpp>
 #include <qi/type/detail/manageable.hpp>
@@ -172,7 +172,7 @@ namespace qi
   template<typename T> class BounceToSignalBase
   {
     // This default should not be instanciated
-    BOOST_STATIC_ASSERT(sizeof(T) < 0);
+    static_assert(sizeof(T) < 0, "You can't instanciate BounceToSignalBase");
     public:
     BounceToSignalBase(SignalBase& sb)
     {
@@ -221,4 +221,4 @@ namespace qi
     return *this;
   }
 } // qi
-#endif  // _QITYPE_DETAILS_SIGNAL_HXX_
+#endif  // _QITYPE_DETAIL_SIGNAL_HXX_

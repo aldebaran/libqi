@@ -50,6 +50,6 @@ namespace qi
   };
 }
 
-#include <qi/perf/details/dataperfsuite.hxx>
+#include <qi/perf/detail/dataperfsuite.hxx>
 
 #endif  // _QI_PERF_DATAPERFSUITE_HPP_

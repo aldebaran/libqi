@@ -4,9 +4,9 @@
 **  See COPYING for the license
 */
 
-#ifndef _QITYPE_DETAILS_TYPEINT_HXX_
-#define _QITYPE_DETAILS_TYPEINT_HXX_
-#include <boost/type_traits/is_signed.hpp>
+#ifndef _QITYPE_DETAIL_TYPEINT_HXX_
+#define _QITYPE_DETAIL_TYPEINT_HXX_
+#include <type_traits>
 
 #include <qi/type/typeinterface.hpp>
 
@@ -35,7 +35,7 @@ namespace qi {
 
     virtual bool isSigned()
     {
-      return boost::is_signed<T>::value;
+      return std::is_signed<T>::value;
     }
 
     _QI_BOUNCE_TYPE_METHODS(ImplType);
@@ -103,4 +103,4 @@ namespace qi {
 
 
 
-#endif  // _QITYPE_DETAILS_TYPEINT_HXX_
+#endif  // _QITYPE_DETAIL_TYPEINT_HXX_

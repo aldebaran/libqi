@@ -5,7 +5,7 @@
 #include <qi/path.hpp>
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/algorithm/cxx11/all_of.hpp>
-#include <fstream>
+#include <boost/filesystem/fstream.hpp>
 
 qiLogCategory("qitype.package");
 
@@ -114,7 +114,7 @@ namespace qi
 
   static ModuleInfo findModuleInFs(const std::string& name) {
     //lookup for module in
-    qi::Path p(qi::path::findData("qi/module", name + ".mod"));
+    const qi::Path p(qi::path::findData("qi/module", name + ".mod"));
 
     //TODO: throwing seriously?
     if (!p.isRegularFile())
@@ -122,7 +122,7 @@ namespace qi
 
     ModuleInfo mi;
     mi.name = name;
-    std::ifstream is(p.str().c_str());
+    boost::filesystem::ifstream is(p);
     is >> mi.type;
 
     qiLogVerbose() << "type: '" << mi.type << "'";
@@ -179,10 +179,10 @@ namespace qi
     std::vector<std::string> ret = qi::path::listData("qi/module", "*.mod");
     for (unsigned int i = 0; i < ret.size(); ++i)
     {
-      qi::Path p(ret.at(i));
+      const qi::Path p(ret.at(i));
       ModuleInfo mi;
       mi.name = p.filename().substr(0, p.filename().find(".mod"));
-      std::ifstream is(p.str().c_str());
+      boost::filesystem::ifstream is(p);
       is >> mi.type;
       modules.push_back(mi);
     }

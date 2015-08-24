@@ -50,12 +50,6 @@ namespace qi
     ~Trackable();
 
     /**
-     * \return A shared_ptr that will block destruction (call to destroy() until
-     *         it is released, or an empty shared_ptr if destroy was already called.
-     */
-    boost::shared_ptr<T> lock();
-
-    /**
      * \return A weak_ptr from this. While a shared_ptr exists from this weak_ptr,
      *         a call to destroy will block()
      *

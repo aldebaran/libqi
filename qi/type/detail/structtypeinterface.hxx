@@ -4,10 +4,10 @@
 **  See COPYING for the license
 */
 
-#ifndef _QITYPE_DETAILS_TYPETUPLE_HXX_
-#define _QITYPE_DETAILS_TYPETUPLE_HXX_
+#ifndef _QITYPE_DETAIL_TYPETUPLE_HXX_
+#define _QITYPE_DETAIL_TYPETUPLE_HXX_
 
-#include <boost/type_traits.hpp>
+#include <type_traits>
 #include <boost/utility/enable_if.hpp>
 #include <qi/type/fwd.hpp>
 #include <qi/type/detail/accessor.hxx>
@@ -490,12 +490,12 @@ namespace qi {
       // FIXME cheating, we do not go through TypeInterface of S and F for copy
       // because typeerasure does not expose the interface
       if (!index)
-        detail::TypeTraitCopy<typename boost::remove_const<F>::type, true>::copy(const_cast<void*>((void*)&ptr->first), types[0]->ptrFromStorage(&valStorage));
+        detail::TypeTraitCopy<typename std::remove_const<F>::type, true>::copy(const_cast<void*>((void*)&ptr->first), types[0]->ptrFromStorage(&valStorage));
       else
-        detail::TypeTraitCopy<typename boost::remove_const<S>::type, true>::copy(const_cast<void*>((void*)&ptr->second), types[1]->ptrFromStorage(&valStorage));
+        detail::TypeTraitCopy<typename std::remove_const<S>::type, true>::copy(const_cast<void*>((void*)&ptr->second), types[1]->ptrFromStorage(&valStorage));
     }
     _QI_BOUNCE_TYPE_METHODS(Methods);
   };
 
 }
-#endif  // _QITYPE_DETAILS_TYPETUPLE_HXX_
+#endif  // _QITYPE_DETAIL_TYPETUPLE_HXX_

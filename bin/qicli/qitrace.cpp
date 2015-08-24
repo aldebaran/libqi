@@ -222,7 +222,7 @@ int subCmd_trace(int argc, char **argv, qi::ApplicationSession& app)
     if (printMo)
     {
       std::cout << "\n\n" << services[i] << "\n";
-      qi::details::printMetaObject(std::cout, o.metaObject());
+      qi::detail::printMetaObject(std::cout, o.metaObject());
     }
     if (disableTrace)
     {

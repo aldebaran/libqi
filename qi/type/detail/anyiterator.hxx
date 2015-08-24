@@ -4,8 +4,8 @@
 **  See COPYING for the license
 */
 
-#ifndef _QITYPE_DETAILS_ANYITERATOR_HXX_
-#define _QITYPE_DETAILS_ANYITERATOR_HXX_
+#ifndef _QITYPE_DETAIL_ANYITERATOR_HXX_
+#define _QITYPE_DETAIL_ANYITERATOR_HXX_
 
 #include <qi/type/typeinterface.hpp>
 
@@ -65,4 +65,4 @@ inline bool operator!=(const AnyIterator& a, const AnyIterator& b)
 }
 
 
-#endif  // _QITYPE_DETAILS_ANYITERATOR_HXX_
+#endif  // _QITYPE_DETAIL_ANYITERATOR_HXX_

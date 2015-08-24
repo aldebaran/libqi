@@ -4,10 +4,11 @@
 **  See COPYING for the license
 */
 
-#ifndef _QITYPE_DETAILS_TYPEIMPL_HXX_
-#define _QITYPE_DETAILS_TYPEIMPL_HXX_
+#ifndef _QITYPE_DETAIL_TYPEIMPL_HXX_
+#define _QITYPE_DETAIL_TYPEIMPL_HXX_
 
 #include <set>
+#include <type_traits>
 #include <qi/type/detail/hasless.hxx>
 
 
@@ -110,7 +111,7 @@ namespace qi
     template<typename T>
     struct TypeManager
         : public boost::mpl::if_c<
-        boost::is_function<T>::value,
+        std::is_function<T>::value,
           TypeManagerNull<T>,
           typename boost::mpl::if_c< boost::is_pod<T>::value,
                  TypeManagerDefaultStruct<T>,
@@ -342,4 +343,4 @@ namespace _qi_
   }
 }
 
-#endif  // _QITYPE_DETAILS_TYPEIMPL_HXX_
+#endif  // _QITYPE_DETAIL_TYPEIMPL_HXX_

@@ -4,9 +4,10 @@
 **  See COPYING for the license
 */
 
-#ifndef _QITYPE_DETAILS_FUNCTIONSIGNATURE_HXX_
-#define _QITYPE_DETAILS_FUNCTIONSIGNATURE_HXX_
+#ifndef _QITYPE_DETAIL_FUNCTIONSIGNATURE_HXX_
+#define _QITYPE_DETAIL_FUNCTIONSIGNATURE_HXX_
 
+#include <boost/function_types/is_member_pointer.hpp>
 #include <boost/thread/mutex.hpp>
 #include <qi/macro.hpp>
 
@@ -147,4 +148,4 @@ namespace qi {
 }
 
 
-#endif  // _QITYPE_DETAILS_FUNCTIONSIGNATURE_HXX_
+#endif  // _QITYPE_DETAIL_FUNCTIONSIGNATURE_HXX_

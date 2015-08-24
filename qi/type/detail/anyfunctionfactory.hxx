@@ -4,9 +4,10 @@
 **  See COPYING for the license
 */
 
-#ifndef _QITYPE_DETAILS_ANYFUNCTIONFACTORY_HXX_
-#define _QITYPE_DETAILS_ANYFUNCTIONFACTORY_HXX_
+#ifndef _QITYPE_DETAIL_ANYFUNCTIONFACTORY_HXX_
+#define _QITYPE_DETAIL_ANYFUNCTIONFACTORY_HXX_
 
+#include <type_traits>
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/transform_view.hpp>
 #include <boost/mpl/find_if.hpp>
@@ -16,11 +17,6 @@
 #include <boost/mpl/placeholders.hpp>
 #include <boost/mpl/max_element.hpp>
 #include <boost/mpl/transform.hpp>
-#include <boost/type_traits/remove_reference.hpp>
-#include <boost/type_traits/add_pointer.hpp>
-#include <boost/type_traits/remove_const.hpp>
-#include <boost/type_traits/remove_pointer.hpp>
-#include <boost/type_traits/is_member_function_pointer.hpp>
 #include <boost/function_types/function_type.hpp>
 #include <boost/function_types/function_arity.hpp>
 #include <boost/function_types/function_pointer.hpp>
@@ -66,16 +62,16 @@ namespace qi
     {
       typedef T type;
       typedef T rType;
-      typedef typename boost::is_reference<T>::type isReference;
+      typedef typename std::is_reference<T>::type isReference;
       static const int dbgTag = 0;
     };
 
     template<typename T>
     struct EqTypeBase<T, true>
     {
-      typedef typename boost::mpl::if_<typename boost::is_fundamental<T>::type, void*, T>::type type;
-      typedef typename boost::mpl::if_<typename boost::is_fundamental<T>::type, void*, T>::type rType;
-      typedef typename boost::is_reference<T>::type isReference;
+      typedef typename boost::mpl::if_<typename std::is_fundamental<T>::type, void*, T>::type type;
+      typedef typename boost::mpl::if_<typename std::is_fundamental<T>::type, void*, T>::type rType;
+      typedef typename std::is_reference<T>::type isReference;
       static const int dbgTag = 1;
     };
 
@@ -88,35 +84,35 @@ namespace qi
     {
       typedef void type;
       typedef void* rType;
-      typedef boost::false_type isReference;
+      typedef std::false_type isReference;
     };
 
     template<> struct EqType<double>
     {
       typedef double type;
       typedef double rType;
-      typedef boost::false_type isReference;
+      typedef std::false_type isReference;
     };
 
     template<> struct EqType<float>
     {
       typedef float type;
       typedef float rType;
-      typedef boost::false_type isReference;
+      typedef std::false_type isReference;
     };
 
     template<> struct EqType<bool>
     {
       typedef bool type;
       typedef bool rType;
-      typedef boost::false_type isReference;
+      typedef std::false_type isReference;
     };
 
     template <typename T> struct EqType<T&>
     {
       typedef void* type;
       typedef void* rType;
-      typedef boost::true_type isReference;
+      typedef std::true_type isReference;
       static const int dbgTag = 2;
     };
 
@@ -124,7 +120,7 @@ namespace qi
     {
       typedef void* type;
       typedef void* rType;
-      typedef boost::true_type isReference;
+      typedef std::true_type isReference;
       static const int dbgTag = 3;
     };
 
@@ -135,7 +131,7 @@ namespace qi
     {
       typedef void* type;
       typedef void* rType;
-      typedef boost::true_type isReference;
+      typedef std::true_type isReference;
       static const int dbgTag = 4;
     };
 
@@ -201,7 +197,7 @@ namespace qi
 
     template<typename F>
     struct EqFunction:
-        public boost::mpl::if_<typename boost::is_member_function_pointer<F>::type,
+        public boost::mpl::if_<typename std::is_member_function_pointer<F>::type,
                                EqMemberFunction<F>,
                                EqFunctionBare<F> >::type
     {};
@@ -248,7 +244,7 @@ namespace qi
     // entirely ptrFromStorage.
 
 #define callArg(z, n, _) \
-  BOOST_PP_COMMA_IF(n) * (typename boost::remove_reference<P##n>::type*)args[n]
+  BOOST_PP_COMMA_IF(n) * (typename std::remove_reference<P##n>::type*)args[n]
 #define makeCall(n, argstypedecl, argstype, argsdecl, argsues, comma) \
   template <typename R comma argstypedecl>                            \
   void* makeCall(R (*f)(argstype), void** args)                       \
@@ -270,9 +266,9 @@ namespace qi
 // so use ptrFromStorage.
 #define declType(z, n, _)                  \
   STATIC_IF_SAFE TypeInterface* type_##n = \
-      typeOf<typename boost::remove_reference<P##n>::type>();
+      typeOf<typename std::remove_reference<P##n>::type>();
 #define callArgBF(z, n, _)                                               \
-  BOOST_PP_COMMA_IF(n) * (typename boost::remove_reference<P##n>::type*) \
+  BOOST_PP_COMMA_IF(n) * (typename std::remove_reference<P##n>::type*) \
       type_##n->ptrFromStorage(&args[n])
 
 #define makeCall(n, argstypedecl, argstype, argsdecl, argsues, comma) \
@@ -372,7 +368,7 @@ namespace qi
       void* v = detail::makeCall(*(S*)ptrFromStorage(&storage), (void**)out);
       // v is storage for type ReturnType we claimed we were
       // adapt return value if needed
-      if (boost::is_pointer<ReturnType>::value
+      if (std::is_pointer<ReturnType>::value
           &&  _resultType->kind() != TypeKind_Pointer)
       {
         // if refMask&1, real return type is some Foo& and v is Foo*
@@ -426,8 +422,8 @@ namespace qi
       template<typename T> void operator()(Ident<T>)
       {
         qiLogCategory("qitype.functiontypefactory");
-        if (boost::is_reference<T>::value && !boost::is_const<
-            typename boost::remove_reference<T>::type>::value)
+        if (std::is_reference<T>::value && !std::is_const<
+            typename std::remove_reference<T>::type>::value)
           qiLogWarning() << "Function argument is a non-const reference: " << typeid(T).name();
       }
     };
@@ -449,8 +445,8 @@ namespace qi
       {
         TypeInterface* result = typeOf<
             typename remove_constptr<
-            typename boost::remove_const<
-            typename boost::remove_reference<T>::type
+            typename std::remove_const<
+            typename std::remove_reference<T>::type
             >::type>::type>();
         target->push_back(result);
       }
@@ -477,15 +473,15 @@ namespace qi
       // Generate and store a TypeInterface* for each argument
       boost::mpl::for_each<
           boost::mpl::transform_view<ArgsType,
-          boost::add_pointer<
-          boost::remove_const<
-          boost::remove_reference<boost::mpl::_1> > > > >(detail::fill_arguments(&argumentsType));
+          std::add_pointer<
+          std::remove_const<
+          std::remove_reference<boost::mpl::_1> > > > >(detail::fill_arguments(&argumentsType));
       typedef typename EqFunction<F>::type MapedF;
       // regenerate eq function pointer type
       typedef typename boost::function_types::components<MapedF>::type EqComponents;
       // would have used mpl::if_ but it has laziness issues it seems
       typedef typename FunctionPointerSynthetizer<EqComponents,
-          boost::is_member_function_pointer<F>::value>::type EqFunPtr;
+          std::is_member_function_pointer<F>::value>::type EqFunPtr;
       unsigned long mask = EqFunction<F>::refMask;
       FunctionTypeInterface* ftype = FunctionTypeInterfaceEq<MapedF, EqFunPtr>::make(mask, argumentsType, resultType);
 
@@ -568,9 +564,9 @@ namespace qi
       std::vector<TypeInterface*> argumentsType;
       boost::mpl::for_each<
           boost::mpl::transform_view<ArgsType,
-          boost::add_pointer<
-          boost::remove_const<
-          boost::remove_reference<boost::mpl::_1> > > > >(detail::fill_arguments(&argumentsType));
+          std::add_pointer<
+          std::remove_const<
+          std::remove_reference<boost::mpl::_1> > > > >(detail::fill_arguments(&argumentsType));
       FunctionTypeInterface* ftype = FunctionTypeInterfaceEq<F, boost::function<F> >::make(0, argumentsType, resultType);
       return AnyFunction(ftype, new boost::function<F>(func));
     }
@@ -671,4 +667,4 @@ namespace qi
   }
 
 }
-#endif  // _QITYPE_DETAILS_ANYFUNCTIONFACTORY_HXX_
+#endif  // _QITYPE_DETAIL_ANYFUNCTIONFACTORY_HXX_

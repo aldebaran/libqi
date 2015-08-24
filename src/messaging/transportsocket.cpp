@@ -9,8 +9,6 @@
 # pragma warning(disable: 4355)
 #endif
 
-#include <iostream>
-
 #include <qi/log.hpp>
 
 #include "transportsocket.hpp"

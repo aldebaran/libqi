@@ -4,7 +4,6 @@
 **  See COPYING for the license
 */
 
-#include <iostream>
 #include <string>
 #include <qi/api.hpp>
 #include <qi/type/metasignal.hpp>
