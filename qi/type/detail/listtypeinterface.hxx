@@ -13,6 +13,8 @@
 #include <qi/type/detail/anyiterator.hpp>
 #include <qi/anyfunction.hpp>
 
+#include <type_traits>
+
 namespace qi
 {
   // List container
@@ -119,7 +121,7 @@ size_t ListTypeInterfaceImpl<T, H>::size(void* storage)
 // There is no way to register a template container type :(
 template<typename T> struct TypeImpl<std::vector<T> >: public ListTypeInterfaceImpl<std::vector<T> >
 {
-  static_assert(!boost::is_same<T,bool>::value, "std::vector<bool> is not supported by AnyValue.");
+  static_assert(!std::is_same<T,bool>::value, "std::vector<bool> is not supported by AnyValue.");
 };
 template<typename T> struct TypeImpl<std::list<T> >: public ListTypeInterfaceImpl<std::list<T> > {};
 template<typename T> struct TypeImpl<std::set<T> >: public ListTypeInterfaceImpl<std::set<T> > {};

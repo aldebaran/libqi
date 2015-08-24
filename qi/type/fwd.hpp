@@ -8,7 +8,6 @@
 #define _QI_TYPE_FWD_HPP_
 
 #include <boost/shared_ptr.hpp>
-#include <boost/type_traits/is_base_of.hpp>
 #include <vector>
 
 namespace qi

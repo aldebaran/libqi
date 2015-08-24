@@ -16,7 +16,6 @@
 #include <qi/api.hpp>
 #include <qi/type/fwd.hpp>
 #include <qi/type/detail/typeinterface.hpp>
-#include <boost/type_traits/remove_const.hpp>
 
 namespace qi {
 

@@ -9,6 +9,8 @@
 
 #include <boost/type_traits/has_less.hpp>
 
+#include <type_traits>
+
 namespace qi {
   namespace detail {
 
@@ -68,10 +70,10 @@ namespace qi {
     struct HasLessGuard
     {
       static const bool switchVal =
-          boost::is_member_function_pointer<T>::value
-          || boost::is_function<T>::value
-          || boost::is_function<typename boost::remove_pointer<T>::type>::value
-          || boost::is_member_pointer<T>::value;
+          std::is_member_function_pointer<T>::value
+          || std::is_function<T>::value
+          || std::is_function<typename std::remove_pointer<T>::type>::value
+          || std::is_member_pointer<T>::value;
       static const bool value = HasLessSwitch<T, !switchVal>::value;
 
     };

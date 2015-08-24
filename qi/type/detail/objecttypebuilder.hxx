@@ -7,7 +7,7 @@
 #ifndef _QITYPE_DETAIL_OBJECTTYPEBUILDER_HXX_
 #define _QITYPE_DETAIL_OBJECTTYPEBUILDER_HXX_
 
-#include <boost/function_types/is_member_function_pointer.hpp>
+#include <type_traits>
 #include <boost/mpl/front.hpp>
 #include <qi/type/objecttypebuilder.hpp>
 #include <qi/type/metamethod.hpp>
@@ -23,14 +23,14 @@ namespace qi {
     }
 
     template <typename T>
-    typename boost::enable_if<boost::is_base_of<Actor, T>, AnyFunction>::type
+    typename std::enable_if<std::is_base_of<Actor, T>::value, AnyFunction>::type
         getStrandAccessor()
     {
       return AnyFunction::from(boost::function<qi::Strand*(void*)>(
           boost::bind(&callWithVoid<T>, &T::strand, _1)));
     }
     template <typename T>
-    typename boost::disable_if<boost::is_base_of<Actor, T>, AnyFunction>::type
+    typename std::enable_if<!std::is_base_of<Actor, T>::value, AnyFunction>::type
         getStrandAccessor()
     {
       return AnyFunction();
@@ -80,7 +80,7 @@ namespace qi {
   void ObjectTypeBuilderBase::inherits(int offset)
   {
     return inherits(typeOf<
-      typename boost::remove_reference<U>::type>(), offset);
+      typename std::remove_reference<U>::type>(), offset);
   }
 
   template<typename T>
@@ -99,13 +99,13 @@ namespace qi {
   namespace detail
   {
     template<typename F, typename T> void checkRegisterParent(
-      ObjectTypeBuilder<T>& , boost::false_type) {}
+      ObjectTypeBuilder<T>& , std::false_type) {}
     template<typename F, typename T> void checkRegisterParent(
-      ObjectTypeBuilder<T>& builder, boost::true_type)
+      ObjectTypeBuilder<T>& builder, std::true_type)
     {
       typedef typename boost::function_types::parameter_types<F>::type ArgsType;
       typedef typename boost::mpl::front<ArgsType>::type DecoratedClassType;
-      typedef typename boost::remove_reference<DecoratedClassType>::type ClassType;
+      typedef typename std::remove_reference<DecoratedClassType>::type ClassType;
       builder.template inherits<ClassType>();
     }
   };
@@ -119,7 +119,7 @@ namespace qi {
     // as a child
     detail::checkRegisterParent<FUNCTION_TYPE>(
       *this,
-      typename boost::function_types::is_member_function_pointer<FUNCTION_TYPE >::type());
+      typename std::is_member_function_pointer<FUNCTION_TYPE >::type());
 
     // throw on error
     return ObjectTypeBuilderBase::advertiseMethod(name, function, threadingModel, id);
@@ -134,7 +134,7 @@ namespace qi {
     // as a child
     detail::checkRegisterParent<FUNCTION_TYPE>(
       *this,
-      typename boost::function_types::is_member_function_pointer<FUNCTION_TYPE >::type());
+      typename std::is_member_function_pointer<FUNCTION_TYPE >::type());
 
     // throw on error
     return ObjectTypeBuilderBase::advertiseMethod(name, function, threadingModel, id);
@@ -154,7 +154,7 @@ namespace qi {
   }
 
   template<typename A>
-  typename boost::enable_if<typename detail::Accessor<A>::is_accessor, SignalBase*>::type
+  typename std::enable_if<detail::Accessor<A>::is_accessor::value, SignalBase*>::type
   signalAccess(A acc, void* instance)
   {
     typedef typename detail::Accessor<A>::class_type class_type;
@@ -162,7 +162,7 @@ namespace qi {
   }
 
   template<typename A>
-  typename boost::enable_if<typename detail::Accessor<A>::is_accessor, PropertyBase*>::type
+  typename std::enable_if<detail::Accessor<A>::is_accessor::value, PropertyBase*>::type
   propertyAccess(A acc, void* instance)
   {
     typedef typename detail::Accessor<A>::class_type class_type;
@@ -213,14 +213,14 @@ namespace qi {
     {};
 
     template<typename T> struct SigProp : public
-    SigPropInheritsProperty<T, boost::is_base_of<PropertyBase, T>::value> {};
+    SigPropInheritsProperty<T, std::is_base_of<PropertyBase, T>::value> {};
 
     template<typename T> struct SigPropInheritsProperty<T, true>
     {
       static const unsigned value = 2;
     };
     template<typename T> struct SigPropInheritsProperty<T, false>
-    : public SigPropInheritsSignal<T, boost::is_base_of<SignalBase, T>::value> {};
+    : public SigPropInheritsSignal<T, std::is_base_of<SignalBase, T>::value> {};
 
     template<typename T> struct SigPropInheritsSignal<T, true>
     {
@@ -250,12 +250,12 @@ namespace qi {
         n = name.substr(interfaceMarkerLength);
       return builder->advertiseProperty(n, accessor);
     }
-    template<typename A> unsigned int advertiseBounce(ObjectTypeBuilderBase* builder, const std::string& name, A accessor, boost::true_type)
+    template<typename A> unsigned int advertiseBounce(ObjectTypeBuilderBase* builder, const std::string& name, A accessor, std::true_type)
     {
       return advertise(builder, name, accessor,
         Dummy<detail::SigProp<typename detail::Accessor<A>::value_type>::value>());
     }
-    template<typename A> unsigned int advertiseBounce(ObjectTypeBuilderBase* builder, const std::string& name, A accessor, boost::false_type)
+    template<typename A> unsigned int advertiseBounce(ObjectTypeBuilderBase* builder, const std::string& name, A accessor, std::false_type)
     {
       return builder->advertiseMethod(name, accessor);
     }
