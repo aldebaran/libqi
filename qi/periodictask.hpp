@@ -47,18 +47,16 @@ namespace qi
      */
     void setCallback(const Callback& cb);
 #ifdef DOXYGEN
-    template <typename T, typename ARG0> PeriodicTask& setCallback(const T& callable, ARG0 tracked, ...);
+    template <typename T, typename ARG0> PeriodicTask& setCallback(T&& callable, ARG0&& tracked, ...);
 #else
-#define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)              \
-  template <typename AF, typename ARG0 comma ATYPEDECL>                \
-  inline void setCallback(const AF& fun, const ARG0& arg0 comma ADECL) \
-  {                                                                    \
-    setCallback(boost::bind(fun, arg0 comma AUSE));                    \
-    _connectMaybeActor<ARG0>(arg0);                                    \
-  }
-    QI_GEN(genCall)
-#undef genCall
+    template <typename AF, typename ARG0, typename... ARGS>
+    inline void setCallback(AF&& callable, ARG0&& arg0, ARGS&&... args)
+    {
+      setCallback(boost::bind(std::forward<AF>(callable), arg0, std::forward<ARGS>(args)...));
+      _connectMaybeActor<ARG0>(arg0);
+    }
 #endif
+
 
     /**
      * Set the strand on which to schedule the calls
