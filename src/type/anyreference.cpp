@@ -691,6 +691,41 @@ namespace detail
       }
       return std::make_pair(result, true);
     }
+    case TypeKind_Tuple:
+    {
+      result = AnyReference(targetType);
+      auto srcStructType = static_cast<StructTypeInterface*>(_type);
+      MapTypeInterface* targetMapType = targetType;
+
+      // Source fields value
+      std::vector<void*> sourceData = srcStructType->get(_value);
+      // Source fields name
+      std::vector<std::string> srcElementName = srcStructType->elementsName();
+      // Source members type
+      std::vector<TypeInterface*> srcTypes = srcStructType->memberTypes();
+      // Destination members type
+      TypeInterface* dstType = targetMapType->elementType();
+
+      // trying to convert std::pair to std::map
+      if (srcElementName.size() != srcTypes.size())
+        return std::make_pair(AnyReference(), false);
+
+      for (unsigned int i = 0; i < srcElementName.size(); ++i)
+      {
+        std::pair<AnyReference, bool> conv = AnyReference(srcTypes[i], sourceData[i]).convert(dstType);
+        if (!conv.first._type)
+        {
+          qiLogVerbose() << "Conversion failure in tuple member between "
+                         << srcTypes[i]->infoString() << " and " << dstType->infoString();
+          result.destroy();
+          return std::make_pair(AnyReference(), false);
+        }
+        result._insert(AnyReference::from(srcElementName[i]), conv.first);
+        if (conv.second)
+          conv.first.destroy();
+      }
+      return std::make_pair(result, true);
+    }
     default:
       break;
     }
@@ -774,6 +809,8 @@ namespace detail
       return convert(static_cast<StructTypeInterface*>(targetType));
     else if (skind == TypeKind_Tuple && dkind == TypeKind_List)
       return convert(static_cast<ListTypeInterface*>(targetType));
+    else if (skind == TypeKind_Tuple && dkind == TypeKind_Map)
+      return convert(static_cast<MapTypeInterface*>(targetType));
 
     else if (skind == TypeKind_VarArgs && dkind == TypeKind_List)
       return convert(static_cast<ListTypeInterface*>(targetType));
