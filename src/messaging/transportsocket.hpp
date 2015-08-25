@@ -38,11 +38,11 @@ namespace qi
   {
   public:
     virtual ~TransportSocket();
-    enum Status {
-      Status_Disconnected  = 0,
-      Status_Connecting    = 1,
-      Status_Connected     = 2,
-      Status_Disconnecting = 3,
+    enum class Status {
+      Disconnected  = 0,
+      Connecting    = 1,
+      Connected     = 2,
+      Disconnecting = 3,
     };
     enum Event {
       Event_Error = 0,
@@ -52,7 +52,7 @@ namespace qi
     explicit TransportSocket(qi::EventLoop* eventLoop = qi::getEventLoop())
       : _eventLoop(NULL)
       , _err(0)
-      , _status(Status_Disconnected)
+      , _status(Status::Disconnected)
     {
       // TODO: these two should be direct too
       connected.setCallType(MetaCallType_Queued);
@@ -85,7 +85,7 @@ namespace qi
 
     bool isConnected() const
     {
-      return _status == qi::TransportSocket::Status_Connected;
+      return _status == qi::TransportSocket::Status::Connected;
     }
 
     static const unsigned int ALL_OBJECTS = (unsigned int)-1;

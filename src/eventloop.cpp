@@ -114,7 +114,7 @@ namespace qi {
   static qi::Atomic<uint32_t> gTaskId = 0;
 
   EventLoopAsio::EventLoopAsio()
-  : _mode(Mode_Unset)
+  : _mode(Mode::Unset)
   , _work(NULL)
   , _maxThreads(0)
   , _workerThreads(new WorkerThreadPool())
@@ -125,7 +125,7 @@ namespace qi {
 
   void EventLoopAsio::start(int nthread)
   {
-    if (*_running || _mode != Mode_Unset)
+    if (*_running || _mode != Mode::Unset)
       return;
     if (nthread == 0)
     {
@@ -137,7 +137,7 @@ namespace qi {
         nthread = strtol(envNthread, 0, 0);
     }
     _maxThreads = qi::os::getEnvDefault("QI_EVENTLOOP_MAX_THREADS", 150);
-    _mode = Mode_Pooled;
+    _mode = Mode::Pooled;
     _work = new boost::asio::io_service::work(_io);
     for (int i=0; i<nthread; ++i)
       _workerThreads->launch(&EventLoopAsio::_runPool, this);
@@ -275,7 +275,7 @@ namespace qi {
 
   void EventLoopAsio::join()
   {
-    if (_mode == Mode_Threaded)
+    if (_mode == Mode::Threaded)
     {
       if (boost::this_thread::get_id() == _id)
       {
