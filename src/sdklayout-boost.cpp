@@ -28,7 +28,7 @@ qiLogCategory("qi.path.sdklayout");
 namespace {
 
 // returns a regex which corresponds to the provided glob pattern,
-static std::string globToRegex(std::string glob)
+std::string globToRegex(std::string glob)
 {
   boost::trim(glob);
   const char expression[] = "(\\*)|(\\?)|([\\.\\^\\$\\|\\(\\)\\[\\]\\+\\\\])";
@@ -44,8 +44,9 @@ static std::string globToRegex(std::string glob)
 
 // return the path "relative' such that full == base / relative
 // This function assumes that full is a child path of base.
-static std::string relative(const boost::filesystem::path &base,
-                            const boost::filesystem::path &full)
+std::string relative(
+    const boost::filesystem::path &base,
+    const boost::filesystem::path &full)
 {
   boost::filesystem::path relative, parent(full), cleanBase(base);
   if(cleanBase.filename() == ".")
@@ -61,7 +62,7 @@ static std::string relative(const boost::filesystem::path &base,
   return relative.string(qi::unicodeFacet());
 }
 
-}
+} // anonymous
 
 namespace qi {
 
