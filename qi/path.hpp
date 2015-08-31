@@ -92,6 +92,9 @@ namespace qi
     std::string str() const;
 
     /// return the path as a boost path representation
+    operator boost::filesystem::path() const;
+
+    /// return the path as a boost path representation
     const boost::filesystem::path& bfsPath() const;
 
     /// concat two paths adding a directory separator between them
