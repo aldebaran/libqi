@@ -451,7 +451,7 @@ namespace qi {
       {
         _glInit = false;
         const std::string logLevel = qi::os::getEnvParam<std::string>("QI_LOG_LEVEL", "info");
-        const int context = qi::os::getEnvParam<int>("QI_LOG_CONTEXT", 26);
+        const int context = qi::os::getEnvParam<int>("QI_LOG_CONTEXT", 30);
         _glContext = context;
         const std::string rules = qi::os::getEnvParam<std::string>("QI_LOG_FILTERS", std::string());
         if (!rules.empty())
