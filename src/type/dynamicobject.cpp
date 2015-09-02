@@ -100,7 +100,7 @@ namespace qi
       signalMap[id] = std::make_pair(sb, true);
       return sb;
     }
-    return 0;
+    return  nullptr;
   }
 
   class DynamicObjectTypeInterface: public ObjectTypeInterface, public DefaultTypeImplMethods<DynamicObject>
@@ -181,7 +181,7 @@ namespace qi
       return const_cast<DynamicObject*>(this)->property(id)->signal();
     DynamicObjectPrivate::SignalMap::iterator i = _p->signalMap.find(id);
     if (i == _p->signalMap.end())
-      return 0;
+      return  nullptr;
     else
       return i->second.first;
   }
@@ -437,7 +437,7 @@ namespace qi
 
   ObjectTypeInterface* getDynamicTypeInterface()
   {
-    static DynamicObjectTypeInterface* type = 0;
+    static DynamicObjectTypeInterface* type = nullptr;
     QI_THREADSAFE_NEW(type);
     return type;
   }

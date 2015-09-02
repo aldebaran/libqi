@@ -116,9 +116,9 @@ namespace qi {
   }
 
   qi::AnyObject ServiceBoundObject::createServiceBoundObjectType(ServiceBoundObject *self, bool bindTerminate) {
-    static qi::ObjectTypeBuilder<ServiceBoundObject>* ob = 0;
+    static qi::ObjectTypeBuilder<ServiceBoundObject>* ob = nullptr;
 
-    static boost::mutex* mutex = 0;
+    static boost::mutex* mutex = nullptr;
     QI_THREADSAFE_NEW(mutex);
     boost::mutex::scoped_lock lock(*mutex);
     if (!ob)

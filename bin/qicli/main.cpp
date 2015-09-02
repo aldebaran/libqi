@@ -26,7 +26,7 @@ int                 main(int argc, char **argv)
 {
   qi::ApplicationSession app(argc, argv);
   int                    subCmdArgc = 0;
-  char                   **subCmdArgv = 0;
+  char                   **subCmdArgv = nullptr;
   SubCmd                 subCmd = 0;
 
   init();

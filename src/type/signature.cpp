@@ -578,14 +578,14 @@ namespace qi {
 
 char* signature_to_json(const char* sig)
 {
-  static char* resc = 0;
+  static char* resc = nullptr;
   std::string res;
   try {
     qi::Signature s(sig);
     res = qi::encodeJSON(s.toData());
   } catch (const std::exception& e) {
     qiLogInfo() << e.what();
-    return 0;
+    return  nullptr;
   }
   free(resc);
   resc = strdup(res.c_str());

@@ -38,16 +38,16 @@ namespace qi {
     if (_cursor + offset <= _buffer.size())
       return _cursor + (unsigned char*)_buffer.data();
     else
-      return 0;
+      return  nullptr;
   }
 
   void *BufferReader::read(size_t offset)
   {
-    void *p = 0;
+    void *p = nullptr;
     if ((p = peek(offset)))
       seek(offset);
     else
-      return 0;
+      return  nullptr;
 
     return p;
   }

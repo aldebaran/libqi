@@ -322,9 +322,9 @@ namespace qi {
     std::map<std::string, std::vector<std::string> > hostIPAddrs(bool ipv6Addr)
     {
       std::map<std::string, std::vector<std::string> > ifsMap;
-      struct ifaddrs *ifAddrStruct = 0;
-      struct ifaddrs *ifa = 0;
-      void *tmpAddrPtr = 0;
+      struct ifaddrs *ifAddrStruct = nullptr;
+      struct ifaddrs *ifa = nullptr;
+      void *tmpAddrPtr = nullptr;
       int ret = 0;
 
       ret = getifaddrs(&ifAddrStruct);

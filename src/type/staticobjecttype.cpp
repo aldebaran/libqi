@@ -123,12 +123,12 @@ static PropertyBase* property(ObjectTypeData& data, void* instance, unsigned int
   ObjectTypeData::PropertyGetterMap::iterator i;
   i = data.propertyGetterMap.find(signal);
   if (i == data.propertyGetterMap.end())
-    return 0;
+    return  nullptr;
   PropertyBase* sig = i->second(instance);
   if (!sig)
   {
     qiLogError() << "Property getter returned NULL";
-    return 0;
+    return  nullptr;
   }
   return sig;
 }
@@ -142,13 +142,13 @@ static SignalBase* getSignal(ObjectTypeData& data, void* instance, unsigned int 
     PropertyBase* prop = property(data, instance, signal);
     if (prop)
       return prop->signal();
-    return 0;
+    return  nullptr;
   }
   SignalBase* sig = i->second(instance);
   if (!sig)
   {
     qiLogError() << "Signal getter returned NULL";
-    return 0;
+    return  nullptr;
   }
   return sig;
 }

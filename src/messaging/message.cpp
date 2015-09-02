@@ -81,7 +81,7 @@ namespace qi {
 
     if (service != qi::Message::Service_ServiceDirectory)
     {
-      return 0;
+      return  nullptr;
     }
 
     switch (action)
@@ -103,7 +103,7 @@ namespace qi {
     case ServiceDirectoryAction_ServiceRemoved:
       return "ServiceRemoved";
     default:
-      return 0;
+      return  nullptr;
     }
   }
 

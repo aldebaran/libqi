@@ -60,7 +60,7 @@ static void parseArguments(int argc, char* argv[])
 
 namespace qi {
   static int         globalArgc = -1;
-  static char**      globalArgv = 0;
+  static char**      globalArgv = nullptr;
   static bool        globalInitialized = false;
   static bool        globalTerminated = false;
   static bool        globalIsStop = false;
@@ -72,18 +72,18 @@ namespace qi {
   static std::string globalRealProgram;
 
   typedef std::vector<boost::function<void()> > FunctionList;
-  static FunctionList* globalAtExit = 0;
-  static FunctionList* globalAtEnter = 0;
-  static FunctionList* globalAtStop = 0;
+  static FunctionList* globalAtExit = nullptr;
+  static FunctionList* globalAtEnter = nullptr;
+  static FunctionList* globalAtStop = nullptr;
 
 
   static boost::mutex globalMutex;
   static boost::condition_variable globalCond;
 
-  static boost::asio::io_service*             globalIoService = 0;
-  static boost::thread*                       globalIoThread = 0;
-  static boost::asio::io_service::work*       globalIoWork = 0;
-  static std::list<boost::asio::signal_set*>* globalSignalSet = 0;
+  static boost::asio::io_service*             globalIoService = nullptr;
+  static boost::thread*                       globalIoThread = nullptr;
+  static boost::asio::io_service::work*       globalIoWork = nullptr;
+  static std::list<boost::asio::signal_set*>* globalSignalSet = nullptr;
 
 
   static void readPathConf()

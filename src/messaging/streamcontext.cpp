@@ -95,7 +95,7 @@ std::pair<unsigned int, bool> StreamContext::sendCacheSet(const MetaObject& mo)
     return std::make_pair(it->second, false);
 }
 
-static CapabilityMap* _defaultCapabilities = 0;
+static CapabilityMap* _defaultCapabilities = nullptr;
 static void initCapabilities()
 {
   _defaultCapabilities  = new CapabilityMap();

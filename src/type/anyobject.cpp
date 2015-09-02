@@ -51,7 +51,7 @@ namespace detail
 {
   ProxyGeneratorMap& proxyGeneratorMap()
   {
-    static ProxyGeneratorMap* map = 0;
+    static ProxyGeneratorMap* map = nullptr;
     if (!map)
       map = new ProxyGeneratorMap();
     return *map;

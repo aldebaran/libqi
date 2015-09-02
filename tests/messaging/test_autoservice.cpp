@@ -129,7 +129,7 @@ TEST(QiAutoService, AutoReConnect)
   }
 }
 
-TestSessionPair *trash = 0;
+TestSessionPair *trash = nullptr;
 
 void trollRegister()
 {

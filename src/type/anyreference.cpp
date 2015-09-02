@@ -1050,7 +1050,7 @@ namespace detail
 
     ListTypeInterface* t = static_cast<ListTypeInterface*>(_type);
     TypeInterface* te = t->elementType();
-    DynamicTypeInterface* td = 0;
+    DynamicTypeInterface* td = nullptr;
     if (te->kind() == TypeKind_Dynamic)
       td = static_cast<DynamicTypeInterface*>(te);
     if (!homogeneous && !td)

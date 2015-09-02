@@ -241,7 +241,7 @@ namespace qi
      * trace-start event gets inserted in the graph, and in the
      * per-uid perId map, so that future trace-end message can find it quickly
     */
-    CallData* d = 0;
+    CallData* d = nullptr;
     CallList& lc = _p->perContext[trace.calleeContext()];
     EventTrace::EventKind k = trace.kind();
     if (k == EventTrace::Event_Call || k == EventTrace::Event_Signal)

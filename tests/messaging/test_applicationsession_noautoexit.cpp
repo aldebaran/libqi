@@ -12,7 +12,7 @@
 static bool _stopped = false;
 static qi::ApplicationSession* _app;
 static qi::Session _sd;
-static char **_argv = 0;
+static char **_argv = nullptr;
 static int _argc = 3;
 
 void onStop()

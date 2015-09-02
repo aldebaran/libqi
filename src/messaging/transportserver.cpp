@@ -43,7 +43,7 @@ namespace qi
 
   qi::Future<void> TransportServer::listen(const qi::Url &url, qi::EventLoop* ctx)
   {
-    TransportServerImpl* impl = 0;
+    TransportServerImpl* impl = nullptr;
 
     if (url.protocol() == "tcp")
     {

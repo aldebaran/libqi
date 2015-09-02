@@ -155,7 +155,7 @@ namespace qi {
   {
     // We can keep this outside the lock because we assume MetaMethods can't be
     // removed
-    MetaMethod* firstOverload = 0;
+    MetaMethod* firstOverload = nullptr;
     {
       boost::recursive_mutex::scoped_lock sl(_methodsMutex);
       if (_dirtyCache)
@@ -185,7 +185,7 @@ namespace qi {
           *canCache = true;
         return -1;
       }
-      MetaMethod* firstMatch = 0;
+      MetaMethod* firstMatch = nullptr;
       bool ambiguous = false;
       size_t nargs = args.size();
       for (MetaMethod* mm = overloadIt->second; mm; mm=mm->_p->next)
@@ -311,7 +311,7 @@ namespace qi {
     boost::recursive_mutex::scoped_lock sl(_eventsMutex);
     int id = signalId(name);
     if (id < 0)
-      return 0;
+      return  nullptr;
     else
       return &_events[id];
   }
@@ -509,7 +509,7 @@ namespace qi {
     boost::recursive_mutex::scoped_lock sl(_p->_methodsMutex);
     MethodMap::iterator i = _p->_methods.find(id);
     if (i == _p->_methods.end())
-      return 0;
+      return  nullptr;
     return &i->second;
   }
 
@@ -517,7 +517,7 @@ namespace qi {
     boost::recursive_mutex::scoped_lock sl(_p->_methodsMutex);
     MethodMap::const_iterator i = _p->_methods.find(id);
     if (i == _p->_methods.end())
-      return 0;
+      return  nullptr;
     return &i->second;
   }
 
@@ -525,7 +525,7 @@ namespace qi {
     boost::recursive_mutex::scoped_lock sl(_p->_eventsMutex);
     SignalMap::iterator i = _p->_events.find(id);
     if (i == _p->_events.end())
-      return 0;
+      return  nullptr;
     return &i->second;
   }
 
@@ -533,7 +533,7 @@ namespace qi {
     boost::recursive_mutex::scoped_lock sl(_p->_eventsMutex);
     SignalMap::const_iterator i = _p->_events.find(id);
     if (i == _p->_events.end())
-      return 0;
+      return  nullptr;
     return &i->second;
   }
 
@@ -541,7 +541,7 @@ namespace qi {
     boost::recursive_mutex::scoped_lock sl(_p->_propertiesMutex);
     PropertyMap::iterator i = _p->_properties.find(id);
     if (i == _p->_properties.end())
-      return 0;
+      return  nullptr;
     return &i->second;
   }
 
@@ -549,7 +549,7 @@ namespace qi {
     boost::recursive_mutex::scoped_lock sl(_p->_propertiesMutex);
     PropertyMap::const_iterator i = _p->_properties.find(id);
     if (i == _p->_properties.end())
-      return 0;
+      return  nullptr;
     return &i->second;
   }
 

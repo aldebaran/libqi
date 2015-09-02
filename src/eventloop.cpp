@@ -663,7 +663,7 @@ namespace qi {
     ctx = 0;
   }
 
-  static EventLoop*    _poolEventLoop = 0;
+  static EventLoop*    _poolEventLoop = nullptr;
 
   //the initialisation is protected by a mutex,
   //we then use an atomic to prevent having a mutex on a fastpath.
