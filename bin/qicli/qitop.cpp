@@ -149,7 +149,7 @@ void main_loop()
   }
 }
 
-int subCmd_top(int argc, char **argv, qi::ApplicationSession& app)
+int subCmd_top(int argc, char **argv, qi::ApplicationSession& app, qi::JsonOption)
 {
   po::options_description     desc("Usage: qicli top [-i interval] [<ServicePattern>..]");
   std::vector<std::string>    serviceList;

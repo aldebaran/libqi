@@ -11,14 +11,10 @@
 #include "qicli.hpp"
 
 
-ServiceHelper::ServiceHelper(const qi::AnyObject& service, const std::string &name)
-  :_name(name),
-    _service(service)
-{}
-
-ServiceHelper::ServiceHelper(const ServiceHelper &other)
-  :_name(other._name),
-    _service(other._service)
+ServiceHelper::ServiceHelper(const qi::AnyObject& service, const std::string &name, qi::JsonOption prettyPrint)
+  : _name(name)
+  , _service(service)
+  , _prettyPrint(prettyPrint)
 {}
 
 ServiceHelper::~ServiceHelper()
@@ -81,16 +77,9 @@ std::list<std::string> ServiceHelper::getMatchingPropertiesName(const std::strin
   return getMatchingMembersName<qi::MetaProperty>(_service.metaObject().propertyMap(), pattern, getHidden);
 }
 
-const ServiceHelper& ServiceHelper::operator=(const qi::AnyObject &service)
+ServiceHelper& ServiceHelper::operator=(const qi::AnyObject &service)
 {
   _service = service;
-  return *this;
-}
-
-const ServiceHelper& ServiceHelper::operator=(const ServiceHelper &other)
-{
-  _service = other._service;
-  _name = other._name;
   return *this;
 }
 
@@ -120,7 +109,7 @@ bool ServiceHelper::showProperty(const std::string &propertyName)
     printError(result.error());
     return false;
   }
-  std::cout << qi::encodeJSON(result.value()) << std::endl;
+  std::cout << qi::encodeJSON(result.value(), _prettyPrint) << std::endl;
   return true;
 }
 
@@ -188,7 +177,7 @@ bool ServiceHelper::call(const std::string &methodName, const qi::GenericFunctio
       std::cout << ((double)t / callCount) << " us per call " << std::endl;
     return false;
   }
-  std::cout << qi::encodeJSON(result.value()) << std::endl;
+  std::cout << qi::encodeJSON(result.value(), _prettyPrint) << std::endl;
   if (callCount)
     std::cout << ((double)t / callCount) << " us per call " << std::endl;
   const_cast<qi::AnyReference&>(result.value()).destroy();
