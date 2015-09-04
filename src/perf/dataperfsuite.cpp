@@ -52,20 +52,20 @@ namespace qi
       {
       case OutputData_Cpu:
         resultType = "Cpu";
-        resultValue = data.getCpu();
+        resultValue = static_cast<float>(data.getCpu());
         break;
       case OutputData_Period:
         resultType = "Period";
-        resultValue = data.getPeriod();
+        resultValue = static_cast<float>(data.getPeriod());
         break;
       case OutputData_MsgPerSecond:
         resultType = "MsgPerSecond";
-        resultValue = data.getMsgPerSecond();
+        resultValue = static_cast<float>(data.getMsgPerSecond());
         break;
       case OutputData_MsgMBPerSecond:
       default:
         resultType = "MsgMBPerSecond";
-        resultValue = data.getMegaBytePerSecond();
+        resultValue = static_cast<float>(data.getMegaBytePerSecond());
         break;
       }
       _p->out << "\t<perf_result "
