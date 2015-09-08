@@ -48,6 +48,7 @@ namespace boost
 {
   namespace chrono
   {
+    // helpers for boost chrono io (v1)
     template <class CharT>
     struct clock_string<qi::SteadyClock, CharT>
     {

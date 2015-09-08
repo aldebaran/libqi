@@ -10,7 +10,6 @@
 
 #include <qi/clock.hpp>
 #include <qi/os.hpp>
-#include <boost/chrono/chrono_io.hpp>
 
 namespace chrono = boost::chrono;
 
@@ -64,27 +63,6 @@ TEST(QiClock, clock_sleep_our)
   qi::sleepUntil(qi::SystemClock::now() + qi::Seconds(1));
   qi::sleepUntil(qi::SystemClock::now());
   qi::sleepUntil(qi::SystemClock::now() - qi::Seconds(1));
-}
-
-template<class Clock>
-void clock_output_()
-{
-  typename Clock::duration d(1);
-  typename Clock::time_point t = Clock::now();
-  std::cout << "name: " << boost::chrono::clock_string<Clock, char>::name() << ",\t"
-            << "tick: " << d << ",\t"
-            << "now: " << t << "\n";
-  // same, using wide chars
-  std::wcout << "name: " << boost::chrono::clock_string<Clock, wchar_t>::name() << ",\t"
-             << "tick: " << d << ",\t"
-             << "now: " << t << "\n";
-}
-
-TEST(QiClock, clock_output)
-{
-  clock_output_<qi::SteadyClock>();
-  clock_output_<qi::Clock>();
-  clock_output_<qi::SystemClock>();
 }
 
 typedef chrono::duration<uint32_t, boost::milli > uint32ms;
