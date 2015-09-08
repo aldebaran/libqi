@@ -17,8 +17,11 @@
 #include <boost/filesystem.hpp>
 #include <locale>
 
+#include <qi/log.hpp>
 #include <qi/os.hpp>
 #include <qi/path.hpp>
+
+qiLogCategory("qi.os");
 
 namespace qi
 {
@@ -26,23 +29,49 @@ namespace os
 {
   namespace
   {
-    std::vector<const wchar_t*> makeCProxy(const std::vector<std::wstring>& wstrlist)
+    std::vector<wchar_t> toCWStrings(const std::vector<std::wstring>& wstrlist)
     {
-      std::vector<const wchar_t*> cstrlist;
+      std::vector<wchar_t> cstrlist;
       cstrlist.reserve(wstrlist.size() + 1);
-      for (const auto& wstr : wstrlist)
+      for(const auto& wstr : wstrlist)
       {
-        cstrlist.push_back(wstr.c_str());
+        for(const auto& wchr : wstr)
+        {
+          cstrlist.push_back(wchr);
+        }
+        cstrlist.push_back(L' ');
       }
-      cstrlist.push_back(nullptr);
+      cstrlist.push_back(0);
       return cstrlist;
     }
 
     template <class WStringSequence>
     int winSpawn(const WStringSequence& wArgs)
     {
-      const auto cwArgs = makeCProxy(wArgs);
-      return static_cast<int>(_wspawnvp(_P_NOWAIT, cwArgs[0], cwArgs.data()));
+      auto cwArgs = toCWStrings(wArgs);
+      STARTUPINFOW startupInfo { };
+      PROCESS_INFORMATION processInfo { };
+      const BOOL spawned = CreateProcessW(
+            NULL, &cwArgs[0], NULL, NULL, false, NULL, NULL, NULL,
+            &startupInfo, &processInfo);
+      if(!spawned)
+        return -1;
+      return static_cast<int>(processInfo.dwProcessId);
+    }
+
+    std::string messageForError(DWORD errorCode)
+    {
+      LPVOID lpMsgBuf = nullptr;
+      FormatMessage(
+          FORMAT_MESSAGE_ALLOCATE_BUFFER |
+          FORMAT_MESSAGE_FROM_SYSTEM |
+          FORMAT_MESSAGE_IGNORE_INSERTS,
+          NULL,
+          errorCode,
+          MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+          (LPTSTR) &lpMsgBuf,
+          0, NULL );
+      return static_cast<const char*>(lpMsgBuf);
     }
   }
 
@@ -94,41 +123,63 @@ namespace os
 
   int waitpid(int pid, int* status)
   {
-    errno = 0;
+    auto logLastError = [&pid](const std::string& doingWhat)
+    {
+      qiLogDebug() << "Error waiting for pid " << pid << " "
+                   << doingWhat << ": " << messageForError(GetLastError());
+    };
 
-    _cwait(status, pid, 0);
-
-    if (errno == ECHILD)
+    const HANDLE handle = OpenProcess(
+          PROCESS_QUERY_INFORMATION | PROCESS_VM_READ | SYNCHRONIZE, FALSE,
+          static_cast<DWORD>(pid));
+    if (!handle)
     {
       *status = 127;
+      logLastError("checking the process");
       return 0;
     }
 
-    return errno;
+    const DWORD result = WaitForSingleObject(handle, INFINITE);
+    assert(result != WAIT_TIMEOUT);
+    if (result == WAIT_FAILED)
+    {
+      *status = 127;
+      logLastError("waiting for the process");
+      return 0;
+    }
+
+    DWORD exitCode = 0xFFFFFF;
+    if (!GetExitCodeProcess(handle, &exitCode))
+    {
+      *status = 127;
+      logLastError("retrieving the exit code");
+      return 0;
+    }
+
+    *status = exitCode;
+    return 0;
   }
 
   int kill(int pid, int sig)
   {
-    HANDLE handle = (HANDLE)pid;
-    int res = -1;
-    DWORD status;
-    GetExitCodeProcess(handle, &status);
-    if (status == STILL_ACTIVE)
-    {
-      if (sig == SIGTERM || sig == SIGKILL)
-      {
-        DWORD error = TerminateProcess(handle, 0);
-        qi::os::msleep(100);
-        GetExitCodeProcess(handle, &status);
-        if (status != STILL_ACTIVE)
-          res = 0;
-      }
-      else
-      {
-        res = 0;
-      }
-    }
-    return res;
+    if(sig == 0) // if signal is 0, just check that it is running
+      return isProcessRunning(pid) ? 0 : -1;
+
+    qiLogDebug() << "Killing " << pid << ": checking the process";
+    const HANDLE handle = OpenProcess(
+          PROCESS_QUERY_INFORMATION | PROCESS_VM_READ | PROCESS_TERMINATE, FALSE,
+          static_cast<DWORD>(pid));
+    if (!handle)
+      return -1;
+
+    qiLogDebug() << "Killing " << pid << ": terminating the process";
+    if (!TerminateProcess(handle, sig))
+      return -1;
+
+    qiLogDebug() << "Killing " << pid << ": waiting the end of the process";
+    WaitForSingleObject(handle, INFINITE);
+    qiLogDebug() << "Killed " << pid;
+    return 0;
   }
-}
-}
+} // os
+} // qi

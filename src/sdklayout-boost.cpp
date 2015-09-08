@@ -15,6 +15,7 @@
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/predef/os.h>
 #include <boost/regex.hpp>
 #include <boost/foreach.hpp>
 #include <locale>
@@ -71,6 +72,23 @@ std::string relative(
 } // anonymous
 
 namespace qi {
+
+namespace path {
+
+namespace detail {
+
+    std::string binSuffix()
+    {
+    #if BOOST_OS_WINDOWS && defined(NDEBUG)
+      return ".exe";
+    #elif BOOST_OS_WINDOWS && !defined(NDEBUG)
+      return "_d.exe";
+    #else
+      return "";
+    #endif
+    }
+  } // detail
+  } // path
 
   class PrivateSDKLayout
   {
@@ -293,25 +311,22 @@ namespace qi {
       if (bin.exists() && !bin.isDir())
         return bin.str();
 
-      std::vector<std::string>::const_iterator it;
-      for (it = _p->_sdkPrefixes.begin();
-           it != _p->_sdkPrefixes.end();
-           ++it)
+      for (const qi::Path& path : _p->_sdkPrefixes)
       {
-        qi::Path p = *it;
-        p = p / "bin" / name;
+        path = path / "bin" / name;
+        if (path.exists() && !path.isDir())
+          return path.str();
 
-        if (p.exists() && !p.isDir())
-          return p.str();
-#ifndef NDEBUG
-        if (qi::Path(p.str() + "_d.exe").exists())
-          return p.str() + "_d.exe";
-#endif
-        if (qi::Path(p.str() + ".exe").exists())
-          return p.str() + ".exe";
+        const auto suffix = path::detail::binSuffix();
+        if (!suffix.empty())
+        { // don't check twice if the suffix is empty
+          path = qi::Path(path.str() + suffix);
+          if (path.exists() && !path.isDir())
+            return path.str();
+        }
       }
     }
-    catch (const boost::filesystem::filesystem_error &e)
+    catch (const std::exception &e)
     {
       qiLogDebug() << e.what();
     }
