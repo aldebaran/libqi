@@ -429,7 +429,7 @@ namespace detail {
         if (ready) {
           bool async = _async != FutureCallbackType_Sync;
           if (type != FutureCallbackType_Auto)
-            async = type;
+            async = type != FutureCallbackType_Sync;
           if (async)
             getEventLoop()->post(boost::bind(s, future));
           else
