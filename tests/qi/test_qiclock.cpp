@@ -17,17 +17,11 @@ namespace chrono = boost::chrono;
 
 TEST(QiClock, initialization)
 {
-  qi::Duration d0;
+  qi::Duration d0 = qi::Duration::zero();
   EXPECT_EQ(0, d0.count());
 
-  qi::Duration d1 = qi::Duration::zero();
+  qi::Duration d1(0);
   EXPECT_EQ(0, d1.count());
-
-  qi::Duration d2 = qi::Duration();
-  EXPECT_EQ(0, d2.count());
-
-  qi::Duration d3(0);
-  EXPECT_EQ(0, d3.count());
 
   qi::Clock::time_point t0;
   EXPECT_EQ(0, t0.time_since_epoch().count());
