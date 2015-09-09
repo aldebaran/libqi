@@ -125,6 +125,33 @@ TEST(QiClock, toIso8601String)
   EXPECT_EQ("1970-02-01T010203.000Z", qi::toISO8601String(t0 + qi::Hours(24*31+1)+qi::Minutes(2)+qi::Seconds(3)));
 }
 
+TEST(QiClock, to_string)
+{
+  // durations defined in libqi
+  EXPECT_EQ("2 nanoseconds", qi::to_string(qi::Duration(2)));
+  EXPECT_EQ("2 nanoseconds", qi::to_string(qi::NanoSeconds(2)));
+  EXPECT_EQ("2 microseconds", qi::to_string(qi::MicroSeconds(2)));
+  EXPECT_EQ("2 milliseconds", qi::to_string(qi::MilliSeconds(2)));
+  EXPECT_EQ("2 seconds", qi::to_string(qi::Seconds(2)));
+  EXPECT_EQ("2 minutes", qi::to_string(qi::Minutes(2)));
+  EXPECT_EQ("2 hours", qi::to_string(qi::Hours(2)));
+
+  // time_points defined in libqi
+  EXPECT_EQ("2 nanoseconds since program start",
+            qi::to_string(qi::SteadyClock::time_point(qi::Duration(2))));
+  EXPECT_EQ("2 nanoseconds since boot",
+            qi::to_string(qi::Clock::time_point(qi::Duration(2))));
+  EXPECT_EQ("2 nanoseconds since Jan 1, 1970",
+            qi::to_string(qi::SystemClock::time_point(qi::Duration(2))));
+
+  // custom duration
+  EXPECT_EQ("0.5 seconds", qi::to_string(boost::chrono::duration<float, boost::ratio<1,1>>(0.5f)));
+
+  // custom time_point for a clock defined in libqi
+  EXPECT_EQ("2 hours since Jan 1, 1970",
+            qi::to_string(boost::chrono::time_point_cast<qi::Hours>(qi::SystemClock::time_point(qi::Hours(2)))));
+}
+
 
 TEST(QiClock, durationSince)
 {
