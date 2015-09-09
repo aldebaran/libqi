@@ -1284,18 +1284,39 @@ struct ColorA
   int r,g,b,a;
 };
 
-// only allow drop of a if it equals 0 (the default-constructed value)
-bool colorVersionHandler(ColorA* instance, const std::vector<std::string>& fields)
+// only allow drop of a if it equals 1
+bool colorDropHandler(std::map<std::string, ::qi::AnyValue>& fields,
+                      const std::vector<std::string>& missing,
+                      const std::map<std::string, ::qi::AnyReference>& dropfields)
 {
-  qiLogDebug() << "colorVersionHandler " << instance->a;
-  if (fields.size() != 1 || fields.front() != "a")
+  try
+  {
+    if (!missing.empty())
+      return false;
+    if (dropfields.size() != 1 || dropfields.begin()->first != "a")
+      return false;
+    return dropfields.begin()->second.toInt() == 0;
+  }
+  catch (...)
+  {
     return false;
-  return instance->a == 0;
+  }
+}
+
+bool colorFillHandler(std::map<std::string, ::qi::AnyValue>& fields,
+                      const std::vector<std::string>& missing,
+                      const std::map<std::string, ::qi::AnyReference>& dropfields)
+{
+  if (!dropfields.empty())
+    return false;
+  if (missing.size() != 1 || missing.front() != "a")
+    return false;
+  fields["a"] = qi::AnyValue::from(0);
+  return true;
 }
 
 QI_TYPE_STRUCT_REGISTER(Color, r, g, b);
-QI_TYPE_STRUCT_EXTENSION_DROP_HANDLER(ColorA, colorVersionHandler);
-QI_TYPE_STRUCT_EXTENSION_FILL_FIELDS(ColorA, "a");
+QI_TYPE_STRUCT_EXTENSION_CONVERT_HANDLERS(ColorA, colorFillHandler, colorDropHandler);
 QI_TYPE_STRUCT_REGISTER(ColorA, r, g, b, a);
 
 int getColor(Color& c) { return c.r+c.g+c.b;}

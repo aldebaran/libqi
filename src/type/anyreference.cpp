@@ -313,9 +313,9 @@ namespace detail
     // Cleanup allocated stuff when exiting scope
     struct CleanUp
     {
-      CleanUp(std::vector<void*>& targetData,
-        std::vector<bool>& mustDestroy,
-        std::vector<TypeInterface*>& dstTypes)
+      CleanUp(const std::vector<void*>& targetData,
+        const std::vector<bool>& mustDestroy,
+        const std::vector<TypeInterface*>& dstTypes)
       : targetData(targetData)
       , mustDestroy(mustDestroy)
       , dstTypes(dstTypes) {}
@@ -327,64 +327,74 @@ namespace detail
             dstTypes[i]->destroy(targetData[i]);
         }
       }
-      std::vector<void*>& targetData;
-      std::vector<bool>& mustDestroy;
-      std::vector<TypeInterface*>& dstTypes;
+      const std::vector<void*>& targetData;
+      const std::vector<bool>& mustDestroy;
+      const std::vector<TypeInterface*>& dstTypes;
     };
+  }
+
+  static std::string fieldList(const std::map<std::string, qi::AnyReference>& map)
+  {
+    std::string ret;
+    for (const auto& item : map)
+    {
+      if (!ret.empty())
+        ret += ", ";
+      ret += item.first;
+    }
+    return ret;
   }
 
   static std::pair<AnyReference, bool> structConverter(const AnyReferenceBase* src, StructTypeInterface* tdst)
   {
     StructTypeInterface* tsrc = static_cast<StructTypeInterface*>(src->type());
 
-    std::vector<std::string> srcNames = tsrc->elementsName();
-    std::vector<std::string> dstNames = tdst->elementsName();
-    std::vector<TypeInterface*> srcTypes = tsrc->memberTypes();
-    std::vector<TypeInterface*> dstTypes = tdst->memberTypes();
+    const std::vector<std::string> srcNames = tsrc->elementsName();
+    const std::vector<std::string> dstNames = tdst->elementsName();
+    const std::vector<TypeInterface*> srcTypes = tsrc->memberTypes();
+    const std::vector<TypeInterface*> dstTypes = tdst->memberTypes();
     if (srcTypes.size() != srcNames.size() || dstTypes.size() != dstNames.size())
     {
-      qiLogVerbose() << "Cannot convert between not fully named mismatching tuples "
-        << tsrc->infoString() << " and " << tdst->infoString();
+      qiLogVerbose() << "Cannot convert between not fully named mismatching tuples " << tsrc->infoString() << " and "
+                     << tdst->infoString();
       return std::make_pair(AnyReference(), false);
     }
     // Compute mapping between src and dst fields based on names
-    std::vector<int> fieldMap; //fieldMap[i] = index of src's field i in dst (-1 for not present)
-    std::vector<std::string> fieldDrop; // unused src fields
-    for (unsigned i=0; i<srcNames.size(); ++i)
+    std::vector<int> fieldMap; // fieldMap[i] = index of src's field i in dst (-1 for not present)
+    std::map<std::string, qi::AnyReference> fieldDrop; // unused src fields
+    for (unsigned i = 0; i < srcNames.size(); ++i)
     {
-      std::vector<std::string>::iterator it = std::find(dstNames.begin(), dstNames.end(), srcNames[i]);
-      if (it == dstNames.end())
-        fieldDrop.push_back(srcNames[i]);
-      fieldMap.push_back(it == dstNames.end() ? -1 : it - dstNames.begin());
+      std::vector<std::string>::const_iterator it = std::find(dstNames.begin(), dstNames.end(), srcNames[i]);
+      if (it != dstNames.end())
+        fieldMap.push_back(it - dstNames.begin());
+      else
+      {
+        fieldDrop[srcNames[i]] = AnyReference(srcTypes[i], tsrc->get(src->rawValue(), i));
+        fieldMap.push_back(-1);
+      }
     }
     std::vector<std::string> fieldMissing; // unfilled dst fields
-    for (unsigned i=0; i<dstNames.size(); ++i)
+    for (unsigned i = 0; i < dstNames.size(); ++i)
     {
       std::vector<int>::iterator it = std::find(fieldMap.begin(), fieldMap.end(), i);
       if (it == fieldMap.end())
         fieldMissing.push_back(dstNames[i]);
     }
     qiLogDebug() << "Field mapping:"
-      << " drop=" << boost::algorithm::join(fieldDrop, ", ")
-      << "  missing=" << boost::algorithm::join(fieldMissing, ", ");
-    // Start by asking source if it is ok to drop
-    if (!fieldDrop.empty() && !tsrc->canDropFields(src->rawValue(), fieldDrop))
-    {
-      qiLogVerbose() << "Source " << tsrc->infoString() <<" refused to drop fields " << boost::algorithm::join(fieldDrop, ", ");
-      return std::make_pair(AnyReference(), false);
-    }
-    // convert what we can (missing field check might need the data)
+                 << " drop=" << fieldList(fieldDrop)
+                 << " missing=" << boost::algorithm::join(fieldMissing, ", ");
 
+    // convert what we can (missing field check might need the data)
     std::vector<void*> targetData;
     std::vector<bool> mustDestroy;
     targetData.resize(dstTypes.size(), 0);
     mustDestroy.resize(dstTypes.size(), false);
 
-    std::vector<void*> sourceData = tsrc->get(src->rawValue());
+    const std::vector<void*> sourceData = tsrc->get(src->rawValue());
 
     CleanUp scopeCleanup(targetData, mustDestroy, dstTypes);
 
-    for (unsigned i=0; i<srcTypes.size(); ++i)
+    for (unsigned i = 0; i < srcTypes.size(); ++i)
     {
       int targetIndex = fieldMap[i];
       if (targetIndex == -1)
@@ -392,17 +402,17 @@ namespace detail
       std::pair<AnyReference, bool> conv = AnyReference(srcTypes[i], sourceData[i]).convert(dstTypes[targetIndex]);
       if (!conv.first.type())
       {
-        qiLogVerbose() << "Conversion failure in tuple member "
-          << srcNames[i] << " between "
-          << srcTypes[i]->infoString() << " and " << dstTypes[targetIndex]->infoString();
+        qiLogVerbose() << "Conversion failure in tuple member " << srcNames[i] << " between "
+                       << srcTypes[i]->infoString() << " and " << dstTypes[targetIndex]->infoString();
         return std::make_pair(AnyReference(), false);
       }
       targetData[targetIndex] = conv.first.rawValue();
       mustDestroy[targetIndex] = conv.second;
     }
-    std::map<std::string, AnyValue> fields; // used only in if below but must survive longuer
+
     // Then ask target to generate a value for missing fields
-    if (!fieldMissing.empty())
+    std::map<std::string, AnyValue> fields; // used only in if below but must survive longuer
+    if (!fieldMissing.empty() || !fieldDrop.empty())
     {
       // Unfortunately we cannot instanciate target type, because of the
       // missing fields (in case struct is in constructor mode), so present
@@ -412,25 +422,27 @@ namespace detail
       // we transfer ownership to the map, so that fillMissing can replace
       // existing values
       // Preallocates all elements so that stuff dont move
-      for (unsigned i=0; i<dstNames.size(); ++i)
+      for (unsigned i = 0; i < dstNames.size(); ++i)
         fields[dstNames[i]] = AnyValue();
       // Fill elements we have, transfering ownership
-      for (unsigned i=0; i<dstNames.size(); ++i)
+      for (unsigned i = 0; i < dstNames.size(); ++i)
         if (std::find(fieldMap.begin(), fieldMap.end(), i) != fieldMap.end())
           fields[dstNames[i]].reset(AnyReference(dstTypes[i], targetData[i]), false, mustDestroy[i]);
       mustDestroy.assign(false, mustDestroy.size());
-      if (!tdst->fillMissingFields(fields, fieldMissing))
+      // attempt both conversions
+      if (!tsrc->convertTo(fields, fieldMissing, fieldDrop) &&
+          !tdst->convertFrom(fields, fieldMissing, fieldDrop))
       {
-        qiLogVerbose() << "Target cannot fill missing fields " << boost::algorithm::join(fieldMissing, ", ");
+        qiLogVerbose() << "Source and target cannot convert struct";
         return std::make_pair(AnyReference(), false);
       }
       // move stuff back to targetdata
-      for (unsigned i=0; i<dstNames.size(); ++i)
+      for (unsigned i = 0; i < dstNames.size(); ++i)
         targetData[i] = fields[dstNames[i]].rawValue();
     }
     void* dst = tdst->initializeStorage();
     tdst->set(&dst, targetData);
-    return std::make_pair(AnyReference(tdst, dst) , true);
+    return std::make_pair(AnyReference(tdst, dst), true);
   }
 
   std::pair<AnyReference, bool> AnyReferenceBase::convert(StructTypeInterface* targetType) const
@@ -446,10 +458,23 @@ namespace detail
       std::vector<void*> sourceData = tsrc->get(_value);
       std::vector<TypeInterface*> srcTypes = tsrc->memberTypes();
       std::vector<TypeInterface*> dstTypes = tdst->memberTypes();
-      if (dstTypes.size() != sourceData.size())
+      assert(sourceData.size() == srcTypes.size());
+      if (srcTypes.size() != dstTypes.size())
       {
         qiLogVerbose() << "Conversion glitch: tuple size mismatch between " << tsrc->infoString() << " and " << tdst->infoString();
         return structConverter(this, targetType);
+      }
+      std::vector<std::string> srcNames = tsrc->elementsName();
+      std::vector<std::string> dstNames = tdst->elementsName();
+      if (srcNames.size() == srcTypes.size() && dstNames.size() == dstTypes.size())
+      {
+        std::sort(srcNames.begin(), srcNames.end());
+        std::sort(dstNames.begin(), dstNames.end());
+        if (srcNames != dstNames)
+        {
+          qiLogVerbose() << "Conversion glitch: names mismatch in named tuple";
+          return structConverter(this, targetType);
+        }
       }
       // Note: start converting without further check.
       // It means the case where a struct was modified but the

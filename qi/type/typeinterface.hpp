@@ -266,27 +266,37 @@ namespace qi{
 
     /** @{
     *
-    *  Versioning support.
+    * Versioning support.
     *
-    * Conversion between non-equivalent structs will be attempted if all
-    * fields are named: fields with matching names will be automatically mapped
-    * to each other.
-    * canDropFields() will be called on the source to ask
-    * if fields given as argument can be dropped (because they do not exist
-    * on the target).
+    * Conversion between non-equivalent structs will be attempted if all fields
+    * are named: fields with matching names will be automatically mapped to each
+    * other.
     *
-    * fillMissingFields(fields, missing) will be called on the target,
-    * with a map of
-    * fields that were converted, and the list of missing field names.
-    * The function must fill fields with a value for each of the missing fields,
-    * or return false (no storage is provided, because the struct cant be
-    * instanciated without a value for all fields being available.
+    * convertFrom(fields, missing, dropFields) will be called on the target,
+    * with a map of fields that were converted, the list of missing field names
+    * and the list of fields that are being dropped.  The function must fill
+    * fields with a value for each of the missing fields, or return false (no
+    * storage is provided, because the struct cant be instanciated without a
+    * value for all fields being available.
+    *
+    * convertTo is called the same way when converting this structure to
+    * another.
     */
 
-    /// Return whether struct accepts field-name-based conversion that drops \p fieldNames.
-    virtual bool canDropFields(void* storage, const std::vector<std::string>& fieldNames) { return false;}
     /// Fill missing fields caused by conversion from a different struct. Return whether fill succeeded.
-    virtual bool fillMissingFields(std::map<std::string, AnyValue>& fields, const std::vector<std::string>& missing) { return false;}
+    virtual bool convertFrom(std::map<std::string, ::qi::AnyValue>& fields,
+                             const std::vector<std::string>& missing,
+                             const std::map<std::string, ::qi::AnyReference>& dropfields)
+    {
+      return false;
+    }
+    /// Fill missing fields caused by conversion to a different struct. Return whether fill succeeded.
+    virtual bool convertTo(std::map<std::string, ::qi::AnyValue>& fields,
+                           const std::vector<std::string>& missing,
+                           const std::map<std::string, ::qi::AnyReference>& dropfields)
+    {
+      return false;
+    }
 
     /// @}
   };
