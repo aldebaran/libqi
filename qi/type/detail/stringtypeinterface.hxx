@@ -6,6 +6,8 @@
 
 #ifndef _QITYPE_DETAIL_TYPESTRING_HXX_
 #define _QITYPE_DETAIL_TYPESTRING_HXX_
+
+#include <algorithm>
 #include <qi/os.hpp>
 #include <qi/type/detail/structtypeinterface.hxx>
 
@@ -109,6 +111,35 @@ namespace qi
       _QI_BOUNCE_TYPE_METHODS_NOCLONE(Methods);
   };
 
+  template<class Func, class... Args >
+  auto callWithInstance(Func&& f, Args&&... args)
+    -> decltype(std::forward<Func>(f)(std::forward<Args>(args)...))
+  {
+    return std::forward<Func>(f)(std::forward<Args>(args)...);
+  }
+
+  template<class Func, class Obj, class... Args >
+  auto callWithInstance(Func&& f, Obj&& o, Args&&... args)
+  -> decltype((std::forward<Obj>(o).*std::forward<Func>(f))(std::forward<Args>(args)...))
+  {
+    return (std::forward<Obj>(o).*std::forward<Func>(f))(std::forward<Args>(args)...);
+  }
+
+  inline StringTypeInterface::ManagedRawString makeManagedString(const std::string& s)
+  {
+    return StringTypeInterface::ManagedRawString(StringTypeInterface::RawString((char*)s.c_str(), s.size()),
+                                                 StringTypeInterface::Deleter());
+  }
+
+  inline StringTypeInterface::ManagedRawString makeManagedString(std::string&& s)
+  {
+    const auto size = s.size() + 1;
+    auto strKeptAlive = new char[size]();
+    std::copy(begin(s), end(s), strKeptAlive);
+    return StringTypeInterface::ManagedRawString(StringTypeInterface::RawString(strKeptAlive, size),
+                                                 [](const StringTypeInterface::RawString& rawStr){ delete[] rawStr.first; });
+  }
+
   /** Declare a Type for T of Kind string.
   *
   * T must be default-constructible, copy-constructible, and
@@ -121,19 +152,19 @@ namespace qi
   public:
     TypeEquivalentString(F f): _getter(f) {}
     typedef DefaultTypeImplMethods<T, TypeByPointerPOD<T> > Impl;
+
     virtual void set(void** storage, const char* ptr, size_t sz)
     {
       T* inst = (T*)ptrFromStorage(storage);
       *inst = T(std::string(ptr, sz));
     }
+
     virtual ManagedRawString get(void* storage)
     {
       T* ptr = (T*)Impl::ptrFromStorage(&storage);
-      void* str = detail::fieldStorage(ptr, _getter);
-      const std::string& s = detail::fieldValue(ptr, _getter, &str);
-      return ManagedRawString(RawString((char*)s.c_str(), s.size()),
-          Deleter());
+      return makeManagedString(callWithInstance(_getter, *ptr));
     }
+
     _QI_BOUNCE_TYPE_METHODS(Impl);
     F _getter;
   };
