@@ -6,6 +6,7 @@
 #include <qi/type/typeinterface.hpp>
 #include <qi/anyobject.hpp>
 #include <qi/session.hpp>
+#include <qi/path.hpp>
 
 #include "type/metaobject_p.hpp"
 #include "type/metamethod_p.hpp"
@@ -112,6 +113,7 @@ public:
 
 
 QI_EQUIVALENT_STRING_REGISTER(qi::Signature, &qi::Signature::toString);
+QI_EQUIVALENT_STRING_REGISTER(qi::Path, &qi::Path::str);
 
 QI_TYPE_REGISTER_CUSTOM(qi::Duration, DurationTypeInterface<qi::Duration>);
 QI_TYPE_REGISTER_CUSTOM(qi::NanoSeconds, DurationTypeInterface<qi::NanoSeconds>);
