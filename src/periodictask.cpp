@@ -7,7 +7,6 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/thread.hpp>
 #include <boost/enable_shared_from_this.hpp>
-#include <boost/chrono/chrono_io.hpp>
 #include <qi/log.hpp>
 #include <qi/periodictask.hpp>
 
@@ -216,7 +215,7 @@ namespace qi
 
   void PeriodicTaskPrivate::_reschedule(qi::Duration delay)
   {
-    qiLogDebug() << "rescheduling in " << delay;
+    qiLogDebug() << "rescheduling in " << qi::to_string(delay);
     if (_scheduleCallback)
       _task = _scheduleCallback(boost::bind(&PeriodicTaskPrivate::_wrap, shared_from_this()), delay);
     else

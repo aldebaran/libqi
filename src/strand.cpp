@@ -8,7 +8,6 @@
 #include <qi/getenv.hpp>
 #include <deque>
 #include <boost/enable_shared_from_this.hpp>
-#include <boost/chrono/chrono_io.hpp>
 
 qiLogCategory("qi.strand");
 
@@ -91,7 +90,7 @@ Future<void> StrandPrivate::async(boost::function<void()> cb,
   cbStruct->promise =
     qi::Promise<void>(boost::bind(&StrandPrivate::cancel, this, cbStruct));
   qiLogDebug() << "Scheduling job id " << cbStruct->id
-    << " at " << tp;
+    << " at " << qi::to_string(tp);
   cbStruct->asyncFuture = _eventLoop.async(boost::bind(
         &StrandPrivate::enqueue, this, cbStruct),
       tp);
@@ -105,7 +104,7 @@ Future<void> StrandPrivate::async(boost::function<void()> cb,
   cbStruct->promise =
     qi::Promise<void>(boost::bind(&StrandPrivate::cancel, this, cbStruct));
   qiLogDebug() << "Scheduling job id " << cbStruct->id
-    << " in " << delay;
+    << " in " << qi::to_string(delay);
   if (delay.count())
     cbStruct->asyncFuture = _eventLoop.async(boost::bind(
           &StrandPrivate::enqueue, this, cbStruct),
