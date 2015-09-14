@@ -274,7 +274,7 @@ namespace detail {
     template <typename T>
     class FutureBaseTyped : public FutureBase {
     public:
-      typedef boost::function<void(Promise<T>)> CancelCallback;
+      typedef boost::function<void(Promise<T>&)> CancelCallback;
       typedef typename FutureType<T>::type ValueType;
       FutureBaseTyped()
         : _value()
@@ -305,7 +305,8 @@ namespace detail {
           requestCancel();
           onCancel = _onCancel;
         }
-        onCancel(Promise<T>(future));
+        qi::Promise<T> prom(future);
+        onCancel(prom);
       }
 
       void setOnCancel(qi::Promise<T>& promise,
@@ -412,7 +413,7 @@ namespace detail {
       }
 
       void connect(qi::Future<T> future,
-          const boost::function<void (qi::Future<T>)> &s,
+          const boost::function<void (qi::Future<T>&)> &s,
           FutureCallbackType type)
       {
         if (state() == FutureState_None)
@@ -457,7 +458,7 @@ namespace detail {
 
     private:
       friend class Promise<T>;
-      typedef boost::function<void(qi::Future<T>)> CallbackType;
+      typedef boost::function<void(qi::Future<T>&)> CallbackType;
       struct Callback
       {
         CallbackType callback;
@@ -574,7 +575,7 @@ namespace detail {
   namespace detail
   {
     template<typename FT, typename PT, typename CONV>
-    void futureAdapter(Future<FT> f, Promise<PT> p, CONV converter)
+    void futureAdapter(Future<FT>& f, Promise<PT> p, CONV converter)
     {
       if (f.hasError())
         p.setError(f.error());

@@ -203,7 +203,7 @@ inline void extractFuture<void>(qi::Future<qi::AnyReference> metaFut)
 }
 
 template <typename T>
-inline void futureAdapter(qi::Future<qi::AnyReference> metaFut, qi::Promise<T> promise)
+inline void futureAdapter(qi::Future<qi::AnyReference>& metaFut, qi::Promise<T> promise)
 {
   qiLogDebug("qi.object") << "futureAdapter " << qi::typeOf<T>()->infoString()<< ' ' << metaFut.hasError();
   //error handling
@@ -216,7 +216,7 @@ inline void futureAdapter(qi::Future<qi::AnyReference> metaFut, qi::Promise<T> p
     return;
   }
 
-  AnyReference val =  metaFut.value();
+  AnyReference val = metaFut.value();
   if (handleFuture(val, promise))
     return;
 
@@ -243,7 +243,7 @@ inline void futureAdapter(qi::Future<qi::AnyReference> metaFut, qi::Promise<T> p
 }
 
 template <>
-inline void futureAdapter<void>(qi::Future<qi::AnyReference> metaFut, qi::Promise<void> promise)
+inline void futureAdapter<void>(qi::Future<qi::AnyReference>& metaFut, qi::Promise<void> promise)
 {
   qiLogDebug("qi.object") << "futureAdapter void " << metaFut.hasError();
   //error handling
