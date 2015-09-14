@@ -41,18 +41,17 @@ public:
    */
   ~Strand();
 
-  void post(const boost::function<void()>& callback);
+  // DEPRECATED
+  QI_API_DEPRECATED void post(const boost::function<void()>& callback) override;
 
-  qi::Future<void> async(const boost::function<void()>& cb,
-      qi::SteadyClockTimePoint tp);
-  qi::Future<void> async(const boost::function<void()>& cb,
-      qi::Duration delay = qi::Duration(0));
-
-  bool isInThisContext();
+  QI_API_DEPRECATED qi::Future<void> async(const boost::function<void()>& cb,
+      qi::SteadyClockTimePoint tp) override;
+  QI_API_DEPRECATED qi::Future<void> async(const boost::function<void()>& cb,
+      qi::Duration delay = qi::Duration(0)) override;
 
 #define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)                    \
   template <typename T, typename F, typename ARG0 comma ATYPEDECL>           \
-  boost::function<T> schedulerFor(                                           \
+  QI_API_DEPRECATED boost::function<T> schedulerFor(                                           \
       const F& func, const ARG0& arg0 comma ADECL,                           \
       const boost::function<void()>& fallbackCb = boost::function<void()>()) \
   {                                                                          \
@@ -65,10 +64,46 @@ public:
   }
   QI_GEN(genCall)
 #undef genCall
+  // END DEPRECATED
+
+  bool isInThisContext() override;
+
+  // C++14 this can be a lambda, but we need perfect forwarding in the capture in scheduleFor below
+  template <typename F>
+  struct SchedulerHelper2
+  {
+    F _func;
+    Strand* _strand;
+
+    SchedulerHelper2(F f, Strand* strand)
+      : _func(std::move(f))
+      , _strand(strand)
+    {
+    }
+
+    template <typename... Args>
+    auto operator()(Args&&... args) const -> qi::Future<decltype(std::bind(_func, std::forward<Args>(args)...)())>
+    {
+      // boost::bind does not work T_T
+      return _strand->async2(std::bind(_func, std::forward<Args>(args)...));
+    }
+  };
+
+  template <typename F>
+  SchedulerHelper2<typename std::decay<F>::type> schedulerFor(F&& func)
+  {
+    return SchedulerHelper2<typename std::decay<F>::type>(std::forward<F>(func), this);
+  }
 
 private:
   boost::shared_ptr<StrandPrivate> _p;
 
+  void postImpl(boost::function<void()> callback) override;
+
+  qi::Future<void> asyncAtImpl(boost::function<void()> cb, qi::SteadyClockTimePoint tp) override;
+  qi::Future<void> asyncDelayImpl(boost::function<void()> cb, qi::Duration delay) override;
+
+  // DEPRECATED
   template <int N, typename T>
   struct SchedulerHelper;
 #define typedefi(z, n, _)                                   \
@@ -100,6 +135,7 @@ private:
 #undef genCall
 #undef placeholders
 #undef typedefi
+  // END DEPRECATED
 };
 
 }

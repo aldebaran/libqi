@@ -55,7 +55,7 @@ namespace qi
      * \brief Check if current thread is the event loop thread.
      * \return true if current thread is the event loop thread.
      */
-    bool isInThisContext();
+    bool isInThisContext() override;
     /**
      * \brief Start the eventloop in threaded mode.
      * \param nthreads Numbers of threads.
@@ -81,6 +81,7 @@ namespace qi
     /// \brief Internal function.
     void *nativeHandle();
 
+    // DEPRECATED
     /// @{
     /**
      * \brief Call given function once after given delay in microseconds.
@@ -90,20 +91,20 @@ namespace qi
      * \deprecated use qi::async with qi::Duration
      */
     template<typename R>
-    Future<R> async(const boost::function<R()>& callback, uint64_t usDelay=0);
-    Future<void> async(const boost::function<void ()>& callback, uint64_t usDelay=0);
-    Future<void> async(const boost::function<void ()>& callback, qi::Duration delay);
-    Future<void> async(const boost::function<void ()>& callback, qi::SteadyClockTimePoint timepoint);
+    QI_API_DEPRECATED Future<R> async(const boost::function<R()>& callback, uint64_t usDelay=0);
+    QI_API_DEPRECATED Future<void> async(const boost::function<void ()>& callback, uint64_t usDelay=0);
+    QI_API_DEPRECATED Future<void> async(const boost::function<void ()>& callback, qi::Duration delay) override;
+    QI_API_DEPRECATED Future<void> async(const boost::function<void ()>& callback, qi::SteadyClockTimePoint timepoint) override;
 
     template <typename R>
-    typename boost::enable_if_c<!boost::is_same<R, void>::value,
+    QI_API_DEPRECATED typename boost::enable_if_c<!boost::is_same<R, void>::value,
                                 qi::Future<R> >::type
         async(const boost::function<R()>& callback, qi::Duration delay)
     {
       return ExecutionContext::async<R>(callback, delay);
     }
     template <typename R>
-    typename boost::enable_if_c<!boost::is_same<R, void>::value,
+    QI_API_DEPRECATED typename boost::enable_if_c<!boost::is_same<R, void>::value,
                                 qi::Future<R> >::type
         async(const boost::function<R()>& callback,
               qi::SteadyClockTimePoint tp)
@@ -117,13 +118,14 @@ namespace qi
      * \param callback Callback to be called.
      * \param usDelay Delay before call the callback in microsecond.
      */
-    void post(const boost::function<void ()>& callback, uint64_t usDelay);
-    void post(const boost::function<void ()>& callback, qi::Duration delay);
-    void post(const boost::function<void ()>& callback, qi::SteadyClockTimePoint timepoint);
-    void post(const boost::function<void ()>& callback)
+    QI_API_DEPRECATED void post(const boost::function<void ()>& callback, uint64_t usDelay);
+    QI_API_DEPRECATED void post(const boost::function<void ()>& callback, qi::Duration delay);
+    QI_API_DEPRECATED void post(const boost::function<void ()>& callback, qi::SteadyClockTimePoint timepoint);
+    QI_API_DEPRECATED void post(const boost::function<void ()>& callback) override
     {
       return post(callback, 0);
     }
+    // END DEPRECATED
 
     /**
      * \brief Monitor event loop to detect deadlocks.
@@ -137,6 +139,19 @@ namespace qi
 
     EventLoopPrivate *_p;
     std::string       _name;
+
+    void postImpl(boost::function<void()> callback) override
+    {
+      post(callback);
+    }
+    qi::Future<void> asyncAtImpl(boost::function<void()> cb, qi::SteadyClockTimePoint tp) override
+    {
+      return async(cb, tp);
+    }
+    qi::Future<void> asyncDelayImpl(boost::function<void()> cb, qi::Duration delay) override
+    {
+      return async(cb, delay);
+    }
   };
 
   /// \brief Return the global eventloop, created on demand on first call.
