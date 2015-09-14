@@ -14,88 +14,51 @@
 
 namespace qi
 {
-#define doUnderscore(z, n, data) , BOOST_PP_CAT(_, n)
-#define genConnect(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma) \
-  template <typename T> \
-  QI_GEN_MAYBE_TEMPLATE_OPEN(comma) ATYPEDECL QI_GEN_MAYBE_TEMPLATE_CLOSE(comma) \
-  inline void SignalF<T>::binder( \
-      const boost::function<void(const boost::function<void()>&)>& poster, \
-      const boost::function<void(ATYPES)>& callback comma ADECL) \
-  { \
-    poster(boost::bind(callback comma AUSE)); \
-  } \
-  template <typename T> \
-  QI_GEN_MAYBE_TEMPLATE_OPEN(comma) ATYPEDECL QI_GEN_MAYBE_TEMPLATE_CLOSE(comma) \
-  inline boost::function<void(ATYPES)> \
-      SignalF<T>::transformStrandedCallback( \
-          qi::Strand* strand, \
-          const boost::function<void(ATYPES)>& cb) \
-  { \
-    return boost::bind<void>( \
-        static_cast<void(*)( \
-          const boost::function<void(const boost::function<void()>&)>& poster, \
-          const boost::function<void(ATYPES)>& callback comma ATYPES \
-          )>(&SignalF<T>::binder QI_GEN_MAYBE_ANGLE_OPEN(comma) ATYPES QI_GEN_MAYBE_ANGLE_CLOSE(comma)), \
-        boost::function<void(const boost::function<void()>&)>( \
-          boost::bind( \
-            static_cast<void(Strand::*)(const boost::function<void()>&)>(&qi::Strand::post), \
-            strand, _1)), \
-        cb \
-        BOOST_PP_REPEAT_FROM_TO(1, BOOST_PP_INC(n), doUnderscore, data)); \
-  }
-  QI_GEN(genConnect)
-#undef genConnect
-#undef doUnderscore
-
   template <typename T>
-  template <typename ARG0>
-  inline typename boost::enable_if<
-      boost::is_base_of<Actor, typename detail::Unwrap<ARG0>::type>,
-      SignalSubscriber&>::type
-      SignalF<T>::_connectMaybeActor(const ARG0& arg0,
-                                     const boost::function<T>& cb,
-                                     const boost::function<void()>& fallbackCb)
+  template <typename Arg0, typename F, typename FFB>
+  inline
+      typename boost::enable_if<boost::is_base_of<Actor, typename detail::Unwrap<Arg0>::type>, SignalSubscriber&>::type
+      SignalF<T>::_connectMaybeActor(Arg0& arg0, F&& cb, FFB&& fallbackCb)
   {
-    SignalSubscriber& s = connect(qi::trackWithFallback(
-        fallbackCb, transformStrandedCallback(
-          detail::Unwrap<ARG0>::unwrap(arg0)->strand(), cb),
-        arg0));
+    SignalSubscriber& s =
+        connect(qi::trackWithFallback(std::move(fallbackCb),
+                                      boost::function<T>(
+                                          detail::Unwrap<Arg0>::unwrap(arg0)->strand()->schedulerFor(std::move(cb))),
+                                      arg0));
     // skip a bounce because we schedule on a strand, call will be async
     // anyway
     s.setCallType(MetaCallType_Direct);
     return s;
   }
   template <typename T>
-  template <typename ARG0>
+  template <typename Arg0, typename F, typename FFB>
   inline typename boost::disable_if<
-      boost::is_base_of<Actor, typename detail::Unwrap<ARG0>::type>,
+      boost::is_base_of<Actor, typename detail::Unwrap<Arg0>::type>,
       SignalSubscriber&>::type
-      SignalF<T>::_connectMaybeActor(const ARG0& arg0,
-                                     const boost::function<T>& cb,
-                                     const boost::function<void()>& fallbackCb)
+      SignalF<T>::_connectMaybeActor(Arg0&& arg0,
+                                     F&& cb,
+                                     FFB&& fallbackCb)
   {
-    return connect(qi::trackWithFallback(fallbackCb, cb, arg0));
+    return connect(qi::trackWithFallback(std::move(fallbackCb), std::move(cb), std::move(arg0)));
   }
 
-#define genConnect(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)            \
-  template <typename T>                                                 \
-  template <typename F, typename P comma ATYPEDECL>                     \
-  SignalSubscriber& SignalF<T>::connect(const F& func,                  \
-      const P& p comma ADECL)                                           \
-  {                                                                     \
-    int curId;                                                          \
-    SignalLink* trackLink;                                              \
-    createNewTrackLink(curId, trackLink);                               \
-    SignalSubscriber& s = _connectMaybeActor<P>(                        \
-        p, qi::bind<T>(func, p comma AUSE),                             \
-        qi::track(boost::function<void()>(boost::bind(                  \
-                      &SignalF<T>::disconnectTrackLink, this, curId)),  \
-                  boost::weak_ptr<SignalBasePrivate>(_p)));             \
-    *trackLink = s;                                                     \
-    return s;                                                           \
+  template <typename T>
+  template <typename F, typename Arg0, typename... Args>
+  SignalSubscriber& SignalF<T>::connect(F&& func, Arg0&& arg0, Args&&... args)
+  {
+    int curId;
+    SignalLink* trackLink;
+    createNewTrackLink(curId, trackLink);
+    SignalSubscriber& s =
+        _connectMaybeActor(arg0,
+                           qi::bind<T>(func, arg0, args...),
+                           qi::track(boost::function<void()>(
+                                         // FIXME: i think this is unsafe, call the function on signalbaseprivate
+                                         boost::bind(&SignalF<T>::disconnectTrackLink, this, curId)),
+                                     boost::weak_ptr<SignalBasePrivate>(_p)));
+    *trackLink = s;
+    return s;
   }
-  QI_GEN(genConnect)
-#undef genConnect
 
   template<typename T>
   SignalSubscriber& SignalF<T>::connect(AnyFunction f)
@@ -138,21 +101,16 @@ namespace qi
     return s;
   }
 
-  template<typename T>
-  SignalSubscriber& SignalF<T>::connect(const boost::function<T>& fun)
-  {
-    return connect(AnyFunction::from(fun));
-  }
   template<typename F>
   SignalSubscriber& SignalBase::connect(const boost::function<F>& fun)
   {
     return connect(AnyFunction::from(fun));
   }
   template<typename T>
-  template<typename CALLABLE>
-  SignalSubscriber&  SignalF<T>::connect(CALLABLE c)
+  template<typename F>
+  SignalSubscriber& SignalF<T>::connect(F c)
   {
-    return connect((boost::function<T>)c);
+    return connect(qi::AnyFunction::from(boost::function<T>(std::move(c))));
   }
   template<typename T>
   SignalSubscriber& SignalF<T>::connect(const AnyObject& obj, const std::string& slot)

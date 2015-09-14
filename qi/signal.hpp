@@ -156,52 +156,29 @@ namespace qi {
     */
     SignalSubscriber& connect(...);
 #else
-    template <typename CALLABLE>
-    SignalSubscriber& connect(CALLABLE c);
+    template <typename F>
+    SignalSubscriber& connect(F c);
     SignalSubscriber& connect(AnyFunction func);
     SignalSubscriber& connect(const SignalSubscriber& sub);
-    SignalSubscriber& connect(const boost::function<T>& func);
     template <typename U>
     SignalSubscriber& connect(SignalF<U>& signal);
     template <QI_SIGNAL_TEMPLATE_DECL>
     SignalSubscriber& connect(Signal<QI_SIGNAL_TEMPLATE>& signal);
 
-#define genConnect(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma) \
-  template <typename F, typename P comma ATYPEDECL>          \
-  SignalSubscriber& connect(const F& func, const P& p comma ADECL);
-    QI_GEN(genConnect)
-#undef genConnect
+    template <typename F, typename Arg0, typename... Args>
+    SignalSubscriber& connect(F&& func, Arg0&& arg0, Args&&... args);
 
     SignalSubscriber& connect(const AnyObject& obj, unsigned int slot);
     SignalSubscriber& connect(const AnyObject& obj, const std::string& slot);
 #endif
 
   private:
-#define genConnect(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma) \
-    QI_GEN_MAYBE_TEMPLATE_OPEN(comma) ATYPEDECL QI_GEN_MAYBE_TEMPLATE_CLOSE(comma) \
-    inline static void binder( \
-        const boost::function<void(const boost::function<void()>&)>& poster, \
-        const boost::function<void(ATYPES)>& callback comma ADECL); \
-    QI_GEN_MAYBE_TEMPLATE_OPEN(comma) ATYPEDECL QI_GEN_MAYBE_TEMPLATE_CLOSE(comma) \
-    inline static boost::function<void(ATYPES)> \
-        transformStrandedCallback( \
-            qi::Strand* strand, \
-            const boost::function<void(ATYPES)>& cb);
-    QI_GEN(genConnect)
-#undef genConnect
-
-    template <typename ARG0>
-    inline typename boost::enable_if<
-        boost::is_base_of<Actor, typename detail::Unwrap<ARG0>::type>,
-        SignalSubscriber&>::type
-        _connectMaybeActor(const ARG0& arg0, const boost::function<T>& cb,
-                           const boost::function<void()>& fallbackCb);
-    template <typename ARG0>
-    inline typename boost::disable_if<
-        boost::is_base_of<Actor, typename detail::Unwrap<ARG0>::type>,
-        SignalSubscriber&>::type
-        _connectMaybeActor(const ARG0& arg0, const boost::function<T>& cb,
-                           const boost::function<void()>& fallbackCb);
+    template <typename Arg0, typename F, typename FFB>
+    typename boost::enable_if<boost::is_base_of<Actor, typename detail::Unwrap<Arg0>::type>, SignalSubscriber&>::type
+    _connectMaybeActor(Arg0& arg0, F&& cb, FFB&& fallbackCb);
+    template <typename Arg0, typename F, typename FFB>
+    typename boost::disable_if<boost::is_base_of<Actor, typename detail::Unwrap<Arg0>::type>, SignalSubscriber&>::type
+    _connectMaybeActor(Arg0&& arg0, F&& cb, FFB&& fallbackCb);
   };
 
   namespace detail
