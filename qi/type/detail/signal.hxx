@@ -85,11 +85,11 @@ namespace qi
     return s;
   }
 
-  template<typename T>
-  template<QI_SIGNAL_TEMPLATE_DECL>
-  SignalSubscriber&  SignalF<T>::connect(Signal<QI_SIGNAL_TEMPLATE>& signal)
+  template <typename T>
+  template <typename... P>
+  SignalSubscriber&  SignalF<T>::connect(Signal<P...>& signal)
   {
-    typedef typename detail::VoidFunctionType<QI_SIGNAL_TEMPLATE>::type ftype;
+    typedef void(ftype)(P...);
     int curId;
     SignalLink* trackLink;
     createNewTrackLink(curId, trackLink);

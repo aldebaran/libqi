@@ -116,10 +116,7 @@ namespace qi {
     friend class SignalBasePrivate;
   };
 
-#define QI_SIGNAL_TEMPLATE_DECL typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename P6, typename P7
-#define QI_SIGNAL_TEMPLATE P0,P1,P2,P3,P4,P5,P6,P7
-
-  template<QI_SIGNAL_TEMPLATE_DECL> class Signal;
+  template <typename... P> class Signal;
 
   template<typename T>
   class SignalF: public SignalBase, public boost::function<T>
@@ -162,8 +159,8 @@ namespace qi {
     SignalSubscriber& connect(const SignalSubscriber& sub);
     template <typename U>
     SignalSubscriber& connect(SignalF<U>& signal);
-    template <QI_SIGNAL_TEMPLATE_DECL>
-    SignalSubscriber& connect(Signal<QI_SIGNAL_TEMPLATE>& signal);
+    template <typename... P>
+    SignalSubscriber& connect(Signal<P...>& signal);
 
     template <typename F, typename Arg0, typename... Args>
     SignalSubscriber& connect(F&& func, Arg0&& arg0, Args&&... args);
@@ -181,38 +178,15 @@ namespace qi {
     _connectMaybeActor(Arg0&& arg0, F&& cb, FFB&& fallbackCb);
   };
 
-  namespace detail
-  {
-    template<typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename P6, typename P7> struct VoidFunctionType                                           { typedef void(type)(P0, P1, P2, P3, P4, P5, P6, P7); };
-    template<typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename P6> struct VoidFunctionType<P0, P1, P2, P3, P4, P5, P6, void>                     { typedef void(type)(P0, P1, P2, P3, P4, P5, P6); };
-    template<typename P0, typename P1, typename P2, typename P3, typename P4, typename P5             > struct VoidFunctionType<P0, P1, P2, P3, P4, P5, void, void>             { typedef void(type)(P0, P1, P2, P3, P4, P5); };
-    template<typename P0, typename P1, typename P2, typename P3, typename P4                          > struct VoidFunctionType<P0, P1, P2, P3, P4, void, void, void>           { typedef void(type)(P0, P1, P2, P3, P4); };
-    template<typename P0, typename P1, typename P2, typename P3                                       > struct VoidFunctionType<P0, P1, P2, P3, void, void, void, void>         { typedef void(type)(P0, P1, P2, P3); };
-    template<typename P0, typename P1, typename P2                                                    > struct VoidFunctionType<P0, P1, P2, void, void, void, void, void>       { typedef void(type)(P0, P1, P2); };
-    template<typename P0, typename P1                                                                 > struct VoidFunctionType<P0, P1, void, void, void, void, void, void>     { typedef void(type)(P0, P1); };
-    template<typename P0                                                                              > struct VoidFunctionType<P0, void, void, void, void, void, void, void>   { typedef void(type)(P0); };
-    template<                                                                                         > struct VoidFunctionType<void, void, void, void, void, void, void, void> { typedef void(type)(); };
-
-  }
-
   /** Class that represent an event to which function can subscribe.
    *
    * \includename{qi/signal.hpp}
    */
-  template<
-    typename P0 = void,
-    typename P1 = void,
-    typename P2 = void,
-    typename P3 = void,
-    typename P4 = void,
-    typename P5 = void,
-    typename P6 = void,
-    typename P7 = void
-    >
-  class Signal: public SignalF<typename detail::VoidFunctionType<P0, P1, P2, P3, P4, P5, P6, P7>::type>
+  template<typename... P>
+  class Signal: public SignalF<void(P...)>
   {
   public:
-    typedef typename detail::VoidFunctionType<P0, P1, P2, P3, P4, P5, P6, P7>::type FunctionType;
+    typedef void(FunctionType)(P...);
     typedef SignalF<FunctionType> ParentType;
     typedef typename ParentType::OnSubscribers OnSubscribers;
     Signal(OnSubscribers onSubscribers = OnSubscribers())
@@ -220,6 +194,9 @@ namespace qi {
     using boost::function<FunctionType>::operator();
   };
 
+  template <>
+  class Signal<void> : public Signal<>
+  {};
 
   /** Event subscriber info.
    *
