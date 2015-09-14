@@ -7,6 +7,7 @@
 #ifndef _QI_FUTURE_HPP_
 # define _QI_FUTURE_HPP_
 
+# include <type_traits>
 # include <qi/api.hpp>
 # include <vector>
 # include <qi/atomic.hpp>
@@ -709,10 +710,23 @@ namespace qi {
      * setError() or setCanceled() as quickly as possible, but can do so
      * in an asynchronous way.
      */
+    template <typename FUNC,
+              typename std::enable_if<!std::is_same<
+                                        typename std::decay<FUNC>::type,
+                                        typename std::decay<qi::Promise<T> >::type
+                                        >::value
+                                      >::type* = nullptr>
+    explicit Promise(FUNC&& cancelCallback,
+        FutureCallbackType async = FutureCallbackType_Auto)
+    {
+      setup(std::forward<FUNC>(cancelCallback), async);
+      ++_f._p->_promiseCount;
+    }
+
     explicit Promise(boost::function<void (qi::Promise<T>)> cancelCallback,
         FutureCallbackType async = FutureCallbackType_Auto)
     {
-      setup(cancelCallback, async);
+      setup([cancelCallback](qi::Promise<T>& p){ cancelCallback(p); }, async);
       ++_f._p->_promiseCount;
     }
 

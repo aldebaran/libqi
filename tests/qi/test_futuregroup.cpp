@@ -67,7 +67,7 @@ qi::Future<void> launchTask(TaskFunc task)
 
 TEST(TestScopedFutureGroup, cancelAddedFutures)
 {
-  typedef std::vector< qi::Future<void> > FutureList;
+  using FutureList = std::vector<qi::Future<void>>;
   FutureList futures;
   qi::ScopedFutureGroup group;
   for (int i = 0; i < 10; ++i)
@@ -86,7 +86,7 @@ TEST(TestScopedFutureGroup, cancelAddedFutures)
 
 TEST(TestScopedFutureGroup, cancelOnScopeExit)
 {
-  typedef std::vector< qi::Future<void> > FutureList;
+  using FutureList = std::vector<qi::Future<void>>;
   FutureList futures;
 
   {
@@ -106,7 +106,7 @@ TEST(TestScopedFutureGroup, cancelOnScopeExit)
 
 TEST(TestScopedFutureGroup, cancelWhileProcessing)
 {
-  typedef std::vector< qi::Future<void> > FutureList;
+  using FutureList = std::vector<qi::Future<void>>;
   FutureList futures;
 
   {
