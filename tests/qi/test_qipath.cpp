@@ -128,7 +128,7 @@ TEST(qiPath, AddPrefixesPath)
   for (unsigned int i = 0; i < prefixes.size(); ++i)
     boost::to_lower(prefixes[i]);
 
-  ASSERT_TRUE(expected == prefixes);
+  ASSERT_EQ(expected, prefixes);
 }
 
 TEST(qiPath, ClearPrefixesPath)
@@ -1043,3 +1043,6 @@ TEST(qipath, ScopedDir)
   }
   ASSERT_FALSE(tmpPath.exists());
 }
+
+  // qibuild sets this variable, but it's easier to test qipath without it
+  qi::os::setenv("QI_ADDITIONAL_SDK_PREFIXES", "");
