@@ -8,10 +8,9 @@
 #ifndef _QI_DETAIL_TRACKABLE_HXX_
 #define _QI_DETAIL_TRACKABLE_HXX_
 
+#include <type_traits>
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
-#include <boost/type_traits/is_base_of.hpp>
-#include <boost/type_traits/remove_pointer.hpp>
 #include <boost/weak_ptr.hpp>
 #include <boost/function_types/result_type.hpp>
 
@@ -116,7 +115,7 @@ namespace qi
       boost::function<void()> _onFail;
     };
 
-    template<typename T, bool IS_TRACKABLE> struct BindTransform
+    template<typename T, bool IS_TRACKABLE> struct BindTransformImpl
     {
       typedef const T& type;
       static type transform(const T& arg)
@@ -130,7 +129,7 @@ namespace qi
       }
     };
 
-    template<typename T> struct BindTransform<boost::weak_ptr<T>, false >
+    template<typename T> struct BindTransformImpl<boost::weak_ptr<T>, false >
     {
       typedef T* type;
       static T* transform(const boost::weak_ptr<T>& arg)
@@ -146,7 +145,7 @@ namespace qi
       }
     };
 
-    template<typename T> struct BindTransform<T*, true>
+    template<typename T> struct BindTransformImpl<T*, true>
     {
       typedef T* type;
       static T* transform(T* const & arg)
@@ -161,60 +160,53 @@ namespace qi
       }
     };
 
+    template <typename T, typename K = typename std::decay<T>::type>
+    using BindTransform =
+      BindTransformImpl<K, std::is_base_of<TrackableBase, typename std::remove_pointer<K>::type>::value>;
+
     inline void throwPointerLockException()
     {
       throw PointerLockException();
     }
   }
 
-#ifndef DOXYGEN
-  template<typename RF, typename AF>
-  boost::function<RF> bind(const AF& fun)
+  template <typename RF, typename AF, typename Arg0, typename... Args>
+  boost::function<RF> bind(AF&& fun, Arg0&& arg0, Args&&... args)
   {
-    return fun;
+    using Transform = detail::BindTransform<Arg0>;
+    typename Transform::type transformed = Transform::transform(arg0);
+    boost::function<RF> f = boost::bind(std::forward<AF>(fun), transformed, std::forward<Args>(args)...);
+    return Transform::wrap(arg0, f, detail::throwPointerLockException);
   }
-#define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)                                                \
-  template <typename RF, typename AF, typename ARG0 comma ATYPEDECL>                                     \
-  boost::function<RF> bind(const AF& fun, const ARG0& arg0 comma ADECL)                                  \
-  {                                                                                                      \
-    typedef typename detail::BindTransform<                                                              \
-        ARG0,                                                                                            \
-        boost::is_base_of<TrackableBase, typename boost::remove_pointer<ARG0>::type>::value> Transform;  \
-    typename Transform::type transformed = Transform::transform(arg0);                                   \
-    boost::function<RF> f = boost::bind(fun, transformed comma AUSE);                                    \
-    return Transform::wrap(arg0, f, detail::throwPointerLockException);                                  \
-  }                                                                                                      \
-  template <typename RF, typename AF, typename ARG0 comma ATYPEDECL>                                     \
-  boost::function<RF> bindWithFallback(const boost::function<void()>& onFail,                            \
-                                       const AF& fun,                                                    \
-                                       const ARG0& arg0 comma ADECL)                                     \
-  {                                                                                                      \
-    typedef typename detail::BindTransform<                                                              \
-        ARG0,                                                                                            \
-        boost::is_base_of<TrackableBase, typename boost::remove_pointer<ARG0>::type>::value> Transform;  \
-    typename Transform::type transformed = Transform::transform(arg0);                                   \
-    boost::function<RF> f = boost::bind(fun, transformed comma AUSE);                                    \
-    return Transform::wrap(arg0, f, onFail);                                                             \
-  }                                                                                                      \
-  template <typename RF, typename AF, typename ARG0 comma ATYPEDECL>                                     \
-  boost::function<RF> bindSilent(const AF& fun, const ARG0& arg0 comma ADECL)                            \
-  {                                                                                                      \
-    return bindWithFallback<RF, AF, ARG0 comma ATYPES>(boost::function<void()>(), fun, arg0 comma AUSE); \
+  template <typename RF, typename AF, typename Arg0, typename... Args>
+  boost::function<RF> bindWithFallback(boost::function<void()> onFail,
+                                       AF&& fun,
+                                       Arg0&& arg0,
+                                       Args&&... args)
+  {
+    using Transform = detail::BindTransform<Arg0>;
+    typename Transform::type transformed = Transform::transform(arg0);
+    boost::function<RF> f = boost::bind(std::forward<AF>(fun), std::move(transformed), std::forward<Args>(args)...);
+    return Transform::wrap(arg0, std::move(f), std::move(onFail));
   }
-  QI_GEN(genCall)
-#undef genCall
-#endif // DOXYGEN
+  template <typename RF, typename AF, typename Arg0, typename... Args>
+  boost::function<RF> bindSilent(AF&& fun, Arg0&& arg0, Args&&... args)
+  {
+    return bindWithFallback<RF, AF>(boost::function<void()>(), std::forward<AF>(fun),
+        std::forward<Arg0>(arg0), std::forward<Args>(args)...);
+  }
+
   template<typename F, typename ARG0>
   boost::function<F> track(const boost::function<F>& f, const ARG0& arg0)
   {
-    typedef typename detail::BindTransform<ARG0, boost::is_base_of<TrackableBase, typename boost::remove_pointer<ARG0>::type>::value> Transform;
+    using Transform = detail::BindTransform<ARG0>;
     return Transform::wrap(arg0, f, detail::throwPointerLockException);
   }
   template<typename F, typename ARG0>
   boost::function<F> trackWithFallback(boost::function<void()> onFail,
       const boost::function<F>& f, const ARG0& arg0)
   {
-    typedef typename detail::BindTransform<ARG0, boost::is_base_of<TrackableBase, typename boost::remove_pointer<ARG0>::type>::value> Transform;
+    using Transform = detail::BindTransform<ARG0>;
     return Transform::wrap(arg0, f, onFail);
   }
   template<typename F, typename ARG0>
