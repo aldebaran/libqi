@@ -677,6 +677,8 @@ TEST_F(qiPathData, findDataDir)
 
 int main(int argc, char* argv[])
 {
+  // qibuild sets this variable, but it's easier to test qipath without it
+  qi::os::setenv("QI_ADDITIONAL_SDK_PREFIXES", "");
   qi::Application app(argc, argv);
   ::testing::InitGoogleTest(&argc, argv);
   argpath = argv[0];
@@ -1044,5 +1046,3 @@ TEST(qipath, ScopedDir)
   ASSERT_FALSE(tmpPath.exists());
 }
 
-  // qibuild sets this variable, but it's easier to test qipath without it
-  qi::os::setenv("QI_ADDITIONAL_SDK_PREFIXES", "");
