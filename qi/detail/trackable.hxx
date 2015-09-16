@@ -167,14 +167,6 @@ namespace qi
   }
 
   template <typename RF, typename AF, typename Arg0, typename... Args>
-  boost::function<RF> bind(AF&& fun, Arg0&& arg0, Args&&... args)
-  {
-    using Transform = detail::BindTransform<Arg0>;
-    typename Transform::type transformed = Transform::transform(arg0);
-    boost::function<RF> f = boost::bind(std::forward<AF>(fun), transformed, std::forward<Args>(args)...);
-    return Transform::wrap(arg0, f, detail::throwPointerLockException);
-  }
-  template <typename RF, typename AF, typename Arg0, typename... Args>
   boost::function<RF> bindWithFallback(boost::function<void()> onFail,
                                        AF&& fun,
                                        Arg0&& arg0,
@@ -184,6 +176,12 @@ namespace qi
     typename Transform::type transformed = Transform::transform(arg0);
     boost::function<RF> f = boost::bind(std::forward<AF>(fun), std::move(transformed), std::forward<Args>(args)...);
     return Transform::wrap(arg0, std::move(f), std::move(onFail));
+  }
+  template <typename RF, typename AF, typename Arg0, typename... Args>
+  boost::function<RF> bind(AF&& fun, Arg0&& arg0, Args&&... args)
+  {
+    return bindWithFallback<RF, AF>(detail::throwPointerLockException, std::forward<AF>(fun), std::forward<Arg0>(arg0),
+        std::forward<Args>(args)...);
   }
   template <typename RF, typename AF, typename Arg0, typename... Args>
   boost::function<RF> bindSilent(AF&& fun, Arg0&& arg0, Args&&... args)
