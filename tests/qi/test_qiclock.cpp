@@ -10,24 +10,17 @@
 
 #include <qi/clock.hpp>
 #include <qi/os.hpp>
-#include <boost/chrono/chrono_io.hpp>
 
 namespace chrono = boost::chrono;
 
 
 TEST(QiClock, initialization)
 {
-  qi::Duration d0;
+  qi::Duration d0 = qi::Duration::zero();
   EXPECT_EQ(0, d0.count());
 
-  qi::Duration d1 = qi::Duration::zero();
+  qi::Duration d1(0);
   EXPECT_EQ(0, d1.count());
-
-  qi::Duration d2 = qi::Duration();
-  EXPECT_EQ(0, d2.count());
-
-  qi::Duration d3(0);
-  EXPECT_EQ(0, d3.count());
 
   qi::Clock::time_point t0;
   EXPECT_EQ(0, t0.time_since_epoch().count());
@@ -70,27 +63,6 @@ TEST(QiClock, clock_sleep_our)
   qi::sleepUntil(qi::SystemClock::now() + qi::Seconds(1));
   qi::sleepUntil(qi::SystemClock::now());
   qi::sleepUntil(qi::SystemClock::now() - qi::Seconds(1));
-}
-
-template<class Clock>
-void clock_output_()
-{
-  typename Clock::duration d(1);
-  typename Clock::time_point t = Clock::now();
-  std::cout << "name: " << boost::chrono::clock_string<Clock, char>::name() << ",\t"
-            << "tick: " << d << ",\t"
-            << "now: " << t << "\n";
-  // same, using wide chars
-  std::wcout << "name: " << boost::chrono::clock_string<Clock, wchar_t>::name() << ",\t"
-             << "tick: " << d << ",\t"
-             << "now: " << t << "\n";
-}
-
-TEST(QiClock, clock_output)
-{
-  clock_output_<qi::SteadyClock>();
-  clock_output_<qi::Clock>();
-  clock_output_<qi::SystemClock>();
 }
 
 typedef chrono::duration<uint32_t, boost::milli > uint32ms;
@@ -151,6 +123,33 @@ TEST(QiClock, toIso8601String)
   EXPECT_EQ("1970-01-01T000000.000Z", qi::toISO8601String(t0 + qi::MicroSeconds(999)));
   EXPECT_EQ("1970-01-01T000001.042Z", qi::toISO8601String(t0 + qi::MilliSeconds(1042)));
   EXPECT_EQ("1970-02-01T010203.000Z", qi::toISO8601String(t0 + qi::Hours(24*31+1)+qi::Minutes(2)+qi::Seconds(3)));
+}
+
+TEST(QiClock, to_string)
+{
+  // durations defined in libqi
+  EXPECT_EQ("2 nanoseconds", qi::to_string(qi::Duration(2)));
+  EXPECT_EQ("2 nanoseconds", qi::to_string(qi::NanoSeconds(2)));
+  EXPECT_EQ("2 microseconds", qi::to_string(qi::MicroSeconds(2)));
+  EXPECT_EQ("2 milliseconds", qi::to_string(qi::MilliSeconds(2)));
+  EXPECT_EQ("2 seconds", qi::to_string(qi::Seconds(2)));
+  EXPECT_EQ("2 minutes", qi::to_string(qi::Minutes(2)));
+  EXPECT_EQ("2 hours", qi::to_string(qi::Hours(2)));
+
+  // time_points defined in libqi
+  EXPECT_EQ("2 nanoseconds since program start",
+            qi::to_string(qi::SteadyClock::time_point(qi::Duration(2))));
+  EXPECT_EQ("2 nanoseconds since boot",
+            qi::to_string(qi::Clock::time_point(qi::Duration(2))));
+  EXPECT_EQ("2 nanoseconds since Jan 1, 1970",
+            qi::to_string(qi::SystemClock::time_point(qi::Duration(2))));
+
+  // custom duration
+  EXPECT_EQ("0.5 seconds", qi::to_string(boost::chrono::duration<float, boost::ratio<1,1>>(0.5f)));
+
+  // custom time_point for a clock defined in libqi
+  EXPECT_EQ("2 hours since Jan 1, 1970",
+            qi::to_string(boost::chrono::time_point_cast<qi::Hours>(qi::SystemClock::time_point(qi::Hours(2)))));
 }
 
 

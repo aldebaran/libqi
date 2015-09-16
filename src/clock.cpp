@@ -10,6 +10,7 @@
 #include <qi/atomic.hpp>
 #include <boost/thread.hpp>
 #include <boost/chrono/ceil.hpp>
+
 #ifndef BOOST_THREAD_USES_CHRONO
 // needed for boost < 1.50
 #include <boost/thread/thread_time.hpp>
@@ -179,5 +180,4 @@ namespace qi {
     ss << std::right << subseconds.count() << 'Z';
     return ss.str();
   }
-
 }

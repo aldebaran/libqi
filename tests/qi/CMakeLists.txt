@@ -11,6 +11,15 @@ qi_create_gtest(test_path_conf    SRC test_path_conf.cpp ../../src/path_conf.cpp
 qi_create_gtest(test_qipath       SRC test_qipath.cpp    ../../src/utils.cpp     DEPENDS QI GTEST)
 qi_create_gtest(test_thread       SRC test_thread.cpp       DEPENDS QI BOOST_THREAD)
 qi_create_gtest(test_qiclock      SRC test_qiclock.cpp      DEPENDS QI GTEST)
+# test with the default chrono io, which is v1 in boost 1.55
+qi_create_gtest(test_qiclock_chronoio SRC test_qiclock_chronoio.cpp DEPENDS QI GTEST)
+# test with the chrono io v2.
+# commented out since it does not compile
+#qi_create_gtest(test_qiclock_chronoio_v2 SRC test_qiclock_chronoio.cpp DEPENDS QI GTEST)
+if(TARGET test_qiclock_chronoio_v2)
+  set_target_properties(test_qiclock_chronoio_v2 PROPERTIES
+      COMPILE_DEFINITIONS "BOOST_CHRONO_DONT_PROVIDES_DEPRECATED_IO_SINCE_V2_0_0")
+endif()
 qi_create_gtest(test_qilocal      SRC test_locale.cpp       DEPENDS QI GTEST)
 qi_create_gtest(test_qios         SRC test_qios.cpp         DEPENDS QI GTEST)
 qi_create_gtest(test_qiatomic     SRC test_qiatomic.cpp     DEPENDS QI GTEST)

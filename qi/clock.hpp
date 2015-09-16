@@ -268,6 +268,12 @@ namespace qi
   template <class DurationTo, class TimePointFrom>
   inline DurationTo durationSince(const TimePointFrom& t);
   /// @}
+
+  template <class R, class P>
+  inline std::string to_string(const boost::chrono::duration<R, P> &d);
+
+  template <class C, class D>
+  inline std::string to_string(const boost::chrono::time_point<C, D> &t);
 }
 
 # ifdef __APPLE__

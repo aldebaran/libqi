@@ -8,8 +8,6 @@
 #include <algorithm>
 #include <string>
 
-#include <boost/chrono/chrono_io.hpp>
-
 #include <qi/trackable.hpp>
 #include <qi/atomic.hpp>
 #include <qi/os.hpp>
@@ -418,7 +416,7 @@ void GatewayPrivate::sdConnectionRetry(const qi::Url& sdUrl, qi::Duration lastTi
   {
     lastTimer *= 2;
     qiLogWarning() << "Can't reach ServiceDirectory at address " << sdUrl.str() << ", retrying in "
-                   << boost::chrono::duration_cast<qi::Seconds>(lastTimer) << " seconds.";
+                   << qi::to_string(boost::chrono::duration_cast<qi::Seconds>(lastTimer)) << ".";
     _retryFut = qi::async(qi::bind<void()>(&GatewayPrivate::sdConnectionRetry, this, sdUrl, lastTimer), lastTimer);
   }
   else
