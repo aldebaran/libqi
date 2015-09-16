@@ -92,24 +92,20 @@ namespace qi
       , _onFail(onFail)
       {}
 
-#define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma) \
-      QI_GEN_MAYBE_TEMPLATE_OPEN(comma)                   \
-      ATYPEDECL                                           \
-      QI_GEN_MAYBE_TEMPLATE_CLOSE(comma)                  \
-      Result operator()(ADECL)                            \
-      {                                                   \
-        ST s = _wptr.lock();                              \
-        if (s)                                            \
-          return _f(AUSE);                                \
-        else                                              \
-        {                                                 \
-          if (_onFail)                                    \
-            _onFail();                                    \
-          return Result();                                \
-        }                                                 \
+      template <typename... Args>
+      Result operator()(Args&&... args)
+      {
+        ST s = _wptr.lock();
+        if (s)
+          return _f(std::forward<Args>(args)...);
+        else
+        {
+          if (_onFail)
+            _onFail();
+          return Result();
+        }
       }
-      QI_GEN(genCall)
-#undef genCall
+
       WT _wptr;
       boost::function<F> _f;
       boost::function<void()> _onFail;
