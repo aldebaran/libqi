@@ -506,7 +506,7 @@ namespace detail
           try {
             lname = (*iter)[0].to<std::string>();
           }
-          catch (std::exception& e) {
+          catch (std::exception& /* e */) {
             qiLogVerbose() << "can't convert map key " << (*iter)[0].type()->infoString() << " to string";
             continue;
           }

@@ -423,7 +423,7 @@ namespace qi {
     lazyGet(globalArguments) = args;
     globalArgv = new char*[args.size() + 1];
     for (unsigned i=0; i<args.size(); ++i)
-      globalArgv[i] = strdup(args[i].c_str());
+      globalArgv[i] = qi::os::strdup(args[i].c_str());
     globalArgv[args.size()] = 0;
   }
 

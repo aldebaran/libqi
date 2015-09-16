@@ -50,7 +50,7 @@ namespace qi {
           processed = true;
         }
       }
-      catch(const std::exception& e)
+      catch(const std::exception& /* e */)
       {
         qiLogDebug() << "forwardEvent failed to convert to forced type";
       }

@@ -245,7 +245,7 @@ namespace qi {
         _io.run();
         //the handler finished by himself. just quit.
         break;
-      } catch(const detail::TerminateThread& e) {
+      } catch(const detail::TerminateThread& /* e */) {
         break;
       } catch(const std::exception& e) {
         qiLogWarning() << "Error caught in eventloop(" << _name << ").async: " << e.what();
@@ -348,7 +348,7 @@ namespace qi {
         tracepoint(qi_qi, eventloop_task_stop, id);
         p.setValue(0);
       }
-      catch (const detail::TerminateThread& e)
+      catch (const detail::TerminateThread& /* e */)
       {
         throw;
       }
