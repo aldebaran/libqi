@@ -4,14 +4,14 @@
  * found in the COPYING file.
  */
 
+#include <boost/chrono/chrono.hpp>
+#include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_generators.hpp>
 #include <boost/uuid/uuid_io.hpp>
 #include <boost/thread/mutex.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/chrono.hpp>
 
 #include <qi/path.hpp>
 #include <qi/os.hpp>
