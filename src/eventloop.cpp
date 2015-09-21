@@ -263,7 +263,9 @@ namespace qi {
     }
     else
     {
-      qiLogDebug() << "Waiting for threads to terminate...";
+      qiLogInfo()
+          << "Waiting threads from the pool \"" << _name << "\", remaining tasks: "
+          << *_totalTask << " (" << *_activeTask <<  " active)...";
       _workerThreads->joinAll();
       assert(*_running == 0);
       qiLogDebug()  << "Waiting done";
