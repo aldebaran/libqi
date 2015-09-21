@@ -78,40 +78,53 @@ namespace qi
 
   namespace detail
   {
+    template <typename T>
+    T defaultConstruct()
+    {
+      return {};
+    }
+
+    template <>
+    inline void defaultConstruct<void>()
+    {
+    }
+
     // Functor that locks a weak ptr and make a call if successful
     // Generalize on shared_ptr and weak_ptr types in case we ever have
     // other types with their semantics
-    template<typename WT, typename ST, typename F>
+    template<typename WT, typename F>
     class LockAndCall
     {
+      WT _wptr;
+      F _f;
+      boost::function<void()> _onFail;
+
     public:
-      typedef typename boost::function_types::result_type<F>::type Result;
-      LockAndCall(const WT& arg, boost::function<F> func, boost::function<void()> onFail)
-      : _wptr(arg)
-      , _f(func)
-      , _onFail(onFail)
+      LockAndCall(const WT& arg, F func, boost::function<void()> onFail)
+        : _wptr(arg)
+        , _f(std::move(func))
+        , _onFail(onFail)
       {}
 
       template <typename... Args>
-      Result operator()(Args&&... args)
+      // decltype(this->_f(std::forward<Args>(args)...)) does not work on vs2013 \o/
+      auto operator()(Args&&... args) const -> decltype(std::declval<F>()(std::forward<Args>(args)...))
       {
-        ST s = _wptr.lock();
+        auto s = _wptr.lock();
         if (s)
           return _f(std::forward<Args>(args)...);
         else
         {
           if (_onFail)
             _onFail();
-          return Result();
+          // hehe, you can't write return {}; because of void here... -_-
+          return defaultConstruct<decltype(this->_f(std::forward<Args>(args)...))>();
         }
       }
-
-      WT _wptr;
-      boost::function<F> _f;
-      boost::function<void()> _onFail;
     };
 
-    template<typename T, bool IS_TRACKABLE> struct BindTransformImpl
+    template<typename T, bool IS_TRACKABLE>
+    struct BindTransformImpl
     {
       typedef const T& type;
       static type transform(const T& arg)
@@ -119,13 +132,16 @@ namespace qi
         return arg;
       }
       template<typename F>
-      static boost::function<F> wrap(const T& arg, boost::function<F> func, boost::function<void()> onFail)
+      using wrap_type = typename std::decay<F>::type;
+      template<typename F>
+      static wrap_type<F> wrap(const T& arg, F&& func, boost::function<void()> onFail)
       {
-        return func;
+        return std::forward<F>(func);
       }
     };
 
-    template<typename T> struct BindTransformImpl<boost::weak_ptr<T>, false >
+    template<typename T>
+    struct BindTransformImpl<boost::weak_ptr<T>, false>
     {
       typedef T* type;
       static T* transform(const boost::weak_ptr<T>& arg)
@@ -135,13 +151,17 @@ namespace qi
         return arg.lock().get();
       }
       template<typename F>
-      static boost::function<F> wrap(const boost::weak_ptr<T>& arg, boost::function<F> func, boost::function<void()> onFail)
+      using wrap_type = LockAndCall<boost::weak_ptr<T>, typename std::decay<F>::type>;
+      template<typename F>
+      static wrap_type<F> wrap(
+          const boost::weak_ptr<T>& arg, F&& func, boost::function<void()> onFail)
       {
-        return LockAndCall<boost::weak_ptr<T>, boost::shared_ptr<T>, F>(arg, func, onFail);
+        return LockAndCall<boost::weak_ptr<T>, typename std::decay<F>::type>(arg, std::forward<F>(func), onFail);
       }
     };
 
-    template<typename T> struct BindTransformImpl<T*, true>
+    template<typename T>
+    struct BindTransformImpl<T*, true>
     {
       typedef T* type;
       static T* transform(T* const & arg)
@@ -150,9 +170,13 @@ namespace qi
         return arg;
       }
       template<typename F>
-      static boost::function<F> wrap(T*const & arg, boost::function<F> func, boost::function<void()> onFail)
+      using wrap_type = LockAndCall<boost::weak_ptr<T>, typename std::decay<F>::type>;
+      template<typename F>
+      static wrap_type<F> wrap(
+          T*const & arg, F&& func, boost::function<void()> onFail)
       {
-        return LockAndCall<boost::weak_ptr<T>, boost::shared_ptr<T>, F>(arg->weakPtr(), func, onFail);
+        return
+          LockAndCall<boost::weak_ptr<T>, typename std::decay<F>::type>(arg->weakPtr(), std::forward<F>(func), onFail);
       }
     };
 
@@ -178,16 +202,46 @@ namespace qi
     return Transform::wrap(arg0, std::move(f), std::move(onFail));
   }
   template <typename RF, typename AF, typename Arg0, typename... Args>
+  boost::function<RF> bindSilent(AF&& fun, Arg0&& arg0, Args&&... args)
+  {
+    return bindWithFallback<RF, AF>({}, std::forward<AF>(fun), std::forward<Arg0>(arg0), std::forward<Args>(args)...);
+  }
+  template <typename RF, typename AF, typename Arg0, typename... Args>
   boost::function<RF> bind(AF&& fun, Arg0&& arg0, Args&&... args)
   {
     return bindWithFallback<RF, AF>(detail::throwPointerLockException, std::forward<AF>(fun), std::forward<Arg0>(arg0),
         std::forward<Args>(args)...);
   }
-  template <typename RF, typename AF, typename Arg0, typename... Args>
-  boost::function<RF> bindSilent(AF&& fun, Arg0&& arg0, Args&&... args)
+
+  template <typename AF, typename Arg0, typename... Args>
+  auto bindWithFallback(boost::function<void()> onFail, AF&& fun, Arg0&& arg0, Args&&... args) ->
+      typename detail::BindTransform<Arg0>::template wrap_type<
+          decltype(boost::bind(std::forward<AF>(fun),
+                               detail::BindTransform<Arg0>::transform(arg0),
+                               std::forward<Args>(args)...))>
   {
-    return bindWithFallback<RF, AF>(boost::function<void()>(), std::forward<AF>(fun),
-        std::forward<Arg0>(arg0), std::forward<Args>(args)...);
+    using Transform = detail::BindTransform<Arg0>;
+    typename Transform::type transformed = Transform::transform(arg0);
+    return Transform::wrap(arg0,
+                           boost::bind(std::forward<AF>(fun), std::move(transformed), std::forward<Args>(args)...),
+                           std::move(onFail));
+  }
+  template <typename AF, typename Arg0, typename... Args>
+  auto bindSilent(AF&& fun, Arg0&& arg0, Args&&... args)
+      -> decltype(bindWithFallback({}, std::forward<AF>(fun), std::forward<Arg0>(arg0), std::forward<Args>(args)...))
+  {
+    return bindWithFallback({}, std::forward<AF>(fun), std::forward<Arg0>(arg0), std::forward<Args>(args)...);
+  }
+  template <typename AF, typename Arg0, typename... Args>
+  auto bind(AF&& fun, Arg0&& arg0, Args&&... args) -> decltype(bindWithFallback(detail::throwPointerLockException,
+                                                                                std::forward<AF>(fun),
+                                                                                std::forward<Arg0>(arg0),
+                                                                                std::forward<Args>(args)...))
+  {
+    return bindWithFallback(detail::throwPointerLockException,
+                            std::forward<AF>(fun),
+                            std::forward<Arg0>(arg0),
+                            std::forward<Args>(args)...);
   }
 
   template<typename F, typename ARG0>
