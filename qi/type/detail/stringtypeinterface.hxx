@@ -4,8 +4,8 @@
 **  See COPYING for the license
 */
 
-#ifndef _QITYPE_DETAILS_TYPESTRING_HXX_
-#define _QITYPE_DETAILS_TYPESTRING_HXX_
+#ifndef _QITYPE_DETAIL_TYPESTRING_HXX_
+#define _QITYPE_DETAIL_TYPESTRING_HXX_
 #include <qi/os.hpp>
 #include <qi/type/detail/structtypeinterface.hxx>
 
@@ -152,4 +152,4 @@ namespace qi
   static bool BOOST_PP_CAT(__qi_registration, __COUNTER__) \
     = qi::registerType(typeid(type),  qi::makeTypeEquivalentString((type*)0, func))
 
-#endif  // _QITYPE_DETAILS_TYPESTRING_HXX_
+#endif  // _QITYPE_DETAIL_TYPESTRING_HXX_

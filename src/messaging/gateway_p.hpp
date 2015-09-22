@@ -72,7 +72,7 @@ private:
 class GatewayPrivate : public qi::Trackable<GatewayPrivate>
 {
 public:
-  GatewayPrivate();
+  GatewayPrivate(bool enforceAuth);
   ~GatewayPrivate();
 
   Property<bool> connected;
@@ -141,6 +141,8 @@ private:
   void localServiceRegistration(Future<ServiceInfo> serviceInfo, ServiceId targetService);
   void localServiceRegistrationCont(Future<TransportSocketPtr> fut, ServiceId sid);
   void localServiceRegistrationEnd(TransportSocketPtr socket, ServiceId sid);
+
+  bool _enforceAuth;
 
   TransportServer _server;
 

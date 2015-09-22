@@ -4,8 +4,8 @@
 **  See COPYING for the license
 */
 
-#ifndef _QITYPE_DETAILS_PROPERTY_HXX_
-#define _QITYPE_DETAILS_PROPERTY_HXX_
+#ifndef _QITYPE_DETAIL_PROPERTY_HXX_
+#define _QITYPE_DETAIL_PROPERTY_HXX_
 
 
 namespace qi
@@ -57,4 +57,4 @@ namespace qi
   }
 }
 
-#endif  // _QITYPE_DETAILS_PROPERTY_HXX_
+#endif  // _QITYPE_DETAIL_PROPERTY_HXX_

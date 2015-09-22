@@ -87,8 +87,8 @@ void GwTransaction::setDestinationIfNull(TransportSocketPtr dest)
     _destination = dest;
 }
 
-Gateway::Gateway()
-  : _p(boost::make_shared<GatewayPrivate>())
+Gateway::Gateway(bool enforceAuth)
+  : _p(boost::make_shared<GatewayPrivate>(enforceAuth))
 {
   _p->setAuthProviderFactory(boost::make_shared<NullAuthProviderFactory>());
   _p->setClientAuthenticatorFactory(boost::make_shared<NullClientAuthenticatorFactory>());
@@ -130,8 +130,9 @@ qi::Future<void> Gateway::attachToServiceDirectory(const Url& serviceDirectoryUr
   return _p->connect(serviceDirectoryUrl);
 }
 
-GatewayPrivate::GatewayPrivate()
-  : _dying(false)
+GatewayPrivate::GatewayPrivate(bool ea)
+  : _enforceAuth(ea)
+  , _dying(false)
 {
   _socketCache.init();
   _server.newConnection.connect(&GatewayPrivate::onClientConnection, this, _1);
@@ -592,11 +593,27 @@ void GatewayPrivate::clientAuthenticationMessages(const Message& msg,
   if (service != Message::Service_Server || type != Message::Type_Call ||
       function != Message::ServerFunction_Authenticate)
   {
-    qiLogWarning() << "Client tried to bypass authentication";
-    reply.setType(Message::Type_Error);
-    reply.setError("Not authenticated.");
-    socket->send(reply);
-    socket->disconnect();
+    socket->messageReady.disconnect(*sub);
+    if (_enforceAuth)
+    {
+      qiLogVerbose() << "Client tried to bypass authentication";
+      reply.setType(Message::Type_Error);
+      reply.setError("Not authenticated.");
+      socket->send(reply);
+      socket->disconnect();
+    }
+    else
+    {
+      qiLogVerbose() << "Client not authenticating, but not enforced. Skipping auth, but sending capabilities.";
+      Message caps;
+      caps.setType(Message::Type_Capability);
+      caps.setService(Message::Service_Server);
+      caps.setValue(socket->localCapabilities(), typeOf<CapabilityMap>()->signature());
+      socket->send(caps);
+
+      socket->messageReady.connect(&GatewayPrivate::onAnyMessageReady, this, _1, socket);
+      onAnyMessageReady(msg, socket);
+    }
     return;
   }
   qiLogVerbose() << "Starting authentication step for client " << client_endpoint << "...";

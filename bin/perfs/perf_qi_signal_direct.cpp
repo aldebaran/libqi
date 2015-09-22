@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
   po::options_description desc(std::string("Usage:\n ")+argv[0]+"\n");
   desc.add_options()
     ("help,h", "Print this help.");
-  desc.add(qi::details::getPerfOptions());
+  desc.add(qi::detail::getPerfOptions());
 
 
   po::variables_map vm;

@@ -11,8 +11,7 @@
 
 #include <qi/perf/dataperfsuite.hpp>
 
-#include <fstream>
-#include <iostream>
+#include <boost/filesystem/fstream.hpp>
 
 namespace qi
 {
@@ -23,7 +22,7 @@ namespace qi
     /**
      * If this file is not open (bool std::ofstream::is_open()) output in std::cout.
      */
-    std::ofstream out;
+    boost::filesystem::ofstream out;
 
     DataPerfSuite::OutputData outputData;
 

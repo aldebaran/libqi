@@ -105,6 +105,6 @@ namespace qi
   typedef AutoService<qi::Empty> AnyAutoService;
 }
 
-#include "details/autoservice.hxx"
+#include "detail/autoservice.hxx"
 
 #endif

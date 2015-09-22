@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
   desc.add_options()
     ("help,h", "Print this help.");
 
-  desc.add(qi::details::getPerfOptions());
+  desc.add(qi::detail::getPerfOptions());
 
   po::variables_map vm;
   po::store(po::command_line_parser(argc, argv)

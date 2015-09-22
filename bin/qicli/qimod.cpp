@@ -14,6 +14,7 @@
 #include <qi/path.hpp>
 #include <qi/log.hpp>
 #include <qi/iocolor.hpp>
+#include <qi/jsoncodec.hpp>
 
 qiLogCategory("qicli.qimod");
 
@@ -31,7 +32,7 @@ void showModule(const AnyModule& module) {
   std::cout << "   path   " << mod.path << std::endl
             << "   type   " << mod.type << std::endl;
 
-  qi::details::printMetaObject(std::cout, module.metaObject());
+  qi::detail::printMetaObject(std::cout, module.metaObject());
 }
 
 void listMods() {
@@ -45,7 +46,7 @@ void listMods() {
   }
 }
 
-int subCmd_mod(int argc, char** argv, qi::ApplicationSession& app)
+int subCmd_mod(int argc, char** argv, qi::ApplicationSession& app, qi::JsonOption)
 {
   po::options_description desc("Usage:\n  qicli mod <module>");
   desc.add_options()

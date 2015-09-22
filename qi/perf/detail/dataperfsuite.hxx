@@ -4,8 +4,8 @@
 **  See COPYING for the license
 */
 
-#ifndef _QI_PERF_DETAILS_DATAPERFSUITE_HXX_
-#define _QI_PERF_DETAILS_DATAPERFSUITE_HXX_
+#ifndef _QI_PERF_DETAIL_DATAPERFSUITE_HXX_
+#define _QI_PERF_DETAIL_DATAPERFSUITE_HXX_
 
 #include <boost/program_options.hpp>
 
@@ -13,7 +13,7 @@ namespace po = boost::program_options;
 
 namespace qi {
 
-  namespace details {
+  namespace detail {
 
     inline po::options_description getPerfOptions()
     {
@@ -30,4 +30,4 @@ namespace qi {
 
 }
 
-#endif /* _QI_PERF_DETAILS_DATAPERFSUITE_HXX_ */
+#endif /* _QI_PERF_DETAIL_DATAPERFSUITE_HXX_ */

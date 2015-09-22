@@ -1,6 +1,7 @@
 #include <boost/program_options.hpp>
 
 #include "qicli.hpp"
+#include <qi/jsoncodec.hpp>
 
 namespace po = boost::program_options;
 
@@ -44,7 +45,9 @@ int                 main(int argc, char **argv)
   po::options_description desc("Usage: qicli [OPTIONS] SUBCMD [-h] [OPTIONS] [ARGS]");
 
   desc.add_options()
-      ("help,h", "Print this help message and exit");
+      ("help,h", "Print this help message and exit")
+      ("prettyprint,p", "Print return json output without any escape characters")
+      ;
 
   po::positional_options_description positionalOptions;
   positionalOptions.add("", 1);
@@ -71,7 +74,10 @@ int                 main(int argc, char **argv)
 
   int ret;
   try {
-    ret = subCmd(subCmdArgc, subCmdArgv, app);
+    if (!vm.count("prettyprint"))
+      ret = subCmd(subCmdArgc, subCmdArgv, app, qi::JsonOption::None);
+    else
+      ret = subCmd(subCmdArgc, subCmdArgv, app, qi::JsonOption::PrettyPrint);
   } catch (const std::exception& e)
   {
     printError(e.what());

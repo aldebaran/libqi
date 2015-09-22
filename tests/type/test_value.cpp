@@ -521,6 +521,25 @@ TEST(Value, Convert_ListToMap)
 }
 
 
+struct EasyStruct
+{
+  int x;
+  bool y;
+  std::vector<std::string> strings;
+};
+QI_TYPE_STRUCT_REGISTER(EasyStruct, x, y, strings);
+
+TEST(Value, Convert_StructToMap)
+{
+  const EasyStruct es{1, false, {"toto", "tata"}};
+  qi::AnyReference ref;
+  ASSERT_NO_THROW(ref = qi::AnyReference::from(es));
+  std::map<std::string, qi::AnyValue> val = ref.toMap<std::string, qi::AnyValue>();
+  EXPECT_EQ(es.x, val["x"].toInt());
+  EXPECT_EQ(es.y, val["y"].to<bool>());
+  EXPECT_EQ(es.strings, val["strings"].toList<std::string>());
+}
+
 struct Foo
 {
   std::string str;

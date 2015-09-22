@@ -6,7 +6,6 @@
  */
 
 #include <vector>
-#include <iostream>
 #include <string>
 
 #include <gtest/gtest.h>
@@ -230,9 +229,9 @@ TEST(QiService, ClassProperty)
   p.server()->registerService("foo", obj);
 
   qi::AnyObject client = p.client()->service("foo");
-  qi::details::printMetaObject(std::cerr, obj.metaObject());
+  qi::detail::printMetaObject(std::cerr, obj.metaObject());
   std::cerr <<"--" << std::endl;
-  qi::details::printMetaObject(std::cerr, client.metaObject());
+  qi::detail::printMetaObject(std::cerr, client.metaObject());
   qiLogDebug() << "setProp";
   client.setProperty<int>("offset", 1).value();
   qiLogDebug() << "setProp done";

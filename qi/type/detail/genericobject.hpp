@@ -201,7 +201,7 @@ struct isFuture<qi::FutureSync<T> > : boost::true_type {};
   R GenericObject::call(const std::string& methodName comma                   \
                             QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoAnyReference)) \
   {                                                                           \
-    BOOST_STATIC_ASSERT_MSG(!detail::isFuture<R>::value,                      \
+    static_assert(!detail::isFuture<R>::value,                                \
                             "return type of call must not be a Future");      \
     if (!value || !type)                                                      \
     {                                                                         \
@@ -219,7 +219,7 @@ struct isFuture<qi::FutureSync<T> > : boost::true_type {};
       const std::string& methodName comma                                     \
           QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoAnyReference))                   \
   {                                                                           \
-    BOOST_STATIC_ASSERT_MSG(!detail::isFuture<R>::value,                      \
+    static_assert(!detail::isFuture<R>::value,                                \
                             "return type of async must not be a Future");     \
     if (!value || !type)                                                      \
     {                                                                         \

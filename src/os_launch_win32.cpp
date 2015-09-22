@@ -4,8 +4,6 @@
  * found in the COPYING file.
  */
 
-#include <iostream>
-
 #include <errno.h>
 #include <fcntl.h>
 
@@ -21,89 +19,116 @@
 
 #include <qi/os.hpp>
 #include <qi/path.hpp>
-#include "filesystem.hpp"
 
 namespace qi
 {
-  namespace os
+namespace os
+{
+  namespace
   {
-
-    int spawnvp(char *const argv[])
+    std::vector<const wchar_t*> makeCProxy(const std::vector<std::wstring>& wstrlist)
     {
-      return static_cast<int>(_spawnvp(_P_NOWAIT, argv[0], (char* const*)argv));
+      std::vector<const wchar_t*> cstrlist;
+      cstrlist.reserve(wstrlist.size() + 1);
+      for (const auto& wstr : wstrlist)
+      {
+        cstrlist.push_back(wstr.c_str());
+      }
+      cstrlist.push_back(nullptr);
+      return cstrlist;
     }
 
-    int spawnlp(const char* argv, ...)
+    template <class WStringSequence>
+    int winSpawn(const WStringSequence& wArgs)
     {
-      const char* cmd[64];
+      const auto cwArgs = makeCProxy(wArgs);
+      return static_cast<int>(_wspawnvp(_P_NOWAIT, cwArgs[0], cwArgs.data()));
+    }
+  }
 
+  int spawnvp(char* const argv[])
+  {
+    std::vector<std::wstring> wargs;
+    for (const char* const* argIt = &argv[0]; *argIt != NULL; ++argIt)
+    {
+      wargs.push_back(qi::Path(*argIt).bfsPath().wstring());
+    }
+
+    return winSpawn(wargs);
+  }
+
+  int spawnlp(const char* argv, ...)
+  {
+    std::vector<std::wstring> wargs;
+
+    {
       va_list ap;
-      const char* arg;
-
+      const char* arg = nullptr;
       int i = 0;
       va_start(ap, argv);
       for (arg = argv; arg != NULL; arg = va_arg(ap, const char*), ++i)
-        cmd[i] = arg;
-
+      {
+        wargs.push_back(qi::Path(arg).bfsPath().wstring());
+      }
       va_end(ap);
-      cmd[i] = NULL;
-
-      return static_cast<int>(_spawnvp(_P_NOWAIT, cmd[0], (char* const*)cmd));
     }
 
-    int system(const char *command)
-    {
-      boost::filesystem::path fname(command, qi::unicodeFacet());
-      return _wsystem(fname.wstring(qi::unicodeFacet()).c_str());
-    }
-
-    int getpid()
-    {
-      return _getpid();
-    }
-
-    int gettid()
-    {
-      return GetCurrentThreadId();
-    }
-
-    int waitpid(int pid, int* status)
-    {
-      errno = 0;
-
-      _cwait(status, pid, 0);
-
-      if (errno == ECHILD)
-      {
-        *status = 127;
-        return 0;
-      }
-
-      return errno;
-    }
-
-    int kill(int pid, int sig)
-    {
-      HANDLE handle = (HANDLE) pid;
-      int res = -1;
-      DWORD status;
-      GetExitCodeProcess(handle, &status);
-      if(status == STILL_ACTIVE)
-      {
-        if(sig == SIGTERM || sig == SIGKILL)
-        {
-          DWORD error = TerminateProcess(handle, 0);
-          qi::os::msleep(100);
-          GetExitCodeProcess(handle, &status);
-          if(status != STILL_ACTIVE)
-            res = 0;
-        }
-        else
-        {
-          res = 0;
-        }
-      }
-      return res;
-    }
+    return winSpawn(wargs);
   }
+
+  int system(const char* command)
+  {
+    boost::filesystem::path fname(command, qi::unicodeFacet());
+    return _wsystem(fname.wstring(qi::unicodeFacet()).c_str());
+  }
+
+  int getpid()
+  {
+    return _getpid();
+  }
+
+  int gettid()
+  {
+    return GetCurrentThreadId();
+  }
+
+  int waitpid(int pid, int* status)
+  {
+    errno = 0;
+
+    _cwait(status, pid, 0);
+
+    if (errno == ECHILD)
+    {
+      *status = 127;
+      return 0;
+    }
+
+    return errno;
+  }
+
+  int kill(int pid, int sig)
+  {
+    HANDLE handle = (HANDLE)pid;
+    int res = -1;
+    DWORD status;
+    GetExitCodeProcess(handle, &status);
+    if (status == STILL_ACTIVE)
+    {
+      if (sig == SIGTERM || sig == SIGKILL)
+      {
+        DWORD error = TerminateProcess(handle, 0);
+        qi::os::msleep(100);
+        GetExitCodeProcess(handle, &status);
+        if (status != STILL_ACTIVE)
+          res = 0;
+      }
+      else
+      {
+        res = 0;
+      }
+    }
+    return res;
+  }
+}
 }

@@ -3,6 +3,7 @@
 
 # include <qi/applicationsession.hpp>
 # include <boost/program_options.hpp>
+# include <qi/jsoncodec.hpp>
 
 # include "sessionhelper.hpp"
 
@@ -15,24 +16,24 @@ struct WatchOptions
   {}
 };
 
-typedef int (*SubCmd)(int argc, char **argv, qi::ApplicationSession& app);
+typedef int (*SubCmd)(int argc, char **argv, qi::ApplicationSession& app, qi::JsonOption prettyPrint);
 
 namespace po = boost::program_options;
 
 
 /* SUBCMDS */
-int subCmd_info(int argc, char **argv, qi::ApplicationSession& app);
-int subCmd_call(int argc, char **argv, qi::ApplicationSession& app);
-int subCmd_post(int argc, char **argv, qi::ApplicationSession& app);
-int subCmd_service(int argc, char **argv, qi::ApplicationSession& app);
-int subCmd_watch(int argc, char **argv, qi::ApplicationSession& app);
-int subCmd_get(int argc, char **argv, qi::ApplicationSession& app);
-int subCmd_set(int argc, char **argv, qi::ApplicationSession& app);
-int subCmd_trace(int argc, char **argv, qi::ApplicationSession& app);
-int subCmd_top(int argc, char **argv, qi::ApplicationSession& app);
-int subCmd_logView(int argc, char **argv, qi::ApplicationSession& app);
-int subCmd_logSend(int argc, char **argv, qi::ApplicationSession& app);
-int subCmd_mod(int argc, char **argv, qi::ApplicationSession& app);
+int subCmd_info(int argc, char **argv, qi::ApplicationSession& app, qi::JsonOption prettyPrint);
+int subCmd_call(int argc, char **argv, qi::ApplicationSession& app, qi::JsonOption prettyPrint);
+int subCmd_post(int argc, char **argv, qi::ApplicationSession& app, qi::JsonOption prettyPrint);
+int subCmd_service(int argc, char **argv, qi::ApplicationSession& app, qi::JsonOption prettyPrint);
+int subCmd_watch(int argc, char **argv, qi::ApplicationSession& app, qi::JsonOption prettyPrint);
+int subCmd_get(int argc, char **argv, qi::ApplicationSession& app, qi::JsonOption prettyPrint);
+int subCmd_set(int argc, char **argv, qi::ApplicationSession& app, qi::JsonOption prettyPrint);
+int subCmd_trace(int argc, char **argv, qi::ApplicationSession& app, qi::JsonOption prettyPrint);
+int subCmd_top(int argc, char **argv, qi::ApplicationSession& app, qi::JsonOption prettyPrint);
+int subCmd_logView(int argc, char **argv, qi::ApplicationSession& app, qi::JsonOption prettyPrint);
+int subCmd_logSend(int argc, char **argv, qi::ApplicationSession& app, qi::JsonOption prettyPrint);
+int subCmd_mod(int argc, char **argv, qi::ApplicationSession& app, qi::JsonOption prettyPrint);
 
 /* UTILS */
 int readNumericInput();

@@ -4,8 +4,8 @@
 **  See COPYING for the license
 */
 
-#ifndef _QITYPE_DETAILS_BINDTYPE_HXX_
-#define _QITYPE_DETAILS_BINDTYPE_HXX_
+#ifndef _QITYPE_DETAIL_BINDTYPE_HXX_
+#define _QITYPE_DETAIL_BINDTYPE_HXX_
 
 #include <boost/mpl/find_if.hpp>
 #include <boost/mpl/vector.hpp>
@@ -271,4 +271,4 @@ namespace qi
     };
 }
 
-#endif  // _QITYPE_DETAILS_BINDTYPE_HXX_
+#endif  // _QITYPE_DETAIL_BINDTYPE_HXX_

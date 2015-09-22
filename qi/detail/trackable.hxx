@@ -5,8 +5,8 @@
  * found in the COPYING file.
  */
 
-#ifndef _QI_DETAILS_TRACKABLE_HXX_
-#define _QI_DETAILS_TRACKABLE_HXX_
+#ifndef _QI_DETAIL_TRACKABLE_HXX_
+#define _QI_DETAIL_TRACKABLE_HXX_
 
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
@@ -69,12 +69,6 @@ namespace qi
       // do it to mitigate the effect, but it's too late
       destroy();
     }
-  }
-
-  template<typename T>
-  inline boost::shared_ptr<T> Trackable<T>::lock()
-  {
-    return _ptr;
   }
 
   template<typename T>
@@ -230,4 +224,4 @@ namespace qi
   }
 }
 
-#endif  // _QI_DETAILS_TRACKABLE_HXX_
+#endif  // _QI_DETAIL_TRACKABLE_HXX_

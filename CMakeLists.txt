@@ -117,8 +117,6 @@ set(QI_C src/dlfcn.cpp
          src/bufferreader.cpp
          src/clock.cpp
          src/sdklayout.hpp
-         src/filesystem.hpp
-         src/filesystem.cpp
          src/future.cpp
          src/log.cpp
          src/log_p.hpp
@@ -249,7 +247,7 @@ set(QIM_H qi/api.hpp
           qi/messaging/autoservice.hpp
           qi/messaging/clientauthenticator.hpp
           qi/messaging/clientauthenticatorfactory.hpp
-          qi/messaging/details/autoservice.hxx
+          qi/messaging/detail/autoservice.hxx
           qi/messaging/gateway.hpp
           qi/messaging/serviceinfo.hpp
           qi/applicationsession.hpp
@@ -311,7 +309,7 @@ set(QIM_C src/messaging/applicationsession.cpp
 
 set(QIPERF_H
   qi/perf/dataperfsuite.hpp
-  qi/perf/details/dataperfsuite.hxx
+  qi/perf/detail/dataperfsuite.hxx
   qi/perf/dataperf.hpp
   qi/perf/measure.hpp
 )
@@ -405,6 +403,7 @@ if(WIN32)
 endif()
 
 qi_stage_lib(qi INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/compat")
+
 
 option(BUILD_EXAMPLES "build examples")
 if (BUILD_EXAMPLES)

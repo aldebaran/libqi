@@ -2,14 +2,17 @@
 # define QICLI_SERVICEHELPER_HPP_
 
 #include <qi/session.hpp>
+#include <qi/jsoncodec.hpp>
 
 struct WatchOptions;
 
 class ServiceHelper
 {
 public:
-  ServiceHelper(const qi::AnyObject &service=qi::AnyObject(), const std::string &name="");
-  ServiceHelper(const ServiceHelper &other);
+  ServiceHelper(const qi::AnyObject &service=qi::AnyObject(), const std::string &name="", qi::JsonOption prettyPrint = qi::JsonOption::None);
+  ServiceHelper(const ServiceHelper &other) = default;
+  ServiceHelper& operator=(const ServiceHelper &other) = default;
+  ServiceHelper& operator=(const qi::AnyObject &service);
   ~ServiceHelper();
 
   bool                        call(const std::string &methodName, const qi::GenericFunctionParameters &gvArgList, unsigned int callCount);
@@ -18,8 +21,6 @@ public:
   bool                        setProperty(const std::string &propertyName, const qi::AnyValue &gvArg);
   bool                        watch(const std::string &signalName, bool showTime=false);
 
-  const ServiceHelper&        operator=(const ServiceHelper &other);
-  const ServiceHelper&        operator=(const qi::AnyObject &service);
   const std::string           &name() const;
   const qi::AnyObject&        objPtr() const;
 
@@ -33,9 +34,10 @@ private:
   bool                byPassMember(const std::string &name, unsigned int uid, bool showHidden) const;
 
 private:
-  std::string         _name;
+  std::string _name;
   std::list<qi::SignalLink> _signalLinks;
-  qi::AnyObject       _service;
+  qi::AnyObject _service;
+  qi::JsonOption _prettyPrint;
 };
 
 #endif /* !QICLI_SERVICEHELPER_HPP_ */

@@ -235,7 +235,7 @@ int main(int argc, char **argv)
     ("msdelay", po::value<int>()->default_value(0, "0"), "Delay in milliseconds to simulate long call")
     ;
 
-  desc.add(qi::details::getPerfOptions());
+  desc.add(qi::detail::getPerfOptions());
 
   po::variables_map vm;
   po::store(po::command_line_parser(argc, argv)

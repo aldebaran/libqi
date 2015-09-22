@@ -7,7 +7,7 @@
 
 static const int qicli_call_cmd_style = po::command_line_style::unix_style ^ po::command_line_style::allow_short;
 
-int subCmd_info(int argc, char **argv, qi::ApplicationSession& app)
+int subCmd_info(int argc, char **argv, qi::ApplicationSession& app, qi::JsonOption prettyPrint)
 {
   po::options_description     desc("Usage: qicli info [<ServicePattern>...]");
   std::vector<std::string>    serviceList;
@@ -47,12 +47,12 @@ int subCmd_info(int argc, char **argv, qi::ApplicationSession& app)
   if (serviceList.empty())
     serviceList.push_back("*");
 
-  SessionHelper session(app);
+  SessionHelper session(app, prettyPrint);
   session.info(serviceList, details, vm.count("hidden"), vm.count("show-doc"), vm.count("raw-signature"), zOpt);
   return 0;
 }
 
-int subCmd_call(int argc, char **argv, qi::ApplicationSession& app)
+int subCmd_call(int argc, char **argv, qi::ApplicationSession& app, qi::JsonOption prettyPrint)
 {
   po::options_description     desc("Usage: qicli call <ServicePattern.MethodPattern> [<JsonParameter>...]");
   std::string                 fullName;
@@ -76,13 +76,13 @@ int subCmd_call(int argc, char **argv, qi::ApplicationSession& app)
   if (!poDefault(po::command_line_parser(argc, argv).options(desc).positional(positionalOptions)
                  .style(qicli_call_cmd_style), vm, desc))
     return 1;
-  SessionHelper session(app);
+  SessionHelper session(app, prettyPrint);
 
   session.call(fullName, argList, vm.count("hidden"), vm.count("json"), vm.count("continue"), callCount);
   return 0;
 }
 
-int subCmd_post(int argc, char **argv, qi::ApplicationSession& app)
+int subCmd_post(int argc, char **argv, qi::ApplicationSession& app, qi::JsonOption prettyPrint)
 {
   po::options_description     desc("Usage: qicli post <ServicePattern.SignalPattern> [<JsonParameter>...]");
   std::string                 fullName;
@@ -105,7 +105,7 @@ int subCmd_post(int argc, char **argv, qi::ApplicationSession& app)
                  .style(qicli_call_cmd_style), vm, desc))
     return 1;
 
-  SessionHelper session(app);
+  SessionHelper session(app, prettyPrint);
 
   if (vm.count("almemory"))
   {
@@ -118,7 +118,7 @@ int subCmd_post(int argc, char **argv, qi::ApplicationSession& app)
   return 0;
 }
 
-int subCmd_get(int argc, char **argv, qi::ApplicationSession& app)
+int subCmd_get(int argc, char **argv, qi::ApplicationSession& app, qi::JsonOption prettyPrint)
 {
   po::options_description   desc("Usage: qicli get <ServicePattern.PropertyPattern>...");
   std::vector<std::string>  patternList;
@@ -136,7 +136,7 @@ int subCmd_get(int argc, char **argv, qi::ApplicationSession& app)
   if (!poDefault(po::command_line_parser(argc, argv).options(desc).positional(positionalOptions), vm, desc))
     return 1;
 
-  SessionHelper session(app);
+  SessionHelper session(app, prettyPrint);
 
   if (patternList.empty())
       patternList.push_back("*.*");
@@ -144,7 +144,7 @@ int subCmd_get(int argc, char **argv, qi::ApplicationSession& app)
   return 0;
 }
 
-int subCmd_set(int argc, char **argv, qi::ApplicationSession& app)
+int subCmd_set(int argc, char **argv, qi::ApplicationSession& app, qi::JsonOption prettyPrint)
 {
   po::options_description   desc("Usage: qicli set <ServicePattern.PropertyPattern>... <JsonParameter>");
   std::vector<std::string>  argList;
@@ -172,12 +172,12 @@ int subCmd_set(int argc, char **argv, qi::ApplicationSession& app)
   std::string jsonValue = argList.back();
   argList.pop_back();
 
-  SessionHelper session(app);
+  SessionHelper session(app, prettyPrint);
   session.set(argList, jsonValue, vm.count("hidden"), vm.count("json"), vm.count("continue"));
   return 0;
 }
 
-int subCmd_watch(int argc, char **argv, qi::ApplicationSession& app)
+int subCmd_watch(int argc, char **argv, qi::ApplicationSession& app, qi::JsonOption prettyPrint)
 {
   po::options_description   desc("Usage: qicli watch <ServicePattern.SignalPattern>...");
   std::vector<std::string>  patternList;
@@ -197,7 +197,7 @@ int subCmd_watch(int argc, char **argv, qi::ApplicationSession& app)
   if (!poDefault(po::command_line_parser(argc, argv).options(desc).positional(positionalOptions), vm, desc))
     return 1;
 
-  SessionHelper session(app);
+  SessionHelper session(app, prettyPrint);
 
   if (patternList.empty())
   {

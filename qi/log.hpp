@@ -16,7 +16,6 @@
 # define _QI_LOG_HPP_
 
 # include <string>
-# include <iostream>
 # include <sstream>
 # include <cstdarg>
 # include <cstdio>

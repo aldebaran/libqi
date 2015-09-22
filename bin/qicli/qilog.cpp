@@ -78,7 +78,7 @@ static void setFilter(const std::string& rules, qi::AnyObject listener)
   }
 }
 
-int subCmd_logView(int argc, char **argv, qi::ApplicationSession& app)
+int subCmd_logView(int argc, char **argv, qi::ApplicationSession& app, qi::JsonOption)
 {
   po::options_description   desc("Usage: qicli log-view");
 
@@ -136,7 +136,7 @@ int subCmd_logView(int argc, char **argv, qi::ApplicationSession& app)
   return 0;
 }
 
-int subCmd_logSend(int argc, char **argv, qi::ApplicationSession& app)
+int subCmd_logSend(int argc, char **argv, qi::ApplicationSession& app, qi::JsonOption)
 {
   po::options_description   desc("Usage: qicli log-send <message>");
 

@@ -4,7 +4,7 @@
  * found in the COPYING file.
  */
 
-#include <fstream>
+#include <boost/filesystem/fstream.hpp>
 
 #include <boost/filesystem.hpp>
 #include <boost/locale.hpp>
@@ -65,9 +65,9 @@ namespace qi
     static boost::mutex gFileMutex;
     static std::set<std::string> domainPaths()
     {
-      std::string confPath = qi::path::userWritableDataPath("naoqi", ".domain_path");
+      const qi::Path confPath = qi::path::userWritableDataPath("naoqi", ".domain_path");
       boost::mutex::scoped_lock l(gFileMutex);
-      std::ifstream fd(bfs::path(confPath, qi::unicodeFacet()).string().c_str());
+      boost::filesystem::ifstream fd(confPath);
       std::set<std::string> paths;
 
       if (!fd.good())
@@ -89,23 +89,22 @@ namespace qi
       if (pathsIt != paths.end())
         return;
 
-      std::string confPath = qi::path::userWritableDataPath("naoqi", ".domain_path");
+      const qi::Path confPath = qi::path::userWritableDataPath("naoqi", ".domain_path");
       boost::mutex::scoped_lock l(gFileMutex);
-      std::ofstream fd(bfs::path(confPath, qi::unicodeFacet()).string().c_str(), std::ios::app | std::ios::out);
+      boost::filesystem::ofstream fd(confPath, std::ios::app | std::ios::out);
 
       if (!fd.good())
         return;
 
       fd << path << std::endl;
-      fd.close();
     }
 
     void removeDomainPath(const std::string &path)
     {
-      std::string confPath = qi::path::userWritableDataPath("naoqi", ".domain_path");
+      const qi::Path confPath = qi::path::userWritableDataPath("naoqi", ".domain_path");
       std::set<std::string> dPaths = domainPaths();
       boost::mutex::scoped_lock l(gFileMutex);
-      std::ofstream fd(bfs::path(confPath, qi::unicodeFacet()).string().c_str(), std::ios::trunc | std::ios::out);
+      boost::filesystem::ofstream fd(confPath, std::ios::trunc | std::ios::out);
 
       if (!fd.good())
         return;
@@ -118,8 +117,6 @@ namespace qi
           continue;
         fd << *itPaths << std::endl;
       }
-
-      fd.close();
     }
   } // !detail
 

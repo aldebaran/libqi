@@ -159,7 +159,7 @@ void signalHandler(int)
     std::cout << "]" << std::endl;
 }
 
-int subCmd_trace(int argc, char **argv, qi::ApplicationSession& app)
+int subCmd_trace(int argc, char **argv, qi::ApplicationSession& app, qi::JsonOption)
 {
   qi::Application::atSignal(&signalHandler, SIGTERM);
   qi::Application::atSignal(&signalHandler, SIGINT);
@@ -222,7 +222,7 @@ int subCmd_trace(int argc, char **argv, qi::ApplicationSession& app)
     if (printMo)
     {
       std::cout << "\n\n" << services[i] << "\n";
-      qi::details::printMetaObject(std::cout, o.metaObject());
+      qi::detail::printMetaObject(std::cout, o.metaObject());
     }
     if (disableTrace)
     {

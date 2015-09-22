@@ -271,6 +271,7 @@ namespace qi
       {
         messageReady(*_msg);
         socketEvent(SocketEventData(*_msg));
+        _dispatcher.dispatch(*_msg);
       }
     }
     else
@@ -539,7 +540,7 @@ namespace qi
     */
     tcp_keepalive params;
     params.onoff = 1;
-    params.keepalivetime = 5000; // entry is in milliseconds
+    params.keepalivetime = 30000; // entry is in milliseconds
     // set interval to target timeout divided by probe count
     params.keepaliveinterval = timeout * 1000 / 10;
     DWORD bytesReturned;
@@ -570,7 +571,7 @@ namespace qi
       optval = timeout / 10;
       if (setsockopt(handle, SOL_TCP, TCP_KEEPINTVL, &optval, optlen) < 0)
         qiLogWarning() << "Failed to set TCP_KEEPINTVL: " << strerror(errno);
-      optval = 5;
+      optval = 30;
       if (setsockopt(handle, SOL_TCP, TCP_KEEPIDLE , &optval, optlen) < 0)
         qiLogWarning() << "Failed to set TCP_KEEPIDLE : " << strerror(errno);
       optval = 10;
@@ -595,7 +596,7 @@ namespace qi
       // Macos only have TCP_KEEPALIVE wich is linux's TCP_KEEPIDLE
       // So best we can do is lower that, which will reduce delay from
       // hours to tens of minutes.
-      optval = 5;
+      optval = 30;
       if (setsockopt(handle, IPPROTO_TCP, TCP_KEEPALIVE , &optval, optlen) < 0)
         qiLogWarning() << "Failed to set TCP_KEEPALIVE : " << strerror(errno);
 # endif

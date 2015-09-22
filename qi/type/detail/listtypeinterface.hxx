@@ -4,10 +4,8 @@
 **  See COPYING for the license
 */
 
-#ifndef _QITYPE_DETAILS_TYPELIST_HXX_
-#define _QITYPE_DETAILS_TYPELIST_HXX_
-
-#include <boost/static_assert.hpp>
+#ifndef _QITYPE_DETAIL_TYPELIST_HXX_
+#define _QITYPE_DETAIL_TYPELIST_HXX_
 
 #include <qi/atomic.hpp>
 
@@ -121,7 +119,7 @@ size_t ListTypeInterfaceImpl<T, H>::size(void* storage)
 // There is no way to register a template container type :(
 template<typename T> struct TypeImpl<std::vector<T> >: public ListTypeInterfaceImpl<std::vector<T> >
 {
-  BOOST_STATIC_ASSERT_MSG((!boost::is_same<T,bool>::value), "std::vector<bool> is not supported by AnyValue.");
+  static_assert(!boost::is_same<T,bool>::value, "std::vector<bool> is not supported by AnyValue.");
 };
 template<typename T> struct TypeImpl<std::list<T> >: public ListTypeInterfaceImpl<std::list<T> > {};
 template<typename T> struct TypeImpl<std::set<T> >: public ListTypeInterfaceImpl<std::set<T> > {};
@@ -167,4 +165,4 @@ public:
 template<typename T> struct TypeImpl<qi::VarArguments<T> >: public VarArgsTypeInterfaceImpl<qi::VarArguments<T> > {};
 }
 
-#endif  // _QITYPE_DETAILS_TYPELIST_HXX_
+#endif  // _QITYPE_DETAIL_TYPELIST_HXX_
