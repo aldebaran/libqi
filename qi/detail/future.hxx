@@ -238,254 +238,217 @@ namespace detail {
 
   namespace detail {
 
-    class FutureBasePrivate;
-    class QI_API FutureBase {
-    public:
-      FutureBase();
-      ~FutureBase();
-
-      FutureState wait(int msecs) const;
-      FutureState wait(qi::Duration duration) const;
-      FutureState wait(qi::SteadyClock::time_point timepoint) const;
-      FutureState state() const;
-      bool isRunning() const;
-      bool isFinished() const;
-      bool isCanceled() const;
-      bool isCancelRequested() const;
-      bool hasError(int msecs) const;
-      bool hasValue(int msecs) const;
-      const std::string &error(int msecs) const;
-      void reportStart();
-
-    protected:
-      void reportValue();
-      void reportError(const std::string &message);
-      void requestCancel();
-      void reportCanceled();
-      boost::recursive_mutex& mutex();
-      void notifyFinish();
-
-    public:
-      FutureBasePrivate *_p;
-    };
-
-
-    //common state shared between a Promise and multiple Futures
     template <typename T>
-    class FutureBaseTyped : public FutureBase {
-    public:
-      typedef boost::function<void(Promise<T>&)> CancelCallback;
-      typedef typename FutureType<T>::type ValueType;
-      FutureBaseTyped()
-        : _value()
-        , _async(FutureCallbackType_Auto)
-      {
-      }
+    FutureBaseTyped<T>::FutureBaseTyped()
+      : _value()
+      , _async(FutureCallbackType_Auto)
+    {
+    }
 
-      ~FutureBaseTyped()
-      {
-        if (_onDestroyed && hasValue(0))
-          _onDestroyed(_value);
-      }
+    template <typename T>
+    FutureBaseTyped<T>::~FutureBaseTyped()
+    {
+      if (_onDestroyed && hasValue(0))
+        _onDestroyed(_value);
+    }
 
-      bool isCancelable() const
-      {
-        return static_cast<bool>(_onCancel);
-      }
+    template <typename T>
+    bool FutureBaseTyped<T>::isCancelable() const
+    {
+      return static_cast<bool>(_onCancel);
+    }
 
-      void cancel(qi::Future<T>& future)
-      {
-        CancelCallback onCancel;
-        {
-          boost::recursive_mutex::scoped_lock lock(mutex());
-          if (isFinished())
-            return;
-          if (!_onCancel)
-            throw FutureException(FutureException::ExceptionState_FutureNotCancelable);
-          requestCancel();
-          onCancel = _onCancel;
-        }
-        qi::Promise<T> prom(future);
-        onCancel(prom);
-      }
-
-      void setOnCancel(qi::Promise<T>& promise,
-        CancelCallback onCancel)
-      {
-        bool doCancel = false;
-        {
-          boost::recursive_mutex::scoped_lock lock(mutex());
-          _onCancel = onCancel;
-          doCancel = isCancelRequested();
-        }
-        qi::Future<T> fut = promise.future();
-        if (doCancel)
-          cancel(fut);
-      }
-
-      void callCbNotify(qi::Future<T>& future)
-      {
-        for(unsigned i = 0; i < _onResult.size(); ++i)
-        {
-          bool async = _async != FutureCallbackType_Sync;
-          if (_onResult[i].callType != FutureCallbackType_Auto)
-            async = _onResult[i].callType == FutureCallbackType_Async;
-
-          if (async)
-            getEventLoop()->post(boost::bind(_onResult[i].callback, future));
-          else
-            try {
-              _onResult[i].callback(future);
-            } catch(const qi::PointerLockException&) { // do nothing
-            } catch(const std::exception& e) {
-              qiLogError("qi.future") << "Exception caught in future callback "
-                                      << e.what();
-            } catch (...) {
-              qiLogError("qi.future")
-                  << "Unknown exception caught in future callback";
-            }
-        }
-        notifyFinish();
-        clearCallbacks();
-      }
-
-      void setValue(qi::Future<T>& future, const ValueType &value)
-      {
-        // report-ready + onResult() must be Atomic to avoid
-        // missing callbacks/double calls in case connect() is invoked at
-        // the same time
-        boost::recursive_mutex::scoped_lock lock(mutex());
-        if (!isRunning())
-          throw FutureException(FutureException::ExceptionState_PromiseAlreadySet);
-
-        _value = value;
-        reportValue();
-        callCbNotify(future);
-      }
-
-      /*
-       * inplace api for promise
-       */
-      void set(qi::Future<T>& future)
-      {
-        // report-ready + onResult() must be Atomic to avoid
-        // missing callbacks/double calls in case connect() is invoked at
-        // the same time
-        boost::recursive_mutex::scoped_lock lock(mutex());
-        if (!isRunning())
-          throw FutureException(FutureException::ExceptionState_PromiseAlreadySet);
-
-        reportValue();
-        callCbNotify(future);
-      }
-
-      void setError(qi::Future<T>& future, const std::string &message)
+    template <typename T>
+    void FutureBaseTyped<T>::cancel(qi::Future<T>& future)
+    {
+      CancelCallback onCancel;
       {
         boost::recursive_mutex::scoped_lock lock(mutex());
-        if (!isRunning())
-          throw FutureException(FutureException::ExceptionState_PromiseAlreadySet);
-
-        reportError(message);
-        callCbNotify(future);
+        if (isFinished())
+          return;
+        if (!_onCancel)
+          throw FutureException(FutureException::ExceptionState_FutureNotCancelable);
+        requestCancel();
+        onCancel = _onCancel;
       }
+      qi::Promise<T> prom(future);
+      onCancel(prom);
+    }
 
-      void setBroken(qi::Future<T>& future)
+    template <typename T>
+    void FutureBaseTyped<T>::setOnCancel(qi::Promise<T>& promise, CancelCallback onCancel)
+    {
+      bool doCancel = false;
       {
         boost::recursive_mutex::scoped_lock lock(mutex());
-        assert(isRunning());
-
-        reportError("Promise broken (all promises are destroyed)");
-        callCbNotify(future);
+        _onCancel = onCancel;
+        doCancel = isCancelRequested();
       }
+      qi::Future<T> fut = promise.future();
+      if (doCancel)
+        cancel(fut);
+    }
 
-      void setCanceled(qi::Future<T>& future) {
-        boost::recursive_mutex::scoped_lock lock(mutex());
-        if (!isRunning())
-          throw FutureException(FutureException::ExceptionState_PromiseAlreadySet);
-
-        reportCanceled();
-        callCbNotify(future);
-      }
-
-      void setOnDestroyed(boost::function<void (ValueType)> f)
+    template <typename T>
+    void FutureBaseTyped<T>::callCbNotify(qi::Future<T>& future)
+    {
+      for (unsigned i = 0; i < _onResult.size(); ++i)
       {
-        _onDestroyed = f;
-      }
+        bool async = _async != FutureCallbackType_Sync;
+        if (_onResult[i].callType != FutureCallbackType_Auto)
+          async = _onResult[i].callType == FutureCallbackType_Async;
 
-      void connect(qi::Future<T> future,
-          const boost::function<void (qi::Future<T>&)> &s,
-          FutureCallbackType type)
-      {
-        if (state() == FutureState_None)
-          throw FutureException(FutureException::ExceptionState_FutureInvalid);
-
-        bool ready;
-        {
-          boost::recursive_mutex::scoped_lock lock(mutex());
-          ready = isFinished();
-          if (!ready)
-            _onResult.push_back(Callback(s, type));
-        }
-        //result already ready, notify the callback
-        if (ready) {
-          bool async = _async != FutureCallbackType_Sync;
-          if (type != FutureCallbackType_Auto)
-            async = type != FutureCallbackType_Sync;
-          if (async)
-            getEventLoop()->post(boost::bind(s, future));
-          else
+        if (async)
+          getEventLoop()->post(boost::bind(_onResult[i].callback, future));
+        else
+          try
           {
-            try {
-              s(future);
-            } catch(const ::qi::PointerLockException&)
-            {/*do nothing*/}
+            _onResult[i].callback(future);
+          }
+          catch (const qi::PointerLockException&)
+          { // do nothing
+          }
+          catch (const std::exception& e)
+          {
+            qiLogError("qi.future") << "Exception caught in future callback " << e.what();
+          }
+          catch (...)
+          {
+            qiLogError("qi.future") << "Unknown exception caught in future callback";
+          }
+      }
+      notifyFinish();
+      clearCallbacks();
+    }
+
+    template <typename T>
+    void FutureBaseTyped<T>::setValue(qi::Future<T>& future, const ValueType& value)
+    {
+      // report-ready + onResult() must be Atomic to avoid
+      // missing callbacks/double calls in case connect() is invoked at
+      // the same time
+      boost::recursive_mutex::scoped_lock lock(mutex());
+      if (!isRunning())
+        throw FutureException(FutureException::ExceptionState_PromiseAlreadySet);
+
+      _value = value;
+      reportValue();
+      callCbNotify(future);
+    }
+
+    template <typename T>
+    void FutureBaseTyped<T>::set(qi::Future<T>& future)
+    {
+      // report-ready + onResult() must be Atomic to avoid
+      // missing callbacks/double calls in case connect() is invoked at
+      // the same time
+      boost::recursive_mutex::scoped_lock lock(mutex());
+      if (!isRunning())
+        throw FutureException(FutureException::ExceptionState_PromiseAlreadySet);
+
+      reportValue();
+      callCbNotify(future);
+    }
+
+    template <typename T>
+    void FutureBaseTyped<T>::setError(qi::Future<T>& future, const std::string& message)
+    {
+      boost::recursive_mutex::scoped_lock lock(mutex());
+      if (!isRunning())
+        throw FutureException(FutureException::ExceptionState_PromiseAlreadySet);
+
+      reportError(message);
+      callCbNotify(future);
+    }
+
+    template <typename T>
+    void FutureBaseTyped<T>::setBroken(qi::Future<T>& future)
+    {
+      boost::recursive_mutex::scoped_lock lock(mutex());
+      assert(isRunning());
+
+      reportError("Promise broken (all promises are destroyed)");
+      callCbNotify(future);
+    }
+
+    template <typename T>
+    void FutureBaseTyped<T>::setCanceled(qi::Future<T>& future)
+    {
+      boost::recursive_mutex::scoped_lock lock(mutex());
+      if (!isRunning())
+        throw FutureException(FutureException::ExceptionState_PromiseAlreadySet);
+
+      reportCanceled();
+      callCbNotify(future);
+    }
+
+    template <typename T>
+    void FutureBaseTyped<T>::setOnDestroyed(boost::function<void(ValueType)> f)
+    {
+      _onDestroyed = f;
+    }
+
+    template <typename T>
+    void FutureBaseTyped<T>::connect(qi::Future<T> future,
+                                  const boost::function<void(qi::Future<T>&)>& s,
+                                  FutureCallbackType type)
+    {
+      if (state() == FutureState_None)
+        throw FutureException(FutureException::ExceptionState_FutureInvalid);
+
+      bool ready;
+      {
+        boost::recursive_mutex::scoped_lock lock(mutex());
+        ready = isFinished();
+        if (!ready)
+          _onResult.push_back(Callback(s, type));
+      }
+
+      // result already ready, notify the callback
+      if (ready)
+      {
+        bool async = _async != FutureCallbackType_Sync;
+        if (type != FutureCallbackType_Auto)
+          async = type != FutureCallbackType_Sync;
+        if (async)
+          getEventLoop()->post(boost::bind(s, future));
+        else
+        {
+          try
+          {
+            s(future);
+          }
+          catch (const ::qi::PointerLockException&)
+          { /*do nothing*/
           }
         }
       }
+    }
 
-      const ValueType &value(int msecs) const {
-        FutureState state = wait(msecs);
-        if (state == FutureState_None)
-          throw FutureException(FutureException::ExceptionState_FutureInvalid);
-        if (state == FutureState_Running)
-          throw FutureException(FutureException::ExceptionState_FutureTimeout);
-        if (state == FutureState_Canceled)
-          throw FutureException(FutureException::ExceptionState_FutureCanceled);
-        if (state == FutureState_FinishedWithError)
-          throw FutureUserException(error(FutureTimeout_None));
-        return _value;
-      }
+    template <typename T>
+    const typename FutureBaseTyped<T>::ValueType& FutureBaseTyped<T>::value(int msecs) const
+    {
+      FutureState state = wait(msecs);
+      if (state == FutureState_None)
+        throw FutureException(FutureException::ExceptionState_FutureInvalid);
+      if (state == FutureState_Running)
+        throw FutureException(FutureException::ExceptionState_FutureTimeout);
+      if (state == FutureState_Canceled)
+        throw FutureException(FutureException::ExceptionState_FutureCanceled);
+      if (state == FutureState_FinishedWithError)
+        throw FutureUserException(error(FutureTimeout_None));
+      return _value;
+    }
 
-    private:
-      friend class Promise<T>;
-      typedef boost::function<void(qi::Future<T>&)> CallbackType;
-      struct Callback
+    template <typename T>
+    void FutureBaseTyped<T>::clearCallbacks()
+    {
+      _onResult.clear();
+      if (_onCancel)
       {
-        CallbackType callback;
-        FutureCallbackType callType;
-
-        Callback(CallbackType callback, FutureCallbackType callType)
-          : callback(callback)
-          , callType(callType)
-        {}
-      };
-      typedef std::vector<Callback> Callbacks;
-      Callbacks                _onResult;
-      ValueType                _value;
-      CancelCallback           _onCancel;
-      boost::function<void (ValueType)> _onDestroyed;
-      FutureCallbackType       _async;
-      qi::Atomic<unsigned int> _promiseCount;
-
-      void clearCallbacks()
-      {
-        _onResult.clear();
-        if (_onCancel)
-        {
-          _onCancel = CancelCallback(PromiseNoop<T>);
-        }
+        _onCancel = CancelCallback(PromiseNoop<T>);
       }
-    };
+    }
 
     template <typename T>
     void waitForFirstHelper(qi::Promise< qi::Future<T> >& prom,

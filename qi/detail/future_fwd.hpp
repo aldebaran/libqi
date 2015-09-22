@@ -840,6 +840,98 @@ namespace qi {
     }
   };
 
+  namespace detail
+  {
+    class FutureBasePrivate;
+    class QI_API FutureBase {
+    public:
+      FutureBase();
+      ~FutureBase();
+
+      FutureState wait(int msecs) const;
+      FutureState wait(qi::Duration duration) const;
+      FutureState wait(qi::SteadyClock::time_point timepoint) const;
+      FutureState state() const;
+      bool isRunning() const;
+      bool isFinished() const;
+      bool isCanceled() const;
+      bool isCancelRequested() const;
+      bool hasError(int msecs) const;
+      bool hasValue(int msecs) const;
+      const std::string &error(int msecs) const;
+      void reportStart();
+
+    protected:
+      void reportValue();
+      void reportError(const std::string &message);
+      void requestCancel();
+      void reportCanceled();
+      boost::recursive_mutex& mutex();
+      void notifyFinish();
+
+    public:
+      FutureBasePrivate *_p;
+    };
+
+
+    //common state shared between a Promise and multiple Futures
+    template <typename T>
+    class FutureBaseTyped : public FutureBase {
+    public:
+      typedef boost::function<void(Promise<T>&)> CancelCallback;
+      typedef typename FutureType<T>::type ValueType;
+      FutureBaseTyped();
+      ~FutureBaseTyped();
+
+      bool isCancelable() const;
+
+      void cancel(qi::Future<T>& future);
+
+      void callCbNotify(qi::Future<T>& future);
+
+      /*
+       * inplace api for promise
+       */
+      void set(qi::Future<T>& future);
+      void setValue(qi::Future<T>& future, const ValueType &value);
+      void setError(qi::Future<T>& future, const std::string &message);
+      void setBroken(qi::Future<T>& future);
+      void setCanceled(qi::Future<T>& future);
+
+      void setOnCancel(qi::Promise<T>& promise, CancelCallback onCancel);
+      void setOnDestroyed(boost::function<void (ValueType)> f);
+
+      void connect(qi::Future<T> future,
+          const boost::function<void (qi::Future<T>&)> &s,
+          FutureCallbackType type);
+
+      const ValueType& value(int msecs) const;
+
+    private:
+      friend class Promise<T>;
+      typedef boost::function<void(qi::Future<T>&)> CallbackType;
+      struct Callback
+      {
+        CallbackType callback;
+        FutureCallbackType callType;
+
+        Callback(CallbackType callback, FutureCallbackType callType)
+          : callback(callback)
+          , callType(callType)
+        {}
+      };
+      typedef std::vector<Callback> Callbacks;
+      Callbacks                _onResult;
+      ValueType                _value;
+      CancelCallback           _onCancel;
+      boost::function<void (ValueType)> _onDestroyed;
+      FutureCallbackType       _async;
+      qi::Atomic<unsigned int> _promiseCount;
+
+      void clearCallbacks();
+    };
+  }
+
   /**
    * \brief Helper function to return a future with the error set.
    * \param error the error message.
