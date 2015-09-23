@@ -416,13 +416,12 @@ namespace qi {
     void connect(FUNCTYPE fun, ARG0 tracked, ...,
                  FutureCallbackType type = FutureCallbackType_Auto);
 #else
-#define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)                 \
-  template <typename AF, typename ARG0 comma ATYPEDECL>                   \
-  inline void connect(const AF& fun, const ARG0& arg0 comma ADECL,        \
+#define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)                \
+  template <typename AF, typename ARG0 comma ATYPEDECL>                  \
+  inline void connect(const AF& fun, const ARG0& arg0 comma ADECL,       \
                       FutureCallbackType type = FutureCallbackType_Auto) \
-  {                                                                       \
-    _connectMaybeActor<ARG0>(                                             \
-        arg0, ::qi::bind<void(Future<T>)>(fun, arg0 comma AUSE), type);   \
+  {                                                                      \
+    this->thenR<void>(type, fun, arg0 comma AUSE);                       \
   }
     QI_GEN(genCall)
 #undef genCall
@@ -489,21 +488,6 @@ namespace qi {
     boost::function<qi::Future<R>(const Arg&)> transformStrandedCallback(
         qi::Strand* strand,
         const boost::function<R(const Arg&)>& cb);
-
-    template <typename ARG0>
-    typename boost::enable_if<
-        boost::is_base_of<Actor, typename detail::Unwrap<ARG0>::type>,
-        void>::type
-        _connectMaybeActor(const ARG0& arg0,
-                           const boost::function<void(const Future<T>&)>& cb,
-                           FutureCallbackType type);
-    template <typename ARG0>
-    typename boost::disable_if<
-        boost::is_base_of<Actor, typename detail::Unwrap<ARG0>::type>,
-        void>::type
-        _connectMaybeActor(const ARG0& arg0,
-                           const boost::function<void(const Future<T>&)>& cb,
-                           FutureCallbackType type);
 
     template <typename R, typename ARG0, typename AF>
     typename boost::enable_if<
