@@ -101,10 +101,8 @@ namespace detail {
 } // namespace detail
 
   template <typename T>
-  template <typename R>
-  inline Future<R> Future<T>::thenR(
-      FutureCallbackType type,
-      const boost::function<R(const Future<T>&)>& func)
+  template <typename R, typename AF>
+  inline Future<R> Future<T>::thenR(FutureCallbackType type, AF&& func)
   {
     qi::Promise<R> promise(
         this->isCancelable()
@@ -112,15 +110,13 @@ namespace detail {
             boost::weak_ptr<detail::FutureBaseTyped<T> >(_p))
         : boost::function<void(qi::Promise<R>)>());
     _p->connect(*this, boost::bind(&detail::continuateThen<T, R>, _1,
-          func, promise), type);
+          std::forward<AF>(func), promise), type);
     return promise.future();
   }
 
   template <typename T>
-  template <typename R>
-  inline Future<R> Future<T>::andThenR(
-      FutureCallbackType type,
-      const boost::function<R(const typename Future<T>::ValueType&)>& func)
+  template <typename R, typename AF>
+  inline Future<R> Future<T>::andThenR(FutureCallbackType type, AF&& func)
   {
     qi::Promise<R> promise(
         this->isCancelable()
@@ -130,7 +126,8 @@ namespace detail {
         // continuateAndThen will abort if cancel is requested
         : boost::function<void(qi::Promise<R>&)>(&qi::PromiseNoop<R>));
     _p->connect(*this, boost::bind(&detail::continuateAndThen<T, R>, _1,
-          func, promise), type);
+          // this cast seems necessary :(
+          boost::function<R(const typename Future<T>::ValueType&)>(std::forward<AF>(func)), promise), type);
     return promise.future();
   }
 

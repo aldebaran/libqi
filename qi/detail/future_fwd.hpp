@@ -319,7 +319,6 @@ namespace qi {
       return _p->isCancelable();
     }
 
-#ifdef DOXYGEN
     /**
      * @brief Execute a callback when the future is finished.
      *
@@ -332,49 +331,29 @@ namespace qi {
      *
      * @return a future that will receive the value returned by the callback or an error if the callback threw.
      */
-    template <typename R>
-    Future<R> thenR(
-        FutureCallbackType type,
-        const boost::function<R(const Future<T>&)>& func, ...);
+    template <typename R, typename AF>
+    Future<R> thenR(FutureCallbackType type, AF&& func);
 
     /**
      * @brief Same as thenR(), but with type defaulted to FutureCallbackType_Auto.
      */
-    template <typename R>
-    Future<R> thenR(
-        const boost::function<R(const Future<T>&)>& func, ...)
+    template <typename R, typename AF>
+    Future<R> thenR(AF&& func)
     {
-      return this->thenR(FutureCallbackType_Auto, func);
-    }
-#else
-    template <typename R>
-    Future<R> thenR(
-        FutureCallbackType type,
-        const boost::function<R(const Future<T>&)>& func);
-
-    template <typename R>
-    Future<R> thenR(
-        const boost::function<R(const Future<T>&)>& func)
-    {
-      return this->thenR(FutureCallbackType_Auto, func);
+      return this->thenR(FutureCallbackType_Auto, std::forward<AF>(func));
     }
 
-#define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)                    \
-  template <typename R, typename AF, typename ARG0 comma ATYPEDECL>          \
-  Future<R> thenR(const AF& func, const ARG0& arg0 comma ADECL)              \
-  {                                                                          \
-    return this->thenR<R>(FutureCallbackType_Auto, func, arg0 comma AUSE);  \
-  }                                                                          \
-  template <typename R, typename AF, typename ARG0 comma ATYPEDECL>          \
-  Future<R> thenR(FutureCallbackType type, const AF& func,                   \
-                  const ARG0& arg0 comma ADECL)                              \
-  {                                                                          \
-    return _thenMaybeActor<R, ARG0>(                                         \
-        arg0, ::qi::bind<R(const Future<T>&)>(func, arg0 comma AUSE), type); \
-  }
-    QI_GEN(genCall)
-#undef genCall
-#endif
+    template <typename R, typename AF, typename Arg0, typename... Args>
+    Future<R> thenR(AF&& func, Arg0&& arg0, Args&&... args)
+    {
+      return this->thenR<R>(FutureCallbackType_Auto, std::forward<AF>(func), std::forward<Arg0>(arg0), std::forward<Args>(args)...);
+    }
+    template <typename R, typename AF, typename Arg0, typename... Args>
+    Future<R> thenR(FutureCallbackType type, AF&& func, Arg0&& arg0, Args&&... args)
+    {
+      return _thenMaybeActor<R, Arg0>(
+          arg0, ::qi::bind<R(const Future<T>&)>(std::forward<AF>(func), arg0, std::forward<Args>(args)...), type);
+    }
 
     /**
      * @brief Same as thenR(), but the callback is called only if this future finishes with a value.
@@ -386,11 +365,8 @@ namespace qi {
      *
      * @remark Variadic variants of this function have not been implemented yet, waiting for C++11.
      */
-    // TODO do variadic ones when we are C++11 TT_TT
-    template <typename R>
-    Future<R> andThenR(
-        FutureCallbackType type,
-        const boost::function<R(const typename Future<T>::ValueType&)>& func);
+    template <typename R, typename AF>
+    Future<R> andThenR(FutureCallbackType type, AF&& func);
 
     /**
      * \brief Get a functor that will cancel the future.
@@ -405,11 +381,10 @@ namespace qi {
     /**
      * @brief Same as andThenR(), but with type defaulted to FutureCallbackType_Auto.
      */
-    template <typename R>
-    Future<R> andThenR(
-        const boost::function<R(const typename Future<T>::ValueType&)>& func)
+    template <typename R, typename AF>
+    Future<R> andThenR(AF&& func)
     {
-      return this->andThenR(FutureCallbackType_Auto, func);
+      return this->andThenR<R>(FutureCallbackType_Auto, std::forward<AF>(func));
     }
 
   public:
