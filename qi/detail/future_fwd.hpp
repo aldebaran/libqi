@@ -505,14 +505,6 @@ namespace qi {
                            const boost::function<void(const Future<T>&)>& cb,
                            FutureCallbackType type);
 
-    template <typename R>
-    static void _continuate(const Future<T>& future,
-        const boost::function<R(const Future<T>&)>& func,
-        Promise<R>& promise);
-
-    static void _cancelContinuation(const Future<T>& future,
-        Promise<T>& promise);
-
     template <typename R, typename ARG0, typename AF>
     typename boost::enable_if<
         boost::is_base_of<Actor, typename detail::Unwrap<ARG0>::type>,
