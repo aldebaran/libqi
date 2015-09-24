@@ -42,9 +42,9 @@ else()
 endif()
 
 # Remove this line to use QT if usable
-set(WITH_QT_QTCORE OFF)
+set(WITH_QT5_CORE OFF)
 
-qi_add_optional_package(QT_QTCORE "Enable QT")
+qi_add_optional_package(QT5_CORE "Enable QT")
 qi_add_optional_package(BOOST_LOCALE "Enable usage of boost::locale")
 if(WITH_BOOST_LOCALE)
   add_definitions(" -DWITH_BOOST_LOCALE ")
@@ -383,8 +383,8 @@ qi_create_lib(qi SHARED
               DEPENDS ASSUME_SYSTEM_INCLUDE BOOST BOOST_ATOMIC BOOST_DATE_TIME BOOST_THREAD BOOST_CHRONO BOOST_FILESYSTEM BOOST_LOCALE BOOST_REGEX BOOST_PROGRAM_OPTIONS ${_ssldeps}
               SUBMODULE ${_tp_qi})
 
-if (WITH_QT_QTCORE)
-  qi_use_lib(qi QT_QTCORE)
+if (WITH_QT5_CORE)
+  qi_use_lib(qi QT5_CORE)
 endif()
 if(WITH_BOOST_LOCALE)
   qi_use_lib(qi BOOST_LOCALE)
