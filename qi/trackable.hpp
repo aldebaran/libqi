@@ -102,7 +102,7 @@ namespace qi
    *   - Else throws qi::PointerLockException
    */
   template<typename F, typename ARG0>
-  boost::function<F> track(const boost::function<F>& f, const ARG0& arg0);
+  boost::function<F> track(boost::function<F> f, const ARG0& arg0);
   /**
    * \brief Wrap given function f with a tracking check on arg0, which must
    *        be a weak pointer or a Trackable instance.
@@ -111,8 +111,7 @@ namespace qi
    *   - Else calls onFail
    */
   template<typename F, typename ARG0>
-  boost::function<F> trackWithFallback(boost::function<void()> onFail,
-      const boost::function<F>& f, const ARG0& arg0);
+  boost::function<F> trackWithFallback(boost::function<void()> onFail, boost::function<F> f, const ARG0& arg0);
 }
 
 # include <qi/detail/trackable.hxx>

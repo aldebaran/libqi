@@ -244,23 +244,39 @@ namespace qi
                             std::forward<Args>(args)...);
   }
 
-  template<typename F, typename ARG0>
-  boost::function<F> track(const boost::function<F>& f, const ARG0& arg0)
+  template <typename F, typename Arg0>
+  auto trackWithFallback(boost::function<void()> onFail, F&& f, const Arg0& arg0)
+      -> decltype(detail::BindTransform<Arg0>::wrap(arg0, std::forward<F>(f), std::move(onFail)))
   {
-    using Transform = detail::BindTransform<ARG0>;
-    return Transform::wrap(arg0, f, detail::throwPointerLockException);
+    return detail::BindTransform<Arg0>::wrap(arg0, std::forward<F>(f), std::move(onFail));
   }
-  template<typename F, typename ARG0>
+  template <typename F, typename Arg0>
+  auto track(F&& f, const Arg0& arg0)
+      -> decltype(trackWithFallback(detail::throwPointerLockException, std::forward<F>(f), arg0))
+  {
+    return trackWithFallback(detail::throwPointerLockException, std::forward<F>(f), arg0);
+  }
+  template <typename F, typename Arg0>
+  auto trackSilent(F&& f, const Arg0& arg0) -> decltype(trackWithFallback({}, std::forward<F>(f), arg0))
+  {
+    return trackWithFallback({}, std::forward<F>(f), arg0);
+  }
+
+  template<typename F, typename Arg0>
   boost::function<F> trackWithFallback(boost::function<void()> onFail,
-      const boost::function<F>& f, const ARG0& arg0)
+      boost::function<F> f, const Arg0& arg0)
   {
-    using Transform = detail::BindTransform<ARG0>;
-    return Transform::wrap(arg0, f, onFail);
+    return detail::BindTransform<Arg0>::wrap(arg0, std::move(f), std::move(onFail));
   }
-  template<typename F, typename ARG0>
-  boost::function<F> trackSilent(const boost::function<F>& f, const ARG0& arg0)
+  template<typename F, typename Arg0>
+  boost::function<F> trackSilent(boost::function<F> f, const Arg0& arg0)
   {
-    return trackWithFallback<F, ARG0>(boost::function<void()>(), f, arg0);
+    return trackWithFallback<F, Arg0>({}, std::move(f), arg0);
+  }
+  template<typename F, typename Arg0>
+  boost::function<F> track(boost::function<F> f, const Arg0& arg0)
+  {
+    return trackWithFallback<F, Arg0>(detail::throwPointerLockException, std::move(f), arg0);
   }
 }
 
