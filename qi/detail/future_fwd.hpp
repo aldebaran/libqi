@@ -428,13 +428,7 @@ namespace qi {
 #endif
 
     inline void connectWithStrand(qi::Strand* strand,
-        const boost::function<void(const Future<T>&)>& cb)
-    {
-      _p->connect(
-          *this,
-          transformStrandedCallback(strand, cb),
-          FutureCallbackType_Sync);
-    }
+        const boost::function<void(const Future<T>&)>& cb);
 
     // Our companion library libqitype requires a connect with same signature for all instantiations
     inline void _connect(const boost::function<void()>& s)
@@ -478,16 +472,6 @@ namespace qi {
     {
       _p->setOnDestroyed(cb);
     }
-
-    template <typename Arg, typename R>
-    static qi::Future<R> binder(
-        const boost::function<qi::Future<void>(const boost::function<void()>&)>& poster,
-        const boost::function<R(const Arg&)>& callback, const Arg& fut);
-
-    template <typename Arg, typename R>
-    boost::function<qi::Future<R>(const Arg&)> transformStrandedCallback(
-        qi::Strand* strand,
-        const boost::function<R(const Arg&)>& cb);
 
     template <typename R, typename ARG0, typename AF>
     typename boost::enable_if<

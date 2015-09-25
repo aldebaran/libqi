@@ -132,33 +132,6 @@ namespace detail {
   }
 
   template <typename T>
-  template <typename Arg, typename R>
-  inline qi::Future<R> Future<T>::binder(
-      const boost::function<qi::Future<void>(const boost::function<void()>&)>& poster,
-      const boost::function<R(const Arg&)>& callback, const Arg& fut)
-  {
-    qi::Promise<R> prom;
-    poster(boost::bind(detail::continuateThen<T, R>, fut, callback, prom));
-    return prom.future();
-  }
-
-  template <typename T>
-  template <typename Arg, typename R>
-  inline boost::function<qi::Future<R>(const Arg&)>
-      Future<T>::transformStrandedCallback(
-          qi::Strand* strand,
-          const boost::function<R(const Arg&)>& cb)
-  {
-    return boost::bind(
-        &Future<T>::binder<Arg, R>,
-        boost::function<qi::Future<void>(const boost::function<void()>&)>(
-          boost::bind(
-            static_cast<qi::Future<void>(Strand::*)(const boost::function<void()>&, qi::Duration delay)>(&qi::Strand::async),
-            strand, _1, qi::Duration(0))),
-        cb, _1);
-  }
-
-  template <typename T>
   template <typename R, typename ARG0, typename AF>
   typename boost::enable_if<
       boost::is_base_of<Actor, typename detail::Unwrap<ARG0>::type>,
@@ -167,10 +140,8 @@ namespace detail {
                          const AF& cb,
                          FutureCallbackType type)
   {
-    return thenR<qi::Future<R> >(FutureCallbackType_Sync, qi::trackWithFallback(
-          boost::function<void()>(),
-          transformStrandedCallback<qi::Future<T>, R>(
-            detail::Unwrap<ARG0>::unwrap(arg0)->strand(), cb),
+    return thenR<qi::Future<R> >(FutureCallbackType_Sync, qi::trackSilent(
+          detail::Unwrap<ARG0>::unwrap(arg0)->strand()->schedulerFor(cb),
           arg0)).unwrap();
   }
   template <typename T>
@@ -184,6 +155,17 @@ namespace detail {
   {
     return thenR<R>(type, cb);
   }
+
+  template <typename T>
+  void Future<T>::connectWithStrand(qi::Strand* strand,
+      const boost::function<void(const Future<T>&)>& cb)
+  {
+    _p->connect(
+        *this,
+        strand->schedulerFor(cb),
+        FutureCallbackType_Sync);
+  }
+
 
   template <typename T>
   void Future<T>::_weakCancelCb(const boost::weak_ptr<detail::FutureBaseTyped<T> >& wfuture)
@@ -267,7 +249,7 @@ namespace detail {
           async = _onResult[i].callType == FutureCallbackType_Async;
 
         if (async)
-          getEventLoop()->post(boost::bind(_onResult[i].callback, future));
+          getEventLoop()->post2(boost::bind(_onResult[i].callback, future));
         else
           try
           {
@@ -379,7 +361,7 @@ namespace detail {
         if (type != FutureCallbackType_Auto)
           async = type != FutureCallbackType_Sync;
         if (async)
-          getEventLoop()->post(boost::bind(s, future));
+          getEventLoop()->post2(boost::bind(s, future));
         else
         {
           try
