@@ -51,7 +51,7 @@ TEST(TestStrand, StrandCancel)
 {
   qi::Strand strand(*qi::getEventLoop());
   // cancel before scheduling
-  qi::Future<void> f1 = strand.async(fail, qi::MilliSeconds(100));
+  qi::Future<void> f1 = strand.async(fail, qi::Seconds(1000));
   f1.cancel();
   ASSERT_EQ(qi::FutureState_Canceled, f1.wait());
 }

@@ -67,8 +67,7 @@ namespace qi {
     template <typename T> class FutureBaseTyped;
 
     template<typename FT>
-    void futureCancelAdapter(
-                             boost::weak_ptr<detail::FutureBaseTyped<FT> > wf);
+    void futureCancelAdapter(boost::weak_ptr<detail::FutureBaseTyped<FT> > wf);
   }
 
   /** State of the future.
@@ -90,6 +89,11 @@ namespace qi {
   enum FutureTimeout {
     FutureTimeout_Infinite = ((int) 0x7fffffff),
     FutureTimeout_None     = 0,
+  };
+
+  enum AdaptFutureOption {
+    AdaptFutureOption_None = 0,
+    AdaptFutureOption_ForwardCancel = 1,
   };
 
   typedef void* FutureUniqueId;
@@ -452,10 +456,10 @@ namespace qi {
     template<typename R>
     friend void adaptFutureUnwrap(Future<AnyReference>& f, Promise<R>& p);
     template<typename FT, typename PT>
-    friend void adaptFuture(const Future<FT>& f, Promise<PT>& p);
+    friend void adaptFuture(const Future<FT>& f, Promise<PT>& p, AdaptFutureOption option);
     template<typename FT, typename PT, typename CONV>
     friend void adaptFuture(const Future<FT>& f, Promise<PT>& p,
-                            CONV converter);
+                            CONV converter, AdaptFutureOption option);
     template<typename R>
     friend void adaptFuture(Future<AnyReference>& f, Promise<R>& p);
 
@@ -756,10 +760,10 @@ namespace qi {
     template<typename R>
     friend void adaptFutureUnwrap(Future<AnyReference>& f, Promise<R>& p);
     template<typename FT, typename PT>
-    friend void adaptFuture(const Future<FT>& f, Promise<PT>& p);
+    friend void adaptFuture(const Future<FT>& f, Promise<PT>& p, AdaptFutureOption option);
     template<typename FT, typename PT, typename CONV>
     friend void adaptFuture(const Future<FT>& f, Promise<PT>& p,
-                            CONV converter);
+                            CONV converter, AdaptFutureOption option);
     template<typename R>
     friend void adaptFuture(Future<AnyReference>& f, Promise<R>& p);
 
@@ -901,14 +905,15 @@ namespace qi {
    * Valued state is bounced through FutureValueConverter<FT, PT>::convert()
    */
   template<typename FT, typename PT>
-  void adaptFuture(const Future<FT>& f, Promise<PT>& p);
+  void adaptFuture(const Future<FT>& f, Promise<PT>& p, AdaptFutureOption option = AdaptFutureOption_ForwardCancel);
 
   template<typename R>
   void adaptFuture(Future<AnyReference>& f, Promise<R>& p);
 
   /// Similar to adaptFuture(f, p) but with a custom converter
   template<typename FT, typename PT, typename CONV>
-  void adaptFuture(const Future<FT>& f, Promise<PT>& p, CONV converter);
+  void adaptFuture(const Future<FT>& f, Promise<PT>& p, CONV converter,
+      AdaptFutureOption option = AdaptFutureOption_ForwardCancel);
 
   /// \copydoc qi::Future<T>::makeCanceler
   template <typename T>
