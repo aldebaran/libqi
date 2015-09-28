@@ -83,7 +83,6 @@ template <typename T>
 class DelayedPromise: public Promise<T>
 {
 public:
-  DelayedPromise() {}
   void setup(boost::function<void (qi::Promise<T>)> cancelCallback, FutureCallbackType async = FutureCallbackType_Async)
   {
     Promise<T>::setup(cancelCallback, async);
@@ -171,14 +170,33 @@ void ExecutionContext::post2(F&& callback)
   postImpl(std::forward<F>(callback));
 }
 
+template <typename ReturnType, typename Callback>
+struct ToPost
+{
+  detail::DelayedPromise<ReturnType> promise;
+  Callback callback;
+
+  ToPost(Callback&& cb) :
+    callback(cb)
+  {}
+  ToPost(const Callback& cb) :
+    callback(cb)
+  {}
+
+  void operator()()
+  {
+    detail::callAndSet<ReturnType>(std::move(promise), std::move(callback));
+  }
+};
+
 template <typename F>
 auto ExecutionContext::asyncAt(F&& callback, qi::SteadyClockTimePoint tp) -> qi::Future<decltype(callback())>
 {
   using ReturnType = decltype(callback());
 
-  detail::DelayedPromise<ReturnType> promise;
-  qi::Future<void> f =
-      asyncAtImpl(std::move(boost::bind(detail::callAndSet<ReturnType>, promise, std::forward<F>(callback))), tp);
+  ToPost<ReturnType, typename std::decay<F>::type> topost(std::move(callback));
+  auto promise = topost.promise;
+  qi::Future<void> f = asyncAtImpl(std::move(topost), tp);
   promise.setup(boost::bind(&detail::futureCancelAdapter<void>,
                             boost::weak_ptr<detail::FutureBaseTyped<void> >(f.impl())),
                 FutureCallbackType_Sync);
@@ -191,9 +209,9 @@ auto ExecutionContext::asyncDelay(F&& callback, qi::Duration delay) -> qi::Futur
 {
   using ReturnType = decltype(callback());
 
-  detail::DelayedPromise<ReturnType> promise;
-  qi::Future<void> f =
-      asyncDelayImpl(std::move(boost::bind(detail::callAndSet<ReturnType>, promise, std::forward<F>(callback))), delay);
+  ToPost<ReturnType, typename std::decay<F>::type> topost(std::move(callback));
+  auto promise = topost.promise;
+  qi::Future<void> f = asyncDelayImpl(std::move(topost), delay);
   promise.setup(boost::bind(&detail::futureCancelAdapter<void>,
                             boost::weak_ptr<detail::FutureBaseTyped<void> >(f.impl())),
                 FutureCallbackType_Sync);

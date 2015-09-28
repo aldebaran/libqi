@@ -276,16 +276,16 @@ namespace qi
       i->second.second, callType, context, method, i->second.first, p);
   }
 
-  static void setPropertyValue(PropertyBase* property, AnyValue value)
-  {
-    property->setValue(value.asReference());
-  }
-
   qi::Future<void> DynamicObject::metaSetProperty(AnyObject context, unsigned int id, AnyValue val)
   {
     ExecutionContext* ec = _p->getExecutionContext(context, MetaCallType_Auto);
     if (ec)
-      return ec->async(boost::bind(&setPropertyValue, property(id), val));
+    {
+      auto prop = property(id);
+      return ec->async2([prop, val]{
+            return prop->setValue(val.asReference()).async();
+          }).unwrap();
+    }
     else
     {
       try
@@ -314,7 +314,9 @@ namespace qi
 
     ExecutionContext* ec = _p->getExecutionContext(context, MetaCallType_Auto);
     if (ec)
-      return ec->async<AnyValue>(boost::bind(&PropertyBase::value, prop));
+      return ec->async2([prop] {
+            return prop->value().async();
+          }).unwrap();
     else
       return qi::Future<AnyValue>(prop->value());
   }

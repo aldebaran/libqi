@@ -32,11 +32,11 @@ TEST(TestStrand, StrandSimple)
 
   qi::Strand strand(*qi::getEventLoop());
   int i = 0;
-  qi::Future<void> f1 = strand.async(boost::bind<void>(&setValueWait,
+  qi::Future<void> f1 = strand.async2(boost::bind<void>(&setValueWait,
         boost::ref(mutex), 100, boost::ref(i), 1));
   qi::os::msleep(5);
   EXPECT_FALSE(f1.isFinished());
-  qi::Future<void> f2 = strand.async(boost::bind<void>(&setValueWait,
+  qi::Future<void> f2 = strand.async2(boost::bind<void>(&setValueWait,
         boost::ref(mutex), 0, boost::ref(i), 2));
   qi::os::msleep(200);
   EXPECT_EQ(i, 2);
@@ -51,7 +51,7 @@ TEST(TestStrand, StrandCancel)
 {
   qi::Strand strand(*qi::getEventLoop());
   // cancel before scheduling
-  qi::Future<void> f1 = strand.async(fail, qi::Seconds(1000));
+  qi::Future<void> f1 = strand.asyncDelay(fail, qi::Seconds(1000));
   f1.cancel();
   ASSERT_EQ(qi::FutureState_Canceled, f1.wait());
 }
@@ -60,8 +60,8 @@ TEST(TestStrand, StrandCancelScheduled)
 {
   qi::Strand strand(*qi::getEventLoop());
   // cancel before scheduling
-  qi::Future<void> f1 = strand.async(boost::bind(qi::os::msleep, 100));
-  qi::Future<void> f2 = strand.async(fail);
+  qi::Future<void> f1 = strand.async2(boost::bind(qi::os::msleep, 100));
+  qi::Future<void> f2 = strand.async2(fail);
   qi::os::msleep(30);
   f2.cancel();
   ASSERT_EQ(qi::FutureState_FinishedWithValue, f1.wait());
@@ -89,10 +89,10 @@ TEST(TestStrand, AggressiveCancel)
   boost::atomic<unsigned int> i(0);
   for (unsigned int j = 0; j < STRAND_NB_TRIES; ++j)
   {
-    qi::Future<void> f1 = strand.async(boost::bind<void>(&increment,
+    qi::Future<void> f1 = strand.async2(boost::bind<void>(&increment,
           boost::ref(mutex), 1, boost::ref(i)));
     futures.push_back(f1);
-    f1 = strand.async(boost::bind<void>(&increment,
+    f1 = strand.async2(boost::bind<void>(&increment,
           boost::ref(mutex), 50, boost::ref(i)));
     futures.push_back(f1);
   }
@@ -120,7 +120,7 @@ TEST(TestStrand, StrandDestruction)
     qi::Strand strand(*qi::getEventLoop());
     for (unsigned int j = 0; j < STRAND_NB_TRIES; ++j)
     {
-      qi::Future<void> f1 = strand.async(boost::bind<void>(&increment,
+      qi::Future<void> f1 = strand.async2(boost::bind<void>(&increment,
             boost::ref(mutex), 1, boost::ref(i)));
     }
   }
@@ -138,10 +138,10 @@ TEST(TestStrand, StrandDestructionWithCancel)
     qi::Strand strand(*qi::getEventLoop());
     for (unsigned int j = 0; j < STRAND_NB_TRIES; ++j)
     {
-      qi::Future<void> f1 = strand.async(boost::bind<void>(&increment,
+      qi::Future<void> f1 = strand.async2(boost::bind<void>(&increment,
             boost::ref(mutex), 1, boost::ref(i)));
       futures.push_back(f1);
-      f1 = strand.async(boost::bind<void>(&increment,
+      f1 = strand.async2(boost::bind<void>(&increment,
             boost::ref(mutex), 50, boost::ref(i)));
       futures.push_back(f1);
     }
@@ -169,7 +169,7 @@ static void deleteStrand(qi::Strand* strand)
 TEST(TestStrand, StrandDestructionBeforeEnd)
 {
   qi::Strand* strand = new qi::Strand(*qi::getEventLoop());
-  qi::Future<void> f = strand->async(boost::bind(deleteStrand, strand));
+  qi::Future<void> f = strand->async2(boost::bind(deleteStrand, strand));
   f.value();
 }
 
@@ -262,7 +262,7 @@ TEST(TestStrand, AllFutureSignalPropertyPeriodicTaskAsyncCallTypeErased)
     for (int i = 0; i < 50; ++i)
       signal.connect(&MyActor::f, obj.get(), _1, finished);
     for (int i = 0; i < 50; ++i)
-      aobj.connect("sig", obj->strand()->schedulerFor<void(int)>(&MyActor::f, obj, _1, finished));
+      aobj.connect("sig", boost::function<void(int)>(obj->strand()->schedulerFor(boost::bind(&MyActor::f, obj, _1, finished))));
 
     per.start();
     for (int i = 0; i < 25; ++i)

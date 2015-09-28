@@ -230,7 +230,9 @@ qi::Future<AnyValue> StaticObjectTypeBase::property(void* instance, AnyObject co
   }
   ExecutionContext* ec = getExecutionContext(instance, context);
   if (ec)
-    return ec->async<AnyValue>(boost::bind(&PropertyBase::value, p));
+    return ec->async2([p]{
+          return p->value().async();
+        });
   else
     return qi::Future<AnyValue>(p->value());
 }
@@ -251,7 +253,7 @@ qi::Future<void> StaticObjectTypeBase::setProperty(void* instance, AnyObject con
   qiLogDebug() << "SetProperty " << id << " " << encodeJSON(value);
   ExecutionContext* ec = getExecutionContext(instance, context);
   if (ec)
-    return ec->async(boost::bind(&setPropertyValue, p, value));
+    return ec->async2(boost::bind(&setPropertyValue, p, value));
   else
   {
     try

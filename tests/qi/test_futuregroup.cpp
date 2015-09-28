@@ -61,7 +61,7 @@ qi::Future<void> launchTask(TaskFunc task)
 {
   qi::Promise<void> promise(qi::PromiseNoop<void>);
   qi::Future<void> future = promise.future();
-  qi::getEventLoop()->post(boost::bind(task, promise));
+  qi::getEventLoop()->post2(boost::bind(task, promise));
   return future;
 }
 

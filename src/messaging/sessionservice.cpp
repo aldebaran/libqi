@@ -127,7 +127,7 @@ namespace qi {
     //delete later as a workaround.
     //At this point the RemoteObject can be either in remote (RemoteObject*)
     //or in sr->promise (promise<AnyObject>), so async them both
-    qi::getEventLoop()->post(boost::bind(&deleteLater, remote, sr));
+    qi::getEventLoop()->post2(boost::bind(&deleteLater, remote, sr));
   }
 
   static void sendCapabilities(TransportSocketPtr sock)

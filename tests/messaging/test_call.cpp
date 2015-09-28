@@ -567,7 +567,7 @@ TEST(TestCall, DeadLock)
   // From the object event loop of process 'server', call a method from
   // object in client, which will call back a method in server
   qiLogDebug() << "TEST: go async servicecall_addone";
-  qi::getEventLoop()->async(
+  qi::getEventLoop()->async2(
     boost::bind(&servicecall_addone, boost::ref(prom), p.server()));
 
   for (unsigned i=0; i<20 && !prom.future().isFinished(); ++i)

@@ -92,9 +92,19 @@ namespace qi
      */
     template<typename R>
     QI_API_DEPRECATED Future<R> async(const boost::function<R()>& callback, uint64_t usDelay=0);
-    QI_API_DEPRECATED Future<void> async(const boost::function<void ()>& callback, uint64_t usDelay=0);
-    QI_API_DEPRECATED Future<void> async(const boost::function<void ()>& callback, qi::Duration delay) override;
-    QI_API_DEPRECATED Future<void> async(const boost::function<void ()>& callback, qi::SteadyClockTimePoint timepoint) override;
+    QI_API_DEPRECATED Future<void> async(const boost::function<void ()>& callback, uint64_t usDelay=0)
+    {
+      return asyncDelayImpl(callback, qi::MicroSeconds(usDelay));
+    }
+    QI_API_DEPRECATED Future<void> async(const boost::function<void ()>& callback, qi::Duration delay) override
+    {
+      return asyncDelayImpl(callback, delay);
+    }
+    QI_API_DEPRECATED Future<void> async(
+        const boost::function<void ()>& callback, qi::SteadyClockTimePoint timepoint) override
+    {
+      return asyncAt(callback, timepoint);
+    }
 
     template <typename R>
     QI_API_DEPRECATED typename boost::enable_if_c<!boost::is_same<R, void>::value,
@@ -118,12 +128,18 @@ namespace qi
      * \param callback Callback to be called.
      * \param usDelay Delay before call the callback in microsecond.
      */
-    QI_API_DEPRECATED void post(const boost::function<void ()>& callback, uint64_t usDelay);
-    QI_API_DEPRECATED void post(const boost::function<void ()>& callback, qi::Duration delay);
+    QI_API_DEPRECATED void post(const boost::function<void ()>& callback, uint64_t usDelay)
+    {
+      postDelayImpl(callback, qi::MicroSeconds(usDelay));
+    }
+    QI_API_DEPRECATED void post(const boost::function<void ()>& callback, qi::Duration delay)
+    {
+      postDelayImpl(callback, delay);
+    }
     QI_API_DEPRECATED void post(const boost::function<void ()>& callback, qi::SteadyClockTimePoint timepoint);
     QI_API_DEPRECATED void post(const boost::function<void ()>& callback) override
     {
-      return post(callback, 0);
+      return postImpl(callback);
     }
     // END DEPRECATED
 
@@ -137,21 +153,17 @@ namespace qi
      */
     Future<void> monitorEventLoop(EventLoop* helper, uint64_t maxUsDelay);
 
+  private:
     EventLoopPrivate *_p;
     std::string       _name;
 
     void postImpl(boost::function<void()> callback) override
     {
-      post(callback);
+      postDelayImpl(callback, qi::Duration(0));
     }
-    qi::Future<void> asyncAtImpl(boost::function<void()> cb, qi::SteadyClockTimePoint tp) override
-    {
-      return async(cb, tp);
-    }
-    qi::Future<void> asyncDelayImpl(boost::function<void()> cb, qi::Duration delay) override
-    {
-      return async(cb, delay);
-    }
+    void postDelayImpl(boost::function<void()> callback, qi::Duration delay);
+    qi::Future<void> asyncAtImpl(boost::function<void()> cb, qi::SteadyClockTimePoint tp) override;
+    qi::Future<void> asyncDelayImpl(boost::function<void()> cb, qi::Duration delay) override;
   };
 
   /// \brief Return the global eventloop, created on demand on first call.
@@ -188,19 +200,19 @@ namespace qi
   /// \copydoc qi::EventLoop::async().
   /// \deprecated use qi::async with qi::Duration
   template<typename R>
-  inline Future<R> async(boost::function<R()> callback, uint64_t usDelay=0)
+  QI_API_DEPRECATED inline Future<R> async(boost::function<R()> callback, uint64_t usDelay)
   {
-    return qi::getEventLoop()->async(callback, usDelay);
+    return qi::getEventLoop()->asyncDelay(callback, qi::MicroSeconds(usDelay));
   }
   template<typename R>
-  inline Future<R> async(boost::function<R()> callback, qi::Duration delay)
+  inline Future<R> async(boost::function<R()> callback, qi::Duration delay = qi::Duration(0))
   {
-    return qi::getEventLoop()->async(callback, delay);
+    return qi::getEventLoop()->asyncDelay(callback, delay);
   }
   template<typename R>
   inline Future<R> async(boost::function<R()> callback, qi::SteadyClockTimePoint timepoint)
   {
-    return qi::getEventLoop()->async(callback, timepoint);
+    return qi::getEventLoop()->asyncAt(callback, timepoint);
   }
 
 #ifdef DOXYGEN

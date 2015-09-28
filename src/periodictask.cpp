@@ -96,11 +96,8 @@ namespace qi
   void PeriodicTask::setStrand(qi::Strand* strand)
   {
     if (strand)
-      _p->_scheduleCallback = boost::bind<qi::Future<void> >(
-              static_cast<qi::Future<void>(qi::Strand::*)(const Callback&,
-                qi::Duration)>(
-                  &qi::Strand::async),
-              strand, _1, _2);
+      _p->_scheduleCallback = boost::bind(
+          &qi::Strand::asyncDelay<const Callback&>, strand, _1, _2);
     else
       _p->_scheduleCallback = ScheduleCallback();
   }
@@ -219,7 +216,7 @@ namespace qi
     if (_scheduleCallback)
       _task = _scheduleCallback(boost::bind(&PeriodicTaskPrivate::_wrap, shared_from_this()), delay);
     else
-      _task = getEventLoop()->async(boost::bind(&PeriodicTaskPrivate::_wrap, shared_from_this()), delay);
+      _task = getEventLoop()->asyncDelay(boost::bind(&PeriodicTaskPrivate::_wrap, shared_from_this()), delay);
     _state = TaskState::Scheduled;
     _task.connect(boost::bind(
           &PeriodicTaskPrivate::_onTaskFinished, shared_from_this(), _1));

@@ -471,13 +471,7 @@ namespace qi {
     return _p->nativeHandle();
   }
 
-  void EventLoop::post(const boost::function<void ()>& callback,
-      uint64_t usDelay)
-  {
-    post(callback, qi::MicroSeconds(usDelay));
-  }
-
-  void EventLoop::post(const boost::function<void ()>& callback,
+  void EventLoop::postDelayImpl(boost::function<void ()> callback,
       qi::Duration delay)
   {
     qiLogDebug() << this << " EventLoop post " << &callback;
@@ -495,27 +489,13 @@ namespace qi {
     qiLogDebug() << this << " EventLoop post done " << &callback;
   }
 
-  qi::Future<void>
-  EventLoop::async(
-    const boost::function<void ()>& callback,
-    uint64_t usDelay)
-  {
-    return async(callback, qi::MicroSeconds(usDelay));
-  }
-
-  qi::Future<void>
-  EventLoop::async(
-    const boost::function<void ()>& callback,
-    qi::Duration delay)
+  qi::Future<void> EventLoop::asyncDelayImpl(boost::function<void()> callback, qi::Duration delay)
   {
     CHECK_STARTED;
     return _p->asyncCall(delay, callback);
   }
 
-  qi::Future<void>
-  EventLoop::async(
-    const boost::function<void ()>& callback,
-    qi::SteadyClockTimePoint timepoint)
+  qi::Future<void> EventLoop::asyncAtImpl(boost::function<void()> callback, qi::SteadyClockTimePoint timepoint)
   {
     CHECK_STARTED;
     return _p->asyncCall(timepoint, callback);
@@ -593,7 +573,7 @@ namespace qi {
         qiLogDebug() << "Long ping " << pingDelay;
       // Wait a bit before pinging againg
       //qiLogDebug("qi.EventLoop") << os::ustime() << " MON delay " << ctx->maxDelay;
-      ctx->helper->async(boost::bind(&monitor_ping, ctx), ctx->maxDelay*5);
+      ctx->helper->asyncDelay(boost::bind(&monitor_ping, ctx), qi::MicroSeconds(ctx->maxDelay*5));
     }
     else
     { // Delay between pings reached, ping again
@@ -601,8 +581,8 @@ namespace qi {
       ctx->isFired = true;
       // Start monitor async first, or the ping async can trigger before the
       // monitor async is setup
-      ctx->mon = ctx->helper->async(boost::bind(&monitor_pingtimeout, ctx), ctx->maxDelay);
-      ctx->target->post(boost::bind(&monitor_ping, ctx));
+      ctx->mon = ctx->helper->asyncDelay(boost::bind(&monitor_pingtimeout, ctx), qi::MicroSeconds(ctx->maxDelay));
+      ctx->target->post2(boost::bind(&monitor_ping, ctx));
       assert(ctx->mon.isCancelable());
     }
   }

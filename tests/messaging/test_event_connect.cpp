@@ -89,7 +89,7 @@ void testDelete(bool afirst, bool disconnectFirst, qi::Promise<void> end)
     end.setValue(0);
     return;
   }
-  qi::getEventLoop()->post(
+  qi::getEventLoop()->post2(
     boost::bind(&testDelete, !!((int)next/2), !!((int)next%2), end));
 }
 
@@ -97,7 +97,7 @@ TEST(TestObject, Destruction)
 {
   qi::Promise<void> end;
   completed = 0;
-  qi::getEventLoop()->post(
+  qi::getEventLoop()->post2(
     boost::bind(&testDelete, false, false, end));
   end.future().wait();
 }

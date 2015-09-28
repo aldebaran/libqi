@@ -88,7 +88,7 @@ Future<void> StrandPrivate::asyncAtImpl(boost::function<void()> cb, qi::SteadyCl
     qi::Promise<void>(boost::bind(&StrandPrivate::cancel, this, cbStruct));
   qiLogDebug() << "Scheduling job id " << cbStruct->id
     << " at " << qi::to_string(tp);
-  cbStruct->asyncFuture = _eventLoop.async(boost::bind(
+  cbStruct->asyncFuture = _eventLoop.asyncAt(boost::bind(
         &StrandPrivate::enqueue, this, cbStruct),
       tp);
   return cbStruct->promise.future();
@@ -102,7 +102,7 @@ Future<void> StrandPrivate::asyncDelayImpl(boost::function<void()> cb, qi::Durat
   qiLogDebug() << "Scheduling job id " << cbStruct->id
     << " in " << qi::to_string(delay);
   if (delay.count())
-    cbStruct->asyncFuture = _eventLoop.async(boost::bind(
+    cbStruct->asyncFuture = _eventLoop.asyncDelay(boost::bind(
           &StrandPrivate::enqueue, this, cbStruct),
         delay);
   else
@@ -136,7 +136,7 @@ void StrandPrivate::enqueue(boost::shared_ptr<Callback> cbStruct)
   if (shouldschedule)
   {
     qiLogDebug() << "StrandPrivate::process was not scheduled, doing it";
-    _eventLoop.async(boost::bind(&StrandPrivate::process, shared_from_this()));
+    _eventLoop.async2(boost::bind(&StrandPrivate::process, shared_from_this()));
   }
 }
 
@@ -204,8 +204,7 @@ void StrandPrivate::process()
     assert(_processing);
 
     qiLogDebug() << "Strand quantum expired, rescheduling";
-    _eventLoop.async(boost::bind(&StrandPrivate::process, shared_from_this()),
-        qi::Duration(0));
+    _eventLoop.async2(boost::bind(&StrandPrivate::process, shared_from_this()));
   }
 }
 

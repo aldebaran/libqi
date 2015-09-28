@@ -34,7 +34,7 @@ inline typename boost::enable_if<
     asyncMaybeActor(const ARG0& arg0, const boost::function<R()>& cb,
                     qi::Duration delay)
 {
-  return detail::Unwrap<ARG0>::unwrap(arg0)->strand()->async(cb, delay);
+  return detail::Unwrap<ARG0>::unwrap(arg0)->strand()->asyncDelay(cb, delay);
 }
 template <typename R, typename ARG0>
 inline typename boost::disable_if<
@@ -43,7 +43,7 @@ inline typename boost::disable_if<
     asyncMaybeActor(const ARG0& arg0, const boost::function<R()>& cb,
                     qi::Duration delay)
 {
-  return qi::getEventLoop()->async(cb, delay);
+  return qi::getEventLoop()->asyncDelay(cb, delay);
 }
 template <typename R, typename ARG0>
 inline typename boost::enable_if<
@@ -52,7 +52,7 @@ inline typename boost::enable_if<
     asyncMaybeActor(const ARG0& arg0, const boost::function<R()>& cb,
                     qi::SteadyClockTimePoint timepoint)
 {
-  return detail::Unwrap<ARG0>::unwrap(arg0)->strand()->async(cb, timepoint);
+  return detail::Unwrap<ARG0>::unwrap(arg0)->strand()->asyncAt(cb, timepoint);
 }
 template <typename R, typename ARG0>
 inline typename boost::disable_if<
@@ -61,7 +61,7 @@ inline typename boost::disable_if<
     asyncMaybeActor(const ARG0& arg0, const boost::function<R()>& cb,
                     qi::SteadyClockTimePoint timepoint)
 {
-  return qi::getEventLoop()->async(cb, timepoint);
+  return qi::getEventLoop()->asyncAt(cb, timepoint);
 }
 
 }
