@@ -263,6 +263,11 @@ Url ApplicationSession::listenUrl()
 
 void ApplicationSession::start()
 {
+  startSession();
+}
+
+void ApplicationSession::startSession()
+{
   {
     boost::mutex::scoped_lock lock(_p->_mutex);
 

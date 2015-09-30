@@ -123,10 +123,18 @@ public:
    */
   Url listenUrl();
 
-  /** Establishes the session's connection and moreover starts listening if
+  /**
+   * Establishes the session's connection and moreover starts listening if
+   * --qi-listen-url was given.
+   * @deprecated since 2.5, use startSession instead
+   */
+  void QI_API_DEPRECATED start();
+
+  /**
+   * Establishes the session's connection and moreover starts listening if
    * --qi-listen-url was given.
    */
-  void start();
+  void startSession();
 
   /** Runs the application and automatically calls start() if it hasn't been done yet.
    */
