@@ -394,6 +394,10 @@ if (UNIX)
   qi_use_lib(qi PTHREAD)
 endif()
 
+if(ANDROID)
+  target_link_libraries(qi log)
+endif()
+
 if(UNIX AND NOT APPLE AND NOT ANDROID)
   qi_use_lib(qi DL RT)
 endif()
