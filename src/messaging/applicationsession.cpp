@@ -284,7 +284,7 @@ void ApplicationSession::startSession()
 
 void ApplicationSession::run()
 {
-  start();
+  startSession();
   Application::run();
 }
 }

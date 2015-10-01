@@ -27,7 +27,7 @@ void onStop()
 TEST(QiApplicationSession, defaultConnect)
 {
   ASSERT_FALSE(_app->session()->isConnected());
-  _app->start();
+  _app->startSession();
   ASSERT_TRUE(_app->session()->isConnected());
 
   ASSERT_EQ(_url, _app->session()->url());
