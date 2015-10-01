@@ -177,8 +177,6 @@ namespace qi {
       return "Future timeout.";
     case ExceptionState_FutureCanceled:
       return "Future canceled.";
-    case ExceptionState_FutureNotCancelable:
-      return "Future is not cancelable.";
     case ExceptionState_FutureHasNoError:
       return "Future has no error.";
     //use the specified string instead.

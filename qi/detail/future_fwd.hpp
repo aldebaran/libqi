@@ -105,7 +105,6 @@ namespace qi {
     enum ExceptionState {
       ExceptionState_FutureTimeout,       ///< No result ready
       ExceptionState_FutureCanceled,      ///< The future has been canceled
-      ExceptionState_FutureNotCancelable, ///< The future is not cancelable
       ExceptionState_FutureHasNoError,    ///< asked for error, but there is no error
       ExceptionState_FutureUserError,     ///< real future error
       ExceptionState_PromiseAlreadySet,   ///< when the promise is already set.
@@ -315,12 +314,13 @@ namespace qi {
       _p->cancel(*this);
     }
 
-    /** @return true if the future can be canceled. This does not mean that
-     * cancel will succeed.
+    /** @return always true
+     *
+     * @deprecated since 2.5
      */
-    bool isCancelable() const
+    QI_API_DEPRECATED bool isCancelable() const
     {
-      return _p->isCancelable();
+      return true;
     }
 
     /**
@@ -587,7 +587,7 @@ namespace qi {
     bool hasValue(int msecs = FutureTimeout_Infinite) const            { _sync = false; return _future.hasValue(msecs); }
     const std::string &error(int msecs = FutureTimeout_Infinite) const { _sync = false; return _future.error(msecs); }
     void cancel()                                                      { _sync = false; _future.cancel(); }
-    bool isCancelable() const                                          { _sync = false; return _future.isCancelable(); }
+    bool isCancelable() const                                          { _sync = false; return true; }
     void connect(const Connection& s)                                  { _sync = false; _future.connect(s);}
     void _connect(const boost::function<void()>& s)                    { _sync = false; _future._connect(s);}
 
@@ -727,8 +727,6 @@ namespace qi {
      */
     void setOnCancel(boost::function<void (qi::Promise<T>&)> cancelCallback)
     {
-      if (!this->_f._p->isCancelable())
-        throw std::runtime_error("Promise was not created as a cancelable one");
       qi::Future<T> fut = this->future();
       this->_f._p->setOnCancel(*this, cancelCallback);
     }
@@ -821,8 +819,6 @@ namespace qi {
       typedef typename FutureType<T>::type ValueType;
       FutureBaseTyped();
       ~FutureBaseTyped();
-
-      bool isCancelable() const;
 
       void cancel(qi::Future<T>& future);
 

@@ -766,7 +766,6 @@ TEST(TestFutureSync, NoThrow) {
   EXPECT_NO_THROW(qi::FutureSync<int>(prom.future()).isFinished());
   EXPECT_NO_THROW(qi::FutureSync<int>(prom.future()).error());
   EXPECT_NO_THROW(qi::FutureSync<int>(prom.future()).cancel());
-  EXPECT_NO_THROW(qi::FutureSync<int>(prom.future()).isCancelable());
 }
 
 void do_nothing(TestFutureI*) {}
@@ -791,13 +790,6 @@ TEST(TestFutureError, ValueOnError)
   EXPECT_ANY_THROW({ f.value();});
 }
 
-
-TEST(TestFutureCancel, NotCanceleable)
-{
-  qi::Promise<int> p;
-  qi::Future<int> f = p.future();
-  EXPECT_ANY_THROW({f.cancel();});
-}
 
 static void setTrue(bool* b)
 {
@@ -832,7 +824,6 @@ TEST(TestFutureCancel, CancelRequest)
   qi::Future<int> future = promise.future();
 
   ASSERT_TRUE(future.isRunning());
-  ASSERT_TRUE(future.isCancelable());
 
   ASSERT_NO_THROW(future.cancel());
 
@@ -850,11 +841,9 @@ TEST(TestFutureCancel, Canceleable)
 
   ASSERT_FALSE(f.isFinished());
   ASSERT_FALSE(f.isCanceled());
-  ASSERT_TRUE(f.isCancelable());
   f.cancel();
   ASSERT_TRUE(f.isFinished());
   ASSERT_TRUE(f.isCanceled());
-  ASSERT_TRUE(f.isCancelable());
   ASSERT_FALSE(f.hasError(qi::FutureTimeout_None));
   ASSERT_FALSE(f.hasValue(qi::FutureTimeout_None));
 
@@ -864,11 +853,9 @@ TEST(TestFutureCancel, Canceleable)
 
   ASSERT_FALSE(f.isFinished());
   ASSERT_FALSE(f.isCanceled());
-  ASSERT_TRUE(f.isCancelable());
   f.cancel();
   ASSERT_TRUE(f.isFinished());
   ASSERT_FALSE(f.isCanceled());
-  ASSERT_TRUE(f.isCancelable());
   ASSERT_TRUE(f.hasError(qi::FutureTimeout_None));
   ASSERT_FALSE(f.hasValue(qi::FutureTimeout_None));
 
@@ -877,11 +864,9 @@ TEST(TestFutureCancel, Canceleable)
 
   ASSERT_FALSE(f.isFinished());
   ASSERT_FALSE(f.isCanceled());
-  ASSERT_TRUE(f.isCancelable());
   f.cancel();
   ASSERT_TRUE(f.isFinished());
   ASSERT_FALSE(f.isCanceled());
-  ASSERT_TRUE(f.isCancelable());
   ASSERT_FALSE(f.hasError(qi::FutureTimeout_None));
   ASSERT_TRUE(f.hasValue(qi::FutureTimeout_None));
 
@@ -890,11 +875,9 @@ TEST(TestFutureCancel, Canceleable)
 
   ASSERT_FALSE(f.isFinished());
   ASSERT_FALSE(f.isCanceled());
-  ASSERT_TRUE(f.isCancelable());
   f.cancel();
   ASSERT_FALSE(f.isFinished());
   ASSERT_FALSE(f.isCanceled());
-  ASSERT_TRUE(f.isCancelable());
   EXPECT_THROW(f.hasError(qi::FutureTimeout_None), qi::FutureException);
   EXPECT_THROW(f.hasValue(qi::FutureTimeout_None), qi::FutureException);
 }
@@ -1347,7 +1330,6 @@ TEST(TestAdaptFuture, PromiseCancel) {
   qi::Promise<void> prom2;
 
   qi::adaptFuture(prom1.future(), prom2);
-  ASSERT_TRUE(prom2.future().isCancelable());
   prom2.future().cancel();
   while(prom2.future().isRunning())
     qi::os::msleep(5);

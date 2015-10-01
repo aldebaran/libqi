@@ -40,12 +40,6 @@ namespace qi
     void add(Future<T> future)
     {
       boost::mutex::scoped_lock lock(_mutex);
-      if (!future.isCancelable())
-      {
-        qiLogVerbose("qi.scopedfuturegroup") << "Trying to add non-cancelable future added to ScopedFutureGroup - future ignored.";
-        return;
-      }
-
       _futureCancelList.insert(std::make_pair(future.uniqueId(), qi::bind<void()>(&Future<T>::cancel, future)));
 
       // The 2 following lines are necessary because of a compiler bug in VS2010 which is fixed in VS2015 and beyond

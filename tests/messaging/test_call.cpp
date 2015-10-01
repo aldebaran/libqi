@@ -1416,10 +1416,7 @@ TEST(TestCall, TestAsyncFutureIsCancelable)
   p.server()->registerService("test", ob.object());
   qi::AnyObject proxy = p.client()->service("test");
 
-  ASSERT_TRUE(promise.future().isCancelable());
-
   qi::Future<void> future = proxy.async<void>("getCancelableFuture");
-  ASSERT_TRUE(future.isCancelable());
   future.cancel();
   future.wait();
   ASSERT_TRUE(future.isCanceled());
