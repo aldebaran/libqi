@@ -41,6 +41,7 @@ qiLogCategory("qi.Application");
 namespace bfs = boost::filesystem;
 
 static std::string _sdkPath;
+static boost::program_options::options_description _options;
 
 static void parseArguments(int argc, char* argv[])
 {
@@ -55,6 +56,7 @@ static void parseArguments(int argc, char* argv[])
   po::store(parsed, vm);
   po::notify(vm);
   qi::Application::setArguments(po::collect_unrecognized(parsed.options, po::include_positional));
+  qi::Application::options().add(desc);
 }
 
 namespace qi {
@@ -288,8 +290,46 @@ namespace qi {
     }
 
     fl.clear();
-    argc = Application::argc();
-    argv = globalArgv;
+
+    {
+      // Add the help option
+      namespace po = boost::program_options;
+      po::options_description helpDesc("Help options");
+      helpDesc.add_options() ("help,h", "Produces help message");
+      _options.add(helpDesc);
+
+      po::variables_map vm;
+      try
+      {
+        po::parsed_options parsed = po::command_line_parser(Application::arguments())
+          .options(_options)
+          .allow_unregistered()
+          .run();
+
+        po::store(parsed, vm);
+        po::notify(vm);
+
+        std::vector<std::string> args
+          = po::collect_unrecognized(parsed.options, po::include_positional);
+
+        if (vm.count("help"))
+        {
+          std::cout << _options << std::endl;
+          args.push_back("--help"); // Put the help argument back.
+        }
+
+        /* Set arguments to what was not used */
+        ::qi::Application::setArguments(args);
+        argc = Application::argc();
+        argv = globalArgv;
+      }
+      catch (po::error& e)
+      {
+        qiLogError() << e.what();
+      }
+
+
+    }
   }
 
   Application::Application(int& argc, char ** &argv, const std::string& name,
@@ -576,6 +616,18 @@ namespace qi {
   const char* Application::_suggestedSdkPath()
   {
     return _sdkPath.c_str();
+  }
+
+  boost::program_options::options_description& Application::options()
+  {
+    return _options;
+  }
+
+  std::string Application::helpText()
+  {
+    std::ostringstream ss;
+    ss << _options;
+    return ss.str();
   }
 
 }

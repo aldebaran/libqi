@@ -153,6 +153,11 @@ public:
    */
   bool standAlone();
 
+  /**
+   *  @return A concatenation of the ApplicationSession's --help with the Application's --help texts.
+   */
+  std::string helpText() const;
+
 private:
   ApplicationSessionPrivate* _p;
 };

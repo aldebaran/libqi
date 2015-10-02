@@ -2,14 +2,15 @@
 ## Use of this source code is governed by a BSD-style license that can be
 ## found in the COPYING file.
 qi_create_test_helper(testlaunch         testlaunch.cpp)
-qi_create_test_helper(testlaunchloop     testlaunchloop.cpp   DEPENDS QI)
+qi_create_test_helper(testlaunchloop     testlaunchloop.cpp     DEPENDS QI)
 qi_create_test_helper(test_launchloop_with_spaces testlaunchloop.cpp   DEPENDS QI)
 if(QI_WITH_TESTS)
   set_property(TARGET test_launchloop_with_spaces PROPERTY OUTPUT_NAME "test launchloop with spaces")
 endif()
 
-qi_create_test_helper(check_env          check_env.cpp        DEPENDS QI)
-qi_create_test_helper(check_machineid    check_machineid.cpp  DEPENDS QI)
+qi_create_test_helper(check_env             check_env.cpp             DEPENDS QI)
+qi_create_test_helper(check_machineid       check_machineid.cpp       DEPENDS QI)
+
 
 qi_create_gtest(
   test_qi
@@ -50,6 +51,24 @@ qi_create_gtest(
   DEPENDS
   qi
 
+  TIMEOUT 120
+)
+
+# TODO: Merge helptext tests in one program once Application can be constructed
+#       and destroyed multiple times in the same process.
+qi_create_gtest(test_helptext
+  SRC
+    "test_helptext.hpp"
+    "test_helptext.cpp"
+  DEPENDS QI
+  TIMEOUT 120
+)
+
+qi_create_gtest(test_helptext_session
+  SRC
+    "test_helptext.hpp"
+    "test_helptext_session.cpp"
+  DEPENDS QI
   TIMEOUT 120
 )
 
