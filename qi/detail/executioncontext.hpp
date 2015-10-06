@@ -140,9 +140,8 @@ typename boost::disable_if<boost::is_same<R, void>,
                              delay);
   promise.setup(
       boost::bind(&detail::futureCancelAdapter<void>,
-                  boost::weak_ptr<detail::FutureBaseTyped<void> >(f.impl())),
-      FutureCallbackType_Sync);
-  f.connect(boost::bind(&detail::checkCanceled<R>, _1, promise));
+                  boost::weak_ptr<detail::FutureBaseTyped<void> >(f.impl())));
+  f.connect(boost::bind(&detail::checkCanceled<R>, _1, promise), FutureCallbackType_Sync);
   return promise.future();
 }
 
@@ -158,9 +157,8 @@ typename boost::disable_if<boost::is_same<R, void>,
                              tp);
   promise.setup(
       boost::bind(&detail::futureCancelAdapter<void>,
-                  boost::weak_ptr<detail::FutureBaseTyped<void> >(f.impl())),
-      FutureCallbackType_Sync);
-  f.connect(boost::bind(&detail::checkCanceled<R>, _1, promise));
+                  boost::weak_ptr<detail::FutureBaseTyped<void> >(f.impl())));
+  f.connect(boost::bind(&detail::checkCanceled<R>, _1, promise), FutureCallbackType_Sync);
   return promise.future();
 }
 
@@ -198,9 +196,8 @@ auto ExecutionContext::asyncAt(F&& callback, qi::SteadyClockTimePoint tp) -> qi:
   auto promise = topost.promise;
   qi::Future<void> f = asyncAtImpl(std::move(topost), tp);
   promise.setup(boost::bind(&detail::futureCancelAdapter<void>,
-                            boost::weak_ptr<detail::FutureBaseTyped<void> >(f.impl())),
-                FutureCallbackType_Sync);
-  f.connect(boost::bind(&detail::checkCanceled<ReturnType>, _1, promise));
+                            boost::weak_ptr<detail::FutureBaseTyped<void> >(f.impl())));
+  f.connect(boost::bind(&detail::checkCanceled<ReturnType>, _1, promise), FutureCallbackType_Sync);
   return promise.future();
 }
 
@@ -213,9 +210,8 @@ auto ExecutionContext::asyncDelay(F&& callback, qi::Duration delay) -> qi::Futur
   auto promise = topost.promise;
   qi::Future<void> f = asyncDelayImpl(std::move(topost), delay);
   promise.setup(boost::bind(&detail::futureCancelAdapter<void>,
-                            boost::weak_ptr<detail::FutureBaseTyped<void> >(f.impl())),
-                FutureCallbackType_Sync);
-  f.connect(boost::bind(&detail::checkCanceled<ReturnType>, _1, promise));
+                            boost::weak_ptr<detail::FutureBaseTyped<void> >(f.impl())));
+  f.connect(boost::bind(&detail::checkCanceled<ReturnType>, _1, promise), FutureCallbackType_Sync);
   return promise.future();
 }
 }
