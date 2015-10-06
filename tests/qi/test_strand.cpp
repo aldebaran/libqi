@@ -64,7 +64,7 @@ TEST(TestStrand, StrandCancelScheduled)
   qi::Future<void> f2 = strand.async2(fail);
   qi::os::msleep(30);
   f2.cancel();
-  ASSERT_EQ(qi::FutureState_FinishedWithValue, f1.wait());
+  ASSERT_EQ(qi::FutureState_FinishedWithValue, f1.wait()) << f1.error();
   ASSERT_EQ(qi::FutureState_Canceled, f2.wait());
 }
 
@@ -116,16 +116,48 @@ TEST(TestStrand, StrandDestruction)
   boost::mutex mutex;
   boost::atomic<unsigned int> i(0);
 
+  std::vector<qi::Future<void>> futures;
   {
     qi::Strand strand(*qi::getEventLoop());
+    futures.reserve(STRAND_NB_TRIES);
     for (unsigned int j = 0; j < STRAND_NB_TRIES; ++j)
     {
-      qi::Future<void> f1 = strand.async2(boost::bind<void>(&increment,
-            boost::ref(mutex), 1, boost::ref(i)));
+      futures.push_back(strand.async2(boost::bind<void>(&increment,
+              boost::ref(mutex), 1, boost::ref(i))));
     }
   }
+  for (auto& future : futures)
+    ASSERT_TRUE(future.isFinished());
+}
 
-  ASSERT_EQ(STRAND_NB_TRIES, i);
+TEST(TestStrand, StrandDestructionWithMethodAndConcurrency)
+{
+  // ASSERT_NOSEGFAULT_NOCRASH_NOBADTHINGS();
+  boost::mutex mutex;
+  boost::atomic<unsigned int> i(0);
+
+  std::vector<qi::Future<void>> futures;
+  qi::Strand strand(*qi::getEventLoop());
+  futures.reserve(STRAND_NB_TRIES);
+  for (unsigned int j = 0; j < STRAND_NB_TRIES/4; ++j)
+    futures.push_back(qi::getEventLoop()->async2([&]{
+            strand.async2(boost::bind<void>(&increment,
+                boost::ref(mutex), 1, boost::ref(i)));
+          }));
+  for (unsigned int j = 0; j < STRAND_NB_TRIES/4; ++j)
+    strand.async2(boost::bind<void>(&increment,
+            boost::ref(mutex), 1, boost::ref(i)));
+  strand.destroy();
+  for (unsigned int j = 0; j < STRAND_NB_TRIES/4; ++j)
+    futures.push_back(qi::getEventLoop()->async2([&]{
+            strand.async2(boost::bind<void>(&increment,
+                boost::ref(mutex), 1, boost::ref(i)));
+          }));
+  for (unsigned int j = 0; j < STRAND_NB_TRIES/4; ++j)
+    strand.async2(boost::bind<void>(&increment,
+            boost::ref(mutex), 1, boost::ref(i)));
+  for (auto& future : futures)
+    ASSERT_TRUE(future.wait());
 }
 
 TEST(TestStrand, StrandDestructionWithCancel)
@@ -179,6 +211,7 @@ struct MyActor : qi::Actor
 {
   boost::atomic<bool> calling;
   MyActor() : calling(0) {}
+  ~MyActor() { strand()->destroy(); }
   int f(int end, qi::Promise<void> finished)
   {
     int startval = prop.get();
@@ -302,39 +335,6 @@ TEST(TestStrand, FutureThenActorCancel)
     ASSERT_EQ(42, masterFut.value());
     ASSERT_NO_THROW(finished.future().value());
   }
-}
-
-struct MyActorTrackable : MyActor, qi::Trackable<MyActorTrackable>
-{
-  ~MyActorTrackable() { destroy(); }
-};
-
-TEST(TestStrand, FutureWithTrackable)
-{
-  callcount = 0;
-  qi::Promise<void> prom;
-  {
-    qi::Promise<void> stub;
-    MyActorTrackable obj;
-    for (int i = 0; i < 10; ++i)
-      prom.future().connect(&MyActorTrackable::f, &obj, 0, stub);
-  }
-  prom.setValue(0);
-  ASSERT_EQ(0, callcount);
-}
-
-TEST(TestStrand, SignalWithTrackable)
-{
-  callcount = 0;
-  qi::Signal<void> signal;
-  {
-    qi::Promise<void> stub;
-    MyActorTrackable obj;
-    for (int i = 0; i < 10; ++i)
-      signal.connect(&MyActorTrackable::f, &obj, 0, stub);
-  }
-  signal();
-  ASSERT_EQ(0, callcount);
 }
 
 int main(int argc, char* argv[])

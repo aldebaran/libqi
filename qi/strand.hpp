@@ -35,11 +35,17 @@ public:
   Strand();
   /// Construct a strand that will schedule work on executionContext
   Strand(qi::ExecutionContext& executionContext);
+  /// Call detroy()
+  ~Strand();
+
   /** Destroys the strand
    *
-   * This will wait for all scheduled tasks to finish
+   * This will wait for currently running tasks to finish and will drop all tasks scheduled from the moment of the call
+   * on. A strand can't be reused after it has been destroy()ed.
+   *
+   * It is safe to call this method concurrently with other methods. All the returned futures will be set to error.
    */
-  ~Strand();
+  void destroy();
 
   // DEPRECATED
   QI_API_DEPRECATED void post(const boost::function<void()>& callback) override;
@@ -66,6 +72,10 @@ public:
 #undef genCall
   // END DEPRECATED
 
+  /**
+   * \return true if current code is running in this strand, false otherwise. If the strand is dying (destroy() has been
+   * called, returns false)
+   */
   bool isInThisContext() override;
 
   // C++14 this can be a lambda, but we need perfect forwarding in the capture in scheduleFor below
@@ -90,9 +100,14 @@ public:
   };
 
   template <typename F>
-  SchedulerHelper2<typename std::decay<F>::type> schedulerFor(F&& func)
+  auto schedulerFor(F&& func, boost::function<void()> onFail = {})
+      -> decltype(qi::trackWithFallback(std::move(onFail),
+                                        SchedulerHelper2<typename std::decay<F>::type>(std::forward<F>(func), this),
+                                        boost::weak_ptr<StrandPrivate>()))
   {
-    return SchedulerHelper2<typename std::decay<F>::type>(std::forward<F>(func), this);
+    return qi::trackWithFallback(std::move(onFail),
+                                 SchedulerHelper2<typename std::decay<F>::type>(std::forward<F>(func), this),
+                                 boost::weak_ptr<StrandPrivate>(_p));
   }
 
 private:
