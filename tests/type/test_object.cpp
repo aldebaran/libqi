@@ -32,7 +32,6 @@ namespace std
 #endif
 
 qiLogCategory("test");
-
 static int gGlobalResult = 0;
 
 void vfun(const int &p0,const int &p1)   { gGlobalResult = p0 + p1; }
@@ -625,8 +624,8 @@ TEST(TestObject, ObjectTypeBuilderTypeDescription)
   builder.setDescription(objectTypeDescription);
 
   Dummy dummy;
-  qi::AnyObject object = builder.object(&dummy, &qi::AnyObject::deleteGenericObjectOnly);
-  qi::MetaObject metaObject = object.metaObject();
+  auto object = builder.object(&dummy, &qi::AnyObject::deleteGenericObjectOnly);
+  auto metaObject = object.metaObject();
 
   ASSERT_EQ(objectTypeDescription, metaObject.description());
 }
