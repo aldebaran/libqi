@@ -69,8 +69,6 @@ QI_API qi::Future<AnyReference> metaCall(ExecutionContext* ec,
 
 #include <qi/type/detail/object.hxx>
 
-#include <qi/type/detail/async.hxx>
-
 #include <qi/type/detail/proxyregister.hpp>
 
 #include <qi/type/objecttypebuilder.hpp>

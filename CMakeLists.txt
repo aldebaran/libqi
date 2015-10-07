@@ -167,7 +167,6 @@ set(QITYPE_H       qi/anyfunction.hpp
                    qi/type/detail/dynamicobjectbuilder.hxx
                    qi/type/detail/genericobject.hpp
                    qi/type/detail/object.hxx
-                   qi/type/detail/async.hxx
                    qi/type/detail/proxyregister.hpp
                    qi/type/detail/hasless.hxx
                    qi/type/detail/objecttypebuilder.hxx

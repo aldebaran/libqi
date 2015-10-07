@@ -221,11 +221,7 @@ namespace qi
 #else
 #define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)                  \
   template<typename R, typename AF, typename ARG0 comma ATYPEDECL>         \
-  inline typename boost::disable_if<                                       \
-      boost::mpl::or_<                                                     \
-          boost::is_same<ARG0, std::string>, boost::is_same<ARG0, char*>,  \
-          boost::is_same<ARG0, const char*>, boost::is_array<ARG0> >,      \
-      Future<R> >::type async(const AF& fun, const ARG0& arg0 comma ADECL, \
+  inline Future<R> async(const AF& fun, const ARG0& arg0 comma ADECL,      \
                               qi::Duration delay = qi::Duration(0))        \
   {                                                                        \
     return detail::asyncMaybeActor<R, ARG0>(                               \
