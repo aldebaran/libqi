@@ -205,14 +205,33 @@ namespace qi
     return qi::getEventLoop()->asyncDelay(callback, qi::MicroSeconds(usDelay));
   }
   template<typename R>
-  inline Future<R> async(boost::function<R()> callback, qi::Duration delay = qi::Duration(0))
+  QI_API_DEPRECATED inline Future<R> async(boost::function<R()> callback, qi::Duration delay = qi::Duration(0))
   {
     return qi::getEventLoop()->asyncDelay(callback, delay);
   }
   template<typename R>
-  inline Future<R> async(boost::function<R()> callback, qi::SteadyClockTimePoint timepoint)
+  QI_API_DEPRECATED inline Future<R> async(boost::function<R()> callback, qi::SteadyClockTimePoint timepoint)
   {
     return qi::getEventLoop()->asyncAt(callback, timepoint);
+  }
+
+  template <typename F>
+  inline auto asyncDelay(F&& callback, qi::Duration delay)
+      -> decltype(qi::getEventLoop()->asyncDelay(std::forward<F>(callback), delay))
+  {
+    return qi::getEventLoop()->asyncDelay(std::forward<F>(callback), delay);
+  }
+  template <typename F>
+  inline auto asyncAt(F&& callback, qi::SteadyClockTimePoint timepoint)
+    -> decltype(qi::getEventLoop()->asyncAt(std::forward<F>(callback), timepoint))
+  {
+    return qi::getEventLoop()->asyncAt(std::forward<F>(callback), timepoint);
+  }
+  template <typename F>
+  inline auto async2(F&& callback)
+    -> decltype(qi::getEventLoop()->async2(std::forward<F>(callback)))
+  {
+    return qi::getEventLoop()->async2(std::forward<F>(callback));
   }
 
 #ifdef DOXYGEN
