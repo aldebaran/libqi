@@ -517,7 +517,7 @@ TEST_F(TestFuture, TestTimeout) {
   EXPECT_GT(qi::SteadyClock::now(), start + qi::MilliSeconds(10));
 
   start = qi::SteadyClock::now();
-  qi::async(boost::function<void()>(boost::bind(&qi::Promise<int>::setValue, pro, 42)), qi::MicroSeconds(20000));
+  qi::asyncDelay(boost::function<void()>(boost::bind(&qi::Promise<int>::setValue, pro, 42)), qi::MicroSeconds(20000));
   EXPECT_EQ(qi::FutureState_FinishedWithValue, fut.wait(qi::SteadyClock::now() + qi::MilliSeconds(40)));
   EXPECT_TRUE(fut.isFinished());
   EXPECT_GT(qi::SteadyClock::now(), start + qi::MilliSeconds(20));
@@ -615,7 +615,7 @@ void justThrow()
 
 TEST(AsyncAndFuture, errorOnTaskThrow)
 {
-  qi::Future<void> f = qi::async<void>(&justThrow);
+  qi::Future<void> f = qi::async2(&justThrow);
   EXPECT_TRUE(f.hasError());
 }
 
@@ -907,7 +907,7 @@ int assinc(const qi::Future<int>& f, int exp)
 
 TEST(TestFutureThen, ThenR)
 {
-  qi::Future<int> f = qi::async<int>(&get42);
+  qi::Future<int> f = qi::async2(&get42);
   qi::Future<int> ff = f.thenR<int>(&assinc, _1, 42);
   qi::Future<int> fff = ff.thenR<int>(&assinc, _1, 43);
 
@@ -928,7 +928,7 @@ int call(bool& b)
 TEST(TestFutureThen, AndThenR)
 {
   bool called = false;
-  qi::Future<int> f = qi::async<int>(&get42);
+  qi::Future<int> f = qi::async2(&get42);
   qi::Future<int> ff = f.andThenR<int>(boost::bind(&fail, _1));
   qi::Future<int> fff = ff.andThenR<int>(boost::bind(&call, boost::ref(called)));
 
@@ -1489,7 +1489,7 @@ TEST(TestPeriodicTask, StartIsNoop)
   std::vector<qi::Future<void> > futs;
   // multiple start is no-op, this should not deadlock
   for (unsigned i=0; i<20; ++i)
-    futs.push_back(qi::async(boost::function<void()>(boost::bind(&qi::PeriodicTask::start, &pt, true))));
+    futs.push_back(qi::async2(boost::function<void()>(boost::bind(&qi::PeriodicTask::start, &pt, true))));
   for (unsigned i=0; i<20; ++i)
     futs[i].wait();
 

@@ -48,7 +48,7 @@ void ObjectHost::onMessage(const qi::Message &msg, TransportSocketPtr socket)
   obj->onMessage(msg, socket);
 
   qi::Promise<void> destructPromise;
-  qi::async<void>(boost::bind(&async_destroy_attempt, obj, destructPromise.future()));
+  qi::async2(boost::bind(&async_destroy_attempt, obj, destructPromise.future()));
   obj.reset();
   destructPromise.setValue(0);
 }
@@ -95,7 +95,7 @@ void ObjectHost::removeObject(unsigned int id)
     obj = it->second;
     _objectMap.erase(it);
     qiLogDebug() << this << " count " << obj.use_count();
-    qi::async<void>(boost::bind(&qi::detail::hold<BoundAnyObject>, obj));
+    qi::async2(boost::bind(&qi::detail::hold<BoundAnyObject>, obj));
   }
   qiLogDebug() << this << " Object " << id << " removed.";
 }

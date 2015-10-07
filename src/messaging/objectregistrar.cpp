@@ -23,7 +23,7 @@ namespace qi {
     // last reference to Session which leads to a deadlock (Session can't be
     // destroyed because it is calling us)
     if (object.unique())
-      qi::async<void>(boost::bind(&qi::detail::hold<qi::AnyObject>, object));
+      qi::async2(boost::bind(&qi::detail::hold<qi::AnyObject>, object));
   }
 
   ObjectRegistrar::ObjectRegistrar(ServiceDirectoryClient *sdClient, bool enforceAuth)

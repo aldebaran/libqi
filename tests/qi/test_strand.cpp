@@ -304,7 +304,7 @@ TEST(TestStrand, AllFutureSignalPropertyPeriodicTaskAsyncCallTypeErased)
       qi::async<void>(&MyActor::f, obj, TOTAL, finished);
     for (int i = 0; i < 50; ++i)
       aobj.setProperty("prop", rand());
-    qi::Future<void> f = qi::async<void>(boost::bind(chaincall, aobj, finished, TOTAL));
+    qi::Future<void> f = qi::async2(boost::bind(chaincall, aobj, finished, TOTAL));
     prom.setValue(0);
     QI_EMIT signal(TOTAL);
     QI_EMIT obj->sig(TOTAL);
