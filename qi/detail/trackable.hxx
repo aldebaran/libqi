@@ -16,6 +16,8 @@
 
 namespace qi
 {
+  class Actor;
+
   template<typename T>
   inline Trackable<T>::Trackable()
   : _wasDestroyed(false)
@@ -92,7 +94,7 @@ namespace qi
     // Functor that locks a weak ptr and make a call if successful
     // Generalize on shared_ptr and weak_ptr types in case we ever have
     // other types with their semantics
-    template<typename WT, typename F>
+    template <typename WT, typename F>
     class LockAndCall
     {
       WT _wptr;
@@ -123,60 +125,157 @@ namespace qi
       }
     };
 
-    template<typename T, bool IS_TRACKABLE>
-    struct BindTransformImpl
+    template <typename T, bool IsActor>
+    struct ObjectWrap;
+
+    template <typename T>
+    struct ObjectWrap<T, false>
     {
-      typedef const T& type;
-      static type transform(const T& arg)
-      {
-        return arg;
-      }
-      template<typename F>
+      template <typename F>
       using wrap_type = typename std::decay<F>::type;
-      template<typename F>
+      template <typename F>
       static wrap_type<F> wrap(const T& arg, F&& func, boost::function<void()> onFail)
       {
         return std::forward<F>(func);
       }
     };
 
-    template<typename T>
+    template <typename T>
+    struct ObjectWrap<T, true>
+    {
+      static const bool is_async = true;
+      template <typename F>
+      using wrap_type = decltype(
+          std::declval<T>()->strand()->schedulerFor(std::declval<typename std::decay<F>::type>()));
+      template <typename F>
+      static wrap_type<F> wrap(const T& arg, F&& func, boost::function<void()> onFail)
+      {
+        return arg->strand()->schedulerFor(std::forward<F>(func), std::move(onFail));
+      }
+    };
+
+    struct IsAsyncBindImpl
+    {
+      struct BigBuf
+      {
+        char buf[128];
+      };
+      template <typename T>
+      static decltype(T::is_async) f(int);
+      template <typename T>
+      static BigBuf f(void*);
+    };
+
+    // can't use a "using" here because visual gets the SFINAE wrong in the conditional (lol.)
+    template <typename T>
+    struct IsAsyncBind
+        : std::conditional<sizeof(decltype(IsAsyncBindImpl::template f<T>(0))) != sizeof(IsAsyncBindImpl::BigBuf),
+                           std::true_type,
+                           std::false_type>::type
+    {
+    };
+
+    template <typename T, bool IsTrackable>
+    struct BindTransformImpl
+    {
+      typedef T type;
+      static T transform(T arg)
+      {
+        return arg;
+      }
+      template <typename F>
+      using wrap_type = typename std::decay<F>::type;
+      template <typename F>
+      static wrap_type<F> wrap(T arg, F&& func, boost::function<void()> onFail)
+      {
+        return std::forward<F>(func);
+      }
+    };
+
+    template <typename T>
+    struct BindTransformImpl<T*, false>
+    {
+      using ObjectWrapType = ObjectWrap<T*, std::is_base_of<Actor, T>::value>;
+      using type = T*;
+      template <typename F>
+      using wrap_type = typename ObjectWrapType::template wrap_type<F>;
+
+      static T* transform(T* arg)
+      {
+        return arg;
+      }
+
+      template <typename F>
+      static wrap_type<F> wrap(T* arg, F&& func, boost::function<void()> onFail)
+      {
+        return ObjectWrapType::wrap(arg, std::forward<F>(func), onFail);
+      }
+    };
+
+    template <typename T>
+    struct BindTransformImpl<T*, true>
+    {
+      using type = T*;
+      template <typename F>
+      using wrap_type = LockAndCall<boost::weak_ptr<T>, typename std::decay<F>::type>;
+
+      static T* transform(T* arg)
+      {
+        // Note that we assume that lock if successful always return the same pointer
+        return arg;
+      }
+
+      template <typename F>
+      static wrap_type<F> wrap(T* arg, F&& func, boost::function<void()> onFail)
+      {
+        return LockAndCall<boost::weak_ptr<T>, typename std::decay<F>::type>(
+            arg->weakPtr(),
+            std::forward<F>(func),
+            onFail);
+      }
+    };
+
+    template <typename T>
     struct BindTransformImpl<boost::weak_ptr<T>, false>
     {
-      typedef T* type;
+      using type = T*;
+      template <typename F>
+      using wrap_type = LockAndCall<boost::weak_ptr<T>, typename std::decay<F>::type>;
+
       static T* transform(const boost::weak_ptr<T>& arg)
       {
         // Note that we assume that lock if successful always return the same pointer
         // And that if lock fails once, it will fail forever from that point
         return arg.lock().get();
       }
-      template<typename F>
-      using wrap_type = LockAndCall<boost::weak_ptr<T>, typename std::decay<F>::type>;
-      template<typename F>
-      static wrap_type<F> wrap(
-          const boost::weak_ptr<T>& arg, F&& func, boost::function<void()> onFail)
+
+      template <typename F>
+      static wrap_type<F> wrap(const boost::weak_ptr<T>& arg, F&& func, boost::function<void()> onFail)
       {
-        return LockAndCall<boost::weak_ptr<T>, typename std::decay<F>::type>(arg, std::forward<F>(func), onFail);
+        return LockAndCall<boost::weak_ptr<T>, typename std::decay<F>::type>(
+            arg,
+            std::forward<F>(func),
+            onFail);
       }
     };
 
-    template<typename T>
-    struct BindTransformImpl<T*, true>
+    template <typename T>
+    struct BindTransformImpl<boost::shared_ptr<T>, false>
     {
-      typedef T* type;
-      static T* transform(T* const & arg)
+      using ObjectWrapType = ObjectWrap<boost::shared_ptr<T>, std::is_base_of<Actor, T>::value>;
+      using type = boost::shared_ptr<T>;
+      template <typename F>
+      using wrap_type = typename ObjectWrapType::template wrap_type<F>;
+
+      static boost::shared_ptr<T> transform(boost::shared_ptr<T> arg)
       {
-        // Note that we assume that lock if successful always return the same pointer
-        return arg;
+        return std::move(arg);
       }
-      template<typename F>
-      using wrap_type = LockAndCall<boost::weak_ptr<T>, typename std::decay<F>::type>;
-      template<typename F>
-      static wrap_type<F> wrap(
-          T*const & arg, F&& func, boost::function<void()> onFail)
+
+      template <typename F>
+      static wrap_type<F> wrap(const boost::shared_ptr<T>& arg, F&& func, boost::function<void()> onFail)
       {
-        return
-          LockAndCall<boost::weak_ptr<T>, typename std::decay<F>::type>(arg->weakPtr(), std::forward<F>(func), onFail);
+        return ObjectWrapType::wrap(arg, std::forward<F>(func), onFail);
       }
     };
 

@@ -61,6 +61,54 @@ namespace detail {
   }
 
   template <typename T, typename R>
+  void continuateThenAsync(const Future<T>& future,
+      const boost::function<qi::Future<R>(const Future<T>&)>& func,
+      qi::Promise<R>& promise)
+  {
+    try
+    {
+      qi::Future<R> fut = func(future);
+      qi::adaptFuture(fut, promise, AdaptFutureOption_None);
+    }
+    catch (std::exception& e)
+    {
+      promise.setError(e.what());
+    }
+    catch (...)
+    {
+      promise.setError("unknown exception");
+    }
+  }
+
+  template <bool Async, typename T, typename R>
+  struct ContinuateMaybeAsync;
+
+  template <typename T, typename R>
+  struct ContinuateMaybeAsync<true, T, R>
+  {
+    template <typename AF>
+    static boost::function<void(const Future<T>&)> makeFunc(AF&& func, const qi::Promise<R>& promise)
+    {
+      return boost::bind(&detail::continuateThenAsync<T, R>,
+                         _1,
+                         // this cast seems necessary :(
+                         boost::function<qi::Future<R>(const Future<T>&)>(std::forward<AF>(func)),
+                         promise);
+    }
+  };
+
+  template <typename T, typename R>
+  struct ContinuateMaybeAsync<false, T, R>
+  {
+    template <typename AF>
+    static boost::function<void(const Future<T>&)> makeFunc(AF&& func, const qi::Promise<R>& promise)
+    {
+      assert(false && "unreachable code");
+      return {};
+    }
+  };
+
+  template <typename T, typename R>
   void continuateAndThen(const Future<T>& future,
       const boost::function<R(const typename Future<T>::ValueType&)>& func,
       qi::Promise<R>& promise)
@@ -105,7 +153,26 @@ namespace detail {
   inline Future<R> Future<T>::thenR(FutureCallbackType type, AF&& func)
   {
     qi::Promise<R> promise(boost::bind(&detail::forwardCancel<T>, boost::weak_ptr<detail::FutureBaseTyped<T> >(_p)));
-    _p->connect(*this, boost::bind(&detail::continuateThen<T, R>, _1, std::forward<AF>(func), promise), type);
+
+    if (type == FutureCallbackType_Auto && detail::IsAsyncBind<AF>::value)
+    {
+      type = FutureCallbackType_Sync;
+      _p->connect(*this,
+                  detail::ContinuateMaybeAsync<detail::IsAsyncBind<AF>::value, T, R>
+                      ::makeFunc(std::forward<AF>(func), promise),
+                  type);
+    }
+    else
+    {
+      _p->connect(*this,
+          boost::bind(
+            &detail::continuateThen<T, R>,
+            _1,
+            // this cast seems necessary :(
+            boost::function<R(const Future<T>&)>(std::forward<AF>(func)),
+            promise),
+          type);
+    }
     return promise.future();
   }
 
@@ -125,38 +192,6 @@ namespace detail {
   }
 
   template <typename T>
-  template <typename R, typename ARG0, typename AF>
-  typename boost::enable_if<
-      boost::is_base_of<Actor, typename detail::Unwrap<ARG0>::type>,
-      qi::Future<R> >::type
-      Future<T>::_thenMaybeActor(const ARG0& arg0,
-                         const AF& cb,
-                         FutureCallbackType type)
-  {
-    auto strand = detail::Unwrap<ARG0>::unwrap(arg0)->strand();
-    return thenR<qi::Future<R> >(FutureCallbackType_Sync, qi::trackSilent(
-          [strand, cb](const qi::Future<T>& future){
-            qi::Promise<R> promise(qi::PromiseNoop<R>);
-            auto cbfuture = strand->async2(std::bind(cb, future));
-            // we don't want that a cancel on the future returned by then cancels the call on the strand
-            adaptFuture(cbfuture, promise, AdaptFutureOption_None);
-            return promise.future();
-          },
-          arg0)).unwrap();
-  }
-  template <typename T>
-  template <typename R, typename ARG0, typename AF>
-  typename boost::disable_if<
-      boost::is_base_of<Actor, typename detail::Unwrap<ARG0>::type>,
-      qi::Future<R> >::type
-      Future<T>::_thenMaybeActor(const ARG0& arg0,
-                         const AF& cb,
-                         FutureCallbackType type)
-  {
-    return thenR<R>(type, cb);
-  }
-
-  template <typename T>
   void Future<T>::connectWithStrand(qi::Strand* strand,
       const boost::function<void(const Future<T>&)>& cb)
   {
@@ -165,7 +200,6 @@ namespace detail {
         strand->schedulerFor(cb),
         FutureCallbackType_Sync);
   }
-
 
   template <typename T>
   void Future<T>::_weakCancelCb(const boost::weak_ptr<detail::FutureBaseTyped<T> >& wfuture)
@@ -181,6 +215,14 @@ namespace detail {
   boost::function<void()> Future<T>::makeCanceler()
   {
     return boost::bind(&Future<T>::_weakCancelCb, boost::weak_ptr<detail::FutureBaseTyped<T> >(_p));
+  }
+
+  template <typename T>
+  Future<T>::operator Future<void>() const
+  {
+    qi::Promise<void> prom;
+    qi::adaptFuture(*this, prom);
+    return prom.future();
   }
 
   namespace detail {

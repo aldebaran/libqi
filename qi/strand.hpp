@@ -99,15 +99,36 @@ public:
     }
   };
 
+  // this structure is just a wrapper with a is_async field
+  template <typename F>
+  struct SchedulerHelper3
+  {
+    static const bool is_async = true;
+
+    F _func;
+
+    template <typename... Args>
+    auto operator()(Args&&... args) const -> decltype(_func(std::forward<Args>(args)...))
+    {
+      return _func(std::forward<Args>(args)...);
+    }
+  };
+
+  template <typename F>
+  SchedulerHelper3<typename std::decay<F>::type> makeSchedulerHelper3(F&& f)
+  {
+    return SchedulerHelper3<typename std::decay<F>::type>{std::forward<F>(f)};
+  }
+
   template <typename F>
   auto schedulerFor(F&& func, boost::function<void()> onFail = {})
-      -> decltype(qi::trackWithFallback(std::move(onFail),
+      -> decltype(makeSchedulerHelper3(qi::trackWithFallback(std::move(onFail),
                                         SchedulerHelper2<typename std::decay<F>::type>(std::forward<F>(func), this),
-                                        boost::weak_ptr<StrandPrivate>()))
+                                        boost::weak_ptr<StrandPrivate>())))
   {
-    return qi::trackWithFallback(std::move(onFail),
+    return makeSchedulerHelper3(qi::trackWithFallback(std::move(onFail),
                                  SchedulerHelper2<typename std::decay<F>::type>(std::forward<F>(func), this),
-                                 boost::weak_ptr<StrandPrivate>(_p));
+                                 boost::weak_ptr<StrandPrivate>(_p)));
   }
 
 private:

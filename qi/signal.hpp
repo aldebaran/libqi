@@ -168,14 +168,6 @@ namespace qi {
     SignalSubscriber& connect(const AnyObject& obj, unsigned int slot);
     SignalSubscriber& connect(const AnyObject& obj, const std::string& slot);
 #endif
-
-  private:
-    template <typename Arg0, typename F, typename FFB>
-    typename boost::enable_if<boost::is_base_of<Actor, typename detail::Unwrap<Arg0>::type>, SignalSubscriber&>::type
-    _connectMaybeActor(Arg0& arg0, F&& cb, FFB&& fallbackCb);
-    template <typename Arg0, typename F, typename FFB>
-    typename boost::disable_if<boost::is_base_of<Actor, typename detail::Unwrap<Arg0>::type>, SignalSubscriber&>::type
-    _connectMaybeActor(Arg0&& arg0, F&& cb, FFB&& fallbackCb);
   };
 
   /** Class that represent an event to which function can subscribe.

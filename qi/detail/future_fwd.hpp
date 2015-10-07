@@ -161,12 +161,14 @@ namespace qi {
       : _p(b._p)
     {}
 
+    operator Future<void>() const;
+
     bool operator==(const Future<T> &other)
     {
       return _p.get() == other._p.get();
     }
 
-    inline Future<T>& operator=(const Future<T>& b)
+    Future<T>& operator=(const Future<T>& b)
     {
       _p = b._p;
       return *this;
@@ -350,13 +352,18 @@ namespace qi {
     template <typename R, typename AF, typename Arg0, typename... Args>
     Future<R> thenR(AF&& func, Arg0&& arg0, Args&&... args)
     {
-      return this->thenR<R>(FutureCallbackType_Auto, std::forward<AF>(func), std::forward<Arg0>(arg0), std::forward<Args>(args)...);
+      return this->thenR<R>(
+          FutureCallbackType_Auto,
+          std::forward<AF>(func),
+          std::forward<Arg0>(arg0),
+          std::forward<Args>(args)...);
     }
     template <typename R, typename AF, typename Arg0, typename... Args>
     Future<R> thenR(FutureCallbackType type, AF&& func, Arg0&& arg0, Args&&... args)
     {
-      return _thenMaybeActor<R, Arg0>(
-          arg0, ::qi::bind<R(const Future<T>&)>(std::forward<AF>(func), arg0, std::forward<Args>(args)...), type);
+      return thenR<R>(
+          type,
+          qi::bind(std::forward<AF>(func), arg0, std::forward<Args>(args)...));
     }
 
     /**
@@ -476,21 +483,6 @@ namespace qi {
     {
       _p->setOnDestroyed(cb);
     }
-
-    template <typename R, typename ARG0, typename AF>
-    typename boost::enable_if<
-        boost::is_base_of<Actor, typename detail::Unwrap<ARG0>::type>,
-        qi::Future<R> >::type
-        _thenMaybeActor(const ARG0& arg0,
-            const AF& cb,
-            FutureCallbackType type);
-    template <typename R, typename ARG0, typename AF>
-    typename boost::disable_if<
-        boost::is_base_of<Actor, typename detail::Unwrap<ARG0>::type>,
-        qi::Future<R> >::type
-        _thenMaybeActor(const ARG0& arg0,
-            const AF& cb,
-            FutureCallbackType type);
 
     static void _weakCancelCb(const boost::weak_ptr<detail::FutureBaseTyped<T> >& wfuture);
   };

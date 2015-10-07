@@ -171,30 +171,18 @@ namespace qi
 
   namespace detail
   {
-    template <typename R, typename ARG0>
-    typename boost::enable_if<
-        boost::is_base_of<Actor, typename detail::Unwrap<ARG0>::type>,
-        Future<R> >::type
-        asyncMaybeActor(const ARG0& arg0, const boost::function<R()>& cb,
-                        qi::Duration delay);
-    template <typename R, typename ARG0>
-    typename boost::disable_if<
-        boost::is_base_of<Actor, typename detail::Unwrap<ARG0>::type>,
-        Future<R> >::type
-        asyncMaybeActor(const ARG0& arg0, const boost::function<R()>& cb,
-                        qi::Duration delay);
-    template <typename R, typename ARG0>
-    typename boost::enable_if<
-        boost::is_base_of<Actor, typename detail::Unwrap<ARG0>::type>,
-        Future<R> >::type
-        asyncMaybeActor(const ARG0& arg0, const boost::function<R()>& cb,
-                        qi::SteadyClockTimePoint timepoint);
-    template <typename R, typename ARG0>
-    typename boost::disable_if<
-        boost::is_base_of<Actor, typename detail::Unwrap<ARG0>::type>,
-        Future<R> >::type
-        asyncMaybeActor(const ARG0& arg0, const boost::function<R()>& cb,
-                        qi::SteadyClockTimePoint timepoint);
+    template <typename F>
+    inline auto asyncMaybeActor(F&& cb, qi::Duration delay) ->
+        typename std::enable_if<detail::IsAsyncBind<F>::value, decltype(cb())>::type;
+    template <typename F>
+    inline auto asyncMaybeActor(F&& cb, qi::Duration delay) ->
+        typename std::enable_if<!detail::IsAsyncBind<F>::value, qi::Future<decltype(cb())>>::type;
+    template <typename F>
+    inline auto asyncMaybeActor(F&& cb, qi::SteadyClockTimePoint timepoint) ->
+        typename std::enable_if<detail::IsAsyncBind<F>::value, decltype(cb())>::type;
+    template <typename F>
+    inline auto asyncMaybeActor(F&& cb, qi::SteadyClockTimePoint timepoint) ->
+        typename std::enable_if<!detail::IsAsyncBind<F>::value, qi::Future<decltype(cb())>>::type;
   }
 
   /// \copydoc qi::EventLoop::async().
@@ -238,20 +226,16 @@ namespace qi
   template<typename R, typename Func, typename ArgTrack>
   qi::Future<R> async(const Func& f, const ArgTrack& toTrack, ...);
 #else
-#define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)                  \
-  template<typename R, typename AF, typename ARG0 comma ATYPEDECL>         \
-  inline Future<R> async(const AF& fun, const ARG0& arg0 comma ADECL,      \
-                              qi::Duration delay = qi::Duration(0))        \
-  {                                                                        \
-    return detail::asyncMaybeActor<R, ARG0>(                               \
-        arg0, qi::bind<R()>(fun, arg0 comma AUSE), delay);                 \
-  }                                                                        \
-  template<typename R, typename AF, typename ARG0 comma ATYPEDECL>         \
-  inline Future<R> async(const AF& fun, const ARG0& arg0 comma ADECL,      \
-                         qi::SteadyClockTimePoint timepoint)               \
-  {                                                                        \
-    return detail::asyncMaybeActor<R, ARG0>(                               \
-        arg0, qi::bind<R()>(fun, arg0 comma AUSE), timepoint);             \
+#define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)                                                   \
+  template <typename R, typename AF, typename ARG0 comma ATYPEDECL>                                         \
+  inline Future<R> async(const AF& fun, const ARG0& arg0 comma ADECL, qi::Duration delay = qi::Duration(0)) \
+  {                                                                                                         \
+    return detail::asyncMaybeActor(qi::bind(fun, arg0 comma AUSE), delay);            \
+  }                                                                                                         \
+  template <typename R, typename AF, typename ARG0 comma ATYPEDECL>                                         \
+  inline Future<R> async(const AF& fun, const ARG0& arg0 comma ADECL, qi::SteadyClockTimePoint timepoint)   \
+  {                                                                                                         \
+    return detail::asyncMaybeActor(qi::bind(fun, arg0 comma AUSE), timepoint);        \
   }
   QI_GEN(genCall)
 #undef genCall

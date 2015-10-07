@@ -301,7 +301,7 @@ TEST(TestStrand, AllFutureSignalPropertyPeriodicTaskAsyncCallTypeErased)
     for (int i = 0; i < 25; ++i)
       aobj.async<void>("f", TOTAL, finished);
     for (int i = 0; i < 25; ++i)
-      qi::async<void>(&MyActor::f, obj, TOTAL, finished);
+      qi::async2(qi::bind(&MyActor::f, obj, TOTAL, finished));
     for (int i = 0; i < 50; ++i)
       aobj.setProperty("prop", rand());
     qi::Future<void> f = qi::async2(boost::bind(chaincall, aobj, finished, TOTAL));
@@ -311,7 +311,7 @@ TEST(TestStrand, AllFutureSignalPropertyPeriodicTaskAsyncCallTypeErased)
     for (int i = 0; i < 25; ++i)
       aobj.async<void>("f", TOTAL, finished);
     for (int i = 0; i < 25; ++i)
-      qi::async<void>(&MyActor::f, obj, TOTAL, finished);
+      qi::async2(qi::bind(&MyActor::f, obj, TOTAL, finished));
     f.wait();
     finished.future().wait();
   }

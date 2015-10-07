@@ -291,7 +291,7 @@ TEST_F(TestObject, disconnectDeadlock)
   oserver1.post("fire1", 24);
   ready.future().wait();
   // a callback is running, trigger other disconnect
-  qi::Future<void> discDone2 = qi::async<void>(&qi::AnyObject::disconnect, oclient1, *link);
+  qi::Future<void> discDone2 = qi::async<void>(boost::function<void(qi::AnyObject, qi::SignalLink)>(&qi::AnyObject::disconnect), oclient1, *link);
   // wait and disconnect inside the callback
   qi::os::msleep(10);
   doDisc.setValue(0);

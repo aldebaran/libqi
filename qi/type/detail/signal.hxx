@@ -15,47 +15,13 @@
 namespace qi
 {
   template <typename T>
-  template <typename Arg0, typename F, typename FFB>
-  inline
-      typename boost::enable_if<boost::is_base_of<Actor, typename detail::Unwrap<Arg0>::type>, SignalSubscriber&>::type
-      SignalF<T>::_connectMaybeActor(Arg0& arg0, F&& cb, FFB&& fallbackCb)
-  {
-    SignalSubscriber& s =
-        connect(qi::trackWithFallback(std::move(fallbackCb),
-                                      boost::function<T>(
-                                          detail::Unwrap<Arg0>::unwrap(arg0)->strand()->schedulerFor(std::move(cb))),
-                                      arg0));
-    // skip a bounce because we schedule on a strand, call will be async
-    // anyway
-    s.setCallType(MetaCallType_Direct);
-    return s;
-  }
-  template <typename T>
-  template <typename Arg0, typename F, typename FFB>
-  inline typename boost::disable_if<
-      boost::is_base_of<Actor, typename detail::Unwrap<Arg0>::type>,
-      SignalSubscriber&>::type
-      SignalF<T>::_connectMaybeActor(Arg0&& arg0,
-                                     F&& cb,
-                                     FFB&& fallbackCb)
-  {
-    return connect(qi::trackWithFallback(std::move(fallbackCb), std::move(cb), std::move(arg0)));
-  }
-
-  template <typename T>
   template <typename F, typename Arg0, typename... Args>
   SignalSubscriber& SignalF<T>::connect(F&& func, Arg0&& arg0, Args&&... args)
   {
     int curId;
     SignalLink* trackLink;
     createNewTrackLink(curId, trackLink);
-    SignalSubscriber& s =
-        _connectMaybeActor(arg0,
-                           qi::bind<T>(func, arg0, args...),
-                           qi::track(boost::function<void()>(
-                                         // FIXME: i think this is unsafe, call the function on signalbaseprivate
-                                         boost::bind(&SignalF<T>::disconnectTrackLink, this, curId)),
-                                     boost::weak_ptr<SignalBasePrivate>(_p)));
+    SignalSubscriber& s = connect(qi::bind(func, std::forward<Arg0>(arg0), std::forward<Args>(args)...));
     *trackLink = s;
     return s;
   }
@@ -110,7 +76,10 @@ namespace qi
   template<typename F>
   SignalSubscriber& SignalF<T>::connect(F c)
   {
-    return connect(qi::AnyFunction::from(boost::function<T>(std::move(c))));
+    SignalSubscriber& sub = connect(qi::AnyFunction::from(boost::function<T>(std::move(c))));
+    if (detail::IsAsyncBind<F>::value)
+      sub.setCallType(MetaCallType_Direct);
+    return sub;
   }
   template<typename T>
   SignalSubscriber& SignalF<T>::connect(const AnyObject& obj, const std::string& slot)
