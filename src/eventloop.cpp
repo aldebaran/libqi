@@ -2,7 +2,8 @@
 **  Copyright (C) 2012, 2013 Aldebaran Robotics
 **  See COPYING for the license
 */
-#include <boost/thread.hpp>
+#include <thread>
+
 #include <boost/program_options.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/asio/steady_timer.hpp>
@@ -26,42 +27,6 @@
 qiLogCategory("qi.eventloop");
 
 namespace qi {
-
-  class WorkerThread // TODO C++11: replace this whole class by: using WorkerThread = boost::thread;
-  {
-  public:
-    WorkerThread()
-    {}
-
-    template<class Func>
-    WorkerThread(Func func)
-      : _thread(boost::make_shared<boost::thread>(func))
-    {}
-
-    template<class Func, class OwnerType>
-    WorkerThread(Func func, OwnerType* owner)
-      : _thread(boost::make_shared<boost::thread>(func, owner))
-    {}
-
-    WorkerThread(const WorkerThread& other)
-      : _thread(other._thread)
-    {}
-
-    WorkerThread& operator=(const WorkerThread& other)
-    {
-      _thread = other._thread;
-      return *this;
-    }
-
-    void join() { _thread->join(); }
-    void detach() { _thread->detach(); }
-    bool joinable() const { return _thread && _thread->joinable(); }
-    operator bool() { return joinable(); }
-
-  private:
-    boost::shared_ptr<boost::thread> _thread;
-  };
-
   class EventLoopAsio::WorkerThreadPool
   {
   public:
@@ -71,38 +36,39 @@ namespace qi {
     void launch(Func func)
     {
       boost::mutex::scoped_lock locked(_mutex);
-      _workers.push_back(WorkerThread(func));
+      _workers.emplace_back(std::move(func));
     }
 
     template<class Func, class OwnerType>
     void launch(Func func, OwnerType* owner)
     {
       boost::mutex::scoped_lock locked(_mutex);
-      _workers.push_back(WorkerThread(func, owner));
+      _workers.emplace_back(std::move(func), owner);
     }
 
     void joinAll()
     {
-      while (WorkerThread workerThread = pop())
+      std::thread workerThread;
+      while ((workerThread = pop()).joinable())
       {
         workerThread.join();
       }
     }
 
   private:
-    std::vector<WorkerThread> _workers;
+    std::vector<std::thread> _workers;
     boost::mutex _mutex;
 
-    WorkerThread pop()
+    std::thread pop()
     {
       boost::mutex::scoped_lock locked(_mutex);
       if (_workers.empty())
       {
-        return WorkerThread();
+        return {};
       }
       else
       {
-        WorkerThread workerThread = _workers.back();
+        std::thread workerThread = std::move(_workers.back());
         _workers.pop_back();
         return workerThread;
       }
