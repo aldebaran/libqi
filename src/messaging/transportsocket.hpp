@@ -54,11 +54,11 @@ namespace qi
       , _err(0)
       , _status(Status_Disconnected)
     {
+      // TODO: these two should be direct too
       connected.setCallType(MetaCallType_Queued);
       disconnected.setCallType(MetaCallType_Queued);
-      // Set messageReady signal to async mode to protect our network thread
-      messageReady.setCallType(MetaCallType_Queued);
-      socketEvent.setCallType(MetaCallType_Queued);
+      messageReady.setCallType(MetaCallType_Direct);
+      socketEvent.setCallType(MetaCallType_Direct);
     }
 
     virtual qi::FutureSync<void> connect(const qi::Url &url) = 0;
