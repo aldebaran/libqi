@@ -414,8 +414,7 @@ namespace qi {
     qi::BufferReader br(_p->buffer);
     //TODO: not exception safe
     AnyReference res(type);
-    decodeBinary(&br, res, boost::bind(deserializeObject, _1, socket), socket.get());
-    return res;
+    return decodeBinary(&br, res, boost::bind(deserializeObject, _1, socket), socket.get());
   }
 
   void Message::setValue(const AutoAnyReference &value, const Signature& sig, ObjectHost* context, StreamContext* streamContext) {

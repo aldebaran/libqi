@@ -26,7 +26,7 @@ namespace qi {
   namespace detail
   {
     void serialize(AnyReference val, BinaryEncoder& out, SerializeObjectCallback context, StreamContext* ctx);
-    void deserialize(AnyReference what, BinaryDecoder& in, DeserializeObjectCallback context, StreamContext* ctx);
+    AnyReference deserialize(AnyReference what, BinaryDecoder& in, DeserializeObjectCallback context, StreamContext* ctx);
     AnyReference deserialize(qi::TypeInterface *type, BinaryDecoder& in, DeserializeObjectCallback context, StreamContext* ctx);
   }
   class BinaryDecoder;
@@ -782,7 +782,7 @@ namespace qi {
       }
     }
 
-    void deserialize(AnyReference what, BinaryDecoder& in, DeserializeObjectCallback context, StreamContext* sctx)
+    AnyReference deserialize(AnyReference what, BinaryDecoder& in, DeserializeObjectCallback context, StreamContext* sctx)
     {
       detail::DeserializeTypeVisitor dtv(in, context, sctx);
       dtv.result = what;
@@ -792,18 +792,18 @@ namespace qi {
         ss << "ISerialization error " << BinaryDecoder::statusToStr(in.status());
         throw std::runtime_error(ss.str());
       }
+      return dtv.result;
     }
 
     AnyReference deserialize(qi::TypeInterface *type, BinaryDecoder& in, DeserializeObjectCallback context, StreamContext* sctx)
     {
       AnyReference res(type);
       try {
-        deserialize(res, in, context, sctx);
+        return deserialize(res, in, context, sctx);
       } catch (const std::runtime_error&) {
         res.destroy();
         throw;
       }
-      return res;
     }
 
   } // namespace detail
@@ -820,7 +820,7 @@ namespace qi {
     }
   }
 
-  void decodeBinary(qi::BufferReader *buf, qi::AnyReference gvp,
+  AnyReference decodeBinary(qi::BufferReader *buf, qi::AnyReference gvp,
     DeserializeObjectCallback onObject, StreamContext* sctx) {
     BinaryDecoder in(buf);
     detail::DeserializeTypeVisitor dtv(in, onObject, sctx);
@@ -832,6 +832,7 @@ namespace qi {
       qiLogError() << ss.str();
       throw std::runtime_error(ss.str());
     }
+    return dtv.result;
   }
 
 }
