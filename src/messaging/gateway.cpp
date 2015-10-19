@@ -768,6 +768,7 @@ void GatewayPrivate::serviceAuthenticationMessages(const Message& msg,
     service->messageReady.disconnect(*sub);
     service->messageReady.connect(&GatewayPrivate::onAnyMessageReady, this, _1, service);
     localServiceRegistrationEnd(service, sid);
+    return;
   }
 
   Message next;
