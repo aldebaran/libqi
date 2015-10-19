@@ -191,10 +191,10 @@ inline T extractFuture(qi::Future<qi::AnyReference> metaFut)
       if (conv.second)
       {
         AutoRefDestroy destroy(conv.first);
-        return *conv.first.ptr<T>(false);
+        return std::move(*conv.first.ptr<T>(false));
       }
       else
-        return *conv.first.ptr<T>(false);
+        return std::move(*conv.first.ptr<T>(false));
     }
   }
   catch(const std::exception& e)
