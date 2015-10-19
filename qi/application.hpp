@@ -10,6 +10,7 @@
 
 # include <functional>
 # include <vector>
+# include <string>
 # include <qi/api.hpp>
 
 namespace qi {
