@@ -17,9 +17,7 @@ namespace qi
     if (!conv.first.type())
       throw std::runtime_error(std::string("Failed converting ") + v.type()->infoString() + " to " + _type->infoString());
 
-    Property<AnyValue>::set(AnyValue(conv.first, false, false));
-    if (conv.second)
-      conv.first.destroy();
+    Property<AnyValue>::set(AnyValue(conv.first, false, conv.second));
   }
 
   template<typename T>
