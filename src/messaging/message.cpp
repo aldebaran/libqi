@@ -338,6 +338,10 @@ namespace qi {
       qiLogWarning() << "called setError on a non Type_Error message";
       return;
     }
+
+    // Clear the buffer before setting an error.
+    _p->buffer.clear();
+
     // Error message is of type m (dynamic)
     AnyValue v(AnyReference::from(error), false, false);
     setValue(AnyReference::from(v), "m");
