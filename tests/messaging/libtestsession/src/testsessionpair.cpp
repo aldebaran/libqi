@@ -30,9 +30,9 @@ TestSessionPair::TestSessionPair(TestMode::Mode mode, const std::string sdUrl)
     if (_mode == TestMode::Mode_Gateway)
     {
       _sd->listenStandalone("tcp://0.0.0.0:0");
-      _gw.attachToServiceDirectory(_sd->url());
+      _gw.attachToServiceDirectory(_sd->url()).value();
       _gw.listen(sdUrl);
-      endpoints = _sd->endpoints();
+      endpoints = _gw.endpoints();
     }
     else
     {
