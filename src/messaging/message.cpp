@@ -333,11 +333,9 @@ namespace qi {
     _p->buffer = buffer;
   }
 
-  void Message::setError(const std::string &error) {
-    if (type() != Type_Error) {
-      qiLogWarning() << "called setError on a non Type_Error message";
-      return;
-    }
+  void Message::setError(const std::string &error)
+  {
+    assert(type() == Type_Error && "called setError on a non Type_Error message");
 
     // Clear the buffer before setting an error.
     _p->buffer.clear();
