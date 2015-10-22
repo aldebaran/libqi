@@ -71,7 +71,7 @@ namespace qi {
   static std::string globalProgram;
   static std::string globalRealProgram;
 
-  typedef std::vector<boost::function<void()> > FunctionList;
+  typedef std::vector<std::function<void()> > FunctionList;
   static FunctionList* globalAtExit = nullptr;
   static FunctionList* globalAtEnter = nullptr;
   static FunctionList* globalAtStop = nullptr;
@@ -162,7 +162,7 @@ namespace qi {
     }
   }
 
-  static void signal_handler(const boost::system::error_code& error, int signal_number, boost::function<void (int)> fun)
+  static void signal_handler(const boost::system::error_code& error, int signal_number, std::function<void (int)> fun)
   {
     //when cancel is called the signal handler is raised with an error. catch it!
     if (!error) {
@@ -170,7 +170,7 @@ namespace qi {
     }
   }
 
-  bool Application::atSignal(boost::function<void (int)> func, int signal)
+  bool Application::atSignal(std::function<void (int)> func, int signal)
   {
     if (!globalIoService)
     {
@@ -457,20 +457,20 @@ namespace qi {
     return (const char**)globalArgv;
   }
 
-  bool Application::atEnter(boost::function<void()> func)
+  bool Application::atEnter(std::function<void()> func)
   {
     qiLogDebug() << "atEnter";
     lazyGet(globalAtEnter).push_back(func);
     return true;
   }
 
-  bool Application::atExit(boost::function<void()> func)
+  bool Application::atExit(std::function<void()> func)
   {
     lazyGet(globalAtExit).push_back(func);
     return true;
   }
 
-  bool Application::atStop(boost::function<void()> func)
+  bool Application::atStop(std::function<void()> func)
   {
     //If the client call atStop, it mean it will handle the proper destruction
     //of the program by itself. So here we catch SigInt/SigTerm to call Application::stop
