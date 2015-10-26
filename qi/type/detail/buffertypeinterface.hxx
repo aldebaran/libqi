@@ -17,6 +17,11 @@ namespace qi
     virtual std::pair<char*, size_t> get(void *storage)
     {
       Buffer* b = (Buffer*)Methods::ptrFromStorage(&storage);
+
+      // TODO: sub-buffers
+      if (b->subBuffers().size() != 0)
+        qiLogError("qitype.buffertypeinterface") << "buffer has sub-buffers, Python bytearrays might be incomplete";
+
       return std::make_pair(const_cast<char*>((const char*)b->data()), b->size());
     }
     virtual void set(void** storage, const char* ptr, size_t sz)
