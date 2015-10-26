@@ -423,8 +423,20 @@ void GatewayPrivate::sdConnectionRetry(const qi::Url& sdUrl, qi::Duration lastTi
   else
   {
     qiLogInfo() << "Successfully reestablished connection to the ServiceDirectory at address " << sdUrl.str();
-    for (UrlVector::iterator it = _endpoints.begin(), end = _endpoints.end(); it != end; ++it)
-      listen(*it);
+    const auto endpointsToReconnect = _endpoints;
+    for (const auto& endpointUrl : endpointsToReconnect)
+    {
+      qiLogInfo() << "Trying reconnection to " << endpointUrl.str();
+      if (listen(endpointUrl))
+      {
+        qiLogInfo() << "Reconnected to " << endpointUrl.str();
+      }
+      else
+      {
+        qiLogInfo() << "Reconnection failed: " << endpointUrl.str();
+      }
+    }
+
   }
 }
 
