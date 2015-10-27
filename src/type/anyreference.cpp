@@ -373,16 +373,26 @@ namespace detail
         fieldMap.push_back(-1);
       }
     }
-    std::vector<std::string> fieldMissing; // unfilled dst fields
+    std::vector<std::tuple<std::string, TypeInterface*>> fieldMissing; // unfilled dst fields
     for (unsigned i = 0; i < dstNames.size(); ++i)
     {
       std::vector<int>::iterator it = std::find(fieldMap.begin(), fieldMap.end(), i);
       if (it == fieldMap.end())
-        fieldMissing.push_back(dstNames[i]);
+        fieldMissing.push_back(std::make_tuple(dstNames[i], dstTypes[i]));
     }
+    auto vecOfTuplesToStrings = [](const std::vector<std::tuple<std::string, TypeInterface*>>& vec) {
+      std::string out;
+      for (const auto& t : vec)
+      {
+        if (!out.empty())
+          out += ", ";
+        out += std::get<0>(t);
+      }
+      return out;
+    };
     qiLogDebug() << "Field mapping:"
                  << " drop=" << fieldList(fieldDrop)
-                 << " missing=" << boost::algorithm::join(fieldMissing, ", ");
+                 << " missing=" << vecOfTuplesToStrings(fieldMissing);
 
     // convert what we can (missing field check might need the data)
     std::vector<void*> targetData;
@@ -410,7 +420,7 @@ namespace detail
       mustDestroy[targetIndex] = conv.second;
     }
 
-    // Then ask target to generate a value for missing fields
+    // Then ask source and target if it's okay to drop fields and fill missing fields
     std::map<std::string, AnyValue> fields; // used only in if below but must survive longuer
     if (!fieldMissing.empty() || !fieldDrop.empty())
     {

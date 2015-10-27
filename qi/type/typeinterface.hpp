@@ -273,7 +273,7 @@ namespace qi{
     * other.
     *
     * convertFrom(fields, missing, dropFields) will be called on the target,
-    * with a map of fields that were converted, the list of missing field names
+    * with a map of fields that were converted, the list of missing field names and typeinterfaces
     * and the list of fields that are being dropped.  The function must fill
     * fields with a value for each of the missing fields, or return false (no
     * storage is provided, because the struct cant be instanciated without a
@@ -285,14 +285,14 @@ namespace qi{
 
     /// Fill missing fields caused by conversion from a different struct. Return whether fill succeeded.
     virtual bool convertFrom(std::map<std::string, ::qi::AnyValue>& fields,
-                             const std::vector<std::string>& missing,
+                             const std::vector<std::tuple<std::string, TypeInterface*>>& missing,
                              const std::map<std::string, ::qi::AnyReference>& dropfields)
     {
       return false;
     }
     /// Fill missing fields caused by conversion to a different struct. Return whether fill succeeded.
     virtual bool convertTo(std::map<std::string, ::qi::AnyValue>& fields,
-                           const std::vector<std::string>& missing,
+                           const std::vector<std::tuple<std::string, TypeInterface*>>& missing,
                            const std::map<std::string, ::qi::AnyReference>& dropfields)
     {
       return false;

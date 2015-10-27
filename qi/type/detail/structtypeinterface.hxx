@@ -17,9 +17,9 @@ namespace qi
 {
   namespace detail {
 
-    bool QI_API fillMissingFieldsWithDefaultValues(StructTypeInterface* type,
+    bool QI_API fillMissingFieldsWithDefaultValues(
         std::map<std::string, ::qi::AnyValue>& fields,
-        const std::vector<std::string>& missing,
+        const std::vector<std::tuple<std::string, TypeInterface*>>& missing,
         const char** which=0, int whichLength=0);
 
     template <typename T>
@@ -27,13 +27,13 @@ namespace qi
     {
       static bool convertFrom(StructTypeInterface* type,
                               std::map<std::string, qi::AnyValue>& fields,
-                              const std::vector<std::string>& missing)
+                              const std::vector<std::tuple<std::string, TypeInterface*>>& missing)
       {
-        return false;
+        return missing.empty();
       }
-      static bool convertTo(const std::map<std::string, qi::AnyReference>&)
+      static bool convertTo(const std::map<std::string, qi::AnyReference>& dropFields)
       {
-        return false;
+        return dropFields.empty();
       }
     };
     template <typename T>
@@ -41,13 +41,13 @@ namespace qi
     {
       static bool convertTo(StructTypeInterface* type,
                             std::map<std::string, ::qi::AnyValue>& fields,
-                            const std::vector<std::string>& missing)
+                            const std::vector<std::tuple<std::string, TypeInterface*>>& missing)
       {
-        return false;
+        return missing.empty();
       }
-      static bool convertFrom(const std::map<std::string, qi::AnyReference>&)
+      static bool convertFrom(const std::map<std::string, qi::AnyReference>& dropFields)
       {
-        return false;
+        return dropFields.empty();
       }
     };
 
@@ -56,7 +56,7 @@ namespace qi
     {
       static bool convertFrom(StructTypeInterface* type,
                               std::map<std::string, qi::AnyValue>& fields,
-                              const std::vector<std::string>& missing,
+                              const std::vector<std::tuple<std::string, TypeInterface*>>& missing,
                               const std::map<std::string, qi::AnyReference>& dropfields)
       {
         return StructVersioningDelegateDropFields<T>::convertFrom(dropfields) &&
@@ -64,7 +64,7 @@ namespace qi
       }
       static bool convertTo(StructTypeInterface* type,
                             std::map<std::string, ::qi::AnyValue>& fields,
-                            const std::vector<std::string>& missing,
+                            const std::vector<std::tuple<std::string, TypeInterface*>>& missing,
                             const std::map<std::string, ::qi::AnyReference>& dropfields)
       {
         return StructVersioningDelegateAddFields<T>::convertTo(dropfields) &&
@@ -75,64 +75,64 @@ namespace qi
 /** Declare that some fields have been added in this structure. They will be filled with default values upon conversion
  * to this structure.
  */
-#define QI_TYPE_STRUCT_EXTENSION_ADDED_FIELDS(name, ...)                                  \
-  namespace qi                                                                            \
-  {                                                                                       \
-    namespace detail                                                                      \
-    {                                                                                     \
-      template <>                                                                         \
-      struct StructVersioningDelegateAddFields<name>                                      \
-      {                                                                                   \
-        static bool convertFrom(StructTypeInterface* type,                                \
-                                std::map<std::string, ::qi::AnyValue>& fields,            \
-                                const std::vector<std::string>& missing)                  \
-        {                                                                                 \
-          static const char* which[] = {__VA_ARGS__};                                     \
-          const int count = sizeof(which) / sizeof(char*);                                \
-          return fillMissingFieldsWithDefaultValues(type, fields, missing, which, count); \
-        }                                                                                 \
-        static bool convertTo(const std::map<std::string, ::qi::AnyReference>& todrop)    \
-        {                                                                                 \
-          static const char* which[] = {__VA_ARGS__};                                     \
-          const int count = sizeof(which) / sizeof(char*);                                \
-          for (const auto& field : todrop)                                                \
-            if (std::find(which, which + count, field.first) == which + count)            \
-              return false;                                                               \
-          return true;                                                                    \
-        }                                                                                 \
-      };                                                                                  \
-    }                                                                                     \
+#define QI_TYPE_STRUCT_EXTENSION_ADDED_FIELDS(name, ...)                                             \
+  namespace qi                                                                                       \
+  {                                                                                                  \
+    namespace detail                                                                                 \
+    {                                                                                                \
+      template <>                                                                                    \
+      struct StructVersioningDelegateAddFields<name>                                                 \
+      {                                                                                              \
+        static bool convertFrom(StructTypeInterface* type,                                           \
+                                std::map<std::string, ::qi::AnyValue>& fields,                       \
+                                const std::vector<std::tuple<std::string, TypeInterface*>>& missing) \
+        {                                                                                            \
+          static const char* which[] = {__VA_ARGS__};                                                \
+          const int count = sizeof(which) / sizeof(char*);                                           \
+          return fillMissingFieldsWithDefaultValues(fields, missing, which, count);            \
+        }                                                                                            \
+        static bool convertTo(const std::map<std::string, ::qi::AnyReference>& todrop)               \
+        {                                                                                            \
+          static const char* which[] = {__VA_ARGS__};                                                \
+          const int count = sizeof(which) / sizeof(char*);                                           \
+          for (const auto& field : todrop)                                                           \
+            if (std::find(which, which + count, field.first) == which + count)                       \
+              return false;                                                                          \
+          return true;                                                                               \
+        }                                                                                            \
+      };                                                                                             \
+    }                                                                                                \
   }
 /** Declare that some fields have been dropped in this structure. They will be filled with default values upon
  * conversion to the old structure.
  */
-#define QI_TYPE_STRUCT_EXTENSION_DROPPED_FIELDS(name, ...)                                \
-  namespace qi                                                                            \
-  {                                                                                       \
-    namespace detail                                                                      \
-    {                                                                                     \
-      template <>                                                                         \
-      struct StructVersioningDelegateDropFields<name>                                     \
-      {                                                                                   \
-        static bool convertTo(StructTypeInterface* type,                                  \
-                              std::map<std::string, ::qi::AnyValue>& fields,              \
-                              const std::vector<std::string>& missing)                    \
-        {                                                                                 \
-          static const char* which[] = {__VA_ARGS__};                                     \
-          const int count = sizeof(which) / sizeof(char*);                                \
-          return fillMissingFieldsWithDefaultValues(type, fields, missing, which, count); \
-        }                                                                                 \
-        static bool convertFrom(const std::map<std::string, ::qi::AnyReference>& todrop)  \
-        {                                                                                 \
-          static const char* which[] = {__VA_ARGS__};                                     \
-          const int count = sizeof(which) / sizeof(char*);                                \
-          for (const auto& field : todrop)                                                \
-            if (std::find(which, which + count, field.first) == which + count)            \
-              return false;                                                               \
-          return true;                                                                    \
-        }                                                                                 \
-      };                                                                                  \
-    }                                                                                     \
+#define QI_TYPE_STRUCT_EXTENSION_DROPPED_FIELDS(name, ...)                                         \
+  namespace qi                                                                                     \
+  {                                                                                                \
+    namespace detail                                                                               \
+    {                                                                                              \
+      template <>                                                                                  \
+      struct StructVersioningDelegateDropFields<name>                                              \
+      {                                                                                            \
+        static bool convertTo(StructTypeInterface* type,                                           \
+                              std::map<std::string, ::qi::AnyValue>& fields,                       \
+                              const std::vector<std::tuple<std::string, TypeInterface*>>& missing) \
+        {                                                                                          \
+          static const char* which[] = {__VA_ARGS__};                                              \
+          const int count = sizeof(which) / sizeof(char*);                                         \
+          return fillMissingFieldsWithDefaultValues(fields, missing, which, count);          \
+        }                                                                                          \
+        static bool convertFrom(const std::map<std::string, ::qi::AnyReference>& todrop)           \
+        {                                                                                          \
+          static const char* which[] = {__VA_ARGS__};                                              \
+          const int count = sizeof(which) / sizeof(char*);                                         \
+          for (const auto& field : todrop)                                                         \
+            if (std::find(which, which + count, field.first) == which + count)                     \
+              return false;                                                                        \
+          return true;                                                                             \
+        }                                                                                          \
+      };                                                                                           \
+    }                                                                                              \
   }
 
 /** Declare handlers for structure conversion from and to old version.
@@ -140,39 +140,39 @@ namespace qi
  * \param name the name of the structure
  * \param fromHandler a handler that will be called when converting from old structure to this one. It should have the
  * following signature: bool convertFrom(StructTypeInterface* type, std::map<std::string, ::qi::AnyValue>& fields, const
- * std::vector<std::string>& missing, const std::map<std::string, ::qi::AnyReference>& dropfields). The method receives
- * the structure to convert from as a map and it must fill in the fields given in the missing argument. It must return
- * true upon successful conversion.
+ * std::vector<std::tuple<std::string, TypeInterface*>>& missing, const std::map<std::string, ::qi::AnyReference>&
+ * dropfields). The method receives the structure to convert from as a map and it must fill in the fields given in the
+ * missing argument. It must return true upon successful conversion.
  * \param toHandler a handler that will be called when converting from this structure to the old one. It should have the
  * following signature: bool convertFrom(StructTypeInterface* type, std::map<std::string, ::qi::AnyValue>& fields, const
- * std::vector<std::string>& missing, const std::map<std::string, ::qi::AnyReference>& dropfields). The method receives
- * the structure to convert from as a map and it must fill in the fields given in the missing argument. It must return
- * true upon successful conversion.
+ * std::vector<std::tuple<std::string>& missing, const std::map<std::string, ::qi::AnyReference>& dropfields). The
+ * method receives the structure to convert from as a map and it must fill in the fields given in the missing argument.
+ * It must return true upon successful conversion.
  */
-#define QI_TYPE_STRUCT_EXTENSION_CONVERT_HANDLERS(name, fromHandler, toHandler)              \
-  namespace qi                                                                               \
-  {                                                                                          \
-    namespace detail                                                                         \
-    {                                                                                        \
-      template <>                                                                            \
-      struct StructVersioningDelegate<name>                                                  \
-      {                                                                                      \
-        static bool convertFrom(StructTypeInterface* type,                                   \
-                                std::map<std::string, ::qi::AnyValue>& fields,               \
-                                const std::vector<std::string>& missing,                     \
-                                const std::map<std::string, ::qi::AnyReference>& dropfields) \
-        {                                                                                    \
-          return fromHandler(fields, missing, dropfields);                                   \
-        }                                                                                    \
-        static bool convertTo(StructTypeInterface* type,                                     \
-                              std::map<std::string, ::qi::AnyValue>& fields,                 \
-                              const std::vector<std::string>& missing,                       \
-                              const std::map<std::string, ::qi::AnyReference>& dropfields)   \
-        {                                                                                    \
-          return toHandler(fields, missing, dropfields);                                     \
-        }                                                                                    \
-      };                                                                                     \
-    }                                                                                        \
+#define QI_TYPE_STRUCT_EXTENSION_CONVERT_HANDLERS(name, fromHandler, toHandler)                      \
+  namespace qi                                                                                       \
+  {                                                                                                  \
+    namespace detail                                                                                 \
+    {                                                                                                \
+      template <>                                                                                    \
+      struct StructVersioningDelegate<name>                                                          \
+      {                                                                                              \
+        static bool convertFrom(StructTypeInterface* type,                                           \
+                                std::map<std::string, ::qi::AnyValue>& fields,                       \
+                                const std::vector<std::tuple<std::string, TypeInterface*>>& missing, \
+                                const std::map<std::string, ::qi::AnyReference>& dropfields)         \
+        {                                                                                            \
+          return fromHandler(fields, missing, dropfields);                                           \
+        }                                                                                            \
+        static bool convertTo(StructTypeInterface* type,                                             \
+                              std::map<std::string, ::qi::AnyValue>& fields,                         \
+                              const std::vector<std::tuple<std::string, TypeInterface*>>& missing,   \
+                              const std::map<std::string, ::qi::AnyReference>& dropfields)           \
+        {                                                                                            \
+          return toHandler(fields, missing, dropfields);                                             \
+        }                                                                                            \
+      };                                                                                             \
+    }                                                                                                \
   }
 
     //keep only the class name. (remove :: and namespaces)
@@ -208,85 +208,85 @@ namespace qi
   }
 }
 
-#define __QI_TYPE_STRUCT_DECLARE(name, extra)                                                \
-  namespace qi                                                                               \
-  {                                                                                          \
-    template <>                                                                              \
-    struct TypeImpl<name> : public ::qi::StructTypeInterface                                 \
-    {                                                                                        \
-    public:                                                                                  \
-      typedef name ClassType;                                                                \
-      TypeImpl();                                                                            \
-      virtual std::vector< ::qi::TypeInterface*> memberTypes();                              \
-      virtual std::vector<std::string> elementsName();                                       \
-      virtual std::string className();                                                       \
-      virtual void* get(void* storage, unsigned int index);                                  \
-      virtual void set(void** storage, unsigned int index, void* valStorage);                \
-      virtual bool convertFrom(std::map<std::string, ::qi::AnyValue>& fields,                \
-                               const std::vector<std::string>& missing,                      \
-                               const std::map<std::string, ::qi::AnyReference>& dropfields); \
-      virtual bool convertTo(std::map<std::string, ::qi::AnyValue>& fields,                  \
-                             const std::vector<std::string>& missing,                        \
-                             const std::map<std::string, ::qi::AnyReference>& dropfields);   \
-      extra typedef ::qi::DefaultTypeImplMethods<name, ::qi::TypeByPointerPOD<name> > Impl;  \
-      _QI_BOUNCE_TYPE_METHODS(Impl);                                                         \
-    };                                                                                       \
+#define __QI_TYPE_STRUCT_DECLARE(name, extra)                                                       \
+  namespace qi                                                                                      \
+  {                                                                                                 \
+    template <>                                                                                     \
+    struct TypeImpl<name> : public ::qi::StructTypeInterface                                        \
+    {                                                                                               \
+    public:                                                                                         \
+      typedef name ClassType;                                                                       \
+      TypeImpl();                                                                                   \
+      virtual std::vector<::qi::TypeInterface*> memberTypes();                                      \
+      virtual std::vector<std::string> elementsName();                                              \
+      virtual std::string className();                                                              \
+      virtual void* get(void* storage, unsigned int index);                                         \
+      virtual void set(void** storage, unsigned int index, void* valStorage);                       \
+      virtual bool convertFrom(std::map<std::string, ::qi::AnyValue>& fields,                       \
+                               const std::vector<std::tuple<std::string, TypeInterface*>>& missing, \
+                               const std::map<std::string, ::qi::AnyReference>& dropfields);        \
+      virtual bool convertTo(std::map<std::string, ::qi::AnyValue>& fields,                         \
+                             const std::vector<std::tuple<std::string, TypeInterface*>>& missing,   \
+                             const std::map<std::string, ::qi::AnyReference>& dropfields);          \
+      extra typedef ::qi::DefaultTypeImplMethods<name, ::qi::TypeByPointerPOD<name>> Impl;          \
+      _QI_BOUNCE_TYPE_METHODS(Impl);                                                                \
+    };                                                                                              \
   }
 
 #define __QI_TUPLE_TYPE(_, what, field) res.push_back(::qi::typeOf(ptr->field));
 #define __QI_TUPLE_GET(_, what, field) if (i == index) return ::qi::typeOf(ptr->field)->initializeStorage(&ptr->field); i++;
 #define __QI_TUPLE_SET(_, what, field) if (i == index) ::qi::detail::setFromStorage(ptr->field, valueStorage); i++;
 #define __QI_TUPLE_FIELD_NAME(_, what, field) res.push_back(BOOST_PP_STRINGIZE(QI_DELAY(field)));
-#define __QI_TYPE_STRUCT_IMPLEMENT(name, inl, onSet, ...)                                                  \
-  namespace qi                                                                                             \
-  {                                                                                                        \
-    inl TypeImpl<name>::TypeImpl()                                                                         \
-    {                                                                                                      \
-      ::qi::registerStruct(this);                                                                          \
-    }                                                                                                      \
-    inl std::vector< ::qi::TypeInterface*> TypeImpl<name>::memberTypes()                                   \
-    {                                                                                                      \
-      name* ptr = 0;                                                                                       \
-      std::vector< ::qi::TypeInterface*> res;                                                              \
-      QI_VAARGS_APPLY(__QI_TUPLE_TYPE, _, __VA_ARGS__);                                                    \
-      return res;                                                                                          \
-    }                                                                                                      \
-    inl void* TypeImpl<name>::get(void* storage, unsigned int index)                                       \
-    {                                                                                                      \
-      unsigned int i = 0;                                                                                  \
-      name* ptr = (name*)ptrFromStorage(&storage);                                                         \
-      QI_VAARGS_APPLY(__QI_TUPLE_GET, _, __VA_ARGS__);                                                     \
-      return 0;                                                                                            \
-    }                                                                                                      \
-    inl void TypeImpl<name>::set(void** storage, unsigned int index, void* valueStorage)                   \
-    {                                                                                                      \
-      unsigned int i = 0;                                                                                  \
-      name* ptr = (name*)ptrFromStorage(storage);                                                          \
-      QI_VAARGS_APPLY(__QI_TUPLE_SET, _, __VA_ARGS__);                                                     \
-      onSet                                                                                                \
-    }                                                                                                      \
-    inl std::vector<std::string> TypeImpl<name>::elementsName()                                            \
-    {                                                                                                      \
-      std::vector<std::string> res;                                                                        \
-      QI_VAARGS_APPLY(__QI_TUPLE_FIELD_NAME, _, __VA_ARGS__);                                              \
-      return res;                                                                                          \
-    }                                                                                                      \
-    inl std::string TypeImpl<name>::className()                                                            \
-    {                                                                                                      \
-      return ::qi::detail::normalizeClassName(BOOST_PP_STRINGIZE(name));                                   \
-    }                                                                                                      \
-    inl bool TypeImpl<name>::convertFrom(std::map<std::string, ::qi::AnyValue>& fields,                    \
-                                         const std::vector<std::string>& missing,                          \
-                                         const std::map<std::string, ::qi::AnyReference>& dropfields)      \
-    {                                                                                                      \
-      return ::qi::detail::StructVersioningDelegate<name>::convertFrom(this, fields, missing, dropfields); \
-    }                                                                                                      \
-    inl bool TypeImpl<name>::convertTo(std::map<std::string, ::qi::AnyValue>& fields,                      \
-                                       const std::vector<std::string>& missing,                            \
-                                       const std::map<std::string, ::qi::AnyReference>& dropfields)        \
-    {                                                                                                      \
-      return ::qi::detail::StructVersioningDelegate<name>::convertTo(this, fields, missing, dropfields);   \
-    }                                                                                                      \
+#define __QI_TYPE_STRUCT_IMPLEMENT(name, inl, onSet, ...)                                                     \
+  namespace qi                                                                                                \
+  {                                                                                                           \
+    inl TypeImpl<name>::TypeImpl()                                                                            \
+    {                                                                                                         \
+      ::qi::registerStruct(this);                                                                             \
+    }                                                                                                         \
+    inl std::vector<::qi::TypeInterface*> TypeImpl<name>::memberTypes()                                       \
+    {                                                                                                         \
+      name* ptr = 0;                                                                                          \
+      std::vector<::qi::TypeInterface*> res;                                                                  \
+      QI_VAARGS_APPLY(__QI_TUPLE_TYPE, _, __VA_ARGS__);                                                       \
+      return res;                                                                                             \
+    }                                                                                                         \
+    inl void* TypeImpl<name>::get(void* storage, unsigned int index)                                          \
+    {                                                                                                         \
+      unsigned int i = 0;                                                                                     \
+      name* ptr = (name*)ptrFromStorage(&storage);                                                            \
+      QI_VAARGS_APPLY(__QI_TUPLE_GET, _, __VA_ARGS__);                                                        \
+      return 0;                                                                                               \
+    }                                                                                                         \
+    inl void TypeImpl<name>::set(void** storage, unsigned int index, void* valueStorage)                      \
+    {                                                                                                         \
+      unsigned int i = 0;                                                                                     \
+      name* ptr = (name*)ptrFromStorage(storage);                                                             \
+      QI_VAARGS_APPLY(__QI_TUPLE_SET, _, __VA_ARGS__);                                                        \
+      onSet                                                                                                   \
+    }                                                                                                         \
+    inl std::vector<std::string> TypeImpl<name>::elementsName()                                               \
+    {                                                                                                         \
+      std::vector<std::string> res;                                                                           \
+      QI_VAARGS_APPLY(__QI_TUPLE_FIELD_NAME, _, __VA_ARGS__);                                                 \
+      return res;                                                                                             \
+    }                                                                                                         \
+    inl std::string TypeImpl<name>::className()                                                               \
+    {                                                                                                         \
+      return ::qi::detail::normalizeClassName(BOOST_PP_STRINGIZE(name));                                      \
+    }                                                                                                         \
+    inl bool TypeImpl<name>::convertFrom(std::map<std::string, ::qi::AnyValue>& fields,                       \
+                                         const std::vector<std::tuple<std::string, TypeInterface*>>& missing, \
+                                         const std::map<std::string, ::qi::AnyReference>& dropfields)         \
+    {                                                                                                         \
+      return ::qi::detail::StructVersioningDelegate<name>::convertFrom(this, fields, missing, dropfields);    \
+    }                                                                                                         \
+    inl bool TypeImpl<name>::convertTo(std::map<std::string, ::qi::AnyValue>& fields,                         \
+                                       const std::vector<std::tuple<std::string, TypeInterface*>>& missing,   \
+                                       const std::map<std::string, ::qi::AnyReference>& dropfields)           \
+    {                                                                                                         \
+      return ::qi::detail::StructVersioningDelegate<name>::convertTo(this, fields, missing, dropfields);      \
+    }                                                                                                         \
   }
 
 /// Declare a struct field using an helper function
@@ -319,62 +319,62 @@ namespace qi
 #define __QI_ATUPLE_GET(_, what, field) if (i == index) return ::qi::detail::fieldStorage(ptr, __QI_STRUCT_ACCESS(field)); i++;
 #define __QI_ATUPLE_FIELD_NAME(_, what, field) res.push_back(QI_PAIR_FIRST(field));
 #define __QI_ATUPLE_FROMDATA(idx, what, field) ::qi::detail::fieldValue(ptr, __QI_STRUCT_ACCESS(field), const_cast<void**>(&data[idx]))
-#define __QI_TYPE_STRUCT_AGREGATE_CONSTRUCTOR_IMPLEMENT(name, inl, onSet, ...)                        \
-  namespace qi                                                                                        \
-  {                                                                                                   \
-    inl TypeImpl<name>::TypeImpl()                                                                    \
-    {                                                                                                 \
-      ::qi::registerStruct(this);                                                                     \
-    }                                                                                                 \
-    inl std::vector< ::qi::TypeInterface*> TypeImpl<name>::memberTypes()                              \
-    {                                                                                                 \
-      std::vector< ::qi::TypeInterface*> res;                                                         \
-      QI_VAARGS_APPLY(__QI_ATUPLE_TYPE, name, __VA_ARGS__);                                           \
-      return res;                                                                                     \
-    }                                                                                                 \
-                                                                                                      \
-    inl void* TypeImpl<name>::get(void* storage, unsigned int index)                                  \
-    {                                                                                                 \
-      unsigned int i = 0;                                                                             \
-      name* ptr = (name*)ptrFromStorage(&storage);                                                    \
-      QI_VAARGS_APPLY(__QI_ATUPLE_GET, name, __VA_ARGS__);                                            \
-      return 0;                                                                                       \
-    }                                                                                                 \
-                                                                                                      \
-    inl void TypeImpl<name>::set(void** storage, unsigned int index, void* valueStorage)              \
-    {                                                                                                 \
-      throw std::runtime_error("single-field set not implemented");                                   \
-    }                                                                                                 \
-                                                                                                      \
-    inl void TypeImpl<name>::set(void** storage, const std::vector<void*>& data)                      \
-    {                                                                                                 \
-      name* ptr = (name*)ptrFromStorage(storage);                                                     \
-      *ptr = name(QI_VAARGS_MAP(__QI_ATUPLE_FROMDATA, name, __VA_ARGS__));                            \
-    }                                                                                                 \
-                                                                                                      \
-    inl std::vector<std::string> TypeImpl<name>::elementsName()                                       \
-    {                                                                                                 \
-      std::vector<std::string> res;                                                                   \
-      QI_VAARGS_APPLY(__QI_ATUPLE_FIELD_NAME, _, __VA_ARGS__);                                        \
-      return res;                                                                                     \
-    }                                                                                                 \
-    inl std::string TypeImpl<name>::className()                                                       \
-                                                                                                      \
-    {                                                                                                 \
-      return ::qi::detail::normalizeClassName(BOOST_PP_STRINGIZE(name));                              \
-    }                                                                                                 \
-    inl bool TypeImpl<name>::convertFrom(std::map<std::string, ::qi::AnyValue>& fields,               \
-                                         const std::vector<std::string>& missing,                     \
-                                         const std::map<std::string, ::qi::AnyReference>& dropfields) \
-    {                                                                                                 \
-      return false;                                                                                   \
-    }                                                                                                 \
-    inl bool TypeImpl<name>::convertTo(std::map<std::string, ::qi::AnyValue>& fields,                 \
-                                       const std::vector<std::string>& missing,                       \
-                                       const std::map<std::string, ::qi::AnyReference>& dropfields)   \
-    {                                                                                                 \
-      return false;                                                                                   \
-    }                                                                                                 \
+#define __QI_TYPE_STRUCT_AGREGATE_CONSTRUCTOR_IMPLEMENT(name, inl, onSet, ...)                                \
+  namespace qi                                                                                                \
+  {                                                                                                           \
+    inl TypeImpl<name>::TypeImpl()                                                                            \
+    {                                                                                                         \
+      ::qi::registerStruct(this);                                                                             \
+    }                                                                                                         \
+    inl std::vector<::qi::TypeInterface*> TypeImpl<name>::memberTypes()                                       \
+    {                                                                                                         \
+      std::vector<::qi::TypeInterface*> res;                                                                  \
+      QI_VAARGS_APPLY(__QI_ATUPLE_TYPE, name, __VA_ARGS__);                                                   \
+      return res;                                                                                             \
+    }                                                                                                         \
+                                                                                                              \
+    inl void* TypeImpl<name>::get(void* storage, unsigned int index)                                          \
+    {                                                                                                         \
+      unsigned int i = 0;                                                                                     \
+      name* ptr = (name*)ptrFromStorage(&storage);                                                            \
+      QI_VAARGS_APPLY(__QI_ATUPLE_GET, name, __VA_ARGS__);                                                    \
+      return 0;                                                                                               \
+    }                                                                                                         \
+                                                                                                              \
+    inl void TypeImpl<name>::set(void** storage, unsigned int index, void* valueStorage)                      \
+    {                                                                                                         \
+      throw std::runtime_error("single-field set not implemented");                                           \
+    }                                                                                                         \
+                                                                                                              \
+    inl void TypeImpl<name>::set(void** storage, const std::vector<void*>& data)                              \
+    {                                                                                                         \
+      name* ptr = (name*)ptrFromStorage(storage);                                                             \
+      *ptr = name(QI_VAARGS_MAP(__QI_ATUPLE_FROMDATA, name, __VA_ARGS__));                                    \
+    }                                                                                                         \
+                                                                                                              \
+    inl std::vector<std::string> TypeImpl<name>::elementsName()                                               \
+    {                                                                                                         \
+      std::vector<std::string> res;                                                                           \
+      QI_VAARGS_APPLY(__QI_ATUPLE_FIELD_NAME, _, __VA_ARGS__);                                                \
+      return res;                                                                                             \
+    }                                                                                                         \
+    inl std::string TypeImpl<name>::className()                                                               \
+                                                                                                              \
+    {                                                                                                         \
+      return ::qi::detail::normalizeClassName(BOOST_PP_STRINGIZE(name));                                      \
+    }                                                                                                         \
+    inl bool TypeImpl<name>::convertFrom(std::map<std::string, ::qi::AnyValue>& fields,                       \
+                                         const std::vector<std::tuple<std::string, TypeInterface*>>& missing, \
+                                         const std::map<std::string, ::qi::AnyReference>& dropfields)         \
+    {                                                                                                         \
+      return false;                                                                                           \
+    }                                                                                                         \
+    inl bool TypeImpl<name>::convertTo(std::map<std::string, ::qi::AnyValue>& fields,                         \
+                                       const std::vector<std::tuple<std::string, TypeInterface*>>& missing,   \
+                                       const std::map<std::string, ::qi::AnyReference>& dropfields)           \
+    {                                                                                                         \
+      return false;                                                                                           \
+    }                                                                                                         \
   }
 
 /// Allow the QI_TYPE_STRUCT macro and variants to access private members
@@ -544,14 +544,14 @@ namespace qi {
     }
 
     virtual bool convertFrom(std::map<std::string, qi::AnyValue>& fields,
-                             const std::vector<std::string>& missing,
+                             const std::vector<std::tuple<std::string, TypeInterface*>>& missing,
                              const std::map<std::string, qi::AnyReference>& dropfields)
     {
       return bounceType()->convertFrom(fields, missing, dropfields);
     }
 
     virtual bool convertTo(std::map<std::string, qi::AnyValue>& fields,
-                           const std::vector<std::string>& missing,
+                           const std::vector<std::tuple<std::string, TypeInterface*>>& missing,
                            const std::map<std::string, qi::AnyReference>& dropfields)
     {
       return bounceType()->convertTo(fields, missing, dropfields);

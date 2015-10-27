@@ -1286,7 +1286,7 @@ struct ColorA
 
 // only allow drop of a if it equals 1
 bool colorDropHandler(std::map<std::string, ::qi::AnyValue>& fields,
-                      const std::vector<std::string>& missing,
+                      const std::vector<std::tuple<std::string, TypeInterface*>>& missing,
                       const std::map<std::string, ::qi::AnyReference>& dropfields)
 {
   try
@@ -1304,12 +1304,12 @@ bool colorDropHandler(std::map<std::string, ::qi::AnyValue>& fields,
 }
 
 bool colorFillHandler(std::map<std::string, ::qi::AnyValue>& fields,
-                      const std::vector<std::string>& missing,
+                      const std::vector<std::tuple<std::string, TypeInterface*>>& missing,
                       const std::map<std::string, ::qi::AnyReference>& dropfields)
 {
   if (!dropfields.empty())
     return false;
-  if (missing.size() != 1 || missing.front() != "a")
+  if (missing.size() != 1 || std::get<0>(missing.front()) != "a")
     return false;
   fields["a"] = qi::AnyValue::from(0);
   return true;
