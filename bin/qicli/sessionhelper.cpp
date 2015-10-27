@@ -13,7 +13,7 @@ SessionHelper::SessionHelper(qi::ApplicationSession& app, qi::JsonOption prettyP
   : _session(app.session())
   , _prettyPrint(prettyPrint)
 {
-  app.start();
+  app.startSession();
   _servicesInfos = _session->services();
 }
 

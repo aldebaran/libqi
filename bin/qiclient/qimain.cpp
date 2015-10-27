@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
     }
 
     qiLogInfo() << "Connecting to:" << a.url().str();
-    a.start();
+    a.startSession();
     if (vm.count("event"))
       recEvent(a);
     else

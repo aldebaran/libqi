@@ -184,7 +184,7 @@ int main(int argc, char *argv[])
     ob.advertiseMethod("anyArgs4", &anyArgs4);
     qi::AnyObject obj(ob.object());
 
-    app.start();
+    app.startSession();
 
     app.session()->listen("tcp://0.0.0.0:0");
     session->setIdentity("tests/server.key", "tests/server.crt");

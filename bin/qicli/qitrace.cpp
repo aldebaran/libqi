@@ -184,7 +184,7 @@ int subCmd_trace(int argc, char **argv, qi::ApplicationSession& app, qi::JsonOpt
     return 1;
 
   qiLogVerbose() << "Connecting to service directory";
-  app.start();
+  app.startSession();
   qi::SessionPtr s = app.session();
 
   qiLogVerbose() << "Resolving services";

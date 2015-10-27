@@ -95,7 +95,7 @@ int subCmd_logView(int argc, char **argv, qi::ApplicationSession& app, qi::JsonO
     return 1;
 
   qiLogVerbose() << "Connecting to service directory";
-  app.start();
+  app.startSession();
   qi::SessionPtr s = app.session();
 
   qiLogVerbose() << "Resolving services";
@@ -158,7 +158,7 @@ int subCmd_logSend(int argc, char **argv, qi::ApplicationSession& app, qi::JsonO
     return 1;
 
   qiLogVerbose() << "Connecting to service directory";
-  app.start();
+  app.startSession();
   qi::SessionPtr s = app.session();
 
   qiLogVerbose() << "Resolving services";
