@@ -23,6 +23,9 @@ namespace po = boost::program_options;
 
 qiLogCategory("qi.gateway.main");
 
+static const unsigned int NB_RETRY_RECONNECT = 5;
+static const qi::Duration RETRY_RECONNECT_WAIT = qi::Seconds(2);
+
 static bool attachToServiceDirectory(qi::Gateway& gw, const qi::Url& url)
 {
   qi::Future<void> fut = gw.attachToServiceDirectory(url);
@@ -80,8 +83,13 @@ int main(int argc, char *argv[])
     if (gatewayType == "local")
     {
       qi::Gateway gateway;
-      if (!attachToServiceDirectory(gateway, qi::Url(masterAddress)) ||
-          !gateway.listen(gatewayAddress))
+      bool ok = false;
+      for (unsigned i = 0; i < NB_RETRY_RECONNECT && !(ok = attachToServiceDirectory(gateway, qi::Url(masterAddress))); ++i)
+      {
+        qiLogInfo() << "Connection to SD failed, retrying in 2 seconds";
+        qi::sleepFor(RETRY_RECONNECT_WAIT);
+      }
+      if (!ok || !gateway.listen(gatewayAddress))
       {
         qiLogError() << "Failed to launch gateway.";
         return EXIT_FAILURE;
