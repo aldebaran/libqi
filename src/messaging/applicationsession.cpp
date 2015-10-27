@@ -202,7 +202,7 @@ static void envConfigInit(qi::ApplicationSession::Config& conf)
 
   if (listenUrl.length())
     conf.setDefaultListenUrl(Url(listenUrl));
-  if (sdUrl.length())
+  if (sdUrl.length() && !conf.defaultStandAlone())
     conf.setDefaultUrl(sdUrl);
 }
 
