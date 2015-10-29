@@ -948,6 +948,20 @@ TEST(TestFutureThen, AndThenR)
   EXPECT_EQ(fff.error(), "fail");
 }
 
+TEST(TestFutureThen, AndThen)
+{
+  bool called = false;
+  qi::Future<int> f = qi::async2(&get42);
+  qi::Future<int> ff = f.andThen(boost::bind(&fail, _1));
+  qi::Future<int> fff = ff.andThen(boost::bind(&call, boost::ref(called)));
+
+  fff.wait();
+
+  EXPECT_FALSE(called);
+  ASSERT_TRUE(fff.hasError());
+  EXPECT_EQ(fff.error(), "fail");
+}
+
 TEST(TestFutureThen, AndThenRVoid)
 {
   bool called = false;

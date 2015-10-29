@@ -411,10 +411,45 @@ namespace qi {
      * If this future finishes with an error or a cancel, the callback will not be called and the returned future will
      * finish in the same state.
      *
-     * @remark Variadic variants of this function have not been implemented yet, waiting for C++11.
+     * @deprecated since 2.5 use then()
      */
     template <typename R, typename AF>
     Future<R> andThenR(FutureCallbackType type, AF&& func);
+
+    /**
+     * @brief Same as andThenR(), but with type defaulted to FutureCallbackType_Auto.
+     *
+     * @deprecated since 2.5 use then()
+     */
+    template <typename R, typename AF>
+    Future<R> andThenR(AF&& func)
+    {
+      return this->andThenR<R>(FutureCallbackType_Auto, std::forward<AF>(func));
+    }
+
+    /**
+     * @brief Same as then(), but the callback is called only if this future finishes with a value.
+     *
+     * The callback will receive the value of this future, as opposed to this future itself.
+     *
+     * If this future finishes with an error or a cancel, the callback will not be called and the returned future will
+     * finish in the same state.
+     */
+    template <typename AF>
+    auto andThen(FutureCallbackType type, AF&& func)
+        -> decltype(this->andThenR<decltype(func(std::declval<ValueType>()))>(type, std::forward<AF>(func)))
+    {
+      return this->andThenR<decltype(func(std::declval<ValueType>()))>(type, std::forward<AF>(func));
+    }
+
+    /**
+     * @brief Same as andThen(), but with type defaulted to FutureCallbackType_Auto.
+     */
+    template <typename AF>
+    auto andThen(AF&& func) -> decltype(this->andThen(FutureCallbackType_Auto, std::forward<AF>(func)))
+    {
+      return this->andThen(FutureCallbackType_Auto, std::forward<AF>(func));
+    }
 
     /**
      * \brief Get a functor that will cancel the future.
@@ -425,15 +460,6 @@ namespace qi {
      * \note This function should only be useful for bindings, you probably don't need it.
      */
     boost::function<void()> makeCanceler();
-
-    /**
-     * @brief Same as andThenR(), but with type defaulted to FutureCallbackType_Auto.
-     */
-    template <typename R, typename AF>
-    Future<R> andThenR(AF&& func)
-    {
-      return this->andThenR<R>(FutureCallbackType_Auto, std::forward<AF>(func));
-    }
 
   public:
     typedef boost::function<void (Future<T>) > Connection;
