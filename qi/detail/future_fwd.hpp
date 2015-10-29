@@ -336,19 +336,26 @@ namespace qi {
      * @tparam R the return type of your callback as it is hard to deduce without C++11.
      *
      * @return a future that will receive the value returned by the callback or an error if the callback threw.
+     *
+     * @deprecated since 2.5 use then()
      */
     template <typename R, typename AF>
     Future<R> thenR(FutureCallbackType type, AF&& func);
 
     /**
      * @brief Same as thenR(), but with type defaulted to FutureCallbackType_Auto.
+     *
+     * @deprecated since 2.5 use then()
      */
     template <typename R, typename AF>
     Future<R> thenR(AF&& func)
     {
-      return this->thenR(FutureCallbackType_Auto, std::forward<AF>(func));
+      return this->thenR<R>(FutureCallbackType_Auto, std::forward<AF>(func));
     }
 
+    /**
+     * @deprecated since 2.5 use then()
+     */
     template <typename R, typename AF, typename Arg0, typename... Args>
     Future<R> thenR(AF&& func, Arg0&& arg0, Args&&... args)
     {
@@ -358,12 +365,42 @@ namespace qi {
           std::forward<Arg0>(arg0),
           std::forward<Args>(args)...);
     }
+
+    /**
+     * @deprecated since 2.5 use then()
+     */
     template <typename R, typename AF, typename Arg0, typename... Args>
     Future<R> thenR(FutureCallbackType type, AF&& func, Arg0&& arg0, Args&&... args)
     {
       return thenR<R>(
           type,
           qi::bind(std::forward<AF>(func), arg0, std::forward<Args>(args)...));
+    }
+
+    /**
+     * @brief Execute a callback when the future is finished.
+     *
+     * The callback will receive this future as argument and all other arguments passed to this function.
+     *
+     * If the first argument bound to this function is a weak_ptr it will be locked. If it is a Trackable, the callback
+     * won't be called after the object's destruction. If it is an Actor, the call will be stranded.
+     *
+     * @return a future that will receive the value returned by the callback or an error if the callback threw.
+     */
+    template <typename AF>
+    auto then(FutureCallbackType type, AF&& func)
+        -> decltype(this->thenR<decltype(func(*this))>(type, std::forward<AF>(func)))
+    {
+      return this->thenR<decltype(func(*this))>(type, std::forward<AF>(func));
+    }
+
+    /**
+     * @brief Same as then(), but with type defaulted to FutureCallbackType_Auto.
+     */
+    template <typename AF>
+    auto then(AF&& func) -> decltype(this->then(FutureCallbackType_Auto, std::forward<AF>(func)))
+    {
+      return this->then(FutureCallbackType_Auto, std::forward<AF>(func));
     }
 
     /**

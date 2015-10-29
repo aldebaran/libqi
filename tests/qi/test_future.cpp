@@ -914,6 +914,15 @@ TEST(TestFutureThen, ThenR)
   ASSERT_EQ(44, fff.value());
 }
 
+TEST(TestFutureThen, Then)
+{
+  qi::Future<int> f = qi::async2(&get42);
+  qi::Future<int> ff = f.then(qi::bind(&assinc, _1, 42));
+  qi::Future<int> fff = ff.then(qi::bind(&assinc, _1, 43));
+
+  ASSERT_EQ(44, fff.value());
+}
+
 int fail(int f)
 {
   throw std::runtime_error("fail");
