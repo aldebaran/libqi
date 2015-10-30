@@ -11,10 +11,10 @@
 #include "qicli.hpp"
 
 
-ServiceHelper::ServiceHelper(const qi::AnyObject& service, const std::string &name, qi::JsonOption prettyPrint)
+ServiceHelper::ServiceHelper(const qi::AnyObject& service, const std::string &name, qi::JsonOption jsonPrintOption)
   : _name(name)
   , _service(service)
-  , _prettyPrint(prettyPrint)
+  , _jsonPrintOption(jsonPrintOption)
 {}
 
 ServiceHelper::~ServiceHelper()
@@ -109,7 +109,7 @@ bool ServiceHelper::showProperty(const std::string &propertyName)
     printError(result.error());
     return false;
   }
-  std::cout << qi::encodeJSON(result.value(), _prettyPrint) << std::endl;
+  std::cout << qi::encodeJSON(result.value(), _jsonPrintOption) << std::endl;
   return true;
 }
 
@@ -177,7 +177,7 @@ bool ServiceHelper::call(const std::string &methodName, const qi::GenericFunctio
       std::cout << ((double)t / callCount) << " us per call " << std::endl;
     return false;
   }
-  std::cout << qi::encodeJSON(result.value(), _prettyPrint) << std::endl;
+  std::cout << qi::encodeJSON(result.value(), _jsonPrintOption) << std::endl;
   if (callCount)
     std::cout << ((double)t / callCount) << " us per call " << std::endl;
   const_cast<qi::AnyReference&>(result.value()).destroy();

@@ -4,6 +4,7 @@
 */
 
 #include <sstream>
+#include <string>
 #include <iomanip>
 #ifdef WITH_BOOST_LOCALE
 #  include <boost/locale.hpp>
@@ -16,7 +17,7 @@ qiLogCategory("qitype.jsonencoder");
 
 namespace qi {
 
-  static void serialize(AnyReference val, std::stringstream& out, JsonOption prettyPrint);
+  static void serialize(AnyReference val, std::stringstream& out, JsonOption jsonPrintOption, unsigned int indent);
 
   //Taken from boost::json
   inline char to_hex_char(unsigned int c)
@@ -44,9 +45,9 @@ namespace qi {
   }
 
   //Taken from boost::json
-  bool add_esc_char(char c, std::string& s, JsonOption prettyPrint)
+  bool add_esc_char(char c, std::string& s, JsonOption jsonPrintOption)
   {
-    if (prettyPrint == JsonOption::None)
+    if (!(jsonPrintOption & JsonOption_Expand))
     {
       switch(c)
       {
@@ -68,7 +69,7 @@ namespace qi {
   }
 
   //Taken from boost::json
-  std::string add_esc_chars(const std::wstring& s, JsonOption prettyPrint)
+  std::string add_esc_chars(const std::wstring& s, JsonOption jsonPrintOption)
   {
     typedef std::wstring::const_iterator Iter_type;
     typedef std::wstring::value_type     Char_type;
@@ -79,7 +80,7 @@ namespace qi {
     for(Iter_type i = s.begin(); i != end; ++i)
     {
       const Char_type c(*i);
-      if(add_esc_char(c, result, prettyPrint))
+      if(add_esc_char(c, result, jsonPrintOption))
         continue;
       const wint_t unsigned_c((c >= 0) ? c : 256 + c);
 
@@ -92,22 +93,43 @@ namespace qi {
     return result;
   }
 
-  std::string encodeJSON(const qi::AutoAnyReference &value, JsonOption prettyPrint) {
+  std::string encodeJSON(const qi::AutoAnyReference &value, JsonOption jsonPrintOption) {
     std::stringstream ss;
-    serialize(value, ss, prettyPrint);
+    serialize(value, ss, jsonPrintOption, 0);
     return ss.str();
   }
 
   class SerializeJSONTypeVisitor
   {
   public:
-    SerializeJSONTypeVisitor(std::stringstream& outd, JsonOption prettyPrintd = JsonOption::None)
+    SerializeJSONTypeVisitor(std::stringstream& outd, JsonOption jsonPrintOptiond, unsigned int indentd)
       : out(outd)
-      , prettyPrint(prettyPrintd)
+      , jsonPrintOption(jsonPrintOptiond)
+      , indent(indentd)
     {
       //force C local, for int and float formatting
       out.imbue(std::locale("C"));
     }
+
+    void printIndent()
+    {
+      if (jsonPrintOption & qi::JsonOption_PrettyPrint)
+      {
+        out << std::endl;
+        for (unsigned int i = 0; i < indent; ++i)
+          out << "  ";
+      }
+    }
+
+    void printColon()
+    {
+      if (jsonPrintOption & qi::JsonOption_PrettyPrint)
+        out << ": ";
+      else
+        out << ":";
+    }
+
+
     void visitUnknown(AnyReference v)
     {
       qiLogError() << "JSON Error: Type " << v.type()->infoString() <<" not serializable";
@@ -159,25 +181,29 @@ namespace qi {
     void visitString(const char* data, size_t size)
     {
 #ifdef WITH_BOOST_LOCALE
-      out << "\"" << add_esc_chars(boost::locale::conv::to_utf<wchar_t>(std::string(data, size), "UTF-8"), prettyPrint) << "\"";
+      out << "\"" << add_esc_chars(boost::locale::conv::to_utf<wchar_t>(std::string(data, size), "UTF-8"), jsonPrintOption) << "\"";
 #else
-      out << "\"" << add_esc_chars(std::wstring(data, data+size), prettyPrint) << "\"";
+      out << "\"" << add_esc_chars(std::wstring(data, data+size), jsonPrintOption) << "\"";
 #endif
     }
 
     void visitList(AnyIterator begin, AnyIterator end)
     {
-      out << "[ ";
-      bool clear = begin != end;
+      out << "[";
+      ++indent;
+      const bool empty = begin == end;
       while (begin != end)
       {
-        serialize(*begin, out, prettyPrint);
-        out << ", ";
+        printIndent();
+        serialize(*begin, out, jsonPrintOption, indent);
         ++begin;
+        if (begin != end)
+          out << ",";
       }
-      if (clear)
-        out.seekp(-2, std::ios_base::cur);
-      out << " ]";
+      --indent;
+      if (!empty)
+        printIndent();
+      out << "]";
     }
 
     void visitVarArgs(AnyIterator begin, AnyIterator end)
@@ -187,20 +213,24 @@ namespace qi {
 
     void visitMap(AnyIterator begin, AnyIterator end)
     {
-      out << "{ ";
-      bool clear = begin != end;
+      out << "{";
+      ++indent;
+      const bool empty = begin == end;
       while (begin != end)
       {
+        printIndent();
         AnyReference e = *begin;
-        serialize(e[0], out, prettyPrint);
-        out << " : ";
-        serialize(e[1], out, prettyPrint);
-        out << ", ";
+        serialize(e[0], out, jsonPrintOption, indent);
+        printColon();
+        serialize(e[1], out, jsonPrintOption, indent);
         ++begin;
+        if (begin != end)
+          out << ",";
       }
-      if (clear)
-        out.seekp(-2, std::ios_base::cur);
-      out << " }";
+      --indent;
+      if (!empty)
+        printIndent();
+      out << "}";
     }
 
     void visitObject(GenericObject value)
@@ -227,36 +257,39 @@ namespace qi {
     {
       //is the tuple is annotated serialize as an object
       if (annotations.size()) {
-        out << "{ ";
-        std::string tsig;
-        for (unsigned i=0; i<vals.size(); ++i) {
+        out << "{";
+        ++indent;
+        for (unsigned i=0; i<vals.size();++i) {
+          printIndent();
           visitString(annotations[i].data(), annotations[i].size());
-          out << " : ";
-          serialize(vals[i], out, prettyPrint);
-          if (i < vals.size() + 1)
-            out << ", ";
+          printColon();
+          serialize(vals[i], out, jsonPrintOption, indent);
+          if (i + 1 < vals.size())
+            out << ",";
         }
-        if (vals.size())
-          out.seekp(-2, std::ios_base::cur);
-        out << " }";
+        --indent;
+        printIndent();
+        out << "}";
         return;
       }
-      out << "[ ";
-      std::string tsig;
-      for (unsigned i=0; i<vals.size(); ++i) {
-        serialize(vals[i], out, prettyPrint);
-        if (i < vals.size() + 1)
-          out << ", ";
+
+      out << "[";
+      ++indent;
+      for (unsigned i=0; i<vals.size();++i) {
+        printIndent();
+        serialize(vals[i], out, jsonPrintOption, indent);
+        if (i + 1 < vals.size())
+          out << ",";
       }
-      if (vals.size())
-        out.seekp(-2, std::ios_base::cur);
-      out << " ]";
+      --indent;
+      printIndent();
+      out << "]";
     }
 
     void visitDynamic(AnyReference pointee)
     {
       if (pointee.isValid()) {
-        serialize(pointee, out, prettyPrint);
+        serialize(pointee, out, jsonPrintOption, indent);
       }
     }
 
@@ -274,12 +307,13 @@ namespace qi {
     }
 
     std::stringstream& out;
-    JsonOption prettyPrint;
+    JsonOption jsonPrintOption;
+    unsigned int indent;
   };
 
-  static void serialize(AnyReference val, std::stringstream& out, JsonOption prettyPrint)
+  static void serialize(AnyReference val, std::stringstream& out, JsonOption jsonPrintOption, unsigned int indent)
   {
-    SerializeJSONTypeVisitor stv(out, prettyPrint);
+    SerializeJSONTypeVisitor stv(out, jsonPrintOption, indent);
     qi::typeDispatch(stv, val);
   }
 

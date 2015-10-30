@@ -47,7 +47,7 @@ int subCmd_info(int argc, char **argv, qi::ApplicationSession& app)
   if (serviceList.empty())
     serviceList.push_back("*");
 
-  SessionHelper session(app, qi::JsonOption::None);
+  SessionHelper session(app, qi::JsonOption_None);
   session.info(serviceList, details, vm.count("hidden"), vm.count("show-doc"), vm.count("raw-signature"), zOpt);
   return 0;
 }
@@ -66,7 +66,8 @@ int subCmd_call(int argc, char **argv, qi::ApplicationSession& app)
       ("hidden", "call hidden methods if they match the given pattern")
       ("json", "method parameters' will be treaded as JSON strings")
       ("continue", "continue on error")
-      ("prettyprint", "Print return json output without any escape characters")
+      ("expand", "Print return string and expanding special characters")
+      ("prettyprint", "Print human readable return json output")
       ("help", "Print this help message and exit");
 
   po::positional_options_description positionalOptions;
@@ -78,9 +79,11 @@ int subCmd_call(int argc, char **argv, qi::ApplicationSession& app)
                  .style(qicli_call_cmd_style), vm, desc))
     return 1;
 
-  qi::JsonOption prettyprint = qi::JsonOption::None;
+  qi::JsonOption prettyprint = qi::JsonOption_None;
   if (vm.count("prettyprint"))
-     prettyprint = qi::JsonOption::PrettyPrint;
+     prettyprint |= qi::JsonOption_PrettyPrint;
+  if (vm.count("expand"))
+     prettyprint |= qi::JsonOption_Expand;
 
   SessionHelper session(app, prettyprint);
   session.call(fullName, argList, vm.count("hidden"), vm.count("json"), vm.count("continue"), callCount);
@@ -110,7 +113,7 @@ int subCmd_post(int argc, char **argv, qi::ApplicationSession& app)
                  .style(qicli_call_cmd_style), vm, desc))
     return 1;
 
-  SessionHelper session(app, qi::JsonOption::None);
+  SessionHelper session(app, qi::JsonOption_None);
 
   if (vm.count("almemory"))
   {
@@ -141,7 +144,7 @@ int subCmd_get(int argc, char **argv, qi::ApplicationSession& app)
   if (!poDefault(po::command_line_parser(argc, argv).options(desc).positional(positionalOptions), vm, desc))
     return 1;
 
-  SessionHelper session(app, qi::JsonOption::None);
+  SessionHelper session(app, qi::JsonOption_None);
 
   if (patternList.empty())
       patternList.push_back("*.*");
@@ -177,7 +180,7 @@ int subCmd_set(int argc, char **argv, qi::ApplicationSession& app)
   std::string jsonValue = argList.back();
   argList.pop_back();
 
-  SessionHelper session(app, qi::JsonOption::None);
+  SessionHelper session(app, qi::JsonOption_None);
   session.set(argList, jsonValue, vm.count("hidden"), vm.count("json"), vm.count("continue"));
   return 0;
 }
@@ -202,7 +205,7 @@ int subCmd_watch(int argc, char **argv, qi::ApplicationSession& app)
   if (!poDefault(po::command_line_parser(argc, argv).options(desc).positional(positionalOptions), vm, desc))
     return 1;
 
-  SessionHelper session(app, qi::JsonOption::None);
+  SessionHelper session(app, qi::JsonOption_None);
 
   if (patternList.empty())
   {
