@@ -175,6 +175,26 @@ namespace qi
     {
     };
 
+    template <bool IsAsync, typename F, typename... Args>
+    struct DecayAsyncResultImpl;
+
+    template <typename F, typename... Args>
+    struct DecayAsyncResultImpl<false, F, Args...>
+    {
+      using type = decltype(std::declval<F>()(std::declval<Args>()...));
+    };
+
+    template <typename F, typename... Args>
+    struct DecayAsyncResultImpl<true, F, Args...>
+    {
+      // I'd like to use a decltype, but vs2013 fails to parse this
+      //using type = typename decltype(std::declval<F>()(std::declval<Args>()...))::TemplateValue;
+      using type = typename std::result_of<F(Args...)>::type::TemplateValue;
+    };
+
+    template <typename T, typename... Args>
+    using DecayAsyncResult = DecayAsyncResultImpl<IsAsyncBind<typename std::decay<T>::type>::value, T, Args...>;
+
     template <typename T, bool IsTrackable>
     struct BindTransformImpl
     {

@@ -217,14 +217,6 @@ namespace detail {
     return boost::bind(&Future<T>::_weakCancelCb, boost::weak_ptr<detail::FutureBaseTyped<T> >(_p));
   }
 
-  template <typename T>
-  Future<T>::operator Future<void>() const
-  {
-    qi::Promise<void> prom;
-    qi::adaptFuture(*this, prom);
-    return prom.future();
-  }
-
   namespace detail {
 
     template <typename T>

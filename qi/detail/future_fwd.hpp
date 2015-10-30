@@ -150,6 +150,7 @@ namespace qi {
   public:
     typedef typename detail::FutureType<T>::type     ValueType;
     typedef typename detail::FutureType<T>::typecast ValueTypeCast;
+    typedef T TemplateValue;
 
   public:
     Future()
@@ -160,8 +161,6 @@ namespace qi {
     Future(const Future<T>& b)
       : _p(b._p)
     {}
-
-    operator Future<void>() const;
 
     bool operator==(const Future<T> &other)
     {
@@ -389,9 +388,9 @@ namespace qi {
      */
     template <typename AF>
     auto then(FutureCallbackType type, AF&& func)
-        -> decltype(this->thenR<decltype(func(*this))>(type, std::forward<AF>(func)))
+        -> qi::Future<typename detail::DecayAsyncResult<AF, qi::Future<T>>::type>
     {
-      return this->thenR<decltype(func(*this))>(type, std::forward<AF>(func));
+      return this->thenR<typename detail::DecayAsyncResult<AF, qi::Future<T>>::type>(type, std::forward<AF>(func));
     }
 
     /**
@@ -495,7 +494,7 @@ namespace qi {
   inline void connect(const AF& fun, const ARG0& arg0 comma ADECL,       \
                       FutureCallbackType type = FutureCallbackType_Auto) \
   {                                                                      \
-    this->thenR<void>(type, fun, arg0 comma AUSE);                       \
+    this->then(type, qi::bind(fun, arg0 comma AUSE));                    \
   }
     QI_GEN(genCall)
 #undef genCall
