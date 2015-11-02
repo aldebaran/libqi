@@ -208,29 +208,29 @@ namespace qi
   }
 }
 
-#define __QI_TYPE_STRUCT_DECLARE(name, extra)                                                       \
-  namespace qi                                                                                      \
-  {                                                                                                 \
-    template <>                                                                                     \
-    struct TypeImpl<name> : public ::qi::StructTypeInterface                                        \
-    {                                                                                               \
-    public:                                                                                         \
-      typedef name ClassType;                                                                       \
-      TypeImpl();                                                                                   \
-      virtual std::vector<::qi::TypeInterface*> memberTypes();                                      \
-      virtual std::vector<std::string> elementsName();                                              \
-      virtual std::string className();                                                              \
-      virtual void* get(void* storage, unsigned int index);                                         \
-      virtual void set(void** storage, unsigned int index, void* valStorage);                       \
-      virtual bool convertFrom(std::map<std::string, ::qi::AnyValue>& fields,                       \
-                               const std::vector<std::tuple<std::string, TypeInterface*>>& missing, \
-                               const std::map<std::string, ::qi::AnyReference>& dropfields);        \
-      virtual bool convertTo(std::map<std::string, ::qi::AnyValue>& fields,                         \
-                             const std::vector<std::tuple<std::string, TypeInterface*>>& missing,   \
-                             const std::map<std::string, ::qi::AnyReference>& dropfields);          \
-      extra typedef ::qi::DefaultTypeImplMethods<name, ::qi::TypeByPointerPOD<name>> Impl;          \
-      _QI_BOUNCE_TYPE_METHODS(Impl);                                                                \
-    };                                                                                              \
+#define __QI_TYPE_STRUCT_DECLARE(name, extra)                                                         \
+  namespace qi                                                                                        \
+  {                                                                                                   \
+    template <>                                                                                       \
+    struct TypeImpl<name> : public ::qi::StructTypeInterface                                          \
+    {                                                                                                 \
+    public:                                                                                           \
+      typedef name ClassType;                                                                         \
+      TypeImpl();                                                                                     \
+      std::vector<::qi::TypeInterface*> memberTypes() override;                                       \
+      std::vector<std::string> elementsName() override;                                               \
+      std::string className() override;                                                               \
+      void* get(void* storage, unsigned int index) override;                                          \
+      void set(void** storage, unsigned int index, void* valStorage) override;                        \
+      virtual bool convertFrom(std::map<std::string, ::qi::AnyValue>& fields,                         \
+                               const std::vector<std::tuple<std::string, TypeInterface*>>& missing,   \
+                               const std::map<std::string, ::qi::AnyReference>& dropfields) override; \
+      virtual bool convertTo(std::map<std::string, ::qi::AnyValue>& fields,                           \
+                             const std::vector<std::tuple<std::string, TypeInterface*>>& missing,     \
+                             const std::map<std::string, ::qi::AnyReference>& dropfields) override;   \
+      extra typedef ::qi::DefaultTypeImplMethods<name, ::qi::TypeByPointerPOD<name>> Impl;            \
+      _QI_BOUNCE_TYPE_METHODS(Impl);                                                                  \
+    };                                                                                                \
   }
 
 #define __QI_TUPLE_TYPE(_, what, field) res.push_back(::qi::typeOf(ptr->field));
@@ -428,7 +428,7 @@ friend class qi::TypeImpl<name>;
  */
 #define QI_TYPE_STRUCT_AGREGATE_CONSTRUCTOR(name, ...)     \
   __QI_TYPE_STRUCT_DECLARE(name,                             \
-    virtual void set(void** storage, const std::vector<void*>&);) \
+    void set(void** storage, const std::vector<void*>&) override;) \
     __QI_TYPE_STRUCT_AGREGATE_CONSTRUCTOR_IMPLEMENT(name, inline, /**/, __VA_ARGS__)
 
 /** Similar to QI_TYPE_STRUCT, but using the runtime factory instead of the
@@ -505,54 +505,54 @@ namespace qi {
     virtual void adaptStorage(void** storage, void** adapted) = 0;
 
     typedef DefaultTypeImplMethods<T, TypeByPointerPOD<T> > Methods;
-    virtual std::vector<TypeInterface*> memberTypes()
+    std::vector<TypeInterface*> memberTypes() override
     {
       return bounceType()->memberTypes();
     }
 
-    virtual void* get(void* storage, unsigned int index)
+    void* get(void* storage, unsigned int index) override
     {
       void* astorage;
       adaptStorage(&storage, &astorage);
       return bounceType()->get(astorage, index);
     }
 
-    virtual std::vector<void*> get(void* storage)
+    std::vector<void*> get(void* storage) override
     {
       void* astorage;
       adaptStorage(&storage, &astorage);
       return bounceType()->get(astorage);
     }
 
-    virtual void set(void** storage, const std::vector<void*>& vals)
+    void set(void** storage, const std::vector<void*>& vals) override
     {
       void* astorage;
       adaptStorage(storage, &astorage);
       bounceType()->set(&astorage, vals);
     }
 
-    virtual void set(void** storage, unsigned int index, void* valStorage)
+    void set(void** storage, unsigned int index, void* valStorage) override
     {
       void* astorage;
       adaptStorage(storage, &astorage);
       bounceType()->set(&astorage, index, valStorage);
     }
 
-    virtual std::vector<std::string> elementsName()
+    std::vector<std::string> elementsName() override
     {
       return bounceType()->elementsName();
     }
 
     virtual bool convertFrom(std::map<std::string, qi::AnyValue>& fields,
                              const std::vector<std::tuple<std::string, TypeInterface*>>& missing,
-                             const std::map<std::string, qi::AnyReference>& dropfields)
+                             const std::map<std::string, qi::AnyReference>& dropfields) override
     {
       return bounceType()->convertFrom(fields, missing, dropfields);
     }
 
     virtual bool convertTo(std::map<std::string, qi::AnyValue>& fields,
                            const std::vector<std::tuple<std::string, TypeInterface*>>& missing,
-                           const std::map<std::string, qi::AnyReference>& dropfields)
+                           const std::map<std::string, qi::AnyReference>& dropfields) override
     {
       return bounceType()->convertTo(fields, missing, dropfields);
     }
@@ -573,8 +573,8 @@ namespace qi {
     }
     std::vector<TypeInterface*> _memberTypes;
 
-    std::vector<TypeInterface*> memberTypes() { return _memberTypes;}
-    void* get(void* storage, unsigned int index)
+    std::vector<TypeInterface*> memberTypes() override { return _memberTypes;}
+    void* get(void* storage, unsigned int index) override
     {
       BackendType* ptr = (BackendType*)ptrFromStorage(&storage);
       // Will work if F or S are references
@@ -583,7 +583,7 @@ namespace qi {
       else
         return typeOf<S>()->initializeStorage(const_cast<void*>((void*)&ptr->second));
     }
-    void set(void** storage, unsigned int index, void* valStorage)
+    void set(void** storage, unsigned int index, void* valStorage) override
     {
       BackendType* ptr = (BackendType*)ptrFromStorage(storage);
       const std::vector<TypeInterface*>& types = _memberTypes;

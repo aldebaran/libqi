@@ -18,22 +18,22 @@ namespace qi {
   public:
     typedef typename detail::TypeImplMethodsBySize<T>::type ImplType;
 
-    virtual int64_t get(void* value)
+    int64_t get(void* value) override
     {
       return *(T*)ImplType::Access::ptrFromStorage(&value);
     }
 
-    virtual void set(void** storage, int64_t value)
+    void set(void** storage, int64_t value) override
     {
       *(T*)ImplType::Access::ptrFromStorage(storage) = (T)value;
     }
 
-    virtual unsigned int size()
+    unsigned int size() override
     {
       return sizeof(T);
     }
 
-    virtual bool isSigned()
+    bool isSigned() override
     {
       return boost::is_signed<T>::value;
     }
@@ -46,22 +46,22 @@ namespace qi {
   public:
     typedef typename detail::TypeImplMethodsBySize<T>::type ImplType;
 
-    virtual int64_t get(void* value)
+    int64_t get(void* value) override
     {
       return *(T*)ImplType::Access::ptrFromStorage(&value);
     }
 
-    virtual void set(void** storage, int64_t value)
+    void set(void** storage, int64_t value) override
     {
       *(T*)ImplType::Access::ptrFromStorage(storage) = (T)(value != 0);
     }
 
-    virtual unsigned int size()
+    unsigned int size() override
     {
       return 0;
     }
 
-    virtual bool isSigned()
+    bool isSigned() override
     {
       return 0;
     }
@@ -81,17 +81,17 @@ namespace qi {
   public:
     typedef typename detail::TypeImplMethodsBySize<T>::type ImplType;
 
-    virtual double get(void* value)
+    double get(void* value) override
     {
       return *(T*)ImplType::Access::ptrFromStorage(&value);
     }
 
-    virtual void set(void** storage, double value)
+    void set(void** storage, double value) override
     {
       *(T*)ImplType::Access::ptrFromStorage(storage) = (T)value;
     }
 
-    virtual unsigned int size()
+    unsigned int size() override
     {
       return sizeof(T);
     }

@@ -45,32 +45,32 @@ public:
   : toProxy(toProxy)
   {
   }
-  virtual const MetaObject& metaObject(void* instance)
+  const MetaObject& metaObject(void* instance) override
   {
     Proxy* ptr = toProxy(instance);
     return ptr->asObject().metaObject();
   }
-  virtual qi::Future<AnyReference> metaCall(void* instance, AnyObject context, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType, Signature returnSignature)
+  qi::Future<AnyReference> metaCall(void* instance, AnyObject context, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType, Signature returnSignature) override
   {
     Proxy* ptr = toProxy(instance);
     return ptr->asObject().metaCall(method, params, callType, returnSignature);
   }
-  virtual void metaPost(void* instance, AnyObject context, unsigned int signal, const GenericFunctionParameters& params)
+  void metaPost(void* instance, AnyObject context, unsigned int signal, const GenericFunctionParameters& params) override
   {
     Proxy* ptr = toProxy(instance);
     ptr->asObject().metaPost(signal, params);
   }
-  virtual qi::Future<SignalLink> connect(void* instance, AnyObject context, unsigned int event, const SignalSubscriber& subscriber)
+  qi::Future<SignalLink> connect(void* instance, AnyObject context, unsigned int event, const SignalSubscriber& subscriber) override
   {
     Proxy* ptr = toProxy(instance);
     return ptr->asObject().connect(event, subscriber);
   }
-  virtual qi::Future<void> disconnect(void* instance, AnyObject context, SignalLink linkId)
+  qi::Future<void> disconnect(void* instance, AnyObject context, SignalLink linkId) override
   {
      Proxy* ptr = toProxy(instance);
      return ptr->asObject().disconnect(linkId);
   }
-  virtual const std::vector<std::pair<TypeInterface*, int> >& parentTypes()
+  const std::vector<std::pair<TypeInterface*, int> >& parentTypes() override
   {
     using ReturnType = typename std::decay<decltype(parentTypes())>::type;
     static ReturnType* parents = nullptr;
@@ -90,13 +90,13 @@ public:
 
     return *parents;
   }
-  virtual qi::Future<AnyValue> property(void* instance, AnyObject context, unsigned int id)
+  qi::Future<AnyValue> property(void* instance, AnyObject context, unsigned int id) override
   {
     Proxy* ptr = toProxy(instance);
     GenericObject* obj = ptr->asObject().asGenericObject();
     return obj->type->property(obj->value, context, id);
   }
-  virtual qi::Future<void> setProperty(void* instance, AnyObject context, unsigned int id, AnyValue value)
+  qi::Future<void> setProperty(void* instance, AnyObject context, unsigned int id, AnyValue value) override
   {
     Proxy* ptr = toProxy(instance);
     GenericObject* obj = ptr->asObject().asGenericObject();

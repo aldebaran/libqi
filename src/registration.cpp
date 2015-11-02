@@ -58,22 +58,22 @@ class DurationTypeInterface: public qi::IntTypeInterface
 public:
   typedef qi::DefaultTypeImplMethods<T, qi::TypeByPointerPOD<T> > ImplType;
 
-  virtual int64_t get(void* value)
+  int64_t get(void* value) override
   {
     return boost::chrono::duration_cast<qi::Duration>(*((T*)ImplType::Access::ptrFromStorage(&value))).count();
   }
 
-  virtual void set(void** storage, int64_t value)
+  void set(void** storage, int64_t value) override
   {
     (*(T*)ImplType::Access::ptrFromStorage(storage)) = boost::chrono::duration_cast<T>(qi::Duration(value));
   }
 
-  virtual unsigned int size()
+  unsigned int size() override
   {
     return sizeof(qi::int64_t);
   }
 
-  virtual bool isSigned()
+  bool isSigned() override
   {
     return false;
   }
@@ -86,24 +86,24 @@ class TimePointTypeInterface: public qi::IntTypeInterface
 {
 public:
   typedef qi::DefaultTypeImplMethods<T, qi::TypeByPointerPOD<T> > ImplType;
-  virtual int64_t get(void* value)
+  int64_t get(void* value) override
   {
     T* tp = (T*)ImplType::Access::ptrFromStorage(&value);
     return tp->time_since_epoch().count();
   }
 
-  virtual void set(void** storage, int64_t value)
+  void set(void** storage, int64_t value) override
   {
     T* tp = (T*)ImplType::Access::ptrFromStorage(storage);
     *tp = T(qi::Duration(value));
   }
 
-  virtual unsigned int size()
+  unsigned int size() override
   {
     return sizeof(qi::int64_t);
   }
 
-  virtual bool isSigned()
+  bool isSigned() override
   {
     return false;
   }

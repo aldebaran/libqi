@@ -107,15 +107,15 @@ namespace qi
   {
   public:
     DynamicObjectTypeInterface() {}
-    virtual const MetaObject& metaObject(void* instance);
-    virtual qi::Future<AnyReference> metaCall(void* instance, AnyObject context, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType, Signature returnSignature);
-    virtual void metaPost(void* instance, AnyObject context, unsigned int signal, const GenericFunctionParameters& params);
-    virtual qi::Future<SignalLink> connect(void* instance, AnyObject context, unsigned int event, const SignalSubscriber& subscriber);
+    const MetaObject& metaObject(void* instance) override;
+    qi::Future<AnyReference> metaCall(void* instance, AnyObject context, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType, Signature returnSignature) override;
+    void metaPost(void* instance, AnyObject context, unsigned int signal, const GenericFunctionParameters& params) override;
+    qi::Future<SignalLink> connect(void* instance, AnyObject context, unsigned int event, const SignalSubscriber& subscriber) override;
     /// Disconnect an event link. Returns if disconnection was successful.
-    virtual qi::Future<void> disconnect(void* instance, AnyObject context, SignalLink linkId);
-    virtual const std::vector<std::pair<TypeInterface*, int> >& parentTypes();
-    virtual qi::Future<AnyValue> property(void* instance, AnyObject context, unsigned int id);
-    virtual qi::Future<void> setProperty(void* instance, AnyObject context, unsigned int id, AnyValue val);
+    qi::Future<void> disconnect(void* instance, AnyObject context, SignalLink linkId) override;
+    const std::vector<std::pair<TypeInterface*, int> >& parentTypes() override;
+    qi::Future<AnyValue> property(void* instance, AnyObject context, unsigned int id) override;
+    qi::Future<void> setProperty(void* instance, AnyObject context, unsigned int id, AnyValue val) override;
     _QI_BOUNCE_TYPE_METHODS(DefaultTypeImplMethods<DynamicObject>);
   };
 

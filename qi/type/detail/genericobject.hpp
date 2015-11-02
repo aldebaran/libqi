@@ -214,7 +214,7 @@ class QI_API TypeImpl<boost::shared_ptr<GenericObject> > :
   public DynamicTypeInterface
 {
 public:
-  virtual AnyReference get(void* storage)
+  AnyReference get(void* storage) override
   {
     detail::ManagedObjectPtr* val = (detail::ManagedObjectPtr*)ptrFromStorage(&storage);
     AnyReference result;
@@ -225,7 +225,7 @@ public:
     return AnyReference((*val)->type, (*val)->value);
   }
 
-  virtual void set(void** storage, AnyReference source)
+  void set(void** storage, AnyReference source) override
   {
     qiLogCategory("qitype.object");
     detail::ManagedObjectPtr* val = (detail::ManagedObjectPtr*)ptrFromStorage(storage);

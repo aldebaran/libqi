@@ -375,7 +375,7 @@ namespace qi
       detail::functionTypeTrack(typeid(S).name());
 #endif
     }
-    virtual void* call(void* storage, void** args, unsigned int argc)
+    void* call(void* storage, void** args, unsigned int argc) override
     {
 #if QI_HAS_VARIABLE_LENGTH_ARRAY
       void* out[argc];

@@ -20,13 +20,13 @@ template<>
 class TypeImpl<AnyValue>: public DynamicTypeInterface
 {
 public:
-  virtual AnyReference get(void* storage)
+  AnyReference get(void* storage) override
   {
     AnyValue* ptr = (AnyValue*)ptrFromStorage(&storage);
     return ptr->asReference();
   }
 
-  virtual void set(void** storage, AnyReference src)
+  void set(void** storage, AnyReference src) override
   {
     AnyValue* val = (AnyValue*)ptrFromStorage(storage);
     val->reset(src, true, true);

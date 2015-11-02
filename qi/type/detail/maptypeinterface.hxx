@@ -18,13 +18,13 @@ public:
                                TypeByPointerPOD<M>
                                > MethodsImpl;
   MapTypeInterfaceImpl();
-  virtual TypeInterface* elementType();
-  virtual TypeInterface* keyType();
-  virtual size_t size(void* storage);
-  virtual AnyIterator begin(void* storage);
-  virtual AnyIterator end(void* storage);
-  virtual void insert(void** storage, void* keyStorage, void* valueStorage);
-  virtual AnyReference element(void** storage, void* keyStorage, bool autoInsert);
+  TypeInterface* elementType() override;
+  TypeInterface* keyType() override;
+  size_t size(void* storage) override;
+  AnyIterator begin(void* storage) override;
+  AnyIterator end(void* storage) override;
+  void insert(void** storage, void* keyStorage, void* valueStorage) override;
+  AnyReference element(void** storage, void* keyStorage, bool autoInsert) override;
   _QI_BOUNCE_TYPE_METHODS(MethodsImpl);
   TypeInterface* _keyType;
   TypeInterface* _elementType;

@@ -224,33 +224,33 @@ namespace detail {
   }                                                                                                        \
   static bool BOOST_PP_CAT(__qi_registration, __LINE__) = BOOST_PP_CAT(__qi_registration_func, __LINE__)();
 
-#define _QI_REGISTER_TEMPLATE_OBJECT(name, model, ...)                    \
-  namespace qi                                                            \
-  {                                                                       \
-  template <>                                                             \
-  class QI_API TypeOfTemplate<name> : public detail::StaticObjectTypeBase \
-  {                                                                       \
-  public:                                                                 \
-    virtual TypeInterface* templateArgument() = 0;                        \
-  };                                                                      \
-  template <typename T>                                                   \
-  class TypeOfTemplateImpl<name, T> : public TypeOfTemplate<name>         \
-  {                                                                       \
-  public:                                                                 \
-    TypeOfTemplateImpl()                                                  \
-    {                                                                     \
-      /* early self registering to avoid recursive init */                \
-      ::qi::registerType(typeid(name<T>), this);                          \
-      ObjectTypeBuilder<name<T> > b(false);                               \
-      b.setThreadingModel(model);                                         \
-      QI_VAARGS_APPLY(__QI_REGISTER_ELEMENT, name<T>, __VA_ARGS__)        \
-      this->initialize(b.metaObject(), b.typeData());                     \
-    }                                                                     \
-    virtual TypeInterface* templateArgument() { return typeOf<T>(); }     \
-    typedef DefaultTypeImplMethods<name<T> > Methods;                     \
-    _QI_BOUNCE_TYPE_METHODS(Methods);                                     \
-  };                                                                      \
-  }                                                                       \
+#define _QI_REGISTER_TEMPLATE_OBJECT(name, model, ...)                             \
+  namespace qi                                                                     \
+  {                                                                                \
+  template <>                                                                      \
+  class QI_API TypeOfTemplate<name> : public detail::StaticObjectTypeBase          \
+  {                                                                                \
+  public:                                                                          \
+    virtual TypeInterface* templateArgument() = 0;                                 \
+  };                                                                               \
+  template <typename T>                                                            \
+  class TypeOfTemplateImpl<name, T> : public TypeOfTemplate<name>                  \
+  {                                                                                \
+  public:                                                                          \
+    TypeOfTemplateImpl()                                                           \
+    {                                                                              \
+      /* early self registering to avoid recursive init */                         \
+      ::qi::registerType(typeid(name<T>), this);                                   \
+      ObjectTypeBuilder<name<T> > b(false);                                        \
+      b.setThreadingModel(model);                                                  \
+      QI_VAARGS_APPLY(__QI_REGISTER_ELEMENT, name<T>, __VA_ARGS__)                 \
+      this->initialize(b.metaObject(), b.typeData());                              \
+    }                                                                              \
+    TypeInterface* templateArgument() override { return typeOf<T>(); }             \
+    typedef DefaultTypeImplMethods<name<T> > Methods;                              \
+    _QI_BOUNCE_TYPE_METHODS(Methods);                                              \
+  };                                                                               \
+  }                                                                                \
   QI_TEMPLATE_TYPE_DECLARE(name)
 
 /** Register name as a template object type
@@ -321,7 +321,7 @@ public:
                           }));
     this->initialize(b.metaObject(), b.typeData());
   }
-  virtual TypeInterface* templateArgument()
+  TypeInterface* templateArgument() override
   {
     return typeOf<T>();
   }
