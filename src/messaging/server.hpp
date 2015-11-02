@@ -57,7 +57,7 @@ namespace qi {
 
   private:
     //bool: true if it's a socketobject
-    typedef std::map<unsigned int, BoundAnyObject> BoundAnyObjectMap;
+    using BoundAnyObjectMap = std::map<unsigned int, BoundAnyObject>;
 
     //ObjectList
     BoundAnyObjectMap                   _boundObjects;

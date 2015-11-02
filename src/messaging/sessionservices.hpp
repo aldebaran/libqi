@@ -49,7 +49,7 @@ namespace qi {
     void             removeRequest(long requestId);
 
   protected:
-    typedef std::map<int, ServicesRequest*> ServicesRequestPtrMap;
+    using ServicesRequestPtrMap = std::map<int, ServicesRequest*>;
 
     std::map<int, ServicesRequest*>  _request;
     boost::mutex                      _requestMutex;

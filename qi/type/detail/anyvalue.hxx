@@ -33,7 +33,7 @@ public:
   }
 
   // Default cloner will do just right since AnyValue is by-value.
-  typedef DefaultTypeImplMethods<AnyValue, TypeByPointerPOD<AnyValue> > Methods;
+  using Methods = DefaultTypeImplMethods<AnyValue, TypeByPointerPOD<AnyValue>>;
   _QI_BOUNCE_TYPE_METHODS(Methods);
 };
 

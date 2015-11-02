@@ -71,7 +71,7 @@ namespace qi {
   static std::string globalProgram;
   static std::string globalRealProgram;
 
-  typedef std::vector<std::function<void()> > FunctionList;
+  using FunctionList = std::vector<std::function<void()>>;
   static FunctionList* globalAtExit = nullptr;
   static FunctionList* globalAtEnter = nullptr;
   static FunctionList* globalAtRun = nullptr;

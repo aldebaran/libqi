@@ -36,10 +36,10 @@ namespace qi {
   class StreamContext;
 
   /// Type of callback invoked by sdeerializer when it encounters an object
-  typedef boost::function<AnyObject (const ObjectSerializationInfo&)> DeserializeObjectCallback;
+  using DeserializeObjectCallback = boost::function<AnyObject(const ObjectSerializationInfo&)>;
 
   /// Type of callback invoked by serializer when it encounters an object.
-  typedef boost::function<ObjectSerializationInfo (const AnyObject&)> SerializeObjectCallback;
+  using SerializeObjectCallback = boost::function<ObjectSerializationInfo(const AnyObject&)>;
 
   template <typename T>
   void decodeBinary(qi::BufferReader *buf, T* value,

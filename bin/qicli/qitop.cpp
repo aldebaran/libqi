@@ -27,14 +27,14 @@ static float interval;
 
 static unsigned int maxServiceLength = 0;
 
-typedef std::map<std::string, qi::AnyObject> ObjectMap;
+using ObjectMap = std::map<std::string, qi::AnyObject>;
 
 static ObjectMap objectMap;
 
 
 // ((modulename, methodname), stats)
-typedef std::pair<std::pair<std::string, std::string>, qi::MethodStatistics> Stat;
-typedef std::vector<Stat> Stats;
+using Stat = std::pair<std::pair<std::string, std::string>, qi::MethodStatistics>;
+using Stats = std::vector<Stat>;
 
 // When sorting use cumulated user+system time
 struct StatCompare

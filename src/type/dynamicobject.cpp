@@ -31,14 +31,14 @@ namespace qi
     // get or create signal, or 0 if id is not an event
     SignalBase* createSignal(unsigned int id);
     PropertyBase* property(unsigned int id);
-    typedef std::map<unsigned int, std::pair<SignalBase*, bool> > SignalMap;
-    typedef std::map<unsigned int, std::pair<AnyFunction, MetaCallType> > MethodMap;
+    using SignalMap = std::map<unsigned int, std::pair<SignalBase*, bool>>;
+    using MethodMap = std::map<unsigned int, std::pair<AnyFunction, MetaCallType>>;
     SignalMap           signalMap;
     MethodMap           methodMap;
     MetaObject          meta;
     ObjectThreadingModel threadingModel;
 
-    typedef std::map<unsigned int, std::pair<PropertyBase*, bool> > PropertyMap;
+    using PropertyMap = std::map<unsigned int, std::pair<PropertyBase*, bool>>;
     PropertyMap propertyMap;
 
     ExecutionContext* getExecutionContext(

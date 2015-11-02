@@ -26,8 +26,8 @@ namespace qi {
 
   class SessionPrivate;
   class AuthProvider;
-  typedef boost::shared_ptr<AuthProvider> AuthProviderPtr;
-  typedef std::map<std::string, AnyValue> CapabilityMap;
+  using AuthProviderPtr = boost::shared_ptr<AuthProvider>;
+  using CapabilityMap = std::map<std::string, AnyValue>;
 
   /** A Session allows you to interconnect services on the same machine or over
    * the network.
@@ -154,7 +154,7 @@ QI_GEN(genCall)
         qi::MetaCallType metacallType);
   };
 
-  typedef boost::shared_ptr<Session> SessionPtr;
+  using SessionPtr = boost::shared_ptr<Session>;
 
   inline SessionPtr makeSession() { return boost::make_shared<qi::Session>(); }
 }

@@ -39,9 +39,9 @@ namespace qi
     virtual qi::Url remoteEndpoint() const;
   private:
 #ifdef WITH_SSL
-    typedef boost::shared_ptr<boost::asio::ssl::stream<boost::asio::ip::tcp::socket> > SocketPtr;
+    using SocketPtr = boost::shared_ptr<boost::asio::ssl::stream<boost::asio::ip::tcp::socket>>;
 #else
-    typedef boost::shared_ptr<boost::asio::ip::tcp::socket> SocketPtr;
+    using SocketPtr = boost::shared_ptr<boost::asio::ip::tcp::socket>;
 #endif
     void error(const std::string& erc);
     void onResolved(const boost::system::error_code& erc,
@@ -78,7 +78,7 @@ namespace qi
 
   };
 
-  typedef boost::shared_ptr<TcpTransportSocket> TcpTransportSocketPtr;
+  using TcpTransportSocketPtr = boost::shared_ptr<TcpTransportSocket>;
 
 }
 

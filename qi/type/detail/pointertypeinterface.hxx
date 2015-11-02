@@ -38,9 +38,7 @@ namespace qi
       *storage = pointer;
     }
 
-    typedef DefaultTypeImplMethods<T*,
-                                     TypeByValue<T*>
-                                     > TypeMethodsImpl;
+    using TypeMethodsImpl = DefaultTypeImplMethods<T*, TypeByValue<T*>>;
     _QI_BOUNCE_TYPE_METHODS(TypeMethodsImpl);
   };
 
@@ -71,7 +69,7 @@ namespace qi
       // we can't do that as it means that we would take ownership of pointer
       throw std::runtime_error("cannot convert to shared_ptr");
     }
-    typedef DefaultTypeImplMethods<T, TypeByPointerPOD<T> > Impl;
+    using Impl = DefaultTypeImplMethods<T, TypeByPointerPOD<T>>;
      _QI_BOUNCE_TYPE_METHODS(Impl);
   };
 

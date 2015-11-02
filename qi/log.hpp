@@ -167,7 +167,7 @@ namespace qi {
   /**
    * \brief Logs context attribute value.
    */
-  typedef int LogContext;
+  using LogContext = int;
 
   /**
    * \brief Log functions with different levels of verbosity.
@@ -200,31 +200,30 @@ namespace qi {
       struct Category;
     }
 
-    typedef unsigned int      SubscriberId; ///< Subscriber Identifier.
-    typedef detail::Category* CategoryType; ///< Catergory Informations.
+    using SubscriberId = unsigned int; ///< Subscriber Identifier.
+    using CategoryType = detail::Category*; ///< Catergory Informations.
 
     /// \deprecated 1.22 Use qi::log::SubscriberId
     QI_API_DEPRECATED typedef unsigned int Subscriber;
-
 
     /**
      * \brief Boost delegate to log function (verbosity lv, date of log,
      *        category, message, file, function, line).
      *  \deprecated 1.24 use qi::log::Handler
      */
-    typedef boost::function7<void,
+    using logFuncHandler = boost::function7<void,
                              const qi::LogLevel,
                              const qi::os::timeval,
                              const char*,
                              const char*,
                              const char*,
                              const char*,
-                             int> logFuncHandler;
+                             int>;
     /**
      * \brief Boost delegate to log function (verbosity lv, dates of log,
      *        category, message, file, function, line).
      */
-    typedef boost::function8<void,
+    using Handler = boost::function8<void,
                              const qi::LogLevel,
                              const qi::Clock::time_point,
                              const qi::SystemClock::time_point,
@@ -232,7 +231,7 @@ namespace qi {
                              const char*,
                              const char*,
                              const char*,
-                             int> Handler;
+                             int>;
 
     /**
      * \brief Initialization of the logging system (could be avoided)

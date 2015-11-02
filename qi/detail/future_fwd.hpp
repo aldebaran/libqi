@@ -37,8 +37,8 @@ namespace qi {
     template<typename T>
     struct FutureType
     {
-      typedef T type;
-      typedef T typecast;
+      using type = T;
+      using typecast = T;
     };
 
     struct FutureHasNoValue {};
@@ -46,8 +46,8 @@ namespace qi {
     template<>
     struct FutureType<void>
     {
-      typedef void* type;
-      typedef FutureHasNoValue typecast;
+      using type = void*;
+      using typecast = FutureHasNoValue;
     };
 
     template <typename T>
@@ -95,7 +95,7 @@ namespace qi {
     AdaptFutureOption_ForwardCancel = 1,
   };
 
-  typedef void* FutureUniqueId;
+  using FutureUniqueId = void*;
 
   /** base exception raised for all future error.
    */
@@ -148,9 +148,9 @@ namespace qi {
   class Future : public detail::AddUnwrap<T> {
     static_assert(!std::is_const<T>::value, "can't create a future of const");
   public:
-    typedef typename detail::FutureType<T>::type     ValueType;
-    typedef typename detail::FutureType<T>::typecast ValueTypeCast;
-    typedef T TemplateValue;
+    using ValueType = typename detail::FutureType<T>::type;
+    using ValueTypeCast = typename detail::FutureType<T>::typecast;
+    using TemplateValue = T;
 
   public:
     Future()
@@ -463,7 +463,7 @@ namespace qi {
     boost::function<void()> makeCanceler();
 
   public:
-    typedef boost::function<void (Future<T>) > Connection;
+    using Connection = boost::function<void(Future<T>)>;
 
     /** Connect a callback function that will be called once when the Future
      * finishes (that is, switches from running to an other state).
@@ -566,9 +566,9 @@ namespace qi {
   class FutureSync
   {
   public:
-    typedef typename Future<T>::ValueType ValueType;
-    typedef typename Future<T>::ValueTypeCast ValueTypeCast;
-    typedef typename Future<T>::Connection Connection;
+    using ValueType = typename Future<T>::ValueType;
+    using ValueTypeCast = typename Future<T>::ValueTypeCast;
+    using Connection = typename Future<T>::Connection;
     // This future cannot be set, so sync starts at false
     FutureSync() : _sync(false) {}
 
@@ -691,7 +691,7 @@ namespace qi {
   template <typename T>
   class Promise {
   public:
-    typedef typename detail::FutureType<T>::type ValueType;
+    using ValueType = typename detail::FutureType<T>::type;
 
     /** Create a standard promise.
      *  @param async specify how callbacks registered with Future::connect
@@ -875,8 +875,8 @@ namespace qi {
     template <typename T>
     class FutureBaseTyped : public FutureBase {
     public:
-      typedef boost::function<void(Promise<T>&)> CancelCallback;
-      typedef typename FutureType<T>::type ValueType;
+      using CancelCallback = boost::function<void(Promise<T>)>;
+      using ValueType = typename FutureType<T>::type;
       FutureBaseTyped();
       ~FutureBaseTyped();
 
@@ -904,7 +904,7 @@ namespace qi {
 
     private:
       friend class Promise<T>;
-      typedef boost::function<void(qi::Future<T>&)> CallbackType;
+      using CallbackType = boost::function<void(qi::Future<T>)>;
       struct Callback
       {
         CallbackType callback;
@@ -915,7 +915,7 @@ namespace qi {
           , callType(callType)
         {}
       };
-      typedef std::vector<Callback> Callbacks;
+      using Callbacks = std::vector<Callback>;
       Callbacks                _onResult;
       ValueType                _value;
       CancelCallback           _onCancel;

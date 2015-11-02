@@ -14,9 +14,7 @@ template<typename M> class MapTypeInterfaceImpl:
 public MapTypeInterface
 {
 public:
-  typedef DefaultTypeImplMethods<M,
-                               TypeByPointerPOD<M>
-                               > MethodsImpl;
+  using MethodsImpl = DefaultTypeImplMethods<M, TypeByPointerPOD<M>>;
   MapTypeInterfaceImpl();
   TypeInterface* elementType() override;
   TypeInterface* keyType() override;

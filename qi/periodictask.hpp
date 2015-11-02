@@ -28,10 +28,9 @@ namespace qi
   {
   public:
     /// \brief Callback is a boost::function.
-    typedef boost::function<void()> Callback;
+    using Callback = boost::function<void()>;
     // internal
-    typedef boost::function<qi::Future<void>(
-        const Callback&, qi::Duration delay)> ScheduleCallback;
+    using ScheduleCallback = boost::function<qi::Future<void>(const Callback&, qi::Duration delay)>;
 
     /// \brief Default constructor.
     PeriodicTask();

@@ -75,7 +75,7 @@ namespace qi {
     }
   };
 
-  typedef boost::asio::basic_waitable_timer<SteadyClock> SteadyTimer;
+  using SteadyTimer = boost::asio::basic_waitable_timer<SteadyClock>;
 
   static qi::Atomic<uint32_t> gTaskId = 0;
 

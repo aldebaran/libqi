@@ -24,7 +24,7 @@ namespace qi
 
   class PrivatePath;
   class Path;
-  typedef std::vector<Path> PathVector;
+  using PathVector = std::vector<Path>;
 
   /**
    * \brief The Path class allow handling path in a cross-platform maner.
@@ -510,7 +510,7 @@ namespace qi
    * Typedef for std::codecvt<wchar_t, char, std::mbstate_t> that can be used
    * with boost::filesystem::path and std::locale.
    */
-  typedef std::codecvt<wchar_t, char, std::mbstate_t> codecvt_type;
+  using codecvt_type = std::codecvt<wchar_t, char, std::mbstate_t>;
 
   /**
    * \brief UTF-8 facet object getter.

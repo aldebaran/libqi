@@ -22,7 +22,7 @@ namespace qi
   class ProxyProperty: public Property<T>
   {
   public:
-    typedef SignalF<void (const T&)> SignalType;
+    using SignalType = SignalF<void (const T&)>;
     ProxyProperty() {}
     /* The signal bounce code is completely duplicated from SignalProxy.
      * Unfortunately factoring this is not trivial:

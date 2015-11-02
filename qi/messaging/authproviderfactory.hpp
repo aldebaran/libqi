@@ -14,7 +14,7 @@
 namespace qi
 {
 class AuthProvider;
-typedef boost::shared_ptr<AuthProvider> AuthProviderPtr;
+using AuthProviderPtr = boost::shared_ptr<AuthProvider>;
 
 class QI_API AuthProviderFactory
 {
@@ -33,7 +33,7 @@ public:
   }
 };
 
-typedef boost::shared_ptr<AuthProviderFactory> AuthProviderFactoryPtr;
+using AuthProviderFactoryPtr = boost::shared_ptr<AuthProviderFactory>;
 }
 
 #endif

@@ -77,7 +77,7 @@ inline TypeKind AnyReferenceBase::kind() const
 
 template<TypeKind T> struct TypeOfKind {};
 
-#define TYPE_OF_KIND(k, t) template<> struct TypeOfKind<k> { typedef t type;}
+#define TYPE_OF_KIND(k, t) template<> struct TypeOfKind<k> { using type = t;}
 // Kind -> handler Type (IntTypeInterface, ListTypeInterface...)  accessor
 TYPE_OF_KIND(TypeKind_Int, IntTypeInterface);
 TYPE_OF_KIND(TypeKind_Float, FloatTypeInterface);

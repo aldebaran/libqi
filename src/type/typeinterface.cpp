@@ -114,7 +114,7 @@ namespace qi {
     }
   }
 
-  typedef std::map<TypeInfo, TypeInterface*> TypeFactory;
+  using TypeFactory = std::map<TypeInfo, TypeInterface*>;
   static TypeFactory& typeFactory()
   {
     static TypeFactory* res = nullptr;
@@ -122,7 +122,7 @@ namespace qi {
     return *res;
   }
 
-  typedef std::map<std::string, TypeInterface*> FallbackTypeFactory;
+  using FallbackTypeFactory = std::map<std::string, TypeInterface*>;
   static FallbackTypeFactory& fallbackTypeFactory()
   {
     static FallbackTypeFactory* res = nullptr;
@@ -842,7 +842,7 @@ namespace qi {
     {
       return _info;
     }
-    typedef DefaultTypeImplMethods<std::vector<void*>, TypeByPointerPOD<std::vector<void*> > > Methods;
+    using Methods = DefaultTypeImplMethods<std::vector<void*>, TypeByPointerPOD<std::vector<void*>>>;
     void* initializeStorage(void* ptr=0) { return Methods::initializeStorage(ptr); }
     void* ptrFromStorage(void**s)        { return Methods::ptrFromStorage(s); }
 
@@ -1022,7 +1022,7 @@ namespace qi {
     std::vector<std::string> _elementName;
     std::string              _name;
     TypeInfo                 _info;
-    typedef DefaultTypeImplMethods<std::vector<void*>, TypeByPointerPOD<std::vector<void*> > > Methods;
+    using Methods = DefaultTypeImplMethods<std::vector<void*>, TypeByPointerPOD<std::vector<void*>>>;
   };
 
   AnyReference makeGenericTuple(const AnyReferenceVector& values)
@@ -1049,7 +1049,7 @@ namespace qi {
 
 
   // element of map is of type _pairType, see below
-  typedef std::map<AnyReference, void*> DefaultMapStorage;
+  using DefaultMapStorage = std::map<AnyReference, void*>;
 
   // Default map, using a vector<pair<void*, void*> > as storage
   static TypeInterface* makeMapIteratorType(TypeInterface* kt);
@@ -1099,7 +1099,7 @@ namespace qi {
     {
       return _info;
     }
-    typedef DefaultTypeImplMethods<DefaultMapStorage::iterator, TypeByPointerPOD<DefaultMapStorage::iterator> > Impl;
+    using Impl = DefaultTypeImplMethods<DefaultMapStorage::iterator, TypeByPointerPOD<DefaultMapStorage::iterator>>;
     _QI_BOUNCE_TYPE_METHODS_NOINFO(Impl);
     TypeInterface* _elementType;
     std::string _name;
@@ -1109,7 +1109,7 @@ namespace qi {
   // We want exactly one instance per element type
   static TypeInterface* makeMapIteratorType(TypeInterface* te)
   {
-    typedef std::map<TypeInfo, TypeInterface*> Map;
+    using Map = std::map<TypeInfo, TypeInterface*>;
     static boost::mutex* mutex = nullptr;
     QI_THREADSAFE_NEW(mutex);
     boost::mutex::scoped_lock lock(*mutex);
@@ -1266,7 +1266,7 @@ namespace qi {
     {
       return _info;
     }
-    typedef DefaultTypeImplMethods<DefaultMapStorage, TypeByPointerPOD<DefaultMapStorage> > Methods;
+    using Methods = DefaultTypeImplMethods<DefaultMapStorage, TypeByPointerPOD<DefaultMapStorage>>;
     void* initializeStorage(void* ptr=0) override { return Methods::initializeStorage(ptr);}
     void* ptrFromStorage(void**s) override { return Methods::ptrFromStorage(s);}
     bool less(void* a, void* b) override { return Methods::less(a, b);}
@@ -1285,7 +1285,7 @@ namespace qi {
     QI_THREADSAFE_NEW(mutex);
     boost::mutex::scoped_lock lock(*mutex);
 
-    typedef std::map<std::pair<TypeInfo, TypeInfo>, MapTypeInterface*> Map;
+    using Map = std::map<std::pair<TypeInfo, TypeInfo>, MapTypeInterface*>;
     static Map * map = nullptr;
     if (!map)
       map = new Map();
@@ -1351,7 +1351,7 @@ namespace qi {
   //TODO: not threadsafe
   TypeInterface* makeTupleType(const std::vector<TypeInterface*>& types, const std::string &name, const std::vector<std::string>& elementNames)
   {
-    typedef std::map<InfosKey, StructTypeInterface*> Map;
+    using Map = std::map<InfosKey, StructTypeInterface*>;
     static boost::mutex* mutex;
     QI_THREADSAFE_NEW(mutex);
     boost::mutex::scoped_lock lock(*mutex);
@@ -1439,7 +1439,7 @@ namespace qi {
     QI_THREADSAFE_NEW(m);
     return *m;
   }
-  typedef std::map<std::string, TypeInterface*> RegisterStructMap;
+  using RegisterStructMap = std::map<std::string, TypeInterface*>;
   static RegisterStructMap& registerStructMap()
   {
     // protected by lock above

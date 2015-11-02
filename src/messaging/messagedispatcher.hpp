@@ -41,11 +41,11 @@ namespace qi {
     bool           messagePendingDisconnect(unsigned int serviceId, unsigned int objectId, qi::SignalLink linkId);
 
   public:
-    typedef std::pair<unsigned int, unsigned int> Target;
-    typedef Signal<const qi::Message&> OnMessageSignal;
+    using Target = std::pair<unsigned int, unsigned int>;
+    using OnMessageSignal = Signal<const qi::Message&>;
     // use shared-ptr on signal so that we may hold it without holding the map lock
-    typedef std::map<Target, boost::shared_ptr<OnMessageSignal> > SignalMap;
-    typedef std::map<unsigned int, MessageAddress>                   MessageSentMap;
+    using SignalMap = std::map<Target, boost::shared_ptr<OnMessageSignal> >;
+    using MessageSentMap = std::map<unsigned int, MessageAddress>;
 
     SignalMap              _signalMap;
     boost::recursive_mutex _signalMapMutex;

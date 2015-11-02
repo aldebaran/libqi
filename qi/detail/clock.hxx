@@ -40,7 +40,7 @@ namespace qi {
   template <class DurationTo, class TimePointFrom>
   DurationTo durationSince(const TimePointFrom& t)
   {
-    typedef typename TimePointFrom::clock ClockFrom;
+    using ClockFrom = typename TimePointFrom::clock;
     return boost::chrono::duration_cast<DurationTo>(ClockFrom::now() - t);
   }
 

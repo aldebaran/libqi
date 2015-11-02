@@ -28,9 +28,7 @@ namespace qi {
 class Empty {};
 
 namespace detail {
-
-  typedef std::map<TypeInfo, boost::function<AnyReference(AnyObject)> >
-    ProxyGeneratorMap;
+  using ProxyGeneratorMap = std::map<TypeInfo, boost::function<AnyReference(AnyObject)>>;
   QI_API ProxyGeneratorMap& proxyGeneratorMap();
 
   /* On ubuntu (and maybe other platforms), the linking is done by default with
@@ -176,7 +174,7 @@ namespace detail {
   template <typename T>
   struct InterfaceImplTraits
   {
-    typedef boost::false_type Defined;
+    using Defined = boost::false_type;
   };
 }
 
@@ -202,10 +200,10 @@ typename boost::disable_if<typename detail::InterfaceImplTraits<T>::Defined, qi:
       template <>                                         \
       struct InterfaceImplTraits<interface>               \
       {                                                   \
-        typedef boost::true_type Defined;                 \
-        typedef impl ImplType;                            \
-        typedef interface##Local<ImplType> LocalType;     \
-        typedef interface##LocalSync<LocalType> SyncType; \
+        using Defined = boost::true_type;                 \
+        using ImplType = impl;                            \
+        using LocalType = interface##Local<ImlpType>;     \
+        using SyncType = interface##LocalSync<LocalType>; \
       };                                                  \
     }                                                     \
   }
@@ -221,7 +219,7 @@ typename boost::disable_if<typename detail::InterfaceImplTraits<T>::Defined, qi:
  * \includename{qi/anyobject.hpp}
  */
 template<typename T> class Object :
-  public detail::GenericObjectBounce<Object<T> >
+  public detail::GenericObjectBounce<Object<T>>
 {
   // see qi::Future constructors below
   struct None {
@@ -239,7 +237,7 @@ public:
   // We use None to disable it. The method must be instantiable because when we
   // export the class under windows, all functions are instanciated
   // Future cast operator
-  typedef typename boost::mpl::if_<typename boost::is_same<T, Empty>::type, None, Object<Empty> >::type MaybeAnyObject;
+  using MaybeAnyObject = typename boost::mpl::if_<typename boost::is_same<T, Empty>::type, None, Object<Empty>>::type;
   Object(const qi::Future<MaybeAnyObject>& fobj);
   Object(const qi::FutureSync<MaybeAnyObject>& fobj);
 
@@ -331,7 +329,7 @@ public:
   Object<T> lock() { return Object<T>(_ptr.lock());}
   boost::weak_ptr<GenericObject> _ptr;
 };
-typedef WeakObject<Empty> AnyWeakObject;
+using AnyWeakObject = WeakObject<Empty>;
 
 template<typename T> inline ObjectTypeInterface* Object<T>::interface()
 {
@@ -554,8 +552,8 @@ namespace detail
  * Object<T> is handling this through the checkT() method.
  */
 template<typename T>
-class QI_API TypeImpl<Object<T> > :
-  public TypeImpl<boost::shared_ptr<GenericObject> >
+class QI_API TypeImpl<Object<T>> :
+  public TypeImpl<boost::shared_ptr<GenericObject>>
 {
 };
 

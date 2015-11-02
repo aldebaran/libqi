@@ -207,7 +207,7 @@ namespace qi {
 
   namespace log {
 
-    typedef struct sPrivateLog
+    using privateLog = struct sPrivateLog
     {
       qi::LogLevel               _logLevel;
       char                       _category[CAT_SIZE];
@@ -217,7 +217,7 @@ namespace qi {
       char                       _log[LOG_SIZE];
       qi::Clock::time_point       _date;
       qi::SystemClock::time_point _systemDate;
-    } privateLog;
+    };
 
     class Log
     {
@@ -266,7 +266,7 @@ namespace qi {
       boost::lockfree::queue<privateLog*>     logs;
 #endif
 
-      typedef std::map<std::string, Handler> LogHandlerMap;
+      using LogHandlerMap = std::map<std::string, Handler>;
       LogHandlerMap logHandlers;
 
       qi::Atomic<int> nextIndex;
@@ -295,7 +295,7 @@ namespace qi {
     static std::vector<GlobRule> _glGlobRules;
 
     // categories must be accessible at static init: cannot go in Log class
-    typedef std::map<std::string, detail::Category*> CategoryMap;
+    using CategoryMap = std::map<std::string, detail::Category*>;
     static CategoryMap* _glCategories = nullptr;
     inline CategoryMap& _categories()
     {

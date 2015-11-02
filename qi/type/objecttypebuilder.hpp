@@ -39,8 +39,8 @@ namespace detail {
     ObjectTypeBuilderBase();
     ~ObjectTypeBuilderBase();
 
-    typedef boost::function<SignalBase* (void*)> SignalMemberGetter;
-    typedef boost::function<PropertyBase* (void*)> PropertyMemberGetter;
+    using SignalMemberGetter = boost::function<SignalBase* (void*)>;
+    using PropertyMemberGetter = boost::function<PropertyBase* (void*)>;
 
     /// Sets a description for the type to build.
     void setDescription(const std::string& description);
@@ -247,7 +247,7 @@ namespace detail {
       this->initialize(b.metaObject(), b.typeData());                              \
     }                                                                              \
     TypeInterface* templateArgument() override { return typeOf<T>(); }             \
-    typedef DefaultTypeImplMethods<name<T> > Methods;                              \
+    using Methods = DefaultTypeImplMethods<name<T>>;                               \
     _QI_BOUNCE_TYPE_METHODS(Methods);                                              \
   };                                                                               \
   }                                                                                \
@@ -325,7 +325,7 @@ public:
   {
     return typeOf<T>();
   }
-  typedef DefaultTypeImplMethods<FutT<T>> Methods;
+  using Methods = DefaultTypeImplMethods<FutT<T>>;
   _QI_BOUNCE_TYPE_METHODS(Methods);
 };
 template <typename T>

@@ -145,7 +145,7 @@ QI_TYPE_STRUCT(qi::ModuleInfo, name, type, path);
 
 namespace qi {
 
-  typedef boost::function<AnyModule (const qi::ModuleInfo&)> ModuleFactoryFunctor;
+  using ModuleFactoryFunctor = boost::function<AnyModule(const qi::ModuleInfo&)>;
   /** Register a module factory for a given language
    */
   QI_API bool registerModuleFactory(const std::string& name, ModuleFactoryFunctor fun);

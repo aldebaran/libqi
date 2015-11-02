@@ -16,7 +16,7 @@ namespace qi {
   class IntTypeInterfaceImpl: public IntTypeInterface
   {
   public:
-    typedef typename detail::TypeImplMethodsBySize<T>::type ImplType;
+    using ImplType = detail::TypeImplMethodsBySize_t<T>;
 
     int64_t get(void* value) override
     {
@@ -44,7 +44,7 @@ namespace qi {
   template<typename T> class TypeBoolImpl: public IntTypeInterface
   {
   public:
-    typedef typename detail::TypeImplMethodsBySize<T>::type ImplType;
+    using ImplType = detail::TypeImplMethodsBySize_t<T>;
 
     int64_t get(void* value) override
     {
@@ -79,7 +79,7 @@ namespace qi {
   class FloatTypeInterfaceImpl: public FloatTypeInterface
   {
   public:
-    typedef typename detail::TypeImplMethodsBySize<T>::type ImplType;
+    using ImplType = detail::TypeImplMethodsBySize_t<T>;
 
     double get(void* value) override
     {
@@ -100,7 +100,5 @@ namespace qi {
   };
 
 }
-
-
 
 #endif  // _QITYPE_DETAIL_TYPEINT_HXX_

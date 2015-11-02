@@ -19,7 +19,7 @@ class AdderImpl: public Adder
   int registerAnyTask(AnyObject v);
   void popTask();
   int addAll(int v); // sum add on all tasks
-  typedef qi::Property<int> Value;
+  using Value = qi::Property<int>;
   private:
   bool onValue(int& storage, const int& newValue);
   std::vector<Object<AddTask> > tasks;

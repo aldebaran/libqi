@@ -56,7 +56,7 @@ template<typename T>
 class DurationTypeInterface: public qi::IntTypeInterface
 {
 public:
-  typedef qi::DefaultTypeImplMethods<T, qi::TypeByPointerPOD<T> > ImplType;
+  using ImplType = qi::DefaultTypeImplMethods<T, qi::TypeByPointerPOD<T>>;
 
   int64_t get(void* value) override
   {
@@ -85,7 +85,7 @@ template <typename T>
 class TimePointTypeInterface: public qi::IntTypeInterface
 {
 public:
-  typedef qi::DefaultTypeImplMethods<T, qi::TypeByPointerPOD<T> > ImplType;
+  using ImplType = qi::DefaultTypeImplMethods<T, qi::TypeByPointerPOD<T>>;
   int64_t get(void* value) override
   {
     T* tp = (T*)ImplType::Access::ptrFromStorage(&value);

@@ -40,7 +40,7 @@ public:
   /* We need a per-instance offset from effective type to Proxy.
    * Avoid code explosion by putting it per-instance
   */
-  typedef boost::function<Proxy*(void*)> ToProxy;
+  using ToProxy = boost::function<Proxy*(void*)>;
   TypeProxy(ToProxy  toProxy)
   : toProxy(toProxy)
   {
@@ -102,11 +102,10 @@ public:
     GenericObject* obj = ptr->asObject().asGenericObject();
     return obj->type->setProperty(obj->value, context, id, value);
   }
-  typedef DefaultTypeImplMethods<Proxy> Methods;
+  using Methods = DefaultTypeImplMethods<Proxy>;
   _QI_BOUNCE_TYPE_METHODS(Methods);
   ToProxy toProxy;
 };
-
 
 namespace detail
 {

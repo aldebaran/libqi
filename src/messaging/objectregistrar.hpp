@@ -71,9 +71,9 @@ namespace qi {
     void onFutureFinished(qi::Future<unsigned int> future, long id, qi::Promise<unsigned int> result);
 
   private:
-    typedef std::map<unsigned int, BoundService>                       BoundServiceMap;
-    typedef std::map<int, std::pair<qi::AnyObject, qi::ServiceInfo> >  RegisterServiceMap;
-    typedef std::map<std::string, unsigned int>                        ServiceNameToIndexMap;
+    using BoundServiceMap = std::map<unsigned int, BoundService>;
+    using RegisterServiceMap = std::map<int, std::pair<qi::AnyObject, qi::ServiceInfo>>;
+    using ServiceNameToIndexMap = std::map<std::string, unsigned int>;
 
   public:
     BoundServiceMap                     _services;

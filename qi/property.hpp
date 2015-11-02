@@ -39,10 +39,10 @@ namespace qi
     /** Setter called with storage containing old value, and new value
     *  Returns true to invoke subscribers, false to 'abort' the update.
     */
-    typedef boost::function<bool (T&, const T&)> Setter;
-    typedef boost::function<T(const T&)> Getter;
-    typedef SignalF<void(const T&)> SignalType;
-    typedef T PropertyType;
+    using Setter = boost::function<bool (T&, const T&)>;
+    using Getter = boost::function<T(const T&)>;
+    using SignalType = SignalF<void(const T&)>;
+    using PropertyType = T;
     /**
      * @param getter value getter, default to reading _value
      * @param setter value setter, what it returns will be written to
@@ -69,9 +69,9 @@ namespace qi
   class Property: public PropertyImpl<T>
   {
   public:
-    typedef PropertyImpl<T> ImplType;
-    typedef typename ImplType::Getter Getter;
-    typedef typename ImplType::Setter Setter;
+    using ImplType = PropertyImpl<T>;
+    using Getter = typename ImplType::Getter;
+    using Setter = typename ImplType::Setter;
     Property(Getter getter = Getter(), Setter setter = Setter(),
       SignalBase::OnSubscribers onsubscribe = SignalBase::OnSubscribers())
     : PropertyImpl<T>(getter, setter, onsubscribe)

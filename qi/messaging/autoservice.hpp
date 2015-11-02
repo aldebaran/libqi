@@ -102,7 +102,7 @@ namespace qi
     qi::Promise<void>    _promise;
   };
 
-  typedef AutoService<qi::Empty> AnyAutoService;
+  using AnyAutoService = AutoService<qi::Empty>;
 }
 
 #include "detail/autoservice.hxx"

@@ -41,8 +41,8 @@ private:
   bool tearDownNightmare(qi::SessionPtr session);
 
 private:
-  typedef bool (SessionInitializer::*setUpFcnt)(qi::SessionPtr session, const std::string &serviceDirectoryUrl);
-  typedef bool (SessionInitializer::*tearDownFcnt)(qi::SessionPtr session);
+  using setUpFcnt = bool (SessionInitializer::*)(qi::SessionPtr session, const std::string &serviceDirectoryUrl);
+  using tearDownFcnt = bool (SessionInitializer::*)(qi::SessionPtr session);
 
   bool                                     _listen;
 

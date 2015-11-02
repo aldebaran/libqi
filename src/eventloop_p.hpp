@@ -29,9 +29,9 @@ namespace qi {
 #ifdef _WIN32
     // Assume it is a socket under WIN32, no way to poll
     // a generic descriptor.
-    typedef boost::asio::ip::tcp::socket Stream;
+    using Stream = boost::asio::ip::tcp::socket;
 #else
-    typedef boost::asio::posix::stream_descriptor Stream;
+    using Stream = boost::asio::posix::stream_descriptor;
 #endif
     Stream* sd;
   };

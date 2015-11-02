@@ -202,7 +202,7 @@ namespace qi
     typename detail::Accessor<A>::value_type&
     fieldValue(C* instance, A accessor, void** data)
     {
-      typedef typename detail::Accessor<A>::value_type T;
+      using T = typename detail::Accessor<A>::value_type;
       return *(T*)fieldType(accessor)->ptrFromStorage(data);
     }
   }
@@ -215,7 +215,7 @@ namespace qi
     struct TypeImpl<name> : public ::qi::StructTypeInterface                                          \
     {                                                                                                 \
     public:                                                                                           \
-      typedef name ClassType;                                                                         \
+      using ClassType = name;                                                                         \
       TypeImpl();                                                                                     \
       std::vector<::qi::TypeInterface*> memberTypes() override;                                       \
       std::vector<std::string> elementsName() override;                                               \
@@ -228,7 +228,7 @@ namespace qi
       virtual bool convertTo(std::map<std::string, ::qi::AnyValue>& fields,                           \
                              const std::vector<std::tuple<std::string, TypeInterface*>>& missing,     \
                              const std::map<std::string, ::qi::AnyReference>& dropfields) override;   \
-      extra typedef ::qi::DefaultTypeImplMethods<name, ::qi::TypeByPointerPOD<name>> Impl;            \
+      extra using Impl = ::qi::DefaultTypeImplMethods<name, ::qi::TypeByPointerPOD<name>>;            \
       _QI_BOUNCE_TYPE_METHODS(Impl);                                                                  \
     };                                                                                                \
   }
@@ -504,7 +504,7 @@ namespace qi {
 
     virtual void adaptStorage(void** storage, void** adapted) = 0;
 
-    typedef DefaultTypeImplMethods<T, TypeByPointerPOD<T> > Methods;
+    using Methods = DefaultTypeImplMethods<T, TypeByPointerPOD<T>>;
     std::vector<TypeInterface*> memberTypes() override
     {
       return bounceType()->memberTypes();
@@ -564,8 +564,8 @@ namespace qi {
   class TypeImpl<std::pair<F, S> >: public StructTypeInterface
   {
   public:
-    typedef DefaultTypeImplMethods<std::pair<F, S>, TypeByPointerPOD<std::pair<F,S> > > Methods;
-    typedef typename std::pair<F, S> BackendType;
+    using Methods = DefaultTypeImplMethods<std::pair<F, S>, TypeByPointerPOD<std::pair<F,S>>>;
+    using BackendType = typename std::pair<F, S>;
     TypeImpl()
     {
       _memberTypes.push_back(typeOf<F>());

@@ -144,7 +144,7 @@ private:
   ApplicationSessionPrivate* _p;
 };
 
-typedef ApplicationSession::Option ApplicationSessionOptions;
+using ApplicationSessionOptions = ApplicationSession::Option;
 }
 
 #endif // QIMESSAGING_APPLICATIONSESSION_HPP_

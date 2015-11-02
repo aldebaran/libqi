@@ -15,13 +15,13 @@
 namespace qi
 {
   /// Convenience typedefs
-  typedef boost::chrono::duration<int64_t, boost::nano>         Duration;
-  typedef boost::chrono::duration<int64_t, boost::nano>         NanoSeconds;
-  typedef boost::chrono::duration<int64_t, boost::micro>        MicroSeconds;
-  typedef boost::chrono::duration<int64_t, boost::milli>        MilliSeconds;
-  typedef boost::chrono::duration<int64_t>                      Seconds;
-  typedef boost::chrono::duration<int64_t, boost::ratio<60> >   Minutes;
-  typedef boost::chrono::duration<int64_t, boost::ratio<3600> > Hours;
+  using Duration = boost::chrono::duration<int64_t, boost::nano>;
+  using NanoSeconds = boost::chrono::duration<int64_t, boost::nano>;
+  using MicroSeconds = boost::chrono::duration<int64_t, boost::micro>;
+  using MilliSeconds = boost::chrono::duration<int64_t, boost::milli>;
+  using Seconds = boost::chrono::duration<int64_t>;
+  using Minutes = boost::chrono::duration<int64_t, boost::ratio<60>>;
+  using Hours = boost::chrono::duration<int64_t, boost::ratio<3600>>;
 
   /**
    * \brief The SteadyClock class represents a monotonic clock.
@@ -34,15 +34,15 @@ namespace qi
   class QI_API SteadyClock
   {
   public:
-    typedef int64_t rep; ///< The representation type of the duration and time_point.
-    typedef boost::nano period; ///< The tick period of the clock in nanoseconds.
-    typedef boost::chrono::duration<rep, period> duration; ///< The duration type of the clock.
+    using rep = int64_t; ///< The representation type of the duration and time_point.
+    using period = boost::nano; ///< The tick period of the clock in nanoseconds.
+    using duration = boost::chrono::duration<rep, period>; ///< The duration type of the clock.
     /**
      * The time_point type of the clock. Different clocks are permitted
      * to share a time_point definition if it is valid to compare their
      * time_points by comparing their respective durations.
      */
-    typedef boost::chrono::time_point<SteadyClock> time_point;
+    using time_point = boost::chrono::time_point<SteadyClock>;
 
     /**
      * true if t1 <= t2 is always true, else false.
@@ -76,15 +76,15 @@ namespace qi
   class QI_API Clock
   {
   public:
-    typedef int64_t rep; ///< The representation type of the duration and time_point.
-    typedef boost::nano period; ///< The tick period of the clock in nanoseconds.
-    typedef boost::chrono::duration<rep, period> duration; ///< The duration type of the clock.
+    using rep = int64_t; ///< The representation type of the duration and time_point.
+    using period = boost::nano; ///< The tick period of the clock in nanoseconds.
+    using duration = boost::chrono::duration<rep, period>; ///< The duration type of the clock.
     /**
      * The time_point type of the clock. Different clocks are permitted
      * to share a time_point definition if it is valid to compare their
      * time_points by comparing their respective durations.
      */
-    typedef boost::chrono::time_point<Clock> time_point;
+    using time_point = boost::chrono::time_point<Clock>;
 
     /**
      * true if t1 <= t2 is always true, else false.
@@ -158,15 +158,15 @@ namespace qi
   class QI_API SystemClock
   {
   public:
-    typedef int64_t rep; ///< The representation type of the duration and time_point.
-    typedef boost::nano period; ///< The tick period of the clock in nanoseconds.
-    typedef boost::chrono::duration<rep, period> duration; ///< The duration type of the clock.
+    using rep = int64_t; ///< The representation type of the duration and time_point.
+    using period = boost::nano; ///< The tick period of the clock in nanoseconds.
+    using duration = boost::chrono::duration<rep, period>; ///< The duration type of the clock.
     /**
      * The time_point type of the clock. Different clocks are permitted
      * to share a time_point definition if it is valid to compare their
      * time_points by comparing their respective durations.
      */
-    typedef boost::chrono::time_point<SystemClock> time_point;
+    using time_point = boost::chrono::time_point<SystemClock>;
 
     /// true if t1 <= t2 is always true, else false.
     /// \note A SystemClock is never steady.
@@ -199,10 +199,10 @@ namespace qi
   QI_API_DEPRECATED
   typedef SystemClock WallClock;
 
+  using SteadyClockTimePoint = SteadyClock::time_point; ///< Steady clock time point.
+  using ClockTimePoint = Clock::time_point; ///< qi::Clock time point.
+  using SystemClockTimePoint = SystemClock::time_point; ///< System clock time point.
 
-  typedef SteadyClock::time_point SteadyClockTimePoint; ///< Steady clock time point.
-  typedef Clock::time_point ClockTimePoint; ///< qi::Clock time point.
-  typedef SystemClock::time_point SystemClockTimePoint; ///< System clock time point.
   QI_API_DEPRECATED
   typedef SystemClockTimePoint WallClockTimePoint; ///< System clock time point.
 

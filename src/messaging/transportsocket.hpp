@@ -112,12 +112,12 @@ namespace qi
     qi::Signal<std::string>        disconnected;
     // C4251
     qi::Signal<const qi::Message&> messageReady;
-    typedef boost::variant<std::string, qi::Message> SocketEventData;
+    using SocketEventData = boost::variant<std::string, qi::Message>;
     // C4251
     qi::Signal<SocketEventData>  socketEvent;
   };
 
-  typedef boost::shared_ptr<TransportSocket> TransportSocketPtr;
+  using TransportSocketPtr = boost::shared_ptr<TransportSocket>;
 
   TransportSocketPtr makeTransportSocket(const std::string &protocol, qi::EventLoop *eventLoop = getEventLoop());
 

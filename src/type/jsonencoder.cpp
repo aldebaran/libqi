@@ -71,8 +71,8 @@ namespace qi {
   //Taken from boost::json
   std::string add_esc_chars(const std::wstring& s, JsonOption jsonPrintOption)
   {
-    typedef std::wstring::const_iterator Iter_type;
-    typedef std::wstring::value_type     Char_type;
+    using Iter_type = std::wstring::const_iterator;
+    using Char_type = std::wstring::value_type;
 
     std::string result;
     const Iter_type end( s.end() );

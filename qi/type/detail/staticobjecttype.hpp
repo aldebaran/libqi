@@ -32,18 +32,15 @@ struct QI_API ObjectTypeData
    * bypass ObjectTypeInterface::metaCall which would have to be removed.
    * -> RemoteObject, ALBridge needs to be rewriten.
    */
-  typedef boost::function<SignalBase* (void*)> SignalGetter;
-  typedef std::map<unsigned int, SignalGetter> SignalGetterMap;
+  using SignalGetter = boost::function<SignalBase* (void*)>;
+  using SignalGetterMap = std::map<unsigned int, SignalGetter>;
   SignalGetterMap signalGetterMap;
 
-  typedef boost::function<PropertyBase*(void*)> PropertyGetter;
-  typedef std::map<unsigned int, PropertyGetter> PropertyGetterMap;
+  using PropertyGetter = boost::function<PropertyBase*(void*)>;
+  using PropertyGetterMap = std::map<unsigned int, PropertyGetter>;
   PropertyGetterMap propertyGetterMap;
 
-  typedef std::map<
-    unsigned int,
-    std::pair<AnyFunction, MetaCallType>
-  > MethodMap;
+  using MethodMap = std::map<unsigned int, std::pair<AnyFunction, MetaCallType>>;
 
   MethodMap methodMap;
 

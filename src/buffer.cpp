@@ -39,7 +39,7 @@ namespace qi
   }
 
   struct MyPoolTag { };
-  typedef boost::singleton_pool<MyPoolTag, sizeof(BufferPrivate)> buffer_pool;
+  using buffer_pool = boost::singleton_pool<MyPoolTag, sizeof(BufferPrivate)>;
 
   void* BufferPrivate::operator new(size_t sz)
   {

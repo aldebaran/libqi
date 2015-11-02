@@ -18,7 +18,7 @@
 
 namespace qi {
 
-typedef Object<Empty> AnyObject;
+using AnyObject = Object<Empty>;
 
 //all methods ID lesser than this constant are considered special.
 //they are reserved for internal use by qi/qitype/qimessaging.

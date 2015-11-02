@@ -27,7 +27,7 @@ namespace qi {
     };
 
     struct FutureBasePrivatePoolTag { };
-    typedef boost::singleton_pool<FutureBasePrivatePoolTag, sizeof(FutureBasePrivate)> futurebase_pool;
+    using futurebase_pool = boost::singleton_pool<FutureBasePrivatePoolTag, sizeof(FutureBasePrivate)>;
 
     void* FutureBasePrivate::operator new(size_t sz)
     {

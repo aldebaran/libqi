@@ -18,7 +18,7 @@
 
 namespace qi
 {
-typedef std::map<std::string, AnyValue> CapabilityMap;
+using CapabilityMap = std::map<std::string, AnyValue>;
 
 class QI_API AuthProvider
 {
@@ -55,7 +55,7 @@ protected:
   virtual CapabilityMap _processAuth(const CapabilityMap& authData) = 0;
 };
 
-typedef boost::shared_ptr<AuthProvider> AuthProviderPtr;
+using AuthProviderPtr = boost::shared_ptr<AuthProvider>;
 }
 
 #endif

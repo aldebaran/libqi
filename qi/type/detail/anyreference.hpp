@@ -21,7 +21,7 @@
 namespace qi {
 
 class AnyReference;
-typedef std::vector<AnyReference> AnyReferenceVector;
+using AnyReferenceVector = std::vector<AnyReference>;
 
 namespace detail {
 
@@ -322,7 +322,7 @@ private:
   };
 };
 
-typedef std::vector<AnyReference> AnyReferenceVector;
+using AnyReferenceVector = std::vector<AnyReference>;
 QI_API bool operator< (const AnyReference& a, const AnyReference& b);
 QI_API bool operator==(const AnyReference& a, const AnyReference& b);
 QI_API bool operator!=(const AnyReference& a, const AnyReference& b);

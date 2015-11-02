@@ -73,7 +73,7 @@ struct _pending_msg_eraser
   qi::TransportSocketPtr target;
 };
 
-typedef boost::shared_ptr<bool> boolptr;
+using boolptr = boost::shared_ptr<bool>;
 }
 
 namespace qi
@@ -234,7 +234,7 @@ UrlVector GatewayPrivate::endpoints() const
 
 static UrlVector allAvailableInterfaces(bool includeLocalhost, unsigned int port, const std::string& protocol)
 {
-  typedef std::map<std::string, std::vector<std::string> > IfMap;
+  using IfMap = std::map<std::string, std::vector<std::string>>;
   std::map<std::string, std::vector<std::string> > interfaces = os::hostIPAddrs(false);
   std::vector<Url> result;
 

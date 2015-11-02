@@ -72,7 +72,7 @@ namespace qi {
     virtual qi::Future<void> metaSetProperty(qi::AnyObject context, unsigned int id, AnyValue val);
 
   protected:
-    typedef std::map<qi::uint64_t, RemoteSignalLinks>  LocalToRemoteSignalLinkMap;
+    using LocalToRemoteSignalLinkMap = std::map<qi::uint64_t, RemoteSignalLinks>;
 
     TransportSocketPtr                              _socket;
     boost::mutex                                    _socketMutex;

@@ -40,7 +40,7 @@ public:
 
   struct Callback;
 
-  typedef std::deque<boost::shared_ptr<Callback> > Queue;
+  using Queue = std::deque<boost::shared_ptr<Callback>>;
 
   qi::ExecutionContext& _eventLoop;
   boost::atomic<unsigned int> _curId;

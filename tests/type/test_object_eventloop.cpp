@@ -18,7 +18,7 @@
 // to hack like hell to pass it in qimessaging calls: We pass along
 // pointers to TID in an unsigned long.
 
-typedef boost::thread::id TID;
+using TID = boost::thread::id;
 
 
 bool sameThread(const unsigned long& tid)

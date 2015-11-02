@@ -376,7 +376,7 @@ TEST_F(TestObject, serviceDirectoryEvent)
   i = 0;
   qi::AnyObject sd = p1.client()->service("ServiceDirectory");
 
-  typedef std::map<unsigned int, qi::MetaSignal> SignalMap;
+  using SignalMap = std::map<unsigned int, qi::MetaSignal>;
   SignalMap s_map;
   s_map = sd.metaObject().signalMap();
 

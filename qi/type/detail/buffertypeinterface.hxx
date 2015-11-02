@@ -30,7 +30,7 @@ namespace qi
       b->clear();
       b->write(ptr, sz);
     }
-    typedef DefaultTypeImplMethods<Buffer, TypeByPointerPOD<Buffer> > Methods;
+    using Methods = DefaultTypeImplMethods<Buffer, TypeByPointerPOD<Buffer> >;
     _QI_BOUNCE_TYPE_METHODS(Methods);
   };
 

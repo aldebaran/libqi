@@ -136,7 +136,7 @@ namespace qi
   class TypeByPointer
   {
   public:
-    typedef T type;
+    using type = T;
 
     static void* ptrFromStorage(void** storage)
     {
@@ -184,7 +184,7 @@ namespace qi
   class TypeByValue
   {
   public:
-    typedef T type;
+    using type = T;
     static void* ptrFromStorage(void** storage)
     {
       return storage;
@@ -228,7 +228,7 @@ namespace qi
   class DefaultTypeImplMethods
   {
   public:
-    typedef _Access Access;
+    using Access = _Access;
 
     static void* initializeStorage(void* ptr=0)
     {
@@ -290,7 +290,7 @@ namespace qi
       : public TypeInterface
   {
   public:
-    typedef DefaultTypeImplMethods<T, _Access> MethodsImpl;
+    using MethodsImpl = DefaultTypeImplMethods<T, _Access>;
     _QI_BOUNCE_TYPE_METHODS(MethodsImpl);
   };
 

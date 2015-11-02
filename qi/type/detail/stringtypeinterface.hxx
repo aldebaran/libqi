@@ -30,9 +30,7 @@ namespace qi
   class QI_API StringTypeInterfaceImpl: public StringTypeInterface
   {
   public:
-    typedef DefaultTypeImplMethods<std::string,
-            TypeByPointerPOD<std::string>
-              > Methods;
+    using Methods = DefaultTypeImplMethods<std::string, TypeByPointerPOD<std::string>>;
     ManagedRawString get(void* storage) override
     {
       std::string* ptr = (std::string*)Methods::ptrFromStorage(&storage);
@@ -72,7 +70,7 @@ namespace qi
     {
       free(src);
     }
-    typedef DefaultTypeImplMethods<char*, TypeByValue<char*> > Methods;
+    using Methods = DefaultTypeImplMethods<char*, TypeByValue<char*>>;
     _QI_BOUNCE_TYPE_METHODS_NOCLONE(Methods);
   };
 
@@ -106,8 +104,7 @@ namespace qi
       qiLogWarning() << "set on C array not implemented";
     }
 
-    typedef  DefaultTypeImplMethods<char[I],
-      TypeByPointerPOD<char[I]> > Methods;
+    using Methods = DefaultTypeImplMethods<char[I], TypeByPointerPOD<char[I]>>;
       _QI_BOUNCE_TYPE_METHODS_NOCLONE(Methods);
   };
 
@@ -151,7 +148,7 @@ namespace qi
   {
   public:
     TypeEquivalentString(F f): _getter(f) {}
-    typedef DefaultTypeImplMethods<T, TypeByPointerPOD<T> > Impl;
+    using Impl = DefaultTypeImplMethods<T, TypeByPointerPOD<T>>;
 
     void set(void** storage, const char* ptr, size_t sz) override
     {

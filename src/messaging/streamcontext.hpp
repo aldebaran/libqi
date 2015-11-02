@@ -15,7 +15,7 @@
 namespace qi
 {
 
-typedef std::map<std::string, AnyValue> CapabilityMap;
+using CapabilityMap = std::map<std::string, AnyValue>;
 
 /** Store contextual data associated to one point-to-point point transport.
  *
@@ -87,8 +87,8 @@ protected:
   CapabilityMap _remoteCapabilityMap; // remote capabilities we received
   CapabilityMap _localCapabilityMap; // memory of what we advertisedk
 
-  typedef std::map<MetaObject, unsigned int> SendMetaObjectCache;
-  typedef std::map<unsigned int, MetaObject> ReceiveMetaObjectCache;
+  using SendMetaObjectCache = std::map<MetaObject, unsigned int>;
+  using ReceiveMetaObjectCache = std::map<unsigned int, MetaObject>;
   SendMetaObjectCache _sendMetaObjectCache;
   ReceiveMetaObjectCache _receiveMetaObjectCache;
 };
