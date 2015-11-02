@@ -21,7 +21,8 @@ namespace qi
     int curId;
     SignalLink* trackLink;
     createNewTrackLink(curId, trackLink);
-    SignalSubscriber& s = connect(qi::bind(func, std::forward<Arg0>(arg0), std::forward<Args>(args)...));
+    SignalSubscriber& s =
+      connect(qi::bind(std::forward<F>(func), std::forward<Arg0>(arg0), std::forward<Args>(args)...));
     *trackLink = s;
     return s;
   }
@@ -29,12 +30,12 @@ namespace qi
   template<typename T>
   SignalSubscriber& SignalF<T>::connect(AnyFunction f)
   {
-    return SignalBase::connect(SignalSubscriber(f));
+    return SignalBase::connect(SignalSubscriber(std::move(f)));
   }
   template<typename T>
   SignalSubscriber& SignalF<T>::connect(const SignalSubscriber& sub)
   {
-    return SignalBase::connect(sub);
+    return SignalBase::connect(std::move(sub));
   }
   template<typename T>
   template<typename U>
@@ -68,10 +69,12 @@ namespace qi
   }
 
   template<typename F>
-  SignalSubscriber& SignalBase::connect(const boost::function<F>& fun)
+  SignalSubscriber& SignalBase::connect(boost::function<F> fun)
   {
-    return connect(AnyFunction::from(fun));
+    return connect(AnyFunction::from(std::move(fun)));
   }
+  // TODO: taking by forward ref is too greedy and connect(SignalSubscriber) takes this overload
+  // find a way to fix this
   template<typename T>
   template<typename F>
   SignalSubscriber& SignalF<T>::connect(F c)

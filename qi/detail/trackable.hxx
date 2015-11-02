@@ -364,21 +364,21 @@ namespace qi
   }
 
   template <typename F, typename Arg0>
-  auto trackWithFallback(boost::function<void()> onFail, F&& f, const Arg0& arg0)
-      -> decltype(detail::BindTransform<Arg0>::wrap(arg0, std::forward<F>(f), std::move(onFail)))
+  auto trackWithFallback(boost::function<void()> onFail, F&& f, Arg0&& arg0)
+      -> decltype(detail::BindTransform<Arg0>::wrap(std::forward<Arg0>(arg0), std::forward<F>(f), std::move(onFail)))
   {
-    return detail::BindTransform<Arg0>::wrap(arg0, std::forward<F>(f), std::move(onFail));
+    return detail::BindTransform<Arg0>::wrap(std::forward<Arg0>(arg0), std::forward<F>(f), std::move(onFail));
   }
   template <typename F, typename Arg0>
-  auto track(F&& f, const Arg0& arg0)
-      -> decltype(trackWithFallback(detail::throwPointerLockException, std::forward<F>(f), arg0))
+  auto track(F&& f, Arg0&& arg0)
+      -> decltype(trackWithFallback(detail::throwPointerLockException, std::forward<F>(f), std::forward<Arg0>(arg0)))
   {
-    return trackWithFallback(detail::throwPointerLockException, std::forward<F>(f), arg0);
+    return trackWithFallback(detail::throwPointerLockException, std::forward<F>(f), std::forward<Arg0>(arg0));
   }
   template <typename F, typename Arg0>
-  auto trackSilent(F&& f, const Arg0& arg0) -> decltype(trackWithFallback({}, std::forward<F>(f), arg0))
+  auto trackSilent(F&& f, Arg0&& arg0) -> decltype(trackWithFallback({}, std::forward<F>(f), std::forward<Arg0>(arg0)))
   {
-    return trackWithFallback({}, std::forward<F>(f), arg0);
+    return trackWithFallback({}, std::forward<F>(f), std::forward<Arg0>(arg0));
   }
 
   template<typename F, typename Arg0>

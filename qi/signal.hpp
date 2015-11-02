@@ -44,7 +44,7 @@ namespace qi {
     virtual ~SignalBase();
     virtual qi::Signature signature() const;
     template<typename F>
-    SignalSubscriber& connect(const boost::function<F>& func);
+    SignalSubscriber& connect(boost::function<F> func);
     SignalSubscriber& connect(const SignalSubscriber& s);
     SignalSubscriber& connect(AnyObject object, const unsigned int slot);
     SignalSubscriber& connect(AnyObject object, const std::string& slot);

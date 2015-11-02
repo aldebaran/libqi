@@ -15,7 +15,6 @@
 # include <qi/trackable.hpp>
 # include <qi/clock.hpp>
 # include <qi/detail/mpl.hpp>
-# include <qi/anyvalue.hpp>
 
 # include <boost/shared_ptr.hpp>
 # include <boost/make_shared.hpp>

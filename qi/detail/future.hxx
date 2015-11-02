@@ -12,7 +12,6 @@
 #include <boost/bind.hpp>
 #include <qi/eventloop.hpp>
 #include <qi/actor.hpp>
-#include <qi/anyvalue.hpp>
 #include <qi/type/detail/futureadapter.hpp>
 #include <qi/log.hpp>
 
@@ -270,9 +269,12 @@ namespace detail {
     {
       for (unsigned i = 0; i < _onResult.size(); ++i)
       {
-        bool async = _async != FutureCallbackType_Sync;
-        if (_onResult[i].callType != FutureCallbackType_Auto)
-          async = _onResult[i].callType == FutureCallbackType_Async;
+        const bool async = [&]{
+          if (_onResult[i].callType != FutureCallbackType_Auto)
+            return _onResult[i].callType != FutureCallbackType_Sync;
+          else
+            return _async != FutureCallbackType_Sync;
+        }();
 
         if (async)
           getEventLoop()->post2(boost::bind(_onResult[i].callback, future));
@@ -383,9 +385,13 @@ namespace detail {
       // result already ready, notify the callback
       if (ready)
       {
-        bool async = _async != FutureCallbackType_Sync;
-        if (type != FutureCallbackType_Auto)
-          async = type != FutureCallbackType_Sync;
+        const bool async = [&]{
+          if (type != FutureCallbackType_Auto)
+            return type != FutureCallbackType_Sync;
+          else
+            return _async != FutureCallbackType_Sync;
+        }();
+
         if (async)
           getEventLoop()->post2(boost::bind(s, future));
         else
