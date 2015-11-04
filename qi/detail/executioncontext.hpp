@@ -49,13 +49,13 @@ public:
   void post2(F&& callback);
   /// call a callback asynchronously to be executed on tp
   template <typename F>
-  auto asyncAt(F&& callback, qi::SteadyClockTimePoint tp) -> qi::Future<decltype(callback())>;
+  auto asyncAt(F&& callback, qi::SteadyClockTimePoint tp) -> qi::Future<typename std::decay<decltype(callback())>::type>;
   /// call a callback asynchronously to be executed in delay
   template <typename F>
-  auto asyncDelay(F&& callback, qi::Duration delay) -> qi::Future<decltype(callback())>;
+  auto asyncDelay(F&& callback, qi::Duration delay) -> qi::Future<typename std::decay<decltype(callback())>::type>;
 
   template <typename F>
-  auto async2(F&& callback) -> qi::Future<decltype(callback())>
+  auto async2(F&& callback) -> decltype(asyncDelay(std::forward<F>(callback), qi::Duration(0)))
   {
     return asyncDelay(std::forward<F>(callback), qi::Duration(0));
   }
@@ -188,9 +188,9 @@ struct ToPost
 };
 
 template <typename F>
-auto ExecutionContext::asyncAt(F&& callback, qi::SteadyClockTimePoint tp) -> qi::Future<decltype(callback())>
+auto ExecutionContext::asyncAt(F&& callback, qi::SteadyClockTimePoint tp) -> qi::Future<typename std::decay<decltype(callback())>::type>
 {
-  using ReturnType = decltype(callback());
+  using ReturnType = typename std::remove_cv<typename std::remove_reference<decltype(callback())>::type>::type;
 
   ToPost<ReturnType, typename std::decay<F>::type> topost(std::move(callback));
   auto promise = topost.promise;
@@ -202,9 +202,9 @@ auto ExecutionContext::asyncAt(F&& callback, qi::SteadyClockTimePoint tp) -> qi:
 }
 
 template <typename F>
-auto ExecutionContext::asyncDelay(F&& callback, qi::Duration delay) -> qi::Future<decltype(callback())>
+auto ExecutionContext::asyncDelay(F&& callback, qi::Duration delay) -> qi::Future<typename std::decay<decltype(callback())>::type>
 {
-  using ReturnType = decltype(callback());
+  using ReturnType = typename std::remove_cv<typename std::remove_reference<decltype(callback())>::type>::type;
 
   ToPost<ReturnType, typename std::decay<F>::type> topost(std::move(callback));
   auto promise = topost.promise;

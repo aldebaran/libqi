@@ -102,10 +102,10 @@ namespace qi
       boost::function<void()> _onFail;
 
     public:
-      LockAndCall(const WT& arg, F func, boost::function<void()> onFail)
-        : _wptr(arg)
+      LockAndCall(WT arg, F func, boost::function<void()> onFail)
+        : _wptr(std::move(arg))
         , _f(std::move(func))
-        , _onFail(onFail)
+        , _onFail(std::move(onFail))
       {}
 
       template <typename... Args>
@@ -198,7 +198,6 @@ namespace qi
     template <typename T, bool IsTrackable>
     struct BindTransformImpl
     {
-      typedef T type;
       static T transform(T arg)
       {
         return arg;
@@ -216,7 +215,6 @@ namespace qi
     struct BindTransformImpl<T*, false>
     {
       using ObjectWrapType = ObjectWrap<T*, std::is_base_of<Actor, T>::value>;
-      using type = T*;
       template <typename F>
       using wrap_type = typename ObjectWrapType::template wrap_type<F>;
 
@@ -235,7 +233,6 @@ namespace qi
     template <typename T>
     struct BindTransformImpl<T*, true>
     {
-      using type = T*;
       template <typename F>
       using wrap_type = LockAndCall<boost::weak_ptr<T>, typename std::decay<F>::type>;
 
@@ -258,7 +255,6 @@ namespace qi
     template <typename T>
     struct BindTransformImpl<boost::weak_ptr<T>, false>
     {
-      using type = T*;
       template <typename F>
       using wrap_type = LockAndCall<boost::weak_ptr<T>, typename std::decay<F>::type>;
 
@@ -283,7 +279,6 @@ namespace qi
     struct BindTransformImpl<boost::shared_ptr<T>, false>
     {
       using ObjectWrapType = ObjectWrap<boost::shared_ptr<T>, std::is_base_of<Actor, T>::value>;
-      using type = boost::shared_ptr<T>;
       template <typename F>
       using wrap_type = typename ObjectWrapType::template wrap_type<F>;
 
@@ -316,7 +311,7 @@ namespace qi
                                        Args&&... args)
   {
     using Transform = detail::BindTransform<Arg0>;
-    typename Transform::type transformed = Transform::transform(arg0);
+    auto transformed = Transform::transform(arg0);
     boost::function<RF> f = boost::bind(std::forward<AF>(fun), std::move(transformed), std::forward<Args>(args)...);
     return Transform::wrap(arg0, std::move(f), std::move(onFail));
   }
@@ -340,7 +335,7 @@ namespace qi
                                std::forward<Args>(args)...))>
   {
     using Transform = detail::BindTransform<Arg0>;
-    typename Transform::type transformed = Transform::transform(arg0);
+    auto transformed = Transform::transform(arg0);
     return Transform::wrap(arg0,
                            boost::bind(std::forward<AF>(fun), std::move(transformed), std::forward<Args>(args)...),
                            std::move(onFail));

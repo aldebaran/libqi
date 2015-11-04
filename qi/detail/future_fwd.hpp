@@ -146,6 +146,7 @@ namespace qi {
    */
   template <typename T>
   class Future : public detail::AddUnwrap<T> {
+    static_assert(!std::is_const<T>::value, "can't create a future of const");
   public:
     typedef typename detail::FutureType<T>::type     ValueType;
     typedef typename detail::FutureType<T>::typecast ValueTypeCast;
