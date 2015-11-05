@@ -16,6 +16,22 @@
 namespace qi
 {
 
+namespace detail
+{
+
+  // C++14 this can be a lambda, but we need perfect forwarding in the capture in scheduleFor below
+  template <typename F>
+  struct WrapInStrand;
+
+  // this structure is just a wrapper with a is_async field
+  template <typename F>
+  struct WrapAsAsync;
+
+  template <typename F>
+  WrapAsAsync<typename std::decay<F>::type> wrapAsAsync(F&& f);
+
+}
+
 class StrandPrivate;
 
 /** Class that schedules tasks sequentially
@@ -38,14 +54,14 @@ public:
   /// Call detroy()
   ~Strand();
 
-  /** Destroys the strand
+  /** Joins the strand
    *
    * This will wait for currently running tasks to finish and will drop all tasks scheduled from the moment of the call
-   * on. A strand can't be reused after it has been destroy()ed.
+   * on. A strand can't be reused after it has been join()ed.
    *
    * It is safe to call this method concurrently with other methods. All the returned futures will be set to error.
    */
-  void destroy();
+  void join();
 
   // DEPRECATED
   QI_API_DEPRECATED void post(const boost::function<void()>& callback) override;
@@ -78,57 +94,17 @@ public:
    */
   bool isInThisContext() override;
 
-  // C++14 this can be a lambda, but we need perfect forwarding in the capture in scheduleFor below
-  template <typename F>
-  struct SchedulerHelper2
-  {
-    F _func;
-    Strand* _strand;
-
-    SchedulerHelper2(F f, Strand* strand)
-      : _func(std::move(f))
-      , _strand(strand)
-    {
-    }
-
-    template <typename... Args>
-    auto operator()(Args&&... args) const -> qi::Future<decltype(std::bind(_func, std::forward<Args>(args)...)())>
-    {
-      // boost::bind does not work T_T
-      return _strand->async2(std::bind(_func, std::forward<Args>(args)...));
-    }
-  };
-
-  // this structure is just a wrapper with a is_async field
-  template <typename F>
-  struct SchedulerHelper3
-  {
-    static const bool is_async = true;
-
-    F _func;
-
-    template <typename... Args>
-    auto operator()(Args&&... args) const -> decltype(_func(std::forward<Args>(args)...))
-    {
-      return _func(std::forward<Args>(args)...);
-    }
-  };
-
-  template <typename F>
-  SchedulerHelper3<typename std::decay<F>::type> makeSchedulerHelper3(F&& f)
-  {
-    return SchedulerHelper3<typename std::decay<F>::type>{std::forward<F>(f)};
-  }
-
   template <typename F>
   auto schedulerFor(F&& func, boost::function<void()> onFail = {})
-      -> decltype(makeSchedulerHelper3(qi::trackWithFallback(std::move(onFail),
-                                        SchedulerHelper2<typename std::decay<F>::type>(std::forward<F>(func), this),
-                                        boost::weak_ptr<StrandPrivate>())))
+  // very very ugly stuff that deals with qi::bind internals
+  // this could just be auto in c++14 and could be decltype in c++11, but vs2013 can't deduce the type here...
+      -> detail::WrapAsAsync<typename std::decay<detail::BindTransform<boost::weak_ptr<StrandPrivate>>::wrap_type<
+          detail::WrapInStrand<typename std::decay<F>::type>>>::type>
   {
-    return makeSchedulerHelper3(qi::trackWithFallback(std::move(onFail),
-                                 SchedulerHelper2<typename std::decay<F>::type>(std::forward<F>(func), this),
-                                 boost::weak_ptr<StrandPrivate>(_p)));
+    return detail::wrapAsAsync(
+        qi::trackWithFallback(std::move(onFail),
+                              detail::WrapInStrand<typename std::decay<F>::type>(std::forward<F>(func), *this),
+                              boost::weak_ptr<StrandPrivate>(_p)));
   }
 
 private:
@@ -173,6 +149,53 @@ private:
 #undef typedefi
   // END DEPRECATED
 };
+
+namespace detail
+{
+
+  // C++14 this can be a lambda, but we need perfect forwarding in the capture in scheduleFor below
+  template <typename F>
+  struct WrapInStrand
+  {
+    F _func;
+    Strand& _strand;
+
+    WrapInStrand(F f, Strand& strand)
+      : _func(std::move(f))
+      , _strand(strand)
+    {
+    }
+
+    template <typename... Args>
+    auto operator()(Args&&... args) const -> qi::Future<decltype(std::bind(_func, std::forward<Args>(args)...)())>
+    {
+      // boost::bind does not work T_T
+      return _strand.async2(std::bind(_func, std::forward<Args>(args)...));
+    }
+  };
+
+  // this structure is just a wrapper with a is_async field
+  template <typename F>
+  struct WrapAsAsync
+  {
+    static const bool is_async = true;
+
+    F _func;
+
+    template <typename... Args>
+    auto operator()(Args&&... args) const -> decltype(_func(std::forward<Args>(args)...))
+    {
+      return _func(std::forward<Args>(args)...);
+    }
+  };
+
+  template <typename F>
+  WrapAsAsync<typename std::decay<F>::type> wrapAsAsync(F&& f)
+  {
+    return WrapAsAsync<typename std::decay<F>::type>{std::forward<F>(f)};
+  }
+
+}
 
 }
 

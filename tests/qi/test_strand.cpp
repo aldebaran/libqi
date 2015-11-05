@@ -147,7 +147,7 @@ TEST(TestStrand, StrandDestructionWithMethodAndConcurrency)
   for (unsigned int j = 0; j < STRAND_NB_TRIES/4; ++j)
     strand.async2(boost::bind<void>(&increment,
             boost::ref(mutex), 1, boost::ref(i)));
-  strand.destroy();
+  strand.join();
   for (unsigned int j = 0; j < STRAND_NB_TRIES/4; ++j)
     futures.push_back(qi::getEventLoop()->async2([&]{
             strand.async2(boost::bind<void>(&increment,
@@ -211,7 +211,7 @@ struct MyActor : qi::Actor
 {
   boost::atomic<bool> calling;
   MyActor() : calling(0) {}
-  ~MyActor() { strand()->destroy(); }
+  ~MyActor() { strand()->join(); }
   int f(int end, qi::Promise<void> finished)
   {
     int startval = prop.get();

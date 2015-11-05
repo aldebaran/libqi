@@ -194,9 +194,16 @@ namespace detail {
   void Future<T>::connectWithStrand(qi::Strand* strand,
       const boost::function<void(const Future<T>&)>& cb)
   {
+    connectWithStrand(*strand, cb);
+  }
+
+  template <typename T>
+  void Future<T>::connectWithStrand(qi::Strand& strand,
+      const boost::function<void(const Future<T>&)>& cb)
+  {
     _p->connect(
         *this,
-        strand->schedulerFor(cb),
+        strand.schedulerFor(cb),
         FutureCallbackType_Sync);
   }
 

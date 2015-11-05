@@ -500,7 +500,10 @@ namespace qi {
 #undef genCall
 #endif
 
-    inline void connectWithStrand(qi::Strand* strand,
+    // @deprecated since 2.5 use the overload with Strand&
+    QI_API_DEPRECATED void connectWithStrand(qi::Strand* strand,
+        const boost::function<void(const Future<T>&)>& cb);
+    void connectWithStrand(qi::Strand& strand,
         const boost::function<void(const Future<T>&)>& cb);
 
     // Our companion library libqitype requires a connect with same signature for all instantiations

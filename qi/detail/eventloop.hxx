@@ -18,7 +18,7 @@ void nullConverter(void*, R&)
 {}
 
 template <typename R>
-inline Future<R> EventLoop::async(const boost::function<R()>& callback,
+Future<R> EventLoop::async(const boost::function<R()>& callback,
                                   uint64_t usDelay)
 {
   return async(callback, qi::MicroSeconds(usDelay));
@@ -27,7 +27,7 @@ inline Future<R> EventLoop::async(const boost::function<R()>& callback,
 namespace detail
 {
   template <typename F>
-  inline auto asyncMaybeActor(F&& cb, qi::Duration delay) ->
+  auto asyncMaybeActor(F&& cb, qi::Duration delay) ->
       typename std::enable_if<detail::IsAsyncBind<F>::value, decltype(cb())>::type
   {
     if (delay == qi::Duration::zero())
@@ -36,19 +36,19 @@ namespace detail
       return cb();
   }
   template <typename F>
-  inline auto asyncMaybeActor(F&& cb, qi::Duration delay) ->
+  auto asyncMaybeActor(F&& cb, qi::Duration delay) ->
       typename std::enable_if<!detail::IsAsyncBind<F>::value, qi::Future<decltype(cb())>>::type
   {
     return asyncDelay(cb, delay);
   }
   template <typename F>
-  inline auto asyncMaybeActor(F&& cb, qi::SteadyClockTimePoint timepoint) ->
+  auto asyncMaybeActor(F&& cb, qi::SteadyClockTimePoint timepoint) ->
       typename std::enable_if<detail::IsAsyncBind<F>::value, decltype(cb())>::type
   {
     return asyncAt(cb, timepoint).unwrap();
   }
   template <typename F>
-  inline auto asyncMaybeActor(F&& cb, qi::SteadyClockTimePoint timepoint) ->
+  auto asyncMaybeActor(F&& cb, qi::SteadyClockTimePoint timepoint) ->
       typename std::enable_if<!detail::IsAsyncBind<F>::value, qi::Future<decltype(cb())>>::type
   {
     return asyncAt(cb, timepoint);

@@ -174,11 +174,8 @@ struct ToPost
   detail::DelayedPromise<ReturnType> promise;
   Callback callback;
 
-  ToPost(Callback&& cb) :
-    callback(cb)
-  {}
-  ToPost(const Callback& cb) :
-    callback(cb)
+  ToPost(Callback cb) :
+    callback(std::move(cb))
   {}
 
   void operator()()

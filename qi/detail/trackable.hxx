@@ -156,20 +156,20 @@ namespace qi
 
     struct IsAsyncBindImpl
     {
-      struct BigBuf
+      struct ArbitraryBigBuf
       {
-        char buf[128];
+        char arbitrary_buf[128];
       };
       template <typename T>
       static decltype(T::is_async) f(int);
       template <typename T>
-      static BigBuf f(void*);
+      static ArbitraryBigBuf f(void*);
     };
 
     // can't use a "using" here because visual gets the SFINAE wrong in the conditional (lol.)
     template <typename T>
     struct IsAsyncBind
-        : std::conditional<sizeof(decltype(IsAsyncBindImpl::template f<T>(0))) != sizeof(IsAsyncBindImpl::BigBuf),
+        : std::conditional<sizeof(decltype(IsAsyncBindImpl::template f<T>(0))) != sizeof(IsAsyncBindImpl::ArbitraryBigBuf),
                            std::true_type,
                            std::false_type>::type
     {

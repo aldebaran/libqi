@@ -285,14 +285,14 @@ Strand::Strand(qi::ExecutionContext& eventloop)
 
 Strand::~Strand()
 {
-  destroy();
+  join();
 }
 
-void Strand::destroy()
+void Strand::join()
 {
   if (!_p)
   {
-    qiLogDebug() << this << " already destroyed";
+    qiLogDebug() << this << " already joined";
     return;
   }
 
@@ -301,15 +301,15 @@ void Strand::destroy()
 
   {
     boost::unique_lock<boost::mutex> lock(_p->_mutex);
-    qiLogVerbose() << this << " destroying (processing: " << _p->_processing
+    qiLogVerbose() << this << " joining (processing: " << _p->_processing
       << ", size: " << _p->_aliveCount << ")";
 
     _p->_dying = true;
 
     if (isInThisContext())
     {
-      qiLogVerbose() << this << " destroying from inside the context";
-      // don't wait if we are destroying the strand from within the strand
+      qiLogVerbose() << this << " joining from inside the context";
+      // don't wait if we are joining the strand from within the strand
       return;
     }
 
@@ -327,7 +327,7 @@ void Strand::destroy()
       --prv->_aliveCount;
     }
 
-    qiLogVerbose() << this << " destroyed, remaining tasks: " << prv->_aliveCount;
+    qiLogVerbose() << this << " joined, remaining tasks: " << prv->_aliveCount;
   }
 }
 
