@@ -615,6 +615,22 @@ TEST(TestObject, ObjectTypeBuilder)
   ASSERT_EQ(4, oa1.call<int>("increment2", 3));
 }
 
+class Dummy{};
+
+TEST(TestObject, ObjectTypeBuilderTypeDescription)
+{
+  qi::ObjectTypeBuilder<Dummy> builder;
+
+  std::string objectTypeDescription = "I am a dummy type";
+  builder.setDescription(objectTypeDescription);
+
+  Dummy dummy;
+  qi::AnyObject object = builder.object(&dummy, &qi::AnyObject::deleteGenericObjectOnly);
+  qi::MetaObject metaObject = object.metaObject();
+
+  ASSERT_EQ(objectTypeDescription, metaObject.description());
+}
+
 class MAdder: public Adder, public qi::Manageable
 {
 public:
