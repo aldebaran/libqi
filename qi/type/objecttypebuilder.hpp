@@ -42,6 +42,9 @@ namespace detail {
     typedef boost::function<SignalBase* (void*)> SignalMemberGetter;
     typedef boost::function<PropertyBase* (void*)> PropertyMemberGetter;
 
+    /// Sets a description for the type to build.
+    void setDescription(const std::string& description);
+
     // input: template-based
 
     /// Declare the class type for which this StaticBuilder is.

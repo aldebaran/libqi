@@ -41,6 +41,11 @@ namespace qi {
     delete _p;
   }
 
+  void ObjectTypeBuilderBase::setDescription(const std::string &description)
+  {
+    _p->metaObject._p->setDescription(description);
+  }
+
   unsigned int ObjectTypeBuilderBase::xAdvertiseMethod(MetaMethodBuilder& builder,
                                                        AnyFunction func,
                                                        MetaCallType threadingModel,
