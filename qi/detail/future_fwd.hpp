@@ -397,7 +397,8 @@ namespace qi {
      * @brief Same as then(), but with type defaulted to FutureCallbackType_Auto.
      */
     template <typename AF>
-    auto then(AF&& func) -> decltype(this->then(FutureCallbackType_Auto, std::forward<AF>(func)))
+    auto then(AF&& func)
+        -> qi::Future<typename detail::DecayAsyncResult<AF, qi::Future<T>>::type>
     {
       return this->then(FutureCallbackType_Auto, std::forward<AF>(func));
     }
@@ -436,16 +437,17 @@ namespace qi {
      */
     template <typename AF>
     auto andThen(FutureCallbackType type, AF&& func)
-        -> decltype(this->andThenR<decltype(func(std::declval<ValueType>()))>(type, std::forward<AF>(func)))
+        -> qi::Future<typename detail::DecayAsyncResult<AF, ValueType>::type>
     {
-      return this->andThenR<decltype(func(std::declval<ValueType>()))>(type, std::forward<AF>(func));
+      return this->andThenR<typename detail::DecayAsyncResult<AF, ValueType>::type>(type, std::forward<AF>(func));
     }
 
     /**
      * @brief Same as andThen(), but with type defaulted to FutureCallbackType_Auto.
      */
     template <typename AF>
-    auto andThen(AF&& func) -> decltype(this->andThen(FutureCallbackType_Auto, std::forward<AF>(func)))
+    auto andThen(AF&& func)
+        -> qi::Future<typename detail::DecayAsyncResult<AF, ValueType>::type>
     {
       return this->andThen(FutureCallbackType_Auto, std::forward<AF>(func));
     }

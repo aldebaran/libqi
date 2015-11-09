@@ -41,7 +41,7 @@ namespace detail {
   };
 
   template <typename T, typename R>
-  void continuateThen(const Future<T>& future,
+  void continueThen(const Future<T>& future,
       const boost::function<R(const Future<T>&)>& func,
       qi::Promise<R>& promise)
   {
@@ -60,7 +60,7 @@ namespace detail {
   }
 
   template <typename T, typename R>
-  void continuateThenAsync(const Future<T>& future,
+  void continueThenAsync(const Future<T>& future,
       const boost::function<qi::Future<R>(const Future<T>&)>& func,
       qi::Promise<R>& promise)
   {
@@ -80,15 +80,15 @@ namespace detail {
   }
 
   template <bool Async, typename T, typename R>
-  struct ContinuateMaybeAsync;
+  struct ContinueThenMaybeAsync;
 
   template <typename T, typename R>
-  struct ContinuateMaybeAsync<true, T, R>
+  struct ContinueThenMaybeAsync<true, T, R>
   {
     template <typename AF>
     static boost::function<void(const Future<T>&)> makeFunc(AF&& func, const qi::Promise<R>& promise)
     {
-      return boost::bind(&detail::continuateThenAsync<T, R>,
+      return boost::bind(&detail::continueThenAsync<T, R>,
                          _1,
                          // this cast seems necessary :(
                          boost::function<qi::Future<R>(const Future<T>&)>(std::forward<AF>(func)),
@@ -97,7 +97,7 @@ namespace detail {
   };
 
   template <typename T, typename R>
-  struct ContinuateMaybeAsync<false, T, R>
+  struct ContinueThenMaybeAsync<false, T, R>
   {
     template <typename AF>
     static boost::function<void(const Future<T>&)> makeFunc(AF&& func, const qi::Promise<R>& promise)
@@ -108,7 +108,7 @@ namespace detail {
   };
 
   template <typename T, typename R>
-  void continuateAndThen(const Future<T>& future,
+  void continueAndThen(const Future<T>& future,
       const boost::function<R(const typename Future<T>::ValueType&)>& func,
       qi::Promise<R>& promise)
   {
@@ -135,15 +135,62 @@ namespace detail {
     }
   }
 
-  template <typename T>
-  inline void forwardCancel(
-      const boost::weak_ptr<FutureBaseTyped<T> >& wfutureb)
+  template <typename T, typename R>
+  void continueAndThenAsync(const Future<T>& future,
+      const boost::function<qi::Future<R>(const typename Future<T>::ValueType&)>& func,
+      qi::Promise<R>& promise)
   {
-    boost::shared_ptr<FutureBaseTyped<T> > futureb = wfutureb.lock();
-    if (!futureb)
-      return;
-    Future<T>(futureb).cancel();
+    if (future.isCanceled())
+      promise.setCanceled();
+    else if (future.hasError())
+      promise.setError(future.error());
+    else if (promise.isCancelRequested())
+      promise.setCanceled();
+    else
+    {
+      try
+      {
+        qi::Future<R> fut = func(future.value());
+        qi::adaptFuture(fut, promise);
+      }
+      catch (std::exception& e)
+      {
+        promise.setError(e.what());
+      }
+      catch (...)
+      {
+        promise.setError("unknown exception");
+      }
+    }
   }
+
+  template <bool Async, typename T, typename R>
+  struct ContinueAndThenMaybeAsync;
+
+  template <typename T, typename R>
+  struct ContinueAndThenMaybeAsync<true, T, R>
+  {
+    template <typename AF>
+    static boost::function<void(const Future<T>&)> makeFunc(AF&& func, const qi::Promise<R>& promise)
+    {
+      return boost::bind(&detail::continueAndThenAsync<T, R>,
+                         _1,
+                         // this cast seems necessary :(
+                         boost::function<qi::Future<R>(const typename Future<T>::ValueType&)>(std::forward<AF>(func)),
+                         promise);
+    }
+  };
+
+  template <typename T, typename R>
+  struct ContinueAndThenMaybeAsync<false, T, R>
+  {
+    template <typename AF>
+    static boost::function<void(const Future<T>&)> makeFunc(AF&& func, const qi::Promise<R>& promise)
+    {
+      assert(false && "unreachable code");
+      return {};
+    }
+  };
 
 } // namespace detail
 
@@ -151,13 +198,17 @@ namespace detail {
   template <typename R, typename AF>
   inline Future<R> Future<T>::thenR(FutureCallbackType type, AF&& func)
   {
-    qi::Promise<R> promise(boost::bind(&detail::forwardCancel<T>, boost::weak_ptr<detail::FutureBaseTyped<T> >(_p)));
+    boost::weak_ptr<detail::FutureBaseTyped<T> > weakp(_p);
+    qi::Promise<R> promise([weakp](const qi::Promise<R>&){
+          if (auto futureb = weakp.lock())
+            Future<T>(futureb).cancel();
+        });
 
     if (type == FutureCallbackType_Auto && detail::IsAsyncBind<AF>::value)
     {
       type = FutureCallbackType_Sync;
       _p->connect(*this,
-                  detail::ContinuateMaybeAsync<detail::IsAsyncBind<AF>::value, T, R>
+                  detail::ContinueThenMaybeAsync<detail::IsAsyncBind<AF>::value, T, R>
                       ::makeFunc(std::forward<AF>(func), promise),
                   type);
     }
@@ -165,7 +216,7 @@ namespace detail {
     {
       _p->connect(*this,
           boost::bind(
-            &detail::continuateThen<T, R>,
+            &detail::continueThen<T, R>,
             _1,
             // this cast seems necessary :(
             boost::function<R(const Future<T>&)>(std::forward<AF>(func)),
@@ -179,14 +230,30 @@ namespace detail {
   template <typename R, typename AF>
   inline Future<R> Future<T>::andThenR(FutureCallbackType type, AF&& func)
   {
-    qi::Promise<R> promise(boost::bind(&detail::forwardCancel<T>, boost::weak_ptr<detail::FutureBaseTyped<T> >(_p)));
-    _p->connect(*this,
-                boost::bind(&detail::continuateAndThen<T, R>,
-                            _1,
-                            // this cast seems necessary :(
-                            boost::function<R(const typename Future<T>::ValueType&)>(std::forward<AF>(func)),
-                            promise),
-                type);
+    boost::weak_ptr<detail::FutureBaseTyped<T> > weakp(_p);
+    qi::Promise<R> promise([weakp](const qi::Promise<R>&){
+          if (auto futureb = weakp.lock())
+            Future<T>(futureb).cancel();
+        });
+
+    if (type == FutureCallbackType_Auto && detail::IsAsyncBind<AF>::value)
+    {
+      type = FutureCallbackType_Sync;
+      _p->connect(*this,
+                  detail::ContinueAndThenMaybeAsync<detail::IsAsyncBind<AF>::value, T, R>
+                      ::makeFunc(std::forward<AF>(func), promise),
+                  type);
+    }
+    else
+    {
+      _p->connect(*this,
+                  boost::bind(&detail::continueAndThen<T, R>,
+                              _1,
+                              // this cast seems necessary :(
+                              boost::function<R(const typename Future<T>::ValueType&)>(std::forward<AF>(func)),
+                              promise),
+                  type);
+    }
     return promise.future();
   }
 
