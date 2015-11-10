@@ -7,6 +7,7 @@
 #ifndef _SRC_EVENTLOOP_P_HPP_
 #define _SRC_EVENTLOOP_P_HPP_
 
+#include <atomic>
 #include <boost/thread.hpp>
 #include <boost/thread/recursive_mutex.hpp>
 
@@ -90,7 +91,7 @@ namespace qi {
     Mode _mode;
     qi::Atomic<unsigned int> _nThreads;
     boost::asio::io_service _io;
-    boost::asio::io_service::work* _work; // keep io.run() alive
+    std::atomic<boost::asio::io_service::work*> _work; // keep io.run() alive
     boost::thread      _thd;
     qi::Atomic<int>    _running;
     boost::recursive_mutex _mutex;

@@ -81,7 +81,7 @@ namespace qi {
 
   EventLoopAsio::EventLoopAsio()
   : _mode(Mode::Unset)
-  , _work(NULL)
+  , _work(nullptr)
   , _maxThreads(0)
   , _workerThreads(new WorkerThreadPool())
   {
@@ -234,8 +234,9 @@ namespace qi {
     boost::recursive_mutex::scoped_lock sl(_mutex);
     if (_work)
     {
-      delete _work;
-      _work = 0;
+      boost::asio::io_service::work* w = _work;
+      _work = nullptr;
+      delete w;
     }
   }
 
