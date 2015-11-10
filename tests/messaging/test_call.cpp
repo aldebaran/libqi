@@ -642,7 +642,7 @@ TEST(TestCall, TestObjectPassing)
   // Transmit unregisteredObj through the network.
   qi::Future<int> v = proxy.async<int>("makeObjectCall", unregisteredObj, "add", 1);
   v.wait(2000);
-  ASSERT_TRUE(!v.hasError());
+  ASSERT_FALSE(v.hasError());
   ASSERT_EQ(2, v.value());
   proxy.call<void>("bindObjectEvent", unregisteredObj, "fire");
   unregisteredObj.post("fire", 42);
@@ -664,10 +664,10 @@ TEST(TestCall, TestObjectPassing)
   ASSERT_TRUE(eventValue.future().isFinished());
   ASSERT_EQ(0, eventValue.future().value());
   eventValue = qi::Promise<int>();
-  ASSERT_TRUE(!eventValue.future().isFinished());
+  ASSERT_FALSE(eventValue.future().isFinished());
   unregisteredObj.post("fire", 1);
   eventValue.future().wait(2000);
-  ASSERT_TRUE(!eventValue.future().isFinished());
+  ASSERT_FALSE(eventValue.future().isFinished());
 
   // Check that unregisteredObj is no longer held
   unregisteredObj.reset();

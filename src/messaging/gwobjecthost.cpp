@@ -237,7 +237,7 @@ ObjectAddress GwObjectHost::getOriginalObjectAddress(const ObjectAddress& a)
 {
   boost::shared_lock<boost::shared_mutex> lock(_mutex);
   assert(a.service == 0);
-  std::map<GwObjectId, std::pair<TransportSocketPtr, ObjectAddress> >::iterator it = _objectsOrigin.find(a.object);
+  auto it = _objectsOrigin.find(a.object);
   assert(it != _objectsOrigin.end());
   return it->second.second;
 }

@@ -302,43 +302,40 @@ void GatewayPrivate::onClientDisconnected(TransportSocketPtr socket, std::string
   qiLogVerbose() << "Client " << url << " has left us: " << reason;
   {
     boost::recursive_mutex::scoped_lock lock(_eventSubMutex);
+    _eventSubscribers.erase(socket);
     EventsEndpointMap::iterator it = _eventSubscribers.begin();
-    EventsEndpointMap::iterator end = _eventSubscribers.end();
-    while (it != end)
+    while (it != _eventSubscribers.end())
     {
       EventServiceMap::iterator sit = it->second.begin();
-      EventServiceMap::iterator send = it->second.end();
-      while (sit != send)
+      while (sit != it->second.end())
       {
         ServiceId serviceId = sit->first;
         EventsPerObjectMap::iterator oit = sit->second.begin();
-        EventsPerObjectMap::iterator oend = sit->second.end();
-        while (oit != oend)
+        while (oit != sit->second.end())
         {
           unsigned int objectId = oit->first;
           ClientsPerEventMap::iterator eit = oit->second.begin();
-          ClientsPerEventMap::iterator eend = oit->second.end();
-          while (eit != eend)
+          while (eit != oit->second.end())
           {
             qi::uint32_t eventId = eit->first;
             removeEventSubscriber(serviceId, objectId, eventId, socket, it->first);
             if (eit->second.remoteSubscribers.size() == 0)
-              oit->second.erase(eit++);
+              eit = oit->second.erase(eit);
             else
               ++eit;
           }
           if (oit->second.size() == 0)
-            sit->second.erase(oit++);
+            oit = sit->second.erase(oit);
           else
             ++oit;
         }
         if (sit->second.size() == 0)
-          it->second.erase(sit++);
+          sit = it->second.erase(sit);
         else
           ++sit;
       }
       if (it->second.size() == 0)
-        _eventSubscribers.erase(it++);
+        it = _eventSubscribers.erase(it);
       else
         ++it;
     }
