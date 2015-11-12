@@ -923,6 +923,19 @@ TEST(TestFutureThen, Then)
   ASSERT_EQ(44, fff.value());
 }
 
+TEST(TestFutureThen, ThenCancel)
+{
+  qi::Promise<int> p;
+  qi::Future<void> f = p.future().then(qi::FutureCallbackType_Sync, [](qi::Future<int> f) {
+      ASSERT_TRUE(f.isCanceled());
+      });
+
+  f.cancel();
+  ASSERT_TRUE(p.isCancelRequested());
+  p.setCanceled();
+  ASSERT_TRUE(f.hasValue());
+}
+
 int fail(int f)
 {
   throw std::runtime_error("fail");
