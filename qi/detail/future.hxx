@@ -351,7 +351,7 @@ namespace detail {
         }();
 
         if (async)
-          getEventLoop()->post2(boost::bind(_onResult[i].callback, future));
+          getEventLoop()->post(boost::bind(_onResult[i].callback, future));
         else
           try
           {
@@ -467,7 +467,7 @@ namespace detail {
         }();
 
         if (async)
-          getEventLoop()->post2(boost::bind(s, future));
+          getEventLoop()->post(boost::bind(s, future));
         else
         {
           try

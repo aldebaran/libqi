@@ -582,7 +582,7 @@ namespace qi {
       // Start monitor async first, or the ping async can trigger before the
       // monitor async is setup
       ctx->mon = ctx->helper->asyncDelay(boost::bind(&monitor_pingtimeout, ctx), qi::MicroSeconds(ctx->maxDelay));
-      ctx->target->post2(boost::bind(&monitor_ping, ctx));
+      ctx->target->post(boost::bind(&monitor_ping, ctx));
     }
   }
 

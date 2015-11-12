@@ -23,8 +23,6 @@ public:
   virtual ~ExecutionContext() {}
 
   // DEPRECATED STUFF
-  /// post a callback to be executed as soon as possible
-  QI_API_DEPRECATED virtual void post(const boost::function<void()>& callback) = 0;
   /// call a callback asynchronously to be executed on tp
   QI_API_DEPRECATED virtual qi::Future<void> async(const boost::function<void()>& callback,
       qi::SteadyClockTimePoint tp) = 0;
@@ -46,7 +44,7 @@ public:
 
   /// post a callback to be executed as soon as possible
   template <typename F>
-  void post2(F&& callback);
+  void post(F&& callback);
   /// call a callback asynchronously to be executed on tp
   template <typename F>
   auto asyncAt(F&& callback, qi::SteadyClockTimePoint tp) -> qi::Future<typename std::decay<decltype(callback())>::type>;
@@ -163,7 +161,7 @@ typename boost::disable_if<boost::is_same<R, void>,
 }
 
 template <typename F>
-void ExecutionContext::post2(F&& callback)
+void ExecutionContext::post(F&& callback)
 {
   postImpl(std::forward<F>(callback));
 }

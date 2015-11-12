@@ -351,13 +351,6 @@ Future<void> Strand::async(const boost::function<void()>& cb,
     return makeFutureError<void>("the strand is dying");
 }
 
-void Strand::post(const boost::function<void()>& callback)
-{
-  auto prv = boost::atomic_load(&_p);
-  if (prv)
-    return prv->enqueue(prv->createCallback(callback));
-}
-
 Future<void> Strand::asyncAtImpl(boost::function<void()> cb, qi::SteadyClockTimePoint tp)
 {
   auto prv = boost::atomic_load(&_p);

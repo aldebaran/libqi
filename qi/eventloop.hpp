@@ -137,11 +137,9 @@ namespace qi
       postDelayImpl(callback, delay);
     }
     QI_API_DEPRECATED void post(const boost::function<void ()>& callback, qi::SteadyClockTimePoint timepoint);
-    QI_API_DEPRECATED void post(const boost::function<void ()>& callback) override
-    {
-      return postImpl(callback);
-    }
     // END DEPRECATED
+
+    using ExecutionContext::post;
 
     /**
      * \brief Monitor event loop to detect deadlocks.

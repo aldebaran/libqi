@@ -64,8 +64,6 @@ public:
   void join();
 
   // DEPRECATED
-  QI_API_DEPRECATED void post(const boost::function<void()>& callback) override;
-
   QI_API_DEPRECATED qi::Future<void> async(const boost::function<void()>& cb,
       qi::SteadyClockTimePoint tp) override;
   QI_API_DEPRECATED qi::Future<void> async(const boost::function<void()>& cb,
