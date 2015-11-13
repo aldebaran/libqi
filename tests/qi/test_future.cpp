@@ -615,7 +615,7 @@ void justThrow()
 
 TEST(AsyncAndFuture, errorOnTaskThrow)
 {
-  qi::Future<void> f = qi::async2(&justThrow);
+  qi::Future<void> f = qi::async(&justThrow);
   EXPECT_TRUE(f.hasError());
 }
 
@@ -907,7 +907,7 @@ int assinc(const qi::Future<int>& f, int exp)
 
 TEST(TestFutureThen, ThenR)
 {
-  qi::Future<int> f = qi::async2(&get42);
+  qi::Future<int> f = qi::async(&get42);
   qi::Future<int> ff = f.thenR<int>(&assinc, _1, 42);
   qi::Future<int> fff = ff.thenR<int>(&assinc, _1, 43);
 
@@ -916,7 +916,7 @@ TEST(TestFutureThen, ThenR)
 
 TEST(TestFutureThen, Then)
 {
-  qi::Future<int> f = qi::async2(&get42);
+  qi::Future<int> f = qi::async(&get42);
   qi::Future<int> ff = f.then(qi::bind(&assinc, _1, 42));
   qi::Future<int> fff = ff.then(qi::bind(&assinc, _1, 43));
 
@@ -950,7 +950,7 @@ int call(bool& b)
 TEST(TestFutureThen, AndThenR)
 {
   bool called = false;
-  qi::Future<int> f = qi::async2(&get42);
+  qi::Future<int> f = qi::async(&get42);
   qi::Future<int> ff = f.andThenR<int>(boost::bind(&fail, _1));
   qi::Future<int> fff = ff.andThenR<int>(boost::bind(&call, boost::ref(called)));
 
@@ -964,7 +964,7 @@ TEST(TestFutureThen, AndThenR)
 TEST(TestFutureThen, AndThen)
 {
   bool called = false;
-  qi::Future<int> f = qi::async2(&get42);
+  qi::Future<int> f = qi::async(&get42);
   qi::Future<int> ff = f.andThen(boost::bind(&fail, _1));
   qi::Future<int> fff = ff.andThen(boost::bind(&call, boost::ref(called)));
 
@@ -1525,7 +1525,7 @@ TEST(TestPeriodicTask, StartIsNoop)
   std::vector<qi::Future<void> > futs;
   // multiple start is no-op, this should not deadlock
   for (unsigned i=0; i<20; ++i)
-    futs.push_back(qi::async2(boost::function<void()>(boost::bind(&qi::PeriodicTask::start, &pt, true))));
+    futs.push_back(qi::async(boost::function<void()>(boost::bind(&qi::PeriodicTask::start, &pt, true))));
   for (unsigned i=0; i<20; ++i)
     futs[i].wait();
 
@@ -1551,10 +1551,10 @@ TEST(TestPeriodicTask, Trigger)
   pt.setUsPeriod(1000);
   pt.start();
   std::vector<qi::Future<void> > futures;
-  futures.push_back(qi::getEventLoop()->async2(boost::bind(&loopTrigger, boost::ref(pt))));
-  futures.push_back(qi::getEventLoop()->async2(boost::bind(&loopTrigger, boost::ref(pt))));
-  futures.push_back(qi::getEventLoop()->async2(boost::bind(&loopTrigger, boost::ref(pt))));
-  futures.push_back(qi::getEventLoop()->async2(boost::bind(&loopTrigger, boost::ref(pt))));
+  futures.push_back(qi::getEventLoop()->async(boost::bind(&loopTrigger, boost::ref(pt))));
+  futures.push_back(qi::getEventLoop()->async(boost::bind(&loopTrigger, boost::ref(pt))));
+  futures.push_back(qi::getEventLoop()->async(boost::bind(&loopTrigger, boost::ref(pt))));
+  futures.push_back(qi::getEventLoop()->async(boost::bind(&loopTrigger, boost::ref(pt))));
   for (unsigned int i = 0; i < futures.size(); ++i)
     futures[i].wait();
   pt.stop();
@@ -1568,10 +1568,10 @@ TEST(TestPeriodicTask, TriggerStartStop)
   pt.setCallback(&inc, boost::ref(a));
   pt.setUsPeriod(1000);
   std::vector<qi::Future<void> > futures;
-  futures.push_back(qi::getEventLoop()->async2(boost::bind(&loopTrigger, boost::ref(pt))));
-  futures.push_back(qi::getEventLoop()->async2(boost::bind(&loopTrigger, boost::ref(pt))));
-  futures.push_back(qi::getEventLoop()->async2(boost::bind(&loopTrigger, boost::ref(pt))));
-  futures.push_back(qi::getEventLoop()->async2(boost::bind(&loopTrigger, boost::ref(pt))));
+  futures.push_back(qi::getEventLoop()->async(boost::bind(&loopTrigger, boost::ref(pt))));
+  futures.push_back(qi::getEventLoop()->async(boost::bind(&loopTrigger, boost::ref(pt))));
+  futures.push_back(qi::getEventLoop()->async(boost::bind(&loopTrigger, boost::ref(pt))));
+  futures.push_back(qi::getEventLoop()->async(boost::bind(&loopTrigger, boost::ref(pt))));
   while (true)
   {
     bool stop = true;
@@ -1590,7 +1590,7 @@ TEST(EventLoop, asyncFast)
   qi::EventLoop* el = qi::getEventLoop();
   for (int i = 0; i < 10; ++i)
   {
-    qi::Future<int> f = el->async2(get42);
+    qi::Future<int> f = el->async(get42);
     f.wait();
   }
 }

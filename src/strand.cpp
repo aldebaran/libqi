@@ -149,7 +149,7 @@ void StrandPrivate::enqueue(boost::shared_ptr<Callback> cbStruct)
   if (shouldschedule)
   {
     qiLogDebug() << "StrandPrivate::process was not scheduled, doing it";
-    _eventLoop.async2(boost::bind(&StrandPrivate::process, shared_from_this()));
+    _eventLoop.async(boost::bind(&StrandPrivate::process, shared_from_this()));
   }
 }
 
@@ -222,7 +222,7 @@ void StrandPrivate::process()
     {
       qiLogDebug() << "Strand quantum expired, rescheduling";
       lock.unlock();
-      _eventLoop.async2(boost::bind(&StrandPrivate::process, shared_from_this()));
+      _eventLoop.async(boost::bind(&StrandPrivate::process, shared_from_this()));
     }
     else
     {

@@ -17,6 +17,19 @@ namespace qi
 template <typename T>
 class Future;
 
+namespace detail
+{
+
+  // This class is kind of a hack to deprecate the old versions of async/post etc without deprecating the correct use of
+  // the new ones. This class is just a strong alias to boost::function
+  template <typename T>
+  struct Function : boost::function<T>
+  {
+    using boost::function<T>::function;
+  };
+
+}
+
 class QI_API ExecutionContext
 {
 public:
@@ -24,22 +37,33 @@ public:
 
   // DEPRECATED STUFF
   /// call a callback asynchronously to be executed on tp
+  /// @deprecated since 2.5
   QI_API_DEPRECATED virtual qi::Future<void> async(const boost::function<void()>& callback,
       qi::SteadyClockTimePoint tp) = 0;
   /// call a callback asynchronously to be executed in delay
+  /// @deprecated since 2.5
   QI_API_DEPRECATED virtual qi::Future<void> async(const boost::function<void()>& callback,
-      qi::Duration delay = qi::Duration(0)) = 0;
+      qi::Duration delay) = 0;
   /// call a callback asynchronously to be executed in delay
+  /// @deprecated since 2.5
   template <typename R>
   QI_API_DEPRECATED typename boost::disable_if<boost::is_same<R, void>,
                               qi::Future<R> >::type
       async(const boost::function<R()>& callback,
-          qi::Duration delay = qi::Duration(0));
+          qi::Duration delay);
   /// call a callback asynchronously to be executed on tp
+  /// @deprecated since 2.5
   template <typename R>
   QI_API_DEPRECATED typename boost::disable_if<boost::is_same<R, void>,
                               qi::Future<R> >::type
       async(const boost::function<R()>& callback, qi::SteadyClockTimePoint tp);
+
+  /// @deprecated since 2.5
+  template <typename R>
+  QI_API_DEPRECATED boost::function<R()> async(const detail::Function<R()>& callback)
+  {
+    return asyncDelay(callback, qi::Duration(0));
+  }
   // END OF DEPRECATED STUFF
 
   /// post a callback to be executed as soon as possible
@@ -53,7 +77,7 @@ public:
   auto asyncDelay(F&& callback, qi::Duration delay) -> qi::Future<typename std::decay<decltype(callback())>::type>;
 
   template <typename F>
-  auto async2(F&& callback) -> decltype(asyncDelay(std::forward<F>(callback), qi::Duration(0)))
+  auto async(F&& callback) -> decltype(asyncDelay(std::forward<F>(callback), qi::Duration(0)))
   {
     return asyncDelay(std::forward<F>(callback), qi::Duration(0));
   }

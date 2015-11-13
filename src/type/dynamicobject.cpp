@@ -282,7 +282,7 @@ namespace qi
     if (ec)
     {
       auto prop = property(id);
-      return ec->async2([prop, val]{
+      return ec->async([prop, val]{
             return prop->setValue(val.asReference()).async();
           }).unwrap();
     }
@@ -314,7 +314,7 @@ namespace qi
 
     ExecutionContext* ec = _p->getExecutionContext(context, MetaCallType_Auto);
     if (ec)
-      return ec->async2([prop] {
+      return ec->async([prop] {
             return prop->value().async();
           }).unwrap();
     else

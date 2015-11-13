@@ -67,7 +67,8 @@ public:
   QI_API_DEPRECATED qi::Future<void> async(const boost::function<void()>& cb,
       qi::SteadyClockTimePoint tp) override;
   QI_API_DEPRECATED qi::Future<void> async(const boost::function<void()>& cb,
-      qi::Duration delay = qi::Duration(0)) override;
+      qi::Duration delay) override;
+  using ExecutionContext::async;
 
 #define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)                    \
   template <typename T, typename F, typename ARG0 comma ATYPEDECL>           \
@@ -168,7 +169,7 @@ namespace detail
     auto operator()(Args&&... args) const -> qi::Future<decltype(std::bind(_func, std::forward<Args>(args)...)())>
     {
       // boost::bind does not work T_T
-      return _strand.async2(std::bind(_func, std::forward<Args>(args)...));
+      return _strand.async(std::bind(_func, std::forward<Args>(args)...));
     }
   };
 

@@ -471,7 +471,7 @@ namespace qi {
     return _p->nativeHandle();
   }
 
-  void EventLoop::postDelayImpl(boost::function<void ()> callback,
+  void EventLoop::postDelayImpl(boost::function<void()> callback,
       qi::Duration delay)
   {
     qiLogDebug() << this << " EventLoop post " << &callback;
@@ -480,7 +480,7 @@ namespace qi {
     qiLogDebug() << this << " EventLoop post done " << &callback;
   }
 
-  void EventLoop::post(const boost::function<void ()>& callback,
+  void EventLoop::post(const boost::function<void()>& callback,
       qi::SteadyClockTimePoint timepoint)
   {
     qiLogDebug() << this << " EventLoop post " << &callback;
