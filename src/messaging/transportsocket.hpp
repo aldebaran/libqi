@@ -54,9 +54,8 @@ namespace qi
       , _err(0)
       , _status(Status::Disconnected)
     {
-      // TODO: these two should be direct too
-      connected.setCallType(MetaCallType_Queued);
-      disconnected.setCallType(MetaCallType_Queued);
+      connected.setCallType(MetaCallType_Direct);
+      disconnected.setCallType(MetaCallType_Direct);
       messageReady.setCallType(MetaCallType_Direct);
       socketEvent.setCallType(MetaCallType_Direct);
     }
