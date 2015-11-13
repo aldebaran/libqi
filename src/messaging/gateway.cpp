@@ -161,22 +161,29 @@ void GatewayPrivate::close(bool clearEndpoints)
   _sdClient.serviceRemoved.disconnectAll();
   _socketCache.close();
   {
-    boost::recursive_mutex::scoped_lock lock(_serviceMutex);
-    std::map<ServiceId, TransportSocketPtr>::iterator it = _services.begin();
-    std::map<ServiceId, TransportSocketPtr>::iterator end = _services.end();
-    for (; it != end; ++it)
+    std::vector<qi::Future<void>> disconnections;
     {
-      if (it->second && it->first != ServiceSD && it->second->isConnected())
-        it->second->disconnect();
+      boost::recursive_mutex::scoped_lock lock(_serviceMutex);
+      disconnections.reserve(_services.size());
+      for (const auto& serviceSlot : _services)
+      {
+        if (serviceSlot.second && serviceSlot.first != ServiceSD && serviceSlot.second->isConnected())
+          disconnections.emplace_back(serviceSlot.second->disconnect());
+      }
     }
+    qi::waitForAll(disconnections);
     _sdAvailableServices.clear();
   }
   {
-    boost::mutex::scoped_lock lock(_clientsMutex);
-    std::vector<TransportSocketPtr>::iterator it = _clients.begin();
-    std::vector<TransportSocketPtr>::iterator end = _clients.end();
-    for (; it != end; ++it)
-      (*it)->disconnect();
+    std::vector<qi::Future<void>> disconnections;
+    {
+      boost::mutex::scoped_lock lock(_clientsMutex);
+      for (auto& client : _clients)
+      {
+        disconnections.emplace_back(client->disconnect());
+      }
+    }
+    qi::waitForAll(disconnections);
     _clients.clear();
   }
   {
