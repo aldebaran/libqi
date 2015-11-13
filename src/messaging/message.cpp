@@ -109,7 +109,6 @@ namespace qi {
 
   MessagePrivate::MessagePrivate()
   {
-    memset(&header, 0, sizeof(MessagePrivate::MessageHeader));
     header.version = qi::Message::currentVersion();
     header.id = newMessageId();
     header.magic = qi::MessagePrivate::magic;

@@ -920,6 +920,7 @@ GWMessageId GatewayPrivate::handleCallMessage(GwTransaction& t, TransportSocketP
   forward.setObject(msg.object());
   forward.setFunction(msg.function());
   forward.setBuffer(msg.buffer());
+  forward.setFlags(msg.flags());
   // Check if we already have a connection to this service
   if (!serviceSocket || !serviceSocket->isConnected())
   {
