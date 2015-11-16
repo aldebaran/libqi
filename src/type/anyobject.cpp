@@ -34,7 +34,7 @@ int ObjectTypeInterface::inherits(TypeInterface* other)
     if (op)
     {
       int offset = op->inherits(other);
-      if (offset != -1)
+      if (offset != INHERITS_FAILED)
       {
         qiLogDebug() << "Inheritance offsets " << parents[i].second
          << " " << offset;
@@ -44,7 +44,7 @@ int ObjectTypeInterface::inherits(TypeInterface* other)
     qiLogDebug() << parents[i].first->infoString() << " does not match " << other->infoString()
     <<" " << ((op != 0) == (dynamic_cast<ObjectTypeInterface*>(other) != 0));
   }
-  return -1;
+  return INHERITS_FAILED;
 }
 
 namespace detail

@@ -904,7 +904,7 @@ namespace detail
       qiLogDebug() << "inheritance check "
         << osrc <<" " << (osrc?osrc->inherits(targetType):false);
       int inheritOffset = 0;
-      if (osrc && (inheritOffset =  osrc->inherits(targetType)) != -1)
+      if (osrc && (inheritOffset = osrc->inherits(targetType)) != ObjectTypeInterface::INHERITS_FAILED)
       {
         // We return a Value that point to the same data as this.
         result._type = targetType;

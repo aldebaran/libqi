@@ -752,7 +752,17 @@ TEST(TestCall, TestObjectPassingReturn)
   ASSERT_FALSE(weak.lock());
 }
 
-class TestClass
+class TestClassInterface
+{
+public:
+  virtual ~TestClassInterface() = default;
+  virtual qi::Future<int> ping(int v) = 0;
+  qi::Property<int> prop;
+};
+
+QI_REGISTER_MT_OBJECT(TestClassInterface, ping, prop)
+
+class TestClass : public TestClassInterface
 {
 public:
   TestClass() : v(0) {}
@@ -762,10 +772,10 @@ public:
     qiLogDebug() << "~TestClass " << this;
     ++destructionCount;
   }
-  int ping(int w)
+  qi::Future<int> ping(int w) override
   {
     qiLogDebug() << "TestClass::ping " << this << ' ' << v << ' ' << w;
-    return v+w;
+    return qi::Future<int>(v+w);
   }
   static boost::shared_ptr<TestClass> make(int v)
   {
@@ -780,7 +790,6 @@ public:
     return !(**checker);
   }
   int v;
-  qi::Property<int> prop;
   static qi::Atomic<int> destructionCount;
 };
 
@@ -1034,8 +1043,8 @@ TEST(TestAdvertise, Overload)
   EXPECT_EQ(1, c.call<int>("foo", std::string("bar")));
 }
 
-// hand-written specialized proxy on TestClall
-class TestClassProxy: public qi::Proxy
+// hand-written specialized proxy on TestCall
+class TestClassProxy: public TestClassInterface, public qi::Proxy
 {
 public:
   TestClassProxy() {}
@@ -1044,7 +1053,7 @@ public:
   qi::Future<int> ping(int v) { return asObject().async<int>("ping", v); }
 };
 
-QI_REGISTER_PROXY_INTERFACE(TestClassProxy, TestClass);
+QI_REGISTER_PROXY_INTERFACE(TestClassProxy, TestClassInterface);
 
 TEST(TestObjectT, Complete)
 {
@@ -1058,10 +1067,9 @@ TEST(TestObjectT, Complete)
   EXPECT_EQ(12, (*olocal).ping(12));
   EXPECT_EQ(12, olocal.asGenericObject()->call<int>("ping", 12));
   EXPECT_EQ(12, olocal.call<int>("ping", 12));
-  qi::registerProxy<TestClassProxy>();
   // Object<T> way, does not require proxy registration actually
 
-  qi::Object<TestClassProxy> oproxy = p.client()->service("s");
+  qi::Object<TestClassInterface> oproxy = p.client()->service("s");
   // Look! It's the same code as above!
   EXPECT_EQ(12, oproxy->ping(12));
   EXPECT_EQ(12, (*oproxy).ping(12));
@@ -1073,12 +1081,11 @@ TEST(TestObjectT, Complete)
   EXPECT_EQ(12, gproxy.call<int>("ping", 12));
 
   // old way for comparison. I don't see anything wrong with that :p
-  boost::shared_ptr<TestClassProxy> oldproxy =
-    qi::AnyValue(p.client()->service("s").value()).to<boost::shared_ptr<TestClassProxy> >();
+  boost::shared_ptr<TestClassInterface> oldproxy =
+    qi::AnyValue(p.client()->service("s").value()).to<boost::shared_ptr<TestClassInterface> >();
   ASSERT_TRUE(!!oldproxy);
   EXPECT_EQ(12, oldproxy->ping(12));
   EXPECT_EQ(12, (*oldproxy).ping(12));
-  EXPECT_EQ(12, oldproxy->asObject().call<int>("ping", 12));
 }
 
 // hard enough to read without it
@@ -1088,9 +1095,9 @@ class PassObject
 {
 public:
   AnyObject pingaa(AnyObject o) { return o;}
-  AnyObject pingat(Object<TestClassProxy> o) { return o;}
-  Object<TestClassProxy> pingta(AnyObject o) {return o;}
-  Object<TestClassProxy> pingtt(Object<TestClassProxy> o) { return o;}
+  AnyObject pingat(Object<TestClassInterface> o) { return o;}
+  Object<TestClassInterface> pingta(AnyObject o) {return o;}
+  Object<TestClassInterface> pingtt(Object<TestClassInterface> o) { return o;}
 
   qi::Property<int> val;
 };
@@ -1104,14 +1111,14 @@ TEST(TestObjectT, Passing)
   p.server()->registerService("pinger", pingerService);
   AnyObject pinger = p.client()->service("pinger");
   Object<TestClass> tc(new TestClass());
-  Object<TestClassProxy> tcprox = tc;
-  tcprox = pinger.call<Object<TestClassProxy> >("pingaa", tc);
+  Object<TestClassInterface> tcprox = tc;
+  tcprox = pinger.call<Object<TestClassInterface> >("pingaa", tc);
   EXPECT_EQ(42, tcprox->ping(42));
-  tcprox = pinger.call<Object<TestClassProxy> >("pingat", tc);
+  tcprox = pinger.call<Object<TestClassInterface> >("pingat", tc);
   EXPECT_EQ(42, tcprox->ping(42));
-  tcprox = pinger.call<Object<TestClassProxy> >("pingta", tc);
+  tcprox = pinger.call<Object<TestClassInterface> >("pingta", tc);
   EXPECT_EQ(42, tcprox->ping(42));
-  tcprox = pinger.call<Object<TestClassProxy> >("pingtt", tc);
+  tcprox = pinger.call<Object<TestClassInterface> >("pingtt", tc);
   EXPECT_EQ(42, tcprox->ping(42));
 }
 
@@ -1122,11 +1129,11 @@ TEST(TestObjectT, Doom)
   p.server()->registerService("pinger", pingerService);
   AnyObject pinger = p.client()->service("pinger");
   Object<TestClass> tc(new TestClass());
-  Object<TestClassProxy> tp = tc;
+  Object<TestClassInterface> tp = tc;
   // MUHAHAHAHAHA
   for (unsigned i=0; i<10; ++i)
   {
-    tp = pinger.call<Object<TestClassProxy> >("pingaa", tp);
+    tp = pinger.call<Object<TestClassInterface> >("pingaa", tp);
     ASSERT_NO_THROW(tp.setProperty("prop", 42));
   }
   ASSERT_EQ(42, tp->ping(42));
