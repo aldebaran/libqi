@@ -157,16 +157,18 @@ namespace qi
   {
     template <typename F>
     inline auto asyncMaybeActor(F&& cb, qi::Duration delay) ->
-        typename std::enable_if<detail::IsAsyncBind<F>::value, decltype(cb())>::type;
+        typename std::enable_if<detail::IsAsyncBind<F>::value, typename std::decay<decltype(cb())>::type>::type;
     template <typename F>
     inline auto asyncMaybeActor(F&& cb, qi::Duration delay) ->
-        typename std::enable_if<!detail::IsAsyncBind<F>::value, qi::Future<decltype(cb())>>::type;
+        typename std::enable_if<!detail::IsAsyncBind<F>::value,
+                 qi::Future<typename std::decay<decltype(cb())>::type>>::type;
     template <typename F>
     inline auto asyncMaybeActor(F&& cb, qi::SteadyClockTimePoint timepoint) ->
-        typename std::enable_if<detail::IsAsyncBind<F>::value, decltype(cb())>::type;
+        typename std::enable_if<detail::IsAsyncBind<F>::value, typename std::decay<decltype(cb())>::type>::type;
     template <typename F>
     inline auto asyncMaybeActor(F&& cb, qi::SteadyClockTimePoint timepoint) ->
-        typename std::enable_if<!detail::IsAsyncBind<F>::value, qi::Future<decltype(cb())>>::type;
+        typename std::enable_if<!detail::IsAsyncBind<F>::value,
+                 qi::Future<typename std::decay<decltype(cb())>::type>>::type;
   }
 
   /// \copydoc qi::EventLoop::async().
@@ -194,9 +196,9 @@ namespace qi
 
   template <typename F>
   inline auto asyncDelay(F&& callback, qi::Duration delay)
-      -> decltype(qi::getEventLoop()->asyncDelay(std::forward<F>(callback), delay))
+      -> decltype(detail::asyncMaybeActor(std::forward<F>(callback), delay))
   {
-    return qi::getEventLoop()->asyncDelay(std::forward<F>(callback), delay);
+    return detail::asyncMaybeActor(std::forward<F>(callback), delay);
   }
   template <typename F>
   inline auto asyncAt(F&& callback, qi::SteadyClockTimePoint timepoint)
@@ -206,15 +208,15 @@ namespace qi
   }
   template <typename F>
   inline auto async(F&& callback)
-      -> decltype(qi::getEventLoop()->async(std::forward<F>(callback)))
+      -> decltype(asyncDelay(std::forward<F>(callback), qi::Duration(0)))
   {
-    return qi::getEventLoop()->async(std::forward<F>(callback));
+    return asyncDelay(std::forward<F>(callback), qi::Duration(0));
   }
 
 #ifdef DOXYGEN
   /// @deprecated since 2.5
   template<typename R, typename Func, typename ArgTrack>
-  qi::Future<R> QI_API_DEPRECATED async(const Func& f, const ArgTrack& toTrack, ...);
+  QI_API_DEPRECATED qi::Future<R> async(const Func& f, const ArgTrack& toTrack, ...);
 #else
 #define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)                                                   \
   template <typename R, typename AF, typename ARG0 comma ATYPEDECL>                                         \

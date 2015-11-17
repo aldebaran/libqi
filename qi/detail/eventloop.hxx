@@ -28,30 +28,32 @@ namespace detail
 {
   template <typename F>
   auto asyncMaybeActor(F&& cb, qi::Duration delay) ->
-      typename std::enable_if<detail::IsAsyncBind<F>::value, decltype(cb())>::type
+      typename std::enable_if<detail::IsAsyncBind<F>::value, typename std::decay<decltype(cb())>::type>::type
   {
-    if (delay == qi::Duration::zero())
-      return asyncDelay(cb, delay).unwrap();
+    if (delay != qi::Duration::zero())
+      return qi::getEventLoop()->asyncDelay(cb, delay).unwrap();
     else
       return cb();
   }
   template <typename F>
   auto asyncMaybeActor(F&& cb, qi::Duration delay) ->
-      typename std::enable_if<!detail::IsAsyncBind<F>::value, qi::Future<decltype(cb())>>::type
+      typename std::enable_if<!detail::IsAsyncBind<F>::value,
+               qi::Future<typename std::decay<decltype(cb())>::type>>::type
   {
-    return asyncDelay(cb, delay);
+    return qi::getEventLoop()->asyncDelay(cb, delay);
   }
   template <typename F>
   auto asyncMaybeActor(F&& cb, qi::SteadyClockTimePoint timepoint) ->
-      typename std::enable_if<detail::IsAsyncBind<F>::value, decltype(cb())>::type
+      typename std::enable_if<detail::IsAsyncBind<F>::value, typename std::decay<decltype(cb())>::type>::type
   {
-    return asyncAt(cb, timepoint).unwrap();
+    return qi::getEventLoop()->asyncAt(cb, timepoint).unwrap();
   }
   template <typename F>
   auto asyncMaybeActor(F&& cb, qi::SteadyClockTimePoint timepoint) ->
-      typename std::enable_if<!detail::IsAsyncBind<F>::value, qi::Future<decltype(cb())>>::type
+      typename std::enable_if<!detail::IsAsyncBind<F>::value,
+               qi::Future<typename std::decay<decltype(cb())>::type>>::type
   {
-    return asyncAt(cb, timepoint);
+    return qi::getEventLoop()->asyncAt(cb, timepoint);
   }
 }
 
