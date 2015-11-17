@@ -94,7 +94,7 @@ namespace qi {
      * calls it with (args...) only.
      */
     template <typename T>
-    qi::Future<T> callModule(const std::string& moduleName, const AnyReferenceVector& args = AnyReferenceVector())
+    qi::Future<T> asyncCallModule(const std::string& moduleName, const AnyReferenceVector& args = AnyReferenceVector())
     {
       qi::Promise<T> promise(qi::PromiseNoop<T>);
       qi::Future<qi::AnyValue> future = _callModule(moduleName, args, qi::MetaCallType_Queued);
@@ -116,7 +116,7 @@ namespace qi {
     loadService(moduleName, renameModule, params);                    \
   }                                                                   \
   template <typename T>                                               \
-  qi::Future<T> callModule(                                           \
+  qi::Future<T> asyncCallModule(                                      \
       const std::string& moduleName,                                  \
       qi::AutoAnyReference pp0 comma                                  \
       QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoAnyReference))               \
@@ -125,7 +125,7 @@ namespace qi {
     params.reserve(n+1);                                              \
     params.push_back(pp0);                                            \
     BOOST_PP_REPEAT(n, pushi, _)                                      \
-    return callModule<T>(moduleName, params);                         \
+    return asyncCallModule<T>(moduleName, params);                    \
   }
 QI_GEN(genCall)
 #undef genCall
