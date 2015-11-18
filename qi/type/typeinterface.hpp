@@ -360,14 +360,32 @@ namespace qi{
 #define QI_TEMPLATE_TYPE_GET(typeInst, templateName) \
   dynamic_cast< ::qi::TypeOfTemplate<templateName>*>(typeInst)
 
+/**
+ * TODO: Find the right size of enum values
+ */
+#define QI_TYPE_ENUM(Enum)                                  \
+  namespace qi                                              \
+  {                                                         \
+    template <>                                             \
+    class TypeImpl<Enum> : public IntTypeInterfaceImpl<int> \
+    {                                                       \
+    };                                                      \
+  }
 
-  /**
-   * TODO: Find the right size of enum values
-   */
-  #define QI_TYPE_ENUM_REGISTER(Enum)                                \
-    namespace qi {                                                   \
-      template<> class TypeImpl<Enum>: public IntTypeInterfaceImpl<int> {};  \
-    }
+namespace detail
+{
+  using QI_TYPE_ENUM_REGISTER_ QI_API_DEPRECATED = int;
+}
+
+#define QI_TYPE_ENUM_REGISTER(Enum)                                  \
+  namespace qi                                                       \
+  {                                                                  \
+    template <>                                                      \
+    class TypeImpl<Enum> : public IntTypeInterfaceImpl<int>          \
+    {                                                                \
+      static const detail::QI_TYPE_ENUM_REGISTER_ BLAH;              \
+    };                                                               \
+  }
 
 #define QI_TYPE_STRUCT_DECLARE(name)                                      \
  __QI_TYPE_STRUCT_DECLARE(name, /**/)

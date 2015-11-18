@@ -32,5 +32,5 @@ namespace qi
   extern const std::string QiAuthPrefix;
 }
 
-QI_TYPE_ENUM_REGISTER(qi::AuthProvider::State);
+QI_TYPE_ENUM(qi::AuthProvider::State);
 #endif

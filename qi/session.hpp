@@ -159,7 +159,7 @@ QI_GEN(genCall)
   inline SessionPtr makeSession() { return boost::make_shared<qi::Session>(); }
 }
 
-QI_TYPE_ENUM_REGISTER(qi::Session::ServiceLocality);
+QI_TYPE_ENUM(qi::Session::ServiceLocality);
 
 #ifdef _MSC_VER
 #  pragma warning( pop )
