@@ -305,7 +305,7 @@ namespace qi
   }
 
   template <typename RF, typename AF, typename Arg0, typename... Args>
-  typename std::enable_if<std::is_function<RF>::value, boost::function<RF>>::type
+  QI_API_DEPRECATED typename std::enable_if<std::is_function<RF>::value, boost::function<RF>>::type
   bindWithFallback(boost::function<void()> onFail, AF&& fun, Arg0&& arg0, Args&&... args)
   {
     using Transform = detail::BindTransform<Arg0>;
@@ -314,14 +314,14 @@ namespace qi
     return Transform::wrap(arg0, std::move(f), std::move(onFail));
   }
   template <typename RF, typename AF, typename Arg0, typename... Args>
-  typename std::enable_if<std::is_function<RF>::value, boost::function<RF>>::type bindSilent(AF&& fun,
+  QI_API_DEPRECATED typename std::enable_if<std::is_function<RF>::value, boost::function<RF>>::type bindSilent(AF&& fun,
                                                                                              Arg0&& arg0,
                                                                                              Args&&... args)
   {
     return bindWithFallback<RF, AF>({}, std::forward<AF>(fun), std::forward<Arg0>(arg0), std::forward<Args>(args)...);
   }
   template <typename RF, typename AF, typename Arg0, typename... Args>
-  typename std::enable_if<std::is_function<RF>::value, boost::function<RF>>::type bind(AF&& fun,
+  QI_API_DEPRECATED typename std::enable_if<std::is_function<RF>::value, boost::function<RF>>::type bind(AF&& fun,
                                                                                        Arg0&& arg0,
                                                                                        Args&&... args)
   {

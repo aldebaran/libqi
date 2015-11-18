@@ -366,7 +366,7 @@ namespace qi {
       }
     }
     else
-      out.setOnCancel(qi::bind<void(Promise<AnyReference>)>(&RemoteObject::onFutureCancelled, this, msg.id()));
+      out.setOnCancel(qi::bind(&RemoteObject::onFutureCancelled, this, msg.id()));
     return out.future();
   }
 

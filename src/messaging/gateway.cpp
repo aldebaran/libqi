@@ -423,7 +423,7 @@ void GatewayPrivate::sdConnectionRetry(const qi::Url& sdUrl, qi::Duration lastTi
     lastTimer *= 2;
     qiLogWarning() << "Can't reach ServiceDirectory at address " << sdUrl.str() << ", retrying in "
                    << qi::to_string(boost::chrono::duration_cast<qi::Seconds>(lastTimer)) << ".";
-    _retryFut = qi::asyncDelay(qi::bind<void()>(&GatewayPrivate::sdConnectionRetry, this, sdUrl, lastTimer), lastTimer);
+    _retryFut = qi::asyncDelay(qi::bind(&GatewayPrivate::sdConnectionRetry, this, sdUrl, lastTimer), lastTimer);
   }
   else
   {
@@ -456,7 +456,7 @@ void GatewayPrivate::onServiceDirectoryDisconnected(TransportSocketPtr socket, c
   qi::Duration retryTimer = qi::Seconds(1);
 
   _retryFut =
-      qi::asyncDelay(qi::bind<void()>(&GatewayPrivate::sdConnectionRetry, this, socket->url(), retryTimer), retryTimer);
+      qi::asyncDelay(qi::bind(&GatewayPrivate::sdConnectionRetry, this, socket->url(), retryTimer), retryTimer);
 }
 
 void GatewayPrivate::serviceDisconnected(ServiceId sid)

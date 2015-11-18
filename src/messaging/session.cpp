@@ -368,8 +368,7 @@ namespace qi {
     boost::shared_ptr<qi::Atomic<int> > link =
       boost::make_shared<qi::Atomic<int> >(0);
 
-    qi::Promise<void> promise(qi::bindWithFallback<void(qi::Promise<void>)>(
-          boost::function<void()>(),
+    qi::Promise<void> promise(qi::bindSilent(
           &SessionPrivate::onServiceTrackingCanceled,
           boost::weak_ptr<SessionPrivate>(_p),
           _1,

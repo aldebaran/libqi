@@ -130,8 +130,7 @@ inline bool handleFuture(AnyReference val, Promise<T> promise)
   {
     ao->call<void>("_connect", cb);
     promise.setOnCancel(
-        qi::bindWithFallback<void(const qi::Promise<T>&)>(
-          boost::function<void()>(),
+        qi::bindSilent(
           static_cast<void(GenericObject::*)(const std::string&)>(
             &GenericObject::call<void>),
           boost::weak_ptr<GenericObject>(ao),
