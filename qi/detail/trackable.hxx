@@ -305,10 +305,8 @@ namespace qi
   }
 
   template <typename RF, typename AF, typename Arg0, typename... Args>
-  boost::function<RF> bindWithFallback(boost::function<void()> onFail,
-                                       AF&& fun,
-                                       Arg0&& arg0,
-                                       Args&&... args)
+  typename std::enable_if<std::is_function<RF>::value, boost::function<RF>>::type
+  bindWithFallback(boost::function<void()> onFail, AF&& fun, Arg0&& arg0, Args&&... args)
   {
     using Transform = detail::BindTransform<Arg0>;
     auto transformed = Transform::transform(arg0);
@@ -316,12 +314,16 @@ namespace qi
     return Transform::wrap(arg0, std::move(f), std::move(onFail));
   }
   template <typename RF, typename AF, typename Arg0, typename... Args>
-  boost::function<RF> bindSilent(AF&& fun, Arg0&& arg0, Args&&... args)
+  typename std::enable_if<std::is_function<RF>::value, boost::function<RF>>::type bindSilent(AF&& fun,
+                                                                                             Arg0&& arg0,
+                                                                                             Args&&... args)
   {
     return bindWithFallback<RF, AF>({}, std::forward<AF>(fun), std::forward<Arg0>(arg0), std::forward<Args>(args)...);
   }
   template <typename RF, typename AF, typename Arg0, typename... Args>
-  boost::function<RF> bind(AF&& fun, Arg0&& arg0, Args&&... args)
+  typename std::enable_if<std::is_function<RF>::value, boost::function<RF>>::type bind(AF&& fun,
+                                                                                       Arg0&& arg0,
+                                                                                       Args&&... args)
   {
     return bindWithFallback<RF, AF>(detail::throwPointerLockException, std::forward<AF>(fun), std::forward<Arg0>(arg0),
         std::forward<Args>(args)...);
@@ -356,6 +358,43 @@ namespace qi
                             std::forward<AF>(fun),
                             std::forward<Arg0>(arg0),
                             std::forward<Args>(args)...);
+  }
+
+  // with support for R
+  template <typename R, typename AF, typename Arg0, typename... Args>
+  auto bindWithFallback(boost::function<void()> onFail, AF&& fun, Arg0&& arg0, Args&&... args) ->
+      typename std::enable_if<!std::is_function<R>::value,
+                              typename detail::BindTransform<Arg0>::template wrap_type<
+                                  decltype(boost::bind<R>(std::forward<AF>(fun),
+                                                          detail::BindTransform<Arg0>::transform(arg0),
+                                                          std::forward<Args>(args)...))>>::type
+  {
+    using Transform = detail::BindTransform<Arg0>;
+    auto transformed = Transform::transform(arg0);
+    return Transform::wrap(arg0,
+                           boost::bind<R>(std::forward<AF>(fun), std::move(transformed), std::forward<Args>(args)...),
+                           std::move(onFail));
+  }
+  template <typename R, typename AF, typename Arg0, typename... Args>
+  auto bindSilent(AF&& fun, Arg0&& arg0, Args&&... args) -> typename std::enable_if<
+      !std::is_function<R>::value,
+      decltype(
+          bindWithFallback<R>({}, std::forward<AF>(fun), std::forward<Arg0>(arg0), std::forward<Args>(args)...))>::type
+  {
+    return bindWithFallback<R>({}, std::forward<AF>(fun), std::forward<Arg0>(arg0), std::forward<Args>(args)...);
+  }
+  template <typename R, typename AF, typename Arg0, typename... Args>
+  auto bind(AF&& fun, Arg0&& arg0, Args&&... args) ->
+      typename std::enable_if<!std::is_function<R>::value,
+                              decltype(bindWithFallback<R>(detail::throwPointerLockException,
+                                                           std::forward<AF>(fun),
+                                                           std::forward<Arg0>(arg0),
+                                                           std::forward<Args>(args)...))>::type
+  {
+    return bindWithFallback<R>(detail::throwPointerLockException,
+                               std::forward<AF>(fun),
+                               std::forward<Arg0>(arg0),
+                               std::forward<Args>(args)...);
   }
 
   template <typename F, typename Arg0>

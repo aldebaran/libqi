@@ -235,6 +235,12 @@ TEST(TestBind, Trackable)
   EXPECT_EQ(10, v); //call not made
 }
 
+TEST(TestBind, BindLambda)
+{
+  auto f = qi::bind<int>([](int i){ return i; }, 18);
+  ASSERT_EQ(18, f());
+}
+
 void _delayValue(int msDelay, qi::Promise<void> p)
 {
   qi::os::msleep(msDelay);
