@@ -60,7 +60,7 @@ public:
 
   /// @deprecated since 2.5
   template <typename R>
-  QI_API_DEPRECATED boost::function<R()> async(const detail::Function<R()>& callback)
+  QI_API_DEPRECATED qi::Future<R> async(const detail::Function<R()>& callback)
   {
     return asyncDelay(callback, qi::Duration(0));
   }
