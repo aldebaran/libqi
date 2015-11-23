@@ -152,7 +152,7 @@ namespace qi {
     boost::condition_variable cond;
     bool gotPong = false;
     unsigned int nbTimeout = 0;
-    while (_work)
+    while (_work.load())
     {
       qiLogDebug() << "Ping";
       gotPong = false;
@@ -232,7 +232,7 @@ namespace qi {
   {
     qiLogDebug() << "stopping eventloopasio: " << this;
     boost::recursive_mutex::scoped_lock sl(_mutex);
-    if (_work)
+    if (_work.load())
     {
       boost::asio::io_service::work* w = _work;
       _work = nullptr;
@@ -360,7 +360,7 @@ namespace qi {
   {
     static boost::system::error_code erc;
 
-    if (!_work)
+    if (!_work.load())
       return qi::makeFutureError<void>("Schedule attempt on destroyed thread pool");
 
     uint32_t id = ++gTaskId;
@@ -390,7 +390,7 @@ namespace qi {
   qi::Future<void> EventLoopAsio::asyncCall(qi::SteadyClockTimePoint timepoint,
       boost::function<void ()> cb)
   {
-    if (!_work)
+    if (!_work.load())
       return qi::makeFutureError<void>("Schedule attempt on destroyed thread pool");
 
     uint32_t id = ++gTaskId;
