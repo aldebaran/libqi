@@ -374,7 +374,7 @@ namespace qi{
 
 namespace detail
 {
-  using QI_TYPE_ENUM_REGISTER_ QI_API_DEPRECATED = int;
+  struct QI_API_DEPRECATED QI_TYPE_ENUM_REGISTER_ {};
 }
 
 #define QI_TYPE_ENUM_REGISTER(Enum)                                  \
