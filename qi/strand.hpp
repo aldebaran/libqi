@@ -13,6 +13,11 @@
 #include <boost/noncopyable.hpp>
 #include <boost/type_traits/function_traits.hpp>
 
+# ifdef _MSC_VER
+#  pragma warning( push )
+#  pragma warning( disable: 4996 ) // TODO: Reactivate this warning once msvc stop triggerring a warning on overloading a deprecated function
+# endif
+
 namespace qi
 {
 
@@ -198,5 +203,9 @@ namespace detail
 }
 
 }
+
+# ifdef _MSC_VER
+#  pragma warning( pop )
+# endif
 
 #endif  // _QI_STRAND_HPP_

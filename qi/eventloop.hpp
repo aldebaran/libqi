@@ -22,6 +22,7 @@
 # ifdef _MSC_VER
 #  pragma warning( push )
 #  pragma warning( disable: 4251 )
+#  pragma warning( disable: 4996 ) // TODO: Reactivate this warning once msvc stop triggerring a warning on overloading a deprecated function
 # endif
 
 namespace boost {
