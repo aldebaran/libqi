@@ -25,7 +25,10 @@ namespace detail
   template <typename T>
   struct Function : boost::function<T>
   {
-    using boost::function<T>::function;
+    template<class... Args>
+    Function(Args&&... args)
+      : boost::function<T>(std::forward<Args>(args)...)
+    {}
   };
 
 }
