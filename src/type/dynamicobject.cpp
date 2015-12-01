@@ -283,13 +283,15 @@ namespace qi
     {
       auto prop = property(id);
       return ec->async([prop, val]{
-            return prop->setValue(val.asReference()).async();
-          }).unwrap();
+            // TODO make this async when setValue returns a futuresync
+            return prop->setValue(val.asReference());
+          });
     }
     else
     {
       try
       {
+        // TODO make this async when setValue returns a futuresync
         property(id)->setValue(val.asReference());
       }
       catch(const std::exception& e)
@@ -315,9 +317,11 @@ namespace qi
     ExecutionContext* ec = _p->getExecutionContext(context, MetaCallType_Auto);
     if (ec)
       return ec->async([prop] {
-            return prop->value().async();
-          }).unwrap();
+            // TODO make this async when setValue returns a futuresync
+            return prop->value();
+          });
     else
+      // TODO make this async when setValue returns a futuresync
       return qi::Future<AnyValue>(prop->value());
   }
 

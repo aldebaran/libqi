@@ -231,7 +231,8 @@ qi::Future<AnyValue> StaticObjectTypeBase::property(void* instance, AnyObject co
   ExecutionContext* ec = getExecutionContext(instance, context);
   if (ec)
     return ec->async([p]{
-          return p->value().async();
+          // TODO make this async when setValue returns a futuresync
+          return p->value();
         });
   else
     return qi::Future<AnyValue>(p->value());
