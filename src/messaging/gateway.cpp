@@ -1151,7 +1151,9 @@ void GatewayPrivate::forwardPostMessage(GwTransaction& t, TransportSocketPtr)
   ServiceId sid = t.content.service();
   TransportSocketPtr target = safeGetService(sid);
   t.setDestinationIfNull(target);
-  t.destination()->send(t.content);
+  // the service may have already disconnected
+  if (t.destination())
+    t.destination()->send(t.content);
 }
 
 void GatewayPrivate::registerEventListenerCall(GwTransaction& t, TransportSocketPtr origin)
