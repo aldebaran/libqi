@@ -50,15 +50,9 @@ namespace log
     _p->_file.open(fPath.make_preferred(), std::ios_base::app | std::ios_base::out | std::ios_base::binary);
 
     if (_p->_file.is_open())
-    {
       _p->_file << qi::detail::csvheader() << std::flush;
-    }
     else
       qiLogWarning() << "Cannot open " << filePath;
-  }
-
-  CsvLogHandler::~CsvLogHandler()
-  {
   }
 
   void CsvLogHandler::log(const qi::LogLevel verb,
@@ -70,14 +64,10 @@ namespace log
                           const char* fct,
                           const int line)
   {
-    if (verb > qi::log::logLevel() || !_p->_file.is_open())
-    {
-      return;
-    }
-    else
-    {
+    if (verb <= qi::log::logLevel() && _p->_file.is_open())
       _p->_file << qi::detail::csvline(date, systemDate, category, msg, file, fct, line, verb) << std::flush;
-    }
+    else
+      return;
   }
 }
 }

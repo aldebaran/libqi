@@ -40,11 +40,6 @@ namespace log
     explicit CsvLogHandler(const std::string& filePath);
 
     /**
-     * \brief Closes the file.
-     */
-    virtual ~CsvLogHandler();
-
-    /**
      * \brief Write logs messages on a file.
      * \param verb verbosity of the log message.
      * \param date date at which the log message was issued.
