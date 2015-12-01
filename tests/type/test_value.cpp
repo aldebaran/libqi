@@ -72,6 +72,29 @@ TEST(Value, Update)
   ASSERT_ANY_THROW(v.update(AutoAnyReference("bar")));
 }
 
+TEST(Value, Conversion)
+{
+  EXPECT_NO_THROW(qi::AnyValue::from(18).to<float>());
+  EXPECT_ANY_THROW(qi::AnyValue::from(18).to<bool>());
+  EXPECT_ANY_THROW(qi::AnyValue::from(18).to<std::string>());
+
+  EXPECT_NO_THROW(qi::AnyValue::from(18.0).to<int>());
+  EXPECT_ANY_THROW(qi::AnyValue::from(18.0).to<bool>());
+  EXPECT_ANY_THROW(qi::AnyValue::from(18.0).to<std::string>());
+
+  EXPECT_EQ(1, qi::AnyValue::from(true).to<int>());
+  EXPECT_EQ(1.0, qi::AnyValue::from(true).to<float>());
+
+  EXPECT_ANY_THROW(qi::AnyValue(qi::typeOf<void>()).to<int>());
+  EXPECT_ANY_THROW(qi::AnyValue(qi::typeOf<void>()).to<std::string>());
+  EXPECT_ANY_THROW(qi::AnyValue(qi::typeOf<void>()).to<float>());
+  EXPECT_ANY_THROW(qi::AnyValue(qi::typeOf<void>()).to<bool>());
+
+  EXPECT_ANY_THROW(qi::AnyValue::from("bla").to<int>());
+  EXPECT_ANY_THROW(qi::AnyValue::from("bla").to<float>());
+  EXPECT_ANY_THROW(qi::AnyValue::from("bla").to<bool>());
+}
+
 TEST(Value, As)
 {
   std::string s("foo");

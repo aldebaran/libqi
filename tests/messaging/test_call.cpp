@@ -36,6 +36,66 @@ qiLogCategory("test");
 //  ASSERT_TRUE(&m1.signature() != &m2.signature());
 //}
 
+int getint()
+{
+  return 42;
+}
+
+bool getbool()
+{
+  return false;
+}
+
+std::string getstring()
+{
+  return "lol";
+}
+
+float getfloat()
+{
+  return 42.0;
+}
+
+void getvoid()
+{
+}
+
+TEST(TestCall, Convert)
+{
+  qi::DynamicObjectBuilder ob;
+  ob.advertiseMethod("getint", &getint);
+  ob.advertiseMethod("getbool", &getbool);
+  ob.advertiseMethod("getstring", &getstring);
+  ob.advertiseMethod("getfloat", &getfloat);
+  ob.advertiseMethod("getvoid", &getvoid);
+
+  TestSessionPair p;
+  p.server()->registerService("Serv", ob.object());
+  qi::AnyObject obj = p.client()->service("Serv");
+
+  EXPECT_EQ(42, obj.call<float>("getint"));
+  EXPECT_ANY_THROW(obj.call<bool>("getint"));
+  EXPECT_ANY_THROW(obj.call<std::string>("getint"));
+
+  EXPECT_EQ(42.0, obj.call<int>("getfloat"));
+  EXPECT_ANY_THROW(obj.call<bool>("getfloat"));
+  EXPECT_ANY_THROW(obj.call<std::string>("getfloat"));
+
+  EXPECT_EQ(false, obj.call<bool>("getbool"));
+  EXPECT_EQ(0, obj.call<int>("getbool"));
+  EXPECT_EQ(0.0, obj.call<float>("getbool"));
+
+  EXPECT_ANY_THROW(obj.call<int>("getvoid"));
+  EXPECT_ANY_THROW(obj.call<std::string>("getvoid"));
+  EXPECT_ANY_THROW(obj.call<float>("getvoid"));
+  EXPECT_ANY_THROW(obj.call<bool>("getvoid"));
+
+  EXPECT_EQ("lol", obj.call<std::string>("getstring"));
+  EXPECT_ANY_THROW(obj.call<int>("getstring"));
+  EXPECT_ANY_THROW(obj.call<float>("getstring"));
+  EXPECT_ANY_THROW(obj.call<bool>("getstring"));
+}
+
 int addOne(int v)
 {
   qiLogDebug() << "addOne";
