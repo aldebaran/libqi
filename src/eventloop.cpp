@@ -125,9 +125,7 @@ namespace qi {
     if (isInThisContext())
       _workerThreads->launch(&EventLoopAsio::destroy, this);
     else
-    {
       delete this;
-    }
   }
 
   static void ping_me(bool & ping, boost::condition_variable& cond)
