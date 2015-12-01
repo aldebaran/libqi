@@ -14,7 +14,7 @@
 #include <sys/wait.h>
 
 #ifdef __APPLE__
-# define MY_PTRACE_ATTACH PT_ATTACH
+# define MY_PTRACE_ATTACH PT_ATTACHEXC
 # define MY_PTRACE_CONT   PT_CONTINUE
 # define MY_PTRACE_DETACH PT_DETACH
 #else
