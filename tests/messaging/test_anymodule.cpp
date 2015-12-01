@@ -24,6 +24,7 @@ TEST(Module, Load)
 TEST(Module, Call)
 {
   ASSERT_EQ(84, session->asyncCallModule<int>("naoqi.testanymodule.func", 42).value());
+  ASSERT_EQ(84, session->callModule<int>("naoqi.testanymodule.func", 42).value());
 }
 
 TEST(Module, LoadByHandWithSession)
