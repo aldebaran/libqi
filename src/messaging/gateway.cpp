@@ -170,9 +170,10 @@ void GatewayPrivate::close(bool clearEndpoints)
         if (serviceSlot.second && serviceSlot.first != ServiceSD && serviceSlot.second->isConnected())
           disconnections.emplace_back(serviceSlot.second->disconnect());
       }
+      _services.clear();
+      _sdAvailableServices.clear();
     }
     qi::waitForAll(disconnections);
-    _sdAvailableServices.clear();
   }
   {
     std::vector<qi::Future<void>> disconnections;
