@@ -25,7 +25,7 @@ public:
     : _counter(0)
   {
     object.connect(signalName,
-                   qi::AnyFunction::fromDynamicFunction(qi::bind<qi::AnyReference(const qi::AnyReferenceVector&)>(&SignalSpy::counterCallback, this)));
+                   qi::AnyFunction::fromDynamicFunction(qi::bind(&SignalSpy::counterCallback, this)));
   }
 
   ~SignalSpy()
