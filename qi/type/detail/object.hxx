@@ -89,17 +89,10 @@ namespace detail {
     {
       return go()->metaPost(nameWithOptionalSignature, in);
     }
-    inline void post(const std::string& eventName,
-      qi::AutoAnyReference p1 = qi::AutoAnyReference(),
-      qi::AutoAnyReference p2 = qi::AutoAnyReference(),
-      qi::AutoAnyReference p3 = qi::AutoAnyReference(),
-      qi::AutoAnyReference p4 = qi::AutoAnyReference(),
-      qi::AutoAnyReference p5 = qi::AutoAnyReference(),
-      qi::AutoAnyReference p6 = qi::AutoAnyReference(),
-      qi::AutoAnyReference p7 = qi::AutoAnyReference(),
-      qi::AutoAnyReference p8 = qi::AutoAnyReference()) const
+    template <typename... Args>
+    inline void post(const std::string& eventName, Args&&... args) const
     {
-      return go()->post(eventName, p1, p2, p3, p4, p5, p6, p7, p8);
+      return go()->post(eventName, std::forward<Args>(args)...);
     }
     template <typename FUNCTOR_TYPE>
     inline qi::FutureSync<SignalLink> connect(const std::string& eventName, FUNCTOR_TYPE callback,
@@ -171,19 +164,16 @@ namespace detail {
     {
       return go()->forceExecutionContext(ec);
     }
-    #define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)       \
-      template<typename R> qi::Future<R> async(                     \
-          const std::string& methodName comma                       \
-          QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoAnyReference)) const { \
-        return go()->template async<R>(methodName comma AUSE);      \
-      }                                                             \
-      template<typename R> R call(                                  \
-          const std::string& methodName comma                       \
-          QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoAnyReference)) const { \
-        return go()->template call<R>(methodName comma AUSE);       \
-      }
-    QI_GEN(genCall)
-    #undef genCall
+    template <typename R, typename... Args>
+    qi::Future<R> async(const std::string& methodName, Args&&... args) const
+    {
+      return go()->template async<R>(methodName, std::forward<Args>(args)...);
+    }
+    template <typename R, typename... Args>
+    R call(const std::string& methodName, Args&&... args) const
+    {
+      return go()->template call<R>(methodName, std::forward<Args>(args)...);
+    }
 
   private:
     inline GenericObject* go() const
