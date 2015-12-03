@@ -12,6 +12,9 @@
 
 #include <qi/messaging/gateway.hpp>
 #include <qi/property.hpp>
+#include <qi/periodictask.hpp>
+
+#include <mutex>
 
 #include "message.hpp"
 #include "transportsocket.hpp"
@@ -142,6 +145,8 @@ private:
   void localServiceRegistrationCont(Future<TransportSocketPtr> fut, ServiceId sid);
   void localServiceRegistrationEnd(TransportSocketPtr socket, ServiceId sid);
 
+  void updateEndpoints(const Url& url);
+
   bool _enforceAuth;
 
   TransportServer _server;
@@ -152,7 +157,10 @@ private:
   TransportServer _localServer;
 
   Url _listenUrl;
+  std::mutex _endpointsMutex;
   UrlVector _endpoints;
+  std::set<Url> _pendingListens;
+  qi::PeriodicTask _updateEndpointsTask;
   TransportSocketCache _socketCache;
 
   std::vector<TransportSocketPtr> _clients;

@@ -30,6 +30,7 @@ namespace
 {
 static const unsigned int DefaultServiceDirectoryPort = 9559;
 static const ServiceId ServiceSD = qi::Message::Service_ServiceDirectory;
+static const auto UpdateEndpointsPeriod = qi::Seconds(5);
 
 class NullTransportSocket : public qi::TransportSocket
 {
@@ -151,6 +152,7 @@ GatewayPrivate::~GatewayPrivate()
 void GatewayPrivate::close(bool clearEndpoints)
 {
   qiLogInfo() << "Bringing the gateway down";
+  _updateEndpointsTask.stop();
   if (_retryFut.isRunning())
     _retryFut.cancel();
   if (_sdClient.isConnected())
@@ -256,44 +258,82 @@ void GatewayPrivate::onServerAcceptError(int err)
 
 bool GatewayPrivate::listen(const Url& url)
 {
-  UrlVector filteredUrls;
-  std::vector<Future<void> > futs;
   _listenUrl = url;
 
   const std::string& host = url.host();
-  const std::string& prot = url.protocol();
-  unsigned int port = url.port();
+  const unsigned int port = url.port();
 
   if ((host == "127.0.0.1" || host == "localhost") && port == DefaultServiceDirectoryPort)
     throw std::runtime_error("Address 127.0.0.1:9559 is reserved.");
 
+  _server.acceptError.connect(&GatewayPrivate::onServerAcceptError, this, _1);
+
+  _updateEndpointsTask.stop();
   if (host == "0.0.0.0" && port == DefaultServiceDirectoryPort)
-    filteredUrls = allAvailableInterfaces(false, port, prot);
-  else
-    filteredUrls.push_back(url);
-
-  bool ret = false;
-
-  for (UrlVector::iterator it = filteredUrls.begin(), end = filteredUrls.end(); it != end; ++it)
-    futs.push_back(_server.listen(*it));
-  for (unsigned int i = 0; i < futs.size(); ++i)
   {
-    // We need a single success for the gateway to be usable
-    ret |= !futs[i].hasError();
-    if (futs[i].hasError())
-      qiLogWarning() << futs[i].error();
+    _updateEndpointsTask.setPeriod(UpdateEndpointsPeriod);
+    _updateEndpointsTask.setCallback(qi::bind<void()>(&GatewayPrivate::updateEndpoints, this, url));
+    _updateEndpointsTask.start();
+    return true;
   }
-
-  if (!ret)
-    qiLogError() << "No available interface for listening";
   else
   {
-    _endpoints = _server.endpoints();
-    for (UrlVector::iterator it = _endpoints.begin(), end = _endpoints.end(); it != end; ++it)
-      qiLogInfo() << "Gateway will listen on: " << it->str();
-    _server.acceptError.connect(&GatewayPrivate::onServerAcceptError, this, _1);
+    qi::Future<void> fut = _server.listen(url);
+    if (fut.hasError())
+    {
+      qiLogError() << "Can't listen on " << url.str();
+      return false;
+    }
+    else
+    {
+      qiLogInfo() << "Listening on " << url.str();
+      _endpoints = _server.endpoints();
+      return true;
+    }
   }
-  return ret;
+}
+
+void GatewayPrivate::updateEndpoints(const qi::Url& url)
+{
+  auto filteredUrls = allAvailableInterfaces(false, url.port(), url.protocol());
+  std::sort(filteredUrls.begin(), filteredUrls.end());
+
+  UrlVector toDo;
+  std::set_difference(filteredUrls.begin(),
+                      filteredUrls.end(),
+                      _pendingListens.begin(),
+                      _pendingListens.end(),
+                      std::back_inserter(toDo));
+
+  // TODO we listen on new interfaces, but we don't stop listening on interfaces that have disappeared. This is because
+  // we don't have a method to stop listening, it must be implemented first
+
+  for (const auto& url : toDo)
+  {
+    try
+    {
+      qiLogInfo() << "New address " << url.str() << ", trying to listen";
+      _server.listen(url)
+          .thenR<void>(qi::bind<void(qi::Future<void> fut)>(boost::function<void(GatewayPrivate*, qi::Future<void>)>(
+                                                                [url](GatewayPrivate* p, qi::Future<void> fut)
+                                                                {
+                                                                  if (fut.hasError())
+                                                                    qiLogWarning() << "Failed to listen on "
+                                                                                   << url.str() << ": " << fut.error();
+                                                                  else
+                                                                    qiLogWarning() << "Now listening on " << url.str();
+                                                                  std::lock_guard<std::mutex> _(p->_endpointsMutex);
+                                                                  p->_endpoints = p->_server.endpoints();
+                                                                }),
+                                                            this,
+                                                            _1));
+      _pendingListens.insert(url);
+    }
+    catch (std::exception& e)
+    {
+      qiLogWarning() << "Failed to listen on " << url.str() << ": " << e.what();
+    }
+  }
 }
 
 TransportSocketPtr GatewayPrivate::safeGetService(ServiceId id)
