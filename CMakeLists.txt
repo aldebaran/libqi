@@ -7,13 +7,18 @@ project(LibQi)
 find_package(qibuild)
 qi_sanitize_compile_flags(HIDDEN_SYMBOLS)
 
-
 include(CheckSymbolExists)
 check_symbol_exists(_SC_HOST_NAME_MAX "unistd.h" HAVE_SC_HOST_NAME_MAX)
 set_source_files_properties(src/os_posix.cpp
   PROPERTIES
     COMPILE_DEFINITIONS HAVE_SC_HOST_NAME_MAX)
 
+#### Check optional packages {{{
+qi_add_optional_package(BOOST_LOCALE "Enable usage of boost::locale")
+qi_add_optional_package(SYSTEMD "Enable usage of journald")
+#### }}}
+
+#### Set definitions {{{
 # We always want boost filesystem v3
 add_definitions("-DBOOST_FILESYSTEM_VERSION=3")
 add_definitions("-DBOOST_ASIO_DISABLE_STD_CHRONO")
@@ -30,29 +35,18 @@ if (UNIX)
  add_definitions(" -fno-strict-aliasing ")
 endif()
 
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++11")
-endif()
-
 if (WITH_SSL)
  add_definitions(" -DWITH_SSL ")
- set(_ssldeps "OPENSSL")
-else()
- set(_ssldeps "")
 endif()
 
-# Remove this line to use QT if usable
-set(WITH_QT5_CORE OFF)
-
-qi_add_optional_package(QT5_CORE "Enable QT")
-qi_add_optional_package(BOOST_LOCALE "Enable usage of boost::locale")
 if(WITH_BOOST_LOCALE)
   add_definitions(" -DWITH_BOOST_LOCALE ")
 endif()
 
-enable_testing()
-include(CMakeDependentOption)
+if (WITH_SYSTEMD)
+  add_definitions("-DWITH_SYSTEM")
+endif()
+#### }}}
 
 if (WITH_PROBES)
   find_package(qiprobes)
@@ -66,9 +60,14 @@ else()
   set(_tp_qi "")
 endif()
 
-# If systemd is available create a WITH_SYSTEMD
-qi_add_optional_package(SYSTEMD)
+#### Set compilation flags {{{
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++11")
+endif()
+#### }}}
 
+#### Set sources {{{
 set(QI_H qi/detail/clock.hxx
          qi/detail/eventloop.hxx
          qi/detail/future.hxx
@@ -142,13 +141,38 @@ set(QI_C src/dlfcn.cpp
          src/iocolor.cpp
          src/strand.cpp)
 
-if (WITH_SYSTEMD)
-  set(QI_H ${QI_H}
-           qi/log/journaldloghandler.hpp)
-  set(QI_C ${QI_C}
-           src/journaldloghandler.cpp)
+#### Add optional files to source {{{
+if (WIN32)
+  list(APPEND QI_C
+    src/os_launch_win32.cpp
+    src/os_win32.cpp
+    src/os_debugger_win32.cpp
+  )
+else()
+  list(APPEND QI_C
+    src/os_posix.cpp
+    src/os_debugger_posix.cpp
+  )
+  if(ANDROID)
+    list(APPEND QI_C src/os_launch_android.cpp)
+  else()
+    list(APPEND QI_C src/os_launch_posix.cpp)
+  endif()
 endif()
 
+if(WITH_BOOST_LOCALE)
+  list(APPEND QI_H qi/translator.hpp)
+  list(APPEND QI_C src/translator.cpp)
+endif()
+
+if (WITH_SYSTEMD)
+  list(APPEND QI_H qi/log/journaldloghandler.hpp)
+  list(APPEND QI_C src/journaldloghandler.cpp)
+endif()
+
+qi_create_config_h(_out qi/config.hpp.in qi/config.hpp)
+list(APPEND QI_C ${_out})
+#### }}}
 
 set(QITYPE_H       qi/anyfunction.hpp
                    qi/anyobject.hpp
@@ -332,53 +356,9 @@ set(QIPERF_C
   src/perf/measure.cpp
 )
 
-qi_create_config_h(_out qi/config.hpp.in qi/config.hpp)
-list(APPEND QI_C ${_out})
-
-if(WITH_BOOST_LOCALE)
-  list(APPEND QI_H qi/translator.hpp)
-  list(APPEND QI_C src/translator.cpp)
-endif()
+#### }}}
 
 qi_install_header(${QI_H} ${QITYPE_H} ${QIM_H} ${QIPERF_H} KEEP_RELATIVE_PATHS)
-
-if (WIN32)
-  list(APPEND QI_C
-    src/os_launch_win32.cpp
-    src/os_win32.cpp
-    src/os_debugger_win32.cpp
-  )
-else()
-  list(APPEND QI_C
-    src/os_posix.cpp
-    src/os_debugger_posix.cpp
-  )
-  if(ANDROID)
-    list(APPEND QI_C src/os_launch_android.cpp)
-  else()
-    list(APPEND QI_C src/os_launch_posix.cpp)
-  endif()
-endif()
-
-#normalize BUILD_SHARED_LIBS, default ON
-if (NOT DEFINED BUILD_SHARED_LIBS)
-  set(BUILD_SHARED_LIBS ON)
-endif()
-
-# Set qi_STATIC_BUILD  used in config.hpp.in
-set(qi_STATIC_BUILD OFF)
-if (NOT BUILD_SHARED_LIBS) #lol
-  set(qi_STATIC_BUILD ON)
-endif()
-
-# Convert ON/OFF to SHARED/STATIC for create_lib argument
-set(_qilibtype)
-if (BUILD_SHARED_LIBS OR ANDROID)
-  set(_qilibtype SHARED)
-else()
-  set(_qilibtype STATIC)
-endif()
-
 
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}")
 
@@ -390,10 +370,16 @@ qi_create_lib(qi SHARED
                  ${QITYPE_H} ${QITYPE_C}
                  ${QIM_H}    ${QIM_C}
                  ${QIPERF_H} ${QIPERF_C}
-              DEPENDS ASSUME_SYSTEM_INCLUDE BOOST BOOST_ATOMIC BOOST_DATE_TIME BOOST_THREAD BOOST_CHRONO BOOST_FILESYSTEM BOOST_LOCALE BOOST_REGEX BOOST_PROGRAM_OPTIONS ${_ssldeps}
+              DEPENDS ASSUME_SYSTEM_INCLUDE BOOST BOOST_ATOMIC BOOST_DATE_TIME BOOST_THREAD BOOST_CHRONO BOOST_FILESYSTEM BOOST_LOCALE BOOST_REGEX BOOST_PROGRAM_OPTIONS
               SUBMODULE ${_tp_qi})
-if (WITH_SYSTEMD)
-  qi_use_lib(qi SYSTEMD)
+
+#### Add optional libs {{{
+if(WIN32)
+  qi_use_lib(qi WSOCK IPHLPAPI PSAPI WSA) #Really?
+endif()
+
+if (WITH_SSL)
+  qi_use_lib(qi OPENSSL)
 endif()
 
 if (WITH_QT5_CORE)
@@ -401,6 +387,10 @@ if (WITH_QT5_CORE)
 endif()
 if(WITH_BOOST_LOCALE)
   qi_use_lib(qi BOOST_LOCALE)
+endif()
+
+if (WITH_SYSTEMD)
+  qi_use_lib(qi SYSTEMD)
 endif()
 
 if (UNIX)
@@ -414,13 +404,9 @@ endif()
 if(UNIX AND NOT APPLE AND NOT ANDROID)
   qi_use_lib(qi DL RT)
 endif()
-
-if(WIN32)
-  qi_use_lib(qi WSOCK IPHLPAPI PSAPI WSA) #Really?
-endif()
+#### }}}
 
 qi_stage_lib(qi INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/compat")
-
 
 option(BUILD_EXAMPLES "build examples")
 if (BUILD_EXAMPLES)
