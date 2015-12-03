@@ -66,6 +66,9 @@ else()
   set(_tp_qi "")
 endif()
 
+# If systemd is available create a WITH_SYSTEMD
+qi_add_optional_package(SYSTEMD)
+
 set(QI_H qi/detail/clock.hxx
          qi/detail/eventloop.hxx
          qi/detail/future.hxx
@@ -138,6 +141,14 @@ set(QI_C src/dlfcn.cpp
          src/version.cpp
          src/iocolor.cpp
          src/strand.cpp)
+
+if (WITH_SYSTEMD)
+  set(QI_H ${QI_H}
+           qi/log/journaldloghandler.hpp)
+  set(QI_C ${QI_C}
+           src/journaldloghandler.cpp)
+endif()
+
 
 set(QITYPE_H       qi/anyfunction.hpp
                    qi/anyobject.hpp
@@ -381,6 +392,9 @@ qi_create_lib(qi SHARED
                  ${QIPERF_H} ${QIPERF_C}
               DEPENDS ASSUME_SYSTEM_INCLUDE BOOST BOOST_ATOMIC BOOST_DATE_TIME BOOST_THREAD BOOST_CHRONO BOOST_FILESYSTEM BOOST_LOCALE BOOST_REGEX BOOST_PROGRAM_OPTIONS ${_ssldeps}
               SUBMODULE ${_tp_qi})
+if (WITH_SYSTEMD)
+  qi_use_lib(qi SYSTEMD)
+endif()
 
 if (WITH_QT5_CORE)
   qi_use_lib(qi QT5_CORE)
