@@ -66,15 +66,11 @@ namespace qi {
     return xAdvertiseMethod(builder, f, threadingModel);
   }
 
-  #define gen(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma) \
-  QI_GEN_MAYBE_TEMPLATE_OPEN(comma) ATYPEDECL QI_GEN_MAYBE_TEMPLATE_CLOSE(comma) \
-  inline unsigned int DynamicObjectBuilder::advertiseSignal(const std::string& s) \
-  { \
-    return advertiseSignalF<void(ATYPES)>(s); \
+  template <typename... Args>
+  unsigned int DynamicObjectBuilder::advertiseSignal(const std::string& s)
+  {
+    return advertiseSignalF<void(Args...)>(s);
   }
-
-  QI_GEN_RANGE(gen, 8)
-  #undef gen
 
   template <typename T> unsigned int DynamicObjectBuilder::advertiseSignalF(const std::string& name)
   {

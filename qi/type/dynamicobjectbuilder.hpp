@@ -60,15 +60,8 @@ namespace qi {
       return advertiseMethod(name, &constructObject<T, Args...>);
     }
 
+    template <typename... Args>
     unsigned int advertiseSignal(const std::string& name);
-    template<typename P0> unsigned int advertiseSignal(const std::string& name);
-    template<typename P0, typename P1> unsigned int advertiseSignal(const std::string& name);
-    template<typename P0, typename P1, typename P2> unsigned int advertiseSignal(const std::string& name);
-    template<typename P0, typename P1, typename P2, typename P3> unsigned int advertiseSignal(const std::string& name);
-    template<typename P0, typename P1, typename P2, typename P3,typename P4> unsigned int advertiseSignal(const std::string& name);
-    template<typename P0, typename P1, typename P2, typename P3,typename P4,typename P5> unsigned int advertiseSignal(const std::string& name);
-    template<typename P0, typename P1, typename P2, typename P3,typename P4,typename P5,typename P6> unsigned int advertiseSignal(const std::string& name);
-    template<typename P0, typename P1, typename P2, typename P3,typename P4,typename P5,typename P6, typename P7> unsigned int advertiseSignal(const std::string& name);
 
     /// Advertise a signal using a function signature
     template<typename T>
