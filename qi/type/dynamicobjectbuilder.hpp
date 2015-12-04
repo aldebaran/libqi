@@ -54,14 +54,11 @@ namespace qi {
     /** create a T, wrap in a AnyObject
      *  All template parameters are given to the T constructor except the first one
      */
-    #define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)                 \
-    template<typename T comma ATYPEDECL>                                      \
-    inline unsigned int advertiseFactory(const std::string& name)             \
-    {                                                                         \
-      return advertiseMethod(name, &constructObject<T comma ATYPES>);         \
+    template<typename T, typename... Args>
+    inline unsigned int advertiseFactory(const std::string& name)
+    {
+      return advertiseMethod(name, &constructObject<T, Args...>);
     }
-    QI_GEN(genCall)
-    #undef genCall
 
     unsigned int advertiseSignal(const std::string& name);
     template<typename P0> unsigned int advertiseSignal(const std::string& name);
