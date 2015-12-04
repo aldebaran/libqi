@@ -180,21 +180,19 @@ namespace detail {
   };
 }
 
-#define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)                                                   \
-  template <typename T comma ATYPEDECL>                                                                     \
-  typename boost::enable_if<typename detail::InterfaceImplTraits<T>::Defined, qi::Object<T> >::type  \
-      constructObject(ADECL)                                                                                \
-  {                                                                                                         \
-    return boost::make_shared<typename detail::InterfaceImplTraits<T>::SyncType>(AUSE);                     \
-  }                                                                                                         \
-  template <typename T comma ATYPEDECL>                                                                     \
-  typename boost::disable_if<typename detail::InterfaceImplTraits<T>::Defined, qi::Object<T> >::type \
-      constructObject(ADECL)                                                                                \
-  {                                                                                                         \
-    return Object<T>(new T(AUSE));                                                                          \
-  }
-QI_GEN(genCall)
-#undef genCall
+// these methods are used by advertiseFactory and arguments are specified explicitely, we can't used forwarding here
+template <typename T, typename... Args>
+typename boost::enable_if<typename detail::InterfaceImplTraits<T>::Defined, qi::Object<T> >::type constructObject(
+    const Args&... args)
+{
+  return boost::make_shared<typename detail::InterfaceImplTraits<T>::SyncType>(args...);
+}
+template <typename T, typename... Args>
+typename boost::disable_if<typename detail::InterfaceImplTraits<T>::Defined, qi::Object<T> >::type constructObject(
+    const Args&... args)
+{
+  return Object<T>(new T(args...));
+}
 
 #define QI_REGISTER_IMPLEMENTATION_H(interface, impl)     \
   namespace qi                                            \
