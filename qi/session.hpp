@@ -94,7 +94,7 @@ namespace qi {
      * calls it with (args...) only.
      */
     template <typename T>
-    qi::Future<T> callModule(const std::string& moduleName, const AnyReferenceVector& args = AnyReferenceVector())
+    qi::Future<T> asyncCallModule(const std::string& moduleName, const AnyReferenceVector& args = AnyReferenceVector())
     {
       qi::Promise<T> promise(qi::PromiseNoop<T>);
       qi::Future<qi::AnyValue> future = _callModule(moduleName, args, qi::MetaCallType_Queued);
@@ -102,34 +102,48 @@ namespace qi {
       return promise.future();
     }
 
+    /// @copydoc asyncCallModule
+    /// @deprecated since 2.5, use asyncCallModule
+    template <typename T>
+    QI_API_DEPRECATED qi::Future<T> callModule(
+        const std::string& moduleName, const AnyReferenceVector& args = AnyReferenceVector())
+    {
+      return asyncCallModule<T>(moduleName, args);
+    }
+
 #define pushi(z, n, _) params.push_back(p ## n);
-#define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)             \
-  void loadService(                                                   \
-      const std::string& moduleName, const std::string& renameModule, \
-      qi::AutoAnyReference pp0 comma                                  \
-      QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoAnyReference))               \
-  {                                                                   \
-    std::vector<qi::AnyReference> params;                             \
-    params.reserve(n+1);                                              \
-    params.push_back(pp0);                                            \
-    BOOST_PP_REPEAT(n, pushi, _)                                      \
-    loadService(moduleName, renameModule, params);                    \
-  }                                                                   \
-  template <typename T>                                               \
-  qi::Future<T> callModule(                                           \
-      const std::string& moduleName,                                  \
-      qi::AutoAnyReference pp0 comma                                  \
-      QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoAnyReference))               \
-  {                                                                   \
-    std::vector<qi::AnyReference> params;                             \
-    params.reserve(n+1);                                              \
-    params.push_back(pp0);                                            \
-    BOOST_PP_REPEAT(n, pushi, _)                                      \
-    return callModule<T>(moduleName, params);                         \
+#define justi(z, n, _) , p ## n
+#define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)                                                             \
+  void loadService(const std::string& moduleName,                                                                     \
+                   const std::string& renameModule,                                                                   \
+                   qi::AutoAnyReference pp0 comma QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoAnyReference))                   \
+  {                                                                                                                   \
+    std::vector<qi::AnyReference> params;                                                                             \
+    params.reserve(n + 1);                                                                                            \
+    params.push_back(pp0);                                                                                            \
+    BOOST_PP_REPEAT(n, pushi, _)                                                                                      \
+    loadService(moduleName, renameModule, params);                                                                    \
+  }                                                                                                                   \
+  template <typename T>                                                                                               \
+  qi::Future<T> asyncCallModule(const std::string& moduleName,                                                        \
+                                qi::AutoAnyReference pp0 comma QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoAnyReference))      \
+  {                                                                                                                   \
+    std::vector<qi::AnyReference> params;                                                                             \
+    params.reserve(n + 1);                                                                                            \
+    params.push_back(pp0);                                                                                            \
+    BOOST_PP_REPEAT(n, pushi, _)                                                                                      \
+    return asyncCallModule<T>(moduleName, params);                                                                    \
+  }                                                                                                                   \
+  template <typename T>                                                                                               \
+  QI_API_DEPRECATED qi::Future<T> callModule(                                                                         \
+      const std::string& moduleName, qi::AutoAnyReference pp0 comma QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoAnyReference)) \
+  {                                                                                                                   \
+    return asyncCallModule<T>(moduleName, pp0 BOOST_PP_REPEAT(n, justi, _));                                          \
   }
-QI_GEN(genCall)
+  QI_GEN(genCall)
 #undef genCall
 #undef pushi
+#undef justi
 
     /** Waits for a service to become available. The future is set immediately
      * if the service is already available.
@@ -159,7 +173,7 @@ QI_GEN(genCall)
   inline SessionPtr makeSession() { return boost::make_shared<qi::Session>(); }
 }
 
-QI_TYPE_ENUM_REGISTER(qi::Session::ServiceLocality);
+QI_TYPE_ENUM(qi::Session::ServiceLocality);
 
 #ifdef _MSC_VER
 #  pragma warning( pop )

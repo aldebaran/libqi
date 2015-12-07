@@ -57,21 +57,21 @@ template<int i> class StaticCounter1
 public:
   static void init()
   {
-    static CCount* cc1 = 0;
+    static CCount* cc1 = nullptr;
     QI_THREADSAFE_NEW(cc1);
   }
 };
 template<int i> inline
 void staticCounter2()
 {
-  static CCount* cc1=0, *cc2=0;
+  static CCount* cc1=nullptr, *cc2=nullptr;
   QI_THREADSAFE_NEW(cc1, cc2);
 }
 
 template<int k> inline
 int staticCounterControlled(qi::Atomic<int>* start, int count, int delay)
 {
-  static CCount* cc1 = 0;
+  static CCount* cc1 = nullptr;
   int res = k;
   // mark thread started
   ++(*start);

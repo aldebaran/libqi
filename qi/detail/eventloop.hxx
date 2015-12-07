@@ -18,7 +18,7 @@ void nullConverter(void*, R&)
 {}
 
 template <typename R>
-inline Future<R> EventLoop::async(const boost::function<R()>& callback,
+Future<R> EventLoop::async(const boost::function<R()>& callback,
                                   uint64_t usDelay)
 {
   return async(callback, qi::MicroSeconds(usDelay));
@@ -26,44 +26,35 @@ inline Future<R> EventLoop::async(const boost::function<R()>& callback,
 
 namespace detail
 {
-
-template <typename R, typename ARG0>
-inline typename boost::enable_if<
-    boost::is_base_of<Actor, typename detail::Unwrap<ARG0>::type>,
-    Future<R> >::type
-    asyncMaybeActor(const ARG0& arg0, const boost::function<R()>& cb,
-                    qi::Duration delay)
-{
-  return detail::Unwrap<ARG0>::unwrap(arg0)->strand()->async(cb, delay);
-}
-template <typename R, typename ARG0>
-inline typename boost::disable_if<
-    boost::is_base_of<Actor, typename detail::Unwrap<ARG0>::type>,
-    Future<R> >::type
-    asyncMaybeActor(const ARG0& arg0, const boost::function<R()>& cb,
-                    qi::Duration delay)
-{
-  return qi::getEventLoop()->async(cb, delay);
-}
-template <typename R, typename ARG0>
-inline typename boost::enable_if<
-    boost::is_base_of<Actor, typename detail::Unwrap<ARG0>::type>,
-    Future<R> >::type
-    asyncMaybeActor(const ARG0& arg0, const boost::function<R()>& cb,
-                    qi::SteadyClockTimePoint timepoint)
-{
-  return detail::Unwrap<ARG0>::unwrap(arg0)->strand()->async(cb, timepoint);
-}
-template <typename R, typename ARG0>
-inline typename boost::disable_if<
-    boost::is_base_of<Actor, typename detail::Unwrap<ARG0>::type>,
-    Future<R> >::type
-    asyncMaybeActor(const ARG0& arg0, const boost::function<R()>& cb,
-                    qi::SteadyClockTimePoint timepoint)
-{
-  return qi::getEventLoop()->async(cb, timepoint);
-}
-
+  template <typename F>
+  auto asyncMaybeActor(F&& cb, qi::Duration delay) ->
+      typename std::enable_if<detail::IsAsyncBind<F>::value, typename std::decay<decltype(cb())>::type>::type
+  {
+    if (delay != qi::Duration::zero())
+      return qi::getEventLoop()->asyncDelay(cb, delay).unwrap();
+    else
+      return cb();
+  }
+  template <typename F>
+  auto asyncMaybeActor(F&& cb, qi::Duration delay) ->
+      typename std::enable_if<!detail::IsAsyncBind<F>::value,
+               qi::Future<typename std::decay<decltype(cb())>::type>>::type
+  {
+    return qi::getEventLoop()->asyncDelay(cb, delay);
+  }
+  template <typename F>
+  auto asyncMaybeActor(F&& cb, qi::SteadyClockTimePoint timepoint) ->
+      typename std::enable_if<detail::IsAsyncBind<F>::value, typename std::decay<decltype(cb())>::type>::type
+  {
+    return qi::getEventLoop()->asyncAt(cb, timepoint).unwrap();
+  }
+  template <typename F>
+  auto asyncMaybeActor(F&& cb, qi::SteadyClockTimePoint timepoint) ->
+      typename std::enable_if<!detail::IsAsyncBind<F>::value,
+               qi::Future<typename std::decay<decltype(cb())>::type>>::type
+  {
+    return qi::getEventLoop()->asyncAt(cb, timepoint);
+  }
 }
 
 }

@@ -8,9 +8,10 @@
 #ifndef _QI_APPLICATION_HPP_
 # define _QI_APPLICATION_HPP_
 
-# include <boost/function.hpp>
-# include <qi/api.hpp>
+# include <functional>
 # include <vector>
+# include <string>
+# include <qi/api.hpp>
 
 namespace qi {
 
@@ -194,20 +195,22 @@ namespace qi {
      * \param func Callback function at Application creation.
      * \return True if registering succeeded, false otherwise.
      */
-    static bool atEnter(boost::function<void()> func);
+    static bool atEnter(std::function<void()> func);
+
     /**
      * \brief Register a function to be executed at Application destruction.
      * \param func Callback function called at Application destruction.
      * \return True if registering succeeded, false otherwise.
      */
-    static bool atExit(boost::function<void()> func);
+    static bool atExit(std::function<void()> func);
     /**
      * \brief Register a function to be executed when stop() is called.
      * The functions are executed sequentially before run() returns.
      * \param func Callback function called when stop() is called.
      * \return True if registering succeeded, false otherwise.
      */
-    static bool atStop(boost::function<void()> func);
+    static bool atStop(std::function<void()> func);
+
     /**
      * \brief Register a function to be executed when a signal occurs.
      * \param func Callback function called on signal.
@@ -218,7 +221,7 @@ namespace qi {
      * so there is no restriction on what can be done by your handler function,
      * except that it should return reasonably quickly.
      */
-    static bool atSignal(boost::function<void(int)> func, int signal);
+    static bool atSignal(std::function<void(int)> func, int signal);
   };
 }
 

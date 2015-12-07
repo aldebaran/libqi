@@ -39,10 +39,10 @@ namespace qi {
     ~BinaryDecoder();
 
 
-    enum Status {
-      Status_Ok                     = 0,
-      Status_ReadError              = 1,
-      Status_ReadPastEnd            = 2,
+    enum class Status {
+      Ok                     = 0,
+      ReadError              = 1,
+      ReadPastEnd            = 2,
     };
 
     void read(bool      &b);
@@ -94,9 +94,9 @@ namespace qi {
    */
   class QI_API BinaryEncoder : private boost::noncopyable {
   public:
-    enum Status {
-      Status_Ok                     = 0,
-      Status_WriteError             = 1,
+    enum class Status {
+      Ok                     = 0,
+      WriteError             = 1,
     };
 
     /// <summary>Default constructor.</summary>

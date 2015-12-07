@@ -33,6 +33,7 @@ inline AnyObject Proxy::asObject() const
 /* A proxy instance can have members: signals and properties, inherited from interface.
 * So it need a type of its own, we cannot pretend it's a AnyObject.
 */
+template<class InterfaceType, class ProxyType>
 class TypeProxy: public ObjectTypeInterface
 {
 public:
@@ -71,8 +72,23 @@ public:
   }
   virtual const std::vector<std::pair<TypeInterface*, int> >& parentTypes()
   {
-    static std::vector<std::pair<TypeInterface*, int> > empty;
-    return empty;
+    using ReturnType = typename std::decay<decltype(parentTypes())>::type;
+    static ReturnType* parents = nullptr;
+
+    static const auto init = []{ return new ReturnType{
+        { qi::typeOf<InterfaceType>(), []{
+            ProxyType* ptr = static_cast<ProxyType*>(reinterpret_cast<void*>(0x10000));
+            InterfaceType* pptr = ptr;
+            intptr_t offset = reinterpret_cast<intptr_t>(pptr)-reinterpret_cast<intptr_t>(ptr);
+            return offset;
+          }()
+        }
+      };
+    };
+
+    QI_ONCE(parents = init());
+
+    return *parents;
   }
   virtual qi::Future<AnyValue> property(void* instance, AnyObject context, unsigned int id)
   {
@@ -91,22 +107,6 @@ public:
   ToProxy toProxy;
 };
 
-/* We limit usage of per-class type for generated proxies
- *to non-interface mode
- * where it is needed.
- */
-template<typename T> struct TypeProxyWrapper: public TypeProxy
-{
-  typedef boost::function<Proxy*(void*)> ToProxy;
-  TypeProxyWrapper(ToProxy  toProxy)
-  : TypeProxy(toProxy)
-  {
-  }
-  typedef DefaultTypeImplMethods<T> Methods;
-  _QI_BOUNCE_TYPE_METHODS(Methods);
-};
-// Needed for legacy code
-//template<> struct TypeImpl<Proxy>: public TypeProxy {};
 
 namespace detail
 {
@@ -116,21 +116,12 @@ namespace detail
     return static_cast<Proxy*>((ProxyImpl*)storage);
   }
 
-  template<typename ProxyImpl>
-  TypeProxy* makeProxyInterfaceWrapper()
+  template<class InterfaceType, typename ProxyImpl>
+  TypeProxy<InterfaceType, ProxyImpl>* makeProxyInterface()
   {
-    static TypeProxy * result = 0;
+    static TypeProxy<InterfaceType, ProxyImpl>* result = 0;
     if (!result)
-      result = new TypeProxyWrapper<ProxyImpl>(&static_proxy_cast<ProxyImpl>);
-    return result;
-  }
-
-  template<typename ProxyImpl>
-  TypeProxy* makeProxyInterface()
-  {
-    static TypeProxy * result = 0;
-    if (!result)
-      result = new TypeProxy(&static_proxy_cast<ProxyImpl>);
+      result = new TypeProxy<InterfaceType, ProxyImpl>(&static_proxy_cast<ProxyImpl>);
     return result;
   }
 
@@ -154,29 +145,9 @@ bool registerProxyInterface()
   qiLogVerbose("qitype.type") << "ProxyInterface registration " << typeOf<Interface>()->infoString();
   // Runtime-register TypeInterface for Proxy, using ProxyInterface with
   // proper static_cast (from Proxy template to qi::Proxy) helper.
-  registerType(typeid(Proxy), detail::makeProxyInterface<Proxy>());
+  registerType(typeid(Proxy), detail::makeProxyInterface<Interface, Proxy>());
   detail::ProxyGeneratorMap& map = detail::proxyGeneratorMap();
   map[typeOf<Interface>()->info()] = boost::function<AnyReference(AnyObject)>(&detail::makeProxy<Proxy>);
-  return true;
-}
-
-/** Register \p Proxy as a proxy class.
- * Required for bound methods to accept a ProxyPtr as argument
- * Proxy must be constructible with an AnyObject as argument
- * @return unused value, present to ease registration at static initialisation
- */
-template<typename ProxyType>
-bool registerProxy()
-{
-  /* In non-interface mode, we need one different registered type
-   * per Proxy class, otherwise they will all land in the same
-   * bucket of proxyGeneratorMap.
-   * In interface mode this problem is absent because the TypeInfo
-   * of the interface is used (not the one of the proxy).
-  */
-  registerType(typeid(ProxyType), detail::makeProxyInterfaceWrapper<ProxyType>());
-  detail::ProxyGeneratorMap& map = detail::proxyGeneratorMap();
-  map[typeOf<ProxyType>()->info()] = boost::function<AnyReference(AnyObject)>(&detail::makeProxy<ProxyType>);
   return true;
 }
 

@@ -71,7 +71,7 @@ namespace qi
   {
     _eventLoop = eventLoop;
     _err = 0;
-    _status = qi::TransportSocket::Status_Disconnected;
+    _status = qi::TransportSocket::Status::Disconnected;
 
     if (s != 0)
     {
@@ -80,7 +80,7 @@ namespace qi
 #else
       _socket = SocketPtr((boost::asio::ip::tcp::socket*) s);
 #endif
-      _status = qi::TransportSocket::Status_Connected;
+      _status = qi::TransportSocket::Status::Connected;
       // Transmit each Message without delay
       setSocketOptions();
     }
@@ -303,7 +303,7 @@ namespace qi
       return;
     }
     _abort = true;
-    _status = qi::TransportSocket::Status_Disconnected;
+    _status = qi::TransportSocket::Status::Disconnected;
     disconnected(erc);
     socketEvent(SocketEventData(erc));
 
@@ -329,7 +329,7 @@ namespace qi
   {
     boost::recursive_mutex::scoped_lock l(_closingMutex);
 
-    if (_status == qi::TransportSocket::Status_Connected || _connecting)
+    if (_status == qi::TransportSocket::Status::Connected || _connecting)
     {
       const char* s = "connection already in progress";
       qiLogError() << s;
@@ -345,13 +345,13 @@ namespace qi
     _socket = SocketPtr(new boost::asio::ip::tcp::socket(*(boost::asio::io_service*)_eventLoop->nativeHandle()));
 #endif
     _url = url;
-    _status = qi::TransportSocket::Status_Connecting;
+    _status = qi::TransportSocket::Status::Connecting;
     _connecting = true;
     _err = 0;
     if (_url.port() == 0) {
       qiLogError() << "Error try to connect to a bad address: " << _url.str();
 
-      _status = qi::TransportSocket::Status_Disconnected;
+      _status = qi::TransportSocket::Status::Disconnected;
       _connecting = false;
       return qi::makeFutureError<void>(std::string("Bad address ") + _url.str());
     }
@@ -390,7 +390,7 @@ namespace qi
     {
       std::string message = "System error: " + erc.message();
       qiLogWarning() << "resolve: " << message;
-      _status = qi::TransportSocket::Status_Disconnected;
+      _status = qi::TransportSocket::Status::Disconnected;
       error(message);
       pSetError(connectPromise, message);
       return;
@@ -430,13 +430,13 @@ namespace qi
     if (erc)
     {
       qiLogWarning() << "connect: " << erc.message();
-      _status = qi::TransportSocket::Status_Disconnected;
+      _status = qi::TransportSocket::Status::Disconnected;
       error("System error: " + erc.message());
       pSetError(connectPromise, "System error: " + erc.message());
     }
     else
     {
-      _status = qi::TransportSocket::Status_Connected;
+      _status = qi::TransportSocket::Status::Connected;
       pSetValue(connectPromise);
       connected();
       _sslHandshake = true;
@@ -469,7 +469,7 @@ namespace qi
     if (erc)
     {
       qiLogWarning() << "connect: " << erc.message();
-      _status = qi::TransportSocket::Status_Disconnected;
+      _status = qi::TransportSocket::Status::Disconnected;
       error("System error: " + erc.message());
       pSetError(connectPromise, "System error: " + erc.message());
     }
@@ -488,7 +488,7 @@ namespace qi
       }
       else
       {
-        _status = qi::TransportSocket::Status_Connected;
+        _status = qi::TransportSocket::Status::Connected;
         pSetValue(connectPromise);
         connected();
 
@@ -606,7 +606,7 @@ namespace qi
 
   qi::FutureSync<void> TcpTransportSocket::disconnect()
   {
-    if (_status == qi::TransportSocket::Status_Disconnected)
+    if (_status == qi::TransportSocket::Status::Disconnected)
       return qi::Future<void>(0);
 
     return _eventLoop->async(boost::bind(&TcpTransportSocket::error,
@@ -618,11 +618,11 @@ namespace qi
   {
     // Check that once before locking in case some idiot tries to send
     // from a disconnect notification.
-    if (_status != qi::TransportSocket::Status_Connected)
+    if (_status != qi::TransportSocket::Status::Connected)
       return false;
     boost::recursive_mutex::scoped_lock lockc(_closingMutex);
 
-    if (!_socket || _status != qi::TransportSocket::Status_Connected)
+    if (!_socket || _status != qi::TransportSocket::Status::Connected)
     {
       qiLogDebug() << this << "Send on closed socket";
       return false;

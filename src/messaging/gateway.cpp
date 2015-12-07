@@ -161,22 +161,30 @@ void GatewayPrivate::close(bool clearEndpoints)
   _sdClient.serviceRemoved.disconnectAll();
   _socketCache.close();
   {
-    boost::recursive_mutex::scoped_lock lock(_serviceMutex);
-    std::map<ServiceId, TransportSocketPtr>::iterator it = _services.begin();
-    std::map<ServiceId, TransportSocketPtr>::iterator end = _services.end();
-    for (; it != end; ++it)
+    std::vector<qi::Future<void>> disconnections;
     {
-      if (it->second && it->first != ServiceSD && it->second->isConnected())
-        it->second->disconnect();
+      boost::recursive_mutex::scoped_lock lock(_serviceMutex);
+      disconnections.reserve(_services.size());
+      for (const auto& serviceSlot : _services)
+      {
+        if (serviceSlot.second && serviceSlot.first != ServiceSD && serviceSlot.second->isConnected())
+          disconnections.emplace_back(serviceSlot.second->disconnect());
+      }
+      _services.clear();
+      _sdAvailableServices.clear();
     }
-    _sdAvailableServices.clear();
+    qi::waitForAll(disconnections);
   }
   {
-    boost::mutex::scoped_lock lock(_clientsMutex);
-    std::vector<TransportSocketPtr>::iterator it = _clients.begin();
-    std::vector<TransportSocketPtr>::iterator end = _clients.end();
-    for (; it != end; ++it)
-      (*it)->disconnect();
+    std::vector<qi::Future<void>> disconnections;
+    {
+      boost::mutex::scoped_lock lock(_clientsMutex);
+      for (auto& client : _clients)
+      {
+        disconnections.emplace_back(client->disconnect());
+      }
+    }
+    qi::waitForAll(disconnections);
     _clients.clear();
   }
   {
@@ -302,43 +310,40 @@ void GatewayPrivate::onClientDisconnected(TransportSocketPtr socket, std::string
   qiLogVerbose() << "Client " << url << " has left us: " << reason;
   {
     boost::recursive_mutex::scoped_lock lock(_eventSubMutex);
+    _eventSubscribers.erase(socket);
     EventsEndpointMap::iterator it = _eventSubscribers.begin();
-    EventsEndpointMap::iterator end = _eventSubscribers.end();
-    while (it != end)
+    while (it != _eventSubscribers.end())
     {
       EventServiceMap::iterator sit = it->second.begin();
-      EventServiceMap::iterator send = it->second.end();
-      while (sit != send)
+      while (sit != it->second.end())
       {
         ServiceId serviceId = sit->first;
         EventsPerObjectMap::iterator oit = sit->second.begin();
-        EventsPerObjectMap::iterator oend = sit->second.end();
-        while (oit != oend)
+        while (oit != sit->second.end())
         {
           unsigned int objectId = oit->first;
           ClientsPerEventMap::iterator eit = oit->second.begin();
-          ClientsPerEventMap::iterator eend = oit->second.end();
-          while (eit != eend)
+          while (eit != oit->second.end())
           {
             qi::uint32_t eventId = eit->first;
             removeEventSubscriber(serviceId, objectId, eventId, socket, it->first);
             if (eit->second.remoteSubscribers.size() == 0)
-              oit->second.erase(eit++);
+              eit = oit->second.erase(eit);
             else
               ++eit;
           }
           if (oit->second.size() == 0)
-            sit->second.erase(oit++);
+            oit = sit->second.erase(oit);
           else
             ++oit;
         }
         if (sit->second.size() == 0)
-          it->second.erase(sit++);
+          sit = it->second.erase(sit);
         else
           ++sit;
       }
       if (it->second.size() == 0)
-        _eventSubscribers.erase(it++);
+        it = _eventSubscribers.erase(it);
       else
         ++it;
     }
@@ -418,13 +423,25 @@ void GatewayPrivate::sdConnectionRetry(const qi::Url& sdUrl, qi::Duration lastTi
     lastTimer *= 2;
     qiLogWarning() << "Can't reach ServiceDirectory at address " << sdUrl.str() << ", retrying in "
                    << qi::to_string(boost::chrono::duration_cast<qi::Seconds>(lastTimer)) << ".";
-    _retryFut = qi::async(qi::bind<void()>(&GatewayPrivate::sdConnectionRetry, this, sdUrl, lastTimer), lastTimer);
+    _retryFut = qi::asyncDelay(qi::bind(&GatewayPrivate::sdConnectionRetry, this, sdUrl, lastTimer), lastTimer);
   }
   else
   {
     qiLogInfo() << "Successfully reestablished connection to the ServiceDirectory at address " << sdUrl.str();
-    for (UrlVector::iterator it = _endpoints.begin(), end = _endpoints.end(); it != end; ++it)
-      listen(*it);
+    const auto endpointsToReconnect = _endpoints;
+    for (const auto& endpointUrl : endpointsToReconnect)
+    {
+      qiLogInfo() << "Trying reconnection to " << endpointUrl.str();
+      if (listen(endpointUrl))
+      {
+        qiLogInfo() << "Reconnected to " << endpointUrl.str();
+      }
+      else
+      {
+        qiLogInfo() << "Reconnection failed: " << endpointUrl.str();
+      }
+    }
+
   }
 }
 
@@ -439,7 +456,7 @@ void GatewayPrivate::onServiceDirectoryDisconnected(TransportSocketPtr socket, c
   qi::Duration retryTimer = qi::Seconds(1);
 
   _retryFut =
-      qi::async(qi::bind<void()>(&GatewayPrivate::sdConnectionRetry, this, socket->url(), retryTimer), retryTimer);
+      qi::asyncDelay(qi::bind(&GatewayPrivate::sdConnectionRetry, this, socket->url(), retryTimer), retryTimer);
 }
 
 void GatewayPrivate::serviceDisconnected(ServiceId sid)
@@ -911,6 +928,7 @@ GWMessageId GatewayPrivate::handleCallMessage(GwTransaction& t, TransportSocketP
   forward.setObject(msg.object());
   forward.setFunction(msg.function());
   forward.setBuffer(msg.buffer());
+  forward.setFlags(msg.flags());
   // Check if we already have a connection to this service
   if (!serviceSocket || !serviceSocket->isConnected())
   {
@@ -1133,7 +1151,9 @@ void GatewayPrivate::forwardPostMessage(GwTransaction& t, TransportSocketPtr)
   ServiceId sid = t.content.service();
   TransportSocketPtr target = safeGetService(sid);
   t.setDestinationIfNull(target);
-  t.destination()->send(t.content);
+  // the service may have already disconnected
+  if (t.destination())
+    t.destination()->send(t.content);
 }
 
 void GatewayPrivate::registerEventListenerCall(GwTransaction& t, TransportSocketPtr origin)

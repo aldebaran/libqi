@@ -22,6 +22,7 @@
 # ifdef _MSC_VER
 #  pragma warning( push )
 #  pragma warning( disable: 4251 )
+#  pragma warning( disable: 4996 ) // TODO: Reactivate this warning once msvc stop triggerring a warning on overloading a deprecated function
 # endif
 
 namespace boost {
@@ -55,7 +56,7 @@ namespace qi
      * \brief Check if current thread is the event loop thread.
      * \return true if current thread is the event loop thread.
      */
-    bool isInThisContext();
+    bool isInThisContext() override;
     /**
      * \brief Start the eventloop in threaded mode.
      * \param nthreads Numbers of threads.
@@ -81,6 +82,7 @@ namespace qi
     /// \brief Internal function.
     void *nativeHandle();
 
+    // DEPRECATED
     /// @{
     /**
      * \brief Call given function once after given delay in microseconds.
@@ -90,26 +92,22 @@ namespace qi
      * \deprecated use qi::async with qi::Duration
      */
     template<typename R>
-    Future<R> async(const boost::function<R()>& callback, uint64_t usDelay=0);
-    Future<void> async(const boost::function<void ()>& callback, uint64_t usDelay=0);
-    Future<void> async(const boost::function<void ()>& callback, qi::Duration delay);
-    Future<void> async(const boost::function<void ()>& callback, qi::SteadyClockTimePoint timepoint);
+    QI_API_DEPRECATED Future<R> async(const boost::function<R()>& callback, uint64_t usDelay);
+    QI_API_DEPRECATED Future<void> async(const boost::function<void()>& callback, uint64_t usDelay)
+    {
+      return asyncDelayImpl(callback, qi::MicroSeconds(usDelay));
+    }
+    QI_API_DEPRECATED Future<void> async(const boost::function<void()>& callback, qi::Duration delay) override
+    {
+      return asyncDelayImpl(callback, delay);
+    }
+    QI_API_DEPRECATED Future<void> async(
+        const boost::function<void()>& callback, qi::SteadyClockTimePoint timepoint) override
+    {
+      return asyncAt(callback, timepoint);
+    }
 
-    template <typename R>
-    typename boost::enable_if_c<!boost::is_same<R, void>::value,
-                                qi::Future<R> >::type
-        async(const boost::function<R()>& callback, qi::Duration delay)
-    {
-      return ExecutionContext::async<R>(callback, delay);
-    }
-    template <typename R>
-    typename boost::enable_if_c<!boost::is_same<R, void>::value,
-                                qi::Future<R> >::type
-        async(const boost::function<R()>& callback,
-              qi::SteadyClockTimePoint tp)
-    {
-      return ExecutionContext::async<R>(callback, tp);
-    }
+    using ExecutionContext::async;
     /// @}
 
     /**
@@ -117,13 +115,18 @@ namespace qi
      * \param callback Callback to be called.
      * \param usDelay Delay before call the callback in microsecond.
      */
-    void post(const boost::function<void ()>& callback, uint64_t usDelay);
-    void post(const boost::function<void ()>& callback, qi::Duration delay);
-    void post(const boost::function<void ()>& callback, qi::SteadyClockTimePoint timepoint);
-    void post(const boost::function<void ()>& callback)
+    QI_API_DEPRECATED void post(const boost::function<void ()>& callback, uint64_t usDelay)
     {
-      return post(callback, 0);
+      postDelayImpl(callback, qi::MicroSeconds(usDelay));
     }
+    QI_API_DEPRECATED void post(const boost::function<void ()>& callback, qi::Duration delay)
+    {
+      postDelayImpl(callback, delay);
+    }
+    QI_API_DEPRECATED void post(const boost::function<void ()>& callback, qi::SteadyClockTimePoint timepoint);
+    // END DEPRECATED
+
+    using ExecutionContext::post;
 
     /**
      * \brief Monitor event loop to detect deadlocks.
@@ -135,8 +138,17 @@ namespace qi
      */
     Future<void> monitorEventLoop(EventLoop* helper, uint64_t maxUsDelay);
 
+  private:
     EventLoopPrivate *_p;
     std::string       _name;
+
+    void postImpl(boost::function<void()> callback) override
+    {
+      postDelayImpl(callback, qi::Duration(0));
+    }
+    void postDelayImpl(boost::function<void()> callback, qi::Duration delay);
+    qi::Future<void> asyncAtImpl(boost::function<void()> cb, qi::SteadyClockTimePoint tp) override;
+    qi::Future<void> asyncDelayImpl(boost::function<void()> cb, qi::Duration delay) override;
   };
 
   /// \brief Return the global eventloop, created on demand on first call.
@@ -144,72 +156,79 @@ namespace qi
 
   namespace detail
   {
-    template <typename R, typename ARG0>
-    typename boost::enable_if<
-        boost::is_base_of<Actor, typename detail::Unwrap<ARG0>::type>,
-        Future<R> >::type
-        asyncMaybeActor(const ARG0& arg0, const boost::function<R()>& cb,
-                        qi::Duration delay);
-    template <typename R, typename ARG0>
-    typename boost::disable_if<
-        boost::is_base_of<Actor, typename detail::Unwrap<ARG0>::type>,
-        Future<R> >::type
-        asyncMaybeActor(const ARG0& arg0, const boost::function<R()>& cb,
-                        qi::Duration delay);
-    template <typename R, typename ARG0>
-    typename boost::enable_if<
-        boost::is_base_of<Actor, typename detail::Unwrap<ARG0>::type>,
-        Future<R> >::type
-        asyncMaybeActor(const ARG0& arg0, const boost::function<R()>& cb,
-                        qi::SteadyClockTimePoint timepoint);
-    template <typename R, typename ARG0>
-    typename boost::disable_if<
-        boost::is_base_of<Actor, typename detail::Unwrap<ARG0>::type>,
-        Future<R> >::type
-        asyncMaybeActor(const ARG0& arg0, const boost::function<R()>& cb,
-                        qi::SteadyClockTimePoint timepoint);
+    template <typename F>
+    inline auto asyncMaybeActor(F&& cb, qi::Duration delay) ->
+        typename std::enable_if<detail::IsAsyncBind<F>::value, typename std::decay<decltype(cb())>::type>::type;
+    template <typename F>
+    inline auto asyncMaybeActor(F&& cb, qi::Duration delay) ->
+        typename std::enable_if<!detail::IsAsyncBind<F>::value,
+                 qi::Future<typename std::decay<decltype(cb())>::type>>::type;
+    template <typename F>
+    inline auto asyncMaybeActor(F&& cb, qi::SteadyClockTimePoint timepoint) ->
+        typename std::enable_if<detail::IsAsyncBind<F>::value, typename std::decay<decltype(cb())>::type>::type;
+    template <typename F>
+    inline auto asyncMaybeActor(F&& cb, qi::SteadyClockTimePoint timepoint) ->
+        typename std::enable_if<!detail::IsAsyncBind<F>::value,
+                 qi::Future<typename std::decay<decltype(cb())>::type>>::type;
   }
 
   /// \copydoc qi::EventLoop::async().
   /// \deprecated use qi::async with qi::Duration
   template<typename R>
-  inline Future<R> async(boost::function<R()> callback, uint64_t usDelay=0)
+  QI_API_DEPRECATED inline Future<R> async(boost::function<R()> callback, uint64_t usDelay)
   {
-    return qi::getEventLoop()->async(callback, usDelay);
+    return qi::getEventLoop()->asyncDelay(callback, qi::MicroSeconds(usDelay));
   }
   template<typename R>
-  inline Future<R> async(boost::function<R()> callback, qi::Duration delay)
+  QI_API_DEPRECATED inline Future<R> async(boost::function<R()> callback, qi::Duration delay)
   {
-    return qi::getEventLoop()->async(callback, delay);
+    return qi::getEventLoop()->asyncDelay(callback, delay);
   }
   template<typename R>
-  inline Future<R> async(boost::function<R()> callback, qi::SteadyClockTimePoint timepoint)
+  QI_API_DEPRECATED inline Future<R> async(boost::function<R()> callback, qi::SteadyClockTimePoint timepoint)
   {
-    return qi::getEventLoop()->async(callback, timepoint);
+    return qi::getEventLoop()->asyncAt(callback, timepoint);
+  }
+  template<typename R>
+  QI_API_DEPRECATED inline Future<R> async(detail::Function<R()> callback)
+  {
+    return qi::getEventLoop()->async(callback);
+  }
+
+  template <typename F>
+  inline auto asyncDelay(F&& callback, qi::Duration delay)
+      -> decltype(detail::asyncMaybeActor(std::forward<F>(callback), delay))
+  {
+    return detail::asyncMaybeActor(std::forward<F>(callback), delay);
+  }
+  template <typename F>
+  inline auto asyncAt(F&& callback, qi::SteadyClockTimePoint timepoint)
+      -> decltype(qi::getEventLoop()->asyncAt(std::forward<F>(callback), timepoint))
+  {
+    return qi::getEventLoop()->asyncAt(std::forward<F>(callback), timepoint);
+  }
+  template <typename F>
+  inline auto async(F&& callback)
+      -> decltype(asyncDelay(std::forward<F>(callback), qi::Duration(0)))
+  {
+    return asyncDelay(std::forward<F>(callback), qi::Duration(0));
   }
 
 #ifdef DOXYGEN
+  /// @deprecated since 2.5
   template<typename R, typename Func, typename ArgTrack>
-  qi::Future<R> async(const Func& f, const ArgTrack& toTrack, ...);
+  QI_API_DEPRECATED qi::Future<R> async(const Func& f, const ArgTrack& toTrack, ...);
 #else
-#define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)                  \
-  template<typename R, typename AF, typename ARG0 comma ATYPEDECL>         \
-  inline typename boost::disable_if<                                       \
-      boost::mpl::or_<                                                     \
-          boost::is_same<ARG0, std::string>, boost::is_same<ARG0, char*>,  \
-          boost::is_same<ARG0, const char*>, boost::is_array<ARG0> >,      \
-      Future<R> >::type async(const AF& fun, const ARG0& arg0 comma ADECL, \
-                              qi::Duration delay = qi::Duration(0))        \
-  {                                                                        \
-    return detail::asyncMaybeActor<R, ARG0>(                               \
-        arg0, qi::bind<R()>(fun, arg0 comma AUSE), delay);                 \
-  }                                                                        \
-  template<typename R, typename AF, typename ARG0 comma ATYPEDECL>         \
-  inline Future<R> async(const AF& fun, const ARG0& arg0 comma ADECL,      \
-                         qi::SteadyClockTimePoint timepoint)               \
-  {                                                                        \
-    return detail::asyncMaybeActor<R, ARG0>(                               \
-        arg0, qi::bind<R()>(fun, arg0 comma AUSE), timepoint);             \
+#define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)                                                   \
+  template <typename R, typename AF, typename ARG0 comma ATYPEDECL>                                         \
+  inline QI_API_DEPRECATED Future<R> async(const AF& fun, const ARG0& arg0 comma ADECL, qi::Duration delay = qi::Duration(0)) \
+  {                                                                                                         \
+    return detail::asyncMaybeActor(qi::bind(fun, arg0 comma AUSE), delay);            \
+  }                                                                                                         \
+  template <typename R, typename AF, typename ARG0 comma ATYPEDECL>                                         \
+  inline QI_API_DEPRECATED Future<R> async(const AF& fun, const ARG0& arg0 comma ADECL, qi::SteadyClockTimePoint timepoint)   \
+  {                                                                                                         \
+    return detail::asyncMaybeActor(qi::bind(fun, arg0 comma AUSE), timepoint);        \
   }
   QI_GEN(genCall)
 #undef genCall

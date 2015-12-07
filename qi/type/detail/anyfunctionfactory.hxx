@@ -237,9 +237,28 @@ namespace qi
       AnyReferenceCopy &operator()() { return *this; }
     };
 
-    template<typename T> void operator,(AnyReferenceCopy& g, const T& any)
+    template <typename T>
+    struct AssignAnyRef
     {
-      *(AnyReference*)&g = AnyReference::from(any).clone();
+      static void assignAnyRef(AnyReference* ref, T any)
+      {
+        *ref = AnyReference(qi::typeOf<T>(), new T(std::move(any)));
+      }
+    };
+
+    template <typename T>
+    struct AssignAnyRef<T*>
+    {
+      static void assignAnyRef(AnyReference* ref, T* any)
+      {
+        *ref = AnyReference::from(any);
+      }
+    };
+
+    template <typename T>
+    void operator,(AnyReferenceCopy& g, T any)
+    {
+      AssignAnyRef<T>::assignAnyRef(&g, std::move(any));
     }
 
     // makeCall function family

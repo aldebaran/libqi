@@ -159,7 +159,7 @@ void signalHandler(int)
     std::cout << "]" << std::endl;
 }
 
-int subCmd_trace(int argc, char **argv, qi::ApplicationSession& app, qi::JsonOption)
+int subCmd_trace(int argc, char **argv, qi::ApplicationSession& app)
 {
   qi::Application::atSignal(&signalHandler, SIGTERM);
   qi::Application::atSignal(&signalHandler, SIGINT);
@@ -184,7 +184,7 @@ int subCmd_trace(int argc, char **argv, qi::ApplicationSession& app, qi::JsonOpt
     return 1;
 
   qiLogVerbose() << "Connecting to service directory";
-  app.start();
+  app.startSession();
   qi::SessionPtr s = app.session();
 
   qiLogVerbose() << "Resolving services";

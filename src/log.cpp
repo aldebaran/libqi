@@ -296,7 +296,7 @@ namespace qi {
 
     // categories must be accessible at static init: cannot go in Log class
     typedef std::map<std::string, detail::Category*> CategoryMap;
-    static CategoryMap* _glCategories = 0;
+    static CategoryMap* _glCategories = nullptr;
     inline CategoryMap& _categories()
     {
       if (!_glCategories)
@@ -305,7 +305,7 @@ namespace qi {
     }
 
     // protects globs and categories, both the map and the per-category vector
-    static boost::recursive_mutex          *_glMutex   = 0;
+    static boost::recursive_mutex          *_glMutex   = nullptr;
     inline boost::recursive_mutex& _mutex()
     {
       if (!_glMutex)
@@ -469,7 +469,7 @@ namespace qi {
     {
 // Logs are handled in qi::log in Android
 #ifndef ANDROID
-      privateLog* pl = 0;
+      privateLog* pl = nullptr;
       boost::mutex::scoped_lock lock(LogHandlerLock);
       while (logs.pop(pl))
       {
@@ -714,7 +714,7 @@ namespace qi {
          if (it->second.index == id)
            return &it->second;
        }
-       return 0;
+       return  nullptr;
     }
 
     void adaptLogFuncHandler(

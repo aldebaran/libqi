@@ -26,7 +26,7 @@ int                 main(int argc, char **argv)
 {
   qi::ApplicationSession app(argc, argv);
   int                    subCmdArgc = 0;
-  char                   **subCmdArgv = 0;
+  char                   **subCmdArgv = nullptr;
   SubCmd                 subCmd = 0;
 
   init();
@@ -46,7 +46,6 @@ int                 main(int argc, char **argv)
 
   desc.add_options()
       ("help,h", "Print this help message and exit")
-      ("prettyprint,p", "Print return json output without any escape characters")
       ;
 
   po::positional_options_description positionalOptions;
@@ -74,10 +73,7 @@ int                 main(int argc, char **argv)
 
   int ret;
   try {
-    if (!vm.count("prettyprint"))
-      ret = subCmd(subCmdArgc, subCmdArgv, app, qi::JsonOption::None);
-    else
-      ret = subCmd(subCmdArgc, subCmdArgv, app, qi::JsonOption::PrettyPrint);
+    ret = subCmd(subCmdArgc, subCmdArgv, app);
   } catch (const std::exception& e)
   {
     printError(e.what());

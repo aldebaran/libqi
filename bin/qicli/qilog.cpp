@@ -78,7 +78,7 @@ static void setFilter(const std::string& rules, qi::AnyObject listener)
   }
 }
 
-int subCmd_logView(int argc, char **argv, qi::ApplicationSession& app, qi::JsonOption)
+int subCmd_logView(int argc, char **argv, qi::ApplicationSession& app)
 {
   po::options_description   desc("Usage: qicli log-view");
 
@@ -95,7 +95,7 @@ int subCmd_logView(int argc, char **argv, qi::ApplicationSession& app, qi::JsonO
     return 1;
 
   qiLogVerbose() << "Connecting to service directory";
-  app.start();
+  app.startSession();
   qi::SessionPtr s = app.session();
 
   qiLogVerbose() << "Resolving services";
@@ -136,7 +136,7 @@ int subCmd_logView(int argc, char **argv, qi::ApplicationSession& app, qi::JsonO
   return 0;
 }
 
-int subCmd_logSend(int argc, char **argv, qi::ApplicationSession& app, qi::JsonOption)
+int subCmd_logSend(int argc, char **argv, qi::ApplicationSession& app)
 {
   po::options_description   desc("Usage: qicli log-send <message>");
 
@@ -158,7 +158,7 @@ int subCmd_logSend(int argc, char **argv, qi::ApplicationSession& app, qi::JsonO
     return 1;
 
   qiLogVerbose() << "Connecting to service directory";
-  app.start();
+  app.startSession();
   qi::SessionPtr s = app.session();
 
   qiLogVerbose() << "Resolving services";

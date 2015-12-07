@@ -63,6 +63,12 @@ namespace qi {
       case 'C':
         _result += "UInt8";
         break;
+      case 'w':
+        _result += "Int16";
+        break;
+      case 'W':
+        _result += "UInt16";
+        break;
       case 'i':
         _result += "Int32";
         break;

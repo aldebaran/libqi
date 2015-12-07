@@ -202,7 +202,7 @@ static void envConfigInit(qi::ApplicationSession::Config& conf)
 
   if (listenUrl.length())
     conf.setDefaultListenUrl(Url(listenUrl));
-  if (sdUrl.length())
+  if (sdUrl.length() && !conf.defaultStandAlone())
     conf.setDefaultUrl(sdUrl);
 }
 
@@ -263,6 +263,11 @@ Url ApplicationSession::listenUrl()
 
 void ApplicationSession::start()
 {
+  startSession();
+}
+
+void ApplicationSession::startSession()
+{
   {
     boost::mutex::scoped_lock lock(_p->_mutex);
 
@@ -279,7 +284,7 @@ void ApplicationSession::start()
 
 void ApplicationSession::run()
 {
-  start();
+  startSession();
   Application::run();
 }
 }

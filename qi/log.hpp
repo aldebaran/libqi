@@ -461,7 +461,8 @@ namespace qi {
     QI_API void setSynchronousLog(bool sync);
 
     /**
-     * \brief Add a log handler.
+     * \brief Add a log handler for this process' logs.
+     * \warning Handlers are usually called synchronously, they must not block.
      * \param name Name of the handler, useful to remove handler (prefer lowercase).
      * \param fct Boost delegate to log handler function.
      * \param defaultLevel default log verbosity.

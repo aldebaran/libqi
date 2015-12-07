@@ -7,6 +7,8 @@
 #ifndef _QI_TYPE_TYPEOBJECT_HPP_
 #define _QI_TYPE_TYPEOBJECT_HPP_
 
+#include <limits>
+
 #include <qi/type/metaobject.hpp>
 #include <qi/future.hpp>
 #include <qi/anyfunction.hpp>
@@ -54,7 +56,10 @@ namespace qi {
     virtual qi::Future<AnyValue> property(void* instance, AnyObject context, unsigned int id) = 0;
     virtual qi::Future<void> setProperty(void* instance, AnyObject context, unsigned int id, AnyValue value) = 0;
     virtual TypeKind kind() { return TypeKind_Object;}
-    /// @return -1 if there is no inheritance, or the pointer offset
+
+    static const int INHERITS_FAILED = INT_MIN;
+
+    /// @return INHERITS_FAILED if there is no inheritance, or the pointer offset
     int inherits(TypeInterface* other);
   };
 

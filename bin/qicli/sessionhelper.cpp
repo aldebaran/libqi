@@ -9,11 +9,11 @@
 #include "almemoryhelper.hpp"
 #include "qicli.hpp"
 
-SessionHelper::SessionHelper(qi::ApplicationSession& app, qi::JsonOption prettyPrint)
+SessionHelper::SessionHelper(qi::ApplicationSession& app, qi::JsonOption jsonPrintOption)
   : _session(app.session())
-  , _prettyPrint(prettyPrint)
+  , _jsonPrintOption(jsonPrintOption)
 {
-  app.start();
+  app.startSession();
   _servicesInfos = _session->services();
 }
 
@@ -101,7 +101,7 @@ ServiceHelper SessionHelper::getServiceHelper(const std::string &serviceName)
 
   if (future.hasError())
     throw std::runtime_error(future.error());
-  return ServiceHelper(future.value(), serviceName, _prettyPrint);
+  return ServiceHelper(future.value(), serviceName, _jsonPrintOption);
 }
 
 std::list<std::string> SessionHelper::getMatchingServices(const std::string &pattern, bool getHidden)

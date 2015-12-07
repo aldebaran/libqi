@@ -40,7 +40,7 @@ TEST(TestJSON, MapIntTableString) {
 
   qi::AnyReference gv = qi::AnyReference::from(mps);
 
-  EXPECT_EQ("{ 0 : [ \"pif\", \"paf\", \"pof\" ], 2 : [ \"pif\", \"paf\", \"pof\" ] }", qi::encodeJSON(gv));
+  EXPECT_EQ("{0:[\"pif\",\"paf\",\"pof\"],2:[\"pif\",\"paf\",\"pof\"]}", qi::encodeJSON(gv));
 }
 
 TEST(TestJSON, MST) {
@@ -56,8 +56,23 @@ TEST(TestJSON, MST) {
 
   qi::AnyReference gv = qi::AnyReference::from(mps);
 
-  EXPECT_EQ("{ \"0\" : [ \"pif\", \"paf\", \"pof\" ], \"2\" : [ \"pif\", \"paf\", \"pof\" ] }", qi::encodeJSON(gv));
+  EXPECT_EQ("{\"0\":[\"pif\",\"paf\",\"pof\"],\"2\":[\"pif\",\"paf\",\"pof\"]}", qi::encodeJSON(gv));
+}
 
+TEST(TestJSON, PrettyPrint) {
+  std::map<std::string, std::vector<std::string> > mps;
+
+  std::vector<std::string> vs;
+  vs.push_back("pif");
+  vs.push_back("paf");
+  vs.push_back("pof");
+
+  mps["0"] = vs;
+  mps["2"] = vs;
+
+  qi::AnyReference gv = qi::AnyReference::from(mps);
+
+  EXPECT_EQ("{\n  \"0\": [\n    \"pif\",\n    \"paf\",\n    \"pof\"\n  ],\n  \"2\": [\n    \"pif\",\n    \"paf\",\n    \"pof\"\n  ]\n}", qi::encodeJSON(gv, qi::JsonOption_PrettyPrint));
 }
 
 TEST(TestJSON, Simple) {
@@ -93,7 +108,7 @@ TEST(TestJSON, String) {
 
 TEST(TestJSON, CharTuple) {
   qi::AnyValue gv(qi::TypeInterface::fromSignature(qi::Signature("(c)")));
-  EXPECT_EQ("[ 0 ]", qi::encodeJSON(gv));
+  EXPECT_EQ("[0]", qi::encodeJSON(gv));
 }
 
 TEST(TestJSON, EmptyValue) {
@@ -111,7 +126,7 @@ TEST(TestJSON, Dynamics) {
 TEST(TestJSON, NamedStruct) {
   MPoint mp(41, 42);
   qi::AnyValue gvr = qi::AnyValue::from(mp);
-  EXPECT_EQ("{ \"x\" : 41, \"y\" : 42 }", qi::encodeJSON(gvr));
+  EXPECT_EQ("{\"x\":41,\"y\":42}", qi::encodeJSON(gvr));
 }
 
 template<class T>
@@ -337,6 +352,7 @@ TEST(TestJSONDecoder, Strings)
   ASSERT_ANY_THROW(qi::decodeJSON(s4));
   ASSERT_ANY_THROW(qi::decodeJSON(s5));
 }
+
 
 TEST(TestJSONDecoder, ignoringWhiteSpace)
 {

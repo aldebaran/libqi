@@ -35,8 +35,8 @@ namespace qi
 {
 
   qi::AnyObject createSDP(ServiceDirectory* self) {
-    static qi::ObjectTypeBuilder<ServiceDirectory>* ob = 0;
-    static boost::mutex* mutex = 0;
+    static qi::ObjectTypeBuilder<ServiceDirectory>* ob = nullptr;
+    static boost::mutex* mutex = nullptr;
     QI_THREADSAFE_NEW(mutex);
     boost::mutex::scoped_lock lock(*mutex);
 

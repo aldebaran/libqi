@@ -326,14 +326,14 @@ namespace qi
     virtual void* call(void* func, void** args, unsigned int argc)
     {
       qiLogError() << "Dynamic function called without type information";
-      return 0;
+      return  nullptr;
     }
     _QI_BOUNCE_TYPE_METHODS(DefaultTypeImplMethods<DynamicFunction>);
   };
 
   FunctionTypeInterface* dynamicFunctionTypeInterface()
   {
-    static FunctionTypeInterface* type = 0;
+    static FunctionTypeInterface* type = nullptr;
     if (!type)
       type = new DynamicFunctionTypeInterfaceInterface();
     return type;

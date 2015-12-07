@@ -53,10 +53,9 @@ namespace qi {
   {
     boost::recursive_mutex::scoped_lock sl(_methodsMutex);
     std::vector<qi::MetaMethod>         ret;
-    MetaObject::MethodMap::const_iterator     it;
 
-    for (it = _methods.begin(); it != _methods.end(); ++it) {
-      const qi::MetaMethod &mm = it->second;
+    for (const auto& method: _methods) {
+      const qi::MetaMethod &mm = method.second;
       if (mm.name() == name)
         ret.push_back(mm);
     }
@@ -69,34 +68,30 @@ namespace qi {
   }
 
   static void displayCandidates(std::stringstream& ss, const std::vector<std::pair<MetaMethod, float> >& candidates) {
-    if (candidates.size() == 0) {
+    if (candidates.empty())
       return;
-    }
+
     if (candidates.size() == 1) {
       ss << "  Candidate:" << std::endl;
     } else {
-      ss << "  Candidate(s):" << std::endl;
+      ss << "  Candidates:" << std::endl;
     }
-    std::vector<std::pair<MetaMethod, float> >::const_iterator it;
-    for (it = candidates.begin(); it != candidates.end(); ++it) {
-      const qi::MetaMethod       &mm = it->first;
-      ss << "  " << mm.toString() << " (" << it->second << ')' << std::endl;
+    for(const auto& candidate: candidates) {
+      ss << "  " << candidate.first.toString() << " (" << candidate.second << ')' << std::endl;
     }
   }
 
   static void displayMeths(std::stringstream& ss, const std::vector<MetaMethod>& candidates) {
-    if (candidates.size() == 0) {
+    if (candidates.empty())
       return;
-    }
+
     if (candidates.size() == 1) {
       ss << "  Candidate:" << std::endl;
     } else {
-      ss << "  Candidate(s):" << std::endl;
+      ss << "  Candidates:" << std::endl;
     }
-    std::vector<MetaMethod>::const_iterator it;
-    for (it = candidates.begin(); it != candidates.end(); ++it) {
-      const qi::MetaMethod       &mm = *it;
-      ss << "  " << mm.toString() << std::endl;
+    for (const auto& candidate: candidates) {
+      ss << "  " << candidate.toString() << std::endl;
     }
   }
 
@@ -155,17 +150,16 @@ namespace qi {
   {
     // We can keep this outside the lock because we assume MetaMethods can't be
     // removed
-    MetaMethod* firstOverload = 0;
+    MetaMethod* firstOverload = nullptr;
     {
       boost::recursive_mutex::scoped_lock sl(_methodsMutex);
       if (_dirtyCache)
         const_cast<MetaObjectPrivate*>(this)->refreshCache();
-      MetaObject::MethodMap::const_iterator it;
       if (nameWithOptionalSignature.find(':') != nameWithOptionalSignature.npos)
       { // full name and signature was given, there can be only one match
         if (canCache)
           *canCache = true;
-        NameToIdx::const_iterator itRev =  _methodsNameToIdx.find(nameWithOptionalSignature);
+        NameToIdx::const_iterator itRev = _methodsNameToIdx.find(nameWithOptionalSignature);
         if (itRev == _methodsNameToIdx.end()) {
           std::string funname = qi::signatureSplit(nameWithOptionalSignature)[1];
           // check if it's no method found, or if it's arguments mismatch
@@ -185,7 +179,7 @@ namespace qi {
           *canCache = true;
         return -1;
       }
-      MetaMethod* firstMatch = 0;
+      MetaMethod* firstMatch = nullptr;
       bool ambiguous = false;
       size_t nargs = args.size();
       for (MetaMethod* mm = overloadIt->second; mm; mm=mm->_p->next)
@@ -275,7 +269,6 @@ namespace qi {
   {
     boost::recursive_mutex::scoped_lock sl(_methodsMutex);
     std::vector<MetaObject::CompatibleMethod>         ret;
-    MetaObject::MethodMap::iterator     it;
     std::string cname(nameOrSignature);
 
     //no signature specified fallback on findMethod
@@ -294,8 +287,8 @@ namespace qi {
 
     Signature sresolved(sigsorig[2]);
 
-    for (it = _methods.begin(); it != _methods.end(); ++it) {
-      const qi::MetaMethod& mm = it->second;
+    for (auto& method: _methods) {
+      const qi::MetaMethod& mm = method.second;
 
       if (sigsorig[1] != mm.name())
         continue;
@@ -311,7 +304,7 @@ namespace qi {
     boost::recursive_mutex::scoped_lock sl(_eventsMutex);
     int id = signalId(name);
     if (id < 0)
-      return 0;
+      return  nullptr;
     else
       return &_events[id];
   }
@@ -378,20 +371,19 @@ namespace qi {
 
   bool MetaObjectPrivate::addMethods(const MetaObject::MethodMap &mms) {
     boost::recursive_mutex::scoped_lock sl(_methodsMutex);
-    MetaObject::MethodMap::const_iterator it;
     unsigned int newUid;
 
-    for (it = mms.begin(); it != mms.end(); ++it) {
-      newUid = it->second.uid();
+    for (const auto& method: mms) {
+      newUid = method.second.uid();
       MetaObject::MethodMap::iterator jt = _methods.find(newUid);
       //same id and same signature: we dont mind.
       if (jt != _methods.end()) {
-        if ((jt->second.toString() != it->second.toString()) ||
-            (jt->second.returnSignature() != it->second.returnSignature()))
+        if ((jt->second.toString() != method.second.toString()) ||
+            (jt->second.returnSignature() != method.second.returnSignature()))
           return false;
       }
-      _methods[newUid] = qi::MetaMethod(newUid, it->second);
-      _methodsNameToIdx[it->second.toString()] = newUid;
+      _methods[newUid] = qi::MetaMethod(newUid, method.second);
+      _methodsNameToIdx[method.second.toString()] = newUid;
     }
     _dirtyCache = true;
     //todo: update uid
@@ -400,18 +392,17 @@ namespace qi {
 
   bool MetaObjectPrivate::addSignals(const MetaObject::SignalMap &mms) {
     boost::recursive_mutex::scoped_lock sl(_eventsMutex);
-    MetaObject::SignalMap::const_iterator it;
     unsigned int newUid;
 
-    for (it = mms.begin(); it != mms.end(); ++it) {
-      newUid = it->second.uid();
+    for (const auto& signal: mms) {
+      newUid = signal.second.uid();
       MetaObject::SignalMap::iterator jt = _events.find(newUid);
       if (jt != _events.end()) {
-        if ((jt->second.toString() != it->second.toString()))
+        if ((jt->second.toString() != signal.second.toString()))
           return false;
       }
-      _events[newUid] = qi::MetaSignal(newUid, it->second.name(), it->second.parametersSignature());
-      _eventsNameToIdx[it->second.name()] = newUid;
+      _events[newUid] = qi::MetaSignal(newUid, signal.second.name(), signal.second.parametersSignature());
+      _eventsNameToIdx[signal.second.name()] = newUid;
     }
     _dirtyCache = true;
     //todo: update uid
@@ -420,17 +411,16 @@ namespace qi {
 
   bool MetaObjectPrivate::addProperties(const MetaObject::PropertyMap &mms) {
     boost::recursive_mutex::scoped_lock sl(_propertiesMutex);
-    MetaObject::PropertyMap::const_iterator it;
     unsigned int newUid;
 
-    for (it = mms.begin(); it != mms.end(); ++it) {
-      newUid = it->second.uid();
+    for (const auto& property: mms) {
+      newUid = property.second.uid();
       MetaObject::PropertyMap::iterator jt = _properties.find(newUid);
       if (jt != _properties.end()) {
-        if ((jt->second.toString() != it->second.toString()))
+        if ((jt->second.toString() != property.second.toString()))
           return false;
       }
-      _properties[newUid] = qi::MetaProperty(newUid, it->second.name(), it->second.signature());
+      _properties[newUid] = qi::MetaProperty(newUid, property.second.name(), property.second.signature());
     }
     _dirtyCache = true;
     //todo: update uid
@@ -509,7 +499,7 @@ namespace qi {
     boost::recursive_mutex::scoped_lock sl(_p->_methodsMutex);
     MethodMap::iterator i = _p->_methods.find(id);
     if (i == _p->_methods.end())
-      return 0;
+      return  nullptr;
     return &i->second;
   }
 
@@ -517,7 +507,7 @@ namespace qi {
     boost::recursive_mutex::scoped_lock sl(_p->_methodsMutex);
     MethodMap::const_iterator i = _p->_methods.find(id);
     if (i == _p->_methods.end())
-      return 0;
+      return  nullptr;
     return &i->second;
   }
 
@@ -525,7 +515,7 @@ namespace qi {
     boost::recursive_mutex::scoped_lock sl(_p->_eventsMutex);
     SignalMap::iterator i = _p->_events.find(id);
     if (i == _p->_events.end())
-      return 0;
+      return  nullptr;
     return &i->second;
   }
 
@@ -533,7 +523,7 @@ namespace qi {
     boost::recursive_mutex::scoped_lock sl(_p->_eventsMutex);
     SignalMap::const_iterator i = _p->_events.find(id);
     if (i == _p->_events.end())
-      return 0;
+      return  nullptr;
     return &i->second;
   }
 
@@ -541,7 +531,7 @@ namespace qi {
     boost::recursive_mutex::scoped_lock sl(_p->_propertiesMutex);
     PropertyMap::iterator i = _p->_properties.find(id);
     if (i == _p->_properties.end())
-      return 0;
+      return  nullptr;
     return &i->second;
   }
 
@@ -549,7 +539,7 @@ namespace qi {
     boost::recursive_mutex::scoped_lock sl(_p->_propertiesMutex);
     PropertyMap::const_iterator i = _p->_properties.find(id);
     if (i == _p->_properties.end())
-      return 0;
+      return  nullptr;
     return &i->second;
   }
 
@@ -754,39 +744,36 @@ namespace qi {
       {
         printCat(stream, color, "Methods");
       }
-      qi::MetaObject::MethodMap::const_iterator itMM;
-      qi::MetaMethodParameterVector::const_iterator itMMPV;
       std::string comma = "";
-      for (itMM = methods.begin(); itMM != methods.end(); ++itMM) {
+      for (const auto& method: methods) {
         if (parseable)
         {
-          stream << comma << itMM->second.name();
+          stream << comma << method.second.name();
           comma = ",";
           continue;
         }
-        printIdName(stream, color, offsetMeth, itMM->second.uid(), itMM->second.name());
+        printIdName(stream, color, offsetMeth, method.second.uid(), method.second.name());
         if (raw)
-          stream << " " << FC(StreamColor_Blue, color) << itMM->second.returnSignature().toString() << FC(StreamColor_Reset, color)
-                 << " " << FC(StreamColor_Yellow, color) << itMM->second.parametersSignature().toString() << FC(StreamColor_Reset, color)
+          stream << " " << FC(StreamColor_Blue, color) << method.second.returnSignature().toString() << FC(StreamColor_Reset, color)
+                 << " " << FC(StreamColor_Yellow, color) << method.second.parametersSignature().toString() << FC(StreamColor_Reset, color)
                  << std::endl;
         else
-          stream << " " << FC(StreamColor_Blue, color) << itMM->second.returnSignature().toPrettySignature() << FC(StreamColor_Reset, color)
-                 << " " << FC(StreamColor_Yellow, color) << itMM->second.parametersSignature().toPrettySignature() << FC(StreamColor_Reset, color)
+          stream << " " << FC(StreamColor_Blue, color) << method.second.returnSignature().toPrettySignature() << FC(StreamColor_Reset, color)
+                 << " " << FC(StreamColor_Yellow, color) << method.second.parametersSignature().toPrettySignature() << FC(StreamColor_Reset, color)
                  << std::endl;
         if (!showDoc)
           continue;
-        if (itMM->second.description() != "")
-          stream << "       " << FC(StreamColor_DarkGreen, color) << itMM->second.description() << FC(StreamColor_Reset, color) << std::endl;
+        if (method.second.description() != "")
+          stream << "       " << FC(StreamColor_DarkGreen, color) << method.second.description() << FC(StreamColor_Reset, color) << std::endl;
 
-        qi::MetaMethodParameterVector mmpVect = itMM->second.parameters();
-        for (itMMPV = mmpVect.begin(); itMMPV != mmpVect.end(); ++itMMPV) {
-          stream << "       " << FC(StreamColor_Brown, color) << itMMPV->name() << ": "
-                 << FC(StreamColor_DarkGreen, color) << itMMPV->description() << FC(StreamColor_Reset, color)
+        for (const auto& mmp: method.second.parameters()) {
+          stream << "       " << FC(StreamColor_Brown, color) << mmp.name() << ": "
+                 << FC(StreamColor_DarkGreen, color) << mmp.description() << FC(StreamColor_Reset, color)
                  << std::endl;
         }
 
-        if (itMM->second.returnDescription() != "")
-          stream << FC(StreamColor_Brown, color) << "       return: " << FC(StreamColor_DarkGreen, color) << itMM->second.returnDescription() << FC(StreamColor_Reset, color)
+        if (method.second.returnDescription() != "")
+          stream << FC(StreamColor_Brown, color) << "       return: " << FC(StreamColor_DarkGreen, color) << method.second.returnDescription() << FC(StreamColor_Reset, color)
                  << std::endl;
       }
 
@@ -799,21 +786,20 @@ namespace qi {
       {
         printCat(stream, color, "Signals");
       }
-      qi::MetaObject::SignalMap::const_iterator it3;
-      for (it3 = events.begin(); it3 != events.end(); ++it3)
+      for (const auto& event: events)
       {
         if (parseable)
         {
-          stream << comma << it3->second.name();
+          stream << comma << event.second.name();
           comma = ",";
           continue;
         }
-        printIdName(stream, color, offsetSigs, it3->second.uid(), it3->second.name());
+        printIdName(stream, color, offsetSigs, event.second.uid(), event.second.name());
         if (raw)
-          stream << " " << FC(StreamColor_Yellow, color) << it3->second.parametersSignature().toString() << FC(StreamColor_Reset, color)
+          stream << " " << FC(StreamColor_Yellow, color) << event.second.parametersSignature().toString() << FC(StreamColor_Reset, color)
                  << std::endl;
         else
-          stream << " " << FC(StreamColor_Yellow, color) << it3->second.parametersSignature().toPrettySignature() << FC(StreamColor_Reset, color)
+          stream << " " << FC(StreamColor_Yellow, color) << event.second.parametersSignature().toPrettySignature() << FC(StreamColor_Reset, color)
                  << std::endl;
       }
 
@@ -826,21 +812,20 @@ namespace qi {
       {
         printCat(stream, color, "Properties");
       }
-      for (qi::MetaObject::PropertyMap::const_iterator it = props.begin();
-        it != props.end(); ++it)
+      for (const auto& property: props)
       {
         if (parseable)
         {
-          stream << comma << it->second.name();
+          stream << comma << property.second.name();
           comma = ",";
           continue;
         }
-        printIdName(stream, color, offsetProps, it->second.uid(), it->second.name());
+        printIdName(stream, color, offsetProps, property.second.uid(), property.second.name());
         if (raw)
-          stream << " " << FC(StreamColor_Yellow, color) << it->second.signature().toString() << FC(StreamColor_Reset, color)
+          stream << " " << FC(StreamColor_Yellow, color) << property.second.signature().toString() << FC(StreamColor_Reset, color)
                  << std::endl;
         else
-          stream << " " << FC(StreamColor_Yellow, color) << it->second.signature().toPrettySignature() << FC(StreamColor_Reset, color)
+          stream << " " << FC(StreamColor_Yellow, color) << property.second.signature().toPrettySignature() << FC(StreamColor_Reset, color)
                  << std::endl;
       }
       if (parseable)

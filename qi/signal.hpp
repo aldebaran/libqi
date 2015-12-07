@@ -44,7 +44,7 @@ namespace qi {
     virtual ~SignalBase();
     virtual qi::Signature signature() const;
     template<typename F>
-    SignalSubscriber& connect(const boost::function<F>& func);
+    SignalSubscriber& connect(boost::function<F> func);
     SignalSubscriber& connect(const SignalSubscriber& s);
     SignalSubscriber& connect(AnyObject object, const unsigned int slot);
     SignalSubscriber& connect(AnyObject object, const std::string& slot);
@@ -116,10 +116,7 @@ namespace qi {
     friend class SignalBasePrivate;
   };
 
-#define QI_SIGNAL_TEMPLATE_DECL typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename P6, typename P7
-#define QI_SIGNAL_TEMPLATE P0,P1,P2,P3,P4,P5,P6,P7
-
-  template<QI_SIGNAL_TEMPLATE_DECL> class Signal;
+  template <typename... P> class Signal;
 
   template<typename T>
   class SignalF: public SignalBase, public boost::function<T>
@@ -156,86 +153,32 @@ namespace qi {
     */
     SignalSubscriber& connect(...);
 #else
-    template <typename CALLABLE>
-    SignalSubscriber& connect(CALLABLE c);
+    template <typename F>
+    SignalSubscriber& connect(F c);
     SignalSubscriber& connect(AnyFunction func);
     SignalSubscriber& connect(const SignalSubscriber& sub);
-    SignalSubscriber& connect(const boost::function<T>& func);
     template <typename U>
     SignalSubscriber& connect(SignalF<U>& signal);
-    template <QI_SIGNAL_TEMPLATE_DECL>
-    SignalSubscriber& connect(Signal<QI_SIGNAL_TEMPLATE>& signal);
+    template <typename... P>
+    SignalSubscriber& connect(Signal<P...>& signal);
 
-#define genConnect(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma) \
-  template <typename F, typename P comma ATYPEDECL>          \
-  SignalSubscriber& connect(const F& func, const P& p comma ADECL);
-    QI_GEN(genConnect)
-#undef genConnect
+    template <typename F, typename Arg0, typename... Args>
+    SignalSubscriber& connect(F&& func, Arg0&& arg0, Args&&... args);
 
     SignalSubscriber& connect(const AnyObject& obj, unsigned int slot);
     SignalSubscriber& connect(const AnyObject& obj, const std::string& slot);
 #endif
-
-  private:
-#define genConnect(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma) \
-    QI_GEN_MAYBE_TEMPLATE_OPEN(comma) ATYPEDECL QI_GEN_MAYBE_TEMPLATE_CLOSE(comma) \
-    inline static void binder( \
-        const boost::function<void(const boost::function<void()>&)>& poster, \
-        const boost::function<void(ATYPES)>& callback comma ADECL); \
-    QI_GEN_MAYBE_TEMPLATE_OPEN(comma) ATYPEDECL QI_GEN_MAYBE_TEMPLATE_CLOSE(comma) \
-    inline static boost::function<void(ATYPES)> \
-        transformStrandedCallback( \
-            qi::Strand* strand, \
-            const boost::function<void(ATYPES)>& cb);
-    QI_GEN(genConnect)
-#undef genConnect
-
-    template <typename ARG0>
-    inline typename boost::enable_if<
-        boost::is_base_of<Actor, typename detail::Unwrap<ARG0>::type>,
-        SignalSubscriber&>::type
-        _connectMaybeActor(const ARG0& arg0, const boost::function<T>& cb,
-                           const boost::function<void()>& fallbackCb);
-    template <typename ARG0>
-    inline typename boost::disable_if<
-        boost::is_base_of<Actor, typename detail::Unwrap<ARG0>::type>,
-        SignalSubscriber&>::type
-        _connectMaybeActor(const ARG0& arg0, const boost::function<T>& cb,
-                           const boost::function<void()>& fallbackCb);
   };
-
-  namespace detail
-  {
-    template<typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename P6, typename P7> struct VoidFunctionType                                           { typedef void(type)(P0, P1, P2, P3, P4, P5, P6, P7); };
-    template<typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename P6> struct VoidFunctionType<P0, P1, P2, P3, P4, P5, P6, void>                     { typedef void(type)(P0, P1, P2, P3, P4, P5, P6); };
-    template<typename P0, typename P1, typename P2, typename P3, typename P4, typename P5             > struct VoidFunctionType<P0, P1, P2, P3, P4, P5, void, void>             { typedef void(type)(P0, P1, P2, P3, P4, P5); };
-    template<typename P0, typename P1, typename P2, typename P3, typename P4                          > struct VoidFunctionType<P0, P1, P2, P3, P4, void, void, void>           { typedef void(type)(P0, P1, P2, P3, P4); };
-    template<typename P0, typename P1, typename P2, typename P3                                       > struct VoidFunctionType<P0, P1, P2, P3, void, void, void, void>         { typedef void(type)(P0, P1, P2, P3); };
-    template<typename P0, typename P1, typename P2                                                    > struct VoidFunctionType<P0, P1, P2, void, void, void, void, void>       { typedef void(type)(P0, P1, P2); };
-    template<typename P0, typename P1                                                                 > struct VoidFunctionType<P0, P1, void, void, void, void, void, void>     { typedef void(type)(P0, P1); };
-    template<typename P0                                                                              > struct VoidFunctionType<P0, void, void, void, void, void, void, void>   { typedef void(type)(P0); };
-    template<                                                                                         > struct VoidFunctionType<void, void, void, void, void, void, void, void> { typedef void(type)(); };
-
-  }
 
   /** Class that represent an event to which function can subscribe.
    *
    * \includename{qi/signal.hpp}
    */
-  template<
-    typename P0 = void,
-    typename P1 = void,
-    typename P2 = void,
-    typename P3 = void,
-    typename P4 = void,
-    typename P5 = void,
-    typename P6 = void,
-    typename P7 = void
-    >
-  class Signal: public SignalF<typename detail::VoidFunctionType<P0, P1, P2, P3, P4, P5, P6, P7>::type>
+  template<typename... P>
+  class Signal: public SignalF<void(P...)>
   {
   public:
-    typedef typename detail::VoidFunctionType<P0, P1, P2, P3, P4, P5, P6, P7>::type FunctionType;
+    typedef void(FunctionType)(P...);
     typedef SignalF<FunctionType> ParentType;
     typedef typename ParentType::OnSubscribers OnSubscribers;
     Signal(OnSubscribers onSubscribers = OnSubscribers())
@@ -243,6 +186,9 @@ namespace qi {
     using boost::function<FunctionType>::operator();
   };
 
+  template <>
+  class Signal<void> : public Signal<>
+  {};
 
   /** Event subscriber info.
    *

@@ -16,7 +16,7 @@ namespace qi {
 
   //this is initialized once.. and will be reported to leak memory.
   //but that okay for a global to be freed by the program termination
-  static detail::utf8_codecvt_facet *gUtf8CodecvtFacet = 0;
+  static detail::utf8_codecvt_facet *gUtf8CodecvtFacet = nullptr;
 
   codecvt_type &unicodeFacet()
   {

@@ -22,7 +22,7 @@ namespace bfs = boost::filesystem;
 
 namespace qi
 {
-  static qi::Translator *globTranslator = 0;
+  static qi::Translator *globTranslator = nullptr;
 
   Translator &defaultTranslator(const std::string &name)
   {

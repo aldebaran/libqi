@@ -149,7 +149,7 @@ void main_loop()
   }
 }
 
-int subCmd_top(int argc, char **argv, qi::ApplicationSession& app, qi::JsonOption)
+int subCmd_top(int argc, char **argv, qi::ApplicationSession& app)
 {
   po::options_description     desc("Usage: qicli top [-i interval] [<ServicePattern>..]");
   std::vector<std::string>    serviceList;
@@ -170,7 +170,7 @@ int subCmd_top(int argc, char **argv, qi::ApplicationSession& app, qi::JsonOptio
 
 
   qiLogVerbose() << "Connecting to service directory";
-  app.start();
+  app.startSession();
   qi::SessionPtr s = app.session();
   qiLogVerbose() << "Resolving services";
   // resolve target service names

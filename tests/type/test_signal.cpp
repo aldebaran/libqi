@@ -342,8 +342,8 @@ TEST(TestSignalSpy, Async)
 {
   qi::Signal<int> sig;
   qi::SignalSpy sp(sig);
-  qi::async<void>(boost::bind(boost::ref(sig), 1));
-  qi::async<void>(boost::bind(boost::ref(sig), 1));
+  qi::async(boost::bind(boost::ref(sig), 1));
+  qi::async(boost::bind(boost::ref(sig), 1));
   ASSERT_TRUE(sp.waitUntil(2, qi::Seconds(1)));
   ASSERT_EQ(sp.getCounter(), 2u);
 }

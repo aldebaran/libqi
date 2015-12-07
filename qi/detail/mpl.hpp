@@ -9,6 +9,7 @@
 
 #include <boost/shared_ptr.hpp>
 #include <boost/weak_ptr.hpp>
+#include <type_traits>
 
 namespace qi
 {
@@ -16,7 +17,7 @@ namespace detail
 {
 
 template <typename T>
-struct Unwrap
+struct UnwrapImpl
 {
   typedef T type;
   static T* unwrap(T& v)
@@ -25,7 +26,7 @@ struct Unwrap
   }
 };
 template <typename T>
-struct Unwrap<T*>
+struct UnwrapImpl<T*>
 {
   typedef T type;
   static T* unwrap(T* v)
@@ -34,7 +35,7 @@ struct Unwrap<T*>
   }
 };
 template <typename T>
-struct Unwrap<boost::shared_ptr<T> >
+struct UnwrapImpl<boost::shared_ptr<T> >
 {
   typedef T type;
   static T* unwrap(boost::shared_ptr<T> v)
@@ -43,7 +44,7 @@ struct Unwrap<boost::shared_ptr<T> >
   }
 };
 template <typename T>
-struct Unwrap<boost::weak_ptr<T> >
+struct UnwrapImpl<boost::weak_ptr<T> >
 {
   typedef T type;
   static T* unwrap(boost::weak_ptr<T> v)
@@ -51,6 +52,10 @@ struct Unwrap<boost::weak_ptr<T> >
     return v.lock().get();
   }
 };
+
+template <typename T>
+struct Unwrap : public UnwrapImpl<typename std::remove_cv<typename std::remove_reference<T>::type>::type>
+{};
 
 }
 }

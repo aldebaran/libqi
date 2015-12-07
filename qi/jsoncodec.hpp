@@ -12,17 +12,17 @@
 
 namespace qi {
 
-  enum class JsonOption
-  {
-    None,
-    PrettyPrint
-  };
+  // Do not use enum here because we want to pipe those values and we don't want to cast them each time we pipe them
+  using JsonOption = int;
+  const unsigned int JsonOption_None = 0;
+  const unsigned int JsonOption_PrettyPrint = 1;
+  const unsigned int JsonOption_Expand = 2;
 
   /** @return the value encoded in JSON.
    * @param val Value to encode
-   * @param prettyPrint If JsonOption::prettyPrint, special chars in string won't be escaped
+   * @param jsonPrintOption Option to change JSON output
    */
-  QI_API std::string encodeJSON(const qi::AutoAnyReference &val, JsonOption prettyPrint = JsonOption::None);
+  QI_API std::string encodeJSON(const qi::AutoAnyReference &val, JsonOption jsonPrintOption = JsonOption_None);
 
   /**
     * creates a GV representing a JSON string or throw on parse error.

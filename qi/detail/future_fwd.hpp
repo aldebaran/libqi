@@ -7,6 +7,7 @@
 #ifndef _QI_FUTURE_HPP_
 # define _QI_FUTURE_HPP_
 
+# include <type_traits>
 # include <qi/api.hpp>
 # include <vector>
 # include <qi/atomic.hpp>
@@ -14,7 +15,6 @@
 # include <qi/trackable.hpp>
 # include <qi/clock.hpp>
 # include <qi/detail/mpl.hpp>
-# include <qi/anyvalue.hpp>
 
 # include <boost/shared_ptr.hpp>
 # include <boost/make_shared.hpp>
@@ -66,8 +66,7 @@ namespace qi {
     template <typename T> class FutureBaseTyped;
 
     template<typename FT>
-    void futureCancelAdapter(
-                             boost::weak_ptr<detail::FutureBaseTyped<FT> > wf);
+    void futureCancelAdapter(boost::weak_ptr<detail::FutureBaseTyped<FT> > wf);
   }
 
   /** State of the future.
@@ -82,12 +81,18 @@ namespace qi {
 
   enum FutureCallbackType {
     FutureCallbackType_Sync  = 0,
-    FutureCallbackType_Async = 1
+    FutureCallbackType_Async = 1,
+    FutureCallbackType_Auto  = 2
   };
 
   enum FutureTimeout {
     FutureTimeout_Infinite = ((int) 0x7fffffff),
     FutureTimeout_None     = 0,
+  };
+
+  enum AdaptFutureOption {
+    AdaptFutureOption_None = 0,
+    AdaptFutureOption_ForwardCancel = 1,
   };
 
   typedef void* FutureUniqueId;
@@ -99,10 +104,10 @@ namespace qi {
     enum ExceptionState {
       ExceptionState_FutureTimeout,       ///< No result ready
       ExceptionState_FutureCanceled,      ///< The future has been canceled
-      ExceptionState_FutureNotCancelable, ///< The future is not cancelable
       ExceptionState_FutureHasNoError,    ///< asked for error, but there is no error
       ExceptionState_FutureUserError,     ///< real future error
       ExceptionState_PromiseAlreadySet,   ///< when the promise is already set.
+      ExceptionState_FutureInvalid,       ///< the future is not associated to a promise
     };
 
     explicit FutureException(const ExceptionState &es, const std::string &str = std::string())
@@ -141,9 +146,11 @@ namespace qi {
    */
   template <typename T>
   class Future : public detail::AddUnwrap<T> {
+    static_assert(!std::is_const<T>::value, "can't create a future of const");
   public:
     typedef typename detail::FutureType<T>::type     ValueType;
     typedef typename detail::FutureType<T>::typecast ValueTypeCast;
+    typedef T TemplateValue;
 
   public:
     Future()
@@ -160,7 +167,7 @@ namespace qi {
       return _p.get() == other._p.get();
     }
 
-    inline Future<T>& operator=(const Future<T>& b)
+    Future<T>& operator=(const Future<T>& b)
     {
       _p = b._p;
       return *this;
@@ -184,7 +191,7 @@ namespace qi {
 
     /** Construct a Future that already contains a value.
      */
-    explicit Future<T>(const ValueType& v, FutureCallbackType async = FutureCallbackType_Async)
+    explicit Future<T>(const ValueType& v, FutureCallbackType async = FutureCallbackType_Auto)
     {
       Promise<T> promise(async);
       promise.setValue(v);
@@ -308,15 +315,15 @@ namespace qi {
       _p->cancel(*this);
     }
 
-    /** @return true if the future can be canceled. This does not mean that
-     * cancel will succeed.
+    /** @return always true
+     *
+     * @deprecated since 2.5
      */
-    bool isCancelable() const
+    QI_API_DEPRECATED bool isCancelable() const
     {
-      return _p->isCancelable();
+      return true;
     }
 
-#ifdef DOXYGEN
     /**
      * @brief Execute a callback when the future is finished.
      *
@@ -328,50 +335,73 @@ namespace qi {
      * @tparam R the return type of your callback as it is hard to deduce without C++11.
      *
      * @return a future that will receive the value returned by the callback or an error if the callback threw.
+     *
+     * @deprecated since 2.5 use then()
      */
-    template <typename R>
-    Future<R> thenR(
-        FutureCallbackType type,
-        const boost::function<R(const Future<T>&)>& func, ...);
+    template <typename R, typename AF>
+    Future<R> thenR(FutureCallbackType type, AF&& func);
 
     /**
-     * @brief Same as thenR(), but with type defaulted to FutureCallbackType_Async.
+     * @brief Same as thenR(), but with type defaulted to FutureCallbackType_Auto.
+     *
+     * @deprecated since 2.5 use then()
      */
-    template <typename R>
-    Future<R> thenR(
-        const boost::function<R(const Future<T>&)>& func, ...)
+    template <typename R, typename AF>
+    Future<R> thenR(AF&& func)
     {
-      return this->thenR(FutureCallbackType_Async, func);
-    }
-#else
-    template <typename R>
-    Future<R> thenR(
-        FutureCallbackType type,
-        const boost::function<R(const Future<T>&)>& func);
-
-    template <typename R>
-    Future<R> thenR(
-        const boost::function<R(const Future<T>&)>& func)
-    {
-      return this->thenR(FutureCallbackType_Async, func);
+      return this->thenR<R>(FutureCallbackType_Auto, std::forward<AF>(func));
     }
 
-#define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)                    \
-  template <typename R, typename AF, typename ARG0 comma ATYPEDECL>          \
-  Future<R> thenR(const AF& func, const ARG0& arg0 comma ADECL)              \
-  {                                                                          \
-    return this->thenR<R>(FutureCallbackType_Async, func, arg0 comma AUSE);  \
-  }                                                                          \
-  template <typename R, typename AF, typename ARG0 comma ATYPEDECL>          \
-  Future<R> thenR(FutureCallbackType type, const AF& func,                   \
-                  const ARG0& arg0 comma ADECL)                              \
-  {                                                                          \
-    return _thenMaybeActor<R, ARG0>(                                         \
-        arg0, ::qi::bind<R(const Future<T>&)>(func, arg0 comma AUSE), type); \
-  }
-    QI_GEN(genCall)
-#undef genCall
-#endif
+    /**
+     * @deprecated since 2.5 use then()
+     */
+    template <typename R, typename AF, typename Arg0, typename... Args>
+    Future<R> thenR(AF&& func, Arg0&& arg0, Args&&... args)
+    {
+      return this->thenR<R>(
+          FutureCallbackType_Auto,
+          std::forward<AF>(func),
+          std::forward<Arg0>(arg0),
+          std::forward<Args>(args)...);
+    }
+
+    /**
+     * @deprecated since 2.5 use then()
+     */
+    template <typename R, typename AF, typename Arg0, typename... Args>
+    Future<R> thenR(FutureCallbackType type, AF&& func, Arg0&& arg0, Args&&... args)
+    {
+      return thenR<R>(
+          type,
+          qi::bind(std::forward<AF>(func), arg0, std::forward<Args>(args)...));
+    }
+
+    /**
+     * @brief Execute a callback when the future is finished.
+     *
+     * The callback will receive this future as argument and all other arguments passed to this function.
+     *
+     * If the first argument bound to this function is a weak_ptr it will be locked. If it is a Trackable, the callback
+     * won't be called after the object's destruction. If it is an Actor, the call will be stranded.
+     *
+     * @return a future that will receive the value returned by the callback or an error if the callback threw.
+     */
+    template <typename AF>
+    auto then(FutureCallbackType type, AF&& func)
+        -> qi::Future<typename detail::DecayAsyncResult<AF, qi::Future<T>>::type>
+    {
+      return this->thenR<typename detail::DecayAsyncResult<AF, qi::Future<T>>::type>(type, std::forward<AF>(func));
+    }
+
+    /**
+     * @brief Same as then(), but with type defaulted to FutureCallbackType_Auto.
+     */
+    template <typename AF>
+    auto then(AF&& func)
+        -> qi::Future<typename detail::DecayAsyncResult<AF, qi::Future<T>>::type>
+    {
+      return this->then(FutureCallbackType_Auto, std::forward<AF>(func));
+    }
 
     /**
      * @brief Same as thenR(), but the callback is called only if this future finishes with a value.
@@ -381,13 +411,46 @@ namespace qi {
      * If this future finishes with an error or a cancel, the callback will not be called and the returned future will
      * finish in the same state.
      *
-     * @remark Variadic variants of this function have not been implemented yet, waiting for C++11.
+     * @deprecated since 2.5 use then()
      */
-    // TODO do variadic ones when we are C++11 TT_TT
-    template <typename R>
-    Future<R> andThenR(
-        FutureCallbackType type,
-        const boost::function<R(const typename Future<T>::ValueType&)>& func);
+    template <typename R, typename AF>
+    Future<R> andThenR(FutureCallbackType type, AF&& func);
+
+    /**
+     * @brief Same as andThenR(), but with type defaulted to FutureCallbackType_Auto.
+     *
+     * @deprecated since 2.5 use then()
+     */
+    template <typename R, typename AF>
+    Future<R> andThenR(AF&& func)
+    {
+      return this->andThenR<R>(FutureCallbackType_Auto, std::forward<AF>(func));
+    }
+
+    /**
+     * @brief Same as then(), but the callback is called only if this future finishes with a value.
+     *
+     * The callback will receive the value of this future, as opposed to this future itself.
+     *
+     * If this future finishes with an error or a cancel, the callback will not be called and the returned future will
+     * finish in the same state.
+     */
+    template <typename AF>
+    auto andThen(FutureCallbackType type, AF&& func)
+        -> qi::Future<typename detail::DecayAsyncResult<AF, ValueType>::type>
+    {
+      return this->andThenR<typename detail::DecayAsyncResult<AF, ValueType>::type>(type, std::forward<AF>(func));
+    }
+
+    /**
+     * @brief Same as andThen(), but with type defaulted to FutureCallbackType_Auto.
+     */
+    template <typename AF>
+    auto andThen(AF&& func)
+        -> qi::Future<typename detail::DecayAsyncResult<AF, ValueType>::type>
+    {
+      return this->andThen(FutureCallbackType_Auto, std::forward<AF>(func));
+    }
 
     /**
      * \brief Get a functor that will cancel the future.
@@ -398,16 +461,6 @@ namespace qi {
      * \note This function should only be useful for bindings, you probably don't need it.
      */
     boost::function<void()> makeCanceler();
-
-    /**
-     * @brief Same as andThenR(), but with type defaulted to FutureCallbackType_Async.
-     */
-    template <typename R>
-    Future<R> andThenR(
-        const boost::function<R(const typename Future<T>::ValueType&)>& func)
-    {
-      return this->andThenR(FutureCallbackType_Async, func);
-    }
 
   public:
     typedef boost::function<void (Future<T>) > Connection;
@@ -423,7 +476,7 @@ namespace qi {
      */
     template<typename AF>
     inline void connect(const AF& fun,
-                        FutureCallbackType type = FutureCallbackType_Async)
+                        FutureCallbackType type = FutureCallbackType_Auto)
     {
       _p->connect(*this, fun, type);
     }
@@ -436,28 +489,24 @@ namespace qi {
      */
     template<typename FUNCTYPE, typename ARG0>
     void connect(FUNCTYPE fun, ARG0 tracked, ...,
-                 FutureCallbackType type = FutureCallbackType_Async);
+                 FutureCallbackType type = FutureCallbackType_Auto);
 #else
-#define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)                 \
-  template <typename AF, typename ARG0 comma ATYPEDECL>                   \
-  inline void connect(const AF& fun, const ARG0& arg0 comma ADECL,        \
-                      FutureCallbackType type = FutureCallbackType_Async) \
-  {                                                                       \
-    _connectMaybeActor<ARG0>(                                             \
-        arg0, ::qi::bind<void(Future<T>)>(fun, arg0 comma AUSE), type);   \
+#define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)                \
+  template <typename AF, typename ARG0 comma ATYPEDECL>                  \
+  inline void connect(const AF& fun, const ARG0& arg0 comma ADECL,       \
+                      FutureCallbackType type = FutureCallbackType_Auto) \
+  {                                                                      \
+    this->then(type, qi::bind(fun, arg0 comma AUSE));                    \
   }
     QI_GEN(genCall)
 #undef genCall
 #endif
 
-    inline void connectWithStrand(qi::Strand* strand,
-        const boost::function<void(const Future<T>&)>& cb)
-    {
-      _p->connect(
-          *this,
-          transformStrandedCallback(strand, cb),
-          FutureCallbackType_Sync);
-    }
+    // @deprecated since 2.5 use the overload with Strand&
+    QI_API_DEPRECATED void connectWithStrand(qi::Strand* strand,
+        const boost::function<void(const Future<T>&)>& cb);
+    void connectWithStrand(qi::Strand& strand,
+        const boost::function<void(const Future<T>&)>& cb);
 
     // Our companion library libqitype requires a connect with same signature for all instantiations
     inline void _connect(const boost::function<void()>& s)
@@ -481,10 +530,10 @@ namespace qi {
     template<typename R>
     friend void adaptFutureUnwrap(Future<AnyReference>& f, Promise<R>& p);
     template<typename FT, typename PT>
-    friend void adaptFuture(const Future<FT>& f, Promise<PT>& p);
+    friend void adaptFuture(const Future<FT>& f, Promise<PT>& p, AdaptFutureOption option);
     template<typename FT, typename PT, typename CONV>
     friend void adaptFuture(const Future<FT>& f, Promise<PT>& p,
-                            CONV converter);
+                            CONV converter, AdaptFutureOption option);
     template<typename R>
     friend void adaptFuture(Future<AnyReference>& f, Promise<R>& p);
 
@@ -501,54 +550,6 @@ namespace qi {
     {
       _p->setOnDestroyed(cb);
     }
-
-    template <typename Arg, typename R>
-    static qi::Future<R> binder(
-        const boost::function<qi::Future<void>(const boost::function<void()>&)>& poster,
-        const boost::function<R(const Arg&)>& callback, const Arg& fut);
-
-    template <typename Arg, typename R>
-    boost::function<qi::Future<R>(const Arg&)> transformStrandedCallback(
-        qi::Strand* strand,
-        const boost::function<R(const Arg&)>& cb);
-
-    template <typename ARG0>
-    typename boost::enable_if<
-        boost::is_base_of<Actor, typename detail::Unwrap<ARG0>::type>,
-        void>::type
-        _connectMaybeActor(const ARG0& arg0,
-                           const boost::function<void(const Future<T>&)>& cb,
-                           FutureCallbackType type);
-    template <typename ARG0>
-    typename boost::disable_if<
-        boost::is_base_of<Actor, typename detail::Unwrap<ARG0>::type>,
-        void>::type
-        _connectMaybeActor(const ARG0& arg0,
-                           const boost::function<void(const Future<T>&)>& cb,
-                           FutureCallbackType type);
-
-    template <typename R>
-    static void _continuate(const Future<T>& future,
-        const boost::function<R(const Future<T>&)>& func,
-        Promise<R>& promise);
-
-    static void _cancelContinuation(const Future<T>& future,
-        Promise<T>& promise);
-
-    template <typename R, typename ARG0, typename AF>
-    typename boost::enable_if<
-        boost::is_base_of<Actor, typename detail::Unwrap<ARG0>::type>,
-        qi::Future<R> >::type
-        _thenMaybeActor(const ARG0& arg0,
-            const AF& cb,
-            FutureCallbackType type);
-    template <typename R, typename ARG0, typename AF>
-    typename boost::disable_if<
-        boost::is_base_of<Actor, typename detail::Unwrap<ARG0>::type>,
-        qi::Future<R> >::type
-        _thenMaybeActor(const ARG0& arg0,
-            const AF& cb,
-            FutureCallbackType type);
 
     static void _weakCancelCb(const boost::weak_ptr<detail::FutureBaseTyped<T> >& wfuture);
   };
@@ -645,7 +646,7 @@ namespace qi {
     bool hasValue(int msecs = FutureTimeout_Infinite) const            { _sync = false; return _future.hasValue(msecs); }
     const std::string &error(int msecs = FutureTimeout_Infinite) const { _sync = false; return _future.error(msecs); }
     void cancel()                                                      { _sync = false; _future.cancel(); }
-    bool isCancelable() const                                          { _sync = false; return _future.isCancelable(); }
+    bool isCancelable() const                                          { _sync = false; return true; }
     void connect(const Connection& s)                                  { _sync = false; _future.connect(s);}
     void _connect(const boost::function<void()>& s)                    { _sync = false; _future._connect(s);}
 
@@ -696,7 +697,7 @@ namespace qi {
      *         are called: synchronously from the Promise setter, or
      *         asynchronously from a thread pool.
      */
-    explicit Promise(FutureCallbackType async = FutureCallbackType_Async) {
+    explicit Promise(FutureCallbackType async = FutureCallbackType_Auto) {
       _f._p->reportStart();
       _f._p->_async = async;
       ++_f._p->_promiseCount;
@@ -707,10 +708,23 @@ namespace qi {
      * setError() or setCanceled() as quickly as possible, but can do so
      * in an asynchronous way.
      */
-    explicit Promise(boost::function<void (qi::Promise<T>)> cancelCallback,
-        FutureCallbackType async = FutureCallbackType_Async)
+    template <typename FUNC,
+              typename std::enable_if<!std::is_same<
+                                        typename std::decay<FUNC>::type,
+                                        typename std::decay<qi::Promise<T> >::type
+                                        >::value
+                                      >::type* = nullptr>
+    explicit Promise(FUNC&& cancelCallback,
+        FutureCallbackType async = FutureCallbackType_Auto)
     {
-      setup(cancelCallback, async);
+      setup(std::forward<FUNC>(cancelCallback), async);
+      ++_f._p->_promiseCount;
+    }
+
+    explicit Promise(boost::function<void (qi::Promise<T>)> cancelCallback,
+        FutureCallbackType async = FutureCallbackType_Auto)
+    {
+      setup([cancelCallback](qi::Promise<T>& p){ cancelCallback(p); }, async);
       ++_f._p->_promiseCount;
     }
 
@@ -770,10 +784,8 @@ namespace qi {
      * \throws std::exception if the promise was not created as a cancelable
      * promise.
      */
-    void setOnCancel(boost::function<void (qi::Promise<T>)> cancelCallback)
+    void setOnCancel(boost::function<void (qi::Promise<T>&)> cancelCallback)
     {
-      if (!this->_f._p->isCancelable())
-        throw std::runtime_error("Promise was not created as a cancelable one");
       qi::Future<T> fut = this->future();
       this->_f._p->setOnCancel(*this, cancelCallback);
     }
@@ -790,7 +802,7 @@ namespace qi {
     }
 
   protected:
-    void setup(boost::function<void (qi::Promise<T>)> cancelCallback, FutureCallbackType async = FutureCallbackType_Async)
+    void setup(boost::function<void (qi::Promise<T>&)> cancelCallback, FutureCallbackType async = FutureCallbackType_Auto)
     {
       this->_f._p->reportStart();
       this->_f._p->setOnCancel(*this, cancelCallback);
@@ -805,10 +817,10 @@ namespace qi {
     template<typename R>
     friend void adaptFutureUnwrap(Future<AnyReference>& f, Promise<R>& p);
     template<typename FT, typename PT>
-    friend void adaptFuture(const Future<FT>& f, Promise<PT>& p);
+    friend void adaptFuture(const Future<FT>& f, Promise<PT>& p, AdaptFutureOption option);
     template<typename FT, typename PT, typename CONV>
     friend void adaptFuture(const Future<FT>& f, Promise<PT>& p,
-                            CONV converter);
+                            CONV converter, AdaptFutureOption option);
     template<typename R>
     friend void adaptFuture(Future<AnyReference>& f, Promise<R>& p);
 
@@ -823,6 +835,96 @@ namespace qi {
         _f._p->setBroken(_f);
     }
   };
+
+  namespace detail
+  {
+    class FutureBasePrivate;
+    class QI_API FutureBase {
+    public:
+      FutureBase();
+      ~FutureBase();
+
+      FutureState wait(int msecs) const;
+      FutureState wait(qi::Duration duration) const;
+      FutureState wait(qi::SteadyClock::time_point timepoint) const;
+      FutureState state() const;
+      bool isRunning() const;
+      bool isFinished() const;
+      bool isCanceled() const;
+      bool isCancelRequested() const;
+      bool hasError(int msecs) const;
+      bool hasValue(int msecs) const;
+      const std::string &error(int msecs) const;
+      void reportStart();
+
+    protected:
+      void reportValue();
+      void reportError(const std::string &message);
+      void requestCancel();
+      void reportCanceled();
+      boost::recursive_mutex& mutex();
+      void notifyFinish();
+
+    public:
+      FutureBasePrivate *_p;
+    };
+
+
+    //common state shared between a Promise and multiple Futures
+    template <typename T>
+    class FutureBaseTyped : public FutureBase {
+    public:
+      typedef boost::function<void(Promise<T>&)> CancelCallback;
+      typedef typename FutureType<T>::type ValueType;
+      FutureBaseTyped();
+      ~FutureBaseTyped();
+
+      void cancel(qi::Future<T>& future);
+
+      void callCbNotify(qi::Future<T>& future);
+
+      /*
+       * inplace api for promise
+       */
+      void set(qi::Future<T>& future);
+      void setValue(qi::Future<T>& future, const ValueType &value);
+      void setError(qi::Future<T>& future, const std::string &message);
+      void setBroken(qi::Future<T>& future);
+      void setCanceled(qi::Future<T>& future);
+
+      void setOnCancel(qi::Promise<T>& promise, CancelCallback onCancel);
+      void setOnDestroyed(boost::function<void (ValueType)> f);
+
+      void connect(qi::Future<T> future,
+          const boost::function<void (qi::Future<T>&)> &s,
+          FutureCallbackType type);
+
+      const ValueType& value(int msecs) const;
+
+    private:
+      friend class Promise<T>;
+      typedef boost::function<void(qi::Future<T>&)> CallbackType;
+      struct Callback
+      {
+        CallbackType callback;
+        FutureCallbackType callType;
+
+        Callback(CallbackType callback, FutureCallbackType callType)
+          : callback(callback)
+          , callType(callType)
+        {}
+      };
+      typedef std::vector<Callback> Callbacks;
+      Callbacks                _onResult;
+      ValueType                _value;
+      CancelCallback           _onCancel;
+      boost::function<void (ValueType)> _onDestroyed;
+      FutureCallbackType       _async;
+      qi::Atomic<unsigned int> _promiseCount;
+
+      void clearCallbacks();
+    };
+  }
 
   /**
    * \brief Helper function to return a future with the error set.
@@ -858,14 +960,15 @@ namespace qi {
    * Valued state is bounced through FutureValueConverter<FT, PT>::convert()
    */
   template<typename FT, typename PT>
-  void adaptFuture(const Future<FT>& f, Promise<PT>& p);
+  void adaptFuture(const Future<FT>& f, Promise<PT>& p, AdaptFutureOption option = AdaptFutureOption_ForwardCancel);
 
   template<typename R>
   void adaptFuture(Future<AnyReference>& f, Promise<R>& p);
 
   /// Similar to adaptFuture(f, p) but with a custom converter
   template<typename FT, typename PT, typename CONV>
-  void adaptFuture(const Future<FT>& f, Promise<PT>& p, CONV converter);
+  void adaptFuture(const Future<FT>& f, Promise<PT>& p, CONV converter,
+      AdaptFutureOption option = AdaptFutureOption_ForwardCancel);
 
   /// \copydoc qi::Future<T>::makeCanceler
   template <typename T>

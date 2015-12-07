@@ -32,6 +32,7 @@ endif()
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++11")
 endif()
 
 if (WITH_SSL)
@@ -166,7 +167,6 @@ set(QITYPE_H       qi/anyfunction.hpp
                    qi/type/detail/dynamicobjectbuilder.hxx
                    qi/type/detail/genericobject.hpp
                    qi/type/detail/object.hxx
-                   qi/type/detail/async.hxx
                    qi/type/detail/proxyregister.hpp
                    qi/type/detail/hasless.hxx
                    qi/type/detail/objecttypebuilder.hxx

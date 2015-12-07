@@ -59,7 +59,7 @@ namespace qi {
     int   dlclose(void *handle) {
       g_LastError.reset();
       if (!handle)
-        return 0;
+        return  0;
 #ifdef _WIN32
       // Mimic unix dlclose (0 on success)
       return FreeLibrary((HINSTANCE) handle) != 0 ? 0 : -1;
@@ -75,7 +75,7 @@ namespace qi {
       if(!handle)
       {
         g_LastError.reset(const_cast<char*>("null handle"));
-        return 0;
+        return  nullptr;
       }
 #ifdef _WIN32
       function = (void *)GetProcAddress((HINSTANCE) handle, symbol);

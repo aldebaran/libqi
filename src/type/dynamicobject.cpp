@@ -100,7 +100,7 @@ namespace qi
       signalMap[id] = std::make_pair(sb, true);
       return sb;
     }
-    return 0;
+    return  nullptr;
   }
 
   class DynamicObjectTypeInterface: public ObjectTypeInterface, public DefaultTypeImplMethods<DynamicObject>
@@ -181,7 +181,7 @@ namespace qi
       return const_cast<DynamicObject*>(this)->property(id)->signal();
     DynamicObjectPrivate::SignalMap::iterator i = _p->signalMap.find(id);
     if (i == _p->signalMap.end())
-      return 0;
+      return  nullptr;
     else
       return i->second.first;
   }
@@ -276,20 +276,22 @@ namespace qi
       i->second.second, callType, context, method, i->second.first, p);
   }
 
-  static void setPropertyValue(PropertyBase* property, AnyValue value)
-  {
-    property->setValue(value.asReference());
-  }
-
   qi::Future<void> DynamicObject::metaSetProperty(AnyObject context, unsigned int id, AnyValue val)
   {
     ExecutionContext* ec = _p->getExecutionContext(context, MetaCallType_Auto);
     if (ec)
-      return ec->async(boost::bind(&setPropertyValue, property(id), val));
+    {
+      auto prop = property(id);
+      return ec->async([prop, val]{
+            // TODO make this async when setValue returns a futuresync
+            return prop->setValue(val.asReference());
+          });
+    }
     else
     {
       try
       {
+        // TODO make this async when setValue returns a futuresync
         property(id)->setValue(val.asReference());
       }
       catch(const std::exception& e)
@@ -314,8 +316,12 @@ namespace qi
 
     ExecutionContext* ec = _p->getExecutionContext(context, MetaCallType_Auto);
     if (ec)
-      return ec->async<AnyValue>(boost::bind(&PropertyBase::value, prop));
+      return ec->async([prop] {
+            // TODO make this async when setValue returns a futuresync
+            return prop->value();
+          });
     else
+      // TODO make this async when setValue returns a futuresync
       return qi::Future<AnyValue>(prop->value());
   }
 
@@ -437,7 +443,7 @@ namespace qi
 
   ObjectTypeInterface* getDynamicTypeInterface()
   {
-    static DynamicObjectTypeInterface* type = 0;
+    static DynamicObjectTypeInterface* type = nullptr;
     QI_THREADSAFE_NEW(type);
     return type;
   }

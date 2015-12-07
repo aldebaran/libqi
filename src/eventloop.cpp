@@ -2,7 +2,8 @@
 **  Copyright (C) 2012, 2013 Aldebaran Robotics
 **  See COPYING for the license
 */
-#include <boost/thread.hpp>
+#include <thread>
+
 #include <boost/program_options.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/asio/steady_timer.hpp>
@@ -26,42 +27,6 @@
 qiLogCategory("qi.eventloop");
 
 namespace qi {
-
-  class WorkerThread // TODO C++11: replace this whole class by: using WorkerThread = boost::thread;
-  {
-  public:
-    WorkerThread()
-    {}
-
-    template<class Func>
-    WorkerThread(Func func)
-      : _thread(boost::make_shared<boost::thread>(func))
-    {}
-
-    template<class Func, class OwnerType>
-    WorkerThread(Func func, OwnerType* owner)
-      : _thread(boost::make_shared<boost::thread>(func, owner))
-    {}
-
-    WorkerThread(const WorkerThread& other)
-      : _thread(other._thread)
-    {}
-
-    WorkerThread& operator=(const WorkerThread& other)
-    {
-      _thread = other._thread;
-      return *this;
-    }
-
-    void join() { _thread->join(); }
-    void detach() { _thread->detach(); }
-    bool joinable() const { return _thread && _thread->joinable(); }
-    operator bool() { return joinable(); }
-
-  private:
-    boost::shared_ptr<boost::thread> _thread;
-  };
-
   class EventLoopAsio::WorkerThreadPool
   {
   public:
@@ -71,38 +36,39 @@ namespace qi {
     void launch(Func func)
     {
       boost::mutex::scoped_lock locked(_mutex);
-      _workers.push_back(WorkerThread(func));
+      _workers.emplace_back(std::move(func));
     }
 
     template<class Func, class OwnerType>
     void launch(Func func, OwnerType* owner)
     {
       boost::mutex::scoped_lock locked(_mutex);
-      _workers.push_back(WorkerThread(func, owner));
+      _workers.emplace_back(std::move(func), owner);
     }
 
     void joinAll()
     {
-      while (WorkerThread workerThread = pop())
+      std::thread workerThread;
+      while ((workerThread = pop()).joinable())
       {
         workerThread.join();
       }
     }
 
   private:
-    std::vector<WorkerThread> _workers;
+    std::vector<std::thread> _workers;
     boost::mutex _mutex;
 
-    WorkerThread pop()
+    std::thread pop()
     {
       boost::mutex::scoped_lock locked(_mutex);
       if (_workers.empty())
       {
-        return WorkerThread();
+        return {};
       }
       else
       {
-        WorkerThread workerThread = _workers.back();
+        std::thread workerThread = std::move(_workers.back());
         _workers.pop_back();
         return workerThread;
       }
@@ -114,8 +80,8 @@ namespace qi {
   static qi::Atomic<uint32_t> gTaskId = 0;
 
   EventLoopAsio::EventLoopAsio()
-  : _mode(Mode_Unset)
-  , _work(NULL)
+  : _mode(Mode::Unset)
+  , _work(nullptr)
   , _maxThreads(0)
   , _workerThreads(new WorkerThreadPool())
   {
@@ -125,7 +91,7 @@ namespace qi {
 
   void EventLoopAsio::start(int nthread)
   {
-    if (*_running || _mode != Mode_Unset)
+    if (*_running || _mode != Mode::Unset)
       return;
     if (nthread == 0)
     {
@@ -137,7 +103,7 @@ namespace qi {
         nthread = strtol(envNthread, 0, 0);
     }
     _maxThreads = qi::os::getEnvDefault("QI_EVENTLOOP_MAX_THREADS", 150);
-    _mode = Mode_Pooled;
+    _mode = Mode::Pooled;
     _work = new boost::asio::io_service::work(_io);
     for (int i=0; i<nthread; ++i)
       _workerThreads->launch(&EventLoopAsio::_runPool, this);
@@ -186,7 +152,7 @@ namespace qi {
     boost::condition_variable cond;
     bool gotPong = false;
     unsigned int nbTimeout = 0;
-    while (_work)
+    while (_work.load())
     {
       qiLogDebug() << "Ping";
       gotPong = false;
@@ -245,7 +211,7 @@ namespace qi {
         _io.run();
         //the handler finished by himself. just quit.
         break;
-      } catch(const detail::TerminateThread& e) {
+      } catch(const detail::TerminateThread& /* e */) {
         break;
       } catch(const std::exception& e) {
         qiLogWarning() << "Error caught in eventloop(" << _name << ").async: " << e.what();
@@ -266,16 +232,17 @@ namespace qi {
   {
     qiLogDebug() << "stopping eventloopasio: " << this;
     boost::recursive_mutex::scoped_lock sl(_mutex);
-    if (_work)
+    if (_work.load())
     {
-      delete _work;
-      _work = 0;
+      boost::asio::io_service::work* w = _work;
+      _work = nullptr;
+      delete w;
     }
   }
 
   void EventLoopAsio::join()
   {
-    if (_mode == Mode_Threaded)
+    if (_mode == Mode::Threaded)
     {
       if (boost::this_thread::get_id() == _id)
       {
@@ -348,7 +315,7 @@ namespace qi {
         tracepoint(qi_qi, eventloop_task_stop, id);
         p.setValue(0);
       }
-      catch (const detail::TerminateThread& e)
+      catch (const detail::TerminateThread& /* e */)
       {
         throw;
       }
@@ -393,7 +360,7 @@ namespace qi {
   {
     static boost::system::error_code erc;
 
-    if (!_work)
+    if (!_work.load())
       return qi::makeFutureError<void>("Schedule attempt on destroyed thread pool");
 
     uint32_t id = ++gTaskId;
@@ -423,7 +390,7 @@ namespace qi {
   qi::Future<void> EventLoopAsio::asyncCall(qi::SteadyClockTimePoint timepoint,
       boost::function<void ()> cb)
   {
-    if (!_work)
+    if (!_work.load())
       return qi::makeFutureError<void>("Schedule attempt on destroyed thread pool");
 
     uint32_t id = ++gTaskId;
@@ -505,13 +472,7 @@ namespace qi {
     return _p->nativeHandle();
   }
 
-  void EventLoop::post(const boost::function<void ()>& callback,
-      uint64_t usDelay)
-  {
-    post(callback, qi::MicroSeconds(usDelay));
-  }
-
-  void EventLoop::post(const boost::function<void ()>& callback,
+  void EventLoop::postDelayImpl(boost::function<void()> callback,
       qi::Duration delay)
   {
     qiLogDebug() << this << " EventLoop post " << &callback;
@@ -520,7 +481,7 @@ namespace qi {
     qiLogDebug() << this << " EventLoop post done " << &callback;
   }
 
-  void EventLoop::post(const boost::function<void ()>& callback,
+  void EventLoop::post(const boost::function<void()>& callback,
       qi::SteadyClockTimePoint timepoint)
   {
     qiLogDebug() << this << " EventLoop post " << &callback;
@@ -529,27 +490,13 @@ namespace qi {
     qiLogDebug() << this << " EventLoop post done " << &callback;
   }
 
-  qi::Future<void>
-  EventLoop::async(
-    const boost::function<void ()>& callback,
-    uint64_t usDelay)
-  {
-    return async(callback, qi::MicroSeconds(usDelay));
-  }
-
-  qi::Future<void>
-  EventLoop::async(
-    const boost::function<void ()>& callback,
-    qi::Duration delay)
+  qi::Future<void> EventLoop::asyncDelayImpl(boost::function<void()> callback, qi::Duration delay)
   {
     CHECK_STARTED;
     return _p->asyncCall(delay, callback);
   }
 
-  qi::Future<void>
-  EventLoop::async(
-    const boost::function<void ()>& callback,
-    qi::SteadyClockTimePoint timepoint)
+  qi::Future<void> EventLoop::asyncAtImpl(boost::function<void()> callback, qi::SteadyClockTimePoint timepoint)
   {
     CHECK_STARTED;
     return _p->asyncCall(timepoint, callback);
@@ -627,7 +574,7 @@ namespace qi {
         qiLogDebug() << "Long ping " << pingDelay;
       // Wait a bit before pinging againg
       //qiLogDebug("qi.EventLoop") << os::ustime() << " MON delay " << ctx->maxDelay;
-      ctx->helper->async(boost::bind(&monitor_ping, ctx), ctx->maxDelay*5);
+      ctx->helper->asyncDelay(boost::bind(&monitor_ping, ctx), qi::MicroSeconds(ctx->maxDelay*5));
     }
     else
     { // Delay between pings reached, ping again
@@ -635,9 +582,8 @@ namespace qi {
       ctx->isFired = true;
       // Start monitor async first, or the ping async can trigger before the
       // monitor async is setup
-      ctx->mon = ctx->helper->async(boost::bind(&monitor_pingtimeout, ctx), ctx->maxDelay);
+      ctx->mon = ctx->helper->asyncDelay(boost::bind(&monitor_pingtimeout, ctx), qi::MicroSeconds(ctx->maxDelay));
       ctx->target->post(boost::bind(&monitor_ping, ctx));
-      assert(ctx->mon.isCancelable());
     }
   }
 
@@ -663,7 +609,7 @@ namespace qi {
     ctx = 0;
   }
 
-  static EventLoop*    _poolEventLoop = 0;
+  static EventLoop*    _poolEventLoop = nullptr;
 
   //the initialisation is protected by a mutex,
   //we then use an atomic to prevent having a mutex on a fastpath.

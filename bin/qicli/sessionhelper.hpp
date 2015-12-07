@@ -14,7 +14,7 @@ private:
   typedef std::pair<const std::string, std::pair<ServiceHelper, std::set<std::string> > > MatchMapPair;
 
 public:
-  SessionHelper(qi::ApplicationSession& app, qi::JsonOption prettyPrint);
+  SessionHelper(qi::ApplicationSession& app, qi::JsonOption jsonPrintOption);
   ~SessionHelper();
 
 public:
@@ -41,7 +41,7 @@ private:
   qi::SessionPtr                _session;
   MatchMap                      _currentMatchMap;
   std::vector<qi::ServiceInfo>  _servicesInfos;
-  qi::JsonOption                _prettyPrint;
+  qi::JsonOption                _jsonPrintOption;
 };
 
 #endif /* !QICLI_SESSIONHELPER_HPP_ */

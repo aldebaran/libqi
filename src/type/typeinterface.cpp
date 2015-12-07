@@ -117,7 +117,7 @@ namespace qi {
   typedef std::map<TypeInfo, TypeInterface*> TypeFactory;
   static TypeFactory& typeFactory()
   {
-    static TypeFactory* res = 0;
+    static TypeFactory* res = nullptr;
     QI_THREADSAFE_NEW(res);
     return *res;
   }
@@ -125,14 +125,14 @@ namespace qi {
   typedef std::map<std::string, TypeInterface*> FallbackTypeFactory;
   static FallbackTypeFactory& fallbackTypeFactory()
   {
-    static FallbackTypeFactory* res = 0;
+    static FallbackTypeFactory* res = nullptr;
     QI_THREADSAFE_NEW(res);
     return *res;
   }
 
   QI_API TypeInterface* getType(const std::type_info& type)
   {
-    static boost::mutex* mutex = 0;
+    static boost::mutex* mutex = nullptr;
     QI_THREADSAFE_NEW(mutex);
     boost::mutex::scoped_lock sl(*mutex);
     static bool fallback = !qi::os::getenv("QI_TYPE_RTTI_FALLBACK").empty();
@@ -756,7 +756,7 @@ namespace qi {
     static boost::mutex* mutex;
     QI_THREADSAFE_NEW(mutex);
     boost::mutex::scoped_lock lock(*mutex);
-    static std::map<TypeInfo, TypeInterface*>* map = 0;
+    static std::map<TypeInfo, TypeInterface*>* map = nullptr;
     if (!map)
       map = new std::map<TypeInfo, TypeInterface*>();
     TypeInfo key = element->info();
@@ -873,10 +873,10 @@ namespace qi {
 
   TypeInterface* makeVarArgsType(TypeInterface* element)
   {
-    static boost::mutex* mutex = 0;
+    static boost::mutex* mutex = nullptr;
     QI_THREADSAFE_NEW(mutex);
     boost::mutex::scoped_lock lock(*mutex);
-    static std::map<TypeInfo, TypeInterface*>* map = 0;
+    static std::map<TypeInfo, TypeInterface*>* map = nullptr;
     if (!map)
       map = new std::map<TypeInfo, TypeInterface*>();
     TypeInfo key(element->info());
@@ -895,10 +895,10 @@ namespace qi {
     // We want exactly one instance per element type
   TypeInterface* makeListType(TypeInterface* element)
   {
-    static boost::mutex* mutex = 0;
+    static boost::mutex* mutex = nullptr;
     QI_THREADSAFE_NEW(mutex);
     boost::mutex::scoped_lock lock(*mutex);
-    static std::map<TypeInfo, TypeInterface*>* map = 0;
+    static std::map<TypeInfo, TypeInterface*>* map = nullptr;
     if (!map)
       map = new std::map<TypeInfo, TypeInterface*>();
     TypeInfo key(element->info());
@@ -1109,11 +1109,11 @@ namespace qi {
   static TypeInterface* makeMapIteratorType(TypeInterface* te)
   {
     typedef std::map<TypeInfo, TypeInterface*> Map;
-    static boost::mutex* mutex = 0;
+    static boost::mutex* mutex = nullptr;
     QI_THREADSAFE_NEW(mutex);
     boost::mutex::scoped_lock lock(*mutex);
 
-    static Map * map = 0;
+    static Map * map = nullptr;
     if (!map)
       map = new Map();
     TypeInfo ti(te->info());
@@ -1280,12 +1280,12 @@ namespace qi {
   // We want exactly one instance per element type
   TypeInterface* makeMapType(TypeInterface* kt, TypeInterface* et)
   {
-    static boost::mutex* mutex = 0;
+    static boost::mutex* mutex = nullptr;
     QI_THREADSAFE_NEW(mutex);
     boost::mutex::scoped_lock lock(*mutex);
 
     typedef std::map<std::pair<TypeInfo, TypeInfo>, MapTypeInterface*> Map;
-    static Map * map = 0;
+    static Map * map = nullptr;
     if (!map)
       map = new Map();
     TypeInfo kk(kt->info());
@@ -1354,7 +1354,7 @@ namespace qi {
     static boost::mutex* mutex;
     QI_THREADSAFE_NEW(mutex);
     boost::mutex::scoped_lock lock(*mutex);
-    static Map* map = 0;
+    static Map* map = nullptr;
     if (!map)
       map = new Map;
     InfosKey key(types, name, elementNames);
@@ -1399,7 +1399,7 @@ namespace qi {
       */
       std::ostringstream ss;
       ss << "Cannot do '" << operation << "' on " << typeName;
-      static std::set<std::string>* once = 0;
+      static std::set<std::string>* once = nullptr;
       QI_THREADSAFE_NEW(once);
       if (once->find(typeName)==once->end())
       {
@@ -1433,7 +1433,7 @@ namespace qi {
   }
   static boost::mutex& registerStructMutex()
   {
-    static boost::mutex* m = 0;
+    static boost::mutex* m = nullptr;
     QI_THREADSAFE_NEW(m);
     return *m;
   }
@@ -1441,7 +1441,7 @@ namespace qi {
   static RegisterStructMap& registerStructMap()
   {
     // protected by lock above
-    static RegisterStructMap* res = 0;
+    static RegisterStructMap* res = nullptr;
     QI_THREADSAFE_NEW(res);
     return *res;
   }

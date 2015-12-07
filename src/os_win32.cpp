@@ -85,7 +85,7 @@ namespace qi {
                          boost::filesystem::path(mode, qi::unicodeFacet()).wstring().c_str());
       }
       catch (boost::filesystem::filesystem_error &) {
-        return 0;
+        return  nullptr;
       }
     }
 

@@ -202,7 +202,7 @@ namespace qi
     {
       qiLogDebug() << "Attempt to read " << offset+length
        <<" on buffer of size " << _p->used;
-      return 0;
+      return  nullptr;
     }
     return (char*)_p->data() + offset;
   }

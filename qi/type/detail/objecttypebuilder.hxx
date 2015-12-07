@@ -46,6 +46,11 @@ namespace qi {
     // => wee need all TypeInterface* methods, but we do not want another TypeInterface*
     // to anwser to typeOf<T>
     xBuildFor(new DefaultTypeImpl<T>(), autoRegister, detail::getStrandAccessor<T>());
+
+    if (std::is_base_of<Actor, T>::value)
+      setThreadingModel(ObjectThreadingModel_SingleThread);
+    else
+      setThreadingModel(ObjectThreadingModel_MultiThread);
   }
 
   template <typename FUNCTION_TYPE>

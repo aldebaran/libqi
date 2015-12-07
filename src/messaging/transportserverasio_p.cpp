@@ -82,7 +82,8 @@ namespace qi
         _acceptor = 0;
         qiLogError() << "fatal accept error: " << erc.value();
         qiLogDebug() << this << " Disabling acceptor for now, retrying in " << AcceptDownRetryTimerUs << "us";
-        context->async(boost::bind(&TransportServerAsioPrivate::restartAcceptor, this), AcceptDownRetryTimerUs);
+        context->asyncDelay(boost::bind(&TransportServerAsioPrivate::restartAcceptor, this),
+            qi::MicroSeconds(AcceptDownRetryTimerUs));
         return;
       }
     }
@@ -187,8 +188,8 @@ namespace qi
 
     }
 
-    _asyncEndpoints = context->async(boost::bind(_updateEndpoints, shared_from_this()),
-                                     ifsMonitoringTimeout);
+    _asyncEndpoints = context->asyncDelay(boost::bind(_updateEndpoints, shared_from_this()),
+        qi::MicroSeconds(ifsMonitoringTimeout));
   }
 
   qi::Future<void> TransportServerAsioPrivate::listen(const qi::Url& url)

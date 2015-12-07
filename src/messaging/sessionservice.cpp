@@ -104,8 +104,8 @@ namespace qi {
   void Session_Service::removeRequest(long requestId)
   {
     boost::recursive_mutex::scoped_lock sl(_requestsMutex);
-    qi::RemoteObject *remote = 0;
-    ServiceRequest   *sr     = 0;
+    qi::RemoteObject *remote = nullptr;
+    ServiceRequest   *sr     = nullptr;
     {
       std::map<int, ServiceRequest*>::iterator it;
 

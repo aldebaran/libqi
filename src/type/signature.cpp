@@ -159,14 +159,14 @@ namespace qi {
         // conveniant to have differently named structs
         static bool requireSameName = qi::os::getenv("QI_IGNORE_STRUCT_NAME").empty();
         if (!requireSameName)
-          return (aSrc.empty() || aDst.empty()) ? 0:0.1;
+          return (aSrc.empty() || aDst.empty()) ? 0.0f:0.1f;
 
         size_t pSrc = aSrc.find_first_of(",");
         size_t pDst = aDst.find_first_of(",");
         if (pSrc == pDst && pSrc != aSrc.npos && !memcmp(aSrc.data(), aDst.data(), pSrc))
-          return 0.1;
+          return 0.1f;
 
-        return 0;
+        return 0.0f;
       }
       SignatureVector::const_iterator its;
       SignatureVector::const_iterator itd;
@@ -177,12 +177,12 @@ namespace qi {
           return 0; // Just check subtype compatibility
         // we got this far, if there is an error in child, make it lower
         // [s] -> m should have a greater convertibility than [s] -> [m]
-        childErr *= 1 - (1 - childRes) * 0.95;
+        childErr *= 1.0f - (1.0f - childRes) * 0.95f;
       }
       assert(its==children().end() && itd==b.children().end()); // we already exited on size mismatch
     }
     else if (d != s)
-      return 0;
+      return 0.0f;
     return RET_CALC;
   }
 
@@ -578,17 +578,17 @@ namespace qi {
 
 char* signature_to_json(const char* sig)
 {
-  static char* resc = 0;
+  static char* resc = nullptr;
   std::string res;
   try {
     qi::Signature s(sig);
     res = qi::encodeJSON(s.toData());
   } catch (const std::exception& e) {
     qiLogInfo() << e.what();
-    return 0;
+    return  nullptr;
   }
   free(resc);
-  resc = strdup(res.c_str());
+  resc = qi::os::strdup(res.c_str());
   return resc;
 }
 

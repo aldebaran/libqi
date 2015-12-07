@@ -32,7 +32,6 @@ namespace std
 #endif
 
 qiLogCategory("test");
-
 static int gGlobalResult = 0;
 
 void vfun(const int &p0,const int &p1)   { gGlobalResult = p0 + p1; }
@@ -625,8 +624,8 @@ TEST(TestObject, ObjectTypeBuilderTypeDescription)
   builder.setDescription(objectTypeDescription);
 
   Dummy dummy;
-  qi::AnyObject object = builder.object(&dummy, &qi::AnyObject::deleteGenericObjectOnly);
-  qi::MetaObject metaObject = object.metaObject();
+  auto object = builder.object(&dummy, &qi::AnyObject::deleteGenericObjectOnly);
+  auto metaObject = object.metaObject();
 
   ASSERT_EQ(objectTypeDescription, metaObject.description());
 }
@@ -1177,45 +1176,6 @@ public:
 qi::Atomic<int> Sleeper::dtorCount;
 
 QI_REGISTER_OBJECT(Sleeper, msleep);
-
-TEST(TestObject, async)
-{
-
-  {
-    Sleeper rf;
-    qi::Future<int> f = qi::async<int>(&rf, "msleep", 100);
-    EXPECT_EQ(qi::FutureState_Running, f.wait(0));
-    EXPECT_EQ(qi::FutureState_FinishedWithValue, f.wait());
-    EXPECT_EQ(100, f.value());
-
-    boost::shared_ptr<Sleeper> rfptr(new Sleeper);
-    f = qi::async<int>(rfptr, "msleep", 100);
-    EXPECT_EQ(qi::FutureState_Running, f.wait(0));
-    EXPECT_EQ(qi::FutureState_FinishedWithValue, f.wait());
-    EXPECT_EQ(100, f.value());
-
-    qiLogDebug() << "converting to AnyObject";
-    qi::AnyObject o = qi::AnyReference::from(rfptr).toObject();
-    qiLogDebug() << "convesion done";
-    f = qi::async<int>(o, "msleep", 100);
-    EXPECT_EQ(qi::FutureState_Running, f.wait(0));
-    EXPECT_EQ(qi::FutureState_FinishedWithValue, f.wait());
-    EXPECT_EQ(100, f.value());
-  }
-
-  for (unsigned i=0; i<50 && *Sleeper::dtorCount <2; ++i)
-    qi::os::msleep(10);
-  EXPECT_EQ(2, *Sleeper::dtorCount);
-
-  // Factory leaks, so can't test no-leak of async...
-  qiLogDebug() << "Factory";
-  qi::AnyObject o = qi::import("testpkg").call<qi::AnyObject>("Sleeper");
-  ASSERT_TRUE(o);
-  qi::Future<int> f = qi::async<int>(o, "msleep", 100);
-  EXPECT_EQ(qi::FutureState_Running, f.wait(0));
-  EXPECT_EQ(qi::FutureState_FinishedWithValue, f.wait());
-  EXPECT_EQ(100, f.value());
-}
 
 class Apple
 {

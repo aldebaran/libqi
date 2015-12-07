@@ -14,60 +14,45 @@
 
 /**
  * \typedef qi::int8_t
- * \brief Cross-platform signed integer of length 8 bits (1 byte).
+ * \brief Deprecated in 2.5. Use int8_t from <cstdint>.
  */
 
 /**
  * \typedef qi::int16_t
- * \brief Cross-platform signed integer of length 16 bits (2 bytes).
+ * \brief Deprecated in 2.5. Use int16_t from <cstdint>.
  */
 
 /**
  * \typedef qi::int32_t
- * \brief Cross-platform signed integer of length 32 bits (4 bytes).
+ * \brief Deprecated in 2.5. Use int32_t from <cstdint>.
  */
 
 /**
  * \typedef qi::int64_t
- * \brief Cross-platform signed integer of length 64 bits (8 bytes).
+ * \brief Deprecated in 2.5. Use int64_t from <cstdint>.
  */
 
 /**
  * \typedef qi::uint8_t
- * \brief Cross-platform unsigned integer of length 8 bits (1 byte).
+ * \brief Deprecated in 2.5. Use uint8_t from <cstdint>.
  */
 
 /**
  * \typedef qi::uint16_t
- * \brief Cross-platform unsigned integer of length 16 bits (2 bytes).
+ * \brief Deprecated in 2.5. Use uint16_t from <cstdint>.
  */
 
 /**
  * \typedef qi::uint32_t
- * \brief Cross-platform unsigned integer of length 32 bits (4 bytes).
+ * \brief Deprecated in 2.5. Use uint32_t from <cstdint>.
  */
 
 /**
  * \typedef qi::uint64_t
- * \brief Cross-platform unsigned integer of length 64 bits (8 bytes).
+ * \brief Deprecated in 2.5. Use uint64_t from <cstdint>.
  */
 
-// visual studio 2008 and lower version
-# if defined(_MSC_VER) && (_MSC_VER <= 1500)
-namespace qi
-{
-  typedef signed __int8     int8_t;
-  typedef signed __int16    int16_t;
-  typedef signed __int32    int32_t;
-  typedef signed __int64    int64_t;
-
-  typedef unsigned __int8   uint8_t;
-  typedef unsigned __int16  uint16_t;
-  typedef unsigned __int32  uint32_t;
-  typedef unsigned __int64  uint64_t;
-}
-# else
-#  include <stdint.h>
+#  include <cstdint>
 namespace qi
 {
   typedef int8_t   int8_t;
@@ -80,6 +65,5 @@ namespace qi
   typedef uint32_t uint32_t;
   typedef uint64_t uint64_t;
 }
-# endif
 
 #endif  // _QI_TYPES_HPP_

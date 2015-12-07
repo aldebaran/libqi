@@ -50,7 +50,7 @@ namespace qi {
      * Will be *replaced* by metaObject received from remote end, when
      * fetchMetaObject is invoked and retuns.
     */
-    static qi::MetaObject* mo = 0;
+    static qi::MetaObject* mo = nullptr;
     QI_ONCE(mo = createRemoteObjectSpecialMetaObject());
     setMetaObject(*mo);
     setTransportSocket(socket);
@@ -366,7 +366,7 @@ namespace qi {
       }
     }
     else
-      out.setOnCancel(qi::bind<void(Promise<AnyReference>)>(&RemoteObject::onFutureCancelled, this, msg.id()));
+      out.setOnCancel(qi::bind(&RemoteObject::onFutureCancelled, this, msg.id()));
     return out.future();
   }
 

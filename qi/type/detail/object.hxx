@@ -254,13 +254,9 @@ public:
 
   boost::shared_ptr<T> asSharedPtr();
 
-  T& asT();
-  const T& asT() const;
-  T* operator ->();
-  const T* operator->() const;
-
-  T& operator *();
-  const T& operator *() const;
+  T& asT() const;
+  T* operator->() const;
+  T& operator *() const;
   bool unique() const;
   GenericObject* asGenericObject() const;
   void reset();
@@ -481,8 +477,13 @@ template<typename T> void Object<T>::checkT()
 {
   if (boost::is_same<T, Empty>::value || !_obj)
     return;
-  if (_obj->type->info() != typeOf<T>()->info()
-    && _obj->type->inherits(typeOf<T>())==-1)
+
+  const auto isMatchingType = [&] {
+    return _obj->type->info() == typeOf<T>()->info()
+      || _obj->type->inherits(typeOf<T>()) != ObjectTypeInterface::INHERITS_FAILED;
+  };
+
+  if (!isMatchingType())
   { // No T interface, try upgrading _obj
     detail::ProxyGeneratorMap& map = detail::proxyGeneratorMap();
     detail::ProxyGeneratorMap::iterator it = map.find(typeOf<T>()->info());
@@ -492,34 +493,22 @@ template<typename T> void Object<T>::checkT()
       AnyReference ref = it->second(AnyObject(_obj));
       _obj = ref.to<detail::ManagedObjectPtr>();
       ref.destroy();
+      assert(isMatchingType());
       return;
     }
     throw std::runtime_error(std::string() + "Object does not have interface " + typeOf<T>()->infoString());
   }
 }
-template<typename T> T& Object<T>::asT()
-{
-  checkT();
-  return *reinterpret_cast<T*>(_obj->value);
-}
-template<typename T> const T& Object<T>::asT() const
+template<typename T> T& Object<T>::asT() const
 {
   const_cast<Object<T>* >(this)->checkT();
-  return *reinterpret_cast<const T*>(_obj->value);
+  return *static_cast<T*>(_obj->value);
 }
-template<typename T> T* Object<T>::operator ->()
-{
-    return &asT();
-}
-template<typename T> const T* Object<T>::operator->() const
+template<typename T> T* Object<T>::operator->() const
 {
   return &asT();
 }
-template<typename T> T& Object<T>::operator *()
-{
-  return asT();
-}
-template<typename T> const T& Object<T>::operator *() const
+template<typename T> T& Object<T>::operator *() const
 {
   return asT();
 }

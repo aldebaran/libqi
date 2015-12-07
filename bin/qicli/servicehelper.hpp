@@ -9,7 +9,7 @@ struct WatchOptions;
 class ServiceHelper
 {
 public:
-  ServiceHelper(const qi::AnyObject &service=qi::AnyObject(), const std::string &name="", qi::JsonOption prettyPrint = qi::JsonOption::None);
+  ServiceHelper(const qi::AnyObject &service=qi::AnyObject(), const std::string &name="", qi::JsonOption jsonPrintOption = qi::JsonOption_None);
   ServiceHelper(const ServiceHelper &other) = default;
   ServiceHelper& operator=(const ServiceHelper &other) = default;
   ServiceHelper& operator=(const qi::AnyObject &service);
@@ -37,7 +37,7 @@ private:
   std::string _name;
   std::list<qi::SignalLink> _signalLinks;
   qi::AnyObject _service;
-  qi::JsonOption _prettyPrint;
+  qi::JsonOption _jsonPrintOption;
 };
 
 #endif /* !QICLI_SERVICEHELPER_HPP_ */

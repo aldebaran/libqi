@@ -12,7 +12,7 @@
 static bool _stopped = false;
 static qi::ApplicationSession* _app;
 static qi::Session _sd;
-static char **_argv = 0;
+static char **_argv = nullptr;
 static int _argc = 3;
 
 void onStop()
@@ -23,7 +23,7 @@ void onStop()
 TEST(QiApplicationSessionNoAutoExit, defaultConnect)
 {
   ASSERT_FALSE(_app->session()->isConnected());
-  _app->start();
+  _app->startSession();
   ASSERT_TRUE(_app->session()->isConnected());
   ASSERT_EQ(_sd.endpoints()[0].str(), _app->session()->url());
 

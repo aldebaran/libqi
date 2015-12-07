@@ -13,7 +13,7 @@
 static bool _stopped = false;
 static qi::Session _sd;
 static qi::ApplicationSession* _app;
-static char **_argv = 0;
+static char **_argv = nullptr;
 static int _argc = 5;
 static std::string _url;
 static qi::Promise<void> _sync;
@@ -27,7 +27,7 @@ void onStop()
 TEST(QiApplicationSession, defaultConnect)
 {
   ASSERT_FALSE(_app->session()->isConnected());
-  _app->start();
+  _app->startSession();
   ASSERT_TRUE(_app->session()->isConnected());
 
   ASSERT_EQ(_url, _app->session()->url());

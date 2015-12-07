@@ -46,17 +46,12 @@ namespace qi
      * If the callback throws, async task will be stopped
      */
     void setCallback(const Callback& cb);
-#ifdef DOXYGEN
-    template <typename T, typename ARG0> PeriodicTask& setCallback(T&& callable, ARG0&& tracked, ...);
-#else
     template <typename AF, typename ARG0, typename... ARGS>
     inline void setCallback(AF&& callable, ARG0&& arg0, ARGS&&... args)
     {
-      setCallback(boost::bind(std::forward<AF>(callable), arg0, std::forward<ARGS>(args)...));
-      _connectMaybeActor<ARG0>(arg0);
+      _connectMaybeActor(arg0);
+      setCallback(boost::bind(std::forward<AF>(callable), std::forward<ARG0>(arg0), std::forward<ARGS>(args)...));
     }
-#endif
-
 
     /**
      * Set the strand on which to schedule the calls

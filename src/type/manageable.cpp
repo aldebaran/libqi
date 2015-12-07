@@ -134,9 +134,9 @@ namespace qi
 
   namespace manageable
   {
-  static Manageable::MethodMap* methodMap = 0;
-  static Manageable::SignalMap* signalMap = 0;
-  static MetaObject* metaObject = 0;
+  static Manageable::MethodMap* methodMap = nullptr;
+  static Manageable::SignalMap* signalMap = nullptr;
+  static MetaObject* metaObject = nullptr;
   }
   void Manageable::_build()
   {

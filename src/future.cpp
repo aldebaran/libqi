@@ -70,6 +70,8 @@ namespace qi {
 
     FutureState FutureBase::wait(int msecs) const {
       boost::recursive_mutex::scoped_lock lock(_p->_mutex);
+      if (*_p->_state != FutureState_Running)
+        return FutureState(*_p->_state);
       if (msecs == FutureTimeout_Infinite)
         _p->_cond.wait(lock, boost::bind(&waitFinished, _p));
       else if (msecs > 0)
@@ -81,6 +83,8 @@ namespace qi {
 
     FutureState FutureBase::wait(qi::Duration duration) const {
       boost::recursive_mutex::scoped_lock lock(_p->_mutex);
+      if (*_p->_state != FutureState_Running)
+        return FutureState(*_p->_state);
       _p->_cond.wait_for(lock, duration, boost::bind(&waitFinished, _p));
       return FutureState(*_p->_state);
     }
@@ -161,14 +165,6 @@ namespace qi {
       return _p->_error;
     }
 
-    void FutureBase::reset() {
-      boost::recursive_mutex::scoped_lock lock(_p->_mutex);
-      //reset is called by the promise. So set the state to running.
-      _p->_state = FutureState_Running;
-      _p->_error = std::string();
-      _p->_cancelRequested = false;
-    }
-
     boost::recursive_mutex& FutureBase::mutex()
     {
       return _p->_mutex;
@@ -181,8 +177,6 @@ namespace qi {
       return "Future timeout.";
     case ExceptionState_FutureCanceled:
       return "Future canceled.";
-    case ExceptionState_FutureNotCancelable:
-      return "Future is not cancelable.";
     case ExceptionState_FutureHasNoError:
       return "Future has no error.";
     //use the specified string instead.
@@ -190,6 +184,8 @@ namespace qi {
       return "";
     case ExceptionState_PromiseAlreadySet:
       return "Future has already been set.";
+    case ExceptionState_FutureInvalid:
+      return "Future is invalid.";
     }
     return "";
   }
