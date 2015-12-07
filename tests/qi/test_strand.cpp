@@ -225,10 +225,36 @@ struct MyActor : qi::Actor
       finished.setValue(0);
     return 42;
   }
+  qi::Future<int> val()
+  {
+    return qi::Future<int>(42);
+  }
+  qi::Future<int> thrw()
+  {
+    throw std::runtime_error("throw");
+  }
+  qi::Future<int> fail()
+  {
+    return qi::makeFutureError<int>("fail");
+  }
   qi::Signal<int> sig;
   qi::Property<int> prop;
 };
-QI_REGISTER_OBJECT(MyActor, f, sig, prop);
+QI_REGISTER_OBJECT(MyActor, f, val, thrw, fail, sig, prop);
+
+TEST(TestStrand, TypeErasedCall)
+{
+  boost::shared_ptr<MyActor> obj(new MyActor);
+  qi::AnyObject aobj(obj);
+
+  EXPECT_EQ(42, aobj.async<int>("val").value());
+  EXPECT_TRUE(aobj.async<int>("thrw").hasError());
+  EXPECT_TRUE(aobj.async<int>("fail").hasError());
+
+  EXPECT_EQ(42, aobj.call<int>("val"));
+  EXPECT_ANY_THROW(aobj.call<int>("thrw"));
+  EXPECT_ANY_THROW(aobj.call<int>("fail"));
+}
 
 TEST(TestStrand, AllFutureSignalPropertyPeriodicTaskAsyncTypeErasedDynamic)
 {
