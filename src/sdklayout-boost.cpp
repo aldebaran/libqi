@@ -177,7 +177,7 @@ namespace detail {
       }
 
       execPath = boost::filesystem::system_complete(execPath).make_preferred();
-      if (execPath.parent_path().filename().string(qi::unicodeFacet()) != "bin") {
+      if (!boost::filesystem::exists(execPath.parent_path().parent_path() / "share" / "qi" / "path.conf")) {
         if (!real)
           return initSDKlayoutFromExec(true);
         _sdkPrefixes.push_back(execPath.parent_path().filename().string(qi::unicodeFacet()));
