@@ -261,7 +261,7 @@ namespace qi {
     }
     else
     {
-      qiLogInfo()
+      qiLogVerbose()
           << "Waiting threads from the pool \"" << _name << "\", remaining tasks: "
           << *_totalTask << " (" << *_activeTask <<  " active)...";
       _workerThreads->joinAll();
