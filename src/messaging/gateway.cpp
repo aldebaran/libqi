@@ -272,7 +272,7 @@ bool GatewayPrivate::listen(const Url& url)
   if (host == "0.0.0.0" && port == DefaultServiceDirectoryPort)
   {
     _updateEndpointsTask.setPeriod(UpdateEndpointsPeriod);
-    _updateEndpointsTask.setCallback(qi::bind<void()>(&GatewayPrivate::updateEndpoints, this, url));
+    _updateEndpointsTask.setCallback(qi::bind(&GatewayPrivate::updateEndpoints, this, url));
     _updateEndpointsTask.start();
     return true;
   }
@@ -314,7 +314,7 @@ void GatewayPrivate::updateEndpoints(const qi::Url& url)
     {
       qiLogInfo() << "New address " << url.str() << ", trying to listen";
       _server.listen(url)
-          .thenR<void>(qi::bind<void(qi::Future<void> fut)>(boost::function<void(GatewayPrivate*, qi::Future<void>)>(
+          .thenR<void>(qi::bind(boost::function<void(GatewayPrivate*, qi::Future<void>)>(
                                                                 [url](GatewayPrivate* p, qi::Future<void> fut)
                                                                 {
                                                                   if (fut.hasError())
