@@ -25,10 +25,13 @@ namespace detail
   template <typename T>
   struct Function : boost::function<T>
   {
-    template<class... Args>
-    Function(Args&&... args)
-      : boost::function<T>(std::forward<Args>(args)...)
+    template<class Arg>
+    Function(Arg&& arg,
+        typename std::enable_if<!std::is_same<typename std::decay<Arg>::type, Function>::value>::type* = nullptr)
+      : boost::function<T>(std::forward<Arg>(arg))
     {}
+
+    Function(const Function&) = default;
   };
 
 }

@@ -1414,6 +1414,8 @@ TEST(EventLoop, async)
   f = el->asyncAt(boost::bind(ping, 42), qi::SteadyClock::now() + qi::MilliSeconds(10));
   qi::os::msleep(15);
   EXPECT_TRUE(f.isFinished());
+
+  qi::async<void>([]{}).value();
 }
 
 void empty() {}
