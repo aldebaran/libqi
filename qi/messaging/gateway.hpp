@@ -27,14 +27,16 @@ typedef boost::shared_ptr<GatewayPrivate> GatewayPrivatePtr;
 
 class QI_API Gateway
 {
+  GatewayPrivatePtr _p;
 public:
   /**
    * @param enforceAuth If set to true, reject clients that try to skip the authentication step. If false, accept all
    * incoming connections whether or not they authentify.
    */
   Gateway(bool enforceAuth = false);
+  ~Gateway();
 
-  Property<bool> connected;
+  Property<bool>& connected;
 
   void setAuthProviderFactory(AuthProviderFactoryPtr provider);
   void setLocalClientAuthProviderFactory(AuthProviderFactoryPtr provider);
@@ -43,9 +45,6 @@ public:
   bool listen(const Url& url);
   qi::Future<void> attachToServiceDirectory(const Url& serviceDirectoryUrl);
   void close();
-
-private:
-  GatewayPrivatePtr _p;
 };
 }
 

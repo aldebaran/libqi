@@ -90,10 +90,15 @@ void GwTransaction::setDestinationIfNull(TransportSocketPtr dest)
 
 Gateway::Gateway(bool enforceAuth)
   : _p(boost::make_shared<GatewayPrivate>(enforceAuth))
+  , connected(_p->connected)
 {
   _p->setAuthProviderFactory(boost::make_shared<NullAuthProviderFactory>());
   _p->setClientAuthenticatorFactory(boost::make_shared<NullClientAuthenticatorFactory>());
-  _p->connected.connect(&Property<bool>::setValue, &connected, _1);
+}
+
+Gateway::~Gateway()
+{
+  close();
 }
 
 void Gateway::close()
