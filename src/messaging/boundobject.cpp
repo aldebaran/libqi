@@ -415,6 +415,7 @@ namespace qi {
     // how many times cancel has been requested.
     int cancelCount = ++(*fut.second);
     Future<AnyReference>& future = fut.first;
+    // this future is from metaCall, canceling invokes only our code, no user code, so it won't block
     future.cancel();
 
     FutureState state = future.wait(0);
@@ -451,7 +452,8 @@ namespace qi {
       // called or is in the process of being called (that would be serverResultAdapter).
       // It will register a completion callback on its inner future (if applicable),
       // so we just need to call cancel.
-      ao->call<void>("cancel");
+      // We do the call in async because this may invoke user code, we must not block this thread
+      ao->async<void>("cancel");
     }
   }
 
