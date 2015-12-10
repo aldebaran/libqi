@@ -452,7 +452,6 @@ namespace qi {
       // It will register a completion callback on its inner future (if applicable),
       // so we just need to call cancel.
       ao->call<void>("cancel");
-      qiLogInfo() << "Cancelled message " << origMsgId;
     }
   }
 
