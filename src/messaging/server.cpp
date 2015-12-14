@@ -219,7 +219,8 @@ namespace qi {
         if (msg.object() > Message::GenericObject_Main
           || msg.type() == Message::Type_Reply
           || msg.type() == Message::Type_Event
-          || msg.type() == Message::Type_Error)
+          || msg.type() == Message::Type_Error
+          || msg.type() == Message::Type_Canceled)
           return;
         // ... but only if the object id is >main
         qi::Message       retval(Message::Type_Error, msg.address());
