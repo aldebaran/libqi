@@ -310,6 +310,7 @@ public:
     ADVERTISE(waitFor);
     ADVERTISE(isRunning);
     ADVERTISE(isFinished);
+    ADVERTISE(isValid);
 #undef ADVERTISE
     // this method is useful to get a future<anyvalue> through a simple async call
     // it is used in libqi-python

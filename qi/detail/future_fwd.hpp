@@ -639,6 +639,7 @@ namespace qi {
     FutureState waitFor(qi::Duration duration) const                   { _sync = false; return _future.waitFor(duration); }
     FutureState wait(qi::SteadyClock::time_point timepoint) const      { _sync = false; return _future.wait(timepoint); }
     FutureState waitUntil(qi::SteadyClock::time_point timepoint) const { _sync = false; return _future.waitUntil(timepoint); }
+    bool isValid() const                                               { _sync = false; return _future.isValid(); }
     bool isRunning() const                                             { _sync = false; return _future.isRunning(); }
     bool isFinished() const                                            { _sync = false; return _future.isFinished(); }
     bool isCanceled() const                                            { _sync = false; return _future.isCanceled(); }

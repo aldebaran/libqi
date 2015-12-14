@@ -578,9 +578,13 @@ namespace qi {
   }
 
   // second bounce when returned type is a future
-  void ServiceBoundObject::serverResultAdapterNext(AnyReference val,// the future
-    Signature targetSignature,ObjectHost* host, TransportSocketPtr socket, const qi::MessageAddress &replyaddr,
-    const Signature& forcedReturnSignature, CancelableKitWeak kit)
+  void ServiceBoundObject::serverResultAdapterNext(AnyReference val, // the future
+                                                   Signature targetSignature,
+                                                   ObjectHost* host,
+                                                   TransportSocketPtr socket,
+                                                   const qi::MessageAddress& replyaddr,
+                                                   const Signature& forcedReturnSignature,
+                                                   CancelableKitWeak kit)
   {
     qi::Message ret(Message::Type_Reply, replyaddr);
     _removeCachedFuture(kit, socket, replyaddr.messageId);
@@ -617,7 +621,7 @@ namespace qi {
     } catch (const std::exception &e) {
       //be more than safe. we always want to nack the client in case of error
       ret.setType(qi::Message::Type_Error);
-      ret.setError(std::string("Uncaught error:") + e.what());
+      ret.setError(std::string("Uncaught error: ") + e.what());
     } catch (...) {
       //be more than safe. we always want to nack the client in case of error
       ret.setType(qi::Message::Type_Error);
@@ -628,10 +632,13 @@ namespace qi {
     val.destroy();
   }
 
-  void ServiceBoundObject::serverResultAdapter(Future<AnyReference> future, const qi::Signature& targetSignature,
-                                               ObjectHost* host, TransportSocketPtr socket,
-                                               const qi::MessageAddress &replyaddr,
-                                               const Signature& forcedReturnSignature, CancelableKitWeak kit,
+  void ServiceBoundObject::serverResultAdapter(Future<AnyReference> future,
+                                               const qi::Signature& targetSignature,
+                                               ObjectHost* host,
+                                               TransportSocketPtr socket,
+                                               const qi::MessageAddress& replyaddr,
+                                               const Signature& forcedReturnSignature,
+                                               CancelableKitWeak kit,
                                                AtomicIntPtr cancelRequested)
   {
     qi::Message ret(Message::Type_Reply, replyaddr);
@@ -649,36 +656,47 @@ namespace qi {
         {
           boost::function<void()> cb = boost::bind(&ServiceBoundObject::serverResultAdapterNext, val, targetSignature,
                                                    host, socket, replyaddr, forcedReturnSignature, kit);
-          ao->call<void>("_connect", cb);
-          // Check if the atomic is set to true.
-          // If it is and we manage to set it to false, we're taking care of cancelling the future.
-          if (cancelRequested)
+          if (ao->call<bool>("isValid"))
           {
-            int cancelCount = *(*cancelRequested);
-            bool doCancel = false;
-            while (cancelCount)
+            ao->call<void>("_connect", cb);
+            // Check if the atomic is set to true.
+            // If it is and we manage to set it to false, we're taking care of cancelling the future.
+            if (cancelRequested)
             {
-              if (cancelRequested->setIfEquals(cancelCount, cancelCount - 1))
+              int cancelCount = *(*cancelRequested);
+              bool doCancel = false;
+              while (cancelCount)
               {
-                doCancel = true;
-                break;
+                if (cancelRequested->setIfEquals(cancelCount, cancelCount - 1))
+                {
+                  doCancel = true;
+                  break;
+                }
+                cancelCount = **cancelRequested;
               }
-              cancelCount = **cancelRequested;
+              if (doCancel)
+              {
+                qiLogDebug() << "Cancel requested for call " << replyaddr.messageId;
+                ao->call<void>("cancel");
+              }
             }
-            if (doCancel)
-            {
-              qiLogDebug() << "Cancel requested for call " << replyaddr.messageId;
-              ao->call<void>("cancel");
-            }
+            return;
           }
-          return;
+          else
+          {
+            ret.setType(Message::Type_Error);
+            ret.setError(qi::detail::InvalidFutureError);
+          }
         }
-        convertAndSetValue(ret, val, targetSignature, host, socket.get(), forcedReturnSignature);
-        future.setOnDestroyed(&destroyAbstractFuture);
+        else
+        {
+          convertAndSetValue(ret, val, targetSignature, host, socket.get(), forcedReturnSignature);
+          future.setOnDestroyed(&destroyAbstractFuture);
+        }
       } catch (const std::exception &e) {
         //be more than safe. we always want to nack the client in case of error
         ret.setType(qi::Message::Type_Error);
-        ret.setError(std::string("Uncaught error:") + e.what());
+        ret.setError(std::string("Uncaught error: ") + e.what());
       } catch (...) {
         //be more than safe. we always want to nack the client in case of error
         ret.setType(qi::Message::Type_Error);

@@ -999,6 +999,31 @@ TEST(TestCall, CallOnFutureReturn)
   ASSERT_EQ(41, f);
 }
 
+TEST(TestCall, TestInvalidFuture)
+{
+  TestSessionPair p;
+
+  qi::DynamicObjectBuilder ob;
+  ob.advertiseMethod("getInvalid",
+                     boost::function<qi::Future<void>()>(
+                       []{ return qi::Future<void>(); }));
+  ob.setThreadingModel(qi::ObjectThreadingModel_MultiThread);
+  p.server()->registerService("test", ob.object());
+  qi::AnyObject proxy = p.client()->service("test");
+
+  qi::Future<void> future = proxy.async<void>("getInvalid");
+  ASSERT_EQ(qi::detail::InvalidFutureError, future.error());
+  try
+  {
+    proxy.call<void>("getInvalid");
+    FAIL();
+  }
+  catch (std::exception& e)
+  {
+    ASSERT_EQ(qi::detail::InvalidFutureError, std::string(e.what()));
+  }
+}
+
 void arrrg(int v) {
 }
 
