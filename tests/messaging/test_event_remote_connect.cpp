@@ -406,6 +406,26 @@ TEST_F(TestObject, serviceDirectoryEvent)
   ASSERT_EQ(*i, 4);
 }
 
+TEST(TestObjectDyn, PropertyConnectOnDynamicObject)
+{
+  qi::Property<int> prop;
+  qi::DynamicObjectBuilder builder;
+  builder.advertiseProperty("prop", &prop);
+
+  TestSessionPair p;
+  p.server()->registerService("Serv", builder.object());
+
+  qi::Promise<int> prom;
+
+  qi::AnyObject obj = p.client()->service("Serv");
+  obj.connect("prop", boost::function<void(int)>([&prom](int i){
+          prom.setValue(i);
+        }));
+
+  prop.set(42);
+  ASSERT_EQ(42, prom.future().value());
+}
+
 int main(int argc, char *argv[])
 {
 #if defined(__APPLE__) || defined(__linux__)

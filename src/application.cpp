@@ -74,6 +74,7 @@ namespace qi {
   typedef std::vector<std::function<void()> > FunctionList;
   static FunctionList* globalAtExit = nullptr;
   static FunctionList* globalAtEnter = nullptr;
+  static FunctionList* globalAtRun = nullptr;
   static FunctionList* globalAtStop = nullptr;
 
 
@@ -378,6 +379,10 @@ namespace qi {
     //will make this loop exit.
     initSigIntSigTermCatcher();
 
+    // call every function registered as "atRun"
+    for(auto& function: lazyGet(globalAtRun))
+      function();
+
     boost::unique_lock<boost::mutex> l(globalMutex);
     globalCond.wait(l, &isStop);
   }
@@ -467,6 +472,12 @@ namespace qi {
   bool Application::atExit(std::function<void()> func)
   {
     lazyGet(globalAtExit).push_back(func);
+    return true;
+  }
+
+  bool Application::atRun(std::function<void ()> func)
+  {
+    lazyGet(globalAtRun).push_back(func);
     return true;
   }
 

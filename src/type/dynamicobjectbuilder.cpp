@@ -134,9 +134,13 @@ namespace qi
 
   unsigned int DynamicObjectBuilder::advertiseProperty(const std::string &name, qi::PropertyBase *prop)
   {
-    //todo: prop.signature()
-    unsigned int nextId = xAdvertiseSignal(name, prop->signal()->signature());
-    xAdvertiseProperty(name, prop->signal()->signature(), nextId);
+    const auto sigsignature = prop->signal()->signature();
+    if (!sigsignature.hasChildren() || sigsignature.children().size() != 1)
+      throw std::runtime_error("Registering property with invalid signal signature");
+    const auto propsignature = sigsignature.children()[0];
+
+    unsigned int nextId = xAdvertiseSignal(name, sigsignature);
+    xAdvertiseProperty(name, propsignature, nextId);
     _p->_object->setProperty(nextId, prop);
     return nextId;
   }

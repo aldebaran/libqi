@@ -125,9 +125,7 @@ namespace qi {
     if (isInThisContext())
       _workerThreads->launch(&EventLoopAsio::destroy, this);
     else
-    {
       delete this;
-    }
   }
 
   static void ping_me(bool & ping, boost::condition_variable& cond)
@@ -263,7 +261,9 @@ namespace qi {
     }
     else
     {
-      qiLogDebug() << "Waiting for threads to terminate...";
+      qiLogVerbose()
+          << "Waiting threads from the pool \"" << _name << "\", remaining tasks: "
+          << *_totalTask << " (" << *_activeTask <<  " active)...";
       _workerThreads->joinAll();
       assert(*_running == 0);
       qiLogDebug()  << "Waiting done";

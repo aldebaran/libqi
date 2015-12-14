@@ -72,6 +72,29 @@ TEST(Value, Update)
   ASSERT_ANY_THROW(v.update(AutoAnyReference("bar")));
 }
 
+TEST(Value, Conversion)
+{
+  EXPECT_NO_THROW(qi::AnyValue::from(18).to<float>());
+  EXPECT_ANY_THROW(qi::AnyValue::from(18).to<bool>());
+  EXPECT_ANY_THROW(qi::AnyValue::from(18).to<std::string>());
+
+  EXPECT_NO_THROW(qi::AnyValue::from(18.0).to<int>());
+  EXPECT_ANY_THROW(qi::AnyValue::from(18.0).to<bool>());
+  EXPECT_ANY_THROW(qi::AnyValue::from(18.0).to<std::string>());
+
+  EXPECT_EQ(1, qi::AnyValue::from(true).to<int>());
+  EXPECT_EQ(1.0, qi::AnyValue::from(true).to<float>());
+
+  EXPECT_ANY_THROW(qi::AnyValue(qi::typeOf<void>()).to<int>());
+  EXPECT_ANY_THROW(qi::AnyValue(qi::typeOf<void>()).to<std::string>());
+  EXPECT_ANY_THROW(qi::AnyValue(qi::typeOf<void>()).to<float>());
+  EXPECT_ANY_THROW(qi::AnyValue(qi::typeOf<void>()).to<bool>());
+
+  EXPECT_ANY_THROW(qi::AnyValue::from("bla").to<int>());
+  EXPECT_ANY_THROW(qi::AnyValue::from("bla").to<float>());
+  EXPECT_ANY_THROW(qi::AnyValue::from("bla").to<bool>());
+}
+
 TEST(Value, As)
 {
   std::string s("foo");
@@ -572,8 +595,9 @@ struct FooBase
 {
   int x;
   int y;
+  int z;
 };
-QI_TYPE_STRUCT_REGISTER(FooBase, x, y);
+QI_TYPE_STRUCT_REGISTER(FooBase, x, y, z);
 struct OtherBase
 {
   int x;
@@ -584,45 +608,51 @@ struct FooEx
 {
   int x;
   int y;
-  int z;
 };
-
-QI_TYPE_STRUCT_EXTENSION_DROP_FIELDS(FooEx, "z");
-QI_TYPE_STRUCT_REGISTER(FooEx, x, y, z);
-
+QI_TYPE_STRUCT_EXTENSION_DROPPED_FIELDS(FooEx, "z");
+QI_TYPE_STRUCT_REGISTER(FooEx, x, y);
 
 TEST(Struct, ExtendDrop)
 {
-  FooEx e; e.x = 1; e.y = 2; e.z = 3;
-  FooBase f = qi::AnyReference::from(e).to<FooBase>();
+  FooBase e = { 1, 2, 3 };
+  FooEx f = qi::AnyReference::from(e).to<FooEx>();
   EXPECT_EQ(1, f.x);
   EXPECT_EQ(2, f.y);
   EXPECT_ANY_THROW(qi::AnyReference::from(e).to<OtherBase>());
-  EXPECT_ANY_THROW(qi::AnyReference::from(f).to<FooEx>());
+
+  FooBase e2 = qi::AnyReference::from(f).to<FooBase>();
+  EXPECT_EQ(1, e2.x);
+  EXPECT_EQ(2, e2.y);
+  EXPECT_EQ(0, e2.z); // filled with default value
+
+  OtherBase b = { 1, 3 };
+  EXPECT_ANY_THROW(qi::AnyReference::from(b).to<FooEx>());
 }
 
 struct FooEx2
 {
   int x;
   int y;
-  int z;
   std::string s;
 };
 
 
-QI_TYPE_STRUCT_EXTENSION_DROP_FIELDS(FooEx2, "z", "s");
-QI_TYPE_STRUCT_EXTENSION_FILL_FIELDS(FooEx2, "z", "s");
-QI_TYPE_STRUCT_REGISTER(FooEx2, x, y, z, s);
+QI_TYPE_STRUCT_EXTENSION_DROPPED_FIELDS(FooEx2, "z");
+QI_TYPE_STRUCT_EXTENSION_ADDED_FIELDS(FooEx2, "s");
+QI_TYPE_STRUCT_REGISTER(FooEx2, x, y, s);
 
-TEST(Struct, ExtendFill)
+TEST(Struct, ExtendFillDrop)
 {
-  FooBase f; f.x = 1; f.y = 2;
+  FooBase f = { 1, 2, 3 };
   FooEx2 f2 = qi::AnyReference::from(f).to<FooEx2>();
-  EXPECT_EQ(0, f2.z);
+  EXPECT_EQ(1, f2.x);
+  EXPECT_EQ(2, f2.y);
   EXPECT_TRUE(f2.s.empty());
-  FooEx f1; f1.x = 1; f1.y = 2; f1.z = 3;
+
+  FooEx f1 = { 1, 2 };
   f2 = qi::AnyReference::from(f1).to<FooEx2>();
-  EXPECT_EQ(3, f2.z);
+  EXPECT_EQ(1, f2.x);
+  EXPECT_EQ(2, f2.y);
   EXPECT_TRUE(f2.s.empty());
 }
 
@@ -640,39 +670,16 @@ QI_TYPE_STRUCT_BOUNCE_REGISTER(FooExPub, FooEx2, get_priv);
 
 TEST(Struct, ExtendFillBounce)
 {
-  FooBase f; f.x = 1; f.y = 2;
+  FooBase f = { 1, 2, 3 };
   FooExPub f2 = qi::AnyReference::from(f).to<FooExPub>();
-  EXPECT_EQ(0, f2.fooex2.z);
+  EXPECT_EQ(1, f2.fooex2.x);
+  EXPECT_EQ(2, f2.fooex2.y);
   EXPECT_TRUE(f2.fooex2.s.empty());
-  FooEx f1; f1.x = 1; f1.y = 2; f1.z = 3;
+  FooEx f1 = { 1, 2 };
   f2 = qi::AnyReference::from(f1).to<FooExPub>();
-  EXPECT_EQ(3, f2.fooex2.z);
+  EXPECT_EQ(1, f2.fooex2.x);
+  EXPECT_EQ(2, f2.fooex2.y);
   EXPECT_TRUE(f2.fooex2.s.empty());
-}
-
-// A good demo of why all mode is overkill
-struct Velo
-{
-  int x;
-  std::string y;
-};
-struct Poisson
-{
-  double z;
-  std::vector<int> a;
-};
-QI_TYPE_STRUCT_EXTENSION_ALL(Velo);
-QI_TYPE_STRUCT_EXTENSION_ALL(Poisson);
-QI_TYPE_STRUCT_REGISTER(Velo, x, y);
-QI_TYPE_STRUCT_REGISTER(Poisson, z, a);
-
-
-TEST(Struct, ExtendAll)
-{
-  Velo v; Poisson p;
-  p = qi::AnyReference::from(v).to<Poisson>();
-  v = qi::AnyReference::from(p).to<Velo>();
-  EXPECT_TRUE(true);
 }
 
 struct Color
@@ -687,98 +694,61 @@ struct ColorA
 };
 
 // only allow drop of a if it equals 1
-bool colorVersionHandler(ColorA* instance, const std::vector<std::string>& fields)
+bool colorDropHandler(std::map<std::string, ::qi::AnyValue>& fields,
+                      const std::vector<std::tuple<std::string, TypeInterface*>>& missing,
+                      const std::map<std::string, ::qi::AnyReference>& dropfields)
 {
-  if (fields.size() != 1 || fields.front() != "a")
+  try
+  {
+    if (!missing.empty())
+      return false;
+    if (dropfields.size() != 1 || dropfields.begin()->first != "a")
+      return false;
+    return dropfields.begin()->second.toInt() == 1;
+  }
+  catch (...)
+  {
     return false;
-  return instance->a == 1;
+  }
+}
+
+bool colorFillHandler(std::map<std::string, ::qi::AnyValue>& fields,
+                      const std::vector<std::tuple<std::string, TypeInterface*>>& missing,
+                      const std::map<std::string, ::qi::AnyReference>& dropfields)
+{
+  if (!dropfields.empty())
+    return false;
+  if (missing.size() != 1 || std::get<0>(missing.front()) != "a")
+    return false;
+  fields["a"] = qi::AnyValue::from(1);
+  return true;
 }
 
 QI_TYPE_STRUCT_REGISTER(Color, r, g, b);
-QI_TYPE_STRUCT_EXTENSION_DROP_HANDLER(ColorA, colorVersionHandler);
+QI_TYPE_STRUCT_EXTENSION_CONVERT_HANDLERS(ColorA, colorFillHandler, colorDropHandler);
 QI_TYPE_STRUCT_REGISTER(ColorA, r, g, b, a);
 
 TEST(Struct, DropHandler)
 {
-  ColorA a0, a1;
+  ColorA a0 = { 0, 1, 2, 0 }, a1 = { 0, 1, 2, 1 };
   Color c;
-  a0.r = 0; a0.g = 1; a0.b = 2; a0.a = 0;
-  a1.r = 0; a1.g = 1; a1.b = 2; a1.a = 1;
-  c = qi::AnyReference::from(a1).to<Color>();
+  ASSERT_NO_THROW(c = qi::AnyReference::from(a1).to<Color>());
+  EXPECT_EQ(a1.r, c.r);
+  EXPECT_EQ(a1.g, c.g);
+  EXPECT_EQ(a1.b, c.b);
+  ASSERT_NO_THROW(a1 = qi::AnyReference::from(c).to<ColorA>());
   EXPECT_EQ(c.r, a1.r);
   EXPECT_EQ(c.g, a1.g);
   EXPECT_EQ(c.b, a1.b);
-  EXPECT_ANY_THROW(c = qi::AnyReference::from(a0).to<Color>());
-}
-
-/* Say we upgraded struct Face with a customizable normal
-*/
-struct V3
-{
-  int x,y,z; // use int for exact comparison
-};
-V3 normal(const V3& a, const V3& b)
-{
-  V3 res;
-  res.x = a.y*b.z - a.z*b.y;
-  res.y = a.x*b.z - a.z*b.x;
-  res.z = a.x*b.y - a.y*b.x;
-  return res;
-}
-V3 diff(const V3& a, const V3& b)
-{
-  V3 res;
-  res.x = a.x-b.x;
-  res.y = a.y-b.y;
-  res.z = a.z-b.z;
-  return res;
-}
-
-QI_TYPE_STRUCT_REGISTER(V3, x, y, z);
-struct Face1
-{
-  V3 a, b, c;
-};
-QI_TYPE_STRUCT_REGISTER(Face1, a, b, c);
-
-struct Face2
-{
-  V3 a,b,c,normal;
-};
-
-bool fillNormal(std::map<std::string, qi::AnyValue>& map, const std::vector<std::string>& fields)
-{
-  if (fields.size() != 1 || fields.front() != "normal")
-    return false;
-  V3 a = map["a"].to<V3>();
-  V3 b = map["b"].to<V3>();
-  V3 c = map["c"].to<V3>();
-  map["normal"] = qi::AnyValue(normal(diff(a, b), diff(a, c)));
-  return true;
-}
-
-QI_TYPE_STRUCT_EXTENSION_DROP_FIELDS(Face2, "normal");
-QI_TYPE_STRUCT_EXTENSION_FILL_HANDLER(Face2, fillNormal);
-QI_TYPE_STRUCT_REGISTER(Face2, a, b, c, normal);
-
-TEST(Struct, FillHandler)
-{
-  Face2 f2;
-  Face1 f1;
-  EXPECT_NO_THROW(f1 = qi::AnyReference::from(f2).to<Face1>());
-  memset(&f2, 0xcc, sizeof(Face2));
-  memset(&f1, 0, sizeof(Face1));
-  f1.b.x = 1;
-  f1.c.y = 1;
-  EXPECT_NO_THROW(f2 = qi::AnyReference::from(f1).to<Face2>());
-  EXPECT_EQ(1, f2.normal.z);
+  EXPECT_EQ(1, a1.a);
+  EXPECT_ANY_THROW(qi::AnyReference::from(a0).to<Color>());
 }
 
 TEST(Struct, ComplexType)
 {
-  std::pair<std::vector<V3>, std::list<V3> > p;
+  std::pair<std::vector<Foo>, std::list<FooEx> > p;
   AnyValue::from(p);
-  std::pair<std::vector<int>, std::list<std::map<int, V3> > > p2;
+  std::pair<std::vector<int>, std::list<std::map<int, Foo> > > p2;
   AnyValue::from(p2);
 }
 

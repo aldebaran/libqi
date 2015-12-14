@@ -36,6 +36,66 @@ qiLogCategory("test");
 //  ASSERT_TRUE(&m1.signature() != &m2.signature());
 //}
 
+int getint()
+{
+  return 42;
+}
+
+bool getbool()
+{
+  return false;
+}
+
+std::string getstring()
+{
+  return "lol";
+}
+
+float getfloat()
+{
+  return 42.0;
+}
+
+void getvoid()
+{
+}
+
+TEST(TestCall, Convert)
+{
+  qi::DynamicObjectBuilder ob;
+  ob.advertiseMethod("getint", &getint);
+  ob.advertiseMethod("getbool", &getbool);
+  ob.advertiseMethod("getstring", &getstring);
+  ob.advertiseMethod("getfloat", &getfloat);
+  ob.advertiseMethod("getvoid", &getvoid);
+
+  TestSessionPair p;
+  p.server()->registerService("Serv", ob.object());
+  qi::AnyObject obj = p.client()->service("Serv");
+
+  EXPECT_EQ(42, obj.call<float>("getint"));
+  EXPECT_ANY_THROW(obj.call<bool>("getint"));
+  EXPECT_ANY_THROW(obj.call<std::string>("getint"));
+
+  EXPECT_EQ(42.0, obj.call<int>("getfloat"));
+  EXPECT_ANY_THROW(obj.call<bool>("getfloat"));
+  EXPECT_ANY_THROW(obj.call<std::string>("getfloat"));
+
+  EXPECT_EQ(false, obj.call<bool>("getbool"));
+  EXPECT_EQ(0, obj.call<int>("getbool"));
+  EXPECT_EQ(0.0, obj.call<float>("getbool"));
+
+  EXPECT_ANY_THROW(obj.call<int>("getvoid"));
+  EXPECT_ANY_THROW(obj.call<std::string>("getvoid"));
+  EXPECT_ANY_THROW(obj.call<float>("getvoid"));
+  EXPECT_ANY_THROW(obj.call<bool>("getvoid"));
+
+  EXPECT_EQ("lol", obj.call<std::string>("getstring"));
+  EXPECT_ANY_THROW(obj.call<int>("getstring"));
+  EXPECT_ANY_THROW(obj.call<float>("getstring"));
+  EXPECT_ANY_THROW(obj.call<bool>("getstring"));
+}
+
 int addOne(int v)
 {
   qiLogDebug() << "addOne";
@@ -1284,18 +1344,39 @@ struct ColorA
   int r,g,b,a;
 };
 
-// only allow drop of a if it equals 0 (the default-constructed value)
-bool colorVersionHandler(ColorA* instance, const std::vector<std::string>& fields)
+// only allow drop of a if it equals 1
+bool colorDropHandler(std::map<std::string, ::qi::AnyValue>& fields,
+                      const std::vector<std::tuple<std::string, TypeInterface*>>& missing,
+                      const std::map<std::string, ::qi::AnyReference>& dropfields)
 {
-  qiLogDebug() << "colorVersionHandler " << instance->a;
-  if (fields.size() != 1 || fields.front() != "a")
+  try
+  {
+    if (!missing.empty())
+      return false;
+    if (dropfields.size() != 1 || dropfields.begin()->first != "a")
+      return false;
+    return dropfields.begin()->second.toInt() == 0;
+  }
+  catch (...)
+  {
     return false;
-  return instance->a == 0;
+  }
+}
+
+bool colorFillHandler(std::map<std::string, ::qi::AnyValue>& fields,
+                      const std::vector<std::tuple<std::string, TypeInterface*>>& missing,
+                      const std::map<std::string, ::qi::AnyReference>& dropfields)
+{
+  if (!dropfields.empty())
+    return false;
+  if (missing.size() != 1 || std::get<0>(missing.front()) != "a")
+    return false;
+  fields["a"] = qi::AnyValue::from(0);
+  return true;
 }
 
 QI_TYPE_STRUCT_REGISTER(Color, r, g, b);
-QI_TYPE_STRUCT_EXTENSION_DROP_HANDLER(ColorA, colorVersionHandler);
-QI_TYPE_STRUCT_EXTENSION_FILL_FIELDS(ColorA, "a");
+QI_TYPE_STRUCT_EXTENSION_CONVERT_HANDLERS(ColorA, colorFillHandler, colorDropHandler);
 QI_TYPE_STRUCT_REGISTER(ColorA, r, g, b, a);
 
 int getColor(Color& c) { return c.r+c.g+c.b;}

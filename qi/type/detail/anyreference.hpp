@@ -379,5 +379,6 @@ public:
  * inside a AnyReference. use AnyValue instead.
  */
 QI_NO_TYPE(qi::AnyReference);
+QI_NO_TYPE(qi::AutoAnyReference);
 
 #endif

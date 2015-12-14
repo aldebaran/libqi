@@ -294,35 +294,39 @@ namespace qi
   void TcpTransportSocket::error(const std::string& erc)
   {
     qiLogVerbose() << "Socket error: " << erc;
-    boost::recursive_mutex::scoped_lock lock(_closingMutex);
-    if (_abort)
     {
-      // Return straight away if error has already been called.
-      // Otherwise, `disconnected` callbacks could be called
-      // multiple times.
-      return;
+      boost::recursive_mutex::scoped_lock lock(_closingMutex);
+      if (_abort)
+      {
+        // Return straight away if error has already been called.
+        // Otherwise, `disconnected` callbacks could be called
+        // multiple times.
+        return;
+      }
+      _abort = true;
+      _status = qi::TransportSocket::Status::Disconnected;
+
+      if (_connecting)
+      {
+        _connecting = false;
+      }
+
+      {
+        boost::mutex::scoped_lock l(_sendQueueMutex);
+        boost::system::error_code er;
+        if (_socket)
+        {
+          // Unconditionally try to shutdown if socket is present, it might be in connecting state.
+          _socket->lowest_layer().shutdown(boost::asio::ip::tcp::socket::shutdown_both, er);
+          _socket->lowest_layer().close(er);
+        }
+      }
+      _socket.reset();
     }
-    _abort = true;
-    _status = qi::TransportSocket::Status::Disconnected;
+
+    // synchronous signals, do not keep the mutex while we trigger
     disconnected(erc);
     socketEvent(SocketEventData(erc));
-
-    if (_connecting)
-    {
-      _connecting = false;
-    }
-
-    {
-      boost::mutex::scoped_lock l(_sendQueueMutex);
-      boost::system::error_code er;
-      if (_socket)
-      {
-        // Unconditionally try to shutdown if socket is present, it might be in connecting state.
-        _socket->lowest_layer().shutdown(boost::asio::ip::tcp::socket::shutdown_both, er);
-        _socket->lowest_layer().close(er);
-      }
-    }
-    _socket.reset();
   }
 
   qi::FutureSync<void> TcpTransportSocket::connect(const qi::Url &url)

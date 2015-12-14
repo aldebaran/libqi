@@ -94,7 +94,7 @@ namespace
   qi::SessionPtr TestGateway::connectClientToGw()
   {
     qi::SessionPtr session = qi::makeSession();
-    session->connect(gw_.endpoints()[0]);
+    session->connect(gw_.endpoints().at(0));
     return session;
   }
 

@@ -203,6 +203,15 @@ namespace qi {
      * \return True if registering succeeded, false otherwise.
      */
     static bool atExit(std::function<void()> func);
+
+    /**
+     * \brief Register a function to be executed when run() is called.
+     * The functions are executed sequentially at the beginning of run().
+     * \param func Callback function called when stop() is called.
+     * \return True if registering succeeded, false otherwise.
+     */
+    static bool atRun(std::function<void()> func);
+
     /**
      * \brief Register a function to be executed when stop() is called.
      * The functions are executed sequentially before run() returns.

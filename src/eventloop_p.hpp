@@ -54,33 +54,33 @@ namespace qi {
     std::string             _name;
 
   protected:
-    virtual ~EventLoopPrivate() {}
+    virtual ~EventLoopPrivate() = default;
   };
 
-  class EventLoopAsio: public EventLoopPrivate
+  class EventLoopAsio final: public EventLoopPrivate
   {
   public:
     EventLoopAsio();
-    virtual bool isInThisContext();
-    virtual void start(int nthreads);
-    virtual void join();
-    virtual void stop();
-    virtual qi::Future<void> asyncCall(qi::Duration delay,
-      boost::function<void ()> callback);
-    virtual void post(qi::Duration delay,
-      const boost::function<void ()>& callback);
-    virtual qi::Future<void> asyncCall(qi::SteadyClockTimePoint timepoint,
-        boost::function<void ()> callback);
-    virtual void post(qi::SteadyClockTimePoint timepoint,
-        const boost::function<void ()>& callback);
-    virtual void destroy();
-    virtual void* nativeHandle();
-    virtual void setMaxThreads(unsigned int max);
+    bool isInThisContext() override;
+    void start(int nthreads) override;
+    void join() override;
+    void stop() override;
+    qi::Future<void> asyncCall(qi::Duration delay,
+      boost::function<void ()> callback) override;
+    void post(qi::Duration delay,
+      const boost::function<void ()>& callback) override;
+    qi::Future<void> asyncCall(qi::SteadyClockTimePoint timepoint,
+        boost::function<void ()> callback) override;
+    void post(qi::SteadyClockTimePoint timepoint,
+        const boost::function<void ()>& callback) override;
+    void destroy() override;
+    void* nativeHandle() override;
+    void setMaxThreads(unsigned int max) override;
   private:
     void invoke_maybe(boost::function<void()> f, qi::uint32_t id, qi::Promise<void> p, const boost::system::error_code& erc);
     void _runPool();
     void _pingThread();
-    virtual ~EventLoopAsio();
+    ~EventLoopAsio() override;
 
     enum class Mode
     {
