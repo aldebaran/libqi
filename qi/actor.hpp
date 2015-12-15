@@ -31,7 +31,7 @@ public:
   {}
   Actor(const Actor&)
   {}
-  Actor(qi::ExecutionContext& ec)
+  explicit Actor(qi::ExecutionContext& ec)
     : _strand(ec)
   {}
 
