@@ -86,7 +86,7 @@ namespace qi
     _p->_name = n;
   }
 
-  void PeriodicTask::setCallback(const Callback& cb)
+  void PeriodicTask::_setCallback(const Callback& cb)
   {
     if (_p->_callback)
       throw std::runtime_error("Callback already set");
