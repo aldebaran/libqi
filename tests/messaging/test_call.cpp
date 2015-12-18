@@ -81,7 +81,7 @@ TEST(TestCall, Convert)
   EXPECT_ANY_THROW(obj.call<bool>("getfloat"));
   EXPECT_ANY_THROW(obj.call<std::string>("getfloat"));
 
-  EXPECT_EQ(false, obj.call<bool>("getbool"));
+  EXPECT_FALSE(obj.call<bool>("getbool"));
   EXPECT_EQ(0, obj.call<int>("getbool"));
   EXPECT_EQ(0.0, obj.call<float>("getbool"));
 
