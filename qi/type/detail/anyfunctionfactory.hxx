@@ -389,8 +389,9 @@ namespace qi
       void* v = detail::makeCall(*(S*)ptrFromStorage(&storage), (void**)out);
       // v is storage for type ReturnType we claimed we were
       // adapt return value if needed
-      if (boost::is_pointer<ReturnType>::value
-          &&  _resultType->kind() != TypeKind_Pointer)
+      if (boost::is_pointer<ReturnType>::value &&
+          (_resultType->kind() != TypeKind_Pointer ||
+           static_cast<PointerTypeInterface*>(_resultType)->pointerKind() != PointerTypeInterface::Raw))
       {
         // if refMask&1, real return type is some Foo& and v is Foo*
         // else, return type is Foo with sizeof(Foo) == sizeof(void*) and v is a Foo
@@ -629,7 +630,8 @@ namespace qi
     {
       static AnyFunction make(boost::function<T> func)
       {
-        assert(sizeof(boost::function<T>) == sizeof(boost::function<void ()>));
+        static_assert(sizeof(boost::function<T>) == sizeof(boost::function<void()>),
+                      "boost::functions are not all the same size");
         AnyFunction res = detail::makeAnyFunctionBare(func);
         return res;
       }

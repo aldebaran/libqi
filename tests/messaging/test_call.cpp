@@ -812,6 +812,19 @@ TEST(TestCall, TestObjectPassingReturn)
   ASSERT_FALSE(weak.lock());
 }
 
+auto ptr = boost::make_shared<int>(9999);
+TEST(TestCall, TestReturnSharedPtrRef)
+{
+  qi::DynamicObjectBuilder ob;
+  ob.advertiseMethod("over9000", static_cast<boost::shared_ptr<int>&(*)()>([]() -> boost::shared_ptr<int>& {
+          return ptr;
+        }));
+  qi::AnyObject obj(ob.object());
+
+  auto p = obj.call<boost::shared_ptr<int>>("over9000");
+  ASSERT_EQ(9999, *p);
+}
+
 class TestClassInterface
 {
 public:
