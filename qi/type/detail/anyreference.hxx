@@ -131,7 +131,7 @@ inline T AnyReferenceBase::to(const T&) const
 }
 
 QI_NORETURN QI_API void throwConversionFailure(
-    TypeInterface* from, TypeInterface* to);
+    TypeInterface* from, TypeInterface* to, const std::string& additionalMsg);
 
 template<typename T>
 inline T AnyReferenceBase::to() const
@@ -140,7 +140,7 @@ inline T AnyReferenceBase::to() const
   std::pair<AnyReference, bool> conv = convert(targetType);
   if (!conv.first._type)
   {
-    throwConversionFailure(_type, targetType);
+    throwConversionFailure(_type, targetType, ""); // no additional message
   }
   T result = *conv.first.ptr<T>(false);
   if (conv.second)
