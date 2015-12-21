@@ -107,8 +107,6 @@ namespace qi {
     qiLogDebug() << "~ServiceBoundObject()";
     _cancelables.reset();
     ObjectHost::clear();
-    if (_owner)
-      _owner->removeObject(_objectId);
     onDestroy(this);
     qiLogDebug() << "~ServiceBoundObject() reseting object " << _object.use_count();
     _object.reset();
