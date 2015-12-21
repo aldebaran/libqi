@@ -157,6 +157,7 @@ public:
 
   qi::Signature signature(bool resolveDynamic = false) const;
   TypeKind kind() const;
+  AnyReference unwrap() const;
 
   ///@{
   /** Read and update functions

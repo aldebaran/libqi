@@ -75,6 +75,16 @@ inline TypeKind AnyReferenceBase::kind() const
     return _type->kind();
 }
 
+inline AnyReference AnyReferenceBase::unwrap() const
+{
+  AnyReference res = *this;
+  while (res.kind() == TypeKind_Dynamic)
+  {
+    res = res.content();
+  }
+  return res;
+}
+
 template<TypeKind T> struct TypeOfKind {};
 
 #define TYPE_OF_KIND(k, t) template<> struct TypeOfKind<k> { using type = t;}
