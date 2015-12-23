@@ -110,7 +110,7 @@ namespace qi
 
       template <typename... Args>
       // decltype(this->_f(std::forward<Args>(args)...)) does not work on vs2013 \o/
-      auto operator()(Args&&... args) const -> decltype(std::declval<F>()(std::forward<Args>(args)...))
+      auto operator()(Args&&... args) -> decltype(std::declval<F>()(std::forward<Args>(args)...))
       {
         auto s = _wptr.lock();
         if (s)
