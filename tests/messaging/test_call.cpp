@@ -1671,10 +1671,6 @@ TEST(TestCall, TestAsyncFutureIsCancelable)
 {
   TestSessionPair p;
 
-  // FIXME support cancel in the gateway
-  if (p.mode() == TestMode::Mode_Gateway)
-    return;
-
   qi::DynamicObjectBuilder ob;
   qi::Promise<void> promise(&doCancel);
   ob.advertiseMethod("getCancelableFuture",
