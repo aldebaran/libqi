@@ -642,7 +642,7 @@ namespace qi {
         for (unsigned i = 0; i < sz; ++i)
         {
           AnyReference v = deserialize(elementType, in, context, streamContext);
-          result._append(v);
+          result.append(v);
           v.destroy();
         }
       }

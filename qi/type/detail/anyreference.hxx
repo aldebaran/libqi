@@ -249,7 +249,7 @@ inline AnyReference AnyReferenceBase::at(const AnyReference& key) const
 template<typename T>
 void AnyReferenceBase::append(const T& element)
 {
-  _append(AnyReference::from(element));
+  append(AnyReference::from(element));
 }
 
 template<typename K, typename V>

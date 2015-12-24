@@ -157,7 +157,7 @@ namespace detail
       {
         AnyReference val = *it;
         if (!needConvert)
-          result._append(val);
+          result.append(val);
         else
         {
           std::pair<AnyReference,bool> c = val.convert(dstElemType);
@@ -168,7 +168,7 @@ namespace detail
             result.destroy();
             return std::make_pair(AnyReference(), false);
           }
-          result._append(c.first);
+          result.append(c.first);
           if (c.second)
             c.first.destroy();
         }
@@ -1159,7 +1159,7 @@ namespace detail
       throw std::runtime_error("Expected List, Map or Tuple kind");
   }
 
-  void AnyReferenceBase::_append(const AnyReference& elem)
+  void AnyReferenceBase::append(const AnyReference& elem)
   {
     if (kind() != TypeKind_List && kind() != TypeKind_VarArgs)
       throw std::runtime_error("Expected a list");

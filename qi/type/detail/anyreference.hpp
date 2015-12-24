@@ -85,7 +85,6 @@ public:
 
   // get item with key/index 'key'. Return empty GVP or throw in case of failure
   AnyReference _element(const AnyReference& key, bool throwOnFailure);
-  void _append(const AnyReference& element);
   void _insert(const AnyReference& key, const AnyReference& val);
   ///@}
 
@@ -274,6 +273,8 @@ public:
   //TODO: use AutoAnyReference
   template<typename T>
   void append(const T& element);
+  void append(const AnyReference& element);
+
 
   template<typename K, typename V>
   void insert(const K& key, const V& val);
