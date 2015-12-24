@@ -256,6 +256,19 @@ public:
   template<typename E, typename K>
   E& element(const K& key);
 
+  /**
+   * Similar to operator[], but Map container type is not modified if
+   * the key does not exist.
+   * Returns an empty AnyReference if the key is invalid (out of bounds for
+   * list/tuple or key not found for the map)
+   */
+  template<typename K>
+  AnyReference at(const K& key);
+  template<typename K>
+  AnyReference at(const K& key) const;
+  AnyReference at(const AnyReference& key);
+  AnyReference at(const AnyReference& key) const;
+
   size_t size() const;
 
   //TODO: use AutoAnyReference

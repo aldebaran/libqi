@@ -219,6 +219,33 @@ AnyReference AnyReferenceBase::operator[](const K& key)
   return _element(AnyReferenceBase::from(key), true);
 }
 
+template<typename K>
+AnyReference AnyReferenceBase::at(const K& key)
+{
+  // note that this implementation is currently not very useful
+  // (it does the same thing as the const version) and could be removed.
+  // In the future, AnyReferenceConst should be implemented to
+  // make the distinction between the two, and in this case
+  // this version of the function will have a real meaning.
+  return _element(AnyReferenceBase::from(key), false);
+}
+
+template<typename K>
+AnyReference AnyReferenceBase::at(const K& key) const
+{
+  return const_cast<AnyReferenceBase*>(this)->_element(AnyReferenceBase::from(key), false);
+}
+
+inline AnyReference AnyReferenceBase::at(const AnyReference& key)
+{
+  return _element(key, false);
+}
+
+inline AnyReference AnyReferenceBase::at(const AnyReference& key) const
+{
+  return const_cast<AnyReferenceBase*>(this)->_element(key, false);
+}
+
 template<typename T>
 void AnyReferenceBase::append(const T& element)
 {
