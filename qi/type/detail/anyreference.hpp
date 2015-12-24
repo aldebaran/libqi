@@ -55,6 +55,9 @@ protected:
     , _value(value)
   {}
 
+  // get item with key/index 'key'. Return empty GVP or throw in case of failure
+  AnyReference _element(const AnyReference& key, bool throwOnFailure);
+
 public:
   /// @return the pair (convertedValue, trueIfCopiedAndNeedsDestroy)
   std::pair<AnyReference, bool> convert(TypeInterface* targetType) const;
@@ -82,9 +85,6 @@ public:
 
   /// Helper function that converts and always clone
   AnyReference convertCopy(TypeInterface* targetType) const;
-
-  // get item with key/index 'key'. Return empty GVP or throw in case of failure
-  AnyReference _element(const AnyReference& key, bool throwOnFailure);
   ///@}
 
   ///@{
