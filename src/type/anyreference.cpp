@@ -686,7 +686,7 @@ namespace detail
           if (!cv.first._type)
             return std::make_pair(AnyReference(), false);
         }
-        result._insert(sameKey?kv[0]:ck.first, sameElem?kv[1]:cv.first);
+        result.insert(sameKey?kv[0]:ck.first, sameElem?kv[1]:cv.first);
         if (!sameKey && ck.second)
           ck.first.destroy();
         if (!sameElem && cv.second)
@@ -719,7 +719,7 @@ namespace detail
           result.destroy();
           return std::make_pair(AnyReference(), false);
         }
-        result._insert(conv.first[0], conv.first[1]);
+        result.insert(conv.first[0], conv.first[1]);
         if (conv.second)
           conv.first.destroy();
         ++srcBegin;
@@ -755,7 +755,7 @@ namespace detail
           result.destroy();
           return std::make_pair(AnyReference(), false);
         }
-        result._insert(AnyReference::from(srcElementName[i]), conv.first);
+        result.insert(AnyReference::from(srcElementName[i]), conv.first);
         if (conv.second)
           conv.first.destroy();
       }
@@ -1170,7 +1170,7 @@ namespace detail
       c.first.destroy();
   }
 
-  void AnyReferenceBase::_insert(const AnyReference& key, const AnyReference& val)
+  void AnyReferenceBase::insert(const AnyReference& key, const AnyReference& val)
   {
     if (kind() != TypeKind_Map)
       throw std::runtime_error("Expected a map");

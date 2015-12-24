@@ -255,7 +255,7 @@ void AnyReferenceBase::append(const T& element)
 template<typename K, typename V>
 void AnyReferenceBase::insert(const K& key, const V& val)
 {
-  _insert(AnyReference::from(key), AnyReference::from(val));
+  insert(AnyReference::from(key), AnyReference::from(val));
 }
 
 template<typename K>

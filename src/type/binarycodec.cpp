@@ -664,7 +664,7 @@ namespace qi {
         {
           AnyReference k = deserialize(keyType, in, context, streamContext);
           AnyReference v = deserialize(elementType, in, context, streamContext);
-          result._insert(k, v);
+          result.insert(k, v);
           k.destroy();
           v.destroy();
         }
