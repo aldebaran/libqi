@@ -202,7 +202,7 @@ typename boost::disable_if<typename detail::InterfaceImplTraits<T>::Defined, qi:
       {                                                   \
         using Defined = boost::true_type;                 \
         using ImplType = impl;                            \
-        using LocalType = interface##Local<ImlpType>;     \
+        using LocalType = interface##Local<ImplType>;     \
         using SyncType = interface##LocalSync<LocalType>; \
       };                                                  \
     }                                                     \
