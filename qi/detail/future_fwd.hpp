@@ -875,7 +875,7 @@ namespace qi {
     template <typename T>
     class FutureBaseTyped : public FutureBase {
     public:
-      using CancelCallback = boost::function<void(Promise<T>)>;
+      using CancelCallback = boost::function<void(Promise<T>&)>;
       using ValueType = typename FutureType<T>::type;
       FutureBaseTyped();
       ~FutureBaseTyped();
@@ -897,7 +897,7 @@ namespace qi {
       void setOnDestroyed(boost::function<void (ValueType)> f);
 
       void connect(qi::Future<T> future,
-          const boost::function<void (qi::Future<T>&)> &s,
+          const boost::function<void (qi::Future<T>)> &s,
           FutureCallbackType type);
 
       const ValueType& value(int msecs) const;

@@ -442,7 +442,7 @@ namespace detail {
 
     template <typename T>
     void FutureBaseTyped<T>::connect(qi::Future<T> future,
-                                  const boost::function<void(qi::Future<T>&)>& s,
+                                  const boost::function<void(qi::Future<T>)>& s,
                                   FutureCallbackType type)
     {
       if (state() == FutureState_None)
@@ -593,7 +593,7 @@ namespace detail {
   namespace detail
   {
     template<typename FT, typename PT, typename CONV>
-    void futureAdapter(Future<FT>& f, Promise<PT> p, CONV converter)
+    void futureAdapter(const Future<FT>& f, Promise<PT> p, CONV converter)
     {
       if (f.hasError())
         p.setError(f.error());
@@ -650,7 +650,7 @@ namespace detail {
   {
     p.setup(boost::bind(&detail::futureCancelAdapter<AnyReference>,
           boost::weak_ptr<detail::FutureBaseTyped<AnyReference> >(f._p)));
-    f.connect(boost::function<void(qi::Future<AnyReference>&)>(
+    f.connect(boost::function<void(const qi::Future<AnyReference>&)>(
           boost::bind(&detail::futureAdapter<R>, _1, p)),
         FutureCallbackType_Sync);
   }
