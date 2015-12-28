@@ -539,7 +539,7 @@ namespace qi {
             const std::string fullPath = itD->path().string(qi::unicodeFacet());
             if (boost::regex_match(fullPath, pathRegex))
             {
-              std::string relativePath = relative(dataPath, itD->path());
+              std::string relativePath = ::relative(dataPath, itD->path());
               if (matchedPaths.find(relativePath) == matchedPaths.end())
               {
                 // we only add the match if it was not found in a previous
