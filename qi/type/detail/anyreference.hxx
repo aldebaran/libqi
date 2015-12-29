@@ -227,13 +227,13 @@ AnyReference AnyReferenceBase::at(const K& key)
   // In the future, AnyReferenceConst should be implemented to
   // make the distinction between the two, and in this case
   // this version of the function will have a real meaning.
-  return _element(AnyReferenceBase::from(key), false);
+  return at(AnyReferenceBase::from(key));
 }
 
 template<typename K>
 AnyReference AnyReferenceBase::at(const K& key) const
 {
-  return const_cast<AnyReferenceBase*>(this)->_element(AnyReferenceBase::from(key), false);
+  return at(AnyReferenceBase::from(key));
 }
 
 inline AnyReference AnyReferenceBase::at(const AnyReference& key)
@@ -243,7 +243,7 @@ inline AnyReference AnyReferenceBase::at(const AnyReference& key)
 
 inline AnyReference AnyReferenceBase::at(const AnyReference& key) const
 {
-  return const_cast<AnyReferenceBase*>(this)->_element(key, false);
+  return const_cast<AnyReferenceBase*>(this)->at(key);
 }
 
 template<typename T>
