@@ -216,7 +216,12 @@ E& AnyReferenceBase::element(const K& key)
 template<typename K>
 AnyReference AnyReferenceBase::operator[](const K& key)
 {
-  return _element(AnyReferenceBase::from(key), true);
+  return operator[](AnyReferenceBase::from(key));
+}
+
+inline AnyReference AnyReferenceBase::operator[](const AnyReference& key)
+{
+  return _element(key, true);
 }
 
 template<typename K>

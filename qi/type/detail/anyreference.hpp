@@ -249,6 +249,7 @@ public:
    */
   template<typename K>
   AnyReference operator[](const K& key);
+  AnyReference operator[](const AnyReference& key);
 
   /// Call operator[](key).as<E>, element type must match E
   template<typename E, typename K>
