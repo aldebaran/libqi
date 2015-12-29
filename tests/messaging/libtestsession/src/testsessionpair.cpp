@@ -22,7 +22,8 @@ TestSessionPair::TestSessionPair(TestMode::Mode mode, const std::string sdUrl)
   // #2 Listen.
   if (_mode == TestMode::Mode_SSL)
   {
-    _sd->setIdentity("../tests/server.key", "../tests/server.crt");
+    _sd->setIdentity(qi::path::findData("qi", "server.key"),
+                     qi::path::findData("qi", "server.crt"));
     _sd->listenStandalone("tcps://0.0.0.0:0");
   }
   else

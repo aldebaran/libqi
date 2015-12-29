@@ -66,7 +66,8 @@ bool SessionInitializer::setUpSSL(qi::SessionPtr session, const std::string &ser
 
   if (_listen == true)
   {
-    session->setIdentity("../tests/server.key", "../tests/server.crt");
+    session->setIdentity(qi::path::findData("qi", "server.key"),
+                         qi::path::findData("qi", "server.crt"));
     session->listen("tcps://0.0.0.0:0");
   }
 

@@ -187,7 +187,8 @@ int main(int argc, char *argv[])
     app.startSession();
 
     app.session()->listen("tcp://0.0.0.0:0");
-    session->setIdentity("tests/server.key", "tests/server.crt");
+    session->setIdentity(qi::path::findData("qi", "server.key"),
+                         qi::path::findData("qi", "server.crt"));
     try {
       app.session()->listen("tcps://0.0.0.0:0");
     } catch (std::runtime_error &) {
