@@ -119,8 +119,9 @@ namespace qi
     {
       if (!_sslHandshake)
       {
+        qi::Promise<void> prom;
         _socket->async_handshake(boost::asio::ssl::stream_base::server,
-          boost::bind(&TcpTransportSocket::handshake, shared_from_this(), _1, _socket));
+          boost::bind(&TcpTransportSocket::handshake, shared_from_this(), _1, _socket, prom));
         return;
       }
 
