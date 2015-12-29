@@ -55,8 +55,17 @@ protected:
     , _value(value)
   {}
 
-  // get item with key/index 'key'. Return empty GVP or throw in case of failure
-  AnyReference _element(const AnyReference& key, bool throwOnFailure);
+  /** Get item with key/index 'key'.
+   * @param throwOnFailure controls what happens in case of failure (key out of range or invalid type):
+   *                       true - the function throws,
+   *                       false - returns empty AnyReferece.
+   *                       If the container is a 'Map' type, this parameter is ignored.
+   * @param autoInsert if the container is a 'Map' type, this parameter controls what happens if the value with
+   *                   the given key does not already exist in the map:
+   *                   true - a new entry is added to the map and then returned,
+   *                   false - an empty AnyReference is returned (no insertion is performed).
+   */
+  AnyReference _element(const AnyReference& key, bool throwOnFailure, bool autoInsert);
 
 public:
   /// @return the pair (convertedValue, trueIfCopiedAndNeedsDestroy)

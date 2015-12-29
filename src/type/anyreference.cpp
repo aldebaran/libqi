@@ -1112,7 +1112,7 @@ namespace detail
     return to<AnyObject>();
   }
 
-  AnyReference AnyReferenceBase::_element(const AnyReference& key, bool throwOnFailure)
+  AnyReference AnyReferenceBase::_element(const AnyReference& key, bool throwOnFailure, bool autoInsert)
   {
     if (kind() == TypeKind_List || kind() == TypeKind_VarArgs)
     {
@@ -1133,10 +1133,7 @@ namespace detail
       std::pair<AnyReference, bool> c = key.convert(t->keyType());
       if (!c.first._type)
         throw std::runtime_error("Incompatible key type");
-      // HACK: should be two separate booleans
-      bool autoInsert = throwOnFailure;
-      AnyReference result
-          = t->element(&_value, c.first._value, autoInsert);
+      AnyReference result = t->element(&_value, c.first._value, autoInsert);
       if (c.second)
         c.first.destroy();
       return result;

@@ -221,7 +221,7 @@ AnyReference AnyReferenceBase::operator[](const K& key)
 
 inline AnyReference AnyReferenceBase::operator[](const AnyReference& key)
 {
-  return _element(key, true);
+  return _element(key, true, true);
 }
 
 template<typename K>
@@ -243,7 +243,7 @@ AnyReference AnyReferenceBase::at(const K& key) const
 
 inline AnyReference AnyReferenceBase::at(const AnyReference& key)
 {
-  return _element(key, false);
+  return _element(key, false, false);
 }
 
 inline AnyReference AnyReferenceBase::at(const AnyReference& key) const
@@ -266,7 +266,7 @@ void AnyReferenceBase::insert(const K& key, const V& val)
 template<typename K>
 AnyReference AnyReferenceBase::find(const K& key)
 {
-  return _element(AnyReference::from(key), false);
+  return _element(AnyReference::from(key), false, false);
 }
 
 } // namespace detail
