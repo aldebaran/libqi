@@ -25,6 +25,7 @@ TestSessionPair::TestSessionPair(TestMode::Mode mode, const std::string sdUrl)
     _sd->setIdentity(qi::path::findData("qi", "server.key"),
                      qi::path::findData("qi", "server.crt"));
     _sd->listenStandalone("tcps://0.0.0.0:0");
+    endpoints = _sd->endpoints();
   }
   else
   {
