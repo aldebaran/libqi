@@ -238,9 +238,9 @@ namespace qi
     template <typename T>
     struct AssignAnyRef
     {
-      static void assignAnyRef(AnyReference* ref, T any)
+      static void assignAnyRef(AnyReference* ref, T&& any)
       {
-        *ref = AnyReference(qi::typeOf<T>(), new T(std::move(any)));
+        *ref = AnyReference(qi::typeOf<T>(), new T(std::forward<T>(any)));
       }
     };
 
@@ -254,9 +254,9 @@ namespace qi
     };
 
     template <typename T>
-    void operator,(AnyReferenceCopy& g, T any)
+    void operator,(AnyReferenceCopy& g, T&& any)
     {
-      AssignAnyRef<T>::assignAnyRef(&g, std::move(any));
+      AssignAnyRef<T>::assignAnyRef(&g, std::forward<T>(any));
     }
 
     // makeCall function family
