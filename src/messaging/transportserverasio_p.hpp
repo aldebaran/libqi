@@ -8,9 +8,7 @@
 #define _SRC_TRANSPORTSERVERASIO_P_HPP_
 
 # include <boost/asio.hpp>
-# ifdef WITH_SSL
 # include <boost/asio/ssl.hpp>
-# endif
 
 # include <qi/api.hpp>
 # include <qi/url.hpp>
@@ -32,20 +30,12 @@ namespace qi
     TransportServer* _self;
     boost::asio::ip::tcp::acceptor* _acceptor;
     void onAccept(const boost::system::error_code& erc,
-#ifdef WITH_SSL
       boost::asio::ssl::stream<boost::asio::ip::tcp::socket>* s
-#else
-      boost::asio::ip::tcp::socket* s
-#endif
       );
     TransportServerAsioPrivate();
     bool _live;
-#ifdef WITH_SSL
     boost::asio::ssl::context _sslContext;
     boost::asio::ssl::stream<boost::asio::ip::tcp::socket>* _s;
-#else
-    boost::asio::ip::tcp::socket* _s;
-#endif
     bool _ssl;
     unsigned short _port;
     qi::Future<void> _asyncEndpoints;

@@ -35,10 +35,6 @@ if (UNIX)
  add_definitions(" -fno-strict-aliasing ")
 endif()
 
-if (WITH_SSL)
- add_definitions(" -DWITH_SSL ")
-endif()
-
 if(WITH_BOOST_LOCALE)
   add_definitions(" -DWITH_BOOST_LOCALE ")
 endif()
@@ -378,9 +374,7 @@ if(WIN32)
   qi_use_lib(qi WSOCK IPHLPAPI PSAPI WSA) #Really?
 endif()
 
-if (WITH_SSL)
-  qi_use_lib(qi OPENSSL)
-endif()
+qi_use_lib(qi OPENSSL)
 
 if (WITH_QT5_CORE)
   qi_use_lib(qi QT5_CORE)

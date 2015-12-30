@@ -61,9 +61,7 @@ namespace qi
     : TransportSocket()
     , _ssl(ssl)
     , _sslHandshake(false)
-#ifdef WITH_SSL
     , _sslContext(boost::asio::ssl::context::sslv23)
-#endif
     , _abort(false)
     , _msg(0)
     , _connecting(false)
@@ -75,11 +73,7 @@ namespace qi
 
     if (s != 0)
     {
-#ifdef WITH_SSL
       _socket = SocketPtr((boost::asio::ssl::stream<boost::asio::ip::tcp::socket>*) s);
-#else
-      _socket = SocketPtr((boost::asio::ip::tcp::socket*) s);
-#endif
       _status = qi::TransportSocket::Status::Connected;
       // Transmit each Message without delay
       setSocketOptions();
@@ -114,7 +108,6 @@ namespace qi
       return;
     }
 
-#ifdef WITH_SSL
     if (_ssl)
     {
       if (!_sslHandshake)
@@ -135,11 +128,6 @@ namespace qi
         boost::asio::buffer(_msg->_p->getHeader(), sizeof(MessagePrivate::MessageHeader)),
         boost::bind(&TcpTransportSocket::onReadHeader, shared_from_this(), _1, _2, _socket));
     }
-#else
-    boost::asio::async_read(*_socket,
-      boost::asio::buffer(_msg->_p->getHeader(), sizeof(MessagePrivate::MessageHeader)),
-      boost::bind(&TcpTransportSocket::onReadHeader, shared_from_this(), _1, _2, _socket));
-#endif
   }
 
   qi::Url TcpTransportSocket::remoteEndpoint() const
@@ -215,7 +203,6 @@ namespace qi
         return;
       }
 
-#ifdef WITH_SSL
       if (_ssl)
       {
         boost::asio::async_read(*_socket,
@@ -228,11 +215,6 @@ namespace qi
           boost::asio::buffer(ptr, payload),
           boost::bind(&TcpTransportSocket::onReadData, shared_from_this(), _1, _2, _socket));
       }
-#else
-      boost::asio::async_read(*_socket,
-        boost::asio::buffer(ptr, payload),
-        boost::bind(&TcpTransportSocket::onReadData, shared_from_this(), _1, _2, _socket));
-#endif
     }
     else
       onReadData(boost::system::error_code(), 0, _socket);
@@ -347,15 +329,11 @@ namespace qi
       qiLogError() << s;
       return makeFutureError<void>(s);
     }
-#ifdef WITH_SSL
     if (_ssl)
     {
       _sslContext.set_verify_mode(boost::asio::ssl::verify_none);
     }
     _socket = SocketPtr(new boost::asio::ssl::stream<boost::asio::ip::tcp::socket>((*(boost::asio::io_service*)_eventLoop->nativeHandle()), _sslContext));
-#else
-    _socket = SocketPtr(new boost::asio::ip::tcp::socket(*(boost::asio::io_service*)_eventLoop->nativeHandle()));
-#endif
     _url = url;
     _status = qi::TransportSocket::Status::Connecting;
     _connecting = true;
@@ -489,14 +467,12 @@ namespace qi
     {
       if (_ssl)
       {
-#ifdef WITH_SSL
         boost::recursive_mutex::scoped_lock l(_closingMutex);
         if (_abort)
           return;
         _socket->async_handshake(boost::asio::ssl::stream_base::client,
             boost::bind(&TcpTransportSocket::handshake, shared_from_this(), _1,
               _socket, connectPromise));
-#endif
       }
       else
       {
@@ -687,7 +663,6 @@ namespace qi
 
     _dispatcher.sent(msg);
 
-#ifdef WITH_SSL
     if (_ssl)
     {
       boost::asio::async_write(*_socket, b,
@@ -698,10 +673,6 @@ namespace qi
       boost::asio::async_write(_socket->next_layer(), b,
         boost::bind(&TcpTransportSocket::sendCont, shared_from_this(), _1, msg, _socket));
     }
-#else
-    boost::asio::async_write(*_socket, b,
-      boost::bind(&TcpTransportSocket::sendCont, shared_from_this(), _1, msg, _socket));
-#endif
   }
 
   /*

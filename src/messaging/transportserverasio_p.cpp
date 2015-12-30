@@ -30,11 +30,7 @@ namespace qi
 
   void _onAccept(TransportServerImplPtr p,
                  const boost::system::error_code& erc,
-#ifdef WITH_SSL
                  boost::asio::ssl::stream<boost::asio::ip::tcp::socket>* s
-#else
-                 boost::asio::ip::tcp::socket* s
-#endif
                  )
   {
     boost::shared_ptr<TransportServerAsioPrivate> ts = boost::dynamic_pointer_cast<TransportServerAsioPrivate>(p);
@@ -58,11 +54,7 @@ namespace qi
   }
 
   void TransportServerAsioPrivate::onAccept(const boost::system::error_code& erc,
-#ifdef WITH_SSL
     boost::asio::ssl::stream<boost::asio::ip::tcp::socket>* s
-#else
-    boost::asio::ip::tcp::socket* s
-#endif
     )
   {
     qiLogDebug() << this << " onAccept";
@@ -96,11 +88,7 @@ namespace qi
             qiLogError() << "bug: socket not stored by the newConnection handler (usecount:" << socket.use_count() << ")";
         }
     }
-#ifdef WITH_SSL
     _s = new boost::asio::ssl::stream<boost::asio::ip::tcp::socket>(_acceptor->get_io_service(), _sslContext);
-#else
-    _s = new boost::asio::ip::tcp::socket(_acceptor->get_io_service());
-#endif
     _acceptor->async_accept(_s->lowest_layer(),
                            boost::bind(_onAccept, shared_from_this(), _1, _s));
   }
@@ -270,7 +258,6 @@ namespace qi
       }
     }
 
-#ifdef WITH_SSL
     if (_ssl)
     {
       if (self->_identityCertificate.empty() || self->_identityKey.empty())
@@ -288,9 +275,6 @@ namespace qi
     }
 
     _s = new boost::asio::ssl::stream<boost::asio::ip::tcp::socket>(_acceptor->get_io_service(), _sslContext);
-#else
-    _s = new boost::asio::ip::tcp::socket(_acceptor->get_io_service());
-#endif
     _acceptor->async_accept(_s->lowest_layer(),
       boost::bind(_onAccept, shared_from_this(), _1, _s));
     _connectionPromise.setValue(0);
@@ -324,9 +308,7 @@ namespace qi
     , _self(self)
     , _acceptor(new boost::asio::ip::tcp::acceptor(*(boost::asio::io_service*)ctx->nativeHandle()))
     , _live(true)
-#ifdef WITH_SSL
     , _sslContext(*(boost::asio::io_service*)ctx->nativeHandle(), boost::asio::ssl::context::sslv23)
-#endif
     , _s(NULL)
     , _ssl(false)
     , _port(0)
