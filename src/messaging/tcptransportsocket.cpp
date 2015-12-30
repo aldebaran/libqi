@@ -161,6 +161,13 @@ namespace qi
       error("System error: " + erc.message());
       return;
     }
+    // when using SSL, sometimes we are called spuriously
+    if (len == 0)
+    {
+      _continueReading();
+      return;
+    }
+    assert(len == sizeof(_msg->_p->header));
     // check magic
     if (_msg->_p->header.magic != MessagePrivate::magic)
     {
