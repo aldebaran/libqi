@@ -568,6 +568,7 @@ namespace qi {
       }
     }
 
+#ifndef ANDROID
     static void my_strcpy(char *dst, const char *src, int len) {
       if (!src)
         src = "(null)";
@@ -578,6 +579,7 @@ namespace qi {
       dst[len - 1] = 0;
 #endif
     }
+#endif // #ifndef ANDROID
 
     static void doInit(qi::LogLevel verb) {
       //if init has already been called, we are set here. (reallocating all globals
@@ -659,17 +661,18 @@ namespace qi {
                      const int             line)
     {
 #ifdef ANDROID
-      std::map<LogLevel, android_LogPriority> _conv;
-
-      _conv[silent]  = ANDROID_LOG_SILENT;
-      _conv[fatal]   = ANDROID_LOG_FATAL;
-      _conv[error]   = ANDROID_LOG_ERROR;
-      _conv[warning] = ANDROID_LOG_WARN;
-      _conv[info]    = ANDROID_LOG_INFO;
-      _conv[verbose] = ANDROID_LOG_VERBOSE;
-      _conv[debug]   = ANDROID_LOG_DEBUG;
-
-      __android_log_print(_conv[verb], categoryStr, "%s", msg);
+      int prio = ANDROID_LOG_DEFAULT;
+      switch(verb)
+      {
+        case LogLevel_Silent:   prio = ANDROID_LOG_SILENT;   break;
+        case LogLevel_Fatal:    prio = ANDROID_LOG_FATAL;    break;
+        case LogLevel_Error:    prio = ANDROID_LOG_ERROR;    break;
+        case LogLevel_Warning:  prio = ANDROID_LOG_WARN;     break;
+        case LogLevel_Info:     prio = ANDROID_LOG_INFO;     break;
+        case LogLevel_Verbose:  prio = ANDROID_LOG_VERBOSE;  break;
+        case LogLevel_Debug:    prio = ANDROID_LOG_DEBUG;    break;
+      }
+      __android_log_write(prio, categoryStr, msg);
 #else
       if (!LogInstance)
         return;
