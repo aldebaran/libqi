@@ -669,7 +669,7 @@ namespace qi {
       _conv[verbose] = ANDROID_LOG_VERBOSE;
       _conv[debug]   = ANDROID_LOG_DEBUG;
 
-      __android_log_print(_conv[verb], categoryStr, msg);
+      __android_log_print(_conv[verb], categoryStr, "%s", msg);
 #else
       if (!LogInstance)
         return;
