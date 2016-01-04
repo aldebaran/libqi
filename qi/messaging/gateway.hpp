@@ -43,6 +43,7 @@ public:
   void setClientAuthenticatorFactory(ClientAuthenticatorFactoryPtr authenticator);
   UrlVector endpoints() const;
   bool listen(const Url& url);
+  bool setIdentity(const std::string& key, const std::string& crt);
   qi::Future<void> attachToServiceDirectory(const Url& serviceDirectoryUrl);
   void close();
 };

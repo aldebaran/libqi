@@ -86,6 +86,7 @@ public:
   void setClientAuthenticatorFactory(ClientAuthenticatorFactoryPtr authenticator);
   UrlVector endpoints() const;
   bool listen(const Url& url);
+  bool setIdentity(const std::string& key, const std::string& crt);
   Future<void> connect(const Url& sdUrl);
 
 private:

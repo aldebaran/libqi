@@ -131,6 +131,11 @@ bool Gateway::listen(const Url& url)
   return _p->listen(url);
 }
 
+bool Gateway::setIdentity(const std::string& key, const std::string& crt)
+{
+  return _p->setIdentity(key, crt);
+}
+
 qi::Future<void> Gateway::attachToServiceDirectory(const Url& serviceDirectoryUrl)
 {
   return _p->connect(serviceDirectoryUrl);
@@ -296,6 +301,11 @@ bool GatewayPrivate::listen(const Url& url)
       return true;
     }
   }
+}
+
+bool GatewayPrivate::setIdentity(const std::string& key, const std::string& crt)
+{
+  return _server.setIdentity(key, crt);
 }
 
 void GatewayPrivate::updateEndpoints(const qi::Url& url)
