@@ -238,9 +238,11 @@ namespace qi
     template <typename T>
     struct AssignAnyRef
     {
-      static void assignAnyRef(AnyReference* ref, T&& any)
+      template<class X>
+      static void assignAnyRef(AnyReference* ref, X&& any)
       {
-        *ref = AnyReference(qi::typeOf<T>(), new T(std::forward<T>(any)));
+        using CopyType = typename std::decay<T>::type;
+        *ref = AnyReference(qi::typeOf<T>(), new CopyType(std::forward<X>(any)));
       }
     };
 
