@@ -82,7 +82,7 @@ namespace qi {
       const Char_type c(*i);
       if(add_esc_char(c, result, jsonPrintOption))
         continue;
-      const wint_t unsigned_c((c >= 0) ? c : 256 + c);
+      const wint_t unsigned_c(c);
 
       // 127 is the end of printable characters in ASCII table.
       if(iswprint(unsigned_c) && unsigned_c < 127)
