@@ -11,6 +11,7 @@
 #include <boost/algorithm/string/predicate.hpp>
 #include <qi/iocolor.hpp>
 #include <iomanip>
+#include <boost/uuid/sha1.hpp>
 
 qiLogCategory("qitype.metaobject");
 
@@ -434,14 +435,18 @@ namespace qi {
     boost::recursive_mutex::scoped_lock ml(_methodsMutex);
     boost::recursive_mutex::scoped_lock el(_eventsMutex);
     unsigned int idx = 0;
+    std::stringstream buff;
     {
       _methodsNameToIdx.clear();
       _methodNameToOverload.clear();
       for (MetaObject::MethodMap::iterator i = _methods.begin();
         i != _methods.end(); ++i)
       {
-        _methodsNameToIdx[i->second.toString()] = i->second.uid();
+        const std::string methodName = i->second.toString();
+        _methodsNameToIdx[methodName] = i->second.uid();
         idx = std::max(idx, i->second.uid());
+        buff << methodName << i->second.uid();
+
         OverloadMap::iterator overloadIt = _methodNameToOverload.find(i->second.name());
         if (overloadIt == _methodNameToOverload.end())
         {
@@ -462,10 +467,21 @@ namespace qi {
       {
         _eventsNameToIdx[i->second.name()] = i->second.uid();
         idx = std::max(idx, i->second.uid());
+        buff << i->second.name() << i->second.uid();
       }
     }
+    buff << _description;
+
     // never lower index
     _index = std::max(idx, *_index);
+
+    // update content hash
+    {
+      boost::uuids::detail::sha1 s;
+      s.process_bytes(buff.str().c_str(), buff.str().size());
+      s.get_digest(_contentSHA1.sha1Digest);
+    }
+
     _dirtyCache = false;
   }
 
@@ -847,10 +863,6 @@ namespace qi {
 
   bool operator < (const MetaObject& a, const MetaObject& b)
   {
-    /* Comparing metaobjects is too expensive.
-    * so compare pointers, since metaobjects are built per-class and not
-    * per instance
-    */
-    return a._p < b._p;
+    return a._p->_contentSHA1 < b._p->_contentSHA1;
   }
 }

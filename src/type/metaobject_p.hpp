@@ -113,6 +113,14 @@ namespace qi {
     // true if cache must be refreshed
     mutable bool                        _dirtyCache;
 
+    // SHA1 of the metaobject's content, used to compare two meta objects
+    struct SHA1Digest
+    {
+      static const int sha1DigestSize = 5;
+      unsigned int sha1Digest[sha1DigestSize] = {}; // force default-initialization <=> zero-initialization for int
+    };
+    SHA1Digest                          _contentSHA1;
+
     // Global uid for event subscribers.
     static qi::Atomic<int> uid;
 
@@ -123,6 +131,11 @@ namespace qi {
     friend class TypeImpl<MetaObjectPrivate>;
     friend class TypeImpl<MetaObject>;
   };
+
+  inline bool operator< (const MetaObjectPrivate::SHA1Digest& lhs, const MetaObjectPrivate::SHA1Digest& rhs)
+  {
+    return std::memcmp(lhs.sha1Digest, rhs.sha1Digest, sizeof(lhs.sha1Digest)) < 0;
+  }
 
 }
 
