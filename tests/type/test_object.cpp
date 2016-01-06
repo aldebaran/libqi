@@ -1253,42 +1253,6 @@ qi::GenericFunctionParameters args(
   return res;
 }
 
-TEST(TestMetaObject, findMethod)
-{
-  qi::MetaObjectBuilder b;
-  unsigned int f   = b.addMethod("i", "f", "(i)");
-  unsigned int g1  = b.addMethod("i", "g", "(i)");
-  unsigned int g2  = b.addMethod("i", "g", "(ii)");
-  unsigned int h1i = b.addMethod("i", "h", "(i)");
-  unsigned int h1s = b.addMethod("i", "h", "(s)");
-  unsigned int h2  = b.addMethod("i", "h", "(ii)");
-
-  qi::MetaObject mo = b.metaObject();
-  bool canCache;
-  int mid;
-  mid = mo.findMethod("f", args(1), &canCache);
-  EXPECT_EQ(mid, (int)f); EXPECT_TRUE(canCache);
-  mid = mo.findMethod("g", args(1), &canCache);
-  EXPECT_EQ(mid, (int)g1); EXPECT_TRUE(canCache);
-  mid = mo.findMethod("g", args(1, 1), &canCache);
-  EXPECT_EQ(mid, (int)g2); EXPECT_TRUE(canCache);
-  // no garantee is made on result of findmethod(g, "foo"), so not tested
-  mid = mo.findMethod("h", args(1), &canCache);
-  EXPECT_EQ(mid, (int)h1i); EXPECT_FALSE(canCache);
-  mid = mo.findMethod("h", args("foo"), &canCache);
-  EXPECT_EQ(mid, (int)h1s); EXPECT_FALSE(canCache);
-  mid = mo.findMethod("h", args(1, 1), &canCache);
-  EXPECT_EQ(mid, (int)h2); EXPECT_TRUE(canCache);
-
-  mid = mo.findMethod("h::(i)", args(1), &canCache);
-  EXPECT_EQ(mid, (int)h1i); EXPECT_TRUE(canCache);
-
-  // check null canCache
-  mo.findMethod("h::(i)", args(1), 0);
-  mid = mo.findMethod("h", args("foo"), 0);
-  EXPECT_TRUE(true);
-}
-
 static void calla() {
 };
 static void callb(bool) {
