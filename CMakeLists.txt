@@ -72,6 +72,7 @@ set(QI_H qi/detail/async.hxx
          qi/detail/futurebarrier.hpp
          qi/detail/futureunwrap.hpp
          qi/detail/executioncontext.hpp
+         qi/detail/sha1.hpp
          qi/detail/log.hxx
          qi/detail/mpl.hpp
          qi/detail/print.hpp

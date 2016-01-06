@@ -490,14 +490,18 @@ qi::Atomic<int> MetaObjectPrivate::uid{1};
     boost::recursive_mutex::scoped_lock ml(_methodsMutex);
     boost::recursive_mutex::scoped_lock el(_eventsMutex);
     unsigned int idx = 0;
+    std::ostringstream buff;
     {
       _objectNameToIdx.clear();
       _methodNameToOverload.clear();
       for (MetaObject::MethodMap::iterator i = _methods.begin();
         i != _methods.end(); ++i)
       {
-        _objectNameToIdx[i->second.toString()] = MetaObjectIdType(i->second.uid(), MetaObjectType_Method);
+        const std::string methodName = i->second.toString();
+        _objectNameToIdx[methodName] = MetaObjectIdType(i->second.uid(), MetaObjectType_Method);
         idx = std::max(idx, i->second.uid());
+        buff << methodName << i->second.uid();
+
         OverloadMap::iterator overloadIt = _methodNameToOverload.find(i->second.name());
         if (overloadIt == _methodNameToOverload.end())
         {
@@ -517,10 +521,19 @@ qi::Atomic<int> MetaObjectPrivate::uid{1};
       {
         _objectNameToIdx[i->second.toString()] = MetaObjectIdType(i->second.uid(), MetaObjectType_Signal);
         idx = std::max(idx, i->second.uid());
+        buff << i->second.name() << i->second.uid();
       }
     }
+    buff << _description;
+
     // never lower index
     _index = std::max(idx, _index.load());
+
+    // update content hash
+    {
+      _contentSHA1 = detail::SHA1Digest{ buff.str() };
+    }
+
     _dirtyCache = false;
   }
 
@@ -768,10 +781,6 @@ namespace qi {
 
   bool operator < (const MetaObject& a, const MetaObject& b)
   {
-    /* Comparing metaobjects is too expensive.
-    * so compare pointers, since metaobjects are built per-class and not
-    * per instance
-    */
-    return a._p < b._p;
+    return a._p->_contentSHA1 < b._p->_contentSHA1;
   }
 }

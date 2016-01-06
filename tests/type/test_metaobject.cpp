@@ -1,6 +1,12 @@
 #include <gtest/gtest.h>
+
+#include "test_object.hpp"
+
 #include <qi/anyobject.hpp>
 #include <qi/jsoncodec.hpp>
+#include <qi/type/metaobject.hpp>
+#include <qi/detail/conceptpredicate.hpp>
+#include <src/type/metaobject_p.hpp>
 
 bool compareMetaMethodParameter(
     const qi::MetaMethodParameter& lhs,
@@ -106,3 +112,127 @@ TEST(MetaObject, constructSimpleMetaObject)
 
 // MetaObject carry a map<int, MetaMethod>, therefore it cannot be serialized
 // to JSON, because JSON does not support non-string keys in maps!
+
+
+TEST(MetaObject, findMethod)
+{
+  qi::MetaObjectBuilder b;
+  const unsigned int f   = b.addMethod("i", "f", "(i)").id;
+  const unsigned int g1  = b.addMethod("i", "g", "(i)").id;
+  const unsigned int g2  = b.addMethod("i", "g", "(ii)").id;
+  const unsigned int h1i = b.addMethod("i", "h", "(i)").id;
+  const unsigned int h1s = b.addMethod("i", "h", "(s)").id;
+  const unsigned int h2  = b.addMethod("i", "h", "(ii)").id;
+
+  qi::MetaObject mo = b.metaObject();
+  bool canCache = false;
+  int mid = mo.findMethod("f", args(1), &canCache);
+  EXPECT_EQ(mid, (int)f); EXPECT_TRUE(canCache);
+  mid = mo.findMethod("g", args(1), &canCache);
+  EXPECT_EQ(mid, (int)g1); EXPECT_TRUE(canCache);
+  mid = mo.findMethod("g", args(1, 1), &canCache);
+  EXPECT_EQ(mid, (int)g2); EXPECT_TRUE(canCache);
+  // no garantee is made on result of findmethod(g, "foo"), so not tested
+  mid = mo.findMethod("h", args(1), &canCache);
+  EXPECT_EQ(mid, (int)h1i); EXPECT_FALSE(canCache);
+  mid = mo.findMethod("h", args("foo"), &canCache);
+  EXPECT_EQ(mid, (int)h1s); EXPECT_FALSE(canCache);
+  mid = mo.findMethod("h", args(1, 1), &canCache);
+  EXPECT_EQ(mid, (int)h2); EXPECT_TRUE(canCache);
+
+  mid = mo.findMethod("h::(i)", args(1), &canCache);
+  EXPECT_EQ(mid, (int)h1i); EXPECT_TRUE(canCache);
+
+  // check null canCache
+  mo.findMethod("h::(i)", args(1), 0);
+  mid = mo.findMethod("h", args("foo"), 0);
+  EXPECT_TRUE(true);
+}
+
+TEST(MetaObject, SHA1DigestConstruction)
+{
+  qi::detail::SHA1Digest d;
+  for (const auto v : d)
+  {
+    EXPECT_EQ(0, v);
+  }
+}
+
+TEST(MetaObject, SHA1DigestLessThenOp)
+{
+  qi::detail::SHA1Digest d1;
+  d1.value[0] = 1;
+  d1.value[1] = 9;
+
+  qi::detail::SHA1Digest d2;
+  d2.value[0] = 2;
+
+  EXPECT_TRUE(d1 < d2);
+  EXPECT_FALSE(d1 < d1);
+}
+
+TEST(MetaObject, SHA1DigestRegular)
+{
+  const qi::detail::SHA1Digest begin;
+  const qi::detail::SHA1Digest end{ {10, 10, 10, 10, 10} };
+  ASSERT_TRUE(qi::detail::isRegular(qi::incrRange(begin, end,
+    [](qi::detail::SHA1Digest& d) {
+      for (auto& x : d) ++x;
+    }
+  )));
+}
+
+TEST(MetaObject, defaultConstructedMosAreEqual)
+{
+  qi::MetaObject mo1;
+  qi::MetaObject mo2;
+  EXPECT_FALSE(mo1 < mo2);
+  EXPECT_FALSE(mo2 < mo1);
+}
+
+TEST(MetaObject, copiedMosAreEqual)
+{
+  qi::MetaObjectBuilder b;
+  b.addMethod("i", "f", "(i)");
+
+  qi::MetaObject mo1 = b.metaObject();
+  qi::MetaObject mo2 = mo1;
+
+  EXPECT_FALSE(mo1 < mo2);
+  EXPECT_FALSE(mo2 < mo1);
+}
+
+TEST(MetaObject, independentMosAreDifferent)
+{
+  qi::MetaObjectBuilder b1;
+  b1.addMethod("i", "f", "(i)");
+  b1.setDescription("first mo");
+
+  qi::MetaObject mo1 = b1.metaObject();
+
+  qi::MetaObjectBuilder b2;
+  b2.addMethod("i", "f", "(i)");
+  b2.setDescription("second mo");
+
+  qi::MetaObject mo2 = b2.metaObject();
+
+  EXPECT_TRUE(mo1 < mo2 || mo2 < mo1);
+}
+
+TEST(MetaObject, independentMosWithTheSameContentAreEqual)
+{
+  qi::MetaObjectBuilder b1;
+  b1.addMethod("i", "f", "(i)");
+  b1.setDescription("my_mo");
+
+  qi::MetaObject mo1 = b1.metaObject();
+
+  qi::MetaObjectBuilder b2;
+  b2.addMethod("i", "f", "(i)");
+  b2.setDescription("my_mo");
+
+  qi::MetaObject mo2 = b2.metaObject();
+
+  EXPECT_FALSE(mo1 < mo2);
+  EXPECT_FALSE(mo2 < mo1);
+}
