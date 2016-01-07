@@ -221,7 +221,7 @@ int main(int argc, char **argv)
     ("help,h", "Print this help.")
     ("all", po::value<std::string>()->default_value("tcp://0.0.0.0:0"), "(default) Run all in the same process.")
     ("client,c", po::value<std::string>(), "Run as a client (tcp://xxx.xxx.xxx.xxx:xxxxx).")
-    ("server,s", po::value<std::string>()->implicit_value("tcp://0.0.0.0:0"), "Run as a server.")
+    ("server,s", po::value<std::string>(), "Run as a server.")
     ("gateway", po::value<std::string>(), "Run as a gateway.")
     ("local", "Run in local.")
     ("thread", po::value<int>()->default_value(1, "1"),
