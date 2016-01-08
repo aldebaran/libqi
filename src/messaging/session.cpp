@@ -102,7 +102,7 @@ namespace qi {
      { // Provide a nice message for backward compatibility
        qiLogVerbose() << e.what();
        qiLogWarning() << "Failed to obtain machineId, connection to service directory will not be reused for other services.";
-       p.setValue(0);
+       p.setError(e.what());
        return;
      }
      TransportSocketPtr s = _sdClient.socket();
