@@ -181,15 +181,15 @@ namespace detail {
 // these methods are used by advertiseFactory and arguments are specified explicitely, we can't used forwarding here
 template <typename T, typename... Args>
 typename boost::enable_if<typename detail::InterfaceImplTraits<T>::Defined, qi::Object<T> >::type constructObject(
-    const Args&... args)
+    Args... args)
 {
-  return boost::make_shared<typename detail::InterfaceImplTraits<T>::SyncType>(args...);
+  return boost::make_shared<typename detail::InterfaceImplTraits<T>::SyncType>(std::forward<Args>(args)...);
 }
 template <typename T, typename... Args>
 typename boost::disable_if<typename detail::InterfaceImplTraits<T>::Defined, qi::Object<T> >::type constructObject(
-    const Args&... args)
+    Args&&... args)
 {
-  return Object<T>(new T(args...));
+  return Object<T>(new T(std::forward<Args>(args)...));
 }
 
 #define QI_REGISTER_IMPLEMENTATION_H(interface, impl)     \
