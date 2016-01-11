@@ -63,7 +63,6 @@ namespace qi
     , _sslHandshake(false)
     , _sslContext(boost::asio::ssl::context::sslv23)
     , _abort(false)
-    , _msg(0)
     , _connecting(false)
     , _sending(false)
   {
@@ -86,7 +85,6 @@ namespace qi
   {
     qiLogDebug() << this;
     error("Destroying TcpTransportSocket");
-    delete _msg;
     qiLogVerbose() << "deleted " << this;
   }
 
@@ -99,7 +97,7 @@ namespace qi
   {
     qiLogDebug() << this;
 
-    _msg = new qi::Message();
+    _msg = {};
     boost::recursive_mutex::scoped_lock l(_closingMutex);
 
     if (_abort)
@@ -119,13 +117,13 @@ namespace qi
       }
 
       boost::asio::async_read(*_socket,
-        boost::asio::buffer(_msg->_p->getHeader(), sizeof(MessagePrivate::MessageHeader)),
+        boost::asio::buffer(_msg._p->getHeader(), sizeof(MessagePrivate::MessageHeader)),
         boost::bind(&TcpTransportSocket::onReadHeader, shared_from_this(), _1, _2, _socket));
     }
     else
     {
       boost::asio::async_read(_socket->next_layer(),
-        boost::asio::buffer(_msg->_p->getHeader(), sizeof(MessagePrivate::MessageHeader)),
+        boost::asio::buffer(_msg._p->getHeader(), sizeof(MessagePrivate::MessageHeader)),
         boost::bind(&TcpTransportSocket::onReadHeader, shared_from_this(), _1, _2, _socket));
     }
   }
@@ -155,20 +153,20 @@ namespace qi
       _continueReading();
       return;
     }
-    assert(len == sizeof(_msg->_p->header));
+    assert(len == sizeof(_msg._p->header));
     // check magic
-    if (_msg->_p->header.magic != MessagePrivate::magic)
+    if (_msg._p->header.magic != MessagePrivate::magic)
     {
       qiLogWarning() << "Incorrect magic from "
         << _socket->lowest_layer().remote_endpoint().address().to_string()
         << ", disconnecting"
            " (expected " << MessagePrivate::magic
-        << ", got " << _msg->_p->header.magic << ").";
+        << ", got " << _msg._p->header.magic << ").";
       error("Protocol error");
       return;
     }
 
-    size_t payload = _msg->_p->header.size;
+    size_t payload = _msg._p->header.size;
     if (payload)
     {
       static size_t maxPayload = 0;
@@ -193,7 +191,7 @@ namespace qi
         return;
       }
 
-      void* ptr = _msg->_p->buffer.reserve(payload);
+      void* ptr = _msg._p->buffer.reserve(payload);
 
       boost::recursive_mutex::scoped_lock l(_closingMutex);
 
@@ -228,23 +226,23 @@ namespace qi
       error("System error: " + erc.message());
       return;
     }
-    qiLogDebug() << this << " Recv (" << _msg->type() << "):" << _msg->address();
+    qiLogDebug() << this << " Recv (" << _msg.type() << "):" << _msg.address();
     static int usWarnThreshold = os::getenv("QIMESSAGING_SOCKET_DISPATCH_TIME_WARN_THRESHOLD").empty()?0:strtol(os::getenv("QIMESSAGING_SOCKET_DISPATCH_TIME_WARN_THRESHOLD").c_str(),0,0);
     qi::int64_t start = 0;
     if (usWarnThreshold)
       start = os::ustime(); // call might be not that cheap
     if ((!hasReceivedRemoteCapabilities() &&
-          _msg->service() == Message::Service_Server &&
-          _msg->function() == Message::ServerFunction_Authenticate)
-        || _msg->type() == Message::Type_Capability)
+          _msg.service() == Message::Service_Server &&
+          _msg.function() == Message::ServerFunction_Authenticate)
+        || _msg.type() == Message::Type_Capability)
     {
       // This one is for us
-      if (_msg->type() != Message::Type_Error)
+      if (_msg.type() != Message::Type_Error)
       {
         AnyReference cmRef;
         try
         {
-          cmRef = _msg->value(typeOf<CapabilityMap>()->signature(), shared_from_this());
+          cmRef = _msg.value(typeOf<CapabilityMap>()->signature(), shared_from_this());
           CapabilityMap cm = cmRef.to<CapabilityMap>();
           cmRef.destroy();
           boost::mutex::scoped_lock lock(_contextMutex);
@@ -257,18 +255,18 @@ namespace qi
           return error("Ill-formed capabilities message.");
         }
       }
-      if (_msg->type() != Message::Type_Capability)
+      if (_msg.type() != Message::Type_Capability)
       {
-        messageReady(*_msg);
-        socketEvent(SocketEventData(*_msg));
-        _dispatcher.dispatch(*_msg);
+        messageReady(_msg);
+        socketEvent(SocketEventData(_msg));
+        _dispatcher.dispatch(_msg);
       }
     }
     else
     {
-      messageReady(*_msg);
-      socketEvent(SocketEventData(*_msg));
-      _dispatcher.dispatch(*_msg);
+      messageReady(_msg);
+      socketEvent(SocketEventData(_msg));
+      _dispatcher.dispatch(_msg);
     }
     if (usWarnThreshold)
     {
@@ -276,8 +274,7 @@ namespace qi
       if (duration > usWarnThreshold)
         qiLogWarning() << "Dispatch to user took " << duration << "us";
     }
-    delete _msg;
-    _msg = 0;
+    _msg = {};
     _continueReading();
   }
 
