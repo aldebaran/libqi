@@ -57,7 +57,7 @@ namespace qi
     bool                _abort; // used to notify send callback sendCont that we are dead
 
     // data to rebuild message
-    qi::Message        *_msg;
+    qi::Message         _msg;
     bool                _connecting;
 
     boost::mutex        _sendQueueMutex; // protects _sendQueue, _sending and closing
