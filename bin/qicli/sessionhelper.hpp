@@ -8,10 +8,10 @@
 class SessionHelper
 {
 private:
-  typedef std::list<std::string> (ServiceHelper::*ShPatternResolver)(const std::string &memberPattern, bool getHidden) const;
-  typedef boost::function<bool (ServiceHelper& sh, const std::string& memberName)> ShMethod;
-  typedef std::map<std::string, std::pair<ServiceHelper, std::set<std::string> > > MatchMap;
-  typedef std::pair<const std::string, std::pair<ServiceHelper, std::set<std::string> > > MatchMapPair;
+  using ShPatternResolver = std::list<std::string> (ServiceHelper::*)(const std::string &memberPattern, bool getHidden) const;
+  using ShMethod = boost::function<bool (ServiceHelper& sh, const std::string& memberName)>;
+  using MatchMap = std::map<std::string, std::pair<ServiceHelper, std::set<std::string> > >;
+  using MatchMapPair = std::pair<const std::string, std::pair<ServiceHelper, std::set<std::string> > >;
 
 public:
   SessionHelper(qi::ApplicationSession& app, qi::JsonOption jsonPrintOption);

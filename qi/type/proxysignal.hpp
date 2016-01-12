@@ -18,7 +18,7 @@ namespace qi
   class ProxySignal: public SignalF<T>
   {
   public:
-    typedef SignalF<T> SignalType;
+    using SignalType = SignalF<T>;
     ProxySignal(AnyObject object, const std::string& signalName)
     : SignalType()
     {

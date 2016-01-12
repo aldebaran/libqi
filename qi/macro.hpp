@@ -223,7 +223,7 @@ namespace qi {
   QI_DEPRECATE_MACRO(QI_DISALLOW_COPY_AND_ASSIGN)       \
   type(type const &);                                   \
   void operator=(type const &);                         \
-  typedef int _qi_not_clonable;                         \
+  using _qi_not_clonable = int;                         \
   template<typename U> friend struct ::qi::IsClonable
 
 

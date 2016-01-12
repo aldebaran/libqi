@@ -45,7 +45,7 @@ namespace qi {
     return time_point(chrono::steady_clock::now().time_since_epoch());
   }
 
-  typedef chrono::duration<uint32_t, boost::milli > uint32ms;
+  using uint32ms = chrono::duration<uint32_t, boost::milli>;
 
   uint32_t Clock::toUint32ms(const time_point &t) throw()
   {
@@ -62,8 +62,8 @@ namespace qi {
                                         Expect expect) throw()
   {
     // ms: a duration type with ms precision, but no overflow problem
-    typedef chrono::milliseconds ms;
-    typedef chrono::time_point<Clock, ms> time_point_ms;
+    using ms = chrono::milliseconds;
+    using time_point_ms = chrono::time_point<Clock, ms>;
     // overflow period
     static const ms period(ms(uint32ms::max()) - ms(uint32ms::min()) + ms(uint32ms(1)));
     uint32ms guess_ms = chrono::duration_cast<uint32ms>(guess.time_since_epoch());
@@ -129,7 +129,7 @@ namespace qi {
 # ifdef BOOST_DATE_TIME_HAS_NANOSECONDS
     boost::this_thread::sleep(boost::posix_time::nanoseconds(d.count()));
 # else
-    typedef chrono::microseconds us;
+    using us = chrono::microseconds;
     boost::this_thread::sleep(
           boost::posix_time::microseconds(chrono::ceil<us>(d).count()));
 # endif
@@ -156,7 +156,7 @@ namespace qi {
     boost::this_thread::sleep(boost::system_time(epoch,
       boost::posix_time::nanoseconds(t.time_since_epoch().count())));
 # else
-    typedef chrono::microseconds us;
+    using us = chrono::microseconds;
     boost::this_thread::sleep(boost::system_time(epoch,
       boost::posix_time::microseconds(
         chrono::ceil<us>(t.time_since_epoch()).count())));

@@ -417,13 +417,13 @@ namespace qi {
     }
 
     void setCurrentThreadName(const std::string &name) {
-      typedef struct tagTHREADNAME_INFO
+      using THREADNAME_INFO = struct tagTHREADNAME_INFO
       {
         DWORD dwType; // must be 0x1000
         LPCSTR szName; // pointer to name (in user addr space)
         HANDLE dwThreadID; // thread ID (-1=caller thread)
         DWORD dwFlags; // reserved for future use, must be zero
-      } THREADNAME_INFO;
+      };
 
       THREADNAME_INFO info;
       info.dwType = 0x1000;

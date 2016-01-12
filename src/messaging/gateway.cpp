@@ -73,7 +73,7 @@ struct _pending_msg_eraser
   qi::TransportSocketPtr target;
 };
 
-typedef boost::shared_ptr<bool> boolptr;
+using boolptr = boost::shared_ptr<bool>;
 }
 
 namespace qi
@@ -129,6 +129,11 @@ UrlVector Gateway::endpoints() const
 bool Gateway::listen(const Url& url)
 {
   return _p->listen(url);
+}
+
+bool Gateway::setIdentity(const std::string& key, const std::string& crt)
+{
+  return _p->setIdentity(key, crt);
 }
 
 qi::Future<void> Gateway::attachToServiceDirectory(const Url& serviceDirectoryUrl)
@@ -234,7 +239,7 @@ UrlVector GatewayPrivate::endpoints() const
 
 static UrlVector allAvailableInterfaces(bool includeLocalhost, unsigned int port, const std::string& protocol)
 {
-  typedef std::map<std::string, std::vector<std::string> > IfMap;
+  using IfMap = std::map<std::string, std::vector<std::string>>;
   std::map<std::string, std::vector<std::string> > interfaces = os::hostIPAddrs(false);
   std::vector<Url> result;
 
@@ -296,6 +301,11 @@ bool GatewayPrivate::listen(const Url& url)
       return true;
     }
   }
+}
+
+bool GatewayPrivate::setIdentity(const std::string& key, const std::string& crt)
+{
+  return _server.setIdentity(key, crt);
 }
 
 void GatewayPrivate::updateEndpoints(const qi::Url& url)

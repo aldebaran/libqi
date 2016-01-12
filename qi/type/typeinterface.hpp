@@ -85,7 +85,7 @@ namespace qi{
     virtual bool isSigned() = 0;
     /// Set the value of the integer
     virtual void set(void** storage, int64_t value) = 0;
-    virtual TypeKind kind() { return TypeKind_Int;}
+    TypeKind kind() override { return TypeKind_Int;}
   };
 
   class QI_API FloatTypeInterface: public TypeInterface
@@ -97,15 +97,15 @@ namespace qi{
     virtual unsigned int size() = 0; // size in bytes
     /// Set the value of the float
     virtual void set(void** storage, double value) = 0;
-    virtual TypeKind kind() { return TypeKind_Float;}
+    TypeKind kind() override { return TypeKind_Float;}
   };
 
   class QI_API StringTypeInterface: public TypeInterface
   {
   public:
-    typedef std::pair<char*, size_t> RawString;
-    typedef boost::function<void(const RawString&)> Deleter;
-    typedef std::pair<RawString, Deleter> ManagedRawString;
+    using RawString = std::pair<char*, size_t>;
+    using Deleter = boost::function<void(const RawString&)>;
+    using ManagedRawString = std::pair<RawString, Deleter>;
 
     /// Get a copy of the string value
     std::string getString(void* storage);
@@ -116,7 +116,7 @@ namespace qi{
     void set(void** storage, const std::string& value);
     /// Set the value of the string
     virtual void set(void** storage, const char* ptr, size_t sz) = 0;
-    virtual TypeKind kind() { return TypeKind_String; }
+    TypeKind kind() override { return TypeKind_String; }
 
   };
 
@@ -130,7 +130,7 @@ namespace qi{
     virtual std::pair<char*, size_t> get(void* storage) = 0;
     /// Set the buffer of data (buffer is copied)
     virtual void set(void** storage, const char* ptr, size_t sz) = 0;
-    virtual TypeKind kind() { return TypeKind_Raw; }
+    TypeKind kind() override { return TypeKind_Raw; }
   };
 
   class QI_API PointerTypeInterface: public TypeInterface
@@ -151,7 +151,7 @@ namespace qi{
     virtual void set(void** storage, AnyReference pointer) = 0;
     /// Set new pointee value. pointer must be a *pointer* to type pointedType()
     virtual void setPointee(void** storage, void* pointer) = 0;
-    virtual TypeKind kind() { return TypeKind_Pointer; }
+    TypeKind kind() override { return TypeKind_Pointer; }
   };
 
   /**
@@ -176,7 +176,7 @@ namespace qi{
     virtual void next(void** storage) = 0;
     /// Check for iterator equality
     virtual bool equals(void* s1, void* s2) = 0;
-    virtual TypeKind kind() { return TypeKind_Iterator; }
+    TypeKind kind() override { return TypeKind_Iterator; }
   };
 
   /**
@@ -200,7 +200,7 @@ namespace qi{
     virtual void pushBack(void** storage, void* valueStorage) = 0;
     /// Get the element at index
     virtual void* element(void* storage, int index);
-    virtual TypeKind kind() { return TypeKind_List;}
+    TypeKind kind() override { return TypeKind_List;}
   };
 
   /**
@@ -232,7 +232,7 @@ namespace qi{
      * otherwise an invalid reference is returned.
      */
     virtual AnyReference element(void** storage, void* keyStorage, bool autoInsert) = 0;
-    virtual TypeKind kind() { return TypeKind_Map; }
+    TypeKind kind() override { return TypeKind_Map; }
     // Since our typesystem has no erased operator < or operator ==,
     // MapTypeInterface does not provide a find()
   };
@@ -258,7 +258,7 @@ namespace qi{
     virtual void set(void** storage, const std::vector<void*>&);
     /// Set the fields of the struct at index (copies the value given)
     virtual void set(void** storage, unsigned int index, void* valStorage) = 0;
-    virtual TypeKind kind() { return TypeKind_Tuple; }
+    TypeKind kind() override { return TypeKind_Tuple; }
     /// Get the names of the fields of the struct
     virtual std::vector<std::string> elementsName() { return std::vector<std::string>();}
     /// Get the type name of the struct
@@ -313,7 +313,7 @@ namespace qi{
     virtual AnyReference get(void* storage) = 0;
     /// Set the underlying element
     virtual void set(void** storage, AnyReference source) = 0;
-    virtual TypeKind kind() { return TypeKind_Dynamic; }
+    TypeKind kind() override { return TypeKind_Dynamic; }
   };
 
   /**
@@ -324,7 +324,7 @@ namespace qi{
   public:
     //virtual AnyReference get(void *storage) = 0;
     //virtual TypeInterface* elementType() = 0;
-    virtual TypeKind kind() { return TypeKind_VarArgs; }
+    TypeKind kind() override { return TypeKind_VarArgs; }
   };
 
   ///@return a Type of the specified Kind. This do not work for list, map and tuple.

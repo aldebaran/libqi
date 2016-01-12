@@ -7,7 +7,9 @@
 #ifndef _QI_STRAND_HPP_
 #define _QI_STRAND_HPP_
 
+#include <deque>
 #include <qi/detail/executioncontext.hpp>
+#include <boost/enable_shared_from_this.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/function.hpp>
 #include <boost/noncopyable.hpp>
@@ -28,16 +30,58 @@ namespace detail
   template <typename F>
   struct WrapInStrand;
 
-  // this structure is just a wrapper with a is_async field
-  template <typename F>
-  struct WrapAsAsync;
-
-  template <typename F>
-  WrapAsAsync<typename std::decay<F>::type> wrapAsAsync(F&& f);
-
 }
 
-class StrandPrivate;
+// we use ExecutionContext's helpers in schedulerFor, we don't need to implement all the methods
+class StrandPrivate : public ExecutionContext, public boost::enable_shared_from_this<StrandPrivate>
+{
+public:
+  enum class State;
+
+  struct Callback;
+
+  using Queue = std::deque<boost::shared_ptr<Callback>>;
+
+  qi::ExecutionContext& _eventLoop;
+  boost::atomic<unsigned int> _curId;
+  boost::atomic<unsigned int> _aliveCount;
+  bool _processing; // protected by mutex, no need for atomic
+  boost::atomic<int> _processingThread;
+  boost::mutex _mutex;
+  boost::condition_variable _processFinished;
+  bool _dying;
+  Queue _queue;
+
+  StrandPrivate(qi::ExecutionContext& eventLoop);
+
+  Future<void> asyncAtImpl(boost::function<void()> cb, qi::SteadyClockTimePoint tp) override;
+  Future<void> asyncDelayImpl(boost::function<void()> cb, qi::Duration delay) override;
+
+  boost::shared_ptr<Callback> createCallback(boost::function<void()> cb);
+  void enqueue(boost::shared_ptr<Callback> cbStruct);
+
+  void process();
+  void cancel(boost::shared_ptr<Callback> cbStruct);
+
+  // don't care
+  bool isInThisContext() override { assert(false); throw 0; }
+  void postImpl(boost::function<void()> callback) override { assert(false); throw 0; }
+  qi::Future<void> async(const boost::function<void()>& callback, qi::SteadyClockTimePoint tp) override
+  { assert(false); throw 0; }
+  qi::Future<void> async(const boost::function<void()>& callback, qi::Duration delay) override
+  { assert(false); throw 0; }
+  using ExecutionContext::async;
+};
+
+inline StrandPrivate::StrandPrivate(qi::ExecutionContext& eventLoop)
+  : _eventLoop(eventLoop)
+  , _curId(0)
+  , _aliveCount(0)
+  , _processing(false)
+  , _processingThread(0)
+  , _dying(false)
+{
+}
 
 /** Class that schedules tasks sequentially
  *
@@ -100,15 +144,11 @@ public:
 
   template <typename F>
   auto schedulerFor(F&& func, boost::function<void()> onFail = {})
-  // very very ugly stuff that deals with qi::bind internals
-  // this could just be auto in c++14 and could be decltype in c++11, but vs2013 can't deduce the type here...
-      -> detail::WrapAsAsync<typename std::decay<detail::BindTransform<boost::weak_ptr<StrandPrivate>>::wrap_type<
-          detail::WrapInStrand<typename std::decay<F>::type>>>::type>
+      -> detail::WrapInStrand<typename std::decay<F>::type>
   {
-    return detail::wrapAsAsync(
-        qi::trackWithFallback(std::move(onFail),
-                              detail::WrapInStrand<typename std::decay<F>::type>(std::forward<F>(func), *this),
-                              boost::weak_ptr<StrandPrivate>(_p)));
+    return detail::WrapInStrand<typename std::decay<F>::type>(std::forward<F>(func),
+                                                              _p,
+                                                              std::move(onFail));
   }
 
 private:
@@ -161,12 +201,16 @@ namespace detail
   template <typename F>
   struct WrapInStrand
   {
-    F _func;
-    Strand& _strand;
+    static const bool is_async = true;
 
-    WrapInStrand(F f, Strand& strand)
+    F _func;
+    boost::weak_ptr<StrandPrivate> _strand;
+    boost::function<void()> _onFail;
+
+    WrapInStrand(F f, boost::weak_ptr<StrandPrivate> strand, boost::function<void()> onFail)
       : _func(std::move(f))
-      , _strand(strand)
+      , _strand(std::move(strand))
+      , _onFail(std::move(onFail))
     {
     }
 
@@ -175,30 +219,17 @@ namespace detail
         -> qi::Future<typename std::decay<decltype(std::bind(_func, std::forward<Args>(args)...)())>::type>
     {
       // boost::bind does not work T_T
-      return _strand.async(std::bind(_func, std::forward<Args>(args)...));
+      if (auto strand = _strand.lock())
+        return strand->async(std::bind(_func, std::forward<Args>(args)...));
+      else
+      {
+        if (_onFail)
+          _onFail();
+        return qi::makeFutureError<
+            typename std::decay<decltype(std::bind(_func, std::forward<Args>(args)...)())>::type>("strand is dead");
+      }
     }
   };
-
-  // this structure is just a wrapper with a is_async field
-  template <typename F>
-  struct WrapAsAsync
-  {
-    static const bool is_async = true;
-
-    F _func;
-
-    template <typename... Args>
-    auto operator()(Args&&... args) const -> typename std::decay<decltype(_func(std::forward<Args>(args)...))>::type
-    {
-      return _func(std::forward<Args>(args)...);
-    }
-  };
-
-  template <typename F>
-  WrapAsAsync<typename std::decay<F>::type> wrapAsAsync(F&& f)
-  {
-    return WrapAsAsync<typename std::decay<F>::type>{std::forward<F>(f)};
-  }
 
 }
 

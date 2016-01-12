@@ -7,72 +7,28 @@
 #include <qi/log.hpp>
 #include <qi/future.hpp>
 #include <qi/getenv.hpp>
-#include <deque>
-#include <boost/enable_shared_from_this.hpp>
 
 qiLogCategory("qi.strand");
 
 namespace qi {
 
-class StrandPrivate : public boost::enable_shared_from_this<StrandPrivate>
+enum class StrandPrivate::State
 {
-public:
-  enum class State
-  {
-    None,
-    Scheduled,
-    Running,
-    Canceled
-    // we don't care about finished state
-  };
-
-  struct Callback
-  {
-    uint32_t id;
-    State state;
-    boost::function<void()> callback;
-    qi::Promise<void> promise;
-    qi::Future<void> asyncFuture;
-  };
-
-  typedef std::deque<boost::shared_ptr<Callback> > Queue;
-
-  qi::ExecutionContext& _eventLoop;
-  boost::atomic<unsigned int> _curId;
-  boost::atomic<unsigned int> _aliveCount;
-  bool _processing; // protected by mutex, no need for atomic
-  boost::atomic<int> _processingThread;
-  boost::mutex _mutex;
-  boost::condition_variable _processFinished;
-  bool _dying;
-  Queue _queue;
-
-  StrandPrivate(qi::ExecutionContext& eventLoop);
-  ~StrandPrivate();
-
-  Future<void> asyncAtImpl(boost::function<void()> cb, qi::SteadyClockTimePoint tp);
-  Future<void> asyncDelayImpl(boost::function<void()> cb, qi::Duration delay);
-
-  boost::shared_ptr<Callback> createCallback(boost::function<void()> cb);
-  void enqueue(boost::shared_ptr<Callback> cbStruct);
-
-  void process();
-  void cancel(boost::shared_ptr<Callback> cbStruct);
+  None,
+  Scheduled,
+  Running,
+  Canceled,
+  // we don't care about finished state
 };
 
-StrandPrivate::StrandPrivate(qi::ExecutionContext& eventLoop)
-  : _eventLoop(eventLoop)
-  , _curId(0)
-  , _aliveCount(0)
-  , _processing(false)
-  , _processingThread(0)
-  , _dying(false)
+struct StrandPrivate::Callback
 {
-}
-
-StrandPrivate::~StrandPrivate()
-{
-}
+  uint32_t id;
+  State state;
+  boost::function<void()> callback;
+  qi::Promise<void> promise;
+  qi::Future<void> asyncFuture;
+};
 
 boost::shared_ptr<StrandPrivate::Callback> StrandPrivate::createCallback(boost::function<void()> cb)
 {

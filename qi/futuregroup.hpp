@@ -43,7 +43,7 @@ namespace qi
       _futureCancelList.insert(std::make_pair(future.uniqueId(), qi::bind<void()>(&Future<T>::cancel, future)));
 
       // The 2 following lines are necessary because of a compiler bug in VS2010 which is fixed in VS2015 and beyond
-      typedef void (ScopedFutureGroup::* MemFuncType)(Future<T>);
+      using MemFuncType = void (ScopedFutureGroup::*)(Future<T>);
       MemFuncType onFutureFinishedCallback = &ScopedFutureGroup::onFutureFinished<T>;
       future.template thenR<void>(onFutureFinishedCallback, this, _1);
     }
@@ -92,7 +92,7 @@ namespace qi
 
   private:
     mutable boost::mutex _mutex;
-    typedef boost::container::flat_map< FutureUniqueId, boost::function<void()> > FutureCancelList;
+    using FutureCancelList = boost::container::flat_map< FutureUniqueId, boost::function<void()>>;
     FutureCancelList _futureCancelList;
 
     template<class T>

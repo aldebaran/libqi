@@ -106,7 +106,7 @@ namespace qi {
   QI_API bool operator==(const AnyValue& a, const AnyValue& b);
   QI_API bool operator!=(const AnyValue& a, const AnyValue& b);
 
-  typedef std::vector<AnyValue> AnyValueVector;
+  using AnyValueVector = std::vector<AnyValue>;
 
   inline AnyReferenceVector asAnyReferenceVector(const AnyValueVector& vect);
 

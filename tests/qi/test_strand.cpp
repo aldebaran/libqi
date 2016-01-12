@@ -205,6 +205,24 @@ TEST(TestStrand, StrandDestructionBeforeEnd)
   f.value();
 }
 
+TEST(TestStrand, StrandDestructionWithSchedulerFor)
+{
+  std::vector<qi::Future<void>> futures;
+  qi::Future<void> fut;
+  {
+    // allocate on heap to help asan & co
+    std::unique_ptr<qi::Strand> strand(new qi::Strand(*qi::getEventLoop()));
+    auto f = strand->schedulerFor([]{ ADD_FAILURE(); });
+    fut = qi::async([f, &futures]{
+          for (int i = 0; i < 300; ++i)
+            futures.push_back(f());
+        });
+  }
+  fut.wait();
+  for (auto& future : futures)
+    future.wait();
+}
+
 boost::atomic<int> callcount;
 
 struct MyActor : qi::Actor

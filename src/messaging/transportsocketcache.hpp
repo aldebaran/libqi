@@ -55,7 +55,7 @@ namespace qi
       State_Error
     };
 
-    typedef boost::shared_ptr<UrlVector> UrlVectorPtr;
+    using UrlVectorPtr = boost::shared_ptr<UrlVector>;
     void onSocketConnectionAttempt(Future<void> fut, Promise<TransportSocketPtr> prom, TransportSocketPtr socket, const ServiceInfo& info, uint32_t currentUrlIdx, UrlVectorPtr urls);
     void onSocketParallelConnectionAttempt(Future<void> fut, TransportSocketPtr socket, Url url, const ServiceInfo& info);
     void onSocketDisconnected(TransportSocketPtr client, Url url, const std::string& reason, const ServiceInfo& info);
@@ -69,12 +69,12 @@ namespace qi
       int attemptCount;
       State state;
     };
-    typedef boost::shared_ptr<ConnectionAttempt> ConnectionAttemptPtr;
+    using ConnectionAttemptPtr = boost::shared_ptr<ConnectionAttempt>;
 
     void checkClear(ConnectionAttemptPtr, const std::string& machineId);
 
-    typedef std::string MachineId;
-    typedef std::map<MachineId, std::map<Url, ConnectionAttemptPtr> > ConnectionMap;
+    using MachineId = std::string;
+    using ConnectionMap = std::map<MachineId, std::map<Url, ConnectionAttemptPtr>>;
     ConnectionMap _connections;
     std::list<TransportSocketPtr> _allPendingConnections;
     bool _dying;

@@ -63,7 +63,7 @@ TEST(QiClock, clock_sleep_our)
   qi::sleepUntil(qi::SystemClock::now() - qi::Seconds(1));
 }
 
-typedef chrono::duration<uint32_t, boost::milli > uint32ms;
+using uint32ms = chrono::duration<uint32_t, boost::milli>;
 
 TEST(QiClock, tofromUint32ms)
 {

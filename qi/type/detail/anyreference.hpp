@@ -21,7 +21,7 @@
 namespace qi {
 
 class AnyReference;
-typedef std::vector<AnyReference> AnyReferenceVector;
+using AnyReferenceVector = std::vector<AnyReference>;
 
 namespace detail {
 
@@ -55,6 +55,18 @@ protected:
     , _value(value)
   {}
 
+  /** Get item with key/index 'key'.
+   * @param throwOnFailure controls what happens in case of failure (key out of range or invalid type):
+   *                       true - the function throws,
+   *                       false - returns empty AnyReferece.
+   *                       If the container is a 'Map' type, this parameter is ignored.
+   * @param autoInsert if the container is a 'Map' type, this parameter controls what happens if the value with
+   *                   the given key does not already exist in the map:
+   *                   true - a new entry is added to the map and then returned,
+   *                   false - an empty AnyReference is returned (no insertion is performed).
+   */
+  AnyReference _element(const AnyReference& key, bool throwOnFailure, bool autoInsert);
+
 public:
   /// @return the pair (convertedValue, trueIfCopiedAndNeedsDestroy)
   std::pair<AnyReference, bool> convert(TypeInterface* targetType) const;
@@ -82,11 +94,6 @@ public:
 
   /// Helper function that converts and always clone
   AnyReference convertCopy(TypeInterface* targetType) const;
-
-  // get item with key/index 'key'. Return empty GVP or throw in case of failure
-  AnyReference _element(const AnyReference& key, bool throwOnFailure);
-  void _append(const AnyReference& element);
-  void _insert(const AnyReference& key, const AnyReference& val);
   ///@}
 
   ///@{
@@ -251,19 +258,36 @@ public:
    */
   template<typename K>
   AnyReference operator[](const K& key);
+  AnyReference operator[](const AnyReference& key);
 
   /// Call operator[](key).as<E>, element type must match E
   template<typename E, typename K>
   E& element(const K& key);
+
+  /**
+   * Similar to operator[], but Map container type is not modified if
+   * the key does not exist.
+   * Returns an empty AnyReference if the key is invalid (out of bounds for
+   * list/tuple or key not found for the map)
+   */
+  template<typename K>
+  AnyReference at(const K& key);
+  template<typename K>
+  AnyReference at(const K& key) const;
+  AnyReference at(const AnyReference& key);
+  AnyReference at(const AnyReference& key) const;
 
   size_t size() const;
 
   //TODO: use AutoAnyReference
   template<typename T>
   void append(const T& element);
+  void append(const AnyReference& element);
 
   template<typename K, typename V>
   void insert(const K& key, const V& val);
+  void insert(const AnyReference& key, const AnyReference& val);
+
 
   /** Similar to operator[](), but return an empty AnyValue
    * If the key is not present.
@@ -322,7 +346,7 @@ private:
   };
 };
 
-typedef std::vector<AnyReference> AnyReferenceVector;
+using AnyReferenceVector = std::vector<AnyReference>;
 QI_API bool operator< (const AnyReference& a, const AnyReference& b);
 QI_API bool operator==(const AnyReference& a, const AnyReference& b);
 QI_API bool operator!=(const AnyReference& a, const AnyReference& b);

@@ -7,6 +7,10 @@
 
 include_directories(".")
 
+qi_stage_dir(".")
+qi_install_test_data("share/qi/server.crt" SUBFOLDER qi)
+qi_install_test_data("share/qi/server.key" SUBFOLDER qi)
+
 function(qimessaging_create_session_test name)
   if (DEFINED BUILD_TESTS AND NOT BUILD_TESTS)
     return()
@@ -20,9 +24,7 @@ function(qimessaging_create_session_test name)
 # qi_add_test(${name}_nightmare ${name} ARGUMENTS --mode=nightmare ${ARG_ARGUMENTS} TIMEOUT ${ARG_TIMEOUT})
   qi_add_test(${name}_sd ${name} ARGUMENTS --mode=sd ${ARG_ARGUMENTS} TIMEOUT ${ARG_TIMEOUT})
   qi_add_test(${name}_gateway ${name} ARGUMENTS --mode=gateway ${ARG_ARGUMENTS} TIMEOUT ${ARG_TIMEOUT})
-  if (WITH_SSL)
-  qi_add_test(${name}_ssl ${name} ARGUMENTS --mode=ssl ${ARG_ARGUMENTS} TIMEOUT ${ARG_TIMEOUT_SSL})
-  endif()
+# qi_add_test(${name}_ssl ${name} ARGUMENTS --mode=ssl ${ARG_ARGUMENTS} TIMEOUT ${ARG_TIMEOUT_SSL})
 endfunction()
 
 qi_create_lib(testsession STATIC NO_INSTALL

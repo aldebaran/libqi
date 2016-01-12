@@ -77,7 +77,7 @@ namespace qi {
     * This class represent a network message
     */
   class TransportSocket;
-  typedef boost::shared_ptr<TransportSocket> TransportSocketPtr;
+  using TransportSocketPtr = boost::shared_ptr<TransportSocket>;
   class ObjectHost;
 
   class Message {

@@ -333,11 +333,13 @@ namespace qi {
     _p->buffer = buffer;
   }
 
-  void Message::setError(const std::string &error) {
-    if (type() != Type_Error) {
-      qiLogWarning() << "called setError on a non Type_Error message";
-      return;
-    }
+  void Message::setError(const std::string &error)
+  {
+    assert(type() == Type_Error && "called setError on a non Type_Error message");
+
+    // Clear the buffer before setting an error.
+    _p->buffer.clear();
+
     // Error message is of type m (dynamic)
     AnyValue v(AnyReference::from(error), false, false);
     setValue(AnyReference::from(v), "m");
@@ -414,8 +416,7 @@ namespace qi {
     qi::BufferReader br(_p->buffer);
     //TODO: not exception safe
     AnyReference res(type);
-    decodeBinary(&br, res, boost::bind(deserializeObject, _1, socket), socket.get());
-    return res;
+    return decodeBinary(&br, res, boost::bind(deserializeObject, _1, socket), socket.get());
   }
 
   void Message::setValue(const AutoAnyReference &value, const Signature& sig, ObjectHost* context, StreamContext* streamContext) {

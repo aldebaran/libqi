@@ -71,8 +71,8 @@ namespace qi {
   //Taken from boost::json
   std::string add_esc_chars(const std::wstring& s, JsonOption jsonPrintOption)
   {
-    typedef std::wstring::const_iterator Iter_type;
-    typedef std::wstring::value_type     Char_type;
+    using Iter_type = std::wstring::const_iterator;
+    using Char_type = std::wstring::value_type;
 
     std::string result;
     const Iter_type end( s.end() );
@@ -82,7 +82,7 @@ namespace qi {
       const Char_type c(*i);
       if(add_esc_char(c, result, jsonPrintOption))
         continue;
-      const wint_t unsigned_c((c >= 0) ? c : 256 + c);
+      const wint_t unsigned_c(c);
 
       // 127 is the end of printable characters in ASCII table.
       if(iswprint(unsigned_c) && unsigned_c < 127)

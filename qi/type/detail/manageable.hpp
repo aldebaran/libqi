@@ -114,7 +114,7 @@ QI_TYPE_STRUCT(qi::os::timeval, tv_sec, tv_usec);
 
 namespace qi {
 
-  typedef std::map<unsigned int, MethodStatistics> ObjectStatistics;
+  using ObjectStatistics = std::map<unsigned int, MethodStatistics>;
 /** Per-instance context.
   */
   class QI_API Manageable
@@ -168,11 +168,9 @@ namespace qi {
     static const uint32_t startId = 80;
     /// Stop id of features handled by Manageable
     static const uint32_t endId = 99;
-    typedef std::map<unsigned int,
-      std::pair<AnyFunction, MetaCallType>
-    > MethodMap;
-    typedef boost::function<SignalBase* (void*)> SignalGetter;
-    typedef std::map<unsigned int, SignalGetter> SignalMap;
+    using MethodMap = std::map<unsigned int, std::pair<AnyFunction, MetaCallType>>;
+    using SignalGetter = boost::function<SignalBase* (void*)>;
+    using SignalMap = std::map<unsigned int, SignalGetter>;
     SignalMap signalMap;
     /* Return the methods and signals defined at GenericObject level.
      * The 'this' argument must be the Manageable*.

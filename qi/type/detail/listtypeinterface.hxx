@@ -20,13 +20,13 @@ template<typename T, typename H = ListTypeInterface>
 class ListTypeInterfaceImpl: public H
 {
 public:
-  typedef DefaultTypeImplMethods<T, TypeByPointerPOD<T> > MethodsImpl;
+  using MethodsImpl = DefaultTypeImplMethods<T, TypeByPointerPOD<T>>;
   ListTypeInterfaceImpl();
-  virtual size_t size(void* storage);
-  virtual TypeInterface* elementType();
-  virtual AnyIterator begin(void* storage);
-  virtual AnyIterator end(void* storage);
-  virtual void pushBack(void** storage, void* valueStorage);
+  size_t size(void* storage) override;
+  TypeInterface* elementType() override;
+  AnyIterator begin(void* storage) override;
+  AnyIterator end(void* storage) override;
+  void pushBack(void** storage, void* valueStorage) override;
   _QI_BOUNCE_TYPE_METHODS(MethodsImpl);
   TypeInterface* _elementType;
 };
@@ -36,24 +36,24 @@ template<typename T>
 class TypeSimpleIteratorImpl: public IteratorTypeInterface
 {
 public:
-  typedef T Storage;
-  virtual AnyReference dereference(void* storage)
+  using Storage = T;
+  AnyReference dereference(void* storage) override
   {
     T* ptr = (T*)ptrFromStorage(&storage);
     return AnyReference::from(*(*ptr));
   }
-  virtual void next(void** storage)
+  void next(void** storage) override
   {
     T* ptr = (T*)ptrFromStorage(storage);
     ++(*ptr);
   }
-  virtual bool equals(void* s1, void* s2)
+  bool equals(void* s1, void* s2) override
   {
     T* p1 = (T*)ptrFromStorage(&s1);
     T* p2 = (T*)ptrFromStorage(&s2);
     return *p1 == *p2;
   }
-  typedef DefaultTypeImplMethods<Storage, TypeByPointerPOD<T> > TypeImpl;
+  using TypeImpl = DefaultTypeImplMethods<Storage, TypeByPointerPOD<T>>;
   _QI_BOUNCE_TYPE_METHODS(TypeImpl);
   static AnyIterator make(const T& val)
   {
@@ -130,9 +130,9 @@ template<typename T>
 class VarArgsTypeInterfaceImpl: public ListTypeInterfaceImpl<typename T::VectorType, VarArgsTypeInterface>
 {
 public:
-  typedef ListTypeInterfaceImpl<typename T::VectorType, VarArgsTypeInterface> BaseClass;
+  using BaseClass = ListTypeInterfaceImpl<typename T::VectorType, VarArgsTypeInterface>;
 
-  typedef DefaultTypeImplMethods<T, TypeByPointerPOD<T> > MethodsImpl;
+  using MethodsImpl = DefaultTypeImplMethods<T, TypeByPointerPOD<T>>;
   VarArgsTypeInterfaceImpl() {}
 
   _QI_BOUNCE_TYPE_METHODS(MethodsImpl);
@@ -144,16 +144,16 @@ public:
     return &v;
   }
 
-  virtual size_t size(void* storage) {
+  size_t size(void* storage) override {
     return BaseClass::size(adaptStorage(&storage));
   }
-  virtual AnyIterator begin(void* storage) {
+  AnyIterator begin(void* storage) override {
     return BaseClass::begin(adaptStorage(&storage));
   }
-  virtual AnyIterator end(void* storage) {
+  AnyIterator end(void* storage) override {
     return BaseClass::end(adaptStorage(&storage));
   }
-  virtual void pushBack(void** storage, void* valueStorage) {
+  void pushBack(void** storage, void* valueStorage) override {
     void* vstor = adaptStorage(storage);
     BaseClass::pushBack(&vstor, valueStorage);
   }

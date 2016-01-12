@@ -18,7 +18,7 @@ class AdderImpl: public Adder
   Object<AddTask> makeTask(int val);
   AnyObject makeAnyTask(int val);
   int nTasks();
-  typedef qi::Property<int> Value;
+  using Value = qi::Property<int>;
   private:
   bool onValue(int& storage, const int& newValue);
   std::vector<WeakObject<AddTask> > tasks;

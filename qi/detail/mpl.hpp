@@ -19,7 +19,7 @@ namespace detail
 template <typename T>
 struct UnwrapImpl
 {
-  typedef T type;
+  using type = T;
   static T* unwrap(T& v)
   {
     return &v;
@@ -28,7 +28,7 @@ struct UnwrapImpl
 template <typename T>
 struct UnwrapImpl<T*>
 {
-  typedef T type;
+  using type = T;
   static T* unwrap(T* v)
   {
     return v;
@@ -37,7 +37,7 @@ struct UnwrapImpl<T*>
 template <typename T>
 struct UnwrapImpl<boost::shared_ptr<T> >
 {
-  typedef T type;
+  using type = T;
   static T* unwrap(boost::shared_ptr<T> v)
   {
     return v.get();
@@ -46,7 +46,7 @@ struct UnwrapImpl<boost::shared_ptr<T> >
 template <typename T>
 struct UnwrapImpl<boost::weak_ptr<T> >
 {
-  typedef T type;
+  using type = T;
   static T* unwrap(boost::weak_ptr<T> v)
   {
     return v.lock().get();

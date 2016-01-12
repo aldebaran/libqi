@@ -16,11 +16,11 @@ namespace qi {
   class QI_API AnyIterator: public AnyValue
   {
   public:
-    typedef AnyReference              value_type;
-    typedef AnyReference*             pointer;
-    typedef AnyReference&             reference;
-    typedef ptrdiff_t                 difference_type;
-    typedef std::forward_iterator_tag iterator_category;
+    using value_type = AnyReference;
+    using pointer = AnyReference*;
+    using reference = AnyReference&;
+    using difference_type = ptrdiff_t;
+    using iterator_category = std::forward_iterator_tag;
 
     AnyIterator();
     AnyIterator(const AnyReference& p);

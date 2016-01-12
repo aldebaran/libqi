@@ -28,7 +28,7 @@ namespace qi {
   };
   class SignalSubscriber;
   class Manageable;
-  typedef qi::uint64_t SignalLink;
+  using SignalLink = qi::uint64_t;
 
   /* We will have 2 implementations for 2 classes of C++ class:
    * - DynamicObject: Use DynamicObjectBuilder

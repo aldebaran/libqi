@@ -157,7 +157,7 @@ namespace detail
       {
         AnyReference val = *it;
         if (!needConvert)
-          result._append(val);
+          result.append(val);
         else
         {
           std::pair<AnyReference,bool> c = val.convert(dstElemType);
@@ -168,7 +168,7 @@ namespace detail
             result.destroy();
             return std::make_pair(AnyReference(), false);
           }
-          result._append(c.first);
+          result.append(c.first);
           if (c.second)
             c.first.destroy();
         }
@@ -686,7 +686,7 @@ namespace detail
           if (!cv.first._type)
             return std::make_pair(AnyReference(), false);
         }
-        result._insert(sameKey?kv[0]:ck.first, sameElem?kv[1]:cv.first);
+        result.insert(sameKey?kv[0]:ck.first, sameElem?kv[1]:cv.first);
         if (!sameKey && ck.second)
           ck.first.destroy();
         if (!sameElem && cv.second)
@@ -719,7 +719,7 @@ namespace detail
           result.destroy();
           return std::make_pair(AnyReference(), false);
         }
-        result._insert(conv.first[0], conv.first[1]);
+        result.insert(conv.first[0], conv.first[1]);
         if (conv.second)
           conv.first.destroy();
         ++srcBegin;
@@ -755,7 +755,7 @@ namespace detail
           result.destroy();
           return std::make_pair(AnyReference(), false);
         }
-        result._insert(AnyReference::from(srcElementName[i]), conv.first);
+        result.insert(AnyReference::from(srcElementName[i]), conv.first);
         if (conv.second)
           conv.first.destroy();
       }
@@ -1112,7 +1112,7 @@ namespace detail
     return to<AnyObject>();
   }
 
-  AnyReference AnyReferenceBase::_element(const AnyReference& key, bool throwOnFailure)
+  AnyReference AnyReferenceBase::_element(const AnyReference& key, bool throwOnFailure, bool autoInsert)
   {
     if (kind() == TypeKind_List || kind() == TypeKind_VarArgs)
     {
@@ -1133,10 +1133,7 @@ namespace detail
       std::pair<AnyReference, bool> c = key.convert(t->keyType());
       if (!c.first._type)
         throw std::runtime_error("Incompatible key type");
-      // HACK: should be two separate booleans
-      bool autoInsert = throwOnFailure;
-      AnyReference result
-          = t->element(&_value, c.first._value, autoInsert);
+      AnyReference result = t->element(&_value, c.first._value, autoInsert);
       if (c.second)
         c.first.destroy();
       return result;
@@ -1159,7 +1156,7 @@ namespace detail
       throw std::runtime_error("Expected List, Map or Tuple kind");
   }
 
-  void AnyReferenceBase::_append(const AnyReference& elem)
+  void AnyReferenceBase::append(const AnyReference& elem)
   {
     if (kind() != TypeKind_List && kind() != TypeKind_VarArgs)
       throw std::runtime_error("Expected a list");
@@ -1170,7 +1167,7 @@ namespace detail
       c.first.destroy();
   }
 
-  void AnyReferenceBase::_insert(const AnyReference& key, const AnyReference& val)
+  void AnyReferenceBase::insert(const AnyReference& key, const AnyReference& val)
   {
     if (kind() != TypeKind_Map)
       throw std::runtime_error("Expected a map");

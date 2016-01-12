@@ -64,25 +64,28 @@ namespace qi  {
     template<typename T>
     struct TypeOfAdapter
     {
-      typedef T type;
+      using type = T;
     };
+
+    template <typename T>
+    using TypeOfAdapter_t = typename TypeOfAdapter<T>::type;
 
     template<typename T>
     struct TypeOfAdapter<T&>
     {
-      typedef typename TypeOfAdapter<T>::type type;
+      using type = TypeOfAdapter_t<T>;
     };
 
     template<typename T>
     struct TypeOfAdapter<const T>
     {
-      typedef typename TypeOfAdapter<T>::type type;
+      using type = TypeOfAdapter_t<T>;
     };
 
     template<typename T>
     struct TypeOfAdapter<T*>
     {
-      typedef typename boost::add_pointer<typename boost::remove_const<typename TypeOfAdapter<T>::type>::type>::type type;
+      using type = typename std::add_pointer<typename std::remove_const<TypeOfAdapter_t<T>>::type>::type;
     };
 
   }
@@ -90,7 +93,7 @@ namespace qi  {
   template<typename T>
   TypeInterface* typeOf()
   {
-    return detail::typeOfBackend<typename detail::TypeOfAdapter<T>::type>();
+    return detail::typeOfBackend<detail::TypeOfAdapter_t<T>>();
   }
 
   inline TypeKind TypeInterface::kind()
@@ -109,7 +112,7 @@ namespace qi  {
       * TODO: be able to switch between ByVal and ByPointer on the
       * same type.
       */
-      typedef DefaultTypeImplMethods<T> type;
+      using type = DefaultTypeImplMethods<T>;
       /*
       typedef typename boost::mpl::if_c<
         sizeof(T) <= sizeof(void*),
@@ -122,6 +125,9 @@ namespace qi  {
                         >::type type;
       */
     };
+
+    template <typename T>
+    using TypeImplMethodsBySize_t = typename TypeImplMethodsBySize<T>::type;
   }
 
   // To detect a templated type, make all the Type of its instanciations

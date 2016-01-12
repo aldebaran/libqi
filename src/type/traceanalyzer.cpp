@@ -33,10 +33,10 @@ namespace qi
     std::vector<CallData*> asyncChildren; // unordered
   };
 
-  typedef std::list<CallData*> CallList;
-  typedef boost::unordered_map<unsigned int, std::list<CallData*> > PerContext;
-  typedef boost::unordered_map<unsigned int, CallData*> PerId;
-  typedef boost::unordered_map<unsigned int, qi::EventTrace> TraceBuffer;
+  using CallList = std::list<CallData*>;
+  using PerContext = boost::unordered_map<unsigned int, std::list<CallData*>>;
+  using PerId = boost::unordered_map<unsigned int, CallData*>;
+  using TraceBuffer = boost::unordered_map<unsigned int, qi::EventTrace>;
 
   class TraceAnalyzerImpl
   {
@@ -349,7 +349,7 @@ namespace qi
 
   // cheap-o-tronic flow detection
 
-  typedef TraceAnalyzer::FlowLink FlowLink;
+  using FlowLink = TraceAnalyzer::FlowLink;
   void trackLink(std::set<FlowLink>& links, const CallData* d)
   {
     for (CallList::const_iterator it = d->children.begin(), iend = d->children.end(); it != iend; ++it)

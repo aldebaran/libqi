@@ -29,10 +29,10 @@ namespace qi
   class AutoAnyReference;
 
   class AnyReference;
-  typedef std::vector<AnyReference> AnyReferenceVector;
+  using AnyReferenceVector = std::vector<AnyReference>;
 
   class AnyValue;
-  typedef std::vector<AnyValue> AnyValueVector;
+  using AnyValueVector = std::vector<AnyValue>;
 
   class AnyIterator;
 
@@ -41,9 +41,9 @@ namespace qi
   class Empty;
   class Proxy;
   template<typename T=Empty> class Object;
-  typedef Object<Empty> AnyObject;
+  using AnyObject = Object<Empty>;
   template<typename T=Empty> class WeakObject;
-  typedef WeakObject<Empty> AnyWeakObject;
+  using AnyWeakObject = WeakObject<Empty>;
 
   class GenericObject;
 

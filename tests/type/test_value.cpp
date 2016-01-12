@@ -182,6 +182,44 @@ TEST(Value, Map)
   ASSERT_ANY_THROW(v.append("foo"));
 }
 
+TEST(Value, Map_at)
+{
+  std::map<std::string, double> map;
+  map["foo"] = 1;
+  map["bar"] = 2;
+  AutoAnyReference v(map);
+  const AutoAnyReference vc(map);
+
+  // at(T)
+  {
+    AnyReference val1 = v.at("foo");
+    EXPECT_EQ(1, val1.toInt());
+    AnyReference valInvalid = v.at("nokey");
+    EXPECT_EQ(nullptr, valInvalid.type());
+  }
+  // at(T) const
+  {
+    const AnyReference val1 = vc.at("bar");
+    EXPECT_EQ(2, val1.toInt());
+    const AnyReference valInvalid = vc.at("nokey");
+    EXPECT_EQ(nullptr, valInvalid.type());
+  }
+  // at(AnyReference)
+  {
+    AnyReference val1 = v.at(AnyReference::from("foo"));
+    EXPECT_EQ(1, val1.toInt());
+    AnyReference valInvalid = v.at(AnyReference::from("nokey"));
+    EXPECT_EQ(nullptr, valInvalid.type());
+  }
+  // at(AnyReference) const
+  {
+    const AnyReference val1 = vc.at(AnyReference::from("bar"));
+    EXPECT_EQ(2, val1.toInt());
+    const AnyReference valInvalid = vc.at(AnyReference::from("nokey"));
+    EXPECT_EQ(nullptr, valInvalid.type());
+  }
+}
+
 static bool triggered = false;
 static void nothing(GenericObject*) {triggered = true;}
 
@@ -230,6 +268,28 @@ TEST(Value, list)
   ASSERT_ANY_THROW(v.element<double>(1)); // wrong type
   ASSERT_ANY_THROW(v.element<int>(17));   // out of bound
   EXPECT_EQ(v.as<std::vector<int> >().size(), v.size());
+}
+
+TEST(Value, list_at)
+{
+  std::vector<int> v{2, 5, 7};
+  AnyReference list = AnyReference::from(v);
+  const AnyReference listc = AnyReference::from(v);
+
+  // at(T)
+  {
+    AnyReference val = list.at(1);
+    EXPECT_EQ(5, val.toInt());
+    AnyReference valInvalid = list.at(4);
+    EXPECT_EQ(nullptr, valInvalid.type());
+  }
+  // at(T) const
+  {
+    const AnyReference val = listc.at(1);
+    EXPECT_EQ(5, val.toInt());
+    const AnyReference valInvalid = listc.at(4);
+    EXPECT_EQ(nullptr, valInvalid.type());
+  }
 }
 
 TEST(Value, set)

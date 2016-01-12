@@ -60,7 +60,7 @@ namespace qi {
   * for tuple annotation has the following form: "<TupleName,elementName0,...,elementName1>"
   */
   class Signature;
-  typedef std::vector<Signature> SignatureVector;
+  using SignatureVector = std::vector<Signature>;
 
   class QI_API Signature {
   protected:

@@ -20,7 +20,7 @@ action_F = ProtoField.uint32("qim.action","Action")
 data_F = ProtoField.string("qim.data", "Data")
 
 
-qim_proto.fields = {src_F, dst_F, conv_F, magic_F, id_F, size_F, type_F, service_F, object_F, action_F, data_F}
+qim_proto.fields = {src_F, dst_F, conv_F, magic_F, id_F, size_F, version_F, type_F, service_F, object_F, action_F, data_F}
 
 function qim_proto.dissector(buffer,pinfo,tree)
   local tcp_src = tcp_src_f()

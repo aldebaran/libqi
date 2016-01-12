@@ -41,7 +41,6 @@ qiLogCategory("qi.Application");
 namespace bfs = boost::filesystem;
 
 static std::string _sdkPath;
-static std::vector<std::string> _sdkPaths;
 
 static void parseArguments(int argc, char* argv[])
 {
@@ -71,7 +70,7 @@ namespace qi {
   static std::string globalProgram;
   static std::string globalRealProgram;
 
-  typedef std::vector<std::function<void()> > FunctionList;
+  using FunctionList = std::vector<std::function<void()>>;
   static FunctionList* globalAtExit = nullptr;
   static FunctionList* globalAtEnter = nullptr;
   static FunctionList* globalAtRun = nullptr;
@@ -258,16 +257,6 @@ namespace qi {
     globalProgram = path::detail::normalize(globalProgram);
 
     parseArguments(argc, argv);
-
-    if (_sdkPath.empty())
-      _sdkPath = qi::os::getenv("QI_SDK_PREFIX");
-
-    if (_sdkPaths.empty())
-    {
-      std::string prefixes = qi::os::getenv("QI_ADDITIONAL_SDK_PREFIXES");
-      if (!prefixes.empty())
-        boost::algorithm::split(_sdkPaths, prefixes, boost::algorithm::is_from_range(SEPARATOR, SEPARATOR));
-    }
 
     readPathConf();
     if (globalInitialized)
@@ -585,8 +574,4 @@ namespace qi {
     return _sdkPath.c_str();
   }
 
-  const std::vector<std::string>& Application::_suggestedSdkPaths()
-  {
-    return _sdkPaths;
-  }
 }

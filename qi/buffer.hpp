@@ -96,6 +96,20 @@ namespace qi
     Buffer& operator = (const Buffer& buffer);
 
     /**
+     * \brief Move constructor.
+     * The moved-from buffer's state is like a default constructed Buffer.
+     * \param buffer The buffer to move from.
+     */
+    Buffer(Buffer&& buffer);
+
+    /**
+     * \brief Move assignment operator.
+     * The moved-from buffer's state is like a default constructed Buffer.
+     * \param buffer The buffer to move from.
+     */
+    Buffer& operator = (Buffer&& buffer);
+
+    /**
      * \brief Write data in the buffer.
      * \param data The data to write
      * \param size The size of the data to write

@@ -77,7 +77,7 @@ inline TypeKind AnyReferenceBase::kind() const
 
 template<TypeKind T> struct TypeOfKind {};
 
-#define TYPE_OF_KIND(k, t) template<> struct TypeOfKind<k> { typedef t type;}
+#define TYPE_OF_KIND(k, t) template<> struct TypeOfKind<k> { using type = t;}
 // Kind -> handler Type (IntTypeInterface, ListTypeInterface...)  accessor
 TYPE_OF_KIND(TypeKind_Int, IntTypeInterface);
 TYPE_OF_KIND(TypeKind_Float, FloatTypeInterface);
@@ -216,25 +216,57 @@ E& AnyReferenceBase::element(const K& key)
 template<typename K>
 AnyReference AnyReferenceBase::operator[](const K& key)
 {
-  return _element(AnyReferenceBase::from(key), true);
+  return operator[](AnyReferenceBase::from(key));
+}
+
+inline AnyReference AnyReferenceBase::operator[](const AnyReference& key)
+{
+  return _element(key, true, true);
+}
+
+template<typename K>
+AnyReference AnyReferenceBase::at(const K& key)
+{
+  // note that this implementation is currently not very useful
+  // (it does the same thing as the const version) and could be removed.
+  // In the future, AnyReferenceConst should be implemented to
+  // make the distinction between the two, and in this case
+  // this version of the function will have a real meaning.
+  return at(AnyReferenceBase::from(key));
+}
+
+template<typename K>
+AnyReference AnyReferenceBase::at(const K& key) const
+{
+  return at(AnyReferenceBase::from(key));
+}
+
+inline AnyReference AnyReferenceBase::at(const AnyReference& key)
+{
+  return _element(key, false, false);
+}
+
+inline AnyReference AnyReferenceBase::at(const AnyReference& key) const
+{
+  return const_cast<AnyReferenceBase*>(this)->at(key);
 }
 
 template<typename T>
 void AnyReferenceBase::append(const T& element)
 {
-  _append(AnyReference::from(element));
+  append(AnyReference::from(element));
 }
 
 template<typename K, typename V>
 void AnyReferenceBase::insert(const K& key, const V& val)
 {
-  _insert(AnyReference::from(key), AnyReference::from(val));
+  insert(AnyReference::from(key), AnyReference::from(val));
 }
 
 template<typename K>
 AnyReference AnyReferenceBase::find(const K& key)
 {
-  return _element(AnyReference::from(key), false);
+  return _element(AnyReference::from(key), false, false);
 }
 
 } // namespace detail

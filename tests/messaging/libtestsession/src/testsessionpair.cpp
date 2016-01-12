@@ -22,17 +22,19 @@ TestSessionPair::TestSessionPair(TestMode::Mode mode, const std::string sdUrl)
   // #2 Listen.
   if (_mode == TestMode::Mode_SSL)
   {
-    _sd->setIdentity("../tests/server.key", "../tests/server.crt");
+    _sd->setIdentity(qi::path::findData("qi", "server.key"),
+                     qi::path::findData("qi", "server.crt"));
     _sd->listenStandalone("tcps://0.0.0.0:0");
+    endpoints = _sd->endpoints();
   }
   else
   {
     if (_mode == TestMode::Mode_Gateway)
     {
       _sd->listenStandalone("tcp://0.0.0.0:0");
-      _gw.attachToServiceDirectory(_sd->url());
+      _gw.attachToServiceDirectory(_sd->url()).value();
       _gw.listen(sdUrl);
-      endpoints = _sd->endpoints();
+      endpoints = _gw.endpoints();
     }
     else
     {

@@ -208,7 +208,7 @@ namespace qi {
       return category && level <= category->maxLevel;
     }
 
-    typedef detail::Category* CategoryType;
+    using CategoryType = detail::Category*;
     class LogStream: public std::stringstream, boost::noncopyable
     {
     public:

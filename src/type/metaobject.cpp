@@ -230,7 +230,7 @@ namespace qi {
         if (itRev != _methodsNameToIdx.end())
           return itRev->second;
 
-        typedef std::vector<std::pair<const MetaMethod*, float> > MethodsPtr;
+        using MethodsPtr = std::vector<std::pair<const MetaMethod*, float>>;
         MethodsPtr mml;
 
         // embed findCompatibleMethod

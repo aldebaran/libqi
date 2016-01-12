@@ -57,23 +57,35 @@ namespace qi {
 
   private:
     //bool: true if it's a socketobject
-    typedef std::map<unsigned int, BoundAnyObject> BoundAnyObjectMap;
+    using BoundAnyObjectMap = std::map<unsigned int, BoundAnyObject>;
 
     //ObjectList
     BoundAnyObjectMap                   _boundObjects;
     boost::mutex                        _boundObjectsMutex;
 
-    //SocketList
-    std::list<TransportSocketPtr>       _sockets;
-    boost::recursive_mutex              _socketsMutex;
     boost::mutex                        _stateMutex;
-
     AuthProviderFactoryPtr              _authProviderFactory;
     bool                                _enforceAuth;
   public:
     TransportServer                     _server;
     bool                                _dying;
     qi::MetaCallType                    _defaultCallType;
+
+  private:
+    // The connection to the server's signal. Needs to be disconnected in the destructor.
+    qi::SignalLink                      _newConnectionLink = qi::SignalBase::invalidSignalLink;
+
+    struct SocketSubscriber
+    {
+      qi::SignalLink disconnected = qi::SignalBase::invalidSignalLink;
+      qi::SignalLink messageReady = qi::SignalBase::invalidSignalLink;
+    };
+    std::map<TransportSocketPtr, SocketSubscriber> _subscribers;
+
+    boost::recursive_mutex              _socketsMutex;
+
+    void connectMessageReady(const TransportSocketPtr& socket);
+    void disconnectSignals(const TransportSocketPtr& socket, const SocketSubscriber& subscriber);
   };
 }
 

@@ -29,7 +29,7 @@ namespace qi {
     MetaObjectPrivate(const MetaObjectPrivate &rhs);
     MetaObjectPrivate&  operator=(const MetaObjectPrivate &rhs);
 
-    typedef std::map<std::string, unsigned int> NameToIdx;
+    using NameToIdx = std::map<std::string, unsigned int>;
 
     inline int idFromName(const NameToIdx& map, const std::string& name) {
       NameToIdx::const_iterator it = map.find(name);
@@ -95,7 +95,7 @@ namespace qi {
     mutable boost::recursive_mutex      _methodsMutex;
 
   public:
-    typedef std::map<std::string, MetaMethod*> OverloadMap;
+    using OverloadMap = std::map<std::string, MetaMethod*>;
     OverloadMap                         _methodNameToOverload;
 
     //name::sig() -> Index

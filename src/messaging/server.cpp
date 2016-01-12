@@ -22,15 +22,15 @@ namespace qi {
     : _enforceAuth(enforceAuth)
     , _dying(false)
     , _defaultCallType(qi::MetaCallType_Queued)
+    , _newConnectionLink(_server.newConnection.connect(&Server::onTransportServerNewConnection, this, _1, true))
   {
-    _server.newConnection.connect(&Server::onTransportServerNewConnection, this, _1, true);
   }
 
   Server::~Server()
   {
     //we can call reset on server and socket they are only owned by us.
     //when it's close it's close
-    _server.newConnection.disconnectAll();
+    _server.newConnection.disconnect(_newConnectionLink);
     close();
     destroy();
   }
@@ -89,6 +89,18 @@ namespace qi {
     sock->send(msg);
   }
 
+  void Server::connectMessageReady(const TransportSocketPtr& socket)
+  {
+    boost::recursive_mutex::scoped_lock sl(_socketsMutex);
+    auto& subscriber = _subscribers[socket];
+
+    assert(subscriber.messageReady == qi::SignalBase::invalidSignalLink &&
+           "Connecting a signal that already exists.");
+
+    subscriber.messageReady =
+        socket->messageReady.connect(&Server::onMessageReady, this, _1, socket).setCallType(MetaCallType_Direct);
+  }
+
   void Server::onTransportServerNewConnection(TransportSocketPtr socket, bool startReading)
   {
     boost::recursive_mutex::scoped_lock sl(_socketsMutex);
@@ -100,8 +112,15 @@ namespace qi {
       socket->disconnect().async();
       return;
     }
-    _sockets.push_back(socket);
-    socket->disconnected.connect(&Server::onSocketDisconnected, this, socket, _1);
+
+    auto inserted = _subscribers.insert(std::make_pair(socket, SocketSubscriber{}));
+    assert(inserted.second && "Socket insertion failed. Socket already exists.");
+
+    auto& subscriber = inserted.first->second;
+
+    assert(subscriber.disconnected == qi::SignalBase::invalidSignalLink && "Connecting a signal that already exists.");
+    subscriber.disconnected =
+        socket->disconnected.connect(&Server::onSocketDisconnected, this, socket, _1);
 
     // If false : the socket is only being registered, and has already been authenticated. The connection
     // was made elsewhere.
@@ -115,7 +134,12 @@ namespace qi {
       socket->startReading();
     }
     else
-      socket->messageReady.connect(&Server::onMessageReady, this, _1, socket).setCallType(MetaCallType_Direct);
+    {
+      assert(subscriber.messageReady == qi::SignalBase::invalidSignalLink &&
+             "Connecting a signal that already exists.");
+      subscriber.messageReady =
+          socket->messageReady.connect(&Server::onMessageReady, this, _1, socket).setCallType(MetaCallType_Direct);
+    }
   }
 
   void Server::onMessageReadyNotAuthenticated(const Message &msg, TransportSocketPtr socket, AuthProviderPtr auth,
@@ -153,7 +177,8 @@ namespace qi {
       {
         sendCapabilities(socket);
         qiLogVerbose() << "Authentication is not enforced. Skipping...";
-        socket->messageReady.connect(&Server::onMessageReady, this, _1, socket).setCallType(MetaCallType_Direct);
+
+        connectMessageReady(socket);
         onMessageReady(msg, socket);
       }
       return;
@@ -173,7 +198,8 @@ namespace qi {
     case AuthProvider::State_Done:
       qiLogVerbose() << "Client " << socket->remoteEndpoint().str() << " successfully authenticated.";
       socket->messageReady.disconnect(*oldSignal);
-      socket->messageReady.connect(&Server::onMessageReady, this, _1, socket).setCallType(MetaCallType_Direct);
+      connectMessageReady(socket);
+      // no break, we know that authentication is done, send the response to the remote end
     case AuthProvider::State_Cont:
       if (*first)
       {
@@ -219,7 +245,8 @@ namespace qi {
         if (msg.object() > Message::GenericObject_Main
           || msg.type() == Message::Type_Reply
           || msg.type() == Message::Type_Event
-          || msg.type() == Message::Type_Error)
+          || msg.type() == Message::Type_Error
+          || msg.type() == Message::Type_Canceled)
           return;
         // ... but only if the object id is >main
         qi::Message       retval(Message::Type_Error, msg.address());
@@ -237,6 +264,14 @@ namespace qi {
     obj->onMessage(msg, socket);
   }
 
+  void Server::disconnectSignals(const TransportSocketPtr& socket, const SocketSubscriber& subscriber)
+  {
+    socket->connected.disconnectAll();
+    socket->disconnected.disconnect(subscriber.disconnected);
+    socket->messageReady.disconnect(subscriber.messageReady);
+    socket->disconnect();
+  }
+
   void Server::close()
   {
     {
@@ -252,19 +287,14 @@ namespace qi {
 
     qiLogVerbose() << "Closing server...";
     {
-      std::list<TransportSocketPtr> socketsCopy;
+      const auto subscribersCopy = [&]
       {
         boost::recursive_mutex::scoped_lock sl(_socketsMutex);
-        std::swap(_sockets, socketsCopy);
-      }
-      std::list<TransportSocketPtr>::iterator it;
-      //TODO move that logic into TransportServer
-      for (it = socketsCopy.begin(); it != socketsCopy.end(); ++it) {
-        (*it)->connected.disconnectAll();
-        (*it)->disconnected.disconnectAll();
-        (*it)->messageReady.disconnectAll();
-        (*it)->disconnect();
-      }
+        return std::move(_subscribers);
+      }();
+
+      for (auto& pair : subscribersCopy)
+        disconnectSignals(pair.first, pair.second);
     }
     _server.close();
   }
@@ -307,12 +337,19 @@ namespace qi {
       }
 
       {
+        // Lock the mutex, erase the socket, and disconnect it outside the lock.
+        auto socketLocal = [&]()
         {
           boost::recursive_mutex::scoped_lock sl(_socketsMutex);
-          std::list<TransportSocketPtr>::iterator it = std::find(_sockets.begin(), _sockets.end(), socket);
-          if (it != _sockets.end())
-            _sockets.erase(it);
-        }
+          auto it = _subscribers.find(socket);
+          assert(it != _subscribers.end());
+          auto local = std::move(*it);
+          _subscribers.erase(it);
+          return local;
+        }();
+
+        if (socketLocal.first)
+          disconnectSignals(socketLocal.first, socketLocal.second);
       }
     }
   }
@@ -325,6 +362,5 @@ namespace qi {
   {
     _dying = false;
   }
-
 
 }

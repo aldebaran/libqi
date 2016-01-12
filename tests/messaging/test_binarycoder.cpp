@@ -563,7 +563,7 @@ TEST(TestBind, TestShPtr) {
     qi::decodeBinary(&bufr, &b2);
   } catch(std::runtime_error&) {}
 
-  typedef void(*titi_t)(void);
+  using titi_t = void(*)(void);
   titi_t titi = (titi_t)1;
 
   try {

@@ -24,8 +24,7 @@ namespace qi
     virtual unsigned int authVersionMinor() { return 0; }
   };
 
-  typedef boost::shared_ptr<ClientAuthenticatorFactory> ClientAuthenticatorFactoryPtr;
-
+  using ClientAuthenticatorFactoryPtr = boost::shared_ptr<ClientAuthenticatorFactory>;
 }
 
 

@@ -81,7 +81,7 @@ TEST(TestCall, Convert)
   EXPECT_ANY_THROW(obj.call<bool>("getfloat"));
   EXPECT_ANY_THROW(obj.call<std::string>("getfloat"));
 
-  EXPECT_EQ(false, obj.call<bool>("getbool"));
+  EXPECT_FALSE(obj.call<bool>("getbool"));
   EXPECT_EQ(0, obj.call<int>("getbool"));
   EXPECT_EQ(0.0, obj.call<float>("getbool"));
 
@@ -812,6 +812,19 @@ TEST(TestCall, TestObjectPassingReturn)
   ASSERT_FALSE(weak.lock());
 }
 
+auto ptr = boost::make_shared<int>(9999);
+TEST(TestCall, TestReturnSharedPtrRef)
+{
+  qi::DynamicObjectBuilder ob;
+  ob.advertiseMethod("over9000", static_cast<boost::shared_ptr<int>&(*)()>([]() -> boost::shared_ptr<int>& {
+          return ptr;
+        }));
+  qi::AnyObject obj(ob.object());
+
+  auto p = obj.call<boost::shared_ptr<int>>("over9000");
+  ASSERT_EQ(9999, *p);
+}
+
 class TestClassInterface
 {
 public:
@@ -999,6 +1012,31 @@ TEST(TestCall, CallOnFutureReturn)
   ASSERT_EQ(41, f);
 }
 
+TEST(TestCall, TestInvalidFuture)
+{
+  TestSessionPair p;
+
+  qi::DynamicObjectBuilder ob;
+  ob.advertiseMethod("getInvalid",
+                     boost::function<qi::Future<void>()>(
+                       []{ return qi::Future<void>(); }));
+  ob.setThreadingModel(qi::ObjectThreadingModel_MultiThread);
+  p.server()->registerService("test", ob.object());
+  qi::AnyObject proxy = p.client()->service("test");
+
+  qi::Future<void> future = proxy.async<void>("getInvalid");
+  ASSERT_EQ(qi::detail::InvalidFutureError, future.error());
+  try
+  {
+    proxy.call<void>("getInvalid");
+    FAIL();
+  }
+  catch (std::exception& e)
+  {
+    ASSERT_EQ(qi::detail::InvalidFutureError, std::string(e.what()));
+  }
+}
+
 void arrrg(int v) {
 }
 
@@ -1167,6 +1205,11 @@ QI_REGISTER_OBJECT(PassObject, pingaa, pingat, pingta, pingtt, val);
 TEST(TestObjectT, Passing)
 {
   TestSessionPair p;
+
+  // FIXME support object passing in the gateway
+  if (p.mode() == TestMode::Mode_Gateway)
+    return;
+
   Object<PassObject> pingerService(new PassObject);
   p.server()->registerService("pinger", pingerService);
   AnyObject pinger = p.client()->service("pinger");
@@ -1185,6 +1228,11 @@ TEST(TestObjectT, Passing)
 TEST(TestObjectT, Doom)
 {
   TestSessionPair p;
+
+  // FIXME support object passing in the gateway
+  if (p.mode() == TestMode::Mode_Gateway)
+    return;
+
   Object<PassObject> pingerService(new PassObject);
   p.server()->registerService("pinger", pingerService);
   AnyObject pinger = p.client()->service("pinger");
@@ -1494,6 +1542,10 @@ qi::Future<void> getCancelableFuture(qi::Promise<void> promise)
 TEST(TestCall, TestAsyncFutureIsCancelable)
 {
   TestSessionPair p;
+
+  // FIXME support cancel in the gateway
+  if (p.mode() == TestMode::Mode_Gateway)
+    return;
 
   qi::DynamicObjectBuilder ob;
   qi::Promise<void> promise(&doCancel);

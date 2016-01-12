@@ -36,16 +36,16 @@ namespace qi {
   class StreamContext;
 
   /// Type of callback invoked by sdeerializer when it encounters an object
-  typedef boost::function<AnyObject (const ObjectSerializationInfo&)> DeserializeObjectCallback;
+  using DeserializeObjectCallback = boost::function<AnyObject(const ObjectSerializationInfo&)>;
 
   /// Type of callback invoked by serializer when it encounters an object.
-  typedef boost::function<ObjectSerializationInfo (const AnyObject&)> SerializeObjectCallback;
+  using SerializeObjectCallback = boost::function<ObjectSerializationInfo(const AnyObject&)>;
 
   template <typename T>
-  void decodeBinary(qi::BufferReader *buf, T* value,
-                    DeserializeObjectCallback onObject=DeserializeObjectCallback(),
-                    StreamContext* streamContext = 0
-                    );
+  AnyReference decodeBinary(qi::BufferReader *buf, T* value,
+                            DeserializeObjectCallback onObject=DeserializeObjectCallback(),
+                            StreamContext* streamContext = 0
+                            );
 
    /** Encode content of \p gvp into \p buf.
     * @param buf buffer that will be filled with serialized data
@@ -62,16 +62,16 @@ namespace qi {
    * @param gvp initialized AnyReference of correct type. Will be filled in.
    * @param onObject callback invoked each time an object is encountered.
    * @param ctx connection context
+   * @return the result of the deserialize type visitor
    *
    * @throw std::runtime_error when the decoding fail
    */
-  QI_API void decodeBinary(qi::BufferReader *buf, AnyReference gvp, DeserializeObjectCallback onObject=DeserializeObjectCallback(), StreamContext* ctx = 0);
+  QI_API AnyReference decodeBinary(qi::BufferReader *buf, AnyReference gvp, DeserializeObjectCallback onObject=DeserializeObjectCallback(), StreamContext* ctx = 0);
 
   template <typename T>
-  void decodeBinary(qi::BufferReader *buf, T* value, DeserializeObjectCallback onObject, StreamContext* ctx) {
-    decodeBinary(buf, AnyReference::fromPtr(value), onObject, ctx);
+  AnyReference decodeBinary(qi::BufferReader *buf, T* value, DeserializeObjectCallback onObject, StreamContext* ctx) {
+    return decodeBinary(buf, AnyReference::fromPtr(value), onObject, ctx);
   }
-
 }
 
 #endif  // _QITYPE_BINARYCODEC_HPP_

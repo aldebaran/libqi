@@ -23,6 +23,12 @@
 #include "utils.hpp"
 #include <boost/system/error_code.hpp>
 
+#ifndef _WIN32
+static const char SEPARATOR = ':';
+#else
+static const char SEPARATOR = ';';
+#endif
+
 qiLogCategory("qi.path.sdklayout");
 
 namespace {
@@ -82,14 +88,31 @@ namespace qi {
     void initSDKlayout()
     {
       std::string prefix = qi::Application::_suggestedSdkPath();
+      if (prefix.empty())
+      {
+        // no user specified sdk path (via --qi-sdk-prefix), try environment variable
+        prefix = qi::os::getenv("QI_SDK_PREFIX");
+      }
       if (!prefix.empty())
         _sdkPrefixes.push_back(prefix);
-      initSDKlayoutFromExec();
-      const std::vector<std::string>& prefixes = qi::Application::_suggestedSdkPaths();
-      _sdkPrefixes.insert(_sdkPrefixes.end(), prefixes.begin(), prefixes.end());
 
-      BOOST_FOREACH(const std::string& prefix, _sdkPrefixes)
-        qiLogVerbose() << "Prefix: " << prefix;
+      initSDKlayoutFromExec();
+
+      // fetch additional sdk prefixes from the environment variable
+      {
+        std::vector<std::string> additionalSdkPrefixes;
+        std::string prefixes = qi::os::getenv("QI_ADDITIONAL_SDK_PREFIXES");
+        if (!prefixes.empty())
+        {
+          boost::algorithm::split(additionalSdkPrefixes,
+                                  prefixes,
+                                  boost::algorithm::is_from_range(SEPARATOR, SEPARATOR));
+          _sdkPrefixes.insert(_sdkPrefixes.end(), additionalSdkPrefixes.begin(), additionalSdkPrefixes.end());
+        }
+      }
+      // log the results
+      for(const auto& p : _sdkPrefixes)
+        qiLogVerbose() << "Prefix: " << p;
     }
 
     void initSDKlayoutFromExec(bool real = false)
@@ -539,7 +562,7 @@ namespace qi {
             const std::string fullPath = itD->path().string(qi::unicodeFacet());
             if (boost::regex_match(fullPath, pathRegex))
             {
-              std::string relativePath = relative(dataPath, itD->path());
+              std::string relativePath = ::relative(dataPath, itD->path());
               if (matchedPaths.find(relativePath) == matchedPaths.end())
               {
                 // we only add the match if it was not found in a previous

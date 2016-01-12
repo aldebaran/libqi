@@ -15,18 +15,18 @@ namespace qi {
   class TypeImpl<boost::any>: public DynamicTypeInterface
   {
   public:
-    AnyReference get(void* storage)
+    AnyReference get(void* storage) override
     {
       qiLogVerbose("qitype.impl") << "get on boost::any not implemented";
       return AnyReference();
     };
 
-    void set(void** storage, AnyReference source)
+    void set(void** storage, AnyReference source) override
     {
       qiLogVerbose("qitype.impl") << "set on boost::any not implemented";
     }
 
-    typedef DefaultTypeImplMethods<boost::any, TypeByPointerPOD<boost::any> > Methods;
+    using Methods = DefaultTypeImplMethods<boost::any, TypeByPointerPOD<boost::any>>;
     _QI_BOUNCE_TYPE_METHODS(Methods);
   };
 }

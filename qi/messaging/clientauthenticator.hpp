@@ -14,7 +14,7 @@
 
 namespace qi
 {
-typedef std::map<std::string, AnyValue> CapabilityMap;
+using CapabilityMap = std::map<std::string, AnyValue>;
 
 class QI_API ClientAuthenticator
 {
@@ -42,7 +42,7 @@ protected:
   }
 };
 
-typedef boost::shared_ptr<ClientAuthenticator> ClientAuthenticatorPtr;
+using ClientAuthenticatorPtr = boost::shared_ptr<ClientAuthenticator>;
 }
 
 #endif

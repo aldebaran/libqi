@@ -446,7 +446,7 @@ TEST(TestObject, ConvertSimple)
 
 TEST(TestObject, ConvertMapStruct)
 {
-  typedef std::map<std::string, int> MyMap;
+  using MyMap = std::map<std::string, int>;
   MyMap m;
 
   m["x"] = 41;
@@ -471,7 +471,7 @@ TEST(TestObject, ConvertMapStruct)
 
 TEST(TestObject, ConvertGenericMapStruct)
 {
-  typedef std::map<qi::AnyValue, qi::AnyValue> MyMap;
+  using MyMap = std::map<qi::AnyValue, qi::AnyValue>;
   MyMap m;
 
   m[qi::AnyValue::from("x")] = qi::AnyValue::from(41);

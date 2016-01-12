@@ -21,5 +21,5 @@ TEST(TestProperty, SignalOfProperty)
   prop.setValue(2);
   qi::os::sleep(1);
   ASSERT_EQ(2, prop.value().to<int>());
-  ASSERT_EQ(1, spy.getCounter());
+  ASSERT_EQ(1u, spy.getCounter());
 }
