@@ -151,8 +151,8 @@ struct Matcher
   qi::Promise<bool> running;
   int targetValue;
   Matcher(int targetValue, qi::Promise<bool> running)
-    : targetValue(targetValue)
-    , running(running)
+    : running(running)
+    , targetValue(targetValue)
   {}
   void operator()(int newValue)
   {

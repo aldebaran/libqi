@@ -63,7 +63,7 @@ TEST(TestMetaObject, SHA1Digest_construction)
   qi::MetaObjectPrivate::SHA1Digest d;
   for (const auto v : d.sha1Digest)
   {
-    EXPECT_EQ(0, v);
+    EXPECT_EQ(0u, v);
   }
 }
 
