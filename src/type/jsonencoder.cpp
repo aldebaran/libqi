@@ -171,11 +171,19 @@ namespace qi {
     void visitFloat(double value, int byteSize)
     {
       if (byteSize == 4)
+      {
+        out.precision(std::numeric_limits<float>::max_digits10);
         out << ((float)value);
+      }
       else if (byteSize == 8)
+      {
+        out.precision(std::numeric_limits<double>::max_digits10);
         out << ((double)value);
+      }
       else
+      {
         qiLogError() << "serialize on unknown float type " << byteSize;
+      }
     }
 
     void visitString(const char* data, size_t size)
