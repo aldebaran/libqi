@@ -80,14 +80,17 @@ namespace qi {
     _authProviderFactory = factory;
   }
 
-  static void sendCapabilities(TransportSocketPtr sock)
+  namespace server_private
   {
-    Message msg;
-    msg.setType(Message::Type_Capability);
-    msg.setService(Message::Service_Server);
-    msg.setValue(sock->localCapabilities(), typeOf<CapabilityMap>()->signature());
-    sock->send(msg);
-  }
+    static void sendCapabilities(TransportSocketPtr sock)
+    {
+      Message msg;
+      msg.setType(Message::Type_Capability);
+      msg.setService(Message::Service_Server);
+      msg.setValue(sock->localCapabilities(), typeOf<CapabilityMap>()->signature());
+      sock->send(msg);
+    }
+  } // server_private
 
   void Server::connectMessageReady(const TransportSocketPtr& socket)
   {
@@ -175,7 +178,7 @@ namespace qi {
       }
       else
       {
-        sendCapabilities(socket);
+        server_private::sendCapabilities(socket);
         qiLogVerbose() << "Authentication is not enforced. Skipping...";
 
         connectMessageReady(socket);
