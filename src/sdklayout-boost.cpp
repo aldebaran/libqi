@@ -25,9 +25,9 @@
 #include <boost/system/error_code.hpp>
 
 #ifndef _WIN32
-static const char SEPARATOR = ':';
+static const char SDK_LAYOUT_BOOST_SEPARATOR = ':';
 #else
-static const char SEPARATOR = ';';
+static const char SDK_LAYOUT_BOOST_SEPARATOR = ';';
 #endif
 
 qiLogCategory("qi.path.sdklayout");
@@ -124,7 +124,8 @@ namespace detail {
         {
           boost::algorithm::split(additionalSdkPrefixes,
                                   prefixes,
-                                  boost::algorithm::is_from_range(SEPARATOR, SEPARATOR));
+                                  boost::algorithm::is_from_range(SDK_LAYOUT_BOOST_SEPARATOR,
+                                                                  SDK_LAYOUT_BOOST_SEPARATOR));
           _sdkPrefixes.insert(_sdkPrefixes.end(), additionalSdkPrefixes.begin(), additionalSdkPrefixes.end());
         }
       }
