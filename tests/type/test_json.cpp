@@ -80,8 +80,8 @@ TEST(TestJSON, Simple) {
   EXPECT_EQ("false", qi::encodeJSON(bool(false)));
   EXPECT_EQ("32", qi::encodeJSON(32));
   EXPECT_EQ("\"ttc:42\"", qi::encodeJSON("ttc:42"));
-  EXPECT_EQ("32.4", qi::encodeJSON(32.4f));
-  EXPECT_EQ("32.3", qi::encodeJSON((double)32.3));
+  EXPECT_EQ("32.4000015", qi::encodeJSON(32.4f));
+  EXPECT_EQ("32.299999999999997", qi::encodeJSON((double)32.3));
 
   qi::AnyValue gv(qi::TypeInterface::fromSignature(qi::Signature("c")));
   gv.setInt(42);
@@ -93,8 +93,8 @@ TEST(TestJSON, SimpleAutoGV) {
   EXPECT_EQ("false", qi::encodeJSON(false));
   EXPECT_EQ("32", qi::encodeJSON(32));
   EXPECT_EQ("\"ttc:42\"", qi::encodeJSON("ttc:42"));
-  EXPECT_EQ("32.4", qi::encodeJSON(32.4f));
-  EXPECT_EQ("32.3", qi::encodeJSON((double)32.3));
+  EXPECT_EQ("32.4000015", qi::encodeJSON(32.4f));
+  EXPECT_EQ("32.299999999999997", qi::encodeJSON((double)32.3));
 }
 
 TEST(TestJSON, String) {
@@ -226,6 +226,43 @@ TEST(TestJSONDecoder, Integer) {
   EXPECT_EQ(LONG_MIN, qi::decodeJSON(itoa(LONG_MIN)).asInt64());
 }
 
+// Helper to access to binary representation of the float
+union Double_t
+{
+    Double_t(double num = 0.0f) : f(num) {}
+    int64_t i;
+    double f;
+};
+
+std::ostream &operator<<(std::ostream &os, const Double_t &f)
+{
+  os.precision(std::numeric_limits<double>::max_digits10+5);
+  os << f.f << " / 0x"  << std::hex << std::setw(16) << std::setfill('0') << f.i << std::dec;
+  return os;
+}
+
+// A predicate-formatter for asserting that two integers are mutually prime.
+::testing::AssertionResult AssertDoubleRoundTrip(const char* f_expr,
+                                           double f) {
+  std::string str = qi::encodeJSON(f);
+  double ff = qi::decodeJSON(str).as<double>();
+#if defined(_MSC_VER)
+  // MSVC fails to roundtrip exactly. See here for the upstream report
+  // https://social.msdn.microsoft.com/Forums/en-US/214a6e0c-2036-47ab-a6ff-c7737f5cf395/imprecise-deserializing-of-decimals-to-double?forum=vcgeneral
+  using FPdouble = testing::internal::FloatingPoint<double>;
+  if (FPdouble(f).AlmostEquals(FPdouble(f)))
+#else
+  if (f == ff)
+#endif
+    return ::testing::AssertionSuccess();
+  return ::testing::AssertionFailure()
+      << f_expr << " with value " << Double_t(f)
+      << " is serialized to \"" << str << "\"  then deserialized to "
+      << Double_t(ff);
+}
+
+#define EXPECT_DOUBLE_ROUNDTRIP(f) EXPECT_PRED_FORMAT1(AssertDoubleRoundTrip, f);
+
 TEST(TestJSONDecoder, Float) {
   // broken value
   ASSERT_NO_THROW(qi::decodeJSON("42.43"));
@@ -239,24 +276,36 @@ TEST(TestJSONDecoder, Float) {
   ASSERT_NO_THROW(qi::decodeJSON("42e-10"));
   ASSERT_NO_THROW(qi::decodeJSON("42e10"));
 
-  EXPECT_DOUBLE_EQ(0.42, qi::decodeJSON("0.42").asDouble());
-  EXPECT_DOUBLE_EQ(42.0, qi::decodeJSON("42.0").asDouble());
-  EXPECT_DOUBLE_EQ(0.0000042, qi::decodeJSON("0.0000042").asDouble());
+  // comparing floating point values is usually done with an epsilon.
+  // However here we do exact comparisons, on purpose, since (de)serialization
+  // shall be lossless.
+  EXPECT_EQ(0.42, qi::decodeJSON("0.42").as<double>());
+  EXPECT_EQ(42.0, qi::decodeJSON("42.0").as<double>());
+  EXPECT_EQ(0.0000042, qi::decodeJSON("0.0000042").as<double>());
 
   // positive value
-  EXPECT_DOUBLE_EQ(42.43, qi::decodeJSON("42.43").asDouble());
+  EXPECT_EQ(42.43, qi::decodeJSON("42.43").as<double>());
 
   // negative value
-  EXPECT_DOUBLE_EQ(-42.43, qi::decodeJSON("-42.43").asDouble());
+  EXPECT_EQ(-42.43, qi::decodeJSON("-42.43").as<double>());
 
   // with E
-  EXPECT_DOUBLE_EQ(42e+10, qi::decodeJSON("42e+10").asDouble());
-  EXPECT_DOUBLE_EQ(42e-10, qi::decodeJSON("42e-10").asDouble());
-  EXPECT_DOUBLE_EQ(42e10, qi::decodeJSON("42e10").asDouble());
+  EXPECT_EQ(42e+10, qi::decodeJSON("42e+10").as<double>());
+  EXPECT_EQ(42e-10, qi::decodeJSON("42e-10").as<double>());
+  EXPECT_EQ(42e10, qi::decodeJSON("42e10").as<double>());
 
-  // max/min vals
-  EXPECT_DOUBLE_EQ(DBL_MAX, qi::decodeJSON(cleanStr(STR(DBL_MAX))).asDouble());
-  EXPECT_DOUBLE_EQ(DBL_MIN, qi::decodeJSON(cleanStr(STR(DBL_MIN))).asDouble());
+  // roundtrip
+  EXPECT_EQ(0, qi::decodeJSON(qi::encodeJSON(0)).to<int>());
+  EXPECT_EQ(0., qi::decodeJSON(qi::encodeJSON(0.)).to<double>());
+  EXPECT_EQ(0.f, qi::decodeJSON(qi::encodeJSON(0.f)).to<float>());
+  EXPECT_EQ(1.6f, qi::decodeJSON(qi::encodeJSON(1.6f)).to<float>());
+
+  EXPECT_DOUBLE_ROUNDTRIP(1.5);
+  EXPECT_DOUBLE_ROUNDTRIP(-1.8364336390987788);
+  EXPECT_DOUBLE_ROUNDTRIP(std::numeric_limits<double>::max());
+  EXPECT_DOUBLE_ROUNDTRIP(std::numeric_limits<double>::min());
+  EXPECT_DOUBLE_ROUNDTRIP(std::numeric_limits<double>::lowest());
+  EXPECT_DOUBLE_ROUNDTRIP(std::numeric_limits<double>::denorm_min());
 }
 
 TEST(TestJSONDecoder, Array) {
