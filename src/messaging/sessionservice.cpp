@@ -130,14 +130,17 @@ namespace qi {
     qi::getEventLoop()->post(boost::bind(&deleteLater, remote, sr));
   }
 
-  static void sendCapabilities(TransportSocketPtr sock)
+  namespace session_service_private
   {
-    Message msg;
-    msg.setType(Message::Type_Capability);
-    msg.setService(Message::Service_Server);
-    msg.setValue(sock->localCapabilities(), typeOf<CapabilityMap>()->signature());
-    sock->send(msg);
-  }
+    static void sendCapabilities(TransportSocketPtr sock)
+    {
+      Message msg;
+      msg.setType(Message::Type_Capability);
+      msg.setService(Message::Service_Server);
+      msg.setValue(sock->localCapabilities(), typeOf<CapabilityMap>()->signature());
+      sock->send(msg);
+    }
+  } // session_service_private
 
   void Session_Service::onAuthentication(const TransportSocket::SocketEventData& data, long requestId, TransportSocketPtr socket, ClientAuthenticatorPtr auth, SignalSubscriberPtr old)
   {
@@ -177,7 +180,7 @@ namespace qi {
       }
       else
       {
-        sendCapabilities(socket);
+        session_service_private::sendCapabilities(socket);
         qi::Future<void> metaObjFut;
         sr->remoteObject = new qi::RemoteObject(sr->serviceId, socket);
         metaObjFut = sr->remoteObject->fetchMetaObject();
