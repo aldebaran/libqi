@@ -309,20 +309,20 @@ namespace detail {
 
     try
     {
-      boost::filesystem::path p(fsconcat(prefix.string(qi::unicodeFacet()),
-                                         file.string(qi::unicodeFacet())),
-                                qi::unicodeFacet());
+      const boost::filesystem::path pathFile(fsconcat(prefix.string(qi::unicodeFacet()),
+                                                      file.string(qi::unicodeFacet())),
+                                             qi::unicodeFacet());
+      const boost::filesystem::path pathFileSysComplete(boost::filesystem::system_complete(pathFile));
 
-      p = boost::filesystem::system_complete(p);
-      if (boost::filesystem::exists(p)
-          && !boost::filesystem::is_directory(p))
-        return (p.string(qi::unicodeFacet()));
+      if (boost::filesystem::exists(pathFileSysComplete)
+          && !boost::filesystem::is_directory(pathFileSysComplete))
+        return (pathFileSysComplete.string(qi::unicodeFacet()));
     }
     catch (const boost::filesystem::filesystem_error &e)
     {
       qiLogDebug() << e.what();
     }
-    return std::string();
+    return {};
   }
 
   std::string SDKLayout::findBin(const std::string &name, bool searchInPath) const
