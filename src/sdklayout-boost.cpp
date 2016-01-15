@@ -327,9 +327,9 @@ namespace detail {
 
   std::string SDKLayout::findBin(const std::string &name, bool searchInPath) const
   {
-    qi::Path bin = name;
     try
     {
+      const qi::Path bin(name);
       // try if the name is a full path
       bin = qi::Path(boost::filesystem::system_complete(bin.bfsPath()));
       if (bin.exists() && !bin.isDir())
@@ -337,17 +337,22 @@ namespace detail {
 
       for (const qi::Path& path : _p->_sdkPrefixes)
       {
-        path = path / "bin" / name;
-        if (path.exists() && !path.isDir())
-          return path.str();
+        const boost::filesystem::path p(fsconcat(path, "bin"), qi::unicodeFacet());
 
-        const auto suffix = path::detail::binSuffix();
-        if (!suffix.empty())
-        { // don't check twice if the suffix is empty
-          path = qi::Path(path.str() + suffix);
-          if (path.exists() && !path.isDir())
-            return path.str();
-        }
+        std::string res = existsFile(p, name);
+        if (res != std::string())
+          return res;
+#ifdef _WIN32
+//DEBUG
+#ifndef NDEBUG
+        res = existsFile(p, name + "_d.exe");
+        if (res != std::string())
+          return res;
+#endif
+        res = existsFile(p, name + ".exe");
+        if (res != std::string())
+          return res;
+#endif
       }
     }
     catch (const std::exception &e)
@@ -355,7 +360,7 @@ namespace detail {
       qiLogDebug() << e.what();
     }
 
-    if(searchInPath) {
+    if (searchInPath) {
       // Look in $PATH now
       std::vector<std::string> paths;
       std::vector<std::string> pathExts;
@@ -369,6 +374,8 @@ namespace detail {
         path /= name;
         if (path.exists())
           return path.str();
+
+        // Only for windows
         // Try with all extensions
         for (std::vector<std::string>::const_iterator ext = pathExts.begin();
              ext != pathExts.end(); ++ext) {
