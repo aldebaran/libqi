@@ -55,6 +55,8 @@ namespace log
       qiLogWarning() << "Cannot open " << filePath;
   }
 
+  CsvLogHandler::~CsvLogHandler() = default;
+
   void CsvLogHandler::log(const qi::LogLevel verb,
                           const qi::Clock::time_point date,
                           const qi::SystemClock::time_point systemDate,
