@@ -27,7 +27,7 @@ namespace qi
   class QI_API PropertyBase
   {
   public:
-    virtual ~PropertyBase() {}
+    virtual ~PropertyBase() = default;
     virtual SignalBase* signal() = 0;
     virtual FutureSync<void> setValue(AutoAnyReference value) = 0;
     virtual FutureSync<AnyValue> value() const = 0;
@@ -56,10 +56,15 @@ namespace qi
     PropertyImpl(Getter getter = Getter(), Setter setter = Setter(),
       SignalBase::OnSubscribers onsubscribe = SignalBase::OnSubscribers());
 
+    PropertyImpl(AutoAnyReference defaultValue, Getter getter = Getter(), Setter setter = Setter(),
+      SignalBase::OnSubscribers onsubscribe = SignalBase::OnSubscribers());
+
     virtual FutureSync<T> get() const = 0;
     virtual FutureSync<void> set(const T& v) = 0;
 
     PropertyImpl<T>& operator=(const T& v) { this->set(v); return *this; }
+
+    SignalBase* signal() override { return this; }
 
   protected:
     Getter _getter;
@@ -72,6 +77,42 @@ namespace qi
 
   /** Povide access to a stored value and signal to connected callbacks when the value changed.
       @see qi::Signal which implement a similar pattern but without storing the value.
+      @remark For thread-safety, consider using Property instead.
+      \includename{qi/property.hpp}
+   */
+  template<typename T>
+  class UnsafeProperty: public PropertyImpl<T>
+  {
+  public:
+    using ImplType = PropertyImpl<T>;
+    using Getter = typename ImplType::Getter;
+    using Setter = typename ImplType::Setter;
+
+    UnsafeProperty(Getter getter = Getter(), Setter setter = Setter(),
+                   SignalBase::OnSubscribers onsubscribe = SignalBase::OnSubscribers())
+      : PropertyImpl<T>(std::move(getter), std::move(setter), std::move(onsubscribe))
+    {}
+
+    UnsafeProperty(AutoAnyReference defaultValue, Getter getter = Getter(), Setter setter = Setter(),
+                   SignalBase::OnSubscribers onsubscribe = SignalBase::OnSubscribers())
+      : PropertyImpl<T>(std::move(defaultValue), std::move(getter), std::move(setter), std::move(onsubscribe))
+    {}
+
+    UnsafeProperty<T>& operator=(const T& v) { this->set(v); return *this; }
+
+    FutureSync<T> get() const override;
+    FutureSync<void> set(const T& v) override;
+
+    SignalBase* signal() override { return this; }
+    FutureSync<void> setValue(AutoAnyReference value) override;
+    FutureSync<AnyValue> value() const override;
+
+  };
+
+
+  /** Povide thread-safe access to a stored value and signal to connected callbacks when the value changed.
+      @see qi::Signal which implement a similar pattern but without storing the value.
+      @remark For more performance in a single-threaded context, consider using UnsafeProperty instead.
       \includename{qi/property.hpp}
    */
   template<typename T>
@@ -86,22 +127,22 @@ namespace qi
 
     Property(Getter getter = Getter(), Setter setter = Setter(),
       SignalBase::OnSubscribers onsubscribe = SignalBase::OnSubscribers())
-    : PropertyImpl<T>(getter, setter, onsubscribe)
+      : PropertyImpl<T>(std::move(getter), std::move(setter), std::move(onsubscribe))
     {}
+
     Property(AutoAnyReference defaultValue, Getter getter = Getter(), Setter setter = Setter(),
       SignalBase::OnSubscribers onsubscribe = SignalBase::OnSubscribers())
-    : PropertyImpl<T>(getter, setter, onsubscribe)
-    {
-      PropertyImpl<T>::setImpl(defaultValue.to<T>()); }
+      : PropertyImpl<T>(std::move(defaultValue), std::move(getter), std::move(setter), std::move(onsubscribe))
+    {}
 
     Property<T>& operator=(const T& v) { this->set(v); return *this; }
 
-    virtual FutureSync<T> get() const;
-    virtual FutureSync<void> set(const T& v);
+    FutureSync<T> get() const override;
+    FutureSync<void> set(const T& v) override;
 
-    virtual SignalBase* signal() { return this; }
-    virtual FutureSync<void> setValue(AutoAnyReference value);
-    virtual FutureSync<AnyValue> value() const;
+    SignalBase* signal() override { return this; }
+    FutureSync<void> setValue(AutoAnyReference value) override;
+    FutureSync<AnyValue> value() const override;
 
     /** @return Acquire write-enabled scoped thread-safe access to the value stored in this object. */
     ScopedLockReadWrite getLockedReadWrite();
@@ -182,9 +223,9 @@ namespace qi
 
     GenericProperty& operator=(const AnyValue& v) { this->set(v); return *this; }
 
-    virtual FutureSync<void> setValue(AutoAnyReference value) { return set(AnyValue(value, false, false));}
-    virtual FutureSync<void> set(const AnyValue& v);
-    virtual qi::Signature signature() const {
+    FutureSync<void> setValue(AutoAnyReference value) override { return set(AnyValue(value, false, false));}
+    FutureSync<void> set(const AnyValue& v) override;
+    qi::Signature signature() const override {
       return makeTupleSignature(std::vector<TypeInterface*>(&_type, &_type + 1));
     }
   private:
