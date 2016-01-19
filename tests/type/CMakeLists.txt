@@ -11,5 +11,7 @@ qi_create_gtest(test_clocktype        SRC test_clocktype.cpp        DEPENDS QI G
 qi_create_gtest(test_anymodule        SRC test_anymodule.cpp        DEPENDS QI GTEST TIMEOUT 30)
 qi_create_gtest(test_metaobject       SRC test_metaobject.cpp       DEPENDS QI GTEST TIMEOUT 30)
 
-qi_create_module(qi_test_anymodule    SRC cat.hpp qi_test_anymodule.cpp SHARED DEPENDS QI NO_INSTALL)
-install(TARGETS qi_test_anymodule DESTINATION lib COMPONENT test)
+if(QI_WITH_TESTS)
+  qi_create_module(qi_test_anymodule    SRC cat.hpp qi_test_anymodule.cpp SHARED DEPENDS QI NO_INSTALL)
+  install(TARGETS qi_test_anymodule DESTINATION lib COMPONENT test)
+endif()
