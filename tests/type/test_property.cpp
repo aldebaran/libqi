@@ -8,63 +8,126 @@
 
 qiLogCategory("qi.test.property");
 
+namespace test
+{
+  template< template< class ... > class PropertyType >
+  void setDuringCreation()
+  {
+    PropertyType<int> prop(4);
+    qi::AnyValue val = prop.value();
+    ASSERT_EQ(4, val.to<int>());
+  }
+
+  template< template< class ... > class PropertyType >
+  void signalOfProperty()
+  {
+    PropertyType<int> prop(4);
+    qi::SignalSpy spy(prop);
+    prop.setValue(2);
+    qi::os::sleep(1);
+    qi::AnyValue val = prop.value();
+    ASSERT_EQ(2, val.to<int>());
+    ASSERT_EQ(1u, spy.getCounter());
+  }
+
+  template< template< class ... > class PropertyType >
+  void keepValue()
+  {
+    PropertyType<int> k;
+    k.set(42);
+    EXPECT_EQ(42, k.get());
+  }
+
+
+  template< class T >
+  struct Setter
+  {
+    qi::Promise<T> result;
+    Setter(qi::Promise<T> result)
+      : result(result)
+    {}
+
+    void operator()(const T& value)
+    {
+      result.setValue(value);
+    }
+  };
+
+  template< template< class ... > class PropertyType >
+  void dispatchValue()
+  {
+    PropertyType<int> k;
+    qi::Promise<int> object;
+    k.connect(Setter<int>(object));
+    k.set(42);
+    qi::Future<int> result = object.future();
+    EXPECT_EQ(42, result.value());
+    EXPECT_EQ(42, k.get());
+  }
+
+  template< template< class ... > class PropertyType >
+  void dispatchAssignedValue()
+  {
+    PropertyType<int> k;
+    qi::Promise<int> object;
+    k.connect(Setter<int>(object));
+    k = 42;
+    qi::Future<int> result = object.future();
+    EXPECT_EQ(42, result.value());
+    EXPECT_EQ(42, k.get());
+  }
+
+}
+
+TEST(TestUnsafeProperty, SetDuringCreation)
+{
+  test::setDuringCreation<qi::UnsafeProperty>();
+}
+
+TEST(TestUnsafeProperty, SignalOfProperty)
+{
+  test::signalOfProperty<qi::UnsafeProperty>();
+}
+
+TEST(TestUnsafeProperty, keepValue)
+{
+  test::keepValue<qi::UnsafeProperty>();
+}
+
+TEST(TestUnsafeProperty, dispatchValue)
+{
+  test::dispatchValue<qi::UnsafeProperty>();
+}
+
+TEST(TestUnsafeProperty, dispatchAssignedValue)
+{
+  test::dispatchAssignedValue<qi::UnsafeProperty>();
+}
+
+
 TEST(TestProperty, SetDuringCreation)
 {
-  qi::Property<int> prop(4);
-  ASSERT_EQ(4, prop.value().value().to<int>());
+  test::setDuringCreation<qi::Property>();
 }
 
 TEST(TestProperty, SignalOfProperty)
 {
-  qi::Property<int> prop(4);
-  qi::SignalSpy spy(prop);
-  prop.setValue(2);
-  qi::os::sleep(1);
-  ASSERT_EQ(2, prop.value().value().to<int>());
-  ASSERT_EQ(1u, spy.getCounter());
+  test::signalOfProperty<qi::Property>();
 }
 
 TEST(TestProperty, keepValue)
 {
-  qi::Property<int> k;
-  k.set(42);
-  EXPECT_EQ(42, k.get());
+  test::keepValue<qi::Property>();
 }
-
-template< class T >
-struct Setter
-{
-  qi::Promise<T> result;
-  Setter(qi::Promise<T> result)
-    : result(result)
-  {}
-
-  void operator()(const T& value)
-  {
-    result.setValue(value);
-  }
-};
 
 TEST(TestProperty, dispatchValue)
 {
-  qi::Property<int> k;
-  qi::Promise<int> object;
-  k.connect(Setter<int>(object));
-  k.set(42);
-  qi::Future<int> result = object.future();
-  EXPECT_EQ(42, result.value());
-  EXPECT_EQ(42, k.get());
+  test::dispatchValue<qi::Property>();
 }
 
 TEST(TestProperty, dispatchAssignedValue)
 {
-  qi::Property<int> k;
-  qi::Promise<int> object;
-  k.connect(Setter<int>(object));
-  k = 42;
-  qi::Future<int> result = object.future();
-  EXPECT_EQ(42, result.value());
-  EXPECT_EQ(42, k.get());
+  test::dispatchAssignedValue<qi::Property>();
 }
 
 TEST(TestProperty, scopedLockReadOnly)
@@ -93,7 +156,7 @@ TEST(TestProperty, scopedLockReadWrite)
 
   qi::Future<int> handlerResult;
   qi::Promise<int> object;
-  k.connect(Setter<int>(object));
+  k.connect(test::Setter<int>(object));
   handlerResult = object.future();
   {
     qi::Property<int>::ScopedLockReadWrite locked_k(k);
@@ -175,7 +238,7 @@ TEST(TestProperty, threadSafeGetSet)
 
   for (int i = 0; i < TARGET_COUNT; ++i)
   {
-    qi::async<void>(Incrementer(counter));
+    qi::async(Incrementer(counter));
   }
 
   EXPECT_TRUE(running.value());

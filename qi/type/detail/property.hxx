@@ -26,9 +26,20 @@ namespace qi
   template<typename T>
   PropertyImpl<T>::PropertyImpl(Getter getter, Setter setter,
     SignalBase::OnSubscribers onsubscribe)
-  : SignalF<void(const T&)>(onsubscribe)
-  , _getter(getter)
-  , _setter(setter)
+  : SignalF<void(const T&)>(std::move(onsubscribe))
+  , _getter(std::move(getter))
+  , _setter(std::move(setter))
+  {
+  }
+
+  template<typename T>
+  PropertyImpl<T>::PropertyImpl(AutoAnyReference defaultValue,
+    Getter getter, Setter setter,
+    SignalBase::OnSubscribers onsubscribe)
+  : SignalF<void(const T&)>(std::move(onsubscribe))
+  , _getter(std::move(getter))
+  , _setter(std::move(setter))
+  , _value(defaultValue.to<T>())
   {
   }
 
@@ -46,7 +57,7 @@ namespace qi
     qiLogDebug("qitype.property") << "set " << this << " " << (!!_setter);
     if (_setter)
     {
-      bool ok = _setter(_value, v);
+      const bool ok = _setter(_value, v);
       if (ok)
         (*this)(_value);
     }
@@ -56,6 +67,34 @@ namespace qi
       (*this)(_value);
     }
   }
+
+
+  template<typename T>
+  FutureSync<T> UnsafeProperty<T>::get() const
+  {
+    return FutureSync<T>(this->getImpl());
+  }
+
+  template<typename T>
+  FutureSync<void> UnsafeProperty<T>::set(const T& v)
+  {
+    this->setImpl(v);
+    return FutureSync<void>(0);
+  }
+
+  template<typename T>
+  FutureSync<AnyValue> UnsafeProperty<T>::value() const
+  {
+    return FutureSync<AnyValue>(AnyValue::from(this->getImpl()));
+  }
+
+  template<typename T>
+  FutureSync<void> UnsafeProperty<T>::setValue(AutoAnyReference value)
+  {
+    this->setImpl(value.to<T>());
+    return FutureSync<void>(0);
+  }
+
 
   template<typename T>
   FutureSync<T> Property<T>::get() const
