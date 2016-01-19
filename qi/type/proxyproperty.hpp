@@ -18,11 +18,12 @@ namespace qi
   * @warning reading and writing the property are synchronous operations
   * and might take time if backend object is a remote proxy.
   */
-  template<typename T>
-  class ProxyProperty: public Property<T>
+  template < typename T, template< class...> class PropertyType = Property >
+  class ProxyProperty: public PropertyType<T>
   {
   public:
     using SignalType = SignalF<void (const T&)>;
+    using ThisProxyType = ProxyProperty;
     ProxyProperty() {}
     /* The signal bounce code is completely duplicated from SignalProxy.
      * Unfortunately factoring this is not trivial:
@@ -43,46 +44,46 @@ namespace qi
     bool setter(T&, const T&, GenericObject* object, const std::string& propertyName);
   };
 
-  template<typename T>
-  void makeProxyProperty(Property<T>& target, AnyObject object, const std::string& signalName)
+  template<typename T, template< class...> class PropertyType>
+  void makeProxyProperty(PropertyType<T>& target, AnyObject object, const std::string& signalName)
   {
-    ProxyProperty<T>& proxy = static_cast<ProxyProperty<T> &>(target);
+    ProxyProperty<T, PropertyType>& proxy = static_cast<ProxyProperty<T, PropertyType> &>(target);
     proxy.setup(object, signalName);
   }
-  template<typename T>
-  void makeProxyProperty(ProxyProperty<T>& target, AnyObject object, const std::string& signalName)
+  template<typename T, template< class...> class PropertyType>
+  void makeProxyProperty(ProxyProperty<T, PropertyType>& target, AnyObject object, const std::string& signalName)
   {
     target.setup(object, signalName);
   }
 
-  template<typename T>
-  ProxyProperty<T>::~ProxyProperty()
+  template<typename T, template< class...> class PropertyType>
+  ProxyProperty<T, PropertyType>::~ProxyProperty()
   {
     SignalType::disconnectAll();
   }
 
-  template<typename T>
-  void ProxyProperty<T>::setup(AnyObject object, const std::string& propertyName)
+  template<typename T, template< class...> class PropertyType>
+  void ProxyProperty<T, PropertyType>::setup(AnyObject object, const std::string& propertyName)
   {
     // signal part
-    SignalBase::setOnSubscribers(boost::bind(&ProxyProperty<T>::onSubscribe, this, _1,
+    SignalBase::setOnSubscribers(boost::bind(&ThisProxyType::onSubscribe, this, _1,
       object.asGenericObject(), propertyName, SignalBase::invalidSignalLink));
-    SignalBase::setTriggerOverride(boost::bind(&ProxyProperty<T>::triggerOverride, this, _1, _2,
+    SignalBase::setTriggerOverride(boost::bind(&ThisProxyType::triggerOverride, this, _1, _2,
       object.asGenericObject(), propertyName));
 
     // property part
-    this->_getter = boost::bind(&ProxyProperty<T>::getter, this, object.asGenericObject(), propertyName);
-    this->_setter = boost::bind(&ProxyProperty<T>::setter, this, _1, _2, object.asGenericObject(), propertyName);
+    this->_getter = boost::bind(&ThisProxyType::getter, this, object.asGenericObject(), propertyName);
+    this->_setter = boost::bind(&ThisProxyType::setter, this, _1, _2, object.asGenericObject(), propertyName);
   }
 
-  template<typename T>
-  void ProxyProperty<T>::onSubscribe(bool enable, GenericObject* object, const std::string& propertyName, SignalLink link)
+  template<typename T, template< class...> class PropertyType>
+  void ProxyProperty<T, PropertyType>::onSubscribe(bool enable, GenericObject* object, const std::string& propertyName, SignalLink link)
   {
     if (enable)
     {
       link = object->connect(propertyName,
           SignalSubscriber(
-            AnyFunction::fromDynamicFunction(boost::bind(&ProxyProperty<T>::bounceEvent, this, _1))
+            AnyFunction::fromDynamicFunction(boost::bind(&ThisProxyType::bounceEvent, this, _1))
             ));
     }
     else
@@ -93,33 +94,33 @@ namespace qi
       link = SignalBase::invalidSignalLink;
     }
     // rebind onSubscribe since link changed
-    SignalBase::setOnSubscribers(boost::bind(&ProxyProperty<T>::onSubscribe, this, _1,
+    SignalBase::setOnSubscribers(boost::bind(&ThisProxyType::onSubscribe, this, _1,
       object, propertyName, link));
   }
 
-  template<typename T>
-  AnyReference ProxyProperty<T>::bounceEvent(const AnyReferenceVector args)
+  template<typename T, template< class...> class PropertyType>
+  AnyReference ProxyProperty<T, PropertyType>::bounceEvent(const AnyReferenceVector args)
   {
     // Receive notify from backend, trigger on our signal, bypassing our trigger overload
     SignalType::callSubscribers(args);
     return AnyReference(typeOf<void>());
   }
 
-  template<typename T>
-  void ProxyProperty<T>::triggerOverride(const GenericFunctionParameters& params, MetaCallType,
+  template<typename T, template< class...> class PropertyType>
+  void ProxyProperty<T, PropertyType>::triggerOverride(const GenericFunctionParameters& params, MetaCallType,
     GenericObject* object, const std::string& propertyName)
   {
     // Just forward to backend, which will notify us in bouceEvent(),
     // and then we will notify our local Subscribers
     object->metaPost(propertyName, params);
   }
-  template<typename T>
-  T ProxyProperty<T>::getter(GenericObject* object, const std::string& propertyName)
+  template<typename T, template< class...> class PropertyType>
+  T ProxyProperty<T, PropertyType>::getter(GenericObject* object, const std::string& propertyName)
   {
     return object->property<T>(propertyName);
   }
-  template<typename T>
-  bool ProxyProperty<T>::setter(T& target, const T& v, GenericObject* object, const std::string& propertyName)
+  template<typename T, template< class...> class PropertyType>
+  bool ProxyProperty<T, PropertyType>::setter(T& target, const T& v, GenericObject* object, const std::string& propertyName)
   {
     // no need to fill target it's never used since we have a getter
     object->setProperty(propertyName, v).value(); // throw on remote error
