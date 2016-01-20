@@ -241,14 +241,16 @@ std::ostream &operator<<(std::ostream &os, const Double_t &f)
   return os;
 }
 
-// A predicate-formatter for asserting that two integers are mutually prime.
 ::testing::AssertionResult AssertDoubleRoundTrip(const char* f_expr,
                                            double f) {
   std::string str = qi::encodeJSON(f);
   double ff = qi::decodeJSON(str).as<double>();
 #if defined(_MSC_VER)
   // MSVC fails to roundtrip exactly. See here for the upstream report
+  // forum:
   // https://social.msdn.microsoft.com/Forums/en-US/214a6e0c-2036-47ab-a6ff-c7737f5cf395/imprecise-deserializing-of-decimals-to-double?forum=vcgeneral
+  // bug report:
+  // connect.microsoft.com/VisualStudio/feedback/details/2245376/imprecise-deserialization-of-decimals-to-double/
   using FPdouble = testing::internal::FloatingPoint<double>;
   if (FPdouble(f).AlmostEquals(FPdouble(f)))
 #else
