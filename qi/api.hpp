@@ -30,12 +30,7 @@
  *
  * \endverbatim
  */
-
-#ifdef QI_API_TEXPORT
-# define QI_API QI_API_TEXPORT QI_LIB_API(qi)
-#else
 # define QI_API QI_LIB_API(qi)
-#endif
 
 # define QI_API_LEVEL 2
 
