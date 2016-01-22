@@ -327,8 +327,9 @@ namespace qi {
     else
       ret = p.metaCall(function, args, metacallType);
 
-    qi::Promise<AnyValue> promise(qi::PromiseNoop<AnyValue>);
-    qi::detail::futureAdapter(ret, promise);
+    qi::Promise<AnyValue> promise;
+    promise.setOnCancel([ret](qi::Promise<AnyValue>&) mutable { ret.cancel(); });
+    ret.then(qi::bind(qi::detail::futureAdapter<qi::AnyValue>, _1, promise));
     return promise.future();
   }
 
