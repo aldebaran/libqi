@@ -18,13 +18,13 @@ namespace detail
 template<typename T> void hold(T data) {}
 
 template <typename T>
-inline T extractFuture(qi::Future<qi::AnyReference> metaFut);
+inline T extractFuture(const qi::Future<qi::AnyReference>& metaFut);
 
 template <typename T>
 inline void futureAdapter(const qi::Future<qi::AnyReference>& metaFut, qi::Promise<T> promise);
 
 template <typename T>
-inline void futureAdapterVal(qi::Future<qi::AnyValue> metaFut, qi::Promise<T> promise);
+inline void futureAdapterVal(const qi::Future<qi::AnyValue>& metaFut, qi::Promise<T> promise);
 
 }
 }
