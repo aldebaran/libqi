@@ -96,9 +96,10 @@ namespace qi {
     template <typename T>
     qi::FutureSync<T> callModule(const std::string& moduleName, const AnyReferenceVector& args = AnyReferenceVector())
     {
-      qi::Promise<T> promise(qi::PromiseNoop<T>);
+      qi::Promise<T> promise;
       qi::Future<qi::AnyValue> future = _callModule(moduleName, args, qi::MetaCallType_Queued);
-      qi::detail::futureAdapterVal(future, promise);
+      promise.setOnCancel([future](qi::Promise<T>&) mutable {future.cancel();}); // keeps the future alive
+      future.then(qi::bind(qi::detail::futureAdapterVal<T>, future, promise));
       return promise.future();
     }
 
