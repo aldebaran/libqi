@@ -163,7 +163,7 @@ struct AutoRefDestroy
 };
 
 template <typename T>
-inline T extractFuture(qi::Future<qi::AnyReference> metaFut)
+inline T extractFuture(const qi::Future<qi::AnyReference>& metaFut)
 {
   AnyReference val =  metaFut.value();
   AutoRefDestroy destroy(val);
@@ -204,7 +204,7 @@ inline T extractFuture(qi::Future<qi::AnyReference> metaFut)
 }
 
 template <>
-inline void extractFuture<void>(qi::Future<qi::AnyReference> metaFut)
+inline void extractFuture<void>(const qi::Future<qi::AnyReference>& metaFut)
 {
   AnyReference val = metaFut.value();
   AutoRefDestroy destroy(val);
@@ -280,7 +280,7 @@ inline void futureAdapter<void>(const qi::Future<qi::AnyReference>& metaFut, qi:
 }
 
 template <typename T>
-inline void futureAdapterVal(qi::Future<qi::AnyValue> metaFut, qi::Promise<T> promise)
+inline void futureAdapterVal(const qi::Future<qi::AnyValue>& metaFut, qi::Promise<T> promise)
 {
   //error handling
   if (metaFut.hasError()) {
@@ -303,7 +303,7 @@ inline void futureAdapterVal(qi::Future<qi::AnyValue> metaFut, qi::Promise<T> pr
 }
 
 template <>
-inline void futureAdapterVal(qi::Future<qi::AnyValue> metaFut, qi::Promise<AnyValue> promise)
+inline void futureAdapterVal(const qi::Future<qi::AnyValue>& metaFut, qi::Promise<AnyValue> promise)
 {
   if (metaFut.hasError())
     promise.setError(metaFut.error());
@@ -314,7 +314,7 @@ inline void futureAdapterVal(qi::Future<qi::AnyValue> metaFut, qi::Promise<AnyVa
 }
 
 template <>
-inline void futureAdapterVal(qi::Future<qi::AnyValue> metaFut, qi::Promise<void> promise)
+inline void futureAdapterVal(const qi::Future<qi::AnyValue>& metaFut, qi::Promise<void> promise)
 {
   if (metaFut.hasError())
     promise.setError(metaFut.error());
