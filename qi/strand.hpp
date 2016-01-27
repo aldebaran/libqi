@@ -216,7 +216,7 @@ namespace detail
 
     template <typename... Args>
     auto operator()(Args&&... args) const
-        -> qi::Future<typename std::decay<decltype(std::bind(_func, std::forward<Args>(args)...)())>::type>
+        -> qi::Future<typename std::decay<decltype(_func(std::forward<Args>(args)...))>::type>
     {
       // boost::bind does not work T_T
       if (auto strand = _strand.lock())
@@ -226,7 +226,7 @@ namespace detail
         if (_onFail)
           _onFail();
         return qi::makeFutureError<
-            typename std::decay<decltype(std::bind(_func, std::forward<Args>(args)...)())>::type>("strand is dead");
+            typename std::decay<decltype(_func(std::forward<Args>(args)...))>::type>("strand is dead");
       }
     }
   };
