@@ -29,7 +29,7 @@ namespace qi
   {
   public:
     ObjectHost(unsigned int service);
-    ~ObjectHost();
+    virtual ~ObjectHost();
     void onMessage(const qi::Message &msg, TransportSocketPtr socket);
     unsigned int addObject(BoundAnyObject obj, StreamContext* remoteReferencer, unsigned int objId = 0);
     void removeObject(unsigned int);
