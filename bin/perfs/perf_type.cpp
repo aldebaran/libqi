@@ -164,16 +164,11 @@ public:
 };
 QI_TYPE_STRUCT(Foo, f, i, v)
 
-class Bar
+struct Bar
 {
 public:
-  Bar() {}
-  Bar(const Foo& foo)
-  : f(foo.f)
-  , i(foo.i)
-  , v(foo.v) {}
-  int f;
-  float i;
+  int f = 0;
+  float i = 0.f;
   std::vector<int> v;
 };
 QI_TYPE_STRUCT(Bar, f, i, v)
