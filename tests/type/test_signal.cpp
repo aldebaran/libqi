@@ -319,7 +319,7 @@ TEST(TestSignalSpy, Counter)
   QI_EMIT sig(1);
   QI_EMIT sig(1);
   ASSERT_TRUE(sp.waitUntil(2, qi::MilliSeconds(300)));
-  ASSERT_EQ(sp.recordCount(), 2u);
+  ASSERT_EQ(sp.getCounter(), 2u);
 
   qi::DynamicObjectBuilder ob;
   ob.advertiseSignal("signal", &sig);
@@ -328,7 +328,7 @@ TEST(TestSignalSpy, Counter)
   QI_EMIT sig(1);
   QI_EMIT sig(1);
   ASSERT_TRUE(sp2.waitUntil(2, qi::MilliSeconds(300)));
-  ASSERT_EQ(sp2.recordCount(), 2u);
+  ASSERT_EQ(sp2.getCounter(), 2u);
 }
 
 TEST(TestSignalSpy, Async)
@@ -339,41 +339,6 @@ TEST(TestSignalSpy, Async)
   qi::async(boost::bind(boost::ref(sig), 1));
   ASSERT_TRUE(sp.waitUntil(2, qi::Seconds(1)));
   ASSERT_EQ(sp.recordCount(), 2u);
-}
-
-TEST(TestSignalSpy, StoringTypedValueRecords)
-{
-  const std::vector<int> ints{ 1, 42, 13, 2016 };
-  const std::vector<std::string> strings{ "poil", "slip", "banane", "pancréas" };
-  qi::Signal<int, std::string> signal;
-  qi::SignalSpy spy(signal);
-
-  signal(ints[0], strings[0]);
-  ASSERT_EQ(1u, spy.recordCount());
-  auto record = spy.record(0);
-  ASSERT_EQ(ints[0], record.arg<int>(0));
-  ASSERT_EQ(strings[0], record.arg<std::string>(1));
-
-  for(auto i = 1u; i < ints.size(); ++i)
-  {
-    signal(ints[i], strings[i]);
-  }
-  spy.waitUntil(ints.size(), qi::MilliSeconds(300));
-
-  for(auto i = 1u; i < ints.size(); ++i)
-  {
-    record = spy.record(i);
-    EXPECT_EQ(ints[i], record.arg<int>(0));
-    EXPECT_EQ(strings[i], record.arg<std::string>(1));
-  }
-
-  auto records = spy.allRecords();
-  ASSERT_EQ(ints.size(), records.size());
-  for(auto i = 0u; i < records.size(); ++i)
-  {
-    EXPECT_EQ(ints[i], records[i].arg<int>(0));
-    EXPECT_EQ(strings[i], records[i].arg<std::string>(1));
-  }
 }
 
 TEST(TestSignalSpy, StoringTypedValueRecords)
