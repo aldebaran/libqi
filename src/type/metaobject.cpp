@@ -185,7 +185,7 @@ namespace qi {
       size_t nargs = args.size();
       for (MetaMethod* mm = overloadIt->second; mm; mm=mm->_p->next)
       {
-        assert(mm->name() == nameWithOptionalSignature);
+        QI_ASSERT(mm->name() == nameWithOptionalSignature);
         const Signature& sig = mm->parametersSignature();
         if (sig == "m" || sig.children().size() == nargs)
         {
@@ -255,7 +255,7 @@ namespace qi {
           if (mml[i].second == it->second)
             ++count;
         }
-        assert(count);
+        QI_ASSERT(count);
         if (count > 1) {
           qiLogVerbose() << generateErrorString(nameWithOptionalSignature, fullSig, const_cast<MetaObjectPrivate*>(this)->findCompatibleMethod(nameWithOptionalSignature), -3, false);
           retval = -3;

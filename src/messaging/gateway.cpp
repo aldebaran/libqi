@@ -714,7 +714,7 @@ void GatewayPrivate::clientAuthenticationMessages(const Message& msg,
     break;
   default:
     qiLogError() << "Unknown state: " << state;
-    assert(false);
+    QI_ASSERT(false);
   case AuthProvider::State_Error:
   {
     std::stringstream builder;

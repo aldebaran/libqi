@@ -102,7 +102,7 @@ namespace detail {
     template <typename AF>
     static boost::function<void(const Future<T>&)> makeFunc(AF&& func, const qi::Promise<R>& promise)
     {
-      assert(false && "unreachable code");
+      QI_ASSERT(false && "unreachable code");
       return {};
     }
   };
@@ -187,7 +187,7 @@ namespace detail {
     template <typename AF>
     static boost::function<void(const Future<T>&)> makeFunc(AF&& func, const qi::Promise<R>& promise)
     {
-      assert(false && "unreachable code");
+      QI_ASSERT(false && "unreachable code");
       return {};
     }
   };
@@ -417,7 +417,7 @@ namespace detail {
     void FutureBaseTyped<T>::setBroken(qi::Future<T>& future)
     {
       boost::recursive_mutex::scoped_lock lock(mutex());
-      assert(isRunning());
+      QI_ASSERT(isRunning());
 
       reportError("Promise broken (all promises are destroyed)");
       callCbNotify(future);

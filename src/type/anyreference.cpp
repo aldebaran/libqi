@@ -468,7 +468,7 @@ namespace detail
       std::vector<void*> sourceData = tsrc->get(_value);
       std::vector<TypeInterface*> srcTypes = tsrc->memberTypes();
       std::vector<TypeInterface*> dstTypes = tdst->memberTypes();
-      assert(sourceData.size() == srcTypes.size());
+      QI_ASSERT(sourceData.size() == srcTypes.size());
       if (srcTypes.size() != dstTypes.size())
       {
         qiLogVerbose() << "Conversion glitch: tuple size mismatch between " << tsrc->infoString() << " and " << tdst->infoString();
@@ -553,7 +553,7 @@ namespace detail
           size_t rpos = riter-elems.begin();
 
           AnyReference ref = (*iter)[1];
-          assert(ref.isValid());
+          QI_ASSERT(ref.isValid());
 
           std::pair<AnyReference, bool> conv =
             ref.convert(dstTypes[rpos]);

@@ -58,7 +58,7 @@ unsigned int ObjectHost::addObject(BoundAnyObject obj, StreamContext* remoteRef,
   boost::recursive_mutex::scoped_lock lock(_mutex);
   if (!id)
     id = nextId();
-  assert(_objectMap.find(id) == _objectMap.end());
+  QI_ASSERT(_objectMap.find(id) == _objectMap.end());
   _objectMap[id] = obj;
   _remoteReferences[remoteRef].push_back(id);
   return id;

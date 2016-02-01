@@ -195,8 +195,8 @@ qi::Future<SignalLink> StaticObjectTypeBase::connect(void* instance, AnyObject c
   if (id == SignalBase::invalidSignalLink)
     return qi::Future<SignalLink>(id);
   SignalLink link = ((SignalLink)event << 32) + id;
-  assert(link >> 32 == event);
-  assert((link & 0xFFFFFFFF) == id);
+  QI_ASSERT(link >> 32 == event);
+  QI_ASSERT((link & 0xFFFFFFFF) == id);
   qiLogDebug() << "Connect " << event <<' ' << id << ' ' << link;
   return qi::Future<SignalLink>(link);
 }

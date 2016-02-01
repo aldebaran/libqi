@@ -153,7 +153,7 @@ namespace qi
       _continueReading();
       return;
     }
-    assert(len == sizeof(_msg._p->header));
+    QI_ASSERT(len == sizeof(_msg._p->header));
     // check magic
     if (_msg._p->header.magic != MessagePrivate::magic)
     {
