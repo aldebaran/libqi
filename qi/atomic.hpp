@@ -184,9 +184,15 @@ public:
   T swap(T value)
   { return _value.exchange(value); }
 
-  /** Return the contained value
+  /** Return the contained valu
+   * Deprecated since 2.5.0
    */
+
+  QI_API_DEPRECATED_MSG("Please use method load() instead")
   T operator*() const
+  { return _value.load(); }
+
+  T load() const
   { return _value.load(); }
 };
 
