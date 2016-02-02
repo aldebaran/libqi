@@ -1,0 +1,15 @@
+sudo: required  # actually sudo is not used, but we
+                # need that for travis to use the correct
+                # version of Ubuntu
+dist: trusty
+
+language: cpp
+
+python:
+  - "2.7"
+
+install:
+  - pip install qibuild --user
+
+script:
+  - ci/script.sh
