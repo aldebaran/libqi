@@ -75,6 +75,16 @@ inline TypeKind AnyReferenceBase::kind() const
     return _type->kind();
 }
 
+inline AnyReference AnyReferenceBase::unwrap() const
+{
+  AnyReference res = *this;
+  while (res.kind() == TypeKind_Dynamic)
+  {
+    res = res.content();
+  }
+  return res;
+}
+
 template<TypeKind T> struct TypeOfKind {};
 
 #define TYPE_OF_KIND(k, t) template<> struct TypeOfKind<k> { using type = t;}
@@ -121,7 +131,7 @@ inline T AnyReferenceBase::to(const T&) const
 }
 
 QI_NORETURN QI_API void throwConversionFailure(
-    TypeInterface* from, TypeInterface* to);
+    TypeInterface* from, TypeInterface* to, const std::string& additionalMsg);
 
 template<typename T>
 inline T AnyReferenceBase::to() const
@@ -130,7 +140,7 @@ inline T AnyReferenceBase::to() const
   std::pair<AnyReference, bool> conv = convert(targetType);
   if (!conv.first._type)
   {
-    throwConversionFailure(_type, targetType);
+    throwConversionFailure(_type, targetType, ""); // no additional message
   }
   T result = *conv.first.ptr<T>(false);
   if (conv.second)

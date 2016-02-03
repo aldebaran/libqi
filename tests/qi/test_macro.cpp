@@ -124,7 +124,7 @@ TEST(Macro, ThreadSafeNew)
 #define DOOM(nthread, delay0, delayDelta)                                           \
   {                                                                                           \
     qi::Atomic<int> a;                                                                        \
-    for (unsigned i=0; i<nthread; ++i)                                                        \
+    for (int i=0; i<nthread; ++i)                                                        \
       boost::thread t(&staticCounterControlled<__LINE__>, &a, nthread, delay0 + i*delayDelta);  \
     EXPECTCOUNTER(1);                                                                         \
   }

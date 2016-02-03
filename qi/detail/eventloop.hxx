@@ -55,6 +55,37 @@ namespace detail
   {
     return qi::getEventLoop()->asyncAt(cb, timepoint);
   }
+
+  // sfinae to try to call unwrap on the future
+  template <typename F>
+  auto tryUnwrap(const F& future, int) -> decltype(future.unwrap())
+  {
+    return future.unwrap();
+  }
+  template <typename F>
+  F tryUnwrap(const F& future, void*)
+  {
+    return future;
+  }
+
+  // this function is used by qilang generation to call something regardless of if it's an actor or not
+  // it is very specific to qilang's generated code, I don't think it's a good idea to use it elsewhere
+  // this function may or may not return a future (the other overload does not)
+  template <typename F, typename Arg0, typename... Args>
+  auto invokeMaybeActor(F&& cb, Arg0* arg0, Args&&... args) ->
+      typename std::enable_if<std::is_base_of<Actor, typename std::decay<Arg0>::type>::value,
+               decltype(tryUnwrap(qi::async(qi::bind(cb, arg0, std::forward<Args>(args)...)), 0))>::type
+  {
+    // this is an actor, we must async to strand the call
+    return tryUnwrap(qi::async(qi::bind(cb, arg0, std::forward<Args>(args)...)), 0);
+  }
+  template <typename F, typename Arg0, typename... Args>
+  auto invokeMaybeActor(F&& cb, Arg0* arg0, Args&&... args) ->
+      typename std::enable_if<!std::is_base_of<Actor, typename std::decay<Arg0>::type>::value,
+               typename std::decay<decltype((arg0->*cb)(std::forward<Args>(args)...))>::type>::type
+  {
+    return (arg0->*cb)(std::forward<Args>(args)...);
+  }
 }
 
 }

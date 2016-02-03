@@ -1162,6 +1162,10 @@ namespace detail
       throw std::runtime_error("Expected a list");
     ListTypeInterface* t = static_cast<ListTypeInterface*>(_type);
     std::pair<AnyReference, bool> c = elem.convert(t->elementType());
+
+    if (!c.first.isValid())
+      throwConversionFailure(elem._type, t->elementType(), "(invalid value type)");
+
     t->pushBack(&_value, c.first._value);
     if (c.second)
       c.first.destroy();
@@ -1174,10 +1178,17 @@ namespace detail
     std::pair<AnyReference, bool> ck(key, false);
     std::pair<AnyReference, bool> cv(val, false);
     MapTypeInterface* t = static_cast<MapTypeInterface*>(_type);
+
     if (key._type != t->keyType())
       ck = key.convert(t->keyType());
+    if (!ck.first.isValid())
+      throwConversionFailure(key._type, t->keyType(), "(invalid key type)");
+
     if (val._type != t->elementType())
       cv = val.convert(t->elementType());
+    if (!cv.first.isValid())
+      throwConversionFailure(val._type, t->elementType(), "(invalid value type)");
+
     t->insert(&_value, ck.first._value, cv.first._value);
     if (ck.second)
       ck.first.destroy();
@@ -1414,7 +1425,7 @@ namespace detail
   }
 
 
-  QI_NORETURN void throwConversionFailure(TypeInterface* from, TypeInterface* to)
+  QI_NORETURN void throwConversionFailure(TypeInterface* from, TypeInterface* to, const std::string& additionalMsg)
   {
     std::stringstream msg;
     msg << "Conversion from ";
@@ -1429,7 +1440,8 @@ namespace detail
     } else {
       msg << "NULL Type";
     }
-    msg << " failed";
+    msg << " failed ";
+    msg << additionalMsg;
     qiLogWarning() << msg.str();
     throw std::runtime_error(msg.str());
   }

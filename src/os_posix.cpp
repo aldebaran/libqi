@@ -273,6 +273,7 @@ namespace qi {
          (d = opendir(interfacesDirectory.c_str())) == 0)
       {
         qiLogError() << "socket() failed: " << strerror(errno);
+        close(ioctl_sock);
         return res;
       }
 

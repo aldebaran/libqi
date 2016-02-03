@@ -812,6 +812,26 @@ TEST(Struct, ComplexType)
   AnyValue::from(p2);
 }
 
+TEST(Append, AppendInvalid)
+{
+  std::vector<std::string> textArgs;
+  textArgs.emplace_back("real");
+  textArgs.emplace_back("magic");
+  auto args = qi::AnyValue::from(textArgs);
+
+  ASSERT_ANY_THROW(args.append(10));
+}
+
+TEST(Insert, InsertInvalid)
+{
+  std::map<int, std::string> map;
+  map[0] = "real";
+  auto anyMap = qi::AnyValue::from(map);
+
+  ASSERT_ANY_THROW(anyMap.insert("false", 0));
+  ASSERT_ANY_THROW(anyMap.insert(1, 10));
+}
+
 int main(int argc, char **argv) {
   qi::Application app(argc, argv);
   ::testing::InitGoogleTest(&argc, argv);

@@ -15,6 +15,7 @@
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/predef/os.h>
 #include <boost/regex.hpp>
 #include <boost/foreach.hpp>
 #include <locale>
@@ -24,9 +25,9 @@
 #include <boost/system/error_code.hpp>
 
 #ifndef _WIN32
-static const char SEPARATOR = ':';
+static const char SDK_LAYOUT_BOOST_SEPARATOR = ':';
 #else
-static const char SEPARATOR = ';';
+static const char SDK_LAYOUT_BOOST_SEPARATOR = ';';
 #endif
 
 qiLogCategory("qi.path.sdklayout");
@@ -72,6 +73,23 @@ std::string relative(
 
 namespace qi {
 
+namespace path {
+
+namespace detail {
+
+    std::string binSuffix()
+    {
+    #if BOOST_OS_WINDOWS && defined(NDEBUG)
+      return ".exe";
+    #elif BOOST_OS_WINDOWS && !defined(NDEBUG)
+      return "_d.exe";
+    #else
+      return "";
+    #endif
+    }
+  } // detail
+  } // path
+
   class PrivateSDKLayout
   {
   public:
@@ -106,7 +124,8 @@ namespace qi {
         {
           boost::algorithm::split(additionalSdkPrefixes,
                                   prefixes,
-                                  boost::algorithm::is_from_range(SEPARATOR, SEPARATOR));
+                                  boost::algorithm::is_from_range(SDK_LAYOUT_BOOST_SEPARATOR,
+                                                                  SDK_LAYOUT_BOOST_SEPARATOR));
           _sdkPrefixes.insert(_sdkPrefixes.end(), additionalSdkPrefixes.begin(), additionalSdkPrefixes.end());
         }
       }
@@ -283,40 +302,65 @@ namespace qi {
     return _p->_sdkPrefixes;
   }
 
-  std::string SDKLayout::findBin(const std::string &name, bool searchInPath) const
+  static std::string existsFile(boost::filesystem::path prefix,
+                               const std::string& fileName)
   {
-    qi::Path bin = name;
+    const boost::filesystem::path file(fileName, qi::unicodeFacet());
+
     try
     {
-      // try if the name is a full path
-      bin = qi::Path(boost::filesystem::system_complete(bin.bfsPath()));
-      if (bin.exists() && !bin.isDir())
-        return bin.str();
+      const boost::filesystem::path pathFile(fsconcat(prefix.string(qi::unicodeFacet()),
+                                                      file.string(qi::unicodeFacet())),
+                                             qi::unicodeFacet());
+      const boost::filesystem::path pathFileSysComplete(boost::filesystem::system_complete(pathFile));
 
-      std::vector<std::string>::const_iterator it;
-      for (it = _p->_sdkPrefixes.begin();
-           it != _p->_sdkPrefixes.end();
-           ++it)
-      {
-        qi::Path p = *it;
-        p = p / "bin" / name;
-
-        if (p.exists() && !p.isDir())
-          return p.str();
-#ifndef NDEBUG
-        if (qi::Path(p.str() + "_d.exe").exists())
-          return p.str() + "_d.exe";
-#endif
-        if (qi::Path(p.str() + ".exe").exists())
-          return p.str() + ".exe";
-      }
+      if (boost::filesystem::exists(pathFileSysComplete)
+          && !boost::filesystem::is_directory(pathFileSysComplete))
+        return (pathFileSysComplete.string(qi::unicodeFacet()));
     }
     catch (const boost::filesystem::filesystem_error &e)
     {
       qiLogDebug() << e.what();
     }
+    return {};
+  }
 
-    if(searchInPath) {
+  std::string SDKLayout::findBin(const std::string &name, bool searchInPath) const
+  {
+    try
+    {
+      const qi::Path bin(name);
+      // try if the name is a full path
+      bin = qi::Path(boost::filesystem::system_complete(bin.bfsPath()));
+      if (bin.exists() && !bin.isDir())
+        return bin.str();
+
+      for (const qi::Path& path : _p->_sdkPrefixes)
+      {
+        const boost::filesystem::path p(fsconcat(path, "bin"), qi::unicodeFacet());
+
+        std::string res = existsFile(p, name);
+        if (res != std::string())
+          return res;
+#ifdef _WIN32
+//DEBUG
+#ifndef NDEBUG
+        res = existsFile(p, name + "_d.exe");
+        if (res != std::string())
+          return res;
+#endif
+        res = existsFile(p, name + ".exe");
+        if (res != std::string())
+          return res;
+#endif
+      }
+    }
+    catch (const std::exception &e)
+    {
+      qiLogDebug() << e.what();
+    }
+
+    if (searchInPath) {
       // Look in $PATH now
       std::vector<std::string> paths;
       std::vector<std::string> pathExts;
@@ -330,6 +374,8 @@ namespace qi {
         path /= name;
         if (path.exists())
           return path.str();
+
+        // Only for windows
         // Try with all extensions
         for (std::vector<std::string>::const_iterator ext = pathExts.begin();
              ext != pathExts.end(); ++ext) {
@@ -343,29 +389,6 @@ namespace qi {
     return std::string();
   }
 
-  static std::string existsLib(boost::filesystem::path prefix,
-                               const std::string& libName)
-  {
-    boost::filesystem::path lib(libName, qi::unicodeFacet());
-
-    try
-    {
-      boost::filesystem::path p(fsconcat(prefix.string(qi::unicodeFacet()),
-                                         lib.string(qi::unicodeFacet())),
-                                qi::unicodeFacet());
-
-      p = boost::filesystem::system_complete(p);
-      if (boost::filesystem::exists(p)
-          && !boost::filesystem::is_directory(p))
-        return (p.string(qi::unicodeFacet()));
-    }
-    catch (const boost::filesystem::filesystem_error &e)
-    {
-      qiLogDebug() << e.what();
-    }
-    return std::string();
-  }
-
   std::string SDKLayout::findLib(const std::string &name) const
   {
     try
@@ -376,7 +399,7 @@ namespace qi {
       std::string libName = module.filename().make_preferred().string(qi::unicodeFacet());
       std::string res;
 
-      res = existsLib(prefix.string(qi::unicodeFacet()), libName);
+      res = existsFile(prefix.string(qi::unicodeFacet()), libName);
       if (res != std::string())
         return res;
 
@@ -388,50 +411,50 @@ namespace qi {
         boost::filesystem::path p;
         p = boost::filesystem::path(fsconcat(*it, "lib", prefix.string(qi::unicodeFacet())), qi::unicodeFacet());
 
-        res = existsLib(p, libName);
+        res = existsFile(p, libName);
         if (res != std::string())
           return res;
-        res = existsLib(p, libName + ".so");
+        res = existsFile(p, libName + ".so");
         if (res != std::string())
           return res;
-        res = existsLib(p, "lib" + libName + ".so");
+        res = existsFile(p, "lib" + libName + ".so");
         if (res != std::string())
           return res;
-        res = existsLib(p, "lib" + libName);
+        res = existsFile(p, "lib" + libName);
         if (res != std::string())
           return res;
 #ifdef __APPLE__
-        res = existsLib(p, libName + ".dylib");
+        res = existsFile(p, libName + ".dylib");
         if (res != std::string())
           return res;
-        res = existsLib(p, "lib" + libName + ".dylib");
+        res = existsFile(p, "lib" + libName + ".dylib");
         if (res != std::string())
           return res;
-        res = existsLib(p, "lib" + libName);
+        res = existsFile(p, "lib" + libName);
         if (res != std::string())
           return res;
 #endif
 #ifdef _WIN32
 //DEBUG
 #ifndef NDEBUG
-        res = existsLib(p, libName + "_d.dll");
+        res = existsFile(p, libName + "_d.dll");
         if (res != std::string())
           return res;
-        res = existsLib(p, "lib" + libName + "_d.dll");
+        res = existsFile(p, "lib" + libName + "_d.dll");
         if (res != std::string())
           return res;
-        res = existsLib(p, "lib" + libName);
+        res = existsFile(p, "lib" + libName);
         if (res != std::string())
           return res;
 #endif
 
-        res = existsLib(p, libName + ".dll");
+        res = existsFile(p, libName + ".dll");
         if (res != std::string())
           return res;
-        res = existsLib(p, "lib" + libName + ".dll");
+        res = existsFile(p, "lib" + libName + ".dll");
         if (res != std::string())
           return res;
-        res = existsLib(p, "lib" + libName);
+        res = existsFile(p, "lib" + libName);
         if (res != std::string())
           return res;
 
@@ -439,24 +462,24 @@ namespace qi {
         p = boost::filesystem::path(fsconcat(*it, "bin", prefix.string(qi::unicodeFacet())), qi::unicodeFacet());
 
 #ifndef NDEBUG
-        res = existsLib(p, libName + "_d.dll");
+        res = existsFile(p, libName + "_d.dll");
         if (res != std::string())
           return res;
-        res = existsLib(p, "lib" + libName + "_d.dll");
+        res = existsFile(p, "lib" + libName + "_d.dll");
         if (res != std::string())
           return res;
-        res = existsLib(p, "lib" + libName);
+        res = existsFile(p, "lib" + libName);
         if (res != std::string())
           return res;
 #endif
 
-        res = existsLib(p, libName + ".dll");
+        res = existsFile(p, libName + ".dll");
         if (res != std::string())
           return res;
-        res = existsLib(p, "lib" + libName + ".dll");
+        res = existsFile(p, "lib" + libName + ".dll");
         if (res != std::string())
           return res;
-        res = existsLib(p, "lib" + libName);
+        res = existsFile(p, "lib" + libName);
         if (res != std::string())
           return res;
 #endif

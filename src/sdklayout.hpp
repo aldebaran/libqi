@@ -26,6 +26,14 @@
  */
 namespace qi
 {
+  namespace path
+  {
+    namespace detail
+    {
+      /// The suffix for executable files for your platform.
+      std::string binSuffix();
+    }
+  }
 
   class PrivateSDKLayout;
 
@@ -121,7 +129,6 @@ namespace qi
     /** @copydoc qi::path::getUserWritableConfigurationPath */
     std::string userWritableConfPath(const std::string &applicationName,
                                                  const std::string &filename="") const;
-
   private:
     // Pimpl
     PrivateSDKLayout* _p;

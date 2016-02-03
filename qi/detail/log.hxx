@@ -9,6 +9,7 @@
 #define _QI_DETAIL_LOG_HXX_
 
 #include <boost/noncopyable.hpp>
+#include <boost/preprocessor/cat.hpp>
 
 #if defined(NO_QI_LOG_DETAILED_CONTEXT) || defined(NDEBUG)
 #   define _qiLogDebug(...)      qi::log::LogStream(qi::LogLevel_Debug, "", __FUNCTION__, 0, __VA_ARGS__).self()
@@ -61,9 +62,15 @@
 
 /* For fast category access, we use lookup to a fixed name symbol.
  * The user is required to call qiLogCategory somewhere in scope.
+ *
+ * _QI_LOG_VARIABLE_SUFFIX is used to make variable name (_qi_log_category)
+ * unique when using unity(blob) builds
  */
+#ifndef _QI_LOG_VARIABLE_SUFFIX
+# define _QI_LOG_VARIABLE_SUFFIX _x // dummy/default suffix
+#endif
 
-#  define _QI_LOG_CATEGORY_GET() _qi_log_category
+#  define _QI_LOG_CATEGORY_GET() BOOST_PP_CAT(_qi_log_category, _QI_LOG_VARIABLE_SUFFIX)
 
 #if defined(NO_QI_LOG_DETAILED_CONTEXT) || defined(NDEBUG)
 #  define _QI_LOG_MESSAGE(Type, Message)                        \

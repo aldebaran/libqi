@@ -1,5 +1,9 @@
+#include <random>
 #include <gtest/gtest.h>
+#include <boost/filesystem.hpp>
+#include <boost/predef/os.h>
 #include <qi/application.hpp>
+#include <qi/log.hpp>
 #include <qi/os.hpp>
 #include <qi/path.hpp>
 
@@ -249,13 +253,164 @@ TEST(system, InvalidBin)
  #endif
 }
 
+//============================================================================
+// Tests for checking isProcessRunning
+//============================================================================
+namespace
+{
+int randInt(int min, int max)
+{
+  static std::random_device rd;
+  static std::mt19937 gen(rd());
+  std::uniform_int_distribution<int> dis(min, max);
+  return dis(gen);
+}
+
+char randomProcessChar()
+{
+  static const char* characters =
+  "0123456789"
+  "-_ "
+  "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+  "abcdefghijklmnopqrstuvwxyz";
+  static int nofChars = strlen(characters) - 1;
+  return characters[randInt(1, nofChars)];
+}
+
+std::string randomProcessName()
+{
+  std::string str;
+  int length = 2 + rand() % 10;
+  for(int i = 0; i < length; ++i)
+  {
+    str.push_back(randomProcessChar());
+  }
+  return str;
+}
+
+int randomWrongPid()
+{
+  return randInt(65565, std::numeric_limits<int>::max());
+}
+
+class ScopedProcess
+{
+public:
+  ScopedProcess(
+      const std::string& executable,
+      const std::vector<std::string>& arguments = std::vector<std::string>())
+    : _executable(executable)
+  {
+    char** cArgs = new char*[arguments.size()+2];
+    cArgs[0] = (char*)_executable.c_str();
+    for(size_t i = 0; i < arguments.size(); ++i)
+      cArgs[i+1] = (char*)arguments[i].c_str();
+    cArgs[arguments.size()+1] = NULL;
+    _pid = qi::os::spawnvp(cArgs);
+    if (_pid <= 0)
+      throw std::runtime_error(
+          std::string("Could not start: ") + _executable);
+  }
+
+  ~ScopedProcess()
+  {
+    qi::os::kill(_pid, SIGKILL);
+    int status = 0;
+    int ret = qi::os::waitpid(_pid, &status);
+    std::cout << "Waiting for " << _executable << " has yielded the status "
+                << status << " and returned " << ret << std::endl;
+  }
+
+  int pid() const
+  {
+    return _pid;
+  }
+
+private:
+  std::string _executable;
+  int _pid;
+};
+
+} // ends anonymous namespace
+
+TEST(QiOs, isProcessRunningCrazyPid)
+{
+  ASSERT_FALSE(qi::os::isProcessRunning(randomWrongPid(), randomProcessName()));
+}
+
+TEST(QiOs, isProcessRunningCrazyPidNoName)
+{
+  ASSERT_FALSE(qi::os::isProcessRunning(randomWrongPid()));
+}
+
+TEST(QiOs, isProcessRunningWrongName)
+{
+  const std::string processName = randomProcessName();
+  ASSERT_FALSE(qi::os::isProcessRunning(1, processName))
+      << "random process with name " << processName << " is said to be running";
+}
+
+TEST(QiOs, isProcessRunningRealProcess)
+{
+  const std::string executable("testlaunchloop");
+  const std::string executablePath = qi::path::findBin(executable);
+  const ScopedProcess p{executablePath};
+  ASSERT_TRUE(qi::os::isProcessRunning(p.pid(), executable))
+      << executablePath << " was not found running";
+}
+
+TEST(QiOs, isProcessRunningRealProcessNoName)
+{
+  const std::string executable("testlaunchloop");
+  const std::string executablePath = qi::path::findBin(executable);
+  const ScopedProcess p{executablePath};
+  ASSERT_TRUE(qi::os::isProcessRunning(p.pid()));
+}
+
+TEST(QiOs, isProcessRunningRealProcessWithArgs)
+{
+  const std::string executable("testlaunchloop");
+  const std::string executablePath = qi::path::findBin(executable);
+  const std::vector<std::string> args { "nan", "mais", "allo", "quoi" };
+  const ScopedProcess p{executablePath, args};
+  ASSERT_TRUE(qi::os::isProcessRunning(p.pid(), executable));
+}
+
+TEST(QiOs, isProcessRunningRealProcessWithArgsUnicode)
+{
+  const std::string originalExecutable { "testlaunchloop" };
+
+  const std::string executable =
+      boost::filesystem::unique_path("%%%%%%%%ユニコード").string(qi::unicodeFacet());
+  std::string executableWithExtension = executable;
+#if BOOST_OS_WINDOWS && defined(NDEBUG)
+    executableWithExtension += ".exe";
+#elif BOOST_OS_WINDOWS && !defined(NDEBUG)
+    executableWithExtension += "_d.exe";
+#endif
+
+  const std::string originalExecutablePath = qi::path::findBin(originalExecutable);
+
+  const qi::Path tmp = qi::Path(qi::os::mktmpdir());
+  const qi::Path executablePathWithExtension =
+          tmp / executableWithExtension;
+  const qi::path::ScopedFile executableFile(executablePathWithExtension);
+  boost::filesystem::copy(
+        qi::Path(originalExecutablePath).bfsPath(),
+        executablePathWithExtension.bfsPath());
+
+  const std::vector<std::string> args { "nan", "mais", "allo", "quoi" };
+  const ScopedProcess p{executablePathWithExtension.str(), args};
+  ASSERT_TRUE(qi::os::isProcessRunning(p.pid(), executable));
+}
+// Tests for isProcessRunning end ============================================
 
 int main(int argc, char* argv[])
 {
   qi::Application app(argc, argv);
   binDir = qi::path::findBin("testlaunch");
   loopBinDir = qi::path::findBin("testlaunchloop");
-
+  qi::log::addFilter("qi.os", qi::LogLevel_Debug);
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

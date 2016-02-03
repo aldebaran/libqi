@@ -478,6 +478,15 @@ namespace qi {
     QI_API int kill(int pid, int sig);
 
     /**
+     * \brief Check whether a process is running, given its name and pid.
+     * \param pid The PID to check.
+     * \param fileName The name of the process: the executable file name
+     * with no .exe or _d.exe extension.
+     * \return true if the process is running and has the expected name.
+     */
+    QI_API bool isProcessRunning(int pid, const std::string& fileName = std::string());
+
+    /**
      * \brief Find the first available port starting at port number in parameter.
      * \param port First port tested, then each port following it is tested
      *             one by one until one available is found.

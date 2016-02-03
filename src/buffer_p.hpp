@@ -29,7 +29,7 @@ namespace qi
 
   public:
     unsigned char*  _bigdata;
-    unsigned char   _data[STATIC_BLOCK];
+    unsigned char   _data[STATIC_BLOCK] = {};
     size_t          _cachedSubBufferTotalSize;
 
   public:

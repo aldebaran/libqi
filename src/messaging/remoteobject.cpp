@@ -53,7 +53,8 @@ namespace qi {
     static qi::MetaObject* mo = nullptr;
     QI_ONCE(mo = createRemoteObjectSpecialMetaObject());
     setMetaObject(*mo);
-    setTransportSocket(socket);
+    if (socket)
+      setTransportSocket(socket);
     //fetchMetaObject should be called to make sure the metaObject is valid.
   }
 
@@ -66,7 +67,8 @@ namespace qi {
     , _self(makeDynamicAnyObject(this, false))
   {
     setMetaObject(metaObject);
-    setTransportSocket(socket);
+    if (socket)
+      setTransportSocket(socket);
   }
 
   RemoteObject::~RemoteObject()
