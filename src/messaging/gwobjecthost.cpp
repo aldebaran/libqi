@@ -161,7 +161,8 @@ void GwObjectHost::harvestServiceOriginatingObjects(Message& msg, TransportSocke
     {
       // if a service does a CALL, he does so on a user-supplied object.
       std::map<GwObjectId, MetaObject>::iterator mit = _objectsMetaObjects.find(msg.object());
-      QI_ASSERT(mit != _objectsMetaObjects.end());
+      if(mit == _objectsMetaObjects.end())
+        throw std::runtime_error("Gateway: Couldn't find object called - aborted.");
       metaObject = &mit->second;
       signatureGetter = &MetaMethod::parametersSignature;
     }
