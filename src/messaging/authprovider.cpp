@@ -71,8 +71,8 @@ namespace qi {
   CapabilityMap NullAuthProvider::_processAuth(const CapabilityMap &authData)
   {
     CapabilityMap reply;
-
-    reply[State_Key] = AnyValue::from(State_Done);
+    const int state = State_Done;
+    reply[State_Key] = AnyValue::from(state);
     return reply;
   }
 
