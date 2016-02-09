@@ -494,9 +494,10 @@ namespace detail {
   }
 
   std::string SDKLayout::findConf(const std::string &applicationName,
-                                  const std::string &filename) const
+                                  const std::string &filename,
+                                  bool excludeUserWritablePath) const
   {
-    std::vector<std::string> paths = confPaths(applicationName);
+    std::vector<std::string> paths = confPaths(applicationName, excludeUserWritablePath);
     try
     {
       std::vector<std::string>::const_iterator it;
@@ -639,13 +640,14 @@ namespace detail {
   }
 
 
-  std::vector<std::string> SDKLayout::confPaths(const std::string &applicationName) const
+  std::vector<std::string> SDKLayout::confPaths(const std::string &applicationName, bool excludeUserWritablePath) const
   {
     std::vector<std::string> res;
-
-    // Pass an empty string to get the directory:
-    res.push_back(userWritableConfPath(applicationName, ""));
-
+    if (!excludeUserWritablePath)
+    {
+      // Pass an empty string to get the directory:
+      res.push_back(userWritableConfPath(applicationName, ""));
+    }
     try
     {
       std::vector<std::string>::const_iterator it;

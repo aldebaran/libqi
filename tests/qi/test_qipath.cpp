@@ -363,6 +363,7 @@ TEST(qiPath, readingWritingfindConfigs)
   boost::to_lower(expect);
   boost::to_lower(fooCfg);
   ASSERT_EQ(expect, fooCfg);
+  ASSERT_TRUE(sdkl.findConf("foo", "foo.cfg", true).empty());
 
   std::cout << "removing: " << fooCfg << std::endl;
   remove(fooCfg.c_str());
