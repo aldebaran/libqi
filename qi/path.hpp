@@ -304,8 +304,8 @@ namespace qi
      * return the first match.
      * \param applicationName Name of the application.
      * \param filename Name of the file to look for.
-     * \param excludeUserWritablePath If true, findData() won't search into userWritableDataPath.
      * You can specify subdirectories using "/" as directory separator.
+     * \param excludeUserWritablePath If true, findData() won't search into userWritableDataPath.
      * \return The complete, native path of the file if it was found,
      * an empty string otherwise.
      * \remark For automatic tests, you can modify the user data path
