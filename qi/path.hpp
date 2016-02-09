@@ -279,6 +279,7 @@ namespace qi
      * \param applicationName Name of the application.
      * \param filename Name of the file to look for.
      * You can specify subdirectories using "/" as directory separator.
+     * \param excludeUserWritablePath If true, findConf() won't search into userWritableConfPath.
      * \return The complete, native path of the file if it was found,
      * an empty string otherwise.
      *
@@ -297,7 +298,8 @@ namespace qi
      * \endverbatim
      */
     QI_API std::string findConf(const std::string& applicationName,
-                                const std::string& filename);
+                                const std::string& filename,
+                                bool excludeUserWritablePath = false);
 
     /**
      * \brief Look for a file in all dataPaths(applicationName) directories,
@@ -376,6 +378,7 @@ namespace qi
     /**
      * \brief Get the list of directories used when searching for configuration files for the given application name.
      * \param applicationName Name of the application.
+     * \param excludeUserWritablePath If true, confPaths() won't include userWritableConfPath.
      * \return List of configuration directories.
      *
      * \verbatim
@@ -385,7 +388,8 @@ namespace qi
      *    that they are writeable.
      * \endverbatim
      */
-    QI_API std::vector<std::string> confPaths(const std::string& applicationName="");
+    QI_API std::vector<std::string> confPaths(const std::string& applicationName="",
+                                              bool excludeUserWritablePath = false);
 
     /**
      * \brief Get the list of directories used when searching for data files for the given application name.
