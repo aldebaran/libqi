@@ -47,7 +47,7 @@ boost::filesystem::path getHomePath()
 TEST(qiPath, callingInit)
 {
   const qi::Path expected = qi::path::detail::normalize(absPath(argpath)).parent().parent();
-  
+
   std::string actual = qi::path::sdkPrefix();
   std::string expect = expected.str();
   boost::to_lower(expect);
