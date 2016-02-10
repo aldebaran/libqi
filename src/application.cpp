@@ -254,7 +254,7 @@ namespace qi {
       globalProgram = guess_app_from_path(argv[0]);
       qiLogVerbose() << "Program path guessed as " << globalProgram;
     }
-    globalProgram = path::detail::normalize(globalProgram);
+    globalProgram = path::detail::normalize(globalProgram).str();
 
     parseArguments(argc, argv);
 
@@ -528,7 +528,7 @@ namespace qi {
         if (ret == 0)
         {
           globalRealProgram = fname;
-          globalRealProgram = path::detail::normalize(globalRealProgram);
+          globalRealProgram = path::detail::normalize(globalRealProgram).str();
         }
         else
         {

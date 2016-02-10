@@ -86,7 +86,7 @@ namespace qi
     PathVector dirs() const;
 
     /// @return the path as an UTF-8 string
-    operator std::string() const;
+    explicit operator std::string() const;
 
     /// @return the path as an UTF-8 string
     std::string str() const;
