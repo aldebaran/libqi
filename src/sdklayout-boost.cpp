@@ -337,20 +337,20 @@ namespace detail {
 
       for (const qi::Path& path : _p->_sdkPrefixes)
       {
-        const boost::filesystem::path p(fsconcat(path, "bin"), qi::unicodeFacet());
+        const boost::filesystem::path p(path / "bin");
 
         std::string res = existsFile(p, name);
-        if (res != std::string())
+        if (!res.empty())
           return res;
 #ifdef _WIN32
 //DEBUG
 #ifndef NDEBUG
         res = existsFile(p, name + "_d.exe");
-        if (res != std::string())
+        if (!res.empty())
           return res;
 #endif
         res = existsFile(p, name + ".exe");
-        if (res != std::string())
+        if (!res.empty())
           return res;
 #endif
       }
