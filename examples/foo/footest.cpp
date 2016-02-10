@@ -7,7 +7,7 @@ int main(int argc, char** argv) {
   ApplicationSession app(argc, argv);
 
   //connect the session
-  app.start();
+  app.startSession();
 
   //## register the Foo object as a service
   app.session()->loadService("foo", "Foo");
