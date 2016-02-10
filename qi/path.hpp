@@ -27,7 +27,7 @@ namespace qi
   using PathVector = std::vector<Path>;
 
   /**
-   * \brief The Path class allow handling path in a cross-platform maner.
+   * \brief The Path class allow handling filesystem path in a cross-platform maner.
    * \includename{qi/path.hpp}
    * The class assume that all string are encoded in UTF-8 if not specified otherwise.
    */
@@ -64,10 +64,10 @@ namespace qi
     /// is the path a symlink?
     bool isSymlink() const;
 
-    /// @return the name of the current file of folder as an UTF-8 string
+    /// @return the last component of the path as an UTF-8 string
     std::string filename() const;
 
-    /// @return the extension of the current file as an UTF-8 string
+    /// @return the extension of the last component of the path as an UTF-8 string
     std::string extension() const;
 
     /// @return a Path to the parent
