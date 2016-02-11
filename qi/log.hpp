@@ -264,7 +264,7 @@ namespace qi {
      * \brief Log function. You should call qiLog* macros instead.
      *
      * \param verb The verbosity of the message.
-     * \param category Log category (for filtering in the future).
+     * \param category Log category (for filtering).
      * \param msg Log message.
      * \param file Filename from which this function was called (ex: __FILE__).
      * \param fct Function name from which this function was called (ex: __FUNCTION__).
