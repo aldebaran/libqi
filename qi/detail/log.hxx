@@ -207,6 +207,11 @@ namespace qi {
       };
 
       QI_API boost::format getFormat(const std::string& s);
+
+      // given a set of rules in the format documented in the public header,
+      // return a list of (category name, LogLevel) tuples.
+      QI_API std::vector<std::tuple<std::string, qi::LogLevel>> parseFilterRules(
+          const std::string &rules);
     }
 
     //inlined for perf
