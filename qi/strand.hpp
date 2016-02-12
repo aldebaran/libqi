@@ -196,7 +196,24 @@ private:
 
 namespace detail
 {
-
+  template <typename F, typename... Args>
+  static auto callInStrand(
+      F& func,
+      const boost::function<void()>& onFail,
+      boost::weak_ptr<StrandPrivate> weakStrand,
+      Args&&... args)
+      -> qi::Future<typename std::decay<decltype(func(std::forward<Args>(args)...))>::type>
+  {
+    if (auto strand = weakStrand.lock())
+      return strand->async(std::bind(func, std::forward<Args>(args)...));
+    else
+    {
+      if (onFail)
+        onFail();
+      return qi::makeFutureError<
+          typename std::decay<decltype(func(std::forward<Args>(args)...))>::type>("strand is dead");
+    }
+  }
   // C++14 this can be a lambda, but we need perfect forwarding in the capture in scheduleFor below
   template <typename F>
   struct WrapInStrand
@@ -216,24 +233,20 @@ namespace detail
 
     template <typename... Args>
     auto operator()(Args&&... args) const
-        -> qi::Future<typename std::decay<decltype(_func(std::forward<Args>(args)...))>::type>
+        -> decltype(callInStrand(_func, _onFail, _strand, std::forward<Args>(args)...))
     {
-      // boost::bind does not work T_T
-      if (auto strand = _strand.lock())
-        return strand->async(std::bind(_func, std::forward<Args>(args)...));
-      else
-      {
-        if (_onFail)
-          _onFail();
-        return qi::makeFutureError<
-            typename std::decay<decltype(_func(std::forward<Args>(args)...))>::type>("strand is dead");
-      }
+      return callInStrand(_func, _onFail, _strand, std::forward<Args>(args)...);
+    }
+
+    template <typename... Args>
+    auto operator()(Args&&... args)
+        -> decltype(callInStrand(_func, _onFail, _strand, std::forward<Args>(args)...))
+    {
+      return callInStrand(_func, _onFail, _strand, std::forward<Args>(args)...);
     }
   };
-
-}
-
-}
+} // detail
+} // qi
 
 # ifdef _MSC_VER
 #  pragma warning( pop )
