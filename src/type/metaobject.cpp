@@ -473,7 +473,7 @@ namespace qi {
     buff << _description;
 
     // never lower index
-    _index = std::max(idx, *_index);
+    _index = std::max(idx, _index.load());
 
     // update content hash
     {

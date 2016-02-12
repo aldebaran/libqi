@@ -440,7 +440,7 @@ namespace qi {
           doCancel = true;
           break;
         }
-        cancelCount = **fut.second;
+        cancelCount = fut.second->load();
       }
       if (!doCancel)
       {
@@ -661,7 +661,7 @@ namespace qi {
             // If it is and we manage to set it to false, we're taking care of cancelling the future.
             if (cancelRequested)
             {
-              int cancelCount = *(*cancelRequested);
+              int cancelCount = cancelRequested->load();
               bool doCancel = false;
               while (cancelCount)
               {
@@ -670,7 +670,7 @@ namespace qi {
                   doCancel = true;
                   break;
                 }
-                cancelCount = **cancelRequested;
+                cancelCount = cancelRequested->load();
               }
               if (doCancel)
               {

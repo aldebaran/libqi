@@ -25,7 +25,7 @@ public:
   {}
 
   void onFutureFinish() {
-    if (--(this->_count) == 0 && *this->_closed) {
+    if (--(this->_count) == 0 && this->_closed.load()) {
       if (!_set.swap(true))
         this->_promise.setValue(this->_futures);
     }
@@ -187,7 +187,7 @@ public:
    */
   void addFuture(qi::Future<T> fut) {
     // Can't add future from closed qi::FutureBarrier.
-    if (*_p->_closed)
+    if (_p->_closed.load())
       throw std::runtime_error("Adding future to closed barrier");
 
     ++(_p->_count);
@@ -217,7 +217,7 @@ protected:
 private:
   void close() {
     _p->_closed = true;
-    if (*(_p->_count) == 0) {
+    if (_p->_count.load() == 0) {
       if (!_p->_set.swap(true))
         _p->_promise.setValue(_p->_futures);
     }

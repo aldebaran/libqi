@@ -469,7 +469,7 @@ Future<void> GatewayPrivate::unregisterServiceFromSD(ServiceId sid)
 
 void GatewayPrivate::sdConnectionRetry(const qi::Url& sdUrl, qi::Duration lastTimer)
 {
-  if (*_dying)
+  if (_dying.load())
     return;
 
   qi::Future<void> fut = connect(sdUrl);
@@ -502,7 +502,7 @@ void GatewayPrivate::sdConnectionRetry(const qi::Url& sdUrl, qi::Duration lastTi
 
 void GatewayPrivate::onServiceDirectoryDisconnected(TransportSocketPtr socket, const std::string& reason)
 {
-  if (*_dying)
+  if (_dying.load())
     return;
   connected.set(false);
   qiLogWarning() << "Lost connection to the ServiceDirectory: " << reason;
