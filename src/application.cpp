@@ -233,11 +233,9 @@ namespace qi {
     return bfs::system_complete(path);
   }
 
-  static std::string guess_app_from_path(const char* path)
+  static qi::Path guess_app_from_path(const qi::Path& path)
   {
-    boost::filesystem::path execPath(path, qi::unicodeFacet());
-    return system_absolute(execPath).make_preferred()
-      .string(qi::unicodeFacet());
+    return system_absolute(path).make_preferred();
   }
 
   static void initApp(int& argc, char ** &argv, const std::string& path)
@@ -251,7 +249,7 @@ namespace qi {
     }
     else
     {
-      globalProgram = guess_app_from_path(argv[0]);
+      globalProgram = guess_app_from_path(qi::Path::fromNative(argv[0])).str();
       qiLogVerbose() << "Program path guessed as " << globalProgram;
     }
     globalProgram = path::detail::normalize(globalProgram).str();
@@ -532,7 +530,7 @@ namespace qi {
         }
         else
         {
-          globalRealProgram = guess_app_from_path(::qi::Application::argv()[0]);
+          globalRealProgram = guess_app_from_path(qi::Path::fromNative(::qi::Application::argv()[0])).str();
         }
         free(fname);
       }
@@ -543,7 +541,7 @@ namespace qi {
       if (!boost::filesystem::is_empty(fname))
         globalRealProgram = fname.string().c_str();
       else
-        globalRealProgram = guess_app_from_path(::qi::Application::argv()[0]);
+        globalRealProgram = guess_app_from_path(qi::Path::fromNative(::qi::Application::argv()[0])).str();
 #elif _WIN32
       WCHAR fname[MAX_PATH];
       int ret = GetModuleFileNameW(NULL, fname, MAX_PATH);
@@ -556,10 +554,10 @@ namespace qi {
       else
       {
         // GetModuleFileName failed, trying to guess from argc, argv...
-        globalRealProgram = guess_app_from_path(::qi::Application::argv()[0]);
+        globalRealProgram = guess_app_from_path(qi::Path::fromNative(::qi::Application::argv()[0])).str();
       }
 #else
-      globalRealProgram = guess_app_from_path(::qi::Application::argv()[0]);
+      globalRealProgram = guess_app_from_path(qi::Path::fromNative(::qi::Application::argv()[0])).str();
 #endif
       return globalRealProgram.c_str();
     }
