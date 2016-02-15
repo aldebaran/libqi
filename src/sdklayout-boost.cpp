@@ -230,15 +230,17 @@ namespace detail {
       if (!filename.empty())
         dest = path.parent_path();
 
-      if (!boost::filesystem::exists(dest)) {
-        try {
+      try
+      {
+        if (!boost::filesystem::exists(dest))
+        {
           boost::filesystem::create_directories(dest);
         }
-        catch (const boost::filesystem::filesystem_error &e)
-        {
-          qiLogError() << "Cannot create directory '" << dest << "' error was: " << e.what();
-          return std::string();
-        }
+      }
+      catch (const boost::filesystem::filesystem_error &e)
+      {
+        qiLogError() << "Cannot create directory '" << dest << "' error was: " << e.what();
+        return std::string();
       }
       return path.string(qi::unicodeFacet());
     }
