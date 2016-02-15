@@ -26,11 +26,9 @@ namespace qi
 class QI_API Actor
 {
 public:
-  Actor()
-    : _strand()
-  {}
-  Actor(const Actor&)
-  {}
+  Actor() = default;
+  Actor(const Actor&) = delete; // An actor cannot be copy-able nor move-able.
+
   explicit Actor(qi::ExecutionContext& ec)
     : _strand(ec)
   {}
@@ -38,6 +36,13 @@ public:
   qi::Strand* strand() const
   {
     return &_strand;
+  }
+
+  template<class... Callable>
+  auto stranded(Callable&&... callable) const
+    -> decltype(strand()->schedulerFor(std::forward<Callable>(callable)...)) // TODO C++14: remove this line
+  {
+    return _strand.schedulerFor(std::forward<Callable>(callable)...);
   }
 
 private:

@@ -146,11 +146,11 @@ namespace qi
       static const bool is_async = true;
       template <typename F>
       using wrap_type = decltype(
-          std::declval<T>()->strand()->schedulerFor(std::declval<typename std::decay<F>::type>()));
+          std::declval<T>()->stranded(std::declval<typename std::decay<F>::type>()));
       template <typename F>
       static wrap_type<F> wrap(const T& arg, F&& func, boost::function<void()> onFail)
       {
-        return arg->strand()->schedulerFor(std::forward<F>(func), std::move(onFail));
+        return arg->stranded(std::forward<F>(func), std::move(onFail));
       }
     };
 
