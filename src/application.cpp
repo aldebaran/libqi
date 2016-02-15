@@ -209,24 +209,31 @@ namespace qi {
     if (path.has_parent_path())
       return bfs::system_complete(path);
 
-    if (!bfs::exists(path) || bfs::is_directory(path))
+    try
     {
-      std::string envPath = qi::os::getenv("PATH");
-      size_t begin = 0;
-      for (size_t end = envPath.find(SEPARATOR, begin);
-          end != std::string::npos;
-          begin = end + 1, end = envPath.find(SEPARATOR, begin))
+      if (!bfs::exists(path) || bfs::is_directory(path))
       {
-        std::string realPath = envPath.substr(begin, end - begin);
-        bfs::path p(realPath);
+        std::string envPath = qi::os::getenv("PATH");
+        size_t begin = 0;
+        for (size_t end = envPath.find(SEPARATOR, begin);
+            end != std::string::npos;
+            begin = end + 1, end = envPath.find(SEPARATOR, begin))
+        {
+          std::string realPath = envPath.substr(begin, end - begin);
+          bfs::path p(realPath);
 
-        p /= path;
-        p = boost::filesystem::system_complete(p);
+          p /= path;
+          p = boost::filesystem::system_complete(p);
 
-        if (boost::filesystem::exists(p) &&
-            !boost::filesystem::is_directory(p))
-          return p.string(qi::unicodeFacet());
+          if (boost::filesystem::exists(p) &&
+              !boost::filesystem::is_directory(p))
+            return p.string(qi::unicodeFacet());
+        }
       }
+    }
+    catch (const boost::filesystem::filesystem_error &e)
+    {
+      qiLogError() << "Cannot access path '" << path << "': " << e.what();
     }
 
     // fallback to something

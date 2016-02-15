@@ -155,16 +155,24 @@ namespace detail {
       }
 
       boost::filesystem::path execPath(program, qi::unicodeFacet());
-      if(!boost::filesystem::exists(execPath)) {
-        if (!real)
+      try
+      {
+        if(!boost::filesystem::exists(execPath))
         {
-          return initSDKlayoutFromExec(true);
+          if (!real)
+          {
+            return initSDKlayoutFromExec(true);
+          }
+          else
+          {
+            _mode = "error";
+            return;
+          }
         }
-        else
-        {
-          _mode = "error";
-          return;
-        }
+      }
+      catch (const boost::filesystem::filesystem_error &e)
+      {
+        qiLogError() << "Cannot access path '" << execPath << "': " << e.what();
       }
 
       execPath = boost::filesystem::system_complete(execPath).make_preferred();
@@ -182,7 +190,7 @@ namespace detail {
     void checkInit()
     {
       if (_mode == "error" || _sdkPrefixes.empty()) {
-        qiLogDebug() << "please call qi::Application first before using qi::path";
+        qiLogError() << "please call qi::Application first before using qi::path";
       }
     }
 
@@ -277,7 +285,7 @@ namespace detail {
     }
     catch (const boost::filesystem::filesystem_error &e)
     {
-      qiLogDebug() << e.what();
+      qiLogError() << e.what();
     }
     _p->_sdkPrefixes.push_back(prefixPath.string(qi::unicodeFacet()));
   }
@@ -322,7 +330,7 @@ namespace detail {
     }
     catch (const boost::filesystem::filesystem_error &e)
     {
-      qiLogDebug() << e.what();
+      qiLogError() << e.what();
     }
     return {};
   }
@@ -356,36 +364,36 @@ namespace detail {
           return res;
 #endif
       }
+
+      if (searchInPath) {
+        // Look in $PATH now
+        std::vector<std::string> paths;
+        std::vector<std::string> pathExts;
+        std::string foo = qi::os::getenv("PATH");
+        boost::split(paths, foo, boost::is_any_of(qi::os::pathsep()));
+        std::string bar = qi::os::getenv("PATHEXT");
+        boost::split(pathExts, bar, boost::is_any_of(qi::os::pathsep()));
+        for (std::vector<std::string>::const_iterator it = paths.begin();
+             it != paths.end(); ++it) {
+          qi::Path path = *it;
+          path /= name;
+          if (path.exists())
+            return path.str();
+
+          // Only for windows
+          // Try with all extensions
+          for (std::vector<std::string>::const_iterator ext = pathExts.begin();
+               ext != pathExts.end(); ++ext) {
+            std::string pathExt = path.str() + "." + *ext;
+            if (qi::Path(pathExt).exists())
+              return pathExt;
+          }
+        }
+      }
     }
     catch (const std::exception &e)
     {
-      qiLogDebug() << e.what();
-    }
-
-    if (searchInPath) {
-      // Look in $PATH now
-      std::vector<std::string> paths;
-      std::vector<std::string> pathExts;
-      std::string foo = qi::os::getenv("PATH");
-      boost::split(paths, foo, boost::is_any_of(qi::os::pathsep()));
-      std::string bar = qi::os::getenv("PATHEXT");
-      boost::split(pathExts, bar, boost::is_any_of(qi::os::pathsep()));
-      for (std::vector<std::string>::const_iterator it = paths.begin();
-           it != paths.end(); ++it) {
-        qi::Path path = *it;
-        path /= name;
-        if (path.exists())
-          return path.str();
-
-        // Only for windows
-        // Try with all extensions
-        for (std::vector<std::string>::const_iterator ext = pathExts.begin();
-             ext != pathExts.end(); ++ext) {
-          std::string pathExt = path.str() + "." + *ext;
-          if (qi::Path(pathExt).exists())
-            return pathExt;
-        }
-      }
+      qiLogError() << e.what();
     }
 
     return std::string();
@@ -489,7 +497,7 @@ namespace detail {
     }
     catch (const boost::filesystem::filesystem_error &e)
     {
-      qiLogDebug() << e.what();
+      qiLogError() << e.what();
     }
 
     return std::string();
@@ -514,7 +522,7 @@ namespace detail {
     }
     catch (const boost::filesystem::filesystem_error &e)
     {
-      qiLogDebug() << e.what();
+      qiLogError() << e.what();
     }
     return std::string();
   }
@@ -537,7 +545,7 @@ namespace detail {
     }
     catch (const boost::filesystem::filesystem_error &e)
     {
-      qiLogDebug() << e.what();
+      qiLogError() << e.what();
     }
     return std::string();
   }
@@ -603,7 +611,7 @@ namespace detail {
       catch (const boost::filesystem::filesystem_error &e)
       {
         // log and continue
-        qiLogDebug() << e.what();
+        qiLogError() << e.what();
       }
     }
     return fullPaths;
@@ -667,7 +675,7 @@ namespace detail {
     }
     catch (const boost::filesystem::filesystem_error &e)
     {
-      qiLogDebug() << e.what();
+      qiLogError() << e.what();
       return std::vector<std::string>();
     }
 
