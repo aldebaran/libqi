@@ -8,6 +8,7 @@
 #define _QI_STRAND_HPP_
 
 #include <deque>
+#include <atomic>
 #include <qi/assert.hpp>
 #include <qi/detail/executioncontext.hpp>
 #include <boost/enable_shared_from_this.hpp>
@@ -44,10 +45,10 @@ public:
   using Queue = std::deque<boost::shared_ptr<Callback>>;
 
   qi::ExecutionContext& _eventLoop;
-  boost::atomic<unsigned int> _curId;
-  boost::atomic<unsigned int> _aliveCount;
+  std::atomic<unsigned int> _curId;
+  std::atomic<unsigned int> _aliveCount;
   bool _processing; // protected by mutex, no need for atomic
-  boost::atomic<int> _processingThread;
+  std::atomic<int> _processingThread;
   boost::mutex _mutex;
   boost::condition_variable _processFinished;
   bool _dying;
