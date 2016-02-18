@@ -147,7 +147,6 @@ GatewayPrivate::GatewayPrivate(bool ea)
 {
   _socketCache.init();
   _server.newConnection.connect(&GatewayPrivate::onClientConnection, this, _1);
-  _localServer.listen("tcp://127.0.0.1:0");
   _localServer.newConnection.connect(&GatewayPrivate::onLocalClientConnection, this, _1);
   _localClientAuthProviderFactory = boost::make_shared<NullAuthProviderFactory>();
 }
