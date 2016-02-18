@@ -32,7 +32,7 @@ public:
   }
 
   void cancelAll() {
-    QI_ASSERT(*_closed);
+    QI_ASSERT(_closed.load());
     for (typename std::vector< Future<T> >::iterator it = this->_futures.begin();
          it != this->_futures.end();
          ++it)
