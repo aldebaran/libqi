@@ -68,7 +68,7 @@ TEST(TestStrand, StrandCancelScheduled)
   ASSERT_EQ(qi::FutureState_Canceled, f2.wait());
 }
 
-static void increment(boost::mutex& mutex, int waittime, boost::atomic<unsigned int>& i)
+static void increment(boost::mutex& mutex, int waittime, std::atomic<unsigned int>& i)
 {
   boost::unique_lock<boost::mutex> lock(mutex, boost::try_to_lock);
   // we should never be called in parallel
@@ -86,7 +86,7 @@ TEST(TestStrand, AggressiveCancel)
   std::vector<qi::Future<void> > futures;
 
   qi::Strand strand(*qi::getEventLoop());
-  boost::atomic<unsigned int> i(0);
+  std::atomic<unsigned int> i(0);
   for (unsigned int j = 0; j < STRAND_NB_TRIES; ++j)
   {
     qi::Future<void> f1 = strand.async(boost::bind<void>(&increment,
@@ -114,7 +114,7 @@ TEST(TestStrand, AggressiveCancel)
 TEST(TestStrand, StrandDestruction)
 {
   boost::mutex mutex;
-  boost::atomic<unsigned int> i(0);
+  std::atomic<unsigned int> i(0);
 
   std::vector<qi::Future<void>> futures;
   {
@@ -134,7 +134,7 @@ TEST(TestStrand, StrandDestructionWithMethodAndConcurrency)
 {
   // ASSERT_NOSEGFAULT_NOCRASH_NOBADTHINGS();
   boost::mutex mutex;
-  boost::atomic<unsigned int> i(0);
+  std::atomic<unsigned int> i(0);
 
   std::vector<qi::Future<void>> futures;
   qi::Strand strand(*qi::getEventLoop());
@@ -164,7 +164,7 @@ TEST(TestStrand, StrandDestructionWithCancel)
 {
   boost::mutex mutex;
   std::vector<qi::Future<void> > futures;
-  boost::atomic<unsigned int> i(0);
+  std::atomic<unsigned int> i(0);
 
   {
     qi::Strand strand(*qi::getEventLoop());
@@ -223,11 +223,11 @@ TEST(TestStrand, StrandDestructionWithSchedulerFor)
     future.wait();
 }
 
-boost::atomic<int> callcount;
+std::atomic<int> callcount;
 
 struct MyActor : qi::Actor
 {
-  boost::atomic<bool> calling;
+  std::atomic<bool> calling;
   MyActor() : calling(0) {}
   ~MyActor() { strand()->join(); }
   int f(int end, qi::Promise<void> finished)

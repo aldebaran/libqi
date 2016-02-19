@@ -52,10 +52,10 @@ TEST(TestSignal, TestCompilation)
 
   s(42);
 
-  while (*res != 6)
+  while (res.load() != 6)
     qi::os::msleep(10);
 
-  ASSERT_EQ(6, *res);
+  ASSERT_EQ(6, res.load());
   ASSERT_TRUE(prom.future().isFinished());
   ASSERT_FALSE(prom.future().hasError());
 }
@@ -93,10 +93,10 @@ TEST(TestSignal, AutoDisconnect)
   qi::Signal<qi::Atomic<int>*, int> sig;
   sig.connect(&Foo::func1, boost::weak_ptr<Foo>(foo), _1, _2).setCallType(qi::MetaCallType_Direct);
   sig(&r, 0);
-  ASSERT_EQ(1, *r);
+  ASSERT_EQ(1, r.load());
   foo.reset();
   sig(&r, 0);
-  ASSERT_EQ(1, *r);
+  ASSERT_EQ(1, r.load());
 }
 
 void waitFuture(qi::Atomic<int>& cnt, qi::Promise<void> start, qi::Future<void> f)
@@ -274,7 +274,7 @@ TEST(TestSignal, Dynamic)
   EXPECT_EQ(56, trig);
 }
 
-void onSubs(boost::atomic<bool>& var, bool subs)
+void onSubs(std::atomic<bool>& var, bool subs)
 {
   var = subs;
 }
@@ -284,7 +284,7 @@ void callback(int i)
 
 TEST(TestSignal, OnSubscriber)
 {
-  boost::atomic<bool> subscribers(false);
+  std::atomic<bool> subscribers(false);
 
   qi::Signal<int> sig(boost::bind(onSubs, boost::ref(subscribers), _1));
   ASSERT_FALSE(subscribers);
@@ -319,7 +319,7 @@ TEST(TestSignalSpy, Counter)
   QI_EMIT sig(1);
   QI_EMIT sig(1);
   ASSERT_TRUE(sp.waitUntil(2, qi::MilliSeconds(300)));
-  ASSERT_EQ(sp.getCounter(), 2u);
+  ASSERT_EQ(sp.recordCount(), 2u);
 
   qi::DynamicObjectBuilder ob;
   ob.advertiseSignal("signal", &sig);
@@ -328,7 +328,7 @@ TEST(TestSignalSpy, Counter)
   QI_EMIT sig(1);
   QI_EMIT sig(1);
   ASSERT_TRUE(sp2.waitUntil(2, qi::MilliSeconds(300)));
-  ASSERT_EQ(sp2.getCounter(), 2u);
+  ASSERT_EQ(sp2.recordCount(), 2u);
 }
 
 TEST(TestSignalSpy, Async)
@@ -338,7 +338,7 @@ TEST(TestSignalSpy, Async)
   qi::async(boost::bind(boost::ref(sig), 1));
   qi::async(boost::bind(boost::ref(sig), 1));
   ASSERT_TRUE(sp.waitUntil(2, qi::Seconds(1)));
-  ASSERT_EQ(sp.getCounter(), 2u);
+  ASSERT_EQ(sp.recordCount(), 2u);
 }
 
 TEST(TestSignalSpy, StoringTypedValueRecords)
