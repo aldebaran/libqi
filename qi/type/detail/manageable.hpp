@@ -7,14 +7,17 @@
 #ifndef _QITYPE_MANAGEABLE_HPP_
 #define _QITYPE_MANAGEABLE_HPP_
 
+#include <memory>
+#include <algorithm>
+#include <boost/function.hpp>
+
+
 #include <qi/stats.hpp>
 
 #include <qi/api.hpp>
 #include <qi/anyfunction.hpp>
 #include <qi/type/typeobject.hpp>
 #include <qi/signal.hpp>
-#include <boost/function.hpp>
-#include <algorithm>
 
 #ifdef _MSC_VER
 #  pragma warning( push )
@@ -119,11 +122,13 @@ namespace qi {
   */
   class QI_API Manageable
   {
-  public:
+  protected:
     Manageable();
-    ~Manageable();
     Manageable(const Manageable& b);
     Manageable& operator=(const Manageable& b);
+
+  public:
+    virtual ~Manageable();
 
     boost::mutex& initMutex();
 
@@ -171,7 +176,7 @@ namespace qi {
     using MethodMap = std::map<unsigned int, std::pair<AnyFunction, MetaCallType>>;
     using SignalGetter = boost::function<SignalBase* (void*)>;
     using SignalMap = std::map<unsigned int, SignalGetter>;
-    SignalMap signalMap;
+
     /* Return the methods and signals defined at GenericObject level.
      * The 'this' argument must be the Manageable*.
     */
@@ -180,7 +185,10 @@ namespace qi {
     static MetaObject&      manageableMetaObject();
     static void             _build();
     int                     _nextTraceId();
-    boost::scoped_ptr<ManageablePrivate> _p;
+
+  private:
+    std::unique_ptr<ManageablePrivate> _p;
+    SignalMap signalMap;
   };
 }
 
