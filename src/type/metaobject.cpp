@@ -16,7 +16,7 @@ qiLogCategory("qitype.metaobject");
 
 namespace qi {
 
-  qi::Atomic<int> MetaObjectPrivate::uid = 1;
+qi::Atomic<int> MetaObjectPrivate::uid{1};
 
   MetaObjectPrivate::MetaObjectPrivate(const MetaObjectPrivate &rhs)
   {

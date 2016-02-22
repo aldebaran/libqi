@@ -34,7 +34,7 @@ void foolast(int, qi::Promise<void> prom, qi::Atomic<int>* r) { prom.setValue(0)
 
 TEST(TestSignal, TestCompilation)
 {
-  qi::Atomic<int>        res = 0;
+  qi::Atomic<int>        res{0};
   qi::Signal<int> s;
   Foo*                   f = (Foo*)1;
   qi::Promise<void>      prom;
@@ -88,7 +88,7 @@ void byRef(int& i, bool* done)
 TEST(TestSignal, AutoDisconnect)
 {
   // Test automatic disconnection when passing shared_ptrs
-  qi::Atomic<int> r = 0;
+  qi::Atomic<int> r{0};
   boost::shared_ptr<Foo> foo(new Foo());
   qi::Signal<qi::Atomic<int>*, int> sig;
   sig.connect(&Foo::func1, boost::weak_ptr<Foo>(foo), _1, _2).setCallType(qi::MetaCallType_Direct);
@@ -115,7 +115,7 @@ TEST(TestSignal, NonBlockingDestroy)
 
   qi::Promise<void> start;
   qi::Promise<void> finish;
-  qi::Atomic<int> cnt = 0;
+  qi::Atomic<int> cnt{0};
 
   {
     qi::Signal<void> sig;

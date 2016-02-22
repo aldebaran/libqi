@@ -242,7 +242,7 @@ TEST(QiService, ClassProperty)
   ASSERT_EQ(2, client.property<int>("offset"));
 
   // test event
-  qi::Atomic<int> hit = 0;
+  qi::Atomic<int> hit{0};
   f.prop.connect(boost::bind(&inc, &hit, _1));
   obj.connect("offset", boost::bind(&inc, &hit,_1));
   client.connect("offset", boost::bind(&inc, &hit,_1));

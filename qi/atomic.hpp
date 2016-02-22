@@ -159,7 +159,7 @@ public:
   // Atomic<int> i = 0;
   // There is no copy there, but the constructor *must* exist
   Atomic(const Atomic& other)
-    : _value(other._value)
+    : _value(other._value.load())
   {}
 
   /// Atomic pre-increment of the value.
@@ -181,7 +181,7 @@ public:
   }
 
   Atomic<T>& operator=(T value)
-  { _value = value; return *this; }
+  { _value = std::move(value); return *this; }
   Atomic<T>& operator=(const Atomic<T>& value)
   { _value = value.load(); return *this; }
 

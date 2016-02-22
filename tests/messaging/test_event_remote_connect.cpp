@@ -22,7 +22,7 @@ qiLogCategory("test");
  */
 
 static qi::Promise<int> *payload1;
-qi::Atomic<int> i = 0;
+qi::Atomic<int> i{0};
 
 void onFire1(const int& pl)
 {
