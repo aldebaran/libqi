@@ -72,7 +72,7 @@ namespace qi {
     executionContext = b.executionContext;
   }
 
-  static qi::Atomic<int> linkUid = 1;
+  static qi::Atomic<int> linkUid{1};
 
   void SignalBase::setCallType(MetaCallType callType)
   {

@@ -77,7 +77,7 @@ namespace qi {
 
   using SteadyTimer = boost::asio::basic_waitable_timer<SteadyClock>;
 
-  static qi::Atomic<uint32_t> gTaskId = 0;
+  static qi::Atomic<uint32_t> gTaskId{0};
 
   EventLoopAsio::EventLoopAsio()
   : _mode(Mode::Unset)

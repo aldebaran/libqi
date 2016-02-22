@@ -377,7 +377,7 @@ namespace qi {
   void Application::stop()
   {
 
-    static qi::Atomic<bool> atStopHandlerCall = false;
+    static qi::Atomic<bool> atStopHandlerCall{false};
     if (atStopHandlerCall.setIfEquals(false, true))
     {
       FunctionList& fl = lazyGet(globalAtStop);
