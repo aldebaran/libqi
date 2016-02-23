@@ -379,9 +379,11 @@ TEST(QiOs, isProcessRunningRealProcessWithArgs)
 TEST(QiOs, isProcessRunningRealProcessWithArgsUnicode)
 {
   const std::string originalExecutable { "testlaunchloop" };
-
-  const std::string executable =
-      boost::filesystem::unique_path("%%%%%%%%ユニコード").string(qi::unicodeFacet());
+  const std::string originalExecutablePath = qi::path::findBin(originalExecutable);
+  // we'll copy the originalExecutable to a unique file inside a unique direcory.
+  // we re-use the unique directory name to build a unique file name.
+  const qi::Path tmp = qi::Path(qi::os::mktmpdir());
+  const std::string executable = tmp.filename() + "-ユニコード";
   std::string executableWithExtension = executable;
 #if BOOST_OS_WINDOWS && defined(NDEBUG)
     executableWithExtension += ".exe";
@@ -389,9 +391,6 @@ TEST(QiOs, isProcessRunningRealProcessWithArgsUnicode)
     executableWithExtension += "_d.exe";
 #endif
 
-  const std::string originalExecutablePath = qi::path::findBin(originalExecutable);
-
-  const qi::Path tmp = qi::Path(qi::os::mktmpdir());
   const qi::Path executablePathWithExtension =
           tmp / executableWithExtension;
   const qi::path::ScopedFile executableFile(executablePathWithExtension);
