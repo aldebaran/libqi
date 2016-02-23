@@ -51,11 +51,11 @@ static void recParseQiPathConf(const std::string &prefix, std::vector<std::strin
     boost::filesystem::path bpath(path, qi::unicodeFacet());
     boost::system::error_code ec;
     bool exists = boost::filesystem::exists(bpath, ec);
-    if (ec) {
-      qiLogError() << "Cannot access path '" << bpath << "': " << ec.message();
+    if (!exists) {
       continue;
     }
-    if (!exists) {
+    if (ec) {
+      qiLogError() << "Cannot access path '" << bpath << "': " << ec.message();
       continue;
     }
     std::string newPrefix = bpath.string(qi::unicodeFacet());

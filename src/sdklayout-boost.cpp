@@ -173,6 +173,8 @@ namespace detail {
       catch (const boost::filesystem::filesystem_error &e)
       {
         qiLogError() << "Cannot access path '" << execPath << "': " << e.what();
+        _mode = "error";
+        return;
       }
 
       execPath = boost::filesystem::system_complete(execPath).make_preferred();
@@ -364,8 +366,16 @@ namespace detail {
           return res;
 #endif
       }
+    }
+    catch (const std::exception &e)
+    {
+      qiLogError() << e.what();
+    }
 
-      if (searchInPath) {
+    try
+    {
+      if (searchInPath)
+      {
         // Look in $PATH now
         std::vector<std::string> paths;
         std::vector<std::string> pathExts;
