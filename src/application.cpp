@@ -212,20 +212,26 @@ namespace qi {
     if (!bfs::exists(path) || bfs::is_directory(path))
     {
       std::string envPath = qi::os::getenv("PATH");
-      size_t begin = 0;
-      for (size_t end = envPath.find(SEPARATOR, begin);
-           end != std::string::npos;
-           begin = end + 1, end = envPath.find(SEPARATOR, begin))
+
+      if (!envPath.empty())
       {
-        std::string realPath = envPath.substr(begin, end - begin);
-        bfs::path p(realPath);
+        std::vector<std::string> envPaths;
+        boost::algorithm::split(envPaths,
+                                envPath,
+                                boost::algorithm::is_from_range(SEPARATOR,
+                                                                SEPARATOR));
 
-        p /= path;
-        p = boost::filesystem::system_complete(p);
+        for (const auto& realPath : envPaths)
+        {
+          bfs::path p(realPath);
 
-        if (boost::filesystem::exists(p) &&
-            !boost::filesystem::is_directory(p))
-          return p.string(qi::unicodeFacet());
+          p /= path;
+          p = boost::filesystem::system_complete(p);
+
+          if (boost::filesystem::exists(p) &&
+              !boost::filesystem::is_directory(p))
+            return p.string(qi::unicodeFacet());
+        }
       }
     }
 
