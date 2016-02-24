@@ -3,6 +3,8 @@
 **  See COPYING for the license
 */
 #include <atomic>
+#include <boost/atomic.hpp>
+
 #include <qi/strand.hpp>
 #include <qi/log.hpp>
 #include <qi/future.hpp>
