@@ -383,7 +383,12 @@ TEST(QiOs, isProcessRunningRealProcessWithArgsUnicode)
   // we'll copy the originalExecutable to a unique file inside a unique direcory.
   // we re-use the unique directory name to build a unique file name.
   const qi::Path tmp = qi::Path(qi::os::mktmpdir());
-  const std::string executable = tmp.filename() + "-ユニコード";
+  // japanese ideograms (specified by their unicode code point)
+  // as an utf-8-encoded string (does not work on VS).
+  //char utf8[] = u8"-\u30e6\u30cb\u30b3\u30fc\u30c9";
+  // The same ideograms, specified by their utf-8 encoding
+  char utf8[] = "-\xe3\x83\xa6\xe3\x83\x8b\xe3\x82\xb3\xe3\x83\xbc\xe3\x83\x89";
+  const std::string executable = tmp.filename() + utf8;
   std::string executableWithExtension = executable;
 #if BOOST_OS_WINDOWS && defined(NDEBUG)
     executableWithExtension += ".exe";
