@@ -73,6 +73,9 @@ public:
   qi::Future<void> async(const boost::function<void()>& callback, qi::Duration delay) override
   { QI_ASSERT(false); throw 0; }
   using ExecutionContext::async;
+private:
+  void stopProcess(boost::mutex::scoped_lock& lock,
+                   bool finished);
 };
 
 inline StrandPrivate::StrandPrivate(qi::ExecutionContext& eventLoop)

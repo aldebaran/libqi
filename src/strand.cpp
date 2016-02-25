@@ -73,20 +73,21 @@ Future<void> StrandPrivate::asyncDelayImpl(boost::function<void()> cb, qi::Durat
 
 void StrandPrivate::enqueue(boost::shared_ptr<Callback> cbStruct)
 {
-  qiLogDebug() << "Enqueueing job id " << cbStruct->id;
-  bool shouldschedule = false;
-
+  const bool shouldschedule = [&]()
   {
     boost::mutex::scoped_lock lock(_mutex);
+    qiLogDebug() << "Enqueueing job id " << cbStruct->id;
     // the callback may have been canceled
     if (cbStruct->state == State::None)
     {
       if (_dying)
       {
         cbStruct->promise.setError("the strand is dying");
-        return;
+        qiLogDebug() << "Strand is dying on job id " << cbStruct->id;
+        return false;
       }
 
+      qiLogDebug() << "Strand callback state is None on job id " << cbStruct->id;
       _queue.push_back(cbStruct);
       cbStruct->state = State::Scheduled;
     }
@@ -94,20 +95,40 @@ void StrandPrivate::enqueue(boost::shared_ptr<Callback> cbStruct)
     {
       QI_ASSERT(cbStruct->state == State::Canceled);
       qiLogDebug() << "Job was canceled, dropping";
-      return;
+      return false;
     }
     // if process was not scheduled yet, do it, there is work to do
     if (!_processing)
     {
+      qiLogDebug() << "Schedule process on job id " << cbStruct->id;
       _processing = true;
-      shouldschedule = true;
+      return true;
     }
-  }
+
+    return false;
+  }();
 
   if (shouldschedule)
   {
     qiLogDebug() << "StrandPrivate::process was not scheduled, doing it";
     _eventLoop.async(boost::bind(&StrandPrivate::process, shared_from_this()));
+  }
+}
+
+void StrandPrivate::stopProcess(boost::mutex::scoped_lock& lock,
+                                bool finished)
+{
+  // if we still have work
+  if (!finished && !_dying)
+  {
+    qiLogDebug() << "Strand quantum expired, rescheduling";
+    lock.unlock();
+    _eventLoop.async(boost::bind(&StrandPrivate::process, shared_from_this()));
+  }
+  else
+  {
+    _processing = false;
+    _processFinished.notify_all();
   }
 }
 
@@ -121,8 +142,6 @@ void StrandPrivate::process()
   _processingThread = qi::os::gettid();
 
   qi::SteadyClockTimePoint start = qi::SteadyClock::now();
-
-  bool finished = false;
 
   do
   {
@@ -139,8 +158,8 @@ void StrandPrivate::process()
       if (_queue.empty())
       {
         qiLogDebug() << "Queue empty, stopping";
-        finished = true;
-        break;
+        stopProcess(lock, true);
+        return;
       }
       cbStruct = _queue.front();
       _queue.pop_front();
@@ -175,18 +194,7 @@ void StrandPrivate::process()
 
   {
     boost::mutex::scoped_lock lock(_mutex);
-    // if we still have work
-    if (!finished && !_dying)
-    {
-      qiLogDebug() << "Strand quantum expired, rescheduling";
-      lock.unlock();
-      _eventLoop.async(boost::bind(&StrandPrivate::process, shared_from_this()));
-    }
-    else
-    {
-      _processing = false;
-      _processFinished.notify_all();
-    }
+    stopProcess(lock, false);
   }
 }
 
