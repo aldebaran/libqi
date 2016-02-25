@@ -23,6 +23,8 @@
 #undef interface
 #endif
 
+#include <type_traits>
+
 namespace qi {
 
 class Empty {};
@@ -192,21 +194,27 @@ typename boost::disable_if<typename detail::InterfaceImplTraits<T>::Defined, qi:
   return Object<T>(new T(std::forward<Args>(args)...));
 }
 
-#define QI_REGISTER_IMPLEMENTATION_H(interface, impl)     \
-  namespace qi                                            \
-  {                                                       \
-    namespace detail                                      \
-    {                                                     \
-      template <>                                         \
-      struct InterfaceImplTraits<interface>               \
-      {                                                   \
-        using Defined = boost::true_type;                 \
-        using ImplType = impl;                            \
-        using LocalType = interface##Local<ImplType>;     \
-        using SyncType = interface##LocalSync<LocalType>; \
-      };                                                  \
-    }                                                     \
-  }
+#define QI_REGISTER_IMPLEMENTATION_H(interface, impl)\
+namespace qi\
+{\
+  namespace detail\
+  {\
+    template <>\
+    struct InterfaceImplTraits<interface>\
+    {\
+      using Defined = boost::true_type;\
+      using InterfaceType = interface;\
+      using ImplType = impl;\
+      using AsyncType = interface##LocalAsync<boost::shared_ptr<ImplType>>;\
+      using SyncType = interface##LocalSync<boost::shared_ptr<ImplType>>;\
+    };\
+\
+    template<>\
+    struct InterfaceImplTraits<impl>:\
+      public InterfaceImplTraits<interface>\
+    {};\
+  }\
+}
 
 /** Type erased object that has a known interface T.
  *
@@ -277,9 +285,7 @@ public:
   // Check or obtain T interface, or throw
   void checkT();
   // no-op deletor callback
-  static void keepManagedObjectPtr(detail::ManagedObjectPtr ptr) {}
-  template<typename U>
-  static void keepReference(GenericObject* obj, boost::shared_ptr<U> ptr) {qiLogDebug("qi.object") << "AnyObject ptr holder deleter"; delete obj;}
+  static void keepManagedObjectPtr(detail::ManagedObjectPtr) {}
   static void noDeleteT(T*) {qiLogDebug("qi.object") << "AnyObject noop T deleter";}
   static void noDelete(GenericObject*) {qiLogDebug("qi.object") << "AnyObject noop deleter";}
   // deletor callback that deletes only the GenericObject and not the content
@@ -410,22 +416,88 @@ template<typename T> template<typename U> Object<T>::Object(GenericObject* go, b
 }
 namespace detail
 {
-  template<typename T, typename U> ManagedObjectPtr fromSharedPtr(Object<T>& dst, boost::shared_ptr<U>& other, boost::false_type)
-  {
-    ObjectTypeInterface* otype = dst.interface();
-    T* ptr = static_cast<T*>(other.get());
-    return ManagedObjectPtr(new GenericObject(otype, ptr),
-      boost::bind(&Object<T>::template keepReference<U>, _1, other));
+  template<typename T>
+  ManagedObjectPtr managedObjectFromSharedPtr(
+      ObjectTypeInterface* oit,
+      boost::shared_ptr<T>& other)
+  { // beware, this overload is for factorization, it is not a good idea to use it directly
+    return ManagedObjectPtr(
+          new GenericObject(oit, other.get()),
+          [other](GenericObject* o){delete o;});
   }
-  template<typename U> ManagedObjectPtr fromSharedPtr(AnyObject& dst, boost::shared_ptr<U>& other, boost::true_type)
+
+  template<typename From>
+  ManagedObjectPtr managedObjectFromSharedPtr(
+      Object<Empty>&,
+      boost::shared_ptr<From>& other)
   {
-    return Object<U>(other).managedObjectPtr();
+    TypeInterface* type = typeOf<From>();
+
+     // directly use the right type underneath if possible
+    if (type->kind() == TypeKind_Object)
+      return qi::Object<From>(other).managedObjectPtr();
+
+    if (type->kind() == TypeKind_Unknown)
+    { // unrecognized type? Could it be an implementation?
+      if (InterfaceImplTraits<From>::Defined::value)
+      { // deduce interface from implementation if defined
+        return qi::Object<typename InterfaceImplTraits<From>::InterfaceType>(other).managedObjectPtr();
+      }
+
+      // otherwise, we don't know what to do
+      throw std::runtime_error(
+            std::string("Cannot create object out of unregistered type: ") + type->infoString());
+    }
+    throw std::runtime_error(
+          std::string("Cannot create object out of non-object type: ") + type->infoString());
+  }
+
+  template<typename ToSameAsFrom>
+  ManagedObjectPtr managedObjectFromSharedPtr(
+      Object<ToSameAsFrom>& dst,
+      boost::shared_ptr<ToSameAsFrom>& other)
+  {
+    return managedObjectFromSharedPtr(dst.interface(), other);
+  }
+
+  template<typename To, typename From>
+  ManagedObjectPtr managedObjectFromSharedPtr(
+      Object<To>& dst,
+      boost::shared_ptr<From>& other)
+  { // is_base_of is safe here, because the case "to is the same type as from" is already dealt with
+    return managedObjectFromSharedPtr(dst, other, typename std::is_base_of<To, From>::type{});
+  }
+
+  template<typename To, typename From>
+  ManagedObjectPtr managedObjectFromSharedPtr(
+      Object<To>& dst,
+      boost::shared_ptr<From>& other,
+      std::true_type)
+  {
+    auto asDestinationType = boost::static_pointer_cast<To>(other);
+    return managedObjectFromSharedPtr(dst.interface(), asDestinationType);
+  }
+
+  template<typename To, typename From>
+  ManagedObjectPtr managedObjectFromSharedPtr(
+      Object<To>& dst,
+      boost::shared_ptr<From>& other,
+      std::false_type)
+  {
+    static_assert(
+          InterfaceImplTraits<To>::Defined::value,
+          "This interface is not associated to any implementation");
+    static_assert(
+          InterfaceImplTraits<From>::Defined::value,
+          "This implementation is not associated to any interface");
+    auto localProxy = new typename InterfaceImplTraits<To>::SyncType(other);
+    return boost::make_shared<GenericObject>(dst.interface(), localProxy);
   }
 }
 
 template<typename T> template<typename U> Object<T>::Object(boost::shared_ptr<U> other)
-{ // bounce depending on T==Empty
-  _obj = detail::fromSharedPtr(*this, other, typename boost::is_same<T, Empty>::type());
+{
+  _obj = detail::managedObjectFromSharedPtr(*this, other);
 }
 
 template<typename T> inline Object<T>::Object(T* ptr)
