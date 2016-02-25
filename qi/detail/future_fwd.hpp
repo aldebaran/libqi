@@ -163,7 +163,7 @@ namespace qi {
       : _p(b._p)
     {}
 
-    bool operator==(const Future<T> &other)
+    bool operator==(const Future<T> &other) const
     {
       return _p.get() == other._p.get();
     }
