@@ -79,8 +79,13 @@ public:
   /// Direct access to a record, by order of arrival.
   Record record(size_t index)
   {
+    qiLogDebug("qi.signalspy") << "Getting record #" << index << " "
+                               << (strand()->isInThisContext() ? "from strand" : "from outside");
+
     return strand()->async([this, index]
-    { return _records[index];
+    {
+      qiLogDebug("qi.signalspy") << "Getting record #" << index;
+      return _records[index];
     }).value();
   }
 
@@ -96,8 +101,11 @@ public:
   /// The number of records.
   size_t recordCount() const
   {
+    qiLogDebug("qi.signalspy") << "Getting record count "
+                               << (strand()->isInThisContext() ? "from strand" : "from outside");
     return strand()->async([this]
     {
+      qiLogDebug("qi.signalspy") << "Getting record count";
       return _records.size();
     }).value();
   }
