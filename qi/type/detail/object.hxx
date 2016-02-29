@@ -185,7 +185,7 @@ template <typename T, typename... Args>
 typename boost::enable_if<typename detail::InterfaceImplTraits<T>::Defined, qi::Object<T> >::type constructObject(
     Args... args)
 {
-  return boost::make_shared<T>(std::forward<Args>(args)...);
+  return boost::make_shared<typename detail::InterfaceImplTraits<T>::ImplType>(std::forward<Args>(args)...);
 }
 template <typename T, typename... Args>
 typename boost::disable_if<typename detail::InterfaceImplTraits<T>::Defined, qi::Object<T> >::type constructObject(
