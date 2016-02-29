@@ -237,6 +237,13 @@ namespace detail {
   template <typename R, typename AF>
   inline Future<R> Future<T>::andThenR(FutureCallbackType type, AF&& func)
   {
+    return andThenRImpl<R>(type, std::forward(func));
+  }
+
+  template <typename T>
+  template <typename R, typename AF>
+  inline Future<R> Future<T>::andThenRImpl(FutureCallbackType type, AF&& func)
+  {
     boost::weak_ptr<detail::FutureBaseTyped<T> > weakp(_p);
     qi::Promise<R> promise([weakp](const qi::Promise<R>&){
           if (auto futureb = weakp.lock())

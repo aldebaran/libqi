@@ -430,7 +430,7 @@ namespace qi {
     QI_API_DEPRECATED_MSG(Use 'andThen' instead)
     Future<R> andThenR(AF&& func)
     {
-      return this->andThenR<R>(FutureCallbackType_Auto, std::forward<AF>(func));
+      return andThenRImpl<R>(FutureCallbackType_Auto, std::forward<AF>(func));
     }
 
     /**
@@ -445,7 +445,7 @@ namespace qi {
     auto andThen(FutureCallbackType type, AF&& func)
         -> qi::Future<typename detail::DecayAsyncResult<AF, ValueType>::type>
     {
-      return this->andThenR<typename detail::DecayAsyncResult<AF, ValueType>::type>(type, std::forward<AF>(func));
+      return this->andThenRImpl<typename detail::DecayAsyncResult<AF, ValueType>::type>(type, std::forward<AF>(func));
     }
 
     /**
@@ -551,6 +551,10 @@ namespace qi {
 
   private:
     friend class ServiceBoundObject;
+    // Private forward impl to then
+    template <typename R, typename AF>
+    Future<R> andThenRImpl(FutureCallbackType type, AF&& func);
+
     // Private forward impl to then
     template <typename R, typename AF>
     Future<R> thenRImpl(FutureCallbackType type, AF&& func);
