@@ -341,6 +341,7 @@ namespace qi {
      * @deprecated since 2.5 use then()
      */
     template <typename R, typename AF>
+    QI_API_DEPRECATED_MSG(Use 'then' instead)
     Future<R> thenR(FutureCallbackType type, AF&& func);
 
     /**
@@ -349,6 +350,7 @@ namespace qi {
      * @deprecated since 2.5 use then()
      */
     template <typename R, typename AF>
+    QI_API_DEPRECATED_MSG(Use 'then' instead)
     Future<R> thenR(AF&& func)
     {
       return this->thenR<R>(FutureCallbackType_Auto, std::forward<AF>(func));
@@ -358,6 +360,7 @@ namespace qi {
      * @deprecated since 2.5 use then()
      */
     template <typename R, typename AF, typename Arg0, typename... Args>
+    QI_API_DEPRECATED_MSG(Use 'then' instead)
     Future<R> thenR(AF&& func, Arg0&& arg0, Args&&... args)
     {
       return this->thenR<R>(
@@ -371,6 +374,7 @@ namespace qi {
      * @deprecated since 2.5 use then()
      */
     template <typename R, typename AF, typename Arg0, typename... Args>
+    QI_API_DEPRECATED_MSG(Use 'then' instead)
     Future<R> thenR(FutureCallbackType type, AF&& func, Arg0&& arg0, Args&&... args)
     {
       return thenR<R>(
@@ -413,17 +417,19 @@ namespace qi {
      * If this future finishes with an error or a cancel, the callback will not be called and the returned future will
      * finish in the same state.
      *
-     * @deprecated since 2.5 use then()
+     * @deprecated since 2.5 use andThen()
      */
     template <typename R, typename AF>
+    QI_API_DEPRECATED_MSG(Use 'andThen' instead)
     Future<R> andThenR(FutureCallbackType type, AF&& func);
 
     /**
      * @brief Same as andThenR(), but with type defaulted to FutureCallbackType_Auto.
      *
-     * @deprecated since 2.5 use then()
+     * @deprecated since 2.5 use andThen()
      */
     template <typename R, typename AF>
+    QI_API_DEPRECATED_MSG(Use 'andThen' instead)
     Future<R> andThenR(AF&& func)
     {
       return this->andThenR<R>(FutureCallbackType_Auto, std::forward<AF>(func));
