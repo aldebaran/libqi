@@ -353,7 +353,7 @@ namespace qi {
     QI_API_DEPRECATED_MSG(Use 'then' instead)
     Future<R> thenR(AF&& func)
     {
-      return this->thenR<R>(FutureCallbackType_Auto, std::forward<AF>(func));
+      return thenRImpl<R>(FutureCallbackType_Auto, std::forward<AF>(func));
     }
 
     /**
@@ -363,11 +363,9 @@ namespace qi {
     QI_API_DEPRECATED_MSG(Use 'then' instead)
     Future<R> thenR(AF&& func, Arg0&& arg0, Args&&... args)
     {
-      return this->thenR<R>(
+      return thenRImpl<R>(
           FutureCallbackType_Auto,
-          std::forward<AF>(func),
-          std::forward<Arg0>(arg0),
-          std::forward<Args>(args)...);
+          qi::bind(std::forward<AF>(func), std::forward<Arg0>(arg0), std::forward<Args>(args)...));
     }
 
     /**
@@ -377,7 +375,7 @@ namespace qi {
     QI_API_DEPRECATED_MSG(Use 'then' instead)
     Future<R> thenR(FutureCallbackType type, AF&& func, Arg0&& arg0, Args&&... args)
     {
-      return thenR<R>(
+      return thenRImpl<R>(
           type,
           qi::bind(std::forward<AF>(func), arg0, std::forward<Args>(args)...));
     }
@@ -396,7 +394,7 @@ namespace qi {
     auto then(FutureCallbackType type, AF&& func)
         -> qi::Future<typename detail::DecayAsyncResult<AF, qi::Future<T>>::type>
     {
-      return this->thenR<typename detail::DecayAsyncResult<AF, qi::Future<T>>::type>(type, std::forward<AF>(func));
+      return thenRImpl<typename detail::DecayAsyncResult<AF, qi::Future<T>>::type>(type, std::forward<AF>(func));
     }
 
     /**
@@ -553,6 +551,9 @@ namespace qi {
 
   private:
     friend class ServiceBoundObject;
+    // Private forward impl to then
+    template <typename R, typename AF>
+    Future<R> thenRImpl(FutureCallbackType type, AF&& func);
 
     // Nuke this when C++03 ends
     void setOnDestroyed(boost::function<void(ValueType)> cb)
