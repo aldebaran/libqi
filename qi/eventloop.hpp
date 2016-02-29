@@ -92,16 +92,20 @@ namespace qi
      * \deprecated use qi::async with qi::Duration
      */
     template<typename R>
-    QI_API_DEPRECATED Future<R> async(const boost::function<R()>& callback, uint64_t usDelay);
-    QI_API_DEPRECATED Future<void> async(const boost::function<void()>& callback, uint64_t usDelay)
+    QI_API_DEPRECATED_MSG(Use 'asyncDelay' instead)
+    Future<R> async(const boost::function<R()>& callback, uint64_t usDelay);
+    QI_API_DEPRECATED_MSG(Use 'asyncDelay' instead)
+    Future<void> async(const boost::function<void()>& callback, uint64_t usDelay)
     {
       return asyncDelayImpl(callback, qi::MicroSeconds(usDelay));
     }
-    QI_API_DEPRECATED Future<void> async(const boost::function<void()>& callback, qi::Duration delay) override
+    QI_API_DEPRECATED_MSG(Use 'asyncDelay' instead)
+    Future<void> async(const boost::function<void()>& callback, qi::Duration delay) override
     {
       return asyncDelayImpl(callback, delay);
     }
-    QI_API_DEPRECATED Future<void> async(
+    QI_API_DEPRECATED_MSG(Use 'asyncAt' instead)
+    Future<void> async(
         const boost::function<void()>& callback, qi::SteadyClockTimePoint timepoint) override
     {
       return asyncAt(callback, timepoint);
@@ -115,15 +119,18 @@ namespace qi
      * \param callback Callback to be called.
      * \param usDelay Delay before call the callback in microsecond.
      */
-    QI_API_DEPRECATED void post(const boost::function<void ()>& callback, uint64_t usDelay)
+    QI_API_DEPRECATED_MSG(Use 'asyncDelay' instead)
+    void post(const boost::function<void ()>& callback, uint64_t usDelay)
     {
       postDelayImpl(callback, qi::MicroSeconds(usDelay));
     }
-    QI_API_DEPRECATED void post(const boost::function<void ()>& callback, qi::Duration delay)
+    QI_API_DEPRECATED_MSG(Use 'asyncDelay' instead)
+    void post(const boost::function<void ()>& callback, qi::Duration delay)
     {
       postDelayImpl(callback, delay);
     }
-    QI_API_DEPRECATED void post(const boost::function<void ()>& callback, qi::SteadyClockTimePoint timepoint);
+    QI_API_DEPRECATED_MSG(Use 'asyncAt' instead)
+    void post(const boost::function<void ()>& callback, qi::SteadyClockTimePoint timepoint);
     // END DEPRECATED
 
     using ExecutionContext::post;
@@ -175,22 +182,26 @@ namespace qi
   /// \copydoc qi::EventLoop::async().
   /// \deprecated use qi::async with qi::Duration
   template<typename R>
-  QI_API_DEPRECATED inline Future<R> async(boost::function<R()> callback, uint64_t usDelay)
+  QI_API_DEPRECATED_MSG(Use 'asyncDelay' instead)
+  inline Future<R> async(boost::function<R()> callback, uint64_t usDelay)
   {
     return qi::getEventLoop()->asyncDelay(callback, qi::MicroSeconds(usDelay));
   }
   template<typename R>
-  QI_API_DEPRECATED inline Future<R> async(boost::function<R()> callback, qi::Duration delay)
+  QI_API_DEPRECATED_MSG(Use 'asyncDelay' instead)
+  inline Future<R> async(boost::function<R()> callback, qi::Duration delay)
   {
     return qi::getEventLoop()->asyncDelay(callback, delay);
   }
   template<typename R>
-  QI_API_DEPRECATED inline Future<R> async(boost::function<R()> callback, qi::SteadyClockTimePoint timepoint)
+  QI_API_DEPRECATED_MSG(Use 'asyncAt' instead)
+  inline Future<R> async(boost::function<R()> callback, qi::SteadyClockTimePoint timepoint)
   {
     return qi::getEventLoop()->asyncAt(callback, timepoint);
   }
   template<typename R>
-  QI_API_DEPRECATED inline Future<R> async(detail::Function<R()> callback)
+  QI_API_DEPRECATED_MSG(Use 'async' without explicit return type template arguement instead)
+  inline Future<R> async(detail::Function<R()> callback)
   {
     return qi::getEventLoop()->async(callback);
   }
