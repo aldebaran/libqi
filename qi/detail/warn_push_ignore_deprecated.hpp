@@ -8,10 +8,10 @@
  *
  * QI_API_DEPRECATED class Foo;
  *
- * #include <qi/detail/diagnostic_push_ignore_deprecated.hpp>
+ * #include <qi/detail/warn_push_ignore_deprecated.hpp>
  * //Would emit a spurious deprecated warning about Foo otherwise
  * QI_API_DEPRECATED void bar(Foo foo);
- * #include <qi/detail/diagnostic_pop.hpp>
+ * #include <qi/detail/warn_pop_ignore_deprecated.hpp>
  */
 
 
