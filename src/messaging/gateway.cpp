@@ -328,19 +328,19 @@ void GatewayPrivate::updateEndpoints(const qi::Url& url)
     {
       qiLogInfo() << "New address " << url.str() << ", trying to listen";
       _server.listen(url)
-          .thenR<void>(qi::bind(boost::function<void(GatewayPrivate*, qi::Future<void>)>(
-                                                                [url](GatewayPrivate* p, qi::Future<void> fut)
-                                                                {
-                                                                  if (fut.hasError())
-                                                                    qiLogWarning() << "Failed to listen on "
-                                                                                   << url.str() << ": " << fut.error();
-                                                                  else
-                                                                    qiLogWarning() << "Now listening on " << url.str();
-                                                                  std::lock_guard<std::mutex> _(p->_endpointsMutex);
-                                                                  p->_endpoints = p->_server.endpoints();
-                                                                }),
-                                                            this,
-                                                            _1));
+          .then(qi::bind(boost::function<void(GatewayPrivate*, qi::Future<void>)>(
+                                                         [url](GatewayPrivate* p, qi::Future<void> fut)
+                                                         {
+                                                           if (fut.hasError())
+                                                             qiLogWarning() << "Failed to listen on "
+                                                                            << url.str() << ": " << fut.error();
+                                                           else
+                                                             qiLogWarning() << "Now listening on " << url.str();
+                                                           std::lock_guard<std::mutex> _(p->_endpointsMutex);
+                                                           p->_endpoints = p->_server.endpoints();
+                                                         }),
+                                                     this,
+                                                     _1));
       _pendingListens.insert(url);
     }
     catch (std::exception& e)
