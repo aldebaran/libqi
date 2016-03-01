@@ -69,7 +69,7 @@ public:
   };
 
   /// Retrieve all the records in one shot.
-  std::vector<Record> allRecords()
+  std::vector<Record> allRecords() const
   {
     return strand()->async([this]
     { return _records;
@@ -77,7 +77,7 @@ public:
   }
 
   /// Direct access to a record, by order of arrival.
-  Record record(size_t index)
+  Record record(size_t index) const
   {
     qiLogDebug("qi.signalspy") << "Getting record #" << index << " "
                                << (strand()->isInThisContext() ? "from strand" : "from outside");
@@ -90,7 +90,7 @@ public:
   }
 
   /// Direct access to last record.
-  Record lastRecord()
+  Record lastRecord() const
   {
     return strand()->async([this]
     {
@@ -141,7 +141,7 @@ public:
       recordedSubscription = recorded.connect(strand()->schedulerFor(
       [this, waiting, &recordedSubscription, timingOut, nofRecords]() mutable
       {
-        assert(nofRecords <= _records.size());
+        assert(nofRecords >= _records.size());
         if (nofRecords == _records.size())
         {
           waiting.setValue(true);
