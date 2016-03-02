@@ -18,15 +18,17 @@ namespace qi {
   /** qi::Url is an address represented by a protocol, a host and a port.
    *  @warning The class isn't compliant with RFC 3986.
    *
-   *  qi::Url can parse the following formats :
-   *    - protocol://host:port
-   *    - protocol://host
-   *    - host:port
-   *    - host
-   *    - protocol://:port
-   *    - protocol://
-   *    - :port
-   *    - *empty string*
+   *  qi::Url can parse the following formats:
+   *  <ul>
+   *    <li>- protocol://host:port</li>
+   *    <li>- protocol://host</li>
+   *    <li>- host:port</li>
+   *    <li>- host</li>
+   *    <li>- protocol://:port</li>
+   *    <li>- protocol://</li>
+   *    <li>- :port</li>
+   *    <li>- *empty string*</li>
+   *  </ul>
    *
    *  @note This class is copyable.
    */
