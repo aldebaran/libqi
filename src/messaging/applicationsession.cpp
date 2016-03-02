@@ -287,7 +287,8 @@ void ApplicationSession::startSession()
 
 void ApplicationSession::run()
 {
-  startSession();
+  if(!_p->_session->isConnected())
+    startSession();
   Application::run();
 }
 }
