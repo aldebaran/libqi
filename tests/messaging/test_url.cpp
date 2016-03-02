@@ -221,9 +221,9 @@ TEST(TestURL, SetAll)
 
 TEST(TestURL, SpecifyUrl)
 {
-  qi::Url specific("0.0.0.0:0");
-  qi::Url base("tcp://127.0.0.1:9559");
-  qi::Url result = qi::specifyUrl(specific, base);
+  const qi::Url specific("0.0.0.0:0");
+  const qi::Url base("tcp://127.0.0.1:9559");
+  const qi::Url result = qi::specifyUrl(specific, base);
   EXPECT_TRUE(result.hasProtocol());
   EXPECT_TRUE(result.hasHost());
   EXPECT_TRUE(result.hasPort());
@@ -235,9 +235,9 @@ TEST(TestURL, SpecifyUrl)
 
 TEST(TestURL, SpecifyUrlWithIncompleteBase)
 {
-  qi::Url specific("0.0.0.0:0");
-  qi::Url base("127.0.0.1:9559");
-  qi::Url result = qi::specifyUrl(specific, base);
+  const qi::Url specific("0.0.0.0:0");
+  const qi::Url base("127.0.0.1:9559");
+  const qi::Url result = qi::specifyUrl(specific, base);
   EXPECT_FALSE(result.hasProtocol());
   EXPECT_TRUE(result.hasHost());
   EXPECT_TRUE(result.hasPort());
@@ -249,9 +249,9 @@ TEST(TestURL, SpecifyUrlWithIncompleteBase)
 
 TEST(TestURL, SpecifyUrlWithEmptyDefault)
 {
-  qi::Url specific("tcp://127.0.0.1:9559");
-  qi::Url base;
-  qi::Url result = qi::specifyUrl(specific, base);
+  const qi::Url specific("tcp://127.0.0.1:9559");
+  const qi::Url base;
+  const qi::Url result = qi::specifyUrl(specific, base);
   EXPECT_TRUE(result.hasProtocol());
   EXPECT_TRUE(result.hasHost());
   EXPECT_TRUE(result.hasPort());
