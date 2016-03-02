@@ -8,6 +8,9 @@
 #include <qi/trackable.hpp>
 #include <qi/applicationsession.hpp>
 #include <qi/anyvalue.hpp>
+#include <qi/log.hpp>
+
+qiLogCategory("qi.applicationsession");
 
 static void onDisconnected(const std::string& /*errorMessage*/)
 {
@@ -76,16 +79,16 @@ public:
       throw std::runtime_error("You cannot be standAlone if you specified --qi-url to connect");
 
     _standAlone = _standAlone ? _standAlone : config.defaultStandAlone();
-    if (!_address.empty())
-    {
-      _url = Url(_address, "tcp", 9559);
+    if(!_address.empty())
       _standAlone = false;
-    }
-    else
-    {
-      _url = config.defaultUrl();
-    }
-    _listenUrl = _listenAddress.empty() ? config.defaultListenUrl() : Url(_listenAddress, "tcp", 9559);
+
+    qiLogDebug() << "Connect url specified was: " << _address << ", now defaulting missing url parts from " << config.defaultUrl().str();
+    _url = specifyUrl(Url(_address), config.defaultUrl());
+    qiLogDebug() << "Connect url is now: " << _url.str();
+
+    qiLogDebug() << "Listen url specified was: " << _listenAddress << ", now defaulting missing url parts" << config.defaultListenUrl().str();
+    _listenUrl = specifyUrl(Url(_listenAddress), config.defaultListenUrl());
+    qiLogDebug() << "Listen url is now: " << _listenUrl.str();
   }
 
   virtual ~ApplicationSessionPrivate()
