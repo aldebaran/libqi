@@ -58,14 +58,14 @@ namespace detail
 
   // sfinae to try to call unwrap on the future
   template <typename F>
-  auto tryUnwrap(const F& future, int) -> decltype(future.unwrap())
+  auto tryUnwrap(F&& future, int) -> decltype(future.unwrap())
   {
     return future.unwrap();
   }
   template <typename F>
-  F tryUnwrap(const F& future, void*)
+  F tryUnwrap(F&& future, void*)
   {
-    return future;
+    return std::forward<F>(future);
   }
 
   // this function is used by qilang generation to call something regardless of if it's an actor or not
