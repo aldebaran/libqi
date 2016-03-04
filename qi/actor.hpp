@@ -35,6 +35,8 @@ public:
     : _strand(ec)
   {}
 
+  virtual ~Actor() = default;
+
   qi::Strand* strand() const
   {
     return &_strand;
