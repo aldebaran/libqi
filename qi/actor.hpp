@@ -40,11 +40,37 @@ public:
     return &_strand;
   }
 
-  template<class... Callable>
-  auto stranded(Callable&&... callable) const
-    -> decltype(strand()->schedulerFor(std::forward<Callable>(callable)...)) // TODO C++14: remove this line
+  template<class... Args>
+  auto stranded(Args&&... args) const
+    -> decltype(_strand.schedulerFor(std::forward<Args>(args)...)) // TODO C++14: remove this line
   {
-    return _strand.schedulerFor(std::forward<Callable>(callable)...);
+    return _strand.schedulerFor(std::forward<Args>(args)...);
+  }
+
+  template<class... Args>
+  auto async(Args&&... args) const
+    -> decltype(_strand.async(std::forward<Args>(args)...)) // TODO C++14: remove this line
+  {
+    return _strand.async(std::forward<Args>(args)...);
+  }
+
+  template<class... Args>
+  auto asyncDelay(Args&&... args) const
+    -> decltype(_strand.asyncDelay(std::forward<Args>(args)...)) // TODO C++14: remove this line
+  {
+    return _strand.asyncDelay(std::forward<Args>(args)...);
+  }
+
+  template<class... Args>
+  auto asyncAt(Args&&... args) const
+    -> decltype(_strand.asyncAt(std::forward<Args>(args)...)) // TODO C++14: remove this line
+  {
+    return _strand.asyncAt(std::forward<Args>(args)...);
+  }
+
+  void joinTasks()
+  {
+    _strand.join();
   }
 
 private:
