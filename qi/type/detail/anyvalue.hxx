@@ -96,6 +96,11 @@ inline AnyValue AnyValue::makeGenericMap(const std::map<AnyReference,
   return makeMap<AnyValue, AnyValue>(values);
 }
 
+inline AnyValue AnyValue::makeVoid()
+{
+  return qi::AnyValue(qi::typeOf<void>());
+}
+
 inline AnyValue::AnyValue()
 : _allocated(false)
 {}
