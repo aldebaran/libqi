@@ -23,7 +23,7 @@ namespace qi {
       boost::recursive_mutex    _mutex;
       std::string               _error;
       qi::Atomic<int>           _state;
-      qi::Atomic<int>           _cancelRequested;
+      qi::Atomic<bool>          _cancelRequested;
     };
 
     struct FutureBasePrivatePoolTag { };
