@@ -991,6 +991,11 @@ namespace qi {
   {
     return future.makeCanceler();
   }
+
+  class AnyValue;
+
+  template <typename T>
+  Future<AnyValue> toAnyValueFuture(Future<T> future);
 }
 
 #ifdef _MSC_VER
