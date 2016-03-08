@@ -7,10 +7,13 @@
 #ifndef _QITYPE_DETAIL_TYPETUPLE_HXX_
 #define _QITYPE_DETAIL_TYPETUPLE_HXX_
 
+#include <map>
 #include <boost/type_traits.hpp>
 #include <boost/utility/enable_if.hpp>
+#include <qi/api.hpp>
 #include <qi/type/fwd.hpp>
 #include <qi/type/detail/accessor.hxx>
+#include <qi/type/typeinterface.hpp>
 #include <qi/preproc.hpp>
 
 namespace qi
