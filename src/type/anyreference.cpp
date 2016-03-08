@@ -438,7 +438,7 @@ namespace detail
       for (unsigned i = 0; i < dstNames.size(); ++i)
         if (std::find(fieldMap.begin(), fieldMap.end(), i) != fieldMap.end())
           fields[dstNames[i]].reset(AnyReference(dstTypes[i], targetData[i]), false, mustDestroy[i]);
-      mustDestroy.assign(false, mustDestroy.size());
+      mustDestroy.assign(mustDestroy.size(), false);
       // attempt both conversions
       if (!tsrc->convertTo(fields, fieldMissing, fieldDrop) &&
           !tdst->convertFrom(fields, fieldMissing, fieldDrop))
