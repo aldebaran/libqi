@@ -291,7 +291,7 @@ namespace qi {
         sigparam = "m";
       // ReturnType flag appends a signature to the payload
       Signature originalSignature;
-      bool hasReturnType = (msg.flags() & Message::TypeFlag_ReturnType);
+      bool hasReturnType = (msg.flags() & Message::TypeFlag_ReturnType) ? true : false;
       if (hasReturnType)
       {
         originalSignature = sigparam;
@@ -495,7 +495,7 @@ namespace qi {
     else if (prop.kind() == TypeKind_Int)
     { // missing accessor, go to bacend
       GenericObject* go = _object.asGenericObject();
-      return go->type->property(go->value, _object, prop.toUInt());
+      return go->type->property(go->value, _object, static_cast<unsigned int>(prop.toUInt()));
     }
     else
       throw std::runtime_error("Expected int or string for property index");
@@ -509,7 +509,7 @@ namespace qi {
     else if (prop.kind() == TypeKind_Int)
     {
       GenericObject* go = _object.asGenericObject();
-      result = go->type->setProperty(go->value, _object, prop.toUInt(), val);
+      result = go->type->setProperty(go->value, _object, static_cast<unsigned int>(prop.toUInt()), val);
     }
     else
       throw std::runtime_error("Expected int or string for property index");

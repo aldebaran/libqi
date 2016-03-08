@@ -35,7 +35,7 @@ static void parseAddress()
   po::notify(vm);
 
   qi::Application::setArguments(po::collect_unrecognized(parsed.options, po::include_positional));
-  _standAlone = vm.count("qi-standalone");
+  _standAlone = vm.count("qi-standalone") ? true : false;
 
   {
     po::options_description descTmp;
