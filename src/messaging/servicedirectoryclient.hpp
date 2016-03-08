@@ -77,7 +77,7 @@ namespace qi {
 
   private:
     qi::TransportSocketPtr _sdSocket;
-    unsigned int           _sdSocketDisconnectedSignalLink;
+    qi::SignalLink         _sdSocketDisconnectedSignalLink;
     // _remoteObject is owned by _object
     qi::RemoteObject*      _remoteObject;
     // _object is a remote object of serviceDirectory
