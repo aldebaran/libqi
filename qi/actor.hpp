@@ -25,6 +25,8 @@ namespace qi
  */
 class QI_API Actor
 {
+  mutable qi::Strand _strand; // The name of this members needs to be declared before using it in the signature of
+                              // the following member functions. This is a C++ restriction so do not move this down.
 public:
   Actor() = default;
   Actor(const Actor&) = delete; // An actor cannot be copy-able nor move-able.
@@ -73,8 +75,6 @@ public:
     _strand.join();
   }
 
-private:
-  mutable qi::Strand _strand;
 };
 
 }
