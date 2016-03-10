@@ -74,10 +74,10 @@ namespace detail
   template <typename F, typename Arg0, typename... Args>
   auto invokeMaybeActor(F&& cb, Arg0* arg0, Args&&... args) ->
       typename std::enable_if<std::is_base_of<Actor, typename std::decay<Arg0>::type>::value,
-               decltype(tryUnwrap(qi::async(qi::bind(cb, arg0, std::forward<Args>(args)...)), 0))>::type
+               decltype(tryUnwrap(arg0->async(boost::bind(cb, arg0, std::forward<Args>(args)...)), 0))>::type
   {
     // this is an actor, we must async to strand the call
-    return tryUnwrap(qi::async(qi::bind(cb, arg0, std::forward<Args>(args)...)), 0);
+    return tryUnwrap(arg0->async(boost::bind(cb, arg0, std::forward<Args>(args)...)), 0);
   }
   template <typename F, typename Arg0, typename... Args>
   auto invokeMaybeActor(F&& cb, Arg0* arg0, Args&&... args) ->
