@@ -403,6 +403,10 @@ endif()
 
 qi_stage_lib(qi INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/compat")
 
+# Install a share/qi/path.conf so that libqi's sdkPrefix can be found
+file(WRITE "${CMAKE_BINARY_DIR}/path.conf" "# Installed by qibuild. Do not remove\n")
+qi_install_data(${CMAKE_BINARY_DIR}/path.conf SUBFOLDER "qi")
+
 option(BUILD_EXAMPLES "build examples" ON)
 if (BUILD_EXAMPLES)
   add_subdirectory("examples")
