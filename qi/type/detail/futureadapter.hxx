@@ -49,7 +49,7 @@ template <typename T>
 void futureAdapterGeneric(AnyReference val, qi::Promise<T> promise,
     boost::shared_ptr<GenericObject>& ao)
 {
-  assert(ao);
+  QI_ASSERT(ao);
   qiLogDebug("qi.adapter") << "futureAdapter trigger";
   TypeOfTemplate<Future>* ft1 = QI_TEMPLATE_TYPE_GET(val.type(), Future);
   TypeOfTemplate<FutureSync>* ft2 = QI_TEMPLATE_TYPE_GET(val.type(), FutureSync);

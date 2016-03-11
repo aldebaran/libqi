@@ -17,6 +17,7 @@
 #include <boost/filesystem.hpp>
 #include <locale>
 
+#include <qi/assert.hpp>
 #include <qi/log.hpp>
 #include <qi/os.hpp>
 #include <qi/path.hpp>
@@ -140,7 +141,7 @@ namespace os
     }
 
     const DWORD result = WaitForSingleObject(handle, INFINITE);
-    assert(result != WAIT_TIMEOUT);
+    QI_ASSERT(result != WAIT_TIMEOUT);
     if (result == WAIT_FAILED)
     {
       *status = 127;

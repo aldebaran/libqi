@@ -357,8 +357,8 @@ namespace qi
     if (l == SignalBase::invalidSignalLink)
       return qi::Future<SignalLink>(l);
     SignalLink link = ((SignalLink)event << 32) + l;
-    assert(link >> 32 == event);
-    assert((link & 0xFFFFFFFF) == l);
+    QI_ASSERT(link >> 32 == event);
+    QI_ASSERT((link & 0xFFFFFFFF) == l);
     qiLogDebug() << "New subscriber " << link <<" to event " << event;
     return qi::Future<SignalLink>(link);
   }

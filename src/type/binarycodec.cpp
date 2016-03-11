@@ -273,13 +273,13 @@ namespace qi {
     beginDynamic(sig);
 
     if (sig.isValid()) {
-      assert(value.type());
+      QI_ASSERT(value.type());
       if (!recurse)
         detail::serialize(value, *this, SerializeObjectCallback(), 0);
       else
         recurse();
     } else {
-      assert(!value.type());
+      QI_ASSERT(!value.type());
     }
     endDynamic();
   }

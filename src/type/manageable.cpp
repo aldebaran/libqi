@@ -154,7 +154,7 @@ namespace qi
     builder.advertiseMethod("isTraceEnabled", &Manageable::isTraceEnabled, MetaCallType_Auto, id++);
     builder.advertiseMethod("enableTrace", &Manageable::enableTrace,       MetaCallType_Auto, id++);
     builder.advertiseSignal("traceObject", &Manageable::traceObject, id++);
-    assert(id <= endId);
+    QI_ASSERT(id <= endId);
     const detail::ObjectTypeData& typeData = builder.typeData();
     *manageable::methodMap = typeData.methodMap;
     *manageable::signalMap = typeData.signalGetterMap;

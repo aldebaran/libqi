@@ -9,6 +9,7 @@
 
 # include <type_traits>
 # include <qi/api.hpp>
+# include <qi/assert.hpp>
 # include <vector>
 # include <qi/atomic.hpp>
 # include <qi/config.hpp>
@@ -518,7 +519,7 @@ namespace qi {
     Future(boost::shared_ptr<detail::FutureBaseTyped<T> > p) :
       _p(p)
     {
-      assert(_p);
+      QI_ASSERT(_p);
     }
 
   protected:
@@ -828,7 +829,7 @@ namespace qi {
   private:
     void decRefcnt()
     {
-      assert(*_f._p->_promiseCount > 0);
+      QI_ASSERT(*_f._p->_promiseCount > 0);
       // this is race-free because if we reach 0 it means that this is the last Promise pointing to a state and since it
       // is the last, no one could be trying to make a copy from it while destroying it. Also no one could be changing
       // the promise state (from running to finished or whatever) while destroying it.

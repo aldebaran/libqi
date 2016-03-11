@@ -105,7 +105,8 @@ set(QI_H qi/detail/clock.hxx
          qi/eventloop.hpp
          qi/version.hpp
          qi/iocolor.hpp
-         qi/strand.hpp)
+         qi/strand.hpp
+         qi/assert.hpp)
 
 set(QI_C src/dlfcn.cpp
          src/path.cpp

@@ -504,7 +504,7 @@ template<typename T> void Object<T>::checkT()
       AnyReference ref = it->second(AnyObject(_obj));
       _obj = ref.to<detail::ManagedObjectPtr>();
       ref.destroy();
-      assert(isMatchingType());
+      QI_ASSERT(isMatchingType());
       return;
     }
     throw std::runtime_error(std::string() + "Object does not have interface " + typeOf<T>()->infoString());

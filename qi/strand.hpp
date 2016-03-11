@@ -8,6 +8,7 @@
 #define _QI_STRAND_HPP_
 
 #include <deque>
+#include <qi/assert.hpp>
 #include <qi/detail/executioncontext.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/shared_ptr.hpp>
@@ -64,12 +65,12 @@ public:
   void cancel(boost::shared_ptr<Callback> cbStruct);
 
   // don't care
-  bool isInThisContext() override { assert(false); throw 0; }
-  void postImpl(boost::function<void()> callback) override { assert(false); throw 0; }
+  bool isInThisContext() override { QI_ASSERT(false); throw 0; }
+  void postImpl(boost::function<void()> callback) override { QI_ASSERT(false); throw 0; }
   qi::Future<void> async(const boost::function<void()>& callback, qi::SteadyClockTimePoint tp) override
-  { assert(false); throw 0; }
+  { QI_ASSERT(false); throw 0; }
   qi::Future<void> async(const boost::function<void()>& callback, qi::Duration delay) override
-  { assert(false); throw 0; }
+  { QI_ASSERT(false); throw 0; }
   using ExecutionContext::async;
 };
 

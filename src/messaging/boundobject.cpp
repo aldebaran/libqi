@@ -151,7 +151,7 @@ namespace qi {
     const MetaSignal* ms = _object.metaObject().signal(eventId);
     if (!ms)
       throw std::runtime_error("No such signal");
-    assert(_currentSocket);
+    QI_ASSERT(_currentSocket);
     AnyFunction mc = AnyFunction::fromDynamicFunction(boost::bind(&forwardEvent, _1, _serviceId, _objectId, eventId, ms->parametersSignature(), _currentSocket, this, ""));
     SignalLink linkId = _object.connect(eventId, mc);
     qiLogDebug() << "SBO rl " << remoteSignalLinkId <<" ll " << linkId;
@@ -163,7 +163,7 @@ namespace qi {
     const MetaSignal* ms = _object.metaObject().signal(eventId);
     if (!ms)
       throw std::runtime_error("No such signal");
-    assert(_currentSocket);
+    QI_ASSERT(_currentSocket);
     AnyFunction mc = AnyFunction::fromDynamicFunction(boost::bind(&forwardEvent, _1, _serviceId, _objectId, eventId, ms->parametersSignature(), _currentSocket, this, signature));
     SignalLink linkId = _object.connect(eventId, mc);
     qiLogDebug() << "SBO rl " << remoteSignalLinkId <<" ll " << linkId;

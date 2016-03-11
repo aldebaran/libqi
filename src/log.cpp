@@ -4,6 +4,7 @@
  * found in the COPYING file.
  */
 
+#include <qi/assert.hpp>
 #include <qi/log.hpp>
 #include "log_p.hpp"
 #include <qi/os.hpp>
@@ -420,7 +421,7 @@ namespace qi {
       CategoryMap& c = _categories();
       for (CategoryMap::iterator it = c.begin(); it != c.end(); ++it)
       {
-        assert(it->first == it->second->name);
+        QI_ASSERT(it->first == it->second->name);
         if (g.matches(it->first)) {
           detail::Category* cat = it->second;
           checkGlobs(cat);

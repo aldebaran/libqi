@@ -268,7 +268,7 @@ namespace qi {
           << "Waiting threads from the pool \"" << _name << "\", remaining tasks: "
           << _totalTask.load() << " (" << _activeTask.load() <<  " active)...";
       _workerThreads->joinAll();
-      assert(*_running == 0);
+      QI_ASSERT(*_running == 0);
       qiLogDebug()  << "Waiting done";
     }
   }

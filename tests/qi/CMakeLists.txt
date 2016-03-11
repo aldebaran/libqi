@@ -32,4 +32,4 @@ qi_create_gtest(test_futuregroup  SRC test_futuregroup.cpp  DEPENDS QI GTEST TIM
 qi_create_gtest(test_buffer       SRC test_buffer.cpp       DEPENDS QI GTEST TIMEOUT 30)
 qi_create_gtest(test_bufferreader SRC test_bufferreader.cpp DEPENDS QI GTEST TIMEOUT 30)
 qi_create_gtest(test_version      SRC test_version.cpp      DEPENDS QI GTEST TIMEOUT 30)
-qi_create_gtest(test_macro        SRC test_macro.cpp        DEPENDS QI GTEST TIMEOUT 30)
+qi_create_gtest(test_macro        SRC test_macro.cpp        DEPENDS QI GTEST TIMEOUT 120)

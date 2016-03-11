@@ -7,6 +7,7 @@
 #include <boost/make_shared.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 
+#include <qi/assert.hpp>
 #include <qi/log.hpp>
 #include <qi/type/typeinterface.hpp>
 
@@ -59,7 +60,7 @@ namespace qi {
 
     result = auth_provider_private::extractAuthData(authData);
     result = _processAuth(result);
-    assert(result.find(AuthProvider::State_Key) != result.end());
+    QI_ASSERT(result.find(AuthProvider::State_Key) != result.end());
     return auth_provider_private::prepareAuthCaps(result);
   }
 

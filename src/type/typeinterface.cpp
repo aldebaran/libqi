@@ -1149,7 +1149,7 @@ namespace qi {
       kvtype.push_back(_keyType);
       kvtype.push_back(_elementType);
       _pairType = static_cast<DefaultTupleType*>(makeTupleType(kvtype));
-      assert(dynamic_cast<DefaultTupleType*>(_pairType));
+      QI_ASSERT(dynamic_cast<DefaultTupleType*>(_pairType));
     }
     friend TypeInterface* makeMapType(TypeInterface* kt, TypeInterface* et);
   public:
@@ -1209,7 +1209,7 @@ namespace qi {
         // But this is not any tuple, we know it's a DefaultTuple
         // So we need to hack.
         std::vector<void*>& elem = _pairType->backend(i->second);
-        assert(elem.size() == 2);
+        QI_ASSERT(elem.size() == 2);
         _elementType->destroy(elem[1]);
         elem[1] = AnyReference(_elementType, valueStorage).clone().rawValue();
       }
@@ -1369,7 +1369,7 @@ namespace qi {
     else
     {
       StructTypeInterface* res = it->second;
-      assert(res->memberTypes().size() == types.size());
+      QI_ASSERT(res->memberTypes().size() == types.size());
       return res;
     }
   }
