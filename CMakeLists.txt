@@ -151,7 +151,10 @@ else()
     src/os_debugger_posix.cpp
   )
   if(ANDROID)
-    list(APPEND QI_C src/os_launch_android.cpp)
+    list(APPEND QI_H qi/log/androidloghandler.hpp)
+    list(APPEND QI_C
+      src/androidloghandler.cpp
+      src/os_launch_android.cpp)
   else()
     list(APPEND QI_C src/os_launch_posix.cpp)
   endif()

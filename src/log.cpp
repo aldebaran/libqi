@@ -24,13 +24,11 @@
 #include <boost/unordered_map.hpp>
 #include <boost/algorithm/string.hpp>
 
-#ifndef ANDROID
-# include <boost/lockfree/queue.hpp>
-#endif
+#include <boost/lockfree/queue.hpp>
 #include <boost/function.hpp>
 
 #ifdef ANDROID
-# include <android/log.h>
+# include <qi/log/androidloghandler.hpp>
 #endif
 
 #ifndef _WIN32
@@ -263,9 +261,7 @@ namespace qi {
       bool                       SyncLog;
       bool                       AsyncLogInit;
 
-#ifndef ANDROID
       boost::lockfree::queue<privateLog*>     logs;
-#endif
 
       using LogHandlerMap = std::map<std::string, Handler>;
       LogHandlerMap logHandlers;
@@ -316,12 +312,59 @@ namespace qi {
 
     static int                    _glContext = 0;
     static bool                   _glInit    = false;
-    static ConsoleLogHandler     *_glConsoleLogHandler;
     static LogColor               _glColorWhen = LogColor_Auto;
 
-    static Log                   *LogInstance;
+    static Log                   *LogInstance = nullptr;
     static privateLog             LogBuffer[RTLOG_BUFFERS];
     static volatile unsigned long LogPush = 0;
+
+#ifdef ANDROID
+    static AndroidLogHandler *_glAndroidLogHandler = nullptr;
+
+    namespace detail {
+      void createAndInstallDefaultHandler(qi::LogLevel verb)
+      {
+        _glAndroidLogHandler = new AndroidLogHandler;
+        addHandler("androidloghandler",
+                   boost::bind(&AndroidLogHandler::log,
+                               _glAndroidLogHandler,
+                               _1, _2, _3, _4, _5, _6, _7, _8),
+                   verb);
+      }
+
+      void destroyDefaultHandler()
+      {
+        if(_glAndroidLogHandler)
+        {
+          delete _glAndroidLogHandler;
+          _glAndroidLogHandler = nullptr;
+        }
+      }
+    } // namespace detail
+#else
+    static ConsoleLogHandler *_glConsoleLogHandler = nullptr;
+
+    namespace detail {
+      void createAndInstallDefaultHandler(qi::LogLevel verb)
+      {
+        _glConsoleLogHandler = new ConsoleLogHandler;
+        addHandler("consoleloghandler",
+                   boost::bind(&ConsoleLogHandler::log,
+                               _glConsoleLogHandler,
+                               _1, _2, _3, _4, _5, _6, _7, _8),
+                   verb);
+      }
+
+      void destroyDefaultHandler()
+      {
+        if(_glConsoleLogHandler)
+        {
+          delete _glConsoleLogHandler;
+          _glConsoleLogHandler = nullptr;
+        }
+      }
+    } // namespace detail
+#endif
 
     namespace detail {
 
@@ -468,8 +511,6 @@ namespace qi {
 
     void Log::printLog()
     {
-// Logs are handled in qi::log in Android
-#ifndef ANDROID
       privateLog* pl = nullptr;
       boost::mutex::scoped_lock lock(LogHandlerLock);
       while (logs.pop(pl))
@@ -483,7 +524,6 @@ namespace qi {
                  pl->_function,
                  pl->_line);
       }
-#endif
     }
 
     void Log::dispatch(const qi::LogLevel level,
@@ -547,9 +587,7 @@ namespace qi {
     inline Log::Log() :
       SyncLog(true),
       AsyncLogInit(false)
-#ifndef ANDROID
       , logs(50)
-#endif
     {
       LogInit = true;
     };
@@ -569,7 +607,6 @@ namespace qi {
       }
     }
 
-#ifndef ANDROID
     static void my_strcpy(char *dst, const char *src, int len) {
       if (!src)
         src = "(null)";
@@ -580,20 +617,15 @@ namespace qi {
       dst[len - 1] = 0;
 #endif
     }
-#endif // #ifndef ANDROID
 
     static void doInit(qi::LogLevel verb) {
       //if init has already been called, we are set here. (reallocating all globals
       // will lead to racecond)
       if (_glInit)
         return;
-      _glConsoleLogHandler = new ConsoleLogHandler;
-      LogInstance          = new Log;
-      addHandler("consoleloghandler",
-                 boost::bind(&ConsoleLogHandler::log,
-                             _glConsoleLogHandler,
-                             _1, _2, _3, _4, _5, _6, _7, _8),
-                 verb);
+
+      LogInstance = new Log;
+      detail::createAndInstallDefaultHandler(verb);
       _glInit = true;
     }
 
@@ -615,10 +647,9 @@ namespace qi {
         return;
       _glInit = false;
       LogInstance->printLog();
-      delete _glConsoleLogHandler;
-      _glConsoleLogHandler = 0;
+      detail::destroyDefaultHandler();
       delete LogInstance;
-      LogInstance = 0;
+      LogInstance = nullptr;
     }
 
     void flush()
@@ -661,20 +692,6 @@ namespace qi {
                      const char           *fct,
                      const int             line)
     {
-#ifdef ANDROID
-      int prio = ANDROID_LOG_DEFAULT;
-      switch(verb)
-      {
-        case LogLevel_Silent:   prio = ANDROID_LOG_SILENT;   break;
-        case LogLevel_Fatal:    prio = ANDROID_LOG_FATAL;    break;
-        case LogLevel_Error:    prio = ANDROID_LOG_ERROR;    break;
-        case LogLevel_Warning:  prio = ANDROID_LOG_WARN;     break;
-        case LogLevel_Info:     prio = ANDROID_LOG_INFO;     break;
-        case LogLevel_Verbose:  prio = ANDROID_LOG_VERBOSE;  break;
-        case LogLevel_Debug:    prio = ANDROID_LOG_DEBUG;    break;
-      }
-      __android_log_write(prio, categoryStr, msg);
-#else
       if (!LogInstance)
         return;
       if (!LogInstance->LogInit)
@@ -706,7 +723,6 @@ namespace qi {
         LogInstance->logs.push(pl);
         LogInstance->LogReadyCond.notify_one();
       }
-#endif
     }
 
     Log::Handler* Log::logHandler(SubscriberId id)
@@ -843,7 +859,9 @@ namespace qi {
     void setColor(LogColor color)
     {
       _glColorWhen = color;
+#ifndef ANDROID
       _glConsoleLogHandler->updateColor();
+#endif
     }
 
     LogColor color()
