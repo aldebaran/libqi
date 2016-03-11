@@ -465,7 +465,7 @@ namespace qi {
       }
     }
     // never lower index
-    _index = std::max(idx, *_index);
+    _index = std::max(idx, _index.load());
     _dirtyCache = false;
   }
 

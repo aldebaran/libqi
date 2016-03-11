@@ -157,7 +157,7 @@ public:
   // Atomic<int> i = 0;
   // There is no copy there, but the constructor *must* exist
   Atomic(const Atomic& other)
-    : _value(*other)
+    : _value(other.load())
   {}
 
   /// Atomic increment of the value.
@@ -170,7 +170,7 @@ public:
   Atomic<T>& operator=(T value)
   { _value = value; return *this; }
   Atomic<T>& operator=(const Atomic<T>& value)
-  { _value = *value; return *this; }
+  { _value = value.load(); return *this; }
 
   /** If value is testValue, replace it with setValue.
    * \return true if swap was performed
