@@ -32,6 +32,7 @@
 #include <boost/thread/mutex.hpp>
 #include <qi/atomic.hpp>
 #include <qi/anyvalue.hpp>
+#include <qi/type/traits.hpp>
 
 namespace qi
 {
@@ -605,9 +606,26 @@ namespace qi
     // Use helper structures for which template partial specialisation is possible
     template<typename T> struct AnyFunctionMaker
     {
-      static AnyFunction make(T func)
+    private:
+      template<typename U>
+      static AnyFunction dispatch(U&& func, type::True is_function_object)
       {
-        return makeAnyFunctionBare(func);
+        return AnyFunctionMaker<boost::function<type::Function<T>>>::make(std::forward<U>(func));
+      }
+      template<typename U>
+      static AnyFunction dispatch(U&& func, type::False is_function_object)
+      {
+        return makeAnyFunctionBare(std::forward<U>(func));
+      }
+    public:
+      /// U&& is used to allow the passing of a T lvalue _or_ rvalue.
+      /// T&& would force a T rvalue.
+      template<typename U>
+      static AnyFunction make(U&& func)
+      {
+        // If T is a function object (a lambda for example), type-erase it with a boost::function
+        // to allow the type system to handle it.
+        return dispatch(std::forward<U>(func), type::IsFunctionObject<T>{});
       }
     };
     template<typename T> struct AnyFunctionMaker<T*>
@@ -650,9 +668,10 @@ namespace qi
   }
 
   template<typename T>
-  AnyFunction AnyFunction::from(T f)
+  AnyFunction AnyFunction::from(T&& f)
   {
-    return detail::AnyFunctionMaker<T>::make(f);
+    // If an lvalue is passed, T is deduced to be U&, so remove the reference.
+    return detail::AnyFunctionMaker<type::RemoveRef<T>>::make(std::forward<T>(f));
   }
 
   namespace detail
