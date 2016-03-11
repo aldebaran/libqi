@@ -201,7 +201,7 @@ public:
    * Deprecated since 2.5.0
    */
 
-  QI_API_DEPRECATED_MSG("Please use method load() instead")
+  QI_API_DEPRECATED_MSG(Use 'load' instead)
   T operator*() const
   { return _value.load(); }
 

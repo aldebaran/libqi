@@ -505,7 +505,8 @@ namespace qi
      * \deprecated since 2.2 Use qi::path::detail::setWritablePath instead
      * \warning This method is only meant to be used in tests.
      */
-    QI_API QI_API_DEPRECATED void setWritablePath(const std::string &path);
+    QI_API QI_API_DEPRECATED_MSG(Use 'detail::setWritablePath' instead)
+    void setWritablePath(const std::string &path);
   }
 
   /**

@@ -45,29 +45,30 @@ public:
   // DEPRECATED STUFF
   /// call a callback asynchronously to be executed on tp
   /// @deprecated since 2.5
-  QI_API_DEPRECATED virtual qi::Future<void> async(const boost::function<void()>& callback,
-      qi::SteadyClockTimePoint tp) = 0;
+  QI_API_DEPRECATED_MSG(Use 'asyncAt' instead)
+  virtual qi::Future<void> async(const boost::function<void()>& callback, qi::SteadyClockTimePoint tp) = 0;
   /// call a callback asynchronously to be executed in delay
   /// @deprecated since 2.5
-  QI_API_DEPRECATED virtual qi::Future<void> async(const boost::function<void()>& callback,
-      qi::Duration delay) = 0;
+  QI_API_DEPRECATED_MSG(Use 'asyncDelay' instead)
+  virtual qi::Future<void> async(const boost::function<void()>& callback, qi::Duration delay) = 0;
+
   /// call a callback asynchronously to be executed in delay
   /// @deprecated since 2.5
   template <typename R>
-  QI_API_DEPRECATED typename boost::disable_if<std::is_same<R, void>,
-                              qi::Future<R> >::type
-      async(const boost::function<R()>& callback,
-          qi::Duration delay);
+  QI_API_DEPRECATED_MSG(Use 'asyncDelay' instead)
+  typename boost::disable_if<std::is_same<R, void>, qi::Future<R> >::type
+  async(const boost::function<R()>& callback, qi::Duration delay);
   /// call a callback asynchronously to be executed on tp
   /// @deprecated since 2.5
   template <typename R>
-  QI_API_DEPRECATED typename boost::disable_if<std::is_same<R, void>,
-                              qi::Future<R> >::type
-      async(const boost::function<R()>& callback, qi::SteadyClockTimePoint tp);
+  QI_API_DEPRECATED_MSG(Use 'asyncAt' instead)
+  typename boost::disable_if<std::is_same<R, void>, qi::Future<R> >::type
+  async(const boost::function<R()>& callback, qi::SteadyClockTimePoint tp);
 
   /// @deprecated since 2.5
   template <typename R>
-  QI_API_DEPRECATED qi::Future<R> async(const detail::Function<R()>& callback)
+  QI_API_DEPRECATED_MSG(Use 'async' without explicit return type template arguement instead)
+  qi::Future<R> async(const detail::Function<R()>& callback)
   {
     return asyncDelay(callback, qi::Duration(0));
   }

@@ -320,7 +320,8 @@ namespace qi {
      *
      * @deprecated since 2.5
      */
-    QI_API_DEPRECATED bool isCancelable() const
+    QI_API_DEPRECATED_MSG("Method implementation removed, always returns 'true'")
+    bool isCancelable() const
     {
       return true;
     }
@@ -504,7 +505,8 @@ namespace qi {
 #endif
 
     // @deprecated since 2.5 use the overload with Strand&
-    QI_API_DEPRECATED void connectWithStrand(qi::Strand* strand,
+    QI_API_DEPRECATED_MSG(Use overload with 'Strand&' instead)
+    void connectWithStrand(qi::Strand* strand,
         const boost::function<void(const Future<T>&)>& cb);
     void connectWithStrand(qi::Strand& strand,
         const boost::function<void(const Future<T>&)>& cb);

@@ -46,7 +46,7 @@ namespace qi
     /// Default constructor
     Trackable();
     /// @deprecated Not required anymore, use the default constructor instead.
-    QI_API_DEPRECATED Trackable(T* ptr);
+    QI_API_DEPRECATED_MSG(Use default constructor instead) Trackable(T* ptr);
     ~Trackable();
 
     /**

@@ -115,15 +115,17 @@ public:
   void join();
 
   // DEPRECATED
-  QI_API_DEPRECATED qi::Future<void> async(const boost::function<void()>& cb,
-      qi::SteadyClockTimePoint tp) override;
-  QI_API_DEPRECATED qi::Future<void> async(const boost::function<void()>& cb,
-      qi::Duration delay) override;
+  QI_API_DEPRECATED_MSG(Use 'asyncAt' instead)
+  qi::Future<void> async(const boost::function<void()>& cb,
+                         qi::SteadyClockTimePoint tp) override;
+  QI_API_DEPRECATED_MSG(Use 'asyncDelay' instead)
+  qi::Future<void> async(const boost::function<void()>& cb,
+                         qi::Duration delay) override;
   using ExecutionContext::async;
 
 #define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)                    \
   template <typename T, typename F, typename ARG0 comma ATYPEDECL>           \
-  QI_API_DEPRECATED boost::function<T> schedulerFor(                                           \
+  QI_API_DEPRECATED_MSG(Use generic 'schedulerFor' overload instead) boost::function<T> schedulerFor(                                                             \
       const F& func, const ARG0& arg0 comma ADECL,                           \
       const boost::function<void()>& fallbackCb = boost::function<void()>()) \
   {                                                                          \
