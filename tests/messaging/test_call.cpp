@@ -799,6 +799,39 @@ TEST(TestCall, TestObjectPassingReturn)
   ASSERT_FALSE(weak.lock());
 }
 
+TEST(TestCall, TestConnectLambda)
+{ // Test calling a anyValue.connect() with a lambda instead of a boost::function (redmine Feature #33409)
+
+  TestSessionPair p;
+  qi::DynamicObjectBuilder ob;
+  ob.advertiseSignal<qi::AnyObject, const std::string&, int>("makeObjectCallEvent");
+
+  qi::AnyObject obj(ob.object());
+
+  p.server()->registerService("s", obj);
+  qi::AnyObject proxy = p.client()->service("s");
+
+  qi::AnyObject unregisteredObj;
+  {
+    qi::DynamicObjectBuilder ob;
+    ob.advertiseMethod("add", &addOne);
+    ob.advertiseSignal<int>("fire");
+    unregisteredObj = ob.object();
+  }
+
+  qi::Promise<int> value;
+  // We connect a method client-side
+  proxy.connect("makeObjectCallEvent", [&](qi::AnyObject ptr, const std::string& fname, int arg) {
+      return onMakeObjectCall(ptr, fname, arg, value);
+  }).wait();
+  obj.post("makeObjectCallEvent", unregisteredObj, "add", 41);
+  value.future().wait(qi::Seconds{100000});
+  if (value.future().hasError(qi::FutureTimeout_None))
+    std::cerr << "Err:" << value.future().error() << std::endl;
+  ASSERT_TRUE(value.future().isFinished());
+  ASSERT_EQ(42, value.future().value());
+}
+
 auto ptr = boost::make_shared<int>(9999);
 TEST(TestCall, TestReturnSharedPtrRef)
 {
@@ -1502,7 +1535,7 @@ TEST(TestObject, StructVersioningEvent)
   o.post("onColorA", c);
   o2.post("onColor", ca);
   o2.post("onColorA", ca); /* FAILS, double-remote */
-  for (unsigned i=0; i<10 && *onCounter != 12; ++i) qi::os::msleep(100);
+  for (unsigned i=0; i<10 && *onCounter != 12; ++i) qi::os::msleep(1000);
   EXPECT_EQ(12, *onCounter);
 }
 
