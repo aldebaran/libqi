@@ -105,7 +105,8 @@ set(QI_H qi/detail/clock.hxx
          qi/eventloop.hpp
          qi/version.hpp
          qi/iocolor.hpp
-         qi/strand.hpp)
+         qi/strand.hpp
+         qi/assert.hpp)
 
 set(QI_C src/dlfcn.cpp
          src/path.cpp
@@ -402,7 +403,7 @@ endif()
 
 qi_stage_lib(qi INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/compat")
 
-option(BUILD_EXAMPLES "build examples")
+option(BUILD_EXAMPLES "build examples" ON)
 if (BUILD_EXAMPLES)
   add_subdirectory("examples")
 endif()

@@ -128,7 +128,8 @@ public:
    * --qi-listen-url was given.
    * @deprecated since 2.5, use startSession instead
    */
-  void QI_API_DEPRECATED start();
+  QI_API_DEPRECATED_MSG(Use 'startSession' instead)
+  void start();
 
   /**
    * Establishes the session's connection and moreover starts listening if

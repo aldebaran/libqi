@@ -2,12 +2,12 @@
 **  Copyright (C) 2012 Aldebaran Robotics
 **  See COPYING for the license
 */
-#include <cassert>
 #include <cstring>
 
 #include <boost/make_shared.hpp>
 #include <boost/dynamic_bitset.hpp>
 
+#include <qi/assert.hpp>
 #include <qi/anyvalue.hpp>
 #include "message.hpp"
 
@@ -335,7 +335,7 @@ namespace qi {
 
   void Message::setError(const std::string &error)
   {
-    assert(type() == Type_Error && "called setError on a non Type_Error message");
+    QI_ASSERT(type() == Type_Error && "called setError on a non Type_Error message");
 
     // Clear the buffer before setting an error.
     _p->buffer.clear();
@@ -401,7 +401,7 @@ namespace qi {
       RemoteObject* ro = new RemoteObject(osi.serviceId, osi.objectId, osi.metaObject, context);
       AnyObject o = makeDynamicAnyObject(ro, true, &onProxyLost);
       qiLogDebug() << "New object is " << o.asGenericObject() << "on ro " << ro;
-      assert(o);
+      QI_ASSERT(o);
       return o;
     }
   }
@@ -541,7 +541,7 @@ namespace qi {
     if (object() == qi::Message::GenericObject_None)
     {
       qiLogError()  << "Message dropped (object is 0)" << std::endl;
-      assert(object() != qi::Message::GenericObject_None);
+      QI_ASSERT(object() != qi::Message::GenericObject_None);
       return false;
     }
 

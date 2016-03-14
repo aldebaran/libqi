@@ -161,7 +161,8 @@ void GwObjectHost::harvestServiceOriginatingObjects(Message& msg, TransportSocke
     {
       // if a service does a CALL, he does so on a user-supplied object.
       std::map<GwObjectId, MetaObject>::iterator mit = _objectsMetaObjects.find(msg.object());
-      assert(mit != _objectsMetaObjects.end());
+      if(mit == _objectsMetaObjects.end())
+        throw std::runtime_error("Gateway: Couldn't find object called - aborted.");
       metaObject = &mit->second;
       signatureGetter = &MetaMethod::parametersSignature;
     }
@@ -236,9 +237,9 @@ void GwObjectHost::harvestMessageObjects(Message& msg, TransportSocketPtr sender
 ObjectAddress GwObjectHost::getOriginalObjectAddress(const ObjectAddress& a)
 {
   boost::shared_lock<boost::shared_mutex> lock(_mutex);
-  assert(a.service == 0);
+  QI_ASSERT(a.service == 0);
   auto it = _objectsOrigin.find(a.object);
-  assert(it != _objectsOrigin.end());
+  QI_ASSERT(it != _objectsOrigin.end());
   return it->second.second;
 }
 
@@ -258,7 +259,7 @@ void GwObjectHost::treatMessage(GwTransaction& t, TransportSocketPtr sender)
     boost::shared_lock<boost::shared_mutex> lock(_mutex);
     std::map<GwObjectId, std::pair<TransportSocketPtr, ObjectAddress> >::iterator it =
         _objectsOrigin.find(msg.object());
-    assert(it != _objectsOrigin.end());
+    QI_ASSERT(it != _objectsOrigin.end());
     qiLogDebug() << "Changing content target from {" << t.content.service() << "," << t.content.object() << "} to {"
                  << it->second.second.service << "," << it->second.second.object << "}";
     t.content.setService(it->second.second.service);

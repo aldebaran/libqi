@@ -4,6 +4,7 @@
  * found in the COPYING file.
  */
 
+#include <qi/assert.hpp>
 #include <qi/log.hpp>
 #include "log_p.hpp"
 #include <qi/os.hpp>
@@ -420,7 +421,7 @@ namespace qi {
       CategoryMap& c = _categories();
       for (CategoryMap::iterator it = c.begin(); it != c.end(); ++it)
       {
-        assert(it->first == it->second->name);
+        QI_ASSERT(it->first == it->second->name);
         if (g.matches(it->first)) {
           detail::Category* cat = it->second;
           checkGlobs(cat);
@@ -946,45 +947,60 @@ namespace qi {
         checkGlobs(it->second);
     }
 
+    namespace detail {
+      std::vector<std::tuple<std::string, qi::LogLevel>> parseFilterRules(
+          const std::string &rules) {
+        std::vector<std::tuple<std::string, qi::LogLevel>> res;
+        // See doc in header for format
+        size_t pos = 0;
+        while (true)
+        {
+          if (pos >= rules.length())
+            break;
+          size_t next = rules.find(':', pos);
+          std::string token;
+          if (next == rules.npos)
+            token = rules.substr(pos);
+          else
+            token = rules.substr(pos, next-pos);
+          if (token.empty())
+          {
+            pos = next + 1;
+            continue;
+          }
+          if (token[0] == '+')
+            token = token.substr(1);
+          size_t sep = token.find('=');
+          if (sep != token.npos)
+          {
+            std::string sLevel = token.substr(sep+1);
+            std::string cat = token.substr(0, sep);
+            qi::LogLevel level = stringToLogLevel(sLevel.c_str());
+            res.emplace_back(cat, level);
+          }
+          else
+          {
+            if (token[0] == '-')
+              res.emplace_back(token.substr(1), LogLevel_Silent);
+            else
+              res.emplace_back(token, LogLevel_Debug);
+          }
+          if (next == rules.npos)
+            break;
+          pos = next+1;
+        }
+        return res;
+      }
+    }
+
     void addFilters(const std::string& rules, SubscriberId sub)
     {
-      // See doc in header for format
-      size_t pos = 0;
-      while (true)
+      std::string cat;
+      qi::LogLevel level;
+      for (auto &&p: detail::parseFilterRules(rules))
       {
-        if (pos >= rules.length())
-          break;
-        size_t next = rules.find(':', pos);
-        std::string token;
-        if (next == rules.npos)
-          token = rules.substr(pos);
-        else
-          token = rules.substr(pos, next-pos);
-        if (token.empty())
-        {
-          pos = next + 1;
-          continue;
-        }
-        if (token[0] == '+')
-          token = token.substr(1);
-        size_t sep = token.find('=');
-        if (sep != token.npos)
-        {
-          std::string sLevel = token.substr(sep+1);
-          std::string cat = token.substr(0, sep);
-          qi::LogLevel level = stringToLogLevel(sLevel.c_str());
-          addFilter(cat, level, sub);
-        }
-        else
-        {
-          if (token[0] == '-')
-            addFilter(token.substr(1), LogLevel_Silent, sub);
-          else
-            addFilter(token, LogLevel_Debug, sub);
-        }
-        if (next == rules.npos)
-          break;
-        pos = next+1;
+        std::tie(cat, level) = std::move(p);
+        addFilter(cat, level, sub);
       }
     }
 

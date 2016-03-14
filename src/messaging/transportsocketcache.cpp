@@ -159,7 +159,7 @@ void TransportSocketCache::insert(const std::string& machineId, const Url& url, 
     std::map<Url, ConnectionAttemptPtr>::iterator uIt = mIt->second.find(url);
     if (uIt != mIt->second.end())
     {
-      assert(!uIt->second->endpoint);
+      QI_ASSERT(!uIt->second->endpoint);
       // If the attempt is done and the endpoint is null, it means the
       // attempt failed and the promise is set as error.
       // We replace it by a new one.

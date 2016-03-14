@@ -21,7 +21,7 @@ extern "C" long __cdecl _InterlockedDecrement(long volatile *);
 
 #endif
 
-#include <boost/atomic.hpp>
+#include <atomic>
 #include <qi/config.hpp>
 #include <qi/macro.hpp>
 
@@ -134,43 +134,56 @@ inline bool StaticAtomicInt::setIfEquals(int testValue, int setValue)
  * This class allows to do operations on an integral value from multiple threads,
  * with the guarantee that each operation will not lead to a data race.
  *
+ * @remark This is a simplification layer over the standard atomic type.
+ *         If you understand the standard atomic, it might be preferable to use it.
+ *
  * \includename{qi/atomic.hpp}
  */
 template <typename T>
 struct Atomic
 {
+  std::atomic<T> _value;
 public:
-  boost::atomic<T> _value;
-
   /* Default atomic constructor, setting value to 0.
    */
   Atomic()
-    : _value(0)
+    : _value{}
   {}
   /** Atomic constructor setting value to its parameter.
    * \param value The default value of the atomic.
    */
   Atomic(T value)
-    : _value(value)
+    : _value(std::move(value))
   {}
   // This is needed in c++03 for lines like:
   // Atomic<int> i = 0;
   // There is no copy there, but the constructor *must* exist
   Atomic(const Atomic& other)
-    : _value(*other)
+    : _value(other._value.load())
   {}
 
-  /// Atomic increment of the value.
+  /// Atomic pre-increment of the value.
   T operator++()
   { return ++_value; }
-  /// Atomic decement of the value.
+  /// Atomic pre-decrement of the value.
   T operator--()
   { return --_value; }
 
+  /// Atomic post-increment of the value.
+  T operator++(int)
+  {
+    return _value++;
+  }
+  /// Atomic post-decrement of the value.
+  T operator--(int)
+  {
+    return _value--;
+  }
+
   Atomic<T>& operator=(T value)
-  { _value = value; return *this; }
+  { _value = std::move(value); return *this; }
   Atomic<T>& operator=(const Atomic<T>& value)
-  { _value = *value; return *this; }
+  { _value = value.load(); return *this; }
 
   /** If value is testValue, replace it with setValue.
    * \return true if swap was performed
@@ -184,9 +197,15 @@ public:
   T swap(T value)
   { return _value.exchange(value); }
 
-  /** Return the contained value
+  /** Return the contained valu
+   * Deprecated since 2.5.0
    */
+
+  QI_API_DEPRECATED_MSG(Use 'load' instead)
   T operator*() const
+  { return _value.load(); }
+
+  T load() const
   { return _value.load(); }
 };
 

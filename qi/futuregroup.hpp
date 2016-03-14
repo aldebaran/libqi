@@ -40,12 +40,10 @@ namespace qi
     void add(Future<T> future)
     {
       boost::mutex::scoped_lock lock(_mutex);
-      _futureCancelList.insert(std::make_pair(future.uniqueId(), qi::bind<void()>(&Future<T>::cancel, future)));
+      _futureCancelList.emplace(future.uniqueId(), [future]() mutable { future.cancel(); });
 
       // The 2 following lines are necessary because of a compiler bug in VS2010 which is fixed in VS2015 and beyond
-      using MemFuncType = void (ScopedFutureGroup::*)(Future<T>);
-      MemFuncType onFutureFinishedCallback = &ScopedFutureGroup::onFutureFinished<T>;
-      future.template thenR<void>(onFutureFinishedCallback, this, _1);
+      future.then([&](Future<T> f){ onFutureFinished(f); });
     }
 
     /** Cancel all registered futures and unregister them.

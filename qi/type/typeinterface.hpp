@@ -384,7 +384,7 @@ namespace qi{
 
 namespace detail
 {
-  struct QI_API_DEPRECATED QI_TYPE_ENUM_REGISTER_ {};
+  struct QI_API_DEPRECATED_MSG(Use 'QI_TYPE_ENUM' instead) QI_TYPE_ENUM_REGISTER_ {};
 }
 
 #define QI_TYPE_ENUM_REGISTER(Enum)                                  \

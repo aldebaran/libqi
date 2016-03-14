@@ -175,22 +175,22 @@ namespace qi {
   namespace log {
 
     /// \deprecated 1.22 Use qi::LogLevel_Silent
-    QI_API_DEPRECATED static const qi::LogLevel silent = LogLevel_Silent;
+    QI_API_DEPRECATED_MSG(Use 'LogLevel_Silent' instead) static const qi::LogLevel silent = LogLevel_Silent;
     /// \deprecated 1.22 Use qi::LogLevel_Fatal
-    QI_API_DEPRECATED static const qi::LogLevel fatal = LogLevel_Fatal;
+    QI_API_DEPRECATED_MSG(Use 'LogLevel_Fatal' instead) static const qi::LogLevel fatal = LogLevel_Fatal;
     /// \deprecated 1.22 Use qi::LogLevel_Error
-    QI_API_DEPRECATED static const qi::LogLevel error = LogLevel_Error;
+    QI_API_DEPRECATED_MSG(Use 'LogLevel_Error' instead) static const qi::LogLevel error = LogLevel_Error;
     /// \deprecated 1.22 Use qi::LogLevel_Warning
-    QI_API_DEPRECATED static const qi::LogLevel warning = LogLevel_Warning;
+    QI_API_DEPRECATED_MSG(Use 'LogLevel_Warning' instead) static const qi::LogLevel warning = LogLevel_Warning;
     /// \deprecated 1.22 Use qi::LogLevel_Info
-    QI_API_DEPRECATED static const qi::LogLevel info = LogLevel_Info;
+    QI_API_DEPRECATED_MSG(Use 'LogLevel_Info' instead) static const qi::LogLevel info = LogLevel_Info;
     /// \deprecated 1.22 Use qi::LogLevel_Verbose
-    QI_API_DEPRECATED static const qi::LogLevel verbose = LogLevel_Verbose;
+    QI_API_DEPRECATED_MSG(Use 'LogLevel_Verbose' instead) static const qi::LogLevel verbose = LogLevel_Verbose;
     /// \deprecated 1.22 Use qi::LogLevel_Debug
-    QI_API_DEPRECATED static const qi::LogLevel debug = LogLevel_Debug;
+    QI_API_DEPRECATED_MSG(Use 'LogLevel_Debug' instead) static const qi::LogLevel debug = LogLevel_Debug;
 
     /// \deprecated 1.22 Use qi::LogLevel
-    QI_API_DEPRECATED typedef qi::LogLevel LogLevel;
+    QI_API_DEPRECATED_MSG('qi::log::LogLevel' is deprecated. Use 'qi::LogLevel' instead) typedef qi::LogLevel LogLevel;
   }
 }
 
@@ -204,7 +204,8 @@ namespace qi {
     using CategoryType = detail::Category*; ///< Catergory Informations.
 
     /// \deprecated 1.22 Use qi::log::SubscriberId
-    QI_API_DEPRECATED typedef unsigned int Subscriber;
+    QI_API_DEPRECATED_MSG(Use 'SubscriberId' instead)
+    typedef unsigned int Subscriber;
 
     /**
      * \brief Boost delegate to log function (verbosity lv, date of log,
@@ -264,7 +265,7 @@ namespace qi {
      * \brief Log function. You should call qiLog* macros instead.
      *
      * \param verb The verbosity of the message.
-     * \param category Log category (for filtering in the future).
+     * \param category Log category (for filtering).
      * \param msg Log message.
      * \param file Filename from which this function was called (ex: __FILE__).
      * \param fct Function name from which this function was called (ex: __FUNCTION__).
@@ -478,7 +479,7 @@ namespace qi {
      * \return New log subscriber id added.
      * \deprecated 1.24 use qi::log::addHandler
      */
-    QI_API_DEPRECATED
+    QI_API_DEPRECATED_MSG(Use 'addHandler' instead)
     QI_API SubscriberId addLogHandler(const std::string& name,
                                       qi::log::logFuncHandler fct,
                                       qi::LogLevel defaultLevel = LogLevel_Info);
@@ -494,7 +495,7 @@ namespace qi {
      * \param name Name of the handler.
      * \deprecated 1.24 use qi::log::removeHandler
      */
-    QI_API_DEPRECATED
+    QI_API_DEPRECATED_MSG(Use 'removeHandler' instead)
     QI_API void removeLogHandler(const std::string& name);
 
     /**
@@ -505,34 +506,40 @@ namespace qi {
 
     #include <qi/detail/warn_push_ignore_deprecated.hpp>
     /// \deprecated since 1.22. Use qi::log::setLogLevel(const qi::LogLevel, SubscriberId)
-    QI_API_DEPRECATED inline void setVerbosity(SubscriberId sub, const qi::log::LogLevel lv) { setLogLevel((qi::LogLevel)lv, sub); }
+    QI_API_DEPRECATED_MSG(Use 'setLogLevel' instead)
+    inline void setVerbosity(SubscriberId sub, const qi::log::LogLevel lv) { setLogLevel((qi::LogLevel)lv, sub); }
     /// \deprecated since 1.22. Use qi::log::addFilter(const std::string&, qi::LogLevel, SubscriberId)
-    QI_API_DEPRECATED inline void setCategory(SubscriberId sub, const std::string& cat, qi::log::LogLevel level) { addFilter(cat, (qi::LogLevel)level, sub); }
+    QI_API_DEPRECATED_MSG(Use 'addFilter' instead)
+    inline void setCategory(SubscriberId sub, const std::string& cat, qi::log::LogLevel level) { addFilter(cat, (qi::LogLevel)level, sub); }
     #include <qi/detail/warn_pop_ignore_deprecated.hpp>
 
     /**
      * \copydoc qi::log::level
      * \deprecated since 2.2. Use qi::log::logLevel instead.
      */
-    QI_API QI_API_DEPRECATED qi::LogLevel verbosity(SubscriberId sub = 0);
+    QI_API QI_API_DEPRECATED_MSG(Use 'logLevel' instead)
+    qi::LogLevel verbosity(SubscriberId sub = 0);
 
     /**
      * \copydoc qi::log::addFilters()
      * \deprecated since 2.2 Use qi::log::addFilters instead.
      */
-    QI_API QI_API_DEPRECATED void setVerbosity(const std::string& rules, SubscriberId sub = 0);
+    QI_API QI_API_DEPRECATED_MSG(Use 'addFilters' instead)
+    void setVerbosity(const std::string& rules, SubscriberId sub = 0);
 
     /**
      * \copydoc qi::log::setLogLevel()
      * \deprecated since 2.2 Use qi::log::setLogLevel instead.
      */
-    QI_API QI_API_DEPRECATED void setVerbosity(const qi::LogLevel lv, SubscriberId sub = 0);
+    QI_API QI_API_DEPRECATED_MSG(Use 'setLogLevel' instead)
+    void setVerbosity(const qi::LogLevel lv, SubscriberId sub = 0);
 
     /**
      * \copydoc qi::log::setFilter
      * \deprecated since 2.2 Use qi::log::addFilter instead.
      */
-    QI_API QI_API_DEPRECATED void setCategory(const std::string& catName, qi::LogLevel level, SubscriberId sub = 0);
+    QI_API QI_API_DEPRECATED_MSG(Use 'addFilter' instead)
+    void setCategory(const std::string& catName, qi::LogLevel level, SubscriberId sub = 0);
 
   }
 }

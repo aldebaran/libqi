@@ -27,7 +27,7 @@ namespace qi
   using PathVector = std::vector<Path>;
 
   /**
-   * \brief The Path class allow handling path in a cross-platform maner.
+   * \brief The Path class allow handling filesystem path in a cross-platform maner.
    * \includename{qi/path.hpp}
    * The class assume that all string are encoded in UTF-8 if not specified otherwise.
    */
@@ -64,10 +64,10 @@ namespace qi
     /// is the path a symlink?
     bool isSymlink() const;
 
-    /// @return the name of the current file of folder as an UTF-8 string
+    /// @return the last component of the path as an UTF-8 string
     std::string filename() const;
 
-    /// @return the extension of the current file as an UTF-8 string
+    /// @return the extension of the last component of the path as an UTF-8 string
     std::string extension() const;
 
     /// @return a Path to the parent
@@ -86,7 +86,7 @@ namespace qi
     PathVector dirs() const;
 
     /// @return the path as an UTF-8 string
-    operator std::string() const;
+    explicit operator std::string() const;
 
     /// @return the path as an UTF-8 string
     std::string str() const;
@@ -279,6 +279,7 @@ namespace qi
      * \param applicationName Name of the application.
      * \param filename Name of the file to look for.
      * You can specify subdirectories using "/" as directory separator.
+     * \param excludeUserWritablePath If true, findConf() won't search into userWritableConfPath.
      * \return The complete, native path of the file if it was found,
      * an empty string otherwise.
      *
@@ -297,15 +298,16 @@ namespace qi
      * \endverbatim
      */
     QI_API std::string findConf(const std::string& applicationName,
-                                const std::string& filename);
+                                const std::string& filename,
+                                bool excludeUserWritablePath = false);
 
     /**
      * \brief Look for a file in all dataPaths(applicationName) directories,
      * return the first match.
      * \param applicationName Name of the application.
      * \param filename Name of the file to look for.
-     * \param excludeUserWritablePath If true, findData() won't search into userWritableDataPath.
      * You can specify subdirectories using "/" as directory separator.
+     * \param excludeUserWritablePath If true, findData() won't search into userWritableDataPath.
      * \return The complete, native path of the file if it was found,
      * an empty string otherwise.
      * \remark For automatic tests, you can modify the user data path
@@ -376,6 +378,7 @@ namespace qi
     /**
      * \brief Get the list of directories used when searching for configuration files for the given application name.
      * \param applicationName Name of the application.
+     * \param excludeUserWritablePath If true, confPaths() won't include userWritableConfPath.
      * \return List of configuration directories.
      *
      * \verbatim
@@ -385,7 +388,8 @@ namespace qi
      *    that they are writeable.
      * \endverbatim
      */
-    QI_API std::vector<std::string> confPaths(const std::string& applicationName="");
+    QI_API std::vector<std::string> confPaths(const std::string& applicationName="",
+                                              bool excludeUserWritablePath = false);
 
     /**
      * \brief Get the list of directories used when searching for data files for the given application name.
@@ -501,7 +505,8 @@ namespace qi
      * \deprecated since 2.2 Use qi::path::detail::setWritablePath instead
      * \warning This method is only meant to be used in tests.
      */
-    QI_API QI_API_DEPRECATED void setWritablePath(const std::string &path);
+    QI_API QI_API_DEPRECATED_MSG(Use 'detail::setWritablePath' instead)
+    void setWritablePath(const std::string &path);
   }
 
   /**

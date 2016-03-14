@@ -9,6 +9,7 @@
 
 #include <qi/os.hpp>
 #include <qi/path.hpp>
+#include <boost/filesystem/fstream.hpp>
 #include <qi/application.hpp>
 
 int main(int argc, char *argv[])
@@ -18,12 +19,12 @@ int main(int argc, char *argv[])
   qi::Application app(argc, argv);
 
   // Get sdk prefix
-  std::cout << "SDK prefix is: " << qi::path::sdkPrefix() << std::endl;
+  std::cout << "SDK prefix is: \"" << qi::path::sdkPrefix() << "\"" << std::endl;
 
   // First argument is the name of the application, used
   // to build various paths later.
-  std::string fooCfgPath = qi::path::findConf("foo", "foo.cfg");
-  if (fooCfgPath == "")
+  qi::Path fooCfgPath = qi::path::findConf("foo", "foo.cfg");
+  if (fooCfgPath.isEmpty())
   {
     std::cerr << "Could not find foo.cfg" << std::endl;
     std::cerr << "Looked in: " << std::endl;
@@ -31,34 +32,26 @@ int main(int argc, char *argv[])
     std::vector<std::string>::const_iterator it;
     for (it = configPaths.begin(); it != configPaths.end(); ++it)
     {
-      std::cerr << "\t" << *it << std::endl;
+      std::cerr << "\t\"" << *it << "\"" << std::endl;
     }
   }
   else
   {
-    std::cout << "Found foo.cfg: " << fooCfgPath << std::endl;
+    std::cout << "Found foo.cfg: \"" << fooCfgPath << "\"" << std::endl;
     std::cout << "Contents: " << std::endl;
     char buf[250];
-    std::ifstream ifs;
-
-    // Set stream to the right charset
-    ifs.open(fooCfgPath.c_str(), std::fstream::in);
-    while (! ifs.eof())
+    boost::filesystem::ifstream ifs(fooCfgPath);
+    while (ifs.getline(buf, sizeof(buf)))
     {
-      ifs.getline(buf, 250);
       std::cout << buf << std::endl;
     }
-    ifs.close();
   }
 
-
   // ... Write back the configuration to userCfgPath
-  std::string userCfgPath = qi::path::userWritableConfPath("foo", "foo.cfg");
-  std::cout << "Writing config file to: " << userCfgPath << std::endl;
-  std::ofstream ofs(userCfgPath.c_str(), std::fstream::out | std::fstream::trunc);
+  qi::Path userCfgPath = qi::path::userWritableConfPath("foo", "foo.cfg");
+  std::cout << "Writing config file to: \"" << userCfgPath << "\"" << std::endl;
+  boost::filesystem::ofstream ofs(userCfgPath, std::fstream::out | std::fstream::trunc);
   ofs << "Hi, this is foo.cfg" << std::endl;
-  ofs.close();
-
   return 0;
 }
 

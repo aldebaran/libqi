@@ -205,7 +205,7 @@ namespace qi
       else if (_state == TaskState::Triggering)
         _state = TaskState::TriggerReady;
       else
-        assert(false && "state is not stopping nor triggering");
+        QI_ASSERT(false && "state is not stopping nor triggering");
       _cond.notify_all();
     }
   }
@@ -227,7 +227,7 @@ namespace qi
     qiLogDebug() << "callback start";
     {
       boost::mutex::scoped_lock l(_mutex);
-      assert(_state != TaskState::Stopped);
+      QI_ASSERT(_state != TaskState::Stopped);
       /* To avoid being stuck because of unhandled transition, the rule is
        * that any other thread playing with our state can only do so
        * to stop us, and must eventualy reach the Stopping state
@@ -238,7 +238,7 @@ namespace qi
         _cond.notify_all();
         return;
       }
-      assert(_state == TaskState::Scheduled || _state == TaskState::Triggering);
+      QI_ASSERT(_state == TaskState::Scheduled || _state == TaskState::Triggering);
       _state = TaskState::Running;
       _cond.notify_all();
     }
@@ -308,7 +308,7 @@ namespace qi
         if (_state != TaskState::Running)
         {
           qiLogDebug() << "continuing " << static_cast<int>(_state);
-          assert(_state == TaskState::Stopping);
+          QI_ASSERT(_state == TaskState::Stopping);
           _state = TaskState::Stopped;
           _cond.notify_all();
           return;

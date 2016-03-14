@@ -77,7 +77,7 @@ namespace qi {
 
   using SteadyTimer = boost::asio::basic_waitable_timer<SteadyClock>;
 
-  static qi::Atomic<uint32_t> gTaskId = 0;
+  static qi::Atomic<uint32_t> gTaskId{0};
 
   EventLoopAsio::EventLoopAsio()
   : _mode(Mode::Unset)
@@ -91,7 +91,7 @@ namespace qi {
 
   void EventLoopAsio::start(int nthread)
   {
-    if (*_running || _mode != Mode::Unset)
+    if (_running.load() || _mode != Mode::Unset)
       return;
     if (nthread == 0)
     {
@@ -108,13 +108,13 @@ namespace qi {
     for (int i=0; i<nthread; ++i)
       _workerThreads->launch(&EventLoopAsio::_runPool, this);
     _workerThreads->launch(&EventLoopAsio::_pingThread, this);
-    while (!*_running)
+    while (!_running.load())
       qi::os::msleep(0);
   }
 
   EventLoopAsio::~EventLoopAsio()
   {
-    if (*_running && boost::this_thread::get_id() == _id)
+    if (_running.load() && boost::this_thread::get_id() == _id)
       qiLogError() << "Destroying EventLoopPrivate from itself while running";
     stop();
     join();
@@ -160,10 +160,13 @@ namespace qi {
         boost::get_system_time()+ boost::posix_time::milliseconds(msTimeout),
         boost::bind(&bool_identity, boost::ref(gotPong))))
       {
-        if (_maxThreads && *_nThreads >= _maxThreads + 1) // we count in nThreads
+        if (_maxThreads && _nThreads.load() >= _maxThreads + 1) // we count in nThreads
         {
           ++nbTimeout;
-          qiLogInfo() << "Threadpool " << _name << " limit reached (" << nbTimeout << " timeouts, number of tasks: " << *_totalTask << ", number of active tasks: " << *_activeTask <<  ", number of threads: " << _maxThreads << ")";
+          qiLogInfo() << "Threadpool " << _name << " limit reached (" << nbTimeout
+                      << " timeouts, number of tasks: " << _totalTask.load()
+                      << ", number of active tasks: " << _activeTask.load()
+                      <<  ", number of threads: " << _maxThreads << ")";
 
           if (nbTimeout >= maxTimeouts)
           {
@@ -180,7 +183,7 @@ namespace qi {
         }
         else
         {
-          qiLogInfo() << _name << ": Spawning more threads (" << *_nThreads << ')';
+          qiLogInfo() << _name << ": Spawning more threads (" << _nThreads.load() << ')';
           _workerThreads->launch(&EventLoopAsio::_runPool, this);
         }
         qi::os::msleep(msGrace);
@@ -263,9 +266,9 @@ namespace qi {
     {
       qiLogVerbose()
           << "Waiting threads from the pool \"" << _name << "\", remaining tasks: "
-          << *_totalTask << " (" << *_activeTask <<  " active)...";
+          << _totalTask.load() << " (" << _activeTask.load() <<  " active)...";
       _workerThreads->joinAll();
-      assert(*_running == 0);
+      QI_ASSERT(_running.load() == 0);
       qiLogDebug()  << "Waiting done";
     }
   }
@@ -619,7 +622,7 @@ namespace qi {
     static boost::mutex    eventLoopMutex;
     static qi::Atomic<int> init(0);
 
-    if (*init)
+    if (init.load())
       return ctx;
 
     {

@@ -8,7 +8,10 @@
 #include <boost/filesystem/fstream.hpp>
 #include <boost/filesystem.hpp>
 
+#include <qi/log.hpp>
 #include <qi/path.hpp>
+
+qiLogCategory("qi.path");
 
 namespace qi {
   namespace path {
@@ -46,7 +49,13 @@ static void recParseQiPathConf(const std::string &prefix, std::vector<std::strin
       continue;
     }
     boost::filesystem::path bpath(path, qi::unicodeFacet());
-    if (!boost::filesystem::exists(bpath)) {
+    boost::system::error_code ec;
+    bool exists = boost::filesystem::exists(bpath, ec);
+    if (!exists) {
+      continue;
+    }
+    if (ec) {
+      qiLogError() << "Cannot access path '" << bpath << "': " << ec.message();
       continue;
     }
     std::string newPrefix = bpath.string(qi::unicodeFacet());

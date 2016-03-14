@@ -379,9 +379,16 @@ TEST(QiOs, isProcessRunningRealProcessWithArgs)
 TEST(QiOs, isProcessRunningRealProcessWithArgsUnicode)
 {
   const std::string originalExecutable { "testlaunchloop" };
-
-  const std::string executable =
-      boost::filesystem::unique_path("%%%%%%%%ユニコード").string(qi::unicodeFacet());
+  const std::string originalExecutablePath = qi::path::findBin(originalExecutable);
+  // we'll copy the originalExecutable to a unique file inside a unique direcory.
+  // we re-use the unique directory name to build a unique file name.
+  const qi::Path tmp = qi::Path(qi::os::mktmpdir());
+  // japanese ideograms (specified by their unicode code point)
+  // as an utf-8-encoded string (does not work on VS).
+  //char utf8[] = u8"-\u30e6\u30cb\u30b3\u30fc\u30c9";
+  // The same ideograms, specified by their utf-8 encoding
+  char utf8[] = "-\xe3\x83\xa6\xe3\x83\x8b\xe3\x82\xb3\xe3\x83\xbc\xe3\x83\x89";
+  const std::string executable = tmp.filename() + utf8;
   std::string executableWithExtension = executable;
 #if BOOST_OS_WINDOWS && defined(NDEBUG)
     executableWithExtension += ".exe";
@@ -389,9 +396,6 @@ TEST(QiOs, isProcessRunningRealProcessWithArgsUnicode)
     executableWithExtension += "_d.exe";
 #endif
 
-  const std::string originalExecutablePath = qi::path::findBin(originalExecutable);
-
-  const qi::Path tmp = qi::Path(qi::os::mktmpdir());
   const qi::Path executablePathWithExtension =
           tmp / executableWithExtension;
   const qi::path::ScopedFile executableFile(executablePathWithExtension);

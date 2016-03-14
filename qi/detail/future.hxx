@@ -102,7 +102,7 @@ namespace detail {
     template <typename AF>
     static boost::function<void(const Future<T>&)> makeFunc(AF&& func, const qi::Promise<R>& promise)
     {
-      assert(false && "unreachable code");
+      QI_ASSERT(false && "unreachable code");
       return {};
     }
   };
@@ -187,7 +187,7 @@ namespace detail {
     template <typename AF>
     static boost::function<void(const Future<T>&)> makeFunc(AF&& func, const qi::Promise<R>& promise)
     {
-      assert(false && "unreachable code");
+      QI_ASSERT(false && "unreachable code");
       return {};
     }
   };
@@ -197,6 +197,13 @@ namespace detail {
   template <typename T>
   template <typename R, typename AF>
   inline Future<R> Future<T>::thenR(FutureCallbackType type, AF&& func)
+  {
+    return thenRImpl<R>(type, std::forward<AF>(func));
+  }
+
+  template <typename T>
+  template <typename R, typename AF>
+  inline Future<R> Future<T>::thenRImpl(FutureCallbackType type, AF&& func)
   {
     boost::weak_ptr<detail::FutureBaseTyped<T> > weakp(_p);
     qi::Promise<R> promise([weakp](const qi::Promise<R>&){
@@ -229,6 +236,13 @@ namespace detail {
   template <typename T>
   template <typename R, typename AF>
   inline Future<R> Future<T>::andThenR(FutureCallbackType type, AF&& func)
+  {
+    return andThenRImpl<R>(type, std::forward(func));
+  }
+
+  template <typename T>
+  template <typename R, typename AF>
+  inline Future<R> Future<T>::andThenRImpl(FutureCallbackType type, AF&& func)
   {
     boost::weak_ptr<detail::FutureBaseTyped<T> > weakp(_p);
     qi::Promise<R> promise([weakp](const qi::Promise<R>&){
@@ -417,7 +431,7 @@ namespace detail {
     void FutureBaseTyped<T>::setBroken(qi::Future<T>& future)
     {
       boost::recursive_mutex::scoped_lock lock(mutex());
-      assert(isRunning());
+      QI_ASSERT(isRunning());
 
       reportError("Promise broken (all promises are destroyed)");
       callCbNotify(future);

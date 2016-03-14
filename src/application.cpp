@@ -212,20 +212,26 @@ namespace qi {
     if (!bfs::exists(path) || bfs::is_directory(path))
     {
       std::string envPath = qi::os::getenv("PATH");
-      size_t begin = 0;
-      for (size_t end = envPath.find(SEPARATOR, begin);
-          end != std::string::npos;
-          begin = end + 1, end = envPath.find(SEPARATOR, begin))
+
+      if (!envPath.empty())
       {
-        std::string realPath = envPath.substr(begin, end - begin);
-        bfs::path p(realPath);
+        std::vector<std::string> envPaths;
+        boost::algorithm::split(envPaths,
+                                envPath,
+                                boost::algorithm::is_from_range(SEPARATOR,
+                                                                SEPARATOR));
 
-        p /= path;
-        p = boost::filesystem::system_complete(p);
+        for (const auto& realPath : envPaths)
+        {
+          bfs::path p(realPath);
 
-        if (boost::filesystem::exists(p) &&
-            !boost::filesystem::is_directory(p))
-          return p.string(qi::unicodeFacet());
+          p /= path;
+          p = boost::filesystem::system_complete(p);
+
+          if (boost::filesystem::exists(p) &&
+              !boost::filesystem::is_directory(p))
+            return p.string(qi::unicodeFacet());
+        }
       }
     }
 
@@ -233,11 +239,9 @@ namespace qi {
     return bfs::system_complete(path);
   }
 
-  static std::string guess_app_from_path(const char* path)
+  static qi::Path guess_app_from_path(const qi::Path& path)
   {
-    boost::filesystem::path execPath(path, qi::unicodeFacet());
-    return system_absolute(execPath).make_preferred()
-      .string(qi::unicodeFacet());
+    return system_absolute(path).make_preferred();
   }
 
   static void initApp(int& argc, char ** &argv, const std::string& path)
@@ -251,10 +255,10 @@ namespace qi {
     }
     else
     {
-      globalProgram = guess_app_from_path(argv[0]);
+      globalProgram = guess_app_from_path(qi::Path::fromNative(argv[0])).str();
       qiLogVerbose() << "Program path guessed as " << globalProgram;
     }
-    globalProgram = path::detail::normalize(globalProgram);
+    globalProgram = path::detail::normalize(globalProgram).str();
 
     parseArguments(argc, argv);
 
@@ -379,7 +383,7 @@ namespace qi {
   void Application::stop()
   {
 
-    static qi::Atomic<bool> atStopHandlerCall = false;
+    static qi::Atomic<bool> atStopHandlerCall{false};
     if (atStopHandlerCall.setIfEquals(false, true))
     {
       FunctionList& fl = lazyGet(globalAtStop);
@@ -528,11 +532,11 @@ namespace qi {
         if (ret == 0)
         {
           globalRealProgram = fname;
-          globalRealProgram = path::detail::normalize(globalRealProgram);
+          globalRealProgram = path::detail::normalize(globalRealProgram).str();
         }
         else
         {
-          globalRealProgram = guess_app_from_path(::qi::Application::argv()[0]);
+          globalRealProgram = guess_app_from_path(qi::Path::fromNative(::qi::Application::argv()[0])).str();
         }
         free(fname);
       }
@@ -543,7 +547,7 @@ namespace qi {
       if (!boost::filesystem::is_empty(fname))
         globalRealProgram = fname.string().c_str();
       else
-        globalRealProgram = guess_app_from_path(::qi::Application::argv()[0]);
+        globalRealProgram = guess_app_from_path(qi::Path::fromNative(::qi::Application::argv()[0])).str();
 #elif _WIN32
       WCHAR fname[MAX_PATH];
       int ret = GetModuleFileNameW(NULL, fname, MAX_PATH);
@@ -556,10 +560,10 @@ namespace qi {
       else
       {
         // GetModuleFileName failed, trying to guess from argc, argv...
-        globalRealProgram = guess_app_from_path(::qi::Application::argv()[0]);
+        globalRealProgram = guess_app_from_path(qi::Path::fromNative(::qi::Application::argv()[0])).str();
       }
 #else
-      globalRealProgram = guess_app_from_path(::qi::Application::argv()[0]);
+      globalRealProgram = guess_app_from_path(qi::Path::fromNative(::qi::Application::argv()[0])).str();
 #endif
       return globalRealProgram.c_str();
     }

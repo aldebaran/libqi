@@ -49,7 +49,8 @@ namespace qi {
      * \deprecated Use Application(int&, char**&, const std::string&, const
      * std::string&)
      */
-    QI_API_DEPRECATED Application(const std::string &name, int& argc, char** &argv);
+    QI_API_DEPRECATED_MSG(Use 'Application(int, char**, string, string)' instead)
+    Application(const std::string &name, int& argc, char** &argv);
     /**
      * \brief Application destructor. It executes atExit() callbacks.
      * \see qi:Application::atExit

@@ -8,6 +8,8 @@
 #define _QI_STRAND_HPP_
 
 #include <deque>
+#include <atomic>
+#include <qi/assert.hpp>
 #include <qi/detail/executioncontext.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/shared_ptr.hpp>
@@ -43,10 +45,10 @@ public:
   using Queue = std::deque<boost::shared_ptr<Callback>>;
 
   qi::ExecutionContext& _eventLoop;
-  boost::atomic<unsigned int> _curId;
-  boost::atomic<unsigned int> _aliveCount;
+  std::atomic<unsigned int> _curId;
+  std::atomic<unsigned int> _aliveCount;
   bool _processing; // protected by mutex, no need for atomic
-  boost::atomic<int> _processingThread;
+  std::atomic<int> _processingThread;
   boost::mutex _mutex;
   boost::condition_variable _processFinished;
   bool _dying;
@@ -64,12 +66,12 @@ public:
   void cancel(boost::shared_ptr<Callback> cbStruct);
 
   // don't care
-  bool isInThisContext() override { assert(false); throw 0; }
-  void postImpl(boost::function<void()> callback) override { assert(false); throw 0; }
+  bool isInThisContext() override { QI_ASSERT(false); throw 0; }
+  void postImpl(boost::function<void()> callback) override { QI_ASSERT(false); throw 0; }
   qi::Future<void> async(const boost::function<void()>& callback, qi::SteadyClockTimePoint tp) override
-  { assert(false); throw 0; }
+  { QI_ASSERT(false); throw 0; }
   qi::Future<void> async(const boost::function<void()>& callback, qi::Duration delay) override
-  { assert(false); throw 0; }
+  { QI_ASSERT(false); throw 0; }
   using ExecutionContext::async;
 };
 
@@ -113,15 +115,17 @@ public:
   void join();
 
   // DEPRECATED
-  QI_API_DEPRECATED qi::Future<void> async(const boost::function<void()>& cb,
-      qi::SteadyClockTimePoint tp) override;
-  QI_API_DEPRECATED qi::Future<void> async(const boost::function<void()>& cb,
-      qi::Duration delay) override;
+  QI_API_DEPRECATED_MSG(Use 'asyncAt' instead)
+  qi::Future<void> async(const boost::function<void()>& cb,
+                         qi::SteadyClockTimePoint tp) override;
+  QI_API_DEPRECATED_MSG(Use 'asyncDelay' instead)
+  qi::Future<void> async(const boost::function<void()>& cb,
+                         qi::Duration delay) override;
   using ExecutionContext::async;
 
 #define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)                    \
   template <typename T, typename F, typename ARG0 comma ATYPEDECL>           \
-  QI_API_DEPRECATED boost::function<T> schedulerFor(                                           \
+  QI_API_DEPRECATED_MSG(Use generic 'schedulerFor' overload instead) boost::function<T> schedulerFor(                                                             \
       const F& func, const ARG0& arg0 comma ADECL,                           \
       const boost::function<void()>& fallbackCb = boost::function<void()>()) \
   {                                                                          \
@@ -196,7 +200,24 @@ private:
 
 namespace detail
 {
-
+  template <typename F, typename... Args>
+  static auto callInStrand(
+      F& func,
+      const boost::function<void()>& onFail,
+      boost::weak_ptr<StrandPrivate> weakStrand,
+      Args&&... args)
+      -> qi::Future<typename std::decay<decltype(func(std::forward<Args>(args)...))>::type>
+  {
+    if (auto strand = weakStrand.lock())
+      return strand->async(std::bind(func, std::forward<Args>(args)...));
+    else
+    {
+      if (onFail)
+        onFail();
+      return qi::makeFutureError<
+          typename std::decay<decltype(func(std::forward<Args>(args)...))>::type>("strand is dead");
+    }
+  }
   // C++14 this can be a lambda, but we need perfect forwarding in the capture in scheduleFor below
   template <typename F>
   struct WrapInStrand
@@ -216,24 +237,20 @@ namespace detail
 
     template <typename... Args>
     auto operator()(Args&&... args) const
-        -> qi::Future<typename std::decay<decltype(std::bind(_func, std::forward<Args>(args)...)())>::type>
+        -> decltype(callInStrand(_func, _onFail, _strand, std::forward<Args>(args)...))
     {
-      // boost::bind does not work T_T
-      if (auto strand = _strand.lock())
-        return strand->async(std::bind(_func, std::forward<Args>(args)...));
-      else
-      {
-        if (_onFail)
-          _onFail();
-        return qi::makeFutureError<
-            typename std::decay<decltype(std::bind(_func, std::forward<Args>(args)...)())>::type>("strand is dead");
-      }
+      return callInStrand(_func, _onFail, _strand, std::forward<Args>(args)...);
+    }
+
+    template <typename... Args>
+    auto operator()(Args&&... args)
+        -> decltype(callInStrand(_func, _onFail, _strand, std::forward<Args>(args)...))
+    {
+      return callInStrand(_func, _onFail, _strand, std::forward<Args>(args)...);
     }
   };
-
-}
-
-}
+} // detail
+} // qi
 
 # ifdef _MSC_VER
 #  pragma warning( pop )

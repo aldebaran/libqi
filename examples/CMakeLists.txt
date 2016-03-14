@@ -5,7 +5,7 @@
 project(qi_examples)
 
 qi_create_bin(qipath_example qipath_example.cpp NO_INSTALL)
-qi_use_lib(qipath_example QI)
+qi_use_lib(qipath_example QI BOOST_FILESYSTEM)
 set_target_properties(qipath_example PROPERTIES FOLDER "examples")
 
 qi_create_bin(sharedlibrary_example sharedlibrary_example.cpp NO_INSTALL)

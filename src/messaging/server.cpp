@@ -97,7 +97,7 @@ namespace qi {
     boost::recursive_mutex::scoped_lock sl(_socketsMutex);
     auto& subscriber = _subscribers[socket];
 
-    assert(subscriber.messageReady == qi::SignalBase::invalidSignalLink &&
+    QI_ASSERT(subscriber.messageReady == qi::SignalBase::invalidSignalLink &&
            "Connecting a signal that already exists.");
 
     subscriber.messageReady =
@@ -117,11 +117,11 @@ namespace qi {
     }
 
     auto inserted = _subscribers.insert(std::make_pair(socket, SocketSubscriber{}));
-    assert(inserted.second && "Socket insertion failed. Socket already exists.");
+    QI_ASSERT(inserted.second && "Socket insertion failed. Socket already exists.");
 
     auto& subscriber = inserted.first->second;
 
-    assert(subscriber.disconnected == qi::SignalBase::invalidSignalLink && "Connecting a signal that already exists.");
+    QI_ASSERT(subscriber.disconnected == qi::SignalBase::invalidSignalLink && "Connecting a signal that already exists.");
     subscriber.disconnected =
         socket->disconnected.connect(&Server::onSocketDisconnected, this, socket, _1);
 
@@ -138,7 +138,7 @@ namespace qi {
     }
     else
     {
-      assert(subscriber.messageReady == qi::SignalBase::invalidSignalLink &&
+      QI_ASSERT(subscriber.messageReady == qi::SignalBase::invalidSignalLink &&
              "Connecting a signal that already exists.");
       subscriber.messageReady =
           socket->messageReady.connect(&Server::onMessageReady, this, _1, socket).setCallType(MetaCallType_Direct);
@@ -345,7 +345,7 @@ namespace qi {
         {
           boost::recursive_mutex::scoped_lock sl(_socketsMutex);
           auto it = _subscribers.find(socket);
-          assert(it != _subscribers.end());
+          QI_ASSERT(it != _subscribers.end());
           auto local = std::move(*it);
           _subscribers.erase(it);
           return local;

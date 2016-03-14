@@ -185,7 +185,7 @@ namespace qi
         }
       }
       // Check if we are child of it
-      assert(prev->tStart <= d->tStart);
+      QI_ASSERT(prev->tStart <= d->tStart);
       if (prev->tEnd >= d->tStart)
       {
         qiLogDebug() << "Insert to child " << d->tStart << ' ' << d->tEnd

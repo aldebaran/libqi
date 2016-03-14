@@ -9,6 +9,7 @@
 
 # include <type_traits>
 # include <qi/api.hpp>
+# include <qi/assert.hpp>
 # include <vector>
 # include <qi/atomic.hpp>
 # include <qi/config.hpp>
@@ -162,7 +163,7 @@ namespace qi {
       : _p(b._p)
     {}
 
-    bool operator==(const Future<T> &other)
+    bool operator==(const Future<T> &other) const
     {
       return _p.get() == other._p.get();
     }
@@ -319,7 +320,8 @@ namespace qi {
      *
      * @deprecated since 2.5
      */
-    QI_API_DEPRECATED bool isCancelable() const
+    QI_API_DEPRECATED_MSG("Method implementation removed, always returns 'true'")
+    bool isCancelable() const
     {
       return true;
     }
@@ -339,6 +341,7 @@ namespace qi {
      * @deprecated since 2.5 use then()
      */
     template <typename R, typename AF>
+    QI_API_DEPRECATED_MSG(Use 'then' instead)
     Future<R> thenR(FutureCallbackType type, AF&& func);
 
     /**
@@ -347,31 +350,32 @@ namespace qi {
      * @deprecated since 2.5 use then()
      */
     template <typename R, typename AF>
+    QI_API_DEPRECATED_MSG(Use 'then' instead)
     Future<R> thenR(AF&& func)
     {
-      return this->thenR<R>(FutureCallbackType_Auto, std::forward<AF>(func));
+      return thenRImpl<R>(FutureCallbackType_Auto, std::forward<AF>(func));
     }
 
     /**
      * @deprecated since 2.5 use then()
      */
     template <typename R, typename AF, typename Arg0, typename... Args>
+    QI_API_DEPRECATED_MSG(Use 'then' instead)
     Future<R> thenR(AF&& func, Arg0&& arg0, Args&&... args)
     {
-      return this->thenR<R>(
+      return thenRImpl<R>(
           FutureCallbackType_Auto,
-          std::forward<AF>(func),
-          std::forward<Arg0>(arg0),
-          std::forward<Args>(args)...);
+          qi::bind(std::forward<AF>(func), std::forward<Arg0>(arg0), std::forward<Args>(args)...));
     }
 
     /**
      * @deprecated since 2.5 use then()
      */
     template <typename R, typename AF, typename Arg0, typename... Args>
+    QI_API_DEPRECATED_MSG(Use 'then' instead)
     Future<R> thenR(FutureCallbackType type, AF&& func, Arg0&& arg0, Args&&... args)
     {
-      return thenR<R>(
+      return thenRImpl<R>(
           type,
           qi::bind(std::forward<AF>(func), arg0, std::forward<Args>(args)...));
     }
@@ -390,7 +394,7 @@ namespace qi {
     auto then(FutureCallbackType type, AF&& func)
         -> qi::Future<typename detail::DecayAsyncResult<AF, qi::Future<T>>::type>
     {
-      return this->thenR<typename detail::DecayAsyncResult<AF, qi::Future<T>>::type>(type, std::forward<AF>(func));
+      return thenRImpl<typename detail::DecayAsyncResult<AF, qi::Future<T>>::type>(type, std::forward<AF>(func));
     }
 
     /**
@@ -411,20 +415,22 @@ namespace qi {
      * If this future finishes with an error or a cancel, the callback will not be called and the returned future will
      * finish in the same state.
      *
-     * @deprecated since 2.5 use then()
+     * @deprecated since 2.5 use andThen()
      */
     template <typename R, typename AF>
+    QI_API_DEPRECATED_MSG(Use 'andThen' instead)
     Future<R> andThenR(FutureCallbackType type, AF&& func);
 
     /**
      * @brief Same as andThenR(), but with type defaulted to FutureCallbackType_Auto.
      *
-     * @deprecated since 2.5 use then()
+     * @deprecated since 2.5 use andThen()
      */
     template <typename R, typename AF>
+    QI_API_DEPRECATED_MSG(Use 'andThen' instead)
     Future<R> andThenR(AF&& func)
     {
-      return this->andThenR<R>(FutureCallbackType_Auto, std::forward<AF>(func));
+      return andThenRImpl<R>(FutureCallbackType_Auto, std::forward<AF>(func));
     }
 
     /**
@@ -439,7 +445,7 @@ namespace qi {
     auto andThen(FutureCallbackType type, AF&& func)
         -> qi::Future<typename detail::DecayAsyncResult<AF, ValueType>::type>
     {
-      return this->andThenR<typename detail::DecayAsyncResult<AF, ValueType>::type>(type, std::forward<AF>(func));
+      return this->andThenRImpl<typename detail::DecayAsyncResult<AF, ValueType>::type>(type, std::forward<AF>(func));
     }
 
     /**
@@ -503,7 +509,8 @@ namespace qi {
 #endif
 
     // @deprecated since 2.5 use the overload with Strand&
-    QI_API_DEPRECATED void connectWithStrand(qi::Strand* strand,
+    QI_API_DEPRECATED_MSG(Use overload with 'Strand&' instead)
+    void connectWithStrand(qi::Strand* strand,
         const boost::function<void(const Future<T>&)>& cb);
     void connectWithStrand(qi::Strand& strand,
         const boost::function<void(const Future<T>&)>& cb);
@@ -518,7 +525,7 @@ namespace qi {
     Future(boost::shared_ptr<detail::FutureBaseTyped<T> > p) :
       _p(p)
     {
-      assert(_p);
+      QI_ASSERT(_p);
     }
 
   protected:
@@ -544,6 +551,13 @@ namespace qi {
 
   private:
     friend class ServiceBoundObject;
+    // Private forward impl to then
+    template <typename R, typename AF>
+    Future<R> andThenRImpl(FutureCallbackType type, AF&& func);
+
+    // Private forward impl to then
+    template <typename R, typename AF>
+    Future<R> thenRImpl(FutureCallbackType type, AF&& func);
 
     // Nuke this when C++03 ends
     void setOnDestroyed(boost::function<void(ValueType)> cb)
@@ -828,7 +842,7 @@ namespace qi {
   private:
     void decRefcnt()
     {
-      assert(*_f._p->_promiseCount > 0);
+      QI_ASSERT(_f._p->_promiseCount.load() > 0);
       // this is race-free because if we reach 0 it means that this is the last Promise pointing to a state and since it
       // is the last, no one could be trying to make a copy from it while destroying it. Also no one could be changing
       // the promise state (from running to finished or whatever) while destroying it.

@@ -3,6 +3,7 @@
 **  See COPYING for the license
 */
 
+#include <qi/assert.hpp>
 #include <qi/buffer.hpp>
 #include <qi/log.hpp>
 
@@ -44,7 +45,7 @@ namespace qi
 
   void* BufferPrivate::operator new(size_t sz)
   {
-    assert(sz <= sizeof(BufferPrivate));
+    QI_ASSERT(sz <= sizeof(BufferPrivate));
     return buffer_pool::malloc();
   }
 

@@ -3,6 +3,8 @@
 **  See COPYING for the license
 */
 #include <atomic>
+#include <boost/atomic.hpp>
+
 #include <qi/strand.hpp>
 #include <qi/log.hpp>
 #include <qi/future.hpp>
@@ -90,7 +92,7 @@ void StrandPrivate::enqueue(boost::shared_ptr<Callback> cbStruct)
     }
     else
     {
-      assert(cbStruct->state == State::Canceled);
+      QI_ASSERT(cbStruct->state == State::Canceled);
       qiLogDebug() << "Job was canceled, dropping";
       return;
     }
@@ -133,7 +135,7 @@ void StrandPrivate::process()
         break;
       }
 
-      assert(_processing);
+      QI_ASSERT(_processing);
       if (_queue.empty())
       {
         qiLogDebug() << "Queue empty, stopping";
@@ -213,7 +215,7 @@ void StrandPrivate::cancel(boost::shared_ptr<Callback> cbStruct)
             break;
           }
         // state was scheduled, so the callback must be there
-        assert(erased);
+        QI_ASSERT(erased);
         // Silence compile warning unused erased
         (void)erased;
 
@@ -278,7 +280,7 @@ void Strand::join()
       prv->_queue.pop_front();
       if (task->state == StrandPrivate::State::Canceled)
         continue;
-      assert(task->state == StrandPrivate::State::Scheduled);
+      QI_ASSERT(task->state == StrandPrivate::State::Scheduled);
       task->promise.setError("the strand is dying");
       --prv->_aliveCount;
     }

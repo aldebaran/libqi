@@ -5,6 +5,7 @@
 
 #include <map>
 #include <string>
+#include <atomic>
 #include <gtest/gtest.h>
 #include <boost/thread.hpp>
 #include <qi/os.hpp>
@@ -797,19 +798,16 @@ TEST(TestFutureError, ValueOnError)
 }
 
 
-static void setTrue(bool* b)
-{
-  *b = true;
-}
-
 TEST(TestFutureCancel, AsyncCallCanceleable)
 {
+  static const auto EXECUTION_DELAY = qi::MilliSeconds{ 100 };
+
   bool b = false;
   qi::Future<void> f = qi::getEventLoop()->asyncDelay(
-    boost::bind(&setTrue, &b), qi::MicroSeconds(200));
+    [&] { b = true; }, EXECUTION_DELAY);
   f.cancel();
   // f is going to cancel asynchronously, so it can already be canceled, or not
-  qi::os::msleep(400);
+  f.wait();
   ASSERT_TRUE(!b);
   ASSERT_TRUE(f.isFinished());
   ASSERT_FALSE(f.hasError());
@@ -888,14 +886,15 @@ TEST(TestFutureCancel, Canceleable)
   EXPECT_THROW(f.hasValue(qi::FutureTimeout_None), qi::FutureException);
 }
 
-TEST(TestFutureCancel, Canceled)
+TEST(TestFutureCancel, CanceledDelayed)
 {
+  // We can't guarantee when it will be cancelled but we can guarantee it will be
+  // cancelled if cancel is called before delayed execution.
   bool b = false;
   qi::Future<void> f = qi::getEventLoop()->asyncDelay(
-    boost::bind(&setTrue, &b), qi::MicroSeconds(200000));
+    [&]{ b = true; }, qi::Hours(999999));
   f.cancel();
-  // Depending on multi-thread timing future can be finished or not at this point
-  qi::os::msleep(400);
+  f.wait();
   ASSERT_TRUE(!b);
   ASSERT_TRUE(f.isFinished());
   ASSERT_FALSE(f.hasError());
@@ -1390,30 +1389,57 @@ int ping(int v)
 
 TEST(EventLoop, async)
 {
-  qi::EventLoop* el = qi::getEventLoop();
-  qi::Future<int> f = el->asyncDelay(boost::bind(ping, 42), qi::MicroSeconds(200000));
-  EXPECT_FALSE(f.isFinished());
-  f.wait();
-  EXPECT_FALSE(f.hasError());
-  EXPECT_EQ(f.value(), 42);
+  static const qi::MilliSeconds SMALL_CALL_DELAY{ 20 };
+  static const qi::MilliSeconds BIG_CALL_DELAY{ 200 };
+  static const int VALID_VALUE = 42;
+  static const auto makeValidValue = [] { return 42; };
+  static const auto makeError = [] { throw std::runtime_error("Voluntary Fail"); };
 
-  f = el->asyncDelay(boost::bind(ping, 42), qi::MicroSeconds(200000));
-  EXPECT_FALSE(f.isFinished());
-  EXPECT_NO_THROW(f.cancel());
-  EXPECT_EQ(f.wait(), qi::FutureState_Canceled);
+  qi::EventLoop& el = *qi::getEventLoop();
+  {
+    auto f = el.asyncDelay(makeValidValue, BIG_CALL_DELAY);
+    EXPECT_FALSE(f.isFinished());
+    f.wait();
+    EXPECT_FALSE(f.hasError());
+    EXPECT_EQ(f.value(), VALID_VALUE);
+  }
 
-  f = el->asyncDelay(boost::bind(ping, -1), qi::MicroSeconds(200000));
-  EXPECT_FALSE(f.isFinished());
-  f.wait();
-  EXPECT_TRUE(f.hasError());
+  {
+    auto f = el.asyncDelay(makeValidValue, BIG_CALL_DELAY);
+    EXPECT_FALSE(f.isFinished());
+    EXPECT_NO_THROW(f.cancel());
+    EXPECT_EQ(f.wait(), qi::FutureState_Canceled);
+  }
 
-  f = el->asyncDelay(boost::bind(ping, 42), qi::MilliSeconds(20));
-  qi::os::msleep(25);
-  EXPECT_TRUE(f.isFinished());
+  {
+    auto f = el.asyncDelay(makeError, BIG_CALL_DELAY);
+    EXPECT_FALSE(f.isFinished());
+    f.wait();
+    EXPECT_TRUE(f.hasError());
+  }
 
-  f = el->asyncAt(boost::bind(ping, 42), qi::SteadyClock::now() + qi::MilliSeconds(10));
-  qi::os::msleep(15);
-  EXPECT_TRUE(f.isFinished());
+  // We cannot guarantee the minimum delay that an async call will take, but we can guarantee that it will
+  // be systematically after the specified delay.
+
+  {
+    const auto beginTime = qi::SteadyClock::now();
+    auto callTime = beginTime;
+    auto f = el.asyncDelay([&]{ callTime = qi::SteadyClock::now(); }, SMALL_CALL_DELAY);
+    f.wait(); // This test will timeout if it's not called in a reasonable time
+    EXPECT_TRUE(f.isFinished());
+    const auto timeUntilCall = callTime - beginTime;
+    EXPECT_TRUE(timeUntilCall >= SMALL_CALL_DELAY);
+  }
+
+  {
+    const auto beginTime = qi::SteadyClock::now();
+    auto callTime = beginTime;
+    auto f = el.asyncAt([&] { callTime = qi::SteadyClock::now(); }, qi::SteadyClock::now() + SMALL_CALL_DELAY);
+    f.wait(); // This test will timeout if it's not called in a reasonable time
+    EXPECT_TRUE(f.isFinished());
+    const auto timeUntilCall = callTime - beginTime;
+    EXPECT_TRUE(timeUntilCall >= SMALL_CALL_DELAY);
+  }
 
   qi::async<void>([]{}).value();
 }

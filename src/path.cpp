@@ -335,7 +335,7 @@ namespace qi
 #ifdef _WIN32
       std::string dosCompatiblePath(const std::string &pathString)
       {
-        // Some libs of our toolchain does not support UTF-8 on Windows
+        // Some libs of our toolchain do not support UTF-8 on Windows
         // for Py_SetPythonHome for example, we need to clean path from UTF-8 chars
         // to make it usable.
         // The fix found is to convert path into short DOS 8.3 path
@@ -406,13 +406,14 @@ namespace qi
     }
 
     std::string findConf(const std::string &applicationName,
-                         const std::string &filename)
+                         const std::string &filename,
+                         bool excludeUserWritablePath)
     {
       if(filename == "") {
         qiLogError() << "Filename cannot be empty!";
         return std::string();
       }
-      return getInstance()->findConf(applicationName, filename);
+      return getInstance()->findConf(applicationName, filename, excludeUserWritablePath);
     }
 
     std::string findData(const std::string &applicationName,
@@ -440,9 +441,11 @@ namespace qi
       return getInstance()->listData(applicationName, pattern, excludeUserWritablePath);
     }
 
-    std::vector<std::string> confPaths(const std::string &applicationName)
+    std::vector<std::string> confPaths(const std::string &applicationName,
+                                       bool excludeUserWritablePath)
     {
-      return getInstance()->confPaths(applicationName);
+      return getInstance()->confPaths(applicationName,
+                                      excludeUserWritablePath);
     }
 
     std::vector<std::string> dataPaths(const std::string &applicationName,
@@ -481,7 +484,9 @@ namespace qi
     std::string convertToDosPath(const std::string &pathString)
     {
 #ifdef _WIN32
-      // Windows doesn't natively support unicode path. Returns an ASCII one
+      // Windows cannot describe an unicode path with a narrow string.
+      // Yet, for DOS compatibility, it can return an ASCII narrow string
+      // describing the path, provided a file/directory already exists at that path.
       return detail::dosCompatiblePath(pathString);
 #else
       // just ignore

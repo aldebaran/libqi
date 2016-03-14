@@ -411,20 +411,27 @@ namespace qi {
     {
       boost::filesystem::path p(link, qi::unicodeFacet());
 
-      while (boost::filesystem::exists(p))
+      try
       {
-        if (boost::filesystem::is_symlink(p))
+        while (boost::filesystem::exists(p))
         {
-          p = boost::filesystem::read_symlink(p);
+          if (boost::filesystem::is_symlink(p))
+          {
+            p = boost::filesystem::read_symlink(p);
+          }
+          else
+          {
+            std::string basename = p.parent_path().filename().string(qi::unicodeFacet());
+            std::string filename = p.filename().string(qi::unicodeFacet());
+            boost::filesystem::path res(basename, qi::unicodeFacet());
+            res.append(filename, qi::unicodeFacet());
+            return res.make_preferred().string(qi::unicodeFacet());
+          }
         }
-        else
-        {
-          std::string basename = p.parent_path().filename().string(qi::unicodeFacet());
-          std::string filename = p.filename().string(qi::unicodeFacet());
-          boost::filesystem::path res(basename, qi::unicodeFacet());
-          res.append(filename, qi::unicodeFacet());
-          return res.make_preferred().string(qi::unicodeFacet());
-        }
+      }
+      catch (const boost::filesystem::filesystem_error &e)
+      {
+        qiLogError() << "Cannot access path '" << link << "': " << e.what();
       }
       return std::string();
     }

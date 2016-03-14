@@ -22,7 +22,7 @@ namespace qi {
   //Taken from boost::json
   inline char to_hex_char(unsigned int c)
   {
-    assert( c <= 0xF );
+    QI_ASSERT( c <= 0xF );
     const char ch = static_cast<char>( c );
     if( ch < 10 )
       return '0' + ch;

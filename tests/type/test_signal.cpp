@@ -34,7 +34,7 @@ void foolast(int, qi::Promise<void> prom, qi::Atomic<int>* r) { prom.setValue(0)
 
 TEST(TestSignal, TestCompilation)
 {
-  qi::Atomic<int>        res = 0;
+  qi::Atomic<int>        res{0};
   qi::Signal<int> s;
   Foo*                   f = (Foo*)1;
   qi::Promise<void>      prom;
@@ -52,10 +52,10 @@ TEST(TestSignal, TestCompilation)
 
   s(42);
 
-  while (*res != 6)
+  while (res.load() != 6)
     qi::os::msleep(10);
 
-  ASSERT_EQ(6, *res);
+  ASSERT_EQ(6, res.load());
   ASSERT_TRUE(prom.future().isFinished());
   ASSERT_FALSE(prom.future().hasError());
 }
@@ -88,15 +88,15 @@ void byRef(int& i, bool* done)
 TEST(TestSignal, AutoDisconnect)
 {
   // Test automatic disconnection when passing shared_ptrs
-  qi::Atomic<int> r = 0;
+  qi::Atomic<int> r{0};
   boost::shared_ptr<Foo> foo(new Foo());
   qi::Signal<qi::Atomic<int>*, int> sig;
   sig.connect(&Foo::func1, boost::weak_ptr<Foo>(foo), _1, _2).setCallType(qi::MetaCallType_Direct);
   sig(&r, 0);
-  ASSERT_EQ(1, *r);
+  ASSERT_EQ(1, r.load());
   foo.reset();
   sig(&r, 0);
-  ASSERT_EQ(1, *r);
+  ASSERT_EQ(1, r.load());
 }
 
 void waitFuture(qi::Atomic<int>& cnt, qi::Promise<void> start, qi::Future<void> f)
@@ -115,7 +115,7 @@ TEST(TestSignal, NonBlockingDestroy)
 
   qi::Promise<void> start;
   qi::Promise<void> finish;
-  qi::Atomic<int> cnt = 0;
+  qi::Atomic<int> cnt{0};
 
   {
     qi::Signal<void> sig;
@@ -281,7 +281,7 @@ TEST(TestSignal, Dynamic)
   EXPECT_EQ(56, trig);
 }
 
-void onSubs(boost::atomic<bool>& var, bool subs)
+void onSubs(std::atomic<bool>& var, bool subs)
 {
   var = subs;
 }
@@ -291,7 +291,7 @@ void callback(int i)
 
 TEST(TestSignal, OnSubscriber)
 {
-  boost::atomic<bool> subscribers(false);
+  std::atomic<bool> subscribers(false);
 
   qi::Signal<int> sig(boost::bind(onSubs, boost::ref(subscribers), _1));
   ASSERT_FALSE(subscribers);

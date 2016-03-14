@@ -47,7 +47,7 @@ boost::filesystem::path getHomePath()
 TEST(qiPath, callingInit)
 {
   const qi::Path expected = qi::path::detail::normalize(absPath(argpath)).parent().parent();
-  
+
   std::string actual = qi::path::sdkPrefix();
   std::string expect = expected.str();
   boost::to_lower(expect);
@@ -363,6 +363,7 @@ TEST(qiPath, readingWritingfindConfigs)
   boost::to_lower(expect);
   boost::to_lower(fooCfg);
   ASSERT_EQ(expect, fooCfg);
+  ASSERT_TRUE(sdkl.findConf("foo", "foo.cfg", true).empty());
 
   std::cout << "removing: " << fooCfg << std::endl;
   remove(fooCfg.c_str());
