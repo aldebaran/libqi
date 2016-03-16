@@ -292,7 +292,7 @@ namespace qi {
     return _p->_serverObject.endpoints();
   }
 
-  void Session::loadService(const std::string &moduleName, const std::string& renameModule, const AnyReferenceVector& args)
+  qi::FutureSync<unsigned int> Session::loadService(const std::string &moduleName, const std::string& renameModule, const AnyReferenceVector& args)
   {
     size_t separatorPos = moduleName.find_last_of(".");
     std::string function = moduleName.substr(separatorPos + 1);
@@ -302,7 +302,7 @@ namespace qi {
       rename = function;
 
     qi::AnyValue retval = _callModule(moduleName, args, qi::MetaCallType_Direct).value();
-    registerService(rename, retval.to<qi::AnyObject>());
+    return registerService(rename, retval.to<qi::AnyObject>());
   }
 
   qi::Future<AnyValue> Session::_callModule(const std::string &moduleName,
