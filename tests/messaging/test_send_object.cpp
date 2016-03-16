@@ -62,6 +62,23 @@ TEST(Module, load_received_obj)
   s->close();
 }
 
+TEST(Module, unregister_obj)
+{
+  TestMode::forceTestMode(TestMode::Mode_SD);
+  TestSessionPair p;
+
+  qi::SessionPtr s = p.server();
+
+  int index = s->loadService("naoqi.testanymodule.test");
+  qi::AnyObject o = s->service("test");
+  test_service(o);
+
+  s->unregisterService(index).wait();
+  ASSERT_ANY_THROW(s->service("test"));
+
+  s->close();
+}
+
 int main(int argc, char **argv) {
   qi::Application app(argc, argv);
   ::testing::InitGoogleTest(&argc, argv);

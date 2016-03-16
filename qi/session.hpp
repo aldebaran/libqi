@@ -85,7 +85,7 @@ namespace qi {
      * Tries to call the factory with (this, args...) if possible, otherwise it
      * calls it with (args...) only.
      */
-    void loadService(const std::string& moduleName, const std::string &renameModule = "",
+    qi::FutureSync<unsigned int> loadService(const std::string& moduleName, const std::string &renameModule = "",
         const AnyReferenceVector& args = AnyReferenceVector());
 
     /** Load a module and call the specified function asynchronously
