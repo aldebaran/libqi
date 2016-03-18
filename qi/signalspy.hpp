@@ -141,8 +141,7 @@ public:
       recordedSubscription = recorded.connect(stranded(
       [this, waiting, &recordedSubscription, timingOut, nofRecords]() mutable
       {
-        assert(nofRecords >= _records.size());
-        if (nofRecords == _records.size())
+        if (nofRecords <= _records.size())
         {
           waiting.setValue(true);
           timingOut.cancel();
