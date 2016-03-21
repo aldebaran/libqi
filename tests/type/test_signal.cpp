@@ -150,51 +150,44 @@ TEST(TestSignal, SignalSignal)
 {
   qi::SignalF<void (int)> sig1;
   qi::SignalF<void (int)> *sig2 = new  qi::SignalF<void (int)>();
-  int res = 0;
   sig1.connect(*sig2);
-  sig2->connect(boost::bind<void>(&lol, _1, boost::ref(res)));
+  qi::SignalSpy spy(*sig2);
   sig1(10);
-  qi::os::msleep(300);
-  ASSERT_EQ(10, res);
+  ASSERT_TRUE(spy.waitUntil(1, qi::MilliSeconds(300)));
+  ASSERT_EQ(10, spy.record(0).arg<int>(0));
+
   // Test autodisconnect
   delete sig2;
   sig1(20);
-  qi::os::msleep(300);
-  ASSERT_EQ(10, res);
+  ASSERT_FALSE(spy.waitUntil(2, qi::MilliSeconds(300)));
 }
 
 class SignalTest {
 public:
-  SignalTest() : payload(0) {}
   qi::Signal<int> sig;
   qi::Signal<int> sig2;
-  void callback(int val) {
-    payload = val;
-  }
-  int payload;
 };
 
 
 TEST(TestSignal, SignalSignal2)
 {
   SignalTest st;
-  st.sig2.connect(&SignalTest::callback, boost::ref(st), _1);
+  qi::SignalSpy spy(st.sig2);
   st.sig.connect(st.sig2);
   qiLogDebug() << "sigptrs are " << &st.sig << " " << &st.sig2;
   st.sig(4242);
-  for (unsigned i=0; i<50 && st.payload != 4242; ++i)
-    qi::os::msleep(20);
-  EXPECT_EQ(st.payload, 4242);
+  ASSERT_TRUE(spy.waitUntil(1, qi::MilliSeconds(300)));
+  assert(spy.recordCount() == 1u);
+  EXPECT_EQ(4242, spy.lastRecord().arg<int>(0));
 }
 
 TEST(TestSignal, SignalN)
 {
   qi::Signal<int> sig;
-  int res = 0;
-  sig.connect(boost::bind<void>(&lol, _1, boost::ref(res)));
+  qi::SignalSpy spy(sig);
   sig(5);
-  qi::os::msleep(300);
-  ASSERT_EQ(5, res);
+  ASSERT_TRUE(spy.waitUntil(1, qi::MilliSeconds(300)));
+  ASSERT_EQ(5, spy.lastRecord().arg<int>(0));
 }
 
 class SigHolder
@@ -325,8 +318,8 @@ TEST(TestSignalSpy, Counter)
   qi::SignalSpy sp(sig);
   QI_EMIT sig(1);
   QI_EMIT sig(1);
-  qi::os::sleep(1);
-  ASSERT_EQ(sp.getCounter(), 2u);
+  ASSERT_TRUE(sp.waitUntil(2, qi::MilliSeconds(300)));
+  ASSERT_EQ(sp.recordCount(), 2u);
 
   qi::DynamicObjectBuilder ob;
   ob.advertiseSignal("signal", &sig);
@@ -334,8 +327,8 @@ TEST(TestSignalSpy, Counter)
   qi::SignalSpy sp2(obj, "signal");
   QI_EMIT sig(1);
   QI_EMIT sig(1);
-  qi::os::sleep(1);
-  ASSERT_EQ(sp2.getCounter(), 2u);
+  ASSERT_TRUE(sp2.waitUntil(2, qi::MilliSeconds(300)));
+  ASSERT_EQ(sp2.recordCount(), 2u);
 }
 
 TEST(TestSignalSpy, Async)
@@ -345,11 +338,47 @@ TEST(TestSignalSpy, Async)
   qi::async(boost::bind(boost::ref(sig), 1));
   qi::async(boost::bind(boost::ref(sig), 1));
   ASSERT_TRUE(sp.waitUntil(2, qi::Seconds(1)));
-  ASSERT_EQ(sp.getCounter(), 2u);
+  ASSERT_EQ(sp.recordCount(), 2u);
+}
+
+TEST(TestSignalSpy, StoringTypedValueRecords)
+{
+  const std::vector<int> ints{ 1, 42, 13, 2016 };
+  const std::vector<std::string> strings{ "poil", "slip", "banane", "pancréas" };
+  qi::Signal<int, std::string> signal;
+  qi::SignalSpy spy(signal);
+
+  signal(ints[0], strings[0]);
+  ASSERT_EQ(1u, spy.recordCount());
+  auto record = spy.record(0);
+  ASSERT_EQ(ints[0], record.arg<int>(0));
+  ASSERT_EQ(strings[0], record.arg<std::string>(1));
+
+  for(auto i = 1u; i < ints.size(); ++i)
+  {
+    signal(ints[i], strings[i]);
+  }
+  spy.waitUntil(ints.size(), qi::MilliSeconds(300));
+
+  for(auto i = 1u; i < ints.size(); ++i)
+  {
+    record = spy.record(i);
+    EXPECT_EQ(ints[i], record.arg<int>(0));
+    EXPECT_EQ(strings[i], record.arg<std::string>(1));
+  }
+
+  auto records = spy.allRecords();
+  ASSERT_EQ(ints.size(), records.size());
+  for(auto i = 0u; i < records.size(); ++i)
+  {
+    EXPECT_EQ(ints[i], records[i].arg<int>(0));
+    EXPECT_EQ(strings[i], records[i].arg<std::string>(1));
+  }
 }
 
 int main(int argc, char **argv) {
   qi::Application app(argc, argv);
   ::testing::InitGoogleTest(&argc, argv);
+  qi::log::addFilter("*", qi::LogLevel_Debug);
   return RUN_ALL_TESTS();
 }

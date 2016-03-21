@@ -215,10 +215,12 @@ namespace qi {
     void appendValue(const AutoAnyReference& value, ObjectHost* context = 0, StreamContext* streamContext = 0);
     MessageAddress address() const;
 
-    bool         isValid();
+    bool         isValid() const;
 
   public:
     boost::shared_ptr<MessagePrivate> _p;
+
+  private:
     void         cow();
   };
 

@@ -146,8 +146,7 @@ namespace qi {
     if (this == &msg)
       return *this;
 
-    _p->buffer = msg._p->buffer;
-    memcpy(&(_p->header), &(msg._p->header), sizeof(MessagePrivate::MessageHeader));
+    _p = msg._p;
     return *this;
   }
 
@@ -337,6 +336,7 @@ namespace qi {
   {
     QI_ASSERT(type() == Type_Error && "called setError on a non Type_Error message");
 
+    cow();
     // Clear the buffer before setting an error.
     _p->buffer.clear();
 
@@ -524,7 +524,7 @@ namespace qi {
     return _p->buffer;
   }
 
-  bool Message::isValid()
+  bool Message::isValid() const
   {
     if (_p->header.magic != qi::MessagePrivate::magic)
     {

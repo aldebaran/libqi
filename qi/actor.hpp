@@ -25,12 +25,12 @@ namespace qi
  */
 class QI_API Actor
 {
+  mutable qi::Strand _strand; // The name of this members needs to be declared before using it in the signature of
+                              // the following member functions. This is a C++ restriction so do not move this down.
 public:
-  Actor()
-    : _strand()
-  {}
-  Actor(const Actor&)
-  {}
+  Actor() = default;
+  Actor(const Actor&) = delete; // An actor cannot be copy-able nor move-able.
+
   explicit Actor(qi::ExecutionContext& ec)
     : _strand(ec)
   {}
@@ -42,8 +42,39 @@ public:
     return &_strand;
   }
 
-private:
-  mutable qi::Strand _strand;
+  template<class... Args>
+  auto stranded(Args&&... args) const
+    -> decltype(_strand.schedulerFor(std::forward<Args>(args)...)) // TODO C++14: remove this line
+  {
+    return _strand.schedulerFor(std::forward<Args>(args)...);
+  }
+
+  template<class... Args>
+  auto async(Args&&... args) const
+    -> decltype(_strand.async(std::forward<Args>(args)...)) // TODO C++14: remove this line
+  {
+    return _strand.async(std::forward<Args>(args)...);
+  }
+
+  template<class... Args>
+  auto asyncDelay(Args&&... args) const
+    -> decltype(_strand.asyncDelay(std::forward<Args>(args)...)) // TODO C++14: remove this line
+  {
+    return _strand.asyncDelay(std::forward<Args>(args)...);
+  }
+
+  template<class... Args>
+  auto asyncAt(Args&&... args) const
+    -> decltype(_strand.asyncAt(std::forward<Args>(args)...)) // TODO C++14: remove this line
+  {
+    return _strand.asyncAt(std::forward<Args>(args)...);
+  }
+
+  void joinTasks()
+  {
+    _strand.join();
+  }
+
 };
 
 }

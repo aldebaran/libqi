@@ -229,7 +229,7 @@ struct MyActor : qi::Actor
 {
   std::atomic<bool> calling;
   MyActor() : calling(0) {}
-  ~MyActor() { strand()->join(); }
+  ~MyActor() { joinTasks(); }
   int f(int end, qi::Promise<void> finished)
   {
     int startval = prop.get();
@@ -347,7 +347,7 @@ TEST(TestStrand, AllFutureSignalPropertyPeriodicTaskAsyncCallTypeErased)
     for (int i = 0; i < 50; ++i)
       signal.connect(&MyActor::f, obj.get(), _1, finished);
     for (int i = 0; i < 50; ++i)
-      aobj.connect("sig", boost::function<void(int)>(obj->strand()->schedulerFor(boost::bind(&MyActor::f, obj, _1, finished))));
+      aobj.connect("sig", boost::function<void(int)>(obj->stranded(boost::bind(&MyActor::f, obj, _1, finished))));
 
     per.start();
     for (int i = 0; i < 25; ++i)

@@ -1206,10 +1206,6 @@ TEST(TestObjectT, Passing)
 {
   TestSessionPair p;
 
-  // FIXME support object passing in the gateway
-  if (p.mode() == TestMode::Mode_Gateway)
-    return;
-
   Object<PassObject> pingerService(new PassObject);
   p.server()->registerService("pinger", pingerService);
   AnyObject pinger = p.client()->service("pinger");
@@ -1228,10 +1224,6 @@ TEST(TestObjectT, Passing)
 TEST(TestObjectT, Doom)
 {
   TestSessionPair p;
-
-  // FIXME support object passing in the gateway
-  if (p.mode() == TestMode::Mode_Gateway)
-    return;
 
   Object<PassObject> pingerService(new PassObject);
   p.server()->registerService("pinger", pingerService);

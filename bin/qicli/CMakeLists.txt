@@ -26,6 +26,6 @@ set(SRCS
 
 qi_create_bin(qicli
   ${SRCS}
-  DEPENDS QI BOOST_PROGRAM_OPTIONS)
+  DEPENDS QI QICORE BOOST_PROGRAM_OPTIONS)
 
 include_directories(./)

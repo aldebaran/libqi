@@ -1,5 +1,5 @@
 <project version="3">
   <qibuild name="libqi-bin">
-    <depends buildtime="true" runtime="true" names="dl boost pthread libqi breakpad" />
+    <depends buildtime="true" runtime="true" names="dl boost pthread libqi breakpad libqicore" />
   </qibuild>
 </project>
