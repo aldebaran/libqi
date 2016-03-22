@@ -53,7 +53,7 @@ namespace log
       return;
 
     // If it fail again print an error message
-    std::cerr << "Can't set message to journald." << std::endl;
+    std::cerr << "Can't send message to journald." << std::endl;
   }
 }
 }
