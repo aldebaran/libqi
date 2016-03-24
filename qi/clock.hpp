@@ -76,7 +76,8 @@ namespace qi
 
   /**
    * \brief The Clock class represents a system-wide clock, best suitable for
-   * timestamping events.
+   * timestamping events. Typically monotonic and unaffected by the system clock
+   * adjustment, altough this is not guaranteed.
    *
    * \includename{qi/clock.hpp}
    *
