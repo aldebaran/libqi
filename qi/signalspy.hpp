@@ -117,7 +117,7 @@ public:
   }
 
   /// Waits for the given number of records to be reached, before the given timeout.
-  qi::FutureSync<bool> waitUntil(unsigned int nofRecords, const qi::Duration& timeout) const
+  qi::FutureSync<bool> waitUntil(size_t nofRecords, const qi::Duration& timeout) const
   {
     qi::Promise<bool> waiting;
     async([this, waiting, nofRecords, timeout]() mutable
