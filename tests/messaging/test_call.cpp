@@ -23,19 +23,6 @@
 
 qiLogCategory("test");
 
-//TEST(TestMessage, COW)
-//{
-//  qi::Message m1;
-//  const void* ptr = &m1.signature();
-//  m1.setSignature("s");
-//  ASSERT_EQ(ptr, &m1.signature());
-//  qi::Message m2(m1);
-//  ASSERT_EQ(ptr, &m1.signature());
-//  ASSERT_EQ(ptr, &m2.signature());
-//  m2.setService(1);
-//  ASSERT_TRUE(&m1.signature() != &m2.signature());
-//}
-
 int getint()
 {
   return 42;
@@ -1585,6 +1572,63 @@ TEST(TestCall, TestAsyncFutureIsCancelable)
   future.cancel();
   future.wait();
   ASSERT_TRUE(future.isCanceled());
+}
+
+class SimpleClass
+{
+public:
+  int print() { return v; }
+  int v = 0;
+};
+QI_REGISTER_MT_OBJECT(SimpleClass, print);
+
+using SimpleClassPtrList = std::vector<qi::Object<SimpleClass>>;
+class DummyProp
+{
+public:
+  void setProp()
+  {
+    boost::shared_ptr<SimpleClass> simpleClass(new SimpleClass);
+    qi::Object<SimpleClass> simpleClassObj = qi::AnyReference::from(simpleClass).toObject();
+
+    std::vector<qi::Object<SimpleClass>> propList;
+    propList.push_back(simpleClassObj);
+
+    prop.set(propList);
+  }
+
+  qi::Property<SimpleClassPtrList> prop;
+};
+QI_REGISTER_MT_OBJECT(DummyProp, setProp, prop);
+
+static void getAndSetObjProp(const TestSessionPair& p, const std::string& module, const std::string& prop)
+{
+  qi::SessionPtr sess = qi::makeSession();
+  if (p.mode() == TestMode::Mode_Gateway)
+    sess->connect(p.gatewayEndpoints()[0]);
+  else
+    sess->connect(p.serviceDirectoryEndpoints()[0]);
+
+  qi::AnyObject obj = sess->service(module);
+  auto objProp = obj.property<std::vector<qi::AnyObject>>(prop).value();
+
+  obj.call<void>("setProp");
+  sess->close();
+}
+
+TEST(TestCall, TestMultipleGetObjectProperty)
+{
+  TestSessionPair p;
+
+  boost::shared_ptr<DummyProp> dummyProp(new DummyProp);
+  qi::Object<DummyProp> dummyPropObj = qi::AnyReference::from(dummyProp).toObject();
+
+  p.server()->registerService("Serv", dummyPropObj);
+  qi::AnyObject obj = p.server()->service("Serv");
+  obj.call<void>("setProp");
+
+  for (int i = 0; i < 10; ++i)
+    ASSERT_NO_THROW(getAndSetObjProp(p, "Serv", "prop"));
 }
 
 int main(int argc, char **argv) {
