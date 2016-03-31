@@ -84,7 +84,12 @@ public:
 
     return async([this, index]
     {
-      qiLogDebug("qi.signalspy") << "Getting record #" << index;
+      if(index >= _records.size())
+      {
+        std::stringstream message;
+        message << "index " << index << " is out of range";
+        throw std::runtime_error(message.str());
+      }
       return _records[index];
     }).value();
   }
