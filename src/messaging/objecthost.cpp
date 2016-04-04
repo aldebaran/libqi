@@ -33,18 +33,45 @@ static void async_destroy_attempt(BoundAnyObject obj, Future<void> fut)
   obj.reset();
 }
 
+BoundAnyObject ObjectHost::recursiveFindObject(uint32_t objectId)
+{
+  boost::recursive_mutex::scoped_lock lock(_mutex);
+  auto it = _objectMap.find(objectId);
+  auto e = end(_objectMap);
+  if (it != e)
+  {
+    return it->second;
+  }
+  // Object was not found, so search in the children.
+  auto b = begin(_objectMap);
+  while (b != e)
+  {
+    BoundObject* obj{b->second.get()};
+    // Children are BoundObjects. Unfortunately, BoundObject has no common
+    // ancestors with ObjectHost. Nevertheless, some children can indeed
+    // be ObjectHost. There is no way to get this information but to
+    // perform a dynamic cast. The overhead should be negligible, as
+    // this case is rare.
+    if (auto* host = dynamic_cast<ObjectHost*>(obj))
+    {
+      if (auto obj = host->recursiveFindObject(objectId))
+      {
+        return obj;
+      }
+    }
+    ++b;
+  }
+  return {};
+}
+
 void ObjectHost::onMessage(const qi::Message &msg, TransportSocketPtr socket)
 {
-  BoundAnyObject obj;
+  BoundAnyObject obj{recursiveFindObject(msg.object())};
+  if (!obj)
   {
-    boost::recursive_mutex::scoped_lock lock(_mutex);
-    ObjectMap::iterator it = _objectMap.find(msg.object());
-    if (it == _objectMap.end())
-    {
-      return;
-    }
-    // Keep ptr alive while message is being processed, even if removeObject is called
-    obj = it->second;
+    // Should we treat this as an error ? Returning without error is the
+    // legacy behavior.
+    return;
   }
   obj->onMessage(msg, socket);
 

@@ -21,7 +21,6 @@ void test_service(const qi::AnyObject &o)
 
 TEST(Module, pass_obj)
 {
-  TestMode::forceTestMode(TestMode::Mode_SD);
   TestSessionPair p;
 
   qi::SessionPtr s = p.server();
@@ -46,7 +45,6 @@ TEST(Module, pass_obj)
 
 TEST(Module, load_received_obj)
 {
-  TestMode::forceTestMode(TestMode::Mode_SD);
   TestSessionPair p;
 
   qi::SessionPtr s = p.server();
@@ -81,7 +79,68 @@ TEST(Module, unregister_obj)
 
 int main(int argc, char **argv) {
   qi::Application app(argc, argv);
+  TestMode::initTestMode(argc, argv);
   ::testing::InitGoogleTest(&argc, argv);
 
   return RUN_ALL_TESTS();
+}
+
+class ObjectEmitter
+{
+public:
+  void emitObject(qi::AnyObject o) { QI_EMIT onTruc(o); }
+  qi::Signal<qi::AnyObject> onTruc;
+};
+
+QI_REGISTER_OBJECT(ObjectEmitter, emitObject, onTruc)
+
+TEST(Module, pass_obj_made_from_module)
+{
+  qi::AnyModule testModule = qi::import("naoqi.testanymodule");
+  auto obj = testModule.call<qi::AnyObject>("test");
+  ASSERT_EQ(1, obj.call<int>("testMethod", 0)); // just checking, in case of
+
+  TestSessionPair p;
+  p.server()->registerService("plop", boost::make_shared<ObjectEmitter>());
+
+  qi::AnyObject remotePlop = p.client()->service("plop");
+  qi::Promise<void> receivingObject;
+  remotePlop.connect("onTruc", boost::function<void(qi::AnyObject)>([&](qi::AnyObject o)
+  {
+    ASSERT_EQ(1, o.call<int>("testMethod", 0)); // this is the real test
+    receivingObject.setValue(0);
+  }));
+  remotePlop.async<void>("emitObject", obj);
+  ASSERT_EQ(qi::FutureState_FinishedWithValue, receivingObject.future().waitFor(qi::MilliSeconds(1000)));
+}
+
+class ObjectEmitterFactoryService
+{
+public:
+  qi::AnyObject makeObjectEmitter() { return boost::make_shared<ObjectEmitter>(); }
+};
+
+QI_REGISTER_OBJECT(ObjectEmitterFactoryService, makeObjectEmitter)
+
+TEST(Module, pass_obj_made_from_module_to_an_obj_made_from_service)
+{
+  qi::AnyModule testModule = qi::import("naoqi.testanymodule");
+  auto obj = testModule.call<qi::AnyObject>("test");
+  ASSERT_EQ(1, obj.call<int>("testMethod", 0)); // just checking, in case of
+
+  TestSessionPair p;
+  p.server()->registerService("EmitterFactory", boost::make_shared<ObjectEmitterFactoryService>());
+
+  qi::AnyObject emitterFactory = p.client()->service("EmitterFactory");
+  auto emitter = emitterFactory.call<qi::AnyObject>("makeObjectEmitter");
+
+  qi::Promise<void> receivingObject;
+  emitter.connect("onTruc", boost::function<void(qi::AnyObject)>([&](qi::AnyObject o)
+  {
+    int i = o.call<int>("testMethod", 0);
+    ASSERT_EQ(1, i); // this is the real test
+    receivingObject.setValue(0);
+  }));
+  emitter.async<void>("emitObject", obj);
+  ASSERT_EQ(qi::FutureState_FinishedWithValue, receivingObject.future().waitFor(qi::MilliSeconds(1000)));
 }

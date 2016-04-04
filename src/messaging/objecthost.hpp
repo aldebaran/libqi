@@ -42,6 +42,11 @@ namespace qi
   protected:
     void clear();
   private:
+    /// If an object follows a complex call path, e.g it is passed by argument to a service,
+    /// then returned via a signal, and finally used to make a call, it is possible that the
+    /// destination of the call (the "service") does not know directly the called object, but instead one of its
+    /// (ObjectHost) children knows it.
+    BoundAnyObject recursiveFindObject(uint32_t objectId);
     using RemoteReferencesMap = std::map<StreamContext*, std::vector<unsigned int>>;
     boost::recursive_mutex    _mutex;
     unsigned int    _service;
