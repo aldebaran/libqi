@@ -97,6 +97,7 @@ set(QI_H qi/detail/clock.hxx
          qi/qi.hpp
          qi/types.hpp
          qi/path.hpp
+         qi/path_conf.hpp
          qi/periodictask.hpp
          qi/qi.hpp
          qi/stats.hpp
@@ -127,7 +128,6 @@ set(QI_C src/dlfcn.cpp
          src/locale-light.cpp
          src/os.cpp
          src/path_conf.cpp
-         src/path_conf.hpp
          src/periodictask.cpp
          src/utils.hpp
          src/utils.cpp

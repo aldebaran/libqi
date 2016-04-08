@@ -11,6 +11,7 @@
 #include <qi/atomic.hpp>
 #include <qi/log.hpp>
 #include <qi/path.hpp>
+#include <qi/path_conf.hpp>
 #include <src/sdklayout.hpp>
 #include <numeric>
 #include <boost/program_options.hpp>
@@ -21,7 +22,6 @@
 #include <boost/algorithm/string/split.hpp>
 
 #include "utils.hpp"
-#include "path_conf.hpp"
 
 #ifdef __APPLE__
 #include <mach-o/dyld.h>
@@ -89,7 +89,7 @@ namespace qi {
   static void readPathConf()
   {
     std::string prefix = ::qi::path::sdkPrefix();
-    std::vector<std::string> toAdd =  ::qi::path::detail::parseQiPathConf(prefix);
+    std::vector<std::string> toAdd =  ::qi::path::parseQiPathConf(prefix);
     std::vector<std::string>::const_iterator it;
     for (it = toAdd.begin(); it != toAdd.end(); ++it) {
       ::qi::path::detail::addOptionalSdkPrefix(it->c_str());
