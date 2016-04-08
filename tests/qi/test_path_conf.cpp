@@ -4,8 +4,8 @@
 
 #include <qi/path.hpp>
 #include <qi/os.hpp>
+#include <qi/path_conf.hpp>
 
-#include "src/path_conf.hpp"
 
 class PathConfTest: public ::testing::Test {
   protected:
@@ -35,7 +35,7 @@ TEST_F(PathConfTest, SimpleTest)
       << foo_sdk.string()
       << std::endl;
   ofs.close();
-  std::vector<std::string> actual = qi::path::detail::parseQiPathConf(foo_sdk.string());
+  std::vector<std::string> actual = qi::path::parseQiPathConf(foo_sdk.string());
   std::vector<std::string> expected;
   expected.push_back(foo_sdk.string());
   ASSERT_EQ(actual, expected);
@@ -66,7 +66,7 @@ TEST_F(PathConfTest, RecursiveTest)
       << "" << std::endl
       << foo_sdk.string() << std::endl;
   ofs.close();
-  std::vector<std::string> actual = qi::path::detail::parseQiPathConf(bar_sdk.string());
+  std::vector<std::string> actual = qi::path::parseQiPathConf(bar_sdk.string());
   std::vector<std::string> expected;
   expected.push_back(foo_sdk.string());
   expected.push_back(foo_src.string());
@@ -94,7 +94,7 @@ TEST_F(PathConfTest, CircularTest)
       << "" << std::endl
       << foo_sdk.string() << std::endl;
   ofs.close();
-  std::vector<std::string> actual = qi::path::detail::parseQiPathConf(bar_sdk.string());
+  std::vector<std::string> actual = qi::path::parseQiPathConf(bar_sdk.string());
   std::vector<std::string> expected;
   expected.push_back(foo_sdk.string());
   expected.push_back(bar_sdk.string());
@@ -117,6 +117,6 @@ TEST_F(PathConfTest, KeepOrderTest)
   std::vector<std::string> expected;
   expected.push_back(bPath.string());
   expected.push_back(aPath.string());
-  std::vector<std::string> actual = qi::path::detail::parseQiPathConf(fooPath.string());
+  std::vector<std::string> actual = qi::path::parseQiPathConf(fooPath.string());
   ASSERT_EQ(actual, expected);
 }

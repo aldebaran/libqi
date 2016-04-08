@@ -10,25 +10,12 @@
 
 #include <qi/log.hpp>
 #include <qi/path.hpp>
+#include <qi/path_conf.hpp>
 
 qiLogCategory("qi.path");
 
 namespace qi {
   namespace path {
-    namespace detail {
-
-// recursive helper for parseQiPathConf();
-static void recParseQiPathConf(const std::string &pathConf, std::vector<std::string> &res,
-                              std::set<std::string>& filesSeen);
-
-std::vector<std::string> parseQiPathConf(const std::string &pathConf)
-{
-  std::vector<std::string> res;
-  std::set<std::string> filesSeen;
-  recParseQiPathConf(pathConf, res, filesSeen);
-  return res;
-}
-
 
 static void recParseQiPathConf(const std::string &prefix, std::vector<std::string>& res,
                               std::set<std::string>& filesSeen)
@@ -68,7 +55,14 @@ static void recParseQiPathConf(const std::string &prefix, std::vector<std::strin
   }
 }
 
-    } // detail
+std::vector<std::string> parseQiPathConf(const std::string &pathConf)
+{
+  std::vector<std::string> res;
+  std::set<std::string> filesSeen;
+  recParseQiPathConf(pathConf, res, filesSeen);
+  return res;
+}
+
   } // path
 } // qi
 
