@@ -61,6 +61,7 @@ namespace detail
       typename std::enable_if<!std::is_base_of<Actor, typename std::decay<Arg0>::type>::value,
                typename std::decay<decltype((arg0->*cb)(std::forward<Args>(args)...))>::type>::type
   {
+    QI_ASSERT(arg0 && "the pointer on which the member is called is null");
     return (arg0->*cb)(std::forward<Args>(args)...);
   }
 } // detail
