@@ -11,9 +11,9 @@
 #include <utility> // pair
 #include <boost/bind.hpp>
 #include <qi/eventloop.hpp>
-#include <qi/actor.hpp>
-#include <qi/type/detail/futureadapter.hpp>
 #include <qi/log.hpp>
+#include <qi/strand.hpp>
+#include <qi/type/detail/futureadapter.hpp>
 
 namespace qi {
 
@@ -752,10 +752,8 @@ namespace detail {
 
       qi::Future<void> future;
     };
-
-  }
-
-}
+  } // detail
+} // qi
 
 #include <qi/detail/futurebarrier.hpp>
 

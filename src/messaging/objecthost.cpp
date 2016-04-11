@@ -3,6 +3,7 @@
 **  See COPYING for the license
 */
 
+#include <qi/actor.hpp>
 #include "objecthost.hpp"
 
 #include "boundobject.hpp"
