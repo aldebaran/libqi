@@ -367,7 +367,7 @@ TEST(TestStrand, AllFutureSignalPropertyPeriodicTaskAsyncCallTypeErased)
     f.wait();
     finished.future().wait();
   }
-  ASSERT_LT(TOTAL, callcount);
+  ASSERT_LT(TOTAL, callcount.load());
 }
 
 TEST(TestStrand, FutureThenActorCancel)
