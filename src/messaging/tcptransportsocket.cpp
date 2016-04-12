@@ -335,7 +335,7 @@ namespace qi
     _status = qi::TransportSocket::Status::Connecting;
     _connecting = true;
     _err = 0;
-    if (_url.port() == 0) {
+    if (_url.port() == 0 || !url.isValid()) {
       qiLogError() << "Error try to connect to a bad address: " << _url.str();
 
       _status = qi::TransportSocket::Status::Disconnected;
