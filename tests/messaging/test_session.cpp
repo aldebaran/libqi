@@ -413,6 +413,28 @@ TEST(QiSession, signalConnectedDisconnectedNotSend)
   EXPECT_EQ(expected, disconnectedSpy.recordCount());
 }
 
+TEST(QiSession, signalConnectedDisconnectedSend)
+{
+  qi::Session sd;
+  sd.listenStandalone("tcp://127.0.0.1:0");
+
+  qi::Session s;
+  try
+  {
+    s.connect(sd.endpoints()[0]).value();
+  }
+  catch (...)
+  { }
+
+  qi::SignalSpy disconnectedSpy{s.disconnected};
+
+  size_t expectSend = 1;
+  size_t expectNotSend = 0;
+  EXPECT_EQ(expectNotSend, disconnectedSpy.recordCount());
+  s.close();
+  EXPECT_EQ(expectSend, disconnectedSpy.recordCount());
+}
+
 
 TEST(QiSession, asyncConnect) {
   qi::Session sd;
