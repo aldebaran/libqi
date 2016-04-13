@@ -394,6 +394,26 @@ TEST(QiSession, getCallInConnect)
   EXPECT_TRUE(ses.isConnected());
 }
 
+TEST(QiSession, signalConnectedDisconnectedNotSend)
+{
+  qi::SessionPtr s = qi::makeSession();
+
+  qi::SignalSpy connectedSpy{s->connected};
+  qi::SignalSpy disconnectedSpy{s->disconnected};
+
+  try
+  {
+    s->connect("127.0.1");
+  }
+  catch (...)
+  { }
+
+  size_t expected = 0;
+  EXPECT_EQ(expected, connectedSpy.recordCount());
+  EXPECT_EQ(expected, disconnectedSpy.recordCount());
+}
+
+
 TEST(QiSession, signalConnectedDisconnectedSend)
 {
   qi::Session sd;

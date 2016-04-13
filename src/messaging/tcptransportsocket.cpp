@@ -380,8 +380,8 @@ namespace qi
     {
       std::string message = "System error: " + erc.message();
       qiLogWarning() << "resolve: " << message;
-      _status = qi::TransportSocket::Status::Disconnected;
       error(message);
+      _status = qi::TransportSocket::Status::Disconnected;
       pSetError(connectPromise, message);
       return;
     }
@@ -459,8 +459,8 @@ namespace qi
     if (erc)
     {
       qiLogWarning() << "connect: " << erc.message();
-      _status = qi::TransportSocket::Status::Disconnected;
       error("System error: " + erc.message());
+      _status = qi::TransportSocket::Status::Disconnected;
       pSetError(connectPromise, "System error: " + erc.message());
     }
     else
