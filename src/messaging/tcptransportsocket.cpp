@@ -281,6 +281,7 @@ namespace qi
   void TcpTransportSocket::error(const std::string& erc)
   {
     qiLogVerbose() << "Socket error: " << erc;
+    const bool wasConnected = _status == qi::TransportSocket::Status::Connected;
     {
       boost::recursive_mutex::scoped_lock lock(_closingMutex);
       if (_abort)
@@ -312,7 +313,9 @@ namespace qi
     }
 
     // synchronous signals, do not keep the mutex while we trigger
-    disconnected(erc);
+    if (wasConnected)
+      disconnected(erc);
+
     socketEvent(SocketEventData(erc));
   }
 
