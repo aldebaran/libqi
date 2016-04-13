@@ -238,6 +238,7 @@ namespace qi {
       boost::asio::io_service::work* w = _work;
       _work = nullptr;
       delete w;
+      _io.stop();
     }
   }
 
