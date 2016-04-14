@@ -196,13 +196,12 @@ namespace qi {
       commandLine = procPidPath;
 
 #else // Linux
-      std::stringstream pathInProc;
-      pathInProc << "/proc/" << pid << "/cmdline";
+      std::string pathInProc = "/proc/" + std::to_string(pid) + "/cmdline";
 
       bool cmdLineFilePresentButEmpty = false;
       do
       {
-        boost::filesystem::ifstream file(pathInProc.str());
+        boost::filesystem::ifstream file(pathInProc);
         qiLogDebug() << "process #" << pid << " " << (file.is_open() ? "exists" : "does not exist");
         if (!file)
           return false;
@@ -213,8 +212,10 @@ namespace qi {
           return true;
         }
 
-        file >> commandLine;
+        std::string buff;
+        file >> buff;
         file.close();
+        commandLine.assign(buff.data(), std::strlen(buff.c_str()));
 
         cmdLineFilePresentButEmpty = commandLine.empty();
       }

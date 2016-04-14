@@ -376,6 +376,15 @@ TEST(QiOs, isProcessRunningRealProcessWithArgs)
   ASSERT_TRUE(qi::os::isProcessRunning(p.pid(), executable));
 }
 
+TEST(QiOs, isProcessRunningRealProcessWithFilePathArg)
+{
+  const std::string executable("testlaunchloop");
+  const std::string executablePath = qi::path::findBin(executable);
+  const std::vector<std::string> args {"/nan/mais/allo/quoi" };
+  const ScopedProcess p{executablePath, args};
+  ASSERT_TRUE(qi::os::isProcessRunning(p.pid(), executable));
+}
+
 TEST(QiOs, isProcessRunningRealProcessWithArgsUnicode)
 {
   const std::string originalExecutable { "testlaunchloop" };
