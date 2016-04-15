@@ -181,24 +181,24 @@ namespace detail {
  * @warning must be called from an unique compilation unit (not a header), from
  * within the namespace of the class
  */
-#define QI_REGISTER_OBJECT(name, ...)                         \
-  static bool _qiregister##name() {                           \
-    ::qi::ObjectTypeBuilder<name > b;                         \
-    QI_VAARGS_APPLY(__QI_REGISTER_ELEMENT, name, __VA_ARGS__) \
-    b.registerType();                                         \
-    return true;                                              \
-  }                                                           \
-  static bool BOOST_PP_CAT(__qi_registration, __LINE__) = _qiregister##name();
+#define QI_REGISTER_OBJECT(name, ...) \
+static bool BOOST_PP_CAT(__qi_registration, __LINE__) = [] \
+{ \
+  ::qi::ObjectTypeBuilder<name> b; \
+  QI_VAARGS_APPLY(__QI_REGISTER_ELEMENT, name, __VA_ARGS__) \
+  b.registerType(); \
+  return true; \
+}();
 
 #define QI_REGISTER_MT_OBJECT(name, ...)                       \
-  static bool _qiregister##name() {                            \
-    ::qi::ObjectTypeBuilder<name > b;                          \
-    b.setThreadingModel(qi::ObjectThreadingModel_MultiThread); \
-    QI_VAARGS_APPLY(__QI_REGISTER_ELEMENT, name, __VA_ARGS__)  \
-    b.registerType();                                          \
-    return true;                                               \
-  }                                                            \
-  static bool BOOST_PP_CAT(__qi_registration, __LINE__) = _qiregister##name();
+static bool BOOST_PP_CAT(__qi_registration, __LINE__) = [] \
+{ \
+  ::qi::ObjectTypeBuilder<name> b; \
+  b.setThreadingModel(qi::ObjectThreadingModel_MultiThread); \
+  QI_VAARGS_APPLY(__QI_REGISTER_ELEMENT, name, __VA_ARGS__) \
+  b.registerType(); \
+  return true; \
+}();
 
 /** Register object \p name as implementation of \p parent
  * FIXME: support inheritance with offset.
