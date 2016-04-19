@@ -89,3 +89,8 @@ std::vector<qi::Url> TestSessionPair::serviceDirectoryEndpoints() const
 {
   return _sd->endpoints();
 }
+
+std::vector<qi::Url> TestSessionPair::gatewayEndpoints() const
+{
+  return _gw.endpoints();
+}

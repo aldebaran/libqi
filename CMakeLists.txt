@@ -64,11 +64,13 @@ endif()
 #### }}}
 
 #### Set sources {{{
-set(QI_H qi/detail/clock.hxx
+set(QI_H qi/detail/async.hxx
+         qi/detail/clock.hxx
          qi/detail/eventloop.hxx
          qi/detail/future.hxx
          qi/detail/future_fwd.hpp
          qi/detail/futurebarrier.hpp
+         qi/detail/futureunwrap.hpp
          qi/detail/executioncontext.hpp
          qi/detail/mpl.hpp
          qi/detail/log.hxx
@@ -79,6 +81,7 @@ set(QI_H qi/detail/clock.hxx
          qi/api.hpp
          qi/application.hpp
          qi/actor.hpp
+         qi/async.hpp
          qi/atomic.hpp
          qi/buffer.hpp
          qi/clock.hpp
@@ -97,6 +100,7 @@ set(QI_H qi/detail/clock.hxx
          qi/qi.hpp
          qi/types.hpp
          qi/path.hpp
+         qi/path_conf.hpp
          qi/periodictask.hpp
          qi/qi.hpp
          qi/stats.hpp
@@ -127,7 +131,6 @@ set(QI_C src/dlfcn.cpp
          src/locale-light.cpp
          src/os.cpp
          src/path_conf.cpp
-         src/path_conf.hpp
          src/periodictask.cpp
          src/utils.hpp
          src/utils.cpp

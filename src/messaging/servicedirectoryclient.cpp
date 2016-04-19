@@ -177,7 +177,7 @@ namespace qi {
     TransportSocketPtr sdSocket = _sdSocket;
 
     if (future.hasError()) {
-      qi::Future<void> fdc = onSocketDisconnected(future.error());
+      qi::Future<void> fdc = onSocketDisconnected(future.error(), false);
       fdc.connect(&qi::Promise<void>::setError, promise, future.error());
       return;
     }
@@ -217,7 +217,7 @@ namespace qi {
 
     if (!_sdSocket)
       return qi::makeFutureError<void>(std::string("unrecognized protocol '") + serviceDirectoryURL.protocol() + "' in url '" + serviceDirectoryURL.str() + "'");
-    _sdSocketDisconnectedSignalLink = _sdSocket->disconnected.connect(&ServiceDirectoryClient::onSocketDisconnected, this, _1);
+    _sdSocketDisconnectedSignalLink = _sdSocket->disconnected.connect(&ServiceDirectoryClient::onSocketDisconnected, this, _1, true);
     _remoteObject->setTransportSocket(_sdSocket);
 
     qi::Promise<void> promise;
@@ -281,7 +281,7 @@ namespace qi {
     serviceAdded(idx, name);
   }
 
-  qi::FutureSync<void> ServiceDirectoryClient::onSocketDisconnected(std::string error) {
+  qi::FutureSync<void> ServiceDirectoryClient::onSocketDisconnected(std::string error, bool wasConnected) {
     qi::Future<void> fut;
     {
       qi::TransportSocketPtr socket;
@@ -331,7 +331,9 @@ namespace qi {
     } catch (std::runtime_error &e) {
         qiLogDebug() << "Cannot disconnect SDC::serviceRemoved: " << e.what();
     }
-    disconnected(error);
+
+    if (wasConnected)
+      disconnected(error);
 
     return fut;
   }

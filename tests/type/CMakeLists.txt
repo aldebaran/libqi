@@ -4,6 +4,7 @@ qi_create_gtest(test_event            SRC test_event.cpp            DEPENDS QI G
 qi_create_gtest(test_object           SRC test_object.cpp           DEPENDS QI GTEST TIMEOUT 30)
 qi_create_gtest(test_signature        SRC test_signature.cpp        DEPENDS QI GTEST TIMEOUT 30)
 qi_create_gtest(test_object_eventloop SRC test_object_eventloop.cpp DEPENDS QI GTEST TIMEOUT 30)
+qi_create_gtest(test_async            SRC test_async.cpp            DEPENDS QI GTEST TIMEOUT 30)
 qi_create_gtest(test_signal           SRC test_signal.cpp           DEPENDS QI GTEST TIMEOUT 30)
 qi_create_gtest(test_property         SRC test_property.cpp         DEPENDS QI GTEST TIMEOUT 30)
 qi_create_gtest(test_json             SRC test_json.cpp             DEPENDS QI GTEST TIMEOUT 30)

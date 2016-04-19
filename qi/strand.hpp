@@ -11,6 +11,7 @@
 #include <atomic>
 #include <qi/assert.hpp>
 #include <qi/detail/executioncontext.hpp>
+#include <qi/detail/futureunwrap.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/function.hpp>
@@ -209,10 +210,13 @@ namespace detail
       const boost::function<void()>& onFail,
       boost::weak_ptr<StrandPrivate> weakStrand,
       Args&&... args)
-      -> qi::Future<typename std::decay<decltype(func(std::forward<Args>(args)...))>::type>
+      -> decltype(tryUnwrap(weakStrand.lock()->async(std::bind(func, std::forward<Args>(args)...)))) // TODO: remove in C++14
   {
     if (auto strand = weakStrand.lock())
-      return strand->async(std::bind(func, std::forward<Args>(args)...));
+    {
+      auto ft = strand->async(std::bind(func, std::forward<Args>(args)...));
+      return tryUnwrap(ft);
+    }
     else
     {
       if (onFail)
@@ -258,5 +262,7 @@ namespace detail
 # ifdef _MSC_VER
 #  pragma warning( pop )
 # endif
+
+# include <qi/async.hpp>
 
 #endif  // _QI_STRAND_HPP_

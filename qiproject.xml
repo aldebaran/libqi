@@ -1,9 +1,10 @@
 <project version="3">
   <maintainer email="hcuche@aldebaran.com">Hervé Cuche</maintainer>
   <maintainer email="jlamotte@aldebaran.com">Joël Lamotte</maintainer>
+  <maintainer email="jmonnon@aldebaran.com">Jérémy Monnon</maintainer>
   <qibuild name="libqi">
     <depends buildtime="true" runtime="true" names="dl boost pthread qiprobes systemd openssl" />
-    <depends testtime="true" buildtime="true" names="gtest" />
+    <depends testtime="true" names="gtest" />
   </qibuild>
   <project src="dox" />
   <project src="bin"/>
