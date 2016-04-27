@@ -169,17 +169,24 @@ namespace qi {
 
     std::string name;
     {
+      // Create a local variable to keep the underlying bound anyobject alive outside the map.
+      // It allows us to remove the iterator map without deleting the underlying anyobject
+      BoundService serviceToRemove;
       boost::mutex::scoped_lock sl(_servicesMutex);
       BoundServiceMap::iterator it = _services.find(idx);
-      if (it != _services.end()) {
+      if (it != _services.end())
+      {
         name = it->second.name;
         if (!it->second.object.unique())
         {
           qiLogVerbose() << "Some references to service #" << idx
                                              << " are still held!";
         }
+        serviceToRemove = std::move(it->second);
         _services.erase(it);
-      } else {
+      }
+      else
+      {
         qiLogVerbose() << "Can't find name associated to id:" << idx;
       }
       Server::removeObject(idx);
