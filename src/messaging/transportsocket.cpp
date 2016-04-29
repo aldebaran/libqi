@@ -23,6 +23,7 @@ namespace qi
 
   TransportSocket::~TransportSocket()
   {
+    qiLogDebug() << "Destroying transport socket";
   }
 
   TransportSocketPtr makeTransportSocket(const std::string &protocol, qi::EventLoop *eventLoop) {
