@@ -33,12 +33,29 @@
 
 #include "sdklayout.hpp"
 
+#if BOOST_OS_ANDROID && BOOST_COMP_GNUC && BOOST_ARCH_ARM
+#include <sstream>
+#endif
+
 qiLogCategory("qi.os");
 
 namespace bfs = boost::filesystem;
 
 namespace qi {
   namespace os {
+// workaround android gcc missing std::to_string on arm
+// http://stackoverflow.com/questions/17950814/how-to-use-stdstoul-and-stdstoull-in-android/18124627#18124627
+#if BOOST_OS_ANDROID && BOOST_COMP_GNUC && BOOST_ARCH_ARM
+#warning "using home made to_string"
+    std::string to_string(int num)
+    {
+      std::ostringstream stream;
+      stream << num;
+      return stream.str();
+    }
+#else
+      using std::to_string;
+#endif
 
     int64_t ustime()
     {
@@ -196,7 +213,7 @@ namespace qi {
       commandLine = procPidPath;
 
 #else // Linux
-      std::string pathInProc = "/proc/" + std::to_string(pid) + "/cmdline";
+      std::string pathInProc = "/proc/" + to_string(pid) + "/cmdline";
 
       bool cmdLineFilePresentButEmpty = false;
       do
