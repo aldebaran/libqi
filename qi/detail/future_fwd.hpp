@@ -309,7 +309,6 @@ namespace qi {
      * Exact effect is controlled by the cancel implementation, but it is
      * expected to set a value or an error to the Future as fast as possible.
      * Note that cancelation may be asynchronous.
-     * @throw ExceptionState_FutureNotCancelable if isCancelable() is false.
      */
     void cancel()
     {
@@ -952,7 +951,10 @@ namespace qi {
   qi::Future<T> makeFutureError(const std::string& error);
 
   /// Helper function that does nothing on future cancelation
+  ///
+  /// @deprecated since 2.5:
   template <typename T>
+  QI_API_DEPRECATED_MSG("you can remove this occurrence")
   void PromiseNoop(qi::Promise<T>&)
   {
   }

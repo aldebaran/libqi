@@ -374,11 +374,10 @@ TEST(TestStrand, FutureThenActorCancel)
   callcount = 0;
   {
     boost::shared_ptr<MyActor> obj(new MyActor);
-    qi::AnyObject aobj(obj);
 
     qi::Promise<void> finished;
 
-    qi::Promise<int> prom(qi::PromiseNoop<int>);
+    qi::Promise<int> prom;
     qi::Future<int> masterFut = prom.future().thenR<int>(&MyActor::f, obj, _1, finished);
     masterFut.cancel();
     ASSERT_TRUE(prom.isCancelRequested());

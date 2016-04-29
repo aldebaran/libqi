@@ -21,7 +21,7 @@ public:
     : _closed(0)
     , _count(0)
     , _futures()
-    , _promise(&qi::PromiseNoop<std::vector<Future<T> > >, async)
+    , _promise(async)
   {}
 
   void onFutureFinish() {

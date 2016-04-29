@@ -59,7 +59,7 @@ void variableTask(qi::Promise<void> promise)
 template<class TaskFunc>
 qi::Future<void> launchTask(TaskFunc task)
 {
-  qi::Promise<void> promise(qi::PromiseNoop<void>);
+  qi::Promise<void> promise;
   qi::Future<void> future = promise.future();
   qi::getEventLoop()->post(boost::bind(task, promise));
   return future;

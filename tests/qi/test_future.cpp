@@ -820,7 +820,7 @@ static void doNothing(qi::Promise<int> promise) { ; }
 
 TEST(TestFutureCancel, CancelRequest)
 {
-  qi::Promise<int> promise(qi::PromiseNoop<int>);
+  qi::Promise<int> promise;
 
   ASSERT_FALSE(promise.isCancelRequested());
 
@@ -1177,7 +1177,7 @@ TEST(TestFutureUnwrap, TryUnwrapOnValue)
 
 TEST(TestFutureWeakCanceler, Cancel)
 {
-  qi::Promise<void> prom(qi::PromiseNoop<void>);
+  qi::Promise<void> prom;
   prom.future().makeCanceler()();
   ASSERT_TRUE(prom.isCancelRequested());
 }
@@ -1187,7 +1187,7 @@ TEST(TestFutureWeakCanceler, IsWeak)
   boost::weak_ptr<int> wptr;
   boost::function<void()> canceler;
   {
-    qi::Promise<boost::shared_ptr<int> > prom(qi::PromiseNoop<boost::shared_ptr<int> >);
+    qi::Promise<boost::shared_ptr<int> > prom;
     canceler = prom.future().makeCanceler();
     prom.setValue(boost::make_shared<int>(42));
     wptr = prom.future().value();

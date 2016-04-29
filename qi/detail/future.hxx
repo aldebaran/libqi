@@ -524,8 +524,7 @@ namespace detail {
     template <typename T>
     void FutureBaseTyped<T>::clearCancelCallback()
     {
-      if (_onCancel)
-        _onCancel = CancelCallback(PromiseNoop<T>);
+      _onCancel.clear();
     }
 
     template <typename T>

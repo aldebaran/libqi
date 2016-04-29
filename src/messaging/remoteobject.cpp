@@ -298,7 +298,7 @@ namespace qi {
      - From a network callback, called asynchronously in thread pool
      So it is safe to use a sync promise.
      */
-    qi::Promise<AnyReference> out(&PromiseNoop<AnyReference>, FutureCallbackType_Sync);
+    qi::Promise<AnyReference> out(FutureCallbackType_Sync);
     qi::Message msg;
     TransportSocketPtr sock;
     // qiLogDebug() << this << " metacall " << msg.service() << " " << msg.function() <<" " << msg.id();

@@ -379,7 +379,7 @@ namespace qi {
       timer->async_wait(boost::bind(&EventLoopAsio::invoke_maybe, this, cb, id, prom, _1));
       return prom.future();
     }
-    Promise<void> prom(PromiseNoop<void>);
+    Promise<void> prom;
     _io.post(boost::bind<void>(&EventLoopAsio::invoke_maybe, this, cb, id, prom,erc));
     return prom.future();
   }
