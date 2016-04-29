@@ -12,14 +12,16 @@
 
 qiLogCategory("test");
 
-qi::Duration timeout = qi::MilliSeconds(500);
+int timeoutMs = 500;
+qi::Duration timeout = qi::MilliSeconds(timeoutMs);
 
 int main(int argc, char **argv)
 {
   qi::Application app(argc, argv);
   TestMode::initTestMode(argc, argv);
   ::testing::InitGoogleTest(&argc, argv);
-  qi::log::addFilter("*", qi::LogLevel_Debug);
+  qi::log::addFilter("qi.*", qi::LogLevel_Debug);
+  qi::log::addFilter("qimessaging.*", qi::LogLevel_Debug);
   return RUN_ALL_TESTS();
 }
 
@@ -87,15 +89,46 @@ TEST(SendObject, unregister_obj)
   s->close();
 }
 
-
 class ObjectEmitter
 {
 public:
   void emitObject(qi::AnyObject o) { QI_EMIT onTruc(o); }
+  void receiveObject(qi::AnyObject o)
+  {
+    auto gettingProperty = o.property<void>("propToPing");
+    auto state = gettingProperty.waitFor(timeout);
+    std::stringstream errorMessage;
+    errorMessage << "Unexpected state";
+    if (state == qi::FutureState_FinishedWithError)
+      errorMessage << ", error: " << gettingProperty.error();
+    else
+      errorMessage << ": " << state;
+    EXPECT_EQ(qi::FutureState_FinishedWithValue, state) << errorMessage.str();
+  }
+
   qi::Signal<qi::AnyObject> onTruc;
+  qi::Property<std::vector<qi::AnyObject>> vectorOfObjects;
 };
 
-QI_REGISTER_OBJECT(ObjectEmitter, emitObject, onTruc)
+QI_REGISTER_OBJECT(ObjectEmitter, emitObject, receiveObject, onTruc, vectorOfObjects)
+
+class SubObjectToPing
+{
+public:
+  void subping() { qiLogInfo() << "subping !" << std::endl; }
+};
+
+QI_REGISTER_OBJECT(SubObjectToPing, subping)
+
+class ObjectToPing
+{
+public:
+  ObjectToPing() { propToPing.set(boost::make_shared<SubObjectToPing>()); }
+  void ping() { qiLogInfo() << "ping !" << std::endl; }
+  qi::Property<qi::AnyObject> propToPing;
+};
+
+QI_REGISTER_OBJECT(ObjectToPing, ping, propToPing)
 
 TEST(SendObject, pass_obj_made_from_module)
 {
@@ -146,4 +179,83 @@ TEST(SendObject, pass_obj_made_from_module_to_an_obj_made_from_service)
   }));
   emitter.async<void>("emitObject", obj);
   ASSERT_EQ(qi::FutureState_FinishedWithValue, receivingObject.future().waitFor(qi::MilliSeconds(1000)));
+}
+
+TEST(SendObject, pass_obj_made_from_service_to_another_function_of_service)
+{
+  TestSessionPair p;
+  p.server()->registerService("EmitterFactory", boost::make_shared<ObjectEmitterFactory>());
+
+  qi::AnyObject emitterFactory = p.client()->service("EmitterFactory");
+  auto emitter = emitterFactory.call<qi::AnyObject>("makeObjectEmitter");
+
+  // create vector
+  std::vector<qi::AnyObject> vecObj{
+    boost::make_shared<ObjectToPing>(), boost::make_shared<ObjectToPing>()
+  };
+
+  emitter.setProperty<std::vector<qi::AnyObject>>("vectorOfObjects", vecObj);
+  auto vectorOfObjectsReceived = emitter.property<std::vector<qi::AnyObject>>("vectorOfObjects").value();
+  auto objectToReceive = vectorOfObjectsReceived[0];
+  auto receiving = emitter.async<void>("receiveObject", objectToReceive);
+  EXPECT_EQ(qi::FutureState_FinishedWithValue, receiving.waitFor(timeout*2));
+}
+
+class Cookie
+{
+public:
+  Cookie(bool withTaste) : taste(withTaste) {}
+  bool eat()
+  {
+    eaten();
+    return true;
+  }
+  qi::Property<bool> taste;
+  qi::Signal<void> eaten;
+};
+
+class CookieBox
+{
+public:
+  qi::AnyObject makeCookie(bool withTaste)
+  {
+    return boost::make_shared<Cookie>(withTaste);
+  }
+  void give(qi::AnyObject c)
+  {
+    cookie = c;
+  }
+
+  qi::AnyObject take()
+  {
+    return cookie;
+  }
+
+private:
+  qi::AnyObject cookie;
+};
+
+QI_REGISTER_OBJECT(Cookie, eat, taste, eaten)
+QI_REGISTER_OBJECT(CookieBox, makeCookie, give, take)
+
+TEST(Module, give_and_take_object_function)
+{
+  TestSessionPair p;
+  p.server()->registerService("CookieBox", boost::make_shared<CookieBox>());
+  qi::AnyObject cookieBoxProxy = p.client()->service("CookieBox");
+  qi::AnyObject cookie = cookieBoxProxy.call<qi::AnyObject>("makeCookie", true);
+  cookieBoxProxy.call<void>("give", cookie);
+  qi::AnyObject tookCookie = cookieBoxProxy.call<qi::AnyObject>("take");
+  EXPECT_TRUE(tookCookie.call<bool>("eat"));
+}
+
+TEST(Module, give_and_take_object_property)
+{
+  TestSessionPair p;
+  p.server()->registerService("CookieBox", boost::make_shared<CookieBox>());
+  qi::AnyObject cookieBoxProxy = p.client()->service("CookieBox");
+  qi::AnyObject cookie = cookieBoxProxy.call<qi::AnyObject>("makeCookie", true);
+  cookieBoxProxy.call<void>("give", cookie);
+  qi::AnyObject tookCookie = cookieBoxProxy.call<qi::AnyObject>("take");
+  EXPECT_TRUE(tookCookie.property<bool>("taste").value(500));
 }
