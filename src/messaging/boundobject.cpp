@@ -488,12 +488,12 @@ namespace qi {
     return ret;
   }
 
-  AnyValue ServiceBoundObject::property(const AnyValue& prop)
+  qi::Future<AnyValue> ServiceBoundObject::property(const AnyValue& prop)
   {
     if (prop.kind() == TypeKind_String)
       return _object.property<AnyValue>(prop.toString());
     else if (prop.kind() == TypeKind_Int)
-    { // missing accessor, go to bacend
+    { // missing accessor, go to backend
       GenericObject* go = _object.asGenericObject();
       return go->type->property(go->value, _object, static_cast<unsigned int>(prop.toUInt()));
     }

@@ -71,7 +71,7 @@ namespace qi {
     void           unregisterEvent(unsigned int serviceId, unsigned int eventId, SignalLink linkId);
     qi::MetaObject metaObject(unsigned int serviceId);
     void           terminate(unsigned int serviceId); //bound only in special cases
-    qi::AnyValue   property(const AnyValue& name);
+    qi::Future<AnyValue> property(const AnyValue& name);
     Future<void>   setProperty(const AnyValue& name, AnyValue value);
     std::vector<std::string> properties();
   public:
