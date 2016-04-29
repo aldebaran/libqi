@@ -12,6 +12,17 @@
 
 qiLogCategory("test");
 
+qi::Duration timeout = qi::MilliSeconds(500);
+
+int main(int argc, char **argv)
+{
+  qi::Application app(argc, argv);
+  TestMode::initTestMode(argc, argv);
+  ::testing::InitGoogleTest(&argc, argv);
+  qi::log::addFilter("*", qi::LogLevel_Debug);
+  return RUN_ALL_TESTS();
+}
+
 void test_service(const qi::AnyObject &o)
 {
   ASSERT_TRUE(o);
@@ -19,7 +30,7 @@ void test_service(const qi::AnyObject &o)
   ASSERT_EQ(13, res);
 }
 
-TEST(Module, pass_obj)
+TEST(SendObject, pass_obj)
 {
   TestSessionPair p;
 
@@ -43,7 +54,7 @@ TEST(Module, pass_obj)
   s->close();
 }
 
-TEST(Module, load_received_obj)
+TEST(SendObject, load_received_obj)
 {
   TestSessionPair p;
 
@@ -60,9 +71,8 @@ TEST(Module, load_received_obj)
   s->close();
 }
 
-TEST(Module, unregister_obj)
+TEST(SendObject, unregister_obj)
 {
-  TestMode::forceTestMode(TestMode::Mode_SD);
   TestSessionPair p;
 
   qi::SessionPtr s = p.server();
@@ -77,13 +87,6 @@ TEST(Module, unregister_obj)
   s->close();
 }
 
-int main(int argc, char **argv) {
-  qi::Application app(argc, argv);
-  TestMode::initTestMode(argc, argv);
-  ::testing::InitGoogleTest(&argc, argv);
-
-  return RUN_ALL_TESTS();
-}
 
 class ObjectEmitter
 {
@@ -94,7 +97,7 @@ public:
 
 QI_REGISTER_OBJECT(ObjectEmitter, emitObject, onTruc)
 
-TEST(Module, pass_obj_made_from_module)
+TEST(SendObject, pass_obj_made_from_module)
 {
   qi::AnyModule testModule = qi::import("naoqi.testanymodule");
   auto obj = testModule.call<qi::AnyObject>("test");
@@ -114,22 +117,22 @@ TEST(Module, pass_obj_made_from_module)
   ASSERT_EQ(qi::FutureState_FinishedWithValue, receivingObject.future().waitFor(qi::MilliSeconds(1000)));
 }
 
-class ObjectEmitterFactoryService
+class ObjectEmitterFactory
 {
 public:
   qi::AnyObject makeObjectEmitter() { return boost::make_shared<ObjectEmitter>(); }
 };
 
-QI_REGISTER_OBJECT(ObjectEmitterFactoryService, makeObjectEmitter)
+QI_REGISTER_OBJECT(ObjectEmitterFactory, makeObjectEmitter)
 
-TEST(Module, pass_obj_made_from_module_to_an_obj_made_from_service)
+TEST(SendObject, pass_obj_made_from_module_to_an_obj_made_from_service)
 {
   qi::AnyModule testModule = qi::import("naoqi.testanymodule");
   auto obj = testModule.call<qi::AnyObject>("test");
   ASSERT_EQ(1, obj.call<int>("testMethod", 0)); // just checking, in case of
 
   TestSessionPair p;
-  p.server()->registerService("EmitterFactory", boost::make_shared<ObjectEmitterFactoryService>());
+  p.server()->registerService("EmitterFactory", boost::make_shared<ObjectEmitterFactory>());
 
   qi::AnyObject emitterFactory = p.client()->service("EmitterFactory");
   auto emitter = emitterFactory.call<qi::AnyObject>("makeObjectEmitter");
