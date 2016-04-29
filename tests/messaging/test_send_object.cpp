@@ -259,3 +259,25 @@ TEST(Module, give_and_take_object_property)
   qi::AnyObject tookCookie = cookieBoxProxy.call<qi::AnyObject>("take");
   EXPECT_TRUE(tookCookie.property<bool>("taste").value(500));
 }
+
+TEST(Module, give_and_take_object_signal)
+{
+  TestSessionPair p;
+  p.server()->registerService("CookieBox", boost::make_shared<CookieBox>());
+  qi::AnyObject cookieBoxProxy = p.client()->service("CookieBox");
+  qi::AnyObject cookie = cookieBoxProxy.call<qi::AnyObject>("makeCookie", true);
+  cookieBoxProxy.call<void>("give", cookie);
+
+  qi::AnyObject takenCookie = cookieBoxProxy.call<qi::AnyObject>("take");
+  qi::Promise<bool> eaten;
+  auto connecting =
+      takenCookie.connect("eaten", boost::function<void()>([&eaten]
+  {
+    eaten.setValue(true);
+  })).async();
+  EXPECT_EQ(qi::FutureState_FinishedWithValue, connecting.waitFor(timeout));
+
+  auto eating = takenCookie.async<bool>("eat");
+  EXPECT_TRUE(eating.value(timeoutMs));
+  EXPECT_TRUE(eaten.future().value(timeoutMs));
+}
