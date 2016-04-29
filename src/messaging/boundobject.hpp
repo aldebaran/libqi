@@ -31,13 +31,15 @@ namespace qi {
   struct RemoteSignalLink
   {
     RemoteSignalLink()
-      : localSignalLinkId(0)
+      : localSignalLinkId()
       , event(0)
     {}
-    RemoteSignalLink(SignalLink localSignalLinkId, unsigned int event)
+
+    RemoteSignalLink(qi::Future<SignalLink> localSignalLinkId, unsigned int event)
     : localSignalLinkId(localSignalLinkId)
     , event(event) {}
-    SignalLink localSignalLinkId;
+
+    qi::Future<SignalLink> localSignalLinkId;
     unsigned int event;
   };
 
@@ -66,9 +68,9 @@ namespace qi {
 
   public:
     //PUBLIC BOUND METHODS
-    SignalLink           registerEvent(unsigned int serviceId, unsigned int eventId, SignalLink linkId);
-    SignalLink           registerEventWithSignature(unsigned int serviceId, unsigned int eventId, SignalLink linkId, const std::string& signature);
-    void           unregisterEvent(unsigned int serviceId, unsigned int eventId, SignalLink linkId);
+    qi::Future<SignalLink> registerEvent(unsigned int serviceId, unsigned int eventId, SignalLink linkId);
+    qi::Future<SignalLink> registerEventWithSignature(unsigned int serviceId, unsigned int eventId, SignalLink linkId, const std::string& signature);
+    qi::Future<void> unregisterEvent(unsigned int serviceId, unsigned int eventId, SignalLink linkId);
     qi::MetaObject metaObject(unsigned int serviceId);
     void           terminate(unsigned int serviceId); //bound only in special cases
     qi::Future<AnyValue> property(const AnyValue& name);
