@@ -12,6 +12,7 @@
 #include <boost/uuid/uuid_generators.hpp>
 #include <boost/uuid/uuid_io.hpp>
 #include <boost/thread/mutex.hpp>
+#include <mutex>
 
 // Headers required for checking processes
 #if BOOST_OS_WINDOWS
@@ -30,6 +31,7 @@
 #include <qi/os.hpp>
 #include <qi/log.hpp>
 #include <qi/types.hpp>
+#include <qi/uuid.hpp>
 
 #include "sdklayout.hpp"
 
@@ -280,9 +282,36 @@ namespace qi {
       return idString;
     }
 
+    /// This is implemented in terms of getMachineId(), which is not as
+    /// efficient as it could be, but :
+    /// 1) it's guaranteed to not change the existing behaviour
+    /// 2) we don't care because the result is only computed on the first call
+    const Uuid& getMachineIdAsUuid()
+    {
+      static const Uuid uuid = [] {
+        Uuid u;
+        std::istringstream ss{getMachineId()};
+        ss >> u;
+        return u;
+      }();
+      return uuid;
+    }
+
+    static UuidRandomGenerator& uuidGenerator()
+    {
+      static UuidRandomGenerator g;
+      return g;
+    }
+
+    const Uuid& getProcessUuid()
+    {
+      static const auto uuid = uuidGenerator()();
+      return uuid;
+    }
+
     std::string generateUuid()
     {
-      boost::uuids::uuid u = boost::uuids::random_generator()();
+      boost::uuids::uuid u = uuidGenerator()();
       return to_string(u);
     }
 

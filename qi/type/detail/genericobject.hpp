@@ -18,6 +18,7 @@
 #include <qi/future.hpp>
 #include <qi/signal.hpp>
 #include <qi/type/typeobject.hpp>
+#include <qi/ptruid.hpp>
 
 #ifdef _MSC_VER
 #  pragma warning( push )
@@ -41,6 +42,7 @@ class QI_API GenericObject
   , public boost::enable_shared_from_this<GenericObject>
 {
 public:
+  GenericObject(ObjectTypeInterface *type, void *value, const PtrUid& ptrUid);
   GenericObject(ObjectTypeInterface *type, void *value);
   ~GenericObject();
   const MetaObject &metaObject();
@@ -119,8 +121,9 @@ public:
 
 
   bool isValid() { return type && value;}
-  ObjectTypeInterface*  type;
-  void*        value;
+  ObjectTypeInterface* type;
+  void* value;
+  PtrUid ptrUid; ///< Uid of "value".
 };
 
 namespace detail
