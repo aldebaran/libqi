@@ -191,7 +191,7 @@ public:
       throw std::runtime_error("Adding future to closed barrier");
 
     ++(_p->_count);
-    fut.connect(boost::bind<void>(&detail::FutureBarrierPrivate<T>::onFutureFinish, _p));
+    fut.connect(boost::bind(&detail::FutureBarrierPrivate<T>::onFutureFinish, _p));
     _p->_futures.push_back(fut);
   }
 

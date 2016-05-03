@@ -158,7 +158,7 @@ namespace qi {
     qi::Promise<unsigned int> prom;
     qi::Future<unsigned int>  future;
     future = _sdClient->registerService(si);
-    future.connect(boost::bind<void>(&ObjectRegistrar::onFutureFinished, this, _1, id, prom));
+    future.connect(boost::bind(&ObjectRegistrar::onFutureFinished, this, _1, id, prom));
 
     return prom.future();
   };

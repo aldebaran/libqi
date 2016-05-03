@@ -352,7 +352,7 @@ namespace qi {
 
 
       ++_totalTask;
-      _io.post(boost::bind<void>(&EventLoopAsio::invoke_maybe, this, cb, id, p, erc));
+      _io.post(boost::bind(&EventLoopAsio::invoke_maybe, this, cb, id, p, erc));
     }
     else
       asyncCall(delay, cb);
@@ -379,7 +379,7 @@ namespace qi {
       return prom.future();
     }
     Promise<void> prom(PromiseNoop<void>);
-    _io.post(boost::bind<void>(&EventLoopAsio::invoke_maybe, this, cb, id, prom,erc));
+    _io.post(boost::bind(&EventLoopAsio::invoke_maybe, this, cb, id, prom,erc));
     return prom.future();
   }
 
@@ -597,7 +597,7 @@ namespace qi {
     ctx->target = this;
     ctx->helper = helper;
     ctx->maxDelay = maxDelay;
-    ctx->promise = Promise<void>(boost::bind<void>(&monitor_cancel, _1, ctx));
+    ctx->promise = Promise<void>(boost::bind(&monitor_cancel, _1, ctx));
     ctx->isFired = false;
     ctx->ending = false;
     monitor_ping(ctx);

@@ -99,7 +99,7 @@ namespace qi {
       // to a 'parent' object.
       _linkMessageDispatcher = _socket->messagePendingConnect(_service,
         TransportSocket::ALL_OBJECTS,
-        boost::bind<void>(&RemoteObject::onMessagePending, this, _1));
+        boost::bind(&RemoteObject::onMessagePending, this, _1));
       _linkDisconnected      = _socket->disconnected.connect (
          &RemoteObject::onSocketDisconnected, this, _1);
     }
@@ -131,7 +131,7 @@ namespace qi {
     qi::Promise<void> prom(qi::FutureCallbackType_Sync);
     qi::Future<qi::MetaObject> fut =
       _self.async<qi::MetaObject>("metaObject", 0U);
-    fut.connect(boost::bind<void>(&RemoteObject::onMetaObject, this, _1, prom));
+    fut.connect(boost::bind(&RemoteObject::onMetaObject, this, _1, prom));
     return prom.future();
   }
 
