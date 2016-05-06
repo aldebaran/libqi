@@ -424,7 +424,7 @@ namespace detail
   {
     return ManagedObjectPtr(
           new GenericObject(oit, other.get()),
-          [other](GenericObject* o) mutable {delete o; other.reset();});
+          [other](GenericObject*) mutable {other.reset();});
   }
 
   // Constructing an AnyObject from a registered implementation.
