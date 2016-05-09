@@ -290,7 +290,7 @@ std::string randomProcessName()
 
 int randomWrongPid()
 {
-  return randInt(65565, std::numeric_limits<int>::max());
+  return randInt(100000, std::numeric_limits<int>::max());
 }
 
 class ScopedProcess
