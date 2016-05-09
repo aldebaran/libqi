@@ -122,11 +122,6 @@ namespace qi {
     return _p->_reader->read(data, size);
   }
 
-  size_t BinaryDecoder::read(uint8_t* data, size_t size)
-  {
-    return readRaw(static_cast<void*>(data), size);
-  }
-
   void* BinaryDecoder::readRaw(size_t size)
   {
     return _p->_reader->read(size);
@@ -232,12 +227,6 @@ namespace qi {
       }
     }
     return len;
-  }
-
-  int BinaryEncoder::write(const uint8_t* buf, size_t len)
-  {
-    static_assert(sizeof(uint8_t) == sizeof(char), "uint8_t and char must have same size.");
-    return write(reinterpret_cast<const char*>(buf), len);
   }
 
   void BinaryEncoder::writeString(const char *str, size_t len)
@@ -512,9 +501,6 @@ namespace qi {
         }
         out.write(osi.serviceId);
         out.write(osi.objectId);
-        // We serialize the PtrUid because, on the receiver side once deserialized, a new local object will be created.
-        // The PtrUid is the only way to retain the identity of the object.
-        out.write(begin(osi.objectPtrUid), size(osi.objectPtrUid));
       }
 
       void visitTuple(const std::string &name, const AnyReferenceVector& vals, const std::vector<std::string>& annotations)
@@ -701,14 +687,13 @@ namespace qi {
         }
         in.read(osi.serviceId);
         in.read(osi.objectId);
-        in.readRaw(begin(osi.objectPtrUid), size(osi.objectPtrUid));
         if (!osi.transmitMetaObject)
           osi.metaObject = streamContext->receiveCacheGet(osi.metaObjectCachedId);
         else if (osi.metaObjectCachedId != ObjectSerializationInfo::notCached)
           streamContext->receiveCacheSet(osi.metaObjectCachedId, osi.metaObject);
         if (context)
           o = context(osi);
-        // else leave result default-initialized
+        // else leave result default-initilaized
       }
 
       void visitObject(GenericObject value)

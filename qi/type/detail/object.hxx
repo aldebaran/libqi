@@ -8,7 +8,6 @@
 #define _QI_TYPE_DETAIL_OBJECT_HXX_
 
 #include <boost/mpl/if.hpp>
-#include <functional>
 
 #include <qi/future.hpp>
 #include <qi/type/typeinterface.hpp>
@@ -18,7 +17,6 @@
 #include <qi/type/metasignal.hpp>
 #include <qi/type/metamethod.hpp>
 #include <qi/type/metaobject.hpp>
-#include <qi/ptruid.hpp>
 
 // Visual defines interface...
 #ifdef interface
@@ -268,12 +266,10 @@ public:
   template<typename U> Object(GenericObject* go, boost::shared_ptr<U> other);
   template<typename U> Object(boost::shared_ptr<U> other);
   bool operator <(const Object& b) const;
+  template<typename U> bool operator !=(const Object<U>& b) const;
+  template<typename U> bool operator ==(const Object<U>& b) const;
   operator bool() const;
   operator Object<Empty>() const;
-
-  /// The PtrUid of the pointer used to initially create the object.
-  /// Won't change if the object travel through the network.
-  PtrUid ptrUid() const;
 
   boost::shared_ptr<T> asSharedPtr();
 
@@ -537,26 +533,14 @@ template<typename T> inline void Object<T>::init(detail::ManagedObjectPtr obj)
   _obj = obj;
 }
 
-template<typename T> inline bool Object<T>::operator <(const Object& b) const
+template<typename T> inline bool Object<T>::operator <(const Object& b) const { return _obj < b._obj;}
+template<typename T> template<typename U> bool Object<T>::operator !=(const Object<U>& b) const
 {
-  return _obj < b._obj;
+  return !(*this ==b);
 }
-
-template<typename T, typename U>
-bool operator!=(const Object<T>& a, const Object<U>& b)
+template<typename T> template<typename U> bool Object<T>::operator ==(const Object<U>& b) const
 {
-  return !(a == b);
-}
-
-/// Compares in fact identities.
-/// The ptrUid identifies the pointer initially used to create the Object. Thus, if an object
-/// cross the network boundaries, its (local) memory address will change but
-/// the ptrUid will be the same.
-template<typename T, typename U>
-bool operator==(const Object<T>& a, const Object<U>& b)
-{
-  return a.asGenericObject()->ptrUid == b.asGenericObject()->ptrUid;
-
+  return asGenericObject() == b.asGenericObject();
 }
 template<typename T> Object<T>::operator bool() const   { return _obj && _obj->type;}
 
@@ -587,10 +571,6 @@ template<typename T> void Object<T>::checkT()
     }
     throw std::runtime_error(std::string() + "Object does not have interface " + typeOf<T>()->infoString());
   }
-}
-template<typename T> PtrUid Object<T>::ptrUid() const
-{
-  return _obj->ptrUid;
 }
 template<typename T> T& Object<T>::asT() const
 {
@@ -648,18 +628,5 @@ template class QI_API Object<Empty>;
 #endif
 
 }
-
-namespace std
-{
-  /// The hash of an object is the hash of its PtrUid.
-  template<typename T>
-  struct hash<qi::Object<T>>
-  {
-    std::size_t operator()(const qi::Object<T>& o) const
-    {
-      return hash<qi::PtrUid>{}(o.asGenericObject()->ptrUid);
-    }
-  };
-} // namespace std
 
 #endif  // _QITYPE_DETAIL_OBJECT_HXX_

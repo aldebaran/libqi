@@ -450,18 +450,14 @@ namespace qi
   }
 
   AnyObject makeDynamicAnyObject(DynamicObject *obj, bool destroyObject,
-    const boost::optional<PtrUid>& ptrUid,
     boost::function<void (GenericObject*)> onDelete)
   {
     ObjectTypeInterface* type = getDynamicTypeInterface();
-    std::unique_ptr<GenericObject> go;
-    if (ptrUid) go.reset(new GenericObject(type, obj, *ptrUid));
-    else        go.reset(new GenericObject(type, obj));
     if (destroyObject || onDelete)
-      return AnyObject(go.release(),
+      return AnyObject(new GenericObject(type, obj),
         boost::bind(&cleanupDynamicObject, _1, destroyObject, onDelete));
     else
-      return AnyObject(go.release(), &AnyObject::deleteGenericObjectOnly);
+      return AnyObject(new GenericObject(type, obj), &AnyObject::deleteGenericObjectOnly);
   }
 
 }

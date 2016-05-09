@@ -14,7 +14,6 @@
 #include <qi/buffer.hpp>
 #include <qi/anyvalue.hpp>
 #include <qi/type/metaobject.hpp>
-#include <qi/ptruid.hpp>
 
 namespace qi {
 
@@ -31,7 +30,6 @@ namespace qi {
     qi::uint32_t metaObjectCachedId;
     qi::uint32_t serviceId;
     qi::uint32_t objectId;
-    PtrUid       objectPtrUid;
     static const qi::uint32_t notCached = 0xFFFFFFFF;
   };
 

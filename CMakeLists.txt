@@ -78,7 +78,6 @@ set(QI_H qi/detail/async.hxx
          qi/detail/trackable.hxx
          qi/detail/warn_push_ignore_deprecated.hpp
          qi/detail/warn_pop_ignore_deprecated.hpp
-         qi/detail/conceptpredicates.hpp
          qi/api.hpp
          qi/application.hpp
          qi/actor.hpp
@@ -111,9 +110,7 @@ set(QI_H qi/detail/async.hxx
          qi/version.hpp
          qi/iocolor.hpp
          qi/strand.hpp
-         qi/assert.hpp
-         qi/uuid.hpp
-         qi/ptruid.hpp)
+         qi/assert.hpp)
 
 set(QI_C src/dlfcn.cpp
          src/path.cpp
@@ -142,8 +139,7 @@ set(QI_C src/dlfcn.cpp
          src/sdklayout-boost.cpp
          src/version.cpp
          src/iocolor.cpp
-         src/strand.cpp
-         src/ptruid.cpp)
+         src/strand.cpp)
 
 #### Add optional files to source {{{
 if (WIN32)
