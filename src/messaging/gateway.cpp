@@ -720,6 +720,13 @@ void GatewayPrivate::clientAuthenticationMessages(const Message& msg,
     std::stringstream builder;
 
     builder << "Authentication failed";
+    for(const auto& slot : authData)
+    {
+      builder << "authData[ ";
+      builder << slot.first << " ][ ";
+      builder << slot.second.toString() << " ]";
+    }
+
     if (authData.find(AuthProvider::Error_Reason_Key) != authData.end())
     {
       builder << ": " << authData[AuthProvider::Error_Reason_Key].to<std::string>() << " [auth v"
@@ -727,9 +734,11 @@ void GatewayPrivate::clientAuthenticationMessages(const Message& msg,
     }
     reply.setType(Message::Type_Error);
     reply.setError(builder.str());
-    socket->send(reply);
-    socket->disconnect();
     qiLogVerbose() << builder.str();
+    socket->send(reply);
+    qiLogVerbose() << "Disconnecting socket...(waiting for at least 2 secs)";
+    socket->disconnect().async().wait(qi::Seconds(2));
+    qiLogVerbose() << "Continue after disconnection.";
   }
   }
   qiLogVerbose() << "Authentication step for client " << client_endpoint << " has ended.";
