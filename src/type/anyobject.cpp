@@ -4,6 +4,7 @@
 */
 
 #include <qi/anyobject.hpp>
+#include <memory>
 
 #ifdef _MSC_VER
 #  pragma warning( push )
@@ -275,12 +276,13 @@ qi::Future<AnyReference> metaCall(ExecutionContext* el,
   {
     // If call is handled by our thread pool, we can safely switch the promise
     // to synchronous mode.
-    qi::Promise<AnyReference>* out = new qi::Promise<AnyReference>();
+    std::unique_ptr<qi::Promise<AnyReference>> out(
+        new qi::Promise<AnyReference>());
     GenericFunctionParameters pCopy = params.copy(noCloneFirst);
     qi::Future<AnyReference> result = out->future();
     qi::os::timeval t(qi::SystemClock::now().time_since_epoch());
-    el->post(MFunctorCall(func, pCopy, out, noCloneFirst, context, methodId,
-                          callerId ? callerId : qi::os::gettid(), t));
+    el->post(MFunctorCall(func, pCopy, out.release(), noCloneFirst, context,
+                           methodId, callerId ? callerId : qi::os::gettid(), t));
     return result;
   }
 }
