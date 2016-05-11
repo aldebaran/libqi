@@ -649,6 +649,7 @@ void GatewayPrivate::clientAuthenticationMessages(const Message& msg,
                                                   AuthProviderPtr auth,
                                                   boolptr firstMessage,
                                                   SignalSubscriberPtr sub)
+try
 {
   int id = msg.id();
   int service = msg.service();
@@ -719,12 +720,20 @@ void GatewayPrivate::clientAuthenticationMessages(const Message& msg,
   {
     std::stringstream builder;
 
-    builder << "Authentication failed";
+    builder << "Authentication failed :\n";
     for(const auto& slot : authData)
     {
-      builder << "authData[ ";
+      builder << "  authData[ ";
       builder << slot.first << " ][ ";
-      builder << slot.second.toString() << " ]";
+      try
+      {
+        builder << slot.second.toString();
+      }
+      catch(...)
+      {
+        builder << "???";
+      }
+      builder << " ]\n";
     }
 
     if (authData.find(AuthProvider::Error_Reason_Key) != authData.end())
@@ -742,6 +751,16 @@ void GatewayPrivate::clientAuthenticationMessages(const Message& msg,
   }
   }
   qiLogVerbose() << "Authentication step for client " << client_endpoint << " has ended.";
+}
+catch (const std::exception& ex)
+{
+  qiLogError() << "Authentification process failed in an unexpected way: " << ex.what();
+  throw;
+}
+catch(...)
+{
+  qiLogError() << "Authentification process failed in an unexpected way: Unknown error";
+  throw;
 }
 
 void GatewayPrivate::onClientConnection(TransportSocketPtr socket)
