@@ -238,7 +238,7 @@ private:
 QI_REGISTER_OBJECT(Cookie, eat, taste, eaten)
 QI_REGISTER_OBJECT(CookieBox, makeCookie, give, take)
 
-TEST(Module, give_and_take_object_function)
+TEST(SendObject, give_and_take_object_function)
 {
   TestSessionPair p;
   p.server()->registerService("CookieBox", boost::make_shared<CookieBox>());
@@ -249,7 +249,7 @@ TEST(Module, give_and_take_object_function)
   EXPECT_TRUE(tookCookie.call<bool>("eat"));
 }
 
-TEST(Module, give_and_take_object_property)
+TEST(SendObject, give_and_take_object_property)
 {
   TestSessionPair p;
   p.server()->registerService("CookieBox", boost::make_shared<CookieBox>());
@@ -260,7 +260,7 @@ TEST(Module, give_and_take_object_property)
   EXPECT_TRUE(tookCookie.property<bool>("taste").value(500));
 }
 
-TEST(Module, give_and_take_object_signal)
+TEST(SendObject, give_and_take_object_signal)
 {
   TestSessionPair p;
   p.server()->registerService("CookieBox", boost::make_shared<CookieBox>());
