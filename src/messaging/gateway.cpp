@@ -1123,8 +1123,20 @@ void GatewayPrivate::handleEventMessage(GwTransaction& t, TransportSocketPtr soc
 void GatewayPrivate::onAnyMessageReady(const Message& msg, TransportSocketPtr socket)
 {
   GwTransaction transaction(msg);
+  GWMessageId gwId = msg.id();
+  ServiceId serviceId = msg.service();
 
-  _objectHost.treatMessage(transaction, socket);
+  TransportSocketPtr destination = [=]() -> TransportSocketPtr {
+    boost::mutex::scoped_lock lock(_ongoingMsgMutex);
+
+    // This is likely an internal message and so can be ignored here
+    if (_ongoingMessages[serviceId].find(gwId) == _ongoingMessages[serviceId].end())
+      return {};
+
+    return _ongoingMessages[serviceId][gwId].second;
+  }();
+
+  _objectHost.treatMessage(transaction, socket, destination);
   qiLogDebug() << socket.get() << " Transaction ready: " << Message::typeToString(transaction.content.type()) << " "
                << transaction.content.address();
   unsigned int function = msg.function();
