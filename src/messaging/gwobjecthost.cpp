@@ -51,8 +51,9 @@ private:
 
 unsigned int MockObjectHost::id_ = 2;
 
-void GwObjectHost::assignClientMessageObjectsGwIds(const Signature& signature, Message& msg, TransportSocketPtr sender)
+void GwObjectHost::assignClientMessageObjectsGwIds(const Signature& signature, Message& msg, TransportSocketPtr sender, TransportSocketPtr destination)
 {
+  qiLogDebug() << "Assigning client message objects ids, signature: " << signature.toString();
   // if there's no chance of any object being in the call we're done.
   if (!hasObjectsSomewhere(signature))
     return;
@@ -73,6 +74,8 @@ void GwObjectHost::assignClientMessageObjectsGwIds(const Signature& signature, M
   const ObjectHost::ObjectMap& objects = host.objects();
   std::map<GwObjectId, MetaObject> newObjectsMetaObjects;
   std::map<GwObjectId, std::pair<TransportSocketPtr, ObjectAddress> > newObjectsOrigin;
+  std::vector<FullObjectAddress> newObjectFullAddresses;
+  newObjectFullAddresses.reserve(objects.size());
   std::map<ObjectAddress, GwObjectId> newHostObjectBank;
   for (ObjectHost::ObjectMap::const_iterator it = objects.begin(), end = objects.end(); it != end; ++it)
   {
@@ -86,6 +89,7 @@ void GwObjectHost::assignClientMessageObjectsGwIds(const Signature& signature, M
 
     newObjectsMetaObjects[oid] = ro->metaObject();
     newObjectsOrigin[oid] = std::make_pair(sender, addr);
+    newObjectFullAddresses.push_back(FullObjectAddress{sender, addr});
     newHostObjectBank[addr] = oid;
     // We set an empty transportsocket.
     // Otherwise when we destroy `passed` below, the remoteobject
@@ -100,13 +104,21 @@ void GwObjectHost::assignClientMessageObjectsGwIds(const Signature& signature, M
     boost::upgrade_to_unique_lock<boost::shared_mutex> unique_lock(lock);
     _objectsMetaObjects.insert(newObjectsMetaObjects.begin(), newObjectsMetaObjects.end());
     _objectsOrigin.insert(newObjectsOrigin.begin(), newObjectsOrigin.end());
+
+    // Remember who will keep the reference of the object, so that to unreference it when the socket is disconnected
+    auto& objectOriginsForDestination = _objectOriginsPerDestination[destination];
+    objectOriginsForDestination.insert(
+          objectOriginsForDestination.end(),
+          newObjectFullAddresses.begin(), newObjectFullAddresses.end());
+
     _hostObjectBank[sender].insert(newHostObjectBank.begin(), newHostObjectBank.end());
   }
   callParameters.destroy();
 }
 
-void GwObjectHost::harvestClientReplyOriginatingObjects(Message& msg, TransportSocketPtr sender, GwObjectId gwid)
+void GwObjectHost::harvestClientReplyOriginatingObjects(Message& msg, TransportSocketPtr sender, GwObjectId gwid, TransportSocketPtr destination)
 {
+  qiLogDebug() << "Harvesting client reply originating objects";
   Signature signature;
   {
     boost::shared_lock<boost::shared_mutex> lock(_mutex);
@@ -115,11 +127,12 @@ void GwObjectHost::harvestClientReplyOriginatingObjects(Message& msg, TransportS
       return;
     signature = method->returnSignature();
   }
-  assignClientMessageObjectsGwIds(signature, msg, sender);
+  assignClientMessageObjectsGwIds(signature, msg, sender, destination);
 }
 
-void GwObjectHost::harvestClientCallOriginatingObjects(Message& msg, TransportSocketPtr sender)
+void GwObjectHost::harvestClientCallOriginatingObjects(Message& msg, TransportSocketPtr sender, TransportSocketPtr destination)
 {
+  qiLogDebug() << "Harvesting client call originating objects";
   Signature signature;
   {
     boost::shared_lock<boost::shared_mutex> lock(_mutex);
@@ -134,10 +147,10 @@ void GwObjectHost::harvestClientCallOriginatingObjects(Message& msg, TransportSo
       return;
     signature = method->parametersSignature();
   }
-  assignClientMessageObjectsGwIds(signature, msg, sender);
+  assignClientMessageObjectsGwIds(signature, msg, sender, destination);
 }
 
-void GwObjectHost::harvestServiceOriginatingObjects(Message& msg, TransportSocketPtr sender)
+void GwObjectHost::harvestServiceOriginatingObjects(Message& msg, TransportSocketPtr sender, TransportSocketPtr destination)
 {
   Signature signature;
   {
@@ -188,6 +201,8 @@ void GwObjectHost::harvestServiceOriginatingObjects(Message& msg, TransportSocke
 
   const ObjectHost::ObjectMap& objects = host.objects();
   std::map<ObjectId, MetaObject> newServicesMetaObject;
+  std::vector<FullObjectAddress> newObjectFullAddresses;
+  newObjectFullAddresses.reserve(objects.size());
   for (ObjectHost::ObjectMap::const_iterator it = objects.begin(), end = objects.end(); it != end; ++it)
   {
     ServiceBoundObject* sbo = static_cast<ServiceBoundObject*>(it->second.get());
@@ -199,23 +214,35 @@ void GwObjectHost::harvestServiceOriginatingObjects(Message& msg, TransportSocke
     // By setting a null socket the object will stay alive on the remote end.
     ro->setTransportSocket(TransportSocketPtr());
     newServicesMetaObject[ro->object()] = ro->metaObject();
+
+    ObjectAddress addr;
+    addr.service = ro->service();
+    addr.object = ro->object();
+    newObjectFullAddresses.emplace_back(FullObjectAddress{sender, addr});
   }
   {
     boost::upgrade_lock<boost::shared_mutex> lock(_mutex);
     boost::upgrade_to_unique_lock<boost::shared_mutex> unique_lock(lock);
     _servicesMetaObjects[msg.service()].insert(newServicesMetaObject.begin(), newServicesMetaObject.end());
+
+    // Remember who will keep the reference of the object, so that to unreference it when the socket is disconnected
+    auto& objectOriginsForDestination = _objectOriginsPerDestination[destination];
+    objectOriginsForDestination.insert(
+          objectOriginsForDestination.end(),
+          newObjectFullAddresses.begin(), newObjectFullAddresses.end());
   }
   passed.destroy();
 }
 
-void GwObjectHost::harvestMessageObjects(Message& msg, TransportSocketPtr sender)
+void GwObjectHost::harvestMessageObjects(Message& msg, TransportSocketPtr sender, TransportSocketPtr destination)
 {
+  qiLogDebug() << "Harvesting objects from message";
   if (msg.type() == Message::Type_Call || msg.type() == Message::Type_Post)
   {
     if (msg.service() == Message::Service_Server && msg.object() > Message::GenericObject_Main)
-      harvestServiceOriginatingObjects(msg, sender);
+      harvestServiceOriginatingObjects(msg, sender, destination);
     else
-      harvestClientCallOriginatingObjects(msg, sender);
+      harvestClientCallOriginatingObjects(msg, sender, destination);
   }
   else if (msg.type() == Message::Type_Reply)
   {
@@ -226,11 +253,11 @@ void GwObjectHost::harvestMessageObjects(Message& msg, TransportSocketPtr sender
       std::map<ObjectAddress, GwObjectId>::iterator oit = sit->second.find(addr);
       if (oit != sit->second.end())
       {
-        harvestClientReplyOriginatingObjects(msg, sender, oit->second);
+        harvestClientReplyOriginatingObjects(msg, sender, oit->second, destination);
         return;
       }
     }
-    harvestServiceOriginatingObjects(msg, sender);
+    harvestServiceOriginatingObjects(msg, sender, destination);
   }
 }
 
@@ -245,13 +272,13 @@ ObjectAddress GwObjectHost::getOriginalObjectAddress(const ObjectAddress& a)
 
 static MetaObject extractReturnedMetaObject(const Message& msg, TransportSocketPtr);
 
-void GwObjectHost::treatMessage(GwTransaction& t, TransportSocketPtr sender)
+void GwObjectHost::treatMessage(GwTransaction& t, TransportSocketPtr sender, TransportSocketPtr destination)
 {
   qiLogDebug() << "treatMessage: " << t.content.address();
   Message& msg = t.content;
 
   if (msg.type() != Message::Type_Event)
-    harvestMessageObjects(msg, sender);
+    harvestMessageObjects(msg, sender, destination);
 
   if (msg.service() == Message::Service_Server && msg.object() > Message::GenericObject_Main &&
       (msg.type() == Message::Type_Call || msg.type() == Message::Type_Post))
@@ -314,7 +341,36 @@ void GwObjectHost::serviceDisconnected(ServiceId id)
 
 void GwObjectHost::clientDisconnected(TransportSocketPtr socket)
 {
+  qiLogDebug() << "Processing client disconnection in gateway's object host, socket: " << (void*)socket.get();
   boost::upgrade_lock<boost::shared_mutex> lock(_mutex);
+
+  // If the client had references to objects, kill them
+  auto it = _objectOriginsPerDestination.find(socket);
+  if (it != _objectOriginsPerDestination.end())
+  {
+    auto& fullObjectAddresses = it->second;
+    for (auto& fullObjectAddress: fullObjectAddresses)
+    {
+      if (auto originSocket = fullObjectAddress.socket.lock())
+      {
+        auto& originObjectAddress = fullObjectAddress.localAddress;
+
+        Message terminateMessage;
+        terminateMessage.setFunction(Message::BoundObjectFunction_Terminate);
+        terminateMessage.setObject(originObjectAddress.object);
+        terminateMessage.setService(originObjectAddress.service);
+        terminateMessage.setType(Message::Type_Call);
+        terminateMessage.setValue(AnyReference::from(originObjectAddress.object), "I");
+        originSocket->send(terminateMessage);
+        qiLogDebug() << "Sending termination message to object host after remote disconnection: "
+                     << terminateMessage;
+      }
+    }
+
+    boost::upgrade_to_unique_lock<boost::shared_mutex> unique_lock(lock);
+    _objectOriginsPerDestination.erase(it);
+  }
+
   // If the client had not registered any object, return.
   if (_hostObjectBank.find(socket) == _hostObjectBank.end())
     return;
@@ -328,16 +384,15 @@ void GwObjectHost::clientDisconnected(TransportSocketPtr socket)
   boost::upgrade_to_unique_lock<boost::shared_mutex> unique_lock(lock);
   for (std::map<ObjectAddress, GwObjectId>::iterator it = bank.begin(), end = bank.end(); it != end; ++it)
   {
-    ServiceId service = it->first.service;
-    GwObjectId object = it->second;
-    std::list<GwObjectId>& used = _objectsUsedOnServices[service];
-
-    allIds.push_back(object);
-    std::list<GwObjectId>::iterator uit = std::find(used.begin(), used.end(), object);
+    auto& serviceId = it->first.service;
+    GwObjectId& gwObjectId = it->second;
+    std::list<GwObjectId>& used = _objectsUsedOnServices[serviceId];
+    allIds.push_back(gwObjectId);
+    std::list<GwObjectId>::iterator uit = std::find(used.begin(), used.end(), gwObjectId);
     if (uit != used.end())
       used.erase(uit);
     if (used.size() == 0)
-      _objectsUsedOnServices.erase(service);
+      _objectsUsedOnServices.erase(serviceId);
   }
 
   for (std::vector<GwObjectId>::iterator it = allIds.begin(), end = allIds.end(); it != end; ++it)
