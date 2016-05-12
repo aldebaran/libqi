@@ -7,7 +7,6 @@
 #ifndef _SRC_MESSAGING_GATEWAY_P_HPP_
 #define _SRC_MESSAGING_GATEWAY_P_HPP_
 
-#include <boost/tuple/tuple.hpp>
 #include <boost/thread/mutex.hpp>
 
 #include <qi/messaging/gateway.hpp>
@@ -32,6 +31,20 @@ using EventId = unsigned int;
 
 namespace qi
 {
+
+struct ClientInfo
+{
+  ClientMessageId id;
+  TransportSocketPtr socket;
+};
+
+struct MessageInfo
+{
+  ClientMessageId clientId;
+  Message message;
+  TransportSocketPtr target;
+};
+
 class GwTransaction
 {
 public:
@@ -172,7 +185,8 @@ private:
   GwSDClient _sdClient;
   GwObjectHost _objectHost;
 
-  using IdLookupMap = std::map<GWMessageId, std::pair<ClientMessageId, TransportSocketPtr> >;
+
+  using IdLookupMap = std::map<GWMessageId, ClientInfo >;
   using OngoingMessagesMap = std::map<ServiceId, IdLookupMap>;
   // This represents the messages that are currently awaiting a response, with both endpoints being known
   // and connected to the gateway.
@@ -182,14 +196,21 @@ private:
   // Messages for services that are not registered to the GW yet.
   // Once they are, we'll forward them.
   using PendingMessagesMap =
-      std::map<ServiceId, std::vector<boost::tuple<ClientMessageId, Message, TransportSocketPtr>>>;
+      std::map<ServiceId, std::vector<MessageInfo>>;
   PendingMessagesMap _pendingMessages;
   boost::mutex _pendingMsgMutex;
 
   using EventSubscriberEndpoint = TransportSocketPtr;
   using EventHostEndpoint = TransportSocketPtr;
-  using EventAddress =
-      boost::tuple<ServiceId, uint32_t, uint32_t, SignalLink, EventSubscriberEndpoint, EventHostEndpoint>;
+  struct EventAddress
+  {
+    ServiceId serviceId;
+    ObjectId objectId;
+    EventId eventId;
+    SignalLink signalLink;
+    EventSubscriberEndpoint subscriberSocket;
+    EventHostEndpoint hostSocket;
+  };
   std::map<GWMessageId, EventAddress> _pendingEventSubscriptions;
   struct EventSubInfo
   {
