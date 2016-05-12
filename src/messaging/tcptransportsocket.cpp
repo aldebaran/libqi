@@ -597,6 +597,7 @@ namespace qi
     if (_status == qi::TransportSocket::Status::Disconnected)
       return qi::Future<void>(0);
 
+    qiLogDebug() << "Disconnecting TCP transport socket";
     return _eventLoop->async(boost::bind(&TcpTransportSocket::error,
                                  boost::static_pointer_cast<TcpTransportSocket>(shared_from_this()),
                                  "Disconnection requested"));

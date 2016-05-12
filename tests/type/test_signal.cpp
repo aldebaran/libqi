@@ -312,6 +312,24 @@ TEST(TestSignal, SignalToSignalWithExtraArgument)
   EXPECT_EQ(42, target2.future().value());
 }
 
+TEST(TestSignal, SignalSubscriberDoesNotUnsubscribeAtDestruction)
+{
+  int count = 0;
+  qi::Signal<void> signal;
+  auto subscriber = signal.connect([&]{ ++count; })
+      .setCallType(qi::MetaCallType_Direct)
+      .shared_from_this();
+  signal();
+  ASSERT_EQ(1, count);
+
+  subscriber.reset();
+  signal();
+  ASSERT_EQ(2, count);
+}
+
+// ===========================================================
+// Signal Spy
+// -----------------------------------------------------------
 TEST(TestSignalSpy, Counter)
 {
   qi::Signal<int> sig;
