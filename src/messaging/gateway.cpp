@@ -66,9 +66,9 @@ struct _pending_msg_eraser
     : target(socket)
   {
   }
-  bool operator()(const boost::tuple<ClientMessageId, qi::Message, qi::TransportSocketPtr>& p)
+  bool operator()(const qi::MessageInfo& p)
   {
-    return boost::tuples::get<2>(p) == target;
+    return p.target == target;
   }
   qi::TransportSocketPtr target;
 };
@@ -412,7 +412,7 @@ void GatewayPrivate::onClientDisconnected(TransportSocketPtr socket, std::string
       IdLookupMap::iterator msgEnd = it->second.end();
       while (msgIt != msgEnd)
       {
-        if (msgIt->second.second == socket)
+        if (msgIt->second.socket == socket)
           it->second.erase(msgIt++);
         else
           msgIt++;
@@ -618,8 +618,8 @@ void GatewayPrivate::forwardMessage(ClientMessageId origId,
                                     TransportSocketPtr origin,
                                     TransportSocketPtr destination)
 {
-  ServiceId service = forward.service();
-  GWMessageId gwId = forward.id();
+  const ServiceId service = forward.service();
+  const GWMessageId gwId = forward.id();
 
   if (destination)
   {
@@ -627,10 +627,10 @@ void GatewayPrivate::forwardMessage(ClientMessageId origId,
     // Its ID is gateway-generated, hence is unique on our side. We use
     // it as our key in our map message.
     qiLogDebug() << "Forward message: " << forward.address() << " Original id:" << origId
-                 << " Origin: " << origin.get();
+                 << " Origin: " << origin.get() << " Destination: " << destination.get();
     {
       boost::mutex::scoped_lock lock(_ongoingMsgMutex);
-      _ongoingMessages[service][gwId] = std::make_pair(origId, origin);
+      _ongoingMessages[service][gwId] = { origId, origin };
     }
     destination->send(forward);
   }
@@ -901,18 +901,16 @@ void GatewayPrivate::localServiceRegistrationEnd(TransportSocketPtr socket, Serv
   }
   {
     boost::mutex::scoped_lock lock(_pendingMsgMutex);
-    std::vector<boost::tuple<ClientMessageId, Message, TransportSocketPtr> >::iterator it =
-        _pendingMessages[sid].begin();
-    std::vector<boost::tuple<ClientMessageId, Message, TransportSocketPtr> >::iterator end =
-        _pendingMessages[sid].end();
+    auto it = _pendingMessages[sid].begin();
+    auto end = _pendingMessages[sid].end();
 
     // Once we have established a connection to the new service,
     // we can send it all the messages we had pending for him.
     for (; it != end; ++it)
-      forwardMessage(boost::tuples::get<0>(*it),
-                     boost::tuples::get<1>(*it),
-                     boost::tuples::get<2>(*it),
-                     safeGetService(boost::tuples::get<1>(*it).service()));
+      forwardMessage(it->clientId,
+                     it->message,
+                     it->target,
+                     safeGetService(it->message.service()));
     _pendingMessages[sid].clear();
     _pendingMessages.erase(sid);
   }
@@ -1039,7 +1037,7 @@ GWMessageId GatewayPrivate::handleCallMessage(GwTransaction& t, TransportSocketP
         // if there are pendingMessages already, it means we're already actively trying to
         // connect to the service: don't request it a second time.
         requestService = _pendingMessages[targetService].size() == 0;
-        _pendingMessages[targetService].push_back(boost::make_tuple(msg.id(), forward, origin));
+        _pendingMessages[targetService].push_back({ msg.id(), forward, origin });
       }
       if (requestService)
       {
@@ -1058,7 +1056,7 @@ void GatewayPrivate::handleReplyMessage(GwTransaction& t)
   Message& msg = t.content;
   ServiceId service = msg.service();
   GWMessageId gwId = msg.id();
-  std::pair<ClientMessageId, TransportSocketPtr> client;
+  ClientInfo client;
 
   if (service == 0 && msg.object() > 1)
   {
@@ -1078,10 +1076,10 @@ void GatewayPrivate::handleReplyMessage(GwTransaction& t)
     _ongoingMessages[service].erase(gwId);
   }
 
-  qiLogDebug() << "Reply to socket " << client.second << " with original ID " << client.first;
+  qiLogDebug() << "Reply to socket " << client.socket << " with original ID " << client.id;
   Message answer(msg);
-  answer.setId(client.first);
-  t.setDestinationIfNull(client.second);
+  answer.setId(client.id);
+  t.setDestinationIfNull(client.socket);
   if (t.destination()->isConnected())
   {
     qiLogVerbose() << "Reply: " << msg.address();
@@ -1133,7 +1131,7 @@ void GatewayPrivate::onAnyMessageReady(const Message& msg, TransportSocketPtr so
     if (_ongoingMessages[serviceId].find(gwId) == _ongoingMessages[serviceId].end())
       return {};
 
-    return _ongoingMessages[serviceId][gwId].second;
+    return _ongoingMessages[serviceId][gwId].socket;
   }();
 
   _objectHost.treatMessage(transaction, socket, destination);
@@ -1227,7 +1225,7 @@ void GatewayPrivate::onServiceDirectoryMessageReady(const Message& msg, Transpor
       TransportSocketPtr origin;
       {
         boost::mutex::scoped_lock lock(_ongoingMsgMutex);
-        origin = _ongoingMessages[ServiceSD][msg.id()].second;
+        origin = _ongoingMessages[ServiceSD][msg.id()].socket;
       }
       int serviceId = msg.value("I", socket).to<unsigned int>();
       {
@@ -1284,7 +1282,7 @@ void GatewayPrivate::registerEventListenerCall(GwTransaction& t, TransportSocket
       // we have to send a subscription message to the service
       // to make the connection.
       GWMessageId id = handleCallMessage(t, origin);
-      _pendingEventSubscriptions[id] = boost::make_tuple(serviceId, objectId, event, signalLink, origin, eventHost);
+      _pendingEventSubscriptions[id] = { serviceId, objectId, event, signalLink, origin, eventHost };
       return;
     }
     else
@@ -1323,17 +1321,12 @@ void GatewayPrivate::registerEventListenerReply(GwTransaction& t, TransportSocke
       return handleReplyMessage(t);
     }
 
-    EventAddress& evt = evIt->second;
-    ServiceId service = bt::get<0>(evt);
-    uint32_t object = bt::get<1>(evt);
-    uint32_t event = bt::get<2>(evt);
-    link = bt::get<3>(evt);
-    EventSubscriberEndpoint client = bt::get<4>(evt);
-    EventHostEndpoint eventHost = bt::get<5>(evt);
-    EventSubInfo& eventInfo = _eventSubscribers[eventHost][service][object][event];
-    eventInfo.remoteSubscribers[client] = link;
-    eventInfo.gwLink = link;
+    const EventAddress& evt = evIt->second;
+    EventSubInfo& eventInfo = _eventSubscribers[evt.hostSocket][evt.serviceId][evt.objectId][evt.eventId];
+    eventInfo.remoteSubscribers[evt.subscriberSocket] = evt.signalLink;
+    eventInfo.gwLink = evt.signalLink;
     _pendingEventSubscriptions.erase(evIt);
+    link = evt.signalLink;
   }
   Message rep;
   rep.setId(msgId);
@@ -1406,13 +1399,13 @@ void GatewayPrivate::invalidateClientsMessages(ServiceId sid)
   {
     namespace bt = boost::tuples;
     boost::mutex::scoped_lock lock(_pendingMsgMutex);
-    std::vector<boost::tuple<ClientMessageId, Message, TransportSocketPtr> >::iterator it =
+    auto it =
         _pendingMessages[sid].begin();
-    std::vector<boost::tuple<ClientMessageId, Message, TransportSocketPtr> >::iterator end =
+    auto end =
         _pendingMessages[sid].end();
 
     for (; it != end; ++it)
-      serviceUnavailable(sid, bt::get<1>(*it), bt::get<2>(*it));
+      serviceUnavailable(sid, it->message, it->target);
     _pendingMessages[sid].clear();
     _pendingMessages.erase(sid);
   }
@@ -1424,8 +1417,8 @@ void GatewayPrivate::invalidateClientsMessages(ServiceId sid)
 
     for (; it != end; ++it)
     {
-      forged.setId(it->second.first);
-      serviceUnavailable(sid, forged, it->second.second);
+      forged.setId(it->second.id);
+      serviceUnavailable(sid, forged, it->second.socket);
     }
     _ongoingMessages[sid].clear();
     _ongoingMessages.erase(sid);
