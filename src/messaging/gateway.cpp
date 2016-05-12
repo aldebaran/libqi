@@ -649,6 +649,7 @@ void GatewayPrivate::clientAuthenticationMessages(const Message& msg,
                                                   AuthProviderPtr auth,
                                                   boolptr firstMessage,
                                                   SignalSubscriberPtr sub)
+try
 {
   int id = msg.id();
   int service = msg.service();
@@ -719,12 +720,20 @@ void GatewayPrivate::clientAuthenticationMessages(const Message& msg,
   {
     std::stringstream builder;
 
-    builder << "Authentication failed";
+    builder << "Authentication failed :\n";
     for(const auto& slot : authData)
     {
-      builder << "authData[ ";
+      builder << "  authData[ ";
       builder << slot.first << " ][ ";
-      builder << slot.second.toString() << " ]";
+      try
+      {
+        builder << slot.second.toString();
+      }
+      catch(...)
+      {
+        builder << "???";
+      }
+      builder << " ]\n";
     }
 
     if (authData.find(AuthProvider::Error_Reason_Key) != authData.end())
@@ -742,6 +751,16 @@ void GatewayPrivate::clientAuthenticationMessages(const Message& msg,
   }
   }
   qiLogVerbose() << "Authentication step for client " << client_endpoint << " has ended.";
+}
+catch (const std::exception& ex)
+{
+  qiLogError() << "Authentification process failed in an unexpected way: " << ex.what();
+  throw;
+}
+catch(...)
+{
+  qiLogError() << "Authentification process failed in an unexpected way: Unknown error";
+  throw;
 }
 
 void GatewayPrivate::onClientConnection(TransportSocketPtr socket)
@@ -1104,8 +1123,20 @@ void GatewayPrivate::handleEventMessage(GwTransaction& t, TransportSocketPtr soc
 void GatewayPrivate::onAnyMessageReady(const Message& msg, TransportSocketPtr socket)
 {
   GwTransaction transaction(msg);
+  GWMessageId gwId = msg.id();
+  ServiceId serviceId = msg.service();
 
-  _objectHost.treatMessage(transaction, socket);
+  TransportSocketPtr destination = [=]() -> TransportSocketPtr {
+    boost::mutex::scoped_lock lock(_ongoingMsgMutex);
+
+    // This is likely an internal message and so can be ignored here
+    if (_ongoingMessages[serviceId].find(gwId) == _ongoingMessages[serviceId].end())
+      return {};
+
+    return _ongoingMessages[serviceId][gwId].second;
+  }();
+
+  _objectHost.treatMessage(transaction, socket, destination);
   qiLogDebug() << socket.get() << " Transaction ready: " << Message::typeToString(transaction.content.type()) << " "
                << transaction.content.address();
   unsigned int function = msg.function();

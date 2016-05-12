@@ -7,6 +7,7 @@
 #include <qi/application.hpp>
 #include <qi/anyobject.hpp>
 #include <qi/session.hpp>
+#include <qi/signalspy.hpp>
 #include <qi/anymodule.hpp>
 #include <testsession/testsessionpair.hpp>
 
@@ -21,6 +22,7 @@ int main(int argc, char **argv)
   TestMode::initTestMode(argc, argv);
   ::testing::InitGoogleTest(&argc, argv);
   qi::log::addFilter("qi.*", qi::LogLevel_Debug);
+  qi::log::addFilter("qigateway.*", qi::LogLevel_Debug);
   qi::log::addFilter("qimessaging.*", qi::LogLevel_Debug);
   return RUN_ALL_TESTS();
 }
@@ -219,7 +221,14 @@ class CookieBox
 public:
   qi::AnyObject makeCookie(bool withTaste)
   {
-    return boost::make_shared<Cookie>(withTaste);
+    return boost::shared_ptr<Cookie>{
+      new Cookie{withTaste},
+      [=](Cookie* cookie) {
+        qiLogInfo() << "Cookie destruction";
+        delete cookie;
+        QI_EMIT cookieLost();
+      }
+    };
   }
   void give(qi::AnyObject c)
   {
@@ -231,6 +240,8 @@ public:
     return cookie;
   }
 
+  qi::Signal<void> cookieLost;
+
 private:
   qi::AnyObject cookie;
 };
@@ -238,7 +249,7 @@ private:
 QI_REGISTER_OBJECT(Cookie, eat, taste, eaten)
 QI_REGISTER_OBJECT(CookieBox, makeCookie, give, take)
 
-TEST(Module, give_and_take_object_function)
+TEST(SendObject, give_and_take_object_function)
 {
   TestSessionPair p;
   p.server()->registerService("CookieBox", boost::make_shared<CookieBox>());
@@ -249,7 +260,7 @@ TEST(Module, give_and_take_object_function)
   EXPECT_TRUE(tookCookie.call<bool>("eat"));
 }
 
-TEST(Module, give_and_take_object_property)
+TEST(SendObject, give_and_take_object_property)
 {
   TestSessionPair p;
   p.server()->registerService("CookieBox", boost::make_shared<CookieBox>());
@@ -260,7 +271,7 @@ TEST(Module, give_and_take_object_property)
   EXPECT_TRUE(tookCookie.property<bool>("taste").value(500));
 }
 
-TEST(Module, give_and_take_object_signal)
+TEST(SendObject, give_and_take_object_signal)
 {
   TestSessionPair p;
   p.server()->registerService("CookieBox", boost::make_shared<CookieBox>());
@@ -280,4 +291,33 @@ TEST(Module, give_and_take_object_signal)
   auto eating = takenCookie.async<bool>("eat");
   EXPECT_TRUE(eating.value(timeoutMs));
   EXPECT_TRUE(eaten.future().value(timeoutMs));
+}
+
+TEST(SendObject, object_referenced_by_remote_only_is_destroyed_on_disconnection)
+{
+  TestSessionPair p;
+  auto cookieBox = boost::make_shared<CookieBox>();
+  p.server()->registerService("CookieBox", cookieBox);
+  qi::AnyObject cookieBoxRemote = p.client()->service("CookieBox");
+
+  qiLogInfo() << "Getting a cookie!";
+  auto cookie = cookieBoxRemote.call<qi::AnyObject>("makeCookie", true);
+  QI_UNUSED(cookie);
+  qi::SignalSpy cookieLostSpy{cookieBox->cookieLost};
+
+  qiLogInfo() << "Closing the session.";
+  p.client()->close();
+  ASSERT_TRUE(cookieLostSpy.waitUntil(1, qi::MilliSeconds{100}));
+}
+
+TEST(SendObject, object_referenced_by_remote_only_is_destroyed_on_unreference)
+{
+  TestSessionPair p;
+  auto cookieBox = boost::make_shared<CookieBox>();
+  p.server()->registerService("CookieBox", cookieBox);
+  qi::AnyObject cookieBoxRemote = p.client()->service("CookieBox");
+  auto cookie = cookieBoxRemote.call<qi::AnyObject>("makeCookie", true);
+  qi::SignalSpy cookieLostSpy{cookieBox->cookieLost};
+  cookie.reset();
+  ASSERT_TRUE(cookieLostSpy.waitUntil(1, qi::MilliSeconds{100}));
 }

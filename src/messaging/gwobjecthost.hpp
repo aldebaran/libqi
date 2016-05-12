@@ -58,25 +58,45 @@ class Message;
 class TransportSocket;
 class GwTransaction;
 using TransportSocketPtr = boost::shared_ptr<TransportSocket>;
+using TransportSocketWeakPtr = boost::weak_ptr<TransportSocket>;
+
+/// Describes the full address of an object.
+struct FullObjectAddress
+{
+  /// The socket from which the object is originated.
+  TransportSocketWeakPtr socket;
+
+  /// The address of the object over the associated socket.
+  ObjectAddress localAddress;
+};
 
 class GwObjectHost
 {
 public:
   ~GwObjectHost();
 
-  void treatMessage(GwTransaction& msg, TransportSocketPtr sender);
+  void treatMessage(GwTransaction& msg, TransportSocketPtr sender, qi::TransportSocketPtr destination);
   void serviceDisconnected(ServiceId);
   void clientDisconnected(TransportSocketPtr);
 
-  void harvestClientReplyOriginatingObjects(Message& msg, TransportSocketPtr sender, GwObjectId id);
-  void harvestClientCallOriginatingObjects(Message& msg, TransportSocketPtr sender);
-  void harvestServiceOriginatingObjects(Message& msg, TransportSocketPtr sender);
-  void harvestMessageObjects(Message& msg, TransportSocketPtr sender);
+  void harvestClientReplyOriginatingObjects(Message& msg, TransportSocketPtr sender, GwObjectId id, TransportSocketPtr destination);
+  void harvestClientCallOriginatingObjects(Message& msg, TransportSocketPtr sender, TransportSocketPtr destination);
+  void harvestServiceOriginatingObjects(Message& msg, TransportSocketPtr sender, qi::TransportSocketPtr destination);
+  void harvestMessageObjects(Message& msg, TransportSocketPtr sender, qi::TransportSocketPtr destination);
 
   ObjectAddress getOriginalObjectAddress(const ObjectAddress& gwObjectAddress);
 
+  /// Use this method to remember to which socket an object was transmitted.
+  /// @param destination The destination socket.
+  /// @param origin The origin socket.
+  /// @param objectAddress The local address of the object over the origin socket.
+  void setDestinationSocketForObject(
+      const TransportSocketPtr& destination,
+      const TransportSocketPtr& origin,
+      const ObjectAddress& objectAddress);
+
 private:
-  void assignClientMessageObjectsGwIds(const Signature& sig, Message& msg, TransportSocketPtr sender);
+  void assignClientMessageObjectsGwIds(const Signature& sig, Message& msg, TransportSocketPtr sender, qi::TransportSocketPtr destination);
 
   boost::shared_mutex _mutex;
 
@@ -94,6 +114,10 @@ private:
 
   // Tracks the connection between a GWObjectId and a client + messageaddress
   std::map<GwObjectId, std::pair<TransportSocketPtr, ObjectAddress> > _objectsOrigin;
+
+  /// The origin of objects that are transmitted to clients are remembered here.
+  std::map<TransportSocketPtr, std::list<FullObjectAddress>> _objectOriginsPerDestination;
+
   std::map<TransportSocketPtr, std::map<ObjectAddress, GwObjectId> > _hostObjectBank;
 };
 }
