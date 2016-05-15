@@ -31,7 +31,7 @@ static bool hasObjectsSomewhere(const Signature& sig)
     const Signature* s = queue.front();
     queue.pop();
 
-    if (s->type() == Signature::Type_Object)
+    if (s->type() == Signature::Type_Object || s->type() == Signature::Type_Dynamic)
       return true;
     for (SignatureVector::const_iterator it = s->children().begin(), end = s->children().end(); it != end; ++it)
       queue.push(&(*it));
