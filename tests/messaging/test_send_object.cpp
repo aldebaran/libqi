@@ -230,6 +230,7 @@ public:
       }
     };
   }
+
   void give(qi::AnyObject c)
   {
     cookie = c;
@@ -246,8 +247,27 @@ private:
   qi::AnyObject cookie;
 };
 
+struct CookieMonster
+{
+  void feed(qi::AnyObject cookie)
+  {
+    cookie.call<void>("eat");
+    qiLogInfo() << "Cookiiiiie!!! Om nom nom nom...";
+  }
+};
+
+struct CookieMonsterFeeder
+{
+  void feedMonster(qi::AnyObject cookie, qi::AnyObject cookieMonster)
+  {
+    cookieMonster.call<void>("feed", cookie);
+  }
+};
+
 QI_REGISTER_OBJECT(Cookie, eat, taste, eaten)
 QI_REGISTER_OBJECT(CookieBox, makeCookie, give, take)
+QI_REGISTER_OBJECT(CookieMonster, feed)
+QI_REGISTER_OBJECT(CookieMonsterFeeder, feedMonster)
 
 TEST(SendObject, give_and_take_object_function)
 {
@@ -291,6 +311,18 @@ TEST(SendObject, give_and_take_object_signal)
   auto eating = takenCookie.async<bool>("eat");
   EXPECT_TRUE(eating.value(timeoutMs));
   EXPECT_TRUE(eaten.future().value(timeoutMs));
+}
+
+TEST(SendObject, two_client_objects_call_each_other_on_service_side)
+{
+  TestSessionPair p;
+  auto cookieFeeder = boost::make_shared<CookieMonsterFeeder>();
+  p.server()->registerService("CookieMonsterFeeder", cookieFeeder);
+
+  qi::AnyObject cookieTransmitterRemote = p.client()->service("CookieMonsterFeeder");
+  auto transmitting = cookieTransmitterRemote.async<void>(
+        "feedMonster", boost::make_shared<Cookie>(false), boost::make_shared<CookieMonster>());
+  ASSERT_EQ(qi::FutureState_FinishedWithValue, transmitting.wait(timeoutMs));
 }
 
 TEST(SendObject, object_referenced_by_remote_only_is_destroyed_on_disconnection)
