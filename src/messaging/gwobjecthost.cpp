@@ -172,10 +172,10 @@ void GwObjectHost::harvestServiceOriginatingObjects(Message& msg, TransportSocke
     }
     else if (msg.type() == Message::Type_Call || msg.type() == Message::Type_Post)
     {
-      // if a service does a CALL, he does so on a user-supplied object.
+      // if a service does a CALL, it does so on a user-supplied object.
       std::map<GwObjectId, MetaObject>::iterator mit = _objectsMetaObjects.find(msg.object());
       if(mit == _objectsMetaObjects.end())
-        throw std::runtime_error("Gateway: Couldn't find object called - aborted.");
+        throw std::runtime_error("could not find object called by service");
       metaObject = &mit->second;
       signatureGetter = &MetaMethod::parametersSignature;
     }
