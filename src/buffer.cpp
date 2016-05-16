@@ -273,7 +273,7 @@ namespace qi
 
       for (unsigned int j = i - 16; j < buffer.size(); j++) {
         char c = data[j];
-        stream << (isgraph(c) ? c : '.');
+        stream << (c >= 0 && isgraph(c) ? c : '.'); // isgraph() required a value which can be represented by an unsigned char
       }
 
       stream.flags(flags);
