@@ -368,7 +368,7 @@ TEST(SendObject, object_emitter_service_provides_single_object_through_property_
 class Human
 {
 public:
-  void pingMe(const qi::AnyObject& humanToPing) { std::string oName = humanToPing.call<std::string>("ping"); }
+  void pingMe(const qi::AnyObject& humanToPing) {std::string oName = humanToPing.call<std::string>("ping");}
   std::string ping()
   {
     qiLogInfo() << "Ping !";
