@@ -69,6 +69,11 @@ struct FullObjectAddress
   /// The address of the object over the associated socket.
   ObjectAddress localAddress;
 };
+struct ObjectInfo
+{
+  TransportSocketPtr socket;
+  ObjectAddress address;
+};
 
 class GwObjectHost
 {
@@ -85,6 +90,7 @@ public:
   void harvestMessageObjects(Message& msg, TransportSocketPtr sender, qi::TransportSocketPtr destination);
 
   ObjectAddress getOriginalObjectAddress(const ObjectAddress& gwObjectAddress);
+  ObjectInfo objectSource(const ObjectAddress&  address);
 
   /// Use this method to remember to which socket an object was transmitted.
   /// @param destination The destination socket.
@@ -112,13 +118,16 @@ private:
   // Objects originating from clients
   std::map<GwObjectId, MetaObject> _objectsMetaObjects;
 
+
   // Tracks the connection between a GWObjectId and a client + messageaddress
-  std::map<GwObjectId, std::pair<TransportSocketPtr, ObjectAddress> > _objectsOrigin;
+  std::map<GwObjectId, ObjectInfo> _objectsOrigin;
 
   /// The origin of objects that are transmitted to clients are remembered here.
   std::map<TransportSocketPtr, std::list<FullObjectAddress>> _objectOriginsPerDestination;
 
   std::map<TransportSocketPtr, std::map<ObjectAddress, GwObjectId> > _hostObjectBank;
+
+  MetaObject* findMetaObject(ServiceId serviceId, ObjectId objectId);
 };
 }
 
