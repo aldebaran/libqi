@@ -994,13 +994,13 @@ void GatewayPrivate::serviceUnavailable(ServiceId service, const Message& subjec
   client->send(unavailable);
 }
 
-GWMessageId GatewayPrivate::handleCallMessage(GwTransaction& t, TransportSocketPtr origin)
+GWMessageId GatewayPrivate::handleCallMessage(GwTransaction& t, TransportSocketPtr origin, TransportSocketPtr destination)
 {
   qiLogDebug() << "Handle call " << t.content.address();
   Message& msg = t.content;
   ServiceId targetService = msg.service();
   Message forward;
-  TransportSocketPtr serviceSocket = safeGetService(targetService);
+  TransportSocketPtr serviceSocket = destination ? destination : safeGetService(targetService);
 
   t.setDestinationIfNull(serviceSocket);
   forward.setType(msg.type());
@@ -1126,14 +1126,27 @@ void GatewayPrivate::onAnyMessageReady(const Message& msg, TransportSocketPtr so
     GWMessageId gwId = msg.id();
     ServiceId serviceId = msg.service();
 
-    TransportSocketPtr destination = [=]() -> TransportSocketPtr {
-      boost::mutex::scoped_lock lock(_ongoingMsgMutex);
+    TransportSocketPtr destination = [&]() -> TransportSocketPtr {
 
       // This is likely an internal message and so can be ignored here
-      if (_ongoingMessages[serviceId].find(gwId) == _ongoingMessages[serviceId].end())
-        return{};
+      {
+        boost::mutex::scoped_lock lock(_ongoingMsgMutex);
+        auto& messageMap = _ongoingMessages[serviceId];
+        auto foundIt = messageMap.find(gwId);
+        if (foundIt != _ongoingMessages[serviceId].end() && foundIt->second.socket)
+          return foundIt->second.socket;
+      }
 
-      return _ongoingMessages[serviceId][gwId].socket;
+      {
+        boost::recursive_mutex::scoped_lock lock(_serviceMutex);
+        auto foundIt = _services.find(serviceId);
+        if (foundIt != _services.end() && foundIt->second)
+        {
+          return foundIt->second;
+        }
+      }
+
+      return _objectHost.objectSource({ msg.service(), msg.object() }).socket;
     }();
 
     _objectHost.treatMessage(transaction, socket, destination);
@@ -1158,7 +1171,7 @@ void GatewayPrivate::onAnyMessageReady(const Message& msg, TransportSocketPtr so
         registerEventListenerCall(transaction, socket);
         break;
       default:
-        handleCallMessage(transaction, socket);
+        handleCallMessage(transaction, socket, destination);
       }
       break;
       // Service Message

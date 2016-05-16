@@ -251,7 +251,7 @@ struct CookieMonster
 {
   void feed(qi::AnyObject cookie)
   {
-    cookie.call<void>("eat");
+    cookie.call<bool>("eat");
     qiLogInfo() << "Cookiiiiie!!! Om nom nom nom...";
   }
 };

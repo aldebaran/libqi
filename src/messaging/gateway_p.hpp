@@ -140,7 +140,7 @@ private:
                       TransportSocketPtr client,
                       TransportSocketPtr destination);
   void forwardPostMessage(GwTransaction& t, TransportSocketPtr origin);
-  GWMessageId handleCallMessage(GwTransaction& msg, TransportSocketPtr socket);
+  GWMessageId handleCallMessage(GwTransaction& msg, TransportSocketPtr origin, TransportSocketPtr destination = {});
   void handleReplyMessage(GwTransaction& msg);
   void handleEventMessage(GwTransaction& msg, TransportSocketPtr socket);
 
