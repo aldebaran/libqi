@@ -1120,60 +1120,76 @@ void GatewayPrivate::handleEventMessage(GwTransaction& t, TransportSocketPtr soc
 
 void GatewayPrivate::onAnyMessageReady(const Message& msg, TransportSocketPtr socket)
 {
-  GwTransaction transaction(msg);
-  GWMessageId gwId = msg.id();
-  ServiceId serviceId = msg.service();
-
-  TransportSocketPtr destination = [=]() -> TransportSocketPtr {
-    boost::mutex::scoped_lock lock(_ongoingMsgMutex);
-
-    // This is likely an internal message and so can be ignored here
-    if (_ongoingMessages[serviceId].find(gwId) == _ongoingMessages[serviceId].end())
-      return {};
-
-    return _ongoingMessages[serviceId][gwId].socket;
-  }();
-
-  _objectHost.treatMessage(transaction, socket, destination);
-  qiLogDebug() << socket.get() << " Transaction ready: " << Message::typeToString(transaction.content.type()) << " "
-               << transaction.content.address();
-  unsigned int function = msg.function();
-  switch (msg.type())
+  try
   {
-  // Could be either message
-  case Message::Type_Post:
-    forwardPostMessage(transaction, socket);
-    break;
-  // Client Message
-  case Message::Type_Call:
-    switch (function)
+    GwTransaction transaction(msg);
+    GWMessageId gwId = msg.id();
+    ServiceId serviceId = msg.service();
+
+    TransportSocketPtr destination = [=]() -> TransportSocketPtr {
+      boost::mutex::scoped_lock lock(_ongoingMsgMutex);
+
+      // This is likely an internal message and so can be ignored here
+      if (_ongoingMessages[serviceId].find(gwId) == _ongoingMessages[serviceId].end())
+        return{};
+
+      return _ongoingMessages[serviceId][gwId].socket;
+    }();
+
+    _objectHost.treatMessage(transaction, socket, destination);
+    qiLogDebug() << socket.get() << " Transaction ready: " << Message::typeToString(transaction.content.type()) << " "
+      << transaction.content.address();
+    unsigned int function = msg.function();
+    switch (msg.type())
     {
-    case Message::BoundObjectFunction_UnregisterEvent:
-      unregisterEventListenerCall(transaction, socket);
+      // Could be either message
+    case Message::Type_Post:
+      forwardPostMessage(transaction, socket);
       break;
-    case Message::BoundObjectFunction_RegisterEvent:
-    case Message::BoundObjectFunction_RegisterEventWithSignature:
-      registerEventListenerCall(transaction, socket);
+      // Client Message
+    case Message::Type_Call:
+      switch (function)
+      {
+      case Message::BoundObjectFunction_UnregisterEvent:
+        unregisterEventListenerCall(transaction, socket);
+        break;
+      case Message::BoundObjectFunction_RegisterEvent:
+      case Message::BoundObjectFunction_RegisterEventWithSignature:
+        registerEventListenerCall(transaction, socket);
+        break;
+      default:
+        handleCallMessage(transaction, socket);
+      }
+      break;
+      // Service Message
+    case Message::Type_Reply:
+    case Message::Type_Error:
+      if (function == Message::BoundObjectFunction_RegisterEvent)
+        registerEventListenerReply(transaction, socket);
+      else
+        handleReplyMessage(transaction);
+      break;
+    case Message::Type_Event:
+      handleEventMessage(transaction, socket);
       break;
     default:
-      handleCallMessage(transaction, socket);
+      qiLogError() << "Unexpected message type: " << msg.type();
+      break;
     }
-    break;
-  // Service Message
-  case Message::Type_Reply:
-  case Message::Type_Error:
-    if (function == Message::BoundObjectFunction_RegisterEvent)
-      registerEventListenerReply(transaction, socket);
-    else
-      handleReplyMessage(transaction);
-    break;
-  case Message::Type_Event:
-    handleEventMessage(transaction, socket);
-    break;
-  default:
-    qiLogError() << "Unexpected message type: " << msg.type();
-    break;
   }
+  catch (const std::exception& ex)
+  {
+    const auto errorMessage = std::string("Message processing failed: ") + ex.what();
+    qiLogError() << errorMessage;
+    reportProcessingFailure(msg, socket, errorMessage);
+  }
+  catch (...)
+  {
+    static const auto errorMessage = "Message processing failed: Unknown reason";
+    qiLogError() << errorMessage;
+    reportProcessingFailure(msg, socket, errorMessage);
+  }
+
 }
 
 void GatewayPrivate::onServiceDirectoryMessageReady(const Message& msg, TransportSocketPtr socket)
@@ -1423,5 +1439,13 @@ void GatewayPrivate::invalidateClientsMessages(ServiceId sid)
     _ongoingMessages[sid].clear();
     _ongoingMessages.erase(sid);
   }
+}
+
+void GatewayPrivate::reportProcessingFailure(const Message& processedMessage, TransportSocketPtr source, std::string messageText)
+{
+  Message errorMessage(Message::Type_Error, processedMessage.address());
+  errorMessage.setId(processedMessage.id());
+  errorMessage.setError(std::move(messageText));
+  source->send(processedMessage);
 }
 }

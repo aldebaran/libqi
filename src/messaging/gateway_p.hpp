@@ -161,6 +161,8 @@ private:
 
   void updateEndpoints(const Url& url);
 
+  void reportProcessingFailure(const Message& processedMessage, TransportSocketPtr source, std::string messageText);
+
   bool _enforceAuth;
 
   TransportServer _server;
