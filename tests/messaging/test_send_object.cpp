@@ -367,7 +367,7 @@ TEST(SendObject, object_emitter_service_provides_single_object_through_property_
 class Human
 {
 public:
-  void pingMe(const qi::AnyObject& humanToPing) {std::string oName = humanToPing.call<std::string>("ping");}
+  void pingMe(const qi::AnyObject& humanToPing) { std::string oName = humanToPing.call<std::string>("ping"); }
   std::string ping()
   {
     qiLogInfo() << "Ping !";
@@ -379,6 +379,8 @@ QI_REGISTER_OBJECT(Human, pingMe, ping)
 class Actuation
 {
 public:
+  Actuation() { humanProperty.set(boost::make_shared<Human>()); }
+
   qi::AnyObject getHomeMadeHuman() { return boost::make_shared<Human>(); }
 
   void set(const qi::AnyObject& humanToSet) {_human = humanToSet;}
@@ -386,8 +388,32 @@ public:
 
 private:
   qi::AnyObject _human;
+
+public:
+  void emitHumanProperty() { humanProperty.set(boost::make_shared<Human>()); }
+  qi::Property<qi::AnyObject> humanProperty;
+
 };
-QI_REGISTER_OBJECT(Actuation, set, get, getHomeMadeHuman)
+QI_REGISTER_OBJECT(Actuation, set, get, getHomeMadeHuman, emitHumanProperty, humanProperty)
+
+TEST(SendObject, reuse_object_taken_from_connect)
+{
+  TestSessionPair p;
+  p.server()->registerService("Actuation", boost::make_shared<Actuation>());
+  qi::AnyObject actuation = p.client()->service("Actuation");
+
+  qi::Promise<bool> pinged;
+  actuation.connect("humanProperty",
+                    boost::function<void(qi::AnyObject)>([&](qi::AnyObject human)
+  {
+    auto homeMadeHuman = actuation.call<qi::AnyObject>("getHomeMadeHuman");
+    human.call<void>("pingMe", homeMadeHuman);
+    pinged.setValue(true);
+  }));
+  actuation.call<void>("emitHumanProperty");
+
+  ASSERT_EQ(qi::FutureState_FinishedWithValue, pinged.future().waitFor(qi::MilliSeconds(2000)));
+}
 
 TEST(SendObject, make_frame)
 {
