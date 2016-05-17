@@ -66,9 +66,9 @@ struct _pending_msg_eraser
     : target(socket)
   {
   }
-  bool operator()(const boost::tuple<ClientMessageId, qi::Message, qi::TransportSocketPtr>& p)
+  bool operator()(const qi::MessageInfo& p)
   {
-    return boost::tuples::get<2>(p) == target;
+    return p.target == target;
   }
   qi::TransportSocketPtr target;
 };
@@ -412,7 +412,7 @@ void GatewayPrivate::onClientDisconnected(TransportSocketPtr socket, std::string
       IdLookupMap::iterator msgEnd = it->second.end();
       while (msgIt != msgEnd)
       {
-        if (msgIt->second.second == socket)
+        if (msgIt->second.socket == socket)
           it->second.erase(msgIt++);
         else
           msgIt++;
@@ -618,8 +618,8 @@ void GatewayPrivate::forwardMessage(ClientMessageId origId,
                                     TransportSocketPtr origin,
                                     TransportSocketPtr destination)
 {
-  ServiceId service = forward.service();
-  GWMessageId gwId = forward.id();
+  const ServiceId service = forward.service();
+  const GWMessageId gwId = forward.id();
 
   if (destination)
   {
@@ -627,10 +627,10 @@ void GatewayPrivate::forwardMessage(ClientMessageId origId,
     // Its ID is gateway-generated, hence is unique on our side. We use
     // it as our key in our map message.
     qiLogDebug() << "Forward message: " << forward.address() << " Original id:" << origId
-                 << " Origin: " << origin.get();
+                 << " Origin: " << origin.get() << " Destination: " << destination.get();
     {
       boost::mutex::scoped_lock lock(_ongoingMsgMutex);
-      _ongoingMessages[service][gwId] = std::make_pair(origId, origin);
+      _ongoingMessages[service][gwId] = { origId, origin };
     }
     destination->send(forward);
   }
@@ -901,18 +901,16 @@ void GatewayPrivate::localServiceRegistrationEnd(TransportSocketPtr socket, Serv
   }
   {
     boost::mutex::scoped_lock lock(_pendingMsgMutex);
-    std::vector<boost::tuple<ClientMessageId, Message, TransportSocketPtr> >::iterator it =
-        _pendingMessages[sid].begin();
-    std::vector<boost::tuple<ClientMessageId, Message, TransportSocketPtr> >::iterator end =
-        _pendingMessages[sid].end();
+    auto it = _pendingMessages[sid].begin();
+    auto end = _pendingMessages[sid].end();
 
     // Once we have established a connection to the new service,
     // we can send it all the messages we had pending for him.
     for (; it != end; ++it)
-      forwardMessage(boost::tuples::get<0>(*it),
-                     boost::tuples::get<1>(*it),
-                     boost::tuples::get<2>(*it),
-                     safeGetService(boost::tuples::get<1>(*it).service()));
+      forwardMessage(it->clientId,
+                     it->message,
+                     it->target,
+                     safeGetService(it->message.service()));
     _pendingMessages[sid].clear();
     _pendingMessages.erase(sid);
   }
@@ -996,13 +994,13 @@ void GatewayPrivate::serviceUnavailable(ServiceId service, const Message& subjec
   client->send(unavailable);
 }
 
-GWMessageId GatewayPrivate::handleCallMessage(GwTransaction& t, TransportSocketPtr origin)
+GWMessageId GatewayPrivate::handleCallMessage(GwTransaction& t, TransportSocketPtr origin, TransportSocketPtr destination)
 {
   qiLogDebug() << "Handle call " << t.content.address();
   Message& msg = t.content;
   ServiceId targetService = msg.service();
   Message forward;
-  TransportSocketPtr serviceSocket = safeGetService(targetService);
+  TransportSocketPtr serviceSocket = destination ? destination : safeGetService(targetService);
 
   t.setDestinationIfNull(serviceSocket);
   forward.setType(msg.type());
@@ -1039,7 +1037,7 @@ GWMessageId GatewayPrivate::handleCallMessage(GwTransaction& t, TransportSocketP
         // if there are pendingMessages already, it means we're already actively trying to
         // connect to the service: don't request it a second time.
         requestService = _pendingMessages[targetService].size() == 0;
-        _pendingMessages[targetService].push_back(boost::make_tuple(msg.id(), forward, origin));
+        _pendingMessages[targetService].push_back({ msg.id(), forward, origin });
       }
       if (requestService)
       {
@@ -1058,7 +1056,7 @@ void GatewayPrivate::handleReplyMessage(GwTransaction& t)
   Message& msg = t.content;
   ServiceId service = msg.service();
   GWMessageId gwId = msg.id();
-  std::pair<ClientMessageId, TransportSocketPtr> client;
+  ClientInfo client;
 
   if (service == 0 && msg.object() > 1)
   {
@@ -1078,10 +1076,10 @@ void GatewayPrivate::handleReplyMessage(GwTransaction& t)
     _ongoingMessages[service].erase(gwId);
   }
 
-  qiLogDebug() << "Reply to socket " << client.second << " with original ID " << client.first;
+  qiLogDebug() << "Reply to socket " << client.socket << " with original ID " << client.id;
   Message answer(msg);
-  answer.setId(client.first);
-  t.setDestinationIfNull(client.second);
+  answer.setId(client.id);
+  t.setDestinationIfNull(client.socket);
   if (t.destination()->isConnected())
   {
     qiLogVerbose() << "Reply: " << msg.address();
@@ -1122,60 +1120,89 @@ void GatewayPrivate::handleEventMessage(GwTransaction& t, TransportSocketPtr soc
 
 void GatewayPrivate::onAnyMessageReady(const Message& msg, TransportSocketPtr socket)
 {
-  GwTransaction transaction(msg);
-  GWMessageId gwId = msg.id();
-  ServiceId serviceId = msg.service();
-
-  TransportSocketPtr destination = [=]() -> TransportSocketPtr {
-    boost::mutex::scoped_lock lock(_ongoingMsgMutex);
-
-    // This is likely an internal message and so can be ignored here
-    if (_ongoingMessages[serviceId].find(gwId) == _ongoingMessages[serviceId].end())
-      return {};
-
-    return _ongoingMessages[serviceId][gwId].second;
-  }();
-
-  _objectHost.treatMessage(transaction, socket, destination);
-  qiLogDebug() << socket.get() << " Transaction ready: " << Message::typeToString(transaction.content.type()) << " "
-               << transaction.content.address();
-  unsigned int function = msg.function();
-  switch (msg.type())
+  try
   {
-  // Could be either message
-  case Message::Type_Post:
-    forwardPostMessage(transaction, socket);
-    break;
-  // Client Message
-  case Message::Type_Call:
-    switch (function)
+    GwTransaction transaction(msg);
+    GWMessageId gwId = msg.id();
+    ServiceId serviceId = msg.service();
+
+    TransportSocketPtr destination = [&]() -> TransportSocketPtr {
+
+      // This is likely an internal message and so can be ignored here
+      {
+        boost::mutex::scoped_lock lock(_ongoingMsgMutex);
+        auto& messageMap = _ongoingMessages[serviceId];
+        auto foundIt = messageMap.find(gwId);
+        if (foundIt != _ongoingMessages[serviceId].end() && foundIt->second.socket)
+          return foundIt->second.socket;
+      }
+
+      {
+        boost::recursive_mutex::scoped_lock lock(_serviceMutex);
+        auto foundIt = _services.find(serviceId);
+        if (foundIt != _services.end() && foundIt->second)
+        {
+          return foundIt->second;
+        }
+      }
+
+      return _objectHost.objectSource({ msg.service(), msg.object() }).socket;
+    }();
+
+    _objectHost.treatMessage(transaction, socket, destination);
+    qiLogDebug() << socket.get() << " Transaction ready: " << Message::typeToString(transaction.content.type()) << " "
+      << transaction.content.address();
+    unsigned int function = msg.function();
+    switch (msg.type())
     {
-    case Message::BoundObjectFunction_UnregisterEvent:
-      unregisterEventListenerCall(transaction, socket);
+      // Could be either message
+    case Message::Type_Post:
+      forwardPostMessage(transaction, socket);
       break;
-    case Message::BoundObjectFunction_RegisterEvent:
-    case Message::BoundObjectFunction_RegisterEventWithSignature:
-      registerEventListenerCall(transaction, socket);
+      // Client Message
+    case Message::Type_Call:
+      switch (function)
+      {
+      case Message::BoundObjectFunction_UnregisterEvent:
+        unregisterEventListenerCall(transaction, socket);
+        break;
+      case Message::BoundObjectFunction_RegisterEvent:
+      case Message::BoundObjectFunction_RegisterEventWithSignature:
+        registerEventListenerCall(transaction, socket);
+        break;
+      default:
+        handleCallMessage(transaction, socket, destination);
+      }
+      break;
+      // Service Message
+    case Message::Type_Reply:
+    case Message::Type_Error:
+      if (function == Message::BoundObjectFunction_RegisterEvent)
+        registerEventListenerReply(transaction, socket);
+      else
+        handleReplyMessage(transaction);
+      break;
+    case Message::Type_Event:
+      handleEventMessage(transaction, socket);
       break;
     default:
-      handleCallMessage(transaction, socket);
+      qiLogError() << "Unexpected message type: " << msg.type();
+      break;
     }
-    break;
-  // Service Message
-  case Message::Type_Reply:
-  case Message::Type_Error:
-    if (function == Message::BoundObjectFunction_RegisterEvent)
-      registerEventListenerReply(transaction, socket);
-    else
-      handleReplyMessage(transaction);
-    break;
-  case Message::Type_Event:
-    handleEventMessage(transaction, socket);
-    break;
-  default:
-    qiLogError() << "Unexpected message type: " << msg.type();
-    break;
   }
+  catch (const std::exception& ex)
+  {
+    const auto errorMessage = std::string("Message processing failed: ") + ex.what();
+    qiLogError() << errorMessage;
+    reportProcessingFailure(msg, socket, errorMessage);
+  }
+  catch (...)
+  {
+    static const auto errorMessage = "Message processing failed: Unknown reason";
+    qiLogError() << errorMessage;
+    reportProcessingFailure(msg, socket, errorMessage);
+  }
+
 }
 
 void GatewayPrivate::onServiceDirectoryMessageReady(const Message& msg, TransportSocketPtr socket)
@@ -1227,7 +1254,7 @@ void GatewayPrivate::onServiceDirectoryMessageReady(const Message& msg, Transpor
       TransportSocketPtr origin;
       {
         boost::mutex::scoped_lock lock(_ongoingMsgMutex);
-        origin = _ongoingMessages[ServiceSD][msg.id()].second;
+        origin = _ongoingMessages[ServiceSD][msg.id()].socket;
       }
       int serviceId = msg.value("I", socket).to<unsigned int>();
       {
@@ -1284,7 +1311,7 @@ void GatewayPrivate::registerEventListenerCall(GwTransaction& t, TransportSocket
       // we have to send a subscription message to the service
       // to make the connection.
       GWMessageId id = handleCallMessage(t, origin);
-      _pendingEventSubscriptions[id] = boost::make_tuple(serviceId, objectId, event, signalLink, origin, eventHost);
+      _pendingEventSubscriptions[id] = { serviceId, objectId, event, signalLink, origin, eventHost };
       return;
     }
     else
@@ -1323,17 +1350,12 @@ void GatewayPrivate::registerEventListenerReply(GwTransaction& t, TransportSocke
       return handleReplyMessage(t);
     }
 
-    EventAddress& evt = evIt->second;
-    ServiceId service = bt::get<0>(evt);
-    uint32_t object = bt::get<1>(evt);
-    uint32_t event = bt::get<2>(evt);
-    link = bt::get<3>(evt);
-    EventSubscriberEndpoint client = bt::get<4>(evt);
-    EventHostEndpoint eventHost = bt::get<5>(evt);
-    EventSubInfo& eventInfo = _eventSubscribers[eventHost][service][object][event];
-    eventInfo.remoteSubscribers[client] = link;
-    eventInfo.gwLink = link;
+    const EventAddress& evt = evIt->second;
+    EventSubInfo& eventInfo = _eventSubscribers[evt.hostSocket][evt.serviceId][evt.objectId][evt.eventId];
+    eventInfo.remoteSubscribers[evt.subscriberSocket] = evt.signalLink;
+    eventInfo.gwLink = evt.signalLink;
     _pendingEventSubscriptions.erase(evIt);
+    link = evt.signalLink;
   }
   Message rep;
   rep.setId(msgId);
@@ -1406,13 +1428,13 @@ void GatewayPrivate::invalidateClientsMessages(ServiceId sid)
   {
     namespace bt = boost::tuples;
     boost::mutex::scoped_lock lock(_pendingMsgMutex);
-    std::vector<boost::tuple<ClientMessageId, Message, TransportSocketPtr> >::iterator it =
+    auto it =
         _pendingMessages[sid].begin();
-    std::vector<boost::tuple<ClientMessageId, Message, TransportSocketPtr> >::iterator end =
+    auto end =
         _pendingMessages[sid].end();
 
     for (; it != end; ++it)
-      serviceUnavailable(sid, bt::get<1>(*it), bt::get<2>(*it));
+      serviceUnavailable(sid, it->message, it->target);
     _pendingMessages[sid].clear();
     _pendingMessages.erase(sid);
   }
@@ -1424,11 +1446,19 @@ void GatewayPrivate::invalidateClientsMessages(ServiceId sid)
 
     for (; it != end; ++it)
     {
-      forged.setId(it->second.first);
-      serviceUnavailable(sid, forged, it->second.second);
+      forged.setId(it->second.id);
+      serviceUnavailable(sid, forged, it->second.socket);
     }
     _ongoingMessages[sid].clear();
     _ongoingMessages.erase(sid);
   }
+}
+
+void GatewayPrivate::reportProcessingFailure(const Message& processedMessage, TransportSocketPtr source, std::string messageText)
+{
+  Message errorMessage(Message::Type_Error, processedMessage.address());
+  errorMessage.setId(processedMessage.id());
+  errorMessage.setError(std::move(messageText));
+  source->send(processedMessage);
 }
 }

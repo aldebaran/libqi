@@ -73,7 +73,7 @@ void GwObjectHost::assignClientMessageObjectsGwIds(const Signature& signature, M
   // The message will store all the objects it serializes in the host.
   const ObjectHost::ObjectMap& objects = host.objects();
   std::map<GwObjectId, MetaObject> newObjectsMetaObjects;
-  std::map<GwObjectId, std::pair<TransportSocketPtr, ObjectAddress> > newObjectsOrigin;
+  std::map<GwObjectId, ObjectInfo > newObjectsOrigin;
   std::vector<FullObjectAddress> newObjectFullAddresses;
   newObjectFullAddresses.reserve(objects.size());
   std::map<ObjectAddress, GwObjectId> newHostObjectBank;
@@ -88,7 +88,7 @@ void GwObjectHost::assignClientMessageObjectsGwIds(const Signature& signature, M
     ro->setTransportSocket(TransportSocketPtr());
 
     newObjectsMetaObjects[oid] = ro->metaObject();
-    newObjectsOrigin[oid] = std::make_pair(sender, addr);
+    newObjectsOrigin[oid] = { sender, addr };
     newObjectFullAddresses.push_back(FullObjectAddress{sender, addr});
     newHostObjectBank[addr] = oid;
     // We set an empty transportsocket.
@@ -172,11 +172,12 @@ void GwObjectHost::harvestServiceOriginatingObjects(Message& msg, TransportSocke
     }
     else if (msg.type() == Message::Type_Call || msg.type() == Message::Type_Post)
     {
-      // if a service does a CALL, he does so on a user-supplied object.
-      std::map<GwObjectId, MetaObject>::iterator mit = _objectsMetaObjects.find(msg.object());
-      if(mit == _objectsMetaObjects.end())
-        throw std::runtime_error("Gateway: Couldn't find object called - aborted.");
-      metaObject = &mit->second;
+      // if a service does a CALL, it does so on a user-supplied object.
+      metaObject = findMetaObject(msg.service(), msg.object());
+      if (!metaObject)
+      {
+        throw std::runtime_error("Gateway Object Host: could not find object called by service");
+      }
       signatureGetter = &MetaMethod::parametersSignature;
     }
     const MetaMethod* method = metaObject->method(msg.function());
@@ -218,7 +219,7 @@ void GwObjectHost::harvestServiceOriginatingObjects(Message& msg, TransportSocke
     ObjectAddress addr;
     addr.service = ro->service();
     addr.object = ro->object();
-    newObjectFullAddresses.emplace_back(FullObjectAddress{sender, addr});
+    newObjectFullAddresses.emplace_back(FullObjectAddress{ sender, addr });
   }
   {
     boost::upgrade_lock<boost::shared_mutex> lock(_mutex);
@@ -228,10 +229,35 @@ void GwObjectHost::harvestServiceOriginatingObjects(Message& msg, TransportSocke
     // Remember who will keep the reference of the object, so that to unreference it when the socket is disconnected
     auto& objectOriginsForDestination = _objectOriginsPerDestination[destination];
     objectOriginsForDestination.insert(
-          objectOriginsForDestination.end(),
-          newObjectFullAddresses.begin(), newObjectFullAddresses.end());
+      objectOriginsForDestination.end(),
+      newObjectFullAddresses.begin(), newObjectFullAddresses.end());
   }
   passed.destroy();
+}
+
+MetaObject* GwObjectHost::findMetaObject(ServiceId serviceId, ObjectId objectId)
+{
+  auto foundIt = _objectsMetaObjects.find(objectId);
+  if (foundIt != _objectsMetaObjects.end())
+  {
+    return &foundIt->second;
+  }
+
+  auto foundServiceIt = _servicesMetaObjects.find(serviceId);
+  if (foundServiceIt == _servicesMetaObjects.end())
+  {
+    return nullptr;
+  }
+
+  auto& metaObjectMap = foundServiceIt->second;
+
+  auto foundObjectIt = metaObjectMap.find(objectId);
+  if (foundObjectIt == metaObjectMap.end())
+  {
+    return nullptr;
+  }
+
+  return &foundObjectIt->second;
 }
 
 void GwObjectHost::harvestMessageObjects(Message& msg, TransportSocketPtr sender, TransportSocketPtr destination)
@@ -265,9 +291,33 @@ ObjectAddress GwObjectHost::getOriginalObjectAddress(const ObjectAddress& a)
 {
   boost::shared_lock<boost::shared_mutex> lock(_mutex);
   QI_ASSERT(a.service == 0);
-  auto it = _objectsOrigin.find(a.object);
-  QI_ASSERT(it != _objectsOrigin.end());
-  return it->second.second;
+  auto info = objectSource(a);
+  QI_ASSERT(info.socket);
+  return info.address;
+}
+
+ObjectInfo GwObjectHost::objectSource(const ObjectAddress& address)
+{
+  {
+    auto foundIt = _objectsOrigin.find(address.object);
+    if (foundIt != _objectsOrigin.end())
+      return foundIt->second;
+  }
+
+  {
+    for (auto&& slot : _objectOriginsPerDestination)
+    {
+      auto& addressList = slot.second;
+      auto findIt = std::find_if(addressList.begin(), addressList.end(), [&](const FullObjectAddress& fullAddress) {
+        return fullAddress.localAddress.object == address.object;
+      });
+      if (findIt != addressList.end())
+        return { findIt->socket.lock(), findIt->localAddress };
+    }
+
+  }
+
+  return{};
 }
 
 static MetaObject extractReturnedMetaObject(const Message& msg, TransportSocketPtr);
@@ -284,15 +334,34 @@ void GwObjectHost::treatMessage(GwTransaction& t, TransportSocketPtr sender, Tra
       (msg.type() == Message::Type_Call || msg.type() == Message::Type_Post))
   {
     boost::shared_lock<boost::shared_mutex> lock(_mutex);
-    std::map<GwObjectId, std::pair<TransportSocketPtr, ObjectAddress> >::iterator it =
-        _objectsOrigin.find(msg.object());
-    QI_ASSERT(it != _objectsOrigin.end());
+
+    auto fullAddress = [&]() -> ObjectInfo {
+      const auto objectIdToFind = msg.object();
+      auto it = _objectsOrigin.find(objectIdToFind);
+      if (it != _objectsOrigin.end())
+        return { it->second.socket, it->second.address };
+
+      for(auto&& slot : _objectOriginsPerDestination) // YOLO
+      {
+        auto& addressList = slot.second;
+        auto it3 = std::find_if(addressList.begin(), addressList.end(), [&](const FullObjectAddress& a) {
+          return a.localAddress.object == objectIdToFind;
+        });
+        if(it3 != addressList.end())
+          return { it3->socket.lock(), it3->localAddress };
+      }
+
+      QI_ASSERT(false);
+      return {};
+    }();
+
+
     qiLogDebug() << "Changing content target from {" << t.content.service() << "," << t.content.object() << "} to {"
-                 << it->second.second.service << "," << it->second.second.object << "}";
-    t.content.setService(it->second.second.service);
-    t.content.setObject(it->second.second.object);
-    t.forceDestination(it->second.first);
-    qiLogDebug() << "Forcing destination: " << it->second.first.get();
+                 << fullAddress.address.service << "," << fullAddress.address.object << "}";
+    t.content.setService(fullAddress.address.service);
+    t.content.setObject(fullAddress.address.object);
+    t.forceDestination(fullAddress.socket);
+    qiLogDebug() << "Forcing destination: " << fullAddress.socket.get();
   }
   else if (msg.type() == Message::Type_Reply || msg.type() == Message::Type_Error || msg.type() == Message::Type_Event)
   {
@@ -325,15 +394,15 @@ void GwObjectHost::serviceDisconnected(ServiceId id)
 
   for (std::list<GwObjectId>::iterator it = objects.begin(), end = objects.end(); it != end; ++it)
   {
-    std::pair<TransportSocketPtr, ObjectAddress>& addr = _objectsOrigin[*it];
+    auto& addr = _objectsOrigin[*it];
     Message terminateMessage;
 
     terminateMessage.setFunction(Message::BoundObjectFunction_Terminate);
-    terminateMessage.setObject(addr.second.object);
-    terminateMessage.setService(addr.second.service);
+    terminateMessage.setObject(addr.address.object);
+    terminateMessage.setService(addr.address.service);
     terminateMessage.setType(Message::Type_Call);
-    terminateMessage.setValue(AnyReference::from(addr.second.object), "I");
-    addr.first->send(terminateMessage);
+    terminateMessage.setValue(AnyReference::from(addr.address.object), "I");
+    addr.socket->send(terminateMessage);
   }
   objects.clear();
   _objectsUsedOnServices.erase(id);
