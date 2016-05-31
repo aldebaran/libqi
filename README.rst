@@ -89,4 +89,4 @@ Maintainers:
 
 - Herve Cuche <hcuche@aldebaran.com>
 - Joel Lamotte <jlamotte@aldebaran.com>
-- Philippe DAOUADI <pdaouadi@aldebaran.com>
+- Jérémy Monnon <jmonnon@aldebaran.com>
