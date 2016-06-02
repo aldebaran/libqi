@@ -746,7 +746,8 @@ try
     qiLogVerbose() << builder.str();
     socket->send(reply);
     qiLogVerbose() << "Disconnecting socket...(waiting for at least 2 secs)";
-    socket->disconnect().async().wait(qi::Seconds(2));
+    onClientDisconnected(socket, socket->remoteEndpoint().str(), builder.str()); // Forced manually here to avoid a deadlock in Signal implementation - FIXME
+    socket->disconnect();
     qiLogVerbose() << "Continue after disconnection.";
   }
   }
