@@ -4,7 +4,6 @@
 #include <qi/application.hpp>
 #include <qi/future.hpp>
 #include <boost/thread/mutex.hpp>
-#include <boost/foreach.hpp>
 #include <qi/os.hpp>
 #include <qi/strand.hpp>
 #include <qi/periodictask.hpp>
@@ -96,11 +95,11 @@ TEST(TestStrand, AggressiveCancel)
           boost::ref(mutex), 50, boost::ref(i)));
     futures.push_back(f1);
   }
-  BOOST_FOREACH(qi::Future<void>& future, futures)
+  for(qi::Future<void>& future: futures)
     future.cancel();
 
   unsigned int successCount = 0;
-  BOOST_FOREACH(qi::Future<void>& future, futures)
+  for(qi::Future<void>& future: futures)
   {
     if (future.wait() != qi::FutureState_Canceled)
       successCount++;
@@ -177,12 +176,12 @@ TEST(TestStrand, StrandDestructionWithCancel)
             boost::ref(mutex), 50, boost::ref(i)));
       futures.push_back(f1);
     }
-    BOOST_FOREACH(qi::Future<void>& future, futures)
+    for(qi::Future<void>& future: futures)
       future.cancel();
   }
 
   unsigned int successCount = 0;
-  BOOST_FOREACH(qi::Future<void>& future, futures)
+  for(qi::Future<void>& future: futures)
   {
     if (future.wait() != qi::FutureState_Canceled)
       successCount++;
