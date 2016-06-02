@@ -18,7 +18,6 @@
 #include <qi/periodictask.hpp>
 #include <qi/strand.hpp>
 
-#include <boost/foreach.hpp>
 #include <boost/function.hpp>
 #include <boost/lambda/lambda.hpp>
 #include <boost/lambda/bind.hpp>

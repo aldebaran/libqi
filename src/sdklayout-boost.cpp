@@ -17,7 +17,6 @@
 #include <boost/filesystem.hpp>
 #include <boost/predef/os.h>
 #include <boost/regex.hpp>
-#include <boost/foreach.hpp>
 #include <locale>
 #include <set>
 #include "sdklayout.hpp"
