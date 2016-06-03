@@ -18,6 +18,7 @@
 # include <qi/types.hpp>
 # include <qi/path.hpp>
 # include <qi/clock.hpp>
+# include <qi/uuid.hpp>
 
 # include <boost/lexical_cast.hpp>
 
@@ -587,6 +588,15 @@ namespace qi {
      * returned. An empty string is returned on failure.
      */
     QI_API std::string getMachineId();
+    /**
+     * \brief Same as getMachineId but return a uuid and not its string representation.
+     */
+    QI_API const Uuid& getMachineIdAsUuid();
+    /**
+     * \brief Returns an unique uuid for the process.
+     * \return The uuid of the process.
+     */
+    QI_API const Uuid& getProcessUuid();
     /**
      * \brief Generate a universally unique identifier.
      * \return The uuid.

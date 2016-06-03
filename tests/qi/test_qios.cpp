@@ -22,9 +22,17 @@
 
 #include <gtest/gtest.h>
 #include <boost/filesystem.hpp>
+#include <boost/uuid/uuid_io.hpp>
 
 #include <qi/path.hpp>
 #include <qi/os.hpp>
+#include <qi/scoped.hpp>
+#include "testutils/testutils.hpp"
+
+static std::chrono::milliseconds timeout()
+{
+  return std::chrono::milliseconds{1000};
+}
 
 #ifdef _MSC_VER
 # pragma warning( push )
@@ -589,6 +597,48 @@ TEST(QiOs, getMachineId)
   uuid2file.close();
 
   ASSERT_TRUE(uuid1.compare(uuid2) == 0);
+}
+
+TEST(QiOs, getMachineIdAsUuid)
+{
+  using namespace qi;
+  std::ostringstream ss;
+  ss << os::getMachineIdAsUuid();
+  EXPECT_EQ(ss.str(), os::getMachineId());
+}
+
+TEST(QiOs, getMachineIdAsUuidConst)
+{
+  using namespace qi;
+  EXPECT_EQ(os::getMachineIdAsUuid(), os::getMachineIdAsUuid());
+}
+
+TEST(Os, getProcessUuidConstantInAProcess)
+{
+  using namespace qi::os;
+  EXPECT_EQ(getProcessUuid(), getProcessUuid());
+}
+
+// To check that the process uuid really changes with a different process, we
+// launch a helper executable that prints its process uuid in a file.
+// We then read the process uuid from the file, remove the file and assert that
+// the read uuid is different than ours.
+TEST(Os, getProcessUuidDifferentInDifferentProcesses)
+{
+  using namespace qi::os;
+  const auto parentProcessUuid = getProcessUuid();
+  const auto childFilename = to_string(parentProcessUuid) + ".txt";
+  {
+    test::ScopedProcess process{
+      qi::path::findBin("print_process_uuid"), {childFilename}, timeout()};
+  }
+  const auto _ = qi::scoped([=]() {
+    boost::filesystem::remove(childFilename);
+  });
+  boost::filesystem::ifstream childFile{childFilename};
+  qi::Uuid childProcessUuid;
+  childFile >> childProcessUuid;
+  EXPECT_NE(childProcessUuid, parentProcessUuid);
 }
 
 #if  defined(_WIN32) || defined(__linux__)

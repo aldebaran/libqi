@@ -8,6 +8,7 @@
 #include <qi/type/dynamicobjectbuilder.hpp>
 #include <qi/type/dynamicobject.hpp>
 #include "metaobject_p.hpp"
+#include <boost/optional.hpp>
 
 qiLogCategory("qitype.objectbuilder");
 
@@ -173,7 +174,8 @@ namespace qi
   {
     if (!_p->_objptr)
     {
-      _p->_objptr = makeDynamicAnyObject(_p->_object, _p->_deleteOnDestroy, onDelete);
+      _p->_objptr = makeDynamicAnyObject(_p->_object, _p->_deleteOnDestroy,
+                                         boost::optional<PtrUid>{}, onDelete);
       _p->_object->setManageable(_p->_objptr.asGenericObject());
     }
     return _p->_objptr;

@@ -181,7 +181,7 @@ TEST(FunctionalCompose, Multi)
   ASSERT_EQ("false", f(1));
 }
 
-namespace
+namespace func_operators
 {
   template<typename G, typename F>
   qi::Composition<qi::traits::Decay<G>, qi::traits::Decay<F>> operator*(G&& g, F&& f)
@@ -194,6 +194,7 @@ TEST(FunctionalCompose, Associative)
 {
   using namespace qi;
   using std::string;
+  using namespace func_operators;
 
   auto f = [](int x) {
     return x / 2.f;
@@ -229,6 +230,7 @@ TEST(FunctionalCompose, Id)
 {
   using namespace qi;
   using std::string;
+  using namespace func_operators;
 
   auto f = [](int x) {
     return x / 2.f;

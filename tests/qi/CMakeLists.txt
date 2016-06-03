@@ -10,7 +10,7 @@ endif()
 
 qi_create_test_helper(check_env             check_env.cpp             DEPENDS QI)
 qi_create_test_helper(check_machineid       check_machineid.cpp       DEPENDS QI)
-
+qi_create_test_helper(print_process_uuid    print_process_uuid.cpp    DEPENDS QI)
 
 qi_create_gmock(
   test_qi
@@ -36,6 +36,7 @@ qi_create_gmock(
   "test_mutablestore.cpp"
   "test_path_conf.cpp"
   "test_periodictask.cpp"
+  "test_ptruid.cpp"
   "test_qi.cpp" # main
   "test_qiatomic.cpp"
   "test_qiclock.cpp"

@@ -220,6 +220,7 @@ namespace qi
       res.metaObject = sbo->metaObject(oid);
       res.serviceId = sid;
       res.objectId = oid;
+      res.objectPtrUid = object.ptrUid();
       return res;
     }
 
@@ -255,7 +256,7 @@ namespace qi
       qiLogDebug() << "Creating unregistered object " << osi.serviceId << '/' << osi.objectId
                    << " on " << context.get();
       RemoteObject* ro = new RemoteObject(osi.serviceId, osi.objectId, osi.metaObject, context);
-      AnyObject o = makeDynamicAnyObject(ro, true, &onProxyLost);
+      AnyObject o = makeDynamicAnyObject(ro, true, osi.objectPtrUid, &onProxyLost);
       qiLogDebug() << "New object is " << o.asGenericObject() << "on ro " << ro;
       QI_ASSERT(o);
       return o;
