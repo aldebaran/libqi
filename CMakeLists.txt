@@ -110,7 +110,10 @@ set(QI_H qi/detail/async.hxx
          qi/version.hpp
          qi/iocolor.hpp
          qi/strand.hpp
-         qi/assert.hpp)
+         qi/assert.hpp
+         qi/detail/conceptpredicates.hpp
+         qi/uuid.hpp
+         qi/ptruid.hpp)
 
 set(QI_C src/dlfcn.cpp
          src/path.cpp
@@ -139,7 +142,8 @@ set(QI_C src/dlfcn.cpp
          src/sdklayout-boost.cpp
          src/version.cpp
          src/iocolor.cpp
-         src/strand.cpp)
+         src/strand.cpp
+         src/ptruid.cpp)
 
 #### Add optional files to source {{{
 if (WIN32)
