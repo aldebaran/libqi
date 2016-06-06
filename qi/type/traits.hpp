@@ -8,6 +8,7 @@
 #define _QI_TYPE_TRAITS_HPP_
 
 #include <type_traits>
+#include <qi/macro.hpp>
 
 namespace qi
 {
@@ -51,9 +52,67 @@ namespace qi
     template<typename A>
     using RemoveCv = typename detail::RemoveCvImpl<A>::type;
 
-    /// Remove reference (normal reference and r-value reference).
+    namespace detail
+    {
+      template<typename T>
+      struct RemoveRefImpl : std::remove_reference<T>
+      {
+      };
+
+#if QI_COMPILER_SUPPORTS_MEMBER_FUNCTION_REF_QUALIFIERS
+      template<typename Ret, typename C, typename... Arg>
+      struct RemoveRefImpl<Ret (C::*)(Arg...) &>
+      {
+        using type = Ret (C::*)(Arg...);
+      };
+
+      template<typename Ret, typename C, typename... Arg>
+      struct RemoveRefImpl<Ret (C::*)(Arg...) const &>
+      {
+        using type = Ret (C::*)(Arg...) const;
+      };
+
+      template<typename Ret, typename C, typename... Arg>
+      struct RemoveRefImpl<Ret (C::*)(Arg...) volatile &>
+      {
+        using type = Ret (C::*)(Arg...) volatile;
+      };
+
+      template<typename Ret, typename C, typename... Arg>
+      struct RemoveRefImpl<Ret (C::*)(Arg...) const volatile &>
+      {
+        using type = Ret (C::*)(Arg...) const volatile;
+      };
+
+      template<typename Ret, typename C, typename... Arg>
+      struct RemoveRefImpl<Ret (C::*)(Arg...) &&>
+      {
+        using type = Ret (C::*)(Arg...);
+      };
+
+      template<typename Ret, typename C, typename... Arg>
+      struct RemoveRefImpl<Ret (C::*)(Arg...) const &&>
+      {
+        using type = Ret (C::*)(Arg...) const;
+      };
+
+      template<typename Ret, typename C, typename... Arg>
+      struct RemoveRefImpl<Ret (C::*)(Arg...) volatile &&>
+      {
+        using type = Ret (C::*)(Arg...) volatile;
+      };
+
+      template<typename Ret, typename C, typename... Arg>
+      struct RemoveRefImpl<Ret (C::*)(Arg...) const volatile &&>
+      {
+        using type = Ret (C::*)(Arg...) const volatile;
+      };
+#endif
+    } // namespace detail
+
+    /// Remove reference (l-value reference and r-value reference, including on member functions).
     template<typename A>
-    using RemoveRef = typename std::remove_reference<A>::type;
+    using RemoveRef = typename detail::RemoveRefImpl<A>::type;
 
     /// Remove the reference, then the const / volatile qualifier.
     /// For example, for the type A const&, this will return A.

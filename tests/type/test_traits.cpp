@@ -7,6 +7,7 @@
 #include <qi/type/traits.hpp>
 #include <boost/function.hpp>
 #include <boost/config/suffix.hpp>
+#include <qi/macro.hpp>
 
 struct A {};
 
@@ -20,6 +21,28 @@ TEST(TestTraits, RemoveRef)
   static_assert(Equal<RemoveRef<int*>, int*>::value, "");
   static_assert(Equal<RemoveRef<A*&>, A*>::value, "");
   static_assert(Equal<RemoveRef<int&&>, int>::value, "");
+
+  // member functions
+  static_assert(Equal<RemoveRef<int (A::*)()>, int (A::*)()>::value, "");
+  static_assert(Equal<RemoveRef<int (A::*)(float const&) const>, int (A::*)(float const&) const>::value, "");
+
+#if QI_COMPILER_SUPPORTS_MEMBER_FUNCTION_REF_QUALIFIERS
+  // member functions (lvalue ref)
+  static_assert(Equal<RemoveRef<int (A::*)() &>, int (A::*)()>::value, "");
+  static_assert(Equal<RemoveRef<int (A::*)(float const&) &>, int (A::*)(float const&)>::value, "");
+  static_assert(Equal<RemoveRef<int (A::*)(float const&) const &>, int (A::*)(float const&) const>::value, "");
+  static_assert(Equal<RemoveRef<int (A::*)(float const&) volatile &>, int (A::*)(float const&) volatile>::value, "");
+  static_assert(Equal<RemoveRef<int (A::*)(float const&) const volatile &>, int (A::*)(float const&) const volatile>::value, "");
+  static_assert(Equal<RemoveRef<int const& (A::*)(float const&) const volatile &>, int const& (A::*)(float const&) const volatile>::value, "");
+
+  // member functions (rvalue ref)
+  static_assert(Equal<RemoveRef<int (A::*)() &&>, int (A::*)()>::value, "");
+  static_assert(Equal<RemoveRef<int (A::*)(float const&) &&>, int (A::*)(float const&)>::value, "");
+  static_assert(Equal<RemoveRef<int (A::*)(float const&) const &&>, int (A::*)(float const&) const>::value, "");
+  static_assert(Equal<RemoveRef<int (A::*)(float const&) volatile &&>, int (A::*)(float const&) volatile>::value, "");
+  static_assert(Equal<RemoveRef<int (A::*)(float const&) const volatile &&>, int (A::*)(float const&) const volatile>::value, "");
+  static_assert(Equal<RemoveRef<int const& (A::*)(float const&) const volatile &&>, int const& (A::*)(float const&) const volatile>::value, "");
+#endif
 }
 
 TEST(TestTraits, RemoveCv)
@@ -43,6 +66,24 @@ TEST(TestTraits, RemoveCv)
   static_assert(Equal<RemoveCv<int (A::*)(float const&) volatile>, int (A::*)(float const&)>::value, "");
   static_assert(Equal<RemoveCv<int (A::*)(float const&) const volatile>, int (A::*)(float const&)>::value, "");
   static_assert(Equal<RemoveCv<int const& (A::*)(float const&) const volatile>, int const& (A::*)(float const&)>::value, "");
+
+#if QI_COMPILER_SUPPORTS_MEMBER_FUNCTION_REF_QUALIFIERS
+  // member functions (lvalue ref)
+  static_assert(Equal<RemoveCv<int (A::*)() &>, int (A::*)() &>::value, "");
+  static_assert(Equal<RemoveCv<int (A::*)(float const&) &>, int (A::*)(float const&) &>::value, "");
+  static_assert(Equal<RemoveCv<int (A::*)(float const&) const &>, int (A::*)(float const&) const &>::value, "");
+  static_assert(Equal<RemoveCv<int (A::*)(float const&) volatile &>, int (A::*)(float const&) volatile &>::value, "");
+  static_assert(Equal<RemoveCv<int (A::*)(float const&) const volatile &>, int (A::*)(float const&) const volatile &>::value, "");
+  static_assert(Equal<RemoveCv<int const& (A::*)(float const&) const volatile &>, int const& (A::*)(float const&) const volatile &>::value, "");
+
+  // member functions (rvalue ref)
+  static_assert(Equal<RemoveCv<int (A::*)() &&>, int (A::*)() &&>::value, "");
+  static_assert(Equal<RemoveCv<int (A::*)(float const&) &&>, int (A::*)(float const&) &&>::value, "");
+  static_assert(Equal<RemoveCv<int (A::*)(float const&) const &&>, int (A::*)(float const&) const &&>::value, "");
+  static_assert(Equal<RemoveCv<int (A::*)(float const&) volatile &&>, int (A::*)(float const&) volatile &&>::value, "");
+  static_assert(Equal<RemoveCv<int (A::*)(float const&) const volatile &&>, int (A::*)(float const&) const volatile &&>::value, "");
+  static_assert(Equal<RemoveCv<int const& (A::*)(float const&) const volatile &&>, int const& (A::*)(float const&) const volatile &&>::value, "");
+#endif
 }
 
 TEST(TestTraits, RemoveCvRef)
@@ -67,6 +108,24 @@ TEST(TestTraits, RemoveCvRef)
   static_assert(Equal<RemoveCvRef<int (A::*)(float const&) const volatile>, int (A::*)(float const&)>::value, "");
   static_assert(Equal<RemoveCvRef<int const& (A::*)(float const&) const volatile>, int const& (A::*)(float const&)>::value, "");
 
+#if QI_COMPILER_SUPPORTS_MEMBER_FUNCTION_REF_QUALIFIERS
+  // member functions (lvalue ref)
+  static_assert(Equal<RemoveCvRef<int (A::*)() &>, int (A::*)()>::value, "");
+  static_assert(Equal<RemoveCvRef<int (A::*)(float const&) &>, int (A::*)(float const&)>::value, "");
+  static_assert(Equal<RemoveCvRef<int (A::*)(float const&) const &>, int (A::*)(float const&)>::value, "");
+  static_assert(Equal<RemoveCvRef<int (A::*)(float const&) volatile &>, int (A::*)(float const&)>::value, "");
+  static_assert(Equal<RemoveCvRef<int (A::*)(float const&) const volatile &>, int (A::*)(float const&)>::value, "");
+  static_assert(Equal<RemoveCvRef<int const& (A::*)(float const&) const volatile &>, int const& (A::*)(float const&)>::value, "");
+
+  // member functions (rvalue ref)
+  static_assert(Equal<RemoveCvRef<int (A::*)() &&>, int (A::*)()>::value, "");
+  static_assert(Equal<RemoveCvRef<int (A::*)(float const&) &&>, int (A::*)(float const&)>::value, "");
+  static_assert(Equal<RemoveCvRef<int (A::*)(float const&) const &&>, int (A::*)(float const&)>::value, "");
+  static_assert(Equal<RemoveCvRef<int (A::*)(float const&) volatile &&>, int (A::*)(float const&)>::value, "");
+  static_assert(Equal<RemoveCvRef<int (A::*)(float const&) const volatile &&>, int (A::*)(float const&)>::value, "");
+  static_assert(Equal<RemoveCvRef<int const& (A::*)(float const&) const volatile &&>, int const& (A::*)(float const&)>::value, "");
+#endif
+
   static_assert(Equal<RemoveCvRef<int>, int>::value, "");
   static_assert(Equal<RemoveCvRef<int&>, int>::value, "");
   static_assert(Equal<RemoveCvRef<int const&>, int>::value, "");
@@ -74,7 +133,6 @@ TEST(TestTraits, RemoveCvRef)
   static_assert(Equal<RemoveCvRef<A*&>, A*>::value, "");
   static_assert(Equal<RemoveCvRef<int&&>, int>::value, "");
 }
-
 
 TEST(TestTraits, HasMemberOperatorCallLambda)
 {

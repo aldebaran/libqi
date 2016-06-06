@@ -25,6 +25,7 @@
 # define _QI_MACRO_HPP_
 
 # include <qi/preproc.hpp>
+#include <boost/predef/compiler.h>
 
 /**
  * \def QI_API_DEPRECATED
@@ -304,5 +305,13 @@ namespace qi {
 #else
 # define QI_NOEXCEPT(cond)
 #endif
+
+/// The only currently supported compiler that doesn't support member function
+/// reference qualifiers is the visual studio 2013 one.
+/// BOOST_COMP_MSVC == 0 means that the compiler is not a visual studio compiler.
+/// So if this is a visual studio compiler, we check that it is at least the
+/// visual studio 2015 one (compiler version = 19).
+#define QI_COMPILER_SUPPORTS_MEMBER_FUNCTION_REF_QUALIFIERS \
+  (BOOST_COMP_MSVC == 0 || BOOST_COMP_MSVC >= BOOST_VERSION_NUMBER(19, 0, 0))
 
 #endif  // _QI_MACRO_HPP_
