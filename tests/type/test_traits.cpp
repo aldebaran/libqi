@@ -12,7 +12,7 @@ struct A {};
 
 TEST(TestTraits, RemoveRef)
 {
-  using namespace qi::type;
+  using namespace qi::traits;
 
   static_assert(Equal<RemoveRef<int>, int>::value, "");
   static_assert(Equal<RemoveRef<int&>, int>::value, "");
@@ -24,7 +24,7 @@ TEST(TestTraits, RemoveRef)
 
 TEST(TestTraits, RemoveCv)
 {
-  using namespace qi::type;
+  using namespace qi::traits;
 
   // simple types
   static_assert(Equal<RemoveCv<int>, int>::value, "");
@@ -47,7 +47,7 @@ TEST(TestTraits, RemoveCv)
 
 TEST(TestTraits, RemoveCvRef)
 {
-  using namespace qi::type;
+  using namespace qi::traits;
 
   // simple types
   static_assert(Equal<RemoveCvRef<int>, int>::value, "");
@@ -78,7 +78,7 @@ TEST(TestTraits, RemoveCvRef)
 
 TEST(TestTraits, HasMemberOperatorCallLambda)
 {
-  using namespace qi::type;
+  using namespace qi::traits;
   { // without return nor parameter
     auto f = []() {};
     static_assert(HasMemberOperatorCall<decltype(f)>::value, "");
@@ -166,7 +166,7 @@ struct IntConstPtrFloatConst {
 
 TEST(TestTraits, HasMemberOperatorCallClass)
 {
-  using namespace qi::type;
+  using namespace qi::traits;
   static_assert(!HasMemberOperatorCall<NoOpCall>::value, "");
   static_assert( HasMemberOperatorCall<VoidVoid>::value, "");
   static_assert( HasMemberOperatorCall<IntVoid>::value, "");
@@ -184,7 +184,7 @@ TEST(TestTraits, HasMemberOperatorCallClass)
 
 TEST(TestTraits, HasMemberOperatorCallBuiltin)
 {
-  using namespace qi::type;
+  using namespace qi::traits;
 
   // functions
   static_assert(!HasMemberOperatorCall<void (void)>::value, "");
@@ -207,7 +207,7 @@ TEST(TestTraits, HasMemberOperatorCallBuiltin)
 
 TEST(TestTraits, IsFunctionObjectLambda)
 {
-  using namespace qi::type;
+  using namespace qi::traits;
   { // without return nor parameter
     auto f = []() {};
     static_assert(IsFunctionObject<decltype(f)>::value, "");
@@ -251,7 +251,7 @@ TEST(TestTraits, IsFunctionObjectLambda)
 
 TEST(TestTraits, IsFunctionObjectClass)
 {
-  using namespace qi::type;
+  using namespace qi::traits;
   static_assert(!IsFunctionObject<NoOpCall>::value, "");
   static_assert( IsFunctionObject<VoidVoid>::value, "");
   static_assert( IsFunctionObject<IntVoid>::value, "");
@@ -269,7 +269,7 @@ TEST(TestTraits, IsFunctionObjectClass)
 
 TEST(TestTraits, IsFunctionObjectBuiltin)
 {
-  using namespace qi::type;
+  using namespace qi::traits;
 
   // functions
   static_assert(!IsFunctionObject<void (void)>::value, "");
@@ -292,7 +292,7 @@ TEST(TestTraits, IsFunctionObjectBuiltin)
 
 TEST(TestTraits, FunctionLambda)
 {
-  using namespace qi::type;
+  using namespace qi::traits;
   {
     auto f = []() {};
     static_assert(Equal<Function<decltype(f)>, void (void)>::value, "");
@@ -329,7 +329,7 @@ TEST(TestTraits, FunctionLambda)
 
 TEST(TestTraits, FunctionClass)
 {
-  using namespace qi::type;
+  using namespace qi::traits;
   using boost::function;
   static_assert( Equal<Function<VoidVoid>, void (void)>::value, "");
   static_assert( Equal<Function<IntVoid>, int (void)>::value, "");
@@ -346,7 +346,7 @@ TEST(TestTraits, FunctionClass)
 
 TEST(TestTraits, FunctionBuiltin)
 {
-  using namespace qi::type;
+  using namespace qi::traits;
   using boost::function;
 
   // functions
