@@ -12,7 +12,7 @@
 namespace qi
 {
   /// Contains anything related to compile-time type manipulation.
-  namespace type
+  namespace traits
   {
     using True  = std::true_type;
     using False = std::false_type;
@@ -132,7 +132,7 @@ namespace qi
     template<typename A>
     using Function = typename detail::FunctionImpl<A>::type;
 
-  } // namespace type
+  } // namespace traits
 } // namespace qi
 
 #endif  // _QITYPE_TYPETRAITS_HPP_
