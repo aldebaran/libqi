@@ -63,7 +63,7 @@ namespace qi {
 
     //TransportSocket Interface
     void onSocketConnected(qi::FutureSync<void> future, qi::Promise<void> prom);
-    qi::FutureSync<void> onSocketDisconnected(std::string error, bool wasConnected = true);
+    qi::FutureSync<void> onSocketFailure(std::string error, bool mustSignalDisconnected = true);
 
     //RemoteObject Interface
     void onMetaObjectFetched(qi::Future<void> fut, qi::Promise<void> prom);

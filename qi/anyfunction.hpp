@@ -235,7 +235,7 @@ QI_GEN(genCall)
     *
     */
     template<typename F>
-    static AnyFunction from(F func);
+    static AnyFunction from(F&& func);
     /// @return a AnyFunction binding instance to member function func
     template<typename F, typename C>
     static AnyFunction from(F func, C instance);
