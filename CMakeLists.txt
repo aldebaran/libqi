@@ -236,7 +236,8 @@ set(QITYPE_H       qi/anyfunction.hpp
                    qi/type/proxysignal.hpp
                    qi/type/typeinterface.hpp
                    qi/type/typeobject.hpp
-                   qi/type/typedispatcher.hpp)
+                   qi/type/typedispatcher.hpp
+                   qi/type/traits.hpp)
 
 
 

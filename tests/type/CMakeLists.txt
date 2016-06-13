@@ -9,6 +9,7 @@ qi_create_gtest(test_property         SRC test_property.cpp         DEPENDS QI G
 qi_create_gtest(test_json             SRC test_json.cpp             DEPENDS QI GTEST TIMEOUT 30)
 qi_create_gtest(test_clocktype        SRC test_clocktype.cpp        DEPENDS QI GTEST TIMEOUT 30)
 qi_create_gtest(test_anymodule        SRC test_anymodule.cpp        DEPENDS QI GTEST TIMEOUT 30)
+qi_create_gtest(test_traits           SRC test_traits.cpp           DEPENDS QI GTEST TIMEOUT 30)
 
 if(QI_WITH_TESTS)
   qi_create_module(qi_test_anymodule    SRC cat.hpp qi_test_anymodule.cpp SHARED DEPENDS QI NO_INSTALL)

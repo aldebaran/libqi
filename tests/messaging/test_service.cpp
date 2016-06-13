@@ -401,6 +401,64 @@ TEST(QiService, NetworkObjectsAreClosedWithTheSession)
   // is gone so our object has been deleted.
 }
 
+class DoSomething
+{
+public:
+  int ping(int i) { return i; }
+};
+QI_REGISTER_OBJECT(DoSomething, ping);
+
+class CallDoSomethingInDtor
+{
+public:
+  CallDoSomethingInDtor(const qi::SessionPtr& session)
+    : _session(session)
+  {
+  }
+
+  ~CallDoSomethingInDtor()
+  {
+    // Should be always work event on client session
+    // ie: call Dtor object THEN close session and not the other way around
+    if (_session->isConnected())
+    {
+      qiLogFatal() << "get doSomething service";
+      _doSomething = _session->service("doSomething");
+      qi::detail::printMetaObject(std::cout, _doSomething.metaObject());
+      qiLogFatal() << "call doSomething.ping()";
+      _doSomething.call<int>("ping", 12);
+    }
+  }
+
+  void doNothing() {}
+
+private:
+  qi::AnyObject _doSomething;
+  qi::SessionPtr _session;
+};
+QI_REGISTER_OBJECT(CallDoSomethingInDtor, doNothing);
+
+TEST(QiService, CallRemoteServiceInsideDtorService)
+{
+  TestSessionPair p;
+
+  auto ds = boost::make_shared<DoSomething>();
+  p.server()->registerService("doSomething", qi::Object<DoSomething>(ds)).wait();
+
+  auto callds = boost::make_shared<CallDoSomethingInDtor>(p.client());
+  unsigned int idCallDS =
+      p.server()->registerService("callDoSomethingInDtor", qi::Object<CallDoSomethingInDtor>(callds));
+
+  {
+    EXPECT_NO_THROW(p.client()->service("doSomething").value());
+    EXPECT_NO_THROW(p.client()->service("callDoSomethingInDtor").value());
+  }
+
+  // Have the client unregister the service
+  // this should not deadlock
+  p.client()->unregisterService(idCallDS).wait();
+}
+
 int main(int argc, char **argv)
 {
   qi::Application app(argc, argv);

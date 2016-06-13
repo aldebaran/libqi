@@ -76,13 +76,14 @@ Links
 git repository:
 http://github.com/aldebaran/libqi
 
-Mailing list:
-https://groups.google.com/a/aldebaran-robotics.com/group/qibuild-dev/topics
-
 Documentation:
 http://doc.aldebaran.com/libqi/
 
+IRC Channel:
+#qi on freenode.
+
 Maintainers:
 
-- Philippe DAOUADI <pdaouadi@aldebaran.com>
-- Cedric GESTES <gestes@aldebaran.com>
+- Herve Cuche <hcuche@aldebaran.com>
+- Joel Lamotte <jlamotte@aldebaran.com>
+- Jérémy Monnon <jmonnon@aldebaran.com>

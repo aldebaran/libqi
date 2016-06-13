@@ -181,29 +181,29 @@ namespace qi {
       commandLine = qi::Path::fromNative(winCommandLine).str();
 
 #elif BOOST_OS_MACOS
-      pid_t pids[1024];
-      bzero(pids, 1024);
-      int numberOfProcesses = proc_listpids(PROC_ALL_PIDS, 0, pids, sizeof(pids));
-      bool found = false;
-      int i = 0;
-      while (!found && i < numberOfProcesses)
+      int numberOfProcesses = proc_listpids(PROC_ALL_PIDS, 0, NULL, 0);
+      if (numberOfProcesses == 0)
       {
-        if(pids[i] == pid)
-        {
-          found = true;
-          continue;
-        }
-        ++i;
+        qiLogError() << "Cannot get number of processes";
+        return false;
       }
 
-      if (!found)
+      std::vector<int> pids(numberOfProcesses, 0);
+      numberOfProcesses = proc_listpids(PROC_ALL_PIDS, 0, pids.data(), sizeof(int) * pids.size());
+      if (numberOfProcesses == 0)
+      {
+        qiLogError() << "Cannot get list of processes";
+        return false;
+      }
+
+      if (std::find(pids.begin(), pids.end(), pid) == pids.end())
         return false;
 
       if (fileName.empty())
         return true;
 
       char procPidPath[PROC_PIDPATHINFO_MAXSIZE];
-      int res = proc_pidpath(pid, procPidPath, sizeof(procPidPath));
+      int res = proc_pidpath(pid, procPidPath, sizeof(char) * PROC_PIDPATHINFO_MAXSIZE);
       if (!res)
       {
         qiLogDebug() << "Failed to get process info: " << strerror(errno);

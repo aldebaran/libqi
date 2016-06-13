@@ -814,7 +814,7 @@ namespace qi {
     qi::typeDispatch(stv, gvp);
     if (be.status() != BinaryEncoder::Status::Ok) {
       std::stringstream ss;
-      ss << "OSerialization error " << static_cast<int>(be.status());
+      ss << "OSerialization error " << BinaryEncoder::statusToStr(be.status());
       qiLogError() << ss.str();
       throw std::runtime_error(ss.str());
     }
@@ -828,7 +828,7 @@ namespace qi {
     qi::typeDispatch(dtv, dtv.result);
     if (in.status() != BinaryDecoder::Status::Ok) {
       std::stringstream ss;
-      ss << "ISerialization error " << static_cast<int>(in.status());
+      ss << "ISerialization error " << BinaryDecoder::statusToStr(in.status());
       qiLogError() << ss.str();
       throw std::runtime_error(ss.str());
     }
