@@ -112,9 +112,10 @@ set(QI_H qi/detail/async.hxx
          qi/strand.hpp
          qi/assert.hpp
          qi/algorithm.hpp
-         qi/detail/conceptpredicates.hpp
+         qi/detail/conceptpredicate.hpp
          qi/macroregular.hpp
-         qi/range.hpp)
+         qi/range.hpp
+         qi/detail/relationpredicate.hpp)
 
 set(QI_C src/dlfcn.cpp
          src/path.cpp

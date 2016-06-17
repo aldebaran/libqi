@@ -37,9 +37,10 @@ qi_create_gtest(
   "test_trackable.cpp"
   "test_version.cpp"
   "test_algorithm.cpp"
-  "test_conceptpredicates.cpp"
+  "test_conceptpredicate.cpp"
   "test_macroregular.cpp"
   "test_range.cpp"
+  "test_relationpredicate.cpp"
 
   DEPENDS
   qi

@@ -3,14 +3,15 @@
 #include <cstdint>
 #include <qi/range.hpp>
 #include <array>
+#include <qi/detail/conceptpredicate.hpp>
+#include <qi/macroregular.hpp>
 
 /// Archetype to ensure that only forward iterator's operations are used.
 struct ForwardIter
 {
   using Self = ForwardIter;
   int i;
-  friend bool operator==(const Self& x, const Self& y) {return x.i == y.i;}
-  friend bool operator<(const Self& x, const Self& y) {return x.i < y.i;}
+  QI_GENERATE_FRIEND_REGULAR_OPS_1(Self, i)
   Self& operator++() {++i; return *this;}
 };
 
@@ -30,8 +31,7 @@ struct ReadableForwardIter
 {
   using Self = ReadableForwardIter;
   int i;
-  friend bool operator==(const Self& x, const Self& y) {return x.i == y.i;}
-  friend bool operator<(const Self& x, const Self& y) {return x.i < y.i;}
+  QI_GENERATE_FRIEND_REGULAR_OPS_1(Self, i)
   const int& operator*() const {return i;}
   Self& operator++() {++i; return *this;}
 };
@@ -151,12 +151,20 @@ TEST(Range, BoundedRangeHelperFunctionSequenceCustomMember)
   EXPECT_TRUE(isEmpty(rng));
 }
 
+TEST(Range, BoundedRangeRegular)
+{
+  using namespace qi;
+  using namespace qi::detail;
+  using I = ReadableForwardIter;
+  using R = BoundedRange<I>;
+  EXPECT_TRUE(isRegular({R{I{0}, I{3}}, R{I{1}, I{4}}, R{I{2}, I{3}}}));
+}
+
 struct MutableForwardIter
 {
   using Self = MutableForwardIter;
   int i;
-  friend bool operator==(const Self& x, const Self& y) {return x.i == y.i;}
-  friend bool operator<(const Self& x, const Self& y) {return x.i < y.i;}
+  QI_GENERATE_FRIEND_REGULAR_OPS_1(Self, i)
   int& operator*() {return i;}
   const int& operator*() const {return i;}
   Self& operator++() {++i; return *this;}
@@ -181,14 +189,7 @@ struct Incrementable
   {
   }
   Incrementable() = default;
-  friend bool operator==(Self x, Self y)
-  {
-    return x.i == y.i;
-  }
-  friend bool operator<(Self x, Self y)
-  {
-    return x.i < y.i;
-  }
+  QI_GENERATE_FRIEND_REGULAR_OPS_1(Self, i)
   void operator++()
   {
     ++i;
@@ -217,6 +218,15 @@ TEST(Range, IncrBoundedRangeBasic)
   EXPECT_EQ(N{1}, front(rng));  // [1, 2, 3, 4]
   pop(rng);
   EXPECT_EQ(N{2}, front(rng));  // [2, 3, 4]
+}
+
+TEST(Range, IncrBoundedRangRegular)
+{
+  using namespace qi;
+  using namespace qi::detail;
+  using N = Incrementable;
+  using R = IncrBoundedRange<N>;
+  EXPECT_TRUE(isRegular({R{N{0}, N{3}}, R{N{1}, N{4}}, R{N{2}, N{3}}}));
 }
 
 TEST(Range, IncrBoundedRangeHelper)
@@ -261,14 +271,7 @@ TEST(Range, IncrBoundedRangeHelperSuperTerse)
 struct IncrTwice
 {
   using Self = IncrTwice;
-  friend bool operator==(Self, Self)
-  {
-    return true;
-  }
-  friend bool operator<(Self, Self)
-  {
-    return false;
-  }
+  QI_GENERATE_FRIEND_REGULAR_OPS_0(Self)
   template<typename N> // Incrementable N
   void operator()(N& n) const
   {
@@ -290,6 +293,16 @@ TEST(Range, IncrBoundedRangeActionBasic)
   EXPECT_EQ(N{-1}, front(rng));  // [-1, 1, 3, 5, 7]
   pop(rng);
   EXPECT_EQ(N{1}, front(rng));  // [1, 3, 5, 7]
+}
+
+TEST(Range, IncrBoundedRangeActionRegular)
+{
+  using namespace qi;
+  using namespace qi::detail;
+  using N = Incrementable;
+  using R = IncrBoundedRangeAction<N, IncrTwice>;
+  IncrTwice a;
+  EXPECT_TRUE(isRegular({R{N{0}, N{4}, a}, R{N{1}, N{7}, a}, R{N{2}, N{2}, a}}));
 }
 
 TEST(Range, IncrBoundedRangeActionHelper)
@@ -330,6 +343,15 @@ TEST(Range, RepeatRangeBasic)
   EXPECT_EQ(9, front(rng));  // [9]
   pop(rng);
   EXPECT_TRUE(isEmpty(rng));
+}
+
+TEST(Range, RepeatRangeRegular)
+{
+  using namespace qi;
+  using namespace qi::detail;
+  using N = Incrementable;
+  using R = RepeatRange<int, N>;
+  EXPECT_TRUE(isRegular({R{7, N{0}, N{4}}, R{8, N{1}, N{7}}, R{9, N{2}, N{2}}}));
 }
 
 TEST(Range, RepeatRangeHelper)

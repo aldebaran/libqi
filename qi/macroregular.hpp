@@ -1,25 +1,38 @@
 #pragma once
 
+/// @file
 /// Contains various macros to help user generate
 /// regular relational operators (==, <, !=, >, <=, >=).
+///
+/// Meaning of regularity
+/// =============================================
 /// Regular means that:
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ///   == is an equivalence
 ///   < is a total ordering (see below)
 ///   != is always the opposite of ==
 ///   a > b is equivalent to b < a
 ///   a <= b is equivalent to !(b < a)
 ///   a >= b is equivalent to !(a < b)
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/// See conceptpredicate.hpp for a formal definition.
 ///
-/// Note:
+/// Meaning of total ordering
+/// =============================================
 /// A total ordering is a relation that imposes an order on values.
-/// Given any values a, b, only one of these hold :
+/// Given any values a, b, only one of these hold:
 /// - a is before b
 /// - b is before a
 /// - a is equal to b
 /// (this is called the trichotomy law)
-/// Furthermore, a total ordering is transitive :
+///
+/// Furthermore, a total ordering is transitive:
 /// if a is before b and b is before c, a is before c.
 ///
+/// See relationpredicate.hpp for a formal definition.
+///
+/// Macros' purpose
+/// =============================================
 /// Macros are provided to generate only one operator or to define
 /// bundles of operators, so that the user has a fine-grained control
 /// over the generation.
@@ -30,8 +43,10 @@
 #define _QI_MACROREGULAR_HPP_
 
 /// The QI_GENERATE_MEMBERWISE_EQUALITY_n macros family generate
-/// memberwise equality with the form :
+/// memberwise equality with the form:
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 /// (instanceA.member0 == instanceB.member0 && instanceA.member1 == instanceB.member1 && ...)
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 /// The macro parameters are the 2 instances' names followed by the members' names
 /// (the number at the end of the macro name indicates the number of members).
 /// These macros are helpers to define QI_GENERATE_FRIEND_OP_EQUALITY_n.
@@ -85,6 +100,7 @@
 /// memberwise equality.
 ///
 /// The typical use is:
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 /// struct MyStruct {
 ///   X x;
 ///   Y y;
@@ -93,19 +109,26 @@
 ///   friend QI_GENERATE_REGULAR_OP_EQUAL_2(MyStruct, x, y)
 ///   // ...
 /// };
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 /// The macro expands to:
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ///   friend bool operator==(const MyStruct& a, const MyStruct& b)
 ///   {
 ///     return a.x == b.x && a.y == b.y;
 ///   }
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ///
-/// The general form of the generated body is: (a.m0 == b.m0 && a.m1 == b.m1 && ...)
+/// The general form of the generated body is:
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/// (a.m0 == b.m0 && a.m1 == b.m1 && ...)
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 /// These macros can be used inside a class by prefixing them with 'friend'.
 ///
-/// Why using macros to define equality ? There exist alternatives but they have
-/// their own drawbacks (e.g CRTP, https://en.wikipedia.org/wiki/Curiously_recurring_template_pattern,
+/// Why using macros to define equality? There exist alternatives but they have
+/// their own drawbacks (e.g [CRTP](https://en.wikipedia.org/wiki/Curiously_recurring_template_pattern),
 /// by relying on public inheritance effectively implements a "is-a" relation, which is totally not
 /// what we're trying to achieve here).
+///
 /// In the current state of the language (C++11), macros seem the least bad solution.
 #define QI_GENERATE_REGULAR_OP_EQUAL_0(type)        \
   bool operator==(const type&, const type&)         \
@@ -266,7 +289,9 @@
 /// Ordering is important in generic programming by allowing elements to be sorted.
 /// The QI_GENERATE_REGULAR_OP_LESS_n macros family generate operator< as a
 /// total ordering (see relationpredicates.hpp for a formal definition).
+///
 /// The typical use is:
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 /// struct MyStruct {
 ///   X x;
 ///   Y y;
@@ -275,17 +300,22 @@
 ///   friend QI_GENERATE_REGULAR_OP_LESS_2(MyStruct, x, y)
 ///   // ...
 /// };
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 /// The macro expands to:
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ///   friend bool operator<(const MyStruct& a, const MyStruct& b)
 ///   {
 ///     return a.x < b.x || (!(b.x < a.x) && a.y < b.y);
 ///   }
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ///
 /// The general form of the generated body is:
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 /// a.m0 < b.m0 ||
 ///   (!(b.m0 < a.m0) && (a.m1 < b.m1 ||
 ///     (!(b.m1 < a.m1) && (b.m2 < a.m2 ||
 ///       ...))))
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 /// These macros can be used inside a class by prefixing them with 'friend'.
 /// See QI_GENERATE_MEMBERWISE_EQUAL_0 comment for a motivation for using macros.
 #define QI_GENERATE_REGULAR_OP_LESS_0(type) \
@@ -363,47 +393,47 @@
 /// via namespace-level template functions.
 #define QI_GENERATE_FRIEND_REGULAR_OP_EQUAL_AND_OP_LESS_0(type) \
   friend QI_GENERATE_REGULAR_OP_EQUAL_0(type)                   \
-  friend QI_GENERATE_REGULAR_OP_LESS_0(type)                    \
+  friend QI_GENERATE_REGULAR_OP_LESS_0(type)
 
 #define QI_GENERATE_FRIEND_REGULAR_OP_EQUAL_AND_OP_LESS_1(type, m0) \
   friend QI_GENERATE_REGULAR_OP_EQUAL_1(type, m0)                   \
-  friend QI_GENERATE_REGULAR_OP_LESS_1(type, m0)                     \
+  friend QI_GENERATE_REGULAR_OP_LESS_1(type, m0)
 
 #define QI_GENERATE_FRIEND_REGULAR_OP_EQUAL_AND_OP_LESS_2(type, m0, m1) \
   friend QI_GENERATE_REGULAR_OP_EQUAL_2(type, m0, m1)                   \
-  friend QI_GENERATE_REGULAR_OP_LESS_2(type, m0, m1)                    \
+  friend QI_GENERATE_REGULAR_OP_LESS_2(type, m0, m1)
 
 #define QI_GENERATE_FRIEND_REGULAR_OP_EQUAL_AND_OP_LESS_3(type, m0, m1, m2) \
   friend QI_GENERATE_REGULAR_OP_EQUAL_3(type, m0, m1, m2)                   \
-  friend QI_GENERATE_REGULAR_OP_LESS_3(type, m0, m1, m2)                    \
+  friend QI_GENERATE_REGULAR_OP_LESS_3(type, m0, m1, m2)
 
 #define QI_GENERATE_FRIEND_REGULAR_OP_EQUAL_AND_OP_LESS_4(type, m0, m1, m2, m3) \
   friend QI_GENERATE_REGULAR_OP_EQUAL_4(type, m0, m1, m2, m3)                   \
-  friend QI_GENERATE_REGULAR_OP_LESS_4(type, m0, m1, m2, m3)                    \
+  friend QI_GENERATE_REGULAR_OP_LESS_4(type, m0, m1, m2, m3)
 
 #define QI_GENERATE_FRIEND_REGULAR_OP_EQUAL_AND_OP_LESS_5(type, m0, m1, m2, m3, m4) \
   friend QI_GENERATE_REGULAR_OP_EQUAL_5(type, m0, m1, m2, m3, m4)                   \
-  friend QI_GENERATE_REGULAR_OP_LESS_5(type, m0, m1, m2, m3, m4)                    \
+  friend QI_GENERATE_REGULAR_OP_LESS_5(type, m0, m1, m2, m3, m4)
 
 #define QI_GENERATE_FRIEND_REGULAR_OP_EQUAL_AND_OP_LESS_6(type, m0, m1, m2, m3, m4, m5) \
   friend QI_GENERATE_REGULAR_OP_EQUAL_6(type, m0, m1, m2, m3, m4, m5)                   \
-  friend QI_GENERATE_REGULAR_OP_LESS_6(type, m0, m1, m2, m3, m4, m5)                    \
+  friend QI_GENERATE_REGULAR_OP_LESS_6(type, m0, m1, m2, m3, m4, m5)
 
 #define QI_GENERATE_FRIEND_REGULAR_OP_EQUAL_AND_OP_LESS_7(type, m0, m1, m2, m3, m4, m5, m6) \
   friend QI_GENERATE_REGULAR_OP_EQUAL_7(type, m0, m1, m2, m3, m4, m5, m6)                   \
-  friend QI_GENERATE_REGULAR_OP_LESS_7(type, m0, m1, m2, m3, m4, m5, m6)                    \
+  friend QI_GENERATE_REGULAR_OP_LESS_7(type, m0, m1, m2, m3, m4, m5, m6)
 
 #define QI_GENERATE_FRIEND_REGULAR_OP_EQUAL_AND_OP_LESS_8(type, m0, m1, m2, m3, m4, m5, m6, m7) \
   friend QI_GENERATE_REGULAR_OP_EQUAL_8(type, m0, m1, m2, m3, m4, m5, m6, m7)                   \
-  friend QI_GENERATE_REGULAR_OP_LESS_8(type, m0, m1, m2, m3, m4, m5, m6, m7)                    \
+  friend QI_GENERATE_REGULAR_OP_LESS_8(type, m0, m1, m2, m3, m4, m5, m6, m7)
 
 #define QI_GENERATE_FRIEND_REGULAR_OP_EQUAL_AND_OP_LESS_9(type, m0, m1, m2, m3, m4, m5, m6, m7, m8) \
   friend QI_GENERATE_REGULAR_OP_EQUAL_9(type, m0, m1, m2, m3, m4, m5, m6, m7, m8)                   \
-  friend QI_GENERATE_REGULAR_OP_LESS_9(type, m0, m1, m2, m3, m4, m5, m6, m7, m8)                    \
+  friend QI_GENERATE_REGULAR_OP_LESS_9(type, m0, m1, m2, m3, m4, m5, m6, m7, m8)
 
 #define QI_GENERATE_FRIEND_REGULAR_OP_EQUAL_AND_OP_LESS_10(type, m0, m1, m2, m3, m4, m5, m6, m7, m8, m9)  \
   friend QI_GENERATE_REGULAR_OP_EQUAL_10(type, m0, m1, m2, m3, m4, m5, m6, m7, m8, m9)                    \
-  friend QI_GENERATE_REGULAR_OP_LESS_10(type, m0, m1, m2, m3, m4, m5, m6, m7, m8, m9)                     \
+  friend QI_GENERATE_REGULAR_OP_LESS_10(type, m0, m1, m2, m3, m4, m5, m6, m7, m8, m9)
 
 
 /// Generate != in terms of ==.

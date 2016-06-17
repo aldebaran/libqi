@@ -9,82 +9,106 @@
 #include <qi/type/traits.hpp>
 #include <qi/macroregular.hpp>
 
-/// @file range.hpp
+/// @file
 /// This file formally defines range properties where ranges are a pair of
 /// iterators, or an iterator with a distance.
+///
 /// It also defines a family of Range concepts which does not expose iterators.
 /// For now, it is only concerned with forward ranges, but other traversal
 /// (bidirectional, random) and access (write-only, read-write) can be added on top.
-/// See conceptpredicates.hpp for the f^n(x) notation.
 ///
+/// See relationpredicate.hpp for the property notation.
+///
+/// See conceptpredicate.hpp for the f^n(x) notation.
+///
+/// Properties
+/// =============================================
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 /// Property(Iterator I, Integer N)
 /// weakRange: I x N
 /// (b, n) |-> (forall i in N) 0 <= i <= n implies (++)^i(b) is defined
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 /// This means that weakRange is a property taking an Iterator and an Integer
 /// and being true if it is defined to increment the iterator up to n times
 /// (n included).
 /// It is possible to have a cycle.
 ///
-/// Properties are comment-only because it's not always possible to efficiently
-/// implement them as real code.
+/// Note: properties are comment-only because it's not always possible to
+/// efficiently implement them as real code.
 ///
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 /// Property(Iterator I, Integer N)
 /// countedRange: I x N
 /// (b, n) |-> weakRange(b, n)
 ///    && (forall i, j in N) 0 <= i < j <= n implies (++)^i(b) != (++)^j(b)
-///
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 /// A counted range is a weak range without cycle.
 ///
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 /// Property(Iterator I)
 /// boundedRange: I x I
 /// (b, e) |-> (there exists i in Distance<I>) countedRange(b, i) && (++)^i(b) == e
-///
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 /// A bounded range is a counted range with the end defined with an iterator
 /// instead of a distance.
 ///
+/// Concepts
+/// =============================================
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 /// Range(R) =
 ///     Regular(R)
 ///  && isEmpty: R -> bool
 ///  && pop:     R -> void
 ///  && pop is not necessarily regular
-///
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 /// In this basic concept, you can "iterate" through the range but not
 /// access the values. Which can be useful if you're only interested in
 /// advancing the front of the range.
-/// The typical use is :
+///
+/// The typical use is:
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 /// while (!isEmpty(myRange)) {
 ///   <some code>
 ///   pop(myRange);
 /// }
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 /// Note that isEmpty is not guaranteed to ever return false, i.e. the
 /// range could be infinite.
 /// Also, pop being not necessarily regular, the traversal on a copy of a range
 /// is not guaranteed to yield the same result (e.g. useful for input streams).
 ///
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 /// ForwardRange(R) =
 ///     Range(R)
 ///  && pop is regular (i.e. the range is multipass)
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ///
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 /// ReadableRange(R) =
 ///     Range(R)
 ///  && front: R -> U where Regular(U)
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ///
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 /// ReadableForwardRange(R) =
 ///     ForwardRange(R)
 ///  && ReadableRange(R)
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ///
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 /// MutableForwardRange(R) =
 ///     ReadableForwardRange(R)
 ///  && (forall r in R where front(r) is defined) front(r) = x establishes front(r) == x
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 namespace qi
 {
   // If these usings are not specified, unqualified begin will not work on native
   // arrays.
   // If an array-specialized begin is added in namespace qi, it will cause
-  // ambiguity for arrays of std types because of ADL : qi array-specialized or
-  // std array-specialized ?
-  // With these usings, the right behaviour is obtained :
+  // ambiguity for arrays of std types because of ADL: qi array-specialized or
+  // std array-specialized?
+  // With these usings, the right behaviour is obtained:
   // - if a qi type specifies a free function begin, it is called
   // - if a qi type specifies a member begin, it is called
   // - begin is ok with std types
@@ -101,9 +125,11 @@ namespace qi
   /// function is never used. This in turn force the members to be public,
   /// because there is no way in C++11 to friend-declare an auto-returning function.
   ///
-  /// Use example (findBest taking a Range) :
+  /// Use example (findBest taking a Range):
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   /// auto b = begin(memories);
   /// auto memory = findBest(boundedRange(b, b + memories.size() / 2u));
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ///
   /// Iterator I
   template<typename I>
@@ -168,9 +194,11 @@ namespace qi
   /// Note: If operator* would be defined on all builtin types, returning
   /// the value itself if not a pointer, BoundedRange could be used instead.
   ///
-  /// Use example (with sum taking a Range) :
+  /// Use example (with sum taking a Range):
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   /// auto n = sum(incrRange(2, 10));
   /// auto m = sum(incrRange(10)); // The begin value is default-initialized (here, 0).
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ///
   /// Incrementable N
   template<typename N>
@@ -231,8 +259,10 @@ namespace qi
   /// Idem IncrBoundedRange but an Action performs the increment.
   /// Useful if you don't want to add an operator++ to N.
   ///
-  /// Use example (with sum taking a Range) :
+  /// Use example (with sum taking a Range):
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   /// auto n = sum(incrRange(1, 64, [](int& i){i *= 2;})); // be careful to not step over the limit
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ///
   /// Incrementable N, Action<N> A
   template<typename N, typename A>

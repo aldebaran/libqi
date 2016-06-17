@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include <qi/macroregular.hpp>
+#include <qi/detail/conceptpredicate.hpp>
 
 struct S0
 {
@@ -347,6 +348,86 @@ TEST(Macro, QI_GENERATE_REGULAR_OP_EQUAL)
   EXPECT_FALSE((S10{0, true, 'a', 1.2, 3, 4.5f, 5L, 7, 2U, 8}) == (S10{0, true, 'a', 1.2, 3, 4.5f, 5L, 6, 2U, 8}));
   EXPECT_FALSE((S10{0, true, 'a', 1.2, 3, 4.5f, 5L, 6, 3U, 8}) == (S10{0, true, 'a', 1.2, 3, 4.5f, 5L, 6, 2U, 8}));
   EXPECT_FALSE((S10{0, true, 'a', 1.2, 3, 4.5f, 5L, 6, 2U, 9}) == (S10{0, true, 'a', 1.2, 3, 4.5f, 5L, 6, 2U, 8}));
+}
+
+TEST(Macro, QI_GENERATE_REGULAR_OP_EQUAL_Equivalence)
+{
+  // TODO: Add more values, especially for types with a great number of members.
+  using namespace qi;
+  using namespace qi::detail;
+  {
+    std::equal_to<S0> equ;
+    auto values = {S0{}};
+    EXPECT_TRUE(isEquivalence(equ, values));
+  }
+  {
+    std::equal_to<S1> equ;
+    auto values = {S1{0}, S1{1}, S1{2}};
+    EXPECT_TRUE(isEquivalence(equ, values));
+  }
+  {
+    std::equal_to<S2> equ;
+    auto values = {S2{0, true},
+                   S2{0, false},
+                   S2{1, true}};
+    EXPECT_TRUE(isEquivalence(equ, values));
+  }
+  {
+    std::equal_to<S3> equ;
+    auto values = {S3{0, true, 'a'},
+                   S3{0, true, 'b'},
+                   S3{1, true, 'a'}};
+    EXPECT_TRUE(isEquivalence(equ, values));
+  }
+  {
+    std::equal_to<S4> equ;
+    auto values = {S4{0, true, 'a', 1.2},
+                   S4{0, true, 'b', 1.2},
+                   S4{1, true, 'a', 1.0}};
+    EXPECT_TRUE(isEquivalence(equ, values));
+  }
+  {
+    std::equal_to<S5> equ;
+    auto values = {S5{0, true, 'a', 1.2, 5},
+                   S5{0, true, 'a', 1.2, 6},
+                   S5{1, true, 'a', 1.0, 5}};
+    EXPECT_TRUE(isEquivalence(equ, values));
+  }
+  {
+    std::equal_to<S6> equ;
+    auto values = {S6{0, true, 'a', 1.2, 5, 2.f},
+                   S6{0, true, 'a', 1.2, 6, 1.f},
+                   S6{1, true, 'a', 1.0, 5, 2.f}};
+    EXPECT_TRUE(isEquivalence(equ, values));
+  }
+  {
+    std::equal_to<S7> equ;
+    auto values = {S7{0, true, 'a', 1.2, 5, 2.f, 1L},
+                   S7{0, true, 'a', 1.2, 6, 1.f, 0L},
+                   S7{1, true, 'a', 1.0, 5, 2.f, 1L}};
+    EXPECT_TRUE(isEquivalence(equ, values));
+  }
+  {
+    std::equal_to<S8> equ;
+    auto values = {S8{0, true, 'a', 1.2, 5, 2.f, 1L, 3},
+                   S8{0, true, 'a', 1.2, 6, 1.f, 0L, 2},
+                   S8{1, true, 'a', 1.0, 5, 2.f, 1L, 3}};
+    EXPECT_TRUE(isEquivalence(equ, values));
+  }
+  {
+    std::equal_to<S9> equ;
+    auto values = {S9{0, true, 'a', 1.2, 5, 2.f, 1L, 3, 4U},
+                   S9{0, true, 'a', 1.2, 6, 1.f, 0L, 2, 3U},
+                   S9{1, true, 'a', 1.0, 5, 2.f, 1L, 3, 4U}};
+    EXPECT_TRUE(isEquivalence(equ, values));
+  }
+  {
+    std::equal_to<S10> equ;
+    auto values = {S10{0, true, 'a', 1.2, 5, 2.f, 1L, 3, 4U, 4},
+                   S10{0, true, 'a', 1.2, 6, 1.f, 0L, 2, 3U, 5},
+                   S10{1, true, 'a', 1.0, 5, 2.f, 1L, 3, 4U, 5}};
+    EXPECT_TRUE(isEquivalence(equ, values));
+  }
 }
 
 TEST(Macro, QI_GENERATE_LEXICOGRAPHICAL_LESS)
@@ -715,6 +796,85 @@ TEST(Macro, QI_GENERATE_REGULAR_OP_LESS)
 
   EXPECT_TRUE((S10{0, true, 'a', 1.2, 3, 4.5f, 5L, 6, 2U, 8}) <
               (S10{0, true, 'a', 1.2, 3, 4.5f, 5L, 6, 2U, 9}));
+}
+
+TEST(Macro, QI_GENERATE_REGULAR_OP_LESS_TotalOrdering)
+{
+  // TODO: Add more values, especially for types with a great number of members.
+  using namespace qi::detail;
+  {
+    std::less<S0> lt;
+    auto values = {S0{}};
+    EXPECT_TRUE(isTotalOrdering(lt, values));
+  }
+  {
+    std::less<S1> lt;
+    auto values = {S1{0}, S1{1}, S1{2}};
+    EXPECT_TRUE(isTotalOrdering(lt, values));
+  }
+  {
+    std::less<S2> lt;
+    auto values = {S2{0, true},
+                   S2{0, false},
+                   S2{1, true}};
+    EXPECT_TRUE(isTotalOrdering(lt, values));
+  }
+  {
+    std::less<S3> lt;
+    auto values = {S3{0, true, 'a'},
+                   S3{0, true, 'b'},
+                   S3{1, true, 'a'}};
+    EXPECT_TRUE(isTotalOrdering(lt, values));
+  }
+  {
+    std::less<S4> lt;
+    auto values = {S4{0, true, 'a', 1.2},
+                   S4{0, true, 'b', 1.2},
+                   S4{1, true, 'a', 1.0}};
+    EXPECT_TRUE(isTotalOrdering(lt, values));
+  }
+  {
+    std::less<S5> lt;
+    auto values = {S5{0, true, 'a', 1.2, 5},
+                   S5{0, true, 'a', 1.2, 6},
+                   S5{1, true, 'a', 1.0, 5}};
+    EXPECT_TRUE(isTotalOrdering(lt, values));
+  }
+  {
+    std::less<S6> lt;
+    auto values = {S6{0, true, 'a', 1.2, 5, 2.f},
+                   S6{0, true, 'a', 1.2, 6, 1.f},
+                   S6{1, true, 'a', 1.0, 5, 2.f}};
+    EXPECT_TRUE(isTotalOrdering(lt, values));
+  }
+  {
+    std::less<S7> lt;
+    auto values = {S7{0, true, 'a', 1.2, 5, 2.f, 1L},
+                   S7{0, true, 'a', 1.2, 6, 1.f, 0L},
+                   S7{1, true, 'a', 1.0, 5, 2.f, 1L}};
+    EXPECT_TRUE(isTotalOrdering(lt, values));
+  }
+  {
+    std::less<S8> lt;
+    auto values = {S8{0, true, 'a', 1.2, 5, 2.f, 1L, 3},
+                   S8{0, true, 'a', 1.2, 6, 1.f, 0L, 2},
+                   S8{1, true, 'a', 1.0, 5, 2.f, 1L, 3}};
+    EXPECT_TRUE(isTotalOrdering(lt, values));
+  }
+  {
+    std::less<S9> lt;
+    auto values = {S9{0, true, 'a', 1.2, 5, 2.f, 1L, 3, 4U},
+                   S9{0, true, 'a', 1.2, 6, 1.f, 0L, 2, 3U},
+                   S9{1, true, 'a', 1.0, 5, 2.f, 1L, 3, 4U}};
+    EXPECT_TRUE(isTotalOrdering(lt, values));
+  }
+  {
+    std::less<S10> lt;
+    auto values = {S10{0, true, 'a', 1.2, 5, 2.f, 1L, 3, 4U, 4},
+                   S10{0, true, 'a', 1.2, 6, 1.f, 0L, 2, 3U, 5},
+                   S10{1, true, 'a', 1.0, 5, 2.f, 1L, 3, 4U, 5}};
+    EXPECT_TRUE(isTotalOrdering(lt, values));
+  }
 }
 
 TEST(Macro, QI_GENERATE_REGULAR_OP_DIFFERENT)
