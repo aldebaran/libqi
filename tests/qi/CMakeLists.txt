@@ -38,6 +38,7 @@ qi_create_gtest(
   "test_version.cpp"
   "test_algorithm.cpp"
   "test_conceptpredicates.cpp"
+  "test_macroregular.cpp"
 
   DEPENDS
   qi
