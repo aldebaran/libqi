@@ -41,6 +41,7 @@ qi_create_gtest(
   "test_macroregular.cpp"
   "test_range.cpp"
   "test_relationpredicate.cpp"
+  "test_scoped.cpp"
 
   DEPENDS
   qi

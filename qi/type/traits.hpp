@@ -342,6 +342,14 @@ namespace qi
     template<typename T>
     using IsList = typename detail::IsList<T>::type;
 
+    /// Behave exactly as the std::decay_t of C++14.
+    template<typename T>
+    using Decay = typename std::decay<T>::type;
+
+    /// Behave exactly as the std::enable_if_t of C++14.
+    template<bool condition, typename T = void>
+    using EnableIf = typename std::enable_if<condition, T>::type;
+
   } // namespace traits
 } // namespace qi
 
