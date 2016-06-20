@@ -470,6 +470,7 @@ namespace qi
         boost::recursive_mutex::scoped_lock l(_closingMutex);
         if (_abort)
           return;
+        setSocketOptions();
         _socket->async_handshake(boost::asio::ssl::stream_base::client,
             boost::bind(&TcpTransportSocket::handshake, shared_from_this(), _1,
               _socket, connectPromise));
