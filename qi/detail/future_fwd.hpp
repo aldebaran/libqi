@@ -896,8 +896,6 @@ namespace qi {
 
       void cancel(qi::Future<T>& future);
 
-      void callCbNotify(qi::Future<T>& future);
-
       /*
        * inplace api for promise
        */
@@ -937,7 +935,12 @@ namespace qi {
       FutureCallbackType       _async;
       qi::Atomic<unsigned int> _promiseCount;
 
-      void clearCallbacks();
+      template <typename F> // FunctionObject<R()> F (R unconstrained)
+      void finish(qi::Future<T>& future, F&& finishTask);
+      Callbacks takeOutResultCallbacks();
+      void clearCancelCallback();
+
+      static void executeCallbacks(bool defaultAsync, const Callbacks& callbacks, qi::Future<T>& future);
     };
   }
 
