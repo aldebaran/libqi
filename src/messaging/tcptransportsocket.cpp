@@ -281,6 +281,7 @@ namespace qi
   void TcpTransportSocket::error(const std::string& erc)
   {
     qiLogVerbose() << "Socket error: " << erc;
+    const bool wasConnected = _status == qi::TransportSocket::Status::Connected;
     {
       boost::recursive_mutex::scoped_lock lock(_closingMutex);
       if (_abort)
@@ -312,7 +313,9 @@ namespace qi
     }
 
     // synchronous signals, do not keep the mutex while we trigger
-    disconnected(erc);
+    if (wasConnected)
+      disconnected(erc);
+
     socketEvent(SocketEventData(erc));
   }
 
@@ -377,8 +380,8 @@ namespace qi
     {
       std::string message = "System error: " + erc.message();
       qiLogWarning() << "resolve: " << message;
-      _status = qi::TransportSocket::Status::Disconnected;
       error(message);
+      _status = qi::TransportSocket::Status::Disconnected;
       pSetError(connectPromise, message);
       return;
     }
@@ -456,8 +459,8 @@ namespace qi
     if (erc)
     {
       qiLogWarning() << "connect: " << erc.message();
-      _status = qi::TransportSocket::Status::Disconnected;
       error("System error: " + erc.message());
+      _status = qi::TransportSocket::Status::Disconnected;
       pSetError(connectPromise, "System error: " + erc.message());
     }
     else
@@ -594,6 +597,7 @@ namespace qi
     if (_status == qi::TransportSocket::Status::Disconnected)
       return qi::Future<void>(0);
 
+    qiLogDebug() << "Disconnecting TCP transport socket";
     return _eventLoop->async(boost::bind(&TcpTransportSocket::error,
                                  boost::static_pointer_cast<TcpTransportSocket>(shared_from_this()),
                                  "Disconnection requested"));

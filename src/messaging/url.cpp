@@ -18,6 +18,7 @@ namespace qi {
     UrlPrivate(const std::string& url, const std::string& defaultProtocol, unsigned short defaultPort);
     UrlPrivate(const char* url);
 
+    void updateUrl();
     const std::string& str() const;
     bool isValid() const;
 
@@ -102,14 +103,65 @@ namespace qi {
     return _p->protocol;
   }
 
+  bool Url::hasProtocol() const {
+    return _p->components & UrlPrivate::SCHEME;
+  }
+
+  void Url::setProtocol(const std::string &protocol) {
+    _p->protocol = protocol;
+    _p->components |= UrlPrivate::SCHEME;
+    _p->updateUrl();
+  }
+
   const std::string& Url::host() const {
     return _p->host;
+  }
+
+  bool Url::hasHost() const {
+    return _p->components & UrlPrivate::HOST;
+  }
+
+  void Url::setHost(const std::string &host) {
+    _p->host = host;
+    _p->components |= UrlPrivate::HOST;
+    _p->updateUrl();
   }
 
   unsigned short Url::port() const {
     return _p->port;
   }
 
+  bool Url::hasPort() const {
+    return _p->components & UrlPrivate::PORT;
+  }
+
+  void Url::setPort(unsigned short port) {
+    _p->port = port;
+    _p->components |= UrlPrivate::PORT;
+    _p->updateUrl();
+  }
+
+  Url specifyUrl(const Url& specification, const Url& baseUrl)
+  {
+    Url url;
+
+    if(specification.hasProtocol())
+      url.setProtocol(specification.protocol());
+    else if(baseUrl.hasProtocol())
+      url.setProtocol(baseUrl.protocol());
+
+    if(specification.hasHost())
+      url.setHost(specification.host());
+    else if(baseUrl.hasHost())
+      url.setHost(baseUrl.host());
+
+    if(specification.hasPort())
+      url.setPort(specification.port());
+    else if(baseUrl.hasPort())
+      url.setPort(baseUrl.port());
+
+    return url;
+  }
 
   UrlPrivate::UrlPrivate()
     : url()
@@ -137,6 +189,7 @@ namespace qi {
     , components(0)
   {
     split_me(url);
+    updateUrl();
   }
 
   UrlPrivate::UrlPrivate(const std::string& url)
@@ -147,6 +200,7 @@ namespace qi {
     , components(0)
   {
     split_me(url);
+    updateUrl();
   }
 
   UrlPrivate::UrlPrivate(const std::string& url, unsigned short defaultPort)
@@ -159,10 +213,8 @@ namespace qi {
     if (!(split_me(url) & PORT)) {
       port = defaultPort;
       components |= PORT;
-      std::stringstream ss;
-        ss << port;
-      this->url += ":" + ss.str();
     }
+    updateUrl();
   }
 
   UrlPrivate::UrlPrivate(const std::string& url, const std::string& defaultProtocol)
@@ -175,8 +227,8 @@ namespace qi {
     if (!(split_me(url) & SCHEME)) {
       protocol = defaultProtocol;
       components |= SCHEME;
-      this->url = protocol + "://" + url;
     }
+    updateUrl();
   }
 
   UrlPrivate::UrlPrivate(const std::string& url, const std::string& defaultProtocol, unsigned short defaultPort)
@@ -190,19 +242,27 @@ namespace qi {
     if (!(result & SCHEME)) {
       protocol = defaultProtocol;
       components |= SCHEME;
-      this->url = protocol + "://" + url;
     }
     if (!(result & PORT)) {
       port = defaultPort;
       components |= PORT;
-      std::stringstream ss;
-        ss << port;
-      this->url += ":" + ss.str();
     }
+    updateUrl();
+  }
+
+  void UrlPrivate::updateUrl()
+  {
+    url = std::string();
+    if(components & SCHEME)
+      url += protocol + "://";
+    if(components & HOST)
+      url += host;
+    if(components & PORT)
+      url += std::string(":") + boost::lexical_cast<std::string>(port);
   }
 
   bool UrlPrivate::isValid() const {
-    return (components & (PORT | SCHEME)) == (PORT | SCHEME);
+    return components == (SCHEME | HOST | PORT);
   }
 
   int UrlPrivate::split_me(const std::string& url) {

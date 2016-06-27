@@ -83,6 +83,7 @@ public:
   qi::SessionPtr server() const;
   qi::SessionPtr sd() const;
   std::vector<qi::Url> serviceDirectoryEndpoints() const;
+  std::vector<qi::Url> gatewayEndpoints() const;
   TestMode::Mode mode() const
   {
     return _mode;

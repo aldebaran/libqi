@@ -1,15 +1,14 @@
 #pragma once
-/*
-**  Copyright (C) 2012 Aldebaran Robotics
+/**
+**  Copyright (C) 2012-2016 Aldebaran Robotics
 **  See COPYING for the license
 */
 
 #ifndef _QI_ACTOR_HPP_
 #define _QI_ACTOR_HPP_
 
+#include <qi/eventloop.hpp>
 #include <qi/strand.hpp>
-#include <boost/scoped_ptr.hpp>
-#include <boost/function.hpp>
 
 namespace qi
 {
@@ -77,6 +76,6 @@ public:
 
 };
 
-}
+} // qi
 
 #endif  // _QI_ACTOR_HPP_

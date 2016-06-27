@@ -142,8 +142,12 @@ namespace qi {
     if (msg.object() != _object)
     {
       qiLogDebug() << "Passing message " << msg.address() << " to host " ;
-      ObjectHost::onMessage(msg, _socket);
-      return;
+      {
+        boost::mutex::scoped_lock lock(_socketMutex);
+        if(_socket)
+          ObjectHost::onMessage(msg, _socket);
+        return;
+      }
     }
 
 
@@ -560,7 +564,7 @@ namespace qi {
 
   void RemoteObject::close(const std::string& reason, bool fromSignal)
   {
-    qiLogDebug() << "Socket disconnection";
+    qiLogDebug() << "Closing remote object";
     TransportSocketPtr socket;
     {
        boost::mutex::scoped_lock lock(_socketMutex);
@@ -569,7 +573,7 @@ namespace qi {
     }
     if (socket)
     { // Do not hold any lock when invoking signals.
-        qiLogDebug() << "Removing connection from socket" << (void*)socket.get();
+        qiLogDebug() << "Removing connection from socket " << (void*)socket.get();
         socket->messagePendingDisconnect(_service, TransportSocket::ALL_OBJECTS, _linkMessageDispatcher);
         if (!fromSignal)
           socket->disconnected.disconnect(_linkDisconnected);

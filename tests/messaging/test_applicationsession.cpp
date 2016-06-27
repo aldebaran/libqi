@@ -30,7 +30,7 @@ TEST(QiApplicationSession, defaultConnect)
   _app->startSession();
   ASSERT_TRUE(_app->session()->isConnected());
 
-  ASSERT_EQ(_url, _app->session()->url());
+  ASSERT_EQ(qi::Url(_url), _app->session()->url());
 
   ASSERT_FALSE(_stopped);
   _sd.close();
@@ -74,8 +74,17 @@ int main(int argc, char** argv)
   strcpy((_argv[4] = new char[100]), "tcp://localhost:0");
   _argv[5] = 0;
 
-  qi::ApplicationSession app(_argc, _argv, qi::ApplicationSession::Option_None, "This url will be ignored");
+  qi::log::addFilter("qi.application*", qi::LogLevel_Debug);
+
+  qi::ApplicationSession app(
+        _argc, _argv,
+        qi::ApplicationSession::Config()
+            .setOption(qi::ApplicationSession::Option_None)
+            .setDefaultUrl("tcp://127.0.0.1:9559")
+            .setDefaultListenUrl("tcp://127.0.0.1:9559"));
+
   app.atStop(&onStop);
   _app = &app;
+
   return RUN_ALL_TESTS();
 }

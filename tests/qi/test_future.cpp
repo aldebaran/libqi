@@ -1135,6 +1135,47 @@ TEST(TestFutureUnwrap, UnwrapCancel2)
   EXPECT_TRUE(canceled2);
 }
 
+TEST(TestFutureUnwrap, TryUnwrapOnSimpleFuture)
+{
+  qi::Future<void> truc;
+  auto machin = qi::detail::tryUnwrap(truc);
+  static_assert(
+        std::is_same<decltype(truc), decltype(machin)>::value,
+        "Try unwrap messes up a simple future!");
+}
+
+TEST(TestFutureUnwrap, TryUnwrapOnFutureOfFutureDirect)
+{
+  auto machin = qi::detail::tryUnwrap(
+        qi::Future<qi::Future<void>>{qi::Future<void>{nullptr}});
+  static_assert(
+        std::is_same<decltype(machin), qi::Future<void>>::value,
+        "Try unwrap does not unwrap future of futures!");
+}
+
+TEST(TestFutureUnwrap, TryUnwrapOnFutureOfFutureIntermediateVariable)
+{
+  auto truc = qi::Future<qi::Future<void>>{qi::Future<void>{nullptr}};
+  auto machin = qi::detail::tryUnwrap(truc);
+  static_assert(
+        std::is_same<decltype(machin), qi::Future<void>>::value,
+        "Try unwrap does not unwrap future of futures!");
+}
+
+TEST(TestFutureUnwrap, TryUnwrapOnFutureOfFutureDeprecatedSignature)
+{
+  auto machin = qi::detail::tryUnwrap(
+        qi::Future<qi::Future<void>>{qi::Future<void>{nullptr}}, 0);
+  static_assert(
+        std::is_same<decltype(machin), qi::Future<void>>::value,
+        "Try unwrap does not unwrap future of futures!");
+}
+
+TEST(TestFutureUnwrap, TryUnwrapOnValue)
+{
+  ASSERT_EQ(42, qi::detail::tryUnwrap(42));
+}
+
 TEST(TestFutureWeakCanceler, Cancel)
 {
   qi::Promise<void> prom(qi::PromiseNoop<void>);

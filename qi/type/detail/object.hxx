@@ -23,6 +23,8 @@
 #undef interface
 #endif
 
+#include <type_traits>
+
 namespace qi {
 
 class Empty {};
@@ -174,7 +176,7 @@ namespace detail {
   template <typename T>
   struct InterfaceImplTraits
   {
-    using Defined = boost::false_type;
+    using Defined = std::false_type;
   };
 }
 
@@ -183,7 +185,7 @@ template <typename T, typename... Args>
 typename boost::enable_if<typename detail::InterfaceImplTraits<T>::Defined, qi::Object<T> >::type constructObject(
     Args... args)
 {
-  return boost::make_shared<typename detail::InterfaceImplTraits<T>::SyncType>(std::forward<Args>(args)...);
+  return boost::make_shared<typename detail::InterfaceImplTraits<T>::ImplType>(std::forward<Args>(args)...);
 }
 template <typename T, typename... Args>
 typename boost::disable_if<typename detail::InterfaceImplTraits<T>::Defined, qi::Object<T> >::type constructObject(
@@ -192,21 +194,27 @@ typename boost::disable_if<typename detail::InterfaceImplTraits<T>::Defined, qi:
   return Object<T>(new T(std::forward<Args>(args)...));
 }
 
-#define QI_REGISTER_IMPLEMENTATION_H(interface, impl)     \
-  namespace qi                                            \
-  {                                                       \
-    namespace detail                                      \
-    {                                                     \
-      template <>                                         \
-      struct InterfaceImplTraits<interface>               \
-      {                                                   \
-        using Defined = boost::true_type;                 \
-        using ImplType = impl;                            \
-        using LocalType = interface##Local<ImplType>;     \
-        using SyncType = interface##LocalSync<LocalType>; \
-      };                                                  \
-    }                                                     \
-  }
+#define QI_REGISTER_IMPLEMENTATION_H(interface, impl)\
+namespace qi\
+{\
+  namespace detail\
+  {\
+    template <>\
+    struct InterfaceImplTraits<interface>\
+    {\
+      using Defined = std::true_type;\
+      using InterfaceType = interface;\
+      using ImplType = impl;\
+      using AsyncType = interface##LocalAsync<boost::shared_ptr<ImplType>>;\
+      using SyncType = interface##LocalSync<boost::shared_ptr<ImplType>>;\
+    };\
+\
+    template<>\
+    struct InterfaceImplTraits<impl>:\
+      public InterfaceImplTraits<interface>\
+    {};\
+  }\
+}
 
 /** Type erased object that has a known interface T.
  *
@@ -277,9 +285,7 @@ public:
   // Check or obtain T interface, or throw
   void checkT();
   // no-op deletor callback
-  static void keepManagedObjectPtr(detail::ManagedObjectPtr ptr) {}
-  template<typename U>
-  static void keepReference(GenericObject* obj, boost::shared_ptr<U> ptr) {qiLogDebug("qi.object") << "AnyObject ptr holder deleter"; delete obj;}
+  static void keepManagedObjectPtr(detail::ManagedObjectPtr) {}
   static void noDeleteT(T*) {qiLogDebug("qi.object") << "AnyObject noop T deleter";}
   static void noDelete(GenericObject*) {qiLogDebug("qi.object") << "AnyObject noop deleter";}
   // deletor callback that deletes only the GenericObject and not the content
@@ -410,22 +416,78 @@ template<typename T> template<typename U> Object<T>::Object(GenericObject* go, b
 }
 namespace detail
 {
-  template<typename T, typename U> ManagedObjectPtr fromSharedPtr(Object<T>& dst, boost::shared_ptr<U>& other, boost::false_type)
+  // Low-level constructor from type, for factorization purpose only
+  template<typename T>
+  ManagedObjectPtr managedObjectFromSharedPtr(
+      ObjectTypeInterface* oit,
+      boost::shared_ptr<T>& other)
   {
-    ObjectTypeInterface* otype = dst.interface();
-    T* ptr = static_cast<T*>(other.get());
-    return ManagedObjectPtr(new GenericObject(otype, ptr),
-      boost::bind(&Object<T>::template keepReference<U>, _1, other));
+    return ManagedObjectPtr(
+          new GenericObject(oit, other.get()),
+          [other](GenericObject*) mutable {other.reset();});
   }
-  template<typename U> ManagedObjectPtr fromSharedPtr(AnyObject& dst, boost::shared_ptr<U>& other, boost::true_type)
+
+  // Constructing an AnyObject from a registered implementation.
+  template<typename From>
+  ManagedObjectPtr managedObjectFromSharedPtr(
+      Object<Empty>&,
+      boost::shared_ptr<From>& other,
+      std::true_type)
+  { // Bounce on a specialized object constructor
+    return qi::Object<typename qi::detail::InterfaceImplTraits<From>::InterfaceType>(other).managedObjectPtr();
+  }
+
+  // Constructing an AnyObject from an arbitrary type
+  template<typename From>
+  ManagedObjectPtr managedObjectFromSharedPtr(
+      Object<Empty>&,
+      boost::shared_ptr<From>& other,
+      std::false_type)
+  { // Bounce on a specialized object constructor
+    return qi::Object<From>(other).managedObjectPtr();
+  }
+
+  // Directly constructing object of the same type
+  template<typename ToSameAsFrom>
+  ManagedObjectPtr managedObjectFromSharedPtr(
+      Object<ToSameAsFrom>& dst,
+      boost::shared_ptr<ToSameAsFrom>& other,
+      std::false_type)
+  { // It may throw if type is not registered
+    return managedObjectFromSharedPtr(dst.interface(), other);
+  }
+
+  // Original pointer is not recognized as an implementation to construct a specialized object
+  template<typename To, typename From>
+  ManagedObjectPtr managedObjectFromSharedPtr(
+      Object<To>& dst,
+      boost::shared_ptr<From>& other,
+      std::false_type)
   {
-    return Object<U>(other).managedObjectPtr();
+    static_assert(
+          std::is_base_of<typename std::decay<To>::type, typename std::decay<From>::type>::value,
+          "Cannot construct object from instance, because it is not a direct base or an associated implementation");
+    auto asDestinationType = boost::static_pointer_cast<To>(other);
+    return managedObjectFromSharedPtr(dst.interface(), asDestinationType);
+  }
+
+  // Original pointer is recognized as an implementation to construct a specialized object
+  template<typename To, typename From>
+  ManagedObjectPtr managedObjectFromSharedPtr(
+      Object<To>&,
+      boost::shared_ptr<From>& other,
+      std::true_type)
+  {
+    using SyncProxyType = typename InterfaceImplTraits<From>::SyncType;
+    auto localProxy = boost::make_shared<SyncProxyType>(other);
+    return qi::Object<To>(std::move(localProxy)).managedObjectPtr();
   }
 }
 
 template<typename T> template<typename U> Object<T>::Object(boost::shared_ptr<U> other)
-{ // bounce depending on T==Empty
-  _obj = detail::fromSharedPtr(*this, other, typename boost::is_same<T, Empty>::type());
+{
+  _obj = detail::managedObjectFromSharedPtr(
+        *this, other, typename qi::detail::InterfaceImplTraits<U>::Defined{});
 }
 
 template<typename T> inline Object<T>::Object(T* ptr)

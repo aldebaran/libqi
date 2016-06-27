@@ -312,6 +312,24 @@ TEST(TestSignal, SignalToSignalWithExtraArgument)
   EXPECT_EQ(42, target2.future().value());
 }
 
+TEST(TestSignal, SignalSubscriberDoesNotUnsubscribeAtDestruction)
+{
+  int count = 0;
+  qi::Signal<void> signal;
+  auto subscriber = signal.connect([&]{ ++count; })
+      .setCallType(qi::MetaCallType_Direct)
+      .shared_from_this();
+  signal();
+  ASSERT_EQ(1, count);
+
+  subscriber.reset();
+  signal();
+  ASSERT_EQ(2, count);
+}
+
+// ===========================================================
+// Signal Spy
+// -----------------------------------------------------------
 TEST(TestSignalSpy, Counter)
 {
   qi::Signal<int> sig;
@@ -319,7 +337,7 @@ TEST(TestSignalSpy, Counter)
   QI_EMIT sig(1);
   QI_EMIT sig(1);
   ASSERT_TRUE(sp.waitUntil(2, qi::MilliSeconds(300)));
-  ASSERT_EQ(sp.recordCount(), 2u);
+  ASSERT_EQ(sp.getCounter(), 2u);
 
   qi::DynamicObjectBuilder ob;
   ob.advertiseSignal("signal", &sig);
@@ -328,7 +346,7 @@ TEST(TestSignalSpy, Counter)
   QI_EMIT sig(1);
   QI_EMIT sig(1);
   ASSERT_TRUE(sp2.waitUntil(2, qi::MilliSeconds(300)));
-  ASSERT_EQ(sp2.recordCount(), 2u);
+  ASSERT_EQ(sp2.getCounter(), 2u);
 }
 
 TEST(TestSignalSpy, Async)

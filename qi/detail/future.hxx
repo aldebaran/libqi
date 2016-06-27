@@ -11,9 +11,9 @@
 #include <utility> // pair
 #include <boost/bind.hpp>
 #include <qi/eventloop.hpp>
-#include <qi/actor.hpp>
-#include <qi/type/detail/futureadapter.hpp>
 #include <qi/log.hpp>
+#include <qi/strand.hpp>
+#include <qi/type/detail/futureadapter.hpp>
 
 namespace qi {
 
@@ -689,6 +689,24 @@ namespace detail {
         FutureCallbackType_Sync);
   }
 
+  template <typename T>
+  Future<AnyValue> toAnyValueFuture(Future<T> future)
+  {
+    return future.andThen([](const T &obj) {
+      // convert the result to qi::AnyValue
+      return AnyValue::from(obj);
+    });
+  }
+
+  template <>
+  inline Future<AnyValue> toAnyValueFuture(Future<void> future)
+  {
+    return future.andThen([](void *) {
+      // create a void AnyValue
+      return AnyValue(typeOf<void>());
+    });
+  }
+
   namespace detail
   {
 
@@ -734,10 +752,8 @@ namespace detail {
 
       qi::Future<void> future;
     };
-
-  }
-
-}
+  } // detail
+} // qi
 
 #include <qi/detail/futurebarrier.hpp>
 

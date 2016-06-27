@@ -145,53 +145,64 @@ namespace qi {
     return result;
   }
 
-  //Bound Method
-  SignalLink ServiceBoundObject::registerEvent(unsigned int objectId, unsigned int eventId, SignalLink remoteSignalLinkId) {
+  // Bound Method
+  qi::Future<SignalLink> ServiceBoundObject::registerEvent(unsigned int objectId, unsigned int eventId, SignalLink remoteSignalLinkId) {
     // fetch signature
     const MetaSignal* ms = _object.metaObject().signal(eventId);
     if (!ms)
       throw std::runtime_error("No such signal");
     QI_ASSERT(_currentSocket);
     AnyFunction mc = AnyFunction::fromDynamicFunction(boost::bind(&forwardEvent, _1, _serviceId, _objectId, eventId, ms->parametersSignature(), _currentSocket, this, ""));
-    SignalLink linkId = _object.connect(eventId, mc);
-    qiLogDebug() << "SBO rl " << remoteSignalLinkId <<" ll " << linkId;
-    _links[_currentSocket][remoteSignalLinkId] = RemoteSignalLink(linkId, eventId);
-    return linkId;
+    qi::Future<SignalLink> linking = _object.connect(eventId, mc);
+    auto& linkEntry = _links[_currentSocket][remoteSignalLinkId];
+    linkEntry = RemoteSignalLink(linking, eventId);
+    return linking.andThen([=](SignalLink linkId) mutable {
+      qiLogDebug() << "SBO rl " << remoteSignalLinkId << " ll " << linkId;
+      return linkId;
+    });
   }
-  SignalLink ServiceBoundObject::registerEventWithSignature(unsigned int objectId, unsigned int eventId, SignalLink remoteSignalLinkId, const std::string& signature) {
+
+  qi::Future<SignalLink> ServiceBoundObject::registerEventWithSignature(unsigned int objectId, unsigned int eventId, SignalLink remoteSignalLinkId, const std::string& signature) {
     // fetch signature
     const MetaSignal* ms = _object.metaObject().signal(eventId);
     if (!ms)
       throw std::runtime_error("No such signal");
     QI_ASSERT(_currentSocket);
     AnyFunction mc = AnyFunction::fromDynamicFunction(boost::bind(&forwardEvent, _1, _serviceId, _objectId, eventId, ms->parametersSignature(), _currentSocket, this, signature));
-    SignalLink linkId = _object.connect(eventId, mc);
-    qiLogDebug() << "SBO rl " << remoteSignalLinkId <<" ll " << linkId;
-    _links[_currentSocket][remoteSignalLinkId] = RemoteSignalLink(linkId, eventId);
-    return linkId;
+    qi::Future<SignalLink> linking = _object.connect(eventId, mc);
+    auto& linkEntry = _links[_currentSocket][remoteSignalLinkId];
+    linkEntry = RemoteSignalLink(linking, eventId);
+    return linking.andThen([=](SignalLink linkId) mutable {
+      qiLogDebug() << "SBO rl " << remoteSignalLinkId << " ll " << linkId;
+      return linkId;
+    });
   }
 
-  //Bound Method
-  void ServiceBoundObject::unregisterEvent(unsigned int objectId, unsigned int QI_UNUSED(event), SignalLink remoteSignalLinkId) {
+  // Bound Method
+  qi::Future<void> ServiceBoundObject::unregisterEvent(unsigned int objectId, unsigned int QI_UNUSED(event), SignalLink remoteSignalLinkId) {
     ServiceSignalLinks&          sl = _links[_currentSocket];
     ServiceSignalLinks::iterator it = sl.find(remoteSignalLinkId);
 
     if (it == sl.end())
     {
       std::stringstream ss;
-      ss << "Unregister request failed for " << remoteSignalLinkId <<" " << objectId;
+      ss << "Unregister request failed for " << remoteSignalLinkId << " " << objectId;
       qiLogError() << ss.str();
       throw std::runtime_error(ss.str());
     }
-    _object.disconnect(it->second.localSignalLinkId);
+
+    auto localSignalLinkId = it->second.localSignalLinkId;
     sl.erase(it);
     if (sl.empty())
       _links.erase(_currentSocket);
+    return localSignalLinkId.andThen([=](SignalLink link) {
+      return _object.disconnect(link).async();
+    }).unwrap();
   }
 
-  //Bound Method
+  // Bound Method
   qi::MetaObject ServiceBoundObject::metaObject(unsigned int objectId) {
-    //we inject specials methods here
+    // we inject specials methods here
     return qi::MetaObject::merge(_self.metaObject(), _object.metaObject());
   }
 
@@ -488,12 +499,12 @@ namespace qi {
     return ret;
   }
 
-  AnyValue ServiceBoundObject::property(const AnyValue& prop)
+  qi::Future<AnyValue> ServiceBoundObject::property(const AnyValue& prop)
   {
     if (prop.kind() == TypeKind_String)
       return _object.property<AnyValue>(prop.toString());
     else if (prop.kind() == TypeKind_Int)
-    { // missing accessor, go to bacend
+    { // missing accessor, go to backend
       GenericObject* go = _object.asGenericObject();
       return go->type->property(go->value, _object, static_cast<unsigned int>(prop.toUInt()));
     }

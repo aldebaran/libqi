@@ -205,7 +205,9 @@ namespace qi
       else if (_state == TaskState::Triggering)
         _state = TaskState::TriggerReady;
       else
+      {
         QI_ASSERT(false && "state is not stopping nor triggering");
+      }
       _cond.notify_all();
     }
   }

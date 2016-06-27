@@ -9,7 +9,7 @@
 #include <sstream>
 #include <qi/os.hpp>
 
-#if defined(__APPLE__) or defined(__linux__)
+#if defined(__APPLE__) || defined(__linux__)
 static std::string makeCol(char c, char modifier = -1) {
   std::stringstream ret;
   ret << "\033[" << (int)c;
@@ -106,7 +106,7 @@ namespace std {
       return os;
     if (&os == &(std::cerr) && !qi::os::isatty(2))
       return os;
-#if defined(__APPLE__) or defined(__linux__)
+#if defined(__APPLE__) || defined(__linux__)
     posix_print(os, col);
 #endif
     return os;

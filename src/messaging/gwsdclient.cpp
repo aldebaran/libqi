@@ -369,7 +369,7 @@ void GwSDClient::onMessageReady(const Message& msg)
 
   if (type == Message::Type_Event)
   {
-    qiLogVerbose() << "Received a SD event";
+    qiLogDebug() << "Received a SD event";
     int event = msg.event();
     Signal<unsigned int, std::string>* sig = NULL;
 
@@ -379,7 +379,7 @@ void GwSDClient::onMessageReady(const Message& msg)
       sig = &serviceRemoved;
     else
     {
-      qiLogVerbose() << "... in which we're not interested";
+      qiLogDebug() << "... in which we're not interested";
       return;
     }
 
@@ -395,10 +395,10 @@ void GwSDClient::onMessageReady(const Message& msg)
 
       if (pit == _promises.end())
       {
-        qiLogVerbose() << "message " << id << " was intended for the GW, skipping.";
+        qiLogDebug() << "message " << id << " was intended for the GW, skipping.";
         return;
       }
-      qiLogVerbose() << "Triggering promise for message " << id;
+      qiLogDebug() << "Triggering promise for message " << id;
       pit->second.second(pit->second.first, msg, _sdSocket);
       _promises.erase(pit);
     }

@@ -245,7 +245,7 @@ void TransportSocketCache::onSocketParallelConnectionAttempt(Future<void> fut,
     if (attempt->attemptCount == 0)
     {
       std::stringstream err;
-      err << "Could not connect to service #" << info.serviceId() << ": no endpoint answered.";
+      err << "Could not connect to service #" << info.serviceId() << ": no endpoint replied.";
       qiLogError() << err.str();
       attempt->promise.setError(err.str());
       attempt->state = State_Error;
