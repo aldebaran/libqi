@@ -91,33 +91,10 @@ TEST(SendObject, unregister_obj)
   s->close();
 }
 
-class ObjectEmitter
-{
-public:
-  void emitObject(qi::AnyObject o) { QI_EMIT onTruc(o); }
-  void receiveObject(qi::AnyObject o)
-  {
-    auto gettingProperty = o.property<void>("propToPing");
-    auto state = gettingProperty.waitFor(timeout);
-    std::stringstream errorMessage;
-    errorMessage << "Unexpected state";
-    if (state == qi::FutureState_FinishedWithError)
-      errorMessage << ", error: " << gettingProperty.error();
-    else
-      errorMessage << ": " << state;
-    EXPECT_EQ(qi::FutureState_FinishedWithValue, state) << errorMessage.str();
-  }
-
-  qi::Signal<qi::AnyObject> onTruc;
-  qi::Property<std::vector<qi::AnyObject>> vectorOfObjects;
-};
-
-QI_REGISTER_OBJECT(ObjectEmitter, emitObject, receiveObject, onTruc, vectorOfObjects)
-
 class SubObjectToPing
 {
 public:
-  void subping() { qiLogInfo() << "subping !" << std::endl; }
+  void subping() { qiLogInfo() << "subping !"; }
 };
 
 QI_REGISTER_OBJECT(SubObjectToPing, subping)
@@ -132,10 +109,54 @@ public:
 
 QI_REGISTER_OBJECT(ObjectToPing, ping, propToPing)
 
+class ObjectEmitter
+{
+public:
+  ObjectEmitter()
+  {
+    object.set(boost::make_shared<ObjectToPing>());
+  }
+
+  void emitObject(qi::AnyObject o) { QI_EMIT onTruc(o); }
+  qi::AnyObject identity(qi::AnyObject o) {return o;}
+  void receiveObject(qi::AnyObject o)
+  {
+    auto gettingProperty = o.property<void>("propToPing");
+    auto state = gettingProperty.waitFor(timeout);
+    std::stringstream errorMessage;
+    errorMessage << "Unexpected state";
+    if (state == qi::FutureState_FinishedWithError)
+      errorMessage << ", error: " << gettingProperty.error();
+    else
+      errorMessage << ": " << state;
+    EXPECT_EQ(qi::FutureState_FinishedWithValue, state) << errorMessage.str();
+  }
+
+  std::vector<qi::AnyObject> identities(const std::vector<qi::AnyObject>& objects)
+  {
+    return objects;
+  }
+
+  std::vector<qi::AnyObject> generateObjects()
+  {
+    return std::vector<qi::AnyObject>{boost::make_shared<ObjectToPing>()};
+  }
+
+  qi::Signal<qi::AnyObject> onTruc;
+  qi::Property<qi::AnyObject> object;
+  qi::Property<std::vector<qi::AnyObject>> vectorOfObjects;
+};
+
+QI_REGISTER_OBJECT(ObjectEmitter, emitObject, identity, identities, generateObjects,
+                   receiveObject, onTruc, vectorOfObjects, object)
+
+
 TEST(SendObject, pass_obj_made_from_module)
 {
   qi::AnyModule testModule = qi::import("naoqi.testanymodule");
   auto obj = testModule.call<qi::AnyObject>("test");
+  auto obj2 = obj;
+  ASSERT_EQ(obj, obj2);
   ASSERT_EQ(1, obj.call<int>("testMethod", 0)); // just checking, in case of
 
   TestSessionPair p;
@@ -183,7 +204,7 @@ TEST(SendObject, pass_obj_made_from_module_to_an_obj_made_from_service)
   ASSERT_EQ(qi::FutureState_FinishedWithValue, receivingObject.future().waitFor(qi::MilliSeconds(1000)));
 }
 
-TEST(SendObject, pass_obj_made_from_service_to_another_function_of_service)
+TEST(SendObject, emitter_from_factory_transmits_objects_through_property_then_receive_object)
 {
   TestSessionPair p;
   p.server()->registerService("EmitterFactory", boost::make_shared<ObjectEmitterFactory>());
@@ -201,6 +222,146 @@ TEST(SendObject, pass_obj_made_from_service_to_another_function_of_service)
   auto objectToReceive = vectorOfObjectsReceived[0];
   auto receiving = emitter.async<void>("receiveObject", objectToReceive);
   EXPECT_EQ(qi::FutureState_FinishedWithValue, receiving.waitFor(timeout*2));
+}
+
+TEST(SendObject, emitter_from_factory_transmits_objects_through_property_then_ping_property)
+{
+  TestSessionPair p;
+  p.server()->registerService("EmitterFactory", boost::make_shared<ObjectEmitterFactory>());
+
+  qi::AnyObject emitterFactory = p.client()->service("EmitterFactory");
+  auto emitter = emitterFactory.call<qi::AnyObject>("makeObjectEmitter");
+
+  // create vector
+  std::vector<qi::AnyObject> vecObj{
+    boost::make_shared<ObjectToPing>(), boost::make_shared<ObjectToPing>()
+  };
+
+  emitter.setProperty<std::vector<qi::AnyObject>>("vectorOfObjects", vecObj);
+  auto vectorOfObjectsReceived = emitter.property<std::vector<qi::AnyObject>>("vectorOfObjects").value();
+  auto objectToPing = vectorOfObjectsReceived[0];
+  ASSERT_EQ(qi::FutureState_FinishedWithValue, objectToPing.property<void>("propToPing").wait(timeoutMs));
+}
+
+TEST(SendObject, object_emitter_service_transmits_objects_through_property_then_ping_property)
+{
+  TestSessionPair p;
+  p.server()->registerService("ObjectEmitter", boost::make_shared<ObjectEmitter>());
+  qi::AnyObject emitter = p.client()->service("ObjectEmitter");
+
+  // create vector
+  std::vector<qi::AnyObject> vecObj{
+    boost::make_shared<ObjectToPing>(), boost::make_shared<ObjectToPing>()
+  };
+
+  emitter.setProperty<std::vector<qi::AnyObject>>("vectorOfObjects", vecObj);
+  auto vectorOfObjectsReceived = emitter.property<std::vector<qi::AnyObject>>("vectorOfObjects").value();
+  auto objectToPing = vectorOfObjectsReceived[0];
+  ASSERT_EQ(qi::FutureState_FinishedWithValue, objectToPing.property<void>("propToPing").wait(timeoutMs));
+}
+
+TEST(SendObject, object_emitter_service_identities_then_ping_property)
+{
+  TestSessionPair p;
+  p.server()->registerService("ObjectEmitter", boost::make_shared<ObjectEmitter>());
+
+  qi::AnyObject emitter = p.client()->service("ObjectEmitter");
+
+  // create vector
+  std::vector<qi::AnyObject> vecObj{
+    boost::make_shared<ObjectToPing>(), boost::make_shared<ObjectToPing>()
+  };
+
+  auto sameObjects = emitter.call<std::vector<qi::AnyObject>>("identities", vecObj);
+  ASSERT_EQ(qi::FutureState_FinishedWithValue, sameObjects[0].property<void>("propToPing").wait(timeoutMs));
+}
+
+TEST(SendObject, object_emitter_service_identities_then_ping)
+{
+  TestSessionPair p;
+  p.server()->registerService("ObjectEmitter", boost::make_shared<ObjectEmitter>());
+
+  qi::AnyObject emitter = p.client()->service("ObjectEmitter");
+
+  // create vector
+  std::vector<qi::AnyObject> vecObj{
+    boost::make_shared<ObjectToPing>(), boost::make_shared<ObjectToPing>()
+  };
+
+  auto sameObjects = emitter.call<std::vector<qi::AnyObject>>("identities", vecObj);
+  ASSERT_EQ(qi::FutureState_FinishedWithValue, sameObjects[0].async<void>("ping").wait(timeoutMs));
+}
+
+TEST(SendObject, object_emitter_service_generate_objects_then_ping)
+{
+  TestSessionPair p;
+  p.server()->registerService("ObjectEmitter", boost::make_shared<ObjectEmitter>());
+  qi::AnyObject emitter = p.client()->service("ObjectEmitter");
+  auto objects = emitter.call<std::vector<qi::AnyObject>>("generateObjects");
+  ASSERT_EQ(qi::FutureState_FinishedWithValue, objects[0].async<void>("ping").wait(timeoutMs));
+}
+
+TEST(SendObject, object_emitter_service_identity_then_ping)
+{
+  TestSessionPair p;
+  p.server()->registerService("ObjectEmitter", boost::make_shared<ObjectEmitter>());
+
+  qi::AnyObject emitter = p.client()->service("ObjectEmitter");
+  qi::AnyObject object{boost::make_shared<ObjectToPing>()};
+
+  auto sameObject = emitter.call<qi::AnyObject>("identity", object);
+  ASSERT_EQ(qi::FutureState_FinishedWithValue, sameObject.async<void>("ping").wait(timeoutMs));
+}
+
+TEST(SendObject, emitter_from_factory_transmits_single_object_through_property_then_receive_object)
+{
+  TestSessionPair p;
+  p.server()->registerService("EmitterFactory", boost::make_shared<ObjectEmitterFactory>());
+
+  qi::AnyObject emitterFactory = p.client()->service("EmitterFactory");
+  auto emitter = emitterFactory.call<qi::AnyObject>("makeObjectEmitter");
+
+  // create vector
+  qi::AnyObject objToPing = boost::make_shared<ObjectToPing>();
+
+  emitter.setProperty<qi::AnyObject>("object", objToPing);
+  auto objectStored = emitter.property<qi::AnyObject>("object").value();
+  auto receiving = emitter.async<void>("receiveObject", objectStored);
+  ASSERT_EQ(qi::FutureState_FinishedWithValue, receiving.wait(timeoutMs));
+}
+
+TEST(SendObject, object_emitter_service_transmits_single_object_through_property_then_ping_property)
+{
+  TestSessionPair p;
+  p.server()->registerService("ObjectEmitter", boost::make_shared<ObjectEmitter>());
+
+  qi::AnyObject emitter = p.client()->service("ObjectEmitter");
+  qi::AnyObject objToPing = boost::make_shared<ObjectToPing>();
+
+  emitter.setProperty<qi::AnyObject>("object", objToPing);
+  auto objectStored = emitter.property<qi::AnyObject>("object").value();
+  ASSERT_EQ(qi::FutureState_FinishedWithValue, objectStored.property<void>("propToPing").wait(timeoutMs));
+}
+
+TEST(SendObject, object_emitter_service_transmits_single_object_through_property_then_ping)
+{
+  TestSessionPair p;
+  p.server()->registerService("ObjectEmitter", boost::make_shared<ObjectEmitter>());
+  qi::AnyObject emitter = p.client()->service("ObjectEmitter");
+
+  qi::AnyObject objToPing = boost::make_shared<ObjectToPing>();
+  emitter.setProperty<qi::AnyObject>("object", objToPing);
+  auto objectStored = emitter.property<qi::AnyObject>("object").value();
+  ASSERT_EQ(qi::FutureState_FinishedWithValue, objectStored.async<void>("ping").wait(timeoutMs));
+}
+
+TEST(SendObject, object_emitter_service_provides_single_object_through_property_then_ping)
+{
+  TestSessionPair p;
+  p.server()->registerService("ObjectEmitter", boost::make_shared<ObjectEmitter>());
+  qi::AnyObject emitter = p.client()->service("ObjectEmitter");
+  auto objectStored = emitter.property<qi::AnyObject>("object").value();
+  ASSERT_EQ(qi::FutureState_FinishedWithValue, objectStored.async<void>("ping").wait(timeoutMs));
 }
 
 class Cookie
