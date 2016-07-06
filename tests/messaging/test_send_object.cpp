@@ -500,7 +500,14 @@ TEST(SendObject, object_referenced_by_remote_only_is_destroyed_on_disconnection)
 
   qiLogInfo() << "Closing the session.";
   p.client()->close();
-  ASSERT_TRUE(cookieLostSpy.waitUntil(1, qi::MilliSeconds{100}));
+
+  // in this case, the references are only counted using the shared pointers
+  if (p.mode() == TestMode::Mode_Direct)
+    ASSERT_FALSE(cookieLostSpy.waitUntil(1, timeout));
+
+  // In every other case, a remote object intervenes
+  else
+    ASSERT_TRUE(cookieLostSpy.waitUntil(1, timeout));
 }
 
 TEST(SendObject, object_referenced_by_remote_only_is_destroyed_on_unreference)
