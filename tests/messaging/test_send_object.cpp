@@ -13,7 +13,7 @@
 
 qiLogCategory("test");
 
-int timeoutMs = 500;
+int timeoutMs = 300;
 qi::Duration timeout = qi::MilliSeconds(timeoutMs);
 
 int main(int argc, char **argv)
@@ -170,7 +170,7 @@ TEST(SendObject, pass_obj_made_from_module)
     receivingObject.setValue(0);
   }));
   remotePlop.async<void>("emitObject", obj);
-  ASSERT_EQ(qi::FutureState_FinishedWithValue, receivingObject.future().waitFor(qi::MilliSeconds(1000)));
+  ASSERT_EQ(qi::FutureState_FinishedWithValue, receivingObject.future().waitFor(timeout));
 }
 
 class ObjectEmitterFactory
@@ -201,7 +201,7 @@ TEST(SendObject, pass_obj_made_from_module_to_an_obj_made_from_service)
     receivingObject.setValue(0);
   }));
   emitter.async<void>("emitObject", obj);
-  ASSERT_EQ(qi::FutureState_FinishedWithValue, receivingObject.future().waitFor(qi::MilliSeconds(1000)));
+  ASSERT_EQ(qi::FutureState_FinishedWithValue, receivingObject.future().waitFor(timeout));
 }
 
 TEST(SendObject, emitter_from_factory_transmits_objects_through_property_then_receive_object)
@@ -221,7 +221,7 @@ TEST(SendObject, emitter_from_factory_transmits_objects_through_property_then_re
   auto vectorOfObjectsReceived = emitter.property<std::vector<qi::AnyObject>>("vectorOfObjects").value();
   auto objectToReceive = vectorOfObjectsReceived[0];
   auto receiving = emitter.async<void>("receiveObject", objectToReceive);
-  EXPECT_EQ(qi::FutureState_FinishedWithValue, receiving.waitFor(timeout*2));
+  ASSERT_EQ(qi::FutureState_FinishedWithValue, receiving.wait(100));
 }
 
 TEST(SendObject, emitter_from_factory_transmits_objects_through_property_then_ping_property)
@@ -437,8 +437,8 @@ TEST(SendObject, give_and_take_object_function)
   qi::AnyObject cookieBoxProxy = p.client()->service("CookieBox");
   qi::AnyObject cookie = cookieBoxProxy.call<qi::AnyObject>("makeCookie", true);
   cookieBoxProxy.call<void>("give", cookie);
-  qi::AnyObject tookCookie = cookieBoxProxy.call<qi::AnyObject>("take");
-  EXPECT_TRUE(tookCookie.call<bool>("eat"));
+  qi::AnyObject takenCookie = cookieBoxProxy.call<qi::AnyObject>("take");
+  EXPECT_TRUE(takenCookie.call<bool>("eat"));
 }
 
 TEST(SendObject, give_and_take_object_property)
@@ -448,8 +448,8 @@ TEST(SendObject, give_and_take_object_property)
   qi::AnyObject cookieBoxProxy = p.client()->service("CookieBox");
   qi::AnyObject cookie = cookieBoxProxy.call<qi::AnyObject>("makeCookie", true);
   cookieBoxProxy.call<void>("give", cookie);
-  qi::AnyObject tookCookie = cookieBoxProxy.call<qi::AnyObject>("take");
-  EXPECT_TRUE(tookCookie.property<bool>("taste").value(500));
+  qi::AnyObject takenCookie = cookieBoxProxy.call<qi::AnyObject>("take");
+  EXPECT_TRUE(takenCookie.property<bool>("taste").value(timeoutMs));
 }
 
 TEST(SendObject, give_and_take_object_signal)
@@ -519,5 +519,5 @@ TEST(SendObject, object_referenced_by_remote_only_is_destroyed_on_unreference)
   auto cookie = cookieBoxRemote.call<qi::AnyObject>("makeCookie", true);
   qi::SignalSpy cookieLostSpy{cookieBox->cookieLost};
   cookie.reset();
-  ASSERT_TRUE(cookieLostSpy.waitUntil(1, qi::MilliSeconds{100}));
+  ASSERT_TRUE(cookieLostSpy.waitUntil(1, timeout));
 }
