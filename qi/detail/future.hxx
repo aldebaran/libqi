@@ -400,7 +400,7 @@ namespace detail {
           throw FutureException(FutureException::ExceptionState_PromiseAlreadySet);
         finishTask();
 
-        async = _async;
+        async = (_async != FutureCallbackType_Sync ? true : false);
         onResult = takeOutResultCallbacks();
         clearCancelCallback();
       }
