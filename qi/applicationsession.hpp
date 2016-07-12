@@ -107,21 +107,28 @@ public:
   /**
    * @return The embedded session used by ApplicationSession.
    */
-  SessionPtr session();
+  SessionPtr session() const;
 
   /**
    *  @return The url used by ApplicationSession parsed on the command line by
    *  --qi-url if specified, otherwise the default url given in the constructor.
    *  @see qi::ApplicationSession::ApplicationSession for parsing information.
    */
-  Url url();
+  Url url() const;
 
   /**
    *  @return The url used by ApplicationSession parsed on the command line by
    *  --qi-listen-url, otherwise the default url given in the constructor.
    *  @see qi::ApplicationSession::ApplicationSession for parsing information.
    */
-  Url listenUrl();
+  Url listenUrl() const;
+
+  /**
+   *  @return The urls used by ApplicationSession parsed on the command line by
+   *  --qi-listen-url, otherwise the default url given in the constructor.
+   *  @see qi::ApplicationSession::ApplicationSession for parsing information.
+   */
+  std::vector<Url> allListenUrl() const;
 
   /**
    * Establishes the session's connection and moreover starts listening if

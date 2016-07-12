@@ -230,7 +230,8 @@ static bool _qiregisterSession() {
   QI_OBJECT_BUILDER_ADVERTISE(builder, qi::Session, listen);
   QI_OBJECT_BUILDER_ADVERTISE(builder, qi::Session, endpoints);
   QI_OBJECT_BUILDER_ADVERTISE(builder, qi::Session, close);
-  QI_OBJECT_BUILDER_ADVERTISE(builder, qi::Session, listenStandalone);
+  QI_OBJECT_BUILDER_ADVERTISE_OVERLOAD(builder, qi::Session, listenStandalone, qi::FutureSync<void>, (const qi::Url &));
+  QI_OBJECT_BUILDER_ADVERTISE_OVERLOAD(builder, qi::Session, listenStandalone, qi::FutureSync<void>, (const std::vector<qi::Url> &));
   QI_OBJECT_BUILDER_ADVERTISE(builder, qi::Session, registerService);
   QI_OBJECT_BUILDER_ADVERTISE(builder, qi::Session, unregisterService);
   // these two methods are variadic, make a dynamic bouncer
