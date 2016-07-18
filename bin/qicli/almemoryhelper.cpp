@@ -2,7 +2,6 @@
 #include <qi/iocolor.hpp>
 #include <qi/anyfunction.hpp>
 #include <qi/jsoncodec.hpp>
-#include <boost/foreach.hpp>
 
 #include "almemoryhelper.hpp"
 #include "qicli.hpp"

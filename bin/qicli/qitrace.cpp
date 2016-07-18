@@ -7,7 +7,6 @@
 
 #include <boost/program_options.hpp>
 #include <boost/algorithm/string.hpp>
-#include <boost/foreach.hpp>
 #include <boost/io/ios_state.hpp>
 
 #include <qi/log.hpp>
@@ -17,9 +16,6 @@
 
 
 #include "qicli.hpp"
-
-#define foreach BOOST_FOREACH
-
 
 static const char* callType[] = {
   "?", "C", "R", "E", "S"
@@ -151,7 +147,7 @@ void onTrace(ObjectMap::value_type ov, const qi::EventTrace& trace)
 
 void signalHandler(int)
 {
-  foreach(ObjectMap::value_type& ov, objectMap)
+  for(ObjectMap::value_type& ov: objectMap)
   {
     ov.second.disconnect(objectSignalLinkMap.find(ov.first)->second);
   }
@@ -249,7 +245,7 @@ int subCmd_trace(int argc, char **argv, qi::ApplicationSession& app)
     return 0;
 
   qiLogVerbose() << "Monitoring services: " << boost::join(servicesOk, ",");
-  foreach(ObjectMap::value_type& ov, objectMap)
+  for(ObjectMap::value_type& ov: objectMap)
   {
     maxServiceLength = std::max(maxServiceLength, (unsigned int)ov.first.size());
     objectSignalLinkMap[ov.first] = ov.second.connect("traceObject", (boost::function<void(qi::EventTrace)>)

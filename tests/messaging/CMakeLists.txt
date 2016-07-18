@@ -49,6 +49,7 @@ qi_create_gtest(test_gateway              SRC test_gateway.cpp              DEPE
 qi_create_gtest(test_testsession                  SRC test_testsession.cpp                   DEPENDS QI GTEST TESTSESSION TIMEOUT 30)
 qi_create_gtest(test_metavalue_argument           SRC test_metavalue_argument.cpp            DEPENDS QI GTEST TIMEOUT 30)
 qi_create_gtest(test_applicationsession           SRC test_applicationsession.cpp            DEPENDS QI GTEST TIMEOUT 30)
+qi_create_gtest(test_applicationsession_option    SRC test_applicationsession_option.cpp     DEPENDS QI GTEST TIMEOUT 30)
 qi_create_gtest(test_applicationsessionnoautoexit SRC test_applicationsession_noautoexit.cpp DEPENDS QI GTEST TIMEOUT 30)
 qi_create_gtest(test_authentication               SRC test_authentication.cpp                DEPENDS QI GTEST TIMEOUT 30)
 

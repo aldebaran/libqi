@@ -6,7 +6,6 @@
 
 #include <boost/program_options.hpp>
 #include <boost/algorithm/string.hpp>
-#include <boost/foreach.hpp>
 
 #include <qi/log.hpp>
 #include <qi/detail/log.hxx>
@@ -18,8 +17,6 @@
 #include <qicore/loglistener.hpp>
 
 #include "qicli.hpp"
-
-#define foreach BOOST_FOREACH
 
 qiLogCategory("qicli.qilog");
 

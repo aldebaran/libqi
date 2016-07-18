@@ -1,7 +1,6 @@
 #include <iomanip>
 #include <boost/regex.hpp>
 #include <qi/iocolor.hpp>
-#include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
 #include <qi/applicationsession.hpp>
 
@@ -37,7 +36,7 @@ void SessionHelper::info(const std::vector<std::string> &patternVec, bool verbos
     throw std::runtime_error("no services matching the given pattern(s) were found");
 
   for (unsigned int j = 0; j < _servicesInfos.size(); ++j)
-    BOOST_FOREACH(const std::string &it, matchServs)
+    for(const std::string &it: matchServs)
       if (it == _servicesInfos[j].name())
         showServiceInfo(_servicesInfos[j], verbose, showHidden, showDoc, showRaw, parseable);
 }
@@ -138,7 +137,7 @@ SessionHelper::MatchMap SessionHelper::getMatchMap(const std::vector<std::string
     splitName(patternList[i], servicePattern, memberPattern, true);
     std::list<std::string> matchingServices = getMatchingServices(servicePattern, hidden);
 
-    BOOST_FOREACH(const std::string &it, matchingServices)
+    for(const std::string &it: matchingServices)
     {
       if (!matchMap.count(it))
         matchMap[it].first = getServiceHelper(it);
@@ -214,12 +213,12 @@ void SessionHelper::forEachService(const std::vector<std::string> &patternList, 
     throw std::runtime_error("no services matching the given pattern(s) were found");
 
   bool foundOne = false;
-  BOOST_FOREACH(MatchMapPair &it, _currentMatchMap)
+  for(MatchMapPair &it: _currentMatchMap)
   {
     if (!it.second.second.empty())
       foundOne = true;
 
-    BOOST_FOREACH(const std::string &it2, it.second.second)
+    for(const std::string &it2: it.second.second)
     {
         if (!methodToCall(it.second.first, it2) && !cont)
           throw std::runtime_error("");

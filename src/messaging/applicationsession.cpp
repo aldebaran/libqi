@@ -5,6 +5,7 @@
  */
 
 #include <boost/program_options.hpp>
+#include <boost/algorithm/string.hpp>
 #include <qi/trackable.hpp>
 #include <qi/applicationsession.hpp>
 #include <qi/anyvalue.hpp>
@@ -17,18 +18,42 @@ static void onDisconnected(const std::string& /*errorMessage*/)
   ::qi::Application::stop();
 }
 
-static std::string _address;
-static std::string _listenAddress;
-static bool _standAlone = false;
+
+std::string& address()
+{
+  static std::string address;
+  return address;
+}
+
+std::string& listenAddresses()
+{
+  static std::string addresses;
+  return addresses;
+}
+
+bool& standAlone()
+{
+  static bool standalone = false;
+  return standalone;
+}
 
 static void parseAddress()
 {
   namespace po = boost::program_options;
   po::options_description desc("ApplicationSession options");
 
+  static const std::string qiListenUrlsOption = ""
+      "Set URL to listen to.\n"
+      "Can be more than one URL to listen semicolon-separated list.\n"
+
+      " tcp://127.0.0.1:9555;tcp://:9999;127.0.0.1\n"
+      "Missing information from incomplete URLs will be defaulted by defaultListenUrl.\n"
+      "If the default URL is tcps://0.0.0.0:9559 the previous list will become:\n"
+      " tcp://127.0.0.1:9555;tcp://0.0.0.0:9999;tcps://127.0.0.1:9559";
+
   desc.add_options()
-      ("qi-url", po::value<std::string>(&_address), "The address of the service directory")
-      ("qi-listen-url", po::value<std::string>(&_listenAddress), "The url to listen to")
+      ("qi-url", po::value<std::string>(&address()), "The address of the service directory")
+      ("qi-listen-url", po::value<std::string>(&listenAddresses()), qiListenUrlsOption.c_str())
       ("qi-standalone", "create a standalone session (this will use qi-listen-url if provided");
 
   po::variables_map vm;
@@ -38,7 +63,7 @@ static void parseAddress()
   po::notify(vm);
 
   qi::Application::setArguments(po::collect_unrecognized(parsed.options, po::include_positional));
-  _standAlone = vm.count("qi-standalone") ? true : false;
+  standAlone() = vm.count("qi-standalone") ? true : false;
 
   {
     po::options_description descTmp;
@@ -75,20 +100,39 @@ public:
       _session->disconnected.connect(&::onDisconnected);
     }
 
-    if (_standAlone && !_address.empty())
+    bool& standalone = standAlone();
+    std::string& addr = address();
+    if (standalone && !addr.empty())
       throw std::runtime_error("You cannot be standAlone if you specified --qi-url to connect");
 
-    _standAlone = _standAlone ? _standAlone : config.defaultStandAlone();
-    if(!_address.empty())
-      _standAlone = false;
+    standalone = standalone ? standalone : config.defaultStandAlone();
+    if(!addr.empty())
+      standalone = false;
 
-    qiLogDebug() << "Connect url specified was: " << _address << ", now defaulting missing url parts from " << config.defaultUrl().str();
-    _url = specifyUrl(Url(_address), config.defaultUrl());
+    qiLogDebug() << "Connect url specified was: " << addr << ", now defaulting missing url parts from "
+                 << config.defaultUrl().str();
+    _url = specifyUrl(Url(addr), config.defaultUrl());
     qiLogDebug() << "Connect url is now: " << _url.str();
 
-    qiLogDebug() << "Listen url specified was: " << _listenAddress << ", now defaulting missing url parts" << config.defaultListenUrl().str();
-    _listenUrl = specifyUrl(Url(_listenAddress), config.defaultListenUrl());
-    qiLogDebug() << "Listen url is now: " << _listenUrl.str();
+
+    std::vector<std::string> listenUrls;
+    boost::split(listenUrls, listenAddresses(), boost::is_any_of(";"));
+    for (const std::string& url : listenUrls)
+      _listenUrls.push_back(specifyUrl(Url(url), config.defaultListenUrl()));
+
+    if (!_listenUrls.empty())
+    {
+      qiLogDebug() << "Listen url specified: "
+                   << boost::algorithm::join(listenUrls, ", ")
+                   << ", now defaulting missing url parts with "
+                   << config.defaultListenUrl().str();
+
+
+      std::ostringstream ssListenUrl;
+      for (const auto& url : _listenUrls)
+        ssListenUrl << " " << url.str();
+      qiLogDebug() << "Listen url are now:" << ssListenUrl.str();
+    }
   }
 
   virtual ~ApplicationSessionPrivate()
@@ -100,23 +144,26 @@ public:
 
   void connect()
   {
-    if (_standAlone)
+    if (standAlone())
     {
-      _session->listenStandalone(_listenUrl);
+      _session->listenStandalone(_listenUrls);
       return;
     }
 
     // listen + connect
     _session->connect(_url);
-    if (!_listenAddress.empty())
-      _session->listen(_listenUrl);
+    if (!listenAddresses().empty())
+    {
+      for (const qi::Url& listenUrl : _listenUrls)
+        _session->listen(listenUrl);
+    }
   }
 
 public:
   SessionPtr _session;
   bool _init;
   Url _url;
-  Url _listenUrl;
+  std::vector<Url> _listenUrls;
   boost::mutex _mutex;
 };
 
@@ -249,19 +296,24 @@ ApplicationSession::~ApplicationSession()
   _p = 0;
 }
 
-SessionPtr ApplicationSession::session()
+SessionPtr ApplicationSession::session() const
 {
   return _p->_session;
 }
 
-Url ApplicationSession::url()
+Url ApplicationSession::url() const
 {
   return _p->_url;
 }
 
-Url ApplicationSession::listenUrl()
+Url ApplicationSession::listenUrl() const
 {
-  return _p->_listenUrl;
+  return _p->_listenUrls.at(0);
+}
+
+std::vector<Url> ApplicationSession::allListenUrl() const
+{
+  return _p->_listenUrls;
 }
 
 void ApplicationSession::start()

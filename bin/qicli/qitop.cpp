@@ -6,7 +6,6 @@
 
 #include <boost/program_options.hpp>
 #include <boost/algorithm/string.hpp>
-#include <boost/foreach.hpp>
 
 
 #include <qi/log.hpp>
@@ -14,8 +13,6 @@
 #include <qi/applicationsession.hpp>
 
 #include "qicli.hpp"
-
-#define foreach BOOST_FOREACH
 
 qiLogCategory("qicli.qitop");
 
@@ -75,18 +72,18 @@ void main_loop()
   {
     unsigned int maxLen = 4;
     // Reset all counters
-    foreach(ObjectMap::value_type& ov, objectMap)
+    for (auto& ov: objectMap)
       ov.second.call<void>("clearStats");
 
     qi::os::msleep(interval * 1000);
 
     Stats stats;
     // Fetch stats from monitored objects and fill stats
-    foreach(ObjectMap::value_type& ov, objectMap)
+    for(ObjectMap::value_type& ov: objectMap)
     {
       qi::ObjectStatistics os = ov.second.call<qi::ObjectStatistics>("stats");
       const std::string& serviceName = ov.first;
-      foreach(qi::ObjectStatistics::value_type& s, os)
+      for(qi::ObjectStatistics::value_type& s: os)
       {
         if (s.first == 83)
           continue; // hide clearstats
@@ -122,7 +119,7 @@ void main_loop()
      << "SYS " << std::string(6*3 - 2, ' ')
      << "WALL"
      << std::endl;
-    foreach(const Stat& s, stats)
+    for(const Stat& s: stats)
     {
       const qi::MethodStatistics& ms = s.second;
       std::string serviceName = s.first.first;
@@ -211,7 +208,7 @@ int subCmd_top(int argc, char **argv, qi::ApplicationSession& app)
     return 0;
 
   qiLogVerbose() << "Monitoring services: " << boost::join(servicesOk, ",");
-  foreach(ObjectMap::value_type& ov, objectMap)
+  for(ObjectMap::value_type& ov: objectMap)
   {
     maxServiceLength = std::max(maxServiceLength, (unsigned int)ov.first.size());
     ov.second.async<void>("enableStats", true);
@@ -222,7 +219,7 @@ int subCmd_top(int argc, char **argv, qi::ApplicationSession& app)
   t.join();
   qiLogInfo() << "Disabling statistics gathering..." << std::endl;
   std::vector<qi::Future<void> > futures;
-  foreach(ObjectMap::value_type& ov, objectMap)
+  for(ObjectMap::value_type& ov: objectMap)
   {
     futures.push_back(ov.second.async<void>("enableStats", false));
   }
