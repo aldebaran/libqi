@@ -353,23 +353,23 @@ namespace detail {
     }
 
     template <typename T>
-    void FutureBaseTyped<T>::callCbNotify(qi::Future<T>& future)
+    void FutureBaseTyped<T>::executeCallbacks(bool defaultAsync, const Callbacks& callbacks, qi::Future<T>& future)
     {
-      for (unsigned i = 0; i < _onResult.size(); ++i)
+      for (const auto& callback : callbacks)
       {
         const bool async = [&]{
-          if (_onResult[i].callType != FutureCallbackType_Auto)
-            return _onResult[i].callType != FutureCallbackType_Sync;
+          if (callback.callType != FutureCallbackType_Auto)
+            return callback.callType != FutureCallbackType_Sync;
           else
-            return _async != FutureCallbackType_Sync;
+            return defaultAsync != FutureCallbackType_Sync;
         }();
 
         if (async)
-          getEventLoop()->post(boost::bind(_onResult[i].callback, future));
+          getEventLoop()->post(boost::bind(callback.callback, future));
         else
           try
           {
-            _onResult[i].callback(future);
+            callback.callback(future);
           }
           catch (const qi::PointerLockException&)
           { // do nothing
@@ -383,69 +383,71 @@ namespace detail {
             qiLogError("qi.future") << "Unknown exception caught in future callback";
           }
       }
+    }
+
+    template <typename T>
+    template <typename F> // FunctionObject<R()> F (R unconstrained)
+    void FutureBaseTyped<T>::finish(qi::Future<T>& future, F&& finishTask)
+    {
+      bool async;
+      Callbacks onResult;
+      {
+        // report-ready + onResult() must be Atomic to avoid
+        // missing callbacks/double calls in case connect() is invoked at
+        // the same time
+        boost::recursive_mutex::scoped_lock lock(mutex());
+        if (!isRunning())
+          throw FutureException(FutureException::ExceptionState_PromiseAlreadySet);
+        finishTask();
+
+        async = (_async != FutureCallbackType_Sync ? true : false);
+        onResult = takeOutResultCallbacks();
+        clearCancelCallback();
+      }
+      // call the callbacks without the mutex
+      executeCallbacks(async, onResult, future);
       notifyFinish();
-      clearCallbacks();
     }
 
     template <typename T>
     void FutureBaseTyped<T>::setValue(qi::Future<T>& future, const ValueType& value)
     {
-      // report-ready + onResult() must be Atomic to avoid
-      // missing callbacks/double calls in case connect() is invoked at
-      // the same time
-      boost::recursive_mutex::scoped_lock lock(mutex());
-      if (!isRunning())
-        throw FutureException(FutureException::ExceptionState_PromiseAlreadySet);
-
-      _value = value;
-      reportValue();
-      callCbNotify(future);
+      finish(future, [this, &value] {
+        _value = value;
+        reportValue();
+      });
     }
 
     template <typename T>
     void FutureBaseTyped<T>::set(qi::Future<T>& future)
     {
-      // report-ready + onResult() must be Atomic to avoid
-      // missing callbacks/double calls in case connect() is invoked at
-      // the same time
-      boost::recursive_mutex::scoped_lock lock(mutex());
-      if (!isRunning())
-        throw FutureException(FutureException::ExceptionState_PromiseAlreadySet);
-
-      reportValue();
-      callCbNotify(future);
+      finish(future, [this] {
+        reportValue();
+      });
     }
 
     template <typename T>
     void FutureBaseTyped<T>::setError(qi::Future<T>& future, const std::string& message)
     {
-      boost::recursive_mutex::scoped_lock lock(mutex());
-      if (!isRunning())
-        throw FutureException(FutureException::ExceptionState_PromiseAlreadySet);
-
-      reportError(message);
-      callCbNotify(future);
+      finish(future, [this, &message] {
+        reportError(message);
+      });
     }
 
     template <typename T>
     void FutureBaseTyped<T>::setBroken(qi::Future<T>& future)
     {
-      boost::recursive_mutex::scoped_lock lock(mutex());
-      QI_ASSERT(isRunning());
-
-      reportError("Promise broken (all promises are destroyed)");
-      callCbNotify(future);
+      finish(future, [this] {
+        reportError("Promise broken (all promises are destroyed)");
+      });
     }
 
     template <typename T>
     void FutureBaseTyped<T>::setCanceled(qi::Future<T>& future)
     {
-      boost::recursive_mutex::scoped_lock lock(mutex());
-      if (!isRunning())
-        throw FutureException(FutureException::ExceptionState_PromiseAlreadySet);
-
-      reportCanceled();
-      callCbNotify(future);
+      finish(future, [this] {
+        reportCanceled();
+      });
     }
 
     template <typename T>
@@ -511,13 +513,19 @@ namespace detail {
     }
 
     template <typename T>
-    void FutureBaseTyped<T>::clearCallbacks()
+    auto FutureBaseTyped<T>::takeOutResultCallbacks() -> Callbacks
     {
-      _onResult.clear();
+      Callbacks onResult;
+      using std::swap;
+      swap(onResult, _onResult);
+      return onResult;
+    }
+
+    template <typename T>
+    void FutureBaseTyped<T>::clearCancelCallback()
+    {
       if (_onCancel)
-      {
         _onCancel = CancelCallback(PromiseNoop<T>);
-      }
     }
 
     template <typename T>

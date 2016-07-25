@@ -63,7 +63,7 @@ namespace qi
     Session_SD(ObjectRegistrar* server);
     ~Session_SD();
 
-    qi::Future<void> listenStandalone(const qi::Url &listenAddress);
+    qi::Future<void> listenStandalone(const std::vector<Url>& listenAddresses);
     void             updateServiceInfo();
 
   private:

@@ -26,7 +26,7 @@ namespace qi {
     virtual ~SessionPrivate();
 
     qi::FutureSync<void> connect(const qi::Url &serviceDirectoryURL);
-    qi::FutureSync<void> listenStandalone(const qi::Url& listenUrl);
+    qi::FutureSync<void> listenStandalone(const std::vector<Url>& addresses);
     qi::FutureSync<void> close();
     bool isConnected() const;
 

@@ -96,7 +96,7 @@ void GwObjectHost::assignClientMessageObjectsGwIds(const Signature& signature, M
     // will attempt to send back home a `terminate` message, which we don't want.
     // By setting a null socket the object will stay alive on the remote end.
 
-    qiLogDebug() << "Message " << msg.address() << ", Object connection: {" << addr.service << "," << addr.object
+    qiLogDebug() << "Message #" << msg.id() << ": object connection: {" << addr.service << "," << addr.object
                  << "} <=> {0," << oid << "}";
   }
   {
@@ -152,6 +152,10 @@ void GwObjectHost::harvestClientCallOriginatingObjects(Message& msg, TransportSo
 
 void GwObjectHost::harvestServiceOriginatingObjects(Message& msg, TransportSocketPtr sender, TransportSocketPtr destination)
 {
+  qiLogDebug() << "Harvesting objects from message for unregistered object";
+  // To be able to find object occurrences in the message, guess the signature of remote member.
+  // The message is for an unregistered object, so the object was eventually mirrored by
+  // the gateway. This message's object address therefore corresponds to a local one.
   Signature signature;
   {
     boost::upgrade_lock<boost::shared_mutex> lock(_mutex);

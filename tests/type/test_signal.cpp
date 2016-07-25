@@ -337,7 +337,7 @@ TEST(TestSignalSpy, Counter)
   QI_EMIT sig(1);
   QI_EMIT sig(1);
   ASSERT_TRUE(sp.waitUntil(2, qi::MilliSeconds(300)));
-  ASSERT_EQ(sp.getCounter(), 2u);
+  ASSERT_EQ(sp.recordCount(), 2u);
 
   qi::DynamicObjectBuilder ob;
   ob.advertiseSignal("signal", &sig);
@@ -346,7 +346,7 @@ TEST(TestSignalSpy, Counter)
   QI_EMIT sig(1);
   QI_EMIT sig(1);
   ASSERT_TRUE(sp2.waitUntil(2, qi::MilliSeconds(300)));
-  ASSERT_EQ(sp2.getCounter(), 2u);
+  ASSERT_EQ(sp2.recordCount(), 2u);
 }
 
 TEST(TestSignalSpy, Async)

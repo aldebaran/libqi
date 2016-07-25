@@ -230,15 +230,20 @@ namespace qi {
 
   qi::FutureSync<void> Session::listenStandalone(const qi::Url &address)
   {
-    return _p->listenStandalone(address);
+    return _p->listenStandalone({address});
   }
 
-  qi::FutureSync<void> SessionPrivate::listenStandalone(const qi::Url& address)
+  qi::FutureSync<void> Session::listenStandalone(const std::vector<qi::Url> &addresses)
+  {
+    return _p->listenStandalone(addresses);
+  }
+
+  qi::FutureSync<void> SessionPrivate::listenStandalone(const std::vector<qi::Url>& addresses)
   {
     _serverObject.open();
     qi::Promise<void> p;
     //will listen and connect
-    qi::Future<void> f = _sd.listenStandalone(address);
+    qi::Future<void> f = _sd.listenStandalone(addresses);
     f.connect(&SessionPrivate::listenStandaloneCont, this, p, _1);
     return p.future();
   }

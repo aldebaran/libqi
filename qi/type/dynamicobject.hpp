@@ -9,6 +9,8 @@
 
 #include <qi/anyobject.hpp>
 #include <qi/property.hpp>
+#include <qi/ptruid.hpp>
+#include <boost/optional.hpp>
 
 #ifdef _MSC_VER
 #  pragma warning( push )
@@ -68,8 +70,10 @@ namespace qi
     boost::shared_ptr<DynamicObjectPrivate> _p;
   };
 
-  //Make an AnyObject of DynamicObject kind from a DynamicObject
-  QI_API AnyObject     makeDynamicAnyObject(DynamicObject *obj, bool destroyObject = true,
+  /// Make an AnyObject of DynamicObject kind from a DynamicObject
+  QI_API AnyObject     makeDynamicAnyObject(DynamicObject *obj,
+    bool destroyObject = true,
+    const boost::optional<PtrUid>& ptrUid = {},
     boost::function<void (GenericObject*)> onDelete = boost::function<void (GenericObject*)>());
 
   QI_API AnyObject makeDynamicSharedAnyObjectImpl(DynamicObject* obj, boost::shared_ptr<Empty> other);

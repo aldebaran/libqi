@@ -15,6 +15,7 @@
 #include <boost/make_shared.hpp>
 
 #include <qi/anyobject.hpp>
+#include <qi/future.hpp>
 #include "transportserver.hpp"
 #include "transportsocket.hpp"
 #include "servicedirectory.hpp"
@@ -361,15 +362,25 @@ namespace qi
     _sdObject->updateServiceInfo(si);
   }
 
-  qi::Future<void> Session_SD::listenStandalone(const qi::Url &address)
+  qi::Future<void> Session_SD::listenStandalone(const std::vector<qi::Url> &listenAddresses)
   {
     if (_init)
       throw std::runtime_error("Already initialised");
     _init = true;
     _server->addObject(1, _serviceBoundObject);
 
-    qiLogInfo() << "ServiceDirectory listener created on " << address.str();
-    qi::Future<void> f = _server->listen(address);
+    std::ostringstream messInfo;
+    messInfo << "ServiceDirectory listener created on";
+    qi::FutureBarrier<void> barrier;
+    for (const qi::Url& url : listenAddresses)
+    {
+      messInfo << " " << url.str();
+      barrier.addFuture(_server->listen(url));
+    }
+    qiLogInfo() << messInfo.str();
+    qi::Promise<void> prom;
+    qi::adaptFuture(barrier.future(), prom);
+    qi::Future<void> f = prom.future();
 
     std::map<unsigned int, ServiceInfo>::iterator it =
         _sdObject->connectedServices.find(qi::Message::Service_ServiceDirectory);

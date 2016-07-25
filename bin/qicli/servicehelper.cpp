@@ -5,7 +5,6 @@
 #include <qi/iocolor.hpp>
 #include <qi/anyfunction.hpp>
 #include <qi/jsoncodec.hpp>
-#include <boost/foreach.hpp>
 
 #include "servicehelper.hpp"
 #include "qicli.hpp"
@@ -19,7 +18,7 @@ ServiceHelper::ServiceHelper(const qi::AnyObject& service, const std::string &na
 
 ServiceHelper::~ServiceHelper()
 {
-  BOOST_FOREACH(qi::SignalLink link, _signalLinks)
+  for(qi::SignalLink link: _signalLinks)
   {
     if (link != qi::SignalBase::invalidSignalLink)
     {
@@ -44,8 +43,7 @@ std::list<std::string> ServiceHelper::getMatchingMembersName(const std::map<unsi
       metaMemberVec.push_back(metaMemberMap.find(uid)->second.name());
     return metaMemberVec;
   }
-  std::pair<unsigned int, T> it;
-  BOOST_FOREACH(it, metaMemberMap)
+  for(const std::pair<unsigned int, T>& it: metaMemberMap)
   {
     if (it.second.name() == pattern)
     {

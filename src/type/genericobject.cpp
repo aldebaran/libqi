@@ -2,15 +2,24 @@
 #include <qi/log.hpp>
 
 #include "metaobject_p.hpp"
+#include <qi/os.hpp>
 
 qiLogCategory("qitype.genericobject");
 
 namespace qi
 {
 
+GenericObject::GenericObject(ObjectTypeInterface *type, void *value, const PtrUid& ptrUid)
+  : type(type)
+  , value(value)
+  , ptrUid(ptrUid)
+{
+}
+
 GenericObject::GenericObject(ObjectTypeInterface *type, void *value)
-: type(type)
-, value(value)
+  : type(type)
+  , value(value)
+  , ptrUid(os::getMachineIdAsUuid(), os::getProcessUuid(), value)
 {
 }
 

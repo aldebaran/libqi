@@ -5,6 +5,24 @@ libqi is a middle-ware framework that provides RPC, type-erasure,
 cross-language interoperability, OS abstractions, logging facilities,
 asynchronous task management, dynamic module loading.
 
+Compilation
+-----------
+
+To compile libqi you need qibuild which give some cmake functions used
+in libqi's CMakeLists.txt.
+
+.. code-block:: sh
+
+  pip2 install --user qibuild
+
+  git clone git@github.com:aldebaran/libqi.git
+  cd libqi
+
+  mkdir BUILD && cd BUILD
+  cmake .. -DQI_WITH_TESTS=OFF
+  make
+  make install DESTDIR=./output
+
 Example
 -------
 
