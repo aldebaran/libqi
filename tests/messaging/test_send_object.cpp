@@ -166,86 +166,11 @@ TEST(SendObject, pass_obj_made_from_module)
   qi::Promise<void> receivingObject;
   remotePlop.connect("onTruc", boost::function<void(qi::AnyObject)>([&](qi::AnyObject o)
   {
-    ASSERT_EQ(o, obj);
     ASSERT_EQ(1, o.call<int>("testMethod", 0)); // this is the real test
     receivingObject.setValue(0);
   }));
   remotePlop.async<void>("emitObject", obj);
   ASSERT_EQ(qi::FutureState_FinishedWithValue, receivingObject.future().waitFor(timeout));
-}
-
-TEST(Module, EqualityOfRemoteObjects)
-{
-  TestSessionPair p;
-  p.server()->registerService("plop", boost::make_shared<ObjectEmitter>());
-
-  qi::DynamicObjectBuilder builder;
-  auto o = builder.object();
-
-  qi::AnyObject remotePlop = p.client()->service("plop");
-  auto remoteObject = remotePlop.call<qi::AnyObject>("identity", o);
-  EXPECT_EQ(o, remoteObject);
-
-  qi::DynamicObjectBuilder builder2;
-  auto o2 = builder2.object();
-  auto remoteObject2 = remotePlop.call<qi::AnyObject>("identity", o2);
-  EXPECT_EQ(o2, remoteObject2);
-  EXPECT_NE(o2, remoteObject);
-  EXPECT_NE(remoteObject2, remoteObject);
-  EXPECT_NE(remoteObject2, o);
-}
-
-class ObjectStore
-{
-  qi::AnyObject obj;
-public:
-  qi::AnyObject get() const
-  {
-    return obj;
-  }
-  void set(qi::AnyObject o)
-  {
-    obj = o;
-  }
-};
-
-QI_REGISTER_OBJECT(ObjectStore, get, set);
-
-struct Dummy
-{
-  int one() const
-  {
-    return 1;
-  }
-};
-
-QI_REGISTER_OBJECT(Dummy, one);
-
-TEST(Module, EqualityOfRemoteObjectsMoreIndirections)
-{
-  qi::AnyObject originalObject(boost::make_shared<Dummy>());
-  TestSessionPair pairA;
-  pairA.server()->registerService("serviceA", boost::make_shared<ObjectStore>());
-  qi::AnyObject clientA = pairA.client()->service("serviceA");
-  clientA.call<void>("set", originalObject);
-  qi::AnyObject objA = clientA.call<qi::AnyObject>("get");
-  EXPECT_EQ(originalObject, objA);
-
-  TestSessionPair pairB;
-  pairB.server()->registerService("serviceB", boost::make_shared<ObjectStore>());
-  qi::AnyObject clientB = pairB.client()->service("serviceB");
-  clientB.call<void>("set", objA);
-  qi::AnyObject objB = clientB.call<qi::AnyObject>("get");
-  EXPECT_EQ(originalObject, objB);
-
-  TestSessionPair pairC;
-  pairC.server()->registerService("serviceC", boost::make_shared<ObjectStore>());
-  qi::AnyObject clientC = pairC.client()->service("serviceC");
-  clientC.call<void>("set", objB);
-  qi::AnyObject objC = clientC.call<qi::AnyObject>("get");
-  EXPECT_EQ(originalObject, objC);
-  EXPECT_EQ(objA, objC);
-  EXPECT_EQ(objB, objC);
 }
 
 class ObjectEmitterFactory
@@ -271,7 +196,6 @@ TEST(SendObject, pass_obj_made_from_module_to_an_obj_made_from_service)
   qi::Promise<void> receivingObject;
   emitter.connect("onTruc", boost::function<void(qi::AnyObject)>([&](qi::AnyObject o)
   {
-    ASSERT_EQ(o, obj);
     int i = o.call<int>("testMethod", 0);
     ASSERT_EQ(1, i); // this is the real test
     receivingObject.setValue(0);
@@ -515,7 +439,6 @@ TEST(SendObject, give_and_take_object_function)
   cookieBoxProxy.call<void>("give", cookie);
   qi::AnyObject takenCookie = cookieBoxProxy.call<qi::AnyObject>("take");
   EXPECT_TRUE(takenCookie.call<bool>("eat"));
-  EXPECT_EQ(cookie, takenCookie);
 }
 
 TEST(SendObject, give_and_take_object_property)
@@ -527,7 +450,6 @@ TEST(SendObject, give_and_take_object_property)
   cookieBoxProxy.call<void>("give", cookie);
   qi::AnyObject takenCookie = cookieBoxProxy.call<qi::AnyObject>("take");
   EXPECT_TRUE(takenCookie.property<bool>("taste").value(timeoutMs));
-  EXPECT_EQ(cookie, takenCookie);
 }
 
 TEST(SendObject, give_and_take_object_signal)
@@ -539,7 +461,6 @@ TEST(SendObject, give_and_take_object_signal)
   cookieBoxProxy.call<void>("give", cookie);
 
   qi::AnyObject takenCookie = cookieBoxProxy.call<qi::AnyObject>("take");
-  EXPECT_EQ(cookie, takenCookie);
   qi::Promise<bool> eaten;
   auto connecting =
       takenCookie.connect("eaten", boost::function<void()>([&eaten]
