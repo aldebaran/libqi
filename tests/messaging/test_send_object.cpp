@@ -390,7 +390,10 @@ private:
   qi::AnyObject _human;
 
 public:
-  void emitHumanProperty() { humanProperty.set(boost::make_shared<Human>()); }
+  void emitHumanProperty()
+  {
+    humanProperty.set(boost::make_shared<Human>());
+  }
   qi::Property<qi::AnyObject> humanProperty;
 
 };
