@@ -128,17 +128,6 @@ namespace qi {
       delete this;
   }
 
-  static void ping_me(bool & ping, boost::condition_variable& cond)
-  {
-    ping = true;
-    cond.notify_all();
-  }
-
-  static bool bool_identity(bool& b)
-  {
-    return b;
-  }
-
   void EventLoopAsio::_pingThread()
   {
     qi::os::setCurrentThreadName("EvLoop.mon");
@@ -146,19 +135,13 @@ namespace qi {
     static unsigned int msGrace = qi::os::getEnvDefault("QI_EVENTLOOP_GRACE_PERIOD", 0u);
     static unsigned int maxTimeouts = qi::os::getEnvDefault("QI_EVENTLOOP_MAX_TIMEOUTS", 20u);
     ++_nThreads;
-    boost::mutex mutex;
-    boost::condition_variable cond;
-    bool gotPong = false;
     unsigned int nbTimeout = 0;
     while (_work.load())
     {
       qiLogDebug() << "Ping";
-      gotPong = false;
-      post(qi::Seconds(0), boost::bind(&ping_me, boost::ref(gotPong), boost::ref(cond)));
-      boost::mutex::scoped_lock l(mutex);
-      if (!cond.timed_wait(l,
-        boost::get_system_time()+ boost::posix_time::milliseconds(msTimeout),
-        boost::bind(&bool_identity, boost::ref(gotPong))))
+      auto calling = asyncCall(Seconds{0}, []{});
+      auto callState = calling.waitFor(MilliSeconds{msTimeout});
+      if (callState == FutureState_Running)
       {
         if (_maxThreads && _nThreads.load() >= _maxThreads + 1) // we count in nThreads
         {
@@ -190,6 +173,7 @@ namespace qi {
       }
       else
       {
+        QI_ASSERT(callState == FutureState_FinishedWithValue);
         nbTimeout = 0;
         qiLogDebug() << "Ping ok";
         qi::os::msleep(msTimeout);

@@ -3,7 +3,9 @@
 ** Copyright (C) 2010, 2012, 2013, Aldebaran Robotics
 */
 
+#include <condition_variable>
 #include <map>
+#include <mutex>
 #include <string>
 #include <atomic>
 #include <gtest/gtest.h>
@@ -1424,6 +1426,42 @@ int ping(int v)
     return v;
   else
     throw std::runtime_error("Invalid argument ");
+}
+
+TEST(EventLoop, EventLoopCanPostWithDuration)
+{
+  std::mutex m;
+  std::condition_variable cv;
+
+  auto cb = [&]
+  {
+    std::unique_lock<std::mutex> l{m};
+    cv.notify_one();
+  };
+
+  qi::EventLoop loop;
+  loop.start(1);
+  {
+    std::unique_lock<std::mutex> l{m};
+    loop.post(cb, qi::MilliSeconds{1});
+    ASSERT_EQ(std::cv_status::no_timeout, cv.wait_for(l, std::chrono::milliseconds{100}));
+  }
+  loop.stop();
+  loop.join();
+}
+
+TEST(EventLoop, EventLoopCanAsyncDelay)
+{
+  qi::EventLoop loop;
+  loop.start(1);
+  loop.asyncDelay([]{}, qi::MilliSeconds{1}).value(100);
+  loop.stop();
+  loop.join();
+}
+
+TEST(EventLoop, asyncNoop)
+{
+  qi::async([]{}).value(100);
 }
 
 TEST(EventLoop, async)
