@@ -461,7 +461,7 @@ namespace detail {
 
     template <typename T>
     void FutureBaseTyped<T>::connect(qi::Future<T> future,
-                                  const boost::function<void(qi::Future<T>)>& s,
+                                  const boost::function<void(qi::Future<T>)>& callback,
                                   FutureCallbackType type)
     {
       if (state() == FutureState_None)
@@ -472,7 +472,7 @@ namespace detail {
         boost::recursive_mutex::scoped_lock lock(mutex());
         ready = isFinished();
         if (!ready)
-          _onResult.push_back(Callback(s, type));
+          _onResult.push_back(Callback(callback, type));
       }
 
       // result already ready, notify the callback
@@ -486,12 +486,12 @@ namespace detail {
         }();
 
         if (async)
-          getEventLoop()->post(boost::bind(s, future));
+          getEventLoop()->post(boost::bind(callback, future));
         else
         {
           try
           {
-            s(future);
+            callback(future);
           }
           catch (const ::qi::PointerLockException&)
           { /*do nothing*/

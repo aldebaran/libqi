@@ -908,7 +908,7 @@ namespace qi {
       void setOnDestroyed(boost::function<void (ValueType)> f);
 
       void connect(qi::Future<T> future,
-          const boost::function<void (qi::Future<T>)> &s,
+          const boost::function<void (qi::Future<T>)> &callback,
           FutureCallbackType type);
 
       const ValueType& value(int msecs) const;
@@ -936,7 +936,11 @@ namespace qi {
 
       template <typename F> // FunctionObject<R()> F (R unconstrained)
       void finish(qi::Future<T>& future, F&& finishTask);
+
+      /// Take the callbacks set for handling the result and leave the member empty. Not thread-safe.
       Callbacks takeOutResultCallbacks();
+
+      /// Clear the callback set for handling cancellation. Not thread-safe.
       void clearCancelCallback();
 
       static void executeCallbacks(bool defaultAsync, const Callbacks& callbacks, qi::Future<T>& future);
