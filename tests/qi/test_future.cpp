@@ -69,13 +69,13 @@ int exchange(int& target, int value)
 TEST(TestBind, Simple)
 {
   int v = 0;
-  qi::bind<void(int)>(&exchange, boost::ref(v), _1)(15);
+  qi::bind<void(int)>(&exchange, std::ref(v), _1)(15);
   EXPECT_EQ(15, v);
-  qi::bind<void(void)>(&exchange, boost::ref(v), 16)();
+  qi::bind<void(void)>(&exchange, std::ref(v), 16)();
   EXPECT_EQ(16, v);
-  qi::bind(&exchange, boost::ref(v), _1)(15);
+  qi::bind(&exchange, std::ref(v), _1)(15);
   EXPECT_EQ(15, v);
-  qi::bind(&exchange, boost::ref(v), 16)();
+  qi::bind(&exchange, std::ref(v), 16)();
   EXPECT_EQ(16, v);
 }
 
@@ -87,9 +87,9 @@ TEST(TestBind, MemFun)
   EXPECT_EQ(1, v);
   qi::bind<void(void)>(&SetValue::exchange, &s1, 2)();
   EXPECT_EQ(2, v);
-  qi::bind<void(int)>(&SetValue::exchange, boost::ref(s1), _1)(3);
+  qi::bind<void(int)>(&SetValue::exchange, std::ref(s1), _1)(3);
   EXPECT_EQ(3, v);
-  qi::bind<void(void)>(&SetValue::exchange, boost::ref(s1), 4)();
+  qi::bind<void(void)>(&SetValue::exchange, std::ref(s1), 4)();
   EXPECT_EQ(4, v);
 }
 
@@ -174,9 +174,9 @@ TEST(TestBind, Trackable)
     EXPECT_EQ(1, v);
     qi::bind<void(void)>(&SetValue2::exchange, &s1, 2)();
     EXPECT_EQ(2, v);
-    qi::bind<void(int)>(&SetValue2::exchange, boost::ref(s1), _1)(3);
+    qi::bind<void(int)>(&SetValue2::exchange, std::ref(s1), _1)(3);
     EXPECT_EQ(3, v);
-    qi::bind<void(void)>(&SetValue2::exchange, boost::ref(s1), 4)();
+    qi::bind<void(void)>(&SetValue2::exchange, std::ref(s1), 4)();
     EXPECT_EQ(4, v);
   }
   v = 0;
@@ -186,9 +186,9 @@ TEST(TestBind, Trackable)
     EXPECT_EQ(1, v);
     qi::bind(&SetValue2::exchange, &s1, 2)();
     EXPECT_EQ(2, v);
-    qi::bind(&SetValue2::exchange, boost::ref(s1), _1)(3);
+    qi::bind(&SetValue2::exchange, std::ref(s1), _1)(3);
     EXPECT_EQ(3, v);
-    qi::bind(&SetValue2::exchange, boost::ref(s1), 4)();
+    qi::bind(&SetValue2::exchange, std::ref(s1), 4)();
     EXPECT_EQ(4, v);
   }
 
@@ -494,14 +494,13 @@ TEST_F(TestFuture, Threaded) {
   EXPECT_EQ(0, gSuccess.load());
   boost::thread_group tg;
 
-  tg.create_thread(boost::bind(&consumer, boost::ref(gSuccess), pro.future()));
-  tg.create_thread(boost::bind(&consumer, boost::ref(gSuccess), pro.future()));
-  tg.create_thread(boost::bind(&consumer, boost::ref(gSuccess), pro.future()));
+  tg.create_thread(boost::bind(&consumer, std::ref(gSuccess), pro.future()));
+  tg.create_thread(boost::bind(&consumer, std::ref(gSuccess), pro.future()));
+  tg.create_thread(boost::bind(&consumer, std::ref(gSuccess), pro.future()));
   tg.create_thread(boost::bind(&producer, pro));
   tg.join_all();
   EXPECT_EQ(3, gSuccess.load());
 }
-
 
 TEST_F(TestFuture, TestTimeout) {
   qi::Promise<int> pro;
@@ -956,7 +955,7 @@ TEST(TestFutureThen, AndThenR)
   bool called = false;
   qi::Future<int> f = qi::async(&get42);
   qi::Future<int> ff = f.andThenR<int>(boost::bind(&fail, _1));
-  qi::Future<int> fff = ff.andThenR<int>(boost::bind(&call, boost::ref(called)));
+  qi::Future<int> fff = ff.andThenR<int>(boost::bind(&call, std::ref(called)));
 
   fff.wait();
 
@@ -970,7 +969,7 @@ TEST(TestFutureThen, AndThen)
   bool called = false;
   qi::Future<int> f = qi::async(&get42);
   qi::Future<int> ff = f.andThen(boost::bind(&fail, _1));
-  qi::Future<int> fff = ff.andThen(boost::bind(&call, boost::ref(called)));
+  qi::Future<int> fff = ff.andThen(boost::bind(&call, std::ref(called)));
 
   fff.wait();
 
@@ -983,7 +982,7 @@ TEST(TestFutureThen, AndThenRVoid)
 {
   bool called = false;
   qi::Promise<void> p;
-  qi::Future<void> ff = p.future().andThenR<void>(boost::bind(&call, boost::ref(called)));
+  qi::Future<void> ff = p.future().andThenR<void>(boost::bind(&call, std::ref(called)));
   p.setValue(0);
 
   ff.wait();
@@ -1005,7 +1004,7 @@ TEST(TestFutureThen, AndThenRCancel)
   bool called = false;
   qi::Future<int> f = qi::Future<int>(42);
   qi::Future<int> ff = f.andThenR<int>(boost::bind(&block, _1, blockProm.future()));
-  qi::Future<int> fff = ff.andThenR<int>(boost::bind(&call, boost::ref(called)));
+  qi::Future<int> fff = ff.andThenR<int>(boost::bind(&call, std::ref(called)));
 
   fff.cancel();
   blockProm.setValue(0);
@@ -1087,7 +1086,7 @@ TEST(TestFutureUnwrap, UnwrapCancel)
 {
   bool canceled = false;
 
-  qi::Promise<qi::Future<int> > prom(boost::bind(setTrue<qi::Future<int> >, _1, boost::ref(canceled)));
+  qi::Promise<qi::Future<int> > prom(boost::bind(setTrue<qi::Future<int> >, _1, std::ref(canceled)));
   qi::Promise<int> prom2;
   qi::Future<int> future = prom.future().unwrap();
 
@@ -1109,8 +1108,8 @@ TEST(TestFutureUnwrap, UnwrapCancel2)
   bool canceled = false;
   bool canceled2 = false;
 
-  qi::Promise<qi::Future<int> > prom(boost::bind(setTrue<qi::Future<int> >, _1, boost::ref(canceled)));
-  qi::Promise<int> prom2(boost::bind(setTrue<int>, _1, boost::ref(canceled2)));
+  qi::Promise<qi::Future<int> > prom(boost::bind(setTrue<qi::Future<int> >, _1, std::ref(canceled)));
+  qi::Promise<int> prom2(boost::bind(setTrue<int>, _1, std::ref(canceled2)));
   qi::Future<int> future = prom.future().unwrap();
 
   ASSERT_TRUE(future.isRunning());
@@ -1523,7 +1522,7 @@ TEST(TestPeriodicTask, Basic)
 {
   qi::Atomic<int> a;
   qi::PeriodicTask pt;
-  pt.setCallback(&inc, boost::ref(a));
+  pt.setCallback(&inc, std::ref(a));
   pt.setUsPeriod(100000);
   pt.start();
   qi::os::msleep(450);
@@ -1553,7 +1552,7 @@ TEST(TestPeriodicTask, Stop)
 TEST(TestPeriodicTask, StopFromTask)
 {
   qi::PeriodicTask pt;
-  pt.setCallback(boost::bind(&qi::PeriodicTask::stop, boost::ref(pt)));
+  pt.setCallback(boost::bind(&qi::PeriodicTask::stop, std::ref(pt)));
   pt.setUsPeriod(10000000);
   pt.start();
   qi::os::msleep(100); // wait for actual start
@@ -1582,7 +1581,7 @@ TEST(TestPeriodicTask, DeadLock)
   for (unsigned i=0; i<500; ++i)
   {
     qi::PeriodicTask pt;
-    pt.setCallback(&inc, boost::ref(a));
+    pt.setCallback(&inc, std::ref(a));
     pt.setUsPeriod(0);
     pt.start();
     qi::os::msleep(i%20);
@@ -1621,14 +1620,14 @@ TEST(TestPeriodicTask, Trigger)
   // just test that there is no segfault or deadlock
   qi::PeriodicTask pt;
   qi::Atomic<int> a;
-  pt.setCallback(&inc, boost::ref(a));
+  pt.setCallback(&inc, std::ref(a));
   pt.setUsPeriod(1000);
   pt.start();
   std::vector<qi::Future<void> > futures;
-  futures.push_back(qi::getEventLoop()->async(boost::bind(&loopTrigger, boost::ref(pt))));
-  futures.push_back(qi::getEventLoop()->async(boost::bind(&loopTrigger, boost::ref(pt))));
-  futures.push_back(qi::getEventLoop()->async(boost::bind(&loopTrigger, boost::ref(pt))));
-  futures.push_back(qi::getEventLoop()->async(boost::bind(&loopTrigger, boost::ref(pt))));
+  futures.push_back(qi::getEventLoop()->async(boost::bind(&loopTrigger, std::ref(pt))));
+  futures.push_back(qi::getEventLoop()->async(boost::bind(&loopTrigger, std::ref(pt))));
+  futures.push_back(qi::getEventLoop()->async(boost::bind(&loopTrigger, std::ref(pt))));
+  futures.push_back(qi::getEventLoop()->async(boost::bind(&loopTrigger, std::ref(pt))));
   for (unsigned int i = 0; i < futures.size(); ++i)
     futures[i].wait();
   pt.stop();
@@ -1639,13 +1638,13 @@ TEST(TestPeriodicTask, TriggerStartStop)
   // just test that there is no segfault or deadlock
   qi::PeriodicTask pt;
   qi::Atomic<int> a;
-  pt.setCallback(&inc, boost::ref(a));
+  pt.setCallback(&inc, std::ref(a));
   pt.setUsPeriod(1000);
   std::vector<qi::Future<void> > futures;
-  futures.push_back(qi::getEventLoop()->async(boost::bind(&loopTrigger, boost::ref(pt))));
-  futures.push_back(qi::getEventLoop()->async(boost::bind(&loopTrigger, boost::ref(pt))));
-  futures.push_back(qi::getEventLoop()->async(boost::bind(&loopTrigger, boost::ref(pt))));
-  futures.push_back(qi::getEventLoop()->async(boost::bind(&loopTrigger, boost::ref(pt))));
+  futures.push_back(qi::getEventLoop()->async(boost::bind(&loopTrigger, std::ref(pt))));
+  futures.push_back(qi::getEventLoop()->async(boost::bind(&loopTrigger, std::ref(pt))));
+  futures.push_back(qi::getEventLoop()->async(boost::bind(&loopTrigger, std::ref(pt))));
+  futures.push_back(qi::getEventLoop()->async(boost::bind(&loopTrigger, std::ref(pt))));
   while (true)
   {
     bool stop = true;
