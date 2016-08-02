@@ -31,7 +31,7 @@ qiLogCategory("test");
 class SetValue: private boost::noncopyable
 {
 public:
-  SetValue(int& tgt)
+  SetValue(std::atomic<int>& tgt)
     : target(tgt)
     , state(0)
   {
@@ -54,8 +54,8 @@ public:
     return exchange(value);
   }
 
-  int& target;
-  int state;
+  std::atomic<int>& target;
+  std::atomic<int> state;
 private:
 
 };
@@ -81,7 +81,7 @@ TEST(TestBind, Simple)
 
 TEST(TestBind, MemFun)
 {
-  int v = 0;
+  std::atomic<int> v{0};
   SetValue s1(v);
   qi::bind<void(int)>(&SetValue::exchange, &s1, _1)(1);
   EXPECT_EQ(1, v);
@@ -95,7 +95,7 @@ TEST(TestBind, MemFun)
 
 TEST(TestBind, SharedPtr)
 {
-  int v = 0;
+  std::atomic<int> v{0};
   boost::shared_ptr<SetValue> s(new SetValue(v));
   qi::bind<void(int)>(&SetValue::exchange, s, _1)(1);
   EXPECT_EQ(1, v);
@@ -110,7 +110,7 @@ TEST(TestBind, SharedPtr)
 
 TEST(TestBind, WeakPtr)
 {
-  int v = 0;
+  std::atomic<int> v{0};
   boost::shared_ptr<SetValue> s(new SetValue(v));
   boost::weak_ptr<SetValue> w(s);
   qi::bind<void(int)>(&SetValue::exchange, w, _1)(1);
@@ -127,7 +127,7 @@ TEST(TestBind, WeakPtr)
 class SetValue2: public SetValue, public qi::Trackable<SetValue2>
 {
 public:
-  SetValue2(int& target)
+  SetValue2(std::atomic<int>& target)
   :SetValue(target)
   {}
   ~SetValue2()
@@ -151,23 +151,23 @@ public:
 };
 
 // wrap a call, waiting before, and notifying state
-void wrap(boost::function<void()> op, int msDelay, int* notify)
+void wrap(boost::function<void()> op, int msDelay, std::atomic<int>& notify)
 {
-  *notify = 1;
+  notify = 1;
   if (msDelay)
     qi::os::msleep(msDelay);
-  *notify = 2;
+  notify = 2;
   try {
     op();
   }
   catch (const qi::PointerLockException&)
   {}
-  *notify = 3;
+  notify = 3;
 }
 
 TEST(TestBind, Trackable)
 {
-  int v = 0;
+  std::atomic<int> v{0};
   {
     SetValue2 s1(v);
     qi::bind<void(int)>(&SetValue2::exchange, &s1, _1)(1);
@@ -201,14 +201,14 @@ TEST(TestBind, Trackable)
   EXPECT_EQ(4, v);
 
   // check waiting behavior of destroy
-  int notify = 0;
+  std::atomic<int> notify{0};
   qi::int64_t time;
   {
     SetValue2 s1(v);
     boost::thread(wrap,
       qi::bind<void(void)>(&SetValue2::delayExchange, &s1, 100, 10),
       0,
-      &notify);
+      std::ref(notify));
     time = qi::os::ustime();
     // wait enough for operation to start
     while (!notify)
@@ -228,7 +228,7 @@ TEST(TestBind, Trackable)
     boost::thread(wrap,
       qi::bind<void(void)>(&SetValue2::delayExchange, &s1, 100, 11),
       50,
-      &notify);
+      std::ref(notify));
   }
   while (notify != 3)
     qi::os::msleep(10);
@@ -257,14 +257,14 @@ qi::Future<void> delayValue(int msDelay)
   return p.future();
 }
 
-void set_from_future(int* tgt, qi::Future<void> f)
+void set_from_future(std::atomic<int>& tgt, qi::Future<void> f)
 {
-  *tgt = f.isFinished()?2:0;
+  tgt = f.isFinished()?2:0;
 }
 
 TEST(FutureTrack, WeakPtr)
 {
-  int v = 0;
+  std::atomic<int> v{0};
   boost::shared_ptr<SetValue> s(new SetValue(v));
   boost::weak_ptr<SetValue> w(s);
   delayValue(-1).connect(&SetValue::exchange, w, 1);
@@ -273,7 +273,7 @@ TEST(FutureTrack, WeakPtr)
   EXPECT_EQ(1, v);
   v=0;
   // check that _1 works in connect
-  delayValue(-1).connect(&set_from_future, &v, _1);
+  delayValue(-1).connect(&set_from_future, std::ref(v), _1);
   for (int i=0; i<50&&v!=2; ++i)
     qi::os::msleep(10);
   EXPECT_EQ(2, v);
@@ -308,7 +308,7 @@ TEST(FutureTrack, WeakPtr)
 TEST(FutureTrack, Trackable)
 {
   // copy-paste of weak-ptr, but use a trackable on stack instead of shared_ptr
-  int v =0;
+  std::atomic<int> v{0};
   SetValue2* w = new SetValue2(v);
   delayValue(-1).connect(&SetValue2::exchange, w, 1);
   for (int i=0; i<50&&v!=1; ++i)
@@ -316,7 +316,7 @@ TEST(FutureTrack, Trackable)
   EXPECT_EQ(1, v);
   v=0;
   // check that _1 works in connect
-  delayValue(-1).connect(&set_from_future, &v, _1);
+  delayValue(-1).connect(&set_from_future, std::ref(v), _1);
   for (int i=0; i<50&&v!=2; ++i)
     qi::os::msleep(10);
   EXPECT_EQ(2, v);

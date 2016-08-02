@@ -316,6 +316,7 @@ namespace detail {
     template <typename T>
     FutureBaseTyped<T>::~FutureBaseTyped()
     {
+      boost::recursive_mutex::scoped_lock lock(mutex());
       if (_onDestroyed && hasValue(0))
         _onDestroyed(_value);
     }
@@ -403,10 +404,12 @@ namespace detail {
         async = (_async != FutureCallbackType_Sync ? true : false);
         onResult = takeOutResultCallbacks();
         clearCancelCallback();
+
+        // wake the waiting threads up
+        notifyFinish();
       }
       // call the callbacks without the mutex
       executeCallbacks(async, onResult, future);
-      notifyFinish();
     }
 
     template <typename T>
