@@ -118,6 +118,7 @@ namespace qi
 
   void PeriodicTask::start(bool immediate)
   {
+    boost::mutex::scoped_lock l(_p->_mutex);
     if (!_p->_callback)
       throw std::runtime_error("Periodic task cannot start without a setCallback() call first");
     if (_p->_period < qi::Duration(0))
@@ -126,7 +127,6 @@ namespace qi
     if (os::gettid() == _p->_tid)
       return;
 
-    boost::mutex::scoped_lock l(_p->_mutex);
     if (_p->_state != TaskState::Stopped)
     {
       qiLogDebug() << static_cast<int>(_p->_state) << " task was not stopped";
@@ -167,10 +167,10 @@ namespace qi
   {
     asyncStop();
 
+    boost::mutex::scoped_lock l(_p->_mutex);
     if (os::gettid() == _p->_tid)
       return;
 
-    boost::mutex::scoped_lock l(_p->_mutex);
     while (_p->_state == TaskState::Stopping)
       _p->_cond.wait(l);
   }
@@ -253,9 +253,18 @@ namespace qi
     {
       qi::SteadyClockTimePoint start = qi::SteadyClock::now();
       std::pair<qi::int64_t, qi::int64_t> cpu = qi::os::cputime();
-      _tid = os::gettid();
+      {
+        boost::mutex::scoped_lock l(_mutex);
+        _tid = os::gettid();
+      }
+
       _callback();
-      _tid = invalidThreadId;
+
+      {
+        boost::mutex::scoped_lock l(_mutex);
+        _tid = invalidThreadId;
+      }
+
       now = qi::SteadyClock::now();
       delta = now - start;
       std::pair<qi::int64_t, qi::int64_t> cpu2 = qi::os::cputime();
@@ -282,6 +291,7 @@ namespace qi
     }
     else
     {
+      boost::mutex::scoped_lock l(_mutex);
       _callStats.push(
           (float)boost::chrono::duration_cast<qi::MicroSeconds>(delta).count() / 1e6f,
           (float)usr / 1e6f,
@@ -305,23 +315,21 @@ namespace qi
       }
 
       qiLogDebug() << "continuing";
+      if (_state != TaskState::Running)
       {
-        boost::mutex::scoped_lock l(_mutex);
-        if (_state != TaskState::Running)
-        {
-          qiLogDebug() << "continuing " << static_cast<int>(_state);
-          QI_ASSERT(_state == TaskState::Stopping);
-          _state = TaskState::Stopped;
-          _cond.notify_all();
-          return;
-        }
-        _reschedule(std::max(qi::Duration(0), _period - (compensate ? delta : qi::Duration(0))));
+        qiLogDebug() << "continuing " << static_cast<int>(_state);
+        QI_ASSERT(_state == TaskState::Stopping);
+        _state = TaskState::Stopped;
+        _cond.notify_all();
+        return;
       }
+      _reschedule(std::max(qi::Duration(0), _period - (compensate ? delta : qi::Duration(0))));
     }
   }
 
   void PeriodicTask::compensateCallbackTime(bool enable)
   {
+    boost::mutex::scoped_lock l(_p->_mutex);
     _p->_compensateCallTime = enable;
   }
 
