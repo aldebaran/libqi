@@ -252,9 +252,11 @@ TEST_F(TestFuture, TestTimeout) {
   start = qi::SteadyClock::now();
   qi::asyncDelay(boost::function<void()>(boost::bind(&qi::Promise<int>::setValue, pro, 42)), qi::MicroSeconds(20000));
   EXPECT_EQ(qi::FutureState_FinishedWithValue, fut.wait(qi::SteadyClock::now() + qi::MilliSeconds(40)));
+  auto end = qi::SteadyClock::now();
   EXPECT_TRUE(fut.isFinished());
-  EXPECT_GT(qi::SteadyClock::now(), start + qi::MilliSeconds(20));
-  EXPECT_LT(qi::SteadyClock::now(), start + qi::MilliSeconds(40));
+  EXPECT_GT(end, start + qi::MilliSeconds(20));
+  EXPECT_LT(end, start + qi::MilliSeconds(40))
+      << "Timeout took " << boost::chrono::duration_cast<qi::MilliSeconds>(end - start).count() << "ms, which is too much!";
 }
 
 TEST_F(TestFuture, TestError) {
@@ -352,9 +354,9 @@ TEST(AsyncAndFuture, errorOnTaskThrow)
   EXPECT_TRUE(f.hasError());
 }
 
-void unlock(qi::Promise<int> prom, bool* tag)
+void unlock(qi::Promise<int> prom, std::atomic<bool>& tag)
 {
-  *tag = true;
+  tag = true;
   prom.setValue(1);
 }
 
@@ -368,12 +370,13 @@ TEST(TestFutureSync, Basic)
     ASSERT_TRUE(!fs.isFinished());
   } // unbound futuresync should not block
 
-  bool tag = false;
+  std::atomic<bool> tag;
+  tag = false;
   {
     qi::FutureSync<int> fs;
     qi::Promise<int> p;
     fs = p.future();
-    eventLoop->asyncDelay(boost::bind(unlock, p, &tag), qi::MicroSeconds(50000));
+    eventLoop->asyncDelay(boost::bind(unlock, p, std::ref(tag)), qi::MicroSeconds(50000));
   }
   ASSERT_TRUE(tag); // fs should block at end of scope, so we reach here after unlock
 
@@ -385,7 +388,7 @@ TEST(TestFutureSync, Basic)
       qi::FutureSync<int> fs;
       fs = p.future();
       fs.async();
-      eventLoop->asyncDelay(boost::bind(unlock, p, &tag), qi::MicroSeconds(50000));
+      eventLoop->asyncDelay(boost::bind(unlock, p, std::ref(tag)), qi::MicroSeconds(50000));
     }
     ASSERT_FALSE(tag); // fs is async: we exit immediately
   }
@@ -399,7 +402,7 @@ TEST(TestFutureSync, Basic)
       qi::FutureSync<int> fs;
       fs = p.future();
       qi::Future<int> fa = fs;
-      eventLoop->asyncDelay(boost::bind(unlock, p, &tag), qi::MicroSeconds(50000));
+      eventLoop->asyncDelay(boost::bind(unlock, p, std::ref(tag)), qi::MicroSeconds(50000));
     }
     ASSERT_FALSE(tag); // fs was copied: blocking disabled
   }
@@ -408,28 +411,28 @@ TEST(TestFutureSync, Basic)
   ASSERT_TRUE(true);
 }
 
-qi::FutureSync<int> getSync(bool* tag)
+qi::FutureSync<int> getSync(std::atomic<bool>& tag)
 {
   qi::EventLoop* el = qi::getEventLoop();
   qi::Promise<int> promise;
-  el->asyncDelay(boost::bind(unlock, promise, tag), qi::MicroSeconds(50000));
+  el->asyncDelay(boost::bind(unlock, promise, std::ref(tag)), qi::MicroSeconds(50000));
   return promise.future();
 }
 
-qi::FutureSync<int> getSync2(bool* tag)
+qi::FutureSync<int> getSync2(std::atomic<bool>& tag)
 {
   qi::EventLoop* el = qi::getEventLoop();
   qi::Promise<int> promise;
-  el->asyncDelay(boost::bind(unlock, promise, tag), qi::MicroSeconds(50000));
+  el->asyncDelay(boost::bind(unlock, promise, std::ref(tag)), qi::MicroSeconds(50000));
   return promise.future().sync();
 }
 
-qi::FutureSync<int> getGetSync(bool* tag)
+qi::FutureSync<int> getGetSync(std::atomic<bool>& tag)
 {
   return getSync(tag);
 }
 
-qi::FutureSync<int> getGetSync2(bool* tag)
+qi::FutureSync<int> getGetSync2(std::atomic<bool>& tag)
 {
   return getSync2(tag);
 }
@@ -439,39 +442,40 @@ TEST(TestFutureSync, InSitu)
   /* Check that whatever we do, a function returning a FutureSync is not
   * stuck if we take the sync, and blocks if we ignore it
   */
-  bool tag = false;
+  std::atomic<bool> tag;
+  tag = false;
   {
-    qi::FutureSync<int> fs = getSync(&tag);
+    qi::FutureSync<int> fs = getSync(std::ref(tag));
     ASSERT_FALSE(tag);
   }
   ASSERT_TRUE(tag);
   tag = false;
   {
-    qi::FutureSync<int> fs = getSync2(&tag);
+    qi::FutureSync<int> fs = getSync2(std::ref(tag));
     ASSERT_FALSE(tag);
   }
   ASSERT_TRUE(tag);
   tag = false;
   {
-    qi::FutureSync<int> fs = getGetSync(&tag);
+    qi::FutureSync<int> fs = getGetSync(std::ref(tag));
     ASSERT_FALSE(tag);
   }
   ASSERT_TRUE(tag);
   tag = false;
   {
-    qi::FutureSync<int> fs = getGetSync2(&tag);
+    qi::FutureSync<int> fs = getGetSync2(std::ref(tag));
     ASSERT_FALSE(tag);
   }
   ASSERT_TRUE(tag);
   tag = false;
   {
-    getSync(&tag);
+    getSync(std::ref(tag));
     ASSERT_TRUE(tag);
   }
   ASSERT_TRUE(tag);
   tag = false;
   {
-    getSync2(&tag);
+    getSync2(std::ref(tag));
     ASSERT_TRUE(tag);
   }
   ASSERT_TRUE(tag);
