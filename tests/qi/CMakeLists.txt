@@ -32,7 +32,23 @@ qi_create_gtest(test_qilaunch     SRC test_qilaunch.cpp     DEPENDS QI GTEST)
 qi_create_gtest(test_qilog_sync   SRC test_qilog_sync.cpp   DEPENDS QI GTEST)
 qi_create_gtest(test_qilog_async  SRC test_qilog_async.cpp  DEPENDS QI GTEST)
 qi_create_gtest(test_strand       SRC test_strand.cpp       DEPENDS QI GTEST)
-qi_create_gtest(test_future       SRC test_future.cpp       DEPENDS QI GTEST TIMEOUT 60)
+
+qi_create_gtest(
+  test_future
+
+  "test_future.hpp"
+  "test_future.cpp"
+  "test_bind.cpp"
+  "test_eventloop.cpp"
+  "test_periodictask.cpp"
+  "test_trackable.cpp"
+
+  DEPENDS
+  qi
+
+  TIMEOUT 30
+)
+
 qi_create_gtest(test_futuregroup  SRC test_futuregroup.cpp  DEPENDS QI GTEST TIMEOUT)
 qi_create_gtest(test_buffer       SRC test_buffer.cpp       DEPENDS QI GTEST TIMEOUT 30)
 qi_create_gtest(test_bufferreader SRC test_bufferreader.cpp DEPENDS QI GTEST TIMEOUT 30)
