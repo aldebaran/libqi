@@ -364,6 +364,48 @@ TEST(SendObject, object_emitter_service_provides_single_object_through_property_
   ASSERT_EQ(qi::FutureState_FinishedWithValue, objectStored.async<void>("ping").wait(timeoutMs));
 }
 
+class Human
+{
+public:
+  void pingMe(const qi::AnyObject& humanToPing) {std::string oName = humanToPing.call<std::string>("ping");}
+  std::string ping()
+  {
+    qiLogInfo() << "Ping !";
+    return "human";
+  }
+};
+QI_REGISTER_OBJECT(Human, pingMe, ping)
+
+class Actuation
+{
+public:
+  qi::AnyObject getHomeMadeHuman() { return boost::make_shared<Human>(); }
+
+  void set(const qi::AnyObject& humanToSet) {_human = humanToSet;}
+  qi::AnyObject get() const {return _human;}
+
+private:
+  qi::AnyObject _human;
+};
+QI_REGISTER_OBJECT(Actuation, set, get, getHomeMadeHuman)
+
+TEST(SendObject, make_frame)
+{
+  TestSessionPair p;
+  p.server()->registerService("Actuation", boost::make_shared<Actuation>());
+  qi::AnyObject actuation = p.client()->service("Actuation");
+
+  actuation.call<void>("set", boost::make_shared<Human>());
+  auto humanReceived = actuation.call<qi::AnyObject>("get");
+
+  auto homeMadeHuman = actuation.call<qi::AnyObject>("getHomeMadeHuman");
+
+  humanReceived.call<void>("ping"); // <-- this one doesn't hang
+  homeMadeHuman.call<void>("pingMe", humanReceived); // <-- this one doesn't hang
+  humanReceived.call<void>("pingMe", homeMadeHuman); // <-- this one hangs infinitely
+  humanReceived.call<void>("pingMe", humanReceived); // <-- this one hangs infinitely
+}
+
 class Cookie
 {
 public:
@@ -371,8 +413,15 @@ public:
   bool eat()
   {
     eaten();
+    qiLogInfo() << "Too late, you ate me";
     return true;
   }
+  bool eatRival(qi::AnyObject other)
+  {
+    qiLogInfo() << "I am bigger than the other cookie";
+    return other.call<bool>("eat");
+  }
+
   qi::Property<bool> taste;
   qi::Signal<void> eaten;
 };
@@ -425,7 +474,7 @@ struct CookieMonsterFeeder
   }
 };
 
-QI_REGISTER_OBJECT(Cookie, eat, taste, eaten)
+QI_REGISTER_OBJECT(Cookie, eat, eatRival, taste, eaten)
 QI_REGISTER_OBJECT(CookieBox, makeCookie, give, take)
 QI_REGISTER_OBJECT(CookieMonster, feed)
 QI_REGISTER_OBJECT(CookieMonsterFeeder, feedMonster)
@@ -520,4 +569,20 @@ TEST(SendObject, object_referenced_by_remote_only_is_destroyed_on_unreference)
   qi::SignalSpy cookieLostSpy{cookieBox->cookieLost};
   cookie.reset();
   ASSERT_TRUE(cookieLostSpy.waitUntil(1, timeout));
+}
+
+TEST(SendObject, eat_yourself)
+{
+  TestSessionPair p;
+  auto cookieBox = boost::make_shared<CookieBox>();
+  p.server()->registerService("CookieBox", cookieBox);
+  qi::AnyObject cookieBoxRemote = p.client()->service("CookieBox");
+  auto cookie = cookieBoxRemote.call<qi::AnyObject>("makeCookie", true);
+  auto otherCookie = cookieBoxRemote.call<qi::AnyObject>("makeCookie", true);
+  auto eatOther = cookie.async<bool>("eatRival", otherCookie);
+  eatOther.value();
+  // ^^^ This works
+  auto eatYourself = cookie.async<bool>("eatRival", cookie);
+  eatYourself.value();
+  // ^^^ This timeouts because cookie.eat() is never called inside of eatRival.
 }
