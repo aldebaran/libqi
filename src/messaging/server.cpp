@@ -130,10 +130,14 @@ namespace qi {
     // If true, it's an actual connection to this server.
     if (startReading)
     {
-      SignalSubscriberPtr sub(new SignalSubscriber);
-      boost::shared_ptr<bool> first = boost::make_shared<bool>(true);
+      auto signalLink = boost::make_shared<qi::SignalLink>();
+      auto first = boost::make_shared<bool>(true);
       // We are reading on the socket for the first time : the first message has to be the capabilities
-      *sub = socket->messageReady.connect(&Server::onMessageReadyNotAuthenticated, this, _1, socket, _authProviderFactory->newProvider(), first, sub).setCallType(MetaCallType_Direct);
+      *signalLink = socket->messageReady.connect(
+            &Server::onMessageReadyNotAuthenticated, this, _1, socket,
+            _authProviderFactory->newProvider(), first, signalLink)
+          .setCallType(MetaCallType_Direct);
+
       socket->startReading();
     }
     else
@@ -146,7 +150,7 @@ namespace qi {
   }
 
   void Server::onMessageReadyNotAuthenticated(const Message &msg, TransportSocketPtr socket, AuthProviderPtr auth,
-                                              boost::shared_ptr<bool> first, SignalSubscriberPtr oldSignal)
+                                              boost::shared_ptr<bool> first, boost::shared_ptr<qi::SignalLink> signalLink)
   {
     qiLogVerbose() << "Starting auth message" << msg.address();
     int id = msg.id();
@@ -161,7 +165,7 @@ namespace qi {
         || type != Message::Type_Call
         || function != Message::ServerFunction_Authenticate)
     {
-      socket->messageReady.disconnect(*oldSignal);
+      socket->messageReady.disconnect(*signalLink);
       if (_enforceAuth)
       {
         std::stringstream err;
@@ -200,7 +204,7 @@ namespace qi {
     {
     case AuthProvider::State_Done:
       qiLogVerbose() << "Client " << socket->remoteEndpoint().str() << " successfully authenticated.";
-      socket->messageReady.disconnect(*oldSignal);
+      socket->messageReady.disconnect(*signalLink);
       connectMessageReady(socket);
       // no break, we know that authentication is done, send the response to the remote end
     case AuthProvider::State_Cont:

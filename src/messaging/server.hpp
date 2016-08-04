@@ -53,7 +53,7 @@ namespace qi {
     void onSocketDisconnected(TransportSocketPtr socket, std::string error);
     void onMessageReady(const qi::Message &msg, TransportSocketPtr socket);
     void onMessageReadyNotAuthenticated(const qi::Message& msg, TransportSocketPtr socket, AuthProviderPtr authProvider,
-                                        boost::shared_ptr<bool> first, SignalSubscriberPtr oldSubscriber);
+                                        boost::shared_ptr<bool> first, boost::shared_ptr<SignalLink> signalLink);
 
   private:
     //bool: true if it's a socketobject

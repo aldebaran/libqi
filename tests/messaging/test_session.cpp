@@ -35,7 +35,7 @@ void create_session(bool bare)
 
 
 // KEEP ME FIRST
-TEST(QiSession, create)
+TEST(QiSession, createMany)
 {
   nThreadFinished = 0;
   /* A lot of static init is going on, check that it is thread safe
@@ -56,6 +56,23 @@ TEST(QiSession, create)
   boost::thread(create_session, true);
   while (nThreadFinished.load() != 12)
     qi::os::msleep(10);
+}
+
+TEST(QiSession, createOne)
+{
+  auto session = qi::makeSession();
+  session->listenStandalone(qi::Url{"tcp://127.0.0.1:0"});
+}
+
+TEST(QiSession, trivialDirectConnection)
+{
+  auto session1 = qi::makeSession();
+  auto session2 = qi::makeSession();
+  session1->listenStandalone(qi::Url{"tcp://127.0.0.1:0"});
+  session2->connect(session1->endpoints()[0]);
+  ASSERT_TRUE(session2->isConnected());
+  session2->close();
+  session1->close();
 }
 
 static void session_close(qi::SessionPtr s, qi::Atomic<int>* counter)
@@ -85,7 +102,6 @@ static std::string reply(const std::string &msg)
 TEST(QiSession, simpleConnectionToSd)
 {
   TestSessionPair p;
-
   EXPECT_TRUE(p.client()->isConnected());
 }
 
@@ -566,5 +582,6 @@ int main(int argc, char **argv)
 #endif
   ::TestMode::initTestMode(argc, argv);
   ::testing::InitGoogleTest(&argc, argv);
+  qi::log::addFilter("qimessaging.*", qi::LogLevel_Debug);
   return RUN_ALL_TESTS();
 }
