@@ -60,20 +60,50 @@ TEST(TestSignal, TestCompilation)
   ASSERT_FALSE(prom.future().hasError());
 }
 
+TEST(TestSignal, SignalHasNoSubscriberByDefault)
+{
+  qi::Signal<int> signal;
+  ASSERT_FALSE(signal.hasSubscribers());
+}
+
+TEST(TestSignal, EmitWithNoSubscriber)
+{
+  qi::Signal<int> signal;
+  QI_EMIT signal(42);
+}
+
+TEST(TestSignal, EmitSharedPointerWithNoSubscriber)
+{
+  qi::Signal<boost::shared_ptr<int>> signal;
+  QI_EMIT signal(boost::make_shared<int>(42));
+}
+
 void write42(boost::shared_ptr<int> ptr)
 {
   *ptr = 42;
 }
 
-TEST(TestSignal, SharedPtr)
+TEST(TestSignal, EmitSharedPointerWithDirectSubscriber)
+{
+  // Redundant with Copy test, but just to be sure, check that shared_ptr
+  // is correctly transmited.
+  qi::Signal<boost::shared_ptr<int> > sig;
+  sig.connect(qi::AnyFunction::from(&write42)).setCallType(qi::MetaCallType_Direct);
+  {
+    auto ptr = boost::make_shared<int>(12);
+    QI_EMIT sig(ptr);
+  };
+}
+
+TEST(TestSignal, EmitSharedPointerWithQueuedSubscriber)
 {
   // Redundant with Copy test, but just to be sure, check that shared_ptr
   // is correctly transmited.
   qi::Signal<boost::shared_ptr<int> > sig;
   sig.connect(qi::AnyFunction::from(&write42)).setCallType(qi::MetaCallType_Queued);
   {
-    boost::shared_ptr<int> ptr(new int(12));
-    sig(ptr);
+    auto ptr = boost::make_shared<int>(12);
+    QI_EMIT sig(ptr);
   };
 }
 
@@ -84,6 +114,17 @@ void byRef(int& i, bool* done)
   *done = true;
 }
 
+TEST(TestSignal, FunctionDestroyedOnDisconnection)
+{
+  std::atomic<bool> destroyed;
+  std::shared_ptr<int> sharedInt{new int{42}, [&](int* i){ delete i; destroyed = true; }};
+  qi::Signal<void> signal;
+  qi::SignalLink link = signal.connect([sharedInt]{});
+  sharedInt.reset();
+  ASSERT_FALSE(destroyed);
+  signal.disconnect(link);
+  ASSERT_TRUE(destroyed);
+}
 
 TEST(TestSignal, AutoDisconnect)
 {
