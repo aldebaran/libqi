@@ -57,7 +57,7 @@ static void pSetValue(qi::Promise<void> prom) {
 
 namespace qi
 {
-  TcpTransportSocket::TcpTransportSocket(EventLoop* eventLoop, bool ssl, void* s)
+  TcpTransportSocket::TcpTransportSocket(EventLoop* eventLoop, bool ssl, boost::shared_ptr<Socket> s)
     : TransportSocket()
     , _ssl(ssl)
     , _sslHandshake(false)
@@ -70,9 +70,9 @@ namespace qi
     _err = 0;
     _status = qi::TransportSocket::Status::Disconnected;
 
-    if (s != 0)
+    if (s)
     {
-      _socket = SocketPtr((boost::asio::ssl::stream<boost::asio::ip::tcp::socket>*) s);
+      _socket = s;
       _status = qi::TransportSocket::Status::Connected;
       // Transmit each Message without delay
       setSocketOptions();
@@ -333,7 +333,8 @@ namespace qi
     {
       _sslContext.set_verify_mode(boost::asio::ssl::verify_none);
     }
-    _socket = SocketPtr(new boost::asio::ssl::stream<boost::asio::ip::tcp::socket>((*(boost::asio::io_service*)_eventLoop->nativeHandle()), _sslContext));
+    auto eventLoopAsAsioService = static_cast<boost::asio::io_service*>(_eventLoop->nativeHandle());
+    _socket = boost::make_shared<Socket>(*eventLoopAsAsioService, _sslContext);
     _url = url;
     _status = qi::TransportSocket::Status::Connecting;
     _connecting = true;

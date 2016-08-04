@@ -30,12 +30,11 @@ namespace qi
     TransportServer* _self;
     boost::asio::ip::tcp::acceptor* _acceptor;
     void onAccept(const boost::system::error_code& erc,
-      boost::asio::ssl::stream<boost::asio::ip::tcp::socket>* s
-      );
+      boost::shared_ptr<boost::asio::ssl::stream<boost::asio::ip::tcp::socket>> s);
     TransportServerAsioPrivate();
     bool _live;
     boost::asio::ssl::context _sslContext;
-    boost::asio::ssl::stream<boost::asio::ip::tcp::socket>* _s;
+    boost::shared_ptr<boost::asio::ssl::stream<boost::asio::ip::tcp::socket>> _s;
     bool _ssl;
     unsigned short _port;
     qi::Future<void> _asyncEndpoints;

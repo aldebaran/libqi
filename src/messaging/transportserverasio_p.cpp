@@ -30,7 +30,7 @@ namespace qi
 
   void _onAccept(TransportServerImplPtr p,
                  const boost::system::error_code& erc,
-                 boost::asio::ssl::stream<boost::asio::ip::tcp::socket>* s
+                 boost::shared_ptr<boost::asio::ssl::stream<boost::asio::ip::tcp::socket>> s
                  )
   {
     boost::shared_ptr<TransportServerAsioPrivate> ts = boost::dynamic_pointer_cast<TransportServerAsioPrivate>(p);
@@ -54,19 +54,19 @@ namespace qi
   }
 
   void TransportServerAsioPrivate::onAccept(const boost::system::error_code& erc,
-    boost::asio::ssl::stream<boost::asio::ip::tcp::socket>* s
+    boost::shared_ptr<boost::asio::ssl::stream<boost::asio::ip::tcp::socket> > s
     )
   {
     qiLogDebug() << this << " onAccept";
     if (!_live)
     {
-      delete s;
+      s.reset();
       return;
     }
     if (erc)
     {
       qiLogDebug() << "accept error " << erc.message();
-      delete s;
+      s.reset();
       self->acceptError(erc.value());
       if (isFatalAcceptError(erc.value()))
       {
@@ -81,14 +81,14 @@ namespace qi
     }
     else
     {
-        qi::TransportSocketPtr socket = qi::TcpTransportSocketPtr(new TcpTransportSocket(context, _ssl, s));
+        auto socket = boost::make_shared<qi::TcpTransportSocket>(context, _ssl, s);
         self->newConnection(socket);
 
         if (socket.unique()) {
             qiLogError() << "bug: socket not stored by the newConnection handler (usecount:" << socket.use_count() << ")";
         }
     }
-    _s = new boost::asio::ssl::stream<boost::asio::ip::tcp::socket>(_acceptor->get_io_service(), _sslContext);
+    _s = boost::make_shared<boost::asio::ssl::stream<boost::asio::ip::tcp::socket>>(_acceptor->get_io_service(), _sslContext);
     _acceptor->async_accept(_s->lowest_layer(),
                            boost::bind(_onAccept, shared_from_this(), _1, _s));
   }
@@ -274,7 +274,7 @@ namespace qi
       _sslContext.use_private_key_file(self->_identityKey.c_str(), boost::asio::ssl::context::pem);
     }
 
-    _s = new boost::asio::ssl::stream<boost::asio::ip::tcp::socket>(_acceptor->get_io_service(), _sslContext);
+    _s = boost::make_shared<boost::asio::ssl::stream<boost::asio::ip::tcp::socket>>(_acceptor->get_io_service(), _sslContext);
     _acceptor->async_accept(_s->lowest_layer(),
       boost::bind(_onAccept, shared_from_this(), _1, _s));
     _connectionPromise.setValue(0);
@@ -309,7 +309,7 @@ namespace qi
     , _acceptor(new boost::asio::ip::tcp::acceptor(*(boost::asio::io_service*)ctx->nativeHandle()))
     , _live(true)
     , _sslContext(*(boost::asio::io_service*)ctx->nativeHandle(), boost::asio::ssl::context::sslv23)
-    , _s(NULL)
+    , _s()
     , _ssl(false)
     , _port(0)
   {
