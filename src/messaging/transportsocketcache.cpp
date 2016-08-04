@@ -49,12 +49,14 @@ void TransportSocketCache::close()
          uIt != uEnd;
          ++uIt)
     {
-      TransportSocketPtr endpoint = uIt->second->endpoint;
+      auto& connectionAttempt = *uIt->second;
+      TransportSocketPtr endpoint = connectionAttempt.endpoint;
 
       // Disconnect any valid socket we were holding.
       if (endpoint)
       {
         endpoint->disconnect();
+        endpoint->disconnected.disconnect(connectionAttempt.disconnectionTracking);
       }
       else
       {
@@ -65,6 +67,7 @@ void TransportSocketCache::close()
   }
   for (std::list<TransportSocketPtr>::iterator it = pending.begin(), end = pending.end(); it != end; ++it)
     (*it)->disconnect();
+  _connections.clear();
 }
 
 static UrlVector localhost_only(const UrlVector& input)
@@ -151,25 +154,29 @@ void TransportSocketCache::insert(const std::string& machineId, const Url& url, 
   ServiceInfo info;
 
   info.setMachineId(machineId);
-  socket->disconnected.connect(&TransportSocketCache::onSocketDisconnected, this, socket, url, _1, info)
+  qi::SignalLink disconnectionTracking = socket->disconnected.connect(
+        &TransportSocketCache::onSocketDisconnected, this, url, info)
       .setCallType(MetaCallType_Direct);
+
   ConnectionMap::iterator mIt = _connections.find(machineId);
   if (mIt != _connections.end())
   {
     std::map<Url, ConnectionAttemptPtr>::iterator uIt = mIt->second.find(url);
     if (uIt != mIt->second.end())
     {
-      QI_ASSERT(!uIt->second->endpoint);
+      auto& connectionAttempt = *uIt->second;
+      QI_ASSERT(!connectionAttempt.endpoint);
       // If the attempt is done and the endpoint is null, it means the
       // attempt failed and the promise is set as error.
       // We replace it by a new one.
       // If the attempt is not done we do not replace it, otherwise the future
       // currently in circulation will never finish.
-      if (uIt->second->state != State_Pending)
-        uIt->second->promise = Promise<TransportSocketPtr>();
-      uIt->second->state = State_Connected;
-      uIt->second->endpoint = socket;
-      uIt->second->promise.setValue(socket);
+      if (connectionAttempt.state != State_Pending)
+        connectionAttempt.promise = Promise<TransportSocketPtr>();
+      connectionAttempt.state = State_Connected;
+      connectionAttempt.endpoint = socket;
+      connectionAttempt.promise.setValue(socket);
+      connectionAttempt.disconnectionTracking = disconnectionTracking;
       return;
     }
   }
@@ -253,11 +260,13 @@ void TransportSocketCache::onSocketParallelConnectionAttempt(Future<void> fut,
     }
     return;
   }
-  socket->disconnected.connect(&TransportSocketCache::onSocketDisconnected, this, socket, url, _1, info)
+  qi::SignalLink disconnectionTracking = socket->disconnected.connect(
+        &TransportSocketCache::onSocketDisconnected, this, url, info)
       .setCallType(MetaCallType_Direct);
   attempt->state = State_Connected;
   attempt->endpoint = socket;
   attempt->promise.setValue(socket);
+  attempt->disconnectionTracking = disconnectionTracking;
   qiLogDebug() << "Connected to service #" << info.serviceId() << " through url " << url.str() << " and socket "
                << socket.get();
 }
@@ -277,10 +286,7 @@ void TransportSocketCache::checkClear(ConnectionAttemptPtr attempt, const std::s
   }
 }
 
-void TransportSocketCache::onSocketDisconnected(TransportSocketPtr socket,
-                                                Url url,
-                                                const std::string& reason,
-                                                const ServiceInfo& info)
+void TransportSocketCache::onSocketDisconnected(Url url, const ServiceInfo& info)
 {
   // remove from the available connections
   boost::mutex::scoped_lock lock(_socketMutex);

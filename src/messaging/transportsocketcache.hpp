@@ -58,7 +58,7 @@ namespace qi
     using UrlVectorPtr = boost::shared_ptr<UrlVector>;
     void onSocketConnectionAttempt(Future<void> fut, Promise<TransportSocketPtr> prom, TransportSocketPtr socket, const ServiceInfo& info, uint32_t currentUrlIdx, UrlVectorPtr urls);
     void onSocketParallelConnectionAttempt(Future<void> fut, TransportSocketPtr socket, Url url, const ServiceInfo& info);
-    void onSocketDisconnected(TransportSocketPtr client, Url url, const std::string& reason, const ServiceInfo& info);
+    void onSocketDisconnected(Url url, const ServiceInfo& info);
 
 
     boost::mutex _socketMutex;
@@ -68,6 +68,7 @@ namespace qi
       UrlVector relatedUrls;
       int attemptCount;
       State state;
+      SignalLink disconnectionTracking;
     };
     using ConnectionAttemptPtr = boost::shared_ptr<ConnectionAttempt>;
 
