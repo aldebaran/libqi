@@ -17,6 +17,7 @@
 
 #include <qi/atomic.hpp>
 #include <qi/type/metaobject.hpp>
+#include <boost/container/flat_map.hpp>
 
 using ServiceId = unsigned int;
 using ObjectId = unsigned int;
@@ -117,6 +118,13 @@ public:
       const TransportSocketPtr& origin,
       const ObjectAddress& objectAddress);
 
+  /// Try to find the socket to communicate with a given service.
+  /// The sockets are collected when harvesting and no metaobject was found.
+  /// Can return null if no socket was found.
+  /// If several sockets are possible, returns the first one.
+  /// Warning: Use this only as a last resort.
+  TransportSocketPtr findInUnknownMetaObjectSockets(ServiceId);
+
 private:
   void assignClientMessageObjectsGwIds(const Signature& sig, Message& msg, TransportSocketPtr sender, qi::TransportSocketPtr destination);
 
@@ -144,6 +152,8 @@ private:
   std::map<TransportSocketPtr, std::map<ObjectAddress, GwObjectId> > _hostObjectBank;
 
   MetaObject* findMetaObject(ServiceId serviceId, ObjectId objectId);
+
+  boost::container::flat_map<ServiceId, std::map<ObjectId, TransportSocketPtr>> _unknownMetaObjectSockets;
 };
 }
 
