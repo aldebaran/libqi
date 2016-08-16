@@ -247,16 +247,16 @@ TEST(QiService, ClassProperty)
   obj.connect("offset", boost::bind(&inc, &hit,_1));
   client.connect("offset", boost::bind(&inc, &hit,_1));
   f.prop.set(1);
-  PERSIST_ASSERT(, (*hit) == 3, 500);
+  PERSIST_ASSERT(, (hit.load()) == 3, 500);
   client.setProperty("offset", 2);
-  PERSIST_ASSERT(, (*hit) == 6, 500);
+  PERSIST_ASSERT(, (hit.load()) == 6, 500);
 
   // test error handling
    EXPECT_TRUE(client.setProperty("canard", 5).hasError());
    EXPECT_TRUE(client.setProperty("offset", "astring").hasError());
 }
 
-int prop_ping(qi::PropertyBase* &p, int v)
+qi::int64_t prop_ping(qi::PropertyBase* &p, int v)
 {
   return p->value().value().toInt() + v;
 }
@@ -292,13 +292,13 @@ TEST(QiService, GenericProperty)
   ASSERT_NE(qi::SignalBase::invalidSignalLink, client.connect("offset", boost::bind(&inc, &hit, _1)));
   qiLogVerbose() << "Triggering prop set";
   prop->setValue(1);
-  PERSIST(, (*hit) == 3, 500);
+  PERSIST(, (hit.load()) == 3, 500);
   qi::os::msleep(500);
-  EXPECT_EQ(3, *hit);
+  EXPECT_EQ(3, hit.load());
   client.setProperty<int>("offset", 2);
-  PERSIST(, (*hit) == 6, 500);
+  PERSIST(, (hit.load()) == 6, 500);
   qi::os::msleep(500);
-  EXPECT_EQ(6, *hit);
+  EXPECT_EQ(6, hit.load());
   if (client != obj)
   {
     client.call<void>("setProperty", "offset", 3);

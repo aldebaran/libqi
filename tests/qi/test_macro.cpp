@@ -76,7 +76,7 @@ int staticCounterControlled(qi::Atomic<int>* start, int count, int delay)
   // mark thread started
   ++(*start);
   // wait for other threads to start
-  while (**start != count)
+  while (start->load() != count)
     ;
   // delay as asked
   for (int i=0; i<delay; ++i)
@@ -88,10 +88,10 @@ int staticCounterControlled(qi::Atomic<int>* start, int count, int delay)
 
 #define EXPECTCOUNTER(v)                                 \
 qi::os::msleep(1);                                        \
-  for (unsigned t=0; t<200 && *counter - prev != v; ++t)  \
+  for (unsigned t=0; t<200 && counter.load() - prev != v; ++t)  \
     qi::os::msleep(5);                                   \
-  EXPECT_EQ(v, *counter - prev);                         \
-  prev = *counter
+  EXPECT_EQ(v, counter.load() - prev);                         \
+  prev = counter.load()
 
 
 TEST(Macro, ThreadSafeNew)

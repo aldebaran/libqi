@@ -27,7 +27,7 @@ namespace test
     qi::os::sleep(1);
     qi::AnyValue val = prop.value();
     ASSERT_EQ(2, val.to<int>());
-    ASSERT_EQ(1u, spy.getCounter());
+    ASSERT_EQ(1u, spy.recordCount());
   }
 
   template< template< class ... > class PropertyType >

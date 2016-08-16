@@ -49,7 +49,7 @@ void callbackCounter(const int& value)
 void callbackCounterBis(const int& value, std::string secondValue)
 {
   ++i;
-  std::cout << "callback called " << *i <<" times" << std::endl;
+  std::cout << "callback called " << i.load() <<" times" << std::endl;
 }
 
 class TestObject: public ::testing::Test
@@ -351,13 +351,13 @@ TEST_F(TestObject, multipleConnect)
   oclient2.post("fire2", 42);//post signal twice
   oclient2.post("fire2", 42);
 
-  while((*i) != 18 && waiting_time < 10000)//waiting 10 seconds max
+  while((i.load()) != 18 && waiting_time < 10000)//waiting 10 seconds max
   {
     qi::os::msleep(additional_timeout); //additional timeout to wait for unwanted callback
     waiting_time += additional_timeout;
   }
   qi::os::msleep(additional_timeout); //additional timeout to wait for unwanted callback
-  ASSERT_EQ(*i, 18);
+  ASSERT_EQ(i.load(), 18);
 
   oclient2.disconnect(link1);
   oclient2.disconnect(link2);
@@ -367,7 +367,7 @@ TEST_F(TestObject, multipleConnect)
   oclient2.post("fire2", 42);
 
   qi::os::msleep(additional_timeout); //additional timeout to wait for unwanted callback
-  ASSERT_EQ(*i, 18);
+  ASSERT_EQ(i.load(), 18);
 
 }
 
@@ -397,13 +397,13 @@ TEST_F(TestObject, serviceDirectoryEvent)
   ASSERT_TRUE(p1.server()->registerService("test", oserver1).hasValue(1000));
 
   int waiting_time = 0;
-  while(*i != 4 && waiting_time < 10000)
+  while(i.load() != 4 && waiting_time < 10000)
   {
     qi::os::msleep(10);
     waiting_time += 10;
   }
   qi::os::msleep(10);
-  ASSERT_EQ(*i, 4);
+  ASSERT_EQ(i.load(), 4);
 }
 
 TEST(TestObjectDyn, PropertyConnectOnDynamicObject)

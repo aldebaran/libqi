@@ -104,7 +104,7 @@ namespace qi {
   }
 
   bool Url::hasProtocol() const {
-    return _p->components & UrlPrivate::SCHEME;
+    return (_p->components & UrlPrivate::SCHEME) != 0;
   }
 
   void Url::setProtocol(const std::string &protocol) {
@@ -118,7 +118,7 @@ namespace qi {
   }
 
   bool Url::hasHost() const {
-    return _p->components & UrlPrivate::HOST;
+    return (_p->components & UrlPrivate::HOST) != 0;
   }
 
   void Url::setHost(const std::string &host) {

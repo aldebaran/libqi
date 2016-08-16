@@ -54,7 +54,7 @@ TEST(QiSession, create)
   boost::thread(create_session, true);
   boost::thread(create_session, false);
   boost::thread(create_session, true);
-  while (*nThreadFinished != 12)
+  while (nThreadFinished.load() != 12)
     qi::os::msleep(10);
 }
 
@@ -73,7 +73,7 @@ TEST(QiSession, multiClose)
   boost::thread(session_close, p.server(), &counter);
   boost::thread(session_close, p.server(), &counter);
   boost::thread(session_close, p.server(), &counter);
-  while (*counter != 5)
+  while (counter.load() != 5)
     qi::os::msleep(50);
 }
 

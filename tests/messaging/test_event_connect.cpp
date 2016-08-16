@@ -51,8 +51,8 @@ void testDelete(bool afirst, bool disconnectFirst, qi::Promise<void> end)
   (*a).post("fire", 12);
   EXPECT_TRUE(p0.future().hasValue(1000));
   EXPECT_TRUE(p1.future().hasValue(1000));
-  EXPECT_EQ(12, *lastPayload);
-  EXPECT_EQ(12, *lastPayload2);
+  EXPECT_EQ(12, lastPayload.load());
+  EXPECT_EQ(12, lastPayload2.load());
   p0 = qi::Promise<void>();
   p1 = qi::Promise<void>();
   if (disconnectFirst)
@@ -60,8 +60,8 @@ void testDelete(bool afirst, bool disconnectFirst, qi::Promise<void> end)
     (*a).disconnect(linkId);
     (*a).post("fire", 13);
     EXPECT_TRUE(p1.future().hasValue(1000));
-    EXPECT_EQ(12, *lastPayload);
-    EXPECT_EQ(13, *lastPayload2);
+    EXPECT_EQ(12, lastPayload.load());
+    EXPECT_EQ(13, lastPayload2.load());
     p0 = qi::Promise<void>();
     p1 = qi::Promise<void>();
   }
@@ -72,18 +72,18 @@ void testDelete(bool afirst, bool disconnectFirst, qi::Promise<void> end)
   }
   else
   {
-    int e1 = *lastPayload, e2 = *lastPayload2;
+    int e1 = lastPayload.load(), e2 = *lastPayload2;
     delete b;
     // wait for the object to be deleted (signal callbacks may still be
     // running)
     qi::os::msleep(10);
     (*a).post("fire", 12);
-    EXPECT_EQ(e1, *lastPayload);
-    EXPECT_EQ(e2, *lastPayload2);
+    EXPECT_EQ(e1, lastPayload.load());
+    EXPECT_EQ(e2, lastPayload2.load());
     delete a;
   }
   ++completed;
-  int next = *completed;
+  int next = completed.load();
   if (next == 4)
   {
     end.setValue(0);

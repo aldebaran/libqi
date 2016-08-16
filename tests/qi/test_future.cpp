@@ -491,7 +491,7 @@ void consumer(qi::Atomic<int> &gSuccess, qi::Future<int> fut) {
 
 TEST_F(TestFuture, Threaded) {
   qi::Promise<int> pro;
-  EXPECT_EQ(0, *gSuccess);
+  EXPECT_EQ(0, gSuccess.load());
   boost::thread_group tg;
 
   tg.create_thread(boost::bind(&consumer, boost::ref(gSuccess), pro.future()));
@@ -499,7 +499,7 @@ TEST_F(TestFuture, Threaded) {
   tg.create_thread(boost::bind(&consumer, boost::ref(gSuccess), pro.future()));
   tg.create_thread(boost::bind(&producer, pro));
   tg.join_all();
-  EXPECT_EQ(3, *gSuccess);
+  EXPECT_EQ(3, gSuccess.load());
 }
 
 
@@ -1238,7 +1238,7 @@ TEST(TestPromiseBarrier, SimpleBarrier)
   // We wait for all futures of the for loop.
   barrier.future().wait();
   qi::os::msleep(10);
-  ASSERT_EQ(it, *a);
+  ASSERT_EQ(it, a.load());
 }
 
 TEST(TestPromiseBarrier, Cancel)
@@ -1527,14 +1527,14 @@ TEST(TestPeriodicTask, Basic)
   pt.setUsPeriod(100000);
   pt.start();
   qi::os::msleep(450);
-  EXPECT_GE(2, std::abs(*a - 5)); // be leniant for our overloaded buildslaves
+  EXPECT_GE(2, std::abs(a.load() - 5)); // be leniant for our overloaded buildslaves
   pt.stop();
-  int cur = *a;
+  int cur = a.load();
   qi::os::msleep(60);
-  EXPECT_EQ(cur, *a); // stop means stop
+  EXPECT_EQ(cur, a.load()); // stop means stop
   pt.start();
   qi::os::msleep(150);
-  EXPECT_GE(1, std::abs(*a - cur - 2));
+  EXPECT_GE(1, std::abs(a.load() - cur - 2));
 }
 
 TEST(TestPeriodicTask, Stop)
