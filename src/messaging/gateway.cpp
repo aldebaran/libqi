@@ -1163,10 +1163,10 @@ void GatewayPrivate::onAnyMessageReady(const Message& msg, TransportSocketPtr so
       }
       else
       {
-        qiLogWarning() << "Destination socket is the same as sender socket "
-                          "(socket=" << socket.get() << ") meaning the gateway "
-                          "is likely to send the message back to its caller. "
-                          " message = " << msg;
+        qiLogVerbose() << "Destination socket is the same as sender socket "
+          "(socket=" << socket.get() << ") meaning the gateway "
+          "is likely to send the message back to its caller. "
+          "message = {type=" << msg.type() << ", address=" << msg.address() << "}";
       }
     }
 
