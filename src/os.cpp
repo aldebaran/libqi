@@ -33,7 +33,7 @@
 
 #include "sdklayout.hpp"
 
-#if BOOST_OS_ANDROID && BOOST_COMP_GNUC && BOOST_ARCH_ARM
+#if BOOST_OS_ANDROID && BOOST_COMP_GNUC
 #include <sstream>
 #endif
 
@@ -45,7 +45,7 @@ namespace qi {
   namespace os {
 // workaround android gcc missing std::to_string on arm
 // http://stackoverflow.com/questions/17950814/how-to-use-stdstoul-and-stdstoull-in-android/18124627#18124627
-#if BOOST_OS_ANDROID && BOOST_COMP_GNUC && BOOST_ARCH_ARM
+#if BOOST_OS_ANDROID && BOOST_COMP_GNUC
 #warning "using home made to_string"
     std::string to_string(int num)
     {
