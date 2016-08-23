@@ -50,7 +50,7 @@ namespace qi
     unsigned int                                              servicesCount;
     boost::weak_ptr<ServiceBoundObject>                       serviceBoundObject;
     /* Our methods can be invoked from remote, and from socket callbacks,
-    * so thread-safeness is required.
+    * so thread-safety is required.
     */
     boost::recursive_mutex                                    mutex;
   }; // !ServiceDirectoryPrivate
