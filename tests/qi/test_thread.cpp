@@ -1,13 +1,32 @@
 /*
- * Copyright (c) 2012 Aldebaran Robotics. All rights reserved.
+ * Copyright (c) 2012-2015 Aldebaran Robotics. All rights reserved.
  * Use of this source code is governed by a BSD-style license that can be
  * found in the COPYING file.
  */
+
+#include <atomic>
 #include <cstdio>
+#include <mutex>
 
 #include <qi/os.hpp>
 #include <boost/thread/thread.hpp>
 #include <boost/thread/condition_variable.hpp>
+
+struct SafeCout
+{
+  static std::mutex m;
+
+  template<typename T>
+  std::ostream& operator<<(const T& whatever)
+  {
+    std::unique_lock<std::mutex> l{m};
+    auto& o = std::cout << whatever;
+    fflush(stdout);
+    return o;
+  }
+} safeCout;
+
+std::mutex SafeCout::m = {};
 
 static class threadTest
 {
@@ -23,29 +42,24 @@ public:
       qi::os::sleep(1);
     }
 
-    std::cout << "Stop running" << std::endl;
-    fflush(stdout);
+    safeCout << "Stop running" << std::endl;
   }
 
   void printTest()
   {
-    std::cout << "Running..." << std::endl;
-    fflush(stdout);
+    safeCout << "Running..." << std::endl;
   }
 
 public:
-  bool                       _glInit;
+  std::atomic<bool>          _glInit;
   boost::thread              _glThread;
-  boost::mutex               _glLock;
-  boost::condition_variable  _glCond;
-} threadGolbal;
+} threadGlobal;
 
 inline threadTest::threadTest()
 {
   _glInit = true;
-  _glThread = boost::thread(&threadTest::run, &threadGolbal);
-  std::cout << "Creating main thread" << std::endl;
-  fflush(stdout);
+  safeCout << "Creating main thread" << std::endl;
+  _glThread = boost::thread(&threadTest::run, &threadGlobal);
 };
 
 inline threadTest::~threadTest()
@@ -53,28 +67,23 @@ inline threadTest::~threadTest()
   _glInit = false;
 
   _glThread.interrupt();
-  std::cout << "Interrupting main thread" << std::endl;
-  fflush(stdout);
+  safeCout << "Interrupting main thread" << std::endl;
 
   _glThread.join();
-  std::cout << "Joinning main thread" << std::endl;
-  fflush(stdout);
+  safeCout << "Joining main thread" << std::endl;
 
   printTest();
-  std::cout << "Main thread destroyed" << std::endl;
-  fflush(stdout);
+  safeCout << "Main thread destroyed" << std::endl;
 };
 
 
 int main(int argc, char *argv[])
 {
-  std::cout << "Entering main function" << std::endl;
-  fflush(stdout);
+  safeCout << "Entering main function" << std::endl;
 
   qi::os::sleep(5);
 
-  std::cout << "Leaving main function" << std::endl;
-  fflush(stdout);
+  safeCout << "Leaving main function" << std::endl;
 
   exit(0);
 }
