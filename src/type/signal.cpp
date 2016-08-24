@@ -517,7 +517,7 @@ namespace qi {
       boost::mutex::scoped_lock subLock(s->mutex);
       // Release signal mutex
       sigLock.release()->unlock();
-      // Ensure no call on subscriber occurrs once this function returns
+      // Ensure no call on subscriber occurs once this function returns
       s->enabled = false;
       if (subscriberMap.empty() && onSubscribers)
         onSubscribers(false);
