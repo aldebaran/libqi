@@ -34,16 +34,27 @@ namespace qi {
 
   using SignalLink = qi::uint64_t;
 
-  //Signal are not copyable, they belong to a class.
-  class QI_API SignalBase : boost::noncopyable
+
+  /// SignalBase provides a signal subscription mechanism called "connection".
+  /// Derived classes can customize the subscription step by setting
+  /// an "onSubscribers" callback. @see onSubscriber.
+  class QI_API SignalBase
   {
   public:
     using OnSubscribers = boost::function<void(bool)>;
+
     explicit SignalBase(const Signature &signature, OnSubscribers onSubscribers = OnSubscribers());
-    SignalBase(OnSubscribers onSubscribers=OnSubscribers());
+    SignalBase(OnSubscribers onSubscribers = OnSubscribers());
+
+    /// SignalBase is not copyable, since subscriptions should not be duplicated.
+    SignalBase(const SignalBase&) = delete;
+    SignalBase& operator=(const SignalBase&) = delete;
+
     virtual ~SignalBase();
+
     virtual qi::Signature signature() const;
     template<typename F>
+
     SignalSubscriber& connect(boost::function<F> func);
     SignalSubscriber& connect(const SignalSubscriber& s);
     SignalSubscriber& connect(AnyObject object, const unsigned int slot);
@@ -267,7 +278,8 @@ namespace qi {
     ExecutionContext* executionContext;
   };
   using SignalSubscriberPtr = boost::shared_ptr<SignalSubscriber>;
-}
+
+} // qi
 
 #ifdef _MSC_VER
 #  pragma warning( pop )
