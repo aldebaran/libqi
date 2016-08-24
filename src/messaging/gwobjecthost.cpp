@@ -140,6 +140,7 @@ void GwObjectHost::harvestClientCallOriginatingObjects(Message& msg, TransportSo
     if (oit == _servicesMetaObjects[msg.service()].end())
     {
       qiLogDebug() << "No metaobject for service " << msg.service() << ". Disconnected?";
+      _unknownMetaObjectSockets[msg.service()][msg.object()] = sender;
       return;
     }
     const MetaMethod* method = oit->second.method(msg.function());
@@ -488,4 +489,20 @@ static MetaObject extractReturnedMetaObject(const Message& msg, TransportSocketP
   ref.destroy();
   return obj;
 }
+
+TransportSocketPtr GwObjectHost::findInUnknownMetaObjectSockets(ServiceId id)
+{
+  boost::shared_lock<boost::shared_mutex> lock(_mutex);
+  auto it = _unknownMetaObjectSockets.find(id);
+  if (it != end(_unknownMetaObjectSockets))
+  {
+    const auto& mapSocketByObjectId = it->second;
+    if (!mapSocketByObjectId.empty())
+    {
+      return mapSocketByObjectId.begin()->second;
+    }
+  }
+  return nullptr;
+}
+
 }

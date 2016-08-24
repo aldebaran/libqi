@@ -102,6 +102,9 @@ namespace qi {
       case 'X':
         _result += "Unknown";
         break;
+      case 'r':
+        _result += "RawBuffer";
+        break;
       default:
         _result += "BUG";
         break;

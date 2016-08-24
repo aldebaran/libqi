@@ -16,6 +16,7 @@
 #include "objecthost.hpp"
 
 #include <boost/thread/mutex.hpp>
+#include <boost/thread/synchronized_value.hpp>
 #include <string>
 
 namespace qi {
@@ -74,12 +75,10 @@ namespace qi {
   protected:
     using LocalToRemoteSignalLinkMap = std::map<qi::uint64_t, RemoteSignalLinks>;
 
-    TransportSocketPtr                              _socket;
-    boost::mutex                                    _socketMutex;
+    boost::synchronized_value<TransportSocketPtr>   _socket;
     unsigned int                                    _service;
     unsigned int                                    _object;
-    std::map<int, qi::Promise<AnyReference> >       _promises;
-    boost::mutex                                    _promisesMutex;
+    boost::synchronized_value<std::map<int, qi::Promise<AnyReference>>> _promises;
     qi::SignalLink                                  _linkMessageDispatcher;
     qi::SignalLink                                  _linkDisconnected;
     qi::AnyObject                                   _self;

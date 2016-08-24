@@ -1126,7 +1126,6 @@ void GatewayPrivate::onAnyMessageReady(const Message& msg, TransportSocketPtr so
     GwTransaction transaction(msg);
     GWMessageId gwId = msg.id();
     ServiceId serviceId = msg.service();
-
     TransportSocketPtr destination = [&]() -> TransportSocketPtr {
 
       // This is likely an internal message and so can be ignored here
@@ -1149,6 +1148,27 @@ void GatewayPrivate::onAnyMessageReady(const Message& msg, TransportSocketPtr so
 
       return _objectHost.objectSource({ msg.service(), msg.object() }).socket;
     }();
+
+    // When the source socket equals the destination one, it is likely an error:
+    // 2 objects on the same side of the gateway should not
+    // communicate via the gateway. A common source of deadlock is the gateway
+    // not being able to find the destination and thus sending back the message
+    // to the caller (which ends up discarding it because it can't answer its
+    // own call). Here as a last resort, we try to avoid this case.
+    if (destination == socket)
+    {
+      if (auto sock = _objectHost.findInUnknownMetaObjectSockets(msg.service()))
+      {
+        destination = sock;
+      }
+      else
+      {
+        qiLogVerbose() << "Destination socket is the same as sender socket "
+          "(socket=" << socket.get() << ") meaning the gateway "
+          "is likely to send the message back to its caller. "
+          "message = {type=" << msg.type() << ", address=" << msg.address() << "}";
+      }
+    }
 
     _objectHost.treatMessage(transaction, socket, destination);
     qiLogDebug() << socket.get() << " Transaction ready: " << Message::typeToString(transaction.content.type()) << " "
