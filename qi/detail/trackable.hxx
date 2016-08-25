@@ -295,9 +295,9 @@ namespace qi
       }
     };
 
-    template <typename T, typename K = typename std::decay<T>::type>
+    template <typename T>
     using BindTransform =
-      BindTransformImpl<K, std::is_base_of<TrackableBase, typename std::remove_pointer<K>::type>::value>;
+      BindTransformImpl<typename std::decay<T>::type, std::is_base_of<TrackableBase, typename std::remove_pointer<typename std::decay<T>::type>::type>::value>;
 
     inline void throwPointerLockException()
     {
