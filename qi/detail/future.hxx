@@ -485,8 +485,11 @@ namespace detail {
             return _async != FutureCallbackType_Sync;
         }();
 
-        if (async)
-          getEventLoop()->post(boost::bind(callback, future));
+        auto soCalledEventLoop = getEventLoop();
+        if (async && soCalledEventLoop)
+        { // if no event loop was found (for example when exiting), force sync callbacks
+          soCalledEventLoop->post(boost::bind(callback, future));
+        }
         else
         {
           try
