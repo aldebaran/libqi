@@ -144,10 +144,6 @@ namespace qi
     FutureSync<void> setValue(AutoAnyReference value) override;
     FutureSync<AnyValue> value() const override;
 
-    /** @return Acquire write-enabled scoped thread-safe access to the value stored in this object. */
-    ScopedLockReadWrite getLockedReadWrite();
-    /** @return Acquire read-only scoped thread-safe access to the value stored in this object. */
-    ScopedLockReadOnly getLockedReadOnly() const;
   private:
     mutable boost::mutex _mutex;
   };

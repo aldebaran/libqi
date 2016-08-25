@@ -125,20 +125,6 @@ namespace qi
     this->setImpl(value.to<T>());
     return FutureSync<void>(0);
   }
-
-  template<class T>
-  typename Property<T>::ScopedLockReadWrite
-    Property<T>::getLockedReadWrite()
-  {
-    return ScopedLockReadWrite(*this);
-  }
-
-  template<class T>
-  typename Property<T>::ScopedLockReadOnly
-    Property<T>::getLockedReadOnly() const
-  {
-    return ScopedLockReadOnly(*this);
-  }
 }
 
 #endif  // _QITYPE_DETAIL_PROPERTY_HXX_
