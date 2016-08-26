@@ -942,7 +942,7 @@ static void checkBarrier(qi::Promise<void> prom,
   prom.setValue(0);
 }
 
-TEST(TestPromiseBarrier, SimpleBarrier)
+TEST(FutureBarrier, SimpleBarrier)
 {
   int it;
   qi::Atomic<int> a;
@@ -965,7 +965,7 @@ TEST(TestPromiseBarrier, SimpleBarrier)
   ASSERT_EQ(it, a.load());
 }
 
-TEST(TestPromiseBarrier, Cancel)
+TEST(FutureBarrier, Cancel)
 {
   qi::Future<std::vector<qi::Future<int> > > fut;
   {
@@ -987,7 +987,7 @@ TEST(TestPromiseBarrier, Cancel)
   fut.value();
 }
 
-TEST(TestPromiseBarrier, ClosedBarrier)
+TEST(FutureBarrier, ClosedBarrier)
 {
   qi::FutureBarrier<void> barrier;
 
@@ -1003,7 +1003,7 @@ TEST(TestPromiseBarrier, ClosedBarrier)
   ASSERT_ANY_THROW(barrier.addFuture(prom2.future()));
 }
 
-TEST(TestPromiseBarrier, CompleteExample)
+TEST(FutureBarrier, CompleteExample)
 {
   qi::Promise<void> end;
 
@@ -1027,6 +1027,20 @@ TEST(TestPromiseBarrier, CompleteExample)
   end.future().wait();
 }
 
+TEST(FutureBarrier, errorAmongstSuccesses)
+{
+  qi::FutureBarrier<void> barrier;
+  barrier.addFuture(qi::Future<void>{0});
+  barrier.addFuture(qi::makeFutureError<void>("holy moses"));
+  auto futures = barrier.future().value(200);
+  int errorCount = 0;
+  for (auto& future: futures)
+  {
+    if (future.hasError())
+      ++errorCount;
+  }
+  ASSERT_EQ(1, errorCount);
+}
 
 qi::Future<int> emulateSet(int it, bool error = false) {
   qi::Promise<int> prom;
