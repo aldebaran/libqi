@@ -13,7 +13,7 @@
 
 namespace qi {
 
-  using SignalSubscriberMap = std::map<SignalLink, SignalSubscriberPtr>;
+  using SignalSubscriberMap = std::map<SignalLink, SignalSubscriber>;
   using TrackMap = std::map<int, SignalLink>;
 
   class SignalBasePrivate
@@ -24,9 +24,11 @@ namespace qi {
     {}
 
     ~SignalBasePrivate();
-    bool disconnectAll(bool wait = true);
-    bool disconnect(const SignalLink& l, bool wait = true);
-    bool disconnectTrackLink(const SignalLink& l);
+    Future<bool> disconnect(const SignalLink& l);
+    Future<bool> disconnectAll();
+
+  private:
+    Future<bool> disconnectAllStep(bool overallSuccess);
 
   public:
     SignalBase::OnSubscribers      onSubscribers;

@@ -315,9 +315,10 @@ TEST(TestSignal, Dynamic)
   EXPECT_EQ(56, trig);
 }
 
-void onSubs(std::atomic<bool>& var, bool subs)
+qi::Future<void> onSubs(std::atomic<bool>& var, bool subs)
 {
   var = subs;
+  return qi::Future<void>{0};
 }
 
 void callback(int i)
@@ -357,13 +358,14 @@ TEST(TestSignal, SignalSubscriberDoesNotUnsubscribeAtDestruction)
 {
   int count = 0;
   qi::Signal<void> signal;
-  auto subscriber = signal.connect([&]{ ++count; })
-      .setCallType(qi::MetaCallType_Direct)
-      .shared_from_this();
-  signal();
-  ASSERT_EQ(1, count);
+  {
+    auto subscriber = signal.connect([&]{ ++count; })
+        .setCallType(qi::MetaCallType_Direct);
+    QI_UNUSED(subscriber); // we are just keeping it alive for a moment
 
-  subscriber.reset();
+    signal();
+    ASSERT_EQ(1, count);
+  }
   signal();
   ASSERT_EQ(2, count);
 }

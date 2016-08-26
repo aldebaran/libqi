@@ -33,7 +33,7 @@ namespace qi
       SignalBase::setTriggerOverride(boost::bind(&ProxySignal<T>::triggerOverride, this, _1, _2,
         object.asGenericObject(), signalName));
     }
-    void onSubscribe(bool enable, GenericObject* object, std::string signalName, SignalLink link);
+    Future<void> onSubscribe(bool enable, GenericObject* object, std::string signalName, SignalLink link);
     AnyReference bounceEvent(const AnyReferenceVector args);
     void triggerOverride(const GenericFunctionParameters& params,
       MetaCallType callType, GenericObject* object, std::string signalName);
@@ -59,7 +59,7 @@ namespace qi
   }
 
   template<typename T>
-  void ProxySignal<T>::onSubscribe(bool enable, GenericObject* object, std::string signalName,
+  qi::Future<void> ProxySignal<T>::onSubscribe(bool enable, GenericObject* object, std::string signalName,
     SignalLink link)
   {
     if (enable)
@@ -79,6 +79,7 @@ namespace qi
     // link change, rebind ourselve
     SignalBase::setOnSubscribers(boost::bind(&ProxySignal<T>::onSubscribe, this, _1,
         object, signalName, link));
+    return Future<void>{0};
   }
 
   template<typename T>

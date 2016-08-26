@@ -211,7 +211,10 @@ TEST(TestStrand, StrandDestructionWithSchedulerFor)
   {
     // allocate on heap to help asan & co
     std::unique_ptr<qi::Strand> strand(new qi::Strand(*qi::getEventLoop()));
-    auto f = strand->schedulerFor([]{ ADD_FAILURE(); });
+    auto f = strand->schedulerFor([]
+    {
+      ADD_FAILURE();
+    });
     fut = qi::async([f, &futures]{
           for (int i = 0; i < 300; ++i)
             futures.push_back(f());

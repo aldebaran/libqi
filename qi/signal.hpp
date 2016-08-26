@@ -41,7 +41,7 @@ namespace qi {
   class QI_API SignalBase
   {
   public:
-    using OnSubscribers = boost::function<void(bool)>;
+    using OnSubscribers = boost::function<Future<void>(bool)>;
 
     explicit SignalBase(const Signature &signature, OnSubscribers onSubscribers = OnSubscribers());
     SignalBase(OnSubscribers onSubscribers = OnSubscribers());
@@ -53,12 +53,20 @@ namespace qi {
     virtual ~SignalBase();
 
     virtual qi::Signature signature() const;
-    template<typename F>
 
-    SignalSubscriber& connect(boost::function<F> func);
-    SignalSubscriber& connect(const SignalSubscriber& s);
-    SignalSubscriber& connect(AnyObject object, const unsigned int slot);
-    SignalSubscriber& connect(AnyObject object, const std::string& slot);
+    template<typename F>
+    SignalSubscriber connect(boost::function<F> func);
+    SignalSubscriber connect(AnyObject object, const unsigned int slot);
+    SignalSubscriber connect(AnyObject object, const std::string& slot);
+
+    /// The following overloads are the lowest-level
+    SignalSubscriber connect(const SignalSubscriber& s);
+
+    /// Connect asynchronously. This is recommended since derived classes may
+    /// provide asynchronous customizations for dealing with subscribers.
+    /// The callbacks are guaranteed to be called only after the returned
+    /// future is set.
+    Future<SignalSubscriber> connectAsync(const SignalSubscriber&);
 
     /** Disconnect all callbacks from signal.
      *
@@ -69,7 +77,14 @@ namespace qi {
      *
      * This function does not block.
      */
-    bool asyncDisconnectAll();
+    Future<bool> disconnectAllAsync();
+
+    QI_API_DEPRECATED_MSG("use disconnectAllAsync instead")
+    bool asyncDisconnectAll()
+    {
+      disconnectAllAsync();
+      return true;
+    }
 
     /** Disconnect a SignalHandler.
      *
@@ -84,8 +99,17 @@ namespace qi {
     /** Disconnect a SignalHandler without waiting for it.
      *
      * Same as disconnect, but this method does not block.
+     * Though this is async, you are guaranteed that when the function returns
+     * your callback will not be called.
      */
-    bool asyncDisconnect(const SignalLink& link);
+    Future<bool> disconnectAsync(const SignalLink& link);
+
+    QI_API_DEPRECATED_MSG("use disconnectAsync instead")
+    bool asyncDisconnect(const SignalLink& link)
+    {
+      disconnectAsync(link);
+      return true;
+    }
 
     /** Trigger the signal with given type-erased parameters.
     * @param params the signal arguments
@@ -157,6 +181,11 @@ namespace qi {
     * - connect(const SignalSubscriber&)
     * - connect(qi::Signal<U>& otherSignal)
     *
+    * @warning This function is synchronous and may block the current thread,
+    * which may be in charge of dispatching results that could be waited for.
+    * Please prefer connectAsync to be totally safe from subtle deadlocks in
+    * your programs.
+    *
     * @return a SignalSubscriber object. This object can be implicitly
     * converted to a SignalLink.
     * @throw runtime_error if the connection could not be made (because of invalid callback
@@ -165,19 +194,19 @@ namespace qi {
     SignalSubscriber& connect(...);
 #else
     template <typename F>
-    SignalSubscriber& connect(F c);
-    SignalSubscriber& connect(AnyFunction func);
-    SignalSubscriber& connect(const SignalSubscriber& sub);
+    SignalSubscriber connect(F c);
+    SignalSubscriber connect(AnyFunction func);
+    SignalSubscriber connect(const SignalSubscriber& sub);
     template <typename U>
-    SignalSubscriber& connect(SignalF<U>& signal);
+    SignalSubscriber connect(SignalF<U>& signal);
     template <typename... P>
-    SignalSubscriber& connect(Signal<P...>& signal);
+    SignalSubscriber connect(Signal<P...>& signal);
 
     template <typename F, typename Arg0, typename... Args>
-    SignalSubscriber& connect(F&& func, Arg0&& arg0, Args&&... args);
+    SignalSubscriber connect(F&& func, Arg0&& arg0, Args&&... args);
 
-    SignalSubscriber& connect(const AnyObject& obj, unsigned int slot);
-    SignalSubscriber& connect(const AnyObject& obj, const std::string& slot);
+    SignalSubscriber connect(const AnyObject& obj, unsigned int slot);
+    SignalSubscriber connect(const AnyObject& obj, const std::string& slot);
 #endif
   };
 
@@ -201,27 +230,34 @@ namespace qi {
   class Signal<void> : public Signal<>
   {};
 
+  struct SignalSubscriberPrivate;
+
   /** Event subscriber info.
    *
    * Only one of handler or target must be set.
+   * This class is copyable but has entity semantics.
    *
    * \includename{qi/signal.hpp}
    */
   class QI_API SignalSubscriber
-  : public boost::enable_shared_from_this<SignalSubscriber>
   {
   public:
+    friend class FunctorCall;
+    friend class ManageablePrivate;
+    friend class SignalBase;
+    friend class SignalBasePrivate;
+
     SignalSubscriber();
 
     SignalSubscriber(AnyFunction func, MetaCallType callType = MetaCallType_Auto);
     SignalSubscriber(AnyFunction func, ExecutionContext* ec);
     SignalSubscriber(const AnyObject& target, unsigned int method);
 
+    // This is copy-constructible
     SignalSubscriber(const SignalSubscriber& b);
+    SignalSubscriber& operator=(const SignalSubscriber& b);
 
     ~SignalSubscriber();
-
-    void operator = (const SignalSubscriber& b);
 
     /** Perform the call.
      *
@@ -232,53 +268,66 @@ namespace qi {
      */
     void call(const GenericFunctionParameters& args, MetaCallType callType);
 
-    SignalSubscriber& setCallType(MetaCallType ct);
+    SignalSubscriber setCallType(MetaCallType ct);
 
     /// Wait until all threads are inactive except the current thread.
-    void waitForInactive();
+    Future<void> waitForInactive();
 
     void addActive(bool acquireLock, boost::thread::id tid = boost::this_thread::get_id());
     void removeActive(bool acquireLock, boost::thread::id tid = boost::this_thread::get_id());
-    operator SignalLink() const
-    {
-      return linkId;
-    }
+
+    /// @return the identifier of the subscription (aka link)
+    SignalLink link() const;
+    operator SignalLink() const;
+
     /** Try to extract exact signature of this subscriber.
     * @return the signature, or an invalid signature if extraction is impossible
     */
     Signature signature() const;
+
+  private:
+    std::shared_ptr<SignalSubscriberPrivate> _p;
+
   public:
+    QI_API_DEPRECATED_MSG("please use link instead or cast to qi::SignalLink")
+    SignalLink& linkId;
+  };
+
+  using SignalSubscriberPtr = boost::shared_ptr<SignalSubscriber>;
+
+  struct SignalSubscriberPrivate
+  {
     // Source information
-    SignalBase* source;
+    SignalBase* source = nullptr;
     /// Uid that can be passed to GenericObject::disconnect()
-    SignalLink  linkId;
+    SignalLink  linkId = SignalBase::invalidSignalLink;
 
     // Target information, kept here to be able to introspect a Subscriber
     //   Mode 1: Direct functor call
-    AnyFunction       handler;
-    MetaCallType      threadingModel;
+    AnyFunction handler;
+    MetaCallType threadingModel = MetaCallType_Direct;
 
     //   Mode 2: metaCall
     boost::scoped_ptr<AnyWeakObject> target;
-    unsigned int      method;
+    unsigned int method = 0;
 
-    boost::mutex      mutex;
+    boost::mutex mutex;
     // Fields below are protected by lock
 
     // If enabled is set to false while lock is acquired,
     // No more callback will trigger (activeThreads will se no push-back)
-    bool                         enabled;
+    bool enabled = true;
     // Number of calls in progress.
     // Each entry there is a subscriber call that can no longuer be aborted
     std::vector<boost::thread::id> activeThreads; // order not preserved
 
-    boost::condition               inactiveThread;
+    /// This promise is set when no active thread is remaining.
+    /// Disconnection requires to wait for inactivity using this promise.
+    Promise<void> inactive;
 
     // ExecutionContext on which to schedule the call
-    ExecutionContext* executionContext;
+    ExecutionContext* executionContext = nullptr;
   };
-  using SignalSubscriberPtr = boost::shared_ptr<SignalSubscriber>;
-
 } // qi
 
 #ifdef _MSC_VER
