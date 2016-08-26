@@ -378,31 +378,48 @@ namespace qi
       barrier.addFuture(_server->listen(url));
     }
     qiLogInfo() << messInfo.str();
-    qi::Promise<void> prom;
-    qi::adaptFuture(barrier.future(), prom);
-    qi::Future<void> f = prom.future();
-
-    std::map<unsigned int, ServiceInfo>::iterator it =
-        _sdObject->connectedServices.find(qi::Message::Service_ServiceDirectory);
-    if (it != _sdObject->connectedServices.end())
+    auto f = barrier.future().andThen([&](const std::vector<Future<void>>& futures)
     {
-      it->second.setEndpoints(_server->endpoints());
-      return f;
-    }
-    ServiceInfo si;
-    si.setName("ServiceDirectory");
-    si.setServiceId(qi::Message::Service_ServiceDirectory);
-    si.setMachineId(qi::os::getMachineId());
-    si.setProcessId(qi::os::getpid());
-    si.setSessionId("0");
-    si.setEndpoints(_server->endpoints());
-    unsigned int regid = _sdObject->registerService(si);
-    (void)regid;
-    _sdObject->serviceReady(qi::Message::Service_ServiceDirectory);
-    //serviceDirectory must have id '1'
-    QI_ASSERT(regid == qi::Message::Service_ServiceDirectory);
+      std::string error = [&]
+      {
+        std::stringstream ss;
+        for (const auto& future: futures)
+        {
+          if (future.hasError())
+          {
+            if (error.empty())
+              ss << "an error occurred when listening to one of the requested endpoints:";
+            ss << std::endl << future.error();
+          }
+        }
+        return ss.str();
+      }();
 
-    _server->_server.endpointsChanged.connect(boost::bind(&Session_SD::updateServiceInfo, this));
+      if (!error.empty())
+        throw std::runtime_error(error);
+
+      auto it = _sdObject->connectedServices.find(qi::Message::Service_ServiceDirectory);
+      if (it != _sdObject->connectedServices.end())
+      {
+        it->second.setEndpoints(_server->endpoints());
+        return;
+      }
+
+      ServiceInfo si;
+      si.setName("ServiceDirectory");
+      si.setServiceId(qi::Message::Service_ServiceDirectory);
+      si.setMachineId(qi::os::getMachineId());
+      si.setProcessId(qi::os::getpid());
+      si.setSessionId("0");
+      si.setEndpoints(_server->endpoints());
+      unsigned int regid = _sdObject->registerService(si);
+      (void)regid;
+      _sdObject->serviceReady(qi::Message::Service_ServiceDirectory);
+      //serviceDirectory must have id '1'
+      QI_ASSERT(regid == qi::Message::Service_ServiceDirectory);
+
+      _server->_server.endpointsChanged.connect(boost::bind(&Session_SD::updateServiceInfo, this));
+    });
 
     return f;
   }
