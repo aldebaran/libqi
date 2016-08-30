@@ -569,7 +569,7 @@ void servicecall_addone(qi::Promise<int>& prom, qi::SessionPtr s)
   qi::AnyObject obj2Proxy = s->service("caller");
   qiLogDebug() << "TEST: got service";
   qi::Future<int> v = obj2Proxy.async<int>("serviceCall", "adder", "addOne", 5);
-  v.wait(500);
+  v.wait(1000);
   if (!v.isFinished())
     prom.setError("timeout");
   else if (v.hasError())
@@ -591,7 +591,7 @@ TEST(TestCall, PairClientListen)
 
 TEST(TestCall, DeadLock)
 {
-  // This test deeadlocks if all objects are in the same monothreaded event loop
+  // This test deadlocks if all objects are in the same monothreaded event loop
   qi::EventLoop* ev = new qi::EventLoop();
   ev->start();
   // One object calls another, both in singleThread mode
@@ -616,11 +616,7 @@ TEST(TestCall, DeadLock)
   qiLogDebug() << "TEST: go async servicecall_addone";
   qi::getEventLoop()->async(
     boost::bind(&servicecall_addone, boost::ref(prom), p.server()));
-
-  for (unsigned i=0; i<20 && !prom.future().isFinished(); ++i)
-    qi::os::msleep(50);
-  ASSERT_TRUE(prom.future().isFinished());
-  ASSERT_EQ(6, prom.future().value());
+  ASSERT_EQ(6, prom.future().value(2000));
 }
 
 void onEvent(int v, qi::Promise<int>& eventValue, qi::AnyObject* ptr)
