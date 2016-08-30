@@ -271,7 +271,7 @@ namespace qi {
     SignalSubscriber setCallType(MetaCallType ct);
 
     /// Wait until all threads are inactive except the current thread.
-    Future<void> waitForInactive();
+    FutureSync<void> waitForInactive();
 
     void addActive(bool acquireLock, boost::thread::id tid = boost::this_thread::get_id());
     void removeActive(bool acquireLock, boost::thread::id tid = boost::this_thread::get_id());

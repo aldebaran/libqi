@@ -55,7 +55,7 @@ namespace qi {
       // from knowing in which thread it will run
       subLock.release()->unlock();
     }
-    return s.waitForInactive().andThen([](void*){ return true; });
+    return s.waitForInactive().async().andThen([](void*){ return true; });
   }
 
 
@@ -381,7 +381,7 @@ namespace qi {
 
   //check if we are called from the same thread that triggered us.
   //in that case, do not wait.
-  Future<void> SignalSubscriber::waitForInactive()
+  FutureSync<void> SignalSubscriber::waitForInactive()
   {
     boost::thread::id tid = boost::this_thread::get_id();
     boost::mutex::scoped_lock sl(_p->mutex);
