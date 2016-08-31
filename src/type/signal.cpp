@@ -89,6 +89,8 @@ namespace qi {
     });
   }
 
+  SignalSubscriberPrivate::SignalSubscriberPrivate() = default;
+
   SignalSubscriber::SignalSubscriber()
     : _p(std::make_shared<SignalSubscriberPrivate>())
     , linkId(_p->linkId)
@@ -114,10 +116,6 @@ namespace qi {
   { // The execution context will reschedule the call like it wants, use sync call type
     _p->handler = func;
     _p->executionContext = ec;
-  }
-
-  SignalSubscriber::~SignalSubscriber()
-  {
   }
 
   SignalSubscriber::SignalSubscriber(const SignalSubscriber& b)
@@ -401,9 +399,9 @@ namespace qi {
 
   void SignalSubscriber::addActive(bool acquireLock, boost::thread::id id)
   {
-    std::unique_ptr<boost::mutex::scoped_lock> l;
+    boost::mutex::scoped_lock l;
     if (acquireLock)
-      l.reset(new boost::mutex::scoped_lock{_p->mutex});
+      l = boost::mutex::scoped_lock{_p->mutex};
 
     if (_p->activeThreads.empty())
       _p->inactive = Promise<void>{};

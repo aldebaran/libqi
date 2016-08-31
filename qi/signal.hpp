@@ -14,8 +14,6 @@
 
 #include <boost/thread/thread.hpp>
 #include <boost/thread/mutex.hpp>
-#include <boost/thread/condition.hpp>
-#include <boost/enable_shared_from_this.hpp>
 
 #ifdef _MSC_VER
 #  pragma warning( push )
@@ -71,11 +69,13 @@ namespace qi {
     /** Disconnect all callbacks from signal.
      *
      * This function will block until all callbacks are finished.
+     * @return Returns true on success.
      */
     bool disconnectAll();
     /** Disconnect all callbacks from signal without waiting for them.
      *
      * This function does not block.
+     * @return A future set to true on success.
      */
     Future<bool> disconnectAllAsync();
 
@@ -93,14 +93,16 @@ namespace qi {
      *
      * This method blocks until all the already running callbacks are
      * finished.
+     * @return Returns true on success.
      */
     bool disconnect(const SignalLink& link);
 
     /** Disconnect a SignalHandler without waiting for it.
      *
      * Same as disconnect, but this method does not block.
-     * Though this is async, you are guaranteed that when the function returns
+     * Though this is async, you are guaranteed that once the function returns
      * your callback will not be called.
+     * @return A future set to true on success.
      */
     Future<bool> disconnectAsync(const SignalLink& link);
 
@@ -191,7 +193,7 @@ namespace qi {
     * @throw runtime_error if the connection could not be made (because of invalid callback
     * arity or argument type)
     */
-    SignalSubscriber& connect(...);
+    SignalSubscriber connect(...);
 #else
     template <typename F>
     SignalSubscriber connect(F c);
@@ -257,7 +259,7 @@ namespace qi {
     SignalSubscriber(const SignalSubscriber& b);
     SignalSubscriber& operator=(const SignalSubscriber& b);
 
-    ~SignalSubscriber();
+    ~SignalSubscriber() = default;
 
     /** Perform the call.
      *
@@ -297,6 +299,12 @@ namespace qi {
 
   struct SignalSubscriberPrivate
   {
+    SignalSubscriberPrivate();
+
+    // Non-copyable
+    SignalSubscriberPrivate(const SignalSubscriberPrivate&) = delete;
+    SignalSubscriberPrivate& operator=(const SignalSubscriberPrivate&) = delete;
+
     // Source information
     SignalBase* source = nullptr;
     /// Uid that can be passed to GenericObject::disconnect()
