@@ -110,7 +110,8 @@ set(QI_H qi/detail/async.hxx
          qi/version.hpp
          qi/iocolor.hpp
          qi/strand.hpp
-         qi/assert.hpp)
+         qi/assert.hpp
+         qi/algorithm.hpp)
 
 set(QI_C src/dlfcn.cpp
          src/path.cpp

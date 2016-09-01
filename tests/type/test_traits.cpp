@@ -8,6 +8,18 @@
 #include <boost/function.hpp>
 #include <boost/config/suffix.hpp>
 #include <qi/macro.hpp>
+#include <string>
+#include <array>
+#include <vector>
+#include <deque>
+#include <list>
+#include <forward_list>
+#include <map>
+#include <unordered_map>
+#include <set>
+#include <unordered_set>
+#include <boost/container/small_vector.hpp>
+#include <boost/container/slist.hpp>
 
 struct A {};
 
@@ -418,4 +430,142 @@ TEST(TestTraits, FunctionBuiltin)
   static_assert( Equal<Function<int (*)(void)>, int (void)>::value, "");
   static_assert( Equal<Function<int (*)(int&, A)>, int (int&, A)>::value, "");
   static_assert( Equal<Function<float const& (*)(int*, A)>, float const& (int*, A)>::value, "");
+}
+
+struct MyContiguousContainer
+{
+};
+
+namespace qi{ namespace traits{ namespace detail{
+  template<>
+  struct IsContiguous<MyContiguousContainer>
+  {
+    using type = True;
+  };
+}}}
+
+TEST(TestTraits, IsContiguous)
+{
+  using namespace qi::traits;
+
+  // non containers
+  static_assert(!IsContiguous<void>::value, "");
+  static_assert(!IsContiguous<int>::value, "");
+  static_assert(!IsContiguous<int*>::value, "");
+  static_assert(!IsContiguous<int&>::value, "");
+  static_assert(!IsContiguous<A>::value, "");
+
+  // std "containers"
+  static_assert( IsContiguous<std::string>::value, "");
+  static_assert( IsContiguous<std::array<int, 3>>::value, "");
+  static_assert( IsContiguous<std::vector<int>>::value, "");
+  static_assert(!IsContiguous<std::list<int>>::value, "");
+  static_assert(!IsContiguous<std::forward_list<int>>::value, "");
+  static_assert(!IsContiguous<std::deque<int>>::value, "");
+  static_assert(!IsContiguous<std::map<int, char>>::value, "");
+  static_assert(!IsContiguous<std::multimap<int, char>>::value, "");
+  static_assert(!IsContiguous<std::unordered_multimap<int, char>>::value, "");
+  static_assert(!IsContiguous<std::set<int>>::value, "");
+  static_assert(!IsContiguous<std::multiset<int>>::value, "");
+  static_assert(!IsContiguous<std::unordered_set<int>>::value, "");
+
+  // boost containers
+  static_assert( IsContiguous<boost::container::static_vector<int, 3>>::value, "");
+  static_assert( IsContiguous<boost::container::small_vector<int, 3>>::value, "");
+  static_assert(!IsContiguous<boost::container::slist<int>>::value, "");
+  static_assert( IsContiguous<boost::container::flat_set<int>>::value, "");
+  static_assert( IsContiguous<boost::container::flat_multiset<int>>::value, "");
+  static_assert( IsContiguous<boost::container::flat_map<int, char>>::value, "");
+  static_assert( IsContiguous<boost::container::flat_multimap<int, char>>::value, "");
+
+  // custom
+  static_assert( IsContiguous<MyContiguousContainer>::value, "");
+}
+
+TEST(TestTraits, IsContiguousLike)
+{
+  using namespace qi::traits;
+
+  // non containers
+  static_assert(!IsContiguousLike<void>::value, "");
+  static_assert(!IsContiguousLike<int>::value, "");
+  static_assert(!IsContiguousLike<int*>::value, "");
+  static_assert(!IsContiguousLike<int&>::value, "");
+  static_assert(!IsContiguousLike<A>::value, "");
+
+  // std "containers"
+  static_assert( IsContiguousLike<std::string>::value, "");
+  static_assert( IsContiguousLike<std::array<int, 3>>::value, "");
+  static_assert( IsContiguousLike<std::vector<int>>::value, "");
+  static_assert(!IsContiguousLike<std::list<int>>::value, "");
+  static_assert(!IsContiguousLike<std::forward_list<int>>::value, "");
+  static_assert( IsContiguousLike<std::deque<int>>::value, "");
+  static_assert(!IsContiguousLike<std::map<int, char>>::value, "");
+  static_assert(!IsContiguousLike<std::multimap<int, char>>::value, "");
+  static_assert(!IsContiguousLike<std::unordered_multimap<int, char>>::value, "");
+  static_assert(!IsContiguousLike<std::set<int>>::value, "");
+  static_assert(!IsContiguousLike<std::multiset<int>>::value, "");
+  static_assert(!IsContiguousLike<std::unordered_set<int>>::value, "");
+
+  // boost containers
+  static_assert( IsContiguousLike<boost::container::static_vector<int, 3>>::value, "");
+  static_assert( IsContiguousLike<boost::container::small_vector<int, 3>>::value, "");
+  static_assert(!IsContiguousLike<boost::container::slist<int>>::value, "");
+  static_assert( IsContiguousLike<boost::container::flat_set<int>>::value, "");
+  static_assert( IsContiguousLike<boost::container::flat_multiset<int>>::value, "");
+  static_assert( IsContiguousLike<boost::container::flat_map<int, char>>::value, "");
+  static_assert( IsContiguousLike<boost::container::flat_multimap<int, char>>::value, "");
+
+  // custom
+  static_assert( IsContiguousLike<MyContiguousContainer>::value, "");
+}
+
+struct MyList
+{
+};
+
+namespace qi{ namespace traits{ namespace detail{
+  template<>
+  struct IsList<MyList>
+  {
+    using type = True;
+  };
+}}}
+
+TEST(TestTraits, IsList)
+{
+  using namespace qi::traits;
+
+  // Non "containers"
+  static_assert(!IsList<void>::value, "");
+  static_assert(!IsList<int>::value, "");
+  static_assert(!IsList<int*>::value, "");
+  static_assert(!IsList<int&>::value, "");
+  static_assert(!IsList<A>::value, "");
+
+  // std "containers"
+  static_assert(!IsList<std::string>::value, "");
+  static_assert(!IsList<std::array<int, 3>>::value, "");
+  static_assert(!IsList<std::vector<int>>::value, "");
+  static_assert( IsList<std::list<int>>::value, "");
+  static_assert( IsList<std::forward_list<int>>::value, "");
+  static_assert(!IsList<std::deque<int>>::value, "");
+  static_assert(!IsList<std::map<int, char>>::value, "");
+  static_assert(!IsList<std::multimap<int, char>>::value, "");
+  static_assert(!IsList<std::unordered_multimap<int, char>>::value, "");
+  static_assert(!IsList<std::set<int>>::value, "");
+  static_assert(!IsList<std::multiset<int>>::value, "");
+  static_assert(!IsList<std::unordered_set<int>>::value, "");
+
+  // boost containers
+  static_assert(!IsList<boost::container::static_vector<int, 3>>::value, "");
+  static_assert(!IsList<boost::container::small_vector<int, 3>>::value, "");
+  static_assert( IsList<boost::container::slist<int>>::value, "");
+  static_assert(!IsList<boost::container::flat_set<int>>::value, "");
+  static_assert(!IsList<boost::container::flat_multiset<int>>::value, "");
+  static_assert(!IsList<boost::container::flat_map<int, char>>::value, "");
+  static_assert(!IsList<boost::container::flat_multimap<int, char>>::value, "");
+
+  // custom
+  static_assert( IsList<MyList>::value, "");
 }
