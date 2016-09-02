@@ -3,6 +3,11 @@
 ## found in the COPYING file.
 qi_create_test_helper(testlaunch         testlaunch.cpp)
 qi_create_test_helper(testlaunchloop     testlaunchloop.cpp   DEPENDS QI)
+qi_create_test_helper(test_launchloop_with_spaces testlaunchloop.cpp   DEPENDS QI)
+if(QI_WITH_TESTS)
+  set_property(TARGET test_launchloop_with_spaces PROPERTY OUTPUT_NAME "test launchloop with spaces")
+endif()
+
 qi_create_test_helper(check_env          check_env.cpp        DEPENDS QI)
 qi_create_test_helper(check_machineid    check_machineid.cpp  DEPENDS QI)
 qi_create_test_helper(test_application   test_application.cpp DEPENDS QI)
