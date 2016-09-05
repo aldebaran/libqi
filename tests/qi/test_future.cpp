@@ -755,8 +755,8 @@ TEST(TestFutureSync, ThrowOnDestroy) {
   qi::Promise<int> prom;
 
   prom.setError("touctouc");
-  EXPECT_THROW(qi::FutureSync<int>(prom.future()), std::runtime_error);
-  EXPECT_THROW(qi::FutureSync<int>(prom.future()), std::runtime_error); //multiple futuresync on the same future should fail.
+  EXPECT_NO_THROW(qi::FutureSync<int>(prom.future()));
+  EXPECT_NO_THROW(qi::FutureSync<int>(prom.future())); //multiple futuresync on the same future should fail.
   EXPECT_THROW(qi::FutureSync<int>(prom.future()).value(), std::runtime_error); //value should fail.
 }
 

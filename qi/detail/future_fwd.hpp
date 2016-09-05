@@ -628,7 +628,7 @@ namespace qi {
     ~FutureSync() QI_NOEXCEPT(false)
     {
       if (_sync)
-        _future.value();
+        _future.wait();
     }
 
     operator Future<T>()
