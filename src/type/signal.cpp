@@ -90,6 +90,7 @@ namespace qi {
   }
 
   SignalSubscriberPrivate::SignalSubscriberPrivate() = default;
+  SignalSubscriberPrivate::~SignalSubscriberPrivate() = default;
 
   SignalSubscriber::SignalSubscriber()
     : _p(std::make_shared<SignalSubscriberPrivate>())

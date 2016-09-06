@@ -300,6 +300,7 @@ namespace qi {
   struct SignalSubscriberPrivate
   {
     SignalSubscriberPrivate();
+    ~SignalSubscriberPrivate();
 
     // Non-copyable
     SignalSubscriberPrivate(const SignalSubscriberPrivate&) = delete;
