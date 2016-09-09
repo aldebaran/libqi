@@ -116,7 +116,7 @@ void byRef(int& i, bool* done)
 
 TEST(TestSignal, FunctionDestroyedOnDisconnection)
 {
-  std::atomic<bool> destroyed;
+  std::atomic<bool> destroyed{false};
   std::shared_ptr<int> sharedInt{new int{42}, [&](int* i){ delete i; destroyed = true; }};
   qi::Signal<void> signal;
   qi::SignalLink link = signal.connect([sharedInt]{});
