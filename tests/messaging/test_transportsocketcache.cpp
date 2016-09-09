@@ -198,12 +198,3 @@ TEST(TestCall, IPV6Rejected)
 
   qi::os::setenv("QIMESSAGING_ENABLE_IPV6", initialEnvValue.c_str());
 }
-
-
-
-int main(int ac, char **av)
-{
-  qi::Application app(ac, av);
-  ::testing::InitGoogleTest(&ac, av);
-  return RUN_ALL_TESTS();
-}
