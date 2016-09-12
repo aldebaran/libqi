@@ -420,7 +420,7 @@ namespace qi
   {
     if (erc)
     {
-      qiLogWarning() << "connect: " << erc.message();
+      qiLogWarning() << "Error connecting " << _url.str() << ": " << erc.message();
       _status = qi::TransportSocket::Status::Disconnected;
       error("System error: " + erc.message());
       pSetError(connectPromise, "System error: " + erc.message());
@@ -459,7 +459,7 @@ namespace qi
     _connecting = false;
     if (erc)
     {
-      qiLogWarning() << "connect: " << erc.message();
+      qiLogWarning() << "Error connecting " << _url.str() << ": " << erc.message();
       error("System error: " + erc.message());
       _status = qi::TransportSocket::Status::Disconnected;
       pSetError(connectPromise, "System error: " + erc.message());
