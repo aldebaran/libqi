@@ -228,6 +228,8 @@ namespace qi {
       {
         printIndent();
         AnyReference e = *begin;
+        if (e[0].kind() != TypeKind_String)
+          throw std::runtime_error("Cannot serialize maps with non-string keys to JSON");
         serialize(e[0], out, jsonPrintOption, indent);
         printColon();
         serialize(e[1], out, jsonPrintOption, indent);

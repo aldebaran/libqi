@@ -41,7 +41,7 @@ TEST(EncodeJSON, MapIntStringArray)
 
   qi::AnyReference gv = qi::AnyReference::from(mps);
 
-  EXPECT_EQ("{0:[\"pif\",\"paf\",\"pof\"],2:[\"pif\",\"paf\",\"pof\"]}", qi::encodeJSON(gv));
+  ASSERT_ANY_THROW(qi::encodeJSON(gv));
 }
 
 TEST(EncodeJSON, MST) {
@@ -128,6 +128,14 @@ TEST(EncodeJSON, NamedStruct) {
   MPoint mp(41, 42);
   qi::AnyValue gvr = qi::AnyValue::from(mp);
   EXPECT_EQ("{\"x\":41,\"y\":42}", qi::encodeJSON(gvr));
+}
+
+TEST(EncodeJSON, MapValueValue) {
+  std::map<qi::AnyValue, qi::AnyValue> map;
+  map[qi::AnyValue{2}] = qi::AnyValue{"mince!"};
+  map[qi::AnyValue{std::vector<std::string>{"hop", "hop"}}] = qi::AnyValue{12};
+  map[qi::AnyValue{MPoint{1, 2}}] = qi::AnyValue{3.14f};
+  ASSERT_ANY_THROW(qi::encodeJSON(map));
 }
 
 template<class T>
@@ -447,6 +455,24 @@ TEST(DecodeJSON, StructWithDifferentSizedFields)
   Qiqi res = res_any.to<Qiqi>();
   EXPECT_EQ(val,
             res) << qi::encodeJSON(val) << "\n" << qi::encodeJSON(res);
+}
+
+TEST(DecodeJSON, MapIntStringArray)
+{
+  std::string json = "{0:[\"pif\",\"paf\",\"pof\"],2:[\"pif\",\"paf\",\"pof\"]}";
+  ASSERT_ANY_THROW(qi::decodeJSON(json));
+}
+
+TEST(DecodeJSON, MapValueValue)
+{
+  std::string json = "{\"2\":\"mince!\",\"[\\\"hop\\\",\\\"hop\\\"]\":12,\"{\\\"x\\\":1,\\\"y\\\":2}\":3.1400001}";
+  auto map = qi::decodeJSON(json).to<std::map<qi::AnyValue, qi::AnyValue>>();
+  ASSERT_EQ(3u, map.size());
+  for (const auto& entry: map)
+  {
+    EXPECT_TRUE(entry.first.kind() == qi::TypeKind_String)
+        << "Map entry was not interpreted as a string: " << entry.first.toString();
+  }
 }
 
 int main(int argc, char **argv)
