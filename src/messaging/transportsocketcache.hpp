@@ -43,7 +43,13 @@ namespace qi
     void init();
     void close();
 
-    Future<TransportSocketPtr> socket(const ServiceInfo& servInfo, const std::string& protocol = "");
+    /// Get the socket for the given ServiceInfo.
+    /// The original url of the service directory is always preferred to the
+    /// other endpoints, and other endpoints will not be tried if the services
+    /// are running on another machine.
+    /// @param servInfo A service info retrieved from a service directory.
+    /// @param sdUrl The endpoint of the service directory on which the service info came from.
+    Future<TransportSocketPtr> socket(const ServiceInfo& servInfo, const std::string& sdUrl);
     void insert(const std::string& machineId, const Url& url, TransportSocketPtr socket);
 
   private:

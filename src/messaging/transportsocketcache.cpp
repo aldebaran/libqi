@@ -70,21 +70,24 @@ void TransportSocketCache::close()
   _connections.clear();
 }
 
+bool isLocalHost(const std::string& host)
+{
+  return boost::algorithm::starts_with(host, "127.") || host == "localhost";
+}
+
 static UrlVector localhost_only(const UrlVector& input)
 {
   UrlVector result;
-
   result.reserve(input.size());
-  for (UrlVector::const_iterator it = input.begin(), end = input.end(); it != end; ++it)
+  for (const auto& url: input)
   {
-    const std::string& host = it->host();
-    if (boost::algorithm::starts_with(host, "127.") || host == "localhost")
+    if (isLocalHost(url.host()))
       result.push_back(*it);
   }
   return result;
 }
 
-Future<TransportSocketPtr> TransportSocketCache::socket(const ServiceInfo& servInfo, const std::string& protocol)
+Future<TransportSocketPtr> TransportSocketCache::socket(const ServiceInfo& servInfo, const std::string& url)
 {
   const std::string& machineId = servInfo.machineId();
   ConnectionAttemptPtr couple = boost::make_shared<ConnectionAttempt>();
@@ -129,14 +132,20 @@ Future<TransportSocketPtr> TransportSocketCache::socket(const ServiceInfo& servI
     // They will all track the same connection.
     couple->attemptCount = connectionCandidates.size();
     std::map<Url, ConnectionAttemptPtr>& urlMap = _connections[machineId];
-    for (UrlVector::iterator it = connectionCandidates.begin(), end = connectionCandidates.end(); it != end; ++it)
+    for (const auto& url: connectionCandidates)
     {
-      urlMap[*it] = couple;
-      TransportSocketPtr socket = makeTransportSocket(it->protocol());
+      if (!url.isValid())
+        continue; // Do not try to connect to an invalid url!
+
+      if (!local && isLocalHost(url.host()))
+        continue; // Do not try to connect on localhost when it is a remote!
+
+      urlMap[url] = couple;
+      TransportSocketPtr socket = makeTransportSocket(url.protocol());
       _allPendingConnections.push_back(socket);
-      Future<void> sockFuture = socket->connect(*it);
-      qiLogDebug() << "Inserted [" << machineId << "][" << it->str() << "]";
-      sockFuture.connect(&TransportSocketCache::onSocketParallelConnectionAttempt, this, _1, socket, *it, servInfo);
+      Future<void> sockFuture = socket->connect(url);
+      qiLogDebug() << "Inserted [" << machineId << "][" << url.str() << "]";
+      sockFuture.connect(&TransportSocketCache::onSocketParallelConnectionAttempt, this, _1, socket, url, servInfo);
     }
   }
   return couple->promise.future();
