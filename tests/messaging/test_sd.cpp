@@ -25,9 +25,10 @@ TEST(ServiceDirectory, DoubleListen)
 
 struct Serv
 {
+  static int response = 4242;
   int f()
   {
-    return 4242;
+    return response;
   }
 };
 QI_REGISTER_OBJECT(Serv, f);
@@ -46,12 +47,12 @@ TEST(ServiceDirectory, MultiRegister)
   {
     qi::Session client;
     client.connect(sd1.url());
-    ASSERT_EQ(4242, client.service("Serv").value().call<int>("f"));
+    ASSERT_EQ(Serv::response, client.service("Serv").value().call<int>("f"));
   }
   {
     qi::Session client;
     client.connect(sd2.url());
-    ASSERT_EQ(4242, client.service("Serv").value().call<int>("f"));
+    ASSERT_EQ(Serv::response, client.service("Serv").value().call<int>("f"));
   }
 }
 
@@ -67,17 +68,17 @@ TEST(ServiceDirectory, Republish)
 
   sd2.registerService("Serv", sd1.service("Serv"));
 
-  ASSERT_EQ(4242, sd1.service("Serv").value().call<int>("f"));
-  ASSERT_EQ(4242, sd2.service("Serv").value().call<int>("f"));
+  ASSERT_EQ(Serv::response, sd1.service("Serv").value().call<int>("f"));
+  ASSERT_EQ(Serv::response, sd2.service("Serv").value().call<int>("f"));
   {
     qi::Session client;
     client.connect(sd1.url());
-    ASSERT_EQ(4242, client.service("Serv").value().call<int>("f"));
+    ASSERT_EQ(Serv::response, client.service("Serv").value().call<int>("f"));
   }
   {
     qi::Session client;
     client.connect(sd2.url());
-    ASSERT_EQ(4242, client.service("Serv").value().call<int>("f"));
+    ASSERT_EQ(Serv::response, client.service("Serv").value().call<int>("f"));
   }
 }
 
@@ -125,7 +126,37 @@ TEST(ServiceDirectory, CallMessagesAreProperlyDispatched)
   session2->registerService("Service", remoteService);
 
   auto remoteRemoteService = session2->service("Service").value();
-  ASSERT_EQ(4242, remoteRemoteService.call<int>("f"));
+  ASSERT_EQ(Serv::response, remoteRemoteService.call<int>("f"));
+}
+
+TEST(ServiceDirectory, RegisterServiceFromNonListeningSessionAndCallThroughAnIntermediate)
+{
+  auto sessionMainServer = qi::makeSession();
+  auto sessionMainClient = qi::makeSession();
+  auto sessionSecondaryFromMain = qi::makeSession();
+  auto sessionSecondaryServer = qi::makeSession();
+  auto sessionSecondaryClient = qi::makeSession();
+
+  sessionMainServer->listenStandalone("tcp://127.0.0.1:0");
+  sessionSecondaryServer->listenStandalone("tcp://127.0.0.1:0");
+  sessionMainClient->connect(sessionMainServer->endpoints()[0]);
+  sessionSecondaryFromMain->connect(sessionMainServer->endpoints()[0]);
+  sessionSecondaryClient->connect(sessionSecondaryServer->endpoints()[0]);
+
+  // Dummy services are registered to offset the indexes, so that they
+  // cannot match by chance between the two service directories
+  sessionMainServer->registerService("A", boost::make_shared<Serv>());
+  sessionMainServer->registerService("B", boost::make_shared<Serv>());
+  sessionMainServer->registerService("C", boost::make_shared<Serv>());
+
+  auto originalService = boost::make_shared<Serv>();
+  sessionMainClient->registerService("Service", originalService);
+
+  auto remoteService = sessionSecondaryFromMain->service("Service").value();
+  sessionSecondaryServer->registerService("Service", remoteService);
+
+  auto remoteRemoteService = sessionSecondaryClient->service("Service").value();
+  ASSERT_EQ(Serv::response, remoteRemoteService.call<int>("f"));
 }
 
 int main(int argc, char **argv) {
