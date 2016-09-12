@@ -92,7 +92,7 @@ TEST_F(TestTransportSocketCache, DifferentMachineIdLocalConnection)
       could end being the same machineID than the actual one of this \
       machine. Then again, one can't be too sure, and we should probably \
       randomly generate it in order to guarantee this test will be consistent.\
-      Butwe can probably take this chance.";
+      But we can probably take this chance.";
 
   ASSERT_NE(fakeMachineId, qi::os::getMachineId());
 
