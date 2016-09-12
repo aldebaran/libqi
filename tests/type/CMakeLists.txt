@@ -1,7 +1,20 @@
 
 qi_create_gtest(test_value            SRC test_value.cpp            DEPENDS QI GTEST TIMEOUT 30)
 qi_create_gtest(test_event            SRC test_event.cpp            DEPENDS QI GTEST TIMEOUT 30)
-qi_create_gtest(test_object           SRC test_object.cpp           DEPENDS QI GTEST TIMEOUT 30)
+
+qi_create_gtest(
+  test_object
+
+  SRC
+  "test_metaobject.cpp"
+  "test_object.cpp"
+
+  DEPENDS
+  qi
+
+  TIMEOUT 30
+)
+
 qi_create_gtest(test_signature        SRC test_signature.cpp        DEPENDS QI GTEST TIMEOUT 30)
 qi_create_gtest(test_object_eventloop SRC test_object_eventloop.cpp DEPENDS QI GTEST TIMEOUT 30)
 qi_create_gtest(test_async            SRC test_async.cpp            DEPENDS QI GTEST TIMEOUT 30)
