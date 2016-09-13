@@ -19,7 +19,7 @@ namespace qi {
    *
    * Support a special kind of objects: (SocketObject, that are aware of Socket)
    *
-   * Threadsafety warning: do not call listen and addSocketObject at the same time
+   * Thread-safety warning: do not call listen and addSocketObject at the same time.
    *
    */
   class Server: public qi::Trackable<Server>, private boost::noncopyable {

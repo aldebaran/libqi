@@ -44,6 +44,16 @@ namespace qi {
   class TransportSocket;
   using TransportSocketPtr = boost::shared_ptr<TransportSocket>;
 
+  /**
+   * @brief A socket acceptor (not a server, duh).
+   * It automatically accepts incoming connections to the endpoint it
+   * listens to. When a connection is accepted, a transport socket is created
+   * and emitted through the newConnection signal.
+   *
+   * Each socket emitted is already connected to the client, but the messages
+   * are not read from the socket at this level. It is the user responsibility
+   * to manage the life cycle of the socket.
+   */
   class TransportServer : private boost::noncopyable
   {
   public:
