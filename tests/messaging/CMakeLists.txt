@@ -36,6 +36,7 @@ qi_create_gtest(
   test_messaging_internal
 
   "test_messaging.cpp"
+  "test_remoteobject.cpp"
   "test_transportsocketcache.cpp"
   ${MESSAGING_SOURCES}
 
