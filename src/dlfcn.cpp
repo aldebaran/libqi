@@ -45,7 +45,7 @@ namespace qi {
       }
       void *handle = NULL;
       boost::filesystem::path fname(fullName, qi::unicodeFacet());
-      qiLogDebug() << "opening " << fname;
+      qiLogVerbose() << "opening " << fname;
 #ifdef _WIN32
       handle = LoadLibraryW(fname.wstring().c_str());
 #else
