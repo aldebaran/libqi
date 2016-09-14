@@ -4,6 +4,7 @@
 */
 
 #include <gtest/gtest.h>
+#include <future>
 #include <boost/thread.hpp>
 #include <qi/application.hpp>
 #include <qi/future.hpp>
@@ -203,6 +204,14 @@ TEST_F(TestFuture, ComplexType) {
   EXPECT_TRUE(fut.isFinished());
   EXPECT_STREQ("42", fut.value().c_str());
   EXPECT_STREQ("42", gGlobalS.c_str());
+}
+
+TEST_F(TestFuture, PromiseSetWhileWaitingOnFuture)
+{
+  qi::Promise<void> p;
+  auto f = p.future();
+  std::async(std::launch::async, [&]{ p.setValue(nullptr); });
+  ASSERT_EQ(qi::FutureState_FinishedWithValue, f.waitFor(qi::MilliSeconds{300}));
 }
 
 void producer(qi::Promise<int> pro) {
