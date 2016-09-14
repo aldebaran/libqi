@@ -133,6 +133,7 @@ namespace qi {
     }
 
     void FutureBase::notifyFinish() {
+      boost::unique_lock<boost::recursive_mutex> l{_p->_mutex};
       _p->_cond.notify_all();
     }
 
