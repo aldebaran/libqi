@@ -19,6 +19,11 @@ namespace qi {
       void* operator new(size_t);
       void operator delete(void*);
       FutureBasePrivate();
+
+      // Disable copy
+      FutureBasePrivate(const FutureBasePrivate&) = delete;
+      FutureBasePrivate& operator=(const FutureBasePrivate&) = delete;
+
       boost::condition_variable_any _cond;
       boost::recursive_mutex _mutex;
       std::string  _error;
