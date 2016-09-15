@@ -161,8 +161,6 @@ TEST(kill, Terminate)
 
   if (childPid != -1)
   {
-    qi::os::sleep(1);
-
     // is it alive?
     alive = qi::os::kill(childPid, 0);
 
@@ -195,8 +193,6 @@ TEST(kill, Kill)
 
   if (childPid != -1)
   {
-    qi::os::sleep(1);
-
     // is it alive?
     alive = qi::os::kill(childPid, 0);
 
