@@ -25,12 +25,14 @@ TEST(ServiceDirectory, DoubleListen)
 
 struct Serv
 {
-  static int response = 4242;
+  static const int response;
   int f()
   {
     return response;
   }
 };
+const int Serv::response = 4242;
+
 QI_REGISTER_OBJECT(Serv, f);
 
 TEST(ServiceDirectory, MultiRegister)
