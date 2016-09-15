@@ -82,7 +82,7 @@ static UrlVector localhost_only(const UrlVector& input)
   for (const auto& url: input)
   {
     if (isLocalHost(url.host()))
-      result.push_back(*it);
+      result.push_back(url);
   }
   return result;
 }
