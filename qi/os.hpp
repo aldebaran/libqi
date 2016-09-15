@@ -478,7 +478,10 @@ namespace qi {
     QI_API int kill(int pid, int sig);
 
     /**
-     * \brief Check whether a process is running, given its name and pid.
+     * \brief Check whether a process is running, given its file name and pid.
+     * \warning On Linux, since the command line of the process takes a little
+     * time to be made available, the file name check may fail if the process
+     * was spawned too recently.
      * \param pid The PID to check.
      * \param fileName The name of the process: the executable file name
      * with no .exe or _d.exe extension.

@@ -327,6 +327,14 @@ private:
   int _pid;
 };
 
+void waitForProcessInfoReady()
+{
+#if BOOST_OS_LINUX
+  qi::os::msleep(50); // on Linux, checking the executable name is racy
+#endif
+}
+
+
 } // ends anonymous namespace
 
 TEST(QiOs, isProcessRunningCrazyPid)
@@ -351,6 +359,7 @@ TEST(QiOs, isProcessRunningRealProcessWithSpaces)
   const std::string executable("test launchloop with spaces");
   std::string executablePath = qi::path::findBin(executable);
   const ScopedProcess p{executablePath};
+  waitForProcessInfoReady();
   ASSERT_TRUE(qi::os::isProcessRunning(p.pid(), executable))
       << executablePath << " was not found running";
 }
@@ -360,6 +369,7 @@ TEST(QiOs, isProcessRunningRealProcess)
   const std::string executable("testlaunchloop");
   const std::string executablePath = qi::path::findBin(executable);
   const ScopedProcess p{executablePath};
+  waitForProcessInfoReady();
   ASSERT_TRUE(qi::os::isProcessRunning(p.pid(), executable))
       << executablePath << " was not found running";
 }
@@ -378,6 +388,7 @@ TEST(QiOs, isProcessRunningRealProcessWithArgs)
   const std::string executablePath = qi::path::findBin(executable);
   const std::vector<std::string> args { "nan", "mais", "allo", "quoi" };
   const ScopedProcess p{executablePath, args};
+  waitForProcessInfoReady();
   ASSERT_TRUE(qi::os::isProcessRunning(p.pid(), executable));
 }
 
@@ -387,6 +398,7 @@ TEST(QiOs, isProcessRunningRealProcessWithFilePathArg)
   const std::string executablePath = qi::path::findBin(executable);
   const std::vector<std::string> args {"/nan/mais/allo/quoi" };
   const ScopedProcess p{executablePath, args};
+  waitForProcessInfoReady();
   ASSERT_TRUE(qi::os::isProcessRunning(p.pid(), executable));
 }
 
@@ -419,6 +431,7 @@ TEST(QiOs, isProcessRunningRealProcessWithArgsUnicode)
 
   const std::vector<std::string> args { "nan", "mais", "allo", "quoi" };
   const ScopedProcess p{executablePathWithExtension.str(), args};
+  waitForProcessInfoReady();
   ASSERT_TRUE(qi::os::isProcessRunning(p.pid(), executable));
 }
 // Tests for isProcessRunning end ============================================
