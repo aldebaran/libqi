@@ -503,6 +503,13 @@ namespace detail {
           return res;
 #endif
       }
+
+      std::stringstream ss;
+      ss << "Could not find library `" << libName << "' in:" << std::endl;
+      std::vector<std::string> libPaths = qi::path::libPaths();
+      for (const auto& libPath : libPaths)
+        ss << "\t- " << libPath << std::endl;
+      qiLogError() << ss.str();
     }
     catch (const boost::filesystem::filesystem_error &e)
     {
