@@ -125,13 +125,6 @@ TEST(TestScopedFutureGroup, cancelWhileProcessing)
   qi::waitForAll(futures);
 }
 
-int main(int argc, char **argv)
-{
-  qi::Application app(argc, argv);
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}
-
 #ifdef _MSC_VER
 #  pragma warning( pop )
 #endif

@@ -11,10 +11,40 @@ endif()
 qi_create_test_helper(check_env          check_env.cpp        DEPENDS QI)
 qi_create_test_helper(check_machineid    check_machineid.cpp  DEPENDS QI)
 
-qi_create_gtest(test_path_conf    SRC test_path_conf.cpp DEPENDS QI GTEST)
-qi_create_gtest(test_qipath       SRC test_qipath.cpp    ../../src/utils.cpp     DEPENDS QI GTEST)
-qi_create_gtest(test_thread       SRC test_thread.cpp       DEPENDS QI BOOST_THREAD)
-qi_create_gtest(test_qiclock      SRC test_qiclock.cpp      DEPENDS QI GTEST)
+qi_create_gtest(
+  test_qi
+
+  SRC
+  "test_bind.cpp"
+  "test_buffer.cpp"
+  "test_bufferreader.cpp"
+  "test_eventloop.cpp"
+  "test_future.hpp"
+  "test_future.cpp"
+  "test_futuregroup.cpp"
+  "test_locale.cpp"
+  "test_macro.cpp"
+  "test_path_conf.cpp"
+  "test_periodictask.cpp"
+  "test_qi.cpp" # main
+  "test_qiatomic.cpp"
+  "test_qiclock.cpp"
+  "test_qilaunch.cpp"
+  "test_qilog_async.cpp"
+  "test_qilog_sync.cpp"
+  "test_qios.cpp"
+  "test_strand.cpp"
+  "test_trackable.cpp"
+  "test_version.cpp"
+
+  DEPENDS
+  qi
+
+  TIMEOUT 120
+)
+
+qi_create_gtest(test_qipath SRC "test_qipath.cpp" "../../src/utils.cpp" DEPENDS qi)
+
 # test with the default chrono io, which is v1 in boost 1.55
 qi_create_gtest(test_qiclock_chronoio SRC test_qiclock_chronoio.cpp DEPENDS QI GTEST)
 # test with the chrono io v2.
@@ -24,32 +54,3 @@ if(TARGET test_qiclock_chronoio_v2)
   set_target_properties(test_qiclock_chronoio_v2 PROPERTIES
       COMPILE_DEFINITIONS "BOOST_CHRONO_DONT_PROVIDES_DEPRECATED_IO_SINCE_V2_0_0")
 endif()
-qi_create_gtest(test_qilocal      SRC test_locale.cpp       DEPENDS QI GTEST)
-qi_create_gtest(test_qios         SRC test_qios.cpp         DEPENDS QI GTEST)
-qi_create_gtest(test_qiatomic     SRC test_qiatomic.cpp     DEPENDS QI GTEST)
-qi_create_gtest(test_qilaunch     SRC test_qilaunch.cpp     DEPENDS QI GTEST)
-qi_create_gtest(test_qilog_sync   SRC test_qilog_sync.cpp   DEPENDS QI GTEST)
-qi_create_gtest(test_qilog_async  SRC test_qilog_async.cpp  DEPENDS QI GTEST)
-qi_create_gtest(test_strand       SRC test_strand.cpp       DEPENDS QI GTEST)
-
-qi_create_gtest(
-  test_future
-
-  "test_future.hpp"
-  "test_future.cpp"
-  "test_bind.cpp"
-  "test_eventloop.cpp"
-  "test_periodictask.cpp"
-  "test_trackable.cpp"
-
-  DEPENDS
-  qi
-
-  TIMEOUT 30
-)
-
-qi_create_gtest(test_futuregroup  SRC test_futuregroup.cpp  DEPENDS QI GTEST TIMEOUT)
-qi_create_gtest(test_buffer       SRC test_buffer.cpp       DEPENDS QI GTEST TIMEOUT 30)
-qi_create_gtest(test_bufferreader SRC test_bufferreader.cpp DEPENDS QI GTEST TIMEOUT 30)
-qi_create_gtest(test_version      SRC test_version.cpp      DEPENDS QI GTEST TIMEOUT 30)
-qi_create_gtest(test_macro        SRC test_macro.cpp        DEPENDS QI GTEST TIMEOUT 120)

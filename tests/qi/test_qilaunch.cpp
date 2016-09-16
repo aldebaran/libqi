@@ -24,8 +24,8 @@
  */
 // TODO2: Some tests to check the consume stack
 
-static std::string binDir;
-static std::string loopBinDir;
+extern std::string binDir;
+extern std::string loopBinDir;
 
 TEST(spawnvp, CmdWithNoArgs)
 {
@@ -435,13 +435,3 @@ TEST(QiOs, isProcessRunningRealProcessWithArgsUnicode)
   ASSERT_TRUE(qi::os::isProcessRunning(p.pid(), executable));
 }
 // Tests for isProcessRunning end ============================================
-
-int main(int argc, char* argv[])
-{
-  qi::Application app(argc, argv);
-  binDir = qi::path::findBin("testlaunch");
-  loopBinDir = qi::path::findBin("testlaunchloop");
-  qi::log::addFilter("qi.os", qi::LogLevel_Debug);
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}

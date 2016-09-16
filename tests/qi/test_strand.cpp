@@ -387,12 +387,3 @@ TEST(TestStrand, FutureThenActorCancel)
     ASSERT_NO_THROW(finished.future().value());
   }
 }
-
-int main(int argc, char* argv[])
-{
-  qi::Application app(argc, argv);
-  ::testing::InitGoogleTest(&argc, argv);
-  // better for these tests, since a task is 5ms long
-  qi::os::setenv("QI_STRAND_QUANTUM_US", "50000");
-  return RUN_ALL_TESTS();
-}
