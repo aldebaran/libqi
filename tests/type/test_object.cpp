@@ -394,19 +394,19 @@ TEST(TestObject, Simple) {
   EXPECT_EQ(f, obj.call<C>("valuetest", f));
 }
 
-struct Point
+struct YetAnotherPoint
 {
-  bool operator == (const Point& b) const { return x==b.x && y==b.y;}
+  bool operator == (const YetAnotherPoint& b) const { return x==b.x && y==b.y;}
   int x, y;
 };
 
-Point point(int x, int y)
+YetAnotherPoint point(int x, int y)
 {
-  Point p; p.x = x; p.y = y; return p;
+  YetAnotherPoint p; p.x = x; p.y = y; return p;
 }
 
-//QI_TYPE_SERIALIZABLE(Point)
-QI_TYPE_STRUCT(Point, x, y);
+//QI_TYPE_SERIALIZABLE(YetAnotherPoint)
+QI_TYPE_STRUCT(YetAnotherPoint, x, y);
 
 struct FPoint { float x; float y;};
 QI_TYPE_STRUCT(FPoint, x, y);
@@ -421,7 +421,7 @@ QI_TYPE_STRUCT_IMPLEMENT(Test, x);
 
 
 
-Point swapPoint(const Point& b)
+YetAnotherPoint swapPoint(const YetAnotherPoint& b)
 {
   return point(b.y, b.x);
 }
@@ -431,16 +431,16 @@ TEST(TestObject, SerializeSimple)
   qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("swapPoint", &swapPoint);
   qi::AnyObject obj(ob.object());
-  Point p;
+  YetAnotherPoint p;
   p.x = 1; p.y = 2;
-  Point res = obj.call<Point>("swapPoint", p);
+  YetAnotherPoint res = obj.call<YetAnotherPoint>("swapPoint", p);
   ASSERT_EQ(2, res.x);
   ASSERT_EQ(1, res.y);
 }
 
 TEST(TestObject, ConvertSimple)
 {
-  Point p; p.x = 1; p.y = 2;
+  YetAnotherPoint p; p.x = 1; p.y = 2;
   FPoint p2 = qi::AnyReference::from(p).to<FPoint>();
   ASSERT_EQ(p2.x, p.x);
   ASSERT_EQ(p2.y, p.y);
@@ -456,7 +456,7 @@ TEST(TestObject, ConvertMapStruct)
 
   qi::AnyReference r = qi::AnyReference::from(m);
 
-  Point p = r.to<Point>();
+  YetAnotherPoint p = r.to<YetAnotherPoint>();
   qiLogInfo() << "converted map to point";
 
   ASSERT_EQ(41, p.x);
@@ -481,7 +481,7 @@ TEST(TestObject, ConvertGenericMapStruct)
 
   qi::AnyReference r = qi::AnyReference::from(m);
 
-  Point p = r.to<Point>();
+  YetAnotherPoint p = r.to<YetAnotherPoint>();
 
   ASSERT_EQ(41, p.x);
   ASSERT_EQ(42, p.y);
@@ -504,7 +504,7 @@ struct Complex
     && baz == b.baz
     && stuff == b.stuff;
   }
-  std::vector<Point> points;
+  std::vector<YetAnotherPoint> points;
   float foo;
   std::string baz;
   std::list<std::vector<int> > stuff;
@@ -1341,11 +1341,4 @@ TEST(TestObject, WeakObject)
   qi::AnyWeakObject wobj = obj;
   obj = qi::AnyObject();
   ASSERT_FALSE(wobj.lock());
-}
-
-int main(int argc, char **argv)
-{
-  qi::Application app(argc, argv);
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
 }

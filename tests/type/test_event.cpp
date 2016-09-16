@@ -217,9 +217,3 @@ TEST(TestTraceAnalyzer, BogusChildren)
   } while (std::next_permutation(permutator, permutator + 4));
   EXPECT_EQ(24U, count);
 }
-
-int main(int argc, char **argv) {
-  qi::Application app(argc, argv);
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}

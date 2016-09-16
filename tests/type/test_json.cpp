@@ -474,10 +474,3 @@ TEST(DecodeJSON, MapValueValue)
         << "Map entry was not interpreted as a string: " << entry.first.toString();
   }
 }
-
-int main(int argc, char **argv)
-{
-  qi::Application app(argc, argv);
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}

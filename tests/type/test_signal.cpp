@@ -16,6 +16,8 @@
 
 qiLogCategory("test");
 
+namespace
+{
 class Foo
 {
 public:
@@ -31,6 +33,7 @@ void foo(qi::Atomic<int>* r, int, int)     { ++*r; }
 void foo2(qi::Atomic<int>* r, char, char)  { ++*r; }
 void foo3(qi::Atomic<int>* r, Foo *)       { ++*r; }
 void foolast(int, qi::Promise<void> prom, qi::Atomic<int>* r) { prom.setValue(0); ++*r; }
+} // anonymous
 
 TEST(TestSignal, TestCompilation)
 {
@@ -435,11 +438,4 @@ TEST(TestSignalSpy, StoringTypedValueRecords)
     EXPECT_EQ(ints[i], records[i].arg<int>(0));
     EXPECT_EQ(strings[i], records[i].arg<std::string>(1));
   }
-}
-
-int main(int argc, char **argv) {
-  qi::Application app(argc, argv);
-  ::testing::InitGoogleTest(&argc, argv);
-  qi::log::addFilter("*", qi::LogLevel_Debug);
-  return RUN_ALL_TESTS();
 }

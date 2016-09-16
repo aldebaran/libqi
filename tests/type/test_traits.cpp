@@ -361,10 +361,3 @@ TEST(TestTraits, FunctionBuiltin)
   static_assert( Equal<Function<int (*)(int&, A)>, int (int&, A)>::value, "");
   static_assert( Equal<Function<float const& (*)(int*, A)>, float const& (int*, A)>::value, "");
 }
-
-int main(int argc, char **argv)
-{
-  qi::Application app(argc, argv);
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}
