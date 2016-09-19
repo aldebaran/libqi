@@ -259,7 +259,7 @@ namespace qi {
     SignalSubscriber(const SignalSubscriber& b);
     SignalSubscriber& operator=(const SignalSubscriber& b);
 
-    ~SignalSubscriber() = default;
+    ~SignalSubscriber();
 
     /** Perform the call.
      *

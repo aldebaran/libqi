@@ -131,6 +131,8 @@ namespace qi {
     return *this;
   }
 
+  SignalSubscriber::~SignalSubscriber() = default;
+
   static qi::Atomic<int> linkUid{1};
 
   void SignalBase::setCallType(MetaCallType callType)
