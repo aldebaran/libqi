@@ -57,7 +57,7 @@ qi_create_gtest(
   test_call_on_close_session
   SRC test_call_on_close_session.cpp
   DEPENDS TESTSESSION QI BOOST BOOST_THREAD
-  TIMEOUT 60
+  TIMEOUT 90
 )
 
 qi_create_test_helper(test_appsession_opts                                    SRC test_applicationsession_opts.cpp DEPENDS QI GTEST GTEST_MAIN)
