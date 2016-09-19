@@ -5,6 +5,15 @@ if(QI_WITH_TESTS)
   install(TARGETS naoqi.testanymodule        DESTINATION lib/naoqi COMPONENT test)
   install(TARGETS naoqi.testanymodulesession DESTINATION lib/naoqi COMPONENT test)
 
+  # A separate binary that runs a simple service directory
+  # Takes arguments supported by qi::ApplicationSession
+  qi_create_test_helper(simplesd "simplesd.cpp" DEPENDS qi)
+
+  # A separate binary that runs a service directory mirroring the target
+  # Takes arguments supported by qi::ApplicationSession
+  qi_create_test_helper(mirrorsd "mirrorsd.cpp" DEPENDS qi)
+
+  # General tests
   qi_create_gtest(
     test_messaging
 
@@ -23,11 +32,15 @@ if(QI_WITH_TESTS)
 
     DEPENDS
     qi
+    qitestutils
 
     TIMEOUT 120
   )
 
+  # A helper library to test two sessions communicating in various modes
   add_subdirectory(libtestsession)
+
+  # Tests using two sessions communicating in various modes
   qimessaging_create_session_test(
     test_messaging_with_sessionpair
 

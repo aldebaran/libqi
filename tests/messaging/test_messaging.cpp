@@ -1,6 +1,10 @@
 #include <gtest/gtest.h>
 #include <qi/application.hpp>
 #include <qi/log.hpp>
+#include <qi/path.hpp>
+
+std::string simpleSdPath;
+std::string mirrorSdPath;
 
 int main(int argc, char **argv)
 {
@@ -10,7 +14,9 @@ int main(int argc, char **argv)
 #endif
   qi::Application app(argc, argv);
   ::testing::InitGoogleTest(&argc, argv);
-  int res = RUN_ALL_TESTS();
   qi::log::addFilter("qimessaging.*", qi::LogLevel_Debug);
+  simpleSdPath = qi::path::findBin("simplesd");
+  mirrorSdPath = qi::path::findBin("mirrorsd");
+  int res = RUN_ALL_TESTS();
   return res;
 }

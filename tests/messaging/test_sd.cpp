@@ -7,6 +7,12 @@
 #include <qi/application.hpp>
 #include <qi/log.hpp>
 #include <qi/session.hpp>
+#include <qi/testutils/testutils.hpp>
+
+extern std::string simpleSdPath;
+extern std::string mirrorSdPath;
+
+qiLogCategory("TestSD");
 
 TEST(ServiceDirectory, DoubleListen)
 {
@@ -159,4 +165,44 @@ TEST(ServiceDirectory, RegisterServiceFromNonListeningSessionAndCallThroughAnInt
 
   auto remoteRemoteService = sessionSecondaryClient->service("Service").value();
   ASSERT_EQ(Serv::response, remoteRemoteService.call<int>("f"));
+}
+
+TEST(ServiceDirectory, MirrorServicesBetweenProcesses)
+{
+  ScopedProcess mainSd{simpleSdPath, {"--qi-listen-url=tcp://127.0.0.1:54321", "--qi-standalone"}};
+  auto mainClient = qi::makeSession();
+  for (int i = 0; i < 20; ++i)
+  {
+    qi::os::msleep(50);
+    try
+    {
+      mainClient->connect("tcp://127.0.0.1:54321");
+      break;
+    }
+    catch (const std::exception& e)
+    {
+      qiLogInfo() << "Main Service Directory is not ready yet (" << e.what() << ")";
+    }
+  }
+  ASSERT_TRUE(mainClient->isConnected());
+  mainClient->registerService("Service", boost::make_shared<Serv>());
+
+  auto secondaryClient = qi::makeSession();
+  ScopedProcess secondarySd{mirrorSdPath, {"--qi-url=tcp://127.0.0.1:54321", "--qi-listen-url=tcp://127.0.0.1:65432"}};
+  for (int i = 0; i < 20; ++i)
+  {
+    qi::os::msleep(50);
+    try
+    {
+      secondaryClient->connect("tcp://127.0.0.1:65432");
+      break;
+    }
+    catch (const std::exception& e)
+    {
+      qiLogInfo() << "Secondary Service Directory is not ready yet (" << e.what() << ")";
+    }
+  }
+  secondaryClient->waitForService("Service").value(200);
+  auto service = secondaryClient->service("Service").value(200);
+  ASSERT_EQ(Serv::response, service.call<int>("f"));
 }
