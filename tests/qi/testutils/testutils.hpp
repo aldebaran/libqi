@@ -1,12 +1,16 @@
 #include <string>
 #include <qi/os.hpp>
 
+/**
+ * Runs a process from construction to destruction.
+ * At destruction, the process is killed with SIGKILL.
+ */
 class ScopedProcess
 {
 public:
   ScopedProcess(
       const std::string& executable,
-      const std::vector<std::string>& arguments = std::vector<std::string>())
+      const std::vector<std::string>& arguments = std::vector<std::string>{})
     : _executable(executable)
   {
     char** cArgs = new char*[arguments.size()+2];
@@ -15,6 +19,7 @@ public:
       cArgs[i+1] = (char*)arguments[i].c_str();
     cArgs[arguments.size()+1] = NULL;
     _pid = qi::os::spawnvp(cArgs);
+    delete[] cArgs;
     if (_pid <= 0)
       throw std::runtime_error(
           std::string("Could not start: ") + _executable);
@@ -28,6 +33,10 @@ public:
     std::cout << "Waiting for " << _executable << " has yielded the status "
                 << status << " and returned " << ret << std::endl;
   }
+
+  // non-copyable
+  ScopedProcess(const ScopedProcess&) = delete;
+  ScopedProcess& operator=(const ScopedProcess&) = delete;
 
   int pid() const
   {
