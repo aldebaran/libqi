@@ -72,15 +72,13 @@ namespace qi
     struct ::stat status;
     if (qi::os::stat(key.c_str(), &status) != 0)
     {
-      qiLogError() << "stat:" << key << ": "
-                                                 << strerror(errno);
+      qiLogError() << "stat of \"" << key << "\": " << strerror(errno);
       return false;
     }
 
     if (qi::os::stat(crt.c_str(), &status) != 0)
     {
-      qiLogError() << "stat:" << crt << ": "
-                                                 << strerror(errno);
+      qiLogError() << "stat of \"" << crt << "\": " << strerror(errno);
       return false;
     }
 
