@@ -58,8 +58,11 @@ TEST(MetaMethod, toFromJSON)
   EXPECT_EQ(mm.name(), reconstructedMm.name());
   EXPECT_EQ(mm.parametersSignature(), reconstructedMm.parametersSignature());
   EXPECT_EQ(mm.description(), reconstructedMm.description());
-  EXPECT_TRUE(std::equal(mm.parameters().begin(), mm.parameters().end(),
-                         reconstructedMm.parameters().begin(), compareMetaMethodParameter));
+
+  const auto parameters = mm.parameters();
+  EXPECT_TRUE(std::equal(parameters.begin(), parameters.end(),
+    reconstructedMm.parameters().begin(), compareMetaMethodParameter));
+
   EXPECT_EQ(mm.returnDescription(), reconstructedMm.returnDescription());
 }
 
