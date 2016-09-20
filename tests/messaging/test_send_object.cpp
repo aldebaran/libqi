@@ -211,7 +211,7 @@ TEST(SendObject, emitter_from_factory_transmits_objects_through_property_then_re
   auto vectorOfObjectsReceived = emitter.property<std::vector<qi::AnyObject>>("vectorOfObjects").value();
   auto objectToReceive = vectorOfObjectsReceived[0];
   auto receiving = emitter.async<void>("receiveObject", objectToReceive);
-  ASSERT_EQ(qi::FutureState_FinishedWithValue, receiving.wait(500));
+  ASSERT_EQ(qi::FutureState_FinishedWithValue, receiving.wait(timeoutMs));
 }
 
 TEST(SendObject, emitter_from_factory_transmits_objects_through_property_then_ping_property)
