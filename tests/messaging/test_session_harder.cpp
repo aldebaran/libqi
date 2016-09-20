@@ -5,11 +5,12 @@
  ** Copyright (C) 2010, 2012 Aldebaran Robotics
  */
 
-#include <vector>
+#include <chrono>
 #include <string>
+#include <thread>
+#include <vector>
 
 #include <gtest/gtest.h>
-
 #include <qi/session.hpp>
 #include <qi/anyobject.hpp>
 #include <qi/type/dynamicobjectbuilder.hpp>
@@ -28,6 +29,9 @@ struct MyStruct {
   std::string titi;
 };
 
+static const qi::MilliSeconds callTimeout{500};
+static const std::chrono::milliseconds unitTimeout{3000};
+
 QI_TYPE_STRUCT(MyStruct, i, j, titi);
 
 static std::string reply(const std::string &msg)
@@ -38,7 +42,6 @@ static std::string reply(const std::string &msg)
 static MyStruct reply2(const MyStruct &mystruct) {
   return mystruct;
 }
-
 
 qi::AnyObject newObject() {
   qi::DynamicObjectBuilder ob;
@@ -69,27 +72,18 @@ void alternateModule(qi::SessionPtr session) {
   }
 }
 
-
-TEST(QiSession, RegisterUnregisterTwoSession)
+template <typename FunctionType>
+void repeatedlyCallServiceMaybeDying(
+    TestSessionPair& p, int nofAttempts, std::chrono::milliseconds timeout, FunctionType f)
 {
-  int a = 1000;
-  if (TestMode::getTestMode() == TestMode::Mode_SSL)
+  const auto endTime = std::chrono::steady_clock::now() + timeout;
+  auto worker = boost::thread(boost::bind(&alternateModule, p.server()));
+  while (nofAttempts && (endTime > std::chrono::steady_clock::now()))
   {
-    a /= 100;
-  }
-  TestSessionPair p;
-  EXPECT_TRUE(p.client()->isConnected());
-
-  boost::thread worker(boost::bind(&alternateModule, p.server()));
-  while (a) {
-    a--;
-    try {
-      qi::Future<qi::AnyObject> fut = p.client()->service("TestToto");
-      if (fut.hasError()) {
-        std::cout << "Call error:" << fut.error() << std::endl;
-        continue;
-      }
-      std::string ret = fut.value().call<std::string>("reply", "plif");
+    --nofAttempts;
+    try
+    {
+      f();
     }
     catch(const std::exception& e)
     {
@@ -100,32 +94,46 @@ TEST(QiSession, RegisterUnregisterTwoSession)
   worker.join();
 }
 
+TEST(QiSession, RegisterUnregisterTwoSession)
+{
+  int a = 1000;
+  if (TestMode::getTestMode() == TestMode::Mode_SSL)
+  {
+    a /= 100;
+  }
+  TestSessionPair p;
+  repeatedlyCallServiceMaybeDying(p, a, unitTimeout, [&]
+  {
+    qi::Future<qi::AnyObject> fut = p.client()->service("TestToto");
+    ASSERT_NE(qi::FutureState_Running, fut.waitFor(callTimeout));
+    if (fut.hasError(0))
+    {
+      std::cout << "Call error:" << fut.error() << std::endl;
+    }
+    else
+    {
+      fut.value().call<std::string>("reply", "plif");
+    }
+  });
+}
 
 TEST(QiSession, RegisterUnregisterSameSession)
 {
   int a = 1000;
   TestSessionPair p;
-  EXPECT_TRUE(p.client()->isConnected());
-
-  boost::thread worker(boost::bind(&alternateModule, p.server()));
-  while (a) {
-    a--;
-    try
+  repeatedlyCallServiceMaybeDying(p, a, unitTimeout, [&]
+  {
+    qi::Future<qi::AnyObject> fut = p.server()->service("TestToto");
+    ASSERT_NE(qi::FutureState_Running, fut.waitFor(callTimeout));
+    if (fut.hasError(0))
     {
-      qi::Future<qi::AnyObject> fut = p.server()->service("TestToto");
-      if (fut.hasError()) {
-        std::cout << "Call error:" << fut.error() << std::endl;
-        continue;
-      }
+      std::cout << "Call error:" << fut.error() << std::endl;
+    }
+    else
+    {
       fut.value().call<std::string>("reply", "plif");
     }
-    catch(const std::exception& e)
-    {
-      std::cout << "Call exception: " << e.what() << std::endl;
-    }
-  }
-  worker.interrupt();
-  worker.join();
+  });
 }
 
 TEST(QiSession, RegisterUnregisterTwoSessionStruct)
@@ -136,41 +144,35 @@ TEST(QiSession, RegisterUnregisterTwoSessionStruct)
     a /= 100;
   }
   TestSessionPair p;
-  EXPECT_TRUE(p.client()->isConnected());
-
-  boost::thread worker(boost::bind(&alternateModule, p.server()));
-  while (a) {
-    a--;
-    try
+  repeatedlyCallServiceMaybeDying(p, a, unitTimeout, [&]
+  {
+    qi::Future<qi::AnyObject> fut = p.client()->service("TestToto");
+    ASSERT_NE(qi::FutureState_Running, fut.waitFor(callTimeout));
+    if (fut.hasError(0))
     {
-      qi::Future<qi::AnyObject> fut = p.client()->service("TestToto");
-      if (fut.hasError()) {
-        std::cout << "Call error:" << fut.error() << std::endl;
-        continue;
-      }
+      std::cout << "Call error:" << fut.error() << std::endl;
+    }
+    else
+    {
       MyStruct ms;
       ms.i = 32;
       ms.j = 42;
       ms.titi = "tutu";
       qi::Future<MyStruct> ret = fut.value().async<MyStruct>("reply2", ms);
-      ret.wait();
-      if (ret.hasError()) {
+      ASSERT_NE(qi::FutureState_Running, ret.waitFor(callTimeout));
+      if (ret.hasError(0))
+      {
         std::cout << "returned an error:" << fut.error() << std::endl;
-      continue;
       }
-      ASSERT_EQ(ms.i, ret.value().i);
-      ASSERT_EQ(ms.j, ret.value().j);
-      ASSERT_EQ(ms.titi, ret.value().titi);
+      else
+      {
+        ASSERT_EQ(ms.i, ret.value().i);
+        ASSERT_EQ(ms.j, ret.value().j);
+        ASSERT_EQ(ms.titi, ret.value().titi);
+      }
     }
-     catch(const std::exception& e)
-    {
-      std::cout << "Call exception: " << e.what() << std::endl;
-    }
-  }
-  worker.interrupt();
-  worker.join();
+  });
 }
-
 
 TEST(QiSession, RegisterUnregisterSameSessionStruct)
 {
@@ -180,41 +182,34 @@ TEST(QiSession, RegisterUnregisterSameSessionStruct)
     a /= 100;
   }
   TestSessionPair p;
-  EXPECT_TRUE(p.client()->isConnected());
-
-  boost::thread worker(boost::bind(&alternateModule, p.server()));
-  while (a) {
-    a--;
-    try
+  repeatedlyCallServiceMaybeDying(p, a, unitTimeout, [&]
+  {
+    qi::Future<qi::AnyObject> fut = p.server()->service("TestToto");
+    if (fut.hasError())
     {
-      qi::Future<qi::AnyObject> fut = p.server()->service("TestToto");
-      if (fut.hasError()) {
-        std::cout << "Call error:" << fut.error() << std::endl;
-        continue;
-      }
+      std::cout << "Call error:" << fut.error() << std::endl;
+    }
+    else
+    {
       MyStruct ms;
       ms.i = 32;
       ms.j = 42;
       ms.titi = "tutu";
       qi::Future<MyStruct> ret = fut.value().async<MyStruct>("reply2", ms);
-      ret.wait();
-      if (ret.hasError()) {
+      ASSERT_NE(qi::FutureState_Running, ret.waitFor(callTimeout));
+      if (ret.hasError(0))
+      {
         std::cout << "returned an error:" << fut.error() << std::endl;
-        continue;
       }
-      ASSERT_EQ(ms.i, ret.value().i);
-      ASSERT_EQ(ms.j, ret.value().j);
-      ASSERT_EQ(ms.titi, ret.value().titi);
+      else
+      {
+        ASSERT_EQ(ms.i, ret.value().i);
+        ASSERT_EQ(ms.j, ret.value().j);
+        ASSERT_EQ(ms.titi, ret.value().titi);
+      }
     }
-    catch(const std::exception& e)
-    {
-      std::cout << "Call exception: " << e.what() << std::endl;
-    }
-  }
-  worker.interrupt();
-  worker.join();
+  });
 }
-
 
 TEST(QiSession, ConnectToMultipleConstellation)
 {
@@ -230,7 +225,7 @@ TEST(QiSession, ConnectToMultipleConstellation)
 
   qi::Future<void> f;
   f = traveler.connect(constellation1.serviceDirectoryEndpoints()[0].str());
-  f.wait(3000);
+  f.waitFor(callTimeout);
   ASSERT_TRUE(!f.hasError());
   qi::AnyObject proxy = constellation1.server()->service("test1");
   std::string res = proxy.call<std::string>("reply", "plaf");
@@ -238,7 +233,7 @@ TEST(QiSession, ConnectToMultipleConstellation)
   traveler.close();
 
   f = traveler.connect(constellation2.serviceDirectoryEndpoints()[0].str());
-  f.wait(3000);
+  f.waitFor(callTimeout);
   ASSERT_TRUE(!f.hasError());
   proxy = constellation2.server()->service("test2");
   ASSERT_TRUE(!!proxy);
@@ -247,7 +242,7 @@ TEST(QiSession, ConnectToMultipleConstellation)
   traveler.close();
 
   f = traveler.connect(constellation3.serviceDirectoryEndpoints()[0].str());
-  f.wait(3000);
+  f.waitFor(callTimeout);
   if (f.hasError())
     qiLogError() << f.error();
   ASSERT_TRUE(!f.hasError());
