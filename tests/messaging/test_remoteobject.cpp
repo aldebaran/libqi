@@ -37,12 +37,12 @@ public:
   {
     // A server to receive socket connections
     server.listen("tcp://127.0.0.1:12121");
-    server.newConnection.connect([&](qi::TransportSocketPtr newSocket) mutable
+    server.newConnection.connect([this](qi::TransportSocketPtr newSocket) mutable
     {
       qiLogInfo() << "A client connects, let's track its messages";
       assert(!serverSocket);
       serverSocket = newSocket;
-      serverSocket->messageReady.connect([&](const qi::Message& message) mutable
+      serverSocket->messageReady.connect([this](const qi::Message& message) mutable
       {
         qiLogInfo() << "Message received: " << message;
         std::lock_guard<std::mutex> lock{_mutex};
