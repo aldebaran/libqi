@@ -164,9 +164,10 @@ void GwObjectHost::harvestServiceOriginatingObjects(Message& msg, TransportSocke
     const Signature& (MetaMethod::*signatureGetter)() const = NULL;
     if (msg.type() == Message::Type_Reply || msg.type() == Message::Type_Error)
     {
-      std::map<ServiceId, std::map<ObjectId, MetaObject> >::iterator sit = _servicesMetaObjects.find(msg.service());
-      if (msg.function() == Message::BoundObjectFunction_MetaObject &&
-          sit->second.find(msg.object()) == sit->second.end())
+      auto sit = _servicesMetaObjects.find(msg.service());
+      if (msg.function() == Message::BoundObjectFunction_MetaObject
+        && sit != _servicesMetaObjects.end()
+        && sit->second.find(msg.object()) == sit->second.end())
       {
         boost::upgrade_to_unique_lock<boost::shared_mutex> unique_lock(lock);
         _servicesMetaObjects[msg.service()][Message::GenericObject_Main] = extractReturnedMetaObject(msg, sender);
