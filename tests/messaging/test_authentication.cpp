@@ -28,16 +28,19 @@ protected:
     : sd_(true),
       client_(true)
   {
-    sd_.listenStandalone("tcp://127.0.0.1:0");
-  }
-  ~TestAuthentication()
-  {
-
   }
 
-  virtual void SetUp()
+  void SetUp() override
   {
+    ASSERT_TRUE(sd_.setIdentity(
+                  qi::path::findData("qi", "test/qi.public.aldebaran.lan.key"),
+                  qi::path::findData("qi", "test/qi.public.aldebaran.lan.crt")));
+    sd_.listenStandalone("tcps://127.0.0.1:0");
+  }
 
+  void TearDown() override
+  {
+    sd_.close();
   }
 
   qi::Session sd_;

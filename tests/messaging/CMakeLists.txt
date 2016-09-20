@@ -13,6 +13,8 @@ if(QI_WITH_TESTS)
   # Takes arguments supported by qi::ApplicationSession
   qi_create_test_helper(mirrorsd "mirrorsd.cpp" DEPENDS qi)
 
+  qi_stage_dir(".")
+
   # General tests
   qi_create_gtest(
     test_messaging
