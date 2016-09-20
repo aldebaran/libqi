@@ -20,50 +20,55 @@
 
 qiLogCategory("test_futuregroup");
 
-void infiniteTask(qi::Promise<void> promise)
-{
-  while (!promise.isCancelRequested())
+namespace {
+
+  void infiniteTask(qi::Promise<void> promise)
   {
-    qi::os::msleep(2);
-  }
-  promise.setCanceled();
-}
-
-static boost::mutex random_mutex;
-static boost::random::mt19937 rng;
-
-template<int minValue, int maxValue>
-int random_number()
-{
-  boost::mutex::scoped_lock lock(random_mutex);
-  static boost::random::uniform_int_distribution<int> random(minValue, maxValue);
-  return random(rng);
-}
-
-void variableTask(qi::Promise<void> promise)
-{
-  int iterations = random_number<1, 10>();
-  while (iterations)
-  {
-    --iterations;
-    qi::os::msleep(300);
-    if (promise.isCancelRequested())
+    while (!promise.isCancelRequested())
     {
-      promise.setCanceled();
-      return;
+      qi::os::msleep(2);
     }
+    promise.setCanceled();
   }
-  promise.setValue(0);
+
+  static boost::mutex random_mutex;
+  static boost::random::mt19937 rng;
+
+  template<int minValue, int maxValue>
+  int random_number()
+  {
+    boost::mutex::scoped_lock lock(random_mutex);
+    static boost::random::uniform_int_distribution<int> random(minValue, maxValue);
+    return random(rng);
+  }
+
+  void variableTask(qi::Promise<void> promise)
+  {
+    int iterations = random_number<1, 10>();
+    while (iterations)
+    {
+      --iterations;
+      qi::os::msleep(300);
+      if (promise.isCancelRequested())
+      {
+        promise.setCanceled();
+        return;
+      }
+    }
+    promise.setValue(0);
+  }
+
+  template<class TaskFunc>
+  qi::Future<void> launchTask(TaskFunc task)
+  {
+    qi::Promise<void> promise;
+    qi::Future<void> future = promise.future();
+    qi::getEventLoop()->post(boost::bind(task, promise));
+    return future;
+  }
+
 }
 
-template<class TaskFunc>
-qi::Future<void> launchTask(TaskFunc task)
-{
-  qi::Promise<void> promise;
-  qi::Future<void> future = promise.future();
-  qi::getEventLoop()->post(boost::bind(task, promise));
-  return future;
-}
 
 TEST(TestScopedFutureGroup, cancelAddedFutures)
 {
