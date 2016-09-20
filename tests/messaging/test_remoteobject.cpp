@@ -52,7 +52,7 @@ public:
       });
 
       // At this level, we have to do it manually!
-      serverSocket->startReading();
+      serverSocket->ensureReading();
 
       // We are ready to track messages!
       _messagesTrackedPromise.set_value();

@@ -51,7 +51,7 @@ public:
   {
     return true;
   }
-  virtual void startReading()
+  virtual void ensureReading()
   {
   }
   virtual qi::Url remoteEndpoint() const
@@ -779,7 +779,7 @@ void GatewayPrivate::onClientConnection(TransportSocketPtr socket)
                                       sub);
   socket->disconnected.connect(
       &GatewayPrivate::onClientDisconnected, this, socket, socket->remoteEndpoint().str(), _1);
-  socket->startReading();
+  socket->ensureReading();
   {
     boost::mutex::scoped_lock lock(_clientsMutex);
     _clients.push_back(socket);
@@ -801,7 +801,7 @@ void GatewayPrivate::onLocalClientConnection(TransportSocketPtr socket)
                                       sub);
   socket->disconnected.connect(
       &GatewayPrivate::onClientDisconnected, this, socket, socket->remoteEndpoint().str(), _1);
-  socket->startReading();
+  socket->ensureReading();
   {
     boost::mutex::scoped_lock lock(_clientsMutex);
     _clients.push_back(socket);

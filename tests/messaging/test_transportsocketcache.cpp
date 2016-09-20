@@ -24,7 +24,7 @@ namespace {
 
 void newConnection(qi::TransportSocketPtr socket)
 {
-  socket->startReading();
+  socket->ensureReading();
 }
 
 class TestTransportSocketCache : public ::testing::Test

@@ -138,7 +138,7 @@ namespace qi {
             _authProviderFactory->newProvider(), first, signalLink)
           .setCallType(MetaCallType_Direct);
 
-      socket->startReading();
+      socket->ensureReading();
     }
     else
     {

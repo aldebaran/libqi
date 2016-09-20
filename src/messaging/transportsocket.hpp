@@ -64,8 +64,10 @@ namespace qi
     virtual qi::FutureSync<void> disconnect()                = 0;
 
     virtual bool send(const qi::Message &msg)                = 0;
+
+    /// Start reading if is not already reading.
     /// Must be called once if the socket is obtained through TransportServer::newConnection()
-    virtual void  startReading() = 0;
+    virtual void  ensureReading() = 0;
 
     virtual qi::Url remoteEndpoint() const = 0;
 

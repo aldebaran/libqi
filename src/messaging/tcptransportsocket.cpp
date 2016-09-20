@@ -60,11 +60,12 @@ namespace qi
   TcpTransportSocket::TcpTransportSocket(EventLoop* eventLoop, bool ssl, boost::shared_ptr<Socket> s)
     : TransportSocket()
     , _ssl(ssl)
-    , _sslHandshake(false)
+    , _nextHandshakeType()
     , _sslContext(boost::asio::ssl::context::sslv23)
     , _abort(false)
     , _connecting(false)
     , _sending(false)
+    , _isStarted(false)
   {
     _eventLoop = eventLoop;
     _err = 0;
@@ -74,6 +75,8 @@ namespace qi
     {
       _socket = s;
       _status = qi::TransportSocket::Status::Connected;
+      if (_ssl)
+        _nextHandshakeType = boost::asio::ssl::stream_base::server;
       // Transmit each Message without delay
       setSocketOptions();
     }
@@ -88,12 +91,21 @@ namespace qi
     qiLogVerbose() << "deleted " << this;
   }
 
-  void TcpTransportSocket::startReading()
-  {
-    _continueReading();
+  void TcpTransportSocket::ensureReading()
+  { // no connection attempt here (it is already connected), we are not interested
+    // in the result of the connection attempt to be set in the promise
+    ensureReading(qi::Promise<void>{});
   }
 
-  void TcpTransportSocket::_continueReading()
+  void TcpTransportSocket::ensureReading(qi::Promise<void> connectionAttemptPromise)
+  {
+    boost::recursive_mutex::scoped_lock l(_closingMutex);
+    if (_isStarted) return;
+    _isStarted = true;
+    _continueReading(connectionAttemptPromise);
+  }
+
+  void TcpTransportSocket::_continueReading(qi::Promise<void> connectionAttemptPromise)
   {
     qiLogDebug() << this;
 
@@ -108,11 +120,10 @@ namespace qi
 
     if (_ssl)
     {
-      if (!_sslHandshake)
+      if (_nextHandshakeType)
       {
-        qi::Promise<void> prom;
-        _socket->async_handshake(boost::asio::ssl::stream_base::server,
-          boost::bind(&TcpTransportSocket::handshake, shared_from_this(), _1, _socket, prom));
+        _socket->async_handshake(_nextHandshakeType.value(),
+          boost::bind(&TcpTransportSocket::handshake, shared_from_this(), _1, _socket, connectionAttemptPromise));
         return;
       }
 
@@ -150,7 +161,7 @@ namespace qi
     // when using SSL, sometimes we are called spuriously
     if (len == 0)
     {
-      _continueReading();
+      _continueReading(qi::Promise<void>{});
       return;
     }
     QI_ASSERT(len == sizeof(_msg._p->header));
@@ -275,7 +286,7 @@ namespace qi
         qiLogWarning() << "Dispatch to user took " << duration << "us";
     }
     _msg = {};
-    _continueReading();
+    _continueReading(qi::Promise<void>{});
   }
 
   void TcpTransportSocket::error(const std::string& erc)
@@ -284,6 +295,8 @@ namespace qi
     const bool wasConnected = _status == qi::TransportSocket::Status::Connected;
     {
       boost::recursive_mutex::scoped_lock lock(_closingMutex);
+      _isStarted = false; // does the inverse of ensureReading()
+      _nextHandshakeType.reset();
       if (_abort)
       {
         // Return straight away if error has already been called.
@@ -430,7 +443,7 @@ namespace qi
       _status = qi::TransportSocket::Status::Connected;
       pSetValue(connectPromise);
       connected();
-      _sslHandshake = true;
+      _nextHandshakeType.reset();
 
       {
         boost::recursive_mutex::scoped_lock l(_closingMutex);
@@ -449,7 +462,7 @@ namespace qi
         }
       }
 
-      startReading();
+      _continueReading(qi::Promise<void>{});
     }
   }
 
@@ -466,34 +479,23 @@ namespace qi
     }
     else
     {
-      if (_ssl)
-      {
-        boost::recursive_mutex::scoped_lock l(_closingMutex);
-        if (_abort)
-          return;
-        setSocketOptions();
-        _socket->async_handshake(boost::asio::ssl::stream_base::client,
-            boost::bind(&TcpTransportSocket::handshake, shared_from_this(), _1,
-              _socket, connectPromise));
-      }
-      else
+      if (!_ssl)
       {
         _status = qi::TransportSocket::Status::Connected;
         pSetValue(connectPromise);
         connected();
-
-        {
-          boost::recursive_mutex::scoped_lock l(_closingMutex);
-
-          if (_abort)
-          {
-            return;
-          }
-          setSocketOptions();
-        }
-
-        startReading();
+        _nextHandshakeType.reset();
       }
+      else
+      {
+        _nextHandshakeType = boost::asio::ssl::stream_base::client;
+      }
+
+      boost::recursive_mutex::scoped_lock l(_closingMutex);
+      if (_abort)
+        return;
+      setSocketOptions();
+      ensureReading(connectPromise);
     }
   }
 

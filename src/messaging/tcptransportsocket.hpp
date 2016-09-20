@@ -13,6 +13,7 @@
 # include <boost/thread/recursive_mutex.hpp>
 # include <boost/asio.hpp>
 # include <boost/asio/ssl.hpp>
+# include <boost/optional.hpp>
 # include <qi/api.hpp>
 # include "message.hpp"
 # include <qi/url.hpp>
@@ -22,22 +23,37 @@
 
 namespace qi
 {
+  /**
+   * Socket handling the Qi messaging protocol.
+   */
+  // TODO: make this API more symmetric by clarifying the server and client roles.
   class TcpTransportSocket : public TransportSocket, public boost::enable_shared_from_this<TcpTransportSocket>
   {
   public:
     using Socket = boost::asio::ssl::stream<boost::asio::ip::tcp::socket>;
     using SocketPtr = boost::shared_ptr<boost::asio::ssl::stream<boost::asio::ip::tcp::socket>>;
 
+    /// @param s if not null, must be a connected socket on the server side
     explicit TcpTransportSocket(EventLoop* eventloop = getEventLoop(), bool ssl = false, SocketPtr s = {});
     virtual ~TcpTransportSocket();
 
+    /// Connects the socket as a client and ensures that it is reading.
     virtual qi::FutureSync<void> connect(const qi::Url &url);
+
+    /// Stops reading the socket and disconnects it.
     virtual qi::FutureSync<void> disconnect();
+
     virtual bool send(const qi::Message &msg);
-    virtual void startReading();
+    virtual void ensureReading();
     virtual qi::Url remoteEndpoint() const;
   private:
+    /// Internal version of ensureReading taking a promise representing the
+    /// status of the connection attempt.
+    void ensureReading(qi::Promise<void> connectionAttemptPromise);
+
+    /// Forces an error to be processed by the socket, leading to its disconnection.
     void error(const std::string& erc);
+
     void onResolved(const boost::system::error_code& erc,
                     boost::asio::ip::tcp::resolver::iterator it,
                     qi::Promise<void> connectPromise);
@@ -50,11 +66,14 @@ namespace qi
     void send_(qi::Message msg);
     void sendCont(const boost::system::error_code& erc, qi::Message msg, SocketPtr s);
     void setSocketOptions();
-    void _continueReading();
+    void _continueReading(qi::Promise<void> connectionAttemptPromise);
     bool _ssl;
-    bool _sslHandshake;
+
+    /// Type of the next SSL handshake to perform.
+    /// No handshake must be performed if this value is not set.
+    boost::optional<boost::asio::ssl::stream_base::handshake_type> _nextHandshakeType;
     boost::asio::ssl::context _sslContext;
-   SocketPtr _socket;
+    SocketPtr _socket;
 
     bool                _abort; // used to notify send callback sendCont that we are dead
 
@@ -65,9 +84,9 @@ namespace qi
     boost::mutex        _sendQueueMutex; // protects _sendQueue, _sending and closing
     std::deque<Message> _sendQueue;
     bool                _sending;
-    mutable boost::recursive_mutex        _closingMutex;
+    mutable boost::recursive_mutex _closingMutex;
     boost::shared_ptr<boost::asio::ip::tcp::resolver> _r;
-
+    bool _isStarted;
   };
 
   using TcpTransportSocketPtr = boost::shared_ptr<TcpTransportSocket>;
