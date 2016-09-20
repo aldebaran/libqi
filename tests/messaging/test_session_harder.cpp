@@ -29,8 +29,8 @@ struct MyStruct {
   std::string titi;
 };
 
-static const qi::MilliSeconds callTimeout{500};
-static const std::chrono::milliseconds unitTimeout{3000};
+qi::Seconds callTimeout{5};
+std::chrono::seconds unitTimeout{15};
 
 QI_TYPE_STRUCT(MyStruct, i, j, titi);
 
@@ -50,11 +50,43 @@ qi::AnyObject newObject() {
   return ob.object();
 }
 
+
+
+namespace {
+
+  class ScopedThread
+  {
+    boost::thread _thread;
+  public:
+
+    template< class... Args >
+    explicit ScopedThread(Args&&... args)
+      : _thread{ std::forward<Args>(args)... }
+    {
+    }
+
+    ~ScopedThread()
+    {
+      _thread.interrupt();
+      _thread.join();
+    }
+
+  };
+
+#define ASSERT_PROPAGATE_FAILURE( expr__ ) { if( expr__ ); else \
+    { \
+      throw ::testing::AssertionFailure() << '\n' << __FILE__ << '(' << __LINE__ << "): Assertion failed: " << #expr__ << '\n'; \
+    } \
+  }
+
+
+}
+
 void alternateModule(qi::SessionPtr session) {
   while (!boost::this_thread::interruption_requested())
   {
     boost::this_thread::interruption_point();
-    //a--;
+
     qi::AnyObject obj = newObject();
     qi::Future<unsigned int> fut = session->registerService("TestToto", obj);
     if (fut.hasError()) {
@@ -77,7 +109,8 @@ void repeatedlyCallServiceMaybeDying(
     TestSessionPair& p, int nofAttempts, std::chrono::milliseconds timeout, FunctionType f)
 {
   const auto endTime = std::chrono::steady_clock::now() + timeout;
-  auto worker = boost::thread(boost::bind(&alternateModule, p.server()));
+  auto server = p.server();
+  ScopedThread worker{ [server] { alternateModule(server); } };
   while (nofAttempts && (endTime > std::chrono::steady_clock::now()))
   {
     --nofAttempts;
@@ -89,9 +122,11 @@ void repeatedlyCallServiceMaybeDying(
     {
       std::cout << "Call exception: " << e.what() << std::endl;
     }
+    catch (const ::testing::AssertionResult& assertFailure)
+    {
+      ASSERT_TRUE(assertFailure);
+    }
   }
-  worker.interrupt();
-  worker.join();
 }
 
 TEST(QiSession, RegisterUnregisterTwoSession)
@@ -105,7 +140,9 @@ TEST(QiSession, RegisterUnregisterTwoSession)
   repeatedlyCallServiceMaybeDying(p, a, unitTimeout, [&]
   {
     qi::Future<qi::AnyObject> fut = p.client()->service("TestToto");
-    ASSERT_NE(qi::FutureState_Running, fut.waitFor(callTimeout));
+
+    ASSERT_PROPAGATE_FAILURE(fut.waitFor(callTimeout) != qi::FutureState_Running);
+
     if (fut.hasError(0))
     {
       std::cout << "Call error:" << fut.error() << std::endl;
@@ -124,7 +161,9 @@ TEST(QiSession, RegisterUnregisterSameSession)
   repeatedlyCallServiceMaybeDying(p, a, unitTimeout, [&]
   {
     qi::Future<qi::AnyObject> fut = p.server()->service("TestToto");
-    ASSERT_NE(qi::FutureState_Running, fut.waitFor(callTimeout));
+
+    ASSERT_PROPAGATE_FAILURE(fut.waitFor(callTimeout) != qi::FutureState_Running);
+
     if (fut.hasError(0))
     {
       std::cout << "Call error:" << fut.error() << std::endl;
@@ -147,7 +186,9 @@ TEST(QiSession, RegisterUnregisterTwoSessionStruct)
   repeatedlyCallServiceMaybeDying(p, a, unitTimeout, [&]
   {
     qi::Future<qi::AnyObject> fut = p.client()->service("TestToto");
-    ASSERT_NE(qi::FutureState_Running, fut.waitFor(callTimeout));
+
+    ASSERT_PROPAGATE_FAILURE(fut.waitFor(callTimeout) != qi::FutureState_Running);
+
     if (fut.hasError(0))
     {
       std::cout << "Call error:" << fut.error() << std::endl;
@@ -159,18 +200,19 @@ TEST(QiSession, RegisterUnregisterTwoSessionStruct)
       ms.j = 42;
       ms.titi = "tutu";
       qi::Future<MyStruct> ret = fut.value().async<MyStruct>("reply2", ms);
-      ASSERT_NE(qi::FutureState_Running, ret.waitFor(callTimeout));
+      ASSERT_PROPAGATE_FAILURE(ret.waitFor(callTimeout) != qi::FutureState_Running);
       if (ret.hasError(0))
       {
         std::cout << "returned an error:" << fut.error() << std::endl;
       }
       else
       {
-        ASSERT_EQ(ms.i, ret.value().i);
-        ASSERT_EQ(ms.j, ret.value().j);
-        ASSERT_EQ(ms.titi, ret.value().titi);
+        ASSERT_PROPAGATE_FAILURE(ms.i == ret.value().i);
+        ASSERT_PROPAGATE_FAILURE(ms.j == ret.value().j);
+        ASSERT_PROPAGATE_FAILURE(ms.titi == ret.value().titi);
       }
     }
+
   });
 }
 
@@ -196,16 +238,16 @@ TEST(QiSession, RegisterUnregisterSameSessionStruct)
       ms.j = 42;
       ms.titi = "tutu";
       qi::Future<MyStruct> ret = fut.value().async<MyStruct>("reply2", ms);
-      ASSERT_NE(qi::FutureState_Running, ret.waitFor(callTimeout));
+      ASSERT_PROPAGATE_FAILURE(ret.waitFor(callTimeout) != qi::FutureState_Running);
       if (ret.hasError(0))
       {
         std::cout << "returned an error:" << fut.error() << std::endl;
       }
       else
       {
-        ASSERT_EQ(ms.i, ret.value().i);
-        ASSERT_EQ(ms.j, ret.value().j);
-        ASSERT_EQ(ms.titi, ret.value().titi);
+        ASSERT_PROPAGATE_FAILURE(ms.i == ret.value().i);
+        ASSERT_PROPAGATE_FAILURE(ms.j == ret.value().j);
+        ASSERT_PROPAGATE_FAILURE(ms.titi == ret.value().titi);
       }
     }
   });
