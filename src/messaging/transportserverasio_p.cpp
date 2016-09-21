@@ -212,7 +212,7 @@ namespace qi
     ip::tcp::endpoint ep(boost::asio::ip::address::from_string(url.host()), url.port());
 #endif // #ifndef ANDROID
 
-    qiLogDebug() << "Will listen on " << ep.address().to_string() << ' ' << ep.port();
+    qiLogDebug() << "Will listen on " << ep;
     _acceptor->open(ep.protocol());
 #ifdef _WIN32
     boost::asio::socket_base::reuse_address option(false);
@@ -221,7 +221,17 @@ namespace qi
     fcntl(_acceptor->native(), F_SETFD, FD_CLOEXEC);
 #endif
     _acceptor->set_option(option);
-    _acceptor->bind(ep);
+    try
+    {
+      _acceptor->bind(ep);
+    }
+    catch (const boost::system::system_error& e)
+    {
+      std::stringstream ss;
+      ss << "failed to listen on " << ep << ": " << e.what();
+      throw std::runtime_error(ss.str());
+    }
+
     boost::system::error_code ec;
     _acceptor->listen(socket_base::max_connections, ec);
     if (ec)
