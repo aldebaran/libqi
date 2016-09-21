@@ -170,6 +170,7 @@ TEST(ServiceDirectory, RegisterServiceFromNonListeningSessionAndCallThroughAnInt
 
 TEST(ServiceDirectory, MirrorServicesBetweenProcesses)
 {
+  using test::ScopedProcess;
   ScopedProcess mainSd{simpleSdPath, {"--qi-listen-url=tcp://127.0.0.1:54321", "--qi-standalone"}};
   auto mainClient = qi::makeSession();
   for (int i = 0; i < 20; ++i)

@@ -641,7 +641,7 @@ TEST(NetMessageSocketAsio, DisconnectToDistantWhileConnected)
   const std::string scheme{"tcp"};
   const Url url{scheme + "://127.0.0.1:54321"};
   MessageSocketPtr socket;
-  ScopedProcess _{
+  test::ScopedProcess _{
     remoteServiceOwnerPath, {"--qi-standalone", "--qi-listen-url=" + url.str()}
   };
   std::this_thread::sleep_for(milliseconds{100});
@@ -665,7 +665,7 @@ TEST(NetMessageSocketAsio, DistantCrashWhileConnected)
   const Url url{protocol + "://127.0.0.1:54321"};
   MessageSocketPtr socket;
   {
-    ScopedProcess _{
+    test::ScopedProcess _{
       remoteServiceOwnerPath, {"--qi-standalone", "--qi-listen-url=" + url.str()}
     };
     std::this_thread::sleep_for(milliseconds{500});

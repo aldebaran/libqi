@@ -679,6 +679,7 @@ QI_REGISTER_OBJECT(MiddleMan, callOnArgument)
 
 TEST(SendObject, MultiProcessPingPong_CallArgumentMethod)
 {
+  using test::ScopedProcess;
   // Start a service directory in a separate process.
   const std::string sdPath = qi::path::findBin("simplesd");
   ScopedProcess sd {sdPath, {"--qi-listen-url=tcp://127.0.0.1:54321",
@@ -725,6 +726,7 @@ TEST(SendObject, MultiProcessPingPong_ConnectToStandaloneAppInTcpThenTcps)
 {
   using namespace qi;
   using std::chrono::milliseconds;
+  using test::ScopedProcess;
 
   // Register a service in another process.
   const std::string remoteServiceOwnerPath = path::findBin("remoteserviceowner");
