@@ -513,7 +513,7 @@ namespace qi {
     bool first = _p->subscriberMap.empty();
     SignalLink res = ++linkUid;
     SignalSubscriber& subscriberInMap = _p->subscriberMap[res];
-    subscriberInMap = SignalSubscriber{src};
+    subscriberInMap = src;
     subscriberInMap._p->linkId = res;
     subscriberInMap._p->source = this;
     Future<void> callingOnSubscribers{0};
