@@ -2,8 +2,9 @@
 **  Copyright (C) 2012 Aldebaran Robotics
 **  See COPYING for the license
 */
+#include <atomic>
 #include <map>
-#include <qi/atomic.hpp>
+#include <numeric>
 
 #include <boost/thread/recursive_mutex.hpp>
 #include <boost/make_shared.hpp>
@@ -134,7 +135,7 @@ namespace qi {
 
   SignalSubscriber::~SignalSubscriber() = default;
 
-  static qi::Atomic<int> linkUid{1};
+  static std::atomic<SignalLink> linkUid{1};
 
   void SignalBase::setCallType(MetaCallType callType)
   {
@@ -638,6 +639,7 @@ namespace qi {
     return connect(SignalSubscriber(obj, method.front().uid()));
   }
 
-  QI_API const SignalLink SignalBase::invalidSignalLink = ((unsigned int)-1);
+  const SignalLink SignalBase::invalidSignalLink =
+      std::numeric_limits<SignalLink>::max();
 
 }
