@@ -17,7 +17,7 @@
 namespace qi {
   class TransportServer;
 
-  class TransportServerImpl: public boost::enable_shared_from_this<TransportServerImpl>
+  class TransportServerImpl
   {
   public:
     TransportServerImpl(TransportServer* self, EventLoop* ctx)

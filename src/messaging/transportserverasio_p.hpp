@@ -16,11 +16,17 @@
 
 namespace qi
 {
-  class TransportServerAsioPrivate : public TransportServerImpl
+  class TransportServerAsioPrivate:
+      public TransportServerImpl,
+      public boost::enable_shared_from_this<TransportServerAsioPrivate>
   {
+    TransportServerAsioPrivate(TransportServer* self, EventLoop* ctx);
+
   public:
-    TransportServerAsioPrivate(TransportServer* self,
-                                   EventLoop* ctx);
+    static boost::shared_ptr<TransportServerAsioPrivate> make(
+        TransportServer* self,
+        EventLoop* ctx);
+
     virtual ~TransportServerAsioPrivate();
 
     virtual qi::Future<void> listen(const qi::Url& listenUrl);

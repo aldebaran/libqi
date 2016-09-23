@@ -43,15 +43,10 @@ namespace qi
 
   qi::Future<void> TransportServer::listen(const qi::Url &url, qi::EventLoop* ctx)
   {
-    TransportServerImpl* impl = nullptr;
-
-    if (url.protocol() == "tcp")
+    TransportServerImplPtr impl;
+    if (url.protocol() == "tcp" || url.protocol() == "tcps")
     {
-      impl = new TransportServerAsioPrivate(this, ctx);
-    }
-    else if (url.protocol() == "tcps")
-    {
-      impl = new TransportServerAsioPrivate(this, ctx);
+      impl = TransportServerAsioPrivate::make(this, ctx);
     }
     else
     {
@@ -59,10 +54,9 @@ namespace qi
       qiLogError() << s;
       return qi::makeFutureError<void>(s);
     }
-    TransportServerImplPtr implPtr(impl);
     {
       boost::mutex::scoped_lock l(_implMutex);
-      _impl.push_back(implPtr);
+      _impl.push_back(impl);
     }
     return impl->listen(url);
   }

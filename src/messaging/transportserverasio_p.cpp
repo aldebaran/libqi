@@ -115,7 +115,7 @@ namespace qi
    */
   void _updateEndpoints(TransportServerImplPtr p)
   {
-    boost::shared_ptr<TransportServerAsioPrivate> ts = boost::dynamic_pointer_cast<TransportServerAsioPrivate>(p);
+    boost::shared_ptr<TransportServerAsioPrivate> ts = boost::static_pointer_cast<TransportServerAsioPrivate>(p);
     ts->updateEndpoints();
   }
 
@@ -329,6 +329,13 @@ namespace qi
     , _ssl(false)
     , _port(0)
   {
+  }
+
+  boost::shared_ptr<TransportServerAsioPrivate> TransportServerAsioPrivate::make(
+      TransportServer* self,
+      EventLoop* ctx)
+  {
+    return boost::shared_ptr<TransportServerAsioPrivate>{new TransportServerAsioPrivate(self, ctx)};
   }
 
   TransportServerAsioPrivate::~TransportServerAsioPrivate()
