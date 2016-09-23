@@ -135,15 +135,22 @@ namespace qi
     qiLogDebug() << "Checking endpoints...";
     std::vector<qi::Url> currentEndpoints;
 
+    auto updateEP = [&]
+    {
+      return context->asyncDelay(boost::bind(_updateEndpoints, shared_from_this()),
+                                 qi::MicroSeconds(ifsMonitoringTimeout));
+    };
+
     std::map<std::string, std::vector<std::string> > ifsMap = qi::os::hostIPAddrs();
     if (ifsMap.empty())
     {
       const char* s = "Cannot get host addresses";
       qiLogWarning() << s;
+      _asyncEndpoints = updateEP();
+      return;
     }
 
     std::string protocol = _ssl ? "tcps://" : "tcp://";
-
     {
       for (std::map<std::string, std::vector<std::string> >::iterator interfaceIt = ifsMap.begin();
            interfaceIt != ifsMap.end();
@@ -176,8 +183,7 @@ namespace qi
 
     }
 
-    _asyncEndpoints = context->asyncDelay(boost::bind(_updateEndpoints, shared_from_this()),
-        qi::MicroSeconds(ifsMonitoringTimeout));
+    _asyncEndpoints = updateEP();
   }
 
   qi::Future<void> TransportServerAsioPrivate::listen(const qi::Url& url)
