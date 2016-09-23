@@ -195,8 +195,8 @@ TEST_F(TestAuthentication, UserPassTest)
   sd_.setAuthProviderFactory(qi::AuthProviderFactoryPtr(factory));
   client_.setClientAuthenticatorFactory(qi::ClientAuthenticatorFactoryPtr(clientFactory));
 
-  qi::Future<void> conn = client_.connect(sd_.url());
-  ASSERT_FALSE(conn.hasError());
+  qi::Future<void> connecting = client_.connect(sd_.url());
+  ASSERT_FALSE(connecting.hasError()) << "Error was: " << connecting.error();
   ASSERT_TRUE(client_.isConnected());
 }
 
