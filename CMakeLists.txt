@@ -111,7 +111,8 @@ set(QI_H qi/detail/async.hxx
          qi/iocolor.hpp
          qi/strand.hpp
          qi/assert.hpp
-         qi/algorithm.hpp)
+         qi/algorithm.hpp
+         qi/detail/conceptpredicates.hpp)
 
 set(QI_C src/dlfcn.cpp
          src/path.cpp

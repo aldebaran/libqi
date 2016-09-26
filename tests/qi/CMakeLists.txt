@@ -37,6 +37,7 @@ qi_create_gtest(
   "test_trackable.cpp"
   "test_version.cpp"
   "test_algorithm.cpp"
+  "test_conceptpredicates.cpp"
 
   DEPENDS
   qi
