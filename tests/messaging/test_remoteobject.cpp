@@ -4,8 +4,8 @@
 #include <gtest/gtest.h>
 #include <qi/jsoncodec.hpp>
 #include <qi/log.hpp>
-#include <../../src/messaging/remoteobject_p.hpp>
-#include <../../src/messaging/server.hpp>
+#include "../../src/messaging/remoteobject_p.hpp"
+#include "../../src/messaging/server.hpp"
 
 qiLogCategory("Test.RemoteObject");
 
