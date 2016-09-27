@@ -38,10 +38,10 @@ namespace qi
     virtual ~TcpTransportSocket();
 
     /// Connects the socket as a client and ensures that it is reading.
-    virtual qi::FutureSync<void> connect(const qi::Url &url);
+    virtual FutureSync<void> connect(const qi::Url &url);
 
     /// Stops reading the socket and disconnects it.
-    virtual qi::FutureSync<void> disconnect();
+    virtual FutureSync<void> disconnect();
 
     virtual bool send(const qi::Message &msg);
     virtual void ensureReading();
@@ -56,6 +56,7 @@ namespace qi
 
     void onResolved(const boost::system::error_code& erc,
                     boost::asio::ip::tcp::resolver::iterator it,
+                    SocketPtr,
                     qi::Promise<void> connectPromise);
     void onConnected(const boost::system::error_code& erc, SocketPtr s,
                     qi::Promise<void> connectPromise);
@@ -63,9 +64,16 @@ namespace qi
                     qi::Promise<void> connectPromise);
     void onReadHeader(const boost::system::error_code& erc, std::size_t, SocketPtr s);
     void onReadData(const boost::system::error_code& erc, std::size_t, SocketPtr s);
+
+    /// The effective sending of a message. Requires prior locking and assumes
+    /// socket is present and connected.
     void send_(qi::Message msg);
+
     void sendCont(const boost::system::error_code& erc, qi::Message msg, SocketPtr s);
+
+    /// Prepare the socket. Callers must lock _mutex first.
     void setSocketOptions();
+
     void _continueReading(qi::Promise<void> connectionAttemptPromise);
     bool _ssl;
 
@@ -75,18 +83,14 @@ namespace qi
     boost::asio::ssl::context _sslContext;
     SocketPtr _socket;
 
-    bool                _abort; // used to notify send callback sendCont that we are dead
-
     // data to rebuild message
     qi::Message         _msg;
     bool                _connecting;
-
-    boost::mutex        _sendQueueMutex; // protects _sendQueue, _sending and closing
     std::deque<Message> _sendQueue;
     bool                _sending;
-    mutable boost::recursive_mutex _closingMutex;
+    mutable boost::recursive_mutex _mutex;
     boost::shared_ptr<boost::asio::ip::tcp::resolver> _r;
-    bool _isStarted;
+    bool _isReading;
   };
 
   using TcpTransportSocketPtr = boost::shared_ptr<TcpTransportSocket>;

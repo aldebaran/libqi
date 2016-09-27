@@ -176,12 +176,20 @@ void GatewayPrivate::close(bool clearEndpoints)
     {
       boost::recursive_mutex::scoped_lock lock(_serviceMutex);
       disconnections.reserve(_services.size());
-      for (const auto& serviceSlot : _services)
+      while (!_services.empty())
       {
-        if (serviceSlot.second && serviceSlot.first != ServiceSD && serviceSlot.second->isConnected())
-          disconnections.emplace_back(serviceSlot.second->disconnect());
+        auto it = _services.begin();
+        auto& serviceId = it->first;
+        auto& socket = it->second;
+        if (socket && serviceId != ServiceSD && socket->isConnected())
+        { // disconnecting the service's socket will erase the occurrences of the service in callbacks
+          disconnections.emplace_back(socket->disconnect());
+        }
+        else
+        { // this socket is already disconnected, forget about the service
+          _services.erase(it);
+        }
       }
-      _services.clear();
       _sdAvailableServices.clear();
     }
     qi::waitForAll(disconnections);
@@ -189,7 +197,7 @@ void GatewayPrivate::close(bool clearEndpoints)
   {
     std::vector<qi::Future<void>> disconnections;
     {
-      boost::mutex::scoped_lock lock(_clientsMutex);
+      boost::recursive_mutex::scoped_lock lock(_clientsMutex);
       for (auto& client : _clients)
       {
         disconnections.emplace_back(client->disconnect());
@@ -451,7 +459,7 @@ void GatewayPrivate::onClientDisconnected(TransportSocketPtr socket, std::string
         ++it;
   }
   {
-    boost::mutex::scoped_lock lock(_clientsMutex);
+    boost::recursive_mutex::scoped_lock lock(_clientsMutex);
     _clients.erase(std::remove(_clients.begin(), _clients.end(), socket), _clients.end());
   }
   _objectHost.clientDisconnected(socket);
@@ -566,7 +574,10 @@ void GatewayPrivate::onSdConnected(Future<void> fut, Promise<void> prom)
     return prom.setError(fut.error());
   TransportSocketPtr sdSocket = _sdClient.socket();
 
-  _services[ServiceSD] = sdSocket;
+  {
+    boost::recursive_mutex::scoped_lock lock(_serviceMutex);
+    _services[ServiceSD] = sdSocket;
+  }
   // Additional checks are required for some of the SD's messages, so it gets
   // it's own messageReady callback.
   sdSocket->messageReady.connect(&GatewayPrivate::onServiceDirectoryMessageReady, this, _1, sdSocket);
@@ -781,7 +792,7 @@ void GatewayPrivate::onClientConnection(TransportSocketPtr socket)
       &GatewayPrivate::onClientDisconnected, this, socket, socket->remoteEndpoint().str(), _1);
   socket->ensureReading();
   {
-    boost::mutex::scoped_lock lock(_clientsMutex);
+    boost::recursive_mutex::scoped_lock lock(_clientsMutex);
     _clients.push_back(socket);
   }
 }
@@ -803,7 +814,7 @@ void GatewayPrivate::onLocalClientConnection(TransportSocketPtr socket)
       &GatewayPrivate::onClientDisconnected, this, socket, socket->remoteEndpoint().str(), _1);
   socket->ensureReading();
   {
-    boost::mutex::scoped_lock lock(_clientsMutex);
+    boost::recursive_mutex::scoped_lock lock(_clientsMutex);
     _clients.push_back(socket);
   }
 }

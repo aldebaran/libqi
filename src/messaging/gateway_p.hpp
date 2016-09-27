@@ -180,7 +180,7 @@ private:
   TransportSocketCache _socketCache;
 
   std::vector<TransportSocketPtr> _clients;
-  boost::mutex _clientsMutex;
+  boost::recursive_mutex _clientsMutex;
   std::map<ServiceId, TransportSocketPtr> _services;
   std::map<ServiceId, std::string> _sdAvailableServices;
   boost::recursive_mutex _serviceMutex;

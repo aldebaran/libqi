@@ -62,18 +62,17 @@ namespace qi
     , _ssl(ssl)
     , _nextHandshakeType()
     , _sslContext(boost::asio::ssl::context::sslv23)
-    , _abort(false)
+    , _socket(s)
     , _connecting(false)
     , _sending(false)
-    , _isStarted(false)
+    , _isReading(false)
   {
     _eventLoop = eventLoop;
     _err = 0;
     _status = qi::TransportSocket::Status::Disconnected;
 
-    if (s)
-    {
-      _socket = s;
+    if (_socket)
+    { // TODO: check that the socket actually is connected
       _status = qi::TransportSocket::Status::Connected;
       if (_ssl)
         _nextHandshakeType = boost::asio::ssl::stream_base::server;
@@ -82,41 +81,40 @@ namespace qi
     }
   }
 
-
-
   TcpTransportSocket::~TcpTransportSocket()
   {
     qiLogDebug() << this;
-    error("Destroying TcpTransportSocket");
+    error("Automatic disconnection of destroyed TCP transport socket");
     qiLogVerbose() << "deleted " << this;
   }
 
   void TcpTransportSocket::ensureReading()
-  { // no connection attempt here (it is already connected), we are not interested
+  {
+    if (!isConnected())
+      throw std::runtime_error("cannot read on a disconnected socket");
+    // no connection attempt here (it is already connected), we are not interested
     // in the result of the connection attempt to be set in the promise
     ensureReading(qi::Promise<void>{});
   }
 
   void TcpTransportSocket::ensureReading(qi::Promise<void> connectionAttemptPromise)
   {
-    boost::recursive_mutex::scoped_lock l(_closingMutex);
-    if (_isStarted) return;
-    _isStarted = true;
+    boost::recursive_mutex::scoped_lock l(_mutex);
+    if (!_socket)
+      throw std::runtime_error("socket is not connected");
+    if (_isReading)
+      return;
+    _isReading = true;
     _continueReading(connectionAttemptPromise);
   }
 
   void TcpTransportSocket::_continueReading(qi::Promise<void> connectionAttemptPromise)
   {
-    qiLogDebug() << this;
-
+    boost::recursive_mutex::scoped_lock l(_mutex);
     _msg = {};
-    boost::recursive_mutex::scoped_lock l(_closingMutex);
 
-    if (_abort)
-    {
-      error("Aborted");
+    if (!_socket)
       return;
-    }
 
     if (_ssl)
     {
@@ -141,23 +139,28 @@ namespace qi
 
   qi::Url TcpTransportSocket::remoteEndpoint() const
   {
-    boost::recursive_mutex::scoped_lock lock(_closingMutex);
+    boost::recursive_mutex::scoped_lock lock(_mutex);
     if (!_socket)
       return qi::Url();
     return qi::Url(
       _socket->lowest_layer().remote_endpoint().address().to_string(),
-      "tcp",
+      _ssl ? "tcps" : "tcp",
       _socket->lowest_layer().remote_endpoint().port());
   }
 
   void TcpTransportSocket::onReadHeader(const boost::system::error_code& erc,
     std::size_t len, SocketPtr)
   {
+    boost::recursive_mutex::scoped_lock l(_mutex);
     if (erc)
     {
       error("System error: " + erc.message());
       return;
     }
+
+    if (!_socket)
+      return;
+
     // when using SSL, sometimes we are called spuriously
     if (len == 0)
     {
@@ -204,14 +207,6 @@ namespace qi
 
       void* ptr = _msg._p->buffer.reserve(payload);
 
-      boost::recursive_mutex::scoped_lock l(_closingMutex);
-
-      if (_abort)
-      {
-        error("Aborted");
-        return;
-      }
-
       if (_ssl)
       {
         boost::asio::async_read(*_socket,
@@ -230,100 +225,110 @@ namespace qi
   }
 
   void TcpTransportSocket::onReadData(const boost::system::error_code& erc,
-    std::size_t len, SocketPtr)
+    std::size_t, SocketPtr)
   {
     if (erc)
     {
       error("System error: " + erc.message());
       return;
     }
-    qiLogDebug() << this << " Recv (" << _msg.type() << "):" << _msg.address();
-    static int usWarnThreshold = os::getenv("QIMESSAGING_SOCKET_DISPATCH_TIME_WARN_THRESHOLD").empty()?0:strtol(os::getenv("QIMESSAGING_SOCKET_DISPATCH_TIME_WARN_THRESHOLD").c_str(),0,0);
+
+    // Timing utilities for dispatch diagnosis
     qi::int64_t start = 0;
+    static auto warnThresholdEnv = os::getenv("QIMESSAGING_SOCKET_DISPATCH_TIME_WARN_THRESHOLD");
+    static int usWarnThreshold = warnThresholdEnv.empty() ? 0 : strtol(warnThresholdEnv.c_str(), 0, 0);
     if (usWarnThreshold)
       start = os::ustime(); // call might be not that cheap
-    if ((!hasReceivedRemoteCapabilities() &&
-          _msg.service() == Message::Service_Server &&
-          _msg.function() == Message::ServerFunction_Authenticate)
-        || _msg.type() == Message::Type_Capability)
+
+    Message toDispatch;
     {
-      // This one is for us
-      if (_msg.type() != Message::Type_Error)
+      bool mustDispatchMessages = false;
+      boost::recursive_mutex::scoped_lock l(_mutex);
+      if (!_socket)
+        return;
+
+      qiLogDebug() << this << " Recv (" << _msg.type() << "):" << _msg.address();
+
+      if ((!hasReceivedRemoteCapabilities() &&
+            _msg.service() == Message::Service_Server &&
+            _msg.function() == Message::ServerFunction_Authenticate)
+          || _msg.type() == Message::Type_Capability)
       {
-        AnyReference cmRef;
-        try
+        // This one is for us
+        if (_msg.type() != Message::Type_Error)
         {
-          cmRef = _msg.value(typeOf<CapabilityMap>()->signature(), shared_from_this());
-          CapabilityMap cm = cmRef.to<CapabilityMap>();
-          cmRef.destroy();
-          boost::mutex::scoped_lock lock(_contextMutex);
-          _remoteCapabilityMap.insert(cm.begin(), cm.end());
+          AnyReference cmRef;
+          try
+          {
+            cmRef = _msg.value(typeOf<CapabilityMap>()->signature(), shared_from_this());
+            CapabilityMap cm = cmRef.to<CapabilityMap>();
+            cmRef.destroy();
+            boost::mutex::scoped_lock lock(_contextMutex);
+            _remoteCapabilityMap.insert(cm.begin(), cm.end());
+          }
+          catch (const std::runtime_error& e)
+          {
+            cmRef.destroy();
+            qiLogError() << "Ill-formed capabilities message: " << e.what();
+            return error("Ill-formed capabilities message.");
+          }
         }
-        catch (const std::runtime_error& e)
-        {
-          cmRef.destroy();
-          qiLogError() << "Ill-formed capabilities message: " << e.what();
-          return error("Ill-formed capabilities message.");
-        }
+
+        if (_msg.type() != Message::Type_Capability)
+          mustDispatchMessages = true;
       }
-      if (_msg.type() != Message::Type_Capability)
+      else
       {
-        messageReady(_msg);
-        socketEvent(SocketEventData(_msg));
-        _dispatcher.dispatch(_msg);
+        mustDispatchMessages = true;
       }
-    }
-    else
-    {
-      messageReady(_msg);
-      socketEvent(SocketEventData(_msg));
-      _dispatcher.dispatch(_msg);
-    }
+      std::swap(toDispatch, _msg);
+    } // end critical section
+
+    messageReady(toDispatch);
+    socketEvent(SocketEventData(toDispatch));
+    _dispatcher.dispatch(toDispatch);
+
     if (usWarnThreshold)
     {
       qi::int64_t duration = os::ustime() - start;
       if (duration > usWarnThreshold)
         qiLogWarning() << "Dispatch to user took " << duration << "us";
     }
-    _msg = {};
     _continueReading(qi::Promise<void>{});
   }
 
   void TcpTransportSocket::error(const std::string& erc)
   {
     qiLogVerbose() << "Socket error: " << erc;
-    const bool wasConnected = _status == qi::TransportSocket::Status::Connected;
+    boost::recursive_mutex::scoped_lock lock(_mutex);
+
+    _isReading = false; // does the inverse of ensureReading()
+
+    if (!_socket)
     {
-      boost::recursive_mutex::scoped_lock lock(_closingMutex);
-      _isStarted = false; // does the inverse of ensureReading()
-      _nextHandshakeType.reset();
-      if (_abort)
-      {
-        // Return straight away if error has already been called.
-        // Otherwise, `disconnected` callbacks could be called
-        // multiple times.
-        return;
-      }
-      _abort = true;
-      _status = qi::TransportSocket::Status::Disconnected;
-
-      if (_connecting)
-      {
-        _connecting = false;
-      }
-
-      {
-        boost::mutex::scoped_lock l(_sendQueueMutex);
-        boost::system::error_code er;
-        if (_socket)
-        {
-          // Unconditionally try to shutdown if socket is present, it might be in connecting state.
-          _socket->lowest_layer().shutdown(boost::asio::ip::tcp::socket::shutdown_both, er);
-          _socket->lowest_layer().close(er);
-        }
-      }
-      _socket.reset();
+      // Return straight away if error has already been called.
+      // Otherwise, `disconnected` callbacks could be called
+      // multiple times.
+      return;
     }
+
+    const bool wasConnected = _status == qi::TransportSocket::Status::Connected;
+    _status = qi::TransportSocket::Status::Disconnected;
+
+    _nextHandshakeType.reset();
+
+    if (_connecting)
+      _connecting = false;
+
+    {
+      boost::system::error_code er;
+
+      // Unconditionally try to shutdown if socket is present, it might be in connecting state.
+      _socket->lowest_layer().shutdown(boost::asio::ip::tcp::socket::shutdown_both, er);
+      _socket->lowest_layer().close(er);
+    }
+    _socket.reset();
+
 
     // synchronous signals, do not keep the mutex while we trigger
     if (wasConnected)
@@ -334,7 +339,7 @@ namespace qi
 
   qi::FutureSync<void> TcpTransportSocket::connect(const qi::Url &url)
   {
-    boost::recursive_mutex::scoped_lock l(_closingMutex);
+    boost::recursive_mutex::scoped_lock l(_mutex);
 
     if (_status == qi::TransportSocket::Status::Connected || _connecting)
     {
@@ -362,7 +367,7 @@ namespace qi
     qiLogVerbose() << "Trying to connect to " << _url.host() << ":" << _url.port();
     using namespace boost::asio;
     // Resolve url
-    _r = boost::shared_ptr<boost::asio::ip::tcp::resolver>(new boost::asio::ip::tcp::resolver(_socket->get_io_service()));
+    _r = boost::make_shared<boost::asio::ip::tcp::resolver>(_socket->get_io_service());
     ip::tcp::resolver::query q(_url.host(), boost::lexical_cast<std::string>(_url.port())
                            #ifndef ANDROID
                                , boost::asio::ip::tcp::resolver::query::all_matching
@@ -375,15 +380,17 @@ namespace qi
                                   shared_from_this(),
                                   boost::asio::placeholders::error,
                                   boost::asio::placeholders::iterator,
+                                  _socket,
                                   connectPromise));
     return connectPromise.future();
   }
 
   void TcpTransportSocket::onResolved(const boost::system::error_code& erc,
                                       boost::asio::ip::tcp::resolver::iterator it,
+                                      SocketPtr,
                                       qi::Promise<void> connectPromise)
   {
-    boost::recursive_mutex::scoped_lock l(_closingMutex);
+    boost::recursive_mutex::scoped_lock l(_mutex);
     if (!_socket)
     {
       // Disconnection was requested, so error() was already called.
@@ -417,7 +424,6 @@ namespace qi
       return;
     }
 
-
     // asynchronous connect
     _socket->lowest_layer().async_connect(*it,
                                           boost::bind(&TcpTransportSocket::onConnected,
@@ -428,9 +434,14 @@ namespace qi
     _r.reset();
   }
 
-  void TcpTransportSocket::handshake(const boost::system::error_code& erc,
-      SocketPtr, qi::Promise<void> connectPromise)
+  void TcpTransportSocket::handshake(
+      const boost::system::error_code& erc,
+      SocketPtr,
+      qi::Promise<void> connectPromise)
   {
+    boost::recursive_mutex::scoped_lock l(_mutex);
+    _nextHandshakeType.reset();
+
     if (erc)
     {
       qiLogWarning() << "Error connecting " << _url.str() << ": " << erc.message();
@@ -440,35 +451,36 @@ namespace qi
     }
     else
     {
-      _status = qi::TransportSocket::Status::Connected;
+      // The connection attempt succeeded, so the caller is notified so.
+      // But the status should be updated only if no disconnection occurred
+      // in the meantime.
       pSetValue(connectPromise);
+      if (!_socket)
+        return;
+
+      _status = qi::TransportSocket::Status::Connected;
       connected();
-      _nextHandshakeType.reset();
 
+      // Transmit each Message without delay
+      const boost::asio::ip::tcp::no_delay option( true );
+      try
       {
-        boost::recursive_mutex::scoped_lock l(_closingMutex);
-
-        if (_abort)
-        {
-          return;
-        }
-        // Transmit each Message without delay
-        const boost::asio::ip::tcp::no_delay option( true );
-        try {
-          _socket->lowest_layer().set_option(option);
-        } catch (std::exception& e)
-        {
-          qiLogWarning() << "can't set no_delay option: " << e.what();
-        }
+        _socket->lowest_layer().set_option(option);
+      } catch (std::exception& e)
+      {
+        qiLogWarning() << "can't set no_delay option: " << e.what();
       }
 
       _continueReading(qi::Promise<void>{});
     }
   }
 
-  void TcpTransportSocket::onConnected(const boost::system::error_code& erc,
-      SocketPtr, qi::Promise<void> connectPromise)
+  void TcpTransportSocket::onConnected(
+      const boost::system::error_code& erc,
+      SocketPtr,
+      qi::Promise<void> connectPromise)
   {
+    boost::recursive_mutex::scoped_lock l(_mutex);
     _connecting = false;
     if (erc)
     {
@@ -480,27 +492,34 @@ namespace qi
     else
     {
       if (!_ssl)
-      {
-        _status = qi::TransportSocket::Status::Connected;
         pSetValue(connectPromise);
-        connected();
-        _nextHandshakeType.reset();
+      if (_socket)
+      {
+        if (!_ssl)
+        {
+          _nextHandshakeType.reset();
+          _status = qi::TransportSocket::Status::Connected;
+          connected();
+        }
+        else
+        {
+          _nextHandshakeType = boost::asio::ssl::stream_base::client;
+        }
+
+        setSocketOptions();
+        ensureReading(connectPromise);
       }
       else
       {
-        _nextHandshakeType = boost::asio::ssl::stream_base::client;
+        if (_ssl)
+          pSetError(connectPromise, "Disconnected while connecting");
       }
-
-      boost::recursive_mutex::scoped_lock l(_closingMutex);
-      if (_abort)
-        return;
-      setSocketOptions();
-      ensureReading(connectPromise);
     }
   }
 
   void TcpTransportSocket::setSocketOptions()
   {
+    assert(_socket);
     // Transmit each Message without delay
     const boost::asio::ip::tcp::no_delay option( true );
     try {
@@ -596,25 +615,20 @@ namespace qi
 #endif
   }
 
-  qi::FutureSync<void> TcpTransportSocket::disconnect()
+  FutureSync<void> TcpTransportSocket::disconnect()
   {
+    boost::recursive_mutex::scoped_lock l(_mutex);
     if (_status == qi::TransportSocket::Status::Disconnected)
-      return qi::Future<void>(0);
+      return Future<void>{nullptr};
 
     qiLogDebug() << "Disconnecting TCP transport socket";
-    return _eventLoop->async(boost::bind(&TcpTransportSocket::error,
-                                 boost::static_pointer_cast<TcpTransportSocket>(shared_from_this()),
-                                 "Disconnection requested"));
+    error("Disconnection requested");
+    return Future<void>{nullptr};
   }
 
   bool TcpTransportSocket::send(const qi::Message &msg)
   {
-    // Check that once before locking in case some idiot tries to send
-    // from a disconnect notification.
-    if (_status != qi::TransportSocket::Status::Connected)
-      return false;
-    boost::recursive_mutex::scoped_lock lockc(_closingMutex);
-
+    boost::recursive_mutex::scoped_lock l(_mutex);
     if (!_socket || _status != qi::TransportSocket::Status::Connected)
     {
       qiLogDebug() << this << "Send on closed socket";
@@ -622,8 +636,6 @@ namespace qi
     }
 
     qiLogDebug() << this << " Send (" << msg.type() << "):" << msg.address();
-    boost::mutex::scoped_lock lock(_sendQueueMutex);
-
     if (!_sending)
     {
       _sending = true;
@@ -636,6 +648,7 @@ namespace qi
 
   void TcpTransportSocket::send_(qi::Message msg)
   {
+    assert(_socket);
     using boost::asio::buffer;
     std::vector<boost::asio::const_buffer> b;
     msg._p->complete();
@@ -658,14 +671,6 @@ namespace qi
     }
     b.push_back(buffer((const char*)buf.data() + pos, sz - pos));
 
-    boost::recursive_mutex::scoped_lock l(_closingMutex);
-
-    if (_abort)
-    {
-      qiLogWarning() << "send aborted";
-      return;
-    }
-
     _dispatcher.sent(msg);
 
     if (_ssl)
@@ -683,27 +688,19 @@ namespace qi
   /*
    * warning: msg is given to the callback so as not to drop buffers refcount
    */
-  void TcpTransportSocket::sendCont(const boost::system::error_code& erc, qi::Message msg, SocketPtr)
+  void TcpTransportSocket::sendCont(const boost::system::error_code& erc, qi::Message, SocketPtr)
   {
+    boost::recursive_mutex::scoped_lock l(_mutex);
     // The class does not wait for us to terminate, but it will set abort to true.
     // So do not use this before checking abort.
-    if (erc || _abort)
-      return; // read-callback will also get the error, avoid dup and ignore it
-
-    qi::Message m;
-    {
-      boost::mutex::scoped_lock lock(_sendQueueMutex);
-      if (_sendQueue.empty())
-      {
-        _sending = false;
-        return;
-      }
-
-      m = _sendQueue.front();
-      _sendQueue.pop_front();
+    if (erc || !_socket || _sendQueue.empty())
+    { // errors are not processed here, since the read callback already does it
+      _sending = false;
+      return;
     }
 
+    auto m = _sendQueue.front();
+    _sendQueue.pop_front();
     send_(m);
   }
-
 }

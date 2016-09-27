@@ -104,7 +104,7 @@ namespace qi
     qi::MessageDispatcher   _dispatcher;
 
     int                     _err;
-    TransportSocket::Status _status;
+    std::atomic<TransportSocket::Status> _status;
     qi::Url                 _url;
 
   public:
