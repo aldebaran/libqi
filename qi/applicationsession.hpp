@@ -148,6 +148,11 @@ public:
    */
   void run();
 
+  /**
+   * Returns whether the ApplicationSession runs in standalone mode.
+   */
+  bool standAlone();
+
 private:
   ApplicationSessionPrivate* _p;
 };
