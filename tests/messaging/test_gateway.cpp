@@ -483,5 +483,4 @@ namespace
     fut.wait();
     ASSERT_FALSE(fut.hasError());
   }
-
 }

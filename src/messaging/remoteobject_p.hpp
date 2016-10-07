@@ -7,7 +7,7 @@
 #ifndef _SRC_REMOTEOBJECT_P_HPP_
 #define _SRC_REMOTEOBJECT_P_HPP_
 
-#include "transportsocket.hpp"
+#include "messagesocket.hpp"
 #include <qi/anyobject.hpp>
 #include <qi/type/dynamicobject.hpp>
 #include <qi/signal.hpp>
@@ -21,7 +21,7 @@
 
 namespace qi {
 
-  class TransportSocket;
+  class MessageSocket;
   class ServerClient;
 
   struct RemoteSignalLinks {
@@ -37,9 +37,9 @@ namespace qi {
   class RemoteObject : public qi::DynamicObject, public ObjectHost, public Trackable<RemoteObject> {
   public:
     RemoteObject();
-    RemoteObject(unsigned int service, qi::TransportSocketPtr socket = qi::TransportSocketPtr());
+    RemoteObject(unsigned int service, qi::MessageSocketPtr socket = qi::MessageSocketPtr());
     //deprecated
-    RemoteObject(unsigned int service, unsigned int object, qi::MetaObject metaObject, qi::TransportSocketPtr socket = qi::TransportSocketPtr());
+    RemoteObject(unsigned int service, unsigned int object, qi::MetaObject metaObject, qi::MessageSocketPtr socket = qi::MessageSocketPtr());
     ~RemoteObject();
 
     unsigned int nextId() { return ++_nextId; }
@@ -47,7 +47,7 @@ namespace qi {
     //must be called to make the object valid.
     qi::Future<void> fetchMetaObject();
 
-    void setTransportSocket(qi::TransportSocketPtr socket);
+    void setTransportSocket(qi::MessageSocketPtr socket);
     // Set fromSignal if close is invoked from disconnect signal callback
     void close(const std::string& reason, bool fromSignal = false);
     unsigned int service() const { return _service; }
@@ -75,7 +75,7 @@ namespace qi {
   protected:
     using LocalToRemoteSignalLinkMap = std::map<qi::uint64_t, RemoteSignalLinks>;
 
-    boost::synchronized_value<TransportSocketPtr>   _socket;
+    boost::synchronized_value<MessageSocketPtr>   _socket;
     unsigned int                                    _service;
     unsigned int                                    _object;
     boost::synchronized_value<std::map<int, qi::Promise<AnyReference>>> _promises;

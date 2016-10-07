@@ -7,6 +7,7 @@
 #include <utility>
 #include <algorithm>
 #include <string>
+#include <boost/optional.hpp>
 
 #include <qi/trackable.hpp>
 #include <qi/atomic.hpp>
@@ -18,7 +19,7 @@
 #include <qi/future.hpp>
 #include <qi/signal.hpp>
 
-#include "tcptransportsocket.hpp"
+#include "tcpmessagesocket.hpp"
 #include "servicedirectoryclient.hpp"
 #include "transportserver.hpp"
 #include "clientauthenticator_p.hpp"
@@ -32,10 +33,10 @@ static const unsigned int DefaultServiceDirectoryPort = 9559;
 static const ServiceId ServiceSD = qi::Message::Service_ServiceDirectory;
 static const auto UpdateEndpointsPeriod = qi::Seconds(5);
 
-class NullTransportSocket : public qi::TransportSocket
+class NullTransportSocket : public qi::MessageSocket
 {
 public:
-  virtual qi::FutureSync<void> connect(const qi::Url&)
+  qi::FutureSync<void> connect(const qi::Url&) override
   {
     qi::Promise<void> p;
     qi::Future<void> f = p.future();
@@ -43,26 +44,35 @@ public:
     p.setValue(0);
     return f;
   }
-  virtual qi::FutureSync<void> disconnect()
+  qi::FutureSync<void> disconnect() override
   {
     return connect(qi::Url());
   }
-  virtual bool send(const qi::Message&)
+  bool send(const qi::Message&) override
   {
     return true;
   }
-  virtual void ensureReading()
+  bool ensureReading() override
   {
+    return true;
   }
-  virtual qi::Url remoteEndpoint() const
+  boost::optional<qi::Url> remoteEndpoint() const override
   {
     return qi::Url();
+  }
+  qi::Url url() const override
+  {
+    return qi::Url();
+  }
+  MessageSocket::Status status() const override
+  {
+    return MessageSocket::Status::Connected;
   }
 };
 
 struct _pending_msg_eraser
 {
-  _pending_msg_eraser(qi::TransportSocketPtr socket)
+  _pending_msg_eraser(qi::MessageSocketPtr socket)
     : target(socket)
   {
   }
@@ -70,7 +80,7 @@ struct _pending_msg_eraser
   {
     return p.target == target;
   }
-  qi::TransportSocketPtr target;
+  qi::MessageSocketPtr target;
 };
 
 using boolptr = boost::shared_ptr<bool>;
@@ -78,11 +88,11 @@ using boolptr = boost::shared_ptr<bool>;
 
 namespace qi
 {
-void GwTransaction::forceDestination(TransportSocketPtr dest)
+void GwTransaction::forceDestination(MessageSocketPtr dest)
 {
   _destination = dest;
 }
-void GwTransaction::setDestinationIfNull(TransportSocketPtr dest)
+void GwTransaction::setDestinationIfNull(MessageSocketPtr dest)
 {
   if (!_destination)
     _destination = dest;
@@ -366,16 +376,16 @@ void GatewayPrivate::updateEndpoints(const qi::Url& url)
   }
 }
 
-TransportSocketPtr GatewayPrivate::safeGetService(ServiceId id)
+MessageSocketPtr GatewayPrivate::safeGetService(ServiceId id)
 {
   boost::recursive_mutex::scoped_lock lock(_serviceMutex);
-  std::map<ServiceId, TransportSocketPtr>::iterator it;
+  std::map<ServiceId, MessageSocketPtr>::iterator it;
   if ((it = _services.find(id)) == _services.end())
-    return TransportSocketPtr();
+    return MessageSocketPtr();
   return it->second;
 }
 
-void GatewayPrivate::onClientDisconnected(TransportSocketPtr socket, std::string url, const std::string& reason)
+void GatewayPrivate::onClientDisconnected(MessageSocketPtr socket, std::string url, const std::string& reason)
 {
   qiLogVerbose() << "Client " << url << " has left us: " << reason;
   {
@@ -453,8 +463,8 @@ void GatewayPrivate::onClientDisconnected(TransportSocketPtr socket, std::string
     // Check if this client was hosting any service,
     // and if so clean them up.
     boost::recursive_mutex::scoped_lock lock(_serviceMutex);
-    std::map<ServiceId, TransportSocketPtr>::iterator it = _services.begin();
-    std::map<ServiceId, TransportSocketPtr>::iterator end = _services.end();
+    std::map<ServiceId, MessageSocketPtr>::iterator it = _services.begin();
+    std::map<ServiceId, MessageSocketPtr>::iterator end = _services.end();
     for (; it != end;)
       if (it->second == socket)
       {
@@ -523,7 +533,7 @@ void GatewayPrivate::disconnectSDSignalsCallback()
   _signalDisconnections.clear();
 }
 
-void GatewayPrivate::onServiceDirectoryDisconnected(TransportSocketPtr socket, const std::string& reason)
+void GatewayPrivate::onServiceDirectoryDisconnected(MessageSocketPtr socket, const std::string& reason)
 {
   if (_dying.load())
     return;
@@ -588,7 +598,7 @@ void GatewayPrivate::onSdConnected(Future<void> fut, Promise<void> prom)
 {
   if (fut.hasError())
     return prom.setError(fut.error());
-  TransportSocketPtr sdSocket = _sdClient.socket();
+  MessageSocketPtr sdSocket = _sdClient.socket();
 
   {
     boost::recursive_mutex::scoped_lock lock(_serviceMutex);
@@ -652,8 +662,8 @@ Future<void> GatewayPrivate::connect(const Url& sdUrl)
 
 void GatewayPrivate::forwardMessage(ClientMessageId origId,
                                     const Message& forward,
-                                    TransportSocketPtr origin,
-                                    TransportSocketPtr destination)
+                                    MessageSocketPtr origin,
+                                    MessageSocketPtr destination)
 {
   const ServiceId service = forward.service();
   const GWMessageId gwId = forward.id();
@@ -682,7 +692,7 @@ void GatewayPrivate::forwardMessage(ClientMessageId origId,
 }
 
 void GatewayPrivate::clientAuthenticationMessages(const Message& msg,
-                                                  TransportSocketPtr socket,
+                                                  MessageSocketPtr socket,
                                                   AuthProviderPtr auth,
                                                   boolptr firstMessage,
                                                   SignalSubscriberPtr sub)
@@ -692,7 +702,7 @@ try
   int service = msg.service();
   int function = msg.function();
   int type = msg.type();
-  const std::string client_endpoint = socket->remoteEndpoint().str();
+  const std::string client_endpoint = socket->remoteEndpoint().value().str();
   std::string cmsig = typeOf<CapabilityMap>()->signature().toString();
   Message reply;
 
@@ -783,7 +793,7 @@ try
     qiLogVerbose() << builder.str();
     socket->send(reply);
     qiLogVerbose() << "Disconnecting socket...(waiting for at least 2 secs)";
-    onClientDisconnected(socket, socket->remoteEndpoint().str(), builder.str()); // Forced manually here to avoid a deadlock in Signal implementation - FIXME
+    onClientDisconnected(socket, socket->remoteEndpoint().value().str(), builder.str()); // Forced manually here to avoid a deadlock in Signal implementation - FIXME
     socket->disconnect();
     qiLogVerbose() << "Continue after disconnection.";
   }
@@ -801,9 +811,11 @@ catch(...)
   throw;
 }
 
-void GatewayPrivate::onClientConnection(TransportSocketPtr socket)
+void GatewayPrivate::onClientConnection(const std::pair<MessageSocketPtr, Url>& socketUrl)
 {
-  qiLogVerbose() << "Client " << socket->remoteEndpoint().str() << " has knocked knocked knocked on the gateway";
+  auto socket = socketUrl.first;
+  const auto& url = socketUrl.second;
+  qiLogVerbose() << "Client " << url.str() << " has knocked knocked knocked on the gateway";
   SignalSubscriberPtr sub = boost::make_shared<SignalSubscriber>();
   boolptr firstMessage = boost::make_shared<bool>(true);
 
@@ -815,7 +827,7 @@ void GatewayPrivate::onClientConnection(TransportSocketPtr socket)
                                       firstMessage,
                                       sub);
   socket->disconnected.connect(
-      &GatewayPrivate::onClientDisconnected, this, socket, socket->remoteEndpoint().str(), _1);
+      &GatewayPrivate::onClientDisconnected, this, socket, url.str(), _1);
   socket->ensureReading();
   {
     boost::recursive_mutex::scoped_lock lock(_clientsMutex);
@@ -823,9 +835,11 @@ void GatewayPrivate::onClientConnection(TransportSocketPtr socket)
   }
 }
 
-void GatewayPrivate::onLocalClientConnection(TransportSocketPtr socket)
+void GatewayPrivate::onLocalClientConnection(const std::pair<MessageSocketPtr, Url>& socketUrl)
 {
-  qiLogVerbose() << "Client " << socket->remoteEndpoint().str() << " has connected on the local endpoint.";
+  auto socket = socketUrl.first;
+  const auto& url = socketUrl.second;
+  qiLogVerbose() << "Client " << url.str() << " has connected on the local endpoint.";
   SignalSubscriberPtr sub = boost::make_shared<SignalSubscriber>();
   boolptr firstMessage = boost::make_shared<bool>(true);
 
@@ -837,7 +851,7 @@ void GatewayPrivate::onLocalClientConnection(TransportSocketPtr socket)
                                       firstMessage,
                                       sub);
   socket->disconnected.connect(
-      &GatewayPrivate::onClientDisconnected, this, socket, socket->remoteEndpoint().str(), _1);
+      &GatewayPrivate::onClientDisconnected, this, socket, url.str(), _1);
   socket->ensureReading();
   {
     boost::recursive_mutex::scoped_lock lock(_clientsMutex);
@@ -858,7 +872,7 @@ void GatewayPrivate::forgeServiceInfo(ServiceInfo& serviceInfo)
   serviceInfo.setProcessId(qi::os::getpid());
 }
 
-void GatewayPrivate::startServiceAuthentication(TransportSocketPtr serviceSocket, ServiceId sid)
+void GatewayPrivate::startServiceAuthentication(MessageSocketPtr serviceSocket, ServiceId sid)
 {
   ClientAuthenticatorPtr authenticator = _clientAuthenticatorFactory->newAuthenticator();
   CapabilityMap socketCaps = serviceSocket->localCapabilities();
@@ -880,7 +894,7 @@ void GatewayPrivate::startServiceAuthentication(TransportSocketPtr serviceSocket
 }
 
 void GatewayPrivate::serviceAuthenticationMessages(const Message& msg,
-                                                   TransportSocketPtr service,
+                                                   MessageSocketPtr service,
                                                    ServiceId sid,
                                                    ClientAuthenticatorPtr authenticator,
                                                    SignalSubscriberPtr sub)
@@ -917,11 +931,11 @@ void GatewayPrivate::serviceAuthenticationMessages(const Message& msg,
   service->send(next);
 }
 
-void GatewayPrivate::localServiceRegistrationCont(Future<TransportSocketPtr> fut, ServiceId sid)
+void GatewayPrivate::localServiceRegistrationCont(Future<MessageSocketPtr> fut, ServiceId sid)
 {
   if (fut.hasError())
     return invalidateClientsMessages(sid);
-  TransportSocketPtr socket = fut.value();
+  MessageSocketPtr socket = fut.value();
 
   // This method is called by the transportsocketcache, which
   // means the socket may have alread been used: check that.
@@ -931,7 +945,7 @@ void GatewayPrivate::localServiceRegistrationCont(Future<TransportSocketPtr> fut
     localServiceRegistrationEnd(socket, sid);
 }
 
-void GatewayPrivate::localServiceRegistrationEnd(TransportSocketPtr socket, ServiceId sid)
+void GatewayPrivate::localServiceRegistrationEnd(MessageSocketPtr socket, ServiceId sid)
 {
   {
     boost::recursive_mutex::scoped_lock lock(_serviceMutex);
@@ -1013,11 +1027,11 @@ void GatewayPrivate::localServiceRegistration(Future<ServiceInfo> serviceInfoFut
     return invalidateClientsMessages(targetService);
 
   qiLogVerbose() << "Starting local service registration";
-  qi::Future<TransportSocketPtr> fut = _socketCache.socket(serviceInfoFut.value(), "");
+  qi::Future<MessageSocketPtr> fut = _socketCache.socket(serviceInfoFut.value(), "");
   fut.connect(&GatewayPrivate::localServiceRegistrationCont, this, _1, targetService);
 }
 
-void GatewayPrivate::serviceUnavailable(ServiceId service, const Message& subject, TransportSocketPtr client)
+void GatewayPrivate::serviceUnavailable(ServiceId service, const Message& subject, MessageSocketPtr client)
 {
   Message unavailable;
   std::stringstream err;
@@ -1032,20 +1046,23 @@ void GatewayPrivate::serviceUnavailable(ServiceId service, const Message& subjec
   client->send(unavailable);
 }
 
-GWMessageId GatewayPrivate::handleCallMessage(GwTransaction& t, TransportSocketPtr origin, TransportSocketPtr destination)
+GWMessageId GatewayPrivate::handleCallMessage(GwTransaction& t, MessageSocketPtr origin, MessageSocketPtr destination)
 {
   qiLogDebug() << "Handle call " << t.content.address();
   Message& msg = t.content;
   ServiceId targetService = msg.service();
   Message forward;
-  TransportSocketPtr serviceSocket = destination ? destination : safeGetService(targetService);
+  MessageSocketPtr serviceSocket = destination ? destination : safeGetService(targetService);
 
   t.setDestinationIfNull(serviceSocket);
   forward.setType(msg.type());
   forward.setService(msg.service());
   forward.setObject(msg.object());
   forward.setFunction(msg.function());
-  forward.setBuffer(msg.buffer());
+  // The message buffer is moved because:
+  //  1) Buffer has an entity semantics
+  //  2) the message ends up being reused by the socket and the buffer is cleared
+  forward.setBuffer(Buffer{std::move(msg.buffer())});
   forward.setFlags(msg.flags());
   // Check if we already have a connection to this service
   if (!serviceSocket || !serviceSocket->isConnected())
@@ -1125,7 +1142,7 @@ void GatewayPrivate::handleReplyMessage(GwTransaction& t)
   }
 }
 
-void GatewayPrivate::handleEventMessage(GwTransaction& t, TransportSocketPtr socket)
+void GatewayPrivate::handleEventMessage(GwTransaction& t, MessageSocketPtr socket)
 {
   Message& msg = t.content;
   ServiceId service = msg.service();
@@ -1148,22 +1165,22 @@ void GatewayPrivate::handleEventMessage(GwTransaction& t, TransportSocketPtr soc
       return;
     }
 
-    std::map<TransportSocketPtr, SignalLink>& subs = eventIt->second.remoteSubscribers;
+    std::map<MessageSocketPtr, SignalLink>& subs = eventIt->second.remoteSubscribers;
 
     qiLogDebug() << "Forwarding event to " << subs.size() << " subscribers.";
-    for (std::map<TransportSocketPtr, SignalLink>::iterator it = subs.begin(), end = subs.end(); it != end; ++it)
+    for (std::map<MessageSocketPtr, SignalLink>::iterator it = subs.begin(), end = subs.end(); it != end; ++it)
       it->first->send(msg);
   }
 }
 
-void GatewayPrivate::onAnyMessageReady(const Message& msg, TransportSocketPtr socket)
+void GatewayPrivate::onAnyMessageReady(const Message& msg, MessageSocketPtr socket)
 {
   try
   {
     GwTransaction transaction(msg);
     GWMessageId gwId = msg.id();
     ServiceId serviceId = msg.service();
-    TransportSocketPtr destination = [&]() -> TransportSocketPtr {
+    MessageSocketPtr destination = [&]() -> MessageSocketPtr {
 
       // This is likely an internal message and so can be ignored here
       {
@@ -1263,7 +1280,7 @@ void GatewayPrivate::onAnyMessageReady(const Message& msg, TransportSocketPtr so
 
 }
 
-void GatewayPrivate::onServiceDirectoryMessageReady(const Message& msg, TransportSocketPtr socket)
+void GatewayPrivate::onServiceDirectoryMessageReady(const Message& msg, MessageSocketPtr socket)
 {
   // We have to do this check in case multiple services exist on the same socket as the SD.
   if (msg.service() != Message::Service_ServiceDirectory)
@@ -1309,7 +1326,7 @@ void GatewayPrivate::onServiceDirectoryMessageReady(const Message& msg, Transpor
   case Message::ServiceDirectoryAction_RegisterService:
     if (msg.type() != Message::Type_Error)
     {
-      TransportSocketPtr origin;
+      MessageSocketPtr origin;
       {
         boost::mutex::scoped_lock lock(_ongoingMsgMutex);
         origin = _ongoingMessages[ServiceSD][msg.id()].socket;
@@ -1325,17 +1342,17 @@ void GatewayPrivate::onServiceDirectoryMessageReady(const Message& msg, Transpor
   onAnyMessageReady(msg, socket);
 }
 
-void GatewayPrivate::forwardPostMessage(GwTransaction& t, TransportSocketPtr)
+void GatewayPrivate::forwardPostMessage(GwTransaction& t, MessageSocketPtr)
 {
   ServiceId sid = t.content.service();
-  TransportSocketPtr target = safeGetService(sid);
+  MessageSocketPtr target = safeGetService(sid);
   t.setDestinationIfNull(target);
   // the service may have already disconnected
   if (t.destination())
     t.destination()->send(t.content);
 }
 
-void GatewayPrivate::registerEventListenerCall(GwTransaction& t, TransportSocketPtr origin)
+void GatewayPrivate::registerEventListenerCall(GwTransaction& t, MessageSocketPtr origin)
 {
   static const char* sig = "(IIL)";
   Message& msg = t.content;
@@ -1390,7 +1407,7 @@ void GatewayPrivate::registerEventListenerCall(GwTransaction& t, TransportSocket
   origin->send(rep);
 }
 
-void GatewayPrivate::registerEventListenerReply(GwTransaction& t, TransportSocketPtr origin)
+void GatewayPrivate::registerEventListenerReply(GwTransaction& t, MessageSocketPtr origin)
 {
   namespace bt = boost::tuples;
   Message& msg = t.content;
@@ -1426,7 +1443,7 @@ void GatewayPrivate::registerEventListenerReply(GwTransaction& t, TransportSocke
   handleReplyMessage(t);
 }
 
-void GatewayPrivate::unregisterEventListenerCall(GwTransaction& t, TransportSocketPtr origin)
+void GatewayPrivate::unregisterEventListenerCall(GwTransaction& t, MessageSocketPtr origin)
 {
   static const char* sig = "(IIL)";
   AnyReference values = t.content.value(sig, origin);
@@ -1512,7 +1529,7 @@ void GatewayPrivate::invalidateClientsMessages(ServiceId sid)
   }
 }
 
-void GatewayPrivate::reportProcessingFailure(const Message& processedMessage, TransportSocketPtr source, std::string messageText)
+void GatewayPrivate::reportProcessingFailure(const Message& processedMessage, MessageSocketPtr source, std::string messageText)
 {
   Message errorMessage(Message::Type_Error, processedMessage.address());
   errorMessage.setId(processedMessage.id());

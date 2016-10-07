@@ -260,7 +260,7 @@ namespace qi {
     return AnyObject();
   }
 
-  void ObjectRegistrar::registerSocket(TransportSocketPtr socket)
+  void ObjectRegistrar::registerSocket(MessageSocketPtr socket)
   {
     onTransportServerNewConnection(socket, false);
   }

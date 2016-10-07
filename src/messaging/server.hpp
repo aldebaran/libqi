@@ -41,7 +41,7 @@ namespace qi {
 
     std::vector<qi::Url> endpoints() const;
 
-    void onTransportServerNewConnection(TransportSocketPtr socket, bool startReading);
+    void onTransportServerNewConnection(MessageSocketPtr socket, bool startReading);
     void setAuthProviderFactory(AuthProviderFactoryPtr factory);
 
   private:
@@ -50,9 +50,9 @@ namespace qi {
   private:
 
     //TransportSocket
-    void onSocketDisconnected(TransportSocketPtr socket, std::string error);
-    void onMessageReady(const qi::Message &msg, TransportSocketPtr socket);
-    void onMessageReadyNotAuthenticated(const qi::Message& msg, TransportSocketPtr socket, AuthProviderPtr authProvider,
+    void onSocketDisconnected(MessageSocketPtr socket, std::string error);
+    void onMessageReady(const qi::Message &msg, MessageSocketPtr socket);
+    void onMessageReadyNotAuthenticated(const qi::Message& msg, MessageSocketPtr socket, AuthProviderPtr authProvider,
                                         boost::shared_ptr<bool> first, boost::shared_ptr<SignalLink> signalLink);
 
   private:
@@ -77,12 +77,12 @@ namespace qi {
       qi::SignalLink disconnected = qi::SignalBase::invalidSignalLink;
       qi::SignalLink messageReady = qi::SignalBase::invalidSignalLink;
     };
-    std::map<TransportSocketPtr, SocketSubscriber> _subscribers;
+    std::map<MessageSocketPtr, SocketSubscriber> _subscribers;
 
     boost::recursive_mutex              _socketsMutex;
 
-    void connectMessageReady(const TransportSocketPtr& socket);
-    void disconnectSignals(const TransportSocketPtr& socket, const SocketSubscriber& subscriber);
+    void connectMessageReady(const MessageSocketPtr& socket);
+    void disconnectSignals(const MessageSocketPtr& socket, const SocketSubscriber& subscriber);
   };
 }
 

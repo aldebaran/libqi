@@ -17,7 +17,7 @@
 
 #include <qi/trackable.hpp>
 
-#include "transportsocket.hpp"
+#include "messagesocket.hpp"
 
 namespace qi
 {
@@ -49,8 +49,8 @@ namespace qi
     /// are running on another machine.
     /// @param servInfo A service info retrieved from a service directory.
     /// @param sdUrl The endpoint of the service directory on which the service info came from.
-    Future<TransportSocketPtr> socket(const ServiceInfo& servInfo, const std::string& sdUrl);
-    void insert(const std::string& machineId, const Url& url, TransportSocketPtr socket);
+    Future<MessageSocketPtr> socket(const ServiceInfo& servInfo, const std::string& sdUrl);
+    void insert(const std::string& machineId, const Url& url, MessageSocketPtr socket);
 
   private:
 
@@ -62,15 +62,15 @@ namespace qi
     };
 
     using UrlVectorPtr = boost::shared_ptr<UrlVector>;
-    void onSocketConnectionAttempt(Future<void> fut, Promise<TransportSocketPtr> prom, TransportSocketPtr socket, const ServiceInfo& info, uint32_t currentUrlIdx, UrlVectorPtr urls);
-    void onSocketParallelConnectionAttempt(Future<void> fut, TransportSocketPtr socket, Url url, const ServiceInfo& info);
+    void onSocketConnectionAttempt(Future<void> fut, Promise<MessageSocketPtr> prom, MessageSocketPtr socket, const ServiceInfo& info, uint32_t currentUrlIdx, UrlVectorPtr urls);
+    void onSocketParallelConnectionAttempt(Future<void> fut, MessageSocketPtr socket, Url url, const ServiceInfo& info);
     void onSocketDisconnected(Url url, const ServiceInfo& info);
 
 
     boost::mutex _socketMutex;
     struct ConnectionAttempt {
-      Promise<TransportSocketPtr> promise;
-      TransportSocketPtr endpoint;
+      Promise<MessageSocketPtr> promise;
+      MessageSocketPtr endpoint;
       UrlVector relatedUrls;
       int attemptCount;
       State state;
@@ -83,7 +83,7 @@ namespace qi
     using MachineId = std::string;
     using ConnectionMap = std::map<MachineId, std::map<Url, ConnectionAttemptPtr>>;
     ConnectionMap _connections;
-    std::list<TransportSocketPtr> _allPendingConnections;
+    std::list<MessageSocketPtr> _allPendingConnections;
     bool _dying;
   };
 }

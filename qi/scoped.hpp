@@ -115,7 +115,7 @@ namespace qi
   public:
     /// We must ensure this cannot be (ab)used as a copy constructor (hence EnableIf).
     template<typename G, typename = traits::EnableIf<!std::is_base_of<Scoped, G>::value>>
-    Scoped(G&& f)
+    explicit Scoped(G&& f)
       : f(std::forward<G>(f))
     {
     }

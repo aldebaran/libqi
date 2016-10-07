@@ -1,0 +1,314 @@
+#pragma once
+#ifndef _QI_NET_SEND_HPP
+#define _QI_NET_SEND_HPP
+#include <atomic>
+#include <vector>
+#include <list>
+#include <stdexcept>
+#include <sstream>
+#include <boost/thread/synchronized_value.hpp>
+#include <boost/core/ignore_unused.hpp>
+#include <qi/messaging/net/concept.hpp>
+#include <qi/messaging/net/traits.hpp>
+#include <qi/messaging/net/option.hpp>
+#include <qi/messaging/net/error.hpp>
+#include <qi/messaging/net/common.hpp>
+#include <qi/trackable.hpp>
+#include <qi/future.hpp>
+#include <qi/scoped.hpp>
+#include <qi/atomic.hpp>
+#include "src/messaging/message.hpp"
+
+/// @file
+/// Contains functions and types related to message sending on a socket.
+
+namespace qi { namespace net {
+
+  /// Make network buffers for the given message.
+  ///
+  /// One buffer is for the header and the other one is for data.
+  ///
+  /// Network N
+  template<typename N>
+  std::vector<ConstBuffer<N>> makeBuffers(const Message& msg)
+  {
+    // header buffer
+    ConstBuffer<N> headerBuffer = N::buffer(static_cast<const void*>(msg._p->getHeader()),
+      sizeof(MessagePrivate::MessageHeader));
+    std::vector<ConstBuffer<N>> buffers;
+    msg._p->complete();
+    const auto& msgBuffer = msg.buffer();
+
+    // A buffer has a header and data.
+    // Inside data, subbuffers' sizes are interleaved.
+    // Subbuffers are _not_ inside the buffer, but in separate memory.
+    // We're going to send to the network:
+    // - the header
+    // - for all subbuffers:
+    //  - the data chunk in the main buffer up to (and including) the subbuffer's size
+    //  - the subbuffer
+    // - the last data chunk in the main buffer
+    //
+    // Memory layout for a buffer with 2 subbuffers:
+    // (low address)                                                         (high address)
+    // |header|buffer_part_0|size_subbuffer_0|buffer_part_1|size_subbuffer_1|buffer_part_2|
+    buffers.reserve(1 + 2 * msgBuffer.subBuffers().size() + 1);
+    buffers.push_back(headerBuffer);
+
+    decltype(msgBuffer.size()) beginOffset = 0;
+    // subbuffers
+    for (const auto& sub: msgBuffer.subBuffers())
+    {
+      // buffer chunk between startOffset and the offset past the next subbuffer's size
+      const auto sizeOffset = sub.first;
+      auto endOffset = sizeOffset + sizeof(Buffer::size_type);
+      if (endOffset != beginOffset)
+        buffers.push_back(N::buffer(
+          static_cast<const char*>(msgBuffer.data()) + beginOffset, endOffset - beginOffset));
+      beginOffset = endOffset;
+      // subbuffer
+      const auto& subBuffer = sub.second;
+      buffers.push_back(N::buffer(subBuffer.data(), subBuffer.size()));
+    }
+    // end of main buffer
+    buffers.push_back(N::buffer(
+      static_cast<const char*>(msgBuffer.data()) + beginOffset, msgBuffer.size() - beginOffset));
+    return buffers;
+  }
+
+  /// Send a message through the socket and call the handler when the operation
+  /// is complete, successfully or not.
+  ///
+  /// If the handler returns a new message, it is immediately sent.
+  ///
+  /// Precondition: The message refered to by `cptrMsg` must be valid until the
+  ///   handler has been called.
+  ///
+  /// Precondition: This function must not be called while a message is already
+  ///   being sent. It is possible to call it again only once the handler as
+  ///   been called.
+  ///
+  /// Example:
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  /// // `It` is the iterator type of the message queue.
+  /// // Precondition: msgQueue is not empty.
+  /// sendMessage<N>(socket, msgQueue.begin(),
+  ///   [](Error e, It itSentMsg) {
+  ///     // Check error...
+  ///     msgQueue.erase(itSentMsg);
+  ///     boost::optional<It> itNext;
+  ///     if (!msgQueue.empty()) itNext = msgQueue.begin();
+  ///     return itNext;
+  ///   },
+  ///   OptionSsl{false});
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ///
+  /// Network N,
+  /// Mutable<SslSocket<N>> S,
+  /// Readable<Message> M,
+  /// Procedure<Optional<M> (ErrorCode<N>, M)> Proc,
+  /// Transformation<Procedure> F0,
+  /// Transformation<Procedure<void (Args...)>> F1
+  template<typename N, typename S, typename M, typename Proc, typename F0 = IdTransfo, typename F1 = IdTransfo>
+  void sendMessage(const S& socket, M cptrMsg, Proc onSent, SslEnabled ssl,
+      F0 dataTransfo = {}, F1 netTransfo = {})
+  {
+    auto buffers = makeBuffers<N>(*cptrMsg);
+    auto writeCont = dataTransfo([=](ErrorCode<N> erc, size_t /*len*/) mutable {
+      if (auto optionalCptrNextMsg = onSent(erc, cptrMsg))
+      {
+        sendMessage<N>(socket, *optionalCptrNextMsg, onSent, ssl, dataTransfo, netTransfo);
+      }
+    });
+    if (*ssl)
+    {
+      N::async_write(*socket, std::move(buffers), netTransfo(writeCont));
+    }
+    else
+    {
+      N::async_write((*socket).next_layer(), std::move(buffers), netTransfo(writeCont));
+    }
+  }
+
+  /// Functor that sends messages through a socket.
+  ///
+  /// The role of this type is to provide a queue for messages.
+  /// You can therefore ask to send a message before the current one has
+  /// actually been sent. The message will simply be enqueued and sent ASAP.
+  /// The messages will be sent in a FIFO manner.
+  /// Sending messages is thread-safe.
+  ///
+  /// The actual sending is done by `sendMessage`.
+  ///
+  /// When a message has been sent, a callback is called. This callback return
+  /// a boolean to decide if the queue, if not empty, must continue to be processed.
+  ///
+  /// If you decide to stop the queue processing and it contain some messages,
+  /// the queue is not cleared. Next time you send a message, it will
+  /// be enqueued and the queue processing will continue from where it had stopped.
+  ///
+  /// Warning: The instance must remain alive until messages are sent.
+  /// You can provide a procedure transformation (`dataTransfo`) that will
+  /// wrap any internal callback and handle the expired instance case.
+  /// `SendMessageEnqueueTrack` does this for you by relying on `Trackable`.
+  ///
+  /// A network procedure transformation can also be provided to wrap any
+  /// callback passed to the network. A typical use is to strand the callback.
+  ///
+  /// Network N, Mutable<SslSocket<N>> S
+  template<typename N, typename S = boost::shared_ptr<SslSocket<N>>>
+  struct SendMessageEnqueue
+  {
+    using ReadableMessage = std::list<Message>::const_iterator;
+    SendMessageEnqueue()
+      : _sending{false}
+    {
+    }
+    explicit SendMessageEnqueue(const S& socket)
+      : _socket(socket)
+      , _sending{false}
+    {
+    }
+  // Procedure:
+    /// Message Msg,
+    /// Procedure<bool (ErrorCode<N>, Readable<Message>)> Proc,
+    /// Transformation<Procedure> F0,
+    /// Transformation<Procedure<void (Args...)>> F1
+    template<typename Msg,
+             typename Proc = NoOpProcedure<bool (ErrorCode<N>, ReadableMessage)>,
+             typename F0 = IdTransfo, typename F1 = IdTransfo>
+    void operator()(Msg&&, SslEnabled, Proc onSent = Proc{true},
+      const F0& dataTransfo = F0{}, const F1& netTransfo = F1{});
+  private:
+    S _socket;
+    /// A list is used because we need the iterators not to be invalidated by
+    /// insertions at begin or end, which is not the case with deque.
+    /// See [23.3.3.4 deque modifiers].
+    std::list<Message> _sendQueue;
+    bool _sending;
+    std::mutex _sendMutex;
+  };
+
+  // Lemma SendMessageEnqueue.0:
+  //  If a message is already being sent, the message is queued without
+  //  invalidating the one being sent.
+  // Proof:
+  //  All messages are put in the send queue, including the one being sent.
+  //  The send queue is a list so adding an element doesn't invalidate the other ones.
+  template<typename N, typename S>
+  template<typename Msg, typename Proc, typename F0, typename F1>
+  void SendMessageEnqueue<N, S>::operator()(Msg&& msg, SslEnabled ssl, Proc onSent,
+      const F0& dataTransfo, const F1& netTransfo)
+  {
+    qiLogDebug(logCategory()) << this << " SendMessageEnqueue()(" << msg.type() << ": " << msg.address() << ", ssl=" << *ssl << ")";
+    using I = decltype(_sendQueue.begin());
+    I itMsg;
+    bool mustStartSendLoop = false;
+    {
+      std::lock_guard<std::mutex> lock{_sendMutex};
+      _sendQueue.emplace_back(std::forward<Msg>(msg));
+      itMsg = _sendQueue.begin();
+      // We've just added a message to the queue, so if we are not currently sending,
+      // we must (re)start the send loop.
+      if (!_sending)
+      {
+        _sending = true;
+        mustStartSendLoop = true;
+      }
+    }
+    if (mustStartSendLoop)
+    {
+      // Lemma SendMessageEnqueue.1:
+      //  When calling sendMessage, itMsg is still valid.
+      // Proof:
+      //  The send queue is a std::list, so inserting or erasing other elements
+      //  doesn't invalidate the iterator.
+      //  Each thread adds a message to the send queue. But only one at a time
+      //  can enter this branch (by tryRaiseAtomicFlag.0).
+      //  Also, the sending flag is only modified while the queue is locked, so
+      //  the scenario where a thread B adds a message to the queue, is suspended
+      //  just before evaluating the condition of this branch, then the sending loop
+      //  thread A clears the queue, and then the thread B resumes, is correctly handled.
+      //  Moreover, this branch results in exactly one message being removed from
+      //  the send queue (by SendMessageEnqueue.2).
+      //  Therefore, at this point the number of messages in the send queue is
+      //  always at least 1.
+
+      // Lemma SendMessageEnqueue.2:
+      //  eraseAndReturnNextMessage erases from the send queue the element pointed
+      //  by the given iterator, even if an exception is thrown.
+      auto eraseAndReturnNextMessage =
+        [&, onSent](ErrorCode<N> erc, I itSent) mutable -> boost::optional<I> {
+          // It's ok to allow new sendings once the current one is complete.
+          bool mustContinue = false;
+          boost::optional<I> itNext;
+          try
+          {
+            // A scoped is used to cope with potential exception thrown by onSent.
+            auto scopedErase = scoped([&] {
+              std::lock_guard<std::mutex> lock{_sendMutex};
+              _sendQueue.erase(itSent);
+              if (!mustContinue || _sendQueue.empty())
+              {
+                QI_ASSERT(_sending);
+                if (!_sending)
+                  qiLogWarning(logCategory()) << "SendMessageEnqueue: sending flag should be raised.";
+                _sending = false;
+                return;
+              }
+              itNext = _sendQueue.begin();
+            });
+            mustContinue = onSent(erc, itSent);
+          }
+          catch (const std::exception& e)
+          {
+            qiLogError(logCategory()) << "Error in post-send phase: " << e.what();
+            throw;
+          }
+          return itNext;
+        };
+      sendMessage<N>(_socket, itMsg, std::move(eraseAndReturnNextMessage), ssl,
+        dataTransfo, netTransfo);
+    }
+  }
+
+  /// Functor that sends messages and tracks the object's lifetime.
+  ///
+  /// The only difference with `SendMessageEnqueue` is that with this type, if
+  /// the instance is destroyed before a internal callback is called,
+  /// the callback will be called with a `operation aborted` error.
+  ///
+  /// Network N
+  template<typename N, typename S = boost::shared_ptr<SslSocket<N>>>
+  struct SendMessageEnqueueTrack : Trackable<SendMessageEnqueueTrack<N, S>>
+  {
+    using ReadableMessage = typename SendMessageEnqueue<N, S>::ReadableMessage;
+    using Trackable<SendMessageEnqueueTrack>::destroy;
+
+    SendMessageEnqueueTrack() = default;
+    explicit SendMessageEnqueueTrack(const S& socket)
+      : _sendMsg{socket}
+    {
+    }
+    ~SendMessageEnqueueTrack()
+    {
+      destroy();
+    }
+  // Procedure:
+    /// Message Msg, Procedure<void (ErrorCode<N>, Readable<Message>)> Proc, Transformation<Procedure<void (Args...)>> F
+    template<typename Msg, typename Proc = NoOpProcedure<void (ErrorCode<N>, ReadableMessage)>, typename F = IdTransfo>
+    void operator()(Msg&& m, SslEnabled ssl, Proc onSent = Proc{}, F netTransfo = F{})
+    {
+      auto dataTransfo = trackWithFallbackTransfo([=]() mutable {
+          onSent(operationAborted<ErrorCode<N>>(), {});
+        },
+        this
+      );
+      _sendMsg(std::forward<Msg>(m), ssl, onSent, dataTransfo, netTransfo);
+    }
+  private:
+    SendMessageEnqueue<N, S> _sendMsg;
+  };
+}} // namespace qi::net
+
+#endif // _QI_NET_SEND_HPP

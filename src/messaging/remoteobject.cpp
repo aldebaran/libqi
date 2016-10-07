@@ -11,7 +11,7 @@
 
 #include "remoteobject_p.hpp"
 #include "message.hpp"
-#include "transportsocket.hpp"
+#include "messagesocket.hpp"
 #include <qi/log.hpp>
 #include <boost/thread/mutex.hpp>
 #include <qi/eventloop.hpp>
@@ -38,7 +38,7 @@ namespace qi {
     return mo;
   }
 
-  RemoteObject::RemoteObject(unsigned int service, qi::TransportSocketPtr socket)
+  RemoteObject::RemoteObject(unsigned int service, qi::MessageSocketPtr socket)
     : ObjectHost(service)
     , _socket()
     , _service(service)
@@ -58,7 +58,7 @@ namespace qi {
     //fetchMetaObject should be called to make sure the metaObject is valid.
   }
 
-  RemoteObject::RemoteObject(unsigned int service, unsigned int object, qi::MetaObject metaObject, TransportSocketPtr socket)
+  RemoteObject::RemoteObject(unsigned int service, unsigned int object, qi::MetaObject metaObject, MessageSocketPtr socket)
     : ObjectHost(service)
     , _socket()
     , _service(service)
@@ -81,8 +81,8 @@ namespace qi {
 
   //### RemoteObject
 
-  void RemoteObject::setTransportSocket(qi::TransportSocketPtr socket) {
-    TransportSocketPtr sock = *_socket;
+  void RemoteObject::setTransportSocket(qi::MessageSocketPtr socket) {
+    MessageSocketPtr sock = *_socket;
     if (socket == sock)
       return;
     if (sock) {
@@ -98,7 +98,7 @@ namespace qi {
       // We have no mechanism to bounce objectHost registration
       // to a 'parent' object.
       _linkMessageDispatcher = socket->messagePendingConnect(_service,
-        TransportSocket::ALL_OBJECTS,
+        MessageSocket::ALL_OBJECTS,
         track(boost::bind<void>(&RemoteObject::onMessagePending, this, _1), this));
       _linkDisconnected      = socket->disconnected.connect (
          &RemoteObject::onSocketDisconnected, this, _1);
@@ -138,7 +138,7 @@ namespace qi {
   //should be done in the object thread
   void RemoteObject::onMessagePending(const qi::Message &msg)
   {
-    TransportSocketPtr sock = *_socket;
+    MessageSocketPtr sock = *_socket;
     qiLogDebug() << this << "(" << _service << '/' << _object << ") msg " << msg.address() << " " << msg.buffer().size();
 
     auto passToHost = [&]{
@@ -305,7 +305,7 @@ namespace qi {
      */
     qi::Promise<AnyReference> out(FutureCallbackType_Sync);
     qi::Message msg;
-    TransportSocketPtr sock;
+    MessageSocketPtr sock;
     // qiLogDebug() << this << " metacall " << msg.service() << " " << msg.function() <<" " << msg.id();
     {
       auto syncSock = _socket.synchronize();
@@ -377,7 +377,7 @@ namespace qi {
   void RemoteObject::onFutureCancelled(unsigned int originalMessageId)
   {
     qiLogDebug() << "Cancel request for message " << originalMessageId;
-    TransportSocketPtr sock = *_socket;
+    MessageSocketPtr sock = *_socket;
     Message cancelMessage;
 
     if (!sock)
@@ -419,7 +419,7 @@ namespace qi {
         throw std::runtime_error("Post target id does not exist");
       funcSig = ms->parametersSignature();
     }
-    TransportSocketPtr sock = *_socket;
+    MessageSocketPtr sock = *_socket;
     try {
       msg.setValues(in, funcSig, weakPtr(), sock.get());
     }
@@ -553,7 +553,7 @@ namespace qi {
       }
 
       if (toDisco != qi::SignalBase::invalidSignalLink) {
-        TransportSocketPtr sock = *_socket;
+        MessageSocketPtr sock = *_socket;
         if (sock && sock->isConnected())
           return _self.async<void>("unregisterEvent", _service, event, toDisco);
       }
@@ -564,7 +564,7 @@ namespace qi {
   void RemoteObject::close(const std::string& reason, bool fromSignal)
   {
     qiLogDebug() << "Closing remote object";
-    TransportSocketPtr socket;
+    MessageSocketPtr socket;
     {
        auto syncSock = _socket.synchronize();
        socket = *syncSock;
@@ -573,7 +573,7 @@ namespace qi {
     if (socket)
     { // Do not hold any lock when invoking signals.
         qiLogDebug() << "Removing connection from socket " << (void*)socket.get();
-        socket->messagePendingDisconnect(_service, TransportSocket::ALL_OBJECTS, _linkMessageDispatcher);
+        socket->messagePendingDisconnect(_service, MessageSocket::ALL_OBJECTS, _linkMessageDispatcher);
         if (!fromSignal)
           socket->disconnected.disconnect(_linkDisconnected);
     }

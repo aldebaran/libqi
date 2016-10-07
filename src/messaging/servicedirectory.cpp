@@ -17,7 +17,7 @@
 #include <qi/anyobject.hpp>
 #include <qi/future.hpp>
 #include "transportserver.hpp"
-#include "transportsocket.hpp"
+#include "messagesocket.hpp"
 #include "servicedirectory.hpp"
 #include <qi/session.hpp>
 #include <qi/messaging/serviceinfo.hpp>
@@ -83,20 +83,20 @@ namespace qi
       qiLogWarning() << "Destroying while connected services remain";
   }
 
-  void ServiceDirectory::onSocketDisconnected(TransportSocketPtr socket, std::string error)
+  void ServiceDirectory::onSocketDisconnected(MessageSocketPtr socket, std::string error)
   {
     boost::recursive_mutex::scoped_lock lock(mutex);
     // clean from idxToSocket
-    for (std::map<unsigned int, TransportSocketPtr>::iterator it = idxToSocket.begin(), iend = idxToSocket.end(); it != iend;)
+    for (std::map<unsigned int, MessageSocketPtr>::iterator it = idxToSocket.begin(), iend = idxToSocket.end(); it != iend;)
     {
-      std::map<unsigned int, TransportSocketPtr>::iterator next = it;
+      std::map<unsigned int, MessageSocketPtr>::iterator next = it;
       ++next;
       if (it->second == socket)
         idxToSocket.erase(it);
       it = next;
     }
     // if services were connected behind the socket
-    std::map<TransportSocketPtr, std::vector<unsigned int> >::iterator it;
+    std::map<MessageSocketPtr, std::vector<unsigned int> >::iterator it;
     it = socketToIdx.find(socket);
     if (it == socketToIdx.end()) {
       return;
@@ -161,7 +161,7 @@ namespace qi
     if (!sbo)
       throw std::runtime_error("ServiceBoundObject has expired.");
 
-    TransportSocketPtr socket = sbo->currentSocket();
+    MessageSocketPtr socket = sbo->currentSocket();
     boost::recursive_mutex::scoped_lock lock(mutex);
     std::map<std::string, unsigned int>::iterator it;
     it = nameToIdx.find(svcinfo.name());
@@ -262,7 +262,7 @@ namespace qi
 
     // Find and remove serviceId into socketToIdx map
     {
-      std::map<TransportSocketPtr , std::vector<unsigned int> >::iterator it;
+      std::map<MessageSocketPtr , std::vector<unsigned int> >::iterator it;
       for (it = socketToIdx.begin(); it != socketToIdx.end(); ++it) {
         std::vector<unsigned int>::iterator jt;
         for (jt = it->second.begin(); jt != it->second.end(); ++jt) {
@@ -429,12 +429,12 @@ namespace qi
     return qi::os::getMachineId();
   }
 
-  qi::TransportSocketPtr ServiceDirectory::_socketOfService(unsigned int id)
+  qi::MessageSocketPtr ServiceDirectory::_socketOfService(unsigned int id)
   {
     boost::recursive_mutex::scoped_lock lock(mutex);
-    std::map<unsigned int, TransportSocketPtr>::iterator it = idxToSocket.find(id);
+    std::map<unsigned int, MessageSocketPtr>::iterator it = idxToSocket.find(id);
     if (it == idxToSocket.end())
-      return TransportSocketPtr();
+      return MessageSocketPtr();
     else
       return it->second;
   }

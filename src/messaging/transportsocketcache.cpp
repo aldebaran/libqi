@@ -8,7 +8,7 @@
 
 #include <qi/log.hpp>
 
-#include "transportsocket.hpp"
+#include "messagesocket.hpp"
 #include "transportsocketcache.hpp"
 
 qiLogCategory("qimessaging.transportsocketcache");
@@ -36,7 +36,7 @@ void TransportSocketCache::close()
 {
   qiLogDebug() << "TransportSocketCache is closing";
   ConnectionMap map;
-  std::list<TransportSocketPtr> pending;
+  std::list<MessageSocketPtr> pending;
   {
     boost::mutex::scoped_lock lock(_socketMutex);
     _dying = true;
@@ -50,7 +50,7 @@ void TransportSocketCache::close()
          ++uIt)
     {
       auto& connectionAttempt = *uIt->second;
-      TransportSocketPtr endpoint = connectionAttempt.endpoint;
+      MessageSocketPtr endpoint = connectionAttempt.endpoint;
 
       // Disconnect any valid socket we were holding.
       if (endpoint)
@@ -65,7 +65,7 @@ void TransportSocketCache::close()
       }
     }
   }
-  for (std::list<TransportSocketPtr>::iterator it = pending.begin(), end = pending.end(); it != end; ++it)
+  for (std::list<MessageSocketPtr>::iterator it = pending.begin(), end = pending.end(); it != end; ++it)
     (*it)->disconnect();
   _connections.clear();
 }
@@ -87,7 +87,7 @@ static UrlVector localhost_only(const UrlVector& input)
   return result;
 }
 
-Future<TransportSocketPtr> TransportSocketCache::socket(const ServiceInfo& servInfo, const std::string& url)
+Future<MessageSocketPtr> TransportSocketCache::socket(const ServiceInfo& servInfo, const std::string& url)
 {
   const std::string& machineId = servInfo.machineId();
   ConnectionAttemptPtr couple = boost::make_shared<ConnectionAttempt>();
@@ -104,14 +104,14 @@ Future<TransportSocketPtr> TransportSocketCache::socket(const ServiceInfo& servI
   if (connectionCandidates.size() == 0)
     connectionCandidates = servInfo.endpoints();
 
-  couple->endpoint = TransportSocketPtr();
+  couple->endpoint = MessageSocketPtr();
   couple->state = State_Pending;
   {
     // If we already have a pending connection to one of the urls, we return the future in question
     boost::mutex::scoped_lock lock(_socketMutex);
 
     if (_dying)
-      return makeFutureError<TransportSocketPtr>("TransportSocketCache is closed.");
+      return makeFutureError<MessageSocketPtr>("TransportSocketCache is closed.");
 
     ConnectionMap::iterator machineIt = _connections.find(machineId);
     if (machineIt != _connections.end())
@@ -141,7 +141,7 @@ Future<TransportSocketPtr> TransportSocketCache::socket(const ServiceInfo& servI
         continue; // Do not try to connect on localhost when it is a remote!
 
       urlMap[url] = couple;
-      TransportSocketPtr socket = makeTransportSocket(url.protocol());
+      MessageSocketPtr socket = makeMessageSocket(url.protocol());
       _allPendingConnections.push_back(socket);
       Future<void> sockFuture = socket->connect(url);
       qiLogDebug() << "Inserted [" << machineId << "][" << url.str() << "]";
@@ -151,7 +151,7 @@ Future<TransportSocketPtr> TransportSocketCache::socket(const ServiceInfo& servI
   return couple->promise.future();
 }
 
-void TransportSocketCache::insert(const std::string& machineId, const Url& url, TransportSocketPtr socket)
+void TransportSocketCache::insert(const std::string& machineId, const Url& url, MessageSocketPtr socket)
 {
   // If a connection is pending for this machine / url, terminate the pendage and set the
   // service socket as this one
@@ -181,7 +181,7 @@ void TransportSocketCache::insert(const std::string& machineId, const Url& url, 
       // If the attempt is not done we do not replace it, otherwise the future
       // currently in circulation will never finish.
       if (connectionAttempt.state != State_Pending)
-        connectionAttempt.promise = Promise<TransportSocketPtr>();
+        connectionAttempt.promise = Promise<MessageSocketPtr>();
       connectionAttempt.state = State_Connected;
       connectionAttempt.endpoint = socket;
       connectionAttempt.promise.setValue(socket);
@@ -190,7 +190,7 @@ void TransportSocketCache::insert(const std::string& machineId, const Url& url, 
     }
   }
   ConnectionAttemptPtr couple = boost::make_shared<ConnectionAttempt>();
-  couple->promise = Promise<TransportSocketPtr>();
+  couple->promise = Promise<MessageSocketPtr>();
   couple->endpoint = socket;
   couple->state = State_Connected;
   couple->relatedUrls.push_back(url);
@@ -211,7 +211,7 @@ void TransportSocketCache::insert(const std::string& machineId, const Url& url, 
  * real target).
  */
 void TransportSocketCache::onSocketParallelConnectionAttempt(Future<void> fut,
-                                                             TransportSocketPtr socket,
+                                                             MessageSocketPtr socket,
                                                              Url url,
                                                              const ServiceInfo& info)
 {

@@ -13,7 +13,7 @@
 #include <qi/binarycodec.hpp>
 #include <qi/anyfunction.hpp>
 #include <qi/types.hpp>
-
+#include <qi/macroregular.hpp>
 #include <boost/weak_ptr.hpp>
 
 namespace qi {
@@ -71,14 +71,15 @@ namespace qi {
     unsigned int serviceId;
     unsigned int objectId;
     unsigned int functionId;
+    QI_GENERATE_FRIEND_REGULAR_OPS_4(MessageAddress, messageId, serviceId, objectId, functionId)
   };
 
 
   /** \class qi::Message
     * This class represent a network message
     */
-  class TransportSocket;
-  using TransportSocketPtr = boost::shared_ptr<TransportSocket>;
+  class MessageSocket;
+  using MessageSocketPtr = boost::shared_ptr<MessageSocket>;
   class ObjectHost;
 
   class Message {
@@ -200,14 +201,15 @@ namespace qi {
     unsigned int action() const;
 
     void          setBuffer(const Buffer &buffer);
-    const Buffer &buffer() const;
+    const Buffer& buffer() const;
+    Buffer&       buffer();
 
     void          setError(const std::string &error);
 
     ///@return signature, set by setParameters() or setSignature()
 
 
-    AnyReference value(const Signature &signature, const qi::TransportSocketPtr &socket) const;
+    AnyReference value(const Signature &signature, const qi::MessageSocketPtr &socket) const;
     void setValue(const AutoAnyReference& value, const Signature& signature,
                   boost::weak_ptr<ObjectHost> context = {}, StreamContext* streamContext = 0);
     void setValues(const std::vector<qi::AnyReference>& values, boost::weak_ptr<ObjectHost> context = {}, StreamContext* streamContext = 0);

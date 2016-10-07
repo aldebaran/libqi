@@ -14,8 +14,8 @@
 #include <boost/lexical_cast.hpp>
 
 #include "transportserver.hpp"
-#include "transportsocket.hpp"
-#include "tcptransportsocket.hpp"
+#include "messagesocket.hpp"
+#include "tcpmessagesocket.hpp"
 
 #include <qi/eventloop.hpp>
 
@@ -81,8 +81,11 @@ namespace qi
     }
     else
     {
-        auto socket = boost::make_shared<qi::TcpTransportSocket>(context, _ssl, s);
-        self->newConnection(socket);
+        auto socket = boost::make_shared<qi::TcpMessageSocket<>>(*asIoServicePtr(context), _ssl, s);
+        qiLogDebug() << "New socket accepted: " << socket.get();
+
+        self->newConnection(std::pair<MessageSocketPtr, Url>{
+          socket, net::remoteEndpoint(*s, _ssl)});
 
         if (socket.unique()) {
             qiLogError() << "bug: socket not stored by the newConnection handler (usecount:" << socket.use_count() << ")";

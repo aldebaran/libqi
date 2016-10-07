@@ -213,9 +213,34 @@ template<typename T> void newAndAssign(T** ptr)
 {
   *ptr = new T();
 }
+} // namespace detail
+
+/// True if the atomic flag was successfully raised (i.e. set to true).
+/// If it was already raised, false is returned.
+/// Lemma tryRaiseAtomicFlag.0:
+///   If the flag is down (false), tryRaiseAtomicFlag() atomically raises it
+///   (i.e. makes it true).
+inline bool tryRaiseAtomicFlag(std::atomic<bool>& b)
+{
+  bool expected = false;
+  const bool desired = true;
+  return b.compare_exchange_strong(expected, desired);
 }
 
+/// Inverse operation of tryRaiseAtomicFlag.
+/// True if the atomic flag was successfully lowered (i.e. set to false).
+/// If it was already lowered, false is returned.
+/// Lemma tryLowerAtomicFlag.0:
+///   If the flag is up (true), tryLowerAtomicFlag() atomically lowers it
+///   (i.e. makes it false).
+inline bool tryLowerAtomicFlag(std::atomic<bool>& b)
+{
+  bool expected = true;
+  const bool desired = false;
+  return b.compare_exchange_strong(expected, desired);
 }
+
+} // namespace qi
 
 #define _QI_INSTANCIATE(_, a, elem) ::qi::detail::newAndAssign(&elem);
 

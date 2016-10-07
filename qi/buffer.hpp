@@ -76,6 +76,8 @@ namespace qi
   class QI_API Buffer
   {
   public:
+    using size_type = qi::uint32_t;
+
     /// \brief Default constructor.
     Buffer();
 

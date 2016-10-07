@@ -398,7 +398,7 @@ namespace qi {
     }
 
     AnyObject deserializeObject(const ObjectSerializationInfo& osi,
-      TransportSocketPtr context)
+      MessageSocketPtr context)
     {
       if (!context)
         throw std::runtime_error("Unable to deserialize object without a valid TransportSocket");
@@ -411,7 +411,7 @@ namespace qi {
     }
   }
 
-  AnyReference Message::value(const qi::Signature &signature, const qi::TransportSocketPtr &socket) const {
+  AnyReference Message::value(const qi::Signature &signature, const qi::MessageSocketPtr &socket) const {
     qi::TypeInterface* type = qi::TypeInterface::fromSignature(signature);
     if (!type) {
       qiLogError() <<"fromBuffer: unknown type " << signature.toString();
@@ -527,7 +527,12 @@ namespace qi {
         nargs[i].destroy();
   }
 
-  const qi::Buffer &Message::buffer() const
+  const qi::Buffer& Message::buffer() const
+  {
+    return _p->buffer;
+  }
+
+  qi::Buffer& Message::buffer()
   {
     return _p->buffer;
   }

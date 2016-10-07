@@ -90,10 +90,10 @@ set(MESSAGING_SOURCES
   "../../src/messaging/messagedispatcher.cpp"
   "../../src/messaging/objecthost.cpp"
   "../../src/messaging/remoteobject.cpp"
-  "../../src/messaging/tcptransportsocket.cpp"
+  "../../src/messaging/tcpmessagesocket.cpp"
   "../../src/messaging/transportserver.cpp"
   "../../src/messaging/transportserverasio_p.cpp"
-  "../../src/messaging/transportsocket.cpp"
+  "../../src/messaging/messagesocket.cpp"
   "../../src/messaging/transportsocketcache.cpp"
 )
 
@@ -103,6 +103,16 @@ qi_create_gtest(
   "test_messaging_internal.cpp"
   "test_remoteobject.cpp"
   "test_transportsocketcache.cpp"
+  "net/networkmock.cpp"
+  "net/networkmock.hpp"
+  "net/networkcommon.hpp"
+  "net/networkasionooplock.hpp"
+  "net/test_accept.cpp"
+  "net/test_connect.cpp"
+  "net/test_resolve.cpp"
+  "net/test_receive.cpp"
+  "net/test_send.cpp"
+  "test_tcpmessagesocket.cpp"
   ${MESSAGING_SOURCES}
 
   DEPENDS

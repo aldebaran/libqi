@@ -35,18 +35,19 @@ class RemoteObject: public testing::Test
 public:
   void SetUp() override
   {
+    using namespace qi;
     // A server to receive socket connections
     server.listen("tcp://127.0.0.1:12121");
-    server.newConnection.connect([this](qi::TransportSocketPtr newSocket) mutable
+    server.newConnection.connect([this](const std::pair<MessageSocketPtr, Url>& socketUrl) mutable
     {
       qiLogInfo() << "A client connects, let's track its messages";
       assert(!serverSocket);
-      serverSocket = newSocket;
-      serverSocket->messageReady.connect([this](const qi::Message& message) mutable
+      serverSocket = socketUrl.first;
+      serverSocket->messageReady.connect([this](const Message& message) mutable
       {
         qiLogInfo() << "Message received: " << message;
         std::lock_guard<std::mutex> lock{_mutex};
-        std::promise<qi::Message> promise;
+        std::promise<Message> promise;
         std::swap(promise, _nextClientToServerMessagePromise);
         promise.set_value(message);
       });
@@ -59,7 +60,7 @@ public:
     });
 
     // Prepare a client socket. The test fails whenever it is disconnected.
-    clientSocket = qi::makeTransportSocket("tcp");
+    clientSocket = makeMessageSocket("tcp");
     clientSocket->connect(server.endpoints()[0]);
     ASSERT_TRUE(clientSocket->isConnected());
     _clientDisconnectionLink =
@@ -67,7 +68,7 @@ public:
     {
       qiLogInfo() << "Client has disconnected unexpectedly: " << what;
       FAIL();
-    }).setCallType(qi::MetaCallType_Direct);
+    }).setCallType(MetaCallType_Direct);
 
     // Wait for messages to be tracked before executing tests
     auto status = _messagesTrackedPromise.get_future().wait_for(usualTimeout);
@@ -89,8 +90,8 @@ public:
   }
 
   qi::TransportServer server;
-  qi::TransportSocketPtr serverSocket;
-  qi::TransportSocketPtr clientSocket;
+  qi::MessageSocketPtr serverSocket;
+  qi::MessageSocketPtr clientSocket;
 
 private:
   std::promise<void> _messagesTrackedPromise;

@@ -137,18 +137,14 @@ TEST(QiSession, multipleConnectSuccess)
   qi::Future<void> f = session.connect(sd.url());
   qiLogVerbose() <<"wait";
   f.wait();
-  if (f.hasError())
-    qiLogWarning() << f.error();
-  EXPECT_FALSE(f.hasError());
+  EXPECT_FALSE(f.hasError()) << f.error();
   qiLogVerbose() <<"close";
   session.close();
   qiLogVerbose() <<"connect";
   f = session.connect(sd.url());
   qiLogVerbose() <<"wait";
   f.wait();
-  if (f.hasError())
-    qiLogWarning() << f.error();
-  EXPECT_FALSE(f.hasError());
+  EXPECT_FALSE(f.hasError()) << f.error();
   qiLogVerbose() <<"close";
   session.close();
   qiLogVerbose() <<"connect";

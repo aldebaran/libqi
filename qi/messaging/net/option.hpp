@@ -1,0 +1,103 @@
+#pragma once
+#ifndef _QI_NET_OPTION_HPP
+#define _QI_NET_OPTION_HPP
+#include <limits>
+#include <boost/optional.hpp>
+#include <qi/messaging/net/concept.hpp>
+#include <qi/messaging/net/traits.hpp>
+#include <qi/type/traits.hpp>
+#include <qi/log.hpp>
+#include <qi/macroregular.hpp>
+
+/// @file
+/// Contains option types (ssl, ipV6) and functions to set options on a socket.
+
+namespace qi { namespace net {
+
+  inline char const* logCategory()
+  {
+    return "qimessaging.messagesocket";
+  }
+
+  /// Option that, if true, means that ssl is enabled.
+  class SslEnabled
+  {
+    bool value;
+  public:
+  // Regular:
+    SslEnabled(bool v = true) : value(v) {}
+    QI_GENERATE_FRIEND_REGULAR_OPS_1(SslEnabled, value)
+  // Readable:
+    bool operator*() const
+    {
+      return value;
+    }
+  };
+
+  /// Option that, if true, means that ipV6 is enabled.
+  class IpV6Enabled
+  {
+    bool value;
+  public:
+  // Regular:
+    IpV6Enabled(bool v = true) : value(v) {}
+    QI_GENERATE_FRIEND_REGULAR_OPS_1(IpV6Enabled, value)
+  // Readable:
+    bool operator*() const
+    {
+      return value;
+    }
+  };
+
+  /// Option that, if true, means that an address can be reused.
+  /// Can be used in the context of a socket acceptor.
+  class ReuseAddressEnabled
+  {
+    bool value;
+  public:
+  // Regular:
+    ReuseAddressEnabled(bool v = true) : value(v) {}
+    QI_GENERATE_FRIEND_REGULAR_OPS_1(ReuseAddressEnabled, value)
+  // Readable:
+    bool operator*() const
+    {
+      return value;
+    }
+  };
+
+  /// Set default options on a socket, including the timeout.
+  ///
+  /// Network N
+  template<typename N>
+  void setSocketOptions(SslSocket<N>& socket, const boost::optional<Seconds>& timeout)
+  {
+    // Transmit each Message without delay
+    try
+    {
+      socket.lowest_layer().set_option(net::SocketOptionNoDelay<N>{true});
+    }
+    catch (const std::exception& e)
+    {
+      qiLogWarning(logCategory()) << "Can't set no_delay option: " << e.what();
+    }
+
+    // Feature disabled.
+    if (!timeout) return;
+
+    // Enable TCP keepalive for faster timeout detection.
+    // We cannot properly honor a timeout less than 10 seconds.
+    using I = traits::Decay<decltype(timeout.value().count())>;
+    auto ajustedTimeout = std::max(timeout.value().count(), I(10));
+    auto handle = socket.lowest_layer().native_handle();
+    static const auto intMax = std::numeric_limits<int>::max();
+    if (ajustedTimeout > I(intMax))
+    {
+      qiLogWarning(logCategory()) << "setSocketOptions: timeout too big for an int. "
+        "Truncated to int max value (" << intMax << ")";
+      ajustedTimeout = intMax;
+    }
+    N::setSocketNativeOptions(handle, static_cast<int>(ajustedTimeout));
+  }
+}} // namespace qi::net
+
+#endif // _QI_NET_OPTION_HPP

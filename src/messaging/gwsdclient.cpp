@@ -1,7 +1,7 @@
 #include <qi/log.hpp>
 
 #include "authprovider_p.hpp"
-#include "transportsocket.hpp"
+#include "messagesocket.hpp"
 #include "gwsdclient.hpp"
 
 qiLogCategory("qigateway.sdclient");
@@ -9,7 +9,7 @@ qiLogCategory("qigateway.sdclient");
 namespace
 {
 template <typename T>
-void promiseSetter(void* promisePtr, const qi::Message& msg, qi::TransportSocketPtr sdsocket)
+void promiseSetter(void* promisePtr, const qi::Message& msg, qi::MessageSocketPtr sdsocket)
 {
   qi::Promise<T>* prom = static_cast<qi::Promise<T>*>(promisePtr);
 
@@ -32,7 +32,7 @@ void promiseSetter(void* promisePtr, const qi::Message& msg, qi::TransportSocket
 }
 
 template <>
-void promiseSetter<void>(void* promisePtr, const qi::Message& msg, qi::TransportSocketPtr sdsocket)
+void promiseSetter<void>(void* promisePtr, const qi::Message& msg, qi::MessageSocketPtr sdsocket)
 {
   qi::Promise<void>* prom = static_cast<qi::Promise<void>*>(promisePtr);
 
@@ -65,7 +65,7 @@ GwSDClient::~GwSDClient()
 
 FutureSync<void> GwSDClient::connect(const Url& url)
 {
-  _sdSocket = qi::makeTransportSocket(url.protocol());
+  _sdSocket = qi::makeMessageSocket(url.protocol());
   if (!_sdSocket)
     return qi::makeFutureError<void>(std::string("unrecognised protocol '") + url.protocol() +
                                      std::string("' in url '") + url.str() + "'");
@@ -98,7 +98,7 @@ void GwSDClient::setClientAuthenticatorFactory(ClientAuthenticatorFactoryPtr aut
   _authFactory = authenticator;
 }
 
-TransportSocketPtr GwSDClient::socket()
+MessageSocketPtr GwSDClient::socket()
 {
   return _sdSocket;
 }
@@ -288,7 +288,7 @@ void GwSDClient::onAuthentication(const Message& msg,
                                   SignalSubscriberPtr old)
 {
   static const std::string cmsig = typeOf<CapabilityMap>()->signature().toString();
-  TransportSocketPtr sdSocket = _sdSocket;
+  MessageSocketPtr sdSocket = _sdSocket;
   unsigned int function = msg.function();
 
   if (msg.type() == Message::Type_Error || msg.service() != Message::Service_Server ||
@@ -335,7 +335,7 @@ void GwSDClient::onSocketConnected(FutureSync<void> future, Promise<void> promis
   {
     qiLogError() << future.error();
     promise.setError(future.error());
-    TransportSocketPtr socket;
+    MessageSocketPtr socket;
     std::swap(socket, _sdSocket);
     return;
   }

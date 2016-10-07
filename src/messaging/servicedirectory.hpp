@@ -9,7 +9,7 @@
 
 # include <qi/url.hpp>
 # include <qi/future.hpp>
-# include "transportsocket.hpp"
+# include "messagesocket.hpp"
 # include <boost/thread/recursive_mutex.hpp>
 # include "boundobject.hpp"
 # include "server.hpp"
@@ -23,7 +23,7 @@ namespace qi
     virtual ~ServiceDirectory();
 
     //TransportSocket
-    virtual void onSocketDisconnected(TransportSocketPtr socket, std::string error);
+    virtual void onSocketDisconnected(MessageSocketPtr socket, std::string error);
 
 
   public:
@@ -35,7 +35,7 @@ namespace qi
     void                     serviceReady(const unsigned int &idx);
     void                     updateServiceInfo(const ServiceInfo &svcinfo);
     std::string              machineId();
-    qi::TransportSocketPtr   _socketOfService(unsigned int id);
+    qi::MessageSocketPtr   _socketOfService(unsigned int id);
     void                     _setServiceBoundObject(boost::shared_ptr<ServiceBoundObject> sbo);
 
     qi::Signal<unsigned int, std::string>  serviceAdded;
@@ -45,8 +45,8 @@ namespace qi
     std::map<unsigned int, ServiceInfo>                       pendingServices;
     std::map<unsigned int, ServiceInfo>                       connectedServices;
     std::map<std::string, unsigned int>                       nameToIdx;
-    std::map<TransportSocketPtr, std::vector<unsigned int> >  socketToIdx;
-    std::map<unsigned int, TransportSocketPtr>                idxToSocket;
+    std::map<MessageSocketPtr, std::vector<unsigned int> >  socketToIdx;
+    std::map<unsigned int, MessageSocketPtr>                idxToSocket;
     unsigned int                                              servicesCount;
     boost::weak_ptr<ServiceBoundObject>                       serviceBoundObject;
     /* Our methods can be invoked from remote, and from socket callbacks,

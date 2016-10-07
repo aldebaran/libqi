@@ -123,7 +123,7 @@ namespace qi {
 
   namespace session_service_private
   {
-    static void sendCapabilities(TransportSocketPtr sock)
+    static void sendCapabilities(MessageSocketPtr sock)
     {
       Message msg;
       msg.setType(Message::Type_Capability);
@@ -133,14 +133,14 @@ namespace qi {
     }
   } // session_service_private
 
-  void Session_Service::onAuthentication(const TransportSocket::SocketEventData& data, long requestId, TransportSocketPtr socket, ClientAuthenticatorPtr auth, SignalSubscriberPtr old)
+  void Session_Service::onAuthentication(const MessageSocket::SocketEventData& data, long requestId, MessageSocketPtr socket, ClientAuthenticatorPtr auth, SignalSubscriberPtr old)
   {
     static const std::string cmsig = typeOf<CapabilityMap>()->signature().toString();
     boost::recursive_mutex::scoped_lock sl(_requestsMutex);
     ServiceRequest *sr = serviceRequest(requestId);
     if (!sr)
       return;
-    if (data.which() == TransportSocket::Event_Error)
+    if (data.which() == MessageSocket::Event_Error)
     {
       if (old)
         socket->socketEvent.disconnect(*old);
@@ -217,7 +217,7 @@ namespace qi {
     socket->send(authMsg);
   }
 
-  void Session_Service::onTransportSocketResult(qi::Future<TransportSocketPtr> value, long requestId) {
+  void Session_Service::onTransportSocketResult(qi::Future<MessageSocketPtr> value, long requestId) {
     qiLogDebug() << "Got transport socket for service";
     {
       boost::recursive_mutex::scoped_lock sl(_requestsMutex);
@@ -231,7 +231,7 @@ namespace qi {
         return;
       }
     }
-    TransportSocketPtr socket = value.value();
+    MessageSocketPtr socket = value.value();
 
     // If true, this socket came from the socket cache and has already been identified.
     // This typically happens when two services are behind the same endpoint.
@@ -244,7 +244,7 @@ namespace qi {
       dummy.setType(Message::Type_Reply);
       dummy.setFunction(qi::Message::ServerFunction_Authenticate);
       dummy.setValue(AnyValue::from(cm), typeOf<CapabilityMap>()->signature());
-      onAuthentication(TransportSocket::SocketEventData(dummy), requestId, socket, ClientAuthenticatorPtr(new NullClientAuthenticator), SignalSubscriberPtr());
+      onAuthentication(MessageSocket::SocketEventData(dummy), requestId, socket, ClientAuthenticatorPtr(new NullClientAuthenticator), SignalSubscriberPtr());
       return;
     }
     ClientAuthenticatorPtr authenticator = _authFactory->newAuthenticator();
@@ -263,7 +263,7 @@ namespace qi {
     msgCapabilities.setService(Message::Service_Server);
     msgCapabilities.setType(Message::Type_Call);
 
-    TransportSocketPtr sdSocket = _sdClient->socket();
+    MessageSocketPtr sdSocket = _sdClient->socket();
     CapabilityMap socketCaps;
     if (sdSocket)
     {
@@ -387,7 +387,7 @@ namespace qi {
         { // Wait! If sd is local, we necessarily have an open socket
           // on which service was registered, whose lifetime is bound
           // to the service
-          TransportSocketPtr s = _sdClient->_socketOfService(sr->serviceId);
+          MessageSocketPtr s = _sdClient->_socketOfService(sr->serviceId);
           if (!s) // weird
             qiLogVerbose() << "_socketOfService returned 0";
           else
@@ -396,7 +396,7 @@ namespace qi {
             if (s->remoteCapability("ClientServerSocket", false))
             {
               qiLogVerbose() << "sd is local and service is capable, going through socketOfService";
-              onTransportSocketResult(qi::Future<TransportSocketPtr>(s), requestId);
+              onTransportSocketResult(qi::Future<MessageSocketPtr>(s), requestId);
               return;
             }
           }
@@ -432,7 +432,7 @@ namespace qi {
         }
       }
       qiLogDebug() << "Requesting socket from cache";
-      qi::Future<qi::TransportSocketPtr> fut = _socketCache->socket(result.value(), protocol);
+      qi::Future<qi::MessageSocketPtr> fut = _socketCache->socket(result.value(), protocol);
       fut.connect(&Session_Service::onTransportSocketResult, this, _1, requestId);
     }, this));
     return result;

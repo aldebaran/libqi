@@ -16,7 +16,7 @@ namespace qi {
   static AnyReference forwardEvent(const GenericFunctionParameters& params,
                                    unsigned int service, unsigned int object,
                                    unsigned int event, Signature sig,
-                                   TransportSocketPtr client,
+                                   MessageSocketPtr client,
                                    boost::weak_ptr<ObjectHost> context,
                                    const std::string& signature)
   {
@@ -225,7 +225,7 @@ namespace qi {
     value.destroy();
   }
 
-  void ServiceBoundObject::onMessage(const qi::Message &msg, TransportSocketPtr socket) {
+  void ServiceBoundObject::onMessage(const qi::Message &msg, MessageSocketPtr socket) {
     boost::mutex::scoped_lock lock(_callMutex);
     try {
       if (msg.version() > qi::Message::currentVersion())
@@ -407,7 +407,7 @@ namespace qi {
     }
   }
 
-  void ServiceBoundObject::cancelCall(TransportSocketPtr socket, const Message& cancelMessage, MessageId origMsgId)
+  void ServiceBoundObject::cancelCall(MessageSocketPtr socket, const Message& cancelMessage, MessageId origMsgId)
   {
     qiLogDebug() << "Canceling call: " << origMsgId << " on client " << socket.get();
     std::pair<Future<AnyReference>, AtomicIntPtr > fut;
@@ -478,7 +478,7 @@ namespace qi {
     }
   }
 
-  void ServiceBoundObject::onSocketDisconnected(TransportSocketPtr client, std::string error)
+  void ServiceBoundObject::onSocketDisconnected(MessageSocketPtr client, std::string error)
   {
     // Disconnect event links set for this client.
     if (_onSocketDisconnectedCallback)
@@ -545,7 +545,7 @@ namespace qi {
     return res;
   }
 
-  void ServiceBoundObject::_removeCachedFuture(CancelableKitWeak kit, TransportSocketPtr sock, MessageId id)
+  void ServiceBoundObject::_removeCachedFuture(CancelableKitWeak kit, MessageSocketPtr sock, MessageId id)
   {
     CancelableKitPtr kitPtr = kit.lock();
     if (!kitPtr)
@@ -569,7 +569,7 @@ namespace qi {
 
   static inline void convertAndSetValue(Message& ret, AnyReference val,
     const Signature& targetSignature, boost::weak_ptr<ObjectHost> host,
-    TransportSocket* socket, const Signature& forcedSignature)
+    MessageSocket* socket, const Signature& forcedSignature)
   {
     // We allow forced signature conversion to fail, in which case we
     // go on with original expected signature.
@@ -597,7 +597,7 @@ namespace qi {
   void ServiceBoundObject::serverResultAdapterNext(AnyReference val, // the future
                                                    Signature targetSignature,
                                                    boost::weak_ptr<ObjectHost> host,
-                                                   TransportSocketPtr socket,
+                                                   MessageSocketPtr socket,
                                                    const qi::MessageAddress& replyaddr,
                                                    const Signature& forcedReturnSignature,
                                                    CancelableKitWeak kit)
@@ -651,7 +651,7 @@ namespace qi {
   void ServiceBoundObject::serverResultAdapter(Future<AnyReference> future,
                                                const qi::Signature& targetSignature,
                                                boost::weak_ptr<ObjectHost> host,
-                                               TransportSocketPtr socket,
+                                               MessageSocketPtr socket,
                                                const qi::MessageAddress& replyaddr,
                                                const Signature& forcedReturnSignature,
                                                CancelableKitWeak kit,

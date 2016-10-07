@@ -11,7 +11,7 @@
 
 #include <qi/session.hpp>
 #include "message.hpp"
-#include "transportsocket.hpp"
+#include "messagesocket.hpp"
 #include <qi/anyobject.hpp>
 #include <qi/messaging/serviceinfo.hpp>
 #include "remoteobject_p.hpp"
@@ -105,9 +105,9 @@ namespace qi {
        p.setError(e.what());
        return;
      }
-     TransportSocketPtr s = _sdClient.socket();
+     MessageSocketPtr s = _sdClient.socket();
      qiLogVerbose() << "Inserting sd to cache for " << mid <<" " << url.str() << std::endl;
-     _socketsCache.insert(mid, s->remoteEndpoint(), s);
+     _socketsCache.insert(mid, s->remoteEndpoint().value(), s);
      p.setValue(0);
   }
 

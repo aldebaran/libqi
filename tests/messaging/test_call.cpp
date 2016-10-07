@@ -1065,10 +1065,10 @@ TEST(TestCall, BadArguments)
   p.server()->registerService("a", sobj);
   qi::AnyObject obj = p.client()->service("a");
   qi::Future<qi::AnyReference> f = obj.metaCall("arrrg::(i)", qi::GenericFunctionParameters());
-  EXPECT_TRUE(f.hasError(1000));
+  EXPECT_TRUE(f.hasError(10000));
 
   qi::Future<qi::AnyReference> f2 = obj.metaCall("arrrg", qi::GenericFunctionParameters());
-  EXPECT_TRUE(f2.hasError(1000));
+  EXPECT_TRUE(f2.hasError(10000));
 }
 
 TEST(TestCall, Statistics)
@@ -1625,4 +1625,14 @@ TEST(TestCall, TestMultipleGetObjectProperty)
 
   for (int i = 0; i < 10; ++i)
     ASSERT_NO_THROW(getAndSetObjProp(p, "Serv", "prop"));
+}
+
+TEST(TestCall, TestIsConnected)
+{
+  TestSessionPair p0;
+  TestSessionPair p1(p0);
+  ASSERT_TRUE(p0.server()->isConnected());
+  ASSERT_TRUE(p0.client()->isConnected());
+  ASSERT_TRUE(p1.server()->isConnected());
+  ASSERT_TRUE(p1.client()->isConnected());
 }

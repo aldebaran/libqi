@@ -7,11 +7,14 @@
 #ifndef _SRC_TRANSPORTSERVER_HPP_
 #define _SRC_TRANSPORTSERVER_HPP_
 
+#include <utility>
 # include <boost/noncopyable.hpp>
 # include <qi/url.hpp>
 # include <qi/eventloop.hpp>
 # include <qi/signal.hpp>
 # include <vector>
+# include <boost/asio/ip/tcp.hpp>
+# include <boost/asio/ssl/stream.hpp>
 
 
 namespace qi {
@@ -41,8 +44,8 @@ namespace qi {
   using TransportServerImplPtr = boost::shared_ptr<TransportServerImpl>;
 
 
-  class TransportSocket;
-  using TransportSocketPtr = boost::shared_ptr<TransportSocket>;
+  class MessageSocket;
+  using MessageSocketPtr = boost::shared_ptr<MessageSocket>;
 
   /**
    * @brief A socket acceptor (not a server, duh).
@@ -72,7 +75,7 @@ namespace qi {
      * called on the socket
      */
     // C4251
-    qi::Signal<TransportSocketPtr> newConnection;
+    qi::Signal<std::pair<MessageSocketPtr, Url>> newConnection;
     // C4251
     qi::Signal<int>                acceptError;
     qi::Signal<void>               endpointsChanged;

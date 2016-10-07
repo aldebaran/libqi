@@ -57,7 +57,7 @@ BoundAnyObject ObjectHost::recursiveFindObject(uint32_t objectId)
   return {};
 }
 
-void ObjectHost::onMessage(const qi::Message &msg, TransportSocketPtr socket)
+void ObjectHost::onMessage(const qi::Message &msg, MessageSocketPtr socket)
 {
   BoundAnyObject obj{recursiveFindObject(msg.object())};
   if (!obj)
@@ -89,7 +89,7 @@ unsigned int ObjectHost::addObject(BoundAnyObject obj, StreamContext* remoteRef,
   return id;
 }
 
-void ObjectHost::removeRemoteReferences(TransportSocketPtr socket)
+void ObjectHost::removeRemoteReferences(MessageSocketPtr socket)
 {
   boost::recursive_mutex::scoped_lock lock(_mutex);
 

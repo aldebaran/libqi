@@ -25,7 +25,7 @@
 #endif
 
 #include "transportserver.hpp"
-#include "transportsocket.hpp"
+#include "messagesocket.hpp"
 #include "transportserverasio_p.hpp"
 
 qiLogCategory("qimessaging.transportserver");

@@ -15,7 +15,7 @@
 #include <qi/atomic.hpp>
 #include "remoteobject_p.hpp"
 #include "transportsocketcache.hpp"
-#include "transportsocket.hpp"
+#include "messagesocket.hpp"
 #include "clientauthenticator_p.hpp"
 
 namespace qi {
@@ -60,10 +60,10 @@ namespace qi {
   private:
     //FutureInterface
     void onRemoteObjectComplete(qi::Future<void> value, long requestId);
-    void onTransportSocketResult(qi::Future<TransportSocketPtr> value, long requestId);
+    void onTransportSocketResult(qi::Future<MessageSocketPtr> value, long requestId);
 
     //ServiceDirectoryClient
-    void onAuthentication(const TransportSocket::SocketEventData& data, long requestId, TransportSocketPtr socket, ClientAuthenticatorPtr auth, SignalSubscriberPtr old);
+    void onAuthentication(const MessageSocket::SocketEventData& data, long requestId, MessageSocketPtr socket, ClientAuthenticatorPtr auth, SignalSubscriberPtr old);
 
     ServiceRequest *serviceRequest(long requestId);
     void            removeRequest(long requestId);
@@ -85,8 +85,6 @@ namespace qi {
     ClientAuthenticatorFactoryPtr      _authFactory;
     bool _enforceAuth;
     friend inline void sessionServiceWaitBarrier(Session_Service* ptr);
-    friend inline void onServiceInfoResultIfExists(Session_Service* s, qi::Future<qi::ServiceInfo> f,
-    long requestId, std::string protocol, boost::weak_ptr<Session_Service> self);
   };
 
 }

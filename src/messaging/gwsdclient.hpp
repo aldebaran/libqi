@@ -21,8 +21,8 @@
 namespace qi
 {
 class Message;
-class TransportSocket;
-using TransportSocketPtr = boost::shared_ptr<TransportSocket>;
+class MessageSocket;
+using MessageSocketPtr = boost::shared_ptr<MessageSocket>;
 
 class GwSDClient
 {
@@ -36,7 +36,7 @@ public:
   void setClientAuthenticatorFactory(ClientAuthenticatorFactoryPtr);
   bool isConnected() const;
 
-  TransportSocketPtr socket();
+  MessageSocketPtr socket();
   const MetaObject& metaObject();
 
 public:
@@ -52,7 +52,7 @@ public:
   Signal<unsigned int, std::string> serviceRemoved;
 
 private:
-  TransportSocketPtr _sdSocket;
+  MessageSocketPtr _sdSocket;
   ClientAuthenticatorFactoryPtr _authFactory;
   MetaObject _metaObject;
   SignalLink _messageReadyLink;
@@ -73,7 +73,7 @@ private:
                         boost::shared_ptr<int> initCount);
   void onMessageReady(const Message& msg);
 
-  using SetterFunc = void (*)(void*, const Message&, TransportSocketPtr);
+  using SetterFunc = void (*)(void*, const Message&, MessageSocketPtr);
   using PromiseMap = std::map<unsigned int, std::pair<void*, SetterFunc> >;
   PromiseMap _promises;
   boost::mutex _promutex;

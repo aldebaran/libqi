@@ -51,55 +51,6 @@
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 /// A bounded range is a counted range with the end defined with an iterator
 /// instead of a distance.
-///
-/// Concepts
-/// =============================================
-/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/// Range(R) =
-///     Regular(R)
-///  && isEmpty: R -> bool
-///  && pop:     R -> void
-///  && pop is not necessarily regular
-/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/// In this basic concept, you can "iterate" through the range but not
-/// access the values. Which can be useful if you're only interested in
-/// advancing the front of the range.
-///
-/// The typical use is:
-/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/// while (!isEmpty(myRange)) {
-///   <some code>
-///   pop(myRange);
-/// }
-/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/// Note that isEmpty is not guaranteed to ever return false, i.e. the
-/// range could be infinite.
-/// Also, pop being not necessarily regular, the traversal on a copy of a range
-/// is not guaranteed to yield the same result (e.g. useful for input streams).
-///
-/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/// ForwardRange(R) =
-///     Range(R)
-///  && pop is regular (i.e. the range is multipass)
-/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-///
-/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/// ReadableRange(R) =
-///     Range(R)
-///  && front: R -> U where Regular(U)
-/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-///
-/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/// ReadableForwardRange(R) =
-///     ForwardRange(R)
-///  && ReadableRange(R)
-/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-///
-/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/// MutableForwardRange(R) =
-///     ReadableForwardRange(R)
-///  && (forall r in R where front(r) is defined) front(r) = x establishes front(r) == x
-/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 namespace qi
 {
