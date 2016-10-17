@@ -47,7 +47,7 @@ namespace qi
   T PropertyImpl<T>::getImpl() const
   {
     if (_getter)
-      return _getter(_value);
+      return _getter(boost::ref(_value));
     else
       return _value;
   }
@@ -57,7 +57,7 @@ namespace qi
     qiLogDebug("qitype.property") << "set " << this << " " << (!!_setter);
     if (_setter)
     {
-      const bool ok = _setter(_value, v);
+      const bool ok = _setter(boost::ref(_value), v);
       if (ok)
         (*this)(_value);
     }

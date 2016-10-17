@@ -244,3 +244,28 @@ TEST(TestProperty, threadSafeGetSet)
   EXPECT_TRUE(running.value());
   EXPECT_EQ(TARGET_COUNT, counter.get());
 }
+
+TEST(TestProperty, customSetter)
+{
+  qi::Property<int> property{12, qi::Property<int>::Getter{}, [this](int& storage, const int& value)
+  {
+    storage = value;
+    return true;
+  }};
+  const int expected = 42;
+  property.set(expected);
+  EXPECT_EQ(expected, property.get().value());
+}
+
+TEST(TestProperty, customSetterStranded)
+{
+  qi::Strand strand;
+  qi::Property<int> property{12, qi::Property<int>::Getter{}, strand.schedulerFor([this](int& storage, const int& value)
+  {
+    storage = value;
+    return true;
+  })};
+  const int expected = 42;
+  property.set(expected);
+  EXPECT_EQ(expected, property.get().value());
+}

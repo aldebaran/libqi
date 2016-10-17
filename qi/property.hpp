@@ -40,8 +40,8 @@ namespace qi
     /** Setter called with storage containing old value, and new value
     *  Returns true to invoke subscribers, false to 'abort' the update.
     */
-    using Setter = boost::function<bool (T&, const T&)>;
-    using Getter = boost::function<T(const T&)>;
+    using Setter = boost::function<bool (boost::reference_wrapper<T>, const T&)>;
+    using Getter = boost::function<T(boost::reference_wrapper<const T>)>;
     using SignalType = SignalF<void(const T&)>;
     using PropertyType = T;
 
