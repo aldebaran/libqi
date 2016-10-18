@@ -592,7 +592,7 @@ TEST(TestCall, PairClientListen)
 TEST(TestCall, DeadLock)
 {
   // This test deadlocks if all objects are in the same monothreaded event loop
-  qi::EventLoop* ev = new qi::EventLoop();
+  std::unique_ptr<qi::EventLoop> ev( new qi::EventLoop{} );
   ev->start();
   // One object calls another, both in singleThread mode
   TestSessionPair p;
