@@ -49,9 +49,12 @@ namespace qi {
     void joinAll()
     {
       std::thread workerThread;
-      while ((workerThread = pop()).joinable())
+      while (pop(workerThread))
       {
-        workerThread.join();
+        if (workerThread.joinable())
+        {
+          workerThread.join();
+        }
       }
     }
 
@@ -59,25 +62,26 @@ namespace qi {
     std::vector<std::thread> _workers;
     boost::mutex _mutex;
 
-    std::thread pop()
+    // Return false if there is no more threads to pop, true otherwise.
+    bool pop(std::thread& output)
     {
       boost::mutex::scoped_lock locked(_mutex);
       if (_workers.empty())
       {
-        return {};
+        return false;
       }
       else
       {
-        std::thread workerThread = std::move(_workers.back());
+        output = std::move(_workers.back());
         _workers.pop_back();
-        return workerThread;
+        return true;
       }
     }
   };
 
   using SteadyTimer = boost::asio::basic_waitable_timer<SteadyClock>;
 
-  static qi::Atomic<uint32_t> gTaskId{0};
+  static qi::Atomic<uint64_t> gTaskId{0};
 
   EventLoopAsio::EventLoopAsio()
   : _mode(Mode::Unset)
