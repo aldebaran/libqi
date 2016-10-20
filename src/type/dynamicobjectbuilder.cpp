@@ -107,7 +107,7 @@ namespace qi
     return nextId;
   }
 
-  unsigned int DynamicObjectBuilder::xAdvertiseSignal(const std::string &name, const qi::Signature& signature)
+  unsigned int DynamicObjectBuilder::xAdvertiseSignal(const std::string &name, const qi::Signature& signature, bool isSignalProperty)
   {
     if (!Signature(signature).isValid() || name.empty()) {
       std::stringstream err;
@@ -121,7 +121,7 @@ namespace qi
       qiLogWarning() << "DynamicObjectBuilder: Called xAdvertiseSignal on event '" << signature.toString() << "' but object is already created.";
     }
     // throw on error
-    unsigned int nextId = _p->_object->metaObject()._p->addSignal(name, signature);
+    unsigned int nextId = _p->_object->metaObject()._p->addSignal(name, signature, -1, isSignalProperty);
     return nextId;
   }
 
@@ -139,7 +139,7 @@ namespace qi
       throw std::runtime_error("Registering property with invalid signal signature");
     const auto propsignature = sigsignature.children()[0];
 
-    unsigned int nextId = xAdvertiseSignal(name, sigsignature);
+    unsigned int nextId = xAdvertiseSignal(name, sigsignature, true);
     xAdvertiseProperty(name, propsignature, nextId);
     _p->_object->setProperty(nextId, prop);
     return nextId;

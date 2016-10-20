@@ -101,7 +101,6 @@ protected:
 
     fut = p1.client()->service("coin2");
     ASSERT_FALSE(fut.hasError());
-
     oclient2 = fut.value();
 
     oe1 = oclient1.metaObject().signalId("fire1::(i)");

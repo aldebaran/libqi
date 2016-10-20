@@ -35,6 +35,46 @@ void foo3(qi::Atomic<int>* r, Foo *)       { ++*r; }
 void foolast(int, qi::Promise<void> prom, qi::Atomic<int>* r) { prom.setValue(0); ++*r; }
 } // anonymous
 
+void fire(int &a) { a = 44; }
+
+TEST(TestSignal, RegisterSignalAndMethodWithSameSignature)
+{
+  qi::DynamicObjectBuilder ob;
+  qi::Property<int> prop;
+
+  ob.advertiseSignal<int&>("fire1");
+  ASSERT_THROW(ob.advertiseMethod("fire1", &fire), std::runtime_error);
+  ASSERT_THROW(ob.advertiseProperty("fire1", &prop), std::runtime_error);
+
+  ob.advertiseMethod("fire2", &fire);
+  ASSERT_THROW(ob.advertiseSignal<int&>("fire2"), std::runtime_error);
+  ASSERT_THROW(ob.advertiseProperty("fire2", &prop), std::runtime_error);
+
+  ob.advertiseProperty("fire3", &prop);
+  ASSERT_THROW(ob.advertiseSignal<int&>("fire3"), std::runtime_error);
+  ASSERT_THROW(ob.advertiseMethod("fire3", &fire), std::runtime_error);
+
+}
+
+TEST(TestSignal, RegisterSignalAndMethodWithDifferentSignature)
+{
+  qi::DynamicObjectBuilder ob;
+  qi::Property<char> prop;
+
+  ob.advertiseSignal<float&>("fire1");
+  ASSERT_NO_THROW(ob.advertiseMethod("fire1", &fire));
+  ASSERT_NO_THROW(ob.advertiseProperty("fire1", &prop));
+
+  ob.advertiseMethod("fire2", &fire);
+  ASSERT_NO_THROW(ob.advertiseSignal<float&>("fire2"));
+  ASSERT_NO_THROW(ob.advertiseProperty("fire2", &prop));
+
+  ob.advertiseProperty("fire3", &prop);
+  ASSERT_NO_THROW(ob.advertiseSignal<float&>("fire3"));
+  ASSERT_NO_THROW(ob.advertiseMethod("fire3", &fire));
+}
+
+
 TEST(TestSignal, TestCompilation)
 {
   qi::Atomic<int>        res{0};
@@ -128,6 +168,8 @@ TEST(TestSignal, FunctionDestroyedOnDisconnection)
   signal.disconnect(link);
   ASSERT_TRUE(destroyed);
 }
+
+
 
 TEST(TestSignal, AutoDisconnect)
 {

@@ -27,31 +27,60 @@ namespace qi {
     }
 
     MetaObjectPrivate(const MetaObjectPrivate &rhs);
-    MetaObjectPrivate&  operator=(const MetaObjectPrivate &rhs);
+    MetaObjectPrivate& operator=(const MetaObjectPrivate &rhs);
 
-    using NameToIdx = std::map<std::string, unsigned int>;
+    enum MetaObjectType
+    {
+      MetaObjectType_None = 0,
+      MetaObjectType_Signal = 1,
+      MetaObjectType_Method = 2,
+      MetaObjectType_Property = 3
+    };
 
-    inline int idFromName(const NameToIdx& map, const std::string& name) {
-      NameToIdx::const_iterator it = map.find(name);
-      if (it == map.end())
-        return -1;
-      else
-        return it->second;
-    }
-
-    inline int methodId(const std::string &name) {
-      return idFromName(_methodsNameToIdx, name);
-    }
-
-    inline int signalId(const std::string &name) {
-      int res = idFromName(_eventsNameToIdx, name);
-      if (res < 0)
-      { // maybe we were given a full signature, but signal is indexed by name
-        std::vector<std::string> split = signatureSplit(name);
-        if (name != split[1])
-          return signalId(split[1]);
+    struct MetaObjectIdType
+    {
+      MetaObjectIdType() = default;
+      ~MetaObjectIdType() = default;
+      MetaObjectIdType(const MetaObjectIdType& rhs) = default;
+      MetaObjectIdType(unsigned int uid, MetaObjectType t)
+        : id(uid)
+        , type(t)
+      {
       }
-      return res;
+
+      unsigned int id{0};
+      MetaObjectType type{MetaObjectType_None};
+    };
+
+    using SignatureToIdx = std::map<std::string, MetaObjectIdType>;
+    inline int idFromName(const SignatureToIdx& map, const std::string& sig, MetaObjectType type = MetaObjectType_None) const {
+      SignatureToIdx::const_iterator it = map.find(sig);
+      if (it != map.end())
+        if (it->second.type == type)
+          return it->second.id;
+
+      return -1;
+    }
+
+    inline int methodId(const std::string &signature) const {
+      return idFromName(_objectNameToIdx, signature, MetaObjectType_Method);
+    }
+
+    inline int propertyId(const std::string &signature) const {
+      return idFromName(_objectNameToIdx, signature, MetaObjectType_Property);
+    }
+
+    inline int signalId(const std::string &signature) const {
+      // Search id from signature
+      int id = idFromName(_objectNameToIdx, signature, MetaObjectType_Signal);
+      if (id == -1)
+      {
+        // if the name is a name and not a signature search directly inside the signal map
+        for (const auto& ms : _events)
+          if (ms.second.name() == signature)
+            return ms.first;
+      }
+      return id;
     }
 
     //if you want to use those methods think twice...
@@ -68,9 +97,9 @@ namespace qi {
 
     unsigned int addMethod(MetaMethodBuilder& builder, int uid = -1);
 
-    unsigned int addSignal(const std::string &name, const Signature &signature, int id = -1);
+    unsigned int addSignal(const std::string &name, const Signature &signature, int id = -1, bool isSignalProperty = false);
 
-    unsigned int addProperty(const std::string& name, const Signature &sig, int id = -1);
+    unsigned int addProperty(const std::string& name, const Signature &signature, int id = -1);
 
     // Recompute data cached in *ToIdx
     void refreshCache();
@@ -88,7 +117,6 @@ namespace qi {
      * operators _MUST_ be updated.
      */
     //name::sig() -> Index
-    NameToIdx                           _methodsNameToIdx;
     MetaObject::MethodMap               _methods;
 
   private:
@@ -99,7 +127,7 @@ namespace qi {
     OverloadMap                         _methodNameToOverload;
 
     //name::sig() -> Index
-    NameToIdx                           _eventsNameToIdx;
+    SignatureToIdx                      _objectNameToIdx;
     MetaObject::SignalMap               _events;
     mutable boost::recursive_mutex      _eventsMutex;
 
