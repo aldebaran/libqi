@@ -287,7 +287,7 @@ namespace qi {
 #define QI_UNIQ_DEF(A) _QI_UNIQ_DEF_LEVEL1(A, __LINE__)
 
 #if (!defined(__GNUC__) || defined(__clang__) ||                        \
-     (__GNUC__ >= 4 && __GNUC_MINOR__ >= 7)) && __cplusplus >= 201103L
+     ((__GNUC__ > 4) || (__GNUC__ == 4 && __GNUC_MINOR__ >= 7))) && __cplusplus >= 201103L
 /**
  * \def QI_CXX11_ENABLED
  * \brief GCC < 4.7 is not standard compliant about __cplusplus
