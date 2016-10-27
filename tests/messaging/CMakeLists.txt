@@ -38,6 +38,8 @@ if(QI_WITH_TESTS)
     "test_without_gateway.cpp"
     "test_streamcontext.cpp"
     "test_send_object_standalone.cpp"
+    "test_message.cpp"
+
     DEPENDS
     qi
     qitestutils
@@ -88,7 +90,6 @@ endif()
 # Some tests target internal classes
 set(MESSAGING_SOURCES
   "../../src/messaging/boundobject.cpp"
-  "../../src/messaging/message.cpp"
   "../../src/messaging/messagedispatcher.cpp"
   "../../src/messaging/objecthost.cpp"
   "../../src/messaging/remoteobject.cpp"

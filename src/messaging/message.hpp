@@ -19,37 +19,7 @@
 
 namespace qi {
 
-  class MessagePrivate
-  {
-  public:
-    struct MessageHeader
-    {
-      qi::uint32_t magic = 0;
-      qi::uint32_t id = 0;
-      qi::uint32_t size = 0;
-      qi::uint16_t version = 0;
-      qi::uint8_t  type = 0;
-      qi::uint8_t  flags = 0;
-      qi::uint32_t service = 0;
-      qi::uint32_t object = 0;
-      qi::uint32_t action = 0;
-    };
-
-    MessagePrivate();
-    MessagePrivate(const MessagePrivate& b);
-    ~MessagePrivate();
-
-    inline void                complete() { header.size = buffer.totalSize(); }
-    inline void               *getHeader() { return reinterpret_cast<void *>(&header); }
-
-    Buffer        buffer;
-    std::string   signature;
-    MessageHeader header;
-
-    static const unsigned int magic;
-  };
-
-  class MessageAddress {
+  class QI_API MessageAddress {
   public:
     MessageAddress()
       : messageId(0)
@@ -83,12 +53,31 @@ namespace qi {
   using MessageSocketPtr = boost::shared_ptr<MessageSocket>;
   class ObjectHost;
 
-  class Message {
+  class QI_API Message {
   public:
-    static unsigned int currentVersion()
+    struct QI_API Header
     {
-      return 0;
-    }
+      qi::uint32_t magic = 0;
+      qi::uint32_t id = 0;
+      qi::uint32_t size = 0;
+      qi::uint16_t version = 0;
+      qi::uint8_t  type = 0;
+      qi::uint8_t  flags = 0;
+      qi::uint32_t service = 0;
+      qi::uint32_t object = 0;
+      qi::uint32_t action = 0;
+
+      Header();
+
+      bool operator==(const Header& b) const;
+
+      static unsigned int currentVersion()
+      {
+        return 0;
+      }
+      static const unsigned int magicCookie;
+    };
+    static_assert(sizeof(Header) == 28, "Message::Header does not have the right size!");
 
 
     // Fixed service id numbers
@@ -166,11 +155,8 @@ namespace qi {
     static const char* typeToString(Type t);
     static const char* actionToString(unsigned int action, unsigned int service);
 
-    ~Message();
-    Message();
+    Message() = default;
     Message(Type type, const MessageAddress &address);
-    Message(const Message &msg);
-    Message &operator=(const Message &msg);
 
     void setAddress(const MessageAddress &address);
 
@@ -202,35 +188,41 @@ namespace qi {
     unsigned int action() const;
 
     void          setBuffer(const Buffer &buffer);
+    void          setBuffer(Buffer&& buffer);
+
     const Buffer& buffer() const;
-    Buffer&       buffer();
+    Buffer        extractBuffer();
 
     void          setError(const std::string &error);
 
     ///@return signature, set by setParameters() or setSignature()
 
-
     AnyReference value(const Signature &signature, const qi::MessageSocketPtr &socket) const;
     void setValue(const AutoAnyReference& value, const Signature& signature,
-                  boost::weak_ptr<ObjectHost> context = {}, StreamContext* streamContext = 0);
-    void setValues(const std::vector<qi::AnyReference>& values, boost::weak_ptr<ObjectHost> context = {}, StreamContext* streamContext = 0);
+                  boost::weak_ptr<ObjectHost> context = boost::weak_ptr<ObjectHost>{}, StreamContext* streamContext = 0);
+    void setValues(const std::vector<qi::AnyReference>& values, boost::weak_ptr<ObjectHost> context = boost::weak_ptr<ObjectHost>{}, StreamContext* streamContext = 0);
+
     /// Convert values to \p targetSignature and assign to payload.
-    void setValues(const std::vector<qi::AnyReference>& values, const qi::Signature& targetSignature, boost::weak_ptr<ObjectHost> context = {}, StreamContext* streamContext = 0);
+    void setValues(const std::vector<qi::AnyReference>& values, const qi::Signature& targetSignature, boost::weak_ptr<ObjectHost> context = boost::weak_ptr<ObjectHost>{}, StreamContext* streamContext = 0);
     /// Append additional data to payload
-    void appendValue(const AutoAnyReference& value, boost::weak_ptr<ObjectHost> context = {}, StreamContext* streamContext = 0);
+    void appendValue(const AutoAnyReference& value, boost::weak_ptr<ObjectHost> context = boost::weak_ptr<ObjectHost>{}, StreamContext* streamContext = 0);
     MessageAddress address() const;
+    inline Header& header() {return _header;}
+    inline const Header& header() const {return _header;}
 
     bool         isValid() const;
-
-  public:
-    boost::shared_ptr<MessagePrivate> _p;
+    bool operator==(const Message& b) const;
 
   private:
-    void         cow();
+    Buffer _buffer;
+    std::string signature;
+    Header _header;
+
+    void encodeBinary(const qi::AutoAnyReference &ref, SerializeObjectCallback onObject, StreamContext* sctx);
   };
 
-  std::ostream& operator<<(std::ostream& os, const qi::MessageAddress &address);
-  std::ostream& operator<<(std::ostream& os, const qi::Message& msg);
+  QI_API std::ostream& operator<<(std::ostream& os, const qi::MessageAddress &address);
+  QI_API std::ostream& operator<<(std::ostream& os, const qi::Message& msg);
 }
 
 QI_TYPE_CONCRETE(qi::Message);

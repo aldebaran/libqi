@@ -228,7 +228,7 @@ namespace qi {
   void ServiceBoundObject::onMessage(const qi::Message &msg, MessageSocketPtr socket) {
     boost::mutex::scoped_lock lock(_callMutex);
     try {
-      if (msg.version() > qi::Message::currentVersion())
+      if (msg.version() > Message::Header::currentVersion())
       {
         std::stringstream ss;
         ss << "Cannot negotiate QiMessaging connection: "

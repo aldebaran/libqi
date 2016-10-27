@@ -8,6 +8,8 @@
 #include <cstdlib>
 #include <string>
 #include <vector>
+#include <algorithm>
+#include <numeric> // std::iota
 
 #include <gtest/gtest.h>
 
@@ -79,4 +81,64 @@ TEST(TestBuffer, TestSubBuffer)
   buffer.clear();
   ASSERT_EQ(buffer.size(), 0u);
   ASSERT_EQ(buffer.totalSize(), 0u);
+}
+
+TEST(TestBuffer, TestCopiesAreDistinct)
+{
+  using namespace qi;
+  // Fill the first buffer.
+  std::vector<int> v(100);
+  std::iota(begin(v), end(v), 993);
+  Buffer b0;
+  const auto len = v.size() * sizeof(v[0]);
+  b0.write(&v[0], len);
+  ASSERT_EQ(len, b0.size());
+  // Copy it.
+  Buffer b1(b0);
+  ASSERT_EQ(len, b1.size());
+  // Assert that the two buffers have the same content.
+  {
+    auto f0 = static_cast<unsigned char*>(b0.data());
+    auto f1 = static_cast<unsigned char*>(b1.data());
+    ASSERT_TRUE(std::equal(f0, f0 + b0.size(), f1));
+  }
+  // Assert that modifying one copy doesn't affect the other one.
+  *static_cast<int*>(b0.data()) = 1234;
+  ASSERT_EQ(993, *static_cast<int*>(b1.data()));
+}
+
+TEST(TestBuffer, TestAssignmentsAreDistinct)
+{
+  using namespace qi;
+  auto asIntPtr = [](void* x) {
+    return static_cast<int*>(x);
+  };
+  auto fill = [](qi::Buffer& b, int size, int start) {
+    std::vector<int> v(size);
+    std::iota(begin(v), end(v), start);
+    const auto len = v.size() * sizeof(v[0]);
+    b.write(&v[0], len);
+  };
+
+  // Fill the first buffer.
+  Buffer b0;
+  fill(b0, 100, 993);
+
+  // Fill the second one with different values.
+  Buffer b1;
+  fill(b1, 100, 7263);
+
+  // Assign.
+  b1 = b0;
+
+  // Assert that the two buffers have the same content.
+  {
+    ASSERT_EQ(b0.size() , b1.size());
+    auto f0 = static_cast<unsigned char*>(b0.data());
+    auto f1 = static_cast<unsigned char*>(b1.data());
+    ASSERT_TRUE(std::equal(f0, f0 + b0.size(), f1));
+  }
+  // Assert that modifying one copy doesn't affect the other one.
+  *asIntPtr(b0.data()) = 1234;
+  ASSERT_EQ(993, *asIntPtr(b1.data()));
 }

@@ -21,9 +21,9 @@ static const qi::MilliSeconds defaultTimeout{ 2000 };
 namespace mock
 {
   template<typename H> // NetHandler H
-  void readHeader(N::_mutable_buffer_sequence buf, H h, qi::uint32_t magic = qi::MessagePrivate::magic, qi::uint32_t size = 10u, N::error_code_type error = {})
+  void readHeader(N::_mutable_buffer_sequence buf, H h, qi::uint32_t magic = qi::Message::Header::magicCookie, qi::uint32_t size = 10u, N::error_code_type error = {})
   {
-    qi::MessagePrivate::MessageHeader header;
+    qi::Message::Header header;
     header.magic = magic;
     header.size = size;
     assert(std::distance(buf.begin, buf.end) >= static_cast<std::ptrdiff_t>(sizeof(header)));
@@ -36,7 +36,7 @@ namespace mock
   /// data.
   struct AsyncReadNextLayerHeaderThenData
   {
-    qi::uint32_t _magic = qi::MessagePrivate::magic;
+    qi::uint32_t _magic = qi::Message::Header::magicCookie;
     qi::uint32_t _headerSize = 10u;
     N::error_code_type _headerError = {};
     N::error_code_type _dataError = {};

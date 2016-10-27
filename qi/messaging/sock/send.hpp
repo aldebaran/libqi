@@ -33,10 +33,9 @@ namespace qi { namespace sock {
   std::vector<ConstBuffer<N>> makeBuffers(const Message& msg)
   {
     // header buffer
-    ConstBuffer<N> headerBuffer = N::buffer(static_cast<const void*>(msg._p->getHeader()),
-      sizeof(MessagePrivate::MessageHeader));
+    ConstBuffer<N> headerBuffer = N::buffer(static_cast<const void*>(&msg.header()),
+      sizeof(Message::Header));
     std::vector<ConstBuffer<N>> buffers;
-    msg._p->complete();
     const auto& msgBuffer = msg.buffer();
 
     // A buffer has a header and data.
