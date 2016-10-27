@@ -37,19 +37,40 @@ namespace qi
   {
     return SignalBase::connect(std::move(sub));
   }
+
+  template<typename T>
+  template<class ForcedSignalType, class SignalType>
+  SignalSubscriber SignalF<T>::connectSignal(SignalType& signal)
+  {
+    int curId = 0;
+    SignalLink* trackLink = nullptr;
+    createNewTrackLink(curId, trackLink);
+
+    boost::weak_ptr<SignalBasePrivate> maybeThisSignalPrivate(this->_p);
+
+    auto onSignalLost = [=]{
+      if (auto thisSignalPrivate = maybeThisSignalPrivate.lock())
+      {
+        disconnectTrackLink(curId);
+      }
+    };
+
+    auto forwardSignalCall = qi::trackWithFallback(
+      std::move(onSignalLost),
+      static_cast<ForcedSignalType&>(signal),
+      boost::weak_ptr<SignalBasePrivate>(signal._p));
+
+    SignalSubscriber s = connect(std::move(forwardSignalCall));
+
+    *trackLink = s;
+    return s;
+  }
+
   template<typename T>
   template<typename U>
   SignalSubscriber  SignalF<T>::connect(SignalF<U>& signal)
   {
-    int curId;
-    SignalLink* trackLink;
-    createNewTrackLink(curId, trackLink);
-    SignalSubscriber s = connect(qi::trackWithFallback(
-          boost::bind(&SignalF<T>::disconnectTrackLink, this, curId),
-          (boost::function<U>&)signal,
-          boost::weak_ptr<SignalBasePrivate>(signal._p)));
-    *trackLink = s;
-    return s;
+    return connectSignal<boost::function<U>>(signal);
   }
 
   template <typename T>
@@ -57,15 +78,7 @@ namespace qi
   SignalSubscriber  SignalF<T>::connect(Signal<P...>& signal)
   {
     typedef void(ftype)(P...);
-    int curId;
-    SignalLink* trackLink;
-    createNewTrackLink(curId, trackLink);
-    SignalSubscriber s = connect(qi::trackWithFallback(
-          boost::bind(&SignalF<T>::disconnectTrackLink, this, curId),
-          (boost::function<ftype>&)signal,
-          boost::weak_ptr<SignalBasePrivate>(signal._p)));
-    *trackLink = s;
-    return s;
+    return connectSignal<boost::function<ftype>>(signal);
   }
 
   template<typename F>

@@ -210,6 +210,10 @@ namespace qi {
     SignalSubscriber connect(const AnyObject& obj, unsigned int slot);
     SignalSubscriber connect(const AnyObject& obj, const std::string& slot);
 #endif
+
+  private:
+    template< class ForcedSignalType, class SignalType >
+    SignalSubscriber connectSignal(SignalType& signal);
   };
 
   /** Class that represent an event to which function can subscribe.
