@@ -450,12 +450,21 @@ class CookieBox
 public:
   qi::AnyObject makeCookie(bool withTaste)
   {
+    std::weak_ptr<Token> token{ _token };
     return boost::shared_ptr<Cookie>{
       new Cookie{withTaste},
-      [=](Cookie* cookie) {
+      [this,token](Cookie* cookie) {
         qiLogInfo() << "Cookie destruction";
         delete cookie;
-        QI_EMIT cookieLost();
+
+        if (auto cookieBox = token.lock())
+        {
+          QI_EMIT cookieLost();
+        }
+        else
+        {
+          qiLogWarning() << "CookieBox have been destroyed before all Cookies instances destruction!";
+        }
       }
     };
   }
@@ -474,6 +483,9 @@ public:
 
 private:
   qi::AnyObject cookie;
+
+  struct Token {};
+  std::shared_ptr<Token> _token{ std::make_shared<Token>() };
 };
 
 struct CookieMonster
