@@ -37,14 +37,15 @@ namespace qi {
       s = it->second;
       // Remove from map (but SignalSubscriber object still good)
       subscriberMap.erase(it);
+      if (subscriberMap.empty() && onSubscribers)
+        onSubscribers(false).value();
       // Acquire subscriber mutex before releasing mutex
       boost::mutex::scoped_lock subLock(s._p->mutex);
       // Release signal mutex
-      sigLock.release()->unlock();
+      sigLock.unlock();
       // Ensure no call on subscriber occurs once this function returns
       s._p->enabled = false;
-      if (subscriberMap.empty() && onSubscribers)
-        onSubscribers(false).value();
+
       if (s._p->activeThreads.empty()
           || (s._p->activeThreads.size() == 1
             && *s._p->activeThreads.begin() == boost::this_thread::get_id()))
