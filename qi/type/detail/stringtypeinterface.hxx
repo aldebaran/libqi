@@ -34,7 +34,7 @@ namespace qi
     ManagedRawString get(void* storage) override
     {
       std::string* ptr = (std::string*)Methods::ptrFromStorage(&storage);
-      return ManagedRawString(RawString((char*)ptr->c_str(), ptr->size()),
+      return ManagedRawString(RawString(const_cast<char*>(ptr->c_str()), ptr->size()),
           Deleter());
     }
     void set(void** storage, const char* value, size_t sz) override
