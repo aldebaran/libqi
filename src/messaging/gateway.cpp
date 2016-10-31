@@ -1375,8 +1375,8 @@ void GatewayPrivate::registerEventListenerReply(GwTransaction& t, TransportSocke
     EventSubInfo& eventInfo = _eventSubscribers[evt.hostSocket][evt.serviceId][evt.objectId][evt.eventId];
     eventInfo.remoteSubscribers[evt.subscriberSocket] = evt.signalLink;
     eventInfo.gwLink = evt.signalLink;
-    _pendingEventSubscriptions.erase(evIt);
     link = evt.signalLink;
+    _pendingEventSubscriptions.erase(evIt);
   }
   Message rep;
   rep.setId(msgId);
