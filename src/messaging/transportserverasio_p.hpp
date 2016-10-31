@@ -9,6 +9,7 @@
 
 # include <boost/asio.hpp>
 # include <boost/asio/ssl.hpp>
+#include <atomic>
 
 # include <qi/api.hpp>
 # include <qi/url.hpp>
@@ -38,7 +39,7 @@ namespace qi
     void onAccept(const boost::system::error_code& erc,
       boost::shared_ptr<boost::asio::ssl::stream<boost::asio::ip::tcp::socket>> s);
     TransportServerAsioPrivate();
-    bool _live;
+    std::atomic<bool> _live;
     boost::asio::ssl::context _sslContext;
     boost::shared_ptr<boost::asio::ssl::stream<boost::asio::ip::tcp::socket>> _s;
     bool _ssl;
