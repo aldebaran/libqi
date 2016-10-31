@@ -129,8 +129,8 @@ namespace qi {
 
   SignalSubscriber& SignalSubscriber::operator=(const SignalSubscriber& b)
   {
+    linkId = b._p->linkId;
     _p = b._p;
-    linkId = _p->linkId;
     return *this;
   }
 
