@@ -17,7 +17,7 @@ namespace qi {
                                    unsigned int service, unsigned int object,
                                    unsigned int event, Signature sig,
                                    TransportSocketPtr client,
-                                   ObjectHost* context,
+                                   boost::weak_ptr<ObjectHost> context,
                                    const std::string& signature)
   {
     qiLogDebug() << "forwardEvent";
@@ -88,7 +88,7 @@ namespace qi {
                                          qi::AnyObject object,
                                          qi::MetaCallType mct,
                                          bool bindTerminate,
-                                         ObjectHost* owner)
+                                         boost::optional<boost::weak_ptr<ObjectHost>> owner)
     : ObjectHost(serviceId)
     , _cancelables(boost::make_shared<CancelableKit>())
     , _links()
@@ -98,16 +98,15 @@ namespace qi {
     , _callType(mct)
     , _owner(owner)
   {
-    onDestroy.setCallType(MetaCallType_Direct);
     _self = createServiceBoundObjectType(this, bindTerminate);
   }
 
   ServiceBoundObject::~ServiceBoundObject()
   {
     qiLogDebug() << "~ServiceBoundObject()";
+    destroy();
     _cancelables.reset();
     ObjectHost::clear();
-    onDestroy(this);
     qiLogDebug() << "~ServiceBoundObject() reseting object " << _object.use_count();
     _object.reset();
     qiLogDebug() << "~ServiceBoundObject() finishing";
@@ -152,7 +151,7 @@ namespace qi {
     if (!ms)
       throw std::runtime_error("No such signal");
     QI_ASSERT(_currentSocket);
-    AnyFunction mc = AnyFunction::fromDynamicFunction(boost::bind(&forwardEvent, _1, _serviceId, _objectId, eventId, ms->parametersSignature(), _currentSocket, this, ""));
+    AnyFunction mc = AnyFunction::fromDynamicFunction(boost::bind(&forwardEvent, _1, _serviceId, _objectId, eventId, ms->parametersSignature(), _currentSocket, weakPtr(), ""));
     qi::Future<SignalLink> linking = _object.connect(eventId, mc);
     auto& linkEntry = _links[_currentSocket][remoteSignalLinkId];
     linkEntry = RemoteSignalLink(linking, eventId);
@@ -168,7 +167,7 @@ namespace qi {
     if (!ms)
       throw std::runtime_error("No such signal");
     QI_ASSERT(_currentSocket);
-    AnyFunction mc = AnyFunction::fromDynamicFunction(boost::bind(&forwardEvent, _1, _serviceId, _objectId, eventId, ms->parametersSignature(), _currentSocket, this, signature));
+    AnyFunction mc = AnyFunction::fromDynamicFunction(boost::bind(&forwardEvent, _1, _serviceId, _objectId, eventId, ms->parametersSignature(), _currentSocket, weakPtr(), signature));
     qi::Future<SignalLink> linking = _object.connect(eventId, mc);
     auto& linkEntry = _links[_currentSocket][remoteSignalLinkId];
     linkEntry = RemoteSignalLink(linking, eventId);
@@ -211,9 +210,14 @@ namespace qi {
   {
     qiLogDebug() << "terminate() received";
     if (_owner)
-      _owner->removeObject(_objectId);
+    {
+      if (boost::shared_ptr<ObjectHost> owner = _owner->lock())
+        owner->removeObject(_objectId);
+      else
+        qiLogDebug() << "terminate() received an object with an expired owner";
+    }
     else
-      qiLogWarning() << "terminate() received on object without owner";
+      qiLogWarning() << "terminate() received on object without an owner";
   }
 
   static void destroyAbstractFuture(AnyReference value)
@@ -361,6 +365,7 @@ namespace qi {
         if (mm)
           retSig = mm->returnSignature();
         _currentSocket.reset();
+
         fut.connect(boost::bind<void>
                     (&ServiceBoundObject::serverResultAdapter, _1, retSig, _gethost(), socket, msg.address(), sig,
                      CancelableKitWeak(_cancelables), cancelRequested));
@@ -489,7 +494,7 @@ namespace qi {
   }
 
   qi::BoundAnyObject makeServiceBoundAnyObject(unsigned int serviceId, qi::AnyObject object, qi::MetaCallType mct) {
-    boost::shared_ptr<ServiceBoundObject> ret = boost::make_shared<ServiceBoundObject>(serviceId, Message::GenericObject_Main, object, mct);
+    boost::shared_ptr<ServiceBoundObject> ret = boost::make_shared<ServiceBoundObject>(serviceId, Message::GenericObject_Main, object, mct); // TODO ju
     return ret;
   }
 
@@ -556,11 +561,12 @@ namespace qi {
   }
 
   static inline void convertAndSetValue(Message& ret, AnyReference val,
-    const Signature& targetSignature, ObjectHost* host, TransportSocket* socket,
-    const Signature& forcedSignature)
+    const Signature& targetSignature, boost::weak_ptr<ObjectHost> host,
+    TransportSocket* socket, const Signature& forcedSignature)
   {
     // We allow forced signature conversion to fail, in which case we
     // go on with original expected signature.
+
 
     if (forcedSignature.isValid() && socket->remoteCapability("MessageFlags", false))
     {
@@ -583,7 +589,7 @@ namespace qi {
   // second bounce when returned type is a future
   void ServiceBoundObject::serverResultAdapterNext(AnyReference val, // the future
                                                    Signature targetSignature,
-                                                   ObjectHost* host,
+                                                   boost::weak_ptr<ObjectHost> host,
                                                    TransportSocketPtr socket,
                                                    const qi::MessageAddress& replyaddr,
                                                    const Signature& forcedReturnSignature,
@@ -637,7 +643,7 @@ namespace qi {
 
   void ServiceBoundObject::serverResultAdapter(Future<AnyReference> future,
                                                const qi::Signature& targetSignature,
-                                               ObjectHost* host,
+                                               boost::weak_ptr<ObjectHost> host,
                                                TransportSocketPtr socket,
                                                const qi::MessageAddress& replyaddr,
                                                const Signature& forcedReturnSignature,

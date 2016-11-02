@@ -352,17 +352,18 @@ namespace qi {
   namespace {
     ObjectSerializationInfo serializeObject(
       AnyObject object,
-      ObjectHost* context,
+      boost::weak_ptr<ObjectHost> context,
       StreamContext* strCtxt)
     {
-      if (!context || !strCtxt)
+      auto host = context.lock();
+      if (!host || !strCtxt)
         throw std::runtime_error("Unable to serialize object without a valid ObjectHost and StreamContext");
-      unsigned int sid = context->service();
-      unsigned int oid = context->nextId();
+      unsigned int sid = host->service();
+      unsigned int oid = host->nextId();
       ServiceBoundObject* sbo = new ServiceBoundObject(sid, oid, object, MetaCallType_Queued, true, context);
       boost::shared_ptr<BoundObject> bo(sbo);
-      context->addObject(bo, strCtxt, oid);
-      qiLogDebug() << "Hooking " << oid <<" on " << context;
+      host->addObject(bo, strCtxt, oid);
+      qiLogDebug() << "Hooking " << oid <<" on " << host.get();
       qiLogDebug() << "sbo " << sbo << "obj " << object.asGenericObject();
       // Transmit the metaObject augmented by ServiceBoundObject.
       ObjectSerializationInfo res;
@@ -423,7 +424,8 @@ namespace qi {
     return decodeBinary(&br, res, boost::bind(deserializeObject, _1, socket), socket.get());
   }
 
-  void Message::setValue(const AutoAnyReference &value, const Signature& sig, ObjectHost* context, StreamContext* streamContext) {
+  void Message::setValue(const AutoAnyReference &value, const Signature& sig,
+                         boost::weak_ptr<ObjectHost> context, StreamContext* streamContext) {
     cow();
     Signature effective = value.type()->signature();
     if (effective != sig)
@@ -453,7 +455,8 @@ namespace qi {
     }
   }
 
-  void Message::setValues(const std::vector<qi::AnyReference>& values, ObjectHost* context, StreamContext* streamContext)
+  void Message::setValues(const std::vector<qi::AnyReference>& values,
+                          boost::weak_ptr<ObjectHost> context, StreamContext* streamContext)
   {
     cow();
     SerializeObjectCallback scb = boost::bind(serializeObject, _1, context, streamContext);
@@ -462,7 +465,8 @@ namespace qi {
   }
 
   //convert args then call setValues
-  void Message::setValues(const std::vector<qi::AnyReference>& in, const qi::Signature& expectedSignature, ObjectHost* context, StreamContext* streamContext) {
+  void Message::setValues(const std::vector<qi::AnyReference>& in, const qi::Signature& expectedSignature,
+                          boost::weak_ptr<ObjectHost> context, StreamContext* streamContext) {
     qi::Signature argsSig = qi::makeTupleSignature(in, false);
     if (expectedSignature == argsSig) {
       setValues(in, context, streamContext);

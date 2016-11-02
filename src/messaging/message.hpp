@@ -14,6 +14,7 @@
 #include <qi/anyfunction.hpp>
 #include <qi/types.hpp>
 
+#include <boost/weak_ptr.hpp>
 
 namespace qi {
 
@@ -207,12 +208,13 @@ namespace qi {
 
 
     AnyReference value(const Signature &signature, const qi::TransportSocketPtr &socket) const;
-    void setValue(const AutoAnyReference& value, const Signature& signature, ObjectHost* context = 0, StreamContext* streamContext = 0);
-    void setValues(const std::vector<qi::AnyReference>& values, ObjectHost* context = 0, StreamContext* streamContext = 0);
+    void setValue(const AutoAnyReference& value, const Signature& signature,
+                  boost::weak_ptr<ObjectHost> context = {}, StreamContext* streamContext = 0);
+    void setValues(const std::vector<qi::AnyReference>& values, boost::weak_ptr<ObjectHost> context = {}, StreamContext* streamContext = 0);
     /// Convert values to \p targetSignature and assign to payload.
-    void setValues(const std::vector<qi::AnyReference>& values, const qi::Signature& targetSignature, ObjectHost* context = 0, StreamContext* streamContext = 0);
+    void setValues(const std::vector<qi::AnyReference>& values, const qi::Signature& targetSignature, boost::weak_ptr<ObjectHost> context = {}, StreamContext* streamContext = 0);
     /// Append additional data to payload
-    void appendValue(const AutoAnyReference& value, ObjectHost* context = 0, StreamContext* streamContext = 0);
+    void appendValue(const AutoAnyReference& value, boost::weak_ptr<ObjectHost> context = {}, StreamContext* streamContext = 0);
     MessageAddress address() const;
 
     bool         isValid() const;

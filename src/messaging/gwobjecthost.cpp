@@ -39,11 +39,16 @@ static bool hasObjectsSomewhere(const Signature& sig)
   return false;
 }
 
-class MockObjectHost : public ObjectHost
+class MockObjectHost : public ObjectHost, public Trackable<MockObjectHost>
 {
 public:
   MockObjectHost(Message::Service s)
     : ObjectHost(s) {}
+  ~MockObjectHost()
+  {
+    destroy();
+  }
+
   unsigned int nextId() { return id_++; }
 private:
   static unsigned int id_;
@@ -64,14 +69,14 @@ void GwObjectHost::assignClientMessageObjectsGwIds(const Signature& signature, M
   // ObjectHost uses a static int for its objectId so we're OK instantiating multiple
   // ones.
   Message forward;
-  MockObjectHost host(Message::Service_Server);
+  auto host = boost::make_shared<MockObjectHost>(Message::Service_Server);
 
   forward.setFlags(msg.flags());
-  forward.setValue(callParameters, signature, &host, sender.get());
+  forward.setValue(callParameters, signature, host->weakPtr(), sender.get());
   msg.setBuffer(forward.buffer());
 
   // The message will store all the objects it serializes in the host.
-  const ObjectHost::ObjectMap& objects = host.objects();
+  const ObjectHost::ObjectMap& objects = host->objects();
   std::map<GwObjectId, MetaObject> newObjectsMetaObjects;
   std::map<GwObjectId, ObjectInfo > newObjectsOrigin;
   std::vector<FullObjectAddress> newObjectFullAddresses;
@@ -199,14 +204,14 @@ void GwObjectHost::harvestServiceOriginatingObjects(Message& msg, TransportSocke
 
   AnyReference passed = msg.value(signature, sender);
   StreamContext filler;
-  MockObjectHost host(Message::Service_Server);
+  auto host = boost::make_shared<MockObjectHost>(Message::Service_Server);
   Message dummy;
 
   // we don't want to pollute the original message and potentially change valid id
   // of contained objects, so we do it in an unrelated message.
-  dummy.setValue(passed, signature, &host, &filler);
+  dummy.setValue(passed, signature, host->weakPtr(), &filler);
 
-  const ObjectHost::ObjectMap& objects = host.objects();
+  const ObjectHost::ObjectMap& objects = host->objects();
   std::map<ObjectId, MetaObject> newServicesMetaObject;
   std::vector<FullObjectAddress> newObjectFullAddresses;
   newObjectFullAddresses.reserve(objects.size());

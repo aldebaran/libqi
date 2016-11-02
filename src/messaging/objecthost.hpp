@@ -10,6 +10,7 @@
 #include <map>
 
 #include <boost/thread/mutex.hpp>
+#include <boost/shared_ptr.hpp>
 
 #include <qi/atomic.hpp>
 
@@ -38,7 +39,6 @@ namespace qi
     virtual unsigned int nextId() = 0;
     using ObjectMap = std::map<unsigned int, BoundAnyObject>;
     const ObjectMap& objects() const { return _objectMap; }
-    qi::Signal<> onDestroy;
   protected:
     void clear();
   private:

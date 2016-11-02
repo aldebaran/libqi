@@ -19,19 +19,12 @@ ObjectHost::ObjectHost(unsigned int service)
 
  ObjectHost::~ObjectHost()
  {
-   onDestroy();
    // deleting our map will trigger calls to removeObject
    // so does clear() while iterating
    ObjectMap map;
    std::swap(map, _objectMap);
    map.clear();
  }
-
-static void async_destroy_attempt(BoundAnyObject obj, Future<void> fut)
-{
-  fut.wait();
-  obj.reset();
-}
 
 BoundAnyObject ObjectHost::recursiveFindObject(uint32_t objectId)
 {
@@ -75,10 +68,14 @@ void ObjectHost::onMessage(const qi::Message &msg, TransportSocketPtr socket)
   }
   obj->onMessage(msg, socket);
 
-  qi::Promise<void> destructPromise;
-  qi::async(boost::bind(&async_destroy_attempt, obj, destructPromise.future()));
-  obj.reset();
-  destructPromise.setValue(0);
+  // Because of potential dependencies between the object's destruction
+  // and the networking resources, we transfer the object's destruction
+  // responsability to another thread.
+  Promise<void> destructPromise;
+  Future<void> destructFuture = destructPromise.future();
+  qi::async([obj, destructFuture] { destructFuture.wait(); });
+  obj = {};
+  destructPromise.setValue(nullptr);
 }
 
 unsigned int ObjectHost::addObject(BoundAnyObject obj, StreamContext* remoteRef, unsigned int id)
@@ -123,7 +120,10 @@ void ObjectHost::removeObject(unsigned int id)
     obj = it->second;
     _objectMap.erase(it);
     qiLogDebug() << this << " count " << obj.use_count();
-    qi::async(boost::bind(&qi::detail::hold<BoundAnyObject>, obj));
+    // Because of potential dependencies between the object's destruction
+    // and the networking resources, we transfer the object's destruction
+    // responsability to another thread.
+    qi::async([obj]{});
   }
   qiLogDebug() << this << " Object " << id << " removed.";
 }
@@ -134,10 +134,11 @@ void ObjectHost::clear()
   for (ObjectMap::iterator it = _objectMap.begin(); it != _objectMap.end(); ++it)
   {
     ServiceBoundObject* sbo = dynamic_cast<ServiceBoundObject*>(it->second.get());
-    if (sbo)
-      sbo->_owner = 0;
+    if (sbo && sbo->_owner)
+      sbo->_owner.reset();
   }
   _objectMap.clear();
 }
 
 }
+

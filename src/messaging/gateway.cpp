@@ -161,6 +161,8 @@ GatewayPrivate::~GatewayPrivate()
 void GatewayPrivate::close(bool clearEndpoints)
 {
   qiLogInfo() << "Bringing the gateway down";
+  disconnectSDSignalsCallback();
+
   _updateEndpointsTask.stop();
   if (_retryFut.isRunning())
     _retryFut.cancel();
@@ -195,16 +197,22 @@ void GatewayPrivate::close(bool clearEndpoints)
     qi::waitForAll(disconnections);
   }
   {
+    // Because calling socket disconnection function will call callbacks
+    // modifying the client vector, we need to copy the clients before calling them
+    // to avoid invalidating the iterator going through the client list.
     std::vector<qi::Future<void>> disconnections;
+    decltype(_clients) clients;
     {
       boost::recursive_mutex::scoped_lock lock(_clientsMutex);
-      for (auto& client : _clients)
-      {
-        disconnections.emplace_back(client->disconnect());
-      }
+      clients = std::move(_clients);
+      _clients.clear();
+    }
+
+    for (auto& client : clients)
+    {
+      disconnections.emplace_back(client->disconnect());
     }
     qi::waitForAll(disconnections);
-    _clients.clear();
   }
   {
     boost::mutex::scoped_lock lock(_ongoingMsgMutex);
@@ -507,6 +515,14 @@ void GatewayPrivate::sdConnectionRetry(const qi::Url& sdUrl, qi::Duration lastTi
   }
 }
 
+void GatewayPrivate::disconnectSDSignalsCallback()
+{
+  boost::mutex::scoped_lock lock(_signalDisconnectionsMutex);
+  for (auto&& disconnector : _signalDisconnections)
+    disconnector();
+  _signalDisconnections.clear();
+}
+
 void GatewayPrivate::onServiceDirectoryDisconnected(TransportSocketPtr socket, const std::string& reason)
 {
   if (_dying.load())
@@ -580,8 +596,18 @@ void GatewayPrivate::onSdConnected(Future<void> fut, Promise<void> prom)
   }
   // Additional checks are required for some of the SD's messages, so it gets
   // it's own messageReady callback.
-  sdSocket->messageReady.connect(&GatewayPrivate::onServiceDirectoryMessageReady, this, _1, sdSocket);
-  sdSocket->disconnected.connect(&GatewayPrivate::onServiceDirectoryDisconnected, this, sdSocket, _1);
+  const SignalLink messageReadyLink = sdSocket->messageReady.connect(&GatewayPrivate::onServiceDirectoryMessageReady, this, _1, sdSocket);
+  const SignalLink disconnectedLink = sdSocket->disconnected.connect(&GatewayPrivate::onServiceDirectoryDisconnected, this, sdSocket, _1);
+
+  {
+    boost::mutex::scoped_lock lock(_signalDisconnectionsMutex);
+    _signalDisconnections.emplace_back([=] {
+      sdSocket->messageReady.disconnect(messageReadyLink);
+    });
+    _signalDisconnections.emplace_back([=] {
+      sdSocket->disconnected.disconnect(disconnectedLink);
+    });
+  }
 
   std::string mid = _sdClient.machineId();
   _socketCache.insert(mid, sdSocket->url(), sdSocket);

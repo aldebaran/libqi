@@ -322,7 +322,7 @@ namespace qi {
     }
     qi::Signature funcSig = mm->parametersSignature();
     try {
-      msg.setValues(in, funcSig, this, sock.get());
+      msg.setValues(in, funcSig, weakPtr(), sock.get());
     }
     catch(const std::exception& e)
     {
@@ -331,7 +331,7 @@ namespace qi {
         throw e;
       // Delegate conversion to the remote end.
       msg.addFlags(Message::TypeFlag_DynamicPayload);
-      msg.setValues(in, "m", this, sock.get());
+      msg.setValues(in, "m", weakPtr(), sock.get());
     }
     if (canConvert < 0.2)
     {
@@ -416,7 +416,7 @@ namespace qi {
     }
     TransportSocketPtr sock = *_socket;
     try {
-      msg.setValues(in, funcSig, this, sock.get());
+      msg.setValues(in, funcSig, weakPtr(), sock.get());
     }
     catch(const std::exception& e)
     {
@@ -425,7 +425,7 @@ namespace qi {
         throw e;
       // Delegate conversion to the remote end.
       msg.addFlags(Message::TypeFlag_DynamicPayload);
-      msg.setValues(in, "m", this, sock.get());
+      msg.setValues(in, "m", weakPtr(), sock.get());
     }
     msg.setType(Message::Type_Post);
     msg.setService(_service);

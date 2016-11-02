@@ -240,6 +240,12 @@ private:
   ClientAuthenticatorFactoryPtr _clientAuthenticatorFactory;
   qi::Future<void> _retryFut;
   Atomic<bool> _dying;
+
+  std::vector<std::function<void()>> _signalDisconnections;
+  boost::mutex _signalDisconnectionsMutex;
+
+
+  void disconnectSDSignalsCallback();
 };
 }
 
