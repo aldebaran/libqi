@@ -154,13 +154,19 @@ TEST(SendObject, pass_obj_made_from_module)
 
   qi::AnyObject remotePlop = p.client()->service("plop");
   qi::Promise<void> receivingObject;
-  remotePlop.connect("onTruc", boost::function<void(qi::AnyObject)>([&](qi::AnyObject o)
+  auto signalLink = remotePlop.connect(
+        "onTruc", boost::function<void(qi::AnyObject)>([&](qi::AnyObject o)
   {
     ASSERT_EQ(1, o.call<int>("testMethod", 0)); // this is the real test
     receivingObject.setValue(0);
-  }));
+  })).value();
   remotePlop.async<void>("emitObject", obj);
   ASSERT_EQ(qi::FutureState_FinishedWithValue, receivingObject.future().waitFor(timeout));
+  // If the test failed and the onTruc signal has not been triggered before the
+  // end of the timeout, it could still be called during the test destruction.
+  // Disconnect the callback to make sure it is not called after receivingObject
+  // Promise has been destroyed.
+  remotePlop.disconnect(signalLink);
 }
 
 class ObjectEmitterFactory
