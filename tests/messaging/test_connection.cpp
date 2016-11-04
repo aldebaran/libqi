@@ -84,7 +84,7 @@ private:
 class Connection: public ::testing::Test
 {
 protected:
-  static void SetUpTestCase()
+  void SetUp() override
   {
     session.listenStandalone("tcp://127.0.0.1:0");
     connectionAddr = session.endpoints()[0].str();
@@ -109,21 +109,19 @@ protected:
   #endif
   }
 
-  static void TearDownTestCase()
+  void TearDown() override
   {
     session.close();
   }
 
 private:
-  static qi::Session session;
-  static qi::AnyObject obj;
+  qi::Session session;
+  qi::AnyObject obj;
 #ifdef WITH_GATEWAY_
   static qi::Gateway gate;
 #endif
 };
 
-qi::Session Connection::session;
-qi::AnyObject Connection::obj = qi::AnyObject{};
 #ifdef WITH_GATEWAY_
 qi::Gateway Connection::gate = qi::Gateway{};
 #endif
