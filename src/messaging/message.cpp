@@ -77,6 +77,8 @@ namespace qi {
       return "SetProperty";
     case BoundObjectFunction_Properties:
       return "Properties";
+    case BoundObjectFunction_RegisterEventWithSignature:
+      return "RegisterEventWithSignature";
     }
 
     if (service != qi::Message::Service_ServiceDirectory)
@@ -102,6 +104,8 @@ namespace qi {
       return "ServiceAdded";
     case ServiceDirectoryAction_ServiceRemoved:
       return "ServiceRemoved";
+    case ServiceDirectoryAction_MachineId:
+      return "MachineId";
     default:
       return  nullptr;
     }
