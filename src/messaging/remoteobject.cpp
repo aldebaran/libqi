@@ -277,7 +277,7 @@ namespace qi {
     if (returnSignature.isValid())
     {
       canConvert = mm->returnSignature().isConvertibleTo(returnSignature);
-      qiLogDebug() << "return type conversion score: " << canConvert;
+      qiLogDebug() << this << " return type conversion score: " << canConvert;
       if (canConvert == 0)
       {
         // last chance for dynamics and adventurous users
@@ -489,7 +489,7 @@ namespace qi {
         }
       }
       rsl.remoteSignalLink = uid;
-      qiLogDebug() << "connect() to " << event << " gave " << uid << " (new remote connection)";
+      qiLogDebug() << this << " connect() to " << event << " gave " << uid << " (new remote connection)";
       if (score >= 0.2)
         rsl.future = _self.async<SignalLink>("registerEvent", _service, event, uid);
       else // we might or might not be capable to convert, ask the remote end to try also
@@ -498,7 +498,7 @@ namespace qi {
     }
     else
     {
-      qiLogDebug() << "connect() to " << event << " gave " << uid << " (reusing remote connection)";
+      qiLogDebug() << this << "connect() to " << event << " gave " << uid << " (reusing remote connection)";
     }
 
     rsl.future.connect(boost::bind<void>(&onEventConnected, this, _1, prom, uid));

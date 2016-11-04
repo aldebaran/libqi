@@ -352,7 +352,7 @@ namespace qi {
         qi::Future<AnyReference>  fut = obj.metaCall(funcId, mfp, mType, sig);
         AtomicIntPtr cancelRequested = boost::make_shared<Atomic<int> >(0);
         {
-          qiLogDebug() << "Registering future for " << socket.get() << ", message:" << msg.id();
+          qiLogDebug() << this << " Registering future for " << socket.get() << ", message:" << msg.id();
           boost::mutex::scoped_lock futlock(_cancelables->guard);
           _cancelables->map[socket][msg.id()] = std::make_pair(fut, cancelRequested);
         }
