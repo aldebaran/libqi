@@ -480,14 +480,8 @@ namespace qi {
     {
       for (ServiceSignalLinks::iterator jt = it->second.begin(); jt != it->second.end(); ++jt)
       {
-        try
-        {
-          _object.disconnect(jt->second.localSignalLinkId);
-        }
-        catch (const std::runtime_error& e)
-        {
-          qiLogError() << e.what();
-        }
+        _object.disconnect(jt->second.localSignalLinkId).async()
+            .then([](Future<void> f) { if (f.hasError()) qiLogError() << f.error(); });
       }
       _links.erase(it);
     }

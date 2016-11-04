@@ -214,10 +214,12 @@ qi::Future<void> StaticObjectTypeBase::disconnect(void* instance, AnyObject cont
     qiLogWarning() << "disconnect: no such signal: " << event;
     return qi::makeFutureError<void>("Cant find signal");
   }
-  bool b = sb->disconnect(link);
-  if (!b)
-    return qi::makeFutureError<void>("Cant unregister signal");
-  return qi::Future<void>(0);
+
+  return sb->disconnectAsync(link).andThen([](bool successful)
+  {
+    if (!successful)
+      throw std::runtime_error("signal registration failed");
+  });
 }
 
 qi::Future<AnyValue> StaticObjectTypeBase::property(void* instance, AnyObject context, unsigned int id)
