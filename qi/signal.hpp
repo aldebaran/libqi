@@ -294,6 +294,8 @@ namespace qi {
   private:
     std::shared_ptr<SignalSubscriberPrivate> _p;
 
+    void callImpl(const GenericFunctionParameters& args);
+
   public:
     QI_API_DEPRECATED_MSG("please use link instead or cast to qi::SignalLink")
     SignalLink linkId;

@@ -210,68 +210,48 @@ namespace qi {
     qiLogDebug() << (void*)this << " done invoking signal subscribers";
   }
 
-  class FunctorCall
+  void SignalSubscriber::callImpl(const GenericFunctionParameters& args)
   {
-  public:
-    FunctorCall(GenericFunctionParameters* params, SignalSubscriber* sub)
-    : params(params)
-    , sub(sub)
+    // verify-enabled-then-register-active op must be locked
     {
+      boost::mutex::scoped_lock sl(_p->mutex);
+      if (!_p->enabled)
+        return;
+      addActive(false);
     }
-
-    FunctorCall(const FunctorCall& b)
+    //do not throw
+    bool mustDisconnect = false;
+    try
     {
-      *this = b;
+      _p->handler(args);
     }
-
-    void operator=(const FunctorCall& b)
+    catch (const qi::PointerLockException&)
     {
-      params = b.params;
-      sub = b.sub;
+      qiLogDebug() << "PointerLockFailure excepton, will disconnect";
+      mustDisconnect = true;
     }
-
-    void operator() ()
+    catch (const std::exception& e)
     {
-      try
+      qiLogWarning() << "Exception caught from signal subscriber: " << e.what();
+    }
+    catch (...)
+    {
+      qiLogWarning() << "Unknown exception caught from signal subscriber";
+    }
+    removeActive(true);
+
+    if (mustDisconnect)
+    {
+      boost::mutex::scoped_lock sl(_p->mutex);
+      // if enabled is false, we are already disconnected
+      if (_p->enabled)
       {
-        {
-          SignalSubscriber s;
-          boost::mutex::scoped_lock sl(sub->_p->mutex);
-          // verify-enabled-then-register-active op must be locked
-          if (!sub->_p->enabled)
-          {
-            s = *sub; // delay destruction until after we leave the scoped_lock
-            delete sub;
-            params->destroy();
-            delete params;
-            return;
-          }
-          sub->addActive(false);
-        } // end mutex-protected scope
-        sub->_p->handler(*params);
+        boost::shared_ptr<SignalBasePrivate> sbp = _p->source->_p;
+        sl.unlock();
+        sbp->disconnect(_p->linkId);
       }
-      catch(const qi::PointerLockException&)
-      {
-        qiLogDebug() << "PointerLockFailure excepton, will disconnect";
-      }
-      catch(const std::exception& e)
-      {
-        qiLogWarning() << "Exception caught from signal subscriber: " << e.what();
-      }
-      catch (...) {
-        qiLogWarning() << "Unknown exception caught from signal subscriber";
-      }
-
-      sub->removeActive(true);
-      params->destroy();
-      delete params;
-      delete sub;
     }
-
-  public:
-    GenericFunctionParameters* params;
-    SignalSubscriber* sub;
-  };
+  }
 
   void SignalSubscriber::call(const GenericFunctionParameters& args, MetaCallType callType)
   {
@@ -287,7 +267,6 @@ namespace qi {
       qiLogDebug() << "subscriber call async=" << async <<" ct " << callType <<" tm " << _p->threadingModel;
       if (_p->executionContext || async)
       {
-        GenericFunctionParameters* copy = new GenericFunctionParameters(args.copy());
         // We will check enabled when we will be scheduled in the target
         // thread, and we hold this SignalSubscriber alive, so no need to
         // explicitly track the asynccall
@@ -300,52 +279,21 @@ namespace qi {
           if (!ec) // this is an assert basicaly, no sense trying to do something clever.
             throw std::runtime_error("Event loop was destroyed");
         }
-        ec->post(FunctorCall(copy, new SignalSubscriber(*this)));
+
+        auto subscriberCopy = *this;
+        std::shared_ptr<GenericFunctionParameters> argsCopy{ new auto(args.copy()), [](GenericFunctionParameters* object) {
+          object->destroy(); // see GenericFunctionParameters::copy() for details
+          delete object;
+        } };
+
+        ec->post([subscriberCopy, argsCopy] () mutable{
+          subscriberCopy.callImpl(*argsCopy);
+        });
+
       }
       else
       {
-        // verify-enabled-then-register-active op must be locked
-        {
-          boost::mutex::scoped_lock sl(_p->mutex);
-          if (!_p->enabled)
-            return;
-          addActive(false);
-        }
-        //do not throw
-        bool mustDisconnect = false;
-        try
-        {
-          _p->handler(args);
-        }
-        catch(const qi::PointerLockException&)
-        {
-          qiLogDebug() << "PointerLockFailure excepton, will disconnect";
-          mustDisconnect = true;
-        }
-        catch(const std::exception& e)
-        {
-          qiLogWarning() << "Exception caught from signal subscriber: " << e.what();
-        }
-        catch (...)
-        {
-          qiLogWarning() << "Unknown exception caught from signal subscriber";
-        }
-        removeActive(true);
-
-        if (mustDisconnect)
-        {
-          boost::mutex::scoped_lock sl(_p->mutex);
-          // if enabled is false, we are already disconnected
-          if (_p->enabled)
-          {
-            // asyncDisconnect tries to lock us, so we need to get a shared_ptr
-            // of signalbase (to be sure it won't be deleted) and release
-            // our lock before calling asyncDisconnect
-            boost::shared_ptr<SignalBasePrivate> sbp = _p->source->_p;
-            sl.unlock();
-            sbp->disconnect(_p->linkId);
-          }
-        }
+        callImpl(args);
       }
     }
     else if (_p->target)
