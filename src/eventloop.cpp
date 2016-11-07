@@ -264,7 +264,7 @@ namespace qi {
 
   class ScopedIncDec {
   public:
-    ScopedIncDec(qi::Atomic<qi::uint32_t>& atom)
+    ScopedIncDec(qi::Atomic<qi::uint64_t>& atom)
       : _atom(atom)
     {
       ++_atom;
@@ -274,12 +274,12 @@ namespace qi {
       --_atom;
     }
 
-    qi::Atomic<qi::uint32_t>& _atom;
+    qi::Atomic<qi::uint64_t>& _atom;
   };
 
   class ScopedExitDec {
   public:
-    ScopedExitDec(qi::Atomic<qi::uint32_t>& atom)
+    ScopedExitDec(qi::Atomic<qi::uint64_t>& atom)
       : _atom(atom)
     {
     }
@@ -288,11 +288,11 @@ namespace qi {
       --_atom;
     }
 
-    qi::Atomic<qi::uint32_t>& _atom;
+    qi::Atomic<qi::uint64_t>& _atom;
   };
 
 
-  void EventLoopAsio::invoke_maybe(boost::function<void()> f, qi::uint32_t id, qi::Promise<void> p, const boost::system::error_code& erc)
+  void EventLoopAsio::invoke_maybe(boost::function<void()> f, qi::uint64_t id, qi::Promise<void> p, const boost::system::error_code& erc)
   {
     ScopedExitDec _(_totalTask);
 
@@ -336,7 +336,7 @@ namespace qi {
     static boost::system::error_code erc;
     qi::Promise<void> p;
     if (delay == qi::Duration(0)) {
-      uint32_t id = ++gTaskId;
+      const auto id = ++gTaskId;
       tracepoint(qi_qi, eventloop_post, id, cb.target_type().name());
 
 
@@ -355,7 +355,7 @@ namespace qi {
     if (!_work.load())
       return qi::makeFutureError<void>("Schedule attempt on destroyed thread pool");
 
-    uint32_t id = ++gTaskId;
+    const auto id = ++gTaskId;
 
     ++_totalTask;
     tracepoint(qi_qi, eventloop_delay, id, cb.target_type().name(), boost::chrono::duration_cast<qi::MicroSeconds>(delay).count());
@@ -385,7 +385,7 @@ namespace qi {
     if (!_work.load())
       return qi::makeFutureError<void>("Schedule attempt on destroyed thread pool");
 
-    uint32_t id = ++gTaskId;
+    const auto id = ++gTaskId;
 
     ++_totalTask;
     //tracepoint(qi_qi, eventloop_delay, id, cb.target_type().name(), qi::MicroSeconds(delay).count());
