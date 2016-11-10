@@ -13,6 +13,7 @@
 #include <qi/anyvalue.hpp>
 #include <qi/anyobject.hpp>
 #include <qi/assert.hpp>
+#include <qi/algorithm.hpp>
 
 #include "signal_p.hpp"
 
@@ -49,17 +50,6 @@ namespace qi {
       sigLock.unlock();
       // Ensure no call on subscriber occurs once this function returns
       s._p->enabled = false;
-
-      if (s._p->activeThreads.empty()
-          || (s._p->activeThreads.size() == 1
-            && *s._p->activeThreads.begin() == boost::this_thread::get_id()))
-      { // One active callback in this thread, means above us in call stack
-        // So we cannot trash s right now
-        return Future<bool>{true};
-      }
-      // More than one active callback, or one in a state that prevent us
-      // from knowing in which thread it will run
-      subLock.release()->unlock();
     }
     return s.waitForInactive().async().andThen([](void*){ return true; });
   }
@@ -352,6 +342,7 @@ namespace qi {
       // So we cannot wait for it
       return Future<void>{0};
     }
+    _p->waitingForInactive.push_back(tid);
     return _p->inactive.future();
   }
 
@@ -372,16 +363,23 @@ namespace qi {
     if (acquireLock)
       sl.lock();
 
-    for (unsigned i=0; i<_p->activeThreads.size(); ++i)
+    qi::erase_if(_p->activeThreads,
+                 [&id] (const boost::thread::id &tid) { return tid == id; });
+
+    // If all remaining activeThreads are waitingForInactive, or if
+    // activeThreads is empty, set the promise.
+    const auto &waitingForInactive = _p->waitingForInactive;
+    if (std::all_of(_p->activeThreads.begin(), _p->activeThreads.end(),
+                    [&waitingForInactive, this] (const boost::thread::id &activeThread) {
+        return std::find(waitingForInactive.begin(), waitingForInactive.end(),
+                           activeThread) != waitingForInactive.end();
+
+        }))
     {
-      if (_p->activeThreads[i] == id)
-      { // fast remove by swapping with last and then pop_back
-        _p->activeThreads[i] = _p->activeThreads[_p->activeThreads.size() - 1];
-        _p->activeThreads.pop_back();
-      }
-    }
-    if (_p->activeThreads.empty())
       _p->inactive.setValue(0);
+      _p->waitingForInactive.clear();
+      _p->activeThreads.clear();
+    }
   }
 
   SignalLink SignalSubscriber::link() const

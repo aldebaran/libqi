@@ -339,6 +339,9 @@ namespace qi {
     /// Disconnection requires to wait for inactivity using this promise.
     Promise<void> inactive;
 
+    // The active threads that are waiting for the inactive promise to be set.
+    std::vector<boost::thread::id> waitingForInactive;
+
     // ExecutionContext on which to schedule the call
     ExecutionContext* executionContext = nullptr;
   };
