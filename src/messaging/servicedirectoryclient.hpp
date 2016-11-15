@@ -76,16 +76,16 @@ namespace qi {
                             bool isAdd);
 
   private:
-    qi::TransportSocketPtr _sdSocket;
+    qi::TransportSocketPtr _sdSocket; // protected by _mutex
     qi::SignalLink         _sdSocketDisconnectedSignalLink;
     // _remoteObject is owned by _object
     qi::RemoteObject*      _remoteObject;
     // _object is a remote object of serviceDirectory
     qi::AnyObject          _object;
-    qi::SignalLink         _addSignalLink;
-    qi::SignalLink         _removeSignalLink;
+    qi::SignalLink         _addSignalLink; // protected by _mutex
+    qi::SignalLink         _removeSignalLink; // protected by _mutex
     ClientAuthenticatorFactoryPtr _authFactory;
-    boost::mutex           _mutex;
+    mutable boost::mutex _mutex;
     bool                   _localSd; // true if sd is local (no socket)
     bool                   _enforceAuth;
   };
