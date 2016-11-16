@@ -100,6 +100,9 @@ namespace qi {
   {
   }
 
+  SignalSubscriber::SignalSubscriber(const SignalSubscriber& other) = default;
+  SignalSubscriber& SignalSubscriber::operator=(const SignalSubscriber& other) = default;
+
   SignalSubscriber::SignalSubscriber(const AnyObject& target, unsigned int method)
     : SignalSubscriber()
   { // The slot has its own threading model: use sync call type (default)
@@ -119,19 +122,6 @@ namespace qi {
   { // The execution context will reschedule the call like it wants, use sync call type
     _p->handler = func;
     _p->executionContext = ec;
-  }
-
-  SignalSubscriber::SignalSubscriber(const SignalSubscriber& b)
-    : _p(b._p)
-    , linkId(_p->linkId)
-  {
-  }
-
-  SignalSubscriber& SignalSubscriber::operator=(const SignalSubscriber& b)
-  {
-    linkId = b._p->linkId;
-    _p = b._p;
-    return *this;
   }
 
   SignalSubscriber::~SignalSubscriber() = default;

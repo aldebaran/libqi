@@ -259,9 +259,9 @@ namespace qi {
     SignalSubscriber(AnyFunction func, ExecutionContext* ec);
     SignalSubscriber(const AnyObject& target, unsigned int method);
 
-    // This is copy-constructible
-    SignalSubscriber(const SignalSubscriber& b);
-    SignalSubscriber& operator=(const SignalSubscriber& b);
+    // This is copiable but not movable (never invalid).
+    SignalSubscriber(const SignalSubscriber& other);
+    SignalSubscriber& operator=(const SignalSubscriber& other);
 
     ~SignalSubscriber();
 
@@ -296,7 +296,7 @@ namespace qi {
 
   public:
     QI_API_DEPRECATED_MSG("please use link instead or cast to qi::SignalLink")
-    SignalLink& linkId;
+    SignalLink linkId;
   };
 
   using SignalSubscriberPtr = boost::shared_ptr<SignalSubscriber>;
