@@ -99,7 +99,7 @@ namespace qi {
       // to a 'parent' object.
       _linkMessageDispatcher = socket->messagePendingConnect(_service,
         TransportSocket::ALL_OBJECTS,
-        boost::bind<void>(&RemoteObject::onMessagePending, this, _1));
+        track(boost::bind<void>(&RemoteObject::onMessagePending, this, _1), this));
       _linkDisconnected      = socket->disconnected.connect (
          &RemoteObject::onSocketDisconnected, this, _1);
     }
@@ -131,7 +131,7 @@ namespace qi {
     qi::Promise<void> prom(qi::FutureCallbackType_Sync);
     qi::Future<qi::MetaObject> fut =
       _self.async<qi::MetaObject>("metaObject", 0U);
-    fut.connect(boost::bind<void>(&RemoteObject::onMetaObject, this, _1, prom));
+    fut.connect(track(boost::bind<void>(&RemoteObject::onMetaObject, this, _1, prom), this));
     return prom.future();
   }
 
@@ -501,7 +501,7 @@ namespace qi {
       qiLogDebug() << this << "connect() to " << event << " gave " << uid << " (reusing remote connection)";
     }
 
-    rsl.future.connect(boost::bind<void>(&onEventConnected, this, _1, prom, uid));
+    rsl.future.connect(track(boost::bind<void>(&onEventConnected, this, _1, prom, uid), this));
     return prom.future();
   }
 
