@@ -350,6 +350,15 @@ TEST(QiOs, isProcessRunningWrongName)
       << "random process with name " << processName << " is said to be running";
 }
 
+TEST(QiOs, isProcessRunningRealProcessWithSpaces)
+{
+  const std::string executable("test launchloop with spaces");
+  std::string executablePath = qi::path::findBin(executable);
+  const ScopedProcess p{executablePath};
+  ASSERT_TRUE(qi::os::isProcessRunning(p.pid(), executable))
+      << executablePath << " was not found running";
+}
+
 TEST(QiOs, isProcessRunningRealProcess)
 {
   const std::string executable("testlaunchloop");
