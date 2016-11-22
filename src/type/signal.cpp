@@ -12,6 +12,7 @@
 #include <qi/signal.hpp>
 #include <qi/anyvalue.hpp>
 #include <qi/anyobject.hpp>
+#include <qi/assert.hpp>
 
 #include "signal_p.hpp"
 
@@ -21,7 +22,10 @@ namespace qi {
 
   SignalBasePrivate::~SignalBasePrivate()
   {
-    onSubscribers = SignalBase::OnSubscribers();
+    {
+      boost::recursive_mutex::scoped_lock lock(mutex);
+      onSubscribers = SignalBase::OnSubscribers();
+    }
     disconnectAll();
   }
 
@@ -130,10 +134,8 @@ namespace qi {
 
   void SignalBase::setCallType(MetaCallType callType)
   {
-    if (!_p)
-    {
-      _p = boost::make_shared<SignalBasePrivate>();
-    }
+    QI_ASSERT(_p);
+    boost::recursive_mutex::scoped_lock lock(_p->mutex);
     _p->defaultCallType = callType;
   }
 
@@ -154,50 +156,60 @@ namespace qi {
         params.push_back(*vals[i]);
     qi::Signature signature = qi::makeTupleSignature(params);
 
-    if (signature != _p->signature)
-    {
-      qiLogError() << "Dropping emit: signature mismatch: " << signature.toString() <<" " << _p->signature.toString();
-      return;
-    }
-    trigger(params, _p->defaultCallType);
+    auto mct = [&] () {
+      QI_ASSERT(_p);
+      boost::recursive_mutex::scoped_lock lock(_p->mutex);
+      if (signature != _p->signature)
+      {
+        qiLogError() << "Dropping emit: signature mismatch: "
+                     << signature.toString() << " " << _p->signature.toString();
+        return MetaCallType_Auto;
+      }
+      return _p->defaultCallType;
+    }();
+
+    trigger(params, mct);
   }
 
   void SignalBase::trigger(const GenericFunctionParameters& params, MetaCallType callType)
   {
-    if (!_p)
-      return;
-    if (_p->triggerOverride)
-      _p->triggerOverride(params, callType);
+    QI_ASSERT(_p);
+    SignalBase::Trigger trigger;
+    {
+      boost::recursive_mutex::scoped_lock lock(_p->mutex);
+      trigger = _p->triggerOverride;
+    }
+    if (trigger)
+      trigger(params, callType);
     else
       callSubscribers(params, callType);
   }
 
   void SignalBase::setTriggerOverride(Trigger t)
   {
-    if (!_p)
-      _p = boost::make_shared<SignalBasePrivate>();
+    QI_ASSERT(_p);
+    boost::recursive_mutex::scoped_lock lock(_p->mutex);
     _p->triggerOverride = t;
   }
 
   void SignalBase::setOnSubscribers(OnSubscribers onSubscribers)
   {
-    if (!_p)
-      _p = boost::make_shared<SignalBasePrivate>();
+    QI_ASSERT(_p);
+    boost::recursive_mutex::scoped_lock lock(_p->mutex);
     _p->onSubscribers = onSubscribers;
   }
 
   void SignalBase::callSubscribers(const GenericFunctionParameters& params, MetaCallType callType)
   {
     MetaCallType mct = callType;
+    QI_ASSERT(_p);
 
-    if (!_p)
-      return;
-
-    if (mct == qi::MetaCallType_Auto)
-      mct = _p->defaultCallType;
     SignalSubscriberMap copy;
     {
-      boost::recursive_mutex::scoped_lock sl(_p->mutex);
+      boost::recursive_mutex::scoped_lock lock(_p->mutex);
+      if (mct == qi::MetaCallType_Auto)
+        mct = _p->defaultCallType;
+
       copy = _p->subscriberMap;
     }
     qiLogDebug() << (void*)this << " Invoking signal subscribers: " << copy.size();
@@ -420,10 +432,7 @@ namespace qi {
   Future<SignalSubscriber> SignalBase::connectAsync(const SignalSubscriber& src)
   {
     qiLogDebug() << (void*)this << " connecting new subscriber";
-    if (!_p)
-    {
-      _p = boost::make_shared<SignalBasePrivate>();
-    }
+    QI_ASSERT(_p);
     // Check arity. Does not require to acquire weakLock.
     int signalArity = signature().children().size();
     int subscriberArity = -1;
@@ -487,16 +496,14 @@ namespace qi {
 
   bool SignalBase::disconnectAll()
   {
-    if (_p)
-      return _p->disconnectAll().value();
-    return false;
+    QI_ASSERT(_p);
+    return _p->disconnectAll().value();
   }
 
   Future<bool> SignalBase::disconnectAllAsync()
   {
-    if (_p)
-      return _p->disconnectAll();
-    return Future<bool>{false};
+    QI_ASSERT(_p);
+    return _p->disconnectAll();
   }
 
   SignalBase::SignalBase(const qi::Signature& sig, OnSubscribers onSubscribers)
@@ -518,27 +525,26 @@ namespace qi {
 
   qi::Signature SignalBase::signature() const
   {
-    return _p ? _p->signature : qi::Signature();
+    QI_ASSERT(_p);
+    boost::recursive_mutex::scoped_lock lock(_p->mutex);
+    return _p->signature;
   }
 
   void SignalBase::_setSignature(const qi::Signature& s)
   {
+    boost::recursive_mutex::scoped_lock lock(_p->mutex);
     _p->signature = s;
   }
 
 
   bool SignalBase::disconnect(const SignalLink &link) {
-    if (!_p)
-      return false;
-    else
-      return _p->disconnect(link).value();
+    QI_ASSERT(_p);
+    return _p->disconnect(link).value();
   }
 
   Future<bool> SignalBase::disconnectAsync(const SignalLink &link) {
-    if (!_p)
-      return Future<bool>{false};
-    else
-      return _p->disconnect(link);
+    QI_ASSERT(_p);
+    return _p->disconnect(link);
   }
 
   SignalBase::~SignalBase()
@@ -548,8 +554,7 @@ namespace qi {
   std::vector<SignalSubscriber> SignalBase::subscribers()
   {
     std::vector<SignalSubscriber> res;
-    if (!_p)
-      return res;
+    QI_ASSERT(_p);
     boost::recursive_mutex::scoped_lock sl(_p->mutex);
     for (const auto& i: _p->subscriberMap)
       res.push_back(i.second);
@@ -558,8 +563,7 @@ namespace qi {
 
   bool SignalBase::hasSubscribers()
   {
-    if (!_p)
-      return false;
+    QI_ASSERT(_p);
     boost::recursive_mutex::scoped_lock sl(_p->mutex);
     return !_p->subscriberMap.empty();
   }
