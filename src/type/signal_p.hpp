@@ -28,9 +28,9 @@ namespace qi {
     Future<bool> disconnectAll();
 
   private:
+    friend class SignalBase;
     Future<bool> disconnectAllStep(bool overallSuccess);
 
-  public:
     SignalBase::OnSubscribers      onSubscribers;
     SignalSubscriberMap            subscriberMap;
     TrackMap                       trackMap;

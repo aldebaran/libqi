@@ -258,9 +258,10 @@ namespace qi {
       // if enabled is false, we are already disconnected
       if (_p->enabled)
       {
-        boost::shared_ptr<SignalBasePrivate> sbp = _p->source->_p;
+        auto sbp = _p->source.lock();
         sl.unlock();
-        sbp->disconnect(_p->linkId);
+        if(sbp)
+          sbp->disconnect(_p->linkId).wait();
       }
     }
   }
@@ -317,9 +318,10 @@ namespace qi {
         if (_p->enabled)
         {
           // see above
-          boost::shared_ptr<SignalBasePrivate> sbp = _p->source->_p;
+          auto sbp = _p->source.lock();
           sl.unlock();
-          sbp->disconnect(_p->linkId);
+          if (sbp)
+            sbp->disconnect(_p->linkId).wait();
         }
       }
       else // no need to keep anything locked, whatever happens this is not used
@@ -464,7 +466,7 @@ namespace qi {
     SignalSubscriber& subscriberInMap = _p->subscriberMap[res];
     subscriberInMap = src;
     subscriberInMap._p->linkId = res;
-    subscriberInMap._p->source = this;
+    subscriberInMap._p->source = this->_p;
     Future<void> callingOnSubscribers{0};
     if (first && _p->onSubscribers)
       callingOnSubscribers = _p->onSubscribers(true);

@@ -1,5 +1,6 @@
 #include <qi/type/detail/manageable.hpp>
 #include <qi/type/objecttypebuilder.hpp>
+#include "../type/signal_p.hpp"
 
 namespace qi
 {
@@ -40,7 +41,8 @@ namespace qi
     }
     for (unsigned i = 0; i < copy.size(); ++i)
     {
-      copy[i]._p->source->disconnect(copy[i]._p->linkId);
+      if(auto source = copy[i]._p->source.lock())
+        source->disconnect(copy[i]._p->linkId).wait();
     }
   }
 

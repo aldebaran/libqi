@@ -138,6 +138,7 @@ namespace qi {
     std::vector<SignalSubscriber> subscribers();
     bool hasSubscribers();
     static const SignalLink invalidSignalLink;
+    void _setSignature(const Signature &s);
   protected:
     using Trigger = boost::function<void(const GenericFunctionParameters& params, MetaCallType callType)>;
     void callSubscribers(const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto);
@@ -146,9 +147,7 @@ namespace qi {
     void callOnSubscribe(bool v);
     void createNewTrackLink(int& id, SignalLink*& trackLink);
     void disconnectTrackLink(int id);
-  public:
-    void _setSignature(const Signature &s);
-    // C4251
+  protected:
     boost::shared_ptr<SignalBasePrivate> _p;
     friend class SignalBasePrivate;
   };
@@ -313,7 +312,7 @@ namespace qi {
     SignalSubscriberPrivate& operator=(const SignalSubscriberPrivate&) = delete;
 
     // Source information
-    SignalBase* source = nullptr;
+    boost::weak_ptr<SignalBasePrivate> source;
     /// Uid that can be passed to GenericObject::disconnect()
     SignalLink  linkId = SignalBase::invalidSignalLink;
 
