@@ -459,3 +459,25 @@ TEST(QiService, CallRemoteServiceInsideDtorService)
   p.client()->unregisterService(idCallDS).wait();
 }
 
+
+TEST(QiService, ExceptionFromPropertySetterSetsErrorOnFuture)
+{
+  using CustomException = std::exception;
+  const int initialValue = 12;
+  qi::Property<int> property{initialValue, qi::Property<int>::Getter{}, [this](int&, const int&)->bool
+  {
+    throw CustomException{};
+  }};
+
+  const std::string serviceName{"Corine"};
+  const std::string propertyName{"Ptitegoutte"};
+
+  qi::DynamicObjectBuilder objectBuilder;
+  objectBuilder.advertiseProperty(propertyName, &property);
+
+  TestSessionPair sessions;
+  sessions.server()->registerService(serviceName, objectBuilder.object());
+  auto setting = sessions.client()->service(serviceName).value().setProperty(propertyName, 42);
+  auto settingState = setting.waitFor(qi::MilliSeconds{200});
+  ASSERT_EQ(qi::FutureState_FinishedWithError, settingState);
+}

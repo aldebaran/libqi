@@ -269,3 +269,29 @@ TEST(TestProperty, customSetterStranded)
   property.set(expected);
   EXPECT_EQ(expected, property.get().value());
 }
+
+TEST(TestProperty, customSetterReturningFalseFailsButDoesNotThrow)
+{
+  const int initialValue = 12;
+  qi::Property<int> property{initialValue, qi::Property<int>::Getter{}, [this](int&, const int&)
+  {
+    return false;
+  }};
+  const int newValue = 42;
+  property.set(newValue);
+  EXPECT_EQ(initialValue, property.get().value());
+}
+
+using CustomException = std::exception;
+
+TEST(TestProperty, customSetterThrowIsTransmitted)
+{
+  const int initialValue = 12;
+  qi::Property<int> property{initialValue, qi::Property<int>::Getter{}, [this](int&, const int&)->bool
+  {
+    throw CustomException{};
+  }};
+  const int newValue = 42;
+  ASSERT_THROW(property.set(newValue), CustomException);
+  EXPECT_EQ(initialValue, property.get().value());
+}
