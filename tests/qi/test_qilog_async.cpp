@@ -41,7 +41,7 @@ TEST(log, logasync)
 
   BlockyHandler bh;
   qi::log::addHandler("BlockyHandler",
-      boost::bind(&BlockyHandler::log, &bh,
+      boost::bind(&BlockyHandler::log, boost::ref(bh),
                   _1, _2, _3, _4, _5, _6, _7, _8));
 
   for (int i = 0; i < MAX; i++)
