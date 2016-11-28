@@ -18,6 +18,7 @@
 #include <limits>
 #include <boost/filesystem/fstream.hpp>
 #include <cstdio>
+#include <future>
 
 #include <gtest/gtest.h>
 #include <boost/filesystem.hpp>
@@ -515,6 +516,53 @@ TEST(QiOs, hostIPAddrs)
 
   ifsMap = qi::os::hostIPAddrs();
   ASSERT_TRUE(ifsMap.empty() == false);
+}
+
+TEST(QiOs, concurrentHostIPAddrs)
+{
+  using IfsMap = std::map<std::string, std::vector<std::string>>;
+  const auto n = 200;
+
+  std::vector<std::future<IfsMap>> futureMaps;
+  futureMaps.reserve(n);
+
+  for (auto i = 0; i < n; ++i)
+  {
+    std::cout << i << std::endl;
+    futureMaps.push_back(std::async(std::launch::async,
+                                    [] () {
+      return qi::os::hostIPAddrs(false);
+    }));
+  }
+
+  for (auto i = 0; i < n; ++i)
+  {
+    auto &future = futureMaps[i];
+    future.wait();
+    std::cout << "future " << i << " set" << std::endl;
+    auto ifsMap = future.get();
+    ASSERT_FALSE(ifsMap.empty());
+    for (const auto &it : ifsMap)
+    {
+      std::cout << it.first << " : " << std::endl;
+      for (const auto &tmp : it.second)
+      {
+        std::cout << tmp << "; ";
+      }
+      std::cout << std::endl;
+    }
+  }
+}
+
+TEST(QiOs, sequentialHostIPAddrs)
+{
+  const auto n = 10000;
+  for (auto i = 0; i < n; ++i)
+  {
+    std::cout << i << std::endl;
+    auto ifsMap = qi::os::hostIPAddrs(false);
+    ASSERT_FALSE(ifsMap.empty());
+  }
 }
 
 TEST(QiOs, getMachineId)
