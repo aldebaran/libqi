@@ -63,6 +63,7 @@ namespace qi {
 
   bool Server::removeObject(unsigned int idx)
   {
+    BoundAnyObject removedObject;
     {
       boost::mutex::scoped_lock sl(_boundObjectsMutex);
       BoundAnyObjectMap::iterator it;
@@ -70,8 +71,10 @@ namespace qi {
       if (it == _boundObjects.end()) {
         return false;
       }
+      removedObject = it->second;
       _boundObjects.erase(idx);
     }
+    removedObject.reset();
     return true;
   }
 
