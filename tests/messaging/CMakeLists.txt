@@ -13,6 +13,11 @@ if(QI_WITH_TESTS)
   # Takes arguments supported by qi::ApplicationSession
   qi_create_test_helper(mirrorsd "mirrorsd.cpp" DEPENDS qi)
 
+  # A separate binary that registers a service on a service directory
+  # Takes arguments supported by qi::ApplicationSession
+  # Expects the url of the service directory to connect to
+  qi_create_test_helper(remoteserviceowner "remoteserviceowner.cpp" DEPENDS qi)
+
   qi_stage_dir(".")
 
   # General tests
