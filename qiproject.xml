@@ -7,7 +7,6 @@
     <depends testtime="true" buildtime="true" names="gtest" />
   </qibuild>
   <project src="dox" />
-  <project src="bin"/>
   <project src="libqipamauth" />
 
   <project src="compat/cqit"/>
