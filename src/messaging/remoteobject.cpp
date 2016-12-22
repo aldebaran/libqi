@@ -140,16 +140,19 @@ namespace qi {
   {
     TransportSocketPtr sock = *_socket;
     qiLogDebug() << this << "(" << _service << '/' << _object << ") msg " << msg.address() << " " << msg.buffer().size();
+
+    auto passToHost = [&]{
+      qiLogDebug() << "Passing message " << msg.address() << " to host ";
+      if (sock)
+      {
+        ObjectHost::onMessage(msg, sock);
+      }
+    };
+
     if (msg.object() != _object)
     {
-      qiLogDebug() << "Passing message " << msg.address() << " to host " ;
-      {
-        if (sock)
-        {
-          ObjectHost::onMessage(msg, sock);
-        }
-        return;
-      }
+      passToHost();
+      return;
     }
 
     if (msg.type() == qi::Message::Type_Event) {
@@ -197,6 +200,8 @@ namespace qi {
       && msg.type() != qi::Message::Type_Error
       && msg.type() != qi::Message::Type_Canceled) {
       qiLogError() << "Message " << msg.address() << " type not handled: " << msg.type();
+
+      passToHost();
       return;
     }
 
