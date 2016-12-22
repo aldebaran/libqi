@@ -97,7 +97,7 @@ namespace qi
     qiLogDebug() << this << " close";
     try
     {
-      _asyncEndpoints.cancel();
+      _asyncEndpoints->cancel();
     }
     catch (const std::runtime_error& e)
     {
@@ -146,7 +146,7 @@ namespace qi
     {
       const char* s = "Cannot get host addresses";
       qiLogWarning() << s;
-      _asyncEndpoints = updateEP();
+      *_asyncEndpoints = updateEP();
       return;
     }
 
@@ -183,7 +183,7 @@ namespace qi
 
     }
 
-    _asyncEndpoints = updateEP();
+    *_asyncEndpoints = updateEP();
   }
 
   qi::Future<void> TransportServerAsioPrivate::listen(const qi::Url& url)

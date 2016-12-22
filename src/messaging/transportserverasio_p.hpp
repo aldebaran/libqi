@@ -9,6 +9,7 @@
 
 # include <boost/asio.hpp>
 # include <boost/asio/ssl.hpp>
+#include <boost/thread/synchronized_value.hpp>
 #include <atomic>
 
 # include <qi/api.hpp>
@@ -44,7 +45,7 @@ namespace qi
     boost::shared_ptr<boost::asio::ssl::stream<boost::asio::ip::tcp::socket>> _s;
     bool _ssl;
     unsigned short _port;
-    qi::Future<void> _asyncEndpoints;
+    boost::synchronized_value<qi::Future<void>> _asyncEndpoints;
     Url _listenUrl;
 
     static const int64_t AcceptDownRetryTimerUs;
