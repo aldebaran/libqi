@@ -75,7 +75,7 @@ void StrandPrivate::enqueue(boost::shared_ptr<Callback> cbStruct)
 {
   const bool shouldschedule = [&]()
   {
-    boost::mutex::scoped_lock lock(_mutex);
+    boost::recursive_mutex::scoped_lock lock(_mutex);
     qiLogDebug() << "Enqueueing job id " << cbStruct->id;
     // the callback may have been canceled
     if (cbStruct->state == State::None)
@@ -115,7 +115,7 @@ void StrandPrivate::enqueue(boost::shared_ptr<Callback> cbStruct)
   }
 }
 
-void StrandPrivate::stopProcess(boost::mutex::scoped_lock& lock,
+void StrandPrivate::stopProcess(boost::recursive_mutex::scoped_lock& lock,
                                 bool finished)
 {
   // if we still have work
@@ -147,7 +147,7 @@ void StrandPrivate::process()
   {
     boost::shared_ptr<Callback> cbStruct;
     {
-      boost::mutex::scoped_lock lock(_mutex);
+      boost::recursive_mutex::scoped_lock lock(_mutex);
       if (_dying)
       {
         qiLogDebug() << this << " strand is dying, stopping process";
@@ -194,14 +194,14 @@ void StrandPrivate::process()
   _processingThread = 0;
 
   {
-    boost::mutex::scoped_lock lock(_mutex);
+    boost::recursive_mutex::scoped_lock lock(_mutex);
     stopProcess(lock, false);
   }
 }
 
 void StrandPrivate::cancel(boost::shared_ptr<Callback> cbStruct)
 {
-  boost::mutex::scoped_lock lock(_mutex);
+  boost::recursive_mutex::scoped_lock lock(_mutex);
 
   switch (cbStruct->state)
   {
@@ -267,7 +267,7 @@ void Strand::join()
   boost::shared_ptr<StrandPrivate> prv;
 
   {
-    boost::unique_lock<boost::mutex> lock(_p->_mutex);
+    boost::unique_lock<boost::recursive_mutex> lock(_p->_mutex);
     qiLogVerbose() << this << " joining (processing: " << _p->_processing
       << ", size: " << _p->_aliveCount << ")";
 

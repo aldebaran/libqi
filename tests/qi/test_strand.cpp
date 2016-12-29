@@ -387,3 +387,47 @@ TEST(TestStrand, FutureThenActorCancel)
     ASSERT_NO_THROW(finished.future().value());
   }
 }
+
+template<typename Functor>
+struct CallerOnDestruction
+{
+  CallerOnDestruction(Functor functor)
+    : toCall(std::move(functor))
+  {
+  }
+
+  ~CallerOnDestruction()
+  {
+    toCall();
+  }
+
+  Functor toCall;
+};
+
+template<typename Functor>
+void callLongCallbackWithDestructionHook(qi::Strand& strand, Functor&& toCallOnDestruction)
+{
+  auto callerOnDestruction =
+      std::make_shared<CallerOnDestruction<Functor>>(std::forward<Functor>(toCallOnDestruction));
+  // keeps alive the caller for some time, so that we can join and have it die in our hands
+  auto f = [callerOnDestruction]{ qi::os::msleep(200); };
+  callerOnDestruction.reset();
+  strand.async(std::move(f));
+}
+
+TEST(TestStrand, AsyncWhileJoiningDoesNotDeadlock)
+{
+  qi::Strand strand;
+  std::atomic<bool> called;
+  called = false;
+  callLongCallbackWithDestructionHook(strand, [&strand, &called]{ strand.async([]{}); called = true; });
+  strand.join();
+  ASSERT_TRUE(called.load());
+}
+
+TEST(TestStrand, CallWrappedInStrandWhileJoiningDoesNotDeadlock)
+{
+  qi::Strand strand;
+  callLongCallbackWithDestructionHook(strand, strand.schedulerFor([]{}));
+  strand.join();
+}
