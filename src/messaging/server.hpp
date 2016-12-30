@@ -72,9 +72,6 @@ namespace qi {
     qi::MetaCallType                    _defaultCallType;
 
   private:
-    // The connection to the server's signal. Needs to be disconnected in the destructor.
-    qi::SignalLink                      _newConnectionLink = qi::SignalBase::invalidSignalLink;
-
     struct SocketSubscriber
     {
       qi::SignalLink disconnected = qi::SignalBase::invalidSignalLink;

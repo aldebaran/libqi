@@ -22,17 +22,17 @@ namespace qi {
     : _enforceAuth(enforceAuth)
     , _dying(false)
     , _defaultCallType(qi::MetaCallType_Queued)
-    , _newConnectionLink(_server.newConnection.connect(&Server::onTransportServerNewConnection, this, _1, true))
   {
+    _server.newConnection.connect(track([this](TransportSocketPtr socket) -> void
+    {
+      this->onTransportServerNewConnection(socket, true);
+    }, this));
   }
 
   Server::~Server()
   {
-    //we can call reset on server and socket they are only owned by us.
-    //when it's close it's close
-    _server.newConnection.disconnect(_newConnectionLink);
-    close();
     destroy();
+    close();
   }
 
   bool Server::addObject(unsigned int id, qi::AnyObject obj)

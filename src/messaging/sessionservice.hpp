@@ -59,13 +59,10 @@ namespace qi {
 
   private:
     //FutureInterface
-    void onServiceInfoResult(qi::Future<qi::ServiceInfo> value, long requestId, std::string protocol);
     void onRemoteObjectComplete(qi::Future<void> value, long requestId);
     void onTransportSocketResult(qi::Future<TransportSocketPtr> value, long requestId);
 
     //ServiceDirectoryClient
-    void onServiceRemoved(const unsigned int &index, const std::string &service);
-
     void onAuthentication(const TransportSocket::SocketEventData& data, long requestId, TransportSocketPtr socket, ClientAuthenticatorPtr auth, SignalSubscriberPtr old);
 
     ServiceRequest *serviceRequest(long requestId);
@@ -82,12 +79,9 @@ namespace qi {
     boost::recursive_mutex          _remoteObjectsMutex;
 
   private:
-    qi::SignalLink    _linkServiceRemoved;
     TransportSocketCache   *_socketCache;
     ServiceDirectoryClient *_sdClient;  //not owned by us
     ObjectRegistrar        *_server;    //not owned by us
-    boost::shared_ptr<Session_Service> _self;
-    Promise<void>                      _destructionBarrier;
     ClientAuthenticatorFactoryPtr      _authFactory;
     bool _enforceAuth;
     friend inline void sessionServiceWaitBarrier(Session_Service* ptr);
