@@ -42,8 +42,6 @@ namespace
       gw_.listen("tcp://127.0.0.1:0");
     }
 
-    void registerSdService(const std::string& serviceName);
-    void registerSdService(const std::string& serviceName, qi::AnyObject service);
     qi::SessionPtr connectClientToSd();
     qi::SessionPtr connectClientToGw();
 
@@ -72,17 +70,6 @@ namespace
     ob.advertiseSignal<int>("echoSignal2");
     return ob.object();
   }
-
-  void TestGateway::registerSdService(const std::string& serviceName)
-  {
-    registerSdService(serviceName, makeBaseService());
-  }
-
-  void TestGateway::registerSdService(const std::string& serviceName, qi::AnyObject service)
-  {
-    sd_.registerService(serviceName, service);
-  }
-
 
   qi::SessionPtr TestGateway::connectClientToSd()
   {
@@ -239,15 +226,13 @@ namespace
     SessionPtr client = connectClientToGw();
     SessionPtr serviceHost = connectClientToGw();
     int value = rand();
-    callsync_ callsync(qi::Promise<int>(), value, 1);
-    qi::Promise<int> prom;
-    qi::Future<int> fut = callsync.prom_.future();
 
     serviceHost->registerService("my_service", makeBaseService());
     qi::AnyObject service = client->service("my_service");
 
-    qi::SignalLink link = service.connect("echoSignal", boost::function<void(int)>(callsyncwrap_(&callsync)));
-    service.connect("echoSignal", boost::function<void(int)>(boost::bind(&qi::Promise<int>::setValue, &prom, _1)));
+    callsync_ callsync(qi::Promise<int>(), value, 1);
+    qi::Future<int> fut = callsync.prom_.future();
+    qi::SignalLink callsyncOnEchoLink = service.connect("echoSignal", [&](int value){ callsync(value); });
     service.post("echoSignal", value);
     fut.wait();
     ASSERT_FALSE(fut.hasError());
@@ -255,15 +240,18 @@ namespace
 
     // Disconnect the signal and check we don't receive it anymore
     // fut ensures we still receive the signal properly
-    //callsync.prom_.reset();
-    //prom.reset();
+    service.disconnect(callsyncOnEchoLink);
     callsync.prom_ = qi::Promise<int>();
-    prom = qi::Promise<int>();
-    fut = prom.future();
     callsync.remainingCalls_ = 1;
-    service.disconnect(link);
+
+    qi::Promise<int> witnessPromise;
+    fut = witnessPromise.future();
+    qi::SignalLink setValueOnEchoLink =
+        service.connect("echoSignal", [&](int v){ witnessPromise.setValue(v); });
+
     service.post("echoSignal", value);
     fut.wait();
+    service.disconnect(setValueOnEchoLink);
     ASSERT_EQ(callsync.remainingCalls_, 1);
 
     // Reconnect the signal, disconnect the client, reconnect the client,
