@@ -497,11 +497,3 @@ namespace
   }
 
 }
-
-int main(int ac, char **av)
-{
-  qi::Application app(ac, av);
-  ::testing::InitGoogleTest(&ac, av);
-  srand(time(NULL));
-  return RUN_ALL_TESTS();
-}

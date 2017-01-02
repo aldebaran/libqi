@@ -16,17 +16,6 @@ qiLogCategory("test");
 int timeoutMs = 300;
 qi::Duration timeout = qi::MilliSeconds(timeoutMs);
 
-int main(int argc, char **argv)
-{
-  qi::Application app(argc, argv);
-  TestMode::initTestMode(argc, argv);
-  ::testing::InitGoogleTest(&argc, argv);
-  qi::log::addFilter("qi.*", qi::LogLevel_Debug);
-  qi::log::addFilter("qigateway.*", qi::LogLevel_Debug);
-  qi::log::addFilter("qimessaging.*", qi::LogLevel_Debug);
-  return RUN_ALL_TESTS();
-}
-
 void test_service(const qi::AnyObject &o)
 {
   ASSERT_TRUE(o);

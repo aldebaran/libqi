@@ -4,10 +4,6 @@
 
 int main(int argc, char **argv)
 {
-  srand(time(NULL));
-#if defined(__APPLE__) || defined(__linux__)
-  setsid();
-#endif
   qi::Application app(argc, argv);
   ::testing::InitGoogleTest(&argc, argv);
   int res = RUN_ALL_TESTS();

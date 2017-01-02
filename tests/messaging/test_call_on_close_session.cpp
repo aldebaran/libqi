@@ -50,7 +50,7 @@ TEST(QiSession, CallOnCloseSession)
   {
     for (int i = 0; i < 20; i++)
     {
-      TestSessionPair p;
+      TestSessionPair p{TestMode::Mode_SD};
       std::cout << "time to wait is:" << timeToWait << std::endl;
 
       qi::SessionPtr s1 = p.server();
@@ -88,7 +88,7 @@ TEST(QiSession, GettingServiceWhileDisconnecting)
 
   qi::SessionPtr client = qi::makeSession();
 
-  for(int i = 0; i < 1000; ++i)
+  for(int i = 0; i < 100; ++i)
   {
     client->connect(server->endpoints()[0]);
     qi::Future<void> closing = client->close().async();
@@ -108,12 +108,4 @@ TEST(QiSession, GettingServiceWhileDisconnecting)
     }
     closing.wait();
   }
-}
-
-int main(int argc, char **argv)
-{
-  ::testing::InitGoogleTest(&argc, argv);
-  qi::Application app(argc, argv);
-  TestMode::forceTestMode(TestMode::Mode_SD);
-  return RUN_ALL_TESTS();
 }

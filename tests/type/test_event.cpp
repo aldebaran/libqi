@@ -16,7 +16,7 @@
 
 qiLogCategory("test");
 
-class TestObject : public ::testing::Test
+class ObjectEvent : public ::testing::Test
 {
 public:
   virtual void SetUp()
@@ -30,19 +30,19 @@ public:
   qi::Promise<int> pPayload;
 };
 
-void TestObject::onFire(int pl)
+void ObjectEvent::onFire(int pl)
 {
   lastPayload = pl;
   pPayload.setValue(pl);
 }
 
-TEST_F(TestObject, Simple)
+TEST_F(ObjectEvent, Simple)
 {
   qi::DynamicObjectBuilder ob;
   ob.advertiseSignal<int>("fire");
   qi::AnyObject obj(ob.object());
   EXPECT_LE(1U, obj.metaObject().signalMap().size());
-  qi::SignalLink linkId = obj.connect("fire", qi::bind<void(int)>(&TestObject::onFire, this, _1));
+  qi::SignalLink linkId = obj.connect("fire", qi::bind<void(int)>(&ObjectEvent::onFire, this, _1));
   obj.post("fire", 42);
   EXPECT_TRUE(pPayload.future().wait() != qi::FutureState_Running);
   EXPECT_EQ(42, lastPayload);
@@ -61,26 +61,26 @@ void readString(const std::string&)
 {
 }
 
-TEST_F(TestObject, ConnectBind)
+TEST_F(ObjectEvent, ConnectBind)
 {
   qi::DynamicObjectBuilder ob;
   ob.advertiseSignal<int>("fire");
   ob.advertiseSignal<int, int>("fire2");
   qi::AnyObject obj(ob.object());
-  qi::SignalLink link = obj.connect("fire", qi::bind<void(int)>(&TestObject::onFire, this, _1));
+  qi::SignalLink link = obj.connect("fire", qi::bind<void(int)>(&ObjectEvent::onFire, this, _1));
   obj.post("fire", 42);
   EXPECT_TRUE(pPayload.future().wait() != qi::FutureState_Running);
   EXPECT_EQ(42, lastPayload);
   obj.disconnect(link);
   // The boost bind without _1 gives us a void (void) signature that does not match fire
   EXPECT_ANY_THROW(
-    obj.connect("fire", boost::bind<void>(&TestObject::onFire, this, 51)).value()
+    obj.connect("fire", boost::bind<void>(&ObjectEvent::onFire, this, 51)).value()
   );
   // Argument type mismatch
   EXPECT_ANY_THROW(
     obj.connect("fire", boost::bind<void>(&readString, _1)).value()
   );
-  link = obj.connect("fire2", qi::bind<void(int, int)>(&TestObject::onFire, this, _2));
+  link = obj.connect("fire2", qi::bind<void(int, int)>(&ObjectEvent::onFire, this, _2));
   EXPECT_TRUE(link != 0);
   pPayload = qi::Promise<int>();
   obj.post("fire2", 40, 41);
@@ -89,11 +89,11 @@ TEST_F(TestObject, ConnectBind)
   obj.disconnect(link);
 }
 
-TEST_F(TestObject, EmitMethod)
+TEST_F(ObjectEvent, EmitMethod)
 {
   lastPayload = 0;
   qi::DynamicObjectBuilder ob;
-  ob.advertiseMethod("fire", qi::bind<void(int)>(&TestObject::onFire, this, _1));
+  ob.advertiseMethod("fire", qi::bind<void(int)>(&ObjectEvent::onFire, this, _1));
   qi::AnyObject obj(ob.object());
   pPayload = qi::Promise<int>();
   obj.post("fire", 23);

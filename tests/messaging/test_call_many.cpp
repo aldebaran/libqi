@@ -66,11 +66,3 @@ TEST(Test, Recurse)
   oclient1.reset();
   oclient2.reset();
 }
-
-
-int main(int argc, char **argv) {
-  qi::Application app(argc, argv);
-  TestMode::initTestMode(argc, argv);
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}

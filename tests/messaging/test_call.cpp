@@ -1626,11 +1626,3 @@ TEST(TestCall, TestMultipleGetObjectProperty)
   for (int i = 0; i < 10; ++i)
     ASSERT_NO_THROW(getAndSetObjProp(p, "Serv", "prop"));
 }
-
-int main(int argc, char **argv) {
-  qi::os::setenv("QI_IGNORE_STRUCT_NAME", "1");
-  qi::Application app(argc, argv);
-  TestMode::initTestMode(argc, argv);
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}

@@ -10,7 +10,6 @@ endif()
 
 qi_create_test_helper(check_env          check_env.cpp        DEPENDS QI)
 qi_create_test_helper(check_machineid    check_machineid.cpp  DEPENDS QI)
-qi_create_test_helper(test_application   test_application.cpp DEPENDS QI)
 
 qi_create_gtest(test_path_conf    SRC test_path_conf.cpp DEPENDS QI GTEST)
 qi_create_gtest(test_qipath       SRC test_qipath.cpp    ../../src/utils.cpp     DEPENDS QI GTEST)

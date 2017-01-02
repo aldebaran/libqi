@@ -255,11 +255,3 @@ TEST_F(TestAuthentication, ConnectionToServiceTest)
   qi::AnyObject myObj = client_.service("toto");
   ASSERT_EQ(myObj.call<int>("toto", 44), 88);
 }
-
-int main(int ac, char **av)
-{
-  qi::Application app(ac, av);
-  ::testing::InitGoogleTest(&ac, av);
-
-  return RUN_ALL_TESTS();
-}

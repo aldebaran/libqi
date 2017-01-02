@@ -459,13 +459,3 @@ TEST(QiService, CallRemoteServiceInsideDtorService)
   p.client()->unregisterService(idCallDS).wait();
 }
 
-int main(int argc, char **argv)
-{
-  qi::Application app(argc, argv);
-#if defined(__APPLE__) || defined(__linux__)
-  setsid();
-#endif
-  TestMode::initTestMode(argc, argv);
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}

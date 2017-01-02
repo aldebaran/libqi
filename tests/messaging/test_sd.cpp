@@ -160,10 +160,3 @@ TEST(ServiceDirectory, RegisterServiceFromNonListeningSessionAndCallThroughAnInt
   auto remoteRemoteService = sessionSecondaryClient->service("Service").value();
   ASSERT_EQ(Serv::response, remoteRemoteService.call<int>("f"));
 }
-
-int main(int argc, char **argv) {
-  qi::Application app(argc, argv);
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}
-

@@ -80,10 +80,3 @@ TEST_F(Module, LoadWithSessionAndRename)
 
   ASSERT_EQ(42, res);
 }
-
-int main(int argc, char **argv) {
-  qi::Application app(argc, argv);
-  ::testing::InitGoogleTest(&argc, argv);
-  int res = RUN_ALL_TESTS();
-  return res;
-}

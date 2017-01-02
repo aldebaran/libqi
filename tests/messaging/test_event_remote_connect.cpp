@@ -22,6 +22,9 @@ qiLogCategory("test");
  */
 
 static qi::Promise<int> *payload1;
+
+namespace
+{
 qi::Atomic<int> i{0};
 
 void onFire1(const int& pl)
@@ -51,11 +54,12 @@ void callbackCounterBis(const int& value, std::string secondValue)
   ++i;
   std::cout << "callback called " << i.load() <<" times" << std::endl;
 }
+} // anonymous
 
-class TestObject: public ::testing::Test
+class ObjectEventRemoteConnect: public ::testing::Test
 {
 public:
-  TestObject()
+  ObjectEventRemoteConnect()
     : oe1(0)
     , oe2(0)
     , om1(0)
@@ -141,7 +145,7 @@ public:
 
 // We try to test all possible combinations of where we connect, where we emit.
 
-TEST_F(TestObject, Connect1)
+TEST_F(ObjectEventRemoteConnect, Connect1)
 {
   oclient1.connect(oe1, oclient1, om1).wait(2000);
   oclient1.post("fire1", 12);
@@ -149,7 +153,7 @@ TEST_F(TestObject, Connect1)
   EXPECT_EQ(12, payload1->future().value());
 }
 
-TEST_F(TestObject, Connect2)
+TEST_F(ObjectEventRemoteConnect, Connect2)
 {
   oclient1.connect(oe1, oclient1, om1).wait(2000);
   oserver1.post("fire1", 12);
@@ -158,7 +162,7 @@ TEST_F(TestObject, Connect2)
 }
 
 
-TEST_F(TestObject, Connect3)
+TEST_F(ObjectEventRemoteConnect, Connect3)
 {
   oclient1.connect(oe1, oserver1, sm1).wait(2000);
   oserver1.post("fire1", 12);
@@ -166,7 +170,7 @@ TEST_F(TestObject, Connect3)
   EXPECT_EQ(12, payload1->future().value());
 }
 
-TEST_F(TestObject, Connect4)
+TEST_F(ObjectEventRemoteConnect, Connect4)
 {
   oclient1.connect(oe1, oserver1, sm1).wait(2000);
   oclient1.post("fire1", 12);
@@ -174,7 +178,7 @@ TEST_F(TestObject, Connect4)
   EXPECT_EQ(12, payload1->future().value());
 }
 
-TEST_F(TestObject, Connect5)
+TEST_F(ObjectEventRemoteConnect, Connect5)
 {
   oserver1.connect(se1, oclient1, om1).wait(2000);
   oclient1.post("fire1", 12);
@@ -182,7 +186,7 @@ TEST_F(TestObject, Connect5)
   EXPECT_EQ(12, payload1->future().value());
 }
 
-TEST_F(TestObject, Connect6)
+TEST_F(ObjectEventRemoteConnect, Connect6)
 {
   oserver1.connect(se1, oclient1, om1).wait(2000);
   oserver1.post("fire1", 12);
@@ -190,7 +194,7 @@ TEST_F(TestObject, Connect6)
   EXPECT_EQ(12, payload1->future().value());
 }
 
-TEST_F(TestObject, Connect7)
+TEST_F(ObjectEventRemoteConnect, Connect7)
 {
   oserver1.connect(se1, oserver1, sm1).wait(2000);
   oserver1.post("fire1", 12);
@@ -198,7 +202,7 @@ TEST_F(TestObject, Connect7)
   EXPECT_EQ(12, payload1->future().value());
 }
 
-TEST_F(TestObject, Connect8)
+TEST_F(ObjectEventRemoteConnect, Connect8)
 {
   oserver1.connect(se1, oserver1, sm1).wait(2000);
   oclient1.post("fire1", 12);
@@ -206,7 +210,7 @@ TEST_F(TestObject, Connect8)
   EXPECT_EQ(12, payload1->future().value());
 }
 
-TEST_F(TestObject, Connect10)
+TEST_F(ObjectEventRemoteConnect, Connect10)
 {
   oclient1.connect(oe1, oclient2, om2).wait(2000);
   oclient1.post("fire1", 12);
@@ -214,7 +218,7 @@ TEST_F(TestObject, Connect10)
   EXPECT_EQ(12, payload2->future().value());
 }
 
-TEST_F(TestObject, Connect11)
+TEST_F(ObjectEventRemoteConnect, Connect11)
 {
   oclient1.connect(oe1, oclient2, om2).wait(2000);
   oserver1.post("fire1", 12);
@@ -223,7 +227,7 @@ TEST_F(TestObject, Connect11)
 }
 
 
-TEST_F(TestObject, Connect12)
+TEST_F(ObjectEventRemoteConnect, Connect12)
 {
   oclient1.connect(oe1, oserver2, sm2).wait(2000);
   oserver1.post("fire1", 12);
@@ -231,7 +235,7 @@ TEST_F(TestObject, Connect12)
   EXPECT_EQ(12, payload2->future().value());
 }
 
-TEST_F(TestObject, Connect13)
+TEST_F(ObjectEventRemoteConnect, Connect13)
 {
   oclient1.connect(oe1, oserver2, sm2).wait(2000);
   oclient1.post("fire1", 12);
@@ -239,7 +243,7 @@ TEST_F(TestObject, Connect13)
   EXPECT_EQ(12, payload2->future().value());
 }
 
-TEST_F(TestObject, Connect14)
+TEST_F(ObjectEventRemoteConnect, Connect14)
 {
   oserver1.connect(se1, oclient2, om2).wait(2000);
   oclient1.post("fire1", 12);
@@ -247,7 +251,7 @@ TEST_F(TestObject, Connect14)
   EXPECT_EQ(12, payload2->future().value());
 }
 
-TEST_F(TestObject, Connect15)
+TEST_F(ObjectEventRemoteConnect, Connect15)
 {
   oserver1.connect(se1, oclient2, om2).wait(2000);
   oserver1.post("fire1", 12);
@@ -255,7 +259,7 @@ TEST_F(TestObject, Connect15)
   EXPECT_EQ(12, payload2->future().value());
 }
 
-TEST_F(TestObject, Connect16)
+TEST_F(ObjectEventRemoteConnect, Connect16)
 {
   oserver1.connect(se1, oserver2, sm2).wait(2000);
   oserver1.post("fire1", 12);
@@ -263,7 +267,7 @@ TEST_F(TestObject, Connect16)
   EXPECT_EQ(12, payload2->future().value());
 }
 
-TEST_F(TestObject, Connect17)
+TEST_F(ObjectEventRemoteConnect, Connect17)
 {
   oserver1.connect(se1, oserver2, sm2).wait(2000);
   oclient1.post("fire1", 12);
@@ -283,7 +287,7 @@ void slowDisconnect(qi::Promise<void> ready, qi::Promise<void> done, qi::Future<
 }
 
 // disconnect multiple times in parallel
-TEST_F(TestObject, disconnectDeadlock)
+TEST_F(ObjectEventRemoteConnect, disconnectDeadlock)
 {
   qi::Promise<void> doDisc, ready, discDone;
   boost::shared_ptr<qi::SignalLink> link = boost::make_shared<qi::SignalLink>();
@@ -301,7 +305,7 @@ TEST_F(TestObject, disconnectDeadlock)
   discDone2.wait();
 }
 
-TEST_F(TestObject, multipleConnect)
+TEST_F(ObjectEventRemoteConnect, multipleConnect)
 {
   int additional_timeout = 5;//time to wait after having received the correct number of callbacks
   i = 0;
@@ -371,7 +375,7 @@ TEST_F(TestObject, multipleConnect)
 
 }
 
-TEST_F(TestObject, serviceDirectoryEvent)
+TEST_F(ObjectEventRemoteConnect, serviceDirectoryEvent)
 {
   i = 0;
   qi::AnyObject sd = p1.client()->service("ServiceDirectory");
@@ -406,7 +410,7 @@ TEST_F(TestObject, serviceDirectoryEvent)
   ASSERT_EQ(i.load(), 4);
 }
 
-TEST(TestObjectDyn, PropertyConnectOnDynamicObject)
+TEST(ObjectEventRemoteDyn, PropertyConnectOnDynamicObject)
 {
   qi::Property<int> prop;
   qi::DynamicObjectBuilder builder;
@@ -424,15 +428,4 @@ TEST(TestObjectDyn, PropertyConnectOnDynamicObject)
 
   prop.set(42);
   ASSERT_EQ(42, prom.future().value());
-}
-
-int main(int argc, char *argv[])
-{
-#if defined(__APPLE__) || defined(__linux__)
-  setsid();
-#endif
-  qi::Application app(argc, argv);
-  TestMode::initTestMode(argc, argv);
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
 }

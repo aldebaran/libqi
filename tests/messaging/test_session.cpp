@@ -571,17 +571,3 @@ TEST(QiSession, WaitForServiceCanceled)
   future.cancel();
   EXPECT_TRUE(future.isCanceled());
 }
-
-
-
-int main(int argc, char **argv)
-{
-  qi::Application app(argc, argv);
-#if defined(__APPLE__) || defined(__linux__)
-  setsid();
-#endif
-  ::TestMode::initTestMode(argc, argv);
-  ::testing::InitGoogleTest(&argc, argv);
-  qi::log::addFilter("qimessaging.*", qi::LogLevel_Debug);
-  return RUN_ALL_TESTS();
-}

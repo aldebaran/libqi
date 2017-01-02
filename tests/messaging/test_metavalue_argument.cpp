@@ -16,12 +16,8 @@ qiLogCategory("test");
 
 qi::AnyValue v;
 
-void onFire(const int& pl)
+namespace
 {
-  std::cout << "onFire:" << pl << std::endl;
-  std::cout.flush();
-}
-
 void value(qi::AnyValue mv)
 {
   v = mv;
@@ -31,11 +27,12 @@ void valueList(std::vector<qi::AnyValue> mv)
 {
   v = qi::AnyValue(mv);
 }
+} // anonymous
 
-class TestObject: public ::testing::Test
+class MetaValueArgument: public ::testing::Test
 {
 public:
-  TestObject()
+  MetaValueArgument()
   {
     qi::DynamicObjectBuilder ob;
     ob.advertiseSignal<const int&>("fire");
@@ -86,7 +83,7 @@ public:
 };
 
 
-TEST_F(TestObject, meta)
+TEST_F(MetaValueArgument, all)
 {
   using namespace qi;
   qi::int64_t time = os::ustime();
@@ -242,14 +239,4 @@ TEST_F(TestObject, meta)
   }
   qiLogVerbose() << "plugin sync us: " << os::ustime() - time;
   time = os::ustime();
-}
-
-int main(int argc, char *argv[])
-{
-#if defined(__APPLE__) || defined(__linux__)
-  setsid();
-#endif
-  qi::Application app(argc, argv);
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
 }

@@ -46,3 +46,15 @@ qi_create_lib(testsession STATIC NO_INSTALL
 )
 
 qi_stage_lib(testsession)
+
+qi_create_gtest(
+  test_testsession
+
+  "test/test_testsession.cpp"
+
+  DEPENDS
+  qi
+  testsession
+
+  TIMEOUT 30
+)
