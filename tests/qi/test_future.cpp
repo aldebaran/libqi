@@ -742,6 +742,25 @@ TEST(TestFutureThen, AndThenRCancel)
   EXPECT_TRUE(fff.isCanceled());
 }
 
+TEST(TestFutureThen, ErrorForwardingAndThenThen)
+{
+  qi::Promise<void> p;
+  std::atomic<bool> ok;
+  std::string error = "zut";
+  ok = false;
+  auto f0 = p.future();
+  auto f1 = f0.andThen([](void*){});
+  auto f2 = f1.then([&ok](qi::Future<void>){ ok = true; });
+  p.setError(error);
+  auto f0State = f0.waitFor(qi::MilliSeconds{100});
+  auto f1State = f1.waitFor(qi::MilliSeconds{100});
+  auto f2State = f2.waitFor(qi::MilliSeconds{100});
+  ASSERT_EQ(qi::FutureState_FinishedWithError, f0State);
+  ASSERT_EQ(qi::FutureState_FinishedWithError, f1State);
+  ASSERT_EQ(qi::FutureState_FinishedWithValue, f2State);
+  ASSERT_TRUE(ok.load());
+}
+
 TEST(TestFutureUnwrap, Unwrap)
 {
   qi::Promise<qi::Future<int> > prom;
