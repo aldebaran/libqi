@@ -40,7 +40,7 @@ if(WITH_BOOST_LOCALE)
 endif()
 
 if (WITH_SYSTEMD)
-  add_definitions("-DWITH_SYSTEM")
+  add_definitions("-DWITH_SYSTEMD")
 endif()
 #### }}}
 

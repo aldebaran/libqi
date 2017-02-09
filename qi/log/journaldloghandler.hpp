@@ -16,14 +16,6 @@ namespace qi
 {
 namespace log
 {
-  /**
-   * \includename{qi/log/journaldloghandler.hpp}
-   *
-   * This class outputs all logs to journald.
-   */
-  class QI_API JournaldLogHandler: private boost::noncopyable
-  {
-  public:
     /**
      * \brief Write logs messages on a file.
      * \param verb verbosity of the log message.
@@ -34,13 +26,12 @@ namespace log
      * \param fct function name from which this log message was issued.
      * \param line line number in the issuer file.
      */
-    void log(const qi::LogLevel verb,
+    void JournaldLogHandler(const qi::LogLevel verb,
              const char* category,
              const char* msg,
              const char* file,
              const char* fct,
              const int line);
-  };
 }; // !log
 }; // !qi
 

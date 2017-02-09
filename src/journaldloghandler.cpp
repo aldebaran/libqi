@@ -15,12 +15,12 @@ namespace qi
 {
 namespace log
 {
-  void JournaldLogHandler::log(const qi::LogLevel verb,
-                               const char* category,
-                               const char* msg,
-                               const char* file,
-                               const char* fct,
-                               const int line)
+  void JournaldLogHandler(const qi::LogLevel verb,
+                          const char* category,
+                          const char* msg,
+                          const char* file,
+                          const char* fct,
+                          const int line)
   {
     // systemd uses the log level defined by syslog.
     // Here is how we mix both.
@@ -39,9 +39,10 @@ namespace log
     int i = sd_journal_send("MESSAGE=%s",     msg,
                             "QI_CATEGORY=%s", category,
                             "PRIORITY=%i",    _verb,
-                            "CODE_FILE=%s",   file,
-                            "CODE_LINE=%i",   line,
-                            "CODE_FUNC=%s",   fct,
+                            "QI_CODE_FILE=%s",   file,
+                            "QI_CODE_LINE=%i",   line,
+                            "QI_CODE_FUNC=%s",   fct,
+                            "QI=1",
                             NULL
                            );
     if (i == 0)
