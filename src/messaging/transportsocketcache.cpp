@@ -2,9 +2,11 @@
 **  Copyright (C) 2012 Aldebaran Robotics
 **  See COPYING for the license
 */
+#include <algorithm>
 #include <sstream>
 
 #include <boost/algorithm/string.hpp>
+#include <boost/range/algorithm/find_if.hpp>
 
 #include <qi/log.hpp>
 
@@ -32,6 +34,16 @@ void TransportSocketCache::init()
   _dying = false;
 }
 
+/// Container<DisconnectInfo> C
+template<typename C>
+static void releaseDisconnectInfoPromises(C& disconnectInfos)
+{
+  for (auto& d: disconnectInfos)
+  {
+    d.promiseSocketRemoved.setValue(0);
+  }
+}
+
 void TransportSocketCache::close()
 {
   qiLogDebug() << "TransportSocketCache is closing";
@@ -43,14 +55,13 @@ void TransportSocketCache::close()
     std::swap(map, _connections);
     std::swap(pending, _allPendingConnections);
   }
-  for (ConnectionMap::iterator mIt = map.begin(), mEnd = map.end(); mIt != mEnd; ++mIt)
+  for (auto& pairMachineIdConnection: map)
   {
-    for (std::map<Url, ConnectionAttemptPtr>::iterator uIt = mIt->second.begin(), uEnd = mIt->second.end();
-         uIt != uEnd;
-         ++uIt)
+    auto& mapUrlConnection = pairMachineIdConnection.second;
+    for (auto& pairUrlConnection: mapUrlConnection)
     {
-      auto& connectionAttempt = *uIt->second;
-      MessageSocketPtr endpoint = connectionAttempt.endpoint;
+      auto& connectionAttempt = *pairUrlConnection.second;
+      auto endpoint = connectionAttempt.endpoint;
 
       // Disconnect any valid socket we were holding.
       if (endpoint)
@@ -60,14 +71,22 @@ void TransportSocketCache::close()
       }
       else
       {
-        uIt->second->state = State_Error;
-        uIt->second->promise.setError("TransportSocketCache is closing.");
+        connectionAttempt.state = State_Error;
+        connectionAttempt.promise.setError("TransportSocketCache is closing.");
       }
     }
   }
-  for (std::list<MessageSocketPtr>::iterator it = pending.begin(), end = pending.end(); it != end; ++it)
-    (*it)->disconnect();
+  for (auto& socket: pending)
+  {
+    socket->disconnect();
+  }
   _connections.clear();
+
+  /// Release all disconnect promises to avoid deadlocks.
+  /// A deadlock could happen if the user calls `disconnect(socket)` and the cache is
+  /// destroyed before the disconnected socket signal has arrived.
+  auto sync = _disconnectInfos.synchronize();
+  releaseDisconnectInfoPromises(*sync);
 }
 
 bool isLocalHost(const std::string& host)
@@ -125,7 +144,10 @@ Future<MessageSocketPtr> TransportSocketCache::socket(const ServiceInfo& servInf
         UrlVector::iterator uIt = std::find(vurls.begin(), vurls.end(), b->first);
         // We found a matching machineId and URL : return the connected endpoint.
         if (uIt != vurls.end())
+        {
+          qiLogDebug() << "Found pending promise.";
           return b->second->promise.future();
+        }
       }
     }
     // Otherwise, we keep track of all those URLs and assign them the same promise in our map.
@@ -149,6 +171,34 @@ Future<MessageSocketPtr> TransportSocketCache::socket(const ServiceInfo& servInf
     }
   }
   return couple->promise.future();
+}
+
+FutureSync<void> TransportSocketCache::disconnect(MessageSocketPtr socket)
+{
+  Promise<void> promiseSocketRemoved;
+  {
+    auto syncDisconnectInfos = _disconnectInfos.synchronize();
+    // TODO: Remove Promise<void>{} when get rid of VS2013.
+    syncDisconnectInfos->push_back(DisconnectInfo{socket, Promise<void>{}});
+    promiseSocketRemoved = syncDisconnectInfos->back().promiseSocketRemoved;
+  }
+  // We wait that the socket has been disconnected _and_ the `disconnected`
+  // signal has been received by the cache.
+  FutureBarrier<void> barrier;
+  barrier.addFuture(promiseSocketRemoved.future());
+  barrier.addFuture(socket->disconnect());
+  Promise<void> promise;
+  return barrier.future().then([=](const std::vector<Future<void>>& v) mutable {
+    const auto isInError = [](const Future<void>& f) {
+      return f.hasError();
+    };
+    if (std::any_of(begin(v), end(v), isInError))
+    {
+      promise.setError("disconnect error");
+      return;
+    }
+    promise.setValue(0);
+  });
 }
 
 void TransportSocketCache::insert(const std::string& machineId, const Url& url, MessageSocketPtr socket)
@@ -295,6 +345,27 @@ void TransportSocketCache::checkClear(ConnectionAttemptPtr attempt, const std::s
   }
 }
 
+/// Remove infos of the given socket and set the associated promise.
+///
+/// Container<DisconnectInfo> C
+template<typename C>
+static void updateDisconnectInfos(C& disconnectInfos, const MessageSocketPtr& socket)
+{
+  // TODO: Replace `using` by `auto` in lambda when C++14 is available.
+  using Value = typename C::value_type;
+  const auto it = boost::find_if(disconnectInfos, [&](const Value& d) {
+    return d.socket == socket;
+  });
+  if (it == disconnectInfos.end())
+  {
+    qiLogWarning() << "Disconnected socket not found in disconnect infos.";
+    return;
+  }
+  auto promise = (*it).promiseSocketRemoved;
+  disconnectInfos.erase(it);
+  promise.setValue(0);
+}
+
 void TransportSocketCache::onSocketDisconnected(Url url, const ServiceInfo& info)
 {
   // remove from the available connections
@@ -303,8 +374,12 @@ void TransportSocketCache::onSocketDisconnected(Url url, const ServiceInfo& info
   ConnectionMap::iterator machineIt = _connections.find(info.machineId());
   if (machineIt == _connections.end())
     return;
-
-  machineIt->second[url]->state = State_Error;
-  checkClear(machineIt->second[url], info.machineId());
+  qiLogDebug() << "onSocketDisconnected: about to erase socket";
+  auto attempt = machineIt->second[url];
+  attempt->state = State_Error;
+  checkClear(attempt, info.machineId());
+  auto syncDisconnectInfos = _disconnectInfos.synchronize();
+  updateDisconnectInfos(*syncDisconnectInfos, attempt->endpoint);
 }
+
 }

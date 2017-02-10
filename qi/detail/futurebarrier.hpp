@@ -52,10 +52,10 @@ public:
 /**
  * \class qi::FutureBarrier
  * \includename{qi/future.hpp}
- * \brief This class helps waiting on multiple futures at the same point.
+ * \brief This class helps waiting for multiple futures at the same point.
  *
  * \verbatim
- * This class helps waiting on multiple futures at the same point. If you want
+ * This class helps waiting for multiple futures at the same point. If you want
  * to make several calls in a function and wait for all results at some point.
  * (:cpp:func:`qi::waitForAll(std::vector<Future<T>>&)` and
  * :cpp:func:`qi::waitForFirst(std::vector<Future<T>>&)` may help you
@@ -87,7 +87,7 @@ public:
  *     }
  *
  * This function is the simplest one you can write with FutureBarrier. Lets say
- * you have a vector of calls and you eant to wait on all of them before
+ * you have a vector of futures and you want to wait for all of them before
  * executing something, this is typically the kind of code you would write.
  *
  * .. note::
@@ -109,9 +109,9 @@ public:
  *         qi::FutureBarrier barrier;
  *
  *         // [1]:
- *         for (int it = 0; it < 10; ++it) {
+ *         for (int i = 0; i < 10; ++i) {
  *             // [1.1]:
- *             qi::Future<int> fut = returnAsynchronouslyNumber(it);
+ *             qi::Future<int> fut = returnAsynchronouslyNumber(i);
  *
  *             qi::Promise<int> prom;
  *             fut.connect(boost::bind(&mult42, prom, _1));
@@ -131,7 +131,7 @@ public:
  *         return res.future();
  *     }
  *
- * This is a complete example of how to do a map. This is the standart usage
+ * This is a complete example of how to do a map. This is the standard usage
  * of futures but within a loop. If you look at *[1.1]* part, you have an
  * asynchronous call to returnAsynchronouslyNumber function, a treatment of this
  * result with function *mult42* to which we give a promise and we use the future
@@ -141,13 +141,13 @@ public:
  * before executing, including the callback *mult42*. FutureBarrier makes sure of
  * this synchronisation.
  *
- * Since it is returning a :cpp:class:`qi::Future`. You can connect to it using
- * the standard pattern again and execute a callback (*sunList*) when all the
- * results has been acquired. This what *[2]* does.
+ * Since it is returning a :cpp:class:`qi::Future`, you can connect to it using
+ * the standard pattern again and execute a callback (*sumList*) when all the
+ * results have been acquired. This is what *[2]* does.
  *
- * To summaries, this function will: use an asynchronous call to the function
- * identity (just to have an asynchronous call), multiply all the results with
- * the number 42, and the sum the complete vector, to return it.
+ * To summarize, this function will: use an asynchronous call to the identity
+ * function (just to have an asynchronous call), multiply all the results by 42,
+ * sum all the multiplied values (in the vector), and return it.
  *
  * .. note::
  *

@@ -11,6 +11,7 @@
 #include <queue>
 
 #include <boost/thread/mutex.hpp>
+#include <boost/thread/synchronized_value.hpp>
 
 #include <qi/future.hpp>
 #include <qi/messaging/serviceinfo.hpp>
@@ -52,8 +53,10 @@ namespace qi
     Future<MessageSocketPtr> socket(const ServiceInfo& servInfo, const std::string& sdUrl);
     void insert(const std::string& machineId, const Url& url, MessageSocketPtr socket);
 
+    /// The returned future is set when the socket has been disconnected and
+    /// effectively removed from the cache.
+    FutureSync<void> disconnect(MessageSocketPtr socket);
   private:
-
     enum State
     {
       State_Pending,
@@ -80,10 +83,18 @@ namespace qi
 
     void checkClear(ConnectionAttemptPtr, const std::string& machineId);
 
+    /// The promise is set when the `disconnected` signal of `socket` has been received.
+    struct DisconnectInfo
+    {
+      MessageSocketPtr socket;
+      Promise<void> promiseSocketRemoved;
+    };
+
     using MachineId = std::string;
     using ConnectionMap = std::map<MachineId, std::map<Url, ConnectionAttemptPtr>>;
     ConnectionMap _connections;
     std::list<MessageSocketPtr> _allPendingConnections;
+    boost::synchronized_value<std::vector<DisconnectInfo>> _disconnectInfos;
     bool _dying;
   };
 }

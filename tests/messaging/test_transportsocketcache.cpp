@@ -58,14 +58,15 @@ protected:
 
 TEST_F(TestTransportSocketCache, DisconnectReconnect)
 {
-  qi::Promise<void> prom;
+  using namespace qi;
+  Promise<void> prom;
 
   server_.listen("tcp://0.0.0.0:0").wait();
   server_.listen("tcp://0.0.0.0:0").wait();
 
-  std::vector<qi::Url> endpoints = server_.endpoints();
-  //endpoints.push_back(server_.endpoints()[0]);
-  qi::ServiceInfo servInfo;
+  std::vector<Url> endpoints = server_.endpoints();
+  endpoints.push_back(server_.endpoints()[0]);
+  ServiceInfo servInfo;
   servInfo.setMachineId("tle;l");
   servInfo.setEndpoints(endpoints);
   qiLogDebug() << "CONNECTING: begin";
