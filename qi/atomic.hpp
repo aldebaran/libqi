@@ -8,18 +8,15 @@
 #ifndef QI_ATOMIC_HPP_
 #define QI_ATOMIC_HPP_
 
-#ifdef _MSC_VER
+#include <boost/predef.h>
 
-#define NOMINMAX
-#include <windows.h>
-#include <intrin.h>
-
-extern "C" long __cdecl _InterlockedIncrement(long volatile *);
-extern "C" long __cdecl _InterlockedDecrement(long volatile *);
-
-#pragma intrinsic(_InterlockedIncrement)
-#pragma intrinsic(_InterlockedDecrement)
-
+#if BOOST_OS_WINDOWS
+#  ifndef NOMINMAX
+#    define NOMINMAX
+#  endif
+#
+#  include <windows.h>
+#  include <intrin.h>
 #endif
 
 #include <atomic>
