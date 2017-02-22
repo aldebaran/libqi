@@ -145,9 +145,10 @@ namespace qi {
       qiLogDebug() << "Ping";
       auto calling = asyncCall(Seconds{0}, []{});
       auto callState = calling.waitFor(MilliSeconds{msTimeout});
+      QI_ASSERT(callState != FutureState_None);
       if (callState == FutureState_Running)
       {
-        if (_maxThreads && _nThreads.load() >= _maxThreads + 1) // we count in nThreads
+        if (_maxThreads && _nThreads.load() > _maxThreads) // we count in nThreads
         {
           ++nbTimeout;
           qiLogInfo() << "Threadpool " << _name << " limit reached (" << nbTimeout
