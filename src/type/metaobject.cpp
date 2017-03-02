@@ -395,8 +395,8 @@ qi::Atomic<int> MetaObjectPrivate::uid{1};
     if (methId != -1 || sigId != -1)
     {
       std::ostringstream err;
-      err << "Property(" << methId << ") already defined: "
-          << mpWithoutUid.toString();
+      err << "Property \"" << mpWithoutUid.toString() << "\" already defined, with method ID #"
+          << methId << " and signal ID #" << sigId;
       throw std::runtime_error(err.str());
     }
 
