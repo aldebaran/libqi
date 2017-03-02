@@ -135,8 +135,8 @@ namespace qi {
       * There is no use-case that requires the methods below without a BoundObject present.
       */
       ob->advertiseMethod("metaObject"     , &ServiceBoundObject::metaObject, MetaCallType_Direct, qi::Message::BoundObjectFunction_MetaObject);
-      ob->advertiseMethod("property",       &ServiceBoundObject::property, MetaCallType_Direct, qi::Message::BoundObjectFunction_GetProperty);
-      ob->advertiseMethod("setProperty",       &ServiceBoundObject::setProperty, MetaCallType_Direct, qi::Message::BoundObjectFunction_SetProperty);
+      ob->advertiseMethod("property", &ServiceBoundObject::property, MetaCallType_Queued, qi::Message::BoundObjectFunction_GetProperty);
+      ob->advertiseMethod("setProperty", &ServiceBoundObject::setProperty, MetaCallType_Queued, qi::Message::BoundObjectFunction_SetProperty);
       ob->advertiseMethod("properties",       &ServiceBoundObject::properties, MetaCallType_Direct, qi::Message::BoundObjectFunction_Properties);
       ob->advertiseMethod("registerEventWithSignature"  , &ServiceBoundObject::registerEventWithSignature, MetaCallType_Direct, qi::Message::BoundObjectFunction_RegisterEventWithSignature);
     }
@@ -251,7 +251,8 @@ namespace qi {
       unsigned int     funcId;
       //choose between special function (on BoundObject) or normal calls
       // Manageable functions are at the end of reserver range but dispatch to _object
-      if (msg.function() < Manageable::startId) {
+      const bool isSpecialFunction = msg.function() < Manageable::startId;
+      if (isSpecialFunction) {
         obj = _self;
       } else {
         obj = _object;
@@ -351,9 +352,15 @@ namespace qi {
       case Message::Type_Call: {
         boost::recursive_mutex::scoped_lock lock(_mutex);
         _currentSocket = socket;
-        qi::MetaCallType mType = obj == _self ? MetaCallType_Direct : _callType;
+
+        // Property accessors are insecure to call synchronously
+        // because users can customize them.
+        const bool isUserDefinedFunction =
+            !isSpecialFunction || funcId == 5 /* property */ || funcId == 6 /* setProperty */;
+        qi::MetaCallType callType = isUserDefinedFunction ? _callType : MetaCallType_Direct;
+
         qi::Signature sig = returnSignature.empty() ? Signature() : Signature(returnSignature);
-        qi::Future<AnyReference>  fut = obj.metaCall(funcId, mfp, mType, sig);
+        qi::Future<AnyReference> fut = obj.metaCall(funcId, mfp, callType, sig);
         AtomicIntPtr cancelRequested = boost::make_shared<Atomic<int> >(0);
         {
           qiLogDebug() << this << " Registering future for " << socket.get() << ", message:" << msg.id();
