@@ -7,8 +7,10 @@
 #ifndef _QI_TYPE_PROXYSIGNAL_HPP_
 #define _QI_TYPE_PROXYSIGNAL_HPP_
 
+#include <boost/bind.hpp>
 #include <qi/signal.hpp>
 #include <qi/anyfunction.hpp>
+#include <qi/anyobject.hpp>
 
 namespace qi
 {
@@ -62,24 +64,38 @@ namespace qi
   qi::Future<void> ProxySignal<T>::onSubscribe(bool enable, GenericObject* object, std::string signalName,
     SignalLink link)
   {
-    if (enable)
+    Future<SignalLink> connectingOrDisconnecting = [=]
     {
-      link = object->connect(signalName,
-        SignalSubscriber(
-            AnyFunction::fromDynamicFunction(boost::bind(&ProxySignal<T>::bounceEvent, this, _1))
-            ));
-    }
-    else
-    {
-      bool ok = !object->disconnect(link).hasError();
-      if (!ok)
-        qiLogError("qitype.proxysignal") << "Failed to disconnect from parent signal";
-      link = SignalBase::invalidSignalLink;
-    }
-    // link change, rebind ourselve
-    SignalBase::setOnSubscribers(boost::bind(&ProxySignal<T>::onSubscribe, this, _1,
-        object, signalName, link));
-    return Future<void>{0};
+      if (enable)
+      {
+        return object->connect(
+              signalName, SignalSubscriber(
+                AnyFunction::fromDynamicFunction(
+                  boost::bind(&ProxySignal<T>::bounceEvent, this, _1)))).async();
+      }
+      else
+      {
+        return object->disconnect(link).async().then([](Future<void> f)
+        {
+          bool ok = !f.hasError();
+          if (!ok)
+            qiLogError("qitype.proxysignal") << "Failed to disconnect from parent signal";
+          return SignalBase::invalidSignalLink;
+        });
+      }
+    }();
+
+    boost::weak_ptr<SignalBasePrivate> weakP = this->_p;
+    return connectingOrDisconnecting.andThen([=](SignalLink link)
+    { // link changed, rebind ourselve if we're still alive
+      if (auto p = weakP.lock())
+      {
+        SignalBase::setOnSubscribers([=](bool enable)
+        {
+          return onSubscribe(enable, object, signalName, link);
+        });
+      }
+    });
   }
 
   template<typename T>

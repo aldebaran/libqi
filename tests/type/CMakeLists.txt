@@ -11,6 +11,7 @@ qi_create_gtest(
   "test_object.cpp"
   "test_object_eventloop.cpp"
   "test_property.cpp"
+  "test_proxysignal.cpp"
   "test_signal.cpp"
   "test_signature.cpp"
   "test_traits.cpp"
