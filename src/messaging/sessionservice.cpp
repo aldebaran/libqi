@@ -200,7 +200,7 @@ namespace qi {
     {
       qi::Future<void> metaObjFut;
       if (old)
-        socket->socketEvent.disconnect(*old);
+        socket->socketEvent.disconnectAsync(*old);
       sr->remoteObject = new qi::RemoteObject(sr->serviceId, socket);
       //ask the remoteObject to fetch the metaObject
       metaObjFut = sr->remoteObject->fetchMetaObject();

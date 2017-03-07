@@ -207,7 +207,7 @@ namespace qi {
     {
     case AuthProvider::State_Done:
       qiLogVerbose() << "Client " << socket->remoteEndpoint().str() << " successfully authenticated.";
-      socket->messageReady.disconnect(*signalLink);
+      socket->messageReady.disconnectAsync(*signalLink); // yet guarantees immediate disconnection
       connectMessageReady(socket);
       // no break, we know that authentication is done, send the response to the remote end
     case AuthProvider::State_Cont:
