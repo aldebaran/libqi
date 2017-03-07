@@ -150,6 +150,40 @@ TEST(TestSignal, EmitSharedPointerWithQueuedSubscriber)
   };
 }
 
+TEST(TestSignal, DisconnectAsynchronouslyFromCallback)
+{
+  qi::SignalLink link;
+  qi::Signal<void> signal;
+  link = signal.connect([&]{ signal.disconnectAsync(link); });
+  QI_EMIT signal();
+}
+
+TEST(TestSignal, DisconnectSynchronouslyFromCallback)
+{
+  qi::SignalLink link;
+  qi::Signal<void> signal;
+  link = signal.connect([&]{ signal.disconnect(link); });
+  QI_EMIT signal();
+}
+
+TEST(TestSignal, DisconnectAsynchronouslyFromAsyncCallback)
+{
+  qi::SignalLink link;
+  qi::Signal<void> signal;
+  link = signal.connect([&]{ signal.disconnectAsync(link); })
+      .setCallType(qi::MetaCallType_Queued);
+  QI_EMIT signal();
+}
+
+TEST(TestSignal, DisconnectSynchronouslyFromAsyncCallback)
+{
+  qi::SignalLink link;
+  qi::Signal<void> signal;
+  link = signal.connect([&]{ signal.disconnect(link); })
+      .setCallType(qi::MetaCallType_Queued);
+  QI_EMIT signal();
+}
+
 void byRef(int& i, bool* done)
 {
   qiLogDebug() <<"byRef " << &i << ' ' << done;

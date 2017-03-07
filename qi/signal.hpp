@@ -276,12 +276,6 @@ namespace qi {
 
     SignalSubscriber setCallType(MetaCallType ct);
 
-    /// Wait until all threads are inactive except the current thread.
-    FutureSync<void> waitForInactive();
-
-    void addActive(bool acquireLock, boost::thread::id tid = boost::this_thread::get_id());
-    void removeActive(bool acquireLock, boost::thread::id tid = boost::this_thread::get_id());
-
     /// @return the identifier of the subscription (aka link)
     SignalLink link() const;
     operator SignalLink() const;
@@ -332,16 +326,6 @@ namespace qi {
     // If enabled is set to false while lock is acquired,
     // No more callback will trigger (activeThreads will se no push-back)
     bool enabled = true;
-    // Number of calls in progress.
-    // Each entry there is a subscriber call that can no longuer be aborted
-    std::vector<boost::thread::id> activeThreads; // order not preserved
-
-    /// This promise is set when no active thread is remaining.
-    /// Disconnection requires to wait for inactivity using this promise.
-    Promise<void> inactive;
-
-    // The active threads that are waiting for the inactive promise to be set.
-    std::vector<boost::thread::id> waitingForInactive;
 
     // ExecutionContext on which to schedule the call
     ExecutionContext* executionContext = nullptr;

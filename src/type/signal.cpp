@@ -32,28 +32,32 @@ namespace qi {
 
   Future<bool> SignalBasePrivate::disconnect(const SignalLink& l)
   {
-    SignalSubscriber s;
+    SignalSubscriber subscriber;
+    Future<void> callingOnSubscribers{nullptr};
+    SignalBase::OnSubscribers onSubscribersToCall;
     {
       // Acquire signal mutex
       boost::recursive_mutex::scoped_lock sigLock(mutex);
       SignalSubscriberMap::iterator it = subscriberMap.find(l);
       if (it == subscriberMap.end())
         return Future<bool>{false};
-      s = it->second;
+      subscriber = it->second;
       // Remove from map (but SignalSubscriber object still good)
       subscriberMap.erase(it);
       if (subscriberMap.empty() && onSubscribers)
-        onSubscribers(false).value();
+        onSubscribersToCall = onSubscribers;
       // Acquire subscriber mutex before releasing mutex
-      boost::mutex::scoped_lock subLock(s._p->mutex);
+      boost::mutex::scoped_lock subLock(subscriber._p->mutex);
       // Release signal mutex
       sigLock.unlock();
       // Ensure no call on subscriber occurs once this function returns
-      s._p->enabled = false;
+      subscriber._p->enabled = false;
     }
-    return s.waitForInactive().async().andThen([](void*){ return true; });
-  }
+    if (onSubscribersToCall)
+      callingOnSubscribers = onSubscribersToCall(false);
 
+    return callingOnSubscribers.andThen([](void*) { return true; });
+  }
 
   Future<bool> SignalBasePrivate::disconnectAll()
   {
@@ -219,9 +223,9 @@ namespace qi {
       boost::mutex::scoped_lock sl(_p->mutex);
       if (!_p->enabled)
         return;
-      addActive(false);
     }
-    //do not throw
+
+    // do not throw
     bool mustDisconnect = false;
     try
     {
@@ -240,7 +244,6 @@ namespace qi {
     {
       qiLogWarning() << "Unknown exception caught from signal subscriber";
     }
-    removeActive(true);
 
     if (mustDisconnect)
     {
@@ -323,63 +326,6 @@ namespace qi {
   {
     _p->threadingModel = ct;
     return *this;
-  }
-
-  //check if we are called from the same thread that triggered us.
-  //in that case, do not wait.
-  FutureSync<void> SignalSubscriber::waitForInactive()
-  {
-    boost::thread::id tid = boost::this_thread::get_id();
-    boost::mutex::scoped_lock sl(_p->mutex);
-    if (_p->activeThreads.empty())
-      return Future<void>{0};
-
-    // There cannot be two activeThreads entry for the same tid
-    // because activeThreads is not set at the post() stage
-    if (_p->activeThreads.size() == 1
-      && *_p->activeThreads.begin() == tid)
-    { // One active callback in this thread, means above us in call stack
-      // So we cannot wait for it
-      return Future<void>{0};
-    }
-    _p->waitingForInactive.push_back(tid);
-    return _p->inactive.future();
-  }
-
-  void SignalSubscriber::addActive(bool acquireLock, boost::thread::id id)
-  {
-    boost::mutex::scoped_lock l;
-    if (acquireLock)
-      l = boost::mutex::scoped_lock{_p->mutex};
-
-    if (_p->activeThreads.empty())
-      _p->inactive = Promise<void>{};
-    _p->activeThreads.push_back(id);
-  }
-
-  void SignalSubscriber::removeActive(bool acquireLock, boost::thread::id id)
-  {
-    boost::mutex::scoped_lock sl(_p->mutex, boost::defer_lock_t());
-    if (acquireLock)
-      sl.lock();
-
-    qi::erase_if(_p->activeThreads,
-                 [&id] (const boost::thread::id &tid) { return tid == id; });
-
-    // If all remaining activeThreads are waitingForInactive, or if
-    // activeThreads is empty, set the promise.
-    const auto &waitingForInactive = _p->waitingForInactive;
-    if (std::all_of(_p->activeThreads.begin(), _p->activeThreads.end(),
-                    [&waitingForInactive, this] (const boost::thread::id &activeThread) {
-        return std::find(waitingForInactive.begin(), waitingForInactive.end(),
-                           activeThread) != waitingForInactive.end();
-
-        }))
-    {
-      _p->inactive.setValue(0);
-      _p->waitingForInactive.clear();
-      _p->activeThreads.clear();
-    }
   }
 
   SignalLink SignalSubscriber::link() const
