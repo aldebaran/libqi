@@ -102,7 +102,7 @@ namespace qi {
      *
      * Same as disconnect, but this method does not block.
      * Though this is async, you are guaranteed that once the function returns
-     * your callback will not be called.
+     * the future, your callback will not be called anymore.
      * @return A future set to true on success.
      */
     Future<bool> disconnectAsync(const SignalLink& link);
