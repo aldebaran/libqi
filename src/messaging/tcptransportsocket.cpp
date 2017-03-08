@@ -242,7 +242,6 @@ namespace qi
 
     Message toDispatch;
     {
-      bool mustDispatchMessages = false;
       boost::recursive_mutex::scoped_lock l(_mutex);
       if (!_socket)
         return;
@@ -273,14 +272,8 @@ namespace qi
             return error("Ill-formed capabilities message.");
           }
         }
+      }
 
-        if (_msg.type() != Message::Type_Capability)
-          mustDispatchMessages = true;
-      }
-      else
-      {
-        mustDispatchMessages = true;
-      }
       std::swap(toDispatch, _msg);
     } // end critical section
 
