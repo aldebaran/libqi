@@ -320,15 +320,11 @@ namespace qi {
     boost::scoped_ptr<AnyWeakObject> target;
     unsigned int method = 0;
 
-    boost::mutex mutex;
-    // Fields below are protected by lock
-
-    // If enabled is set to false while lock is acquired,
-    // No more callback will trigger (activeThreads will se no push-back)
-    bool enabled = true;
+    // If enabled is set to false, no more callback will trigger
+    std::atomic<bool> enabled{true};
 
     // ExecutionContext on which to schedule the call
-    ExecutionContext* executionContext = nullptr;
+    std::atomic<ExecutionContext*> executionContext{nullptr};
   };
 } // qi
 

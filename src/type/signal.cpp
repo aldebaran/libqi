@@ -46,10 +46,6 @@ namespace qi {
       subscriberMap.erase(it);
       if (subscriberMap.empty() && onSubscribers)
         onSubscribersToCall = onSubscribers;
-      // Acquire subscriber mutex before releasing mutex
-      boost::mutex::scoped_lock subLock(subscriber._p->mutex);
-      // Release signal mutex
-      sigLock.unlock();
       // Ensure no call on subscriber occurs once this function returns
       subscriber._p->enabled = false;
     }
@@ -218,12 +214,8 @@ namespace qi {
 
   void SignalSubscriber::callImpl(const GenericFunctionParameters& args)
   {
-    // verify-enabled-then-register-active op must be locked
-    {
-      boost::mutex::scoped_lock sl(_p->mutex);
-      if (!_p->enabled)
-        return;
-    }
+    if (!_p->enabled)
+      return;
 
     // do not throw
     bool mustDisconnect = false;
@@ -247,12 +239,10 @@ namespace qi {
 
     if (mustDisconnect)
     {
-      boost::mutex::scoped_lock sl(_p->mutex);
       // if enabled is false, we are already disconnected
       if (_p->enabled)
       {
         auto sbp = _p->source.lock();
-        sl.unlock();
         if(sbp)
           sbp->disconnect(_p->linkId).wait();
       }
@@ -271,18 +261,18 @@ namespace qi {
         async = (callType == MetaCallType_Queued);
 
       qiLogDebug() << "subscriber call async=" << async <<" ct " << callType <<" tm " << _p->threadingModel;
-      if (_p->executionContext || async)
+      ExecutionContext* executionContext = _p->executionContext;
+      if (executionContext || async)
       {
         // We will check enabled when we will be scheduled in the target
         // thread, and we hold this SignalSubscriber alive, so no need to
         // explicitly track the asynccall
 
         // courtesy-check of el, but it should be kept alive longuer than us
-        qi::ExecutionContext* ec = _p->executionContext;
-        if (!ec)
+        if (!executionContext)
         {
-          ec = getEventLoop();
-          if (!ec) // this is an assert basicaly, no sense trying to do something clever.
+          executionContext = getEventLoop();
+          if (!executionContext) // this is an assert basicaly, no sense trying to do something clever.
             throw std::runtime_error("Event loop was destroyed");
         }
 
@@ -292,7 +282,7 @@ namespace qi {
           delete object;
         } };
 
-        ec->post([subscriberCopy, argsCopy] () mutable{
+        executionContext->post([subscriberCopy, argsCopy] () mutable{
           subscriberCopy.callImpl(*argsCopy);
         });
 
@@ -307,12 +297,10 @@ namespace qi {
       AnyObject lockedTarget = _p->target->lock();
       if (!lockedTarget)
       {
-        boost::mutex::scoped_lock sl(_p->mutex);
         if (_p->enabled)
         {
           // see above
           auto sbp = _p->source.lock();
-          sl.unlock();
           if (sbp)
             sbp->disconnect(_p->linkId).wait();
         }
