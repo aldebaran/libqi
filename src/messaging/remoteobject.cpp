@@ -514,46 +514,51 @@ namespace qi {
   {
     unsigned int event = linkId >> 32;
     //disconnect locally
-    qi::Future<void> fut = DynamicObject::metaDisconnect(linkId);
-    if (fut.hasError())
+    Future<void> fut = DynamicObject::metaDisconnect(linkId);
+    return fut.then([=](Future<void> f) -> Future<void>
     {
-      std::stringstream ss;
-      ss << "Disconnection failure for " << linkId << ", error:" << fut.error();
-      qiLogWarning() << ss.str();
-      return qi::makeFutureError<void>(ss.str());
-    }
-
-    boost::recursive_mutex::scoped_lock _lock(_localToRemoteSignalLinkMutex);
-    LocalToRemoteSignalLinkMap::iterator it;
-    it = _localToRemoteSignalLink.find(event);
-    if (it == _localToRemoteSignalLink.end()) {
-      qiLogWarning() << "Cant find " << event << " in the localtoremote signal map";
-      return fut;
-    }
-    qi::SignalLink toDisco = qi::SignalBase::invalidSignalLink;
-    {
-      RemoteSignalLinks &rsl = it->second;
-      std::vector<SignalLink>::iterator vslit;
-      vslit = std::find(rsl.localSignalLink.begin(), rsl.localSignalLink.end(), linkId);
-
-      if (vslit != rsl.localSignalLink.end()) {
-        rsl.localSignalLink.erase(vslit);
-      } else {
-        qiLogWarning() << "Cant find " << linkId << " in the remote signal vector (event:" << event << ")";
+      if (f.hasError())
+      {
+        std::stringstream ss;
+        ss << "Disconnection failure for " << linkId << ", error:" << fut.error();
+        qiLogWarning() << ss.str();
+        throw std::runtime_error(ss.str());
       }
 
-      //only drop the remote connection when no more local connection are registered
-      if (rsl.localSignalLink.size() == 0) {
-        toDisco = rsl.remoteSignalLink;
-        _localToRemoteSignalLink.erase(it);
+      boost::recursive_mutex::scoped_lock _lock(_localToRemoteSignalLinkMutex);
+      LocalToRemoteSignalLinkMap::iterator it;
+      it = _localToRemoteSignalLink.find(event);
+      if (it == _localToRemoteSignalLink.end()) {
+        qiLogWarning() << "Cant find " << event << " in the localtoremote signal map";
+        return f;
       }
-    }
-    if (toDisco != qi::SignalBase::invalidSignalLink) {
-      TransportSocketPtr sock = *_socket;
-      if (sock && sock->isConnected())
-        return _self.async<void>("unregisterEvent", _service, event, toDisco);
-    }
-    return fut;
+
+      qi::SignalLink toDisco = qi::SignalBase::invalidSignalLink;
+      {
+        RemoteSignalLinks &rsl = it->second;
+        std::vector<SignalLink>::iterator vslit;
+        vslit = std::find(rsl.localSignalLink.begin(), rsl.localSignalLink.end(), linkId);
+
+        if (vslit != rsl.localSignalLink.end()) {
+          rsl.localSignalLink.erase(vslit);
+        } else {
+          qiLogWarning() << "Cant find " << linkId << " in the remote signal vector (event:" << event << ")";
+        }
+
+        //only drop the remote connection when no more local connection are registered
+        if (rsl.localSignalLink.size() == 0) {
+          toDisco = rsl.remoteSignalLink;
+          _localToRemoteSignalLink.erase(it);
+        }
+      }
+
+      if (toDisco != qi::SignalBase::invalidSignalLink) {
+        TransportSocketPtr sock = *_socket;
+        if (sock && sock->isConnected())
+          return _self.async<void>("unregisterEvent", _service, event, toDisco);
+      }
+      return f;
+    }).unwrap();
   }
 
   void RemoteObject::close(const std::string& reason, bool fromSignal)

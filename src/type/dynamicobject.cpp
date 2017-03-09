@@ -371,11 +371,12 @@ namespace qi
     SignalBase* s = _p->createSignal(event);
     if (!s)
       return qi::makeFutureError<void>("Cannot find local signal connection.");
-    bool b = s->disconnect(link);
-    if (!b) {
-      return qi::makeFutureError<void>("Cannot find local signal connection.");
-    }
-    return qi::Future<void>(0);
+    auto disconnecting = s->disconnectAsync(link);
+    return disconnecting.andThen([](bool success)
+    {
+      if (!success)
+        throw std::runtime_error("Cannot find local signal connection.");
+    });
   }
 
   //DynamicObjectTypeInterface implementation: just bounces everything to metaobject
