@@ -1256,12 +1256,12 @@ qi::GenericFunctionParameters args(
 TEST(TestMetaObject, findMethod)
 {
   qi::MetaObjectBuilder b;
-  unsigned int f   = b.addMethod("i", "f", "(i)");
-  unsigned int g1  = b.addMethod("i", "g", "(i)");
-  unsigned int g2  = b.addMethod("i", "g", "(ii)");
-  unsigned int h1i = b.addMethod("i", "h", "(i)");
-  unsigned int h1s = b.addMethod("i", "h", "(s)");
-  unsigned int h2  = b.addMethod("i", "h", "(ii)");
+  unsigned int f   = b.addMethod("i", "f", "(i)").id;
+  unsigned int g1  = b.addMethod("i", "g", "(i)").id;
+  unsigned int g2  = b.addMethod("i", "g", "(ii)").id;
+  unsigned int h1i = b.addMethod("i", "h", "(i)").id;
+  unsigned int h1s = b.addMethod("i", "h", "(s)").id;
+  unsigned int h2  = b.addMethod("i", "h", "(ii)").id;
 
   qi::MetaObject mo = b.metaObject();
   bool canCache;

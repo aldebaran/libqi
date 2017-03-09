@@ -101,7 +101,7 @@ namespace qi
           << "' but object is already created.";
     }
 
-    unsigned int nextId = _p->_object->metaObject()._p->addMethod(builder);
+    const unsigned int nextId = _p->_object->metaObject()._p->addMethod(builder).id;
 
     _p->_object->setMethod(nextId, func, threadingModel);
     return nextId;
@@ -121,13 +121,18 @@ namespace qi
       qiLogWarning() << "DynamicObjectBuilder: Called xAdvertiseSignal on event '" << signature.toString() << "' but object is already created.";
     }
     // throw on error
-    unsigned int nextId = _p->_object->metaObject()._p->addSignal(name, signature, -1, isSignalProperty);
+    const auto signalAddResult = _p->_object->metaObject()._p->addSignal(name, signature, -1, isSignalProperty);
+    if (isSignalProperty && !signalAddResult.isNewMember)
+    {
+      throw std::runtime_error("Registering property failed: name already used by a member Signal: " + name);
+    }
+    const unsigned int nextId = signalAddResult.id;
     return nextId;
   }
 
   unsigned int DynamicObjectBuilder::advertiseSignal(const std::string &name, qi::SignalBase *sig)
   {
-    unsigned int nextId = xAdvertiseSignal(name, sig->signature());
+    const unsigned int nextId = xAdvertiseSignal(name, sig->signature());
     _p->_object->setSignal(nextId, sig);
     return nextId;
   }
@@ -139,7 +144,7 @@ namespace qi
       throw std::runtime_error("Registering property with invalid signal signature");
     const auto propsignature = sigsignature.children()[0];
 
-    unsigned int nextId = xAdvertiseSignal(name, sigsignature, true);
+    const unsigned int nextId = xAdvertiseSignal(name, sigsignature, true);
     xAdvertiseProperty(name, propsignature, nextId);
     _p->_object->setProperty(nextId, prop);
     return nextId;
@@ -155,7 +160,7 @@ namespace qi
         err << "DynamicObjectBuilder: Called xAdvertiseProperty("<< name << "," << sig.toString() << ") with an invalid signature.";
       throw std::runtime_error(err.str());
     }
-    unsigned int res = _p->_object->metaObject()._p->addProperty(name, sig, id);
+    unsigned int res = _p->_object->metaObject()._p->addProperty(name, sig, id).id;
     return res;
   }
 

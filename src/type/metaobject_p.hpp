@@ -95,11 +95,56 @@ namespace qi {
 
     MetaSignal* signal(const std::string &name);
 
-    unsigned int addMethod(MetaMethodBuilder& builder, int uid = -1);
+    /** Adds a method member to the interface.
 
-    unsigned int addSignal(const std::string &name, const Signature &signature, int id = -1, bool isSignalProperty = false);
+        @throws `std::runtime_error` if a signal or property has the same name and signature.
 
-    unsigned int addProperty(const std::string& name, const Signature &signature, int id = -1);
+        @param builder  Meta method builder ready to create a meta method object.
+                        It will be used to decude name and signature of the method to create.
+        @param id       Id to associate with the method to create or -1 (default value) to request a new id.
+
+        @return The id associated to the member and a clarification if it has been created, or not, through this operation.
+                The member will not be created if another member of the same category, signature and name has been found,
+                in which case the id returned is the already existing one.
+    */
+    MemberAddInfo addMethod(MetaMethodBuilder& builder, int uid = -1);
+
+    /** Adds a Signal member to the interface.
+
+        @throws `std::runtime_error` if a method or property has the same name and signature.
+
+        @param name             Name to associate with the signal to create.
+        @param signature        Signature of the signal to create.
+        @param id               Id to associate with the signal to create or -1 (default value) to request a new id.
+        @param isSignalProperty If false (default) the signal will be exposed
+                                as an independent signal member (dissociate from a property)
+                                in the interface.
+                                If true, the signal to create will be part of a property interface
+                                that you should add after this operation.
+                                The signal will then be exposed as part of the property.
+
+
+        @return The id associated to the member and a clarification if it has been created, or not, through this operation.
+                The member will not be created if another member of the same category, signature and name has been found,
+                in which case the id returned is the already existing one.
+    */
+    MemberAddInfo addSignal(const std::string &name, const Signature &signature, int id = -1, bool isSignalProperty = false);
+
+    /** Adds a Property member to the interface.
+
+        @throws `std::runtime_error` if a method have the same name and signature
+                or if a signal already exists with the same name and signature but does not has the same id than
+                the one specified, if specified.
+
+        @param name       Name to associate with the property to create.
+        @param signature  Signature of the property to create.
+        @param id         Id to associate with the property to create or -1 (default value) to request a new id.
+
+        @return The id associated to the member and a clarification if it has been created, or not, through this operation.
+                The member will not be created if another member of the same category, signature and name has been found,
+                in which case the id returned is the one of the member that was already existing.
+    */
+    MemberAddInfo addProperty(const std::string& name, const Signature &signature, int id = -1);
 
     // Recompute data cached in *ToIdx
     void refreshCache();
