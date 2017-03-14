@@ -40,9 +40,9 @@ static void setSocketNativeOptionsWindows(
     qiLogWarning() << "Failed to set socket keepalive with code " << WSAGetLastError();
   }
 }
-#elif BOOST_OS_LINUX
+#elif BOOST_OS_LINUX || BOOST_OS_ANDROID
   /// Precondition: timeoutInSeconds >= 0
-static void setSocketNativeOptionsLinux(
+static void setSocketNativeOptionsLinuxAndroid(
   boost::asio::ip::tcp::socket::native_handle_type socketNativeHandle, int timeoutInSeconds)
 {
   int optval = 1;
@@ -147,8 +147,8 @@ namespace qi { namespace net {
   {
   #if BOOST_OS_WINDOWS
     setSocketNativeOptionsWindows(socketNativeHandle, timeoutInSeconds);
-  #elif BOOST_OS_LINUX
-    setSocketNativeOptionsLinux(socketNativeHandle, timeoutInSeconds);
+  #elif BOOST_OS_LINUX || BOOST_OS_ANDROID
+    setSocketNativeOptionsLinuxAndroid(socketNativeHandle, timeoutInSeconds);
   #elif BOOST_OS_MACOS
     setSocketNativeOptionsMacOs(socketNativeHandle);
   #else
