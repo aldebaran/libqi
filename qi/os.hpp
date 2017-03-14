@@ -12,6 +12,7 @@
 # include <string>
 # include <map>
 # include <vector>
+# include <type_traits>
 # include <qi/api.hpp>
 # include <qi/types.hpp>
 # include <qi/path.hpp>
@@ -614,6 +615,26 @@ namespace qi {
         return boost::lexical_cast<T>(sval);
     }
 
+    /// (Arithmetic or Enum) N
+    template<typename N>
+    std::string to_string(N n)
+    {
+      // Prevent the Android version to behave differently than other platforms.
+      // Enums are implicitly convertible to integral types, so we accept them.
+      static_assert(std::is_arithmetic<N>::value || std::is_enum<N>::value,
+        "to_string() accepts only arithmetic types (i.e. integral types and "
+        "floating-point types) and enum types.");
+
+#if BOOST_OS_ANDROID && BOOST_COMP_GNUC
+      // workaround android gcc missing std::to_string on arm
+      // http://stackoverflow.com/questions/17950814/how-to-use-stdstoul-and-stdstoull-in-android/18124627#18124627
+      std::ostringstream stream;
+      stream << n;
+      return stream.str();
+#else
+      return std::to_string(n);
+#endif
+    }
   }
 }
 

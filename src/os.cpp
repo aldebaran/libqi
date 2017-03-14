@@ -43,26 +43,11 @@ namespace bfs = boost::filesystem;
 
 namespace qi {
   namespace os {
-// workaround android gcc missing std::to_string on arm
-// http://stackoverflow.com/questions/17950814/how-to-use-stdstoul-and-stdstoull-in-android/18124627#18124627
-#if BOOST_OS_ANDROID && BOOST_COMP_GNUC
-#warning "using home made to_string"
-    std::string to_string(int num)
-    {
-      std::ostringstream stream;
-      stream << num;
-      return stream.str();
-    }
-#else
-      using std::to_string;
-#endif
-
     int64_t ustime()
     {
       return boost::chrono::duration_cast<qi::MicroSeconds>(
           SteadyClock::now().time_since_epoch()).count();
     }
-
 
     static inline void normalize_tv(qi::os::timeval *t)
     {
