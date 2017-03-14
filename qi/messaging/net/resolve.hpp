@@ -8,6 +8,7 @@
 #include <qi/messaging/net/error.hpp>
 #include <qi/messaging/net/option.hpp>
 #include <qi/url.hpp>
+#include <qi/os.hpp>
 #include <qi/macroregular.hpp>
 
 /// @file
@@ -74,7 +75,7 @@ namespace qi { namespace net {
         return;
       }
       qiLogVerbose(logCategory()) << "(ResolverUrlList)" << this << ": Trying to connect to " << url.host() << ":" << url.port();
-      Query<Resolver<N>> query(url.host(), std::to_string(url.port())
+      Query<Resolver<N>> query(url.host(), os::to_string(url.port())
 #if !BOOST_OS_ANDROID
         , Query<Resolver<N>>::all_matching
 #endif

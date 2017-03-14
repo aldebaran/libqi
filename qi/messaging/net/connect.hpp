@@ -12,6 +12,7 @@
 #include <qi/future.hpp>
 #include <qi/clock.hpp>
 #include <qi/macroregular.hpp>
+#include <qi/os.hpp>
 
 /// @file
 /// Contains functions and types related to socket connection.
@@ -217,7 +218,7 @@ namespace qi { namespace net {
     {
       if (erc)
       {
-        _complete.setError(std::to_string(erc.value()) + ": " + erc.message());
+        _complete.setError(os::to_string(erc.value()) + ": " + erc.message());
       }
       else
       {
