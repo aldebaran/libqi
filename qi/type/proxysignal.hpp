@@ -90,7 +90,8 @@ namespace qi
     { // link changed, rebind ourselve if we're still alive
       if (auto p = weakP.lock())
       {
-        SignalBase::setOnSubscribers([=](bool enable)
+        this->setOnSubscribers([=](bool enable) // TODO: remove `this->` after upgrading from GCC4.8
+                                                // Currently necessary because of a bug in g++4.8
         {
           return onSubscribe(enable, object, signalName, link);
         });
