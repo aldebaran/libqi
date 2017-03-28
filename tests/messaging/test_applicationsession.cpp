@@ -37,8 +37,8 @@ TEST(QiApplicationSession, defaultConnect)
   _sync.future().wait();
   ASSERT_TRUE(_stopped);
 
-  qi::Future<void> fConnected = _app->session()->connect("ftp://invalidurl:42");
-  EXPECT_TRUE(fConnected.hasError());
+  EXPECT_THROW(_app->session()->connect("ftp://invalidurl:42"),
+               qi::FutureUserException);
   ASSERT_FALSE(_app->session()->isConnected());
 }
 

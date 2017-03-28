@@ -22,6 +22,7 @@
 # include <boost/function.hpp>
 # include <boost/bind.hpp>
 # include <boost/thread/recursive_mutex.hpp>
+# include <boost/exception/diagnostic_information.hpp>
 
 # ifdef _MSC_VER
 #   pragma warning( push )
@@ -627,7 +628,35 @@ namespace qi {
     ~FutureSync() QI_NOEXCEPT(false)
     {
       if (_sync)
-        _future.wait();
+      {
+        static const auto logKnownError = [](const char* message)
+        {
+          qiLogWarning("qi.FutureSync")
+            << "Error in future on destruction: '" << message
+            << "' - continuing stack unwinding...";
+        };
+
+        try
+        {
+          _future.value();
+        }
+        catch(const std::exception& err)
+        {
+          logKnownError(err.what());
+          throw;
+        }
+        catch(const boost::exception& err)
+        {
+          logKnownError(boost::diagnostic_information(err).c_str());
+          throw;
+        }
+        catch(...)
+        {
+          qiLogWarning("qi.FutureSync")
+            << "Unknown error in future on destruction - continuing stack unwinding...";
+          throw;
+        }
+      }
     }
 
     operator Future<T>()

@@ -76,8 +76,7 @@ TEST(SendObject, unregister_obj)
   test_service(o);
 
   s->unregisterService(index).wait();
-  qi::Future<qi::AnyObject> f = s->service("test");
-  EXPECT_TRUE(f.hasError());
+  ASSERT_ANY_THROW(s->service("test"));
 
   s->close();
 }

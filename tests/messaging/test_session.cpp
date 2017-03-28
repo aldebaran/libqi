@@ -109,10 +109,13 @@ TEST(QiSession, multipleConnectionToNonReachableSd)
 {
   qi::Session session;
   qi::Future<void> f = session.connect("tcp://127.0.0.1:1234");
+  f.wait();
   EXPECT_TRUE(f.hasError());
   f = session.connect("tcp://127.0.0.1:1234");
+  f.wait();
   EXPECT_TRUE(f.hasError());
   f = session.connect("tcp://127.0.0.1:1234");
+  f.wait();
   EXPECT_TRUE(f.hasError());
 }
 
@@ -120,10 +123,12 @@ TEST(QiSession, connectOnSecondAttempt)
 {
   qi::Session session;
   qi::Future<void> f = session.connect("tcp://127.0.0.1:1234");
+  f.wait();
   EXPECT_TRUE(f.hasError());
   qi::Session s2;
   s2.listenStandalone("tcp://127.0.0.1:0");
   f = session.connect(s2.url());
+  f.wait();
   if (f.hasError())
     qiLogWarning() << f.error();
   EXPECT_FALSE(f.hasError());
@@ -161,8 +166,7 @@ TEST(QiSession, multipleConnectSuccess)
 TEST(QiSession, simpleConnectionToNonReachableSd)
 {
   qi::Session session;
-  qi::Future<void> f = session.connect("tcp://127.0.0.1:1234");
-  EXPECT_TRUE(f.hasError());
+  EXPECT_ANY_THROW(session.connect("tcp://127.0.0.1:1234"));
 
   EXPECT_FALSE(session.isConnected());
 
@@ -174,6 +178,8 @@ TEST(QiSession, simpleConnectionToInvalidAddrToSd)
 {
   qi::Session session;
   qi::Future<void> fConnected = session.connect("tcp://0.0.0.0:0");
+
+  fConnected.wait();
 
   EXPECT_TRUE(fConnected.hasError());
   EXPECT_FALSE(session.isConnected());
@@ -235,8 +241,7 @@ TEST(QiSession, testClose)
     qiLogError() << f.error();
   ASSERT_TRUE(!f.hasError());
 
-  qi::Future<void> res = session.unregisterService(idx.value());
-  EXPECT_TRUE(res.hasError());
+  EXPECT_ANY_THROW(session.unregisterService(idx.value()));
 }
 
 TEST(QiSession, getSimpleService)
