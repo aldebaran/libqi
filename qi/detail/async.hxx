@@ -66,27 +66,6 @@ namespace detail
   }
 } // detail
 
-template <typename F>
-inline auto asyncAt(F&& callback, qi::SteadyClockTimePoint timepoint)
-    -> decltype(qi::getEventLoop()->asyncAt(std::forward<F>(callback), timepoint))
-{
-  return qi::getEventLoop()->asyncAt(std::forward<F>(callback), timepoint);
-}
-
-template <typename F>
-inline auto asyncDelay(F&& callback, qi::Duration delay)
-    -> decltype(detail::asyncMaybeActor(std::forward<F>(callback), delay))
-{
-  return detail::asyncMaybeActor(std::forward<F>(callback), delay);
-}
-
-template <typename F>
-inline auto async(F&& callback)
-    -> decltype(asyncDelay(std::forward<F>(callback), qi::Duration(0)))
-{
-  return asyncDelay(std::forward<F>(callback), qi::Duration(0));
-}
-
 /// \copydoc qi::EventLoop::async().
 /// \deprecated use qi::async with qi::Duration
 template<typename R>

@@ -6,6 +6,8 @@
 #include <gtest/gtest.h>
 #include <qi/actor.hpp>
 #include <qi/async.hpp>
+#include <qi/clock.hpp>
+#include <iostream>
 
 namespace
 {
@@ -51,6 +53,23 @@ TEST(TestAsync, asyncQiBoundFunction)
 {
   bool executed = false;
   auto executing = qi::async(qi::bind(execute, std::ref(executed)));
+  ASSERT_EQ(qi::FutureState_FinishedWithValue, executing.wait(usualTimeout));
+  ASSERT_TRUE(gExecuted);
+}
+
+TEST(TestAsyncAt, asyncAtSimple)
+{
+  gExecuted = false;
+  qi::SteadyClock::time_point tp(qi::SteadyClock::now()+qi::MilliSeconds(1));
+  auto executing = qi::asyncAt(&executeGlobal, tp);
+  ASSERT_EQ(qi::FutureState_FinishedWithValue, executing.wait(usualTimeout));
+  ASSERT_TRUE(gExecuted);
+}
+
+TEST(TestAsyncDelay, asyncDelaySimple)
+{
+  gExecuted = false;
+  auto executing = qi::asyncDelay(&executeGlobal, qi::MilliSeconds(1));
   ASSERT_EQ(qi::FutureState_FinishedWithValue, executing.wait(usualTimeout));
   ASSERT_TRUE(gExecuted);
 }
