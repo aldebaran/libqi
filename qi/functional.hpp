@@ -53,10 +53,16 @@ namespace qi {
   /// One use is to bind a shared pointer to extend the lifetime of some data
   /// related to the procedure.
   ///
-  /// This type is useful equivalent to a variadic generic lambda in C++14 ():
-  /// auto lambda = [=](auto&&... args) {
+  /// This type is useful equivalent to a variadic generic lambda in C++14:
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  /// T data;
+  /// auto dataBoundProc = [data](auto&&... args) {
   ///   // ...
   /// };
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ///
+  /// Warning: This type is not strictly equivalent to a lambda (C++14 or even C++17),
+  ///   as it is regular and lambdas are not.
   ///
   /// Procedure Proc
   template<typename Proc, typename T>

@@ -184,6 +184,7 @@ TYPED_TEST(NetConnectFuture, ResolveCalledAfterParentHasBeenDestroyed)
     p = &connect;
   }
   // The connecting object is now destroyed and on top of that we wipe out its memory.
+  // cppcheck-suppress deadpointer
   overwrite(p);
   // Now we unblock the resolve handler.
   nukeObject.setValue(0);
@@ -396,6 +397,7 @@ TYPED_TEST(NetConnectFuture, HandshakeHandlerCalledAfterParentHasBeenDestroyed)
     p = &connect;
   }
   // The connecting object is now destroyed and on top of that we wipe out its memory.
+  // cppcheck-suppress deadpointer
   overwrite(p);
   // Now we unblock the handler.
   nukeObject.setValue(0);

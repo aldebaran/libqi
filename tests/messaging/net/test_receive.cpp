@@ -146,6 +146,7 @@ namespace mock
       p = &receive;
     }
     // The connecting object is now destroyed and on top of that we wipe out its memory.
+    // cppcheck-suppress deadpointer
     overwrite(p);
     // Now we unblock the handler.
     nukingObject.setValue(0);
@@ -218,6 +219,7 @@ namespace mock
       p = &receive;
     }
     // The connecting object is now destroyed and on top of that we wipe out its memory.
+    // cppcheck-suppress deadpointer
     overwrite(p);
     // Now we unblock the handler.
     nukingObject.setValue(0);

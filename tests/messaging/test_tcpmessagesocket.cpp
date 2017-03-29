@@ -6,10 +6,6 @@
 #include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp>
 #include <qi/messaging/net/accept.hpp>
-int scopelock(const boost::asio::ssl::stream<boost::asio::ip::tcp::socket>&)
-{
-  return 0;
-}
 #include "src/messaging/tcpmessagesocket.hpp"
 #include "src/messaging/transportserver.hpp"
 

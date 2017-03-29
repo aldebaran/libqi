@@ -512,6 +512,8 @@ namespace qi {
       }
     };
 
+    const int defaultTimeoutInSeconds = 0;
+
   } // namespace net
 
   /// A socket to send and receive messages.
@@ -728,7 +730,6 @@ namespace qi {
     net::SslContext<N> _sslContext;
     mutable boost::recursive_mutex _stateMutex;
     net::IoService<N>& _ioService;
-    static const int defaultTimeoutInSeconds;
 
     void enterDisconnectedState(const SocketPtr& socket = {},
       Promise<void> promiseDisconnected = Promise<void>{});
@@ -776,9 +777,6 @@ namespace qi {
     FutureSync<void> doDisconnect();
   };
 
-  template<typename N>
-  const int TcpMessageSocket<N>::defaultTimeoutInSeconds = 30;
-
   using TcpMessageSocketPtr = boost::shared_ptr<TcpMessageSocket<net::NetworkAsio>>;
 
   template<typename N>
@@ -792,7 +790,7 @@ namespace qi {
   {
     if (socket)
     {
-      net::setSocketOptions<N>(*socket, getTcpPingTimeout(Seconds{defaultTimeoutInSeconds}));
+      net::setSocketOptions<N>(*socket, getTcpPingTimeout(Seconds{net::defaultTimeoutInSeconds}));
       _state = ConnectingState{io, ssl, socket, Handshake::server};
     }
   }
@@ -865,7 +863,7 @@ namespace qi {
     // This changes the status so that concurrent calls will return in error.
     using Side = net::HandshakeSide<net::SslSocket<N>>;
     _state = ConnectingState{_ioService, url, _ssl, _sslContext, disableIpV6, Side::client,
-      getTcpPingTimeout(Seconds{defaultTimeoutInSeconds})};
+      getTcpPingTimeout(Seconds{net::defaultTimeoutInSeconds})};
     _url = url;
     auto self = shared_from_this();
 
