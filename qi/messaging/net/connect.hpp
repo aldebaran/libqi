@@ -169,7 +169,7 @@ namespace qi { namespace net {
     template<typename Proc>
     void operator()(const Url& url, SslEnabled ssl, SslContext<N>& context,
         IpV6Enabled ipV6, Handshake side, const Proc& onComplete,
-        const boost::optional<Seconds>& tcpPingTimeout = {})
+        const boost::optional<Seconds>& tcpPingTimeout = boost::optional<Seconds>{})
     {
       _resolve(url, ipV6,
         [=, &context](const ErrorCode<N>& erc, const OptionalEntry& entry) {
@@ -256,7 +256,7 @@ namespace qi { namespace net {
     }
   // Procedure:
     void operator()(const Url& url, SslEnabled ssl, SslContext<N>& context, IpV6Enabled ipV6,
-      Handshake side, const boost::optional<Seconds>& tcpPingTimeout = {})
+      Handshake side, const boost::optional<Seconds>& tcpPingTimeout = boost::optional<Seconds>{})
     {
       _connect(url, ssl, context, ipV6, side, ConnectHandler<N>{_complete}, tcpPingTimeout);
     }

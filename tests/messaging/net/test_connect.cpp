@@ -85,7 +85,7 @@ struct ConnectingWrap
   {
   }
   void operator()(const Url& url, SslEnabled ssl, SslContext<N>& context, IpV6Enabled ipV6, Handshake side,
-    const boost::optional<Seconds>& tcpPingTimeout = {})
+    const boost::optional<Seconds>& tcpPingTimeout = boost::optional<Seconds>{})
   {
     _connecting.reset(new Connecting<N>{_io, url, ssl, context, ipV6, side, tcpPingTimeout});
     auto complete = _complete;
