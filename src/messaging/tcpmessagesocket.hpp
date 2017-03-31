@@ -121,7 +121,7 @@ namespace qi {
     };
 
     /// Connecting state of the socket.
-    /// Connect to an url and give the created socket.
+    /// Connect to a URL and give the created socket.
     ///
     /// Usage:
     /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -147,7 +147,7 @@ namespace qi {
     /// is set in error.
     ///
     /// It is also possible to give an already connected socket. In this case,
-    /// if needed, only the ssl handshake is done. This is the typical usecase
+    /// if needed, only the SSL handshake is done. This is the typical use case
     /// for servers, because the `accept` pattern yields an already connected socket.
     ///
     /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -155,11 +155,11 @@ namespace qi {
     /// auto socketPtr = c.complete().value();
     /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     ///
-    /// From a more technical point of view, the differents connecting steps
+    /// From a more technical point of view, the different connecting steps
     /// are:
-    /// - url resolving
+    /// - URL resolving
     /// - socket connecting
-    /// - ssl handshake if needed.
+    /// - SSL handshake if needed.
     ///
     /// Network N
     template<typename N>
@@ -251,7 +251,7 @@ namespace qi {
     Url remoteEndpoint(S& socket, bool /*ssl*/)
     {
       auto endpoint = socket.lowest_layer().remote_endpoint();
-      // Forcing tcp is the legacy behavior.
+      // Forcing TCP is the legacy behavior.
       // TODO: Change this with `ssl ? "tcps" : "tcp"` when sure of the impact.
       return Url{
         endpoint.address().to_string(),
@@ -467,7 +467,7 @@ namespace qi {
     }
 
     /// Disconnecting state of the socket.
-    /// Close the socket immediatly.
+    /// Close the socket immediately.
     ///
     /// The disconnected promise is stored only to be passed to the next state.
     /// It is not the responsibility of Disconnecting to set it.
@@ -550,7 +550,7 @@ namespace qi {
   /// The socket is then in the disconnected state.
   /// Then you call connect() to enter the connecting state. connect() returns
   /// a future that is set when the socket is in the connected state.
-  /// Also the `connected` signal is emmited when the socket enter the connected
+  /// Also the `connected` signal is emitted when the socket enter the connected
   /// state.
   /// You can then send messages and receive them with the `messageReady` signal.
   /// You can finally disconnect. The socket then enter the disconnecting state
@@ -565,10 +565,10 @@ namespace qi {
   /// This underlying socket is typically obtained by the `accept` system call.
   /// The underlying socket is technically connected by the message socket is
   /// nonetheless set in the connecting state.
-  /// This is because we generally don't want to receive and send messages immediatly.
+  /// This is because we generally don't want to receive and send messages immediately.
   /// We'd rather first connect signals and perform other tasks.
   /// Then, you call ensureReading() to enter the connected state.
-  /// Note that if you specified `ssl` at construction, the ssl handshake already
+  /// Note that if you specified `SSL` at construction, the SSL handshake already
   /// happened at construction, so that ensureReading() is synchronous.
   ///
   /// # The Network template parameter
@@ -648,7 +648,7 @@ namespace qi {
     friend struct HandleMessage<N>;
 
     /// If the socket is not null, we consider we are on server side.
-    /// On server side, if SSL is enabled the connection only consist of the hansdshake.
+    /// On server side, if SSL is enabled the connection only consist of the handshake.
     /// On client side (null socket), the connection is done by calling `connect(Url)`.
     explicit TcpMessageSocket(net::IoService<N>& io = N::defaultIoService(),
       net::SslEnabled ssl = {false}, SocketPtr = {});
@@ -698,7 +698,7 @@ namespace qi {
     bool ensureReading() override;
   private:
     /// Handler called when we transition outside the connected state.
-    /// It is the responsability of the caller to ensure the socket pointer is
+    /// It is the responsibility of the caller to ensure the socket pointer is
     /// valid.
     struct OnConnectedComplete
     {
@@ -739,7 +739,7 @@ namespace qi {
     using ConnectedState = net::Connected<N>;
     using DisconnectingState = net::Disconnecting<N>;
 
-    // Do not change the order : it must match the Status enum order.
+    // Do not change the order : it must match the Status enumeration order.
     using State = boost::variant<DisconnectedState, ConnectingState, ConnectedState, DisconnectingState>;
     State _state;
     boost::synchronized_value<Url> _url;

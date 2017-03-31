@@ -97,7 +97,7 @@ namespace qi { namespace net {
     }
 
     /// Performs various checks against the received message header, then starts
-    /// an async read to get the message data.
+    /// an asynchronous read to get the message data.
     ///
     /// Note: The message size must not exceed the given maximum payload.
     ///
@@ -125,7 +125,7 @@ namespace qi { namespace net {
         return;
       }
       // When using SSL, sometimes we are called spuriously.
-      // Consider this only in ssl ?
+      // Consider this only in SSL ?
       if (*ssl && len == 0)
       {
         receiveMessage<N>(socket, ptrMsg, ssl, maxPayload, onReceive,

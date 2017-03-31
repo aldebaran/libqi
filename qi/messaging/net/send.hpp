@@ -81,7 +81,7 @@ namespace qi { namespace net {
   ///
   /// If the handler returns a new message, it is immediately sent.
   ///
-  /// Precondition: The message refered to by `cptrMsg` must be valid until the
+  /// Precondition: The message referred to by `cptrMsg` must be valid until the
   ///   handler has been called.
   ///
   /// Precondition: This function must not be called while a message is already

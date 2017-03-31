@@ -150,7 +150,7 @@ namespace qi { namespace net {
   /// object lifetime.
   ///
   /// From a more technical point of view, the different connecting steps
-  /// are: URL resolving, socket connecting and ssl handshake if needed.
+  /// are: URL resolving, socket connecting and SSL handshake if needed.
   template<typename N>
   class ConnectSocket
   {
