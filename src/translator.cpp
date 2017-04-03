@@ -124,14 +124,14 @@ namespace qi
   class TranslatorPrivate
   {
   public:
+    // TODO : as name is not used anymore (domain paths are pre-loaded by packageManager, who loads all of them) we can remove it and change the API
     TranslatorPrivate(const std::string &name)
     {
       if (name.empty())
       {
         qiLogWarning() << "You forget to set qi::Application name or to generate a translator with a name!";
       }
-
-      addDomainPath(name);
+      addDomainPath();
     }
 
     void setCurrentLocale(const std::string &locale)
@@ -158,17 +158,9 @@ namespace qi
       generator.add_messages_domain(domain);
     }
 
-    void addDomainPath(const std::string &name)
+    void addDomainPath()
     {
-      std::string applicationData = fsconcat("locale", name);
-      // find conf file to know dictionary path
-      boost::filesystem::path intlConfPath(::qi::path::findData(applicationData, ".confintl"),
-                                           ::qi::unicodeFacet());
-      std::string parentDirDict = intlConfPath.parent_path().string(::qi::unicodeFacet());
-      // Specify location of dictionaries
       std::set<std::string> dPath = qi::detail::domainPaths();
-      if (!parentDirDict.empty())
-        dPath.insert(parentDirDict);
 
       for (std::set<std::string>::const_iterator dPathIt = dPath.begin();
            dPathIt != dPath.end();
