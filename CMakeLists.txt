@@ -120,6 +120,7 @@ set(QI_H qi/detail/async.hxx
          qi/scoped.hpp
          qi/concept.hpp
          qi/functional.hpp
+         qi/errorhandling.hpp
          qi/messaging/net/accept.hpp
          qi/messaging/net/common.hpp
          qi/messaging/net/concept.hpp

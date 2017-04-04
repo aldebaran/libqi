@@ -15,16 +15,21 @@ qi_create_gtest(
   test_qi
 
   SRC
+  "test_algorithm.cpp"
   "test_bind.cpp"
   "test_buffer.cpp"
   "test_bufferreader.cpp"
+  "test_conceptpredicate.cpp"
+  "test_errorhandling.cpp"
   "test_eventloop.cpp"
   "test_flags.cpp"
+  "test_functional.cpp"
   "test_future.hpp"
   "test_future.cpp"
   "test_futuregroup.cpp"
   "test_locale.cpp"
   "test_macro.cpp"
+  "test_macroregular.cpp"
   "test_path_conf.cpp"
   "test_periodictask.cpp"
   "test_qi.cpp" # main
@@ -34,15 +39,12 @@ qi_create_gtest(
   "test_qilog_async.cpp"
   "test_qilog_sync.cpp"
   "test_qios.cpp"
-  "test_strand.cpp"
-  "test_trackable.cpp"
-  "test_version.cpp"
-  "test_algorithm.cpp"
-  "test_conceptpredicate.cpp"
-  "test_macroregular.cpp"
   "test_range.cpp"
   "test_relationpredicate.cpp"
   "test_scoped.cpp"
+  "test_strand.cpp"
+  "test_trackable.cpp"
+  "test_version.cpp"
 
   DEPENDS
   qi

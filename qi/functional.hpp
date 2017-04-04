@@ -1,4 +1,5 @@
 #pragma once
+#include <qi/type/traits.hpp>
 #include <qi/macroregular.hpp>
 
 /// @file
@@ -29,6 +30,35 @@ namespace qi {
   // Regular:
     QI_GENERATE_FRIEND_REGULAR_OPS_0(NoOpProcedure)
   // Procedure:
+    void operator()(const Args&...) const
+    {
+    }
+  };
+
+  /// Polymorphic function that maps any input to the same output.
+  ///
+  /// There is no constraint on Ret.
+  template<typename Ret>
+  struct PolymorphicConstantFunction
+  {
+    Ret ret;
+  // Regular:
+    QI_GENERATE_FRIEND_REGULAR_OPS_1(PolymorphicConstantFunction, ret)
+  // PolymorphicFunction<Ret (Args...)>:
+    template<typename... Args>
+    Ret operator()(const Args&...) const
+    {
+      return ret;
+    }
+  };
+
+  template<>
+  struct PolymorphicConstantFunction<void>
+  {
+  // Regular:
+    QI_GENERATE_FRIEND_REGULAR_OPS_0(PolymorphicConstantFunction)
+  // PolymorphicFunction<void (Args...)>:
+    template<typename... Args>
     void operator()(const Args&...) const
     {
     }
