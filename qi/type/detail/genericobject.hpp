@@ -229,6 +229,10 @@ public:
   {
     qiLogCategory("qitype.object");
     detail::ManagedObjectPtr* val = (detail::ManagedObjectPtr*)ptrFromStorage(storage);
+
+    if (!source.type())
+      throw std::runtime_error("cannot set object from an invalid value");
+
     if (source.type()->info() == info())
     { // source is objectptr
       detail::ManagedObjectPtr* src = source.ptr<detail::ManagedObjectPtr>(false);
@@ -238,6 +242,9 @@ public:
     }
     else if (source.kind() == TypeKind_Dynamic)
     { // try to dereference dynamic type in case it contains an object
+      auto content = source.content();
+      if (!content.isValid())
+        throw std::runtime_error("cannot set object from an invalid dynamic value");
       set(storage, source.content());
     }
     else if (source.kind() == TypeKind_Object)

@@ -154,7 +154,11 @@ namespace qi {
     AnyFunction(const AnyFunction& b);
     AnyFunction(FunctionTypeInterface* type, void* value);
     AnyFunction& operator = (const AnyFunction& b);
-    /// Call the function, reference must be destroy()ed
+
+    /// Calls the function.
+    /// @param args A list of unnamed arguments, each wrapped in an
+    /// AnyReference for allowing introspection.
+    /// @throw If an argument mismatches the signature, or is invalid.
     AnyReference call(const AnyReferenceVector& args);
     /// Call the function, reference must be destroy()ed
     AnyReference call(AnyReference arg1, const AnyReferenceVector& args);

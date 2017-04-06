@@ -78,7 +78,7 @@ inline TypeKind AnyReferenceBase::kind() const
 inline AnyReference AnyReferenceBase::unwrap() const
 {
   AnyReference res = *this;
-  while (res.kind() == TypeKind_Dynamic)
+  while (res.isValid() && res.kind() == TypeKind_Dynamic)
   {
     res = res.content();
   }

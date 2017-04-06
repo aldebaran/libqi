@@ -61,6 +61,21 @@ namespace qi
     return call(args);
   }
 
+  static void throwForInvalidConversion(
+      size_t argNumber,
+      const qi::Signature& argSignature,
+      const qi::Signature& expectedArgSignature,
+      const qi::Signature& functionSignature)
+  {
+    throw std::runtime_error(
+        _QI_LOG_FORMAT(
+            "Call argument number %d conversion failure from %s to %s. Function signature: %s.",
+            argNumber,
+            argSignature.toPrettySignature(),
+            expectedArgSignature.toPrettySignature(),
+            functionSignature.toPrettySignature()));
+  }
+
   AnyReference AnyFunction::call(const AnyReferenceVector& vargs)
   {
     if (type == dynamicFunctionTypeInterface())
@@ -121,38 +136,34 @@ namespace qi
     for (unsigned i=0; i<sz; ++i)
     {
       const unsigned ti = i + offset;
-      //qiLogDebug() << "argument " << i
-      //   << " " << args[i].type->infoString() << ' ' << args[i].value
-      //   << " to " << target[ti]->infoString();
-      if (args[i].type() == target[ti] || args[i].type()->info() == target[ti]->info())
-        arad.convertedArgs[ti] = args[i].rawValue();
+      auto& arg = args[i];
+      auto* argType = arg.type();
+
+      if (!argType) // invalid argument not wrapped into a dynamic AnyReference!
+        throwForInvalidConversion(i, arg.signature(), target[ti]->signature(), this->parametersSignature(this->transform.dropFirst));
+
+      if (argType == target[ti] || argType->info() == target[ti]->info())
+        arad.convertedArgs[ti] = arg.rawValue();
       else
       {
-        //qiLogDebug() << "needs conversion "
-        //<< args[i].type->infoString() << " -> "
-        //<< target[ti]->infoString();
-        std::pair<AnyReference,bool> v = args[i].convert(target[ti]);
+        std::pair<AnyReference,bool> v = arg.convert(target[ti]);
         if (!v.first.type())
         {
-          // Try pointer dereference
-          if (args[i].kind() == TypeKind_Pointer)
+          if (arg.isValid())
           {
-            AnyReference deref = *const_cast<AnyReference&>(args[i]);
-            if (deref.type() == target[ti] || deref.type()->info() == target[ti]->info())
-              v = std::make_pair(deref, false);
-            else
-              v = deref.convert(target[ti]);
+            // Try pointer dereference
+            if (arg.kind() == TypeKind_Pointer)
+            {
+              AnyReference deref = *const_cast<AnyReference&>(arg);
+              if (deref.type() == target[ti] || deref.type()->info() == target[ti]->info())
+                v = std::make_pair(deref, false);
+              else
+                v = deref.convert(target[ti]);
+            }
           }
-          if (!v.first.type())
-          {
-            throw std::runtime_error(_QI_LOG_FORMAT("Call argument number %d conversion failure from %s to %s. Function signature: %s.",
-                                                    i,
-                                                    args[i].type()->signature().toPrettySignature(),
-                                                    target[ti]->signature().toPrettySignature(),
-                                                    this->parametersSignature(this->transform.dropFirst).toPrettySignature()));
 
-            return AnyReference();
-          }
+          if (!v.first.type())
+            throwForInvalidConversion(i, arg.signature(true), target[ti]->signature(), this->parametersSignature(this->transform.dropFirst));
         }
 
         if (v.second)
