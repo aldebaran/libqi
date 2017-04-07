@@ -7,11 +7,166 @@
 #ifndef _QITYPE_DETAIL_PROPERTY_HXX_
 #define _QITYPE_DETAIL_PROPERTY_HXX_
 
-#include <boost/thread/locks.hpp>
-#include <qi/future.hpp>
-
 namespace qi
 {
+  // PropertyInterface
+  //-------------------------------------------------------------
+  template<typename T>
+  SignalBase* PropertyInterface<T>::signal() { return this; }
+
+  template<typename T>
+  FutureSync<AnyValue> PropertyInterface<T>::value() const
+  {
+    Promise<AnyValue> promise;
+    adaptFuture(get().async(), promise, AdaptFutureOption_ForwardCancel);
+    return promise.future();
+  }
+
+  template<typename T>
+  FutureSync<void> PropertyInterface<T>::setValue(AutoAnyReference value)
+  {
+    return set(value.to<T>());
+  }
+
+  // PropertyWithoutStorage
+  //-------------------------------------------------------------
+  template<typename T>
+  PropertyWithoutStorage<T>::PropertyWithoutStorage(
+      Getter&& getter,
+      Setter&& setter,
+      SignalBase::OnSubscribers&& onSubscriber)
+    : PropertyInterface<T>(std::forward<SignalBase::OnSubscribers>(onSubscriber)),
+      _getter(getter),
+      _setter(setter)
+  {}
+
+  template<typename T>
+  PropertyWithoutStorage<T>::PropertyWithoutStorage(
+      GetterSync&& getter,
+      SetterSync&& setter,
+      SignalBase::OnSubscribers&& onSubscriber)
+    : PropertyInterface<T>(std::forward<SignalBase::OnSubscribers>(onSubscriber)),
+      _getter([=]{ return Future<T>{getter()}; }),
+      _setter([=](const T& v, std::reference_wrapper<SignalType> s){ setter(v, s); return Future<void>{nullptr}; })
+  {}
+
+  // PropertyWithStorage
+  //-------------------------------------------------------------
+  template<typename T>
+  PropertyWithStorage<T>::PropertyWithStorage(
+      Getter&& getter,
+      Setter&& setter,
+      SignalBase::OnSubscribers&& onSubscriber)
+    : PropertyWithStorage<T>(
+        T{},
+        std::forward<Getter>(getter),
+        std::forward<Setter>(setter),
+        std::forward<SignalBase::OnSubscribers>(onSubscriber))
+  {}
+
+  template<typename T>
+  PropertyWithStorage<T>::PropertyWithStorage(
+      AutoAnyReference&& defaultValue,
+      Getter&& getter,
+      Setter&& setter,
+      SignalBase::OnSubscribers&& onSubscriber)
+    : PropertyWithoutStorage<T>(
+        [=] // getter
+        {
+          if (_getterWithStorage)
+            return _getterWithStorage(boost::ref(static_cast<const T&>(_storage)));
+          else
+            return _storage;
+        },
+        [=](const T& value, Signal<const T&>& signal) // setter
+        {
+          if (_setterWithStorage)
+          {
+            const bool ok = _setterWithStorage(boost::ref(_storage), value);
+            if (ok)
+              signal(_storage);
+          }
+          else
+          {
+            _storage = value;
+            signal(_storage);
+          }
+        },
+        std::forward<SignalBase::OnSubscribers>(onSubscriber)),
+      _storage(defaultValue.to<T>()),
+      _getterWithStorage(getter),
+      _setterWithStorage(setter)
+  {}
+
+  // UnsafeProperty
+  //-------------------------------------------------------------
+  template<typename T>
+  UnsafeProperty<T>::UnsafeProperty(
+      Getter getter,
+      Setter setter,
+      SignalBase::OnSubscribers onSubscriber)
+    : PropertyWithStorage<T>(
+        std::move(getter),
+        std::move(setter),
+        std::move(onSubscriber))
+  {}
+
+  template<typename T>
+  UnsafeProperty<T>::UnsafeProperty(
+      AutoAnyReference defaultValue,
+      Getter getter,
+      Setter setter,
+      SignalBase::OnSubscribers onSubscriber)
+    : PropertyWithStorage<T>(
+        std::move(defaultValue),
+        std::move(getter),
+        std::move(setter),
+        std::move(onSubscriber))
+  {}
+
+  // Property
+  //-------------------------------------------------------------
+  template<typename T>
+  Property<T>::Property(
+      Getter getter,
+      Setter setter,
+      SignalBase::OnSubscribers onsubscribe)
+    : Property<T>(
+        T{},
+        std::move(getter),
+        std::move(setter),
+        std::move(onsubscribe))
+  {}
+
+  template<typename T>
+  Property<T>::Property(
+      AutoAnyReference defaultValue,
+      Getter getter,
+      Setter setter,
+      SignalBase::OnSubscribers onsubscribe)
+    : PropertyWithStorage<T>(
+        std::move(defaultValue),
+        std::move(getter),
+        std::move(setter),
+        std::move(onsubscribe))
+  {}
+
+  template<typename T>
+  FutureSync<T> Property<T>::get() const
+  {
+    std::unique_lock<std::mutex> lock{_mutex};
+    return PropertyWithStorage<T>::get();
+  }
+
+  template<typename T>
+  FutureSync<void> Property<T>::set(const T& v)
+  {
+    std::unique_lock<std::mutex> lock(_mutex);
+    return PropertyWithStorage<T>::set(v);
+  }
+
+  // GenericProperty
+  //-------------------------------------------------------------
   inline FutureSync<void> GenericProperty::set(const AnyValue& v)
   {
     std::pair<AnyReference, bool> conv = v.convert(_type);
@@ -20,109 +175,6 @@ namespace qi
 
     Property<AnyValue>::set(AnyValue(conv.first, false, conv.second));
 
-    return FutureSync<void>(0);
-  }
-
-  template<typename T>
-  PropertyImpl<T>::PropertyImpl(Getter getter, Setter setter,
-    SignalBase::OnSubscribers onsubscribe)
-  : SignalF<void(const T&)>(std::move(onsubscribe))
-  , _getter(std::move(getter))
-  , _setter(std::move(setter))
-  {
-  }
-
-  template<typename T>
-  PropertyImpl<T>::PropertyImpl(AutoAnyReference defaultValue,
-    Getter getter, Setter setter,
-    SignalBase::OnSubscribers onsubscribe)
-  : SignalF<void(const T&)>(std::move(onsubscribe))
-  , _getter(std::move(getter))
-  , _setter(std::move(setter))
-  , _value(defaultValue.to<T>())
-  {
-  }
-
-  template<typename T>
-  T PropertyImpl<T>::getImpl() const
-  {
-    if (_getter)
-      return _getter(boost::ref(_value));
-    else
-      return _value;
-  }
-  template<typename T>
-  void PropertyImpl<T>::setImpl(const T& v)
-  {
-    qiLogDebug("qitype.property") << "set " << this << " " << (!!_setter);
-    if (_setter)
-    {
-      const bool ok = _setter(boost::ref(_value), v);
-      if (ok)
-        (*this)(_value);
-    }
-    else
-    {
-      _value = v;
-      (*this)(_value);
-    }
-  }
-
-
-  template<typename T>
-  FutureSync<T> UnsafeProperty<T>::get() const
-  {
-    return FutureSync<T>(this->getImpl());
-  }
-
-  template<typename T>
-  FutureSync<void> UnsafeProperty<T>::set(const T& v)
-  {
-    this->setImpl(v);
-    return FutureSync<void>(0);
-  }
-
-  template<typename T>
-  FutureSync<AnyValue> UnsafeProperty<T>::value() const
-  {
-    return FutureSync<AnyValue>(AnyValue::from(this->getImpl()));
-  }
-
-  template<typename T>
-  FutureSync<void> UnsafeProperty<T>::setValue(AutoAnyReference value)
-  {
-    this->setImpl(value.to<T>());
-    return FutureSync<void>(0);
-  }
-
-
-  template<typename T>
-  FutureSync<T> Property<T>::get() const
-  {
-    boost::mutex::scoped_lock lock(_mutex);
-    return FutureSync<T>(this->getImpl());
-  }
-
-  template<typename T>
-  FutureSync<void> Property<T>::set(const T& v)
-  {
-    boost::mutex::scoped_lock lock(_mutex);
-    this->setImpl(v);
-    return FutureSync<void>(0);
-  }
-
-  template<typename T>
-  FutureSync<AnyValue> Property<T>::value() const
-  {
-    boost::mutex::scoped_lock lock(_mutex);
-    return FutureSync<AnyValue>(AnyValue::from(this->getImpl()));
-  }
-
-  template<typename T>
-  FutureSync<void> Property<T>::setValue(AutoAnyReference value)
-  {
-    boost::mutex::scoped_lock lock(_mutex);
-    this->setImpl(value.to<T>());
     return FutureSync<void>(0);
   }
 }

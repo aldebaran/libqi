@@ -72,8 +72,8 @@ namespace qi
       object.asGenericObject(), propertyName));
 
     // property part
-    this->_getter = boost::bind(&ThisProxyType::getter, this, object.asGenericObject(), propertyName);
-    this->_setter = boost::bind(&ThisProxyType::setter, this, _1, _2, object.asGenericObject(), propertyName);
+    this->_getterWithStorage = boost::bind(&ThisProxyType::getter, this, object.asGenericObject(), propertyName);
+    this->_setterWithStorage = boost::bind(&ThisProxyType::setter, this, _1, _2, object.asGenericObject(), propertyName);
   }
 
   template<typename T, template< class...> class PropertyType>
