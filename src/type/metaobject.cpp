@@ -10,6 +10,7 @@
 #include "metamethod_p.hpp"
 #include <boost/algorithm/string/predicate.hpp>
 #include <qi/iocolor.hpp>
+#include <qi/detail/print.hpp>
 #include <iomanip>
 
 qiLogCategory("qitype.metaobject");
@@ -722,169 +723,35 @@ qi::Atomic<int> MetaObjectPrivate::uid{1};
 namespace qi {
   namespace detail {
 
-    static bool bypass(const std::string &name, unsigned int uid, bool showHidden) {
-      if (showHidden)
-        return false;
-      if (MetaObject::isPrivateMember(name, uid))
-        return true;
-      return false;
-    }
-
-    template <typename T>
-    static void filterHiddenInPlace(T &mmaps, bool showHidden) {
-      typename T::iterator it = mmaps.begin();
-      typename T::iterator ittmp;
-      while (it != mmaps.end()) {
-        if (bypass(it->second.name(), it->second.uid(), showHidden)) {
-          ittmp = it;
-          ++ittmp;
-          mmaps.erase(it);
-          it = ittmp;
-        } else
-          ++it;
-      }
-    }
-
-    template <typename T>
-    static int calcOffset(const T &mmaps) {
-      typename T::const_iterator it;
-      int max = 0;
-      for (it = mmaps.begin(); it != mmaps.end(); ++it) {
-        int cur = it->second.name().size();
-        if (cur > max)
-          max = cur;
-      }
-      return max;
-    }
-
-    static StreamColor FC(StreamColor col, bool enable) {
-      if (enable)
-        return col;
-      return StreamColor_None;
-    }
-
-    static void printCat(std::ostream &stream, bool color, const std::string &cat) {
-      stream << FC(StreamColor_Green, color) << "  * " << FC(StreamColor_Fuchsia, color) << cat << FC(StreamColor_Reset, color) << ":" << std::endl;
-    }
-
-    static void printIdName(std::ostream &stream, bool color, int offset, unsigned int id, const std::string &name) {
-      stream << "   "
-             << FC(StreamColor_Blue, color)
-             << std::right << std::setfill('0') << std::setw(3) << id
-             << FC(StreamColor_Reset, color)
-             << std::left << std::setw(0) << std::setfill(' ')
-             << " " << std::setw(offset) << name << std::setw(0);
-    }
-
-    void printMetaObject(std::ostream &stream, const qi::MetaObject &mobj, bool color, bool showHidden, bool showDoc, bool raw, bool parseable) {
-      qi::MetaObject::MethodMap   methods = mobj.methodMap();
-      qi::MetaObject::SignalMap   events = mobj.signalMap();
-      qi::MetaObject::PropertyMap props = mobj.propertyMap();
-
-      filterHiddenInPlace(methods, showHidden);
-      filterHiddenInPlace(events, showHidden);
-      filterHiddenInPlace(props, showHidden);
-
-      int offsetProps = std::min(calcOffset(props), 30);
-      int offsetSigs  = std::min(calcOffset(events), 30);
-      int offsetMeth  = std::min(calcOffset(methods), 30);
-
-      //##### Methods
-      if (parseable)
-      {
-        stream << ":";
-      }
-      else if (methods.size())
-      {
-        printCat(stream, color, "Methods");
-      }
-      std::string comma = "";
-      for (const auto& method: methods) {
-        if (parseable)
-        {
-          stream << comma << method.second.name();
-          comma = ",";
-          continue;
-        }
-        printIdName(stream, color, offsetMeth, method.second.uid(), method.second.name());
-        if (raw)
-          stream << " " << FC(StreamColor_Blue, color) << method.second.returnSignature().toString() << FC(StreamColor_Reset, color)
-                 << " " << FC(StreamColor_Yellow, color) << method.second.parametersSignature().toString() << FC(StreamColor_Reset, color)
-                 << std::endl;
-        else
-          stream << " " << FC(StreamColor_Blue, color) << method.second.returnSignature().toPrettySignature() << FC(StreamColor_Reset, color)
-                 << " " << FC(StreamColor_Yellow, color) << method.second.parametersSignature().toPrettySignature() << FC(StreamColor_Reset, color)
-                 << std::endl;
-        if (!showDoc)
-          continue;
-        if (method.second.description() != "")
-          stream << "       " << FC(StreamColor_DarkGreen, color) << method.second.description() << FC(StreamColor_Reset, color) << std::endl;
-
-        for (const auto& mmp: method.second.parameters()) {
-          stream << "       " << FC(StreamColor_Brown, color) << mmp.name() << ": "
-                 << FC(StreamColor_DarkGreen, color) << mmp.description() << FC(StreamColor_Reset, color)
-                 << std::endl;
-        }
-
-        if (method.second.returnDescription() != "")
-          stream << FC(StreamColor_Brown, color) << "       return: " << FC(StreamColor_DarkGreen, color) << method.second.returnDescription() << FC(StreamColor_Reset, color)
-                 << std::endl;
-      }
+    void printMetaObject(std::ostream& stream,
+                         const qi::MetaObject& mobj,
+                         bool color,
+                         bool showHidden,
+                         bool showDoc,
+                         bool raw,
+                         bool parseable)
+    {
+      const auto displayHidden = (showHidden ? DisplayHiddenMembers::Display : DisplayHiddenMembers::Hide);
 
       if (parseable)
       {
-        stream << ":";
-        comma = "";
+        ParseablePrintStream printer(stream, displayHidden);
+        printer.print(mobj);
       }
-      else if (events.size())
+      else
       {
-        printCat(stream, color, "Signals");
-      }
-      for (const auto& event: events)
-      {
-        if (parseable)
-        {
-          stream << comma << event.second.name();
-          comma = ",";
-          continue;
-        }
-        printIdName(stream, color, offsetSigs, event.second.uid(), event.second.name());
-        if (raw)
-          stream << " " << FC(StreamColor_Yellow, color) << event.second.parametersSignature().toString() << FC(StreamColor_Reset, color)
-                 << std::endl;
-        else
-          stream << " " << FC(StreamColor_Yellow, color) << event.second.parametersSignature().toPrettySignature() << FC(StreamColor_Reset, color)
-                 << std::endl;
-      }
+        using Option = PrettyPrintStream::Option;
+        using Options = PrettyPrintStream::Options;
 
-      if (parseable)
-      {
-        stream << ":";
-        comma = "";
+        Options opts;
+        if (color)   opts.set(Option::Colorized);
+        if (showDoc) opts.set(Option::Documentation);
+        if (raw)     opts.set(Option::RawSignatures);
+        PrettyPrintStream prettyPrinter(stream, displayHidden, opts);
+        prettyPrinter.print(mobj);
       }
-      else if (props.size())
-      {
-        printCat(stream, color, "Properties");
-      }
-      for (const auto& property: props)
-      {
-        if (parseable)
-        {
-          stream << comma << property.second.name();
-          comma = ",";
-          continue;
-        }
-        printIdName(stream, color, offsetProps, property.second.uid(), property.second.name());
-        if (raw)
-          stream << " " << FC(StreamColor_Yellow, color) << property.second.signature().toString() << FC(StreamColor_Reset, color)
-                 << std::endl;
-        else
-          stream << " " << FC(StreamColor_Yellow, color) << property.second.signature().toPrettySignature() << FC(StreamColor_Reset, color)
-                 << std::endl;
-      }
-      if (parseable)
-        stream << std::endl;
     }
+
   }
 
 
