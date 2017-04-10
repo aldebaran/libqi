@@ -212,6 +212,7 @@ namespace qi
     friend class BufferReader;
     // CS4251
     boost::shared_ptr<BufferPrivate> _p;
+    bool test_github;
   };
 
   /**
