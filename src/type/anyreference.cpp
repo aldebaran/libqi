@@ -810,9 +810,6 @@ namespace detail
 
   std::pair<AnyReference, bool> AnyReferenceBase::convert(TypeInterface* targetType) const
   {
-    if (!targetType)
-      return std::make_pair(AnyReference{}, false);
-
     /* Can have false-negative (same effective type, different Type instances
      * but we do not care, correct check (by comparing info() result
      * is more expensive than the dummy conversion that will happen.
