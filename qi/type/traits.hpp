@@ -350,6 +350,10 @@ namespace qi
     template<bool condition, typename T = void>
     using EnableIf = typename std::enable_if<condition, T>::type;
 
+    /// Behave exactly as the std::underlying_type_t of C++14.
+    template<typename T>
+    using UnderlyingType = typename std::underlying_type<T>::type;
+
   } // namespace traits
 } // namespace qi
 
