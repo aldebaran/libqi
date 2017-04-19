@@ -1031,6 +1031,49 @@ namespace qi {
 
   template <typename T>
   Future<AnyValue> toAnyValueFuture(Future<T> future);
+
+  /** Wraps a callable object to make it return a Future.
+
+    @param  f       A callable object which can take arguments of types Args.
+
+    @return An object which can be called with arguments of types Args.
+            Calling this object will immediately call a copy of f with the provided arguments
+            and return the result wrapped in a future.
+  */
+  template<typename... Args, typename F
+    , typename ReturnType = typename std::decay<decltype(std::declval<F>()(
+                                               std::declval<Args>()...))>::type
+    , typename FutureType = Future<ReturnType>
+    , class = typename std::enable_if<
+                !std::is_same<void, ReturnType>::value
+                >::type
+  >
+  auto futurizedReturnType(F&& f) -> std::function<FutureType(Args...)>
+  {
+    return [=](Args... args) {
+      return FutureType{ f(args...) };
+    };
+  }
+
+  /// Specialization of futurizedReturnType() for return type void. @see futurizedReturnType
+  template<typename... Args, typename F
+    , typename ReturnType = typename std::decay<decltype(std::declval<F>()(
+                                               std::declval<Args>()...))>::type
+    , typename FutureType = Future<ReturnType>
+    , class = typename std::enable_if<
+                std::is_same<void, ReturnType>::value
+                >::type
+  >
+  auto futurizedReturnType(F&& f) -> std::function<Future<void>(Args...)>
+  {
+    return [=](Args... args) {
+      f(args...);
+      return Future<void>{nullptr};
+    };
+  }
+
+
+
 }
 
 #ifdef _MSC_VER

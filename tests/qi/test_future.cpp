@@ -1179,3 +1179,48 @@ TEST(TestAdaptFuture, PromiseCancel) {
   ASSERT_FALSE(prom2.future().hasError());
 }
 
+TEST(TestFuturized, returnVoidNoArgument)
+{
+  bool wasCalled = false;
+  auto k = qi::futurizedReturnType([&] { wasCalled = true; });
+  static_assert(std::is_same<qi::Future<void>, decltype(k())>::value, "");
+  ASSERT_FALSE(wasCalled);
+  k();
+  ASSERT_TRUE(wasCalled);
+}
+
+TEST(TestFuturized, returnValueNoArgument)
+{
+  bool wasCalled = false;
+  auto k = qi::futurizedReturnType([&] { wasCalled = true; return 42; });
+  static_assert(std::is_same<qi::Future<int>, decltype(k())>::value, "");
+  ASSERT_FALSE(wasCalled);
+  int x = k();
+  ASSERT_TRUE(wasCalled);
+  ASSERT_EQ(42, x);
+}
+
+TEST(TestFuturized, returnVoidWithArgument)
+{
+  bool wasCalled = false;
+  auto k = qi::futurizedReturnType<int, int>([&](int x, int y) { wasCalled = true; });
+  static_assert(std::is_same<qi::Future<void>, decltype(k(1, 2))>::value, "");
+  ASSERT_FALSE(wasCalled);
+  k(1, 2);
+  ASSERT_TRUE(wasCalled);
+}
+
+TEST(TestFuturized, returnValueWithArgument)
+{
+  bool wasCalled = false;
+  auto k = qi::futurizedReturnType<int, int>([&](int x, int y) { wasCalled = true; return x + y; });
+  static const int a = 1;
+  static const int b = 2;
+  static_assert(std::is_same<qi::Future<int>, decltype(k(a, b))>::value, "");
+  ASSERT_FALSE(wasCalled);
+  int x = k(a, b);
+  ASSERT_TRUE(wasCalled);
+  ASSERT_EQ(a+b, x);
+}
+
+
