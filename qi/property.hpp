@@ -7,9 +7,8 @@
 #ifndef _QI_PROPERTY_HPP_
 #define _QI_PROPERTY_HPP_
 
-#include <functional>
-#include <mutex>
 #include <boost/function.hpp>
+#include <boost/thread/mutex.hpp>
 #include <qi/signal.hpp>
 #include <qi/future.hpp>
 
@@ -34,118 +33,17 @@ namespace qi
     virtual FutureSync<AnyValue> value() const = 0;
   };
 
-  /// A typed interface for a property, that is also a signal.
   template<typename T>
-  class PropertyInterface: public Signal<const T&>, public PropertyBase
-  {
-  public:
-    /// Recalling the value type behind the property.
-    using PropertyType = T;
-
-    /// Recalling the signal type associated to this signal.
-    using SignalType = Signal<const T&>;
-
-    PropertyInterface(SignalBase::OnSubscribers&& onSubscriber = SignalBase::OnSubscribers())
-      : Signal<const T&>(std::forward<SignalBase::OnSubscribers>(onSubscriber)) {}
-
-    // PropertyBase support
-    SignalBase* signal() override;
-    FutureSync<AnyValue> value() const override;
-    FutureSync<void> setValue(AutoAnyReference value) override;
-
-    virtual FutureSync<T> get() const = 0;
-    virtual FutureSync<void> set(const T& v) = 0;
-  };
-
-  /// A very common setter that works for most properties that have a simple storage.
-  /// @example
-  ///   std::string storage;
-  ///   TypedProperty<std::string> property{
-  ///       [&]{ return storage; },
-  ///       propertySetterForStorage(storage)
-  ///   };
-  template <typename T>
-  typename std::function<void(const T&, Signal<const T&>&)> propertySetterForStorage(T& storage)
-  {
-    return [&](const T& value, Signal<const T&>& signal)
-    {
-      if (storage != value)
-      {
-        storage = value;
-        QI_EMIT signal(value);
-      }
-    };
-  }
-
-  /// A failing setter with a message explaining it is read-only.
-  template <typename T>
-  Future<void> propertySetterForReadOnly(const T&, Signal<const T&>&)
-  {
-    throw std::runtime_error("property is read-only, so it cannot be set");
-  }
-
-  /// A synchronous failing setter with a message explaining it is read-only.
-  template <typename T>
-  void propertySetterForReadOnlySync(const T& v, Signal<const T&>& s)
-  {
-    propertySetterForReadOnly(v, s);
-  }
-
-  /// A typed property, that is also a signal to be connectable to.
-  template<typename T>
-  class PropertyWithoutStorage: public PropertyInterface<T>
-  {
-  public:
-    /// Recalling the signal type associated to this signal.
-    using SignalType = PropertyInterface<T>;
-
-    /// A getter returns a value stored anywhere.
-    using Getter = std::function<Future<T>()>;
-
-    /// A getter returns a value stored anywhere, synchrously.
-    using GetterSync = std::function<T()>;
-
-    /// A setter receives a value to store anywhere, and a signal to emit if successful.
-    using Setter = std::function<Future<void>(const T&, typename std::reference_wrapper<SignalType>)>;
-
-    /// A synchronous setter receives a value to store anywhere, and a signal to emit if successful.
-    using SetterSync = std::function<void(const T&, typename std::reference_wrapper<SignalType>)>;
-
-    /// Constructor using accessors.
-    /// The setter can be omitted to make a read-only property.
-    PropertyWithoutStorage(
-        Getter&& getter,
-        Setter&& setter = propertySetterForReadOnly<T>,
-        SignalBase::OnSubscribers&& onSubscriber = SignalBase::OnSubscribers{});
-
-    /// Constructor using sync accessors.
-    /// The setter can be omitted to make a read-only property.
-    PropertyWithoutStorage(
-        GetterSync&& getter,
-        SetterSync&& setter = propertySetterForReadOnlySync<T>,
-        SignalBase::OnSubscribers&& onSubscriber = SignalBase::OnSubscribers{});
-
-    /// Maps the interface to the getter.
-    FutureSync<T> get() const override { return _getter(); }
-
-    /// Maps the interface to the setter, the property itself is the signal to emit.
-    FutureSync<void> set(const T& v) override { return _setter(v, *this); }
-
-  private:
-    Getter _getter;
-    Setter _setter;
-  };
-
-  /// A property with the management of the storage already implemented, and is not safe.
-  template<typename T>
-  class PropertyWithStorage: public PropertyWithoutStorage<T>
+  class PropertyImpl: public SignalF<void(const T&)>, public PropertyBase
   {
   public:
     /** Setter called with storage containing old value, and new value
     *  Returns true to invoke subscribers, false to 'abort' the update.
     */
+    using Setter = boost::function<bool (boost::reference_wrapper<T>, const T&)>;
     using Getter = boost::function<T(boost::reference_wrapper<const T>)>;
-    using Setter = boost::function<bool(boost::reference_wrapper<T>, const T&)>;
+    using SignalType = SignalF<void(const T&)>;
+    using PropertyType = T;
 
     /**
      * @param getter value getter, default to reading _value
@@ -155,51 +53,62 @@ namespace qi
      * @param onsubscribe callback to call when subscribers connect or
      *        disconnect from the property
     */
-    PropertyWithStorage(
-        Getter&& getter = Getter{},
-        Setter&& setter = Setter{},
-        SignalBase::OnSubscribers&& onsubscribe = SignalBase::OnSubscribers{});
+    PropertyImpl(Getter getter = Getter(), Setter setter = Setter(),
+      SignalBase::OnSubscribers onsubscribe = SignalBase::OnSubscribers());
 
-    PropertyWithStorage(
-        AutoAnyReference&& defaultValue,
-        Getter&& getter = Getter{},
-        Setter&& setter = Setter{},
-        SignalBase::OnSubscribers&& onsubscribe = SignalBase::OnSubscribers{});
+    PropertyImpl(AutoAnyReference defaultValue, Getter getter = Getter(), Setter setter = Setter(),
+      SignalBase::OnSubscribers onsubscribe = SignalBase::OnSubscribers());
 
-    PropertyWithStorage<T>& operator=(const T& v) { this->set(v); return *this; }
+    virtual FutureSync<T> get() const = 0;
+    virtual FutureSync<void> set(const T& v) = 0;
+
+    PropertyImpl<T>& operator=(const T& v) { this->set(v); return *this; }
+
+    SignalBase* signal() override { return this; }
 
   protected:
-    T _storage;
-    Getter _getterWithStorage;
-    Setter _setterWithStorage;
+    Getter _getter;
+    Setter _setter;
+    T      _value;
+
+    T getImpl() const;
+    void setImpl(const T& v);
   };
 
-  /**
-   * Provide access to a stored value and signal to connected callbacks when the value changed.
-   * @see qi::Signal which implement a similar pattern but without storing the value.
-   * @remark For thread-safety, consider using Property instead.
-   * \includename{qi/property.hpp}
+  /** Povide access to a stored value and signal to connected callbacks when the value changed.
+      @see qi::Signal which implement a similar pattern but without storing the value.
+      @remark For thread-safety, consider using Property instead.
+      \includename{qi/property.hpp}
    */
-  template <typename T>
-  class UnsafeProperty: public PropertyWithStorage<T>
+  template<typename T>
+  class UnsafeProperty: public PropertyImpl<T>
   {
   public:
-    using Getter = typename PropertyWithStorage<T>::Getter;
-    using Setter = typename PropertyWithStorage<T>::Setter;
+    using ImplType = PropertyImpl<T>;
+    using Getter = typename ImplType::Getter;
+    using Setter = typename ImplType::Setter;
 
-    UnsafeProperty(
-        Getter getter = Getter{},
-        Setter setter = Setter{},
-        SignalBase::OnSubscribers onsubscribe = SignalBase::OnSubscribers{});
+    UnsafeProperty(Getter getter = Getter(), Setter setter = Setter(),
+                   SignalBase::OnSubscribers onsubscribe = SignalBase::OnSubscribers())
+      : PropertyImpl<T>(std::move(getter), std::move(setter), std::move(onsubscribe))
+    {}
 
-    UnsafeProperty(
-        AutoAnyReference defaultValue,
-        Getter getter = Getter{},
-        Setter setter = Setter{},
-        SignalBase::OnSubscribers onsubscribe = SignalBase::OnSubscribers{});
+    UnsafeProperty(AutoAnyReference defaultValue, Getter getter = Getter(), Setter setter = Setter(),
+                   SignalBase::OnSubscribers onsubscribe = SignalBase::OnSubscribers())
+      : PropertyImpl<T>(std::move(defaultValue), std::move(getter), std::move(setter), std::move(onsubscribe))
+    {}
 
     UnsafeProperty<T>& operator=(const T& v) { this->set(v); return *this; }
+
+    FutureSync<T> get() const override;
+    FutureSync<void> set(const T& v) override;
+
+    SignalBase* signal() override { return this; }
+    FutureSync<void> setValue(AutoAnyReference value) override;
+    FutureSync<AnyValue> value() const override;
+
   };
+
 
   /** Povide thread-safe access to a stored value and signal to connected callbacks when the value changed.
       @see qi::Signal which implement a similar pattern but without storing the value.
@@ -207,37 +116,36 @@ namespace qi
       \includename{qi/property.hpp}
    */
   template<typename T>
-  class Property: public PropertyWithStorage<T>
+  class Property: public PropertyImpl<T>
   {
   public:
-    using PropertyType = T;
-    using ImplType = PropertyWithStorage<T>;
+    using ImplType = PropertyImpl<T>;
     using Getter = typename ImplType::Getter;
     using Setter = typename ImplType::Setter;
     class ScopedLockReadWrite;
     class ScopedLockReadOnly;
 
-    Property(
-        Getter getter = Getter{},
-        Setter setter = Setter{},
-        SignalBase::OnSubscribers onsubscribe = SignalBase::OnSubscribers{});
+    Property(Getter getter = Getter(), Setter setter = Setter(),
+      SignalBase::OnSubscribers onsubscribe = SignalBase::OnSubscribers())
+      : PropertyImpl<T>(std::move(getter), std::move(setter), std::move(onsubscribe))
+    {}
 
-    Property(
-        AutoAnyReference defaultValue,
-        Getter getter = Getter{},
-        Setter setter = Setter{},
-        SignalBase::OnSubscribers onsubscribe = SignalBase::OnSubscribers{});
+    Property(AutoAnyReference defaultValue, Getter getter = Getter(), Setter setter = Setter(),
+      SignalBase::OnSubscribers onsubscribe = SignalBase::OnSubscribers())
+      : PropertyImpl<T>(std::move(defaultValue), std::move(getter), std::move(setter), std::move(onsubscribe))
+    {}
 
     Property<T>& operator=(const T& v) { this->set(v); return *this; }
+
     FutureSync<T> get() const override;
     FutureSync<void> set(const T& v) override;
 
-  protected:
-    Getter _getterWithStorage;
-    Setter _setterWithStorage;
+    SignalBase* signal() override { return this; }
+    FutureSync<void> setValue(AutoAnyReference value) override;
+    FutureSync<AnyValue> value() const override;
 
   private:
-    mutable std::mutex _mutex;
+    mutable boost::mutex _mutex;
   };
 
   /** Provides (locking) exclusive write-enabled access to the value of a property.
@@ -246,6 +154,7 @@ namespace qi
    */
   template<class T>
   class Property<T>::ScopedLockReadWrite
+    : boost::noncopyable
   {
   public:
     ScopedLockReadWrite(Property<T>& property)
@@ -254,24 +163,20 @@ namespace qi
     {
     }
 
-    // non-copyable
-    ScopedLockReadWrite(const ScopedLockReadWrite&) = delete;
-    ScopedLockReadWrite& operator=(const ScopedLockReadWrite&) = delete;
-
     ~ScopedLockReadWrite()
     {
-      _property(_property._storage); // Trigger update of the observer callbacks with the new value.
+      _property(_property._value); // Trigger update of the observer callbacks with the new value.
     }
 
-    T& operator*() { return _property._storage; }
-    T* operator->() { return &_property._storage; }
+    T& operator*() { return _property._value; }
+    T* operator->() { return &_property._value; }
 
-    const T& operator*() const { return _property._storage; }
-    const T* operator->() const { return &_property._storage; }
+    const T& operator*() const { return _property._value; }
+    const T* operator->() const { return &_property._value; }
 
   private:
     Property<T>& _property;
-    std::unique_lock<std::mutex> _lock;
+    boost::mutex::scoped_lock _lock;
   };
 
   /** Provides (locking) exclusive read-only access to the value of a property.
@@ -280,6 +185,7 @@ namespace qi
    */
   template<class T>
   class Property<T>::ScopedLockReadOnly
+    : boost::noncopyable
   {
   public:
     ScopedLockReadOnly(const Property<T>& property)
@@ -288,17 +194,13 @@ namespace qi
     {
     }
 
-    // non-copyable
-    ScopedLockReadOnly(const ScopedLockReadOnly&) = delete;
-    ScopedLockReadOnly& operator=(const ScopedLockReadOnly&) = delete;
-
-    const T& get() const { return _property._storage; }
+    const T& get() const { return _property._value; }
     const T& operator*() const { return get(); }
     const T* operator->() const { return &get(); }
 
   private:
     const Property<T>& _property;
-    std::unique_lock<std::mutex> _lock;
+    boost::mutex::scoped_lock _lock;
   };
 
 
@@ -306,12 +208,9 @@ namespace qi
   class QI_API GenericProperty : public Property<AnyValue>
   {
   public:
-    GenericProperty(
-        TypeInterface* type,
-        Getter&& getter = Getter{},
-        Setter&& setter = Setter{})
-      : Property<AnyValue>(std::forward<Getter>(getter), std::forward<Setter>(setter)),
-        _type(type)
+    GenericProperty(TypeInterface* type, Getter getter = Getter(), Setter setter = Setter())
+    :Property<AnyValue>(getter, setter)
+    , _type(type)
     { // Initialize with default value for given type
       set(AnyValue(_type));
       std::vector<TypeInterface*> types(&_type, &_type + 1);
