@@ -5,6 +5,7 @@
  ** Copyright (C) 2010, 2012 Aldebaran Robotics
  */
 
+#include <future>
 #include <vector>
 #include <string>
 
@@ -21,6 +22,8 @@
 #include <testsession/testsessionpair.hpp>
 
 qiLogCategory("test");
+
+static const qi::MilliSeconds usualTimeout{200};
 
 static std::string reply(const std::string &msg)
 {
@@ -478,6 +481,35 @@ TEST(QiService, ExceptionFromPropertySetterSetsErrorOnFuture)
   TestSessionPair sessions;
   sessions.server()->registerService(serviceName, objectBuilder.object());
   auto setting = sessions.client()->service(serviceName).value().setProperty(propertyName, 42);
-  auto settingState = setting.waitFor(qi::MilliSeconds{200});
+  auto settingState = setting.waitFor(usualTimeout);
   ASSERT_EQ(qi::FutureState_FinishedWithError, settingState);
+}
+
+TEST(QiService, BlockingPropertySetterDoesNotBlockOtherCalls)
+{
+  std::promise<void> promise;
+  qi::Property<int> property{qi::Property<int>::Getter{}, [&](int&, const int&)->bool
+  {
+    promise.get_future().wait();
+    return false;
+  }};
+
+  const std::string serviceName{"Alain"};
+  const std::string propertyName{"Alex"};
+  const std::string methodName{"Terieur"};
+
+  qi::DynamicObjectBuilder objectBuilder;
+  objectBuilder.advertiseProperty(propertyName, &property);
+  objectBuilder.advertiseMethod(methodName, []{});
+  objectBuilder.setThreadingModel(qi::ObjectThreadingModel_MultiThread);
+
+  TestSessionPair sessions;
+  sessions.server()->registerService(serviceName, objectBuilder.object());
+
+  auto remoteService = sessions.client()->service(serviceName).value();
+  remoteService.setProperty(propertyName, 42).async();
+  auto calling = remoteService.async<void>(methodName);
+  auto callingState = calling.waitFor(usualTimeout);
+  EXPECT_EQ(qi::FutureState_FinishedWithValue, callingState);
+  promise.set_value();
 }
