@@ -5,10 +5,14 @@
 
 #include <gtest/gtest.h>
 #include <future>
+#include <list>
+#include <string>
+#include <functional>
 #include <boost/thread.hpp>
 #include <qi/application.hpp>
 #include <qi/future.hpp>
 #include <qi/log.hpp>
+#include <qi/detail/conceptpredicate.hpp>
 #include "test_future.hpp"
 
 qiLogCategory("test");
@@ -1179,10 +1183,35 @@ TEST(TestAdaptFuture, PromiseCancel) {
   ASSERT_FALSE(prom2.future().hasError());
 }
 
+TEST(TestUnitFuture, Regular)
+{
+  using namespace qi;
+  UnitFuture unit; // There is only one value.
+  ASSERT_TRUE(detail::isRegular({unit}));
+}
+
+TEST(TestUnitFuture, BasicNonVoid)
+{
+  using namespace qi;
+  UnitFuture unit; // There is only one value.
+  const int i = 3;
+  Future<int> fut = unit(i);
+  ASSERT_EQ(i, fut.value());
+}
+
+TEST(TestUnitFuture, BasicVoid)
+{
+  using namespace qi;
+  UnitFuture unit; // There is only one value.
+  Future<void> fut = unit();
+  ASSERT_EQ(nullptr, fut.value());
+}
+
 TEST(TestFuturized, returnVoidNoArgument)
 {
+  using namespace qi;
   bool wasCalled = false;
-  auto k = qi::futurizedReturnType([&] { wasCalled = true; });
+  auto k = futurizeOutput([&] { wasCalled = true; });
   static_assert(std::is_same<qi::Future<void>, decltype(k())>::value, "");
   ASSERT_FALSE(wasCalled);
   k();
@@ -1191,8 +1220,9 @@ TEST(TestFuturized, returnVoidNoArgument)
 
 TEST(TestFuturized, returnValueNoArgument)
 {
+  using namespace qi;
   bool wasCalled = false;
-  auto k = qi::futurizedReturnType([&] { wasCalled = true; return 42; });
+  auto k = futurizeOutput([&] { wasCalled = true; return 42; });
   static_assert(std::is_same<qi::Future<int>, decltype(k())>::value, "");
   ASSERT_FALSE(wasCalled);
   int x = k();
@@ -1202,8 +1232,9 @@ TEST(TestFuturized, returnValueNoArgument)
 
 TEST(TestFuturized, returnVoidWithArgument)
 {
+  using namespace qi;
   bool wasCalled = false;
-  auto k = qi::futurizedReturnType<int, int>([&](int x, int y) { wasCalled = true; });
+  auto k = futurizeOutput([&](int, int) { wasCalled = true; });
   static_assert(std::is_same<qi::Future<void>, decltype(k(1, 2))>::value, "");
   ASSERT_FALSE(wasCalled);
   k(1, 2);
@@ -1212,8 +1243,9 @@ TEST(TestFuturized, returnVoidWithArgument)
 
 TEST(TestFuturized, returnValueWithArgument)
 {
+  using namespace qi;
   bool wasCalled = false;
-  auto k = qi::futurizedReturnType<int, int>([&](int x, int y) { wasCalled = true; return x + y; });
+  auto k = futurizeOutput([&](int x, int y) { wasCalled = true; return x + y; });
   static const int a = 1;
   static const int b = 2;
   static_assert(std::is_same<qi::Future<int>, decltype(k(a, b))>::value, "");
@@ -1222,5 +1254,4 @@ TEST(TestFuturized, returnValueWithArgument)
   ASSERT_TRUE(wasCalled);
   ASSERT_EQ(a+b, x);
 }
-
 

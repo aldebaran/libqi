@@ -16,6 +16,7 @@
 # include <qi/trackable.hpp>
 # include <qi/clock.hpp>
 # include <qi/detail/mpl.hpp>
+# include <qi/functional.hpp>
 
 # include <boost/shared_ptr.hpp>
 # include <boost/make_shared.hpp>
@@ -1032,48 +1033,62 @@ namespace qi {
   template <typename T>
   Future<AnyValue> toAnyValueFuture(Future<T> future);
 
-  /** Wraps a callable object to make it return a Future.
-
-    @param  f       A callable object which can take arguments of types Args.
-
-    @return An object which can be called with arguments of types Args.
-            Calling this object will immediately call a copy of f with the provided arguments
-            and return the result wrapped in a future.
-  */
-  template<typename... Args, typename F
-    , typename ReturnType = typename std::decay<decltype(std::declval<F>()(
-                                               std::declval<Args>()...))>::type
-    , typename FutureType = Future<ReturnType>
-    , class = typename std::enable_if<
-                !std::is_same<void, ReturnType>::value
-                >::type
-  >
-  auto futurizedReturnType(F&& f) -> std::function<FutureType(Args...)>
+  /// Polymorphic function object that creates a Future from a value, if provided.
+  ///
+  /// "unit" is traditionally the name of a transformation that sends a value into
+  /// the monadic level, because it is a "unit" or "neutral element" for
+  /// monadic composition.
+  ///
+  /// See the comment of `semiLift` for an explanation.
+  ///
+  /// Example:
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  /// // `i` is an `int`
+  /// UnitFuture unit;
+  /// Future<int> fut0 = unit(i);
+  /// Future<void> fut1 = unit();
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  struct UnitFuture
   {
-    return [=](Args... args) {
-      return FutureType{ f(args...) };
-    };
-  }
+  // Regular:
+    QI_GENERATE_FRIEND_REGULAR_OPS_0(UnitFuture)
+  // PolymorphicFunction<Future<T> (T), Future<void> ()>:
+    /// There is no constraint on T.
+    template<typename T>
+    Future<traits::Decay<T>> operator()(T&& t) const
+    {
+      return Future<traits::Decay<T>>{std::forward<T>(t)};
+    }
 
-  /// Specialization of futurizedReturnType() for return type void. @see futurizedReturnType
-  template<typename... Args, typename F
-    , typename ReturnType = typename std::decay<decltype(std::declval<F>()(
-                                               std::declval<Args>()...))>::type
-    , typename FutureType = Future<ReturnType>
-    , class = typename std::enable_if<
-                std::is_same<void, ReturnType>::value
-                >::type
-  >
-  auto futurizedReturnType(F&& f) -> std::function<Future<void>(Args...)>
-  {
-    return [=](Args... args) {
-      f(args...);
+    Future<void> operator()() const
+    {
       return Future<void>{nullptr};
-    };
+    }
+  };
+
+  /// Returns a new function similar to the given one except that it returns a
+  /// future.
+  ///
+  /// This is a "semi-lifting" (see `semilift` for an explanation of the lifting notion)
+  ///
+  /// Example:
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  /// // `heavyCompute` takes a `vector<int>` and returns an `int`.
+  /// // `v` is a `vector<int>`.
+  /// auto f = futurizeOutput(heavyCompute);
+  /// Future<int> res = f(v);
+  /// // ...
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ///
+  /// TODO: Remove the trailing return type when get rid of C++11.
+  ///
+  /// Procedure Proc
+  template<typename Proc>
+  auto futurizeOutput(Proc&& p)
+    -> decltype(semiLift(std::forward<Proc>(p), UnitFuture{}))
+  {
+    return semiLift(std::forward<Proc>(p), UnitFuture{});
   }
-
-
-
 }
 
 #ifdef _MSC_VER
