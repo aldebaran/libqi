@@ -7,6 +7,10 @@
 #include <boost/algorithm/cxx11/all_of.hpp>
 #include <boost/filesystem/fstream.hpp>
 
+#ifdef _WIN32
+  #include <Windows.h>
+#endif
+
 qiLogCategory("qitype.package");
 
 namespace qi
@@ -37,7 +41,14 @@ namespace qi
       qiLogVerbose() << "found module factory: '" << vs.at(i) << "'";
       void* lib;
       try {
+#ifdef _WIN32
+        auto oldErrorMode = GetErrorMode();
+        SetErrorMode(oldErrorMode | SEM_FAILCRITICALERRORS);
+#endif
         lib = qi::Application::loadModule(vs.at(i));
+#ifdef _WIN32
+        SetErrorMode(oldErrorMode);
+#endif
       }
       catch (std::exception& e)
       {
