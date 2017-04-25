@@ -23,12 +23,6 @@
 #include "utils.hpp"
 #include <boost/system/error_code.hpp>
 
-#ifndef _WIN32
-static const char SDK_LAYOUT_BOOST_SEPARATOR = ':';
-#else
-static const char SDK_LAYOUT_BOOST_SEPARATOR = ';';
-#endif
-
 qiLogCategory("qi.path.sdklayout");
 
 namespace {
@@ -121,10 +115,8 @@ namespace detail {
         std::string prefixes = qi::os::getenv("QI_ADDITIONAL_SDK_PREFIXES");
         if (!prefixes.empty())
         {
-          boost::algorithm::split(additionalSdkPrefixes,
-                                  prefixes,
-                                  boost::algorithm::is_from_range(SDK_LAYOUT_BOOST_SEPARATOR,
-                                                                  SDK_LAYOUT_BOOST_SEPARATOR));
+          auto pathSep = os::pathsep()[0];
+          boost::algorithm::split(additionalSdkPrefixes, prefixes, [&](char c){ return c == pathSep; });
           _sdkPrefixes.insert(_sdkPrefixes.end(), additionalSdkPrefixes.begin(), additionalSdkPrefixes.end());
         }
       }
