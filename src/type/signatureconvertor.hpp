@@ -29,6 +29,7 @@ namespace qi {
     void visitVarArgs(const qi::Signature &sig);
     void visitMap(const qi::Signature &sig);
     void visitTuple(const qi::Signature &sig);
+    void visitOptional(const qi::Signature &sig);
 
     bool                 _done;
     const qi::Signature *_sig;

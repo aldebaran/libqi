@@ -108,6 +108,10 @@ namespace qi {
       case TypeKind_VarArgs:
         v.visitVarArgs(value.begin(), value.end());
         break;
+      case TypeKind_Optional:
+        v.visitOptional(value);
+        break;
+
       case TypeKind_Function:
       case TypeKind_Signal:
       case TypeKind_Property:

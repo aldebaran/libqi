@@ -338,6 +338,64 @@ namespace detail
     return std::make_pair(AnyReference(), false);
   }
 
+  std::pair<AnyReference, bool> AnyReferenceBase::convert(OptionalTypeInterface* targetType) const
+  {
+    if (!targetType)
+      return std::make_pair(AnyReference{}, false);
+
+    AnyReference result;
+    try
+    {
+      result = AnyReference{ targetType };
+      switch (_type->kind())
+      {
+        case TypeKind_Void:
+          // do nothing, converting void to optional means creating an unset optional
+          break;
+        case TypeKind_Optional:
+          result.setOptional(*this);
+          break;
+        // In all other cases, try setting this value as the value of the optional
+        default:
+          detail::setOptionalValueReference(result, [&](AnyReference& optValRef){
+            // Recurse the conversion to the value type of the optional
+            const auto optValType = optValRef._type;
+            AnyReference thisConverted;
+            bool shouldDestroy = false;
+            std::tie(thisConverted, shouldDestroy) = convert(optValType);
+
+            auto scopedRefDestruction = ka::scoped([&]{
+              if (shouldDestroy)
+                thisConverted.destroy();
+            });
+
+            if (!thisConverted.isValid())
+              throwConversionFailure(_type, optValType, "");
+
+            optValRef.update(thisConverted);
+          });
+          break;
+      }
+      return std::make_pair(result, true);
+    }
+    catch (const std::runtime_error& ex)
+    {
+      qiLogDebug() << "Failed to convert " << _type->infoString() << " to an optional type "
+                   << targetType->infoString() << " : " << ex.what();
+    }
+    catch (...)
+    {
+      qiLogDebug() << "Failed to convert " << _type->infoString() << " to an optional type "
+                   << targetType->infoString() << " : unknown exception";
+    }
+
+    // If result is valid, it also means it holds an initialized value that must be destroyed.
+    // It can happen if an exception was caught above.
+    if (result.isValid())
+      result.destroy();
+    return std::make_pair(AnyReference{}, false);
+  }
+
   namespace {
     // Cleanup allocated stuff when exiting scope
     struct CleanUp
@@ -855,6 +913,8 @@ namespace detail
         return convert(static_cast<DynamicTypeInterface*>(targetType));
       case TypeKind_Raw:
         return convert(static_cast<RawTypeInterface*>(targetType));
+      case TypeKind_Optional:
+        return convert(static_cast<OptionalTypeInterface*>(targetType));
       case TypeKind_Unknown:
       {
         /* Under clang macos, typeInfo() comparison fails
@@ -962,6 +1022,11 @@ namespace detail
       AnyReference gv = content();
       std::pair<AnyReference, bool> result = gv.convert(targetType);
       return result;
+    }
+
+    if (targetType->kind() == TypeKind_Optional)
+    {
+      return convert(static_cast<OptionalTypeInterface*>(targetType));
     }
 
     if (skind == TypeKind_Object && dkind == TypeKind_Pointer)
@@ -1090,6 +1155,7 @@ bool operator<(const AnyReference& a, const AnyReference& b)
   case TypeKind_Function:
   case TypeKind_Signal:
   case TypeKind_Property:
+  case TypeKind_Optional:
     return a.rawValue() < b.rawValue();
   }
 #undef GET
@@ -1236,7 +1302,7 @@ namespace detail
 
   void AnyReferenceBase::update(const AutoAnyReference& val)
   {
-    switch(kind())
+    switch(val.kind())
     {
     case TypeKind_Int:
       setInt(val.toInt());
@@ -1259,6 +1325,9 @@ namespace detail
         setRaw(pa.first, pa.second);
         break;
       }
+    case TypeKind_Optional:
+      setOptional(val);
+      break;
     default:
       throw std::runtime_error("Update not implemented for this type.");
     }
@@ -1291,6 +1360,41 @@ namespace detail
       throw std::runtime_error("Value is not a Dynamic");
     DynamicTypeInterface* t = static_cast<DynamicTypeInterface*>(this->_type);
     t->set(&_value, element);
+  }
+
+  void AnyReferenceBase::setOptional(const AnyReference& opt)
+  {
+    if (opt.kind() != TypeKind_Optional)
+      throw std::runtime_error("Cannot set optional from argument: argument is not an Optional");
+    if (kind() != TypeKind_Optional)
+      throw std::runtime_error("Cannot set optional from argument: object is not an Optional");
+
+    const auto argType = static_cast<OptionalTypeInterface*>(opt._type);
+    const auto thisType = static_cast<OptionalTypeInterface*>(_type);
+
+    if (!argType->hasValue(opt._value))
+    {
+      // When argument optional has no value, we might not know what its real value type is (when
+      // for instance its type is dynamic), which means that we cannot know for sure that the
+      // argument value type would have been convertible to this object value type.
+      // The signature conversion check returns zero when conversion cannot be ensured.
+      if (argType->valueType()->signature().isConvertibleTo(thisType->valueType()->signature()) ==
+          0.f)
+      {
+        throw std::runtime_error(
+            "Cannot set optional from argument: argument has no value and its signature is not "
+            "convertible to the object signature");
+      }
+
+      // Otherwise, we accept that if it had a value it would have been convertible in any cases.
+      thisType->reset(&_value);
+    }
+    else
+    {
+      setOptionalValueReference(thisType, _value, [&](AnyReference& optValueRef){
+        optValueRef.update(argType->value(opt._value));
+      });
+    }
   }
 
   void AnyReferenceBase::setRaw(const char *buffer, size_t size) {
@@ -1426,6 +1530,15 @@ namespace detail
     stype->set(&_value, vals);
   }
 
+  void AnyReferenceBase::resetOptional()
+  {
+    if (kind() != TypeKind_Optional)
+      throw std::runtime_error("Value is not an optional");
+
+    const auto optType = static_cast<OptionalTypeInterface*>(_type);
+    optType->reset(&_value);
+  }
+
   size_t AnyReferenceBase::size() const
   {
     if (kind() == TypeKind_List || kind() == TypeKind_VarArgs)
@@ -1438,6 +1551,12 @@ namespace detail
       throw std::runtime_error("Expected List, Map or Tuple.");
   }
 
+  bool AnyReferenceBase::optionalHasValue() const
+  {
+    if (kind() != TypeKind_Optional)
+      throw std::runtime_error("Expected Optional.");
+    return static_cast<OptionalTypeInterface*>(_type)->hasValue(_value);
+  }
 
   AnyReference AnyReferenceBase::content() const
   {
@@ -1447,8 +1566,10 @@ namespace detail
       return static_cast<IteratorTypeInterface*>(_type)->dereference(_value);
     else if (kind() == TypeKind_Dynamic)
       return static_cast<DynamicTypeInterface*>(_type)->get(_value);
+    else if (kind() == TypeKind_Optional)
+      return static_cast<OptionalTypeInterface*>(_type)->value(_value);
     else
-      throw std::runtime_error("Expected pointer, dynamic or iterator");
+      throw std::runtime_error("Expected pointer, dynamic, iterator or optional");
   }
 
   AnyReference AnyReferenceBase::operator*() const

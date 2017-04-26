@@ -25,6 +25,7 @@ namespace qi
   class MapTypeInterface;
   class StructTypeInterface;
   class DynamicTypeInterface;
+  class OptionalTypeInterface;
 
   class AutoAnyReference;
 
@@ -69,6 +70,7 @@ namespace qi
     TypeKind_Signal   = 15,
     TypeKind_Property = 16,
     TypeKind_VarArgs  = 17,
+    TypeKind_Optional = 18,
   };
 
 }

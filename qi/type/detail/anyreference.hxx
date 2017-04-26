@@ -7,6 +7,8 @@
 #ifndef _QI_TYPE_DETAIL_ANYREFERENCE_HXX_
 #define _QI_TYPE_DETAIL_ANYREFERENCE_HXX_
 
+#include <qi/type/detail/anyreference.hpp>
+
 namespace qi
 {
 
@@ -200,6 +202,12 @@ inline std::map<K, V> AnyReferenceBase::toMap() const
   return to<std::map<K, V> >();
 }
 
+template <typename T>
+inline boost::optional<T> AnyReferenceBase::toOptional() const
+{
+  return to<boost::optional<T>>();
+}
+
 inline AnyReferenceVector AnyReferenceBase::asListValuePtr()
 {
   return asTupleValuePtr();
@@ -209,7 +217,7 @@ template<typename T>
 void AnyReferenceBase::set(const T& v)
 {
   update(AnyReferenceBase::from(v));
- }
+}
 
 inline void AnyReferenceBase::setFloat(float v)
 {

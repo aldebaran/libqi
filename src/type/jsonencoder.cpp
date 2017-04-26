@@ -314,6 +314,18 @@ namespace qi {
       out << "\"Error: no serialization for iterator\"";
     }
 
+    void visitOptional(AnyReference value)
+    {
+      if (value.optionalHasValue())
+      {
+        serialize(value.content(), out, jsonPrintOption, indent);
+      }
+      else
+      {
+        out << "null";
+      }
+    }
+
     std::stringstream& out;
     JsonOption jsonPrintOption;
     unsigned int indent;

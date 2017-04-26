@@ -5,86 +5,39 @@
 
 #include <qi/type/detail/type.hpp>
 #include <qi/type/typeinterface.hpp>
+#include <boost/utility/string_ref.hpp>
 
 namespace qi {
 
   namespace detail {
-  static std::string kindToString(TypeKind kind) {
+  static boost::string_ref kindToString(TypeKind kind)
+  {
     switch(kind) {
-    case TypeKind_Void    : {
-      static std::string r("void");
-      return r;
-    }
-    case TypeKind_Int     :{
-      static std::string r("int");
-      return r;
-    }
-    case TypeKind_Float   :{
-      static std::string r("float");
-      return r;
-    }
-    case TypeKind_String  :{
-      static std::string r("string");
-      return r;
-    }
-    case TypeKind_List    :{
-      static std::string r("list");
-      return r;
-    }
-    case TypeKind_Map     :{
-      static std::string r("map");
-      return r;
-    }
-    case TypeKind_Object  :{
-      static std::string r("object");
-      return r;
-    }
-    case TypeKind_Pointer :{
-      static std::string r("pointer");
-      return r;
-    }
-    case TypeKind_Tuple   :{
-      static std::string r("tuple");
-      return r;
-    }
-    case TypeKind_Dynamic :{
-      static std::string r("dynamic");
-      return r;
-    }
-    case TypeKind_Raw     :{
-      static std::string r("raw");
-      return r;
-    }
-    case TypeKind_Unknown :{
-      static std::string r("unknown");
-      return r;
-    }
-    case TypeKind_Iterator:{
-      static std::string r("iterator");
-      return r;
-    }
-    case TypeKind_Function:{
-      static std::string r("function");
-      return r;
-    }
-    case TypeKind_Signal:{
-      static std::string r("signal");
-      return r;
-    }
-    case TypeKind_Property:{
-      static std::string r("property");
-      return r;
-    }
-    case TypeKind_VarArgs:{
-      static std::string r("vargs");
-      return r;
-    }
+    case TypeKind_Void:     return "void";
+    case TypeKind_Int:      return "int";
+    case TypeKind_Float:    return "float";
+    case TypeKind_String:   return "string";
+    case TypeKind_List:     return "list";
+    case TypeKind_Map:      return "map";
+    case TypeKind_Object:   return "object";
+    case TypeKind_Pointer:  return "pointer";
+    case TypeKind_Tuple:    return "tuple";
+    case TypeKind_Dynamic:  return "dynamic";
+    case TypeKind_Raw:      return "raw";
+    case TypeKind_Unknown:  return "unknown";
+    case TypeKind_Iterator: return "iterator";
+    case TypeKind_Function: return "function";
+    case TypeKind_Signal:   return "signal";
+    case TypeKind_Property: return "property";
+    case TypeKind_VarArgs:  return "vargs";
+    case TypeKind_Optional: return "optional";
     }
     return "unhandled";
   }
 
 
- #define PLOUF(OP) throw std::runtime_error(std::string("Operation ") + std::string(#OP) + std::string("not implemented for this kind of type:") + kindToString(kind()))
+#define QI_THROW_OP_NOT_IMPL(OP) throw std::runtime_error("Operation " #OP \
+  "not implemented for this kind of type:" + kindToString(kind()).to_string())
 
 
   AnyType::AnyType(TypeInterface *typeInterface)
@@ -134,7 +87,7 @@ namespace qi {
     default:
       break;
     }
-    PLOUF(className);
+    QI_THROW_OP_NOT_IMPL(className);
   }
 
   //NamedTuple/Tuple/List/Map/Methods/Signal/Properties/pointer/Dynamic/Objects
@@ -162,10 +115,13 @@ namespace qi {
     case TypeKind_Function:
       //TODO
       return ret;
+    case TypeKind_Optional :
+      ret.push_back(AnyType(static_cast<OptionalTypeInterface*>(_type)->valueType()));
+      return ret;
     default:
       break;
     }
-    PLOUF(elements);
+    QI_THROW_OP_NOT_IMPL(elements);
   }
 
   //Struct/Object
@@ -181,7 +137,7 @@ namespace qi {
     default:
       break;
     }
-    PLOUF(members);
+    QI_THROW_OP_NOT_IMPL(members);
   }
 
   //Object
@@ -193,18 +149,18 @@ namespace qi {
     default:
       break;
     }
-    PLOUF(methods);
+    QI_THROW_OP_NOT_IMPL(methods);
   }
 
   FieldInfo       AnyType::method(const uint32_t id) {
     return FieldInfo();
-    PLOUF(method);
+    QI_THROW_OP_NOT_IMPL(method);
   }
 
   FieldInfoVector AnyType::methodOverloads(const std::string& name) {
     FieldInfoVector ret;
     return ret;
-    PLOUF(methodOverloads);
+    QI_THROW_OP_NOT_IMPL(methodOverloads);
   }
 
   FieldInfoVector AnyType::sigs() {
@@ -216,7 +172,7 @@ namespace qi {
     default:
       break;
     }
-    PLOUF(sigs);
+    QI_THROW_OP_NOT_IMPL(sigs);
   }
 
   FieldInfo       AnyType::signal(const uint32_t id) {
@@ -227,7 +183,7 @@ namespace qi {
     default:
       break;
     }
-    PLOUF(signal);
+    QI_THROW_OP_NOT_IMPL(signal);
   }
 
   FieldInfo       AnyType::signal(const std::string& id) {
@@ -238,7 +194,7 @@ namespace qi {
     default:
       break;
     }
-    PLOUF(signal);
+    QI_THROW_OP_NOT_IMPL(signal);
   }
 
 
@@ -251,7 +207,7 @@ namespace qi {
     default:
       break;
     }
-    PLOUF(properties);
+    QI_THROW_OP_NOT_IMPL(properties);
   }
 
   FieldInfo       AnyType::property(const uint32_t id) {
@@ -262,7 +218,7 @@ namespace qi {
     default:
       break;
     }
-    PLOUF(property);
+    QI_THROW_OP_NOT_IMPL(property);
   }
 
   FieldInfo       AnyType::property(const std::string& name) {
@@ -272,7 +228,7 @@ namespace qi {
     default:
       break;
     }
-    PLOUF(property);
+    QI_THROW_OP_NOT_IMPL(property);
   }
 
 
@@ -286,7 +242,7 @@ namespace qi {
     default:
       break;
     }
-    PLOUF(parametersIn);
+    QI_THROW_OP_NOT_IMPL(parametersIn);
   }
 
   FieldInfoVector AnyType::paramsOut() {
@@ -296,7 +252,7 @@ namespace qi {
     default:
       break;
     }
-    PLOUF(parametersOut);
+    QI_THROW_OP_NOT_IMPL(parametersOut);
   }
 
   //List/Map/Pointer/Properties
@@ -309,13 +265,15 @@ namespace qi {
       return AnyType(static_cast<MapTypeInterface*>(_type)->elementType());
     case TypeKind_Pointer :
       return AnyType(static_cast<PointerTypeInterface*>(_type)->pointedType());
+    case TypeKind_Optional :
+      return AnyType(static_cast<OptionalTypeInterface*>(_type)->valueType());
     case TypeKind_Property:
       //TODO
       break;
     default:
       break;
     }
-    PLOUF(element);
+    QI_THROW_OP_NOT_IMPL(element);
   }
 
   //Map
@@ -326,7 +284,7 @@ namespace qi {
     default:
       break;
     }
-    PLOUF(key);
+    QI_THROW_OP_NOT_IMPL(key);
   }
   //NO MORE SUGAR
 
@@ -361,7 +319,7 @@ namespace qi {
       break;
 
     }
-    PLOUF(bits);
+    QI_THROW_OP_NOT_IMPL(bits);
   }
 
   int AnyType::isSigned()
@@ -372,9 +330,10 @@ namespace qi {
     default:
       break;
     }
-    PLOUF(isSigned);
+    QI_THROW_OP_NOT_IMPL(isSigned);
   }
 
-  }
+#undef QI_THROW_OP_NOT_IMPL
 
+  }
 }

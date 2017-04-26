@@ -91,7 +91,16 @@ namespace qi {
     return qi::Signature(res);
   }
 
-#define RET_CALC (1.0f * childErr * ((float)(100 - error)) / 100.0f)
+  qi::Signature makeOptionalSignature(const qi::Signature& value)
+  {
+    const std::string res = [&]() {
+      std::stringstream s;
+      s << static_cast<char>(Signature::Type_Optional) << value.toString();
+      return s.str();
+    }();
+    return qi::Signature(res);
+  }
+
 
   float qi::Signature::isConvertibleTo(const qi::Signature& b) const
   {
@@ -99,8 +108,11 @@ namespace qi {
      * - comparison between integral types
      * - Weaker error score for deeper (in containers) struct.
      */
-    int error = 0;
+    float error = 0.f;
     float childErr = 1.0f;
+    const auto calculateFactor = [&] {
+      return childErr * (1.f - error / 100.f);
+    };
     static const char numeric[] = "bcCwWiIlLfd";
     static const char integral[] = "bcCwWiIlL";
     static const char floating[] = "fd";
@@ -108,51 +120,71 @@ namespace qi {
 
     Signature::Type s = type();
     Signature::Type d = b.type();
+
     //varargs are just vector, handle them that way
     if (s == Type_VarArgs)
       s = Type_List;
     if (d == Type_VarArgs)
       d = Type_List;
     if (d == Type_Void)
-      return RET_CALC;
+      return calculateFactor();
     if (d == Type_Unknown)
     {
       // We cannot anwser the question for unknown types. So let it pass
       // and the conversion code will decide.
       // Type_Unknown is not serializable anyway.
       if (s != Type_Unknown)
-        error += 10; // Weird but can happen with object pointers
-      return RET_CALC;
+        error += 10.f; // Weird but can happen with object pointers
+      return calculateFactor();
     }
 
     if (d == Type_Dynamic || // Dynamic can convert to whatever
         s == Type_None) // None means parent is empty container
     {
-      error += 5; // big malus for dynamic
-      return RET_CALC;
+      error += 5.f; // big malus for dynamic
+      return calculateFactor();
+    }
+
+    // Source is convertible to an optional if source's type is convertible to the destination
+    // optional value type. For instance, int is convertible to optional<int>, but also int is
+    // convertible to optional<dynamic>
+    if (d == Type_Optional)
+    {
+      // If source is also an optional then we are performing a optional to optional conversion.
+      // By design this is allowed if source value type is convertible to dest value type.
+      if (s == Type_Optional)
+        return children()[0].isConvertibleTo(b.children()[0]);
+      return isConvertibleTo(b.children()[0]);
+    }
+    else if (s == Type_Optional)
+    {
+      // The case where dest is dynamic is already handled above, and is the same for optionals:
+      // converting optionals to dynamic is allowed, but converting optionals to anything else is
+      // not.
+      return 0.f;
     }
 
     // Main switch on source sig
     if (strchr(numeric, s))
     { // Numeric
       if (!strchr(numeric, d))
-        return 0;
+        return 0.f;
       // Distance heuristic
       if (strchr(integral, s) && strchr(floating, d))
-        error += 2; // integral->float
+        error += 2.f; // integral->float
       if (strchr(floating, s) && strchr(integral, d))
-        error += 3; // float->integral
+        error += 3.f; // float->integral
       if (s!= 'b' && d == 'b')
-        error += 4; // ->bool
+        error += 4.f; // ->bool
     }
     else if (strchr(container, s))
     { // Container, list or map
       if (d != s)
-        return 0; // Must be same container
+        return 0.f; // Must be same container
       if (children().size() != b.children().size())
       {
         if (s != Type_Tuple)
-          return 0;
+          return 0.f;
         // Special case for same-named tuples that might be compatible
         std::string aSrc = annotation();
         std::string aDst = b.annotation();
@@ -160,22 +192,22 @@ namespace qi {
         // conveniant to have differently named structs
         static bool requireSameName = qi::os::getenv("QI_IGNORE_STRUCT_NAME").empty();
         if (!requireSameName)
-          return (aSrc.empty() || aDst.empty()) ? 0.0f:0.1f;
+          return (aSrc.empty() || aDst.empty()) ? 0.f : 0.1f;
 
         size_t pSrc = aSrc.find_first_of(",");
         size_t pDst = aDst.find_first_of(",");
         if (pSrc == pDst && pSrc != aSrc.npos && !memcmp(aSrc.data(), aDst.data(), pSrc))
           return 0.1f;
 
-        return 0.0f;
+        return 0.f;
       }
       SignatureVector::const_iterator its;
       SignatureVector::const_iterator itd;
       itd = b.children().begin();
       for (its = children().begin(); its != children().end(); ++its, ++itd) {
         float childRes = its->isConvertibleTo(*itd);
-        if (!childRes)
-          return 0; // Just check subtype compatibility
+        if (childRes == 0.f)
+          return 0.f; // Just check subtype compatibility
         // we got this far, if there is an error in child, make it lower
         // [s] -> m should have a greater convertibility than [s] -> [m]
         childErr *= 1.0f - (1.0f - childRes) * 0.95f;
@@ -183,8 +215,8 @@ namespace qi {
       QI_ASSERT(its==children().end() && itd==b.children().end()); // we already exited on size mismatch
     }
     else if (d != s)
-      return 0.0f;
-    return RET_CALC;
+      return 0.f;
+    return calculateFactor();
   }
 
   Signature Signature::fromType(Signature::Type t)
@@ -292,6 +324,7 @@ namespace qi {
         break;
       case qi::Signature::Type_VarArgs:
       case qi::Signature::Type_KwArgs:
+      case qi::Signature::Type_Optional:
         index++;
         index = findNext(signature, index);
         if (index == std::string::npos)
@@ -396,7 +429,9 @@ namespace qi {
         break;
       }
       case qi::Signature::Type_KwArgs:
-      case qi::Signature::Type_VarArgs: {
+      case qi::Signature::Type_VarArgs:
+      case qi::Signature::Type_Optional:
+      {
         int index_should_stop = findNext(signature, index);
         eatChildren(signature, index + 1, index_should_stop, 1);
         break;

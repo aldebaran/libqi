@@ -327,6 +327,26 @@ namespace qi{
     TypeKind kind() override { return TypeKind_VarArgs; }
   };
 
+  /**
+   * Type that either is empty or contains a value.
+   */
+  class QI_API OptionalTypeInterface: public TypeInterface
+  {
+  public:
+    /// Get the type of the optional element
+    virtual TypeInterface* valueType() = 0;
+    /// Return true if the optional has a value, false if not
+    virtual bool hasValue(void* storage) = 0;
+    /// Get the optional value or a default constructed AnyReference if no value is set
+    virtual AnyReference value(void* storage) = 0;
+    /// Set the optional value
+    virtual void set(void** storage, void* valueStorage) = 0;
+    /// Resets the optional value, making the optional empty
+    virtual void reset(void** storage) = 0;
+    TypeKind kind() override { return TypeKind_Optional; }
+  };
+
+
   ///@return a Type of the specified Kind. This do not work for list, map and tuple.
   /// kind Int and Float will create the biggest possible type. use makeFloatType and makeIntType
   /// to be more specific.
@@ -349,6 +369,9 @@ namespace qi{
 
   ///@return a Type of kind Tuple with givent memberTypes
   QI_API TypeInterface* makeTupleType(const std::vector<TypeInterface*>& memberTypes, const std::string &name = std::string(), const std::vector<std::string>& elementNames = std::vector<std::string>());
+
+  ///@return a Type of kind Optional with given value
+  QI_API TypeInterface* makeOptionalType(TypeInterface* valueType);
 
 
 
@@ -413,6 +436,7 @@ namespace detail
 #include <qi/type/detail/structtypeinterface.hxx>
 #include <qi/type/detail/buffertypeinterface.hxx>
 #include <qi/type/detail/dynamictypeinterface.hxx>
+#include <qi/type/detail/optionaltypeinterface.hxx>
 
 QI_NO_TYPE(qi::TypeInterface)
 QI_NO_TYPE(qi::TypeInterface*)

@@ -17,6 +17,7 @@
 #include <qi/type/fwd.hpp>
 #include <qi/type/detail/typeinterface.hpp>
 #include <boost/type_traits/remove_const.hpp>
+#include <boost/optional.hpp>
 
 namespace qi {
 
@@ -82,6 +83,7 @@ public:
   std::pair<AnyReference, bool> convert(StringTypeInterface* targetType) const;
   std::pair<AnyReference, bool> convert(PointerTypeInterface* targetType) const;
   std::pair<AnyReference, bool> convert(DynamicTypeInterface* targetType) const;
+  std::pair<AnyReference, bool> convert(OptionalTypeInterface* targetType) const;
 
   /** Return the typed pointer behind a AnyReference. T *must* be the type
    * of the value.
@@ -158,6 +160,7 @@ public:
   std::map<K, V> toMap() const;
 
   AnyObject  toObject() const;
+  template <typename T> boost::optional<T> toOptional() const;
 
   /** Convert the value to a tuple.
    * If value is currently a tuple, it will be returned.
@@ -249,6 +252,10 @@ public:
   void  setString(const std::string& v);
   void  setDynamic(const AnyReference &value);
 
+  /// Sets the value of the optional. A copy will be made.
+  /// @throw std::runtime_error if either kind of `this` or kind of `opt` is not Optional
+  void  setOptional(const AnyReference& opt);
+
   /// set the value of the raw buffer, a copy will be made.
   /// @throw std::runtime_error when kind is not Raw
   void  setRaw(const char *buffer, size_t size);
@@ -256,6 +263,10 @@ public:
   /// set the values of the tuple. A copy will be made.
   /// @throw std::runtime_error when kind is not Tuple
   void  setTuple(const AnyReferenceVector& values);
+
+  /// Resets the value of the optional.
+  /// @throw std::runtime_error if kind of `this` is not Optional
+  void resetOptional();
 
   ///@{
   /// In-place container manipulation.
@@ -294,6 +305,11 @@ public:
 
   size_t size() const;
 
+  /// Returns true if the optional has a value.
+  /// @throw std::runtime_error if kind of `this` is not Optional
+  bool optionalHasValue() const;
+
+
   //TODO: use AutoAnyReference
   template<typename T>
   void append(const T& element);
@@ -325,6 +341,23 @@ public:
   /// @return list of tuple elements type, or throw if not a tuple
   std::vector<TypeInterface*> membersType() const;
   void* rawValue() const { return _value; }
+
+  /// This function will set an optional value by passing a reference (as an `AnyReference`) to that
+  /// value to a procedure `setValue` which must assign a value to it. It will handle the case
+  /// where the optional has no value yet by creating one, setting it and then inserting it into
+  /// the optional.
+  ///
+  /// Preconditions: type != nullptr && value != nullptr
+  ///
+  /// Procedure<void (AnyReference&)> Proc
+  template<typename Proc>
+  friend void setOptionalValueReference(OptionalTypeInterface* type, void* value, Proc setValue);
+
+  /// Overload that takes an AnyReference. It will do nothing if kind of `optRef` is not Optional.
+  ///
+  /// Procedure<void (AnyReference&)> Proc
+  template<typename Proc>
+  friend void setOptionalValueReference(AnyReference optRef, Proc setValue);
 
 protected:
   TypeInterface* _type;
@@ -411,7 +444,7 @@ public:
 } // namespace qi
 
 #include <qi/type/detail/anyreference.hxx>
-
+#include <qi/type/detail/anyreferenceoptional.hxx>
 #include <qi/type/typeinterface.hpp>
 
 /* Since AnyReference does not handle its memory, it cannot be used

@@ -618,7 +618,6 @@ TEST(Value, Convert_ListToMap)
   ASSERT_FALSE(res2.first.type());
 }
 
-
 struct EasyStruct
 {
   int x;
@@ -644,6 +643,11 @@ struct Foo
 {
   std::string str;
   double dbl;
+
+  friend bool operator<(const Foo& a, const Foo&b)
+  {
+    return std::make_tuple(a.str, a.dbl) < std::make_tuple(b.str, b.dbl);
+  }
 };
 
 struct Oof
@@ -896,9 +900,23 @@ struct ConvertWithTypes: ::testing::Test {
   using Type = T;
 };
 
-using Types = ::testing::Types<
-    int, float, double, std::string, std::vector<int>, std::map<int, int>,
-    Foo, Foo*, void*, qi::AnyValue, qi::AnyObject>;
+using Types = ::testing::Types<int,
+                               float,
+                               double,
+                               std::string,
+                               std::vector<int>,
+                               std::map<int, int>,
+                               Foo,
+                               Foo*,
+                               void*,
+                               qi::AnyValue,
+                               qi::AnyObject,
+                               boost::optional<int>,
+                               boost::optional<double>,
+                               boost::optional<std::string>,
+                               boost::optional<std::vector<int>>,
+                               boost::optional<std::map<int, int>>,
+                               boost::optional<Foo>>;
 
 TYPED_TEST_CASE(ConvertWithTypes, Types);
 
@@ -920,4 +938,215 @@ TYPED_TEST(ConvertWithTypes, convertReferenceFromInvalidToOtherTypeInterfaceIsSa
 {
   qi::AnyReference::from(qi::AnyValue{}).convert(qi::typeOf<typename TestFixture::Type>());
   // depending on the type, the result may be invalid or not, let's not test the result
+}
+
+using boost::make_optional;
+
+TEST(Value, OptionalSetResetState)
+{
+  AnyValue v{ boost::optional<int>{} };
+  EXPECT_FALSE(v.optionalHasValue());
+  v.set(make_optional(42));
+  EXPECT_TRUE(v.optionalHasValue());
+  v.resetOptional();
+  EXPECT_FALSE(v.optionalHasValue());
+}
+
+TEST(Value, OptionalSetInvalidTypeToUnsetOptionalDoesNotSetIt)
+{
+  AnyValue v{ boost::optional<int>{} };
+  EXPECT_FALSE(v.optionalHasValue());
+  EXPECT_THROW(v.set(make_optional<std::string>("sarah connor ?")), std::exception);
+  EXPECT_FALSE(v.optionalHasValue());
+}
+
+TEST(Value, OptionalInt)
+{
+  AnyValue v{ boost::optional<int>{42} };
+  ASSERT_TRUE(v.optionalHasValue());
+  EXPECT_EQ(42, v.content().toInt());
+
+  // different type of integer is allowed
+  v.set(make_optional(static_cast<unsigned short>(4323)));
+  ASSERT_TRUE(v.optionalHasValue());
+  EXPECT_EQ(4323, v.content().toInt());
+
+  // as long as it fits
+  EXPECT_THROW(v.set(0x100000000), std::exception);
+
+  // conversion from double is allowed
+  v.set(make_optional(33.2));
+  ASSERT_TRUE(v.optionalHasValue());
+  EXPECT_EQ(33, v.content().toInt()); // result is rounded
+
+  // optional of same type is allowed
+  v.set(make_optional(51));
+  ASSERT_TRUE(v.optionalHasValue());
+  EXPECT_EQ(51, v.content().toInt());
+
+  // conversion from a totally different type is not allowed
+  EXPECT_THROW(v.set(make_optional<std::string>("foo")), std::exception);
+
+  // it did not affect the value
+  ASSERT_TRUE(v.optionalHasValue());
+  EXPECT_EQ(51, v.content().toInt());
+}
+
+TEST(Value, OptionalDouble)
+{
+  AnyValue v{ boost::optional<double>{3.14} };
+  ASSERT_TRUE(v.optionalHasValue());
+  EXPECT_DOUBLE_EQ(3.14, v.content().toDouble());
+
+  // conversion from float is allowed
+  v.set(make_optional(8.94f));
+  ASSERT_TRUE(v.optionalHasValue());
+  EXPECT_DOUBLE_EQ(static_cast<double>(8.94f), v.content().toDouble());
+
+  // conversion from int is allowed
+  v.set(make_optional(67));
+  ASSERT_TRUE(v.optionalHasValue());
+  EXPECT_DOUBLE_EQ(67., v.content().toDouble());
+
+  // conversion from a totally different type is not allowed
+  EXPECT_THROW(v.set(make_optional<std::string>("cupcakes")), std::exception);
+
+  // it did not affect the value
+  ASSERT_TRUE(v.optionalHasValue());
+  EXPECT_DOUBLE_EQ(67., v.content().toDouble());
+}
+
+TEST(Value, OptionalBool)
+{
+  AnyValue v{ boost::optional<bool>{true} };
+  ASSERT_TRUE(v.optionalHasValue());
+  EXPECT_TRUE(v.content().to<bool>());
+
+  v.set(make_optional(false));
+  ASSERT_TRUE(v.optionalHasValue());
+  EXPECT_FALSE(v.content().to<bool>());
+
+  // optional with a different type of int is not allowed
+  EXPECT_THROW(v.set(make_optional(1337)), std::exception);
+
+  // conversion from a totally different type is not allowed
+  EXPECT_THROW(v.set(make_optional(67)), std::exception);
+  EXPECT_THROW(v.set(make_optional(33.2)), std::exception);
+  EXPECT_THROW(v.set(make_optional<std::string>("cookies")), std::exception);
+
+  // it did not affect the value
+  ASSERT_TRUE(v.optionalHasValue());
+  EXPECT_FALSE(v.content().to<bool>());
+}
+
+TEST(Value, OptionalString)
+{
+  AnyValue v{ boost::optional<std::string>{"foo"} };
+  ASSERT_TRUE(v.optionalHasValue());
+  EXPECT_EQ("foo", v.content().toString());
+
+  v.set(make_optional<std::string>("lolcats"));
+  ASSERT_TRUE(v.optionalHasValue());
+  EXPECT_EQ("lolcats", v.content().toString());
+
+  // conversion from a totally different type is not allowed
+  EXPECT_THROW(v.set(make_optional(67)), std::exception);
+  EXPECT_THROW(v.set(make_optional(33.2)), std::exception);
+
+  // it did not affect the value
+  ASSERT_TRUE(v.optionalHasValue());
+  EXPECT_EQ("lolcats", v.content().toString());
+}
+
+TEST(Value, OptionalList)
+{
+  AnyValue v{ boost::optional<std::vector<int>>{{1, 1, 2, 3, 5}} };
+  ASSERT_TRUE(v.optionalHasValue());
+  EXPECT_EQ(5u, v.content().size());
+  EXPECT_EQ(3, v.content().element<int>(3));
+
+  v.content().append(8);
+  ASSERT_TRUE(v.optionalHasValue());
+  EXPECT_EQ(6u, v.content().size());
+  EXPECT_EQ(8, v.content().element<int>(5));
+
+  // conversion from a totally different type is not allowed
+  EXPECT_THROW(v.set(make_optional(67)), std::exception);
+  EXPECT_THROW(v.set(make_optional(33.2)), std::exception);
+  EXPECT_THROW(v.set(make_optional<std::string>("muffins")), std::exception);
+
+  // it did not affect the value
+  ASSERT_TRUE(v.optionalHasValue());
+
+  // can be converted to list
+  const std::vector<int> expected{1, 1, 2, 3, 5, 8};
+  EXPECT_EQ(v.content().toList<int>(), expected);
+}
+
+TEST(Value, OptionalMap)
+{
+  AnyValue v{ boost::optional<std::map<int, std::string>>{
+      { { 1, "one" }, { 3, "three" }, { 42, "the answer" } } } };
+  ASSERT_TRUE(v.optionalHasValue());
+  EXPECT_EQ(3u, v.content().size());
+  EXPECT_EQ("the answer", v.content().element<std::string>(42));
+
+  v.content().insert(8, "31ght");
+  ASSERT_TRUE(v.optionalHasValue());
+  EXPECT_EQ(4u, v.content().size());
+  EXPECT_EQ("31ght", v.content().element<std::string>(8));
+
+  // conversion from a totally different type is not allowed
+  EXPECT_THROW(v.set(make_optional(67)), std::exception);
+  EXPECT_THROW(v.set(make_optional(33.2)), std::exception);
+  EXPECT_THROW(v.set(make_optional<std::string>("donuts")), std::exception);
+
+  // it did not affect the value
+  ASSERT_TRUE(v.optionalHasValue());
+
+  // can be converted to map
+  const auto convertedSize = v.content().toMap<int, std::string>().size();
+  EXPECT_EQ(4u, convertedSize);
+}
+
+TEST(Value, OptionalTuple)
+{
+  AnyValue v{ boost::optional<Foo>{Foo()} };
+  ASSERT_TRUE(v.optionalHasValue());
+  EXPECT_EQ(2u, v.content().size());
+  EXPECT_EQ(2u, v.content().membersType().size());
+
+  AnyReferenceVector refVec;
+  std::string str("cornflakes");
+  refVec.push_back(AutoAnyReference(str)); // has to explicitly be a std::string, a string literal won't do
+  refVec.push_back(AutoAnyReference(6.9847));
+  v.content().setTuple(refVec);
+  EXPECT_EQ(str, v.content().element<std::string>(0));
+
+  Foo foo = v.content().to<Foo>();
+  EXPECT_DOUBLE_EQ(6.9847, foo.dbl);
+  EXPECT_EQ(str, foo.str);
+}
+
+TEST(Value, OptionalToOptional)
+{
+  AnyValue v{ make_optional<std::string>("cupcakes") };
+  ASSERT_TRUE(v.optionalHasValue());
+  EXPECT_EQ("cupcakes", *v.toOptional<std::string>());
+  EXPECT_EQ("cupcakes", *v.to<boost::optional<std::string>>());
+}
+
+TEST(Value, OptionalAnyValue)
+{
+  AnyValue v{ boost::optional<AnyValue>() };
+
+  ASSERT_NO_THROW(v.set(make_optional(AnyValue{ "marshmallows" })));
+  ASSERT_TRUE(v.optionalHasValue());
+  EXPECT_EQ("marshmallows", v.toOptional<AnyValue>()->to<std::string>());
+  EXPECT_ANY_THROW(v.toOptional<std::string>());
+
+  ASSERT_NO_THROW(v.set(make_optional(AnyValue{ 42329 })));
+  ASSERT_TRUE(v.optionalHasValue());
+  EXPECT_EQ(42329, v.toOptional<AnyValue>()->to<int>());
+  EXPECT_ANY_THROW(v.toOptional<std::string>());
 }
