@@ -26,6 +26,25 @@ static std::string reply(const std::string &msg)
   return msg;
 }
 
+static qi::Buffer replyBufBA(const unsigned int&, const qi::Buffer& arg, const int&)
+{
+  return arg;
+}
+static qi::Buffer replyBufB(const int&, const qi::Buffer& arg)
+{
+  std::cerr <<"B " << arg.size() << std::endl;
+  return arg;
+}
+static qi::Buffer replyBufA(const qi::Buffer& arg, const int&)
+{
+  std::cerr <<"A " << arg.size() << std::endl;
+  return arg;
+}
+static qi::Buffer replyBuf(const qi::Buffer& arg)
+{
+  return arg;
+}
+
 static std::string connectionAddr;
 
 class TestConnection
@@ -62,7 +81,52 @@ private:
   qi::Session session;
 };
 
-TEST(QiMessagingConnexion, testSyncSendOneMessage)
+class Connection: public ::testing::Test
+{
+protected:
+  void SetUp() override
+  {
+    session.listenStandalone("tcp://127.0.0.1:0");
+    connectionAddr = session.endpoints()[0].str();
+
+    std::cout << "Service Directory ready." << std::endl;
+    qi::DynamicObjectBuilder ob;
+    ob.advertiseMethod("reply", &reply);
+    ob.advertiseMethod("replyBuf", &replyBuf);
+    ob.advertiseMethod("replyBufA", &replyBufA);
+    ob.advertiseMethod("replyBufB", &replyBufB);
+    ob.advertiseMethod("replyBufBA", &replyBufBA);
+
+    obj = ob.object();
+
+    unsigned int id = session.registerService("serviceTest", obj);
+    std::cout << "serviceTest ready:" << id << std::endl;
+
+  #ifdef WITH_GATEWAY_
+    gate.attachToServiceDirectory(sd.endpoints()[0]);
+    gate.listen(gatewayAddr.str());
+    connectionAddr = gate.endpoints()[0];
+  #endif
+  }
+
+  void TearDown() override
+  {
+    session.close();
+  }
+
+private:
+  qi::Session session;
+  qi::AnyObject obj;
+#ifdef WITH_GATEWAY_
+  static qi::Gateway gate;
+#endif
+};
+
+#ifdef WITH_GATEWAY_
+qi::Gateway Connection::gate = qi::Gateway{};
+#endif
+
+TEST_F(Connection, testSyncSendOneMessage)
 {
   TestConnection tc;
   ASSERT_TRUE(tc.init());
@@ -71,7 +135,7 @@ TEST(QiMessagingConnexion, testSyncSendOneMessage)
   EXPECT_EQ("question", result);
 }
 
-TEST(QiMessagingConnexion, testSyncSendMessages)
+TEST_F(Connection, testSyncSendMessages)
 {
   TestConnection tc;
   ASSERT_TRUE(tc.init());
@@ -84,26 +148,7 @@ TEST(QiMessagingConnexion, testSyncSendMessages)
   EXPECT_EQ("question3", result);
 }
 
-static qi::Buffer replyBufBA(const unsigned int&, const qi::Buffer& arg, const int&)
-{
-  return arg;
-}
-static qi::Buffer replyBufB(const int&, const qi::Buffer& arg)
-{
-  std::cerr <<"B " << arg.size() << std::endl;
-  return arg;
-}
-static qi::Buffer replyBufA(const qi::Buffer& arg, const int&)
-{
-  std::cerr <<"A " << arg.size() << std::endl;
-  return arg;
-}
-static qi::Buffer replyBuf(const qi::Buffer& arg)
-{
-  return arg;
-}
-
-TEST(QiMessagingConnexion, testBuffer)
+TEST_F(Connection, testBuffer)
 {
   TestConnection tc;
   ASSERT_TRUE(tc.init());
@@ -146,39 +191,4 @@ TEST(QiMessagingConnexion, testBuffer)
     qi::decodeBinary(&br, &reply);
     ASSERT_EQ(challenge, reply);
   }
-}
-
-int main(int argc, char **argv) {
-  qi::Application app(argc, argv);
-  ::testing::InitGoogleTest(&argc, argv);
-  qi::Session       session;
-
-  session.listenStandalone("tcp://127.0.0.1:0");
-  connectionAddr = session.endpoints()[0].str();
-
-  std::cout << "Service Directory ready." << std::endl;
-  qi::DynamicObjectBuilder ob;
-  ob.advertiseMethod("reply", &reply);
-  ob.advertiseMethod("replyBuf", &replyBuf);
-  ob.advertiseMethod("replyBufA", &replyBufA);
-  ob.advertiseMethod("replyBufB", &replyBufB);
-  ob.advertiseMethod("replyBufBA", &replyBufBA);
-  qi::AnyObject        obj(ob.object());
-
-  unsigned int id = session.registerService("serviceTest", obj);
-  std::cout << "serviceTest ready:" << id << std::endl;
-
-#ifdef WITH_GATEWAY_
-
-  qi::Gateway gate;
-  gate.attachToServiceDirectory(sd.endpoints()[0]);
-  gate.listen(gatewayAddr.str());
-  connectionAddr = gate.endpoints()[0];
-#endif
-
-  int res = RUN_ALL_TESTS();
-  session.close();
-
-
-  return res;
 }

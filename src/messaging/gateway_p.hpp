@@ -16,7 +16,7 @@
 #include <mutex>
 
 #include "message.hpp"
-#include "transportsocket.hpp"
+#include "messagesocket.hpp"
 #include "authprovider_p.hpp"
 #include "transportsocketcache.hpp"
 #include "gwsdclient.hpp"
@@ -35,14 +35,14 @@ namespace qi
 struct ClientInfo
 {
   ClientMessageId id;
-  TransportSocketPtr socket;
+  MessageSocketPtr socket;
 };
 
 struct MessageInfo
 {
   ClientMessageId clientId;
   Message message;
-  TransportSocketPtr target;
+  MessageSocketPtr target;
 };
 
 class GwTransaction
@@ -50,7 +50,6 @@ class GwTransaction
 public:
   GwTransaction(const Message& msg)
     : content(msg)
-    , _destination(TransportSocketPtr())
     , _originalObjectId(msg.object())
     , _originalServiceId(msg.service())
   {
@@ -64,9 +63,9 @@ public:
   }
   Message content;
 
-  void forceDestination(TransportSocketPtr dest);
-  void setDestinationIfNull(TransportSocketPtr dest);
-  TransportSocketPtr destination()
+  void forceDestination(MessageSocketPtr dest);
+  void setDestinationIfNull(MessageSocketPtr dest);
+  MessageSocketPtr destination()
   {
     return _destination;
   }
@@ -80,7 +79,7 @@ public:
   }
 
 private:
-  TransportSocketPtr _destination;
+  MessageSocketPtr _destination;
   ObjectId _originalObjectId;
   ServiceId _originalServiceId;
 };
@@ -103,65 +102,65 @@ public:
   Future<void> connect(const Url& sdUrl);
 
 private:
-  TransportSocketPtr safeGetService(ServiceId id);
+  MessageSocketPtr safeGetService(ServiceId id);
 
   void onServerAcceptError(int err);
 
-  void onClientConnection(TransportSocketPtr socket);
-  void onLocalClientConnection(TransportSocketPtr socket);
+  void onClientConnection(const std::pair<MessageSocketPtr, Url>& socketUrl);
+  void onLocalClientConnection(const std::pair<MessageSocketPtr, Url>& socketUrl);
   void onSdServiceAdded(ServiceId id, const std::string& name);
   void onSdServiceRemoved(ServiceId id);
   void onSdConnected(Future<void> fut, Promise<void> prom);
-  void onClientDisconnected(TransportSocketPtr socket, std::string url, const std::string& reason);
+  void onClientDisconnected(MessageSocketPtr socket, std::string url, const std::string& reason);
   void serviceDisconnected(ServiceId sid);
-  void onServiceDirectoryDisconnected(TransportSocketPtr socket, const std::string& reason);
+  void onServiceDirectoryDisconnected(MessageSocketPtr socket, const std::string& reason);
 
   void firstServiceMessage(const Message& capMessage,
-                           TransportSocketPtr service,
+                           MessageSocketPtr service,
                            ServiceId sid,
                            SignalSubscriberPtr sub);
-  void firstClientMessage(const Message& capMessage, TransportSocketPtr socket, SignalSubscriberPtr sub);
+  void firstClientMessage(const Message& capMessage, MessageSocketPtr socket, SignalSubscriberPtr sub);
   void clientAuthenticationMessages(const Message& capMessage,
-                                    TransportSocketPtr socket,
+                                    MessageSocketPtr socket,
                                     AuthProviderPtr auth,
                                     boost::shared_ptr<bool> firstMessage,
                                     SignalSubscriberPtr sub);
-  void localClientSkipAuthMessage(const Message& capMsg, TransportSocketPtr socket, SignalSubscriberPtr sub);
-  void startServiceAuthentication(TransportSocketPtr serviceSocket, ServiceId sid);
+  void localClientSkipAuthMessage(const Message& capMsg, MessageSocketPtr socket, SignalSubscriberPtr sub);
+  void startServiceAuthentication(MessageSocketPtr serviceSocket, ServiceId sid);
   void serviceAuthenticationMessages(const Message& msg,
-                                     TransportSocketPtr service,
+                                     MessageSocketPtr service,
                                      ServiceId sid,
                                      ClientAuthenticatorPtr authenticator,
                                      SignalSubscriberPtr sub);
 
-  void serviceUnavailable(ServiceId service, const Message& subject, TransportSocketPtr client);
+  void serviceUnavailable(ServiceId service, const Message& subject, MessageSocketPtr client);
   void forwardMessage(ClientMessageId origId,
                       const Message& forward,
-                      TransportSocketPtr client,
-                      TransportSocketPtr destination);
-  void forwardPostMessage(GwTransaction& t, TransportSocketPtr origin);
-  GWMessageId handleCallMessage(GwTransaction& msg, TransportSocketPtr origin, TransportSocketPtr destination = {});
+                      MessageSocketPtr client,
+                      MessageSocketPtr destination);
+  void forwardPostMessage(GwTransaction& t, MessageSocketPtr origin);
+  GWMessageId handleCallMessage(GwTransaction& msg, MessageSocketPtr origin, MessageSocketPtr destination = {});
   void handleReplyMessage(GwTransaction& msg);
-  void handleEventMessage(GwTransaction& msg, TransportSocketPtr socket);
+  void handleEventMessage(GwTransaction& msg, MessageSocketPtr socket);
 
-  void onAnyMessageReady(const Message& msg, TransportSocketPtr socket);
-  void onServiceDirectoryMessageReady(const Message& msg, TransportSocketPtr socket);
+  void onAnyMessageReady(const Message& msg, MessageSocketPtr socket);
+  void onServiceDirectoryMessageReady(const Message& msg, MessageSocketPtr socket);
 
-  void registerEventListenerCall(GwTransaction& msg, TransportSocketPtr origin);
-  void registerEventListenerReply(GwTransaction& msg, TransportSocketPtr origin);
-  void unregisterEventListenerCall(GwTransaction& msg, TransportSocketPtr origin);
+  void registerEventListenerCall(GwTransaction& msg, MessageSocketPtr origin);
+  void registerEventListenerReply(GwTransaction& msg, MessageSocketPtr origin);
+  void unregisterEventListenerCall(GwTransaction& msg, MessageSocketPtr origin);
   Future<void> unregisterServiceFromSD(ServiceId sid);
   void invalidateClientsMessages(ServiceId sid);
   void forgeServiceInfo(ServiceInfo&);
 
   void sdConnectionRetry(const Url& sdUrl, qi::Duration lastTimer);
   void localServiceRegistration(Future<ServiceInfo> serviceInfo, ServiceId targetService);
-  void localServiceRegistrationCont(Future<TransportSocketPtr> fut, ServiceId sid);
-  void localServiceRegistrationEnd(TransportSocketPtr socket, ServiceId sid);
+  void localServiceRegistrationCont(Future<MessageSocketPtr> fut, ServiceId sid);
+  void localServiceRegistrationEnd(MessageSocketPtr socket, ServiceId sid);
 
   void updateEndpoints(const Url& url);
 
-  void reportProcessingFailure(const Message& processedMessage, TransportSocketPtr source, std::string messageText);
+  void reportProcessingFailure(const Message& processedMessage, MessageSocketPtr source, std::string messageText);
 
   bool _enforceAuth;
 
@@ -179,9 +178,9 @@ private:
   qi::PeriodicTask _updateEndpointsTask;
   TransportSocketCache _socketCache;
 
-  std::vector<TransportSocketPtr> _clients;
-  boost::mutex _clientsMutex;
-  std::map<ServiceId, TransportSocketPtr> _services;
+  std::vector<MessageSocketPtr> _clients;
+  boost::recursive_mutex _clientsMutex;
+  std::map<ServiceId, MessageSocketPtr> _services;
   std::map<ServiceId, std::string> _sdAvailableServices;
   boost::recursive_mutex _serviceMutex;
   GwSDClient _sdClient;
@@ -202,8 +201,8 @@ private:
   PendingMessagesMap _pendingMessages;
   boost::mutex _pendingMsgMutex;
 
-  using EventSubscriberEndpoint = TransportSocketPtr;
-  using EventHostEndpoint = TransportSocketPtr;
+  using EventSubscriberEndpoint = MessageSocketPtr;
+  using EventHostEndpoint = MessageSocketPtr;
   struct EventAddress
   {
     ServiceId serviceId;
@@ -240,6 +239,12 @@ private:
   ClientAuthenticatorFactoryPtr _clientAuthenticatorFactory;
   qi::Future<void> _retryFut;
   Atomic<bool> _dying;
+
+  std::vector<std::function<void()>> _signalDisconnections;
+  boost::mutex _signalDisconnectionsMutex;
+
+
+  void disconnectSDSignalsCallback();
 };
 }
 

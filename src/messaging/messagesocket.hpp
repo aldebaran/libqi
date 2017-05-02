@@ -1,14 +1,10 @@
 #pragma once
-/*
-**  Copyright (C) 2012 Aldebaran Robotics
-**  See COPYING for the license
-*/
-
-#ifndef _SRC_TRANSPORTSOCKET_HPP_
-#define _SRC_TRANSPORTSOCKET_HPP_
+#ifndef _SRC_MESSAGESOCKET_HPP_
+#define _SRC_MESSAGESOCKET_HPP_
 
 # include <boost/noncopyable.hpp>
 # include <boost/variant.hpp>
+# include <boost/optional.hpp>
 # include <qi/future.hpp>
 # include "message.hpp"
 # include <qi/url.hpp>
@@ -32,12 +28,19 @@ QI_TYPE_CONCRETE(boost::variant<std::string QI_COMMA qi::Message>);
 
 namespace qi
 {
+  inline boost::asio::io_service* asIoServicePtr(EventLoop* e)
+  {
+    return static_cast<boost::asio::io_service*>(e->nativeHandle());
+  }
+
   class Session;
 
-  class TransportSocket : private boost::noncopyable, public StreamContext
+  class MessageSocket : private boost::noncopyable, public StreamContext
   {
   public:
-    virtual ~TransportSocket();
+    virtual ~MessageSocket();
+
+    // Do not change the values because TcpMessageSocket::status() relies on it.
     enum class Status {
       Disconnected  = 0,
       Connecting    = 1,
@@ -49,9 +52,8 @@ namespace qi
       Event_Message = 1,
     };
 
-    explicit TransportSocket(qi::EventLoop* eventLoop = qi::getEventLoop())
-      : _eventLoop(NULL)
-      , _err(0)
+    explicit MessageSocket(qi::EventLoop* eventLoop = qi::getEventLoop())
+      : _eventLoop(eventLoop)
       , _status(Status::Disconnected)
     {
       connected.setCallType(MetaCallType_Direct);
@@ -64,28 +66,17 @@ namespace qi
     virtual qi::FutureSync<void> disconnect()                = 0;
 
     virtual bool send(const qi::Message &msg)                = 0;
+
+    /// Start reading if is not already reading.
     /// Must be called once if the socket is obtained through TransportServer::newConnection()
-    virtual void  startReading() = 0;
+    virtual bool  ensureReading() = 0;
 
-    virtual qi::Url remoteEndpoint() const = 0;
+    virtual Status status() const = 0;
+    virtual boost::optional<qi::Url> remoteEndpoint() const = 0;
 
-    qi::Url url() const {
-      return _url;
-    }
+    virtual qi::Url url() const = 0;
 
-    Status status() const {
-      return _status;
-    }
-
-    int error() const
-    {
-      return _err;
-    }
-
-    bool isConnected() const
-    {
-      return _status == qi::TransportSocket::Status::Connected;
-    }
+    virtual bool isConnected() const;
 
     static const unsigned int ALL_OBJECTS = (unsigned int)-1;
 
@@ -93,18 +84,15 @@ namespace qi
       return _dispatcher.messagePendingConnect(serviceId, objectId, fun);
     }
 
-    bool                 messagePendingDisconnect(unsigned int serviceId, unsigned int objectId, qi::SignalLink linkId) {
+    bool messagePendingDisconnect(unsigned int serviceId, unsigned int objectId, qi::SignalLink linkId) {
       return _dispatcher.messagePendingDisconnect(serviceId, objectId, linkId);
     }
 
   protected:
-    qi::EventLoop*          _eventLoop;
-    qi::MessageDispatcher   _dispatcher;
+    qi::EventLoop* _eventLoop;
+    qi::MessageDispatcher _dispatcher;
 
-    int                     _err;
-    TransportSocket::Status _status;
-    qi::Url                 _url;
-
+    std::atomic<MessageSocket::Status> _status;
   public:
     // C4251
     qi::Signal<>                   connected;
@@ -117,10 +105,8 @@ namespace qi
     qi::Signal<SocketEventData>  socketEvent;
   };
 
-  using TransportSocketPtr = boost::shared_ptr<TransportSocket>;
-
-  TransportSocketPtr makeTransportSocket(const std::string &protocol, qi::EventLoop *eventLoop = getEventLoop());
-
+  using MessageSocketPtr = boost::shared_ptr<MessageSocket>;
+  MessageSocketPtr makeMessageSocket(const std::string &protocol, qi::EventLoop *eventLoop = getEventLoop());
 }
 
-#endif  // _SRC_TRANSPORTSOCKET_HPP_
+#endif  // _SRC_MESSAGESOCKET_HPP_

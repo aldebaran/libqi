@@ -7,6 +7,12 @@
 #include <qi/application.hpp>
 #include <qi/log.hpp>
 #include <qi/session.hpp>
+#include <qi/testutils/testutils.hpp>
+
+extern std::string simpleSdPath;
+extern std::string mirrorSdPath;
+
+qiLogCategory("TestSD");
 
 TEST(ServiceDirectory, DoubleListen)
 {
@@ -25,11 +31,14 @@ TEST(ServiceDirectory, DoubleListen)
 
 struct Serv
 {
+  static const int response;
   int f()
   {
-    return 4242;
+    return response;
   }
 };
+const int Serv::response = 4242;
+
 QI_REGISTER_OBJECT(Serv, f);
 
 TEST(ServiceDirectory, MultiRegister)
@@ -46,12 +55,12 @@ TEST(ServiceDirectory, MultiRegister)
   {
     qi::Session client;
     client.connect(sd1.url());
-    ASSERT_EQ(4242, client.service("Serv").value().call<int>("f"));
+    ASSERT_EQ(Serv::response, client.service("Serv").value().call<int>("f"));
   }
   {
     qi::Session client;
     client.connect(sd2.url());
-    ASSERT_EQ(4242, client.service("Serv").value().call<int>("f"));
+    ASSERT_EQ(Serv::response, client.service("Serv").value().call<int>("f"));
   }
 }
 
@@ -67,24 +76,133 @@ TEST(ServiceDirectory, Republish)
 
   sd2.registerService("Serv", sd1.service("Serv"));
 
-  ASSERT_EQ(4242, sd1.service("Serv").value().call<int>("f"));
-  ASSERT_EQ(4242, sd2.service("Serv").value().call<int>("f"));
+  ASSERT_EQ(Serv::response, sd1.service("Serv").value().call<int>("f"));
+  ASSERT_EQ(Serv::response, sd2.service("Serv").value().call<int>("f"));
   {
     qi::Session client;
     client.connect(sd1.url());
-    ASSERT_EQ(4242, client.service("Serv").value().call<int>("f"));
+    ASSERT_EQ(Serv::response, client.service("Serv").value().call<int>("f"));
   }
   {
     qi::Session client;
     client.connect(sd2.url());
-    ASSERT_EQ(4242, client.service("Serv").value().call<int>("f"));
+    ASSERT_EQ(Serv::response, client.service("Serv").value().call<int>("f"));
   }
 }
 
-int main(int argc, char **argv) {
-  qi::Application app(argc, argv);
-  ::testing::InitGoogleTest(&argc, argv);
-
-  return RUN_ALL_TESTS();
+TEST(ServiceDirectory, ServiceEndpointMatchesServiceDirectorys)
+{
+  auto session = qi::makeSession();
+  session->listenStandalone("tcp://127.0.0.1:0");
+  session->registerService("Service", boost::make_shared<Serv>());
+  auto serviceInfo = session->services().value().back();
+  ASSERT_EQ(session->endpoints(), serviceInfo.endpoints());
 }
 
+TEST(ServiceDirectory, ReRegisterRemoteServiceRenewEndpoints)
+{
+  auto session1 = qi::makeSession();
+  auto session2 = qi::makeSession();
+  session1->listenStandalone("tcp://127.0.0.1:0");
+  session2->listenStandalone("tcp://127.0.0.1:0");
+  session1->registerService("Service", boost::make_shared<Serv>());
+  auto serviceInfo1 = session1->services().value().back();
+  auto remoteService = session1->service("Service").value();
+  session2->registerService("Service", remoteService);
+  auto serviceInfo2 = session2->services().value().back();
+  ASSERT_NE(serviceInfo1.endpoints(), serviceInfo2.endpoints());
+  ASSERT_NE(session1->endpoints(), serviceInfo2.endpoints());
+  ASSERT_EQ(session2->endpoints(), serviceInfo2.endpoints());
+}
+
+TEST(ServiceDirectory, CallMessagesAreProperlyDispatched)
+{
+  auto session1 = qi::makeSession();
+  auto session2 = qi::makeSession();
+  session1->listenStandalone("tcp://127.0.0.1:0");
+  session2->listenStandalone("tcp://127.0.0.1:0");
+
+  // Dummy services are registered to offset the indexes, so that they
+  // cannot match by chance between the two service directories
+  auto originalService = boost::make_shared<Serv>();
+  session2->registerService("A", boost::make_shared<Serv>());
+  session2->registerService("B", boost::make_shared<Serv>());
+  session2->registerService("C", boost::make_shared<Serv>());
+  session1->registerService("Service", originalService);
+
+  auto remoteService = session1->service("Service").value();
+  session2->registerService("Service", remoteService);
+
+  auto remoteRemoteService = session2->service("Service").value();
+  ASSERT_EQ(Serv::response, remoteRemoteService.call<int>("f"));
+}
+
+TEST(ServiceDirectory, RegisterServiceFromNonListeningSessionAndCallThroughAnIntermediate)
+{
+  auto sessionMainServer = qi::makeSession();
+  auto sessionMainClient = qi::makeSession();
+  auto sessionSecondaryFromMain = qi::makeSession();
+  auto sessionSecondaryServer = qi::makeSession();
+  auto sessionSecondaryClient = qi::makeSession();
+
+  sessionMainServer->listenStandalone("tcp://127.0.0.1:0");
+  sessionSecondaryServer->listenStandalone("tcp://127.0.0.1:0");
+  sessionMainClient->connect(sessionMainServer->endpoints()[0]);
+  sessionSecondaryFromMain->connect(sessionMainServer->endpoints()[0]);
+  sessionSecondaryClient->connect(sessionSecondaryServer->endpoints()[0]);
+
+  // Dummy services are registered to offset the indexes, so that they
+  // cannot match by chance between the two service directories
+  sessionMainServer->registerService("A", boost::make_shared<Serv>());
+  sessionMainServer->registerService("B", boost::make_shared<Serv>());
+  sessionMainServer->registerService("C", boost::make_shared<Serv>());
+
+  auto originalService = boost::make_shared<Serv>();
+  sessionMainClient->registerService("Service", originalService);
+
+  auto remoteService = sessionSecondaryFromMain->service("Service").value();
+  sessionSecondaryServer->registerService("Service", remoteService);
+
+  auto remoteRemoteService = sessionSecondaryClient->service("Service").value();
+  ASSERT_EQ(Serv::response, remoteRemoteService.call<int>("f"));
+}
+
+TEST(ServiceDirectory, MirrorServicesBetweenProcesses)
+{
+  ScopedProcess mainSd{simpleSdPath, {"--qi-listen-url=tcp://127.0.0.1:54321", "--qi-standalone"}};
+  auto mainClient = qi::makeSession();
+  for (int i = 0; i < 20; ++i)
+  {
+    qi::os::msleep(50);
+    try
+    {
+      mainClient->connect("tcp://127.0.0.1:54321");
+      break;
+    }
+    catch (const std::exception& e)
+    {
+      qiLogInfo() << "Main Service Directory is not ready yet (" << e.what() << ")";
+    }
+  }
+  ASSERT_TRUE(mainClient->isConnected());
+  mainClient->registerService("Service", boost::make_shared<Serv>());
+
+  auto secondaryClient = qi::makeSession();
+  ScopedProcess secondarySd{mirrorSdPath, {"--qi-url=tcp://127.0.0.1:54321", "--qi-listen-url=tcp://127.0.0.1:65432"}};
+  for (int i = 0; i < 20; ++i)
+  {
+    qi::os::msleep(50);
+    try
+    {
+      secondaryClient->connect("tcp://127.0.0.1:65432");
+      break;
+    }
+    catch (const std::exception& e)
+    {
+      qiLogInfo() << "Secondary Service Directory is not ready yet (" << e.what() << ")";
+    }
+  }
+  secondaryClient->waitForService("Service").value(200);
+  auto service = secondaryClient->service("Service").value(200);
+  ASSERT_EQ(Serv::response, service.call<int>("f"));
+}

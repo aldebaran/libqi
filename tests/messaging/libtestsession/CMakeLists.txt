@@ -24,25 +24,41 @@ function(qimessaging_create_session_test name)
 # qi_add_test(${name}_nightmare ${name} ARGUMENTS --mode=nightmare ${ARG_ARGUMENTS} TIMEOUT ${ARG_TIMEOUT})
   qi_add_test(${name}_sd ${name} ARGUMENTS --mode=sd ${ARG_ARGUMENTS} TIMEOUT ${ARG_TIMEOUT})
   qi_add_test(${name}_gateway ${name} ARGUMENTS --mode=gateway ${ARG_ARGUMENTS} TIMEOUT ${ARG_TIMEOUT})
-# qi_add_test(${name}_ssl ${name} ARGUMENTS --mode=ssl ${ARG_ARGUMENTS} TIMEOUT ${ARG_TIMEOUT_SSL})
+  qi_add_test(${name}_ssl ${name} ARGUMENTS --mode=ssl ${ARG_ARGUMENTS} TIMEOUT ${ARG_TIMEOUT_SSL})
 endfunction()
 
-qi_create_lib(testsession STATIC NO_INSTALL
-              src/testmode.cpp
-              src/testsessionpair.cpp
-              src/testsession.cpp
-              src/testsession_p.hpp
-              src/testsession_p.cpp
-              src/testsessionerror.cpp
-              src/trafficgenerator.hpp
-              src/trafficgenerator.cpp
-              src/populationgenerator.cpp
-              src/populationgenerator.cpp
-              src/sessioninitializer.hpp
-              src/sessioninitializer.cpp
-              src/defaultservice.hpp
-              src/defaultservice.cpp
-              DEPENDS QI
+qi_create_lib(
+  testsession
+  STATIC NO_INSTALL
+  testsession/testsession.hpp
+  testsession/testsessionpair.hpp
+  src/testmode.cpp
+  src/testsessionpair.cpp
+  src/testsession.cpp
+  src/testsession_p.hpp
+  src/testsession_p.cpp
+  src/testsessionerror.cpp
+  src/trafficgenerator.hpp
+  src/trafficgenerator.cpp
+  src/populationgenerator.cpp
+  src/populationgenerator.cpp
+  src/sessioninitializer.hpp
+  src/sessioninitializer.cpp
+  src/defaultservice.hpp
+  src/defaultservice.cpp
+  DEPENDS QI
 )
 
 qi_stage_lib(testsession)
+
+qi_create_gtest(
+  test_testsession
+
+  "test/test_testsession.cpp"
+
+  DEPENDS
+  qi
+  testsession
+
+  TIMEOUT 30
+)

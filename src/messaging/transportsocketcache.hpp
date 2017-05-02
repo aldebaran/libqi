@@ -11,13 +11,14 @@
 #include <queue>
 
 #include <boost/thread/mutex.hpp>
+#include <boost/thread/synchronized_value.hpp>
 
 #include <qi/future.hpp>
 #include <qi/messaging/serviceinfo.hpp>
 
 #include <qi/trackable.hpp>
 
-#include "transportsocket.hpp"
+#include "messagesocket.hpp"
 
 namespace qi
 {
@@ -43,11 +44,19 @@ namespace qi
     void init();
     void close();
 
-    Future<TransportSocketPtr> socket(const ServiceInfo& servInfo, const std::string& protocol = "");
-    void insert(const std::string& machineId, const Url& url, TransportSocketPtr socket);
+    /// Get the socket for the given ServiceInfo.
+    /// The original url of the service directory is always preferred to the
+    /// other endpoints, and other endpoints will not be tried if the services
+    /// are running on another machine.
+    /// @param servInfo A service info retrieved from a service directory.
+    /// @param sdUrl The endpoint of the service directory on which the service info came from.
+    Future<MessageSocketPtr> socket(const ServiceInfo& servInfo, const std::string& sdUrl);
+    void insert(const std::string& machineId, const Url& url, MessageSocketPtr socket);
 
+    /// The returned future is set when the socket has been disconnected and
+    /// effectively removed from the cache.
+    FutureSync<void> disconnect(MessageSocketPtr socket);
   private:
-
     enum State
     {
       State_Pending,
@@ -56,27 +65,36 @@ namespace qi
     };
 
     using UrlVectorPtr = boost::shared_ptr<UrlVector>;
-    void onSocketConnectionAttempt(Future<void> fut, Promise<TransportSocketPtr> prom, TransportSocketPtr socket, const ServiceInfo& info, uint32_t currentUrlIdx, UrlVectorPtr urls);
-    void onSocketParallelConnectionAttempt(Future<void> fut, TransportSocketPtr socket, Url url, const ServiceInfo& info);
-    void onSocketDisconnected(TransportSocketPtr client, Url url, const std::string& reason, const ServiceInfo& info);
+    void onSocketConnectionAttempt(Future<void> fut, Promise<MessageSocketPtr> prom, MessageSocketPtr socket, const ServiceInfo& info, uint32_t currentUrlIdx, UrlVectorPtr urls);
+    void onSocketParallelConnectionAttempt(Future<void> fut, MessageSocketPtr socket, Url url, const ServiceInfo& info);
+    void onSocketDisconnected(Url url, const ServiceInfo& info);
 
 
     boost::mutex _socketMutex;
     struct ConnectionAttempt {
-      Promise<TransportSocketPtr> promise;
-      TransportSocketPtr endpoint;
+      Promise<MessageSocketPtr> promise;
+      MessageSocketPtr endpoint;
       UrlVector relatedUrls;
       int attemptCount;
       State state;
+      SignalLink disconnectionTracking;
     };
     using ConnectionAttemptPtr = boost::shared_ptr<ConnectionAttempt>;
 
     void checkClear(ConnectionAttemptPtr, const std::string& machineId);
 
+    /// The promise is set when the `disconnected` signal of `socket` has been received.
+    struct DisconnectInfo
+    {
+      MessageSocketPtr socket;
+      Promise<void> promiseSocketRemoved;
+    };
+
     using MachineId = std::string;
     using ConnectionMap = std::map<MachineId, std::map<Url, ConnectionAttemptPtr>>;
     ConnectionMap _connections;
-    std::list<TransportSocketPtr> _allPendingConnections;
+    std::list<MessageSocketPtr> _allPendingConnections;
+    boost::synchronized_value<std::vector<DisconnectInfo>> _disconnectInfos;
     bool _dying;
   };
 }

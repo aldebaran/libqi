@@ -244,7 +244,6 @@ namespace qi
           *status = WEXITSTATUS(st);
       }
 
-#ifdef __APPLE__
       if (errno == ECHILD)
       {
         result = 0;
@@ -252,7 +251,6 @@ namespace qi
           *status = 127;
         return result;
       }
-#endif
 
       return result;
     }

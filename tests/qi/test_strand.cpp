@@ -208,15 +208,16 @@ TEST(TestStrand, StrandDestructionWithSchedulerFor)
 {
   std::vector<qi::Future<void>> futures;
   qi::Future<void> fut;
-  {
+  auto f = []{
     // allocate on heap to help asan & co
     std::unique_ptr<qi::Strand> strand(new qi::Strand(*qi::getEventLoop()));
-    auto f = strand->schedulerFor([]{ ADD_FAILURE(); });
-    fut = qi::async([f, &futures]{
-          for (int i = 0; i < 300; ++i)
-            futures.push_back(f());
-        });
-  }
+    return strand->schedulerFor(boost::function<void()>([]{ ADD_FAILURE(); }));
+  }();
+
+  fut = qi::async([f, &futures]{
+        for (int i = 0; i < 300; ++i)
+          futures.push_back(f());
+      });
   fut.wait();
   for (auto& future : futures)
     future.wait();
@@ -374,11 +375,10 @@ TEST(TestStrand, FutureThenActorCancel)
   callcount = 0;
   {
     boost::shared_ptr<MyActor> obj(new MyActor);
-    qi::AnyObject aobj(obj);
 
     qi::Promise<void> finished;
 
-    qi::Promise<int> prom(qi::PromiseNoop<int>);
+    qi::Promise<int> prom;
     qi::Future<int> masterFut = prom.future().thenR<int>(&MyActor::f, obj, _1, finished);
     masterFut.cancel();
     ASSERT_TRUE(prom.isCancelRequested());
@@ -388,11 +388,46 @@ TEST(TestStrand, FutureThenActorCancel)
   }
 }
 
-int main(int argc, char* argv[])
+template<typename Functor>
+struct CallerOnDestruction
 {
-  qi::Application app(argc, argv);
-  ::testing::InitGoogleTest(&argc, argv);
-  // better for these tests, since a task is 5ms long
-  qi::os::setenv("QI_STRAND_QUANTUM_US", "50000");
-  return RUN_ALL_TESTS();
+  CallerOnDestruction(Functor functor)
+    : toCall(std::move(functor))
+  {
+  }
+
+  ~CallerOnDestruction()
+  {
+    toCall();
+  }
+
+  Functor toCall;
+};
+
+template<typename Functor>
+void callLongCallbackWithDestructionHook(qi::Strand& strand, Functor&& toCallOnDestruction)
+{
+  auto callerOnDestruction =
+      std::make_shared<CallerOnDestruction<Functor>>(std::forward<Functor>(toCallOnDestruction));
+  // keeps alive the caller for some time, so that we can join and have it die in our hands
+  auto f = [callerOnDestruction]{ qi::os::msleep(200); };
+  callerOnDestruction.reset();
+  strand.async(std::move(f));
+}
+
+TEST(TestStrand, AsyncWhileJoiningDoesNotDeadlock)
+{
+  qi::Strand strand;
+  std::atomic<bool> called;
+  called = false;
+  callLongCallbackWithDestructionHook(strand, [&strand, &called]{ strand.async([]{}); called = true; });
+  strand.join();
+  ASSERT_TRUE(called.load());
+}
+
+TEST(TestStrand, CallWrappedInStrandWhileJoiningDoesNotDeadlock)
+{
+  qi::Strand strand;
+  callLongCallbackWithDestructionHook(strand, strand.schedulerFor([]{}));
+  strand.join();
 }

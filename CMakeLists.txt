@@ -110,7 +110,26 @@ set(QI_H qi/detail/async.hxx
          qi/version.hpp
          qi/iocolor.hpp
          qi/strand.hpp
-         qi/assert.hpp)
+         qi/assert.hpp
+         qi/algorithm.hpp
+         qi/detail/conceptpredicate.hpp
+         qi/macroregular.hpp
+         qi/range.hpp
+         qi/detail/relationpredicate.hpp
+         qi/scoped.hpp
+         qi/concept.hpp
+         qi/functional.hpp
+         qi/messaging/net/accept.hpp
+         qi/messaging/net/common.hpp
+         qi/messaging/net/concept.hpp
+         qi/messaging/net/connect.hpp
+         qi/messaging/net/error.hpp
+         qi/messaging/net/networkasio.hpp
+         qi/messaging/net/option.hpp
+         qi/messaging/net/receive.hpp
+         qi/messaging/net/resolve.hpp
+         qi/messaging/net/send.hpp
+         qi/messaging/net/traits.hpp)
 
 set(QI_C src/dlfcn.cpp
          src/path.cpp
@@ -335,12 +354,12 @@ set(QIM_C src/messaging/applicationsession.cpp
           src/messaging/transportserver.cpp
           src/messaging/transportserverasio_p.cpp
           src/messaging/transportserverasio_p.hpp
-          src/messaging/transportsocket.hpp
-          src/messaging/transportsocket.cpp
+          src/messaging/messagesocket.hpp
+          src/messaging/messagesocket.cpp
           src/messaging/transportsocketcache.cpp
           src/messaging/transportsocketcache.hpp
-          src/messaging/tcptransportsocket.cpp
-          src/messaging/tcptransportsocket.hpp
+          src/messaging/tcpmessagesocket.cpp
+          src/messaging/tcpmessagesocket.hpp
           src/messaging/url.cpp
           src/registration.cpp
           )

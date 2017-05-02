@@ -28,3 +28,4 @@ if (UNIX AND WITH_BOOST_LOCALE)
 endif()
 
 add_subdirectory(foo)
+add_subdirectory(perf)

@@ -17,21 +17,21 @@ void sub_test_type()
   T min = std::numeric_limits<T>::min();
 
   A<T> n(max);
-  EXPECT_EQ(*n, max);
+  EXPECT_EQ(n.load(), max);
   ++n;
-  EXPECT_EQ(*n, min);
+  EXPECT_EQ(n.load(), min);
 
   A<T> m(min);
-  EXPECT_EQ(*m, min);
+  EXPECT_EQ(m.load(), min);
   --m;
-  EXPECT_EQ(*m, max);
+  EXPECT_EQ(m.load(), max);
 
   m = 42;
-  EXPECT_EQ((T) 42, *m);
+  EXPECT_EQ((T) 42, m.load());
 
-  T old = *m;
+  T old = m.load();
   EXPECT_EQ(old, m.swap(51));
-  EXPECT_EQ((T) 51, *m);
+  EXPECT_EQ((T) 51, m.load());
 }
 
 template <typename T>

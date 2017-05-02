@@ -58,26 +58,31 @@ namespace qi {
           << "' but type is already created.";
     }
 
-    unsigned int nextId = _p->metaObject._p->addMethod(builder, id);
+    const unsigned int nextId = _p->metaObject._p->addMethod(builder, id).id;
     _p->data.methodMap[nextId] = std::make_pair(func, threadingModel);
     return nextId;
   }
 
-  unsigned int ObjectTypeBuilderBase::xAdvertiseSignal(const std::string &name, const qi::Signature& signature, SignalMemberGetter getter, int id)
+  unsigned int ObjectTypeBuilderBase::xAdvertiseSignal(const std::string &name, const qi::Signature& signature, SignalMemberGetter getter, int id, bool isSignalProperty)
   {
     if (_p->type) {
       qiLogWarning() << "ObjectTypeBuilder: Called xAdvertiseSignal with event '"
                      << signature.toString() << "' but type is already created.";
     }
     // throw on error
-    unsigned int nextId = _p->metaObject._p->addSignal(name, signature, id);
+    const auto signalAddResult = _p->metaObject._p->addSignal(name, signature, id, isSignalProperty);
+    if (!signalAddResult.isNewMember)
+    {
+      throw std::runtime_error("Property advertise failed: name already used by a member Signal: " + name);
+    }
+    const auto nextId = signalAddResult.id;
     _p->data.signalGetterMap[nextId] = getter;
     return nextId;
   }
 
   unsigned int ObjectTypeBuilderBase::xAdvertiseProperty(const std::string& name, const qi::Signature& signature, PropertyMemberGetter getter, int id)
   {
-    unsigned int res = _p->metaObject._p->addProperty(name, signature, id);
+    const unsigned int res = _p->metaObject._p->addProperty(name, signature, id).id;
     _p->data.propertyGetterMap[res] = getter;
     return res;
   }

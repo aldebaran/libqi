@@ -30,12 +30,11 @@ qi::Atomic<int> MetaObjectPrivate::uid{1};
 
     {
       boost::recursive_mutex::scoped_lock sl(rhs._methodsMutex);
-      _methodsNameToIdx = rhs._methodsNameToIdx;
+      _objectNameToIdx = rhs._objectNameToIdx;
       _methods          = rhs._methods;
     }
     {
       boost::recursive_mutex::scoped_lock sl(rhs._eventsMutex);
-      _eventsNameToIdx = rhs._eventsNameToIdx;
       _events = rhs._events;
     }
     {
@@ -159,17 +158,17 @@ qi::Atomic<int> MetaObjectPrivate::uid{1};
       { // full name and signature was given, there can be only one match
         if (canCache)
           *canCache = true;
-        NameToIdx::const_iterator itRev = _methodsNameToIdx.find(nameWithOptionalSignature);
-        if (itRev == _methodsNameToIdx.end()) {
+        int idRev = methodId(nameWithOptionalSignature);
+        if (idRev == -1) {
           std::string funname = qi::signatureSplit(nameWithOptionalSignature)[1];
           // check if it's no method found, or if it's arguments mismatch
-          if (_methodNameToOverload.find(funname) != _methodNameToOverload.end()) {
+          if (methodId(funname) != -1) {
             return -2;
           }
           return -1;
         }
         else
-          return itRev->second;
+          return idRev;
       }
       // Only name given, try to find an unique match with given argument count
       OverloadMap::const_iterator overloadIt = _methodNameToOverload.find(nameWithOptionalSignature);
@@ -226,9 +225,9 @@ qi::Atomic<int> MetaObjectPrivate::uid{1};
         std::string fullSig = nameWithOptionalSignature + "::" + resolvedSig;
         qiLogDebug() << "Finding method for resolved signature " << fullSig;
         // First try an exact match, which is much faster if we're lucky.
-        NameToIdx::const_iterator itRev =  _methodsNameToIdx.find(nameWithOptionalSignature);
-        if (itRev != _methodsNameToIdx.end())
-          return itRev->second;
+        int idRev = methodId(nameWithOptionalSignature);
+        if (idRev != -1)
+          return idRev;
 
         using MethodsPtr = std::vector<std::pair<const MetaMethod*, float>>;
         MethodsPtr mml;
@@ -309,64 +308,117 @@ qi::Atomic<int> MetaObjectPrivate::uid{1};
       return &_events[id];
   }
 
-  unsigned int MetaObjectPrivate::addMethod(MetaMethodBuilder& builder, int uid) {
+  MemberAddInfo MetaObjectPrivate::addMethod(MetaMethodBuilder& builder, int uid) {
     boost::recursive_mutex::scoped_lock sl(_methodsMutex);
-    qi::MetaMethod method = builder.metaMethod();
-    NameToIdx::iterator it = _methodsNameToIdx.find(method.toString());
-    if (it != _methodsNameToIdx.end()) {
-      qiLogWarning() << "Method("<< it->second << ") already defined (and overriden): "
+    const qi::MetaMethod method = builder.metaMethod();
+
+    int sigId = signalId(method.toString());
+    int propId = propertyId(method.toString());
+    if (sigId != -1 || propId != -1)
+    {
+      std::ostringstream err;
+      err << "Method(" << sigId << ") already defined: "
+          << method.toString();
+      throw std::runtime_error(err.str());
+    }
+
+    int methId = methodId(method.toString());
+    if (methId != -1) {
+      qiLogWarning() << "Method("<< methId << ") already defined (and overriden): "
                      << method.toString();
-      return it->second;
+      return MemberAddInfo(methId, false);
     }
 
     if (uid == -1)
       uid = ++_index;
     builder.setUid(uid);
     _methods[uid] = builder.metaMethod();
-    _methodsNameToIdx[method.toString()] = uid;
+    _objectNameToIdx[method.toString()] = MetaObjectIdType(uid, MetaObjectType_Method);
     _dirtyCache = true;
-    return uid;
+    return MemberAddInfo(uid, true);
   }
 
-  unsigned int MetaObjectPrivate::addSignal(const std::string &name, const Signature &signature, int uid) {
+  MemberAddInfo MetaObjectPrivate::addSignal(const std::string &name, const Signature &signature, int uid, bool isSignalProperty) {
 #ifndef NDEBUG
     std::vector<std::string> split = signatureSplit(name);
     if (name != split[1])
       throw std::runtime_error("Unexpected full signature " + name);
 #endif
     boost::recursive_mutex::scoped_lock sl(_eventsMutex);
-    NameToIdx::iterator it = _eventsNameToIdx.find(name);
-    if (it != _eventsNameToIdx.end()) {
-      MetaSignal &ms = _events[it->second];
-      qiLogWarning() << "Signal("<< it->second << ") already defined (and overriden): " << ms.toString() << "instead of requested: " << name;
-      return it->second;
+
+    // We need a temporary MetaSignal without any UID to get full signature
+    const MetaSignal msWithoutUid(-1, name, signature);
+    int methId = methodId(msWithoutUid.toString());
+    int propId = propertyId(msWithoutUid.toString());
+    if (methId != -1 || propId != -1)
+    {
+      std::ostringstream err;
+      err << "Signal(" << methId << ") already defined: "
+          << msWithoutUid.toString();
+      throw std::runtime_error(err.str());
+    }
+
+    int sigId = signalId(msWithoutUid.toString());
+    if (sigId != -1)
+    {
+      const MetaSignal &ms = _events[sigId];
+      qiLogWarning() << "Signal("<< sigId << ") already defined (and overriden): " << ms.toString() <<
+                        "instead of requested: " << name;
+      return MemberAddInfo(sigId, false);
     }
 
     if (uid == -1)
       uid = ++_index;
-    MetaSignal ms(uid, name, signature);
+    const MetaSignal ms(uid, name, signature);
     _events[uid] = ms;
-    _eventsNameToIdx[name] = uid;
+    if (isSignalProperty)
+    {
+      _objectNameToIdx[ms.toString()] = MetaObjectIdType(uid, MetaObjectType_Property);
+    }
+    else
+    {
+      _objectNameToIdx[ms.toString()] = MetaObjectIdType(uid, MetaObjectType_Signal);
+    }
     _dirtyCache = true;
-    return uid;
+    return MemberAddInfo(uid, true);
   }
 
-  unsigned int MetaObjectPrivate::addProperty(const std::string& name, const qi::Signature& sig, int id)
+  MemberAddInfo MetaObjectPrivate::addProperty(const std::string& name, const qi::Signature& signature, int id)
   {
     boost::recursive_mutex::scoped_lock sl(_propertiesMutex);
+    // We need a temporary MetaProperty without any UID to get full signature
+    const MetaProperty mpWithoutUid(-1, name, signature);
+    const MetaSignal msWithoutUid(-1, name, std::string("(" + signature.toString() + ")"));
+
+    {
+      const int methId = methodId(msWithoutUid.toString());
+      const int sigId = signalId(msWithoutUid.toString());
+
+      // If an id is provided, we should find a signal member which have the same signature.
+      if (methId != -1 || (sigId != -1 && sigId != id))
+      {
+        std::ostringstream err;
+        err << "Property \"" << mpWithoutUid.toString() << "\" already defined, with method ID #"
+          << methId << " and signal ID #" << sigId;
+        throw std::runtime_error(err.str());
+      }
+    }
+
     for (MetaObject::PropertyMap::iterator it = _properties.begin(); it != _properties.end(); ++it)
     {
       if (it->second.name() == name)
       {
         qiLogWarning() << "Property already exists: " << name;
-        return it->second.uid() ;
+        return MemberAddInfo(it->second.uid(), false);
       }
     }
     if (id == -1)
       id = ++_index;
-    _properties[id] = MetaProperty(id, name, sig);
+    const MetaProperty mp(id, name, signature);
+    _properties[id] = mp;
+    _objectNameToIdx[mp.toString()] = MetaObjectIdType(id, MetaObjectType_Property);
     _dirtyCache = true;
-    return id;
+    return MemberAddInfo(id, true);
   }
 
   bool MetaObjectPrivate::addMethods(const MetaObject::MethodMap &mms) {
@@ -383,7 +435,7 @@ qi::Atomic<int> MetaObjectPrivate::uid{1};
           return false;
       }
       _methods[newUid] = qi::MetaMethod(newUid, method.second);
-      _methodsNameToIdx[method.second.toString()] = newUid;
+      _objectNameToIdx[method.second.toString()] = MetaObjectIdType(newUid, MetaObjectType_Method);
     }
     _dirtyCache = true;
     //todo: update uid
@@ -401,8 +453,9 @@ qi::Atomic<int> MetaObjectPrivate::uid{1};
         if ((jt->second.toString() != signal.second.toString()))
           return false;
       }
-      _events[newUid] = qi::MetaSignal(newUid, signal.second.name(), signal.second.parametersSignature());
-      _eventsNameToIdx[signal.second.name()] = newUid;
+      const qi::MetaSignal ms(newUid, signal.second.name(), signal.second.parametersSignature());
+      _events[newUid] = ms;
+      _objectNameToIdx[ms.toString()] = MetaObjectIdType(newUid, MetaObjectType_Signal);
     }
     _dirtyCache = true;
     //todo: update uid
@@ -420,7 +473,9 @@ qi::Atomic<int> MetaObjectPrivate::uid{1};
         if ((jt->second.toString() != property.second.toString()))
           return false;
       }
-      _properties[newUid] = qi::MetaProperty(newUid, property.second.name(), property.second.signature());
+      const qi::MetaProperty mp(newUid, property.second.name(), property.second.signature());
+      _properties[newUid] = mp;
+      _objectNameToIdx[mp.toString()] = MetaObjectIdType(newUid, MetaObjectType_Property);
     }
     _dirtyCache = true;
     //todo: update uid
@@ -435,12 +490,12 @@ qi::Atomic<int> MetaObjectPrivate::uid{1};
     boost::recursive_mutex::scoped_lock el(_eventsMutex);
     unsigned int idx = 0;
     {
-      _methodsNameToIdx.clear();
+      _objectNameToIdx.clear();
       _methodNameToOverload.clear();
       for (MetaObject::MethodMap::iterator i = _methods.begin();
         i != _methods.end(); ++i)
       {
-        _methodsNameToIdx[i->second.toString()] = i->second.uid();
+        _objectNameToIdx[i->second.toString()] = MetaObjectIdType(i->second.uid(), MetaObjectType_Method);
         idx = std::max(idx, i->second.uid());
         OverloadMap::iterator overloadIt = _methodNameToOverload.find(i->second.name());
         if (overloadIt == _methodNameToOverload.end())
@@ -456,11 +511,10 @@ qi::Atomic<int> MetaObjectPrivate::uid{1};
       }
     }
     {
-      _eventsNameToIdx.clear();
       for (MetaObject::SignalMap::iterator i = _events.begin();
         i != _events.end(); ++i)
       {
-        _eventsNameToIdx[i->second.name()] = i->second.uid();
+        _objectNameToIdx[i->second.toString()] = MetaObjectIdType(i->second.uid(), MetaObjectType_Signal);
         idx = std::max(idx, i->second.uid());
       }
     }
@@ -629,7 +683,7 @@ qi::Atomic<int> MetaObjectPrivate::uid{1};
   {
   }
 
-  unsigned int MetaObjectBuilder::addMethod(const qi::Signature& sigret,
+  MemberAddInfo MetaObjectBuilder::addMethod(const qi::Signature& sigret,
                                             const std::string& name,
                                             const qi::Signature& signature,
                                             int id)
@@ -641,15 +695,15 @@ qi::Atomic<int> MetaObjectPrivate::uid{1};
     return _p->metaObject._p->addMethod(mmb, id);
   }
 
-  unsigned int MetaObjectBuilder::addMethod(MetaMethodBuilder& builder, int id) {
+  MemberAddInfo MetaObjectBuilder::addMethod(MetaMethodBuilder& builder, int id) {
     return _p->metaObject._p->addMethod(builder, id);
   }
 
-  unsigned int MetaObjectBuilder::addSignal(const std::string &name, const qi::Signature& sig, int id) {
+  MemberAddInfo MetaObjectBuilder::addSignal(const std::string &name, const qi::Signature& sig, int id) {
     return _p->metaObject._p->addSignal(name, sig, id);
   }
 
-  unsigned int MetaObjectBuilder::addProperty(const std::string& name, const qi::Signature& sig, int id)
+  MemberAddInfo MetaObjectBuilder::addProperty(const std::string& name, const qi::Signature& sig, int id)
   {
      return _p->metaObject._p->addProperty(name, sig, id);
   }

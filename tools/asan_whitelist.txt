@@ -1,0 +1,3 @@
+leak:__cxx_global_var_init102
+leak:__cxx_global_var_init150
+leak:Application::setArguments

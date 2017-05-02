@@ -4,7 +4,7 @@
 **  See COPYING for the license
 */
 #include <boost/container/flat_map.hpp>
-#include <boost/thread/mutex.hpp>
+#include <boost/thread/synchronized_value.hpp>
 #include <qi/future.hpp>
 #include <qi/trackable.hpp>
 
@@ -39,11 +39,8 @@ namespace qi
     template< class T >
     void add(Future<T> future)
     {
-      boost::mutex::scoped_lock lock(_mutex);
-      _futureCancelList.emplace(future.uniqueId(), [future]() mutable { future.cancel(); });
-
-      // The 2 following lines are necessary because of a compiler bug in VS2010 which is fixed in VS2015 and beyond
-      future.then([&](Future<T> f){ onFutureFinished(f); });
+      _futureCancelList->emplace(future.uniqueId(), [future]() mutable { future.cancel(); });
+      future.then(qi::track( [this](Future<T> f){ onFutureFinished(f); }, this ));
     }
 
     /** Cancel all registered futures and unregister them.
@@ -52,15 +49,14 @@ namespace qi
     {
       FutureCancelList cancelList;
       {
-        boost::mutex::scoped_lock lock(_mutex);
-        swap(cancelList, _futureCancelList);
+        auto synched_futureCancelList = _futureCancelList.synchronize();
+        swap(cancelList, *synched_futureCancelList);
       }
-      for (FutureCancelList::iterator it = cancelList.begin(), itEnd = cancelList.end();
-           it != itEnd; ++it)
+      for (auto& slot : cancelList)
       {
         try
         {
-          it->second();
+          slot.second();
         }
         catch (std::exception& ex)
         {
@@ -77,27 +73,24 @@ namespace qi
     /** @return True if there is no future registered, false otherwise. */
     bool empty() const
     {
-      boost::mutex::scoped_lock lock(_mutex);
-      return _futureCancelList.empty();
+      return _futureCancelList->empty();
     }
 
     /** @return Count of registered futures. */
     size_t size() const
     {
-      boost::mutex::scoped_lock lock(_mutex);
-      return _futureCancelList.size();
+      return _futureCancelList->size();
     }
 
   private:
-    mutable boost::mutex _mutex;
+
     using FutureCancelList = boost::container::flat_map< FutureUniqueId, boost::function<void()>>;
-    FutureCancelList _futureCancelList;
+    boost::synchronized_value<FutureCancelList> _futureCancelList;
 
     template<class T>
     void onFutureFinished(Future<T> future)
     {
-      boost::mutex::scoped_lock lock(_mutex);
-      _futureCancelList.erase(future.uniqueId());
+      _futureCancelList->erase(future.uniqueId());
     }
   };
 }

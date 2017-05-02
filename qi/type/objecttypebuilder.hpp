@@ -57,10 +57,10 @@ namespace detail {
     inline unsigned int advertiseMethod(MetaMethodBuilder& name, FUNCTION_TYPE function, MetaCallType threadingModel = MetaCallType_Auto, int id = -1);
 
     template<typename A>
-    unsigned int advertiseSignal(const std::string& eventName, A accessor, int id = -1);
+    unsigned int advertiseSignal(const std::string& eventName, A accessor, int id = -1, bool isSignalProperty = false);
 
     template <typename T>
-    inline unsigned int advertiseSignal(const std::string& name, SignalMemberGetter getter, int id = -1);
+    inline unsigned int advertiseSignal(const std::string& name, SignalMemberGetter getter, int id = -1, bool isSignalProperty = false);
 
     template <typename A>
     inline unsigned int advertiseProperty(const std::string& propertyName, A accessor);
@@ -89,7 +89,7 @@ namespace detail {
     // input: type-erased
 
     unsigned int xAdvertiseMethod(MetaMethodBuilder& builder, AnyFunction func, MetaCallType threadingModel = MetaCallType_Auto, int id = -1);
-    unsigned int xAdvertiseSignal(const std::string &name, const qi::Signature& signature, SignalMemberGetter getter, int id = -1);
+    unsigned int xAdvertiseSignal(const std::string &name, const qi::Signature& signature, SignalMemberGetter getter, int id = -1, bool isSignalProperty = false);
     unsigned int xAdvertiseProperty(const std::string& name, const qi::Signature& signature, PropertyMemberGetter getter, int id = -1);
     void xBuildFor(TypeInterface* type, bool autoRegister, qi::AnyFunction strandAccessor);
     void inherits(TypeInterface* parentType, int offset);

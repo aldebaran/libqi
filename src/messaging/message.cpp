@@ -77,6 +77,8 @@ namespace qi {
       return "SetProperty";
     case BoundObjectFunction_Properties:
       return "Properties";
+    case BoundObjectFunction_RegisterEventWithSignature:
+      return "RegisterEventWithSignature";
     }
 
     if (service != qi::Message::Service_ServiceDirectory)
@@ -102,6 +104,8 @@ namespace qi {
       return "ServiceAdded";
     case ServiceDirectoryAction_ServiceRemoved:
       return "ServiceRemoved";
+    case ServiceDirectoryAction_MachineId:
+      return "MachineId";
     default:
       return  nullptr;
     }
@@ -348,17 +352,18 @@ namespace qi {
   namespace {
     ObjectSerializationInfo serializeObject(
       AnyObject object,
-      ObjectHost* context,
+      boost::weak_ptr<ObjectHost> context,
       StreamContext* strCtxt)
     {
-      if (!context || !strCtxt)
+      auto host = context.lock();
+      if (!host || !strCtxt)
         throw std::runtime_error("Unable to serialize object without a valid ObjectHost and StreamContext");
-      unsigned int sid = context->service();
-      unsigned int oid = context->nextId();
+      unsigned int sid = host->service();
+      unsigned int oid = host->nextId();
       ServiceBoundObject* sbo = new ServiceBoundObject(sid, oid, object, MetaCallType_Queued, true, context);
       boost::shared_ptr<BoundObject> bo(sbo);
-      context->addObject(bo, strCtxt, oid);
-      qiLogDebug() << "Hooking " << oid <<" on " << context;
+      host->addObject(bo, strCtxt, oid);
+      qiLogDebug() << "Hooking " << oid <<" on " << host.get();
       qiLogDebug() << "sbo " << sbo << "obj " << object.asGenericObject();
       // Transmit the metaObject augmented by ServiceBoundObject.
       ObjectSerializationInfo res;
@@ -393,7 +398,7 @@ namespace qi {
     }
 
     AnyObject deserializeObject(const ObjectSerializationInfo& osi,
-      TransportSocketPtr context)
+      MessageSocketPtr context)
     {
       if (!context)
         throw std::runtime_error("Unable to deserialize object without a valid TransportSocket");
@@ -406,7 +411,7 @@ namespace qi {
     }
   }
 
-  AnyReference Message::value(const qi::Signature &signature, const qi::TransportSocketPtr &socket) const {
+  AnyReference Message::value(const qi::Signature &signature, const qi::MessageSocketPtr &socket) const {
     qi::TypeInterface* type = qi::TypeInterface::fromSignature(signature);
     if (!type) {
       qiLogError() <<"fromBuffer: unknown type " << signature.toString();
@@ -419,7 +424,8 @@ namespace qi {
     return decodeBinary(&br, res, boost::bind(deserializeObject, _1, socket), socket.get());
   }
 
-  void Message::setValue(const AutoAnyReference &value, const Signature& sig, ObjectHost* context, StreamContext* streamContext) {
+  void Message::setValue(const AutoAnyReference &value, const Signature& sig,
+                         boost::weak_ptr<ObjectHost> context, StreamContext* streamContext) {
     cow();
     Signature effective = value.type()->signature();
     if (effective != sig)
@@ -449,7 +455,8 @@ namespace qi {
     }
   }
 
-  void Message::setValues(const std::vector<qi::AnyReference>& values, ObjectHost* context, StreamContext* streamContext)
+  void Message::setValues(const std::vector<qi::AnyReference>& values,
+                          boost::weak_ptr<ObjectHost> context, StreamContext* streamContext)
   {
     cow();
     SerializeObjectCallback scb = boost::bind(serializeObject, _1, context, streamContext);
@@ -458,7 +465,8 @@ namespace qi {
   }
 
   //convert args then call setValues
-  void Message::setValues(const std::vector<qi::AnyReference>& in, const qi::Signature& expectedSignature, ObjectHost* context, StreamContext* streamContext) {
+  void Message::setValues(const std::vector<qi::AnyReference>& in, const qi::Signature& expectedSignature,
+                          boost::weak_ptr<ObjectHost> context, StreamContext* streamContext) {
     qi::Signature argsSig = qi::makeTupleSignature(in, false);
     if (expectedSignature == argsSig) {
       setValues(in, context, streamContext);
@@ -519,7 +527,12 @@ namespace qi {
         nargs[i].destroy();
   }
 
-  const qi::Buffer &Message::buffer() const
+  const qi::Buffer& Message::buffer() const
+  {
+    return _p->buffer;
+  }
+
+  qi::Buffer& Message::buffer()
   {
     return _p->buffer;
   }

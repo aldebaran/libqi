@@ -5,6 +5,7 @@
  ** Copyright (C) 2010, 2012 Aldebaran Robotics
  */
 
+#include <future>
 #include <vector>
 #include <string>
 
@@ -21,6 +22,8 @@
 #include <testsession/testsessionpair.hpp>
 
 qiLogCategory("test");
+
+static const qi::MilliSeconds usualTimeout{200};
 
 static std::string reply(const std::string &msg)
 {
@@ -247,16 +250,16 @@ TEST(QiService, ClassProperty)
   obj.connect("offset", boost::bind(&inc, &hit,_1));
   client.connect("offset", boost::bind(&inc, &hit,_1));
   f.prop.set(1);
-  PERSIST_ASSERT(, (*hit) == 3, 500);
+  PERSIST_ASSERT(, (hit.load()) == 3, 500);
   client.setProperty("offset", 2);
-  PERSIST_ASSERT(, (*hit) == 6, 500);
+  PERSIST_ASSERT(, (hit.load()) == 6, 500);
 
   // test error handling
    EXPECT_TRUE(client.setProperty("canard", 5).hasError());
    EXPECT_TRUE(client.setProperty("offset", "astring").hasError());
 }
 
-int prop_ping(qi::PropertyBase* &p, int v)
+qi::int64_t prop_ping(qi::PropertyBase* &p, int v)
 {
   return p->value().value().toInt() + v;
 }
@@ -292,13 +295,13 @@ TEST(QiService, GenericProperty)
   ASSERT_NE(qi::SignalBase::invalidSignalLink, client.connect("offset", boost::bind(&inc, &hit, _1)));
   qiLogVerbose() << "Triggering prop set";
   prop->setValue(1);
-  PERSIST(, (*hit) == 3, 500);
+  PERSIST(, (hit.load()) == 3, 500);
   qi::os::msleep(500);
-  EXPECT_EQ(3, *hit);
+  EXPECT_EQ(3, hit.load());
   client.setProperty<int>("offset", 2);
-  PERSIST(, (*hit) == 6, 500);
+  PERSIST(, (hit.load()) == 6, 500);
   qi::os::msleep(500);
-  EXPECT_EQ(6, *hit);
+  EXPECT_EQ(6, hit.load());
   if (client != obj)
   {
     client.call<void>("setProperty", "offset", 3);
@@ -459,13 +462,54 @@ TEST(QiService, CallRemoteServiceInsideDtorService)
   p.client()->unregisterService(idCallDS).wait();
 }
 
-int main(int argc, char **argv)
+
+TEST(QiService, ExceptionFromPropertySetterSetsErrorOnFuture)
 {
-  qi::Application app(argc, argv);
-#if defined(__APPLE__) || defined(__linux__)
-  setsid();
-#endif
-  TestMode::initTestMode(argc, argv);
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
+  using CustomException = std::exception;
+  const int initialValue = 12;
+  qi::Property<int> property{initialValue, qi::Property<int>::Getter{}, [this](int&, const int&)->bool
+  {
+    throw CustomException{};
+  }};
+
+  const std::string serviceName{"Corine"};
+  const std::string propertyName{"Ptitegoutte"};
+
+  qi::DynamicObjectBuilder objectBuilder;
+  objectBuilder.advertiseProperty(propertyName, &property);
+
+  TestSessionPair sessions;
+  sessions.server()->registerService(serviceName, objectBuilder.object());
+  auto setting = sessions.client()->service(serviceName).value().setProperty(propertyName, 42);
+  auto settingState = setting.waitFor(usualTimeout);
+  ASSERT_EQ(qi::FutureState_FinishedWithError, settingState);
+}
+
+TEST(QiService, BlockingPropertySetterDoesNotBlockOtherCalls)
+{
+  std::promise<void> promise;
+  qi::Property<int> property{qi::Property<int>::Getter{}, [&](int&, const int&)->bool
+  {
+    promise.get_future().wait();
+    return false;
+  }};
+
+  const std::string serviceName{"Alain"};
+  const std::string propertyName{"Alex"};
+  const std::string methodName{"Terieur"};
+
+  qi::DynamicObjectBuilder objectBuilder;
+  objectBuilder.advertiseProperty(propertyName, &property);
+  objectBuilder.advertiseMethod(methodName, []{});
+  objectBuilder.setThreadingModel(qi::ObjectThreadingModel_MultiThread);
+
+  TestSessionPair sessions;
+  sessions.server()->registerService(serviceName, objectBuilder.object());
+
+  auto remoteService = sessions.client()->service(serviceName).value();
+  remoteService.setProperty(propertyName, 42).async();
+  auto calling = remoteService.async<void>(methodName);
+  auto callingState = calling.waitFor(usualTimeout);
+  EXPECT_EQ(qi::FutureState_FinishedWithValue, callingState);
+  promise.set_value();
 }

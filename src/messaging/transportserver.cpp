@@ -25,7 +25,7 @@
 #endif
 
 #include "transportserver.hpp"
-#include "transportsocket.hpp"
+#include "messagesocket.hpp"
 #include "transportserverasio_p.hpp"
 
 qiLogCategory("qimessaging.transportserver");
@@ -43,15 +43,10 @@ namespace qi
 
   qi::Future<void> TransportServer::listen(const qi::Url &url, qi::EventLoop* ctx)
   {
-    TransportServerImpl* impl = nullptr;
-
-    if (url.protocol() == "tcp")
+    TransportServerImplPtr impl;
+    if (url.protocol() == "tcp" || url.protocol() == "tcps")
     {
-      impl = new TransportServerAsioPrivate(this, ctx);
-    }
-    else if (url.protocol() == "tcps")
-    {
-      impl = new TransportServerAsioPrivate(this, ctx);
+      impl = TransportServerAsioPrivate::make(this, ctx);
     }
     else
     {
@@ -59,10 +54,9 @@ namespace qi
       qiLogError() << s;
       return qi::makeFutureError<void>(s);
     }
-    TransportServerImplPtr implPtr(impl);
     {
       boost::mutex::scoped_lock l(_implMutex);
-      _impl.push_back(implPtr);
+      _impl.push_back(impl);
     }
     return impl->listen(url);
   }
@@ -72,15 +66,13 @@ namespace qi
     struct ::stat status;
     if (qi::os::stat(key.c_str(), &status) != 0)
     {
-      qiLogError() << "stat:" << key << ": "
-                                                 << strerror(errno);
+      qiLogError() << "stat of \"" << key << "\": " << strerror(errno);
       return false;
     }
 
     if (qi::os::stat(crt.c_str(), &status) != 0)
     {
-      qiLogError() << "stat:" << crt << ": "
-                                                 << strerror(errno);
+      qiLogError() << "stat of \"" << crt << "\": " << strerror(errno);
       return false;
     }
 

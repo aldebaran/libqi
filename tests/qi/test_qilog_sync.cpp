@@ -436,13 +436,13 @@ TEST(log, threadSafeness)
   qi::Atomic<int> count;
   for (unsigned i=0; i<10; ++i)
     boost::thread(makeCats, i, 1000, boost::ref(count));
-  while (*count < 10)
+  while (count.load() < 10)
     qi::os::msleep(50);
   qi::Atomic<int> pos;
   count = 0;
   for (unsigned i=0; i<10; ++i)
     boost::thread(addHandler, boost::ref(pos), boost::ref(count));
-  while (*count < 10)
+  while (count.load() < 10)
     qi::os::msleep(50);
   EXPECT_TRUE(true);
 }

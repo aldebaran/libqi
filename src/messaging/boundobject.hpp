@@ -10,6 +10,7 @@
 #include <string>
 #include <boost/thread/mutex.hpp>
 #include <boost/signals2.hpp>
+#include <boost/optional.hpp>
 #include <qi/api.hpp>
 #include <qi/session.hpp>
 #include "transportserver.hpp"
@@ -48,20 +49,39 @@ namespace qi {
   public:
     //Server Interface
     virtual ~BoundObject() {}
-    virtual void onMessage(const qi::Message &msg, TransportSocketPtr socket) = 0;
-    virtual void onSocketDisconnected(qi::TransportSocketPtr socket, std::string error) = 0;
+    virtual void onMessage(const qi::Message &msg, MessageSocketPtr socket) = 0;
+    virtual void onSocketDisconnected(qi::MessageSocketPtr socket, std::string error) = 0;
   };
 
   //Bound Object, represent an object bound on a server
   // this is not an object..
-  class ServiceBoundObject : public BoundObject, public ObjectHost, boost::noncopyable {
+  class ServiceBoundObject
+    : public BoundObject
+    , public ObjectHost
+    , boost::noncopyable
+    , public Trackable<ServiceBoundObject> {
 
   public:
+    // TODO: once VS2013 build farm is fixed, replaced the following constructors by this one.
+    //ServiceBoundObject(unsigned int serviceId, unsigned int objectId,
+                       //qi::AnyObject obj,
+                       //qi::MetaCallType mct = qi::MetaCallType_Queued,
+                       //bool bindTerminate = false,
+                       //boost::optional<boost::weak_ptr<ObjectHost>> owner = {});
+
     ServiceBoundObject(unsigned int serviceId, unsigned int objectId,
                        qi::AnyObject obj,
-                       qi::MetaCallType mct = qi::MetaCallType_Queued,
-                       bool bindTerminate = false,
-                       ObjectHost* owner = 0);
+                       qi::MetaCallType mct,
+                       bool bindTerminatee,
+                       boost::optional<boost::weak_ptr<ObjectHost>> owner);
+
+    ServiceBoundObject(unsigned int serviceId, unsigned int objectId,
+                      qi::AnyObject obj,
+                      qi::MetaCallType mct = qi::MetaCallType_Queued,
+                      bool bindTerminate = false)
+      : ServiceBoundObject(serviceId, objectId, obj, mct, bindTerminate, {})
+    {}
+
     virtual ~ServiceBoundObject();
 
     unsigned int nextId() { return ++_nextId; }
@@ -85,7 +105,7 @@ namespace qi {
     * avoided: call it once and use the return value, unless you know what
     * you're doing.
     */
-    inline qi::TransportSocketPtr currentSocket() const {
+    inline qi::MessageSocketPtr currentSocket() const {
 #ifndef NDEBUG
       if (_callType != MetaCallType_Direct)
         qiLogWarning("qimessaging.boundobject") << " currentSocket() used but callType is not direct";
@@ -97,16 +117,15 @@ namespace qi {
     inline AnyObject object() { return _object;}
   public:
     //BoundObject Interface
-    virtual void onMessage(const qi::Message &msg, TransportSocketPtr socket);
-    virtual void onSocketDisconnected(qi::TransportSocketPtr socket, std::string error);
+    virtual void onMessage(const qi::Message &msg, MessageSocketPtr socket);
+    virtual void onSocketDisconnected(qi::MessageSocketPtr socket, std::string error);
 
     using MessageId = unsigned int;
-    void cancelCall(TransportSocketPtr origSocket, const Message& cancelMessage, MessageId origMsgId);
+    void cancelCall(MessageSocketPtr origSocket, const Message& cancelMessage, MessageId origMsgId);
 
-    qi::Signal<ServiceBoundObject*> onDestroy;
   private:
     using FutureMap = std::map<MessageId, std::pair<Future<AnyReference>, AtomicIntPtr>>;
-    using CancelableMap = std::map<TransportSocketPtr, FutureMap>;
+    using CancelableMap = std::map<MessageSocketPtr, FutureMap>;
     struct CancelableKit;
     using CancelableKitPtr = boost::shared_ptr<CancelableKit>;
     CancelableKitPtr _cancelables;
@@ -114,37 +133,38 @@ namespace qi {
 
     qi::AnyObject createServiceBoundObjectType(ServiceBoundObject *self, bool bindTerminate = false);
 
-
-    inline ObjectHost* _gethost() { return _owner ? _owner : this; }
-    static void _removeCachedFuture(CancelableKitWeak kit, TransportSocketPtr sock, MessageId id);
-    static void serverResultAdapterNext(AnyReference val, Signature targetSignature, ObjectHost* host,
-                                 TransportSocketPtr sock, const MessageAddress& replyAddr,
+    inline boost::weak_ptr<ObjectHost> _gethost() { return _owner ? *_owner : weakPtr(); }
+    static void _removeCachedFuture(CancelableKitWeak kit, MessageSocketPtr sock, MessageId id);
+    static void serverResultAdapterNext(AnyReference val, Signature targetSignature,
+                                        boost::weak_ptr<ObjectHost> host,
+                                 MessageSocketPtr sock, const MessageAddress& replyAddr,
                                  const Signature& forcedReturnSignature, CancelableKitWeak kit);
-    static void serverResultAdapter(Future<AnyReference> future, const Signature& targetSignature, ObjectHost* host,
-                                    TransportSocketPtr sock, const MessageAddress& replyAddr,
+    static void serverResultAdapter(Future<AnyReference> future, const Signature& targetSignature,
+                                    boost::weak_ptr<ObjectHost> host,
+                                    MessageSocketPtr sock, const MessageAddress& replyAddr,
                                     const Signature& forcedReturnSignature, CancelableKitWeak kit,
                                     AtomicIntPtr cancelRequested = AtomicIntPtr());
 
   private:
     // remote link id -> local link id
     using ServiceSignalLinks = std::map<SignalLink, RemoteSignalLink>;
-    using BySocketServiceSignalLinks = std::map<qi::TransportSocketPtr, ServiceSignalLinks>;
+    using BySocketServiceSignalLinks = std::map<qi::MessageSocketPtr, ServiceSignalLinks>;
 
     //Event handling (no lock needed)
     BySocketServiceSignalLinks  _links;
 
     boost::mutex _callMutex;
   private:
-    qi::TransportSocketPtr _currentSocket;
+    qi::MessageSocketPtr _currentSocket;
     unsigned int           _serviceId;
     unsigned int           _objectId;
     qi::AnyObject          _object;
     qi::AnyObject          _self;
     qi::MetaCallType       _callType;
-    qi::ObjectHost*        _owner;
+    boost::optional<boost::weak_ptr<qi::ObjectHost>> _owner;
     // prevents parallel onMessage on self execution and protects the current socket
     mutable boost::recursive_mutex           _mutex;
-    boost::function<void (TransportSocketPtr, std::string)> _onSocketDisconnectedCallback;
+    boost::function<void (MessageSocketPtr, std::string)> _onSocketDisconnectedCallback;
 
     static qi::Atomic<unsigned int> _nextId;
 

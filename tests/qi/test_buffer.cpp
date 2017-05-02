@@ -7,6 +7,7 @@
 
 #include <cstdlib>
 #include <string>
+#include <vector>
 
 #include <gtest/gtest.h>
 
@@ -16,7 +17,7 @@
 TEST(TestBuffer, TestReserveSpace)
 {
   qi::Buffer      buffer;
-  unsigned char   *image, *resultImage;
+  unsigned char   *resultImage;
   int             fiveM = 5242880;
   void           *reservedSpace1;
   std::string     str("Oh man, this is a super config file, check it out !");
@@ -26,12 +27,12 @@ TEST(TestBuffer, TestReserveSpace)
   //Oh wait it's a config file !
   ASSERT_TRUE(buffer.reserve(1024) != NULL);
 
-  image = new unsigned char [fiveM];
+  std::vector<unsigned char> image(fiveM);
   srand(static_cast<unsigned int>(time(NULL)));
   for (int i = 0; i < fiveM; i++)
     image[i] = static_cast<unsigned char>(rand() % 256);
 
-  buffer.write(image, fiveM);
+  buffer.write(image.data(), fiveM);
   resultImage = (unsigned char*)buffer.data() + 150 + 1024;
 
   for (int i = 0; i < fiveM; i++)

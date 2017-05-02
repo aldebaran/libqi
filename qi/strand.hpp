@@ -50,8 +50,8 @@ public:
   std::atomic<unsigned int> _aliveCount;
   bool _processing; // protected by mutex, no need for atomic
   std::atomic<int> _processingThread;
-  boost::mutex _mutex;
-  boost::condition_variable _processFinished;
+  boost::recursive_mutex _mutex;
+  boost::condition_variable_any _processFinished;
   bool _dying;
   Queue _queue;
 
@@ -75,7 +75,7 @@ public:
   { QI_ASSERT(false); throw 0; }
   using ExecutionContext::async;
 private:
-  void stopProcess(boost::mutex::scoped_lock& lock,
+  void stopProcess(boost::recursive_mutex::scoped_lock& lock,
                    bool finished);
 };
 

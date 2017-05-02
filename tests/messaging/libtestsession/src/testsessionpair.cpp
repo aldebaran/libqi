@@ -32,9 +32,10 @@ TestSessionPair::TestSessionPair(TestMode::Mode mode, const std::string sdUrl)
     if (_mode == TestMode::Mode_Gateway)
     {
       _sd->listenStandalone("tcp://0.0.0.0:0");
-      _gw.attachToServiceDirectory(_sd->url()).value();
-      _gw.listen(sdUrl);
-      endpoints = _gw.endpoints();
+      _gw.reset(new qi::Gateway);
+      _gw->attachToServiceDirectory(_sd->url()).value();
+      _gw->listen(sdUrl);
+      endpoints = _gw->endpoints();
     }
     else
     {
@@ -44,8 +45,8 @@ TestSessionPair::TestSessionPair(TestMode::Mode mode, const std::string sdUrl)
   }
 
   // #3 Get client and server sessions.
-  _client = new TestSession(endpoints[0].str(), false, _mode);
-  _server = new TestSession(endpoints[0].str(), true, _mode);
+  _client.reset(new TestSession(endpoints[0].str(), false, _mode));
+  _server.reset(new TestSession(endpoints[0].str(), true, _mode));
 }
 
 TestSessionPair::TestSessionPair(TestSessionPair &other)
@@ -56,14 +57,14 @@ TestSessionPair::TestSessionPair(TestSessionPair &other)
   _mode = TestMode::getTestMode();
 
   // #2 Get client and server sessions using other pair service directory.
-  _client = new TestSession(other._sd->endpoints()[0].str(), false, _mode);
-  _server = new TestSession(other._sd->endpoints()[0].str(), true, _mode);
+  _client.reset(new TestSession(other._sd->endpoints()[0].str(), false, _mode));
+  _server.reset(new TestSession(other._sd->endpoints()[0].str(), true, _mode));
 }
 
 TestSessionPair::~TestSessionPair()
 {
-  delete _client;
-  delete _server;
+  _client.reset();
+  _server.reset();
 }
 
 qi::SessionPtr TestSessionPair::client() const
@@ -92,5 +93,7 @@ std::vector<qi::Url> TestSessionPair::serviceDirectoryEndpoints() const
 
 std::vector<qi::Url> TestSessionPair::gatewayEndpoints() const
 {
-  return _gw.endpoints();
+  if (_gw)
+    return _gw->endpoints();
+  return std::vector<qi::Url>{};
 }

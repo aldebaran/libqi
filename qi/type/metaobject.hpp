@@ -145,19 +145,38 @@ namespace qi {
 
   bool QI_API operator < (const MetaObject& a, const MetaObject& b);
 
+
+  /** Information about an operation that attempted to add a member to the type's interface. */
+  struct MemberAddInfo
+  {
+    MemberAddInfo(unsigned int newId, bool newMember)
+      : id(newId), isNewMember(newMember)
+    {}
+
+    unsigned int id;    ///< Id of the member that has been created or that already existed.
+    bool isNewMember;   ///< True iff the member has been created through the operation.
+  };
+
   class MetaObjectBuilderPrivate;
   class QI_API MetaObjectBuilder {
   public:
     MetaObjectBuilder();
 
     void setDescription(const std::string& desc);
-    unsigned int addMethod(const qi::Signature &sigret,
+
+    MemberAddInfo addMethod(const qi::Signature &sigret,
                            const std::string &name,
                            const qi::Signature &signature,
                            int id = -1);
-    unsigned int addMethod(MetaMethodBuilder& builder, int id = -1);
-    unsigned int addSignal(const std::string &name, const qi::Signature& sig, int id = -1);
-    unsigned int addProperty(const std::string& name, const qi::Signature& sig, int id = -1);
+
+    /// @see MetaObjectPrivate::addMethod()
+    MemberAddInfo addMethod(MetaMethodBuilder& builder, int id = -1);
+
+    /// @see MetaObjectPrivate::addSignal()
+    MemberAddInfo addSignal(const std::string &name, const qi::Signature& sig, int id = -1);
+
+    /// @see MetaObjectPrivate::addProperty()
+    MemberAddInfo addProperty(const std::string& name, const qi::Signature& sig, int id = -1);
     qi::MetaObject metaObject();
 
   private:

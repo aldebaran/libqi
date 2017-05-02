@@ -30,19 +30,19 @@ public:
   ~SessionInitializer();
 
 public:
-  bool setUp(qi::SessionPtr session, const std::string &serviceDirectoryUrl, TestMode::Mode mode, bool listen);
-  bool tearDown(qi::SessionPtr session, TestMode::Mode mode);
+  void setUp(qi::SessionPtr session, const std::string &serviceDirectoryUrl, TestMode::Mode mode, bool listen);
+  void tearDown(qi::SessionPtr session, TestMode::Mode mode);
 
 private:
-  bool setUpSD(qi::SessionPtr session, const std::string &serviceDirectoryUrl);
-  bool setUpSSL(qi::SessionPtr session, const std::string &serviceDirectoryUrl);
-  bool setUpNightmare(qi::SessionPtr session, const std::string &serviceDirectoryUrl);
-  bool tearDownSD(qi::SessionPtr session);
-  bool tearDownNightmare(qi::SessionPtr session);
+  void setUpSD(qi::SessionPtr session, const std::string &serviceDirectoryUrl);
+  void setUpSSL(qi::SessionPtr session, const std::string &serviceDirectoryUrl);
+  void setUpNightmare(qi::SessionPtr session, const std::string &serviceDirectoryUrl);
+  void tearDownSD(qi::SessionPtr session);
+  void tearDownNightmare(qi::SessionPtr session);
 
 private:
-  using setUpFcnt = bool (SessionInitializer::*)(qi::SessionPtr session, const std::string &serviceDirectoryUrl);
-  using tearDownFcnt = bool (SessionInitializer::*)(qi::SessionPtr session);
+  using setUpFcnt = void (SessionInitializer::*)(qi::SessionPtr session, const std::string &serviceDirectoryUrl);
+  using tearDownFcnt = void (SessionInitializer::*)(qi::SessionPtr session);
 
   bool                                     _listen;
 

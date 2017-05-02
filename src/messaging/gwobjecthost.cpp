@@ -5,7 +5,7 @@
 #include <qi/signature.hpp>
 #include <qi/jsoncodec.hpp>
 
-#include "transportsocket.hpp"
+#include "messagesocket.hpp"
 #include "gwobjecthost.hpp"
 #include "remoteobject_p.hpp"
 #include "boundobject.hpp"
@@ -19,7 +19,7 @@ GwObjectHost::~GwObjectHost()
 {
 }
 
-static MetaObject extractReturnedMetaObject(const Message& msg, TransportSocketPtr);
+static MetaObject extractReturnedMetaObject(const Message& msg, MessageSocketPtr);
 
 static bool hasObjectsSomewhere(const Signature& sig)
 {
@@ -39,11 +39,16 @@ static bool hasObjectsSomewhere(const Signature& sig)
   return false;
 }
 
-class MockObjectHost : public ObjectHost
+class MockObjectHost : public ObjectHost, public Trackable<MockObjectHost>
 {
 public:
   MockObjectHost(Message::Service s)
     : ObjectHost(s) {}
+  ~MockObjectHost()
+  {
+    destroy();
+  }
+
   unsigned int nextId() { return id_++; }
 private:
   static unsigned int id_;
@@ -51,7 +56,7 @@ private:
 
 unsigned int MockObjectHost::id_ = 2;
 
-void GwObjectHost::assignClientMessageObjectsGwIds(const Signature& signature, Message& msg, TransportSocketPtr sender, TransportSocketPtr destination)
+void GwObjectHost::assignClientMessageObjectsGwIds(const Signature& signature, Message& msg, MessageSocketPtr sender, MessageSocketPtr destination)
 {
   qiLogDebug() << "Assigning client message objects ids, signature: " << signature.toString();
   // if there's no chance of any object being in the call we're done.
@@ -64,14 +69,14 @@ void GwObjectHost::assignClientMessageObjectsGwIds(const Signature& signature, M
   // ObjectHost uses a static int for its objectId so we're OK instantiating multiple
   // ones.
   Message forward;
-  MockObjectHost host(Message::Service_Server);
+  auto host = boost::make_shared<MockObjectHost>(Message::Service_Server);
 
   forward.setFlags(msg.flags());
-  forward.setValue(callParameters, signature, &host, sender.get());
+  forward.setValue(callParameters, signature, host->weakPtr(), sender.get());
   msg.setBuffer(forward.buffer());
 
   // The message will store all the objects it serializes in the host.
-  const ObjectHost::ObjectMap& objects = host.objects();
+  const ObjectHost::ObjectMap& objects = host->objects();
   std::map<GwObjectId, MetaObject> newObjectsMetaObjects;
   std::map<GwObjectId, ObjectInfo > newObjectsOrigin;
   std::vector<FullObjectAddress> newObjectFullAddresses;
@@ -85,7 +90,7 @@ void GwObjectHost::assignClientMessageObjectsGwIds(const Signature& signature, M
     ObjectAddress addr;
     addr.service = ro->service();
     addr.object = ro->object();
-    ro->setTransportSocket(TransportSocketPtr());
+    ro->setTransportSocket(MessageSocketPtr());
 
     newObjectsMetaObjects[oid] = ro->metaObject();
     newObjectsOrigin[oid] = { sender, addr };
@@ -116,7 +121,7 @@ void GwObjectHost::assignClientMessageObjectsGwIds(const Signature& signature, M
   callParameters.destroy();
 }
 
-void GwObjectHost::harvestClientReplyOriginatingObjects(Message& msg, TransportSocketPtr sender, GwObjectId gwid, TransportSocketPtr destination)
+void GwObjectHost::harvestClientReplyOriginatingObjects(Message& msg, MessageSocketPtr sender, GwObjectId gwid, MessageSocketPtr destination)
 {
   qiLogDebug() << "Harvesting client reply originating objects";
   Signature signature;
@@ -130,7 +135,7 @@ void GwObjectHost::harvestClientReplyOriginatingObjects(Message& msg, TransportS
   assignClientMessageObjectsGwIds(signature, msg, sender, destination);
 }
 
-void GwObjectHost::harvestClientCallOriginatingObjects(Message& msg, TransportSocketPtr sender, TransportSocketPtr destination)
+void GwObjectHost::harvestClientCallOriginatingObjects(Message& msg, MessageSocketPtr sender, MessageSocketPtr destination)
 {
   qiLogDebug() << "Harvesting client call originating objects";
   Signature signature;
@@ -151,7 +156,7 @@ void GwObjectHost::harvestClientCallOriginatingObjects(Message& msg, TransportSo
   assignClientMessageObjectsGwIds(signature, msg, sender, destination);
 }
 
-void GwObjectHost::harvestServiceOriginatingObjects(Message& msg, TransportSocketPtr sender, TransportSocketPtr destination)
+void GwObjectHost::harvestServiceOriginatingObjects(Message& msg, MessageSocketPtr sender, MessageSocketPtr destination)
 {
   qiLogDebug() << "Harvesting objects from message for unregistered object";
   // To be able to find object occurrences in the message, guess the signature of remote member.
@@ -164,9 +169,10 @@ void GwObjectHost::harvestServiceOriginatingObjects(Message& msg, TransportSocke
     const Signature& (MetaMethod::*signatureGetter)() const = NULL;
     if (msg.type() == Message::Type_Reply || msg.type() == Message::Type_Error)
     {
-      std::map<ServiceId, std::map<ObjectId, MetaObject> >::iterator sit = _servicesMetaObjects.find(msg.service());
-      if (msg.function() == Message::BoundObjectFunction_MetaObject &&
-          sit->second.find(msg.object()) == sit->second.end())
+      auto sit = _servicesMetaObjects.find(msg.service());
+      if (msg.function() == Message::BoundObjectFunction_MetaObject
+        && sit != _servicesMetaObjects.end()
+        && sit->second.find(msg.object()) == sit->second.end())
       {
         boost::upgrade_to_unique_lock<boost::shared_mutex> unique_lock(lock);
         _servicesMetaObjects[msg.service()][Message::GenericObject_Main] = extractReturnedMetaObject(msg, sender);
@@ -198,14 +204,14 @@ void GwObjectHost::harvestServiceOriginatingObjects(Message& msg, TransportSocke
 
   AnyReference passed = msg.value(signature, sender);
   StreamContext filler;
-  MockObjectHost host(Message::Service_Server);
+  auto host = boost::make_shared<MockObjectHost>(Message::Service_Server);
   Message dummy;
 
   // we don't want to pollute the original message and potentially change valid id
   // of contained objects, so we do it in an unrelated message.
-  dummy.setValue(passed, signature, &host, &filler);
+  dummy.setValue(passed, signature, host->weakPtr(), &filler);
 
-  const ObjectHost::ObjectMap& objects = host.objects();
+  const ObjectHost::ObjectMap& objects = host->objects();
   std::map<ObjectId, MetaObject> newServicesMetaObject;
   std::vector<FullObjectAddress> newObjectFullAddresses;
   newObjectFullAddresses.reserve(objects.size());
@@ -218,7 +224,7 @@ void GwObjectHost::harvestServiceOriginatingObjects(Message& msg, TransportSocke
     // Otherwise when we destroy `passed` below, the remoteobject
     // will attempt to send back home a `terminate` message, which we don't want.
     // By setting a null socket the object will stay alive on the remote end.
-    ro->setTransportSocket(TransportSocketPtr());
+    ro->setTransportSocket(MessageSocketPtr());
     newServicesMetaObject[ro->object()] = ro->metaObject();
 
     ObjectAddress addr;
@@ -265,7 +271,7 @@ MetaObject* GwObjectHost::findMetaObject(ServiceId serviceId, ObjectId objectId)
   return &foundObjectIt->second;
 }
 
-void GwObjectHost::harvestMessageObjects(Message& msg, TransportSocketPtr sender, TransportSocketPtr destination)
+void GwObjectHost::harvestMessageObjects(Message& msg, MessageSocketPtr sender, MessageSocketPtr destination)
 {
   qiLogDebug() << "Harvesting objects from message";
   if (msg.type() == Message::Type_Call || msg.type() == Message::Type_Post)
@@ -277,7 +283,7 @@ void GwObjectHost::harvestMessageObjects(Message& msg, TransportSocketPtr sender
   }
   else if (msg.type() == Message::Type_Reply)
   {
-    std::map<TransportSocketPtr, std::map<ObjectAddress, GwObjectId> >::iterator sit = _hostObjectBank.find(sender);
+    std::map<MessageSocketPtr, std::map<ObjectAddress, GwObjectId> >::iterator sit = _hostObjectBank.find(sender);
     if (sit != _hostObjectBank.end())
     {
       ObjectAddress addr(msg.service(), msg.object());
@@ -325,9 +331,9 @@ ObjectInfo GwObjectHost::objectSource(const ObjectAddress& address)
   return{};
 }
 
-static MetaObject extractReturnedMetaObject(const Message& msg, TransportSocketPtr);
+static MetaObject extractReturnedMetaObject(const Message& msg, MessageSocketPtr);
 
-void GwObjectHost::treatMessage(GwTransaction& t, TransportSocketPtr sender, TransportSocketPtr destination)
+void GwObjectHost::treatMessage(GwTransaction& t, MessageSocketPtr sender, MessageSocketPtr destination)
 {
   qiLogDebug() << "treatMessage: " << t.content.address();
   Message& msg = t.content;
@@ -371,7 +377,7 @@ void GwObjectHost::treatMessage(GwTransaction& t, TransportSocketPtr sender, Tra
   else if (msg.type() == Message::Type_Reply || msg.type() == Message::Type_Error || msg.type() == Message::Type_Event)
   {
     boost::shared_lock<boost::shared_mutex> lock(_mutex);
-    std::map<TransportSocketPtr, std::map<ObjectAddress, GwObjectId> >::iterator it = _hostObjectBank.find(sender);
+    std::map<MessageSocketPtr, std::map<ObjectAddress, GwObjectId> >::iterator it = _hostObjectBank.find(sender);
     if (it != _hostObjectBank.end())
     {
       std::map<ObjectAddress, GwObjectId>::iterator oit =
@@ -413,7 +419,7 @@ void GwObjectHost::serviceDisconnected(ServiceId id)
   _objectsUsedOnServices.erase(id);
 }
 
-void GwObjectHost::clientDisconnected(TransportSocketPtr socket)
+void GwObjectHost::clientDisconnected(MessageSocketPtr socket)
 {
   qiLogDebug() << "Processing client disconnection in gateway's object host, socket: " << (void*)socket.get();
   boost::upgrade_lock<boost::shared_mutex> lock(_mutex);
@@ -477,7 +483,7 @@ void GwObjectHost::clientDisconnected(TransportSocketPtr socket)
   _hostObjectBank.erase(socket);
 }
 
-static MetaObject extractReturnedMetaObject(const Message& msg, TransportSocketPtr sock)
+static MetaObject extractReturnedMetaObject(const Message& msg, MessageSocketPtr sock)
 {
   static const std::string retSig =
       "({I(Issss[(ss)<MetaMethodParameter,name,description>]s)<MetaMethod,uid,returnSignature,name,"
@@ -490,7 +496,7 @@ static MetaObject extractReturnedMetaObject(const Message& msg, TransportSocketP
   return obj;
 }
 
-TransportSocketPtr GwObjectHost::findInUnknownMetaObjectSockets(ServiceId id)
+MessageSocketPtr GwObjectHost::findInUnknownMetaObjectSockets(ServiceId id)
 {
   boost::shared_lock<boost::shared_mutex> lock(_mutex);
   auto it = _unknownMetaObjectSockets.find(id);

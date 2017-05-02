@@ -1,71 +1,125 @@
-#add_subdirectory(test_messaging)
-#add_subdirectory(test_messaging_publish)
-#add_subdirectory(test_transport)
-#add_subdirectory(test_transport_publish)
-
-#add_subdirectory(test_endpoint_context)
 if(QI_WITH_TESTS)
-  add_subdirectory(libtestsession)
+
   qi_create_module(naoqi.testanymodule        SRC testanymodule.cpp        SHARED DEPENDS QI NO_INSTALL)
   qi_create_module(naoqi.testanymodulesession SRC testanymodulesession.cpp SHARED DEPENDS QI NO_INSTALL)
-
   install(TARGETS naoqi.testanymodule        DESTINATION lib/naoqi COMPONENT test)
   install(TARGETS naoqi.testanymodulesession DESTINATION lib/naoqi COMPONENT test)
 
-  qimessaging_create_session_test(test_event_remote         SRC test_event_remote.cpp         DEPENDS QI GTEST TESTSESSION TIMEOUT 30)
-  qimessaging_create_session_test(test_event_remote_connect SRC test_event_remote_connect.cpp DEPENDS QI GTEST TESTSESSION TIMEOUT 30)
-  qimessaging_create_session_test(test_call_many            SRC test_call_many.cpp            DEPENDS QI GTEST TESTSESSION TIMEOUT 30)
-  qimessaging_create_session_test(test_session              SRC test_session.cpp              DEPENDS QI GTEST TESTSESSION TIMEOUT 30)
-  qimessaging_create_session_test(test_session_harder       SRC test_session_harder.cpp       DEPENDS QI GTEST TESTSESSION TIMEOUT 30)
-  qimessaging_create_session_test(test_call                 SRC test_call.cpp                 DEPENDS QI GTEST TESTSESSION TIMEOUT 30)
+  # A separate binary that runs a simple service directory
+  # Takes arguments supported by qi::ApplicationSession
+  qi_create_test_helper(simplesd "simplesd.cpp" DEPENDS qi)
 
-  qimessaging_create_session_test(test_service     SRC test_service.cpp     DEPENDS QI GTEST TESTSESSION TIMEOUT 30)
-  qimessaging_create_session_test(test_send_object SRC test_send_object.cpp DEPENDS QI GTEST TESTSESSION TIMEOUT 30)
-  qimessaging_create_session_test(test_proxy       SRC test_proxy.cpp       DEPENDS QI GTEST TESTSESSION TIMEOUT 30)
+  # A separate binary that runs a service directory mirroring the target
+  # Takes arguments supported by qi::ApplicationSession
+  qi_create_test_helper(mirrorsd "mirrorsd.cpp" DEPENDS qi)
+
+  # A separate binary that registers a service on a service directory
+  # Takes arguments supported by qi::ApplicationSession
+  # Expects the url of the service directory to connect to
+  qi_create_test_helper(remoteserviceowner "remoteserviceowner.cpp" DEPENDS qi)
+
+  qi_stage_dir(".")
+
+  # General tests
+  qi_create_gtest(
+    test_messaging
+
+    "test_anymodule.cpp"
+    "test_authentication.cpp"
+#    "test_autoservice.cpp" # TODO: repair
+    "test_binarycoder.cpp"
+    "test_event_connect.cpp"
+    "test_gateway.cpp"
+    "test_messaging.cpp" # main
+    "test_metavalue_argument.cpp"
+    "test_sd.cpp"
+    "test_url.cpp"
+#    "test_with_gateway.cpp" # TODO: repair
+    "test_without_gateway.cpp"
+
+    DEPENDS
+    qi
+    qitestutils
+
+    TIMEOUT 120
+  )
+
+  # A helper library to test two sessions communicating in various modes
+  add_subdirectory(libtestsession)
+
+  # Tests using two sessions communicating in various modes
+  qimessaging_create_session_test(
+    test_messaging_with_sessionpair
+
+    SRC
+    "test_call.cpp"
+    "test_call_many.cpp"
+    "test_call_on_close_session.cpp"
+    "test_event_remote.cpp"
+    "test_event_remote_connect.cpp"
+    "test_messaging_with_sessionpair.cpp" # main
+    "test_send_object.cpp"
+    "test_service.cpp"
+    "test_session.cpp"
+    "test_session_harder.cpp"
+
+    DEPENDS
+    qi
+    testsession
+
+    TIMEOUT 120
+  )
+
+  # Tests on Application require a separate binary
+  qi_create_gtest(test_applicationsession SRC test_applicationsession.cpp DEPENDS QI GTEST TIMEOUT 30)
+  qi_create_gtest(test_applicationsession_option SRC test_applicationsession_option.cpp DEPENDS QI GTEST TIMEOUT 30)
+  qi_create_gtest(test_applicationsessionnoautoexit SRC test_applicationsession_noautoexit.cpp DEPENDS QI GTEST TIMEOUT 30)
+  qi_create_test_helper(test_appsession_opts SRC test_applicationsession_opts.cpp DEPENDS QI GTEST GTEST_MAIN)
+  qi_add_test(test_appsession_options_low test_appsession_opts ARGUMENTS low TIMEOUT 30)
+  qi_add_test(test_appsession_options_med test_appsession_opts ARGUMENTS medium TIMEOUT 30)
+  qi_add_test(test_appsession_options_high test_appsession_opts ARGUMENTS high TIMEOUT 30)
+
+  # Broken!
+  #qi_create_gtest(test_application SRC "test_messaging_application_exit.cpp" DEPENDS QI)
 endif()
 
-qi_create_gtest(test_anymodule_service    SRC test_anymodule.cpp DEPENDS QI GTEST TIMEOUT 30)
-qi_create_gtest(test_url                  SRC test_url.cpp       DEPENDS QI GTEST TIMEOUT 30)
-qi_create_gtest(test_transportsocketcache SRC test_transportsocketcache.cpp
-  ../../src/messaging/messagedispatcher.cpp ../../src/messaging/transportserverasio_p.cpp
-  ../../src/messaging/remoteobject.cpp ../../src/messaging/objecthost.cpp
-  ../../src/messaging/boundobject.cpp ../../src/messaging/transportsocketcache.cpp
-  ../../src/messaging/message.cpp ../../src/messaging/transportserver.cpp
-  ../../src/messaging/tcptransportsocket.cpp ../../src/messaging/transportsocket.cpp DEPENDS QI TIMEOUT 30)
-#qi_create_gtest(test_message_visitor      SRC test_message_visitor.cpp DEPENDS QI GTEST TIMEOUT 120)
-#Not working yet
-#qi_create_gtest(test_value                SRC test_value.cpp           DEPENDS QI GTEST TIMEOUT 120)
-qi_create_gtest(test_binarycoder          SRC test_binarycoder.cpp     DEPENDS QI GTEST TIMEOUT 30)
-qi_create_gtest(test_without_gateway      SRC test_without_gateway.cpp DEPENDS QI GTEST TIMEOUT 30)
-#qi_create_gtest(test_with_gateway         SRC test_with_gateway.cpp    DEPENDS QI GTEST TIMEOUT 120)
-# `qibuild test` on mac never returns with those tests.
-
-qi_create_gtest(test_event_connect                        SRC test_event_connect.cpp        DEPENDS QI GTEST TIMEOUT 30)
-qi_create_gtest(test_sd                                   SRC test_sd.cpp                   DEPENDS QI GTEST TIMEOUT 30)
-#broken
-#qimessaging_create_session_test(test_autoservice  SRC test_autoservice.cpp                   DEPENDS QI GTEST TESTSESSION TIMEOUT 30)
-#qi_create_gtest(test_application                  SRC test_application.cpp                   DEPENDS QI GTEST TIMEOUT 2)
-qi_create_gtest(test_gateway              SRC test_gateway.cpp              DEPENDS QI  GTEST TIMEOUT 10)
-qi_create_gtest(test_testsession                  SRC test_testsession.cpp                   DEPENDS QI GTEST TESTSESSION TIMEOUT 30)
-qi_create_gtest(test_metavalue_argument           SRC test_metavalue_argument.cpp            DEPENDS QI GTEST TIMEOUT 30)
-qi_create_gtest(test_applicationsession           SRC test_applicationsession.cpp            DEPENDS QI GTEST TIMEOUT 30)
-qi_create_gtest(test_applicationsession_option    SRC test_applicationsession_option.cpp     DEPENDS QI GTEST TIMEOUT 30)
-qi_create_gtest(test_applicationsessionnoautoexit SRC test_applicationsession_noautoexit.cpp DEPENDS QI GTEST TIMEOUT 30)
-qi_create_gtest(test_authentication               SRC test_authentication.cpp                DEPENDS QI GTEST TIMEOUT 30)
-
-qi_create_gtest(
-  test_call_on_close_session
-  SRC test_call_on_close_session.cpp
-  DEPENDS TESTSESSION QI BOOST BOOST_THREAD
-  TIMEOUT 60
+# Some tests target internal classes
+set(MESSAGING_SOURCES
+  "../../src/messaging/boundobject.cpp"
+  "../../src/messaging/message.cpp"
+  "../../src/messaging/messagedispatcher.cpp"
+  "../../src/messaging/objecthost.cpp"
+  "../../src/messaging/remoteobject.cpp"
+  "../../src/messaging/tcpmessagesocket.cpp"
+  "../../src/messaging/transportserver.cpp"
+  "../../src/messaging/transportserverasio_p.cpp"
+  "../../src/messaging/messagesocket.cpp"
+  "../../src/messaging/transportsocketcache.cpp"
 )
 
-qi_create_test_helper(test_appsession_opts                                    SRC test_applicationsession_opts.cpp DEPENDS QI GTEST GTEST_MAIN)
-qi_add_test(test_appsession_options_low test_appsession_opts            ARGUMENTS low    TIMEOUT 30)
-qi_add_test(test_appsession_options_med test_appsession_opts            ARGUMENTS medium TIMEOUT 30)
-qi_add_test(test_appsession_options_high test_appsession_opts           ARGUMENTS high   TIMEOUT 30)
+qi_create_gtest(
+  test_messaging_internal
 
-qi_create_gtest(test_signaturegen SRC sig_generator.cpp sig_generator.h test_signature.cpp DEPENDS TESTSESSION QI BOOST)
+  "test_messaging_internal.cpp"
+  "test_remoteobject.cpp"
+  "test_transportsocketcache.cpp"
+  "net/networkmock.cpp"
+  "net/networkmock.hpp"
+  "net/networkcommon.hpp"
+  "net/networkasionooplock.hpp"
+  "net/test_accept.cpp"
+  "net/test_connect.cpp"
+  "net/test_resolve.cpp"
+  "net/test_receive.cpp"
+  "net/test_send.cpp"
+  "test_tcpmessagesocket.cpp"
+  ${MESSAGING_SOURCES}
+
+  DEPENDS
+  qi
+
+  TIMEOUT 30
+)
 
 # those are idl tests that currently only
 # work on linux, and when not cross-compiling

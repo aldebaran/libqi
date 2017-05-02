@@ -14,7 +14,9 @@
 # include <boost/thread/condition_variable.hpp>
 # include <boost/function.hpp>
 
+# include <qi/type/traits.hpp>
 # include <qi/macro.hpp>
+# include <qi/macroregular.hpp>
 # include <qi/log.hpp>
 
 namespace qi
@@ -112,6 +114,65 @@ namespace qi
    */
   template<typename F, typename ARG0>
   boost::function<F> trackWithFallback(boost::function<void()> onFail, boost::function<F> f, const ARG0& arg0);
+
+  /// A polymorphic transformation that takes a procedure and returns a
+  /// "tracked with fallback" equivalent.
+  /// The trackable value must derive from Trackable.
+  ///
+  /// Procedure<void ()> Proc, Trackable T
+  template<typename Proc, typename T>
+  struct TrackWithFallbackTransfo
+  {
+    Proc _fallback;
+    T* _trackable;
+  // Regular:
+    QI_GENERATE_FRIEND_REGULAR_OPS_2(TrackWithFallbackTransfo, _fallback, _trackable)
+  // PolymorphicTransformation:
+    template<typename F>
+    auto operator()(F&& f) const -> decltype(
+      trackWithFallback(_fallback, std::forward<F>(f), _trackable))
+    {
+      return trackWithFallback(_fallback, std::forward<F>(f), _trackable);
+    }
+  };
+
+  /// Helper to deduce types to construct a TrackWithFallbackTransfo.
+  ///
+  /// Procedure<void ()> Proc, Trackable T
+  template<typename Proc, typename T>
+  TrackWithFallbackTransfo<traits::Decay<Proc>, T> trackWithFallbackTransfo(Proc&& fallback, T* t)
+  {
+    return {std::forward<Proc>(fallback), t};
+  }
+
+  /// A polymorphic transformation that takes a procedure and returns a
+  /// "tracked silent" equivalent.
+  /// The trackable value must derive from Trackable.
+  ///
+  /// Trackable T
+  template<typename T>
+  struct TrackSilentTransfo
+  {
+    T* _trackable;
+  // Regular:
+    QI_GENERATE_FRIEND_REGULAR_OPS_1(TrackSilentTransfo, _trackable)
+  // PolymorphicTransformation:
+    template<typename F>
+    auto operator()(F&& f) const -> decltype(
+      trackSilent(std::forward<F>(f), _trackable))
+    {
+      return trackSilent(std::forward<F>(f), _trackable);
+    }
+  };
+
+  /// Helper to deduce types to construct a TrackSilentTransfo.
+  ///
+  /// Trackable T
+  template<typename T>
+  TrackSilentTransfo<T> trackSilentTransfo(T* t)
+  {
+    return {t};
+  }
 }
 
 # include <qi/detail/trackable.hxx>

@@ -31,4 +31,10 @@
 # define QI_ASSERT_TRUE( expr__ ) QI_ASSERT( expr__ )
 # define QI_ASSERT_FALSE( expr__ ) QI_ASSERT( !(expr__) )
 
+/// If the expression is false, return false.
+/// Designed to be used in a boolean function where all conditions must be true
+/// for the function to be true.
+/// See isRegular() in conceptpredicates.hpp for a use example.
+# define QI_TRUE_OR_RETURN_FALSE( expr__ ) if (!(expr__)) return false
+
 #endif  // _QI_ASSERT_HPP_

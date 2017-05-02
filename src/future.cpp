@@ -19,11 +19,16 @@ namespace qi {
       void* operator new(size_t);
       void operator delete(void*);
       FutureBasePrivate();
+
+      // Disable copy
+      FutureBasePrivate(const FutureBasePrivate&) = delete;
+      FutureBasePrivate& operator=(const FutureBasePrivate&) = delete;
+
       boost::condition_variable_any _cond;
-      boost::recursive_mutex    _mutex;
-      std::string               _error;
-      qi::Atomic<int>           _state;
-      qi::Atomic<bool>          _cancelRequested;
+      boost::recursive_mutex _mutex;
+      std::string  _error;
+      std::atomic<FutureState> _state;
+      std::atomic<bool> _cancelRequested;
     };
 
     struct FutureBasePrivatePoolTag { };
@@ -42,10 +47,12 @@ namespace qi {
     FutureBasePrivate::FutureBasePrivate()
       : _cond(),
         _mutex(),
-        _error()
+        _error(),
+        _state(FutureState_None),
+        _cancelRequested(false)
+
+
     {
-      _state = FutureState_None;
-      _cancelRequested = false;
     }
 
     FutureBase::FutureBase()
@@ -121,10 +128,12 @@ namespace qi {
     }
 
     void FutureBase::reportStart() {
-      _p->_state.setIfEquals(FutureState_None, FutureState_Running);
+      auto expected = FutureState_None;
+      _p->_state.compare_exchange_strong(expected, FutureState_Running);
     }
 
     void FutureBase::notifyFinish() {
+      boost::unique_lock<boost::recursive_mutex> l{_p->_mutex};
       _p->_cond.notify_all();
     }
 

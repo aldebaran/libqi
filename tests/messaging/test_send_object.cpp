@@ -10,22 +10,12 @@
 #include <qi/signalspy.hpp>
 #include <qi/anymodule.hpp>
 #include <testsession/testsessionpair.hpp>
+#include <qi/testutils/testutils.hpp>
 
 qiLogCategory("test");
 
 int timeoutMs = 300;
 qi::Duration timeout = qi::MilliSeconds(timeoutMs);
-
-int main(int argc, char **argv)
-{
-  qi::Application app(argc, argv);
-  TestMode::initTestMode(argc, argv);
-  ::testing::InitGoogleTest(&argc, argv);
-  qi::log::addFilter("qi.*", qi::LogLevel_Debug);
-  qi::log::addFilter("qigateway.*", qi::LogLevel_Debug);
-  qi::log::addFilter("qimessaging.*", qi::LogLevel_Debug);
-  return RUN_ALL_TESTS();
-}
 
 void test_service(const qi::AnyObject &o)
 {
@@ -164,13 +154,19 @@ TEST(SendObject, pass_obj_made_from_module)
 
   qi::AnyObject remotePlop = p.client()->service("plop");
   qi::Promise<void> receivingObject;
-  remotePlop.connect("onTruc", boost::function<void(qi::AnyObject)>([&](qi::AnyObject o)
+  auto signalLink = remotePlop.connect(
+        "onTruc", boost::function<void(qi::AnyObject)>([&](qi::AnyObject o)
   {
     ASSERT_EQ(1, o.call<int>("testMethod", 0)); // this is the real test
     receivingObject.setValue(0);
-  }));
+  })).value();
   remotePlop.async<void>("emitObject", obj);
   ASSERT_EQ(qi::FutureState_FinishedWithValue, receivingObject.future().waitFor(timeout));
+  // If the test failed and the onTruc signal has not been triggered before the
+  // end of the timeout, it could still be called during the test destruction.
+  // Disconnect the callback to make sure it is not called after receivingObject
+  // Promise has been destroyed.
+  remotePlop.disconnect(signalLink);
 }
 
 class ObjectEmitterFactory
@@ -221,7 +217,7 @@ TEST(SendObject, emitter_from_factory_transmits_objects_through_property_then_re
   auto vectorOfObjectsReceived = emitter.property<std::vector<qi::AnyObject>>("vectorOfObjects").value();
   auto objectToReceive = vectorOfObjectsReceived[0];
   auto receiving = emitter.async<void>("receiveObject", objectToReceive);
-  ASSERT_EQ(qi::FutureState_FinishedWithValue, receiving.wait(100));
+  ASSERT_EQ(qi::FutureState_FinishedWithValue, receiving.wait(timeoutMs));
 }
 
 TEST(SendObject, emitter_from_factory_transmits_objects_through_property_then_ping_property)
@@ -367,7 +363,7 @@ TEST(SendObject, object_emitter_service_provides_single_object_through_property_
 class Human
 {
 public:
-  void pingMe(const qi::AnyObject& humanToPing) { std::string oName = humanToPing.call<std::string>("ping"); }
+  void pingMe(const qi::AnyObject& humanToPing) {std::string oName = humanToPing.call<std::string>("ping");}
   std::string ping()
   {
     qiLogInfo() << "Ping !";
@@ -460,12 +456,21 @@ class CookieBox
 public:
   qi::AnyObject makeCookie(bool withTaste)
   {
+    std::weak_ptr<Token> token{ _token };
     return boost::shared_ptr<Cookie>{
       new Cookie{withTaste},
-      [=](Cookie* cookie) {
+      [this,token](Cookie* cookie) {
         qiLogInfo() << "Cookie destruction";
         delete cookie;
-        QI_EMIT cookieLost();
+
+        if (auto cookieBox = token.lock())
+        {
+          QI_EMIT cookieLost();
+        }
+        else
+        {
+          qiLogWarning() << "CookieBox have been destroyed before all Cookies instances destruction!";
+        }
       }
     };
   }
@@ -484,6 +489,9 @@ public:
 
 private:
   qi::AnyObject cookie;
+
+  struct Token {};
+  std::shared_ptr<Token> _token{ std::make_shared<Token>() };
 };
 
 struct CookieMonster
@@ -614,4 +622,69 @@ TEST(SendObject, eat_yourself)
   auto eatYourself = cookie.async<bool>("eatRival", cookie);
   eatYourself.value();
   // ^^^ This timeouts because cookie.eat() is never called inside of eatRival.
+}
+
+struct InterestingObject
+{
+  bool doStuff()
+  {
+    qiLogInfo() << "Done";
+    return true;
+  }
+};
+
+QI_REGISTER_OBJECT(InterestingObject, doStuff)
+
+struct MiddleMan
+{
+  bool callOnArgument(qi::AnyObject o, const std::string &method)
+  {
+    return o.call<bool>(method);
+  }
+};
+
+QI_REGISTER_OBJECT(MiddleMan, callOnArgument)
+
+TEST(SendObject, MultiProcessPingPong_CallArgumentMethod)
+{
+  // Start a service directory in a separate process.
+  const std::string sdPath = qi::path::findBin("simplesd");
+  ScopedProcess sd {sdPath, {"--qi-listen-url=tcp://127.0.0.1:54321",
+                             "--qi-standalone"}};
+
+  auto client = qi::makeSession();
+  for (int i = 0; i < 20; ++i)
+  {
+    qi::os::msleep(50);
+    try
+    {
+      client->connect("tcp://127.0.0.1:54321");
+      break;
+    }
+    catch (const std::exception& e)
+    {
+      std::cout << "Service Directory is not ready yet (" << e.what() << ")" << std::endl;
+    }
+  }
+  ASSERT_TRUE(client->isConnected());
+
+  // Register a service in another process.
+  const std::string remoteServiceOwnerPath =
+      qi::path::findBin("remoteserviceowner");
+  ScopedProcess remoteServiceOwner{
+    remoteServiceOwnerPath, {"--qi-url=tcp://127.0.0.1:54321"}};
+
+  qi::Session session;
+  session.connect("tcp://127.0.0.1:54321");
+  session.waitForService("PingPongService").wait(5000);
+  qi::AnyObject serviceProxy = session.service("PingPongService");
+  serviceProxy.call<void>("give", boost::make_shared<MiddleMan>());
+  qi::AnyObject middleman = serviceProxy.call<qi::AnyObject>("take");
+  qi::AnyObject precious = boost::make_shared<InterestingObject>();
+  for (auto i = 0; i < 5; ++i)
+  {
+    qiLogInfo() << "Attempt #" << i;
+    auto doingStuff = middleman.async<bool>("callOnArgument", precious, "doStuff");
+    ASSERT_TRUE(doingStuff.value(3 * 1000));
+  }
 }

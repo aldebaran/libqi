@@ -35,7 +35,7 @@ void create_session(bool bare)
 
 
 // KEEP ME FIRST
-TEST(QiSession, create)
+TEST(QiSession, createMany)
 {
   nThreadFinished = 0;
   /* A lot of static init is going on, check that it is thread safe
@@ -54,8 +54,25 @@ TEST(QiSession, create)
   boost::thread(create_session, true);
   boost::thread(create_session, false);
   boost::thread(create_session, true);
-  while (*nThreadFinished != 12)
+  while (nThreadFinished.load() != 12)
     qi::os::msleep(10);
+}
+
+TEST(QiSession, createOne)
+{
+  auto session = qi::makeSession();
+  session->listenStandalone(qi::Url{"tcp://127.0.0.1:0"});
+}
+
+TEST(QiSession, trivialDirectConnection)
+{
+  auto session1 = qi::makeSession();
+  auto session2 = qi::makeSession();
+  session1->listenStandalone(qi::Url{"tcp://127.0.0.1:0"});
+  session2->connect(session1->endpoints()[0]);
+  ASSERT_TRUE(session2->isConnected());
+  session2->close();
+  session1->close();
 }
 
 static void session_close(qi::SessionPtr s, qi::Atomic<int>* counter)
@@ -73,7 +90,7 @@ TEST(QiSession, multiClose)
   boost::thread(session_close, p.server(), &counter);
   boost::thread(session_close, p.server(), &counter);
   boost::thread(session_close, p.server(), &counter);
-  while (*counter != 5)
+  while (counter.load() != 5)
     qi::os::msleep(50);
 }
 
@@ -85,7 +102,6 @@ static std::string reply(const std::string &msg)
 TEST(QiSession, simpleConnectionToSd)
 {
   TestSessionPair p;
-
   EXPECT_TRUE(p.client()->isConnected());
 }
 
@@ -126,18 +142,14 @@ TEST(QiSession, multipleConnectSuccess)
   qi::Future<void> f = session.connect(sd.url());
   qiLogVerbose() <<"wait";
   f.wait();
-  if (f.hasError())
-    qiLogWarning() << f.error();
-  EXPECT_FALSE(f.hasError());
+  EXPECT_FALSE(f.hasError()) << f.error();
   qiLogVerbose() <<"close";
   session.close();
   qiLogVerbose() <<"connect";
   f = session.connect(sd.url());
   qiLogVerbose() <<"wait";
   f.wait();
-  if (f.hasError())
-    qiLogWarning() << f.error();
-  EXPECT_FALSE(f.hasError());
+  EXPECT_FALSE(f.hasError()) << f.error();
   qiLogVerbose() <<"close";
   session.close();
   qiLogVerbose() <<"connect";
@@ -559,17 +571,4 @@ TEST(QiSession, WaitForServiceCanceled)
   qi::Future<void> future = pair.client()->waitForService("serviceTest");
   future.cancel();
   EXPECT_TRUE(future.isCanceled());
-}
-
-
-
-int main(int argc, char **argv)
-{
-  qi::Application app(argc, argv);
-#if defined(__APPLE__) || defined(__linux__)
-  setsid();
-#endif
-  ::TestMode::initTestMode(argc, argv);
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
 }

@@ -13,7 +13,8 @@
 #include <qi/binarycodec.hpp>
 #include <qi/anyfunction.hpp>
 #include <qi/types.hpp>
-
+#include <qi/macroregular.hpp>
+#include <boost/weak_ptr.hpp>
 
 namespace qi {
 
@@ -70,14 +71,15 @@ namespace qi {
     unsigned int serviceId;
     unsigned int objectId;
     unsigned int functionId;
+    QI_GENERATE_FRIEND_REGULAR_OPS_4(MessageAddress, messageId, serviceId, objectId, functionId)
   };
 
 
   /** \class qi::Message
     * This class represent a network message
     */
-  class TransportSocket;
-  using TransportSocketPtr = boost::shared_ptr<TransportSocket>;
+  class MessageSocket;
+  using MessageSocketPtr = boost::shared_ptr<MessageSocket>;
   class ObjectHost;
 
   class Message {
@@ -199,20 +201,22 @@ namespace qi {
     unsigned int action() const;
 
     void          setBuffer(const Buffer &buffer);
-    const Buffer &buffer() const;
+    const Buffer& buffer() const;
+    Buffer&       buffer();
 
     void          setError(const std::string &error);
 
     ///@return signature, set by setParameters() or setSignature()
 
 
-    AnyReference value(const Signature &signature, const qi::TransportSocketPtr &socket) const;
-    void setValue(const AutoAnyReference& value, const Signature& signature, ObjectHost* context = 0, StreamContext* streamContext = 0);
-    void setValues(const std::vector<qi::AnyReference>& values, ObjectHost* context = 0, StreamContext* streamContext = 0);
+    AnyReference value(const Signature &signature, const qi::MessageSocketPtr &socket) const;
+    void setValue(const AutoAnyReference& value, const Signature& signature,
+                  boost::weak_ptr<ObjectHost> context = {}, StreamContext* streamContext = 0);
+    void setValues(const std::vector<qi::AnyReference>& values, boost::weak_ptr<ObjectHost> context = {}, StreamContext* streamContext = 0);
     /// Convert values to \p targetSignature and assign to payload.
-    void setValues(const std::vector<qi::AnyReference>& values, const qi::Signature& targetSignature, ObjectHost* context = 0, StreamContext* streamContext = 0);
+    void setValues(const std::vector<qi::AnyReference>& values, const qi::Signature& targetSignature, boost::weak_ptr<ObjectHost> context = {}, StreamContext* streamContext = 0);
     /// Append additional data to payload
-    void appendValue(const AutoAnyReference& value, ObjectHost* context = 0, StreamContext* streamContext = 0);
+    void appendValue(const AutoAnyReference& value, boost::weak_ptr<ObjectHost> context = {}, StreamContext* streamContext = 0);
     MessageAddress address() const;
 
     bool         isValid() const;

@@ -54,6 +54,8 @@
 #include <qi/path.hpp>
 #include "utils.hpp"
 
+#include <mutex>
+
 qiLogCategory("qi.os");
 
 namespace qi {
@@ -327,6 +329,9 @@ namespace qi {
       struct ifaddrs *ifa = nullptr;
       void *tmpAddrPtr = nullptr;
       int ret = 0;
+
+      static std::mutex mutex;
+      std::lock_guard<std::mutex> lock(mutex);
 
       ret = getifaddrs(&ifAddrStruct);
       if (ret == -1) {

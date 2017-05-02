@@ -49,9 +49,12 @@ namespace qi {
     void joinAll()
     {
       std::thread workerThread;
-      while ((workerThread = pop()).joinable())
+      while (pop(workerThread))
       {
-        workerThread.join();
+        if (workerThread.joinable())
+        {
+          workerThread.join();
+        }
       }
     }
 
@@ -59,25 +62,26 @@ namespace qi {
     std::vector<std::thread> _workers;
     boost::mutex _mutex;
 
-    std::thread pop()
+    // Return false if there is no more threads to pop, true otherwise.
+    bool pop(std::thread& output)
     {
       boost::mutex::scoped_lock locked(_mutex);
       if (_workers.empty())
       {
-        return {};
+        return false;
       }
       else
       {
-        std::thread workerThread = std::move(_workers.back());
+        output = std::move(_workers.back());
         _workers.pop_back();
-        return workerThread;
+        return true;
       }
     }
   };
 
   using SteadyTimer = boost::asio::basic_waitable_timer<SteadyClock>;
 
-  static qi::Atomic<uint32_t> gTaskId{0};
+  static qi::Atomic<uint64_t> gTaskId{0};
 
   EventLoopAsio::EventLoopAsio()
   : _mode(Mode::Unset)
@@ -128,17 +132,6 @@ namespace qi {
       delete this;
   }
 
-  static void ping_me(bool & ping, boost::condition_variable& cond)
-  {
-    ping = true;
-    cond.notify_all();
-  }
-
-  static bool bool_identity(bool& b)
-  {
-    return b;
-  }
-
   void EventLoopAsio::_pingThread()
   {
     qi::os::setCurrentThreadName("EvLoop.mon");
@@ -146,21 +139,16 @@ namespace qi {
     static unsigned int msGrace = qi::os::getEnvDefault("QI_EVENTLOOP_GRACE_PERIOD", 0u);
     static unsigned int maxTimeouts = qi::os::getEnvDefault("QI_EVENTLOOP_MAX_TIMEOUTS", 20u);
     ++_nThreads;
-    boost::mutex mutex;
-    boost::condition_variable cond;
-    bool gotPong = false;
     unsigned int nbTimeout = 0;
     while (_work.load())
     {
       qiLogDebug() << "Ping";
-      gotPong = false;
-      post(qi::Seconds(0), boost::bind(&ping_me, boost::ref(gotPong), boost::ref(cond)));
-      boost::mutex::scoped_lock l(mutex);
-      if (!cond.timed_wait(l,
-        boost::get_system_time()+ boost::posix_time::milliseconds(msTimeout),
-        boost::bind(&bool_identity, boost::ref(gotPong))))
+      auto calling = asyncCall(Seconds{0}, []{});
+      auto callState = calling.waitFor(MilliSeconds{msTimeout});
+      QI_ASSERT(callState != FutureState_None);
+      if (callState == FutureState_Running)
       {
-        if (_maxThreads && _nThreads.load() >= _maxThreads + 1) // we count in nThreads
+        if (_maxThreads && _nThreads.load() > _maxThreads) // we count in nThreads
         {
           ++nbTimeout;
           qiLogInfo() << "Threadpool " << _name << " limit reached (" << nbTimeout
@@ -190,6 +178,7 @@ namespace qi {
       }
       else
       {
+        QI_ASSERT(callState == FutureState_FinishedWithValue);
         nbTimeout = 0;
         qiLogDebug() << "Ping ok";
         qi::os::msleep(msTimeout);
@@ -276,7 +265,7 @@ namespace qi {
 
   class ScopedIncDec {
   public:
-    ScopedIncDec(qi::Atomic<qi::uint32_t>& atom)
+    ScopedIncDec(qi::Atomic<qi::uint64_t>& atom)
       : _atom(atom)
     {
       ++_atom;
@@ -286,12 +275,12 @@ namespace qi {
       --_atom;
     }
 
-    qi::Atomic<qi::uint32_t>& _atom;
+    qi::Atomic<qi::uint64_t>& _atom;
   };
 
   class ScopedExitDec {
   public:
-    ScopedExitDec(qi::Atomic<qi::uint32_t>& atom)
+    ScopedExitDec(qi::Atomic<qi::uint64_t>& atom)
       : _atom(atom)
     {
     }
@@ -300,11 +289,11 @@ namespace qi {
       --_atom;
     }
 
-    qi::Atomic<qi::uint32_t>& _atom;
+    qi::Atomic<qi::uint64_t>& _atom;
   };
 
 
-  void EventLoopAsio::invoke_maybe(boost::function<void()> f, qi::uint32_t id, qi::Promise<void> p, const boost::system::error_code& erc)
+  void EventLoopAsio::invoke_maybe(boost::function<void()> f, qi::uint64_t id, qi::Promise<void> p, const boost::system::error_code& erc)
   {
     ScopedExitDec _(_totalTask);
 
@@ -348,7 +337,7 @@ namespace qi {
     static boost::system::error_code erc;
     qi::Promise<void> p;
     if (delay == qi::Duration(0)) {
-      uint32_t id = ++gTaskId;
+      const auto id = ++gTaskId;
       tracepoint(qi_qi, eventloop_post, id, cb.target_type().name());
 
 
@@ -367,7 +356,7 @@ namespace qi {
     if (!_work.load())
       return qi::makeFutureError<void>("Schedule attempt on destroyed thread pool");
 
-    uint32_t id = ++gTaskId;
+    const auto id = ++gTaskId;
 
     ++_totalTask;
     tracepoint(qi_qi, eventloop_delay, id, cb.target_type().name(), boost::chrono::duration_cast<qi::MicroSeconds>(delay).count());
@@ -379,7 +368,7 @@ namespace qi {
       timer->async_wait(boost::bind(&EventLoopAsio::invoke_maybe, this, cb, id, prom, _1));
       return prom.future();
     }
-    Promise<void> prom(PromiseNoop<void>);
+    Promise<void> prom;
     _io.post(boost::bind<void>(&EventLoopAsio::invoke_maybe, this, cb, id, prom,erc));
     return prom.future();
   }
@@ -397,7 +386,7 @@ namespace qi {
     if (!_work.load())
       return qi::makeFutureError<void>("Schedule attempt on destroyed thread pool");
 
-    uint32_t id = ++gTaskId;
+    const auto id = ++gTaskId;
 
     ++_totalTask;
     //tracepoint(qi_qi, eventloop_delay, id, cb.target_type().name(), qi::MicroSeconds(delay).count());

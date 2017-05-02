@@ -318,14 +318,14 @@ struct TStruct
   std::string s;
   bool operator ==(const TStruct& b) const { return d == b.d && s == b.s;}
 };
-struct Point
+struct Point2D
 {
   int x,y;
-  bool operator ==(const Point& b) const { return x==b.x && y == b.y;}
+  bool operator ==(const Point2D& b) const { return x==b.x && y == b.y;}
 };
 
 QI_TYPE_STRUCT(TStruct, d, s);
-QI_TYPE_STRUCT(Point, x, y);
+QI_TYPE_STRUCT(Point2D, x, y);
 
 TEST(Value, Tuple)
 {
@@ -349,14 +349,14 @@ TEST(Value, Tuple)
   gv = AnyReference::from(vd);
   gv.append(2);
   gtuple = gv.toTuple(true);
-  Point p;
+  Point2D p;
   p.x = 1;
   p.y = 2;
   ASSERT_TRUE(p == p);
-  ASSERT_EQ(p , gtuple.to<Point>());
+  ASSERT_EQ(p , gtuple.to<Point2D>());
   p.x = 3;
   gtuple[0].setDouble(gtuple[0].toDouble() + 2);
-  ASSERT_EQ(p, gtuple.to<Point>());
+  ASSERT_EQ(p, gtuple.to<Point2D>());
 }
 
 
@@ -623,6 +623,8 @@ TEST(Value, Convert_StructToMap)
   EXPECT_EQ(es.strings, val["strings"].toList<std::string>());
 }
 
+namespace
+{
 struct Foo
 {
   std::string str;
@@ -634,6 +636,7 @@ struct Oof
   double dbl;
   std::string str;
 };
+} // anonymous
 
 QI_TYPE_STRUCT_REGISTER(Foo, str, dbl);
 QI_TYPE_STRUCT_REGISTER(Oof, dbl, str);
@@ -830,10 +833,4 @@ TEST(Insert, InsertInvalid)
 
   ASSERT_ANY_THROW(anyMap.insert("false", 0));
   ASSERT_ANY_THROW(anyMap.insert(1, 10));
-}
-
-int main(int argc, char **argv) {
-  qi::Application app(argc, argv);
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
 }

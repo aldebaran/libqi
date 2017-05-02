@@ -36,7 +36,7 @@ namespace qi
     }
     void setup(AnyObject object, const std::string& propertyName);
     ~ProxyProperty();
-    void onSubscribe(bool enable, GenericObject* object, const std::string& propertyName, SignalLink link);
+    Future<void> onSubscribe(bool enable, GenericObject* object, const std::string& propertyName, SignalLink link);
     AnyReference bounceEvent(const AnyReferenceVector args);
     void triggerOverride(const GenericFunctionParameters& params, MetaCallType, GenericObject* object, const std::string& propertyName);
   private:
@@ -77,7 +77,7 @@ namespace qi
   }
 
   template<typename T, template< class...> class PropertyType>
-  void ProxyProperty<T, PropertyType>::onSubscribe(bool enable, GenericObject* object, const std::string& propertyName, SignalLink link)
+  Future<void> ProxyProperty<T, PropertyType>::onSubscribe(bool enable, GenericObject* object, const std::string& propertyName, SignalLink link)
   {
     if (enable)
     {
@@ -96,6 +96,7 @@ namespace qi
     // rebind onSubscribe since link changed
     SignalBase::setOnSubscribers(boost::bind(&ThisProxyType::onSubscribe, this, _1,
       object, propertyName, link));
+    return Future<void>{0};
   }
 
   template<typename T, template< class...> class PropertyType>

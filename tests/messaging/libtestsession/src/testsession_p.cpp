@@ -7,6 +7,9 @@
 */
 
 #include "testsession_p.hpp"
+#include <qi/log.hpp>
+
+qiLogCategory("TestSession");
 
 TestSessionPrivate::TestSessionPrivate(const std::string &serviceDirectoryUrl, TestMode::Mode mode, bool listen)
 {
@@ -18,7 +21,15 @@ TestSessionPrivate::TestSessionPrivate(const std::string &serviceDirectoryUrl, T
 
 TestSessionPrivate::~TestSessionPrivate()
 {
-  _manager->tearDown(_session, _mode);
+  try
+  {
+    _manager->tearDown(_session, _mode);
+  }
+  catch (const std::exception& e)
+  {
+    qiLogError() << "Error closing the session: " << e.what();
+  }
+
   delete _manager;
 }
 

@@ -5,11 +5,12 @@
  ** Copyright (C) 2010, 2012 Aldebaran Robotics
  */
 
-#include <vector>
+#include <chrono>
 #include <string>
+#include <thread>
+#include <vector>
 
 #include <gtest/gtest.h>
-
 #include <qi/session.hpp>
 #include <qi/anyobject.hpp>
 #include <qi/type/dynamicobjectbuilder.hpp>
@@ -28,6 +29,9 @@ struct MyStruct {
   std::string titi;
 };
 
+qi::Seconds callTimeout{5};
+std::chrono::seconds unitTimeout{15};
+
 QI_TYPE_STRUCT(MyStruct, i, j, titi);
 
 static std::string reply(const std::string &msg)
@@ -39,7 +43,6 @@ static MyStruct reply2(const MyStruct &mystruct) {
   return mystruct;
 }
 
-
 qi::AnyObject newObject() {
   qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("reply", &reply);
@@ -47,11 +50,43 @@ qi::AnyObject newObject() {
   return ob.object();
 }
 
+
+
+namespace {
+
+  class ScopedThread
+  {
+    boost::thread _thread;
+  public:
+
+    template< class... Args >
+    explicit ScopedThread(Args&&... args)
+      : _thread{ std::forward<Args>(args)... }
+    {
+    }
+
+    ~ScopedThread()
+    {
+      _thread.interrupt();
+      _thread.join();
+    }
+
+  };
+
+#define ASSERT_PROPAGATE_FAILURE( expr__ ) { if( expr__ ); else \
+    { \
+      throw ::testing::AssertionFailure() << '\n' << __FILE__ << '(' << __LINE__ << "): Assertion failed: " << #expr__ << '\n'; \
+    } \
+  }
+
+
+}
+
 void alternateModule(qi::SessionPtr session) {
   while (!boost::this_thread::interruption_requested())
   {
     boost::this_thread::interruption_point();
-    //a--;
+
     qi::AnyObject obj = newObject();
     qi::Future<unsigned int> fut = session->registerService("TestToto", obj);
     if (fut.hasError()) {
@@ -69,6 +104,30 @@ void alternateModule(qi::SessionPtr session) {
   }
 }
 
+template <typename FunctionType>
+void repeatedlyCallServiceMaybeDying(
+    TestSessionPair& p, int nofAttempts, std::chrono::milliseconds timeout, FunctionType f)
+{
+  const auto endTime = std::chrono::steady_clock::now() + timeout;
+  auto server = p.server();
+  ScopedThread worker{ [server] { alternateModule(server); } };
+  while (nofAttempts && (endTime > std::chrono::steady_clock::now()))
+  {
+    --nofAttempts;
+    try
+    {
+      f();
+    }
+    catch(const std::exception& e)
+    {
+      std::cout << "Call exception: " << e.what() << std::endl;
+    }
+    catch (const ::testing::AssertionResult& assertFailure)
+    {
+      ASSERT_TRUE(assertFailure);
+    }
+  }
+}
 
 TEST(QiSession, RegisterUnregisterTwoSession)
 {
@@ -78,54 +137,42 @@ TEST(QiSession, RegisterUnregisterTwoSession)
     a /= 100;
   }
   TestSessionPair p;
-  EXPECT_TRUE(p.client()->isConnected());
+  repeatedlyCallServiceMaybeDying(p, a, unitTimeout, [&]
+  {
+    qi::Future<qi::AnyObject> fut = p.client()->service("TestToto");
 
-  boost::thread worker(boost::bind(&alternateModule, p.server()));
-  while (a) {
-    a--;
-    try {
-      qi::Future<qi::AnyObject> fut = p.client()->service("TestToto");
-      if (fut.hasError()) {
-        std::cout << "Call error:" << fut.error() << std::endl;
-        continue;
-      }
-      std::string ret = fut.value().call<std::string>("reply", "plif");
-    }
-    catch(const std::exception& e)
+    ASSERT_PROPAGATE_FAILURE(fut.waitFor(callTimeout) != qi::FutureState_Running);
+
+    if (fut.hasError(0))
     {
-      std::cout << "Call exception: " << e.what() << std::endl;
+      std::cout << "Call error:" << fut.error() << std::endl;
     }
-  }
-  worker.interrupt();
-  worker.join();
+    else
+    {
+      fut.value().call<std::string>("reply", "plif");
+    }
+  });
 }
-
 
 TEST(QiSession, RegisterUnregisterSameSession)
 {
   int a = 1000;
   TestSessionPair p;
-  EXPECT_TRUE(p.client()->isConnected());
+  repeatedlyCallServiceMaybeDying(p, a, unitTimeout, [&]
+  {
+    qi::Future<qi::AnyObject> fut = p.server()->service("TestToto");
 
-  boost::thread worker(boost::bind(&alternateModule, p.server()));
-  while (a) {
-    a--;
-    try
+    ASSERT_PROPAGATE_FAILURE(fut.waitFor(callTimeout) != qi::FutureState_Running);
+
+    if (fut.hasError(0))
     {
-      qi::Future<qi::AnyObject> fut = p.server()->service("TestToto");
-      if (fut.hasError()) {
-        std::cout << "Call error:" << fut.error() << std::endl;
-        continue;
-      }
+      std::cout << "Call error:" << fut.error() << std::endl;
+    }
+    else
+    {
       fut.value().call<std::string>("reply", "plif");
     }
-    catch(const std::exception& e)
-    {
-      std::cout << "Call exception: " << e.what() << std::endl;
-    }
-  }
-  worker.interrupt();
-  worker.join();
+  });
 }
 
 TEST(QiSession, RegisterUnregisterTwoSessionStruct)
@@ -136,41 +183,38 @@ TEST(QiSession, RegisterUnregisterTwoSessionStruct)
     a /= 100;
   }
   TestSessionPair p;
-  EXPECT_TRUE(p.client()->isConnected());
+  repeatedlyCallServiceMaybeDying(p, a, unitTimeout, [&]
+  {
+    qi::Future<qi::AnyObject> fut = p.client()->service("TestToto");
 
-  boost::thread worker(boost::bind(&alternateModule, p.server()));
-  while (a) {
-    a--;
-    try
+    ASSERT_PROPAGATE_FAILURE(fut.waitFor(callTimeout) != qi::FutureState_Running);
+
+    if (fut.hasError(0))
     {
-      qi::Future<qi::AnyObject> fut = p.client()->service("TestToto");
-      if (fut.hasError()) {
-        std::cout << "Call error:" << fut.error() << std::endl;
-        continue;
-      }
+      std::cout << "Call error:" << fut.error() << std::endl;
+    }
+    else
+    {
       MyStruct ms;
       ms.i = 32;
       ms.j = 42;
       ms.titi = "tutu";
       qi::Future<MyStruct> ret = fut.value().async<MyStruct>("reply2", ms);
-      ret.wait();
-      if (ret.hasError()) {
+      ASSERT_PROPAGATE_FAILURE(ret.waitFor(callTimeout) != qi::FutureState_Running);
+      if (ret.hasError(0))
+      {
         std::cout << "returned an error:" << fut.error() << std::endl;
-      continue;
       }
-      ASSERT_EQ(ms.i, ret.value().i);
-      ASSERT_EQ(ms.j, ret.value().j);
-      ASSERT_EQ(ms.titi, ret.value().titi);
+      else
+      {
+        ASSERT_PROPAGATE_FAILURE(ms.i == ret.value().i);
+        ASSERT_PROPAGATE_FAILURE(ms.j == ret.value().j);
+        ASSERT_PROPAGATE_FAILURE(ms.titi == ret.value().titi);
+      }
     }
-     catch(const std::exception& e)
-    {
-      std::cout << "Call exception: " << e.what() << std::endl;
-    }
-  }
-  worker.interrupt();
-  worker.join();
-}
 
+  });
+}
 
 TEST(QiSession, RegisterUnregisterSameSessionStruct)
 {
@@ -180,41 +224,34 @@ TEST(QiSession, RegisterUnregisterSameSessionStruct)
     a /= 100;
   }
   TestSessionPair p;
-  EXPECT_TRUE(p.client()->isConnected());
-
-  boost::thread worker(boost::bind(&alternateModule, p.server()));
-  while (a) {
-    a--;
-    try
+  repeatedlyCallServiceMaybeDying(p, a, unitTimeout, [&]
+  {
+    qi::Future<qi::AnyObject> fut = p.server()->service("TestToto");
+    if (fut.hasError())
     {
-      qi::Future<qi::AnyObject> fut = p.server()->service("TestToto");
-      if (fut.hasError()) {
-        std::cout << "Call error:" << fut.error() << std::endl;
-        continue;
-      }
+      std::cout << "Call error:" << fut.error() << std::endl;
+    }
+    else
+    {
       MyStruct ms;
       ms.i = 32;
       ms.j = 42;
       ms.titi = "tutu";
       qi::Future<MyStruct> ret = fut.value().async<MyStruct>("reply2", ms);
-      ret.wait();
-      if (ret.hasError()) {
+      ASSERT_PROPAGATE_FAILURE(ret.waitFor(callTimeout) != qi::FutureState_Running);
+      if (ret.hasError(0))
+      {
         std::cout << "returned an error:" << fut.error() << std::endl;
-        continue;
       }
-      ASSERT_EQ(ms.i, ret.value().i);
-      ASSERT_EQ(ms.j, ret.value().j);
-      ASSERT_EQ(ms.titi, ret.value().titi);
+      else
+      {
+        ASSERT_PROPAGATE_FAILURE(ms.i == ret.value().i);
+        ASSERT_PROPAGATE_FAILURE(ms.j == ret.value().j);
+        ASSERT_PROPAGATE_FAILURE(ms.titi == ret.value().titi);
+      }
     }
-    catch(const std::exception& e)
-    {
-      std::cout << "Call exception: " << e.what() << std::endl;
-    }
-  }
-  worker.interrupt();
-  worker.join();
+  });
 }
-
 
 TEST(QiSession, ConnectToMultipleConstellation)
 {
@@ -230,7 +267,7 @@ TEST(QiSession, ConnectToMultipleConstellation)
 
   qi::Future<void> f;
   f = traveler.connect(constellation1.serviceDirectoryEndpoints()[0].str());
-  f.wait(3000);
+  f.waitFor(callTimeout);
   ASSERT_TRUE(!f.hasError());
   qi::AnyObject proxy = constellation1.server()->service("test1");
   std::string res = proxy.call<std::string>("reply", "plaf");
@@ -238,7 +275,7 @@ TEST(QiSession, ConnectToMultipleConstellation)
   traveler.close();
 
   f = traveler.connect(constellation2.serviceDirectoryEndpoints()[0].str());
-  f.wait(3000);
+  f.waitFor(callTimeout);
   ASSERT_TRUE(!f.hasError());
   proxy = constellation2.server()->service("test2");
   ASSERT_TRUE(!!proxy);
@@ -247,7 +284,7 @@ TEST(QiSession, ConnectToMultipleConstellation)
   traveler.close();
 
   f = traveler.connect(constellation3.serviceDirectoryEndpoints()[0].str());
-  f.wait(3000);
+  f.waitFor(callTimeout);
   if (f.hasError())
     qiLogError() << f.error();
   ASSERT_TRUE(!f.hasError());
@@ -255,16 +292,4 @@ TEST(QiSession, ConnectToMultipleConstellation)
   res = proxy.call<std::string>("reply", "plaf");
   ASSERT_TRUE(res.compare("plaf") == 0);
   traveler.close();
-}
-
-
-int main(int argc, char **argv)
-{
-  qi::Application app(argc, argv);
-#if defined(__APPLE__) || defined(__linux__)
-  setsid();
-#endif
-  TestMode::initTestMode(argc, argv);
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
 }

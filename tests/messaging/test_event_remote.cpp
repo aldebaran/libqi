@@ -20,10 +20,10 @@ void onFire(const int& pl)
   payload->setValue(pl);
 }
 
-class TestObject: public ::testing::Test
+class ObjectEventRemote: public ::testing::Test
 {
 public:
-  TestObject()
+  ObjectEventRemote()
   {
     qi::DynamicObjectBuilder ob;
     ob.advertiseSignal<const int&>("fire");
@@ -60,7 +60,7 @@ public:
 };
 
 
-TEST_F(TestObject, Simple)
+TEST_F(ObjectEventRemote, Simple)
 {
   qi::SignalLink linkId = oclient.connect("fire", &onFire);
   EXPECT_LT((unsigned) 0, linkId);
@@ -70,7 +70,7 @@ TEST_F(TestObject, Simple)
 }
 
 
-TEST_F(TestObject, RemoteEmit)
+TEST_F(ObjectEventRemote, RemoteEmit)
 {
   qi::SignalLink linkId = oclient.connect("fire", &onFire);
   EXPECT_LT((unsigned) 0, linkId);
@@ -82,7 +82,7 @@ TEST_F(TestObject, RemoteEmit)
 
 
 
-TEST_F(TestObject, CoDeco)
+TEST_F(ObjectEventRemote, CoDeco)
 {
   for (unsigned i=0; i<5; ++i)
   {
@@ -140,15 +140,4 @@ TEST(TestSignal, TwoLongPost)
     qi::os::msleep(10);
   ASSERT_EQ(42, verifA);
   ASSERT_EQ(43, verifB);
-}
-
-int main(int argc, char *argv[])
-{
-#if defined(__APPLE__) || defined(__linux__)
-  setsid();
-#endif
-  qi::Application app(argc, argv);
-  TestMode::initTestMode(argc, argv);
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
 }

@@ -10,12 +10,13 @@
 #include <map>
 
 #include <boost/thread/mutex.hpp>
+#include <boost/shared_ptr.hpp>
 
 #include <qi/atomic.hpp>
 
 #include <qi/type/fwd.hpp>
 
-#include "transportsocket.hpp"
+#include "messagesocket.hpp"
 
 
 namespace qi
@@ -30,15 +31,14 @@ namespace qi
   public:
     ObjectHost(unsigned int service);
     virtual ~ObjectHost();
-    void onMessage(const qi::Message &msg, TransportSocketPtr socket);
+    void onMessage(const qi::Message &msg, MessageSocketPtr socket);
     unsigned int addObject(BoundAnyObject obj, StreamContext* remoteReferencer, unsigned int objId = 0);
     void removeObject(unsigned int);
-    void removeRemoteReferences(TransportSocketPtr socket);
+    void removeRemoteReferences(MessageSocketPtr socket);
     unsigned int service() { return _service;}
     virtual unsigned int nextId() = 0;
     using ObjectMap = std::map<unsigned int, BoundAnyObject>;
     const ObjectMap& objects() const { return _objectMap; }
-    qi::Signal<> onDestroy;
   protected:
     void clear();
   private:

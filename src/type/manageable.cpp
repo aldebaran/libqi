@@ -1,5 +1,6 @@
 #include <qi/type/detail/manageable.hpp>
 #include <qi/type/objecttypebuilder.hpp>
+#include "../type/signal_p.hpp"
 
 namespace qi
 {
@@ -40,19 +41,19 @@ namespace qi
     }
     for (unsigned i = 0; i < copy.size(); ++i)
     {
-      copy[i].source->disconnect(copy[i].linkId);
+      if(auto source = copy[i]._p->source.lock())
+        source->disconnect(copy[i]._p->linkId).wait();
     }
   }
 
   Manageable::Manageable()
-    : traceObject(boost::bind(&Manageable::enableTrace, this, _1))
+    : traceObject([this](bool enable){ enableTrace(enable); return Future<void>{0}; })
     , _p(new ManageablePrivate())
   {
   }
 
   Manageable::Manageable(const Manageable& b)
-    : traceObject(boost::bind(&Manageable::enableTrace, this, _1))
-    , _p(new ManageablePrivate())
+    : Manageable()
   {
     _p->executionContext = b._p->executionContext;
   }

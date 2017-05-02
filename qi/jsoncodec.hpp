@@ -18,14 +18,17 @@ namespace qi {
   const unsigned int JsonOption_PrettyPrint = 1;
   const unsigned int JsonOption_Expand = 2;
 
-  /** @return the value encoded in JSON.
+  /**
+   * Serializes a value of any compatible type to an JSON string.
+   * Objects, raw data and maps with non-string keys are incompatible.
+   * @return the value encoded in JSON.
    * @param val Value to encode
    * @param jsonPrintOption Option to change JSON output
    */
   QI_API std::string encodeJSON(const qi::AutoAnyReference &val, JsonOption jsonPrintOption = JsonOption_None);
 
   /**
-    * creates a GV representing a JSON string or throw on parse error.
+    * Parses the given JSON string to produce the corresponding value.
     * @param in JSON string to decode.
     * @return a GV representing the JSON string
     */

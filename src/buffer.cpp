@@ -142,7 +142,7 @@ namespace qi
     size_t subBufferSize = buffer.size();
     size_t actualUsed = _p->used;
 
-    write((uint32_t*)&subBufferSize, sizeof(uint32_t));
+    write((size_type*)&subBufferSize, sizeof(size_type));
 
     _p->_subBuffers.push_back(std::make_pair(actualUsed, buffer));
     _p->_cachedSubBufferTotalSize += buffer.totalSize();

@@ -41,6 +41,7 @@ boost::optional<AnyValue> StreamContext::remoteCapability(const std::string& key
 
 bool StreamContext::hasReceivedRemoteCapabilities() const
 {
+  boost::mutex::scoped_lock lock(_contextMutex);
   return _remoteCapabilityMap.size() != 0;
 }
 

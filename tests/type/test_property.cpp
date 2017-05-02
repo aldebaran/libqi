@@ -27,7 +27,7 @@ namespace test
     qi::os::sleep(1);
     qi::AnyValue val = prop.value();
     ASSERT_EQ(2, val.to<int>());
-    ASSERT_EQ(1u, spy.getCounter());
+    ASSERT_EQ(1u, spy.recordCount());
   }
 
   template< template< class ... > class PropertyType >
@@ -243,4 +243,55 @@ TEST(TestProperty, threadSafeGetSet)
 
   EXPECT_TRUE(running.value());
   EXPECT_EQ(TARGET_COUNT, counter.get());
+}
+
+TEST(TestProperty, customSetter)
+{
+  qi::Property<int> property{12, qi::Property<int>::Getter{}, [this](int& storage, const int& value)
+  {
+    storage = value;
+    return true;
+  }};
+  const int expected = 42;
+  property.set(expected);
+  EXPECT_EQ(expected, property.get().value());
+}
+
+TEST(TestProperty, customSetterStranded)
+{
+  qi::Strand strand;
+  qi::Property<int> property{12, qi::Property<int>::Getter{}, strand.schedulerFor([this](int& storage, const int& value)
+  {
+    storage = value;
+    return true;
+  })};
+  const int expected = 42;
+  property.set(expected);
+  EXPECT_EQ(expected, property.get().value());
+}
+
+TEST(TestProperty, customSetterReturningFalseFailsButDoesNotThrow)
+{
+  const int initialValue = 12;
+  qi::Property<int> property{initialValue, qi::Property<int>::Getter{}, [this](int&, const int&)
+  {
+    return false;
+  }};
+  const int newValue = 42;
+  property.set(newValue);
+  EXPECT_EQ(initialValue, property.get().value());
+}
+
+using CustomException = std::exception;
+
+TEST(TestProperty, customSetterThrowIsTransmitted)
+{
+  const int initialValue = 12;
+  qi::Property<int> property{initialValue, qi::Property<int>::Getter{}, [this](int&, const int&)->bool
+  {
+    throw CustomException{};
+  }};
+  const int newValue = 42;
+  ASSERT_THROW(property.set(newValue), CustomException);
+  EXPECT_EQ(initialValue, property.get().value());
 }

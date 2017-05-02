@@ -343,4 +343,9 @@ void ApplicationSession::run()
     startSession();
   Application::run();
 }
+
+bool ApplicationSession::standAlone()
+{
+  return ::standAlone();
+}
 }

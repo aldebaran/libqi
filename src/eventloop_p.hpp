@@ -77,7 +77,7 @@ namespace qi {
     void* nativeHandle() override;
     void setMaxThreads(unsigned int max) override;
   private:
-    void invoke_maybe(boost::function<void()> f, qi::uint32_t id, qi::Promise<void> p, const boost::system::error_code& erc);
+    void invoke_maybe(boost::function<void()> f, qi::uint64_t id, qi::Promise<void> p, const boost::system::error_code& erc);
     void _runPool();
     void _pingThread();
     ~EventLoopAsio() override;
@@ -101,8 +101,8 @@ namespace qi {
     class WorkerThreadPool;
     boost::scoped_ptr<WorkerThreadPool> _workerThreads;
 
-    qi::Atomic<uint32_t> _totalTask;
-    qi::Atomic<uint32_t> _activeTask;
+    qi::Atomic<uint64_t> _totalTask;
+    qi::Atomic<uint64_t> _activeTask;
   };
 }
 

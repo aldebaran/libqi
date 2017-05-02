@@ -10,27 +10,25 @@
 #include <qi/anyobject.hpp>
 #include <qi/type/dynamicobjectbuilder.hpp>
 #include <qi/session.hpp>
-#include <qi/messaging/servicedirectory.hpp>
 
 int    _argc;
 char** _argv;
 
 TEST(Test, TestApplicationDestruction)
 {
-  qi::ServiceDirectory     sd;
-  qi::Session              server, client;
+  qi::Session              sd, server, client;
   qi::DynamicObjectBuilder ob1;
   qi::AnyObject            oclient1;
 
   {
     qi::Application app(_argc, _argv);
 
-    sd.listen("tcp://127.0.0.1:0");
-    server.connect(sd.endpoints()[0].str());
-    server.listen("tcp://0.0.0.0:0");
-    client.connect(sd.endpoints()[0].str());
+    sd.listenStandalone("tcp://127.0.0.1:0");
+    server.connect(sd.endpoints()[0]);
+    server.listen("tcp://127.0.0.1:0");
+    client.connect(sd.endpoints()[0]);
 
-    qi::AnyObject    oserver1(ob1.object());
+    qi::AnyObject oserver1(ob1.object());
 
     server.registerService("coin1", oserver1).wait();
 

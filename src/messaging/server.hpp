@@ -19,7 +19,7 @@ namespace qi {
    *
    * Support a special kind of objects: (SocketObject, that are aware of Socket)
    *
-   * Threadsafety warning: do not call listen and addSocketObject at the same time
+   * Thread-safety warning: do not call listen and addSocketObject at the same time.
    *
    */
   class Server: public qi::Trackable<Server>, private boost::noncopyable {
@@ -41,7 +41,7 @@ namespace qi {
 
     std::vector<qi::Url> endpoints() const;
 
-    void onTransportServerNewConnection(TransportSocketPtr socket, bool startReading);
+    void onTransportServerNewConnection(MessageSocketPtr socket, bool startReading);
     void setAuthProviderFactory(AuthProviderFactoryPtr factory);
 
   private:
@@ -50,10 +50,10 @@ namespace qi {
   private:
 
     //TransportSocket
-    void onSocketDisconnected(TransportSocketPtr socket, std::string error);
-    void onMessageReady(const qi::Message &msg, TransportSocketPtr socket);
-    void onMessageReadyNotAuthenticated(const qi::Message& msg, TransportSocketPtr socket, AuthProviderPtr authProvider,
-                                        boost::shared_ptr<bool> first, SignalSubscriberPtr oldSubscriber);
+    void onSocketDisconnected(MessageSocketPtr socket, std::string error);
+    void onMessageReady(const qi::Message &msg, MessageSocketPtr socket);
+    void onMessageReadyNotAuthenticated(const qi::Message& msg, MessageSocketPtr socket, AuthProviderPtr authProvider,
+                                        boost::shared_ptr<bool> first, boost::shared_ptr<SignalLink> signalLink);
 
   private:
     //bool: true if it's a socketobject
@@ -72,20 +72,17 @@ namespace qi {
     qi::MetaCallType                    _defaultCallType;
 
   private:
-    // The connection to the server's signal. Needs to be disconnected in the destructor.
-    qi::SignalLink                      _newConnectionLink = qi::SignalBase::invalidSignalLink;
-
     struct SocketSubscriber
     {
       qi::SignalLink disconnected = qi::SignalBase::invalidSignalLink;
       qi::SignalLink messageReady = qi::SignalBase::invalidSignalLink;
     };
-    std::map<TransportSocketPtr, SocketSubscriber> _subscribers;
+    std::map<MessageSocketPtr, SocketSubscriber> _subscribers;
 
     boost::recursive_mutex              _socketsMutex;
 
-    void connectMessageReady(const TransportSocketPtr& socket);
-    void disconnectSignals(const TransportSocketPtr& socket, const SocketSubscriber& subscriber);
+    void connectMessageReady(const MessageSocketPtr& socket);
+    void disconnectSignals(const MessageSocketPtr& socket, const SocketSubscriber& subscriber);
   };
 }
 

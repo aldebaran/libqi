@@ -15,11 +15,11 @@
 #include <qi/session.hpp>
 #include "remoteobject_p.hpp"
 #include "clientauthenticator_p.hpp"
-#include "transportsocket.hpp"
+#include "messagesocket.hpp"
 
 namespace qi {
 
-  class TransportSocket;
+  class MessageSocket;
   class ServiceDirectoryClient: public qi::Trackable<ServiceDirectoryClient> {
   public:
     ServiceDirectoryClient(bool enforceAuth = false);
@@ -46,14 +46,14 @@ namespace qi {
     qi::Future< void >                     updateServiceInfo(const ServiceInfo &svcinfo);
     qi::Future< std::string >              machineId();
     /// if isLocal() only, return socket holding given service id
-    qi::Future<qi::TransportSocketPtr>     _socketOfService(unsigned int serviceId);
+    qi::Future<qi::MessageSocketPtr>     _socketOfService(unsigned int serviceId);
 
     qi::Signal<>                                  connected;
     qi::Signal<std::string>                       disconnected;
     qi::Signal<unsigned int, std::string>         serviceAdded;
     qi::Signal<unsigned int, std::string>         serviceRemoved;
 
-    TransportSocketPtr socket();
+    MessageSocketPtr socket();
     // True if ServiceDirectory is local
     bool isLocal();
   private:
@@ -61,14 +61,14 @@ namespace qi {
     void onServiceAdded(unsigned int idx, const std::string &name);
     void onServiceRemoved(unsigned int idx, const std::string &name);
 
-    //TransportSocket Interface
+    //MessageSocket Interface
     void onSocketConnected(qi::FutureSync<void> future, qi::Promise<void> prom);
     qi::FutureSync<void> onSocketFailure(std::string error, bool mustSignalDisconnected = true);
 
     //RemoteObject Interface
     void onMetaObjectFetched(qi::Future<void> fut, qi::Promise<void> prom);
 
-    void onAuthentication(const TransportSocket::SocketEventData& data, qi::Promise<void> prom, ClientAuthenticatorPtr authenticator, SignalSubscriberPtr old);
+    void onAuthentication(const MessageSocket::SocketEventData& data, qi::Promise<void> prom, ClientAuthenticatorPtr authenticator, SignalSubscriberPtr old);
 
     //wait for serviceAdded/serviceRemoved are connected
     void onSDEventConnected(qi::Future<SignalLink> ret,
@@ -76,16 +76,16 @@ namespace qi {
                             bool isAdd);
 
   private:
-    qi::TransportSocketPtr _sdSocket;
+    qi::MessageSocketPtr _sdSocket; // protected by _mutex
     qi::SignalLink         _sdSocketDisconnectedSignalLink;
     // _remoteObject is owned by _object
     qi::RemoteObject*      _remoteObject;
     // _object is a remote object of serviceDirectory
     qi::AnyObject          _object;
-    qi::SignalLink         _addSignalLink;
-    qi::SignalLink         _removeSignalLink;
+    qi::SignalLink         _addSignalLink; // protected by _mutex
+    qi::SignalLink         _removeSignalLink; // protected by _mutex
     ClientAuthenticatorFactoryPtr _authFactory;
-    boost::mutex           _mutex;
+    mutable boost::mutex _mutex;
     bool                   _localSd; // true if sd is local (no socket)
     bool                   _enforceAuth;
   };

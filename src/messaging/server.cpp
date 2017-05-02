@@ -22,17 +22,17 @@ namespace qi {
     : _enforceAuth(enforceAuth)
     , _dying(false)
     , _defaultCallType(qi::MetaCallType_Queued)
-    , _newConnectionLink(_server.newConnection.connect(&Server::onTransportServerNewConnection, this, _1, true))
   {
+    _server.newConnection.connect(track([this](const std::pair<MessageSocketPtr, Url>& socketUrl) -> void
+    {
+      this->onTransportServerNewConnection(socketUrl.first, true);
+    }, this));
   }
 
   Server::~Server()
   {
-    //we can call reset on server and socket they are only owned by us.
-    //when it's close it's close
-    _server.newConnection.disconnect(_newConnectionLink);
-    close();
     destroy();
+    close();
   }
 
   bool Server::addObject(unsigned int id, qi::AnyObject obj)
@@ -63,6 +63,7 @@ namespace qi {
 
   bool Server::removeObject(unsigned int idx)
   {
+    BoundAnyObject removedObject;
     {
       boost::mutex::scoped_lock sl(_boundObjectsMutex);
       BoundAnyObjectMap::iterator it;
@@ -70,8 +71,10 @@ namespace qi {
       if (it == _boundObjects.end()) {
         return false;
       }
+      removedObject = it->second;
       _boundObjects.erase(idx);
     }
+    removedObject.reset();
     return true;
   }
 
@@ -82,7 +85,7 @@ namespace qi {
 
   namespace server_private
   {
-    static void sendCapabilities(TransportSocketPtr sock)
+    static void sendCapabilities(MessageSocketPtr sock)
     {
       Message msg;
       msg.setType(Message::Type_Capability);
@@ -92,7 +95,7 @@ namespace qi {
     }
   } // server_private
 
-  void Server::connectMessageReady(const TransportSocketPtr& socket)
+  void Server::connectMessageReady(const MessageSocketPtr& socket)
   {
     boost::recursive_mutex::scoped_lock sl(_socketsMutex);
     auto& subscriber = _subscribers[socket];
@@ -104,7 +107,7 @@ namespace qi {
         socket->messageReady.connect(&Server::onMessageReady, this, _1, socket).setCallType(MetaCallType_Direct);
   }
 
-  void Server::onTransportServerNewConnection(TransportSocketPtr socket, bool startReading)
+  void Server::onTransportServerNewConnection(MessageSocketPtr socket, bool startReading)
   {
     boost::recursive_mutex::scoped_lock sl(_socketsMutex);
     if (!socket)
@@ -130,11 +133,15 @@ namespace qi {
     // If true, it's an actual connection to this server.
     if (startReading)
     {
-      SignalSubscriberPtr sub(new SignalSubscriber);
-      boost::shared_ptr<bool> first = boost::make_shared<bool>(true);
+      auto signalLink = boost::make_shared<qi::SignalLink>();
+      auto first = boost::make_shared<bool>(true);
       // We are reading on the socket for the first time : the first message has to be the capabilities
-      *sub = socket->messageReady.connect(&Server::onMessageReadyNotAuthenticated, this, _1, socket, _authProviderFactory->newProvider(), first, sub).setCallType(MetaCallType_Direct);
-      socket->startReading();
+      *signalLink = socket->messageReady.connect(
+            &Server::onMessageReadyNotAuthenticated, this, _1, socket,
+            _authProviderFactory->newProvider(), first, signalLink)
+          .setCallType(MetaCallType_Direct);
+
+      socket->ensureReading();
     }
     else
     {
@@ -145,8 +152,8 @@ namespace qi {
     }
   }
 
-  void Server::onMessageReadyNotAuthenticated(const Message &msg, TransportSocketPtr socket, AuthProviderPtr auth,
-                                              boost::shared_ptr<bool> first, SignalSubscriberPtr oldSignal)
+  void Server::onMessageReadyNotAuthenticated(const Message &msg, MessageSocketPtr socket, AuthProviderPtr auth,
+                                              boost::shared_ptr<bool> first, boost::shared_ptr<qi::SignalLink> signalLink)
   {
     qiLogVerbose() << "Starting auth message" << msg.address();
     int id = msg.id();
@@ -161,7 +168,7 @@ namespace qi {
         || type != Message::Type_Call
         || function != Message::ServerFunction_Authenticate)
     {
-      socket->messageReady.disconnect(*oldSignal);
+      socket->messageReady.disconnect(*signalLink);
       if (_enforceAuth)
       {
         std::stringstream err;
@@ -173,7 +180,7 @@ namespace qi {
         reply.setType(Message::Type_Error);
         reply.setError(err.str());
         socket->send(reply);
-        socket->disconnect();
+        socket->disconnect().async();
         qiLogVerbose() << err.str();
       }
       else
@@ -187,7 +194,7 @@ namespace qi {
       return;
     }
     // the socket now contains the remote capabilities in socket->remoteCapabilities()
-    qiLogVerbose() << "Authenticating client " << socket->remoteEndpoint().str() << "...";
+    qiLogVerbose() << "Authenticating client " << socket->remoteEndpoint().value().str() << "...";
 
     AnyReference cmref = msg.value(typeOf<CapabilityMap>()->signature(), socket);
     CapabilityMap authData = cmref.to<CapabilityMap>();
@@ -199,8 +206,8 @@ namespace qi {
     switch (state)
     {
     case AuthProvider::State_Done:
-      qiLogVerbose() << "Client " << socket->remoteEndpoint().str() << " successfully authenticated.";
-      socket->messageReady.disconnect(*oldSignal);
+      qiLogVerbose() << "Client " << socket->remoteEndpoint().value().str() << " successfully authenticated.";
+      socket->messageReady.disconnectAsync(*signalLink); // yet guarantees immediate disconnection // NDJ: verifier ca
       connectMessageReady(socket);
       // no break, we know that authentication is done, send the response to the remote end
     case AuthProvider::State_Cont:
@@ -226,13 +233,13 @@ namespace qi {
       reply.setError(builder.str());
       qiLogVerbose() << builder.str();
       socket->send(reply);
-      socket->disconnect();
+      socket->disconnect().async();
       }
     }
     qiLogVerbose() << "Auth ends";
   }
 
-  void Server::onMessageReady(const qi::Message &msg, TransportSocketPtr socket) {
+  void Server::onMessageReady(const qi::Message &msg, MessageSocketPtr socket) {
     qi::BoundAnyObject obj;
     // qiLogDebug() << "Server Recv (" << msg.type() << "):" << msg.address();
     {
@@ -265,9 +272,9 @@ namespace qi {
     // We were called from the thread pool: synchronous call is ok
     //qi::getEventLoop()->post(boost::bind<void>(&BoundObject::onMessage, obj, msg, socket));
     obj->onMessage(msg, socket);
-  }
+  } // TODO: heap-use-after-free: memory freed here, in ~shared_ptr, probably the local BoundAnyObject obj;
 
-  void Server::disconnectSignals(const TransportSocketPtr& socket, const SocketSubscriber& subscriber)
+  void Server::disconnectSignals(const MessageSocketPtr& socket, const SocketSubscriber& subscriber)
   {
     socket->connected.disconnectAll();
     socket->disconnected.disconnect(subscriber.disconnected);
@@ -314,7 +321,7 @@ namespace qi {
     return _server.setIdentity(key, crt);
   }
 
-  void Server::onSocketDisconnected(TransportSocketPtr socket, std::string error)
+  void Server::onSocketDisconnected(MessageSocketPtr socket, std::string error)
   {
     {
       boost::mutex::scoped_lock l(_stateMutex);

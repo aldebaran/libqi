@@ -28,16 +28,19 @@ protected:
     : sd_(true),
       client_(true)
   {
-    sd_.listenStandalone("tcp://127.0.0.1:0");
-  }
-  ~TestAuthentication()
-  {
-
   }
 
-  virtual void SetUp()
+  void SetUp() override
   {
+    ASSERT_TRUE(sd_.setIdentity(
+                  qi::path::findData("qi", "test/qi.public.aldebaran.lan.key"),
+                  qi::path::findData("qi", "test/qi.public.aldebaran.lan.crt")));
+    sd_.listenStandalone("tcps://127.0.0.1:0");
+  }
 
+  void TearDown() override
+  {
+    sd_.close();
   }
 
   qi::Session sd_;
@@ -192,8 +195,8 @@ TEST_F(TestAuthentication, UserPassTest)
   sd_.setAuthProviderFactory(qi::AuthProviderFactoryPtr(factory));
   client_.setClientAuthenticatorFactory(qi::ClientAuthenticatorFactoryPtr(clientFactory));
 
-  qi::Future<void> conn = client_.connect(sd_.url());
-  ASSERT_FALSE(conn.hasError());
+  qi::Future<void> connecting = client_.connect(sd_.url());
+  ASSERT_FALSE(connecting.hasError()) << "Error was: " << connecting.error();
   ASSERT_TRUE(client_.isConnected());
 }
 
@@ -210,8 +213,8 @@ TEST_F(TestAuthentication, UserPassFailTest)
   sd_.setAuthProviderFactory(qi::AuthProviderFactoryPtr(factory));
   client_.setClientAuthenticatorFactory(qi::ClientAuthenticatorFactoryPtr(clientFactory));
 
-  qi::Future<void> conn = client_.connect(sd_.url());
-  ASSERT_TRUE(conn.hasError());
+  auto connecting = client_.connect(sd_.url());
+  EXPECT_EQ(qi::FutureState_FinishedWithError, connecting.waitFor(qi::MilliSeconds{500}));
   ASSERT_FALSE(client_.isConnected());
 }
 
@@ -254,12 +257,4 @@ TEST_F(TestAuthentication, ConnectionToServiceTest)
 
   qi::AnyObject myObj = client_.service("toto");
   ASSERT_EQ(myObj.call<int>("toto", 44), 88);
-}
-
-int main(int ac, char **av)
-{
-  qi::Application app(ac, av);
-  ::testing::InitGoogleTest(&ac, av);
-
-  return RUN_ALL_TESTS();
 }

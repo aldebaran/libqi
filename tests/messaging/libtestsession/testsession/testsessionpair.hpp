@@ -91,10 +91,10 @@ public:
 
 private:
   qi::SessionPtr       _sd;
-  qi::Gateway          _gw;
+  std::unique_ptr<qi::Gateway> _gw;
   TestMode::Mode       _mode;
-  TestSession         *_client;
-  TestSession         *_server;
+  std::unique_ptr<TestSession> _client;
+  std::unique_ptr<TestSession> _server;
 };
 
 #endif // !_TESTS_LIBTESTSESSION_TESTSESSIONPAIR_HPP_

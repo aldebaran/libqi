@@ -4,6 +4,14 @@
  * found in the COPYING file.
  */
 
+// VS2015 fix atomic alignment and require an acknowledgement from developer
+#include <boost/predef.h>
+#if BOOST_COMP_MSVC
+#  if (BOOST_COMP_MSVC >= BOOST_VERSION_NUMBER(14, 0, 0))
+#    define _ENABLE_ATOMIC_ALIGNMENT_FIX
+#  endif
+#endif
+
 #include <qi/assert.hpp>
 #include <qi/log.hpp>
 #include "log_p.hpp"

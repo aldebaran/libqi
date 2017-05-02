@@ -16,6 +16,8 @@
 
 qiLogCategory("test");
 
+namespace
+{
 class Foo
 {
 public:
@@ -31,6 +33,47 @@ void foo(qi::Atomic<int>* r, int, int)     { ++*r; }
 void foo2(qi::Atomic<int>* r, char, char)  { ++*r; }
 void foo3(qi::Atomic<int>* r, Foo *)       { ++*r; }
 void foolast(int, qi::Promise<void> prom, qi::Atomic<int>* r) { prom.setValue(0); ++*r; }
+} // anonymous
+
+void fire(int &a) { a = 44; }
+
+TEST(TestSignal, RegisterSignalAndMethodWithSameSignature)
+{
+  qi::DynamicObjectBuilder ob;
+  qi::Property<int> prop;
+
+  ob.advertiseSignal<int&>("fire1");
+  ASSERT_THROW(ob.advertiseMethod("fire1", &fire), std::runtime_error);
+  ASSERT_THROW(ob.advertiseProperty("fire1", &prop), std::runtime_error);
+
+  ob.advertiseMethod("fire2", &fire);
+  ASSERT_THROW(ob.advertiseSignal<int&>("fire2"), std::runtime_error);
+  ASSERT_THROW(ob.advertiseProperty("fire2", &prop), std::runtime_error);
+
+  ob.advertiseProperty("fire3", &prop);
+  ASSERT_THROW(ob.advertiseSignal<int&>("fire3"), std::runtime_error);
+  ASSERT_THROW(ob.advertiseMethod("fire3", &fire), std::runtime_error);
+
+}
+
+TEST(TestSignal, RegisterSignalAndMethodWithDifferentSignature)
+{
+  qi::DynamicObjectBuilder ob;
+  qi::Property<char> prop;
+
+  ob.advertiseSignal<float&>("fire1");
+  ASSERT_NO_THROW(ob.advertiseMethod("fire1", &fire));
+  ASSERT_NO_THROW(ob.advertiseProperty("fire1", &prop));
+
+  ob.advertiseMethod("fire2", &fire);
+  ASSERT_NO_THROW(ob.advertiseSignal<float&>("fire2"));
+  ASSERT_NO_THROW(ob.advertiseProperty("fire2", &prop));
+
+  ob.advertiseProperty("fire3", &prop);
+  ASSERT_NO_THROW(ob.advertiseSignal<float&>("fire3"));
+  ASSERT_NO_THROW(ob.advertiseMethod("fire3", &fire));
+}
+
 
 TEST(TestSignal, TestCompilation)
 {
@@ -60,21 +103,85 @@ TEST(TestSignal, TestCompilation)
   ASSERT_FALSE(prom.future().hasError());
 }
 
+TEST(TestSignal, SignalHasNoSubscriberByDefault)
+{
+  qi::Signal<int> signal;
+  ASSERT_FALSE(signal.hasSubscribers());
+}
+
+TEST(TestSignal, EmitWithNoSubscriber)
+{
+  qi::Signal<int> signal;
+  QI_EMIT signal(42);
+}
+
+TEST(TestSignal, EmitSharedPointerWithNoSubscriber)
+{
+  qi::Signal<boost::shared_ptr<int>> signal;
+  QI_EMIT signal(boost::make_shared<int>(42));
+}
+
 void write42(boost::shared_ptr<int> ptr)
 {
   *ptr = 42;
 }
 
-TEST(TestSignal, SharedPtr)
+TEST(TestSignal, EmitSharedPointerWithDirectSubscriber)
+{
+  // Redundant with Copy test, but just to be sure, check that shared_ptr
+  // is correctly transmited.
+  qi::Signal<boost::shared_ptr<int> > sig;
+  sig.connect(qi::AnyFunction::from(&write42)).setCallType(qi::MetaCallType_Direct);
+  {
+    auto ptr = boost::make_shared<int>(12);
+    QI_EMIT sig(ptr);
+  };
+}
+
+TEST(TestSignal, EmitSharedPointerWithQueuedSubscriber)
 {
   // Redundant with Copy test, but just to be sure, check that shared_ptr
   // is correctly transmited.
   qi::Signal<boost::shared_ptr<int> > sig;
   sig.connect(qi::AnyFunction::from(&write42)).setCallType(qi::MetaCallType_Queued);
   {
-    boost::shared_ptr<int> ptr(new int(12));
-    sig(ptr);
+    auto ptr = boost::make_shared<int>(12);
+    QI_EMIT sig(ptr);
   };
+}
+
+TEST(TestSignal, DisconnectAsynchronouslyFromCallback)
+{
+  qi::SignalLink link;
+  qi::Signal<void> signal;
+  link = signal.connect([&]{ signal.disconnectAsync(link); });
+  QI_EMIT signal();
+}
+
+TEST(TestSignal, DisconnectSynchronouslyFromCallback)
+{
+  qi::SignalLink link;
+  qi::Signal<void> signal;
+  link = signal.connect([&]{ signal.disconnect(link); });
+  QI_EMIT signal();
+}
+
+TEST(TestSignal, DisconnectAsynchronouslyFromAsyncCallback)
+{
+  qi::SignalLink link;
+  qi::Signal<void> signal;
+  link = signal.connect([&]{ signal.disconnectAsync(link); })
+      .setCallType(qi::MetaCallType_Queued);
+  QI_EMIT signal();
+}
+
+TEST(TestSignal, DisconnectSynchronouslyFromAsyncCallback)
+{
+  qi::SignalLink link;
+  qi::Signal<void> signal;
+  link = signal.connect([&]{ signal.disconnect(link); })
+      .setCallType(qi::MetaCallType_Queued);
+  QI_EMIT signal();
 }
 
 void byRef(int& i, bool* done)
@@ -83,6 +190,19 @@ void byRef(int& i, bool* done)
   i = 12;
   *done = true;
 }
+
+TEST(TestSignal, FunctionDestroyedOnDisconnection)
+{
+  std::atomic<bool> destroyed{false};
+  std::shared_ptr<int> sharedInt{new int{42}, [&](int* i){ delete i; destroyed = true; }};
+  qi::Signal<void> signal;
+  qi::SignalLink link = signal.connect([sharedInt]{});
+  sharedInt.reset();
+  ASSERT_FALSE(destroyed);
+  signal.disconnect(link);
+  ASSERT_TRUE(destroyed);
+}
+
 
 
 TEST(TestSignal, AutoDisconnect)
@@ -274,9 +394,10 @@ TEST(TestSignal, Dynamic)
   EXPECT_EQ(56, trig);
 }
 
-void onSubs(std::atomic<bool>& var, bool subs)
+qi::Future<void> onSubs(std::atomic<bool>& var, bool subs)
 {
   var = subs;
+  return qi::Future<void>{0};
 }
 
 void callback(int i)
@@ -316,13 +437,14 @@ TEST(TestSignal, SignalSubscriberDoesNotUnsubscribeAtDestruction)
 {
   int count = 0;
   qi::Signal<void> signal;
-  auto subscriber = signal.connect([&]{ ++count; })
-      .setCallType(qi::MetaCallType_Direct)
-      .shared_from_this();
-  signal();
-  ASSERT_EQ(1, count);
+  {
+    auto subscriber = signal.connect([&]{ ++count; })
+        .setCallType(qi::MetaCallType_Direct);
+    QI_UNUSED(subscriber); // we are just keeping it alive for a moment
 
-  subscriber.reset();
+    signal();
+    ASSERT_EQ(1, count);
+  }
   signal();
   ASSERT_EQ(2, count);
 }
@@ -392,11 +514,4 @@ TEST(TestSignalSpy, StoringTypedValueRecords)
     EXPECT_EQ(ints[i], records[i].arg<int>(0));
     EXPECT_EQ(strings[i], records[i].arg<std::string>(1));
   }
-}
-
-int main(int argc, char **argv) {
-  qi::Application app(argc, argv);
-  ::testing::InitGoogleTest(&argc, argv);
-  qi::log::addFilter("*", qi::LogLevel_Debug);
-  return RUN_ALL_TESTS();
 }

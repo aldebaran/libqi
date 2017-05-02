@@ -6,6 +6,7 @@
 #include <qi/log.hpp>
 #include <qi/os.hpp>
 #include <qi/path.hpp>
+#include <qi/testutils/testutils.hpp>
 
 #include <errno.h>
 
@@ -24,8 +25,8 @@
  */
 // TODO2: Some tests to check the consume stack
 
-static std::string binDir;
-static std::string loopBinDir;
+extern std::string binDir;
+extern std::string loopBinDir;
 
 TEST(spawnvp, CmdWithNoArgs)
 {
@@ -161,8 +162,6 @@ TEST(kill, Terminate)
 
   if (childPid != -1)
   {
-    qi::os::sleep(1);
-
     // is it alive?
     alive = qi::os::kill(childPid, 0);
 
@@ -195,8 +194,6 @@ TEST(kill, Kill)
 
   if (childPid != -1)
   {
-    qi::os::sleep(1);
-
     // is it alive?
     alive = qi::os::kill(childPid, 0);
 
@@ -293,43 +290,13 @@ int randomWrongPid()
   return randInt(100000, std::numeric_limits<int>::max());
 }
 
-class ScopedProcess
+void waitForProcessInfoReady()
 {
-public:
-  ScopedProcess(
-      const std::string& executable,
-      const std::vector<std::string>& arguments = std::vector<std::string>())
-    : _executable(executable)
-  {
-    char** cArgs = new char*[arguments.size()+2];
-    cArgs[0] = (char*)_executable.c_str();
-    for(size_t i = 0; i < arguments.size(); ++i)
-      cArgs[i+1] = (char*)arguments[i].c_str();
-    cArgs[arguments.size()+1] = NULL;
-    _pid = qi::os::spawnvp(cArgs);
-    if (_pid <= 0)
-      throw std::runtime_error(
-          std::string("Could not start: ") + _executable);
-  }
+#if BOOST_OS_LINUX
+  qi::os::msleep(50); // on Linux, checking the executable name is racy
+#endif
+}
 
-  ~ScopedProcess()
-  {
-    qi::os::kill(_pid, SIGKILL);
-    int status = 0;
-    int ret = qi::os::waitpid(_pid, &status);
-    std::cout << "Waiting for " << _executable << " has yielded the status "
-                << status << " and returned " << ret << std::endl;
-  }
-
-  int pid() const
-  {
-    return _pid;
-  }
-
-private:
-  std::string _executable;
-  int _pid;
-};
 
 } // ends anonymous namespace
 
@@ -355,6 +322,7 @@ TEST(QiOs, isProcessRunningRealProcessWithSpaces)
   const std::string executable("test launchloop with spaces");
   std::string executablePath = qi::path::findBin(executable);
   const ScopedProcess p{executablePath};
+  waitForProcessInfoReady();
   ASSERT_TRUE(qi::os::isProcessRunning(p.pid(), executable))
       << executablePath << " was not found running";
 }
@@ -364,6 +332,7 @@ TEST(QiOs, isProcessRunningRealProcess)
   const std::string executable("testlaunchloop");
   const std::string executablePath = qi::path::findBin(executable);
   const ScopedProcess p{executablePath};
+  waitForProcessInfoReady();
   ASSERT_TRUE(qi::os::isProcessRunning(p.pid(), executable))
       << executablePath << " was not found running";
 }
@@ -382,6 +351,7 @@ TEST(QiOs, isProcessRunningRealProcessWithArgs)
   const std::string executablePath = qi::path::findBin(executable);
   const std::vector<std::string> args { "nan", "mais", "allo", "quoi" };
   const ScopedProcess p{executablePath, args};
+  waitForProcessInfoReady();
   ASSERT_TRUE(qi::os::isProcessRunning(p.pid(), executable));
 }
 
@@ -391,6 +361,7 @@ TEST(QiOs, isProcessRunningRealProcessWithFilePathArg)
   const std::string executablePath = qi::path::findBin(executable);
   const std::vector<std::string> args {"/nan/mais/allo/quoi" };
   const ScopedProcess p{executablePath, args};
+  waitForProcessInfoReady();
   ASSERT_TRUE(qi::os::isProcessRunning(p.pid(), executable));
 }
 
@@ -423,16 +394,7 @@ TEST(QiOs, isProcessRunningRealProcessWithArgsUnicode)
 
   const std::vector<std::string> args { "nan", "mais", "allo", "quoi" };
   const ScopedProcess p{executablePathWithExtension.str(), args};
+  waitForProcessInfoReady();
   ASSERT_TRUE(qi::os::isProcessRunning(p.pid(), executable));
 }
 // Tests for isProcessRunning end ============================================
-
-int main(int argc, char* argv[])
-{
-  qi::Application app(argc, argv);
-  binDir = qi::path::findBin("testlaunch");
-  loopBinDir = qi::path::findBin("testlaunchloop");
-  qi::log::addFilter("qi.os", qi::LogLevel_Debug);
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}

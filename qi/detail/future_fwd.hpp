@@ -22,6 +22,7 @@
 # include <boost/function.hpp>
 # include <boost/bind.hpp>
 # include <boost/thread/recursive_mutex.hpp>
+# include <boost/exception/diagnostic_information.hpp>
 
 # ifdef _MSC_VER
 #   pragma warning( push )
@@ -309,7 +310,6 @@ namespace qi {
      * Exact effect is controlled by the cancel implementation, but it is
      * expected to set a value or an error to the Future as fast as possible.
      * Note that cancelation may be asynchronous.
-     * @throw ExceptionState_FutureNotCancelable if isCancelable() is false.
      */
     void cancel()
     {
@@ -628,7 +628,35 @@ namespace qi {
     ~FutureSync() QI_NOEXCEPT(false)
     {
       if (_sync)
-        _future.value();
+      {
+        static const auto logKnownError = [](const char* message)
+        {
+          qiLogWarning("qi.FutureSync")
+            << "Error in future on destruction: '" << message
+            << "' - continuing stack unwinding...";
+        };
+
+        try
+        {
+          _future.value();
+        }
+        catch(const std::exception& err)
+        {
+          logKnownError(err.what());
+          throw;
+        }
+        catch(const boost::exception& err)
+        {
+          logKnownError(boost::diagnostic_information(err).c_str());
+          throw;
+        }
+        catch(...)
+        {
+          qiLogWarning("qi.FutureSync")
+            << "Unknown error in future on destruction - continuing stack unwinding...";
+          throw;
+        }
+      }
     }
 
     operator Future<T>()
@@ -909,7 +937,7 @@ namespace qi {
       void setOnDestroyed(boost::function<void (ValueType)> f);
 
       void connect(qi::Future<T> future,
-          const boost::function<void (qi::Future<T>)> &s,
+          const boost::function<void (qi::Future<T>)> &callback,
           FutureCallbackType type);
 
       const ValueType& value(int msecs) const;
@@ -937,7 +965,11 @@ namespace qi {
 
       template <typename F> // FunctionObject<R()> F (R unconstrained)
       void finish(qi::Future<T>& future, F&& finishTask);
+
+      /// Take the callbacks set for handling the result and leave the member empty. Not thread-safe.
       Callbacks takeOutResultCallbacks();
+
+      /// Clear the callback set for handling cancellation. Not thread-safe.
       void clearCancelCallback();
 
       static void executeCallbacks(bool defaultAsync, const Callbacks& callbacks, qi::Future<T>& future);
@@ -952,7 +984,10 @@ namespace qi {
   qi::Future<T> makeFutureError(const std::string& error);
 
   /// Helper function that does nothing on future cancelation
+  ///
+  /// @deprecated since 2.5:
   template <typename T>
+  QI_API_DEPRECATED_MSG("you can remove this occurrence")
   void PromiseNoop(qi::Promise<T>&)
   {
   }

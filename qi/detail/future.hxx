@@ -316,6 +316,7 @@ namespace detail {
     template <typename T>
     FutureBaseTyped<T>::~FutureBaseTyped()
     {
+      boost::recursive_mutex::scoped_lock lock(mutex());
       if (_onDestroyed && hasValue(0))
         _onDestroyed(_value);
     }
@@ -403,10 +404,12 @@ namespace detail {
         async = (_async != FutureCallbackType_Sync ? true : false);
         onResult = takeOutResultCallbacks();
         clearCancelCallback();
+
+        // wake the waiting threads up
+        notifyFinish();
       }
       // call the callbacks without the mutex
       executeCallbacks(async, onResult, future);
-      notifyFinish();
     }
 
     template <typename T>
@@ -458,7 +461,7 @@ namespace detail {
 
     template <typename T>
     void FutureBaseTyped<T>::connect(qi::Future<T> future,
-                                  const boost::function<void(qi::Future<T>)>& s,
+                                  const boost::function<void(qi::Future<T>)>& callback,
                                   FutureCallbackType type)
     {
       if (state() == FutureState_None)
@@ -469,7 +472,7 @@ namespace detail {
         boost::recursive_mutex::scoped_lock lock(mutex());
         ready = isFinished();
         if (!ready)
-          _onResult.push_back(Callback(s, type));
+          _onResult.push_back(Callback(callback, type));
       }
 
       // result already ready, notify the callback
@@ -482,13 +485,16 @@ namespace detail {
             return _async != FutureCallbackType_Sync;
         }();
 
-        if (async)
-          getEventLoop()->post(boost::bind(s, future));
+        auto soCalledEventLoop = getEventLoop();
+        if (async && soCalledEventLoop)
+        { // if no event loop was found (for example when exiting), force sync callbacks
+          soCalledEventLoop->post(boost::bind(callback, future));
+        }
         else
         {
           try
           {
-            s(future);
+            callback(future);
           }
           catch (const ::qi::PointerLockException&)
           { /*do nothing*/
@@ -524,8 +530,7 @@ namespace detail {
     template <typename T>
     void FutureBaseTyped<T>::clearCancelCallback()
     {
-      if (_onCancel)
-        _onCancel = CancelCallback(PromiseNoop<T>);
+      _onCancel.clear();
     }
 
     template <typename T>

@@ -176,26 +176,26 @@ namespace qi {
 
   template<typename A>
   unsigned int
-  ObjectTypeBuilderBase::advertiseSignal(const std::string& eventName, A accessor, int id)
+  ObjectTypeBuilderBase::advertiseSignal(const std::string& eventName, A accessor, int id, bool isSignalProperty)
   {
     SignalMemberGetter fun = boost::bind(&signalAccess<A>, accessor, _1);
     using FunctionType = typename detail::Accessor<A>::value_type::FunctionType;
     return xAdvertiseSignal(eventName,
-      detail::FunctionSignature<FunctionType>::signature(), fun, id);
+      detail::FunctionSignature<FunctionType>::signature(), fun, id, isSignalProperty);
   }
 
   template <typename A>
   unsigned int ObjectTypeBuilderBase::advertiseProperty(const std::string& name, A accessor)
   {
-    unsigned int id = advertiseSignal(name, accessor);
+    unsigned int id = advertiseSignal(name, accessor, -1, true);
     PropertyMemberGetter pg = boost::bind(&propertyAccess<A>, accessor, _1);
     using PropertyType = typename detail::Accessor<A>::value_type::PropertyType;
     return xAdvertiseProperty(name, typeOf<PropertyType>()->signature(), pg, id);
   }
 
-  template <typename T> unsigned int ObjectTypeBuilderBase::advertiseSignal(const std::string& name, SignalMemberGetter getter, int id)
+  template <typename T> unsigned int ObjectTypeBuilderBase::advertiseSignal(const std::string& name, SignalMemberGetter getter, int id, bool isSignalProperty)
   {
-    return xAdvertiseSignal(name, detail::FunctionSignature<T>::signature(), getter, id);
+    return xAdvertiseSignal(name, detail::FunctionSignature<T>::signature(), getter, id, isSignalProperty);
   }
 
   template<typename T>

@@ -55,7 +55,7 @@ namespace qi {
     qi::AnyObject                 registeredServiceObject(const std::string &service);
 
     // Add an existing running socket to the list
-    void registerSocket(TransportSocketPtr socket);
+    void registerSocket(MessageSocketPtr socket);
 
     using Server::setAuthProviderFactory;
     using Server::listen;

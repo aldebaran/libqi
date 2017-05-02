@@ -177,7 +177,7 @@ qi::Future<R> GenericObject::async(const std::string& methodName, Args&&... args
   if (!value || !type)
     return makeFutureError<R>("Invalid GenericObject");
   std::vector<qi::AnyReference> params = {qi::AnyReference::from(args)...};
-  qi::Promise<R> res(&qi::PromiseNoop<R>);
+  qi::Promise<R> res;
   qi::Future<AnyReference> fmeta = metaCall(methodName, params, MetaCallType_Queued, typeOf<R>()->signature());
   qi::adaptFutureUnwrap(fmeta, res);
   return res.future();

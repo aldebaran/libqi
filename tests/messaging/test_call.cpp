@@ -569,7 +569,7 @@ void servicecall_addone(qi::Promise<int>& prom, qi::SessionPtr s)
   qi::AnyObject obj2Proxy = s->service("caller");
   qiLogDebug() << "TEST: got service";
   qi::Future<int> v = obj2Proxy.async<int>("serviceCall", "adder", "addOne", 5);
-  v.wait(500);
+  v.wait(1000);
   if (!v.isFinished())
     prom.setError("timeout");
   else if (v.hasError())
@@ -591,8 +591,8 @@ TEST(TestCall, PairClientListen)
 
 TEST(TestCall, DeadLock)
 {
-  // This test deeadlocks if all objects are in the same monothreaded event loop
-  qi::EventLoop* ev = new qi::EventLoop();
+  // This test deadlocks if all objects are in the same monothreaded event loop
+  std::unique_ptr<qi::EventLoop> ev( new qi::EventLoop{} );
   ev->start();
   // One object calls another, both in singleThread mode
   TestSessionPair p;
@@ -616,11 +616,7 @@ TEST(TestCall, DeadLock)
   qiLogDebug() << "TEST: go async servicecall_addone";
   qi::getEventLoop()->async(
     boost::bind(&servicecall_addone, boost::ref(prom), p.server()));
-
-  for (unsigned i=0; i<20 && !prom.future().isFinished(); ++i)
-    qi::os::msleep(50);
-  ASSERT_TRUE(prom.future().isFinished());
-  ASSERT_EQ(6, prom.future().value());
+  ASSERT_EQ(6, prom.future().value(2000));
 }
 
 void onEvent(int v, qi::Promise<int>& eventValue, qi::AnyObject* ptr)
@@ -880,7 +876,7 @@ public:
   {
     session->unregisterService(sid).wait();
     qi::os::msleep(100);
-    return !(**checker);
+    return !(checker->load());
   }
   int v;
   static qi::Atomic<int> destructionCount;
@@ -1069,10 +1065,10 @@ TEST(TestCall, BadArguments)
   p.server()->registerService("a", sobj);
   qi::AnyObject obj = p.client()->service("a");
   qi::Future<qi::AnyReference> f = obj.metaCall("arrrg::(i)", qi::GenericFunctionParameters());
-  EXPECT_TRUE(f.hasError(1000));
+  EXPECT_TRUE(f.hasError(10000));
 
   qi::Future<qi::AnyReference> f2 = obj.metaCall("arrrg", qi::GenericFunctionParameters());
-  EXPECT_TRUE(f2.hasError(1000));
+  EXPECT_TRUE(f2.hasError(10000));
 }
 
 TEST(TestCall, Statistics)
@@ -1282,7 +1278,7 @@ void inc_atomic_and_delete(TestClass* obj, qi::Atomic<int>* a)
 TEST(TestObject, callAndDropPointer)
 {
   // We check that the object is deleted after the call
-  int currentDCount = *TestClass::destructionCount;
+  int currentDCount = TestClass::destructionCount.load();
   TestSessionPair p;
   Session& s  = *p.server();
   qi::Atomic<int> checker;
@@ -1293,14 +1289,14 @@ TEST(TestObject, callAndDropPointer)
   // the object should be present while the call runs
   EXPECT_TRUE(go->call<bool>("unregisterService", &s, sid, &checker));
   // ... and should be gone by now
-  EXPECT_EQ(1, *checker);
-  EXPECT_EQ(currentDCount + 1, *TestClass::destructionCount);
+  EXPECT_EQ(1, checker.load());
+  EXPECT_EQ(currentDCount + 1, TestClass::destructionCount.load());
 }
 
 TEST(TestObject, asyncCallAndDropPointer)
 {
   // We check that the object is deleted after the call
-  int currentDCount = *TestClass::destructionCount;
+  int currentDCount = TestClass::destructionCount.load();
   TestSessionPair p;
   Session& s  = *p.server();
   qi::Atomic<int> checker;
@@ -1313,10 +1309,10 @@ TEST(TestObject, asyncCallAndDropPointer)
   f.wait();
   EXPECT_TRUE(f.value());
   // ... and should be gone eventually
-  for (unsigned i=0; i<20 && !*checker; ++i)
+  for (unsigned i=0; i<20 && !checker.load(); ++i)
     qi::os::msleep(50);
-  EXPECT_EQ(1, *checker);
-  EXPECT_EQ(currentDCount + 1, *TestClass::destructionCount);
+  EXPECT_EQ(1, checker.load());
+  EXPECT_EQ(currentDCount + 1, TestClass::destructionCount.load());
 }
 
 
@@ -1340,7 +1336,7 @@ TEST(TestObject, asyncCallAndDropPointerGeneric)
   qi::Atomic<int> checker;
 
   TestClass to; // this instance doesn't matter realy
-  int currentDCount = *TestClass::destructionCount;
+  int currentDCount = TestClass::destructionCount.load();
 
   DynamicObject* dobj = new MyDynamicObject();
   AnyObject svc;
@@ -1358,16 +1354,16 @@ TEST(TestObject, asyncCallAndDropPointerGeneric)
   int sid = s.registerService("test", svc);
   qi::GenericObject* go = svc.asGenericObject();
   svc.reset();
-  EXPECT_EQ(0, *checker); // are you there?
+  EXPECT_EQ(0, checker.load()); // are you there?
   // the object should be present while the call runs
   qi::Future<bool> f = go->async<bool>("unregisterService", &s, sid, &checker);
   f.wait();
   EXPECT_TRUE(f.value());
   // ... and should be gone by now, but maybe asynchronously
-  for(unsigned i=0; i<10 && !*checker; ++i)
+  for(unsigned i=0; i<10 && !checker.load(); ++i)
     qi::os::msleep(100);
-  EXPECT_EQ(1, *checker);
-  EXPECT_EQ(currentDCount + 1, *TestClass::destructionCount);
+  EXPECT_EQ(1, checker.load());
+  EXPECT_EQ(currentDCount + 1, TestClass::destructionCount.load());
 }
 
 bool incrementAtomic(qi::Atomic<int>& a)
@@ -1385,10 +1381,10 @@ TEST(TestObject, EarlyAbort)
   p.server()->registerService("color", s);
   AnyObject o = p.client()->service("color");
   EXPECT_ANY_THROW(o.call<std::string>("inc"));
-  EXPECT_EQ(0, *a);
+  EXPECT_EQ(0, a.load());
   a = 0;
   EXPECT_ANY_THROW(o.call<bool>("inc", 42));
-  EXPECT_EQ(0, *a);
+  EXPECT_EQ(0, a.load());
 }
 
 struct Color
@@ -1535,8 +1531,8 @@ TEST(TestObject, StructVersioningEvent)
   o.post("onColorA", c);
   o2.post("onColor", ca);
   o2.post("onColorA", ca); /* FAILS, double-remote */
-  for (unsigned i=0; i<10 && *onCounter != 12; ++i) qi::os::msleep(1000);
-  EXPECT_EQ(12, *onCounter);
+  for (unsigned i=0; i<10 && onCounter.load() != 12; ++i) qi::os::msleep(1000);
+  EXPECT_EQ(12, onCounter.load());
 }
 
 void doCancel(qi::Promise<void>& p)
@@ -1631,10 +1627,12 @@ TEST(TestCall, TestMultipleGetObjectProperty)
     ASSERT_NO_THROW(getAndSetObjProp(p, "Serv", "prop"));
 }
 
-int main(int argc, char **argv) {
-  qi::os::setenv("QI_IGNORE_STRUCT_NAME", "1");
-  qi::Application app(argc, argv);
-  TestMode::initTestMode(argc, argv);
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
+TEST(TestCall, TestIsConnected)
+{
+  TestSessionPair p0;
+  TestSessionPair p1(p0);
+  ASSERT_TRUE(p0.server()->isConnected());
+  ASSERT_TRUE(p0.client()->isConnected());
+  ASSERT_TRUE(p1.server()->isConnected());
+  ASSERT_TRUE(p1.client()->isConnected());
 }

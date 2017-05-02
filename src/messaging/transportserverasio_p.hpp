@@ -9,6 +9,8 @@
 
 # include <boost/asio.hpp>
 # include <boost/asio/ssl.hpp>
+#include <boost/thread/synchronized_value.hpp>
+#include <atomic>
 
 # include <qi/api.hpp>
 # include <qi/url.hpp>
@@ -16,11 +18,17 @@
 
 namespace qi
 {
-  class TransportServerAsioPrivate : public TransportServerImpl
+  class TransportServerAsioPrivate:
+      public TransportServerImpl,
+      public boost::enable_shared_from_this<TransportServerAsioPrivate>
   {
+    TransportServerAsioPrivate(TransportServer* self, EventLoop* ctx);
+
   public:
-    TransportServerAsioPrivate(TransportServer* self,
-                                   EventLoop* ctx);
+    static boost::shared_ptr<TransportServerAsioPrivate> make(
+        TransportServer* self,
+        EventLoop* ctx);
+
     virtual ~TransportServerAsioPrivate();
 
     virtual qi::Future<void> listen(const qi::Url& listenUrl);
@@ -30,15 +38,14 @@ namespace qi
     TransportServer* _self;
     boost::asio::ip::tcp::acceptor* _acceptor;
     void onAccept(const boost::system::error_code& erc,
-      boost::asio::ssl::stream<boost::asio::ip::tcp::socket>* s
-      );
+      boost::shared_ptr<boost::asio::ssl::stream<boost::asio::ip::tcp::socket>> s);
     TransportServerAsioPrivate();
-    bool _live;
+    std::atomic<bool> _live;
     boost::asio::ssl::context _sslContext;
-    boost::asio::ssl::stream<boost::asio::ip::tcp::socket>* _s;
+    boost::shared_ptr<boost::asio::ssl::stream<boost::asio::ip::tcp::socket>> _s;
     bool _ssl;
     unsigned short _port;
-    qi::Future<void> _asyncEndpoints;
+    boost::synchronized_value<qi::Future<void>> _asyncEndpoints;
     Url _listenUrl;
 
     static const int64_t AcceptDownRetryTimerUs;
