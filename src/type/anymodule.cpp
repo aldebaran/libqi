@@ -3,6 +3,7 @@
 #include <qi/application.hpp>
 #include <qi/type/dynamicobjectbuilder.hpp>
 #include <qi/path.hpp>
+#include <qi/scoped.hpp>
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/algorithm/cxx11/all_of.hpp>
 #include <boost/filesystem/fstream.hpp>
@@ -42,13 +43,13 @@ namespace qi
       void* lib;
       try {
 #ifdef _WIN32
-        auto oldErrorMode = GetErrorMode();
-        SetErrorMode(oldErrorMode | SEM_FAILCRITICALERRORS);
+        auto errorMode = qi::scoped(GetErrorMode(), [](UINT oldErrorMode)
+        {
+          SetErrorMode(oldErrorMode);
+        });
+        SetErrorMode(errorMode.value | SEM_FAILCRITICALERRORS);
 #endif
         lib = qi::Application::loadModule(vs.at(i));
-#ifdef _WIN32
-        SetErrorMode(oldErrorMode);
-#endif
       }
       catch (std::exception& e)
       {
