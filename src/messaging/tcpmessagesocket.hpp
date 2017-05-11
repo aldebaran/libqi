@@ -862,7 +862,7 @@ namespace qi {
     }
     // This changes the status so that concurrent calls will return in error.
     using Side = net::HandshakeSide<net::SslSocket<N>>;
-    _state = ConnectingState{_ioService, url, _ssl, _sslContext, disableIpV6, Side::client,
+    _state = ConnectingState{_ioService, url, _ssl, _sslContext, !disableIpV6, Side::client,
       getTcpPingTimeout(Seconds{net::defaultTimeoutInSeconds})};
     _url = url;
     auto self = shared_from_this();
