@@ -12,6 +12,7 @@
 #include <boost/thread/mutex.hpp>
 #include "servicedirectoryclient.hpp"
 #include "session_p.hpp"
+#include <qi/scoped.hpp>
 
 qiLogCategory("qimessaging.objectregistrar");
 
@@ -81,8 +82,13 @@ namespace qi {
     }
   }
 
-  void ObjectRegistrar::onFutureFinished(qi::Future<unsigned int> fut, long id, qi::Promise<unsigned int> result)
+  void ObjectRegistrar::onFutureFinished(qi::Future<unsigned int> fut, int id, qi::Promise<unsigned int> result)
   {
+    auto eraseRequest = scoped([id, this]{
+      boost::mutex::scoped_lock sl(_registerServiceRequestMutex);
+      _registerServiceRequest.erase(id);
+    });
+
     if (fut.hasError()) {
       result.setError(fut.error());
       return;
@@ -95,11 +101,6 @@ namespace qi {
       it = _registerServiceRequest.find(id);
       if (it != _registerServiceRequest.end())
         si = it->second.second;
-      if (fut.hasError()) {
-        _registerServiceRequest.erase(id);
-        result.setError(fut.error());
-        return;
-      }
     }
     unsigned int idx = fut.value();
     si.setServiceId(idx);
@@ -126,10 +127,6 @@ namespace qi {
       boost::mutex::scoped_lock sl(_serviceNameToIndexMutex);
       _serviceNameToIndex[si.name()] = idx;
     }
-    {
-      boost::mutex::scoped_lock sl(_registerServiceRequestMutex);
-      _registerServiceRequest.erase(it);
-    }
 
     // ack the Service directory to tell that we are ready
     qi::Future<void> fut2 = _sdClient->serviceReady(idx);
@@ -149,7 +146,7 @@ namespace qi {
     si.setEndpoints(Server::endpoints());
     si.setSessionId(_id);
 
-    long id = ++_registerServiceRequestIndex;
+    int id = ++_registerServiceRequestIndex;
     {
       boost::mutex::scoped_lock sl(_registerServiceRequestMutex);
       _registerServiceRequest[id] = std::make_pair(obj, si);
