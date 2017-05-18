@@ -13,6 +13,7 @@
 #include <qi/anymodule.hpp>
 #include <testsession/testsessionpair.hpp>
 #include <qi/testutils/testutils.hpp>
+#include <condition_variable>
 
 qiLogCategory("test");
 
@@ -711,4 +712,66 @@ TEST(SendObject, MultiProcessPingPong_ConnectToStandaloneAppInTcpThenTcps)
   Session sessionTcps;
   auto futTcps = sessionTcps.connect("tcps://127.0.0.1:54321");
   ASSERT_TRUE(futTcps.hasValue(1000)); // milliseconds
+}
+
+class FocusOwner
+{
+public:
+  FocusOwner() {}
+  void doNothing() {}
+};
+QI_REGISTER_OBJECT(FocusOwner, doNothing)
+
+class Focus
+{
+  std::condition_variable& _var;
+  std::atomic_bool& _sessionClosed;
+  std::mutex _mutex;
+public:
+  boost::weak_ptr<FocusOwner> focusOwner;
+  qi::Promise<void> focusPromise;
+
+  Focus(std::condition_variable& var,
+        std::atomic_bool& closed) : _var(var), _sessionClosed(closed) {}
+  qi::Object<FocusOwner> take()
+  {
+    std::unique_lock<std::mutex> lock(_mutex);
+    _var.wait(lock, [this]() { return _sessionClosed.load() == true; });
+    auto fo = boost::make_shared<FocusOwner>();
+    focusOwner = fo;
+    focusPromise.setValue(nullptr);
+    return fo;
+  }
+};
+QI_REGISTER_OBJECT(Focus, take)
+
+TEST(SendObject, sendOnClosedConnection)
+{
+  if(TestMode::getTestMode() == TestMode::Mode_Direct)
+    return; // in direct mode the future will hold the object
+
+  std::condition_variable var;
+  std::atomic_bool closed{false};
+  auto focus = boost::make_shared<Focus>(var, closed);
+  TestSessionPair p;
+  p.server()->registerService("Focus", focus);
+
+  qi::AnyObject focusService = p.client()->service("Focus");
+  auto future = focusService.async<qi::AnyObject>("take");
+
+  p.client()->close().wait();
+  closed.store(true);
+  var.notify_all();
+
+  focus->focusPromise.future().wait();
+  // at this point the focus object should be thrown away by qi::messaging
+  // hypothesis: it takes no longer that 2 seconds
+  int i = 0;
+  while (!focus->focusOwner.expired() && i < 2000)
+  {
+    qi::sleepFor(qi::MilliSeconds(1));
+    ++i;
+  }
+
+  ASSERT_TRUE(focus->focusOwner.expired());
 }
