@@ -200,7 +200,7 @@ namespace qi { namespace net {
   void SendMessageEnqueue<N, S>::operator()(Msg&& msg, SslEnabled ssl, Proc onSent,
       const F0& dataTransfo, const F1& netTransfo)
   {
-    qiLogDebug(logCategory()) << this << " SendMessageEnqueue()(" << msg.type() << ": " << msg.address() << ", ssl=" << *ssl << ")";
+    qiLogDebug(logCategory()) << _socket.get() << " SendMessageEnqueue()(" << msg.type() << ": " << msg.address() << ", ssl=" << *ssl << ")";
     using I = decltype(_sendQueue.begin());
     I itMsg;
     bool mustStartSendLoop = false;

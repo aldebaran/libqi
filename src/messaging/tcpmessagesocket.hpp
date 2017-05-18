@@ -72,6 +72,8 @@ namespace qi {
     boost::shared_ptr<TcpMessageSocket<N>> _tcpSocket;
     bool operator()(const net::ErrorCode<N>& erc, const Message* msg)
     {
+      QI_LOG_DEBUG_SOCKET(_tcpSocket.get()) << "Message received "
+                                            << ((!erc && msg) ? msg->id() : 0);
       return !erc && msg && _tcpSocket->handleMessage(*msg);
     }
   };
