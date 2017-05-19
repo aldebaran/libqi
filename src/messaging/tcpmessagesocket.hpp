@@ -367,6 +367,7 @@ namespace qi {
       if (hasError(res))
       {
         enterDisconnectedState(res.socket, res.disconnectedPromise);
+        lock.unlock();
         res.disconnectedPromise.future().wait();
         return false;
       }

@@ -3,6 +3,8 @@
 ** Copyright (C) 2012 Aldebaran Robotics
 */
 
+#include <chrono>
+#include <thread>
 #include <gtest/gtest.h>
 #include <qi/application.hpp>
 #include <qi/anyobject.hpp>
@@ -687,4 +689,26 @@ TEST(SendObject, MultiProcessPingPong_CallArgumentMethod)
     auto doingStuff = middleman.async<bool>("callOnArgument", precious, "doStuff");
     ASSERT_TRUE(doingStuff.value(3 * 1000));
   }
+}
+
+TEST(SendObject, MultiProcessPingPong_ConnectToStandaloneAppInTcpThenTcps)
+{
+  using namespace qi;
+  using std::chrono::milliseconds;
+
+  // Register a service in another process.
+  const std::string remoteServiceOwnerPath = path::findBin("remoteserviceowner");
+
+  ScopedProcess remoteServiceOwner{
+    remoteServiceOwnerPath, {"--qi-standalone", "--qi-listen-url=tcps://127.0.0.1:54321"}};
+
+  std::this_thread::sleep_for(milliseconds{50});
+
+  Session sessionTcp;
+  auto futTcp = sessionTcp.connect("tcp://127.0.0.1:54321");
+  ASSERT_TRUE(futTcp.hasError(1000)); // milliseconds
+
+  Session sessionTcps;
+  auto futTcps = sessionTcps.connect("tcps://127.0.0.1:54321");
+  ASSERT_TRUE(futTcps.hasValue(1000)); // milliseconds
 }
