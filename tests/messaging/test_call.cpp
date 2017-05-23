@@ -23,6 +23,8 @@
 
 qiLogCategory("test");
 
+qi::MilliSeconds usualTimeout{200};
+
 int getint()
 {
   return 42;
@@ -1071,6 +1073,45 @@ TEST(TestCall, BadArguments)
   EXPECT_TRUE(f2.hasError(10000));
 }
 
+TEST(TestCall, MetaCallFutureMatchesMethod)
+{
+  qi::Promise<void> promise;
+
+  qi::DynamicObjectBuilder dob;
+  dob.advertiseMethod("hop", [=]{ promise.future().wait(); });
+  qi::AnyObject obj = dob.object();
+
+  TestSessionPair sessions;
+  sessions.server()->registerService("hip", obj);
+  qi::AnyObject remoteObj = sessions.client()->service("hip");
+
+  qi::Future<qi::AnyReference> future = remoteObj.metaCall("hop", qi::GenericFunctionParameters{});
+  auto state = future.waitFor(usualTimeout);
+  ASSERT_EQ(qi::FutureState_Running, state);
+  promise.setValue(nullptr);
+  state = future.waitFor(usualTimeout);
+  EXPECT_EQ(qi::FutureState_FinishedWithValue, state);
+}
+
+TEST(TestCall, MetaCallFutureMatchesMethodFuture)
+{
+  qi::Promise<void> promise;
+
+  qi::DynamicObjectBuilder dob;
+  dob.advertiseMethod("hop", [=]{ return promise.future(); });
+  qi::AnyObject obj = dob.object();
+
+  TestSessionPair sessions;
+  sessions.server()->registerService("hip", obj);
+  qi::AnyObject remoteObj = sessions.client()->service("hip");
+
+  qi::Future<qi::AnyReference> future = remoteObj.metaCall("hop", qi::GenericFunctionParameters{});
+  auto state = future.waitFor(usualTimeout);
+  ASSERT_EQ(qi::FutureState_Running, state);
+  promise.setValue(nullptr);
+  state = future.waitFor(usualTimeout);
+  EXPECT_EQ(qi::FutureState_FinishedWithValue, state);
+}
 TEST(TestCall, Statistics)
 {
   TestSessionPair p;
