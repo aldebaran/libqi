@@ -1015,9 +1015,6 @@ namespace qi {
   template<typename FT, typename PT>
   void adaptFuture(const Future<FT>& f, Promise<PT>& p, AdaptFutureOption option = AdaptFutureOption_ForwardCancel);
 
-  template<typename R>
-  void adaptFuture(Future<AnyReference>& f, Promise<R>& p);
-
   /// Similar to adaptFuture(f, p) but with a custom converter
   template<typename FT, typename PT, typename CONV>
   void adaptFuture(const Future<FT>& f, Promise<PT>& p, CONV converter,
