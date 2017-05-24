@@ -8,6 +8,7 @@
 #include <qi/log.hpp>
 #include <qi/session.hpp>
 #include <qi/testutils/testutils.hpp>
+#include <qi/type/dynamicobjectbuilder.hpp>
 
 extern std::string simpleSdPath;
 extern std::string mirrorSdPath;
@@ -205,4 +206,64 @@ TEST(ServiceDirectory, MirrorServicesBetweenProcesses)
   secondaryClient->waitForService("Service").value(200);
   auto service = secondaryClient->service("Service").value(200);
   ASSERT_EQ(Serv::response, service.call<int>("f"));
+}
+
+class PromisedObject
+{
+public:
+  PromisedObject(qi::Promise<void> prom) : p(prom), a(0) { }
+  ~PromisedObject()
+  {
+      p.setValue(0);
+  }
+  qi::Promise<void> p;
+  int a;
+};
+QI_REGISTER_OBJECT(PromisedObject, a)
+
+TEST(ServiceDirectory, NoThreadSpawnOnClientClose)
+{
+  const int objectCount = 200;
+  qi::getEventLoop()->setMaxThreads(boost::thread::hardware_concurrency() + 1);
+
+  auto originalServer = qi::makeSession();
+  auto originalClient = qi::makeSession();
+  auto mirroredServer = qi::makeSession();
+  auto mirroredClient = qi::makeSession();
+
+  originalServer->listenStandalone("tcp://127.0.0.1:0");
+  originalClient->connect(originalServer->endpoints().back());
+  mirroredServer->listenStandalone("tcp://127.0.0.1:0");
+  mirroredClient->connect(mirroredServer->endpoints().back());
+
+  const std::string serviceName{ "Cookies" };
+  const std::string methodName{ "muffins" };
+  std::vector<qi::Future<void>> futures;
+  qi::DynamicObjectBuilder builder;
+  builder.advertiseMethod(methodName, [&] {
+    std::vector<qi::AnyObject> objects;
+    for (int i = 0; i < objectCount; ++i)
+    {
+      qi::Promise<void> promise;
+      objects.push_back(boost::make_shared<PromisedObject>(promise));
+      futures.push_back(promise.future());
+    }
+    return objects;
+  });
+  originalServer->registerService(serviceName, builder.object());
+
+  const auto mirrored = originalClient->service(serviceName).value();
+  mirroredServer->registerService(serviceName, mirrored);
+
+  const auto objects = mirroredClient->service(serviceName).value().call<std::vector<qi::AnyObject>>(methodName);
+
+  qiLogVerbose() << "Closing client";
+  mirroredClient->close().async();
+
+  qiLogVerbose() << "Waiting for objects destruction";
+  for (auto& future : futures)
+  {
+    auto state = future.waitFor(qi::MilliSeconds(200));
+    ASSERT_EQ(qi::FutureState_FinishedWithValue, state);
+  }
 }
