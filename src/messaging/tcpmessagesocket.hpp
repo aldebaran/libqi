@@ -512,7 +512,7 @@ namespace qi {
       }
     };
 
-    const int defaultTimeoutInSeconds = 0;
+    const int defaultTimeoutInSeconds = 30;
 
   } // namespace net
 
