@@ -214,3 +214,52 @@ TEST(NetResolveUrlList, Success)
   ++it;
   ASSERT_EQ(entryIpV6, *it);
 }
+
+// Checks that the setup-cancel procedure is called.
+//
+// We block in the resolve and the only way to unblock is to perform a cancel.
+// To perform a cancel, the setup-cancel procedure must have been called.
+TEST(NetResolveUrlList, Cancel)
+{
+  //using Resolve = TypeParam;
+  using namespace qi;
+  using namespace qi::net;
+  using namespace mock;
+  using mock::Resolver;
+  using I = N::resolver_type::iterator;
+
+  Promise<std::pair<Error, I>> promiseResolve;
+  std::thread threadResolve;
+  Resolver::async_resolve = [&](Resolver::query, Resolver::_anyResolveHandler h) {
+    threadResolve = std::thread{[=]() mutable {
+      // Block until the resolve promise has been set.
+      auto p = promiseResolve.future().value();
+      h(p.first, p.second);
+    }};
+  };
+  Promise<std::pair<Error, I>> promiseResult;
+  Promise<void> promiseCancel;
+  IoService<N> io;
+  const std::string host = "10.11.12.13";
+  ResolveUrlList<N> resolve{io};
+  resolve(
+    Url{"tcp://" + host + ":1234"},
+    [&](Error e, I it) { // onComplete
+      promiseResult.setValue({e, it});
+    },
+    [&](Resolver&) { // setupCancel
+      promiseCancel.future().andThen([=](void*) mutable {
+        promiseResolve.setValue({operationAborted<Error>(), I{}});
+      });
+    }
+  );
+  auto futResult = promiseResult.future();
+
+  // Trigger the cancel.
+  promiseCancel.setValue(nullptr);
+
+  // And check that we have a "operation aborted" error.
+  ASSERT_EQ(FutureState_FinishedWithValue, futResult.waitFor(defaultTimeout));
+  ASSERT_EQ(operationAborted<Error>(), futResult.value().first);
+  threadResolve.join();
+}

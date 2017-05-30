@@ -200,6 +200,7 @@ namespace mock
       using _anyResolveHandler = std::function<void (error_code_type, iterator)>;
       using _anyAsyncResolver = std::function<void (query, _anyResolveHandler)>;
       static _anyAsyncResolver async_resolve;
+      void cancel() {}
       io_service_type& get_io_service() {return _io;}
     };
 

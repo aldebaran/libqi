@@ -351,7 +351,7 @@ TEST(NetMessageSocket, DisconnectWhileConnecting)
   Promise<void> promiseAsyncConnectCanFinish;
 
   // The async connect waits for a promise to be set before finishing.
-  LowestLayer::async_connect = [&](N::_resolver_entry e, N::_anyHandler h) {
+  LowestLayer::async_connect = [&](N::_resolver_entry, N::_anyHandler h) {
     promiseAsyncConnectStarted.setValue(0);
     promiseAsyncConnectCanFinish.future().wait();
     h(success<Error>());
@@ -368,7 +368,7 @@ TEST(NetMessageSocket, DisconnectWhileConnecting)
   promiseAsyncConnectCanFinish.setValue(0);
   ASSERT_EQ(FutureState_FinishedWithValue, futDisconnect.wait(defaultTimeoutInMs)) << futDisconnect.error();
   ASSERT_EQ(FutureState_FinishedWithError, futConnect.wait(defaultTimeoutInMs));
-  ASSERT_EQ("Abort: disconnection requested while connecting", futConnect.error());
+  ASSERT_EQ("Connect abort: disconnection requested while connecting", futConnect.error());
   resolveThread.join();
 }
 

@@ -257,6 +257,7 @@ namespace qi { namespace net {
 ///           NetResolveHandler resolveHandler, the following are valid:
 ///        R resolver{ioServiceLValue};
 ///     && resolver.async_resolve(query, resolveHandler)
+///     && resolver.cancel();
 ///     && NetIoService& io = resolver.get_io_service();
 ///     && If `resolver` is destroyed before `resolveHandler` has been called,
 ///         `resolveHandler` must eventually be called with an error equal to

@@ -44,19 +44,6 @@ namespace qi {
 
   boost::optional<Seconds> getTcpPingTimeout(Seconds defaultTimeout);
 
-  /// Network N, NetSslSocket S
-  template<typename N, typename S>
-  void close(boost::shared_ptr<S> socket)
-  {
-    using namespace net;
-    if (socket)
-    {
-      ErrorCode<N> erc;
-      socket->lowest_layer().shutdown(ShutdownMode<Lowest<S>>::shutdown_both, erc);
-      socket->lowest_layer().close(erc);
-    }
-  }
-
   template<typename N>
   class TcpMessageSocket;
 
@@ -123,7 +110,7 @@ namespace qi {
     };
 
     /// Connecting state of the socket.
-    /// Connect to a URL and give the created socket.
+    /// Connects to a URL and give back the created socket.
     ///
     /// Usage:
     /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -137,16 +124,20 @@ namespace qi {
     /// issue and no locking is done.
     /// If any error occurs, the `complete` future is set in error.
     ///
+    /// # Lifetime considerations
+    ///
     /// The object must be alive until the connecting process is complete.
     /// That is, you must not write:
     /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    ///   Future<SocketPtr<N>> connectNonSsl(IoService& io, Url url) {
-    ///     return Connecting(io, url, SslEnabled{false}, IpV6Enabled{true}).complete();
-    ///   }
+    /// Future<SocketPtr<N>> connectNonSsl(IoService& io, Url url) {
+    ///   return Connecting(io, url, SslEnabled{false}, IpV6Enabled{true}).complete();
+    /// }
     /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     /// because the connecting process could exceed the ConnectSocket object lifetime.
     /// If the ConnectSocket dies before the end of the connecting process, the future
     /// is set in error.
+    ///
+    /// # Server-side
     ///
     /// It is also possible to give an already connected socket. In this case,
     /// if needed, only the SSL handshake is done. This is the typical use case
@@ -157,11 +148,68 @@ namespace qi {
     /// auto socketPtr = c.complete().value();
     /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     ///
+    /// # Connecting steps
+    ///
     /// From a more technical point of view, the different connecting steps
     /// are:
     /// - URL resolving
     /// - socket connecting
     /// - SSL handshake if needed.
+    ///
+    /// # Stopping the connection
+    ///
+    /// Example: stopping the connection
+    /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    /// Promise<void> disconnectedPromise;
+    /// connecting.stop(disconnectedPromise);
+    /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    /// The promise will be passed as-is in the "complete" future. The purpose is to
+    /// pass it to the next socket state, that will pass it again to the next state
+    /// until it is finally set by the disconnected state.
+    /// The stop is expected to happen almost immediately.
+    ///
+    /// # Technicalities of stopping
+    ///
+    /// The stop can happen in any step: resolving, connecting or handshaking.
+    ///
+    /// Stopping while resolving results in cancelling the resolver.
+    /// Stopping while connecting or while handshaking results in the same
+    /// action: closing the socket.
+    ///
+    /// These stopping actions are performed by continuations on a future. The stop is
+    /// effectively triggered when the associated promise is set. This promise is
+    /// owned by the `Connecting` object. A procedure is passed to the object that
+    /// connects the socket to setup the stop, that is to set the continuations
+    /// on the future.
+    ///
+    /// The promise must be destroyed before the object that connects the socket
+    /// to avoid continuations to be called after the destruction of the resolver
+    /// or the socket.
+    ///
+    /// Stopping kinematics:
+    /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    /// -> `Connecting` object construction
+    ///     | (1) creates
+    ///     |
+    ///     |           (3) calls when necessary
+    ///     |           ------------------------
+    ///     |          |                        |
+    ///     v          v     (2) passed to      |
+    /// setup-stop procedure -----------> connect-socket object
+    ///        |
+    ///        | (4) sets
+    ///    -------------------------
+    ///   |                         |
+    ///   v                         v
+    ///  cancelling resolver       closing socket
+    ///  continuation              continuation (for connect & handshake steps)
+    ///   ^                         ^
+    ///   |                         |
+    ///    -------------------------
+    ///                        | (2') triggers
+    ///           (1') sets    |
+    /// -> stop() ---------> stop promise
+    /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     ///
     /// Network N
     template<typename N>
@@ -173,9 +221,11 @@ namespace qi {
       struct Impl : std::enable_shared_from_this<Impl>
       {
         using std::enable_shared_from_this<Impl>::shared_from_this;
-        ConnectSocketFuture<N> _connect;
         Promise<Result> _promiseComplete;
+        ConnectSocketFuture<N> _connect;
+        Promise<void> _promiseStop; // Must be declared after `_connect`, to be destroyed first
         ConnectingResult<N> _result;
+        std::atomic<bool> _stopping;
 
         void setContinuation()
         {
@@ -196,18 +246,24 @@ namespace qi {
         }
         Impl(IoService<N>& io)
           : _connect{io}
+          , _stopping{false}
         {
         }
+
+        template<typename Proc = PolymorphicConstantFunction<void>>
         void start(const Url& url, SslEnabled ssl, SslContext<N>& context,
-          IpV6Enabled ipV6, Handshake side, const boost::optional<Seconds>& tcpPingTimeout = {})
+          IpV6Enabled ipV6, Handshake side, const boost::optional<Seconds>& tcpPingTimeout = {},
+          Proc setupCancel = Proc{})
         {
           setContinuation();
-          _connect(url, ssl, context, ipV6, side, tcpPingTimeout);
+          _connect(url, ssl, context, ipV6, side, tcpPingTimeout, setupCancel);
         }
-        void start(SslEnabled ssl, const SocketPtr<N>& s, Handshake side)
+
+        template<typename Proc = PolymorphicConstantFunction<void>>
+        void start(SslEnabled ssl, const SocketPtr<N>& s, Handshake side, Proc setupCancel = Proc{})
         {
           setContinuation();
-          _connect(ssl, s, side);
+          _connect(ssl, s, side, setupCancel);
         }
       };
 
@@ -215,20 +271,27 @@ namespace qi {
           IpV6Enabled ipV6, Handshake side, const boost::optional<Seconds>& tcpPingTimeout = {})
         : _impl(std::make_shared<Impl>(io))
       {
-        _impl->start(url, ssl, context, ipV6, side, tcpPingTimeout);
+        _impl->start(url, ssl, context, ipV6, side, tcpPingTimeout,
+          SetupConnectionStop<N>{_impl->_promiseStop.future()});
       }
       Connecting(IoService<N>& io, SslEnabled ssl, const SocketPtr<N>& s, Handshake side)
         : _impl(std::make_shared<Impl>(io))
       {
-        _impl->start(ssl, s, side);
+        _impl->start(ssl, s, side, SetupConnectionStop<N>{_impl->_promiseStop.future()});
       }
       Future<Result> complete() const
       {
         return _impl->_promiseComplete.future();
       }
-      void requestStop(const Promise<void>& disconnectedPromise)
+      bool stop(const Promise<void>& disconnectedPromise)
       {
-        setDisconnectionRequested(_impl->_result, disconnectedPromise);
+        const bool mustStop = tryRaiseAtomicFlag(_impl->_stopping);
+        if (mustStop)
+        {
+          setDisconnectionRequested(_impl->_result, disconnectedPromise);
+          _impl->_promiseStop.setValue(nullptr); // triggers the stop
+        }
+        return mustStop;
       }
       static Future<void> connectError(const std::string& error)
       {
@@ -279,7 +342,7 @@ namespace qi {
     /// If an error occurs while sending or receiving, the `complete` future is
     /// set in error.
     ///
-    /// Warning: You must call `requestStop()` before closing the socket, because
+    /// Warning: You must call `stop()` before closing the socket, because
     /// closing the socket cause the send and receive handlers to be called with
     /// an 'abort' error, and we don't want to take it into account.
     ///
@@ -876,11 +939,11 @@ namespace qi {
         QI_ASSERT_TRUE(getStatus() == Status::Connecting);
         const auto res = fut.value();
         const bool connectingFailed = hasError(res);
-        if (connectingFailed || res.disconnectionRequested)
+        if (res.disconnectionRequested || connectingFailed)
         {
-          connectedPromise.setError(connectingFailed
-            ? "Connect error: " + res.errorMessage
-            : "Abort: disconnection requested while connecting");
+          connectedPromise.setError(res.disconnectionRequested
+            ? "Connect abort: disconnection requested while connecting"
+            : "Connect error: " + res.errorMessage);
           enterDisconnectedState(res.socket, res.disconnectedPromise);
           return;
         }
@@ -901,7 +964,7 @@ namespace qi {
       QI_LOG_DEBUG_SOCKET(self.get()) << "Emitting `connected` signal";
       connected();
       QI_LOG_DEBUG_SOCKET(self.get()) << "Setting `connected` promise";
-      connectedPromise.setValue(0);
+      connectedPromise.setValue(nullptr);
       QI_LOG_DEBUG_SOCKET(self.get()) << "socket connected to " << url.str();
     });
     return connectedPromise.future();
@@ -918,10 +981,10 @@ namespace qi {
     {
     case Status::Disconnected:
       // libqi's code heavily relies on socket disconnection being reentrant...
-      promiseDisconnected.setValue(0);
+      promiseDisconnected.setValue(nullptr);
       break;
     case Status::Connecting:
-      asConnecting(_state).requestStop(promiseDisconnected);
+      asConnecting(_state).stop(promiseDisconnected);
       break;
     case Status::Connected:
       QI_LOG_DEBUG_SOCKET(this) << "Requesting connected socket to disconnect.";

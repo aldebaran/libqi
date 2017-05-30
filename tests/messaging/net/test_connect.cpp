@@ -425,3 +425,164 @@ TYPED_TEST(NetConnectFuture, SucceedsSsl)
     IpV6Enabled{false}, Side::client);
   ASSERT_TRUE(connect.complete().hasValue());
 }
+
+template<typename N>
+struct SetupStop
+{
+  using I = mock::Resolver::iterator;
+
+  qi::Future<void> futStopResolve;
+  qi::Future<void> futStopConnect;
+  bool connectAlreadySetup;
+  qi::Promise<std::pair<mock::Error, I>> promiseResolve;
+  qi::Promise<qi::net::ErrorCode<N>> promiseConnect;
+
+  void operator()(qi::net::Resolver<N>&)
+  {
+    using namespace qi::net;
+    auto promResolve = promiseResolve;
+    futStopResolve.andThen([=](void*) mutable {
+      promResolve.setValue({operationAborted<ErrorCode<N>>(), I{}});
+    });
+  }
+
+  void operator()(const qi::net::SocketPtr<N>&)
+  {
+    using namespace qi::net;
+    // Can be called in the connection step and in the handshake step.
+    // The stop action being the same, we do it only once.
+    if (connectAlreadySetup) return;
+    auto promConnect = promiseConnect;
+    futStopConnect.andThen([=](void*) mutable {
+      promConnect.setValue(operationAborted<ErrorCode<N>>());
+    });
+    connectAlreadySetup = true;
+  }
+};
+
+// Stop called while in the resolving step.
+//
+// The resolve step waits for a promise to be set. This promise is set when the
+// stop promise is set.
+TEST(NetConnectFutureStop, WhileResolving)
+{
+  using namespace qi;
+  using namespace qi::net;
+  using namespace mock;
+  using mock::Resolver;
+  using I = N::resolver_type::iterator;
+
+  Promise<std::pair<Error, I>> promiseResolve;
+  Promise<void> promiseStopResolve;
+  Promise<void> promiseStopConnect;
+  Promise<ErrorCode<N>> promiseConnect;
+  std::thread threadResolve;
+  Resolver::async_resolve = [&](Resolver::query, Resolver::_anyResolveHandler h) {
+    threadResolve = std::thread{[=]() mutable {
+      // Block until the resolve promise has been set.
+      auto p = promiseResolve.future().value();
+      h(p.first, p.second);
+    }};
+  };
+  LowestLayer::async_connect = defaultAsyncConnect;
+  Socket::async_handshake = defaultAsyncHandshake;
+  IoService<N>& io = N::defaultIoService();
+  using Side = HandshakeSide<SslSocket<N>>;
+  ConnectSocketFuture<N> connect{io};
+  SslContext<N> context{Method<SslContext<N>>::sslv23};
+  connect(Url{"tcp://10.11.12.13:1234"}, SslEnabled{true}, context,
+    IpV6Enabled{false}, Side::client, Seconds{100},
+    SetupStop<N>{promiseStopResolve.future(), promiseStopConnect.future(), false,
+      promiseResolve, promiseConnect}
+  );
+
+  // Trigger the stop.
+  promiseStopResolve.setValue(nullptr);
+  ASSERT_TRUE(connect.complete().hasError());
+  ASSERT_EQ("5: operationAborted", connect.complete().error());
+  threadResolve.join();
+}
+
+// Stop called while in the connect step.
+//
+// The connect step waits for a promise to be set. This promise is set when the
+// stop promise is set.
+TEST(NetConnectFutureStop, WhileConnecting)
+{
+  using namespace qi;
+  using namespace qi::net;
+  using namespace mock;
+  using mock::Resolver;
+  using I = N::resolver_type::iterator;
+
+  Promise<std::pair<Error, I>> promiseResolve;
+  Promise<void> promiseStopResolve;
+  Promise<void> promiseStopConnect;
+  Promise<ErrorCode<N>> promiseConnect;
+  std::thread threadConnect;
+  Resolver::async_resolve = defaultAsyncResolve;
+  LowestLayer::async_connect = [&](N::_resolver_entry, N::_anyHandler h) {
+    threadConnect = std::thread{[=]() mutable {
+      // Block until the resolve promise has been set.
+      h(promiseConnect.future().value());
+    }};
+  };
+  Socket::async_handshake = defaultAsyncHandshake;
+  IoService<N>& io = N::defaultIoService();
+  using Side = HandshakeSide<SslSocket<N>>;
+  ConnectSocketFuture<N> connect{io};
+  SslContext<N> context{Method<SslContext<N>>::sslv23};
+  connect(Url{"tcp://10.11.12.13:1234"}, SslEnabled{true}, context,
+    IpV6Enabled{false}, Side::client, Seconds{100},
+    SetupStop<N>{promiseStopResolve.future(), promiseStopConnect.future(), false,
+      promiseResolve, promiseConnect}
+  );
+
+  // Trigger the stop.
+  promiseStopConnect.setValue(nullptr);
+  ASSERT_TRUE(connect.complete().hasError());
+  ASSERT_EQ("5: operationAborted", connect.complete().error());
+  threadConnect.join();
+}
+
+// Stop called while in the handshake step.
+//
+// The handshake step waits for a promise to be set. This promise is set when the
+// stop promise is set.
+TEST(NetConnectFutureStop, WhileHandshaking)
+{
+  using namespace qi;
+  using namespace qi::net;
+  using namespace mock;
+  using mock::Resolver;
+  using I = N::resolver_type::iterator;
+
+  Promise<std::pair<Error, I>> promiseResolve;
+  Promise<void> promiseStopResolve;
+  Promise<void> promiseStopConnect;
+  Promise<ErrorCode<N>> promiseConnect;
+  std::thread threadHandshake;
+  Resolver::async_resolve = defaultAsyncResolve;
+  LowestLayer::async_connect = defaultAsyncConnect;
+  Socket::async_handshake = [&](HandshakeSide<SslSocket<N>>, N::_anyHandler h) {
+    threadHandshake = std::thread{[=]() mutable {
+      // Block until the resolve promise has been set.
+      h(promiseConnect.future().value());
+    }};
+  };
+  IoService<N>& io = N::defaultIoService();
+  using Side = HandshakeSide<SslSocket<N>>;
+  ConnectSocketFuture<N> connect{io};
+  SslContext<N> context{Method<SslContext<N>>::sslv23};
+  connect(Url{"tcp://10.11.12.13:1234"}, SslEnabled{true}, context,
+    IpV6Enabled{false}, Side::client, Seconds{100},
+    SetupStop<N>{promiseStopResolve.future(), promiseStopConnect.future(), false,
+      promiseResolve, promiseConnect}
+  );
+
+  // Trigger the stop.
+  promiseStopConnect.setValue(nullptr);
+  ASSERT_TRUE(connect.complete().hasError());
+  ASSERT_EQ("5: operationAborted", connect.complete().error());
+  threadHandshake.join();
+}
