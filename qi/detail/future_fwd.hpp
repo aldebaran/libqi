@@ -772,8 +772,8 @@ namespace qi {
     }
 
     Promise(const qi::Promise<T>& rhs)
+      : _f(rhs._f)
     {
-      _f = rhs._f;
       ++_f._p->_promiseCount;
     }
 
