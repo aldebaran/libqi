@@ -47,40 +47,41 @@ static void releaseDisconnectInfoPromises(C& disconnectInfos)
 void TransportSocketCache::close()
 {
   qiLogDebug() << "TransportSocketCache is closing";
-  ConnectionMap map;
-  std::list<MessageSocketPtr> pending;
   {
-    boost::mutex::scoped_lock lock(_socketMutex);
-    _dying = true;
-    std::swap(map, _connections);
-    std::swap(pending, _allPendingConnections);
-  }
-  for (auto& pairMachineIdConnection: map)
-  {
-    auto& mapUrlConnection = pairMachineIdConnection.second;
-    for (auto& pairUrlConnection: mapUrlConnection)
+    ConnectionMap map;
+    std::list<MessageSocketPtr> pending;
     {
-      auto& connectionAttempt = *pairUrlConnection.second;
-      auto endpoint = connectionAttempt.endpoint;
+      boost::mutex::scoped_lock lock(_socketMutex);
+      _dying = true;
+      std::swap(map, _connections);
+      std::swap(pending, _allPendingConnections);
+    }
+    for (auto& pairMachineIdConnection: map)
+    {
+      auto& mapUrlConnection = pairMachineIdConnection.second;
+      for (auto& pairUrlConnection: mapUrlConnection)
+      {
+        auto& connectionAttempt = *pairUrlConnection.second;
+        auto endpoint = connectionAttempt.endpoint;
 
-      // Disconnect any valid socket we were holding.
-      if (endpoint)
-      {
-        endpoint->disconnect();
-        endpoint->disconnected.disconnect(connectionAttempt.disconnectionTracking);
-      }
-      else
-      {
-        connectionAttempt.state = State_Error;
-        connectionAttempt.promise.setError("TransportSocketCache is closing.");
+        // Disconnect any valid socket we were holding.
+        if (endpoint)
+        {
+          endpoint->disconnect();
+          endpoint->disconnected.disconnect(connectionAttempt.disconnectionTracking);
+        }
+        else
+        {
+          connectionAttempt.state = State_Error;
+          connectionAttempt.promise.setError("TransportSocketCache is closing.");
+        }
       }
     }
+    for (auto& socket: pending)
+    {
+      socket->disconnect();
+    }
   }
-  for (auto& socket: pending)
-  {
-    socket->disconnect();
-  }
-  _connections.clear();
 
   /// Release all disconnect promises to avoid deadlocks.
   /// A deadlock could happen if the user calls `disconnect(socket)` and the cache is
