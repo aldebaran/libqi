@@ -436,6 +436,41 @@ TEST(NetMessageSocket, DisconnectWhileDisconnecting)
   for (auto& t: writeThreads) t.join();
 }
 
+// Stress test for disconnections.
+// A lot of threads try to disconnect the same socket at the same time.
+// This test should be launched a lot of times to be meaningful.
+TYPED_TEST(NetMessageSocketAsio, DisconnectBurst)
+{
+  using namespace qi;
+  using namespace qi::net;
+  using N = NetworkAsio;
+
+  // Start a server.
+  TransportServer server;
+  Url url{"tcp://127.0.0.1:34987"};
+  listen(server, url);
+
+  // Connect the client.
+  auto socket = boost::make_shared<TcpMessageSocket<N>>();
+  Future<void> fut = socket->connect(url);
+  ASSERT_EQ(FutureState_FinishedWithValue, fut.wait(defaultTimeoutInMs));
+
+  // Launch threads waiting to disconnect the socket.
+  Promise<void> promiseRun;
+  std::array<std::thread, 100> threads;
+  for (auto& t: threads)
+  {
+    t = std::thread{[&] {
+      promiseRun.future().wait();
+      socket->disconnect();
+    }};
+  }
+
+  // Trigger the concurrent disconnections from all threads.
+  promiseRun.setValue(nullptr);
+  for (auto& t: threads) t.join();
+}
+
 TEST(NetMessageSocketAsio, SendReceiveManyMessages)
 {
   using namespace qi;
