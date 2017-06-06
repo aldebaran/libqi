@@ -126,6 +126,9 @@ namespace mock
         using _anyAsyncConnecter = std::function<void (_resolver_entry, _anyHandler)>;
         static _anyAsyncConnecter async_connect;
 
+        using _anyCanceler = std::function<void ()>;
+        static _anyCanceler cancel;
+
         using _anyShutdowner = std::function<void (shutdown_type, error_code_type)>;
         static _anyShutdowner shutdown;
 
@@ -361,6 +364,10 @@ namespace mock
     std::thread{[=] {
       h(Error{});
     }}.join();
+  }
+
+  inline void defaultCancel()
+  {
   }
 
   inline void defaultShutdown(LowestLayer::shutdown_type, N::error_code_type)

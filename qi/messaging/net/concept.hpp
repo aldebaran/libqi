@@ -135,6 +135,7 @@ namespace qi { namespace net {
 ///        socket.set_option(noDelay)
 ///     && socket.async_connect(endpoint, handler)
 ///     && socket.shutdown(shutdownMode, errorCodeLValue)
+///     && socket.cancel()
 ///     && socket.close(errorCodeLValue)
 ///     && Regular handle = socket.native_handle()
 ///     && Endpoint<S> e = const_socket.remote_endpoint()

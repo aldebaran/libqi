@@ -1,3 +1,4 @@
+#include <chrono>
 #include <numeric>
 #include <random>
 #include <gtest/gtest.h>
@@ -8,6 +9,7 @@
 #include <qi/messaging/net/accept.hpp>
 #include "src/messaging/tcpmessagesocket.hpp"
 #include "src/messaging/transportserver.hpp"
+#include "tests/qi/testutils/testutils.hpp"
 
 static const int defaultTimeoutInMs = 500;
 static const std::chrono::milliseconds defaultPostPauseInMs{20};
@@ -379,25 +381,29 @@ TEST(NetMessageSocket, DisconnectWhileDisconnecting)
   using mock::Resolver;
   using namespace mock;
 
-  Promise<void> promiseCanFinishAsyncReadWrite;
+  Promise<Error> promiseAsyncReadWrite;
 
   Resolver::async_resolve = defaultAsyncResolve;
   LowestLayer::async_connect = defaultAsyncConnect;
   std::vector<std::thread> readThreads, writeThreads;
 
-  // Make sure async read and async write block until the end of this test.
+  // Make sure async read and async write block until cancel happens.
   N::_async_read_next_layer =
     [=, &readThreads](Socket::next_layer_type&, N::_mutable_buffer_sequence, N::_anyTransferHandler h) {
       readThreads.push_back(std::thread{[=] {
-        promiseCanFinishAsyncReadWrite.future().wait();
+        h(promiseAsyncReadWrite.future().value(), 0);
       }});
     };
   N::_async_write_next_layer =
-    [=, &writeThreads](Socket::next_layer_type&, const std::vector<N::_const_buffer_sequence>&, N::_anyTransferHandler) {
+    [=, &writeThreads](Socket::next_layer_type&, const std::vector<N::_const_buffer_sequence>&, N::_anyTransferHandler h) {
       writeThreads.push_back(std::thread{[=] {
-        promiseCanFinishAsyncReadWrite.future().wait();
+        h(promiseAsyncReadWrite.future().value(), 0);
       }});
     };
+  N::ssl_socket_type::lowest_layer_type::cancel = [=]() mutable {
+    promiseAsyncReadWrite.setValue(operationAborted<Error>());
+  };
+
   Promise<void> promiseShutdownStarted;
   Promise<void> promiseCanShutdown;
   LowestLayer::shutdown = [=](LowestLayer::shutdown_type, Error) mutable {
@@ -431,7 +437,6 @@ TEST(NetMessageSocket, DisconnectWhileDisconnecting)
   ASSERT_FALSE(socket->isConnected());
   ASSERT_EQ(MessageSocket::Status::Disconnected, socket->status());
 
-  promiseCanFinishAsyncReadWrite.setValue(0);
   for (auto& t: readThreads) t.join();
   for (auto& t: writeThreads) t.join();
 }
@@ -529,4 +534,52 @@ TEST(NetMessageSocketAsio, SendReceiveManyMessages)
   // Wait for the client to receive it.
   ASSERT_EQ(FutureState_FinishedWithValue, promiseAllMessageReceived.future().wait());
   for (auto& t: sendThreads) t.join();
+}
+
+TEST(NetMessageSocketAsio, DisconnectToDistantWhileConnected)
+{
+  using namespace qi;
+  using namespace qi::net;
+  using std::chrono::milliseconds;
+
+  const std::string remoteServiceOwnerPath = path::findBin("remoteserviceowner");
+  const std::string scheme{"tcp"};
+  const Url url{scheme + "://127.0.0.1:54321"};
+  MessageSocketPtr socket;
+  ScopedProcess _{
+    remoteServiceOwnerPath, {"--qi-standalone", "--qi-listen-url=" + url.str()}
+  };
+  std::this_thread::sleep_for(milliseconds{100});
+  socket = makeMessageSocket(scheme, getEventLoop());
+  Future<void> futCo = socket->connect(url);
+  ASSERT_EQ(FutureState_FinishedWithValue, futCo.wait(defaultTimeoutInMs));
+  Future<void> futDisco = socket->disconnect();
+  ASSERT_EQ(FutureState_FinishedWithValue, futDisco.wait(defaultTimeoutInMs));
+}
+
+// Connect to another process and make it brutally crash to check that the
+// disconnection is quick and does not last until a system timeout expires.
+TEST(NetMessageSocketAsio, DistantCrashWhileConnected)
+{
+  using namespace qi;
+  using namespace qi::net;
+  using std::chrono::milliseconds;
+
+  const std::string remoteServiceOwnerPath = path::findBin("remoteserviceowner");
+  const std::string protocol{"tcp"};
+  const Url url{protocol + "://127.0.0.1:54321"};
+  MessageSocketPtr socket;
+  {
+    ScopedProcess _{
+      remoteServiceOwnerPath, {"--qi-standalone", "--qi-listen-url=" + url.str()}
+    };
+    std::this_thread::sleep_for(milliseconds{100});
+    socket = makeMessageSocket(protocol, getEventLoop());
+    Future<void> fut = socket->connect(url);
+    ASSERT_EQ(FutureState_FinishedWithValue, fut.wait(defaultTimeoutInMs));
+  }
+  std::this_thread::sleep_for(milliseconds{500});
+  ASSERT_EQ(MessageSocket::Status::Disconnected, socket->status());
+  Future<void> fut = socket->disconnect();
+  ASSERT_EQ(FutureState_FinishedWithValue, fut.wait(defaultTimeoutInMs));
 }

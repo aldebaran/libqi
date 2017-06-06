@@ -226,6 +226,7 @@ namespace qi {
         Promise<void> _promiseStop; // Must be declared after `_connect`, to be destroyed first
         ConnectingResult<N> _result;
         std::atomic<bool> _stopping;
+        boost::mutex _disconnectedPromiseMutex;
 
         void setContinuation()
         {
@@ -283,13 +284,18 @@ namespace qi {
       {
         return _impl->_promiseComplete.future();
       }
-      bool stop(const Promise<void>& disconnectedPromise)
+      bool stop(Promise<void> disconnectedPromise)
       {
+        boost::mutex::scoped_lock lock(_impl->_disconnectedPromiseMutex);
         const bool mustStop = tryRaiseAtomicFlag(_impl->_stopping);
         if (mustStop)
         {
           setDisconnectionRequested(_impl->_result, disconnectedPromise);
           _impl->_promiseStop.setValue(nullptr); // triggers the stop
+        }
+        else
+        {
+          adaptFuture(_impl->_result.disconnectedPromise.future(), disconnectedPromise);
         }
         return mustStop;
       }
@@ -371,6 +377,13 @@ namespace qi {
         using ReadableMessage = typename SendMessageEnqueue<N, SocketPtr<N>>::ReadableMessage;
         using PairSocketPromise = std::pair<SocketPtr<N>, Promise<void>>;
 
+        boost::synchronized_value<Promise<PairSocketPromise>> _completePromise;
+        PairSocketPromise _pairSocketPromise;
+        std::atomic<bool> _stopRequested;
+        ReceiveMessageContinuous<N> _receiveMsg;
+        SendMessageEnqueue<N, SocketPtr<N>> _sendMsg;
+        boost::mutex _disconnectedPromiseMutex;
+
         Impl(const SocketPtr<N>& socket);
         ~Impl();
 
@@ -380,11 +393,31 @@ namespace qi {
         template<typename Msg, typename Proc>
         void send(Msg&& msg, SslEnabled, Proc onSent);
 
-        Promise<PairSocketPromise> _completePromise;
-        SocketPtr<N> _socket;
-        std::atomic<bool> _stopRequested;
-        ReceiveMessageContinuous<N> _receiveMsg;
-        SendMessageEnqueue<N, SocketPtr<N>> _sendMsg;
+        void stop(Promise<void> disconnectedPromise)
+        {
+          boost::mutex::scoped_lock lock(_disconnectedPromiseMutex);
+          if (tryRaiseAtomicFlag(_stopRequested))
+          {
+            _pairSocketPromise.second = disconnectedPromise;
+
+            // The cancel will cause any pending operation on the socket to fail
+            // with a "operation aborted" error.
+            _pairSocketPromise.first->lowest_layer().cancel();
+          }
+          else
+          {
+            // The disconnected promise has already been set.
+            // Forward the result when we have it.
+            adaptFuture(_pairSocketPromise.second.future(), disconnectedPromise);
+          }
+        }
+
+        void setPromise(const net::ErrorCode<N>&, const Message*);
+
+        SocketPtr<N>& socket()
+        {
+          return _pairSocketPromise.first;
+        }
       };
       std::shared_ptr<Impl> _impl;
     public:
@@ -405,34 +438,21 @@ namespace qi {
       }
       Future<std::pair<SocketPtr<N>, Promise<void>>> complete() const
       {
-        return _impl->_completePromise.future();
+        return _impl->_completePromise->future();
       }
       Url remoteEndpoint(SslEnabled ssl) const
       {
-        return net::remoteEndpoint(*(_impl->_socket), *ssl);
+        return net::remoteEndpoint(*_impl->socket(), *ssl);
       }
-      void requestStop(Promise<void> promiseDisconnected = Promise<void>{})
+      void stop(Promise<void> disconnectedPromise = Promise<void>{})
       {
-        using P = typename Impl::PairSocketPromise;
-        auto impl = _impl->shared_from_this();
-        ioServiceStranded([=]() mutable {
-          auto& promise = impl->_completePromise;
-          if (promise.future().isRunning())
-          {
-            promise.setValue(P{impl->_socket, promiseDisconnected});
-          }
-          else
-          {
-            // A verifier.
-            promiseDisconnected.setValue(nullptr);
-          }
-        })();
+        _impl->stop(disconnectedPromise);
       }
       template<typename Proc>
       auto ioServiceStranded(Proc&& p)
-        -> decltype(StrandTransfo<N>{&_impl->_socket->get_io_service()}(std::forward<Proc>(p)))
+        -> decltype(StrandTransfo<N>{&_impl->socket()->get_io_service()}(std::forward<Proc>(p)))
       {
-        return StrandTransfo<N>{&_impl->_socket->get_io_service()}(std::forward<Proc>(p));
+        return StrandTransfo<N>{&_impl->socket()->get_io_service()}(std::forward<Proc>(p));
       }
     };
 
@@ -447,10 +467,34 @@ namespace qi {
 
     template<typename N>
     Connected<N>::Impl::Impl(const SocketPtr<N>& s)
-      : _socket(s)
+      : _pairSocketPromise(PairSocketPromise{s, Promise<void>{}})
       , _stopRequested(false)
       , _sendMsg{s}
     {
+    }
+
+    template<typename N>
+    void Connected<N>::Impl::setPromise(const net::ErrorCode<N>& error, const Message* msg)
+    {
+      auto prom = _completePromise.synchronize();
+      if (!prom->future().isRunning()) // promise already set
+        return;
+      if (_stopRequested.load() && error == operationAborted<ErrorCode<N>>())
+      {
+        // This is not a real error: the user has asked the state to stop,
+        // so we set the promise with a value instead of an error.
+        prom->setValue(_pairSocketPromise);
+      }
+      else if (error || !msg)
+      {
+        // A real error occurred.
+        prom->setError(error.message());
+      }
+      else
+      {
+        // This is not an error: the user decided to stop after handling a message.
+        prom->setValue(_pairSocketPromise);
+      }
     }
 
     template<typename N>
@@ -459,33 +503,18 @@ namespace qi {
         qi::int64_t messageHandlingTimeoutInMus)
     {
       auto self = shared_from_this();
-      _receiveMsg(_socket, ssl, maxPayload,
-        [=](net::ErrorCode<N> e, const Message* msg) mutable {
-          // If a stop is already requested, we must not call the handler.
-          if (self->_stopRequested) return false;
+      _receiveMsg(socket(), ssl, maxPayload,
+        [=](net::ErrorCode<N> e, const Message* msg) mutable { // onReceived
           const bool mustContinue = onReceive(e, msg);
           if (!mustContinue)
           {
-            self->_stopRequested = true;
-            if (self->_completePromise.future().isRunning())
-            {
-              if (e || !msg) // has error
-              {
-                self->_completePromise.setError(e.message());
-              }
-              else
-              {
-                self->_completePromise.setValue(PairSocketPromise{self->_socket, Promise<void>{}});
-              }
-            }
-            // We must not continue to receive messages.
-            return false;
+            self->setPromise(e, msg);
+            return false; // We must not continue to receive messages.
           }
-          // Otherwise, we continue to receive messages.
-          return true;
+          return true; // Otherwise, we continue to receive messages.
         },
         dataBoundTransfo(shared_from_this()), // dataTransfo
-        StrandTransfo<N>{&(*_socket).get_io_service()} // netTransfo
+        StrandTransfo<N>{&(*socket()).get_io_service()} // netTransfo
       );
     }
 
@@ -502,33 +531,18 @@ namespace qi {
       using ReadableMessage = typename SendMessage::ReadableMessage;
       auto self = shared_from_this();
       _sendMsg(std::forward<Msg>(msg), ssl,
-        [=](const ErrorCode<N>& e, const ReadableMessage& ptrMsg) mutable {
-          // If a stop is already requested, we must not call the handler.
-          if (self->_stopRequested) return false;
+        [=](const ErrorCode<N>& e, const ReadableMessage& ptrMsg) mutable { // onSent
           const bool mustContinue = onSent(e, ptrMsg);
           if (!mustContinue)
           {
-            self->_stopRequested = true;
-            if (self->_completePromise.future().isRunning())
-            {
-              if (e) // has error
-              {
-                self->_completePromise.setError(e.message());
-              }
-              else
-              {
-                self->_completePromise.setValue(PairSocketPromise{_socket, Promise<void>{}});
-              }
-            }
-            // Stop sending pending messages.
-            return false;
+            self->setPromise(e, &msg);
+            return false; // We must not continue to send messages.
           }
-          // Continue sending pending messages.
-          return true;
+          return true; // Otherwise, we continue to send messages.
         },
         dataBoundTransfo(shared_from_this()), // dataTransfo
-        StrandTransfo<N>{&(*_socket).get_io_service()} // netTransfo
-       );
+        StrandTransfo<N>{&(*socket()).get_io_service()} // netTransfo
+      );
     }
 
     /// Disconnecting state of the socket.
@@ -988,7 +1002,7 @@ namespace qi {
       break;
     case Status::Connected:
       QI_LOG_DEBUG_SOCKET(this) << "Requesting connected socket to disconnect.";
-      asConnected(_state).requestStop(promiseDisconnected);
+      asConnected(_state).stop(promiseDisconnected);
       break;
     case Status::Disconnecting:
       return asDisconnecting(_state).complete();
