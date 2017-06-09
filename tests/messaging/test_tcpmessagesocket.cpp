@@ -117,15 +117,83 @@ SignalPromises connectSignals(Socket& socket)
   return p;
 }
 
-TEST(NetMessageSocket, DestroyNotConnectedAsio)
+namespace {
+
+  struct SchemeTcp
+  {
+  // Function<std::string ()>:
+    std::string operator()() const { return "tcp"; }
+  };
+
+  struct SchemeTcpSSL
+  {
+  // Function<std::string ()>:
+    std::string operator()() const { return "tcps"; }
+  };
+
+
+  template<class SchemeType>
+  class NetMessageSocket : public ::testing::Test
+  {
+  public:
+    static SchemeType scheme;
+
+    static qi::Url defaultListenURL()
+    {
+      static const qi::Url listenUrl = scheme() + "://127.0.0.1:34988";
+      return listenUrl;
+    }
+
+    static qi::Promise<qi::MessageSocketPtr> listen(qi::TransportServer& server
+      , const qi::Url& url = defaultListenURL()
+      , bool connectNewConnectionSignal = true)
+    {
+      using namespace qi;
+      const auto key = qi::path::findData("qi", "server.key");
+      const auto crt = qi::path::findData("qi", "server.crt");
+      server.setIdentity(key, crt);
+      Promise<MessageSocketPtr> promiseConnectedSocket;
+      if (connectNewConnectionSignal)
+      {
+        server.newConnection.connect([=](const std::pair<MessageSocketPtr, Url>& p) mutable {
+          promiseConnectedSocket.setValue(p.first);
+        });
+      }
+      else
+      {
+        promiseConnectedSocket.setValue({});
+      }
+      server.listen(url);
+
+      return promiseConnectedSocket;
+    }
+
+  };
+
+  template<class SchemeType>
+  SchemeType NetMessageSocket<SchemeType>::scheme;
+
+
+  template<class SchemeType>
+  class NetMessageSocketAsio : public NetMessageSocket<SchemeType> {};
+
+  using SchemeTypes = ::testing::Types< SchemeTcp
+                                        , SchemeTcpSSL
+                                        >;
+
+  TYPED_TEST_CASE(NetMessageSocket, SchemeTypes);
+  TYPED_TEST_CASE(NetMessageSocketAsio, SchemeTypes);
+
+}
+
+TYPED_TEST(NetMessageSocket, DestroyNotConnectedAsio)
 {
   using namespace qi;
   using namespace qi::net;
-  using N = NetworkAsio;
 
   SignalPromises signalPromises;
   {
-    auto clientSideSocket = boost::make_shared<TcpMessageSocket<N>>();
+    auto clientSideSocket = makeMessageSocket(this->scheme());
     signalPromises = connectSignals(*clientSideSocket);
 
     // Check that signal were not emitted.
@@ -138,36 +206,18 @@ TEST(NetMessageSocket, DestroyNotConnectedAsio)
   ASSERT_TRUE(signalPromises.disconnectedReceived().isRunning());
 }
 
-qi::Promise<qi::MessageSocketPtr> listen(
-  qi::TransportServer& server,
-  const qi::Url& url = {"tcp://127.0.0.1:34987"},
-  bool connectNewConnectionSignal = true)
-{
-  using namespace qi;
-  Promise<MessageSocketPtr> promiseConnectedSocket;
-  if (connectNewConnectionSignal)
-  {
-    server.newConnection.connect([=](const std::pair<MessageSocketPtr, Url>& p) mutable {
-      promiseConnectedSocket.setValue(p.first);
-    });
-  }
-  server.listen(url);
-  return promiseConnectedSocket;
-}
-
-TEST(NetMessageSocket, ConnectAndDisconnectAsio)
+TYPED_TEST(NetMessageSocket, ConnectAndDisconnectAsio)
 {
   using namespace qi;
   using namespace qi::net;
-  using N = NetworkAsio;
 
   // Start a server and get the server side socket.
   TransportServer server;
-  Url url{"tcp://127.0.0.1:34987"};
-  listen(server, url);
+  const auto url = this->defaultListenURL();
+  this->listen(server, url);
 
   // We also want to check that signals are emitted.
-  auto clientSideSocket = boost::make_shared<TcpMessageSocket<N>>();
+  auto clientSideSocket = makeMessageSocket(this->scheme());
   auto signalPromises = connectSignals(*clientSideSocket);
 
   Future<void> fut0 = clientSideSocket->connect(url);
@@ -180,11 +230,10 @@ TEST(NetMessageSocket, ConnectAndDisconnectAsio)
   ASSERT_EQ(FutureState_FinishedWithValue, signalPromises.disconnectedReceived().wait(defaultTimeoutInMs));
 }
 
-TEST(NetMessageSocket, ConnectAndDestroyAsio)
+TYPED_TEST(NetMessageSocket, ConnectAndDestroyAsio)
 {
   using namespace qi;
   using namespace qi::net;
-  using N = NetworkAsio;
 
   // We also want to check that signals are emitted.
   SignalPromises signalPromises;
@@ -192,9 +241,9 @@ TEST(NetMessageSocket, ConnectAndDestroyAsio)
   {
     // Start a server and get the server side socket.
     TransportServer server;
-    Url url{"tcp://127.0.0.1:34987"};
-    listen(server, url);
-    auto clientSideSocket = boost::make_shared<TcpMessageSocket<N>>();
+    const auto url = this->defaultListenURL();
+    this->listen(server, url);
+    auto clientSideSocket = makeMessageSocket(this->scheme());
     signalPromises = connectSignals(*clientSideSocket);
 
     Future<void> fut0 = clientSideSocket->connect(url);
@@ -207,13 +256,12 @@ TEST(NetMessageSocket, ConnectAndDestroyAsio)
   ASSERT_EQ(FutureState_FinishedWithValue, signalPromises.disconnectedReceived().wait(defaultTimeoutInMs));
 }
 
-TEST(NetMessageSocket, SendWhileNotConnectedAsio)
+TYPED_TEST(NetMessageSocket, SendWhileNotConnectedAsio)
 {
   using namespace qi;
   using namespace qi::net;
-  using N = NetworkAsio;
 
-  auto clientSideSocket = boost::make_shared<TcpMessageSocket<N>>();
+  auto clientSideSocket = makeMessageSocket(this->scheme());
   auto signalPromises = connectSignals(*clientSideSocket);
 
   MessageAddress address{1234, 5, 9876, 107};
@@ -224,18 +272,17 @@ TEST(NetMessageSocket, SendWhileNotConnectedAsio)
   ASSERT_TRUE(signalPromises.disconnectedReceived().isRunning());
 }
 
-TEST(NetMessageSocket, SendAfterDisconnectedAsio)
+TYPED_TEST(NetMessageSocket, SendAfterDisconnectedAsio)
 {
   using namespace qi;
   using namespace qi::net;
-  using N = NetworkAsio;
 
   // Start a server and get the server side socket.
   TransportServer server;
-  Url url{"tcp://127.0.0.1:34987"};
-  listen(server, url);
+  const auto url = this->defaultListenURL();
+  this->listen(server, url);
 
-  auto clientSideSocket = boost::make_shared<TcpMessageSocket<N>>();
+  auto clientSideSocket = makeMessageSocket(this->scheme());
   Future<void> fut0 = clientSideSocket->connect(url);
   ASSERT_EQ(FutureState_FinishedWithValue, fut0.wait(defaultTimeoutInMs));
 
@@ -246,32 +293,30 @@ TEST(NetMessageSocket, SendAfterDisconnectedAsio)
   ASSERT_FALSE(clientSideSocket->send(makeMessage(address)));
 }
 
-TEST(NetMessageSocket, DisconnectWhileNotConnectedAsio)
+TYPED_TEST(NetMessageSocket, DisconnectWhileNotConnectedAsio)
 {
   using namespace qi;
   using namespace qi::net;
-  using N = NetworkAsio;
 
-  auto socket = boost::make_shared<TcpMessageSocket<N>>();
+  auto socket = makeMessageSocket(this->scheme());
   ASSERT_FALSE(socket->disconnect().hasError());
 }
 
-TEST(NetMessageSocket, ReceiveOneMessageAsio)
+TYPED_TEST(NetMessageSocket, ReceiveOneMessageAsio)
 {
   using namespace qi;
   using namespace qi::net;
-  using N = NetworkAsio;
 
   // Start a server and get the server side socket.
   TransportServer server;
-  Url url{"tcp://127.0.0.1:34987"};
-  auto promiseServerSideSocket = listen(server, url);
+  const auto url = this->defaultListenURL();
+  auto promiseServerSideSocket = this->listen(server, url);
 
   // Connect the client.
   auto msgSent = makeMessage(MessageAddress{1234, 5, 9876, 107});
 
   Promise<void> promiseReceivedMessage;
-  auto clientSideSocket = boost::make_shared<TcpMessageSocket<N>>();//N::defaultIoService(), SslEnabled{true});
+  auto clientSideSocket = makeMessageSocket(this->scheme());//N::defaultIoService(), SslEnabled{true});
   clientSideSocket->messageReady.connect([&](const Message& msgReceived) mutable {
     if (!messageEqual(msgReceived, msgSent)) throw std::runtime_error("messages are not equal.");
     promiseReceivedMessage.setValue(0);
@@ -288,20 +333,19 @@ TEST(NetMessageSocket, ReceiveOneMessageAsio)
   ASSERT_EQ(FutureState_FinishedWithValue, promiseReceivedMessage.future().wait(defaultTimeoutInMs));
 }
 
-TEST(NetMessageSocketAsio, ReceiveManyMessages)
+TYPED_TEST(NetMessageSocketAsio, ReceiveManyMessages)
 {
   using namespace qi;
   using namespace qi::net;
-  using N = NetworkAsio;
 
   // Start a server and get the server side socket.
   TransportServer server;
-  Url url{"tcp://127.0.0.1:34987"};
-  auto promiseServerSideSocket = listen(server, url);
+  const auto url = this->defaultListenURL();
+  auto promiseServerSideSocket = this->listen(server, url);
 
   // Connect the client.
   Promise<void> promiseAllMessageReceived;
-  auto clientSideSocket = boost::make_shared<TcpMessageSocket<N>>();
+  auto clientSideSocket = makeMessageSocket(this->scheme());
   const int messageCount = 100;
   MessageAddress address{1234, 5, 9876, 107};
   int i = 0;
@@ -318,6 +362,7 @@ TEST(NetMessageSocketAsio, ReceiveManyMessages)
     if (i == messageCount) promiseAllMessageReceived.setValue(0);
   });
   Future<void> fut = clientSideSocket->connect(url);
+  fut.wait();
   ASSERT_EQ(FutureState_FinishedWithValue, fut.wait(defaultTimeoutInMs));
 
   // The server sends a message.
@@ -335,7 +380,7 @@ TEST(NetMessageSocketAsio, ReceiveManyMessages)
   qiLogInfo("") << "fin\n";
 }
 
-TEST(NetMessageSocket, DisconnectWhileConnecting)
+TYPED_TEST(NetMessageSocket, DisconnectWhileConnecting)
 {
   using namespace qi;
   using namespace qi::net;
@@ -374,7 +419,7 @@ TEST(NetMessageSocket, DisconnectWhileConnecting)
   resolveThread.join();
 }
 
-TEST(NetMessageSocket, DisconnectWhileDisconnecting)
+TYPED_TEST(NetMessageSocket, DisconnectWhileDisconnecting)
 {
   using namespace qi;
   using namespace qi::net;
@@ -444,19 +489,18 @@ TEST(NetMessageSocket, DisconnectWhileDisconnecting)
 // Stress test for disconnections.
 // A lot of threads try to disconnect the same socket at the same time.
 // This test should be launched a lot of times to be meaningful.
-TEST(NetMessageSocketAsio, DisconnectBurst)
+TYPED_TEST(NetMessageSocketAsio, DisconnectBurst)
 {
   using namespace qi;
   using namespace qi::net;
-  using N = NetworkAsio;
 
   // Start a server.
   TransportServer server;
-  Url url{"tcp://127.0.0.1:34987"};
-  listen(server, url);
+  const auto url = this->defaultListenURL();
+  this->listen(server, url);
 
   // Connect the client.
-  auto socket = boost::make_shared<TcpMessageSocket<N>>();
+  auto socket = makeMessageSocket(this->scheme());
   Future<void> fut = socket->connect(url);
   ASSERT_EQ(FutureState_FinishedWithValue, fut.wait(defaultTimeoutInMs));
 
@@ -476,20 +520,19 @@ TEST(NetMessageSocketAsio, DisconnectBurst)
   for (auto& t: threads) t.join();
 }
 
-TEST(NetMessageSocketAsio, SendReceiveManyMessages)
+TYPED_TEST(NetMessageSocketAsio, SendReceiveManyMessages)
 {
   using namespace qi;
   using namespace qi::net;
-  using N = NetworkAsio;
 
   // Start a server and get the server side socket.
   TransportServer server;
-  Url url{"tcp://127.0.0.1:34987"};
-  auto promiseServerSideSocket = listen(server, url);
+  const auto url = this->defaultListenURL();
+  auto promiseServerSideSocket = this->listen(server, url);
 
   // Connect the client.
   Promise<void> promiseAllMessageReceived;
-  auto clientSideSocket = boost::make_shared<TcpMessageSocket<N>>();
+  auto clientSideSocket = makeMessageSocket(this->scheme());
   const unsigned sendThreadCount = 100u;
   const unsigned perSendThreadMessageCount = 200u;
   const unsigned messageCount = sendThreadCount * perSendThreadMessageCount;
