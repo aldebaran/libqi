@@ -5,6 +5,7 @@
 
 // Test that calls happen in the correct event loop
 
+#include <cstdint>
 #include <boost/thread.hpp>
 
 #include <gtest/gtest.h>
@@ -16,14 +17,14 @@
 
 // ARGH! boost::thread::id is an opaque class, not an int, so we have
 // to hack like hell to pass it in qimessaging calls: We pass along
-// pointers to TID in an unsigned long.
+// pointers to TID in an big-enough int type.
 
 using TID = boost::thread::id;
+using RawTID = std::uintptr_t;
 
-
-bool sameThread(const unsigned long& tid)
+bool sameThread(const RawTID& tid)
 {
-  boost::thread::id* id = (boost::thread::id*)(void*)tid;
+  boost::thread::id* id = reinterpret_cast<boost::thread::id*>(tid);
   bool res = *id == boost::this_thread::get_id();
   return res;
 }
@@ -32,7 +33,7 @@ void fire_samethread(qi::AnyObject obj, void* tid)
 {
   if (!tid)
     tid = new TID(boost::this_thread::get_id());
-  obj.post("fire", (unsigned long) tid);
+  obj.post("fire", reinterpret_cast<RawTID>(tid));
 }
 
 // Fire sameThread in given event loop
@@ -46,7 +47,7 @@ qi::AnyObject makeDynamicObj()
   qi::DynamicObjectBuilder ob;
   ob.setThreadingModel(qi::ObjectThreadingModel_MultiThread);
   ob.advertiseMethod("sameThread", &sameThread);
-  ob.advertiseSignal<unsigned long>("fire");
+  ob.advertiseSignal<RawTID>("fire");
   qi::AnyObject res = ob.object();
   return res;
 }
@@ -58,7 +59,7 @@ qi::AnyObject makeDynamicObjWithThreadModel(qi::ObjectThreadingModel model)
   ob.advertiseMethod("delayms", &qi::os::msleep);
   ob.advertiseMethod("delaymsThreadSafe", &qi::os::msleep, "", qi::MetaCallType_Queued);
   ob.advertiseMethod("delaymsFast", &qi::os::msleep, "", qi::MetaCallType_Direct);
-  ob.advertiseSignal<unsigned long>("fire");
+  ob.advertiseSignal<RawTID>("fire");
   ob.setThreadingModel(model);
   qi::AnyObject res = ob.object();
   return res;
@@ -66,7 +67,7 @@ qi::AnyObject makeDynamicObjWithThreadModel(qi::ObjectThreadingModel model)
 
 class EventObject {
 public:
-  bool sameThread(const unsigned long& tid)
+  bool sameThread(const RawTID& tid)
   {
     return ::sameThread(tid);
   }
@@ -76,7 +77,7 @@ public:
     qi::os::msleep(milliseconds);
   }
 
-  qi::Signal<unsigned long> fire;
+  qi::Signal<RawTID> fire;
 
 };
 
@@ -98,7 +99,7 @@ TEST(TestEventLoop, Basic)
   void* mainId = new TID(boost::this_thread::get_id());
   qi::AnyObject o1 = makeDynamicObj();
   // Call is synchronous, no reason not to
-  ASSERT_TRUE(o1.call<bool>("sameThread", (unsigned long)mainId));
+  ASSERT_TRUE(o1.call<bool>("sameThread", reinterpret_cast<RawTID>(mainId)));
   // FIXME more!
 }
 
