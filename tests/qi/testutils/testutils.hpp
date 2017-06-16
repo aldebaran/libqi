@@ -1,3 +1,13 @@
+/*
+**  Copyright (C) 2017 SoftBank Robotics Europe
+**  See COPYING for the license
+*/
+
+#ifndef QI_TEST_MOCKUTILS_HPP
+#define QI_TEST_MOCKUTILS_HPP
+
+#pragma once
+
 #include <string>
 #include <qi/os.hpp>
 
@@ -47,3 +57,5 @@ private:
   std::string _executable;
   int _pid;
 };
+
+#endif

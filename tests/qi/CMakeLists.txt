@@ -12,7 +12,7 @@ qi_create_test_helper(check_env             check_env.cpp             DEPENDS QI
 qi_create_test_helper(check_machineid       check_machineid.cpp       DEPENDS QI)
 
 
-qi_create_gtest(
+qi_create_gmock(
   test_qi
 
   SRC
@@ -37,6 +37,8 @@ qi_create_gtest(
   "test_qiatomic.cpp"
   "test_qiclock.cpp"
   "test_qilaunch.cpp"
+  "test_qilog.hpp"
+  "test_qilog.cpp"
   "test_qilog_async.cpp"
   "test_qilog_sync.cpp"
   "test_qios.cpp"
