@@ -6,24 +6,25 @@
  */
 
 #include <gtest/gtest.h>
-
-#include <qi/perf/measure.hpp>
 #include <qi/os.hpp>
-TEST(TestMeasure, TestNumFD)
-{
-  int numFD = qi::measure::getNumFD();
-#ifdef __linux__
-  ASSERT_NE(numFD, -1);
-#else
-  ASSERT_EQ(numFD, -1);
-#endif
+#include <qi/perf/measure.hpp>
+#include <qi/scoped.hpp>
 
-  std::string tmp = qi::os::mktmpdir();
-  tmp += "test";
-  qi::os::fopen(tmp.c_str(), "w");
 #ifdef __linux__
-  ASSERT_EQ(qi::measure::getNumFD(), numFD + 1);
+TEST(TestMeasure, TestNumFD)
 #else
-  ASSERT_EQ(qi::measure::getNumFD(), -1);
+TEST(TestMeasure, DISABLED_TestNumFD)
+#endif
+{
+#ifdef __linux__
+  const int numFD = qi::measure::getNumFD();
+  ASSERT_NE(numFD, -1);
+
+  const std::string tmp = qi::os::mktmpdir() + std::string("test");
+  auto _ = qi::scoped(qi::os::fopen(tmp.c_str(), "w"), [](FILE* f) {
+    if (f)
+      fclose(f);
+  });
+  ASSERT_EQ(numFD + 1, qi::measure::getNumFD());
 #endif
 }
