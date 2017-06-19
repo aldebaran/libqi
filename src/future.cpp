@@ -171,6 +171,7 @@ namespace qi {
         throw FutureException(FutureException::ExceptionState_FutureTimeout);
       if (_p->_state.load() != FutureState_FinishedWithError)
         throw FutureException(FutureException::ExceptionState_FutureHasNoError);
+      boost::recursive_mutex::scoped_lock lock(_p->_mutex);
       return _p->_error;
     }
 

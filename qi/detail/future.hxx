@@ -456,6 +456,7 @@ namespace detail {
     template <typename T>
     void FutureBaseTyped<T>::setOnDestroyed(boost::function<void(ValueType)> f)
     {
+      boost::recursive_mutex::scoped_lock lock(mutex());
       _onDestroyed = f;
     }
 
