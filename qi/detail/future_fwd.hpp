@@ -934,7 +934,7 @@ namespace qi {
       void setBroken(qi::Future<T>& future);
       void setCanceled(qi::Future<T>& future);
 
-      void setOnCancel(qi::Promise<T>& promise, CancelCallback onCancel);
+      void setOnCancel(const qi::Promise<T>& promise, CancelCallback onCancel);
       void setOnDestroyed(boost::function<void (ValueType)> f);
 
       void connect(qi::Future<T> future,

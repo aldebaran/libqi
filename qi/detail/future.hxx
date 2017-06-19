@@ -340,7 +340,7 @@ namespace detail {
     }
 
     template <typename T>
-    void FutureBaseTyped<T>::setOnCancel(qi::Promise<T>& promise, CancelCallback onCancel)
+    void FutureBaseTyped<T>::setOnCancel(const qi::Promise<T>& promise, CancelCallback onCancel)
     {
       bool doCancel = false;
       {
