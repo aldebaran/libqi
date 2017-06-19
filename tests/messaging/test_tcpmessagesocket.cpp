@@ -439,7 +439,7 @@ TEST(NetMessageSocket, DisconnectWhileDisconnecting)
 // Stress test for disconnections.
 // A lot of threads try to disconnect the same socket at the same time.
 // This test should be launched a lot of times to be meaningful.
-TYPED_TEST(NetMessageSocketAsio, DisconnectBurst)
+TEST(NetMessageSocketAsio, DisconnectBurst)
 {
   using namespace qi;
   using namespace qi::net;
