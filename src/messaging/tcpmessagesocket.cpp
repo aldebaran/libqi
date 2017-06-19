@@ -133,7 +133,7 @@ namespace qi {
   {
     static const auto thresholdEnvVariable = os::getenv("QIMESSAGING_SOCKET_DISPATCH_TIME_WARN_THRESHOLD");
     using Opt = boost::optional<qi::int64_t>;
-    static Opt warnThreshold = thresholdEnvVariable.empty()
+    static const auto warnThreshold = thresholdEnvVariable.empty()
        ? Opt{}
        : Opt{strtol(thresholdEnvVariable.c_str(), 0, 0)};
     return warnThreshold;
