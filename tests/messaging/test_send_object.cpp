@@ -372,8 +372,11 @@ public:
     qiLogInfo() << "Ping !";
     return "human";
   }
+
+  void nameMe(const std::string& newName) {name.set(newName);}
+  qi::Property<std::string> name;
 };
-QI_REGISTER_OBJECT(Human, pingMe, ping)
+QI_REGISTER_OBJECT(Human, pingMe, ping, nameMe, name)
 
 class Actuation
 {
@@ -415,6 +418,32 @@ TEST(SendObject, reuse_object_taken_from_connect)
   actuation.call<void>("emitHumanProperty");
 
   ASSERT_EQ(qi::FutureState_FinishedWithValue, pinged.future().waitFor(qi::MilliSeconds(2000)));
+}
+
+// Check that we can connect to a property exposed on an object retrieved in a property callback
+TEST(SendObject, connect_to_object_taken_from_connect)
+{
+  TestSessionPair p;
+  p.server()->registerService("Actuation", boost::make_shared<Actuation>());
+  qi::AnyObject actuation = p.client()->service("Actuation");
+
+  qi::Promise<bool> pinged;
+  qi::Promise<bool> named;
+  actuation.connect("humanProperty",
+                    boost::function<void(qi::AnyObject)>([&](qi::AnyObject human)
+  {
+    human.connect("name",
+                  boost::function<void(const std::string&)>([&](const std::string& name)
+    {
+      named.setValue(true);
+    }));
+    human.call<void>("nameMe", "(´・ω・`)");
+    pinged.setValue(true);
+  }));
+  actuation.call<void>("emitHumanProperty");
+
+  ASSERT_EQ(qi::FutureState_FinishedWithValue, pinged.future().waitFor(qi::MilliSeconds(2000)));
+  ASSERT_EQ(qi::FutureState_FinishedWithValue, named.future().waitFor(qi::MilliSeconds(2000)));
 }
 
 TEST(SendObject, make_frame)
