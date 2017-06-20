@@ -10,6 +10,7 @@
 #include "src/messaging/tcpmessagesocket.hpp"
 #include "src/messaging/transportserver.hpp"
 #include "tests/qi/testutils/testutils.hpp"
+#include "qi/scoped.hpp"
 
 static const int defaultTimeoutInMs = 500;
 static const std::chrono::milliseconds defaultPostPauseInMs{20};
@@ -386,23 +387,43 @@ TYPED_TEST(NetMessageSocket, DisconnectWhileConnecting)
   using namespace qi::net;
   using mock::Resolver;
   using namespace mock;
-  std::thread resolveThread;
 
+  std::thread threadResolve;
   Resolver::async_resolve = [&](Resolver::query q, Resolver::_anyResolveHandler h) {
-    resolveThread = std::thread{[=] {
+    threadResolve = std::thread{[=] {
       defaultAsyncResolve(q, h);
     }};
   };
+  auto resolveGuard = scoped([&] {
+    threadResolve.join();
+    Resolver::async_resolve = defaultAsyncResolve;
+  });
 
   Promise<void> promiseAsyncConnectStarted;
-  Promise<void> promiseAsyncConnectCanFinish;
+  Promise<Error> promiseAsyncConnectResult;
 
   // The async connect waits for a promise to be set before finishing.
-  LowestLayer::async_connect = [&](N::_resolver_entry, N::_anyHandler h) {
-    promiseAsyncConnectStarted.setValue(0);
-    promiseAsyncConnectCanFinish.future().wait();
-    h(success<Error>());
+  std::thread threadConnect;
+  LowestLayer::async_connect = [&](N::_resolver_entry, N::_anyHandler h) mutable {
+    threadConnect = std::thread{[=]() mutable {
+      promiseAsyncConnectStarted.setValue(0);
+      auto err = promiseAsyncConnectResult.future().value();
+      h(err);
+    }};
   };
+  auto connectGuard = scoped([&] {
+    threadConnect.join();
+    LowestLayer::async_connect = defaultAsyncConnect;
+  });
+
+  using LowestLayer = N::ssl_socket_type::lowest_layer_type;
+  LowestLayer::shutdown = [=](LowestLayer::shutdown_type, Error) mutable {
+    auto err = operationAborted<Error>();
+    promiseAsyncConnectResult.setValue(err);
+  };
+  auto shutdownGuard = scoped([] {
+    LowestLayer::shutdown = defaultShutdown;
+  });
 
   auto socket = boost::make_shared<TcpMessageSocket<N>>();
   Future<void> futConnect = socket->connect(Url{"tcp://10.11.12.13:1234"});
@@ -412,11 +433,9 @@ TYPED_TEST(NetMessageSocket, DisconnectWhileConnecting)
   Future<void> futDisconnect = socket->disconnect();
 
   // Now the async connect (therefore the connecting part) can finish.
-  promiseAsyncConnectCanFinish.setValue(0);
-  ASSERT_EQ(FutureState_FinishedWithValue, futDisconnect.wait(defaultTimeoutInMs)) << futDisconnect.error();
+  ASSERT_EQ(FutureState_FinishedWithValue, futDisconnect.wait(defaultTimeoutInMs));
   ASSERT_EQ(FutureState_FinishedWithError, futConnect.wait(defaultTimeoutInMs));
   ASSERT_EQ("Connect abort: disconnection requested while connecting", futConnect.error());
-  resolveThread.join();
 }
 
 TYPED_TEST(NetMessageSocket, DisconnectWhileDisconnecting)
@@ -452,8 +471,8 @@ TYPED_TEST(NetMessageSocket, DisconnectWhileDisconnecting)
   Promise<void> promiseShutdownStarted;
   Promise<void> promiseCanShutdown;
   LowestLayer::shutdown = [=](LowestLayer::shutdown_type, Error) mutable {
-    promiseShutdownStarted.setValue(0);
-    promiseCanShutdown.future().wait();
+      promiseShutdownStarted.setValue(0);
+      promiseCanShutdown.future().wait();
   };
 
   auto socket = boost::make_shared<TcpMessageSocket<N>>();

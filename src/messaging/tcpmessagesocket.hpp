@@ -330,6 +330,50 @@ namespace qi {
         endpoint.port()};
     }
 
+    /// Ouput of the connected state.
+    ///
+    /// It contains the socket, error information, and a promise to be set to
+    /// indicate the end of the disconnection. This promise will typically be
+    /// passed to the disconnecting state and finally set by the disconnected state.
+    ///
+    /// The only valid operation on the socket is to close it.
+    ///
+    /// The error message is valid only if there was an error.
+    ///
+    /// Example:
+    /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    /// // res is a ConnectedResult<N>
+    /// if (res.hasError)
+    /// {
+    ///   qiLogWarning() << "socket exited connected state with an error: "
+    ///     << res.errorMessage;
+    /// }
+    /// close<N>(res.socket);
+    /// res.disconnectedPromise.setValue(nullptr);
+    /// // ...
+    /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    ///
+    /// Network N
+    template<typename N>
+    struct ConnectedResult
+    {
+      SocketPtr<N> socket;
+
+      /// If a disconnection was requested, this promise is related to the future
+      /// returned to the caller. Setting it will inform the caller that the
+      /// disconnection is complete (that is, the socket is in a disconnected state).
+      Promise<void> disconnectedPromise;
+
+      bool hasError;
+      std::string errorMessage;
+
+      ConnectedResult(SocketPtr<N> s = SocketPtr<N>{})
+        : socket(s)
+        , hasError(false)
+      {
+      }
+    };
+
     /// Connected state of the socket.
     /// Allow to send and receive messages.
     ///
@@ -375,10 +419,9 @@ namespace qi {
       {
         using std::enable_shared_from_this<Impl>::shared_from_this;
         using ReadableMessage = typename SendMessageEnqueue<N, SocketPtr<N>>::ReadableMessage;
-        using PairSocketPromise = std::pair<SocketPtr<N>, Promise<void>>;
 
-        boost::synchronized_value<Promise<PairSocketPromise>> _completePromise;
-        PairSocketPromise _pairSocketPromise;
+        boost::synchronized_value<Promise<ConnectedResult<N>>> _completePromise;
+        ConnectedResult<N> _result;
         std::atomic<bool> _stopRequested;
         ReceiveMessageContinuous<N> _receiveMsg;
         SendMessageEnqueue<N, SocketPtr<N>> _sendMsg;
@@ -398,17 +441,17 @@ namespace qi {
           boost::mutex::scoped_lock lock(_disconnectedPromiseMutex);
           if (tryRaiseAtomicFlag(_stopRequested))
           {
-            _pairSocketPromise.second = disconnectedPromise;
+            _result.disconnectedPromise = disconnectedPromise;
 
             // The cancel will cause any pending operation on the socket to fail
             // with a "operation aborted" error.
-            _pairSocketPromise.first->lowest_layer().cancel();
+            _result.socket->lowest_layer().cancel();
           }
           else
           {
             // The disconnected promise has already been set.
             // Forward the result when we have it.
-            adaptFuture(_pairSocketPromise.second.future(), disconnectedPromise);
+            adaptFuture(_result.disconnectedPromise.future(), disconnectedPromise);
           }
         }
 
@@ -416,7 +459,7 @@ namespace qi {
 
         SocketPtr<N>& socket()
         {
-          return _pairSocketPromise.first;
+          return _result.socket;
         }
       };
       std::shared_ptr<Impl> _impl;
@@ -436,7 +479,7 @@ namespace qi {
       {
         return _impl->send(std::forward<Msg>(msg), ssl, onSent);
       }
-      Future<std::pair<SocketPtr<N>, Promise<void>>> complete() const
+      Future<ConnectedResult<N>> complete() const
       {
         return _impl->_completePromise->future();
       }
@@ -467,7 +510,7 @@ namespace qi {
 
     template<typename N>
     Connected<N>::Impl::Impl(const SocketPtr<N>& s)
-      : _pairSocketPromise(PairSocketPromise{s, Promise<void>{}})
+      : _result{s}
       , _stopRequested(false)
       , _sendMsg{s}
     {
@@ -483,17 +526,19 @@ namespace qi {
       {
         // This is not a real error: the user has asked the state to stop,
         // so we set the promise with a value instead of an error.
-        prom->setValue(_pairSocketPromise);
+        prom->setValue(_result);
       }
       else if (error || !msg)
       {
         // A real error occurred.
-        prom->setError(error.message());
+        _result.hasError = true;
+        _result.errorMessage = error.message();
+        prom->setValue(_result);
       }
       else
       {
         // This is not an error: the user decided to stop after handling a message.
-        prom->setValue(_pairSocketPromise);
+        prom->setValue(_result);
       }
     }
 
@@ -553,41 +598,56 @@ namespace qi {
     template<typename N>
     class Disconnecting
     {
-      Future<void> _completeFuture;
+      SocketPtr<N> _socket;
       Promise<void> _disconnectedPromise;
+      Promise<void> _completePromise;
     public:
       Disconnecting(const SocketPtr<N>& socket, Promise<void> disconnectedPromise)
-        : _completeFuture(0)
+        : _socket(socket)
         , _disconnectedPromise(disconnectedPromise)
       {
-        QI_LOG_DEBUG_SOCKET(socket.get()) << "Entering Disconnecting state";
+        QI_LOG_DEBUG_SOCKET(_socket.get()) << "Entering Disconnecting state";
+        // The socket is the output of the connecting state. It this state fails,
+        // we don't have any socket, so it is null here.
+        // Even in this case, we still enter the disconnecting state for
+        // consistency reasons.
         if (socket)
         {
-          _completeFuture = qi::async([=] {
+          socket->get_io_service().wrap([=]() mutable {
+            QI_LOG_DEBUG_SOCKET(socket.get()) << "Disconnecting: before socket close";
             close<N>(socket);
-          });
+            _completePromise.setValue(nullptr);
+          })();
+        }
+        else
+        {
+          // Nothing to do: disconnection is therefore complete.
+          _completePromise.setValue(nullptr);
         }
       }
       // TODO: replace by "= default" when get rid of VS2013.
       Disconnecting(Disconnecting&& x)
-        : _completeFuture(std::move(x._completeFuture))
+        : _socket(std::move(x._socket))
         , _disconnectedPromise(std::move(x._disconnectedPromise))
+        , _completePromise(std::move(x._completePromise))
       {
       }
       // TODO: replace by "= default" when get rid of VS2013.
       Disconnecting& operator=(Disconnecting&& x)
       {
-        _completeFuture = std::move(x._completeFuture);
+        _socket = std::move(x._socket);
         _disconnectedPromise = std::move(x._disconnectedPromise);
+        _completePromise = std::move(x._completePromise);
         return *this;
-      }
-      Future<void> complete() const
-      {
-        return _completeFuture;
       }
       Future<void> disconnectedPromise() const
       {
         return _disconnectedPromise.future();
+      }
+      Future<void> complete() const
+      {
+        QI_LOG_DEBUG_SOCKET(_socket.get()) << "Disconnecting: asking the 'complete' future";
+        return _completePromise.future();
       }
     };
 
@@ -597,7 +657,7 @@ namespace qi {
 
   /// A socket to send and receive messages.
   ///
-  /// # General cinematic
+  /// # General kinematics
   ///
   /// The socket has four states : disconnected, connecting, connected, disconnecting.
   /// At any moment, the socket is in only one of these states.
@@ -786,22 +846,17 @@ namespace qi {
     // Regular:
       QI_GENERATE_FRIEND_REGULAR_OPS_1(OnConnectedComplete, _socket)
     // Procedure:
-      void operator()(Future<std::pair<SocketPtr, Promise<void>>> f)
+      void operator()(Future<net::ConnectedResult<N>> f)
       {
         _futureConnected.wait();
         // Here, connected state is over, successfully (user asked for) or not.
         QI_LOG_DEBUG_SOCKET(_socket.get()) << "Exiting connected state.";
-        if (f.hasError())
+        const auto res = f.value();
+        if (res.hasError)
         {
-          QI_LOG_DEBUG_SOCKET(_socket.get()) << "socket exited connected state: " << f.error();
-          _socket->enterDisconnectedState();
+          QI_LOG_DEBUG_SOCKET(_socket.get()) << "socket exited connected state: " << res.errorMessage;
         }
-        else
-        {
-          auto socket = f.value().first;
-          auto promiseDisconnected = f.value().second;
-          _socket->enterDisconnectedState(socket, promiseDisconnected);
-        }
+        _socket->enterDisconnectedState(res.socket, res.disconnectedPromise);
       }
     };
 
@@ -1016,29 +1071,30 @@ namespace qi {
   {
     bool wasConnected = false;
     {
+      DisconnectingState dis{socket, promiseDisconnected};
       boost::recursive_mutex::scoped_lock lock(_stateMutex);
       wasConnected = (getStatus() == Status::Connected);
-      _state = DisconnectingState{socket, promiseDisconnected};
+      _state = std::move(dis);
       auto self = shared_from_this();
       asDisconnecting(_state).complete().then([=](Future<void> fut) mutable {
         if (fut.hasError())
         {
-          QI_LOG_WARNING_SOCKET(self.get()) << "Error while disconnecting: " << fut.error();
+          QI_LOG_WARNING_SOCKET(socket.get()) << "Error while disconnecting: " << fut.error();
         }
         {
           boost::recursive_mutex::scoped_lock lock(self->_stateMutex);
           self->_state = DisconnectedState{};
-          QI_LOG_DEBUG_SOCKET(self.get()) << "Socket disconnected.";
+          QI_LOG_DEBUG_SOCKET(socket.get()) << "Socket disconnected.";
         }
         static const std::string data{"disconnected"};
         if (wasConnected)
         {
-          QI_LOG_DEBUG_SOCKET(self.get()) << "Emitting `disconnected` signal.";
+          QI_LOG_DEBUG_SOCKET(socket.get()) << "Emitting `disconnected` signal.";
           self->disconnected(data);
         }
-        QI_LOG_DEBUG_SOCKET(self.get()) << "Emitting `socketEvent` signal.";
+        QI_LOG_DEBUG_SOCKET(socket.get()) << "Emitting `socketEvent` signal.";
         self->socketEvent(SocketEventData(data));
-        QI_LOG_DEBUG_SOCKET(self.get()) << "Setting disconnected promise.";
+        QI_LOG_DEBUG_SOCKET(socket.get()) << "Setting disconnected promise.";
         promiseDisconnected.setValue(nullptr);
       });
     }
