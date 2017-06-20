@@ -182,9 +182,27 @@ namespace detail
 
     PrettyPrintStream(const PrettyPrintStream&) = delete;
     PrettyPrintStream& operator=(const PrettyPrintStream&) = delete;
-    PrettyPrintStream(PrettyPrintStream&& o) BOOST_NOEXCEPT = default;
-    PrettyPrintStream& operator=(PrettyPrintStream&& o) BOOST_NOEXCEPT = default;
 
+    // TODO: Make this constructor = default when we get rid of VS2013
+    PrettyPrintStream(PrettyPrintStream&& o) BOOST_NOEXCEPT
+      : _stream(std::move(o._stream))
+      , _displayHidden(std::move(o._displayHidden))
+      , _options(std::move(o._options))
+      , _indentLevel(std::move(o._indentLevel))
+    {
+      o._stream = nullptr;
+    }
+
+    // TODO: Make this operator = default when we get rid of VS2013
+    PrettyPrintStream& operator=(PrettyPrintStream&& o) BOOST_NOEXCEPT
+    {
+      _stream = std::move(o._stream);
+      _displayHidden = std::move(o._displayHidden);
+      _options = std::move(o._options);
+      _indentLevel = std::move(o._indentLevel);
+      o._stream = nullptr;
+      return *this;
+    }
 
   // Custom:
     static Line makeSectionHeader(const Line& line);
@@ -279,8 +297,23 @@ namespace detail
 
     ParseablePrintStream(const ParseablePrintStream&) = delete;
     ParseablePrintStream& operator=(const ParseablePrintStream&) = delete;
-    ParseablePrintStream(ParseablePrintStream&& o) BOOST_NOEXCEPT = default;
-    ParseablePrintStream& operator=(ParseablePrintStream&& o) BOOST_NOEXCEPT = default;
+
+    // TODO: Make this constructor = default when we get rid of VS2013
+    ParseablePrintStream(ParseablePrintStream&& o) BOOST_NOEXCEPT
+      : _stream(std::move(o._stream))
+      , _displayHidden(std::move(o._displayHidden))
+    {
+      o._stream = nullptr;
+    }
+
+    // TODO: Make this operator = default when we get rid of VS2013
+    ParseablePrintStream& operator=(ParseablePrintStream&& o) BOOST_NOEXCEPT
+    {
+      _stream = std::move(o._stream);
+      _displayHidden = std::move(o._displayHidden);
+      o._stream = nullptr;
+      return *this;
+    }
 
   // Custom:
     /// OutputStreamable S

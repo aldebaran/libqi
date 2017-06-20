@@ -513,7 +513,7 @@ namespace detail
 
   PrettyPrintStream::Line::Line(const std::initializer_list<PrettyPrintStream::Column>& columns)
     : columns(columns)
-    , opts{Option::NewLine, Option::Indent}
+    , opts({Option::NewLine, Option::Indent})
   {}
 
   PrettyPrintStream::Line::Line(const Columns& columns, Options opts)
