@@ -1,13 +1,13 @@
 #pragma once
-#ifndef _QI_NET_CONNECT_HPP
-#define _QI_NET_CONNECT_HPP
+#ifndef _QI_SOCK_CONNECT_HPP
+#define _QI_SOCK_CONNECT_HPP
 #include <string>
-#include <qi/messaging/net/concept.hpp>
-#include <qi/messaging/net/traits.hpp>
-#include <qi/messaging/net/error.hpp>
-#include <qi/messaging/net/option.hpp>
-#include <qi/messaging/net/resolve.hpp>
-#include <qi/messaging/net/common.hpp>
+#include <qi/messaging/sock/concept.hpp>
+#include <qi/messaging/sock/traits.hpp>
+#include <qi/messaging/sock/error.hpp>
+#include <qi/messaging/sock/option.hpp>
+#include <qi/messaging/sock/resolve.hpp>
+#include <qi/messaging/sock/common.hpp>
 #include <qi/url.hpp>
 #include <qi/future.hpp>
 #include <qi/clock.hpp>
@@ -17,7 +17,7 @@
 /// @file
 /// Contains functions and types related to socket connection.
 
-namespace qi { namespace net {
+namespace qi { namespace sock {
 
   /// Network N
   template<typename N>
@@ -286,6 +286,6 @@ namespace qi { namespace net {
       return _complete.future();
     }
   };
-}} // namespace qi::net
+}} // namespace qi::sock
 
-#endif // _QI_NET_CONNECT_HPP
+#endif // _QI_SOCK_CONNECT_HPP

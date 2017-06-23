@@ -1,12 +1,12 @@
 #pragma once
-#ifndef _QI_NET_CONCEPT_HPP
-#define _QI_NET_CONCEPT_HPP
+#ifndef _QI_SOCK_CONCEPT_HPP
+#define _QI_SOCK_CONCEPT_HPP
 #include <qi/concept.hpp>
 
 /// @file
-/// Contains definitions of concepts used by the code in the net namespace.
+/// Contains definitions of concepts used by the code in the sock namespace.
 
-namespace qi { namespace net {
+namespace qi { namespace sock {
 /// # Concept definitions
 ///
 /// ## NetErrorCode
@@ -315,5 +315,5 @@ namespace qi { namespace net {
 namespace concept // To allow doc tools to extract this documentation.
 {
 }
-}} // namespace qi::net
-#endif // _QI_NET_CONCEPT_HPP
+}} // namespace qi::sock
+#endif // _QI_SOCK_CONCEPT_HPP

@@ -121,17 +121,22 @@ set(QI_H qi/detail/async.hxx
          qi/concept.hpp
          qi/functional.hpp
          qi/errorhandling.hpp
-         qi/messaging/net/accept.hpp
-         qi/messaging/net/common.hpp
-         qi/messaging/net/concept.hpp
-         qi/messaging/net/connect.hpp
-         qi/messaging/net/error.hpp
-         qi/messaging/net/networkasio.hpp
-         qi/messaging/net/option.hpp
-         qi/messaging/net/receive.hpp
-         qi/messaging/net/resolve.hpp
-         qi/messaging/net/send.hpp
-         qi/messaging/net/traits.hpp)
+         qi/messaging/sock/accept.hpp
+         qi/messaging/sock/common.hpp
+         qi/messaging/sock/concept.hpp
+         qi/messaging/sock/connect.hpp
+         qi/messaging/sock/connectedstate.hpp
+         qi/messaging/sock/connectingstate.hpp
+         qi/messaging/sock/disconnectedstate.hpp
+         qi/messaging/sock/disconnectingstate.hpp
+         qi/messaging/sock/error.hpp
+         qi/messaging/sock/macrolog.hpp
+         qi/messaging/sock/networkasio.hpp
+         qi/messaging/sock/option.hpp
+         qi/messaging/sock/receive.hpp
+         qi/messaging/sock/resolve.hpp
+         qi/messaging/sock/send.hpp
+         qi/messaging/sock/traits.hpp)
 
 set(QI_C src/dlfcn.cpp
          src/path.cpp

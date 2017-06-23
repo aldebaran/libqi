@@ -1,15 +1,15 @@
 #pragma once
-#ifndef _QI_NET_COMMON_HPP
-#define _QI_NET_COMMON_HPP
+#ifndef _QI_SOCK_COMMON_HPP
+#define _QI_SOCK_COMMON_HPP
 #include <mutex>
 #include <boost/shared_ptr.hpp>
 #include <boost/optional.hpp>
 #include <qi/functional.hpp>
 #include <qi/trackable.hpp>
 #include <qi/type/traits.hpp>
-#include <qi/messaging/net/concept.hpp>
-#include <qi/messaging/net/traits.hpp>
-#include <qi/messaging/net/option.hpp>
+#include <qi/messaging/sock/concept.hpp>
+#include <qi/messaging/sock/traits.hpp>
+#include <qi/messaging/sock/option.hpp>
 #include <qi/future.hpp>
 #include <qi/macroregular.hpp>
 
@@ -17,7 +17,7 @@
 /// Contains procedure transformations (to transform a procedure into a "stranded"
 /// equivalent for example) and lockable adapters around a socket.
 
-namespace qi { namespace net {
+namespace qi { namespace sock {
 
   /// A polymorphic transformation that takes a procedure and returns a
   /// "stranded" equivalent.
@@ -49,7 +49,7 @@ namespace qi { namespace net {
   template<typename N>
   void close(SocketPtr<N> socket)
   {
-    using namespace net;
+    using namespace sock;
     if (socket)
     {
       ErrorCode<N> erc;
@@ -108,6 +108,6 @@ namespace qi { namespace net {
     }
   };
 
-}} // namespace qi::net
+}} // namespace qi::sock
 
-#endif // _QI_NET_COMMON_HPP
+#endif // _QI_SOCK_COMMON_HPP

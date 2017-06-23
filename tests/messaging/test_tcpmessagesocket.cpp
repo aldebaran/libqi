@@ -2,11 +2,11 @@
 #include <numeric>
 #include <random>
 #include <gtest/gtest.h>
-#include "net/networkmock.hpp"
-#include "net/networkcommon.hpp"
+#include "sock/networkmock.hpp"
+#include "sock/networkcommon.hpp"
 #include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp>
-#include <qi/messaging/net/accept.hpp>
+#include <qi/messaging/sock/accept.hpp>
 #include "src/messaging/tcpmessagesocket.hpp"
 #include "src/messaging/transportserver.hpp"
 #include "tests/qi/testutils/testutils.hpp"
@@ -75,7 +75,7 @@ qi::Message makeMessage(const qi::MessageAddress& address)
 template<typename N>
 struct NoMoreMessage
 {
-  boost::optional<qi::Message*> operator()(qi::net::ErrorCode<N> e, qi::Message*) {
+  boost::optional<qi::Message*> operator()(qi::sock::ErrorCode<N> e, qi::Message*) {
     if (e) throw std::runtime_error("error sending message");
     return boost::optional<qi::Message*>{};
   }
@@ -190,7 +190,7 @@ namespace {
 TYPED_TEST(NetMessageSocket, DestroyNotConnectedAsio)
 {
   using namespace qi;
-  using namespace qi::net;
+  using namespace qi::sock;
 
   SignalPromises signalPromises;
   {
@@ -210,7 +210,7 @@ TYPED_TEST(NetMessageSocket, DestroyNotConnectedAsio)
 TYPED_TEST(NetMessageSocket, ConnectAndDisconnectAsio)
 {
   using namespace qi;
-  using namespace qi::net;
+  using namespace qi::sock;
 
   // Start a server and get the server side socket.
   TransportServer server;
@@ -234,7 +234,7 @@ TYPED_TEST(NetMessageSocket, ConnectAndDisconnectAsio)
 TYPED_TEST(NetMessageSocket, ConnectAndDestroyAsio)
 {
   using namespace qi;
-  using namespace qi::net;
+  using namespace qi::sock;
 
   // We also want to check that signals are emitted.
   SignalPromises signalPromises;
@@ -260,7 +260,7 @@ TYPED_TEST(NetMessageSocket, ConnectAndDestroyAsio)
 TYPED_TEST(NetMessageSocket, SendWhileNotConnectedAsio)
 {
   using namespace qi;
-  using namespace qi::net;
+  using namespace qi::sock;
 
   auto clientSideSocket = makeMessageSocket(this->scheme());
   auto signalPromises = connectSignals(*clientSideSocket);
@@ -276,7 +276,7 @@ TYPED_TEST(NetMessageSocket, SendWhileNotConnectedAsio)
 TYPED_TEST(NetMessageSocket, SendAfterDisconnectedAsio)
 {
   using namespace qi;
-  using namespace qi::net;
+  using namespace qi::sock;
 
   // Start a server and get the server side socket.
   TransportServer server;
@@ -297,7 +297,7 @@ TYPED_TEST(NetMessageSocket, SendAfterDisconnectedAsio)
 TYPED_TEST(NetMessageSocket, DisconnectWhileNotConnectedAsio)
 {
   using namespace qi;
-  using namespace qi::net;
+  using namespace qi::sock;
 
   auto socket = makeMessageSocket(this->scheme());
   ASSERT_FALSE(socket->disconnect().hasError());
@@ -306,7 +306,7 @@ TYPED_TEST(NetMessageSocket, DisconnectWhileNotConnectedAsio)
 TYPED_TEST(NetMessageSocket, ReceiveOneMessageAsio)
 {
   using namespace qi;
-  using namespace qi::net;
+  using namespace qi::sock;
 
   // Start a server and get the server side socket.
   TransportServer server;
@@ -337,7 +337,7 @@ TYPED_TEST(NetMessageSocket, ReceiveOneMessageAsio)
 TYPED_TEST(NetMessageSocketAsio, ReceiveManyMessages)
 {
   using namespace qi;
-  using namespace qi::net;
+  using namespace qi::sock;
 
   // Start a server and get the server side socket.
   TransportServer server;
@@ -384,7 +384,7 @@ TYPED_TEST(NetMessageSocketAsio, ReceiveManyMessages)
 TYPED_TEST(NetMessageSocket, DisconnectWhileConnecting)
 {
   using namespace qi;
-  using namespace qi::net;
+  using namespace qi::sock;
   using mock::Resolver;
   using namespace mock;
 
@@ -441,7 +441,7 @@ TYPED_TEST(NetMessageSocket, DisconnectWhileConnecting)
 TYPED_TEST(NetMessageSocket, DisconnectWhileDisconnecting)
 {
   using namespace qi;
-  using namespace qi::net;
+  using namespace qi::sock;
   using mock::Resolver;
   using namespace mock;
 
@@ -511,7 +511,7 @@ TYPED_TEST(NetMessageSocket, DisconnectWhileDisconnecting)
 TYPED_TEST(NetMessageSocketAsio, DisconnectBurst)
 {
   using namespace qi;
-  using namespace qi::net;
+  using namespace qi::sock;
 
   // Start a server.
   TransportServer server;
@@ -542,7 +542,7 @@ TYPED_TEST(NetMessageSocketAsio, DisconnectBurst)
 TYPED_TEST(NetMessageSocketAsio, SendReceiveManyMessages)
 {
   using namespace qi;
-  using namespace qi::net;
+  using namespace qi::sock;
 
   // Start a server and get the server side socket.
   TransportServer server;
@@ -601,7 +601,7 @@ TYPED_TEST(NetMessageSocketAsio, SendReceiveManyMessages)
 TEST(NetMessageSocketAsio, DisconnectToDistantWhileConnected)
 {
   using namespace qi;
-  using namespace qi::net;
+  using namespace qi::sock;
   using std::chrono::milliseconds;
 
   const std::string remoteServiceOwnerPath = path::findBin("remoteserviceowner");
@@ -624,7 +624,7 @@ TEST(NetMessageSocketAsio, DisconnectToDistantWhileConnected)
 TEST(NetMessageSocketAsio, DistantCrashWhileConnected)
 {
   using namespace qi;
-  using namespace qi::net;
+  using namespace qi::sock;
   using std::chrono::milliseconds;
 
   const std::string remoteServiceOwnerPath = path::findBin("remoteserviceowner");

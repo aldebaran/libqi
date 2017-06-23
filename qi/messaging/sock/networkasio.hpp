@@ -1,10 +1,10 @@
 #pragma once
-#ifndef _QI_NET_NETWORKASIO_HPP
-#define _QI_NET_NETWORKASIO_HPP
+#ifndef _QI_SOCK_NETWORKASIO_HPP
+#define _QI_SOCK_NETWORKASIO_HPP
 #include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp>
 #include <boost/predef.h>
-#include <qi/messaging/net/concept.hpp>
+#include <qi/messaging/sock/concept.hpp>
 #include <qi/eventloop.hpp>
 
 /// @file
@@ -12,7 +12,7 @@
 ///
 /// See traits.hpp
 
-namespace qi { namespace net {
+namespace qi { namespace sock {
 
   /// Model the `Network` concept for boost::asio.
   struct NetworkAsio
@@ -55,5 +55,5 @@ namespace qi { namespace net {
       boost::asio::async_write(s, b, h);
     }
   };
-}} // namespace qi::net
-#endif // _QI_NET_NETWORKASIO_HPP
+}} // namespace qi::sock
+#endif // _QI_SOCK_NETWORKASIO_HPP

@@ -2,9 +2,9 @@
 #include <thread>
 #include <boost/algorithm/string/predicate.hpp>
 #include <gtest/gtest.h>
-#include <qi/messaging/net/accept.hpp>
-#include <qi/messaging/net/connect.hpp>
-#include <qi/messaging/net/networkasio.hpp>
+#include <qi/messaging/sock/accept.hpp>
+#include <qi/messaging/sock/connect.hpp>
+#include <qi/messaging/sock/networkasio.hpp>
 #include "src/messaging/tcpmessagesocket.hpp"
 #include <qi/future.hpp>
 #include <qi/url.hpp>
@@ -20,7 +20,7 @@ static const qi::MilliSeconds defaultTimeout{500};
 TEST(NetAcceptConnectionContinuous, Success)
 {
   using namespace qi;
-  using namespace qi::net;
+  using namespace qi::sock;
   using N = mock::Network;
   N::acceptor_type::async_accept = mock::defaultAsyncAccept;
 
@@ -43,7 +43,7 @@ TEST(NetAcceptConnectionContinuous, Success)
 TEST(NetAcceptConnectionContinuous, AcceptFailed)
 {
   using namespace qi;
-  using namespace qi::net;
+  using namespace qi::sock;
   using N = mock::Network;
 
   N::acceptor_type::async_accept = [](SslSocket<N>::next_layer_type&, N::_anyHandler h) {
@@ -70,7 +70,7 @@ TEST(NetAcceptConnectionContinuous, AcceptFailed)
 TEST(NetAcceptConnectionContinuous, SuccessWithListenAsio)
 {
   using namespace qi;
-  using namespace qi::net;
+  using namespace qi::sock;
   using N = NetworkAsio;
 
   auto& io = N::defaultIoService();

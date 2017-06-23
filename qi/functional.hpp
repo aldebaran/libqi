@@ -281,7 +281,7 @@ namespace qi {
   ///     // _sendMsg will wrap any asynchronous task by binding it with a
   ///     // shared pointer on this instance.
   ///     _sendMsg(msg, ssl, onSent,
-  ///       dataBoundTransfo(shared_from_this()) // dataTransfo
+  ///       dataBoundTransfo(shared_from_this()) // lifetimeTransfo
   ///     );
   ///   }
   /// };

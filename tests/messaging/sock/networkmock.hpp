@@ -7,9 +7,9 @@
 #include <thread>
 #include <chrono>
 #include <boost/shared_ptr.hpp>
-#include <qi/messaging/net/traits.hpp>
-#include <qi/messaging/net/error.hpp>
-#include <qi/messaging/net/common.hpp>
+#include <qi/messaging/sock/traits.hpp>
+#include <qi/messaging/sock/error.hpp>
+#include <qi/messaging/sock/common.hpp>
 #include <qi/macroregular.hpp>
 
 /// @file
@@ -209,7 +209,7 @@ namespace mock
 
     static io_service_type& defaultIoService()
     {
-      static qi::net::IoService<mock::Network> io;
+      static qi::sock::IoService<mock::Network> io;
       return io;
     }
 
@@ -282,7 +282,7 @@ namespace mock
 } // namespace mock
 
 namespace qi {
-namespace net {
+namespace sock {
 
 template<>
 inline ErrorCode<mock::Network> success<ErrorCode<mock::Network>>()
@@ -338,7 +338,7 @@ inline ErrorCode<mock::Network> connectionRefused<ErrorCode<mock::Network>>()
   return {ErrorCode<mock::Network>::connectionRefused};
 }
 
-}} // namespace qi::net
+}} // namespace qi::sock
 
 namespace mock
 {
@@ -355,7 +355,7 @@ namespace mock
       static N::_resolver_entry entryIpV4{{{false, q._host}}};
       static N::_resolver_entry entryIpV6{{{true, q._host}}};
       static N::_resolver_entry* a[] = {&entryIpV4, &entryIpV6, nullptr};
-      h(qi::net::success<Error>(), Resolver::iterator{a});
+      h(qi::sock::success<Error>(), Resolver::iterator{a});
     }}.join();
   }
 

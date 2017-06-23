@@ -1,8 +1,8 @@
 #include <thread>
 #include <boost/algorithm/string/predicate.hpp>
 #include <gtest/gtest.h>
-#include <qi/messaging/net/connect.hpp>
-#include <qi/messaging/net/networkasio.hpp>
+#include <qi/messaging/sock/connect.hpp>
+#include <qi/messaging/sock/networkasio.hpp>
 #include "src/messaging/tcpmessagesocket.hpp"
 #include <qi/future.hpp>
 #include <qi/url.hpp>
@@ -16,7 +16,7 @@
 TEST(NetConnectSocket, ResolveCalledAfterParentHasBeenDestroyed)
 {
   using namespace qi;
-  using namespace qi::net;
+  using namespace qi::sock;
   using mock::N;
   using mock::Resolver;
   std::thread resolveThread;
@@ -66,7 +66,7 @@ struct NetConnectFuture : testing::Test
 {
 };
 
-namespace qi { namespace net {
+namespace qi { namespace sock {
 
 /// Network N
 template<typename N>
@@ -111,13 +111,13 @@ struct ConnectingWrap
   }
 };
 
-}} // namespace qi::net
+}} // namespace qi::sock
 
 using sequences = testing::Types<
   // Mock
-  qi::net::ConnectSocketFuture<mock::N>, qi::net::ConnectingWrap<mock::N>
+  qi::sock::ConnectSocketFuture<mock::N>, qi::sock::ConnectingWrap<mock::N>
   // Asio
-  //, qi::net::ConnectSocketFuture<qi::net::NetworkAsio>, qi::net::Connecting<qi::net::NetworkAsio>
+  //, qi::sock::ConnectSocketFuture<qi::sock::NetworkAsio>, qi::sock::Connecting<qi::sock::NetworkAsio>
 >;
 
 TYPED_TEST_CASE(NetConnectFuture, sequences);
@@ -126,7 +126,7 @@ TYPED_TEST(NetConnectFuture, FailsOnResolve)
 {
   using ConnectFuture = TypeParam;
   using namespace qi;
-  using namespace qi::net;
+  using namespace qi::sock;
   using mock::N;
   using mock::Resolver;
   std::string receivedHost, receivedPort;
@@ -153,7 +153,7 @@ TYPED_TEST(NetConnectFuture, ResolveCalledAfterParentHasBeenDestroyed)
 {
   using ConnectFuture = TypeParam;
   using namespace qi;
-  using namespace qi::net;
+  using namespace qi::sock;
   using namespace boost::algorithm;
   using mock::N;
   using mock::Resolver;
@@ -198,7 +198,7 @@ TYPED_TEST(NetConnectFuture, ResolvedBySkippingIpV6)
 {
   using ConnectFuture = TypeParam;
   using namespace qi;
-  using namespace qi::net;
+  using namespace qi::sock;
   using namespace boost::algorithm;
   using namespace mock;
   using mock::Resolver;
@@ -230,7 +230,7 @@ TYPED_TEST(NetConnectFuture, OnlyIpV6EndpointsResolvedButIpV6NotAllowed)
 {
   using ConnectFuture = TypeParam;
   using namespace qi;
-  using namespace qi::net;
+  using namespace qi::sock;
   using mock::Resolver;
   using namespace mock;
   using Entry = N::_resolver_entry;
@@ -257,7 +257,7 @@ TYPED_TEST(NetConnectFuture, ConnectCalledAfterParentHasBeenDestroyed)
 {
   using ConnectFuture = TypeParam;
   using namespace qi;
-  using namespace qi::net;
+  using namespace qi::sock;
   using namespace boost::algorithm;
   using mock::Resolver;
   using namespace mock;
@@ -296,7 +296,7 @@ TYPED_TEST(NetConnectFuture, FailsOnConnect)
 {
   using ConnectFuture = TypeParam;
   using namespace qi;
-  using namespace qi::net;
+  using namespace qi::sock;
   using namespace boost::algorithm;
   using mock::Resolver;
   using namespace mock;
@@ -321,7 +321,7 @@ TYPED_TEST(NetConnectFuture, SucceedsNonSsl)
 {
   using ConnectFuture = TypeParam;
   using namespace qi;
-  using namespace qi::net;
+  using namespace qi::sock;
   using mock::Resolver;
   using namespace mock;
   Resolver::async_resolve = defaultAsyncResolve;
@@ -339,7 +339,7 @@ TYPED_TEST(NetConnectFuture, FailsOnHandshake)
 {
   using ConnectFuture = TypeParam;
   using namespace qi;
-  using namespace qi::net;
+  using namespace qi::sock;
   using namespace boost::algorithm;
   using mock::Resolver;
   using namespace mock;
@@ -365,7 +365,7 @@ TYPED_TEST(NetConnectFuture, HandshakeHandlerCalledAfterParentHasBeenDestroyed)
 {
   using ConnectFuture = TypeParam;
   using namespace qi;
-  using namespace qi::net;
+  using namespace qi::sock;
   using namespace boost::algorithm;
   using mock::Resolver;
   using namespace mock;
@@ -411,7 +411,7 @@ TYPED_TEST(NetConnectFuture, SucceedsSsl)
 {
   using ConnectFuture = TypeParam;
   using namespace qi;
-  using namespace qi::net;
+  using namespace qi::sock;
   using namespace mock;
   using mock::Resolver;
   Resolver::async_resolve = defaultAsyncResolve;
@@ -435,20 +435,20 @@ struct SetupStop
   qi::Future<void> futStopConnect;
   bool connectAlreadySetup;
   qi::Promise<std::pair<mock::Error, I>> promiseResolve;
-  qi::Promise<qi::net::ErrorCode<N>> promiseConnect;
+  qi::Promise<qi::sock::ErrorCode<N>> promiseConnect;
 
-  void operator()(qi::net::Resolver<N>&)
+  void operator()(qi::sock::Resolver<N>&)
   {
-    using namespace qi::net;
+    using namespace qi::sock;
     auto promResolve = promiseResolve;
     futStopResolve.andThen([=](void*) mutable {
       promResolve.setValue({operationAborted<ErrorCode<N>>(), I{}});
     });
   }
 
-  void operator()(const qi::net::SocketPtr<N>&)
+  void operator()(const qi::sock::SocketPtr<N>&)
   {
-    using namespace qi::net;
+    using namespace qi::sock;
     // Can be called in the connection step and in the handshake step.
     // The stop action being the same, we do it only once.
     if (connectAlreadySetup) return;
@@ -467,7 +467,7 @@ struct SetupStop
 TEST(NetConnectFutureStop, WhileResolving)
 {
   using namespace qi;
-  using namespace qi::net;
+  using namespace qi::sock;
   using namespace mock;
   using mock::Resolver;
   using I = N::resolver_type::iterator;
@@ -510,7 +510,7 @@ TEST(NetConnectFutureStop, WhileResolving)
 TEST(NetConnectFutureStop, WhileConnecting)
 {
   using namespace qi;
-  using namespace qi::net;
+  using namespace qi::sock;
   using namespace mock;
   using mock::Resolver;
   using I = N::resolver_type::iterator;
@@ -552,7 +552,7 @@ TEST(NetConnectFutureStop, WhileConnecting)
 TEST(NetConnectFutureStop, WhileHandshaking)
 {
   using namespace qi;
-  using namespace qi::net;
+  using namespace qi::sock;
   using namespace mock;
   using mock::Resolver;
   using I = N::resolver_type::iterator;

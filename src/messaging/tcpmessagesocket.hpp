@@ -7,29 +7,23 @@
 #include <functional>
 #include <memory>
 #include <mutex>
-#include <boost/asio.hpp>
-#include <boost/asio/ssl.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/optional.hpp>
 #include <boost/predef.h>
 #include <boost/thread/synchronized_value.hpp>
-#include <qi/api.hpp>
 #include "message.hpp"
 #include <qi/url.hpp>
-#include <qi/trackable.hpp>
-#include <qi/signal.hpp>
 #include <qi/type/traits.hpp>
 #include <qi/macroregular.hpp>
 #include "messagedispatcher.hpp"
 #include "messagesocket.hpp"
-#include <qi/messaging/net/networkasio.hpp>
-#include <qi/messaging/net/traits.hpp>
-#include <qi/messaging/net/common.hpp>
-#include <qi/messaging/net/resolve.hpp>
-#include <qi/messaging/net/connect.hpp>
-#include <qi/messaging/net/receive.hpp>
-#include <qi/messaging/net/send.hpp>
+#include <qi/messaging/sock/disconnectedstate.hpp>
+#include <qi/messaging/sock/disconnectingstate.hpp>
+#include <qi/messaging/sock/connectingstate.hpp>
+#include <qi/messaging/sock/connectedstate.hpp>
+#include <qi/messaging/sock/macrolog.hpp>
+#include <qi/messaging/sock/networkasio.hpp>
 
 /// @file
 /// Contains a socket to send and receive qi::Messages, and the types representing
@@ -37,623 +31,33 @@
 
 namespace qi {
 
-#define QI_LOG_ERROR_SOCKET(SOCKET_PTR) qiLogError(net::logCategory()) << (SOCKET_PTR) << ": "
-#define QI_LOG_WARNING_SOCKET(SOCKET_PTR) qiLogWarning(net::logCategory()) << (SOCKET_PTR) << ": "
-#define QI_LOG_INFO_SOCKET(SOCKET_PTR) qiLogInfo(net::logCategory()) << (SOCKET_PTR) << ": "
-#define QI_LOG_DEBUG_SOCKET(SOCKET_PTR) qiLogDebug(net::logCategory()) << (SOCKET_PTR) << ": "
-
   boost::optional<Seconds> getTcpPingTimeout(Seconds defaultTimeout);
 
   template<typename N>
   class TcpMessageSocket;
 
-  /// Functor that forwards the message to a TcpMessageSocket.
-  ///
-  /// Precondition: The socket pointer must be valid.
-  /// You should protect the socket if necessary.
-  ///
-  /// Network N
-  template<typename N>
-  struct HandleMessage
+  namespace sock
   {
-    boost::shared_ptr<TcpMessageSocket<N>> _tcpSocket;
-    bool operator()(const net::ErrorCode<N>& erc, const Message* msg)
-    {
-      QI_LOG_DEBUG_SOCKET(_tcpSocket.get()) << "Message received "
-                                            << ((!erc && msg) ? msg->id() : 0);
-      return !erc && msg && _tcpSocket->handleMessage(*msg);
-    }
-  };
-
-  boost::optional<qi::int64_t> getSocketTimeWarnThresholdFromEnv();
-
-  namespace net
-  {
-    /// Result of the connecting state.
-    /// The socket is valid if there was no error and no disconnection was requested.
+    /// Functor that forwards the message to a TcpMessageSocket.
     ///
-    /// Example:
-    /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    /// // res is a ConnectingResult<N>
-    /// const bool connectingFailed = hasError(res);
-    /// if (connectingFailed || res.disconnectionRequested)
-    /// {
-    ///   connectedPromise.setError(connectingFailed
-    ///     ? "Connect error: " + res.errorMessage
-    ///     : "Abort: disconnection requested while connecting");
-    ///
-    ///   // res.socket is null but it is handled by enterDisconnectedState().
-    ///   enterDisconnectedState(res.socket, res.disconnectedPromise);
-    ///   return;
-    /// }
-    /// // res.socket is valid and can be used.
-    /// // ...
-    /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    /// Precondition: The socket pointer must be valid.
+    /// You should protect the socket if necessary.
     ///
     /// Network N
     template<typename N>
-    struct ConnectingResult
+    struct HandleMessage
     {
-      std::string errorMessage;
-      SocketPtr<N> socket;
-      bool disconnectionRequested = false;
-      Promise<void> disconnectedPromise;
-      friend void setDisconnectionRequested(ConnectingResult& res, const Promise<void>& p)
+      boost::shared_ptr<TcpMessageSocket<N>> _tcpSocket;
+      bool operator()(const sock::ErrorCode<N>& erc, const Message* msg)
       {
-        res.disconnectionRequested = true;
-        res.disconnectedPromise = p;
-      }
-      friend bool hasError(const ConnectingResult& x)
-      {
-        return !x.errorMessage.empty();
-      }
-    };
-
-    /// Connecting state of the socket.
-    /// Connects to a URL and give back the created socket.
-    ///
-    /// Usage:
-    /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    /// Connecting c{ioService, Url("tcp://1.2.3.4:9876"), SslEnabled{true},
-    ///   IpV6Enabled{true}, HandshakeSide::client};
-    /// auto socketPtr = c.complete().value();
-    /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    ///
-    /// The constructor immediately starts the connecting process, in the
-    /// the same manner as std::thread. This way, there is no concurrency
-    /// issue and no locking is done.
-    /// If any error occurs, the `complete` future is set in error.
-    ///
-    /// # Lifetime considerations
-    ///
-    /// The object must be alive until the connecting process is complete.
-    /// That is, you must not write:
-    /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    /// Future<SocketPtr<N>> connectNonSsl(IoService& io, Url url) {
-    ///   return Connecting(io, url, SslEnabled{false}, IpV6Enabled{true}).complete();
-    /// }
-    /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    /// because the connecting process could exceed the ConnectSocket object lifetime.
-    /// If the ConnectSocket dies before the end of the connecting process, the future
-    /// is set in error.
-    ///
-    /// # Server-side
-    ///
-    /// It is also possible to give an already connected socket. In this case,
-    /// if needed, only the SSL handshake is done. This is the typical use case
-    /// for servers, because the `accept` pattern yields an already connected socket.
-    ///
-    /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    /// Connecting c{ioService, SslEnabled{true}, IpV6Enabled{true}, HandshakeSide::server};
-    /// auto socketPtr = c.complete().value();
-    /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    ///
-    /// # Connecting steps
-    ///
-    /// From a more technical point of view, the different connecting steps
-    /// are:
-    /// - URL resolving
-    /// - socket connecting
-    /// - SSL handshake if needed.
-    ///
-    /// # Stopping the connection
-    ///
-    /// Example: stopping the connection
-    /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    /// Promise<void> disconnectedPromise;
-    /// connecting.stop(disconnectedPromise);
-    /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    /// The promise will be passed as-is in the "complete" future. The purpose is to
-    /// pass it to the next socket state, that will pass it again to the next state
-    /// until it is finally set by the disconnected state.
-    /// The stop is expected to happen almost immediately.
-    ///
-    /// # Technicalities of stopping
-    ///
-    /// The stop can happen in any step: resolving, connecting or handshaking.
-    ///
-    /// Stopping while resolving results in cancelling the resolver.
-    /// Stopping while connecting or while handshaking results in the same
-    /// action: closing the socket.
-    ///
-    /// These stopping actions are performed by continuations on a future. The stop is
-    /// effectively triggered when the associated promise is set. This promise is
-    /// owned by the `Connecting` object. A procedure is passed to the object that
-    /// connects the socket to setup the stop, that is to set the continuations
-    /// on the future.
-    ///
-    /// The promise must be destroyed before the object that connects the socket
-    /// to avoid continuations to be called after the destruction of the resolver
-    /// or the socket.
-    ///
-    /// Stopping kinematics:
-    /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    /// -> `Connecting` object construction
-    ///     | (1) creates
-    ///     |
-    ///     |           (3) calls when necessary
-    ///     |           ------------------------
-    ///     |          |                        |
-    ///     v          v     (2) passed to      |
-    /// setup-stop procedure -----------> connect-socket object
-    ///        |
-    ///        | (4) sets
-    ///    -------------------------
-    ///   |                         |
-    ///   v                         v
-    ///  cancelling resolver       closing socket
-    ///  continuation              continuation (for connect & handshake steps)
-    ///   ^                         ^
-    ///   |                         |
-    ///    -------------------------
-    ///                        | (2') triggers
-    ///           (1') sets    |
-    /// -> stop() ---------> stop promise
-    /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    ///
-    /// Network N
-    template<typename N>
-    struct Connecting
-    {
-      using Handshake = HandshakeSide<SslSocket<N>>;
-      using Result = ConnectingResult<N>;
-
-      struct Impl : std::enable_shared_from_this<Impl>
-      {
-        using std::enable_shared_from_this<Impl>::shared_from_this;
-        Promise<Result> _promiseComplete;
-        ConnectSocketFuture<N> _connect;
-        Promise<void> _promiseStop; // Must be declared after `_connect`, to be destroyed first
-        ConnectingResult<N> _result;
-        std::atomic<bool> _stopping;
-        boost::mutex _disconnectedPromiseMutex;
-
-        void setContinuation()
-        {
-          auto self = shared_from_this();
-          _connect.complete().then(
-            [=](const Future<SocketPtr<N>>& fut) { // continuation
-              if (fut.hasError())
-              {
-                self->_result.errorMessage = fut.error();
-              }
-              else
-              {
-                self->_result.socket = fut.value();
-              }
-              self->_promiseComplete.setValue(_result);
-            }
-          );
-        }
-        Impl(IoService<N>& io)
-          : _connect{io}
-          , _stopping{false}
-        {
-        }
-
-        template<typename Proc = PolymorphicConstantFunction<void>>
-        void start(const Url& url, SslEnabled ssl, SslContext<N>& context,
-          IpV6Enabled ipV6, Handshake side, const boost::optional<Seconds>& tcpPingTimeout = {},
-          Proc setupCancel = Proc{})
-        {
-          setContinuation();
-          _connect(url, ssl, context, ipV6, side, tcpPingTimeout, setupCancel);
-        }
-
-        template<typename Proc = PolymorphicConstantFunction<void>>
-        void start(SslEnabled ssl, const SocketPtr<N>& s, Handshake side, Proc setupCancel = Proc{})
-        {
-          setContinuation();
-          _connect(ssl, s, side, setupCancel);
-        }
-      };
-
-      Connecting(IoService<N>& io, const Url& url, SslEnabled ssl, SslContext<N>& context,
-          IpV6Enabled ipV6, Handshake side, const boost::optional<Seconds>& tcpPingTimeout = {})
-        : _impl(std::make_shared<Impl>(io))
-      {
-        _impl->start(url, ssl, context, ipV6, side, tcpPingTimeout,
-          SetupConnectionStop<N>{_impl->_promiseStop.future()});
-      }
-      Connecting(IoService<N>& io, SslEnabled ssl, const SocketPtr<N>& s, Handshake side)
-        : _impl(std::make_shared<Impl>(io))
-      {
-        _impl->start(ssl, s, side, SetupConnectionStop<N>{_impl->_promiseStop.future()});
-      }
-      Future<Result> complete() const
-      {
-        return _impl->_promiseComplete.future();
-      }
-      bool stop(Promise<void> disconnectedPromise)
-      {
-        boost::mutex::scoped_lock lock(_impl->_disconnectedPromiseMutex);
-        const bool mustStop = tryRaiseAtomicFlag(_impl->_stopping);
-        if (mustStop)
-        {
-          setDisconnectionRequested(_impl->_result, disconnectedPromise);
-          _impl->_promiseStop.setValue(nullptr); // triggers the stop
-        }
-        else
-        {
-          adaptFuture(_impl->_result.disconnectedPromise.future(), disconnectedPromise);
-        }
-        return mustStop;
-      }
-      static Future<void> connectError(const std::string& error)
-      {
-        return makeFutureError<void>(std::string("socket connection: ") + error);
-      }
-    private:
-      std::shared_ptr<Impl> _impl;
-    };
-
-    /// Disconnected state of the socket.
-    /// It does nothing but is provided for the sake of consistency.
-    template<typename N>
-    struct Disconnected
-    {
-    };
-
-    /// The URL of the endpoint of the given socket.
-    /// Precondition: The socket must be connected.
-    ///
-    /// NetSslSocket S
-    template<typename S>
-    Url remoteEndpoint(S& socket, bool /*ssl*/)
-    {
-      auto endpoint = socket.lowest_layer().remote_endpoint();
-      // Forcing TCP is the legacy behavior.
-      // TODO: Change this with `ssl ? "tcps" : "tcp"` when sure of the impact.
-      return Url{
-        endpoint.address().to_string(),
-        "tcp",
-        endpoint.port()};
-    }
-
-    /// Ouput of the connected state.
-    ///
-    /// It contains the socket, error information, and a promise to be set to
-    /// indicate the end of the disconnection. This promise will typically be
-    /// passed to the disconnecting state and finally set by the disconnected state.
-    ///
-    /// The only valid operation on the socket is to close it.
-    ///
-    /// The error message is valid only if there was an error.
-    ///
-    /// Example:
-    /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    /// // res is a ConnectedResult<N>
-    /// if (res.hasError)
-    /// {
-    ///   qiLogWarning() << "socket exited connected state with an error: "
-    ///     << res.errorMessage;
-    /// }
-    /// close<N>(res.socket);
-    /// res.disconnectedPromise.setValue(nullptr);
-    /// // ...
-    /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    ///
-    /// Network N
-    template<typename N>
-    struct ConnectedResult
-    {
-      SocketPtr<N> socket;
-
-      /// If a disconnection was requested, this promise is related to the future
-      /// returned to the caller. Setting it will inform the caller that the
-      /// disconnection is complete (that is, the socket is in a disconnected state).
-      Promise<void> disconnectedPromise;
-
-      bool hasError;
-      std::string errorMessage;
-
-      ConnectedResult(SocketPtr<N> s = SocketPtr<N>{})
-        : socket(s)
-        , hasError(false)
-      {
-      }
-    };
-
-    /// Connected state of the socket.
-    /// Allow to send and receive messages.
-    ///
-    /// Received messages are exposed via a callback specified at construction.
-    ///
-    /// You can send messages continuously : they will be enqueued if needed.
-    /// By default, enqueued messages are sent as soon as possible, but
-    /// you can explicitly ask to stop the queue processing.
-    ///
-    /// You can request this state to stop, by optionally passing it a Promise
-    /// to be set on disconnection.
-    ///
-    /// A `complete` future is set when the connected state is over.
-    /// It contains the socket and a Promise to be set when disconnection is over.
-    ///
-    /// If an error occurs while sending or receiving, the `complete` future is
-    /// set in error.
-    ///
-    /// Warning: You must call `stop()` before closing the socket, because
-    /// closing the socket cause the send and receive handlers to be called with
-    /// an 'abort' error, and we don't want to take it into account.
-    ///
-    /// Usage:
-    /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    /// auto onReceive = [](ErrorCode e, const Message* msg) {
-    ///   // `msg` is valid only if there is no error.
-    ///   // Do something with `msg`.
-    ///   return true; // Or return false to stop listening to message.
-    /// };
-    /// Connected<N> c{socketPtr, SslEnabled{true}, maxPayload, onReceive};
-    /// // Get a Message msg;
-    /// c.send(msg); // Move the message if you can, to avoid a copy.
-    /// // Send more messages.
-    /// Future<std::pair<SocketPtr<N>, Promise<void>>> futureComplete = c.complete();
-    /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    ///
-    /// Network N
-    template<typename N>
-    struct Connected
-    {
-    private:
-      struct Impl : std::enable_shared_from_this<Impl>
-      {
-        using std::enable_shared_from_this<Impl>::shared_from_this;
-        using ReadableMessage = typename SendMessageEnqueue<N, SocketPtr<N>>::ReadableMessage;
-
-        boost::synchronized_value<Promise<ConnectedResult<N>>> _completePromise;
-        ConnectedResult<N> _result;
-        std::atomic<bool> _stopRequested;
-        ReceiveMessageContinuous<N> _receiveMsg;
-        SendMessageEnqueue<N, SocketPtr<N>> _sendMsg;
-        boost::mutex _disconnectedPromiseMutex;
-
-        Impl(const SocketPtr<N>& socket);
-        ~Impl();
-
-        template<typename Proc>
-        void start(SslEnabled, size_t maxPayload, Proc onReceive, qi::int64_t messageHandlingTimeoutInMus);
-
-        template<typename Msg, typename Proc>
-        void send(Msg&& msg, SslEnabled, Proc onSent);
-
-        void stop(Promise<void> disconnectedPromise)
-        {
-          boost::mutex::scoped_lock lock(_disconnectedPromiseMutex);
-          if (tryRaiseAtomicFlag(_stopRequested))
-          {
-            _result.disconnectedPromise = disconnectedPromise;
-
-            // The cancel will cause any pending operation on the socket to fail
-            // with a "operation aborted" error.
-            _result.socket->lowest_layer().cancel();
-          }
-          else
-          {
-            // The disconnected promise has already been set.
-            // Forward the result when we have it.
-            adaptFuture(_result.disconnectedPromise.future(), disconnectedPromise);
-          }
-        }
-
-        void setPromise(const net::ErrorCode<N>&, const Message*);
-
-        SocketPtr<N>& socket()
-        {
-          return _result.socket;
-        }
-      };
-      std::shared_ptr<Impl> _impl;
-    public:
-      /// If `onReceive` returns `false`, this stops the message receiving.
-      ///
-      /// Procedure<bool (ErrorCode<N>, const Message*)> Proc
-      template<typename Proc>
-      Connected(const SocketPtr<N>&, SslEnabled ssl, size_t maxPayload, const Proc& onReceive,
-        qi::int64_t messageHandlingTimeoutInMus = getSocketTimeWarnThresholdFromEnv().value_or(0));
-
-      /// If `onSent` returns false, the processing of enqueued messages stops.
-      ///
-      /// Procedure<bool (ErrorCode<N>, std::list<Message>::const_iterator)>
-      template<typename Msg, typename Proc = NoOpProcedure<bool (ErrorCode<N>, std::list<Message>::const_iterator)>>
-      void send(Msg&& msg, SslEnabled ssl, const Proc& onSent = {true})
-      {
-        return _impl->send(std::forward<Msg>(msg), ssl, onSent);
-      }
-      Future<ConnectedResult<N>> complete() const
-      {
-        return _impl->_completePromise->future();
-      }
-      Url remoteEndpoint(SslEnabled ssl) const
-      {
-        return net::remoteEndpoint(*_impl->socket(), *ssl);
-      }
-      void stop(Promise<void> disconnectedPromise = Promise<void>{})
-      {
-        _impl->stop(disconnectedPromise);
-      }
-      template<typename Proc>
-      auto ioServiceStranded(Proc&& p)
-        -> decltype(StrandTransfo<N>{&_impl->socket()->get_io_service()}(std::forward<Proc>(p)))
-      {
-        return StrandTransfo<N>{&_impl->socket()->get_io_service()}(std::forward<Proc>(p));
-      }
-    };
-
-    template<typename N>
-    template<typename Proc>
-    Connected<N>::Connected(const SocketPtr<N>& socket, SslEnabled ssl, size_t maxPayload,
-        const Proc& onReceive, qi::int64_t messageHandlingTimeoutInMus)
-      : _impl(std::make_shared<Impl>(socket))
-    {
-      _impl->start(ssl, maxPayload, onReceive, messageHandlingTimeoutInMus);
-    }
-
-    template<typename N>
-    Connected<N>::Impl::Impl(const SocketPtr<N>& s)
-      : _result{s}
-      , _stopRequested(false)
-      , _sendMsg{s}
-    {
-    }
-
-    template<typename N>
-    void Connected<N>::Impl::setPromise(const net::ErrorCode<N>& error, const Message* msg)
-    {
-      auto prom = _completePromise.synchronize();
-      if (!prom->future().isRunning()) // promise already set
-        return;
-      if (_stopRequested.load() && error == operationAborted<ErrorCode<N>>())
-      {
-        // This is not a real error: the user has asked the state to stop,
-        // so we set the promise with a value instead of an error.
-        prom->setValue(_result);
-      }
-      else if (error || !msg)
-      {
-        // A real error occurred.
-        _result.hasError = true;
-        _result.errorMessage = error.message();
-        prom->setValue(_result);
-      }
-      else
-      {
-        // This is not an error: the user decided to stop after handling a message.
-        prom->setValue(_result);
-      }
-    }
-
-    template<typename N>
-    template<typename Proc>
-    void Connected<N>::Impl::start(SslEnabled ssl, size_t maxPayload, Proc onReceive,
-        qi::int64_t messageHandlingTimeoutInMus)
-    {
-      auto self = shared_from_this();
-      _receiveMsg(socket(), ssl, maxPayload,
-        [=](net::ErrorCode<N> e, const Message* msg) mutable { // onReceived
-          const bool mustContinue = onReceive(e, msg);
-          if (!mustContinue)
-          {
-            self->setPromise(e, msg);
-            return false; // We must not continue to receive messages.
-          }
-          return true; // Otherwise, we continue to receive messages.
-        },
-        dataBoundTransfo(shared_from_this()), // dataTransfo
-        StrandTransfo<N>{&(*socket()).get_io_service()} // netTransfo
-      );
-    }
-
-    template<typename N>
-    Connected<N>::Impl::~Impl()
-    {
-    }
-
-    template<typename N>
-    template<typename Msg, typename Proc>
-    void Connected<N>::Impl::send(Msg&& msg, SslEnabled ssl, Proc onSent)
-    {
-      using SendMessage = decltype(_sendMsg);
-      using ReadableMessage = typename SendMessage::ReadableMessage;
-      auto self = shared_from_this();
-      _sendMsg(std::forward<Msg>(msg), ssl,
-        [=](const ErrorCode<N>& e, const ReadableMessage& ptrMsg) mutable { // onSent
-          const bool mustContinue = onSent(e, ptrMsg);
-          if (!mustContinue)
-          {
-            self->setPromise(e, &msg);
-            return false; // We must not continue to send messages.
-          }
-          return true; // Otherwise, we continue to send messages.
-        },
-        dataBoundTransfo(shared_from_this()), // dataTransfo
-        StrandTransfo<N>{&(*socket()).get_io_service()} // netTransfo
-      );
-    }
-
-    /// Disconnecting state of the socket.
-    /// Close the socket immediately.
-    ///
-    /// The disconnected promise is stored only to be passed to the next state.
-    /// It is not the responsibility of Disconnecting to set it.
-    template<typename N>
-    class Disconnecting
-    {
-      SocketPtr<N> _socket;
-      Promise<void> _disconnectedPromise;
-      Promise<void> _completePromise;
-    public:
-      Disconnecting(const SocketPtr<N>& socket, Promise<void> disconnectedPromise)
-        : _socket(socket)
-        , _disconnectedPromise(disconnectedPromise)
-      {
-        QI_LOG_DEBUG_SOCKET(_socket.get()) << "Entering Disconnecting state";
-        // The socket is the output of the connecting state. It this state fails,
-        // we don't have any socket, so it is null here.
-        // Even in this case, we still enter the disconnecting state for
-        // consistency reasons.
-        if (socket)
-        {
-          socket->get_io_service().wrap([=]() mutable {
-            QI_LOG_DEBUG_SOCKET(socket.get()) << "Disconnecting: before socket close";
-            close<N>(socket);
-            _completePromise.setValue(nullptr);
-          })();
-        }
-        else
-        {
-          // Nothing to do: disconnection is therefore complete.
-          _completePromise.setValue(nullptr);
-        }
-      }
-      // TODO: replace by "= default" when get rid of VS2013.
-      Disconnecting(Disconnecting&& x)
-        : _socket(std::move(x._socket))
-        , _disconnectedPromise(std::move(x._disconnectedPromise))
-        , _completePromise(std::move(x._completePromise))
-      {
-      }
-      // TODO: replace by "= default" when get rid of VS2013.
-      Disconnecting& operator=(Disconnecting&& x)
-      {
-        _socket = std::move(x._socket);
-        _disconnectedPromise = std::move(x._disconnectedPromise);
-        _completePromise = std::move(x._completePromise);
-        return *this;
-      }
-      Future<void> disconnectedPromise() const
-      {
-        return _disconnectedPromise.future();
-      }
-      Future<void> complete() const
-      {
-        QI_LOG_DEBUG_SOCKET(_socket.get()) << "Disconnecting: asking the 'complete' future";
-        return _completePromise.future();
+        QI_LOG_DEBUG_SOCKET(_tcpSocket.get()) << "Message received "
+                                              << ((!erc && msg) ? msg->id() : 0);
+        return !erc && msg && _tcpSocket->handleMessage(*msg);
       }
     };
 
     const int defaultTimeoutInSeconds = 30;
-
-  } // namespace net
+  } // namespace sock
 
   /// A socket to send and receive messages.
   ///
@@ -774,23 +178,23 @@ namespace qi {
   /// on destruction.
   ///
   /// Network N
-  template<typename N = net::NetworkAsio>
+  template<typename N = sock::NetworkAsio>
   class TcpMessageSocket
     : public MessageSocket
     , public boost::enable_shared_from_this<TcpMessageSocket<N>>
   {
   public:
-    using SocketPtr = net::SocketPtr<N>;
-    using Handshake = net::HandshakeSide<net::SslSocket<N>>;
-    using Method = net::Method<net::SslContext<N>>;
+    using SocketPtr = sock::SocketPtr<N>;
+    using Handshake = sock::HandshakeSide<sock::SslSocket<N>>;
+    using Method = sock::Method<sock::SslContext<N>>;
     using boost::enable_shared_from_this<TcpMessageSocket<N>>::shared_from_this;
-    friend struct HandleMessage<N>;
+    friend struct sock::HandleMessage<N>;
 
     /// If the socket is not null, we consider we are on server side.
     /// On server side, if SSL is enabled the connection only consist of the handshake.
     /// On client side (null socket), the connection is done by calling `connect(Url)`.
-    explicit TcpMessageSocket(net::IoService<N>& io = N::defaultIoService(),
-      net::SslEnabled ssl = {false}, SocketPtr = {});
+    explicit TcpMessageSocket(sock::IoService<N>& io = N::defaultIoService(),
+      sock::SslEnabled ssl = {false}, SocketPtr = {});
 
     virtual ~TcpMessageSocket();
 
@@ -846,7 +250,7 @@ namespace qi {
     // Regular:
       QI_GENERATE_FRIEND_REGULAR_OPS_1(OnConnectedComplete, _socket)
     // Procedure:
-      void operator()(Future<net::ConnectedResult<N>> f)
+      void operator()(Future<sock::ConnectedResult<N>> f)
       {
         _futureConnected.wait();
         // Here, connected state is over, successfully (user asked for) or not.
@@ -860,18 +264,18 @@ namespace qi {
       }
     };
 
-    const net::SslEnabled _ssl;
-    net::SslContext<N> _sslContext;
+    const sock::SslEnabled _ssl;
+    sock::SslContext<N> _sslContext;
     mutable boost::recursive_mutex _stateMutex;
-    net::IoService<N>& _ioService;
+    sock::IoService<N>& _ioService;
 
     void enterDisconnectedState(const SocketPtr& socket = {},
       Promise<void> promiseDisconnected = Promise<void>{});
 
-    using DisconnectedState = net::Disconnected<N>;
-    using ConnectingState = net::Connecting<N>;
-    using ConnectedState = net::Connected<N>;
-    using DisconnectingState = net::Disconnecting<N>;
+    using DisconnectedState = sock::Disconnected<N>;
+    using ConnectingState = sock::Connecting<N>;
+    using ConnectedState = sock::Connected<N>;
+    using DisconnectingState = sock::Disconnecting<N>;
 
     // Do not change the order : it must match the Status enumeration order.
     using State = boost::variant<DisconnectedState, ConnectingState, ConnectedState, DisconnectingState>;
@@ -911,10 +315,10 @@ namespace qi {
     FutureSync<void> doDisconnect();
   };
 
-  using TcpMessageSocketPtr = boost::shared_ptr<TcpMessageSocket<net::NetworkAsio>>;
+  using TcpMessageSocketPtr = boost::shared_ptr<TcpMessageSocket<sock::NetworkAsio>>;
 
   template<typename N>
-  TcpMessageSocket<N>::TcpMessageSocket(net::IoService<N>& io, net::SslEnabled ssl,
+  TcpMessageSocket<N>::TcpMessageSocket(sock::IoService<N>& io, sock::SslEnabled ssl,
         SocketPtr socket)
     : MessageSocket()
     , _ssl(ssl)
@@ -924,7 +328,7 @@ namespace qi {
   {
     if (socket)
     {
-      net::setSocketOptions<N>(*socket, getTcpPingTimeout(Seconds{net::defaultTimeoutInSeconds}));
+      sock::setSocketOptions<N>(*socket, getTcpPingTimeout(Seconds{sock::defaultTimeoutInSeconds}));
       _state = ConnectingState{io, ssl, socket, Handshake::server};
     }
   }
@@ -967,7 +371,7 @@ namespace qi {
         return false;
       }
       auto self = shared_from_this();
-      _state = ConnectedState(res.socket, _ssl, maxPayload, HandleMessage<N>{self});
+      _state = ConnectedState(res.socket, _ssl, maxPayload, sock::HandleMessage<N>{self});
       auto& connected = asConnected(_state);
       connected.complete().then(connected.ioServiceStranded(
         OnConnectedComplete{self, Future<void>{nullptr}}
@@ -995,13 +399,13 @@ namespace qi {
       return ConnectingState::connectError("Must be disconnected to connect().");
     }
     // This changes the status so that concurrent calls will return in error.
-    using Side = net::HandshakeSide<net::SslSocket<N>>;
+    using Side = sock::HandshakeSide<sock::SslSocket<N>>;
     _state = ConnectingState{_ioService, url, _ssl, _sslContext, !disableIpV6, Side::client,
-      getTcpPingTimeout(Seconds{net::defaultTimeoutInSeconds})};
+      getTcpPingTimeout(Seconds{sock::defaultTimeoutInSeconds})};
     _url = url;
     auto self = shared_from_this();
 
-    asConnecting(_state).complete().then([=](Future<net::ConnectingResult<N>> fut) mutable {
+    asConnecting(_state).complete().then([=](Future<sock::ConnectingResult<N>> fut) mutable {
       // Here, connecting is over, successfully or not.
       {
         boost::recursive_mutex::scoped_lock lock(_stateMutex);
@@ -1019,7 +423,7 @@ namespace qi {
         // Connecting was successful, so we enter the connected state (to be able
         // send and receive messages).
         static const auto maxPayload = getMaxPayloadFromEnv();
-        _state = ConnectedState(res.socket, _ssl, maxPayload, HandleMessage<N>{self});
+        _state = ConnectedState(res.socket, _ssl, maxPayload, sock::HandleMessage<N>{self});
         auto& connected = asConnected(_state);
         connected.complete().then(connected.ioServiceStranded(
           OnConnectedComplete{self, connectedPromise.future()}
@@ -1172,12 +576,6 @@ namespace qi {
     asConnected(_state).send(msg, _ssl);
     return true;
   }
-
-#undef QI_LOG_ERROR_SOCKET
-#undef QI_LOG_WARNING_SOCKET
-#undef QI_LOG_INFO_SOCKET
-#undef QI_LOG_DEBUG_SOCKET
-
 } // namespace qi
 
 #endif  // _SRC_TCPMESSAGESOCKET_HPP_

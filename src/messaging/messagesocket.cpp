@@ -1,5 +1,5 @@
 #include <qi/log.hpp>
-#include <qi/messaging/net/option.hpp>
+#include <qi/messaging/sock/option.hpp>
 #include "messagesocket.hpp"
 #include "tcpmessagesocket.hpp"
 
@@ -10,7 +10,7 @@
 #endif
 
 
-qiLogCategory(qi::net::logCategory());
+qiLogCategory(qi::sock::logCategory());
 
 namespace qi
 {

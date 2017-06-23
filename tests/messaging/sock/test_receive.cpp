@@ -7,13 +7,13 @@
 #include "src/messaging/transportserver.hpp"
 #include <qi/future.hpp>
 #include "src/messaging/message.hpp"
-#include <qi/messaging/net/networkasio.hpp>
+#include <qi/messaging/sock/networkasio.hpp>
 #include "networkasionooplock.hpp"
 #include "src/messaging/tcpmessagesocket.hpp"
 #include "networkcommon.hpp"
 #include "networkmock.hpp"
-#include <qi/messaging/net/receive.hpp>
-#include <qi/messaging/net/accept.hpp>
+#include <qi/messaging/sock/receive.hpp>
+#include <qi/messaging/sock/accept.hpp>
 
 static const qi::MilliSeconds defaultTimeout{500};
 static const std::chrono::milliseconds defaultPostPauseInMs{20};
@@ -24,7 +24,7 @@ static const std::chrono::milliseconds defaultPostPauseInMs{20};
 TEST(NetReceiveMessage, FailsOnReadNonSsl)
 {
   using namespace qi;
-  using namespace qi::net;
+  using namespace qi::sock;
   using namespace mock;
   std::vector<std::thread> writeThreads;
   N::_async_read_next_layer = [&](Socket::next_layer_type&, N::_mutable_buffer_sequence, N::_anyTransferHandler h) {
@@ -56,9 +56,9 @@ struct NetReceiveMessageContinuous : testing::Test
 
 using sequences = testing::Types<
   // Mock
-  qi::net::ReceiveMessageContinuous<mock::N>//, qi::net::Connected<mock::N>
+  qi::sock::ReceiveMessageContinuous<mock::N>//, qi::sock::Connected<mock::N>
   // Asio
-  //, qi::net::ReceiveMessageContinuous<qi::net::NetworkAsio>, qi::net::Connected<qi::net::NetworkAsio>
+  //, qi::sock::ReceiveMessageContinuous<qi::sock::NetworkAsio>, qi::sock::Connected<qi::sock::NetworkAsio>
 >;
 
 TYPED_TEST_CASE(NetReceiveMessageContinuous, sequences);
@@ -66,7 +66,7 @@ TYPED_TEST_CASE(NetReceiveMessageContinuous, sequences);
 TYPED_TEST(NetReceiveMessageContinuous, FailsOnReadNonSsl)
 {
   using namespace qi;
-  using namespace qi::net;
+  using namespace qi::sock;
   using namespace mock;
   std::vector<std::thread> writeThreads;
   N::_async_read_next_layer = [&](Socket::next_layer_type&, N::_mutable_buffer_sequence, N::_anyTransferHandler h) {
@@ -110,10 +110,10 @@ namespace mock
     });
   }
 
-  void readHeaderHandlerCalledAfterParentHasBeenDestroyed(qi::net::SslEnabled ssl)
+  void readHeaderHandlerCalledAfterParentHasBeenDestroyed(qi::sock::SslEnabled ssl)
   {
     using namespace qi;
-    using namespace qi::net;
+    using namespace qi::sock;
     qi::Promise<void> nukingObject;
     std::thread t;
     // The read is going to fail. Before calling the handler, we're going to
@@ -159,20 +159,20 @@ namespace mock
 
 TYPED_TEST(NetReceiveMessageContinuous, ReadHeaderHandlerCalledAfterParentHasBeenDestroyedNonSsl)
 {
-  mock::readHeaderHandlerCalledAfterParentHasBeenDestroyed(qi::net::SslEnabled{false});
+  mock::readHeaderHandlerCalledAfterParentHasBeenDestroyed(qi::sock::SslEnabled{false});
 }
 
 TYPED_TEST(NetReceiveMessageContinuous, ReadHeaderHandlerCalledAfterParentHasBeenDestroyedSsl)
 {
-  mock::readHeaderHandlerCalledAfterParentHasBeenDestroyed(qi::net::SslEnabled{true});
+  mock::readHeaderHandlerCalledAfterParentHasBeenDestroyed(qi::sock::SslEnabled{true});
 }
 
 namespace mock
 {
-  void readDataHandlerCalledAfterParentHasBeenDestroyed(qi::net::SslEnabled ssl)
+  void readDataHandlerCalledAfterParentHasBeenDestroyed(qi::sock::SslEnabled ssl)
   {
     using namespace qi;
-    using namespace qi::net;
+    using namespace qi::sock;
     Promise<void> nukingObject;
     std::thread t;
     // The read is going to fail. Before calling the handler, we're going to
@@ -243,7 +243,7 @@ TYPED_TEST(NetReceiveMessageContinuous, ReadDataHandlerCalledAfterParentHasBeenD
 TYPED_TEST(NetReceiveMessageContinuous, AsyncReadCalledUntilSomethingIsActuallyRead)
 {
   using namespace qi;
-  using namespace qi::net;
+  using namespace qi::sock;
   using namespace mock;
   std::atomic<int> callCount{0};
   std::mutex writeThreadsMutex;
@@ -308,7 +308,7 @@ namespace mock
 TYPED_TEST(NetReceiveMessageContinuous, FailsOnReadHeaderBecauseOfBadMessageCookie)
 {
   using namespace qi;
-  using namespace qi::net;
+  using namespace qi::sock;
   using namespace mock;
   std::vector<std::thread> threads;
   {
@@ -334,7 +334,7 @@ TYPED_TEST(NetReceiveMessageContinuous, FailsOnReadHeaderBecauseOfBadMessageCook
 TYPED_TEST(NetReceiveMessageContinuous, FailsOnReadHeaderBecausePayloadIsTooBig)
 {
   using namespace qi;
-  using namespace qi::net;
+  using namespace qi::sock;
   using namespace mock;
   const size_t maxPayload = 10000;
   {
@@ -356,7 +356,7 @@ TYPED_TEST(NetReceiveMessageContinuous, FailsOnReadHeaderBecausePayloadIsTooBig)
 TYPED_TEST(NetReceiveMessageContinuous, FailsOnReadData)
 {
   using namespace qi;
-  using namespace qi::net;
+  using namespace qi::sock;
   using namespace mock;
   {
     AsyncReadNextLayerHeaderThenData h;
@@ -379,7 +379,7 @@ TYPED_TEST(NetReceiveMessageContinuous, FailsOnReadData)
 TYPED_TEST(NetReceiveMessageContinuous, SeveralMessagesHandled)
 {
   using namespace qi;
-  using namespace qi::net;
+  using namespace qi::sock;
   using namespace mock;
   N::_async_read_next_layer = AsyncReadNextLayerHeaderThenData{};
   auto socket = boost::make_shared<Socket>(N::defaultIoService(), SslContext<N>{});
@@ -411,7 +411,7 @@ TYPED_TEST(NetReceiveMessageContinuous, SeveralMessagesHandled)
 TEST(NetReceiveMessage, Asio)
 {
   using namespace qi;
-  using namespace qi::net;
+  using namespace qi::sock;
   using N = NetworkAsio;
 
   auto& io = N::defaultIoService();

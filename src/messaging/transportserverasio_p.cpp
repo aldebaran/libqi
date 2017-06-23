@@ -85,7 +85,7 @@ namespace qi
         qiLogDebug() << "New socket accepted: " << socket.get();
 
         self->newConnection(std::pair<MessageSocketPtr, Url>{
-          socket, net::remoteEndpoint(*s, _ssl)});
+          socket, sock::remoteEndpoint(*s, _ssl)});
 
         if (socket.unique()) {
             qiLogError() << "bug: socket not stored by the newConnection handler (usecount:" << socket.use_count() << ")";
