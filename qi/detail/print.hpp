@@ -78,7 +78,7 @@ namespace detail
     };
 
     /// Encapsulates in a RAII style a shift or an indentation level of a PrettyPrintStream instance.
-    class IndentLevel
+    class QI_API IndentLevel
     {
       friend PrettyPrintStream;
       IndentLevel(PrettyPrintStream& printer);
@@ -97,7 +97,7 @@ namespace detail
     using IndentLevelPtr = std::unique_ptr<IndentLevel>;
 
     /// Contains the data and options needed to fill and format one column of a line
-    struct Column
+    struct QI_API Column
     {
       using ValueType = boost::variant<int, std::string>;
       enum class Alignment
@@ -141,7 +141,7 @@ namespace detail
 
     /// Contains the data and options needed to fill and format one line.
     /// PrettyPrintStream prints lines which are each composed of multiple columns.
-    struct Line
+    struct QI_API Line
     {
       enum class Option
       {
