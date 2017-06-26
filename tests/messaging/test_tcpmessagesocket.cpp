@@ -381,6 +381,26 @@ TYPED_TEST(NetMessageSocketAsio, ReceiveManyMessages)
   qiLogInfo("") << "fin\n";
 }
 
+// The test ends while a socket connection or a server accept may be pending.
+// The destruction of the corresponding objects must be fine.
+// This test must typically be launched a great number of times to be meaningful.
+TYPED_TEST(NetMessageSocket, PrematureDestroy)
+{
+  using namespace qi;
+  using namespace qi::sock;
+
+  // Start a server and get the server side socket.
+  TransportServer server;
+  const auto url = this->defaultListenURL();
+  this->listen(server, url);
+
+  // Connect the client.
+  auto msgSent = makeMessage(MessageAddress{1234, 5, 9876, 107});
+
+  auto clientSideSocket = makeMessageSocket(this->scheme());
+  clientSideSocket->connect(url);
+}
+
 TYPED_TEST(NetMessageSocket, DisconnectWhileConnecting)
 {
   using namespace qi;

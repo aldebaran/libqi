@@ -58,6 +58,7 @@ namespace qi
     )
   {
     qiLogDebug() << this << " onAccept";
+    boost::mutex::scoped_lock lock(_acceptCloseMutex);
     if (!_live)
     {
       s.reset();
@@ -98,6 +99,7 @@ namespace qi
 
   void TransportServerAsioPrivate::close() {
     qiLogDebug() << this << " close";
+    boost::mutex::scoped_lock l(_acceptCloseMutex);
     try
     {
       _asyncEndpoints->cancel();

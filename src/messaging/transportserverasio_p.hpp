@@ -48,6 +48,12 @@ namespace qi
     boost::synchronized_value<qi::Future<void>> _asyncEndpoints;
     Url _listenUrl;
 
+    // The server must avoid being closed while accepting a connection.
+    // Typically, the TransportServer this class has a pointer to closes implementations
+    // in its destructor. Without protection, this class can end up using a
+    // dangling pointer on the TransportServer.
+    boost::mutex _acceptCloseMutex;
+
     static const int64_t AcceptDownRetryTimerUs;
 
   private:
