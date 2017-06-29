@@ -49,6 +49,16 @@ namespace qi {
     StreamColor_Turquoise = 22, ///< Turquoise
     StreamColor_White     = 23  ///< White
   };
+
+  /**
+   * \brief Returns \p color if \p enable is true, otherwise returns no color
+   * \details This function can be used to easily enable or disable colors when
+   * streaming.
+   * \includename{qi/iocolor.hpp}
+   */
+  inline StreamColor enabledColor(StreamColor color, bool enable = true) {
+    return enable ? color : StreamColor_None;
+  }
 }
 
 namespace std {

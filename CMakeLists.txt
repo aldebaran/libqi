@@ -72,9 +72,9 @@ set(QI_H qi/detail/async.hxx
          qi/detail/futurebarrier.hpp
          qi/detail/futureunwrap.hpp
          qi/detail/executioncontext.hpp
-         qi/detail/mpl.hpp
          qi/detail/log.hxx
          qi/detail/mpl.hpp
+         qi/detail/print.hpp
          qi/detail/trackable.hxx
          qi/detail/warn_push_ignore_deprecated.hpp
          qi/detail/warn_pop_ignore_deprecated.hpp
@@ -85,6 +85,7 @@ set(QI_H qi/detail/async.hxx
          qi/atomic.hpp
          qi/buffer.hpp
          qi/clock.hpp
+         qi/flags.hpp
          qi/future.hpp
          qi/futuregroup.hpp
          qi/log/consoleloghandler.hpp
@@ -151,6 +152,7 @@ set(QI_C src/dlfcn.cpp
          src/os.cpp
          src/path_conf.cpp
          src/periodictask.cpp
+         src/print.cpp
          src/utils.hpp
          src/utils.cpp
          src/eventloop.cpp

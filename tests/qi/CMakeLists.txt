@@ -19,6 +19,7 @@ qi_create_gtest(
   "test_buffer.cpp"
   "test_bufferreader.cpp"
   "test_eventloop.cpp"
+  "test_flags.cpp"
   "test_future.hpp"
   "test_future.cpp"
   "test_futuregroup.cpp"
