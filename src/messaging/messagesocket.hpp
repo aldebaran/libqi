@@ -84,8 +84,8 @@ namespace qi
       return _dispatcher.messagePendingConnect(serviceId, objectId, fun);
     }
 
-    bool messagePendingDisconnect(unsigned int serviceId, unsigned int objectId, qi::SignalLink linkId) {
-      return _dispatcher.messagePendingDisconnect(serviceId, objectId, linkId);
+    void messagePendingDisconnect(unsigned int serviceId, unsigned int objectId, qi::SignalLink linkId) {
+      _dispatcher.messagePendingDisconnect(serviceId, objectId, linkId);
     }
 
   protected:
