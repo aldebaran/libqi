@@ -8,11 +8,10 @@
 #define _SRC_EVENTLOOP_P_HPP_
 
 #include <atomic>
-#include <boost/thread.hpp>
-#include <boost/thread/recursive_mutex.hpp>
-
+#include <thread>
 #include <boost/asio.hpp>
 #include <qi/eventloop.hpp>
+#include <boost/thread/synchronized_value.hpp>
 
 namespace qi {
   class AsyncCallHandlePrivate
@@ -39,7 +38,10 @@ namespace qi {
   class EventLoopPrivate
   {
   public:
-    virtual bool isInThisContext()=0;
+    EventLoopPrivate(std::string name) : _name(std::move(name)) {}
+    virtual ~EventLoopPrivate() = default;
+
+    virtual bool isInThisContext() const =0;
     virtual void start(int nthreads)=0; // 0=auto
     virtual void join()=0;
     virtual void stop()=0;
@@ -47,21 +49,21 @@ namespace qi {
     virtual void post(qi::Duration delay, const boost::function<void ()>& callback)=0;
     virtual qi::Future<void> asyncCall(qi::SteadyClockTimePoint timepoint, boost::function<void ()> callback)=0;
     virtual void post(qi::SteadyClockTimePoint timepoint, const boost::function<void ()>& callback)=0;
-    virtual void destroy()=0;
     virtual void* nativeHandle()=0;
     virtual void setMaxThreads(unsigned int max)=0;
-    boost::function<void()> _emergencyCallback;
-    std::string             _name;
-
-  protected:
-    virtual ~EventLoopPrivate() = default;
+    boost::synchronized_value<boost::function<void()>> _emergencyCallback;
+    const std::string _name;
   };
 
   class EventLoopAsio final: public EventLoopPrivate
   {
   public:
-    EventLoopAsio();
-    bool isInThisContext() override;
+    static const char* const defaultName;
+
+    explicit EventLoopAsio(int threadCount = 0, std::string name = defaultName);
+    ~EventLoopAsio() override;
+
+    bool isInThisContext() const override;
     void start(int nthreads) override;
     void join() override;
     void stop() override;
@@ -73,36 +75,24 @@ namespace qi {
         boost::function<void ()> callback) override;
     void post(qi::SteadyClockTimePoint timepoint,
         const boost::function<void ()>& callback) override;
-    void destroy() override;
     void* nativeHandle() override;
     void setMaxThreads(unsigned int max) override;
+
   private:
     void invoke_maybe(boost::function<void()> f, qi::uint64_t id, qi::Promise<void> p, const boost::system::error_code& erc);
-    void _runPool();
-    void _pingThread();
-    ~EventLoopAsio() override;
+    void runWorkerLoop();
+    void runPingLoop();
 
-    enum class Mode
-    {
-      Unset = 0,
-      Threaded = 1,
-      Pooled = 2
-    };
-    Mode _mode;
-    qi::Atomic<unsigned int> _nThreads;
     boost::asio::io_service _io;
     std::atomic<boost::asio::io_service::work*> _work; // keep io.run() alive
-    boost::thread      _thd;
-    qi::Atomic<int>    _running;
-    boost::recursive_mutex _mutex;
-    boost::thread::id  _id;
-    unsigned int _maxThreads;
+    std::atomic<int> _maxThreads;
 
     class WorkerThreadPool;
-    boost::scoped_ptr<WorkerThreadPool> _workerThreads;
+    std::unique_ptr<WorkerThreadPool> _workerThreads;
+    std::thread _pingThread;
 
-    qi::Atomic<uint64_t> _totalTask;
-    qi::Atomic<uint64_t> _activeTask;
+    std::atomic<uint64_t> _totalTask;
+    std::atomic<uint64_t> _activeTask;
   };
 }
 

@@ -43,39 +43,56 @@ namespace qi
   {
   public:
     /**
-     * \brief Create a new eventLoop.
-     * \param name Name of the event loop created.
-     *
-     * You must then call either start(), run() or startThreadPool() to start event processing.
+     * \brief Creates a group of threads running event loops.
+     * \param name Name of the event loop to create.
+     * \param nthreads Number of threads. If lower or equal to 0, the event loop will use in order:
+     *   - the value of the environment variable QI_EVENTLOOP_THREAD_COUNT if it's set,
+     *   - the value returned by std::thread::hardware_concurrency() if it's greater than 3,
+     *   - the fixed value of 3.
      */
-    EventLoop(const std::string& name = "eventloop");
+    explicit EventLoop(std::string name = "eventloop", int nthreads = 0);
 
     /// \brief Default destructor.
     ~EventLoop();
+
     /**
-     * \brief Check if current thread is the event loop thread.
-     * \return true if current thread is the event loop thread.
+     * \brief Checks if the current thread is one of the event loop threads.
+     * \note It is safe to call this method concurrently.
+     * \return true if the current thread is one of the event loop threads.
      */
     bool isInThisContext() override;
     /**
-     * \brief Start the eventloop in threaded mode.
-     * \param nthreads Numbers of threads.
+     * \brief Starts the event loop. Does nothing if already started.
+     * \param threadCount Number of threads. See the constructor for more information.
+     * \note It is NOT safe to call this method concurrently.
+     * \deprecated EventLoop automatically starts when constructed.
      */
-    void start(int nthreads = 0);
+    QI_API_DEPRECATED_MSG(EventLoop automatically starts when constructed)
+    void start(int threadCount = 0);
 
-    /// \brief Wait for run thread to terminate.
+    /// \brief Waits for all threads of the pool to terminate.
+    /// \note It is NOT safe to call this method concurrently.
+    /// \deprecated EventLoop automatically joins when destroyed.
+    QI_API_DEPRECATED_MSG(EventLoop automatically joins when stopped)
     void join();
-    /// \brief Ask main loop to terminate.
+
+    /// \brief Stops all running threads. Does nothing if already stopped.
+    /// \note It is NOT safe to call this method concurrently.
+    /// \deprecated EventLoop automatically stops when destroyed.
+    QI_API_DEPRECATED_MSG(EventLoop automatically stops when destroyed)
     void stop();
+
     /**
-     * \brief Set callback to be called in case of a deadlock detection.
+     * \brief Sets callback to be called in case of a deadlock detection.
      * \param cb Callback to be called.
+     * \note It is safe to call this method concurrently.
      */
     void setEmergencyCallback(boost::function<void()> cb);
 
     /**
-     * \brief Set the maximum number of threads in the pool.
+     * \brief Sets the maximum number of threads in the pool.
      * \param max Maximum number of threads.
+     * \note It is safe to call this method concurrently.
      */
     void setMaxThreads(unsigned int max);
 
@@ -85,7 +102,7 @@ namespace qi
     // DEPRECATED
     /// @{
     /**
-     * \brief Call given function once after given delay in microseconds.
+     * \brief Calls given function once after given delay in microseconds.
      * \param callback Callback to be called.
      * \param usDelay Delay before call the callback in microsecond.
      * \return A canceleable future.
@@ -136,7 +153,7 @@ namespace qi
     using ExecutionContext::post;
 
     /**
-     * \brief Monitor event loop to detect deadlocks.
+     * \brief Monitors event loop to detect deadlocks.
      * \param helper an other event loop used for monitoring.
      * \param maxUsDelay maximum expected delay between an async() and its execution.
      * \return A canceleable future. Invoke cancel() to terminate monitoring.
@@ -146,7 +163,7 @@ namespace qi
     Future<void> monitorEventLoop(EventLoop* helper, uint64_t maxUsDelay);
 
   private:
-    EventLoopPrivate *_p;
+    std::unique_ptr<EventLoopPrivate> _p;
     std::string       _name;
 
     void postImpl(boost::function<void()> callback) override
@@ -158,17 +175,17 @@ namespace qi
     qi::Future<void> asyncDelayImpl(boost::function<void()> cb, qi::Duration delay) override;
   };
 
-  /// \brief Return the global eventloop, created on demand on first call.
+  /// \brief Returns the global eventloop, created on demand on first call.
   QI_API EventLoop* getEventLoop();
 
   /**
-   * \brief Start the eventloop with nthread threads. No-op if already started.
+   * \brief Starts the eventloop with nthread threads. Does nothing if already started.
    * \param nthread Set the minimum number of worker threads in the pool.
    */
   QI_API void startEventLoop(int nthread);
 
   /**
-   * \brief Get the io_service used by the global event loop.
+   * \brief Gets the io_service used by the global event loop.
    * \return io_service used by the global event loop.
    */
   QI_API boost::asio::io_service& getIoService();
